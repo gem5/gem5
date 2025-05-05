@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2019, 2021-2024 Arm Limited
+ * Copyright (c) 2010, 2012-2019, 2021-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -640,14 +640,14 @@ TableWalker::processWalk()
                     currState->vaddr_tainted,
                     ArmFault::TranslationLL + LookupLevel::L1,
                     isStage2,
-                    ArmFault::VmsaTran);
+                    TranMethod::VmsaTran);
             else
                 return std::make_shared<DataAbort>(
                     currState->vaddr_tainted,
-                    TlbEntry::DomainType::NoAccess,
+                    DomainType::NoAccess,
                     is_atomic ? false : currState->isWrite,
                     ArmFault::TranslationLL + LookupLevel::L1, isStage2,
-                    ArmFault::VmsaTran);
+                    TranMethod::VmsaTran);
         }
         ttbr = currState->tc->readMiscReg(snsBankedIndex(
             MISCREG_TTBR0, currState->tc,
@@ -661,14 +661,14 @@ TableWalker::processWalk()
                     currState->vaddr_tainted,
                     ArmFault::TranslationLL + LookupLevel::L1,
                     isStage2,
-                    ArmFault::VmsaTran);
+                    TranMethod::VmsaTran);
             else
                 return std::make_shared<DataAbort>(
                     currState->vaddr_tainted,
-                    TlbEntry::DomainType::NoAccess,
+                    DomainType::NoAccess,
                     is_atomic ? false : currState->isWrite,
                     ArmFault::TranslationLL + LookupLevel::L1, isStage2,
-                    ArmFault::VmsaTran);
+                    TranMethod::VmsaTran);
         }
         ttbr = ttbr1;
         currState->ttbcr.n = 0;
@@ -758,15 +758,15 @@ TableWalker::processWalkLPAE()
                         currState->vaddr_tainted,
                         ArmFault::TranslationLL + LookupLevel::L1,
                         isStage2,
-                        ArmFault::LpaeTran);
+                        TranMethod::LpaeTran);
                 else
                     return std::make_shared<DataAbort>(
                         currState->vaddr_tainted,
-                        TlbEntry::DomainType::NoAccess,
+                        DomainType::NoAccess,
                         is_atomic ? false : currState->isWrite,
                         ArmFault::TranslationLL + LookupLevel::L1,
                         isStage2,
-                        ArmFault::LpaeTran);
+                        TranMethod::LpaeTran);
             }
             ttbr = currState->tc->readMiscReg(snsBankedIndex(
                 MISCREG_TTBR0, currState->tc,
@@ -784,15 +784,15 @@ TableWalker::processWalkLPAE()
                         currState->vaddr_tainted,
                         ArmFault::TranslationLL + LookupLevel::L1,
                         isStage2,
-                        ArmFault::LpaeTran);
+                        TranMethod::LpaeTran);
                 else
                     return std::make_shared<DataAbort>(
                         currState->vaddr_tainted,
-                        TlbEntry::DomainType::NoAccess,
+                        DomainType::NoAccess,
                         is_atomic ? false : currState->isWrite,
                         ArmFault::TranslationLL + LookupLevel::L1,
                         isStage2,
-                        ArmFault::LpaeTran);
+                        TranMethod::LpaeTran);
             }
             ttbr = currState->tc->readMiscReg(snsBankedIndex(
                 MISCREG_TTBR1, currState->tc,
@@ -809,14 +809,14 @@ TableWalker::processWalkLPAE()
                     currState->vaddr_tainted,
                     ArmFault::TranslationLL + LookupLevel::L1,
                     isStage2,
-                    ArmFault::LpaeTran);
+                    TranMethod::LpaeTran);
             else
                 return std::make_shared<DataAbort>(
                     currState->vaddr_tainted,
-                    TlbEntry::DomainType::NoAccess,
+                    DomainType::NoAccess,
                     is_atomic ? false : currState->isWrite,
                     ArmFault::TranslationLL + LookupLevel::L1,
-                    isStage2, ArmFault::LpaeTran);
+                    isStage2, TranMethod::LpaeTran);
         }
 
     }
@@ -881,7 +881,12 @@ TableWalker::maxTxSz(GrainSize tg) const
           case Grain16KB: return 48;
           case Grain64KB: return 47;
           default:
-            panic("Invalid grain size\n");
+            // If the value is programmed to either a reserved value or a size
+            // that has not been implemented, then the hardware will treat the
+            // field as if it has been programmed to an IMPLEMENTATION DEFINED
+            // choice
+            warn_once("Invalid grain size\n");
+            return 48;
         }
     }
     return 39;
@@ -1074,14 +1079,14 @@ TableWalker::processWalkAArch64()
             return std::make_shared<PrefetchAbort>(
                 currState->vaddr_tainted,
                 ArmFault::TranslationLL + LookupLevel::L0, isStage2,
-                ArmFault::LpaeTran);
+                TranMethod::LpaeTran);
         } else {
             return std::make_shared<DataAbort>(
                 currState->vaddr_tainted,
-                TlbEntry::DomainType::NoAccess,
+                DomainType::NoAccess,
                 is_atomic ? false : currState->isWrite,
                 ArmFault::TranslationLL + LookupLevel::L0,
-                isStage2, ArmFault::LpaeTran);
+                isStage2, TranMethod::LpaeTran);
         }
     }
 
@@ -1111,15 +1116,15 @@ TableWalker::processWalkAArch64()
                 currState->vaddr_tainted,
                 ArmFault::AddressSizeLL + start_lookup_level,
                 isStage2,
-                ArmFault::LpaeTran);
+                TranMethod::LpaeTran);
         else
             return std::make_shared<DataAbort>(
                 currState->vaddr_tainted,
-                TlbEntry::DomainType::NoAccess,
+                DomainType::NoAccess,
                 is_atomic ? false : currState->isWrite,
                 ArmFault::AddressSizeLL + start_lookup_level,
                 isStage2,
-                ArmFault::LpaeTran);
+                TranMethod::LpaeTran);
     }
 
     Request::Flags flag = Request::PT_WALK;
@@ -1687,15 +1692,15 @@ TableWalker::doL1Descriptor()
                     currState->vaddr_tainted,
                     ArmFault::TranslationLL + LookupLevel::L1,
                     isStage2,
-                    ArmFault::VmsaTran);
+                    TranMethod::VmsaTran);
         else
             currState->fault =
                 std::make_shared<DataAbort>(
                     currState->vaddr_tainted,
-                    TlbEntry::DomainType::NoAccess,
+                    DomainType::NoAccess,
                     is_atomic ? false : currState->isWrite,
                     ArmFault::TranslationLL + LookupLevel::L1, isStage2,
-                    ArmFault::VmsaTran);
+                    TranMethod::VmsaTran);
         return;
       case L1Descriptor::Section:
         if (currState->sctlr.afe && bits(currState->l1Desc.ap(), 0) == 0) {
@@ -1710,7 +1715,7 @@ TableWalker::doL1Descriptor()
                 is_atomic ? false : currState->isWrite,
                 ArmFault::AccessFlagLL + LookupLevel::L1,
                 isStage2,
-                ArmFault::VmsaTran);
+                TranMethod::VmsaTran);
         }
         if (currState->l1Desc.supersection()) {
             panic("Haven't implemented supersections\n");
@@ -1758,15 +1763,15 @@ TableWalker::generateLongDescFault(ArmFault::FaultSource src)
             currState->vaddr_tainted,
             src + currState->longDesc.lookupLevel,
             isStage2,
-            ArmFault::LpaeTran);
+            TranMethod::LpaeTran);
     } else {
         return std::make_shared<DataAbort>(
             currState->vaddr_tainted,
-            TlbEntry::DomainType::NoAccess,
+            DomainType::NoAccess,
             currState->req->isAtomic() ? false : currState->isWrite,
             src + currState->longDesc.lookupLevel,
             isStage2,
-            ArmFault::LpaeTran);
+            TranMethod::LpaeTran);
     }
 }
 
@@ -1788,12 +1793,13 @@ TableWalker::doLongDescriptor()
     if ((currState->longDesc.type() == LongDescriptor::Block) ||
         (currState->longDesc.type() == LongDescriptor::Page)) {
         DPRINTF(PageTableWalker, "Analyzing L%d descriptor: %#llx, pxn: %d, "
-                "xn: %d, ap: %d, af: %d, type: %d\n",
+                "xn: %d, ap: %d, piindex: %d, af: %d, type: %d\n",
                 currState->longDesc.lookupLevel,
                 currState->longDesc.data,
                 currState->longDesc.pxn(),
                 currState->longDesc.xn(),
                 currState->longDesc.ap(),
+                currState->longDesc.piindex(),
                 currState->longDesc.af(),
                 currState->longDesc.type());
     } else {
@@ -1953,14 +1959,14 @@ TableWalker::doL2Descriptor()
                     currState->vaddr_tainted,
                     ArmFault::TranslationLL + LookupLevel::L2,
                     isStage2,
-                    ArmFault::VmsaTran);
+                    TranMethod::VmsaTran);
         else
             currState->fault = std::make_shared<DataAbort>(
                 currState->vaddr_tainted, currState->l1Desc.domain(),
                 is_atomic ? false : currState->isWrite,
                 ArmFault::TranslationLL + LookupLevel::L2,
                 isStage2,
-                ArmFault::VmsaTran);
+                TranMethod::VmsaTran);
         return;
     }
 
@@ -1973,10 +1979,10 @@ TableWalker::doL2Descriptor()
 
         currState->fault = std::make_shared<DataAbort>(
             currState->vaddr_tainted,
-            TlbEntry::DomainType::NoAccess,
+            DomainType::NoAccess,
             is_atomic ? false : currState->isWrite,
             ArmFault::AccessFlagLL + LookupLevel::L2, isStage2,
-            ArmFault::VmsaTran);
+            TranMethod::VmsaTran);
     }
 
     insertTableEntry(currState->l2Desc, false);
@@ -2312,7 +2318,7 @@ TableWalker::insertPartialTableEntry(LongDescriptor &descriptor)
             descriptor.getRawData());
 
     // Insert the entry into the TLBs
-    tlb->multiInsert(te);
+    tlb->multiInsert(TlbEntry::KeyType(te), te);
 }
 
 void
@@ -2362,6 +2368,8 @@ TableWalker::insertTableEntry(DescriptorBase &descriptor, bool long_descriptor)
            te.ap = ((!currState->longDescData->rwTable ||
                      descriptor.ap() >> 1) << 1) |
                (currState->longDescData->userTable && (descriptor.ap() & 0x1));
+            // Add index of Indirect Permission.
+            te.piindex = l_descriptor.piindex();
         }
         if (currState->aarch64)
             memAttrsAArch64(currState->tc, te, l_descriptor);
@@ -2377,16 +2385,17 @@ TableWalker::insertTableEntry(DescriptorBase &descriptor, bool long_descriptor)
     DPRINTF(TLB, descriptor.dbgHeader().c_str());
     DPRINTF(TLB, " - N:%d pfn:%#x size:%#x global:%d valid:%d\n",
             te.N, te.pfn, te.size, te.global, te.valid);
-    DPRINTF(TLB, " - vpn:%#x xn:%d pxn:%d ap:%d domain:%d asid:%d "
+    DPRINTF(TLB, " - vpn:%#x xn:%d pxn:%d ap:%d piindex:%d domain:%d asid:%d "
             "vmid:%d nc:%d ns:%d\n", te.vpn, te.xn, te.pxn,
-            te.ap, static_cast<uint8_t>(te.domain), te.asid, te.vmid,
+            te.ap, te.piindex,
+            static_cast<uint8_t>(te.domain), te.asid, te.vmid,
             te.nonCacheable, te.ns);
     DPRINTF(TLB, " - domain from L%d desc:%d data:%#x\n",
             descriptor.lookupLevel, static_cast<uint8_t>(descriptor.domain()),
             descriptor.getRawData());
 
     // Insert the entry into the TLBs
-    tlb->multiInsert(te);
+    tlb->multiInsert(TlbEntry::KeyType(te), te);
     if (!currState->timing) {
         currState->tc  = NULL;
         currState->req = NULL;
@@ -2427,7 +2436,7 @@ TableWalker::pendingChange()
 }
 
 Fault
-TableWalker::testWalk(const RequestPtr &walk_req, TlbEntry::DomainType domain,
+TableWalker::testWalk(const RequestPtr &walk_req, DomainType domain,
                       LookupLevel lookup_level)
 {
     if (!test) {

@@ -26,26 +26,34 @@
 
 from m5.objects import (
     MessageBuffer,
+    MI_example_Directory_Controller,
     RubyDirectoryMemory,
 )
 
-from ......utils.override import overrides
-from ..abstract_directory import AbstractDirectory
 
-
-class Directory(AbstractDirectory):
+class Directory(MI_example_Directory_Controller):
     """
     The directory controller for the MI_Example cache hierarchy.
     """
 
+    _version = 0
+
+    @classmethod
+    def versionCount(cls):
+        cls._version += 1  # Use count for this particular type
+        return cls._version - 1
+
     def __init__(self, network, cache_line_size, mem_range, port):
-        super().__init__(network, cache_line_size)
+        super().__init__()
+        self.version = self.versionCount()
+        self._cache_line_size = cache_line_size
+        self.connectQueues(network)
+
         self.addr_ranges = [mem_range]
-        self.directory = RubyDirectoryMemory()
+        self.directory = RubyDirectoryMemory(block_size=cache_line_size)
         # Connect this directory to the memory side.
         self.memory_out_port = port
 
-    @overrides(AbstractDirectory)
     def connectQueues(self, network):
         self.requestToDir = MessageBuffer(ordered=True)
         self.requestToDir.in_port = network.out_port

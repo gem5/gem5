@@ -213,9 +213,9 @@ def build_test_system(np, isa: ISA):
                     IndirectBPClass = ObjectList.indirect_bp_list.get(
                         args.indirect_bp_type
                     )
-                    test_sys.cpu[
-                        i
-                    ].branchPred.indirectBranchPred = IndirectBPClass()
+                    test_sys.cpu[i].branchPred.indirectBranchPred = (
+                        IndirectBPClass()
+                    )
             test_sys.cpu[i].createThreads()
 
         # If elastic tracing is enabled when not restoring from checkpoint and

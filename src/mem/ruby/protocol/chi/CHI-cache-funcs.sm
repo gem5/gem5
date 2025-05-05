@@ -204,6 +204,7 @@ void functionalRead(Addr addr, Packet *pkt, WriteMask &mask) {
   CacheEntry cache_entry := getCacheEntry(addr);
   DPRINTF(RubySlicc, "functionalRead %x\n", addr);
   WriteMask read_mask;
+  read_mask.setBlockSize(mask.getBlockSize());
   bool dirty := false;
   bool from_tbe := false;
 
@@ -228,6 +229,7 @@ void functionalRead(Addr addr, Packet *pkt, WriteMask &mask) {
             tbe.expected_snp_resp.receivedDataType(CHIDataType:SnpRespData_UD) ||
             tbe.expected_snp_resp.receivedDataType(CHIDataType:SnpRespData_SC_Fwded_SD_PD) ||
             tbe.expected_snp_resp.receivedDataType(CHIDataType:SnpRespData_SC_PD_Fwded_SC) ||
+            tbe.expected_snp_resp.receivedDataType(CHIDataType:SnpRespData_SD_Fwded_SC) ||
             tbe.expected_snp_resp.receivedDataType(CHIDataType:SnpRespData_I_Fwded_SD_PD) ||
             tbe.expected_snp_resp.receivedDataType(CHIDataType:SnpRespData_I_PD_Fwded_SC);
     }
@@ -1190,6 +1192,7 @@ bool isReadReqType(CHIRequestType type) {
       type == CHIRequestType:ReadShared ||
       type == CHIRequestType:ReadNotSharedDirty ||
       type == CHIRequestType:MakeReadUnique ||
+      type == CHIRequestType:ReadNoSnp ||
       type == CHIRequestType:ReadOnce) {
     return true;
   }
@@ -1246,6 +1249,8 @@ Event reqToEvent(CHIRequestType type, bool is_prefetch) {
     }
   } else if (type == CHIRequestType:CleanUnique) {
     return Event:CleanUnique;
+  } else if (type == CHIRequestType:ReadNoSnp) {
+    return Event:ReadNoSnp;
   } else if (type == CHIRequestType:ReadOnce) {
     return Event:ReadOnce;
   } else if (type == CHIRequestType:MakeReadUnique) {
@@ -1419,6 +1424,8 @@ Event dataToEvent (CHIDataType type) {
     return Event:SnpRespData_SC_Fwded_SC;
   } else if (type == CHIDataType:SnpRespData_SC_Fwded_SD_PD) {
     return Event:SnpRespData_SC_Fwded_SD_PD;
+  } else if (type == CHIDataType:SnpRespData_SD_Fwded_SC) {
+    return Event:SnpRespData_SD_Fwded_SC;
   } else if (type == CHIDataType:SnpRespData_SC_PD_Fwded_SC) {
     return Event:SnpRespData_SC_PD_Fwded_SC;
   } else if (type == CHIDataType:SnpRespData_I_Fwded_SD_PD) {

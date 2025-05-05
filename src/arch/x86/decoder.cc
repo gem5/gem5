@@ -41,14 +41,12 @@ namespace gem5
 namespace X86ISA
 {
 
-X86ISAInst::MicrocodeRom Decoder::microcodeRom;
-
 Decoder::State
 Decoder::doResetState()
 {
     origPC = basePC + offset;
     DPRINTF(Decoder, "Setting origPC to %#x\n", origPC);
-    instBytes = &decodePages->lookup(origPC);
+    instBytes.reset();
     chunkIdx = 0;
 
     emi.rex = 0;
@@ -66,12 +64,7 @@ Decoder::doResetState()
     emi.modRM = 0;
     emi.sib = 0;
 
-    if (instBytes->si) {
-        return FromCacheState;
-    } else {
-        instBytes->chunks.clear();
-        return PrefixState;
-    }
+    return PrefixState;
 }
 
 void
@@ -85,13 +78,11 @@ Decoder::process()
     assert(!outOfBytes);
     assert(!instDone);
 
-    if (state == ResetState)
+    if (state == ResetState) {
         state = doResetState();
-    if (state == FromCacheState) {
-        state = doFromCacheState();
-    } else {
-        instBytes->chunks.push_back(fetchChunk);
     }
+
+    instBytes.chunks.push_back(fetchChunk);
 
     // While there's still something to do...
     while (!instDone && !outOfBytes) {
@@ -141,38 +132,6 @@ Decoder::process()
           default:
             panic("Unrecognized state! %d\n", state);
         }
-    }
-}
-
-Decoder::State
-Decoder::doFromCacheState()
-{
-    DPRINTF(Decoder, "Looking at cache state.\n");
-    if ((fetchChunk & instBytes->masks[chunkIdx]) !=
-            instBytes->chunks[chunkIdx]) {
-        DPRINTF(Decoder, "Decode cache miss.\n");
-        // The chached chunks didn't match what was fetched. Fall back to the
-        // predecoder.
-        instBytes->chunks[chunkIdx] = fetchChunk;
-        instBytes->chunks.resize(chunkIdx + 1);
-        instBytes->si = NULL;
-        chunkIdx = 0;
-        fetchChunk = instBytes->chunks[0];
-        offset = origPC % sizeof(MachInst);
-        basePC = origPC - offset;
-        return PrefixState;
-    } else if (chunkIdx == instBytes->chunks.size() - 1) {
-        // We matched the cache, so use its value.
-        instDone = true;
-        offset = instBytes->lastOffset;
-        if (offset == sizeof(MachInst))
-            outOfBytes = true;
-        return ResetState;
-    } else {
-        // We matched so far, but need to check more chunks.
-        chunkIdx++;
-        outOfBytes = true;
-        return FromCacheState;
     }
 }
 
@@ -671,9 +630,6 @@ Decoder::doImmediateState()
     return nextState;
 }
 
-Decoder::InstBytes Decoder::dummy;
-Decoder::InstCacheMap Decoder::instCacheMap;
-
 StaticInstPtr
 Decoder::decode(ExtMachInst mach_inst, Addr addr)
 {
@@ -702,7 +658,7 @@ Decoder::decode(PCStateBase &next_pc)
     instDone = false;
     updateNPC(next_pc.as<PCState>());
 
-    StaticInstPtr &si = instBytes->si;
+    StaticInstPtr &si = instBytes.si;
     if (si)
         return si;
 
@@ -710,26 +666,26 @@ Decoder::decode(PCStateBase &next_pc)
     // up its byte masks.
     const int chunkSize = sizeof(MachInst);
 
-    instBytes->lastOffset = offset;
+    instBytes.lastOffset = offset;
 
-    Addr firstBasePC = basePC - (instBytes->chunks.size() - 1) * chunkSize;
+    Addr firstBasePC = basePC - (instBytes.chunks.size() - 1) * chunkSize;
     Addr firstOffset = origPC - firstBasePC;
-    Addr totalSize = instBytes->lastOffset - firstOffset +
-        (instBytes->chunks.size() - 1) * chunkSize;
+    Addr totalSize = instBytes.lastOffset - firstOffset +
+        (instBytes.chunks.size() - 1) * chunkSize;
     int start = firstOffset;
-    instBytes->masks.clear();
+    instBytes.masks.clear();
 
     while (totalSize) {
         int end = start + totalSize;
         end = (chunkSize < end) ? chunkSize : end;
         int size = end - start;
-        int idx = instBytes->masks.size();
+        int idx = instBytes.masks.size();
 
         MachInst maskVal = mask(size * 8) << (start * 8);
         assert(maskVal);
 
-        instBytes->masks.push_back(maskVal);
-        instBytes->chunks[idx] &= instBytes->masks[idx];
+        instBytes.masks.push_back(maskVal);
+        instBytes.chunks[idx] &= instBytes.masks[idx];
         totalSize -= size;
         start = 0;
     }

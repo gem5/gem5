@@ -41,7 +41,6 @@
 #include "cpu/testers/memtest/memtest.hh"
 
 #include "base/compiler.hh"
-#include "base/random.hh"
 #include "base/statistics.hh"
 #include "base/trace.hh"
 #include "debug/MemTest.hh"
@@ -241,12 +240,12 @@ MemTest::tick()
     assert(!waitResponse);
 
     // create a new request
-    unsigned cmd = random_mt.random(0, 100);
-    uint8_t data = random_mt.random<uint8_t>();
-    bool uncacheable = random_mt.random(0, 100) < percentUncacheable;
-    bool do_atomic = (random_mt.random(0, 100) < percentAtomic) &&
+    unsigned cmd = rng->random(0, 100);
+    uint8_t data = rng->random<uint8_t>();
+    bool uncacheable = rng->random(0, 100) < percentUncacheable;
+    bool do_atomic = (rng->random(0, 100) < percentAtomic) &&
                      !uncacheable;
-    unsigned base = random_mt.random(0, 1);
+    unsigned base = rng->random(0, 1);
     Request::Flags flags;
     Addr paddr;
 
@@ -259,7 +258,7 @@ MemTest::tick()
 
     // generate a unique address
     do {
-        unsigned offset = random_mt.random<unsigned>(0, size - 1);
+        unsigned offset = rng->random<unsigned>(0, size - 1);
 
         // use the tester id as offset within the block for false sharing
         offset = blockAlign(offset);
@@ -273,7 +272,7 @@ MemTest::tick()
         }
     } while (outstandingAddrs.find(paddr) != outstandingAddrs.end());
 
-    bool do_functional = (random_mt.random(0, 100) < percentFunctional) &&
+    bool do_functional = (rng->random(0, 100) < percentFunctional) &&
         !uncacheable;
     RequestPtr req = std::make_shared<Request>(paddr, 1, flags, requestorId);
     req->setContext(id);

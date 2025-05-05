@@ -41,10 +41,10 @@ gem5_verify_config(
 )
 
 simple_mem_params = [
-    ("inf-bandwidth", {"bandwidth": "0GB/s"}),
+    ("inf-bandwidth", {"bandwidth": "0GiB/s"}),
     ("low-latency", {"latency": "1ns"}),
     ("high-latency", {"latency": "1us"}),
-    ("low-bandwidth", {"bandwidth": "1MB/s"}),
+    ("low-bandwidth", {"bandwidth": "1MiB/s"}),
     ("high-var", {"latency_var": "100ns"}),
 ]
 

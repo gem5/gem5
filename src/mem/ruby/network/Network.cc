@@ -65,7 +65,8 @@ Network::Network(const Params &p)
              "%s: data message size > cache line size", name());
     m_data_msg_size = p.data_msg_size + m_control_msg_size;
 
-    params().ruby_system->registerNetwork(this);
+    m_ruby_system = p.ruby_system;
+    m_ruby_system->registerNetwork(this);
 
     // Populate localNodeVersions with the version of each MachineType in
     // this network. This will be used to compute a global to local ID.
@@ -102,7 +103,8 @@ Network::Network(const Params &p)
 
     m_topology_ptr = new Topology(m_nodes, p.routers.size(),
                                   m_virtual_networks,
-                                  p.ext_links, p.int_links);
+                                  p.ext_links, p.int_links,
+                                  m_ruby_system);
 
     // Allocate to and from queues
     // Queues that are getting messages from protocol
@@ -246,7 +248,7 @@ Network::addressToNodeID(Addr addr, MachineType mtype)
             }
         }
     }
-    return MachineType_base_count(mtype);
+    return m_ruby_system->MachineType_base_count(mtype);
 }
 
 NodeID
@@ -254,6 +256,24 @@ Network::getLocalNodeID(NodeID global_id) const
 {
     assert(globalToLocalMap.count(global_id));
     return globalToLocalMap.at(global_id);
+}
+
+bool
+Network::getRandomization() const
+{
+    return m_ruby_system->getRandomization();
+}
+
+bool
+Network::getWarmupEnabled() const
+{
+    return m_ruby_system->getWarmupEnabled();
+}
+
+int
+Network::MachineType_base_number(const MachineType& obj)
+{
+    return m_ruby_system->MachineType_base_number(obj);
 }
 
 } // namespace ruby

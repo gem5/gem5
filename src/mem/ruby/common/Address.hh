@@ -33,6 +33,7 @@
 #include <iomanip>
 #include <iostream>
 
+#include "base/intmath.hh"
 #include "base/types.hh"
 
 namespace gem5
@@ -44,11 +45,10 @@ namespace ruby
 // selects bits inclusive
 Addr bitSelect(Addr addr, unsigned int small, unsigned int big);
 Addr maskLowOrderBits(Addr addr, unsigned int number);
-Addr getOffset(Addr addr);
-Addr makeLineAddress(Addr addr);
+Addr getOffset(Addr addr, int cacheLineBits);
 Addr makeLineAddress(Addr addr, int cacheLineBits);
-Addr makeNextStrideAddress(Addr addr, int stride);
-std::string printAddress(Addr addr);
+Addr makeNextStrideAddress(Addr addr, int stride, int cacheLineBytes);
+std::string printAddress(Addr addr, int cacheLineBits);
 
 } // namespace ruby
 } // namespace gem5

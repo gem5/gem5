@@ -62,6 +62,7 @@
 
 #include <vector>
 
+#include "base/random.hh"
 #include "base/types.hh"
 #include "cpu/pred/bpred_unit.hh"
 #include "cpu/pred/tage_base.hh"
@@ -78,11 +79,14 @@ class TAGE: public BPredUnit
   protected:
     TAGEBase *tage;
 
+    Random::RandomPtr rng = Random::genRandom();
+
     struct TageBranchInfo
     {
         TAGEBase::BranchInfo *tageBranchInfo;
 
-        TageBranchInfo(TAGEBase &tage) : tageBranchInfo(tage.makeBranchInfo())
+        TageBranchInfo(TAGEBase &tage, Addr pc, bool conditional)
+        : tageBranchInfo(tage.makeBranchInfo(pc, conditional))
         {}
 
         virtual ~TageBranchInfo()
@@ -101,11 +105,14 @@ class TAGE: public BPredUnit
     // Base class methods.
     bool lookup(ThreadID tid, Addr pc, void* &bp_history) override;
     void updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
-                         Addr target,  void * &bp_history) override;
-    void update(ThreadID tid, Addr pc, bool taken,
-                void * &bp_history, bool squashed,
-                const StaticInstPtr & inst, Addr target) override;
+                         Addr target, const StaticInstPtr &inst,
+                         void * &bp_history) override;
+    void update(ThreadID tid, Addr pc, bool taken, void * &bp_history,
+                bool squashed, const StaticInstPtr &inst,
+                Addr target) override;
     virtual void squash(ThreadID tid, void * &bp_history) override;
+    virtual void branchPlaceholder(ThreadID tid, Addr pc,
+                                   bool uncond, void * &bp_history) override;
 };
 
 } // namespace branch_prediction

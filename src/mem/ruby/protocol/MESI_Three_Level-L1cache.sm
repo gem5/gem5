@@ -90,9 +90,9 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     // For all of the following states, invalidate
     // message has been sent to L0 cache. The response
     // from the L0 cache has not been seen yet.
-    S_IL0, AccessPermission:Busy, desc="Shared in L1, invalidation sent to L0, have not seen response yet";
-    E_IL0, AccessPermission:Busy, desc="Exclusive in L1, invalidation sent to L0, have not seen response yet";
-    M_IL0, AccessPermission:Busy, desc="Modified in L1, invalidation sent to L0, have not seen response yet";
+    S_IL0, AccessPermission:Read_Only, desc="Shared in L1, invalidation sent to L0, have not seen response yet";
+    E_IL0, AccessPermission:Maybe_Stale, desc="Exclusive in L1, invalidation sent to L0, have not seen response yet";
+    M_IL0, AccessPermission:Maybe_Stale, desc="Modified in L1, invalidation sent to L0, have not seen response yet";
     MM_IL0, AccessPermission:Read_Write, desc="Invalidation sent to L0, have not seen response yet";
     SM_IL0, AccessPermission:Busy, desc="Invalidation sent to L0, have not seen response yet";
   }
@@ -167,7 +167,7 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
 
   TBETable TBEs, template="<L1Cache_TBE>", constructor="m_number_of_TBEs";
 
-  int l2_select_low_bit, default="RubySystem::getBlockSizeBits()";
+  int l2_select_low_bit, default="m_ruby_system->getBlockSizeBits()";
 
   Tick clockEdge();
   Cycles ticksToCycles(Tick t);
@@ -229,6 +229,10 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     } else {
       testAndRead(addr, getCacheEntry(addr).DataBlk, pkt);
     }
+  }
+
+  int functionalReadPriority() {
+    return 10;
   }
 
   int functionalWrite(Addr addr, Packet *pkt) {

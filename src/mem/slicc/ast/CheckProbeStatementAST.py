@@ -49,7 +49,8 @@ class CheckProbeStatementAST(StatementAST):
     if (m_is_blocking &&
         (m_block_map.count($address_code) == 1) &&
         (m_block_map[$address_code] == &$in_port_code)) {
-            $in_port_code.delayHead(clockEdge(), cyclesToTicks(Cycles(1)));
+            $in_port_code.delayHead(clockEdge(), cyclesToTicks(Cycles(1)),
+                m_ruby_system->getRandomization(), m_ruby_system->getWarmupEnabled());
             continue;
         }
         """

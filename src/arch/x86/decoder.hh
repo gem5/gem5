@@ -60,19 +60,19 @@ class Decoder : public InstDecoder
     // These are defined and documented in decoder_tables.cc
     static const uint8_t SizeTypeToSize[3][10];
     typedef const uint8_t ByteTable[256];
-    static ByteTable Prefixes[2];
+    static const ByteTable Prefixes[2];
 
-    static ByteTable UsesModRMOneByte;
-    static ByteTable UsesModRMTwoByte;
-    static ByteTable UsesModRMThreeByte0F38;
-    static ByteTable UsesModRMThreeByte0F3A;
+    static const ByteTable UsesModRMOneByte;
+    static const ByteTable UsesModRMTwoByte;
+    static const ByteTable UsesModRMThreeByte0F38;
+    static const ByteTable UsesModRMThreeByte0F3A;
 
-    static ByteTable ImmediateTypeOneByte;
-    static ByteTable ImmediateTypeTwoByte;
-    static ByteTable ImmediateTypeThreeByte0F38;
-    static ByteTable ImmediateTypeThreeByte0F3A;
+    static const ByteTable ImmediateTypeOneByte;
+    static const ByteTable ImmediateTypeTwoByte;
+    static const ByteTable ImmediateTypeThreeByte0F38;
+    static const ByteTable ImmediateTypeThreeByte0F3A;
 
-    static X86ISAInst::MicrocodeRom microcodeRom;
+    X86ISAInst::MicrocodeRom microcodeRom;
 
   protected:
     using MachInst = uint64_t;
@@ -86,13 +86,20 @@ class Decoder : public InstDecoder
 
         InstBytes() : lastOffset(0)
         {}
-    };
 
-    static InstBytes dummy;
+        void
+        reset()
+        {
+            si = nullptr;
+            chunks.clear();
+            masks.clear();
+            lastOffset = 0;
+        }
+    };
 
     // The bytes to be predecoded.
     MachInst fetchChunk;
-    InstBytes *instBytes = &dummy;
+    InstBytes instBytes;
     int chunkIdx;
     // The pc of the start of fetchChunk.
     Addr basePC = 0;
@@ -149,13 +156,13 @@ class Decoder : public InstDecoder
         assert(offset <= sizeof(MachInst));
         if (offset == sizeof(MachInst)) {
             DPRINTF(Decoder, "At the end of a chunk, idx = %d, chunks = %d.\n",
-                    chunkIdx, instBytes->chunks.size());
+                    chunkIdx, instBytes.chunks.size());
             chunkIdx++;
-            if (chunkIdx == instBytes->chunks.size()) {
+            if (chunkIdx == instBytes.chunks.size()) {
                 outOfBytes = true;
             } else {
                 offset = 0;
-                fetchChunk = instBytes->chunks[chunkIdx];
+                fetchChunk = instBytes.chunks[chunkIdx];
                 basePC += sizeof(MachInst);
             }
         }
@@ -210,7 +217,6 @@ class Decoder : public InstDecoder
 
     // Functions to handle each of the states
     State doResetState();
-    State doFromCacheState();
     State doPrefixState(uint8_t);
     State doVex2Of2State(uint8_t);
     State doVex2Of3State(uint8_t);
@@ -236,15 +242,10 @@ class Decoder : public InstDecoder
 
     typedef RegVal CacheKey;
 
-    typedef decode_cache::AddrMap<Decoder::InstBytes> DecodePages;
-    DecodePages *decodePages = nullptr;
-    typedef std::unordered_map<CacheKey, DecodePages *> AddrCacheMap;
-    AddrCacheMap addrCacheMap;
-
     decode_cache::InstMap<ExtMachInst> *instMap = nullptr;
     typedef std::unordered_map<
             CacheKey, decode_cache::InstMap<ExtMachInst> *> InstCacheMap;
-    static InstCacheMap instCacheMap;
+    InstCacheMap instCacheMap;
 
     StaticInstPtr decodeInst(ExtMachInst mach_inst);
 
@@ -278,14 +279,6 @@ class Decoder : public InstDecoder
         altAddr = m5Reg.altAddr;
         defAddr = m5Reg.defAddr;
         stack = m5Reg.stack;
-
-        AddrCacheMap::iterator amIter = addrCacheMap.find(m5Reg);
-        if (amIter != addrCacheMap.end()) {
-            decodePages = amIter->second;
-        } else {
-            decodePages = new DecodePages;
-            addrCacheMap[m5Reg] = decodePages;
-        }
 
         InstCacheMap::iterator imIter = instCacheMap.find(m5Reg);
         if (imIter != instCacheMap.end()) {

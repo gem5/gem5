@@ -1,5 +1,4 @@
 protocol "MI_example";
-include "RubySlicc_interfaces.slicc";
 include "MI_example-msg.sm";
 include "MI_example-cache.sm";
 include "MI_example-dir.sm";

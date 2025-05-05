@@ -338,7 +338,7 @@ SyscallDescTable<SEWorkload::SyscallABI32> EmuLinux::syscall32Descs = {
     { 239, "mlockall" }, // 32 bit
     { 240, "munlockall" },
     { 241, "sched_setparam" }, // 32 bit
-    { 242, "sched_getparam" }, // 32 bit
+    { 242, "sched_getparam", sched_getparamFunc }, // 32 bit
     { 243, "sched_setscheduler" }, // 32 bit
     { 244, "sched_getscheduler" }, // 32 bit
     { 245, "sched_yield" },
@@ -641,7 +641,7 @@ SyscallDescTable<SEWorkload::SyscallABI64> EmuLinux::syscallDescs = {
     { 239, "mlockall" },
     { 240, "munlockall" },
     { 241, "sched_setparam" },
-    { 242, "sched_getparam" },
+    { 242, "sched_getparam", sched_getparamFunc },
     { 243, "sched_setscheduler" },
     { 244, "sched_getscheduler" },
     { 245, "sched_yield" },

@@ -45,7 +45,7 @@ SimObject('BranchPredictor.py',
     sim_objects=[
     'BranchPredictor',
     'IndirectPredictor', 'SimpleIndirectPredictor',
-    'BranchTargetBuffer', 'SimpleBTB',
+    'BranchTargetBuffer', 'SimpleBTB', 'BTBIndexingPolicy', 'BTBSetAssociative',
     'ReturnAddrStack',
     'LocalBP', 'TournamentBP', 'BiModeBP', 'TAGEBase', 'TAGE', 'LoopPredictor',
     'TAGE_SC_L_TAGE', 'TAGE_SC_L_TAGE_64KB', 'TAGE_SC_L_TAGE_8KB',

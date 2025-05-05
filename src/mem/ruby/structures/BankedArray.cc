@@ -42,8 +42,7 @@ namespace ruby
 {
 
 BankedArray::BankedArray(unsigned int banks, Cycles accessLatency,
-                         unsigned int startIndexBit, RubySystem *rs)
-    : m_ruby_system(rs)
+                         unsigned int startIndexBit)
 {
     this->banks = banks;
     this->accessLatency = accessLatency;
@@ -78,6 +77,8 @@ BankedArray::reserve(int64_t idx)
     if (accessLatency == 0)
         return;
 
+    assert(clockPeriod > 0);
+
     unsigned int bank = mapIndexToBank(idx);
     assert(bank < banks);
 
@@ -95,7 +96,7 @@ BankedArray::reserve(int64_t idx)
     busyBanks[bank].idx = idx;
     busyBanks[bank].startAccess = curTick();
     busyBanks[bank].endAccess = curTick() +
-        (accessLatency-1) * m_ruby_system->clockPeriod();
+        (accessLatency-1) * clockPeriod;
 }
 
 unsigned int

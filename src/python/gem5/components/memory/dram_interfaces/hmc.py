@@ -60,7 +60,7 @@ class HMC_2500_1x32(DDR3_1600_8x8):
     [2] High performance AXI-4.0 based interconnect for extensible smart memory
     cubes (E. Azarkhish et. al).
     Assumed for the HMC model is a 30 nm technology node.
-    The modelled HMC consists of 4 Gbit layers which sum up to 2GiB of memory
+    The modelled HMC consists of 4 Gibibit layers which sum up to 2GiB of memory
     (4 layers).
     Each layer has 16 vaults and each vault consists of 2 banks per layer.
     In order to be able to use the same controller used for 2D DRAM generations

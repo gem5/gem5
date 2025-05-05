@@ -38,7 +38,6 @@ gem5_verify_config(
     verifiers=(verifier.MatchStdoutNoPerf(joinpath(ref_path, "threads")),),
     config=joinpath(config_path, "simple_ruby.py"),
     config_args=[],
-    protocol="MSI",
     # Currently only x86 has the threads test
     valid_isas=(constants.all_compiled_tag,),
     # dynamically linked
@@ -51,7 +50,6 @@ gem5_verify_config(
     verifiers=(verifier.MatchStdout(joinpath(ref_path, "test")),),
     config=joinpath(config_path, "ruby_test.py"),
     config_args=[],
-    protocol="MSI",
     # Currently only x86 has the threads test
     valid_isas=(constants.all_compiled_tag,),
     length=constants.long_tag,

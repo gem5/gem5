@@ -140,9 +140,9 @@ def handle_statement(parser, container, statement):
     if statement.is_microop:
         if statement.mnemonic not in parser.microops.keys():
             raise Exception(f"Unrecognized mnemonic: {statement.mnemonic}")
-        parser.symbols[
-            "__microopClassFromInsideTheAssembler"
-        ] = parser.microops[statement.mnemonic]
+        parser.symbols["__microopClassFromInsideTheAssembler"] = (
+            parser.microops[statement.mnemonic]
+        )
         try:
             microop = eval(
                 f"__microopClassFromInsideTheAssembler({statement.params})",
@@ -166,9 +166,9 @@ def handle_statement(parser, container, statement):
     elif statement.is_directive:
         if statement.name not in container.directives.keys():
             raise Exception(f"Unrecognized directive: {statement.name}")
-        parser.symbols[
-            "__directiveFunctionFromInsideTheAssembler"
-        ] = container.directives[statement.name]
+        parser.symbols["__directiveFunctionFromInsideTheAssembler"] = (
+            container.directives[statement.name]
+        )
         try:
             eval(
                 f"__directiveFunctionFromInsideTheAssembler({statement.params})",

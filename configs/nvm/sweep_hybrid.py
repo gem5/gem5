@@ -127,8 +127,8 @@ system.clk_domain = SrcClockDomain(
 # the second, larger (1024) range for NVM
 # the NVM range starts directly after the DRAM range
 system.mem_ranges = [
-    AddrRange("128MB"),
-    AddrRange(Addr("128MB"), size="1024MB"),
+    AddrRange("128MiB"),
+    AddrRange(Addr("128MiB"), size="1024MiB"),
 ]
 
 # do not worry about reserving space for the backing store

@@ -26,12 +26,11 @@
 
 from m5.util import warn
 
-from ...coherence_protocol import CoherenceProtocol
 from ...components.boards.x86_board import X86Board
-from ...components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import (
-    MESITwoLevelCacheHierarchy,
+from ...components.cachehierarchies.classic.private_l1_shared_l2_cache_hierarchy import (
+    PrivateL1SharedL2CacheHierarchy,
 )
-from ...components.memory.single_channel import SingleChannelDDR3_1600
+from ...components.memory.multi_channel import DualChannelDDR4_2400
 from ...components.processors.cpu_types import CPUTypes
 from ...components.processors.simple_processor import SimpleProcessor
 from ...isas import ISA
@@ -41,10 +40,9 @@ from ...utils.requires import requires
 class X86DemoBoard(X86Board):
     """
     This prebuilt X86 board is used for demonstration purposes. It simulates
-    an X86 3GHz quad-core system with a 2GB DDR3_1600 memory system. A
-    MESI_Two_Level cache hierarchy is set with an l1 data and instruction
-    cache, each 32kB with an associativity of 8, and a single bank l2 cache of
-    1MB with an associativity of 16.
+    an X86 3GHz dual-core system with a 3GiB DDR4_2400 memory system. The
+    cache hierarchy consists of per-core private L1 instruction and data
+    caches (64KiB each) connected to a shared 8MiB L2 cache.
 
     **DISCLAIMER**: This board is solely for demonstration purposes. This board
     is not known to be representative of any real-world system or produce
@@ -68,7 +66,6 @@ class X86DemoBoard(X86Board):
     def __init__(self):
         requires(
             isa_required=ISA.X86,
-            coherence_protocol_required=CoherenceProtocol.MESI_TWO_LEVEL,
         )
 
         warn(
@@ -77,18 +74,15 @@ class X86DemoBoard(X86Board):
             "real-world system. Use with caution."
         )
 
-        memory = SingleChannelDDR3_1600(size="2GB")
+        # The other demo boards have 4 GiB of memory, but X86Board can only
+        # support up to 3 GiB.
+        memory = DualChannelDDR4_2400(size="3GiB")
         processor = SimpleProcessor(
-            cpu_type=CPUTypes.TIMING, isa=ISA.X86, num_cores=4
+            cpu_type=CPUTypes.TIMING, isa=ISA.X86, num_cores=2
         )
-        cache_hierarchy = MESITwoLevelCacheHierarchy(
-            l1d_size="32kB",
-            l1d_assoc=8,
-            l1i_size="32kB",
-            l1i_assoc=8,
-            l2_size="1MB",
-            l2_assoc=16,
-            num_l2_banks=1,
+
+        cache_hierarchy = PrivateL1SharedL2CacheHierarchy(
+            l1d_size="64KiB", l1i_size="64KiB", l2_size="8MiB"
         )
 
         super().__init__(

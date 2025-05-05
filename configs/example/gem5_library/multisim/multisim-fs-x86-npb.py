@@ -101,15 +101,15 @@ multisim.set_num_processes(3)
 for benchmark in obtain_resource("npb-benchmark-suite"):
     for num_cores in [1, 2]:
         cache_hierarchy = MESITwoLevelCacheHierarchy(
-            l1d_size="32kB",
-            l1i_size="32kB",
-            l2_size="256kB",
+            l1d_size="32KiB",
+            l1i_size="32KiB",
+            l2_size="256KiB",
             l1d_assoc=8,
             l1i_assoc=8,
             l2_assoc=16,
             num_l2_banks=2,
         )
-        memory = DualChannelDDR4_2400(size="3GB")
+        memory = DualChannelDDR4_2400(size="3GiB")
         processor = SimpleSwitchableProcessor(
             starting_core_type=CPUTypes.ATOMIC,
             switch_core_type=CPUTypes.TIMING,

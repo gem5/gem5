@@ -119,7 +119,7 @@ class Disjoint_VIPER(RubySystem):
         dma_cntrls = []
         for i, dma_device in enumerate(dma_devices):
             dma_seq = DMASequencer(version=i, ruby_system=self)
-            dma_cntrl = DMA_Controller(
+            dma_cntrl = GPU_VIPER_DMA_Controller(
                 version=i, dma_sequencer=dma_seq, ruby_system=self
             )
 

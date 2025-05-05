@@ -633,6 +633,10 @@ class ArmStaticInst : public StaticInst
         return std::make_shared<UndefinedInstruction>(
             machInst, false, mnemonic, disabled);
     }
+
+    Fault
+    generateTrap(ArmISA::ExceptionLevel el,
+                 ArmISA::ExceptionClass ec, uint32_t iss) const;
 };
 
 } // namespace ArmISA

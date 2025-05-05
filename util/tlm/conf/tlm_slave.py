@@ -63,7 +63,7 @@ system.clk_domain = SrcClockDomain(
 
 # Create a external TLM port:
 system.tlm = ExternalSlave()
-system.tlm.addr_ranges = [AddrRange("512MB")]
+system.tlm.addr_ranges = [AddrRange("512MiB")]
 system.tlm.port_type = "tlm_slave"
 system.tlm.port_data = "transactor"
 

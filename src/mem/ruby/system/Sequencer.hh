@@ -82,8 +82,6 @@ struct SequencerRequest
     }
 };
 
-std::ostream& operator<<(std::ostream& out, const SequencerRequest& obj);
-
 class Sequencer : public RubyPort
 {
   public:
@@ -253,6 +251,8 @@ class Sequencer : public RubyPort
     virtual RequestStatus insertRequest(PacketPtr pkt,
                                         RubyRequestType primary_type,
                                         RubyRequestType secondary_type);
+
+    RubySystem *m_ruby_system;
 
   private:
     int m_max_outstanding_requests;

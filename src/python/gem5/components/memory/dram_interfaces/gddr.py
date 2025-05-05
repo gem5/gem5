@@ -65,7 +65,7 @@ class GDDR5_4000_2x32(DRAMInterface):
     # GDDR5 is a BL8 device
     burst_length = 8
 
-    # Each device has a page (row buffer) size of 2Kbits (256Bytes)
+    # Each device has a page (row buffer) size of 2Kibibits (256Bytes)
     device_rowbuffer_size = "256B"
 
     # 2x32 configuration, so 2 devices

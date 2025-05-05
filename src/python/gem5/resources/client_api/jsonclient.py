@@ -25,6 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import json
+import urllib.parse
 from pathlib import Path
 from typing import (
     Any,
@@ -54,21 +55,62 @@ class JSONClient(AbstractClient):
         self.path = path
         self.resources = []
 
-        if Path(self.path).is_file():
-            self.resources = json.load(open(self.path))
-        elif not self._url_validator(self.path):
-            raise Exception(
-                f"Resources location '{self.path}' is not a valid path or URL."
-            )
-        else:
-            req = request.Request(self.path)
+        # Try loading as local file if it exists
+        if Path(path).is_file():
             try:
-                response = request.urlopen(req)
+                with open(path, encoding="utf-8") as f:
+                    self.resources = json.load(f)
+                if not isinstance(self.resources, list):
+                    raise ValueError(
+                        f"Invalid JSON in file '{path}': "
+                        "Top-level object must be a list"
+                    )
+                return
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Invalid JSON in file '{path}': {e}")
+            except Exception as e:
+                raise FileNotFoundError(f"Error reading file '{path}': {e}")
+
+        # Handle URLs (including file:// URIs)
+        if self._url_validator(path):
+            try:
+                parsed_url = urllib.parse.urlparse(path)
+                # Handle file:// URLs
+                if parsed_url.scheme == "file":
+                    local_path = Path(parsed_url.path)
+                    if not local_path.is_file():
+                        raise FileNotFoundError(f"File not found: '{path}'")
+
+                    with local_path.open("r", encoding="utf-8") as f:
+                        self.resources = json.load(f)
+                    if not isinstance(self.resources, list):
+                        raise ValueError(
+                            f"Invalid JSON in file '{path}': "
+                            "Top-level object must be a list"
+                        )
+                    return
+
+                # Handle HTTP/HTTPS URLs
+                req = request.Request(path)
+                with request.urlopen(req) as response:
+                    self.resources = json.loads(
+                        response.read().decode("utf-8")
+                    )
+                if not isinstance(self.resources, list):
+                    raise ValueError(
+                        f"Invalid JSON in file '{path}': "
+                        "Top-level object must be a list"
+                    )
+                return
+
             except URLError as e:
-                raise Exception(
-                    f"Unable to open Resources location '{self.path}': {e}"
-                )
-            self.resources = json.loads(response.read().decode("utf-8"))
+                raise ConnectionError(f"Failed to access URL '{path}': {e}")
+            except json.JSONDecodeError as e:
+                raise ValueError(f"Invalid JSON from URL '{path}': {e}")
+            except Exception as e:
+                raise ValueError(f"Error processing URL '{path}': {e}")
+
+        raise ValueError(f"'{path}' is not a valid file path or URL")
 
     def get_resources_json(self) -> List[Dict[str, Any]]:
         """Returns a JSON representation of the resources."""
@@ -89,9 +131,11 @@ class JSONClient(AbstractClient):
                         "DEVELOP"
                     )
                 ):
-                    gem5_version_match = (
-                        resource_query.get_gem5_version()
-                        in resource["gem5_versions"]
+                    gem5_version_match = any(
+                        resource_query.get_gem5_version().startswith(
+                            gem5_version
+                        )
+                        for gem5_version in resource["gem5_versions"]
                     )
                 else:
                     gem5_version_match = True

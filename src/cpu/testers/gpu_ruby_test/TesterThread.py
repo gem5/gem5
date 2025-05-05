@@ -41,3 +41,4 @@ class TesterThread(ClockedObject):
     thread_id = Param.Int("Unique TesterThread ID")
     num_lanes = Param.Int("Number of lanes this thread has")
     deadlock_threshold = Param.Cycles(1000000000, "Deadlock threshold")
+    cache_line_size = Param.UInt32("Size of cache line in cache")

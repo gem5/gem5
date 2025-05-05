@@ -601,8 +601,8 @@ class VcdTraceValInt : public VcdTraceVal<T>
     output(std::ostream &os) override
     {
         const int w = this->width();
-        char str[w + 1];
-        str[w] = '\0';
+        std::string str;
+        str.reserve(w);
 
         const uint64_t val =
             static_cast<uint64_t>(this->value()) & gem5::mask(sizeof(T) * 8);

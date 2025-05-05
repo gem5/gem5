@@ -5,7 +5,7 @@ name: CI Tests
 
 on:
     pull_request:
-        types: [opened, edited, synchronize, ready_for_review]
+        types: [opened, synchronize, ready_for_review]
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
@@ -21,43 +21,48 @@ jobs:
             - uses: actions/setup-python@v5
             - uses: pre-commit/action@v3.0.1
 
-  # ensures we have a change-id in every commit, needed for gerrit
-    check-for-change-id:
-        # runs on github hosted runner
+    get-date:
+    # We use the date to label caches. A cache is a a "hit" if the date is the
+    # request binary and date are the same as what is stored in the cache.
+    # This essentially means the first job to run on a given day for a given
+    # binary will always be a "miss" and will have to build the binary then
+    # upload it as that day's binary to upload. While this isn't the most
+    # efficient way to do this, the alternative was to run take a hash of the
+    # `src` directory contents and use it as a hash. We found there to be bugs
+    # with the hash function where this task would timeout. This approach is
+    # simple, works, and still provides some level of caching.
         runs-on: ubuntu-latest
-        if: github.event.pull_request.draft == false
+        outputs:
+            date: ${{ steps.date.outputs.date }}
         steps:
-            - uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
-            - name: Check for Change-Id
-              run: |
-                  # loop through all the commits in the pull request
-                  for commit in $(git rev-list ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}); do
-                      git checkout $commit
-                      if (git log -1 --pretty=format:"%B" | grep -q "Change-Id: ")
-                      then
-                        # passes as long as at least one change-id exists in the pull request
-                        exit 0
-                      fi
-                  done
-                  # if we reach this part, none of the commits had a change-id
-                  echo "None of the commits in this pull request contains a Change-ID, which we require for any changes made to gem5. "\
-                    "To automatically insert one, run the following:\n f=`git rev-parse --git-dir`/hooks/commit-msg ; mkdir -p $(dirname $f) ; "\
-                    "curl -Lo $f https://gerrit-review.googlesource.com/tools/hooks/commit-msg ; chmod +x $f\n Then amend the commit with git commit --amend --no-edit, and update your pull request."
-                  exit 1
+            - name: Get the current date
+              id: date
+              run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
     unittests-all-opt:
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: [pre-commit, check-for-change-id] # only runs if pre-commit and change-id passes
+        needs: [pre-commit, get-date] # only runs if pre-commit passes.
         timeout-minutes: 60
         steps:
             - uses: actions/checkout@v4
+
+
+            # Restore the cache if available. As this just builds the unittests
+            # we only obtain the cache and do not provide if if is not
+            # available.
+            - name: Cache build/ALL
+              uses: actions/cache/restore@v4
+              with:
+                  path: build/ALL
+                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      testlib-build-all
+
             - name: CI Unittests
               working-directory: ${{ github.workspace }}
-              run: scons build/ALL/unittests.opt -j $(nproc)
+              run: scons --no-compress-debug build/ALL/unittests.opt -j $(nproc)
             - run: echo "This job's status is ${{ job.status }}."
 
     testlib-quick-matrix:
@@ -66,7 +71,7 @@ jobs:
     # In order to make sure the environment is exactly the same, we run in
     # the same container we use to build gem5 and run the testlib tests. This
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: [pre-commit, check-for-change-id]
+        needs: [pre-commit]
         steps:
             - uses: actions/checkout@v4
 
@@ -83,7 +88,7 @@ jobs:
             - name: Get the build targets for testlib-quick-gem5-builds
               working-directory: ${{ github.workspace }}/tests
               id: build-matrix
-              run: echo "build-matrix=$(./main.py list --build-targets -q | jq -ncR '[inputs]')" >>$GITHUB_OUTPUT
+              run: echo "build-matrix=$(./main.py list --build-targets --exclude-tags VEGA_X86 -q | jq -ncR '[inputs]')" >>$GITHUB_OUTPUT
 
         outputs:
             build-matrix: ${{ steps.build-matrix.outputs.build-matrix }}
@@ -96,8 +101,8 @@ jobs:
         # for compilation error to be exposed.
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
-        container: ghcr.io/gem5/clang-version-18:latest
-        needs: [pre-commit, check-for-change-id]
+        container: ghcr.io/gem5/clang-version-19:latest
+        needs: [pre-commit]
         timeout-minutes: 90
         steps:
             - uses: actions/checkout@v4
@@ -109,14 +114,29 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: [pre-commit, check-for-change-id, testlib-quick-matrix]
+        needs: [pre-commit, testlib-quick-matrix, get-date]
         strategy:
             matrix:
                 build-target: ${{ fromJson(needs.testlib-quick-matrix.outputs.build-matrix) }}
         steps:
             - uses: actions/checkout@v4
+
+            - name: Cache build/ALL
+              uses: actions/cache/restore@v4
+              if: ${{ endsWith(matrix.build-target, 'build/ALL/gem5.opt') }}
+              with:
+                  path: build/ALL
+                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      testlib-build-all
+
             - name: Build gem5
-              run: scons ${{ matrix.build-target }} -j $(nproc)
+              run: scons --no-compress-debug ${{ matrix.build-target }} -j $(nproc)
+
+            - name: Sanitize build-target for artifact name
+              id: sanitize-build-target
+              if: success() || failure()
+              run: echo "sanitized-build-target=$(echo '${{ matrix.build-target }}' | sed 's/[\\|\.]/-/g' | sed 's/[\/|__w|gem5|build]//g')" >> $GITHUB_OUTPUT
 
         # Upload the gem5 binary as an artifact.
         # Note: the "achor.txt" file is a hack to make sure the paths are
@@ -129,7 +149,7 @@ jobs:
             - run: echo "anchor" > anchor.txt
             - uses: actions/upload-artifact@v4
               with:
-                  name: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds
+                  name: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds-${{ steps.sanitize-build-target.outputs.sanitized-build-target }}
                   path: |
                       build/*/gem5.*
                       anchor.txt
@@ -139,7 +159,7 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: [pre-commit, check-for-change-id, testlib-quick-matrix, testlib-quick-gem5-builds]
+        needs: [pre-commit, testlib-quick-matrix, testlib-quick-gem5-builds]
         timeout-minutes: 360 # 6 hours
         strategy:
             fail-fast: false
@@ -153,7 +173,8 @@ jobs:
             - uses: actions/checkout@v4
             - uses: actions/download-artifact@v4
               with:
-                  name: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds
+                  pattern: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds*
+                  merge-multiple: true
 
         # Check that the gem5.opt artifact exists and is executable.
             - name: Chmod gem5.{opt,debug,fast} to be executable
@@ -166,7 +187,7 @@ jobs:
             - name: Run "tests/${{ matrix.test-dir }}" TestLib quick tests
               id: run-tests
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --skip-build -vv -j$(nproc) ${{ matrix.test-dir }}
+              run: ./main.py run --skip-build --exclude-tags gcn_gpu ${{ matrix.test-dir }}
 
         # Get the basename of the matrix.test-dir path (to name the artifact).
             - name: Sanatize test-dir for artifact name
@@ -188,7 +209,7 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: [pre-commit, check-for-change-id, testlib-quick-gem5-builds]
+        needs: [pre-commit, testlib-quick-gem5-builds]
         timeout-minutes: 30
         steps:
 
@@ -196,7 +217,8 @@ jobs:
             - uses: actions/checkout@v4
             - uses: actions/download-artifact@v4
               with:
-                  name: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds
+                  pattern: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds*
+                  merge-multiple: true
 
             # Check that the gem5 binaries exist and are executable.
             - name: Chmod gem5.{opt,debug,fast} to be executable
@@ -210,7 +232,7 @@ jobs:
             - name: Run The pyunit tests
               id: run-tests
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --skip-build -vv -j$(nproc) pyunit
+              run: ./main.py run --skip-build -vv pyunit
 
             # Upload the tests/testing-results directory as an artifact.
             - name: Upload pyunit test results
@@ -225,18 +247,23 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/gcn-gpu:latest
         timeout-minutes: 180
-        needs: [pre-commit, check-for-change-id]
+        needs: [pre-commit, get-date]
         steps:
             - uses: actions/checkout@v4
 
-            # Build the VEGA_X86/gem5.opt binary.
-            - name: Build VEGA_X86/gem5.opt
-              run: scons build/VEGA_X86/gem5.opt -j`nproc`
+            # Obtain the cache if available.
+            - name: Cache build/VEGA_X86
+              uses: actions/cache@v4
+              with:
+                  path: build/VEGA_X86
+                  key: testlib-build-vega-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      testlib-build-vega
 
             # Run the GPU tests.
             - name: Run Testlib GPU Tests
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run  --skip-build -vvv -t $(nproc) --host gcn_gpu gem5/gpu
+              run: ./main.py run -j$(nproc) -t$(nproc) --host gcn_gpu
 
             # Upload the tests/testing-results directory as an artifact.
             - name: Upload results
@@ -257,7 +284,6 @@ jobs:
             - clang-fast-compilation
             - unittests-all-opt
             - pre-commit
-            - check-for-change-id
             - gpu-tests
         steps:
             - run: echo "This job's status is ${{ job.status }}."

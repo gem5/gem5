@@ -28,11 +28,17 @@
 
 Import('*')
 
-SimObject('Malta.py', sim_objects=['MaltaCChip', 'MaltaIO', 'Malta'],
-    tags='mips isa')
+if not env['CONF']['USE_MIPS_ISA']:
+    Return()
 
-DebugFlag('Malta', tags='mips isa')
+SimObject(
+    'Malta.py',
+    sim_objects=['MaltaCChip', 'MaltaIO', 'Malta'],
+    tags=['mips isa']
+)
 
-Source('malta.cc', tags='mips isa')
-Source('malta_cchip.cc', tags='mips isa')
-Source('malta_io.cc', tags='mips isa')
+DebugFlag('Malta', tags=['mips isa'])
+
+Source('malta.cc', tags=['mips isa'])
+Source('malta_cchip.cc', tags=['mips isa'])
+Source('malta_io.cc', tags=['mips isa'])

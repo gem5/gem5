@@ -374,9 +374,9 @@ class TwoDColours(ColourPattern):
 
                 for index, value in parsed:
                     try:
-                        array[index % strips][
-                            index / strips
-                        ] = special_view_decoder(elemClass)(value)
+                        array[index % strips][index / strips] = (
+                            special_view_decoder(elemClass)(value)
+                        )
                     except:
                         print(
                             "Element out of range strips: %d,"
@@ -912,9 +912,9 @@ class BlobModel:
                         blobs = self.unitNameToBlobs.get(unit, [])
                         for blob in blobs:
                             if blob.visualDecoder is not None:
-                                event.visuals[
-                                    blob.picChar
-                                ] = blob.visualDecoder(pairs)
+                                event.visuals[blob.picChar] = (
+                                    blob.visualDecoder(pairs)
+                                )
 
                         self.add_unit_event(event)
                         last_time_lines[unit] = rest

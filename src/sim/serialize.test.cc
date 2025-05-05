@@ -36,6 +36,7 @@
 #include <cassert>
 #include <cstdint>
 #include <deque>
+#include <cstdio>
 #include <fstream>
 #include <list>
 #include <memory>
@@ -201,7 +202,8 @@ TEST_F(SerializeFixture, ConstructorSuccess)
     CheckpointIn cpt(getDirName());
 
     // When a new CheckpointIn instance is created the static cpt dir changes
-    EXPECT_EQ(CheckpointIn::dir(), getDirName());
+    // Return value from getDirName() doesn't have trailing '/', hence add one.
+    EXPECT_EQ(CheckpointIn::dir(), getDirName() + '/');
 }
 
 /**
@@ -451,9 +453,7 @@ TEST_F(SerializableFixture, SCSChangeCptOutLarge)
 TEST(SerializableDeathTest, GenerateCptOutFail)
 {
     std::ofstream cpt;
-    const std::string dir_name =
-        SerializeFixture::generateTempDirName();
-    ASSERT_FALSE(dirExists(dir_name));
+    const std::string dir_name = std::tmpnam(nullptr);
 
     ASSERT_ANY_THROW(Serializable::generateCheckpointOut(
         dir_name + "/b/a/n/a/n/a/", cpt));

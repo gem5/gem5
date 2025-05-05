@@ -183,6 +183,7 @@ enum MiscRegIndex
     MISCREG_SCAUSE,
     MISCREG_STVAL,
     MISCREG_SATP,
+    MISCREG_SENVCFG,
 
     MISCREG_UTVEC,
     MISCREG_USCRATCH,
@@ -209,6 +210,12 @@ enum MiscRegIndex
     MISCREG_NMIE,
     // non-maskable-interrupt-pending: NMI version of xIP
     MISCREG_NMIP,
+
+    // Resumable Non-Maskable Interrupts
+    MISCREG_MNSCRATCH,
+    MISCREG_MNEPC,
+    MISCREG_MNCAUSE,
+    MISCREG_MNSTATUS,
 
     // the following MicsRegIndex are RV32 only
     MISCREG_MSTATUSH,
@@ -245,6 +252,8 @@ enum MiscRegIndex
     MISCREG_HPMCOUNTER29H,
     MISCREG_HPMCOUNTER30H,
     MISCREG_HPMCOUNTER31H,
+
+    MISCREG_JVT,
 
     NUM_PHYS_MISCREGS,
 
@@ -360,6 +369,7 @@ enum CSRIndex
     CSR_STVAL = 0x143,
     CSR_SIP = 0x144,
     CSR_SATP = 0x180,
+    CSR_SENVCFG = 0x10A, // 20240411 RISCV spec, volume 2
 
     CSR_MVENDORID = 0xF11,
     CSR_MARCHID = 0xF12,
@@ -508,7 +518,14 @@ enum CSRIndex
     CSR_VCSR         = 0x00F,
     CSR_VL           = 0xC20,
     CSR_VTYPE        = 0xC21,
-    CSR_VLENB        = 0xC22
+    CSR_VLENB        = 0xC22,
+
+    CSR_MNSCRATCH    = 0x740,
+    CSR_MNEPC        = 0x741,
+    CSR_MNCAUSE      = 0x742,
+    CSR_MNSTATUS     = 0x744,
+
+    CSR_JVT          = 0x017,
 };
 
 struct CSRMetadata
@@ -517,6 +534,7 @@ struct CSRMetadata
     const int physIndex;
     const uint64_t rvTypes;
     const uint64_t isaExts;
+    const bool requireSmrnmi = false;
 };
 
 template <typename... T>
@@ -777,6 +795,9 @@ const std::unordered_map<int, CSRMetadata> CSRData = {
         {"sip", MISCREG_SIP, rvTypeFlags(RV64, RV32), isaExtsFlags('s')}},
     {CSR_SATP,
         {"satp", MISCREG_SATP, rvTypeFlags(RV64, RV32), isaExtsFlags('s')}},
+    {CSR_SENVCFG,
+        {"senvcfg", MISCREG_SENVCFG, rvTypeFlags(RV64, RV32),
+         isaExtsFlags('s')}},
 
     {CSR_MVENDORID,
         {"mvendorid", MISCREG_VENDORID, rvTypeFlags(RV64, RV32),
@@ -1176,7 +1197,23 @@ const std::unordered_map<int, CSRMetadata> CSRData = {
     {CSR_VTYPE,
         {"vtype", MISCREG_VTYPE, rvTypeFlags(RV64, RV32), isaExtsFlags('v')}},
     {CSR_VLENB,
-        {"VLENB", MISCREG_VLENB, rvTypeFlags(RV64, RV32), isaExtsFlags('v')}}
+        {"VLENB", MISCREG_VLENB, rvTypeFlags(RV64, RV32), isaExtsFlags('v')}},
+
+    {CSR_MNSCRATCH,
+        {"mnscratch", MISCREG_MNSCRATCH, rvTypeFlags(RV64, RV32),
+         isaExtsFlags(), true}},
+    {CSR_MNEPC,
+        {"mnepc", MISCREG_MNEPC, rvTypeFlags(RV64, RV32), isaExtsFlags(),
+         true}},
+    {CSR_MNCAUSE,
+        {"mncause", MISCREG_MNCAUSE, rvTypeFlags(RV64, RV32), isaExtsFlags(),
+         true}},
+    {CSR_MNSTATUS,
+        {"mnstatus", MISCREG_MNSTATUS, rvTypeFlags(RV64, RV32),
+         isaExtsFlags(), true}},
+
+    {CSR_JVT,
+        {"jvt", MISCREG_JVT, rvTypeFlags(RV64, RV32), isaExtsFlags()}},
 };
 
 /**
@@ -1209,6 +1246,17 @@ BitUnion64(STATUS)
     Bitfield<1> sie;
     Bitfield<0> uie;
 EndBitUnion(STATUS)
+
+/**
+ * These fields are specified in the RISC-V Instruction Set Manual.
+ * Resumable Non-Maskable Interrupts. The main register that
+ * uses these fields is the MNSTATUS register
+ */
+BitUnion64(NSTATUS)
+    Bitfield<12, 11> mnpp;
+    Bitfield<7> mnv;
+    Bitfield<3> nmie;
+EndBitUnion(NSTATUS)
 
 /**
  * These fields are specified in the RISC-V Instruction Set Manual, Volume II,
@@ -1259,6 +1307,25 @@ BitUnion64(INTERRUPT)
     Bitfield<1> ssi;
     Bitfield<0> usi;
 EndBitUnion(INTERRUPT)
+
+
+// From the RISCV specification version 20240411, volume 2,
+// section 10.1.10, page 98
+BitUnion64(SENVCFG)
+    Bitfield<63,34> wpri_1;
+    Bitfield<33,32> pmm;
+    Bitfield<31,8> wpri_2;
+    Bitfield<7> cbze;
+    Bitfield<6> cbcfe;
+    Bitfield<5,4> cbie;
+    Bitfield<3,1> wpri_3;
+    Bitfield<0> fiom;
+EndBitUnion(SENVCFG)
+
+BitUnion64(JVT)
+    Bitfield<63,6> base;
+    Bitfield<5,0> mode;
+EndBitUnion(JVT)
 
 const off_t MXL_OFFSETS[enums::Num_RiscvType] = {
     [RV32] = (sizeof(uint32_t) * 8 - 2),
@@ -1464,6 +1531,14 @@ const RegVal UTI_MASK = 1ULL << 4;
 const RegVal MSI_MASK = 1ULL << 3;
 const RegVal SSI_MASK = 1ULL << 1;
 const RegVal USI_MASK = 1ULL << 0;
+const RegVal MIP_MASK[enums::Num_PrivilegeModeSet] = {
+    [enums::M] = LOCAL_MASK,
+    [enums::MU] = LOCAL_MASK,
+    [enums::MNU] = LOCAL_MASK | UEI_MASK | UTI_MASK | USI_MASK,
+    [enums::MSU] = LOCAL_MASK | SEI_MASK | STI_MASK | SSI_MASK,
+    [enums::MNSU] = LOCAL_MASK | SEI_MASK | UEI_MASK | STI_MASK | UTI_MASK |
+                    SSI_MASK | USI_MASK,
+};
 const RegVal MI_MASK[enums::Num_PrivilegeModeSet] = {
     [enums::M] = LOCAL_MASK | MEI_MASK| MTI_MASK | MSI_MASK,
     [enums::MU] = LOCAL_MASK | MEI_MASK| MTI_MASK | MSI_MASK,
@@ -1475,21 +1550,42 @@ const RegVal MI_MASK[enums::Num_PrivilegeModeSet] = {
                     MTI_MASK | STI_MASK | UTI_MASK |
                     MSI_MASK | SSI_MASK | USI_MASK,
 };
+const RegVal SIP_MASK[enums::Num_PrivilegeModeSet] = {
+    [enums::M] = LOCAL_MASK,
+    [enums::MU] = LOCAL_MASK,
+    [enums::MNU] = LOCAL_MASK | UEI_MASK | UTI_MASK | USI_MASK,
+    [enums::MSU] = LOCAL_MASK | SSI_MASK,
+    [enums::MNSU] = LOCAL_MASK | UEI_MASK | UTI_MASK | SSI_MASK | USI_MASK,
+};
 const RegVal SI_MASK[enums::Num_PrivilegeModeSet] = {
-    [enums::M] = 0ULL,
-    [enums::MU] = 0ULL,
-    [enums::MNU] = UEI_MASK | UTI_MASK | USI_MASK,
-    [enums::MSU] = SEI_MASK | STI_MASK | SSI_MASK,
-    [enums::MNSU] = SEI_MASK | UEI_MASK |
-                    STI_MASK | UTI_MASK |
+    [enums::M] = LOCAL_MASK,
+    [enums::MU] = LOCAL_MASK,
+    [enums::MNU] = LOCAL_MASK | UEI_MASK | UTI_MASK | USI_MASK,
+    [enums::MSU] = LOCAL_MASK | SEI_MASK | STI_MASK | SSI_MASK,
+    [enums::MNSU] = LOCAL_MASK | SEI_MASK | UEI_MASK | STI_MASK | UTI_MASK |
+                    SSI_MASK | USI_MASK,
+};
+const RegVal MIDELEG_MASK[enums::Num_PrivilegeModeSet] = {
+    [enums::M] = LOCAL_MASK,
+    [enums::MU] = LOCAL_MASK,
+    [enums::MNU] = LOCAL_MASK | UEI_MASK | UTI_MASK | USI_MASK,
+    [enums::MSU] = LOCAL_MASK | SEI_MASK | STI_MASK | SSI_MASK,
+    [enums::MNSU] = LOCAL_MASK | SEI_MASK | UEI_MASK | STI_MASK | UTI_MASK |
                     SSI_MASK | USI_MASK,
 };
 const RegVal UI_MASK[enums::Num_PrivilegeModeSet] = {
-    [enums::M] = 0ULL,
-    [enums::MU] = 0ULL,
-    [enums::MNU] = UEI_MASK | UTI_MASK | USI_MASK,
-    [enums::MSU] = 0ULL,
-    [enums::MNSU] = UEI_MASK | UTI_MASK | USI_MASK,
+    [enums::M] = LOCAL_MASK,
+    [enums::MU] = LOCAL_MASK,
+    [enums::MNU] = LOCAL_MASK | UEI_MASK | UTI_MASK | USI_MASK,
+    [enums::MSU] = LOCAL_MASK,
+    [enums::MNSU] = LOCAL_MASK | UEI_MASK | UTI_MASK | USI_MASK,
+};
+const RegVal SIDELEG_MASK[enums::Num_PrivilegeModeSet] = {
+    [enums::M] = LOCAL_MASK,
+    [enums::MU] = LOCAL_MASK,
+    [enums::MNU] = LOCAL_MASK | UEI_MASK | UTI_MASK | USI_MASK,
+    [enums::MSU] = LOCAL_MASK,
+    [enums::MNSU] = LOCAL_MASK | UEI_MASK | UTI_MASK | USI_MASK,
 };
 const RegVal FFLAGS_MASK = (1 << FRM_OFFSET) - 1;
 const RegVal FRM_MASK = 0x7;
@@ -1511,12 +1607,12 @@ CSRMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
             {CSR_FCSR, FFLAGS_MASK | (FRM_MASK << FRM_OFFSET)},
             {CSR_SSTATUS, SSTATUS_MASKS[RV32][enums::M]},
             {CSR_SIE, SI_MASK[enums::M]},
-            {CSR_SIP, SI_MASK[enums::M]},
+            {CSR_SIP, SIP_MASK[enums::M]},
             {CSR_MSTATUS, MSTATUS_MASKS[RV32][enums::M]},
             {CSR_MISA, MISA_MASKS[RV32]},
             {CSR_MIE, MI_MASK[enums::M]},
             {CSR_MSTATUSH, MSTATUSH_MASKS[enums::M]},
-            {CSR_MIP, MI_MASK[enums::M]},
+            {CSR_MIP, MIP_MASK[enums::M]},
         },
         [enums::MU] = {
             {CSR_USTATUS, USTATUS_MASKS[RV32][enums::MU]},
@@ -1527,12 +1623,12 @@ CSRMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
             {CSR_FCSR, FFLAGS_MASK | (FRM_MASK << FRM_OFFSET)},
             {CSR_SSTATUS, SSTATUS_MASKS[RV32][enums::MU]},
             {CSR_SIE, SI_MASK[enums::MU]},
-            {CSR_SIP, SI_MASK[enums::MU]},
+            {CSR_SIP, SIP_MASK[enums::MU]},
             {CSR_MSTATUS, MSTATUS_MASKS[RV32][enums::MU]},
             {CSR_MISA, MISA_MASKS[RV32]},
             {CSR_MIE, MI_MASK[enums::MU]},
             {CSR_MSTATUSH, MSTATUSH_MASKS[enums::MU]},
-            {CSR_MIP, MI_MASK[enums::MU]},
+            {CSR_MIP, MIP_MASK[enums::MU]},
         },
         [enums::MNU] = {
             {CSR_USTATUS, USTATUS_MASKS[RV32][enums::MNU]},
@@ -1543,12 +1639,12 @@ CSRMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
             {CSR_FCSR, FFLAGS_MASK | (FRM_MASK << FRM_OFFSET)},
             {CSR_SSTATUS, SSTATUS_MASKS[RV32][enums::MNU]},
             {CSR_SIE, SI_MASK[enums::MNU]},
-            {CSR_SIP, SI_MASK[enums::MNU]},
+            {CSR_SIP, SIP_MASK[enums::MNU]},
             {CSR_MSTATUS, MSTATUS_MASKS[RV32][enums::MNU]},
             {CSR_MISA, MISA_MASKS[RV32]},
             {CSR_MIE, MI_MASK[enums::MNU]},
             {CSR_MSTATUSH, MSTATUSH_MASKS[enums::MNU]},
-            {CSR_MIP, MI_MASK[enums::MNU]},
+            {CSR_MIP, MIP_MASK[enums::MNU]},
         },
         [enums::MSU] = {
             {CSR_USTATUS, USTATUS_MASKS[RV32][enums::MSU]},
@@ -1559,12 +1655,12 @@ CSRMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
             {CSR_FCSR, FFLAGS_MASK | (FRM_MASK << FRM_OFFSET)},
             {CSR_SSTATUS, SSTATUS_MASKS[RV32][enums::MSU]},
             {CSR_SIE, SI_MASK[enums::MSU]},
-            {CSR_SIP, SI_MASK[enums::MSU]},
+            {CSR_SIP, SIP_MASK[enums::MSU]},
             {CSR_MSTATUS, MSTATUS_MASKS[RV32][enums::MSU]},
             {CSR_MISA, MISA_MASKS[RV32]},
             {CSR_MIE, MI_MASK[enums::MSU]},
             {CSR_MSTATUSH, MSTATUSH_MASKS[enums::MSU]},
-            {CSR_MIP, MI_MASK[enums::MSU]},
+            {CSR_MIP, MIP_MASK[enums::MSU]},
         },
         [enums::MNSU] = {
             {CSR_USTATUS, USTATUS_MASKS[RV32][enums::MNSU]},
@@ -1575,12 +1671,12 @@ CSRMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
             {CSR_FCSR, FFLAGS_MASK | (FRM_MASK << FRM_OFFSET)},
             {CSR_SSTATUS, SSTATUS_MASKS[RV32][enums::MNSU]},
             {CSR_SIE, SI_MASK[enums::MNSU]},
-            {CSR_SIP, SI_MASK[enums::MNSU]},
+            {CSR_SIP, SIP_MASK[enums::MNSU]},
             {CSR_MSTATUS, MSTATUS_MASKS[RV32][enums::MNSU]},
             {CSR_MISA, MISA_MASKS[RV32]},
             {CSR_MIE, MI_MASK[enums::MNSU]},
             {CSR_MSTATUSH, MSTATUSH_MASKS[enums::MNSU]},
-            {CSR_MIP, MI_MASK[enums::MNSU]},
+            {CSR_MIP, MIP_MASK[enums::MNSU]},
         },
     },
     [RV64] = {
@@ -1593,11 +1689,11 @@ CSRMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
             {CSR_FCSR, FFLAGS_MASK | (FRM_MASK << FRM_OFFSET)},
             {CSR_SSTATUS, SSTATUS_MASKS[RV64][enums::M]},
             {CSR_SIE, SI_MASK[enums::M]},
-            {CSR_SIP, SI_MASK[enums::M]},
+            {CSR_SIP, SIP_MASK[enums::M]},
             {CSR_MSTATUS, MSTATUS_MASKS[RV64][enums::M]},
             {CSR_MISA, MISA_MASKS[RV64]},
             {CSR_MIE, MI_MASK[enums::M]},
-            {CSR_MIP, MI_MASK[enums::M]},
+            {CSR_MIP, MIP_MASK[enums::M]},
         },
         [enums::MU] = {
             {CSR_USTATUS, USTATUS_MASKS[RV64][enums::MU]},
@@ -1608,11 +1704,11 @@ CSRMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
             {CSR_FCSR, FFLAGS_MASK | (FRM_MASK << FRM_OFFSET)},
             {CSR_SSTATUS, SSTATUS_MASKS[RV64][enums::MU]},
             {CSR_SIE, SI_MASK[enums::MU]},
-            {CSR_SIP, SI_MASK[enums::MU]},
+            {CSR_SIP, SIP_MASK[enums::MU]},
             {CSR_MSTATUS, MSTATUS_MASKS[RV64][enums::MU]},
             {CSR_MISA, MISA_MASKS[RV64]},
             {CSR_MIE, MI_MASK[enums::MU]},
-            {CSR_MIP, MI_MASK[enums::MU]},
+            {CSR_MIP, MIP_MASK[enums::MU]},
         },
         [enums::MNU] = {
             {CSR_USTATUS, USTATUS_MASKS[RV64][enums::MNU]},
@@ -1623,11 +1719,11 @@ CSRMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
             {CSR_FCSR, FFLAGS_MASK | (FRM_MASK << FRM_OFFSET)},
             {CSR_SSTATUS, SSTATUS_MASKS[RV64][enums::MNU]},
             {CSR_SIE, SI_MASK[enums::MNU]},
-            {CSR_SIP, SI_MASK[enums::MNU]},
+            {CSR_SIP, SIP_MASK[enums::MNU]},
             {CSR_MSTATUS, MSTATUS_MASKS[RV64][enums::MNU]},
             {CSR_MISA, MISA_MASKS[RV64]},
             {CSR_MIE, MI_MASK[enums::MNU]},
-            {CSR_MIP, MI_MASK[enums::MNU]},
+            {CSR_MIP, MIP_MASK[enums::MNU]},
         },
         [enums::MSU] = {
             {CSR_USTATUS, USTATUS_MASKS[RV64][enums::MSU]},
@@ -1638,11 +1734,11 @@ CSRMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
             {CSR_FCSR, FFLAGS_MASK | (FRM_MASK << FRM_OFFSET)},
             {CSR_SSTATUS, SSTATUS_MASKS[RV64][enums::MSU]},
             {CSR_SIE, SI_MASK[enums::MSU]},
-            {CSR_SIP, SI_MASK[enums::MSU]},
+            {CSR_SIP, SIP_MASK[enums::MSU]},
             {CSR_MSTATUS, MSTATUS_MASKS[RV64][enums::MSU]},
             {CSR_MISA, MISA_MASKS[RV64]},
             {CSR_MIE, MI_MASK[enums::MSU]},
-            {CSR_MIP, MI_MASK[enums::MSU]},
+            {CSR_MIP, MIP_MASK[enums::MSU]},
         },
         [enums::MNSU] = {
             {CSR_USTATUS, USTATUS_MASKS[RV64][enums::MNSU]},
@@ -1653,11 +1749,11 @@ CSRMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
             {CSR_FCSR, FFLAGS_MASK | (FRM_MASK << FRM_OFFSET)},
             {CSR_SSTATUS, SSTATUS_MASKS[RV64][enums::MNSU]},
             {CSR_SIE, SI_MASK[enums::MNSU]},
-            {CSR_SIP, SI_MASK[enums::MNSU]},
+            {CSR_SIP, SIP_MASK[enums::MNSU]},
             {CSR_MSTATUS, MSTATUS_MASKS[RV64][enums::MNSU]},
             {CSR_MISA, MISA_MASKS[RV64]},
             {CSR_MIE, MI_MASK[enums::MNSU]},
-            {CSR_MIP, MI_MASK[enums::MNSU]},
+            {CSR_MIP, MIP_MASK[enums::MNSU]},
         },
     },
 };

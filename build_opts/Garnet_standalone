@@ -1,2 +1,3 @@
 RUBY=y
-RUBY_PROTOCOL_GARNET_STANDALONE=y
+PROTOCOL="Garnet_standalone"
+RUBY_PROTOCOL_Garnet_standalone=y

@@ -49,7 +49,7 @@ system.cpu_clk_domain = SrcClockDomain(
 )
 
 system.toL2Bus = L2XBar(clk_domain=system.cpu_clk_domain)
-system.l2c = L2Cache(clk_domain=system.cpu_clk_domain, size="64kB", assoc=8)
+system.l2c = L2Cache(clk_domain=system.cpu_clk_domain, size="64KiB", assoc=8)
 system.l2c.cpu_side = system.toL2Bus.mem_side_ports
 
 # connect l2c to membus
@@ -59,7 +59,7 @@ system.l2c.mem_side = system.membus.cpu_side_ports
 for cpu in cpus:
     # All cpus are associated with cpu_clk_domain
     cpu.clk_domain = system.cpu_clk_domain
-    cpu.l1c = L1Cache(size="32kB", assoc=4)
+    cpu.l1c = L1Cache(size="32KiB", assoc=4)
     cpu.l1c.cpu_side = cpu.port
     cpu.l1c.mem_side = system.toL2Bus.cpu_side_ports
 

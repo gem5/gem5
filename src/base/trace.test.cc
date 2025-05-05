@@ -633,34 +633,6 @@ TEST(TraceTest, MacroDPRINTFNR)
 #endif
 }
 
-/** Test DPRINTF_UNCONDITIONAL with tracing on. */
-TEST(TraceTest, MacroDPRINTF_UNCONDITIONAL)
-{
-    StringWrap name("Foo");
-
-    // Flag enabled
-    trace::enable();
-    EXPECT_TRUE(debug::changeFlag("TraceTestDebugFlag", true));
-    EXPECT_TRUE(debug::changeFlag("FmtFlag", true));
-    DPRINTF_UNCONDITIONAL(TraceTestDebugFlag, "Test message");
-#if TRACING_ON
-    ASSERT_EQ(getString(trace::output()),
-        "      0: TraceTestDebugFlag: Foo: Test message");
-#else
-    ASSERT_EQ(getString(trace::output()), "");
-#endif
-
-    // Flag disabled
-    trace::disable();
-    EXPECT_TRUE(debug::changeFlag("TraceTestDebugFlag", false));
-    DPRINTF_UNCONDITIONAL(TraceTestDebugFlag, "Test message");
-#if TRACING_ON
-    ASSERT_EQ(getString(trace::output()), "      0: Foo: Test message");
-#else
-    ASSERT_EQ(getString(trace::output()), "");
-#endif
-}
-
 /**
  * Test that there is a global name() to fall through when a locally scoped
  * name() is not defined.

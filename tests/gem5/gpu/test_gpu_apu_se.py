@@ -108,7 +108,7 @@ gem5_verify_config(
         resource_path,
         "--reg-alloc-policy=dynamic",
         "-n3",
-        "--mem-size=8GB",
+        "--mem-size=8GiB",
         "--dgpu",
         "--gfx-version",
         "gfx900",
@@ -141,5 +141,5 @@ gem5_verify_config(
     ],
     valid_isas=(constants.vega_x86_tag,),
     valid_hosts=(constants.host_gcn_gpu_tag,),
-    length=constants.very_long_tag,
+    length=constants.long_tag,
 )

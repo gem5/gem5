@@ -62,8 +62,8 @@ words, where N is the length in words
 enables to suppress the part where the other segment is active
 
 Data buffer definition:  starts at 0, randomly filled
-with lower case letters and numbers.  Size 2 kB.  Addresses are limited to
-1 kB.
+with lower case letters and numbers.  Size 2 KiB.  Addresses are limited to
+1 KiB.
 """
 
 

@@ -28,18 +28,25 @@ import math
 
 from m5.objects import (
     ClockDomain,
+    MESI_Two_Level_L1Cache_Controller,
     MessageBuffer,
     RubyCache,
     RubyPrefetcher,
 )
 
 from ......isas import ISA
-from ......utils.override import *
 from .....processors.abstract_core import AbstractCore
-from ..abstract_l1_cache import AbstractL1Cache
 
 
-class L1Cache(AbstractL1Cache):
+class L1Cache(MESI_Two_Level_L1Cache_Controller):
+
+    _version = 0
+
+    @classmethod
+    def versionCount(cls):
+        cls._version += 1  # Use count for this particular type
+        return cls._version - 1
+
     def __init__(
         self,
         l1i_size,
@@ -56,29 +63,32 @@ class L1Cache(AbstractL1Cache):
         """Creating L1 cache controller. Consist of both instruction
         and data cache.
         """
-        super().__init__(network, cache_line_size)
+        super().__init__()
+
+        self.version = self.versionCount()
+        self._cache_line_size = cache_line_size
+        self.connectQueues(network)
 
         # This is the cache memory object that stores the cache data and tags
         self.L1Icache = RubyCache(
             size=l1i_size,
             assoc=l1i_assoc,
-            start_index_bit=self.getBlockSizeBits(),
+            start_index_bit=self._cache_line_size,
             is_icache=True,
         )
         self.L1Dcache = RubyCache(
             size=l1d_size,
             assoc=l1d_assoc,
-            start_index_bit=self.getBlockSizeBits(),
+            start_index_bit=self._cache_line_size,
             is_icache=False,
         )
         self.l2_select_num_bits = int(math.log(num_l2Caches, 2))
         self.clk_domain = clk_domain
-        self.prefetcher = RubyPrefetcher()
+        self.prefetcher = RubyPrefetcher(block_size=self._cache_line_size)
         self.send_evictions = core.requires_send_evicts()
         self.transitions_per_cycle = 4
         self.enable_prefetch = False
 
-    @overrides(AbstractL1Cache)
     def connectQueues(self, network):
         self.mandatoryQueue = MessageBuffer()
         self.requestFromL1Cache = MessageBuffer()

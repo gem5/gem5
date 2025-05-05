@@ -294,7 +294,7 @@ class DDR3_1600_8x8(DRAMInterface):
     # DDR3 is a BL8 device
     burst_length = 8
 
-    # Each device has a page (row buffer) size of 1 Kbyte (1K columns x8)
+    # Each device has a page (row buffer) size of 1 Kibibyte (1KiB columns x8)
     device_rowbuffer_size = "1KiB"
 
     # 8x8 configuration, so 8 devices
@@ -700,7 +700,7 @@ class LPDDR2_S4_1066_1x32(DRAMInterface):
     # LPDDR2_S4 is a BL4 and BL8 device
     burst_length = 8
 
-    # Each device has a page (row buffer) size of 1KB
+    # Each device has a page (row buffer) size of 1KiB
     # (this depends on the memory density)
     device_rowbuffer_size = "1KiB"
 
@@ -1276,7 +1276,7 @@ class DDR5_4400_4x8(DRAMInterface):
     burst_length = 16
 
     # Each device has a page (row buffer) size of 256B
-    # Four devices lead to a page size of 1KB
+    # Four devices lead to a page size of 1KiB
     device_rowbuffer_size = "256B"
 
     # 4Gbx8 configuration
@@ -1312,10 +1312,10 @@ class DDR5_4400_4x8(DRAMInterface):
     # RRD_S (different bank group) : 8nCK
     tRRD = "3.632ns"
 
-    # RRD_L (same bank group) is MAX(8nCK, 5ns) for 1KB page
+    # RRD_L (same bank group) is MAX(8nCK, 5ns) for 1KiB page
     tRRD_L = "5ns"
 
-    # tFAW for 1KB page is MAX(32nCK, 14.545ns)
+    # tFAW for 1KiB page is MAX(32nCK, 14.545ns)
     tXAW = "14.545ns"
     activation_limit = 4
 
@@ -1420,10 +1420,10 @@ class DDR5_6400_4x8(DDR5_4400_4x8):
     # RRD_S (different bank group) : 8nCK
     tRRD = "2.496ns"
 
-    # RRD_L (same bank group) is MAX(8nCK, 5ns) for 1KB page
+    # RRD_L (same bank group) is MAX(8nCK, 5ns) for 1KiB page
     tRRD_L = "5ns"
 
-    # tFAW for 1KB page is MAX(32 CK, 10.00ns)
+    # tFAW for 1KiB page is MAX(32 CK, 10.00ns)
     tXAW = "10ns"
 
     # Rd/Wr turnaround timings
@@ -1480,7 +1480,7 @@ class DDR5_8400_4x8(DDR5_4400_4x8):
     # RRD_S (different bank group) : 8nCK
     tRRD = "1.904ns"
 
-    # tFAW for 1KB page is MAX(32 CK, 10.00ns)
+    # tFAW for 1KiB page is MAX(32 CK, 10.00ns)
     tXAW = "10ns"
 
     # Rd/Wr turnaround timings

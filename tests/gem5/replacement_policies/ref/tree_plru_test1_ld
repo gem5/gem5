@@ -1,13 +1,13 @@
 Global frequency set at 1000000000000 ticks per second
 Beginning simulation!
-  74000: system.cache_hierarchy.ruby_system.controllers.sequencer: Cache miss at [0x0, line 0x0]
- 134000: system.cache_hierarchy.ruby_system.controllers.sequencer: Cache miss at [0x80, line 0x80]
- 194000: system.cache_hierarchy.ruby_system.controllers.sequencer: Cache miss at [0x100, line 0x100]
- 254000: system.cache_hierarchy.ruby_system.controllers.sequencer: Cache miss at [0x180, line 0x180]
- 271000: system.cache_hierarchy.ruby_system.controllers.sequencer: Cache hit at [0x0, line 0x0]
- 379000: system.cache_hierarchy.ruby_system.controllers.sequencer: Cache miss at [0x200, line 0x200]
- 439000: system.cache_hierarchy.ruby_system.controllers.sequencer: Cache miss at [0x280, line 0x280]
- 499000: system.cache_hierarchy.ruby_system.controllers.sequencer: Cache miss at [0x300, line 0x300]
- 559000: system.cache_hierarchy.ruby_system.controllers.sequencer: Cache miss at [0x380, line 0x380]
- 619000: system.cache_hierarchy.ruby_system.controllers.sequencer: Cache miss at [0x0, line 0x0]
+  74000: board.cache_hierarchy.ruby_system.controllers.sequencer: Cache miss at [0x0, line 0x0]
+ 134000: board.cache_hierarchy.ruby_system.controllers.sequencer: Cache miss at [0x80, line 0x80]
+ 194000: board.cache_hierarchy.ruby_system.controllers.sequencer: Cache miss at [0x100, line 0x100]
+ 254000: board.cache_hierarchy.ruby_system.controllers.sequencer: Cache miss at [0x180, line 0x180]
+ 271000: board.cache_hierarchy.ruby_system.controllers.sequencer: Cache hit at [0x0, line 0x0]
+ 379000: board.cache_hierarchy.ruby_system.controllers.sequencer: Cache miss at [0x200, line 0x200]
+ 439000: board.cache_hierarchy.ruby_system.controllers.sequencer: Cache miss at [0x280, line 0x280]
+ 499000: board.cache_hierarchy.ruby_system.controllers.sequencer: Cache miss at [0x300, line 0x300]
+ 559000: board.cache_hierarchy.ruby_system.controllers.sequencer: Cache miss at [0x380, line 0x380]
+ 619000: board.cache_hierarchy.ruby_system.controllers.sequencer: Cache miss at [0x0, line 0x0]
 .

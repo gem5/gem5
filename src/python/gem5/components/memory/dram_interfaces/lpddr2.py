@@ -69,7 +69,7 @@ class LPDDR2_S4_1066_1x32(DRAMInterface):
     # LPDDR2_S4 is a BL4 and BL8 device
     burst_length = 8
 
-    # Each device has a page (row buffer) size of 1KB
+    # Each device has a page (row buffer) size of 1KiB
     # (this depends on the memory density)
     device_rowbuffer_size = "1KiB"
 

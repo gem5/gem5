@@ -93,7 +93,7 @@ class BaseGdbRegCache
      *
      * @ingroup api_remote_gdb
      */
-    virtual char *data() const = 0;
+    virtual char *data() = 0;
 
     /**
      * Return the size of the raw buffer, in bytes

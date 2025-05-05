@@ -47,6 +47,8 @@ class TypeDeclAST(DeclAST):
             ident = f"{parent}_{self.type_ast.ident}"
         else:
             ident = self.type_ast.ident
+        if not self.shared:
+            ident = f"{self.slicc.protocol}/{ident}"
         return {f"{ident}.hh", f"{ident}.cc"}
 
     def generate(self):
@@ -55,7 +57,12 @@ class TypeDeclAST(DeclAST):
 
         # Make the new type
         new_type = Type(
-            self.symtab, ident, self.location, self.pairs, self.state_machine
+            self.symtab,
+            ident,
+            self.location,
+            self.pairs,
+            self.shared,
+            self.state_machine,
         )
 
         if machine:

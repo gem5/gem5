@@ -23,40 +23,37 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-config PROTOCOL
-    default "GPU_VIPER" if RUBY_PROTOCOL_GPU_VIPER
-    default "MOESI_AMD_Base" if RUBY_PROTOCOL_MOESI_AMD_BASE
-    default "MESI_Two_Level" if RUBY_PROTOCOL_MESI_TWO_LEVEL
-    default "MESI_Three_Level" if RUBY_PROTOCOL_MESI_THREE_LEVEL
-    default "MESI_Three_Level_HTM" if RUBY_PROTOCOL_MESI_THREE_LEVEL_HTM
-    default "MI_example" if RUBY_PROTOCOL_MI_EXAMPLE
-    default "MOESI_CMP_directory" if RUBY_PROTOCOL_MOESI_CMP_DIRECTORY
-    default "MOESI_CMP_token" if RUBY_PROTOCOL_MOESI_CMP_TOKEN
-    default "MOESI_hammer" if RUBY_PROTOCOL_MOESI_HAMMER
-    default "Garnet_standalone" if RUBY_PROTOCOL_GARNET_STANDALONE
 
-cont_choice "Ruby protocol"
-    config RUBY_PROTOCOL_GPU_VIPER
-        bool "GPU VIPER"
-        depends on BUILD_GPU
-    config RUBY_PROTOCOL_MOESI_AMD_BASE
-        bool "MOESI AMD base"
-    config RUBY_PROTOCOL_MESI_TWO_LEVEL
-        bool "MESI two level"
-    config RUBY_PROTOCOL_MESI_THREE_LEVEL
-        bool "MESI three level"
-    config RUBY_PROTOCOL_MESI_THREE_LEVEL_HTM
-        bool "MESI three level HTM"
-    config RUBY_PROTOCOL_MI_EXAMPLE
-        bool "MI example"
-    config RUBY_PROTOCOL_MOESI_CMP_DIRECTORY
-        bool "MOESI CMP directory"
-    config RUBY_PROTOCOL_MOESI_CMP_TOKEN
-        bool "MOESI CMP token"
-    config RUBY_PROTOCOL_MOESI_HAMMER
-        bool "MOESI hammer"
-    config RUBY_PROTOCOL_GARNET_STANDALONE
-        bool "Garnet standalone"
-endchoice
+config RUBY_PROTOCOL_GPU_VIPER
+    bool "GPU VIPER"
+    depends on BUILD_GPU
+    default n
+config RUBY_PROTOCOL_MOESI_AMD_Base
+    bool "MOESI AMD base"
+    default n
+config RUBY_PROTOCOL_MESI_Two_Level
+    bool "MESI two level"
+    default n
+config RUBY_PROTOCOL_MESI_Three_Level
+    bool "MESI three level"
+    default n
+config RUBY_PROTOCOL_MESI_Three_Level_HTM
+    bool "MESI three level HTM"
+    default n
+config RUBY_PROTOCOL_MI_example
+    bool "MI example"
+    default n
+config RUBY_PROTOCOL_MOESI_CMP_directory
+    bool "MOESI CMP directory"
+    default n
+config RUBY_PROTOCOL_MOESI_CMP_token
+    bool "MOESI CMP token"
+    default n
+config RUBY_PROTOCOL_MOESI_hammer
+    bool "MOESI hammer"
+    default n
+config RUBY_PROTOCOL_Garnet_standalone
+    bool "Garnet standalone"
+    default n
 
 rsource "chi/Kconfig"

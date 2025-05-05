@@ -515,6 +515,35 @@ action(Initiate_ReadShared_HitUpstream_NoOwner, desc="") {
   tbe.actions.push(Event:MaintainCoherence);
 }
 
+action(Initiate_ReadNoSnp, desc="") {
+  assert(is_HN);
+  tbe.dataToBeInvalid := true;
+  tbe.actions.push(Event:ReadMissPipe);
+
+  if (tbe.use_DMT) {
+    assert(is_invalid(cache_entry));
+    if (enable_DMT_early_dealloc) {
+      tbe.actions.push(Event:SendRespSepData);
+    }
+    tbe.actions.push(Event:WaitCompAck);
+    tbe.actions.pushNB(Event:SendReadNoSnpDMT);
+  } else {
+    tbe.actions.push(Event:SendReadNoSnp);
+    tbe.actions.push(Event:WaitCompAck);
+    tbe.actions.pushNB(Event:SendCompData);
+  }
+
+  tbe.updateDirOnCompAck := false;
+}
+
+action(Initiate_ReadNoSnp_Hit, desc="") {
+  assert(is_HN);
+  tbe.actions.push(Event:ReadHitPipe);
+  tbe.actions.push(Event:DataArrayRead);
+  tbe.actions.push(Event:WaitCompAck);
+  tbe.actions.pushNB(Event:SendCompData);
+  tbe.updateDirOnCompAck := false;
+}
 
 action(Initiate_ReadOnce_Miss, desc="") {
   // drop at the end if not doing a fill
@@ -1950,6 +1979,7 @@ action(Send_SnpSharedFwd_ToOwner, desc="") {
     if (retToSrc) {
       tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_SC_Fwded_SC);
       tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_SC_Fwded_SD_PD);
+      tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_SD_Fwded_SC);
       tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_I_Fwded_SC);
       tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_I_Fwded_SD_PD);
     } else {
@@ -1964,6 +1994,7 @@ action(Send_SnpSharedFwd_ToOwner, desc="") {
       tbe.expected_snp_resp.addExpectedRespType(CHIResponseType:SnpResp_SC_Fwded_SC);
     }
     tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_SC_PD_Fwded_SC);
+    tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_SD_Fwded_SC);
     tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_I_PD_Fwded_SC);
   }
   tbe.expected_snp_resp.addExpectedCount(1);
@@ -1994,6 +2025,7 @@ action(Send_SnpSharedFwd_ToSharer, desc="") {
   bool retToSrc := tbe.doCacheFill;
   if (retToSrc) {
     tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_SC_Fwded_SC);
+    tbe.expected_snp_resp.addExpectedDataType(CHIDataType:SnpRespData_I_Fwded_SC);
   } else {
     tbe.expected_snp_resp.addExpectedRespType(CHIResponseType:SnpResp_SC_Fwded_SC);
   }
@@ -2304,7 +2336,8 @@ action(UpdateDirState_FromSnpDataResp, desc="") {
                  (in_msg.type == CHIDataType:SnpRespData_SC) ||
                  (in_msg.type == CHIDataType:SnpRespData_SC_Fwded_SC) ||
                  (in_msg.type == CHIDataType:SnpRespData_SC_Fwded_SD_PD) ||
-                 (in_msg.type == CHIDataType:SnpRespData_SC_PD_Fwded_SC)) {
+                 (in_msg.type == CHIDataType:SnpRespData_SC_PD_Fwded_SC) ||
+                 (in_msg.type == CHIDataType:SnpRespData_SD_Fwded_SC)) {
         // the owner must have been the responder, if there was one
         assert((tbe.dir_ownerExists == false) ||
              (tbe.dir_ownerExists && (tbe.dir_owner == in_msg.responder)));
@@ -2313,12 +2346,16 @@ action(UpdateDirState_FromSnpDataResp, desc="") {
         tbe.dir_ownerIsExcl := false;
         if ((in_msg.type == CHIDataType:SnpRespData_SC_Fwded_SC) ||
             (in_msg.type == CHIDataType:SnpRespData_SC_PD_Fwded_SC) ||
-            (in_msg.type == CHIDataType:SnpRespData_SC_Fwded_SD_PD)) {
+            (in_msg.type == CHIDataType:SnpRespData_SC_Fwded_SD_PD) ||
+            (in_msg.type == CHIDataType:SnpRespData_SD_Fwded_SC)) {
           tbe.dir_sharers.add(tbe.requestor);
         }
         if (in_msg.type == CHIDataType:SnpRespData_SC_Fwded_SD_PD) {
           tbe.dir_ownerExists := true;
           tbe.dir_owner := tbe.requestor;
+        } else if (in_msg.type == CHIDataType:SnpRespData_SD_Fwded_SC) {
+          tbe.dir_ownerExists := true;
+          tbe.dir_owner := in_msg.responder;
         }
 
       } else if ((in_msg.type == CHIDataType:SnpRespData_I_Fwded_SD_PD) ||
@@ -2507,7 +2544,8 @@ action(UpdateDataState_FromSnpDataResp, desc="") {
 
       } else if ((in_msg.type == CHIDataType:SnpRespData_SD) ||
                  (in_msg.type == CHIDataType:SnpRespData_SC_Fwded_SD_PD) ||
-                 (in_msg.type == CHIDataType:SnpRespData_I_Fwded_SD_PD)) {
+                 (in_msg.type == CHIDataType:SnpRespData_I_Fwded_SD_PD) ||
+                 (in_msg.type == CHIDataType:SnpRespData_SD_Fwded_SC)) {
         tbe.dataDirty := true;
         tbe.dataValid := true;
         tbe.dataMaybeDirtyUpstream := true;
@@ -2737,6 +2775,7 @@ action(Send_CompData, desc="") {
   assert(tbe.dataValid);
 
   bool is_rd_once := tbe.reqType == CHIRequestType:ReadOnce;
+  bool is_rd_no_snp := tbe.reqType == CHIRequestType:ReadNoSnp;
   bool is_rd_shared := (tbe.reqType == CHIRequestType:ReadShared) ||
                        (tbe.reqType == CHIRequestType:ReadNotSharedDirty);
   bool is_rd_nsd := tbe.reqType == CHIRequestType:ReadNotSharedDirty;
@@ -2756,7 +2795,7 @@ action(Send_CompData, desc="") {
   bool snd_dirty_on_rs := (is_rd_shared && !is_rd_nsd) &&
                           !tbe.dir_ownerExists;
 
-  if (is_rd_once) {
+  if (is_rd_once || is_rd_no_snp) {
     tbe.snd_msgType := CHIDataType:CompData_I;
   } else if (is_rd_unique || (is_rd_shared && snd_unique_on_rs)) {
     assert(tbe.dataUnique);
@@ -3196,6 +3235,7 @@ action(Send_CompI_Stale, desc="") {
     out_msg.type := CHIResponseType:Comp_I;
     out_msg.responder := machineID;
     out_msg.Destination.add(tbe.requestor);
+    out_msg.txnId := tbe.txnId;
     out_msg.dbid := tbe.txnId;
     // We don't know if this is a stale writeback or a bug, so flag the
     // reponse so the requestor can make further checks

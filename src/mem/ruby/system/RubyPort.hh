@@ -181,6 +181,11 @@ class RubyPort : public ClockedObject
 
     virtual int functionalWrite(Packet *func_pkt);
 
+    // Helper methods for commonly used functions called in common/address.hh
+    Addr getOffset(Addr addr) const;
+    Addr makeLineAddress(Addr addr) const;
+    std::string printAddress(Addr addr) const;
+
   protected:
     void trySendRetries();
     void ruby_hit_callback(PacketPtr pkt);

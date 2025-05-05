@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2019 ARM Limited
+ * Copyright (c) 2010-2013, 2019, 2024-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -117,6 +117,31 @@ static inline double bitsToFp(uint64_t, double);
 static inline uint32_t fpToBits(float);
 static inline uint64_t fpToBits(double);
 
+constexpr int
+fpclassifyFpH(uint16_t __x)
+{
+    // Extract sign, exponent, and fraction
+    uint16_t exponent = bits(__x, 14, 10);
+    uint16_t fraction = bits(__x, 9, 0);
+
+    // Classification logic
+    if (exponent == 0) {
+        if (fraction == 0) {
+            return FP_ZERO;  // Zero (positive or negative)
+        } else {
+            return FP_SUBNORMAL;  // Subnormal number
+        }
+    } else if (exponent == 0x1F) {
+        if (fraction == 0) {
+            return FP_INFINITE;  // Infinity (positive or negative)
+        } else {
+            return FP_NAN;  // Not a Number (NaN)
+        }
+    } else {
+        return FP_NORMAL;  // Normalized number
+    }
+}
+
 template <class fpType>
 static inline bool
 flushToZero(fpType &op)
@@ -125,6 +150,16 @@ flushToZero(fpType &op)
     if (std::fpclassify(op) == FP_SUBNORMAL) {
         uint64_t bitMask = 0x1ULL << (sizeof(fpType) * 8 - 1);
         op = bitsToFp(fpToBits(op) & bitMask, junk);
+        return true;
+    }
+    return false;
+}
+
+static inline bool
+flushToZeroFpH(uint16_t& op)
+{
+    if (fpclassifyFpH(op) == FP_SUBNORMAL) {
+        op = op & 0x8000;
         return true;
     }
     return false;
@@ -144,6 +179,14 @@ static inline void
 vfpFlushToZero(FPSCR &fpscr, fpType &op)
 {
     if (fpscr.fz == 1 && flushToZero(op)) {
+        fpscr.idc = 1;
+    }
+}
+
+static inline void
+vfpFlushToZeroFpH(FPSCR &fpscr, uint16_t& op)
+{
+    if (fpscr.fz16 == 1 && flushToZeroFpH(op)) {
         fpscr.idc = 1;
     }
 }
@@ -266,6 +309,7 @@ setFPExceptions(int exceptions) {
 
 template <typename T>
 uint64_t
+GEM5_NO_OPTIMIZE
 vfpFpToFixed(T val, bool isSigned, uint8_t width, uint8_t imm, bool
              useRmode = true, VfpRoundingMode roundMode = VfpRoundZero,
              bool aarch64 = false)
@@ -435,6 +479,120 @@ vfpFpToFixed(T val, bool isSigned, uint8_t width, uint8_t imm, bool
 };
 
 
+template <typename T>
+T
+GEM5_NO_OPTIMIZE
+vfpFpRint(T val, bool exact, bool defaultNan, bool useRmode = true,
+          VfpRoundingMode roundMode = VfpRoundZero)
+{
+    int  rmode;
+    bool roundAwayFix = false;
+
+    if (!useRmode) {
+        rmode = fegetround();
+    } else {
+        switch (roundMode)
+        {
+          case VfpRoundNearest:
+            rmode = FeRoundNearest;
+            break;
+          case VfpRoundUpward:
+            rmode = FeRoundUpward;
+            break;
+          case VfpRoundDown:
+            rmode = FeRoundDown;
+            break;
+          case VfpRoundZero:
+            rmode = FeRoundZero;
+            break;
+          case VfpRoundAway:
+            // There is no equivalent rounding mode, use round down and we'll
+            // fix it later
+            rmode        = FeRoundDown;
+            roundAwayFix = true;
+            break;
+          default:
+            panic("Unsupported roundMode %d\n", roundMode);
+        }
+    }
+    __asm__ __volatile__("" : "=m" (rmode) : "m" (rmode));
+    __asm__ __volatile__("" : "=m" (val) : "m" (val));
+    fesetround(rmode);
+    feclearexcept(FeAllExceptions);
+    __asm__ __volatile__("" : "=m" (val) : "m" (val));
+    T origVal = val;
+    val = rint(val);
+    __asm__ __volatile__("" : "=m" (val) : "m" (val));
+
+    int exceptions = fetestexcept(FeAllExceptions);
+    if (!exact) {
+        exceptions &= ~FeInexact;
+    }
+
+    int fpType = std::fpclassify(val);
+    if (fpType == FP_SUBNORMAL || fpType == FP_NAN) {
+        if (fpType == FP_NAN) {
+            if (isSnan(val)) {
+                exceptions |= FeInvalid;
+            }
+            if (defaultNan || !isSnan(val)) {
+                bool single = (sizeof(T) == sizeof(float));
+                uint64_t qnan = single ? 0x7fc00000 : 0x7ff8000000000000ULL;
+                val = bitsToFp(qnan, (T)0.0);
+            }
+        } else {
+            val = 0.0;
+        }
+    } else if (origVal != val) {
+        switch (rmode) {
+          case FeRoundNearest:
+            if (origVal - val > 0.5)
+                val += 1.0;
+            else if (val - origVal > 0.5)
+                val -= 1.0;
+            break;
+          case FeRoundDown:
+            if (roundAwayFix) {
+                // The ordering on the subtraction looks a bit odd in that we
+                // don't do the obvious origVal - val, instead we do
+                // -(val - origVal). This is required to get the corruct bit
+                // exact behaviour when very close to the 0.5 threshold.
+                volatile T error = val;
+                error -= origVal;
+                error = -error;
+                if ( (error >  0.5) ||
+                    ((error == 0.5) && (val >= 0)) )
+                    val += 1.0;
+            } else {
+                if (origVal < val)
+                    val -= 1.0;
+            }
+            break;
+          case FeRoundUpward:
+            if (origVal > val)
+                val += 1.0;
+            break;
+        }
+        if (exact) {
+            exceptions |= FeInexact;
+        }
+    }
+    // Fix signal of zero.
+    fpType = std::fpclassify(val);
+    if (fpType == FP_ZERO) {
+        bool single = (sizeof(T) == sizeof(float));
+        uint64_t mask = single ? 0x80000000 : 0x8000000000000000ULL;
+        val = bitsToFp((fpToBits(val) & (~mask)) | (fpToBits(origVal) & mask),
+                       (T)0.0);
+    }
+
+    // __asm__ __volatile__("" : "=m" (val) : "m" (val));
+    setFPExceptions(exceptions);
+
+    return val;
+};
+
+
 float vfpUFixedToFpS(bool flush, bool defaultNan,
         uint64_t val, uint8_t width, uint8_t imm);
 float vfpSFixedToFpS(bool flush, bool defaultNan,
@@ -446,9 +604,11 @@ double vfpSFixedToFpD(bool flush, bool defaultNan,
         int64_t val, uint8_t width, uint8_t imm);
 
 float fprSqrtEstimate(FPSCR &fpscr, float op);
+uint16_t fprSqrtEstimateFpH(FPSCR &fpscr, uint16_t op);
 uint32_t unsignedRSqrtEstimate(uint32_t op);
 
 float fpRecipEstimate(FPSCR &fpscr, float op);
+uint16_t fpRecipEstimateFpH(FPSCR &fpscr, uint16_t op);
 uint32_t unsignedRecipEstimate(uint32_t op);
 
 FPSCR
@@ -1071,6 +1231,13 @@ class FpRegRegRegImmOp : public FpOp
     std::string generateDisassembly(
             Addr pc, const loader::SymbolTable *symtab) const override;
 };
+
+
+FPSCR fpVASimdFPSCRValue(const FPSCR &fpscr);
+
+FPSCR fpVASimdCvtFPSCRValue(const FPSCR &fpscr);
+
+FPSCR fpRestoreFPSCRValue(const FPSCR fpscr_exec, const FPSCR &fpscr);
 
 } // namespace ArmISA
 } // namespace gem5

@@ -135,7 +135,7 @@ elif args.mem_system == "chi":
     )
 
     cache_hierarchy = PrivateL1CacheHierarchy(
-        size="16kB",
+        size="16KiB",
         assoc=4,
     )
 
@@ -146,11 +146,11 @@ elif args.mem_system == "mesi_two_level":
     )
 
     cache_hierarchy = MESITwoLevelCacheHierarchy(
-        l1d_size="32kB",
+        l1d_size="32KiB",
         l1d_assoc=8,
-        l1i_size="32kB",
+        l1i_size="32KiB",
         l1i_assoc=8,
-        l2_size="256kB",
+        l2_size="256KiB",
         l2_assoc=16,
         num_l2_banks=2,
     )
@@ -161,7 +161,7 @@ elif args.mem_system == "mi_example":
         MIExampleCacheHierarchy,
     )
 
-    cache_hierarchy = MIExampleCacheHierarchy(size="32kB", assoc=4)
+    cache_hierarchy = MIExampleCacheHierarchy(size="32KiB", assoc=4)
 else:
     raise NotImplementedError(
         f"Memory type '{args.mem_system}' is not supported in the boot tests."

@@ -44,6 +44,7 @@
 #ifndef __CPU_PRED_LOOP_PREDICTOR_HH__
 #define __CPU_PRED_LOOP_PREDICTOR_HH__
 
+#include "base/random.hh"
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "sim/sim_object.hh"
@@ -69,6 +70,8 @@ class LoopPredictor : public SimObject
     const uint16_t loopTagMask;
     const uint16_t loopNumIterMask;
     const int loopSetMask;
+
+    mutable Random::RandomPtr rng = Random::genRandom();
 
     // Prediction Structures
     // Loop Predictor Entry

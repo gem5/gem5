@@ -38,6 +38,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects.ClockedObject import ClockedObject
+from m5.objects.IndexingPolicies import *
+from m5.objects.ReplacementPolicies import *
 from m5.params import *
 from m5.proxy import *
 from m5.SimObject import *
@@ -83,6 +85,38 @@ class BranchTargetBuffer(ClockedObject):
     numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
 
 
+class BTBIndexingPolicy(SimObject):
+    type = "BTBIndexingPolicy"
+    abstract = True
+    cxx_class = "gem5::IndexingPolicyTemplate<gem5::BTBTagType>"
+    cxx_header = "cpu/pred/btb_entry.hh"
+    cxx_template_params = ["class Types"]
+
+    # Get the associativity
+    assoc = Param.Int(Parent.assoc, "associativity")
+
+
+class BTBSetAssociative(BTBIndexingPolicy):
+    type = "BTBSetAssociative"
+    cxx_class = "gem5::BTBSetAssociative"
+    cxx_header = "cpu/pred/btb_entry.hh"
+
+    # Get the number of entries in the BTB from the parent
+    num_entries = Param.Unsigned(
+        Parent.numEntries, "Number of entries in the BTB"
+    )
+
+    # Set shift for the index. Ignore lower 2 bits for a 4 byte instruction.
+    set_shift = Param.Unsigned(2, "Number of bits to shift PC to get index")
+
+    # Total number of bits in the tag.
+    # This is above the index and offset bit
+    tag_bits = Param.Unsigned(64, "number of bits in the tag")
+
+    # Number of threads sharing the BTB
+    numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
+
+
 class SimpleBTB(BranchTargetBuffer):
     type = "SimpleBTB"
     cxx_class = "gem5::branch_prediction::SimpleBTB"
@@ -92,6 +126,19 @@ class SimpleBTB(BranchTargetBuffer):
     tagBits = Param.Unsigned(16, "Size of the BTB tags, in bits")
     instShiftAmt = Param.Unsigned(
         Parent.instShiftAmt, "Number of bits to shift instructions by"
+    )
+    associativity = Param.Unsigned(1, "BTB associativity")
+    btbReplPolicy = Param.BaseReplacementPolicy(
+        LRURP(), "BTB replacement policy"
+    )
+    btbIndexingPolicy = Param.BTBIndexingPolicy(
+        BTBSetAssociative(
+            assoc=Parent.associativity,
+            num_entries=Parent.numEntries,
+            set_shift=Parent.instShiftAmt,
+            numThreads=1,
+        ),
+        "BTB indexing policy",
     )
 
 

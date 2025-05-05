@@ -84,14 +84,14 @@ class CPCntrl(AMD_Base_Controller, CntrlBase):
         self.L2cache = L2Cache()
         self.L2cache.create(options.l2_size, options.l2_assoc, options)
 
-        self.sequencer = RubySequencer()
+        self.sequencer = RubySequencer(ruby_system=ruby_system)
         self.sequencer.version = self.seqCount()
         self.sequencer.dcache = self.L1D0cache
         self.sequencer.ruby_system = ruby_system
         self.sequencer.coreid = 0
         self.sequencer.is_cpu_sequencer = True
 
-        self.sequencer1 = RubySequencer()
+        self.sequencer1 = RubySequencer(ruby_system=ruby_system)
         self.sequencer1.version = self.seqCount()
         self.sequencer1.dcache = self.L1D1cache
         self.sequencer1.ruby_system = ruby_system

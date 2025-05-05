@@ -98,7 +98,7 @@ parser.add_argument(
     "--mem-size",
     action="store",
     type=str,
-    default="16MB",
+    default="16MiB",
     help="Specify the memory size",
 )
 parser.add_argument(
@@ -161,7 +161,7 @@ def is_pow2(num):
 # assume we start every range at 0
 max_range = int(mem_range.end)
 
-# start at a size of 4 kByte, and go up till we hit the max, increase
+# start at a size of 4 kibibyte, and go up till we hit the max, increase
 # the step every time we hit a power of two
 min_range = 4096
 ranges = [min_range]
@@ -295,17 +295,17 @@ class L3Cache(Cache):
 
 # note that everything is in the same clock domain, 2.0 GHz as
 # specified above
-system.l1cache = L1_DCache(size="64kB")
+system.l1cache = L1_DCache(size="64KiB")
 system.monitor.mem_side_port = system.l1cache.cpu_side
 
-system.l2cache = L2Cache(size="512kB", writeback_clean=True)
+system.l2cache = L2Cache(size="512KiB", writeback_clean=True)
 system.l2cache.xbar = L2XBar()
 system.l1cache.mem_side = system.l2cache.xbar.cpu_side_ports
 system.l2cache.cpu_side = system.l2cache.xbar.mem_side_ports
 
 # make the L3 mostly exclusive, and correspondingly ensure that the L2
 # writes back also clean lines to the L3
-system.l3cache = L3Cache(size="4MB", clusivity="mostly_excl")
+system.l3cache = L3Cache(size="4MiB", clusivity="mostly_excl")
 system.l3cache.xbar = L2XBar()
 system.l2cache.mem_side = system.l3cache.xbar.cpu_side_ports
 system.l3cache.cpu_side = system.l3cache.xbar.mem_side_ports

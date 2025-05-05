@@ -53,7 +53,7 @@ def generator_factory(
 
         return LinearGenerator(
             duration="250us",
-            rate="40GB/s",
+            rate="40GiB/s",
             num_cores=generator_cores,
             max_addr=mem_size,
         )
@@ -62,7 +62,7 @@ def generator_factory(
 
         return RandomGenerator(
             duration="250us",
-            rate="40GB/s",
+            rate="40GiB/s",
             num_cores=generator_cores,
             max_addr=mem_size,
         )
@@ -133,6 +133,57 @@ def cache_factory(cache_class: str):
             l2_assoc="4",
             num_l2_banks=1,
         )
+    elif cache_class == "MIExample":
+        from gem5.components.cachehierarchies.ruby.mi_example_cache_hierarchy import (
+            MIExampleCacheHierarchy,
+        )
+
+        return MIExampleCacheHierarchy(
+            size="16KiB",
+            assoc=8,
+        )
+    elif cache_class == "CHIL1":
+        from gem5.components.cachehierarchies.chi.private_l1_cache_hierarchy import (
+            PrivateL1CacheHierarchy,
+        )
+
+        return PrivateL1CacheHierarchy(
+            size="16KiB",
+            assoc=8,
+        )
+    elif cache_class == "MESIThreeLevel":
+        from gem5.components.cachehierarchies.ruby.mesi_three_level_cache_hierarchy import (
+            MESIThreeLevelCacheHierarchy,
+        )
+
+        return MESIThreeLevelCacheHierarchy(
+            l1i_size="32KiB",
+            l1i_assoc="8",
+            l1d_size="32KiB",
+            l1d_assoc="8",
+            l2_size="256KiB",
+            l2_assoc="4",
+            l3_size="16MiB",
+            l3_assoc="16",
+            num_l3_banks=1,
+        )
+    elif cache_class == "OctopiCache":
+        from gem5.components.cachehierarchies.ruby.caches.prebuilt.octopi_cache.octopi import (
+            OctopiCache,
+        )
+
+        return OctopiCache(
+            l1i_size="32KiB",
+            l1i_assoc=8,
+            l1d_size="32KiB",
+            l1d_assoc=8,
+            l2_size="256KiB",
+            l2_assoc=4,
+            l3_size="16MiB",
+            l3_assoc=16,
+            num_core_complexes=1,
+            is_fullsystem=False,
+        )
     else:
         raise ValueError(f"The cache class {cache_class} is not supported.")
 
@@ -163,7 +214,16 @@ parser.add_argument(
     "cache_class",
     type=str,
     help="The cache class to import and instantiate.",
-    choices=["NoCache", "PrivateL1", "PrivateL1PrivateL2", "MESITwoLevel"],
+    choices=[
+        "NoCache",
+        "PrivateL1",
+        "PrivateL1PrivateL2",
+        "MESITwoLevel",
+        "MIExample",
+        "CHIL1",
+        "MESIThreeLevel",
+        "OctopiCache",
+    ],
 )
 
 parser.add_argument(
@@ -202,9 +262,7 @@ motherboard = TestBoard(
     cache_hierarchy=cache_hierarchy,
 )
 
-root = Root(full_system=False, system=motherboard)
-
-motherboard._pre_instantiate()
+root = motherboard._pre_instantiate()
 m5.instantiate()
 
 generator.start_traffic()

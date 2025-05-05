@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2023 ARM Limited
+# Copyright (c) 2021-2024 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -49,6 +49,29 @@ import math
 
 import m5
 from m5.objects import *
+
+
+# Declare caches and controller types used by the protocol
+# Notice tag and data accesses are not concurrent, so the a cache hit
+# latency = tag + data + response latencies.
+# Default response latencies are 1 cy for all controllers.
+# For L1 controllers the mandatoryQueue enqueue latency is always 1 cy and
+# this is deducted from the initial tag read latency for sequencer requests
+# dataAccessLatency may be set to 0 if one wants to consider parallel
+# data and tag lookups
+class L1ICache(RubyCache):
+    dataAccessLatency = 1
+    tagAccessLatency = 1
+
+
+class L1DCache(RubyCache):
+    dataAccessLatency = 2
+    tagAccessLatency = 1
+
+
+class L2Cache(RubyCache):
+    dataAccessLatency = 6
+    tagAccessLatency = 2
 
 
 class Versions:
@@ -194,7 +217,7 @@ class MemCtrlMessageBuffer(MessageBuffer):
     ordered = True
 
 
-class CHI_Cache_Controller(Cache_Controller):
+class Base_CHI_Cache_Controller(CHI_Cache_Controller):
     """
     Default parameters for a Cache controller
     The Cache_Controller can also be used as a DMA requester or as
@@ -203,7 +226,7 @@ class CHI_Cache_Controller(Cache_Controller):
 
     def __init__(self, ruby_system):
         super().__init__(
-            version=Versions.getVersion(Cache_Controller),
+            version=Versions.getVersion(CHI_Cache_Controller),
             ruby_system=ruby_system,
             mandatoryQueue=MessageBuffer(),
             prefetchQueue=MessageBuffer(),
@@ -223,7 +246,7 @@ class CHI_Cache_Controller(Cache_Controller):
         self.sc_lock_enabled = False
 
 
-class CHI_L1Controller(CHI_Cache_Controller):
+class CHI_L1Controller(Base_CHI_Cache_Controller):
     """
     Default parameters for a L1 Cache controller
     """
@@ -261,7 +284,7 @@ class CHI_L1Controller(CHI_Cache_Controller):
         self.unify_repl_TBEs = False
 
 
-class CHI_L2Controller(CHI_Cache_Controller):
+class CHI_L2Controller(Base_CHI_Cache_Controller):
     """
     Default parameters for a L2 Cache controller
     """
@@ -298,7 +321,7 @@ class CHI_L2Controller(CHI_Cache_Controller):
         self.unify_repl_TBEs = False
 
 
-class CHI_HNFController(CHI_Cache_Controller):
+class CHI_HNFController(Base_CHI_Cache_Controller):
     """
     Default parameters for a coherent home node (HNF) cache controller
     """
@@ -336,7 +359,7 @@ class CHI_HNFController(CHI_Cache_Controller):
         self.unify_repl_TBEs = False
 
 
-class CHI_MNController(MiscNode_Controller):
+class CHI_MNController(CHI_MiscNode_Controller):
     """
     Default parameters for a Misc Node
     """
@@ -345,7 +368,7 @@ class CHI_MNController(MiscNode_Controller):
         self, ruby_system, addr_range, l1d_caches, early_nonsync_comp
     ):
         super().__init__(
-            version=Versions.getVersion(MiscNode_Controller),
+            version=Versions.getVersion(CHI_MiscNode_Controller),
             ruby_system=ruby_system,
             mandatoryQueue=MessageBuffer(),
             triggerQueue=TriggerMessageBuffer(),
@@ -369,7 +392,7 @@ class CHI_MNController(MiscNode_Controller):
         self.upstream_destinations = l1d_caches
 
 
-class CHI_DMAController(CHI_Cache_Controller):
+class CHI_DMAController(Base_CHI_Cache_Controller):
     """
     Default parameters for a DMA controller
     """
@@ -575,6 +598,24 @@ class CHI_RNF(CHI_Node):
                 c.downstream_destinations = [cpu.l2]
             cpu._ll_cntrls = [cpu.l2]
 
+    @classmethod
+    def generate(cls, options, ruby_system, cpus):
+        rnfs = [
+            cls(
+                [cpu],
+                ruby_system,
+                L1ICache(size=options.l1i_size, assoc=options.l1i_assoc),
+                L1DCache(size=options.l1d_size, assoc=options.l1d_assoc),
+                options.cacheline_size,
+            )
+            for cpu in cpus
+        ]
+        for rnf in rnfs:
+            rnf.addPrivL2Cache(
+                L2Cache(size=options.l2_size, assoc=options.l2_assoc)
+            )
+        return rnfs
+
 
 class CHI_HNF(CHI_Node):
     """
@@ -659,7 +700,7 @@ class CHI_MN(CHI_Node):
         super().__init__(ruby_system)
 
         # MiscNode has internal address range starting at 0
-        addr_range = AddrRange(0, size="1kB")
+        addr_range = AddrRange(0, size="1KiB")
 
         self._cntrl = CHI_MNController(
             ruby_system, addr_range, l1d_caches, early_nonsync_comp
@@ -678,6 +719,13 @@ class CHI_MN(CHI_Node):
     def getNetworkSideControllers(self):
         return [self._cntrl]
 
+    @classmethod
+    def generate(cls, options, ruby_system, cpus):
+        """
+        Creates one Misc Node
+        """
+        return [cls(ruby_system, [cpu.l1d for cpu in cpus])]
+
 
 class CHI_SNF_Base(CHI_Node):
     """
@@ -689,8 +737,8 @@ class CHI_SNF_Base(CHI_Node):
     def __init__(self, ruby_system, parent):
         super().__init__(ruby_system)
 
-        self._cntrl = Memory_Controller(
-            version=Versions.getVersion(Memory_Controller),
+        self._cntrl = CHI_Memory_Controller(
+            version=Versions.getVersion(CHI_Memory_Controller),
             ruby_system=ruby_system,
             triggerQueue=TriggerMessageBuffer(),
             responseFromMemory=MemCtrlMessageBuffer(),

@@ -29,6 +29,7 @@
 #include <gtest/gtest.h>
 
 #include <cassert>
+#include <cstdlib>
 #include <cerrno>
 #include <fstream>
 #include <string>
@@ -52,24 +53,11 @@ namespace gem5
 class SerializationFixture : public ::testing::Test
 {
   private:
-    /**
-     * Temporary directory names are generated based on this number, which
-     * is updated every time the generator function is called.
-     */
-    static unsigned dirNumber;
-
     /** The name of the temporary directory. */
-    std::string dirName;
+    std::string dirName = "/tmp/temp_dir_test_XXXXXX";
 
   public:
     using ::testing::Test::Test;
-
-    /** Generate a temporary directory name. */
-    static std::string
-    generateTempDirName()
-    {
-        return "/tmp/temp_dir_test" + std::to_string(dirNumber++) + "/";
-    }
 
     /** Get the name of the directory we have created on SetUp. */
     std::string getDirName() const { return dirName; }
@@ -78,7 +66,7 @@ class SerializationFixture : public ::testing::Test
     std::string
     getCptPath() const
     {
-        return getDirName() + std::string(CheckpointIn::baseFilename);
+        return getDirName() + '/' + std::string(CheckpointIn::baseFilename);
     }
 
     /**
@@ -98,9 +86,8 @@ class SerializationFixture : public ::testing::Test
     SetUp() override
     {
         // Create the directory
-        dirName = generateTempDirName();
-        [[maybe_unused]] int success = mkdir(dirName.c_str(), 0775);
-        assert(!(success == -1 && errno != EEXIST));
+        [[maybe_unused]] char* ret = mkdtemp(dirName.data());
+        assert(ret != nullptr);
     }
 
     void
@@ -114,6 +101,5 @@ class SerializationFixture : public ::testing::Test
         assert(success == 0);
     }
 };
-unsigned SerializationFixture::dirNumber = 0;
 
 } // anonymous namespace

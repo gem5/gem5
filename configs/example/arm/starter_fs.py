@@ -276,7 +276,7 @@ def main():
         "--mem-size",
         action="store",
         type=str,
-        default="2GB",
+        default="2GiB",
         help="Specify the physical memory size",
     )
     parser.add_argument(

@@ -156,6 +156,27 @@ if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
         uses_kvm=True,
     )
 
+if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
+    # The x86-ubuntu-run uses KVM cores, this test will therefore only be run
+    # on systems that support KVM.
+    gem5_verify_config(
+        name="test-gem5-library-example-x86-ubuntu-run-with-kvm-no-perf",
+        fixtures=(),
+        verifiers=(),
+        config=joinpath(
+            config.base_dir,
+            "configs",
+            "example",
+            "gem5_library",
+            "x86-ubuntu-run-with-kvm-no-perf.py",
+        ),
+        config_args=[],
+        valid_isas=(constants.all_compiled_tag,),
+        valid_hosts=(constants.host_x86_64_tag,),
+        length=constants.long_tag,
+        uses_kvm=True,
+    )
+
 gem5_verify_config(
     name="test-gem5-library-example-x86-ubuntu-run",
     fixtures=(),
@@ -196,7 +217,6 @@ if False:  # os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
         ),
         config_args=["--benchmark", "blackscholes", "--size", "simsmall"],
         valid_isas=(constants.all_compiled_tag,),
-        protocol="MESI_Two_Level",
         valid_hosts=(constants.host_x86_64_tag,),
         length=constants.long_tag,
         uses_kvm=True,
@@ -218,11 +238,11 @@ if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
         ),
         config_args=[
             "--benchmark",
-            "npb-bt-a" "--ticks",
+            "npb-bt-a",
+            "--ticks",
             "5000000000",
         ],
         valid_isas=(constants.all_compiled_tag,),
-        protocol="MESI_Two_Level",
         valid_hosts=(constants.host_x86_64_tag,),
         length=constants.long_tag,
         uses_kvm=True,
@@ -244,7 +264,6 @@ if os.access("/dev/kvm", mode=os.R_OK | os.W_OK):
         ),
         config_args=["--benchmark", "gapbs-bfs-test"],
         valid_isas=(constants.all_compiled_tag,),
-        protocol="MESI_Two_Level",
         valid_hosts=(constants.host_x86_64_tag,),
         length=constants.long_tag,
         uses_kvm=True,
@@ -422,6 +441,25 @@ gem5_verify_config(
         "multisim-print-this.py",
     ),
     config_args=["process_1"],
+    gem5_args=[],
+    valid_isas=(constants.all_compiled_tag,),
+    valid_hosts=constants.supported_hosts,
+    length=constants.quick_tag,
+)
+
+gem5_verify_config(
+    name="test-gem5-library-example-exit-handling-user-exit-handler",
+    fixtures=(),
+    verifiers=(),
+    config=joinpath(
+        config.base_dir,
+        "configs",
+        "example",
+        "gem5_library",
+        "exit_handling",
+        "user-exit-handler.py",
+    ),
+    config_args=[],
     gem5_args=[],
     valid_isas=(constants.all_compiled_tag,),
     valid_hosts=constants.supported_hosts,

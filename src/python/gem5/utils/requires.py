@@ -31,8 +31,8 @@ from typing import Optional
 from ..coherence_protocol import CoherenceProtocol
 from ..isas import ISA
 from ..runtime import (
-    get_runtime_coherence_protocol,
     get_supported_isas,
+    get_supported_protocols,
 )
 
 
@@ -73,7 +73,7 @@ def requires(
     """
 
     supported_isas = get_supported_isas()
-    runtime_coherence_protocol = get_runtime_coherence_protocol()
+    supported_protocols = get_supported_protocols()
     kvm_available = os.access("/dev/kvm", mode=os.R_OK | os.W_OK)
 
     # Note, previously I had the following code here:
@@ -108,17 +108,13 @@ def requires(
     if (
         coherence_protocol_required != None
         and coherence_protocol_required.value
-        != runtime_coherence_protocol.value
+        not in (protocol.value for protocol in supported_protocols)
     ):
-        raise Exception(
-            _get_exception_str(
-                msg="The current coherence protocol is "
-                "'{}'. Required: '{}'".format(
-                    runtime_coherence_protocol.name,
-                    coherence_protocol_required.name,
-                )
-            )
-        )
+        msg = f"The required protocol is '{coherence_protocol_required.name}'."
+        msg += "Supported protocols: "
+        for protocol in supported_protocols:
+            msg += f"{os.linesep}{protocol.name}"
+        raise Exception(_get_exception_str(msg=msg))
 
     if kvm_required and not kvm_available:
         raise Exception(

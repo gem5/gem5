@@ -122,28 +122,23 @@ ElasticTrace::regEtraceListeners()
 {
     assert(!allProbesReg);
     inform("@%llu: No. of instructions committed = %llu, registering elastic"
-        " probe listeners", curTick(), cpu->numSimulatedInsts());
+        " probe listeners", curTick(), cpu->totalNumSimulatedInsts());
     // Create new listeners: provide method to be called upon a notify() for
     // each probe point.
-    listeners.push_back(new ProbeListenerArg<ElasticTrace, RequestPtr>(this,
-                        "FetchRequest", &ElasticTrace::fetchReqTrace));
-    listeners.push_back(new ProbeListenerArg<ElasticTrace,
-            DynInstConstPtr>(this, "Execute",
-                &ElasticTrace::recordExecTick));
-    listeners.push_back(new ProbeListenerArg<ElasticTrace,
-            DynInstConstPtr>(this, "ToCommit",
-                &ElasticTrace::recordToCommTick));
-    listeners.push_back(new ProbeListenerArg<ElasticTrace,
-            DynInstConstPtr>(this, "Rename",
-                &ElasticTrace::updateRegDep));
-    listeners.push_back(new ProbeListenerArg<ElasticTrace, SeqNumRegPair>(this,
-                        "SquashInRename", &ElasticTrace::removeRegDepMapEntry));
-    listeners.push_back(new ProbeListenerArg<ElasticTrace,
-            DynInstConstPtr>(this, "Squash",
-                &ElasticTrace::addSquashedInst));
-    listeners.push_back(new ProbeListenerArg<ElasticTrace,
-            DynInstConstPtr>(this, "Commit",
-                &ElasticTrace::addCommittedInst));
+    connectListener<ProbeListenerArg<ElasticTrace, RequestPtr>>(
+        this, "FetchRequest", &ElasticTrace::fetchReqTrace);
+    connectListener<ProbeListenerArg<ElasticTrace, DynInstConstPtr>>(
+        this, "Execute", &ElasticTrace::recordExecTick);
+    connectListener<ProbeListenerArg<ElasticTrace, DynInstConstPtr>>(
+        this, "ToCommit", &ElasticTrace::recordToCommTick);
+    connectListener<ProbeListenerArg<ElasticTrace, DynInstConstPtr>>(
+        this, "Rename", &ElasticTrace::updateRegDep);
+    connectListener<ProbeListenerArg<ElasticTrace, SeqNumRegPair>>(
+        this, "SquashInRename", &ElasticTrace::removeRegDepMapEntry);
+    connectListener<ProbeListenerArg<ElasticTrace, DynInstConstPtr>>(
+        this, "Squash", &ElasticTrace::addSquashedInst);
+    connectListener<ProbeListenerArg<ElasticTrace, DynInstConstPtr>>(
+        this, "Commit", &ElasticTrace::addCommittedInst);
     allProbesReg = true;
 }
 

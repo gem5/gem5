@@ -83,7 +83,17 @@ def test_memory(
     )
 
 
-cache_classes = ["NoCache", "PrivateL1", "PrivateL1PrivateL2", "MESITwoLevel"]
+cache_classes = [
+    "NoCache",
+    "PrivateL1",
+    "PrivateL1PrivateL2",
+    "MESITwoLevel",
+    "MIExample",
+    "CHIL1",
+    "MESIThreeLevel",
+    "OctopiCache",
+]
+
 memory_classes = [
     "SingleChannelDDR3_1600",
     "SingleChannelDDR3_2133",

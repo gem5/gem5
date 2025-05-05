@@ -63,7 +63,7 @@ class BaseBufferArg
      * Allocate a buffer of size 'size' representing the memory at
      * target address 'addr'.
      */
-    BaseBufferArg(Addr _addr, int _size)
+    BaseBufferArg(Addr _addr, uint64_t _size)
         : addr(_addr), size(_size), bufPtr(new uint8_t[size])
     {
         // clear out buffer: in case we only partially populate this,
@@ -96,7 +96,7 @@ class BaseBufferArg
 
   protected:
     const Addr addr;        ///< address of buffer in target address space
-    const int size;         ///< buffer size
+    const uint64_t size;         ///< buffer size
     uint8_t * const bufPtr; ///< pointer to buffer in simulator space
 };
 
@@ -111,7 +111,7 @@ class BufferArg : public BaseBufferArg
      * Allocate a buffer of size 'size' representing the memory at
      * target address 'addr'.
      */
-    BufferArg(Addr _addr, int _size) : BaseBufferArg(_addr, _size) { }
+    BufferArg(Addr _addr, uint64_t _size) : BaseBufferArg(_addr, _size) { }
 
     /**
      * Return a pointer to the internal simulator-space buffer.
@@ -138,7 +138,7 @@ class TypedBufferArg : public BaseBufferArg
      * number of bytes to allocate to deal with structs that have
      * variable-size arrays at the end.
      */
-    TypedBufferArg(Addr _addr, int _size = sizeof(T))
+    TypedBufferArg(Addr _addr, uint64_t _size = sizeof(T))
         : BaseBufferArg(_addr, _size)
     { }
 

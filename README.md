@@ -94,6 +94,6 @@ or start discussions. To join the mailing list please visit
 
 ## Contributing to gem5
 
-We hope you enjoy using gem5. When appropriate we advise charing your
+We hope you enjoy using gem5. When appropriate we advise sharing your
 contributions to the project. <https://www.gem5.org/contributing> can help you
 get started. Additional information can be found in the CONTRIBUTING.md file.

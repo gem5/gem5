@@ -272,7 +272,21 @@ def scheduleTickExitAbsolute(
     """
     if tick <= curTick():
         warn("Tick exit scheduled for the past. This will not be triggered.")
-    _m5.event.exitSimLoop(exit_string, 0, tick, 0, False)
+
+    # This is a nasty little hack that uses the generator based approach when
+    # the exit string is used (as it maps the an ExitEvent enum value). For
+    # other string values we use the newer approach.
+    if exit_string == "Tick exit reached":
+        _m5.event.exitSimLoop(exit_string, 0, tick, 0, False)
+    else:
+        _m5.event.exitSimulationLoop(
+            6,
+            {
+                "scheduled_at_tick": str(curTick()),
+                "justification": exit_string,
+            },
+            tick,
+        )
 
 
 def drain():

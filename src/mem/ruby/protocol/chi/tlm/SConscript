@@ -1,0 +1,85 @@
+# -*- mode:python -*-
+# Copyright (c) 2024 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+Import("*")
+
+def get_tlm_paths():
+    tlm_dir = Dir(env["CONF"]["TLM_PATH"])
+    assert tlm_dir is not None and tlm_dir != "."
+
+    include_dir = tlm_dir.Dir("include")
+    lib_dir = tlm_dir.Dir("lib")
+
+    model_lib = "libarmtlmchi.so"
+    if not lib_dir.File(model_lib).exists():
+        print(f"Error: Can't find {model_lib} in AMBA TLM directory.")
+        print(f"TLM path: {tlm_dir}")
+        Exit(1)
+
+    return include_dir, lib_dir, "armtlmchi"
+
+
+if env["CONF"]["BUILD_TLM"]:
+    include_path, lib_path, tlm_lib = get_tlm_paths()
+
+    env.Append(CPPPATH=include_path)
+    env.Append(LIBPATH=lib_path)
+    env.Append(LIBS=[tlm_lib])
+
+    SimObject(
+        "TlmController.py",
+        sim_objects=["TlmController"],
+        tags=['arm isa']
+    )
+    SimObject(
+        'TlmGenerator.py',
+        sim_objects=['TlmGenerator'],
+        tags=['arm isa']
+    )
+    Source("utils.cc", tags=['arm isa'])
+    Source("controller.cc", tags=['arm isa'])
+    Source('tlm_chi.cc', tags=['arm isa', 'python'])
+    Source('tlm_chi_gen.cc', tags=['arm isa', 'python'])
+    Source('generator.cc', tags=['arm isa'])
+    PySource('m5', 'tlm_chi.py')
+    DebugFlag("TLM", tags=['arm isa'])
+
+    print(
+        "BUILD_TLM set: "
+        f"Building TLM integration with libarmtlmchi.so from '{lib_path}'\n"
+    )
+elif not GetOption("silent"):
+    print("BUILD_TLM not set, not building CHI-TLM integration\n")

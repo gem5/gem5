@@ -92,7 +92,7 @@ from m5.util.pybind import *
 # object, either using keyword assignment in the constructor or in
 # separate assignment statements.  For example:
 #
-# cache = BaseCache(size='64KB')
+# cache = BaseCache(size='64KiB')
 # cache.hit_latency = 3
 # cache.assoc = 8
 #
@@ -145,6 +145,7 @@ class MetaSimObject(type):
         "cxx_exports": list,
         "cxx_param_exports": list,
         "cxx_template_params": list,
+        "override_create": bool,  # True if overrides the default create()
     }
     # Attributes that can be set any time
     keywords = {"check": FunctionType}
@@ -186,6 +187,8 @@ class MetaSimObject(type):
             value_dict["cxx_param_exports"] = []
         if "cxx_template_params" not in value_dict:
             value_dict["cxx_template_params"] = []
+        if "override_create" not in value_dict:
+            value_dict["override_create"] = False
         cls_dict["_value_dict"] = value_dict
         cls = super().__new__(mcls, name, bases, cls_dict)
         if "type" in value_dict:
@@ -452,10 +455,10 @@ class MetaSimObject(type):
 
     # See ParamValue.cxx_predecls for description.
     def cxx_predecls(cls, code):
-        code('#include "params/$cls.hh"')
+        code('#include "params/$cls.hh"', add_once=True)
 
     def pybind_predecls(cls, code):
-        code('#include "${{cls.cxx_header}}"')
+        code('#include "${{cls.cxx_header}}"', add_once=True)
 
 
 # This *temporary* definition is required to support calls from the
@@ -1259,7 +1262,9 @@ class SimObject(metaclass=MetaSimObject):
         if not self._ccObject:
             # Make sure this object is in the configuration hierarchy
             if not self._parent and not isRoot(self):
-                raise RuntimeError("Attempt to instantiate orphan node")
+                raise RuntimeError(
+                    f"Attempt to instantiate orphan node {self}"
+                )
             # Cycles in the configuration hierarchy are not supported. This
             # will catch the resulting recursion and stop.
             self._ccObject = -1

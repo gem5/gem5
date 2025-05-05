@@ -401,6 +401,20 @@ let {{
     exec_output += DvmInitiateAcc.subst(msrTlbiSIop)
     exec_output += DvmCompleteAcc.subst(msrTlbiSIop)
 
+    atCode = msr_check_code + '''
+        uint64_t par_result;
+        std::tie(fault, par_result) = performAt(xc, flat_idx, XOp1);
+        MiscDest_ud = XOp1;
+        MiscDest2_ud = par_result;
+    '''
+    msrAtIop = ArmInstObjParams("msr", "At64Hub", "AtOp64",
+        {
+            "code" : atCode
+        })
+    header_output += AtDeclare.subst(msrAtIop)
+    decoder_output += AtConstructor.subst(msrAtIop)
+    exec_output += BasicExecute.subst(msrAtIop)
+
     msrNZCVCode = '''
         CPSR cpsr = XOp1;
         CondCodesNZ = cpsr.nz;
@@ -525,11 +539,9 @@ let {{
            EA = XBase;
            faultAddr = EA;
            HCR hcr = Hcr64;
-           SCR scr = Scr64;
            CPSR cpsr = Cpsr;
            ExceptionLevel el = (ExceptionLevel) (uint8_t) cpsr.el;
-           if (el == EL1 && ArmSystem::haveEL(xc->tcBase(), EL2) &&
-               hcr.vm && (scr.ns || !ArmSystem::haveEL(xc->tcBase(), EL3))) {
+           if (el == EL1 && EL2Enabled(xc->tcBase()) && hcr.vm) {
                memAccessFlags = memAccessFlags | Request::CLEAN;
            }
            System *sys = xc->tcBase()->getSystemPtr();

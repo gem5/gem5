@@ -49,6 +49,12 @@ class TimerTable
     TimerTable();
 
     void
+    setBlockSize(int block_size)
+    {
+        m_block_size_bits = floorLog2(block_size);
+    }
+
+    void
     setConsumer(Consumer* consumer_ptr)
     {
         assert(m_consumer_ptr == NULL);
@@ -87,6 +93,8 @@ class TimerTable
 
     //! Consumer to signal a wakeup()
     Consumer* m_consumer_ptr;
+
+    int m_block_size_bits = 0;
 
     std::string m_name;
 };

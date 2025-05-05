@@ -85,7 +85,7 @@ class TaggedSetAssociative : public TaggedIndexingPolicy
   public:
     PARAMS(TaggedSetAssociative);
     TaggedSetAssociative(const Params &p)
-      : TaggedIndexingPolicy(p)
+      : TaggedIndexingPolicy(p, p.size / p.entry_size, floorLog2(p.entry_size))
     {}
 
     std::vector<ReplaceableEntry*>

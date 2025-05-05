@@ -41,6 +41,6 @@ class SimpleCache(ClockedObject):
 
     latency = Param.Cycles(1, "Cycles taken on a hit or to resolve a miss")
 
-    size = Param.MemorySize("16kB", "The size of the cache")
+    size = Param.MemorySize("16KiB", "The size of the cache")
 
     system = Param.System(Parent.any, "The system this cache is part of")

@@ -51,7 +51,7 @@ from m5.objects import *
 # Create a system with a Crossbar and a simple Memory:
 system = System()
 system.membus = IOXBar(width=16)
-system.physmem = SimpleMemory(range=AddrRange("512MB"))
+system.physmem = SimpleMemory(range=AddrRange("512MiB"))
 system.clk_domain = SrcClockDomain(
     clock="1.5GHz", voltage_domain=VoltageDomain(voltage="1V")
 )

@@ -170,12 +170,12 @@ init_pc(py::module_ &m_native)
     py::module_ m = m_native.def_submodule("pc");
     py::class_<PcCountPair>(m, "PcCountPair")
         .def(py::init<>())
-        .def(py::init<Addr, int>())
+        .def(py::init<Addr, uint64_t>())
         .def("__eq__", [](const PcCountPair& self, py::object other) {
             py::int_ pyPC = other.attr("get_pc")();
             py::int_ pyCount = other.attr("get_count")();
             uint64_t cPC = pyPC.cast<uint64_t>();
-            int cCount = pyCount.cast<int>();
+            uint64_t cCount = pyCount.cast<uint64_t>();
             return (self.getPC() == cPC && self.getCount() == cCount);
         })
         .def("__hash__", [](const PcCountPair& self){
@@ -310,7 +310,9 @@ pybind_init_core(py::module_ &m_native)
         .def("disableAllListeners", &ListenSocket::disableAll)
         .def("listenersDisabled", &ListenSocket::allDisabled)
         .def("listenersLoopbackOnly", &ListenSocket::loopbackOnly)
-        .def("seedRandom", [](uint64_t seed) { random_mt.init(seed); })
+        .def("seedRandom", [](uint64_t seed) {
+            Random::reseedAll(seed);
+        })
 
 
         .def("fixClockFrequency", &fixClockFrequency)

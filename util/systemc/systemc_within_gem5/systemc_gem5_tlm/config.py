@@ -62,7 +62,7 @@ system.target = TLM_Target()
 system.physmem = (
     SimpleMemory()
 )  # This must be instanciated, even if not needed
-# system.mem.addr_ranges = [AddrRange('512MB')]
+# system.mem.addr_ranges = [AddrRange('512MiB')]
 system.transactor = Gem5ToTlmBridge32()
 system.clk_domain = SrcClockDomain(clock="1.5GHz", voltage_domain=vd)
 

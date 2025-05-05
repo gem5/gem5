@@ -377,7 +377,7 @@ TrafficGen::parseConfig()
 size_t
 TrafficGen::nextState()
 {
-    double p = random_mt.random<double>();
+    double p = rng->random<double>();
     assert(currState < transitionMatrix.size());
     double cumulative = 0.0;
     size_t i = 0;

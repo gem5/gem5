@@ -24,8 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Channeled "generic" DDR memory controllers
-"""
+"""Channeled "generic" DDR memory controllers"""
 
 from math import log
 from typing import (
@@ -184,6 +183,10 @@ class ChanneledMemory(AbstractMemorySystem):
     @overrides(AbstractMemorySystem)
     def get_memory_controllers(self) -> List[MemCtrl]:
         return [ctrl for ctrl in self.mem_ctrl]
+
+    @overrides(AbstractMemorySystem)
+    def get_mem_interfaces(self) -> List[DRAMInterface]:
+        return self._dram
 
     @overrides(AbstractMemorySystem)
     def get_size(self) -> int:

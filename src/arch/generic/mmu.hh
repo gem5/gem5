@@ -125,6 +125,8 @@ class BaseMMU : public SimObject
     translateFunctional(const RequestPtr &req, ThreadContext *tc,
                         Mode mode);
 
+    virtual Addr getValidAddr(Addr vaddr, ThreadContext *tc, Mode mode);
+
     class MMUTranslationGen : public TranslationGen
     {
       private:

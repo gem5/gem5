@@ -28,11 +28,14 @@
 
 Import('*')
 
-Source('blockmem.cc', tags='sparc isa')
-Source('branch.cc', tags='sparc isa')
-Source('integer.cc', tags='sparc isa')
-Source('mem.cc', tags='sparc isa')
-Source('micro.cc', tags='sparc isa')
-Source('priv.cc', tags='sparc isa')
-Source('static_inst.cc', tags='sparc isa')
-Source('trap.cc', tags='sparc isa')
+if not env['CONF']['USE_SPARC_ISA']:
+    Return()
+
+Source('blockmem.cc', tags=['sparc isa'])
+Source('branch.cc', tags=['sparc isa'])
+Source('integer.cc', tags=['sparc isa'])
+Source('mem.cc', tags=['sparc isa'])
+Source('micro.cc', tags=['sparc isa'])
+Source('priv.cc', tags=['sparc isa'])
+Source('static_inst.cc', tags=['sparc isa'])
+Source('trap.cc', tags=['sparc isa'])

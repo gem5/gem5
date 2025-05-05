@@ -79,7 +79,7 @@ class RISCVMatchedCacheHierarchy(
         l2_size: str,
     ) -> None:
         """
-        :param l2_size: The size of the L2 Cache (e.g., "256kB").
+        :param l2_size: The size of the L2 Cache (e.g., "256KiB").
         """
         AbstractClassicCacheHierarchy.__init__(self=self)
         AbstractTwoLevelCacheHierarchy.__init__(
@@ -173,7 +173,7 @@ class RISCVMatchedCacheHierarchy(
             data_latency=50,
             response_latency=50,
             mshrs=20,
-            size="1kB",
+            size="1KiB",
             tgts_per_mshr=12,
             addr_ranges=board.mem_ranges,
         )

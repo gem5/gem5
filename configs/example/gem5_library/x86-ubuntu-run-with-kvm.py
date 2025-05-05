@@ -67,17 +67,17 @@ from gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import
 
 # Here we setup a MESI Two Level Cache Hierarchy.
 cache_hierarchy = MESITwoLevelCacheHierarchy(
-    l1d_size="16kB",
+    l1d_size="16KiB",
     l1d_assoc=8,
-    l1i_size="16kB",
+    l1i_size="16KiB",
     l1i_assoc=8,
-    l2_size="256kB",
+    l2_size="256KiB",
     l2_assoc=16,
     num_l2_banks=1,
 )
 
 # Setup the system memory.
-memory = SingleChannelDDR3_1600(size="3GB")
+memory = SingleChannelDDR3_1600(size="3GiB")
 
 # Here we setup the processor. This is a special switchable processor in which
 # a starting core type and a switch core type must be specified. Once a
@@ -100,35 +100,34 @@ board = X86Board(
     cache_hierarchy=cache_hierarchy,
 )
 
-# Here we set the Full System workload.
-# The `set_kernel_disk_workload` function for the X86Board takes a kernel, a
-# disk image, and, optionally, a command to run.
 
-# This is the command to run after the system has booted. The first `m5 exit`
-# will stop the simulation so we can switch the CPU cores from KVM to timing
-# and continue the simulation to run the echo command, sleep for a second,
-# then, again, call `m5 exit` to terminate the simulation. After simulation
-# has ended you may inspect `m5out/system.pc.com_1.device` to see the echo
-# output.
-command = (
-    "m5 exit;"
-    + "echo 'This is running on Timing CPU cores.';"
-    + "sleep 1;"
-    + "m5 exit;"
-)
-
-workload = obtain_resource("x86-ubuntu-18.04-boot", resource_version="2.0.0")
-workload.set_parameter("readfile_contents", command)
+workload = obtain_resource("x86-ubuntu-24.04-boot-with-systemd")
 board.set_workload(workload)
+
+
+def exit_event_handler():
+    print("First exit: kernel booted")
+    yield False  # gem5 is now executing systemd startup
+    print("Second exit: Started `after_boot.sh` script")
+    # The after_boot.sh script is executed after the kernel and systemd have
+    # booted.
+    # Here we switch the CPU type to Timing.
+    print("Switching to Timing CPU")
+    processor.switch()
+    yield False  # gem5 is now executing the `after_boot.sh` script
+    print("Third exit: Finished `after_boot.sh` script")
+    # The after_boot.sh script will run a script if it is passed via
+    # m5 readfile. This is the last exit event before the simulation exits.
+    yield True
+
 
 simulator = Simulator(
     board=board,
     on_exit_event={
         # Here we want override the default behavior for the first m5 exit
-        # exit event. Instead of exiting the simulator, we just want to
-        # switch the processor. The 2nd m5 exit after will revert to using
-        # default behavior where the simulator run will exit.
-        ExitEvent.EXIT: (func() for func in [processor.switch])
+        # exit event.
+        ExitEvent.EXIT: exit_event_handler()
     },
 )
+
 simulator.run()

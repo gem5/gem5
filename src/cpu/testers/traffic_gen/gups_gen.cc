@@ -31,7 +31,6 @@
 #include <cstring>
 #include <string>
 
-#include "base/random.hh"
 #include "debug/GUPSGen.hh"
 #include "sim/sim_exit.hh"
 
@@ -80,17 +79,17 @@ GUPSGen::startup()
 {
     int block_size = 64; // Write the initial values in 64 byte blocks.
     uint64_t stride_size = block_size / elementSize;
+    auto write_data = std::make_unique<uint8_t[]>(block_size);
     if (initMemory) {
         for (uint64_t start_index = 0; start_index < tableSize;
                                     start_index += stride_size) {
-            uint8_t write_data[block_size];
             for (uint64_t offset = 0; offset < stride_size; offset++) {
                 uint64_t value = start_index + offset;
-                std::memcpy(write_data + offset * elementSize,
+                std::memcpy(write_data.get() + offset * elementSize,
                             &value, elementSize);
             }
             Addr addr = indexToAddr(start_index);
-            PacketPtr pkt = getWritePacket(addr, block_size, write_data);
+            PacketPtr pkt = getWritePacket(addr, block_size, write_data.get());
             port.sendFunctionalPacket(pkt);
             delete pkt;
         }
@@ -212,7 +211,7 @@ GUPSGen::createNextReq()
         assert (readRequests < numUpdates);
 
         uint64_t value = readRequests;
-        uint64_t index = random_mt.random((int64_t) 0, tableSize);
+        uint64_t index = rng->random<int64_t>((int64_t) 0, tableSize);
         Addr addr = indexToAddr(index);
         PacketPtr pkt = getReadPacket(addr, elementSize);
         updateTable[pkt->req] = value;

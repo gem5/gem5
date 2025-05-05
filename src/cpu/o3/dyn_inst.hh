@@ -187,6 +187,8 @@ class DynInst : public ExecContext, public RefCounted
         ReqMade,
         MemOpDone,
         HtmFromTransaction,
+        NoCapableFU,           /// Processor does not have capability to
+                               /// execute the instruction
         MaxFlags
     };
 
@@ -841,6 +843,16 @@ class DynInst : public ExecContext, public RefCounted
     /** Returns whether or not this instruction is squashed in the ROB. */
     bool isSquashedInROB() const { return status[SquashedInROB]; }
 
+    /** Mark this instruction as having attempted to execute
+     * but CPU did not have a capable functional unit.
+     */
+    void setNoCapableFU() { instFlags.set(NoCapableFU); }
+
+    /** Returns whether or not this instruction attempted
+     * to execute and found not capable FU.
+     */
+    bool noCapableFU() const { return instFlags[NoCapableFU]; }
+
     /** Returns whether pinned registers are renamed */
     bool isPinnedRegsRenamed() const { return status[PinnedRegsRenamed]; }
 
@@ -1088,9 +1100,10 @@ class DynInst : public ExecContext, public RefCounted
                 setRegOperand(staticInst.get(), idx,
                         cpu->getReg(prev_phys_reg, threadNumber));
             } else {
-                uint8_t val[original_dest_reg.regClass().regBytes()];
-                cpu->getReg(prev_phys_reg, val, threadNumber);
-                setRegOperand(staticInst.get(), idx, val);
+                const size_t size = original_dest_reg.regClass().regBytes();
+                auto val = std::make_unique<uint8_t[]>(size);
+                cpu->getReg(prev_phys_reg, val.get(), threadNumber);
+                setRegOperand(staticInst.get(), idx, val.get());
             }
         }
     }

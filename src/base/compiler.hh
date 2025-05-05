@@ -131,6 +131,16 @@ do { [[maybe_unused]] int i[] = { 0, ((void)(__VA_ARGS__), 0)... }; } while (0)
 #  error "Don't know what to do for your compiler."
 #endif
 
+
+// GEM5_NO_OPTIMIZE can be used to prevent the compiler from optimizing a
+// function. Clang and GCC have different ways of doing this, so we need to
+// check which compiler is being used.
+#if defined(__clang__)
+#  define GEM5_NO_OPTIMIZE __attribute__((optnone))
+#else
+#  define GEM5_NO_OPTIMIZE __attribute__((optimize("O0")))
+#endif
+
 // When a member variable may be unused, mark it with GEM5_CLASS_VAR_USED. This
 // needs to be limitted to clang only since clang warns on these unused
 // variables, and g++ will actually warn if you use this attribute since it

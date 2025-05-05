@@ -30,6 +30,8 @@
 
 #include <algorithm>
 
+#include "mem/ruby/system/RubySystem.hh"
+
 namespace gem5
 {
 
@@ -38,12 +40,18 @@ namespace ruby
 
 NetDest::NetDest()
 {
-  resize();
+}
+
+NetDest::NetDest(RubySystem *ruby_system)
+    : m_ruby_system(ruby_system)
+{
+    resize();
 }
 
 void
 NetDest::add(MachineID newElement)
 {
+    assert(m_bits.size() > 0);
     assert(bitIndex(newElement.num) < m_bits[vecIndex(newElement)].getSize());
     m_bits[vecIndex(newElement)].add(bitIndex(newElement.num));
 }
@@ -51,6 +59,7 @@ NetDest::add(MachineID newElement)
 void
 NetDest::addNetDest(const NetDest& netDest)
 {
+    assert(m_bits.size() > 0);
     assert(m_bits.size() == netDest.getSize());
     for (int i = 0; i < m_bits.size(); i++) {
         m_bits[i].addSet(netDest.m_bits[i]);
@@ -60,6 +69,8 @@ NetDest::addNetDest(const NetDest& netDest)
 void
 NetDest::setNetDest(MachineType machine, const Set& set)
 {
+    assert(m_ruby_system != nullptr);
+
     // assure that there is only one set of destinations for this machine
     assert(MachineType_base_level((MachineType)(machine + 1)) -
            MachineType_base_level(machine) == 1);
@@ -69,12 +80,14 @@ NetDest::setNetDest(MachineType machine, const Set& set)
 void
 NetDest::remove(MachineID oldElement)
 {
+    assert(m_bits.size() > 0);
     m_bits[vecIndex(oldElement)].remove(bitIndex(oldElement.num));
 }
 
 void
 NetDest::removeNetDest(const NetDest& netDest)
 {
+    assert(m_bits.size() > 0);
     assert(m_bits.size() == netDest.getSize());
     for (int i = 0; i < m_bits.size(); i++) {
         m_bits[i].removeSet(netDest.m_bits[i]);
@@ -84,6 +97,7 @@ NetDest::removeNetDest(const NetDest& netDest)
 void
 NetDest::clear()
 {
+    assert(m_bits.size() > 0);
     for (int i = 0; i < m_bits.size(); i++) {
         m_bits[i].clear();
     }
@@ -101,6 +115,8 @@ NetDest::broadcast()
 void
 NetDest::broadcast(MachineType machineType)
 {
+    assert(m_ruby_system != nullptr);
+
     for (NodeID i = 0; i < MachineType_base_count(machineType); i++) {
         MachineID mach = {machineType, i};
         add(mach);
@@ -111,6 +127,9 @@ NetDest::broadcast(MachineType machineType)
 std::vector<NodeID>
 NetDest::getAllDest()
 {
+    assert(m_ruby_system != nullptr);
+    assert(m_bits.size() > 0);
+
     std::vector<NodeID> dest;
     dest.clear();
     for (int i = 0; i < m_bits.size(); i++) {
@@ -127,6 +146,8 @@ NetDest::getAllDest()
 int
 NetDest::count() const
 {
+    assert(m_bits.size() > 0);
+
     int counter = 0;
     for (int i = 0; i < m_bits.size(); i++) {
         counter += m_bits[i].count();
@@ -137,12 +158,14 @@ NetDest::count() const
 NodeID
 NetDest::elementAt(MachineID index)
 {
+    assert(m_bits.size() > 0);
     return m_bits[vecIndex(index)].elementAt(bitIndex(index.num));
 }
 
 MachineID
 NetDest::smallestElement() const
 {
+    assert(m_bits.size() > 0);
     assert(count() > 0);
     for (int i = 0; i < m_bits.size(); i++) {
         for (NodeID j = 0; j < m_bits[i].getSize(); j++) {
@@ -158,6 +181,9 @@ NetDest::smallestElement() const
 MachineID
 NetDest::smallestElement(MachineType machine) const
 {
+    assert(m_bits.size() > 0);
+    assert(m_ruby_system != nullptr);
+
     int size = m_bits[MachineType_base_level(machine)].getSize();
     for (NodeID j = 0; j < size; j++) {
         if (m_bits[MachineType_base_level(machine)].isElement(j)) {
@@ -173,6 +199,7 @@ NetDest::smallestElement(MachineType machine) const
 bool
 NetDest::isBroadcast() const
 {
+    assert(m_bits.size() > 0);
     for (int i = 0; i < m_bits.size(); i++) {
         if (!m_bits[i].isBroadcast()) {
             return false;
@@ -185,6 +212,7 @@ NetDest::isBroadcast() const
 bool
 NetDest::isEmpty() const
 {
+    assert(m_bits.size() > 0);
     for (int i = 0; i < m_bits.size(); i++) {
         if (!m_bits[i].isEmpty()) {
             return false;
@@ -197,8 +225,9 @@ NetDest::isEmpty() const
 NetDest
 NetDest::OR(const NetDest& orNetDest) const
 {
+    assert(m_bits.size() > 0);
     assert(m_bits.size() == orNetDest.getSize());
-    NetDest result;
+    NetDest result(m_ruby_system);
     for (int i = 0; i < m_bits.size(); i++) {
         result.m_bits[i] = m_bits[i].OR(orNetDest.m_bits[i]);
     }
@@ -209,8 +238,9 @@ NetDest::OR(const NetDest& orNetDest) const
 NetDest
 NetDest::AND(const NetDest& andNetDest) const
 {
+    assert(m_bits.size() > 0);
     assert(m_bits.size() == andNetDest.getSize());
-    NetDest result;
+    NetDest result(m_ruby_system);
     for (int i = 0; i < m_bits.size(); i++) {
         result.m_bits[i] = m_bits[i].AND(andNetDest.m_bits[i]);
     }
@@ -221,6 +251,7 @@ NetDest::AND(const NetDest& andNetDest) const
 bool
 NetDest::intersectionIsNotEmpty(const NetDest& other_netDest) const
 {
+    assert(m_bits.size() > 0);
     assert(m_bits.size() == other_netDest.getSize());
     for (int i = 0; i < m_bits.size(); i++) {
         if (!m_bits[i].intersectionIsEmpty(other_netDest.m_bits[i])) {
@@ -233,6 +264,7 @@ NetDest::intersectionIsNotEmpty(const NetDest& other_netDest) const
 bool
 NetDest::isSuperset(const NetDest& test) const
 {
+    assert(m_bits.size() > 0);
     assert(m_bits.size() == test.getSize());
 
     for (int i = 0; i < m_bits.size(); i++) {
@@ -246,12 +278,15 @@ NetDest::isSuperset(const NetDest& test) const
 bool
 NetDest::isElement(MachineID element) const
 {
+    assert(m_bits.size() > 0);
     return ((m_bits[vecIndex(element)])).isElement(bitIndex(element.num));
 }
 
 void
 NetDest::resize()
 {
+    assert(m_ruby_system != nullptr);
+
     m_bits.resize(MachineType_base_level(MachineType_NUM));
     assert(m_bits.size() == MachineType_NUM);
 
@@ -263,6 +298,7 @@ NetDest::resize()
 void
 NetDest::print(std::ostream& out) const
 {
+    assert(m_bits.size() > 0);
     out << "[NetDest (" << m_bits.size() << ") ";
 
     for (int i = 0; i < m_bits.size(); i++) {
@@ -277,12 +313,27 @@ NetDest::print(std::ostream& out) const
 bool
 NetDest::isEqual(const NetDest& n) const
 {
+    assert(m_bits.size() > 0);
     assert(m_bits.size() == n.m_bits.size());
     for (unsigned int i = 0; i < m_bits.size(); ++i) {
         if (!m_bits[i].isEqual(n.m_bits[i]))
             return false;
     }
     return true;
+}
+
+int
+NetDest::MachineType_base_count(const MachineType& obj)
+{
+    assert(m_ruby_system != nullptr);
+    return m_ruby_system->MachineType_base_count(obj);
+}
+
+int
+NetDest::MachineType_base_number(const MachineType& obj)
+{
+    assert(m_ruby_system != nullptr);
+    return m_ruby_system->MachineType_base_number(obj);
 }
 
 } // namespace ruby

@@ -1,5 +1,4 @@
 protocol "MOESI_hammer";
-include "RubySlicc_interfaces.slicc";
 include "MOESI_hammer-msg.sm";
 include "MOESI_hammer-cache.sm";
 include "MOESI_hammer-dir.sm";

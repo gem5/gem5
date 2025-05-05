@@ -65,7 +65,7 @@ from devices import (
 
 default_disk = "aarch64-ubuntu-trusty-headless.img"
 
-default_mem_size = "2GB"
+default_mem_size = "2GiB"
 
 
 def _to_ticks(value):

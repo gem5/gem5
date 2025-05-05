@@ -34,6 +34,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "base/random.hh"
 #include "mem/ruby/common/Address.hh"
 
 namespace gem5
@@ -71,6 +72,7 @@ class CheckTable
     int m_num_writers;
     int m_num_readers;
     RubyTester* m_tester_ptr;
+    Random::RandomPtr rng = Random::genRandom();
 };
 
 inline std::ostream&

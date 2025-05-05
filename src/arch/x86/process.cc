@@ -114,7 +114,7 @@ X86_64Process::X86_64Process(const ProcessParams &params,
     Addr stack_base = 0x7FFFFFFFF000ULL;
     Addr max_stack_size = params.maxStackSize;
     Addr next_thread_stack_base = stack_base - max_stack_size;
-    Addr mmap_end = 0x7FFFF7FFF000ULL;
+    Addr mmap_end = std::min<Addr>(0x7FFFF7FFF000ULL, next_thread_stack_base);
 
     memState = std::make_shared<MemState>(
             this, brk_point, stack_base, max_stack_size,

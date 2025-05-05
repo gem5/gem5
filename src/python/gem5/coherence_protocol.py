@@ -28,18 +28,52 @@
 Specifies the coherence protocol enum
 """
 
+import os
 from enum import Enum
 
 
 class CoherenceProtocol(Enum):
-    MESI_THREE_LEVEL = 1
-    MESI_THREE_LEVEL_HTM = 2
-    ARM_MOESI_HAMMER = 3
-    GARNET_STANDALONE = 4
-    MESI_TWO_LEVEL = 5
-    MOESI_CMP_DIRECTORY = 6
-    MOESI_CMP_TOKEN = 7
-    MOESI_AMD_BASE = 8
-    MI_EXAMPLE = 9
-    GPU_VIPER = 10
-    CHI = 11
+    NULL = "no protocol (classic only)"
+    MESI_THREE_LEVEL = "MESI_Three_Level"
+    MESI_THREE_LEVEL_HTM = "MESI_Three_Level_HTM"
+    AMD_MOESI_HAMMER = "AMD_MOESI_hammer"
+    GARNET_STANDALONE = "Garnet_standalone"
+    MESI_TWO_LEVEL = "MESI_Two_Level"
+    MOESI_CMP_DIRECTORY = "MOESI_CMP_directory"
+    MOESI_CMP_TOKEN = "MOESI_CMP_token"
+    MOESI_AMD_BASE = "MOESI_AMD_Base"
+    MI_EXAMPLE = "MI_example"
+    GPU_VIPER = "GPU_VIPER"
+    CHI = "CHI"
+    MSI = "MSI"
+
+
+def get_protocols_str_set():
+    return {protocol.value for protocol in CoherenceProtocol}
+
+
+def get_protocol_from_str(protocol_str: str) -> CoherenceProtocol:
+    """
+    Will return the correct enum given the input string. This is matched on
+    the enum's value. E.g., "CHI" will return CoherenceProtocol.CHI. Throws
+    an exception if the input string is invalid.
+
+    ``get_protocols_str_set()`` can be used to determine the valid strings.
+
+    This is for parsing text inputs that specify protocol targets.
+
+    :param input: The protocol to return, as a string. Case-insensitive.
+    """
+
+    for protocol in CoherenceProtocol:
+        if protocol.value.lower() == protocol_str.lower():
+            return protocol
+
+    valid_protocols_str_list = ""
+    for isa_str in get_protocols_str_set():
+        valid_protocols_str_list += f"{os.linesep}{isa_str}"
+
+    raise Exception(
+        f"Value '{input}' does not correspond to a known ISA. Known protocols:"
+        f"{valid_protocols_str_list}"
+    )

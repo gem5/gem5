@@ -91,6 +91,18 @@ class tlm_base_target_socket :
     // - Binds the port of the target socket to the export of the initiator
     //   socket
     //
+
+#pragma GCC diagnostic push
+/**
+ * The following warning is disabled because the bind methods are overloaded
+ * in the derived class and the base class. In GCC v13+ this
+ * 'overloaded-virtual' warning is strict enough to trigger here (though the
+ * code is correct).
+ * Please check section 9.3 of SystemC 2.3.1 release note for more details.
+ */
+#if defined(__clang__) || (defined(__GNUC__) && (__GNUC__ >= 13))
+#pragma GCC diagnostic ignored "-Woverloaded-virtual"
+#endif
     virtual void
     bind(base_initiator_socket_type &s)
     {
@@ -133,6 +145,7 @@ class tlm_base_target_socket :
     }
 
     void operator () (fw_interface_type &s) { bind(s); }
+#pragma GCC diagnostic pop
 
     //
     // Forward to 'size()' of port class.

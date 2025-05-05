@@ -191,6 +191,7 @@ simulate(Tick num_cycles)
     // install the sigint handler to catch ctrl-c and exit the sim loop cleanly
     // Note: This should be done before initializing the threads
     initSigInt();
+    initSigCont();
 
     if (global_exit_event)//cleaning last global exit event
         global_exit_event->clean();
@@ -325,6 +326,10 @@ doSimLoop(EventQueue *eventq)
             if (async_exception) {
                 async_exception = false;
                 return NULL;
+            }
+            if (async_hypercall) {
+                async_hypercall = false;
+                processExternalSignal();
             }
         }
 

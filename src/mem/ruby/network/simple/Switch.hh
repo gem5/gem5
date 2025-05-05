@@ -90,7 +90,8 @@ class Switch : public BasicRouter
     void init();
 
     void addInPort(const std::vector<MessageBuffer*>& in);
-    void addOutPort(const std::vector<MessageBuffer*>& out,
+    void addOutPort(std::string switch_name,
+                    const std::vector<MessageBuffer*>& out,
                     const NetDest& routing_table_entry,
                     Cycles link_latency, int link_weight, int bw_multiplier,
                     bool is_external,
@@ -104,6 +105,7 @@ class Switch : public BasicRouter
 
     void print(std::ostream& out) const;
     void init_net_ptr(SimpleNetwork* net_ptr) { m_network_ptr = net_ptr; }
+    SimpleNetwork* getNetPtr() const { return m_network_ptr; }
 
     bool functionalRead(Packet *);
     bool functionalRead(Packet *, WriteMask&);

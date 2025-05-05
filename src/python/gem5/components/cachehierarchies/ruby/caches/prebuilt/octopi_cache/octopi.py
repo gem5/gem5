@@ -30,19 +30,24 @@ from m5.objects import (
     RubySystem,
 )
 
-from ......coherence_protocol import CoherenceProtocol
-from ......components.boards.abstract_board import AbstractBoard
-from ......components.cachehierarchies.ruby.caches.mesi_three_level.directory import (
+from .......coherence_protocol import CoherenceProtocol
+from .......utils.override import overrides
+from .......utils.requires import requires
+
+requires(coherence_protocol_required=CoherenceProtocol.MESI_THREE_LEVEL)
+
+from .......components.boards.abstract_board import AbstractBoard
+from .......components.cachehierarchies.ruby.caches.mesi_three_level.directory import (
     Directory,
 )
-from ......components.cachehierarchies.ruby.caches.mesi_three_level.dma_controller import (
+from .......components.cachehierarchies.ruby.caches.mesi_three_level.dma_controller import (
     DMAController,
 )
-from ......utils.requires import requires
-from ....abstract_three_level_cache_hierarchy import (
+from .....abstract_cache_hierarchy import AbstractCacheHierarchy
+from .....abstract_three_level_cache_hierarchy import (
     AbstractThreeLevelCacheHierarchy,
 )
-from ...abstract_ruby_cache_hierarchy import AbstractRubyCacheHierarchy
+from ....abstract_ruby_cache_hierarchy import AbstractRubyCacheHierarchy
 from .core_complex import CoreComplex
 from .octopi_network import OctopiNetwork
 from .ruby_network_components import (
@@ -91,10 +96,15 @@ class OctopiCache(
         self._num_core_complexes = num_core_complexes
         self._is_fullsystem = is_fullsystem
 
+    @overrides(AbstractCacheHierarchy)
+    def get_coherence_protocol(self):
+        return CoherenceProtocol.MESI_THREE_LEVEL
+
     def incorporate_cache(self, board: AbstractBoard) -> None:
         requires(
             coherence_protocol_required=CoherenceProtocol.MESI_THREE_LEVEL
         )
+        super().incorporate_cache(board)
 
         cache_line_size = board.get_cache_line_size()
 
@@ -151,7 +161,9 @@ class OctopiCache(
 
         # Set up a proxy port for the system_port. Used for load binaries and
         # other functional-only things.
-        self.ruby_system.sys_port_proxy = RubyPortProxy()
+        self.ruby_system.sys_port_proxy = RubyPortProxy(
+            ruby_system=self.ruby_system
+        )
         board.connect_system_port(self.ruby_system.sys_port_proxy.in_ports)
 
     def _create_directory_controllers(self, board):
@@ -228,7 +240,11 @@ class OctopiCache(
         if board.has_dma_ports():
             self.ruby_system.dma_controllers = [
                 DMAController(
-                    dma_sequencer=DMASequencer(version=i + 1, in_ports=port),
+                    dma_sequencer=DMASequencer(
+                        version=i + 1,
+                        in_ports=port,
+                        ruby_system=self.ruby_system,
+                    ),
                     ruby_system=self.ruby_system,
                 )
                 for i, port in enumerate(board.get_dma_ports())
@@ -261,3 +277,15 @@ class OctopiCache(
             ]
             for link in self.dma_int_links:
                 self.ruby_system.network._add_int_link(link)
+
+    @overrides(AbstractRubyCacheHierarchy)
+    def _reset_version_numbers(self):
+        from ....caches.mesi_three_level.l1_cache import L1Cache
+        from ....caches.mesi_three_level.l2_cache import L2Cache
+        from ....caches.mesi_three_level.l3_cache import L3Cache
+
+        Directory._version = 0
+        L1Cache._version = 0
+        L2Cache._version = 0
+        L3Cache._version = 0
+        DMAController._version = 0

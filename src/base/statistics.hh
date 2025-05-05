@@ -1004,7 +1004,7 @@ class VectorBase : public DataWrapVec<Derived, VectorInfoProxy>
     zero() const
     {
         for (off_type i = 0; i < size(); ++i)
-            if (data(i)->zero())
+            if (!data(i)->zero())
                 return false;
         return true;
     }

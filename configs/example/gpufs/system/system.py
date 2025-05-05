@@ -57,8 +57,8 @@ def makeGpuFSSystem(args):
     ]
     cmdline = " ".join(boot_options)
 
-    if MemorySize(args.mem_size) < MemorySize("2GB"):
-        panic("Need at least 2GB of system memory to load amdgpu module")
+    if MemorySize(args.mem_size) < MemorySize("2GiB"):
+        panic("Need at least 2GiB of system memory to load amdgpu module")
 
     # Use the common FSConfig to setup a Linux X86 System
     (TestCPUClass, test_mem_mode) = Simulation.getCPUClass(args.cpu_type)
@@ -89,7 +89,7 @@ def makeGpuFSSystem(args):
     )
 
     # Setup VGA ROM region
-    system.shadow_rom_ranges = [AddrRange(0xC0000, size=Addr("128kB"))]
+    system.shadow_rom_ranges = [AddrRange(0xC0000, size=Addr("128KiB"))]
 
     # Create specified number of CPUs. GPUFS really only needs one.
     system.cpu = [
@@ -199,7 +199,7 @@ def makeGpuFSSystem(args):
     system.pc.south_bridge.gpu.pm4_pkt_procs = pm4_procs
 
     # GPU data path
-    gpu_mem_mgr = AMDGPUMemoryManager()
+    gpu_mem_mgr = AMDGPUMemoryManager(cache_line_size=args.cacheline_size)
     system.pc.south_bridge.gpu.memory_manager = gpu_mem_mgr
 
     # CPU data path (SystemHub)
@@ -336,9 +336,9 @@ def makeGpuFSSystem(args):
     token_port_idx = 0
     for i in range(len(system.ruby._cpu_ports)):
         if isinstance(system.ruby._cpu_ports[i], VIPERCoalescer):
-            system.cpu[shader_idx].CUs[
-                token_port_idx
-            ].gmTokenPort = system.ruby._cpu_ports[i].gmTokenPort
+            system.cpu[shader_idx].CUs[token_port_idx].gmTokenPort = (
+                system.ruby._cpu_ports[i].gmTokenPort
+            )
             token_port_idx += 1
 
     wavefront_size = args.wf_size
@@ -346,9 +346,9 @@ def makeGpuFSSystem(args):
         # The pipeline issues wavefront_size number of uncoalesced requests
         # in one GPU issue cycle. Hence wavefront_size mem ports.
         for j in range(wavefront_size):
-            system.cpu[shader_idx].CUs[i].memory_port[
-                j
-            ] = system.ruby._cpu_ports[gpu_port_idx].in_ports[j]
+            system.cpu[shader_idx].CUs[i].memory_port[j] = (
+                system.ruby._cpu_ports[gpu_port_idx].in_ports[j]
+            )
         gpu_port_idx += 1
 
     for i in range(args.num_compute_units):

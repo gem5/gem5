@@ -58,5 +58,5 @@ Source('TimerTable.cc')
 Source('BankedArray.cc')
 Source('ALUFreeListArray.cc')
 Source('TBEStorage.cc')
-if env['CONF']['PROTOCOL'] == 'CHI':
+if env['CONF']['RUBY_PROTOCOL_CHI']:
     Source('MN_TBETable.cc')

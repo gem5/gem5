@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2009, 2013, 2015, 2021 Arm Limited
+# Copyright (c) 2009, 2013, 2015, 2021, 2024 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -36,6 +36,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects.BaseTLB import BaseTLB
+from m5.objects.ReplacementPolicies import LRURP
 from m5.params import *
 from m5.proxy import *
 from m5.SimObject import SimObject
@@ -45,12 +46,42 @@ class ArmLookupLevel(Enum):
     vals = ["L0", "L1", "L2", "L3"]
 
 
+class TLBIndexingPolicy(SimObject):
+    type = "TLBIndexingPolicy"
+    abstract = True
+    cxx_class = "gem5::IndexingPolicyTemplate<gem5::ArmISA::TLBTypes>"
+    cxx_header = "arch/arm/pagetable.hh"
+    cxx_template_params = ["class Types"]
+
+    # Get the size from the parent (cache)
+    num_entries = Param.Int(Parent.size, "number of TLB entries")
+
+    # Get the associativity
+    assoc = Param.Int(Parent.assoc, "associativity")
+
+
+class TLBSetAssociative(TLBIndexingPolicy):
+    type = "TLBSetAssociative"
+    cxx_class = "gem5::ArmISA::TLBSetAssociative"
+    cxx_header = "arch/arm/pagetable.hh"
+
+
 class ArmTLB(BaseTLB):
     type = "ArmTLB"
     cxx_class = "gem5::ArmISA::TLB"
     cxx_header = "arch/arm/tlb.hh"
     sys = Param.System(Parent.any, "system object parameter")
     size = Param.Int(64, "TLB size")
+    assoc = Param.Int(
+        Self.size, "Associativity of the TLB. Fully Associative by default"
+    )
+    indexing_policy = Param.TLBIndexingPolicy(
+        TLBSetAssociative(assoc=Parent.assoc, num_entries=Parent.size),
+        "Indexing policy of the TLB",
+    )
+    replacement_policy = Param.BaseReplacementPolicy(
+        LRURP(), "Replacement policy of the TLB"
+    )
     is_stage2 = Param.Bool(False, "Is this a stage 2 TLB?")
 
     partial_levels = VectorParam.ArmLookupLevel(

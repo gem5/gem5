@@ -202,7 +202,7 @@ def register_node(cpu_list, mem, node_number):
     file_append((nodedir, "cpumap"), hex_mask(cpu_list))
     file_append(
         (nodedir, "meminfo"),
-        "Node %d MemTotal: %dkB"
+        "Node %d MemTotal: %dKiB"
         % (node_number, toMemorySize(str(mem)) / kibi),
     )
 

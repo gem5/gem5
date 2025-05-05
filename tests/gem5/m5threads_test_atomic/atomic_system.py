@@ -48,7 +48,7 @@ root.system.clk_domain = SrcClockDomain()
 root.system.clk_domain.clock = "3GHz"
 root.system.clk_domain.voltage_domain = VoltageDomain()
 root.system.mem_mode = "timing"
-root.system.mem_ranges = [AddrRange("512MB")]
+root.system.mem_ranges = [AddrRange("512MiB")]
 
 if args.cpu_type == "DerivO3CPU":
     root.system.cpu = [

@@ -55,7 +55,7 @@ class SymbolTable:
         pairs["primitive"] = "yes"
         pairs["external"] = "yes"
         location = Location("init", 0, no_warning=not slicc.verbose)
-        void = Type(self, "void", location, pairs)
+        void = Type(self, "void", location, pairs, shared=False)
         self.newSymbol(void)
 
     def __repr__(self):
@@ -135,6 +135,7 @@ class SymbolTable:
 
     def writeCodeFiles(self, path, includes):
         makeDir(path)
+        makeDir(os.path.join(path, self.slicc.protocol))
 
         code = self.codeFormatter()
 
@@ -143,14 +144,75 @@ class SymbolTable:
 
         for symbol in self.sym_vec:
             if isinstance(symbol, Type) and not symbol.isPrimitive:
-                code('#include "mem/ruby/protocol/${{symbol.c_ident}}.hh"')
+                ident = symbol.c_ident
+                if not symbol.shared and not symbol.isExternal:
+                    ident = f"{self.slicc.protocol}/{ident}"
+                code('#include "mem/ruby/protocol/${{ident}}.hh"')
 
-        code.write(path, "Types.hh")
+        code(
+            f'#include "mem/ruby/protocol/{self.slicc.protocol}/{self.slicc.protocol}ProtocolInfo.hh"'
+        )
+        code.write(path, f"{self.slicc.protocol}/Types.hh")
+
+        self.writeProtocolInfo(path)
 
         for symbol in self.sym_vec:
             symbol.writeCodeFiles(path, includes)
 
+    def writeProtocolInfo(self, path):
+        code = self.codeFormatter()
+        code(
+            f"""
+#ifndef __MEM_RUBY_PROTOCOL_{self.slicc.protocol}_{self.slicc.protocol}PROTOCOL_INFO_HH__
+#define __MEM_RUBY_PROTOCOL_{self.slicc.protocol}_{self.slicc.protocol}PROTOCOL_INFO_HH__
+
+#include "mem/ruby/slicc_interface/ProtocolInfo.hh"
+
+namespace gem5
+{{
+
+namespace ruby
+{{
+
+namespace {self.slicc.protocol}
+{{
+
+class {self.slicc.protocol}ProtocolInfo : public ProtocolInfo
+{{
+  public:
+      {self.slicc.protocol}ProtocolInfo() :
+          ProtocolInfo("{self.slicc.protocol}",
+"""
+        )
+        options = ",\n".join(
+            [
+                f"                       {'true' if value else 'false'}"
+                for _, value in self.slicc.options.items()
+            ]
+        )
+        code(options)
+        code(
+            f"""          )
+      {{
+      }}
+}};
+
+}}
+}}
+}}
+
+#endif // __MEM_RUBY_PROTOCOL_{self.slicc.protocol}_{self.slicc.protocol}PROTOCOL_INFO_HH__
+"""
+        )
+        code.write(
+            path, f"{self.slicc.protocol}/{self.slicc.protocol}ProtocolInfo.hh"
+        )
+
     def writeHTMLFiles(self, path):
+        makeDir(path)
+
+        # Append the protocol to the path and make that directory
+        path = os.path.join(path, self.slicc.protocol)
         makeDir(path)
 
         machines = list(self.getAllType(StateMachine))

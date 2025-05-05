@@ -31,6 +31,7 @@ from typing import (
 )
 
 import m5
+from m5.objects import Root
 
 from ...utils.override import *
 from ..boards.abstract_board import AbstractBoard
@@ -120,7 +121,11 @@ class SwitchableProcessor(AbstractProcessor):
     def switch_to_processor(self, switchable_core_key: str):
         # Run various checks.
         if not hasattr(self, "_board"):
-            raise AssertionError("The processor has not been incorporated.")
+            raise AssertionError(
+                "The processor has not been incorporated. "
+                "If you are using multisim, please use "
+                "simulator.switch_processor() instead of processor.switch()."
+            )
 
         if switchable_core_key not in self._switchable_cores.keys():
             raise AssertionError(
@@ -155,3 +160,24 @@ class SwitchableProcessor(AbstractProcessor):
 
         # Ensure the current processor is updated.
         self._current_cores = to_switch
+
+    def _pre_instantiate(self, root: Root) -> None:
+        super()._pre_instantiate(root)
+        # The following is a bit of a hack. If a simulation is to use a KVM
+        # core then the `sim_quantum` value must be set. However, in the
+        # case of using a SwitchableProcessor the KVM cores may be
+        # switched out and therefore not accessible via `get_cores()`.
+        # This is the reason for the `isinstance` check.
+        #
+        # We cannot set the `sim_quantum` value in every simulation as
+        # setting it causes the scheduling of exits to be off by the
+        # `sim_quantum` value (something necessary if we are using KVM
+        # cores). Ergo we only set the value of KVM cores are present.
+        #
+        # There is still a bug here in that if the user is switching to and
+        # from KVM and non-KVM cores via the SwitchableProcessor then the
+        # scheduling of exits for the non-KVM cores will be incorrect. This
+        # will be fixed at a later date.
+        if self._prepare_kvm:
+            m5.ticks.fixGlobalFrequency()
+            root.sim_quantum = m5.ticks.fromSeconds(0.001)

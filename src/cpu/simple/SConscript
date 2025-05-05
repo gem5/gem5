@@ -28,26 +28,28 @@
 
 Import('*')
 
-if env['CONF']['BUILD_ISA']:
-    SimObject('BaseAtomicSimpleCPU.py', sim_objects=['BaseAtomicSimpleCPU'])
-    Source('atomic.cc')
+if not env['CONF']['BUILD_ISA']:
+    Return()
 
-    # The NonCachingSimpleCPU is really an atomic CPU in
-    # disguise. It's therefore always enabled when the atomic CPU is
-    # enabled.
-    SimObject('BaseNonCachingSimpleCPU.py',
-            sim_objects=['BaseNonCachingSimpleCPU'])
-    Source('noncaching.cc')
+SimObject('BaseAtomicSimpleCPU.py', sim_objects=['BaseAtomicSimpleCPU'])
+Source('atomic.cc')
 
-    SimObject('BaseTimingSimpleCPU.py', sim_objects=['BaseTimingSimpleCPU'])
-    Source('timing.cc')
+# The NonCachingSimpleCPU is really an atomic CPU in
+# disguise. It's therefore always enabled when the atomic CPU is
+# enabled.
+SimObject('BaseNonCachingSimpleCPU.py',
+        sim_objects=['BaseNonCachingSimpleCPU'])
+Source('noncaching.cc')
 
-    DebugFlag('SimpleCPU')
+SimObject('BaseTimingSimpleCPU.py', sim_objects=['BaseTimingSimpleCPU'])
+Source('timing.cc')
 
-    Source('base.cc')
-    SimObject('BaseSimpleCPU.py', sim_objects=['BaseSimpleCPU'])
+DebugFlag('SimpleCPU')
 
-    # For backwards compatibility
-    SimObject('AtomicSimpleCPU.py', sim_objects=[])
-    SimObject('NonCachingSimpleCPU.py', sim_objects=[])
-    SimObject('TimingSimpleCPU.py', sim_objects=[])
+Source('base.cc')
+SimObject('BaseSimpleCPU.py', sim_objects=['BaseSimpleCPU'])
+
+# For backwards compatibility
+SimObject('AtomicSimpleCPU.py', sim_objects=[], tags=['isa'])
+SimObject('NonCachingSimpleCPU.py', sim_objects=[], tags=['isa'])
+SimObject('TimingSimpleCPU.py', sim_objects=[], tags=['isa'])

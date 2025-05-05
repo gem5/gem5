@@ -28,15 +28,28 @@ menu "Ruby"
         bool "Enable"
 
     if RUBY
+        menu "Ruby protocols"
+
+        config USE_MULTIPLE_PROTOCOLS
+            bool 'Use multiple protocols'
+            default y
+
         config PROTOCOL
-            string
+            string "The 'main' protocol"
+            default "MULTIPLE" if USE_MULTIPLE_PROTOCOLS
+            help
+                This shows up as `buildEnv["PROTOCOL"]`` for backwards
+                compatibility, mostly in the Ruby.py config scripts.
+                Otherwise, this is ignored.
+                If this is set to anything when build with MULTIPLE,
+                it will be ignored unless using Ruby.py, in which case
+                the protocol specified here will appear as the only protocol.
+                Note: This is case sensitive.
 
-        config NEED_PARTIAL_FUNC_READS
-            bool
+        rsource "protocol/Kconfig"
+        rsource "../../learning_gem5/part3/Kconfig"
 
-        choice "Ruby protocol"
-        prompt "Ruby protocol"
-        endchoice
+        endmenu
 
         config SLICC_HTML
             bool 'Create HTML files'
@@ -45,6 +58,6 @@ menu "Ruby"
             int 'Max elements in set'
             default 64
     endif
-endmenu
 
-rsource "protocol/Kconfig"
+
+endmenu

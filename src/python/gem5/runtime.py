@@ -33,7 +33,11 @@ from typing import Set
 from m5.defines import buildEnv
 from m5.util import warn
 
-from .coherence_protocol import CoherenceProtocol
+from .coherence_protocol import (
+    CoherenceProtocol,
+    get_protocol_from_str,
+    get_protocols_str_set,
+)
 from .isas import (
     ISA,
     get_isa_from_str,
@@ -60,30 +64,18 @@ def get_supported_isas() -> Set[ISA]:
     return supported_isas
 
 
-def get_runtime_coherence_protocol() -> CoherenceProtocol:
-    """Gets the cache coherence protocol.
-
-    This can be inferred at runtime.
-
-    :returns: The cache coherence protocol.
+def get_supported_protocols() -> Set[CoherenceProtocol]:
     """
-    protocol_map = {
-        "mi_example": CoherenceProtocol.MI_EXAMPLE,
-        "moesi_hammer": CoherenceProtocol.ARM_MOESI_HAMMER,
-        "garnet_standalone": CoherenceProtocol.GARNET_STANDALONE,
-        "moesi_cmp_token": CoherenceProtocol.MOESI_CMP_TOKEN,
-        "mesi_two_level": CoherenceProtocol.MESI_TWO_LEVEL,
-        "moesi_amd_base": CoherenceProtocol.MOESI_AMD_BASE,
-        "mesi_three_level_htm": CoherenceProtocol.MESI_THREE_LEVEL_HTM,
-        "mesi_three_level": CoherenceProtocol.MESI_THREE_LEVEL,
-        "gpu_viper": CoherenceProtocol.GPU_VIPER,
-        "chi": CoherenceProtocol.CHI,
-    }
+    Returns the set of all the coherence protocols compiled into the current
+    binary.
+    """
+    supported_protocols = set()
 
-    protocol_str = str(buildEnv["PROTOCOL"]).lower()
-    if protocol_str not in protocol_map.keys():
-        raise NotImplementedError(
-            "Protocol '" + buildEnv["PROTOCOL"] + "' not recognized."
-        )
+    if not buildEnv["RUBY"]:
+        return {CoherenceProtocol.NULL}
 
-    return protocol_map[protocol_str]
+    for key in get_protocols_str_set():
+        if buildEnv.get(f"RUBY_PROTOCOL_{key}", False):
+            supported_protocols.add(get_protocol_from_str(key))
+
+    return supported_protocols

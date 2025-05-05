@@ -189,7 +189,7 @@ for t, m in zip(testerspec, multiplier):
 
 # Define a prototype L1 cache that we scale for all successive levels
 proto_l1 = Cache(
-    size="32kB",
+    size="32KiB",
     assoc=4,
     tag_latency=1,
     data_latency=1,

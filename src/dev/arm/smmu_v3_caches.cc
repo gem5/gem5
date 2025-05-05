@@ -65,7 +65,7 @@ SMMUv3BaseCache::SMMUv3BaseCache(const std::string &policy_name, uint32_t seed,
     statistics::Group *parent, const std::string &name)
   : replacementPolicy(decodePolicyName(policy_name)),
     nextToReplace(0),
-    random(seed),
+    random(Random::genRandom(seed)),
     useStamp(0),
     baseCacheStats(parent, name)
 {}
@@ -410,9 +410,9 @@ SMMUTLB::pickEntryIdxToReplace(const Set &set, AllocPolicy alloc)
     case SMMU_CACHE_REPL_RANDOM:
         switch (alloc) {
         case ALLOC_ANY_WAY:
-            return random.random<size_t>(0, associativity-1);
+            return random->random<size_t>(0, associativity-1);
         case ALLOC_ANY_BUT_LAST_WAY:
-            return random.random<size_t>(0, associativity-2);
+            return random->random<size_t>(0, associativity-2);
         default:
             panic("Unknown allocation mode %d\n", alloc);
         }
@@ -615,7 +615,7 @@ ARMArchTLB::pickEntryIdxToReplace(const Set &set)
         return nextToReplace = ((nextToReplace+1) % associativity);
 
     case SMMU_CACHE_REPL_RANDOM:
-        return random.random<size_t>(0, associativity-1);
+        return random->random<size_t>(0, associativity-1);
 
     case SMMU_CACHE_REPL_LRU:
         return lru_idx;
@@ -795,7 +795,7 @@ IPACache::pickEntryIdxToReplace(const Set &set)
         return nextToReplace = ((nextToReplace+1) % associativity);
 
     case SMMU_CACHE_REPL_RANDOM:
-        return random.random<size_t>(0, associativity-1);
+        return random->random<size_t>(0, associativity-1);
 
     case SMMU_CACHE_REPL_LRU:
         return lru_idx;
@@ -959,7 +959,7 @@ ConfigCache::pickEntryIdxToReplace(const Set &set)
         return nextToReplace = ((nextToReplace+1) % associativity);
 
     case SMMU_CACHE_REPL_RANDOM:
-        return random.random<size_t>(0, associativity-1);
+        return random->random<size_t>(0, associativity-1);
 
     case SMMU_CACHE_REPL_LRU:
         return lru_idx;
@@ -1218,7 +1218,7 @@ WalkCache::pickEntryIdxToReplace(const Set &set,
         return nextToReplace = ((nextToReplace+1) % associativity);
 
     case SMMU_CACHE_REPL_RANDOM:
-        return random.random<size_t>(0, associativity-1);
+        return random->random<size_t>(0, associativity-1);
 
     case SMMU_CACHE_REPL_LRU:
         return lru_idx;

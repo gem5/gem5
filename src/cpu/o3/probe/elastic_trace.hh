@@ -59,7 +59,7 @@
 #include "proto/packet.pb.h"
 #include "proto/protoio.hh"
 #include "sim/eventq.hh"
-#include "sim/probe/probe.hh"
+#include "sim/probe/probe_listener_object.hh"
 
 namespace gem5
 {

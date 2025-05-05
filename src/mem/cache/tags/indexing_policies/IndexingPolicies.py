@@ -49,12 +49,6 @@ class BaseIndexingPolicy(SimObject):
     cxx_header = "mem/cache/tags/indexing_policies/base.hh"
     cxx_template_params = ["class Types"]
 
-    # Get the size from the parent (cache)
-    size = Param.MemorySize(Parent.size, "capacity in bytes")
-
-    # Get the entry size from the parent (tags)
-    entry_size = Param.Int(Parent.entry_size, "entry size in bytes")
-
     # Get the associativity
     assoc = Param.Int(Parent.assoc, "associativity")
 
@@ -64,8 +58,20 @@ class SetAssociative(BaseIndexingPolicy):
     cxx_class = "gem5::SetAssociative"
     cxx_header = "mem/cache/tags/indexing_policies/set_associative.hh"
 
+    # Get the size from the parent (cache)
+    size = Param.MemorySize(Parent.size, "capacity in bytes")
+
+    # Get the entry size from the parent (tags)
+    entry_size = Param.Int(Parent.entry_size, "entry size in bytes")
+
 
 class SkewedAssociative(BaseIndexingPolicy):
     type = "SkewedAssociative"
     cxx_class = "gem5::SkewedAssociative"
     cxx_header = "mem/cache/tags/indexing_policies/skewed_associative.hh"
+
+    # Get the size from the parent (cache)
+    size = Param.MemorySize(Parent.size, "capacity in bytes")
+
+    # Get the entry size from the parent (tags)
+    entry_size = Param.Int(Parent.entry_size, "entry size in bytes")

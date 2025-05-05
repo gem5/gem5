@@ -33,7 +33,11 @@ from typing import (
     Optional,
 )
 
-from m5.objects import SubSystem
+from m5.objects import (
+    Root,
+    SubSystem,
+)
+from m5.util import warn
 
 from ...isas import ISA
 from ...utils.requires import requires
@@ -76,6 +80,13 @@ class AbstractProcessor(SubSystem):
     def get_isa(self) -> ISA:
         return self._isa
 
+    def get_total_instructions(self) -> int:
+        """Return the number of instructions executed by all cores.
+
+        Note: This total is the sum since the last call to reset stats
+        """
+        return sum(core.get_total_instructions() for core in self.get_cores())
+
     @abstractmethod
     def incorporate_processor(self, board: AbstractBoard) -> None:
         raise NotImplementedError
@@ -83,3 +94,20 @@ class AbstractProcessor(SubSystem):
     def _post_instantiate(self) -> None:
         """Called to set up anything needed after ``m5.instantiate``."""
         pass
+
+    def _pre_instantiate(self, root: Root) -> None:
+        """Called in the `AbstractBoard`'s `_pre_instantiate` method. This is
+        called after `connect_things`, after the creation of the root object
+        (which is passed in as an argument), but before `m5.instantiate`).
+
+        Subclasses should override this method to set up any connections.
+        """
+        pass
+
+    def switch(self) -> None:
+        """Switch the processor to a different core type.
+
+        This function prints a warning and does nothing by default. Subclasses
+        should override this method to implement switching.
+        """
+        warn("Switching is not supported for this processor")

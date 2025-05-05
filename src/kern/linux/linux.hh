@@ -256,7 +256,7 @@ class Linux : public OperatingSystem
     };
 
     // For /dev/urandom accesses
-    static Random random;
+    static Random::RandomPtr random;
 
     static int openSpecialFile(std::string path, Process *process,
                                ThreadContext *tc);

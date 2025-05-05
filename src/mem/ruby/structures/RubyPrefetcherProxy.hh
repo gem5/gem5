@@ -142,6 +142,9 @@ class RubyPrefetcherProxy : public CacheAccessor, public Named
      */
     ProbePointArg<CacheDataUpdateProbeArg> *ppDataUpdate;
 
+    Addr makeLineAddress(Addr addr) const;
+    Addr getOffset(Addr addr) const;
+
   public:
 
     /** Accessor functions */

@@ -53,3 +53,4 @@ Source('gpu_wavefront.cc')
 Source('tester_thread.cc')
 
 DebugFlag('ProtocolTest')
+DebugFlag('EpisodeCount')

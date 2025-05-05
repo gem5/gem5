@@ -181,7 +181,7 @@ machine(MachineType:RegionBuffer, "Region Buffer for AMD_Base-like protocol")
 
   // Stores only region addresses
   TBETable TBEs, template="<RegionBuffer_TBE>", constructor="m_number_of_TBEs";
-  int TCC_select_low_bit, default="RubySystem::getBlockSizeBits()";
+  int TCC_select_low_bit, default="m_ruby_system->getBlockSizeBits()";
 
   Tick clockEdge();
   Tick cyclesToTicks(Cycles c);
@@ -195,8 +195,8 @@ machine(MachineType:RegionBuffer, "Region Buffer for AMD_Base-like protocol")
   Cycles curCycle();
   MachineID mapAddressToMachine(Addr addr, MachineType mtype);
 
-  int blockBits,  default="RubySystem::getBlockSizeBits()";
-  int blockBytes, default="RubySystem::getBlockSizeBytes()";
+  int blockBits,  default="m_ruby_system->getBlockSizeBits()";
+  int blockBytes, default="m_ruby_system->getBlockSizeBytes()";
   int regionBits, default="log2(m_blocksPerRegion)";
 
   // Functions

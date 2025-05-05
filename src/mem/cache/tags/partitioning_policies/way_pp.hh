@@ -85,6 +85,9 @@ class WayPartitioningPolicy : public BasePartitioningPolicy
     void
     notifyRelease(const uint64_t partition_id) override {};
 
+    void addWayToPartition(uint64_t partition_id, unsigned way);
+    void removeWayToPartition(uint64_t partition_id, unsigned way);
+
   private:
     /**
     * Map of policied PartitionIDs and their associated cache ways

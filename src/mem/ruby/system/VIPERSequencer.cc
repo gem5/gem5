@@ -81,8 +81,8 @@ VIPERSequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
     // subBlock with the recieved data.  The tester will later access
     // this state.
     assert(!m_usingRubyTester);
-    assert(!RubySystem::getWarmupEnabled());
-    assert(!RubySystem::getCooldownEnabled());
+    assert(!m_ruby_system->getWarmupEnabled());
+    assert(!m_ruby_system->getCooldownEnabled());
     ruby_hit_callback(pkt);
     testDrainComplete();
 }
@@ -101,6 +101,10 @@ VIPERSequencer::processReadCallback(SequencerRequest &seq_req,
         return Sequencer::processReadCallback(
             seq_req, data, ruby_request, externalHit, mach, initialRequestTime,
             forwardRequestTime, firstResponseTime);
+    }
+    else if (!ruby_request) {
+        issueRequest(seq_req.pkt, seq_req.m_second_type);
+        return true;
     }
     return false;
 }

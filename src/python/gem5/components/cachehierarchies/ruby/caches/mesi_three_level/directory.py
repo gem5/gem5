@@ -25,23 +25,29 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects import (
+    MESI_Three_Level_Directory_Controller,
     MessageBuffer,
     RubyDirectoryMemory,
 )
 
 from ......utils.override import overrides
-from ..abstract_directory import AbstractDirectory
 
 
-class Directory(AbstractDirectory):
+class Directory(MESI_Three_Level_Directory_Controller):
+    @classmethod
+    def versionCount(cls):
+        cls._version += 1  # Use count for this particular type
+        return cls._version - 1
+
     def __init__(self, network, cache_line_size, mem_range, port):
-        super().__init__(network, cache_line_size)
+        super().__init__()
+        self.version = self.versionCount()
         self.addr_ranges = [mem_range]
-        self.directory = RubyDirectoryMemory()
+        self.directory = RubyDirectoryMemory(block_size=cache_line_size)
         # Connect this directory to the memory side.
         self.memory_out_port = port
+        self.connectQueues(network=network)
 
-    @overrides(AbstractDirectory)
     def connectQueues(self, network):
         self.requestToDir = MessageBuffer()
         self.requestToDir.in_port = network.out_port

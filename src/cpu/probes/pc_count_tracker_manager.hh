@@ -54,7 +54,7 @@ class PcCountTrackerManager : public SimObject {
     /** a counter that stores all the target PC addresses and the number
      * of times the target PC has been executed
      */
-    std::unordered_map<Addr, int> counter;
+    std::unordered_map<Addr, uint64_t> counter;
 
     /** a set that stores all the PC Count pairs that should raise an
      * exit event at
@@ -82,7 +82,7 @@ class PcCountTrackerManager : public SimObject {
      * @return the corresponding value of count for the inputted Program
      * Counter address
      */
-    int
+    uint64_t
     getPcCount(Addr pc) const
     {
         if (counter.find(pc) != counter.end()) {

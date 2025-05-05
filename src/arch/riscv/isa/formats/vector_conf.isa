@@ -39,12 +39,16 @@ def format VConfOp(code, write_code, declare_class, branch_class, *flags) {{
         flags
     )
     declareTemplate = eval(declare_class)
-    branchTargetTemplate = eval(branch_class)
 
     header_output = declareTemplate.subst(iop)
     decoder_output = VConfConstructor.subst(iop)
     decode_block = VConfDecodeBlock.subst(iop)
-    exec_output = VConfExecute.subst(iop) + branchTargetTemplate.subst(iop)
+
+    if "vsetivli" in name:
+        branchTargetTemplate = eval(branch_class)
+        exec_output = VConfExecute.subst(iop) + branchTargetTemplate.subst(iop)
+    else:
+        exec_output = VConfExecute.subst(iop)
 }};
 
 def template VSetVlDeclare {{
@@ -55,18 +59,15 @@ def template VSetVlDeclare {{
     {
       private:
         %(reg_idx_arr_decl)s;
-        VTYPE getNewVtype(VTYPE, VTYPE, uint32_t) const;
+        VTYPE getNewVtype(VTYPE, VTYPE) const;
         uint32_t getNewVL(
             uint32_t, uint32_t, uint32_t, uint64_t, uint64_t) const;
 
       public:
         /// Constructor.
-        %(class_name)s(ExtMachInst machInst, uint32_t elen);
+        %(class_name)s(ExtMachInst machInst, uint32_t elen, uint32_t vlen);
         Fault execute(ExecContext *, trace::InstRecord *) const override;
-        std::unique_ptr<PCStateBase> branchTarget(
-                ThreadContext *tc) const override;
 
-        using StaticInst::branchTarget;
         using %(base_class)s::generateDisassembly;
 
     };
@@ -80,13 +81,13 @@ def template VSetiVliDeclare {{
     {
       private:
         %(reg_idx_arr_decl)s;
-        VTYPE getNewVtype(VTYPE, VTYPE, uint32_t) const;
+        VTYPE getNewVtype(VTYPE, VTYPE) const;
         uint32_t getNewVL(
             uint32_t, uint32_t, uint32_t, uint64_t, uint64_t) const;
 
       public:
         /// Constructor.
-        %(class_name)s(ExtMachInst machInst, uint32_t elen);
+        %(class_name)s(ExtMachInst machInst, uint32_t elen, uint32_t vlen);
         Fault execute(ExecContext *, trace::InstRecord *) const override;
         std::unique_ptr<PCStateBase> branchTarget(
                 const PCStateBase &branch_pc) const override;
@@ -98,8 +99,9 @@ def template VSetiVliDeclare {{
 }};
 
 def template VConfConstructor {{
-%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _elen)
-    : %(base_class)s("%(mnemonic)s", _machInst, _elen, %(op_class)s)
+%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _elen,
+                               uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, _elen, _vlen, %(op_class)s)
     {
         %(set_reg_idx_arr)s;
         %(constructor)s;
@@ -107,13 +109,13 @@ def template VConfConstructor {{
 }};
 
 def template VConfDecodeBlock {{
-    return new %(class_name)s(machInst,elen);
+    return new %(class_name)s(machInst, elen, vlen);
 }};
 
 def template VConfExecute {{
     VTYPE
     %(class_name)s::getNewVtype(
-        VTYPE oldVtype, VTYPE reqVtype, uint32_t vlen) const
+        VTYPE oldVtype, VTYPE reqVtype)  const
     {
         VTYPE newVtype = oldVtype;
         if (oldVtype != reqVtype) {
@@ -170,8 +172,7 @@ def template VConfExecute {{
 
         tc->setMiscReg(MISCREG_VSTART, 0);
 
-        VTYPE new_vtype = getNewVtype(Vtype, requested_vtype,
-            vlen);
+        VTYPE new_vtype = getNewVtype(Vtype, requested_vtype);
         vlmax = new_vtype.vill ? 0 : getVlmax(new_vtype, vlen);
         uint32_t new_vl = getNewVL(
             current_vl, requested_vl, vlmax, rd_bits, rs1_bits);
@@ -196,66 +197,16 @@ def template VSetiVliBranchTarget {{
         uint64_t requested_vl = uimm;
         uint64_t requested_vtype = zimm10;
 
-        uint32_t vlen = rpc.vlenb() * 8;
-
-        VTYPE new_vtype = getNewVtype(rpc.vtype(), requested_vtype, vlen);
+        VTYPE new_vtype = getNewVtype(rpc.vtype(), requested_vtype);
         uint32_t vlmax = new_vtype.vill ? 0 : getVlmax(new_vtype, vlen);
         uint32_t new_vl = getNewVL(
             rpc.vl(), requested_vl, vlmax, rd_bits, rs1_bits);
 
         std::unique_ptr<PCState> npc(dynamic_cast<PCState*>(rpc.clone()));
+        npc->set(rvSext(npc->pc() + 4));
+        npc->new_vconf(true);
         npc->vtype(new_vtype);
         npc->vl(new_vl);
         return npc;
-    }
-}};
-
-def template VSetVliBranchTarget {{
-    std::unique_ptr<PCStateBase>
-    %(class_name)s::branchTarget(ThreadContext *tc) const
-    {
-        PCStateBase *pc_ptr = tc->pcState().clone();
-
-        uint64_t rd_bits = machInst.rd;
-        uint64_t rs1_bits = machInst.rs1;
-        uint64_t requested_vl = tc->getReg(srcRegIdx(0));
-        uint64_t requested_vtype = zimm11;
-
-        uint32_t vlen = pc_ptr->as<PCState>().vlenb() * 8;
-
-        VTYPE new_vtype = getNewVtype(
-            pc_ptr->as<PCState>().vtype(), requested_vtype, vlen);
-        uint32_t vlmax = new_vtype.vill ? 0 : getVlmax(new_vtype, vlen);
-        uint32_t new_vl = getNewVL(
-            pc_ptr->as<PCState>().vl(), requested_vl, vlmax, rd_bits, rs1_bits);
-
-        pc_ptr->as<PCState>().vtype(new_vtype);
-        pc_ptr->as<PCState>().vl(new_vl);
-        return std::unique_ptr<PCStateBase>{pc_ptr};
-    }
-}};
-
-def template VSetVlBranchTarget {{
-    std::unique_ptr<PCStateBase>
-    %(class_name)s::branchTarget(ThreadContext *tc) const
-    {
-        PCStateBase *pc_ptr = tc->pcState().clone();
-
-        uint64_t rd_bits = machInst.rd;
-        uint64_t rs1_bits = machInst.rs1;
-        uint64_t requested_vl = tc->getReg(srcRegIdx(0));
-        uint64_t requested_vtype = tc->getReg(srcRegIdx(1));
-
-        uint32_t vlen = pc_ptr->as<PCState>().vlenb() * 8;
-
-        VTYPE new_vtype = getNewVtype(
-            pc_ptr->as<PCState>().vtype(), requested_vtype, vlen);
-        uint32_t vlmax = new_vtype.vill ? 0 : getVlmax(new_vtype, vlen);
-        uint32_t new_vl = getNewVL(
-            pc_ptr->as<PCState>().vl(), requested_vl, vlmax, rd_bits, rs1_bits);
-
-        pc_ptr->as<PCState>().vtype(new_vtype);
-        pc_ptr->as<PCState>().vl(new_vl);
-        return std::unique_ptr<PCStateBase>{pc_ptr};
     }
 }};

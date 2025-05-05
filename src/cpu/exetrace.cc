@@ -43,6 +43,7 @@
 #include <iomanip>
 #include <sstream>
 
+#include "arch/generic/mmu.hh"
 #include "base/loader/symtab.hh"
 #include "cpu/base.hh"
 #include "cpu/static_inst.hh"
@@ -75,7 +76,8 @@ ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
     if (debug::ExecThread)
         outs << "T" << thread->threadId() << " : ";
 
-    Addr cur_pc = pc->instAddr();
+    Addr cur_pc = thread->getMMUPtr()->getValidAddr(
+        pc->instAddr(), thread, BaseMMU::Execute);
     loader::SymbolTable::const_iterator it;
     ccprintf(outs, "%#x", cur_pc);
     if (debug::ExecSymbol && (!FullSystem || !in_user_mode) &&

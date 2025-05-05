@@ -62,8 +62,9 @@ typedef std::shared_ptr<Message> MsgPtr;
 class Message
 {
   public:
-    Message(Tick curTime)
-        : m_time(curTime),
+    Message(Tick curTime, int block_size, const RubySystem *rs)
+        : m_block_size(block_size),
+          m_time(curTime),
           m_LastEnqueueTime(curTime),
           m_DelayedTicks(0), m_msg_counter(0)
     { }
@@ -120,6 +121,9 @@ class Message
     void setIncomingLink(int link) { incoming_link = link; }
     int getVnet() const { return vnet; }
     void setVnet(int net) { vnet = net; }
+
+  protected:
+    int m_block_size = 0;
 
   private:
     Tick m_time;

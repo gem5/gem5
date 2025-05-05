@@ -114,6 +114,16 @@ class RiscvISA(BaseISA):
 
     enable_Zicbom_fs = Param.Bool(True, "Enable Zicbom extension in FS mode")
     enable_Zicboz_fs = Param.Bool(True, "Enable Zicboz extension in FS mode")
+    enable_Zcd = Param.Bool(
+        True,
+        "Enable Zcd extensions. "
+        "Set the option to false implies the Zcmp and Zcmt is enable as "
+        "c.fsdsp is overlap with them."
+        "Refs: https://github.com/riscv/riscv-isa-manual/blob/main/src/zc.adoc",
+    )
+    enable_Smrnmi = Param.Bool(
+        False, "Resumable non-maskable interrupt in FS mode"
+    )
 
     wfi_resume_on_pending = Param.Bool(
         False,
@@ -150,5 +160,6 @@ class RiscvISA(BaseISA):
         isa_string += "_Zba"  # Address Generation
         isa_string += "_Zbb"  # Basic Bit Manipulation
         isa_string += "_Zbs"  # Single-bit Instructions
+        isa_string += "_svnapot"
 
         return isa_string

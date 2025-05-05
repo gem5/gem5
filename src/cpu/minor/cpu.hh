@@ -88,6 +88,8 @@ class MinorCPU : public BaseCPU
      *  Elements of pipeline call TheISA to implement the model. */
     minor::Pipeline *pipeline;
 
+    Random::RandomPtr rng = Random::genRandom();
+
   public:
     /** Activity recording for pipeline.  This belongs to Pipeline but
      *  stages will access it through the CPU as the MinorCPU object
@@ -186,7 +188,7 @@ class MinorCPU : public BaseCPU
         }
 
         std::shuffle(prio_list.begin(), prio_list.end(),
-                     random_mt.gen);
+                     rng->gen);
 
         return prio_list;
     }

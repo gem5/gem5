@@ -205,6 +205,7 @@ enumeration(CHIDataType, desc="...") {
   SnpRespData_SC_Fwded_SC;
   SnpRespData_SC_Fwded_SD_PD;
   SnpRespData_SC_PD_Fwded_SC;
+  SnpRespData_SD_Fwded_SC;
   SnpRespData_I_Fwded_SD_PD;
   SnpRespData_I_PD_Fwded_SC;
   SnpRespData_I_Fwded_SC;
@@ -243,6 +244,7 @@ structure(CHIDataMsg, desc="", interface="Message") {
                     (type == CHIDataType:SnpRespData_SD) ||
                     (type == CHIDataType:SnpRespData_UD) ||
                     (type == CHIDataType:SnpRespData_SC_Fwded_SD_PD) ||
+                    (type == CHIDataType:SnpRespData_SD_Fwded_SC) ||
                     (type == CHIDataType:SnpRespData_SC_PD_Fwded_SC) ||
                     (type == CHIDataType:SnpRespData_I_Fwded_SD_PD) ||
                     (type == CHIDataType:SnpRespData_I_PD_Fwded_SC);

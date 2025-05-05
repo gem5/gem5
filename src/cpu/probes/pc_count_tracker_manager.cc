@@ -57,7 +57,7 @@ PcCountTrackerManager::checkCount(Addr pc)
 {
 
     if(ifListNotEmpty) {
-        int count = ++counter.find(pc)->second;
+        uint64_t count = ++counter.find(pc)->second;
         // increment the counter of the encountered PC address by 1
 
         currentPair = PcCountPair(pc,count);

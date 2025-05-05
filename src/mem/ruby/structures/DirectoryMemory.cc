@@ -64,12 +64,14 @@ DirectoryMemory::DirectoryMemory(const Params &p)
     }
     m_size_bits = floorLog2(m_size_bytes);
     m_num_entries = 0;
+    m_block_size = p.block_size;
+    m_ruby_system = p.ruby_system;
 }
 
 void
 DirectoryMemory::init()
 {
-    m_num_entries = m_size_bytes / RubySystem::getBlockSizeBytes();
+    m_num_entries = m_size_bytes / m_block_size;
     m_entries = new AbstractCacheEntry*[m_num_entries];
     for (int i = 0; i < m_num_entries; i++)
         m_entries[i] = NULL;
@@ -108,7 +110,7 @@ DirectoryMemory::mapAddressToLocalIdx(Addr address)
         }
         ret += r.size();
     }
-    return ret >> RubySystem::getBlockSizeBits();
+    return ret >> (floorLog2(m_block_size));
 }
 
 AbstractCacheEntry*
@@ -133,6 +135,8 @@ DirectoryMemory::allocate(Addr address, AbstractCacheEntry *entry)
     assert(idx < m_num_entries);
     assert(m_entries[idx] == NULL);
     entry->changePermission(AccessPermission_Read_Only);
+    entry->initBlockSize(m_block_size);
+    entry->setRubySystem(m_ruby_system);
     m_entries[idx] = entry;
 
     return entry;

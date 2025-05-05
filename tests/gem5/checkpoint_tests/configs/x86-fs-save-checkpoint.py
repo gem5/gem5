@@ -64,11 +64,11 @@ requires(isa_required=ISA.X86)
 # For classic, PrivateL1PrivateL2 and NoCache have been tested.
 # For Ruby, MESI_Two_Level and MI_example have been tested.
 cache_hierarchy = PrivateL1PrivateL2WalkCacheHierarchy(
-    l1d_size="32kB", l1i_size="32kB", l2_size="512kB"
+    l1d_size="32KiB", l1i_size="32KiB", l2_size="512KiB"
 )
 
 # Setup the system memory.
-memory = SingleChannelDDR3_1600(size="1GB")
+memory = SingleChannelDDR3_1600(size="1GiB")
 
 # Setup a single core Processor.
 processor = SimpleProcessor(cpu_type=CPUTypes.O3, isa=ISA.X86, num_cores=1)

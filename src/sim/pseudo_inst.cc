@@ -608,5 +608,13 @@ workend(ThreadContext *tc, uint64_t workid, uint64_t threadid)
     }
 }
 
+void
+m5Hypercall(ThreadContext *tc, uint64_t hypercall_id)
+{
+    DPRINTF(PseudoInst, "pseudo_inst::m5Hypercall(%i)\n", hypercall_id);
+    exitSimLoopWithHypercall("m5_hypercall instruction encountered", 0,
+    curTick(),0, std::map<std::string, std::string>(), hypercall_id, true);
+}
+
 } // namespace pseudo_inst
 } // namespace gem5

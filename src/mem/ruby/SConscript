@@ -83,7 +83,8 @@ generated_dir = Dir('protocol')
 def MakeIncludeAction(target, source, env):
     with open(str(target[0]), 'w') as f:
         for s in source:
-            print('#include "%s"' % str(s.abspath), file=f)
+            relpath = os.path.relpath(s.abspath, target[0].dir.abspath)
+            print('#include "%s"' % relpath, file=f)
 
 def MakeInclude(source):
     target = generated_dir.File(basename(source))
@@ -113,7 +114,7 @@ MakeInclude('structures/PersistentTable.hh')
 MakeInclude('structures/RubyPrefetcher.hh')
 MakeInclude('structures/RubyPrefetcherProxy.hh')
 MakeInclude('structures/TBEStorage.hh')
-if env['CONF']['PROTOCOL'] == 'CHI':
+if env['CONF']['RUBY_PROTOCOL_CHI']:
     MakeInclude('structures/MN_TBEStorage.hh')
     MakeInclude('structures/MN_TBETable.hh')
 MakeInclude('structures/TBETable.hh')

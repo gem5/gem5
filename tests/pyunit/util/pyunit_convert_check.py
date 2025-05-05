@@ -277,3 +277,42 @@ class ConvertTestSuite(unittest.TestCase):
         self.assertRaises(ValueError, conv, "-1K")
 
         self.assertEqual(conv("32F"), 273.15)
+
+    def test_base_10_to_2(self):
+        conv = convert._base_10_to_2
+
+        self.assertEqual(conv("1kB", "B"), "1Ki")
+        self.assertIsNone(conv("1KiB", "B"))
+
+        self.assertEqual(conv("2MB", "B"), "2Mi")
+        self.assertIsNone(conv("2MiB", "B"))
+
+        self.assertEqual(conv("3GB", "B"), "3Gi")
+        self.assertIsNone(conv("3GiB", "B"))
+
+        self.assertEqual(conv("4TB", "B"), "4Ti")
+        self.assertIsNone(conv("4TiB", "B"))
+
+        self.assertEqual(conv("5PB", "B"), "5Pi")
+        self.assertIsNone(conv("5PiB", "B"))
+
+        self.assertEqual(conv("6EB", "B"), "6Ei")
+        self.assertIsNone(conv("6EiB", "B"))
+
+        self.assertEqual(conv("1kB/s", "B/s"), "1Ki")
+        self.assertIsNone(conv("1KiB/s", "B/s"))
+
+        self.assertEqual(conv("2MB/s", "B/s"), "2Mi")
+        self.assertIsNone(conv("2MiB/s", "B/s"))
+
+        self.assertEqual(conv("3GB/s", "B/s"), "3Gi")
+        self.assertIsNone(conv("3GiB/s", "B/s"))
+
+        self.assertEqual(conv("4TB/s", "B/s"), "4Ti")
+        self.assertIsNone(conv("4TiB/s", "B/s"))
+
+        self.assertEqual(conv("5PB/s", "B/s"), "5Pi")
+        self.assertIsNone(conv("5PiB/s", "B/s"))
+
+        self.assertEqual(conv("6EB/s", "B/s"), "6Ei")
+        self.assertIsNone(conv("6EiB/s", "B/s"))

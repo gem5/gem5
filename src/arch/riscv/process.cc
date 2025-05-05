@@ -44,7 +44,6 @@
 #include "base/loader/elf_object.hh"
 #include "base/loader/object_file.hh"
 #include "base/logging.hh"
-#include "base/random.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Stack.hh"
 #include "mem/page_table.hh"
@@ -172,7 +171,7 @@ RiscvProcess::argsInit(int pageSize)
     memState->setStackMin(memState->getStackMin() - RandomBytes);
     uint8_t at_random[RandomBytes];
     std::generate(std::begin(at_random), std::end(at_random),
-                  [&]{ return random_mt.random(0, 0xFF); });
+                  [&]{ return rng->random(0, 0xFF); });
     initVirtMem->writeBlob(memState->getStackMin(), at_random, RandomBytes);
 
     // Copy argv to stack

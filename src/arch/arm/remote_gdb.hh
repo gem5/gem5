@@ -77,7 +77,7 @@ class RemoteGDB : public BaseRemoteGDB
           uint32_t fpscr;
         } r;
       public:
-        char *data() const override { return (char *)&r; }
+        char *data() override { return (char *)&r; }
         size_t size() const override { return sizeof(r); }
         void getRegs(ThreadContext*) override;
         void setRegs(ThreadContext*) const override;
@@ -103,7 +103,7 @@ class RemoteGDB : public BaseRemoteGDB
           uint32_t fpcr;
         } r;
       public:
-        char *data() const override { return (char *)&r; }
+        char *data() override { return (char *)&r; }
         size_t size() const override { return sizeof(r); }
         void getRegs(ThreadContext*) override;
         void setRegs(ThreadContext*) const override;

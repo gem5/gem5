@@ -38,6 +38,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # metric prefixes
+from typing import Optional
+
 atto = 1.0e-18
 femto = 1.0e-15
 pico = 1.0e-12
@@ -94,6 +96,15 @@ binary_prefixes = {
     "M": mebi,
     "Ki": kibi,
     "k": kibi,
+}
+
+base_10_to_2 = {
+    "k": "Ki",
+    "M": "Mi",
+    "G": "Gi",
+    "T": "Ti",
+    "P": "Pi",
+    "E": "Ei",
 }
 
 
@@ -254,10 +265,38 @@ def toNetworkBandwidth(value):
 
 
 def toMemoryBandwidth(value):
+    checkBaseConversion(value, "B/s")
     return toBinaryFloat(value, "memory bandwidth", "B/s")
 
 
+def _base_10_to_2(value: str, unit: str) -> Optional[str]:
+    """Convert a base 10 memory/cache size SI prefix strings to base 2. Used
+    in `checkBaseConversion` to provide a warning message to the user. Will
+    return None if no conversion is required.
+
+    This function is intentionally separate from `checkBaseConversion` to aid
+    in testing."""
+    size_and_prefix, _ = _split_suffix(value, [unit])
+    size, prefix = _split_suffix(size_and_prefix, binary_prefixes)
+    if prefix in base_10_to_2.keys():
+        return f"{size}{base_10_to_2[prefix]}"
+    return None
+
+
+def checkBaseConversion(value, unit):
+    if type(value) is str:
+        new_value = _base_10_to_2(value, unit)
+        if new_value:
+            from m5.util import warn
+
+            warn(
+                f"Base 10 memory/cache size {value} will be cast to base 2"
+                + f" size {new_value}{unit}."
+            )
+
+
 def toMemorySize(value):
+    checkBaseConversion(value, "B")
     return toBinaryInteger(value, "memory size", "B")
 
 

@@ -50,6 +50,8 @@ class EnumDeclAST(DeclAST):
             ident = f"{parent}_{self.type_ast.ident}"
         else:
             ident = self.type_ast.ident
+        if not self.shared:
+            ident = f"{self.slicc.protocol}/{ident}"
         s = {f"{ident}.hh", f"{ident}.cc"}
         return s
 
@@ -58,7 +60,12 @@ class EnumDeclAST(DeclAST):
 
         # Make the new type
         t = Type(
-            self.symtab, ident, self.location, self.pairs, self.state_machine
+            self.symtab,
+            ident,
+            self.location,
+            self.pairs,
+            self.shared,
+            self.state_machine,
         )
         self.symtab.newSymbol(t)
 

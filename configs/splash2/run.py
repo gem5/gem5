@@ -49,9 +49,9 @@ parser.add_argument(
 parser.add_argument(
     "-f", "--frequency", default="1GHz", help="Frequency of each CPU"
 )
-parser.add_argument("--l1size", default="32kB")
+parser.add_argument("--l1size", default="32KiB")
 parser.add_argument("--l1latency", default="1ns")
-parser.add_argument("--l2size", default="256kB")
+parser.add_argument("--l2size", default="256KiB")
 parser.add_argument("--l2latency", default="10ns")
 parser.add_argument(
     "--rootdir",

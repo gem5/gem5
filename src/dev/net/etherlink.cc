@@ -51,7 +51,6 @@
 #include <vector>
 
 #include "base/logging.hh"
-#include "base/random.hh"
 #include "base/trace.hh"
 #include "debug/Ethernet.hh"
 #include "debug/EthernetData.hh"
@@ -189,7 +188,7 @@ EtherLink::Link::transmit(EthPacketPtr pkt)
     packet = pkt;
     Tick delay = (Tick)ceil(((double)pkt->simLength * ticksPerByte) + 1.0);
     if (delayVar != 0)
-        delay += random_mt.random<Tick>(0, delayVar);
+        delay += rng->random<Tick>(0, delayVar);
 
     DPRINTF(Ethernet, "scheduling packet: delay=%d, (rate=%f)\n",
             delay, ticksPerByte);

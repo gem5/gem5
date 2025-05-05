@@ -22,7 +22,8 @@
         "resource_version": "1.0.0",
         "gem5_versions": [
             "develop",
-            "24.0"
+            "24.0",
+            "24.1"
         ],
         "example_usage": "get_resource(resource_name=\"rv64mi-p-sbreak\")"
     },
@@ -50,7 +51,8 @@
         "resource_version": "1.1.0",
         "gem5_versions": [
             "develop",
-            "24.0"
+            "24.0",
+            "24.1"
         ],
         "example_usage": "get_resource(resource_name=\"rv64mi-p-sbreak\")"
     },
@@ -97,7 +99,8 @@
         "resource_version": "1.0.0",
         "gem5_versions": [
             "develop",
-            "24.0"
+            "24.0",
+            "24.1"
         ],
         "workload_name": "x86-print-this-15000-with-simpoints",
         "example_usage": "get_resource(resource_name=\"x86-print-this-1500-simpoints\")",
@@ -126,7 +129,8 @@
         "resource_version": "0.2.0",
         "gem5_versions": [
             "develop",
-            "24.0"
+            "24.0",
+            "24.1"
         ],
         "workload_name": "x86-print-this-15000-with-simpoints",
         "example_usage": "get_resource(resource_name=\"x86-print-this-1500-simpoints\")",
@@ -155,7 +159,8 @@
         "resource_version": "0.2.0",
         "gem5_versions": [
             "develop",
-            "24.0"
+            "24.0",
+            "24.1"
         ],
         "workload_name": "x86-print-this-15000-with-simpoints",
         "example_usage": "get_resource(resource_name=\"x86-print-this-1500-simpoints\")",
@@ -184,7 +189,8 @@
         "resource_version": "0.2.0",
         "gem5_versions": [
             "develop",
-            "24.0"
+            "24.0",
+            "24.1"
         ],
         "workload_name": "x86-print-this-15000-with-simpoints",
         "example_usage": "get_resource(resource_name=\"x86-print-this-1500-simpoints\")",
@@ -213,7 +219,8 @@
         "resource_version": "0.2.0",
         "gem5_versions": [
             "develop",
-            "24.0"
+            "24.0",
+            "24.1"
         ],
         "workload_name": "x86-print-this-15000-with-simpoints",
         "example_usage": "get_resource(resource_name=\"x86-print-this-1500-simpoints\")",
@@ -242,7 +249,8 @@
         "resource_version": "0.2.0",
         "gem5_versions": [
             "develop",
-            "24.0"
+            "24.0",
+            "24.1"
         ],
         "workload_name": "x86-print-this-15000-with-simpoints",
         "example_usage": "get_resource(resource_name=\"x86-print-this-1500-simpoints\")",
@@ -271,7 +279,8 @@
         "resource_version": "0.2.0",
         "gem5_versions": [
             "develop",
-            "24.0"
+            "24.0",
+            "24.1"
         ],
         "workload_name": "x86-print-this-15000-with-simpoints",
         "example_usage": "get_resource(resource_name=\"x86-print-this-1500-simpoints\")",
@@ -300,7 +309,8 @@
         "resource_version": "0.2.0",
         "gem5_versions": [
             "develop",
-            "24.0"
+            "24.0",
+            "24.1"
         ],
         "workload_name": "x86-print-this-15000-with-simpoints",
         "example_usage": "get_resource(resource_name=\"x86-print-this-1500-simpoints\")",
@@ -333,7 +343,8 @@
         "resource_version": "2.0.0",
         "gem5_versions": [
             "develop",
-            "24.0"
+            "24.0",
+            "24.1"
         ],
         "example_usage": "get_resource(resource_name=\"x86-ubuntu-18.04-img\")"
     }

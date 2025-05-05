@@ -34,87 +34,148 @@ from SCons.Scanner import Classic
 
 from gem5_scons import Transform
 
-Import('*')
+Import("*")
 
-if not env['CONF']['RUBY']:
+if not env["CONF"]["RUBY"]:
     Return()
 
-output_dir = Dir('.')
-html_dir = Dir('html')
-slicc_dir = Dir('../slicc')
+output_dir = Dir(".")
+html_dir = Dir("html")
+slicc_dir = Dir("../slicc")
 
-sys.path[1:1] = [ Dir('..').Dir('..').srcnode().abspath ]
+sys.path[1:1] = [Dir("..").Dir("..").srcnode().abspath]
 from slicc.parser import SLICC
 
 slicc_depends = []
-for root,dirs,files in os.walk(slicc_dir.srcnode().abspath):
+for root, dirs, files in os.walk(slicc_dir.srcnode().abspath):
     for f in files:
-        if f.endswith('.py'):
+        if f.endswith(".py"):
             slicc_depends.append(File(os.path.join(root, f)))
 
 #
 # Use SLICC
 #
 env["SLICC_PATH"] = env["PROTOCOL_DIRS"]
-slicc_scanner = Classic("SliccScanner", ['.sm', '.slicc'], "SLICC_PATH",
-                        r'''include[ \t]["'](.*)["'];''')
+slicc_scanner = Classic(
+    "SliccScanner",
+    [".sm", ".slicc"],
+    "SLICC_PATH",
+    r"""include[ \t]["'](.*)["'];""",
+)
 env.Append(SCANNERS=slicc_scanner)
 
-slicc_includes = ['mem/ruby/slicc_interface/RubySlicc_includes.hh'] + \
-        env['SLICC_INCLUDES']
+slicc_includes = ["mem/ruby/slicc_interface/RubySlicc_includes.hh"] + env[
+    "SLICC_INCLUDES"
+]
+
+
 def slicc_emitter(target, source, env):
-    assert len(source) == 1
-    filepath = source[0].srcnode().abspath
+    files = set(target)
+    for s in source:
+        filepath = s.srcnode().abspath
 
-    slicc = SLICC(filepath, protocol_base.abspath, verbose=False)
-    slicc.process()
-    slicc.writeCodeFiles(output_dir.abspath, slicc_includes)
-    if env['CONF']['SLICC_HTML']:
-        slicc.writeHTMLFiles(html_dir.abspath)
+        slicc = SLICC(
+            filepath,
+            [
+                os.path.join(
+                    protocol_base.abspath, "RubySlicc_interfaces.slicc"
+                )
+            ],
+            protocol_base.abspath,
+            verbose=GetOption("verbose"),
+        )
+        slicc.process()
+        slicc.writeCodeFiles(output_dir.abspath, slicc_includes)
+        if env["CONF"]["SLICC_HTML"]:
+            slicc.writeHTMLFiles(html_dir.abspath)
 
-    target.extend([output_dir.File(f) for f in sorted(slicc.files())])
-    return target, source
+        files.update([output_dir.File(f) for f in sorted(slicc.files())])
+
+        # Dynamically determine protocol and add ProtocolInfo.hh to the list of
+        # files to be built
+        protocol_file = output_dir.File(
+            f"{slicc.protocol}/{slicc.protocol}ProtocolInfo.hh"
+        )
+        files.update([protocol_file])
+
+    return list(files), source
+
 
 def slicc_action(target, source, env):
-    assert len(source) == 1
-    filepath = source[0].srcnode().abspath
+    for s in source:
+        filepath = s.srcnode().abspath
+        slicc = SLICC(
+            filepath,
+            [
+                os.path.join(
+                    protocol_base.abspath, "RubySlicc_interfaces.slicc"
+                )
+            ],
+            protocol_base.abspath,
+            verbose=GetOption("verbose"),
+        )
+        slicc.process()
+        slicc.writeCodeFiles(output_dir.abspath, slicc_includes)
+        if env["CONF"]["SLICC_HTML"]:
+            slicc.writeHTMLFiles(html_dir.abspath)
 
-    slicc = SLICC(filepath, protocol_base.abspath, verbose=True)
-    slicc.process()
-    slicc.writeCodeFiles(output_dir.abspath, slicc_includes)
-    if env['CONF']['SLICC_HTML']:
-        slicc.writeHTMLFiles(html_dir.abspath)
 
-slicc_builder = Builder(action=MakeAction(slicc_action, Transform("SLICC")),
-                        emitter=slicc_emitter)
+slicc_builder = Builder(
+    action=MakeAction(slicc_action, Transform("SLICC")), emitter=slicc_emitter
+)
 
-protocol = env['CONF']['PROTOCOL']
-protocol_dir = None
-for path in env['PROTOCOL_DIRS']:
-    if os.path.exists(path.File("%s.slicc" % protocol).abspath):
-        protocol_dir = Dir(path)
-        break
+if env["CONF"]["PROTOCOL"] != "MULTIPLE":
+    # Using backward compatibility
+    if (
+        f"RUBY_PROTOCOL_{env['CONF']['PROTOCOL']}" not in env["CONF"].keys()
+        or not env["CONF"][f"RUBY_PROTOCOL_{env['CONF']['PROTOCOL']}"]
+    ):
+        raise ValueError(
+            "Your build config must be updated for the new multiple Ruby "
+            "build system. Please select the correct protocol under Ruby. "
+            "Deselect \"Use multiple protocols\" and select the desired "
+            f"protocol ({env['CONF']['PROTOCOL']})\n"
+            "Run the following code:\n"
+            f"scons menuconfig {env['BUILDDIR']}\n"
+        )
 
-if not protocol_dir:
-    raise ValueError("Could not find {}.slicc in PROTOCOL_DIRS".format(
-        protocol))
+# Gather protocol names
+protocols = []
+for variable in env["CONF"]:
+    if variable.startswith("RUBY_PROTOCOL_") and env["CONF"][variable]:
+        protocols.append(variable[len("RUBY_PROTOCOL_") :])
 
-sources = [ protocol_dir.File("%s.slicc" % protocol) ]
+def find_protocol_sources(protocol):
+    protocol_dir = None
+    for path in env["PROTOCOL_DIRS"]:
+        if os.path.exists(path.File("%s.slicc" % protocol).abspath):
+            protocol_dir = Dir(path)
+            break
 
-env.Append(BUILDERS={'SLICC' : slicc_builder})
+    if not protocol_dir:
+        raise ValueError(
+            "Could not find {}.slicc in PROTOCOL_DIRS".format(protocol)
+        )
+
+    return protocol_dir.File("%s.slicc" % protocol)
+
+
+sources = [find_protocol_sources(protocol) for protocol in protocols]
+
+env.Append(BUILDERS={"SLICC": slicc_builder})
 nodes = env.SLICC([], sources)
 env.Depends(nodes, slicc_depends)
 
 append = {}
-if env['CLANG']:
-    append['CCFLAGS'] = '-Wno-parentheses'
+if env["CLANG"]:
+    append["CCFLAGS"] = "-Wno-parentheses"
 for f in nodes:
     s = str(f)
-    if s.endswith('.cc'):
+    if s.endswith(".cc"):
         Source(f, append=append)
-    elif s.endswith('.py'):
+    elif s.endswith(".py"):
         filename = os.path.basename(s)
         # We currently only expect ${ident}_Controller.py to be generated, and
         # for it to contain a single SimObject with the same name.
-        assert(filename.endswith('_Controller.py'))
+        assert filename.endswith("_Controller.py")
         SimObject(f, sim_objects=[os.path.splitext(filename)[0]])

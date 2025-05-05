@@ -43,9 +43,9 @@ with gem5_scons.Configure(main) as conf:
     # since some installations don't use pkg-config.
     conf.env['CONF']['HAVE_HDF5'] = \
             conf.CheckLibWithHeader('hdf5', 'hdf5.h', 'C',
-                                    'H5Fcreate("", 0, 0, 0);') and \
+                                    call='H5Fcreate("", 0, 0, 0);') and \
             conf.CheckLibWithHeader('hdf5_cpp', 'H5Cpp.h', 'C++',
-                                    'H5::H5File("", 0);')
+                                    call='H5::H5File("", 0);')
 
     if conf.env['CONF']['HAVE_HDF5']:
         conf.env.TagImplies('hdf5', 'gem5 lib')

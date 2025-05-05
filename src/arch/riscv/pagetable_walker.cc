@@ -369,6 +369,12 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                                 "PTE has misaligned PPN, raising PF\n");
                         fault = pageFault(true);
                     }
+                    if (pte.n && (pte.ppn0 & mask(NapotShift)) != 8) {
+                            DPRINTF(PageTableWalker,
+                                "SVNAPOT PTE has wrong encoding, \
+                                 raising PF\n");
+                            fault = pageFault(true);
+                    }
                 }
 
                 if (fault == NoFault) {
@@ -404,8 +410,13 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                                  level, entry.vaddr);
 
                         // step 8
-                        entry.logBytes = PageShift + (level * LEVEL_BITS);
-                        entry.paddr = pte.ppn;
+                        // Check if N (contig bit) is set, if yes we have
+                        // a 64K page mapping (SVNAPOT Extension)
+                        assert(!(pte.n) || level == 0);
+                        entry.logBytes = (pte.n) ? PageShift + NapotShift :
+                                            PageShift + (level * LEVEL_BITS);
+                        entry.paddr = (pte.n) ? pte.ppn & ~mask(NapotShift) :
+                                                pte.ppn;
                         entry.vaddr &= ~((1 << entry.logBytes) - 1);
                         entry.pte = pte;
                         // put it non-writable into the TLB to detect
@@ -420,7 +431,10 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
                             walker->pagewalkerstats.num_2mb_walks++;
                         }
                         if (level == 0) {
-                            walker->pagewalkerstats.num_4kb_walks++;
+                            if (pte.n)
+                                walker->pagewalkerstats.num_64kb_walks++;
+                            else
+                                walker->pagewalkerstats.num_4kb_walks++;
                         }
                         DPRINTF(PageTableWalker,
                                 "#1 leaf node at level %d, with vpn %#x\n",
@@ -574,8 +588,8 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
              */
             Addr vaddr = req->getVaddr();
             vaddr = Addr(sext<VADDR_BITS>(vaddr));
-            Addr paddr = walker->tlb->translateWithTLB(vaddr, satp.asid,
-                                                       satp.mode, mode);
+            Addr paddr = walker->tlb->hiddenTranslateWithTLB(vaddr, satp.asid,
+                                                             satp.mode, mode);
             req->setPaddr(paddr);
 
             // do pmp check if any checking condition is met.
@@ -680,6 +694,8 @@ Walker::PagewalkerStats::PagewalkerStats(statistics::Group *parent)
   : statistics::Group(parent),
     ADD_STAT(num_4kb_walks, statistics::units::Count::get(),
              "Completed page walks with 4KB pages"),
+    ADD_STAT(num_64kb_walks, statistics::units::Count::get(),
+             "Completed page walks with 64KB pages"),
     ADD_STAT(num_2mb_walks, statistics::units::Count::get(),
              "Completed page walks with 2MB pages")
 {

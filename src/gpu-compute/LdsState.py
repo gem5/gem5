@@ -38,7 +38,7 @@ class LdsState(ClockedObject):
     cxx_class = "gem5::LdsState"
     cxx_header = "gpu-compute/lds_state.hh"
     size = Param.Int(65536, "the size of the LDS")
-    range = Param.AddrRange("64kB", "address space of the LDS")
+    range = Param.AddrRange("64KiB", "address space of the LDS")
     bankConflictPenalty = Param.Int(
         1, "penalty per LDS bank conflict when accessing data"
     )

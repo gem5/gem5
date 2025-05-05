@@ -124,7 +124,7 @@ class L1Cache(Cache):
 
 class L1I(L1Cache):
     mshrs = 2
-    size = "32kB"
+    size = "32KiB"
     assoc = 2
     is_read_only = True
     tgts_per_mshr = 20
@@ -132,7 +132,7 @@ class L1I(L1Cache):
 
 class L1D(L1Cache):
     mshrs = 4
-    size = "32kB"
+    size = "32KiB"
     assoc = 4
     write_buffers = 4
 
@@ -144,7 +144,7 @@ class L2(Cache):
     response_latency = 9
     mshrs = 8
     tgts_per_mshr = 12
-    size = "512kB"
+    size = "512KiB"
     assoc = 8
     write_buffers = 16
     clusivity = "mostly_excl"

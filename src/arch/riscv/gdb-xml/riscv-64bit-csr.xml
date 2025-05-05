@@ -30,6 +30,7 @@
   <reg name="stval" bitsize="64"/>
   <reg name="sip" bitsize="64"/>
   <reg name="satp" bitsize="64"/>
+  <reg name="senvcfg" bitsize="64"/>
   <reg name="mvendorid" bitsize="64"/>
   <reg name="marchid" bitsize="64"/>
   <reg name="mimpid" bitsize="64"/>

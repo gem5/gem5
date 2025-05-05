@@ -37,6 +37,18 @@ class AbstractRubyCacheHierarchy(AbstractCacheHierarchy):
     def __init__(self):
         super().__init__()
 
+    def _reset_version_numbers(self):
+        """Needed for multiple ruby systems so that each system starts at 0.
+
+        Note: This needs to be overridden by the protocol since we don't know
+        the machine classes at this point.
+        """
+        raise NotImplementedError
+
+    @overrides(AbstractCacheHierarchy)
+    def incorporate_cache(self, board):
+        self._reset_version_numbers()
+
     @overrides(AbstractCacheHierarchy)
     def is_ruby(self) -> bool:
         return True

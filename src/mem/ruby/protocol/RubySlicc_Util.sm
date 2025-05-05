@@ -52,6 +52,7 @@ Addr intToAddress(int addr);
 int addressOffset(Addr addr, Addr base);
 int max_tokens();
 Addr makeLineAddress(Addr addr);
+Addr makeLineAddress(Addr addr, int cacheLineBits);
 int getOffset(Addr addr);
 int mod(int val, int mod);
 Addr bitSelect(Addr addr, int small, int big);

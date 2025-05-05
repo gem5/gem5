@@ -169,7 +169,7 @@ for name in arm_fs_long_tests:
         verifiers=verifier_list(name),  # TODO: Add basic stat verifiers
         config=joinpath(filepath, "run.py"),
         config_args=args,
-        valid_isas=(constants.all_compiled_tag,),
+        valid_isas=(constants.arm_x86_tag,),
         length=constants.long_tag,
         fixtures=(arm_fs_binaries,),
         uses_kvm=name in arm_fs_kvm_tests,

@@ -187,3 +187,7 @@ class BaseCPUCore(AbstractCore):
         pair_tracker.core = self.core
         pair_tracker.ptmanager = manager
         self.core.probeListener = pair_tracker
+
+    @overrides(AbstractCore)
+    def get_total_instructions(self) -> int:
+        return self.core.totalInsts()

@@ -24,17 +24,27 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects import MessageBuffer
+from m5.objects import (
+    MESI_Two_Level_DMA_Controller,
+    MessageBuffer,
+)
 
-from ......utils.override import overrides
-from ..abstract_dma_controller import AbstractDMAController
 
+class DMAController(MESI_Two_Level_DMA_Controller):
 
-class DMAController(AbstractDMAController):
+    _version = 0
+
+    @classmethod
+    def versionCount(cls):
+        cls._version += 1  # Use count for this particular type
+        return cls._version - 1
+
     def __init__(self, network, cache_line_size):
-        super().__init__(network, cache_line_size)
+        super().__init__()
+        self.version = self.versionCount()
+        self._cache_line_size = cache_line_size
+        self.connectQueues(network)
 
-    @overrides(AbstractDMAController)
     def connectQueues(self, network):
         self.mandatoryQueue = MessageBuffer()
         self.responseFromDir = MessageBuffer(ordered=True)

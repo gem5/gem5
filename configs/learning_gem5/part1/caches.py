@@ -24,7 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Caches with options for a simple gem5 configuration script
+"""Caches with options for a simple gem5 configuration script
 
 This file contains L1 I/D and L2 caches to be used in the simple
 gem5 configuration script. It uses the SimpleOpts wrapper to set up command
@@ -71,7 +71,7 @@ class L1ICache(L1Cache):
     """Simple L1 instruction cache with default values"""
 
     # Set the default size
-    size = "16kB"
+    size = "16KiB"
 
     SimpleOpts.add_option(
         "--l1i_size", help=f"L1 instruction cache size. Default: {size}"
@@ -92,7 +92,7 @@ class L1DCache(L1Cache):
     """Simple L1 data cache with default values"""
 
     # Set the default size
-    size = "64kB"
+    size = "64KiB"
 
     SimpleOpts.add_option(
         "--l1d_size", help=f"L1 data cache size. Default: {size}"
@@ -113,7 +113,7 @@ class L2Cache(Cache):
     """Simple L2 Cache with default values"""
 
     # Default parameters
-    size = "256kB"
+    size = "256KiB"
     assoc = 8
     tag_latency = 20
     data_latency = 20

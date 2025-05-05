@@ -2,53 +2,96 @@
 name: Docker images build and push
 
 on:
+    push:
+        branches:
+            - develop
+        paths:
+            - util/dockerfiles/**
     workflow_dispatch:
+
+
 jobs:
-    obtain-dockerfiles:
-        runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+
+    obtain-targets:
+        runs-on: ubuntu-latest
+        outputs:
+            targets: ${{ steps.generate.outputs.targets }}
 
         steps:
-            - uses: actions/checkout@v4
-              with:
-          # Scheduled workflows run on the default branch by default. We
-          # therefore need to explicitly checkout the develop branch.
-                  ref: develop
-            - uses: actions/upload-artifact@v4
-              with:
-                  name: dockerfiles
-                  path: util/dockerfiles
+            - name: Checkout
+              uses: actions/checkout@v3
 
-  # This builds and pushes the docker image.
-    build-and-push:
+            - name: List targets
+              id: generate
+              uses: docker/bake-action/subaction/list-targets@v4
+              with:
+                  target: default
+                  workdir: util/dockerfiles
+
+    docker-buildx-bake-base-images:
+        # This job is used to build the base images -- the images which other
+        # images use as a base (usually an Ubuntu release).
+        # We do this prior to building the other images to ensure that the base
+        # are available when building the other images.
         runs-on: [self-hosted, linux, x64]
-        needs: obtain-dockerfiles
-        permissions:
-            packages: write
-            contents: read
-
         steps:
-            - uses: actions/download-artifact@v4
-              with:
-                  name: dockerfiles
-                  path: dockerfiles-docker-build
+            - name: Set up QEMU
+              uses: docker/setup-qemu-action@v3
 
-            - uses: docker/setup-qemu-action@v2
-              name: Setup QEMU
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
 
-            - uses: docker/setup-buildx-action@v2
-              name: Set up Docker Buildx
-
-            - uses: docker/login-action@v2
-              name: Login to the GitHub Container Registry
+            - name: Login to GitHub Container Registry
+              uses: docker/login-action@v3
               with:
                   registry: ghcr.io
                   username: ${{ github.repository_owner }}
                   password: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Build and push with bake
-              uses: docker/bake-action@v4
+            - name: Build and Push
+              uses: docker/bake-action@v6
               with:
-                  workdir: ./dockerfiles-docker-build
-                  files: docker-bake.hcl
+                  source: '{{defaultContext}}:util/dockerfiles'
+                  targets: base-images
+                  provenance: true
+                  push: true
+
+    docker-buildx-bake-all:
+        runs-on: [self-hosted, linux, x64]
+        needs:
+            - obtain-targets
+            - docker-buildx-bake-base-images
+
+        strategy:
+            fail-fast: false
+            # Limit the number of parallel jobs to not overwhelm the runners
+            max-parallel: 4
+            matrix:
+                target: ${{ fromJSON(needs.obtain-targets.outputs.targets) }}
+
+        permissions:
+            packages: write
+            contents: read
+
+        steps:
+
+            - name: Set up QEMU
+              uses: docker/setup-qemu-action@v3
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Login to GitHub Container Registry
+              uses: docker/login-action@v3
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.repository_owner }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Build and Push
+              uses: docker/bake-action@v6
+              with:
+                  source: '{{defaultContext}}:util/dockerfiles'
+                  targets: ${{ matrix.target }}
+                  provenance: true
                   push: true

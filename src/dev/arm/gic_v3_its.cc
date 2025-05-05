@@ -1276,21 +1276,22 @@ Gicv3Its::moveAllPendingState(
     Gicv3Redistributor *rd1, Gicv3Redistributor *rd2)
 {
     const uint64_t largest_lpi_id = 1ULL << (rd1->lpiIDBits + 1);
-    uint8_t lpi_pending_table[largest_lpi_id / 8];
+    const uint64_t table_size = largest_lpi_id / 8;
+    auto lpi_pending_table = std::make_unique<uint8_t[]>(table_size);
 
     // Copying the pending table from redistributor 1 to redistributor 2
     rd1->memProxy->readBlob(
-        rd1->lpiPendingTablePtr, (uint8_t *)lpi_pending_table,
-        sizeof(lpi_pending_table));
+        rd1->lpiPendingTablePtr, lpi_pending_table.get(),
+        table_size);
 
     rd2->memProxy->writeBlob(
-        rd2->lpiPendingTablePtr, (uint8_t *)lpi_pending_table,
-        sizeof(lpi_pending_table));
+        rd2->lpiPendingTablePtr, lpi_pending_table.get(),
+        table_size);
 
     // Clearing pending table in redistributor 2
     rd1->memProxy->memsetBlob(
-        rd1->lpiPendingTablePtr,
-        0, sizeof(lpi_pending_table));
+        rd1->lpiPendingTablePtr, 0,
+        table_size);
 
     rd2->updateDistributor();
 }

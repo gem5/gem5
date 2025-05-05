@@ -45,6 +45,7 @@
 #include <unordered_map>
 
 #include "mem/ruby/common/Address.hh"
+#include "mem/ruby/system/RubySystem.hh"
 
 namespace gem5
 {
@@ -70,6 +71,8 @@ class TBETable
         return (m_number_of_TBEs - m_map.size()) >= n;
     }
 
+    void setRubySystem(RubySystem* rs);
+
     ENTRY *getNullEntry();
     ENTRY *lookup(Addr address);
 
@@ -85,7 +88,12 @@ class TBETable
     std::unordered_map<Addr, ENTRY> m_map;
 
   private:
-    int m_number_of_TBEs;
+    int m_number_of_TBEs = 0;
+    int m_block_size = 0;
+    RubySystem* m_ruby_system = nullptr;
+
+    static constexpr bool entryRequiresRubySystem =
+        std::is_member_function_pointer_v<decltype(&ENTRY::setRubySystem)>;
 };
 
 template<class ENTRY>
@@ -98,10 +106,18 @@ operator<<(std::ostream& out, const TBETable<ENTRY>& obj)
 }
 
 template<class ENTRY>
+inline
+void TBETable<ENTRY>::setRubySystem(RubySystem* rs)
+{
+    m_ruby_system = rs;
+    m_block_size = rs->getBlockSizeBytes();
+}
+
+template<class ENTRY>
 inline bool
 TBETable<ENTRY>::isPresent(Addr address) const
 {
-    assert(address == makeLineAddress(address));
+    assert(address == makeLineAddress(address, floorLog2(m_block_size)));
     assert(m_map.size() <= m_number_of_TBEs);
     return !!m_map.count(address);
 }
@@ -112,7 +128,10 @@ TBETable<ENTRY>::allocate(Addr address)
 {
     assert(!isPresent(address));
     assert(m_map.size() < m_number_of_TBEs);
-    m_map[address] = ENTRY();
+    assert(m_block_size > 0);
+    ENTRY new_entry = ENTRY(m_block_size);
+    new_entry.setRubySystem(m_ruby_system);
+    m_map.emplace(address, new_entry);
 }
 
 template<class ENTRY>

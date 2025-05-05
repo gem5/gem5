@@ -44,7 +44,6 @@ config USE_EFENCE
 
 rsource "base/Kconfig"
 rsource "mem/ruby/Kconfig"
-rsource "learning_gem5/part3/Kconfig"
 rsource "proto/Kconfig"
 rsource "dev/net/Kconfig"
 rsource "arch/Kconfig"

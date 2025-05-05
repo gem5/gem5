@@ -155,7 +155,7 @@ def addNoISAOptions(parser):
         "--mem-size",
         action="store",
         type=str,
-        default="512MB",
+        default="512MiB",
         help="Specify the physical memory size (single memory)",
     )
     parser.add_argument(
@@ -188,10 +188,10 @@ def addNoISAOptions(parser):
     parser.add_argument("--num-dirs", type=int, default=1)
     parser.add_argument("--num-l2caches", type=int, default=1)
     parser.add_argument("--num-l3caches", type=int, default=1)
-    parser.add_argument("--l1d_size", type=str, default="64kB")
-    parser.add_argument("--l1i_size", type=str, default="32kB")
-    parser.add_argument("--l2_size", type=str, default="2MB")
-    parser.add_argument("--l3_size", type=str, default="16MB")
+    parser.add_argument("--l1d_size", type=str, default="64KiB")
+    parser.add_argument("--l1i_size", type=str, default="32KiB")
+    parser.add_argument("--l2_size", type=str, default="2MiB")
+    parser.add_argument("--l3_size", type=str, default="16MiB")
     parser.add_argument("--l1d_assoc", type=int, default=2)
     parser.add_argument("--l1i_assoc", type=int, default=2)
     parser.add_argument("--l2_assoc", type=int, default=8)

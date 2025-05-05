@@ -59,6 +59,8 @@ namespace gem5
 namespace ruby
 {
 
+class RubySystem;
+
 class AbstractCacheEntry : public ReplaceableEntry
 {
   private:
@@ -78,15 +80,14 @@ class AbstractCacheEntry : public ReplaceableEntry
 
     // The methods below are those called by ruby runtime, add when it
     // is absolutely necessary and should all be virtual function.
-    virtual DataBlock&
+    [[noreturn]] virtual DataBlock&
     getDataBlk()
     {
         panic("getDataBlk() not implemented!");
-
-        // Dummy return to appease the compiler
-        static DataBlock b;
-        return b;
     }
+
+    virtual void initBlockSize(int block_size) { };
+    virtual void setRubySystem(RubySystem *rs) { };
 
     int validBlocks;
     virtual int& getNumValidBlocks()

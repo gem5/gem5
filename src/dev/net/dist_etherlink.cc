@@ -50,7 +50,6 @@
 #include <string>
 #include <vector>
 
-#include "base/random.hh"
 #include "base/trace.hh"
 #include "debug/DistEthernet.hh"
 #include "debug/DistEthernetPkt.hh"
@@ -195,7 +194,7 @@ DistEtherLink::TxLink::transmit(EthPacketPtr pkt)
     packet = pkt;
     Tick delay = (Tick)ceil(((double)pkt->simLength * ticksPerByte) + 1.0);
     if (delayVar != 0)
-        delay += random_mt.random<Tick>(0, delayVar);
+        delay += rng->random<Tick>(0, delayVar);
 
     // send the packet to the peers
     assert(distIface);

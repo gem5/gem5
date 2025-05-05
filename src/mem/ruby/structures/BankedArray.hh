@@ -48,9 +48,9 @@ class BankedArray
   private:
     unsigned int banks;
     Cycles accessLatency;
+    Tick clockPeriod = 0;
     unsigned int bankBits;
     unsigned int startIndexBit;
-    RubySystem *m_ruby_system;
 
     class AccessRecord
     {
@@ -69,7 +69,7 @@ class BankedArray
 
   public:
     BankedArray(unsigned int banks, Cycles accessLatency,
-                unsigned int startIndexBit, RubySystem *rs);
+                unsigned int startIndexBit);
 
     // Note: We try the access based on the cache index, not the address
     // This is so we don't get aliasing on blocks being replaced
@@ -78,6 +78,8 @@ class BankedArray
     void reserve(int64_t idx);
 
     Cycles getLatency() const { return accessLatency; }
+
+    void setClockPeriod(Tick _clockPeriod) { clockPeriod = _clockPeriod; }
 };
 
 } // namespace ruby

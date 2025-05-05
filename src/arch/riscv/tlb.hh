@@ -131,8 +131,8 @@ class TLB : public BaseTLB
      */
     Port *getTableWalkerPort() override;
 
-    Addr translateWithTLB(Addr vaddr, uint16_t asid, Addr xmode,
-                          BaseMMU::Mode mode);
+    Addr hiddenTranslateWithTLB(Addr vaddr, uint16_t asid, Addr xmode,
+                                BaseMMU::Mode mode);
 
     Fault translateAtomic(const RequestPtr &req,
                           ThreadContext *tc, BaseMMU::Mode mode) override;
@@ -144,6 +144,21 @@ class TLB : public BaseTLB
     Fault finalizePhysical(const RequestPtr &req, ThreadContext *tc,
                            BaseMMU::Mode mode) const override;
 
+    Addr
+    getValidAddr(Addr vaddr, ThreadContext *tc, BaseMMU::Mode mode)
+    {
+      /**
+        * For RV32, we follow what the specification said:
+        * When mapping between narrower and wider addresses,
+        * RISC-V zero-extends a narrower physical address to a
+        * wider size.
+        */
+        ISA* isa = static_cast<ISA*>(tc->getIsaPtr());
+        if (isa->rvType() == RV32) {
+            return bits(vaddr, 31, 0);
+        }
+        return vaddr;
+    }
     /**
      * Perform the tlb lookup
      * @param vpn The virtual page number extracted from the address.

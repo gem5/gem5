@@ -23,7 +23,8 @@
         "resource_version": "1.0.0",
         "gem5_versions": [
             "develop",
-            "24.0"
+            "24.0",
+            "24.1"
         ],
         "example_usage": "get_resource(resource_name=\"x86-ubuntu-18.04-img\")"
     },
@@ -51,7 +52,8 @@
         "resource_version": "1.1.0",
         "gem5_versions": [
             "develop",
-            "24.0"
+            "24.0",
+            "24.1"
         ],
         "example_usage": "get_resource(resource_name=\"x86-ubuntu-18.04-img\")"
     }

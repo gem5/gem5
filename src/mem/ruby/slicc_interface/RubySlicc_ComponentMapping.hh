@@ -41,17 +41,6 @@ namespace gem5
 namespace ruby
 {
 
-inline NetDest
-broadcast(MachineType type)
-{
-    NetDest dest;
-    for (NodeID i = 0; i < MachineType_base_count(type); i++) {
-        MachineID mach = {type, i};
-        dest.add(mach);
-    }
-    return dest;
-}
-
 inline MachineID
 mapAddressToRange(Addr addr, MachineType type, int low_bit,
                   int num_bits, int cluster_id = 0)
@@ -75,12 +64,6 @@ inline MachineType
 machineIDToMachineType(MachineID machID)
 {
     return machID.type;
-}
-
-inline int
-machineCount(MachineType machType)
-{
-    return MachineType_base_count(machType);
 }
 
 inline MachineID

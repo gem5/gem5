@@ -34,6 +34,7 @@
 #include "base/stl_helpers.hh"
 #include "mem/ruby/profiler/Profiler.hh"
 #include "mem/ruby/protocol/RubyRequest.hh"
+#include "mem/ruby/system/RubySystem.hh"
 
 namespace gem5
 {
@@ -307,7 +308,8 @@ AddressProfiler::addTraceSample(Addr data_addr, Addr pc_addr,
         }
 
         // record data address trace info
-        data_addr = makeLineAddress(data_addr);
+        int block_size_bits = m_profiler->m_ruby_system->getBlockSizeBits();
+        data_addr = makeLineAddress(data_addr, block_size_bits);
         lookupTraceForAddress(data_addr, m_dataAccessTrace).
             update(type, access_mode, id, sharing_miss);
 

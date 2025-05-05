@@ -1,3 +1,5 @@
+// All of the sm files that are shared between all protocols
+
 include "RubySlicc_Exports.sm";
 include "RubySlicc_Types.sm";
 include "RubySlicc_Util.sm";

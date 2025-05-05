@@ -159,22 +159,6 @@ namespace gem5
 
 using namespace RiscvISA;
 
-static RiscvType
-getRvType(ThreadContext* tc)
-{
-    auto isa = dynamic_cast<ISA*>(tc->getIsaPtr());
-    panic_if(!isa, "Cannot derive rv_type from non-riscv isa");
-    return isa->rvType();
-}
-
-static PrivilegeModeSet
-getPrivilegeModeSet(ThreadContext* tc)
-{
-    auto isa = dynamic_cast<ISA*>(tc->getIsaPtr());
-    panic_if(!isa, "Cannot derive rv_type from non-riscv isa");
-    return isa->getPrivilegeModeSet();
-}
-
 template <typename xint>
 static void
 setRegNoEffectWithMask(
@@ -205,6 +189,22 @@ RemoteGDB::RemoteGDB(System *_system, ListenSocketConfig _listen_config)
     : BaseRemoteGDB(_system, _listen_config),
     regCache32(this), regCache64(this)
 {
+}
+
+RiscvType
+RemoteGDB::getRvType(ThreadContext* tc)
+{
+    auto isa = dynamic_cast<ISA*>(tc->getIsaPtr());
+    panic_if(!isa, "Cannot derive rv_type from non-riscv isa");
+    return isa->rvType();
+}
+
+PrivilegeModeSet
+RemoteGDB::getPrivilegeModeSet(ThreadContext* tc)
+{
+    auto isa = dynamic_cast<ISA*>(tc->getIsaPtr());
+    panic_if(!isa, "Cannot derive rv_type from non-riscv isa");
+    return isa->getPrivilegeModeSet();
 }
 
 bool
@@ -251,7 +251,11 @@ void
 RemoteGDB::Riscv32GdbRegCache::getRegs(ThreadContext *context)
 {
     DPRINTF(GDBAcc, "getregs in remotegdb, size %lu\n", size());
-    PrivilegeModeSet pms = getPrivilegeModeSet(context);
+    RemoteGDB* rv_gdb = dynamic_cast<RemoteGDB*>(gdb);
+    PrivilegeModeSet pms = enums::MSU;
+    if (rv_gdb != nullptr) {
+      pms = rv_gdb->getPrivilegeModeSet(context);
+    }
     auto& RVxCSRMasks = CSRMasks[RV32][pms];
 
     // General registers
@@ -323,6 +327,8 @@ RemoteGDB::Riscv32GdbRegCache::getRegs(ThreadContext *context)
         CSRData.at(CSR_SIP).physIndex) & RVxCSRMasks.at(CSR_SIP);
     r.satp = context->readMiscRegNoEffect(
         CSRData.at(CSR_SATP).physIndex);
+    r.senvcfg = context->readMiscRegNoEffect(
+        CSRData.at(CSR_SENVCFG).physIndex);
 
     // M mode CSR
     r.mvendorid = context->readMiscRegNoEffect(
@@ -366,7 +372,11 @@ void
 RemoteGDB::Riscv32GdbRegCache::setRegs(ThreadContext *context) const
 {
     DPRINTF(GDBAcc, "setregs in remotegdb \n");
-    PrivilegeModeSet pms = getPrivilegeModeSet(context);
+    RemoteGDB* rv_gdb = dynamic_cast<RemoteGDB*>(gdb);
+    PrivilegeModeSet pms = enums::MSU;
+    if (rv_gdb != nullptr) {
+      pms = rv_gdb->getPrivilegeModeSet(context);
+    }
     for (int i = 0; i < int_reg::NumArchRegs; i++)
         context->setReg(intRegClass[i], r.gpr[i]);
     context->pcState(r.pc);
@@ -418,6 +428,8 @@ RemoteGDB::Riscv32GdbRegCache::setRegs(ThreadContext *context) const
         CSRData.at(CSR_STVAL).physIndex, r.stval);
     context->setMiscRegNoEffect(
         CSRData.at(CSR_SATP).physIndex, r.satp);
+    context->setMiscRegNoEffect(
+        CSRData.at(CSR_SENVCFG).physIndex, r.senvcfg);
 
     // M mode CSR
     setRegWithMask(context, RV32, pms, CSR_MSTATUS, r.mstatus);
@@ -448,7 +460,11 @@ void
 RemoteGDB::Riscv64GdbRegCache::getRegs(ThreadContext *context)
 {
     DPRINTF(GDBAcc, "getregs in remotegdb, size %lu\n", size());
-    PrivilegeModeSet pms = getPrivilegeModeSet(context);
+    RemoteGDB* rv_gdb = dynamic_cast<RemoteGDB*>(gdb);
+    PrivilegeModeSet pms = enums::MSU;
+    if (rv_gdb != nullptr) {
+      pms = rv_gdb->getPrivilegeModeSet(context);
+    }
     auto& RVxCSRMasks = CSRMasks[RV64][pms];
 
     // General registers
@@ -516,6 +532,8 @@ RemoteGDB::Riscv64GdbRegCache::getRegs(ThreadContext *context)
         CSRData.at(CSR_SIP).physIndex) & RVxCSRMasks.at(CSR_SIP);
     r.satp = context->readMiscRegNoEffect(
         CSRData.at(CSR_SATP).physIndex);
+    r.senvcfg = context->readMiscRegNoEffect(
+        CSRData.at(CSR_SENVCFG).physIndex);
 
     // M mode CSR
     r.mvendorid = context->readMiscRegNoEffect(
@@ -557,7 +575,11 @@ void
 RemoteGDB::Riscv64GdbRegCache::setRegs(ThreadContext *context) const
 {
     DPRINTF(GDBAcc, "setregs in remotegdb \n");
-    PrivilegeModeSet pms = getPrivilegeModeSet(context);
+    RemoteGDB* rv_gdb = dynamic_cast<RemoteGDB*>(gdb);
+    PrivilegeModeSet pms = enums::MSU;
+    if (rv_gdb != nullptr) {
+      pms = rv_gdb->getPrivilegeModeSet(context);
+    }
     for (int i = 0; i < int_reg::NumArchRegs; i++)
         context->setReg(intRegClass[i], r.gpr[i]);
     context->pcState(r.pc);
@@ -609,7 +631,8 @@ RemoteGDB::Riscv64GdbRegCache::setRegs(ThreadContext *context) const
         CSRData.at(CSR_STVAL).physIndex, r.stval);
     context->setMiscRegNoEffect(
         CSRData.at(CSR_SATP).physIndex, r.satp);
-
+    context->setMiscRegNoEffect(
+        CSRData.at(CSR_SENVCFG).physIndex, r.senvcfg);
     // M mode CSR
     setRegWithMask(context, RV64, pms, CSR_MSTATUS, r.mstatus);
     setRegNoEffectWithMask(context, RV64, pms, CSR_MISA, r.misa);

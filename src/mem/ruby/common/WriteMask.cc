@@ -39,13 +39,13 @@ namespace ruby
 {
 
 WriteMask::WriteMask()
-    : mSize(RubySystem::getBlockSizeBytes()), mMask(mSize, false),
-      mAtomic(false)
+    : mSize(0), mMask(mSize, false), mAtomic(false)
 {}
 
 void
 WriteMask::print(std::ostream& out) const
 {
+    assert(mSize > 0);
     std::string str(mSize,'0');
     for (int i = 0; i < mSize; i++) {
         str[i] = mMask[i] ? ('1') : ('0');
@@ -59,6 +59,7 @@ void
 WriteMask::performAtomic(uint8_t * p,
         std::deque<uint8_t*>& log, bool isAtomicNoReturn) const
 {
+    assert(mSize > 0);
     int offset;
     uint8_t *block_update;
     // Here, operations occur in FIFO order from the mAtomicOp

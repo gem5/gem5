@@ -233,8 +233,9 @@ addressOffset(Addr addr, Addr base)
 inline bool
 testAndRead(Addr addr, DataBlock& blk, Packet *pkt)
 {
-    Addr pktLineAddr = makeLineAddress(pkt->getAddr());
-    Addr lineAddr = makeLineAddress(addr);
+    int block_size_bits = floorLog2(blk.getBlockSize());
+    Addr pktLineAddr = makeLineAddress(pkt->getAddr(), block_size_bits);
+    Addr lineAddr = makeLineAddress(addr, block_size_bits);
 
     if (pktLineAddr == lineAddr) {
         uint8_t *data = pkt->getPtr<uint8_t>();
@@ -259,8 +260,10 @@ testAndRead(Addr addr, DataBlock& blk, Packet *pkt)
 inline bool
 testAndReadMask(Addr addr, DataBlock& blk, WriteMask& mask, Packet *pkt)
 {
-    Addr pktLineAddr = makeLineAddress(pkt->getAddr());
-    Addr lineAddr = makeLineAddress(addr);
+    assert(blk.getBlockSize() == mask.getBlockSize());
+    int block_size_bits = floorLog2(blk.getBlockSize());
+    Addr pktLineAddr = makeLineAddress(pkt->getAddr(), block_size_bits);
+    Addr lineAddr = makeLineAddress(addr, block_size_bits);
 
     if (pktLineAddr == lineAddr) {
         uint8_t *data = pkt->getPtr<uint8_t>();
@@ -288,8 +291,9 @@ testAndReadMask(Addr addr, DataBlock& blk, WriteMask& mask, Packet *pkt)
 inline bool
 testAndWrite(Addr addr, DataBlock& blk, Packet *pkt)
 {
-    Addr pktLineAddr = makeLineAddress(pkt->getAddr());
-    Addr lineAddr = makeLineAddress(addr);
+    int block_size_bits = floorLog2(blk.getBlockSize());
+    Addr pktLineAddr = makeLineAddress(pkt->getAddr(), block_size_bits);
+    Addr lineAddr = makeLineAddress(addr, block_size_bits);
 
     if (pktLineAddr == lineAddr) {
         const uint8_t *data = pkt->getConstPtr<uint8_t>();

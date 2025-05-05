@@ -27,7 +27,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-""" This file creates an X86 system with a KVM CPU and GPU device capable of
+"""This file creates an X86 system with a KVM CPU and GPU device capable of
 running the MI300 ISA (gfx942). Most of this file sets up a runscript which
 will load in a binary, shell script, or python file from the host and run that
 within gem5. Jump to line 146 for list of system parameters to configure.
@@ -152,11 +152,11 @@ def runMI300GPUFS(
 
     # Defaults for CPU
     args.cpu_type = "X86KvmCPU"
-    args.mem_size = "8GB"
+    args.mem_size = "8GiB"
 
     # Defaults for MI300X
     args.gpu_device = "MI300X"
-    args.dgpu_mem_size = "16GB"  # GPU memory size, must be 16GB currently.
+    args.dgpu_mem_size = "16GiB"  # GPU memory size, must be 16GiB currently.
 
     # See: https://rocm.docs.amd.com/en/latest/conceptual/gpu-arch/mi300.html
     # Topology for one XCD. Number of CUs is approximately 304 / 8, rounded

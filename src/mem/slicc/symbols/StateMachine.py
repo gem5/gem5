@@ -265,8 +265,10 @@ class StateMachine(Symbol):
         code = self.symtab.codeFormatter()
         ident = self.ident
 
-        py_ident = f"{ident}_Controller"
+        protocol = self.symtab.slicc.protocol
+        py_ident = f"{protocol}_{ident}_Controller"
         c_ident = f"{self.ident}_Controller"
+        gen_filename = f"{protocol}/{py_ident}"
 
         code(
             """
@@ -276,8 +278,8 @@ from m5.objects.Controller import RubyController
 
 class $py_ident(RubyController):
     type = '$py_ident'
-    cxx_header = 'mem/ruby/protocol/${c_ident}.hh'
-    cxx_class = 'gem5::ruby::$py_ident'
+    cxx_header = 'mem/ruby/protocol/${protocol}/${c_ident}.hh'
+    cxx_class = 'gem5::ruby::$protocol::$c_ident'
 """
         )
         code.indent()
@@ -302,7 +304,30 @@ class $py_ident(RubyController):
                 )
 
         code.dedent()
-        code.write(path, f"{py_ident}.py")
+
+        # Needed for backwards compatibility. If you have exactly 1 protocol
+        # (i.e., buildEnv["PROTOCOL"] is not MULTIPLE), then for the one
+        # type of machine that matches this (sole) protocol, you can create an
+        # alias to the new name. This is only needed if using script that
+        # reference Ruby.py. When that is deprecated, this code can be removed
+        code(
+            """
+
+from m5.defines import buildEnv
+from m5.util import warn
+
+if buildEnv["PROTOCOL"] == "${protocol}":
+    class ${c_ident}(${py_ident}):
+        def __init__(self, *args, **kwargs):
+            warn(
+                "${c_ident} is deprecated. Use %s_${c_ident} instead",
+                buildEnv['PROTOCOL']
+            )
+            super().__init__(*args, **kwargs)
+"""
+        )
+
+        code.write(path, f"{gen_filename}.py")
 
     def printControllerHH(self, path):
         """Output the method declarations for the class declaration"""
@@ -310,12 +335,17 @@ class $py_ident(RubyController):
         ident = self.ident
         c_ident = f"{self.ident}_Controller"
 
+        protocol = self.symtab.slicc.protocol
+        header_string = protocol + "_" + self.ident
+        gen_filename = f"{protocol}/{c_ident}"
+        py_ident = f"{protocol}_{ident}_Controller"
+
         code(
             """
 // Created by slicc definition of Module "${{self.short}}"
 
-#ifndef __${ident}_CONTROLLER_HH__
-#define __${ident}_CONTROLLER_HH__
+#ifndef __${header_string}_CONTROLLER_HH__
+#define __${header_string}_CONTROLLER_HH__
 
 #include <iostream>
 #include <sstream>
@@ -323,9 +353,9 @@ class $py_ident(RubyController):
 
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/protocol/TransitionResult.hh"
-#include "mem/ruby/protocol/Types.hh"
+#include "mem/ruby/protocol/${protocol}/Types.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
-#include "params/$c_ident.hh"
+#include "params/$py_ident.hh"
 
 """
         )
@@ -333,7 +363,18 @@ class $py_ident(RubyController):
         seen_types = set()
         for var in self.objects:
             if var.type.ident not in seen_types and not var.type.isPrimitive:
-                code('#include "mem/ruby/protocol/${{var.type.c_ident}}.hh"')
+                if var.type.shared or var.type.isExternal:
+                    code(
+                        """
+#include "mem/ruby/protocol/${{var.type.c_ident}}.hh"
+"""
+                    )
+                else:
+                    code(
+                        """
+#include "mem/ruby/protocol/${{protocol}}/${{var.type.c_ident}}.hh"
+"""
+                    )
                 seen_types.add(var.type.ident)
 
         # for adding information to the protocol debug trace
@@ -345,14 +386,16 @@ namespace gem5
 namespace ruby
 {
 
+namespace ${protocol}
+{
+
 extern std::stringstream ${ident}_transitionComment;
 
 class $c_ident : public AbstractController
 {
   public:
-    typedef ${c_ident}Params Params;
+    typedef ${py_ident}Params Params;
     $c_ident(const Params &p);
-    static int getNumControllers();
     void init();
 
     MessageBuffer *getMandatoryQueue() const;
@@ -449,9 +492,8 @@ int m_counters[${ident}_State_NUM][${ident}_Event_NUM];
 int m_event_counters[${ident}_Event_NUM];
 bool m_possible[${ident}_State_NUM][${ident}_Event_NUM];
 
-static std::vector<statistics::Vector *> eventVec;
-static std::vector<std::vector<statistics::Vector *> > transVec;
-static int m_num_controllers;
+std::vector<statistics::Vector *> eventVec;
+std::vector<std::vector<statistics::Vector *> > transVec;
 
 // Internal functions
 """
@@ -532,14 +574,15 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
             """
 };
 
+} // namespace ${protocol}
 } // namespace ruby
 } // namespace gem5
 
-#endif // __${ident}_CONTROLLER_H__
+#endif // __${header_string}_CONTROLLER_H__
 """
         )
 
-        code.write(path, f"{c_ident}.hh")
+        code.write(path, f"{gen_filename}.hh")
 
     def printControllerCC(self, path, includes):
         """Output the actions for performing the actions"""
@@ -547,6 +590,7 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
         code = self.symtab.codeFormatter()
         ident = self.ident
         c_ident = f"{self.ident}_Controller"
+        gen_filename = f"{self.symtab.slicc.protocol}/{self.ident}"
 
         # Unfortunately, clang compilers will throw a "call to function ...
         # that is neither visible in the template definition nor found by
@@ -597,10 +641,10 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
         code(
             """
 #include "mem/ruby/network/Network.hh"
-#include "mem/ruby/protocol/${ident}_Controller.hh"
-#include "mem/ruby/protocol/${ident}_Event.hh"
-#include "mem/ruby/protocol/${ident}_State.hh"
-#include "mem/ruby/protocol/Types.hh"
+#include "mem/ruby/protocol/${gen_filename}_Controller.hh"
+#include "mem/ruby/protocol/${gen_filename}_Event.hh"
+#include "mem/ruby/protocol/${gen_filename}_State.hh"
+#include "mem/ruby/protocol/${protocol}/Types.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 """
@@ -612,7 +656,18 @@ void unset_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr);
         seen_types = set()
         for var in self.objects:
             if var.type.ident not in seen_types and not var.type.isPrimitive:
-                code('#include "mem/ruby/protocol/${{var.type.c_ident}}.hh"')
+                if var.type.shared or var.type.isExternal:
+                    code(
+                        """
+#include "mem/ruby/protocol/${{var.type.c_ident}}.hh"
+"""
+                    )
+                else:
+                    code(
+                        """
+#include "mem/ruby/protocol/${{protocol}}/${{var.type.c_ident}}.hh"
+"""
+                    )
             seen_types.add(var.type.ident)
 
         num_in_ports = len(self.in_ports)
@@ -625,9 +680,8 @@ namespace gem5
 namespace ruby
 {
 
-int $c_ident::m_num_controllers = 0;
-std::vector<statistics::Vector *>  $c_ident::eventVec;
-std::vector<std::vector<statistics::Vector *> >  $c_ident::transVec;
+namespace ${protocol}
+{
 
 // for adding information to the protocol debug trace
 std::stringstream ${ident}_transitionComment;
@@ -644,8 +698,9 @@ $c_ident::$c_ident(const Params &p)
 {
     m_machineID.type = MachineType_${ident};
     m_machineID.num = m_version;
-    m_num_controllers++;
-    p.ruby_system->registerAbstractController(this);
+    p.ruby_system->m_num_controllers[MachineType_${ident}]++;
+    p.ruby_system->registerAbstractController(this, std::make_unique<${protocol}ProtocolInfo>());
+    m_ruby_system = p.ruby_system;
 
     m_in_ports = $num_in_ports;
 """
@@ -699,7 +754,7 @@ void
 $c_ident::initNetQueues()
 {
     MachineType machine_type = string_to_MachineType("${{self.ident}}");
-    [[maybe_unused]] int base = MachineType_base_number(machine_type);
+    [[maybe_unused]] int base = m_ruby_system->MachineType_base_number(machine_type);
 
 """
         )
@@ -775,6 +830,20 @@ $c_ident::init()
                     elif "default" in vtype:
                         comment = f"Type {vtype.ident} default"
                         code('*$vid = ${{vtype["default"]}}; // $comment')
+
+                    # For objects that require a pointer to RubySystem,
+                    # set the value here.
+                    if vtype.c_ident in (
+                        "NetDest",
+                        "PerfectCacheMemory",
+                        "TBETable",
+                    ):
+                        code(f"(*{vid}).setRubySystem(m_ruby_system);")
+
+        for param in self.config_parameters:
+            if param.type_ast.type.ident == "CacheMemory":
+                assert param.pointer
+                code(f"m_{param.ident}_ptr->setRubySystem(m_ruby_system);")
 
         # Set the prefetchers
         code()
@@ -942,7 +1011,9 @@ $c_ident::regStats()
                 "${c_ident}." + ${ident}_Event_to_string(event);
             statistics::Vector *t =
                 new statistics::Vector(profilerStatsPtr, stat_name.c_str());
-            t->init(m_num_controllers);
+            int num_controllers =
+                m_ruby_system->m_num_controllers[MachineType_${ident}];
+            t->init(num_controllers);
             t->flags(statistics::pdf | statistics::total |
                 statistics::oneline | statistics::nozero);
 
@@ -961,7 +1032,9 @@ $c_ident::regStats()
                     "." + ${ident}_Event_to_string(event);
                 statistics::Vector *t = new statistics::Vector(
                     profilerStatsPtr, stat_name.c_str());
-                t->init(m_num_controllers);
+                int num_controllers =
+                    m_ruby_system->m_num_controllers[MachineType_${ident}];
+                t->init(num_controllers);
                 t->flags(statistics::pdf | statistics::total |
                     statistics::oneline | statistics::nozero);
                 transVec[state].push_back(t);
@@ -1062,9 +1135,12 @@ $c_ident::regStats()
 void
 $c_ident::collateStats()
 {
+    int num_controllers =
+        m_ruby_system->m_num_controllers[MachineType_${ident}];
+
     for (${ident}_Event event = ${ident}_Event_FIRST;
          event < ${ident}_Event_NUM; ++event) {
-        for (unsigned int i = 0; i < m_num_controllers; ++i) {
+        for (unsigned int i = 0; i < num_controllers; ++i) {
             RubySystem *rs = params().ruby_system;
             std::map<uint32_t, AbstractController *>::iterator it =
                      rs->m_abstract_controls[MachineType_${ident}].find(i);
@@ -1080,7 +1156,7 @@ $c_ident::collateStats()
         for (${ident}_Event event = ${ident}_Event_FIRST;
              event < ${ident}_Event_NUM; ++event) {
 
-            for (unsigned int i = 0; i < m_num_controllers; ++i) {
+            for (unsigned int i = 0; i < num_controllers; ++i) {
                 RubySystem *rs = params().ruby_system;
                 std::map<uint32_t, AbstractController *>::iterator it =
                          rs->m_abstract_controls[MachineType_${ident}].find(i);
@@ -1123,12 +1199,6 @@ $c_ident::getTransitionCount(${ident}_State state,
                              ${ident}_Event event)
 {
     return m_counters[state][event];
-}
-
-int
-$c_ident::getNumControllers()
-{
-    return m_num_controllers;
 }
 
 MessageBuffer*
@@ -1181,6 +1251,7 @@ void
 $c_ident::set_cache_entry(${{self.EntryType.c_ident}}*& m_cache_entry_ptr, AbstractCacheEntry* m_new_cache_entry)
 {
   m_cache_entry_ptr = (${{self.EntryType.c_ident}}*)m_new_cache_entry;
+  m_cache_entry_ptr->setRubySystem(m_ruby_system);
 }
 
 void
@@ -1388,18 +1459,20 @@ $c_ident::functionalReadBuffers(PacketPtr& pkt, WriteMask &mask)
     return read;
 }
 
+} // namespace ${protocol}
 } // namespace ruby
 } // namespace gem5
 """
         )
 
-        code.write(path, f"{c_ident}.cc")
+        code.write(path, f"{gen_filename}_Controller.cc")
 
     def printCWakeup(self, path, includes):
         """Output the wakeup loop for the events"""
 
         code = self.symtab.codeFormatter()
         ident = self.ident
+        gen_filename = f"{self.symtab.slicc.protocol}/{self.ident}"
 
         outputRequest_types = True
         if len(self.request_types) == 0:
@@ -1425,19 +1498,23 @@ $c_ident::functionalReadBuffers(PacketPtr& pkt, WriteMask &mask)
             code('#include "debug/${{f}}.hh"')
         code(
             """
-#include "mem/ruby/protocol/${ident}_Controller.hh"
-#include "mem/ruby/protocol/${ident}_Event.hh"
-#include "mem/ruby/protocol/${ident}_State.hh"
+#include "mem/ruby/protocol/${gen_filename}_Controller.hh"
+#include "mem/ruby/protocol/${gen_filename}_Event.hh"
+#include "mem/ruby/protocol/${gen_filename}_State.hh"
 
 """
         )
 
         if outputRequest_types:
-            code('''#include "mem/ruby/protocol/${ident}_RequestType.hh"''')
+            code(
+                """
+#include "mem/ruby/protocol/${protocol}/${ident}_RequestType.hh"
+"""
+            )
 
         code(
             """
-#include "mem/ruby/protocol/Types.hh"
+#include "mem/ruby/protocol/${protocol}/Types.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 """
@@ -1454,6 +1531,9 @@ namespace gem5
 {
 
 namespace ruby
+{
+
+namespace ${protocol}
 {
 
 void
@@ -1539,18 +1619,20 @@ ${ident}_Controller::wakeup()
     }
 }
 
+} // namespace ${protocol}
 } // namespace ruby
 } // namespace gem5
 """
         )
 
-        code.write(path, f"{self.ident}_Wakeup.cc")
+        code.write(path, f"{gen_filename}_Wakeup.cc")
 
     def printCSwitch(self, path):
         """Output switch statement for transition table"""
 
         code = self.symtab.codeFormatter()
         ident = self.ident
+        gen_filename = f"{self.symtab.slicc.protocol}/{self.ident}"
 
         code(
             """
@@ -1562,10 +1644,10 @@ ${ident}_Controller::wakeup()
 #include "base/trace.hh"
 #include "debug/ProtocolTrace.hh"
 #include "debug/RubyGenerated.hh"
-#include "mem/ruby/protocol/${ident}_Controller.hh"
-#include "mem/ruby/protocol/${ident}_Event.hh"
-#include "mem/ruby/protocol/${ident}_State.hh"
-#include "mem/ruby/protocol/Types.hh"
+#include "mem/ruby/protocol/${gen_filename}_Controller.hh"
+#include "mem/ruby/protocol/${gen_filename}_Event.hh"
+#include "mem/ruby/protocol/${gen_filename}_State.hh"
+#include "mem/ruby/protocol/${protocol}/Types.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 #define HASH_FUN(state, event)  ((int(state)*${ident}_Event_NUM)+int(event))
@@ -1577,6 +1659,9 @@ namespace gem5
 {
 
 namespace ruby
+{
+
+namespace ${protocol}
 {
 
 TransitionResult
@@ -1852,11 +1937,12 @@ if (!checkResourceAvailable({}_RequestType_{}, addr)) {{
     return TransitionResult_Valid;
 }
 
+} // namespace ${protocol}
 } // namespace ruby
 } // namespace gem5
 """
         )
-        code.write(path, f"{self.ident}_Transitions.cc")
+        code.write(path, f"{gen_filename}_Transitions.cc")
 
     # **************************
     # ******* HTML Files *******

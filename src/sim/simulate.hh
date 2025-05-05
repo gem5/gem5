@@ -38,6 +38,9 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef __SIMULATE_HH__
+#define __SIMULATE_HH__
+
 #include "base/types.hh"
 
 namespace gem5
@@ -78,3 +81,5 @@ void terminateEventQueueThreads();
 extern GlobalSimLoopExitEvent *simulate_limit_event;
 
 } // namespace gem5
+
+#endif // __SIMULATE_HH__

@@ -29,8 +29,8 @@ env['ABI'] = 'arm64'
 get_abi_opt('CROSS_COMPILE', 'aarch64-linux-gnu-')
 get_abi_opt('QEMU_ARCH', 'aarch64')
 
-env['CALL_TYPE']['inst'].impl('m5op.S', 'verify_inst.cc', default=True)
-env['CALL_TYPE']['addr'].impl('m5op_addr.S')
+env['CALL_TYPE']['inst'].impl('m5op.S', 'verify_inst.cc')
+env['CALL_TYPE']['addr'].impl('m5op_addr.S', default=True)
 env['CALL_TYPE']['semi'].impl('m5op_semi.S', 'verify_semi.cc')
 
 env.Append(CXXFLAGS='-DM5OP_ADDR=0x10010000')

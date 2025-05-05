@@ -23,13 +23,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-config PROTOCOL
-    default "CHI" if RUBY_PROTOCOL_CHI
-
-config NEED_PARTIAL_FUNC_READS
-    default y if RUBY_PROTOCOL_CHI
-
-cont_choice "Ruby protocol"
-    config RUBY_PROTOCOL_CHI
-        bool "CHI"
-endchoice
+config RUBY_PROTOCOL_CHI
+    bool "CHI"
+    default n

@@ -23,10 +23,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-config PROTOCOL
-    default "MSI" if RUBY_PROTOCOL_MSI
 
-cont_choice "Ruby protocol"
-    config RUBY_PROTOCOL_MSI
-        bool "MSI"
-endchoice
+config RUBY_PROTOCOL_MSI
+    bool "MSI"
+    default n

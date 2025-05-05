@@ -73,6 +73,7 @@ machine(MachineType:TCC, "TCC Cache")
     // Probes
     PrbInv,                 desc="Invalidating probe";
     InvCache,               desc="Invalidating probe from TCP";
+    PrbDowngrade,	        desc="Downgrading probe";
     // Coming from Memory Controller
     WBAck,                  desc="writethrough ack from memory";
     Bypass,                 desc="Bypass the entire L2 cache";
@@ -180,8 +181,11 @@ machine(MachineType:TCC, "TCC Cache")
 
   void functionalRead(Addr addr, Packet *pkt) {
     TBE tbe := TBEs.lookup(addr);
+    Entry cache_entry := getCacheEntry(addr);
     if(is_valid(tbe)) {
       testAndRead(addr, tbe.DataBlk, pkt);
+    } else if (is_valid(cache_entry)) {
+      testAndRead(addr, cache_entry.DataBlk, pkt);
     } else {
       functionalMemoryRead(pkt);
     }
@@ -345,7 +349,14 @@ machine(MachineType:TCC, "TCC Cache")
         DPRINTF(RubySlicc, "%s\n", in_msg);
         Entry cache_entry := getCacheEntry(in_msg.addr);
         TBE tbe := TBEs.lookup(in_msg.addr);
-        trigger(Event:PrbInv, in_msg.addr, cache_entry, tbe);
+        if (in_msg.Type == ProbeRequestType:PrbInv) {
+          // Invalidate data and send it downstream
+          trigger(Event:PrbInv, in_msg.addr, cache_entry, tbe);
+        } else {
+          // If data present in cache, then downgrade it and send it
+          // downstream
+          trigger(Event:PrbDowngrade, in_msg.addr, cache_entry, tbe);
+        }
       }
     }
   }
@@ -815,6 +826,28 @@ machine(MachineType:TCC, "TCC Cache")
     }
   }
 
+  action(pd_sendProbeResponseDowngrade, "pd", desc="send probe downgrade") {
+    enqueue(responseToNB_out, ResponseMsg, 1) {
+      out_msg.addr := address;
+      out_msg.Type := CoherenceResponseType:CPUPrbResp;  // TCC, L3  respond in same way to probes
+      out_msg.Sender := machineID;
+      out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+      if (getState(tbe, cache_entry, address) == State:V || getState(tbe, cache_entry, address) == State:M || getState(tbe, cache_entry, address) == State:W) {
+        out_msg.Hit := true;
+        out_msg.Dirty := true;
+        out_msg.DataBlk := cache_entry.DataBlk;
+        out_msg.MessageSize := MessageSizeType:Response_Data;
+      } else {
+	    out_msg.Hit := false;
+        out_msg.Dirty := false;
+        out_msg.MessageSize := MessageSizeType:Response_Control;
+      }
+      out_msg.Ntsl := true;
+      out_msg.State := CoherenceState:NA;
+    }
+  }
+
+
   action(pi_sendProbeResponseInv, "pi", desc="send probe ack inv, no data") {
     enqueue(responseToNB_out, ResponseMsg, 1) {
       out_msg.addr := address;
@@ -900,14 +933,18 @@ machine(MachineType:TCC, "TCC Cache")
   }
 
   action(pa_performAtomic, "pa", desc="Perform atomic") {
-    peek(coreRequestNetwork_in, CPURequestMsg) {
-      if ((is_valid(tbe) && tbe.atomicDataReturn) || in_msg.Type == CoherenceRequestType:AtomicReturn) {
-        cache_entry.DataBlk.atomicPartial(cache_entry.DataBlk, cache_entry.writeMask, false);
-      } else {
-        // Set the isAtomicNoReturn flag to ensure that logs are not
-        // generated erroneously
-        assert((is_valid(tbe) && tbe.atomicDataNoReturn) || in_msg.Type == CoherenceRequestType:AtomicNoReturn);
-        cache_entry.DataBlk.atomicPartial(cache_entry.DataBlk, cache_entry.writeMask, true);
+    if (is_valid(tbe) && tbe.atomicDataReturn) {
+       cache_entry.DataBlk.atomicPartial(cache_entry.DataBlk, cache_entry.writeMask, false);
+    } else if (is_valid(tbe) && tbe.atomicDataNoReturn) {
+       cache_entry.DataBlk.atomicPartial(cache_entry.DataBlk, cache_entry.writeMask, true);
+    } else {
+      peek(coreRequestNetwork_in, CPURequestMsg) {
+        if (in_msg.Type == CoherenceRequestType:AtomicReturn) {
+           cache_entry.DataBlk.atomicPartial(cache_entry.DataBlk, cache_entry.writeMask, false);
+        } else {
+          assert(in_msg.Type == CoherenceRequestType:AtomicNoReturn);
+          cache_entry.DataBlk.atomicPartial(cache_entry.DataBlk, cache_entry.writeMask, true);
+        }
       }
     }
   }
@@ -1162,7 +1199,6 @@ machine(MachineType:TCC, "TCC Cache")
   transition(I, WrVicBlkBack, W) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
     p_profileMiss;
     a_allocateBlock;
-    ut_updateTag;
     swb_sendWBAck;
     wdb_writeDirtyBytes;
     p_popRequestQueue;
@@ -1213,6 +1249,25 @@ machine(MachineType:TCC, "TCC Cache")
     p_popRequestQueue;
   }
 
+  transition(I, PrbDowngrade) {TagArrayRead} {
+    pd_sendProbeResponseDowngrade;
+    pp_popProbeQueue;
+  }
+
+  transition(V, PrbDowngrade) {TagArrayRead} {
+    pd_sendProbeResponseDowngrade;
+    pp_popProbeQueue;
+  }
+
+  transition({M, W}, PrbDowngrade, V) {TagArrayRead, TagArrayWrite} {
+    pd_sendProbeResponseDowngrade;
+    pp_popProbeQueue;
+  }
+
+  transition({A, IV, WI, WIB}, PrbDowngrade) {TagArrayRead, TagArrayWrite} {
+    st_stallAndWaitRequest;
+  }
+
   transition({I, V}, PrbInv, I) {TagArrayRead, TagArrayWrite} {
     pi_sendProbeResponseInv;
     pp_popProbeQueue;
@@ -1257,7 +1312,6 @@ machine(MachineType:TCC, "TCC Cache")
 
   transition(IV, Data, V) {TagArrayRead, TagArrayWrite, DataArrayWrite} {
     a_allocateBlock;
-    ut_updateTag;
     wcb_writeCacheBlock;
     sdr_sendDataResponse;
     wada_wakeUpAllDependentsAddr;

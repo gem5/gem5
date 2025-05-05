@@ -26,11 +26,21 @@
 
 Import("*")
 
-SimObject(
-    "PcCountTracker.py",
-    sim_objects=["PcCountTracker", "PcCountTrackerManager"],
-)
-Source("pc_count_tracker.cc")
-Source("pc_count_tracker_manager.cc")
+if env['CONF']['BUILD_ISA']:
 
-DebugFlag("PcCountTracker")
+    SimObject(
+        "PcCountTracker.py",
+        sim_objects=["PcCountTracker", "PcCountTrackerManager"],
+    )
+    Source("pc_count_tracker.cc")
+    Source("pc_count_tracker_manager.cc")
+
+    DebugFlag("PcCountTracker")
+
+    SimObject(
+        "InstTracker.py",
+        sim_objects=["GlobalInstTracker", "LocalInstTracker"],
+    )
+    Source("inst_tracker.cc")
+
+    DebugFlag("InstTracker")

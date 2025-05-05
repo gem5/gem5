@@ -85,7 +85,8 @@ Switch::addInPort(const std::vector<MessageBuffer*>& in)
 }
 
 void
-Switch::addOutPort(const std::vector<MessageBuffer*>& out,
+Switch::addOutPort(std::string link_name,
+                   const std::vector<MessageBuffer*>& out,
                    const NetDest& routing_table_entry,
                    Cycles link_latency, int link_weight,
                    int bw_multiplier,
@@ -106,11 +107,11 @@ Switch::addOutPort(const std::vector<MessageBuffer*>& out,
         throttles.emplace_back(m_id, m_network_ptr->params().ruby_system,
             throttles.size(), link_latency,
             physical_vnets_channels, physical_vnets_bandwidth,
-            m_network_ptr->getEndpointBandwidth(), this);
+            m_network_ptr->getEndpointBandwidth(), this, link_name);
     } else {
         throttles.emplace_back(m_id, m_network_ptr->params().ruby_system,
             throttles.size(), link_latency, bw_multiplier,
-            m_network_ptr->getEndpointBandwidth(), this);
+            m_network_ptr->getEndpointBandwidth(), this, link_name);
     }
 
     // Create one buffer per vnet (these are intermediaryQueues)

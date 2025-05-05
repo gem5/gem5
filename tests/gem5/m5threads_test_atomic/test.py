@@ -62,7 +62,7 @@ for cpu in cpu_types:
             "--cmd",
             joinpath(base_path, binary),
         ],
-        valid_isas=(constants.sparc_tag,),
+        valid_isas=(constants.all_compiled_tag,),
         valid_hosts=constants.supported_hosts,
         length=constants.long_tag,
     )

@@ -311,6 +311,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     ReadNotSharedDirty,          desc="", in_trans="yes";
     ReadUnique,                  desc="", in_trans="yes";
     ReadUnique_PoC,              desc="", in_trans="yes";
+    ReadNoSnp,                   desc="", in_trans="yes";
     ReadOnce,                    desc="", in_trans="yes";
     CleanUnique,                 desc="", in_trans="yes";
     MakeReadUnique,              desc="", in_trans="yes";
@@ -406,6 +407,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     SnpRespData_UD,                desc="";
     SnpRespData_SC_Fwded_SC,       desc="";
     SnpRespData_SC_Fwded_SD_PD,    desc="";
+    SnpRespData_SD_Fwded_SC,       desc="";
     SnpRespData_SC_PD_Fwded_SC,    desc="";
     SnpRespData_I_Fwded_SD_PD,     desc="";
     SnpRespData_I_PD_Fwded_SC,     desc="";
@@ -574,7 +576,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
   ////////////////////////////////////////////////////////////////////////////
 
   // Cache block size
-  int blockSize, default="RubySystem::getBlockSizeBytes()";
+  int blockSize, default="m_ruby_system->getBlockSizeBytes()";
 
   // CacheEntry
   structure(CacheEntry, interface="AbstractCacheEntry") {

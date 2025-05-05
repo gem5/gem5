@@ -208,7 +208,7 @@ TAGE_SC_L_TAGE_8KB::handleAllocAndUReset(
             if (noSkip[i]) {
                 if (gtable[i][bi->tableIndices[i]].u == 0) {
                     gtable[i][bi->tableIndices[i]].u =
-                        ((random_mt.random<int>() & 31) == 0);
+                        ((rng->random<int>() & 31) == 0);
                     // protect randomly from fast replacement
                     gtable[i][bi->tableIndices[i]].tag = bi->tableTags[i];
                     gtable[i][bi->tableIndices[i]].ctr = taken ? 0 : -1;
@@ -223,7 +223,7 @@ TAGE_SC_L_TAGE_8KB::handleAllocAndUReset(
                     int8_t ctr = gtable[i][bi->tableIndices[i]].ctr;
                     if ((gtable[i][bi->tableIndices[i]].u == 1) &
                         (abs (2 * ctr + 1) == 1)) {
-                        if ((random_mt.random<int>() & 7) == 0) {
+                        if ((rng->random<int>() & 7) == 0) {
                             gtable[i][bi->tableIndices[i]].u = 0;
                         }
                     } else {

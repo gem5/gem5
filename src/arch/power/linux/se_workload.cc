@@ -273,7 +273,7 @@ SyscallDescTable<PowerISA::SEWorkload::SyscallABI> EmuLinux::syscallDescs = {
     { 152, "mlockall" },
     { 153, "munlockall" },
     { 154, "sched_setparam" },
-    { 155, "sched_getparam" },
+    { 155, "sched_getparam", sched_getparamFunc },
     { 156, "sched_setscheduler" },
     { 157, "sched_getscheduler" },
     { 158, "sched_yield" },

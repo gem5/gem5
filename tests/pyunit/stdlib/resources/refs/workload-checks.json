@@ -11,7 +11,8 @@
         "resource_version": "1.0.0",
         "gem5_versions": [
             "develop",
-            "24.0"
+            "24.0",
+            "24.1"
         ]
     },
     {
@@ -27,7 +28,8 @@
         "resource_version": "1.0.0",
         "gem5_versions": [
             "develop",
-            "24.0"
+            "24.0",
+            "24.1"
         ]
     },
     {
@@ -51,7 +53,8 @@
         "resource_version": "1.0.0",
         "gem5_versions": [
             "develop",
-            "24.0"
+            "24.0",
+            "24.1"
         ]
     },
     {
@@ -66,7 +69,8 @@
         "resource_version": "1.0.0",
         "gem5_versions": [
             "develop",
-            "24.0"
+            "24.0",
+            "24.1"
         ]
     }
 ]

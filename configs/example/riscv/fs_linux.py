@@ -81,8 +81,9 @@ requires(isa_required=ISA.RISCV)
 # of 25 March 2021).
 #
 # Options (Full System):
-# --kernel (required):          Bootloader + kernel binary (e.g. bbl with
-#                               linux kernel payload)
+# --kernel (required):          Bootloader + kernel binary if no --bootloader
+#                               is specified, kernel only binary otherwise
+# --bootloader (optional):      Bootloader (OpenSBI: fw_jump.elf)
 # --disk-image (optional):      Path to disk image file. Not needed if using
 #                               ramfs (might run into issues though).
 # --virtio-rng (optional):      Enable VirtIO entropy source device
@@ -133,6 +134,11 @@ def generateDtb(system):
             else:
                 root.append(node)
 
+    node = FdtNode("chosen")
+    node.append(FdtPropertyStrings("bootargs", [system.workload.command_line]))
+    node.append(FdtPropertyStrings("stdout-path", ["/uart@10000000"]))
+    root.append(node)
+
     fdt = Fdt()
     fdt.add_rootnode(root)
     fdt.writeDtsFile(path.join(m5.options.outdir, "device.dts"))
@@ -164,6 +170,8 @@ parser.add_argument(
 )
 # ---------------------------- Parse Options --------------------------- #
 args = parser.parse_args()
+if not args.kernel:
+    parser.error("--kernel argument is required")
 
 # CPU and Memory
 (CPUClass, mem_mode, FutureClass) = Simulation.setCPUClass(args)
@@ -193,8 +201,12 @@ if args.semihosting:
 if args.bare_metal:
     system.workload = RiscvBareMetal(**workload_args)
     system.workload.bootloader = args.kernel
-else:
+elif not args.bootloader:
     system.workload = RiscvLinux(**workload_args)
+    system.workload.object_file = args.kernel
+else:
+    system.workload = RiscvBootloaderKernelWorkload(**workload_args)
+    system.workload.bootloader_filename = args.bootloader
     system.workload.object_file = args.kernel
 
 system.iobus = IOXBar()
@@ -321,15 +333,7 @@ for cpu in system.cpu:
 # --------------------------- DTB Generation --------------------------- #
 
 if not args.bare_metal:
-    if args.dtb_filename:
-        system.workload.dtb_filename = args.dtb_filename
-    else:
-        generateDtb(system)
-        system.workload.dtb_filename = path.join(
-            m5.options.outdir, "device.dtb"
-        )
-
-    # Default DTB address if bbl is bulit with --with-dts option
+    # Default DTB address if bbl is built with --with-dts option
     system.workload.dtb_addr = 0x87E00000
 
     # Linux boot command flags
@@ -338,6 +342,15 @@ if not args.bare_metal:
     else:
         kernel_cmd = ["console=ttyS0", "root=/dev/vda", "ro"]
         system.workload.command_line = " ".join(kernel_cmd)
+
+    # DTB filename (auto-generate if not specified)
+    if args.dtb_filename:
+        system.workload.dtb_filename = args.dtb_filename
+    else:
+        generateDtb(system)
+        system.workload.dtb_filename = path.join(
+            m5.options.outdir, "device.dtb"
+        )
 
 # ---------------------------- Default Setup --------------------------- #
 

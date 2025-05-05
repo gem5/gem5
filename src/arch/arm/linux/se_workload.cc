@@ -282,7 +282,7 @@ class SyscallTable32 : public SyscallDescTable<EmuLinux::SyscallABI32>
         { base + 152, "mlockall" },
         { base + 153, "munlockall" },
         { base + 154, "sched_setparam", ignoreWarnOnceFunc },
-        { base + 155, "sched_getparam", ignoreWarnOnceFunc },
+        { base + 155, "sched_getparam", sched_getparamFunc },
         { base + 156, "sched_setscheduler", ignoreWarnOnceFunc },
         { base + 157, "sched_getscheduler", ignoreWarnOnceFunc },
         { base + 158, "sched_yield", ignoreWarnOnceFunc },
@@ -490,7 +490,8 @@ class SyscallTable32 : public SyscallDescTable<EmuLinux::SyscallABI32>
         { base + 365, "sys_recvmmsg" },
         { base + 384, "getrandom", getrandomFunc<ArmLinux32> },
         { base + 397, "sys_statx", ignoreFunc },
-        { base + 398, "sys_rseq", ignoreFunc }
+        { base + 398, "sys_rseq", ignoreFunc },
+        { base + 435, "clone3", clone3Func<ArmLinux32> },
     })
     {}
 };
@@ -626,7 +627,7 @@ class SyscallTable64 : public SyscallDescTable<EmuLinux::SyscallABI64>
         {  base + 118, "sched_setparam", ignoreWarnOnceFunc },
         {  base + 119, "sched_setscheduler", ignoreWarnOnceFunc },
         {  base + 120, "sched_getscheduler", ignoreWarnOnceFunc },
-        {  base + 121, "sched_getparam", ignoreWarnOnceFunc },
+        {  base + 121, "sched_getparam", sched_getparamFunc },
         {  base + 122, "sched_setaffinity", ignoreWarnOnceFunc },
         {  base + 123, "sched_getaffinity", ignoreFunc },
         {  base + 124, "sched_yield", ignoreWarnOnceFunc },
@@ -784,6 +785,7 @@ class SyscallTable64 : public SyscallDescTable<EmuLinux::SyscallABI64>
         {  base + 292, "io_pgetevents"},
         {  base + 293, "rseq", ignoreWarnOnceFunc },
         {  base + 294, "kexec_file_load"},
+        {  base + 435, "clone3", clone3Func<ArmLinux64> },
         { base + 1024, "open", openFunc<ArmLinux64> },
         { base + 1025, "link" },
         { base + 1026, "unlink", unlinkFunc },

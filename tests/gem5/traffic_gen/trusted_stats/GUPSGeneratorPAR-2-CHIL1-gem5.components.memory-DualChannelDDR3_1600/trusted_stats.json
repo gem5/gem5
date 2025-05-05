@@ -1,0 +1,282 @@
+{
+  "type": "SimObject",
+  "time_conversion": null,
+  "creation_time": "2024-10-31T10:22:24",
+  "simulated_begin_time": 0,
+  "simulated_end_time": 8935057,
+  "name": "generator",
+  "totalUpdates": {
+    "value": 498.0,
+    "type": "Scalar",
+    "description": "Total number of updates the generator made in the memory",
+    "unit": "Count",
+    "datatype": "f64"
+  },
+  "totalReads": {
+    "value": 500.0,
+    "type": "Scalar",
+    "description": "Total number of read requests",
+    "unit": "Count",
+    "datatype": "f64"
+  },
+  "totalBytesRead": {
+    "value": 4000.0,
+    "type": "Scalar",
+    "description": "Total number of bytes read",
+    "unit": "Byte",
+    "datatype": "f64"
+  },
+  "totalReadLat": {
+    "value": 65713787.0,
+    "type": "Scalar",
+    "description": "Total latency of read requests.",
+    "unit": "Tick",
+    "datatype": "f64"
+  },
+  "totalWrites": {
+    "value": 498.0,
+    "type": "Scalar",
+    "description": "Total number of write requests",
+    "unit": "Count",
+    "datatype": "f64"
+  },
+  "totalBytesWritten": {
+    "value": 3984.0,
+    "type": "Scalar",
+    "description": "Total number of bytes written",
+    "unit": "Byte",
+    "datatype": "f64"
+  },
+  "totalWriteLat": {
+    "value": 84553194.0,
+    "type": "Scalar",
+    "description": "Total latency of write requests.",
+    "unit": "Tick",
+    "datatype": "f64"
+  },
+  "power_state": {
+    "type": "SimObject",
+    "time_conversion": null,
+    "name": "power_state",
+    "ticksClkGated": {
+      "value": {
+        "0": {
+          "value": 0.0,
+          "type": "Scalar",
+          "description": null,
+          "unit": "Tick",
+          "datatype": "f64"
+        },
+        "1": {
+          "value": 0.0,
+          "type": "Scalar",
+          "description": null,
+          "unit": "Tick",
+          "datatype": "f64"
+        },
+        "2": {
+          "value": 0.0,
+          "type": "Scalar",
+          "description": null,
+          "unit": "Tick",
+          "datatype": "f64"
+        },
+        "3": {
+          "value": 0.0,
+          "type": "Scalar",
+          "description": null,
+          "unit": "Tick",
+          "datatype": "f64"
+        },
+        "4": {
+          "value": 0.0,
+          "type": "Scalar",
+          "description": null,
+          "unit": "Tick",
+          "datatype": "f64"
+        },
+        "5": {
+          "value": 0.0,
+          "type": "Scalar",
+          "description": null,
+          "unit": "Tick",
+          "datatype": "f64"
+        },
+        "6": {
+          "value": 0.0,
+          "type": "Scalar",
+          "description": null,
+          "unit": "Tick",
+          "datatype": "f64"
+        },
+        "7": {
+          "value": 0.0,
+          "type": "Scalar",
+          "description": null,
+          "unit": "Tick",
+          "datatype": "f64"
+        },
+        "8": {
+          "value": 0.0,
+          "type": "Scalar",
+          "description": null,
+          "unit": "Tick",
+          "datatype": "f64"
+        },
+        "9": {
+          "value": 0.0,
+          "type": "Scalar",
+          "description": null,
+          "unit": "Tick",
+          "datatype": "f64"
+        },
+        "10": {
+          "value": 0.0,
+          "type": "Scalar",
+          "description": null,
+          "unit": "Tick",
+          "datatype": "f64"
+        },
+        "11": {
+          "value": 0.0,
+          "type": "Scalar",
+          "description": null,
+          "unit": "Tick",
+          "datatype": "f64"
+        },
+        "12": {
+          "value": 0.0,
+          "type": "Scalar",
+          "description": null,
+          "unit": "Tick",
+          "datatype": "f64"
+        },
+        "13": {
+          "value": 0.0,
+          "type": "Scalar",
+          "description": null,
+          "unit": "Tick",
+          "datatype": "f64"
+        },
+        "14": {
+          "value": 0.0,
+          "type": "Scalar",
+          "description": null,
+          "unit": "Tick",
+          "datatype": "f64"
+        },
+        "15": {
+          "value": 0.0,
+          "type": "Scalar",
+          "description": null,
+          "unit": "Tick",
+          "datatype": "f64"
+        },
+        "16": {
+          "value": 0.0,
+          "type": "Scalar",
+          "description": null,
+          "unit": "Tick",
+          "datatype": "f64"
+        },
+        "17": {
+          "value": 0.0,
+          "type": "Scalar",
+          "description": null,
+          "unit": "Tick",
+          "datatype": "f64"
+        },
+        "18": {
+          "value": 0.0,
+          "type": "Scalar",
+          "description": null,
+          "unit": "Tick",
+          "datatype": "f64"
+        },
+        "19": {
+          "value": 0.0,
+          "type": "Scalar",
+          "description": null,
+          "unit": "Tick",
+          "datatype": "f64"
+        }
+      },
+      "type": "Distribution",
+      "description": "Distribution of time spent in the clock gated state",
+      "min": 0.0,
+      "max": 0.0,
+      "num_bins": 20,
+      "bin_size": 49999999950.05,
+      "sum": 0.0,
+      "underflow": 0.0,
+      "overflow": 0.0,
+      "logs": 0.0,
+      "sum_squared": 0.0
+    },
+    "pwrStateResidencyTicks": {
+      "value": {
+        "UNDEFINED": {
+          "value": 8935057.0,
+          "type": "Scalar",
+          "description": "Cumulative time (in ticks) in various power states",
+          "unit": "Tick",
+          "datatype": "f64"
+        },
+        "ON": {
+          "value": 0.0,
+          "type": "Scalar",
+          "description": "Cumulative time (in ticks) in various power states",
+          "unit": "Tick",
+          "datatype": "f64"
+        },
+        "CLK_GATED": {
+          "value": 0.0,
+          "type": "Scalar",
+          "description": "Cumulative time (in ticks) in various power states",
+          "unit": "Tick",
+          "datatype": "f64"
+        },
+        "SRAM_RETENTION": {
+          "value": 0.0,
+          "type": "Scalar",
+          "description": "Cumulative time (in ticks) in various power states",
+          "unit": "Tick",
+          "datatype": "f64"
+        },
+        "OFF": {
+          "value": 0.0,
+          "type": "Scalar",
+          "description": "Cumulative time (in ticks) in various power states",
+          "unit": "Tick",
+          "datatype": "f64"
+        }
+      },
+      "type": "Vector",
+      "description": "Cumulative time (in ticks) in various power states"
+    }
+  },
+  "clk_domain": {
+    "type": "SimObject",
+    "time_conversion": null,
+    "name": "clk_domain",
+    "clock": {
+      "value": 500.0,
+      "type": "Scalar",
+      "description": "Clock period in ticks",
+      "unit": "Tick",
+      "datatype": "f64"
+    },
+    "voltage_domain": {
+      "type": "SimObject",
+      "time_conversion": null,
+      "name": "voltage_domain",
+      "voltage": {
+        "value": 1.0,
+        "type": "Scalar",
+        "description": "Voltage in Volts",
+        "unit": "Volt",
+        "datatype": "f64"
+      }
+    }
+  }
+}

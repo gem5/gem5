@@ -28,6 +28,7 @@ import os
 from abc import ABCMeta
 from typing import (
     List,
+    Optional,
     Sequence,
     Tuple,
 )
@@ -274,11 +275,15 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
 
     @overrides(AbstractBoard)
     def get_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
-        all_ports = [
-            (self.realview.bootmem.range, self.realview.bootmem.port),
-        ] + self.get_memory().get_mem_ports()
+        # Note: Ruby needs to create a directory for the realview bootmem
+        if self.get_cache_hierarchy().is_ruby():
+            all_ports = [
+                (self.realview.bootmem.range, self.realview.bootmem.port),
+            ] + self.get_memory().get_mem_ports()
 
-        return all_ports
+            return all_ports
+
+        return super().get_mem_ports()
 
     @overrides(AbstractBoard)
     def has_io_bus(self) -> bool:
@@ -327,8 +332,8 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         self.system_port = port
 
     @overrides(AbstractBoard)
-    def _pre_instantiate(self):
-        super()._pre_instantiate()
+    def _pre_instantiate(self, full_system: Optional[bool] = None) -> None:
+        super()._pre_instantiate(full_system=full_system)
 
         # Add the PCI devices.
         self.pci_devices = self._pci_devices

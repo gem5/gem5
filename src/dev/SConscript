@@ -38,6 +38,7 @@ Source('dma_virt_device.cc')
 SimObject('IntPin.py', sim_objects=[])
 SimObject('ResetPort.py', sim_objects=[])
 
+DebugFlag('IntPin')
 DebugFlag('IsaFake')
 DebugFlag('DMA')
 

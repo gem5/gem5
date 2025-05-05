@@ -68,10 +68,10 @@ class PrefetchEntry
 {
     public:
         /// constructor
-        PrefetchEntry()
+        PrefetchEntry(int block_size)
         {
             // default: 1 cache-line stride
-            m_stride   = (1 << RubySystem::getBlockSizeBits());
+            m_stride   = (1 << floorLog2(block_size));
             m_use_time = Cycles(0);
             m_is_valid = false;
         }
@@ -238,6 +238,16 @@ class RubyPrefetcher : public SimObject
         AbstractController *m_controller;
 
         const unsigned pageShift;
+
+        int m_block_size_bits = 0;
+        int m_block_size_bytes = 0;
+
+        Addr
+        makeNextStrideAddress(Addr addr, int stride) const
+        {
+            return ruby::makeNextStrideAddress(addr, stride,
+                                               m_block_size_bytes);
+        }
 
         struct RubyPrefetcherStats : public statistics::Group
         {

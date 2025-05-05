@@ -68,6 +68,15 @@ class MMU : public BaseMMU
         getPMP()->pmpReset();
     }
 
+    Addr
+    getValidAddr(Addr vaddr, ThreadContext *tc, Mode mode) override
+    {
+        if (mode == BaseMMU::Execute) {
+            return static_cast<TLB*>(itb)->getValidAddr(vaddr, tc, mode);
+        }
+        return static_cast<TLB*>(dtb)->getValidAddr(vaddr, tc, mode);
+    }
+
     TranslationGenPtr
     translateFunctional(Addr start, Addr size, ThreadContext *tc,
             Mode mode, Request::Flags flags) override

@@ -73,4 +73,4 @@ if env['CONF']['BUILD_ISA']:
         'MinorScoreboard'])
 
     # For backwards compatibility
-    SimObject('MinorCPU.py', sim_objects=[])
+    SimObject('MinorCPU.py', sim_objects=[], tags=['isa'])

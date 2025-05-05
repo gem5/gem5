@@ -66,7 +66,7 @@ RubyPrefetcherProxy::RubyPrefetcherProxy(AbstractController* _parent,
         prefetcher->setParentInfo(
             cacheCntrl->params().system,
             cacheCntrl->getProbeManager(),
-            RubySystem::getBlockSizeBytes());
+            cacheCntrl->m_ruby_system->getBlockSizeBytes());
     }
 }
 
@@ -112,7 +112,7 @@ RubyPrefetcherProxy::issuePrefetch()
 
         if (pkt) {
             DPRINTF(HWPrefetch, "Next prefetch ready %s\n", pkt->print());
-            unsigned blk_size = RubySystem::getBlockSizeBytes();
+            unsigned blk_size = cacheCntrl->m_ruby_system->getBlockSizeBytes();
             Addr line_addr = pkt->getBlockAddr(blk_size);
 
             if (issuedPfPkts.count(line_addr) == 0) {
@@ -126,6 +126,8 @@ RubyPrefetcherProxy::issuePrefetch()
 
                 std::shared_ptr<RubyRequest> msg =
                     std::make_shared<RubyRequest>(cacheCntrl->clockEdge(),
+                                                  blk_size,
+                                                  cacheCntrl->m_ruby_system,
                                                   pkt->getAddr(),
                                                   blk_size,
                                                   0, // pc
@@ -136,7 +138,10 @@ RubyPrefetcherProxy::issuePrefetch()
 
                 // enqueue request into prefetch queue to the cache
                 pfQueue->enqueue(msg, cacheCntrl->clockEdge(),
-                                    cacheCntrl->cyclesToTicks(Cycles(1)));
+                                 cacheCntrl->cyclesToTicks(Cycles(1)),
+                                 cacheCntrl->m_ruby_system->getRandomization(),
+                                 cacheCntrl->m_ruby_system->getWarmupEnabled()
+                                );
 
                 // track all pending PF requests
                 issuedPfPkts[line_addr] = pkt;
@@ -228,6 +233,20 @@ RubyPrefetcherProxy::regProbePoints()
     ppDataUpdate =
         new ProbePointArg<CacheDataUpdateProbeArg>(
             cacheCntrl->getProbeManager(), "Data Update");
+}
+
+Addr
+RubyPrefetcherProxy::makeLineAddress(Addr addr) const
+{
+    return ruby::makeLineAddress(addr,
+                           cacheCntrl->m_ruby_system->getBlockSizeBits());
+}
+
+Addr
+RubyPrefetcherProxy::getOffset(Addr addr) const
+{
+    return ruby::getOffset(addr,
+                           cacheCntrl->m_ruby_system->getBlockSizeBits());
 }
 
 } // namespace ruby

@@ -104,8 +104,8 @@ system.clk_domain = SrcClockDomain(
     clock="2.0GHz", voltage_domain=VoltageDomain(voltage="1V")
 )
 
-# we are fine with 256 MB memory for now
-mem_range = AddrRange("512MB")
+# we are fine with 256 MiB memory for now
+mem_range = AddrRange("512MiB")
 system.mem_ranges = [mem_range]
 
 # do not worry about reserving space for the backing store

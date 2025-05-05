@@ -78,7 +78,10 @@ class WireBuffer : public SimObject
     void setDescription(const std::string& name) { m_description = name; };
     std::string getDescription() { return m_description; };
 
-    void enqueue(MsgPtr message, Tick current_time, Tick delta);
+    // ruby_is_random and ruby_warmup are not used, but this method signature
+    // must match that of MessageBuffer.
+    void enqueue(MsgPtr message, Tick current_time, Tick delta,
+                 bool ruby_is_random = false, bool ruby_warmup = false);
     void dequeue(Tick current_time);
     const Message* peek();
     void recycle(Tick current_time, Tick recycle_latency);

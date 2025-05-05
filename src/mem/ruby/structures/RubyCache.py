@@ -54,4 +54,3 @@ class RubyCache(SimObject):
     dataAccessLatency = Param.Cycles(1, "cycles for a data array access")
     tagAccessLatency = Param.Cycles(1, "cycles for a tag array access")
     resourceStalls = Param.Bool(False, "stall if there is a resource failure")
-    ruby_system = Param.RubySystem(Parent.any, "")

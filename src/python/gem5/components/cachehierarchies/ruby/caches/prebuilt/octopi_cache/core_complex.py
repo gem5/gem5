@@ -143,6 +143,7 @@ class CoreComplex(SubSystem, RubyNetworkComponent):
             version=core_id,
             dcache=cluster.l1_cache.Dcache,
             clk_domain=cluster.l1_cache.clk_domain,
+            ruby_system=self._ruby_system,
         )
 
         if self._board.has_io_bus():

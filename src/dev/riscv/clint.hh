@@ -74,6 +74,8 @@ class Clint : public BasicPioDevice
     System *system;
     int nThread;
     IntSinkPin<Clint> signal;
+    SignalSinkPort<bool> reset;
+    bool resetMtimecmp;
 
   public:
     typedef ClintParams Params;
@@ -89,6 +91,13 @@ class Clint : public BasicPioDevice
     void raiseInterruptPin(int id);
     void lowerInterruptPin(int id) {}
 
+  // Interrupt ID
+  enum InterruptId
+  {
+      INT_RTC = 0, // received from RTC(signal port)
+      INT_RESET, // received from reset port
+  };
+
   // Register bank
   public:
 
@@ -99,24 +108,28 @@ class Clint : public BasicPioDevice
      * 0x4000 - 0xBFF7: mtimecmp
      * ...:             reserved[1]
      * 0xBFF8:          mtime (read-only)
+     * ...:             reserved[2]
      */
     class ClintRegisters: public RegisterBankLE
     {
       public:
         const Addr mtimecmpStart = 0x4000;
         const Addr mtimeStart = 0xBFF8;
-        const Addr maxBankSize = 0xC000;
+        const Addr minBankSize = 0xC000;
 
         std::vector<Register32> msip;
         std::vector<Register64> mtimecmp;
         Register64 mtime = {"mtime", 0};
         std::vector<RegisterRaz> reserved;
 
-        ClintRegisters(const std::string &name, Addr base, Clint* clint) :
+        ClintRegisters(const std::string &name, Addr base, Clint* clint,
+                       uint64_t mtimecmp_reset_value) :
           RegisterBankLE(name, base),
-          clint(clint) {}
+          clint(clint),
+          mtimecmpResetValue(mtimecmp_reset_value) {}
 
         Clint *clint;
+        uint64_t mtimecmpResetValue;
 
         void init();
 
@@ -124,7 +137,6 @@ class Clint : public BasicPioDevice
 
     using Register32 = ClintRegisters::Register32;
 
-    uint32_t readMSIP(Register32& reg, const int thread_id);
     void writeMSIP(Register32& reg, const uint32_t& data, const int thread_id);
 
   // External API
@@ -143,6 +155,15 @@ class Clint : public BasicPioDevice
                    PortID idx=InvalidPortID) override;
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
+
+    /**
+     * Software Interrupt
+     */
+    void updateMSIP(const int thread_id);
+
+  // CLINT reset
+  public:
+    void doReset();
 
 };
 

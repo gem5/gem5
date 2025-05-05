@@ -52,8 +52,8 @@ machine(MachineType:L1Cache, "MI Example L1 Cache")
     I, AccessPermission:Invalid, desc="Not Present/Invalid";
     II, AccessPermission:Busy, desc="Not Present/Invalid, issued PUT";
     M, AccessPermission:Read_Write, desc="Modified";
-    MI, AccessPermission:Busy, desc="Modified, issued PUT";
-    MII, AccessPermission:Busy, desc="Modified, issued PUTX, received nack";
+    MI, AccessPermission:Maybe_Stale, desc="Modified, issued PUT";
+    MII, AccessPermission:Read_Write, desc="Modified, issued PUTX, received nack";
 
     IS, AccessPermission:Busy, desc="Issued request for LOAD/IFETCH";
     IM, AccessPermission:Busy, desc="Issued request for STORE/ATOMIC";

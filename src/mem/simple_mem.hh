@@ -48,6 +48,7 @@
 
 #include <list>
 
+#include "base/random.hh"
 #include "mem/abstract_mem.hh"
 #include "mem/port.hh"
 #include "params/SimpleMemory.hh"
@@ -149,6 +150,8 @@ class SimpleMemory : public AbstractMemory
      * retry. This is only used as a check.
      */
     bool retryResp;
+
+    mutable Random::RandomPtr rng = Random::genRandom();
 
     /**
      * Release the memory after being busy and send a retry if a

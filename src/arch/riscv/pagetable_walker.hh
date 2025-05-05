@@ -199,6 +199,7 @@ namespace RiscvISA
             PagewalkerStats(statistics::Group *parent);
 
             statistics::Scalar num_4kb_walks;
+            statistics::Scalar num_64kb_walks;
             statistics::Scalar num_2mb_walks;
 
         } pagewalkerstats;

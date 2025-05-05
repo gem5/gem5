@@ -33,7 +33,7 @@ from m5.objects.Device import (
     DmaVirtDevice,
 )
 from m5.objects.PciDevice import (
-    PciDevice,
+    PciEndpoint,
     PciLegacyIoBar,
     PciMemBar,
     PciMemUpperBar,
@@ -49,7 +49,7 @@ from m5.proxy import *
 # This class requires a ROM binary and an MMIO trace to initialize the
 # device registers and memory. It is intended only to be used in full-system
 # simulation under Linux where the amdgpu driver is modprobed.
-class AMDGPUDevice(PciDevice):
+class AMDGPUDevice(PciEndpoint):
     type = "AMDGPUDevice"
     cxx_header = "dev/amdgpu/amdgpu_device.hh"
     cxx_class = "gem5::AMDGPUDevice"
@@ -81,8 +81,6 @@ class AMDGPUDevice(PciDevice):
     InterruptPin = 2
     ExpansionROM = 0
 
-    rom_binary = Param.String("ROM binary dumped from hardware")
-    trace_file = Param.String("MMIO trace collected on hardware")
     checkpoint_before_mmios = Param.Bool(
         False, "Take a checkpoint before the device begins sending MMIOs"
     )
@@ -127,6 +125,8 @@ class AMDGPUMemoryManager(ClockedObject):
     type = "AMDGPUMemoryManager"
     cxx_header = "dev/amdgpu/memory_manager.hh"
     cxx_class = "gem5::AMDGPUMemoryManager"
+
+    cache_line_size = Param.UInt64("Cache line size in bytes")
 
     port = RequestPort("Memory Port to access VRAM (device memory)")
     system = Param.System(Parent.any, "System the dGPU belongs to")

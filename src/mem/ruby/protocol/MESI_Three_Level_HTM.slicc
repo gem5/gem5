@@ -1,5 +1,4 @@
-protocol "MESI_Three_Level_HTM";
-include "RubySlicc_interfaces.slicc";
+protocol "MESI_Three_Level_HTM" use_secondary_store_conditional;
 include "MESI_Two_Level-msg.sm";
 include "MESI_Three_Level-msg.sm";
 include "MESI_Three_Level_HTM-L0cache.sm";

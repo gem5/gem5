@@ -60,12 +60,12 @@ def add_options(parser):
     )
 
 
-# considering 4GB HMC device with following parameters
-# hmc_device_size = '4GB'
-# hmc_vault_size = '256MB'
+# considering 4GiB HMC device with following parameters
+# hmc_device_size = '4GiB'
+# hmc_vault_size = '256MiB'
 # hmc_stack_size = 8
 # hmc_bank_in_stack = 2
-# hmc_bank_size = '16MB'
+# hmc_bank_size = '16MiB'
 # hmc_bank_in_vault = 16
 def build_system(options):
     # create the system we are going to simulate

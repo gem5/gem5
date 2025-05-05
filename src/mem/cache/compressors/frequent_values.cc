@@ -290,8 +290,9 @@ FrequentValues::regProbeListeners()
 {
     assert(listeners.empty());
     assert(cache != nullptr);
-    listeners.push_back(new FrequentValuesListener(
-        *this, cache->getProbeManager(), "Data Update"));
+    listeners.push_back(
+        cache->getProbeManager()->connect<FrequentValuesListener>(
+            *this, "Data Update"));
 }
 
 void

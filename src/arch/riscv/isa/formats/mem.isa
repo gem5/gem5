@@ -104,12 +104,15 @@ def LoadStoreBase(name, Name, offset_code, ea_code, memacc_code, mem_flags,
 
     # select templates
 
+    is_prefetch = "prefetch" in name
+
     fullExecTemplate = eval(exec_template_base + 'Execute')
     initiateAccTemplate = eval(exec_template_base + 'InitiateAcc')
-    completeAccTemplate = eval(exec_template_base + 'CompleteAcc')
+    completeAccTemplate = eval('PrefetchCompleteAcc') if is_prefetch else \
+        eval(exec_template_base + 'CompleteAcc')
 
     # (header_output, decoder_output, decode_block, exec_output)
-    return (LoadStoreDeclare.subst(iop),
+    return (PrefetchDeclare.subst(iop) if is_prefetch else LoadStoreDeclare.subst(iop),
         LoadStoreConstructor.subst(iop),
         decode_template.subst(iop),
         fullExecTemplate.subst(iop) +
@@ -293,6 +296,45 @@ def template CacheBlockBasedStoreInitiateAcc {{
 }};
 
 def template CacheBlockBasedStoreCompleteAcc {{
+    Fault
+    %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
+        trace::InstRecord *traceData) const
+    {
+        return NoFault;
+    }
+}};
+
+def template PrefetchDeclare {{
+    /**
+     * Static instruction class for "%(mnemonic)s".
+     */
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      public:
+        /// Constructor.
+        %(class_name)s(ExtMachInst machInst);
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          trace::InstRecord *) const override;
+        std::string
+        generateDisassembly(Addr pc,
+                            const loader::SymbolTable *symtab) const override
+        {
+            std::stringstream ss;
+            ss << mnemonic << ' ' <<
+                offset << '(' << registerName(srcRegIdx(0)) << ')';
+            return ss.str();
+        }
+    };
+}};
+
+
+def template PrefetchCompleteAcc {{
     Fault
     %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
         trace::InstRecord *traceData) const

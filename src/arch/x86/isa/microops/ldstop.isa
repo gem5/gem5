@@ -720,8 +720,15 @@ let {{
                           "memDataSize": "dataSize" })
     header_output += MicroLeaDeclare.subst(iop)
     exec_output += MicroLeaExecute.subst(iop)
+    iop = InstObjParams("lea", "LeaBig", 'X86ISA::LdStOp',
+                        { "code": "Data = EA & mask(dataSize * 8);",
+                          "ea_code": "EA = " + segmentEAExpr,
+                          "memDataSize": "dataSize" })
+    header_output += MicroLeaDeclare.subst(iop)
+    exec_output += MicroLeaExecute.subst(iop)
 
-    class LeaOp(LdStOp):
+
+    class LeaOp(BigLdStOp):
         def __init__(self, data, segment, addr, disp = 0,
                 dataSize="env.dataSize", addressSize="env.addressSize"):
             super().__init__(data, segment, addr, disp,

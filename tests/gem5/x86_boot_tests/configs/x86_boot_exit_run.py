@@ -42,7 +42,6 @@ from gem5.components.processors.cpu_types import (
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.isas import ISA
 from gem5.resources.resource import obtain_resource
-from gem5.runtime import get_runtime_coherence_protocol
 from gem5.simulate.simulator import Simulator
 from gem5.utils.requires import requires
 
@@ -128,18 +127,18 @@ if args.mem_system == "mi_example":
         MIExampleCacheHierarchy,
     )
 
-    cache_hierarchy = MIExampleCacheHierarchy(size="32kB", assoc=8)
+    cache_hierarchy = MIExampleCacheHierarchy(size="32KiB", assoc=8)
 elif args.mem_system == "mesi_two_level":
     from gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import (
         MESITwoLevelCacheHierarchy,
     )
 
     cache_hierarchy = MESITwoLevelCacheHierarchy(
-        l1d_size="16kB",
+        l1d_size="16KiB",
         l1d_assoc=8,
-        l1i_size="16kB",
+        l1i_size="16KiB",
         l1i_assoc=8,
-        l2_size="256kB",
+        l2_size="256KiB",
         l2_assoc=16,
         num_l2_banks=1,
     )
@@ -148,7 +147,9 @@ elif args.mem_system == "classic":
         PrivateL1CacheHierarchy,
     )
 
-    cache_hierarchy = PrivateL1CacheHierarchy(l1d_size="16kB", l1i_size="16kB")
+    cache_hierarchy = PrivateL1CacheHierarchy(
+        l1d_size="16KiB", l1i_size="16KiB"
+    )
 else:
     raise NotImplementedError(
         f"Memory system '{args.mem_system}' is not supported in the boot tests."
@@ -157,7 +158,7 @@ else:
 assert cache_hierarchy != None
 
 # Setup the system memory.
-# Warning: This must be kept at 3GB for now. X86Motherboard does not support
+# Warning: This must be kept at 3GiB for now. X86Motherboard does not support
 # anything else right now!
 python_module = "gem5.components.memory"
 memory_class = getattr(importlib.import_module(python_module), args.dram_class)
@@ -194,7 +195,9 @@ motherboard.set_workload(workload)
 # Begin running of the simulation. This will exit once the Linux system boot
 # is complete.
 print("Running with ISA: " + processor.get_isa().name)
-print("Running with protocol: " + get_runtime_coherence_protocol().name)
+print(
+    "Running with protocol: " + cache_hierarchy.get_coherence_protocol().name
+)
 print()
 
 print("Beginning simulation!")

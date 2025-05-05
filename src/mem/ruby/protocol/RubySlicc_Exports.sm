@@ -72,6 +72,9 @@ structure(WriteMask, external="yes", desc="...") {
   int count();
   int count(int);
   bool test(int);
+  int getBlockSize();
+  void setBlockSize(int);
+  int getBlockSizeBits();
 }
 
 structure(DataBlock, external = "yes", desc="..."){

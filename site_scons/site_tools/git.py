@@ -58,7 +58,7 @@ def install_style_hooks(env):
     try:
         gitdir = env.Dir(
             gem5_scons.util.readCommand(
-                ["git", "rev-parse", "--git-dir"]
+                ["git", "rev-parse", "--git-common-dir"]
             ).strip("\n")
         )
     except Exception as e:

@@ -114,7 +114,7 @@ class BaseSystem(metaclass=ABCMeta):
           cpu -- CPU instance to work on.
         """
         cpu.addPrivateSplitL1Caches(
-            L1_ICache(size="32kB", assoc=1), L1_DCache(size="32kB", assoc=4)
+            L1_ICache(size="32KiB", assoc=1), L1_DCache(size="32KiB", assoc=4)
         )
 
     def create_caches_shared(self, system):
@@ -128,7 +128,7 @@ class BaseSystem(metaclass=ABCMeta):
         """
         system.toL2Bus = L2XBar(clk_domain=system.cpu_clk_domain)
         system.l2c = L2Cache(
-            clk_domain=system.cpu_clk_domain, size="4MB", assoc=8
+            clk_domain=system.cpu_clk_domain, size="4MiB", assoc=8
         )
         system.l2c.cpu_side = system.toL2Bus.mem_side_ports
         system.l2c.mem_side = system.membus.cpu_side_ports
@@ -197,9 +197,9 @@ class BaseSystem(metaclass=ABCMeta):
 
             # Set the default cache size and associativity to be very
             # small to encourage races between requests and writebacks.
-            args.l1d_size = "32kB"
-            args.l1i_size = "32kB"
-            args.l2_size = "4MB"
+            args.l1d_size = "3KiB"
+            args.l1i_size = "32KiB"
+            args.l2_size = "4MiB"
             args.l1d_assoc = 4
             args.l1i_assoc = 2
             args.l2_assoc = 8
@@ -305,9 +305,9 @@ class BaseSESystemUniprocessor(BaseSESystem):
         if self.mem_mode == "timing":
             # @todo We might want to revisit these rather enthusiastic L1 sizes
             cpu.addTwoLevelCacheHierarchy(
-                L1_ICache(size="128kB"),
-                L1_DCache(size="256kB"),
-                L2Cache(size="2MB"),
+                L1_ICache(size="128KiB"),
+                L1_DCache(size="256KiB"),
+                L2Cache(size="2MiB"),
             )
 
     def create_caches_shared(self, system):
@@ -367,9 +367,9 @@ class BaseFSSystemUniprocessor(BaseFSSystem):
 
     def create_caches_private(self, cpu):
         cpu.addTwoLevelCacheHierarchy(
-            L1_ICache(size="32kB", assoc=1),
-            L1_DCache(size="32kB", assoc=4),
-            L2Cache(size="4MB", assoc=8),
+            L1_ICache(size="32KiB", assoc=1),
+            L1_DCache(size="32KiB", assoc=4),
+            L2Cache(size="4MiB", assoc=8),
         )
 
     def create_caches_shared(self, system):

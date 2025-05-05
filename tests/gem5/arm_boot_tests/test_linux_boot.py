@@ -71,15 +71,6 @@ arm_boot_test"
     else:
         name += "_m5-exit"
 
-    if mem_system == "chi":
-        protocol_to_use = "CHI"
-    elif mem_system == "mesi_two_level":
-        protocol_to_use = None
-    elif mem_system == "mi_example":
-        protocol_to_use = "MI_example"
-    else:
-        protocol_to_use = None
-
     gem5_verify_config(
         name=name,
         verifiers=verifiers,
@@ -96,7 +87,6 @@ arm_boot_test"
         valid_isas=(constants.all_compiled_tag,),
         valid_hosts=constants.supported_hosts,
         length=length,
-        protocol=protocol_to_use,
     )
 
 

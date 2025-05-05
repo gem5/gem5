@@ -48,16 +48,6 @@ def test_kvm_fork_run(cpu: str, num_cpus: int, mem_system: str, length: str):
     name = f"{cpu}-cpu_{str(num_cpus)}-cores_{mem_system}_kvm-fork-run-test"
     verifiers = []
 
-    if mem_system == "mesi_two_level":
-        protocol_to_use = None
-        isa_to_use = constants.all_compiled_tag
-    elif mem_system == "mi_example":
-        protocol_to_use = "MI_example"
-        isa_to_use = constants.x86_tag
-    else:
-        protocol_to_use = None
-        isa_to_use = constants.all_compiled_tag
-
     gem5_verify_config(
         name=name,
         verifiers=verifiers,
@@ -83,9 +73,8 @@ def test_kvm_fork_run(cpu: str, num_cpus: int, mem_system: str, length: str):
             resource_path,
             "--kernel-args=''",
         ],
-        valid_isas=(isa_to_use,),
+        valid_isas=(constants.all_compiled_tag,),
         valid_hosts=(constants.host_x86_64_tag,),
-        protocol=protocol_to_use,
         length=length,
         uses_kvm=True,
     )

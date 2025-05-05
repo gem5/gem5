@@ -136,9 +136,9 @@ def main():
     xticks_labels = []
     for x in xticks_locations:
         if x < 1024:
-            xticks_labels.append("%d kB" % x)
+            xticks_labels.append("%d KiB" % x)
         else:
-            xticks_labels.append("%d MB" % (x / 1024))
+            xticks_labels.append("%d MiB" % (x / 1024))
     plt.xticks(xticks_locations, xticks_labels, rotation=-45)
 
     plt.minorticks_off()

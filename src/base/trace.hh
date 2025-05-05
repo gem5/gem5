@@ -195,7 +195,6 @@ struct StringWrap
  * \def DPRINTFV(x, ...)
  * \def DPRINTFN(...)
  * \def DPRINTFNR(...)
- * \def DPRINTF_UNCONDITIONAL(x, ...) (deprecated)
  *
  * @ingroup api_trace
  * @{
@@ -248,16 +247,6 @@ struct StringWrap
             (::gem5::Tick)-1, "", __VA_ARGS__); \
     }                                                                \
 } while (0)
-
-#define DPRINTF_UNCONDITIONAL(x, ...)                      \
-    GEM5_DEPRECATED_MACRO_STMT(DPRINTF_UNCONDITIONAL,      \
-    do {                                                   \
-        if (TRACING_ON) {                                  \
-            ::gem5::trace::getDebugLogger()->dprintf_flag(         \
-                ::gem5::curTick(), name(), #x, __VA_ARGS__);       \
-        }                                                  \
-    } while (0),                                           \
-    "Use DPRINTFN or DPRINTF with a debug flag instead.")
 
 /** @} */ // end of api_trace
 

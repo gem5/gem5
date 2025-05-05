@@ -32,6 +32,7 @@
 
 #include <iostream>
 
+#include "base/random.hh"
 #include "cpu/testers/rubytest/RubyTester.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/protocol/RubyAccessMode.hh"
@@ -47,6 +48,7 @@ class SubBlock;
 
 const int CHECK_SIZE_BITS = 2;
 const int CHECK_SIZE = (1 << CHECK_SIZE_BITS);
+const int CACHE_LINE_BITS = 6;
 
 class Check
 {
@@ -83,6 +85,7 @@ class Check
     int m_num_writers;
     int m_num_readers;
     RubyTester* m_tester_ptr;
+    Random::RandomPtr rng = Random::genRandom();
 };
 
 inline std::ostream&
