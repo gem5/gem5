@@ -1,3 +1,29 @@
+# Copyright (c) 2025 The Regents of the University of California
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 import argparse
 import json
 import logging
@@ -18,7 +44,10 @@ from orchestrator_request import (
     send_and_receive_hypercall,
 )
 
-from gem5.resources.resource import obtain_resource
+try:
+    from gem5.resources.resource import obtain_resource
+except:
+    pass
 
 logger = logging.getLogger(__name__)
 
@@ -96,13 +125,8 @@ def find_gem5_pids() -> List[int]:
                 # Skip processes we can't read
                 continue
 
-    # Mac OS doesn't have /proc, so we need a different approach
+    # macOS doesn't have /proc, so we need a different approach
     elif platform.system() == "Darwin":
-        # Get processes for current user
-        user_processes = subprocess.run(
-            ["ps", "-U", str(current_user)], capture_output=True
-        ).stdout.decode("UTF-8")
-
         # Filter for gem5 processes
         gem5_pids_proc = subprocess.run(["pgrep", "gem5"], capture_output=True)
 
@@ -118,7 +142,6 @@ def find_gem5_pids() -> List[int]:
                 if is_valid_gem5_process(pid, cmdline):
                     gem5_pids.append(int(pid))
 
-    # Add support for other platforms here if needed
     else:
         logger.error(f"Unsupported platform: {platform.system()}")
 
@@ -129,9 +152,10 @@ def find_gem5_pids() -> List[int]:
 
 
 def format_ticks_time(ticks):
-    """Convert tick count to human-readable time format"""
-    # Define tick to time unit conversions (example values - adjust based on gem5's tick rate)
-    # Assuming 1 tick = 1 picosecond for gem5
+    """
+    Convert tick count to human-readable time format.
+    1 tick = 1 picosecond.
+    """
     if ticks < 1_000:
         return f"{ticks}ps"
     elif ticks < 1_000_000:
@@ -142,20 +166,6 @@ def format_ticks_time(ticks):
         return f"{ticks/1_000_000_000:.2f}ms"
     else:
         return f"{ticks/1_000_000_000_000:.2f}s"
-
-
-def format_instruction_count(count):
-    """Format instruction count with appropriate suffix (K, M, B, T)"""
-    if count < 1_000:
-        return f"{count}"
-    elif count < 1_000_000:
-        return f"{count/1_000:.4g}K"
-    elif count < 1_000_000_000:
-        return f"{count/1_000_000:.4g}M"
-    elif count < 1_000_000_000_000:
-        return f"{count/1_000_000_000:.4g}B"
-    else:
-        return f"{count/1_000_000_000_000:.4g}T"
 
 
 class Gem5ProgressBar:
@@ -187,18 +197,19 @@ class Gem5ProgressBar:
                 send_and_receive_hypercall(self.pid, "status")
             )
 
-            # Get workload information
             workload = obtain_resource(curr_info["workload"])
             self.max_insts = workload.get_estimated_instructions() or 0
-
-            # Store simulation properties
+            logger.info(
+                f"Max instructions for workload {workload} is "
+                f"{self.max_insts}"
+            )
             self.current_insts = curr_info["instruction_count"]
             self.sim_id = curr_info["sim_id"]
             self.workload_id = curr_info["workload"]
             self.current_ticks = curr_info["tick"]
 
             # Create the actual tqdm progress bar
-            desc_format = f"{self.sim_id}|{self.workload_id}"
+            desc_format = f"{self.pid}|{self.sim_id}|{self.workload_id}"
             self.bar = tqdm.tqdm(
                 total=self.max_insts,
                 initial=self.current_insts,
@@ -206,6 +217,7 @@ class Gem5ProgressBar:
                 unit="insts",
                 position=self.position,
                 leave=True,
+                dynamic_ncols=True,
             )
 
             # Initial postfix update
@@ -216,13 +228,17 @@ class Gem5ProgressBar:
 
             # Reset retry counter on successful initialization
             self.retries = 0
-
+            logger.info(
+                f"Successfully initialized progress bar for PID {self.pid}"
+            )
         except Exception as e:
             self.retries += 1
             if self.retries < self.max_retries:
                 logger.warning(
-                    f"Error initializing progress bar for PID {self.pid} (attempt {self.retries}/{self.max_retries}): {e}"
+                    f"Error initializing progress bar for PID {self.pid} "
+                    f"(attempt {self.retries}/{self.max_retries}): {e}"
                 )
+                logger.exception(e)
                 logger.warning(
                     f"Will retry initialization during next update cycle"
                 )
@@ -230,7 +246,8 @@ class Gem5ProgressBar:
                 self.active = True
             else:
                 logger.error(
-                    f"Failed to initialize progress bar for PID {self.pid} after {self.max_retries} attempts: {e}"
+                    f"Failed to initialize progress bar for PID {self.pid} "
+                    f"after {self.max_retries} attempts: {e}"
                 )
                 self.active = False
 
@@ -294,7 +311,7 @@ class ProgressBarManager:
             auto_discover: Whether to automatically discover new gem5 processes
         """
         self.pids = set(pids)
-        self.update_interval = 5  # Update every 5 seconds
+        self.update_interval = 5
         self.progress_bars = {}
         self.running = True
         self.auto_discover = auto_discover
@@ -303,6 +320,7 @@ class ProgressBarManager:
             15  # Check for new processes every 15 seconds
         )
         self._initialize_bars()
+        self._print_dashboard_label()
         self.run()
 
     def _initialize_bars(self, new_pids=None):
@@ -313,13 +331,10 @@ class ProgressBarManager:
             new_pids: Optional list of new PIDs to initialize bars for
         """
         pids_to_initialize = new_pids if new_pids is not None else self.pids
-
         for pid in pids_to_initialize:
-            # Skip if we already have a progress bar for this PID
             if pid in self.progress_bars:
                 continue
 
-            # Calculate position (number of existing bars)
             position = len(self.progress_bars)
             self.progress_bars[pid] = Gem5ProgressBar(pid, position=position)
 
@@ -327,28 +342,24 @@ class ProgressBarManager:
         """Discover new gem5 processes and create progress bars for them."""
         current_time = time.time()
 
-        # Only check for new processes at the specified interval
         if current_time - self.last_discovery_time < self.discovery_interval:
             return
 
         self.last_discovery_time = current_time
 
         try:
-            # Find all current gem5 processes
             current_pids = set(find_gem5_pids())
 
-            # Identify new PIDs that we're not already monitoring
             new_pids = current_pids - self.pids
 
             if new_pids:
                 logger.info(
-                    f"Discovered {len(new_pids)} new gem5 process(es): {new_pids}"
+                    f"Discovered {len(new_pids)} new gem5 process(es): "
+                    f"{new_pids}"
                 )
 
-                # Update our set of known PIDs
                 self.pids.update(new_pids)
 
-                # Initialize progress bars for new PIDs
                 self._initialize_bars(new_pids)
 
         except Exception as e:
@@ -357,7 +368,9 @@ class ProgressBarManager:
     def _rearrange_positions(self):
         """Rearrange progress bar positions to account for closed bars."""
         active_bars = [
-            bar for pid, bar in self.progress_bars.items() if bar.active
+            bar
+            for bar in self.progress_bars.values()
+            if bar.active and bar.bar is not None
         ]
 
         for i, bar in enumerate(active_bars):
@@ -366,8 +379,15 @@ class ProgressBarManager:
                 if bar.bar:
                     # Update the tqdm bar's position
                     bar.bar.pos = i
-                    # Force refresh to reflect new position
-                    bar.bar.refresh()
+
+        # clear the screen so outdated prints of active progress bars in a
+        # lower position than the exited progress bar do not linger on the
+        # dashboard
+        self._print_dashboard_label()
+        # refresh bars only after all positions have been updated. This
+        # prevents the same bar from being printed multiple times.
+        for bar in active_bars:
+            bar.bar.refresh()
 
     def run(self):
         """Run update loop for all progress bars."""
@@ -376,32 +396,39 @@ class ProgressBarManager:
                 any(bar.active for bar in self.progress_bars.values())
                 or self.auto_discover
             ):
-                # Sleep between updates
                 time.sleep(self.update_interval)
 
-                # Check for new processes if auto-discovery is enabled
                 if self.auto_discover:
                     self._discover_new_processes()
 
-                # Update each active progress bar
-                for pid, bar in list(self.progress_bars.items()):
+                for bar in self.progress_bars.values():
                     if not bar.active:
                         continue
+                    bar.update()
 
-                    if not bar.update():
-                        # If update failed, bar is now inactive
-                        # We'll rearrange positions at the end of the loop
-                        pass
-
-                # Rearrange positions if needed to fill in gaps from closed bars
+                # fill in gaps from closed bars if necessary
                 self._rearrange_positions()
 
         except KeyboardInterrupt:
             self.running = False
         finally:
-            # Clean up all progress bars
             for bar in self.progress_bars.values():
                 bar.close()
+
+    def _print_dashboard_label(self) -> None:
+        screen_width = os.get_terminal_size()[0]
+        os.system("cls||clear")
+        left_justified_label = " pid | simulation id | workload: "
+        print(left_justified_label, end="")
+        right_justified_label = (
+            " current insts / total insts [elapsed<remaining, rate, "
+            "simulated time]"
+        )
+        print(
+            right_justified_label.rjust(
+                screen_width - len(left_justified_label)
+            )
+        )
 
 
 def main():
@@ -409,16 +436,15 @@ def main():
 
     parser.add_argument(
         "--pid",
-        help="Enter the pid of the gem5 process for which you would like to "
-        "observe the progress",
+        help="Enter the pid(s) of the gem5 process(es) to display. "
+        "If entering multiple pids, please separate pids using spaces, "
+        "e.g. --pid 12345 12346. If --pid is not passed, the dashboard will "
+        "automatically detect the currently running gem5 processes, but will "
+        "not continue to discover new processes unless --auto-discover is "
+        "passed.",
+        nargs="*",
         type=int,
         default=None,
-    )
-
-    parser.add_argument(
-        "--single",
-        help="Monitor a single process instead of using the manager",
-        action="store_true",
     )
 
     parser.add_argument(
@@ -435,38 +461,22 @@ def main():
             logger.debug(f"Found gem5 processes: {pids}")
         except ValueError:
             if args.auto_discover:
-                # If auto-discovering, start with empty list and wait for processes
                 logger.info(
                     "No gem5 processes found, waiting for new processes..."
                 )
                 pids = []
             else:
-                # Otherwise exit with error
                 logger.error("No gem5 processes found. Exiting.")
                 exit(1)
     else:
-        pids = [args.pid]
+        pids = args.pid
 
-    if args.single and len(pids) > 0:
-        # Single progress bar mode - useful for scripts that want to embed a progress bar
-        bar = Gem5ProgressBar(pids[0])
-        try:
-            while bar.active:
-                time.sleep(5)
-                bar.update()
-        except KeyboardInterrupt:
-            pass
-        finally:
-            bar.close()
-    else:
-        # Multi-bar manager mode
-        ProgressBarManager(pids, auto_discover=args.auto_discover)
+    ProgressBarManager(pids, auto_discover=args.auto_discover)
 
 
 if __name__ == "__m5_main__":
     # Disable logging to stdout/stderr
     logging.getLogger().handlers.clear()
-    # Set up logging to file
     log_file = "gem5_progress.log"
     file_handler = logging.FileHandler(log_file)
     file_handler.setLevel(logging.INFO)
@@ -476,5 +486,5 @@ if __name__ == "__m5_main__":
     logger.info("Starting gem5 progress bar manager")
     main()
 elif __name__ == "__main__":
-    print("This script is intended to be run from gem5")
+    logger.error("This script is intended to be run from gem5")
     exit(1)
