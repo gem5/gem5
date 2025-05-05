@@ -242,7 +242,7 @@ IPCP::calculatePrefetch(const PrefetchInfo &pfi,
 
     curStride = lineOffset - ipcpTable[ipIndex].lastLineOffset;
     // Page boundary learning
-    if (ipcpTable[ipIndex].lastVpage != curPage) { 
+    if (ipcpTable[ipIndex].lastVpage != curPage) {
        if (curStride < 0) //Assuming the page moving in +ve direction
            curStride += blkSize;
        else
