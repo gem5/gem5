@@ -24,6 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import copy
 import json
 import urllib.parse
 from pathlib import Path
@@ -177,4 +178,4 @@ class JSONClient(AbstractClient):
         for id, resource_list in resources_by_id.items():
             resources_by_id[id] = self.sort_resources(resource_list)[0]
 
-        return resources_by_id
+        return copy.deepcopy(resources_by_id)
