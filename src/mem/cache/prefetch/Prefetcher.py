@@ -229,10 +229,10 @@ class TaggedPrefetcher(QueuedPrefetcher):
     degree = Param.Int(2, "Number of prefetches to generate")
 
 
-class IpcpPrefetcher(QueuedPrefetcher):
+class IPCPPrefetcher(QueuedPrefetcher):
     # CS and CPLX prefetcher
-    type = "IpcpPrefetcher"
-    cxx_class = "gem5::prefetch::Ipcp"
+    type = "IPCPPrefetcher"
+    cxx_class = "gem5::prefetch::IPCP"
     cxx_header = "mem/cache/prefetch/ipcp.hh"
     ip_entries = Param.Unsigned(64, "Number of IPs to track")
     cspt_entries = Param.Unsigned(64, "Number of complex signature to track")
@@ -259,7 +259,7 @@ class IpcpPrefetcher(QueuedPrefetcher):
     cache_snoop = True
     prefetch_on_access = True
 
-    # add_citation(IpcpPrefetcher,
+    # add_citation(IPCPPrefetcher,
     # """
     #     @inproceedings{pakalapati2020bouquet,
     #     title={Bouquet of instruction pointers: Instruction pointer classifier-based spatial hardware prefetching},

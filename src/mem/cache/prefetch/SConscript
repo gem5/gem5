@@ -36,7 +36,7 @@ SimObject('Prefetcher.py', sim_objects=[
     'DeltaCorrelatingPredictionTables', 'DCPTPrefetcher',
     'IrregularStreamBufferPrefetcher', 'SlimAMPMPrefetcher',
     'BOPPrefetcher', 'SBOOEPrefetcher', 'STeMSPrefetcher', 'PIFPrefetcher',
-    'IpcpPrefetcher'])
+    'IPCPPrefetcher'])
 
 Source('access_map_pattern_matching.cc')
 Source('base.cc')

@@ -34,7 +34,7 @@
 #include "mem/cache/prefetch/ipcp.hh"
 
 #include "debug/HWPrefetch.hh"
-#include "params/IpcpPrefetcher.hh"
+#include "params/IPCPPrefetcher.hh"
 
 namespace gem5
 {
@@ -42,14 +42,14 @@ namespace gem5
 namespace prefetch
 {
 
-Ipcp::Ipcp(const IpcpPrefetcherParams &p)
+IPCP::IPCP(const IPCPPrefetcherParams &p)
     : Queued(p), bitsIpTag(p.ip_tag_bits),
     bitsLastVpage(p.last_vpage_bits),
     bitsSignature(p.signature_bits),
     degree(p.degree), csOn(p.cs_on),
     cplxOn(p.cplx_on),
     //GS IP Prefetcher
-    RM_SIZE(p.rm_size), REGION_SIZE(p.region_size),
+    rmSize(p.rm_size), regionSize(p.region_size),
     pageDegree(p.page_degree), pageOn(p.page_on),
     ipcpStats(this), nlOn(p.nl_on)
 {
@@ -70,7 +70,7 @@ Ipcp::Ipcp(const IpcpPrefetcherParams &p)
 }
 
 Addr
-Ipcp::getSignature(Addr curSignature, int64_t stride)
+IPCP::getSignature(Addr curSignature, int64_t stride)
 {
     //Handle -ve stride
     int64_t corStride = (stride < 0) ?
@@ -81,7 +81,7 @@ Ipcp::getSignature(Addr curSignature, int64_t stride)
 }
 
 void
-Ipcp::calculatePrefetch(const PrefetchInfo &pfi,
+IPCP::calculatePrefetch(const PrefetchInfo &pfi,
     std::vector<AddrPriority> &addresses,
     const CacheAccessor &cache)
 {
@@ -102,7 +102,7 @@ Ipcp::calculatePrefetch(const PrefetchInfo &pfi,
     //Extract information
     Addr pc = pfi.getPC();
     Addr blkAddr = blockAddress(pfi.getAddr());
-    Addr regionBase = roundDown(blkAddr, REGION_SIZE);
+    Addr regionBase = roundDown(blkAddr, regionSize);
     Addr lineOffset = (blkAddr >> floorLog2(blkSize))
      & (pageBytes/blkSize - 1);
     //original index
@@ -129,7 +129,7 @@ Ipcp::calculatePrefetch(const PrefetchInfo &pfi,
         RST[regionBase].lastAddr = blkAddr;
 
         if (RST[regionBase].cacheLineTouched.size() >
-         (0.75 * (REGION_SIZE/blkSize))) {
+         (0.75 * (regionSize/blkSize))) {
            RST[regionBase].trained = true;
            //Update ipcpTable[ipIndex]
            for (auto &ip : ipcpTable) {
@@ -165,7 +165,7 @@ Ipcp::calculatePrefetch(const PrefetchInfo &pfi,
      }
 
     //Check for victim
-    if (RST.size() > RM_SIZE) {
+    if (RST.size() > rmSize) {
         //dummy victim
         std::map<Addr, RstEntry>::iterator victim = RST.begin();
         //Evict region that is dense, if not then LRU
@@ -242,7 +242,7 @@ Ipcp::calculatePrefetch(const PrefetchInfo &pfi,
 
     curStride = lineOffset - ipcpTable[ipIndex].lastLineOffset;
     // Page boundary learning
-    if (ipcpTable[ipIndex].lastVpage != curPage) { //switching it off?
+    if (ipcpTable[ipIndex].lastVpage != curPage) { 
        if (curStride < 0) //Assuming the page moving in +ve direction
            curStride += blkSize;
        else
@@ -352,7 +352,7 @@ Ipcp::calculatePrefetch(const PrefetchInfo &pfi,
 
 
 }
-Ipcp::StatGroup::StatGroup(statistics::Group *parent)
+IPCP::StatGroup::StatGroup(statistics::Group *parent)
   : statistics::Group(parent),
   ADD_STAT(trainedVictim, statistics::units::Count::get(),
         "number of times RST victim entry was trained"),
@@ -369,7 +369,7 @@ Ipcp::StatGroup::StatGroup(statistics::Group *parent)
   ADD_STAT(noPrefs, statistics::units::Count::get(),
         "number of times no component was chosen for prefetching"),
   ADD_STAT(conflicts, statistics::units::Count::get(),
-        "number of times there was conflict"),
+        "number of times there was conflict in IPCP table"),
   ADD_STAT(pageCross, statistics::units::Count::get(),
         "number of times prefetchers were crossing page")
 {

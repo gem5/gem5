@@ -35,18 +35,20 @@
 #define __MEM_CACHE_PREFETCH_IPCP_HH__
 
 #include "base/statistics.hh"
+#include "base/types.hh"
 #include "mem/cache/prefetch/queued.hh"
 #include "mem/packet.hh"
+#include <map>
 
 namespace gem5
 {
 
-struct IpcpPrefetcherParams;
+struct IPCPPrefetcherParams;
 
 namespace prefetch
 {
 
-class Ipcp : public Queued
+class IPCP : public Queued
 {
   protected:
    class IpEntry
@@ -93,7 +95,7 @@ class Ipcp : public Queued
 
    //GS IP
    //Structure sizes
-   uint64_t RM_SIZE, REGION_SIZE;
+   uint64_t rmSize, regionSize;
    int pageDegree;
    bool pageOn;
 
@@ -137,8 +139,8 @@ class Ipcp : public Queued
  uint64_t misses, mpkc;
 
   public:
-    Ipcp(const IpcpPrefetcherParams &p);
-    ~Ipcp() = default;
+    IPCP(const IPCPPrefetcherParams &p);
+    ~IPCP() = default;
 
     void calculatePrefetch(const PrefetchInfo &pfi,
                            std::vector<AddrPriority> &addresses,
