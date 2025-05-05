@@ -182,9 +182,15 @@ def send_and_receive_hypercall(
 
     :param pid: Process ID of gem5 instance
     :type pid: int
-    :param function: Hypercall function to execute ('status'|'get_stats'|'update_debug_flags')
+    :param function: Hypercall function to execute
+                     ('status'|'get_stats'|'update_debug_flags')
     :type function: str
-    :param arguments: This parameter contains the arguments for the function. The functions 'status' and 'get_stats' dont expect any arguments. The 'update_debug_flags' function expects a ',' separated string of debug flags to update on the simulation. If the debug flag starts with '-' then the flag will be disabled.
+    :param arguments: This parameter contains the arguments for the function.
+                      The functions 'status' and 'get_stats' dont expect any
+                      arguments. The 'update_debug_flags' function expects a
+                      ',' separated string of debug flags to update on the
+                      simulation. If the debug flag starts with '-' then the
+                      flag will be disabled.
     :type debug_flags_to_update: str
     :return: JSON response from gem5
     :rtype: str
@@ -193,7 +199,7 @@ def send_and_receive_hypercall(
     """
     global sock, socket_path
 
-    socket_path = f"/tmp/hypercall_{os.getpid()}.sock"
+    socket_path = f"/tmp/hypercall_{pid}.sock"
 
     try:
         os.unlink(socket_path)
@@ -256,7 +262,10 @@ def main():
     parser.add_argument(
         "--debug-flags-to-update",
         metavar="FLAG1,FLAG2,..",
-        help="Sets the flags for debug output. This flag will only work if positional argument 'update_debug_flags' is passed. To disable a flag you can pass the flag name starting with '-' for example -FLAG1. If an invalid flag is passed the flag will be skipped.",
+        help="Sets the flags for debug output. This flag will only work if "
+        "positional argument 'update_debug_flags' is passed. To disable "
+        "a flag you can pass the flag name starting with '-' for example "
+        "-FLAG1. If an invalid flag is passed the flag will be skipped.",
     )
     parser.add_argument(
         "--output", type=str, help="Write response to specified file"
