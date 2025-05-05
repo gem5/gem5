@@ -229,7 +229,8 @@ class DmaDevice : public PioDevice
 
     void
     dmaWrite(Addr addr, int size, Event *event, uint8_t *data,
-             uint32_t sid, uint32_t ssid, Tick delay=0)
+             std::optional<uint32_t> sid, std::optional<uint32_t> ssid,
+             Tick delay=0)
     {
         dmaPort.dmaAction(MemCmd::WriteReq, addr, size, event, data,
                           sid, ssid, delay);
@@ -243,7 +244,8 @@ class DmaDevice : public PioDevice
 
     void
     dmaRead(Addr addr, int size, Event *event, uint8_t *data,
-            uint32_t sid, uint32_t ssid, Tick delay=0)
+            std::optional<uint32_t> sid, std::optional<uint32_t> ssid,
+            Tick delay=0)
     {
         dmaPort.dmaAction(MemCmd::ReadReq, addr, size, event, data,
                           sid, ssid, delay);
