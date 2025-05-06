@@ -3,9 +3,5 @@
         "src/python",
         "ext",
         "tests"
-    ],
-    "files.associations": {
-        "*.cc": "cpp",
-        "iosfwd": "cpp"
-    }
+    ]
 }
