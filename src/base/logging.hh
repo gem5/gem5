@@ -42,8 +42,11 @@
 #define __BASE_LOGGING_HH__
 
 #include <cassert>
+#include <functional>
 #include <sstream>
 #include <utility>
+#include <string>
+#include <vector>
 
 #include "base/compiler.hh"
 #include "base/cprintf.hh"
@@ -123,19 +126,48 @@ class Logger
      */
     [[noreturn]] void exit_helper() { exit(); ::abort(); }
 
+    /** Register callback to generate extra log. */
+    void
+    registerExtraLog(std::function<std::string()> cb)
+    {
+        extraLogs.emplace_back(std::move(cb));
+    }
+
   protected:
     bool enabled;
+
+    /**
+     * Generate the formatted extra log string. Developers can register extra
+     * logs when printing logs, such as PC of each CPUs, .etc. This function
+     * ensures that there's at least a new line between each extra log.
+     * */
+    std::string
+    getFormattedExtraLog() const
+    {
+        std::stringstream ss;
+        for (const auto &cb : extraLogs) {
+            std::string str = cb();
+            ss << str;
+            if (str.length() && str.back() != '\n' && str.back() != '\r')
+                ss << std::endl;
+        }
+        return ss.str();
+    }
 
     /** Generates the log message. By default it is sent to cerr. */
     virtual void
     log(const Loc &loc, std::string s)
     {
-        std::cerr << loc.file << ":" << loc.line << ": " << s;
+        std::cerr << loc.file << ":" << loc.line << ": " << s
+                  << getFormattedExtraLog();
     }
 
     virtual void exit() { /* Fall through to the abort in exit_helper. */ }
 
     const char *prefix;
+
+    /** Data structure to store extra log callbacks. */
+    std::vector<std::function<std::string()>> extraLogs;
 };
 
 #define base_message(logger, ...)                                       \

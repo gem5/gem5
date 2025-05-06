@@ -84,7 +84,7 @@ TEST(RandomCtor, DoubleDefaultConstruct)
     // First double corresponds to the default seed
     // 14514284786278117030llu / std::numeric_limits<uint64_t>::max()
     ASSERT_EQ(dut->random<double>(),
-      0.7868209548678020137657540544751100242137908935546875d);
+      0.7868209548678020137657540544751100242137908935546875);
 }
 
 TEST(RandomCtor, FloatDefaultConstruct)

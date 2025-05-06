@@ -40,6 +40,7 @@ def operand_types {{
     'ud' : 'uint64_t',
     'sf' : 'float',
     'df' : 'double',
+    'bl' : 'bool',
 
     'vi'    : 'vi',
     'vu'    : 'vu',
@@ -110,4 +111,9 @@ def operands {{
     'VL': PCStateOp('uw', 'vl', (None, None, 'IsControl'), 11),
 #VLENB, actually the CSR is read only.
     'VlenbBits': PCStateOp('ud', 'vlenb', (None, None, 'IsControl'), 12),
+#Zcmt Second Fetch
+    'ZcmtSecondFetch': PCStateOp(
+        'bl', 'zcmtSecondFetch', (None, None, 'IsControl'), 13),
+    'ZcmtPC': PCStateOp('ud', 'zcmtPc', (None, None, 'IsControl'), 13),
+    'IsVset': PCStateOp('ub', 'new_vconf', (None, None, 'IsControl'), 13),
 }};

@@ -328,6 +328,18 @@ ArmProcess64::armHwcapImpl2() const
     hwcap |= (zf_r0.f64mm >= 1) ? Arm_Svef64mm : Arm_None;
     hwcap |= (zf_r0.i8mm >= 1) ? Arm_Svei8mm : Arm_None;
 
+    const AA64PFR1 pf_r1 = tc->readMiscReg(MISCREG_ID_AA64PFR1_EL1);
+    hwcap |= (pf_r1.sme == 1) ? Arm_Sme : Arm_None;
+
+    const AA64SMFR0 smfr_r0 = tc->readMiscReg(MISCREG_ID_AA64SMFR0_EL1);
+    hwcap |= (smfr_r0.i16i64 == 0b1111) ? Arm_Sme_I16i64 : Arm_None;
+    hwcap |= (smfr_r0.f64f64 == 1) ? Arm_Sme_F64f64 : Arm_None;
+    hwcap |= (smfr_r0.i8i32 == 0b1111) ? Arm_Sme_I8i32 : Arm_None;
+    hwcap |= (smfr_r0.f16f32 == 1) ? Arm_Sme_F16f32 : Arm_None;
+    hwcap |= (smfr_r0.b16f32 == 1) ? Arm_Sme_B16f32 : Arm_None;
+    hwcap |= (smfr_r0.f32f32 == 1) ? Arm_Sme_F32f32 : Arm_None;
+    hwcap |= (smfr_r0.fa64 == 1) ? Arm_Sme_Fa64 : Arm_None;
+
     return hwcap;
 }
 

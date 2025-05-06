@@ -38,5 +38,6 @@
 Import('*')
 
 SimObject('Probe.py', sim_objects=['ProbeListenerObject'])
-Source('probe.cc')
+Source('probe.cc', tags=['gem5 simobject'])
+Source('probe_listener_object.cc')
 DebugFlag('ProbeVerbose')

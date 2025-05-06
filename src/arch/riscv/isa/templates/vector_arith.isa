@@ -367,8 +367,6 @@ template<typename ElemType>
     %(set_reg_idx_arr)s;
     %(constructor)s;
     const int64_t vlmul = vtype_vlmul(_machInst.vtype8);
-    // Todo: move to Decode template
-    panic_if(vlmul == 3, "LMUL=8 is illegal for widening inst");
     // when LMUL setted as m1, need to split to 2 micro insts
     const uint32_t num_microops = 1 << std::max<int64_t>(0, vlmul + 1);
 
@@ -410,7 +408,8 @@ private:
     bool vm;
 public:
     %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
-                   uint32_t _microIdx, uint32_t _elen, uint32_t _vlen);
+                   uint32_t _microIdx, uint32_t _elen, uint32_t _vlen,
+                   bool _copyVs1=false, bool _copyVs2=false);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     using %(base_class)s::generateDisassembly;
 };
@@ -421,7 +420,8 @@ def template VectorIntWideningMicroConstructor {{
 
 template<typename ElemType>
 %(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
-        uint32_t _microVl, uint32_t _microIdx, uint32_t _elen, uint32_t _vlen)
+        uint32_t _microVl, uint32_t _microIdx, uint32_t _elen, uint32_t _vlen,
+        bool _copyVs1, bool _copyVs2)
     : %(base_class)s("%(mnemonic)s", _machInst,
                      %(op_class)s, _microVl, _microIdx, _elen, _vlen)
 {
@@ -462,6 +462,8 @@ Fault
 
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+    if (vtype_vlmul(machInst.vtype8) == 3)
+        return std::make_shared<IllegalInstFault>("LMUL=8 is illegal for widening inst", machInst);
 
     status.vs = VPUStatus::DIRTY;
     xc->setMiscReg(MISCREG_STATUS, status);
@@ -477,6 +479,70 @@ Fault
     %(code)s;
     %(op_wb)s;
     return NoFault;
+}
+
+%(declare_varith_template)s;
+
+}};
+
+def template VectorIntNarrowingMacroConstructor {{
+
+template<typename ElemType>
+%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst, uint32_t _elen,
+                                         uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _elen, _vlen)
+{
+    %(set_reg_idx_arr)s;
+    %(constructor)s;
+    const int64_t vlmul = vtype_vlmul(_machInst.vtype8);
+    // when LMUL setted as m1, need to split to 2 micro insts
+    const uint32_t num_microops = 1 << std::max<int64_t>(0, vlmul + 1);
+
+    int32_t tmp_vl = this->vl;
+    const int32_t t_micro_vlmax = vtype_VLMAX(_machInst.vtype8, vlen, true);
+    const int32_t micro_vlmax = vlmul < 0 ? t_micro_vlmax : t_micro_vlmax / 2;
+    int32_t micro_vl = std::min(tmp_vl, micro_vlmax);
+    StaticInstPtr microop;
+
+    if (micro_vl == 0) {
+        microop = new VectorNopMicroInst(_machInst);
+        this->microops.push_back(microop);
+    }
+
+    // copy on vs2 overlap, which can only happen once
+    bool copy_vs2 = (machInst.vd == machInst.vs2);
+    if (copy_vs2) {
+        microop = new VCpyVsMicroInst(machInst, 0, machInst.vs2, elen, vlen);
+        microop->setFlag(IsDelayedCommit);
+        this->microops.push_back(microop);
+    }
+
+    bool copy_vs1 = (machInst.vd == machInst.vs1);
+    for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
+        if (i%2 == 0 && tmp_vl > micro_vlmax) {
+            if (copy_vs1 && !copy_vs2) {
+                microop = new VCpyVsMicroInst(machInst, i/2, machInst.vs1,
+                                              elen, vlen);
+                microop->setFlag(IsDelayedCommit);
+                this->microops.push_back(microop);
+            }
+            microop = new VPinVdMicroInst(machInst, i/2, 2, elen, vlen);
+            microop->setFlag(IsDelayedCommit);
+            this->microops.push_back(microop);
+        }
+
+        microop = new %(class_name)sMicro<ElemType>(_machInst, micro_vl, i,
+                                                    _elen, _vlen, copy_vs1,
+                                                    copy_vs2);
+        microop->setDelayedCommit();
+        this->microops.push_back(microop);
+        micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
+
+        copy_vs2 = false;
+    }
+
+    this->microops.front()->setFirstMicroop();
+    this->microops.back()->setLastMicroop();
 }
 
 %(declare_varith_template)s;
@@ -520,7 +586,6 @@ Fault
         (this->microIdx % 2 == 0) ? 0 : micro_vlmax;
 
     %(vm_decl_rd)s;
-    %(copy_old_vd)s;
     %(code)s;
     %(op_wb)s;
     return NoFault;
@@ -710,7 +775,8 @@ private:
     bool vm;
 public:
     %(class_name)s(ExtMachInst _machInst,
-        uint32_t _microVl, uint32_t _microIdx, uint32_t _elen, uint32_t _vlen);
+        uint32_t _microVl, uint32_t _microIdx, uint32_t _elen, uint32_t _vlen,
+        bool _copyVs1=false, bool _copyVs2=false);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     std::string generateDisassembly(Addr pc,
         const loader::SymbolTable *symtab) const override
@@ -747,6 +813,8 @@ Fault
 
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+    if (vtype_vlmul(machInst.vtype8) == 3)
+        return std::make_shared<IllegalInstFault>("LMUL=8 is illegal for widening inst", machInst);
 
     status.vs = VPUStatus::DIRTY;
     xc->setMiscReg(MISCREG_STATUS, status);
@@ -812,7 +880,6 @@ Fault
         (this->microIdx % 2 == 0) ? 0 : micro_vlmax;
 
     %(vm_decl_rd)s;
-    %(copy_old_vd)s;
     %(code)s;
     %(op_wb)s;
     return NoFault;
@@ -1711,13 +1778,40 @@ template<typename ElemType>
         microop = new VectorNopMicroInst(_machInst);
         this->microops.push_back(microop);
     }
+
+    if (machInst.vd == machInst.vs1) {
+        microop = new VCpyVsMicroInst(machInst, 0, machInst.vs1, elen, vlen);
+        microop->setFlag(IsDelayedCommit);
+        this->microops.push_back(microop);
+    }
+
+    for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
+        if (machInst.vd == (machInst.vs2 + i) && machInst.vd != machInst.vs1) {
+            microop = new VCpyVsMicroInst(machInst, i, machInst.vs2, elen,
+                                          vlen);
+            microop->setFlag(IsDelayedCommit);
+            this->microops.push_back(microop);
+        }
+        micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
+    }
+
+    microop = new VPinVdMicroInst(machInst, 0, num_microops, elen, vlen);
+    microop->setFlag(IsDelayedCommit);
+    this->microops.push_back(microop);
+
+    tmp_vl = this->vl;
+    micro_vl = std::min(tmp_vl, micro_vlmax);
     for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
         microop = new %(class_name)sMicro<ElemType>(_machInst, micro_vl, i,
                                                     _elen, _vlen);
+        if (flags[IsSerializeAfter] && i < num_microops-1) { // ordered
+            microop->setFlag(StaticInst::IsSerializeAfter);
+        }
         microop->setDelayedCommit();
         this->microops.push_back(microop);
         micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
     }
+
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
 }
@@ -1732,8 +1826,8 @@ template<typename ElemType>
 class %(class_name)s : public %(base_class)s
 {
 private:
-    // vs2, vs1, vd, vm
-    RegId srcRegIdxArr[4];
+    // vs2, vs1, vm
+    RegId srcRegIdxArr[3];
     RegId destRegIdxArr[1];
     bool vm;
 public:
@@ -1793,11 +1887,10 @@ Fault
     %(op_rd)s;
     %(set_vlenb)s;
     %(vm_decl_rd)s;
-    %(copy_old_vd)s;
 
     auto reduce_loop =
         [&, this](const auto& f, const auto* _, const auto* vs2) {
-            ElemType microop_result = Vs1[0];
+            ElemType microop_result = (microIdx == 0) ? Vs1[0]:Vd[0];
             for (uint32_t i = 0; i < this->microVl; i++) {
                 uint32_t ei = i + vtype_VLMAX(vtype, vlen, true) *
                     this->microIdx;
@@ -1843,11 +1936,10 @@ Fault
     %(op_rd)s;
     %(set_vlenb)s;
     %(vm_decl_rd)s;
-    %(copy_old_vd)s;
 
     auto reduce_loop =
         [&, this](const auto& f, const auto* _, const auto* vs2) {
-            vu tmp_val = Vs1[0];
+            vu tmp_val = (microIdx == 0) ? Vs1[0]:Vd[0];
             for (uint32_t i = 0; i < this->microVl; i++) {
                 uint32_t ei = i + vtype_VLMAX(vtype, vlen, true) *
                     this->microIdx;
@@ -1884,6 +1976,8 @@ Fault
 
     if (machInst.vill)
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+    if (vtype_vlmul(machInst.vtype8) == 3)
+        return std::make_shared<IllegalInstFault>("LMUL=8 is illegal for widening inst", machInst);
 
     status.vs = VPUStatus::DIRTY;
     xc->setMiscReg(MISCREG_STATUS, status);
@@ -1892,11 +1986,10 @@ Fault
     %(op_rd)s;
     %(set_vlenb)s;
     %(vm_decl_rd)s;
-    %(copy_old_vd)s;
 
     auto reduce_loop =
         [&, this](const auto& f, const auto* _, const auto* vs2) {
-            vwu tmp_val = Vs1[0];
+            vu tmp_val = (microIdx == 0) ? Vs1[0]:Vd[0];
             for (uint32_t i = 0; i < this->microVl; i++) {
                 uint32_t ei = i + vtype_VLMAX(vtype, vlen, true) *
                     this->microIdx;
@@ -2251,11 +2344,10 @@ Fault
     %(op_rd)s;
     %(set_vlenb)s;
     %(vm_decl_rd)s;
-    %(copy_old_vd)s;
 
     auto reduce_loop =
         [&, this](const auto& f, const auto* _, const auto* vs2) {
-            vwu tmp_val = Vs1[0];
+            vwu tmp_val = (microIdx == 0) ? Vs1[0]:Vd[0];
             for (uint32_t i = 0; i < this->microVl; i++) {
                 uint32_t ei = i + vtype_VLMAX(vtype, vlen, true) *
                     this->microIdx;

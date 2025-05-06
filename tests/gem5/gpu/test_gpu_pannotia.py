@@ -42,7 +42,7 @@ binary_links = {
     "bc.gem5": "https://storage.googleapis.com/dist.gem5.org/dist/v24-0/test-progs/pannotia/bc.gem5",
     "color_max.gem5": "https://storage.googleapis.com/dist.gem5.org/dist/v24-0/test-progs/pannotia/color_max.gem5",
     "color_maxmin.gem5": "https://storage.googleapis.com/dist.gem5.org/dist/v24-0/test-progs/pannotia/color_maxmin.gem5",
-    "fw_hip.gem5": "https://storage.googleapis.com/dist.gem5.org/dist/v24-0/test-progs/pannotia/fw_hip.gem5",
+    "mis_hip.gem5": "https://storage.googleapis.com/dist.gem5.org/dist/v24-0/test-progs/pannotia/mis_hip.gem5",
 }
 
 dataset_links = {
@@ -128,45 +128,45 @@ gem5_verify_config(
 )
 
 
-gem5_verify_config(
-    name="gpu-apu-se-pannotia-fw-hip-1k-128k",
-    fixtures=(),
-    verifiers=(),
-    config=joinpath(config.base_dir, "configs", "example", "apu_se.py"),
-    config_args=[
-        "-n3",
-        "--mem-size=8GB",
-        "-c",
-        joinpath(binary_path, "fw_hip.gem5"),
-        "--options",
-        f'-f {joinpath(dataset_path, "1k_128k.gr")} -m default',
-    ],
-    valid_isas=(constants.vega_x86_tag,),
-    valid_hosts=(constants.host_gcn_gpu_tag,),
-    length=constants.very_long_tag,
-)
-
-# This test fails with
-# ERROR: hipMalloc row_d (size:-202182160) => hipErrorOutOfMemory
-# when mem-size is set to 64GiB.
-# The test passes with mem-size set to 8GiB.
 # gem5_verify_config(
-#     name="gpu-apu-se-pannotia-mis-hip-1k-128k",
+#     name="gpu-apu-se-pannotia-fw-hip-1k-128k",
 #     fixtures=(),
 #     verifiers=(),
 #     config=joinpath(config.base_dir, "configs", "example", "apu_se.py"),
 #     config_args=[
 #         "-n3",
-#         "--mem-size=8GiB",
+#         "--mem-size=8GB",
 #         "-c",
-#         joinpath(binary_path, "mis_hip.gem5"),
+#         joinpath(binary_path, "fw_hip.gem5"),
 #         "--options",
-#         f'{joinpath(dataset_path, "1k_128k.gr")} 0'
+#         f'-f {joinpath(dataset_path, "1k_128k.gr")} -m default',
 #     ],
 #     valid_isas=(constants.vega_x86_tag,),
 #     valid_hosts=(constants.host_gcn_gpu_tag,),
 #     length=constants.very_long_tag,
 # )
+
+# This test fails with
+# ERROR: hipMalloc row_d (size:-202182160) => hipErrorOutOfMemory
+# when mem-size is set to 64GiB.
+# The test passes with mem-size set to 8GiB.
+gem5_verify_config(
+    name="gpu-apu-se-pannotia-mis-hip-1k-128k",
+    fixtures=(),
+    verifiers=(),
+    config=joinpath(config.base_dir, "configs", "example", "apu_se.py"),
+    config_args=[
+        "-n3",
+        "--mem-size=8GiB",
+        "-c",
+        joinpath(binary_path, "mis_hip.gem5"),
+        "--options",
+        f'{joinpath(dataset_path, "1k_128k.gr")} 0',
+    ],
+    valid_isas=(constants.vega_x86_tag,),
+    valid_hosts=(constants.host_gcn_gpu_tag,),
+    length=constants.long_tag,
+)
 
 
 # gem5_verify_config(

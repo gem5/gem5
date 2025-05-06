@@ -36,8 +36,8 @@
 
 // m5 includes
 #include "arch/generic/pcstate.hh"
-#include "cpu/probes/pc_count_pair.hh"
 #include "cpu/simple_thread.hh"
+#include "sim/probe/probe_listener_object.hh"
 #include "sim/sim_exit.hh"
 
 // class includes

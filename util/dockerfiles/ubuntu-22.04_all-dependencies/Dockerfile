@@ -42,7 +42,7 @@ RUN pip install mypy pre-commit
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.24.0/cmake-3.24.0.tar.gz \
     && tar -xzf cmake-3.24.0.tar.gz \
     && cd cmake-3.24.0 \
-    && ./bootstrap \
+    && ./bootstrap --parallel=`nproc`\
     && make -j`nproc` \
     && make install \
     && cd .. \

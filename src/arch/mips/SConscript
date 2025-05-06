@@ -29,33 +29,48 @@
 
 Import('*')
 
-if env['CONF']['USE_MIPS_ISA']:
-    env.TagImplies('mips isa', 'gem5 lib')
+if not env['CONF']['USE_MIPS_ISA']:
+    Return()
 
-Source('decoder.cc', tags='mips isa')
-Source('dsp.cc', tags='mips isa')
-Source('faults.cc', tags='mips isa')
-Source('idle_event.cc', tags='mips isa')
-Source('interrupts.cc', tags='mips isa')
-Source('isa.cc', tags='mips isa')
-Source('linux/se_workload.cc', tags='mips isa')
-Source('pagetable.cc', tags='mips isa')
-Source('process.cc', tags='mips isa')
-Source('remote_gdb.cc', tags='mips isa')
-Source('se_workload.cc', tags='mips isa')
-Source('tlb.cc', tags='mips isa')
-Source('utility.cc', tags='mips isa')
+env.TagImplies('mips isa', 'gem5 lib')
 
-SimObject('MipsDecoder.py', sim_objects=['MipsDecoder'], tags='mips isa')
-SimObject('MipsInterrupts.py', sim_objects=['MipsInterrupts'], tags='mips isa')
-SimObject('MipsISA.py', sim_objects=['MipsISA'], tags='mips isa')
-SimObject('MipsMMU.py', sim_objects=['MipsMMU'], tags='mips isa')
-SimObject('MipsSeWorkload.py', sim_objects=['MipsSEWorkload', 'MipsEmuLinux'],
-    tags='mips isa')
-SimObject('MipsTLB.py', sim_objects=['MipsTLB'], tags='mips isa')
+env.TagImplies('isa', 'mips isa')
 
-SimObject('MipsCPU.py', sim_objects=[], tags='mips isa')
+Source('decoder.cc', tags=['mips isa'])
+Source('dsp.cc', tags=['mips isa'])
+Source('faults.cc', tags=['mips isa'])
+Source('idle_event.cc', tags=['mips isa'])
+Source('interrupts.cc', tags=['mips isa'])
+Source('isa.cc', tags=['mips isa'])
+Source('linux/se_workload.cc', tags=['mips isa'])
+Source('pagetable.cc', tags=['mips isa'])
+Source('process.cc', tags=['mips isa'])
+Source('remote_gdb.cc', tags=['mips isa'])
+Source('se_workload.cc', tags=['mips isa'])
+Source('tlb.cc', tags=['mips isa'])
+Source('utility.cc', tags=['mips isa'])
 
-DebugFlag('MipsPRA', tags='mips isa')
+SimObject(
+    'MipsDecoder.py',
+    sim_objects=['MipsDecoder'],
+    tags=['mips isa']
+)
+SimObject(
+    'MipsInterrupts.py',
+    sim_objects=['MipsInterrupts'],
+    tags=['mips isa']
+)
+SimObject('MipsISA.py', sim_objects=['MipsISA'], tags=['mips isa'])
+SimObject('MipsMMU.py', sim_objects=['MipsMMU'], tags=['mips isa'])
+SimObject(
+    'MipsSeWorkload.py',
+    sim_objects=['MipsSEWorkload', 'MipsEmuLinux'],
+    tags=['mips isa']
+)
+SimObject('MipsTLB.py', sim_objects=['MipsTLB'], tags=['mips isa'])
 
-ISADesc('isa/main.isa', tags='mips isa')
+SimObject('MipsCPU.py', sim_objects=[], tags=['mips isa'])
+
+DebugFlag('MipsPRA', tags=['mips isa'])
+
+ISADesc('isa/main.isa', tags=['mips isa'])

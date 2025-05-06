@@ -127,6 +127,12 @@ class SDMAEngine : public DmaVirtDevice
         void setMQDAddr(Addr mqdAddr) { _mqd_addr = mqdAddr; }
         void setPriv(bool priv) { _priv = priv; }
         void setStatic(bool isStatic) { _static = isStatic; }
+
+        // setGlobalRptr is only used during checkpoint restoration
+        // It is needed because _global_rptr is incremented each time
+        // incRptr() is called pre-checkpointing and the pointer
+        // needs to be set to the incremented value at restoration
+        void setGlobalRptr(Addr global_rptr) { _global_rptr = global_rptr;}
     };
 
     /* SDMA Engine ID */
@@ -239,20 +245,18 @@ class SDMAEngine : public DmaVirtDevice
     void fence(SDMAQueue *q, sdmaFence *pkt);
     void fenceDone(SDMAQueue *q, sdmaFence *pkt);
     void trap(SDMAQueue *q, sdmaTrap *pkt);
-    void srbmWrite(SDMAQueue *q, sdmaSRBMWriteHeader *header,
-                    sdmaSRBMWrite *pkt);
-    void pollRegMem(SDMAQueue *q, sdmaPollRegMemHeader *header,
-                    sdmaPollRegMem *pkt);
-    void pollRegMemRead(SDMAQueue *q, sdmaPollRegMemHeader *header,
-                        sdmaPollRegMem *pkt, uint32_t dma_buffer, int count);
+    void srbmWrite(SDMAQueue *q, uint32_t header, sdmaSRBMWrite *pkt);
+    void pollRegMem(SDMAQueue *q, uint32_t header, sdmaPollRegMem *pkt);
+    void pollRegMemRead(SDMAQueue *q, uint32_t header, sdmaPollRegMem *pkt,
+                        uint32_t dma_buffer, int count);
     bool pollRegMemFunc(uint32_t value, uint32_t reference, uint32_t func);
     void ptePde(SDMAQueue *q, sdmaPtePde *pkt);
     void ptePdeDone(SDMAQueue *q, sdmaPtePde *pkt, uint64_t *dmaBuffer);
     void ptePdeCleanup(uint64_t *dmaBuffer);
-    void atomic(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt);
-    void atomicData(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt,
+    void atomic(SDMAQueue *q, uint32_t header, sdmaAtomic *pkt);
+    void atomicData(SDMAQueue *q, uint32_t header, sdmaAtomic *pkt,
                     uint64_t *dmaBuffer);
-    void atomicDone(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt,
+    void atomicDone(SDMAQueue *q, uint32_t header, sdmaAtomic *pkt,
                     uint64_t *dmaBuffer);
     void constFill(SDMAQueue *q, sdmaConstFill *pkt, uint32_t header);
     void constFillDone(SDMAQueue *q, sdmaConstFill *pkt, uint8_t *fill_data);

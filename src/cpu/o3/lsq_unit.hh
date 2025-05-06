@@ -538,6 +538,9 @@ class LSQUnit
         /** Distribution of cycle latency between the first time a load
          * is issued and its completion */
         statistics::Distribution loadToUse;
+
+        /** Total number of loads and stores written to the load store queue */
+        statistics::Scalar addedLoadsAndStores;
     } stats;
 
   public:

@@ -87,11 +87,12 @@ class GPUCommandProcessor : public DmaVirtDevice
 
     struct KernelDispatchData
     {
-        AMDKernelCode *akc;
-        void *raw_pkt;
-        uint32_t queue_id;
-        Addr host_pkt_addr;
-        PacketPtr readPkt;
+        AMDKernelCode *akc = nullptr;
+        void *raw_pkt = nullptr;
+        uint32_t queue_id = 0;
+        Addr host_pkt_addr = 0;
+        PacketPtr readPkt = nullptr;
+        HSAQueueEntry *task = nullptr;
     };
 
     std::list<struct KernelDispatchData> kernelDispatchList;
@@ -102,9 +103,9 @@ class GPUCommandProcessor : public DmaVirtDevice
       Steal = 1
     };
 
-    void performTimingRead(PacketPtr pkt);
+    void performTimingRead(PacketPtr pkt, int dispType);
 
-    void completeTimingRead();
+    void completeTimingRead(int dispType);
 
     void submitAgentDispatchPkt(void *raw_pkt, uint32_t queue_id,
                            Addr host_pkt_addr);
@@ -319,6 +320,9 @@ class GPUCommandProcessor : public DmaVirtDevice
             dmaReadVirt(value_addr, sizeof(Addr), cb, &cb->dmaBuffer, 1e9);
         }
     }
+
+    void readPreload(AMDKernelCode *akc, HSAQueueEntry *task);
+    void initPreload(AMDKernelCode *akc, HSAQueueEntry *task);
 };
 
 } // namespace gem5

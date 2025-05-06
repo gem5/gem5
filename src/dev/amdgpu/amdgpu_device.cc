@@ -53,7 +53,7 @@ namespace gem5
 {
 
 AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
-    : PciDevice(p), gpuMemMgr(p.memory_manager), deviceIH(p.device_ih),
+    : PciEndpoint(p), gpuMemMgr(p.memory_manager), deviceIH(p.device_ih),
       cp(p.cp), checkpoint_before_mmios(p.checkpoint_before_mmios),
       init_interrupt_count(0), _lastVMID(0),
       deviceMem(name() + ".deviceMem", p.memories, false, "", false)
@@ -68,8 +68,8 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
         p.system->addDeviceMemory(gpuMemMgr->getRequestorID(), m);
     }
 
-    if (config.expansionROM) {
-        romRange = RangeSize(config.expansionROM, ROM_SIZE);
+    if (config().expansionROM) {
+        romRange = RangeSize(config().expansionROM, ROM_SIZE);
     } else {
         romRange = RangeSize(VGA_ROM_DEFAULT, ROM_SIZE);
     }
@@ -227,7 +227,7 @@ AMDGPUDevice::writeROM(PacketPtr pkt)
 AddrRangeList
 AMDGPUDevice::getAddrRanges() const
 {
-    AddrRangeList ranges = PciDevice::getAddrRanges();
+    AddrRangeList ranges = PciEndpoint::getAddrRanges();
     AddrRangeList ret_ranges;
     ret_ranges.push_back(romRange);
 
@@ -249,7 +249,7 @@ AMDGPUDevice::readConfig(PacketPtr pkt)
     int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
 
     if (offset < PCI_DEVICE_SPECIFIC) {
-        PciDevice::readConfig(pkt);
+        PciEndpoint::readConfig(pkt);
     } else {
         if (offset >= PXCAP_BASE && offset < (PXCAP_BASE + sizeof(PXCAP))) {
             int pxcap_offset = offset - PXCAP_BASE;
@@ -294,7 +294,7 @@ AMDGPUDevice::readConfig(PacketPtr pkt)
     // around the VGA ROM region such that KVM exits and sends requests to
     // this device rather than the KVM VM.
     if (checkpoint_before_mmios) {
-        if (offset == PCI0_INTERRUPT_PIN) {
+        if (offset == PCI_INTERRUPT_PIN) {
             if (++init_interrupt_count == 3) {
                 DPRINTF(AMDGPUDevice, "Checkpointing before first MMIO\n");
                 exitSimLoop("checkpoint", 0, curTick() + configDelay + 1);
@@ -316,7 +316,7 @@ AMDGPUDevice::writeConfig(PacketPtr pkt)
             pkt->getUintX(ByteOrder::little));
 
     if (offset < PCI_DEVICE_SPECIFIC)
-        return PciDevice::writeConfig(pkt);
+        return PciEndpoint::writeConfig(pkt);
 
 
     if (offset >= PXCAP_BASE && offset < (PXCAP_BASE + sizeof(PXCAP))) {
@@ -361,7 +361,7 @@ AMDGPUDevice::readFrame(PacketPtr pkt, Addr offset)
 
     /*
      * Read the value from device memory. This must be done functionally
-     * because this method is called by the PCIDevice::read method which
+     * because this method is called by the PCIEndpoint::read method which
      * is a non-timing read.
      */
     RequestPtr req = std::make_shared<Request>(
@@ -449,7 +449,7 @@ AMDGPUDevice::writeFrame(PacketPtr pkt, Addr offset)
 
     /*
      * Write the value to device memory. This must be done functionally
-     * because this method is called by the PCIDevice::write method which
+     * because this method is called by the PCIEndpoint::write method which
      * is a non-timing write.
      */
     RequestPtr req = std::make_shared<Request>(offset, pkt->getSize(), 0,
@@ -747,14 +747,14 @@ AMDGPUDevice::getSDMAEngine(Addr offset)
 void
 AMDGPUDevice::intrPost()
 {
-    PciDevice::intrPost();
+    PciEndpoint::intrPost();
 }
 
 void
 AMDGPUDevice::serialize(CheckpointOut &cp) const
 {
-    // Serialize the PciDevice base class
-    PciDevice::serialize(cp);
+    // Serialize the PciEndpoint base class
+    PciEndpoint::serialize(cp);
 
     uint64_t doorbells_size = doorbells.size();
     uint64_t sdma_engs_size = sdmaEngs.size();
@@ -833,8 +833,8 @@ AMDGPUDevice::serialize(CheckpointOut &cp) const
 void
 AMDGPUDevice::unserialize(CheckpointIn &cp)
 {
-    // Unserialize the PciDevice base class
-    PciDevice::unserialize(cp);
+    // Unserialize the PciEndpoint base class
+    PciEndpoint::unserialize(cp);
 
     uint64_t doorbells_size = 0;
     uint64_t sdma_engs_size = 0;

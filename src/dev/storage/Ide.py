@@ -25,7 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects.PciDevice import (
-    PciDevice,
+    PciEndpoint,
     PciIoBar,
 )
 from m5.params import *
@@ -45,7 +45,7 @@ class IdeDisk(SimObject):
     image = Param.DiskImage("Disk image")
 
 
-class IdeController(PciDevice):
+class IdeController(PciEndpoint):
     type = "IdeController"
     cxx_header = "dev/storage/ide_ctrl.hh"
     cxx_class = "gem5::IdeController"

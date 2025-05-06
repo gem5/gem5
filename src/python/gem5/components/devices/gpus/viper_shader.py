@@ -273,7 +273,7 @@ class ViperShader(Shader):
 
         # Set bit 6 to enable atomic requestor, meaning this device can request
         # atomics from other PCI devices.
-        device.PXCAPDevCtrl2 = 0x00000040
+        device.PXCAPDevCtrl2 = 0x0040
 
         # If there are multiple GPUs in the system, make sure the VBIOS region
         # and the legacy IO bar do not overlap with the ranges from other GPUs.

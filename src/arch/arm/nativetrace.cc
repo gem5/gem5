@@ -91,8 +91,8 @@ ArmNativeTrace::ThreadState::update(NativeTrace *parent)
         diffVector >>= 1;
     }
 
-    uint64_t values[changes];
-    parent->read(values, sizeof(values));
+    auto values = std::make_unique<uint64_t[]>(changes);
+    parent->read(values.get(), changes * sizeof(uint64_t));
     int pos = 0;
     for (int i = 0; i < STATE_NUMVALS; i++) {
         if (changed[i]) {

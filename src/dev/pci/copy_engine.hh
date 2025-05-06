@@ -58,7 +58,7 @@
 namespace gem5
 {
 
-class CopyEngine : public PciDevice
+class CopyEngine : public PciEndpoint
 {
     class CopyEngineChannel : public Drainable, public Serializable
     {

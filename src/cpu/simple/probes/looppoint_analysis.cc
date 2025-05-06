@@ -173,8 +173,8 @@ LooppointAnalysis::regProbeListeners()
 {
     if (ifListening) {
         if (listeners.empty()) {
-            listeners.push_back(new looppointAnalysisListener(this,
-                                "Commit", &LooppointAnalysis::checkPc));
+            connectListener<looppointAnalysisListener>(
+                this, "Commit", &LooppointAnalysis::checkPc);
             DPRINTF(LooppointAnalysis,
                                     "Start listening to the RetiredInstsPC\n");
         }
@@ -193,16 +193,6 @@ void
 LooppointAnalysis::stopListening()
 {
     ifListening = false;
-    bool _ifRemoved;
-    for (auto &_listener : listeners) {
-        _ifRemoved = getProbeManager()->removeListener("Commit", *_listener);
-        panic_if(!_ifRemoved, "Failed to remove listener");
-        if (_listener != nullptr) {
-            delete(_listener);
-            DPRINTF(LooppointAnalysis,
-                "Deleted Listener pointer\n");
-        }
-    }
     listeners.clear();
     DPRINTF(LooppointAnalysis, "Stop listening to Commit\n");
 }

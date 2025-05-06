@@ -328,7 +328,7 @@ SyscallDescTable<MipsISA::SEWorkload::SyscallABI> EmuLinux::syscallDescs = {
     { 4156, "mlockall" },
     { 4157, "munlockall" },
     { 4158, "sched_setparam" },
-    { 4159, "sched_getparam" },
+    { 4159, "sched_getparam", sched_getparamFunc },
     { 4160, "sched_setscheduler" },
     { 4161, "sched_getscheduler" },
     { 4162, "sched_yield" },

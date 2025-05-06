@@ -59,14 +59,49 @@ class GlobalSimLoopExitEvent : public GlobalEvent
     std::string cause;
     int code;
     Tick repeat;
+    uint64_t hypercall_id = 0;
+    std::map<std::string, std::string> payload;
 
   public:
+
+    /**
+     * The "old style" constructor for GlobalSimLoopExitEvent.
+     * Not the `type_id` parameter is set to 0. Zero is reserved for the "old
+     * style" exitSimLoop handling via generators in the Simulator module.
+     * The payload is unused.
+     */
     GlobalSimLoopExitEvent(Tick when, const std::string &_cause, int c,
-                           Tick repeat = 0);
-    GlobalSimLoopExitEvent(const std::string &_cause, int c, Tick repeat = 0);
+        Tick repeat = 0, uint64_t hypercall_id = 0,
+        std::map<std::string, std::string> payload =
+            std::map<std::string, std::string>());
+
+    GlobalSimLoopExitEvent(const std::string &_cause, int c,
+         Tick repeat = 0, uint64_t hypercall_id = 0,
+        std::map<std::string, std::string> payload =
+            std::map<std::string, std::string>());
+
+    /**
+     * The "new style" constructor for GlobalSimLoopExitEvent.
+     * Here the "type_id" parameter is used to specify the type of the exit
+     * and the payload is used to pass additional information about the exit.
+     *
+     * These are used to construct Exit Handlers on the Python side.
+     */
+    GlobalSimLoopExitEvent(Tick when, uint64_t hypercall_id,
+        std::map<std::string, std::string> payload =
+            std::map<std::string, std::string>());
+
+    GlobalSimLoopExitEvent(uint64_t hypercall_id,
+        std::map<std::string, std::string> payload =
+            std::map<std::string, std::string>());
 
     const std::string getCause() const { return cause; }
     int getCode() const { return code; }
+
+    uint64_t getHypercallId() const { return hypercall_id; }
+    const std::map<std::string, std::string> getPayload() const {
+        return payload;
+    }
 
     virtual void process();// process event
     virtual void clean(){};//cleaning event
@@ -75,6 +110,7 @@ class GlobalSimLoopExitEvent : public GlobalEvent
     };
     virtual const char *description() const;
 };
+
 
 class LocalSimLoopExitEvent : public Event
 {

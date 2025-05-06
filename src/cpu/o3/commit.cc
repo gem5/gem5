@@ -295,6 +295,11 @@ Commit::clearStates(ThreadID tid)
     pc[tid].reset(cpu->tcBase(tid)->getIsaPtr()->newPCState());
     lastCommitedSeqNum[tid] = 0;
     squashAfterInst[tid] = NULL;
+
+    // Clear out any of this thread's instructions being sent to prior stages.
+    for (int i = -cpu->timeBuffer.getPast();
+         i <= cpu->timeBuffer.getFuture(); ++i)
+        cpu->timeBuffer[i].commitInfo[i] = {};
 }
 
 void Commit::drain() { drainPending = true; }
@@ -366,8 +371,8 @@ Commit::takeOverFrom()
 void
 Commit::deactivateThread(ThreadID tid)
 {
-    std::list<ThreadID>::iterator thread_it = std::find(priority_list.begin(),
-            priority_list.end(), tid);
+    auto thread_it = std::find(
+            priority_list.begin(), priority_list.end(), tid);
 
     if (thread_it != priority_list.end()) {
         priority_list.erase(thread_it);
@@ -398,12 +403,7 @@ void
 Commit::updateStatus()
 {
     // reset ROB changed variable
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         changedROBNumEntries[tid] = false;
 
         // Also check if any of the threads has a trap pending
@@ -427,12 +427,7 @@ Commit::updateStatus()
 bool
 Commit::changedROBEntries()
 {
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (changedROBNumEntries[tid]) {
             return true;
         }
@@ -586,14 +581,9 @@ Commit::tick()
     if (activeThreads->empty())
         return;
 
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
     // Check if any of the threads are done squashing.  Change the
     // status if they are done.
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         // Clear the bit saying if the thread has committed stores
         // this cycle.
         committedStores[tid] = false;
@@ -616,11 +606,7 @@ Commit::tick()
 
     markCompletedInsts();
 
-    threads = activeThreads->begin();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (!rob->isEmpty(tid) && rob->readHeadInst(tid)->readyToCommit()) {
             // The ROB has more instructions it can commit. Its next status
             // will be active.
@@ -744,14 +730,9 @@ Commit::commit()
     ////////////////////////////////////
     // Check for any possible squashes, handle them first
     ////////////////////////////////////
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
 
     int num_squashing_threads = 0;
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         // Not sure which one takes priority.  I think if we have
         // both, that's a bad sign.
         if (trapSquash[tid]) {
@@ -858,11 +839,7 @@ Commit::commit()
     }
 
     //Check for any activity
-    threads = activeThreads->begin();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (changedROBNumEntries[tid]) {
             toIEW->commitInfo[tid].usedROB = true;
             toIEW->commitInfo[tid].freeROBEntries = rob->numFreeEntries(tid);
@@ -1459,8 +1436,8 @@ Commit::getCommittingThread()
 ThreadID
 Commit::roundRobin()
 {
-    std::list<ThreadID>::iterator pri_iter = priority_list.begin();
-    std::list<ThreadID>::iterator end      = priority_list.end();
+    auto pri_iter = priority_list.begin();
+    auto end      = priority_list.end();
 
     while (pri_iter != end) {
         ThreadID tid = *pri_iter;
@@ -1490,12 +1467,7 @@ Commit::oldestReady()
     unsigned oldest_seq_num = 0;
     bool first = true;
 
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (!rob->isEmpty(tid) &&
             (commitStatus[tid] == Running ||
              commitStatus[tid] == Idle ||

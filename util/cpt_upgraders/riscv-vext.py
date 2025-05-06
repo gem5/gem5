@@ -76,7 +76,7 @@ def upgrader(cpt):
         ):
             # Updating RVV misc registers (dummy values)
             mr = cpt.get(sec, "miscRegFile").split()
-            if len(mr) == 164:
+            if len(mr) >= 164:
                 print(
                     "MISCREG_* RVV registers already seem " "to be inserted."
                 )

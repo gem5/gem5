@@ -206,6 +206,10 @@ namespace RiscvISA
     [MISCREG_NMIVEC]        = "NMIVEC",
     [MISCREG_NMIE]          = "NMIE",
     [MISCREG_NMIP]          = "NMIP",
+    [MISCREG_MNSCRATCH]     = "MNSCRATCH",
+    [MISCREG_MNEPC]         = "MNEPC",
+    [MISCREG_MNCAUSE]       = "MNCAUSE",
+    [MISCREG_MNSTATUS]      = "MNSTATUS",
 
     // following are rv32 only registers
     [MISCREG_MSTATUSH]      = "MSTATUSH",
@@ -243,6 +247,8 @@ namespace RiscvISA
     [MISCREG_HPMCOUNTER30H]  = "HPMCOUNTER30H",
     [MISCREG_HPMCOUNTER31H]  = "HPMCOUNTER31H",
 
+    [MISCREG_JVT] = "JVT",
+
     [MISCREG_FFLAGS_EXE]    = "FFLAGS_EXE",
 }};
 
@@ -261,7 +267,8 @@ RegClass ccRegClass(CCRegClass, CCRegClassName, 0, debug::IntRegs);
 ISA::ISA(const Params &p) : BaseISA(p, "riscv"),
     _rvType(p.riscv_type), enableRvv(p.enable_rvv), vlen(p.vlen), elen(p.elen),
     _privilegeModeSet(p.privilege_mode_set),
-    _wfiResumeOnPending(p.wfi_resume_on_pending), _enableZcd(p.enable_Zcd)
+    _wfiResumeOnPending(p.wfi_resume_on_pending), _enableZcd(p.enable_Zcd),
+    _enableSmrnmi(p.enable_Smrnmi)
 {
     _regClasses.push_back(&intRegClass);
     _regClasses.push_back(&floatRegClass);
@@ -376,8 +383,7 @@ void ISA::clear()
     // don't set it to zero; software may try to determine the supported
     // triggers, starting at zero. simply set a different value here.
     miscRegFile[MISCREG_TSELECT] = 1;
-    // NMI is always enabled.
-    miscRegFile[MISCREG_NMIE] = 1;
+    miscRegFile[MISCREG_NMIE] = enableSmrnmi() ? 0 : 1;
 }
 
 bool
@@ -487,11 +493,14 @@ ISA::readMiscReg(RegIndex idx)
         }
       case MISCREG_UIP:
         {
-            return readMiscReg(MISCREG_IP) & UI_MASK[getPrivilegeModeSet()];
+            RegVal mask = readMiscRegNoEffect(MISCREG_SIDELEG);
+            mask &= readMiscRegNoEffect(MISCREG_MIDELEG);
+            return readMiscReg(MISCREG_IP) & mask;
         }
       case MISCREG_SIP:
         {
-            return readMiscReg(MISCREG_IP) & SI_MASK[getPrivilegeModeSet()];
+            RegVal mask = readMiscRegNoEffect(MISCREG_MIDELEG);
+            return readMiscReg(MISCREG_IP) & mask;
         }
       case MISCREG_IE:
         {
@@ -501,14 +510,18 @@ ISA::readMiscReg(RegIndex idx)
         }
       case MISCREG_UIE:
         {
-            return readMiscReg(MISCREG_IE) & UI_MASK[getPrivilegeModeSet()];
+            RegVal mask = readMiscRegNoEffect(MISCREG_SIDELEG);
+            mask &= readMiscRegNoEffect(MISCREG_MIDELEG);
+            return readMiscReg(MISCREG_IE) & mask;
         }
       case MISCREG_SIE:
         {
-            return readMiscReg(MISCREG_IE) & SI_MASK[getPrivilegeModeSet()];
+            RegVal mask = readMiscRegNoEffect(MISCREG_MIDELEG);
+            return readMiscReg(MISCREG_IE) & mask;
         }
       case MISCREG_SEPC:
       case MISCREG_MEPC:
+      case MISCREG_MNEPC:
         {
             MISA misa = readMiscRegNoEffect(MISCREG_ISA);
             auto val = readMiscRegNoEffect(idx);
@@ -600,6 +613,29 @@ ISA::readMiscReg(RegIndex idx)
                   (readMiscRegNoEffect(MISCREG_VXRM) << 1);
         }
         break;
+      case MISCREG_MNSTATUS:
+        {
+            NSTATUS nstatus = readMiscRegNoEffect(idx);
+            nstatus.nmie = readMiscRegNoEffect(MISCREG_NMIE);
+            // Check nstatus.mnpp
+            MISA misa = readMiscRegNoEffect(MISCREG_ISA);
+            switch(nstatus.mnpp) {
+                case PRV_U:
+                    nstatus.mnpp = (misa.rvu) ? PRV_U : PRV_M;
+                    break;
+                case PRV_S:
+                    if (misa.rvs)
+                        nstatus.mnpp = PRV_S;
+                    else
+                        nstatus.mnpp = (misa.rvu) ? PRV_U : PRV_M;
+                    break;
+                case PRV_M:
+                    break;
+                default:
+                    nstatus.mnpp = (misa.rvu) ? PRV_U : PRV_M;
+            }
+            return nstatus;
+        }
       case MISCREG_FFLAGS_EXE:
         {
             return readMiscRegNoEffect(MISCREG_FFLAGS) & FFLAGS_MASK;
@@ -723,25 +759,39 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 }
             }
             break;
-
+          case MISCREG_MIDELEG:
+            {
+                setMiscRegNoEffect(
+                    idx, val & MIDELEG_MASK[getPrivilegeModeSet()]);
+            }
+            break;
+          case MISCREG_SIDELEG:
+            {
+                setMiscRegNoEffect(
+                    idx, val & SIDELEG_MASK[getPrivilegeModeSet()]);
+            }
+            break;
           case MISCREG_IP:
             {
-                val = val & MI_MASK[getPrivilegeModeSet()];
+                RegVal mask = MIP_MASK[getPrivilegeModeSet()];
                 auto ic = dynamic_cast<RiscvISA::Interrupts *>(
                     tc->getCpuPtr()->getInterruptController(tc->threadId()));
+                val = (val & mask) | (ic->readIP() & ~mask);
                 ic->setIP(val);
             }
             break;
           case MISCREG_UIP:
             {
-                RegVal mask = UI_MASK[getPrivilegeModeSet()];
+                RegVal mask = readMiscRegNoEffect(MISCREG_SIDELEG);
+                mask &= readMiscRegNoEffect(MISCREG_MIDELEG);
                 val = (val & mask) | (readMiscReg(MISCREG_IP) & ~mask);
                 setMiscReg(MISCREG_IP, val);
             }
             break;
           case MISCREG_SIP:
             {
-                RegVal mask = SI_MASK[getPrivilegeModeSet()];
+                RegVal mask = SIP_MASK[getPrivilegeModeSet()];
+                mask &= readMiscRegNoEffect(MISCREG_MIDELEG);
                 val = (val & mask) | (readMiscReg(MISCREG_IP) & ~mask);
                 setMiscReg(MISCREG_IP, val);
             }
@@ -756,14 +806,15 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             break;
           case MISCREG_UIE:
             {
-                RegVal mask = UI_MASK[getPrivilegeModeSet()];
+                RegVal mask = readMiscRegNoEffect(MISCREG_SIDELEG);
+                mask &= readMiscRegNoEffect(MISCREG_MIDELEG);
                 val = (val & mask) | (readMiscReg(MISCREG_IE) & ~mask);
                 setMiscReg(MISCREG_IE, val);
             }
             break;
           case MISCREG_SIE:
             {
-                RegVal mask = SI_MASK[getPrivilegeModeSet()];
+                RegVal mask = readMiscRegNoEffect(MISCREG_MIDELEG);
                 val = (val & mask) | (readMiscReg(MISCREG_IE) & ~mask);
                 setMiscReg(MISCREG_IE, val);
             }
@@ -896,6 +947,19 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             {
                 setMiscRegNoEffect(MISCREG_FFLAGS, bits(val, 4, 0));
                 setMiscRegNoEffect(MISCREG_FRM, bits(val, 7, 5));
+            }
+            break;
+          case MISCREG_MNSTATUS:
+            {
+                NSTATUS nstatus = val;
+                setMiscRegNoEffect(MISCREG_NMIE,
+                    (RegVal)nstatus.nmie | readMiscRegNoEffect(MISCREG_NMIE));
+                setMiscRegNoEffect(idx, val);
+            }
+            break;
+          case MISCREG_JVT:
+            {
+                setMiscRegNoEffect(idx, rvSext(val));
             }
             break;
           default:

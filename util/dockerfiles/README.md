@@ -5,35 +5,56 @@ The Docker images are used to run gem5 in a containerized environment.
 
 ## The Docker Registry
 
-We use the Github Container Registry to host the gem5 Docker images. The images are available at the  [ghcr.io/gem5] URI.
+We use the Github Container Registry to host the gem5 Docker images.
+The images are available at the [ghcr.io/gem5] URI.
 
 ### Pulling the Docker Images
 
 You can pull the gem5 Docker images using the following command:
 
 ```sh
-# Example: Pulling the gem5 Ubuntu 24.04 image.
+# Example: Pulling the gem5 Ubuntu 24.04 image with all dependencies
 docker pull ghcr.io/gem5/gem5/ubuntu-24.04_all-dependencies:latest
 ```
 
 ## Building the Docker Images
 
 The gem5 Dockerfiles are available in this directory.
-All the currently supported Docker images, stored in the registery, are built using these Dockerfiles.
+All the currently supported Docker images, stored in the registry, are built using these Dockerfiles.
 
 ### Docker buildx
 
-The Dockerfiles are built using the Docker buildx feature. The buildx feature is used to build multi-architecture images. The buildx feature is available in Docker 19.03 and later versions.
+The Dockerfiles are built using the Docker buildx feature. The buildx feature is used to build multi-platform images which allow for a single Docker image container variants of the environment for a given set of hardware platforms (most notable ISAs). The buildx feature is available in Docker 19.03 and later versions.
 
-For more information on the Docker buildx feature, refer to the [Docker documentation](https://docs.docker.com/buildx/working-with-buildx/).
+In order to build the multi-platforms images, you need to create a buildx builder.
+Our Docker images are built for the following platforms: `linux/amd64`, `linux/arm64`, and `linux/riscv64` (note: `linux/riscv64` is not often used as the RISC-V architecture is not yet fully supported and worth targeting.).
+
+To use the buildx feature, you need to have the QEMU system emulators installed on your system for the target platforms.
+If you're working on a system with APT you can install the QEMU system emulators using the following command:
+
+```sh
+sudo apt install -y qemu-system-arm64 qemu-system-x86 qemu-system-riscv64
+```
+
+For other systems, you can refer to the QEMU documentation to install the system emulators.
+
+To create a buildx builder with the QEMU emulators you can use the following command:
+
+```sh
+docker buildx create --name mybuilder --bootstrap --use --platform linux/aarch64,linux/amd64,linux/riscv64
+```
+
+This creates a buildx builder named `mybuilder` with the specified platforms then and sets it as the active builder.
 
 In this setup we store the buildx configurations in the "docker-bake.hcl" file.
-It is worth consulting these files and noting the "targets" and "groups", these can be passed to the buildx command to build that target image or group of images.
+This specifies how our docker images are built and what platforms they are built for.
+It is worth consulting these files and noting the "targets" and "groups".
+These can be passed to the buildx command to build that target image or group of images.
 
 For example, the following will build the "ubuntu-24.04_all-dependencies" image:
 
 ```sh
-docker buildx bake ubuntu-24.04_all-dependencies
+docker buildx bake ubuntu-24-04_all-dependencies
 ```
 
 And the following will build all the gcc-compiler images:

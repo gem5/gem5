@@ -45,12 +45,12 @@ namespace gem5
 
 class EtherInt;
 
-class EtherDevice : public PciDevice
+class EtherDevice : public PciEndpoint
 {
   public:
     using Params = EtherDeviceParams;
     EtherDevice(const Params &params)
-        : PciDevice(params),
+        : PciEndpoint(params),
           etherDeviceStats(this)
     {}
 

@@ -356,6 +356,13 @@ def template CSRExecute {{
                     machInst);
         }
 
+        if (csr_data_it->second.requireSmrnmi && !isa->enableSmrnmi()) {
+            return std::make_shared<IllegalInstFault>(
+                    csprintf("%s requires Smrnmi enabled\n",
+                             csrName),
+                    machInst);
+        }
+
         %(op_decl)s;
         %(op_rd)s;
 

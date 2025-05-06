@@ -65,24 +65,56 @@ class Random
     using RandomPtr = std::shared_ptr<Random>;
     using Instances = std::vector<std::weak_ptr<Random>>;
 
-    static RandomPtr genRandom()
+    static RandomPtr genRandom(Random* r = nullptr)
     {
-      if (!instances)
-        instances = new Instances();
+        if (instances == nullptr)
+            instances = new Instances();
 
-      auto ptr = std::shared_ptr<Random>(new Random(globalSeed));
-      instances->emplace_back(ptr);
-      return ptr;
+        /*
+        * If `r` is null we create a new RNG with the global seed and wrap
+        * it in a `shared_ptr`. Otherwise, we wrap the existing RNG in a
+        * `shared_ptr` and add it to the vector of instances.
+        *
+        * This is done to ensure that the RNG is not deleted while it is still
+        * in use. The `shared_ptr` will keep the RNG alive until all references
+        * to it are gone.
+        */
+        auto randpoint = r ? std::shared_ptr<Random>(r, [](Random*){})
+                         : std::shared_ptr<Random>(new Random(globalSeed));
+        // Check if randpoint is not already in the vector
+        bool exists = false;
+        for (const auto& weak_ptr : *instances) {
+            if (!weak_ptr.expired() && weak_ptr.lock() == randpoint) {
+                exists = true;
+                break;
+            }
+        }
+        if (!exists) {
+            instances->emplace_back(randpoint);
+        }
+
+        return randpoint;
     }
 
     static RandomPtr genRandom(uint32_t s)
     {
-      if (!instances)
-        instances = new Instances();
+        if (instances == nullptr)
+            instances = new Instances();
 
-      auto ptr = std::shared_ptr<Random>(new Random(s));
-      instances->emplace_back(ptr);
-      return ptr;
+        auto randpoint = std::shared_ptr<Random>(new Random(s));
+        // Check if randpoint is not already in the vector
+        bool exists = false;
+        for (const auto& weak_ptr : *instances) {
+            if (!weak_ptr.expired() && weak_ptr.lock() == randpoint) {
+                exists = true;
+                break;
+            }
+        }
+        if (!exists) {
+            instances->emplace_back(randpoint);
+        }
+
+        return randpoint;
     }
 
     static uint64_t globalSeed;

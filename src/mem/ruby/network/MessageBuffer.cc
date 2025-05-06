@@ -205,7 +205,7 @@ MessageBuffer::peek() const
 Tick
 random_time()
 {
-    static Random::RandomPtr rng = Random::genRandom();
+    static Random::RandomPtr rng(Random::genRandom());
     Tick time = 1;
     time += rng->random(0, 3);  // [0...3]
     if (rng->random(0, 7) == 0) {  // 1 in 8 chance

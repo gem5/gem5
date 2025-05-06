@@ -244,7 +244,7 @@ BaseCPU::postInterrupt(ThreadID tid, int int_num, int index)
     // For RISC-V, the WFI sleep wake up is implementation defined.
     // The SiFive WFI wake up the hart only if mip & mie != 0
     if ((FullSystem && interrupts[tid]->isWakeUp()) ||
-        !system->futexMap.is_waiting(threadContexts[tid]))
+        (!FullSystem && !system->futexMap.is_waiting(threadContexts[tid])))
         wakeup(tid);
 }
 

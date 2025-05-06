@@ -260,6 +260,36 @@ IEW::clearStates(ThreadID tid)
     toRename->iewInfo[tid].usedLSQ = true;
     toRename->iewInfo[tid].freeLQEntries = ldstQueue.numFreeLoadEntries(tid);
     toRename->iewInfo[tid].freeSQEntries = ldstQueue.numFreeStoreEntries(tid);
+
+    // Clear out any of this thread's instructions being sent to commit.
+    for (int i = -cpu->iewQueue.getPast();
+         i <= cpu->iewQueue.getFuture(); ++i) {
+        IEWStruct& iew_struct = cpu->iewQueue[i];
+        removeCommThreadInsts(tid, iew_struct);
+        iew_struct.mispredictInst[tid] = nullptr;
+        iew_struct.mispredPC[tid] = 0;
+        iew_struct.squashedSeqNum[tid] = 0;
+        iew_struct.pc[tid] = nullptr;
+        iew_struct.squash[tid] = false;
+        iew_struct.branchMispredict[tid] = false;
+        iew_struct.branchTaken[tid] = false;
+        iew_struct.includeSquashInst[tid] = false;
+    }
+
+    // Clear out any of this thread's instructions being sent from
+    // issue to execute.
+    for (int i = -issueToExecQueue.getPast();
+         i <= issueToExecQueue.getFuture(); ++i)
+        removeCommThreadInsts(tid, issueToExecQueue[i]);
+
+    // Clear out any of this thread's instructions being sent to prior stages.
+    for (int i = -cpu->timeBuffer.getPast();
+         i <= cpu->timeBuffer.getFuture(); ++i) {
+        TimeStruct& time_struct = cpu->timeBuffer[i];
+        time_struct.iewInfo[tid] = {};
+        time_struct.iewBlock[tid] = false;
+        time_struct.iewUnblock[tid] = false;
+    }
 }
 
 void
@@ -579,11 +609,7 @@ IEW::skidCount()
 {
     int max=0;
 
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
+    for (ThreadID tid : *activeThreads) {
         unsigned thread_count = skidBuffer[tid].size();
         if (max < thread_count)
             max = thread_count;
@@ -595,12 +621,7 @@ IEW::skidCount()
 bool
 IEW::skidsEmpty()
 {
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (!skidBuffer[tid].empty())
             return false;
     }
@@ -613,12 +634,7 @@ IEW::updateStatus()
 {
     bool any_unblocking = false;
 
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (dispatchStatus[tid] == Unblocking) {
             any_unblocking = true;
             break;
@@ -1099,11 +1115,7 @@ IEW::executeInsts()
     wbNumInst = 0;
     wbCycle = 0;
 
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
+    for (ThreadID tid : *activeThreads) {
         fetchRedirect[tid] = false;
     }
 
@@ -1405,14 +1417,9 @@ IEW::tick()
     // Free function units marked as being freed this cycle.
     fuPool->processFreeUnits();
 
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
     // Check stall and squash signals, dispatch any instructions.
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
-        DPRINTF(IEW,"Issue: Processing [tid:%i]\n",tid);
+    for (ThreadID tid : *activeThreads) {
+        DPRINTF(IEW,"Issue: Processing [tid:%i]\n", tid);
 
         checkSignalsAndUpdate(tid);
         dispatch(tid);
@@ -1449,12 +1456,8 @@ IEW::tick()
     // or store to commit.  Also check if it's being told to execute a
     // nonspeculative instruction.
     // This is pretty inefficient...
-
-    threads = activeThreads->begin();
-    while (threads != end) {
-        ThreadID tid = (*threads++);
-
-        DPRINTF(IEW,"Processing [tid:%i]\n",tid);
+    for (ThreadID tid : *activeThreads) {
+        DPRINTF(IEW,"Processing [tid:%i]\n", tid);
 
         // Update structures based on instructions committed.
         if (fromCommit->commitInfo[tid].doneSeqNum != 0 &&

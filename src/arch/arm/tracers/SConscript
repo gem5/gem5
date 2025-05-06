@@ -35,15 +35,26 @@
 
 Import('*')
 
-SimObject('TarmacTrace.py', sim_objects=['TarmacParser', 'TarmacTracer'],
-        enums=['TarmacDump'], tags='arm isa')
-Source('tarmac_base.cc', tags='arm isa')
-Source('tarmac_parser.cc', tags='arm isa')
-Source('tarmac_tracer.cc', tags='arm isa')
-Source('tarmac_record.cc', tags='arm isa')
-Source('tarmac_record_v8.cc', tags='arm isa')
+if not env["CONF"]["USE_ARM_ISA"]:
+    Return()
+
+
+SimObject(
+    'TarmacTrace.py',
+    sim_objects=['TarmacParser', 'TarmacTracer'],
+    enums=['TarmacDump'],
+    tags=['arm isa']
+)
+Source('tarmac_base.cc', tags=['arm isa'])
+Source('tarmac_parser.cc', tags=['arm isa'])
+Source('tarmac_tracer.cc', tags=['arm isa'])
+Source('tarmac_record.cc', tags=['arm isa'])
+Source('tarmac_record_v8.cc', tags=['arm isa'])
 
 if env['CONF']['USE_CAPSTONE']:
-    SimObject('ArmCapstone.py', sim_objects=['ArmCapstoneDisassembler'],
-              tags=['arm isa'])
+    SimObject(
+        'ArmCapstone.py',
+        sim_objects=['ArmCapstoneDisassembler'],
+        tags=['arm isa']
+    )
     Source('capstone.cc', tags=['arm isa'])

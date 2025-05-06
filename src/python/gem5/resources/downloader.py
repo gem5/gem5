@@ -41,6 +41,8 @@ from typing import (
 from urllib.error import HTTPError
 from urllib.parse import urlparse
 
+from m5.util import warn
+
 from _m5 import core
 
 from ..utils.filelock import FileLock
@@ -261,15 +263,74 @@ def get_resource(
             else:
                 md5 = md5_dir(Path(to_path))
 
-            if md5 == resource_json["md5sum"]:
+            if md5 == resource_json.get("md5sum"):
                 # In this case, the file has already been download, no need to
                 # do so again.
                 return
-            elif download_md5_mismatch:
+            elif download_md5_mismatch or "md5sum" not in resource_json:
+                # In the case the the md5sum is not present in the resource
+                # JSON/dict or the ,md5sum is present but does not match that
+                # of the local file, the local file will be deleted and the
+                # resource will be downloaded again.
                 if os.path.isfile(to_path):
                     os.remove(to_path)
                 else:
                     shutil.rmtree(to_path)
+                if "md5sum" not in resource_json:
+                    warn(
+                        f"The 'md5sum' field of {resource_name}, version "
+                        f"{resource_version} is not present or set. This is "
+                        "not recommended as it forces a re-download of the "
+                        "resource on every call to get_resource."
+                    )
+                # if the md5sum of the local resource != the md5sum in the
+                # retrieved JSON
+                elif md5 != resource_json.get("md5sum"):
+                    most_recent_resource_version = get_resource_json_obj(
+                        resource_name,
+                        resource_version=None,
+                        clients=clients,
+                        gem5_version=gem5_version,
+                    )["resource_version"]
+
+                    # Check if the local version of requested resource is
+                    # different from the requested version
+                    int_most_recent_resource_version = int(
+                        most_recent_resource_version.split(".")[0]
+                    )
+                    version_mismatch = False
+                    # iterate through jsons of the requested resource by
+                    # version, starting from 1.0.0 to the latest version,
+                    # and try to match md5sums to determine local version.
+                    for i in range(1, int_most_recent_resource_version + 1):
+                        temp_resource_version = f"{i}.0.0"
+                        temp_resource_json = get_resource_json_obj(
+                            resource_name,
+                            resource_version=temp_resource_version,
+                            clients=clients,
+                            gem5_version=gem5_version,
+                        )
+                        # If we match the md5sum of the local resource, and the
+                        # resource version to get != the local resource version
+                        if (
+                            temp_resource_json.get("md5sum") == md5
+                            and resource_version != temp_resource_version
+                        ):
+                            warn(
+                                f"Redownloading {resource_name} to get "
+                                f"version {resource_version}. The local "
+                                f"version of the resource is currently "
+                                f"{temp_resource_version}."
+                            )
+                            version_mismatch = True
+                            break
+                    if not version_mismatch:
+                        warn(
+                            "There is a mismatch between the md5sum of the "
+                            f"local and remote copies of {resource_name}, "
+                            f"version {resource_version}. Redownloading..."
+                        )
+
             else:
                 raise Exception(
                     "There already a file present at '{}' but "

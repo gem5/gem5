@@ -320,6 +320,7 @@ hwprobe_one_pair(ThreadContext *tc, RiscvLinux::riscv_hwprobe *pair,
             ext->ZFHMIN = 1;
             ext->ZVFH = 1;
             ext->ZVFHMIN = 1;
+            ext->ZFA = 1;
             ext->ZICOND = 1;
             ext->ZVE64D = 1;
             ext->ZCB = 1;
@@ -650,7 +651,7 @@ SyscallDescTable<SEWorkload::SyscallABI64> EmuLinux::syscallDescs64 = {
     { 118,  "sched_setparam" },
     { 119,  "sched_setscheduler" },
     { 120,  "sched_getscheduler" },
-    { 121,  "sched_getparam" },
+    { 121,  "sched_getparam", sched_getparamFunc },
     { 122,  "sched_setaffinity" },
     { 123,  "sched_getaffinity", schedGetaffinityFunc<RiscvLinux64> },
     { 124,  "sched_yield", ignoreWarnOnceFunc },
@@ -1017,7 +1018,7 @@ SyscallDescTable<SEWorkload::SyscallABI32> EmuLinux::syscallDescs32 = {
     { 118,  "sched_setparam" },
     { 119,  "sched_setscheduler" },
     { 120,  "sched_getscheduler" },
-    { 121,  "sched_getparam" },
+    { 121,  "sched_getparam", sched_getparamFunc },
     { 122,  "sched_setaffinity" },
     { 123,  "sched_getaffinity", schedGetaffinityFunc<RiscvLinux32> },
     { 124,  "sched_yield", ignoreWarnOnceFunc },

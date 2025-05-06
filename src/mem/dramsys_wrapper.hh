@@ -33,7 +33,7 @@
 #include <memory>
 
 #include "DRAMSys/config/DRAMSysConfiguration.h"
-#include "DRAMSys/simulation/DRAMSysRecordable.h"
+#include "DRAMSys/simulation/DRAMSys.h"
 #include "mem/abstract_mem.hh"
 #include "params/DRAMSys.hh"
 #include "sim/core.hh"
@@ -59,14 +59,9 @@ class DRAMSysWrapper : public sc_core::sc_module
     SC_HAS_PROCESS(DRAMSysWrapper);
     DRAMSysWrapper(sc_core::sc_module_name name,
                    ::DRAMSys::Config::Configuration const &config,
-                   bool recordable,
                    AddrRange range);
 
   private:
-    static std::shared_ptr<::DRAMSys::DRAMSys>
-    instantiateDRAMSys(bool recordable,
-        ::DRAMSys::Config::Configuration const &config);
-
     tlm::tlm_sync_enum nb_transport_fw(tlm::tlm_generic_payload &payload,
                                        tlm::tlm_phase &phase,
                                        sc_core::sc_time &fwDelay);

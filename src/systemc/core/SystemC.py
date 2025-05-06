@@ -36,6 +36,7 @@ class SystemC_Kernel(SimObject):
     type = "SystemC_Kernel"
     cxx_class = "sc_gem5::Kernel"
     cxx_header = "systemc/core/kernel.hh"
+    override_create = True
 
 
 # This class represents systemc sc_object instances in python config files. It

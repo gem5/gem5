@@ -68,9 +68,9 @@ build_env = list(env['CONF'].items())
 
 from code_formatter import code_formatter
 
-def GdbXml(xml_id, symbol, tags=None, add_tags=None):
+def GdbXml(xml_id, symbol, tags=None):
     cc, hh = env.Blob(symbol, xml_id)
-    Source(cc, tags=tags, add_tags=add_tags)
+    Source(cc, tags=tags)
 
 class Source(SourceFile):
     pass
@@ -265,9 +265,9 @@ c_file, cxx_file = SCons.Tool.createCFileBuilders(env)
 cxx_file.add_action('.proto', protoc_action)
 cxx_file.add_emitter('.proto', protoc_emitter)
 
-def ProtoBuf(source, tags=None, add_tags=None):
+def ProtoBuf(source, tags=None):
     '''Add a Protocol Buffer to build'''
-    Source(source, tags, add_tags, append={'CXXFLAGS': '-Wno-array-bounds'})
+    Source(source, tags, append={'CXXFLAGS': '-Wno-array-bounds'})
 
 env['PROTOC_GRPC'] = which('grpc_cpp_plugin')
 if env['PROTOC_GRPC']:
@@ -290,14 +290,14 @@ env.Append(BUILDERS={'GrpcProtoBufCC' : Builder(
             emitter=protoc_grpc_emitter
         )})
 
-def GrpcProtoBuf(source, tags=None, add_tags=None):
+def GrpcProtoBuf(source, tags=None):
     '''Add a GRPC protocol buffer to the build'''
 
     if not env['PROTOC_GRPC']:
         error('No grpc_cpp_plugin found')
 
-    Source(env.GrpcProtoBufCC(source=source)[0], tags=tags, add_tags=add_tags)
-    Source(env.ProtoBufCC(source=source)[0], tags=tags, add_tags=add_tags)
+    Source(env.GrpcProtoBufCC(source=source)[0], tags=tags)
+    Source(env.ProtoBufCC(source=source)[0], tags=tags)
 
 
 
@@ -333,7 +333,7 @@ class TopLevelBase(object, metaclass=TopLevelMeta):
         srcs = SourceList()
         for src in source_files:
             if not isinstance(src, SourceFile):
-                src = Source(src, tags=[])
+                src = Source(src, tags=[], tag_gem5_lib=False)
             srcs.append(src)
         self.srcs = srcs
 
@@ -483,7 +483,7 @@ Export('GTest')
 #
 
 debug_flags = set()
-def DebugFlagCommon(name, flags, desc, fmt, tags, add_tags):
+def DebugFlagCommon(name, flags, desc, fmt, tags):
     if name == "All":
         raise AttributeError('The "All" flag name is reserved')
     if name in debug_flags:
@@ -506,21 +506,22 @@ def DebugFlagCommon(name, flags, desc, fmt, tags, add_tags):
             MakeAction('"${GEM5PY}" "${DEBUGFLAGCC_PY}" "${TARGET}" "${NAME}"',
                 Transform("TRACING", 0)),
             DEBUGFLAGCC_PY=build_tools.File('debugflagcc.py'), NAME=name)
-    if not add_tags:
-        add_tags = set()
-    if isinstance(add_tags, str):
-        add_tags = { add_tags }
-    if not isinstance(add_tags, set):
-        add_tags = set(add_tags)
-    add_tags.add('gem5 trace')
-    Source(cc_file, tags=tags, add_tags=add_tags)
 
-def DebugFlag(name, desc=None, fmt=False, tags=None, add_tags=None):
-    DebugFlagCommon(name, (), desc, fmt, tags=tags, add_tags=add_tags)
-def CompoundFlag(name, flags, desc=None, tags=None, add_tags=None):
-    DebugFlagCommon(name, flags, desc, False, tags=tags, add_tags=add_tags)
-def DebugFormatFlag(name, desc=None, tags=None, add_tags=None):
-    DebugFlag(name, desc, True, tags=tags, add_tags=add_tags)
+    if not tags:
+        tags = set()
+    if isinstance(tags, str):
+        tags = { tags }
+    if not isinstance(tags, set):
+        tags = set(tags)
+    tags.add('gem5 trace')
+    Source(cc_file, tags=tags)
+
+def DebugFlag(name, desc=None, fmt=False, tags=None):
+    DebugFlagCommon(name, (), desc, fmt, tags=tags)
+def CompoundFlag(name, flags, desc=None, tags=None):
+    DebugFlagCommon(name, flags, desc, False, tags=tags)
+def DebugFormatFlag(name, desc=None, tags=None):
+    DebugFlag(name, desc, True, tags=tags)
 
 Export('DebugFlag')
 Export('CompoundFlag')

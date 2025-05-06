@@ -721,8 +721,8 @@ Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk)
         // don't need to respond now, so pop it off to prevent the loop
         // below from generating another response.
         assert(initial_tgt->pkt->cmd == MemCmd::LockedRMWReadReq);
-        mshr->popTarget();
         delete initial_tgt->pkt;
+        mshr->popTarget();
         initial_tgt = nullptr;
     }
 

@@ -121,6 +121,9 @@ class RiscvISA(BaseISA):
         "c.fsdsp is overlap with them."
         "Refs: https://github.com/riscv/riscv-isa-manual/blob/main/src/zc.adoc",
     )
+    enable_Smrnmi = Param.Bool(
+        False, "Resumable non-maskable interrupt in FS mode"
+    )
 
     wfi_resume_on_pending = Param.Bool(
         False,
@@ -157,5 +160,6 @@ class RiscvISA(BaseISA):
         isa_string += "_Zba"  # Address Generation
         isa_string += "_Zbb"  # Basic Bit Manipulation
         isa_string += "_Zbs"  # Single-bit Instructions
+        isa_string += "_svnapot"
 
         return isa_string

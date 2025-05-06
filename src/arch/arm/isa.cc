@@ -254,6 +254,8 @@ ISA::redirectRegVHE(int misc_reg)
         return currEL() == EL2 ? MISCREG_TTBR1_EL2 : misc_reg;
       case MISCREG_TCR_EL1:
         return currEL() == EL2 ? MISCREG_TCR_EL2 : misc_reg;
+      case MISCREG_TCR2_EL1:
+        return currEL() == EL2 ? MISCREG_TCR2_EL2 : misc_reg;
       case MISCREG_AFSR0_EL1:
         return currEL() == EL2 ? MISCREG_AFSR0_EL2 : misc_reg;
       case MISCREG_AFSR1_EL1:
@@ -276,6 +278,10 @@ ISA::redirectRegVHE(int misc_reg)
         return currEL() == EL2 ? MISCREG_MPAM2_EL2 : misc_reg;
       case MISCREG_ZCR_EL1:
         return currEL() == EL2 ? MISCREG_ZCR_EL2 : misc_reg;
+      case MISCREG_PIR_EL1:
+        return currEL() == EL2 ? MISCREG_PIR_EL2 : misc_reg;
+      case MISCREG_PIRE0_EL1:
+        return currEL() == EL2 ? MISCREG_PIRE0_EL2 : misc_reg;
       case MISCREG_CNTP_TVAL:
       case MISCREG_CNTP_TVAL_EL0:
         if (ELIsInHost(tc, currEL())) {
@@ -367,6 +373,10 @@ ISA::redirectRegVHE(int misc_reg)
         return MISCREG_CNTKCTL_EL1;
       case MISCREG_MPAM1_EL12:
         return MISCREG_MPAM1_EL1;
+      case MISCREG_PIR_EL12:
+        return MISCREG_PIR_EL1;
+      case MISCREG_PIRE0_EL12:
+        return MISCREG_PIRE0_EL1;
       // _EL02 registers
       case MISCREG_CNTP_TVAL_EL02:
         return MISCREG_CNTP_TVAL_EL0;
@@ -701,8 +711,9 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             getMMUPtr(tc)->invalidateMiscReg();
         }
 
-        DPRINTF(Arm, "Updating CPSR from %#x to %#x f:%d i:%d a:%d mode:%#x\n",
-                miscRegs[idx], cpsr, cpsr.f, cpsr.i, cpsr.a, cpsr.mode);
+        DPRINTF(Arm, "Updating CPSR from %#x to %#x f:%d i:%d a:%d d:%d "
+                "mode:%#x\n", miscRegs[idx], cpsr, cpsr.f, cpsr.i, cpsr.a,
+                cpsr.d, cpsr.mode);
         PCState pc = tc->pcState().as<PCState>();
         pc.nextThumb(cpsr.t);
         pc.illegalExec(cpsr.il == 1);
@@ -1220,6 +1231,14 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
           case MISCREG_TTBR0_EL2:
           case MISCREG_TTBR1_EL2:
           case MISCREG_TTBR0_EL3:
+          // Add registers used by indirect permission.
+          case MISCREG_TCR2_EL1:
+          case MISCREG_TCR2_EL2:
+          case MISCREG_PIR_EL1:
+          case MISCREG_PIR_EL2:
+          case MISCREG_PIR_EL3:
+          case MISCREG_PIRE0_EL1:
+          case MISCREG_PIRE0_EL2:
             getMMUPtr(tc)->invalidateMiscReg();
             break;
           case MISCREG_HCR_EL2:

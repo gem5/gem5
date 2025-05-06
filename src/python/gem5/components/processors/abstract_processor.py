@@ -37,6 +37,7 @@ from m5.objects import (
     Root,
     SubSystem,
 )
+from m5.util import warn
 
 from ...isas import ISA
 from ...utils.requires import requires
@@ -79,6 +80,13 @@ class AbstractProcessor(SubSystem):
     def get_isa(self) -> ISA:
         return self._isa
 
+    def get_total_instructions(self) -> int:
+        """Return the number of instructions executed by all cores.
+
+        Note: This total is the sum since the last call to reset stats
+        """
+        return sum(core.get_total_instructions() for core in self.get_cores())
+
     @abstractmethod
     def incorporate_processor(self, board: AbstractBoard) -> None:
         raise NotImplementedError
@@ -95,3 +103,11 @@ class AbstractProcessor(SubSystem):
         Subclasses should override this method to set up any connections.
         """
         pass
+
+    def switch(self) -> None:
+        """Switch the processor to a different core type.
+
+        This function prints a warning and does nothing by default. Subclasses
+        should override this method to implement switching.
+        """
+        warn("Switching is not supported for this processor")

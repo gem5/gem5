@@ -27,11 +27,15 @@
 
 Import('*')
 
-Source('amo.cc', tags='riscv isa')
-Source('bs.cc', tags='riscv isa')
-Source('compressed.cc', tags='riscv isa')
-Source('mem.cc', tags='riscv isa')
-Source('standard.cc', tags='riscv isa')
-Source('static_inst.cc', tags='riscv isa')
-Source('vector.cc', tags='riscv isa')
-Source('zcmp.cc', tags='riscv isa')
+if not env['CONF']['USE_RISCV_ISA']:
+    Return()
+
+Source('amo.cc', tags=['riscv isa'])
+Source('bs.cc', tags=['riscv isa'])
+Source('compressed.cc', tags=['riscv isa'])
+Source('mem.cc', tags=['riscv isa'])
+Source('standard.cc', tags=['riscv isa'])
+Source('static_inst.cc', tags=['riscv isa'])
+Source('vector.cc', tags=['riscv isa'])
+Source('zcmp.cc', tags=['riscv isa'])
+Source('zcmt.cc', tags=['riscv isa'])

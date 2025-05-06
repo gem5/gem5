@@ -111,6 +111,7 @@ pybind_init_event(py::module_ &m_native)
     m.def("getMaxTick", &get_max_tick, py::return_value_policy::copy);
     m.def("terminateEventQueueThreads", &terminateEventQueueThreads);
     m.def("exitSimLoop", &exitSimLoop);
+    m.def("exitSimulationLoop", &exitSimulationLoop);
     m.def("getEventQueue", []() { return curEventQueue(); },
           py::return_value_policy::reference);
     m.def("setEventQueue", [](EventQueue *q) { return curEventQueue(q); });
@@ -138,6 +139,8 @@ pybind_init_event(py::module_ &m_native)
                m, "GlobalSimLoopExitEvent")
         .def("getCause", &GlobalSimLoopExitEvent::getCause)
         .def("getCode", &GlobalSimLoopExitEvent::getCode)
+        .def("getPayload", &GlobalSimLoopExitEvent::getPayload)
+        .def("getHypercallId", &GlobalSimLoopExitEvent::getHypercallId)
         ;
 
     // Event base class. These should never be returned directly to

@@ -1792,9 +1792,8 @@ Fault
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
 
     const int64_t vlmul = vtype_vlmul(machInst.vtype8);
-
-    panic_if(((1 << vlmul) * this->numFields) > 8,
-        "LMUL value is illegal for vlseg inst");
+    if (((1 << vlmul) * this->numFields) > 8)
+        return std::make_shared<IllegalInstFault>("LMUL value is illegal for vlseg inst", machInst);
 
     status.vs = VPUStatus::DIRTY;
     xc->setMiscReg(MISCREG_STATUS, status);
@@ -1851,9 +1850,8 @@ Fault
         return std::make_shared<IllegalInstFault>("VILL is set", machInst);
 
     const int64_t vlmul = vtype_vlmul(machInst.vtype8);
-
-    panic_if(((1 << vlmul) * this->numFields) > 8,
-        "LMUL value is illegal for vlseg inst");
+    if (((1 << vlmul) * this->numFields) > 8)
+        return std::make_shared<IllegalInstFault>("LMUL value is illegal for vlseg inst", machInst);
 
     const std::vector<bool> byte_enable(mem_size, true);
     Fault fault = initiateMemRead(xc, EA, mem_size, memAccessFlags,
@@ -2040,8 +2038,8 @@ Fault
     %(ea_code)s;
 
     const int64_t vlmul = vtype_vlmul(machInst.vtype8);
-    panic_if(((1 << vlmul) * this->numFields) > 8,
-        "LMUL value is illegal for vsseg inst");
+    if (((1 << vlmul) * this->numFields) > 8)
+        return std::make_shared<IllegalInstFault>("LMUL value is illegal for vsseg inst", machInst);
 
     const size_t micro_vlmax = vlen / width_EEW(machInst.width);
 
@@ -2097,9 +2095,8 @@ Fault
     %(ea_code)s;
 
     const int64_t vlmul = vtype_vlmul(machInst.vtype8);
-        panic_if(((1 << vlmul) * this->numFields) > 8,
-            "LMUL value is illegal for vsseg inst");
-
+    if (((1 << vlmul) * this->numFields) > 8)
+        return std::make_shared<IllegalInstFault>("LMUL value is illegal for vsseg inst", machInst);
 
     const size_t micro_vlmax = vlen / width_EEW(machInst.width);
 

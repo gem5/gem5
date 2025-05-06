@@ -1,4 +1,4 @@
-# Copyright (c) 2021 The Regents of the University of California
+# Copyright (c) 2021-2024 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,7 +26,6 @@
 
 import os
 import sys
-from io import StringIO
 from pathlib import Path
 from typing import (
     Callable,
@@ -35,28 +34,24 @@ from typing import (
     List,
     Optional,
     Tuple,
+    Type,
     Union,
 )
 
 import m5
+import m5.options
 import m5.ticks
 from m5.ext.pystats.simstat import SimStat
-from m5.objects import Root
 from m5.stats import addStatVisitor
 from m5.util import warn
 
-from ..components.boards.abstract_board import AbstractBoard
-from ..components.processors.switchable_processor import SwitchableProcessor
+from gem5.components.boards.abstract_board import AbstractBoard
+
+from ..resources.resource import WorkloadResource
 from .exit_event import ExitEvent
-from .exit_event_generators import (
-    dump_stats_generator,
-    exit_generator,
-    reset_stats_generator,
-    save_checkpoint_generator,
-    skip_generator,
-    spatter_exit_generator,
-    switch_generator,
-    warn_default_decorator,
+from .exit_handler import (
+    ClassicGeneratorExitHandler,
+    ExitHandler,
 )
 
 
@@ -141,6 +136,8 @@ class Simulator:
                                 no mandatory arguments and return a boolean specifying
                                 if the Simulation should exit or not. This function is
                                 executed each time the associated exit event is encountered.
+
+                                See `ClassicGeneratorExitHandler` for more details
         :param checkpoint_path: An optional parameter specifying the directory of
                                 the checkpoint to instantiate from. When the path
                                 is ``None``, no checkpoint will be loaded. By default,
@@ -162,137 +159,14 @@ class Simulator:
         Simulator configuration. Note, the latter means the ID only available
         after the Simulator has been instantiated. The ID can be obtained via
         the `get_id` method.
+        :param exit_event_handler_id_map: An optional parameter specifying the
+        mapping each exit event IDs the Exit Event handler class responsible
+        for handling them. The Simulator provides sensible defaults for stdlib
+        exit events, but this parameter allows the user to override these
+        or add handlers for custom exit events. Use
+        `ExitHandler.get_handler_map` to see the mapping.
 
-
-        ``on_exit_event`` usage notes
-        ---------------------------
-
-        With Generators
-        ===============
-
-        The ``on_exit_event`` parameter specifies a Python generator for each
-        exit event. `next(<generator>)` is run each time an exit event. The
-        generator may yield a boolean. If this value of this boolean is ``True``
-        the Simulator run loop will exit, otherwise
-        the Simulator run loop will continue execution. If the generator has
-        finished (i.e. a ``StopIteration`` exception is thrown when
-        ``next(<generator>)`` is executed), then the default behavior for that
-        exit event is run.
-
-        As an example, a user may specify their own exit event setup like so:
-
-        .. code-block::
-
-            def unique_exit_event():
-                processor.switch()
-                yield False
-                m5.stats.dump()
-                yield False
-                yield True
-
-            simulator = Simulator(
-                board=board
-                on_exit_event = {
-                    ExitEvent.Exit : unique_exit_event(),
-                },
-            )
-
-
-        This will execute ``processor.switch()`` the first time an exit event is
-        encountered, will dump gem5 statistics the second time an exit event is
-        encountered, and will terminate the Simulator run loop the third time.
-
-        With a list of functions
-        ========================
-
-        Alternatively, instead of passing a generator per exit event, a list of
-        functions may be passed. Each function must take no mandatory arguments
-        and return True if the simulator is to exit after being called.
-
-        An example:
-
-        .. code-block::
-
-            def stop_simulation() -> bool:
-                return True
-
-            def switch_cpus() -> bool:
-                processor.switch()
-                return False
-
-            def print_hello() -> None:
-                # Here we don't explicitly return a boolean, but the simulator
-                # treats a None return as False. Ergo the Simulation loop is not
-                # terminated.
-                print("Hello")
-
-
-            simulator = Simulator(
-                board=board,
-                on_exit_event = {
-                    ExitEvent.Exit : [
-                        print_hello,
-                        switch_cpus,
-                        print_hello,
-                        stop_simulation
-                    ],
-                },
-            )
-
-
-        Upon each ``EXIT`` type exit event the list will function as a queue,
-        with the top function of the list popped and executed. Therefore, in
-        this example, the first ``EXIT`` type exit event will cause ``print_hello``
-        to be executed, and the second ``EXIT`` type exit event will cause the
-        ``switch_cpus`` function to run. The third will execute ``print_hello``
-        again before finally, on the forth exit event will call
-        ``stop_simulation`` which will stop the simulation as it returns ``False``.
-
-        With a function
-        ===============
-        A single function can be passed. In this case every exit event of that
-        type will execute that function every time. The function should not
-        accept any mandatory parameters and return a boolean specifying if the
-        simulation loop should end after it is executed.
-        An example:
-
-        .. code-block::
-
-            def print_hello() -> bool:
-                print("Hello")
-                return False
-            simulator = Simulator(
-                board=board,
-                on_exit_event = {
-                    ExitEvent.Exit : print_hello
-                },
-            )
-
-        The above will print "Hello" on every ``Exit`` type Exit Event. As the
-        function returns False, the simulation loop will not end on these
-        events.
-
-
-        Exit Event defaults
-        ===================
-
-        Each exit event has a default behavior if none is specified by the
-        user. These are as follows:
-
-            * ExitEvent.EXIT:  exit simulation
-            * ExitEvent.CHECKPOINT: take a checkpoint
-            * ExitEvent.FAIL : exit simulation
-            * ExitEvent.SWITCHCPU: call ``switch`` on the processor
-            * ExitEvent.WORKBEGIN: reset stats
-            * ExitEvent.WORKEND: dump stats
-            * ExitEvent.USER_INTERRUPT: exit simulation
-            * ExitEvent.MAX_TICK: exit simulation
-            * ExitEvent.SCHEDULED_TICK: exit simulation
-            * ExitEvent.SIMPOINT_BEGIN: reset stats
-            * ExitEvent.MAX_INSTS: exit simulation
-
-        These generators can be found in the ``exit_event_generator.py`` module.
-
+        See ClassicGeneratorExitHandler for details on
         """
 
         if full_system is not None:
@@ -309,98 +183,9 @@ class Simulator:
         if id:
             self.set_id(id)
 
-        # We specify a dictionary here outlining the default behavior for each
-        # exit event. Each exit event is mapped to a generator.
-        self._default_on_exit_dict = {
-            ExitEvent.EXIT: exit_generator(),
-            ExitEvent.CHECKPOINT: warn_default_decorator(
-                save_checkpoint_generator,
-                "checkpoint",
-                "creating a checkpoint and continuing",
-            )(),
-            ExitEvent.FAIL: exit_generator(),
-            ExitEvent.SPATTER_EXIT: warn_default_decorator(
-                spatter_exit_generator,
-                "spatter exit",
-                "dumping and resetting stats after each sync point. "
-                "Note that there will be num_cores*sync_points spatter_exits.",
-            )(spatter_gen=board.get_processor()),
-            ExitEvent.SWITCHCPU: warn_default_decorator(
-                switch_generator,
-                "switch CPU",
-                "switching the CPU type of the processor and continuing",
-            )(processor=board.get_processor()),
-            ExitEvent.WORKBEGIN: warn_default_decorator(
-                reset_stats_generator,
-                "work begin",
-                "resetting the stats and continuing",
-            )(),
-            ExitEvent.WORKEND: warn_default_decorator(
-                dump_stats_generator,
-                "work end",
-                "dumping the stats and continuing",
-            )(),
-            ExitEvent.USER_INTERRUPT: exit_generator(),
-            ExitEvent.MAX_TICK: exit_generator(),
-            ExitEvent.SCHEDULED_TICK: exit_generator(),
-            ExitEvent.SIMPOINT_BEGIN: warn_default_decorator(
-                skip_generator,
-                "simpoint begin",
-                "resetting the stats and continuing",
-            )(),
-            ExitEvent.MAX_INSTS: warn_default_decorator(
-                exit_generator,
-                "max instructions",
-                "exiting the simulation",
-            )(),
-            ExitEvent.KERNEL_PANIC: exit_generator(),
-            ExitEvent.KERNEL_OOPS: exit_generator(),
-        }
-
-        if on_exit_event:
-            self._on_exit_event = {}
-            for key, value in on_exit_event.items():
-                if isinstance(value, Generator):
-                    self._on_exit_event[key] = value
-                elif isinstance(value, List):
-                    # In instances where we have a list of functions, we
-                    # convert this to a generator.
-                    self._on_exit_event[key] = (func() for func in value)
-                elif isinstance(value, Callable):
-                    # In instances where the user passes a lone function, the
-                    # function is called on every exit event of that type. Here
-                    # we convert the function into an infinite generator.
-
-                    # We check if the function is a generator. If it is we
-                    # throw a warning as this is likely a mistake.
-                    import inspect
-
-                    if inspect.isgeneratorfunction(value):
-                        warn(
-                            f"Function passed for '{key.value}' exit event "
-                            "is not a generator but a function that returns "
-                            "a generator. Did you mean to do this? (e.g., "
-                            "did you mean `ExitEvent.EVENT : gen()` instead "
-                            "of `ExitEvent.EVENT : gen`)"
-                        )
-
-                    def function_generator(func: Callable):
-                        while True:
-                            yield func()
-
-                    self._on_exit_event[key] = function_generator(func=value)
-                else:
-                    raise Exception(
-                        f"`on_exit_event` for '{key.value}' event is "
-                        "not a Generator or List[Callable]."
-                    )
-        else:
-            self._on_exit_event = self._default_on_exit_dict
-
         self._instantiated = False
         self._board = board
         self._full_system = full_system
-        self._expected_execution_order = expected_execution_order
         self._tick_stopwatch = []
 
         self._last_exit_event = None
@@ -417,6 +202,31 @@ class Simulator:
             )
 
         self._checkpoint_path = checkpoint_path
+
+        # Set up the classic event generators.
+        ClassicGeneratorExitHandler.set_exit_event_map(
+            on_exit_event, expected_execution_order, board
+        )
+
+        # A simple mapping of ticks to exit event.
+        # This can help in cases where the order and number of exits thus far
+        # matters (say an exit event acts differently for the Nth time it is
+        # hit)
+        self._exit_event_id_log = {}
+
+    def switch_processor(self) -> None:
+        """
+        Switch the processor. This is a convenience function to call the
+        processor's switch function.
+        """
+        self._board.get_processor().switch()
+
+    def get_exit_handler_id_map(self) -> Dict[int, Type[ExitHandler]]:
+        """
+        Returns the exit handler ID map. This is a dictionary mapping exit
+        event IDs to the ExitEvent handler class responsible for handling them.
+        """
+        return ExitHandler.get_handler_map()
 
     def set_id(self, id: str) -> None:
         """Set the ID of the simulator.
@@ -505,6 +315,20 @@ class Simulator:
         """
         for core in self._board.get_processor().get_cores():
             core._set_inst_stop_any_thread(inst, self._instantiated)
+
+    def get_instruction_count(self) -> int:
+        """
+        Returns the number of instructions executed by all cores.
+
+        Note: This total is the sum since the last call to reset stats.
+        """
+        return self._board.get_processor().get_total_instructions()
+
+    def get_workload(self) -> WorkloadResource:
+        """
+        Returns the workload of the board.
+        """
+        return self._board.get_workload()
 
     def get_stats(self) -> Dict:
         """
@@ -595,6 +419,12 @@ class Simulator:
         """
         return self._last_exit_event.getCode()
 
+    def get_hypercall_id(self) -> int:
+        """
+        Returns the hypercall ID.
+        """
+        return self._last_exit_event.getHypercallId()
+
     def get_current_tick(self) -> int:
         """
         Returns the current tick.
@@ -622,6 +452,20 @@ class Simulator:
                 to_return.append(tick - start)
 
         return to_return
+
+    def get_exit_event_id_log(self) -> Dict[int, str]:
+        """
+        Returns a dictionary mapping tick at which an exit event was encountered
+        to the exit event description.
+        """
+        return self._exit_event_id_log
+
+    def show_exit_event_messages(self) -> None:
+        """
+        Show exit event messages. This will print the exit event messages to
+        the console.
+        """
+        m5.options.show_exit_event_messages = True
 
     def override_outdir(self, new_outdir: Path) -> None:
         """This function can be used to override the output directory locatiomn
@@ -718,50 +562,30 @@ class Simulator:
         # This while loop will continue until an a generator yields True.
         while True:
             self._last_exit_event = m5.simulate(self.get_max_ticks())
-
-            # Translate the exit event cause to the exit event enum.
-            exit_enum = ExitEvent.translate_exit_status(
-                self.get_last_exit_event_cause()
-            )
-
-            # Check to see the run is corresponding to the expected execution
-            # order (assuming this check is demanded by the user).
-            if self._expected_execution_order:
-                expected_enum = self._expected_execution_order[
-                    self._exit_event_count
-                ]
-                if exit_enum.value != expected_enum.value:
-                    raise Exception(
-                        f"Expected a '{expected_enum.value}' exit event but a "
-                        f"'{exit_enum.value}' exit event was encountered."
-                    )
-
-            # Record the current tick and exit event enum.
-            self._tick_stopwatch.append((exit_enum, self.get_current_tick()))
-
-            try:
-                # If the user has specified their own generator for this exit
-                # event, use it.
-                exit_on_completion = next(self._on_exit_event[exit_enum])
-            except StopIteration:
-                # If the user's generator has ended, throw a warning and use
-                # the default generator for this exit event.
+            exit_event_hypercall_id = self._last_exit_event.getHypercallId()
+            if (
+                exit_event_hypercall_id
+                not in self.get_exit_handler_id_map().keys()
+            ):
                 warn(
-                    "User-specified generator/function list for the exit "
-                    f"event'{exit_enum.value}' has ended. Using the default "
-                    "generator."
+                    f"Warning: Exit event type ID "
+                    f"{self._last_exit_event.getHypercallId()} "
+                    f"not in exit handler ID map. Reentering simulation loop."
                 )
-                exit_on_completion = next(
-                    self._default_on_exit_dict[exit_enum]
-                )
-            except KeyError:
-                # If the user has not specified their own generator for this
-                # exit event, use the default.
-                exit_on_completion = next(
-                    self._default_on_exit_dict[exit_enum]
+                continue
+            exit_handler = self.get_exit_handler_id_map()[
+                exit_event_hypercall_id
+            ](self._last_exit_event.getPayload())
+
+            if m5.options.show_exit_event_messages:
+                print(
+                    f"Exit event: {exit_handler.get_handler_description()} called at tick {self.get_current_tick()}"
                 )
 
-            self._exit_event_count += 1
+            exit_on_completion = exit_handler.handle(self)
+            self._exit_event_id_log[self.get_current_tick()] = (
+                exit_handler.get_handler_description()
+            )
 
             # If the generator returned True we will return from the Simulator
             # run loop. In the case of a function: if it returned True.

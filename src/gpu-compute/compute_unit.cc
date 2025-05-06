@@ -46,6 +46,8 @@
 #include "debug/GPURename.hh"
 #include "debug/GPUSync.hh"
 #include "debug/GPUTLB.hh"
+#include "debug/GPUTrace.hh"
+#include "enums/GfxVersion.hh"
 #include "gpu-compute/dispatcher.hh"
 #include "gpu-compute/gpu_command_processor.hh"
 #include "gpu-compute/gpu_dyn_inst.hh"
@@ -106,6 +108,74 @@ ComputeUnit::ComputeUnit(const Params &p) : ClockedObject(p),
     scalar_resp_tick_latency(
             p.scalar_mem_resp_latency * p.clk_domain->clockPeriod()),
     memtime_latency(p.memtime_latency * p.clk_domain->clockPeriod()),
+    mfma_scale(p.mfma_scale),
+    mfma_cycles({
+        // gfx90a is MI200 series (MI210, MI250X). The latency values are the
+        // "passes" in the MI200 Instruction Set Architecture reference listed
+        // for each instruction in section 12.10:
+        // https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/
+        //          instruction-set-architectures/
+        //          instinct-mi200-cdna2-instruction-set-architecture.pdf
+        {GfxVersion::gfx90a, {
+            {"v_mfma_f32_32x32x1_2b_f32", 64},
+            {"v_mfma_f32_16x16x1_4b_f32", 32},
+            {"v_mfma_f32_4x4x1_16b_f32", 8},
+            {"v_mfma_f32_32x32x2_f32", 64},
+            {"v_mfma_f32_16x16x4_f32", 32},
+            {"v_mfma_f32_32x32x4_2b_f16", 64},
+            {"v_mfma_f32_16x16x4_4b_f16", 32},
+            {"v_mfma_f32_4x4x4_16b_f16", 8},
+            {"v_mfma_f32_32x32x8_f16", 64},
+            {"v_mfma_f32_16x16x16_f16", 32},
+            {"v_mfma_i32_32x32x4_2b_i8", 64},
+            {"v_mfma_i32_16x16x4_4b_i8", 32},
+            {"v_mfma_i32_4x4x4_16b_i8", 8},
+            {"v_mfma_i32_32x32x8_i8", 64},
+            {"v_mfma_i32_16x16x16_i8", 32},
+            {"v_mfma_f32_32x32x2_2b_bf16", 64},
+            {"v_mfma_f32_16x16x2_4b_bf16", 32},
+            {"v_mfma_f32_4x4x2_16b_bf16", 8},
+            {"v_mfma_f32_32x32x4_bf16", 64},
+            {"v_mfma_f32_16x16x8_bf16", 32},
+            {"v_mfma_f64_16x16x4_f64", 32},
+            {"v_mfma_f64_4x4x4_4b_f64", 16},
+        }},
+        // gfx942 is MI300X. The latency values are taken from table 28 in
+        // section 7.1.2 in the MI300 Instruction Set Architecture reference:
+        // https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/
+        //          instruction-set-architectures/
+        //          amd-instinct-mi300-cdna3-instruction-set-architecture.pdf
+        {GfxVersion::gfx942, {
+            {"v_mfma_f32_32x32x1_2b_f32", 64},
+            {"v_mfma_f32_16x16x1_4b_f32", 32},
+            {"v_mfma_f32_4x4x1_16b_f32", 8},
+            {"v_mfma_f32_32x32x2_f32", 64},
+            {"v_mfma_f32_16x16x4_f32", 32},
+            {"v_mfma_f32_32x32x4_2b_f16", 64},
+            {"v_mfma_f32_16x16x4_4b_f16", 32},
+            {"v_mfma_f32_4x4x4_16b_f16", 8},
+            {"v_mfma_f32_32x32x8_f16", 32},
+            {"v_mfma_f32_16x16x16_f16", 16},
+            {"v_mfma_f32_32x32x4_2b_bf16", 64},
+            {"v_mfma_f32_16x16x4_4b_bf16", 32},
+            {"v_mfma_f32_4x4x4_16b_bf16", 8},
+            {"v_mfma_f32_32x32x8_bf16", 32},
+            {"v_mfma_f32_16x16x16_bf16", 16},
+            {"v_mfma_i32_32x32x4_2b_i8", 64},
+            {"v_mfma_i32_16x16x4_4b_i8", 32},
+            {"v_mfma_i32_4x4x4_16b_i8", 8},
+            {"v_mfma_i32_32x32x16_i8", 32},
+            {"v_mfma_i32_16x16x32_i8", 16},
+            {"v_mfma_f32_16x16x8_xf32", 16},
+            {"v_mfma_f32_32x32x4_xf32", 32},
+            {"v_mfma_f64_16x16x4_f64", 32},
+            {"v_mfma_f64_4x4x4_4b_f64", 16},
+            {"v_mfma_f32_16x16x32_bf8_bf8", 16},
+            {"v_mfma_f32_16x16x32_bf8_fp8", 16},
+            {"v_mfma_f32_32x32x16_fp8_bf8", 32},
+            {"v_mfma_f32_32x32x16_fp8_fp8", 32},
+        }}
+    }),
     _requestorId(p.system->getRequestorId(this, "ComputeUnit")),
     lds(*p.localDataStore), gmTokenPort(name() + ".gmTokenPort", this),
     ldsPort(csprintf("%s-port", name()), this),
@@ -229,6 +299,14 @@ ComputeUnit::ComputeUnit(const Params &p) : ClockedObject(p),
     panic_if(!isPowerOf2(_cacheLineSize),
         "Cache line size should be a power of two.");
     cacheLineBits = floorLog2(_cacheLineSize);
+
+    matrix_core_ready.resize(numVectorALUs);
+    for (int i = 0; i < numVectorALUs; i++) {
+        matrix_core_ready[i] = 0;
+    }
+
+    // Used for periodic pipeline prints
+    execCycles = 0;
 }
 
 ComputeUnit::~ComputeUnit()
@@ -388,6 +466,10 @@ ComputeUnit::startWavefront(Wavefront *w, int waveId, LdsChunk *ldsChunk,
 
     stats.waveLevelParallelism.sample(activeWaves);
     activeWaves++;
+
+    w->vmemIssued.clear();
+    w->lgkmIssued.clear();
+    w->expIssued.clear();
 
     panic_if(w->wrGmReqsInPipe, "GM write counter for wavefront non-zero\n");
     panic_if(w->rdGmReqsInPipe, "GM read counter for wavefront non-zero\n");
@@ -777,6 +859,13 @@ ComputeUnit::exec()
     fetchStage.exec();
 
     stats.totalCycles++;
+    execCycles++;
+
+    if (shader->getProgressInterval() != 0 &&
+        execCycles >= shader->getProgressInterval()) {
+        printProgress();
+        execCycles = 0;
+    }
 
     // Put this CU to sleep if there is no more work to be done.
     if (!isDone()) {
@@ -1070,9 +1159,10 @@ ComputeUnit::SQCPort::recvTimingResp(PacketPtr pkt)
         // then the request is an instruction fetch and can be handled in
         // the compute unit
         if (sender_state->isKernDispatch) {
-          computeUnit->shader->gpuCmdProc.completeTimingRead();
+            int dispType = sender_state->dispatchType;
+            computeUnit->shader->gpuCmdProc.completeTimingRead(dispType);
         } else {
-          computeUnit->handleSQCReturn(pkt);
+            computeUnit->handleSQCReturn(pkt);
         }
     } else {
         delete pkt->senderState;
@@ -1590,6 +1680,11 @@ ComputeUnit::DTLBPort::recvTimingResp(PacketPtr pkt)
     Addr vaddr = pkt->req->getVaddr();
     gpuDynInst->memStatusVector[line].push_back(mp_index);
     gpuDynInst->tlbHitLevel[mp_index] = hit_level;
+
+    DPRINTF(GPUTrace, "CU%d WF[%d][%d]: Translated %#lx -> %#lx for "
+            "instruction %s (seqNum: %ld)\n", computeUnit->cu_id,
+            gpuDynInst->simdId, gpuDynInst->wfSlotId, pkt->req->getVaddr(),
+            line, gpuDynInst->disassemble().c_str(), gpuDynInst->seqNum());
 
     MemCmd requestCmd;
 
@@ -2215,6 +2310,26 @@ RequestorID
 ComputeUnit::vramRequestorId()
 {
     return FullSystem ? shader->vramRequestorId() : requestorId();
+}
+
+void
+ComputeUnit::printProgress()
+{
+    for (int j = 0; j < numVectorALUs; ++j) {
+        for (int i = 0; i < shader->n_wf; ++i) {
+            if (wfList[j][i]->getStatus() == Wavefront::status_e::S_STOPPED) {
+                continue;
+            }
+
+            std::cout << curTick() << ": ";
+            std::cout << "CU" << cu_id << " WF[" << j << "][" << i << "] ";
+            wfList[j][i]->printProgress();
+        }
+    }
+    globalMemoryPipe.printProgress();
+    scalarMemoryPipe.printProgress();
+    localMemoryPipe.printProgress();
+    std::cout << std::endl;
 }
 
 /**

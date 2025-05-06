@@ -47,6 +47,7 @@
 #include <vector>
 
 #include "base/amo.hh"
+#include "base/intmath.hh"
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/common/TypeDefines.hh"
 
@@ -89,6 +90,7 @@ class WriteMask
         mSize = size;
         clear();
     }
+    int getBlockSizeBits() const { return floorLog2(mSize); }
 
     void
     clear()

@@ -45,7 +45,6 @@
 #ifndef __DEV_PCI_DEVICE_HH__
 #define __DEV_PCI_DEVICE_HH__
 
-#include <array>
 #include <cstring>
 #include <vector>
 
@@ -54,14 +53,17 @@
 #include "dev/pci/pcireg.h"
 #include "params/PciBar.hh"
 #include "params/PciBarNone.hh"
+#include "params/PciBridge.hh"
 #include "params/PciDevice.hh"
+#include "params/PciEndpoint.hh"
 #include "params/PciIoBar.hh"
 #include "params/PciLegacyIoBar.hh"
 #include "params/PciMemBar.hh"
 #include "params/PciMemUpperBar.hh"
 #include "sim/byteswap.hh"
 
-#define BAR_NUMBER(x) (((x) - PCI0_BASE_ADDR0) >> 0x2);
+#define PCI0_BAR_NUMBER(x) (((x) - PCI0_BASE_ADDR0) >> 0x2);
+#define PCI1_BAR_NUMBER(x) (((x) - PCI1_BASE_ADDR0) >> 0x2);
 
 namespace gem5
 {
@@ -263,16 +265,30 @@ class PciMemUpperBar : public PciBar
     }
 };
 
+class PciEndpoint;
+class PciBridge;
+
 /**
  * PCI device, base implementation is only config space.
  */
 class PciDevice : public DmaDevice
 {
+    friend PciEndpoint;
+    friend PciBridge;
+
+  private:
+    /** The current config space.  */
+    PCIConfig _config;
+
+    bool
+    isCommonConfig(Addr offs)
+    {
+        return (offs <= PCI_BIST) || (offs == PCI_CAP_PTR) ||
+               (offs == PCI_INTERRUPT_LINE) || (offs == PCI_INTERRUPT_PIN);
+    }
+
   protected:
     const PciBusAddr _busAddr;
-
-    /** The current config space.  */
-    PCIConfig config;
 
     /** The capability list structures and base addresses
      * @{
@@ -305,7 +321,7 @@ class PciDevice : public DmaDevice
     std::vector<MSIXTable> msix_table;
     std::vector<MSIXPbaEntry> msix_pba;
 
-    std::array<PciBar *, 6> BARs{};
+    std::vector<PciBar *> BARs{};
 
     /**
      * Which base address register (if any) maps the given address?
@@ -364,7 +380,11 @@ class PciDevice : public DmaDevice
     void intrPost() { hostInterface.postInt(); }
     void intrClear() { hostInterface.clearInt(); }
 
-    uint8_t interruptLine() const { return letoh(config.interruptLine); }
+    uint8_t
+    interruptLine() const
+    {
+        return letoh(_config.common.interruptLine);
+    }
 
     /**
      * Determine the address ranges that this device responds to.
@@ -378,7 +398,8 @@ class PciDevice : public DmaDevice
      * config file object PCIConfigData and registers the device with
      * a PciHost object.
      */
-    PciDevice(const PciDeviceParams &params);
+    PciDevice(const PciDeviceParams &params,
+              std::initializer_list<PciBar *> BARs_init);
 
     /**
      * Serialize this object to the given output stream.
@@ -394,6 +415,72 @@ class PciDevice : public DmaDevice
     void unserialize(CheckpointIn &cp) override;
 
     const PciBusAddr &busAddr() const { return _busAddr; }
+};
+
+class PciEndpoint : public PciDevice
+{
+  protected:
+    PCIConfigType0 &
+    config()
+    {
+        return _config.type0;
+    }
+
+  public:
+    /**
+     * Constructor for PCI Dev. This function copies data from the
+     * config file object PCIConfigData and registers the device with
+     * a PciHost object.
+     */
+    PciEndpoint(const PciEndpointParams &params);
+
+    /**
+     * Write to the PCI config space data that is stored locally. This may be
+     * overridden by the device but at some point it will eventually call this
+     * for normal operations that it does not need to override.
+     * @param pkt packet containing the write the offset into config space
+     */
+    Tick writeConfig(PacketPtr pkt) override;
+
+    /**
+     * Reconstruct the state of this object from a checkpoint.
+     * @param cp The checkpoint use.
+     * @param section The section name of this object
+     */
+    void unserialize(CheckpointIn &cp) override;
+};
+
+class PciBridge : public PciDevice
+{
+  protected:
+    PCIConfigType1 &
+    config()
+    {
+        return _config.type1;
+    }
+
+  public:
+    /**
+     * Constructor for PCI Dev. This function copies data from the
+     * config file object PCIConfigData and registers the device with
+     * a PciHost object.
+     */
+    PciBridge(const PciBridgeParams &params);
+
+    /**
+     * Write to the PCI config space data that is stored locally. This may be
+     * overridden by the device but at some point it will eventually call this
+     * for normal operations that it does not need to override.
+     * @param pkt packet containing the write the offset into config space
+     */
+    Tick writeConfig(PacketPtr pkt) override;
+
+    /**
+     * Reconstruct the state of this object from a checkpoint.
+     * @param cp The checkpoint use.
+     * @param section The section name of this object
+     */
+    void unserialize(CheckpointIn &cp) override;
 };
 
 } // namespace gem5

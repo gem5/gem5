@@ -37,5 +37,12 @@
 
 Import('*')
 
-SimObject('X86KvmCPU.py', sim_objects=['X86KvmCPU'], tags='x86 kvm')
-Source('x86_cpu.cc', tags='x86 kvm')
+if not env['CONF']['USE_X86_ISA'] or env['CONF']['KVM_ISA'] != 'x86':
+    Return()
+
+SimObject(
+    'X86KvmCPU.py',
+    sim_objects=['X86KvmCPU'],
+    tags=['x86 kvm']
+)
+Source('x86_cpu.cc', tags=['x86 kvm'])

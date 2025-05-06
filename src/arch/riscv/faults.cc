@@ -69,12 +69,15 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         PrivilegeMode prv = PRV_M;
         MISA misa = tc->readMiscRegNoEffect(MISCREG_ISA);
         STATUS status = tc->readMiscReg(MISCREG_STATUS);
+        NSTATUS nstatus = tc->readMiscReg(MISCREG_MNSTATUS);
+        auto* isa = static_cast<RiscvISA::ISA*>(tc->getIsaPtr());
+        bool is_rnmi = isResumableNonMaskableInterrupt(isa);
 
         // According to riscv-privileged-v1.11, if a NMI occurs at the middle
         // of a M-mode trap handler, the state (epc/cause) will be overwritten
-        // and is not necessary recoverable. There's nothing we can do here so
-        // we'll just warn our user that the CPU state might be broken.
-        warn_if(isNonMaskableInterrupt() && pp == PRV_M && status.mie == 0,
+        // and is not necessary recoverable unless smrnmi enabled.
+        warn_if(!isa->enableSmrnmi() && isNonMaskableInterrupt() &&
+                pp == PRV_M && status.mie == 0,
                 "NMI overwriting M-mode trap handler state");
 
         // Set fault handler privilege mode
@@ -123,14 +126,18 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
             status.sie = 0;
             break;
           case PRV_M:
-            cause = MISCREG_MCAUSE;
-            epc = MISCREG_MEPC;
+            cause = is_rnmi ? MISCREG_MNCAUSE : MISCREG_MCAUSE;
+            epc = is_rnmi ? MISCREG_MNEPC : MISCREG_MEPC;
             tvec = isNonMaskableInterrupt() ? MISCREG_NMIVEC : MISCREG_MTVEC;
             tval = MISCREG_MTVAL;
 
-            status.mpp = pp;
-            status.mpie = status.mie;
-            status.mie = 0;
+            if (is_rnmi) {
+                nstatus.mnpp = pp;
+            } else {
+                status.mpp = pp;
+                status.mpie = status.mie;
+                status.mie = 0;
+            }
             break;
           default:
             panic("Unknown privilege mode %d.", prv);
@@ -143,10 +150,18 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
            _cause |= CAUSE_INTERRUPT_MASKS[pc_state.rvType()];
         }
         tc->setMiscReg(cause, _cause);
-        tc->setMiscReg(epc, tc->pcState().instAddr());
+        if (pc_state.zcmtSecondFetch()) {
+            tc->setMiscReg(epc, pc_state.zcmtPc());
+        } else {
+            tc->setMiscReg(epc, pc_state.instAddr());
+        }
         tc->setMiscReg(tval, trap_value());
         tc->setMiscReg(MISCREG_PRV, prv);
-        tc->setMiscReg(MISCREG_STATUS, status);
+        if (is_rnmi) {
+            tc->setMiscReg(MISCREG_MNSTATUS, nstatus);
+        } else {
+            tc->setMiscReg(MISCREG_STATUS, status);
+        }
         // Temporarily mask NMI while we're in NMI handler. Otherweise, the
         // checkNonMaskableInterrupt will always return true and we'll be
         // stucked in an infinite loop.
@@ -155,11 +170,14 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         }
 
         // Clear load reservation address
-        auto isa = static_cast<RiscvISA::ISA*>(tc->getIsaPtr());
         isa->clearLoadReservation(tc->contextId());
 
         // Set PC to fault handler address
         Addr addr = isa->getFaultHandlerAddr(tvec, _code, isInterrupt());
+        if (pc_state.zcmtSecondFetch()) {
+            pc_state.zcmtSecondFetch(false);
+            pc_state.zcmtPc(0);
+        }
         pc_state.set(isa->rvSext(addr));
         tc->pcState(pc_state);
     } else {

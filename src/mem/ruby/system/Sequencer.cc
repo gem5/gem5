@@ -1171,14 +1171,13 @@ template <class KEY, class VALUE>
 std::ostream &
 operator<<(std::ostream &out, const std::unordered_map<KEY, VALUE> &map)
 {
-    for (const auto &table_entry : map) {
-        out << "[ " << table_entry.first << " =";
-        for (const auto &seq_req : table_entry.second) {
+    for (const auto &[key, values] : map) {
+        out << "[ " << key << " =";
+        for (const auto &seq_req : values) {
             out << " " << RubyRequestType_to_string(seq_req.m_second_type);
         }
+        out << " ]";
     }
-    out << " ]";
-
     return out;
 }
 

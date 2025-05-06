@@ -37,6 +37,7 @@ def createGPU(system, args):
         cu_per_sqc=args.cu_per_sqc,
         timing=True,
         clk_domain=system.clk_domain,
+        progress_interval=args.gpu_progress_interval,
     )
 
     # VIPER GPU protocol implements release consistency at GPU side. So,
@@ -82,6 +83,7 @@ def createGPU(system, args):
                 mem_resp_latency=args.mem_resp_latency,
                 scalar_mem_req_latency=args.scalar_mem_req_latency,
                 scalar_mem_resp_latency=args.scalar_mem_resp_latency,
+                mfma_scale=args.mfma_scale,
                 localDataStore=LdsState(
                     banks=args.numLdsBanks,
                     bankConflictPenalty=args.ldsBankConflictPenalty,
@@ -226,4 +228,4 @@ def connectGPU(system, args):
 
     # Set bit 6 to enable atomic requestor, meaning this device can request
     # atomics from other PCI devices.
-    system.pc.south_bridge.gpu.PXCAPDevCtrl2 = 0x00000040
+    system.pc.south_bridge.gpu.PXCAPDevCtrl2 = 0x0040

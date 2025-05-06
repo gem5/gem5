@@ -29,4 +29,7 @@
 
 Import('*')
 
-GdbXml('mips.xml', 'gdb_xml_mips', tags='mips isa')
+if not env['CONF']['USE_MIPS_ISA']:
+    Return()
+
+GdbXml('mips.xml', 'gdb_xml_mips', tags=['mips isa'])

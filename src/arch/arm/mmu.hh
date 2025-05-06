@@ -146,6 +146,10 @@ class MMU : public BaseMMU
             isPriv = rhs.isPriv;
             securityState = rhs.securityState;
             ttbcr = rhs.ttbcr;
+            tcr2 = rhs.tcr2;
+            pir = rhs.pir;
+            pire0 = rhs.pire0;
+            pie = rhs.pie;
             asid = rhs.asid;
             vmid = rhs.vmid;
             prrr = rhs.prrr;
@@ -181,6 +185,10 @@ class MMU : public BaseMMU
         bool isPriv = false;
         SecurityState securityState = SecurityState::NonSecure;
         TTBCR ttbcr = 0;
+        TCR2 tcr2 = 0;
+        RegVal pir = 0;
+        RegVal pire0 = 0;
+        bool pie = false;
         uint16_t asid = 0;
         vmid_t vmid = 0;
         PRRR prrr = 0;
@@ -379,13 +387,14 @@ class MMU : public BaseMMU
                           ExceptionLevel el,
                           TCR tcr, bool is_inst, CachedState& state);
 
-    bool checkPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req,
-                  Mode mode, const bool is_priv, CachedState &state);
-
-    bool faultPAN(ThreadContext *tc, uint8_t ap, const RequestPtr &req,
-                  Mode mode, const bool is_priv, CachedState &state);
-
     std::pair<bool, bool> s1PermBits64(
+        TlbEntry *te, const RequestPtr &req, Mode mode,
+        ThreadContext *tc, CachedState &state, bool r, bool w, bool x);
+
+    std::tuple<bool, bool, bool> s1IndirectPermBits64(
+        TlbEntry *te, const RequestPtr &req, Mode mode,
+        ThreadContext *tc, CachedState &state, bool r, bool w, bool x);
+    std::tuple<bool, bool, bool> s1DirectPermBits64(
         TlbEntry *te, const RequestPtr &req, Mode mode,
         ThreadContext *tc, CachedState &state, bool r, bool w, bool x);
 

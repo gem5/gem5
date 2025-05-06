@@ -138,9 +138,8 @@ Multi::compress(const std::vector<Chunk>& chunks, Cycles& comp_lat,
 
     // Each sub-compressor can have its own chunk size; therefore, revert
     // the chunks to raw data, so that they handle the conversion internally
-    uint64_t data[blkSize / sizeof(uint64_t)];
-    std::memset(data, 0, blkSize);
-    fromChunks(chunks, data);
+    auto data = std::make_unique<uint64_t[]>(blkSize/8);
+    fromChunks(chunks, data.get());
 
     // Find the ranking of the compressor outputs
     std::priority_queue<std::shared_ptr<Results>,
@@ -149,7 +148,7 @@ Multi::compress(const std::vector<Chunk>& chunks, Cycles& comp_lat,
     for (unsigned i = 0; i < compressors.size(); i++) {
         Cycles temp_decomp_lat;
         auto temp_comp_data =
-            compressors[i]->compress(data, comp_lat, temp_decomp_lat);
+            compressors[i]->compress(data.get(), comp_lat, temp_decomp_lat);
         temp_comp_data->setSizeBits(temp_comp_data->getSizeBits() +
             numEncodingBits);
         results.push(std::make_shared<Results>(i, std::move(temp_comp_data),
@@ -159,9 +158,8 @@ Multi::compress(const std::vector<Chunk>& chunks, Cycles& comp_lat,
 
     // Assign best compressor to compression data
     const unsigned best_index = results.top()->index;
-    std::unique_ptr<CompressionData> multi_comp_data =
-        std::unique_ptr<MultiCompData>(
-            new MultiCompData(best_index, std::move(results.top()->compData)));
+    auto multi_comp_data = std::make_unique<MultiCompData>(
+            best_index, std::move(results.top()->compData));
     DPRINTF(CacheComp, "Best compressor: %d\n", best_index);
 
     // Set decompression latency of the best compressor

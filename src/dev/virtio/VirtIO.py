@@ -37,7 +37,7 @@
 
 from m5.objects.Device import PioDevice
 from m5.objects.PciDevice import (
-    PciDevice,
+    PciEndpoint,
     PciIoBar,
 )
 from m5.params import *
@@ -63,7 +63,7 @@ class VirtIODummyDevice(VirtIODeviceBase):
     cxx_class = "gem5::VirtIODummyDevice"
 
 
-class PciVirtIO(PciDevice):
+class PciVirtIO(PciEndpoint):
     type = "PciVirtIO"
     cxx_header = "dev/virtio/pci.hh"
     cxx_class = "gem5::PciVirtIO"
