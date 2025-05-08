@@ -1,0 +1,106 @@
+/*
+ * Copyright (c) 2017 Jason Lowe-Power
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * This file contains the messages and other types for a simple MSI protocol.
+ *
+ * The protocol in this file is based off of the MSI protocol found in
+ * A Primer on Memory Consistency and Cache Coherence
+ *      Daniel J. Sorin, Mark D. Hill, and David A. Wood
+ *      Synthesis Lectures on Computer Architecture 2011 6:3, 141-149
+ *
+ * See Learning gem5 Part 3: Ruby for more details.
+ */
+
+enumeration(CoherenceRequestType, desc="Types of request messages") {
+    GetS,       desc="Request from cache for a block with read permission";
+    GetM,       desc="Request from cache for a block with write permission";
+    PutS,       desc="Sent to directory when evicting a block in S (clean WB)";
+    PutM,       desc="Sent to directory when evicting a block in M";
+
+    // "Requests" from the directory to the caches on the fwd network
+    Inv,        desc="Probe the cache and invalidate any matching blocks";
+    PutAck,     desc="The put request has been processed.";
+}
+
+enumeration(CoherenceResponseType, desc="Types of response messages") {
+    Data,       desc="Contains the most up-to-date data";
+    InvAck,     desc="Message from another cache that they have inv. the blk";
+}
+
+structure(RequestMsg, desc="Used for Cache->Dir and Fwd messages",
+          interface="Message") {
+    // NOTE: You can't name addr "Addr" because it would conflict with the
+    // Addr *type*.
+    Addr addr,                   desc="Physical address for this request";
+    CoherenceRequestType Type,   desc="Type of request";
+    MachineID Requestor,         desc="Node who initiated the request";
+    NetDest Destination,         desc="Multicast destination mask";
+    DataBlock DataBlk,           desc="data for the cache line";
+    // NOTE: You *must* use MessageSize as the name of this variable, and it's
+    // required that you have a MessageSize for each type of message. You will
+    // the the error "panic: MessageSizeType() called on wrong message!"
+    MessageSizeType MessageSize, desc="size category of the message";
+
+    // This must be overridden here to support functional accesses
+    bool functionalRead(Packet *pkt) {
+        // Requests should never have the only copy of the most up-to-date data
+        return false;
+    }
+
+    bool functionalWrite(Packet *pkt) {
+        // No check on message type required since the protocol should read
+        // data block from only those messages that contain valid data
+        return testAndWrite(addr, DataBlk, pkt);
+    }
+}
+
+structure(ResponseMsg, desc="Used for Cache->Dir and Fwd messages",
+          interface="Message") {
+    Addr addr,                   desc="Physical address for this response";
+    CoherenceResponseType Type,  desc="Type of response";
+    MachineID Sender,            desc="Node who is responding to the request";
+    NetDest Destination,         desc="Multicast destination mask";
+    DataBlock DataBlk,           desc="data for the cache line";
+    MessageSizeType MessageSize, desc="size category of the message";
+    int Acks,                    desc="Number of acks required from others";
+
+    // This must be overridden here to support functional accesses
+    bool functionalRead(Packet *pkt) {
+        if (Type == CoherenceResponseType:Data) {
+            return testAndRead(addr, DataBlk, pkt);
+        }
+        return false;
+    }
+
+    bool functionalWrite(Packet *pkt) {
+        // No check on message type required since the protocol should read
+        // data block from only those messages that contain valid data
+        return testAndWrite(addr, DataBlk, pkt);
+    }
+}

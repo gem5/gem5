@@ -1,0 +1,3 @@
+Import('*')
+main.Append(ALL_PROTOCOLS=['MUSI'])
+main.Append(PROTOCOL_DIRS=[Dir('.')])
