@@ -1,4 +1,0 @@
-protocol "MSI";
-include "MSI-msg.sm";
-include "MSI-cache.sm";
-include "MSI-dir.sm";
