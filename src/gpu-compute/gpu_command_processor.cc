@@ -988,4 +988,10 @@ GPUCommandProcessor::shader()
     return _shader;
 }
 
+GfxVersion
+GPUCommandProcessor::getGfxVersion() const
+{
+    return FullSystem ? gpuDevice->getGfxVersion() : _driver->getGfxVersion();
+}
+
 } // namespace gem5
