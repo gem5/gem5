@@ -144,9 +144,6 @@ class AbstractBoard:
         """
         return self.processor
 
-    # NOTE: Am I sure that this should be a AbstractMemorySystem instead of a m5.objects.AbstractMemory?
-    # the type being assigned to this previously would imply that, but I'd have to ensure that that's how it's used as well
-    # if it's used as a m5.objects.AbstractMemory then I need either refactor the constructor or convert the values to the correct type
     def get_memory(self) -> "AbstractMemorySystem":
         """Get the memory (RAM) connected to the board.
 
