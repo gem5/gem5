@@ -101,7 +101,10 @@ namespace gem5
        *  there is room to execute more instructions than taken from the first
        *  line */
       bool processMoreThanOneInput;
-
+      int branchDelay = -1;
+      unsigned int branchDelaySlot = 1;
+      unsigned int delayBranchTid = 0;
+      InstSeqNum delayStreamSeqNum = InstId::firstStreamSeqNum;
       /** Descriptions of the functional units we want to generate */
       MinorFUPool &fuDescriptions;
 
@@ -134,6 +137,10 @@ namespace gem5
 
       /** The execution functional units */
       std::vector<FUPipeline *> funcUnits;
+
+      InstSeqNum getCurrentStreamSeqNum(ThreadID tid) {
+        return executeInfo[tid].streamSeqNum;
+      }
 
     protected:
       /** Stage cycle-by-cycle state */

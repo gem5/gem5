@@ -159,8 +159,28 @@ namespace gem5
             activityRecorder.minorTrace();
         }
 
-        void
-        Pipeline::evaluate()
+        bool Pipeline::decodeWasStalling() const
+        {
+            return decode.decode_was_stalling(); //|| !activityRecorder.getStageActive(DecodeStageId);
+        }
+
+        gem5::Addr Pipeline::getDecodeLastInstPC() const
+        {
+            return decode.last_inst_pc;
+        }
+
+        bool Pipeline::decodeHasBranched() const
+        {
+            return decode.decode_has_branched();
+        }
+
+        bool Pipeline::decodeIsWaitingFetchAfterBranch() const
+        {
+            return decode.decode_is_waiting_fetch_after_branch();
+        }
+
+            void
+            Pipeline::evaluate()
         {
             /** We tick the CPU to update the BaseCPU cycle counters */
             cpu.tick();
@@ -171,6 +191,7 @@ namespace gem5
             memory.evaluate();
             execute.evaluate();
             decode.evaluate();
+            dToF1.evaluate();
             // fetch2.evaluate();
             fetch1.evaluate();
 
@@ -182,7 +203,6 @@ namespace gem5
             // f2ToF1.evaluate();
             // f2ToD.evaluate();
             f1ToD.evaluate();
-            dToF1.evaluate();
             dToE.evaluate();
             eToF1.evaluate();
             eToM.evaluate();

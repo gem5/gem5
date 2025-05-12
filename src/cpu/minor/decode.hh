@@ -92,7 +92,10 @@ namespace gem5
 
       /** Width of output of this stage/input of next in instructions */
       unsigned int outputWidth;
-
+      unsigned int branchDelaySlot = 1;
+      unsigned int delayBranchTid = 0;
+      gem5::InstSeqNum delayStreamSeqNum = InstId::firstStreamSeqNum;
+      int branchDelay = -1;
       /** If true, more than one input word can be processed each cycle if
        *  there is room in the output to contain its processed data */
       bool processMoreThanOneInput;
@@ -230,7 +233,7 @@ namespace gem5
       /** Predicts branches for the given instruction.  Updates the
        *  instruction's predicted... fields and also the branch which
        *  carries the prediction to Fetch1 */
-      void predictBranch(MinorDynInstPtr inst, BranchData &branch);
+      void predictBranch(MinorDynInstPtr inst, BranchData &branch, bool &early_branch);
 
       /** Use the current threading policy to determine the next thread to
        *  decode from. */
@@ -260,7 +263,7 @@ namespace gem5
     protected:
       /** Push input coming from input wire into input buffer */
       void pushIntoInpBuffer();
-
+      void earlyBranch(MinorDynInstPtr inst, Fault &f, BranchData &branch);
       /** Check what branches were taken by execute and dumps all
        * lines that are now old */
       void dumpIfBranchesExecuted(const BranchData &branch);
@@ -337,7 +340,10 @@ namespace gem5
 
       /** Push input buffer tail to make the buffer shift */
       void pushTailInpBuffer();
+      bool decode_is_stalling = false;
       bool was_stalling = false;
+      bool has_branched = false;
+      bool waiting_fetch = true;
 
     public:
       /** Pass on input/buffer data to the output if you can */
@@ -350,6 +356,23 @@ namespace gem5
        *  into Decode and on to Execute which is responsible for
        *  actually killing instructions */
       bool isDrained();
+      bool decode_was_stalling() const
+      {
+        return was_stalling;
+      }
+
+      bool decode_has_branched() const
+      {
+        return has_branched;
+      }
+
+      bool decode_is_waiting_fetch_after_branch() const
+      {
+        return waiting_fetch;
+      }
+
+      gem5::Addr last_inst_pc = gem5::MaxAddr;
+      gem5::Addr last_branch_pc = gem5::MaxAddr;
     };
 
   } // namespace minor

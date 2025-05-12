@@ -145,7 +145,8 @@ namespace gem5
 
       /** Test to see if the CPU is drained */
       bool isDrained();
-
+      bool decodeWasStalling() const;
+      gem5::Addr getDecodeLastInstPC() const;
       /** A custom evaluate allows report in the right place (between
        *  stages and pipeline advance) */
       void evaluate() override;
@@ -171,6 +172,9 @@ namespace gem5
       {
         return memory.memoryInfo[tid].inFlightInst;
       }
+
+      bool decodeHasBranched() const;
+      bool decodeIsWaitingFetchAfterBranch() const;
       std::vector<Scoreboard> &getScoreboard();
     };
 

@@ -47,6 +47,7 @@
 #include "debug/Decode.hh"
 #include "debug/MinorTrace.hh"
 #include "debug/MinorGUI.hh"
+#include "cpu/minor/exec_context.hh"
 
 namespace gem5
 {
@@ -203,7 +204,7 @@ namespace gem5
         }
 
         void
-        Decode::predictBranch(MinorDynInstPtr inst, BranchData &branch)
+        Decode::predictBranch(MinorDynInstPtr inst, BranchData &branch, bool &early_branch)
         {
             DecodeThreadInfo &thread = decodeInfo[inst->id.threadId];
 
@@ -226,14 +227,26 @@ namespace gem5
                     inst->predictedTaken = true;
                     set(inst->predictedTarget, inst_pc);
                 }
+
+                if (inst->staticInst->isControl())
+                {
+                    
+                }
             }
+
             else
             {
                 DPRINTF(Branch, "Not attempting prediction for inst: %s\n", *inst);
             }
 
+            if (branch.reason != BranchData::Reason::NoBranch)
+
+            {
+                thread.expectedStreamSeqNum = inst->id.streamSeqNum + 1;
+                thread.predictionSeqNum++;
+            }
             /* If we predict taken, set branch and update sequence numbers */
-            if (inst->predictedTaken)
+            else if (inst->predictedTaken)
             {
                 /* Update the predictionSeqNum and remember the streamSeqNum that it
                  *  was associated with */
@@ -273,7 +286,94 @@ namespace gem5
                 inst->traceData->setFetchSeq(inst->id.execSeqNum);
         }
 #endif
+        void Decode::earlyBranch(MinorDynInstPtr inst, Fault &f, BranchData &branch)
+        {
+            ThreadContext *thread = cpu.getContext(inst->id.threadId);
+            const std::unique_ptr<PCStateBase> pc_before(inst->pc->clone());
+            std::unique_ptr<PCStateBase> target(thread->pcState().clone());
 
+            /* Force a branch for SerializeAfter/SquashAfter instructions
+             * at the end of micro-op sequence when we're not suspended */
+            bool force_branch = thread->status() != ThreadContext::Suspended &&
+                                !inst->isFault() &&
+                                inst->isLastOpInInst() &&
+                                (inst->staticInst->isSerializeAfter() ||
+                                 inst->staticInst->isSquashAfter());
+
+            DPRINTF(Branch, "earlyBranch before: %s after: %s%s\n",
+                    *pc_before, *target, (force_branch ? " (forcing)" : ""));
+            /* Will we change the PC to something other than the next instruction? */
+            bool must_branch = *pc_before != *target ||
+                               f != NoFault ||
+                               force_branch;
+
+            /* The reason for the branch data we're about to generate, set below */
+            BranchData::Reason reason = BranchData::NoBranch;
+
+            if (f == NoFault)
+            {
+                inst->staticInst->advancePC(*target);
+                thread->pcState(*target);
+                last_branch_pc = target->clone()->instAddr();
+
+                DPRINTF(Decode, "Advancing current PC from: %s to: %s\n",
+                        *pc_before, *target);
+            }
+
+            if (inst->predictedTaken && !force_branch)
+            {
+                /* Predicted to branch */
+                if (!must_branch)
+                {
+                    /* No branch was taken, change stream to get us back to the
+                     *  intended PC value */
+                    DPRINTF(Branch, "Predicted a branch from 0x%x to 0x%x but"
+                                    " none happened inst: %s\n",
+                            inst->pc->instAddr(), inst->predictedTarget->instAddr(),
+                            *inst);
+
+                    reason = BranchData::BadlyPredictedBranch;
+                }
+                else if (*inst->predictedTarget == *target)
+                {
+                    /* Branch prediction got the right target, kill the branch and
+                     *  carry on.
+                     *  Note that this information to the branch predictor might get
+                     *  overwritten by a "real" branch during this cycle */
+                    DPRINTF(Branch, "Predicted a branch from 0x%x to 0x%x correctly"
+                                    " inst: %s\n",
+                            inst->pc->instAddr(), inst->predictedTarget->instAddr(),
+                            *inst);
+
+                    reason = BranchData::CorrectlyPredictedBranch;
+                }
+                else
+                {
+                    /* Branch prediction got the wrong target */
+                    DPRINTF(Branch, "Predicted a branch from 0x%x to 0x%x"
+                                    " but got the wrong target (actual: 0x%x) inst: %s\n",
+                            inst->pc->instAddr(), inst->predictedTarget->instAddr(),
+                            target->instAddr(), *inst);
+
+                    reason = BranchData::BadlyPredictedBranchTarget;
+                }
+            }
+            else if (must_branch)
+            {
+                /* Unpredicted branch */
+                DPRINTF(Branch, "Unpredicted branch from 0x%x to 0x%x inst: %s\n",
+                        inst->pc->instAddr(), target->instAddr(), *inst);
+
+                reason = BranchData::UnpredictedBranch;
+            }
+            else
+            {
+                /* No branch at all */
+                reason = BranchData::NoBranch;
+            }
+
+            branch.reason = reason;
+        }
         void
         Decode::pushIntoInpBuffer()
         {
@@ -288,8 +388,8 @@ namespace gem5
             {
                 DPRINTF(Decode, "Dumping all input as a stream changing branch"
                                 " has arrived\n");
-                dumpAllInput(branch.threadId);
-                decodeInfo[branch.threadId].havePC = false;
+                dumpAllInput(delayBranchTid);
+                decodeInfo[delayBranchTid].havePC = false;
             }
         }
 
@@ -731,11 +831,9 @@ namespace gem5
             BranchData prediction;
             BranchData &branch_inp = *branchInp.outputWire;
 
-            bool is_stalling = false;
             MinorDynInstPtr inst_ptr_4_GUI = NULL;
 
             assert(insts_out.isBubble());
-
             /* React to branches from Execute to update local branch prediction
              *  structures */
             updateBranchPrediction(branch_inp);
@@ -743,7 +841,7 @@ namespace gem5
             /* If a branch arrives, don't try and do anything about it.  Only
              *  react to your own predictions */
             dumpIfBranchesExecuted(branch_inp);
-
+            
             assert(insts_out.isBubble());
 
             /* Even when blocked, clear out input lines with the wrong
@@ -763,20 +861,29 @@ namespace gem5
             {
                 DecodeThreadInfo &decode_info = decodeInfo[tid];
                 const ForwardLineData *line_in = getInput(tid);
+                if (!line_in && has_branched) {
+                    last_inst_pc = last_branch_pc;
+                    waiting_fetch = true;
+                } else {
+                    waiting_fetch = false;
+                }
 
                 unsigned int output_index = 0;
 
                 /* Pack instructions into the output while we can.  This may involve
                  * using more than one input line.  Note that lineWidth will be 0
                  * for faulting lines */
+                bool early_branch = false;
                 while ((((line_in &&
                           (line_in->isFault() ||
                            decode_info.inputIndex < line_in->lineWidth)) || /* More input */
                          macroInstPending) &&                               /* Some macroinst not completely processed */
                         output_index < outputWidth &&                       /* More output to fill */
-                        prediction.isBubble()) ||
+                        prediction.isBubble() &&
+                        !early_branch) ||
                        instWaitingDependencies[tid]) /* No predicted branch */
                 {
+                    has_branched = false;
                     /* The generated instruction.  Leave as NULL if no instruction
                      *  is to be packed into the output */
                     MinorDynInstPtr dyn_inst = NULL;
@@ -880,7 +987,9 @@ namespace gem5
                                         line_in->lineWidth, output_index,
                                         decode_info.inputIndex,
                                         *decode_info.pc, *dyn_inst);
-
+                                auto next_pc = std::unique_ptr<PCStateBase>(dyn_inst->pc->clone());
+                                next_pc->advance();
+                                last_inst_pc = next_pc->instAddr();
                                 /*
                                  * In SE mode, it's possible to branch to a microop when
                                  * replaying faults such as page faults (or simply
@@ -902,7 +1011,7 @@ namespace gem5
 
                                 /* Predict any branches and issue a branch if
                                  *  necessary */
-                                predictBranch(dyn_inst, prediction);
+                                predictBranch(dyn_inst, prediction, early_branch);
                             }
                             else
                             {
@@ -934,7 +1043,6 @@ namespace gem5
                         line_in = maybeMoreInput(tid, line_in);
 
                         /* Info for GUI */
-                        is_stalling = dyn_inst ? false : true;
                         inst_ptr_4_GUI = dyn_inst;
                     }
 
@@ -949,15 +1057,63 @@ namespace gem5
 
                             DPRINTF(MinorGUI, "Log4GUI: decode: %d: %d: %x: %s\n",
                                     curTick(),
-                                    was_stalling,
+                                    decode_is_stalling,
                                     inst_ptr_4_GUI->pc->instAddr(),
                                     inst_ptr_4_GUI->staticInst->disassemble(inst_ptr_4_GUI->pc->instAddr()));
+                            if (inst_ptr_4_GUI->isInst() && inst_ptr_4_GUI->staticInst->isControl())
+                            {
+                                DPRINTF(Decode, "Early executing control inst: %s\n", *inst_ptr_4_GUI);
+                                ExecContext context(cpu, *cpu.threads[inst_ptr_4_GUI->id.threadId], inst_ptr_4_GUI);
+
+                                Fault fault = inst_ptr_4_GUI->staticInst->execute(&context, inst_ptr_4_GUI->traceData);
+
+                                if (inst_ptr_4_GUI->traceData)
+                                    inst_ptr_4_GUI->traceData->setPredicate(context.readPredicate());
+
+                                if (fault != NoFault)
+                                {
+                                    DPRINTF(Decode, "Fault in execute of inst: %s fault: %s\n",
+                                            *inst_ptr_4_GUI, fault->name());
+                                    panic("Fault in early branch execution of inst: %s fault: %s\n",
+                                          *inst_ptr_4_GUI, fault->name());
+                                }
+                                if (prediction.reason != BranchData::Reason::NoBranch)
+
+                                {
+                                    decode_info.expectedStreamSeqNum = inst_ptr_4_GUI->id.streamSeqNum + 1;
+                                    decode_info.predictionSeqNum++;
+                                }
+                                DPRINTF(Decode, "Executing control inst: %s\n", *inst_ptr_4_GUI);
+                                context.writeback(inst_ptr_4_GUI->staticInst);
+                                inst_ptr_4_GUI->executed = true;
+                                earlyBranch(inst_ptr_4_GUI, fault, prediction);
+                                dumpIfBranchesExecuted(prediction);
+                                decode_info.expectedStreamSeqNum = inst_ptr_4_GUI->id.streamSeqNum;
+                                ThreadContext *thread = cpu.getContext(inst_ptr_4_GUI->id.threadId);
+                                prediction = BranchData(BranchData::UnpredictedBranch,
+                                                                   inst_ptr_4_GUI->id.threadId,
+                                                                   inst_ptr_4_GUI->id.streamSeqNum, decode_info.predictionSeqNum + 1,
+                                                                   *thread->pcState().clone(), inst_ptr_4_GUI);
+
+                                /* Mark with a new prediction number by the stream number of the
+                                 *  instruction causing the prediction */
+                                decode_info.predictionSeqNum++;
+                            }
                             packIntoOutput(instWaitingDependenciesPtr[tid],
                                            insts_out, &output_index);
+                            auto next_pc = std::unique_ptr<PCStateBase>(instWaitingDependenciesPtr[tid]->pc->clone());
+                            next_pc->advance();
+                            last_inst_pc = next_pc->instAddr();
                             instWaitingDependencies[tid] = false;
                             instWaitingDependenciesPtr[tid] = nullptr;
                             /* Continue the execution */
-                            was_stalling = false;
+                            was_stalling = decode_is_stalling;
+                            decode_is_stalling = false;
+                            if (prediction.isStreamChange())
+                            {
+                                //last_inst_pc = prediction.target->instAddr();
+                                has_branched = true;
+                            }
                         }
                         else
                         {
@@ -967,10 +1123,15 @@ namespace gem5
                             inst_ptr_4_GUI = instWaitingDependenciesPtr[tid];
                             DPRINTF(MinorGUI, "Log4GUI: decode: %d: %d: %x: %s\n",
                                     curTick(),
-                                    was_stalling,
+                                    decode_is_stalling,
                                     inst_ptr_4_GUI->pc->instAddr(),
                                     inst_ptr_4_GUI->staticInst->disassemble(inst_ptr_4_GUI->pc->instAddr()));
-                            was_stalling = true;
+                            auto next_pc = std::unique_ptr<PCStateBase>(inst_ptr_4_GUI->pc->clone());
+                            next_pc->advance();
+                            last_inst_pc = next_pc->instAddr();
+                            was_stalling = decode_is_stalling;
+                            decode_is_stalling = true;
+                            has_branched = false;
                         }
                         break;
                     }
@@ -1023,14 +1184,60 @@ namespace gem5
                         if (checkScoreboardAndUpdate(output_inst, tid))
                         {
                             DPRINTF(Decode, "Can pass to Execute: %s\n", *output_inst);
+                            // if (output_inst->isInst() && output_inst->staticInst->isControl())
+                            // {
+                            //     earlyExecuteBranch(output_inst, prediction);
+                            // }
+                            if (output_inst->isInst() && output_inst->staticInst->isControl()) {
+                                DPRINTF(Decode, "Early executing control inst: %s\n", *output_inst);
+                                ExecContext context(cpu, *cpu.threads[output_inst->id.threadId], output_inst);
+
+                                Fault fault = output_inst->staticInst->execute(&context, output_inst->traceData);
+
+                                if (output_inst->traceData)
+                                    output_inst->traceData->setPredicate(context.readPredicate());
+
+                                if (fault != NoFault)
+                                {
+                                    DPRINTF(Decode, "Fault in execute of inst: %s fault: %s\n",
+                                            *output_inst, fault->name());
+                                    panic("Fault in early branch execution of inst: %s fault: %s\n",
+                                          *output_inst, fault->name());
+                                }
+                                DPRINTF(Decode, "Executing control inst: %s\n", *output_inst);
+                                context.writeback(output_inst->staticInst);
+                                output_inst->executed = true;
+                                earlyBranch(output_inst, fault, prediction);
+                                dumpIfBranchesExecuted(prediction);
+                                decode_info.expectedStreamSeqNum = inst_ptr_4_GUI->id.streamSeqNum;
+                                ThreadContext *thread = cpu.getContext(inst_ptr_4_GUI->id.threadId);
+                                prediction = BranchData(BranchData::UnpredictedBranch,
+                                                        inst_ptr_4_GUI->id.threadId,
+                                                        inst_ptr_4_GUI->id.streamSeqNum, decode_info.predictionSeqNum + 1,
+                                                        *thread->pcState().clone(), inst_ptr_4_GUI);
+
+                                /* Mark with a new prediction number by the stream number of the
+                                 *  instruction causing the prediction */
+                                decode_info.predictionSeqNum++;
+                            }
                             packIntoOutput(output_inst, insts_out, &output_index);
+                            last_inst_pc = output_inst->pc->instAddr();
                             /* Continue the execution normally */
                             DPRINTF(MinorGUI, "Log4GUI: decode: %d: %d: %x: %s\n",
                                     curTick(),
-                                    was_stalling,
+                                    decode_is_stalling,
                                     output_inst->pc->instAddr(),
                                     output_inst->staticInst->disassemble(output_inst->pc->instAddr()));
-                            was_stalling = false;
+                            auto next_pc = std::unique_ptr<PCStateBase>(output_inst->pc->clone());
+                            next_pc->advance();
+                            last_inst_pc = next_pc->instAddr();
+                            was_stalling = decode_is_stalling;
+                            decode_is_stalling = false;
+                            if (prediction.isStreamChange())
+                            {
+                                //last_inst_pc = prediction.target->instAddr();
+                                has_branched = true;
+                            }
                         }
                         else
                         {
@@ -1040,10 +1247,15 @@ namespace gem5
                             /* Stall here */
                             DPRINTF(MinorGUI, "Log4GUI: decode: %d: %d: %x: %s\n",
                                     curTick(),
-                                    was_stalling,
+                                    decode_is_stalling,
                                     output_inst->pc->instAddr(),
                                     output_inst->staticInst->disassemble(output_inst->pc->instAddr()));
-                            was_stalling = true;
+                            was_stalling = decode_is_stalling;
+                            decode_is_stalling = true;
+                            auto next_pc = std::unique_ptr<PCStateBase>(output_inst->pc->clone());
+                            next_pc->advance();
+                            last_inst_pc = next_pc->instAddr();
+                            has_branched = false;
                             break;
                         }
                     }

@@ -761,6 +761,7 @@ namespace gem5
             const BranchData &mem_branch = *mem_inp.outputWire;
             ForwardLineData &line_out = *out.inputWire;
 
+            bool is_active_this_cycle = cpu.activityRecorder->getStageActive(Pipeline::Fetch1StageId); 
             bool is_stalling = false;
             bool has_output = false;
 
@@ -819,13 +820,20 @@ namespace gem5
             }
 
             /* Format >>> Log4GUI: fetch1: tick: stall_bit: inst_address: <assembly> */
-            if (has_output)
-            {
-                DPRINTF(MinorGUI, "Log4GUI: fetch1: %d: %d: %x: <assembly>\n",
-                        curTick(),
-                        is_stalling,
-                        line_out.pc->instAddr());
+            //if (has_output || !line_out.isBubble())
+            //{
+            gem5::Addr fetch_pc = cpu.getDecodeLastInstPC();
+            bool stalled = false;
+            if (fetch_pc == gem5::MaxAddr) {
+                fetch_pc = cpu.getContext(0)->pcState().instAddr();
             }
+            ThreadContext *t = cpu.getContext(0);
+            DPRINTF(MinorGUI, "Log4GUI: fetch1: %d: %d: %x: <assembly>\n",
+                    curTick(),
+                    !cpu.decodeIsWaitingFetchAfterBranch() && (cpu.decodeWasStalling() || was_waiting_for_transfer),
+                    fetch_pc);
+            was_waiting_for_transfer = !transfers.empty() && transfers.front()->state == FetchRequest::RequestIssuing;
+            //}
         }
 
         void

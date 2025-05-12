@@ -127,18 +127,18 @@ namespace gem5
             DPRINTF(Branch, "tryToBranch before: %s after: %s%s\n",
                     *pc_before, *target, (force_branch ? " (forcing)" : ""));
 
-            bool must_branch = *pc_before != *target ||
-                               fault != NoFault ||
-                               force_branch;
+            bool must_branch = //*pc_before != *target ||
+                               fault != NoFault; // ||
+                               //force_branch;
 
             BranchData::Reason reason = BranchData::NoBranch;
             if (fault == NoFault)
             {
-                inst->staticInst->advancePC(*target);
+                /* inst->staticInst->advancePC(*target);
                 thread->pcState(*target);
 
                 DPRINTF(Branch, "Advancing current PC from: %s to: %s\n",
-                        *pc_before, *target);
+                        *pc_before, *target); */
             }
 
             if (inst->predictedTaken && !force_branch)

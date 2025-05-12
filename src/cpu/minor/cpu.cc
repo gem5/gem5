@@ -36,9 +36,6 @@
  */
 
 #include "cpu/minor/cpu.hh"
-
-#include "cpu/minor/dyn_inst.hh"
-#include "cpu/minor/fetch1.hh"
 #include "cpu/minor/pipeline.hh"
 #include "debug/Drain.hh"
 #include "debug/MinorCPU.hh"
@@ -107,6 +104,22 @@ namespace gem5
     std::vector<minor::Scoreboard> &MinorCPU::getScoreboard()
     {
         return pipeline->getScoreboard();
+    }
+
+    bool MinorCPU::decodeWasStalling() const {
+        return pipeline->decodeWasStalling();
+    }
+
+    bool MinorCPU::decodeHasBranched() const {
+        return pipeline->decodeHasBranched();
+    }
+
+    bool MinorCPU::decodeIsWaitingFetchAfterBranch() const {
+        return pipeline->decodeIsWaitingFetchAfterBranch();
+    }
+    
+    gem5::Addr MinorCPU::getDecodeLastInstPC() const {
+        return pipeline->getDecodeLastInstPC();
     }
 
     void

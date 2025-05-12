@@ -516,7 +516,7 @@ namespace gem5
 
       /** Pop the head item.  Like std::queue::pop */
       void pop() { queue.pop_front(); }
-
+      void pop_back() { queue.pop_back(); }
       /** Is the queue empty? */
       bool empty() const { return queue.empty(); }
 
@@ -617,7 +617,9 @@ namespace gem5
 
       /** No single element or queue entries */
       bool empty() const { return !elementPtr && queue.empty(); }
-
+      unsigned int occupiedSpace() const { return queue.occupiedSpace() + (elementPtr ? 1 : 0); }
+      unsigned int reservedSpace() const { return queue.reservedSpace(); }
+      unsigned int totalSpace() const { return queue.totalSpace(); }
       /** Return the element, or the front of the queue */
       const ElemType &front() const
       {
@@ -645,6 +647,8 @@ namespace gem5
           queue.pop();
         }
       }
+
+      void pop_back() { queue.pop_back(); }
 
       /** Push the single element (if any) into the queue proper.  If the
        *  element's reference points to a transient object, remember to

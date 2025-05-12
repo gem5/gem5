@@ -226,7 +226,7 @@ namespace gem5
 
       /** Maximum number of fetches allowed in flight (in queues or memory) */
       unsigned int fetchLimit;
-
+      bool was_waiting_for_transfer = false;
     protected:
       /** Cycle-by-cycle state */
 

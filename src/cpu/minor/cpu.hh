@@ -138,6 +138,10 @@ namespace gem5
     void init() override;
     void startup() override;
     void wakeup(ThreadID tid) override;
+    bool decodeWasStalling() const;
+    bool decodeHasBranched() const;
+    gem5::Addr getDecodeLastInstPC() const;
+    bool decodeIsWaitingFetchAfterBranch() const;
     bool isMemoryExecuting(ThreadID tid) const;
     /** Processor-specific statistics */
     minor::MinorStats stats;
