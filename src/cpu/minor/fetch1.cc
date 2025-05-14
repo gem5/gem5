@@ -666,6 +666,8 @@ namespace gem5
                     }
                     else
                     {
+                        DPRINTF(Fetch, "Changing stream on prediction: %s\n",
+                                fetch2_branch);
                         changeStream(fetch2_branch);
                     }
                 }

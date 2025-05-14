@@ -371,6 +371,8 @@ namespace gem5
                 /* No branch at all */
                 reason = BranchData::NoBranch;
             }
+            DPRINTF(Decode, "Early branch: %s\n",
+                    reason == BranchData::NoBranch ? "NoBranch" : "Branch");
 
             branch.reason = reason;
         }
@@ -409,7 +411,7 @@ namespace gem5
                 popInput(tid);
                 decodeInfo[tid].havePC = false;
 
-                if (processMoreThanOneInput)
+                if (true)
                 {
                     DPRINTF(Decode, "Wrapping\n");
                     line_in = getInput(tid);
@@ -1090,14 +1092,17 @@ namespace gem5
                                 dumpIfBranchesExecuted(prediction);
                                 decode_info.expectedStreamSeqNum = inst_ptr_4_GUI->id.streamSeqNum;
                                 ThreadContext *thread = cpu.getContext(inst_ptr_4_GUI->id.threadId);
-                                prediction = BranchData(BranchData::UnpredictedBranch,
+                                prediction = BranchData(prediction.reason,
                                                                    inst_ptr_4_GUI->id.threadId,
-                                                                   inst_ptr_4_GUI->id.streamSeqNum, decode_info.predictionSeqNum + 1,
+                                                                   inst_ptr_4_GUI->id.streamSeqNum, prediction.isStreamChange() ? decode_info.predictionSeqNum + 1 : decode_info.predictionSeqNum,
                                                                    *thread->pcState().clone(), inst_ptr_4_GUI);
 
                                 /* Mark with a new prediction number by the stream number of the
                                  *  instruction causing the prediction */
-                                decode_info.predictionSeqNum++;
+                                if (prediction.isStreamChange())
+                                {
+                                    decode_info.predictionSeqNum++;
+                                }
                             }
                             packIntoOutput(instWaitingDependenciesPtr[tid],
                                            insts_out, &output_index);
@@ -1211,14 +1216,17 @@ namespace gem5
                                 dumpIfBranchesExecuted(prediction);
                                 decode_info.expectedStreamSeqNum = inst_ptr_4_GUI->id.streamSeqNum;
                                 ThreadContext *thread = cpu.getContext(inst_ptr_4_GUI->id.threadId);
-                                prediction = BranchData(BranchData::UnpredictedBranch,
+                                prediction = BranchData(prediction.reason,
                                                         inst_ptr_4_GUI->id.threadId,
-                                                        inst_ptr_4_GUI->id.streamSeqNum, decode_info.predictionSeqNum + 1,
+                                                        inst_ptr_4_GUI->id.streamSeqNum, prediction.isStreamChange() ? decode_info.predictionSeqNum + 1 : decode_info.predictionSeqNum,
                                                         *thread->pcState().clone(), inst_ptr_4_GUI);
 
                                 /* Mark with a new prediction number by the stream number of the
                                  *  instruction causing the prediction */
-                                decode_info.predictionSeqNum++;
+                                if (prediction.isStreamChange())
+                                {
+                                    decode_info.predictionSeqNum++;
+                                }
                             }
                             packIntoOutput(output_inst, insts_out, &output_index);
                             last_inst_pc = output_inst->pc->instAddr();

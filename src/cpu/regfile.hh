@@ -108,7 +108,7 @@ class RegFile
             return;
 
         auto regsSize = regClass.type() != RegClassType::IntRegClass ? 32 :  regClass.numRegs();
-        for (size_t i = 0; i < regsSize; ++i) {
+        for (size_t i = 0; i < regsSize && i < 32; ++i) {
             RegVal val = reg(i);
             const RegId regId(regClass, i);
             DPRINTF_GLOBAL(MinorGUI, "%s%d=0x%08x\n", regClass.type() == RegClassType::IntRegClass ? "x" : "f", i, (int32_t) val);
