@@ -1,3 +1,14 @@
+# Version 24.1.0.3
+
+**[HOTFIX]** This hotfix release adds `#import <algorithm>` to "src/base/random.cc" to fix a compilation error affecting some systems (compilation error: "‘remove_if’ is not a member of ‘std’.").
+
+# Version 24.1.0.2
+
+**[HOTFIX]** Adds PR <https://github.com/gem5/gem5/pull/1930> as a hotfix to v24.1.0.
+
+This fixes a bug which was was causing the CHI coherence protocol to fail in multi-core simulations.
+The fix sets the `RubySystem` pointer when the TBE is allocated, instead of when `set_tbe` is performed, thus ensuring that the `RubySystem` pointer is set before the TBE is used.
+
 # Version 24.1.0.1
 
 **[HOTFIX]** This hotfix release applies the following:

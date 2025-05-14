@@ -1160,7 +1160,7 @@ recvmsgFunc(SyscallDesc *desc, ThreadContext *tc,
      */
     Addr msg_name_phold = 0;
     Addr msg_iov_phold = 0;
-    Addr iovec_base_phold[msgHdr->msg_iovlen];
+    auto iovec_base_phold = std::make_unique<Addr[]>(msgHdr->msg_iovlen);
     Addr msg_control_phold = 0;
 
     /**
@@ -1180,7 +1180,7 @@ recvmsgFunc(SyscallDesc *desc, ThreadContext *tc,
      * their pointers with buffer pointers.
      */
     BufferArg *iovBuf = NULL;
-    BufferArg *iovecBuf[msgHdr->msg_iovlen];
+    auto iovecBuf = std::make_unique<BufferArg *[]>(msgHdr->msg_iovlen);
     for (int i = 0; i < msgHdr->msg_iovlen; i++) {
         iovec_base_phold[i] = 0;
         iovecBuf[i] = NULL;
@@ -1192,14 +1192,13 @@ recvmsgFunc(SyscallDesc *desc, ThreadContext *tc,
                                     sizeof(struct iovec));
         /*3*/iovBuf->copyIn(proxy);
         for (int i = 0; i < msgHdr->msg_iovlen; i++) {
-            if (((struct iovec *)iovBuf->bufferPtr())[i].iov_base) {
-                /*1*/iovec_base_phold[i] =
-                     (Addr)((struct iovec *)iovBuf->bufferPtr())[i].iov_base;
-                /*2*/iovecBuf[i] = new BufferArg(iovec_base_phold[i],
-                     ((struct iovec *)iovBuf->bufferPtr())[i].iov_len);
+            auto iov = ((struct iovec *)iovBuf->bufferPtr())[i];
+            if (iov.iov_base) {
+                /*1*/iovec_base_phold[i] = (Addr)iov.iov_base;
+                /*2*/iovecBuf[i] = new BufferArg(
+                        iovec_base_phold[i], iov.iov_len);
                 /*3*/iovecBuf[i]->copyIn(proxy);
-                /*4*/((struct iovec *)iovBuf->bufferPtr())[i].iov_base =
-                     iovecBuf[i]->bufferPtr();
+                /*4*/iov.iov_base = iovecBuf[i]->bufferPtr();
             }
         }
         /*4*/msgHdr->msg_iov = (struct iovec *)iovBuf->bufferPtr();
@@ -1230,11 +1229,11 @@ recvmsgFunc(SyscallDesc *desc, ThreadContext *tc,
 
     if (msgHdr->msg_iov) {
         for (int i = 0; i< msgHdr->msg_iovlen; i++) {
-            if (((struct iovec *)iovBuf->bufferPtr())[i].iov_base) {
+            auto iov = ((struct iovec *)iovBuf->bufferPtr())[i];
+            if (iov.iov_base) {
                 iovecBuf[i]->copyOut(proxy);
                 delete iovecBuf[i];
-                ((struct iovec *)iovBuf->bufferPtr())[i].iov_base =
-                (void *)iovec_base_phold[i];
+                iov.iov_base = (void *)iovec_base_phold[i];
             }
         }
         iovBuf->copyOut(proxy);

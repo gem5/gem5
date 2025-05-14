@@ -253,7 +253,7 @@ TLB::checkPermissions(STATUS status, PrivilegeMode pmode, Addr vaddr,
 {
     Fault fault = NoFault;
 
-    if (mode == BaseMMU::Read && !pte.r) {
+    if (mode == BaseMMU::Read && !pte.r && !(pte.x && status.mxr)) {
         DPRINTF(TLB, "PTE has no read perm, raising PF\n");
         fault = createPagefault(vaddr, mode);
     }
@@ -272,7 +272,8 @@ TLB::checkPermissions(STATUS status, PrivilegeMode pmode, Addr vaddr,
             DPRINTF(TLB, "PTE is not user accessible, raising PF\n");
             fault = createPagefault(vaddr, mode);
         }
-        else if (pmode == PrivilegeMode::PRV_S && pte.u && status.sum == 0) {
+        else if (pmode == PrivilegeMode::PRV_S && pte.u &&
+                 (mode == BaseMMU::Execute || status.sum == 0)) {
             DPRINTF(TLB, "PTE is only user accessible, raising PF\n");
             fault = createPagefault(vaddr, mode);
         }

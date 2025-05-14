@@ -50,6 +50,26 @@ namespace VegaISA
     {
     } // ~Decoder
 
+    void Decoder::fixupGfx90a()
+    {
+        tableDecodePrimary[16] = &Decoder::decode_OP_VOP2__V_FMAC_F64;
+        tableDecodePrimary[17] = &Decoder::decode_OP_VOP2__V_FMAC_F64;
+        tableDecodePrimary[18] = &Decoder::decode_OP_VOP2__V_FMAC_F64;
+        tableDecodePrimary[19] = &Decoder::decode_OP_VOP2__V_FMAC_F64;
+    }
+
+    void Decoder::setGfxVersion(GfxVersion gfxVersion)
+    {
+        // Some ISA have recycled opcodes and are using those going forward.
+        // Here we replace those entries in the decoder table.
+        if (gfxVersion == GfxVersion::gfx90a) {
+            fixupGfx90a();
+        } else if (gfxVersion == GfxVersion::gfx942) {
+            fixupGfx90a();
+            // No further changes beyond changes in gfx90a
+        }
+    }
+
     /*
      * These will probably have to be updated according to the Vega ISA manual:
      * https://developer.amd.com/wp-content/resources/
@@ -3872,6 +3892,12 @@ namespace VegaISA
     {
         return new Inst_VOP2__V_MUL_LEGACY_F32(&iFmt->iFmt_VOP2);
     } // decode_OP_VOP2__V_MUL_LEGACY_F32
+
+    GPUStaticInst*
+    Decoder::decode_OP_VOP2__V_FMAC_F64(MachInst iFmt)
+    {
+        return new Inst_VOP2__V_FMAC_F64(&iFmt->iFmt_VOP2);
+    }
 
     GPUStaticInst*
     Decoder::decode_OP_VOP2__V_MUL_F32(MachInst iFmt)

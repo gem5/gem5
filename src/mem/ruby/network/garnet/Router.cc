@@ -250,16 +250,14 @@ Router::printFaultVector(std::ostream& out)
 {
     int temperature_celcius = BASELINE_TEMPERATURE_CELCIUS;
     int num_fault_types = m_network_ptr->fault_model->number_of_fault_types;
-    float fault_vector[num_fault_types];
-    get_fault_vector(temperature_celcius, fault_vector);
+    auto fault_vector = std::make_unique<float[]>(num_fault_types);
+    get_fault_vector(temperature_celcius, fault_vector.get());
     out << "Router-" << m_id << " fault vector: " << std::endl;
-    for (int fault_type_index = 0; fault_type_index < num_fault_types;
-         fault_type_index++) {
-        out << " - probability of (";
-        out <<
-        m_network_ptr->fault_model->fault_type_to_string(fault_type_index);
-        out << ") = ";
-        out << fault_vector[fault_type_index] << std::endl;
+    for (int i = 0; i < num_fault_types; i++) {
+        out << " - probability of ("
+            << m_network_ptr->fault_model->fault_type_to_string(i)
+            << ") = "
+            << fault_vector[i] << std::endl;
     }
 }
 

@@ -269,25 +269,20 @@ MemState::unmapRegion(Addr start_addr, Addr length)
         tc->getMMUPtr()->flushAll();
     }
 
-    do {
-        if (!_ownerProcess->pTable->isUnmapped(start_addr, _pageBytes))
-            _ownerProcess->pTable->unmap(start_addr, _pageBytes);
-
-        start_addr += _pageBytes;
-
-        /**
-         * The regions need to always be page-aligned otherwise the while
-         * condition will loop indefinitely. (The Addr type is currently
-         * defined to be uint64_t in src/base/types.hh; it can underflow
-         * since it is unsigned.)
-         */
-        length -= _pageBytes;
-    } while (length > 0);
+    /**
+     * Deallocate physical pages mapped to by this virtual address range.
+     */
+    _ownerProcess->deallocateMem(start_addr, length);
 }
 
 void
 MemState::remapRegion(Addr start_addr, Addr new_start_addr, Addr length)
 {
+    /**
+     * Unmap new virtual region before doing anything else.
+     */
+    unmapRegion(new_start_addr, length);
+
     Addr end_addr = start_addr + length;
     const AddrRange range(start_addr, end_addr);
 

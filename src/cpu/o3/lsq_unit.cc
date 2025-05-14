@@ -601,6 +601,11 @@ LSQUnit::executeLoad(const DynInstPtr &inst)
 
     assert(!inst->isSquashed());
 
+    if (inst->isExecuted()) {
+        DPRINTF(LSQUnit, "Load [sn:%lli] already executed\n", inst->seqNum);
+        return NoFault;
+    }
+
     load_fault = inst->initiateAcc();
 
     if (load_fault == NoFault && !inst->readMemAccPredicate()) {

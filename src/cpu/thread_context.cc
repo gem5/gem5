@@ -202,14 +202,14 @@ serialize(const ThreadContext &tc, CheckpointOut &cp)
         const size_t reg_count = reg_class->numRegs();
         const size_t array_bytes = reg_bytes * reg_count;
 
-        uint8_t regs[array_bytes];
-        auto *reg_ptr = regs;
+        auto regs = std::make_unique<uint8_t[]>(array_bytes);
+        auto *reg_ptr = regs.get();
         for (const auto &id: *reg_class) {
             tc.getReg(id, reg_ptr);
             reg_ptr += reg_bytes;
         }
 
-        arrayParamOut(cp, std::string("regs.") + reg_class->name(), regs,
+        arrayParamOut(cp, std::string("regs.") + reg_class->name(), regs.get(),
                 array_bytes);
     }
 
@@ -230,11 +230,11 @@ unserialize(ThreadContext &tc, CheckpointIn &cp)
         const size_t reg_count = reg_class->numRegs();
         const size_t array_bytes = reg_bytes * reg_count;
 
-        uint8_t regs[array_bytes];
-        arrayParamIn(cp, std::string("regs.") + reg_class->name(), regs,
+        auto regs = std::make_unique<uint8_t[]>(array_bytes);
+        arrayParamIn(cp, std::string("regs.") + reg_class->name(), regs.get(),
                 array_bytes);
 
-        auto *reg_ptr = regs;
+        auto *reg_ptr = regs.get();
         for (const auto &id: *reg_class) {
             tc.setReg(id, reg_ptr);
             reg_ptr += reg_bytes;

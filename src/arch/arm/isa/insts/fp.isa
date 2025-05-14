@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2013,2016,2018-2019 ARM Limited
+// Copyright (c) 2010-2013,2016,2018-2019,2024-2025 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -467,6 +467,20 @@ let {{
     decoder_output = ""
     exec_output = ""
 
+    halfCode = vfpEnabledCheckCode + '''
+        [[maybe_unused]] FPSCR fpscr = fpVASimdFPSCRValue((FPSCR)FpscrExc);
+        uint16_t half_src1 = FpOp1_uw & 0xFFFF;
+        uint16_t half_src2 = (FpOp1_uw >> 16) & 0xFFFF;
+        static_assert(std::is_same_v<decltype(%(op1)s), uint16_t>,
+                      "operation triggers invalid implicit conversion");
+        static_assert(std::is_same_v<decltype(%(op2)s), uint16_t>,
+                      "operation triggers invalid implicit conversion");
+        uint16_t half_dest1 = %(op1)s;
+        uint16_t half_dest2 = %(op2)s;
+        FpDestP0 = (uint32_t)half_dest1 | ((uint32_t)half_dest2 << 16);
+        FpscrExc = fpscr;
+    '''
+
     singleSimpleCode = vfpEnabledCheckCode + '''
         [[maybe_unused]] FPSCR fpscr = (FPSCR) FpscrExc;
         static_assert(std::is_same_v<decltype(%(op)s), uint32_t>,
@@ -677,11 +691,16 @@ let {{
     buildUnaryFpOp("vsqrt", "Vsqrt", "FpRegRegOp", "SimdFloatSqrtOp", "sqrtf",
                    "sqrt")
 
-    def buildSimpleUnaryFpOp(name, Name, base, opClass, singleOp, doubleOp):
+    def buildSimpleUnaryFpOp(name, Name, base, opClass,
+                             halfOp1, halfOp2, singleOp, doubleOp):
         if doubleOp is None:
             doubleOp = singleOp
         global header_output, decoder_output, exec_output
 
+        hIop = ArmInstObjParams(name + ".f16", Name + "H", base,
+                { "code": halfCode % { "op1": halfOp1, "op2": halfOp2 },
+                  "predicate_test": predicateTest,
+                  "op_class": opClass }, [])
         sIop = ArmInstObjParams(name + ".f32", Name + "S", base,
                 { "code": singleSimpleCode % { "op": singleOp },
                   "predicate_test": predicateTest,
@@ -694,28 +713,38 @@ let {{
         declareTempl = eval(base + "Declare");
         constructorTempl = eval(base + "Constructor");
 
-        for iop in sIop, dIop:
+        for iop in hIop, sIop, dIop:
             header_output += declareTempl.subst(iop)
             decoder_output += constructorTempl.subst(iop)
             exec_output += PredOpExecute.subst(iop)
 
     buildSimpleUnaryFpOp("vneg", "Vneg", "FpRegRegOp", "SimdFloatMiscOp",
+                         "fplibNeg(half_src1)", "fplibNeg(half_src2)",
                          "fplibNeg(FpOp1_uw)", "fplibNeg(cOp1)")
     buildSimpleUnaryFpOp("vabs", "Vabs", "FpRegRegOp", "SimdFloatMiscOp",
+                         "fplibAbs(half_src1)", "fplibAbs(half_src2)",
                          "fplibAbs(FpOp1_uw)", "fplibAbs(cOp1)")
     buildSimpleUnaryFpOp("vrintp", "VRIntP", "FpRegRegOp", "SimdFloatMiscOp",
+        "fplibRoundInt<uint16_t>(half_src1, FPRounding_POSINF, false, fpscr)",
+        "fplibRoundInt<uint16_t>(half_src2, FPRounding_POSINF, false, fpscr)",
         "fplibRoundInt<uint32_t>(FpOp1_uw, FPRounding_POSINF, false, fpscr)",
         "fplibRoundInt<uint64_t>(cOp1, FPRounding_POSINF, false, fpscr)"
         )
     buildSimpleUnaryFpOp("vrintm", "VRIntM", "FpRegRegOp", "SimdFloatMiscOp",
+        "fplibRoundInt<uint16_t>(half_src1, FPRounding_NEGINF, false, fpscr)",
+        "fplibRoundInt<uint16_t>(half_src2, FPRounding_NEGINF, false, fpscr)",
         "fplibRoundInt<uint32_t>(FpOp1_uw, FPRounding_NEGINF, false, fpscr)",
         "fplibRoundInt<uint64_t>(cOp1, FPRounding_NEGINF, false, fpscr)"
         )
     buildSimpleUnaryFpOp("vrinta", "VRIntA", "FpRegRegOp", "SimdFloatMiscOp",
+        "fplibRoundInt<uint16_t>(half_src1, FPRounding_TIEAWAY, false, fpscr)",
+        "fplibRoundInt<uint16_t>(half_src2, FPRounding_TIEAWAY, false, fpscr)",
         "fplibRoundInt<uint32_t>(FpOp1_uw, FPRounding_TIEAWAY, false, fpscr)",
         "fplibRoundInt<uint64_t>(cOp1, FPRounding_TIEAWAY, false, fpscr)"
         )
     buildSimpleUnaryFpOp("vrintn", "VRIntN", "FpRegRegOp", "SimdFloatMiscOp",
+        "fplibRoundInt<uint16_t>(half_src1, FPRounding_TIEEVEN, false, fpscr)",
+        "fplibRoundInt<uint16_t>(half_src2, FPRounding_TIEEVEN, false, fpscr)",
         "fplibRoundInt<uint32_t>(FpOp1_uw, FPRounding_TIEEVEN, false, fpscr)",
         "fplibRoundInt<uint64_t>(cOp1, FPRounding_TIEEVEN, false, fpscr)"
         )

@@ -150,12 +150,6 @@ parser = argparse.ArgumentParser()
 Options.addCommonOptions(parser, ISA.RISCV)
 Options.addFSOptions(parser)
 parser.add_argument(
-    "--bootloader",
-    action="store",
-    type=str,
-    help="File that contains the bootloader",
-)
-parser.add_argument(
     "--virtio-rng", action="store_true", help="Enable VirtIORng device"
 )
 parser.add_argument(

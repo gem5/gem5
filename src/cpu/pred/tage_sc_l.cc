@@ -239,7 +239,8 @@ TAGE_SC_L_TAGE::bindex(Addr pc) const
 
 void
 TAGE_SC_L_TAGE::updatePathAndGlobalHistory(
-    ThreadID tid, int brtype, bool taken, Addr branch_pc, Addr target)
+    ThreadID tid, int brtype, bool taken, Addr branch_pc, Addr target,
+    TAGEBase::BranchInfo *bi)
 {
     ThreadHistory& tHist = threadHistory[tid];
     // TAGE update
@@ -265,6 +266,7 @@ TAGE_SC_L_TAGE::updatePathAndGlobalHistory(
     }
 
     updateGHist(tid, tmp, maxt);
+    bi->modified = true;
 }
 
 void
@@ -285,7 +287,7 @@ TAGE_SC_L_TAGE::updateHistories(ThreadID tid, Addr branch_pc,
     if (! inst->isUncondCtrl()) {
         ++brtype;
     }
-    updatePathAndGlobalHistory(tid, brtype, taken, branch_pc, target);
+    updatePathAndGlobalHistory(tid, brtype, taken, branch_pc, target, bi);
 
     DPRINTF(TageSCL, "Updating global histories with branch:%lx; taken?:%d, "
             "path Hist: %x; pointer:%d\n", branch_pc, taken, tHist.pathHist,

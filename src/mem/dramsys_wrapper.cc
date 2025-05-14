@@ -37,10 +37,9 @@ namespace memory
 DRAMSysWrapper::DRAMSysWrapper(
     sc_core::sc_module_name name,
     ::DRAMSys::Config::Configuration const &config,
-    bool recordable,
     AddrRange range) :
     sc_core::sc_module(name),
-    dramsys(instantiateDRAMSys(recordable, config)),
+    dramsys(std::make_shared<::DRAMSys::DRAMSys>("DRAMSys", config)),
     range(range)
 {
     tSocket.register_nb_transport_fw(this, &DRAMSysWrapper::nb_transport_fw);
@@ -59,16 +58,6 @@ DRAMSysWrapper::DRAMSysWrapper(
             // Workaround for BUG GEM5-1233
             sc_gem5::Kernel::stop();
         });
-}
-
-std::shared_ptr<::DRAMSys::DRAMSys>
-DRAMSysWrapper::instantiateDRAMSys(
-    bool recordable,
-    ::DRAMSys::Config::Configuration const &config)
-{
-    return recordable
-        ? std::make_shared<::DRAMSys::DRAMSysRecordable>("DRAMSys", config)
-        : std::make_shared<::DRAMSys::DRAMSys>("DRAMSys", config);
 }
 
 void DRAMSysWrapper::b_transport(

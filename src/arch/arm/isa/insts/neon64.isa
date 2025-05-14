@@ -1,6 +1,6 @@
 // -*- mode: c++ -*-
 
-// Copyright (c) 2012-2013, 2015-2018, 2020, 2024 ARM Limited
+// Copyright (c) 2012-2013, 2015-2018, 2020, 2024-2025 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -43,7 +43,7 @@ let {{
 
     # FP types (FP operations always work with unsigned representations)
     floatTypes = ("uint16_t", "uint32_t", "uint64_t")
-    smallFloatTypes = ("uint32_t",)
+    smallFloatTypes = ("uint16_t","uint32_t")
 
     zeroSveVecRegUpperPartCode = '''
         ArmISA::ISA::zeroSveVecRegUpperPart(%s,
@@ -555,7 +555,13 @@ let {{
         %(op)s
         destReg.elements[0] = htole(destElem);
         ''' % { "op" : op }
-        destCnt = rCount // 2
+
+        if rCount == 1:
+            # This is the FP16 case
+            destCnt = rCount
+        else:
+            destCnt = rCount // 2
+
         for reg in range(destCnt):
             eWalkCode += '''
         AA64FpDestP%(reg)d_uw = letoh(destReg.regs[%(reg)d]);
@@ -1435,6 +1441,8 @@ let {{
     threeEqualRegInstX("fadd", "FaddQX", "SimdFloatAddOp", floatTypes, 4,
                        faddCode)
     # FADDP (scalar)
+    twoRegPairwiseScInstX("faddp", "FaddpScSX", "SimdFloatAddOp",
+                          ("uint16_t",), 1, faddCode)
     twoRegPairwiseScInstX("faddp", "FaddpScDX", "SimdFloatAddOp",
                           ("uint32_t",), 2, faddCode)
     twoRegPairwiseScInstX("faddp", "FaddpScQX", "SimdFloatAddOp",
@@ -1653,6 +1661,8 @@ let {{
     threeEqualRegInstX("fmaxnm", "FmaxnmQX", "SimdFloatCmpOp", floatTypes, 4,
                        fmaxnmCode)
     # FMAXNMP (scalar)
+    twoRegPairwiseScInstX("fmaxnmp", "FmaxnmpScSX", "SimdFloatCmpOp",
+                          ("uint16_t",), 1, fmaxnmCode)
     twoRegPairwiseScInstX("fmaxnmp", "FmaxnmpScDX", "SimdFloatCmpOp",
                           ("uint32_t",), 2, fmaxnmCode)
     twoRegPairwiseScInstX("fmaxnmp", "FmaxnmpScQX", "SimdFloatCmpOp",
@@ -1666,9 +1676,15 @@ let {{
     # Note: SimdFloatCmpOp can be a bit optimistic here
     fpAcrossOp = fpOp % "fplib%s<Element>(destElem, srcElem1, fpscr)"
     fmaxnmAcrossCode = fpAcrossOp % "MaxNum"
-    twoRegAcrossInstX("fmaxnmv", "FmaxnmvQX", "SimdFloatCmpOp", ("uint32_t",),
-                      4, fmaxnmAcrossCode, False, False, True)
+    twoRegAcrossInstX("fmaxnmv", "FmaxnmvDX", "SimdFloatCmpOp",
+                      ("uint16_t", "uint32_t"), 2, fmaxnmAcrossCode,
+                      False, False, True)
+    twoRegAcrossInstX("fmaxnmv", "FmaxnmvQX", "SimdFloatCmpOp",
+                      ("uint16_t", "uint32_t"), 4, fmaxnmAcrossCode,
+                      False, False, True)
     # FMAXP (scalar)
+    twoRegPairwiseScInstX("fmaxp", "FmaxpScSX", "SimdFloatCmpOp",
+                          ("uint16_t",), 1, fmaxCode)
     twoRegPairwiseScInstX("fmaxp", "FmaxpScDX", "SimdFloatCmpOp",
                           ("uint32_t",), 2, fmaxCode)
     twoRegPairwiseScInstX("fmaxp", "FmaxpScQX", "SimdFloatCmpOp",
@@ -1681,7 +1697,11 @@ let {{
     # FMAXV
     # Note: SimdFloatCmpOp can be a bit optimistic here
     fmaxAcrossCode = fpAcrossOp % "Max"
-    twoRegAcrossInstX("fmaxv", "FmaxvQX", "SimdFloatCmpOp", ("uint32_t",), 4,
+    twoRegAcrossInstX("fmaxv", "FmaxvDX", "SimdFloatCmpOp",
+                      ("uint16_t", "uint32_t"), 2,
+                      fmaxAcrossCode, False, False, True)
+    twoRegAcrossInstX("fmaxv", "FmaxvQX", "SimdFloatCmpOp",
+                      ("uint16_t", "uint32_t"), 4,
                       fmaxAcrossCode, False, False, True)
     # FMIN
     fminCode = fpBinOp % "Min"
@@ -1696,6 +1716,8 @@ let {{
     threeEqualRegInstX("fminnm", "FminnmQX", "SimdFloatCmpOp", floatTypes, 4,
                        fminnmCode)
     # FMINNMP (scalar)
+    twoRegPairwiseScInstX("fminnmp", "FminnmpScSX", "SimdFloatCmpOp",
+                          ("uint16_t",), 1, fminnmCode)
     twoRegPairwiseScInstX("fminnmp", "FminnmpScDX", "SimdFloatCmpOp",
                           ("uint32_t",), 2, fminnmCode)
     twoRegPairwiseScInstX("fminnmp", "FminnmpScQX", "SimdFloatCmpOp",
@@ -1708,9 +1730,15 @@ let {{
     # FMINNMV
     # Note: SimdFloatCmpOp can be a bit optimistic here
     fminnmAcrossCode = fpAcrossOp % "MinNum"
-    twoRegAcrossInstX("fminnmv", "FminnmvQX", "SimdFloatCmpOp", ("uint32_t",),
-                      4, fminnmAcrossCode, False, False, True)
+    twoRegAcrossInstX("fminnmv", "FminnmvDX", "SimdFloatCmpOp",
+                      ("uint16_t", "uint32_t"), 2, fminnmAcrossCode,
+                      False, False, True)
+    twoRegAcrossInstX("fminnmv", "FminnmvQX", "SimdFloatCmpOp",
+                      ("uint16_t", "uint32_t"), 4, fminnmAcrossCode,
+                      False, False, True)
     # FMINP (scalar)
+    twoRegPairwiseScInstX("fminp", "FminpScSX", "SimdFloatCmpOp",
+                          ("uint16_t",), 1, fminCode)
     twoRegPairwiseScInstX("fminp", "FminpScDX", "SimdFloatCmpOp",
                           ("uint32_t",), 2, fminCode)
     twoRegPairwiseScInstX("fminp", "FminpScQX", "SimdFloatCmpOp",
@@ -1723,7 +1751,11 @@ let {{
     # FMINV
     # Note: SimdFloatCmpOp can be a bit optimistic here
     fminAcrossCode = fpAcrossOp % "Min"
-    twoRegAcrossInstX("fminv", "FminvQX", "SimdFloatCmpOp", ("uint32_t",), 4,
+    twoRegAcrossInstX("fminv", "FminvDX", "SimdFloatCmpOp",
+                      ("uint16_t", "uint32_t"), 2,
+                      fminAcrossCode, False, False, True)
+    twoRegAcrossInstX("fminv", "FminvQX", "SimdFloatCmpOp",
+                      ("uint16_t", "uint32_t"), 4,
                       fminAcrossCode, False, False, True)
     # FMLA (by element)
     fmlaCode = fpOp % ("fplibMulAdd<Element>("
@@ -2134,31 +2166,35 @@ let {{
     threeRegWideInstX("saddw2", "Saddw2X", "SimdAddAccOp", smallSignedTypes,
                       addlwCode, hi=True)
     # SCVTF (fixed-point)
-    scvtfFixedCode = fpOp % ("fplibFixedToFP<Element>((int%d_t) srcElem1, imm,"
+    scvtfFixedCode = fpOp % ("fplibFixedToFP<Element>("
+                             "sext<sizeof(Element) * 8>(srcElem1), imm,"
                              " false, FPCRRounding(fpscr), fpscr)")
     twoEqualRegInstX("scvtf", "ScvtfFixedDX", "SimdCvtOp", smallFloatTypes, 2,
-                     scvtfFixedCode % 32, hasImm=True)
+                     scvtfFixedCode, hasImm=True)
     twoEqualRegInstX("scvtf", "ScvtfFixedSQX", "SimdCvtOp", smallFloatTypes, 4,
-                     scvtfFixedCode % 32, hasImm=True)
+                     scvtfFixedCode, hasImm=True)
     twoEqualRegInstX("scvtf", "ScvtfFixedDQX", "SimdCvtOp", ("uint64_t",), 4,
-                     scvtfFixedCode % 64, hasImm=True)
+                     scvtfFixedCode, hasImm=True)
     twoEqualRegInstX("scvtf", "ScvtfFixedScSX", "SimdCvtOp", smallFloatTypes,
-                     4, scvtfFixedCode % 32, hasImm=True, scalar=True)
+                     4, scvtfFixedCode, hasImm=True, scalar=True)
     twoEqualRegInstX("scvtf", "ScvtfFixedScDX", "SimdCvtOp", ("uint64_t",), 4,
-                     scvtfFixedCode % 64, hasImm=True, scalar=True)
+                     scvtfFixedCode, hasImm=True, scalar=True)
     # SCVTF (integer)
-    scvtfIntCode = fpOp % ("fplibFixedToFP<Element>((int%d_t) srcElem1, 0,"
+    scvtfIntCode = fpOp % ("fplibFixedToFP<Element>("
+                           "sext<sizeof(Element) * 8>(srcElem1), 0,"
                            " false, FPCRRounding(fpscr), fpscr)")
     twoEqualRegInstX("scvtf", "ScvtfIntDX", "SimdCvtOp", smallFloatTypes, 2,
-                     scvtfIntCode % 32)
+                     scvtfIntCode)
     twoEqualRegInstX("scvtf", "ScvtfIntSQX", "SimdCvtOp", smallFloatTypes, 4,
-                     scvtfIntCode % 32)
+                     scvtfIntCode)
     twoEqualRegInstX("scvtf", "ScvtfIntDQX", "SimdCvtOp", ("uint64_t",), 4,
-                     scvtfIntCode % 64)
-    twoEqualRegInstX("scvtf", "ScvtfIntScSX", "SimdCvtOp", smallFloatTypes, 4,
-                     scvtfIntCode % 32, scalar=True)
+                     scvtfIntCode)
+    twoEqualRegInstX("scvtf", "ScvtfIntScHX", "SimdCvtOp", ("uint16_t",), 4,
+                     scvtfIntCode, scalar=True)
+    twoEqualRegInstX("scvtf", "ScvtfIntScSX", "SimdCvtOp", ("uint32_t",), 4,
+                     scvtfIntCode, scalar=True)
     twoEqualRegInstX("scvtf", "ScvtfIntScDX", "SimdCvtOp", ("uint64_t",), 4,
-                     scvtfIntCode % 64, scalar=True)
+                     scvtfIntCode, scalar=True)
     # SHADD
     haddCode = '''
             Element carryBit =

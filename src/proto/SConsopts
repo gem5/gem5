@@ -62,7 +62,7 @@ with gem5_scons.Configure(main) as conf:
             (conf.env['HAVE_PKG_CONFIG'] and
             conf.CheckPkgConfig('protobuf', '--cflags', '--libs')) or
             conf.CheckLibWithHeader('protobuf', 'google/protobuf/message.h',
-                                    'C++', 'GOOGLE_PROTOBUF_VERIFY_VERSION;'))
+                                    'C++', call='GOOGLE_PROTOBUF_VERIFY_VERSION;'))
     )
 
 # If we have the compiler but not the library, print another warning.

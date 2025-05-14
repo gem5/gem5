@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2012 ARM Limited
+// Copyright (c) 2010-2012, 2024, 2025 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -142,12 +142,13 @@ decode BIGTHUMB {
             default: decode HTOPCODE_9_8 {
                 0x2: decode LTOPCODE_4 {
                     0x0: decode LTCOPROC {
-                        0x8: Thumb32NeonSIMD::thumb32NeonSIMD();
+                        0x8, 0xc, 0xd: Thumb32NeonSIMD::thumb32NeonSIMD();
                         0xa, 0xb: VfpData::vfpData();
                         default: WarnUnimpl::cdp(); // cdp2
                     }
                     0x1: decode LTCOPROC {
                         0x1: Gem5Op::gem5op();
+                        0x8, 0xc, 0xd: Thumb32NeonSIMD::Thumb32NeonSIMD();
                         0xa, 0xb: ShortFpTransfer::shortFpTransfer();
                         0xe: McrMrc14::mcrMrc14();
                         0xf: McrMrc15::mcrMrc15();

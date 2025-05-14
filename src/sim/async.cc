@@ -35,5 +35,6 @@ volatile bool async_statreset = false;
 volatile bool async_exit = false;
 volatile bool async_io = false;
 volatile bool async_exception = false;
+volatile bool async_hypercall = false;
 
 } // namespace gem5

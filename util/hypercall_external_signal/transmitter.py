@@ -98,16 +98,19 @@ def send_signal(pid: int, id: int, payload: str) -> None:
     try:
         final_payload = create_json(id, payload)
         shm.buf[: len(final_payload.encode())] = final_payload.encode()
-        # Note: SIGHUP is used as SIGUSR1 and SIGUSR2 are already in used by
+        # Note: SIGCONT is used as SIGUSR1 and SIGUSR2 are already in used by
         # gem5 for other purposes. SIGRTMIN and SIGRTMAX (usually the suggested
         # alternative when SIGUSR1 and SIGUSR2 unavailable) cannot be used in
         # this case as they are not supported on MacOS.
         #
-        # SIGHUP is compatible with both Linux and MacOS and was not otherwise
-        # used by gem5. In general, SIGHUP is a signal that is
-        # for use in interacting with system daemons to request reloading of
-        # their configurations.
-        os.kill(pid, signal.SIGHUP)
+        # SIGCONT is compatible with both Linux and MacOS and was not otherwise
+        # used by gem5. In general, SIGCONT is used to continue a process if it
+        # was stopped. It is ignored by default, which makes it preferable to
+        # signals that kill processes by default, as this means it won't kill
+        # newly launched gem5 simulations that haven't registered signal
+        # handlers yet.
+
+        os.kill(pid, signal.SIGCONT)
     except ProcessLookupError:
         logger.error(
             "Process does not exist! Check that you are using the correct PID."

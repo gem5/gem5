@@ -300,7 +300,6 @@ def define_constants(constants):
         constants.host_isa_tag_type: (
             constants.host_x86_64_tag,
             constants.host_arm_tag,
-            constants.host_gcn_gpu_tag,
         ),
     }
 
@@ -309,13 +308,16 @@ def define_constants(constants):
     constants.target_host = {
         constants.arm_tag: (constants.host_arm_tag,),
         constants.x86_tag: (constants.host_x86_64_tag,),
-        constants.vega_x86_tag: (constants.host_x86_64_tag,),
+        constants.vega_x86_tag: (constants.host_gcn_gpu_tag,),
         constants.sparc_tag: (constants.host_x86_64_tag,),
         constants.riscv_tag: (constants.host_x86_64_tag,),
         constants.mips_tag: (constants.host_x86_64_tag,),
         constants.power_tag: (constants.host_x86_64_tag,),
         constants.null_tag: (None,),
-        constants.all_compiled_tag: (None,),
+        constants.all_compiled_tag: (
+            constants.host_x86_64_tag,
+            constants.host_arm_tag,
+        ),
     }
 
     constants.supported_isas = constants.supported_tags["isa"]

@@ -563,6 +563,7 @@ VlFFTrimVlMicroOp::execute(ExecContext *xc, trace::InstRecord *traceData) const
     }
 
     pc.vl(new_vl);
+    pc.new_vconf(true);
     xc->pcState(pc);
 
     return NoFault;

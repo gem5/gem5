@@ -570,20 +570,25 @@ ScheduleStage::fillDispatchList()
 
         // iterate waves in schList to pick one for dispatch
         auto schIter = schList.at(j).begin();
-        bool dispatched = false;
+        auto selected_iter = schList.at(j).end();
+
+        //find the earliest ready wave according to seqNum
+        for (auto iter = schList.at(j).begin();
+            iter != schList.at(j).end(); iter++) {
+            if (iter->second == RFREADY && dispatchReady(iter->first)) {
+                if (selected_iter == schList.at(j).end()) {
+                    selected_iter = iter;
+                } else if
+                     (selected_iter->first->seqNum() > iter->first->seqNum()) {
+                    selected_iter = iter;
+                }
+            }
+        }
         while (schIter != schList.at(j).end()) {
             // only attempt to dispatch if status is RFREADY
             if (schIter->second == RFREADY) {
-                // Check if this wave is ready for dispatch
-                bool dispRdy = dispatchReady(schIter->first);
-                if (!dispatched && dispRdy) {
-                    // No other wave has been dispatched for this exe
-                    // resource, and this wave is ready. Place this wave
-                    // on dispatchList and make it ready for execution
-                    // next cycle.
-
-                    // Acquire a coalescer token if it is a global mem
-                    // operation.
+                //oldest wave selected for dispatch
+                if (schIter == selected_iter) {
                     GPUDynInstPtr mp = schIter->first;
                     if (!mp->isMemSync() && !mp->isScalar() &&
                         mp->needsToken()) {
@@ -599,13 +604,12 @@ ScheduleStage::fillDispatchList()
                     DPRINTF(GPUSched, "dispatchList[%d]: fillDispatchList: "
                             "EMPTY->EXREADY\n", j);
                     schIter->first = nullptr;
-                    schIter = schList.at(j).erase(schIter);
-                    dispatched = true;
+                    schIter++;
                 } else {
-                    // Either another wave has been dispatched, or this wave
-                    // was not ready, so it is stalled this cycle
+                    // Either another wave has been selected for dispatch,
+                    // or this wave was not ready, so it is stalled this cycle
                     schIter->first->wavefront()->stats.schStalls++;
-                    if (!dispRdy) {
+                    if (!dispatchReady(schIter->first)) {
                         // not ready for dispatch, increment stall stat
                         schIter->first->wavefront()->stats.schResourceStalls++;
                     }
@@ -620,10 +624,13 @@ ScheduleStage::fillDispatchList()
 
         // Increment stall count if no wave sent to dispatchList for
         // current execution resource
-        if (!dispatched) {
+        // No wave has been selected for dispatch = not dispatched
+        if (selected_iter == schList.at(j).end()) {
             stats.schListToDispListStalls[j]++;
         } else {
             stats.schListToDispList[j]++;
+            //erase the dispatched wave
+            schList.at(j).erase(selected_iter);
         }
     }
 }

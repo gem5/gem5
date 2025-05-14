@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2015-2024 Arm Limited
+ * Copyright (c) 2010-2013, 2015-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -4899,6 +4899,8 @@ ISA::initializeMiscRegMetadata()
           pfr0_el1.el2 = release->has(ArmExtension::VIRTUALIZATION)
                                   ? 0x2 : 0x0;
           pfr0_el1.el3 = release->has(ArmExtension::SECURITY) ? 0x2 : 0x0;
+          pfr0_el1.fp = release->has(ArmExtension::FEAT_FP16) ? 0x1 : 0x0;
+          pfr0_el1.advsimd = release->has(ArmExtension::FEAT_FP16) ? 0x1 : 0x0;
           pfr0_el1.sve = release->has(ArmExtension::FEAT_SVE) ? 0x1 : 0x0;
           pfr0_el1.sel2 = release->has(ArmExtension::FEAT_SEL2) ? 0x1 : 0x0;
           // See MPAM frac in MISCREG_ID_AA64PFR1_EL1. Currently supporting

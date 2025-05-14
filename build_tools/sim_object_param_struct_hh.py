@@ -1,7 +1,7 @@
 # Copyright 2004-2006 The Regents of The University of Michigan
 # Copyright 2010-20013 Advanced Micro Devices, Inc.
 # Copyright 2013 Mark D. Hill and David A. Wood
-# Copyright 2017-2020 ARM Limited
+# Copyright 2017-2020, 2025 Arm Limited
 # Copyright 2021 Google, Inc.
 #
 # The license below extends only to copyright in the software and shall
@@ -71,7 +71,7 @@ params = list(
 )
 ports = sim_object._ports.local
 try:
-    ptypes = [p.ptype for p in params]
+    ptypes = [single_type for p in params for single_type in p.ptypes]
 except:
     print(sim_object)
     print(params)

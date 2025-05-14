@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2011, 2015, 2019, 2024 ARM Limited
+// Copyright (c) 2010-2011, 2015, 2019, 2024-2025 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -348,14 +348,20 @@ output header {{
 
     template <template <typename T> class Base>
     StaticInstPtr
-    decodeNeonUThreeImmScFpReg(bool size, ExtMachInst machInst,
+    decodeNeonUThreeImmScFpReg(uint8_t size, ExtMachInst machInst,
                                RegIndex dest, RegIndex op1,
                                RegIndex op2, uint64_t imm)
     {
-        if (size)
+        switch (size) {
+          case 0b11:
             return new Base<uint64_t>(machInst, dest, op1, op2, imm);
-        else
+          case 0b10:
             return new Base<uint32_t>(machInst, dest, op1, op2, imm);
+          case 0b00:
+            return new Base<uint16_t>(machInst, dest, op1, op2, imm);
+          default:
+            return new Unknown(machInst);
+        }
     }
 
     template <template <typename T> class BaseD,
@@ -422,15 +428,25 @@ output header {{
                              RegIndex op2, uint64_t imm)
     {
         if (q) {
-            if (size)
+            switch (size) {
+              case 0b11:
                 return new BaseQ<uint64_t>(machInst, dest, op1, op2, imm);
-            else
+              case 0b10:
                 return new BaseQ<uint32_t>(machInst, dest, op1, op2, imm);
-        } else {
-            if (size)
+              case 0b00:
+                return new BaseQ<uint16_t>(machInst, dest, op1, op2, imm);
+              default:
                 return new Unknown(machInst);
-            else
+            }
+        } else {
+            switch (size) {
+              case 0b10:
                 return new BaseD<uint32_t>(machInst, dest, op1, op2, imm);
+              case 0b00:
+                return new BaseD<uint16_t>(machInst, dest, op1, op2, imm);
+              default:
+                return new Unknown(machInst);
+            }
         }
     }
 
@@ -682,10 +698,16 @@ output header {{
     decodeNeonUTwoShiftUFpReg(unsigned size, ExtMachInst machInst,
                               RegIndex dest, RegIndex op1, uint64_t imm)
     {
-        if (size)
+        switch (size) {
+          case 0b11:
             return new Base<uint64_t>(machInst, dest, op1, imm);
-        else
+          case 0b10:
             return new Base<uint32_t>(machInst, dest, op1, imm);
+          case 0b01:
+            return new Base<uint16_t>(machInst, dest, op1, imm);
+          default:
+            return new Unknown(machInst);
+        }
     }
 
     template <template <typename T> class BaseD,
@@ -695,15 +717,25 @@ output header {{
                              RegIndex dest, RegIndex op1, uint64_t imm)
     {
         if (q) {
-            if (size)
+            switch (size) {
+              case 0b11:
                 return new BaseQ<uint64_t>(machInst, dest, op1, imm);
-            else
+              case 0b10:
                 return new BaseQ<uint32_t>(machInst, dest, op1, imm);
-        } else {
-            if (size)
+              case 0b01:
+                return new BaseQ<uint16_t>(machInst, dest, op1, imm);
+              default:
                 return new Unknown(machInst);
-            else
+            }
+        } else {
+            switch (size) {
+              case 0b10:
                 return new BaseD<uint32_t>(machInst, dest, op1, imm);
+              case 0b01:
+                return new BaseD<uint16_t>(machInst, dest, op1, imm);
+              default:
+                return new Unknown(machInst);
+            }
         }
     }
 
@@ -900,16 +932,25 @@ output header {{
         }
     }
 
-    template <template <typename T> class BaseD,
+    template <template <typename T> class BaseS,
+              template <typename T> class BaseD,
               template <typename T> class BaseQ>
     StaticInstPtr
-    decodeNeonUTwoMiscPwiseScFpReg(unsigned size, ExtMachInst machInst,
+    decodeNeonUTwoMiscPwiseScFpReg(unsigned u, unsigned size,
+                                   ExtMachInst machInst,
                                    RegIndex dest, RegIndex op1)
     {
-        if (size)
-            return new BaseQ<uint64_t>(machInst, dest, op1);
-        else
-            return new BaseD<uint32_t>(machInst, dest, op1);
+        if (u) {
+            if (size)
+                return new BaseQ<uint64_t>(machInst, dest, op1);
+            else
+                return new BaseD<uint32_t>(machInst, dest, op1);
+        } else {
+            if (size)
+                return new Unknown64(machInst);
+            else
+                return new BaseS<uint16_t>(machInst, dest, op1);
+        }
     }
 
     template <template <typename T> class Base>
@@ -1553,7 +1594,7 @@ let {{
             exec_output += NeonExecDeclare.subst(substDict)
 
     def twoRegShiftInst(name, Name, opClass, types, rCount, op,
-            readDest=False, toInt=False, fromInt=False):
+            readDest=False, toInt=False, fromInt=False, readSrcElem=True):
         global header_output, exec_output
         eWalkCode = simdEnabledCheckCode + '''
         RegVect srcRegs1, destRegs;
@@ -1587,7 +1628,7 @@ let {{
             %(op)s
             %(writeDest)s
         }
-        ''' % { "readOp" : readOpCode,
+        ''' % { "readOp" : readOpCode if readSrcElem else "",
                 "declDest" : declDest,
                 "readDest" : readDestCode,
                 "op" : op,
@@ -2883,7 +2924,7 @@ let {{
             name,
             Name,
             "SimdFloatCmpOp",
-            ("uint32_t",),
+            ("uint16_t", "uint32_t",),
             rCount,
             vMinMaxFpCode % op,
             pairwise=pairwise,
@@ -2904,6 +2945,21 @@ let {{
     threeEqualRegInstFp("vpadd", "VpaddQFp", "SimdFloatAddOp", ("float",),
                         4, vaddfpCode, pairwise=True)
 
+    vaddfpHCode = '''
+        FPSCR fpscr = fpVASimdFPSCRValue((FPSCR)FpscrExc);
+        destElem = fplibAdd(srcElem1, srcElem2, fpscr);
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    threeEqualRegInst("vadd", "VaddDFpH", "SimdFloatAddOp", ("uint16_t",),
+            2, vaddfpHCode)
+    threeEqualRegInst("vadd", "VaddQFpH", "SimdFloatAddOp", ("uint16_t",),
+            4, vaddfpHCode)
+
+    threeEqualRegInst("vpadd", "VpaddDFpH", "SimdFloatAddOp", ("uint16_t",),
+                        2, vaddfpHCode, pairwise=True)
+    threeEqualRegInst("vpadd", "VpaddQFpH", "SimdFloatAddOp", ("uint16_t",),
+                        4, vaddfpHCode, pairwise=True)
+
     vsubfpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
         destReg = binaryOp(fpscr, srcReg1, srcReg2, fpSubS,
@@ -2913,6 +2969,16 @@ let {{
     threeEqualRegInstFp("vsub", "VsubDFp", "SimdFloatAddOp", ("float",), 2, vsubfpCode)
     threeEqualRegInstFp("vsub", "VsubQFp", "SimdFloatAddOp", ("float",), 4, vsubfpCode)
 
+    vsubfpHCode = '''
+        FPSCR fpscr = fpVASimdFPSCRValue((FPSCR)FpscrExc);
+        destElem = fplibSub(srcElem1, srcElem2, fpscr);
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    threeEqualRegInst("vsub", "VsubDFpH", "SimdFloatAddOp", ("uint16_t",),
+            2, vsubfpHCode)
+    threeEqualRegInst("vsub", "VsubQFpH", "SimdFloatAddOp", ("uint16_t",),
+            4, vsubfpHCode)
+
     vmulfpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
         destReg = binaryOp(fpscr, srcReg1, srcReg2, fpMulS,
@@ -2921,6 +2987,16 @@ let {{
     '''
     threeEqualRegInstFp("vmul", "NVmulDFp", "SimdFloatMultOp", ("float",), 2, vmulfpCode)
     threeEqualRegInstFp("vmul", "NVmulQFp", "SimdFloatMultOp", ("float",), 4, vmulfpCode)
+
+    vmulfpHCode = '''
+        FPSCR fpscr = fpVASimdFPSCRValue((FPSCR)FpscrExc);
+        destElem = fplibMul(srcElem1, srcElem2, fpscr);
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    threeEqualRegInst("vmul", "NVmulDFpH", "SimdFloatMultOp", ("uint16_t",),
+            2, vmulfpHCode)
+    threeEqualRegInst("vmul", "NVmulQFpH", "SimdFloatMultOp", ("uint16_t",),
+            4, vmulfpHCode)
 
     vmlafpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
@@ -2933,6 +3009,17 @@ let {{
     threeEqualRegInstFp("vmla", "NVmlaDFp", "SimdFloatMultAccOp", ("float",), 2, vmlafpCode, True)
     threeEqualRegInstFp("vmla", "NVmlaQFp", "SimdFloatMultAccOp", ("float",), 4, vmlafpCode, True)
 
+    vmlafpHCode = '''
+        FPSCR fpscr = fpVASimdFPSCRValue((FPSCR)FpscrExc);
+        destElem = fplibAdd(
+            destElem, fplibMul(srcElem1, srcElem2, fpscr), fpscr);
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    threeEqualRegInst("vmla", "NVmlaDFpH", "SimdFloatMultAccOp", ("uint16_t",),
+                      2, vmlafpHCode, True)
+    threeEqualRegInst("vmla", "NVmlaQFpH", "SimdFloatMultAccOp", ("uint16_t",),
+                      4, vmlafpHCode, True)
+
     vfmafpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
         destReg = ternaryOp(fpscr, srcReg1, srcReg2, destReg, fpMulAdd<float>,
@@ -2942,6 +3029,16 @@ let {{
     threeEqualRegInstFp("vfma", "NVfmaDFp", "SimdFloatMultAccOp", ("float",), 2, vfmafpCode, True)
     threeEqualRegInstFp("vfma", "NVfmaQFp", "SimdFloatMultAccOp", ("float",), 4, vfmafpCode, True)
 
+    vfmafpHCode = '''
+        FPSCR fpscr = fpVASimdFPSCRValue((FPSCR)FpscrExc);
+        destElem = fplibMulAdd(destElem, srcElem1, srcElem2, fpscr);
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    threeEqualRegInst("vfma", "NVfmaDFpH", "SimdFloatMultAccOp", ("uint16_t",),
+                      2, vfmafpHCode, True)
+    threeEqualRegInst("vfma", "NVfmaQFpH", "SimdFloatMultAccOp", ("uint16_t",),
+                      4, vfmafpHCode, True)
+
     vfmsfpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
         destReg = ternaryOp(fpscr, -srcReg1, srcReg2, destReg, fpMulAdd<float>,
@@ -2950,6 +3047,16 @@ let {{
     '''
     threeEqualRegInstFp("vfms", "NVfmsDFp", "SimdFloatMultAccOp", ("float",), 2, vfmsfpCode, True)
     threeEqualRegInstFp("vfms", "NVfmsQFp", "SimdFloatMultAccOp", ("float",), 4, vfmsfpCode, True)
+
+    vfmsfpHCode = '''
+        FPSCR fpscr = fpVASimdFPSCRValue((FPSCR)FpscrExc);
+        destElem = fplibMulAdd(destElem, fplibNeg(srcElem1), srcElem2, fpscr);
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    threeEqualRegInst("vfms", "NVfmsDFpH", "SimdFloatMultAccOp", ("uint16_t",),
+                      2, vfmsfpHCode, True)
+    threeEqualRegInst("vfms", "NVfmsQFpH", "SimdFloatMultAccOp", ("uint16_t",),
+                      4, vfmsfpHCode, True)
 
     vmlsfpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
@@ -2961,6 +3068,17 @@ let {{
     '''
     threeEqualRegInstFp("vmls", "NVmlsDFp", "SimdFloatMultAccOp", ("float",), 2, vmlsfpCode, True)
     threeEqualRegInstFp("vmls", "NVmlsQFp", "SimdFloatMultAccOp", ("float",), 4, vmlsfpCode, True)
+
+    vmlsfpHCode = '''
+        FPSCR fpscr = fpVASimdFPSCRValue((FPSCR)FpscrExc);
+        destElem = fplibAdd(
+            destElem, fplibNeg(fplibMul(srcElem1, srcElem2, fpscr)), fpscr);
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    threeEqualRegInst("vmls", "NVmlsDFpH", "SimdFloatMultAccOp", ("uint16_t",),
+                      2, vmlsfpHCode, True)
+    threeEqualRegInst("vmls", "NVmlsQFpH", "SimdFloatMultAccOp", ("uint16_t",),
+                      4, vmlsfpHCode, True)
 
     vcgtfpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
@@ -2976,6 +3094,17 @@ let {{
     threeEqualRegInstFp("vcgt", "VcgtQFp", "SimdFloatCmpOp", ("float",),
             4, vcgtfpCode, toInt = True)
 
+    vcgtfpHCode = '''
+        FPSCR fpscr = fpVASimdFPSCRValue((FPSCR)FpscrExc);
+        bool test_passed = fplibCompareGT(srcElem1, srcElem2, fpscr);
+        destElem = test_passed ? 0xFFFF : 0x0000;
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    threeEqualRegInst("vcgt", "VcgtDFpH", "SimdFloatCmpOp", ("uint16_t",),
+            2, vcgtfpHCode)
+    threeEqualRegInst("vcgt", "VcgtQFpH", "SimdFloatCmpOp", ("uint16_t",),
+            4, vcgtfpHCode)
+
     vcgefpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
         float res = binaryOp(fpscr, srcReg1, srcReg2, vcgeFunc,
@@ -2989,6 +3118,17 @@ let {{
             2, vcgefpCode, toInt = True)
     threeEqualRegInstFp("vcge", "VcgeQFp", "SimdFloatCmpOp", ("float",),
             4, vcgefpCode, toInt = True)
+
+    vcgefpHCode = '''
+        FPSCR fpscr = fpVASimdFPSCRValue((FPSCR)FpscrExc);
+        bool test_passed = fplibCompareGE(srcElem1, srcElem2, fpscr);
+        destElem = test_passed ? 0xFFFF : 0x0000;
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    threeEqualRegInst("vcge", "VcgeDFpH", "SimdFloatCmpOp", ("uint16_t",),
+            2, vcgefpHCode)
+    threeEqualRegInst("vcge", "VcgeQFpH", "SimdFloatCmpOp", ("uint16_t",),
+            4, vcgefpHCode)
 
     vacgtfpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
@@ -3004,6 +3144,18 @@ let {{
     threeEqualRegInstFp("vacgt", "VacgtQFp", "SimdFloatCmpOp", ("float",),
             4, vacgtfpCode, toInt = True)
 
+    vacgtfpHCode = '''
+        FPSCR fpscr = fpVASimdFPSCRValue((FPSCR)FpscrExc);
+        bool test_passed = fplibCompareGT(
+            fplibAbs(srcElem1), fplibAbs(srcElem2), fpscr);
+        destElem = test_passed ? 0xFFFF : 0x0000;
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    threeEqualRegInst("vacgt", "VacgtDFpH", "SimdFloatCmpOp", ("uint16_t",),
+            2, vacgtfpHCode)
+    threeEqualRegInst("vacgt", "VacgtQFpH", "SimdFloatCmpOp", ("uint16_t",),
+            4, vacgtfpHCode)
+
     vacgefpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
         float res = binaryOp(fpscr, srcReg1, srcReg2, vacgeFunc,
@@ -3017,6 +3169,18 @@ let {{
             2, vacgefpCode, toInt = True)
     threeEqualRegInstFp("vacge", "VacgeQFp", "SimdFloatCmpOp", ("float",),
             4, vacgefpCode, toInt = True)
+
+    vacgefpHCode = '''
+        FPSCR fpscr = fpVASimdFPSCRValue((FPSCR)FpscrExc);
+        bool test_passed = fplibCompareGE(
+            fplibAbs(srcElem1), fplibAbs(srcElem2), fpscr);
+        destElem = test_passed ? 0xFFFF : 0x0000;
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    threeEqualRegInst("vacge", "VacgeDFpH", "SimdFloatCmpOp", ("uint16_t",),
+            2, vacgefpHCode)
+    threeEqualRegInst("vacge", "VacgeQFpH", "SimdFloatCmpOp", ("uint16_t",),
+            4, vacgefpHCode)
 
     vceqfpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
@@ -3032,6 +3196,17 @@ let {{
     threeEqualRegInstFp("vceq", "VceqQFp", "SimdFloatCmpOp", ("float",),
             4, vceqfpCode, toInt = True)
 
+    vceqfpHCode = '''
+        FPSCR fpscr = fpVASimdFPSCRValue((FPSCR)FpscrExc);
+        bool test_passed = fplibCompareEQ(srcElem1, srcElem2, fpscr);
+        destElem = test_passed ? 0xFFFF : 0x0000;
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    threeEqualRegInst("vceq", "VceqDFpH", "SimdFloatCmpOp", ("uint16_t",),
+            2, vceqfpHCode)
+    threeEqualRegInst("vceq", "VceqQFpH", "SimdFloatCmpOp", ("uint16_t",),
+            4, vceqfpHCode)
+
     vrecpsCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
         destReg = binaryOp(fpscr, srcReg1, srcReg2, fpRecpsS,
@@ -3041,6 +3216,16 @@ let {{
     threeEqualRegInstFp("vrecps", "VrecpsDFp", "SimdFloatMultAccOp", ("float",), 2, vrecpsCode)
     threeEqualRegInstFp("vrecps", "VrecpsQFp", "SimdFloatMultAccOp", ("float",), 4, vrecpsCode)
 
+    vrecpsFpHCode = '''
+        FPSCR fpscr = fpVASimdFPSCRValue((FPSCR)FpscrExc);
+        destElem = fplib32RecipStep(srcElem1, srcElem2, fpscr);
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    threeEqualRegInst("vrecps", "VrecpsDFpH", "SimdFloatMultAccOp",
+                      ("uint16_t",), 2, vrecpsFpHCode)
+    threeEqualRegInst("vrecps", "VrecpsQFpH", "SimdFloatMultAccOp",
+                      ("uint16_t",), 4, vrecpsFpHCode)
+
     vrsqrtsCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
         destReg = binaryOp(fpscr, srcReg1, srcReg2, fpRSqrtsS,
@@ -3049,6 +3234,16 @@ let {{
     '''
     threeEqualRegInstFp("vrsqrts", "VrsqrtsDFp", "SimdFloatMiscOp", ("float",), 2, vrsqrtsCode)
     threeEqualRegInstFp("vrsqrts", "VrsqrtsQFp", "SimdFloatMiscOp", ("float",), 4, vrsqrtsCode)
+
+    vrsqrtsFpHCode = '''
+        FPSCR fpscr = fpVASimdFPSCRValue((FPSCR)FpscrExc);
+        destElem = fplib32RSqrtStep(srcElem1, srcElem2, fpscr);
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    threeEqualRegInst("vrsqrts", "VrsqrtsDFpH", "SimdFloatMiscOp",
+                      ("uint16_t",), 2, vrsqrtsFpHCode)
+    threeEqualRegInst("vrsqrts", "VrsqrtsQFpH", "SimdFloatMiscOp",
+                      ("uint16_t",), 4, vrsqrtsFpHCode)
 
     vabdfpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
@@ -3060,22 +3255,50 @@ let {{
     threeEqualRegInstFp("vabd", "VabdDFp", "SimdFloatAddOp", ("float",), 2, vabdfpCode)
     threeEqualRegInstFp("vabd", "VabdQFp", "SimdFloatAddOp", ("float",), 4, vabdfpCode)
 
-    twoEqualRegInst("vmla", "VmlasD", "SimdMultAccOp", unsignedTypes, 2, vmlaCode, True)
-    twoEqualRegInst("vmla", "VmlasQ", "SimdMultAccOp", unsignedTypes, 4, vmlaCode, True)
-    twoEqualRegInstFp("vmla", "VmlasDFp", "SimdFloatMultAccOp", ("float",), 2, vmlafpCode, True)
-    twoEqualRegInstFp("vmla", "VmlasQFp", "SimdFloatMultAccOp", ("float",), 4, vmlafpCode, True)
-    twoRegLongInst("vmlal", "Vmlals", "SimdMultAccOp", smallTypes, vmlalCode, True)
+    vabdfpHCode = '''
+        FPSCR fpscr = fpVASimdFPSCRValue((FPSCR)FpscrExc);
+        destElem = fplibAbs<Element>(fplibSub(srcElem1, srcElem2, fpscr));
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    threeEqualRegInst("vabd", "VabdDFpH", "SimdFloatAddOp", ("uint16_t",), 2,
+                      vabdfpHCode)
+    threeEqualRegInst("vabd", "VabdQFpH", "SimdFloatAddOp", ("uint16_t",), 4,
+                      vabdfpHCode)
+
+    twoEqualRegInst("vmla", "VmlasD", "SimdMultAccOp", unsignedTypes, 2,
+                    vmlaCode, True)
+    twoEqualRegInst("vmla", "VmlasQ", "SimdMultAccOp", unsignedTypes, 4,
+                    vmlaCode, True)
+    twoEqualRegInstFp("vmla", "VmlasDFp", "SimdFloatMultAccOp", ("float",), 2,
+                      vmlafpCode, True)
+    twoEqualRegInstFp("vmla", "VmlasQFp", "SimdFloatMultAccOp", ("float",), 4,
+                      vmlafpCode, True)
+    twoEqualRegInst("vmla", "VmlasDFpH", "SimdFloatMultAccOp", ("uint16_t",),
+                    2, vmlafpHCode, True)
+    twoEqualRegInst("vmla", "VmlasQFpH", "SimdFloatMultAccOp", ("uint16_t",),
+                    4, vmlafpHCode, True)
+    twoRegLongInst("vmlal", "Vmlals", "SimdMultAccOp", smallTypes, vmlalCode,
+                   True)
 
     twoEqualRegInst("vmls", "VmlssD", "SimdMultAccOp", allTypes, 2, vmlsCode, True)
     twoEqualRegInst("vmls", "VmlssQ", "SimdMultAccOp", allTypes, 4, vmlsCode, True)
     twoEqualRegInstFp("vmls", "VmlssDFp", "SimdFloatMultAccOp", ("float",), 2, vmlsfpCode, True)
     twoEqualRegInstFp("vmls", "VmlssQFp", "SimdFloatMultAccOp", ("float",), 4, vmlsfpCode, True)
-    twoRegLongInst("vmlsl", "Vmlsls", "SimdMultAccOp", smallTypes, vmlslCode, True)
+    twoEqualRegInst("vmls", "VmlssDFpH", "SimdFloatMultAccOp", ("uint16_t",),
+                    2, vmlsfpHCode, True)
+    twoEqualRegInst("vmls", "VmlssQFpH", "SimdFloatMultAccOp", ("uint16_t",),
+                    4, vmlsfpHCode, True)
+    twoRegLongInst("vmlsl", "Vmlsls", "SimdMultAccOp", smallTypes, vmlslCode,
+                   True)
 
     twoEqualRegInst("vmul", "VmulsD", "SimdMultOp", allTypes, 2, vmulCode)
     twoEqualRegInst("vmul", "VmulsQ", "SimdMultOp", allTypes, 4, vmulCode)
     twoEqualRegInstFp("vmul", "VmulsDFp", "SimdFloatMultOp", ("float",), 2, vmulfpCode)
     twoEqualRegInstFp("vmul", "VmulsQFp", "SimdFloatMultOp", ("float",), 4, vmulfpCode)
+    twoEqualRegInst("vmul", "VmulsDFpH", "SimdFloatMultOp", ("uint16_t",),
+                    2, vmulfpHCode)
+    twoEqualRegInst("vmul", "VmulsQFpH", "SimdFloatMultOp", ("uint16_t",),
+                    4, vmulfpHCode)
     twoRegLongInst("vmull", "Vmulls", "SimdMultOp", smallTypes, vmullCode)
 
     twoRegLongInst("vqdmull", "Vqdmulls", "SimdMultOp", smallTypes, vqdmullCode)
@@ -3099,6 +3322,80 @@ let {{
     twoEqualRegInst("vqrdmlsh", "VqrdmlshsQ",
             "SimdMultOp", smallSignedTypes, 4, vqrdmlshCode, readDest=True,
             extra=rdm_check)
+
+    vdotCode = '''
+        int way = sizeof(Element) / sizeof(%(src1_type)s);
+
+        Element res = destElem;
+        for (int w = 0; w < way; w ++) {
+            Element src1_elem = (%(src1_type)s)
+                (srcElem1 >> (8 * sizeof(%(src1_type)s) * w));
+            Element src2_elem = (%(src2_type)s)
+                (srcElem2 >> (8 * sizeof(%(src2_type)s) * w));
+            res = res + src1_elem * src2_elem;
+        }
+        destElem = res;
+    '''
+    twoEqualRegInst("vudot", "VudotElemD", "SimdMultOp", ("uint32_t",), 2,
+        vdotCode % {"src1_type": "uint8_t", "src2_type": "uint8_t"}, True)
+    twoEqualRegInst("vudot", "VudotElemQ", "SimdMultOp", ("uint32_t",), 4,
+        vdotCode % {"src1_type": "uint8_t", "src2_type": "uint8_t"}, True)
+    twoEqualRegInst("vsdot", "VsdotElemD", "SimdMultOp", ("int32_t",), 2,
+        vdotCode % {"src1_type": "int8_t", "src2_type": "int8_t"}, True)
+    twoEqualRegInst("vsdot", "VsdotElemQ", "SimdMultOp", ("int32_t",), 4,
+        vdotCode % {"src1_type": "int8_t", "src2_type": "int8_t"}, True)
+
+    threeEqualRegInst("vudot", "VudotD", "SimdMultOp", ("uint32_t",), 2,
+        vdotCode % {"src1_type": "uint8_t", "src2_type": "uint8_t"}, True)
+    threeEqualRegInst("vudot", "VudotQ", "SimdMultOp", ("uint32_t",), 4,
+        vdotCode % {"src1_type": "uint8_t", "src2_type": "uint8_t"}, True)
+    threeEqualRegInst("vsdot", "VsdotD", "SimdMultOp", ("int32_t",), 2,
+        vdotCode % {"src1_type": "int8_t", "src2_type": "int8_t"}, True)
+    threeEqualRegInst("vsdot", "VsdotQ", "SimdMultOp", ("int32_t",), 4,
+        vdotCode % {"src1_type": "int8_t", "src2_type": "int8_t"}, True)
+
+    twoEqualRegInst("vusdot", "VusdotElemD", "SimdMultOp", ("int32_t",), 2,
+        vdotCode % {"src1_type": "uint8_t", "src2_type": "int8_t"}, True)
+    twoEqualRegInst("vusdot", "VusdotElemQ", "SimdMultOp", ("int32_t",), 4,
+        vdotCode % {"src1_type": "uint8_t", "src2_type": "int8_t"}, True)
+    twoEqualRegInst("vsudot", "VsudotElemD", "SimdMultOp", ("int32_t",), 2,
+        vdotCode % {"src1_type": "int8_t", "src2_type": "uint8_t"}, True)
+    twoEqualRegInst("vsudot", "VsudotElemQ", "SimdMultOp", ("int32_t",), 4,
+        vdotCode % {"src1_type": "int8_t", "src2_type": "uint8_t"}, True)
+
+    threeEqualRegInst("vusdot", "VusdotD", "SimdMultOp", ("int32_t",), 2,
+        vdotCode % {"src1_type": "uint8_t", "src2_type": "int8_t"}, True)
+    threeEqualRegInst("vusdot", "VusdotQ", "SimdMultOp", ("int32_t",), 4,
+        vdotCode % {"src1_type": "uint8_t", "src2_type": "int8_t"}, True)
+
+    vmmla8bCode = '''
+        for (int i = 0; i < 2; i ++) {
+            for (int j = 0; j < 2; j ++) {
+                Element sum = letoh(destReg.elements[2 * i + j]);
+                for (int e = 0; e < 2; e ++) {
+                    Element srcElem1 = letoh(srcReg1.elements[2 * i + e]);
+                    Element srcElem2 = letoh(srcReg2.elements[2 * j + e]);
+                    for (int w = 0; w < 4; w ++) {
+                        Element src1_elem = (%(src1_type)s)
+                            (srcElem1 >> (8 * sizeof(%(src1_type)s) * w));
+                        Element src2_elem = (%(src2_type)s)
+                            (srcElem2 >> (8 * sizeof(%(src2_type)s) * w));
+                        sum = sum + src1_elem * src2_elem;
+                    }
+                }
+                destReg.elements[2 * i + j] = htole(sum);
+            }
+        }
+    '''
+    threeEqualRegInst("vummla", "VummlaQ", "SimdMultOp", ("uint32_t",), 4,
+        vmmla8bCode % {"src1_type": "uint8_t", "src2_type": "uint8_t"},
+        readDest=True, complex=True)
+    threeEqualRegInst("vsmmla", "VsmmlaQ", "SimdMultOp", ("int32_t",), 4,
+        vmmla8bCode % {"src1_type": "int8_t", "src2_type": "int8_t"},
+        readDest=True, complex=True)
+    threeEqualRegInst("vusmmla", "VusmmlaQ", "SimdMultOp", ("int32_t",), 4,
+        vmmla8bCode % {"src1_type": "uint8_t", "src2_type": "int8_t"},
+        readDest=True, complex=True)
 
     vshrCode = '''
         if (imm >= sizeof(srcElem1) * 8) {
@@ -3507,6 +3804,17 @@ let {{
     twoRegShiftInst("vcvt", "NVcvt2ufxQ", "SimdCvtOp", ("float",),
             4, vcvt2ufxCode, toInt = True)
 
+    vcvt2ufxHCode = '''
+        FPSCR fpscr = fpVASimdCvtFPSCRValue((FPSCR)FpscrExc);
+        destElem = fplibFPToFixed<uint16_t, uint16_t>(
+            srcElem1, imm, true, FPRounding_ZERO, fpscr);
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    twoRegShiftInst("vcvt", "NVcvt2ufxHD", "SimdCvtOp", ("uint16_t",),
+            2, vcvt2ufxHCode)
+    twoRegShiftInst("vcvt", "NVcvt2ufxHQ", "SimdCvtOp", ("uint16_t",),
+            4, vcvt2ufxHCode)
+
     vcvt2sfxCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
         if (flushToZero(srcElem1))
@@ -3523,6 +3831,17 @@ let {{
     twoRegShiftInst("vcvt", "NVcvt2sfxQ", "SimdCvtOp", ("float",),
             4, vcvt2sfxCode, toInt = True)
 
+    vcvt2sfxHCode = '''
+        FPSCR fpscr = fpVASimdCvtFPSCRValue((FPSCR)FpscrExc);
+        destElem = fplibFPToFixed<uint16_t, uint16_t>(
+            srcElem1, imm, false, FPRounding_ZERO, fpscr);
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    twoRegShiftInst("vcvt", "NVcvt2sfxHD", "SimdCvtOp", ("uint16_t",),
+            2, vcvt2sfxHCode)
+    twoRegShiftInst("vcvt", "NVcvt2sfxHQ", "SimdCvtOp", ("uint16_t",),
+            4, vcvt2sfxHCode)
+
     vcvtu2fpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
         VfpSavedState state = prepFpState(VfpRoundNearest);
@@ -3537,6 +3856,17 @@ let {{
     twoRegShiftInst("vcvt", "NVcvtu2fpQ", "SimdCvtOp", ("float",),
             4, vcvtu2fpCode, fromInt = True)
 
+    vcvtu2fpHCode = '''
+        FPSCR fpscr = fpVASimdCvtFPSCRValue((FPSCR)FpscrExc);
+        destElem = fplibFixedToFP<uint16_t>(
+            srcElem1, imm, true, FPRounding_TIEEVEN, fpscr);
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    twoRegShiftInst("vcvt", "NVcvtu2fpHD", "SimdCvtOp", ("uint16_t",),
+            2, vcvtu2fpHCode)
+    twoRegShiftInst("vcvt", "NVcvtu2fpHQ", "SimdCvtOp", ("uint16_t",),
+            4, vcvtu2fpHCode)
+
     vcvts2fpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
         VfpSavedState state = prepFpState(VfpRoundNearest);
@@ -3550,6 +3880,17 @@ let {{
             2, vcvts2fpCode, fromInt = True)
     twoRegShiftInst("vcvt", "NVcvts2fpQ", "SimdCvtOp", ("float",),
             4, vcvts2fpCode, fromInt = True)
+
+    vcvts2fpHCode = '''
+        FPSCR fpscr = fpVASimdCvtFPSCRValue((FPSCR)FpscrExc);
+        destElem = fplibFixedToFP<uint16_t>(
+            sext<16>(srcElem1), imm, false, FPRounding_TIEEVEN, fpscr);
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    twoRegShiftInst("vcvt", "NVcvts2fpHD", "SimdCvtOp", ("uint16_t",),
+            2, vcvts2fpHCode)
+    twoRegShiftInst("vcvt", "NVcvts2fpHQ", "SimdCvtOp", ("uint16_t",),
+            4, vcvts2fpHCode)
 
     vcvts2hCode = '''
         destElem = 0;
@@ -3582,61 +3923,55 @@ let {{
     twoRegLongMiscInst("vcvt", "NVcvth2s", "SimdCvtOp", ("uint16_t",), vcvth2sCode)
 
     vcvthp2hCode = '''
-        FPSCR fpscr = (FPSCR) FpscrExc;
-        VfpSavedState state = prepFpState(fpscr.rMode);
-        __asm__ __volatile__("" : "=m" (srcElem1) : "m" (srcElem1));
-        float mid = vcvtFpHFpS(fpscr, fpscr.dn, fpscr.ahp, srcElem1);
-        if (flushToZero(mid))
-            fpscr.idc = 1;
-        destElem = vfpFpToFixed<float>(mid, %s, 16, 0, true, %s);
-        __asm__ __volatile__("" :: "m" (destElem));
-        finishVfp(fpscr, state, true);
-        FpscrExc = fpscr;
+        FPSCR fpscr = fpVASimdCvtFPSCRValue((FPSCR)FpscrExc);
+        destElem = fplibFPToFixed<uint16_t, uint16_t>(
+            srcElem1, 0, %s, %s, fpscr);
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
     '''
 
-    vcvtahp2uhCode = vcvthp2hCode % ("false", "VfpRoundAway")
+    vcvtahp2uhCode = vcvthp2hCode % ("true", "FPRounding_TIEAWAY")
     twoRegMiscInst("vcvta.u16.f16", "NVcvt2uhAD", "SimdCvtOp",
                    ("uint16_t",), 2, vcvtahp2uhCode)
     twoRegMiscInst("vcvta.u16.f16", "NVcvt2uhAQ", "SimdCvtOp",
                    ("uint16_t",), 4, vcvtahp2uhCode)
 
-    vcvtnhp2uhCode = vcvthp2hCode % ("false", "VfpRoundNearest")
+    vcvtnhp2uhCode = vcvthp2hCode % ("true", "FPRounding_TIEEVEN")
     twoRegMiscInst("vcvtn.u16.f16", "NVcvt2uhND", "SimdCvtOp",
                    ("uint16_t",), 2, vcvtnhp2uhCode)
     twoRegMiscInst("vcvtn.u16.f16", "NVcvt2uhNQ", "SimdCvtOp",
                    ("uint16_t",), 4, vcvtnhp2uhCode)
 
-    vcvtphp2uhCode = vcvthp2hCode % ("false", "VfpRoundUpward")
+    vcvtphp2uhCode = vcvthp2hCode % ("true", "FPRounding_POSINF")
     twoRegMiscInst("vcvtp.u16.f16", "NVcvt2uhPD", "SimdCvtOp",
                    ("uint16_t",), 2, vcvtphp2uhCode)
     twoRegMiscInst("vcvtp.u16.f16", "NVcvt2uhPQ", "SimdCvtOp",
                    ("uint16_t",), 4, vcvtphp2uhCode)
 
-    vcvtmhp2uhCode = vcvthp2hCode % ("false", "VfpRoundDown")
+    vcvtmhp2uhCode = vcvthp2hCode % ("true", "FPRounding_NEGINF")
     twoRegMiscInst("vcvtm.u16.f16", "NVcvt2uhMD", "SimdCvtOp",
                    ("uint16_t",), 2, vcvtmhp2uhCode)
     twoRegMiscInst("vcvtm.u16.f16", "NVcvt2uhMQ", "SimdCvtOp",
                    ("uint16_t",), 4, vcvtmhp2uhCode)
 
-    vcvtahp2shCode = vcvthp2hCode % ("true", "VfpRoundAway")
+    vcvtahp2shCode = vcvthp2hCode % ("false", "FPRounding_TIEAWAY")
     twoRegMiscInst("vcvta.s16.f16", "NVcvt2shAD", "SimdCvtOp",
                    ("int16_t",), 2, vcvtahp2shCode)
     twoRegMiscInst("vcvta.s16.f16", "NVcvt2shAQ", "SimdCvtOp",
                    ("int16_t",), 4, vcvtahp2shCode)
 
-    vcvtnhp2shCode = vcvthp2hCode % ("true", "VfpRoundNearest")
+    vcvtnhp2shCode = vcvthp2hCode % ("false", "FPRounding_TIEEVEN")
     twoRegMiscInst("vcvtn.s16.f16", "NVcvt2shND", "SimdCvtOp",
                    ("int16_t",), 2, vcvtnhp2shCode)
     twoRegMiscInst("vcvtn.s16.f16", "NVcvt2shNQ", "SimdCvtOp",
                    ("int16_t",), 4, vcvtnhp2shCode)
 
-    vcvtphp2shCode = vcvthp2hCode % ("true", "VfpRoundUpward")
+    vcvtphp2shCode = vcvthp2hCode % ("false", "FPRounding_POSINF")
     twoRegMiscInst("vcvtp.s16.f16", "NVcvt2shPD", "SimdCvtOp",
                    ("int16_t",), 2, vcvtphp2shCode)
     twoRegMiscInst("vcvtp.s16.f16", "NVcvt2shPQ", "SimdCvtOp",
                    ("int16_t",), 4, vcvtphp2shCode)
 
-    vcvtmhp2shCode = vcvthp2hCode % ("true", "VfpRoundDown")
+    vcvtmhp2shCode = vcvthp2hCode % ("false", "FPRounding_NEGINF")
     twoRegMiscInst("vcvtm.s16.f16", "NVcvt2shMD", "SimdCvtOp",
                    ("int16_t",), 2, vcvtmhp2shCode)
     twoRegMiscInst("vcvtm.s16.f16", "NVcvt2shMQ", "SimdCvtOp",
@@ -3704,46 +4039,36 @@ let {{
                    ("int32_t",), 4, vcvtmsp2ssCode)
 
     vrinthpCode = '''
-        FPSCR fpscr = (FPSCR) FpscrExc;
-        VfpSavedState state = prepFpState(fpscr.rMode);
-        __asm__ __volatile__("" : "=m" (srcElem1) : "m" (srcElem1));
-        float mid = vcvtFpHFpS(fpscr, fpscr.dn, fpscr.ahp, srcElem1);
-        if (flushToZero(mid))
-            fpscr.idc = 1;
-        float mid2 = vfpFpRint<float>(mid, %s, fpscr.dn, true, %s);
-        destElem = vcvtFpSFpH(fpscr, fpscr.fz, fpscr.dn, %s, fpscr.ahp, mid2);
-        __asm__ __volatile__("" :: "m" (destElem));
-        finishVfp(fpscr, state, true);
-        FpscrExc = fpscr;
+        FPSCR fpscr = fpVASimdCvtFPSCRValue((FPSCR)FpscrExc);
+        destElem = fplibRoundInt<uint16_t>(srcElem1, %s, %s, fpscr);
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
     '''
-    vrintnhpCode = vrinthpCode % ("false",
-                                  "VfpRoundNearest", "VfpRoundNearest")
+    vrintnhpCode = vrinthpCode % ("FPRounding_TIEEVEN", "false")
     twoRegMiscInst("vrintn.f16", "NVrintnhpD", "SimdCvtOp",
                    ("uint16_t",), 2, vrintnhpCode)
     twoRegMiscInst("vrintn.f16", "NVrintnhpQ", "SimdCvtOp",
                    ("uint16_t",), 4, vrintnhpCode)
-    vrintxhpCode = vrinthpCode % ("true",
-                                  "VfpRoundNearest", "VfpRoundNearest")
+    vrintxhpCode = vrinthpCode % ("FPRounding_TIEEVEN", "true")
     twoRegMiscInst("vrintx.f16", "NVrintxhpD", "SimdCvtOp",
                    ("uint16_t",), 2, vrintxhpCode)
     twoRegMiscInst("vrintx.f16", "NVrintxhpQ", "SimdCvtOp",
                    ("uint16_t",), 4, vrintxhpCode)
-    vrintahpCode = vrinthpCode % ("false", "VfpRoundAway", "VfpRoundAway")
+    vrintahpCode = vrinthpCode % ("FPRounding_TIEAWAY", "false")
     twoRegMiscInst("vrinta.f16", "NVrintahpD", "SimdCvtOp",
                    ("uint16_t",), 2, vrintahpCode)
     twoRegMiscInst("vrinta.f16", "NVrintahpQ", "SimdCvtOp",
                    ("uint16_t",), 4, vrintahpCode)
-    vrintzhpCode = vrinthpCode % ("false", "VfpRoundZero", "VfpRoundZero")
+    vrintzhpCode = vrinthpCode % ("FPRounding_ZERO", "false")
     twoRegMiscInst("vrintz.f16", "NVrintzhpD", "SimdCvtOp",
                    ("uint16_t",), 2, vrintzhpCode)
     twoRegMiscInst("vrintz.f16", "NVrintzhpQ", "SimdCvtOp",
                    ("uint16_t",), 4, vrintzhpCode)
-    vrintmhpCode = vrinthpCode % ("false", "VfpRoundDown", "VfpRoundDown")
+    vrintmhpCode = vrinthpCode % ("FPRounding_NEGINF", "false")
     twoRegMiscInst("vrintm.f16", "NVrintmhpD", "SimdCvtOp",
                    ("uint16_t",), 2, vrintmhpCode)
     twoRegMiscInst("vrintm.f16", "NVrintmhpQ", "SimdCvtOp",
                    ("uint16_t",), 4, vrintmhpCode)
-    vrintphpCode = vrinthpCode % ("false", "VfpRoundUpward", "VfpRoundUpward")
+    vrintphpCode = vrinthpCode % ("FPRounding_POSINF", "false")
     twoRegMiscInst("vrintp.f16", "NVrintphpD", "SimdCvtOp",
                    ("uint16_t",), 2, vrintphpCode)
     twoRegMiscInst("vrintp.f16", "NVrintphpQ", "SimdCvtOp",
@@ -3815,6 +4140,16 @@ let {{
     twoRegMiscInstFp("vrsqrte", "NVrsqrteDFp", "SimdFloatSqrtOp", ("float",), 2, vrsqrtefpCode)
     twoRegMiscInstFp("vrsqrte", "NVrsqrteQFp", "SimdFloatSqrtOp", ("float",), 4, vrsqrtefpCode)
 
+    vrsqrtefpHCode = '''
+        FPSCR fpscr = (FPSCR) FpscrExc;
+        destElem = fprSqrtEstimateFpH(fpscr, srcElem1);
+        FpscrExc = fpscr;
+    '''
+    twoRegMiscInst("vrsqrte", "NVrsqrteDFpH", "SimdFloatSqrtOp", ("uint16_t",),
+                   2, vrsqrtefpHCode)
+    twoRegMiscInst("vrsqrte", "NVrsqrteQFpH", "SimdFloatSqrtOp", ("uint16_t",),
+                   4, vrsqrtefpHCode)
+
     vrecpeCode = '''
         destElem = unsignedRecipEstimate(srcElem1);
     '''
@@ -3830,6 +4165,16 @@ let {{
     '''
     twoRegMiscInstFp("vrecpe", "NVrecpeDFp", "SimdFloatMultAccOp", ("float",), 2, vrecpefpCode)
     twoRegMiscInstFp("vrecpe", "NVrecpeQFp", "SimdFloatMultAccOp", ("float",), 4, vrecpefpCode)
+
+    vrecpefpHCode = '''
+        FPSCR fpscr = (FPSCR) FpscrExc;
+        destElem = fpRecipEstimateFpH(fpscr, srcElem1);
+        FpscrExc = fpscr;
+    '''
+    twoRegMiscInst("vrecpe", "NVrecpeDFpH", "SimdMultAccOp", ("uint16_t",), 2,
+                   vrecpefpHCode)
+    twoRegMiscInst("vrecpe", "NVrecpeQFpH", "SimdMultAccOp", ("uint16_t",), 4,
+                   vrecpefpHCode)
 
     vrev16Code = '''
         destElem = srcElem1;
@@ -3960,6 +4305,7 @@ let {{
 
     twoRegMiscInst("vabs", "NVabsD", "SimdAluOp", signedTypes, 2, vabsCode)
     twoRegMiscInst("vabs", "NVabsQ", "SimdAluOp", signedTypes, 4, vabsCode)
+
     vabsfpCode = '''
         union
         {
@@ -3973,20 +4319,38 @@ let {{
     twoRegMiscInstFp("vabs", "NVabsDFp", "SimdFloatAluOp", ("float",), 2, vabsfpCode)
     twoRegMiscInstFp("vabs", "NVabsQFp", "SimdFloatAluOp", ("float",), 4, vabsfpCode)
 
+    vabsfpHCode = '''
+        destElem = srcElem1 & mask(sizeof(uint16_t) * 8 - 1);
+    '''
+    twoRegMiscInst("vabs", "NVabsDFpH", "SimdFloatAluOp", ("uint16_t",),
+            2, vabsfpHCode)
+    twoRegMiscInst("vabs", "NVabsQFpH", "SimdFloatAluOp", ("uint16_t",),
+            4, vabsfpHCode)
+
     vnegCode = '''
         destElem = -srcElem1;
     '''
     twoRegMiscInst("vneg", "NVnegD", "SimdAluOp", signedTypes, 2, vnegCode)
     twoRegMiscInst("vneg", "NVnegQ", "SimdAluOp", signedTypes, 4, vnegCode)
+
     vnegfpCode = '''
         destReg = -srcReg1;
     '''
     twoRegMiscInstFp("vneg", "NVnegDFp", "SimdFloatAluOp", ("float",), 2, vnegfpCode)
     twoRegMiscInstFp("vneg", "NVnegQFp", "SimdFloatAluOp", ("float",), 4, vnegfpCode)
 
+    vnegfpHCode = '''
+        destElem = fplibNeg(srcElem1);
+    '''
+    twoRegMiscInst("vneg", "NVnegDFpH", "SimdFloatAluOp", ("uint16_t",),
+            2, vnegfpHCode)
+    twoRegMiscInst("vneg", "NVnegQFpH", "SimdFloatAluOp", ("uint16_t",),
+            4, vnegfpHCode)
+
     vcgtCode = 'destElem = (srcElem1 > 0) ? mask(sizeof(Element) * 8) : 0;'
     twoRegMiscInst("vcgt", "NVcgtD", "SimdCmpOp", signedTypes, 2, vcgtCode)
     twoRegMiscInst("vcgt", "NVcgtQ", "SimdCmpOp", signedTypes, 4, vcgtCode)
+
     vcgtfpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
         float res = binaryOp(fpscr, srcReg1, (float)0.0, vcgtFunc,
@@ -4001,9 +4365,21 @@ let {{
     twoRegMiscInstFp("vcgt", "NVcgtQFp", "SimdFloatCmpOp", ("float",),
             4, vcgtfpCode, toInt = True)
 
+    vcgtfpHCode = '''
+        FPSCR fpscr = fpVASimdFPSCRValue((FPSCR)FpscrExc);
+        bool test_passed = fplibCompareGT(srcElem1, (Element)0, fpscr);
+        destElem = test_passed ? 0xFFFF : 0x0000;
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    twoRegMiscInst("vcgt", "NVcgtDFpH", "SimdFloatCmpOp", ("uint16_t",),
+            2, vcgtfpHCode)
+    twoRegMiscInst("vcgt", "NVcgtQFpH", "SimdFloatCmpOp", ("uint16_t",),
+            4, vcgtfpHCode)
+
     vcgeCode = 'destElem = (srcElem1 >= 0) ? mask(sizeof(Element) * 8) : 0;'
     twoRegMiscInst("vcge", "NVcgeD", "SimdCmpOp", signedTypes, 2, vcgeCode)
     twoRegMiscInst("vcge", "NVcgeQ", "SimdCmpOp", signedTypes, 4, vcgeCode)
+
     vcgefpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
         float res = binaryOp(fpscr, srcReg1, (float)0.0, vcgeFunc,
@@ -4018,9 +4394,21 @@ let {{
     twoRegMiscInstFp("vcge", "NVcgeQFp", "SimdFloatCmpOp", ("float",),
             4, vcgefpCode, toInt = True)
 
+    vcgefpHCode = '''
+        FPSCR fpscr = fpVASimdFPSCRValue((FPSCR)FpscrExc);
+        bool test_passed = fplibCompareGE(srcElem1, (Element)0, fpscr);
+        destElem = test_passed ? 0xFFFF : 0x0000;
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    twoRegMiscInst("vcge", "NVcgeDFpH", "SimdFloatCmpOp", ("uint16_t",),
+            2, vcgefpHCode)
+    twoRegMiscInst("vcge", "NVcgeQFpH", "SimdFloatCmpOp", ("uint16_t",),
+            4, vcgefpHCode)
+
     vceqCode = 'destElem = (srcElem1 == 0) ? mask(sizeof(Element) * 8) : 0;'
     twoRegMiscInst("vceq", "NVceqD", "SimdCmpOp", signedTypes, 2, vceqCode)
     twoRegMiscInst("vceq", "NVceqQ", "SimdCmpOp", signedTypes, 4, vceqCode)
+
     vceqfpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
         float res = binaryOp(fpscr, srcReg1, (float)0.0, vceqFunc,
@@ -4035,9 +4423,21 @@ let {{
     twoRegMiscInstFp("vceq", "NVceqQFp", "SimdFloatCmpOp", ("float",),
             4, vceqfpCode, toInt = True)
 
+    vceqfpHCode = '''
+        FPSCR fpscr = fpVASimdFPSCRValue((FPSCR)FpscrExc);
+        bool test_passed = fplibCompareEQ(srcElem1, (Element)0, fpscr);
+        destElem = test_passed ? 0xFFFF : 0x0000;
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    twoRegMiscInst("vceq", "NVceqDFpH", "SimdFloatCmpOp", ("uint16_t",),
+            2, vceqfpHCode)
+    twoRegMiscInst("vceq", "NVceqQFpH", "SimdFloatCmpOp", ("uint16_t",),
+            4, vceqfpHCode)
+
     vcleCode = 'destElem = (srcElem1 <= 0) ? mask(sizeof(Element) * 8) : 0;'
     twoRegMiscInst("vcle", "NVcleD", "SimdCmpOp", signedTypes, 2, vcleCode)
     twoRegMiscInst("vcle", "NVcleQ", "SimdCmpOp", signedTypes, 4, vcleCode)
+
     vclefpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
         float res = binaryOp(fpscr, srcReg1, (float)0.0, vcleFunc,
@@ -4052,9 +4452,21 @@ let {{
     twoRegMiscInstFp("vcle", "NVcleQFp", "SimdFloatCmpOp", ("float",),
             4, vclefpCode, toInt = True)
 
+    vclefpHCode = '''
+        FPSCR fpscr = fpVASimdFPSCRValue((FPSCR)FpscrExc);
+        bool test_passed = fplibCompareGE((Element)0, srcElem1, fpscr);
+        destElem = test_passed ? 0xFFFF : 0x0000;
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    twoRegMiscInst("vcle", "NVcleDFpH", "SimdFloatCmpOp", ("uint16_t",),
+            2, vclefpHCode)
+    twoRegMiscInst("vcle", "NVcleQFpH", "SimdFloatCmpOp", ("uint16_t",),
+            4, vclefpHCode)
+
     vcltCode = 'destElem = (srcElem1 < 0) ? mask(sizeof(Element) * 8) : 0;'
     twoRegMiscInst("vclt", "NVcltD", "SimdCmpOp", signedTypes, 2, vcltCode)
     twoRegMiscInst("vclt", "NVcltQ", "SimdCmpOp", signedTypes, 4, vcltCode)
+
     vcltfpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
         float res = binaryOp(fpscr, srcReg1, (float)0.0, vcltFunc,
@@ -4068,6 +4480,17 @@ let {{
             2, vcltfpCode, toInt = True)
     twoRegMiscInstFp("vclt", "NVcltQFp", "SimdFloatCmpOp", ("float",),
             4, vcltfpCode, toInt = True)
+
+    vcltfpHCode = '''
+        FPSCR fpscr = fpVASimdFPSCRValue((FPSCR)FpscrExc);
+        bool test_passed = fplibCompareGT((Element)0, srcElem1, fpscr);
+        destElem = test_passed ? 0xFFFF : 0x0000;
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    twoRegMiscInst("vclt", "NVcltDFpH", "SimdFloatCmpOp", ("uint16_t",),
+            2, vcltfpHCode)
+    twoRegMiscInst("vclt", "NVcltQFpH", "SimdFloatCmpOp", ("uint16_t",),
+            4, vcltfpHCode)
 
     vswpCode = '''
         uint32_t mid;
@@ -4129,6 +4552,26 @@ let {{
     vdupCode = 'destElem = srcElem1;'
     twoRegMiscScInst("vdup", "NVdupD", "SimdAluOp", smallUnsignedTypes, 2, vdupCode)
     twoRegMiscScInst("vdup", "NVdupQ", "SimdAluOp", smallUnsignedTypes, 4, vdupCode)
+
+    vmovxCode = '''
+        if (i == 0) {
+            destElem = letoh(srcRegs1.elements[1]);
+        } else {
+            destElem = (Element)0;
+        }
+    '''
+    twoRegShiftInst("vmovx", "NVmovx", "SimdMiscOp", ("uint16_t",), 1,
+                    vmovxCode, readSrcElem=False)
+
+    vinsCode = '''
+        if (i == 1) {
+            destElem = letoh(srcRegs1.elements[0]);
+        } else {
+            destElem = letoh(destRegs.elements[i]);
+        }
+    '''
+    twoRegShiftInst("vins", "NVins", "SimdMiscOp", ("uint16_t",), 1,
+                    vinsCode, readDest=True, readSrcElem=False)
 
     def vdupGprInst(name, Name, opClass, types, rCount):
         global header_output, exec_output

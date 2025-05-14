@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2017-2018 ARM Limited
+ * Copyright (c) 2012-2013, 2017-2018, 2024-2025 ARM Limited
  * Copyright (c) 2020 Metempsy Technology Consulting
  * All rights reserved
  *
@@ -178,6 +178,11 @@ template <class T>
 T fplibDefaultNaN();
 /** Floating-point  JS convert to a signed integer, with rounding to zero. */
 uint32_t fplibFPToFixedJS(uint64_t op, FPSCR &fpscr, bool Is64, uint8_t &nz);
+
+template <class T>
+T fplib32RSqrtStep(T op1, T op2, FPSCR &fpscr);
+template <class T>
+T fplib32RecipStep(T op1, T op2, FPSCR &fpscr);
 
 /* Function specializations... */
 template <>
@@ -417,6 +422,11 @@ template <>
 uint32_t fplibDefaultNaN();
 template <>
 uint64_t fplibDefaultNaN();
+
+template <>
+uint16_t fplib32RSqrtStep(uint16_t op1, uint16_t op2, FPSCR &fpscr);
+template <>
+uint16_t fplib32RecipStep(uint16_t op1, uint16_t op2, FPSCR &fpscr);
 
 } // namespace ArmISA
 } // namespace gem5

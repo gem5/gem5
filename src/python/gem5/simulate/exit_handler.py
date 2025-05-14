@@ -392,12 +392,41 @@ class OrchestratorExitHandler(ExitHandler, hypercall_num=1000):
             "instruction_count": simulator.get_instruction_count(),
         }
 
+    def _add_debug_flags(self, debug_flags: List[str]) -> Dict[str, str]:
+        from m5 import debug
+
+        flags_disabled = []
+        flags_enabled = []
+        invalid_flags = []
+        for flag in debug_flags:
+            off = False
+            if flag.startswith("-"):
+                flag = flag[1:]
+                off = True
+
+            if flag not in debug.flags:
+                invalid_flags.append(flag)
+                continue
+
+            if off:
+                flags_disabled.append(flag)
+                debug.flags[flag].disable()
+            else:
+                flags_enabled.append(flag)
+                debug.flags[flag].enable()
+
+        return {
+            "flags_enabled": str(flags_enabled),
+            "flags_disabled": str(flags_disabled),
+            "invalid_flags": str(invalid_flags),
+        }
+
     @overrides(ExitHandler)
     def _process(self, simulator: "Simulator") -> None:
         try:
             socket_path = self._payload.get("response_socket")
             function = self._payload.get("function", "status")
-
+            arguments = self._payload.get("arguments")
             if socket_path:
                 sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
                 sock.connect(socket_path)
@@ -407,6 +436,9 @@ class OrchestratorExitHandler(ExitHandler, hypercall_num=1000):
                 elif function == "get_stats":
                     stats = simulator.get_stats()
                     response = json.dumps(stats)
+                elif function == "update_debug_flags":
+                    debug_flags = arguments.split(",")
+                    response = json.dumps(self._add_debug_flags(debug_flags))
                 else:
                     response = json.dumps(
                         {"error": f"Unknown function: {function}"}

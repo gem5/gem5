@@ -226,6 +226,7 @@ class Shader : public ClockedObject
     }
 
     RequestorID vramRequestorId();
+    GfxVersion getGfxVersion() const;
 
     EventFunctionWrapper tickEvent;
 

@@ -27,12 +27,8 @@
 cmake_minimum_required(VERSION 3.22.0)
 project(DRAMSys)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+
 set(BUILD_SHARED_LIBS OFF)
-
-add_library(systemc INTERFACE)
-
-target_include_directories(systemc INTERFACE "${SCONS_SOURCE_DIR}/src/systemc/ext/systemc_home/include")
-
-add_library(SystemC::systemc ALIAS systemc)
 
 add_subdirectory(DRAMSys)

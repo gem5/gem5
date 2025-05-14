@@ -766,13 +766,13 @@ AMDGPUDevice::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(used_vmid_map_size);
 
     // Make a c-style array of the regs to serialize
-    uint32_t doorbells_offset[doorbells_size];
-    QueueType doorbells_queues[doorbells_size];
-    int doorbells_ip_ids[doorbells_size];
-    uint32_t sdma_engs_offset[sdma_engs_size];
-    int sdma_engs[sdma_engs_size];
-    int used_vmids[used_vmid_map_size];
-    int used_queue_id_sizes[used_vmid_map_size];
+    auto doorbells_offset = std::make_unique<uint32_t[]>(doorbells_size);
+    auto doorbells_queues = std::make_unique<QueueType[]>(doorbells_size);
+    auto doorbells_ip_ids = std::make_unique<int[]>(doorbells_size);
+    auto sdma_engs_offset = std::make_unique<uint32_t[]>(sdma_engs_size);
+    auto sdma_engs = std::make_unique<int[]>(sdma_engs_size);
+    auto used_vmids = std::make_unique<int[]>(used_vmid_map_size);
+    auto used_queue_id_sizes = std::make_unique<int[]>(used_vmid_map_size);
     std::vector<int> used_vmid_sets;
 
     int idx = 0;
@@ -801,33 +801,26 @@ AMDGPUDevice::serialize(CheckpointOut &cp) const
     }
 
     int num_queue_id = used_vmid_sets.size();
-    int* vmid_array = new int[num_queue_id];
-    std::copy(used_vmid_sets.begin(), used_vmid_sets.end(), vmid_array);
+    auto vmid_array = std::make_unique<int[]>(num_queue_id);
+    std::copy(used_vmid_sets.begin(), used_vmid_sets.end(), vmid_array.get());
 
-    SERIALIZE_ARRAY(doorbells_offset, sizeof(doorbells_offset)/
-        sizeof(doorbells_offset[0]));
-    SERIALIZE_ARRAY(doorbells_queues, sizeof(doorbells_queues)/
-        sizeof(doorbells_queues[0]));
-    SERIALIZE_ARRAY(doorbells_ip_ids, sizeof(doorbells_ip_ids)/
-        sizeof(doorbells_ip_ids[0]));
-    SERIALIZE_ARRAY(sdma_engs_offset, sizeof(sdma_engs_offset)/
-        sizeof(sdma_engs_offset[0]));
-    SERIALIZE_ARRAY(sdma_engs, sizeof(sdma_engs)/sizeof(sdma_engs[0]));
+    SERIALIZE_UNIQUE_PTR_ARRAY(doorbells_offset, doorbells_size);
+    SERIALIZE_UNIQUE_PTR_ARRAY(doorbells_queues, doorbells_size);
+    SERIALIZE_UNIQUE_PTR_ARRAY(doorbells_ip_ids, doorbells_size);
+    SERIALIZE_UNIQUE_PTR_ARRAY(sdma_engs_offset, sdma_engs_size);
+    SERIALIZE_UNIQUE_PTR_ARRAY(sdma_engs, sdma_engs_size);
     // Save the vmids used in an array
-    SERIALIZE_ARRAY(used_vmids, sizeof(used_vmids)/sizeof(used_vmids[0]));
+    SERIALIZE_UNIQUE_PTR_ARRAY(used_vmids, used_vmid_map_size);
     // Save the size of the set of queue ids mapped to each vmid
-    SERIALIZE_ARRAY(used_queue_id_sizes,
-            sizeof(used_queue_id_sizes)/sizeof(used_queue_id_sizes[0]));
+    SERIALIZE_UNIQUE_PTR_ARRAY(used_queue_id_sizes, used_vmid_map_size);
     // Save all the queue ids used for all the vmids
-    SERIALIZE_ARRAY(vmid_array, num_queue_id);
+    SERIALIZE_UNIQUE_PTR_ARRAY(vmid_array, num_queue_id);
     // Save the total number of queue idsused
     SERIALIZE_SCALAR(num_queue_id);
 
     // Serialize the device memory
     deviceMem.serializeSection(cp, "deviceMem");
     gpuvm.serializeSection(cp, "GPUVM");
-
-    delete[] vmid_array;
 }
 
 void
@@ -846,16 +839,13 @@ AMDGPUDevice::unserialize(CheckpointIn &cp)
 
 
     if (doorbells_size > 0) {
-        uint32_t doorbells_offset[doorbells_size];
-        QueueType doorbells_queues[doorbells_size];
-        int doorbells_ip_ids[doorbells_size];
+        auto doorbells_offset = std::make_unique<uint32_t[]>(doorbells_size);
+        auto doorbells_queues = std::make_unique<QueueType[]>(doorbells_size);
+        auto doorbells_ip_ids = std::make_unique<int[]>(doorbells_size);
 
-        UNSERIALIZE_ARRAY(doorbells_offset, sizeof(doorbells_offset)/
-                sizeof(doorbells_offset[0]));
-        UNSERIALIZE_ARRAY(doorbells_queues, sizeof(doorbells_queues)/
-                sizeof(doorbells_queues[0]));
-        UNSERIALIZE_ARRAY(doorbells_ip_ids, sizeof(doorbells_ip_ids)/
-                sizeof(doorbells_ip_ids[0]));
+        UNSERIALIZE_UNIQUE_PTR_ARRAY(doorbells_offset, doorbells_size);
+        UNSERIALIZE_UNIQUE_PTR_ARRAY(doorbells_queues, doorbells_size);
+        UNSERIALIZE_UNIQUE_PTR_ARRAY(doorbells_ip_ids, doorbells_size);
 
         for (int idx = 0; idx < doorbells_size; ++idx) {
             doorbells[doorbells_offset[idx]].qtype = doorbells_queues[idx];
@@ -864,12 +854,11 @@ AMDGPUDevice::unserialize(CheckpointIn &cp)
     }
 
     if (sdma_engs_size > 0) {
-        uint32_t sdma_engs_offset[sdma_engs_size];
-        int sdma_engs[sdma_engs_size];
+        auto sdma_engs_offset = std::make_unique<uint32_t[]>(sdma_engs_size);
+        auto sdma_engs = std::make_unique<int[]>(sdma_engs_size);
 
-        UNSERIALIZE_ARRAY(sdma_engs_offset, sizeof(sdma_engs_offset)/
-            sizeof(sdma_engs_offset[0]));
-        UNSERIALIZE_ARRAY(sdma_engs, sizeof(sdma_engs)/sizeof(sdma_engs[0]));
+        UNSERIALIZE_UNIQUE_PTR_ARRAY(sdma_engs_offset, sdma_engs_size);
+        UNSERIALIZE_UNIQUE_PTR_ARRAY(sdma_engs, sdma_engs_size);
 
         for (int idx = 0; idx < sdma_engs_size; ++idx) {
             int sdma_id = sdma_engs[idx];
@@ -880,19 +869,19 @@ AMDGPUDevice::unserialize(CheckpointIn &cp)
     }
 
     if (used_vmid_map_size > 0) {
-        int used_vmids[used_vmid_map_size];
-        int used_queue_id_sizes[used_vmid_map_size];
+        auto used_vmids = std::make_unique<int[]>(used_vmid_map_size);
+        auto used_queue_id_sizes = std::make_unique<int[]>(used_vmid_map_size);
         int num_queue_id = 0;
         std::vector<int> used_vmid_sets;
         // Extract the total number of queue ids used
         UNSERIALIZE_SCALAR(num_queue_id);
-        int* vmid_array = new int[num_queue_id];
+        auto vmid_array = std::make_unique<int[]>(num_queue_id);
         // Extract the number of vmids used
-        UNSERIALIZE_ARRAY(used_vmids, used_vmid_map_size);
+        UNSERIALIZE_UNIQUE_PTR_ARRAY(used_vmids, used_vmid_map_size);
         // Extract the size of the queue id set for each vmid
-        UNSERIALIZE_ARRAY(used_queue_id_sizes, used_vmid_map_size);
+        UNSERIALIZE_UNIQUE_PTR_ARRAY(used_queue_id_sizes, used_vmid_map_size);
         // Extract all the queue ids used
-        UNSERIALIZE_ARRAY(vmid_array, num_queue_id);
+        UNSERIALIZE_UNIQUE_PTR_ARRAY(vmid_array, num_queue_id);
         // Populate the usedVMIDs map with the queue ids per vm
         int idx = 0;
         for (int it = 0; it < used_vmid_map_size; it++) {
@@ -903,7 +892,6 @@ AMDGPUDevice::unserialize(CheckpointIn &cp)
             }
             idx += vmid_set_size;
         }
-        delete[] vmid_array;
     }
 
     // Unserialize the device memory

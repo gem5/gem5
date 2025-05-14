@@ -100,6 +100,31 @@ class PortTerminator : public SimObject
         RespPort(const std::string &name):
             ResponsePort(name)
         {}
+
+        Tick recvAtomic(PacketPtr) override
+        {
+            panic("PortTerminator recvAtomic should never be called");
+        }
+
+        bool recvTimingReq(PacketPtr) override
+        {
+            panic("PortTerminator recvTimingReq should never be called");
+        }
+
+        void recvRespRetry() override
+        {
+            panic("PortTerminator recvRespRetry should never be called");
+        }
+
+        void recvFunctional(PacketPtr) override
+        {
+            panic("PortTerminator recvFunctional should never be called");
+        }
+
+        AddrRangeList getAddrRanges() const override
+        {
+            panic("PortTerminator getAddrRanges should never be called");
+        }
     };
 
     std::vector<ReqPort> reqPorts;

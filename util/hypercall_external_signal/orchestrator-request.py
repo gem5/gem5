@@ -171,7 +171,9 @@ def receive_full_message(conn: socket.socket, timeout: float = 30.0) -> str:
     return b"".join(chunks).decode()
 
 
-def send_and_receive_hypercall(pid: int, function: str) -> str:
+def send_and_receive_hypercall(
+    pid: int, function: str, arguments: str = None
+) -> str:
     """
     Send a hypercall to gem5 and wait for response.
 
@@ -180,8 +182,10 @@ def send_and_receive_hypercall(pid: int, function: str) -> str:
 
     :param pid: Process ID of gem5 instance
     :type pid: int
-    :param function: Hypercall function to execute ('status'|'get_stats')
+    :param function: Hypercall function to execute ('status'|'get_stats'|'update_debug_flags')
     :type function: str
+    :param arguments: This parameter contains the arguments for the function. The functions 'status' and 'get_stats' dont expect any arguments. The 'update_debug_flags' function expects a ',' separated string of debug flags to update on the simulation. If the debug flag starts with '-' then the flag will be disabled.
+    :type debug_flags_to_update: str
     :return: JSON response from gem5
     :rtype: str
     :raises TimeoutError: If gem5 doesn't respond within timeout
@@ -202,7 +206,11 @@ def send_and_receive_hypercall(pid: int, function: str) -> str:
 
     try:
         payload = json.dumps(
-            {"function": function, "response_socket": socket_path}
+            {
+                "function": function,
+                "arguments": arguments,
+                "response_socket": socket_path,
+            }
         )
         send_signal(pid, 1000, payload)
 
@@ -241,7 +249,14 @@ def main():
         "(auto-detected if not specified)",
     )
     parser.add_argument(
-        "function", choices=["status", "get_stats"], help="Function to execute"
+        "function",
+        choices=["status", "get_stats", "update_debug_flags"],
+        help="Function to execute",
+    )
+    parser.add_argument(
+        "--debug-flags-to-update",
+        metavar="FLAG1,FLAG2,..",
+        help="Sets the flags for debug output. This flag will only work if positional argument 'update_debug_flags' is passed. To disable a flag you can pass the flag name starting with '-' for example -FLAG1. If an invalid flag is passed the flag will be skipped.",
     )
     parser.add_argument(
         "--output", type=str, help="Write response to specified file"
@@ -250,7 +265,9 @@ def main():
 
     try:
         pid = args.pid if args.pid is not None else find_gem5_pid()
-        response = send_and_receive_hypercall(pid, args.function)
+        response = send_and_receive_hypercall(
+            pid, args.function, args.debug_flags_to_update
+        )
         if args.output:
             write_response_to_file(response, args.output)
         else:

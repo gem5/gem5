@@ -1,4 +1,4 @@
-// Copyright (c) 2012-2013, 2020 ARM Limited
+// Copyright (c) 2012-2013, 2020, 2025 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -39,6 +39,8 @@ namespace Aarch64
     // AdvSIMD three same
     template <typename DecoderFeatures>
     StaticInstPtr decodeNeon3Same(ExtMachInst machInst);
+    // AdvSIMD three same FP16
+    StaticInstPtr decodeNeon3SameFp16(ExtMachInst machInst);
     // AdvSIMD three register extension
     template <typename DecoderFeatures>
     StaticInstPtr decodeNeon3RegExtension(ExtMachInst machInst);
@@ -46,6 +48,8 @@ namespace Aarch64
     inline StaticInstPtr decodeNeon3Diff(ExtMachInst machInst);
     // AdvSIMD two-reg misc
     inline StaticInstPtr decodeNeon2RegMisc(ExtMachInst machInst);
+    // AdvSIMD two-reg misc FP16
+    inline StaticInstPtr decodeNeon2RegMiscFp16(ExtMachInst machInst);
     // AdvSIMD across lanes
     inline StaticInstPtr decodeNeonAcrossLanes(ExtMachInst machInst);
     // AdvSIMD copy
@@ -66,12 +70,16 @@ namespace Aarch64
 
     // AdvSIMD scalar three same
     inline StaticInstPtr decodeNeonSc3Same(ExtMachInst machInst);
+    // AdvSIMD scalar three same FP16
+    inline StaticInstPtr decodeNeonSc3SameFp16(ExtMachInst machInst);
     // AdvSIMD scalar three same extra
     inline StaticInstPtr decodeNeonSc3SameExtra(ExtMachInst machInst);
     // AdvSIMD scalar three different
     inline StaticInstPtr decodeNeonSc3Diff(ExtMachInst machInst);
     // AdvSIMD scalar two-reg misc
     inline StaticInstPtr decodeNeonSc2RegMisc(ExtMachInst machInst);
+    // AdvSIMD scalar two-reg misc FP16
+    inline StaticInstPtr decodeNeonSc2RegMiscFp16(ExtMachInst machInst);
     // AdvSIMD scalar pairwise
     inline StaticInstPtr decodeNeonScPwise(ExtMachInst machInst);
     // AdvSIMD scalar copy
@@ -89,6 +97,145 @@ namespace Aarch64
 output decoder {{
 namespace Aarch64
 {
+    StaticInstPtr
+    decodeNeon3SameFp16(ExtMachInst machInst)
+    {
+        uint8_t u_a_opcode = bits(machInst, 29) << 4 | // u
+                             bits(machInst, 23) << 3 | // a
+                             bits(machInst, 13, 11);   // opcode
+
+        RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex vn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex vm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
+
+        uint8_t q = bits(machInst, 30);
+
+        switch (u_a_opcode) {
+          case 0b00000:
+            if (q)
+                return new FmaxnmQX<uint16_t>(machInst, vd, vn, vm);
+            else
+                return new FmaxnmDX<uint16_t>(machInst, vd, vn, vm);
+          case 0b00001:
+            if (q)
+                return new FmlaQX<uint16_t>(machInst, vd, vn, vm);
+            else
+                return new FmlaDX<uint16_t>(machInst, vd, vn, vm);
+          case 0b00010:
+            if (q)
+                return new FaddQX<uint16_t>(machInst, vd, vn, vm);
+            else
+                return new FaddDX<uint16_t>(machInst, vd, vn, vm);
+          case 0b00011:
+            if (q)
+                return new FmulxQX<uint16_t>(machInst, vd, vn, vm);
+            else
+                return new FmulxDX<uint16_t>(machInst, vd, vn, vm);
+          case 0b00100:
+            if (q)
+                return new FcmeqQX<uint16_t>(machInst, vd, vn, vm);
+            else
+                return new FcmeqDX<uint16_t>(machInst, vd, vn, vm);
+          case 0b00110:
+            if (q)
+                return new FmaxQX<uint16_t>(machInst, vd, vn, vm);
+            else
+                return new FmaxDX<uint16_t>(machInst, vd, vn, vm);
+          case 0b00111:
+            if (q)
+                return new FrecpsQX<uint16_t>(machInst, vd, vn, vm);
+            else
+                return new FrecpsDX<uint16_t>(machInst, vd, vn, vm);
+          case 0b01000:
+            if (q)
+                return new FminnmQX<uint16_t>(machInst, vd, vn, vm);
+            else
+                return new FminnmDX<uint16_t>(machInst, vd, vn, vm);
+          case 0b01001:
+            if (q)
+                return new FmlsQX<uint16_t>(machInst, vd, vn, vm);
+            else
+                return new FmlsDX<uint16_t>(machInst, vd, vn, vm);
+          case 0b01010:
+            if (q)
+                return new FsubQX<uint16_t>(machInst, vd, vn, vm);
+            else
+                return new FsubDX<uint16_t>(machInst, vd, vn, vm);
+          case 0b01110:
+            if (q)
+                return new FminQX<uint16_t>(machInst, vd, vn, vm);
+            else
+                return new FminDX<uint16_t>(machInst, vd, vn, vm);
+          case 0b01111:
+            if (q)
+                return new FrsqrtsQX<uint16_t>(machInst, vd, vn, vm);
+            else
+                return new FrsqrtsDX<uint16_t>(machInst, vd, vn, vm);
+          case 0b10000:
+            if (q)
+                return new FmaxnmpQX<uint16_t>(machInst, vd, vn, vm);
+            else
+                return new FmaxnmpDX<uint16_t>(machInst, vd, vn, vm);
+          case 0b10010:
+            if (q)
+                return new FaddpQX<uint16_t>(machInst, vd, vn, vm);
+            else
+                return new FaddpDX<uint16_t>(machInst, vd, vn, vm);
+          case 0b10011:
+            if (q)
+                return new FmulQX<uint16_t>(machInst, vd, vn, vm);
+            else
+                return new FmulDX<uint16_t>(machInst, vd, vn, vm);
+          case 0b10100:
+            if (q)
+                return new FcmgeQX<uint16_t>(machInst, vd, vn, vm);
+            else
+                return new FcmgeDX<uint16_t>(machInst, vd, vn, vm);
+          case 0b10101:
+            if (q)
+                return new FacgeQX<uint16_t>(machInst, vd, vn, vm);
+            else
+                return new FacgeDX<uint16_t>(machInst, vd, vn, vm);
+          case 0b10110:
+            if (q)
+                return new FmaxpQX<uint16_t>(machInst, vd, vn, vm);
+            else
+                return new FmaxpDX<uint16_t>(machInst, vd, vn, vm);
+          case 0b10111:
+            if (q)
+                return new FdivQX<uint16_t>(machInst, vd, vn, vm);
+            else
+                return new FdivDX<uint16_t>(machInst, vd, vn, vm);
+          case 0b11000:
+            if (q)
+                return new FminnmpQX<uint16_t>(machInst, vd, vn, vm);
+            else
+                return new FminnmpDX<uint16_t>(machInst, vd, vn, vm);
+          case 0b11010:
+            if (q)
+                return new FabdQX<uint16_t>(machInst, vd, vn, vm);
+            else
+                return new FabdDX<uint16_t>(machInst, vd, vn, vm);
+          case 0b11100:
+            if (q)
+                return new FcmgtQX<uint16_t>(machInst, vd, vn, vm);
+            else
+                return new FcmgtDX<uint16_t>(machInst, vd, vn, vm);
+          case 0b11101:
+            if (q)
+                return new FacgtQX<uint16_t>(machInst, vd, vn, vm);
+            else
+                return new FacgtDX<uint16_t>(machInst, vd, vn, vm);
+          case 0b11110:
+            if (q)
+                return new FminpQX<uint16_t>(machInst, vd, vn, vm);
+            else
+                return new FminpDX<uint16_t>(machInst, vd, vn, vm);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
     template <typename DecoderFeatures>
     StaticInstPtr
     decodeNeon3Same(ExtMachInst machInst)
@@ -1157,6 +1304,36 @@ namespace Aarch64
                 return new Unknown64(machInst);
             return decodeNeonSAcrossLanesReg<SmaxvDX, SmaxvQX>(
                 q, size, machInst, vd, vn);
+          case 0x0c:
+            switch (size) {
+              case 0b00:
+                if (q)
+                    return new FmaxnmvQX<uint16_t>(machInst, vd, vn);
+                else
+                    return new FmaxnmvDX<uint16_t>(machInst, vd, vn);
+              case 0b10:
+                if (q)
+                    return new FminnmvQX<uint16_t>(machInst, vd, vn);
+                else
+                    return new FminnmvDX<uint16_t>(machInst, vd, vn);
+              default:
+                return new Unknown64(machInst);
+            }
+          case 0x0f:
+            switch (size) {
+              case 0b00:
+                if (q)
+                    return new FmaxvQX<uint16_t>(machInst, vd, vn);
+                else
+                    return new FmaxvDX<uint16_t>(machInst, vd, vn);
+              case 0b10:
+                if (q)
+                    return new FminvQX<uint16_t>(machInst, vd, vn);
+                else
+                    return new FminvDX<uint16_t>(machInst, vd, vn);
+              default:
+                return new Unknown64(machInst);
+            }
           case 0x1a:
             if (size_q == 0x4 || size == 0x3)
                 return new Unknown64(machInst);
@@ -1392,8 +1569,9 @@ namespace Aarch64
         RegIndex vm_bf = (RegIndex) (uint8_t) bits(machInst, 19, 16);
 
         uint8_t index = 0;
+        RegIndex vm = 0;
         uint8_t index_fp = 0;
-        uint8_t vmh = 0;
+        RegIndex vm_fp = 0;
         uint8_t sz = size & 0x1;
         uint8_t sz_q = (sz << 1) | bits(machInst, 30);
         uint8_t sz_L = (sz << 1) | L;
@@ -1401,21 +1579,29 @@ namespace Aarch64
         // Index and 2nd register operand for integer instructions
         if (size == 0x1) {
             index = (H << 2) | (L << 1) | M;
-            // vmh = 0;
+            vm = vm_bf;
         } else if (size == 0x2) {
             index = (H << 1) | L;
-            vmh = M;
+            vm = (M << 4 | vm_bf);
         }
-        RegIndex vm = (RegIndex) (uint8_t) (vmh << 4 | vm_bf);
 
         // Index and 2nd register operand for FP instructions
-        vmh = M;
-        if ((size & 0x1) == 0) {
+        switch (size) {
+          case 0b00:
+            index_fp = (H << 2) | (L << 1) | M;
+            vm_fp = vm_bf;
+            break;
+          case 0b10:
             index_fp = (H << 1) | L;
-        } else if (L == 0) {
+            vm_fp = (M << 4 | vm_bf);
+            break;
+          case 0b11:
             index_fp = H;
+            vm_fp = (M << 4 | vm_bf);
+            break;
+          default:
+            break;
         }
-        RegIndex vm_fp = (RegIndex) (uint8_t) (vmh << 4 | vm_bf);
 
         // Index and 2nd register operand for FEAT_DOTPROD and
         // FEAT_I8MM instructions
@@ -1430,10 +1616,10 @@ namespace Aarch64
                 return decodeNeonUThreeImmHAndWReg<MlaElemDX, MlaElemQX>(
                     q, size, machInst, vd, vn, vm, index);
           case 0x1:
-            if (!u && size >= 2 && sz_q != 0x2 && sz_L != 0x3)
+            if (!u && sz_q != 0x2 && sz_L != 0x3) {
                 return decodeNeonUThreeImmFpReg<FmlaElemDX, FmlaElemQX>(
-                    q, sz, machInst, vd, vn, vm_fp, index_fp);
-            else if (u && (size == 1 || size == 2)){
+                    q, size, machInst, vd, vn, vm_fp, index_fp);
+            } else if (u && (size == 1 || size == 2)) {
                 // FCMLA by element
                 if (size == 0x2) {
                     index_fp = H;
@@ -1497,10 +1683,10 @@ namespace Aarch64
             else
                 return new Unknown64(machInst);
           case 0x5:
-            if (!u && size >= 0x2 && sz_L != 0x3 && sz_q != 0x2)
+            if (!u && sz_L != 0x3 && sz_q != 0x2) {
                 return decodeNeonUThreeImmFpReg<FmlsElemDX, FmlsElemQX>(
-                    q, sz, machInst, vd, vn, vm_fp, index_fp);
-            else if (u && (size == 1 || size == 2)){
+                    q, size, machInst, vd, vn, vm_fp, index_fp);
+            } else if (u && (size == 1 || size == 2)) {
                 // FCMLA by element
                 if (size == 0x2) {
                     index_fp = H;
@@ -1563,13 +1749,13 @@ namespace Aarch64
                 return decodeNeonUThreeImmHAndWReg<MulElemDX, MulElemQX>(
                     q, size, machInst, vd, vn, vm, index);
           case 0x9:
-            if (size >= 2 && sz_q != 0x2 && sz_L != 0x3) {
+            if (sz_q != 0x2 && sz_L != 0x3) {
                 if (u)
                     return decodeNeonUThreeImmFpReg<FmulxElemDX, FmulxElemQX>(
-                        q, sz, machInst, vd, vn, vm_fp, index_fp);
+                        q, size, machInst, vd, vn, vm_fp, index_fp);
                 else
                     return decodeNeonUThreeImmFpReg<FmulElemDX, FmulElemQX>(
-                        q, sz, machInst, vd, vn, vm_fp, index_fp);
+                        q, size, machInst, vd, vn, vm_fp, index_fp);
             } else {
                 return new Unknown64(machInst);
             }
@@ -1672,7 +1858,28 @@ namespace Aarch64
 
         RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
 
-        if (o2 == 0x1 || (op == 0x1 && cmode == 0xf && !q))
+        if (o2 == 0x1) {
+            if (op == 0b0 && cmode == 0b1111) {
+                uint8_t imm8 = abcdefgh;
+                uint16_t imm16 = bits(imm8, 7) << 15 | !bits(imm8, 6) << 14 |
+                                 bits(imm8, 6) << 13 | bits(imm8, 6) << 12 |
+                                 bits(imm8, 5, 0) << 6;
+
+                uint64_t imm = 0;
+                for (int index = 0; index < (64 << q); index+=16) {
+                    imm |= (imm16 << index);
+                }
+                if (q) {
+                    return new FmovQX<uint16_t>(machInst, vd, imm);
+                } else {
+                    return new FmovDX<uint16_t>(machInst, vd, imm);
+                }
+            } else {
+                return new Unknown64(machInst);
+            }
+        }
+
+        if (op == 0x1 && cmode == 0xf && !q)
             return new Unknown64(machInst);
 
         bool immValid = true;
@@ -1923,38 +2130,50 @@ namespace Aarch64
                 return decodeNeonSTwoShiftSReg<SshllX, Sshll2X>(
                     q, size, machInst, vd, vn, shiftAmt);
           case 0x1c:
-            if (immh < 0x4 || immh3_q == 0x2)
+            if (immh < 0x2 || immh3_q == 0x2)
                 return new Unknown64(machInst);
             shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
             if (u) {
                 return decodeNeonUTwoShiftFpReg<UcvtfFixedDX, UcvtfFixedQX>(
-                    q, size & 0x1, machInst, vd, vn, shiftAmt);
+                    q, size, machInst, vd, vn, shiftAmt);
             } else {
                 if (q) {
-                    if (size & 0x1)
-                        return new ScvtfFixedDQX<uint64_t>(machInst, vd, vn,
-                                                           shiftAmt);
-                    else
-                        return new ScvtfFixedSQX<uint32_t>(machInst, vd, vn,
-                                                           shiftAmt);
+                    switch (size) {
+                      case 0b11:
+                        return new ScvtfFixedDQX<uint64_t>(
+                            machInst, vd, vn, shiftAmt);
+                      case 0b10:
+                        return new ScvtfFixedSQX<uint32_t>(
+                            machInst, vd, vn, shiftAmt);
+                      case 0b01:
+                        return new ScvtfFixedSQX<uint16_t>(
+                            machInst, vd, vn, shiftAmt);
+                      default:
+                        return new Unknown64(machInst);
+                    }
                 } else {
-                    if (size & 0x1)
-                        return new Unknown(machInst);
-                    else
-                        return new ScvtfFixedDX<uint32_t>(machInst, vd, vn,
-                                                          shiftAmt);
+                    switch (size) {
+                      case 0b10:
+                        return new ScvtfFixedDX<uint32_t>(
+                            machInst, vd, vn, shiftAmt);
+                      case 0b01:
+                        return new ScvtfFixedDX<uint16_t>(
+                            machInst, vd, vn, shiftAmt);
+                      default:
+                        return new Unknown64(machInst);
+                    }
                 }
             }
           case 0x1f:
-            if (immh < 0x4 || immh3_q == 0x2)
+            if (immh < 0x2 || immh3_q == 0x2)
                 return new Unknown64(machInst);
             shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
             if (u)
                 return decodeNeonUTwoShiftFpReg<FcvtzuFixedDX, FcvtzuFixedQX>(
-                    q, size & 0x1, machInst, vd, vn, shiftAmt);
+                    q, size, machInst, vd, vn, shiftAmt);
             else
                 return decodeNeonUTwoShiftFpReg<FcvtzsFixedDX, FcvtzsFixedQX>(
-                    q, size & 0x1, machInst, vd, vn, shiftAmt);
+                    q, size, machInst, vd, vn, shiftAmt);
           default:
             return new Unknown64(machInst);
         }
@@ -2247,6 +2466,41 @@ namespace Aarch64
     }
 
     StaticInstPtr
+    decodeNeonSc3SameFp16(ExtMachInst machInst)
+    {
+        uint8_t u_a_opcode = bits(machInst, 29) << 4 | // u
+                             bits(machInst, 23) << 3 | // a
+                             bits(machInst, 13, 11);   // opcode
+
+        RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex vn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+        RegIndex vm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
+
+        switch (u_a_opcode) {
+          case 0b00011:
+            return new FmulxScX<uint16_t>(machInst, vd, vn, vm);
+          case 0b00100:
+            return new FcmeqScX<uint16_t>(machInst, vd, vn, vm);
+          case 0b00111:
+            return new FrecpsScX<uint16_t>(machInst, vd, vn, vm);
+          case 0b01111:
+            return new FrsqrtsScX<uint16_t>(machInst, vd, vn, vm);
+          case 0b10100:
+            return new FcmgeScX<uint16_t>(machInst, vd, vn, vm);
+          case 0b10101:
+            return new FacgeScX<uint16_t>(machInst, vd, vn, vm);
+          case 0b11010:
+            return new FabdScX<uint16_t>(machInst, vd, vn, vm);
+          case 0b11100:
+            return new FcmgtScX<uint16_t>(machInst, vd, vn, vm);
+          case 0b11101:
+            return new FacgtScX<uint16_t>(machInst, vd, vn, vm);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
     decodeNeonSc3Diff(ExtMachInst machInst)
     {
         if (bits(machInst, 29))
@@ -2476,6 +2730,225 @@ namespace Aarch64
     }
 
     StaticInstPtr
+    decodeNeonSc2RegMiscFp16(ExtMachInst machInst)
+    {
+        uint8_t u_a_opcode = bits(machInst, 29) << 6 | // u
+                             bits(machInst, 23) << 5 | // a
+                             bits(machInst, 16, 12);   // opcode
+
+        RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex vn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+
+        switch (u_a_opcode) {
+          case 0b0011010:
+            return new FcvtnsScX<uint16_t>(machInst, vd, vn);
+          case 0b0011011:
+            return new FcvtmsScX<uint16_t>(machInst, vd, vn);
+          case 0b0011100:
+            return new FcvtasScX<uint16_t>(machInst, vd, vn);
+          case 0b0011101:
+            return new ScvtfIntScHX<uint16_t>(machInst, vd, vn);
+          case 0b0101100:
+            return new FcmgtZeroScX<uint16_t>(machInst, vd, vn);
+          case 0b0101101:
+            return new FcmeqZeroScX<uint16_t>(machInst, vd, vn);
+          case 0b0101110:
+            return new FcmltZeroScX<uint16_t>(machInst, vd, vn);
+          case 0b0111010:
+            return new FcvtpsScX<uint16_t>(machInst, vd, vn);
+          case 0b0111011:
+            return new FcvtzsIntScX<uint16_t>(machInst, vd, vn);
+          case 0b0111101:
+            return new FrecpeScX<uint16_t>(machInst, vd, vn);
+          case 0b0111111:
+            return new FrecpxX<uint16_t>(machInst, vd, vn);
+          case 0b1011010:
+            return new FcvtnuScX<uint16_t>(machInst, vd, vn);
+          case 0b1011011:
+            return new FcvtmuScX<uint16_t>(machInst, vd, vn);
+          case 0b1011100:
+            return new FcvtauScX<uint16_t>(machInst, vd, vn);
+          case 0b1011101:
+            return new UcvtfIntScX<uint16_t>(machInst, vd, vn);
+          case 0b1101100:
+            return new FcmgeZeroScX<uint16_t>(machInst, vd, vn);
+          case 0b1101101:
+            return new FcmleZeroScX<uint16_t>(machInst, vd, vn);
+          case 0b1111010:
+            return new FcvtpuScX<uint16_t>(machInst, vd, vn);
+          case 0b1111011:
+            return new FcvtzuIntScX<uint16_t>(machInst, vd, vn);
+          case 0b1111101:
+            return new FrsqrteScX<uint16_t>(machInst, vd, vn);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
+    decodeNeon2RegMiscFp16(ExtMachInst machInst)
+    {
+        uint8_t u_a_opcode = bits(machInst, 29) << 6 | // u
+                             bits(machInst, 23) << 5 | // a
+                             bits(machInst, 16, 12);   // opcode
+
+        uint8_t q = bits(machInst, 30);
+
+        RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
+        RegIndex vn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
+
+        switch (u_a_opcode) {
+          case 0b0011000:
+            if (q)
+                return new FrintnQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FrintnDX<uint16_t>(machInst, vd, vn);
+          case 0b0011001:
+            if (q)
+                return new FrintmQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FrintmDX<uint16_t>(machInst, vd, vn);
+          case 0b0011010:
+            if (q)
+                return new FcvtnsQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FcvtnsDX<uint16_t>(machInst, vd, vn);
+          case 0b0011011:
+            if (q)
+                return new FcvtmsQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FcvtmsDX<uint16_t>(machInst, vd, vn);
+          case 0b0011100:
+            if (q)
+                return new FcvtasQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FcvtasDX<uint16_t>(machInst, vd, vn);
+          case 0b0011101:
+            if (q)
+                return new ScvtfIntSQX<uint16_t>(machInst, vd, vn);
+            else
+                return new ScvtfIntDX<uint16_t>(machInst, vd, vn);
+          case 0b0101100:
+            if (q)
+                return new FcmgtZeroQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FcmgtZeroDX<uint16_t>(machInst, vd, vn);
+          case 0b0101101:
+            if (q)
+                return new FcmeqZeroQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FcmeqZeroDX<uint16_t>(machInst, vd, vn);
+          case 0b0101110:
+            if (q)
+                return new FcmltZeroQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FcmltZeroDX<uint16_t>(machInst, vd, vn);
+          case 0b0101111:
+            if (q)
+                return new FabsQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FabsDX<uint16_t>(machInst, vd, vn);
+          case 0b0111000:
+            if (q)
+                return new FrintpQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FrintpDX<uint16_t>(machInst, vd, vn);
+          case 0b0111001:
+            if (q)
+                return new FrintzQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FrintzDX<uint16_t>(machInst, vd, vn);
+          case 0b0111010:
+            if (q)
+                return new FcvtpsQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FcvtpsDX<uint16_t>(machInst, vd, vn);
+          case 0b0111011:
+            if (q)
+                return new FcvtzsIntQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FcvtzsIntDX<uint16_t>(machInst, vd, vn);
+          case 0b0111101:
+            if (q)
+                return new FrecpeQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FrecpeDX<uint16_t>(machInst, vd, vn);
+          case 0b1011000:
+            if (q)
+                return new FrintaQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FrintaDX<uint16_t>(machInst, vd, vn);
+          case 0b1011001:
+            if (q)
+                return new FrintxQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FrintxDX<uint16_t>(machInst, vd, vn);
+          case 0b1011010:
+            if (q)
+                return new FcvtnuQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FcvtnuDX<uint16_t>(machInst, vd, vn);
+          case 0b1011011:
+            if (q)
+                return new FcvtmuQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FcvtmuDX<uint16_t>(machInst, vd, vn);
+          case 0b1011100:
+            if (q)
+                return new FcvtauQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FcvtauDX<uint16_t>(machInst, vd, vn);
+          case 0b1011101:
+            if (q)
+                return new UcvtfIntQX<uint16_t>(machInst, vd, vn);
+            else
+                return new UcvtfIntDX<uint16_t>(machInst, vd, vn);
+          case 0b1101100:
+            if (q)
+                return new FcmgeZeroQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FcmgeZeroDX<uint16_t>(machInst, vd, vn);
+          case 0b1101101:
+            if (q)
+                return new FcmleZeroQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FcmleZeroDX<uint16_t>(machInst, vd, vn);
+          case 0b1101111:
+            if (q)
+                return new FnegQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FnegDX<uint16_t>(machInst, vd, vn);
+          case 0b1111001:
+            if (q)
+                return new FrintiQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FrintiDX<uint16_t>(machInst, vd, vn);
+          case 0b1111010:
+            if (q)
+                return new FcvtpuQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FcvtpuDX<uint16_t>(machInst, vd, vn);
+          case 0b1111011:
+            if (q)
+                return new FcvtzuIntQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FcvtzuIntDX<uint16_t>(machInst, vd, vn);
+          case 0b1111101:
+            if (q)
+                return new FrsqrteQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FrsqrteDX<uint16_t>(machInst, vd, vn);
+          case 0b1111111:
+            if (q)
+                return new FsqrtQX<uint16_t>(machInst, vd, vn);
+            else
+                return new FsqrtDX<uint16_t>(machInst, vd, vn);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
     decodeNeonScPwise(ExtMachInst machInst)
     {
         uint8_t u = bits(machInst, 29);
@@ -2485,8 +2958,8 @@ namespace Aarch64
         RegIndex vd = (RegIndex) (uint8_t) bits(machInst, 4, 0);
         RegIndex vn = (RegIndex) (uint8_t) bits(machInst, 9, 5);
 
-        if (!u) {
-            if (opcode == 0x1b && size == 0x3)
+        if (!u && opcode == 0x1b) {
+            if (size == 0x3)
                 return new AddpScQX<uint64_t>(machInst, vd, vn);
             else
                 return new Unknown64(machInst);
@@ -2496,24 +2969,24 @@ namespace Aarch64
         switch (switchVal) {
           case 0x0c:
           case 0x2c:
-            return decodeNeonUTwoMiscPwiseScFpReg<FmaxnmpScDX, FmaxnmpScQX>(
-                    size & 0x1, machInst, vd, vn);
+            return decodeNeonUTwoMiscPwiseScFpReg<FmaxnmpScSX, FmaxnmpScDX, FmaxnmpScQX>(
+                    u, size & 0x1, machInst, vd, vn);
           case 0x0d:
           case 0x2d:
-            return decodeNeonUTwoMiscPwiseScFpReg<FaddpScDX, FaddpScQX>(
-                    size & 0x1, machInst, vd, vn);
+            return decodeNeonUTwoMiscPwiseScFpReg<FaddpScSX, FaddpScDX, FaddpScQX>(
+                    u, size & 0x1, machInst, vd, vn);
           case 0x0f:
           case 0x2f:
-            return decodeNeonUTwoMiscPwiseScFpReg<FmaxpScDX, FmaxpScQX>(
-                    size & 0x1, machInst, vd, vn);
+            return decodeNeonUTwoMiscPwiseScFpReg<FmaxpScSX, FmaxpScDX, FmaxpScQX>(
+                    u, size & 0x1, machInst, vd, vn);
           case 0x4c:
           case 0x6c:
-            return decodeNeonUTwoMiscPwiseScFpReg<FminnmpScDX, FminnmpScQX>(
-                    size & 0x1, machInst, vd, vn);
+            return decodeNeonUTwoMiscPwiseScFpReg<FminnmpScSX, FminnmpScDX, FminnmpScQX>(
+                    u, size & 0x1, machInst, vd, vn);
           case 0x4f:
           case 0x6f:
-            return decodeNeonUTwoMiscPwiseScFpReg<FminpScDX, FminpScQX>(
-                    size & 0x1, machInst, vd, vn);
+            return decodeNeonUTwoMiscPwiseScFpReg<FminpScSX, FminpScDX, FminpScQX>(
+                    u, size & 0x1, machInst, vd, vn);
           default:
             return new Unknown64(machInst);
         }
@@ -2555,41 +3028,50 @@ namespace Aarch64
         RegIndex vm_bf = (RegIndex) (uint8_t) bits(machInst, 19, 16);
 
         uint8_t index = 0;
+        RegIndex vm = 0;
         uint8_t index_fp = 0;
-        uint8_t vmh = 0;
+        RegIndex vm_fp = 0;
         uint8_t sz_L = bits(machInst, 22, 21);
 
         // Index and 2nd register operand for integer instructions
         if (size == 0x1) {
             index = (H << 2) | (L << 1) | M;
-            // vmh = 0;
+            vm = vm_bf;
         } else if (size == 0x2) {
             index = (H << 1) | L;
-            vmh = M;
+            vm = (M << 4 | vm_bf);
         } else if (size == 0x3) {
             index = H;
-            vmh = M;
+            vm = (M << 4 | vm_bf);
         }
-        RegIndex vm = (RegIndex) (uint8_t) (vmh << 4 | vm_bf);
 
         // Index and 2nd register operand for FP instructions
-        vmh = M;
-        if ((size & 0x1) == 0) {
+        switch (size) {
+          case 0b00:
+            index_fp = (H << 2) | (L << 1) | M;
+            vm_fp = vm_bf;
+            break;
+          case 0b10:
             index_fp = (H << 1) | L;
-        } else if (L == 0) {
+            vm_fp = (M << 4 | vm_bf);
+            break;
+          case 0b11:
             index_fp = H;
+            vm_fp = (M << 4 | vm_bf);
+            break;
+          default:
+            break;
         }
-        RegIndex vm_fp = (RegIndex) (uint8_t) (vmh << 4 | vm_bf);
 
         uint8_t u_opcode = opcode | u << 4;
 
         switch (u_opcode) {
           case 0x1:
-            if (size < 2 || sz_L == 0x3)
+            if (sz_L == 0x3)
                 return new Unknown64(machInst);
             else
                 return decodeNeonUThreeImmScFpReg<FmlaElemScX>(
-                    size & 0x1, machInst, vd, vn, vm_fp, index_fp);
+                    size, machInst, vd, vn, vm_fp, index_fp);
           case 0x3:
             if (size == 0x0 || size == 0x3)
                 return new Unknown64(machInst);
@@ -2597,11 +3079,11 @@ namespace Aarch64
                 return decodeNeonSThreeImmHAndWReg<SqdmlalElemScX>(
                     size, machInst, vd, vn, vm, index);
           case 0x5:
-            if (size < 2 || sz_L == 0x3)
+            if (sz_L == 0x3)
                 return new Unknown64(machInst);
             else
                 return decodeNeonUThreeImmScFpReg<FmlsElemScX>(
-                    size & 0x1, machInst, vd, vn, vm_fp, index_fp);
+                    size, machInst, vd, vn, vm_fp, index_fp);
           case 0x7:
             if (size == 0x0 || size == 0x3)
                 return new Unknown64(machInst);
@@ -2609,10 +3091,10 @@ namespace Aarch64
                 return decodeNeonSThreeImmHAndWReg<SqdmlslElemScX>(
                     size, machInst, vd, vn, vm, index);
           case 0x9:
-            if (size < 2 || sz_L == 0x3)
+            if (sz_L == 0x3)
                 return new Unknown64(machInst);
             return decodeNeonUThreeImmScFpReg<FmulElemScX>(
-                    size & 0x1, machInst, vd, vn, vm_fp, index_fp);
+                    size, machInst, vd, vn, vm_fp, index_fp);
           case 0xb:
             if (size == 0x0 || size == 0x3)
                 return new Unknown64(machInst);
@@ -2629,11 +3111,11 @@ namespace Aarch64
             return decodeNeonSThreeImmHAndWReg<SqrdmulhElemScX>(
                     size, machInst, vd, vn, vm, index);
           case 0x19:
-            if (size < 2 || sz_L == 0x3)
+            if (sz_L == 0x3)
                 return new Unknown64(machInst);
-            return decodeNeonUThreeImmScFpReg<FmulxElemScX>(
-                    size & 0x1, machInst, vd, vn, vm_fp, index_fp);
-
+            else
+                return decodeNeonUThreeImmScFpReg<FmulxElemScX>(
+                        size, machInst, vd, vn, vm_fp, index_fp);
           case 0x1d:
             return decodeNeonSThreeImmHAndWReg<SqrdmlahElemScX>(
                     size, machInst, vd, vn, vm, index);
@@ -2762,30 +3244,37 @@ namespace Aarch64
                 return decodeNeonSTwoShiftUSReg<SqrshrnScX>(
                     size, machInst, vd, vn, shiftAmt);
           case 0x1c:
-            if (immh < 0x4)
+            if (immh < 0x2)
                 return new Unknown64(machInst);
             shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
             if (u) {
                 return decodeNeonUTwoShiftUFpReg<UcvtfFixedScX>(
-                    size & 0x1, machInst, vd, vn, shiftAmt);
+                    size, machInst, vd, vn, shiftAmt);
             } else {
-                if (size & 0x1)
+                switch (size) {
+                  case 0b11:
                     return new ScvtfFixedScDX<uint64_t>(machInst, vd, vn,
                                                         shiftAmt);
-                else
+                  case 0b10:
                     return new ScvtfFixedScSX<uint32_t>(machInst, vd, vn,
                                                         shiftAmt);
+                  case 0b01:
+                    return new ScvtfFixedScSX<uint16_t>(machInst, vd, vn,
+                                                        shiftAmt);
+                  default:
+                    return new Unknown64(machInst);
+                }
             }
           case 0x1f:
-            if (immh < 0x4)
+            if (immh < 0x2)
                 return new Unknown64(machInst);
             shiftAmt = (8 << (size + 1)) - ((immh << 3) | immb);
             if (u)
                 return decodeNeonUTwoShiftUFpReg<FcvtzuFixedScX>(
-                    size & 0x1, machInst, vd, vn, shiftAmt);
+                    size, machInst, vd, vn, shiftAmt);
             else
                 return decodeNeonUTwoShiftUFpReg<FcvtzsFixedScX>(
-                    size & 0x1, machInst, vd, vn, shiftAmt);
+                    size, machInst, vd, vn, shiftAmt);
           default:
             return new Unknown64(machInst);
         }

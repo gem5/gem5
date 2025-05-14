@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2024 Arm Limited
+// Copyright (c) 2011-2025 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -2708,6 +2708,10 @@ namespace Aarch64
                 return new FcvtWUIntFpD(machInst, rd, rn);
               case 3: // UCVTF Dd = convertFromInt(Xn)
                 return new FcvtXUIntFpD(machInst, rd, rn);
+              case 6: // UCVTF Hd = convertFromInt(Wn)
+                return new FcvtWUIntFpH(machInst, rd, rn);
+              case 7: // UCVTF Hd = convertFromInt(Xn)
+                return new FcvtXUIntFpH(machInst, rd, rn);
               default:
                 return new Unknown64(machInst);
             }
@@ -2931,12 +2935,11 @@ namespace Aarch64
         if (bits(machInst, 31) ||
                 bits(machInst, 29) ||
                 bits(machInst, 15, 14) ||
-                bits(machInst, 23) ||
                 bits(machInst, 2, 0)) {
             return new Unknown64(machInst);
         }
         uint8_t switchVal = (bits(machInst, 4, 3) << 0) |
-                            (bits(machInst, 22) << 2);
+                            (bits(machInst, 23, 22) << 2);
         RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 9, 5);
         RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 20, 16);
 
@@ -2966,6 +2969,18 @@ namespace Aarch64
           case 0x7:
             // FCMPE flags = compareSignaling(Dn,0.0)
             return new FCmpEImmD(machInst, rn, 0);
+          case 0xc:
+            // FCMP flags = compareQuiet(Hn,Hm)
+            return new FCmpRegH(machInst, rn, rm);
+          case 0xd:
+            // FCMP flags = compareQuiet(Hn,0.0)
+            return new FCmpImmH(machInst, rn, 0);
+          case 0xe:
+            // FCMPE flags = compareSignaling(Hn,Hm)
+            return new FCmpERegH(machInst, rn, rm);
+          case 0xf:
+            // FCMPE flags = compareSignaling(Hn,0.0)
+            return new FCmpEImmH(machInst, rn, 0);
           default:
             return new Unknown64(machInst);
         }
@@ -3159,6 +3174,24 @@ output decoder {{
         '0','0','X','X', // op2
         'X','X','X','0','X','X','X','X','1'>(); // op3
 
+    inline constexpr auto isAdvSIMDSc3SameFp16 = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','1','X','1', // op0
+        '1','1','1',
+        '0','X', // op1
+        '1','0','X','X', // op2
+        'X','X','X','0','0','X','X','X','1'>(); // op3
+
+    inline constexpr auto isAdvSIMDSc2RegMiscFp16 = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','1','X','1', // op0
+        '1','1','1',
+        '0','X', // op1
+        '1','1','1','1', // op2
+        '0','0','X','X','X','X','X','1','0'>(); // op3
+
     inline constexpr auto isAdvSIMDSc3SameExtra = bitPatternMatcher<
         MachInst,
         31, 10,
@@ -3257,6 +3290,24 @@ output decoder {{
         '0','0', // op1
         '0','0','X','X', // op2
         'X','X','X','0','X','X','X','X','1'>(); // op3
+
+    inline constexpr auto isAdvSIMD3SameFp16 = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','X','X','0', // op0
+        '1','1','1',
+        '0','X', // op1
+        '1','0','X','X', // op2
+        'X','X','X','0','0','X','X','X','1'>(); // op3
+
+    inline constexpr auto isAdvSIMD2RegMiscFp16 = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','X','X','0', // op0
+        '1','1','1',
+        '0','X', // op1
+        '1','1','1','1', // op2
+        '0','0','X','X','X','X','X','1','0'>(); // op3
 
     inline constexpr auto isAdvSIMD3RegExt = bitPatternMatcher<
         MachInst,
@@ -3424,6 +3475,8 @@ namespace Aarch64
         if (isCrypto3SHA(machInst)) return decodeCryptoThreeRegSHA(machInst);
         if (isCrypto2SHA(machInst)) return decodeCryptoTwoRegSHA(machInst);
         if (isAdvSIMDScCopy(machInst)) return decodeNeonScCopy(machInst);
+        if (isAdvSIMDSc3SameFp16(machInst)) return decodeNeonSc3SameFp16(machInst);
+        if (isAdvSIMDSc2RegMiscFp16(machInst)) return decodeNeonSc2RegMiscFp16(machInst);
         if (isAdvSIMDSc3SameExtra(machInst)) return decodeNeonSc3SameExtra(machInst);
         if (isAdvSIMDSc2RegMisc(machInst)) return decodeNeonSc2RegMisc(machInst);
         if (isAdvSIMDSc2Pwise(machInst)) return decodeNeonScPwise(machInst);
@@ -3435,6 +3488,8 @@ namespace Aarch64
         if (isAdvSIMDPermute(machInst)) return decodeNeonZipUzpTrn(machInst);
         if (isAdvSIMDExtract(machInst)) return decodeNeonExt(machInst);
         if (isAdvSIMDCopy(machInst)) return decodeNeonCopy(machInst);
+        if (isAdvSIMD3SameFp16(machInst)) return decodeNeon3SameFp16(machInst);
+        if (isAdvSIMD2RegMiscFp16(machInst)) return decodeNeon2RegMiscFp16(machInst);
         if (isAdvSIMD3RegExt(machInst)) return decodeNeon3RegExtension<DecoderFeatures>(machInst);
         if (isAdvSIMD2RegMisc(machInst)) return decodeNeon2RegMisc(machInst);
         if (isAdvSIMDAcrossLanes(machInst)) return decodeNeonAcrossLanes(machInst);
