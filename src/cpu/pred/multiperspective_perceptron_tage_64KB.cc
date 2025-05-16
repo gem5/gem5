@@ -64,7 +64,7 @@ MPP_StatisticalCorrector_64KB::MPP_StatisticalCorrector_64KB(
 MPP_StatisticalCorrector_64KB::SCThreadHistory*
 MPP_StatisticalCorrector_64KB::makeThreadHistory()
 {
-    MPP_SCThreadHistory *sh = new MPP_SCThreadHistory();
+    MPP_SCThreadHistory *sh = new MPP_SCThreadHistory(instShiftAmt);
 
     sh->setNumOrdinalHistories(3);
     sh->initLocalHistory(1, numEntriesFirstLocalHistories, 4);
@@ -77,7 +77,7 @@ MPP_StatisticalCorrector_64KB::makeThreadHistory()
 
 void
 MPP_StatisticalCorrector_64KB::getBiasLSUM(Addr branch_pc,
-        StatisticalCorrector::BranchInfo* bi, int &lsum) const
+        StatisticalCorrector::BranchInfo *bi, int &lsum) const
 {
     int8_t ctr = bias[getIndBias(branch_pc, bi, false /* unused */)];
     lsum += 2.09 * ctr;
@@ -87,7 +87,7 @@ MPP_StatisticalCorrector_64KB::getBiasLSUM(Addr branch_pc,
 
 int
 MPP_StatisticalCorrector_64KB::gPredictions(ThreadID tid, Addr branch_pc,
-        StatisticalCorrector::BranchInfo* bi, int & lsum, int64_t phist)
+        StatisticalCorrector::BranchInfo *bi, int &lsum)
 {
     MPP_SCThreadHistory *sh = static_cast<MPP_SCThreadHistory *>(scHistory);
     unsigned int pc = branch_pc;
@@ -118,7 +118,7 @@ MPP_StatisticalCorrector_64KB::gPredictions(ThreadID tid, Addr branch_pc,
 
 void
 MPP_StatisticalCorrector_64KB::gUpdates(ThreadID tid, Addr pc, bool taken,
-        StatisticalCorrector::BranchInfo* bi, int64_t phist)
+        StatisticalCorrector::BranchInfo *bi)
 {
     MPP_SCThreadHistory *sh = static_cast<MPP_SCThreadHistory *>(scHistory);
 
@@ -141,7 +141,7 @@ MPP_StatisticalCorrector_64KB::gUpdates(ThreadID tid, Addr pc, bool taken,
 void
 MPP_StatisticalCorrector_64KB::scHistoryUpdate(Addr branch_pc,
         const StaticInstPtr &inst, bool taken,
-        StatisticalCorrector::BranchInfo *bi, Addr corrTarget)
+        Addr corrTarget, int64_t phist)
 {
     int brtype = inst->isDirectCtrl() ? 0 : 2;
     if (! inst->isUncondCtrl()) {
@@ -159,8 +159,8 @@ MPP_StatisticalCorrector_64KB::scHistoryUpdate(Addr branch_pc,
     sh->updateHistoryStack(corrTarget, taken, inst->isCall(),
                            inst->isReturn());
 
-    StatisticalCorrector::scHistoryUpdate(branch_pc, inst, taken, bi,
-                                          corrTarget);
+    StatisticalCorrector::scHistoryUpdate(branch_pc, inst, taken,
+                                          corrTarget, phist);
 }
 
 size_t

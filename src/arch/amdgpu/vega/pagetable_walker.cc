@@ -100,7 +100,6 @@ Walker::WalkerState::startFunctional(Addr base, Addr vaddr,
     return fault;
 }
 
-
 /*
  * Timing mode methods
  */
@@ -165,8 +164,8 @@ Walker::WalkerState::startWalk()
         DPRINTF(GPUPTWalker, "Sending timing read to %#lx\n",
                 read->getAddr());
 
-        sendPackets();
         started = true;
+        sendPackets();
     } else {
         // This is mostly the same as stepWalk except we update the state and
         // send the new timing read request.
@@ -366,22 +365,35 @@ Walker::WalkerState::sendPackets()
     // If we're already waiting for the port to become available, just return.
     if (retrying)
         return;
-
+    [[maybe_unused]] auto addr = read->getAddr();
     if (!walker->sendTiming(this, read)) {
         DPRINTF(GPUPTWalker, "Timing request for %#lx failed\n",
-                read->getAddr());
+                addr);
 
         retrying = true;
-    } else {
-        DPRINTF(GPUPTWalker, "Timing request for %#lx successful\n",
-                read->getAddr());
     }
+    // No lines after sendTiming because the state might be freed
+    // else {
+    //     DPRINTF(GPUPTWalker, "Timing request for %#lx successful\n",
+    //             addr);
+    // }
 }
 
 bool Walker::sendTiming(WalkerState* sending_walker, PacketPtr pkt)
 {
     auto walker_state = new WalkerSenderState(sending_walker);
     pkt->pushSenderState(walker_state);
+
+    // If hit, send the response pkt immediately.
+    PWCEntry *entry = pwc.findEntry(pkt->getAddr());
+    if (entry != nullptr) {
+        DPRINTF(GPUPTWalker, "PTE found in buffer, skipping timing request.");
+        pkt->setLE<uint64_t>(entry->pteEntry);
+
+        recvTimingResp(pkt);
+
+        return true;
+    }
 
     if (port.sendTimingReq(pkt)) {
         DPRINTF(GPUPTWalker, "Sending timing read to %#lx from walker %p\n",
@@ -412,9 +424,24 @@ Walker::recvTimingResp(PacketPtr pkt)
 
     DPRINTF(GPUPTWalker, "Got response for %#lx from walker %p -- %#lx\n",
             pkt->getAddr(), senderState->senderWalk, pkt->getLE<uint64_t>());
+    // on PWC miss, add the entry to PWC
+    if (enable_pwc && pwc.findEntry(pkt->getAddr()) == nullptr) {
+        pwc.insert(pkt->getAddr(), pkt->getLE<uint64_t>());
+    }
+
     senderState->senderWalk->startWalk();
 
     delete senderState;
+}
+
+void
+Walker::invalidatePWC()
+{
+    for (auto &i : pwc) {
+        if (i.valid) {
+            pwc.invalidate(&i);
+        }
+    }
 }
 
 void
@@ -427,8 +454,11 @@ void
 Walker::recvReqRetry()
 {
     std::list<WalkerState *>::iterator iter;
-    for (iter = currStates.begin(); iter != currStates.end(); iter++) {
+    for (iter = currStates.begin(); iter != currStates.end(); ) {
         WalkerState * walkerState = *(iter);
+        // retry() might finish the walk, thus the current iterator
+        // might be invalid after retry(). Need to update iter now
+        iter++;
         if (walkerState->isRetrying()) {
             walkerState->retry();
         }

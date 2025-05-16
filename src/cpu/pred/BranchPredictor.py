@@ -1,4 +1,5 @@
 # Copyright (c) 2022-2023 The University of Edinburgh
+# Copyright (c) 2024 Technical University of Munich
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -172,7 +173,9 @@ class SimpleIndirectPredictor(IndirectPredictor):
         "pipeline depth or a high value e.g. 256 to make it 'unlimited'.",
     )
     indirectGHRBits = Param.Unsigned(13, "Indirect GHR number of bits")
-    instShiftAmt = Param.Unsigned(2, "Number of bits to shift instructions by")
+    instShiftAmt = Param.Unsigned(
+        Parent.instShiftAmt, "Number of bits to shift instructions by"
+    )
 
 
 class BranchPredictor(SimObject):
@@ -182,7 +185,20 @@ class BranchPredictor(SimObject):
     abstract = True
 
     numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
-    instShiftAmt = Param.Unsigned(2, "Number of bits to shift instructions by")
+    instShiftAmt = Param.Unsigned(
+        0,
+        "The `instShiftAmt` is intended for fixed size instruction sets "
+        "(Arm,RISC-V) to shift the FULL PC by `n` bits (e.g. 2 for 4 byte "
+        "instructions) as the two least significant bits are always zero and "
+        "therefore not useful for prediction. For variable size instruction "
+        "sets (x86) all bits are used and the `instShiftAmt` should be set "
+        "to 0.",
+    )
+    speculativeHistUpdate = Param.Bool(
+        True,
+        "Use speculative update for histories",
+    )
+
     requiresBTBHit = Param.Bool(
         False,
         "Requires the BTB to hit for returns and indirect branches. For an"
@@ -288,7 +304,7 @@ class TAGEBase(SimObject):
     noSkip = VectorParam.Bool([], "Vector of enabled TAGE tables")
 
     speculativeHistUpdate = Param.Bool(
-        True, "Use speculative update for histories"
+        Parent.speculativeHistUpdate, "Use speculative update for histories"
     )
 
 
@@ -368,8 +384,6 @@ class TAGE_SC_L_TAGE(TAGEBase):
     logUResetPeriod = 10
     initialTCounterValue = 1 << 9
     useAltOnNaBits = 5
-    # TODO No speculation implemented as of now
-    speculativeHistUpdate = False
 
     # This size does not set the final sizes of the tables (it is just used
     # for some calculations)
@@ -561,6 +575,10 @@ class StatisticalCorrector(SimObject):
     cxx_header = "cpu/pred/statistical_corrector.hh"
     abstract = True
 
+    instShiftAmt = Param.Unsigned(
+        Parent.instShiftAmt, "Number of bits to shift instructions by"
+    )
+
     # Statistical corrector parameters
 
     numEntriesFirstLocalHistories = Param.Unsigned(
@@ -616,6 +634,11 @@ class StatisticalCorrector(SimObject):
         0, "Initial pUpdate threshold counter value"
     )
 
+    speculativeHistUpdate = Param.Bool(
+        Parent.speculativeHistUpdate,
+        "Use speculative update for the statistical corrector",
+    )
+
 
 # TAGE-SC-L branch predictor as desribed in
 # https://www.jilp.org/cbp2016/paper/AndreSeznecLimited.pdf
@@ -635,7 +658,9 @@ class TAGE_SC_L(LTAGE):
     cxx_header = "cpu/pred/tage_sc_l.hh"
     abstract = True
 
-    statistical_corrector = Param.StatisticalCorrector("Statistical Corrector")
+    statistical_corrector = Param.StatisticalCorrector(
+        "Statistical Corrector. Set to NULL to disable it"
+    )
 
 
 class TAGE_SC_L_64KB_LoopPredictor(TAGE_SC_L_LoopPredictor):
@@ -915,7 +940,6 @@ class MPP_TAGE(TAGEBase):
     logUResetPeriod = 10
     initialTCounterValue = 0
     numUseAltOnNa = 512
-    speculativeHistUpdate = False
 
 
 class MPP_LoopPredictor(LoopPredictor):
@@ -1034,6 +1058,7 @@ class MultiperspectivePerceptronTAGE64KB(MultiperspectivePerceptronTAGE):
     cxx_header = "cpu/pred/multiperspective_perceptron_tage_64KB.hh"
 
     budgetbits = 65536 * 8 + 2048
+    speculativeHistUpdate = False
 
     tage = MPP_TAGE()
     loop_predictor = MPP_LoopPredictor()
@@ -1084,6 +1109,7 @@ class MultiperspectivePerceptronTAGE8KB(MultiperspectivePerceptronTAGE):
     cxx_header = "cpu/pred/multiperspective_perceptron_tage_8KB.hh"
 
     budgetbits = 8192 * 8 + 2048
+    speculativeHistUpdate = False
 
     tage = MPP_TAGE_8KB()
     loop_predictor = MPP_LoopPredictor_8KB()

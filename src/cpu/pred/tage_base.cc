@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2014 The University of Wisconsin
+ * Copyright (c) 2024 Technical University of Munich
  *
  * Copyright (c) 2006 INRIA (Institut National de Recherche en
  * Informatique et en Automatique  / French National Research Institute
@@ -109,6 +110,7 @@ TAGEBase::init()
 
     for (auto& history : threadHistory) {
         history.pathHist = 0;
+        history.nonSpecPathHist = 0;
         history.globalHistory = new uint8_t[histBufferSize];
         history.gHist = history.globalHistory;
         memset(history.gHist, 0, histBufferSize);
@@ -591,9 +593,7 @@ TAGEBase::updatePathAndGlobalHistory(ThreadID tid, int brtype, bool taken,
     ThreadHistory& tHist = threadHistory[tid];
 
     // Update path history
-    bool pathbit = ((branch_pc >> instShiftAmt) & 1);
-    tHist.pathHist = (tHist.pathHist << 1) + pathbit;
-    tHist.pathHist = (tHist.pathHist & ((1ULL << pathHistBits) - 1));
+    tHist.pathHist = calcNewPathHist(tid, branch_pc, tHist.pathHist);
 
     // For normal direction history update the history by
     // whether the branch was taken or not.
@@ -601,7 +601,6 @@ TAGEBase::updatePathAndGlobalHistory(ThreadID tid, int brtype, bool taken,
     bi->nGhist = 1;
     // Update the global history
     updateGHist(tid, bi->ghist, bi->nGhist);
-    bi->modified = true;
 }
 
 
@@ -611,6 +610,11 @@ TAGEBase::updateHistories(ThreadID tid, Addr branch_pc, bool speculative,
                           const StaticInstPtr & inst, BranchInfo* bi)
 {
     if (speculative != speculativeHistUpdate) {
+        if (!speculative) {
+            // Save the speculative path history as non-speculative
+            threadHistory[tid].nonSpecPathHist
+                            = calcNewPathHist(tid, branch_pc, bi->pathHist);
+        }
         return;
     }
 
@@ -646,6 +650,7 @@ TAGEBase::updateHistories(ThreadID tid, Addr branch_pc, bool speculative,
     // TAGE implementations.
     updatePathAndGlobalHistory(tid, branchTypeExtra(inst), taken,
                                branch_pc, target, bi);
+    bi->modified = true;
 
     DPRINTF(Tage, "Updating global histories with branch:%lx; taken?:%d, "
             "path Hist: %x; pointer:%d\n", branch_pc, taken,
@@ -700,6 +705,15 @@ TAGEBase::restoreHistState(ThreadID tid, BranchInfo* bi)
     }
     bi->nGhist = 0;
     bi->modified = false;
+}
+
+int
+TAGEBase::calcNewPathHist(ThreadID tid, Addr pc, int cur_phist) const
+{
+    int pathbit = ((pc >> instShiftAmt) & 1);
+    cur_phist = (cur_phist << 1) + pathbit;
+    cur_phist = (cur_phist & ((1ULL << pathHistBits) - 1));
+    return cur_phist;
 }
 
 void
@@ -835,9 +849,10 @@ TAGEBase::getTageCtrBits() const
 }
 
 int
-TAGEBase::getPathHist(ThreadID tid) const
+TAGEBase::getPathHist(ThreadID tid, bool speculative) const
 {
-    return threadHistory[tid].pathHist;
+    return speculative ? threadHistory[tid].pathHist
+                       : threadHistory[tid].nonSpecPathHist;
 }
 
 bool
