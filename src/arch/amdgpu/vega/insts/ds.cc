@@ -1049,7 +1049,6 @@ namespace VegaISA
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
-                // vdst[lane] = 10;
                 vdst[lane] = (reinterpret_cast<VecElemU32*>(
                     gpuDynInst->d_data))[lane];
             }
