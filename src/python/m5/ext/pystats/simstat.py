@@ -24,14 +24,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import enum
-import pathlib
 from datetime import datetime
 from typing import (
     Dict,
     List,
     Optional,
-    Tuple,
     Union,
 )
 
@@ -51,12 +48,12 @@ class SimStat(Group):
         time_conversion: Optional[TimeConversion] = None,
         simulated_begin_time: Optional[Union[int, float]] = None,
         simulated_end_time: Optional[Union[int, float]] = None,
-        **kwargs: Dict[str, Union[Group, Statistic, List[Group]]],
+        **kwargs: Dict[str, Union[Group, Statistic, List[Group]]]
     ):
         super().__init__(
             creation_time=creation_time,
             time_conversion=time_conversion,
             simulated_begin_time=simulated_begin_time,
             simulated_end_time=simulated_end_time,
-            **kwargs,
+            **kwargs
         )
