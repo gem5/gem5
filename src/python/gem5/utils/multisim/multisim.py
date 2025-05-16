@@ -191,9 +191,7 @@ def _run(module_path: Path, id: str, pipe: Pipe) -> None:
     pipe.close()
 
 
-def run(
-    module_path: Path, processes: Optional[int] = None
-) -> List[Tuple[str, Dict]]:
+def run(module_path: Path, processes: Optional[int] = None) -> Dict[str, Dict]:
     """Run the simulators specified in the module in parallel.
 
     :param module_path: The path to the module containing the simulators to
@@ -223,7 +221,7 @@ def run(
     )
 
     active_processes: List[Tuple[Process, Pipe, str]] = []
-    stats = []
+    stats = {}
     remaining_ids = list(ids).copy()
     process_lock = Lock()
     from ..multiprocessing import Process
@@ -278,7 +276,7 @@ def run(
                 for _, pipe, id in active_processes:
                     if not pipe.poll(0):
                         continue
-                    stats.append((id, pipe.recv()))
+                    stats[id] = pipe.recv()
 
     finally:
         handle_exit(None, None)
