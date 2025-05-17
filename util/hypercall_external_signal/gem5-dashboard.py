@@ -31,7 +31,11 @@ import os
 import platform
 import signal
 import subprocess
+import sys
+import termios
+import threading
 import time
+import tty
 from typing import (
     Any,
     Dict,
@@ -389,9 +393,38 @@ class ProgressBarManager:
         for bar in active_bars:
             bar.bar.refresh()
 
+    def _keyboard_listener(self):
+        """Thread function to listen for keyboard input."""
+        try:
+            # Save original terminal settings
+            self.old_settings = termios.tcgetattr(sys.stdin)
+            # try:
+            # Set terminal to raw mode
+            tty.setraw(sys.stdin.fileno(), when=termios.TCSANOW)
+            while self.running:
+                # Read a character (blocking)
+                char = sys.stdin.read(1)
+                logger.info(rf"character is {char}")
+                ctrlc_char = "\x03"
+                if char.lower() == "q" or char == ctrlc_char:
+                    logger.info("Quit requested by user")
+                    self.running = False
+                    break
+        except Exception as e:
+            logger.warning(f"Keyboard listener error: {e}")
+
     def run(self):
         """Run update loop for all progress bars."""
         try:
+            keyboard_thread = threading.Thread(target=self._keyboard_listener)
+            # This ensures thread exits when main thread exits
+            keyboard_thread.daemon = True
+            keyboard_thread.start()
+            logger.info(
+                "keyboard listener thread for registering 'q' and "
+                "CTLR+C as exits has been started"
+            )
+
             while self.running and (
                 any(bar.active for bar in self.progress_bars.values())
                 or self.auto_discover
@@ -409,9 +442,9 @@ class ProgressBarManager:
                 # fill in gaps from closed bars if necessary
                 self._rearrange_positions()
 
-        except KeyboardInterrupt:
-            self.running = False
         finally:
+            # restore terminal settings
+            termios.tcsetattr(sys.stdin, termios.TCSADRAIN, self.old_settings)
             for bar in self.progress_bars.values():
                 bar.close()
 
