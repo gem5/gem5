@@ -31,6 +31,13 @@ output header {{
 #define ASSIGN_VD_BIT(idx, bit) \
     ((Vd[(idx)/8] & ~(1 << (idx)%8)) | ((bit) << (idx)%8))
 
+#define COPY_OLD_VD_IF_VL(idx)                                            \
+    if (machInst.vtype8.vta && this->vl) {                                \
+        tmp_d0.set(0xff);                                                 \
+    } else {                                                              \
+        xc->getRegOperand(this, idx, &tmp_d0);                            \
+    }                                                                     \
+
 #define COPY_OLD_VD(idx)                                                  \
     if (!machInst.vtype8.vta || (!machInst.vm && !machInst.vtype8.vma)) { \
         RiscvISA::vreg_t old_vd;                                          \
@@ -1649,6 +1656,7 @@ template<typename ElemType>
     %(set_reg_idx_arr)s;
     %(constructor)s;
     %(set_vm_idx)s;
+    %(set_src_reg_idx)s;
 }
 
 %(declare_varith_template)s;
@@ -1680,6 +1688,7 @@ Fault
     %(op_decl)s;
     %(op_rd)s;
     %(vm_decl_rd)s;
+    %(copy_old_vd)s;
     %(code)s;
     %(op_wb)s;
     return NoFault;
@@ -1714,6 +1723,7 @@ Fault
     %(op_decl)s;
     %(op_rd)s;
     %(vm_decl_rd)s;
+    %(copy_old_vd)s;
     %(code)s;
     %(op_wb)s;
     return NoFault;

@@ -54,6 +54,8 @@ let {{
         '''
     def copyOldVd(vd_idx):
         return 'COPY_OLD_VD(%d);' % vd_idx
+    def copyOldVdIfVL(vd_idx):
+        return 'COPY_OLD_VD_IF_VL(%d);' % vd_idx
     def loopWrapper(code, micro_inst = True):
         if micro_inst:
             upper_bound = "this->microVl"
@@ -1125,14 +1127,23 @@ def format VectorNonSplitFormat(code, category, *flags) {{
     if inst_name == "vfmv" :
         code = fflags_wrapper(code)
 
+    copy_old_vd = ""
+    set_src_reg_idx = ""
+    if name in ["vfmv_s_f", "vmv_s_x"]:
+        copy_old_vd = copyOldVdIfVL(1)
+        set_src_reg_idx = "if(!(machInst.vtype8.vta && this->vl))\n"
+        set_src_reg_idx += setSrcWrapper("vecRegClass[VD]")
+
     if inst_name == "vfmv" :
         varith_template = declareVArithTemplate(Name, 'float', 16)
         iop = InstObjParams(name,
             Name,
             'VectorNonSplitInst',
             {'code': code,
+             'set_src_reg_idx': set_src_reg_idx,
              'vm_decl_rd': vm_decl_rd,
              'set_vm_idx': set_vm_idx,
+             'copy_old_vd': copy_old_vd,
              'declare_varith_template': varith_template},
             flags)
         header_output = VectorNonSplitDeclare.subst(iop)
@@ -1144,8 +1155,10 @@ def format VectorNonSplitFormat(code, category, *flags) {{
             Name,
             'VectorNonSplitInst',
             {'code': code,
+             'set_src_reg_idx': set_src_reg_idx,
              'vm_decl_rd': vm_decl_rd,
              'set_vm_idx': set_vm_idx,
+             'copy_old_vd': copy_old_vd,
              'declare_varith_template': declareVArithTemplate(Name)},
             flags)
         header_output = VectorNonSplitDeclare.subst(iop)
