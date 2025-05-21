@@ -949,6 +949,10 @@ Fetch::checkSignalsAndUpdate(ThreadID tid)
         }
 
         return true;
+    } else if (fromCommit->commitInfo[tid].trapPending) {
+        fetchStatus[tid] = TrapPending;
+
+        return true;
     } else if (fromCommit->commitInfo[tid].doneSeqNum) {
         // Update the branch predictor if it wasn't a squashed instruction
         // that was broadcasted.
@@ -1330,6 +1334,13 @@ Fetch::fetch(bool &status_change)
 void
 Fetch::recvReqRetry()
 {
+    // If a trap is pending to execute, discard the retry
+    if (retryPkt != NULL && fetchStatus[retryTid] == TrapPending) {
+        delete retryPkt;
+        retryPkt = NULL;
+        retryTid = InvalidThreadID;
+    }
+
     if (retryPkt != NULL) {
         assert(cacheBlocked);
         assert(retryTid != InvalidThreadID);
