@@ -27,7 +27,6 @@
 import gem5.utils.multisim as multisim
 from gem5.components.boards.riscv_board import RiscvBoard
 from gem5.components.boards.simple_board import SimpleBoard
-from gem5.components.boards.x86_board import X86Board
 from gem5.components.cachehierarchies.classic.no_cache import NoCache
 from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
     PrivateL1PrivateL2CacheHierarchy,
@@ -67,98 +66,45 @@ for no_systemd in [True, False]:
         cache_hierarchy=cache_hierarchy,
     )
 
+    # Once the new hypercall resources are up, convert this section of code to
+    # if not no_systemd:
+    #     board.set_workload(
+    #         obtain_resource("riscv-ubuntu-24.04-boot",resource_version="2.0.0")
+    #     )
+    #     name = f"process_riscv-atomic-24-04-boot-with-systemd"
+    # else:
+    #     board.set_workload(
+    #         obtain_resource("riscv-ubuntu-24.04-boot-no-systemd",
+    #             resource_version="2.0.0")
+    #     )
+    #     name = f"process_riscv-atomic-24-04-boot-no-systemd"
+
     if not no_systemd:
-        board.set_kernel_disk_workload(
-            kernel=KernelResource(
-                "/projects/gem5/new-base-imgs-w-hypercalls/riscv-disk-image-24-04/vmlinux"
-            ),
-            disk_image=DiskImageResource(
-                "/projects/gem5/new-base-imgs-w-hypercalls/riscv-disk-image-24-04/riscv-ubuntu",
-                root_partition="1",
-            ),
-            bootloader=obtain_resource("riscv-bootloader-opensbi-1.3.1"),
-            kernel_args=[
-                "console=ttyS0",
-                "root=/dev/vda1",
-                "rw",
-            ],
-        )
+        kernel_args = ["console=ttyS0", "root=/dev/vda1", "rw"]
+        name = f"process_riscv-atomic-24-04-boot-with-systemd"
     else:
-        board.set_kernel_disk_workload(
-            kernel=KernelResource(
-                "/projects/gem5/new-base-imgs-w-hypercalls/riscv-disk-image-24-04/vmlinux"
-            ),
-            disk_image=DiskImageResource(
-                "/projects/gem5/new-base-imgs-w-hypercalls/riscv-disk-image-24-04/riscv-ubuntu",
-                root_partition="1",
-            ),
-            bootloader=obtain_resource("riscv-bootloader-opensbi-1.3.1"),
-            kernel_args=[
-                "console=ttyS0",
-                "root=/dev/vda1",
-                "rw",
-                "no_systemd=true",
-            ],
-        )
-    if no_systemd:
-        multisim.add_simulator(
-            Simulator(
-                board=board, id=f"process_riscv-atomic-24-04-boot-no-systemd"
-            )
-        )
+        kernel_args = [
+            "console=ttyS0",
+            "root=/dev/vda1",
+            "rw",
+            "no_systemd=true",
+        ]
+        name = f"process_riscv-atomic-24-04-boot-no-systemd"
+    board.set_kernel_disk_workload(
+        kernel=KernelResource(
+            "/projects/gem5/new-base-imgs-w-hypercalls/riscv-disk-image-24-04/"
+            "riscv-vmlinux-6.8.12"
+        ),
+        disk_image=DiskImageResource(
+            "/projects/gem5/new-base-imgs-w-hypercalls/riscv-disk-image-24-04/"
+            "riscv-ubuntu-24.04-20250515",
+            root_partition="1",
+        ),
+        bootloader=obtain_resource("riscv-bootloader-opensbi-1.3.1"),
+        kernel_args=kernel_args,
+    )
 
-    else:
-        multisim.add_simulator(
-            Simulator(
-                board=board, id=f"process_riscv-atomic-24-04-boot-with-systemd"
-            )
-        )
-
-
-# Run cg, is, and mg size S and A. These are the NPB workloads with the
-# shortest wallclock times on size A, but they still take more time
-# to finish compared to the Ubuntu boot workloads.
-for npb_workload in ["cg", "is", "mg"]:  # "bt", "ep", "ft", "lu", "sp", "ua"
-    for size in ["S", "A"]:
-        cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
-            l1d_size="16KiB",
-            l1i_size="16KiB",
-            l2_size="256KiB",
-        )
-        memory = SingleChannelDDR3_1600(size="3GiB")
-        processor = SimpleProcessor(
-            cpu_type=CPUTypes.TIMING, isa=ISA.X86, num_cores=1
-        )
-        board = X86Board(
-            clk_freq="1GHz",
-            processor=processor,
-            memory=memory,
-            cache_hierarchy=cache_hierarchy,
-        )
-
-        board.set_kernel_disk_workload(
-            kernel=KernelResource(
-                "/home/bees/gem5-resources/src/ubuntu-generic-diskimages/x86-disk-image-24-04/vmlinux-x86-ubuntu"
-            ),
-            disk_image=DiskImageResource(
-                "/home/bees/gem5-resources/src/npb-24.04-imgs/disk-image-x86-npb/x86-ubuntu-npb"
-            ),
-            kernel_args=[
-                "earlyprintk=ttyS0",
-                "console=ttyS0",
-                "lpj=7999923",
-                "root=/dev/sda2",
-            ],
-            readfile_contents=f"/home/gem5/NPB3.4-OMP/bin/{npb_workload}.{size}.x; sleep 5;",
-        )
-
-        multisim.add_simulator(
-            Simulator(
-                board=board,
-                id=f"process_x86-timing-npb-{npb_workload}-{size.lower()}",
-            )
-        )
-
+    multisim.add_simulator(Simulator(board=board, id=name))
 
 # Run X86 and Arm hello world binaries. The shortest workloads.
 for isa in [ISA.X86, ISA.ARM]:
