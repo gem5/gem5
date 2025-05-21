@@ -275,7 +275,7 @@ LSQUnit::LSQUnitStats::LSQUnitStats(statistics::Group *parent)
                "Number of loads and stores written to the Load Store Queue")
 {
     loadToUse
-        .init(0, 299, 10)
+        .init(0, 299, 1)
         .flags(statistics::nozero);
 }
 
