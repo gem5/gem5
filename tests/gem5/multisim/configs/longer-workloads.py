@@ -44,68 +44,54 @@ from gem5.simulate.simulator import Simulator
 multisim.set_num_processes(22)
 
 
-for ubuntu_ver in ["22-04", "24-04"]:
-    for core_type in [CPUTypes.ATOMIC, CPUTypes.TIMING]:
-        cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
-            l1d_size="16KiB",
-            l1i_size="16KiB",
-            l2_size="256KiB",
-        )
-        memory = SingleChannelDDR3_1600(size="3GiB")
-        processor = SimpleProcessor(
-            cpu_type=CPUTypes.ATOMIC, isa=ISA.X86, num_cores=1
-        )
-        board = X86Board(
-            clk_freq="1GHz",
-            processor=processor,
-            memory=memory,
-            cache_hierarchy=cache_hierarchy,
-        )
+for core_type in [CPUTypes.ATOMIC]:
+    cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
+        l1d_size="16KiB",
+        l1i_size="16KiB",
+        l2_size="256KiB",
+    )
+    memory = SingleChannelDDR3_1600(size="3GiB")
+    processor = SimpleProcessor(
+        cpu_type=CPUTypes.ATOMIC, isa=ISA.X86, num_cores=1
+    )
+    board = X86Board(
+        clk_freq="1GHz",
+        processor=processor,
+        memory=memory,
+        cache_hierarchy=cache_hierarchy,
+    )
+    # When the new resources with hypercalls are uploaded, replace this with
+    # board.set_workload(
+    # obtain_resource("x86-ubuntu-24.04-boot-with-systemd",
+    #   resource_version="5.0.0")
+    # )
+    board.set_kernel_disk_workload(
+        kernel=KernelResource(
+            "/home/bees/gem5-resources/src/ubuntu-generic-diskimages/"
+            "x86-disk-image-24-04/vmlinux-x86-ubuntu"
+        ),
+        disk_image=DiskImageResource(
+            "/home/bees/gem5-resources/src/ubuntu-generic-diskimages/"
+            "x86-disk-image-24-04/x86-ubuntu"
+        ),
+        kernel_args=[
+            "earlyprintk=ttyS0",
+            "console=ttyS0",
+            "lpj=7999923",
+            "root=/dev/sda2",
+        ],
+    )
 
-        if (
-            ubuntu_ver == "22-04"
-        ):  # It doesn't look like the workloads json has a 22.04 workload
-            board.set_kernel_disk_workload(
-                kernel=KernelResource(
-                    "/home/bees/gem5-resources/src/ubuntu-generic-diskimages/x86-disk-image-22-04/vmlinux-x86-ubuntu"
-                ),
-                disk_image=DiskImageResource(
-                    "/home/bees/gem5-resources/src/ubuntu-generic-diskimages/x86-disk-image-22-04/x86-ubuntu"
-                ),
-                kernel_args=[
-                    "earlyprintk=ttyS0",
-                    "console=ttyS0",
-                    "lpj=7999923",
-                    "root=/dev/sda2",
-                ],
-            )
-        elif ubuntu_ver == "24-04":
-            board.set_kernel_disk_workload(
-                kernel=KernelResource(
-                    "/home/bees/gem5-resources/src/ubuntu-generic-diskimages/x86-disk-image-24-04/vmlinux-x86-ubuntu"
-                ),
-                disk_image=DiskImageResource(
-                    "/home/bees/gem5-resources/src/ubuntu-generic-diskimages/x86-disk-image-24-04/x86-ubuntu"
-                ),
-                kernel_args=[
-                    "earlyprintk=ttyS0",
-                    "console=ttyS0",
-                    "lpj=7999923",
-                    "root=/dev/sda2",
-                ],
-            )
-
-        multisim.add_simulator(
-            Simulator(
-                board=board,
-                id=f"process_x86-{core_type.name.lower()}-{ubuntu_ver}-boot",
-            )
+    multisim.add_simulator(
+        Simulator(
+            board=board,
+            id=f"process_x86-{core_type.name.lower()}-24-04-boot",
         )
+    )
 
 
 for npb_workload in ["bt", "cg", "ep", "ft", "is", "lu", "mg", "sp", "ua"]:
-    for core_type in [CPUTypes.ATOMIC, CPUTypes.TIMING]:
-
+    for core_type in [CPUTypes.ATOMIC]:
         cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
             l1d_size="16KiB",
             l1i_size="16KiB",
@@ -121,7 +107,12 @@ for npb_workload in ["bt", "cg", "ep", "ft", "is", "lu", "mg", "sp", "ua"]:
             memory=memory,
             cache_hierarchy=cache_hierarchy,
         )
-
+        # When the new resources with hypercalls are uploaded, replace this
+        # with:
+        # board.set_workload(
+        # obtain_resource(f"x86-ubuntu-24.04-npb-{npb_workload}-s",
+        #   resource_version="3.0.0")
+        # )
         board.set_kernel_disk_workload(
             kernel=KernelResource(
                 "/home/bees/gem5-resources/src/ubuntu-generic-diskimages/x86-disk-image-24-04/vmlinux-x86-ubuntu"
