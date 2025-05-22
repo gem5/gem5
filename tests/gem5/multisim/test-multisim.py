@@ -45,7 +45,7 @@ gem5_verify_config(
     ),
     config_args=[],
     valid_isas=(constants.all_compiled_tag,),
-    valid_hosts=(constants.host_x86_64_tag,),
-    length=constants.quick_tag,
+    valid_hosts=constants.supported_hosts,
+    length=constants.very_long_tag,
     uses_kvm=False,
 )

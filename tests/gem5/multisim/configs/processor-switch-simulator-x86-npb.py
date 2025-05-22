@@ -22,7 +22,7 @@ from gem5.resources.resource import (
     KernelResource,
     obtain_resource,
 )
-from gem5.simulate.exit_handler import WorkBeginExitHandler
+from gem5.simulate.exit_handler import KernelBootedExitHandler
 from gem5.simulate.simulator import Simulator
 
 NUM_PROCESSES = 10
@@ -30,7 +30,7 @@ NUM_PROCESSES = 10
 multisim.set_num_processes(NUM_PROCESSES)
 
 
-for npb_workload in ["bt", "cg", "ep", "ft", "is", "lu", "mg", "sp", "ua"]:
+for npb_workload in ["bt", "cg", "ep"]:  # , "ft", "is", "lu", "mg", "sp", "ua"
 
     cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
         l1d_size="16KiB",
@@ -52,6 +52,8 @@ for npb_workload in ["bt", "cg", "ep", "ft", "is", "lu", "mg", "sp", "ua"]:
         cache_hierarchy=cache_hierarchy,
     )
 
+    # when the correct resources are available, switch this to
+    # board.set_workload(obtain_resource("x86-ubuntu-24.04-npb-{npb-workload}-s"), resource_version="3.0.0")
     board.set_kernel_disk_workload(
         kernel=KernelResource(
             "/projects/gem5/new-base-imgs-w-hypercalls/x86-disk-image-24-04/6.8.0-52-generic-x86-ubuntu"
@@ -74,12 +76,12 @@ for npb_workload in ["bt", "cg", "ep", "ft", "is", "lu", "mg", "sp", "ua"]:
     multisim.add_simulator(simulator)
 
 
-class WorkBeginDumpReset(WorkBeginExitHandler):
+class KernelBootProcessorSwitch(KernelBootedExitHandler):
     def _process(self, simulator: "Simulator") -> None:
         m5.stats.dump()
         m5.stats.reset()
-        print("Dumping and resetting stats at ROI begin! Hypercall 4")
-        print("Switching processors at ROI begin! Hypercall 4")
+        print("Dumping and resetting stats at kernel boot! Hypercall 1")
+        print("Switching processors at kernel boot! Hypercall 1")
         simulator.switch_processor()
         m5.scheduleTickExitFromCurrent(1_000_000)
 
