@@ -68,27 +68,14 @@ for ticks in [500000, 1000000, 1500000]:
 
     # checkpoint restore using riscv-hello checkpoints taken at 500,000,
     # 1 million, and 1.5 million ticks.
-    if ticks == 500000:
-        board.set_se_binary_workload(
-            obtain_resource("riscv-hello"),
-            checkpoint=CheckpointResource(
-                "./gem5/multisim/configs/riscv-hello-checkpoint-500000/"
-            ),
-        )
-    elif ticks == 1000000:
-        board.set_se_binary_workload(
-            obtain_resource("riscv-hello"),
-            checkpoint=CheckpointResource(
-                "./gem5/multisim/configs/riscv-hello-checkpoint/"
-            ),
-        )
-    else:
-        board.set_se_binary_workload(
-            obtain_resource("riscv-hello"),
-            checkpoint=CheckpointResource(
-                "./gem5/multisim/configs/riscv-hello-checkpoint-1500000/"
-            ),
-        )
+    board.set_se_binary_workload(
+        obtain_resource("riscv-hello"),
+        # When the correct resource is made, change the below to:
+        # checkpoint=obtain_resource(f"riscv-hello-{ticks}-tick-checkpoint")
+        checkpoint=CheckpointResource(
+            f"./gem5/multisim/configs/riscv-hello-checkpoint-{ticks}/"
+        ),
+    )
 
     simulator = Simulator(
         board=board, id=f"process-riscv-{ticks}-checkpoint-restore"

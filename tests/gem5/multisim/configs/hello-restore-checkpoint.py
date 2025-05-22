@@ -63,22 +63,28 @@ for isa in [ISA.RISCV, ISA.ARM, ISA.X86]:
     if isa == ISA.RISCV:
         board.set_se_binary_workload(
             obtain_resource("riscv-hello"),
+            # When the correct resource is made, change the below to:
+            # checkpoint=obtain_resource("riscv-hello-1000000-tick-checkpoint")
             checkpoint=CheckpointResource(
-                "./gem5/multisim/configs/riscv-hello-checkpoint/"
+                "./gem5/multisim/configs/process_RISCV-hello-checkpoint/"
             ),
         )
     elif isa == ISA.ARM:
         board.set_se_binary_workload(
             obtain_resource("arm-hello64-static"),
+            # When the correct resource is made, change the below to:
+            # checkpoint=obtain_resource("arm-hello64-static-1000000-tick-checkpoint")
             checkpoint=CheckpointResource(
-                "./gem5/multisim/configs/arm-hello-checkpoint/"
+                "./gem5/multisim/configs/process_ARM-hello-checkpoint/"
             ),
         )
     else:
         board.set_se_binary_workload(
             obtain_resource("x86-hello64-static"),
+            # When the correct resource is made, change the below to:
+            # checkpoint=obtain_resource("x86-hello64-static-1000000-tick-checkpoint")
             checkpoint=CheckpointResource(
-                "./gem5/multisim/configs/x86-hello-checkpoint/"
+                "./gem5/multisim/configs/process_X86-hello-checkpoint/"
             ),
         )
 
