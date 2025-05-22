@@ -107,4 +107,4 @@ class ScheduledCheckpointTakingHandler(ScheduledExitEventHandler):
 
     @overrides(ExitHandler)
     def _exit_simulation(self) -> bool:
-        return False
+        return True
