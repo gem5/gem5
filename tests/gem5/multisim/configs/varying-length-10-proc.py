@@ -66,43 +66,20 @@ for no_systemd in [True, False]:
         cache_hierarchy=cache_hierarchy,
     )
 
-    # Once the new hypercall resources are up, convert this section of code to
-    # if not no_systemd:
-    #     board.set_workload(
-    #         obtain_resource("riscv-ubuntu-24.04-boot",resource_version="2.0.0")
-    #     )
-    #     name = f"process_riscv-atomic-24-04-boot-with-systemd"
-    # else:
-    #     board.set_workload(
-    #         obtain_resource("riscv-ubuntu-24.04-boot-no-systemd",
-    #             resource_version="2.0.0")
-    #     )
-    #     name = f"process_riscv-atomic-24-04-boot-no-systemd"
-
-    if not no_systemd:
-        kernel_args = ["console=ttyS0", "root=/dev/vda1", "rw"]
-        name = f"process_riscv-atomic-24-04-boot-with-systemd"
-    else:
-        kernel_args = [
-            "console=ttyS0",
-            "root=/dev/vda1",
-            "rw",
-            "no_systemd=true",
-        ]
+    if no_systemd:
+        board.set_workload(
+            obtain_resource(
+                "riscv-ubuntu-24.04-boot-no-systemd", resource_version="2.0.0"
+            )
+        )
         name = f"process_riscv-atomic-24-04-boot-no-systemd"
-    board.set_kernel_disk_workload(
-        kernel=KernelResource(
-            "/projects/gem5/new-base-imgs-w-hypercalls/riscv-disk-image-24-04/"
-            "riscv-vmlinux-6.8.12"
-        ),
-        disk_image=DiskImageResource(
-            "/projects/gem5/new-base-imgs-w-hypercalls/riscv-disk-image-24-04/"
-            "riscv-ubuntu-24.04-20250515",
-            root_partition="1",
-        ),
-        bootloader=obtain_resource("riscv-bootloader-opensbi-1.3.1"),
-        kernel_args=kernel_args,
-    )
+    else:
+        board.set_workload(
+            obtain_resource(
+                "riscv-ubuntu-24.04-boot", resource_version="2.0.0"
+            )
+        )
+        name = f"process_riscv-atomic-24-04-boot-with-systemd"
 
     multisim.add_simulator(Simulator(board=board, id=name))
 
