@@ -38,6 +38,7 @@ from gem5.isas import ISA
 from gem5.resources.resource import (
     DiskImageResource,
     KernelResource,
+    obtain_resource,
 )
 from gem5.simulate.simulator import Simulator
 
@@ -60,26 +61,10 @@ for core_type in [CPUTypes.ATOMIC]:
         memory=memory,
         cache_hierarchy=cache_hierarchy,
     )
-    # When the new resources with hypercalls are uploaded, replace this with
-    # board.set_workload(
-    # obtain_resource("x86-ubuntu-24.04-boot-with-systemd",
-    #   resource_version="5.0.0")
-    # )
-    board.set_kernel_disk_workload(
-        kernel=KernelResource(
-            "/home/bees/gem5-resources/src/ubuntu-generic-diskimages/"
-            "x86-disk-image-24-04/vmlinux-x86-ubuntu"
-        ),
-        disk_image=DiskImageResource(
-            "/home/bees/gem5-resources/src/ubuntu-generic-diskimages/"
-            "x86-disk-image-24-04/x86-ubuntu"
-        ),
-        kernel_args=[
-            "earlyprintk=ttyS0",
-            "console=ttyS0",
-            "lpj=7999923",
-            "root=/dev/sda2",
-        ],
+    board.set_workload(
+        obtain_resource(
+            "x86-ubuntu-24.04-boot-with-systemd", resource_version="5.0.0"
+        )
     )
 
     multisim.add_simulator(
@@ -107,26 +92,11 @@ for npb_workload in ["bt", "cg", "ep", "ft", "is", "lu", "mg", "sp", "ua"]:
             memory=memory,
             cache_hierarchy=cache_hierarchy,
         )
-        # When the new resources with hypercalls are uploaded, replace this
-        # with:
-        # board.set_workload(
-        # obtain_resource(f"x86-ubuntu-24.04-npb-{npb_workload}-s",
-        #   resource_version="3.0.0")
-        # )
-        board.set_kernel_disk_workload(
-            kernel=KernelResource(
-                "/home/bees/gem5-resources/src/ubuntu-generic-diskimages/x86-disk-image-24-04/vmlinux-x86-ubuntu"
-            ),
-            disk_image=DiskImageResource(
-                "/home/bees/gem5-resources/src/npb-24.04-imgs/disk-image-x86-npb/x86-ubuntu-npb"
-            ),
-            kernel_args=[
-                "earlyprintk=ttyS0",
-                "console=ttyS0",
-                "lpj=7999923",
-                "root=/dev/sda2",
-            ],
-            readfile_contents=f"/home/gem5/NPB3.4-OMP/bin/{npb_workload}.S.x; sleep 5;",
+        board.set_workload(
+            obtain_resource(
+                f"x86-ubuntu-24.04-npb-{npb_workload}-s",
+                resource_version="3.0.0",
+            )
         )
 
         multisim.add_simulator(
