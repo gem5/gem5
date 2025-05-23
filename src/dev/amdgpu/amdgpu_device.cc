@@ -82,6 +82,8 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
         gfx_version = GfxVersion::gfx90a;
     } else if (p.device_name == "MI300X") {
         gfx_version = GfxVersion::gfx942;
+    } else if (p.device_name == "MI355X") {
+        gfx_version = GfxVersion::gfx950;
     } else {
         panic("Unknown GPU device %s\n", p.device_name);
     }
@@ -116,8 +118,8 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
         sdmaFunc.insert({0x10b, &SDMAEngine::setPageDoorbellOffsetLo});
         sdmaFunc.insert({0xe0, &SDMAEngine::setPageSize});
         sdmaFunc.insert({0x113, &SDMAEngine::setPageWptrLo});
-    } else if (p.device_name == "MI100" || p.device_name == "MI200"
-            || p.device_name == "MI300X") {
+    } else if (p.device_name == "MI100" || p.device_name == "MI200" ||
+               p.device_name == "MI300X" || p.device_name == "MI355X") {
         sdmaFunc.insert({0xd9, &SDMAEngine::setPageBaseLo});
         sdmaFunc.insert({0xe1, &SDMAEngine::setPageRptrLo});
         sdmaFunc.insert({0xe0, &SDMAEngine::setPageRptrHi});
@@ -169,7 +171,8 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
     gpuvm.setMMIOAperture(IH_MMIO_RANGE,   AddrRange(0x4280, 0x4980));
     gpuvm.setMMIOAperture(GRBM_MMIO_RANGE, AddrRange(0x8000, 0xC000));
     gpuvm.setMMIOAperture(GFX_MMIO_RANGE,  AddrRange(0x28000, 0x3F000));
-    if (getGfxVersion() == GfxVersion::gfx942) {
+    if (getGfxVersion() == GfxVersion::gfx942 ||
+        getGfxVersion() == GfxVersion::gfx950) {
         gpuvm.setMMIOAperture(MMHUB_MMIO_RANGE,  AddrRange(0x60D00, 0x62E20));
     } else {
         gpuvm.setMMIOAperture(MMHUB_MMIO_RANGE,  AddrRange(0x68000, 0x6A120));
@@ -198,15 +201,37 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
         setRegVal(MI300X_FB_LOCATION_BASE, mmhubBase >> 24);
         setRegVal(MI300X_FB_LOCATION_TOP, mmhubTop >> 24);
         setRegVal(MI300X_MEM_SIZE_REG, mem_size);
+    } else if (p.device_name == "MI355X") {
+        // Same as MI300X
+        // VRAM size in MB (shifted right by 20 bits)
+        setRegVal(MI300X_FB_LOCATION_BASE, mmhubBase >> 24);
+        setRegVal(MI300X_FB_LOCATION_TOP, mmhubTop >> 24);
+        setRegVal(MI300X_MEM_SIZE_REG, mem_size);
     } else {
         panic("Unknown GPU device %s\n", p.device_name);
     }
 
-    if (getGfxVersion() == GfxVersion::gfx942 && p.ipt_binary != "") {
+    // IP discovery from VRAM for MI300X+. If ipt_binary is None, the assume
+    // the driver is being loaded using discovery=2 to read from the disk.
+    // In that case gem5 does not have to do anything special.
+    bool use_ip_discovery = false;
+
+    if (getGfxVersion() == GfxVersion::gfx942 ||
+        getGfxVersion() == GfxVersion::gfx950) {
+        use_ip_discovery = true;
+
+        if (p.ipt_binary == "") {
+            DPRINTF(AMDGPUDevice, "Assuming discovery=2 for IP discovery\n");
+        }
+    }
+
+    if (use_ip_discovery && p.ipt_binary != "") {
         // From ROCk driver: amdgpu/amdgpu_discovery.h:
         constexpr uint64_t DISCOVERY_TMR_OFFSET = (64 << 10);
         constexpr int IPT_SIZE_DW = 0xa00;
         uint64_t ip_table_base = (mem_size << 20) - DISCOVERY_TMR_OFFSET;
+
+        DPRINTF(AMDGPUDevice, "Using IP discovery file %s\n", p.ipt_binary);
 
         std::ifstream iptBin;
         std::array<uint32_t, IPT_SIZE_DW> ipTable;
@@ -466,7 +491,8 @@ AMDGPUDevice::readMMIO(PacketPtr pkt, Addr offset)
 void
 AMDGPUDevice::writeFrame(PacketPtr pkt, Addr offset)
 {
-    DPRINTF(AMDGPUDevice, "Wrote framebuffer address %#lx\n", offset);
+    DPRINTF(AMDGPUDevice, "Wrote framebuffer address %#lx (size %d)\n", offset,
+            pkt->getSize());
 
     for (auto& cu: CP()->shader()->cuList) {
         Addr aligned_addr = offset & ~(gpuMemMgr->getCacheLineSize() - 1);
@@ -499,7 +525,15 @@ AMDGPUDevice::writeFrame(PacketPtr pkt, Addr offset)
     writePkt->dataDynamic(dataPtr);
 
     auto system = cp->shader()->gpuCmdProc.system();
-    system->getDeviceMemory(writePkt)->access(writePkt);
+
+    // If for some reason no device memory is found for this address, ignore
+    // the packet. This is an extremely rare situation and seems to only
+    // happen with one address that is not important, therefore warn only.
+    if (system->getDeviceMemory(writePkt)) {
+        system->getDeviceMemory(writePkt)->access(writePkt);
+    } else {
+        warn("Unable to find device memory for address %#lx\n", offset);
+    }
 
     delete writePkt;
 }

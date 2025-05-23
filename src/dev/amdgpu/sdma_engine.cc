@@ -904,7 +904,8 @@ SDMAEngine::trap(SDMAQueue *q, sdmaTrap *pkt)
     int node_id = 0;
     int local_id = getId();
 
-    if (gpuDevice->getGfxVersion() == GfxVersion::gfx942) {
+    if (gpuDevice->getGfxVersion() == GfxVersion::gfx942 ||
+        gpuDevice->getGfxVersion() == GfxVersion::gfx950) {
         node_id = getId() >> 2;
 
         // For most SDMAs the "node_id" for the interrupt handler is the SDMA

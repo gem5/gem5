@@ -261,8 +261,10 @@ AMDGPUVM::writeMMIO(PacketPtr pkt, Addr offset)
 {
     // There are multiple functions due to MMIO addresses being aliased to
     // something different from a previous GFX version. So far this has not
-    // been the case for supported MMIO reads.
-    if (gpuDevice->getGfxVersion() == GfxVersion::gfx942) {
+    // been the case for supported MMIO reads but requires special handling
+    // for newer gfx942 and gfx950 devices.
+    if (gpuDevice->getGfxVersion() == GfxVersion::gfx942 ||
+        gpuDevice->getGfxVersion() == GfxVersion::gfx950) {
         writeMMIOGfx940(pkt, offset);
     } else {
         writeMMIOGfx900(pkt, offset);

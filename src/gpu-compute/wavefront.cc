@@ -405,7 +405,8 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
                 // For architected flat scratch, this enable is reused to set
                 // the FLAT_SCRATCH register pair to the scratch backing
                 // memory: https://llvm.org/docs/AMDGPUUsage.html#flat-scratch
-                if (task->gfxVersion() == GfxVersion::gfx942) {
+                if (task->gfxVersion() == GfxVersion::gfx942 ||
+                    task->gfxVersion() == GfxVersion::gfx950) {
                     uint32_t scratchPerWI =
                         task->amdQueue.scratch_workitem_byte_size;
 
@@ -490,7 +491,8 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
     bool packed_work_item_id = false;
 
     if (task->gfxVersion() == GfxVersion::gfx90a ||
-        task->gfxVersion() == GfxVersion::gfx942) {
+        task->gfxVersion() == GfxVersion::gfx942 ||
+        task->gfxVersion() == GfxVersion::gfx950) {
         packed_work_item_id = true;
     }
 

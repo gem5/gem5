@@ -60,6 +60,11 @@ dmesg -n8
 cat /proc/cpuinfo
 dd if=/root/roms/mi300.rom of=/dev/mem bs=1k seek=768 count=128
 
+# Check if exists (backwards compat with ROCm <7.0)
+if [ -e /usr/lib/firmware/amdgpu/mi300_discovery ]; then
+    ln -s /usr/lib/firmware/amdgpu/mi300_discovery /usr/lib/firmware/amdgpu/ip_discovery.bin
+fi
+
 if [ -f /home/gem5/load_amdgpu.sh ]; then
     sh /home/gem5/load_amdgpu.sh
 elif [ ! -f /lib/modules/`uname -r`/updates/dkms/amdgpu.ko ]; then
