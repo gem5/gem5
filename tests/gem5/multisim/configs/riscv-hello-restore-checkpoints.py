@@ -70,11 +70,7 @@ for ticks in [500000, 1000000, 1500000]:
     # 1 million, and 1.5 million ticks.
     board.set_se_binary_workload(
         obtain_resource("riscv-hello"),
-        # When the correct resource is made, change the below to:
-        # checkpoint=obtain_resource(f"riscv-hello-{ticks}-tick-checkpoint")
-        checkpoint=CheckpointResource(
-            f"./gem5/multisim/configs/riscv-hello-checkpoint-{ticks}/"
-        ),
+        checkpoint=obtain_resource(f"riscv-hello-{ticks}-tick-checkpoint"),
     )
 
     simulator = Simulator(
