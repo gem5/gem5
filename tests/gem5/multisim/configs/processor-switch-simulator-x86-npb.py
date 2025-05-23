@@ -52,22 +52,10 @@ for npb_workload in ["bt", "cg", "ep"]:  # , "ft", "is", "lu", "mg", "sp", "ua"
         cache_hierarchy=cache_hierarchy,
     )
 
-    # when the correct resources are available, switch this to
-    # board.set_workload(obtain_resource("x86-ubuntu-24.04-npb-{npb-workload}-s"), resource_version="3.0.0")
-    board.set_kernel_disk_workload(
-        kernel=KernelResource(
-            "/projects/gem5/new-base-imgs-w-hypercalls/x86-disk-image-24-04/6.8.0-52-generic-x86-ubuntu"
-        ),
-        disk_image=DiskImageResource(
-            "/projects/gem5/new-base-imgs-w-hypercalls/disk-image-x86-npb/x86-ubuntu-npb"
-        ),
-        kernel_args=[
-            "earlyprintk=ttyS0",
-            "console=ttyS0",
-            "lpj=7999923",
-            "root=/dev/sda2",
-        ],
-        readfile_contents=f"/home/gem5/NPB3.4-OMP/bin/{npb_workload}.S.x; sleep 5;",
+    board.set_workload(
+        obtain_resource(
+            f"x86-ubuntu-24.04-npb-{npb_workload}-s", resource_version="3.0.0"
+        )
     )
 
     simulator = Simulator(board=board, id=f"process_x86_npb_{npb_workload}_s")
