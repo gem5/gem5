@@ -48,7 +48,7 @@ from gem5.components.cachehierarchies.classic.abstract_classic_cache_hierarchy i
 )
 from gem5.components.cachehierarchies.classic.caches.mmu_cache import MMUCache
 from gem5.isas import ISA
-from gem5.utils.override import *
+from gem5.utils.override import overrides
 
 
 class RISCVUnleashedCacheHierarchy(
