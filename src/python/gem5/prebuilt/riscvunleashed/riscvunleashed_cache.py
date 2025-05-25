@@ -192,7 +192,7 @@ class RISCVUnleashedCacheHierarchy(
             data_latency=50,
             response_latency=50,
             mshrs=20,
-            size="1kB",
+            size="1kiB",
             tgts_per_mshr=12,
             addr_ranges=board.mem_ranges,
         )

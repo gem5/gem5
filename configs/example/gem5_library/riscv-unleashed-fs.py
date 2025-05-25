@@ -1,5 +1,4 @@
-# Copyright (c) 2024 REDS-HEIG-VD and ESL-EPFL
-
+# Copyright (c) 2022 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,26 +23,50 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-# * Author: Karan Pathak
+
+"""
+This gem5 configuration script runs the RISCVMatchedBoard in FS mode with a
+an Ubuntu 20.04 image and calls m5 exit after the simulation has booted the OS.
+
+Usage
+---
+
+```
+scons build/RISCV/gem5.opt
+
+./build/RISCV/gem5.opt configs/example/gem5_library/riscvmatched-fs.py
+```
+"""
+
+import argparse
+
+from gem5.isas import ISA
+from gem5.prebuilt.riscvunleashed.riscvunleashed_board import (
+    RiscvUnleashedBoard,
+)
+from gem5.resources.resource import (
+    DiskImageResource,
+    obtain_resource,
+)
+from gem5.simulate.simulator import Simulator
+from gem5.utils.requires import requires
+
+requires(isa_required=ISA.RISCV)
+
+board = RiscvUnleashedBoard()
+
+# Here we a full system workload: "riscv-ubuntu-20.04-boot" which boots
+# Ubuntu 20.04. Once the system successfully boots it encounters an `m5_exit`
+# instruction which stops the simulation. When the simulation has ended you may
+# inspect `m5out/system.pc.com_1.device` to see the stdout.
+#
+board.set_kernel_disk_workload(
+    kernel=obtain_resource(
+        "riscv-bootloader-vmlinux-5.10", resource_version="1.0.0"
+    ),
+    disk_image=obtain_resource("riscv-disk-img", resource_version="1.0.0"),
+)
 
 
-from gem5.components.processors.base_cpu_processor import BaseCPUProcessor
-from gem5.components.processors.cpu_types import CPUTypes
-
-from .riscvunleashed_core import U54Core
-
-
-class U54Processor(BaseCPUProcessor):
-    """
-    A U54Processor contains one core of U54Core.
-    """
-
-    def __init__(
-        self,
-    ) -> None:
-        self._cpu_type = CPUTypes.MINOR
-        super().__init__(cores=self._create_cores())
-
-    def _create_cores(self):
-        self.num_cores = 1
-        return U54Core(core_id=0)
+simulator = Simulator(board=board)
+simulator.run()

@@ -27,17 +27,9 @@
 # * Author: Karan Pathak
 
 
-from m5.objects import (
-    BaseCPU,
-    BaseMMU,
-    Port,
-    Process,
-)
 from m5.objects.BaseMinorCPU import *
 from m5.objects.RiscvCPU import RiscvMinorCPU
-
 from gem5.components.processors.base_cpu_core import BaseCPUCore
-from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 
 
