@@ -32,7 +32,6 @@ from gem5.components.processors.base_cpu_core import BaseCPUCore
 from gem5.isas import ISA
 
 
-
 class RocketIntFU(MinorDefaultIntFU):
     opLat = 1
 

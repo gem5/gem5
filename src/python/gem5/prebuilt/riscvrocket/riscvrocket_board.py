@@ -33,6 +33,7 @@ from typing import (
 )
 
 import m5
+from m5 import fatal
 from m5.objects import (
     AddrRange,
     BadAddr,
@@ -59,13 +60,14 @@ from m5.util.fdthelper import (
     FdtPropertyWords,
     FdtState,
 )
-from m5 import fatal
+
 from gem5.components.boards.abstract_system_board import AbstractSystemBoard
 from gem5.components.boards.kernel_disk_workload import KernelDiskWorkload
 from gem5.components.memory import SingleChannelDDR3_1600
 from gem5.isas import ISA
 from gem5.resources.resource import AbstractResource
 from gem5.utils.override import overrides
+
 from .riscvrocket_cache import RISCVRocketCacheHierarchy
 from .riscvrocket_processor import RocketProcessor
 
