@@ -28,6 +28,7 @@
 
 from gem5.components.processors.base_cpu_processor import BaseCPUProcessor
 from gem5.components.processors.cpu_types import CPUTypes
+
 from .riscvrocket_core import RocketCore
 
 
