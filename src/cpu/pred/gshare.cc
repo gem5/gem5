@@ -1,6 +1,5 @@
 /*
  * Copyright (c) 2024 REDS-HEIG-VD and ESL-EPFL
- * Author Karan Pathak
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -35,7 +34,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * * Author: Karan Pathak
  */
 
 /* @file
