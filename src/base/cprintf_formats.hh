@@ -230,10 +230,7 @@ _formatString(std::ostream &out, const T &data, Format &fmt)
         int flen = foo.str().size();
 
         if (fmt.width > flen) {
-            char spaces[fmt.width - flen + 1];
-            std::memset(spaces, ' ', fmt.width - flen);
-            spaces[fmt.width - flen] = 0;
-
+            std::string spaces(fmt.width - flen, ' ');
             if (fmt.flushLeft)
                 out << foo.str() << spaces;
             else

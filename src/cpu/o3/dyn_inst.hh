@@ -1100,9 +1100,10 @@ class DynInst : public ExecContext, public RefCounted
                 setRegOperand(staticInst.get(), idx,
                         cpu->getReg(prev_phys_reg, threadNumber));
             } else {
-                uint8_t val[original_dest_reg.regClass().regBytes()];
-                cpu->getReg(prev_phys_reg, val, threadNumber);
-                setRegOperand(staticInst.get(), idx, val);
+                const size_t size = original_dest_reg.regClass().regBytes();
+                auto val = std::make_unique<uint8_t[]>(size);
+                cpu->getReg(prev_phys_reg, val.get(), threadNumber);
+                setRegOperand(staticInst.get(), idx, val.get());
             }
         }
     }

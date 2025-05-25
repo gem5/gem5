@@ -1452,7 +1452,7 @@ def _get_default_resource_dir() -> str:
                 return path  # If so, the path is valid and can be used.
         else:  # If the path does not exist, try to create it.
             try:
-                os.makedirs(path, exist_ok=False)
+                os.makedirs(path, exist_ok=True)
                 return path
             except OSError:
                 continue  # If the path cannot be created, then try another.

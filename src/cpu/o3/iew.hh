@@ -182,6 +182,9 @@ class IEW
     /** Moves memory instruction onto the list of cache blocked instructions */
     void blockMemInst(const DynInstPtr &inst);
 
+    /** Moves memory instruction onto the list of retry memory instructions */
+    void retryMemInst(const DynInstPtr &inst);
+
     /** Notifies that the cache has become unblocked */
     void cacheUnblocked();
 

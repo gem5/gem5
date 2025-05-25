@@ -434,19 +434,21 @@ def format VectorIntNarrowingFormat(code, category, *flags) {{
     mask_cond = True
     need_elem_idx = True
 
-    old_vd_idx = 2
     dest_reg_id = "vecRegClass[_machInst.vd + _microIdx / 2]"
     src1_is_vec = False
     if category in ["OPIVV"]:
-        src1_reg_id = "vecRegClass[_machInst.vs1 + _microIdx / 2]"
+        src1_reg_id = "vecRegClass[(_copyVs1 ? VecMemInternalReg0\
+                                             : _machInst.vs1) + _microIdx / 2]"
         src1_is_vec = True
     elif category in ["OPIVX"]:
         src1_reg_id = "intRegClass[_machInst.rs1]"
     elif category == "OPIVI":
-        old_vd_idx = 1
+        pass
     else:
         error("not supported category for VectorIntFormat: %s" % category)
-    src2_reg_id = "vecRegClass[_machInst.vs2 + _microIdx]"
+
+    src2_reg_id = "vecRegClass[(_copyVs2 ? VecMemInternalReg0 : _machInst.vs2)\
+                               + _microIdx]"
     src2_sew_mul = 2
 
     set_dest_reg_idx = setDestWrapper(dest_reg_id)
@@ -454,7 +456,6 @@ def format VectorIntNarrowingFormat(code, category, *flags) {{
     if category != "OPIVI":
         set_src_reg_idx += setSrcWrapper(src1_reg_id)
     set_src_reg_idx += setSrcWrapper(src2_reg_id)
-    set_src_reg_idx += tailMaskCondSetSrcWrapper(setSrcWrapper(dest_reg_id))
     set_src_reg_idx += setSrcVm()
     # code
     code = maskCondWrapper(code)
@@ -474,7 +475,6 @@ def format VectorIntNarrowingFormat(code, category, *flags) {{
          'set_src_reg_idx': set_src_reg_idx,
          'set_vlenb': set_vlenb,
          'vm_decl_rd': vm_decl_rd,
-         'copy_old_vd': copyOldVd(old_vd_idx),
          'declare_varith_template': varith_micro_declare
         },
         flags)
@@ -484,7 +484,7 @@ def format VectorIntNarrowingFormat(code, category, *flags) {{
         VectorIntWideningMacroDeclare.subst(iop)
     decoder_output = \
         VectorIntWideningMicroConstructor.subst(microiop) + \
-        VectorIntWideningMacroConstructor.subst(iop)
+        VectorIntNarrowingMacroConstructor.subst(iop)
     exec_output = VectorIntNarrowingMicroExecute.subst(microiop)
     decode_block = VectorIntWideningDecodeBlock.subst(iop)
 }};
@@ -741,7 +741,7 @@ def format VectorFloatCvtFormat(code, category, *flags) {{
         VectorFloatCvtMicroDeclare.subst(microiop) + \
         VectorFloatCvtMacroDeclare.subst(iop)
     decoder_output = \
-        VectorFloatMicroConstructor.subst(microiop) + \
+        VectorIntWideningMicroConstructor.subst(microiop) + \
         VectorFloatMacroConstructor.subst(iop)
     exec_output = VectorFloatMicroExecute.subst(microiop)
     decode_block = VectorFloatDecodeBlock.subst(iop)
@@ -885,7 +885,7 @@ def format VectorFloatWideningCvtFormat(code, category, *flags) {{
         VectorFloatCvtMicroDeclare.subst(microiop) + \
         VectorFloatCvtMacroDeclare.subst(iop)
     decoder_output = \
-        VectorFloatMicroConstructor.subst(microiop) + \
+        VectorIntWideningMicroConstructor.subst(microiop) + \
         VectorIntWideningMacroConstructor.subst(iop)
     exec_output = VectorFloatWideningMicroExecute.subst(microiop)
     decode_block = VectorFloatWideningAndNarrowingCvtDecodeBlock.subst(iop)
@@ -902,16 +902,15 @@ def format VectorFloatNarrowingCvtFormat(code, category, *flags) {{
         flags
     )
 
-    old_vd_idx = 1
     dest_reg_id = "vecRegClass[_machInst.vd + _microIdx / 2]"
-    src2_reg_id = "vecRegClass[_machInst.vs2 + _microIdx]"
+    src2_reg_id = "vecRegClass[(_copyVs2 ? VecMemInternalReg0 : _machInst.vs2)\
+                               + _microIdx]"
     src2_sew_mul = 2
 
     set_dest_reg_idx = setDestWrapper(dest_reg_id)
 
     set_src_reg_idx = ""
     set_src_reg_idx += setSrcWrapper(src2_reg_id)
-    set_src_reg_idx += tailMaskCondSetSrcWrapper(setSrcWrapper(dest_reg_id))
     set_src_reg_idx += setSrcVm()
     code = maskCondWrapper(code)
     code = eiDeclarePrefix(code, widening=True)
@@ -933,7 +932,6 @@ def format VectorFloatNarrowingCvtFormat(code, category, *flags) {{
          'set_src_reg_idx': set_src_reg_idx,
          'set_vlenb': set_vlenb,
          'vm_decl_rd': vm_decl_rd,
-         'copy_old_vd': copyOldVd(old_vd_idx),
          'declare_varith_template': varith_micro_declare},
         flags)
 
@@ -941,8 +939,8 @@ def format VectorFloatNarrowingCvtFormat(code, category, *flags) {{
         VectorFloatCvtMicroDeclare.subst(microiop) + \
         VectorFloatCvtMacroDeclare.subst(iop)
     decoder_output = \
-        VectorFloatMicroConstructor.subst(microiop) + \
-        VectorIntWideningMacroConstructor.subst(iop)
+        VectorIntWideningMicroConstructor.subst(microiop) + \
+        VectorIntNarrowingMacroConstructor.subst(iop)
     exec_output = VectorFloatNarrowingMicroExecute.subst(microiop)
     decode_block = VectorFloatWideningAndNarrowingCvtDecodeBlock.subst(iop)
 }};

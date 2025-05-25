@@ -348,7 +348,7 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
                 break;
               case KernargPreload:
                 DPRINTF(GPUInitAbi, "Preload %d user SGPRs starting at virtual"
-                        "SGPR %d\n", task->preloadLength(), regInitIdx);
+                        " SGPR s[%d]\n", task->preloadLength(), regInitIdx);
 
                 for (int idx = 0; idx < task->preloadLength(); ++idx) {
                     uint32_t finalValue = task->preloadArgs()[idx];

@@ -2311,6 +2311,43 @@ namespace VegaISA
 
         vdst.write();
     } // execute
+    // --- Inst_VOP2__V_FMAC_F64 class methods ---
+
+    Inst_VOP2__V_FMAC_F64::Inst_VOP2__V_FMAC_F64(InFmt_VOP2 *iFmt)
+        : Inst_VOP2(iFmt, "v_fmac_f64")
+    {
+        setFlag(ALU);
+    } // Inst_VOP2__V_FMAC_F64
+
+    Inst_VOP2__V_FMAC_F64::~Inst_VOP2__V_FMAC_F64()
+    {
+    } // ~Inst_VOP2__V_FMAC_F64
+
+    // --- description from .arch file ---
+    // D0.f64 = fma(S0.f64, S1.f64, D0.f64)
+    void
+    Inst_VOP2__V_FMAC_F64::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandF64 src0(gpuDynInst, instData.SRC0);
+        ConstVecOperandF64 src1(gpuDynInst, instData.VSRC1);
+        VecOperandF64 vdst(gpuDynInst, instData.VDST);
+
+        src0.readSrc();
+        src1.read();
+        vdst.read();
+
+        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                vdst[lane] = std::fma(src0[lane], src1[lane], vdst[lane]);
+            }
+        }
+
+        vdst.write();
+    } // execute
     // --- Inst_VOP2__V_XNOR_B32 class methods ---
 
     Inst_VOP2__V_XNOR_B32::Inst_VOP2__V_XNOR_B32(InFmt_VOP2 *iFmt)

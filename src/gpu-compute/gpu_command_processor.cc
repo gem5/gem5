@@ -400,8 +400,6 @@ GPUCommandProcessor::dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
         "LDS size: %d)\n", kernel_name, task->numVectorRegs(),
         task->numScalarRegs(), task->codeAddr(), 0, 0);
 
-    panic_if(akc->kernarg_preload_spec_offset, "kernarg_preload_spec_offset "
-        "!= 0 is not implemented.\n");
     if (akc->kernarg_preload_spec_length == 0) {
         initABI(task);
 
@@ -729,11 +727,10 @@ GPUCommandProcessor::readPreload(AMDKernelCode *akc, HSAQueueEntry *task)
     _hsa_dispatch_packet_t *disp_pkt =
         (_hsa_dispatch_packet_t*)task->dispPktPtr();
 
-    // The code entry byte offset was updated by dispatchKernelObject, so we
-    // need to subtract back the kernarg preload area size to get the preload
-    // area starting address.
-    Addr preload_addr = (Addr)disp_pkt->kernel_object
-        + akc->kernel_code_entry_byte_offset - KernargPreloadPktSize;
+    // Data preloaded is copied from the kernarg segment. Preloading starts at
+    // the dword offset specified by kernarg_preload_spec_offset.
+    Addr preload_addr = (Addr)disp_pkt->kernarg_address
+        + akc->kernarg_preload_spec_offset * 4;
 
     DPRINTF(GPUCommandProc, "Kernarg preload starts at addr: %#x\n",
             preload_addr);
@@ -823,12 +820,11 @@ GPUCommandProcessor::initPreload(AMDKernelCode *akc, HSAQueueEntry *task)
 {
     // Fill in SGPRs
     int num_sgprs = akc->kernarg_preload_spec_length;
-    int start_sgpr = akc->kernarg_preload_spec_offset;
 
     task->preloadLength(num_sgprs);
     for (int i = 0; i < num_sgprs; ++i) {
         DPRINTF(GPUCommandProc, "Task preload user SGPR[%d] = %x\n",
-                start_sgpr + i, task->preloadArgs()[i]);
+                i, task->preloadArgs()[i]);
     }
 
     delete akc;
@@ -990,6 +986,12 @@ Shader*
 GPUCommandProcessor::shader()
 {
     return _shader;
+}
+
+GfxVersion
+GPUCommandProcessor::getGfxVersion() const
+{
+    return FullSystem ? gpuDevice->getGfxVersion() : _driver->getGfxVersion();
 }
 
 } // namespace gem5

@@ -541,14 +541,14 @@ class AddrRange
         }
 
         // Get the LSB set from each mask
-        int masks_lsb[masks.size()];
+        auto masks_lsb = std::make_unique<int[]>(masks.size());
         for (unsigned int i = 0; i < masks.size(); i++) {
             masks_lsb[i] = ctz64(masks[i]);
         }
 
         // we need to sort the list of bits we will discard as we
         // discard them one by one starting.
-        std::sort(masks_lsb, masks_lsb + masks.size());
+        std::sort(masks_lsb.get(), masks_lsb.get() + masks.size());
 
         for (unsigned int i = 0; i < masks.size(); i++) {
             const int intlv_bit = masks_lsb[i];
@@ -580,13 +580,13 @@ class AddrRange
         }
 
         // Get the LSB set from each mask
-        int masks_lsb[masks.size()];
+        auto masks_lsb = std::make_unique<int[]>(masks.size());
         for (unsigned int i = 0; i < masks.size(); i++) {
             masks_lsb[i] = ctz64(masks[i]);
         }
 
         // Add bits one-by-one from the LSB side.
-        std::sort(masks_lsb, masks_lsb + masks.size());
+        std::sort(masks_lsb.get(), masks_lsb.get() + masks.size());
         for (unsigned int i = 0; i < masks.size(); i++) {
             const int intlv_bit = masks_lsb[i];
             if (intlv_bit > 0) {

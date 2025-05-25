@@ -601,6 +601,11 @@ LSQUnit::executeLoad(const DynInstPtr &inst)
 
     assert(!inst->isSquashed());
 
+    if (inst->isExecuted()) {
+        DPRINTF(LSQUnit, "Load [sn:%lli] already executed\n", inst->seqNum);
+        return NoFault;
+    }
+
     load_fault = inst->initiateAcc();
 
     if (load_fault == NoFault && !inst->readMemAccPredicate()) {
@@ -1596,10 +1601,18 @@ LSQUnit::read(LSQRequest *request, ssize_t load_idx)
     // and arbitrate between loads and stores.
 
     // if we the cache is not blocked, do cache access
+    // if the request is not sent and cache is unblocked
+    // then put the instruction into retry queue so we do not need
+    // an exta cycle to re-issue and execute
     request->buildPackets();
     request->sendPacketToCache();
-    if (!request->isSent())
-        iewStage->blockMemInst(load_inst);
+    if (!request->isSent()) {
+        if (!lsq->cacheBlocked()) {
+            iewStage->retryMemInst(load_inst);
+       } else {
+            iewStage->blockMemInst(load_inst);
+       }
+    }
 
     return NoFault;
 }

@@ -87,7 +87,7 @@ let {{
                 raise Exception("Inconsistent extensions in double filter")
 
         # Get rid of any unwanted extension
-        code = operandsRE.sub('\g<name>', code)
+        code = operandsRE.sub(r'\g<name>', code)
 
         for op in operands.values():
             is_int = op.ext in int_extensions
@@ -112,7 +112,7 @@ let {{
         if rOrImmMatch == None:
             return code, None, None
         orig_code = code
-        reg_code = matcher.sub('Rs\g<rNum>\g<typeQual>', code)
+        reg_code = matcher.sub(r'Rs\g<rNum>\g<typeQual>', code)
         imm_code = matcher.sub('imm', code)
         return reg_code, imm_code, rOrImmMatch.group('iNum')
 }};

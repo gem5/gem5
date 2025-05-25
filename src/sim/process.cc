@@ -390,14 +390,15 @@ Process::replicatePage(Addr vaddr, Addr new_paddr, ThreadContext *old_tc,
         new_paddr = seWorkload->allocPhysPages(1);
 
     // Read from old physical page.
-    uint8_t buf_p[pTable->pageSize()];
-    SETranslatingPortProxy(old_tc).readBlob(vaddr, buf_p, sizeof(buf_p));
+    const size_t buf_size = pTable->pageSize();
+    auto buf_p = std::make_unique<uint8_t[]>(buf_size);
+    SETranslatingPortProxy(old_tc).readBlob(vaddr, buf_p.get(), buf_size);
 
     // Create new mapping in process address space by clobbering existing
     // mapping (if any existed) and then write to the new physical page.
     bool clobber = true;
-    pTable->map(vaddr, new_paddr, sizeof(buf_p), clobber);
-    SETranslatingPortProxy(new_tc).writeBlob(vaddr, buf_p, sizeof(buf_p));
+    pTable->map(vaddr, new_paddr, buf_size, clobber);
+    SETranslatingPortProxy(new_tc).writeBlob(vaddr, buf_p.get(), buf_size);
 }
 
 bool

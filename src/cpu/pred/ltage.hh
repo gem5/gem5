@@ -85,9 +85,8 @@ class LTAGE : public TAGE
     void update(ThreadID tid, Addr pc, bool taken,
                 void * &bp_history, bool squashed,
                 const StaticInstPtr & inst, Addr target) override;
-    virtual void branchPlaceholder(ThreadID tid, Addr pc,
-                                   bool uncond, void * &bp_history) override;
-
+    void branchPlaceholder(ThreadID tid, Addr pc,
+                           bool uncond, void * &bp_history) override;
     void init() override;
 
   protected:

@@ -108,7 +108,7 @@ DMASequencer::makeRequest(PacketPtr pkt)
             return RequestStatus_Aliased;
     }
 
-    DPRINTF(RubyDma, "DMA req created: addr %p, len %d\n", line_addr, len);
+    DPRINTF(RubyDma, "DMA req created: addr %#llx, len %d\n", line_addr, len);
 
     int blk_size = m_ruby_system->getBlockSizeBytes();
 
@@ -194,7 +194,14 @@ DMASequencer::issueNext(const Addr& address)
                                 active_request.bytes_completed;
 
     assert((msg->getPhysicalAddress() & m_data_block_mask) == 0);
-    msg->getLineAddress() = makeLineAddress(msg->getPhysicalAddress());
+    Addr new_line_addr = makeLineAddress(msg->getPhysicalAddress());
+    msg->getLineAddress() = new_line_addr;
+
+    // Add mapping from block address to original line address
+    // Only add if the new line address is different from the original
+    if (new_line_addr != address) {
+        m_blockToLineMap[new_line_addr] = address;
+    }
 
     msg->getType() = (active_request.write ? SequencerRequestType_ST :
                      SequencerRequestType_LD);
@@ -216,16 +223,28 @@ DMASequencer::issueNext(const Addr& address)
         m_ruby_system->getRandomization(), m_ruby_system->getWarmupEnabled());
     active_request.bytes_issued += msg->getLen();
     DPRINTF(RubyDma,
-            "DMA request bytes issued %d, bytes completed %d, total len %d\n",
+            "DMA request bytes issued %d, bytes completed %d, total len %d, "
+            "addr %#llx\n",
             active_request.bytes_issued, active_request.bytes_completed,
-            active_request.len);
+            active_request.len, msg->getPhysicalAddress());
 }
 
 void
 DMASequencer::dataCallback(const DataBlock & dblk, const Addr& address)
 {
+    DPRINTF(RubyDma, "DMA data callback: addr %#x\n", address);
 
-    RequestTable::iterator i = m_RequestTable.find(address);
+    // Find the original request by looking in the block to line map
+    Addr lookup_addr = address;
+    auto map_it = m_blockToLineMap.find(address);
+    // Note that if the address is the original address, we will not
+    // find it in the map
+    if (map_it != m_blockToLineMap.end()) {
+        lookup_addr = map_it->second;
+        m_blockToLineMap.erase(address);
+    }
+
+    RequestTable::iterator i = m_RequestTable.find(lookup_addr);
     assert(i != m_RequestTable.end());
 
     DMARequest &active_request = i->second;
@@ -238,20 +257,36 @@ DMASequencer::dataCallback(const DataBlock & dblk, const Addr& address)
         memcpy(&active_request.data[active_request.bytes_completed],
                dblk.getData(offset, len), len);
     }
-    issueNext(address);
+    issueNext(lookup_addr);
 }
 
 void
 DMASequencer::ackCallback(const Addr& address)
 {
-    assert(m_RequestTable.find(address) != m_RequestTable.end());
-    issueNext(address);
+    // Find the original request by looking in the block to line map
+    Addr lookup_addr = address;
+    auto map_it = m_blockToLineMap.find(address);
+    if (map_it != m_blockToLineMap.end()) {
+        lookup_addr = map_it->second;
+        m_blockToLineMap.erase(address);
+    }
+
+    assert(m_RequestTable.find(lookup_addr) != m_RequestTable.end());
+    issueNext(lookup_addr);
 }
 
 void
 DMASequencer::atomicCallback(const DataBlock& dblk, const Addr& address)
 {
-    RequestTable::iterator i = m_RequestTable.find(address);
+    // Find the original request by looking in the block to line map
+    Addr lookup_addr = address;
+    auto map_it = m_blockToLineMap.find(address);
+    if (map_it != m_blockToLineMap.end()) {
+        lookup_addr = map_it->second;
+        m_blockToLineMap.erase(address);
+    }
+
+    RequestTable::iterator i = m_RequestTable.find(lookup_addr);
     assert(i != m_RequestTable.end());
 
     DMARequest &active_request = i->second;

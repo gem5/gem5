@@ -1551,27 +1551,41 @@ const RegVal MI_MASK[enums::Num_PrivilegeModeSet] = {
                     MSI_MASK | SSI_MASK | USI_MASK,
 };
 const RegVal SIP_MASK[enums::Num_PrivilegeModeSet] = {
-    [enums::M] = 0ULL,
-    [enums::MU] = 0ULL,
-    [enums::MNU] = UEI_MASK | UTI_MASK | USI_MASK,
-    [enums::MSU] = SSI_MASK,
-    [enums::MNSU] = UEI_MASK | UTI_MASK | SSI_MASK | USI_MASK,
+    [enums::M] = LOCAL_MASK,
+    [enums::MU] = LOCAL_MASK,
+    [enums::MNU] = LOCAL_MASK | UEI_MASK | UTI_MASK | USI_MASK,
+    [enums::MSU] = LOCAL_MASK | SSI_MASK,
+    [enums::MNSU] = LOCAL_MASK | UEI_MASK | UTI_MASK | SSI_MASK | USI_MASK,
 };
 const RegVal SI_MASK[enums::Num_PrivilegeModeSet] = {
-    [enums::M] = 0ULL,
-    [enums::MU] = 0ULL,
-    [enums::MNU] = UEI_MASK | UTI_MASK | USI_MASK,
-    [enums::MSU] = SEI_MASK | STI_MASK | SSI_MASK,
-    [enums::MNSU] = SEI_MASK | UEI_MASK |
-                    STI_MASK | UTI_MASK |
+    [enums::M] = LOCAL_MASK,
+    [enums::MU] = LOCAL_MASK,
+    [enums::MNU] = LOCAL_MASK | UEI_MASK | UTI_MASK | USI_MASK,
+    [enums::MSU] = LOCAL_MASK | SEI_MASK | STI_MASK | SSI_MASK,
+    [enums::MNSU] = LOCAL_MASK | SEI_MASK | UEI_MASK | STI_MASK | UTI_MASK |
+                    SSI_MASK | USI_MASK,
+};
+const RegVal MIDELEG_MASK[enums::Num_PrivilegeModeSet] = {
+    [enums::M] = LOCAL_MASK,
+    [enums::MU] = LOCAL_MASK,
+    [enums::MNU] = LOCAL_MASK | UEI_MASK | UTI_MASK | USI_MASK,
+    [enums::MSU] = LOCAL_MASK | SEI_MASK | STI_MASK | SSI_MASK,
+    [enums::MNSU] = LOCAL_MASK | SEI_MASK | UEI_MASK | STI_MASK | UTI_MASK |
                     SSI_MASK | USI_MASK,
 };
 const RegVal UI_MASK[enums::Num_PrivilegeModeSet] = {
-    [enums::M] = 0ULL,
-    [enums::MU] = 0ULL,
-    [enums::MNU] = UEI_MASK | UTI_MASK | USI_MASK,
-    [enums::MSU] = 0ULL,
-    [enums::MNSU] = UEI_MASK | UTI_MASK | USI_MASK,
+    [enums::M] = LOCAL_MASK,
+    [enums::MU] = LOCAL_MASK,
+    [enums::MNU] = LOCAL_MASK | UEI_MASK | UTI_MASK | USI_MASK,
+    [enums::MSU] = LOCAL_MASK,
+    [enums::MNSU] = LOCAL_MASK | UEI_MASK | UTI_MASK | USI_MASK,
+};
+const RegVal SIDELEG_MASK[enums::Num_PrivilegeModeSet] = {
+    [enums::M] = LOCAL_MASK,
+    [enums::MU] = LOCAL_MASK,
+    [enums::MNU] = LOCAL_MASK | UEI_MASK | UTI_MASK | USI_MASK,
+    [enums::MSU] = LOCAL_MASK,
+    [enums::MNSU] = LOCAL_MASK | UEI_MASK | UTI_MASK | USI_MASK,
 };
 const RegVal FFLAGS_MASK = (1 << FRM_OFFSET) - 1;
 const RegVal FRM_MASK = 0x7;

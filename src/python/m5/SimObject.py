@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2020 ARM Limited
+# Copyright (c) 2017-2020, 2025 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -61,6 +61,7 @@ from m5.ext.pyfdt import pyfdt
 # variable, the 'name' param)...
 from m5.params import *
 from m5.params import (
+    DictParamDesc,
     ParamDesc,
     Port,
     SimObjectVector,
@@ -145,6 +146,7 @@ class MetaSimObject(type):
         "cxx_exports": list,
         "cxx_param_exports": list,
         "cxx_template_params": list,
+        "override_create": bool,  # True if overrides the default create()
     }
     # Attributes that can be set any time
     keywords = {"check": FunctionType}
@@ -186,6 +188,8 @@ class MetaSimObject(type):
             value_dict["cxx_param_exports"] = []
         if "cxx_template_params" not in value_dict:
             value_dict["cxx_template_params"] = []
+        if "override_create" not in value_dict:
+            value_dict["override_create"] = False
         cls_dict["_value_dict"] = value_dict
         cls = super().__new__(mcls, name, bases, cls_dict)
         if "type" in value_dict:
@@ -680,6 +684,9 @@ class SimObject(metaclass=MetaSimObject):
                     if isinstance(values, VectorParamDesc):
                         type_str = f"Vector_{values.ptype_str}"
                         ptype = values
+                    elif isinstance(values, DictParamDesc):
+                        type_str = f"Dict_{values.key_desc.ptype_str}_{values.val_desc.ptype_str}"
+                        ptype = values
                     else:
                         type_str = f"{values.ptype_str}"
                         ptype = values.ptype
@@ -1049,6 +1056,10 @@ class SimObject(metaclass=MetaSimObject):
                 found_obj = child
         # search param space
         for pname, pdesc in self._params.items():
+            if isinstance(pdesc, DictParamDesc):
+                # DictParams are not supported
+                continue
+
             if issubclass(pdesc.ptype, ptype):
                 match_obj = self._values[pname]
                 if found_obj != None and found_obj != match_obj:
@@ -1082,6 +1093,10 @@ class SimObject(metaclass=MetaSimObject):
                     all.update(dict(zip(child_all, [done] * len(child_all))))
         # search param space
         for pname, pdesc in self._params.items():
+            if isinstance(pdesc, DictParamDesc):
+                # DictParams are not supported
+                continue
+
             if issubclass(pdesc.ptype, ptype):
                 match_obj = self._values[pname]
                 if not isproxy(match_obj) and not isNullPointer(match_obj):
@@ -1233,6 +1248,18 @@ class SimObject(metaclass=MetaSimObject):
                 else:
                     for v in value:
                         getattr(cc_params, param).append(v)
+            elif isinstance(self._params[param], DictParamDesc):
+                assert isinstance(value, dict)
+                dic = getattr(cc_params, param)
+                assert not len(
+                    dic
+                ), "Dictionary parameter has already been set"
+                if isinstance(dic, dict):
+                    setattr(cc_params, param, dict(value))
+                else:
+                    raise TypeError(
+                        f"Must provide dictionary for param {param}"
+                    )
             else:
                 setattr(cc_params, param, value)
 

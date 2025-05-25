@@ -1,7 +1,7 @@
 # Copyright 2004-2006 The Regents of The University of Michigan
 # Copyright 2010-20013 Advanced Micro Devices, Inc.
 # Copyright 2013 Mark D. Hill and David A. Wood
-# Copyright 2017-2020 ARM Limited
+# Copyright 2017-2020, 2025 Arm Limited
 # Copyright 2021 Google, Inc.
 #
 # The license below extends only to copyright in the software and shall
@@ -103,6 +103,10 @@ class ${param_class} : public CxxConfigParams, public ${sim_object_name}Params
 
     bool setParamVector(const std::string &name,
         const std::vector<std::string> &values, const Flags flags);
+
+    bool setParamDict(const std::string &name,
+        const std::unordered_map<std::string, std::string> &values,
+        const Flags flags);
 
     bool setPortConnectionCount(const std::string &name, unsigned int count);
 

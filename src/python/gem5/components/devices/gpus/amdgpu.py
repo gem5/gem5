@@ -29,6 +29,7 @@
 
 from m5.objects import (
     AMDGPUDevice,
+    PciMemBar,
     SubSystem,
 )
 
@@ -172,7 +173,7 @@ class MI210(BaseViperGPU):
         self.device.pm4_pkt_procs = shader._create_pm4s(pm4_starts, pm4_ends)
 
     def get_driver_command(self, debug: bool = False):
-        debug_commands = "dmesg -n8\n" if debug else ""
+        debug_commands = "dmesg -n8\nuname -r\nlspci -v\n" if debug else ""
 
         driver_load_command = (
             "export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH\n"
@@ -180,11 +181,14 @@ class MI210(BaseViperGPU):
             "export HCC_AMDGPU_TARGET=gfx90a\n"
             f"{debug_commands}\n"
             "dd if=/root/roms/mi200.rom of=/dev/mem bs=1k seek=768 count=128\n"
-            "if [ ! -f /lib/modules/`uname -r`/updates/dkms/amdgpu.ko ]; then\n"
+            "if [ -f /home/gem5/load_amdgpu.sh ]; then\n"
+            "    sh /home/gem5/load_amdgpu.sh\n"
+            "elif [ ! -f /lib/modules/`uname -r`/updates/dkms/amdgpu.ko ]; then\n"
             '    echo "ERROR: Missing DKMS package for kernel `uname -r`. Exiting gem5."\n'
             "    /sbin/m5 exit\n"
+            "else\n"
+            "    modprobe -v amdgpu ip_block_mask=0x6f ppfeaturemask=0 dpm=0 audio=0 ras_enable=0\n"
             "fi\n"
-            "modprobe -v amdgpu ip_block_mask=0x6f ppfeaturemask=0 dpm=0 audio=0 ras_enable=0\n"
         )
 
         return driver_load_command
@@ -224,9 +228,10 @@ class MI300X(BaseViperGPU):
 
         self.device.device_name = "MI300X"
 
-        self.device.DeviceID = 0x740F
+        self.device.DeviceID = 0x74A1
         self.device.SubsystemVendorID = 0x1002
         self.device.SubsystemID = 0x0C34
+        self.device.BAR5 = PciMemBar(size="2MiB")
 
         # Setup device-specific address ranges for various SoC components.
         shader = ViperShader(
@@ -234,34 +239,70 @@ class MI300X(BaseViperGPU):
         )
         self.set_shader(shader)
 
-        # These currently use MI200 values until the MI300X bios is released.
-        num_sdmas = 5
-        sdma_bases = [0x4980, 0x6180, 0x78000, 0x79000, 0x7A000]
-        sdma_sizes = [0x1000] * 5
+        num_sdmas = 16
+        sdma_bases = [
+            0x4980,
+            0x6180,
+            0x65000,
+            0x66000,
+            0x84980,
+            0x86180,
+            0xE5000,
+            0xE6000,
+            0x104980,
+            0x106180,
+            0x165000,
+            0x166000,
+            0x184980,
+            0x186180,
+            0x1E5000,
+            0x1E6000,
+        ]
+        sdma_sizes = [0x1000] * num_sdmas
 
         self.device.sdmas = shader._create_sdmas(sdma_bases, sdma_sizes)
 
         # Setup the Command Processor's PM4 engines.
-        pm4_starts = [0xC000]
-        pm4_ends = [0xD000]
+        pm4_starts = [
+            0xC000,
+            0x4C000,
+            0x8C000,
+            0xCC000,
+            0x10C000,
+            0x14C000,
+            0x18C000,
+            0x1CC000,
+        ]
+        pm4_ends = [
+            0xD000,
+            0x4D000,
+            0x8D000,
+            0xCD000,
+            0x10D000,
+            0x14D000,
+            0x18D000,
+            0x1CD000,
+        ]
 
         self.device.pm4_pkt_procs = shader._create_pm4s(pm4_starts, pm4_ends)
 
     def get_driver_command(self, debug: bool = False):
-        debug_commands = "dmesg -n8\n" if debug else ""
+        debug_commands = "dmesg -n8\nuname -r\nlspci -v\n" if debug else ""
 
         driver_load_command = (
             "export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH\n"
             "export HSA_ENABLE_INTERRUPT=0\n"
             "export HCC_AMDGPU_TARGET=gfx942\n"
-            'export HSA_OVERRIDE_GFX_VERSION="9.4.2"\n'
             f"{debug_commands}\n"
-            "dd if=/root/roms/mi200.rom of=/dev/mem bs=1k seek=768 count=128\n"
-            "if [ ! -f /lib/modules/`uname -r`/updates/dkms/amdgpu.ko ]; then\n"
+            "dd if=/root/roms/mi300.rom of=/dev/mem bs=1k seek=768 count=128\n"
+            "if [ -f /home/gem5/load_amdgpu.sh ]; then\n"
+            "    sh /home/gem5/load_amdgpu.sh\n"
+            "elif [ ! -f /lib/modules/`uname -r`/updates/dkms/amdgpu.ko ]; then\n"
             '    echo "ERROR: Missing DKMS package for kernel `uname -r`. Exiting gem5."\n'
             "    /sbin/m5 exit\n"
+            "else\n"
+            "    modprobe -v amdgpu ip_block_mask=0x6f ppfeaturemask=0 dpm=0 audio=0 ras_enable=0 discovery=2\n"
             "fi\n"
-            "modprobe -v amdgpu ip_block_mask=0x6f ppfeaturemask=0 dpm=0 audio=0 ras_enable=0\n"
         )
 
         return driver_load_command

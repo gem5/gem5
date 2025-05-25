@@ -36,6 +36,7 @@
 #include <vector>
 
 #include "arch/amdgpu/vega/gpu_types.hh"
+#include "enums/GfxVersion.hh"
 
 namespace gem5
 {
@@ -55,9 +56,13 @@ namespace VegaISA
         Decoder();
         ~Decoder();
 
+        void setGfxVersion(GfxVersion gfxVersion);
+
         GPUStaticInst* decode(MachInst mach_inst);
 
       private:
+        void fixupGfx90a();
+
         static IsaDecodeMethod tableDecodePrimary[512];
         static IsaDecodeMethod tableSubDecode_OPU_VOP3[768];
         static IsaDecodeMethod tableSubDecode_OP_DS[256];
@@ -1376,6 +1381,7 @@ namespace VegaISA
         GPUStaticInst* decode_OP_VOP2__V_DOT4C_I32_I8(MachInst);
         GPUStaticInst* decode_OP_VOP2__V_DOT8C_I32_I4(MachInst);
         GPUStaticInst* decode_OP_VOP2__V_FMAC_F32(MachInst);
+        GPUStaticInst* decode_OP_VOP2__V_FMAC_F64(MachInst);
         GPUStaticInst* decode_OP_VOP2__V_PK_FMAC_F16(MachInst);
         GPUStaticInst* decode_OP_VOP2__V_XNOR_B32(MachInst);
         GPUStaticInst* decode_OP_VOPC__V_CMP_CLASS_F32(MachInst);

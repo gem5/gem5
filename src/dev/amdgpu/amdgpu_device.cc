@@ -147,6 +147,7 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
     cp->hsaPacketProc().setGPUDevice(this);
     cp->setGPUDevice(this);
     nbio.setGPUDevice(this);
+    gpuvm.setGPUDevice(this);
 
     // Address aperture for device memory. We tell this to the driver and
     // could possibly be anything, but these are the values used by hardware.
@@ -168,7 +169,11 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
     gpuvm.setMMIOAperture(IH_MMIO_RANGE,   AddrRange(0x4280, 0x4980));
     gpuvm.setMMIOAperture(GRBM_MMIO_RANGE, AddrRange(0x8000, 0xC000));
     gpuvm.setMMIOAperture(GFX_MMIO_RANGE,  AddrRange(0x28000, 0x3F000));
-    gpuvm.setMMIOAperture(MMHUB_MMIO_RANGE,  AddrRange(0x68000, 0x6A120));
+    if (getGfxVersion() == GfxVersion::gfx942) {
+        gpuvm.setMMIOAperture(MMHUB_MMIO_RANGE,  AddrRange(0x60D00, 0x62E20));
+    } else {
+        gpuvm.setMMIOAperture(MMHUB_MMIO_RANGE,  AddrRange(0x68000, 0x6A120));
+    }
 
     // These are hardcoded register values to return what the driver expects
     setRegVal(AMDGPU_MP0_SMN_C2PMSG_33, 0x80000000);
@@ -189,11 +194,41 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
         setRegVal(MI200_FB_LOCATION_TOP, mmhubTop >> 24);
         setRegVal(MI200_MEM_SIZE_REG, mem_size);
     } else if (p.device_name == "MI300X") {
-        setRegVal(MI200_FB_LOCATION_BASE, mmhubBase >> 24);
-        setRegVal(MI200_FB_LOCATION_TOP, mmhubTop >> 24);
-        setRegVal(MI200_MEM_SIZE_REG, mem_size);
+        // VRAM size in MB (shifted right by 20 bits)
+        setRegVal(MI300X_FB_LOCATION_BASE, mmhubBase >> 24);
+        setRegVal(MI300X_FB_LOCATION_TOP, mmhubTop >> 24);
+        setRegVal(MI300X_MEM_SIZE_REG, mem_size);
     } else {
         panic("Unknown GPU device %s\n", p.device_name);
+    }
+
+    if (getGfxVersion() == GfxVersion::gfx942 && p.ipt_binary != "") {
+        // From ROCk driver: amdgpu/amdgpu_discovery.h:
+        constexpr uint64_t DISCOVERY_TMR_OFFSET = (64 << 10);
+        constexpr int IPT_SIZE_DW = 0xa00;
+        uint64_t ip_table_base = (mem_size << 20) - DISCOVERY_TMR_OFFSET;
+
+        std::ifstream iptBin;
+        std::array<uint32_t, IPT_SIZE_DW> ipTable;
+        iptBin.open(p.ipt_binary, std::ios::binary);
+        iptBin.read((char *)ipTable.data(), IPT_SIZE_DW*4);
+        iptBin.close();
+
+        // Read from the IP discovery ROM starting at offset 0x100 (DW 0x40)
+        for (int ipt_dword = 0x0; ipt_dword < IPT_SIZE_DW; ipt_dword++) {
+            Addr ipt_addr = ip_table_base + ipt_dword*4;
+
+            // The driver is using bit 32 of the address for something not
+            // part of the address. Fixup the address to be ipt_addr >> 31
+            // OR'd with the lower 31 bits and 0x80000000.
+            Addr ipt_addr_hi = ipt_addr >> 31;
+            Addr fixup_addr = (ipt_addr_hi << 32) | (ipt_addr & 0x7fffffff)
+                            | 0x80000000;
+
+            setRegVal(fixup_addr, ipTable[ipt_dword]);
+            DPRINTF(AMDGPUDevice, "IPTable wrote dword %d (%x) to %lx\n",
+                    ipt_dword, ipTable[ipt_dword], fixup_addr);
+        }
     }
 }
 
@@ -766,13 +801,13 @@ AMDGPUDevice::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(used_vmid_map_size);
 
     // Make a c-style array of the regs to serialize
-    uint32_t doorbells_offset[doorbells_size];
-    QueueType doorbells_queues[doorbells_size];
-    int doorbells_ip_ids[doorbells_size];
-    uint32_t sdma_engs_offset[sdma_engs_size];
-    int sdma_engs[sdma_engs_size];
-    int used_vmids[used_vmid_map_size];
-    int used_queue_id_sizes[used_vmid_map_size];
+    auto doorbells_offset = std::make_unique<uint32_t[]>(doorbells_size);
+    auto doorbells_queues = std::make_unique<QueueType[]>(doorbells_size);
+    auto doorbells_ip_ids = std::make_unique<int[]>(doorbells_size);
+    auto sdma_engs_offset = std::make_unique<uint32_t[]>(sdma_engs_size);
+    auto sdma_engs = std::make_unique<int[]>(sdma_engs_size);
+    auto used_vmids = std::make_unique<int[]>(used_vmid_map_size);
+    auto used_queue_id_sizes = std::make_unique<int[]>(used_vmid_map_size);
     std::vector<int> used_vmid_sets;
 
     int idx = 0;
@@ -801,33 +836,26 @@ AMDGPUDevice::serialize(CheckpointOut &cp) const
     }
 
     int num_queue_id = used_vmid_sets.size();
-    int* vmid_array = new int[num_queue_id];
-    std::copy(used_vmid_sets.begin(), used_vmid_sets.end(), vmid_array);
+    auto vmid_array = std::make_unique<int[]>(num_queue_id);
+    std::copy(used_vmid_sets.begin(), used_vmid_sets.end(), vmid_array.get());
 
-    SERIALIZE_ARRAY(doorbells_offset, sizeof(doorbells_offset)/
-        sizeof(doorbells_offset[0]));
-    SERIALIZE_ARRAY(doorbells_queues, sizeof(doorbells_queues)/
-        sizeof(doorbells_queues[0]));
-    SERIALIZE_ARRAY(doorbells_ip_ids, sizeof(doorbells_ip_ids)/
-        sizeof(doorbells_ip_ids[0]));
-    SERIALIZE_ARRAY(sdma_engs_offset, sizeof(sdma_engs_offset)/
-        sizeof(sdma_engs_offset[0]));
-    SERIALIZE_ARRAY(sdma_engs, sizeof(sdma_engs)/sizeof(sdma_engs[0]));
+    SERIALIZE_UNIQUE_PTR_ARRAY(doorbells_offset, doorbells_size);
+    SERIALIZE_UNIQUE_PTR_ARRAY(doorbells_queues, doorbells_size);
+    SERIALIZE_UNIQUE_PTR_ARRAY(doorbells_ip_ids, doorbells_size);
+    SERIALIZE_UNIQUE_PTR_ARRAY(sdma_engs_offset, sdma_engs_size);
+    SERIALIZE_UNIQUE_PTR_ARRAY(sdma_engs, sdma_engs_size);
     // Save the vmids used in an array
-    SERIALIZE_ARRAY(used_vmids, sizeof(used_vmids)/sizeof(used_vmids[0]));
+    SERIALIZE_UNIQUE_PTR_ARRAY(used_vmids, used_vmid_map_size);
     // Save the size of the set of queue ids mapped to each vmid
-    SERIALIZE_ARRAY(used_queue_id_sizes,
-            sizeof(used_queue_id_sizes)/sizeof(used_queue_id_sizes[0]));
+    SERIALIZE_UNIQUE_PTR_ARRAY(used_queue_id_sizes, used_vmid_map_size);
     // Save all the queue ids used for all the vmids
-    SERIALIZE_ARRAY(vmid_array, num_queue_id);
+    SERIALIZE_UNIQUE_PTR_ARRAY(vmid_array, num_queue_id);
     // Save the total number of queue idsused
     SERIALIZE_SCALAR(num_queue_id);
 
     // Serialize the device memory
     deviceMem.serializeSection(cp, "deviceMem");
     gpuvm.serializeSection(cp, "GPUVM");
-
-    delete[] vmid_array;
 }
 
 void
@@ -846,16 +874,13 @@ AMDGPUDevice::unserialize(CheckpointIn &cp)
 
 
     if (doorbells_size > 0) {
-        uint32_t doorbells_offset[doorbells_size];
-        QueueType doorbells_queues[doorbells_size];
-        int doorbells_ip_ids[doorbells_size];
+        auto doorbells_offset = std::make_unique<uint32_t[]>(doorbells_size);
+        auto doorbells_queues = std::make_unique<QueueType[]>(doorbells_size);
+        auto doorbells_ip_ids = std::make_unique<int[]>(doorbells_size);
 
-        UNSERIALIZE_ARRAY(doorbells_offset, sizeof(doorbells_offset)/
-                sizeof(doorbells_offset[0]));
-        UNSERIALIZE_ARRAY(doorbells_queues, sizeof(doorbells_queues)/
-                sizeof(doorbells_queues[0]));
-        UNSERIALIZE_ARRAY(doorbells_ip_ids, sizeof(doorbells_ip_ids)/
-                sizeof(doorbells_ip_ids[0]));
+        UNSERIALIZE_UNIQUE_PTR_ARRAY(doorbells_offset, doorbells_size);
+        UNSERIALIZE_UNIQUE_PTR_ARRAY(doorbells_queues, doorbells_size);
+        UNSERIALIZE_UNIQUE_PTR_ARRAY(doorbells_ip_ids, doorbells_size);
 
         for (int idx = 0; idx < doorbells_size; ++idx) {
             doorbells[doorbells_offset[idx]].qtype = doorbells_queues[idx];
@@ -864,12 +889,11 @@ AMDGPUDevice::unserialize(CheckpointIn &cp)
     }
 
     if (sdma_engs_size > 0) {
-        uint32_t sdma_engs_offset[sdma_engs_size];
-        int sdma_engs[sdma_engs_size];
+        auto sdma_engs_offset = std::make_unique<uint32_t[]>(sdma_engs_size);
+        auto sdma_engs = std::make_unique<int[]>(sdma_engs_size);
 
-        UNSERIALIZE_ARRAY(sdma_engs_offset, sizeof(sdma_engs_offset)/
-            sizeof(sdma_engs_offset[0]));
-        UNSERIALIZE_ARRAY(sdma_engs, sizeof(sdma_engs)/sizeof(sdma_engs[0]));
+        UNSERIALIZE_UNIQUE_PTR_ARRAY(sdma_engs_offset, sdma_engs_size);
+        UNSERIALIZE_UNIQUE_PTR_ARRAY(sdma_engs, sdma_engs_size);
 
         for (int idx = 0; idx < sdma_engs_size; ++idx) {
             int sdma_id = sdma_engs[idx];
@@ -880,19 +904,19 @@ AMDGPUDevice::unserialize(CheckpointIn &cp)
     }
 
     if (used_vmid_map_size > 0) {
-        int used_vmids[used_vmid_map_size];
-        int used_queue_id_sizes[used_vmid_map_size];
+        auto used_vmids = std::make_unique<int[]>(used_vmid_map_size);
+        auto used_queue_id_sizes = std::make_unique<int[]>(used_vmid_map_size);
         int num_queue_id = 0;
         std::vector<int> used_vmid_sets;
         // Extract the total number of queue ids used
         UNSERIALIZE_SCALAR(num_queue_id);
-        int* vmid_array = new int[num_queue_id];
+        auto vmid_array = std::make_unique<int[]>(num_queue_id);
         // Extract the number of vmids used
-        UNSERIALIZE_ARRAY(used_vmids, used_vmid_map_size);
+        UNSERIALIZE_UNIQUE_PTR_ARRAY(used_vmids, used_vmid_map_size);
         // Extract the size of the queue id set for each vmid
-        UNSERIALIZE_ARRAY(used_queue_id_sizes, used_vmid_map_size);
+        UNSERIALIZE_UNIQUE_PTR_ARRAY(used_queue_id_sizes, used_vmid_map_size);
         // Extract all the queue ids used
-        UNSERIALIZE_ARRAY(vmid_array, num_queue_id);
+        UNSERIALIZE_UNIQUE_PTR_ARRAY(vmid_array, num_queue_id);
         // Populate the usedVMIDs map with the queue ids per vm
         int idx = 0;
         for (int it = 0; it < used_vmid_map_size; it++) {
@@ -903,7 +927,6 @@ AMDGPUDevice::unserialize(CheckpointIn &cp)
             }
             idx += vmid_set_size;
         }
-        delete[] vmid_array;
     }
 
     // Unserialize the device memory

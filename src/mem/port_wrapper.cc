@@ -48,14 +48,16 @@ RequestPortWrapper::recvRangeChange()
 bool
 RequestPortWrapper::recvTimingResp(PacketPtr packet)
 {
-    panic_if(!recvTimingRespCb, "RecvTimingRespCallback is empty.");
+    panic_if(!recvTimingRespCb,
+             "RecvTimingRespCallback in port %s is empty.", name());
     return recvTimingRespCb(packet);
 }
 
 void
 RequestPortWrapper::recvReqRetry()
 {
-    panic_if(!recvReqRetryCb, "RecvReqRetryCallback is empty.");
+    panic_if(!recvReqRetryCb,
+             "RecvReqRetryCallback in port %s is empty.", name());
     recvReqRetryCb();
 }
 
@@ -81,28 +83,31 @@ ResponsePortWrapper::ResponsePortWrapper(const std::string& name, PortID id)
 AddrRangeList
 ResponsePortWrapper::getAddrRanges() const
 {
-    panic_if(!getAddrRangesCb, "GetAddrRangesCallback is empty.");
+    panic_if(!getAddrRangesCb,
+             "GetAddrRangesCallback in port %s is empty.", name());
     return getAddrRangesCb();
 }
 
 bool
 ResponsePortWrapper::recvTimingReq(PacketPtr packet)
 {
-    panic_if(!recvTimingReqCb, "RecvTimingReqCallback is empty.");
+    panic_if(!recvTimingReqCb,
+             "RecvTimingReqCallback in port %s is empty.", name());
     return recvTimingReqCb(packet);
 }
 
 void
 ResponsePortWrapper::recvRespRetry()
 {
-    panic_if(!recvRespRetryCb, "RecvRespRetryCallback is empty.");
+    panic_if(!recvRespRetryCb,
+             "RecvRespRetryCallback in port %s is empty.", name());
     recvRespRetryCb();
 }
 
 Tick
 ResponsePortWrapper::recvAtomic(PacketPtr packet)
 {
-    panic_if(!recvAtomicCb, "RecvAtomicCallback is empty.");
+    panic_if(!recvAtomicCb, "RecvAtomicCallback in port %s is empty.", name());
     return recvAtomicCb(packet);
 }
 
@@ -119,7 +124,8 @@ ResponsePortWrapper::recvAtomicBackdoor(PacketPtr packet,
 void
 ResponsePortWrapper::recvFunctional(PacketPtr packet)
 {
-    panic_if(!recvFunctionalCb, "RecvFunctionalCallback is empty.");
+    panic_if(!recvFunctionalCb,
+             "RecvFunctionalCallback in port %s is empty.", name());
     recvFunctionalCb(packet);
 }
 

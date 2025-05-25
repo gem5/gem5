@@ -55,6 +55,7 @@ Usage
 """
 
 import m5
+from m5.simulate import scheduleTickExitAbsolute
 
 import gem5.utils.multisim as multisim
 from gem5.coherence_protocol import CoherenceProtocol
@@ -133,6 +134,16 @@ for benchmark in obtain_resource("npb-benchmark-suite"):
             },
         )
 
+        # As this is just an example we will only run the simulation for a
+        # billion ticks. In a real like would be days of time to simulate.
+        scheduleTickExitAbsolute(
+            1000000000, "To exit the simulation as this is just an example."
+        )
+
         simulator.set_id(f"{benchmark.get_id()}_cores-{num_cores}")
 
         multisim.add_simulator(simulator)
+
+        if multisim.num_simulators() >= 5:
+            # This is just an example, so we will only run 5 simulations.
+            break

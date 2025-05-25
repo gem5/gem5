@@ -1,5 +1,5 @@
-# Copyright (c) 2021 The Regents of the University of California
-# All Rights Reserved.
+# Copyright (c) 2021-2025 The Regents of the University of California
+# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -24,26 +24,49 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os
+import re
 
+from testlib import (
+    config,
+    constants,
+    gem5_verify_config,
+    joinpath,
+    verifier,
+)
 from testlib.configuration import constants
 
-from gem5.suite import *
-
-"""
-As the filename begins with `test_`, it will be added to the TestLib testsuite
-when `../main.py` is run.
-
-The purpose of this file is to ensure the pyunit tests are executed as part
-of a typical TestLib execution. These have been added as part of the "quick"
-tests and will run with NULL/gem5.*
-"""
+hello_verifier = verifier.MatchRegex(re.compile(r"Hello world!"))
+save_checkpoint_verifier = verifier.MatchRegex(
+    re.compile(r"Done taking a checkpoint")
+)
 
 gem5_verify_config(
-    name="pyunit-tests",
-    config=os.path.join(os.getcwd(), os.pardir, "run_pyunit.py"),
-    verifiers=(),
+    name="test-gem5-library-example-arm-hello",
+    fixtures=(),
+    verifiers=(hello_verifier,),
+    config=joinpath(
+        config.base_dir, "configs", "example", "gem5_library", "arm-hello.py"
+    ),
     config_args=[],
     valid_isas=(constants.all_compiled_tag,),
+    valid_hosts=constants.supported_hosts,
     length=constants.quick_tag,
+)
+
+
+gem5_verify_config(
+    name="test-gem5-library-example-arm-ubuntu-run-test",
+    fixtures=(),
+    verifiers=(),
+    config=joinpath(
+        config.base_dir,
+        "configs",
+        "example",
+        "gem5_library",
+        "arm-ubuntu-run.py",
+    ),
+    config_args=[],
+    valid_isas=(constants.all_compiled_tag,),
+    valid_hosts=constants.supported_hosts,
+    length=constants.long_tag,
 )

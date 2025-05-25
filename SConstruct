@@ -673,9 +673,17 @@ for variant_path in variant_paths:
               "src/SConscript to support that compiler.")))
 
     if env['GCC']:
-        if compareVersions(env['CXXVERSION'], "10") < 0:
-            error('gcc version 10 or newer required.\n'
-                  'Installed version:', env['CXXVERSION'])
+        gcc_min_version = "11"
+        gcc_max_version = "14"
+        gcc_version = env['CXXVERSION']
+        if compareVersions(gcc_version, gcc_min_version) < 0 or \
+              compareVersions(gcc_version, gcc_max_version) > 0:
+            warning(
+                f'Detected GCC version {gcc_version} is not officially '
+                f'supported.\n'f'gem5 supports GCC v{gcc_min_version} up '
+                f'to v{gcc_max_version}.\n'
+            )
+
 
         # Add the appropriate Link-Time Optimization (LTO) flags if
         # `--with-lto` is set.
@@ -699,10 +707,16 @@ for variant_path in variant_paths:
             '-fno-builtin-realloc', '-fno-builtin-free'])
 
     elif env['CLANG']:
-        if compareVersions(env['CXXVERSION'], "6") < 0:
-            error('clang version 6 or newer required.\n'
-                  'Installed version:', env['CXXVERSION'])
-
+        clang_min_version = "14"
+        clang_max_version = "19"
+        clang_version = env['CXXVERSION']
+        if compareVersions(clang_version, clang_min_version) < 0 or \
+              compareVersions(clang_version, clang_max_version) > 0:
+            warning(
+                f'Detected Clang version {clang_version} is not officially '
+                f'supported.\n'f'gem5 supports Clang v{clang_min_version} up '
+                f'to v{clang_max_version}.\n'
+            )
         # Set the Link-Time Optimization (LTO) flags if enabled.
         if GetOption('with_lto'):
             for var in 'LTO_CCFLAGS', 'LTO_LINKFLAGS':
@@ -712,22 +726,8 @@ for variant_path in variant_paths:
         with gem5_scons.Configure(env) as conf:
             conf.CheckCxxFlag('-Wno-c99-designator')
             conf.CheckCxxFlag('-Wno-defaulted-function-deleted')
-        if compareVersions(env['CXXVERSION'], '18') > 0:
-            env.Append(CCFLAGS=['-Wno-vla-cxx-extension'])
 
         env.Append(TCMALLOC_CCFLAGS=['-fno-builtin'])
-
-        if not want_libcxx and compareVersions(env['CXXVERSION'], "11") < 0:
-            # `libstdc++fs`` must be explicitly linked for `std::filesystem``
-            # in clang versions 6 through 10.
-            #
-            # In addition, for these versions, the
-            # `std::filesystem` is under the `experimental`
-            # namespace(`std::experimental::filesystem`).
-            #
-            # Note: gem5 does not support clang versions < 6.
-            env.Append(LIBS=['stdc++fs'])
-
 
         # On Mac OS X/Darwin we need to also use libc++ (part of XCode) as
         # opposed to libstdc++, as the later is dated.

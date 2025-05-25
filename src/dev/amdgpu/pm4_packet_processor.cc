@@ -574,7 +574,7 @@ PM4PacketProcessor::releaseMemDone(PM4Queue *q, PM4ReleaseMem *pkt, Addr addr)
         }
         gpuDevice->getIH()->prepareInterruptCookie(pkt->intCtxId, ringId,
                                             SOC15_IH_CLIENTID_GRBM_CP, CP_EOP,
-                                            0);
+                                            2 * getIpId());
         gpuDevice->getIH()->submitInterruptCookie();
     }
 
@@ -1130,29 +1130,29 @@ PM4PacketProcessor::serialize(CheckpointOut &cp) const
     DmaVirtDevice::serialize(cp);
 
     int num_queues = queues.size();
-    Addr id[num_queues];
-    Addr mqd_base[num_queues];
-    uint64_t mqd_read_index[num_queues];
-    Addr base[num_queues];
-    Addr rptr[num_queues];
-    Addr wptr[num_queues];
-    Addr ib_base[num_queues];
-    Addr ib_rptr[num_queues];
-    Addr ib_wptr[num_queues];
-    Addr offset[num_queues];
-    bool processing[num_queues];
-    bool ib[num_queues];
-    uint32_t me[num_queues];
-    uint32_t pipe[num_queues];
-    uint32_t queue[num_queues];
-    bool privileged[num_queues];
-    uint32_t queue_type[num_queues];
-    uint32_t hqd_active[num_queues];
-    uint32_t hqd_vmid[num_queues];
-    Addr aql_rptr[num_queues];
-    uint32_t aql[num_queues];
-    uint32_t doorbell[num_queues];
-    uint32_t hqd_pq_control[num_queues];
+    auto id = std::make_unique<Addr[]>(num_queues);
+    auto mqd_base = std::make_unique<Addr[]>(num_queues);
+    auto mqd_read_index = std::make_unique<uint64_t[]>(num_queues);
+    auto base = std::make_unique<Addr[]>(num_queues);
+    auto rptr = std::make_unique<Addr[]>(num_queues);
+    auto wptr = std::make_unique<Addr[]>(num_queues);
+    auto ib_base = std::make_unique<Addr[]>(num_queues);
+    auto ib_rptr = std::make_unique<Addr[]>(num_queues);
+    auto ib_wptr = std::make_unique<Addr[]>(num_queues);
+    auto offset = std::make_unique<Addr[]>(num_queues);
+    auto processing = std::make_unique<bool[]>(num_queues);
+    auto ib = std::make_unique<bool[]>(num_queues);
+    auto me = std::make_unique<uint32_t[]>(num_queues);
+    auto pipe = std::make_unique<uint32_t[]>(num_queues);
+    auto queue = std::make_unique<uint32_t[]>(num_queues);
+    auto privileged = std::make_unique<bool[]>(num_queues);
+    auto queue_type = std::make_unique<uint32_t[]>(num_queues);
+    auto hqd_active = std::make_unique<uint32_t[]>(num_queues);
+    auto hqd_vmid = std::make_unique<uint32_t[]>(num_queues);
+    auto aql_rptr = std::make_unique<Addr[]>(num_queues);
+    auto aql = std::make_unique<uint32_t[]>(num_queues);
+    auto doorbell = std::make_unique<uint32_t[]>(num_queues);
+    auto hqd_pq_control = std::make_unique<uint32_t[]>(num_queues);
 
     int i = 0;
     for (auto iter : queues) {
@@ -1188,29 +1188,29 @@ PM4PacketProcessor::serialize(CheckpointOut &cp) const
     }
 
     SERIALIZE_SCALAR(num_queues);
-    SERIALIZE_ARRAY(id, num_queues);
-    SERIALIZE_ARRAY(mqd_base, num_queues);
-    SERIALIZE_ARRAY(mqd_read_index, num_queues);
-    SERIALIZE_ARRAY(base, num_queues);
-    SERIALIZE_ARRAY(rptr, num_queues);
-    SERIALIZE_ARRAY(wptr, num_queues);
-    SERIALIZE_ARRAY(ib_base, num_queues);
-    SERIALIZE_ARRAY(ib_rptr, num_queues);
-    SERIALIZE_ARRAY(ib_wptr, num_queues);
-    SERIALIZE_ARRAY(offset, num_queues);
-    SERIALIZE_ARRAY(processing, num_queues);
-    SERIALIZE_ARRAY(ib, num_queues);
-    SERIALIZE_ARRAY(me, num_queues);
-    SERIALIZE_ARRAY(pipe, num_queues);
-    SERIALIZE_ARRAY(queue, num_queues);
-    SERIALIZE_ARRAY(privileged, num_queues);
-    SERIALIZE_ARRAY(queue_type, num_queues);
-    SERIALIZE_ARRAY(hqd_active, num_queues);
-    SERIALIZE_ARRAY(hqd_vmid, num_queues);
-    SERIALIZE_ARRAY(aql_rptr, num_queues);
-    SERIALIZE_ARRAY(aql, num_queues);
-    SERIALIZE_ARRAY(doorbell, num_queues);
-    SERIALIZE_ARRAY(hqd_pq_control, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(id, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(mqd_base, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(mqd_read_index, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(base, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rptr, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(wptr, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(ib_base, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(ib_rptr, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(ib_wptr, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(offset, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(processing, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(ib, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(me, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(pipe, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(queue, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(privileged, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(queue_type, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(hqd_active, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(hqd_vmid, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(aql_rptr, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(aql, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(doorbell, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(hqd_pq_control, num_queues);
 }
 
 void
@@ -1222,53 +1222,53 @@ PM4PacketProcessor::unserialize(CheckpointIn &cp)
     int num_queues = 0;
     UNSERIALIZE_SCALAR(num_queues);
 
-    Addr id[num_queues];
-    Addr mqd_base[num_queues];
-    uint64_t mqd_read_index[num_queues];
-    Addr base[num_queues];
-    Addr rptr[num_queues];
-    Addr wptr[num_queues];
-    Addr ib_base[num_queues];
-    Addr ib_rptr[num_queues];
-    Addr ib_wptr[num_queues];
-    Addr offset[num_queues];
-    bool processing[num_queues];
-    bool ib[num_queues];
-    uint32_t me[num_queues];
-    uint32_t pipe[num_queues];
-    uint32_t queue[num_queues];
-    bool privileged[num_queues];
-    uint32_t queue_type[num_queues];
-    uint32_t hqd_active[num_queues];
-    uint32_t hqd_vmid[num_queues];
-    Addr aql_rptr[num_queues];
-    uint32_t aql[num_queues];
-    uint32_t doorbell[num_queues];
-    uint32_t hqd_pq_control[num_queues];
+    auto id = std::make_unique<Addr[]>(num_queues);
+    auto mqd_base = std::make_unique<Addr[]>(num_queues);
+    auto mqd_read_index = std::make_unique<uint64_t[]>(num_queues);
+    auto base = std::make_unique<Addr[]>(num_queues);
+    auto rptr = std::make_unique<Addr[]>(num_queues);
+    auto wptr = std::make_unique<Addr[]>(num_queues);
+    auto ib_base = std::make_unique<Addr[]>(num_queues);
+    auto ib_rptr = std::make_unique<Addr[]>(num_queues);
+    auto ib_wptr = std::make_unique<Addr[]>(num_queues);
+    auto offset = std::make_unique<Addr[]>(num_queues);
+    auto processing = std::make_unique<bool[]>(num_queues);
+    auto ib = std::make_unique<bool[]>(num_queues);
+    auto me = std::make_unique<uint32_t[]>(num_queues);
+    auto pipe = std::make_unique<uint32_t[]>(num_queues);
+    auto queue = std::make_unique<uint32_t[]>(num_queues);
+    auto privileged = std::make_unique<bool[]>(num_queues);
+    auto queue_type = std::make_unique<uint32_t[]>(num_queues);
+    auto hqd_active = std::make_unique<uint32_t[]>(num_queues);
+    auto hqd_vmid = std::make_unique<uint32_t[]>(num_queues);
+    auto aql_rptr = std::make_unique<Addr[]>(num_queues);
+    auto aql = std::make_unique<uint32_t[]>(num_queues);
+    auto doorbell = std::make_unique<uint32_t[]>(num_queues);
+    auto hqd_pq_control = std::make_unique<uint32_t[]>(num_queues);
 
-    UNSERIALIZE_ARRAY(id, num_queues);
-    UNSERIALIZE_ARRAY(mqd_base, num_queues);
-    UNSERIALIZE_ARRAY(mqd_read_index, num_queues);
-    UNSERIALIZE_ARRAY(base, num_queues);
-    UNSERIALIZE_ARRAY(rptr, num_queues);
-    UNSERIALIZE_ARRAY(wptr, num_queues);
-    UNSERIALIZE_ARRAY(ib_base, num_queues);
-    UNSERIALIZE_ARRAY(ib_rptr, num_queues);
-    UNSERIALIZE_ARRAY(ib_wptr, num_queues);
-    UNSERIALIZE_ARRAY(offset, num_queues);
-    UNSERIALIZE_ARRAY(processing, num_queues);
-    UNSERIALIZE_ARRAY(ib, num_queues);
-    UNSERIALIZE_ARRAY(me, num_queues);
-    UNSERIALIZE_ARRAY(pipe, num_queues);
-    UNSERIALIZE_ARRAY(queue, num_queues);
-    UNSERIALIZE_ARRAY(privileged, num_queues);
-    UNSERIALIZE_ARRAY(queue_type, num_queues);
-    UNSERIALIZE_ARRAY(hqd_active, num_queues);
-    UNSERIALIZE_ARRAY(hqd_vmid, num_queues);
-    UNSERIALIZE_ARRAY(aql_rptr, num_queues);
-    UNSERIALIZE_ARRAY(aql, num_queues);
-    UNSERIALIZE_ARRAY(doorbell, num_queues);
-    UNSERIALIZE_ARRAY(hqd_pq_control, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(id, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(mqd_base, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(mqd_read_index, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(base, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rptr, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(wptr, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(ib_base, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(ib_rptr, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(ib_wptr, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(offset, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(processing, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(ib, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(me, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(pipe, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(queue, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(privileged, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(queue_type, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(hqd_active, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(hqd_vmid, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(aql_rptr, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(aql, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(doorbell, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(hqd_pq_control, num_queues);
 
     for (int i = 0; i < num_queues; i++) {
         QueueDesc *mqd = new QueueDesc();

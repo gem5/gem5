@@ -66,7 +66,7 @@ jobs:
             - run: echo "This job's status is ${{ job.status }}."
 
     testlib-quick-matrix:
-        runs-on: [self-hosted, linux, x64]
+        runs-on: ubuntu-latest
         if: github.event.pull_request.draft == false
     # In order to make sure the environment is exactly the same, we run in
     # the same container we use to build gem5 and run the testlib tests. This
@@ -74,21 +74,33 @@ jobs:
         needs: [pre-commit]
         steps:
             - uses: actions/checkout@v4
-
-            # Unfortunately the image doesn't have jq installed.
-            # We therefore need to install it as a step here.
-            - name: Install jq
-              run: apt update && apt install -y jq
-
             - name: Get directories for testlib-quick
               working-directory: ${{ github.workspace }}/tests
               id: dir-matrix
-              run: echo "test-dirs-matrix=$(find gem5/* -type d -maxdepth 0 | jq -ncR '[inputs]')" >>$GITHUB_OUTPUT
+              run: |
+                  unset PREV
+                  echo "test-dirs-matrix=$(\
+                    ./main.py list gem5 \
+                    --suites \
+                    --exclude-tags gcn_gpu | \
+                    grep "$SUITEUID:" | \
+                    cut -d: -f2 | \
+                    cut -d/ -f 2- | \
+                    xargs dirname | \
+                    sort -u  | \
+                    while read x; do \
+                      if [ -z "${PREV}" ] || [ "$x" != "${PREV}/*" ]; then \
+                        PREV=$x; \
+                        echo $x; \
+                      fi; \
+                    done  | \
+                    jq -ncR '[inputs]'\
+                  )" >>$GITHUB_OUTPUT
 
             - name: Get the build targets for testlib-quick-gem5-builds
               working-directory: ${{ github.workspace }}/tests
               id: build-matrix
-              run: echo "build-matrix=$(./main.py list --build-targets -q | jq -ncR '[inputs]')" >>$GITHUB_OUTPUT
+              run: echo "build-matrix=$(./main.py list --build-targets --exclude-tags VEGA_X86 -q | jq -ncR '[inputs]')" >>$GITHUB_OUTPUT
 
         outputs:
             build-matrix: ${{ steps.build-matrix.outputs.build-matrix }}
@@ -101,7 +113,7 @@ jobs:
         # for compilation error to be exposed.
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
-        container: ghcr.io/gem5/clang-version-18:latest
+        container: ghcr.io/gem5/clang-version-19:latest
         needs: [pre-commit]
         timeout-minutes: 90
         steps:
@@ -133,6 +145,11 @@ jobs:
             - name: Build gem5
               run: scons --no-compress-debug ${{ matrix.build-target }} -j $(nproc)
 
+            - name: Sanitize build-target for artifact name
+              id: sanitize-build-target
+              if: success() || failure()
+              run: echo "sanitized-build-target=$(echo '${{ matrix.build-target }}' | sed 's/[\\|\.]/-/g' | sed 's/[\/|__w|gem5|build]//g')" >> $GITHUB_OUTPUT
+
         # Upload the gem5 binary as an artifact.
         # Note: the "achor.txt" file is a hack to make sure the paths are
         # preserverd in the artifact. The upload-artifact action finds the
@@ -144,13 +161,13 @@ jobs:
             - run: echo "anchor" > anchor.txt
             - uses: actions/upload-artifact@v4
               with:
-                  name: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds
+                  name: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds-${{ steps.sanitize-build-target.outputs.sanitized-build-target }}
                   path: |
                       build/*/gem5.*
                       anchor.txt
-                  retention-days: 7
 
     testlib-quick-execution:
+        name: quick-tests
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
@@ -161,14 +178,13 @@ jobs:
             matrix:
                 test-dir: ${{ fromJson(needs.testlib-quick-matrix.outputs.test-dirs-matrix) }}
         steps:
-            - name: Clean runner
-              run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
-
         # Checkout the repository then download the gem5.opt artifact.
             - uses: actions/checkout@v4
             - uses: actions/download-artifact@v4
+              name: Download gem5 artifacts
               with:
-                  name: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds
+                  pattern: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds*
+                  merge-multiple: true
 
         # Check that the gem5.opt artifact exists and is executable.
             - name: Chmod gem5.{opt,debug,fast} to be executable
@@ -178,61 +194,24 @@ jobs:
                   find . -name "gem5.fast" -exec chmod u+x {} \;
 
         # Run the testlib quick tests in the given directory.
-            - name: Run "tests/${{ matrix.test-dir }}" TestLib quick tests
+            - name: Run quick ${{ matrix.test-dir }} tests
               id: run-tests
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --skip-build -vv -j$(nproc) ${{ matrix.test-dir }}
+              run: ./main.py run --skip-build --exclude-tags gcn_gpu ${{  matrix.test-dir }}
 
         # Get the basename of the matrix.test-dir path (to name the artifact).
-            - name: Sanatize test-dir for artifact name
+            - name: Sanitize test-dir for artifact name
               id: sanitize-test-dir
               if: success() || failure()
-              run: echo "sanatized-test-dir=$(echo '${{ matrix.test-dir }}' | sed 's/\//-/g')" >> $GITHUB_OUTPUT
+              run: echo "sanitized-test-dir=$(echo '${{ matrix.test-dir }}' | sed 's/\//-/g')" >> $GITHUB_OUTPUT
 
         # Upload the tests/testing-results directory as an artifact.
-            - name: upload results
+            - name: Upload results
               if: success() || failure()
               uses: actions/upload-artifact@v4
               with:
-                  name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-quick-${{ steps.sanitize-test-dir.outputs.sanatized-test-dir
+                  name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-quick-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir
                       }}-status-${{ steps.run-tests.outcome }}-output
-                  path: tests/testing-results
-                  retention-days: 30
-
-    pyunit:
-        runs-on: [self-hosted, linux, x64]
-        if: github.event.pull_request.draft == false
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: [pre-commit, testlib-quick-gem5-builds]
-        timeout-minutes: 30
-        steps:
-
-            # Checkout the repository then download the builds.
-            - uses: actions/checkout@v4
-            - uses: actions/download-artifact@v4
-              with:
-                  name: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds
-
-            # Check that the gem5 binaries exist and are executable.
-            - name: Chmod gem5.{opt,debug,fast} to be executable
-              run: |
-                  find . -name "gem5.opt" -exec chmod u+x {} \;
-                  find . -name "gem5.debug" -exec chmod u+x {} \;
-                  find . -name "gem5.fast" -exec chmod u+x {} \;
-
-            # Run the pyunit tests.
-            # Note: these are all quick tests.
-            - name: Run The pyunit tests
-              id: run-tests
-              working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --skip-build -vv -j$(nproc) pyunit
-
-            # Upload the tests/testing-results directory as an artifact.
-            - name: Upload pyunit test results
-              if: success() || failure()
-              uses: actions/upload-artifact@v4
-              with:
-                  name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-pyunit-status-${{ steps.run-tests.outcome }}-output
                   path: tests/testing-results
                   retention-days: 30
 
@@ -246,21 +225,18 @@ jobs:
 
             # Obtain the cache if available.
             - name: Cache build/VEGA_X86
-              uses: actions/cache/restore@v4
+              uses: actions/cache@v4
               with:
                   path: build/VEGA_X86
                   key: testlib-build-vega-${{ needs.get-date.outputs.date }}
                   restore-keys: |
                       testlib-build-vega
 
-            # Build the VEGA_X86/gem5.opt binary.
-            - name: Build VEGA_X86/gem5.opt
-              run: scons --no-compress-debug build/VEGA_X86/gem5.opt -j`nproc`
-
             # Run the GPU tests.
             - name: Run Testlib GPU Tests
+              id: run-tests
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run  --skip-build -vvv -t $(nproc) --host gcn_gpu gem5/gpu
+              run: ./main.py run -j$(nproc) -t$(nproc) --host gcn_gpu
 
             # Upload the tests/testing-results directory as an artifact.
             - name: Upload results
@@ -269,7 +245,6 @@ jobs:
               with:
                   name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gpu-status-${{ steps.run-tests.outcome }}-output
                   path: tests/testing-results
-                  retention-days: 30
 
     ci-tests:
     # It is 'testlib-quick' which needs to pass for the pull request to be
@@ -277,7 +252,6 @@ jobs:
         runs-on: ubuntu-latest
         needs:
             - testlib-quick-execution
-            - pyunit
             - clang-fast-compilation
             - unittests-all-opt
             - pre-commit
