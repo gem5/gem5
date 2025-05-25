@@ -82,8 +82,8 @@ class RocketFUPool(MinorFUPool):
 class RocketBP(GshareBP):
     btb = SimpleBTB(numEntries=32)
     ras = ReturnAddrStack(numEntries=12)
-    globalPredictorSize = 16384
-    globalCtrBits = 4
+    global_predictor_size = 16384
+    global_predictor_size = 4
     indirectBranchPred = SimpleIndirectPredictor()
     indirectBranchPred.indirectSets = 16
 
