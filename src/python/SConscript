@@ -324,6 +324,16 @@ PySource('gem5.prebuilt.riscvrocket',
     'gem5/prebuilt/riscvrocket/riscvrocket_processor.py')
 PySource('gem5.prebuilt.riscvrocket',
     'gem5/prebuilt/riscvrocket/riscvrocket_core.py')
+PySource('gem5.prebuilt.riscvunleashed',
+    'gem5/prebuilt/riscvunleashed/__init__.py')
+PySource('gem5.prebuilt.riscvunleashed',
+    'gem5/prebuilt/riscvunleashed/riscvunleashed_board.py')
+PySource('gem5.prebuilt.riscvunleashed',
+    'gem5/prebuilt/riscvunleashed/riscvunleashed_cache.py')
+PySource('gem5.prebuilt.riscvunleashed',
+    'gem5/prebuilt/riscvunleashed/riscvunleashed_processor.py')
+PySource('gem5.prebuilt.riscvunleashed',
+    'gem5/prebuilt/riscvunleashed/riscvunleashed_core.py')
 PySource('gem5.prebuilt.viper', 'gem5/prebuilt/viper/__init__.py')
 PySource('gem5.prebuilt.viper', 'gem5/prebuilt/viper/board.py')
 PySource('gem5.prebuilt.viper',
