@@ -1,7 +1,8 @@
 {
-    "python.analysis.extraPaths": [
-        "src/python",
-        "ext",
-        "tests"
-    ]
+  "python.analysis.extraPaths": [
+    "src/python",
+    "ext",
+    "tests"
+  ],
+  "C_Cpp_Runner.msvcBatchPath": ""
 }

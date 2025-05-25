@@ -94,7 +94,7 @@ class RiscvUnleashedBoard(AbstractSystemBoard, KernelDiskWorkload):
         clk_freq = "1GHz"
         cache_hierarchy = RISCVUnleashedCacheHierarchy(l2_size="2MiB")
         processor = U54Processor()
-        memory = SingleChannelDDR4_2400("8Gi    B")
+        memory = SingleChannelDDR4_2400("8GiB")
         super().__init__(clk_freq, processor, memory, cache_hierarchy)
 
         if processor.get_isa() != ISA.RISCV:

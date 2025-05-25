@@ -119,12 +119,12 @@ class RISCVRocketCacheHierarchy(AbstractClassicCacheHierarchy):
         ]
         # ITLB Page walk caches
         self.iptw_caches = [
-            MMUCache(size="1KiB", assoc=1)
+            MMUCache(size="64B", assoc=1)
             for _ in range(board.get_processor().get_num_cores())
         ]
         # DTLB Page walk caches
         self.dptw_caches = [
-            MMUCache(size="1KiB", assoc=1)
+            MMUCache(size="64B", assoc=1)
             for _ in range(board.get_processor().get_num_cores())
         ]
 
@@ -160,7 +160,7 @@ class RISCVRocketCacheHierarchy(AbstractClassicCacheHierarchy):
             data_latency=50,
             response_latency=50,
             mshrs=20,
-            size="1kiB",
+            size="1KiB",
             tgts_per_mshr=12,
             addr_ranges=board.mem_ranges,
         )

@@ -48,5 +48,4 @@ class RocketProcessor(BaseCPUProcessor):
         super().__init__(cores=self._create_cores())
 
     def _create_cores(self):
-        self.num_cores = 1
         return RocketCore(core_id=0)
