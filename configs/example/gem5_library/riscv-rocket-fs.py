@@ -42,7 +42,6 @@ Characteristics
 from gem5.isas import ISA
 from gem5.prebuilt.riscvrocket.riscvrocket_board import RiscvRocketBoard
 from gem5.resources.resource import (
-    DiskImageResource,
     obtain_resource,
 )
 from gem5.simulate.simulator import Simulator
