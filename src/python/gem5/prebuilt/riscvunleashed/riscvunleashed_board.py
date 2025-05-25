@@ -32,6 +32,7 @@ from typing import (
 )
 
 import m5
+from m5 import fatal
 from m5.objects import (
     AddrRange,
     BadAddr,
@@ -58,7 +59,7 @@ from m5.util.fdthelper import (
     FdtPropertyWords,
     FdtState,
 )
-from m5 import fatal
+
 from gem5.components.boards.abstract_system_board import AbstractSystemBoard
 from gem5.components.boards.kernel_disk_workload import KernelDiskWorkload
 from gem5.components.memory import SingleChannelDDR4_2400

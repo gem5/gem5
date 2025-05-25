@@ -31,7 +31,6 @@ from gem5.components.boards.mem_mode import MemMode
 from gem5.components.processors.base_cpu_processor import BaseCPUProcessor
 from gem5.components.processors.cpu_types import CPUTypes
 
-
 from .riscvunleashed_core import U54Core
 
 

@@ -41,7 +41,6 @@ from gem5.components.processors.cpu_types import CPUTypes
 from gem5.isas import ISA
 
 
-
 class U54IntFU(MinorDefaultIntFU):
     opLat = 2
 
