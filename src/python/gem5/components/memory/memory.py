@@ -24,8 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" Channeled "generic" DDR memory controllers
-"""
+"""Channeled "generic" DDR memory controllers"""
 
 from math import log
 from typing import (
