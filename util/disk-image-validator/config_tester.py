@@ -210,12 +210,108 @@ def ATOMIC_test(workload_id, resource_version):
     return True
 
 
+def ATOMIC_2_core_test(workload_id, resource_version):
+    cache_hierarchy = PrivateL1SharedL2CacheHierarchy(
+        l1d_size="64KiB", l1i_size="64KiB", l2_size="8MiB"
+    )
+    memory = SingleChannelDDR3_1600(size="3GiB")
+    processor = SimpleProcessor(
+        cpu_type=CPUTypes.ATOMIC, isa=ISA.X86, num_cores=2
+    )
+
+    board = X86Board(
+        clk_freq="3GHz",
+        processor=processor,
+        memory=memory,
+        cache_hierarchy=cache_hierarchy,
+    )
+    board.set_workload(
+        obtain_resource(workload_id, resource_version=resource_version)
+    )
+
+    class KernelBootedExit(ExitHandler, hypercall_num=1):
+        def _process(self, simulator: "Simulator") -> None:
+            print("Kernel Booted with ATOMIC CPU. Test Passed")
+
+        def _exit_simulation(self) -> bool:
+            return True
+
+    simulator = Simulator(board=board)
+    simulator.run()
+    return True
+
+
+def ATOMIC_4_core_test(workload_id, resource_version):
+    cache_hierarchy = PrivateL1SharedL2CacheHierarchy(
+        l1d_size="64KiB", l1i_size="64KiB", l2_size="8MiB"
+    )
+    memory = SingleChannelDDR3_1600(size="3GiB")
+    processor = SimpleProcessor(
+        cpu_type=CPUTypes.ATOMIC, isa=ISA.X86, num_cores=4
+    )
+
+    board = X86Board(
+        clk_freq="3GHz",
+        processor=processor,
+        memory=memory,
+        cache_hierarchy=cache_hierarchy,
+    )
+    board.set_workload(
+        obtain_resource(workload_id, resource_version=resource_version)
+    )
+
+    class KernelBootedExit(ExitHandler, hypercall_num=1):
+        def _process(self, simulator: "Simulator") -> None:
+            print("Kernel Booted with ATOMIC CPU. Test Passed")
+
+        def _exit_simulation(self) -> bool:
+            return True
+
+    simulator = Simulator(board=board)
+    simulator.run()
+    return True
+
+
+def ATOMIC_8_core_test(workload_id, resource_version):
+    cache_hierarchy = PrivateL1SharedL2CacheHierarchy(
+        l1d_size="64KiB", l1i_size="64KiB", l2_size="8MiB"
+    )
+    memory = SingleChannelDDR3_1600(size="3GiB")
+    processor = SimpleProcessor(
+        cpu_type=CPUTypes.ATOMIC, isa=ISA.X86, num_cores=8
+    )
+
+    board = X86Board(
+        clk_freq="3GHz",
+        processor=processor,
+        memory=memory,
+        cache_hierarchy=cache_hierarchy,
+    )
+    board.set_workload(
+        obtain_resource(workload_id, resource_version=resource_version)
+    )
+
+    class KernelBootedExit(ExitHandler, hypercall_num=1):
+        def _process(self, simulator: "Simulator") -> None:
+            print("Kernel Booted with ATOMIC CPU. Test Passed")
+
+        def _exit_simulation(self) -> bool:
+            return True
+
+    simulator = Simulator(board=board)
+    simulator.run()
+    return True
+
+
 TEST_FUNCTIONS = {
     "MESI_cache_test": MESI_cache_test,
     "KVM_test": KVM_test,
     "O3_test": O3_test,
     "MINOR_test": MINOR_test,
     "ATOMIC_test": ATOMIC_test,
+    "ATOMIC_2_core_test": ATOMIC_2_core_test,
+    "ATOMIC_4_core_test": ATOMIC_4_core_test,
+    "ATOMIC_8_core_test": ATOMIC_8_core_test,
 }
 
 

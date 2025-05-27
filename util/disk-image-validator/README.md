@@ -109,7 +109,7 @@ build/ALL/gem5.opt util/disk-img-validator/disk-image-validate.py --isa x86 --wo
 - If the order is incorrect, an error message is printed.
 - If `--validate-npb` is used and validation fails, an error message is printed.
 
-## gem5 Configuration Test Script3
+## gem5 Configuration Test Script
 
 This script runs a specified workload across multiple gem5 configurations to verify that gem5 can successfully boot full-system workloads with different CPU models and cache hierarchies.
 

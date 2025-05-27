@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Copyright (c) 2025 The Regents of the University of California
 # All rights reserved.
 #
@@ -81,6 +83,9 @@ CONFIG_TESTS = [
     "O3_test",
     "MINOR_test",
     "ATOMIC_test",
+    "ATOMIC_2_core_test",
+    "ATOMIC_4_core_test",
+    "ATOMIC_8_core_test",
 ]
 
 
