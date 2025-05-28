@@ -479,7 +479,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         if (doTLBInsert) {
             if (!functional) {
                 Addr vpn = getVPNFromVAddr(entry.vaddr, satp.mode);
-                walker->tlb->insert(vpn, entry);
+                walker->tlb->multiInsert(vpn, entry);
             } else {
                 DPRINTF(PageTableWalker, "Translated %#x -> %#x\n",
                         entry.vaddr, entry.paddr << PageShift |

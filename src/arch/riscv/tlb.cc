@@ -149,6 +149,23 @@ TLB::lookup(Addr vpn, uint16_t asid, BaseMMU::Mode mode, bool hidden)
 }
 
 TlbEntry *
+TLB::multiLookup(Addr vpn, uint16_t asid, BaseMMU::Mode mode, bool hidden)
+{
+    TlbEntry *entry = lookup(vpn, asid, mode, hidden);
+
+    if (!entry) {
+        if (auto l2_tlb = static_cast<TLB*>(nextLevel())) {
+            entry = l2_tlb->multiLookup(vpn, asid, mode, hidden);
+            // update L1 TLB
+            if (entry)
+                insert(vpn, *entry);
+        }
+    }
+
+    return entry;
+}
+
+TlbEntry *
 TLB::insert(Addr vpn, const TlbEntry &entry)
 {
     DPRINTF(TLB, "insert(vpn=%#x, asid=%#x, key=%#x): "
@@ -182,6 +199,18 @@ TLB::insert(Addr vpn, const TlbEntry &entry)
     return newEntry;
 }
 
+TlbEntry *
+TLB::multiInsert(Addr vpn, const TlbEntry &entry)
+{
+    TlbEntry *newEntry = insert(vpn, entry);
+
+    if (auto l2_tlb = static_cast<TLB*>(nextLevel())) {
+        l2_tlb->multiInsert(vpn, entry);
+    }
+
+    return newEntry;
+}
+
 void
 TLB::demapPage(Addr vaddr, uint64_t asid)
 {
@@ -197,6 +226,11 @@ TLB::demapPage(Addr vaddr, uint64_t asid)
     // referencing x0.
 
     asid &= 0xFFFF;
+
+    // FIXME: this will get triggered by both ITLB/DTLB and counted twice
+    if (auto l2_tlb = static_cast<TLB*>(nextLevel())) {
+        l2_tlb->demapPage(vaddr, asid);
+    }
 
     DPRINTF(TLB, "flush(vaddr=%#x, asid=%#x)\n", vaddr, asid);
     if (vaddr == 0 && asid == 0) {
@@ -299,7 +333,8 @@ Addr
 TLB::hiddenTranslateWithTLB(Addr vaddr, uint16_t asid, Addr xmode,
                             BaseMMU::Mode mode)
 {
-    TlbEntry *e = lookup(getVPNFromVAddr(vaddr, xmode), asid, mode, true);
+    TlbEntry *e = multiLookup(getVPNFromVAddr(vaddr, xmode),
+                              asid, mode, true);
     assert(e != nullptr);
     return e->paddr << PageShift | (vaddr & mask(e->logBytes));
 }
@@ -315,7 +350,7 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
     SATP satp = tc->readMiscReg(MISCREG_SATP);
 
     Addr vpn = getVPNFromVAddr(vaddr, satp.mode);
-    TlbEntry *e = lookup(vpn, satp.asid, mode, false);
+    TlbEntry *e = multiLookup(vpn, satp.asid, mode, false);
     if (!e) {
         Fault fault = walker->start(tc, translation, req, mode);
         if (translation != nullptr || fault != NoFault) {

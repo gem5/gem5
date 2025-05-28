@@ -106,6 +106,9 @@ class TLB : public BaseTLB
      * @param entry The entry to insert.
      */
     TlbEntry *insert(Addr vpn, const TlbEntry &entry);
+    // Insert an entry to the TLB hierarchy (L1 & L2 TLBs)
+    TlbEntry *multiInsert(Addr vpn, const TlbEntry &entry);
+
     void flushAll() override;
     void demapPage(Addr vaddr, uint64_t asn) override;
 
@@ -170,7 +173,9 @@ class TLB : public BaseTLB
      * @param hidden If the lookup should be hidden from the statistics.
      */
     TlbEntry *lookup(Addr vpn, uint16_t asid, BaseMMU::Mode mode, bool hidden);
-
+    // Hierarchical lookup (if an L2 TLB exists)
+    TlbEntry *multiLookup(Addr vpn, uint16_t asid,
+                          BaseMMU::Mode mode, bool hidden);
   private:
     uint64_t nextSeq() { return ++lruSeq; }
 
