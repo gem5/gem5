@@ -113,9 +113,12 @@ def send_signal(pid: int, id: int, payload: str) -> None:
 
         os.kill(pid, signal.SIGCONT)
     except ProcessLookupError:
-        logger.error(
-            "Process does not exist! Check that you are using the correct PID."
-        )
+        # This is a hacky solution to prevent the error message from being
+        # printed to the gem5 dashboard
+        if __name__ == "__main__":
+            logger.error(
+                "Process does not exist! Check that you are using the correct PID."
+            )
         shm.close()
         shm.unlink()
         return
