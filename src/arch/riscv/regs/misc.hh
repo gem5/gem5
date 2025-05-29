@@ -176,8 +176,8 @@ enum MiscRegIndex
     MISCREG_PMPADDR14,
     MISCREG_PMPADDR15,
 
-    MISCREG_SEDELEG,
-    MISCREG_SIDELEG,
+    MISCREG_RESERVED01, // MISCREG_SEDELEG,
+    MISCREG_RESERVED02, // MISCREG_SIDELEG,
     MISCREG_STVEC,
     MISCREG_SCOUNTEREN,
     MISCREG_SSCRATCH,
@@ -187,11 +187,11 @@ enum MiscRegIndex
     MISCREG_SATP,
     MISCREG_SENVCFG,
 
-    MISCREG_UTVEC,
-    MISCREG_USCRATCH,
-    MISCREG_UEPC,
-    MISCREG_UCAUSE,
-    MISCREG_UTVAL,
+    MISCREG_RESERVED03, // MISCREG_UTVEC,
+    MISCREG_RESERVED04, // MISCREG_USCRATCH,
+    MISCREG_RESERVED05, // MISCREG_UEPC,
+    MISCREG_RESERVED06, // MISCREG_UCAUSE,
+    MISCREG_RESERVED07, // MISCREG_UTVAL,
     MISCREG_FFLAGS,
     MISCREG_FRM,
 
@@ -303,14 +303,6 @@ inline constexpr RegClass miscRegClass(MiscRegClass, MiscRegClassName,
 
 enum CSRIndex
 {
-    CSR_USTATUS = 0x000,
-    CSR_UIE = 0x004,
-    CSR_UTVEC = 0x005,
-    CSR_USCRATCH = 0x040,
-    CSR_UEPC = 0x041,
-    CSR_UCAUSE = 0x042,
-    CSR_UTVAL = 0x043,
-    CSR_UIP = 0x044,
     CSR_FFLAGS = 0x001,
     CSR_FRM = 0x002,
     CSR_FCSR = 0x003,
@@ -383,8 +375,6 @@ enum CSRIndex
     // rv32 only csr register end
 
     CSR_SSTATUS = 0x100,
-    CSR_SEDELEG = 0x102,
-    CSR_SIDELEG = 0x103,
     CSR_SIE = 0x104,
     CSR_STVEC = 0x105,
     CSR_SCOUNTEREN = 0x106,
@@ -612,25 +602,6 @@ constexpr uint64_t isaExtsFlags() {
 }
 
 const std::unordered_map<int, CSRMetadata> CSRData = {
-    {CSR_USTATUS,
-        {"ustatus", MISCREG_STATUS, rvTypeFlags(RV64, RV32),
-         isaExtsFlags('n')}},
-    {CSR_UIE,
-        {"uie", MISCREG_IE, rvTypeFlags(RV64, RV32), isaExtsFlags('n')}},
-    {CSR_UTVEC,
-        {"utvec", MISCREG_UTVEC, rvTypeFlags(RV64, RV32), isaExtsFlags('n')}},
-    {CSR_USCRATCH,
-        {"uscratch", MISCREG_USCRATCH, rvTypeFlags(RV64, RV32),
-         isaExtsFlags('n')}},
-    {CSR_UEPC,
-        {"uepc", MISCREG_UEPC, rvTypeFlags(RV64, RV32), isaExtsFlags('n')}},
-    {CSR_UCAUSE,
-        {"ucause", MISCREG_UCAUSE, rvTypeFlags(RV64, RV32),
-         isaExtsFlags('n')}},
-    {CSR_UTVAL,
-        {"utval", MISCREG_UTVAL, rvTypeFlags(RV64, RV32), isaExtsFlags('n')}},
-    {CSR_UIP,
-        {"uip", MISCREG_IP, rvTypeFlags(RV64, RV32), isaExtsFlags('n')}},
     {CSR_FFLAGS,
         {"fflags", MISCREG_FFLAGS, rvTypeFlags(RV64, RV32),
          isaExtsFlags('f')}},
@@ -827,12 +798,6 @@ const std::unordered_map<int, CSRMetadata> CSRData = {
 
     {CSR_SSTATUS,
         {"sstatus", MISCREG_STATUS, rvTypeFlags(RV64, RV32),
-         isaExtsFlags('s')}},
-    {CSR_SEDELEG,
-        {"sedeleg", MISCREG_SEDELEG, rvTypeFlags(RV64, RV32),
-         isaExtsFlags('s')}},
-    {CSR_SIDELEG,
-        {"sideleg", MISCREG_SIDELEG, rvTypeFlags(RV64, RV32),
          isaExtsFlags('s')}},
     {CSR_SIE,
         {"sie", MISCREG_IE, rvTypeFlags(RV64, RV32), isaExtsFlags('s')}},
@@ -1388,10 +1353,8 @@ BitUnion64(STATUS)
     Bitfield<7> mpie;
     Bitfield<6> ube;
     Bitfield<5> spie;
-    Bitfield<4> upie;
     Bitfield<3> mie;
     Bitfield<1> sie;
-    Bitfield<0> uie;
 EndBitUnion(STATUS)
 
 
@@ -1464,15 +1427,12 @@ BitUnion64(INTERRUPT)
     Bitfield<11> mei;
     Bitfield<10> vsei; // H-extension
     Bitfield<9> sei;
-    Bitfield<8> uei;
     Bitfield<7> mti;
     Bitfield<6> vsti;  // H-extension
     Bitfield<5> sti;
-    Bitfield<4> uti;
     Bitfield<3> msi;
     Bitfield<2> vssi;  // H-extension
     Bitfield<1> ssi;
-    Bitfield<0> usi;
 EndBitUnion(INTERRUPT)
 
 
@@ -1556,10 +1516,8 @@ const RegVal STATUS_SPP_MASK = 1ULL << 8;
 const RegVal STATUS_MPIE_MASK = 1ULL << 7;
 const RegVal STATUS_UBE_MASK = 1ULL << 6;
 const RegVal STATUS_SPIE_MASK = 1ULL << 5;
-const RegVal STATUS_UPIE_MASK = 1ULL << 4;
 const RegVal STATUS_MIE_MASK = 1ULL << 3;
 const RegVal STATUS_SIE_MASK = 1ULL << 1;
-const RegVal STATUS_UIE_MASK = 1ULL << 0;
 
 // H-extension
 const RegVal HSTATUS_VSXL_MASK = 3ULL << VSXL_OFFSET;
@@ -1583,12 +1541,6 @@ MSTATUS_MASKS[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
                       STATUS_MPRV_MASK |
                       STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
                       STATUS_MPP_MASK | STATUS_MPIE_MASK | STATUS_MIE_MASK,
-        [enums::MNU] = STATUS_SD_MASKS[RV32] | STATUS_TW_MASK  |
-                       STATUS_MPRV_MASK |
-                       STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
-                       STATUS_MPP_MASK |
-                       STATUS_MPIE_MASK | STATUS_UPIE_MASK |
-                       STATUS_MIE_MASK | STATUS_UIE_MASK,
         [enums::MSU] = STATUS_SD_MASKS[RV32] | STATUS_TSR_MASK |
                        STATUS_TW_MASK | STATUS_TVM_MASK | STATUS_MXR_MASK |
                        STATUS_SUM_MASK | STATUS_MPRV_MASK |
@@ -1596,14 +1548,6 @@ MSTATUS_MASKS[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
                        STATUS_MPP_MASK | STATUS_SPP_MASK |
                        STATUS_MPIE_MASK | STATUS_SPIE_MASK |
                        STATUS_MIE_MASK | STATUS_SIE_MASK,
-        [enums::MNSU] = STATUS_SD_MASKS[RV32] | STATUS_TSR_MASK |
-                        STATUS_TW_MASK | STATUS_TVM_MASK | STATUS_MXR_MASK |
-                        STATUS_SUM_MASK | STATUS_MPRV_MASK |
-                        STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
-                        STATUS_MPP_MASK | STATUS_SPP_MASK |
-                        STATUS_MPIE_MASK | STATUS_SPIE_MASK |
-                        STATUS_UPIE_MASK | STATUS_MIE_MASK | STATUS_SIE_MASK |
-                        STATUS_UIE_MASK,
     },
     [RV64] = {
         [enums::M] = STATUS_SD_MASKS[RV64] | STATUS_MBE_MASK[RV64] |
@@ -1613,12 +1557,6 @@ MSTATUS_MASKS[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
                       STATUS_UXL_MASK | STATUS_TW_MASK |  STATUS_MPRV_MASK |
                       STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
                       STATUS_MPP_MASK | STATUS_MPIE_MASK | STATUS_MIE_MASK,
-        [enums::MNU] = STATUS_SD_MASKS[RV64] | STATUS_MBE_MASK[RV64] |
-                       STATUS_UXL_MASK | STATUS_TW_MASK | STATUS_MPRV_MASK |
-                       STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
-                       STATUS_MPP_MASK |
-                       STATUS_MPIE_MASK | STATUS_UPIE_MASK |
-                       STATUS_MIE_MASK | STATUS_UIE_MASK,
         [enums::MSU] = STATUS_SD_MASKS[RV64] |
                        STATUS_MBE_MASK[RV64] | STATUS_SBE_MASK[RV64] |
                        STATUS_SXL_MASK | STATUS_UXL_MASK |
@@ -1628,15 +1566,6 @@ MSTATUS_MASKS[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
                        STATUS_MPP_MASK | STATUS_SPP_MASK |
                        STATUS_MPIE_MASK | STATUS_SPIE_MASK |
                        STATUS_MIE_MASK | STATUS_SIE_MASK,
-        [enums::MNSU] = STATUS_SD_MASKS[RV64] |
-                       STATUS_MBE_MASK[RV64] | STATUS_SBE_MASK[RV64] |
-                       STATUS_SXL_MASK | STATUS_UXL_MASK |
-                       STATUS_TSR_MASK | STATUS_TW_MASK | STATUS_TVM_MASK |
-                       STATUS_MXR_MASK | STATUS_SUM_MASK | STATUS_MPRV_MASK |
-                       STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
-                       STATUS_MPP_MASK | STATUS_SPP_MASK |
-                       STATUS_MPIE_MASK | STATUS_SPIE_MASK | STATUS_UPIE_MASK |
-                       STATUS_MIE_MASK | STATUS_SIE_MASK | STATUS_UIE_MASK,
         [enums::MHSU] = STATUS_SD_MASKS[RV64] |
                        STATUS_MPV_MASK | STATUS_GVA_MASK | // H-extension
                        STATUS_MBE_MASK[RV64] | STATUS_SBE_MASK[RV64] |
@@ -1653,9 +1582,7 @@ MSTATUS_MASKS[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
 const RegVal MSTATUSH_MASKS[enums::Num_PrivilegeModeSet] = {
     [enums::M] = STATUS_MBE_MASK[RV32],
     [enums::MU] = STATUS_MBE_MASK[RV32],
-    [enums::MNU] = STATUS_MBE_MASK[RV32],
     [enums::MSU] = STATUS_MBE_MASK[RV32] | STATUS_SBE_MASK[RV32],
-    [enums::MNSU] = STATUS_MBE_MASK[RV32] | STATUS_SBE_MASK[RV32],
 };
 
 const RegVal
@@ -1663,17 +1590,13 @@ HSTATUS_MASKS[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
     [RV32] = {
         [enums::M] = 0ULL,
         [enums::MU] = 0ULL,
-        [enums::MNU] = 0ULL,
         [enums::MSU] = 0ULL,
-        [enums::MNSU] = 0ULL,
         [enums::MHSU] = 0ULL,
     },
     [RV64] = {
         [enums::M] = 0ULL,
         [enums::MU] = 0ULL,
-        [enums::MNU] = 0ULL,
         [enums::MSU] = 0ULL,
-        [enums::MNSU] = 0ULL,
         [enums::MHSU] = HSTATUS_VSXL_MASK | HSTATUS_VTSR_MASK |
                         HSTATUS_VTW_MASK   | HSTATUS_VTVM_MASK |
                         HSTATUS_VGEIN_MASK | HSTATUS_HU_MASK |
@@ -1686,62 +1609,22 @@ SSTATUS_MASKS[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
     [RV32] = {
         [enums::M] = 0ULL,
         [enums::MU] = 0ULL,
-        [enums::MNU] = 0ULL,
         [enums::MSU] = STATUS_SD_MASKS[RV32] | STATUS_MXR_MASK |
                        STATUS_SUM_MASK |
                        STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
                        STATUS_SPP_MASK | STATUS_SPIE_MASK | STATUS_SIE_MASK,
-        [enums::MNSU] = STATUS_SD_MASKS[RV32] | STATUS_MXR_MASK |
-                        STATUS_SUM_MASK |
-                        STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
-                        STATUS_SPP_MASK | STATUS_SPIE_MASK | STATUS_UPIE_MASK |
-                        STATUS_SIE_MASK | STATUS_UIE_MASK,
     },
     [RV64] = {
         [enums::M] = 0ULL,
         [enums::MU] = 0ULL,
-        [enums::MNU] = 0ULL,
         [enums::MSU] = STATUS_SD_MASKS[RV64] | STATUS_UXL_MASK |
                        STATUS_MXR_MASK | STATUS_SUM_MASK |
                        STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
                        STATUS_SPP_MASK | STATUS_SPIE_MASK | STATUS_SIE_MASK,
-        [enums::MNSU] = STATUS_SD_MASKS[RV64] | STATUS_UXL_MASK |
-                        STATUS_MXR_MASK | STATUS_SUM_MASK |
-                        STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
-                        STATUS_SPP_MASK | STATUS_SPIE_MASK |
-                        STATUS_UPIE_MASK | STATUS_SIE_MASK | STATUS_UIE_MASK,
         [enums::MHSU] = STATUS_SD_MASKS[RV64] | STATUS_UXL_MASK |
                         STATUS_MXR_MASK | STATUS_SUM_MASK | STATUS_UBE_MASK |
                         STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
                         STATUS_SPP_MASK | STATUS_SPIE_MASK | STATUS_SIE_MASK,
-    },
-};
-const RegVal
-USTATUS_MASKS[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
-    [RV32] = {
-        [enums::M] = 0ULL,
-        [enums::MU] = 0ULL,
-        [enums::MNU] = STATUS_SD_MASKS[RV32] |
-                       STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
-                       STATUS_UPIE_MASK | STATUS_UIE_MASK,
-        [enums::MSU] = 0ULL,
-        [enums::MNSU] = STATUS_SD_MASKS[RV32] | STATUS_MXR_MASK |
-                        STATUS_SUM_MASK |
-                        STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
-                        STATUS_UPIE_MASK | STATUS_UIE_MASK,
-    },
-    [RV64] = {
-        [enums::M] = 0ULL,
-        [enums::MU] = 0ULL,
-        [enums::MNU] = STATUS_SD_MASKS[RV64] |
-                       STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
-                       STATUS_UPIE_MASK | STATUS_UIE_MASK,
-        [enums::MSU] = 0ULL,
-        [enums::MNSU] = STATUS_SD_MASKS[RV64] | STATUS_MXR_MASK |
-                        STATUS_SUM_MASK |
-                        STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
-                        STATUS_UPIE_MASK | STATUS_UIE_MASK,
-        [enums::MHSU] = 0ULL,
     },
 };
 
@@ -1750,33 +1633,22 @@ const RegVal SGEI_MASK = 1ULL << 12; // H-extension
 const RegVal MEI_MASK = 1ULL << 11;
 const RegVal VSEI_MASK = 1ULL << 10; // H-extension
 const RegVal SEI_MASK = 1ULL << 9;
-const RegVal UEI_MASK = 1ULL << 8;
 const RegVal MTI_MASK = 1ULL << 7;
 const RegVal VSTI_MASK = 1ULL << 6; // H-extension
 const RegVal STI_MASK = 1ULL << 5;
-const RegVal UTI_MASK = 1ULL << 4;
 const RegVal MSI_MASK = 1ULL << 3;
 const RegVal VSSI_MASK = 1ULL << 2; // H-extension
 const RegVal SSI_MASK = 1ULL << 1;
-const RegVal USI_MASK = 1ULL << 0;
 
 const RegVal MI_MASK[enums::Num_PrivilegeModeSet] = {
     [enums::M] = LOCAL_MASK |
                  MEI_MASK| MTI_MASK | MSI_MASK,
     [enums::MU] = LOCAL_MASK |
                   MEI_MASK| MTI_MASK | MSI_MASK,
-    [enums::MNU] = LOCAL_MASK |
-                   MEI_MASK | UEI_MASK |
-                   MTI_MASK | UTI_MASK |
-                   MSI_MASK | USI_MASK,
     [enums::MSU] = LOCAL_MASK |
                    MEI_MASK | SEI_MASK |
                    MTI_MASK | STI_MASK |
                    MSI_MASK | SSI_MASK,
-    [enums::MNSU] = LOCAL_MASK |
-                    MEI_MASK | SEI_MASK | UEI_MASK |
-                    MTI_MASK | STI_MASK | UTI_MASK |
-                    MSI_MASK | SSI_MASK | USI_MASK,
     [enums::MHSU] = LOCAL_MASK |
                     MEI_MASK | VSEI_MASK | SEI_MASK |
                     MTI_MASK | VSTI_MASK | STI_MASK |
@@ -1786,46 +1658,21 @@ const RegVal MI_MASK[enums::Num_PrivilegeModeSet] = {
 const RegVal SI_MASK[enums::Num_PrivilegeModeSet] = {
     [enums::M] = LOCAL_MASK,
     [enums::MU] = LOCAL_MASK,
-    [enums::MNU] = LOCAL_MASK | UEI_MASK | UTI_MASK | USI_MASK,
     [enums::MSU] = LOCAL_MASK | SEI_MASK | STI_MASK | SSI_MASK,
-    [enums::MNSU] = LOCAL_MASK | SEI_MASK | UEI_MASK | STI_MASK | UTI_MASK |
-                    SSI_MASK | USI_MASK,
     [enums::MHSU] = LOCAL_MASK | SEI_MASK | STI_MASK | SSI_MASK,
 };
 const RegVal MIDELEG_MASK[enums::Num_PrivilegeModeSet] = {
     [enums::M] = LOCAL_MASK,
     [enums::MU] = LOCAL_MASK,
-    [enums::MNU] = LOCAL_MASK | UEI_MASK | UTI_MASK | USI_MASK,
     [enums::MSU] = LOCAL_MASK | SEI_MASK | STI_MASK | SSI_MASK,
-    [enums::MNSU] = LOCAL_MASK | SEI_MASK | UEI_MASK | STI_MASK | UTI_MASK |
-                    SSI_MASK | USI_MASK,
     [enums::MHSU] = LOCAL_MASK | SEI_MASK | STI_MASK | SSI_MASK,
 };
 
 const RegVal VSI_MASK[enums::Num_PrivilegeModeSet] = {
     [enums::M] = LOCAL_MASK,
     [enums::MU] = LOCAL_MASK,
-    [enums::MNU] = LOCAL_MASK,
     [enums::MSU] = LOCAL_MASK,
-    [enums::MNSU] = LOCAL_MASK,
     [enums::MHSU] = LOCAL_MASK | VSEI_MASK | VSTI_MASK | VSSI_MASK,
-};
-
-const RegVal UI_MASK[enums::Num_PrivilegeModeSet] = {
-    [enums::M] = LOCAL_MASK,
-    [enums::MU] = LOCAL_MASK,
-    [enums::MNU] = LOCAL_MASK | UEI_MASK | UTI_MASK | USI_MASK,
-    [enums::MSU] = LOCAL_MASK,
-    [enums::MNSU] = LOCAL_MASK | UEI_MASK | UTI_MASK | USI_MASK,
-};
-
-const RegVal SIDELEG_MASK[enums::Num_PrivilegeModeSet] = {
-    [enums::M] = LOCAL_MASK,
-    [enums::MU] = LOCAL_MASK,
-    [enums::MNU] = LOCAL_MASK | UEI_MASK | UTI_MASK | USI_MASK,
-    [enums::MSU] = LOCAL_MASK,
-    [enums::MNSU] = LOCAL_MASK | UEI_MASK | UTI_MASK | USI_MASK,
-    [enums::MHSU] = LOCAL_MASK,
 };
 
 const RegVal FFLAGS_MASK = (1 << FRM_OFFSET) - 1;
@@ -1847,9 +1694,6 @@ const std::unordered_map<int, RegVal>
 CSRMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
     [RV32] = {
         [enums::M] = {
-            {CSR_USTATUS, USTATUS_MASKS[RV32][enums::M]},
-            {CSR_UIE, UI_MASK[enums::M]},
-            {CSR_UIP, UI_MASK[enums::M]},
             {CSR_FFLAGS, FFLAGS_MASK},
             {CSR_FRM, FRM_MASK},
             {CSR_FCSR, FFLAGS_MASK | (FRM_MASK << FRM_OFFSET)},
@@ -1863,9 +1707,6 @@ CSRMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
             {CSR_MIP, MI_MASK[enums::M]},
         },
         [enums::MU] = {
-            {CSR_USTATUS, USTATUS_MASKS[RV32][enums::MU]},
-            {CSR_UIE, UI_MASK[enums::MU]},
-            {CSR_UIP, UI_MASK[enums::MU]},
             {CSR_FFLAGS, FFLAGS_MASK},
             {CSR_FRM, FRM_MASK},
             {CSR_FCSR, FFLAGS_MASK | (FRM_MASK << FRM_OFFSET)},
@@ -1878,26 +1719,7 @@ CSRMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
             {CSR_MSTATUSH, MSTATUSH_MASKS[enums::MU]},
             {CSR_MIP, MI_MASK[enums::MU]},
         },
-        [enums::MNU] = {
-            {CSR_USTATUS, USTATUS_MASKS[RV32][enums::MNU]},
-            {CSR_UIE, UI_MASK[enums::MNU]},
-            {CSR_UIP, UI_MASK[enums::MNU]},
-            {CSR_FFLAGS, FFLAGS_MASK},
-            {CSR_FRM, FRM_MASK},
-            {CSR_FCSR, FFLAGS_MASK | (FRM_MASK << FRM_OFFSET)},
-            {CSR_SSTATUS, SSTATUS_MASKS[RV32][enums::MNU]},
-            {CSR_SIE, SI_MASK[enums::MNU]},
-            {CSR_SIP, SI_MASK[enums::MNU]},
-            {CSR_MSTATUS, MSTATUS_MASKS[RV32][enums::MNU]},
-            {CSR_MISA, MISA_MASKS[RV32]},
-            {CSR_MIE, MI_MASK[enums::MNU]},
-            {CSR_MSTATUSH, MSTATUSH_MASKS[enums::MNU]},
-            {CSR_MIP, MI_MASK[enums::MNU]},
-        },
         [enums::MSU] = {
-            {CSR_USTATUS, USTATUS_MASKS[RV32][enums::MSU]},
-            {CSR_UIE, UI_MASK[enums::MSU]},
-            {CSR_UIP, UI_MASK[enums::MSU]},
             {CSR_FFLAGS, FFLAGS_MASK},
             {CSR_FRM, FRM_MASK},
             {CSR_FCSR, FFLAGS_MASK | (FRM_MASK << FRM_OFFSET)},
@@ -1910,28 +1732,9 @@ CSRMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
             {CSR_MSTATUSH, MSTATUSH_MASKS[enums::MSU]},
             {CSR_MIP, MI_MASK[enums::MSU]},
         },
-        [enums::MNSU] = {
-            {CSR_USTATUS, USTATUS_MASKS[RV32][enums::MNSU]},
-            {CSR_UIE, UI_MASK[enums::MNSU]},
-            {CSR_UIP, UI_MASK[enums::MNSU]},
-            {CSR_FFLAGS, FFLAGS_MASK},
-            {CSR_FRM, FRM_MASK},
-            {CSR_FCSR, FFLAGS_MASK | (FRM_MASK << FRM_OFFSET)},
-            {CSR_SSTATUS, SSTATUS_MASKS[RV32][enums::MNSU]},
-            {CSR_SIE, SI_MASK[enums::MNSU]},
-            {CSR_SIP, SI_MASK[enums::MNSU]},
-            {CSR_MSTATUS, MSTATUS_MASKS[RV32][enums::MNSU]},
-            {CSR_MISA, MISA_MASKS[RV32]},
-            {CSR_MIE, MI_MASK[enums::MNSU]},
-            {CSR_MSTATUSH, MSTATUSH_MASKS[enums::MNSU]},
-            {CSR_MIP, MI_MASK[enums::MNSU]},
-        },
     },
     [RV64] = {
         [enums::M] = {
-            {CSR_USTATUS, USTATUS_MASKS[RV64][enums::M]},
-            {CSR_UIE, UI_MASK[enums::M]},
-            {CSR_UIP, UI_MASK[enums::M]},
             {CSR_FFLAGS, FFLAGS_MASK},
             {CSR_FRM, FRM_MASK},
             {CSR_FCSR, FFLAGS_MASK | (FRM_MASK << FRM_OFFSET)},
@@ -1944,9 +1747,6 @@ CSRMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
             {CSR_MIP, MI_MASK[enums::M]},
         },
         [enums::MU] = {
-            {CSR_USTATUS, USTATUS_MASKS[RV64][enums::MU]},
-            {CSR_UIE, UI_MASK[enums::MU]},
-            {CSR_UIP, UI_MASK[enums::MU]},
             {CSR_FFLAGS, FFLAGS_MASK},
             {CSR_FRM, FRM_MASK},
             {CSR_FCSR, FFLAGS_MASK | (FRM_MASK << FRM_OFFSET)},
@@ -1958,25 +1758,7 @@ CSRMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
             {CSR_MIE, MI_MASK[enums::MU]},
             {CSR_MIP, MI_MASK[enums::MU]},
         },
-        [enums::MNU] = {
-            {CSR_USTATUS, USTATUS_MASKS[RV64][enums::MNU]},
-            {CSR_UIE, UI_MASK[enums::MNU]},
-            {CSR_UIP, UI_MASK[enums::MNU]},
-            {CSR_FFLAGS, FFLAGS_MASK},
-            {CSR_FRM, FRM_MASK},
-            {CSR_FCSR, FFLAGS_MASK | (FRM_MASK << FRM_OFFSET)},
-            {CSR_SSTATUS, SSTATUS_MASKS[RV64][enums::MNU]},
-            {CSR_SIE, SI_MASK[enums::MNU]},
-            {CSR_SIP, SI_MASK[enums::MNU]},
-            {CSR_MSTATUS, MSTATUS_MASKS[RV64][enums::MNU]},
-            {CSR_MISA, MISA_MASKS[RV64]},
-            {CSR_MIE, MI_MASK[enums::MNU]},
-            {CSR_MIP, MI_MASK[enums::MNU]},
-        },
         [enums::MSU] = {
-            {CSR_USTATUS, USTATUS_MASKS[RV64][enums::MSU]},
-            {CSR_UIE, UI_MASK[enums::MSU]},
-            {CSR_UIP, UI_MASK[enums::MSU]},
             {CSR_FFLAGS, FFLAGS_MASK},
             {CSR_FRM, FRM_MASK},
             {CSR_FCSR, FFLAGS_MASK | (FRM_MASK << FRM_OFFSET)},
@@ -1988,25 +1770,7 @@ CSRMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
             {CSR_MIE, MI_MASK[enums::MSU]},
             {CSR_MIP, MI_MASK[enums::MSU]},
         },
-        [enums::MNSU] = {
-            {CSR_USTATUS, USTATUS_MASKS[RV64][enums::MNSU]},
-            {CSR_UIE, UI_MASK[enums::MNSU]},
-            {CSR_UIP, UI_MASK[enums::MNSU]},
-            {CSR_FFLAGS, FFLAGS_MASK},
-            {CSR_FRM, FRM_MASK},
-            {CSR_FCSR, FFLAGS_MASK | (FRM_MASK << FRM_OFFSET)},
-            {CSR_SSTATUS, SSTATUS_MASKS[RV64][enums::MNSU]},
-            {CSR_SIE, SI_MASK[enums::MNSU]},
-            {CSR_SIP, SI_MASK[enums::MNSU]},
-            {CSR_MSTATUS, MSTATUS_MASKS[RV64][enums::MNSU]},
-            {CSR_MISA, MISA_MASKS[RV64]},
-            {CSR_MIE, MI_MASK[enums::MNSU]},
-            {CSR_MIP, MI_MASK[enums::MNSU]},
-        },
         [enums::MHSU] = {
-            {CSR_USTATUS, USTATUS_MASKS[RV64][enums::MHSU]},
-            {CSR_UIE, UI_MASK[enums::MHSU]},
-            {CSR_UIP, UI_MASK[enums::MHSU]},
             {CSR_FFLAGS, FFLAGS_MASK},
             {CSR_FRM, FRM_MASK},
             {CSR_FCSR, FFLAGS_MASK | (FRM_MASK << FRM_OFFSET)},
@@ -2053,9 +1817,7 @@ CSRWriteMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
     [RV32] = {
         [enums::M] = {},
         [enums::MU] = {},
-        [enums::MNU] = {},
         [enums::MSU] = {},
-        [enums::MNSU] = {},
     },
     [RV64] = {
         [enums::M] = {
@@ -2072,20 +1834,6 @@ CSRWriteMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
             },
         },
         [enums::MU] = {
-            {CSR_MIDELEG, 0ULL},
-            {CSR_MEDELEG, 0ULL},
-            {CSR_MSTATUS,
-                STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
-                STATUS_MIE_MASK | STATUS_MPIE_MASK | STATUS_MPP_MASK |
-                STATUS_TW_MASK  | STATUS_TVM_MASK  |
-                STATUS_MPRV_MASK // added for U
-            },
-            {CSR_MIP, 0ULL},
-            {CSR_MIE,
-                MSI_MASK | MTI_MASK | MEI_MASK
-            },
-        },
-        [enums::MNU] = {
             {CSR_MIDELEG, 0ULL},
             {CSR_MEDELEG, 0ULL},
             {CSR_MSTATUS,
@@ -2128,41 +1876,6 @@ CSRWriteMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
                 SSI_MASK // added for S
             },
             {CSR_SIE,
-                SSI_MASK | STI_MASK | SEI_MASK // added for S
-            },
-        },
-        [enums::MNSU] = {
-            {CSR_MIDELEG, SSI_MASK | STI_MASK | SEI_MASK},
-            {CSR_MEDELEG, DELEGABLE_EXCPS},
-            {CSR_MSTATUS,
-                STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
-                STATUS_MIE_MASK | STATUS_MPIE_MASK | STATUS_MPP_MASK |
-                STATUS_TW_MASK  | STATUS_TVM_MASK  |
-                STATUS_MPRV_MASK | // added for U
-                STATUS_TSR_MASK  | STATUS_SIE_MASK | STATUS_SPIE_MASK |
-                STATUS_SPP_MASK  | STATUS_SUM_MASK | STATUS_MXR_MASK |
-                STATUS_UXL_MASK | STATUS_SXL_MASK
-                // added for S
-            },
-            {CSR_MIP,
-                SEI_MASK | SSI_MASK | STI_MASK // added for S
-            },
-            {CSR_MIE,
-                MSI_MASK | MTI_MASK | MEI_MASK |
-                SSI_MASK | STI_MASK | SEI_MASK // added for S
-            },
-            {CSR_SSTATUS,
-                STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
-                STATUS_SIE_MASK | STATUS_SPIE_MASK | // no TSR here!
-                STATUS_SPP_MASK  | STATUS_SUM_MASK | STATUS_MXR_MASK |
-                STATUS_UXL_MASK
-                // added for S
-            },
-            {CSR_SIP,
-                SSI_MASK // added for S
-            },
-            {CSR_SIE,
-                MSI_MASK | MTI_MASK | MEI_MASK |
                 SSI_MASK | STI_MASK | SEI_MASK // added for S
             },
         },

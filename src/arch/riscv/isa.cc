@@ -177,8 +177,8 @@ const std::array<const char *, NUM_MISCREGS> MiscRegNames = {{
     [MISCREG_PMPADDR14]     = "PMPADDR14",
     [MISCREG_PMPADDR15]     = "PMPADDR15",
 
-    [MISCREG_SEDELEG]       = "SEDELEG",
-    [MISCREG_SIDELEG]       = "SIDELEG",
+    [MISCREG_RESERVED01]    = "",
+    [MISCREG_RESERVED02]    = "",
     [MISCREG_STVEC]         = "STVEC",
     [MISCREG_SCOUNTEREN]    = "SCOUNTEREN",
     [MISCREG_SSCRATCH]      = "SSCRATCH",
@@ -188,11 +188,11 @@ const std::array<const char *, NUM_MISCREGS> MiscRegNames = {{
     [MISCREG_SATP]          = "SATP",
     [MISCREG_SENVCFG]       = "SENVCFG",
 
-    [MISCREG_UTVEC]         = "UTVEC",
-    [MISCREG_USCRATCH]      = "USCRATCH",
-    [MISCREG_UEPC]          = "UEPC",
-    [MISCREG_UCAUSE]        = "UCAUSE",
-    [MISCREG_UTVAL]         = "UTVAL",
+    [MISCREG_RESERVED03]    = "",
+    [MISCREG_RESERVED04]    = "",
+    [MISCREG_RESERVED05]    = "",
+    [MISCREG_RESERVED06]    = "",
+    [MISCREG_RESERVED07]    = "",
     [MISCREG_FFLAGS]        = "FFLAGS",
     [MISCREG_FRM]           = "FRM",
 
@@ -375,14 +375,8 @@ void ISA::clear()
         case enums::MU:
           misa.rvu = 1;
           break;
-        case enums::MNU:
-          misa.rvu = misa.rvn = 1;
-          break;
         case enums::MSU:
           misa.rvs = misa.rvu = 1;
-          break;
-        case enums::MNSU:
-          misa.rvs = misa.rvu = misa.rvn = 1;
           break;
         case enums::MHSU:
           misa.rvh = misa.rvs = misa.rvu = 1;
@@ -786,12 +780,6 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                     idx, val & MIDELEG_MASK[getPrivilegeModeSet()]);
             }
             break;
-          case MISCREG_SIDELEG:
-            {
-                setMiscRegNoEffect(
-                    idx, val & SIDELEG_MASK[getPrivilegeModeSet()]);
-            }
-            break;
           case MISCREG_IP:
             {
                 RegVal mask = MI_MASK[getPrivilegeModeSet()];
@@ -919,7 +907,6 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 if (!getEnableRvv()) {
                     new_misa.rvv = 0;
                 }
-                new_misa.rvn = cur_misa.rvn;
                 new_misa.rvs = cur_misa.rvs;
                 new_misa.rvu = cur_misa.rvu;
                 setMiscRegNoEffect(idx, new_misa);
@@ -1362,8 +1349,7 @@ ISA::writeCSR(ExecContext *xc, uint64_t csr, RegVal writeData)
         // case CSR_HIP: case CSR_HIE:
         // case CSR_SIP: case CSR_SIE:
         // case CSR_VSIP: case CSR_VSIE:
-        // case CSR_UIP: case CSR_UIE:
-        // case CSR_MSTATUS: case CSR_SSTATUS: case CSR_USTATUS:
+        // case CSR_MSTATUS: case CSR_SSTATUS:
         //     xc->setMiscReg(midx, new_reg_data_all);
         //     break;
         default:

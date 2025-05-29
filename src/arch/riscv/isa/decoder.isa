@@ -5963,19 +5963,6 @@ decode QUADRANT default Unknown::unknown() {
                         0x1: ebreak({{
                             return executeEBreakOrSemihosting(xc);
                         }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
-                        0x2: uret({{
-                           MISA misa = xc->readMiscReg(MISCREG_ISA);
-                            if (!misa.rvn) {
-                                return std::make_shared<IllegalInstFault>(
-                                    "sret can't execute without N systems",
-                                    machInst);
-                            }
-                            STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                            status.uie = status.upie;
-                            status.upie = 1;
-                            xc->setMiscReg(MISCREG_STATUS, status);
-                            NPC = rvSext(xc->readMiscReg(MISCREG_UEPC));
-                        }}, IsSerializeAfter, IsNonSpeculative, IsReturn);
                     }
                     0x8: decode RS2 {
                         0x2: sret({{

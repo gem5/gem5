@@ -63,12 +63,8 @@ Interrupts::globalMask() const
     STATUS status = tc->readMiscReg(MISCREG_STATUS);
     MISA misa = tc->readMiscRegNoEffect(MISCREG_ISA);
     INTERRUPT mideleg = 0;
-    if (misa.rvs || misa.rvn) {
+    if (misa.rvs) {
         mideleg = tc->readMiscReg(MISCREG_MIDELEG);
-    }
-    INTERRUPT sideleg = 0;
-    if (misa.rvs && misa.rvn) {
-        sideleg = tc->readMiscReg(MISCREG_SIDELEG);
     }
     PrivilegeMode prv = (PrivilegeMode)tc->readMiscReg(MISCREG_PRV);
     switch (prv) {
@@ -78,15 +74,11 @@ Interrupts::globalMask() const
                 INTERRUPT hideleg = tc->readMiscReg(MISCREG_HIDELEG);
 
                 mask.local = ~hideleg.local | ~mideleg.local;
-                if (status.uie) {
-                    mask.local = mask.local | (hideleg.local & mideleg.local);
-                }
 
                 mask.vsei = (~hideleg.vsei)|(hideleg.vsei & vsstatus.sie);
                 mask.vssi = (~hideleg.vssi)|(hideleg.vssi & vsstatus.sie);
                 mask.vsti = (~hideleg.vsti)|(hideleg.vsti & vsstatus.sie);
 
-                // status.sie is always 0 if misa.rvn is disabled
                 mask.mei = (~mideleg.mei | ~hideleg.mei)
                         |  (mideleg.mei & hideleg.mei & vsstatus.sie);
 
@@ -104,35 +96,14 @@ Interrupts::globalMask() const
 
                 mask.ssi = (~mideleg.ssi | ~hideleg.ssi)
                         |  (mideleg.ssi & hideleg.ssi & vsstatus.sie);
-            }
-            // status.uie is always 0 if misa.rvn is disabled
-            else if (misa.rvs) {
-                mask.local = ~sideleg.local;
-                if (status.uie) {
-                    mask.local = mask.local | sideleg.local;
-                }
-                mask.mei = (~sideleg.mei) | (sideleg.mei & status.uie);
-                mask.mti = (~sideleg.mti) | (sideleg.mti & status.uie);
-                mask.msi = (~sideleg.msi) | (sideleg.msi & status.uie);
-                mask.sei = (~sideleg.sei) | (sideleg.sei & status.uie);
-                mask.sti = (~sideleg.sti) | (sideleg.sti & status.uie);
-                mask.ssi = (~sideleg.ssi) | (sideleg.ssi & status.uie);
             } else {
-                // According to the RISC-V privilege spec v1.10, if the
-                // S privilege mode is not implemented and user-trap
-                // support, setting mideleg/medeleg bits will delegate the
-                // trap to U-mode trap handler
-                mask.local = ~mideleg.local;
-                if (status.uie) {
-                    mask.local = mask.local | mideleg.local;
-                }
-                mask.mei = (~mideleg.mei) | (mideleg.mei & status.uie);
-                mask.mti = (~mideleg.mti) | (mideleg.mti & status.uie);
-                mask.msi = (~mideleg.msi) | (mideleg.msi & status.uie);
-                mask.sei = mask.sti = mask.ssi = 0;
-            }
-            if (status.uie) {
-                mask.uei = mask.uti = mask.usi = 1;
+                mask.local = gem5::mask(48);
+                mask.mei = 1;
+                mask.mti = 1;
+                mask.msi = 1;
+                mask.sei = 1;
+                mask.sti = 1;
+                mask.ssi = 1;
             }
             break;
         case PRV_S:
@@ -168,10 +139,7 @@ Interrupts::globalMask() const
 
                 mask.ssi = (~mideleg.ssi | ~hideleg.ssi)
                         |  (mideleg.ssi & hideleg.ssi & vsstatus.sie);
-
-                mask.uei = mask.uti = mask.usi = 0;
             } else {
-                // status.sie is always 0 if misa.rvn is disabled
                 mask.local = ~mideleg.local;
                 mask.mei = (~mideleg.mei) | (mideleg.mei & status.sie);
                 mask.mti = (~mideleg.mti) | (mideleg.mti & status.sie);
@@ -180,7 +148,6 @@ Interrupts::globalMask() const
                     mask.sei = mask.sti = mask.ssi = 1;
                     mask.local = mask.local | mideleg.local;
                 }
-                mask.uei = mask.uti = mask.usi = 0;
             }
 
             break;
@@ -190,7 +157,6 @@ Interrupts::globalMask() const
                 mask.mei = mask.mti = mask.msi = 1;
             }
             mask.sei = mask.sti = mask.ssi = 0;
-            mask.uei = mask.uti = mask.usi = 0;
             break;
         default:
             panic("Unknown privilege mode %d.", prv);
@@ -226,8 +192,7 @@ Interrupts::getInterrupt()
             INT_EXT_MACHINE, INT_SOFTWARE_MACHINE, INT_TIMER_MACHINE,
             INT_EXT_SUPER, INT_SOFTWARE_SUPER, INT_TIMER_SUPER,
             INT_EXT_SUPER_GUEST, INT_EXT_VIRTUAL_SUPER,
-            INT_SOFTWARE_VIRTUAL_SUPER, INT_TIMER_VIRTUAL_SUPER,
-            INT_EXT_USER, INT_TIMER_USER, INT_SOFTWARE_USER
+            INT_SOFTWARE_VIRTUAL_SUPER, INT_TIMER_VIRTUAL_SUPER
         };
         for (const int &id : interrupt_order) {
             if (checkInterrupt(id) && mask[id]) {
@@ -241,8 +206,7 @@ Interrupts::getInterrupt()
             INT_LOCAL_7, INT_LOCAL_6, INT_LOCAL_5, INT_LOCAL_4,
             INT_LOCAL_3, INT_LOCAL_2, INT_LOCAL_1, INT_LOCAL_0,
             INT_EXT_MACHINE, INT_SOFTWARE_MACHINE, INT_TIMER_MACHINE,
-            INT_EXT_SUPER, INT_SOFTWARE_SUPER, INT_TIMER_SUPER,
-            INT_EXT_USER, INT_SOFTWARE_USER, INT_TIMER_USER
+            INT_EXT_SUPER, INT_SOFTWARE_SUPER, INT_TIMER_SUPER
         };
         for (const int &id : interrupt_order) {
             if (checkInterrupt(id) && mask[id]) {

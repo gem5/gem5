@@ -83,15 +83,12 @@ enum ExceptionCode : uint64_t
     STORE_GUEST_PAGE = 23,// H-extension
     AMO_GUEST_PAGE = 23,  // H-extension
 
-    INT_SOFTWARE_USER = 0,
     INT_SOFTWARE_SUPER = 1,
     INT_SOFTWARE_VIRTUAL_SUPER = 2, // H-extension
     INT_SOFTWARE_MACHINE = 3,
-    INT_TIMER_USER = 4,
     INT_TIMER_SUPER = 5,
     INT_TIMER_VIRTUAL_SUPER = 6, // H-extension
     INT_TIMER_MACHINE = 7,
-    INT_EXT_USER = 8,
     INT_EXT_SUPER = 9,
     INT_EXT_VIRTUAL_SUPER = 10, // H-extension
     INT_EXT_MACHINE = 11,
