@@ -856,8 +856,9 @@ void
 Execute::doInstCommitAccounting(MinorDynInstPtr inst)
 {
     assert(!inst->isFault());
-
-    MinorThread *thread = cpu.threads[inst->id.threadId];
+    const ThreadID tid = inst->id.threadId;
+    MinorThread *thread = cpu.threads[tid];
+    const bool in_user_mode = thread->getIsaPtr()->inUserMode();
 
     /* Increment the many and various inst and op counts in the
      *  thread and system */
@@ -865,17 +866,24 @@ Execute::doInstCommitAccounting(MinorDynInstPtr inst)
     {
         thread->numInst++;
         thread->threadStats.numInsts++;
-        cpu.commitStats[inst->id.threadId]->numInsts++;
+        cpu.commitStats[tid]->numInsts++;
         cpu.baseStats.numInsts++;
+        if (in_user_mode) {
+            cpu.commitStats[tid]->numUserInsts++;
+        }
 
         /* Act on events related to instruction counts */
         thread->comInstEventQueue.serviceEvents(thread->numInst);
     }
+
     thread->numOp++;
     thread->threadStats.numOps++;
-    cpu.commitStats[inst->id.threadId]->numOps++;
-    cpu.commitStats[inst->id.threadId]
+    cpu.commitStats[tid]->numOps++;
+    cpu.commitStats[tid]
         ->committedInstType[inst->staticInst->opClass()]++;
+    if (in_user_mode) {
+        cpu.commitStats[tid]->numUserOps++;
+    }
 
     /* Set the CP SeqNum to the numOps commit number */
     if (inst->traceData)

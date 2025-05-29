@@ -812,6 +812,14 @@ class BaseCPU : public ClockedObject
         statistics::Scalar numInstsNotNOP;
         statistics::Scalar numOpsNotNOP;
 
+        /* Number of instructions committed in user mode */
+        statistics::Scalar numUserInsts;
+        statistics::Scalar numUserOps;
+
+        /* Ratio of instructions committed in user mode */
+        statistics::Formula ratioUserInsts;
+        statistics::Formula ratioUserOps;
+
         /* CPI/IPC for total cycle counts and macro insts */
         statistics::Formula cpi;
         statistics::Formula ipc;

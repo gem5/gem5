@@ -219,6 +219,10 @@ BaseCPU::BaseCPU(const Params &p, bool is_checker)
         CommitCPUStats* commitStatptr = new CommitCPUStats(this, i);
         commitStatptr->ipc = commitStatptr->numInsts / baseStats.numCycles;
         commitStatptr->cpi = baseStats.numCycles / commitStatptr->numInsts;
+        commitStatptr->ratioUserInsts = commitStatptr->numUserInsts /
+            commitStatptr->numInsts;
+        commitStatptr->ratioUserOps = commitStatptr->numUserOps /
+            commitStatptr->numOps;
         commitStats.emplace_back(commitStatptr);
     }
 }
@@ -1018,6 +1022,14 @@ CommitCPUStats::CommitCPUStats(statistics::Group *parent, int thread_id)
              "Number of instructions committed excluding NOPs or prefetches"),
     ADD_STAT(numOpsNotNOP, statistics::units::Count::get(),
              "Number of Ops (including micro ops) Simulated"),
+    ADD_STAT(numUserInsts, statistics::units::Count::get(),
+             "Numbrer of instructions committed in user mode"),
+    ADD_STAT(numUserOps, statistics::units::Count::get(),
+            "Number of ops committed in user mode"),
+    ADD_STAT(ratioUserInsts, statistics::units::Ratio::get(),
+             "Ratio of instructions committed in user mode"),
+    ADD_STAT(ratioUserOps, statistics::units::Ratio::get(),
+             "Ratio of ops committed in user mode"),
     ADD_STAT(cpi, statistics::units::Rate<
                 statistics::units::Cycle, statistics::units::Count>::get(),
              "CPI: cycles per instruction (thread level)"),

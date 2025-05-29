@@ -1324,13 +1324,21 @@ Commit::markCompletedInsts()
 void
 Commit::updateComInstStats(const DynInstPtr &inst)
 {
-    ThreadID tid = inst->threadNumber;
+    const ThreadID tid = inst->threadNumber;
+    const bool in_user_mode = cpu->inUserMode(tid);
 
     if (!inst->isMicroop() || inst->isLastMicroop()) {
         cpu->commitStats[tid]->numInsts++;
         cpu->baseStats.numInsts++;
+        if (in_user_mode) {
+            cpu->commitStats[tid]->numUserInsts++;
+        }
     }
+
     cpu->commitStats[tid]->numOps++;
+    if (in_user_mode) {
+        cpu->commitStats[tid]->numUserOps++;
+    }
 
     // To match the old model, don't count nops and instruction
     // prefetches towards the total commit count.
