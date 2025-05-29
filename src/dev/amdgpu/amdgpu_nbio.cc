@@ -98,6 +98,17 @@ AMDGPUNbio::readMMIO(PacketPtr pkt, Addr offset)
       case MI100_INV_ENG17_ACK2:
       case MI100_INV_ENG17_ACK3:
       case MI200_INV_ENG17_ACK2:
+      case MI300X_INV_ENG17_ACK1:
+      case MI300X_INV_ENG17_ACK2:
+      case MI300X_INV_ENG17_ACK3:
+      case MI300X_INV_ENG17_ACK4:
+      case MI300X_INV_ENG17_ACK5:
+      case MI300X_INV_ENG17_ACK6:
+      case MI300X_INV_ENG17_ACK7:
+      case MI300X_INV_ENG17_ACK8:
+      case MI300X_INV_ENG17_ACK9:
+      case MI300X_INV_ENG17_ACK10:
+      case MI300X_INV_ENG17_ACK11:
         pkt->setLE<uint32_t>(0x10001);
         break;
       case VEGA10_INV_ENG17_SEM1:
@@ -113,6 +124,15 @@ AMDGPUNbio::readMMIO(PacketPtr pkt, Addr offset)
         break;
       case AMDGPU_MP1_SMN_C2PMSG_90:
         pkt->setLE<uint32_t>(0x1);
+        break;
+      case MI300X_EPF0_STRAP0:
+        // This contains a revision ID for the chip. It is required for MI300X
+        // to see the GFX target as gfx942 instead of gfx941.
+        if (gpuDevice->getGfxVersion() == GfxVersion::gfx942) {
+          pkt->setLE<uint32_t>(2 << 24);
+        } else {
+          pkt->setLE<uint32_t>(0);
+        }
         break;
       default:
         if (triggered_reads.count(offset)) {

@@ -1129,6 +1129,12 @@ InstructionQueue::blockMemInst(const DynInstPtr &blocked_inst)
 }
 
 void
+InstructionQueue::retryMemInst(const DynInstPtr &retry_inst)
+{
+    retryMemInsts.push_back(retry_inst);
+}
+
+void
 InstructionQueue::cacheUnblocked()
 {
     DPRINTF(IQ, "Cache is unblocked, rescheduling blocked memory "

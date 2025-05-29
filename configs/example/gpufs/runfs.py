@@ -83,6 +83,11 @@ def addRunFSOptions(parser):
     )
     parser.add_argument("--kernel", default=None, help="Linux kernel to boot")
     parser.add_argument(
+        "--gpu-ipt",
+        default=None,
+        help="Intended only for gem5 developers. IP discovery table to load",
+    )
+    parser.add_argument(
         "--checkpoint-before-mmios",
         default=False,
         action="store_true",

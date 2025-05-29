@@ -59,6 +59,13 @@
 #define mmVM_CONTEXT0_PAGE_TABLE_END_ADDR_LO32                        0x092b
 #define mmVM_CONTEXT0_PAGE_TABLE_END_ADDR_HI32                        0x092c
 
+#define MI300X_CONTEXT0_PAGE_TABLE_BASE_ADDR_LO32                     0x08cb
+#define MI300X_CONTEXT0_PAGE_TABLE_BASE_ADDR_HI32                     0x08cc
+#define MI300X_CONTEXT0_PAGE_TABLE_START_ADDR_LO32                    0x08eb
+#define MI300X_CONTEXT0_PAGE_TABLE_START_ADDR_HI32                    0x08ec
+#define MI300X_CONTEXT0_PAGE_TABLE_END_ADDR_LO32                      0x090b
+#define MI300X_CONTEXT0_PAGE_TABLE_END_ADDR_HI32                      0x090c
+
 #define mmMC_VM_FB_OFFSET                                             0x096b
 #define mmMC_VM_FB_LOCATION_BASE                                      0x0980
 #define mmMC_VM_FB_LOCATION_TOP                                       0x0981
@@ -67,6 +74,15 @@
 #define mmMC_VM_AGP_BASE                                              0x0984
 #define mmMC_VM_SYSTEM_APERTURE_LOW_ADDR                              0x0985
 #define mmMC_VM_SYSTEM_APERTURE_HIGH_ADDR                             0x0986
+
+#define MI300X_VM_FB_OFFSET                                           0x0947
+#define MI300X_VM_FB_LOCATION_BASE                                    0x095c
+#define MI300X_VM_FB_LOCATION_TOP                                     0x095d
+#define MI300X_VM_AGP_TOP                                             0x095e
+#define MI300X_VM_AGP_BOT                                             0x095f
+#define MI300X_VM_AGP_BASE                                            0x0960
+#define MI300X_VM_SYSTEM_APERTURE_LOW_ADDR                            0x0961
+#define MI300X_VM_SYSTEM_APERTURE_HIGH_ADDR                           0x0962
 
 #define mmMMHUB_VM_INVALIDATE_ENG17_SEM                               0x06e2
 #define mmMMHUB_VM_INVALIDATE_ENG17_REQ                               0x06f4
@@ -84,6 +100,11 @@
 #define MI200_MEM_SIZE_REG                                           0x0378c
 #define MI200_FB_LOCATION_BASE                                       0x6b300
 #define MI200_FB_LOCATION_TOP                                        0x6b304
+
+#define MI300X_MEM_SIZE_REG                                          0x0378c
+#define MI300X_FB_LOCATION_BASE                                      0x63270
+#define MI300X_FB_LOCATION_TOP                                       0x63274
+#define MI300X_VM_INVALIDATE_ENG17_ACK                                0x08a6
 
 // AMD GPUs support 16 different virtual address spaces
 static constexpr int AMDGPU_VM_COUNT = 16;
@@ -173,6 +194,13 @@ class AMDGPUVM : public Serializable
      * the TLBs upon a driver request.
      */
     std::vector<VegaISA::GpuTLB *> gpu_tlbs;
+
+    /**
+     * Different MMIO implements for different GFX versions with overlapping
+     * MMIO addresses.
+     */
+    void writeMMIOGfx900(PacketPtr pkt, Addr offset);
+    void writeMMIOGfx940(PacketPtr pkt, Addr offset);
 
     std::array<AddrRange, NUM_MMIO_RANGES> mmioRanges;
 

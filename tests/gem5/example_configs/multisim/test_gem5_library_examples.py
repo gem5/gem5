@@ -82,7 +82,8 @@ gem5_verify_config(
         verifier.MatchStdoutNoPerf(
             joinpath(
                 config.base_dir,
-                "tests/gem5/gem5_library_example_tests/multisim/ref/simout_multisim_print_this_list.txt",
+                "tests/gem5/example_configs",
+                "multisim/ref/simout_multisim_print_this_list.txt",
             )
         ),
     ),

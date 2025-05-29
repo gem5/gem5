@@ -510,6 +510,56 @@ let {{
         "fplibRoundInt<uint16_t>(cOp1, FPCRRounding(fpscr), true, fpscr)",
         "fplibRoundInt<uint32_t>(cOp1, FPCRRounding(fpscr), true, fpscr)",
         "fplibRoundInt<uint64_t>(cOp1, FPCRRounding(fpscr), true, fpscr)")
+
+    def buildSimpleUnaryFpOpFrintts(name, Name, base, opClass, singleOp,
+                              doubleOp = None, isIntConv = True):
+        if doubleOp is None:
+            doubleOp = singleOp
+        global header_output, decoder_output, exec_output
+
+        if isIntConv:
+            sCode = singleIntConvCode
+            dCode = doubleIntConvCode
+        else:
+            sCode = singleCode
+            dCode = doubleCode
+
+        frintts_check = '''
+        AA64ISAR1 isar1 = xc->tcBase()->readMiscReg(MISCREG_ID_AA64ISAR1_EL1);
+        if (!isar1.frintts)
+            return std::make_shared<UndefinedInstruction>(machInst, true);
+        '''
+        for code, op, suffix in [[sCode, singleOp, "S"],
+                                 [dCode, doubleOp, "D"]]:
+            iop = ArmInstObjParams(name, Name + suffix, base,
+                { "code": frintts_check + code % { "op": op },
+                  "op_class": opClass }, [])
+            iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
+
+            declareTempl     = eval(         base + "Declare");
+            constructorTempl = eval("AA64" + base + "Constructor");
+
+            header_output  += declareTempl.subst(iop)
+            decoder_output += constructorTempl.subst(iop)
+            exec_output    += BasicExecute.subst(iop)
+
+    buildSimpleUnaryFpOpFrintts("frint32z", "FRInt32Z", "FpRegRegOp",
+        "FloatMiscOp",
+        "fplibRoundIntN<uint32_t>(cOp1, FPRounding_ZERO, true, 32, fpscr)",
+        "fplibRoundIntN<uint64_t>(cOp1, FPRounding_ZERO, true, 32, fpscr)")
+    buildSimpleUnaryFpOpFrintts("frint32x", "FRInt32X", "FpRegRegOp",
+        "FloatMiscOp",
+        "fplibRoundIntN<uint32_t>(cOp1, FPCRRounding(fpscr), true, 32, fpscr)",
+        "fplibRoundIntN<uint64_t>(cOp1, FPCRRounding(fpscr), true, 32, fpscr)")
+
+    buildSimpleUnaryFpOpFrintts("frint64z", "FRInt64Z", "FpRegRegOp",
+        "FloatMiscOp",
+        "fplibRoundIntN<uint32_t>(cOp1, FPRounding_ZERO, true, 64, fpscr)",
+        "fplibRoundIntN<uint64_t>(cOp1, FPRounding_ZERO, true, 64, fpscr)")
+    buildSimpleUnaryFpOpFrintts("frint64x", "FRInt64X", "FpRegRegOp",
+        "FloatMiscOp",
+        "fplibRoundIntN<uint32_t>(cOp1, FPCRRounding(fpscr), true, 64, fpscr)",
+        "fplibRoundIntN<uint64_t>(cOp1, FPCRRounding(fpscr), true, 64, fpscr)")
 }};
 
 let {{

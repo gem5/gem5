@@ -40,8 +40,8 @@ length_map = {
     "sparc": constants.long_tag,
     "mips": constants.long_tag,
     "null": constants.long_tag,
-    "arm": constants.very_long_tag,
-    "x86": constants.very_long_tag,
+    "arm": constants.long_tag,
+    "x86": constants.long_tag,
     "power": constants.long_tag,
     "riscv": constants.long_tag,
 }

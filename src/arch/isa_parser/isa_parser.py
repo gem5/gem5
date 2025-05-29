@@ -200,7 +200,7 @@ class Template:
 
 
 class Format:
-    def __init__(self, id, params, code):
+    def __init__(self, id, params, code, lineno):
         self.id = id
         self.params = params
         label = "def format " + id
@@ -212,8 +212,14 @@ class Format:
                 return my_locals
 """
         c = compile(f, label + " wrapper", "exec")
-        exec(c, globals())
-        self.func = defInst
+        scope = {}
+        exec(c, scope)
+        try:
+            self.func = scope["defInst"]
+        except Exception as exc:
+            if debug:
+                raise
+            error(lineno, f'error initial format "{id}": {exc}.')
 
     def defineInst(self, parser, name, args, lineno):
         parser.updateExportContext()
@@ -1543,7 +1549,7 @@ StaticInstPtr
             error(lineno, f"format {id} redefined.")
 
         # create new object and store in global map
-        self.formatMap[id] = Format(id, params, code)
+        self.formatMap[id] = Format(id, params, code, lineno)
 
     def buildOperandNameMap(self, user_dict, lineno):
         operand_name = {}

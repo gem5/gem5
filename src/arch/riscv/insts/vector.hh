@@ -638,6 +638,8 @@ class VlSegMicroInst : public VectorMicroInst
   protected:
     Request::Flags memAccessFlags;
     uint8_t regIdx;
+    mutable bool trimVl;
+    mutable uint32_t faultIdx;
 
     VlSegMicroInst(const char *mnem, ExtMachInst _machInst,
                    OpClass __opClass, uint32_t _microVl,
@@ -646,6 +648,7 @@ class VlSegMicroInst : public VectorMicroInst
                    uint32_t _elen, uint32_t _vlen)
         : VectorMicroInst(mnem, _machInst, __opClass, _microVl,
                           _microIdx, _elen, _vlen)
+        , trimVl(false), faultIdx(_microVl)
     {
       this->flags[IsLoad] = true;
     }

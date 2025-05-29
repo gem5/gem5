@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2014, 2017-2019, 2022-2023 Arm Limited
+ * Copyright (c) 2011-2014, 2017-2019, 2022-2023, 2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -69,13 +69,18 @@ PMU::PMU(const ArmPMUParams &p)
       reg_pmcr_conf(0),
       interrupt(nullptr),
       exitOnPMUControl(p.exitOnPMUControl),
-      exitOnPMUInterrupt(p.exitOnPMUInterrupt)
+      exitOnPMUInterrupt(p.exitOnPMUInterrupt),
+      stats(this)
 {
     DPRINTF(PMUVerbose, "Initializing the PMU.\n");
 
     if (maximumCounterCount > 31) {
         fatal("The PMU can only accept 31 counters, %d counters requested.\n",
               maximumCounterCount);
+    }
+
+    for (const auto& [key, value] : p.statCounters) {
+        statCounters.insert(key);
     }
 
     warn_if(!p.interrupt, "ARM PMU: No interrupt specified, interrupt " \
@@ -88,7 +93,7 @@ PMU::PMU(const ArmPMUParams &p)
 
     // Setup the hard-coded cycle counter, which is equivalent to
     // architected counter event type 0x11.
-    cycleCounter.eventId = 0x11;
+    cycleCounter.eventId = enums::EventTypeId::CPU_CYCLES;
 }
 
 PMU::~PMU()
@@ -106,7 +111,7 @@ PMU::setThreadContext(ThreadContext *tc)
 }
 
 void
-PMU::addSoftwareIncrementEvent(unsigned int id)
+PMU::addSoftwareIncrementEvent(EventTypeId id)
 {
     auto old_event = eventMap.find(id);
     DPRINTF(PMUVerbose, "PMU: Adding SW increment event with id '0x%x'\n", id);
@@ -122,22 +127,26 @@ PMU::addSoftwareIncrementEvent(unsigned int id)
     fatal_if(old_event != eventMap.end(), "An event with id %d has "
              "been previously defined\n", id);
 
-    swIncrementEvent = std::make_shared<SWIncrementEvent>();
+    auto pmu_stats = statCounters.find(id) != statCounters.end() ?
+        &stats : nullptr;
+    swIncrementEvent = std::make_shared<SWIncrementEvent>(id, pmu_stats);
     eventMap[id] = swIncrementEvent;
     registerEvent(id);
 }
 
 void
-PMU::addEventProbe(unsigned int id, SimObject *obj, const char *probe_name)
+PMU::addEventProbe(EventTypeId id, SimObject *obj, const char *probe_name)
 {
 
     DPRINTF(PMUVerbose, "PMU: Adding Probe Driven event with id '0x%x'"
-        "as probe %s:%s\n",id, obj->name(), probe_name);
+        "as probe %s:%s\n", id, obj->name(), probe_name);
 
     std::shared_ptr<RegularEvent> event;
     auto event_entry = eventMap.find(id);
     if (event_entry == eventMap.end()) {
-        event = std::make_shared<RegularEvent>();
+        auto pmu_stats = statCounters.find(id) != statCounters.end() ?
+            &stats : nullptr;
+        event = std::make_shared<RegularEvent>(id, pmu_stats);
         eventMap[id] = event;
     } else {
         event = std::dynamic_pointer_cast<RegularEvent>(event_entry->second);
@@ -146,11 +155,10 @@ PMU::addEventProbe(unsigned int id, SimObject *obj, const char *probe_name)
     event->addMicroarchitectureProbe(obj, probe_name);
 
     registerEvent(id);
-
 }
 
 void
-PMU::registerEvent(uint32_t id)
+PMU::registerEvent(EventTypeId id)
 {
     // Flag the event as available in the corresponding PMCEID register if it
     // is an architected event.
@@ -476,6 +484,10 @@ PMU::PMUEvent::increment(const uint64_t val)
     for (auto& counter: userCounters) {
         counter->add(val);
     }
+
+    if (pmuStats) {
+        pmuStats->add(id, val);
+    }
 }
 
 void
@@ -773,7 +785,7 @@ PMU::unserialize(CheckpointIn &cp)
 }
 
 std::shared_ptr<PMU::PMUEvent>
-PMU::getEvent(uint64_t eventId)
+PMU::getEvent(EventTypeId eventId)
 {
     auto entry = eventMap.find(eventId);
 
@@ -844,6 +856,38 @@ PMU::SWIncrementEvent::write(uint64_t val)
         if (val & (0x1 << counter->getCounterId())) {
             counter->add(1);
         }
+    }
+}
+
+PMU::Stats::Stats(PMU *parent)
+    : statistics::Group(parent), pmu(parent)
+{
+    auto params = static_cast<const ArmPMUParams&>(pmu->params());
+    for (const auto& [key, val] : params.statCounters) {
+        registerEvent(key, val.c_str());
+    }
+}
+
+void
+PMU::Stats::registerEvent(EventTypeId id, const char *stat_name)
+{
+    map.emplace(std::piecewise_construct,
+                std::forward_as_tuple(id),
+                std::forward_as_tuple(
+                    this, stat_name,
+                    statistics::units::Count::get(),
+                    stat_name));
+    map[id]
+        .precision(0);
+}
+
+void
+PMU::Stats::add(EventTypeId id, uint64_t value)
+{
+    if (auto it = map.find(id); it != map.end()) {
+        it->second += value;
+    } else {
+        panic("Couldn't increment event %d stat counter", id);
     }
 }
 

@@ -150,7 +150,8 @@ class TAGE_SC_L_TAGE : public TAGEBase
                        TAGEBase::BranchInfo* tage_bi) const override;
 
     void extraAltCalc(TAGEBase::BranchInfo* bi) override;
-
+    int calcNewPathHist(ThreadID tid, Addr pc, int cur_phist, bool taken,
+                        int brtype, Addr target) const override;
 };
 
 class TAGE_SC_L_LoopPredictor : public LoopPredictor

@@ -66,7 +66,7 @@ jobs:
             - run: echo "This job's status is ${{ job.status }}."
 
     testlib-quick-matrix:
-        runs-on: [self-hosted, linux, x64]
+        runs-on: ubuntu-latest
         if: github.event.pull_request.draft == false
     # In order to make sure the environment is exactly the same, we run in
     # the same container we use to build gem5 and run the testlib tests. This
@@ -74,12 +74,6 @@ jobs:
         needs: [pre-commit]
         steps:
             - uses: actions/checkout@v4
-
-            # Unfortunately the image doesn't have jq installed.
-            # We therefore need to install it as a step here.
-            - name: Install jq
-              run: apt update && apt install -y jq
-
             - name: Get directories for testlib-quick
               working-directory: ${{ github.workspace }}/tests
               id: dir-matrix
@@ -171,9 +165,9 @@ jobs:
                   path: |
                       build/*/gem5.*
                       anchor.txt
-                  retention-days: 7
 
     testlib-quick-execution:
+        name: quick-tests
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
@@ -184,12 +178,10 @@ jobs:
             matrix:
                 test-dir: ${{ fromJson(needs.testlib-quick-matrix.outputs.test-dirs-matrix) }}
         steps:
-            - name: Clean runner
-              run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
-
         # Checkout the repository then download the gem5.opt artifact.
             - uses: actions/checkout@v4
             - uses: actions/download-artifact@v4
+              name: Download gem5 artifacts
               with:
                   pattern: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds*
                   merge-multiple: true
@@ -202,23 +194,23 @@ jobs:
                   find . -name "gem5.fast" -exec chmod u+x {} \;
 
         # Run the testlib quick tests in the given directory.
-            - name: Run "tests/${{ matrix.test-dir }}" TestLib quick tests
+            - name: Run quick ${{ matrix.test-dir }} tests
               id: run-tests
               working-directory: ${{ github.workspace }}/tests
               run: ./main.py run --skip-build --exclude-tags gcn_gpu ${{  matrix.test-dir }}
 
         # Get the basename of the matrix.test-dir path (to name the artifact).
-            - name: Sanatize test-dir for artifact name
+            - name: Sanitize test-dir for artifact name
               id: sanitize-test-dir
               if: success() || failure()
-              run: echo "sanatized-test-dir=$(echo '${{ matrix.test-dir }}' | sed 's/\//-/g')" >> $GITHUB_OUTPUT
+              run: echo "sanitized-test-dir=$(echo '${{ matrix.test-dir }}' | sed 's/\//-/g')" >> $GITHUB_OUTPUT
 
         # Upload the tests/testing-results directory as an artifact.
-            - name: upload results
+            - name: Upload results
               if: success() || failure()
               uses: actions/upload-artifact@v4
               with:
-                  name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-quick-${{ steps.sanitize-test-dir.outputs.sanatized-test-dir
+                  name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-quick-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir
                       }}-status-${{ steps.run-tests.outcome }}-output
                   path: tests/testing-results
                   retention-days: 30
@@ -233,7 +225,7 @@ jobs:
 
             # Obtain the cache if available.
             - name: Cache build/VEGA_X86
-              uses: actions/cache@v4
+              uses: actions/cache/restore@v4
               with:
                   path: build/VEGA_X86
                   key: testlib-build-vega-${{ needs.get-date.outputs.date }}
@@ -242,6 +234,7 @@ jobs:
 
             # Run the GPU tests.
             - name: Run Testlib GPU Tests
+              id: run-tests
               working-directory: ${{ github.workspace }}/tests
               run: ./main.py run -j$(nproc) -t$(nproc) --host gcn_gpu
 
@@ -252,7 +245,6 @@ jobs:
               with:
                   name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gpu-status-${{ steps.run-tests.outcome }}-output
                   path: tests/testing-results
-                  retention-days: 30
 
     ci-tests:
     # It is 'testlib-quick' which needs to pass for the pull request to be

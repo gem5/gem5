@@ -574,7 +574,7 @@ PM4PacketProcessor::releaseMemDone(PM4Queue *q, PM4ReleaseMem *pkt, Addr addr)
         }
         gpuDevice->getIH()->prepareInterruptCookie(pkt->intCtxId, ringId,
                                             SOC15_IH_CLIENTID_GRBM_CP, CP_EOP,
-                                            0);
+                                            2 * getIpId());
         gpuDevice->getIH()->submitInterruptCookie();
     }
 
