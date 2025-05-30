@@ -27,10 +27,10 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 LABEL org.opencontainers.image.source=https://github.com/gem5/gem5
-LABEL org.opencontainers.image.description="An image used to build applications to be run with GPU full system. A pplications targeting AMD's ROCm GPU framework can be built using this image (e.g., HIP, HSA, OpencL, etc.)."
+LABEL org.opencontainers.image.description="An image used to build applications to be run with GPU full system. Applications targeting AMD's ROCm GPU framework can be built using this image (e.g., HIP, HSA, OpencL, etc.)."
 LABEL org.opencontainers.image.licenses=BSD-3-Clause
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -38,8 +38,7 @@ RUN apt -y update && apt -y upgrade && \
     apt -y install build-essential git m4 scons zlib1g zlib1g-dev \
     libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
     python3-dev python-is-python3 doxygen libboost-all-dev \
-    libhdf5-serial-dev python3-pydot libpng-dev libelf-dev pkg-config
-RUN apt -y install wget
+    libhdf5-serial-dev python3-pydot libpng-dev libelf-dev pkg-config wget
 
 # The follow were adapted from instructions at the URL below, accessed 4/12/24:
 # https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/
@@ -54,15 +53,15 @@ RUN mkdir --parents --mode=0755 /etc/apt/keyrings
 RUN wget https://repo.radeon.com/rocm/rocm.gpg.key -O - | \
     gpg --dearmor | tee /etc/apt/keyrings/rocm.gpg > /dev/null
 
-RUN echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/amdgpu/6.1/ubuntu jammy main" \
+RUN echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/amdgpu/6.4/ubuntu noble main" \
     | tee /etc/apt/sources.list.d/amdgpu.list
-RUN echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/6.1 jammy main" \
+RUN echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/6.4 noble main" \
     | tee --append /etc/apt/sources.list.d/rocm.list
 # Note: Need to remove 'echo -e' in docker.
 RUN echo 'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600' \
     | tee /etc/apt/preferences.d/rocm-pin-600
 
-RUN apt update
+RUN apt -y update
 
 # This package should be the minimum needed to build and is significantly
 # smaller than the full `rocm` package.
