@@ -67,6 +67,12 @@ class MemAccessInfo
     MemAccessInfo(
       PrivilegeMode priv, bool virt, bool force_virt, bool hlvx, bool lr) :
       priv(priv), virt(virt), force_virt(force_virt), hlvx(hlvx), lr(lr) {}
+
+    bool
+    bypassTLB() const
+    {
+        return (force_virt || hlvx);
+    }
 };
 
 enum XlateStage

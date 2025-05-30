@@ -348,13 +348,6 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
 
     MISA misa = tc->readMiscReg(MISCREG_ISA);
 
-    // special access indicates that we should
-    // not lookup or insert to the TLB
-    bool special_access = false
-        || memaccess.force_virt
-        || memaccess.hlvx
-        || memaccess.lr;
-
     SATP satp = (misa.rvh && memaccess.virt) ?
         tc->readMiscReg(MISCREG_VSATP) :
         tc->readMiscReg(MISCREG_SATP);
@@ -362,7 +355,7 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
     Addr vpn = getVPNFromVAddr(vaddr, satp.mode);
 
     TlbEntry *e = nullptr;
-    if (!special_access) {
+    if (!memaccess.bypassTLB()) {
         e = lookup(vpn, satp.asid, mode, false);
         if (!e) {
             Fault fault = walker->start(tc, translation, req, mode);
@@ -376,7 +369,7 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
         }
     }
     else {
-        // Don't lookup and don't insert for special accesses!
+        // Don't lookup and don't insert when bypassing the TLB.
         // We get the translation result back in memory pointed to by
         // TlbEntry *e which is not inserted!
         e = new TlbEntry();
@@ -390,8 +383,7 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
     }
 
     Fault fault;
-    // No check on special_access
-    if (special_access) {
+    if (memaccess.bypassTLB()) {
         fault = NoFault;
     }
     else {
@@ -415,7 +407,7 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
         DPRINTF(TLB, "Dirty bit not set, repeating PT walk\n");
         fault = walker->start(tc, translation, req, mode);
         if (translation != nullptr || fault != NoFault) {
-            if (special_access)
+            if (memaccess.bypassTLB())
                 delete e;
             delayed = true;
             return fault;
@@ -423,7 +415,7 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
     }
 
     if (fault != NoFault) {
-        if (special_access)
+        if (memaccess.bypassTLB())
             delete e;
         return fault;
     }
@@ -435,7 +427,7 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
             vaddr, vpn, satp.asid, paddr);
     req->setPaddr(paddr);
 
-    if (special_access)
+    if (memaccess.bypassTLB())
         delete e;
 
     return NoFault;
