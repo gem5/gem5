@@ -297,50 +297,60 @@ std::string VsWholeMacroInst::generateDisassembly(Addr pc,
     return ss.str();
 }
 
-std::string VlStrideMacroInst::generateDisassembly(Addr pc,
+std::string VlElementMacroInst::generateDisassembly(Addr pc,
         const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " <<
-        '(' << registerName(srcRegIdx(0)) << ')' <<
-        ", " << registerName(srcRegIdx(1));
-    if (!machInst.vm) ss << ", v0.t";
+        '(' << registerName(srcRegIdx(0)) << ')';
+    if (has_rs2) {
+        ss << ", " << registerName(srcRegIdx(1));
+    }
+    if (!machInst.vm)
+        ss << ", v0.t";
     return ss.str();
 }
 
-std::string VlStrideMicroInst::generateDisassembly(Addr pc,
+std::string VlElementMicroInst::generateDisassembly(Addr pc,
         const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " <<
-        '(' << registerName(srcRegIdx(0)) << ')' <<
-        ", "<< registerName(srcRegIdx(1));
+        '(' << registerName(srcRegIdx(0)) << ')';
+    if (has_rs2) {
+        ss << ", " << registerName(srcRegIdx(1));
+    }
     if (microIdx != 0 || machInst.vtype8.vma == 0 || machInst.vtype8.vta == 0)
-        ss << ", " << registerName(srcRegIdx(2));
+        ss << ", " << registerName(srcRegIdx(has_rs2 ? 2 : 1));
+    if (!machInst.vm)
+        ss << ", v0.t";
+    return ss.str();
+}
+
+std::string VsElementMacroInst::generateDisassembly(Addr pc,
+        const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(srcRegIdx(has_rs2 ? 2 : 1))
+        << ", " << '(' << registerName(srcRegIdx(0)) << ')';
+    if (has_rs2) {
+        ss << ", " << registerName(srcRegIdx(1));
+    }
     if (!machInst.vm) ss << ", v0.t";
     return ss.str();
 }
 
-std::string VsStrideMacroInst::generateDisassembly(Addr pc,
+std::string VsElementMicroInst::generateDisassembly(Addr pc,
         const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     ss << mnemonic << ' ' << registerName(srcRegIdx(2)) << ", " <<
-        '(' << registerName(srcRegIdx(0)) << ')' <<
-        ", " << registerName(srcRegIdx(1));
-    if (!machInst.vm) ss << ", v0.t";
-    return ss.str();
-}
-
-std::string VsStrideMicroInst::generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const
-{
-    std::stringstream ss;
-    ss << mnemonic << ' ' << registerName(srcRegIdx(2)) << ", " <<
-        '(' << registerName(srcRegIdx(0)) << ')' <<
-        ", "<< registerName(srcRegIdx(1));
+        '(' << registerName(srcRegIdx(0)) << ')';
+    if (has_rs2) {
+        ss << ", " << registerName(srcRegIdx(1));
+    }
     if (microIdx != 0 || machInst.vtype8.vma == 0 || machInst.vtype8.vta == 0)
-        ss << ", " << registerName(srcRegIdx(2));
+        ss << ", " << registerName(srcRegIdx(has_rs2 ? 2 : 1));
     if (!machInst.vm) ss << ", v0.t";
     return ss.str();
 }
