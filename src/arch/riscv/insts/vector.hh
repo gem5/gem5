@@ -169,15 +169,18 @@ protected:
 
 class VectorNopMicroInst : public RiscvMicroInst
 {
+protected:
+    const Fault fault;
 public:
-    VectorNopMicroInst(ExtMachInst _machInst)
+    VectorNopMicroInst(ExtMachInst _machInst, const Fault &fault = NoFault)
         : RiscvMicroInst("vnop", _machInst, No_OpClass)
+        , fault(fault)
     {}
 
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)
         const override
     {
-        return NoFault;
+        return fault;
     }
 
     std::string generateDisassembly(Addr pc, const loader::SymbolTable *symtab)

@@ -1639,6 +1639,18 @@ def template VlSegConstructor {{
             remaining_vl = this->vl;
             micro_vl = std::min(remaining_vl, micro_vlmax);
             for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
+                bool illegal = (_machInst.vd + i + (f * num_microops)) >= 32;
+                if (illegal) {
+                    microop = new VectorNopMicroInst(_machInst,
+                        std::make_shared<IllegalInstFault>("vd is illegal",
+                        _machInst));
+                    this->microops.push_back(microop);
+                    this->microops.front()->setFlag(IsFirstMicroop);
+                    this->microops.back()->setFlag(IsLastMicroop);
+                    this->flags[IsVector] = true;
+                    return;
+                }
+
                 microop = new %(class_name)sMicro(_machInst, micro_vl, i,
                                                   num_microops, f, NFIELDS,
                                                   elen, vlen);
@@ -1885,6 +1897,18 @@ def template VsSegConstructor {{
             remaining_vl = this->vl;
             micro_vl = std::min(remaining_vl, micro_vlmax);
             for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
+                bool illegal = (_machInst.vs3 + i + (f * num_microops)) >= 32;
+                if (illegal) {
+                    microop = new VectorNopMicroInst(_machInst,
+                        std::make_shared<IllegalInstFault>("vs3 is illegal",
+                        _machInst));
+                    this->microops.push_back(microop);
+                    this->microops.front()->setFlag(IsFirstMicroop);
+                    this->microops.back()->setFlag(IsLastMicroop);
+                    this->flags[IsVector] = true;
+                    return;
+                }
+
                 microop = new VsSegIntrlvMicroInst(_machInst, micro_vl,
                     _machInst.vs3, NFIELDS, i, num_microops, f, elen, vlen,
                     size_per_elem);
