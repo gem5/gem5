@@ -1,3 +1,198 @@
+# Version 25.0.0.0
+
+## User Facing Changes
+
+- gem5 bridge driver (#1480) removes the requirement to use `sudo` to run
+gem5 bridge commands
+- Allow stdlib to support multiple-program workloads in SE mode #1961
+- Add `switch_processor` function in `simulator.py` - this allows you to switch
+processors using the new hypercall exit handler classes (see below) #1991
+- added option to print exit event information #1994
+
+### Changes to exit events in the stdlib - Hypercalls
+
+- PRs 947, 1982, 1988, 1995, and 2029
+- gem5 now supports hypercalls, which are specialized exit events. Instead of
+using generators to specify whether gem5 should exit simulation, we can now use
+exit handler classes and their member functions to specify what to do at each
+exit event and specify whether gem5 should end simulation.
+- An example of how to use this is below. More information can be found in the
+- description of PR 1995.
+
+```python
+# Here is an example of overriding an exit handler that already exists
+# Note that you don't need to know the hypercall number. It is inferred
+# from the parent class. The new handler will replace the old one.
+class MySchedHandler(ScheduledExitEventHandler):
+    def _process(self, simulator):
+        super()._process(simulator)
+        print("Got this scheduled event")
+        print(f"the current tick is {simulator.get_current_tick()}")
+        print(f"justification is {self.justification()}")
+
+    def _exit_simulation(self):
+        return False
+
+
+board = X86DemoBoard()
+workload = obtain_resource("x86-ubuntu-24.04-boot-with-systemd")
+board.set_workload(workload)
+
+simulator = Simulator(board=board)
+
+scheduleTickExitAbsolute(10000000, "hello!")
+
+simulator.run()
+```
+
+- Hypercalls are associated with a hypercall number and have default behaviors
+which can be overridden by the user. The exit handler classes can be found at
+`gem5/src/python/simulate/exit_handler.py`. The events that cause hypercalls and
+the handers' default behaviors are as follows:
+  - 0 - The previous/classic style of handling hypercalls.
+  - 1 - Kernel boot. Default behavior is to continue the simulation.
+  - 2 - Ubuntu boot. Default behavior is to continue the simulation.
+  - 3 - Script that was launched after Ubuntu boot finishes running. This is
+  typically the last hypercall in the simulation, so the default behavior is
+  to exit simulation.
+  - 4 - Work/ROI begin. Default behavior is to reset the stats and continue
+  the simulationi
+  - 5 - Work/ROI end. Default behavior is to dump stats and continue simulation.
+  - 6 - Scheduled exit event - This exit event is triggered when
+  `scheduleTickExitFromCurrent` and `scheduleTickExitAbsolute` are used, and a
+  justification string is passed in addition to the number of ticks. Without
+  the justification string, the previous style of exit event (hypercall 0) will
+  be triggered instead.
+  - 7 - Allows the user to take a checkpoint if this hypercall is built into the
+  disk image. It saves a checkpoint at a specific path, or if no path is
+  provided, it saves the checkpoint to a default location, then continues
+  simulation.
+  - 1000 - This hypercall is used in conjunction with
+  `util/hypercall_external_signal`. `orchestrator-request.py` allows you to send
+  a payload to a gem5 simulation and receive a response with information from
+  the simulation, or update the debug flags that are enabled for that
+  simulation.
+
+### Utilities
+
+- Added TargetNamedBreakpoint class for GDB #1794
+- Added `gem5term`, a Python implementation of the `m5term` terminal client #1935
+- Added the `util/hypercall_external_signal` utility, mentioned above, which
+allows you to retrieve information from a gem5 simulation while it is running,
+or update a simulation's enabled/disabled debug flags. #1988, #2161
+
+## RISC-V ISA improvements
+
+- Added support for the hypervisor (H) extension #1387
+- Implemented resumable non-maskable interrupt(Smrnmi) #1704
+- Implemented Zcmt #1761
+- Added support for the Zfa extension #1767
+- Clear mstatus.mprv when xret leaving M-mode #1938
+- Added support for SVNAPOT extension #1943
+- fix mip and sip #2000
+- fix mnepc lower bits 2015
+- fix interrupt delegation #2179
+- fix CMO decoding #2223
+- Fix move scalar to vector tail agnostic behaviour #2286
+
+### Changes to RISC-V Vector extension
+
+- Fix misprediction of control flow instruction caused by vset{i}vl{i} #1709
+- Fix incorrect vector slide instructions and statically filter redundant uops #1712
+- Fix vector reduction instructions when LMUL > 1 #1955
+- Add support for vector stride segment load/store instructions #2022
+- Add support for fault-only-first unit-stride segment load instructions #2023
+- arch-riscv: fix narrowing instructions with pin µop #2026
+- dev,arch-riscv: Fix Clint msip register read/write #2048
+- arch-riscv: Use generic ISA resetThread for RISC-V workloads #2051
+- fix atomic ops on big endian hosts 2143
+
+## Arm ISA improvements
+
+- Added support for cache PMU events #1439
+- Simplified FEAT_PAN implementation #1818
+- Implemented FEAT_S1PIE #1858
+- Added syscall 435 to arm64 #1913
+- New version of decoding for AdvSIMD 2044
+- Implemented FEAT_FP16 2071
+- Added ArmLinux32 support for clone3 syscall in SE mode #2126
+- Updated bootloader to set SCR_EL3.HXEN bit to 1 #2130, fixes issue 2116
+- Added stats to track PMU events #2271
+- Implemented FEAT_FHM and FEAT_FRINTTS #2287
+- Added L2D_TLB_REFILL and L2I_TLB_REFILL in PMU #2316
+- Added read/write function to FPCR/FPSR #2317
+
+## Decoupled Front End / branch predictors
+
+- BPU support for surprise branches #499
+- Speculative update for TAGE-SC-L #1854
+- Add taken-only history #1855
+
+## GPU
+
+- Added SDWA to v_cmp_ne_u32 #1915
+- Fixed architected flat scratch #1947
+- Added GPU progress prints and debug tracing #1976
+- Added RLC queues to checkpoint #1999
+- Moved GPU L1 cache MSHR to the coalescer #2035
+- Added MFMA insts, check if inst exists #2039
+- Implemented kernarg preload #2084
+- fixed GPU protocol tester bug #2091
+- Added pagetable walker buffer #2162
+- Improved dispatch scheduler #2163
+- Added opcode overrides based on gfx version #2263
+- Added two new DS instructions #2272
+- Updated MI300X model to use real firmware #2284
+- Fixed LDS/buffer load/store x2,x3,x4 #1916
+
+### O3 CPU
+
+- Added integer and floating point free list writes, load store queue writes to the O3 CPU #1872
+- Added retry resp to LSQ with throttling params #1926
+
+## DRAMSys
+
+- Updated integration of DRAMSys into gem5 #2093
+
+## Misc
+
+- Added EpisodeCount debug flag #1861
+- Added debug print for when an AssociativeCache entry is accessed #2033
+- Implemented CHI ReadNoSnp Request #2059
+- Added --debug-fission option for compiling gem5 #2107
+- Added warning for non-default create function #2189
+- converted "Entering event queue" message to EnteringEventQueue debug flag #2215
+- Added OptionalParam to support std::optonal #2252
+- Introduced dictionary parameters (DictParam) in gem5 #2264
+
+## Misc bug fixes
+
+- 1681 - Clear thread specific state in time buffers on thread exit, instead of
+all state for all threads - fixes issue 1049
+- 1874 - Fix bug in SysBridge and XBar, adds option for external memory
+addresses - enables disaggregated memory
+- 1902 - Fix use-after-free in MSHR handling
+- 1904 - Fix memory leaks - fixes x86 boot memory leaks noted in issue 1903
+- 1930 - Set RubySystem pointer during TBE alloc - fixes failure with CHI
+protocol when using multiple cores
+- 1936 - Fix `append_kernel_arg()` for RISCV
+- 1940 - Fixed incorrect x-o lookup address in BOP
+- 1945 - Refactor `base/random` to avoid a memory leak
+- 1952 - Fix pack micro-op implementation
+- 1957 - Remove decodePages decode cache to prevent excessive memory usage
+- 1997 - Fix memory error at systemcall
+- 2063 - Fix incorrect return address after flush, fixes issue 1707
+- 2210 - Fix Ruby Directory_Controller fallback logic
+- 2214 - Break Request::NO_ACCESS reference cycle - fixes 2213 memory leak
+- 2220 - Fix memory leak on indirect branch prediction - fixes 2219
+- 2239 - Prevent re-executing load instruction - fixes 2238
+- 2241 - Fix DMA sequencer request size above 64 - fixes 2218
+- 2255 - Fix deadlocks when running ruby_random_test with -n > 18
+- 2259 - Return early from MWAIT if address monitor is not armed - fixes 2043
+- 2274 - Fix memory range check in dramsim 3 - fixes 2273
+- 2326 - Fix Garnet_standalone simulation - fixes issue introduced by PR 1453
+- 2328 - Bug fix for configs/ruby/Ruby.py
+
 # Version 24.1.0.3
 
 **[HOTFIX]** This hotfix release adds `#import <algorithm>` to "src/base/random.cc" to fix a compilation error affecting some systems (compilation error: "‘remove_if’ is not a member of ‘std’.").
