@@ -1,197 +1,208 @@
-# Version 25.0.0.0
+# Version 25.0
 
-## User Facing Changes
+## Major Highlights
 
-- gem5 bridge driver (#1480) removes the requirement to use `sudo` to run
-gem5 bridge commands
-- Allow stdlib to support multiple-program workloads in SE mode #1961
-- Add `switch_processor` function in `simulator.py` - this allows you to switch
-processors using the new hypercall exit handler classes (see below) #1991
-- added option to print exit event information #1994
+- **Hypercalls and New Exit Event Handlers**: Exit events now use hypercalls and
+are handled using a new `ExitHandler` class, improving flexibility and
+clarity.
+- **Improved RISC-V and Arm ISA Support**: Includes major architectural
+extensions, bug fixes, and hypervisor extension support for RISC-V.
+- **Python Utilities**: Introduction of `gem5term`, an m5term replacement in
+Python, and the `hypercall_external_signal` utility for interacting with running
+simulations via hypercalls.
 
-### Changes to exit events in the stdlib - Hypercalls
+## User-Facing Enhancements
 
-- PRs 947, 1982, 1988, 1995, and 2029
-- gem5 now supports hypercalls, which are specialized exit events. Instead of
-using generators to specify whether gem5 should exit simulation, we can now use
-exit handler classes and their member functions to specify what to do at each
-exit event and specify whether gem5 should end simulation.
-- An example of how to use this is below. More information can be found in the
-- description of PR 1995.
+- The addition of the **gem5 bridge driver** means that `sudo` is no longer
+needed to run `gem5-bridge` commands
+([#1480](https://github.com/gem5/gem5/pull/1480)).
+- **SE mode** in the standard library now supports multi-program workloads
+([#1961](https://github.com/gem5/gem5/pull/1961)).
+- Added `switch_processor()` to `simulator.py`, allowing processor switching
+with the new exit event handlers ([#1991](https://github.com/gem5/gem5/pull/1991)).
+- Users can now print exit event information at runtime
+([#1994](https://github.com/gem5/gem5/pull/1994)).
+
+### Exit Event Framework and Hypercalls
+
+A major rework of exit handling introduces **hypercalls**
+([#947](https://github.com/gem5/gem5/pull/947),
+[#1982](https://github.com/gem5/gem5/pull/1982),
+[#1988](https://github.com/gem5/gem5/pull/1988),
+[#1995](https://github.com/gem5/gem5/pull/1995),
+[#2029](https://github.com/gem5/gem5/pull/2029)).
+This replaces generator-driven exits with:
+
+- Explicit hypercall numbers.
+- Overrideable handler classes.
+- Better tooling for fine-grained simulation control.
+
+### Example: Custom Scheduled Exit Handler
 
 ```python
-# Here is an example of overriding an exit handler that already exists
-# Note that you don't need to know the hypercall number. It is inferred
-# from the parent class. The new handler will replace the old one.
 class MySchedHandler(ScheduledExitEventHandler):
     def _process(self, simulator):
         super()._process(simulator)
-        print("Got this scheduled event")
-        print(f"the current tick is {simulator.get_current_tick()}")
-        print(f"justification is {self.justification()}")
+        print("Scheduled event fired")
+        print(f"Tick: {simulator.get_current_tick()}")
+        print(f"Justification: {self.justification()}")
 
     def _exit_simulation(self):
         return False
-
-
-board = X86DemoBoard()
-workload = obtain_resource("x86-ubuntu-24.04-boot-with-systemd")
-board.set_workload(workload)
-
-simulator = Simulator(board=board)
-
-scheduleTickExitAbsolute(10000000, "hello!")
-
-simulator.run()
 ```
 
-- Hypercalls are associated with a hypercall number and have default behaviors
-which can be overridden by the user. The exit handler classes can be found at
-`gem5/src/python/simulate/exit_handler.py`. The events that cause hypercalls and
-the handers' default behaviors are as follows:
-  - 0 - The previous/classic style of handling hypercalls.
-  - 1 - Kernel boot. Default behavior is to continue the simulation.
-  - 2 - Ubuntu boot. Default behavior is to continue the simulation.
-  - 3 - Script that was launched after Ubuntu boot finishes running. This is
-  typically the last hypercall in the simulation, so the default behavior is
-  to exit simulation.
-  - 4 - Work/ROI begin. Default behavior is to reset the stats and continue
-  the simulationi
-  - 5 - Work/ROI end. Default behavior is to dump stats and continue simulation.
-  - 6 - Scheduled exit event - This exit event is triggered when
-  `scheduleTickExitFromCurrent` and `scheduleTickExitAbsolute` are used, and a
-  justification string is passed in addition to the number of ticks. Without
-  the justification string, the previous style of exit event (hypercall 0) will
-  be triggered instead.
-  - 7 - Allows the user to take a checkpoint if this hypercall is built into the
-  disk image. It saves a checkpoint at a specific path, or if no path is
-  provided, it saves the checkpoint to a default location, then continues
-  simulation.
-  - 1000 - This hypercall is used in conjunction with
-  `util/hypercall_external_signal`. `orchestrator-request.py` allows you to send
-  a payload to a gem5 simulation and receive a response with information from
-  the simulation, or update the debug flags that are enabled for that
-  simulation.
+See [PR #1995](https://github.com/gem5/gem5/pull/1995) for more details on how
+to use the new exit handler API.
 
-### Utilities
+Handlers are tied to numbered hypercalls with default behavior that users may
+override. The events associated with hypercalls and the handlers' default
+behaviors are listed below:
 
-- Added TargetNamedBreakpoint class for GDB #1794
-- Added `gem5term`, a Python implementation of the `m5term` terminal client #1935
-- Added the `util/hypercall_external_signal` utility, mentioned above, which
-allows you to retrieve information from a gem5 simulation while it is running,
-or update a simulation's enabled/disabled debug flags. #1988, #2161
+- 0 - The previous/classic style of handling hypercalls.
+- 1 - Kernel boot. Default behavior is to continue the simulation.
+- 2 - Ubuntu boot. Default behavior is to continue the simulation.
+- 3 - `after_boot.sh`, which is launched after Ubuntu boot, finishes running.
+This is typically the last hypercall in the simulation, so the default behavior
+is to exit simulation.
+- 4 - Work/ROI begin. Default behavior is to reset the stats and continue
+the simulation.
+- 5 - Work/ROI end. Default behavior is to dump stats and continue simulation.
+- 6 - Scheduled exit event - This exit event is triggered when
+`scheduleTickExitFromCurrent` or `scheduleTickExitAbsolute` are used, and a
+justification string is passed in addition to the number of ticks. Without
+the justification string, the previous style of exit event (hypercall 0) will
+be triggered instead.
+- 7 - Allows the user to take a checkpoint if this hypercall is built into the
+workload. It saves a checkpoint and continues simulation.
+- 1000 - This hypercall is used in conjunction with
+`util/hypercall_external_signal`. `orchestrator-request.py` allows you to send
+a payload to a gem5 simulation and receive a response with information from
+the simulation, or update the debug flags that are enabled for that
+simulation.
 
-## RISC-V ISA improvements
+## New Utilities
 
-- Added support for the hypervisor (H) extension #1387
-- Implemented resumable non-maskable interrupt(Smrnmi) #1704
-- Implemented Zcmt #1761
-- Added support for the Zfa extension #1767
-- Clear mstatus.mprv when xret leaving M-mode #1938
-- Added support for SVNAPOT extension #1943
-- fix mip and sip #2000
-- fix mnepc lower bits 2015
-- fix interrupt delegation #2179
-- fix CMO decoding #2223
-- Fix move scalar to vector tail agnostic behaviour #2286
+- **`gem5term`**: A Python terminal client to use instead of `m5term`
+([#1935](https://github.com/gem5/gem5/pull/1935)).
+- **`util/hypercall_external_signal`**: Allows you to interact with
+running gem5 simulations. It currently supports returning information about the
+current state of the simulation or enabling/disabling debug flags, but can be
+further extended ([#1988](https://github.com/gem5/gem5/pull/1988),
+[#2161](https://github.com/gem5/gem5/pull/2161)).
+- **`TargetNamedBreakpoint`**: Improves breakpoint management in GDB
+([#1794](https://github.com/gem5/gem5/pull/1794)).
 
-### Changes to RISC-V Vector extension
+## ISA Improvements
 
-- Fix misprediction of control flow instruction caused by vset{i}vl{i} #1709
-- Fix incorrect vector slide instructions and statically filter redundant uops #1712
-- Fix vector reduction instructions when LMUL > 1 #1955
-- Add support for vector stride segment load/store instructions #2022
-- Add support for fault-only-first unit-stride segment load instructions #2023
-- arch-riscv: fix narrowing instructions with pin µop #2026
-- dev,arch-riscv: Fix Clint msip register read/write #2048
-- arch-riscv: Use generic ISA resetThread for RISC-V workloads #2051
-- fix atomic ops on big endian hosts 2143
+### RISC-V
 
-## Arm ISA improvements
+- Added support for **hypervisor extension (H)** ([#1387](https://github.com/gem5/gem5/pull/1387)).
+- Added **Zfa** ([#1767](https://github.com/gem5/gem5/pull/1767)),
+**Zcmt** ([#1761](https://github.com/gem5/gem5/pull/1761)), and **SVNAPOT**
+([#1943](https://github.com/gem5/gem5/pull/1943)) support.
+- Fixed interrupt delegation ([#2179](https://github.com/gem5/gem5/pull/2179)),
+`mnepc` lower bits ([#2015](https://github.com/gem5/gem5/pull/2015)), and `CMO`
+decoding ([#2223](https://github.com/gem5/gem5/pull/2223)).
 
-- Added support for cache PMU events #1439
-- Simplified FEAT_PAN implementation #1818
-- Implemented FEAT_S1PIE #1858
-- Added syscall 435 to arm64 #1913
-- New version of decoding for AdvSIMD 2044
-- Implemented FEAT_FP16 2071
-- Added ArmLinux32 support for clone3 syscall in SE mode #2126
-- Updated bootloader to set SCR_EL3.HXEN bit to 1 #2130, fixes issue 2116
-- Added stats to track PMU events #2271
-- Implemented FEAT_FHM and FEAT_FRINTTS #2287
-- Added L2D_TLB_REFILL and L2I_TLB_REFILL in PMU #2316
-- Added read/write function to FPCR/FPSR #2317
+#### Vector Extension (RVV)
 
-## Decoupled Front End / branch predictors
+- Corrected slide, reduction, narrowing, and segment operations.
+([#1712](https://github.com/gem5/gem5/pull/1712),
+[#1955](https://github.com/gem5/gem5/pull/1955),
+[#2026](https://github.com/gem5/gem5/pull/2026),
+[#2022](https://github.com/gem5/gem5/pull/2022),
+[#2023](https://github.com/gem5/gem5/pull/2023))
+- Improved control flow misprediction handling.
+([#1709](https://github.com/gem5/gem5/pull/1709))
 
-- BPU support for surprise branches #499
-- Speculative update for TAGE-SC-L #1854
-- Add taken-only history #1855
+### Arm
 
-## GPU
+- Added support for architectural extensions: `FEAT_FP16`
+([#2071](https://github.com/gem5/gem5/pull/2071)),
+`FEAT_FHM` ([#2287](https://github.com/gem5/gem5/pull/2287)),
+`FEAT_FRINTTS` ([#2287](https://github.com/gem5/gem5/pull/2287)), `FEAT_S1PIE`
+([#1858](https://github.com/gem5/gem5/pull/1858)), and more.
+- Added syscall 435 ([#1913](https://github.com/gem5/gem5/pull/1913)) and stats
+to track PMU events ([#2271](https://github.com/gem5/gem5/pull/2271)).
+- Added read/write interface for FPCR/FPSR
+([#2317](https://github.com/gem5/gem5/pull/2317)).
 
-- Added SDWA to v_cmp_ne_u32 #1915
-- Fixed architected flat scratch #1947
-- Added GPU progress prints and debug tracing #1976
-- Added RLC queues to checkpoint #1999
-- Moved GPU L1 cache MSHR to the coalescer #2035
-- Added MFMA insts, check if inst exists #2039
-- Implemented kernarg preload #2084
-- fixed GPU protocol tester bug #2091
-- Added pagetable walker buffer #2162
-- Improved dispatch scheduler #2163
-- Added opcode overrides based on gfx version #2263
-- Added two new DS instructions #2272
-- Updated MI300X model to use real firmware #2284
-- Fixed LDS/buffer load/store x2,x3,x4 #1916
+## GPU Model Enhancements
+
+- Added MFMA ([#2039](https://github.com/gem5/gem5/pull/2039)),
+SDWA ([#1915](https://github.com/gem5/gem5/pull/1915)),
+opcode overrides ([#2263](https://github.com/gem5/gem5/pull/2263)),
+kernarg preloading ([#2084](https://github.com/gem5/gem5/pull/2084)).
+- Improved progress printing and debug tracing
+([#1976](https://github.com/gem5/gem5/pull/1976)), improved dispatch scheduling
+([#2163](https://github.com/gem5/gem5/pull/2163)).
+- Added RLC queues to checkpoint ([#1999](https://github.com/gem5/gem5/pull/1999)),
+added pagetable walker buffer ([#2162](https://github.com/gem5/gem5/pull/2162)),
+added two new DS instructions ([#2272](https://github.com/gem5/gem5/pull/2272))
+- Updated MI300X firmware model ([#2284](https://github.com/gem5/gem5/pull/2284)).
+
+## Miscellaneous
+
+### Developer-Facing changes
+
+- New `OptionalParam` and `DictParam` support in Python params
+([#2252](https://github.com/gem5/gem5/pull/2252),
+[#2264](https://github.com/gem5/gem5/pull/2264)).
+- `--debug-fission` compiler flag allows separation of debug information
+([#2107](https://github.com/gem5/gem5/pull/2107)).
+- Additional debug flags and prints, including `EpisodeCount`, `EnteringEventQueue`,
+and AssociativeCache tracing ([#1861](https://github.com/gem5/gem5/pull/1861),
+[#2215](https://github.com/gem5/gem5/pull/2215),
+[#2033](https://github.com/gem5/gem5/pull/2033)).
+
+### DRAMSys
+
+- DRAMSys integration updated ([#2093](https://github.com/gem5/gem5/pull/2093)).
 
 ### O3 CPU
 
-- Added integer and floating point free list writes, load store queue writes to the O3 CPU #1872
-- Added retry resp to LSQ with throttling params #1926
+- Added stats for integer and floating point free list writes, LSQ writes
+([#1872](https://github.com/gem5/gem5/pull/1872)).
+- Enhanced load-store queue latency modeling ([#1926](https://github.com/gem5/gem5/pull/1926)).
 
-## DRAMSys
+### Branch Prediction
 
-- Updated integration of DRAMSys into gem5 #2093
+- Added taken-only branch history and support for surprise branches
+([#1855](https://github.com/gem5/gem5/pull/1855), [#499](https://github.com/gem5/gem5/pull/499)).
 
-## Misc
+## Bug Fixes
 
-- Added EpisodeCount debug flag #1861
-- Added debug print for when an AssociativeCache entry is accessed #2033
-- Implemented CHI ReadNoSnp Request #2059
-- Added --debug-fission option for compiling gem5 #2107
-- Added warning for non-default create function #2189
-- converted "Entering event queue" message to EnteringEventQueue debug flag #2215
-- Added OptionalParam to support std::optonal #2252
-- Introduced dictionary parameters (DictParam) in gem5 #2264
+Numerous fixes for bugs, including:
 
-## Misc bug fixes
+- Fixes for memory leaks and excess memory usage, a fix for use-after-free in
+MSHR handling ([#1904](https://github.com/gem5/gem5/pull/1904),
+[#2214](https://github.com/gem5/gem5/pull/2214),
+[#2220](https://github.com/gem5/gem5/pull/2220),
+[#1945](https://github.com/gem5/gem5/pull/1945),
+[#1904](https://github.com/gem5/gem5/pull/1904),
+[#1957](https://github.com/gem5/gem5/pull/1957),
+[#1902](https://github.com/gem5/gem5/pull/1902))
 
-- 1681 - Clear thread specific state in time buffers on thread exit, instead of
-all state for all threads - fixes issue 1049
-- 1874 - Fix bug in SysBridge and XBar, adds option for external memory
-addresses - enables disaggregated memory
-- 1902 - Fix use-after-free in MSHR handling
-- 1904 - Fix memory leaks - fixes x86 boot memory leaks noted in issue 1903
-- 1930 - Set RubySystem pointer during TBE alloc - fixes failure with CHI
-protocol when using multiple cores
-- 1936 - Fix `append_kernel_arg()` for RISCV
-- 1940 - Fixed incorrect x-o lookup address in BOP
-- 1945 - Refactor `base/random` to avoid a memory leak
-- 1952 - Fix pack micro-op implementation
-- 1957 - Remove decodePages decode cache to prevent excessive memory usage
-- 1997 - Fix memory error at systemcall
-- 2063 - Fix incorrect return address after flush, fixes issue 1707
-- 2210 - Fix Ruby Directory_Controller fallback logic
-- 2214 - Break Request::NO_ACCESS reference cycle - fixes 2213 memory leak
-- 2220 - Fix memory leak on indirect branch prediction - fixes 2219
-- 2239 - Prevent re-executing load instruction - fixes 2238
-- 2241 - Fix DMA sequencer request size above 64 - fixes 2218
-- 2255 - Fix deadlocks when running ruby_random_test with -n > 18
-- 2259 - Return early from MWAIT if address monitor is not armed - fixes 2043
-- 2274 - Fix memory range check in dramsim 3 - fixes 2273
-- 2326 - Fix Garnet_standalone simulation - fixes issue introduced by PR 1453
-- 2328 - Bug fix for configs/ruby/Ruby.py
+- Ruby related bug fixes:
+([#1930](https://github.com/gem5/gem5/pull/1930),
+[#2326](https://github.com/gem5/gem5/pull/2326),
+[#2210](https://github.com/gem5/gem5/pull/2210),
+[#2255](https://github.com/gem5/gem5/pull/2255),
+[#2328](https://github.com/gem5/gem5/pull/2328),
+[#2241](https://github.com/gem5/gem5/pull/2241))
+
+- Clear only thread specific state instead of all state in O3 CPU time
+buffers ([#1681](https://github.com/gem5/gem5/pull/1681)) - prevents the X86 O3
+CPU from getting stuck under certain conditons
+([#1049](https://github.com/gem5/gem5/pull/1049))
+- Fix for RISC-V atomic operations on big-endian hosts
+([#2143](https://github.com/gem5/gem5/pull/2143))
+- Fix for `append_kernel_arg()` for RISC-V
+([#1936](https://github.com/gem5/gem5/pull/1936))
+- Return early from MWAIT if address monitor is not armed
+([#2259](https://github.com/gem5/gem5/pull/2259)) - fixes a kernel panic when
+switching from KVM to timing on X86
+([#2043](https://github.com/gem5/gem5/pull/2043))
 
 # Version 24.1.0.3
 
