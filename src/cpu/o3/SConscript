@@ -55,6 +55,7 @@ if env['CONF']['BUILD_ISA']:
     Source('rob.cc')
     Source('scoreboard.cc')
     Source('store_set.cc')
+    Source('tdm.cc')
     Source('thread_context.cc')
     Source('thread_state.cc')
 

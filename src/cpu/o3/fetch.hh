@@ -578,7 +578,20 @@ class Fetch
         statistics::Distribution nisnDist;
         /** Rate of how often fetch was idle. */
         statistics::Formula idleRate;
+        /** Stat for Top-Down Methodology, number of instructions not delivered
+         * to backend */
+        statistics::Scalar fetchBubbles;
+        /** Stat for Top-Down Methodology, number of cycles in which no
+         * instructions are delivered to backend */
+        statistics::Scalar fetchBubblesMax;
     } fetchStats;
+
+  public:
+    const FetchStatGroup &
+    getStats() const
+    {
+        return fetchStats;
+    }
 };
 
 } // namespace o3

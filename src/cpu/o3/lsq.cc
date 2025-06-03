@@ -443,6 +443,24 @@ LSQ::sendRetryResp()
 }
 
 bool
+LSQ::anyCacheLevelMisses(int level)
+{
+    for (LSQUnit &unit : thread) {
+        for (auto &entry : unit.loadQueue) {
+            if (entry.valid() && entry.hasRequest()) {
+                auto req = entry.request();
+                if (req->isAnyOutstandingRequest()) {
+                    if (req->mainReq()->getAccessDepth() == level) {
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    return false;
+}
+
+bool
 LSQ::recvTimingResp(PacketPtr pkt)
 {
     if (pkt->isError())

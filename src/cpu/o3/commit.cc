@@ -165,7 +165,9 @@ Commit::CommitStats::CommitStats(CPU *cpu, Commit *commit)
       ADD_STAT(committedInstType, statistics::units::Count::get(),
                "Class of committed instruction"),
       ADD_STAT(commitEligibleSamples, statistics::units::Cycle::get(),
-               "number cycles where commit BW limit reached")
+               "Number cycles where commit BW limit reached"),
+      ADD_STAT(committedInst, statistics::units::Count::get(),
+               "Number of committed instructions (For Top-Down)")
 {
     using namespace statistics;
 
@@ -1079,6 +1081,7 @@ Commit::commitInsts()
 
     DPRINTF(CommitRate, "%i\n", num_committed);
     stats.numCommittedDist.sample(num_committed);
+    stats.committedInst += num_committed;
 
     if (num_committed == commitWidth) {
         stats.commitEligibleSamples++;

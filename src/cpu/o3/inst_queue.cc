@@ -179,45 +179,59 @@ InstructionQueue::name() const
 
 InstructionQueue::IQStats::IQStats(CPU *cpu, const unsigned &total_width)
     : statistics::Group(cpu),
-    ADD_STAT(instsAdded, statistics::units::Count::get(),
-             "Number of instructions added to the IQ (excludes non-spec)"),
-    ADD_STAT(nonSpecInstsAdded, statistics::units::Count::get(),
-             "Number of non-speculative instructions added to the IQ"),
-    ADD_STAT(instsIssued, statistics::units::Count::get(),
-             "Number of instructions issued"),
-    ADD_STAT(intInstsIssued, statistics::units::Count::get(),
-             "Number of integer instructions issued"),
-    ADD_STAT(floatInstsIssued, statistics::units::Count::get(),
-             "Number of float instructions issued"),
-    ADD_STAT(branchInstsIssued, statistics::units::Count::get(),
-             "Number of branch instructions issued"),
-    ADD_STAT(memInstsIssued, statistics::units::Count::get(),
-             "Number of memory instructions issued"),
-    ADD_STAT(miscInstsIssued, statistics::units::Count::get(),
-             "Number of miscellaneous instructions issued"),
-    ADD_STAT(squashedInstsIssued, statistics::units::Count::get(),
-             "Number of squashed instructions issued"),
-    ADD_STAT(squashedInstsExamined, statistics::units::Count::get(),
-             "Number of squashed instructions iterated over during squash; "
-             "mainly for profiling"),
-    ADD_STAT(squashedOperandsExamined, statistics::units::Count::get(),
-             "Number of squashed operands that are examined and possibly "
-             "removed from graph"),
-    ADD_STAT(squashedNonSpecRemoved, statistics::units::Count::get(),
-             "Number of squashed non-spec instructions that were removed"),
-    ADD_STAT(numIssuedDist, statistics::units::Count::get(),
-             "Number of insts issued each cycle"),
-    ADD_STAT(statFuBusy, statistics::units::Count::get(),
-             "attempts to use FU when none available"),
-    ADD_STAT(statIssuedInstType, statistics::units::Count::get(),
-             "Number of instructions issued per FU type, per thread"),
-    ADD_STAT(issueRate, statistics::units::Rate<
-                statistics::units::Count, statistics::units::Cycle>::get(),
-             "Inst issue rate", instsIssued / cpu->baseStats.numCycles),
-    ADD_STAT(fuBusy, statistics::units::Count::get(), "FU busy when requested"),
-    ADD_STAT(fuBusyRate, statistics::units::Rate<
-                statistics::units::Count, statistics::units::Count>::get(),
-             "FU busy rate (busy events/executed inst)")
+      ADD_STAT(instsAdded, statistics::units::Count::get(),
+               "Number of instructions added to the IQ (excludes non-spec)"),
+      ADD_STAT(nonSpecInstsAdded, statistics::units::Count::get(),
+               "Number of non-speculative instructions added to the IQ"),
+      ADD_STAT(instsIssued, statistics::units::Count::get(),
+               "Number of instructions issued"),
+      ADD_STAT(intInstsIssued, statistics::units::Count::get(),
+               "Number of integer instructions issued"),
+      ADD_STAT(floatInstsIssued, statistics::units::Count::get(),
+               "Number of float instructions issued"),
+      ADD_STAT(branchInstsIssued, statistics::units::Count::get(),
+               "Number of branch instructions issued"),
+      ADD_STAT(memInstsIssued, statistics::units::Count::get(),
+               "Number of memory instructions issued"),
+      ADD_STAT(miscInstsIssued, statistics::units::Count::get(),
+               "Number of miscellaneous instructions issued"),
+      ADD_STAT(squashedInstsIssued, statistics::units::Count::get(),
+               "Number of squashed instructions issued"),
+      ADD_STAT(squashedInstsExamined, statistics::units::Count::get(),
+               "Number of squashed instructions iterated over during squash; "
+               "mainly for profiling"),
+      ADD_STAT(squashedOperandsExamined, statistics::units::Count::get(),
+               "Number of squashed operands that are examined and possibly "
+               "removed from graph"),
+      ADD_STAT(squashedNonSpecRemoved, statistics::units::Count::get(),
+               "Number of squashed non-spec instructions that were removed"),
+      ADD_STAT(numIssuedDist, statistics::units::Count::get(),
+               "Number of insts issued each cycle"),
+      ADD_STAT(statFuBusy, statistics::units::Count::get(),
+               "attempts to use FU when none available"),
+      ADD_STAT(statIssuedInstType, statistics::units::Count::get(),
+               "Number of instructions issued per FU type, per thread"),
+      ADD_STAT(issueRate,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Cycle>::get(),
+               "Inst issue rate", instsIssued / cpu->baseStats.numCycles),
+      ADD_STAT(fuBusy, statistics::units::Count::get(),
+               "FU busy when requested"),
+      ADD_STAT(fuBusyRate,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Count>::get(),
+               "FU busy rate (busy events/executed inst)"),
+      ADD_STAT(numInstsExec0, statistics::units::Count::get(),
+               "0 instructions executed in a cycle"),
+      ADD_STAT(numInstsExec1, statistics::units::Count::get(),
+               "1 instruction executed in a cycle"),
+      ADD_STAT(numInstsExec2, statistics::units::Count::get(),
+               "2 instructions executed in a cycle"),
+      ADD_STAT(loadStallCycles, statistics::units::Cycle::get(),
+               "Top down, no uops executed and at least 1 in-flight load"),
+      ADD_STAT(L1miss, statistics::units::Cycle::get(), "l1miss"),
+      ADD_STAT(L2miss, statistics::units::Cycle::get(), "l2miss"),
+      ADD_STAT(L3miss, statistics::units::Cycle::get(), "l1miss")
 {
     instsAdded
         .prereq(instsAdded);
@@ -269,17 +283,17 @@ InstructionQueue::IQStats::IQStats(CPU *cpu, const unsigned &total_width)
         .init(0,total_width,1)
         .flags(statistics::pdf)
         ;
-/*
-    dist_unissued
-        .init(Num_OpClasses+2)
-        .name(name() + ".unissued_cause")
-        .desc("Reason ready instruction not issued")
-        .flags(pdf | dist)
-        ;
-    for (int i=0; i < (Num_OpClasses + 2); ++i) {
-        dist_unissued.subname(i, unissued_names[i]);
-    }
-*/
+    /*
+      dist_unissued
+          .init(Num_OpClasses+2)
+          .name(name() + ".unissued_cause")
+          .desc("Reason ready instruction not issued")
+          .flags(pdf | dist)
+          ;
+      for (int i=0; i < (Num_OpClasses + 2); ++i) {
+          dist_unissued.subname(i, unissued_names[i]);
+      }
+  */
     statIssuedInstType
         .init(cpu->numThreads,enums::Num_OpClass)
         .flags(statistics::total | statistics::pdf | statistics::dist)
@@ -323,6 +337,14 @@ InstructionQueue::IQStats::IQStats(CPU *cpu, const unsigned &total_width)
         .flags(statistics::total)
         ;
     fuBusyRate = fuBusy / instsIssued;
+
+    numInstsExec0.prereq(numInstsExec0);
+    numInstsExec1.prereq(numInstsExec1);
+    numInstsExec2.prereq(numInstsExec2);
+
+    L1miss.prereq(L1miss);
+    L2miss.prereq(L2miss);
+    L3miss.prereq(L3miss);
 }
 
 InstructionQueue::IQIOStats::IQIOStats(statistics::Group *parent)
@@ -922,6 +944,30 @@ InstructionQueue::scheduleReadyInsts()
         cpu->activityThisCycle();
     } else {
         DPRINTF(IQ, "Not able to schedule any instructions.\n");
+    }
+
+    int numBusyFUs = fuPool->numBusyFUs();
+
+    if (numBusyFUs == 0) {
+        iqStats.numInstsExec0++;
+    } else if (numBusyFUs == 1) {
+        iqStats.numInstsExec1++;
+    } else if (numBusyFUs == 2) {
+        iqStats.numInstsExec2++;
+    }
+
+    if (fuPool->isDrained() && iewStage->ldstQueue.numLoads()) {
+        iqStats.loadStallCycles++;
+        if (iewStage->ldstQueue.anyCacheLevelMisses(3)) {
+            iqStats.L1miss++;
+            iqStats.L2miss++;
+            iqStats.L3miss++;
+        } else if (iewStage->ldstQueue.anyCacheLevelMisses(2)) {
+            iqStats.L1miss++;
+            iqStats.L2miss++;
+        } else if (iewStage->ldstQueue.anyCacheLevelMisses(1)) {
+            iqStats.L1miss++;
+        }
     }
 }
 

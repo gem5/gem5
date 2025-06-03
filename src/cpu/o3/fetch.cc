@@ -157,43 +157,50 @@ Fetch::regProbePoints()
 
 Fetch::FetchStatGroup::FetchStatGroup(CPU *cpu, Fetch *fetch)
     : statistics::Group(cpu, "fetch"),
-    ADD_STAT(predictedBranches, statistics::units::Count::get(),
-             "Number of branches that fetch has predicted taken"),
-    ADD_STAT(cycles, statistics::units::Cycle::get(),
-             "Number of cycles fetch has run and was not squashing or "
-             "blocked"),
-    ADD_STAT(squashCycles, statistics::units::Cycle::get(),
-             "Number of cycles fetch has spent squashing"),
-    ADD_STAT(tlbCycles, statistics::units::Cycle::get(),
-             "Number of cycles fetch has spent waiting for tlb"),
-    ADD_STAT(idleCycles, statistics::units::Cycle::get(),
-             "Number of cycles fetch was idle"),
-    ADD_STAT(blockedCycles, statistics::units::Cycle::get(),
-             "Number of cycles fetch has spent blocked"),
-    ADD_STAT(miscStallCycles, statistics::units::Cycle::get(),
-             "Number of cycles fetch has spent waiting on interrupts, or bad "
-             "addresses, or out of MSHRs"),
-    ADD_STAT(pendingDrainCycles, statistics::units::Cycle::get(),
-             "Number of cycles fetch has spent waiting on pipes to drain"),
-    ADD_STAT(noActiveThreadStallCycles, statistics::units::Cycle::get(),
-             "Number of stall cycles due to no active thread to fetch from"),
-    ADD_STAT(pendingTrapStallCycles, statistics::units::Cycle::get(),
-             "Number of stall cycles due to pending traps"),
-    ADD_STAT(pendingQuiesceStallCycles, statistics::units::Cycle::get(),
-             "Number of stall cycles due to pending quiesce instructions"),
-    ADD_STAT(icacheWaitRetryStallCycles, statistics::units::Cycle::get(),
-             "Number of stall cycles due to full MSHR"),
-    ADD_STAT(cacheLines, statistics::units::Count::get(),
-             "Number of cache lines fetched"),
-    ADD_STAT(icacheSquashes, statistics::units::Count::get(),
-             "Number of outstanding Icache misses that were squashed"),
-    ADD_STAT(tlbSquashes, statistics::units::Count::get(),
-             "Number of outstanding ITLB misses that were squashed"),
-    ADD_STAT(nisnDist, statistics::units::Count::get(),
-             "Number of instructions fetched each cycle (Total)"),
-    ADD_STAT(idleRate, statistics::units::Ratio::get(),
-             "Ratio of cycles fetch was idle",
-             idleCycles / cpu->baseStats.numCycles)
+      ADD_STAT(predictedBranches, statistics::units::Count::get(),
+               "Number of branches that fetch has predicted taken"),
+      ADD_STAT(cycles, statistics::units::Cycle::get(),
+               "Number of cycles fetch has run and was not squashing or "
+               "blocked"),
+      ADD_STAT(squashCycles, statistics::units::Cycle::get(),
+               "Number of cycles fetch has spent squashing"),
+      ADD_STAT(tlbCycles, statistics::units::Cycle::get(),
+               "Number of cycles fetch has spent waiting for tlb"),
+      ADD_STAT(idleCycles, statistics::units::Cycle::get(),
+               "Number of cycles fetch was idle"),
+      ADD_STAT(blockedCycles, statistics::units::Cycle::get(),
+               "Number of cycles fetch has spent blocked"),
+      ADD_STAT(
+          miscStallCycles, statistics::units::Cycle::get(),
+          "Number of cycles fetch has spent waiting on interrupts, or bad "
+          "addresses, or out of MSHRs"),
+      ADD_STAT(pendingDrainCycles, statistics::units::Cycle::get(),
+               "Number of cycles fetch has spent waiting on pipes to drain"),
+      ADD_STAT(noActiveThreadStallCycles, statistics::units::Cycle::get(),
+               "Number of stall cycles due to no active thread to fetch from"),
+      ADD_STAT(pendingTrapStallCycles, statistics::units::Cycle::get(),
+               "Number of stall cycles due to pending traps"),
+      ADD_STAT(pendingQuiesceStallCycles, statistics::units::Cycle::get(),
+               "Number of stall cycles due to pending quiesce instructions"),
+      ADD_STAT(icacheWaitRetryStallCycles, statistics::units::Cycle::get(),
+               "Number of stall cycles due to full MSHR"),
+      ADD_STAT(cacheLines, statistics::units::Count::get(),
+               "Number of cache lines fetched"),
+      ADD_STAT(icacheSquashes, statistics::units::Count::get(),
+               "Number of outstanding Icache misses that were squashed"),
+      ADD_STAT(tlbSquashes, statistics::units::Count::get(),
+               "Number of outstanding ITLB misses that were squashed"),
+      ADD_STAT(nisnDist, statistics::units::Count::get(),
+               "Number of instructions fetched each cycle (Total)"),
+      ADD_STAT(idleRate, statistics::units::Ratio::get(),
+               "Ratio of cycles fetch was idle",
+               idleCycles / cpu->baseStats.numCycles),
+      ADD_STAT(fetchBubbles, statistics::units::Count::get(),
+               "Stat for Top-Down Methodology, number of empty slots where no "
+               "uop was delivered to backend"),
+      ADD_STAT(fetchBubblesMax, statistics::units::Count::get(),
+               "Stat for Top-Down Methodology, number of cycles where no "
+               "uop was delivered to backend")
 {
         predictedBranches
             .prereq(predictedBranches);
@@ -899,6 +906,22 @@ Fetch::tick()
         // Wrap around if at end of active threads list
         if (tid_itr == activeThreads->end())
             tid_itr = activeThreads->begin();
+    }
+
+    bool backendStall = false;
+
+    for (ThreadID i = 0; i < numThreads; ++i) {
+        if ((fetchStatus[i] == Squashing) || (stalls[i].decode) ||
+            (fetchStatus[i] == Blocked)) {
+            backendStall = true;
+        }
+    }
+
+    if (!backendStall) {
+        fetchStats.fetchBubbles += (fetchWidth - insts_to_decode);
+        if (insts_to_decode == 0) {
+            fetchStats.fetchBubblesMax++;
+        }
     }
 
     // If there was activity this cycle, inform the CPU of it.

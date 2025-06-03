@@ -201,6 +201,19 @@ class FUPool : public SimObject
 
     /** Takes over from another CPU's thread. */
     void takeOverFrom() {};
+
+    /** Returns the number of free FUs */
+    int
+    numBusyFUs() const
+    {
+        int busy = 0;
+        for (int i = 0; i < numFU; ++i) {
+            if (unitBusy[i]) {
+                busy++;
+            }
+        }
+        return busy;
+    }
 };
 
 } // namespace o3

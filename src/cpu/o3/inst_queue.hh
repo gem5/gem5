@@ -544,6 +544,17 @@ class InstructionQueue
         statistics::Vector fuBusy;
         /** Number of times the FU was busy per instruction issued. */
         statistics::Formula fuBusyRate;
+
+        /** Top down, cycles in which few ops are executed **/
+        statistics::Scalar numInstsExec0;
+        statistics::Scalar numInstsExec1;
+        statistics::Scalar numInstsExec2;
+
+        /** Top down, MemStalls.AnyLoad **/
+        statistics::Scalar loadStallCycles;
+        statistics::Scalar L1miss;
+        statistics::Scalar L2miss;
+        statistics::Scalar L3miss;
     } iqStats;
 
    public:
@@ -564,6 +575,13 @@ class InstructionQueue
         statistics::Scalar fpAluAccesses;
         statistics::Scalar vecAluAccesses;
     } iqIOStats;
+
+  public:
+    const IQStats &
+    getStats() const
+    {
+        return iqStats;
+    }
 };
 
 } // namespace o3
