@@ -403,10 +403,6 @@ void ISA::clear()
         case RV64:
           misa.rv64_mxl = 2;
           status.uxl = status.sxl = 2;
-          if (getEnableRvv()) {
-              status.vs = VPUStatus::INITIAL;
-              misa.rvv = 1;
-          }
           if (misa.rvh) {
               HSTATUS hstatus = 0;
               hstatus.vsxl = 2;
@@ -424,6 +420,10 @@ void ISA::clear()
           break;
         default:
           panic("%s: Unknown _rvType: %d", name(), (int)_rvType);
+    }
+    if (getEnableRvv()) {
+        status.vs = VPUStatus::INITIAL;
+        misa.rvv = 1;
     }
 
     miscRegFile[MISCREG_ISA] = misa;
