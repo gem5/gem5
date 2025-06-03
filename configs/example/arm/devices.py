@@ -184,6 +184,7 @@ class ArmCpuCluster(CpuCluster):
                     cpu=cpu,
                     itb=cpu.mmu.itb,
                     dtb=cpu.mmu.dtb,
+                    l2_shared=cpu.mmu.l2_shared,
                     icache=getattr(cpu, "icache", None),
                     dcache=getattr(cpu, "dcache", None),
                     l2cache=getattr(self, "l2", None),

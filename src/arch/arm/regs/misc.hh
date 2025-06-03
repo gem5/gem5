@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2024 Arm Limited
+ * Copyright (c) 2010-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -3019,6 +3019,10 @@ namespace ArmISA
     static const uint32_t FpscrAhpMask = 0x04000000;
     // This mask selects the cumulative FP exception flags of the FPSCR.
     static const uint32_t FpscrExcMask = 0x0000009F;
+    // This mask selects FPCR bits from FPSCR.
+    static const uint32_t FpscrFpcrMask = 0x07FF9F00;
+    // This mask selects FPSR bits from FPSCR.
+    static const uint32_t FpscrFpsrMask = 0xF800009F;
 
     /**
      * Check for permission to read coprocessor registers.

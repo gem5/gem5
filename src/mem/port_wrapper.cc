@@ -48,14 +48,12 @@ RequestPortWrapper::recvRangeChange()
 bool
 RequestPortWrapper::recvTimingResp(PacketPtr packet)
 {
-    panic_if(!recvTimingRespCb, "RecvTimingRespCallback is empty.");
     return recvTimingRespCb(packet);
 }
 
 void
 RequestPortWrapper::recvReqRetry()
 {
-    panic_if(!recvReqRetryCb, "RecvReqRetryCallback is empty.");
     recvReqRetryCb();
 }
 
@@ -81,28 +79,24 @@ ResponsePortWrapper::ResponsePortWrapper(const std::string& name, PortID id)
 AddrRangeList
 ResponsePortWrapper::getAddrRanges() const
 {
-    panic_if(!getAddrRangesCb, "GetAddrRangesCallback is empty.");
     return getAddrRangesCb();
 }
 
 bool
 ResponsePortWrapper::recvTimingReq(PacketPtr packet)
 {
-    panic_if(!recvTimingReqCb, "RecvTimingReqCallback is empty.");
     return recvTimingReqCb(packet);
 }
 
 void
 ResponsePortWrapper::recvRespRetry()
 {
-    panic_if(!recvRespRetryCb, "RecvRespRetryCallback is empty.");
     recvRespRetryCb();
 }
 
 Tick
 ResponsePortWrapper::recvAtomic(PacketPtr packet)
 {
-    panic_if(!recvAtomicCb, "RecvAtomicCallback is empty.");
     return recvAtomicCb(packet);
 }
 
@@ -119,7 +113,6 @@ ResponsePortWrapper::recvAtomicBackdoor(PacketPtr packet,
 void
 ResponsePortWrapper::recvFunctional(PacketPtr packet)
 {
-    panic_if(!recvFunctionalCb, "RecvFunctionalCallback is empty.");
     recvFunctionalCb(packet);
 }
 

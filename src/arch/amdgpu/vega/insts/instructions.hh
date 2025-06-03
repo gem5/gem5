@@ -32276,6 +32276,8 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
     }; // Inst_DS__DS_ADD_RTN_U32
 
     class Inst_DS__DS_SUB_RTN_U32 : public Inst_DS
@@ -32809,9 +32811,11 @@ namespace VegaISA
             switch (opIdx) {
               case 0: //vgpr_a
                 return 4;
-              case 1: //vgpr_d1
+              case 1: //vgpr_d0
                 return 4;
-              case 2: //vgpr_rtn
+              case 2: //vgpr_d1
+                return 4;
+              case 3: //vgpr_rtn
                 return 4;
               default:
                 fatal("op idx %i out of bounds\n", opIdx);
@@ -32820,6 +32824,8 @@ namespace VegaISA
         } // getOperandSize
 
         void execute(GPUDynInstPtr) override;
+        void initiateAcc(GPUDynInstPtr) override;
+        void completeAcc(GPUDynInstPtr) override;
     }; // Inst_DS__DS_CMPST_RTN_B32
 
     class Inst_DS__DS_CMPST_RTN_F32 : public Inst_DS

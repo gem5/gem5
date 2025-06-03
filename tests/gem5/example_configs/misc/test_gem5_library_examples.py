@@ -24,6 +24,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
+import re
+
 from testlib import (
     config,
     gem5_verify_config,
@@ -32,68 +35,13 @@ from testlib import (
 from testlib.configuration import constants
 
 gem5_verify_config(
-    name="test-gem5-library-example-riscv-ubuntu-run",
+    name="test-lupv-example",
     fixtures=(),
     verifiers=(),
     config=joinpath(
-        config.base_dir,
-        "configs",
-        "example",
-        "gem5_library",
-        "riscv-ubuntu-run.py",
+        config.base_dir, "configs", "example", "lupv", "run_lupv.py"
     ),
-    config_args=[],
-    valid_isas=(constants.all_compiled_tag,),
-    valid_hosts=constants.supported_hosts,
-    length=constants.long_tag,
-)
-
-gem5_verify_config(
-    name="test-gem5-library-example-riscvmatched-hello",
-    fixtures=(),
-    verifiers=(),
-    config=joinpath(
-        config.base_dir,
-        "configs",
-        "example",
-        "gem5_library",
-        "riscvmatched-hello.py",
-    ),
-    config_args=[],
-    valid_isas=(constants.all_compiled_tag,),
-    valid_hosts=constants.supported_hosts,
-    length=constants.long_tag,
-)
-
-gem5_verify_config(
-    name="test-gem5-library-example-riscvmatched-fs",
-    fixtures=(),
-    verifiers=(),
-    config=joinpath(
-        config.base_dir,
-        "configs",
-        "example",
-        "gem5_library",
-        "riscvmatched-fs.py",
-    ),
-    config_args=["--to-init"],
-    valid_isas=(constants.all_compiled_tag,),
-    valid_hosts=constants.supported_hosts,
-    length=constants.very_long_tag,
-)
-
-gem5_verify_config(
-    name="test-gem5-library-example-riscvmatched-microbenchmark-suite",
-    fixtures=(),
-    verifiers=(),
-    config=joinpath(
-        config.base_dir,
-        "configs",
-        "example",
-        "gem5_library",
-        "riscvmatched-microbenchmark-suite.py",
-    ),
-    config_args=[],
+    config_args=["timing", "1", "--max-ticks", "1000000000"],
     valid_isas=(constants.all_compiled_tag,),
     valid_hosts=constants.supported_hosts,
     length=constants.long_tag,

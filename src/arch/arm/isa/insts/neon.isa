@@ -1365,20 +1365,21 @@ let {{
             exec_output += NeonExecDeclare.subst(substDict)
 
     def threeUnequalRegInst(name, Name, opClass, types, op,
-                            bigSrc1, bigSrc2, bigDest, readDest):
+                            bigSrc1, bigSrc2, bigDest, readDest, short=False,
+                            extra_check=''):
         global header_output, exec_output
-        src1Cnt = src2Cnt = destCnt = 2
+        src1Cnt = src2Cnt = destCnt = 1 if short else 2
         src1Prefix = src2Prefix = destPrefix = ''
         if bigSrc1:
-            src1Cnt = 4
+            src1Cnt = 2 if short else 4
             src1Prefix = 'Big'
         if bigSrc2:
-            src2Cnt = 4
+            src2Cnt = 2 if short else 4
             src2Prefix = 'Big'
         if bigDest:
-            destCnt = 4
+            destCnt = 2 if short else 4
             destPrefix = 'Big'
-        eWalkCode = simdEnabledCheckCode + '''
+        eWalkCode = simdEnabledCheckCode + extra_check + '''
             %sRegVect srcReg1;
             %sRegVect srcReg2;
             %sRegVect destReg;
@@ -1418,7 +1419,7 @@ let {{
         iop = ArmInstObjParams(name, Name,
                                "RegRegRegOp",
                                { "code": eWalkCode,
-                                 "r_count": 2,
+                                 "r_count": 1 if short else 2,
                                  "predicate_test": predicateTest,
                                  "op_class": opClass }, [])
         header_output += NeonRegRegRegOpDeclare.subst(iop)
@@ -1428,17 +1429,20 @@ let {{
                           "class_name" : Name }
             exec_output += NeonExecDeclare.subst(substDict)
 
-    def threeRegNarrowInst(name, Name, opClass, types, op, readDest=False):
+    def threeRegNarrowInst(name, Name, opClass, types, op, readDest=False,
+                           extra_check=''):
         threeUnequalRegInst(name, Name, opClass, types, op,
-                            True, True, False, readDest)
+                            True, True, False, readDest, False, extra_check)
 
-    def threeRegLongInst(name, Name, opClass, types, op, readDest=False):
+    def threeRegLongInst(name, Name, opClass, types, op, readDest=False,
+                         short=False, extra_check=''):
         threeUnequalRegInst(name, Name, opClass, types, op,
-                            False, False, True, readDest)
+                            False, False, True, readDest, short, extra_check)
 
-    def threeRegWideInst(name, Name, opClass, types, op, readDest=False):
+    def threeRegWideInst(name, Name, opClass, types, op, readDest=False,
+                         extra_check=''):
         threeUnequalRegInst(name, Name, opClass, types, op,
-                            True, False, True, readDest)
+                            True, False, True, readDest, False, extra_check)
 
     def twoEqualRegInst(name, Name, opClass, types, rCount, op,
                         readDest=False, extra=''):
@@ -1491,10 +1495,11 @@ let {{
                           "class_name" : Name }
             exec_output += NeonExecDeclare.subst(substDict)
 
-    def twoRegLongInst(name, Name, opClass, types, op, readDest=False):
+    def twoRegLongInst(name, Name, opClass, types, op, readDest=False,
+                       short=False, extra_check=''):
         global header_output, exec_output
-        rCount = 2
-        eWalkCode = simdEnabledCheckCode + '''
+        rCount = 1 if short else 2
+        eWalkCode = simdEnabledCheckCode + extra_check + '''
         RegVect srcReg1, srcReg2;
         BigRegVect destReg = {};
         '''
@@ -3039,6 +3044,25 @@ let {{
     threeEqualRegInst("vfma", "NVfmaQFpH", "SimdFloatMultAccOp", ("uint16_t",),
                       4, vfmafpHCode, True)
 
+    fhm_check = '''
+      RegVal isar6 = xc->tcBase()->readMiscReg(MISCREG_ID_ISAR6);
+      if (!(bits(isar6, 11, 8) == 0x1))
+          return std::make_shared<UndefinedInstruction>(machInst, true);
+    '''
+    vfmalfpCode = '''
+        FPSCR fpscr = fpVASimdFPSCRValue((FPSCR)FpscrExc);
+        destElem = fplibMulAddH(destElem, srcElem1, srcElem2, fpscr);
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    threeRegLongInst("vfmal", "NVfmalD", "SimdFloatMultAccOp", ("uint16_t",),
+                     vfmalfpCode, True, short=True, extra_check=fhm_check)
+    threeRegLongInst("vfmal", "NVfmalQ", "SimdFloatMultAccOp", ("uint16_t",),
+                     vfmalfpCode, True, extra_check=fhm_check)
+    twoRegLongInst("vfmal", "NVfmalElemD", "SimdFloatMultAccOp", ("uint16_t",),
+                     vfmalfpCode, True, short=True, extra_check=fhm_check)
+    twoRegLongInst("vfmal", "NVfmalElemQ", "SimdFloatMultAccOp", ("uint16_t",),
+                     vfmalfpCode, True, extra_check=fhm_check)
+
     vfmsfpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
         destReg = ternaryOp(fpscr, -srcReg1, srcReg2, destReg, fpMulAdd<float>,
@@ -3057,6 +3081,53 @@ let {{
                       2, vfmsfpHCode, True)
     threeEqualRegInst("vfms", "NVfmsQFpH", "SimdFloatMultAccOp", ("uint16_t",),
                       4, vfmsfpHCode, True)
+
+    vfmslfpCode = '''
+        FPSCR fpscr = fpVASimdFPSCRValue((FPSCR)FpscrExc);
+        destElem = fplibMulAddH(destElem, fplibNeg(srcElem1), srcElem2, fpscr);
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    threeRegLongInst("vfmsl", "NVfmslD", "SimdFloatMultAccOp", ("uint16_t",),
+                     vfmslfpCode, True, short=True, extra_check=fhm_check)
+    threeRegLongInst("vfmsl", "NVfmslQ", "SimdFloatMultAccOp", ("uint16_t",),
+                     vfmslfpCode, True, extra_check=fhm_check)
+    twoRegLongInst("vfmsl", "NVfmslElemD", "SimdFloatMultAccOp", ("uint16_t",),
+                     vfmslfpCode, True, short=True, extra_check=fhm_check)
+    twoRegLongInst("vfmsl", "NVfmslElemQ", "SimdFloatMultAccOp", ("uint16_t",),
+                     vfmslfpCode, True, extra_check=fhm_check)
+
+    vfmabtElemBfCode = '''
+        int sel = %(sel)s;
+        int immsel = bits(machInst, 3);
+        FPSCR fpscr = fpVASimdFPSCRValue((FPSCR)FpscrExc);
+
+        uint32_t src1_elem = (uint16_t)(srcElem1 >> (16 * sel));
+        uint32_t src2_elem = (uint16_t)(srcElem2 >> (16 * immsel));
+        destElem = fplibMulAdd(destElem,
+            (uint32_t)src1_elem << 16, (uint32_t)src2_elem << 16, fpscr);
+
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    twoEqualRegInst("vfmab", "VfmabElemQ", "SimdMultOp", ("uint32_t",), 4,
+        vfmabtElemBfCode % {"sel": "0"}, True)
+    twoEqualRegInst("vfmat", "VfmatElemQ", "SimdMultOp", ("uint32_t",), 4,
+        vfmabtElemBfCode % {"sel": "1"}, True)
+
+    vfmabtBfCode = '''
+        int sel = %(sel)s;
+        FPSCR fpscr = fpVASimdFPSCRValue((FPSCR)FpscrExc);
+
+        uint32_t src1_elem = (uint16_t)(srcElem1 >> (16 * sel));
+        uint32_t src2_elem = (uint16_t)(srcElem2 >> (16 * sel));
+        destElem = fplibMulAdd(destElem,
+            (uint32_t)src1_elem << 16, (uint32_t)src2_elem << 16, fpscr);
+
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    threeEqualRegInst("vfmab", "VfmabQ", "SimdMultOp", ("uint32_t",), 4,
+        vfmabtBfCode % {"sel": "0"}, True)
+    threeEqualRegInst("vfmat", "VfmatQ", "SimdMultOp", ("uint32_t",), 4,
+        vfmabtBfCode % {"sel": "1"}, True)
 
     vmlsfpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;

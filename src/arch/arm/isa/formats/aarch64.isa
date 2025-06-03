@@ -3129,6 +3129,30 @@ namespace Aarch64
             else if (type == 1) // FRINTI Dd = roundToIntegral(Dn)
                 return new FRIntID(machInst, rd, rn);
             break;
+          case 0x10:
+            if (type == 0) // FRINT32Z
+                return new FRInt32ZS(machInst, rd, rn);
+            else if (type == 1) // FRINT32Z
+                return new FRInt32ZD(machInst, rd, rn);
+            break;
+          case 0x11:
+            if (type == 0) // FRINT32X
+                return new FRInt32XS(machInst, rd, rn);
+            else if (type == 1) // FRINT32X
+                return new FRInt32XD(machInst, rd, rn);
+            break;
+          case 0x12:
+            if (type == 0) // FRINT64Z
+                return new FRInt64ZS(machInst, rd, rn);
+            else if (type == 1) // FRINT64Z
+                return new FRInt64ZD(machInst, rd, rn);
+            break;
+          case 0x13:
+            if (type == 0) // FRINT64X
+                return new FRInt64XS(machInst, rd, rn);
+            else if (type == 1) // FRINT64X
+                return new FRInt64XD(machInst, rd, rn);
+            break;
           default:
             return new Unknown64(machInst);
         }

@@ -174,7 +174,12 @@ SimObject(
     enums=["ArmLookupLevel"],
     tags=['arm isa'],
 )
-SimObject("ArmPMU.py", sim_objects=["ArmPMU"], tags=['arm isa'])
+SimObject(
+    "ArmPMU.py",
+    sim_objects=["ArmPMU"],
+    enums=["EventTypeId"],
+    tags=['arm isa']
+)
 
 SimObject("ArmCPU.py", sim_objects=[], tags=['arm isa'])
 

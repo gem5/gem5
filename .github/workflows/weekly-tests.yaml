@@ -10,7 +10,7 @@ on:
 jobs:
 
     get-date:
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-24.04
         outputs:
             date: ${{ steps.date.outputs.date }}
         steps:
@@ -19,10 +19,8 @@ jobs:
               run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
     get-testlib-very-long-dirs:
-        name: Obtain target directories for Testlib very-long tests
-        runs-on: [self-hosted, linux, x64]
+        runs-on: ubuntu-24.04
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        timeout-minutes: 10
         outputs:
             test-dirs-matrix: ${{ steps.dir-matrix.outputs.test-dirs-matrix }}
         steps:
@@ -53,6 +51,7 @@ jobs:
 
     # start running the very-long tests
     testlib-very-long-tests:
+        name: very-long-tests
         strategy:
             fail-fast: false
             matrix:
@@ -62,8 +61,6 @@ jobs:
         timeout-minutes: 4320 # 3 days
         needs: [get-date, get-testlib-very-long-dirs]
         steps:
-            - name: Clean runner
-              run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
             - uses: actions/checkout@v4
 
             - name: Cache build/ALL
@@ -74,7 +71,8 @@ jobs:
                   restore-keys: |
                       testlib-build-all
 
-            - name: very-long ${{ matrix.test-type }}
+            - name: Run very-long ${{ matrix.test-type }} tests
+              id: run-tests
               working-directory: ${{ github.workspace }}/tests
               run: ./main.py run ${{ matrix.test-type }} --length very-long -j$(nproc) -vv --exclude-tags gcn_gpu
 
@@ -83,15 +81,13 @@ jobs:
               if: success() || failure()
               run: echo "sanitized-test-dir=$(echo '${{ matrix.test-type }}' | sed 's/\//-/g')" >> $GITHUB_OUTPUT
 
-            - name: upload results
+            - name: Upload results
               if: success() || failure()
               uses: actions/upload-artifact@v4
-              env:
-                  MY_STEP_VAR: ${{ steps.sanitize-test-dir.outputs.sanitized-test-dir }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
               with:
-                  name: ${{ env.MY_STEP_VAR }}
+                  name: weekly-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-very-long-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir
+                      }}-status-${{ steps.run-tests.outcome }}-output
                   path: tests/testing-results
-                  retention-days: 7
 
     gpu-tests:
         runs-on: [self-hosted, linux, x64]
@@ -101,8 +97,6 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
-              with:
-                  ref: develop
 
             - name: Cache build/VEGA_X86
               uses: actions/cache@v4
@@ -113,6 +107,7 @@ jobs:
                       testlib-build-vega
 
             - name: Run Testlib GPU Tests
+              id: run-tests
               working-directory: ${{ github.workspace }}/tests
               run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu
 
@@ -120,29 +115,5 @@ jobs:
               if: success() || failure()
               uses: actions/upload-artifact@v4
               with:
-                  name: gpu_tests_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
+                  name: weekly-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gpu-status-${{ steps.run-tests.outcome }}-output
                   path: tests/testing-results
-                  retention-days: 7
-
-
-    dramsys-tests:
-        runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        timeout-minutes: 4320 # 3 days
-        steps:
-            - uses: actions/checkout@v4
-            - name: Checkout DRAMSys
-              working-directory: ${{ github.workspace }}/ext/dramsys
-              run: git clone https://github.com/tukl-msd/DRAMSys --branch v5.1 --depth 1 DRAMSys
-
-              # gem5 is built separately because it depends on the DRAMSys library
-            - name: Build gem5
-              working-directory: ${{ github.workspace }}
-              run: scons build/ALL/gem5.opt -j $(nproc)
-
-            - name: Run DRAMSys Checks
-              working-directory: ${{ github.workspace }}
-              run: |
-                  ./build/ALL/gem5.opt configs/example/gem5_library/dramsys/arm-hello-dramsys.py
-                  ./build/ALL/gem5.opt configs/example/gem5_library/dramsys/dramsys-traffic.py
-                  ./build/ALL/gem5.opt configs/example/dramsys.py

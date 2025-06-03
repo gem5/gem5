@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016, 2019-2022, 2024 Arm Limited
+ * Copyright (c) 2010-2013, 2016, 2019-2022, 2024-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -174,7 +174,8 @@ class TLB : public BaseTLB
     } stats;
 
     /** PMU probe for TLB refills */
-    probing::PMUUPtr ppRefills;
+    probing::PMUUPtr ppInstRefills;
+    probing::PMUUPtr ppDataRefills;
 
     int rangeMRU; //On lookup, only move entries ahead when outside rangeMRU
     vmid_t vmid;

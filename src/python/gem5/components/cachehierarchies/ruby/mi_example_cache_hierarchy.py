@@ -54,7 +54,7 @@ class MIExampleCacheHierarchy(AbstractRubyCacheHierarchy):
     simple point-to-point topology.
     """
 
-    def __init__(self, size: str, assoc: str):
+    def __init__(self, size: str, assoc: int):
         """
         :param size: The size of each cache in the heirarchy.
         :param assoc: The associativity of each cache.

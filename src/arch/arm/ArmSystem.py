@@ -1,4 +1,4 @@
-# Copyright (c) 2009, 2012-2013, 2015-2024 Arm Limited
+# Copyright (c) 2009, 2012-2013, 2015-2025 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -77,6 +77,7 @@ class ArmExtension(ScopedEnum):
         "FEAT_HPDS",
         "FEAT_VMID16",
         "FEAT_RDM",
+        "FEAT_FHM",  # Optional in Armv8.1
         # Armv8.2
         "FEAT_SVE",
         "FEAT_UAO",
@@ -98,6 +99,7 @@ class ArmExtension(ScopedEnum):
         "FEAT_FLAGM",
         "FEAT_IDST",
         "FEAT_TTST",
+        "FEAT_FRINTTS",  # Optional in Armv8.4
         # Armv8.5
         "FEAT_FLAGM2",
         "FEAT_RNG",
@@ -230,6 +232,7 @@ class Armv81(Armv8):
         "FEAT_HPDS",
         "FEAT_VMID16",
         "FEAT_RDM",
+        "FEAT_FHM",
     ]
 
 
@@ -259,6 +262,7 @@ class Armv84(Armv83):
         "FEAT_FLAGM",
         "FEAT_IDST",
         "FEAT_TTST",
+        "FEAT_FRINTTS",
     ]
 
 

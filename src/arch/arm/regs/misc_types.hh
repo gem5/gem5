@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2024 Arm Limited
+ * Copyright (c) 2010-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -514,6 +514,26 @@ namespace ArmISA
         Bitfield<12> ext;
         Bitfield<13> cm;  // LPAE
     EndBitUnion(FSR)
+
+    BitUnion32(FPCR)
+        Bitfield<0> fiz;
+        Bitfield<1> ah;
+        Bitfield<2> nep;
+        Bitfield<8> ioe;
+        Bitfield<9> dze;
+        Bitfield<10> ofe;
+        Bitfield<11> ufe;
+        Bitfield<12> ixe;
+        Bitfield<13> ebf;
+        Bitfield<15> ide;
+        Bitfield<18, 16> len;
+        Bitfield<19> fz16;
+        Bitfield<21, 20> stride;
+        Bitfield<23, 22> rMode;
+        Bitfield<24> fz;
+        Bitfield<25> dn;
+        Bitfield<26> ahp;
+    EndBitUnion(FPCR)
 
     BitUnion32(FPSCR)
         Bitfield<0> ioc;

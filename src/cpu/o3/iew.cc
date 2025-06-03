@@ -550,6 +550,12 @@ IEW::blockMemInst(const DynInstPtr& inst)
 }
 
 void
+IEW::retryMemInst(const DynInstPtr& inst)
+{
+    instQueue.retryMemInst(inst);
+}
+
+void
 IEW::cacheUnblocked()
 {
     instQueue.cacheUnblocked();

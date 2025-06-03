@@ -1049,7 +1049,7 @@ class RegisterBank : public RegisterBankBase
           const Addr reg_bytes = std::min(reg_size, bytes - done);
 
           if (reg_bytes != reg.size()) {
-              if (_debug_flag) {
+              if (_debug_flag && _debug_flag->tracing()) {
                   ::gem5::trace::getDebugLogger()->dprintf_flag(
                       curTick(), name(), _debug_flag->name(),
                       "Read register %s, byte offset %d, size %d\n",
@@ -1057,7 +1057,7 @@ class RegisterBank : public RegisterBankBase
               }
               reg.read(ptr + done, reg_off, reg_bytes);
           } else {
-              if (_debug_flag) {
+              if (_debug_flag && _debug_flag->tracing()) {
                   ::gem5::trace::getDebugLogger()->dprintf_flag(
                       curTick(), name(), _debug_flag->name(),
                       "Read register %s\n", reg.name());
@@ -1093,7 +1093,7 @@ class RegisterBank : public RegisterBankBase
             const Addr reg_bytes = std::min(reg_size, bytes - done);
 
             if (reg_bytes != reg.size()) {
-                if (_debug_flag) {
+                if (_debug_flag && _debug_flag->tracing()) {
                     ::gem5::trace::getDebugLogger()->dprintf_flag(
                         curTick(), name(), _debug_flag->name(),
                         "Write register %s, byte offset %d, size %d\n",
@@ -1101,7 +1101,7 @@ class RegisterBank : public RegisterBankBase
                 }
                 reg.write(ptr + done, reg_off, reg_bytes);
             } else {
-                if (_debug_flag) {
+                if (_debug_flag && _debug_flag->tracing()) {
                     ::gem5::trace::getDebugLogger()->dprintf_flag(
                         curTick(), name(), _debug_flag->name(),
                         "Write register %s\n", reg.name());

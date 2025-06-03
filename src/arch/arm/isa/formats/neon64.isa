@@ -542,17 +542,37 @@ namespace Aarch64
             }
           case 0x19:
             if (size < 0x2) {
-                if (u || sz_q == 0x2)
-                    return new Unknown64(machInst);
-                else
+                if (u) {
+                    if (size == 0) {
+                        if (q)
+                            return new Fmlal2QX<uint16_t>(
+                                machInst, vd, vn, vm);
+                        else
+                            return new Fmlal2DX<uint16_t>(
+                                machInst, vd, vn, vm);
+                    } else {
+                        return new Unknown64(machInst);
+                    }
+                } else {
                     return decodeNeonUThreeFpReg<FmlaDX, FmlaQX>(
                         q, size & 0x1, machInst, vd, vn, vm);
+                }
             } else {
-                if (u || sz_q == 0x2)
-                    return new Unknown64(machInst);
-                else
+                if (u) {
+                    if (size == 2) {
+                        if (q)
+                            return new Fmlsl2QX<uint16_t>(
+                                machInst, vd, vn, vm);
+                        else
+                            return new Fmlsl2DX<uint16_t>(
+                                machInst, vd, vn, vm);
+                    } else {
+                        return new Unknown64(machInst);
+                    }
+                } else {
                     return decodeNeonUThreeFpReg<FmlsDX, FmlsQX>(
                         q, size & 0x1, machInst, vd, vn, vm);
+                }
             }
           case 0x1a:
             if (sz_q == 0x2)
@@ -600,17 +620,33 @@ namespace Aarch64
             }
           case 0x1d:
             if (size < 0x2) {
-                if (u)
+                if (u) {
                     return decodeNeonUThreeFpReg<FacgeDX, FacgeQX>(
                         q, size & 0x1, machInst, vd, vn, vm);
-                else
-                    return new Unknown64(machInst);
+                } else {
+                    if (size == 0) {
+                        if (q)
+                            return new FmlalQX<uint16_t>(machInst, vd, vn, vm);
+                        else
+                            return new FmlalDX<uint16_t>(machInst, vd, vn, vm);
+                    } else {
+                        return new Unknown64(machInst);
+                    }
+                }
             } else {
-                if (u)
+                if (u) {
                     return decodeNeonUThreeFpReg<FacgtDX, FacgtQX>(
                         q, size & 0x1, machInst, vd, vn, vm);
-                else
-                    return new Unknown64(machInst);
+                } else {
+                    if (size == 2) {
+                        if (q)
+                            return new FmlslQX<uint16_t>(machInst, vd, vn, vm);
+                        else
+                            return new FmlslDX<uint16_t>(machInst, vd, vn, vm);
+                    } else {
+                        return new Unknown64(machInst);
+                    }
+                }
             }
           case 0x1e:
             if (sz_q == 0x2)
@@ -1108,6 +1144,20 @@ namespace Aarch64
                 return decodeNeonUTwoMiscFpReg<FrecpeDX, FrecpeQX>(
                     q, size & 0x1, machInst, vd, vn);
             }
+          case 0x1e:
+            if (size < 0x2) {
+                return decodeNeonUTwoMiscFpReg<Frint32zDX, Frint32zQX>(
+                    q, size & 0x1, machInst, vd, vn);
+            } else {
+                return new Unknown64(machInst);
+            }
+          case 0x1f:
+            if (size < 0x2) {
+                return decodeNeonUTwoMiscFpReg<Frint64zDX, Frint64zQX>(
+                    q, size & 0x1, machInst, vd, vn);
+            } else {
+                return new Unknown64(machInst);
+            }
           case 0x20:
             if (op + size >= 3)
                 return new Unknown64(machInst);
@@ -1267,11 +1317,21 @@ namespace Aarch64
             else
                 return decodeNeonUTwoMiscFpReg<FrsqrteDX, FrsqrteQX>(
                     q, size & 0x1, machInst, vd, vn);
-          case 0x3f:
-            if (size < 0x2 || sz_q == 0x2)
+          case 0x3e:
+            if (size < 0x2) {
+                return decodeNeonUTwoMiscFpReg<Frint32xDX, Frint32xQX>(
+                    q, size & 0x1, machInst, vd, vn);
+            } else {
                 return new Unknown64(machInst);
-            return decodeNeonUTwoMiscFpReg<FsqrtDX, FsqrtQX>(
-                q, size & 0x1, machInst, vd, vn);
+            }
+          case 0x3f:
+            if (size < 0x2) {
+                return decodeNeonUTwoMiscFpReg<Frint64xDX, Frint64xQX>(
+                    q, size & 0x1, machInst, vd, vn);
+            } else {
+                return decodeNeonUTwoMiscFpReg<FsqrtDX, FsqrtQX>(
+                    q, size & 0x1, machInst, vd, vn);
+            }
           default:
             return new Unknown64(machInst);
         }
@@ -1610,11 +1670,26 @@ namespace Aarch64
 
         switch (opcode) {
           case 0x0:
-            if (!u || (size == 0x0 || size == 0x3))
-                return new Unknown64(machInst);
-            else
-                return decodeNeonUThreeImmHAndWReg<MlaElemDX, MlaElemQX>(
-                    q, size, machInst, vd, vn, vm, index);
+            if (u) {
+                if (size == 0x0 || size == 0x3) {
+                    return new Unknown64(machInst);
+                } else {
+                    return decodeNeonUThreeImmHAndWReg<MlaElemDX, MlaElemQX>(
+                        q, size, machInst, vd, vn, vm, index);
+                }
+            } else {
+                if (size != 0x2) {
+                    return new Unknown64(machInst);
+                } else {
+                    index = (H << 2) | (L << 1) | M;
+                    if (q)
+                        return new FmlalElemQX<uint16_t>(machInst,
+                            vd, vn, vm_bf, index);
+                    else
+                        return new FmlalElemDX<uint16_t>(machInst,
+                            vd, vn, vm_bf, index);
+                }
+            }
           case 0x1:
             if (!u && sz_q != 0x2 && sz_L != 0x3) {
                 return decodeNeonUThreeImmFpReg<FmlaElemDX, FmlaElemQX>(
@@ -1677,11 +1752,26 @@ namespace Aarch64
                                                    SqdmlalElem2X>(
                     q, size, machInst, vd, vn, vm, index);
           case 0x4:
-            if (u && !(size == 0x0 || size == 0x3))
-                return decodeNeonUThreeImmHAndWReg<MlsElemDX, MlsElemQX>(
-                    q, size, machInst, vd, vn, vm, index);
-            else
-                return new Unknown64(machInst);
+            if (u) {
+                if (size == 0x0 || size == 0x3) {
+                    return new Unknown64(machInst);
+                } else {
+                    return decodeNeonUThreeImmHAndWReg<MlsElemDX, MlsElemQX>(
+                        q, size, machInst, vd, vn, vm, index);
+                }
+            } else {
+                if (size != 0x2) {
+                    return new Unknown64(machInst);
+                } else {
+                    index = (H << 2) | (L << 1) | M;
+                    if (q)
+                        return new FmlslElemQX<uint16_t>(machInst,
+                            vd, vn, vm_bf, index);
+                    else
+                        return new FmlslElemDX<uint16_t>(machInst,
+                            vd, vn, vm_bf, index);
+                }
+            }
           case 0x5:
             if (!u && sz_L != 0x3 && sz_q != 0x2) {
                 return decodeNeonUThreeImmFpReg<FmlsElemDX, FmlsElemQX>(
@@ -1743,11 +1833,26 @@ namespace Aarch64
                                                    SqdmlslElem2X>(
                     q, size, machInst, vd, vn, vm, index);
           case 0x8:
-            if (u || (size == 0x0 || size == 0x3))
-                return new Unknown64(machInst);
-            else
-                return decodeNeonUThreeImmHAndWReg<MulElemDX, MulElemQX>(
-                    q, size, machInst, vd, vn, vm, index);
+            if (u) {
+                if (size != 0x2) {
+                    return new Unknown64(machInst);
+                } else {
+                    index = (H << 2) | (L << 1) | M;
+                    if (q)
+                        return new Fmlal2ElemQX<uint16_t>(machInst,
+                            vd, vn, vm_bf, index);
+                    else
+                        return new Fmlal2ElemDX<uint16_t>(machInst,
+                            vd, vn, vm_bf, index);
+                }
+            } else {
+                if (size == 0x0 || size == 0x3) {
+                    return new Unknown64(machInst);
+                } else {
+                    return decodeNeonUThreeImmHAndWReg<MulElemDX, MulElemQX>(
+                        q, size, machInst, vd, vn, vm, index);
+                }
+            }
           case 0x9:
             if (sz_q != 0x2 && sz_L != 0x3) {
                 if (u)
@@ -1776,12 +1881,27 @@ namespace Aarch64
                     <SqdmullElemX, SqdmullElem2X>(
                         q, size, machInst, vd, vn, vm, index);
           case 0xc:
-            if (u || (size == 0x0 || size == 0x3))
-                return new Unknown64(machInst);
-            else
-                return decodeNeonSThreeImmHAndWReg
-                    <SqdmulhElemDX, SqdmulhElemQX>(
-                        q, size, machInst, vd, vn, vm, index);
+            if (u) {
+                if (size != 0x2) {
+                    return new Unknown64(machInst);
+                } else {
+                    index = (H << 2) | (L << 1) | M;
+                    if (q)
+                        return new Fmlsl2ElemQX<uint16_t>(machInst,
+                            vd, vn, vm_bf, index);
+                    else
+                        return new Fmlsl2ElemDX<uint16_t>(machInst,
+                            vd, vn, vm_bf, index);
+                }
+            } else {
+                if (size == 0x0 || size == 0x3) {
+                    return new Unknown64(machInst);
+                } else {
+                    return decodeNeonSThreeImmHAndWReg
+                        <SqdmulhElemDX, SqdmulhElemQX>(
+                            q, size, machInst, vd, vn, vm, index);
+                }
+            }
           case 0xd:
             if (u)
                 return decodeNeonSThreeImmHAndWReg<SqrdmlahElemDX,

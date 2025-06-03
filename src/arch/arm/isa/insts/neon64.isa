@@ -152,30 +152,31 @@ let {{
 
     def threeUnequalRegInstX(name, Name, opClass, types, op,
                              bigSrc1, bigSrc2, bigDest, readDest, scalar=False,
-                             byElem=False, hi=False):
+                             byElem=False, hi=False, short=False,
+                             extra_check=''):
         assert not (scalar and hi)
         global header_output, exec_output
-        src1Cnt = src2Cnt = destCnt = 2
+        src1Cnt = src2Cnt = destCnt = 1 if short else 2
         src1Prefix = src2Prefix = destPrefix = ''
         if bigSrc1:
-            src1Cnt = 4
+            src1Cnt = 2 if short else 4
             src1Prefix = 'Big'
         if bigSrc2:
-            src2Cnt = 4
+            src2Cnt = 2 if short else 4
             src2Prefix = 'Big'
         if bigDest:
-            destCnt = 4
+            destCnt = 2 if short else 4
             destPrefix = 'Big'
         if byElem:
             src2Prefix = 'Full'
-        eWalkCode = simd64EnabledCheckCode + '''
+        eWalkCode = simd64EnabledCheckCode + extra_check + '''
         %sRegVect srcReg1;
         %sRegVect srcReg2;
         %sRegVect destReg;
         ''' % (src1Prefix, src2Prefix, destPrefix)
         srcReg1 = 0
         if hi and not bigSrc1:  # long/widening operations
-            srcReg1 = 2
+            srcReg1 = 1 if short else 2
         for reg in range(src1Cnt):
             eWalkCode += '''
         srcReg1.regs[%(reg)d] = htole(AA64FpOp1P%(srcReg1)d_uw);
@@ -183,7 +184,7 @@ let {{
             srcReg1 += 1
         srcReg2 = 0
         if (not byElem) and (hi and not bigSrc2):  # long/widening operations
-            srcReg2 = 2
+            srcReg2 = 1 if short else 2
         for reg in range(src2Cnt):
             eWalkCode += '''
         srcReg2.regs[%(reg)d] = htole(AA64FpOp2P%(srcReg2)d_uw);
@@ -228,14 +229,14 @@ let {{
         destReg = 0
         if hi and not bigDest:
             # narrowing operations
-            destReg = 2
+            destReg = 1 if short else 2
         for reg in range(destCnt):
             eWalkCode += '''
         AA64FpDestP%(destReg)d_uw = letoh(destReg.regs[%(reg)d]);
         ''' % { "reg" : reg, "destReg": destReg }
             destReg += 1
         if destCnt < 4:
-            if hi:  # Explicitly merge with lower half
+            if hi and not bigDest:  # Explicitly merge with lower half
                 for reg in range(0, destCnt):
                     eWalkCode += '''
         AA64FpDestP%(reg)d_uw = AA64FpDestP%(reg)d_uw;''' % { "reg" : reg }
@@ -247,7 +248,7 @@ let {{
         iop = ArmInstObjParams(name, Name,
                                "DataX2RegImmOp" if byElem else "DataX2RegOp",
                                { "code": eWalkCode,
-                                 "r_count": 2,
+                                 "r_count": 1 if short else 2,
                                  "op_class": opClass }, [])
         iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         if byElem:
@@ -261,36 +262,42 @@ let {{
             exec_output += NeonXExecDeclare.subst(substDict)
 
     def threeRegNarrowInstX(name, Name, opClass, types, op, readDest=False,
-                            scalar=False, byElem=False, hi=False):
+                            scalar=False, byElem=False, hi=False,
+                            extra_check=''):
         assert not byElem
         threeUnequalRegInstX(name, Name, opClass, types, op,
-                             True, True, False, readDest, scalar, byElem, hi)
+                             True, True, False, readDest, scalar, byElem, hi,
+                             False, extra_check)
 
     def threeRegLongInstX(name, Name, opClass, types, op, readDest=False,
-                          scalar=False, byElem=False, hi=False):
+                          scalar=False, byElem=False, hi=False, short=False,
+                          extra_check=''):
         threeUnequalRegInstX(name, Name, opClass, types, op,
-                             False, False, True, readDest, scalar, byElem, hi)
+                             False, False, True, readDest, scalar, byElem, hi,
+                             short, extra_check)
 
     def threeRegWideInstX(name, Name, opClass, types, op, readDest=False,
-                          scalar=False, byElem=False, hi=False):
+                          scalar=False, byElem=False, hi=False,
+                          extra_check=''):
         assert not byElem
         threeUnequalRegInstX(name, Name, opClass, types, op,
-                             True, False, True, readDest, scalar, byElem, hi)
+                             True, False, True, readDest, scalar, byElem, hi,
+                             False, extra_check)
 
     def twoEqualRegInstX(name, Name, opClass, types, rCount, op,
                          readDest=False, scalar=False, byElem=False,
-                         hasImm=False, isDup=False):
+                         hasImm=False, isDup=False, extra_check=''):
         global header_output, exec_output
         assert (not isDup) or byElem
         if byElem:
             hasImm = True
         if isDup:
-            eWalkCode = simd64EnabledCheckCode + '''
+            eWalkCode = simd64EnabledCheckCode + extra_check + '''
         FullRegVect srcReg1;
         RegVect destReg;
         '''
         else:
-            eWalkCode = simd64EnabledCheckCode + '''
+            eWalkCode = simd64EnabledCheckCode + extra_check + '''
         RegVect srcReg1, destReg;
         '''
         for reg in range(4 if isDup else rCount):
@@ -349,21 +356,21 @@ let {{
             exec_output += NeonXExecDeclare.subst(substDict)
 
     def twoRegLongInstX(name, Name, opClass, types, op, readDest=False,
-                        hi=False, hasImm=False):
+                        hi=False, hasImm=False, short=False):
         global header_output, exec_output
         eWalkCode = simd64EnabledCheckCode + '''
         RegVect srcReg1;
         BigRegVect destReg = {};
         '''
-        destReg = 0 if not hi else 2
-        for reg in range(2):
+        destReg = 0 if not hi else 1 if short else 2
+        for reg in range(1 if short else 2):
             eWalkCode += '''
         srcReg1.regs[%(reg)d] = htole(AA64FpOp1P%(destReg)d_uw);
         ''' % { "reg" : reg, "destReg": destReg }
             destReg += 1
-        destReg = 0 if not hi else 2
+        destReg = 0 if not hi else 1 if short else 2
         if readDest:
-            for reg in range(4):
+            for reg in range(2 if short else 4):
                 eWalkCode += '''
         destReg.regs[%(reg)d] = htole(AA64FpDestP%(reg)d_uw);
         ''' % { "reg" : reg }
@@ -380,14 +387,14 @@ let {{
             destReg.elements[i] = htole(destElem);
         }
         ''' % { "op" : op, "readDest" : readDestCode }
-        for reg in range(4):
+        for reg in range(2 if short else 4):
             eWalkCode += '''
         AA64FpDestP%(reg)d_uw = letoh(destReg.regs[%(reg)d]);
         ''' % { "reg" : reg }
         iop = ArmInstObjParams(name, Name,
                                "DataX1RegImmOp" if hasImm else "DataX1RegOp",
                                { "code": eWalkCode,
-                                 "r_count": 2,
+                                 "r_count": 1 if short else 2,
                                  "op_class": opClass }, [])
         iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         if hasImm:
@@ -1758,6 +1765,11 @@ let {{
                       ("uint16_t", "uint32_t"), 4,
                       fminAcrossCode, False, False, True)
     # FMLA (by element)
+    fhm_check = '''
+      AA64ISAR0 isar0 = xc->tcBase()->readMiscReg( MISCREG_ID_AA64ISAR0_EL1);
+      if (!isar0.fhm)
+          return std::make_shared<UndefinedInstruction>(machInst, true);
+    '''
     fmlaCode = fpOp % ("fplibMulAdd<Element>("
                        "destElem, srcElem1, srcElem2, fpscr)")
     threeEqualRegInstX("fmla", "FmlaElemDX", "SimdFloatMultAccOp",
@@ -1771,6 +1783,36 @@ let {{
                        2, fmlaCode, True)
     threeEqualRegInstX("fmla", "FmlaQX", "SimdFloatMultAccOp", floatTypes, 4,
                        fmlaCode, True)
+    # FMLAL (by element)
+    fmlalCode = fpOp % ("fplibMulAddH("
+                       "destElem, srcElem1, srcElem2, fpscr)")
+    threeRegLongInstX("fmlal", "FmlalElemDX", "SimdFloatMultAccOp",
+                      ("uint16_t",), fmlalCode, True, byElem=True, short=True,
+                      extra_check=fhm_check)
+    threeRegLongInstX("fmlal", "FmlalElemQX", "SimdFloatMultAccOp",
+                      ("uint16_t",), fmlalCode, True, byElem=True,
+                      extra_check=fhm_check)
+    # FMLAL2 (by element)
+    threeRegLongInstX("fmlal2", "Fmlal2ElemDX", "SimdFloatMultAccOp",
+                      ("uint16_t",), fmlalCode, True, byElem=True, hi=True,
+                      short=True, extra_check=fhm_check)
+    threeRegLongInstX("fmlal2", "Fmlal2ElemQX", "SimdFloatMultAccOp",
+                      ("uint16_t",), fmlalCode, True, byElem=True, hi=True,
+                      extra_check=fhm_check)
+    # FMLAL (vector)
+    threeRegLongInstX("fmlal", "FmlalDX", "SimdFloatMultAccOp",
+                      ("uint16_t",), fmlalCode, True, short=True,
+                      extra_check=fhm_check)
+    threeRegLongInstX("fmlal", "FmlalQX", "SimdFloatMultAccOp",
+                      ("uint16_t",), fmlalCode, True,
+                      extra_check=fhm_check)
+    # FMLAL2 (vector)
+    threeRegLongInstX("fmlal2", "Fmlal2DX", "SimdFloatMultAccOp",
+                      ("uint16_t",), fmlalCode, True, hi=True, short=True,
+                      extra_check=fhm_check)
+    threeRegLongInstX("fmlal2", "Fmlal2QX", "SimdFloatMultAccOp",
+                      ("uint16_t",), fmlalCode, True, hi=True,
+                      extra_check=fhm_check)
     # FMLS (by element)
     fmlsCode = fpOp % ("fplibMulAdd<Element>(destElem,"
                        " fplibNeg<Element>(srcElem1), srcElem2, fpscr)")
@@ -1785,6 +1827,35 @@ let {{
                        2, fmlsCode, True)
     threeEqualRegInstX("fmls", "FmlsQX", "SimdFloatMultAccOp", floatTypes, 4,
                        fmlsCode, True)
+    # FMLSL (by element)
+    fmlslCode = fpOp % ("fplibMulAddH(destElem, "
+                       "fplibNeg<Element>(srcElem1), srcElem2, fpscr)")
+    threeRegLongInstX("fmlsl", "FmlslElemDX", "SimdFloatMultAccOp",
+                      ("uint16_t",), fmlslCode, True, byElem=True, short=True,
+                      extra_check=fhm_check)
+    threeRegLongInstX("fmlsl", "FmlslElemQX", "SimdFloatMultAccOp",
+                      ("uint16_t",), fmlslCode, True, byElem=True,
+                      extra_check=fhm_check)
+    # FMLSL2 (by element)
+    threeRegLongInstX("fmlsl2", "Fmlsl2ElemDX", "SimdFloatMultAccOp",
+                      ("uint16_t",), fmlslCode, True, byElem=True, hi=True,
+                      short=True, extra_check=fhm_check)
+    threeRegLongInstX("fmlsl2", "Fmlsl2ElemQX", "SimdFloatMultAccOp",
+                      ("uint16_t",), fmlslCode, True, byElem=True, hi=True,
+                      extra_check=fhm_check)
+    # FMLSL (vector)
+    threeRegLongInstX("fmlsl", "FmlslDX", "SimdFloatMultAccOp",
+                      ("uint16_t",), fmlslCode, True, short=True,
+                      extra_check=fhm_check)
+    threeRegLongInstX("fmlsl", "FmlslQX", "SimdFloatMultAccOp",
+                      ("uint16_t",), fmlslCode, True, extra_check=fhm_check)
+    # FMLSL2 (vector)
+    threeRegLongInstX("fmlsl2", "Fmlsl2DX", "SimdFloatMultAccOp",
+                      ("uint16_t",), fmlslCode, True, hi=True, short=True,
+                      extra_check=fhm_check)
+    threeRegLongInstX("fmlsl2", "Fmlsl2QX", "SimdFloatMultAccOp",
+                      ("uint16_t",), fmlslCode, True, hi=True,
+                      extra_check=fhm_check)
     # FMOV
     fmovCode = 'destElem = imm;'
     oneRegImmInstX("fmov", "FmovDX", "SimdMiscOp", smallFloatTypes, 2,
@@ -1887,6 +1958,43 @@ let {{
                      frintzCode)
     twoEqualRegInstX("frintz", "FrintzQX", "SimdCvtOp", floatTypes, 4,
                      frintzCode)
+    # FRINT32X
+    frintts_check = '''
+      AA64ISAR1 isar1 = xc->tcBase()->readMiscReg( MISCREG_ID_AA64ISAR1_EL1);
+      if (!isar1.frintts)
+          return std::make_shared<UndefinedInstruction>(machInst, true);
+    '''
+    frint32xCode = fpOp % ("fplibRoundIntN<Element>"
+                        "(srcElem1, FPCRRounding(fpscr), true, 32, fpscr)")
+    twoEqualRegInstX("frint32x", "Frint32xDX", "SimdCvtOp", ('uint32_t',), 2,
+                     frint32xCode, extra_check=frintts_check)
+    twoEqualRegInstX("frint32x", "Frint32xQX", "SimdCvtOp",
+                     ('uint32_t', 'uint64_t',), 4,
+                     frint32xCode, extra_check=frintts_check)
+    # FRINT32Z
+    frint32zCode = fpOp % ("fplibRoundIntN<Element>"
+                        "(srcElem1, FPRounding_ZERO, true, 32, fpscr)")
+    twoEqualRegInstX("frint32z", "Frint32zDX", "SimdCvtOp", ('uint32_t',), 2,
+                     frint32zCode, extra_check=frintts_check)
+    twoEqualRegInstX("frint32z", "Frint32zQX", "SimdCvtOp",
+                     ('uint32_t', 'uint64_t',), 4,
+                     frint32zCode, extra_check=frintts_check)
+    # FRINT64X
+    frint64xCode = fpOp % ("fplibRoundIntN<Element>"
+                        "(srcElem1, FPCRRounding(fpscr), true, 64, fpscr)")
+    twoEqualRegInstX("frint64x", "Frint64xDX", "SimdCvtOp", ('uint32_t',), 2,
+                     frint64xCode, extra_check=frintts_check)
+    twoEqualRegInstX("frint64x", "Frint64xQX", "SimdCvtOp",
+                     ('uint32_t', 'uint64_t',), 4,
+                     frint64xCode, extra_check=frintts_check)
+    # FRINT64Z
+    frint64zCode = fpOp % ("fplibRoundIntN<Element>"
+                        "(srcElem1, FPRounding_ZERO, true, 64, fpscr)")
+    twoEqualRegInstX("frint64z", "Frint64zDX", "SimdCvtOp", ('uint32_t',), 2,
+                     frint64zCode, extra_check=frintts_check)
+    twoEqualRegInstX("frint64z", "Frint64zQX", "SimdCvtOp",
+                     ('uint32_t', 'uint64_t',), 4,
+                     frint64zCode, extra_check=frintts_check)
     # FRSQRTE
     frsqrteCode = fpOp % "fplibRSqrtEstimate<Element>(srcElem1, fpscr)"
     twoEqualRegInstX("frsqrte", "FrsqrteDX", "SimdFloatSqrtOp",

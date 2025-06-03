@@ -373,7 +373,34 @@ let {{
             switch (op1_op2) {
               case 2: case 3: case 6: case 7:
                 if (u) {
-                    return new Unknown64(machInst);
+                    if (op1_op2 == 2) {
+                        if (q) {
+                            return new NVfmalQ<uint16_t>(machInst, vd, vn, vm);
+                        } else {
+                            vn = (RegIndex)((bits(machInst, 19, 16) << 1) |
+                                             bits(machInst, 7));
+                            vm = (RegIndex)((bits(machInst, 3, 0) << 1) |
+                                             bits(machInst, 5));
+                            return new NVfmalD<uint16_t>(machInst, vd, vn, vm);
+                        }
+                    } else if (op1_op2 == 3) {
+                        if (q)
+                            return new VfmatQ<uint32_t>(machInst, vd, vn, vm);
+                        else
+                            return new VfmabQ<uint32_t>(machInst, vd, vn, vm);
+                    } else if (op1_op2 == 6) {
+                        if (q) {
+                            return new NVfmslQ<uint16_t>(machInst, vd, vn, vm);
+                        } else {
+                            vn = (RegIndex)((bits(machInst, 19, 16) << 1) |
+                                             bits(machInst, 7));
+                            vm = (RegIndex)((bits(machInst, 3, 0) << 1) |
+                                             bits(machInst, 5));
+                            return new NVfmslD<uint16_t>(machInst, vd, vn, vm);
+                        }
+                    } else {
+                        return new Unknown64(machInst);
+                    }
                 } else {
                     // VCMLA
                     bool s = bits (machInst, 20);
@@ -505,7 +532,50 @@ let {{
             vm = (RegIndex)(2 * bits(machInst, 2, 0));
 
             if (u) {
-                return new Unknown64(machInst);
+                if (op1_op2 == 0) {
+                    if (q) {
+                        vm = (RegIndex)(2 * bits(machInst, 2, 0));
+                        uint8_t index = (bits(machInst, 5) << 1) |
+                                         bits(machInst, 3);
+                        return new NVfmalElemQ<uint16_t>(
+                            machInst, vd, vn, vm, index);
+                    } else {
+                        vn = (RegIndex)((bits(machInst, 19, 16) << 1) |
+                                          bits(machInst, 7));
+                        vm = (RegIndex)((bits(machInst, 2, 0) << 1) |
+                                          bits(machInst, 5));
+                        uint8_t index = bits(machInst, 3);
+                        return new NVfmalElemD<uint16_t>(
+                            machInst, vd, vn, vm, index);
+                    }
+                } else if (op1_op2 == 1) {
+                    if (q) {
+                        vm = (RegIndex)(2 * bits(machInst, 2, 0));
+                        uint8_t index = (bits(machInst, 5) << 1) |
+                                         bits(machInst, 3);
+                        return new NVfmslElemQ<uint16_t>(
+                            machInst, vd, vn, vm, index);
+                    } else {
+                        vn = (RegIndex)((bits(machInst, 19, 16) << 1) |
+                                          bits(machInst, 7));
+                        vm = (RegIndex)((bits(machInst, 2, 0) << 1) |
+                                          bits(machInst, 5));
+                        uint8_t index = bits(machInst, 3);
+                        return new NVfmslElemD<uint16_t>(
+                            machInst, vd, vn, vm, index);
+                    }
+                } else if (op1_op2 == 3) {
+                    vm = (RegIndex)(2 * bits(machInst, 2, 0));
+                    uint8_t index = bits(machInst, 5);
+                    if (q)
+                        return new VfmatElemQ<uint32_t>(
+                            machInst, vd, vn, vm, index);
+                    else
+                        return new VfmabElemQ<uint32_t>(
+                            machInst, vd, vn, vm, index);
+                } else {
+                    return new Unknown64(machInst);
+                }
             } else {
                 // VCMLA by element
                 bool s = bits (machInst, 23);

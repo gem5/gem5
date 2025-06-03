@@ -399,7 +399,8 @@ SDMAEngine::decodeHeader(SDMAQueue *q, uint32_t header)
     DmaVirtCallback<uint64_t> *cb = nullptr;
     void *dmaBuffer = nullptr;
 
-    DPRINTF(SDMAEngine, "SDMA opcode %p sub-opcode %p\n", opcode, sub_opcode);
+    DPRINTF(SDMAEngine, "SDMA header %x opcode %x sub-opcode %x\n",
+            header, opcode, sub_opcode);
 
     switch(opcode) {
       case SDMA_OP_NOP: {
@@ -880,6 +881,22 @@ SDMAEngine::trap(SDMAQueue *q, sdmaTrap *pkt)
     int node_id = 0;
     int local_id = getId();
 
+    if (gpuDevice->getGfxVersion() == GfxVersion::gfx942) {
+        node_id = getId() >> 2;
+
+        // For most SDMAs the "node_id" for the interrupt handler is the SDMA
+        // id / 4. node_id of 2 is used by some other IP, so this gets changed
+        // to node_id 4:
+        // SDMA 0-3: node_id 0
+        // SDMA 4-7: node_id 1
+        // SDMA 8-11: node_id 4
+        // SDMA 12-15: node_id 3
+        if (node_id == 2) {
+            node_id += 2;
+        }
+
+        local_id = getId() % 4;
+    }
     gpuDevice->getIH()->prepareInterruptCookie(pkt->intrContext, ring_id,
                                                getIHClientId(local_id),
                                                TRAP_ID, 2*node_id);
@@ -928,6 +945,10 @@ SDMAEngine::pollRegMem(SDMAQueue *q, uint32_t header, sdmaPollRegMem *pkt)
 
     sdmaPollRegMemHeader prm_header;
     prm_header.ordinal = header;
+
+    if (q->priv()) {
+        pkt->address = getGARTAddr(pkt->address);
+    }
 
     DPRINTF(SDMAEngine, "POLL_REGMEM: M=%d, func=%d, op=%d, addr=%p, ref=%d, "
             "mask=%p, retry=%d, pinterval=%d\n", prm_header.mode,

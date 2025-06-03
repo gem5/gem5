@@ -1,5 +1,5 @@
 # -*- mode:python -*-
-# Copyright (c) 2009-2014, 2017-2018, 2020, 2022-2023 Arm Limited
+# Copyright (c) 2009-2014, 2017-2018, 2020, 2022-2023, 2025 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -46,11 +46,71 @@ from m5.SimObject import *
 from m5.util.fdthelper import *
 
 
+class EventTypeId(Enum):
+    """
+    The values of the scoped enum are matching the event ID
+    number defined in the Arm architecture reference manual
+    """
+
+    map = {
+        "SW_INCR": 0x00,
+        "L1I_CACHE_REFILL": 0x01,
+        "L1I_TLB_REFILL": 0x02,
+        "L1D_CACHE_REFILL": 0x03,
+        "L1D_CACHE": 0x04,
+        "L1D_TLB_REFILL": 0x05,
+        "LD_RETIRED": 0x06,
+        "ST_RETIRED": 0x07,
+        "INST_RETIRED": 0x08,
+        "EXC_TAKEN": 0x09,
+        "EXC_RETURN": 0x0A,
+        "CID_WRITE_RETIRED": 0x0B,
+        "PC_WRITE_RETIRED": 0x0C,
+        "BR_IMMED_RETIRED": 0x0D,
+        "BR_RETURN_RETIRED": 0x0E,
+        "UNALIGEND_LDST_RETIRED": 0x0F,
+        "BR_MIS_PRED": 0x10,
+        "CPU_CYCLES": 0x11,
+        "BR_PRED": 0x12,
+        "MEM_ACCESS": 0x13,
+        "L1I_CACHE": 0x14,
+        "L1D_CACHE_WB": 0x15,
+        "L2D_CACHE": 0x16,
+        "L2D_CACHE_REFILL": 0x17,
+        "L2D_CACHE_WB": 0x18,
+        "BUS_ACCESS": 0x19,
+        "MEMORY_ERROR": 0x1A,
+        "INST_SPEC": 0x1B,
+        "TTBR_WRITE_RETIRED": 0x1C,
+        "BUS_CYCLES": 0x1D,
+        "CHAIN": 0x1E,
+        "L1D_CACHE_ALLOCATE": 0x1F,
+        "L2D_CACHE_ALLOCATE": 0x20,
+        "BR_RETIRED": 0x21,
+        "BR_MIS_PRED_RETIRED": 0x22,
+        "STALL_FRONTEND": 0x23,
+        "STALL_BACKEND": 0x24,
+        "L1D_TLB": 0x25,
+        "L1I_TLB": 0x26,
+        "L2I_CACHE": 0x27,
+        "L2I_CACHE_REFILL": 0x28,
+        "L3D_CACHE_ALLOCATE": 0x29,
+        "L3D_CACHE_REFILL": 0x2A,
+        "L3D_CACHE": 0x2B,
+        "L3D_CACHE_WB": 0x2C,
+        "L2D_TLB_REFILL": 0x2D,
+        "L2I_TLB_REFILL": 0x2E,
+        "L2D_TLB": 0x2F,
+        "L2I_TLB": 0x30,
+        "INVALID": 0xFF,
+    }
+
+
 class ProbeEvent:
     def __init__(self, pmu, _eventId, obj, *listOfNames):
         self.obj = obj
         self.names = listOfNames
-        self.eventId = _eventId
+        self.eventId = EventTypeId(_eventId).getValue()
         self.pmu = pmu
 
     def register(self):
@@ -63,14 +123,11 @@ class ProbeEvent:
 
 class SoftwareIncrement:
     def __init__(self, pmu, _eventId):
-        self.eventId = _eventId
+        self.eventId = EventTypeId(_eventId).getValue()
         self.pmu = pmu
 
     def register(self):
         self.pmu.getCCObject().addSoftwareIncrementEvent(self.eventId)
-
-
-ARCH_EVENT_CORE_CYCLES = 0x11
 
 
 class ArmPMU(SimObject):
@@ -112,6 +169,7 @@ class ArmPMU(SimObject):
         cpu=None,
         itb=None,
         dtb=None,
+        l2_shared=None,
         icache=None,
         dcache=None,
         l2cache=None,
@@ -132,24 +190,15 @@ class ArmPMU(SimObject):
         if bpred is not None and isNullPointer(bpred):
             bpred = None
 
-        # 0x00: SW_INCR
-        self.addEvent(SoftwareIncrement(self, 0x00))
-        # 0x01: L1I_CACHE_REFILL
-        self.addEvent(ProbeEvent(self, 0x01, icache, "Fill"))
-        # 0x02: L1I_TLB_REFILL,
-        self.addEvent(ProbeEvent(self, 0x02, itb, "Refills"))
-        # 0x03: L1D_CACHE_REFILL
-        self.addEvent(ProbeEvent(self, 0x03, dcache, "Fill"))
-        # 0x04: L1D_CACHE
-        self.addEvent(ProbeEvent(self, 0x04, dcache, "Hit", "Miss"))
-        # 0x05: L1D_TLB_REFILL
-        self.addEvent(ProbeEvent(self, 0x05, dtb, "Refills"))
-        # 0x06: LD_RETIRED
-        self.addEvent(ProbeEvent(self, 0x06, cpu, "RetiredLoads"))
-        # 0x07: ST_RETIRED
-        self.addEvent(ProbeEvent(self, 0x07, cpu, "RetiredStores"))
-        # 0x08: INST_RETIRED
-        self.addEvent(ProbeEvent(self, 0x08, cpu, "RetiredInsts"))
+        self.addEvent(SoftwareIncrement(self, "SW_INCR"))
+        self.addEvent(ProbeEvent(self, "L1I_CACHE_REFILL", icache, "Fill"))
+        self.addEvent(ProbeEvent(self, "L1I_TLB_REFILL", itb, "InstRefills"))
+        self.addEvent(ProbeEvent(self, "L1D_CACHE_REFILL", dcache, "Fill"))
+        self.addEvent(ProbeEvent(self, "L1D_CACHE", dcache, "Hit", "Miss"))
+        self.addEvent(ProbeEvent(self, "L1D_TLB_REFILL", dtb, "DataRefills"))
+        self.addEvent(ProbeEvent(self, "LD_RETIRED", cpu, "RetiredLoads"))
+        self.addEvent(ProbeEvent(self, "ST_RETIRED", cpu, "RetiredStores"))
+        self.addEvent(ProbeEvent(self, "INST_RETIRED", cpu, "RetiredInsts"))
         # 0x09: EXC_TAKEN
         # 0x0A: EXC_RETURN
         # 0x0B: CID_WRITE_RETIRED
@@ -157,25 +206,18 @@ class ArmPMU(SimObject):
         # 0x0D: BR_IMMED_RETIRED
         # 0x0E: BR_RETURN_RETIRED
         # 0x0F: UNALIGEND_LDST_RETIRED
-        # 0x10: BR_MIS_PRED
-        self.addEvent(ProbeEvent(self, 0x10, bpred, "Misses"))
-        # 0x11: CPU_CYCLES
+        self.addEvent(ProbeEvent(self, "BR_MIS_PRED", bpred, "Misses"))
+        self.addEvent(ProbeEvent(self, "CPU_CYCLES", cpu, "ActiveCycles"))
+        self.addEvent(ProbeEvent(self, "BR_PRED", bpred, "Branches"))
         self.addEvent(
-            ProbeEvent(self, ARCH_EVENT_CORE_CYCLES, cpu, "ActiveCycles")
+            ProbeEvent(
+                self, "MEM_ACCESS", cpu, "RetiredLoads", "RetiredStores"
+            )
         )
-        # 0x12: BR_PRED
-        self.addEvent(ProbeEvent(self, 0x12, bpred, "Branches"))
-        # 0x13: MEM_ACCESS
-        self.addEvent(
-            ProbeEvent(self, 0x13, cpu, "RetiredLoads", "RetiredStores")
-        )
-        # 0x14: L1I_CACHE
-        self.addEvent(ProbeEvent(self, 0x14, icache, "Hit", "Miss"))
+        self.addEvent(ProbeEvent(self, "L1I_CACHE", icache, "Hit", "Miss"))
         # 0x15: L1D_CACHE_WB
-        # 0x16: L2D_CACHE
-        self.addEvent(ProbeEvent(self, 0x16, l2cache, "Hit", "Miss"))
-        # 0x17: L2D_CACHE_REFILL
-        self.addEvent(ProbeEvent(self, 0x17, l2cache, "Fill"))
+        self.addEvent(ProbeEvent(self, "L2D_CACHE", l2cache, "Hit", "Miss"))
+        self.addEvent(ProbeEvent(self, "L2D_CACHE_REFILL", l2cache, "Fill"))
         # 0x18: L2D_CACHE_WB
         # 0x19: BUS_ACCESS
         # 0x1A: MEMORY_ERROR
@@ -185,8 +227,7 @@ class ArmPMU(SimObject):
         # 0x1E: CHAIN
         # 0x1F: L1D_CACHE_ALLOCATE
         # 0x20: L2D_CACHE_ALLOCATE
-        # 0x21: BR_RETIRED
-        self.addEvent(ProbeEvent(self, 0x21, cpu, "RetiredBranches"))
+        self.addEvent(ProbeEvent(self, "BR_RETIRED", cpu, "RetiredBranches"))
         # 0x22: BR_MIS_PRED_RETIRED
         # 0x23: STALL_FRONTEND
         # 0x24: STALL_BACKEND
@@ -198,8 +239,12 @@ class ArmPMU(SimObject):
         # 0x2A: L3D_CACHE_REFILL
         # 0x2B: L3D_CACHE
         # 0x2C: L3D_CACHE_WB
-        # 0x2D: L2D_TLB_REFILL
-        # 0x2E: L2I_TLB_REFILL
+        self.addEvent(
+            ProbeEvent(self, "L2D_TLB_REFILL", l2_shared, "DataRefills")
+        )
+        self.addEvent(
+            ProbeEvent(self, "L2I_TLB_REFILL", l2_shared, "InstRefills")
+        )
         # 0x2F: L2D_TLB
         # 0x30: L2I_TLB
 
@@ -220,7 +265,7 @@ class ArmPMU(SimObject):
 
         yield node
 
-    cycleEventId = Param.Int(ARCH_EVENT_CORE_CYCLES, "Cycle event id")
+    cycleEventId = Param.EventTypeId("CPU_CYCLES", "Cycle event id")
     platform = Param.Platform(Parent.any, "Platform this device is part of.")
     eventCounters = Param.Int(31, "Number of supported PMU counters")
     interrupt = Param.ArmInterruptPin("PMU interrupt")
@@ -235,4 +280,26 @@ class ArmPMU(SimObject):
     use64bitCounters = Param.Bool(
         False,
         "Choose whether to use 64-bit or 32-bit PMEVCNTR<n>_EL0 registers.",
+    )
+
+    statCounters = DictParam.Int.String(
+        {},
+        """
+        Dictionary of PMU events to be merged into the stats framework.
+            Key = ID of the PMU event
+            Value = Name of the gem5 stat
+
+        For example the following param value:
+
+        my_stat_counters = {
+            int(EventTypeId("INST_RETIRED")): "INST_RETIRED",
+            int(EventTypeId("CPU_CYCLES")): "CPU_CYCLES",
+            0xC0C0 : "MY_IMPDEF_EVENT"
+        }
+
+        Will produce three stats under the pmu section:
+            root.<>.pmu.INST_RETIRED=<val>
+            root.<>.pmu.CPU_CYCLES=<val>
+            root.<>.pmu.MY_IMPDEF_EVENT=<val>
+        """,
     )

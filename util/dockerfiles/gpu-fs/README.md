@@ -1,7 +1,7 @@
 ## rocm-build Dockerfile
 The Dockerfile in this directory is used to build applications to be run with GPU full system.
 Applications targeting AMD's ROCm GPU framework can be built using this docker (e.g., HIP, HSA, OpenCL, etc.).
-The current major ROCm version targeted is 6.1.
+The current major ROCm version targeted is 6.4.
 This version matches the disk image provided in gem5-resources.
 
 The purpose of this docker image is to allow building applications without requiring ROCm to be installed on the host machine.
@@ -16,7 +16,7 @@ docker build -t <image_name> .
 For example:
 
 ```sh
-docker build -t rocm6-build .
+docker build -t rocm64-build .
 ```
 
 ### Building an application
@@ -26,7 +26,7 @@ Square provides a Makefile and has only one input file:
 
 ```sh
 cd gem5-resources/src/gpu/square
-docker run --rm -u $UID:$GID -v $PWD:$PWD -w $PWD rocm6-build make
+docker run --rm -u $UID:$GID -v $PWD:$PWD -w $PWD rocm64-build make -f Makefile.default
 ```
 
 More complex applications, such as applications requiring m5ops, applications with multiple build steps, or paths with symlinks require more complex --volume command line options.
