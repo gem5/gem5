@@ -61,6 +61,11 @@ def bitfield FRC           <10:6>;
 def bitfield FRS           <25:21>;
 def bitfield FRT           <25:21>;
 
+// VSX Fields
+def bitfield RA_vsx         <15:11>;
+def bitfield T_S            <10:6>;
+def bitfield TX_SX          <31>;
+
 // The record bit can be in two positions
 // Used to enable setting of the condition register
 def bitfield RC31          <0>;
