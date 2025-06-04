@@ -1,46 +1,56 @@
 #include "arch/power/insts/misc.hh"
+#include "arch/power/isa.hh"
+#include "arch/power/regs/float.hh"  // Defines floatRegClass
+#include "arch/power/regs/int.hh"  // Defines intRegClass
+#include "arch/power/regs/vec.hh"
 #include "base/types.hh"
 #include "cpu/reg_class.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
 #include "vector_scalar.hh"
 
-void mtvsrd(ThreadContext *tc, int xt, int ra) {
-    // Ensure valid register indices
-    assert(xt >= 0 && xt < NumVecRegs);
-    assert(ra >= 0 && ra < NumIntRegs);
+using namespace gem5;
 
-    // Read the integer register value from GPR[RA]
-    uint64_t value = tc->getReg(RegId(IntRegClass, ra));
+// Define 128-bit unsigned int if not already available
+typedef __uint128_t uint128_t;
 
-    // Read the current value of the VSR[XT] register (128-bit)
-    uint128_t vsr_value = tc->getReg(RegId(VecRegClass, xt));
+// Register classes are in PowerISA namespace (from src/arch/power/regs/)
+using namespace PowerISA;
 
-    // Mask to preserve the upper 64 bits of the VSR
-    const uint128_t UPPER_MASK = (uint128_t)0xFFFFFFFFFFFFFFFFULL << 64;
+void mtvsrd_exec(ThreadContext *tc, int t_s, int ra_vsx, int tx_sx) {
+    // Compute effective VSX register index (0-63)
+    const RegIndex vsr_idx = (tx_sx << 5) | t_s;
 
-    // Replace only the lower 64-bits of VSR with the new value from GPR
-    vsr_value = (vsr_value & UPPER_MASK) | value;
+    // Get integer register value
+    uint64_t int_val = tc->getReg(intRegClass[ra_vsx]);
 
-    // Write the updated value back to VSR[XT]
-    tc->setReg(RegId(VecRegClass, xt), vsr_value);
+    // For VSR0-VSR31 (vector registers)
+    if (vsr_idx < 32) {
+        // Read existing VSR value (preserve upper 64 bits)
+        uint128_t vsr_val = tc->getReg(vecRegClass[vsr_idx]);
+        vsr_val = (vsr_val & ((uint128_t)0xFFFFFFFFFFFFFFFFULL << 64)) |
+        int_val;
+        tc->setReg(vecRegClass[vsr_idx], vsr_val);
+    }
+    // For VSR32-VSR63 (map to FPRs)
+    else {
+        tc->setReg(floatRegClass[vsr_idx - 32], int_val);
+    }
 }
 
+void mfvsrd_exec(ThreadContext *tc, int t_s, int ra_vsx, int tx_sx) {
+    // Compute effective VSX register index (0-63)
+    const RegIndex vsr_idx = (tx_sx << 5) | t_s;
+    uint64_t val;
 
-void mfvsrd(ThreadContext *tc, int rt, int xs) {
-    // Ensure valid register indices
-    assert(rt >= 0 && rt < NumIntRegs);
-    assert(xs >= 0 && xs < NumVecRegs);
+    // For VSR0-VSR31 (vector registers)
+    if (vsr_idx < 32) {
+        val = static_cast<uint64_t>(tc->getReg(vecRegClass[vsr_idx]));
+    }
+    // For VSR32-VSR63 (map to FPRs)
+    else {
+        val = tc->getReg(floatRegClass[vsr_idx - 32]);
+    }
 
-    // Read the current value of the VSR[XS] register (128-bit)
-    uint128_t vsr_value = tc->getReg(RegId(VecRegClass, xs));
-
-    // Extract only the lower 64 bits of the VSR[XS]
-    uint64_t lower_64_bits = static_cast<uint64_t>(
-    vsr_value & 0xFFFFFFFFFFFFFFFFULL
-    );
-
-
-    // Write the extracted lower 64 bits to GPR[RT]
-    tc->setReg(RegId(IntRegClass, rt), lower_64_bits);
+    tc->setReg(intRegClass[ra_vsx], val);
 }
