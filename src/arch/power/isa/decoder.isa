@@ -37,24 +37,6 @@
 //
 decode PO default Unknown::unknown() {
 
-    31: decode VSX_INST {  // Grouping VSX-related instructions
-
-    format ("mtvsrd", XT, ",", RA") {
-        179: mtvsrd({{
-            // Move GPR to lower 64-bits of VSR
-            VSR[XT][0] = GPR[RA];
-        }});
-    }
-
-    format ("mfvsrd", RT, ",", XS") {
-        51: mfvsrd({{
-            // Move lower 64 bits of VSR to GPR
-            GPR[RT] = VSR[XS][0];
-        }});
-    }
-}
-
-
     format IntImmTrapOp {
         2: tdi({{ Ra }});
         3: twi({{ Ra_sw }});
@@ -803,6 +785,12 @@ decode PO default Unknown::unknown() {
 
         // These instructions are of XO form with bit 21 as the OE bit.
         default: decode XO_XO {
+
+            format VSRTransferOp {
+                    179: mtvsrd({{ }});
+                    51:  mfvsrd({{ }});
+            }
+
             8: IntSumOp::subfc({{ ~Ra }}, {{ Rb }}, {{ 1 }}, true);
 
             9: IntArithCheckRcOp::mulhdu({{
