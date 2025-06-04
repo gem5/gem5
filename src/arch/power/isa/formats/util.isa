@@ -146,54 +146,124 @@ def template CheckRaZeroDecode {{
 
 let {{
 
-def LoadStoreBase(name, Name, ea_code, memacc_code, update_code,
-                  mem_flags, inst_flags, base_class = 'MemOp',
-                  decode_template = BasicDecode, exec_template_base = ''):
-    # Make sure flags are in lists (convert to lists if not).
-    mem_flags = makeList(mem_flags)
-    inst_flags = makeList(inst_flags)
+    def LoadStoreBase(name, Name, ea_code, memacc_code, update_code,
+                    mem_flags, inst_flags, base_class = 'MemOp',
+                    decode_template = BasicDecode, exec_template_base = ''):
+        # Make sure flags are in lists (convert to lists if not).
+        mem_flags = makeList(mem_flags)
+        inst_flags = makeList(inst_flags)
 
-    # Generate InstObjParams for the memory access.
-    iop = InstObjParams(name, Name, base_class,
-                        {'ea_code': ea_code,
-                         'memacc_code': memacc_code,
-                         'update_code': update_code},
-                        inst_flags)
+        # Generate InstObjParams for the memory access.
+        iop = InstObjParams(name, Name, base_class,
+                            {'ea_code': ea_code,
+                            'memacc_code': memacc_code,
+                            'update_code': update_code},
+                            inst_flags)
 
-    if mem_flags:
-        s = '\n\tmemAccessFlags = ' + '|'.join(mem_flags) + ';'
-        iop.constructor += s
+        if mem_flags:
+            s = '\n\tmemAccessFlags = ' + '|'.join(mem_flags) + ';'
+            iop.constructor += s
 
-    fullExecTemplate = eval(exec_template_base + 'Execute')
-    initiateAccTemplate = eval(exec_template_base + 'InitiateAcc')
-    completeAccTemplate = eval(exec_template_base + 'CompleteAcc')
+        fullExecTemplate = eval(exec_template_base + 'Execute')
+        initiateAccTemplate = eval(exec_template_base + 'InitiateAcc')
+        completeAccTemplate = eval(exec_template_base + 'CompleteAcc')
 
-    # (header_output, decoder_output, decode_block, exec_output)
-    return (LoadStoreDeclare.subst(iop),
-            LoadStoreConstructor.subst(iop),
-            decode_template.subst(iop),
-            fullExecTemplate.subst(iop)
-            + initiateAccTemplate.subst(iop)
-            + completeAccTemplate.subst(iop))
+        # (header_output, decoder_output, decode_block, exec_output)
+        return (LoadStoreDeclare.subst(iop),
+                LoadStoreConstructor.subst(iop),
+                decode_template.subst(iop),
+                fullExecTemplate.subst(iop)
+                + initiateAccTemplate.subst(iop)
+                + completeAccTemplate.subst(iop))
 
 
-# The generic ALU instruction generator. Integer and fp formats calls this
-# to generate the different output sections.
-def GenAluOp(name, Name, base_class, code, inst_flags, decode_template,
-             constructor_template):
-    iop = InstObjParams(name, Name, base_class,
-                        {"code": code},
-                        inst_flags)
-    header_output = BasicDeclare.subst(iop)
-    exec_output = BasicExecute.subst(iop)
+    # The generic ALU instruction generator. Integer and fp formats calls this
+    # to generate the different output sections.
+    def GenAluOp(name, Name, base_class, code, inst_flags, decode_template,
+                constructor_template):
+        iop = InstObjParams(name, Name, base_class,
+                            {"code": code},
+                            inst_flags)
+        header_output = BasicDeclare.subst(iop)
+        exec_output = BasicExecute.subst(iop)
 
-    # We use constructors dependent on the Rc and OE bits being set
-    decoder_output = constructor_template.subst(iop)
+        # We use constructors dependent on the Rc and OE bits being set
+        decoder_output = constructor_template.subst(iop)
 
-    # The decode block defines which version to use
-    decode_block = decode_template.subst(iop)
-    return (header_output, decoder_output, decode_block, exec_output)
+        # The decode block defines which version to use
+        decode_block = decode_template.subst(iop)
+        return (header_output, decoder_output, decode_block, exec_output)
 
+    def GenBasicOp(name, Name, base_class, code, inst_flags,
+                decode_template, constructor_template) :
+        iop = InstObjParams(name, Name, base_class, code, inst_flags)
+        header_output = BasicDeclare.subst(iop)
+        decoder_output = constructor_template.subst(iop)
+        decode_block = decode_template.subst(iop)
+        exec_output = BasicExecute.subst(iop)
+        return (header_output, decoder_output, decode_block, exec_output)
+
+    def GenVSRTransferOp(name, Name, code, inst_flags):
+        iop = InstObjParams(name, Name, "PowerStaticInst", code, inst_flags)
+
+        header_output = """
+        #include "base/compiler.hh"
+        #include "cpu/static_inst.hh"
+        #include "sim/serialize.hh"
+        #include "arch/power/regs/vec.hh"
+        #include "arch/power/insts/vector_scalar.hh"
+        """ + BasicDeclare.subst(iop)
+
+        decoder_output = BasicConstructor.subst(iop)
+        decode_block = BasicDecode.subst(iop)
+
+        # Common VSX register index calculation
+        vsr_idx_calc = """
+        const RegIndex vsr_idx = (tx_sx << 5) | t_s;
+        """
+        if name == "mtvsrd":
+            exec_body = """\
+            uint32_t t_s = bits(machInst, 10, 6);
+            uint32_t ra_vsx = bits(machInst, 15, 11);
+            uint32_t tx_sx = bits(machInst, 31);
+            mtvsrd_exec(tc, t_s, ra_vsx, tx_sx);"""
+        elif name == "mfvsrd":
+            exec_body = """\
+            uint32_t t_s = bits(machInst, 10, 6);
+            uint32_t ra_vsx = bits(machInst, 15, 11);
+            uint32_t tx_sx = bits(machInst, 31);
+            mfvsrd_exec(tc, t_s, ra_vsx, tx_sx);"""
+        else:
+            exec_body = "// Unknown instruction"
+
+        exec_output = """
+            class %(name)s : public PowerStaticInst
+            {
+            public:
+                using PowerStaticInst::PowerStaticInst;
+
+                Fault
+                execute(ExecContext *xc, trace::InstRecord *traceData)
+                const override
+                {
+                    ThreadContext *tc = xc->tcBase();
+                    if (traceData)
+                        traceData->setPredicate(true);
+                    %(exec_body)s
+                    return NoFault;
+                }
+                std::string generateDisassembly(Addr pc,
+                const loader::SymbolTable *symtab) const override
+                {
+                    std::stringstream ss;
+                    ccprintf(ss, "%%-10s ", mnemonic);
+                    // Add disassembly formatting here
+                    return ss.str();
+                }
+            };
+            """ % {'name': name, 'exec_body': exec_body}
+
+        return (header_output, decoder_output, decode_block, exec_output)
 }};
 
 
