@@ -39,6 +39,9 @@
 //Include utility functions
 ##include "util.isa"
 
+//Include the Vector Scalar formats
+##include "vector_scalar.isa"
+
 //Include the float formats
 ##include "fp.isa"
 
