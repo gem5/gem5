@@ -59,8 +59,8 @@ output decoder {{
 #include "arch/power/faults.hh"
 #include "arch/power/regs/float.hh"
 #include "arch/power/regs/int.hh"
-#include "base/loader/symtab.hh"
 #include "base/cprintf.hh"
+#include "base/loader/symtab.hh"
 #include "cpu/thread_context.hh"
 
 namespace gem5::PowerISAInst
@@ -74,9 +74,11 @@ output exec {{
 
 #include "arch/generic/memhelpers.hh"
 #include "arch/power/faults.hh"
+#include "arch/power/insts/vector_scalar.hh"
 #include "arch/power/regs/float.hh"
 #include "arch/power/regs/int.hh"
 #include "arch/power/regs/misc.hh"
+#include "arch/power/regs/vec.hh"
 #include "base/condcodes.hh"
 #include "cpu/base.hh"
 #include "cpu/exetrace.hh"
