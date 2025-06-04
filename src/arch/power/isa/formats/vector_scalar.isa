@@ -1,0 +1,4 @@
+def format VSRTransferOp(code, inst_flags = []) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        GenVSRTransferOp(name, Name, code, inst_flags)
+}};
