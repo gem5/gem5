@@ -55,6 +55,10 @@ def operands {{
     'Fs': FloatRegOp('df', 'FRS', 'IsFloating', 4),
     'Ft': FloatRegOp('df', 'FRT', 'IsFloating', 5),
 
+    # Vector Registers
+    'Xt': VecRegOp('ud', 'XT', 'VecRegClass', 5),
+    'Xs': VecRegOp('ud', 'XS', 'VecRegClass', 3),
+
     # Memory Operand
     'Mem': MemOp('ud', None, (None, 'IsLoad', 'IsStore'), 8),
 
