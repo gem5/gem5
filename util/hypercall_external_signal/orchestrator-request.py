@@ -63,7 +63,7 @@ Response Format:
             "workload": "x86-ubuntu-22.04",
             "tick": 1234567,
             "sim_id": "abc123",
-            "instruction_count": 9876
+            "curr_instructions_executed": 9876
         }
 
 Error Handling:
