@@ -50,10 +50,6 @@ mock_config_json = {
 }
 
 
-@unittest.skip(
-    "These fail due to changes in client API in gem5 stdlib. "
-    "Unknown reason. To be fixed at a later date."
-)
 class CustomSuiteResourceTestSuite(unittest.TestCase):
     @classmethod
     @patch(
