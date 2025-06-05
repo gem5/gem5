@@ -198,6 +198,8 @@ def run(module_path: Path, processes: Optional[int] = None) -> Dict[str, Dict]:
     run.
     :param processes: The number of processes to run in parallel. If not
     specified, the number of available threads will be used.
+
+    :returns A dictionary of simulation names mapped to their statistics
     """
 
     assert len(_multi_sim) == 0, (
@@ -228,7 +230,6 @@ def run(module_path: Path, processes: Optional[int] = None) -> Dict[str, Dict]:
 
     def handle_exit(signum, frame):
         """Signal handler to clean up processes on termination."""
-        # import sys
 
         inform("Cleaning up processes")
         with process_lock:
@@ -236,7 +237,6 @@ def run(module_path: Path, processes: Optional[int] = None) -> Dict[str, Dict]:
                 if process.is_alive():
                     inform(f"Terminating process {process.name}")
                     process.terminate()
-        # sys.exit(0) # since we actually want to return our values
 
     # Register signal handler
     signal.signal(signal.SIGINT, handle_exit)
