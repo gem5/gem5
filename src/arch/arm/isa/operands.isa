@@ -1,5 +1,5 @@
 // -*- mode:c++ -*-
-// Copyright (c) 2010-2014, 2016-2018, 2021-2022, 2024 Arm Limited
+// Copyright (c) 2010-2014, 2016-2018, 2021-2022, 2024-2025 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -486,6 +486,7 @@ def operands {{
     'Fpscr': CntrlRegNC('MISCREG_FPSCR'),
     'FpscrQc': CntrlRegNC('MISCREG_FPSCR_QC'),
     'FpscrExc': CntrlRegNC('MISCREG_FPSCR_EXC'),
+    'Fpcr': CntrlRegNC('MISCREG_FPCR'),
     'Cpacr': CntrlReg('MISCREG_CPACR'),
     'Cpacr64': CntrlReg64('MISCREG_CPACR_EL1'),
     'Fpexc': CntrlRegNC('MISCREG_FPEXC'),

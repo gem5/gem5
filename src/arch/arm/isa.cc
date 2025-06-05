@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2024 Arm Limited
+ * Copyright (c) 2010-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -508,39 +508,26 @@ ISA::readMiscReg(RegIndex idx)
 
       case MISCREG_CPSR_Q:
         panic("shouldn't be reading this register seperately\n");
-      case MISCREG_FPSCR_QC:
-        return readMiscRegNoEffect(MISCREG_FPSCR) & ~FpscrQcMask;
-      case MISCREG_FPSCR_EXC:
-        return readMiscRegNoEffect(MISCREG_FPSCR) & ~FpscrExcMask;
-      case MISCREG_FPSR:
+      case MISCREG_FPSCR:
         {
-            const uint32_t ones = (uint32_t)(-1);
-            FPSCR fpscrMask = 0;
-            fpscrMask.ioc = ones;
-            fpscrMask.dzc = ones;
-            fpscrMask.ofc = ones;
-            fpscrMask.ufc = ones;
-            fpscrMask.ixc = ones;
-            fpscrMask.idc = ones;
-            fpscrMask.qc = ones;
-            fpscrMask.v = ones;
-            fpscrMask.c = ones;
-            fpscrMask.z = ones;
-            fpscrMask.n = ones;
-            return readMiscRegNoEffect(MISCREG_FPSCR) & (uint32_t)fpscrMask;
+          FPCR fpcr = readMiscRegNoEffect(MISCREG_FPCR);
+          FPSCR fpsr = readMiscRegNoEffect(MISCREG_FPSR);
+          FPSCR fpscr = (fpsr & FpscrFpsrMask) | (fpcr & FpscrFpcrMask);
+          return fpscr;
         }
-      case MISCREG_FPCR:
+      case MISCREG_FPSCR_QC:
         {
-            const uint32_t ones = (uint32_t)(-1);
-            FPSCR fpscrMask  = 0;
-            fpscrMask.len    = ones;
-            fpscrMask.fz16   = ones;
-            fpscrMask.stride = ones;
-            fpscrMask.rMode  = ones;
-            fpscrMask.fz     = ones;
-            fpscrMask.dn     = ones;
-            fpscrMask.ahp    = ones;
-            return readMiscRegNoEffect(MISCREG_FPSCR) & (uint32_t)fpscrMask;
+          FPCR fpcr = readMiscRegNoEffect(MISCREG_FPCR);
+          FPSCR fpsr = readMiscRegNoEffect(MISCREG_FPSR);
+          FPSCR fpscr = (fpsr & FpscrFpsrMask) | (fpcr & FpscrFpcrMask);
+          return fpscr & ~FpscrQcMask;
+        }
+      case MISCREG_FPSCR_EXC:
+        {
+          FPCR fpcr = readMiscRegNoEffect(MISCREG_FPCR);
+          FPSCR fpsr = readMiscRegNoEffect(MISCREG_FPSR);
+          FPSCR fpscr = (fpsr & FpscrFpsrMask) | (fpcr & FpscrFpcrMask);
+          return fpscr & ~FpscrExcMask;
         }
       case MISCREG_NZCV:
         {
@@ -873,43 +860,15 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
 
           case MISCREG_FPSCR:
             tc->getDecoderPtr()->as<Decoder>().setContext(newVal);
-            break;
-          case MISCREG_FPSR:
             {
-                const uint32_t ones = (uint32_t)(-1);
-                FPSCR fpscrMask = 0;
-                fpscrMask.ioc = ones;
-                fpscrMask.dzc = ones;
-                fpscrMask.ofc = ones;
-                fpscrMask.ufc = ones;
-                fpscrMask.ixc = ones;
-                fpscrMask.idc = ones;
-                fpscrMask.qc = ones;
-                fpscrMask.v = ones;
-                fpscrMask.c = ones;
-                fpscrMask.z = ones;
-                fpscrMask.n = ones;
-                newVal = (newVal & (uint32_t)fpscrMask) |
-                         (readMiscRegNoEffect(MISCREG_FPSCR) &
-                          ~(uint32_t)fpscrMask);
-                idx = MISCREG_FPSCR;
-            }
-            break;
-          case MISCREG_FPCR:
-            {
-                const uint32_t ones = (uint32_t)(-1);
-                FPSCR fpscrMask  = 0;
-                fpscrMask.len    = ones;
-                fpscrMask.fz16   = ones;
-                fpscrMask.stride = ones;
-                fpscrMask.rMode  = ones;
-                fpscrMask.fz     = ones;
-                fpscrMask.dn     = ones;
-                fpscrMask.ahp    = ones;
-                newVal = (newVal & (uint32_t)fpscrMask) |
-                         (readMiscRegNoEffect(MISCREG_FPSCR) &
-                          ~(uint32_t)fpscrMask);
-                idx = MISCREG_FPSCR;
+                FPCR fpcr_val = (newVal & FpscrFpcrMask) |
+                    (readMiscRegNoEffect(MISCREG_FPCR) &
+                     ~(uint32_t)FpscrFpcrMask);
+                setMiscRegNoEffect(MISCREG_FPCR, fpcr_val);
+                FPSCR fpsr_val = (newVal & FpscrFpsrMask) |
+                    (readMiscRegNoEffect(MISCREG_FPSR) &
+                     ~(uint32_t)FpscrFpsrMask);
+                setMiscRegNoEffect(MISCREG_FPSR, fpsr_val);
             }
             break;
           case MISCREG_CPSR_Q:
@@ -921,16 +880,16 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             break;
           case MISCREG_FPSCR_QC:
             {
-                newVal = readMiscRegNoEffect(MISCREG_FPSCR) |
+                newVal = readMiscRegNoEffect(MISCREG_FPSR) |
                          (newVal & FpscrQcMask);
-                idx = MISCREG_FPSCR;
+                idx = MISCREG_FPSR;
             }
             break;
           case MISCREG_FPSCR_EXC:
             {
-                newVal = readMiscRegNoEffect(MISCREG_FPSCR) |
+                newVal = readMiscRegNoEffect(MISCREG_FPSR) |
                          (newVal & FpscrExcMask);
-                idx = MISCREG_FPSCR;
+                idx = MISCREG_FPSR;
             }
             break;
           case MISCREG_FPEXC:

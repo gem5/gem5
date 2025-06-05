@@ -83,7 +83,7 @@ gem5_verify_config(
             joinpath(
                 config.base_dir,
                 "tests/gem5/example_configs",
-                "multisim/ref/simout_multisim_print_this_list.txt",
+                "stdlib/ref/simout_multisim_print_this_list.txt",
             )
         ),
     ),
@@ -115,6 +115,25 @@ gem5_verify_config(
         "multisim-print-this.py",
     ),
     config_args=["process_1"],
+    gem5_args=[],
+    valid_isas=(constants.all_compiled_tag,),
+    valid_hosts=constants.supported_hosts,
+    length=constants.quick_tag,
+)
+
+gem5_verify_config(
+    name="test-gem5-library-example-exit-handling-user-exit-handler",
+    fixtures=(),
+    verifiers=(),
+    config=joinpath(
+        config.base_dir,
+        "configs",
+        "example",
+        "gem5_library",
+        "exit_handling",
+        "user-exit-handler.py",
+    ),
+    config_args=[],
     gem5_args=[],
     valid_isas=(constants.all_compiled_tag,),
     valid_hosts=constants.supported_hosts,

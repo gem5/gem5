@@ -10,7 +10,7 @@ on:
 jobs:
 
     get-date:
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-24.04
         outputs:
             date: ${{ steps.date.outputs.date }}
         steps:
@@ -53,7 +53,7 @@ jobs:
               run: scons build/ALL/unittests.${{ matrix.type }} -j $(nproc)
 
     get-testlib-long-dirs:
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-24.04
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         outputs:
             test-dirs-matrix: ${{ steps.dir-matrix.outputs.test-dirs-matrix }}

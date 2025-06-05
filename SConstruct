@@ -674,7 +674,7 @@ for variant_path in variant_paths:
 
     if env['GCC']:
         gcc_min_version = "11"
-        gcc_max_version = "14"
+        gcc_max_version = "14.2"
         gcc_version = env['CXXVERSION']
         if compareVersions(gcc_version, gcc_min_version) < 0 or \
               compareVersions(gcc_version, gcc_max_version) > 0:

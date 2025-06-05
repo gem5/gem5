@@ -114,6 +114,8 @@ class OpClass(Enum):
         "SimdUnitStrideSegmentedLoad",
         "SimdUnitStrideSegmentedStore",
         "SimdUnitStrideSegmentedFaultOnlyFirstLoad",
+        "SimdStrideSegmentedLoad",
+        "SimdStrideSegmentedStore",
         "SimdExt",
         "SimdFloatExt",
         "SimdConfig",

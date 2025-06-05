@@ -78,7 +78,11 @@ def create_system(
         # Only one cache exists for this protocol, so by default use the L1D
         # config parameters.
         #
-        cache = L1Cache(size=options.l1d_size, assoc=options.l1d_assoc)
+        cache = L1Cache(
+            size=options.l1d_size,
+            assoc=options.l1d_assoc,
+            block_size=f"{options.cacheline_size}B",
+        )
 
         #
         # Only one unified L1 cache exists.  Can cache instructions and data.

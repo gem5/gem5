@@ -14,11 +14,13 @@ concurrency:
 jobs:
     pre-commit:
     # runs on github hosted runner
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-24.04
         if: github.event.pull_request.draft == false
         steps:
             - uses: actions/checkout@v4
             - uses: actions/setup-python@v5
+              with:
+                  python-version: '3.10'
             - uses: pre-commit/action@v3.0.1
 
     get-date:
@@ -31,7 +33,7 @@ jobs:
     # `src` directory contents and use it as a hash. We found there to be bugs
     # with the hash function where this task would timeout. This approach is
     # simple, works, and still provides some level of caching.
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-24.04
         outputs:
             date: ${{ steps.date.outputs.date }}
         steps:
@@ -66,7 +68,7 @@ jobs:
             - run: echo "This job's status is ${{ job.status }}."
 
     testlib-quick-matrix:
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-24.04
         if: github.event.pull_request.draft == false
     # In order to make sure the environment is exactly the same, we run in
     # the same container we use to build gem5 and run the testlib tests. This
@@ -249,7 +251,7 @@ jobs:
     ci-tests:
     # It is 'testlib-quick' which needs to pass for the pull request to be
     # merged. This job is a dummy job that depends on all the other jobs.
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-24.04
         needs:
             - testlib-quick-execution
             - clang-fast-compilation

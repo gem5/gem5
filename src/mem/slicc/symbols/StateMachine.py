@@ -822,6 +822,10 @@ $c_ident::init()
                     if "non_obj" not in vtype and not vtype.isEnumeration:
                         args = var.get("constructor", "")
 
+                    if args == "" and "DataBlock" in vtype.c_ident:
+                        # DataBlock constructor requires a blk_size argument
+                        args = "m_ruby_system->getBlockSizeBytes()"
+
                     code("$expr($args);")
                     code("assert($vid != NULL);")
 

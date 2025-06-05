@@ -1,7 +1,7 @@
 /*
  * Copyright 2015 LabWare
  * Copyright 2014 Google Inc.
- * Copyright (c) 2010, 2013, 2016, 2018-2019 ARM Limited
+ * Copyright (c) 2010, 2013, 2016, 2018-2019, 2025 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -312,7 +312,7 @@ RemoteGDB::AArch32GdbRegCache::getRegs(ThreadContext *context)
     for (int i = 0; i < 32; i++)
         r.fpr[i] = 0;
 
-    r.fpscr = context->readMiscRegNoEffect(MISCREG_FPSCR);
+    r.fpscr = context->readMiscReg(MISCREG_FPSCR);
 }
 
 void
