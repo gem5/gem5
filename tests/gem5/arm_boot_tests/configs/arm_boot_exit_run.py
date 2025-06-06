@@ -201,21 +201,11 @@ board = ArmBoard(
 )
 
 # Set the Full System workload.
-board.set_kernel_disk_workload(
-    kernel=obtain_resource(
-        "arm64-linux-kernel-5.4.49",
+board.set_workload(
+    obtain_resource(
+        "arm-ubuntu-24.04-boot-with-systemd",
         resource_directory=args.resource_directory,
-        resource_version="1.0.0",
-    ),
-    bootloader=obtain_resource(
-        "arm64-bootloader-foundation",
-        resource_directory=args.resource_directory,
-        resource_version="1.0.0",
-    ),
-    disk_image=obtain_resource(
-        "arm64-ubuntu-20.04-img",
-        resource_directory=args.resource_directory,
-        resource_version="1.0.0",
+        resource_version="3.0.0",
     ),
 )
 

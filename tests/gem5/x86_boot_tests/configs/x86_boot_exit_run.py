@@ -180,15 +180,21 @@ motherboard = X86Board(
 )
 
 kernal_args = motherboard.get_default_kernel_args()
-if args.boot_type == "init":
-    kernal_args.append("init=/root/exit.sh")
 
 # Set the workload.
-workload = obtain_resource(
-    "x86-ubuntu-18.04-boot",
-    resource_directory=args.resource_directory,
-    resource_version="2.0.0",
-)
+workload = None
+if args.boot_type == "init":
+    workload = obtain_resource(
+        "x86-ubuntu-24.04-boot-no-systemd",
+        resource_directory=args.resource_directory,
+        resource_version="4.0.0",
+    )
+else:
+    workload = obtain_resource(
+        "x86-ubuntu-24.04-boot-with-systemd",
+        resource_directory=args.resource_directory,
+        resource_version="5.0.0",
+    )
 workload.set_parameter("kernel_args", kernal_args)
 motherboard.set_workload(workload)
 
