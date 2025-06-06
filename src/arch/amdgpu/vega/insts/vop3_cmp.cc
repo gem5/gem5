@@ -1346,6 +1346,28 @@ namespace VegaISA
         src0.readSrc();
         src1.readSrc();
 
+        if (instData.ABS & 0x1) {
+            src0.absModifier();
+        }
+
+        if (instData.ABS & 0x2) {
+            src1.absModifier();
+        }
+
+        if (extData.NEG & 0x1) {
+            src0.negModifier();
+        }
+
+        if (extData.NEG & 0x2) {
+            src1.negModifier();
+        }
+
+        /**
+         * input modifiers are supported by FP operations only
+         */
+        assert(!(instData.ABS & 0x4));
+        assert(!(extData.NEG & 0x4));
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 sdst.setBit(lane, src0[lane] < src1[lane] ? 1 : 0);
@@ -1437,6 +1459,28 @@ namespace VegaISA
 
         src0.readSrc();
         src1.readSrc();
+
+        if (instData.ABS & 0x1) {
+            src0.absModifier();
+        }
+
+        if (instData.ABS & 0x2) {
+            src1.absModifier();
+        }
+
+        if (extData.NEG & 0x1) {
+            src0.negModifier();
+        }
+
+        if (extData.NEG & 0x2) {
+            src1.negModifier();
+        }
+
+        /**
+         * input modifiers are supported by FP operations only
+         */
+        assert(!(instData.ABS & 0x4));
+        assert(!(extData.NEG & 0x4));
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -1530,6 +1574,28 @@ namespace VegaISA
         src0.readSrc();
         src1.readSrc();
 
+        if (instData.ABS & 0x1) {
+            src0.absModifier();
+        }
+
+        if (instData.ABS & 0x2) {
+            src1.absModifier();
+        }
+
+        if (extData.NEG & 0x1) {
+            src0.negModifier();
+        }
+
+        if (extData.NEG & 0x2) {
+            src1.negModifier();
+        }
+
+        /**
+         * input modifiers are supported by FP operations only
+         */
+        assert(!(instData.ABS & 0x4));
+        assert(!(extData.NEG & 0x4));
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 sdst.setBit(lane, src0[lane] != src1[lane] ? 1 : 0);
@@ -1621,6 +1687,28 @@ namespace VegaISA
         src0.readSrc();
         src1.readSrc();
 
+        if (instData.ABS & 0x1) {
+            src0.absModifier();
+        }
+
+        if (instData.ABS & 0x2) {
+            src1.absModifier();
+        }
+
+        if (extData.NEG & 0x1) {
+            src0.negModifier();
+        }
+
+        if (extData.NEG & 0x2) {
+            src1.negModifier();
+        }
+
+        /**
+         * input modifiers are supported by FP operations only
+         */
+        assert(!(instData.ABS & 0x4));
+        assert(!(extData.NEG & 0x4));
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 sdst.setBit(lane, (!std::isnan(src0[lane])
@@ -1655,6 +1743,28 @@ namespace VegaISA
 
         src0.readSrc();
         src1.readSrc();
+
+        if (instData.ABS & 0x1) {
+            src0.absModifier();
+        }
+
+        if (instData.ABS & 0x2) {
+            src1.absModifier();
+        }
+
+        if (extData.NEG & 0x1) {
+            src0.negModifier();
+        }
+
+        if (extData.NEG & 0x2) {
+            src1.negModifier();
+        }
+
+        /**
+         * input modifiers are supported by FP operations only
+         */
+        assert(!(instData.ABS & 0x4));
+        assert(!(extData.NEG & 0x4));
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
@@ -1749,6 +1859,28 @@ namespace VegaISA
         src0.readSrc();
         src1.readSrc();
 
+        if (instData.ABS & 0x1) {
+            src0.absModifier();
+        }
+
+        if (instData.ABS & 0x2) {
+            src1.absModifier();
+        }
+
+        if (extData.NEG & 0x1) {
+            src0.negModifier();
+        }
+
+        if (extData.NEG & 0x2) {
+            src1.negModifier();
+        }
+
+        /**
+         * input modifiers are supported by FP operations only
+         */
+        assert(!(instData.ABS & 0x4));
+        assert(!(extData.NEG & 0x4));
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 sdst.setBit(lane, !(src0[lane] < src1[lane]
@@ -1842,6 +1974,28 @@ namespace VegaISA
         src0.readSrc();
         src1.readSrc();
 
+        if (instData.ABS & 0x1) {
+            src0.absModifier();
+        }
+
+        if (instData.ABS & 0x2) {
+            src1.absModifier();
+        }
+
+        if (extData.NEG & 0x1) {
+            src0.negModifier();
+        }
+
+        if (extData.NEG & 0x2) {
+            src1.negModifier();
+        }
+
+        /**
+         * input modifiers are supported by FP operations only
+         */
+        assert(!(instData.ABS & 0x4));
+        assert(!(extData.NEG & 0x4));
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 sdst.setBit(lane, !(src0[lane] <= src1[lane]) ? 1 : 0);
@@ -1877,6 +2031,28 @@ namespace VegaISA
         src0.readSrc();
         src1.readSrc();
 
+        if (instData.ABS & 0x1) {
+            src0.absModifier();
+        }
+
+        if (instData.ABS & 0x2) {
+            src1.absModifier();
+        }
+
+        if (extData.NEG & 0x1) {
+            src0.negModifier();
+        }
+
+        if (extData.NEG & 0x2) {
+            src1.negModifier();
+        }
+
+        /**
+         * input modifiers are supported by FP operations only
+         */
+        assert(!(instData.ABS & 0x4));
+        assert(!(extData.NEG & 0x4));
+
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 sdst.setBit(lane, src0[lane] != src1[lane] ? 1 : 0);
@@ -1911,6 +2087,28 @@ namespace VegaISA
 
         src0.readSrc();
         src1.readSrc();
+
+        if (instData.ABS & 0x1) {
+            src0.absModifier();
+        }
+
+        if (instData.ABS & 0x2) {
+            src1.absModifier();
+        }
+
+        if (extData.NEG & 0x1) {
+            src0.negModifier();
+        }
+
+        if (extData.NEG & 0x2) {
+            src1.negModifier();
+        }
+
+        /**
+         * input modifiers are supported by FP operations only
+         */
+        assert(!(instData.ABS & 0x4));
+        assert(!(extData.NEG & 0x4));
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
