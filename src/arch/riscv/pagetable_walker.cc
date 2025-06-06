@@ -93,7 +93,9 @@ Walker::start(ThreadContext * _tc, BaseMMU::Translation *_translation,
         if (result_entry)
             *result_entry = newState->entry;
 
-        if (!newState->isTiming())
+        // In functional mode, always pop the state
+        // In timing we must pop the state in the case of an early fault!
+        if (fault != NoFault || !newState->isTiming())
         {
             currStates.pop_front();
             delete newState;
@@ -291,10 +293,17 @@ Walker::startWalkWrapper()
         }
     }
     if (currState && !currState->wasStarted()) {
-        if (!e || fault != NoFault)
-            currState->walk();
-        else
+        if (!e || fault != NoFault) {
+            Fault timingFault = currState->walk();
+            if (timingFault != NoFault) {
+                currStates.pop_front();
+                delete currState;
+                currState = NULL;
+            }
+        }
+        else {
             schedule(startWalkWrapperEvent, clockEdge(Cycles(1)));
+        }
     }
 }
 

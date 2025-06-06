@@ -359,9 +359,20 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
         e = lookup(vpn, satp.asid, mode, false);
         if (!e) {
             Fault fault = walker->start(tc, translation, req, mode);
-            if (translation != nullptr || fault != NoFault) {
-                // This gets ignored in atomic mode.
-                delayed = true;
+            // Atomic translations have translation == nullptr
+            // so the if body is reachable only in timing
+            if (translation != nullptr) {
+                // If there has been a fault already, do not
+                // mark the translation as delayed as that
+                // will block its deletion
+                if (fault != NoFault) {
+                    delayed = false;
+                } else {
+                    delayed = true;
+                }
+                return fault;
+            }
+            else if (fault != NoFault) {
                 return fault;
             }
             e = lookup(vpn, satp.asid, mode, true);
@@ -406,10 +417,25 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
     if (e && (mode == BaseMMU::Write) && !e->pte.w) {
         DPRINTF(TLB, "Dirty bit not set, repeating PT walk\n");
         fault = walker->start(tc, translation, req, mode);
-        if (translation != nullptr || fault != NoFault) {
+        // Atomic translations have translation == nullptr
+        // so the if body is reachable only in timing
+        if (translation != nullptr) {
+            // If there has been a fault already, do not
+            // mark the translation as delayed as that
+            // will block its deletion
+            if (fault != NoFault) {
+                delayed = false;
+            } else {
+                delayed = true;
+            }
+
             if (memaccess.bypassTLB())
                 delete e;
-            delayed = true;
+            return fault;
+        }
+        else if (fault != NoFault) {
+            if (memaccess.bypassTLB())
+                delete e;
             return fault;
         }
     }
