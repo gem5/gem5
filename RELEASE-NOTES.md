@@ -10,6 +10,9 @@ extensions, bug fixes, and hypervisor extension support for RISC-V.
 - **Python Utilities**: Introduction of `gem5term`, an m5term replacement in
 Python, and the `hypercall_external_signal` utility for interacting with running
 simulations via hypercalls.
+- **OptionalParam and DictParam**: Introduction of OptionalParam, which allows
+users to define optional parameters without using magic default numbers,
+and DictParam, which allows users to have dictionaries as parameters.
 
 ## User-Facing Enhancements
 
@@ -92,9 +95,7 @@ further extended ([#1988](https://github.com/gem5/gem5/pull/1988),
 - **`TargetNamedBreakpoint`**: Improves breakpoint management in GDB
 ([#1794](https://github.com/gem5/gem5/pull/1794)).
 
-## ISA Improvements
-
-### RISC-V
+## RISC-V
 
 - Added support for **hypervisor extension (H)** ([#1387](https://github.com/gem5/gem5/pull/1387)).
 - Added **Zfa** ([#1767](https://github.com/gem5/gem5/pull/1767)),
@@ -104,7 +105,7 @@ further extended ([#1988](https://github.com/gem5/gem5/pull/1988),
 `mnepc` lower bits ([#2015](https://github.com/gem5/gem5/pull/2015)), and `CMO`
 decoding ([#2223](https://github.com/gem5/gem5/pull/2223)).
 
-#### Vector Extension (RVV)
+### Vector Extension (RVV)
 
 - Corrected slide, reduction, narrowing, and segment operations.
 ([#1712](https://github.com/gem5/gem5/pull/1712),
@@ -115,17 +116,32 @@ decoding ([#2223](https://github.com/gem5/gem5/pull/2223)).
 - Improved control flow misprediction handling.
 ([#1709](https://github.com/gem5/gem5/pull/1709))
 
-### Arm
+## ArmISA changes/improvements
 
-- Added support for architectural extensions: `FEAT_FP16`
-([#2071](https://github.com/gem5/gem5/pull/2071)),
-`FEAT_FHM` ([#2287](https://github.com/gem5/gem5/pull/2287)),
-`FEAT_FRINTTS` ([#2287](https://github.com/gem5/gem5/pull/2287)), `FEAT_S1PIE`
-([#1858](https://github.com/gem5/gem5/pull/1858)), and more.
-- Added syscall 435 ([#1913](https://github.com/gem5/gem5/pull/1913)) and stats
-to track PMU events ([#2271](https://github.com/gem5/gem5/pull/2271)).
-- Added read/write interface for FPCR/FPSR
-([#2317](https://github.com/gem5/gem5/pull/2317)).
+### Architectural extensions
+
+Architectural support for the following extensions:
+
+- FEAT_FP16 ([#2071](https://github.com/gem5/gem5/pull/2071))
+- FEAT_FHM ([#2287](https://github.com/gem5/gem5/pull/2287))
+- FEAT_FRINTTS ([#2287](https://github.com/gem5/gem5/pull/2287))
+- FEAT_S1PIE ([#1858](https://github.com/gem5/gem5/pull/1858))
+
+### Bugfixes
+
+- The following syscalls have been added in SE mode
+  - clone3 (syscall 435) ([#1913](https://github.com/gem5/gem5/pull/1913))
+
+### ArmPMU improvements
+
+#### Cache Events
+
+Add support for Cache PMU events. By hooking the PMU to l1d/l1i and l2 caches it is now possible to monitor their activities through performance counters ([#1439](https://github.com/gem5/gem5/pull/1439))
+
+#### Stat support
+
+The ArmPMU has been enhanced to dump PMU counters as if they were common statistics. In this way a user can observe PMU events without requiring explicit programming from the guest application
+(see [#2271](https://github.com/gem5/gem5/pull/2271) for further details)
 
 ## GPU Model Enhancements
 
