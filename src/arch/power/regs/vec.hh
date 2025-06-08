@@ -1,4 +1,4 @@
-// Copyright (c) 2025 The Regents of the University of XYZ
+// Copyright (c) 2025 The Regents of the University of Michigan Ann Arbor
 // All rights reserved.
 //
 // This file is part of gem5.
