@@ -216,9 +216,7 @@ RemoteGDB::acc(Addr va, size_t len)
         unsigned logBytes;
         Addr paddr = va;
 
-        // TODO: does this need virt as well?
-        PrivilegeMode pmode = mmu->getMemAccessInfo(
-            context(), BaseMMU::Read).priv;
+        PrivilegeMode pmode = mmu->getMemPriv(context(), BaseMMU::Read);
         SATP satp = context()->readMiscReg(MISCREG_SATP);
         MISA misa = tc->readMiscRegNoEffect(MISCREG_ISA);
         if (misa.rvs && pmode != PrivilegeMode::PRV_M &&

@@ -555,10 +555,12 @@ Fault
 VlFFTrimVlMicroOp::execute(ExecContext *xc, trace::InstRecord *traceData) const
 {
     auto tc = xc->tcBase();
-    bool set_dirty = false;
-    bool check_vill = false;
-    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
-    if (update_fault != NoFault) { return update_fault; }
+    MISA misa = xc->readMiscReg(MISCREG_ISA);
+    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+    if (!misa.rvv || status.vs == VPUStatus::OFF) {
+        return std::make_shared<IllegalInstFault>(
+                "RVV is disabled or VPU is off", machInst);
+    }
 
     PCState pc;
     set(pc, xc->pcState());
@@ -861,10 +863,16 @@ VCpyVsMicroInst::VCpyVsMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
 Fault
 VCpyVsMicroInst::execute(ExecContext* xc, trace::InstRecord* traceData) const
 {
-    bool set_dirty = true;
-    bool check_vill = false;
-    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
-    if (update_fault != NoFault) { return update_fault; }
+    MISA misa = xc->readMiscReg(MISCREG_ISA);
+    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+
+    if (!misa.rvv || status.vs == VPUStatus::OFF) {
+        return std::make_shared<IllegalInstFault>(
+                "RVV is disabled or VPU is off", machInst);
+    }
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
 
     // copy vector source reg to vtmp
     vreg_t& vtmp = *(vreg_t *)xc->getWritableRegOperand(this, 0);
@@ -924,10 +932,16 @@ VPinVdMicroInst::VPinVdMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
 Fault
 VPinVdMicroInst::execute(ExecContext* xc, trace::InstRecord* traceData) const
 {
-    bool set_dirty = true;
-    bool check_vill = false;
-    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
-    if (update_fault != NoFault) { return update_fault; }
+    MISA misa = xc->readMiscReg(MISCREG_ISA);
+    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+
+    if (!misa.rvv || status.vs == VPUStatus::OFF) {
+        return std::make_shared<IllegalInstFault>(
+                "RVV is disabled or VPU is off", machInst);
+    }
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
 
     // tail/mask policy: both undisturbed if one is, 1s if none
     vreg_t& vd = *(vreg_t *)xc->getWritableRegOperand(this, 0);

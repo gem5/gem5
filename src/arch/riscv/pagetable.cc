@@ -64,8 +64,6 @@ Addr
 getVPNFromVAddr(Addr vaddr, Addr mode)
 {
     switch (mode) {
-    case BARE:
-        return vaddr >> 12;
     case SV39:
         return bits(vaddr, 38, 12);
     case SV48:

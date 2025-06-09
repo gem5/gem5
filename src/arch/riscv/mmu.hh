@@ -85,11 +85,10 @@ class MMU : public BaseMMU
                 PageBytes, start, size, tc, this, mode, flags));
     }
 
-    MemAccessInfo
-    getMemAccessInfo(ThreadContext *tc, BaseMMU::Mode mode)
+    PrivilegeMode
+    getMemPriv(ThreadContext *tc, BaseMMU::Mode mode)
     {
-        return static_cast<TLB*>(dtb)->getMemAccessInfo(
-          tc, mode, (Request::ArchFlagsType)0);
+        return static_cast<TLB*>(dtb)->getMemPriv(tc, mode);
     }
 
     Walker *
