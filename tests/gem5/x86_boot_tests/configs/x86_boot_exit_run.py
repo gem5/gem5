@@ -179,7 +179,6 @@ motherboard = X86Board(
     cache_hierarchy=cache_hierarchy,
 )
 
-kernal_args = motherboard.get_default_kernel_args()
 
 # Set the workload.
 workload = None
@@ -195,7 +194,7 @@ else:
         resource_directory=args.resource_directory,
         resource_version="5.0.0",
     )
-workload.set_parameter("kernel_args", kernal_args)
+
 motherboard.set_workload(workload)
 
 # Begin running of the simulation. This will exit once the Linux system boot
