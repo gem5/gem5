@@ -6038,7 +6038,6 @@ decode QUADRANT default Unknown::unknown() {
                             }
 
                             xc->setMiscReg(status_idx, status);
-                            xc->tcBase()->getMMUPtr()->flushAll();
 
                         }}, IsSerializeAfter, IsNonSpeculative, IsReturn);
                         0x5: wfi({{
@@ -6195,7 +6194,6 @@ decode QUADRANT default Unknown::unknown() {
                             status.mpv = 0; // H-extension
 
                             xc->setMiscReg(MISCREG_STATUS, status);
-                            xc->tcBase()->getMMUPtr()->flushAll();
                             // TODO: is rvSext mandated by the spec?
                             NPC = rvSext(xc->readMiscReg(MISCREG_MEPC));
                         }

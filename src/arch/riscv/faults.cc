@@ -229,11 +229,6 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
             }
         }
 
-        // Also flush TLB on fault handling as Spike does.
-        // This happens even when privilege does not change
-        tc->getMMUPtr()->flushAll();
-
-
         // Set fault cause, privilege, and return PC
         uint64_t _cause = _code;
         if (isInterrupt()) {
