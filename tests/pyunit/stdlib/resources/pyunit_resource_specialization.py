@@ -176,6 +176,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
         """Tests the loading of a Simpoint directory resource."""
         resource = obtain_resource(
             resource_id="simpoint-directory-example",
+            resource_version="1.0.0",
             resource_directory=self.get_resource_dir(),
             gem5_version="develop",
         )
@@ -192,7 +193,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
         self.assertEqual(
             Path(
                 Path(self.get_resource_dir())
-                / "simpoint-directory-example"
+                / "simpoint-directory-example-1.0.0"
                 / "simpoint.simpt"
             ),
             resource.get_simpoint_file(),
@@ -200,7 +201,7 @@ class ResourceSpecializationSuite(unittest.TestCase):
         self.assertEqual(
             Path(
                 Path(self.get_resource_dir())
-                / "simpoint-directory-example"
+                / "simpoint-directory-example-1.0.0"
                 / "simpoint.weight"
             ),
             resource.get_weight_file(),

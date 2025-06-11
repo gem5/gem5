@@ -1395,7 +1395,9 @@ def _get_to_path_and_downloader_partial(
                     )
 
             # This is the path to which the resource is to be stored.
-            to_path = os.path.join(resource_directory, resource_id)
+            to_path = os.path.join(
+                resource_directory, f"{resource_id}-{resource_version}"
+            )
 
         assert to_path
 
