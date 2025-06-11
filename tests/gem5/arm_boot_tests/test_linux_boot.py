@@ -41,6 +41,7 @@ def test_boot(
     mem_system: str,
     memory_class: str,
     length: str,
+    systemd: bool,
     to_tick: Optional[int] = None,
 ):
     name = f"{cpu}-cpu_{num_cpus}-cores_{mem_system}_{memory_class}_\
@@ -59,6 +60,7 @@ arm_boot_test"
         memory_class,
         "--resource-directory",
         resource_path,
+        "--systemd" if systemd else "--no-systemd",
     ]
 
     if to_tick:
@@ -99,6 +101,7 @@ test_boot(
     memory_class="SingleChannelDDR3_1600",
     length=constants.quick_tag,
     to_tick=10000000000,
+    systemd=False,
 )
 
 test_boot(
@@ -108,6 +111,7 @@ test_boot(
     memory_class="SingleChannelDDR3_2133",
     length=constants.quick_tag,
     to_tick=10000000000,
+    systemd=False,
 )
 
 test_boot(
@@ -117,6 +121,7 @@ test_boot(
     memory_class="DualChannelDDR3_1600",
     length=constants.quick_tag,
     to_tick=10000000000,
+    systemd=False,
 )
 
 test_boot(
@@ -126,6 +131,7 @@ test_boot(
     memory_class="DualChannelDDR4_2400",
     length=constants.quick_tag,
     to_tick=10000000000,
+    systemd=False,
 )
 
 test_boot(
@@ -135,6 +141,7 @@ test_boot(
     memory_class="DualChannelDDR4_2400",
     length=constants.quick_tag,
     to_tick=10000000000,
+    systemd=False,
 )
 
 
@@ -145,6 +152,7 @@ test_boot(
     memory_class="DualChannelDDR4_2400",
     length=constants.quick_tag,
     to_tick=10000000000,
+    systemd=False,
 )
 
 
@@ -152,10 +160,11 @@ test_boot(
 
 test_boot(
     cpu="atomic",
-    num_cpus=4,
+    num_cpus=1,
     mem_system="no_cache",
     memory_class="HBM2Stack",
     length=constants.long_tag,
+    systemd=True,
 )
 
 test_boot(
@@ -164,4 +173,5 @@ test_boot(
     mem_system="chi",
     memory_class="DualChannelDDR4_2400",
     length=constants.long_tag,
+    systemd=False,
 )

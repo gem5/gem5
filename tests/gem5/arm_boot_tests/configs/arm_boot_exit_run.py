@@ -93,6 +93,18 @@ parser.add_argument(
     help="The python class for the memory interface to use",
 )
 
+systemd_group = parser.add_mutually_exclusive_group(required=True)
+systemd_group.add_argument(
+    "--systemd",
+    action="store_true",
+    help="Enable systemd on boot.",
+)
+systemd_group.add_argument(
+    "--no-systemd",
+    action="store_true",
+    help="Disable systemd on boot.",
+)
+
 parser.add_argument(
     "-t",
     "--tick-exit",
@@ -203,9 +215,13 @@ board = ArmBoard(
 # Set the Full System workload.
 board.set_workload(
     obtain_resource(
-        "arm-ubuntu-24.04-boot-with-systemd",
+        (
+            "arm-ubuntu-24.04-boot-systemd"
+            if args.systemd
+            else "arm-ubuntu-24.04-boot-no-systemd"
+        ),
         resource_directory=args.resource_directory,
-        resource_version="3.0.0",
+        resource_version=("3.0.0" if args.systemd else "2.0.0"),
     ),
 )
 
