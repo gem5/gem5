@@ -181,7 +181,7 @@ and AssociativeCache tracing ([#1861](https://github.com/gem5/gem5/pull/1861),
 ### Branch Prediction
 
 - Support of speculative update of TAGE-SC-L
-([#1854](https://github.com/gem5/gem5/pull/1854)) 
+([#1854](https://github.com/gem5/gem5/pull/1854))
 - Added taken-only branch history and support for surprise branches
 ([#1855](https://github.com/gem5/gem5/pull/1855), [#499](https://github.com/gem5/gem5/pull/499)).
 
