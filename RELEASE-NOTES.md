@@ -98,6 +98,7 @@ further extended ([#1988](https://github.com/gem5/gem5/pull/1988),
 ## RISC-V
 
 - Added support for **hypervisor extension (H)** ([#1387](https://github.com/gem5/gem5/pull/1387)).
+  - **CAVEAT**: This support only works for atomic mode. Timing mode implementation is in development.
 - Added **Zfa** ([#1767](https://github.com/gem5/gem5/pull/1767)),
 **Zcmt** ([#1761](https://github.com/gem5/gem5/pull/1761)), and **SVNAPOT**
 ([#1943](https://github.com/gem5/gem5/pull/1943)) support.
