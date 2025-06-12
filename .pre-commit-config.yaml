@@ -80,6 +80,11 @@ repos:
       rev: 25.1.0
       hooks:
           - id: black
+    - repo: https://github.com/pre-commit/mirrors-clang-format
+      rev: v20.1.5
+      hooks:
+          - id: clang-format
+            types_or: [c++, c]
     - repo: https://github.com/asottile/pyupgrade
       rev: v3.20.0
       hooks:
