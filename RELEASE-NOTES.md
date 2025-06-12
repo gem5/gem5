@@ -146,17 +146,13 @@ The ArmPMU has been enhanced to dump PMU counters as if they were common statist
 
 ## GPU Model Enhancements
 
-- Added MFMA ([#2039](https://github.com/gem5/gem5/pull/2039)),
-SDWA ([#1915](https://github.com/gem5/gem5/pull/1915)),
-opcode overrides ([#2263](https://github.com/gem5/gem5/pull/2263)),
-kernarg preloading ([#2084](https://github.com/gem5/gem5/pull/2084)).
-- Improved progress printing and debug tracing
-([#1976](https://github.com/gem5/gem5/pull/1976)), improved dispatch scheduling
-([#2163](https://github.com/gem5/gem5/pull/2163)).
-- Added RLC queues to checkpoint ([#1999](https://github.com/gem5/gem5/pull/1999)),
-added pagetable walker buffer ([#2162](https://github.com/gem5/gem5/pull/2162)),
-added two new DS instructions ([#2272](https://github.com/gem5/gem5/pull/2272))
-- Updated MI300X firmware model ([#2284](https://github.com/gem5/gem5/pull/2284)).
+- Updated MI300X model to use real firmware ([#2284](https://github.com/gem5/gem5/pull/2284)). This allows for MI300X specific features such as [compute and memory partitioning](https://rocm.blogs.amd.com/software-tools-optimization/compute-memory-modes/README.html). This requires a new disk image from gem5-resources.
+- Implemented [kernarg preload](https://llvm.org/docs/AMDGPUUsage.html#preloaded-kernel-arguments) feature in newer ROCm versions ([#2165](https://github.com/gem5/gem5/pull/2165)).
+- Added GPU page table walker cache ([#2162](https://github.com/gem5/gem5/pull/2162)). This provides more realistic memory bandwidth.
+- Improved progress printing and debug tracing ([#1976](https://github.com/gem5/gem5/pull/1976)). Provides a more concise debug information compared to previous debug flags.
+- Reworked dispatch scheduling ([#2163](https://github.com/gem5/gem5/pull/2163)). The new scheduler correlates better with hardware.
+- Added timings for MFMA instructions ([#2039](https://github.com/gem5/gem5/pull/2039)). Previously they were assumed to run in one cycle.
+- Several bug fixes for architected flat scratch ([#1947](https://github.com/gem5/gem5/pull/1947)), missing instructions ([#2272](https://github.com/gem5/gem5/pull/2272), [#2263](https://github.com/gem5/gem5/pull/2263)), missing support for modifiers such as SDWA ([#1915](https://github.com/gem5/gem5/pull/1915)), and missing checkpoint fields ([#1999](https://github.com/gem5/gem5/pull/1999)).
 
 ## Miscellaneous
 
