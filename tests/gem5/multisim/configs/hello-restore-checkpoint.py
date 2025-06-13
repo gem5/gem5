@@ -42,17 +42,12 @@ from gem5.utils.requires import requires
 multisim.set_num_processes(5)
 
 for isa in [ISA.RISCV, ISA.ARM, ISA.X86]:
-    # In this setup we don't have a cache. `NoCache` can be used for such setups.
     cache_hierarchy = NoCache()
 
-    # We use a single channel DDR3_1600 memory system
     memory = SingleChannelDDR3_1600(size="32MiB")
 
-    # We use a simple Timing processor with one core.
     processor = SimpleProcessor(cpu_type=CPUTypes.TIMING, isa=isa, num_cores=1)
 
-    # The gem5 library simple board which can be used to run simple SE-mode
-    # simulations.
     board = SimpleBoard(
         clk_freq="3GHz",
         processor=processor,
