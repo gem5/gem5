@@ -460,7 +460,7 @@ During this time there have been 298 pull requests merged, comprising of over 60
 
 ## API and user-facing changes
 
-* The GCN3 GPU model has been removed in favor of the newer VEGA_X85 GPU model.
+* The GCN3 GPU model has been removed in favor of the newer VEGA_X86 GPU model.
 * gem5 now supports building, running, and simulating Ubuntu 24.04.
 
 ### Compiler and OS support
