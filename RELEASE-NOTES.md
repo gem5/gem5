@@ -25,6 +25,9 @@ needed to run `gem5-bridge` commands
 with the new exit event handlers ([#1991](https://github.com/gem5/gem5/pull/1991)).
 - Users can now print exit event information at runtime
 ([#1994](https://github.com/gem5/gem5/pull/1994)).
+- When passing `-re` to a Multisim simulation, the redirected terminal output
+will now be named `simerr.txt` and `simout.txt` instead of `stderr.txt` and
+`stdout.txt` ([#2360](https://github.com/gem5/gem5/pull/2360/files)).
 
 ### Exit Event Framework and Hypercalls
 
@@ -91,7 +94,9 @@ simulation.
 running gem5 simulations. It currently supports returning information about the
 current state of the simulation or enabling/disabling debug flags, but can be
 further extended ([#1988](https://github.com/gem5/gem5/pull/1988),
-[#2161](https://github.com/gem5/gem5/pull/2161)).
+[#2161](https://github.com/gem5/gem5/pull/2161), [#2225](https://github.com/gem5/gem5/pull/2225)).
+  - This set of changes also adds a new signal handler in gem5 for `SIGCONT`.
+    Receiving the `SIGCONT` signal will now cause gem5 to try to open shared memory to receive a message.
 - **`TargetNamedBreakpoint`**: Improves breakpoint management in GDB
 ([#1794](https://github.com/gem5/gem5/pull/1794)).
 
