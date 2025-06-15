@@ -59,7 +59,7 @@ class MeshDirCorners_XY(SimpleTopology):
         dir_nodes = []
         dma_nodes = []
         for node in nodes:
-            # 将所有包含 "Cache_Controller" 的节点（例如 L0/L1/L2）都视为缓存节点
+            # bug fix: take all with "Cache_Controller" node (L0/L1/L2) as cache node
             if "Cache_Controller" in node.type:
                 cache_nodes.append(node)
             elif "Directory_Controller" in node.type:
