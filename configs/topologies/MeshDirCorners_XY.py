@@ -116,7 +116,7 @@ class MeshDirCorners_XY(SimpleTopology):
             else:
                 self.numa_nodes[3].append(i)
 
-        # 计算num_numa_nodes并保存为类成员变量
+        # bug fix: compute and savenum_numa_nodes
         self.num_numa_nodes = 0
         for n in self.numa_nodes:
             if n:
