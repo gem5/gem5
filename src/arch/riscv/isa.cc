@@ -177,8 +177,8 @@ const std::array<const char *, NUM_MISCREGS> MiscRegNames = {{
     [MISCREG_PMPADDR14]     = "PMPADDR14",
     [MISCREG_PMPADDR15]     = "PMPADDR15",
 
-    [MISCREG_SEDELEG]       = "SEDELEG",
-    [MISCREG_SIDELEG]       = "SIDELEG",
+    [MISCREG_RESERVED01]    = "",
+    [MISCREG_RESERVED02]    = "",
     [MISCREG_STVEC]         = "STVEC",
     [MISCREG_SCOUNTEREN]    = "SCOUNTEREN",
     [MISCREG_SSCRATCH]      = "SSCRATCH",
@@ -188,11 +188,11 @@ const std::array<const char *, NUM_MISCREGS> MiscRegNames = {{
     [MISCREG_SATP]          = "SATP",
     [MISCREG_SENVCFG]       = "SENVCFG",
 
-    [MISCREG_UTVEC]         = "UTVEC",
-    [MISCREG_USCRATCH]      = "USCRATCH",
-    [MISCREG_UEPC]          = "UEPC",
-    [MISCREG_UCAUSE]        = "UCAUSE",
-    [MISCREG_UTVAL]         = "UTVAL",
+    [MISCREG_RESERVED03]    = "",
+    [MISCREG_RESERVED04]    = "",
+    [MISCREG_RESERVED05]    = "",
+    [MISCREG_RESERVED06]    = "",
+    [MISCREG_RESERVED07]    = "",
     [MISCREG_FFLAGS]        = "FFLAGS",
     [MISCREG_FRM]           = "FRM",
 
@@ -375,14 +375,8 @@ void ISA::clear()
         case enums::MU:
           misa.rvu = 1;
           break;
-        case enums::MNU:
-          misa.rvu = misa.rvn = 1;
-          break;
         case enums::MSU:
           misa.rvs = misa.rvu = 1;
-          break;
-        case enums::MNSU:
-          misa.rvs = misa.rvu = misa.rvn = 1;
           break;
         case enums::MHSU:
           misa.rvh = misa.rvs = misa.rvu = 1;
@@ -579,7 +573,6 @@ ISA::readMiscReg(RegIndex idx)
             // instruction, however, lazily updating the Status register
             // upon its read produces the same effect as well.
             STATUS status = readMiscRegNoEffect(idx);
-            STATUS oldstatus = status;
             uint64_t sd_bit = \
                 (status.xs == 3) || (status.fs == 3) || (status.vs == 3);
             // For RV32, the SD bit is at index 31
@@ -610,19 +603,6 @@ ISA::readMiscReg(RegIndex idx)
                     break;
                 default:
                     status.mpp = (misa.rvu) ? PRV_U : PRV_M;
-            }
-
-            if ((virtualizationEnabled() && idx == MISCREG_VSSTATUS) ||
-                         (idx == MISCREG_STATUS)) {
-                RegVal bits_of_interest = STATUS_MPP_MASK |
-                                          STATUS_MPRV_MASK |
-                                          STATUS_MXR_MASK |
-                                          STATUS_SUM_MASK;
-
-                // If at least one of these changed, flush
-                if ((oldstatus ^ status) & bits_of_interest) {
-                    tc->getMMUPtr()->flushAll();
-                }
             }
 
             setMiscRegNoEffect(idx, status);
@@ -762,7 +742,6 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                         res |= (old_val & (0xFF << (8*i)));
                     }
                 }
-                tc->getMMUPtr()->flushAll();
                 setMiscRegNoEffect(idx, res);
             }
             break;
@@ -777,19 +756,12 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 if (mmu->getPMP()->pmpUpdateAddr(pmp_index, val)) {
                     setMiscRegNoEffect(idx, val);
                 }
-                mmu->flushAll();
             }
             break;
           case MISCREG_MIDELEG:
             {
                 setMiscRegNoEffect(
                     idx, val & MIDELEG_MASK[getPrivilegeModeSet()]);
-            }
-            break;
-          case MISCREG_SIDELEG:
-            {
-                setMiscRegNoEffect(
-                    idx, val & SIDELEG_MASK[getPrivilegeModeSet()]);
             }
             break;
           case MISCREG_IP:
@@ -846,8 +818,6 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 if (new_val.mode != AddrXlateMode::BARE &&
                     new_val.mode != AddrXlateMode::SV39)
                     new_val.mode = cur_val.mode;
-
-                tc->getMMUPtr()->flushAll();
 
                 setMiscRegNoEffect(idx, new_val);
             }
@@ -919,7 +889,6 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 if (!getEnableRvv()) {
                     new_misa.rvv = 0;
                 }
-                new_misa.rvn = cur_misa.rvn;
                 new_misa.rvs = cur_misa.rvs;
                 new_misa.rvu = cur_misa.rvu;
                 setMiscRegNoEffect(idx, new_misa);
@@ -927,7 +896,6 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             break;
           case MISCREG_STATUS:
             {
-                STATUS oldstatus = readMiscReg(idx);
                 if (_rvType != RV32) {
                     // SXL and UXL are hard-wired to 64 bit
                     auto cur = readMiscRegNoEffect(idx);
@@ -937,15 +905,6 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 if (!getEnableRvv()) {
                     // Always OFF is rvv is disabled.
                     val &= ~STATUS_VS_MASK;
-                }
-                RegVal bits_of_interest = STATUS_MPP_MASK |
-                                          STATUS_MPRV_MASK |
-                                          STATUS_MXR_MASK |
-                                          STATUS_SUM_MASK;
-
-                // If at least one of these changed, flush
-                if ((oldstatus ^ val) & bits_of_interest) {
-                    tc->getMMUPtr()->flushAll();
                 }
                 setMiscRegNoEffect(idx, val);
             }
@@ -957,18 +916,6 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 auto wmask_map = CSRWriteMasks[RV64][getPrivilegeModeSet()];
                 auto sstatus_wmask = wmask_map.find(CSR_VSSTATUS)->second;
                 val = (cur & ~sstatus_wmask) | val;
-                if (virtualizationEnabled()) {
-                    RegVal bits_of_interest = 0
-                        | STATUS_MPP_MASK
-                        | STATUS_MPRV_MASK
-                        | STATUS_MXR_MASK
-                        | STATUS_SUM_MASK;
-
-                    // If at least one of these changed, flush
-                    if ((cur ^ val) & bits_of_interest) {
-                        tc->getMMUPtr()->flushAll();
-                    }
-                }
                 setMiscRegNoEffect(idx, val);
             }
             break;
@@ -990,7 +937,6 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             break;
           case MISCREG_PRV:
             {
-                tc->getMMUPtr()->flushAll();
                 setMiscRegNoEffect(idx, val);
             }
             break;
@@ -1362,8 +1308,7 @@ ISA::writeCSR(ExecContext *xc, uint64_t csr, RegVal writeData)
         // case CSR_HIP: case CSR_HIE:
         // case CSR_SIP: case CSR_SIE:
         // case CSR_VSIP: case CSR_VSIE:
-        // case CSR_UIP: case CSR_UIE:
-        // case CSR_MSTATUS: case CSR_SSTATUS: case CSR_USTATUS:
+        // case CSR_MSTATUS: case CSR_SSTATUS:
         //     xc->setMiscReg(midx, new_reg_data_all);
         //     break;
         default:

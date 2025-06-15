@@ -60,10 +60,6 @@ mock_config_json = {
     "gem5.resources.client._create_clients",
     side_effect=lambda x: _create_clients(mock_config_json),
 )
-@unittest.skip(
-    "These fail due to changes in client API in gem5 stdlib. "
-    "Unknown reason. To be fixed at a later date."
-)
 class TestObtainResourcesCheck(unittest.TestCase):
     def get_resource_dir(cls) -> str:
         """To ensure the resources are cached to the same directory as all

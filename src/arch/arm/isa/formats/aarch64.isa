@@ -399,12 +399,12 @@ namespace Aarch64
                             if (bits(crm, 1, 0) == 0b10) {
                                 switch (bits(crm, 3, 2)) {
                                   case 0x1: // Non-Shareable
-                                    return new Dsb64Local(machInst);
+                                    return new Dsb64Local(machInst, crm);
                                   case 0x0: // OuterShareable
                                   case 0x2: // InnerShareable
                                   case 0x3: // FullSystem
                                     return new Dsb64Shareable(
-                                        machInst, dec.dvmEnabled);
+                                        machInst, crm, dec.dvmEnabled);
                                   default:
                                     GEM5_UNREACHABLE;
                                 }
@@ -416,19 +416,19 @@ namespace Aarch64
                           case 0x4:
                             switch (bits(crm, 3, 2)) {
                               case 0x1: // Non-Shareable
-                                return new Dsb64Local(machInst);
+                                return new Dsb64Local(machInst, crm);
                               case 0x0: // OuterShareable
                               case 0x2: // InnerShareable
                               case 0x3: // FullSystem
                                 return new Dsb64Shareable(
-                                    machInst, dec.dvmEnabled);
+                                    machInst, crm, dec.dvmEnabled);
                               default:
                                 GEM5_UNREACHABLE;
                             }
                           case 0x5:
                             return new Dmb64(machInst);
                           case 0x6:
-                            return new Isb64(machInst);
+                            return new Isb64(machInst, crm);
                           default:
                             return new Unknown64(machInst);
                         }

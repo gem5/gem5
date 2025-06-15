@@ -82,9 +82,7 @@ class PrivilegeModeSet(Enum):
     vals = [
         "M",  # Machine privilege mode only
         "MU",  # Machine and user privlege modes
-        "MNU",  # MU privilege modes with user-mode trap
         "MSU",  # Machine, supervisor and user modes
-        "MNSU",  # MSU privilege modes with user-mode trap
         "MHSU",  # Machine, hypervisor, supervisor and user modes
     ]
 

@@ -47,6 +47,7 @@ from gem5.components.processors.simple_switchable_processor import (
 from gem5.isas import ISA
 from gem5.resources.resource import obtain_resource
 from gem5.simulate.exit_event import ExitEvent
+from gem5.simulate.exit_handler import AfterBootExitHandler
 from gem5.simulate.simulator import Simulator
 from gem5.utils.requires import requires
 
@@ -163,23 +164,14 @@ motherboard = X86Board(
 )
 
 kernal_args = motherboard.get_default_kernel_args() + [args.kernel_args]
-
-# Set the Full System workload.
-motherboard.set_kernel_disk_workload(
-    kernel=obtain_resource(
-        "x86-linux-kernel-5.4.49",
-        resource_directory=args.resource_directory,
-        resource_version="1.0.0",
-    ),
-    disk_image=obtain_resource(
-        "x86-ubuntu-18.04-img",
-        resource_directory=args.resource_directory,
-        resource_version="1.0.0",
-    ),
-    # The first exit signals to switch processors.
-    readfile_contents="m5 exit\nm5 exit\n",
-    kernel_args=kernal_args,
+workload = obtain_resource(
+    "x86-ubuntu-24.04-boot-with-systemd",
+    resource_directory=args.resource_directory,
+    resource_version="5.0.0",
 )
+workload.set_parameter("kernel_args", kernal_args)
+# Set the Full System workload.
+motherboard.set_workload(workload)
 
 
 # Begin running of the simulation. This will exit once the Linux system boot
@@ -190,17 +182,18 @@ print(
 )
 print()
 
+
+class SwitchProcessorsExitHandler(AfterBootExitHandler):
+    def _process(self, simulator):
+        super()._process(simulator)
+        simulator.switch_processor()
+
+    def _exit_simulation(self):
+        return False
+
+
 simulator = Simulator(
     board=motherboard,
-    on_exit_event={
-        # When we reach the first exit, we switch cores. For the second exit we
-        # simply exit the simulation (default behavior).
-        ExitEvent.EXIT: (i() for i in [processor.switch])
-    },
-    # This parameter allows us to state the expected order-of-execution.
-    # That is, we expect two exit events. If anyother event is triggered, an
-    # exeception will be thrown.
-    expected_execution_order=[ExitEvent.EXIT, ExitEvent.EXIT],
 )
 
 simulator.run()

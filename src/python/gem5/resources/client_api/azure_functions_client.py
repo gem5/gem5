@@ -37,6 +37,7 @@ from typing import (
     Union,
 )
 from urllib import (
+    error,
     parse,
     request,
 )
@@ -54,6 +55,7 @@ class AzureFunctionsAPIClientHttpJsonRequestError(Exception):
         client: "AzureFunctionsAPIClient",
         data: Dict[str, Any],
         purpose_of_request: Optional[str],
+        response: Optional[str] = None,
     ):
         """An exception raised when an HTTP request to the Azure Functions API fails.
         :param client: The AzureFunctionsAPI instance that raised the exception.
@@ -63,11 +65,13 @@ class AzureFunctionsAPIClientHttpJsonRequestError(Exception):
         error_str = (
             f"Http Request to Azure Functions API failed.\n"
             f"Azure Functions API URL: {client.url}\n"
-            f"Data sent:\n\n{json.dumps(data,indent=4)}\n\n"
+            f"Data sent:\n\n{json.dumps(data,indent=4)}\n"
+            f"Response: {str(response)}\n"
         )
 
         if purpose_of_request:
-            error_str += f"Purpose of Request: {purpose_of_request}\n\n"
+            error_str += f"Purpose of Request: {purpose_of_request}\n"
+        error_str += "\n"
         super().__init__(error_str)
 
 
@@ -118,18 +122,32 @@ class AzureFunctionsAPIClient(AbstractClient):
                 response = request.urlopen(req, context=get_proxy_context())
                 break
             except Exception as e:
+                error_response = None
+                if isinstance(e, error.HTTPError):
+                    try:
+                        error_content = e.read().decode("utf-8")
+                        error_json = json.loads(error_content)
+                        if "error" in error_json:
+                            error_response = error_json["error"]
+                        else:
+                            error_response = error_json
+                    except (json.JSONDecodeError, UnicodeDecodeError):
+                        # If the content isn't valid JSON or can't be decoded as UTF-8
+                        error_response = f"Non-JSON error response: {str(e)}"
                 if attempt >= max_failed_attempts:
                     raise AzureFunctionsAPIClientHttpJsonRequestError(
                         client=self,
                         data=data_json,
                         purpose_of_request=purpose_of_request,
+                        response=error_response,
                     )
                 pause = reattempt_pause_base**attempt
                 warn(
                     f"Attempt {attempt} of Azure functions HTTP Request failed.\n"
-                    f"Purpose of Request: {purpose_of_request}.\n\n"
-                    f"Failed with Exception:\n{e}\n\n"
-                    f"Retrying after {pause} seconds..."
+                    f"Purpose of Request: {purpose_of_request}.\n"
+                    f"Failed with Exception: {e}\n"
+                    f"Response: {str(error_response)}\n\n"
+                    f"Retrying after {pause} seconds...\n\n"
                 )
                 time.sleep(pause)
 

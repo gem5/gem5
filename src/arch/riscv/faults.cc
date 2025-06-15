@@ -94,10 +94,9 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         if (isNonMaskableInterrupt()) {
             prv = PRV_M;
         } else if (isInterrupt()) {
-            if (pp != PRV_M &&
+            if (pp != PRV_M && misa.rvs &&
                 bits(tc->readMiscReg(MISCREG_MIDELEG), _code) != 0) {
-                prv = (misa.rvs) ? PRV_S : ((misa.rvn) ? PRV_U : PRV_M);
-
+                prv = PRV_S;
                 // when rvh is true we know rvs is true so prv is S
                 if (misa.rvh) {
                     if (virtualizationEnabled(tc) &&
@@ -107,14 +106,10 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
                     // otherwise handled in VS (S with V = 1)
                 }
             }
-            if (pp == PRV_U && misa.rvs && misa.rvn &&
-                bits(tc->readMiscReg(MISCREG_SIDELEG), _code) != 0) {
-                prv = PRV_U;
-            }
         } else {
-            if (pp != PRV_M &&
+            if (pp != PRV_M && misa.rvs &&
                 bits(tc->readMiscReg(MISCREG_MEDELEG), _code) != 0) {
-                prv = (misa.rvs) ? PRV_S : ((misa.rvn) ? PRV_U : PRV_M);
+                prv = PRV_S;
 
                 // when rvh is true we know rvs is true so prv is S
                 if (misa.rvh) {
@@ -125,23 +120,13 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
                     // otherwise handled in VS (S with V = 1)
                 }
             }
-            if (pp == PRV_U && misa.rvs && misa.rvn &&
-                bits(tc->readMiscReg(MISCREG_SEDELEG), _code) != 0) {
-                prv = PRV_U;
-            }
         }
 
         // Set fault registers and status
         MiscRegIndex cause, epc, tvec, tval;
         switch (prv) {
           case PRV_U:
-            cause = MISCREG_UCAUSE;
-            epc = MISCREG_UEPC;
-            tvec = MISCREG_UTVEC;
-            tval = MISCREG_UTVAL;
-
-            status.upie = status.uie;
-            status.uie = 0;
+            panic("Delegating interrupt to user mode is removed.");
             break;
           case PRV_S:
             cause = MISCREG_SCAUSE;
@@ -228,11 +213,6 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
                       "prv = %d, V = %d", prv, virtualizationEnabled(tc));
             }
         }
-
-        // Also flush TLB on fault handling as Spike does.
-        // This happens even when privilege does not change
-        tc->getMMUPtr()->flushAll();
-
 
         // Set fault cause, privilege, and return PC
         uint64_t _cause = _code;

@@ -942,14 +942,18 @@ template<typename ElemType>
         this->microops.push_back(microop);
     }
 
-    const uint32_t vd_vlmax = vlenb / vd_eewb;
-    const uint8_t num_pinvdcpyvs_microops = ceil((float) this->vl/vd_vlmax);
-    for (uint32_t i = 0; i < num_pinvdcpyvs_microops; i++) {
-        uint32_t vdNumElems = (vl >= vd_vlmax*(i+1)) ? vd_vlmax:vl-vd_vlmax*i;
-
+    const uint32_t vs2_vlmax = vlenb / vs2_eewb;
+    const uint8_t num_cpyvs_microops = ceil((float) this->vl/vs2_vlmax);
+    for (uint32_t i = 0; i < num_cpyvs_microops; i++) {
         microop = new VCpyVsMicroInst(machInst, i, machInst.vs2, elen, vlen);
         microop->setFlag(IsDelayedCommit);
         this->microops.push_back(microop);
+    }
+
+    const uint32_t vd_vlmax = vlenb / vd_eewb;
+    const uint8_t num_pinvd_microops = ceil((float) this->vl/vd_vlmax);
+    for (uint32_t i = 0; i < num_pinvd_microops; i++) {
+        uint32_t vdNumElems = (vl >= vd_vlmax*(i+1)) ? vd_vlmax:vl-vd_vlmax*i;
 
         microop = new VPinVdMicroInst(machInst, i, vdNumElems, elen, vlen);
         microop->setFlag(IsDelayedCommit);

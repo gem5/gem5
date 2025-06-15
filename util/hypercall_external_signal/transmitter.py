@@ -135,9 +135,22 @@ def send_signal(pid: int, id: int, payload: str) -> None:
         f"Sent a SIGHUP signal to PID {pid} with payload: '{final_payload}'"
     )
 
+    timeout = 10
+    sleep_count = 0
     while bytes(shm.buf[:shared_mem_size]).decode().strip("\x00") != "done":
         logger.debug("Waiting for gem5 to finish using shared memory...")
+        try:
+            os.kill(pid, 0)
+        except ProcessLookupError:
+            logger.debug("Process has ended!")
+            break
         sleep(1)
+        sleep_count += 1
+        if sleep_count == timeout:
+            logger.debug(
+                "Timeout waiting for gem5 to finish using shared memory!"
+            )
+            break
     logger.debug("Done message received")
     shm.close()
     try:
