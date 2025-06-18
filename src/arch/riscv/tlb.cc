@@ -467,13 +467,17 @@ TLB::getMemAccessInfo(ThreadContext *tc, BaseMMU::Mode mode,
     STATUS status = tc->readMiscReg(MISCREG_STATUS);
     HSTATUS hstatus = tc->readMiscReg(MISCREG_HSTATUS);
     PrivilegeMode priv = (PrivilegeMode)tc->readMiscReg(MISCREG_PRV);
+    ISA* isa = dynamic_cast<ISA*>(tc->getIsaPtr());
+    assert(isa);
 
+    bool nmie = !isa->enableSmrnmi() || tc->readMiscRegNoEffect(MISCREG_NMIE);
+    bool in_mprv = nmie && (status.mprv == 1);
     bool virt = misa.rvh ? virtualizationEnabled(tc) : false;
     bool force_virt = false;
     bool hlvx = false;
     bool lr = false;
 
-    if (mode != BaseMMU::Execute && status.mprv == 1) {
+    if (mode != BaseMMU::Execute && in_mprv) {
         priv = (PrivilegeMode)(RegVal)status.mpp;
         if (misa.rvh && status.mpv && priv != PRV_M) {
             virt = true;
