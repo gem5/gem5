@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2018-2019, 2023-2024 ARM Limited
+ * Copyright (c) 2012-2013, 2018-2019, 2023-2025 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -2408,6 +2408,7 @@ BaseCache::CacheStats::regStats()
     blockedCycles.init(NUM_BLOCKED_CAUSES);
     blockedCycles
         .subname(Blocked_NoMSHRs, "no_mshrs")
+        .subname(Blocked_NoWBBuffers, "no_wbuffers")
         .subname(Blocked_NoTargets, "no_targets")
         ;
 
@@ -2415,11 +2416,13 @@ BaseCache::CacheStats::regStats()
     blockedCauses.init(NUM_BLOCKED_CAUSES);
     blockedCauses
         .subname(Blocked_NoMSHRs, "no_mshrs")
+        .subname(Blocked_NoWBBuffers, "no_wbuffers")
         .subname(Blocked_NoTargets, "no_targets")
         ;
 
     avgBlocked
         .subname(Blocked_NoMSHRs, "no_mshrs")
+        .subname(Blocked_NoWBBuffers, "no_wbuffers")
         .subname(Blocked_NoTargets, "no_targets")
         ;
     avgBlocked = blockedCycles / blockedCauses;
