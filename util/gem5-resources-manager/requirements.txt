@@ -24,6 +24,6 @@ pyrsistent==0.19.3
 python-dotenv==1.0.0
 requests==2.32.4
 sentinels==1.0.0
-urllib3==2.2.2
+urllib3==2.5.0
 Werkzeug==3.0.6
 zipp==3.19.1
