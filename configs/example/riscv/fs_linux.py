@@ -205,8 +205,9 @@ elif not args.bootloader:
     system.workload = RiscvLinux(**workload_args)
     system.workload.object_file = args.kernel
 else:
+    assert len(args.bootloader) == 1, "Please specify only one bootloader"
     system.workload = RiscvBootloaderKernelWorkload(**workload_args)
-    system.workload.bootloader_filename = args.bootloader
+    system.workload.bootloader_filename = args.bootloader[0]
     system.workload.object_file = args.kernel
 
 system.iobus = IOXBar()
