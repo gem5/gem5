@@ -38,15 +38,23 @@
 #include "cpu/thread_context.hh"
 #include "vector_scalar.hh"
 
-using namespace gem5;
+namespace gem5
+{
 
 // Define 128-bit unsigned int if not already available
+#if defined(__SIZEOF_INT128__)
 typedef __uint128_t uint128_t;
+#else
+#warning "128-bit integer type not supported on this compiler"
+#endif
 
 // Register classes are in PowerISA namespace (from src/arch/power/regs/)
-using namespace PowerISA;
+namespace PowerISA
+{
 
-void mtvsrd_exec(ThreadContext *tc, int t_s, int ra_vsx, int tx_sx) {
+void
+mtvsrd_exec(ThreadContext *tc, int t_s, int ra_vsx, int tx_sx)
+{
     // Compute effective VSX register index (0-63)
     const RegIndex vsr_idx = (tx_sx << 5) | t_s;
 
@@ -67,7 +75,9 @@ void mtvsrd_exec(ThreadContext *tc, int t_s, int ra_vsx, int tx_sx) {
     }
 }
 
-void mfvsrd_exec(ThreadContext *tc, int t_s, int ra_vsx, int tx_sx) {
+void
+mfvsrd_exec(ThreadContext *tc, int t_s, int ra_vsx, int tx_sx)
+{
     // Compute effective VSX register index (0-63)
     const RegIndex vsr_idx = (tx_sx << 5) | t_s;
     uint64_t val;
@@ -82,4 +92,8 @@ void mfvsrd_exec(ThreadContext *tc, int t_s, int ra_vsx, int tx_sx) {
     }
 
     tc->setReg(intRegClass[ra_vsx], val);
+}
+
+}
+
 }
