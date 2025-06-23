@@ -71,10 +71,10 @@ RegVal
 DummyISADevice::readMiscReg(int misc_reg)
 {
     warn(
-        
-        "Returning zero for read from miscreg %s\n", 
-        
-        
+
+        "Returning zero for read from miscreg %s\n",
+
+
         miscRegName[misc_reg]);
 
     return 0;

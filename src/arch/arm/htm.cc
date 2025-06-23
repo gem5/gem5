@@ -57,13 +57,13 @@ ArmISA::HTMCheckpoint::reset()
     daif = 0;
     tcreason = 0;
     x.fill(0);
-    for (auto i = 0; 
-        i < NumVecRegs; 
-        
-        
-        ++i) 
+    for (auto i = 0;
+        i < NumVecRegs;
+
+
+        ++i)
       z[i].zero();
-    
+
     for (auto i = 0; i < NumVecPredRegs; ++i) {
       p[i].reset();
     }
