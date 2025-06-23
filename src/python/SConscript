@@ -335,7 +335,7 @@ PySource('gem5.resources.client_api',
 PySource('gem5.resources.client_api',
          'gem5/resources/client_api/jsonclient.py')
 PySource('gem5.resources.client_api',
-         'gem5/resources/client_api/atlasclient.py')
+         'gem5/resources/client_api/azure_functions_client.py')
 PySource('gem5.resources.client_api',
          'gem5/resources/client_api/abstract_client.py')
 PySource('gem5.resources.client_api',

@@ -44,10 +44,7 @@ gem5_verify_config(
     ],
     fixtures=(),
     config=joinpath(
-        config.base_dir,
-        "tests",
-        "gem5",
-        "to_tick",
+        getcwd(),
         "configs",
         "tick-to-max.py",
     ),
@@ -79,10 +76,7 @@ gem5_verify_config(
     ],
     fixtures=(),
     config=joinpath(
-        config.base_dir,
-        "tests",
-        "gem5",
-        "to_tick",
+        getcwd(),
         "configs",
         "tick-to-max.py",
     ),
@@ -111,10 +105,7 @@ gem5_verify_config(
     ],
     fixtures=(),
     config=joinpath(
-        config.base_dir,
-        "tests",
-        "gem5",
-        "to_tick",
+        getcwd(),
         "configs",
         "tick-to-max.py",
     ),
@@ -139,7 +130,7 @@ gem5_verify_config(
     ],
     fixtures=(),
     config=joinpath(
-        config.base_dir, "tests", "gem5", "to_tick", "configs", "tick-exit.py"
+        config.base_dir, "tests", "gem5", "stdlib", "configs", "tick-exit.py"
     ),
     config_args=["--resource-directory", resource_path, "--tick-exits", "100"],
     valid_isas=(constants.all_compiled_tag,),
@@ -156,9 +147,7 @@ gem5_verify_config(
         )
     ],
     fixtures=(),
-    config=joinpath(
-        config.base_dir, "tests", "gem5", "to_tick", "configs", "tick-exit.py"
-    ),
+    config=joinpath(getcwd(), "configs", "tick-exit.py"),
     config_args=[
         "--resource-directory",
         resource_path,

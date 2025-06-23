@@ -452,8 +452,17 @@ class AddrRange
         // whether it would fit in a continuous segment of the input
         // addr range.
         if (r.interleaved()) {
-            return r.contains(_start) && r.contains(_end - 1) &&
-                size() <= r.granularity();
+          if (r.contains(_start) && size() <= r.granularity()) {
+            // simplify checking for 1 element ranges
+            // no need to re-check r.contains(_end -1) if
+            // it is the same as _start
+            if (_start == _end - 1) {
+              return true;
+            }
+            //otherwise check if it also contains the end.
+            return r.contains(_end -1);
+          }
+          return false;
         } else {
 
             if (_end <= _start){

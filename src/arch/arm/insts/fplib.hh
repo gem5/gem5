@@ -121,6 +121,8 @@ T fplibMul(T op1, T op2, FPSCR &fpscr);
 /** Floating-point multiply-add. */
 template <class T>
 T fplibMulAdd(T addend, T op1, T op2, FPSCR &fpscr);
+template <class T1, class T2>
+T2 fplibMulAddH(T2 addend, T1 op1, T1 op2, FPSCR &fpscr);
 /** Floating-point multiply extended. */
 template <class T>
 T fplibMulX(T op1, T op2, FPSCR &fpscr);
@@ -145,6 +147,10 @@ T fplibRecpX(T op, FPSCR &fpscr);
 /**  Floating-point convert to integer. */
 template <class T>
 T fplibRoundInt(T op, FPRounding rounding, bool exact, FPSCR &fpscr);
+/**  Floating-point convert to integer. */
+template <class T>
+T fplibRoundIntN(T op, FPRounding rounding, bool exact, int intsize,
+                 FPSCR &fpscr);
 /** Floating-point adjust exponent. */
 template <class T>
 T fplibScale(T op1, T op2, FPSCR &fpscr);
@@ -291,6 +297,9 @@ template <>
 uint64_t fplibMulAdd(uint64_t addend, uint64_t op1, uint64_t op2,
                      FPSCR &fpscr);
 template <>
+uint32_t fplibMulAddH(uint32_t addend, uint16_t op1, uint16_t op2,
+                      FPSCR &fpscr);
+template <>
 uint16_t fplibMulX(uint16_t op1, uint16_t op2, FPSCR &fpscr);
 template <>
 uint32_t fplibMulX(uint32_t op1, uint32_t op2, FPSCR &fpscr);
@@ -341,6 +350,12 @@ uint32_t fplibRoundInt(uint32_t op, FPRounding rounding, bool exact,
 template <>
 uint64_t fplibRoundInt(uint64_t op, FPRounding rounding, bool exact,
                        FPSCR &fpscr);
+template <>
+uint32_t fplibRoundIntN(uint32_t op, FPRounding rounding, bool exact,
+                        int intsize, FPSCR &fpscr);
+template <>
+uint64_t fplibRoundIntN(uint64_t op, FPRounding rounding, bool exact,
+                        int intsize, FPSCR &fpscr);
 template <>
 uint16_t fplibScale(uint16_t op1, uint16_t op2, FPSCR &fpscr);
 template <>

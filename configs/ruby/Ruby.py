@@ -213,8 +213,10 @@ def create_topology(controllers, options):
     found in configs/topologies/BaseTopology.py
     This is a wrapper for the legacy topologies.
     """
-    exec(f"import topologies.{options.topology} as Topo")
-    topology = eval(f"Topo.{options.topology}(controllers)")
+    topology_class = getattr(
+        import_module(f"topologies.{options.topology}"), options.topology
+    )
+    topology = topology_class(controllers=controllers)
     return topology
 
 

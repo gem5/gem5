@@ -431,6 +431,13 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    "--download-resource-version",
+    type=str,
+    default=None,
+    required=False,
+    help="Specify version of resource to download",
+)
+parser.add_argument(
     "--download-dir",
     type=str,
     default=None,
@@ -449,6 +456,7 @@ args = parser.parse_args()
 if args.download_resource:
     resources = obtain_resource(
         resource_id=args.download_resource,
+        resource_version=args.download_resource_version,
         resource_directory=args.download_dir,
     )
 

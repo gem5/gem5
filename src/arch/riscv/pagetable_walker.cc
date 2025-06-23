@@ -71,7 +71,7 @@ namespace RiscvISA {
 
 Fault
 Walker::start(ThreadContext * _tc, BaseMMU::Translation *_translation,
-              const RequestPtr &_req, BaseMMU::Mode _mode)
+    const RequestPtr &_req, BaseMMU::Mode _mode, TlbEntry* result_entry)
 {
     // TODO: in timing mode, instead of blocking when there are other
     // outstanding requests, see if this request can be coalesced with
@@ -85,8 +85,18 @@ Walker::start(ThreadContext * _tc, BaseMMU::Translation *_translation,
         return NoFault;
     } else {
         currStates.push_back(newState);
-        Fault fault = newState->startWalk();
-        if (!newState->isTiming()) {
+        Fault fault = newState->walk();
+
+        // Keep the resulting TLB entry
+        // in some cases we might need to use the result
+        // but not insert to the TLB, so we can't look it up if we return!
+        if (result_entry)
+            *result_entry = newState->entry;
+
+        // In functional mode, always pop the state
+        // In timing we must pop the state in the case of an early fault!
+        if (fault != NoFault || !newState->isTiming())
+        {
             currStates.pop_front();
             delete newState;
         }
@@ -189,10 +199,38 @@ Walker::WalkerState::initState(ThreadContext * _tc,
     mode = _mode;
     timing = _isTiming;
     // fetch these now in case they change during the walk
+    memaccess = functional ?
+        walker->tlb->getMemAccessInfo(tc, mode, (Request::ArchFlagsType)0):
+        walker->tlb->getMemAccessInfo(tc, mode, req->getArchFlags());
+    pmode = memaccess.priv;
     status = tc->readMiscReg(MISCREG_STATUS);
-    pmode = walker->tlb->getMemPriv(tc, mode);
-    satp = tc->readMiscReg(MISCREG_SATP);
-    assert(satp.mode == AddrXlateMode::SV39);
+    MISA misa = tc->readMiscReg(MISCREG_ISA);
+
+    // Find SATP
+    // If no rvh or effective V = 0, base is SATP
+    // otherwise base is VSATP (effective V=1)
+    satp = (!misa.rvh || !memaccess.virt) ?
+            tc->readMiscReg(MISCREG_SATP) :
+            tc->readMiscReg(MISCREG_VSATP);
+
+    // If effective V = 1, also read HGATP for
+    // G-stage because we will perform a two-stage translation.
+    hgatp = (misa.rvh && memaccess.virt) ?
+            tc->readMiscReg(MISCREG_HGATP) :
+            (RegVal)0;
+
+    // TODO move this somewhere else
+    // VSATP mode might be bare, but we still
+    // will have to go through G-stage
+    // assert(satp.mode == AddrXlateMode::SV39);
+
+    // If functional entry.vaddr will be set
+    // in start functional (req == NULL)
+    entry.vaddr = functional ?
+        (Addr)0 :
+        req->getVaddr();
+
+    entry.asid = satp.asid;
 }
 
 void
@@ -202,14 +240,14 @@ Walker::startWalkWrapper()
     WalkerState *currState = currStates.front();
 
     // check if we get a tlb hit to skip the walk
-    Addr vaddr = Addr(sext<VADDR_BITS>(currState->req->getVaddr()));
+    Addr vaddr = Addr(sext<SV39_VADDR_BITS>(currState->req->getVaddr()));
     Addr vpn = getVPNFromVAddr(vaddr, currState->satp.mode);
     TlbEntry *e = tlb->lookup(vpn, currState->satp.asid, currState->mode,
                               true);
     Fault fault = NoFault;
     if (e) {
-       fault = tlb->checkPermissions(currState->status, currState->pmode,
-                                     vaddr, currState->mode, e->pte);
+       fault = tlb->checkPermissions(currState->tc, currState->memaccess,
+                            e->vaddr, currState->mode, e->pte);
     }
 
     while ((num_squashed < numSquashable) && currState &&
@@ -242,91 +280,435 @@ Walker::startWalkWrapper()
         // check the next translation request, if it exists
         if (currStates.size()) {
             currState = currStates.front();
-            vaddr = Addr(sext<VADDR_BITS>(currState->req->getVaddr()));
+            vaddr = Addr(sext<SV39_VADDR_BITS>(currState->req->getVaddr()));
             Addr vpn = getVPNFromVAddr(vaddr, currState->satp.mode);
             e = tlb->lookup(vpn, currState->satp.asid, currState->mode,
                             true);
             if (e) {
-               fault = tlb->checkPermissions(currState->status,
-                                             currState->pmode, vaddr,
-                                             currState->mode, e->pte);
+                fault = tlb->checkPermissions(currState->tc,
+                    currState->memaccess, e->vaddr, currState->mode, e->pte);
             }
         } else {
             currState = NULL;
         }
     }
     if (currState && !currState->wasStarted()) {
-        if (!e || fault != NoFault)
-            currState->startWalk();
-        else
+        if (!e || fault != NoFault) {
+            Fault timingFault = currState->walk();
+            if (timingFault != NoFault) {
+                currStates.pop_front();
+                delete currState;
+                currState = NULL;
+            }
+        }
+        else {
             schedule(startWalkWrapperEvent, clockEdge(Cycles(1)));
+        }
     }
 }
 
 Fault
-Walker::WalkerState::startWalk()
+Walker::WalkerState::walkGStage(Addr guest_paddr, Addr& host_paddr)
 {
     Fault fault = NoFault;
-    assert(!started);
-    started = true;
-    setupWalk(req->getVaddr());
+    curstage = XlateStage::GSTAGE;
+
+
+    // reset gresult in case we were called again
+    // in a two stage translation
+    gresult.reset();
+    gresult.vaddr = guest_paddr;
+
+    gstate = Translate;
+    nextgState = Ready;
+
+
+    const int maxgpabits = SV39_LEVELS * SV39_LEVEL_BITS +
+                    SV39X4_WIDENED_BITS + PageShift;
+    Addr maxgpa = mask(maxgpabits);
+
+    // If there is a bit beyond maxgpa, throw pf
+    if (guest_paddr & ~maxgpa) {
+        return pageFault();
+    }
+
+    // If there is another read packet,
+    // deallocate it, gstage creates a new packet
+    if (read) {
+        delete read;
+        read = nullptr;
+    }
+
+    Addr pte_addr = setupWalk(guest_paddr);
+    read = createReqPacket(pte_addr, MemCmd::ReadReq, sizeof(PTESv39));
+    glevel = SV39_LEVELS - 1;
+
+    // TODO THE TIMING PATH IS UNTESTED
     if (timing) {
-        nextState = state;
-        state = Waiting;
+        panic("unimpl");
+        nextgState = gstate;
+        gstate = Waiting;
         timingFault = NoFault;
         sendPackets();
-    } else {
+    }
+    else {
         do {
             walker->port.sendAtomic(read);
             PacketPtr write = NULL;
-            fault = stepWalk(write);
+            fault = stepWalkGStage(write);
             assert(fault == NoFault || read == NULL);
-            state = nextState;
-            nextState = Ready;
-            if (write)
+            gstate = nextgState;
+            nextgState = Ready;
+            if (write) {
                 walker->port.sendAtomic(write);
+            }
         } while (read);
-        state = Ready;
-        nextState = Waiting;
+
+        if (fault) {
+            return fault;
+        }
+
+        // In GStageOnly result is in entry (which is put in TLB)
+        // otherwise it's a two stage walk so result is in gresult
+        // which is discarded after.
+        Addr ppn = walkType == GstageOnly ? entry.paddr : gresult.paddr;
+        Addr vpn = guest_paddr >> PageShift;
+        Addr vpn_bits = vpn & mask(glevel * SV39_LEVEL_BITS);
+
+        // Update gresult
+        gresult.paddr = (ppn | vpn_bits);
+
+        host_paddr = ((ppn | vpn_bits) << PageShift) |
+                    (guest_paddr & mask(PageShift));
+
+        gstate = Ready;
+        nextgState = Waiting;
     }
     return fault;
 }
 
 Fault
-Walker::WalkerState::startFunctional(Addr &addr, unsigned &logBytes)
+Walker::WalkerState::walk()
 {
     Fault fault = NoFault;
     assert(!started);
     started = true;
-    setupWalk(addr);
+    state = Translate;
+    nextState = Ready;
 
-    do {
-        walker->port.sendFunctional(read);
-        // On a functional access (page table lookup), writes should
-        // not happen so this pointer is ignored after stepWalk
+    // This is the vaddr to walk for
+    Addr vaddr = entry.vaddr;
+
+    // Decide the type of walk to perform
+    // When memaccess is virtual, GStage is enabled
+    if (satp.mode == AddrXlateMode::BARE && memaccess.virt) {
+        // In this case VSATP (== satp) is bare and
+        // we do G-stage translation only
+        Addr paddr;
+        walkType = WalkType::GstageOnly;
+        fault = walkGStage(vaddr, paddr);
+    }
+    else if (memaccess.virt) {
+        walkType = WalkType::TwoStage;
+        fault = walkTwoStage(vaddr);
+    }
+    else {
+        walkType = WalkType::OneStage;
+        fault = walkOneStage(vaddr);
+    }
+
+    return fault;
+}
+
+
+Fault
+Walker::WalkerState::walkOneStage(Addr vaddr)
+{
+
+    curstage = XlateStage::FIRST_STAGE;
+
+    // Make sure MSBS are the same
+    // riscv-privileged-20211203 page 84
+    auto mask_for_msbs = mask(64 - SV39_VADDR_BITS);
+    auto msbs = bits(vaddr, 63, SV39_VADDR_BITS);
+    if (msbs != 0 && msbs != mask_for_msbs) {
+        return pageFault();
+    }
+
+    Addr pte_addr = setupWalk(vaddr);
+    level = SV39_LEVELS - 1;
+    // Create physical request for first_pte_addr
+    // This is a host physical address
+    // In two-stage this gets discarded?
+    read = createReqPacket(pte_addr,
+            MemCmd::ReadReq, sizeof(PTESv39));
+
+    if (timing)
+    {
+        MISA misa = tc->readMiscReg(MISCREG_ISA);
+        panic_if(misa.rvh, "Timing walks are not supported with h extension");
+        nextState = state;
+        state = Waiting;
+        timingFault = NoFault;
+        // DO GSTAGE HERE IF NEEDED AND THEN DO PACKETS FOR *PTE
+        sendPackets();
+        return NoFault;
+    }
+
+    Fault fault = NoFault;
+    do
+    {
+        if (functional) {
+            walker->port.sendFunctional(read);
+        }
+        else {
+            walker->port.sendAtomic(read);
+        }
+
         PacketPtr write = NULL;
         fault = stepWalk(write);
         assert(fault == NoFault || read == NULL);
         state = nextState;
         nextState = Ready;
-    } while (read);
-    logBytes = entry.logBytes;
-    addr = entry.paddr << PageShift;
 
+        // On a functional access (page table lookup), writes should
+        // not happen so this pointer is ignored after stepWalk
+        if (write && !functional) {
+            walker->port.sendAtomic(write);
+        }
+    } while (read);
+
+    state = Ready;
+    nextState = Waiting;
     return fault;
+}
+
+
+
+
+
+Fault
+Walker::WalkerState::walkTwoStage(Addr vaddr)
+{
+    curstage = XlateStage::FIRST_STAGE;
+
+    // Make sure MSBS are the same
+    // riscv-privileged-20211203 page 84
+    auto mask_for_msbs = mask(64 - SV39_VADDR_BITS);
+    auto msbs = bits(vaddr, 63, SV39_VADDR_BITS);
+    if (msbs != 0 && msbs != mask_for_msbs) {
+        return pageFault();
+    }
+
+    Addr pte_addr = setupWalk(vaddr);
+    level = SV39_LEVELS - 1;
+    // Create physical request for first_pte_addr
+    // This is a host physical address
+    // In two-stage this gets discarded?
+    read = createReqPacket(pte_addr,
+            MemCmd::ReadReq, sizeof(PTESv39));
+
+
+
+    if (timing)
+    {
+        MISA misa = tc->readMiscReg(MISCREG_ISA);
+        panic_if(misa.rvh, "Timing walks are not supported with h extension");
+        nextState = state;
+        state = Waiting;
+        timingFault = NoFault;
+        // DO GSTAGE HERE IF NEEDED AND THEN DO PACKETS FOR *PTE
+        sendPackets();
+        return NoFault;
+    }
+
+    Fault fault = NoFault;
+    do
+    {
+        // This is a "virtual" access, pte_address
+        // is guest physical (host virtual) so pass through
+        // G-stage before making a request to physmem.
+        Addr guest_paddr = pte_addr;
+        Addr host_paddr;
+
+        fault = walkGStage(guest_paddr, host_paddr);
+        if (fault != NoFault) { return fault; }
+        pte_addr = host_paddr;
+
+        // Create the physmem packet to be sent
+        read = createReqPacket(pte_addr,
+            MemCmd::ReadReq, sizeof(PTESv39));
+
+        // G-stage done go back to first_stage logic
+        curstage = FIRST_STAGE;
+
+
+        if (functional) {
+            walker->port.sendFunctional(read);
+        } else {
+            walker->port.sendAtomic(read);
+        }
+
+        PacketPtr write = NULL;
+        fault = stepWalk(write);
+
+        // Set up next vpte_addr for GStage
+        // This read packet should not be sent to mem
+        // paddr contains a virtual (guest physical) address
+        if (read && fault == NoFault) {
+            pte_addr = read->req->getPaddr();
+        }
+
+        assert(fault == NoFault || read == NULL);
+        state = nextState;
+        nextState = Ready;
+
+        // On a functional access (page table lookup), writes should
+        // not happen so this pointer is ignored after stepWalk
+        if (write && !functional) {
+            walker->port.sendAtomic(write);
+        }
+    } while (read);
+
+
+    if (fault != NoFault) {
+        return fault;
+    }
+
+    // In 2-stage walks the TLB insert is done after an
+    // additional g-stage walk
+
+    // gpa is a host virtual address.
+    // To actually get the host physical address of the page,
+    // we have to pass through GStage one final time.
+    fault = guestToHostPage(vaddr);
+
+    if (fault != NoFault) {
+        return fault;
+    }
+
+    if (!functional && !memaccess.bypassTLB()) {
+        Addr vpn = getVPNFromVAddr(entry.vaddr, satp.mode);
+        walker->tlb->insert(vpn, entry);
+    }
+
+    state = Ready;
+    nextState = Waiting;
+    return NoFault;
+}
+
+
+Fault
+Walker::WalkerState::guestToHostPage(Addr vaddr)
+{
+    Addr gpa = (((entry.paddr) |
+    ((vaddr >> PageShift) & mask(level*SV39_LEVEL_BITS)))
+    << PageShift) | (vaddr & mask(PageShift));
+
+    Addr host_page_address;
+    Fault fault = walkGStage(gpa, host_page_address);
+    if (fault != NoFault) { return fault; }
+
+    // Final G-stage done, go back to first_stage logic
+    curstage = FIRST_STAGE;
+
+    // gpn (vaddr) -> ppn (paddr) translation is already
+    // in gresult, host_page_address is not needed here
+    // TLB stores ppn and pte
+    // entry.logBytes = PageShift + (level * SV39_LEVEL_BITS);
+    entry.logBytes = PageShift;
+    entry.paddr = gresult.paddr;
+    entry.vaddr &= ~((1 << entry.logBytes) - 1);
+
+    // entry.pte contains guest pte
+    // host pte is in gresult.pte from final GStage
+    entry.gpte = entry.pte;
+    entry.pte = gresult.pte;
+
+    return NoFault;
+}
+
+Fault
+Walker::WalkerState::startFunctional(Addr &addr, unsigned &logBytes)
+{
+    // Pass the addess to entry here
+    // initState cannot because there is no req object
+    entry.vaddr = addr;
+    // just call walk
+    // it takes care to do the right thing
+    // when functional is true
+    return walk();
+}
+
+
+Fault
+Walker::WalkerState::checkPTEPermissions(
+    PTESv39 pte, WalkFlags& stepWalkFlags, int level)
+{
+    // If valid bit is off OR
+    // the page is writable but not readable, throw pf
+    if (!pte.v || (!pte.r && pte.w)) {
+        stepWalkFlags.doEndWalk = true;
+        return pageFault();
+    }
+
+    // If read-bit or exec-bit, then PTE is a leaf
+    if (pte.r || pte.x) {
+        stepWalkFlags.pteIsLeaf = true;
+        stepWalkFlags.doEndWalk = true;
+
+        Fault fault = walker->tlb->checkPermissions(tc, memaccess,
+                    entry.vaddr, mode, pte, gresult.vaddr, curstage);
+
+        if (fault != NoFault) {
+            return fault;
+        }
+
+        // ppn fragments that correspond to unused
+        // vpn fragments have to be all zeroes
+        // Otherwise, throw a pagefault
+        if (level >= 1 && pte.ppn0 != 0)
+        {
+            return pageFault();
+        }
+        else if (level == 2 && pte.ppn1 != 0)
+        {
+            return pageFault();
+        }
+
+        if (pte.n && (pte.ppn0 & mask(NapotShift)) != 8) {
+            DPRINTF(PageTableWalker,
+                "SVNAPOT PTE has wrong encoding, \
+                    raising PF\n");
+            fault = pageFault();
+        }
+
+        // Check if we need to write
+        if (!pte.a) {
+            pte.a = 1;
+            stepWalkFlags.doWrite = true;
+        }
+        if (!pte.d && mode == BaseMMU::Write) {
+            pte.d = 1;
+            stepWalkFlags.doWrite = true;
+        }
+    }
+
+    return NoFault;
 }
 
 Fault
 Walker::WalkerState::stepWalk(PacketPtr &write)
 {
     assert(state != Ready && state != Waiting);
+
     Fault fault = NoFault;
     write = NULL;
     PTESv39 pte = read->getLE<uint64_t>();
     Addr nextRead = 0;
-    bool doWrite = false;
-    bool doTLBInsert = false;
-    bool doEndWalk = false;
+
+    // walk flags are initialized to false
+    WalkFlags stepWalkFlags;
 
     DPRINTF(PageTableWalker, "Got level%d PTE: %#x\n", level, pte);
 
@@ -343,131 +725,110 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
     }
 
     if (fault == NoFault) {
-        // step 3:
-        if (!pte.v || (!pte.r && pte.w)) {
-            doEndWalk = true;
-            DPRINTF(PageTableWalker, "PTE invalid, raising PF\n");
-            fault = pageFault(pte.v);
-        }
-        else {
-            // step 4:
-            if (pte.r || pte.x) {
-                // step 5: leaf PTE
-                doEndWalk = true;
-                fault = walker->tlb->checkPermissions(status, pmode,
-                                                    entry.vaddr, mode, pte);
 
-                // step 6
+        fault = checkPTEPermissions(pte, stepWalkFlags, level);
+
+        if (fault == NoFault && stepWalkFlags.pteIsLeaf) {
+
+            if (stepWalkFlags.doWrite) {
+
+                // this read will eventually become write
+                // if doWrite is True
+
+                fault = walker->pmp->pmpCheck(read->req,
+                            BaseMMU::Write, pmode, tc, entry.vaddr);
+
                 if (fault == NoFault) {
-                    if (level >= 1 && pte.ppn0 != 0) {
-                        DPRINTF(PageTableWalker,
-                                "PTE has misaligned PPN, raising PF\n");
-                        fault = pageFault(true);
-                    }
-                    else if (level == 2 && pte.ppn1 != 0) {
-                        DPRINTF(PageTableWalker,
-                                "PTE has misaligned PPN, raising PF\n");
-                        fault = pageFault(true);
-                    }
-                    if (pte.n && (pte.ppn0 & mask(NapotShift)) != 8) {
-                            DPRINTF(PageTableWalker,
-                                "SVNAPOT PTE has wrong encoding, \
-                                 raising PF\n");
-                            fault = pageFault(true);
-                    }
+                    fault = walker->pma->check(read->req,
+                                BaseMMU::Write, entry.vaddr);
                 }
+            }
 
-                if (fault == NoFault) {
-                    // step 7
-                    if (!pte.a) {
-                        pte.a = 1;
-                        doWrite = true;
-                    }
-                    if (!pte.d && mode == BaseMMU::Write) {
-                        pte.d = 1;
-                        doWrite = true;
-                    }
-                    // Performing PMA/PMP checks
+            // perform next step only if pmp checks pass
+            if (fault == NoFault) {
+                // TLB inserts are OK for single stage walks
+                // For two-stage, FIRST_STAGE will reach here just once
+                // but the TLB insertion is done in walkTwoStage()
+                if (walkType == OneStage ||
+                    (walkType == TwoStage && curstage == FIRST_STAGE))
+                {
+                    // Fill in TLB entry
+                    // Check if N (contig bit) is set, if yes we have
+                    // a 64K page mapping (SVNAPOT Extension)
+                    assert(!(pte.n) || level == 0);
+                    entry.pte = pte;
+                    entry.paddr = (pte.n) ?
+                        pte.ppn & ~mask(NapotShift) :
+                        pte.ppn;
 
-                    if (doWrite) {
+                    entry.logBytes = (pte.n) ?
+                        PageShift + NapotShift :
+                        PageShift + (level * SV39_LEVEL_BITS);
 
-                        // this read will eventually become write
-                        // if doWrite is True
-
-                        fault = walker->pmp->pmpCheck(read->req,
-                                            BaseMMU::Write, pmode, tc, entry.vaddr);
-
-                        if (fault == NoFault) {
-                            fault = walker->pma->check(read->req,
-                                                BaseMMU::Write, entry.vaddr);
-                        }
-
-                    }
-                    // perform step 8 only if pmp checks pass
-                    if (fault == NoFault) {
-                        DPRINTF(PageTableWalker,
-                                "#0 leaf node at level %d, with vpn %#x\n",
-                                 level, entry.vaddr);
-
-                        // step 8
-                        // Check if N (contig bit) is set, if yes we have
-                        // a 64K page mapping (SVNAPOT Extension)
-                        assert(!(pte.n) || level == 0);
-                        entry.logBytes = (pte.n) ? PageShift + NapotShift :
-                                            PageShift + (level * LEVEL_BITS);
-                        entry.paddr = (pte.n) ? pte.ppn & ~mask(NapotShift) :
-                                                pte.ppn;
+                    // Only truncate the address in non-two stage walks
+                    // The truncation for two-stage is done in
+                    // walkTwoStage()
+                    if (walkType != TwoStage) {
+                        entry.logBytes = PageShift +
+                                        (level * SV39_LEVEL_BITS);
                         entry.vaddr &= ~((1 << entry.logBytes) - 1);
-                        entry.pte = pte;
-                        // put it non-writable into the TLB to detect
-                        // writes and redo the page table walk in order
-                        // to update the dirty flag.
-                        if (!pte.d && mode != BaseMMU::Write)
-                            entry.pte.w = 0;
-                        doTLBInsert = true;
-
-                        // Update statistics for completed page walks
-                        if (level == 1) {
-                            walker->pagewalkerstats.num_2mb_walks++;
-                        }
-                        if (level == 0) {
-                            if (pte.n)
-                                walker->pagewalkerstats.num_64kb_walks++;
-                            else
-                                walker->pagewalkerstats.num_4kb_walks++;
-                        }
-                        DPRINTF(PageTableWalker,
-                                "#1 leaf node at level %d, with vpn %#x\n",
-                                level, entry.vaddr);
                     }
+
+                    // put it non-writable into the TLB to detect
+                    // writes and redo the page table walk in order
+                    // to update the dirty flag
+                    if (!pte.d && mode != BaseMMU::Write)
+                        entry.pte.w = 0;
+
+                    // Don't do TLB insert here when ending TwoStage.
+                    // An additional GStage is done in walkTwoStage()
+                    // and then we insert.
+                    // Also don't insert on special_access
+                    if (walkType != TwoStage && !memaccess.bypassTLB())
+                        stepWalkFlags.doTLBInsert = true;
                 }
-            } else {
-                level--;
-                if (level < 0) {
-                    DPRINTF(PageTableWalker, "No leaf PTE found,"
-                                                  "raising PF\n");
-                    doEndWalk = true;
-                    fault = pageFault(true);
-                } else {
-                    Addr shift = (PageShift + LEVEL_BITS * level);
-                    Addr idx = (entry.vaddr >> shift) & LEVEL_MASK;
-                    nextRead = (pte.ppn << PageShift) + (idx * sizeof(pte));
-                    nextState = Translate;
+
+                // Update statistics for completed page walks
+                if (level == 1) {
+                    walker->pagewalkerstats.num_2mb_walks++;
                 }
+                if (level == 0) {
+                    walker->pagewalkerstats.num_4kb_walks++;
+                }
+                DPRINTF(PageTableWalker,
+                        "#1 leaf node at level %d, with vpn %#x\n",
+                        level, entry.vaddr);
+            }
+        }
+        // PTE is not a leaf and there was no fault, decrement level
+        else if (fault == NoFault) {
+            Addr shift, idx;
+            level--;
+            if (level < 0)
+            {
+                stepWalkFlags.doEndWalk = true;
+                fault = pageFault();
+            }
+            else {
+                shift = (PageShift + SV39_LEVEL_BITS * level);
+                idx = (entry.vaddr >> shift) & mask(SV39_LEVEL_BITS);
+                nextRead = (pte.ppn << PageShift) + (idx * sizeof(pte));
+                nextState = Translate;
             }
         }
     } else {
-        doEndWalk = true;
+        stepWalkFlags.doEndWalk = true;
     }
+
     PacketPtr oldRead = read;
     Request::Flags flags = oldRead->req->getFlags();
 
-    if (doEndWalk) {
+    if (stepWalkFlags.doEndWalk) {
         // If we need to write, adjust the read packet to write the modified
         // value back to memory.
-        if (!functional && doWrite) {
-            DPRINTF(PageTableWalker, "Writing level%d PTE to %#x: %#x\n",
-                level, oldRead->getAddr(), pte);
+        if (!functional && stepWalkFlags.doWrite &&
+            !(walkType == TwoStage && curstage == FIRST_STAGE))
+        {
             write = oldRead;
             write->setLE<uint64_t>(pte);
             write->cmd = MemCmd::WriteReq;
@@ -476,14 +837,10 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
             write = NULL;
         }
 
-        if (doTLBInsert) {
-            if (!functional) {
+        if (stepWalkFlags.doTLBInsert) {
+            if (!functional && !memaccess.bypassTLB()) {
                 Addr vpn = getVPNFromVAddr(entry.vaddr, satp.mode);
                 walker->tlb->insert(vpn, entry);
-            } else {
-                DPRINTF(PageTableWalker, "Translated %#x -> %#x\n",
-                        entry.vaddr, entry.paddr << PageShift |
-                        (entry.vaddr & mask(entry.logBytes)));
             }
         }
         endWalk();
@@ -498,9 +855,174 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
 
         read = new Packet(request, MemCmd::ReadReq);
         read->allocate();
+    }
 
-        DPRINTF(PageTableWalker,
-                "Loading level%d PTE from %#x\n", level, nextRead);
+    return fault;
+}
+
+Fault
+Walker::WalkerState::stepWalkGStage(PacketPtr &write)
+{
+    assert(gstate != Ready && gstate != Waiting);
+
+    Fault fault = NoFault;
+    write = NULL;
+    PTESv39 pte = read->getLE<uint64_t>();
+    Addr nextRead = 0;
+
+    // walk flags are initialized to false
+    WalkFlags stepWalkFlags;
+
+    DPRINTF(PageTableWalker, "[GSTAGE]: Got level%d PTE: %#x\n", glevel, pte);
+
+    // step 2:
+    // Performing PMA/PMP checks on physical address of PTE
+
+    // Effective privilege mode for pmp checks for page table
+    // walks is S mode according to specs
+    fault = walker->pmp->pmpCheck(read->req, BaseMMU::Read,
+                    RiscvISA::PrivilegeMode::PRV_S, tc, entry.vaddr);
+
+    if (fault == NoFault) {
+        fault = walker->pma->check(read->req, BaseMMU::Read, entry.vaddr);
+    }
+
+    if (fault == NoFault) {
+
+        fault = checkPTEPermissions(pte, stepWalkFlags, glevel);
+
+        if (fault == NoFault && stepWalkFlags.pteIsLeaf) {
+
+            if (stepWalkFlags.doWrite) {
+
+                // this read will eventually become write
+                // if doWrite is True
+
+                fault = walker->pmp->pmpCheck(read->req,
+                            BaseMMU::Write, pmode, tc, entry.vaddr);
+
+                if (fault == NoFault) {
+                    fault = walker->pma->check(read->req,
+                                BaseMMU::Write, entry.vaddr);
+                }
+            }
+
+            // perform next step only if pmp checks pass
+            if (fault == NoFault) {
+                // Only change TLB entry if walk is
+                // GStageOnly. Otherwise the entry is produced
+                // at the end of the two-stage walk.
+                // (we do not currently store intermediate GStage
+                // results)
+                if (walkType == GstageOnly)
+                {
+                    // Check if N (contig bit) is set, if yes we have
+                    // a 64K page mapping (SVNAPOT Extension)
+                    assert(!(pte.n) || glevel == 0);
+                    entry.pte = pte;
+                    entry.paddr = (pte.n) ?
+                        pte.ppn & ~mask(NapotShift) :
+                        pte.ppn;
+
+                    entry.logBytes = (pte.n) ?
+                        PageShift + NapotShift :
+                        PageShift + (glevel * SV39_LEVEL_BITS);
+
+                    entry.vaddr &= ~((1 << entry.logBytes) - 1);
+
+                    // put it non-writable into the TLB to detect
+                    // writes and redo the page table walk in order
+                    // to update the dirty flag.
+                    if (!pte.d && mode != BaseMMU::Write)
+                        entry.pte.w = 0;
+
+                    // Also don't do TLB inserts on special_access
+                    if (!memaccess.bypassTLB())
+                        stepWalkFlags.doTLBInsert = true;
+                }
+                else {
+                    gresult.logBytes = PageShift +
+                                    (glevel * SV39_LEVEL_BITS);
+                    gresult.paddr = pte.ppn;
+                    gresult.vaddr &= ~((1 << entry.logBytes) - 1);
+                    gresult.pte = pte;
+                }
+
+                // Update statistics for completed page walks
+                if (glevel == 1) {
+                    walker->pagewalkerstats.num_2mb_walks++;
+                }
+                if (glevel == 0) {
+                    if (pte.n) {
+                        walker->pagewalkerstats.num_64kb_walks++;
+                    }
+                    else {
+                        walker->pagewalkerstats.num_4kb_walks++;
+                    }
+                }
+                DPRINTF(PageTableWalker,
+                        "[GSTAGE] #1 leaf node at level %d, with vpn %#x\n",
+                        glevel, gresult.vaddr);
+            }
+        }
+        else if (fault == NoFault) {
+            Addr shift, idx;
+            glevel--;
+            if (glevel < 0)
+            {
+                stepWalkFlags.doEndWalk = true;
+                fault = pageFault();
+            }
+            else {
+                shift = (PageShift + SV39_LEVEL_BITS * glevel);
+                idx = (gresult.vaddr >> shift) & mask(SV39_LEVEL_BITS);
+                nextRead = (pte.ppn << PageShift) + (idx * sizeof(pte));
+                nextgState = Translate;
+            }
+        }
+    } else {
+        stepWalkFlags.doEndWalk = true;
+    }
+
+    PacketPtr oldRead = read;
+    Request::Flags flags = oldRead->req->getFlags();
+
+    if (stepWalkFlags.doEndWalk) {
+        // If we need to write, adjust the read packet to write the modified
+        // value back to memory.
+        if (!functional && stepWalkFlags.doWrite)
+        {
+            write = oldRead;
+            write->setLE<uint64_t>(pte);
+            write->cmd = MemCmd::WriteReq;
+            read = NULL;
+        }
+        else {
+            write = NULL;
+        }
+
+        if (stepWalkFlags.doTLBInsert) {
+            if (!functional && !memaccess.bypassTLB()) {
+                // This TLB insertion should only be reachable
+                // for GstageOnly walks. Two stage walks insert
+                // in walkTwoStage.
+                assert(walkType == GstageOnly);
+                Addr vpn = getVPNFromVAddr(entry.vaddr, satp.mode);
+                walker->tlb->insert(vpn, entry);
+            }
+        }
+        endWalk();
+    }
+    else {
+        //If we didn't return, we're setting up another read.
+        RequestPtr request = std::make_shared<Request>(
+            nextRead, oldRead->getSize(), flags, walker->requestorId);
+
+        delete oldRead;
+        oldRead = nullptr;
+
+        read = new Packet(request, MemCmd::ReadReq);
+        read->allocate();
     }
 
     return fault;
@@ -514,30 +1036,35 @@ Walker::WalkerState::endWalk()
     read = NULL;
 }
 
-void
+Addr
 Walker::WalkerState::setupWalk(Addr vaddr)
 {
-    vaddr = Addr(sext<VADDR_BITS>(vaddr));
+    Addr shift;
+    Addr idx;
+    Addr pte_addr;
 
-    Addr shift = PageShift + LEVEL_BITS * 2;
-    Addr idx = (vaddr >> shift) & LEVEL_MASK;
-    Addr topAddr = (satp.ppn << PageShift) + (idx * sizeof(PTESv39));
-    level = 2;
+    if (curstage == FIRST_STAGE) {
+        //vaddr = Addr(sext<SV39_VADDR_BITS>(vaddr));
+        shift = PageShift + SV39_LEVEL_BITS * 2;
+        idx = (vaddr >> shift) & mask(SV39_LEVEL_BITS);
+        pte_addr = (satp.ppn << PageShift) + (idx * sizeof(PTESv39));
 
-    DPRINTF(PageTableWalker, "Performing table walk for address %#x\n", vaddr);
-    DPRINTF(PageTableWalker, "Loading level%d PTE from %#x\n", level, topAddr);
+        // original vaddress for first-stage is in entry.vaddr already
+    }
+    else if (curstage == GSTAGE) {
+        shift = PageShift + SV39_LEVEL_BITS * 2;
+        idx = (vaddr >> shift) &
+            mask(SV39_LEVEL_BITS + SV39X4_WIDENED_BITS); // widened
+        pte_addr = ((hgatp.ppn << PageShift) & ~mask(2)) +
+                    (idx * sizeof(PTESv39));
 
-    state = Translate;
-    nextState = Ready;
-    entry.vaddr = vaddr;
-    entry.asid = satp.asid;
+        gresult.vaddr = vaddr; // store original address for g-stage
+    }
+    else {
+        panic("Unknown translation stage!");
+    }
 
-    Request::Flags flags = Request::PHYSICAL;
-    RequestPtr request = std::make_shared<Request>(
-        topAddr, sizeof(PTESv39), flags, walker->requestorId);
-
-    read = new Packet(request, MemCmd::ReadReq);
-    read->allocate();
+    return pte_addr;
 }
 
 bool
@@ -587,9 +1114,10 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
              * well.
              */
             Addr vaddr = req->getVaddr();
-            vaddr = Addr(sext<VADDR_BITS>(vaddr));
+            vaddr = Addr(sext<SV39_VADDR_BITS>(vaddr));
             Addr paddr = walker->tlb->hiddenTranslateWithTLB(vaddr, satp.asid,
                                                              satp.mode, mode);
+
             req->setPaddr(paddr);
 
             // do pmp check if any checking condition is met.
@@ -646,6 +1174,17 @@ Walker::WalkerState::sendPackets()
     }
 }
 
+PacketPtr
+Walker::WalkerState::createReqPacket(Addr paddr, MemCmd cmd, size_t bytes)
+{
+    Request::Flags flags = Request::PHYSICAL;
+    RequestPtr request = std::make_shared<Request>(
+        paddr, bytes, flags, walker->requestorId);
+    PacketPtr pkt = new Packet(request, cmd);
+    pkt->allocate();
+    return pkt;
+}
+
 unsigned
 Walker::WalkerState::numInflight() const
 {
@@ -684,10 +1223,10 @@ Walker::WalkerState::retry()
 }
 
 Fault
-Walker::WalkerState::pageFault(bool present)
+Walker::WalkerState::pageFault()
 {
-    DPRINTF(PageTableWalker, "Raising page fault.\n");
-    return walker->tlb->createPagefault(entry.vaddr, mode);
+    return walker->tlb->createPagefault(entry.vaddr, mode,
+                        gresult.vaddr, curstage == GSTAGE, memaccess.virt);
 }
 
 Walker::PagewalkerStats::PagewalkerStats(statistics::Group *parent)

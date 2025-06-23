@@ -37,6 +37,7 @@ from typing import (
     Union,
 )
 from urllib import (
+    error,
     parse,
     request,
 )
@@ -48,66 +49,50 @@ from .abstract_client import AbstractClient
 from .client_query import ClientQuery
 
 
-class AtlasClientHttpJsonRequestError(Exception):
+class AzureFunctionsAPIClientHttpJsonRequestError(Exception):
     def __init__(
         self,
-        client: "AtlasClient",
+        client: "AzureFunctionsAPIClient",
         data: Dict[str, Any],
         purpose_of_request: Optional[str],
+        response: Optional[str] = None,
     ):
-        """An exception raised when an HTTP request to Atlas MongoDB fails.
-        :param client: The AtlasClient instance that raised the exception.
+        """An exception raised when an HTTP request to the Azure Functions API fails.
+        :param client: The AzureFunctionsAPI instance that raised the exception.
         :param purpose_of_request: A string describing the purpose of the
         request.
         """
         error_str = (
-            f"Http Request to Atlas MongoDB failed.\n"
-            f"Atlas URL: {client.url}\n"
-            f"Auth URL: {client.authUrl}\n"
-            f"Database: {client.database}\n"
-            f"Collection: {client.collection}\n\n"
-            f"Data sent:\n\n{json.dumps(data,indent=4)}\n\n"
+            f"Http Request to Azure Functions API failed.\n"
+            f"Azure Functions API URL: {client.url}\n"
+            f"Data sent:\n\n{json.dumps(data,indent=4)}\n"
+            f"Response: {str(response)}\n"
         )
 
         if purpose_of_request:
-            error_str += f"Purpose of Request: {purpose_of_request}\n\n"
+            error_str += f"Purpose of Request: {purpose_of_request}\n"
+        error_str += "\n"
         super().__init__(error_str)
 
 
-class AtlasClient(AbstractClient):
+class AzureFunctionsAPIClient(AbstractClient):
     def __init__(self, config: Dict[str, str]):
         """
-        Initializes a connection to a MongoDB Atlas database.
+        Initializes a connection to the gem5 resources database via azure functions API.
 
-        :param uri: The URI for connecting to the MongoDB server.
-        :param db: The name of the database to connect to.
-        :param collection: The name of the collection within the database.
+        :param url: The base url for the azure functions API.
         """
-        self.apiKey = config["apiKey"]
         self.url = config["url"]
-        self.collection = config["collection"]
-        self.database = config["database"]
-        self.dataSource = config["dataSource"]
-        self.authUrl = config["authUrl"]
 
-    def get_token(self):
-        return self._atlas_http_json_req(
-            self.authUrl,
-            data_json={"key": self.apiKey},
-            headers={"Content-Type": "application/json"},
-            purpose_of_request="Get Access Token with API key",
-        )["access_token"]
-
-    def _atlas_http_json_req(
+    def _functions_http_json_req(
         self,
         url: str,
-        data_json: Dict[str, Any],
-        headers: Dict[str, str],
+        data_json: List[Dict[str, str]],
         purpose_of_request: Optional[str],
-        max_failed_attempts: int = 4,
+        max_failed_attempts: int = 3,
         reattempt_pause_base: int = 2,
     ) -> Dict[str, Any]:
-        """Sends a JSON object over HTTP to a given Atlas MongoDB server and
+        """Sends a JSON object over HTTP to a given Azure functions API and
         returns the response. This function will attempt to reconnect to the
         server if the connection fails a set number of times before raising an
         exception.
@@ -125,31 +110,44 @@ class AtlasClient(AbstractClient):
 
         **Warning**: This function assumes a JSON response.
         """
-        data = json.dumps(data_json).encode("utf-8")
 
-        req = request.Request(
-            url,
-            data=data,
-            headers=headers,
-        )
+        for resource in data_json:
+            params = parse.urlencode(resource)
+            url += ("&" if parse.urlparse(url).query else "?") + params
+
+        req = request.Request(url)
 
         for attempt in itertools.count(start=1):
             try:
                 response = request.urlopen(req, context=get_proxy_context())
                 break
             except Exception as e:
+                error_response = None
+                if isinstance(e, error.HTTPError):
+                    try:
+                        error_content = e.read().decode("utf-8")
+                        error_json = json.loads(error_content)
+                        if "error" in error_json:
+                            error_response = error_json["error"]
+                        else:
+                            error_response = error_json
+                    except (json.JSONDecodeError, UnicodeDecodeError):
+                        # If the content isn't valid JSON or can't be decoded as UTF-8
+                        error_response = f"Non-JSON error response: {str(e)}"
                 if attempt >= max_failed_attempts:
-                    raise AtlasClientHttpJsonRequestError(
+                    raise AzureFunctionsAPIClientHttpJsonRequestError(
                         client=self,
                         data=data_json,
                         purpose_of_request=purpose_of_request,
+                        response=error_response,
                     )
                 pause = reattempt_pause_base**attempt
                 warn(
-                    f"Attempt {attempt} of Atlas HTTP Request failed.\n"
-                    f"Purpose of Request: {purpose_of_request}.\n\n"
-                    f"Failed with Exception:\n{e}\n\n"
-                    f"Retrying after {pause} seconds..."
+                    f"Attempt {attempt} of Azure functions HTTP Request failed.\n"
+                    f"Purpose of Request: {purpose_of_request}.\n"
+                    f"Failed with Exception: {e}\n"
+                    f"Response: {str(error_response)}\n\n"
+                    f"Retrying after {pause} seconds...\n\n"
                 )
                 time.sleep(pause)
 
@@ -159,12 +157,8 @@ class AtlasClient(AbstractClient):
         self,
         client_queries: List[ClientQuery],
     ) -> Dict[str, Any]:
-        url = f"{self.url}/action/find"
-        data = {
-            "dataSource": self.dataSource,
-            "collection": self.collection,
-            "database": self.database,
-        }
+        url = self.url
+        url += "/find-resources-in-batch"
 
         search_conditions = []
         for resource in client_queries:
@@ -176,24 +170,16 @@ class AtlasClient(AbstractClient):
             # conditions.
             if resource.get_resource_version():
                 condition["resource_version"] = resource.get_resource_version()
+            else:
+                condition["resource_version"] = "None"
 
             search_conditions.append(condition)
 
-        filter = {"$or": search_conditions}
-        data["filter"] = filter
-
-        headers = {
-            "Authorization": f"Bearer {self.get_token()}",
-            "Content-Type": "application/json",
-        }
-
-        resources = self._atlas_http_json_req(
+        resources = self._functions_http_json_req(
             url,
-            data_json=data,
-            headers=headers,
+            data_json=search_conditions,
             purpose_of_request="Get Resources",
-        )["documents"]
-
+        )
         resources_by_id = {}
         for resource in resources:
             if resource["id"] in resources_by_id.keys():

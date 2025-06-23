@@ -48,30 +48,30 @@ namespace gem5
 
 namespace branch_prediction
 {
-
 TAGEBase::TAGEBase(const TAGEBaseParams &p)
-   : SimObject(p),
-     logRatioBiModalHystEntries(p.logRatioBiModalHystEntries),
-     nHistoryTables(p.nHistoryTables),
-     tagTableCounterBits(p.tagTableCounterBits),
-     tagTableUBits(p.tagTableUBits),
-     histBufferSize(p.histBufferSize),
-     minHist(p.minHist),
-     maxHist(p.maxHist),
-     pathHistBits(p.pathHistBits),
-     tagTableTagWidths(p.tagTableTagWidths),
-     logTagTableSizes(p.logTagTableSizes),
-     threadHistory(p.numThreads),
-     logUResetPeriod(p.logUResetPeriod),
-     initialTCounterValue(p.initialTCounterValue),
-     numUseAltOnNa(p.numUseAltOnNa),
-     useAltOnNaBits(p.useAltOnNaBits),
-     maxNumAlloc(p.maxNumAlloc),
-     noSkip(p.noSkip),
-     speculativeHistUpdate(p.speculativeHistUpdate),
-     instShiftAmt(p.instShiftAmt),
-     initialized(false),
-     stats(this, nHistoryTables)
+    : SimObject(p),
+      logRatioBiModalHystEntries(p.logRatioBiModalHystEntries),
+      nHistoryTables(p.nHistoryTables),
+      tagTableCounterBits(p.tagTableCounterBits),
+      tagTableUBits(p.tagTableUBits),
+      histBufferSize(p.histBufferSize),
+      minHist(p.minHist),
+      maxHist(p.maxHist),
+      pathHistBits(p.pathHistBits),
+      tagTableTagWidths(p.tagTableTagWidths),
+      logTagTableSizes(p.logTagTableSizes),
+      threadHistory(p.numThreads),
+      logUResetPeriod(p.logUResetPeriod),
+      initialTCounterValue(p.initialTCounterValue),
+      numUseAltOnNa(p.numUseAltOnNa),
+      useAltOnNaBits(p.useAltOnNaBits),
+      maxNumAlloc(p.maxNumAlloc),
+      takenOnlyHistory(p.takenOnlyHistory),
+      noSkip(p.noSkip),
+      speculativeHistUpdate(p.speculativeHistUpdate),
+      instShiftAmt(p.instShiftAmt),
+      initialized(false),
+      stats(this, nHistoryTables)
 {
     if (noSkip.empty()) {
         // Set all the table to enabled by default
@@ -111,9 +111,7 @@ TAGEBase::init()
     for (auto& history : threadHistory) {
         history.pathHist = 0;
         history.nonSpecPathHist = 0;
-        history.globalHistory = new uint8_t[histBufferSize];
-        history.gHist = history.globalHistory;
-        memset(history.gHist, 0, histBufferSize);
+        history.globalHist.resize(histBufferSize, 0);
         history.ptGhist = 0;
     }
 
@@ -310,32 +308,32 @@ TAGEBase::updateGHist(ThreadID tid, uint64_t bv, uint8_t n)
     ThreadHistory& tHist = threadHistory[tid];
     if (tHist.ptGhist < n) {
         DPRINTF(Tage, "Rolling over the histories\n");
-         // Copy beginning of globalHistoryBuffer to end, such that
-         // the last maxHist outcomes are still reachable
-         // through globalHistory[0 .. maxHist - 1].
+        // Copy beginning of globalHistoryBuffer to end, such that
+        // the last maxHist outcomes are still reachable
+        // through globalHist[0 .. maxHist - 1].
         for (int i = 0; i < maxHist; i++) {
-            tHist.globalHistory[histBufferSize - maxHist + i]
-                = tHist.globalHistory[tHist.ptGhist + i];
+            tHist.globalHist[histBufferSize - maxHist + i] =
+                tHist.globalHist[tHist.ptGhist + i];
         }
 
         tHist.ptGhist = histBufferSize - maxHist;
-        tHist.gHist = &tHist.globalHistory[tHist.ptGhist];
     }
 
     // Update the global history
     for (int i = 0; i < n; i++) {
-
         // Shift the next bit of the bit vector into the history
+        // Use `at` to check for out-of-bounds access.
         tHist.ptGhist--;
-        tHist.gHist--;
-        *(tHist.gHist) = (bv & 1) ? 1 : 0;
+        tHist.globalHist.at(tHist.ptGhist) = (bv & 1) ? 1 : 0;
         bv >>= 1;
 
         // Update the folded histories with the new bit.
+        uint8_t *gh_ptr = &(tHist.globalHist[tHist.ptGhist]);
+
         for (int i = 1; i <= nHistoryTables; i++) {
-            tHist.computeIndices[i].update(tHist.gHist);
-            tHist.computeTags[0][i].update(tHist.gHist);
-            tHist.computeTags[1][i].update(tHist.gHist);
+            tHist.computeIndices[i].update(gh_ptr);
+            tHist.computeTags[0][i].update(gh_ptr);
+            tHist.computeTags[1][i].update(gh_ptr);
         }
     }
 }
@@ -593,12 +591,29 @@ TAGEBase::updatePathAndGlobalHistory(ThreadID tid, int brtype, bool taken,
     ThreadHistory& tHist = threadHistory[tid];
 
     // Update path history
-    tHist.pathHist = calcNewPathHist(tid, branch_pc, tHist.pathHist);
+    tHist.pathHist =
+        calcNewPathHist(tid, branch_pc, tHist.pathHist, taken, brtype, target);
 
-    // For normal direction history update the history by
-    // whether the branch was taken or not.
-    bi->ghist = taken ? 1 : 0;
-    bi->nGhist = 1;
+    if (takenOnlyHistory) {
+        // Taken-only history is implemented after the paper:
+        // https://ieeexplore.ieee.org/document/9246215
+        //
+        // For taken-only history two bits of a hash of pc and its target
+        // is shifted into the global history in case the branch was taken.
+        // For not-taken branches no history update will happen.
+        if (taken) {
+            bi->ghist = (((branch_pc >> instShiftAmt) >> 2) ^
+                         ((target >> instShiftAmt) >> 3));
+            bi->nGhist = 2;
+        }
+
+    } else {
+        // For normal direction history update the history by
+        // whether the branch was taken or not.
+        bi->ghist = taken ? 1 : 0;
+        bi->nGhist = 1;
+    }
+
     // Update the global history
     updateGHist(tid, bi->ghist, bi->nGhist);
 }
@@ -612,8 +627,9 @@ TAGEBase::updateHistories(ThreadID tid, Addr branch_pc, bool speculative,
     if (speculative != speculativeHistUpdate) {
         if (!speculative) {
             // Save the speculative path history as non-speculative
-            threadHistory[tid].nonSpecPathHist
-                            = calcNewPathHist(tid, branch_pc, bi->pathHist);
+            threadHistory[tid].nonSpecPathHist =
+                calcNewPathHist(tid, branch_pc, bi->pathHist, taken,
+                                branchTypeExtra(inst), target);
         }
         return;
     }
@@ -652,18 +668,17 @@ TAGEBase::updateHistories(ThreadID tid, Addr branch_pc, bool speculative,
                                branch_pc, target, bi);
     bi->modified = true;
 
-    DPRINTF(Tage, "Updating global histories with branch:%lx; taken?:%d, "
-            "path Hist: %x; pointer:%d\n", branch_pc, taken,
-            threadHistory[tid].pathHist, threadHistory[tid].ptGhist);
-    assert(threadHistory[tid].gHist ==
-            &threadHistory[tid].globalHistory[threadHistory[tid].ptGhist]);
+    DPRINTF(Tage,
+            "Updating global histories with branch:%lx; taken?:%d, "
+            "path Hist: %x; pointer:%d\n",
+            branch_pc, taken, threadHistory[tid].pathHist,
+            threadHistory[tid].ptGhist);
 }
 
 void
 TAGEBase::recordHistState(ThreadID tid, BranchInfo* bi)
 {
-    ThreadHistory& tHist = threadHistory[tid];
-    bi->ptGhist = tHist.ptGhist;
+    ThreadHistory &tHist = threadHistory[tid];
     bi->pathHist = tHist.pathHist;
 
     for (int i = 1; i <= nHistoryTables; i++) {
@@ -690,26 +705,31 @@ TAGEBase::restoreHistState(ThreadID tid, BranchInfo* bi)
         return;
 
     //  RESTORE HISTORIES
-    // Shift out the inserted bits
-    // from the folded history and the global history vector
+    // Shift out the inserted bits from the folded history
+    // and the global history vector
     for (int n = 0; n < bi->nGhist; n++) {
+        uint8_t *gh_ptr = &(tHist.globalHist[tHist.ptGhist]);
 
         // First revert the folded history
         for (int i = 1; i <= nHistoryTables; i++) {
-            tHist.computeIndices[i].restore(tHist.gHist);
-            tHist.computeTags[0][i].restore(tHist.gHist);
-            tHist.computeTags[1][i].restore(tHist.gHist);
+            tHist.computeIndices[i].restore(gh_ptr);
+            tHist.computeTags[0][i].restore(gh_ptr);
+            tHist.computeTags[1][i].restore(gh_ptr);
         }
         tHist.ptGhist++;
-        tHist.gHist++;
     }
     bi->nGhist = 0;
     bi->modified = false;
 }
 
 int
-TAGEBase::calcNewPathHist(ThreadID tid, Addr pc, int cur_phist) const
+TAGEBase::calcNewPathHist(ThreadID tid, Addr pc, int cur_phist, bool taken,
+                          int brtype, Addr target) const
 {
+    if (takenOnlyHistory && !taken) {
+        // For taken-only history we update only if the branch was taken
+        return cur_phist;
+    }
     int pathbit = ((pc >> instShiftAmt) & 1);
     cur_phist = (cur_phist << 1) + pathbit;
     cur_phist = (cur_phist & ((1ULL << pathHistBits) - 1));
@@ -785,10 +805,8 @@ TAGEBase::getGHR(ThreadID tid) const
     unsigned val = 0;
     int gh_ptr = threadHistory[tid].ptGhist;
     for (unsigned i = 0; i < 16; i++) {
-        // Make sure we don't go out of bounds
-        assert(&(threadHistory[tid].globalHistory[gh_ptr + i]) <
-               threadHistory[tid].globalHistory + histBufferSize);
-        val |= ((threadHistory[tid].globalHistory[gh_ptr + i] & 0x1) << i);
+        // Make sure we don't go out of bounds with `at`.
+        val |= ((threadHistory[tid].globalHist.at(gh_ptr + i) & 0x1) << i);
     }
     return val;
 }

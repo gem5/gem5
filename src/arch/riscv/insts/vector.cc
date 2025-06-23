@@ -192,9 +192,11 @@ std::string VectorSlideMicroInst::generateDisassembly(Addr pc,
     std::stringstream ss;
     ss << mnemonic << ' ' << registerName(destRegIdx(0)) <<  ", ";
     if (machInst.funct3 == 0x3) {
-      ss  << registerName(srcRegIdx(0)) << ", " << machInst.vecimm;
+      ss  << registerName(srcRegIdx(0)) << ", "
+        << registerName(srcRegIdx(1)) << ", " << machInst.vecimm;
     } else {
-      ss  << registerName(srcRegIdx(1)) << ", " << registerName(srcRegIdx(0));
+      ss  << registerName(srcRegIdx(1)) << ", "
+        << registerName(srcRegIdx(2)) << ", " << registerName(srcRegIdx(0));
     }
     if (machInst.vm == 0) ss << ", v0.t";
     return ss.str();
@@ -295,50 +297,60 @@ std::string VsWholeMacroInst::generateDisassembly(Addr pc,
     return ss.str();
 }
 
-std::string VlStrideMacroInst::generateDisassembly(Addr pc,
+std::string VlElementMacroInst::generateDisassembly(Addr pc,
         const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " <<
-        '(' << registerName(srcRegIdx(0)) << ')' <<
-        ", " << registerName(srcRegIdx(1));
-    if (!machInst.vm) ss << ", v0.t";
+        '(' << registerName(srcRegIdx(0)) << ')';
+    if (has_rs2) {
+        ss << ", " << registerName(srcRegIdx(1));
+    }
+    if (!machInst.vm)
+        ss << ", v0.t";
     return ss.str();
 }
 
-std::string VlStrideMicroInst::generateDisassembly(Addr pc,
+std::string VlElementMicroInst::generateDisassembly(Addr pc,
         const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " <<
-        '(' << registerName(srcRegIdx(0)) << ')' <<
-        ", "<< registerName(srcRegIdx(1));
+        '(' << registerName(srcRegIdx(0)) << ')';
+    if (has_rs2) {
+        ss << ", " << registerName(srcRegIdx(1));
+    }
     if (microIdx != 0 || machInst.vtype8.vma == 0 || machInst.vtype8.vta == 0)
-        ss << ", " << registerName(srcRegIdx(2));
+        ss << ", " << registerName(srcRegIdx(has_rs2 ? 2 : 1));
+    if (!machInst.vm)
+        ss << ", v0.t";
+    return ss.str();
+}
+
+std::string VsElementMacroInst::generateDisassembly(Addr pc,
+        const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(srcRegIdx(has_rs2 ? 2 : 1))
+        << ", " << '(' << registerName(srcRegIdx(0)) << ')';
+    if (has_rs2) {
+        ss << ", " << registerName(srcRegIdx(1));
+    }
     if (!machInst.vm) ss << ", v0.t";
     return ss.str();
 }
 
-std::string VsStrideMacroInst::generateDisassembly(Addr pc,
+std::string VsElementMicroInst::generateDisassembly(Addr pc,
         const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     ss << mnemonic << ' ' << registerName(srcRegIdx(2)) << ", " <<
-        '(' << registerName(srcRegIdx(0)) << ')' <<
-        ", " << registerName(srcRegIdx(1));
-    if (!machInst.vm) ss << ", v0.t";
-    return ss.str();
-}
-
-std::string VsStrideMicroInst::generateDisassembly(Addr pc,
-        const loader::SymbolTable *symtab) const
-{
-    std::stringstream ss;
-    ss << mnemonic << ' ' << registerName(srcRegIdx(2)) << ", " <<
-        '(' << registerName(srcRegIdx(0)) << ')' <<
-        ", "<< registerName(srcRegIdx(1));
+        '(' << registerName(srcRegIdx(0)) << ')';
+    if (has_rs2) {
+        ss << ", " << registerName(srcRegIdx(1));
+    }
     if (microIdx != 0 || machInst.vtype8.vma == 0 || machInst.vtype8.vta == 0)
-        ss << ", " << registerName(srcRegIdx(2));
+        ss << ", " << registerName(srcRegIdx(has_rs2 ? 2 : 1));
     if (!machInst.vm) ss << ", v0.t";
     return ss.str();
 }
@@ -543,12 +555,10 @@ Fault
 VlFFTrimVlMicroOp::execute(ExecContext *xc, trace::InstRecord *traceData) const
 {
     auto tc = xc->tcBase();
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-                "RVV is disabled or VPU is off", machInst);
-    }
+    bool set_dirty = false;
+    bool check_vill = false;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
 
     PCState pc;
     set(pc, xc->pcState());
@@ -644,6 +654,16 @@ VlSegDeIntrlvMicroInst::VlSegDeIntrlvMicroInst(ExtMachInst extMachInst,
         uint32_t index = VecMemInternalReg0 + i + (microIdx * _numSrcs);
         setSrcRegIdx(_numSrcRegs++, vecRegClass[index]);
     }
+
+    if (!extMachInst.vtype8.vta
+        || (!extMachInst.vm && !extMachInst.vtype8.vma)) {
+        oldDstIdx = _numSrcRegs;
+        setSrcRegIdx(_numSrcRegs++, destRegIdxArr[0]);
+    }
+    if (!extMachInst.vm) {
+        vmsrcIdx = _numSrcRegs;
+        setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
+    }
 }
 
 Fault
@@ -651,29 +671,46 @@ VlSegDeIntrlvMicroInst::execute(ExecContext* xc, trace::InstRecord* traceData) c
 {
     vreg_t& tmp_d0 = *(vreg_t *)xc->getWritableRegOperand(this, 0);
     auto Vd = tmp_d0.as<uint8_t>();
-    const uint32_t elems_per_vreg =  micro_vl;
+    const uint32_t elems_per_vreg = micro_vl;
     vreg_t tmp_s;
     auto s = tmp_s.as<uint8_t>();
     uint32_t elem = 0;
     uint32_t index = field;
+
+    vreg_t tmp_v0;
+    uint8_t *v0;
+    if (!machInst.vm) {
+        xc->getRegOperand(this, vmsrcIdx, &tmp_v0);
+        v0 = tmp_v0.as<uint8_t>();
+    }
+
+    const size_t micro_vlmax = vlen / width_EEW(machInst.width);
+
+    if (!machInst.vtype8.vta || (!machInst.vm && !machInst.vtype8.vma)) {
+        RiscvISA::vreg_t old_vd;
+        xc->getRegOperand(this, oldDstIdx, &old_vd);
+        tmp_d0 = old_vd;
+    } else {
+        tmp_d0.set(0xff);
+    }
+
     for (uint32_t i = 0; i < numSrcs; i++) {
         xc->getRegOperand(this, i, &tmp_s);
         s = tmp_s.as<uint8_t>();
 
-        // copy tail/inactive elements from vtmp src
-        if (i == field) {
-            tmp_d0 = tmp_s;
-        }
-
         while (index < (i + 1) * elems_per_vreg)
         {
-            memcpy(Vd + (elem * sizeOfElement),
-                    s + ((index  %  elems_per_vreg) * sizeOfElement),
-                    sizeOfElement);
+            size_t ei = elem + micro_vlmax * microIdx;
+            if (machInst.vm || elem_mask(v0, ei)) {
+                memcpy(Vd + (elem * sizeOfElement),
+                       s + ((index % elems_per_vreg) * sizeOfElement),
+                       sizeOfElement);
+            }
             index += numSrcs;
             elem++;
         }
     }
+
     if (traceData) {
         traceData->setData(vecRegClass, &tmp_d0);
     }
@@ -824,16 +861,10 @@ VCpyVsMicroInst::VCpyVsMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
 Fault
 VCpyVsMicroInst::execute(ExecContext* xc, trace::InstRecord* traceData) const
 {
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-                "RVV is disabled or VPU is off", machInst);
-    }
-
-    status.vs = VPUStatus::DIRTY;
-    xc->setMiscReg(MISCREG_STATUS, status);
+    bool set_dirty = true;
+    bool check_vill = false;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
 
     // copy vector source reg to vtmp
     vreg_t& vtmp = *(vreg_t *)xc->getWritableRegOperand(this, 0);
@@ -860,10 +891,12 @@ VCpyVsMicroInst::generateDisassembly(Addr pc,
 
 VPinVdMicroInst::VPinVdMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
                                  uint32_t _numVdPins, uint32_t _elen,
-                                 uint32_t _vlen, bool _hasVdOffset)
+                                 uint32_t _vlen, bool _hasVdOffset,
+                                 bool _copyVs, uint32_t _vsIdx)
     : VectorArithMicroInst("vpinvd_v_micro", _machInst, SimdMiscOp, 0,
                            _microIdx, _elen, _vlen)
     , hasVdOffset(_hasVdOffset)
+    , copyVs(_copyVs)
 {
     setRegIdxArrays(
         reinterpret_cast<RegIdArrayPtr>(
@@ -882,26 +915,24 @@ VPinVdMicroInst::VPinVdMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
     RegId Vd = destRegIdx(0);
     Vd.setNumPinnedWrites(_numVdPins);
     setDestRegIdx(0, Vd);
+
+    if (copyVs) {
+        setSrcRegIdx(_numSrcRegs++, vecRegClass[_vsIdx]);
+    }
 }
 
 Fault
 VPinVdMicroInst::execute(ExecContext* xc, trace::InstRecord* traceData) const
 {
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-                "RVV is disabled or VPU is off", machInst);
-    }
-
-    status.vs = VPUStatus::DIRTY;
-    xc->setMiscReg(MISCREG_STATUS, status);
+    bool set_dirty = true;
+    bool check_vill = false;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
 
     // tail/mask policy: both undisturbed if one is, 1s if none
     vreg_t& vd = *(vreg_t *)xc->getWritableRegOperand(this, 0);
     if (!machInst.vtype8.vta || (!machInst.vm && !machInst.vtype8.vma)
-                             || hasVdOffset) {
+                            || hasVdOffset) {
         vreg_t old_vd;
         xc->getRegOperand(this, 0, &old_vd);
         vd = old_vd;
@@ -910,7 +941,14 @@ VPinVdMicroInst::execute(ExecContext* xc, trace::InstRecord* traceData) const
     }
 
     if (traceData) {
-        traceData->setData(vecRegClass, &vd);
+        traceData->setData(vecRegClass, xc->getWritableRegOperand(this, 0));
+    }
+
+    if (copyVs) {
+        vreg_t& vs = *(vreg_t *)xc->getWritableRegOperand(this, 1);
+        vreg_t old_vs;
+        xc->getRegOperand(this, 1, &old_vs);
+        vs = old_vs;
     }
 
     return NoFault;

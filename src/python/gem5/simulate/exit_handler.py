@@ -389,7 +389,7 @@ class OrchestratorExitHandler(ExitHandler, hypercall_num=1000):
             "workload": simulator.get_workload().get_id(),
             "tick": simulator.get_current_tick(),
             "sim_id": simulator.get_id(),
-            "instruction_count": simulator.get_instruction_count(),
+            "curr_instructions_executed": simulator.get_instruction_count(),
         }
 
     def _add_debug_flags(self, debug_flags: List[str]) -> Dict[str, str]:
