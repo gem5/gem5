@@ -1,0 +1,97 @@
+# Adding Power ISA VSX Instructions: mtvsrd and mfvsrd
+
+This README documents the changes made to gem5 source files to support the addition of two new Power ISA VSX instructions: `mtvsrd` (Move to Vector-Scalar Register Doubleword) and `mfvsrd` (Move from Vector-Scalar Register Doubleword). These changes were modeled according to the POWER ISA specification and integrated within gem5's existing vector register infrastructure.
+
+### Reference Pull Request:
+
+[https://github.com/gem5/gem5/pull/2339](https://github.com/gem5/gem5/pull/2339)
+
+---
+
+## Modified Files and Changes
+
+### 1. `src/arch/power/regs/vec.hh`
+
+* Defined the `vecRegClass` to represent 64 vector-scalar (VSX) registers.
+* Declared all 64 `VSR` registers: `V0` through `V63`.
+* Avoided use of `debug::VecRegs` due to conflict (unresolved compilation error); debug flag omitted intentionally.
+
+### 2. `src/arch/power/isa/operands.isa`
+
+* Defined new operand extractors for `t_s`, `ra_vsx`, and `tx_sx` to extract instruction fields needed for VSX register indexing.
+
+### 3. `src/arch/power/isa/includes.isa`
+
+* Included the header file `vector_scalar.hh` for use in decoded instruction execution.
+
+### 4. `src/arch/power/isa/formats/vector_scalar.isa`
+
+* Added new format handler function `VSRTransferOp()` to generate `PowerStaticInst` for `mtvsrd` and `mfvsrd`.
+
+### 5. `src/arch/power/isa/formats/util.isa`
+
+* Implemented `GenVSRTransferOp()` to define class logic and execution body for `mtvsrd` and `mfvsrd`.
+* This generates the C++ class with `execute()` and `generateDisassembly()` implementations.
+
+### 6. `src/arch/power/isa/formats/formats.isa`
+
+* Included `vector_scalar.isa` to register the custom instruction format.
+
+### 7. `src/arch/power/isa/decoder.isa`
+
+* Registered `mtvsrd` and `mfvsrd` using the `VSRTransferOp` format with opcodes 179 and 51 respectively.
+
+```python
+format VSRTransferOp {
+    179: mtvsrd({});
+    51:  mfvsrd({});
+}
+```
+
+### 8. `src/arch/power/isa/bitfields.isa`
+
+* No direct changes needed unless custom bitfield names were added (typically optional if bits() used inline).
+
+### 9. `src/arch/power/isa.cc`
+
+* Ensured the instruction classes are registered during initialization.
+* No major structural changes required here.
+
+### 10. `src/arch/power/insts/vector_scalar.hh`
+
+* Declared the execution functions `mtvsrd_exec()` and `mfvsrd_exec()`.
+
+### 11. `src/arch/power/insts/vector_scalar.cc`
+
+* Implemented logic for `mtvsrd_exec()` and `mfvsrd_exec()`.
+* Properly handles mapping between GPRs and VSRs, including VSR0-31 (vector) and VSR32-63 (mapped to FPRs).
+
+### 12. `src/arch/power/SConscript`
+
+* Added `vector_scalar.cc` and `vector_scalar.hh` to the build.
+
+```python
+Source('insts/vector_scalar.cc')
+Header('insts/vector_scalar.hh')
+```
+
+---
+
+## Build & Validation
+
+* Run `scons build/POWER/gem5.opt -j$(nproc)` after making changes.
+* No debug flags were required to be enabled.
+* TODO: Validate with a small test binary that executes `mtvsrd` and `mfvsrd`.
+
+---
+
+## Notes
+
+* The implementation omits `debug::VecRegs` to avoid namespace/flag conflict.
+* Currently, facing the compilation error mentioned in the `gem5/uild_errors_June22.txt` file.
+
+---
+
+For questions or review, refer to the discussions in the [PR #2339](https://github.com/gem5/gem5/pull/2339).
+
+Maintainer: @divyangthakkar

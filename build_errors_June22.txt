@@ -1,0 +1,8 @@
+/usr/bin/ld: build/POWER/arch/power/generated/inst-constrs.o: warning: relocation against `_ZTVN4gem512PowerISAInst6MfvsrdE' in read-only section `.text'
+/usr/bin/ld: build/POWER/arch/power/generated/inst-constrs.o: in function `gem5::PowerISAInst::Mtvsrd::Mtvsrd(gem5::bitfield_backend::BitUnionOperators<gem5::PowerISA::BitfieldUnderlyingClassesExtMachInst>)':
+/home/divyangthakkar/ibm_project/gem5/build/POWER/arch/power/generated/decoder-ns.cc.inc:4394: undefined reference to `vtable for gem5::PowerISAInst::Mtvsrd'
+/usr/bin/ld: build/POWER/arch/power/generated/inst-constrs.o: in function `gem5::PowerISAInst::Mfvsrd::Mfvsrd(gem5::bitfield_backend::BitUnionOperators<gem5::PowerISA::BitfieldUnderlyingClassesExtMachInst>)':
+/home/divyangthakkar/ibm_project/gem5/build/POWER/arch/power/generated/decoder-ns.cc.inc:4409: undefined reference to `vtable for gem5::PowerISAInst::Mfvsrd'
+/usr/bin/ld: warning: creating DT_TEXTREL in a PIE
+collect2: error: ld returned 1 exit status
+scons: *** [build/POWER/gem5.opt] Error 1
