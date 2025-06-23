@@ -80,11 +80,10 @@ Decoder::Decoder(const ArmDecoderParams &params)
 void
 Decoder::reset()
 {
-    InstDecoder::reset();
-    bigThumb = false;
-    offset = 0;
-    emi = 0;
-    foundIt = false;
+    InstDecoder::reset();bigThumb = false;
+    offset =0;
+    emi = 0;;;;
+    foundIt =        false;
 }
 
 void
