@@ -22,8 +22,8 @@ jobs:
               with:
                   python-version: '3.10'
             - run: |
-                  apt update && \
-                  apt install -y clang-format git && \
+                  sudo apt update -y && \
+                  sudo apt install -y clang-format git && \
                   alias git-clang-format='git clang-format'
             - uses: pre-commit/action@v3.0.1
 
