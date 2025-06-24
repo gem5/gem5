@@ -60,10 +60,10 @@ jobs:
 
             - name: Restore previous stats file
               id: cache-stats-file
-              working-directory: ${{ github.workspace }}/tests/regression_tests
+            #   working-directory:
               uses: actions/cache@v4
               with:
-                  path: gem5/regression-tests
+                  path: ${{ github.workspace }}/tests/regression_tests
                   key: stats-${{ needs.get-date.outputs.date }}
                   restore-keys: stats-**
 
