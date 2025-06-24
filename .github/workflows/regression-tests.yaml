@@ -67,7 +67,7 @@ jobs:
               with:
                   path: ${{ github.workspace }}/tests/regression_tests
                   key: stats-${{ needs.get-date.outputs.date }}
-                  restore-keys: stats-**
+                  restore-keys: stats
 
             - name: Run regression tests
               id: run-tests
