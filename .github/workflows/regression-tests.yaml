@@ -5,6 +5,9 @@
 name: Daily Regression Tests
 
 on:
+    push:
+        branches:
+            - issue-702-regression-tests
     # This is triggered weekly via the 'scheduler.yaml' workflow.
     workflow_dispatch:
 
