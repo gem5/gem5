@@ -46,7 +46,9 @@ jobs:
         runs-on: ubuntu-latest # [self-hosted, linux, x64]
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         timeout-minutes: 60
-        needs: get-date
+        needs:
+            - get-date
+            - build-all-gem5
 
         steps:
             - uses: actions/checkout@v4
