@@ -35,7 +35,7 @@ jobs:
               uses: actions/cache@v4
               with:
                   path: build/ALL
-                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
+                  key: testlib-build-all #-${{ needs.get-date.outputs.date }}
                   restore-keys: |
                       testlib-build-all
 
