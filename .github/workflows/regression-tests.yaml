@@ -1,0 +1,270 @@
+---
+# Workflow for the regression tests. This should be integrated into the daily
+# tests once testing is complete.
+
+name: Daily Regression Tests
+
+on:
+    # This is triggered weekly via the 'scheduler.yaml' workflow.
+    workflow_dispatch:
+
+jobs:
+
+    get-date:
+        runs-on: ubuntu-24.04
+        outputs:
+            date: ${{ steps.date.outputs.date }}
+        steps:
+            - name: Get the current date
+              id: date
+              run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+    build-all-gem5:
+        runs-on: ubuntu-latest #[self-hosted, linux, x64]
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        timeout-minutes: 180
+        needs: get-date
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Cache build/ALL
+              uses: actions/cache@v4
+              with:
+                  path: build/ALL
+                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      testlib-build-all
+
+            - name: Build ALL/gem5.opt
+              run: scons --no-compress-debug build/ALL/gem5.opt -j $(nproc)
+
+    regression-tests:
+        runs-on: ubuntu-latest # [self-hosted, linux, x64]
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        timeout-minutes: 60
+        needs: get-date
+
+        steps:
+            - uses: actions/checkout@v4
+            - name: Restore build/ALL cache
+              uses: actions/cache/restore@v4
+              with:
+                  path: build/ALL
+                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      testlib-build-all
+
+            - name: Restore previous stats file
+              id: cache-stats-file
+              working_directory: ${{ github.workspace }}/tests/regression_tests
+              uses: actions/cache@v4
+              with:
+                  path: gem5/regression-tests
+                  key: stats-${{ needs.get-date.outputs.date }}
+                  restore-keys: stats-**
+
+            - name: Run regression tests
+              id: run-tests
+              working-directory: ${{ github.workspace }}/tests
+              run: ./main.py run gem5/regression_tests --length=long --skip-build -vv
+
+            # Skip the "Sanitize test dir for artifact name" step that's in testlib-long-tests and hard code "regression-tests" instead
+            - name: Upload results
+              if: success() || failure()
+              uses: actions/upload-artifact@v4
+              env:
+                  MY_STEP_VAR: regression-tests_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
+              with:
+                  name: regression_tests-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-long-regression-tests-status-${{ steps.run-tests.outcome
+                      }}-output
+                  path: tests/testing-results
+
+
+
+  # # this builds both unittests.fast and unittests.debug
+  #   unittests-fast-debug:
+  #       strategy:
+  #           matrix:
+  #               type: [fast, debug]
+  #       runs-on: [self-hosted, linux, x64]
+  #       container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+  #       timeout-minutes: 60
+  #       steps:
+  #           - uses: actions/checkout@v4
+
+  #           - name: Run ALL/unittests.${{ matrix.type }} UnitTests
+  #             run: scons build/ALL/unittests.${{ matrix.type }} -j $(nproc)
+
+  #   get-testlib-long-dirs:
+  #       runs-on: ubuntu-24.04
+  #       container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+  #       outputs:
+  #           test-dirs-matrix: ${{ steps.dir-matrix.outputs.test-dirs-matrix }}
+  #       steps:
+  #           - uses: actions/checkout@v4
+  #           - name: Get directories for testlib-long
+  #             working-directory: ${{ github.workspace }}/tests
+  #             id: dir-matrix
+  #             run: |
+  #                 unset PREV
+  #                 echo "test-dirs-matrix=$(\
+  #                   ./main.py list gem5 \
+  #                   --suites \
+  #                   --length=long \
+  #                   --exclude-tags gcn_gpu | \
+  #                   grep "$SUITEUID:" | \
+  #                   cut -d: -f2 | \
+  #                   cut -d/ -f 2- | \
+  #                   xargs dirname | \
+  #                   sort -u  | \
+  #                   while read x; do \
+  #                     if [ -z "${PREV}" ] || [ "$x" != "${PREV}/*" ]; then \
+  #                       PREV=$x; \
+  #                       echo $x; \
+  #                     fi; \
+  #                   done  | \
+  #                   jq -ncR '[inputs]'\
+  #                 )" >>$GITHUB_OUTPUT
+
+  # # start running all of the long tests
+  #   testlib-long-tests:
+  #       name: long-tests
+  #       runs-on: [self-hosted, linux, x64]
+  #       container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+  #       timeout-minutes: 1440 # 24 hours for entire matrix to run
+  #       needs:
+  #           - build-all-gem5
+  #           - get-testlib-long-dirs
+  #           - get-date
+  #       strategy:
+  #           fail-fast: false
+  #           matrix:
+  #               test-type: ${{ fromJson(needs.get-testlib-long-dirs.outputs.test-dirs-matrix) }}
+
+  #       steps:
+  #           - uses: actions/checkout@v4
+  #           - name: Restore build/ALL cache
+  #             uses: actions/cache/restore@v4
+  #             with:
+  #                 path: build/ALL
+  #                 key: testlib-build-all-${{ needs.get-date.outputs.date }}
+  #                 restore-keys: |
+  #                     testlib-build-all
+
+  #           - name: Run long ${{ matrix.test-type }} tests
+  #             id: run-tests
+  #             working-directory: ${{ github.workspace }}/tests
+  #             run: ./main.py run ${{ matrix.test-type }} -j$(nproc) --length=long -vv -t $(nproc) --exclude-tags gcn_gpu
+
+  #           - name: Sanitize test-dir for artifact name
+  #             id: sanitize-test-dir
+  #             if: success() || failure()
+  #             run: echo "sanitized-test-dir=$(echo '${{ matrix.test-type }}' | sed 's/\//-/g')" >> $GITHUB_OUTPUT
+
+  #           - name: Upload results
+  #             if: success() || failure()
+  #             uses: actions/upload-artifact@v4
+  #             env:
+  #                 MY_STEP_VAR: ${{ steps.sanitize-test-dir.outputs.sanitized-test-dir }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
+  #             with:
+  #                 name: daily-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-long-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir
+  #                     }}-status-${{ steps.run-tests.outcome }}-output
+  #                 path: tests/testing-results
+
+
+  #   gpu-tests:
+  #       runs-on: [self-hosted, linux, x64]
+  #       container: ghcr.io/gem5/gcn-gpu:latest
+  #       timeout-minutes: 1440 # 24 hours
+  #       needs:
+  #           - get-date
+
+  #       steps:
+  #           - uses: actions/checkout@v4
+  #           - name: Cache build/VEGA_X86
+  #             uses: actions/cache@v4
+  #             with:
+  #                 path: build/VEGA_X86
+  #                 key: testlib-build-vega-${{ needs.get-date.outputs.date }}
+  #                 restore-keys: |
+  #                     testlib-build-vega
+
+
+  #           - name: Run Testlib GPU Tests
+  #             id: run-tests
+  #             working-directory: ${{ github.workspace }}/tests
+  #             run: ./main.py run --length=long -vvv -j $(nproc) --host gcn_gpu
+
+  #           - name: Upload results
+  #             if: success() || failure()
+  #             uses: actions/upload-artifact@v4
+  #             with:
+  #                 name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gpu-status-${{ steps.run-tests.outcome }}-output
+  #                 path: tests/testing-results
+
+  # # This runs the SST-gem5 integration compilation and tests it with
+  # # ext/sst/sst/example.py.
+  #   sst-test:
+  #       runs-on: [self-hosted, linux, x64]
+  #       container: ghcr.io/gem5/sst-env:latest
+  #       timeout-minutes: 180
+
+  #       steps:
+  #           - uses: actions/checkout@v4
+  #           - name: Build RISCV/libgem5_opt.so with SST
+  #             run: scons build/RISCV/libgem5_opt.so --without-tcmalloc --duplicate-sources --ignore-style -j $(nproc)
+  #           - name: Makefile ext/sst
+  #             working-directory: ${{ github.workspace }}/ext/sst
+  #             run: mv Makefile.linux Makefile
+  #           - name: Compile ext/sst
+  #             working-directory: ${{ github.workspace }}/ext/sst
+  #             run: make -j $(nproc)
+  #           - name: Run SST test
+  #             working-directory: ${{ github.workspace }}/ext/sst
+  #             run: sst --add-lib-path=./ sst/example.py
+
+  # # This runs the gem5 within SystemC ingration and runs a simple hello-world
+  # # simulation with it.
+  #   systemc-test:
+  #       runs-on: [self-hosted, linux, x64]
+  #       container: ghcr.io/gem5/systemc-env:latest
+  #       timeout-minutes: 180
+
+  #       steps:
+  #           - uses: actions/checkout@v4
+  #           - name: Build ARM/gem5.opt
+  #             run: scons build/ARM/gem5.opt --ignore-style --duplicate-sources -j$(nproc)
+  #           - name: disable systemc
+  #             run: scons setconfig build/ARM --ignore-style USE_SYSTEMC=n
+  #           - name: Build ARM/libgem5_opt.so
+  #             run: scons build/ARM/libgem5_opt.so --with-cxx-config --without-python --without-tcmalloc -j$(nproc) --duplicate-sources
+  #           - name: Compile gem5 withing SystemC
+  #             working-directory: ${{ github.workspace }}/util/systemc/gem5_within_systemc
+  #             run: make
+  #           - name: Run gem5 within SystemC test
+  #             run: ./build/ARM/gem5.opt configs/deprecated/example/se.py -c tests/test-progs/hello/bin/arm/linux/hello
+  #           - name: Continue gem5 within SystemC test
+  #             run: LD_LIBRARY_PATH=build/ARM/:/opt/systemc/lib-linux64/ ./util/systemc/gem5_within_systemc/gem5.opt.sc m5out/config.ini
+
+  #   dramsys-tests:
+  #       runs-on: [self-hosted, linux, x64]
+  #       container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+  #       timeout-minutes: 360 # 6 hours
+  #       steps:
+  #           - uses: actions/checkout@v4
+  #           - name: Checkout DRAMSys
+  #             working-directory: ${{ github.workspace }}/ext/dramsys
+  #             run: git clone https://github.com/tukl-msd/DRAMSys --branch v5.1 --depth 1 DRAMSys
+
+  #             # gem5 is built separately because it depends on the DRAMSys library
+  #           - name: Build gem5
+  #             working-directory: ${{ github.workspace }}
+  #             run: scons build/ALL/gem5.opt -j $(nproc)
+
+  #           - name: Run DRAMSys Checks
+  #             working-directory: ${{ github.workspace }}
+  #             run: |
+  #                 ./build/ALL/gem5.opt configs/example/gem5_library/dramsys/arm-hello-dramsys.py
+  #                 ./build/ALL/gem5.opt configs/example/gem5_library/dramsys/dramsys-traffic.py
+  #                 ./build/ALL/gem5.opt configs/example/dramsys.py
