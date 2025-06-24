@@ -81,7 +81,8 @@ memory = SingleChannelDDR3_1600(size="3GiB")
 #     num_cores=1,
 # )
 processor = SimpleProcessor(
-    cpu_type=CPUTypes.KVM,  # switch to ATOMIC for final
+    # cpu_type=CPUTypes.KVM,  # switch to ATOMIC for final
+    cpu_type=CPUTypes.ATOMIC,
     isa=ISA.X86,
     num_cores=1,
 )
@@ -95,7 +96,7 @@ board = X86Board(
 
 board.set_workload(
     obtain_resource(
-        "x86-ubuntu-24.04-boot-with-systemd", resource_version="5.0.0"
+        "x86-ubuntu-24.04-boot-no-systemd", resource_version="4.0.0"
     )
 )
 
