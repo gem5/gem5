@@ -24,6 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import os
 import shutil
 
 import m5
@@ -43,6 +44,8 @@ from gem5.resources.resource import obtain_resource
 from gem5.simulate.exit_handler import KernelBootedExitHandler
 from gem5.simulate.simulator import Simulator
 from gem5.utils.override import overrides
+
+print(f"Current working directory is: {os.getcwd()}")
 
 
 class KernelBootProcessorSwitch(KernelBootedExitHandler):
