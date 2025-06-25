@@ -32,6 +32,7 @@ jobs:
             - uses: actions/checkout@v4
 
             - name: Cache build/ALL
+              id: cache-all
               uses: actions/cache@v4
               with:
                   path: build/ALL
@@ -40,6 +41,7 @@ jobs:
                       testlib-build-all
 
             - name: Build ALL/gem5.opt
+              if: steps.cache-all.outputs.cache-hit != 'true'
               run: scons --no-compress-debug build/ALL/gem5.opt -j $(nproc)
 
     regression-tests:
