@@ -113,13 +113,12 @@ print("starting data analysis: IPC comparison")
 cached_stats = {}
 curr_stats = {}
 
-read_stats_files("./gem5/regression_tests/cached_stats.txt", cached_stats)
-read_stats_files(f"{m5.options.outdir}/stats.txt", curr_stats)
-
-print(f"{m5.options.outdir}/stats.txt")
-
-print(curr_stats)
+# print(f"{m5.options.outdir}/stats.txt")
+# print(curr_stats)
 try:
+    read_stats_files("./gem5/regression_tests/cached_stats.txt", cached_stats)
+    read_stats_files(f"{m5.options.outdir}/stats.txt", curr_stats)
+
     old_ipc = float(cached_stats["board.processor.cores.core.ipc"])
     new_ipc = float(curr_stats["board.processor.cores.core.ipc"])
 
