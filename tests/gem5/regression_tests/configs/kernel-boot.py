@@ -84,8 +84,8 @@ memory = SingleChannelDDR3_1600(size="3GiB")
 #     num_cores=1,
 # )
 processor = SimpleProcessor(
-    # cpu_type=CPUTypes.KVM,  # switch to ATOMIC for final
-    cpu_type=CPUTypes.ATOMIC,
+    cpu_type=CPUTypes.KVM,  # switch to ATOMIC for final
+    # cpu_type=CPUTypes.ATOMIC,
     isa=ISA.X86,
     num_cores=1,
 )
@@ -128,7 +128,10 @@ try:
     if (new_ipc / old_ipc) < 0.8:
         print(f"New IPC is less than 80% of the old IPC!")
         exit(1)
-
+except FileNotFoundError:
+    print("One of the stats files was not found!")
+except KeyError:
+    print("One of the stats files might be empty!")
 finally:
     shutil.move(
         f"{m5.options.outdir}/stats.txt",

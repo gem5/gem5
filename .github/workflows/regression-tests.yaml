@@ -67,7 +67,7 @@ jobs:
             #   working-directory:
               uses: actions/cache@v4
               with:
-                  path: ${{ github.workspace }}/tests/regression_tests
+                  path: tests/gem5/regression_tests/cached_stats.txt
                   key: stats
                   restore-keys: stats
 
