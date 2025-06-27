@@ -40,55 +40,43 @@ import argparse
 import importlib
 import os.path
 import sys
+from typing import Type
 
-import importer
 from code_formatter import code_formatter
 
-parser = argparse.ArgumentParser()
-parser.add_argument("modpath", help="module the simobject belongs to")
-parser.add_argument("param_cc", help="parameter cc file to generate")
-parser.add_argument(
-    "use_python", help="whether python is enabled in gem5 (True or False)"
-)
 
-args = parser.parse_args()
+def write_cc_file(sim_object: Type, use_python: bool, param_cc: str):
+    """Write the parameter C++ source file for a SimObject.
 
-use_python = args.use_python.lower()
-if use_python == "true":
-    use_python = True
-elif use_python == "false":
-    use_python = False
-else:
-    print(f'Unrecognized "use_python" value {use_python}', file=sys.stderr)
-    sys.exit(1)
+    This function generates a C++ source file that defines the
+    parameter struct for a given SimObject.
 
-basename = os.path.basename(args.param_cc)
-no_ext = os.path.splitext(basename)[0]
-sim_object_name = "_".join(no_ext.split("_")[1:])
+    Args:
+        sim_object: The SimObject class for which to generate the header.
+        use_python: A boolean indicating whether Python support is enabled.
+        param_cc: The path to the C++ source file to write.
+    """
 
-importer.install()
-module = importlib.import_module(args.modpath)
-sim_object = getattr(module, sim_object_name)
+    # Need to import after the importer is installed
+    from m5.objects.SimObject import PyBindProperty
 
-from m5.objects.SimObject import PyBindProperty
+    code = code_formatter()
 
-code = code_formatter()
+    py_class_name = sim_object.pybind_class
 
-py_class_name = sim_object.pybind_class
+    # The 'local' attribute restricts us to the params declared in
+    # the object itself, not including inherited params (which
+    # will also be inherited from the base class's param struct
+    # here). Sort the params based on their key
+    params = list(
+        map(lambda k_v: k_v[1], sorted(sim_object._params.local.items()))
+    )
+    ports = sim_object._ports.local
 
-# The 'local' attribute restricts us to the params declared in
-# the object itself, not including inherited params (which
-# will also be inherited from the base class's param struct
-# here). Sort the params based on their key
-params = list(
-    map(lambda k_v: k_v[1], sorted(sim_object._params.local.items()))
-)
-ports = sim_object._ports.local
-
-# only include pybind if python is enabled in the build
-if use_python:
-    code(
-        """#include "pybind11/pybind11.h"
+    # only include pybind if python is enabled in the build
+    if use_python:
+        code(
+            """#include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
 #include <type_traits>
@@ -101,10 +89,10 @@ if use_python:
 #include "${{sim_object.cxx_header}}"
 
 """
-    )
-else:
-    code(
-        """
+        )
+    else:
+        code(
+            """
 #include <type_traits>
 
 #include "base/compiler.hh"
@@ -113,14 +101,14 @@ else:
 #include "${{sim_object.cxx_header}}"
 
 """
-    )
-# only include the python params code if python is enabled.
-if use_python:
-    for param in params:
-        param.pybind_predecls(code)
+        )
+    # only include the python params code if python is enabled.
+    if use_python:
+        for param in params:
+            param.pybind_predecls(code)
 
-    code(
-        """namespace py = pybind11;
+        code(
+            """namespace py = pybind11;
 
 namespace gem5
 {
@@ -130,98 +118,98 @@ module_init(py::module_ &m_internal)
 {
 py::module_ m = m_internal.def_submodule("param_${sim_object}");
 """
-    )
-    code.indent()
-    if sim_object._base:
-        code(
-            "py::class_<${sim_object}Params, "
-            "${{sim_object._base.type}}Params, "
-            "std::unique_ptr<${{sim_object}}Params, py::nodelete>>("
-            'm, "${sim_object}Params")'
         )
-    else:
-        code(
-            "py::class_<${sim_object}Params, "
-            "std::unique_ptr<${sim_object}Params, py::nodelete>>("
-            'm, "${sim_object}Params")'
-        )
+        code.indent()
+        if sim_object._base:
+            code(
+                "py::class_<${sim_object}Params, "
+                "${{sim_object._base.type}}Params, "
+                "std::unique_ptr<${{sim_object}}Params, py::nodelete>>("
+                'm, "${sim_object}Params")'
+            )
+        else:
+            code(
+                "py::class_<${sim_object}Params, "
+                "std::unique_ptr<${{sim_object}}Params, py::nodelete>>("
+                'm, "${sim_object}Params")'
+            )
 
-    code.indent()
+        code.indent()
+        if not hasattr(sim_object, "abstract") or not sim_object.abstract:
+            code(".def(py::init<>())")
+            code('.def("create", &${sim_object}Params::create)')
+
+        param_exports = (
+            sim_object.cxx_param_exports
+            + [
+                PyBindProperty(k)
+                for k, v in sorted(sim_object._params.local.items())
+            ]
+            + [
+                PyBindProperty(f"port_{port.name}_connection_count")
+                for port in ports.values()
+            ]
+        )
+        for exp in param_exports:
+            exp.export(code, f"{sim_object}Params")
+
+        code(";")
+        code()
+        code.dedent()
+
+        bases = []
+        if "cxx_base" in sim_object._value_dict:
+            # If the c++ base class implied by python inheritance was
+            # overridden, use that value.
+            if sim_object.cxx_base:
+                bases.append(sim_object.cxx_base)
+        elif sim_object._base:
+            # If not and if there was a SimObject base, use its c++ class
+            # as this class' base.
+            bases.append(sim_object._base.cxx_class)
+        # Add in any extra bases that were requested.
+        bases.extend(sim_object.cxx_extra_bases)
+
+        if bases:
+            base_str = ", ".join(bases)
+            code(
+                "py::class_<${{sim_object.cxx_class}}, ${base_str}, "
+                "std::unique_ptr<${{sim_object.cxx_class}}, py::nodelete>>("
+                'm, "${py_class_name}")'
+            )
+        else:
+            code(
+                "py::class_<${{sim_object.cxx_class}}, "
+                "std::unique_ptr<${{sim_object.cxx_class}}, py::nodelete>>("
+                'm, "${py_class_name}")'
+            )
+        code.indent()
+        for exp in sim_object.cxx_exports:
+            exp.export(code, sim_object.cxx_class)
+        code(";")
+        code.dedent()
+        code()
+        code.dedent()
+        code("}")
+        code()
+        code(
+            "static EmbeddedPyBind " 'embed_obj("${0}", module_init, "${1}");',
+            sim_object,
+            sim_object._base.type if sim_object._base else "",
+        )
+        code()
+        code("} // namespace gem5")
+
+    # include the create() methods whether or not python is enabled.
     if not hasattr(sim_object, "abstract") or not sim_object.abstract:
-        code(".def(py::init<>())")
-        code('.def("create", &${sim_object}Params::create)')
-
-    param_exports = (
-        sim_object.cxx_param_exports
-        + [
-            PyBindProperty(k)
-            for k, v in sorted(sim_object._params.local.items())
-        ]
-        + [
-            PyBindProperty(f"port_{port.name}_connection_count")
-            for port in ports.values()
-        ]
-    )
-    for exp in param_exports:
-        exp.export(code, f"{sim_object}Params")
-
-    code(";")
-    code()
-    code.dedent()
-
-    bases = []
-    if "cxx_base" in sim_object._value_dict:
-        # If the c++ base class implied by python inheritance was
-        # overridden, use that value.
-        if sim_object.cxx_base:
-            bases.append(sim_object.cxx_base)
-    elif sim_object._base:
-        # If not and if there was a SimObject base, use its c++ class
-        # as this class' base.
-        bases.append(sim_object._base.cxx_class)
-    # Add in any extra bases that were requested.
-    bases.extend(sim_object.cxx_extra_bases)
-
-    if bases:
-        base_str = ", ".join(bases)
-        code(
-            "py::class_<${{sim_object.cxx_class}}, ${base_str}, "
-            "std::unique_ptr<${{sim_object.cxx_class}}, py::nodelete>>("
-            'm, "${py_class_name}")'
-        )
-    else:
-        code(
-            "py::class_<${{sim_object.cxx_class}}, "
-            "std::unique_ptr<${{sim_object.cxx_class}}, py::nodelete>>("
-            'm, "${py_class_name}")'
-        )
-    code.indent()
-    for exp in sim_object.cxx_exports:
-        exp.export(code, sim_object.cxx_class)
-    code(";")
-    code.dedent()
-    code()
-    code.dedent()
-    code("}")
-    code()
-    code(
-        "static EmbeddedPyBind " 'embed_obj("${0}", module_init, "${1}");',
-        sim_object,
-        sim_object._base.type if sim_object._base else "",
-    )
-    code()
-    code("} // namespace gem5")
-
-# include the create() methods whether or not python is enabled.
-if not hasattr(sim_object, "abstract") or not sim_object.abstract:
-    sim_object._unique_namespace = sim_object.cxx_class.replace("::", "_")
-    sim_object._unique_namespace = sim_object._unique_namespace.replace(
-        "<", "_"
-    ).replace(">", "_")
-    sim_object._unique_namespace += "_create"
-    if "type" in sim_object.__dict__:
-        code(
-            """
+        sim_object._unique_namespace = sim_object.cxx_class.replace("::", "_")
+        sim_object._unique_namespace = sim_object._unique_namespace.replace(
+            "<", "_"
+        ).replace(">", "_")
+        sim_object._unique_namespace += "_create"
+        if "type" in sim_object.__dict__:
+            code(
+                """
 namespace gem5
 {
 
@@ -295,7 +283,7 @@ Dummy${sim_object}Shunt<${{sim_object.cxx_class}}>::Params::create() const
 
 } // namespace gem5
 """
-        )
+            )
 
         if not sim_object.override_create:
             code(
@@ -327,4 +315,40 @@ struct [[deprecated(
 """
             )
 
-code.write(args.param_cc)
+    code.write(param_cc)
+
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("modpath", help="module the simobject belongs to")
+    parser.add_argument("param_cc", help="parameter cc file to generate")
+    parser.add_argument(
+        "use_python", help="whether python is enabled in gem5 (True or False)"
+    )
+    args = parser.parse_args()
+    return args
+
+
+if __name__ == "__main__":
+    args = parse_args()
+
+    use_python = args.use_python.lower()
+    if use_python == "true":
+        use_python = True
+    elif use_python == "false":
+        use_python = False
+    else:
+        print(f'Unrecognized "use_python" value {use_python}', file=sys.stderr)
+        sys.exit(1)
+
+    basename = os.path.basename(args.param_cc)
+    no_ext = os.path.splitext(basename)[0]
+    sim_object_name = "_".join(no_ext.split("_")[1:])
+
+    # Note: Import here to remove dependence if importing from this file
+    import importer
+
+    importer.install()
+    module = importlib.import_module(args.modpath)
+    sim_object = getattr(module, sim_object_name)
+    write_cc_file(sim_object, use_python, args.param_cc)
