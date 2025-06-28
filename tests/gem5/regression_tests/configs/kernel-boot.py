@@ -84,8 +84,8 @@ memory = SingleChannelDDR3_1600(size="3GiB")
 #     num_cores=1,
 # )
 processor = SimpleProcessor(
-    cpu_type=CPUTypes.KVM,  # switch to ATOMIC for final
-    # cpu_type=CPUTypes.ATOMIC,
+    # cpu_type=CPUTypes.KVM,  # switch to ATOMIC for final
+    cpu_type=CPUTypes.ATOMIC,
     isa=ISA.X86,
     num_cores=1,
 )
