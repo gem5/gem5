@@ -208,6 +208,8 @@ struct TimeStruct
         bool interruptPending = false; // *F
         /// If the interrupt ended up being cleared before being handled
         bool clearInterrupt = false; // *F
+        /// If a trap is pending
+        bool trapPending = false; // *F
 
         /// Hack for now to send back an strictly ordered access to
         /// the IEW stage.

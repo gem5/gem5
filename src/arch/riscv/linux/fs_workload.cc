@@ -153,15 +153,15 @@ void
 BootloaderKernelWorkload::loadBootloader()
 {
     if (params().bootloader_filename != "") {
-        Addr bootloader_addr_offset = params().bootloader_addr;
-        bootloader->buildImage().offset(bootloader_addr_offset).write(
-            system->physProxy
-        );
+        loader::MemoryImage image = bootloader->buildImage();
+        Addr bootloader_addr_offset = \
+            params().bootloader_addr - image.minAddr();
+        image.offset(bootloader_addr_offset).write(system->physProxy);
         delete bootloader;
 
         inform("Loaded bootloader \'%s\' at 0x%llx\n",
                params().bootloader_filename,
-               bootloader_addr_offset);
+               params().bootloader_addr);
     } else {
         inform("Bootloader is not specified.\n");
     }
@@ -171,15 +171,14 @@ void
 BootloaderKernelWorkload::loadKernel()
 {
     if (params().object_file != "") {
-        Addr kernel_paddr_offset = params().kernel_addr;
-        kernel->buildImage().offset(kernel_paddr_offset).write(
-            system->physProxy
-        );
+        loader::MemoryImage image = kernel->buildImage();
+        Addr kernel_paddr_offset = params().kernel_addr - image.minAddr();
+        image.offset(kernel_paddr_offset).write(system->physProxy);
         delete kernel;
 
         inform("Loaded kernel \'%s\' at 0x%llx\n",
                 params().object_file,
-                kernel_paddr_offset);
+                params().kernel_addr);
     } else {
         inform("Kernel is not specified.\n");
     }

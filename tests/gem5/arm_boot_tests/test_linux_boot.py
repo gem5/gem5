@@ -43,6 +43,7 @@ def test_boot(
     length: str,
     systemd: bool,
     to_tick: Optional[int] = None,
+    systemd: bool = False,
 ):
     name = f"{cpu}-cpu_{num_cpus}-cores_{mem_system}_{memory_class}_\
 arm_boot_test"
@@ -62,6 +63,10 @@ arm_boot_test"
         resource_path,
         "--systemd" if systemd else "--no-systemd",
     ]
+
+    if systemd:
+        name += "_systemd"
+        config_args += ["--systemd"]
 
     if to_tick:
         name += "_to-tick"

@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017, 2019, 2021-2023 Arm Limited
+# Copyright (c) 2016-2017, 2019, 2021-2023, 2025 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -151,6 +151,7 @@ class ArmCpuCluster(CpuCluster):
         self,
         ints,
         events=[],
+        stat_counters=[],
         exit_sim_on_control=False,
         exit_sim_on_interrupt=False,
     ):
@@ -173,6 +174,11 @@ class ArmCpuCluster(CpuCluster):
         :type exit_on_control: bool
 
         """
+        # If ALL option has been passed, simply enable everything
+        stat_counters = (
+            EventTypeId.vals if "ALL" in stat_counters else stat_counters
+        )
+
         assert len(ints) == len(self.cpus)
         for cpu, pint in zip(self.cpus, ints):
             int_cls = ArmPPI if pint < 32 else ArmSPI
@@ -191,6 +197,8 @@ class ArmCpuCluster(CpuCluster):
                 )
                 for ev in events:
                     isa.pmu.addEvent(ev)
+
+                isa.pmu.statCounters = isa.pmu.archStatCounters(*stat_counters)
 
     def connectMemSide(self, bus):
         try:

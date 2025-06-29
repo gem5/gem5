@@ -89,7 +89,7 @@ class RiscvBootloaderKernelWorkload(Workload):
         "", "File that contains the bootloader. Don't use bootloader if empty."
     )
     bootloader_addr = Param.Addr(
-        0x0, "Where to place the bootloader in memory."
+        0x80000000, "Where to place the bootloader in memory."
     )
     object_file = Param.String("", "vmlinux file. Don't use kernel if empty.")
     kernel_addr = Param.Addr(

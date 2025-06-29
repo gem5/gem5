@@ -265,6 +265,25 @@ class ArmPMU(SimObject):
 
         yield node
 
+    def archStatCounters(self, *args):
+        """
+        This method accepts a list of strings and it matches them with
+        their related EventTypeId integer value (id). It returns
+        the generated dictionary but it does not assigns it directly to
+        the param.  This is because we want to be able to provide the
+        user with the possibility of amending the dictionary (e.g. to
+        include implementation defined events) before the assignment is
+        made.
+        """
+        statCounters = {}
+        for event_str in args:
+            assert (
+                event_str in EventTypeId.vals
+            ), f"{event_str} is not a EventTypeId value"
+            statCounters[EventTypeId.map[event_str]] = event_str
+
+        return statCounters
+
     cycleEventId = Param.EventTypeId("CPU_CYCLES", "Cycle event id")
     platform = Param.Platform(Parent.any, "Platform this device is part of.")
     eventCounters = Param.Int(31, "Number of supported PMU counters")

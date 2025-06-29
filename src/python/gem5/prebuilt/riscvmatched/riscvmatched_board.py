@@ -316,14 +316,14 @@ class RISCVMatchedBoard(
     def _pre_instantiate(self, full_system: Optional[bool] = None) -> None:
         if self._fs:
             if len(self._bootloader) > 0:
-                self.workload.bootloader_addr = 0x0
+                self.workload.bootloader_addr = 0x80000000
                 self.workload.bootloader_filename = self._bootloader[0]
                 self.workload.kernel_addr = 0x80200000
                 self.workload.entry_point = (
                     0x80000000  # Bootloader starting point
                 )
             else:
-                self.workload.kernel_addr = 0x0
+                self.workload.kernel_addr = 0x80000000
                 self.workload.entry_point = 0x80000000
 
         super()._pre_instantiate(full_system=full_system)

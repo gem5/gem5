@@ -532,14 +532,14 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
         # all boards support both FS and SE modes.
         if self.is_fullsystem():
             if len(self._bootloader) > 0:
-                self.workload.bootloader_addr = 0x0
+                self.workload.bootloader_addr = 0x80000000
                 self.workload.bootloader_filename = self._bootloader[0]
                 self.workload.kernel_addr = 0x80200000
                 self.workload.entry_point = (
                     0x80000000  # Bootloader starting point
                 )
             else:
-                self.workload.kernel_addr = 0x0
+                self.workload.kernel_addr = 0x80000000
                 self.workload.entry_point = 0x80000000
 
             # Set up the device tree. We need to wait until pre-instantiate to
