@@ -100,6 +100,7 @@ Currently facing issues while executing the binary in gem5 due to simulation run
 
 * The implementation omits `debug::VecRegs` to avoid namespace/flag conflict.
 * Currently facing issues while executing the binary in gem5 due to simulation runtime errors — under investigation.
+* Errors can be found here: gem5/gem5_run_output_June29.txt
 
 ---
 

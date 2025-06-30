@@ -1,0 +1,22 @@
+warn: The se.py script is deprecated. It will be removed in future releases of  gem5.
+Global frequency set at 1000000000000 ticks per second
+warn: No dot file generated. Please install pydot to generate the dot file and pdf.
+src/mem/dram_interface.cc:690: warn: DRAM device capacity (8192 Mbytes) does not match the address range assigned (512 Mbytes)
+src/base/statistics.hh:279: warn: One of the stats is a legacy stat. Legacy stat is a stat that does not belong to any statistics::Group. Legacy stat is deprecated.
+IndexError: vector::_M_range_check: __n (which is 6) >= this->size() (which is 6)
+
+At:
+  src/python/m5/SimObject.py(1270): getCCObject
+  src/python/m5/SimObject.py(1290): createCCObject
+  src/python/m5/simulate.py(135): instantiate
+  /home/divyangthakkar/ibm_project/gem5/configs/common/Simulation.py(685): run
+  configs/deprecated/example/se.py(298): <module>
+  src/python/m5/main.py(675): main
+gem5 Simulator System.  https://www.gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 version 24.1.0.1
+gem5 compiled Jun 29 2025 04:57:20
+gem5 started Jun 30 2025 07:05:29
+gem5 executing on ibm-proj, pid 13475
+command line: ./build/POWER/gem5.opt --debug-flags=Exec,Power configs/deprecated/example/se.py -c ./tests/power_test/mtvsrd_mfvsrd_test
