@@ -99,7 +99,7 @@ Currently facing issues while executing the binary in gem5 due to simulation run
 ## Notes
 
 * The implementation omits `debug::VecRegs` to avoid namespace/flag conflict.
-* Currently, facing the compilation error mentioned in the `gem5/uild_errors_June22.txt` file.
+* Currently facing issues while executing the binary in gem5 due to simulation runtime errors — under investigation.
 
 ---
 
