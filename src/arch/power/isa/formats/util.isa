@@ -204,7 +204,16 @@ let {{
         return (header_output, decoder_output, decode_block, exec_output)
 
     def GenVSRTransferOp(name, Name, code, inst_flags):
-        iop = InstObjParams(name, Name, "PowerStaticInst", code, inst_flags)
+
+        iop = InstObjParams(name, Name, "PowerStaticInst",
+        {
+        "code": code,
+        "reg_idx_arr_decl": "RegId srcRegIdxArr[1]; RegId destRegIdxArr[1]"
+        },
+        inst_flags)
+        # Manually add a top-level key for template use
+        iop.reg_idx_arr_decl = iop.snippets['reg_idx_arr_decl']
+        print(iop.__dict__)
 
         header_output = """
         #include "base/compiler.hh"
@@ -215,6 +224,7 @@ let {{
         """ + BasicDeclare.subst(iop)
 
         decoder_output = BasicConstructor.subst(iop)
+
         decode_block = BasicDecode.subst(iop)
 
         # Common VSX register index calculation
@@ -237,14 +247,10 @@ let {{
             exec_body = "// Unknown instruction"
 
         exec_output = """
-            class %(name)s : public PowerStaticInst
-            {
-            public:
-                using PowerStaticInst::PowerStaticInst;
-
                 Fault
-                execute(ExecContext *xc, trace::InstRecord *traceData)
-                const override
+                %(Name)s::execute(ExecContext *xc,
+                trace::InstRecord *traceData)
+                const
                 {
                     ThreadContext *tc = xc->tcBase();
                     if (traceData)
@@ -252,16 +258,7 @@ let {{
                     %(exec_body)s
                     return NoFault;
                 }
-                std::string generateDisassembly(Addr pc,
-                const loader::SymbolTable *symtab) const override
-                {
-                    std::stringstream ss;
-                    ccprintf(ss, "%%-10s ", mnemonic);
-                    // Add disassembly formatting here
-                    return ss.str();
-                }
-            };
-            """ % {'name': name, 'exec_body': exec_body}
+            """ % {'Name': Name, 'exec_body': exec_body}
 
         return (header_output, decoder_output, decode_block, exec_output)
 }};
