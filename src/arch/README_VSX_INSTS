@@ -1,3 +1,6 @@
+### Version History
+v0.1 29th June 2025: The compilation errors faced during the gem5 build are resolved. A unit-level test is created to test the 'mtvsrd' and 'mfvsrd' instructions of POWER ISA. Currently, facing run-time errors. For more details refer section Test Case at the bottom of this file.
+
 # Adding Power ISA VSX Instructions: mtvsrd and mfvsrd
 
 This README documents the changes made to gem5 source files to support the addition of two new Power ISA VSX instructions: `mtvsrd` (Move to Vector-Scalar Register Doubleword) and `mfvsrd` (Move from Vector-Scalar Register Doubleword). These changes were modeled according to the POWER ISA specification and integrated within gem5's existing vector register infrastructure.
@@ -83,6 +86,14 @@ Header('insts/vector_scalar.hh')
 * No debug flags were required to be enabled.
 * TODO: Validate with a small test binary that executes `mtvsrd` and `mfvsrd`.
 
+---
+## Test Case
+
+A test case C program using inline assembly for mtvsrd and mfvsrd has been created.
+
+The binary compiles correctly using a PowerPC cross-compiler.
+
+Currently facing issues while executing the binary in gem5 due to simulation runtime errors — under investigation.
 ---
 
 ## Notes
