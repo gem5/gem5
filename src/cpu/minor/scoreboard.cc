@@ -475,6 +475,26 @@ namespace gem5
                         }
                     }
                 }
+            } else if (inst->staticInst->isStore()) {
+                RegId reg = staticInst->srcRegIdx(1).flatten(*isa);
+                unsigned short int index;
+
+                if (findIndex(reg, index))
+                {
+                    int src_reg_fu = fuIndices[index];
+                    bool cant_forward = src_reg_fu != invalidFUIndex &&
+                                        cant_forward_from_fu_indices &&
+                                        src_reg_fu < cant_forward_from_fu_indices->size() &&
+                                        (*cant_forward_from_fu_indices)[src_reg_fu];
+
+                    Cycles relative_latency = (cant_forward ? Cycles(0) : (1 >= num_relative_latencies ? default_relative_latency : (*src_reg_relative_latencies)[1]));
+                    Cycles retCycle = returnCycle[index];
+                    if (retCycle > now ||
+                        numUnpredictableResults[index] != 0)
+                    {
+                        return false;
+                    }
+                }
             }
             return true;
         }

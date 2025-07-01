@@ -791,9 +791,9 @@ namespace gem5
                 delay = Cycles(0);
             }
 
-            bool can_issue = output_inst->isMemRef() ? cpu.getScoreboard()[tid].canMemInstIssue(output_inst,
+            bool can_issue = output_inst->isMemRef() ? ( output_inst->staticInst->isLoad() ? cpu.getScoreboard()[tid].canMemInstIssue(output_inst,
                                                                                                 src_latencies, cant_forward_from_fu_indices,
-                                                                                                cpu.curCycle() + delay, cpu.getContext(tid), false)
+                                                                                                cpu.curCycle() + delay, cpu.getContext(tid), false) : true)
                                                      : cpu.getScoreboard()[tid].canInstIssue(output_inst,
                                                                                              src_latencies, cant_forward_from_fu_indices,
                                                                                              cpu.curCycle() + delay, cpu.getContext(tid));
