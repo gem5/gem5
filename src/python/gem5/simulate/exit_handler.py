@@ -180,69 +180,6 @@ def register_exit_handler(
     return _ExitHandlerFactory(hypercall_num, func, description)
 
 
-class ClassicGeneratorExitHandler(ExitHandler, hypercall_num=0):
-
-    def __init__(self, payload: Dict[str, str]) -> None:
-        super().__init__(payload)
-        self._exit_on_completion = None
-
-    @overrides(ExitHandler)
-    def _process(self, simulator: "Simulator") -> None:
-        #  # Translate the exit event cause to the exit event enum.
-        exit_enum = ExitEvent.translate_exit_status(
-            simulator.get_last_exit_event_cause()
-        )
-
-        # Check to see the run is corresponding to the expected execution
-        # order (assuming this check is demanded by the user).
-        if simulator._expected_execution_order:
-            expected_enum = simulator._expected_execution_order[
-                simulator._exit_event_count
-            ]
-            if exit_enum.value != expected_enum.value:
-                raise Exception(
-                    f"Expected a '{expected_enum.value}' exit event but a "
-                    f"'{exit_enum.value}' exit event was encountered."
-                )
-
-        # Record the current tick and exit event enum.
-        simulator._tick_stopwatch.append(
-            (exit_enum, simulator.get_current_tick())
-        )
-
-        try:
-            # If the user has specified their own generator for this exit
-            # event, use it.
-            self._exit_on_completion = next(
-                simulator._on_exit_event[exit_enum]
-            )
-        except StopIteration:
-            # If the user's generator has ended, throw a warning and use
-            # the default generator for this exit event.
-            warn(
-                "User-specified generator/function list for the exit "
-                f"event'{exit_enum.value}' has ended. Using the default "
-                "generator."
-            )
-            self._exit_on_completion = next(
-                simulator._default_on_exit_dict[exit_enum]
-            )
-
-        except KeyError:
-            # If the user has not specified their own generator for this
-            # exit event, use the default.
-            self._exit_on_completion = next(
-                simulator._default_on_exit_dict[exit_enum]
-            )
-
-    @overrides(ExitHandler)
-    def _exit_simulation(self) -> bool:
-        assert (
-            self._exit_on_completion is not None
-        ), "Exit on completion boolean var is not set."
-        return self._exit_on_completion
-
-
 class ScheduledExitEventHandler(ExitHandler, hypercall_num=6):
     """A handler designed to be the default for  an Exit scheduled to occur
     at a specified tick. For example, these Exit exits can be triggered through be
