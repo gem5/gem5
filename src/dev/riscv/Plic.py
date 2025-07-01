@@ -82,6 +82,10 @@ class Plic(PlicBase):
         "Number of interrupt contexts. Usually the number "
         "of threads * 2. One for M mode, one for S mode",
     )
+    output_latency = Param.Int(
+        3,
+        "Cycle latency from received interrupt signal to output",
+    )
 
     def generateDeviceTree(self, state):
         node = self.generateBasicPioDeviceNode(
