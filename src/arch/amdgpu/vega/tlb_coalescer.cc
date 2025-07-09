@@ -69,6 +69,9 @@ VegaTLBCoalescer::VegaTLBCoalescer(const VegaTLBCoalescerParams &p)
         memSidePort.push_back(new MemSidePort(csprintf("%s-port%d", name(), i),
                                               this, i));
     }
+
+    default_pgSize = p.default_pgSize;
+    potentialPagesize.insert(default_pgSize);
 }
 
 Port &
@@ -98,7 +101,9 @@ VegaTLBCoalescer::getPort(const std::string &if_name, PortID idx)
  * The rules can potentially be modified based on the TLB level.
  */
 bool
-VegaTLBCoalescer::canCoalesce(PacketPtr incoming_pkt, PacketPtr coalesced_pkt)
+VegaTLBCoalescer::canCoalesce
+(PacketPtr incoming_pkt, PacketPtr coalesced_pkt,
+ Addr pagebytes = VegaISA::PageBytes)
 {
     if (disableCoalescing)
         return false;
@@ -112,10 +117,10 @@ VegaTLBCoalescer::canCoalesce(PacketPtr incoming_pkt, PacketPtr coalesced_pkt)
     // Rule 1: Coalesce requests only if they
     // fall within the same virtual page
     Addr incoming_virt_page_addr = roundDown(incoming_pkt->req->getVaddr(),
-                                             VegaISA::PageBytes);
+                                             pagebytes);
 
     Addr coalesced_virt_page_addr = roundDown(coalesced_pkt->req->getVaddr(),
-                                              VegaISA::PageBytes);
+                                              pagebytes);
 
     if (incoming_virt_page_addr != coalesced_virt_page_addr)
         return false;
@@ -145,11 +150,6 @@ VegaTLBCoalescer::canCoalesce(PacketPtr incoming_pkt, PacketPtr coalesced_pkt)
 void
 VegaTLBCoalescer::updatePhysAddresses(PacketPtr pkt)
 {
-    Addr virt_page_addr = roundDown(pkt->req->getVaddr(), VegaISA::PageBytes);
-
-    DPRINTF(GPUTLB, "Update phys. addr. for %d coalesced reqs for page %#x\n",
-            issuedTranslationsTable[virt_page_addr].size(), virt_page_addr);
-
     GpuTranslationState *sender_state =
         safe_cast<GpuTranslationState*>(pkt->senderState);
 
@@ -160,12 +160,41 @@ VegaTLBCoalescer::updatePhysAddresses(PacketPtr pkt)
     Addr first_entry_vaddr = tlb_entry.vaddr;
     Addr first_entry_paddr = tlb_entry.paddr;
     int page_size = tlb_entry.size();
+
+    potentialPagesize.insert(page_size);
+
+    Addr virt_page_addr;
+
+    // Find coalesced translation request.
+    for (auto pgsize_seen : potentialPagesize) {
+        virt_page_addr = roundDown(pkt->req->getVaddr(), pgsize_seen);
+        if (issuedTranslationsTable.count(virt_page_addr) != 0)
+            break;
+    }
+
+    DPRINTF(GPUTLB, "Update phys. addr. for %d \
+            coalesced reqs for page %#x\n",
+            issuedTranslationsTable[virt_page_addr].size(),
+            virt_page_addr);
+
     bool uncacheable = tlb_entry.uncacheable();
     int first_hit_level = sender_state->hitLevel;
     bool is_system = pkt->req->systemReq();
 
-    for (int i = 0; i < issuedTranslationsTable[virt_page_addr].size(); ++i) {
+    for (int i = 0;
+         i < issuedTranslationsTable[virt_page_addr].size(); ++i) {
         PacketPtr local_pkt = issuedTranslationsTable[virt_page_addr][i];
+
+        Addr local_pkt_vaddr = local_pkt->req->getVaddr();
+
+        //check if the pending req's vaddr matches the returned page,
+        //if not, reissue pending req as a 4k page
+        if (!(first_entry_vaddr <= local_pkt_vaddr &&
+              local_pkt_vaddr < first_entry_vaddr+page_size)) {
+            reissue_pkt_helper(local_pkt);
+            continue;
+        }
+
         GpuTranslationState *sender_state =
             safe_cast<GpuTranslationState*>(local_pkt->senderState);
 
@@ -236,6 +265,74 @@ VegaTLBCoalescer::updatePhysAddresses(PacketPtr pkt)
         schedule(cleanupEvent, curTick());
 }
 
+// re-coalesce packet to 4k pages
+void
+VegaTLBCoalescer::reissue_pkt_helper(PacketPtr pkt)
+{
+    // first packet of a coalesced request
+    PacketPtr first_packet = nullptr;
+    // true if we are able to do coalescing
+    bool didCoalesce = false;
+    // number of coalesced reqs for a given window
+    int coalescedReq_cnt = 0;
+
+    GpuTranslationState *sender_state =
+        safe_cast<GpuTranslationState*>(pkt->senderState);
+
+    DPRINTF(GPUTLB, "Trying to re-issue req at tick: %llu, addr: %#x\n",
+            sender_state->issueTime, pkt->req->getVaddr());
+
+    // The tick index is used as a key to the coalescerFIFO hashmap.
+    // It is shared by all candidates that fall within the
+    // given coalescingWindow.
+    Tick tick_index = sender_state->issueTime / coalescingWindow;
+
+    if (coalescerFIFO.count(tick_index)) {
+        coalescedReq_cnt = coalescerFIFO[tick_index].size();
+    }
+
+    // see if we can coalesce the incoming pkt with another
+    // coalesced request with the same tick_index
+    for (int i = 0; i < coalescedReq_cnt; ++i) {
+        first_packet = coalescerFIFO[tick_index][i].first[0];
+        if (coalescerFIFO[tick_index][i].second != VegaISA::PageBytes)
+            continue;
+
+        if (canCoalesce(pkt, first_packet, VegaISA::PageBytes)) {
+            coalescerFIFO[tick_index][i].first.push_back(pkt);
+
+            DPRINTF(GPUTLB, "Coalesced re-issued req %i \
+                    w/ tick_index %d has %d reqs\n",
+                    i, tick_index,
+                    coalescerFIFO[tick_index][i].first.size());
+
+            didCoalesce = true;
+            break;
+        }
+    }
+
+    // if this is the first request for this tick_index
+    // or we did not manage to coalesce, update stats
+    // and make necessary allocations.
+    if (!coalescedReq_cnt || !didCoalesce) {
+        std::vector<PacketPtr> new_array;
+        new_array.push_back(pkt);
+        coalescerFIFO[tick_index].push_back(
+            std::make_pair(new_array, VegaISA::PageBytes));
+
+        DPRINTF(GPUTLB, "coalescerFIFO[%d] now has %d coalesced reqs after "
+                "push re-issued req\n", tick_index,
+                coalescerFIFO[tick_index].size());
+    }
+
+    //schedule probeTLBEvent next cycle to send the
+    //coalesced requests to the TLB
+    if (!probeTLBEvent.scheduled()) {
+        schedule(probeTLBEvent,
+                curTick() + clockPeriod());
+    }
+}
+
 // Receive translation requests, create a coalesced request,
 // and send them to the TLB (TLBProbesPerCycle)
 bool
@@ -297,14 +394,15 @@ VegaTLBCoalescer::CpuSidePort::recvTimingReq(PacketPtr pkt)
     // see if we can coalesce the incoming pkt with another
     // coalesced request with the same tick_index
     for (int i = 0; i < coalescedReq_cnt; ++i) {
-        first_packet = coalescer->coalescerFIFO[tick_index][i][0];
+        first_packet = coalescer->coalescerFIFO[tick_index][i].first[0];
+        Addr pg_size = coalescer->coalescerFIFO[tick_index][i].second;
 
-        if (coalescer->canCoalesce(pkt, first_packet)) {
-            coalescer->coalescerFIFO[tick_index][i].push_back(pkt);
+        if (coalescer->canCoalesce(pkt, first_packet, pg_size)) {
+            coalescer->coalescerFIFO[tick_index][i].first.push_back(pkt);
 
             DPRINTF(GPUTLB, "Coalesced req %i w/ tick_index %d has %d reqs\n",
                     i, tick_index,
-                    coalescer->coalescerFIFO[tick_index][i].size());
+                    coalescer->coalescerFIFO[tick_index][i].first.size());
 
             didCoalesce = true;
             break;
@@ -320,7 +418,8 @@ VegaTLBCoalescer::CpuSidePort::recvTimingReq(PacketPtr pkt)
 
         std::vector<PacketPtr> new_array;
         new_array.push_back(pkt);
-        coalescer->coalescerFIFO[tick_index].push_back(new_array);
+        coalescer->coalescerFIFO[tick_index].push_back
+            (std::make_pair(new_array, coalescer->default_pgSize));
 
         DPRINTF(GPUTLB, "coalescerFIFO[%d] now has %d coalesced reqs after "
                 "push\n", tick_index,
@@ -453,7 +552,7 @@ VegaTLBCoalescer::processProbeTLBEvent()
 
         while (i < coalescedReq_cnt) {
             ++i;
-            PacketPtr first_packet = iter->second[vector_index][0];
+            PacketPtr first_packet = iter->second[vector_index].first[0];
             //The request to coalescer is origanized as follows.
             //The coalescerFIFO is a map which is indexed by coalescingWindow
             // cycle. Only requests that falls in the same coalescingWindow
@@ -462,13 +561,17 @@ VegaTLBCoalescer::processProbeTLBEvent()
             // page number and it contains vector of all request that are
             // coalesced for the same virtual page address
 
-            // compute virtual page address for this request
+            // compute virtual page address for this request use the assumed
+            // page size, stored in pair.second of the coalesced req
             Addr virt_page_addr = roundDown(first_packet->req->getVaddr(),
-                    VegaISA::PageBytes);
+                    iter->second[vector_index].second);
 
             // is there another outstanding request for the same page addr?
-            int pending_reqs =
-                issuedTranslationsTable.count(virt_page_addr);
+            // consider all possible page size
+            int pending_reqs = 0;
+            for (auto i_pgsize : potentialPagesize)
+                pending_reqs += issuedTranslationsTable.count
+                    (roundDown(first_packet->req->getVaddr(), i_pgsize));
 
             if (pending_reqs) {
                 DPRINTF(GPUTLB, "Cannot issue - There are pending reqs for "
@@ -512,7 +615,7 @@ VegaTLBCoalescer::processProbeTLBEvent()
 
                     // pkt_cnt is number of packets we coalesced into the one
                     // we just sent but only at this coalescer level
-                    int pkt_cnt = iter->second[vector_index].size();
+                    int pkt_cnt = iter->second[vector_index].first.size();
                     localqueuingCycles += (curCycle() * pkt_cnt);
                 }
 
@@ -521,7 +624,7 @@ VegaTLBCoalescer::processProbeTLBEvent()
 
                 //copy coalescedReq to issuedTranslationsTable
                 issuedTranslationsTable[virt_page_addr]
-                    = iter->second[vector_index];
+                    = iter->second[vector_index].first;
 
                 //erase the entry of this coalesced req
                 iter->second.erase(iter->second.begin() + vector_index);
