@@ -140,7 +140,7 @@ enum FloatRegIndex
     _Ymm15LowIdx,
     _Ymm15HighIdx,
 
-    MicrofpBase = YmmBase + 2 * NumXMMRegs,
+    MicrofpBase = YmmBase + 2 * NumYMMRegs,
     _Microfp0Idx = MicrofpBase,
     _Microfp1Idx,
     _Microfp2Idx,
@@ -211,12 +211,6 @@ static inline RegId
 xmmHigh(int index)
 {
     return floatRegClass[XmmBase + 2 * index + 1];
-}
-
-static inline RegId
-ymm(int index)
-{
-    return floatRegClass[YmmBase + index];
 }
 
 static inline RegId

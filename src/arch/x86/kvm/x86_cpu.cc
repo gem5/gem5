@@ -112,7 +112,7 @@ struct GEM5_PACKED FXSave
 
     uint8_t fpr[8][16];
     uint8_t xmm[16][16];
-
+    
     uint64_t reserved[12];
 };
 
@@ -882,9 +882,10 @@ X86KvmCPU::updateKvmStateAVXCommon(ThreadContext *tc, const kvm_xsave &kxsave)
 {
     // Like updateKvmStateFPUCommon, updateKvmStateAVXCommon is called by
     // updateKvmStateFPU function
-    // Setting Kvm's ymm reg values to gem5's ymm reg values
-    const AVXState *avx = (const AVXState*)((const char*)kxsave.region
-                            + sizeof(FXSave) + sizeof(XSaveHeader));
+    // Setting KVM's YMM reg values to gem5's YMM reg values
+    const AVXState *avx = (const AVXState*)((const char*)
+                            kxsave.region[sizeof(FXSave) 
+                            + sizeof(XSaveHeader)]);
 
     for (int i = 0; i < 16; i++) {
         *(uint64_t *)&avx->ymmh[i][0] = tc->getReg(float_reg::ymmHigh(i));
@@ -968,15 +969,13 @@ X86KvmCPU::updateKvmStateFPUXSave()
      * Development Manual) directly follows the legacy xsave region
      * (i.e., the FPU/SSE state). The first 8 bytes of the xsave header
      * hold a state-component bitmap called xstate_bv. We need to set
-     * the state component bits corresponding to the FPU and SSE
+     * the state component bits corresponding to the FPU, SSE, and AVX
      * states.
      */
     XSaveHeader& xsave_hdr =
       * (XSaveHeader *) ((char *) &kxsave + sizeof(FXSave));
     xsave_hdr.xstate_bv.fpu = 1;
     xsave_hdr.xstate_bv.sse = 1;
-
-    // enable avx bitmap and run the AVX state update function
     xsave_hdr.xstate_bv.avx = 1;
     updateKvmStateAVXCommon(tc, kxsave);
 
@@ -1152,13 +1151,14 @@ void
 X86KvmCPU::updateThreadContextAVXCommon(ThreadContext *tc,
                                         const struct kvm_xsave &kxsave)
 {
-    // Setting gem5's ymm reg values to Kvm's ymm reg values
+    // Setting gem5's YMM reg values to KVM's YMM reg values
     XSaveHeader& xsave_hdr = * (XSaveHeader *) ((char *) &kxsave
                                 + sizeof(FXSave));
 
     if (xsave_hdr.xstate_bv.avx) {
-        const AVXState *avx = (const AVXState*)((const char*)kxsave.region
-                                + sizeof(FXSave) + sizeof(XSaveHeader));
+        const AVXState *avx = (const AVXState*)((const char*)
+                                kxsave.region[sizeof(FXSave) 
+                                + sizeof(XSaveHeader)]);
 
         for (int i = 0; i < 16; i++) {
             tc->setReg(float_reg::ymmLow(i), *(uint64_t *)&avx->ymmh[i][0]);
