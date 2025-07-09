@@ -888,8 +888,8 @@ X86KvmCPU::updateKvmStateAVXCommon(ThreadContext *tc, const kvm_xsave &kxsave)
                             + sizeof(XSaveHeader)]);
 
     for (int i = 0; i < 16; i++) {
-        *(uint64_t *)&avx->ymmh[i][0] = tc->getReg(float_reg::ymmHigh(i));
-        *(uint64_t *)&avx->ymmh[i][8] = tc->getReg(float_reg::ymmLow(i));
+        *(uint64_t *)&avx->ymmh[i][0] = tc->getReg(float_reg::ymmLow(i));
+        *(uint64_t *)&avx->ymmh[i][8] = tc->getReg(float_reg::ymmHigh(i));
     }
 }
 
