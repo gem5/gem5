@@ -62,7 +62,8 @@ class LooppointAnalysis : public ProbeListenerObject
      * @param inst_pair A pair that contains the SimpleThread pointer and the
      * StaticInstPtr of the commited instruction from the atomic CPU.
      */
-    void checkPc(const std::pair<SimpleThread*, StaticInstPtr>& inst_pair);
+    void checkPc(const std::pair<SimpleThread*,
+        const StaticInstPtr>& inst_pair);
 
     /**
      * When this function is called, it sets the class variable ifListening to
@@ -77,8 +78,8 @@ class LooppointAnalysis : public ProbeListenerObject
      */
     void stopListening();
 
-    typedef ProbeListenerArg<LooppointAnalysis,
-        std::pair<SimpleThread*, StaticInstPtr>> looppointAnalysisListener;
+    typedef ProbeListenerArg<LooppointAnalysis, std::pair<SimpleThread*,
+        const StaticInstPtr>> looppointAnalysisListener;
 
   private:
 
