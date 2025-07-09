@@ -112,7 +112,7 @@ struct GEM5_PACKED FXSave
 
     uint8_t fpr[8][16];
     uint8_t xmm[16][16];
-    
+
     uint64_t reserved[12];
 };
 
@@ -884,7 +884,7 @@ X86KvmCPU::updateKvmStateAVXCommon(ThreadContext *tc, const kvm_xsave &kxsave)
     // updateKvmStateFPU function
     // Setting KVM's YMM reg values to gem5's YMM reg values
     const AVXState *avx = (const AVXState*)((const char*)
-                            kxsave.region[sizeof(FXSave) 
+                            kxsave.region[sizeof(FXSave)
                             + sizeof(XSaveHeader)]);
 
     for (int i = 0; i < 16; i++) {
@@ -1157,7 +1157,7 @@ X86KvmCPU::updateThreadContextAVXCommon(ThreadContext *tc,
 
     if (xsave_hdr.xstate_bv.avx) {
         const AVXState *avx = (const AVXState*)((const char*)
-                                kxsave.region[sizeof(FXSave) 
+                                kxsave.region[sizeof(FXSave)
                                 + sizeof(XSaveHeader)]);
 
         for (int i = 0; i < 16; i++) {
