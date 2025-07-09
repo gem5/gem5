@@ -68,6 +68,14 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
         p.system->addDeviceMemory(gpuMemMgr->getRequestorID(), m);
     }
 
+     // Populate allShaders from the parameter list
+    // p.shaders is a std::vector<Shader*> passed from Python's VectorParam.
+    for (auto& shader : p.shaders) {
+        allShaders.push_back(shader);
+        DPRINTF(AMDGPUDevice, "Added shader %s to AMDGPUDevice.\n",
+                shader->name());
+    }
+
     if (config().expansionROM) {
         romRange = RangeSize(config().expansionROM, ROM_SIZE);
     } else {

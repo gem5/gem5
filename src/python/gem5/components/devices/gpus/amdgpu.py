@@ -51,7 +51,9 @@ class BaseViperGPU(SubSystem):
     def get_gpu_count(cls):
         return cls._gpu_count
 
-    def __init__(self, gpu_memory: AbstractMemorySystem):
+    def __init__(self, gpu_memory: AbstractMemorySystem, shaders:list = None):
+        # Initialize shaders as an empty list
+        shaders = shaders if shaders is not None else []
         super().__init__()
         if gpu_memory.has_parent():
             raise ValueError(
@@ -67,24 +69,45 @@ class BaseViperGPU(SubSystem):
 
         self.device = AMDGPUDevice(pci_func=0, pci_dev=pci_dev, pci_bus=0)
 
-    def set_shader(self, shader: ViperShader):
-        self.shader = shader
 
+
+    def set_shader(self, shaders: list[ViperShader]):
+         self.shaders = shaders  # Set the list of shaders for this GPU
+         self.device.shaders = shaders  # Set the shaders in the device
+
+    # def set_shader(self, shader: ViperShader):
+    #     self.shader = shader
+    # now pass the all shaders dma ports together (ksubhadip)
     def get_cpu_dma_ports(self):
-        return self.shader.get_cpu_dma_ports()
+        ports = []
+        for shader in self.shaders:
+            ports.extend(shader.get_cpu_dma_ports())
+        return ports
+        # return self.shader.get_cpu_dma_ports()
+
 
     def connectGPU(self, board: "ViperBoard") -> None:
         # Connect a CPU pointer. This is only used for SE mode. Any CPU will
         # work, so pick assuming there is at least one
         cpus = board.get_processor()
-        self.shader.set_cpu_pointer(cpus.cores[0].core)
+        for shader in self.shaders:
+            print(f"  Created shader: {shader}")
+            shader.set_cpu_pointer(cpus.cores[0].core)
+            # Connect all PIO buses
 
-        # Connect all PIO buses
-        self.shader.connect_iobus(board.get_io_bus())
+        #need to see what can be done
+        # how to connect multiple shaders to the board IOs
+        for x in range (len(self.shaders)):
+            print(f"  Created connect iobus from chiplet: {x}")
+            self.shaders[x].connect_iobus(board.get_io_bus())
+
+
+
 
         # Make the cache hierarchy. This will create an independent RubySystem
         # class containing only the GPU caches with no network connection to
         # the CPU cache hierarchy.
+        print("DEBUG: Entering connectGPU()")
         self.gpu_caches = ViperGPUCacheHierarchy(
             gpu_memory=self._memory,
             tcp_size=self._tcp_size,
@@ -98,7 +121,8 @@ class BaseViperGPU(SubSystem):
             tcc_count=self._tcc_count,
             cu_per_sqc=self._cu_per_sqc,
             cache_line_size=self._cache_line_size,
-            shader=self.shader,
+            num_chiplets = 8,
+            shaders=self.shaders,
         )
 
         self.memory = self._memory
@@ -130,6 +154,7 @@ class MI210(BaseViperGPU):
         tcc_count: int = 8,
         cache_line_size: int = 64,
     ):
+
         super().__init__(gpu_memory=gpu_memory)
 
         self._cu_per_sqc = cu_per_sqc
@@ -195,6 +220,7 @@ class MI300X(BaseViperGPU):
     def __init__(
         self,
         gpu_memory: AbstractMemorySystem,
+        num_chiplets: int = 8,
         num_cus: int = 40,
         cu_per_sqc: int = 4,
         tcp_size: str = "16KiB",
@@ -203,13 +229,16 @@ class MI300X(BaseViperGPU):
         sqc_assoc: int = 8,
         scalar_size: str = "32KiB",
         scalar_assoc: int = 8,
-        tcc_size: str = "256KiB",
+       # tcc_size: str = "256KiB",
+        tcc_size: str = "4MiB",
         tcc_assoc: int = 16,
         tcc_count: int = 16,
         cache_line_size: int = 64,
     ):
-        super().__init__(gpu_memory=gpu_memory)
+        shaders = []
+        super().__init__(gpu_memory=gpu_memory,shaders=shaders)
 
+       # self.num_chiplets = num_chiplets
         self._cu_per_sqc = cu_per_sqc
         self._tcp_size = tcp_size
         self._tcp_assoc = tcp_assoc
@@ -228,24 +257,70 @@ class MI300X(BaseViperGPU):
         self.device.SubsystemVendorID = 0x1002
         self.device.SubsystemID = 0x0C34
 
+
         # Setup device-specific address ranges for various SoC components.
-        shader = ViperShader(
-            self._my_id, num_cus, cache_line_size, self.device
-        )
-        self.set_shader(shader)
+        for s in range (num_chiplets):
+            shader = ViperShader(
+                self._my_id, num_cus, cache_line_size, self.device
+            )
+            self._my_id += 1
+            shaders.append(shader)
+        self.set_shader(shaders)  # Pass the shaders to set_shader()
+       #  self.set_shader(shaders[0])
+
+        # if self.shaders:
+        #     self.device.cp = self.shaders[0].gpu_cmd_proc
+        #     # self.device.device_ih = self.shaders[0].device_ih # If IH is shared
+        #     # self.device.memory_manager = self.shaders[0].memory_manager # If MM is shared
+
+        #     # Now, pass all shader references to the *single* command processor
+        #     # This requires a new method in GPUCommandProcessor C++
+        #     self.device.cp.setAllShaders(self.shaders)
+
 
         # These currently use MI200 values until the MI300X bios is released.
         num_sdmas = 5
         sdma_bases = [0x4980, 0x6180, 0x78000, 0x79000, 0x7A000]
         sdma_sizes = [0x1000] * 5
-
-        self.device.sdmas = shader._create_sdmas(sdma_bases, sdma_sizes)
+        # created sdmas for shaders[0]
+        self.device.sdmas = shaders[0]._create_sdmas(sdma_bases, sdma_sizes)
 
         # Setup the Command Processor's PM4 engines.
         pm4_starts = [0xC000]
         pm4_ends = [0xD000]
 
-        self.device.pm4_pkt_procs = shader._create_pm4s(pm4_starts, pm4_ends)
+        # created pm4_pkt_procs for shaders[0]
+        self.device.pm4_pkt_procs = shaders[0]._create_pm4s(pm4_starts, pm4_ends)
+
+
+    # def connectGPU(self, board: "ViperBoard") -> None:
+    #      super().connectGPU(board) 
+    #      print(f"  Called connectGPU from amdgpu for {self.device.device_name}")
+    #      if self.shaders:
+    #          self.device.cp = self.shaders[0].gpu_cmd_proc
+    #         # self.device.device_ih = self.shaders[0].device_ih # If IH is shared
+    #         # self.device.memory_manager = self.shaders[0].memory_manager # If MM is shared
+
+    #         # Now, pass all shader references to the *single* command processor
+    #         # This requires a new method in GPUCommandProcessor C++
+    #          print(f"  Setting all shaders for {self.device.device_name}")
+    #          self.device.cp.setAllShaders(self.shaders)
+           
+   
+    def _pre_instantiate(self):
+         
+        """Called to set up anything needed after ``m5.instantiate`` in amdgpu.py"""
+        print(f"  Called pre_instantiate from amdgpu for {self.device.device_name}")
+        if self.shaders:
+             self.device.cp = self.shaders[0].gpu_cmd_proc
+            # self.device.device_ih = self.shaders[0].device_ih # If IH is shared
+            # self.device.memory_manager = self.shaders[0].memory_manager # If MM is shared
+
+            # Now, pass all shader references to the *single* command processor
+            # This requires a new method in GPUCommandProcessor C++
+             print(f"  Setting all shaders for {self.device.device_name}")
+             self.device.cp.setAllShaders(self.shaders)
+           
 
     def get_driver_command(self, debug: bool = False):
         debug_commands = "dmesg -n8\n" if debug else ""
@@ -255,7 +330,8 @@ class MI300X(BaseViperGPU):
             "export HSA_ENABLE_INTERRUPT=0\n"
             "export HCC_AMDGPU_TARGET=gfx942\n"
             'export HSA_OVERRIDE_GFX_VERSION="9.4.2"\n'
-            f"{debug_commands}\n"
+           # f"{debug_commands}\n"
+            "dmesg -n8\n"
             "dd if=/root/roms/mi200.rom of=/dev/mem bs=1k seek=768 count=128\n"
             "if [ ! -f /lib/modules/`uname -r`/updates/dkms/amdgpu.ko ]; then\n"
             '    echo "ERROR: Missing DKMS package for kernel `uname -r`. Exiting gem5."\n'

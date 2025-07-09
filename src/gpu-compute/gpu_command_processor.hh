@@ -93,6 +93,7 @@ class GPUCommandProcessor : public DmaVirtDevice
         Addr host_pkt_addr = 0;
         PacketPtr readPkt = nullptr;
         HSAQueueEntry *task = nullptr;
+        int selectedShaderId = 0;   // To identify which ViperShader
     };
 
     std::list<struct KernelDispatchData> kernelDispatchList;
@@ -103,7 +104,9 @@ class GPUCommandProcessor : public DmaVirtDevice
       Steal = 1
     };
 
-    void performTimingRead(PacketPtr pkt, int dispType);
+    //void setAllShaders(const std::vector<Shader *> &shaders);
+
+    void performTimingRead(PacketPtr pkt, int dispType,int targetShaderId = 0);
 
     void completeTimingRead(int dispType);
 
@@ -116,7 +119,7 @@ class GPUCommandProcessor : public DmaVirtDevice
     void attachDriver(GPUComputeDriver *driver);
 
     void dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
-                              uint32_t queue_id, Addr host_pkt_addr);
+                              uint32_t queue_id, Addr host_pkt_addr,int selected_shader_id);
     void dispatchPkt(HSAQueueEntry *task);
     void signalWakeupEvent(uint32_t event_id);
 
@@ -321,7 +324,8 @@ class GPUCommandProcessor : public DmaVirtDevice
         }
     }
 
-    void readPreload(AMDKernelCode *akc, HSAQueueEntry *task);
+    void readPreload(AMDKernelCode *akc, HSAQueueEntry *task,
+                     int selected_shader_id);
     void initPreload(AMDKernelCode *akc, HSAQueueEntry *task);
 };
 

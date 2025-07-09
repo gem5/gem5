@@ -82,7 +82,7 @@ class DmaVirtDevice : public DmaDevice
      * @param delay Number of ticks to wait before scheduling callback
      */
     void dmaReadVirt(Addr host_addr, unsigned size, DmaCallback *cb,
-                     void *data, Tick delay = 0);
+                     void *data, Tick delay = 1e9);
     /**
      * Initiate a DMA write from virtual address host_addr. Helper function
      * for dmaVirt method.
@@ -94,7 +94,7 @@ class DmaVirtDevice : public DmaDevice
      * @param delay Number of ticks to wait before scheduling callback
      */
     void dmaWriteVirt(Addr host_addr, unsigned size, DmaCallback *b,
-                      void *data, Tick delay = 0);
+                      void *data, Tick delay = 1e9);
 
     // Typedefing dmaRead and dmaWrite function pointer
     typedef void (DmaDevice::*DmaFnPtr)(Addr, int, Event*, uint8_t*, Tick);
@@ -112,7 +112,7 @@ class DmaVirtDevice : public DmaDevice
      * @param delay Number of ticks to wait before scheduling callback
      */
     void dmaVirt(DmaFnPtr dmaFn, Addr host_addr, unsigned size,
-                 DmaCallback *cb, void *data, Tick delay = 0);
+                 DmaCallback *cb, void *data, Tick delay = 1e9);
 
     /**
      * Function used to translate a range of addresses from virtual to

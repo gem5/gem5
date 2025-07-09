@@ -51,17 +51,19 @@ class Set
     // Number of bits in use in this set.
     // can be defined in build_opts file (default=64).
     int m_nSize;
-    std::bitset<NUMBER_BITS_PER_SET> bits;
+    static constexpr int NUMBER_BITS_PER_SET_MGPU = NUMBER_BITS_PER_SET * 4 ; // needs to be set to 320 as (8*40)
+    std::bitset<NUMBER_BITS_PER_SET_MGPU> bits;
+
 
   public:
     Set() : m_nSize(0) {}
 
     Set(int size) : m_nSize(size)
     {
-        if (size > NUMBER_BITS_PER_SET)
+        if (size > NUMBER_BITS_PER_SET_MGPU)
             fatal("Number of bits(%d) < size specified(%d). "
                   "Increase the number of bits and recompile.\n",
-                  NUMBER_BITS_PER_SET, size);
+                  NUMBER_BITS_PER_SET_MGPU, size);
     }
 
     Set(const Set& obj) : m_nSize(obj.m_nSize), bits(obj.bits) {}
@@ -118,7 +120,7 @@ class Set
     void broadcast()
     {
         bits.set();
-        for (int j = m_nSize; j < NUMBER_BITS_PER_SET; ++j) {
+        for (int j = m_nSize; j < NUMBER_BITS_PER_SET_MGPU; ++j) {
             bits.reset(j);
         }
     }
@@ -162,7 +164,7 @@ class Set
     bool
     intersectionIsEmpty(const Set& obj) const
     {
-        std::bitset<NUMBER_BITS_PER_SET> r = bits & obj.bits;
+        std::bitset<NUMBER_BITS_PER_SET_MGPU> r = bits & obj.bits;
         return r.none();
     }
 
@@ -174,7 +176,7 @@ class Set
     isSuperset(const Set& test) const
     {
         assert(m_nSize == test.m_nSize);
-        std::bitset<NUMBER_BITS_PER_SET> r = bits | test.bits;
+        std::bitset<NUMBER_BITS_PER_SET_MGPU> r = bits | test.bits;
         return (r == bits);
     }
 
@@ -210,10 +212,10 @@ class Set
     void
     setSize(int size)
     {
-        if (size > NUMBER_BITS_PER_SET)
+        if (size >  NUMBER_BITS_PER_SET_MGPU ) // temporary hack to bypass the below error
             fatal("Number of bits(%d) < size specified(%d). "
-                  "Increase the number of bits and recompile.\n",
-                  NUMBER_BITS_PER_SET, size);
+                 "Increase the number of bits and recompile (ksubhadip) \n",
+                  NUMBER_BITS_PER_SET_MGPU, size);
         m_nSize = size;
         bits.reset();
     }

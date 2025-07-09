@@ -57,6 +57,8 @@
 namespace gem5
 {
 
+static int global_next_shader_idx_for_dispatch = 0;
+
 GPUCommandProcessor::GPUCommandProcessor(const Params &p)
     : DmaVirtDevice(p), dispatcher(*p.dispatcher), _driver(nullptr),
       walker(p.walker), hsaPP(p.hsapp),
@@ -102,13 +104,27 @@ GPUCommandProcessor::translate(Addr vaddr, Addr size)
 }
 
 void
-GPUCommandProcessor::performTimingRead(PacketPtr pkt, int dispType)
+GPUCommandProcessor::performTimingRead(PacketPtr pkt, int dispType,int targetShaderId)
 {
     // Use the shader to access the CUs and call the read request from
     // the SQC port. Call submit kernel dispatch in the timing response
     // function in receive timing response of SQC port. Schedule this
     // timing read when...just currTick
-    ComputeUnit *cu = shader()->cuList[0];
+
+    // ksubhadip
+    if (gpuDevice->allShaders.size() == 0) {
+        panic("No shaders available for GPUCommandProcessor to perform timing read.");
+    }
+
+    if (!(targetShaderId < gpuDevice->allShaders.size())) {
+        panic("Invalid target shader ID %d for GPUCommandProcessor with %d shaders.",
+              targetShaderId, gpuDevice->allShaders.size());
+    }
+
+    Shader *targetShader = gpuDevice->allShaders[targetShaderId];
+
+   // ComputeUnit *cu = shader()->cuList[0];
+    ComputeUnit *cu = targetShader->cuList[0];
     pkt->senderState = new ComputeUnit::SQCPort::SenderState(
             cu->wfList[0][0], true);
     ComputeUnit::SQCPort::SenderState *sender_state =
@@ -136,7 +152,7 @@ GPUCommandProcessor::completeTimingRead(int dispType)
         switch (dispType) {
           case ComputeUnit::SQCPort::SenderState::DISPATCH_KERNEL_OBJECT:
             dispatchKernelObject(dispatchData.akc, dispatchData.raw_pkt,
-                    dispatchData.queue_id, dispatchData.host_pkt_addr);
+                    dispatchData.queue_id, dispatchData.host_pkt_addr,dispatchData.selectedShaderId);
             break;
           case ComputeUnit::SQCPort::SenderState::DISPATCH_PRELOAD_ARG:
             initPreload(dispatchData.akc, dispatchData.task);
@@ -172,6 +188,16 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
     unsigned akc_alignment_granularity = 64;
     assert(!(disp_pkt->kernel_object & (akc_alignment_granularity - 1)));
 
+    // --- LOGIC FOR TARGET SHADER/CU SELECTION ---
+    // This Command Processor will select which shader and CU will handle this kernel.
+    assert(!gpuDevice->allShaders.empty() && "No shaders registered with Command Processor!");
+
+    // Simple round-robin for shader selection
+   // int selected_shader_id = global_next_shader_idx_for_dispatch % (gpuDevice->allShaders.size());
+    int selected_shader_id = 0;
+    Shader* targetShader = gpuDevice->allShaders[selected_shader_id];
+    global_next_shader_idx_for_dispatch++;
+    DPRINTF(GPUCommandProc, "Selected Shader ID: %d for dispatch.\n", selected_shader_id);
     /**
      * Make sure there is not a race condition with invalidates in the L2
      * cache. The full system driver may write directly to memory using
@@ -179,10 +205,12 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
      * state between kernel launches. This is a rare event but is required
      * for correctness.
      */
-    if (shader()->getNumOutstandingInvL2s() > 0) {
+   // if (shader()->getNumOutstandingInvL2s() > 0) {
+    if (targetShader->getNumOutstandingInvL2s() > 0) {
         DPRINTF(GPUCommandProc,
                 "Deferring kernel launch due to outstanding L2 invalidates\n");
-        shader()->addDeferredDispatch(raw_pkt, queue_id, host_pkt_addr);
+        //shader()->addDeferredDispatch(raw_pkt, queue_id, host_pkt_addr);
+        targetShader->addDeferredDispatch(raw_pkt, queue_id, host_pkt_addr);
 
         return;
     }
@@ -219,7 +247,7 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
         virt_proxy.readBlob(disp_pkt->kernel_object, (uint8_t*)akc,
             sizeof(AMDKernelCode));
 
-        dispatchKernelObject(akc, raw_pkt, queue_id, host_pkt_addr);
+        dispatchKernelObject(akc, raw_pkt, queue_id, host_pkt_addr,selected_shader_id);
     } else {
         /**
          * In full system mode, the page table entry may point to a system
@@ -256,7 +284,7 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
 
             auto dma_callback = new DmaVirtCallback<uint32_t>(
               [=](const uint32_t&) {
-                dispatchKernelObject(akc, raw_pkt, queue_id, host_pkt_addr);
+                dispatchKernelObject(akc, raw_pkt, queue_id, host_pkt_addr,selected_shader_id);
               });
 
             dmaReadVirt(disp_pkt->kernel_object, sizeof(AMDKernelCode),
@@ -291,10 +319,11 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
                 dispatchData.raw_pkt = raw_pkt;
                 dispatchData.queue_id = queue_id;
                 dispatchData.host_pkt_addr = host_pkt_addr;
+                dispatchData.selectedShaderId = selected_shader_id;
                 dispatchData.readPkt = readPkt;
                 kernelDispatchList.push_back(dispatchData);
                 performTimingRead(readPkt,
-                    ComputeUnit::SQCPort::SenderState::DISPATCH_KERNEL_OBJECT);
+                    ComputeUnit::SQCPort::SenderState::DISPATCH_KERNEL_OBJECT,selected_shader_id);
             }
         }
     }
@@ -302,7 +331,7 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
 
 void
 GPUCommandProcessor::dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
-                                        uint32_t queue_id, Addr host_pkt_addr)
+                                        uint32_t queue_id, Addr host_pkt_addr,int selected_shader_id)
 {
     _hsa_dispatch_packet_t *disp_pkt = (_hsa_dispatch_packet_t*)raw_pkt;
 
@@ -407,7 +436,7 @@ GPUCommandProcessor::dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
 
         delete akc;
     } else {
-        readPreload(akc, task);
+        readPreload(akc, task, selected_shader_id);
     }
 
     ++dynamic_task_id;
@@ -724,7 +753,8 @@ GPUCommandProcessor::signalWakeupEvent(uint32_t event_id)
 }
 
 void
-GPUCommandProcessor::readPreload(AMDKernelCode *akc, HSAQueueEntry *task)
+GPUCommandProcessor::readPreload(AMDKernelCode *akc, HSAQueueEntry *task,
+                                 int selected_shader_id)
 {
     _hsa_dispatch_packet_t *disp_pkt =
         (_hsa_dispatch_packet_t*)task->dispPktPtr();
@@ -734,6 +764,9 @@ GPUCommandProcessor::readPreload(AMDKernelCode *akc, HSAQueueEntry *task)
     // area starting address.
     Addr preload_addr = (Addr)disp_pkt->kernel_object
         + akc->kernel_code_entry_byte_offset - KernargPreloadPktSize;
+
+    DPRINTF(GPUCommandProc, "Preload Shader: %#d\n",
+            selected_shader_id);
 
     DPRINTF(GPUCommandProc, "Kernarg preload starts at addr: %#x\n",
             preload_addr);
@@ -811,9 +844,10 @@ GPUCommandProcessor::readPreload(AMDKernelCode *akc, HSAQueueEntry *task)
             dispatchData.akc = akc;
             dispatchData.task = task;
             dispatchData.readPkt = readPkt;
+            dispatchData.selectedShaderId = selected_shader_id;
             kernelDispatchList.push_back(dispatchData);
             performTimingRead(readPkt,
-                ComputeUnit::SQCPort::SenderState::DISPATCH_PRELOAD_ARG);
+                ComputeUnit::SQCPort::SenderState::DISPATCH_PRELOAD_ARG,selected_shader_id);
         }
     }
 }

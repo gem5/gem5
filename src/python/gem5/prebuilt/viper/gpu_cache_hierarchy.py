@@ -85,12 +85,14 @@ class ViperGPUCacheHierarchy(AbstractRubyCacheHierarchy):
         tcc_count: int,
         cu_per_sqc: int,
         cache_line_size: int,
-        shader: ViperShader,
+        num_chiplets: int,
+        shaders: list[ViperShader],
     ):
         """
         :param size: The size of each cache in the heirarchy.
         :param assoc: The associativity of each cache.
         """
+        print(f"DEBUG: num_chiplets received: {num_chiplets}")  # ksubhadip
         super().__init__()
 
         self._tcp_size = tcp_size
@@ -102,6 +104,7 @@ class ViperGPUCacheHierarchy(AbstractRubyCacheHierarchy):
         self._tcc_size = tcc_size
         self._tcc_assoc = tcc_assoc
         self._cache_line_size = cache_line_size
+
 
         # We have everything we need to know to create the GPU cache hierarchy
         # immediately. Therefore, an incorporate_cache method is not part of
@@ -133,159 +136,192 @@ class ViperGPUCacheHierarchy(AbstractRubyCacheHierarchy):
 
         # Variables used by multiple objects are defined once here
         tcc_bits = int(math.log(tcc_count, 2))
+        tcc_bits2 = int(math.log(tcc_count * num_chiplets, 2)) # for chiplet support(ksubhadip)
         deadlock_threshold = 500000
 
-        # Create one TCP per CU
-        compute_units = shader.get_compute_units()
-        for idx, cu in enumerate(compute_units):
-            tcp = TCPCache(
-                tcp_size=self._tcp_size,
-                tcp_assoc=self._tcp_assoc,
-                network=self.ruby_gpu.network,
-                cache_line_size=self._cache_line_size,
-            )
+        for x in range(num_chiplets):  #iterate over through the number of chiplets (ksubhadip) need to check is there any id notion needed in the below hierarchy
+            # Create one TCP per CU
+            compute_units = shaders[x].get_compute_units()
+            for idx, cu in enumerate(compute_units):
+                tcp = TCPCache(
+                    tcp_size=self._tcp_size,
+                    tcp_assoc=self._tcp_assoc,
+                    network=self.ruby_gpu.network,
+                    cache_line_size=self._cache_line_size,
+                )
+                #print ( f"value of chiplet is {x}")
+                #tcp.version = (x * compute_units) +  idx  # it has to be the unique number(fixed)
+                idx_no =  (x * len(compute_units)) +  idx
+                tcp.version = idx_no  # it has to be the unique number(fixed)
 
-            tcp.version = idx
+                tcp.sequencer = RubySequencer(
+                    version=self.seqCount(),
+                    dcache=tcp.L1cache,
+                    ruby_system=self.ruby_gpu,
+                    is_cpu_sequencer=True,
+                )
 
-            tcp.sequencer = RubySequencer(
-                version=self.seqCount(),
-                dcache=tcp.L1cache,
-                ruby_system=self.ruby_gpu,
-                is_cpu_sequencer=True,
-            )
+                tcp.coalescer = VIPERCoalescer(
+                    version=self.seqCount(),
+                    icache=tcp.L1cache,
+                    dcache=tcp.L1cache,
+                    ruby_system=self.ruby_gpu,
+                    support_inst_reqs=False,
+                    is_cpu_sequencer=False,
+                    deadlock_threshold=deadlock_threshold,
+                    max_coalesces_per_cycle=1,
+                    gmTokenPort=cu.gmTokenPort,
+                )
+              #  print(f"  CU instance ID: {cu}")
+               # print(f"tcp.coalescer token port for CU {idx}: {tcp.coalescer.gmTokenPort}")
+                # need to see if this below needs any change (ksubhadip)
+                for port_idx in range(cu.wf_size):
+                    cu.memory_port[port_idx] = tcp.coalescer.in_ports
 
-            tcp.coalescer = VIPERCoalescer(
-                version=self.seqCount(),
-                icache=tcp.L1cache,
-                dcache=tcp.L1cache,
-                ruby_system=self.ruby_gpu,
-                support_inst_reqs=False,
-                is_cpu_sequencer=False,
-                deadlock_threshold=deadlock_threshold,
-                max_coalesces_per_cycle=1,
-                gmTokenPort=cu.gmTokenPort,
-            )
+              #  print(f"CU ID: {idx}, wf_size: {cu.wf_size}, memory_port length: {len(cu.memory_port)}")
 
-            for port_idx in range(cu.wf_size):
-                cu.memory_port[port_idx] = tcp.coalescer.in_ports
 
-            tcp.ruby_system = self.ruby_gpu
-            tcp.TCC_select_num_bits = tcc_bits
-            tcp.use_seq_not_coal = False
-            tcp.issue_latency = 1
-            tcp.clk_domain = self.clk_domain
-            tcp.recycle_latency = 10
-            tcp.WB = False
-            tcp.disableL1 = False
+                tcp.ruby_system = self.ruby_gpu
+                tcp.TCC_select_num_bits = tcc_bits
+                tcp.use_seq_not_coal = False
+                tcp.issue_latency = 1
+                tcp.clk_domain = self.clk_domain
+                tcp.recycle_latency = 10
+                tcp.WB = False
+                tcp.disableL1 = False
 
-            self._controllers.append(tcp)
+                self._controllers.append(tcp)
 
-        # This check ensures there are a same number of CUs with shared SQC
-        # and Scalar caches.
-        num_cus = len(shader.get_compute_units())
-        assert (num_cus % cu_per_sqc) == 0
-        num_sqcs = num_cus // cu_per_sqc
+            # This check ensures there are a same number of CUs with shared SQC
+            # and Scalar caches.
+            num_cus = len(shaders[x].get_compute_units())
+            assert (num_cus % cu_per_sqc) == 0
+            num_sqcs = num_cus // cu_per_sqc
 
-        for idx in range(num_sqcs):
-            sqc = SQCCache(
-                sqc_size=self._sqc_size,
-                sqc_assoc=self._sqc_assoc,
-                network=self.ruby_gpu.network,
-                cache_line_size=self._cache_line_size,
-            )
+            for idx in range(num_sqcs):
+                sqc = SQCCache(
+                    sqc_size=self._sqc_size,
+                    sqc_assoc=self._sqc_assoc,
+                    network=self.ruby_gpu.network,
+                    cache_line_size=self._cache_line_size,
+                )
 
-            sqc.version = idx
+                idx_no = (x * num_sqcs) + idx
+                sqc.version = idx_no  # need sthe same unique notion
+                #print(f"SQC ID : {idx}  absolute ID : {idx_no}")
 
-            sqc.sequencer = RubySequencer(
-                version=self.seqCount(),
-                dcache=sqc.L1cache,
-                ruby_system=self.ruby_gpu,
-                support_data_reqs=False,
-                is_cpu_sequencer=False,
-                deadlock_threshold=deadlock_threshold,
-            )
+                sqc.sequencer = RubySequencer(
+                    version=self.seqCount(),
+                    dcache=sqc.L1cache,
+                    ruby_system=self.ruby_gpu,
+                    support_data_reqs=False,
+                    is_cpu_sequencer=False,
+                    deadlock_threshold=deadlock_threshold,
+                )
 
-            # SQC is shared across {cu_per_sqc} CUs.
-            cu_base = cu_per_sqc * idx
-            for cu_num in range(cu_per_sqc):
-                cu_id = cu_base + cu_num
-                compute_units[cu_id].sqc_port = sqc.sequencer.in_ports
+                # SQC is shared across {cu_per_sqc} CUs.
+                # need to pass the absolute base across the chiplets (ksubhadip)
+                cu_base = ( cu_per_sqc * idx )
+                # print(f"cu_base : {cu_base}  for chiplet : {x}")
+                for cu_num in range(cu_per_sqc):
+                    cu_id = cu_base + cu_num
+                    #print(f"cu_num : {cu_num}  for chiplet : {x} calculated_cu_id: {cu_id}")
+                    compute_units[cu_id].sqc_port = sqc.sequencer.in_ports
+                    #print(f" cu_num_done for chiplet {x} in SQC")
 
-            sqc.ruby_system = self.ruby_gpu
-            sqc.TCC_select_num_bits = tcc_bits
-            sqc.clk_domain = self.clk_domain
-            sqc.recycle_latency = 10
+                sqc.ruby_system = self.ruby_gpu
+                sqc.TCC_select_num_bits = tcc_bits
+                sqc.clk_domain = self.clk_domain
+                sqc.recycle_latency = 10
 
-            self._controllers.append(sqc)
+                self._controllers.append(sqc)
 
-        num_scalars = num_sqcs
-        for idx in range(num_scalars):
-            scalar = SQCCache(
-                sqc_size=self._scalar_size,
-                sqc_assoc=self._scalar_assoc,
-                network=self.ruby_gpu.network,
-                cache_line_size=self._cache_line_size,
-            )
+            num_scalars = num_sqcs
+            for idx in range(num_scalars):
+                scalar = SQCCache(
+                    sqc_size=self._scalar_size,
+                    sqc_assoc=self._scalar_assoc,
+                    network=self.ruby_gpu.network,
+                    cache_line_size=self._cache_line_size,
+                )
 
-            # Scalar uses same controller as SQC, so add SQC count
-            scalar.version = idx + num_sqcs
+                # Scalar uses same controller as SQC, so add SQC count
 
-            scalar.sequencer = RubySequencer(
-                version=self.seqCount(),
-                dcache=scalar.L1cache,
-                ruby_system=self.ruby_gpu,
-                support_data_reqs=False,
-                is_cpu_sequencer=False,
-                deadlock_threshold=deadlock_threshold,
-            )
+                # scalar.version = idx + num_sqcs ( updated with unique id (ksubhadip))
 
-            # Scalar cache is shared across {cu_per_sqc} CUs.
-            cu_base = cu_per_sqc * idx
-            for cu_num in range(cu_per_sqc):
-                cu_id = cu_base + cu_num
-                compute_units[cu_id].scalar_port = scalar.sequencer.in_ports
+                scalar.version = idx + num_scalars * x + num_scalars * num_chiplets
 
-            scalar.ruby_system = self.ruby_gpu
-            scalar.TCC_select_num_bits = tcc_bits
-            scalar.clk_domain = self.clk_domain
-            scalar.recycle_latency = 10
+                scalar.sequencer = RubySequencer(
+                    version=self.seqCount(),
+                    dcache=scalar.L1cache,
+                    ruby_system=self.ruby_gpu,
+                    support_data_reqs=False,
+                    is_cpu_sequencer=False,
+                    deadlock_threshold=deadlock_threshold,
+                )
 
-            self._controllers.append(scalar)
+                # Scalar cache is shared across {cu_per_sqc} CUs.
+                # same change as above for sqc (ksubhadip)
+                cu_base = cu_per_sqc * idx
+                for cu_num in range(cu_per_sqc):
+                    cu_id = cu_base + cu_num
+                    #print(f"cu_num : {cu_num} for chiplet  for Scalar : {x} calculated_cu_id: {cu_id}")
+                    compute_units[cu_id].scalar_port = scalar.sequencer.in_ports
+                    #print(f" cu_num_done for chiplet {x} in Scalar ")
 
-        # Create TCCs (GPU L2 cache)
-        for idx in range(tcc_count):
-            tcc = TCCCache(
-                tcc_size=self._tcc_size,
-                tcc_assoc=self._tcc_assoc,
-                network=self.ruby_gpu.network,
-                cache_line_size=self._cache_line_size,
-            )
 
-            tcc.version = idx
+                scalar.ruby_system = self.ruby_gpu
+                scalar.TCC_select_num_bits = tcc_bits
+                scalar.clk_domain = self.clk_domain
+                scalar.recycle_latency = 10
 
-            tcc.ruby_system = self.ruby_gpu
-            tcc.WB = False
-            tcc.clk_domain = self.clk_domain
-            tcc.recycle_latency = 10
+                self._controllers.append(scalar)
 
-            self._controllers.append(tcc)
+            # Create TCCs (GPU L2 cache)
+            for idx in range(tcc_count):
+                tcc = TCCCache(
+                    tcc_size=self._tcc_size,
+                    tcc_assoc=self._tcc_assoc,
+                    network=self.ruby_gpu.network,
+                    cache_line_size=self._cache_line_size,
+                )
+                idx_no = x * tcc_count + idx
+                tcc.version = idx_no
 
-        # Create DMA controllers
-        for i, port in enumerate(shader.get_gpu_dma_ports()):
-            ctrl = ViperGPUDMAController(
-                self.ruby_gpu.network, self._cache_line_size
-            )
-            ctrl.dma_sequencer = DMASequencer(version=i, in_ports=port)
+                tcc.ruby_system = self.ruby_gpu
+                tcc.WB = False
+                tcc.clk_domain = self.clk_domain
+                tcc.recycle_latency = 10
 
-            ctrl.version = len(self._dma_controllers)
-            ctrl.ruby_system = self.ruby_gpu
-            ctrl.dma_sequencer.ruby_system = self.ruby_gpu
+                self._controllers.append(tcc)
 
-            self._dma_controllers.append(ctrl)
+            # Create DMA controllers
+            for i, port in enumerate(shaders[x].get_gpu_dma_ports()):
+                ctrl = ViperGPUDMAController(
+                    self.ruby_gpu.network, self._cache_line_size
+                )
+                ctrl.dma_sequencer = DMASequencer(version=i, in_ports=port)
 
+            # make the ID's in order for each controller
+                #ctrl.version = len(self._dma_controllers) + ( x  * len(shaders[x].get_gpu_dma_ports()) )
+                ctrl.version = len(self._dma_controllers)
+                ctrl.ruby_system = self.ruby_gpu
+                ctrl.dma_sequencer.ruby_system = self.ruby_gpu
+
+                self._dma_controllers.append(ctrl)
+
+        # for i, c in enumerate(self._controllers):
+        #     print(f"Controller[{i}]: type={c.type}, cntrl_id={c.version}")
+
+        # for i, c in enumerate(self._dma_controllers):
+        #     print(f"DMA_Controller[{i}]: type={c.type}, cntrl_id={c.version}")
+
+        #Make Directory as a global notion for all the chiplets
+        print(f"VIPERDIRECTORY to HBM connection started")
         gpu_memory.set_memory_range([AddrRange(0, size=gpu_memory.get_size())])
         self._mem_ctrls = gpu_memory.get_memory_controllers()
         for addr_range, port in gpu_memory.get_mem_ports():
+            # print(f" VIPERDIRECTORY for port connection to HBM : addr_range {addr_range} port{port} ")
             dir = ViperGPUDirectory(
                 self.ruby_gpu.network,
                 self._cache_line_size,
@@ -294,7 +330,7 @@ class ViperGPUCacheHierarchy(AbstractRubyCacheHierarchy):
             )
 
             dir.ruby_system = self.ruby_gpu
-            dir.TCC_select_num_bits = tcc_bits
+            dir.TCC_select_num_bits = tcc_bits2
             dir.version = len(self._directory_controllers)
             self._directory_controllers.append(dir)
 

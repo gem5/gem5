@@ -246,6 +246,10 @@ class ViperCPUCacheHierarchy(AbstractRubyCacheHierarchy):
 
                 self._dma_controllers.append(ctrl)
 
+        # for i, c in enumerate(self._dma_controllers):
+        #     print(f"CPU DMA_Controller[{i}]: type={c.type}, cntrl_id={c.version}")
+        
+
         # Number of sequencers = one per core pair + one per DMA
         self.ruby_system.num_of_sequencers = len(self._controllers) * 2 + len(
             self._dma_controllers

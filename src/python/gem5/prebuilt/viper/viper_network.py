@@ -103,24 +103,37 @@ class SimpleDoubleCrossbar(SimpleNetwork):
 
         # Create one router per controller plus a crossbar for L2 controllers
         # and a crossbar for SoC controllers.
+        # print controllers length
+        print(f"Number of controllers: {len(controllers)}")
         routers = [Switch(router_id=i) for i in range(len(controllers))]
+        print(f"Number of  routers: {len(routers)}")
         routers.append(Switch(router_id=len(routers)))
         routers.append(Switch(router_id=len(routers)))
         self.routers = routers
 
         # Routers 0 ... N-2 connect to the individual controllers
+        # print the exact i and c
         self.ext_links = [
             SimpleExtLink(link_id=i, ext_node=c, int_node=self.routers[i])
             for i, c in enumerate(controllers)
         ]
+
+
+    # Print ext_link and associated controller info
+        # for i, ext_link in enumerate(self.ext_links):
+        #     print(f"[EXT_LINK {i}] Controller Type: {ext_link.ext_node.type}, "
+        #         f"Controller ID: {getattr(ext_link.ext_node, 'version', 'N/A')}, "
+        #         f"Router ID: {ext_link.int_node.router_id}")
 
         # Connect compute unit components and L2s to L2 crossbar in both
         # directions.
         l2_xbar_id = len(controllers)
         soc_xbar_id = l2_xbar_id + 1
         int_links = []
-
+        print(f"Number of EXT_LINKS: {len(self.ext_links)}")
         for ext_link in self.ext_links:
+            src_router_id = ext_link.int_node.router_id
+            # print(f"EXT LINK TYPE {ext_link.ext_node.type}  and  Router ID{src_router_id} ")
             if ext_link.ext_node.type in l2_xbar_types:
                 int_links.append(
                     SimpleIntLink(
@@ -129,6 +142,7 @@ class SimpleDoubleCrossbar(SimpleNetwork):
                         dst_node=self.routers[l2_xbar_id],
                     )
                 )
+                # print(f"Connecting L2-type Router{ext_link.int_node}  and  Router ID{src_router_id} -> L2_XBAR {l2_xbar_id}")
                 int_links.append(
                     SimpleIntLink(
                         link_id=len(int_links),
@@ -136,6 +150,7 @@ class SimpleDoubleCrossbar(SimpleNetwork):
                         dst_node=ext_link.int_node,
                     )
                 )
+                # print(f"Connecting L2_XBAR {l2_xbar_id} -> Router {ext_link.int_node}  and  Router ID {src_router_id}")
             elif ext_link.ext_node.type in soc_xbar_types:
                 int_links.append(
                     SimpleIntLink(
@@ -144,6 +159,7 @@ class SimpleDoubleCrossbar(SimpleNetwork):
                         dst_node=self.routers[soc_xbar_id],
                     )
                 )
+                # print(f"Connecting SoC-type Router {src_router_id} -> SOC_XBAR {soc_xbar_id}")
                 int_links.append(
                     SimpleIntLink(
                         link_id=len(int_links),
@@ -151,7 +167,7 @@ class SimpleDoubleCrossbar(SimpleNetwork):
                         dst_node=ext_link.int_node,
                     )
                 )
-
+                # print(f"Connecting SOC_XBAR {soc_xbar_id} -> Router {src_router_id}")
         # Connect L2 xbar to SoC xbar.
         int_links.append(
             SimpleIntLink(
@@ -160,6 +176,8 @@ class SimpleDoubleCrossbar(SimpleNetwork):
                 dst_node=self.routers[soc_xbar_id],
             )
         )
+        # print(f"Connecting L2_XBAR {l2_xbar_id} -> SOC_XBAR {soc_xbar_id}")
+
         int_links.append(
             SimpleIntLink(
                 link_id=len(int_links),
@@ -167,6 +185,6 @@ class SimpleDoubleCrossbar(SimpleNetwork):
                 dst_node=self.routers[l2_xbar_id],
             )
         )
-
+        # print(f"Connecting SOC_XBAR {soc_xbar_id} -> L2_XBAR {l2_xbar_id}")
         # Finalize network int_links for unproxy
         self.int_links = int_links

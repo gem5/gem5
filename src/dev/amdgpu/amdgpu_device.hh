@@ -113,6 +113,7 @@ class AMDGPUDevice : public PciEndpoint
     AMDGPUMemoryManager *gpuMemMgr;
     AMDGPUInterruptHandler *deviceIH;
     AMDGPUVM gpuvm;
+    //std::vector<GPUCommandProcessor*> cp; // Changed from single pointer
     GPUCommandProcessor *cp;
 
     struct AddrRangeHasher
@@ -163,6 +164,8 @@ class AMDGPUDevice : public PciEndpoint
   public:
     AMDGPUDevice(const AMDGPUDeviceParams &p);
 
+    std::vector<Shader*> allShaders;
+
     /**
      * Methods inherited from PciEndpoint
      */
@@ -179,6 +182,9 @@ class AMDGPUDevice : public PciEndpoint
     /**
      * Checkpoint support
      */
+    // void serialize(CheckpointOut &cp) const override;
+    // void unserialize(CheckpointIn &cp) override;
+
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 

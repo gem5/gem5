@@ -208,12 +208,13 @@ class ViperShader(Shader):
         self.impl_kern_end_rel = False
 
         # Attach compute units to GPU
-        self.CUs = [ViperCU(idx, device) for idx in range(num_cus)]
+        self.CUs = [ViperCU(idx , device) for idx in range(num_cus)]
 
         self._create_tlbs(device)
 
         # This arbitrary address is something in the X86 I/O hole
-        hsapp_gpu_map_paddr = 0xE00000000
+        # needs to have an unique ID fro each shader (ksubhadip)
+        hsapp_gpu_map_paddr = 0xE00000000 + 0x1000 * shader_id
         self.dispatcher = GPUDispatcher()
         self.gpu_cmd_proc = GPUCommandProcessor(
             hsapp=HSAPacketProcessor(
@@ -224,9 +225,9 @@ class ViperShader(Shader):
             dispatcher=self.dispatcher,
             walker=VegaPagetableWalker(),
         )
-        self._cpu_dma_ports.append(self.gpu_cmd_proc.hsapp.dma)
         self._cpu_dma_ports.append(self.gpu_cmd_proc.dma)
-
+       # if self._shader_id == 0 :
+        self._cpu_dma_ports.append(self.gpu_cmd_proc.hsapp.dma)
         self._gpu_dma_ports.append(self.gpu_cmd_proc.hsapp.walker.port)
         self._gpu_dma_ports.append(self.gpu_cmd_proc.walker.port)
 
@@ -240,17 +241,21 @@ class ViperShader(Shader):
 
     def _setup_device(self, device: AMDGPUDevice):
         """Set the device type info on the device connected via PCI."""
-        device.cp = self.gpu_cmd_proc
-        device.device_ih = AMDGPUInterruptHandler()
-        self._cpu_dma_ports.append(device.device_ih.dma)
-
+        if self._shader_id == 0 :
+            device.cp = self.gpu_cmd_proc
+            device.device_ih = AMDGPUInterruptHandler()
+            print(f"  Connected cpu_dma_ports for shader : {self._shader_id}")
+            self._cpu_dma_ports.append(device.device_ih.dma)
+        # need to see if the below append is creating issues
         # GPU data path
-        device.memory_manager = AMDGPUMemoryManager(
-            cache_line_size=self._cache_line_size,
-        )
-        self._gpu_dma_ports.append(device.memory_manager.port)
-
-        self._cpu_dma_ports.append(device.dma)
+        # try wiith one global notion
+        if self._shader_id == 0 :
+            device.memory_manager = AMDGPUMemoryManager(
+                cache_line_size=self._cache_line_size,
+            )
+            print(f"  Connected gpu_dma_ports for shader : {self._shader_id}")
+            self._gpu_dma_ports.append(device.memory_manager.port)
+            self._cpu_dma_ports.append(device.dma)
 
         # Use the gem5 default of 0x280 OR'd  with 0x10 which tells Linux there is
         # a PCI capabilities list to travse.
@@ -362,15 +367,19 @@ class ViperShader(Shader):
 
     def connect_iobus(self, iobus: BaseXBar):
         """Connect the GPU objects to the IO bus."""
+       # if self._shader_id == 0 :
         self.gpu_cmd_proc.pio = iobus.mem_side_ports
         self.gpu_cmd_proc.hsapp.pio = iobus.mem_side_ports
         self.system_hub.pio = iobus.mem_side_ports
-        self._device.pio = iobus.mem_side_ports
-        self._device.device_ih.pio = iobus.mem_side_ports
-        for sdma in self._device.sdmas:
-            sdma.pio = iobus.mem_side_ports
-        for pm4_proc in self._device.pm4_pkt_procs:
-            pm4_proc.pio = iobus.mem_side_ports
+        # let me see if I just connect the shader 0.
+        if self._shader_id == 0 :
+            self._device.pio = iobus.mem_side_ports
+            self._device.device_ih.pio = iobus.mem_side_ports
+            # let me see if I just connect the shader 0.
+            for sdma in self._device.sdmas:
+                sdma.pio = iobus.mem_side_ports
+            for pm4_proc in self._device.pm4_pkt_procs:
+                pm4_proc.pio = iobus.mem_side_ports
 
     def set_cpu_pointer(self, cpu: BaseCPU):
         """Set the CPU pointer for the Shader."""

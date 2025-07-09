@@ -89,6 +89,9 @@ class AMDGPUDevice(PciEndpoint):
     # therefore an array is used.
     sdmas = VectorParam.SDMAEngine("All SDMA Engines")
 
+    #kusbhadip ( create the list of shaders)
+    shaders = VectorParam.Shader("All Shaders in the device")
+
     # The cp is needed here to handle certain packets the device may receive.
     # The config script should not create a new cp here but rather assign the
     # same cp that is assigned to the Shader SimObject.

@@ -183,9 +183,13 @@ class ViperBoard(X86Board):
 
         application_command = (
             f'echo "{encodedBin}" | base64 -d > myapp\n'
+            "export AMD_LOG_LEVEL=4\n"
             "chmod +x myapp\n"
             "./myapp {}\n"
+            "sleep 40\n"
             "/sbin/m5 exit\n"
+            "dmesg -n8\n"
         )
 
-        return driver_load_command + application_command
+       # return driver_load_command + application_command
+        return application_command
