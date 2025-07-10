@@ -2528,10 +2528,14 @@ namespace Aarch64
                 return new FcvtSFixedFpSW(machInst, rd, rn, scale);
               case 1: // SCVTF Dd = convertFromInt(Wn/(2^fbits))
                 return new FcvtSFixedFpDW(machInst, rd, rn, scale);
+              case 3: // SCVTF Hd = convertFromInt(Wn/(2^fbits))
+                return new FcvtSFixedFpHW(machInst, rd, rn, scale);
               case 4: // SCVTF Sd = convertFromInt(Xn/(2^fbits))
                 return new FcvtSFixedFpSX(machInst, rd, rn, scale);
               case 5: // SCVTF Dd = convertFromInt(Xn/(2^fbits))
                 return new FcvtSFixedFpDX(machInst, rd, rn, scale);
+              case 7: // SCVTF Hd = convertFromInt(Xn/(2^fbits))
+                return new FcvtSFixedFpHX(machInst, rd, rn, scale);
               default:
                 return new Unknown64(machInst);
             }
@@ -2541,10 +2545,14 @@ namespace Aarch64
                 return new FcvtUFixedFpSW(machInst, rd, rn, scale);
               case 1: // UCVTF Dd = convertFromInt(Wn/(2^fbits))
                 return new FcvtUFixedFpDW(machInst, rd, rn, scale);
+              case 3: // UCVTF Hd = convertFromInt(Wn/(2^fbits))
+                return new FcvtUFixedFpHW(machInst, rd, rn, scale);
               case 4: // UCVTF Sd = convertFromInt(Xn/(2^fbits))
                 return new FcvtUFixedFpSX(machInst, rd, rn, scale);
               case 5: // UCVTF Dd = convertFromInt(Xn/(2^fbits))
                 return new FcvtUFixedFpDX(machInst, rd, rn, scale);
+              case 7: // UCVTF Hd = convertFromInt(Xn/(2^fbits))
+                return new FcvtUFixedFpHX(machInst, rd, rn, scale);
               default:
                 return new Unknown64(machInst);
             }
@@ -2570,10 +2578,14 @@ namespace Aarch64
                 return new FcvtFpSFixedSW(machInst, rd, rn, scale);
               case 1: // FCVTZS Wd = convertToIntExactTowardZero(Dn*(2^fbits))
                 return new FcvtFpSFixedDW(machInst, rd, rn, scale);
+              case 3: // FCVTZS Wd = convertToIntExactTowardZero(Hn*(2^fbits))
+                return new FcvtFpSFixedHW(machInst, rd, rn, scale);
               case 4: // FCVTZS Xd = convertToIntExactTowardZero(Sn*(2^fbits))
                 return new FcvtFpSFixedSX(machInst, rd, rn, scale);
               case 5: // FCVTZS Xd = convertToIntExactTowardZero(Dn*(2^fbits))
                 return new FcvtFpSFixedDX(machInst, rd, rn, scale);
+              case 7: // FCVTZS Xd = convertToIntExactTowardZero(Hn*(2^fbits))
+                return new FcvtFpSFixedHX(machInst, rd, rn, scale);
               default:
                 return new Unknown64(machInst);
             }
@@ -2583,10 +2595,14 @@ namespace Aarch64
                 return new FcvtFpUFixedSW(machInst, rd, rn, scale);
               case 1: // FCVTZU Wd = convertToIntExactTowardZero(Dn*(2^fbits))
                 return new FcvtFpUFixedDW(machInst, rd, rn, scale);
+              case 3: // FCVTZU Wd = convertToIntExactTowardZero(Hn*(2^fbits))
+                return new FcvtFpUFixedHW(machInst, rd, rn, scale);
               case 4: // FCVTZU Xd = convertToIntExactTowardZero(Sn*(2^fbits))
                 return new FcvtFpUFixedSX(machInst, rd, rn, scale);
               case 5: // FCVTZU Xd = convertToIntExactTowardZero(Dn*(2^fbits))
                 return new FcvtFpUFixedDX(machInst, rd, rn, scale);
+              case 7: // FCVTZU Xd = convertToIntExactTowardZero(Hn*(2^fbits))
+                return new FcvtFpUFixedHX(machInst, rd, rn, scale);
               default:
                 return new Unknown64(machInst);
             }
@@ -2643,6 +2659,22 @@ namespace Aarch64
                 return new FcvtFpSIntXDM(machInst, rd, rn);
               case 0xF: //FCVTZS Xd = convertToIntExactTowardZero(Dn)
                 return new FcvtFpSIntXDZ(machInst, rd, rn);
+              case 0x18: //FCVTNS Wd = convertToIntExactTiesToEven(Hn)
+                return new FcvtFpSIntWHN(machInst, rd, rn);
+              case 0x19: //FCVTPS Wd = convertToIntExactTowardPlusInf(Hn)
+                return new FcvtFpSIntWHP(machInst, rd, rn);
+              case 0x1A: //FCVTMS Wd = convertToIntExactTowardMinusInf(Hn)
+                return new FcvtFpSIntWHM(machInst, rd, rn);
+              case 0x1B: //FCVTZS Wd = convertToIntExactTowardZero(Hn)
+                return new FcvtFpSIntWHZ(machInst, rd, rn);
+              case 0x1C: //FCVTNS Xd = convertToIntExactTiesToEven(Hn)
+                return new FcvtFpSIntXHN(machInst, rd, rn);
+              case 0x1D: //FCVTPS Xd = convertToIntExactTowardPlusInf(Hn)
+                return new FcvtFpSIntXHP(machInst, rd, rn);
+              case 0x1E: //FCVTMS Xd = convertToIntExactTowardMinusInf(Hn)
+                return new FcvtFpSIntXHM(machInst, rd, rn);
+              case 0x1F: //FCVTZS Xd = convertToIntExactTowardZero(Hn)
+                return new FcvtFpSIntXHZ(machInst, rd, rn);
               default:
                 return new Unknown64(machInst);
             }
@@ -2680,6 +2712,22 @@ namespace Aarch64
                 return new FcvtFpUIntXDM(machInst, rd, rn);
               case 0xF: //FCVTZU Xd = convertToIntExactTowardZero(Dn)
                 return new FcvtFpUIntXDZ(machInst, rd, rn);
+              case 0x18: //FCVTNU Wd = convertToIntExactTiesToEven(Hn)
+                return new FcvtFpUIntWHN(machInst, rd, rn);
+              case 0x19: //FCVTPU Wd = convertToIntExactTowardPlusInf(Hn)
+                return new FcvtFpUIntWHP(machInst, rd, rn);
+              case 0x1A: //FCVTMU Wd = convertToIntExactTowardMinusInf(Hn)
+                return new FcvtFpUIntWHM(machInst, rd, rn);
+              case 0x1B: //FCVTZU Wd = convertToIntExactTowardZero(Hn)
+                return new FcvtFpUIntWHZ(machInst, rd, rn);
+              case 0x1C: //FCVTNU Xd = convertToIntExactTiesToEven(Hn)
+                return new FcvtFpUIntXHN(machInst, rd, rn);
+              case 0x1D: //FCVTPU Xd = convertToIntExactTowardPlusInf(Hn)
+                return new FcvtFpUIntXHP(machInst, rd, rn);
+              case 0x1E: //FCVTMU Xd = convertToIntExactTowardMinusInf(Hn)
+                return new FcvtFpUIntXHM(machInst, rd, rn);
+              case 0x1F: //FCVTZU Xd = convertToIntExactTowardZero(Hn)
+                return new FcvtFpUIntXHZ(machInst, rd, rn);
               default:
                 return new Unknown64(machInst);
             }
@@ -2695,6 +2743,10 @@ namespace Aarch64
                 return new FcvtWSIntFpD(machInst, rd, rn);
               case 3: // SCVTF Dd = convertFromInt(Xn)
                 return new FcvtXSIntFpD(machInst, rd, rn);
+              case 6: // SCVTF Hd = convertFromInt(Wn)
+                return new FcvtWSIntFpH(machInst, rd, rn);
+              case 7: // SCVTF Hd = convertFromInt(Xn)
+                return new FcvtXSIntFpH(machInst, rd, rn);
               default:
                 return new Unknown64(machInst);
             }
@@ -2727,6 +2779,10 @@ namespace Aarch64
                 return new FcvtFpSIntWDA(machInst, rd, rn);
               case 3: // FCVTAS Wd = convertToIntExactTiesToAway(Dn)
                 return new FcvtFpSIntXDA(machInst, rd, rn);
+              case 6: // FCVTAS Wd = convertToIntExactTiesToAway(Hn)
+                return new FcvtFpSIntWHA(machInst, rd, rn);
+              case 7: // FCVTAS Xd = convertToIntExactTiesToAway(Hn)
+                return new FcvtFpSIntXHA(machInst, rd, rn);
               default:
                 return new Unknown64(machInst);
             }
@@ -2740,6 +2796,10 @@ namespace Aarch64
                 return new FcvtFpUIntWDA(machInst, rd, rn);
               case 3: // FCVTAU Xd = convertToIntExactTiesToAway(Dn)
                 return new FcvtFpUIntXDA(machInst, rd, rn);
+              case 6: // FCVTAU Wd = convertToIntExactTiesToAway(Hn)
+                return new FcvtFpUIntWHA(machInst, rd, rn);
+              case 7: // FCVTAU Xd = convertToIntExactTiesToAway(Hn)
+                return new FcvtFpUIntXHA(machInst, rd, rn);
               default:
                 return new Unknown64(machInst);
             }
@@ -2759,6 +2819,14 @@ namespace Aarch64
                 if (rmode != 1)
                     return new Unknown64(machInst);
                 return new FmovURegCoreX(machInst, rd, rn);
+              case 6: // FMOV Wd = Hn
+                if (rmode != 0)
+                    return new Unknown64(machInst);
+                return new FmovRegCoreWH(machInst, rd, rn);
+              case 7: // FMOV Xd = Hn
+                if (rmode != 0)
+                    return new Unknown64(machInst);
+                return new FmovRegCoreXH(machInst, rd, rn);
               default:
                 return new Unknown64(machInst);
             }
@@ -2777,6 +2845,14 @@ namespace Aarch64
                 if (rmode != 1)
                     return new Unknown64(machInst);
                 return new FmovUCoreRegX(machInst, rd, rn);
+              case 6: // FMOV Hd = Wn
+                if (rmode != 0)
+                    return new Unknown64(machInst);
+                return new FmovCoreRegHW(machInst, rd, rn);
+              case 7: // FMOV Hd = Xn
+                if (rmode != 0)
+                    return new Unknown64(machInst);
+                return new FmovCoreRegHX(machInst, rd, rn);
               default:
                 return new Unknown64(machInst);
             }
@@ -2814,6 +2890,14 @@ namespace Aarch64
             return new FNMAddD(machInst, rd, rn, rm, ra);
           case 0x7: // FNMSUB Dd = (-Da) + Dn*Dm
             return new FNMSubD(machInst, rd, rn, rm, ra);
+          case 0xc: // FMADD Hd = Ha + Hn*Hm
+            return new FMAddH(machInst, rd, rn, rm, ra);
+          case 0xd: // FMSUB Hd = Ha + (-Hn)*Hm
+            return new FMSubH(machInst, rd, rn, rm, ra);
+          case 0xe: // FNMADD Hd = (-Ha) + (-Hn)*Hm
+            return new FNMAddH(machInst, rd, rn, rm, ra);
+          case 0xf: // FNMSUB Hd = (-Ha) + Hn*Hm
+            return new FNMSubH(machInst, rd, rn, rm, ra);
           default:
             return new Unknown64(machInst);
         }
@@ -2834,6 +2918,8 @@ namespace Aarch64
             return new FCSelS(machInst, rd, rn, rm, cond);
         else if (type == 1) // FCSEL Dd = if cond then Dn else Dm
             return new FCSelD(machInst, rd, rn, rm, cond);
+        else if (type == 3) // FCSEL Hd = if cond then Hn else Hm
+            return new FCSelH(machInst, rd, rn, rm, cond);
         else
             return new Unknown64(machInst);
     }
@@ -2842,8 +2928,7 @@ namespace Aarch64
     decodeFpCondCompare(ExtMachInst machInst)
     {
         if (bits(machInst, 31) ||
-            bits(machInst, 29) ||
-            bits(machInst, 23)) {
+            bits(machInst, 29)) {
             return new Unknown64(machInst);
         }
         RegIndex rm = (RegIndex)(uint32_t) bits(machInst, 20, 16);
@@ -2852,7 +2937,7 @@ namespace Aarch64
         ConditionCode cond =
             (ConditionCode)(uint8_t)(bits(machInst, 15, 12));
         uint8_t switchVal = (bits(machInst, 4) << 0) |
-                            (bits(machInst, 22) << 1);
+                            (bits(machInst, 23, 22) << 1);
         // 31:23=000111100, 21=1, 11:10=01
         switch (switchVal) {
           case 0x0:
@@ -2869,6 +2954,13 @@ namespace Aarch64
             // FCCMP flags = if cond then compareSignaling(Dn,Dm)
             //               else #nzcv
             return new FCCmpERegD(machInst, rn, rm, cond, imm);
+          case 0x6:
+            // FCCMP flags = if cond then compareQuiet(Hn,Hm) else #nzcv
+            return new FCCmpRegH(machInst, rn, rm, cond, imm);
+          case 0x7:
+            // FCCMP flags = if cond then compareSignaling(Hn,Hm)
+            //               else #nzcv
+            return new FCCmpERegH(machInst, rn, rm, cond, imm);
           default:
             return new Unknown64(machInst);
         }
@@ -2878,52 +2970,69 @@ namespace Aarch64
     decodeFpDataProc2Source(ExtMachInst machInst)
     {
         if (bits(machInst, 31) ||
-                bits(machInst, 29) ||
-                bits(machInst, 23)) {
+                bits(machInst, 29)) {
             return new Unknown64(machInst);
         }
         RegIndex rd = (RegIndex)(uint32_t)bits(machInst,  4,  0);
         RegIndex rn = (RegIndex)(uint32_t)bits(machInst,  9,  5);
         RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 20, 16);
         uint8_t switchVal = (bits(machInst, 15, 12) << 0) |
-                            (bits(machInst, 22) << 4);
+                            (bits(machInst, 23, 22) << 4);
         switch (switchVal) {
           case 0x00: // FMUL Sd = Sn * Sm
             return new FMulS(machInst, rd, rn, rm);
           case 0x10: // FMUL Dd = Dn * Dm
             return new FMulD(machInst, rd, rn, rm);
+          case 0x30: // FMUL Hd = Hn * Hm
+            return new FMulH(machInst, rd, rn, rm);
           case 0x01: // FDIV Sd = Sn / Sm
             return new FDivS(machInst, rd, rn, rm);
           case 0x11: // FDIV Dd = Dn / Dm
             return new FDivD(machInst, rd, rn, rm);
+          case 0x31: // FDIV Hd = Hn / Hm
+            return new FDivH(machInst, rd, rn, rm);
           case 0x02: // FADD Sd = Sn + Sm
             return new FAddS(machInst, rd, rn, rm);
           case 0x12: // FADD Dd = Dn + Dm
             return new FAddD(machInst, rd, rn, rm);
+          case 0x32: // FADD Hd = Hn + Hm
+            return new FAddH(machInst, rd, rn, rm);
           case 0x03: // FSUB Sd = Sn - Sm
             return new FSubS(machInst, rd, rn, rm);
           case 0x13: // FSUB Dd = Dn - Dm
             return new FSubD(machInst, rd, rn, rm);
+          case 0x33: // FSUB Hd = Hn - Hm
+            return new FSubH(machInst, rd, rn, rm);
           case 0x04: // FMAX Sd = max(Sn, Sm)
             return new FMaxS(machInst, rd, rn, rm);
           case 0x14: // FMAX Dd = max(Dn, Dm)
             return new FMaxD(machInst, rd, rn, rm);
+          case 0x34: // FMAX Hd = max(Hn, Hm)
+            return new FMaxH(machInst, rd, rn, rm);
           case 0x05: // FMIN Sd = min(Sn, Sm)
             return new FMinS(machInst, rd, rn, rm);
           case 0x15: // FMIN Dd = min(Dn, Dm)
             return new FMinD(machInst, rd, rn, rm);
+          case 0x35: // FMIN Hd = min(Hn, Hm)
+            return new FMinH(machInst, rd, rn, rm);
           case 0x06: // FMAXNM Sd = maxNum(Sn, Sm)
             return new FMaxNMS(machInst, rd, rn, rm);
           case 0x16: // FMAXNM Dd = maxNum(Dn, Dm)
             return new FMaxNMD(machInst, rd, rn, rm);
+          case 0x36: // FMAXNM Hd = maxNum(Hn, Hm)
+            return new FMaxNMH(machInst, rd, rn, rm);
           case 0x07: // FMINNM Sd = minNum(Sn, Sm)
             return new FMinNMS(machInst, rd, rn, rm);
           case 0x17: // FMINNM Dd = minNum(Dn, Dm)
             return new FMinNMD(machInst, rd, rn, rm);
+          case 0x37: // FMINNM Hd = minNum(Hn, Hm)
+            return new FMinNMH(machInst, rd, rn, rm);
           case 0x08: // FNMUL Sd = -(Sn * Sm)
             return new FNMulS(machInst, rd, rn, rm);
           case 0x18: // FNMUL Dd = -(Dn * Dm)
             return new FNMulD(machInst, rd, rn, rm);
+          case 0x38: // FNMUL Hd = -(Hn * Hm)
+            return new FNMulH(machInst, rd, rn, rm);
           default:
             return new Unknown64(machInst);
         }
@@ -3012,6 +3121,12 @@ namespace Aarch64
             uint64_t imm = vfp_modified_imm(imm8,
                                             FpDataType::Fp64);
             return new FmovImmD(machInst, rd, imm);
+        } else if (type == 3) {
+            // FMOV H[d] = imm8<7>:NOT(imm8<6>):Replicate(imm8<6>,8)
+            //             :imm8<5:0>:Zeros(48)
+            uint64_t imm = vfp_modified_imm(imm8,
+                                            FpDataType::Fp16);
+            return new FmovImmH(machInst, rd, imm);
         } else {
             return new Unknown64(machInst);
         }
@@ -3038,6 +3153,9 @@ namespace Aarch64
             else if (type == 1)
                 // FMOV Dd = Dn
                 return new FmovRegD(machInst, rd, rn);
+            else if (type == 3)
+                // FMOV Hd = Hn
+                return new FmovRegH(machInst, rd, rn);
             break;
           case 0x1:
             if (type == 0)
@@ -3046,6 +3164,9 @@ namespace Aarch64
             else if (type == 1)
                 // FABS Dd = abs(Dn)
                 return new FAbsD(machInst, rd, rn);
+            else if (type == 3)
+                // FABS Hd = abs(Hn)
+                return new FAbsH(machInst, rd, rn);
             break;
           case 0x2:
             if (type == 0)
@@ -3054,6 +3175,9 @@ namespace Aarch64
             else if (type == 1)
                 // FNEG Dd = -Dn
                 return new FNegD(machInst, rd, rn);
+            else if (type == 3)
+                // FNEG Hd = -Hn
+                return new FNegH(machInst, rd, rn);
             break;
           case 0x3:
             if (type == 0)
@@ -3062,6 +3186,9 @@ namespace Aarch64
             else if (type == 1)
                 // FSQRT Dd = sqrt(Dn)
                 return new FSqrtD(machInst, rd, rn);
+            else if (type == 3)
+                // FSQRT Hd = sqrt(Hn)
+                return new FSqrtH(machInst, rd, rn);
             break;
           case 0x4:
             if (type == 1)
@@ -3092,42 +3219,56 @@ namespace Aarch64
                 return new FRIntNS(machInst, rd, rn);
             else if (type == 1) // FRINTN Dd = roundToIntegralTiesToEven(Dn)
                 return new FRIntND(machInst, rd, rn);
+            else if (type == 3) // FRINTN Hd = roundToIntegralTiesToEven(Hn)
+                return new FRIntNH(machInst, rd, rn);
             break;
           case 0x9:
             if (type == 0) // FRINTP Sd = roundToIntegralTowardPlusInf(Sn)
                 return new FRIntPS(machInst, rd, rn);
             else if (type == 1) // FRINTP Dd = roundToIntegralTowardPlusInf(Dn)
                 return new FRIntPD(machInst, rd, rn);
+            else if (type == 3) // FRINTP Hd = roundToIntegralTowardPlusInf(Hn)
+                return new FRIntPH(machInst, rd, rn);
             break;
           case 0xa:
             if (type == 0) // FRINTM Sd = roundToIntegralTowardMinusInf(Sn)
                 return new FRIntMS(machInst, rd, rn);
             else if (type == 1) // FRINTM Dd = roundToIntegralTowardMinusInf(Dn)
                 return new FRIntMD(machInst, rd, rn);
+            else if (type == 3) // FRINTM Hd = roundToIntegralTowardMinusInf(Hn)
+                return new FRIntMH(machInst, rd, rn);
             break;
           case 0xb:
             if (type == 0) // FRINTZ Sd = roundToIntegralTowardZero(Sn)
                 return new FRIntZS(machInst, rd, rn);
             else if (type == 1) // FRINTZ Dd = roundToIntegralTowardZero(Dn)
                 return new FRIntZD(machInst, rd, rn);
+            else if (type == 3) // FRINTZ Hd = roundToIntegralTowardZero(Hn)
+                return new FRIntZH(machInst, rd, rn);
             break;
           case 0xc:
             if (type == 0) // FRINTA Sd = roundToIntegralTiesToAway(Sn)
                 return new FRIntAS(machInst, rd, rn);
             else if (type == 1) // FRINTA Dd = roundToIntegralTiesToAway(Dn)
                 return new FRIntAD(machInst, rd, rn);
+            else if (type == 3) // FRINTA Hd = roundToIntegralTiesToAway(Hn)
+                return new FRIntAH(machInst, rd, rn);
             break;
           case 0xe:
             if (type == 0) // FRINTX Sd = roundToIntegralExact(Sn)
                 return new FRIntXS(machInst, rd, rn);
             else if (type == 1) // FRINTX Dd = roundToIntegralExact(Dn)
                 return new FRIntXD(machInst, rd, rn);
+            else if (type == 3) // FRINTX Hd = roundToIntegralExact(Hn)
+                return new FRIntXH(machInst, rd, rn);
             break;
           case 0xf:
             if (type == 0) // FRINTI Sd = roundToIntegral(Sn)
                 return new FRIntIS(machInst, rd, rn);
             else if (type == 1) // FRINTI Dd = roundToIntegral(Dn)
                 return new FRIntID(machInst, rd, rn);
+            else if (type == 3) // FRINTI Hd = roundToIntegral(Hn)
+                return new FRIntIH(machInst, rd, rn);
             break;
           case 0x10:
             if (type == 0) // FRINT32Z
