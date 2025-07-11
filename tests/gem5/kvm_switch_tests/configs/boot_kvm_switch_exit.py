@@ -163,13 +163,20 @@ motherboard = X86Board(
     cache_hierarchy=cache_hierarchy,
 )
 
-kernal_args = motherboard.get_default_kernel_args() + [args.kernel_args]
 workload = obtain_resource(
     "x86-ubuntu-24.04-boot-with-systemd",
     resource_directory=args.resource_directory,
     resource_version="5.0.0",
 )
-workload.set_parameter("kernel_args", kernal_args)
+
+if "kernel_args" in workload.get_parameters():
+    kernel_args = workload.get_parameters()["kernel_args"]
+else:
+    kernel_args = motherboard.get_default_kernel_args()
+
+kernel_args += [args.kernel_args]
+
+workload.set_parameter("kernel_args", kernel_args)
 # Set the Full System workload.
 motherboard.set_workload(workload)
 
