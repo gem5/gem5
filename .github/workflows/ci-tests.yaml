@@ -23,6 +23,39 @@ jobs:
                   python-version: '3.10'
             - uses: pre-commit/action@v3.0.1
 
+    # Runs on the github hosted runner
+    # Iterates through all of the commits in the the PR and runs
+    # clang-format to make sure that nothing changes.
+    clang-format-check:
+        runs-on: ubuntu-24.04
+        if: github.event.pull_request.draft == false
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0  # Need full history to get the merge base
+
+            - name: Setup Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: '3.10'
+
+            - name: Install clang-format
+              run: sudo apt-get install -y clang-format
+
+            - name: Get merge base commit
+              id: get-base-commit
+              run: |
+                  echo "base_commit=$(git merge-base ${{ github.event.pull_request.base.sha }} HEAD)" >> $GITHUB_OUTPUT
+
+            - name: Run clang-format check
+              run: |
+                  python util/run-git-clang-format.py --ci-pr-base-commit ${{ steps.get-base-commit.outputs.base_commit }}
+                  if [ $? -ne 0 ]; then
+                    echo "::error::Code formatting issues detected! Please run clang-format on your changes."
+                    exit 1
+                  fi
+
     get-date:
     # We use the date to label caches. A cache is a a "hit" if the date is the
     # request binary and date are the same as what is stored in the cache.
