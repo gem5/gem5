@@ -948,12 +948,12 @@ Commit::commitInsts()
         // so panic.
         } else if (head_inst->noCapableFU() &&
             head_inst->getFault() == NoFault)  {
-            panic("CPU cannot execute [sn:%llu] op_class: %u but"
-              " did not trigger a fault. Do you need to update"
-              " the configuration and add a functional unit for"
-              " that op class?\n",
-              head_inst->seqNum,
-              head_inst->opClass());
+            panic("CPU cannot execute [sn:%llu] op_class: %s but"
+                  " did not trigger a fault. Do you need to update"
+                  " the configuration and add a functional unit for"
+                  " that op class?\n",
+                  head_inst->seqNum,
+                  enums::OpClassStrings[head_inst->opClass()]);
         } else {
             set(pc[tid], head_inst->pcState());
 
