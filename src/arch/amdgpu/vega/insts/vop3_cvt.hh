@@ -32,6 +32,8 @@
 #ifndef __ARCH_AMDGPU_VEGA_INSTS_VOP3_CVT_HH__
 #define __ARCH_AMDGPU_VEGA_INSTS_VOP3_CVT_HH__
 
+#include <vector>
+
 #include "arch/amdgpu/common/dtype/mxfp_types.hh"
 #include "arch/amdgpu/vega/insts/inst_util.hh"
 
@@ -547,26 +549,23 @@ execute(GPUDynInstPtr gpuDynInst) override
     // The gem5 operand types are really only handy up to 64 bits. For BF
     // operand sizes such as in these instructions, just create an array of
     // 32-bit registers to use.
-    typename std::aligned_storage<sizeof(ConstVecOperandU32),
-                                  alignof(ConstVecOperandU32)>::type
-                                      _src0[input_regs];
-    ConstVecOperandU32 *src0 =
-        std::launder(reinterpret_cast<ConstVecOperandU32*>(&_src0));
+    std::vector<ConstVecOperandU32> src0;
+    src0.reserve(input_regs);
     for (int reg = 0; reg < input_regs; ++reg) {
-        new (&src0[reg]) ConstVecOperandU32(gpuDynInst, extData.SRC0 + reg);
+        src0.emplace_back(gpuDynInst, extData.SRC0 + reg);
         src0[reg].readSrc();
     }
 
     ConstVecOperandF32 src1(gpuDynInst, extData.SRC1);
     src1.readSrc();
 
-    typename std::aligned_storage<sizeof(VecOperandU32),
-                                  alignof(VecOperandU32)>::type
-                                      _vdst[output_regs];
-    VecOperandU32 *vdst =
-        std::launder(reinterpret_cast<VecOperandU32*>(&_vdst));
+    std::vector<typename std::aligned_storage<sizeof(VecOperandU32),
+                                              alignof(VecOperandU32)>::type>
+        _vdst(output_regs);
+    VecOperandU32* vdst =
+        std::launder(reinterpret_cast<VecOperandU32*>(_vdst.data()));
     for (int reg = 0; reg < output_regs; ++reg) {
-        new (&vdst[reg]) ConstVecOperandU32(gpuDynInst, instData.VDST + reg);
+        new (&vdst[reg]) VecOperandU32(gpuDynInst, instData.VDST + reg);
     }
 
     panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
@@ -789,21 +788,21 @@ execute(GPUDynInstPtr gpuDynInst) override
     // The gem5 operand types are really only handy up to 64 bits. For BF
     // operand sizes such as in these instructions, just create an array of
     // 32-bit registers to use.
-    typename std::aligned_storage<sizeof(ConstVecOperandU32),
-                                  alignof(ConstVecOperandU32)>::type
-                                      _src0[input_regs];
-    ConstVecOperandU32 *src0 =
-        std::launder(reinterpret_cast<ConstVecOperandU32*>(&_src0));
+    std::vector<typename std::aligned_storage<
+        sizeof(ConstVecOperandU32), alignof(ConstVecOperandU32)>::type>
+        _src0(input_regs);
+    ConstVecOperandU32* src0 =
+        std::launder(reinterpret_cast<ConstVecOperandU32*>(_src0.data()));
     for (int reg = 0; reg < input_regs; ++reg) {
         new (&src0[reg]) ConstVecOperandU32(gpuDynInst, extData.SRC0 + reg);
         src0[reg].readSrc();
     }
 
-    typename std::aligned_storage<sizeof(ConstVecOperandU32),
-                                  alignof(ConstVecOperandU32)>::type
-                                      _src1[input_regs];
-    ConstVecOperandU32 *src1 =
-        std::launder(reinterpret_cast<ConstVecOperandU32*>(&_src1));
+    std::vector<typename std::aligned_storage<
+        sizeof(ConstVecOperandU32), alignof(ConstVecOperandU32)>::type>
+        _src1(input_regs);
+    ConstVecOperandU32* src1 =
+        std::launder(reinterpret_cast<ConstVecOperandU32*>(_src1.data()));
     for (int reg = 0; reg < input_regs; ++reg) {
         new (&src1[reg]) ConstVecOperandU32(gpuDynInst, extData.SRC1 + reg);
         src1[reg].readSrc();
@@ -812,13 +811,13 @@ execute(GPUDynInstPtr gpuDynInst) override
     ConstVecOperandF32 src2(gpuDynInst, extData.SRC2);
     src2.readSrc();
 
-    typename std::aligned_storage<sizeof(VecOperandU32),
-                                  alignof(VecOperandU32)>::type
-                                      _vdst[output_regs];
-    VecOperandU32 *vdst =
-        std::launder(reinterpret_cast<VecOperandU32*>(&_vdst));
+    std::vector<typename std::aligned_storage<sizeof(VecOperandU32),
+                                              alignof(VecOperandU32)>::type>
+        _vdst(output_regs);
+    VecOperandU32* vdst =
+        std::launder(reinterpret_cast<VecOperandU32*>(_vdst.data()));
     for (int reg = 0; reg < output_regs; ++reg) {
-        new (&vdst[reg]) ConstVecOperandU32(gpuDynInst, instData.VDST + reg);
+        new (&vdst[reg]) VecOperandU32(gpuDynInst, instData.VDST + reg);
     }
 
     panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
@@ -1158,11 +1157,11 @@ execute(GPUDynInstPtr gpuDynInst) override
     // The gem5 operand types are really only handy up to 64 bits. For BF
     // operand sizes such as in these instructions, just create an array of
     // 32-bit registers to use.
-    typename std::aligned_storage<sizeof(ConstVecOperandU32),
-                                  alignof(ConstVecOperandU32)>::type
-                                      _src0[input_regs];
-    ConstVecOperandU32 *src0 =
-        std::launder(reinterpret_cast<ConstVecOperandU32*>(&_src0));
+    std::vector<typename std::aligned_storage<
+        sizeof(ConstVecOperandU32), alignof(ConstVecOperandU32)>::type>
+        _src0(input_regs);
+    ConstVecOperandU32* src0 =
+        std::launder(reinterpret_cast<ConstVecOperandU32*>(_src0.data()));
     for (int reg = 0; reg < input_regs; ++reg) {
         new (&src0[reg]) ConstVecOperandU32(gpuDynInst, extData.SRC0 + reg);
         src0[reg].readSrc();
@@ -1173,13 +1172,13 @@ execute(GPUDynInstPtr gpuDynInst) override
     src1.readSrc();
     src2.readSrc();
 
-    typename std::aligned_storage<sizeof(VecOperandU32),
-                                  alignof(VecOperandU32)>::type
-                                      _vdst[output_regs];
-    VecOperandU32 *vdst =
-        std::launder(reinterpret_cast<VecOperandU32*>(&_vdst));
+    std::vector<typename std::aligned_storage<sizeof(VecOperandU32),
+                                              alignof(VecOperandU32)>::type>
+        _vdst(output_regs);
+    VecOperandU32* vdst =
+        std::launder(reinterpret_cast<VecOperandU32*>(_vdst.data()));
     for (int reg = 0; reg < output_regs; ++reg) {
-        new (&vdst[reg]) ConstVecOperandU32(gpuDynInst, instData.VDST + reg);
+        new (&vdst[reg]) VecOperandU32(gpuDynInst, instData.VDST + reg);
     }
 
     panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);

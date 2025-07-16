@@ -83,8 +83,8 @@ dFMT convertMXFP(sFMT in, mxfpRoundingMode mode = roundTiesToEven,
         return out;
     }
 
-    if (int(sFMT::mbits) >= int(dFMT::mbits) &&
-        int(sFMT::ebits) >= int(dFMT::ebits)) {
+    if constexpr (int(sFMT::mbits) >= int(dFMT::mbits) &&
+                  int(sFMT::ebits) >= int(dFMT::ebits)) {
         // Input format is larger, truncate and round mantissa. MX formats
         // are subnormal if exp == 0. Zero out exp in that case.
 
@@ -257,8 +257,8 @@ dFMT convertMXFP(sFMT in, mxfpRoundingMode mode = roundTiesToEven,
                 }
             }
         }
-    } else if (int(sFMT::mbits) <= int(dFMT::mbits) &&
-               int(sFMT::ebits) <= int(dFMT::ebits)) {
+    } else if constexpr (int(sFMT::mbits) <= int(dFMT::mbits) &&
+                         int(sFMT::ebits) <= int(dFMT::ebits)) {
         // Input format is smaller. Extend mantissa / exponent and pad with 0.
         // Should be the same for all non-stochastic rounding modes.
 
