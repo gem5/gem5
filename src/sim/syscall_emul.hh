@@ -1820,6 +1820,39 @@ doClone(SyscallDesc *desc, ThreadContext *tc, RegVal flags, RegVal newStack,
     cp->assignThreadContext(ctc->contextId());
     owner->revokeThreadContext(ctc->contextId());
 
+    // For switchable CPU configurations, we need to also set the process
+    // pointer on any switched-out CPUs that have the same CPU ID and thread
+    // context ID. This ensures that when CPU switching occurs, both CPUs
+    // have consistent process pointers, preventing assertion failures in
+    // takeOverFrom().
+    BaseCPU *current_cpu = ctc->getCpuPtr();
+    ThreadID current_thread_id = ctc->threadId();
+    
+    // Iterate through all CPUs in the system to find switchable partners
+    for (BaseCPU *cpu : BaseCPU::getCpuList()) {
+        // Skip the current CPU and only consider switched-out CPUs with
+        // matching ID
+        if (cpu != current_cpu && 
+            cpu->switchedOut() && 
+            cpu->cpuId() == current_cpu->cpuId()) {
+            
+            // Find the corresponding thread context on the switched-out CPU
+            if (current_thread_id < cpu->numThreadContexts()) {
+                ThreadContext *switched_tc = 
+                    cpu->getThreadContext(current_thread_id);
+                
+                // Update the process pointer to match the active CPU
+                if (switched_tc) {
+                    DPRINTF(SyscallVerbose, "doClone: Updating switched-out "
+                            "CPU %d thread %d process pointer from %p to %p\n",
+                            cpu->cpuId(), current_thread_id, 
+                            switched_tc->getProcessPtr(), cp);
+                    switched_tc->setProcessPtr(cp);
+                }
+            }
+        }
+    }
+
     if (flags & OS::TGT_CLONE_PARENT_SETTID) {
         BufferArg ptidBuf(ptidPtr, sizeof(long));
         long *ptid = (long *)ptidBuf.bufferPtr();
