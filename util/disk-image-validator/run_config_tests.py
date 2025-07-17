@@ -60,7 +60,11 @@ Functionality:
         * MESI_cache_test
         * O3_test
         * MINOR_test
+        * TIMING_test
         * ATOMIC_test
+        * ATOMIC_2_core_test
+        * ATOMIC_4_core_test
+        * ATOMIC_8_core_test
     - Outputs results in m5out/<workload_id>-<test_name>
     - Prints a summary of test results and exits with an appropriate status code.
 
@@ -82,6 +86,7 @@ CONFIG_TESTS = [
     "MESI_cache_test",
     "O3_test",
     "MINOR_test",
+    "TIMING_test",
     "ATOMIC_test",
     "ATOMIC_2_core_test",
     "ATOMIC_4_core_test",
