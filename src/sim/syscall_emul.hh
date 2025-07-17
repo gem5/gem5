@@ -1827,25 +1827,25 @@ doClone(SyscallDesc *desc, ThreadContext *tc, RegVal flags, RegVal newStack,
     // takeOverFrom().
     BaseCPU *current_cpu = ctc->getCpuPtr();
     ThreadID current_thread_id = ctc->threadId();
-    
+
     // Iterate through all CPUs in the system to find switchable partners
     for (BaseCPU *cpu : BaseCPU::getCpuList()) {
         // Skip the current CPU and only consider switched-out CPUs with
         // matching ID
-        if (cpu != current_cpu && 
-            cpu->switchedOut() && 
+        if (cpu != current_cpu &&
+            cpu->switchedOut() &&
             cpu->cpuId() == current_cpu->cpuId()) {
-            
+
             // Find the corresponding thread context on the switched-out CPU
             if (current_thread_id < cpu->numThreadContexts()) {
-                ThreadContext *switched_tc = 
+                ThreadContext *switched_tc =
                     cpu->getThreadContext(current_thread_id);
-                
+
                 // Update the process pointer to match the active CPU
                 if (switched_tc) {
                     DPRINTF(SyscallVerbose, "doClone: Updating switched-out "
                             "CPU %d thread %d process pointer from %p to %p\n",
-                            cpu->cpuId(), current_thread_id, 
+                            cpu->cpuId(), current_thread_id,
                             switched_tc->getProcessPtr(), cp);
                     switched_tc->setProcessPtr(cp);
                 }

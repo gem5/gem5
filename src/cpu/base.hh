@@ -629,19 +629,19 @@ class BaseCPU : public ClockedObject
     }
 
     static int numSimulatedCPUs() { return cpuList.size(); }
-    
+
     /**
      * Get access to the global CPU list for switchable CPU synchronization.
      * @return Reference to the static CPU list
      */
     static const std::vector<BaseCPU *>& getCpuList() { return cpuList; }
-    
+
     /**
      * Get the number of thread contexts for this CPU.
      * @return Number of thread contexts
      */
     size_t numThreadContexts() const { return threadContexts.size(); }
-    
+
     /**
      * Get a thread context by index for switchable CPU synchronization.
      * @param tid Thread ID to retrieve
@@ -655,7 +655,7 @@ class BaseCPU : public ClockedObject
         }
         return nullptr;
     }
-    
+
     static Counter
     totalNumSimulatedInsts()
     {
