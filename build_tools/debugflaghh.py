@@ -105,42 +105,42 @@ namespace unions
     # use debug flags even in the destructors of other objects.
     if components:
         code("""
-inline union ${{args.name}}
+inline union ${{name}}
 {
-    ~${{args.name}}() {}
+    ~${{name}}() {}
 
-    CompoundFlag flag${{args.name}};
+    CompoundFlag flag${{name}};
 
-    ${{args.name}}() : flag${{args.name}}("${{args.name}}", "${{args.desc}}",
+    ${{name}}() : flag${{name}}("${{name}}", "${{desc}}",
         {
             ${{",\\n            ".join(
                 f"(Flag *)&::gem5::debug::{flag}" for flag in components)}}
         }) {}
 
-} instance${{args.name}};
+} instance${{name}};
 """)
     else:
         code("""
-inline union ${{args.name}}
+inline union ${{name}}
 {
-    ~${{args.name}}() {}
-    SimpleFlag flag${{args.name}};
+    ~${{name}}() {}
+    SimpleFlag flag${{name}};
 
-    ${{args.name}}() : flag${{args.name}}("${{args.name}}", "${{args.desc}}", ${{"true" if fmt else "false"}}) {}
+    ${{name}}() : flag${{name}}("${{name}}", "${{desc}}", ${{"true" if fmt else "false"}}) {}
 
-} instance${{args.name}};
+} instance${{name}};
 """)
 
     code("""
 } // namespace unions
 
-inline constexpr const auto& ${{args.name}} =
-    ::gem5::debug::unions::instance${{args.name}}.flag${{args.name}};
+inline constexpr const auto& ${{name}} =
+    ::gem5::debug::unions::instance${{name}}.flag${{name}};
 
 } // namespace debug
 } // namespace gem5
 
-#endif // __DEBUG_${{args.name}}_HH__
+#endif // __DEBUG_${{name}}_HH__
 """)
 
     code.write(hh)
