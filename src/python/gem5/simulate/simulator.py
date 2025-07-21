@@ -298,7 +298,7 @@ class Simulator:
         return self._max_ticks
 
     def set_hypercall_absolute_max_ticks(
-        self, max_tick: int, exit_str: str
+        self, max_tick: int, exit_str: str = "Max ticks reached"
     ) -> None:
         """Set the maximum number of ticks to simulate before the simulation
         exits with a hypercall 6 exit. This exit will be handled by
@@ -307,9 +307,7 @@ class Simulator:
 
         Args:
             max_tick (int): The number of ticks to simulate before exiting.
-            exit_str (str): The reason for the exit. This must be provided to
-            exit with a hypercall 6 exit. Without it, the simulation will exit
-            with a classic ExitEvent.SCHEDULED_TICK exit event.
+            exit_str (str): The reason for the exit.
         """
         if self._max_ticks and self._max_ticks != m5.MaxTick:
             warn(
@@ -318,11 +316,17 @@ class Simulator:
                 "exits in the same simulation is not well tested and the "
                 "simulation may not behave as expected."
             )
+        if exit_str == "Tick exit reached":
+            warn(
+                f"The exit string '{exit_str}' will cause the simulation "
+                "to exit with a classic ExitEvent.SCHEDULED_TICK exit event "
+                "instead of a hypercall."
+            )
         m5.scheduleTickExitAbsolute(max_tick, exit_str)
         self._hypercall_max_ticks = max_tick
 
     def set_hypercall_relative_max_ticks(
-        self, ticks_from_current: int, exit_str: str
+        self, ticks_from_current: int, exit_str: str = "Max ticks reached"
     ) -> None:
         """Set the number of ticks to simulate from the current tick before the
         simulation exits with a hypercall 6 exit. This exit will be handled by
@@ -332,9 +336,7 @@ class Simulator:
         Args:
             max_tick (int): The number of ticks to simulate from the current
             tick before exiting.
-            exit_str (str): The reason for the exit. This must be provided to
-            exit with a hypercall 6 exit. Without it, the simulation will exit
-            with a classic ExitEvent.SCHEDULED_TICK exit event.
+            exit_str (str): The reason for the exit.
         """
         if self._max_ticks and self._max_ticks != m5.MaxTick:
             warn(
@@ -342,6 +344,12 @@ class Simulator:
                 f"tick {self._max_ticks}. Setting hypercall and classic "
                 "exits in the same simulation is not well tested and the "
                 "simulation may not behave as expected."
+            )
+        if exit_str == "Tick exit reached":
+            warn(
+                f"The exit string '{exit_str}' will cause the simulation "
+                "to exit with a classic ExitEvent.SCHEDULED_TICK exit event "
+                "instead of a hypercall."
             )
         m5.scheduleTickExitFromCurrent(ticks_from_current, exit_str)
         self._hypercall_max_ticks = (
