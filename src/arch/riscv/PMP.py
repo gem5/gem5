@@ -34,4 +34,4 @@ class PMP(SimObject):
     cxx_header = "arch/riscv/pmp.hh"
     cxx_class = "gem5::RiscvISA::PMP"
 
-    pmp_entries = Param.Int(16, "Maximum PMP Entries Supported")
+    pmp_entries = Param.Int(0, "Maximum PMP Entries Supported")
