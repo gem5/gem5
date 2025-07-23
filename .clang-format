@@ -69,7 +69,8 @@ AllowShortLoopsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: InlineOnly
 
 # Return‐type / function‐name separation
-AlwaysBreakAfterReturnType: All              # Return on its own line (sec. Functions)
+AlwaysBreakAfterReturnType: None             # Do not break after return type
+AlwaysBreakAfterDefinitionReturnType: All    # Unless it is a definition
 
 # Pointer/reference alignment
 DerivePointerAlignment: false
