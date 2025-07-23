@@ -340,7 +340,6 @@ class Simulator:
         """
         max_tick = self.get_current_tick() + ticks_from_current
         self.set_hypercall_absolute_max_ticks(max_tick, exit_str)
-        self._hypercall_max_ticks = max_tick
 
     def schedule_simpoint(self, simpoint_start_insts: List[int]) -> None:
         """
