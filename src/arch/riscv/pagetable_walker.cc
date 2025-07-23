@@ -637,7 +637,11 @@ Walker::WalkerState::startFunctional(Addr &addr, unsigned &logBytes)
     // just call walk
     // it takes care to do the right thing
     // when functional is true
-    return walk();
+    Fault fault = walk();
+    logBytes = entry.logBytes;
+    addr = entry.paddr << PageShift;
+
+    return fault;
 }
 
 
