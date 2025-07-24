@@ -155,21 +155,26 @@ def find_gem5_pids() -> List[int]:
     return gem5_pids
 
 
-def format_ticks_time(ticks):
+def format_ticks_time(ticks, ticks_per_second):
     """
     Convert tick count to human-readable time format.
-    1 tick = 1 picosecond.
     """
-    if ticks < 1_000:
-        return f"{ticks}ps"
-    elif ticks < 1_000_000:
-        return f"{ticks/1000:.2f}ns"
-    elif ticks < 1_000_000_000:
-        return f"{ticks/1_000_000:.2f}μs"
-    elif ticks < 1_000_000_000_000:
-        return f"{ticks/1_000_000_000:.2f}ms"
+    seconds = ticks / ticks_per_second
+    if seconds > 1:
+        unit = "s"
+    elif seconds > 0.001:
+        unit = "ms"
+        seconds *= 1000
+    elif seconds > 0.000001:
+        unit = "μs"
+        seconds *= 1_000_000
+    elif seconds > 0.000000001:
+        unit = "ns"
+        seconds *= 1_000_000_000
     else:
-        return f"{ticks/1_000_000_000_000:.2f}s"
+        unit = "ps"
+        seconds *= 1_000_000_000_000
+    return f"{seconds:.2f}{unit}"
 
 
 class Gem5ProgressBar:
@@ -213,7 +218,8 @@ class Gem5ProgressBar:
             self.sim_id = curr_info["sim_id"]
             self.workload_id = curr_info["workload"]
             self.current_ticks = curr_info["tick"]
-
+            self.ticks_per_second = curr_info["ticks_per_second"]
+            logger.info(f"ticks per second is: {self.ticks_per_second}")
             # Create the actual tqdm progress bar
             desc_format = f"{self.pid}|{self.sim_id}|{self.workload_id}"
             self.bar = tqdm.tqdm(
@@ -228,7 +234,11 @@ class Gem5ProgressBar:
 
             # Initial postfix update
             self.bar.set_postfix(
-                {"SimTime": format_ticks_time(self.current_ticks)},
+                {
+                    "SimTime": format_ticks_time(
+                        self.current_ticks, self.ticks_per_second
+                    )
+                },
                 refresh=False,
             )
 
@@ -289,7 +299,11 @@ class Gem5ProgressBar:
             # Update the progress bar
             self.bar.n = self.current_insts_executed
             self.bar.set_postfix(
-                {"SimTime": format_ticks_time(self.current_ticks)},
+                {
+                    "SimTime": format_ticks_time(
+                        self.current_ticks, self.ticks_per_second
+                    )
+                },
                 refresh=True,
             )
 
