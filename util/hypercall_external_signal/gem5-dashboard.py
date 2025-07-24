@@ -202,12 +202,14 @@ class Gem5ProgressBar:
             )
 
             workload = obtain_resource(curr_info["workload"])
-            self.max_insts = workload.get_estimated_instructions() or 0
+            self.max_insts = workload.get_estimated_total_instructions() or 0
             logger.info(
                 f"Max instructions for workload {workload} is "
                 f"{self.max_insts}"
             )
-            self.current_insts = curr_info["instruction_count"]
+            self.current_insts_executed = curr_info[
+                "curr_instructions_executed"
+            ]
             self.sim_id = curr_info["sim_id"]
             self.workload_id = curr_info["workload"]
             self.current_ticks = curr_info["tick"]
@@ -216,7 +218,7 @@ class Gem5ProgressBar:
             desc_format = f"{self.pid}|{self.sim_id}|{self.workload_id}"
             self.bar = tqdm.tqdm(
                 total=self.max_insts,
-                initial=self.current_insts,
+                initial=self.current_insts_executed,
                 desc=desc_format,
                 unit="insts",
                 position=self.position,
@@ -279,11 +281,13 @@ class Gem5ProgressBar:
             )
 
             # Update values
-            self.current_insts = curr_info["instruction_count"]
+            self.current_insts_executed = curr_info[
+                "curr_instructions_executed"
+            ]
             self.current_ticks = curr_info["tick"]
 
             # Update the progress bar
-            self.bar.n = self.current_insts
+            self.bar.n = self.current_insts_executed
             self.bar.set_postfix(
                 {"SimTime": format_ticks_time(self.current_ticks)},
                 refresh=True,
