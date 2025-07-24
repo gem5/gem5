@@ -49,6 +49,7 @@
 #include "cpu/inst_seq.hh"
 #include "cpu/pred/branch_type.hh"
 #include "cpu/pred/btb.hh"
+#include "cpu/pred/conditional.hh"
 #include "cpu/pred/indirect.hh"
 #include "cpu/pred/ras.hh"
 #include "cpu/static_inst.hh"
@@ -135,81 +136,6 @@ class BPredUnit : public SimObject
      * Interface functions to the conditional branch predictor
      *
     */
-
-    /**
-     * Looks up a given conditional branch PC of in the BP to see if it
-     * is taken or not taken.
-     * @param tid The thread id.
-     * @param pc The PC to look up.
-     * @param bp_history Pointer that will be set to an object that
-     * has the branch predictor state associated with the lookup.
-     * @return Whether the branch is taken or not taken.
-     */
-    virtual bool lookup(ThreadID tid, Addr pc, void * &bp_history) = 0;
-
-    /**
-     * Ones done with the prediction this function updates the
-     * path and global history. All branches call this function
-     * including unconditional once.
-     * @param tid The thread id.
-     * @param pc The branch's pc that will be updated.
-     * @param uncond Wheather or not this branch is an unconditional branch.
-     * @param taken Whether or not the branch was taken
-     * @param target The final target of branch. Some modern
-     * predictors use the target in their history.
-     * @param inst Static instruction information
-     * @param bp_history Pointer that will be set to an object that
-     * has the branch predictor state associated with the lookup.
-     *
-     */
-    virtual void updateHistories(ThreadID tid, Addr pc, bool uncond,
-                           bool taken, Addr target,
-                           const StaticInstPtr &inst, void * &bp_history) = 0;
-
-    /**
-     * @param tid The thread id.
-     * @param bp_history Pointer to the history object.  The predictor
-     * will need to update any state and delete the object.
-     */
-    virtual void squash(ThreadID tid, void * &bp_history) = 0;
-
-
-    /**
-     * Updates the BP with taken/not taken information.
-     * @param tid The thread id.
-     * @param pc The branch's PC that will be updated.
-     * @param taken Whether the branch was taken or not taken.
-     * @param bp_history Pointer to the branch predictor state that is
-     * associated with the branch lookup that is being updated.
-     * @param squashed Set to true when this function is called during a
-     * squash operation.
-     * @param inst Static instruction information
-     * @param target The resolved target of the branch (only needed
-     * for squashed branches)
-     * @todo Make this update flexible enough to handle a global predictor.
-     */
-    virtual void update(ThreadID tid, Addr pc, bool taken,
-                        void * &bp_history, bool squashed,
-                        const StaticInstPtr &inst, Addr target) = 0;
-
-    /**
-     * Special function for the decoupled front-end. In it there can be
-     * branches which are not detected by the BPU in the first place as it
-     * requires a BTB hit. This function will generate a placeholder for
-     * such a branch once it is pre-decoded in the fetch stage. It will
-     * only create the branch history object but not update any internal state
-     * of the BPU.
-     * If the branch turns to be wrong then decode or commit will
-     * be able to use the normal squash functionality to correct the branch.
-     * Note that not all branch predictors implement this functionality.
-     * @param tid The thread id.
-     * @param pc The branch's PC.
-     * @param uncond Whether or not this branch is an unconditional branch.
-     * @param bp_history Pointer that will be set to an branch history object.
-     */
-    virtual void branchPlaceholder(ThreadID tid, Addr pc,
-                                   bool uncond, void * &bp_history);
-
     /**
      * Looks up a given PC in the BTB to see if a matching entry exists.
      * @param tid The thread id.
@@ -263,6 +189,24 @@ class BPredUnit : public SimObject
         ++stats.BTBUpdates;
         return btb->update(tid, pc, target);
     }
+
+    /**
+     * Special function for the decoupled front-end. In it there can be
+     * branches which are not detected by the BPU in the first place as it
+     * requires a BTB hit. This function will generate a placeholder for
+     * such a branch once it is pre-decoded in the fetch stage. It will
+     * only create the branch history object but not update any internal state
+     * of the BPU.
+     * If the branch turns to be wrong then decode or commit will
+     * be able to use the normal squash functionality to correct the branch.
+     * Note that not all branch predictors implement this functionality.
+     * @param tid The thread id.
+     * @param pc The branch's PC.
+     * @param uncond Whether or not this branch is an unconditional branch.
+     * @param bp_history Pointer that will be set to an branch history object.
+     */
+    void branchPlaceholder(ThreadID tid, Addr pc,
+                            bool uncond, void * &bp_history);
 
 
     void dump();
@@ -485,6 +429,9 @@ class BPredUnit : public SimObject
 
     /** The return address stack. */
     ReturnAddrStack * ras;
+
+    /** The conditional branch predictor. */
+    ConditionalPredictor * cPred;
 
     /** The indirect target predictor. */
     IndirectPredictor * iPred;

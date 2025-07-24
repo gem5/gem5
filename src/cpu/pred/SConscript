@@ -44,6 +44,7 @@ Import('*')
 SimObject('BranchPredictor.py',
     sim_objects=[
     'BranchPredictor',
+    'ConditionalPredictor',
     'IndirectPredictor', 'SimpleIndirectPredictor',
     'BranchTargetBuffer', 'SimpleBTB', 'BTBIndexingPolicy', 'BTBSetAssociative',
     'ReturnAddrStack',
@@ -64,6 +65,7 @@ SimObject('BranchPredictor.py',
 Source('bpred_unit.cc')
 Source('2bit_local.cc')
 Source('simple_indirect.cc')
+Source('conditional.cc')
 Source('indirect.cc')
 Source('ras.cc')
 Source('tournament.cc')

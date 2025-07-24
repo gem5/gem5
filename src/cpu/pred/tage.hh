@@ -64,7 +64,7 @@
 
 #include "base/random.hh"
 #include "base/types.hh"
-#include "cpu/pred/bpred_unit.hh"
+#include "cpu/pred/conditional.hh"
 #include "cpu/pred/tage_base.hh"
 #include "params/TAGE.hh"
 
@@ -74,7 +74,7 @@ namespace gem5
 namespace branch_prediction
 {
 
-class TAGE: public BPredUnit
+class TAGE: public ConditionalPredictor
 {
   protected:
     TAGEBase *tage;

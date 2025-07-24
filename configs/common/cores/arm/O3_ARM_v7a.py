@@ -123,13 +123,15 @@ class O3_ARM_v7a_BTB(SimpleBTB):
 
 
 # Bi-Mode Branch Predictor
-class O3_ARM_v7a_BP(BiModeBP):
+class O3_ARM_v7a_BP(BranchPredictor):
+    conditionalBranchPred = BiModeBP(
+        globalPredictorSize=8192,
+        globalCtrBits=2,
+        choicePredictorSize=8192,
+        choiceCtrBits=2,
+    )
     btb = O3_ARM_v7a_BTB()
     ras = ReturnAddrStack(numEntries=16)
-    globalPredictorSize = 8192
-    globalCtrBits = 2
-    choicePredictorSize = 8192
-    choiceCtrBits = 2
     instShiftAmt = 2
 
 

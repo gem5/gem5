@@ -1694,16 +1694,18 @@ class HPI_BTB(SimpleBTB):
     )
 
 
-class HPI_BP(TournamentBP):
+class HPI_BP(BranchPredictor):
+    conditionalBranchPred = TournamentBP(
+        localPredictorSize=64,
+        localCtrBits=2,
+        localHistoryTableSize=64,
+        globalPredictorSize=1024,
+        globalCtrBits=2,
+        choicePredictorSize=1024,
+        choiceCtrBits=2,
+    )
     btb = HPI_BTB()
     ras = ReturnAddrStack(numEntries=8)
-    localPredictorSize = 64
-    localCtrBits = 2
-    localHistoryTableSize = 64
-    globalPredictorSize = 1024
-    globalCtrBits = 2
-    choicePredictorSize = 1024
-    choiceCtrBits = 2
     instShiftAmt = 2
 
 

@@ -63,6 +63,7 @@ BPredUnit::BPredUnit(const Params &params)
       predHist(numThreads),
       btb(params.btb),
       ras(params.ras),
+      cPred(params.conditionalBranchPred),
       iPred(params.indirectBranchPred),
       stats(this)
 {
@@ -94,12 +95,6 @@ BPredUnit::drainSanityCheck() const
         assert(ph.empty());
 }
 
-void
-BPredUnit::branchPlaceholder(ThreadID tid, Addr pc,
-                             bool uncond, void * &bp_history)
-{
-    panic("BPredUnit::branchPlaceholder() not implemented for this BP.\n");
-}
 
 bool
 BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
@@ -156,7 +151,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
     } else {
         // Conditional branches -------
         ++stats.condPredicted;
-        hist->condPred = lookup(tid, pc.instAddr(), hist->bpHistory);
+        hist->condPred = cPred->lookup(tid, pc.instAddr(), hist->bpHistory);
 
         if (hist->condPred) {
             ++stats.condPredictedTaken;
@@ -323,8 +318,9 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
      * The actual prediction tables will updated once
      * we know the correct direction.
      **/
-    updateHistories(tid, hist->pc, hist->uncond, hist->predTaken,
-                    hist->target->instAddr(), hist->inst, hist->bpHistory);
+    cPred->updateHistories(tid, hist->pc, hist->uncond, hist->predTaken,
+                           hist->target->instAddr(), hist->inst,
+                           hist->bpHistory);
 
 
     if (iPred) {
@@ -380,11 +376,8 @@ BPredUnit::commitBranch(ThreadID tid, PredictorHistory* &hist)
                 hist->target->instAddr());
 
     // Update the branch predictor with the correct results.
-    update(tid, hist->pc,
-                hist->actuallyTaken,
-                hist->bpHistory, false,
-                hist->inst,
-                hist->target->instAddr());
+    cPred->update(tid, hist->pc, hist->actuallyTaken, hist->bpHistory, false,
+                  hist->inst, hist->target->instAddr());
 
     // Commit also Indirect predictor and RAS
     if (iPred) {
@@ -447,7 +440,7 @@ BPredUnit::squashHistory(ThreadID tid, PredictorHistory* &history)
     }
 
     // This call should delete the bpHistory.
-    squash(tid, history->bpHistory);
+    cPred->squash(tid, history->bpHistory);
 
     delete history;
     history = nullptr;
@@ -526,8 +519,8 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
         set(hist->target,  corr_target);
 
         // Correct Direction predictor ------------------
-        update(tid, hist->pc, actually_taken, hist->bpHistory,
-               true, hist->inst, corr_target.instAddr());
+        cPred->update(tid, hist->pc, actually_taken, hist->bpHistory,
+                      true, hist->inst, corr_target.instAddr());
 
 
         // Correct Indirect predictor -------------------
@@ -611,6 +604,13 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
     }
 }
 
+void
+BPredUnit::branchPlaceholder(ThreadID tid, Addr pc,
+                             bool uncond, void * &bp_history)
+{
+    // Delegate to conditional predictor
+    cPred->branchPlaceholder(tid, pc, uncond, bp_history);
+}
 
 void
 BPredUnit::dump()
