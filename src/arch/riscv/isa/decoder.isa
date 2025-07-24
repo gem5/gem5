@@ -36,6 +36,12 @@
 // The RISC-V ISA decoder
 //
 
+// Include the C++ include directives (already there)
+##include "includes.isa"
+
+// Add our new SFKA ISA definitions
+##include "sfka.isa" // <-- BU SATIRI EKLEYİN
+
 // In theory, all registers should be sign extended if not operating in the
 // full MXLEN register, but that will cause memory address out of range as it is
 // always regarded as uint64. So we'll zero extend PC related registers and

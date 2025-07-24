@@ -1,0 +1,56 @@
+// -*- mode:c++ -*-
+
+// Copyright (c) 2025 catnys
+// All rights reserved.
+//
+// SFKA (Spill-Fill-Kill Architecture) custom instructions for RISC-V.
+
+namespace RiscvISA;
+
+// We might need to include some common headers, similar to main.isa
+##include "includes.isa"
+##include "bitfields.isa"
+##include "operands.isa"
+##include "formats/formats.isa"
+##include "templates/templates.isa" // Possibly needed for common templates
+
+////////////////////////////////////////////////////////////////////
+//
+// Custom SFKA Instruction Definitions.
+//
+////////////////////////////////////////////////////////////////////
+
+// Example placeholder for our first instruction: SFK_SPILL
+// We will define the actual instruction here soon.
+// This will likely be an I-Type like instruction (base register + immediate offset)
+// with a destination register and a source register.
+
+// Let's decide on the custom opcode for SFKA instructions.
+// For now, we'll use a placeholder for its definition.
+// RISC-V has reserved "custom-0", "custom-1", "custom-2", "custom-3" opcodes.
+// Let's try to map to one of them, e.g., custom-2 (0111011 = 0x1B).
+// Or we can pick a specific funct3/funct7 combination within an existing opcode range
+// that is marked as "reserved for custom extensions".
+
+// For simplicity for now, let's target the 'MISC_MEM' opcode (0x0F / 0001111)
+// or 'CUSTOM-2' (0x5B / 1011011) from the RISC-V Unprivileged Spec.
+// Let's choose the CUSTOM-2 opcode (0x5B)
+// The bits for CUSTOM-2 opcode would be: XXX 1011011 -> 0x5B
+
+// Define a new format for our SFKA instructions if necessary, or reuse existing ones.
+// A spill instruction 'spill reg, [sfp+imm]' looks like an S-Type (store) or I-Type (load with immediate)
+// RISC-V S-Type: imm[11:5] rs2 rs1 funct3 imm[4:0] opcode
+// RISC-V I-Type: imm[11:0] rs1 funct3 rd opcode
+
+// Let's assume an I-type like format for 'spill' for now, as it takes:
+// 1. Source Register (reg) -> rs1
+// 2. Base Register (sfp) -> rs1 (same field, or we introduce a new SFP reg)
+// 3. Immediate Offset (imm) -> imm12
+// It also writes a value implicitly to the spill store, not a general purpose register.
+
+// Let's create a custom opcode for SFKA instructions.
+// The standard specifies 'CUSTOM_0', 'CUSTOM_1', 'CUSTOM_2', 'CUSTOM_3'.
+// `CUSTOM_2` has opcode `0x5B` (binary `1011011`).
+
+// This is where we'll define our first instruction:
+// def instruction SFK_SPILL : I_FORMAT_BASE_OP<"sfk_spill", { /* opcode bits */ }> { ... };
