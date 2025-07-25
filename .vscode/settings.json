@@ -37,7 +37,7 @@
             "query": "author:${user} state:open repo:gem5/gem5 sort:created-desc"
         },
         {
-            "label": "[gem5] All open  Issues",
+            "label": "[gem5] All open Issues",
             "query": "state:open repo:${owner}/${repository} sort:updated-desc"
         }
     ]
