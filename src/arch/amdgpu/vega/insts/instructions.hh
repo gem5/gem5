@@ -45412,8 +45412,9 @@ namespace VegaISA
                         int lane_A = i + M * (block + B * (k / K_L));
                         int lane_B = j + N * (block + B * (k / K_L));
                         int item = k % K_L;
-                        result[i][j] +=
-                          src0[item][lane_A] * src1[item][lane_B];
+                        result[i][j] =
+                            std::fma(src0[item][lane_A], src1[item][lane_B],
+                                     result[i][j]);
                     }
                 }
             }
