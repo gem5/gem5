@@ -388,8 +388,13 @@ lastDump = 0
 global_dump_roots = []
 
 
-def dump(roots=None):
-    """Dump all statistics data to the registered outputs"""
+def dump(roots=None, message=""):
+    """Dump all statistics data to the registered outputs
+
+    Args:
+        roots: Optional list of roots to dump
+        message: Optional message to include in text output headers
+    """
 
     all_roots = []
     if roots is not None:
@@ -425,13 +430,21 @@ def dump(roots=None):
                 output.dump(all_roots)
         else:
             if output.valid():
-                output.begin()
+                output.begin(message)
                 _dump_to_visitor(output, roots=all_roots)
                 output.end()
 
 
-def reset():
-    """Reset all statistics to the base state"""
+def reset(message=""):
+    """Reset all statistics to the base state
+
+    Args:
+        message: Optional message to output when resetting stats
+    """
+
+    for output in outputList:
+        if not isinstance(output, JsonOutputVistor):
+            output.printResetMessage(message)
 
     # call reset stats on all SimObjects
     root = Root.getInstance()

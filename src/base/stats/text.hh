@@ -98,8 +98,9 @@ class Text : public Output
 
     // Implement Output
     bool valid() const override;
-    void begin() override;
+    void begin(const std::string& message = "") override;
     void end() override;
+    void printResetMessage(const std::string& message = "") override;
 };
 
 std::string ValueToString(Result value, int precision);

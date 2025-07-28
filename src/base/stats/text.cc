@@ -127,9 +127,20 @@ Text::valid() const
 }
 
 void
-Text::begin()
+Text::begin(const std::string& message)
 {
-    ccprintf(*stream, "\n---------- Begin Simulation Statistics ----------\n");
+    if (message.empty()) {
+        ccprintf(
+            *stream,
+            "\n---------- Begin Simulation Statistics ----------\n"
+        );
+    } else {
+        ccprintf(
+            *stream,
+            "\n---------- Begin Simulation Statistics : %s ----------\n",
+            message
+        );
+    }
 }
 
 void
@@ -137,6 +148,14 @@ Text::end()
 {
     ccprintf(*stream, "\n---------- End Simulation Statistics   ----------\n");
     stream->flush();
+}
+
+void
+Text::printResetMessage(const std::string& message)
+{
+    if (!message.empty()) {
+        ccprintf(*stream, "Resetting stats: %s\n", message);
+    }
 }
 
 std::string

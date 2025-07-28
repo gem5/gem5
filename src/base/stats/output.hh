@@ -65,12 +65,14 @@ struct Output
 {
     virtual ~Output() {}
 
-    virtual void begin() = 0;
+    virtual void begin(const std::string& message = "") = 0;
     virtual void end() = 0;
     virtual bool valid() const = 0;
 
     virtual void beginGroup(const char *name) = 0;
     virtual void endGroup() = 0;
+
+    virtual void printResetMessage(const std::string& message = "") {};
 
     virtual void visit(const ScalarInfo &info) = 0;
     virtual void visit(const VectorInfo &info) = 0;
