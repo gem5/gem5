@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Advanced Micro Devices, Inc.
+ * Copyright (c) 2025 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,29 +29,49 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_AMDGPU_COMMON_DTYPE_MXFP_TYPES_HH__
-#define __ARCH_AMDGPU_COMMON_DTYPE_MXFP_TYPES_HH__
+#ifndef __ARCH_AMDGPU_COMMON_DTYPE_PACKED_TYPES_HH__
+#define __ARCH_AMDGPU_COMMON_DTYPE_PACKED_TYPES_HH__
 
-#include "arch/amdgpu/common/dtype/mxfp.hh"
+#include "arch/amdgpu/common/dtype/mxfp_types.hh"
 
 namespace gem5
 {
+
 namespace AMDGPU
 {
 
-using mxfp4 = mxfp<fp4_e2m1_info>;
-using mxfp6 = mxfp<fp6_e2m3_info>;
-using mxbf6 = mxfp<fp6_e3m2_info>;
+class PkBfloat16
+{
+  public:
+    AMDGPU::mxbfloat16 data[2];
 
-using mxbfloat8 = mxfp<fp8_e5m2_info>;
-using mxfloat8 = mxfp<fp8_e4m3_info>;
+    uint32_t get() { return data[0].data | (uint32_t(data[1].data) << 16); }
 
-using mxbfloat16 = mxfp<fp16_e8m7_info>;
-using mxfloat16 = mxfp<fp16_e5m10_info>;
+    PkBfloat16 operator+=(const PkBfloat16& rhs)
+    {
+        data[0] = data[0] + rhs.data[0];
+        data[1] = data[1] + rhs.data[1];
+        return *this;
+    }
 
-using mxfloat32 = mxfp<binary32>;
+    PkBfloat16 operator+(const PkBfloat16& rhs)
+    {
+        data[0] = data[0] + rhs.data[0];
+        data[1] = data[1] + rhs.data[1];
+        return *this;
+    }
 
-}
-}
+    // Conversions
+    PkBfloat16 operator=(const int& rhs)
+    {
+        data[0].data = bits(rhs, 15, 0);
+        data[1].data = bits(rhs, 31, 16);
+        return *this;
+    }
+};
 
-#endif // __ARCH_AMDGPU_COMMON_DTYPE_MXFP_TYPES_HH__
+} // namespace AMDGPU
+
+} // namespace gem5
+
+#endif // __ARCH_AMDGPU_COMMON_DTYPE_PACKED_TYPES_HH__

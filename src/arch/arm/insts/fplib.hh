@@ -75,113 +75,116 @@ FPCRRounding(FPSCR &fpscr)
 
 /** Floating-point absolute value. */
 template <class T>
-T fplibAbs(T op);
+T fplibAbs(T op, FPCR fpcr = 0);
 /** Floating-point add. */
 template <class T>
-T fplibAdd(T op1, T op2, FPSCR &fpscr);
+T fplibAdd(T op1, T op2, FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point compare (quiet and signaling). */
 template <class T>
-int fplibCompare(T op1, T op2, bool signal_nans, FPSCR &fpscr);
+int fplibCompare(T op1, T op2, bool signal_nans, FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point compare equal. */
 template <class T>
-bool fplibCompareEQ(T op1, T op2, FPSCR &fpscr);
+bool fplibCompareEQ(T op1, T op2, FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point compare greater than or equal. */
 template <class T>
-bool fplibCompareGE(T op1, T op2, FPSCR &fpscr);
+bool fplibCompareGE(T op1, T op2, FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point compare greater than. */
 template <class T>
-bool fplibCompareGT(T op1, T op2, FPSCR &fpscr);
+bool fplibCompareGT(T op1, T op2, FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point compare unordered. */
 template <class T>
-bool fplibCompareUN(T op1, T op2, FPSCR &fpscr);
+bool fplibCompareUN(T op1, T op2, FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point convert precision. */
 template <class T1, class T2>
-T2 fplibConvert(T1 op, FPRounding rounding, FPSCR &fpscr);
+T2 fplibConvert(T1 op, FPRounding rounding, FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point division. */
 template <class T>
-T fplibDiv(T op1, T op2, FPSCR &fpscr);
+T fplibDiv(T op1, T op2, FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point exponential accelerator. */
 template <class T>
 T fplibExpA(T op);
 /** Floating-point maximum. */
 template <class T>
-T fplibMax(T op1, T op2, FPSCR &fpscr);
+T fplibMax(T op1, T op2, FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point maximum number. */
 template <class T>
-T fplibMaxNum(T op1, T op2, FPSCR &fpscr);
+T fplibMaxNum(T op1, T op2, FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point minimum. */
 template <class T>
-T fplibMin(T op1, T op2, FPSCR &fpscr);
+T fplibMin(T op1, T op2, FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point minimum number. */
 template <class T>
-T fplibMinNum(T op1, T op2, FPSCR &fpscr);
+T fplibMinNum(T op1, T op2, FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point multiply. */
 template <class T>
-T fplibMul(T op1, T op2, FPSCR &fpscr);
+T fplibMul(T op1, T op2, FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point multiply-add. */
 template <class T>
-T fplibMulAdd(T addend, T op1, T op2, FPSCR &fpscr);
+T fplibMulAdd(T addend, T op1, T op2, FPSCR &fpscr, FPCR fpcr=0);
 template <class T1, class T2>
-T2 fplibMulAddH(T2 addend, T1 op1, T1 op2, FPSCR &fpscr);
+T2 fplibMulAddH(T2 addend, T1 op1, T1 op2, FPSCR &fpscr, FPCR fpcr=0);
 /** Floating-point multiply extended. */
 template <class T>
-T fplibMulX(T op1, T op2, FPSCR &fpscr);
+T fplibMulX(T op1, T op2, FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point negate. */
 template <class T>
-T fplibNeg(T op);
+T fplibNeg(T op, FPCR fpcr = 0);
 /** Floating-point reciprocal square root estimate. */
 template <class T>
-T fplibRSqrtEstimate(T op, FPSCR &fpscr);
+T fplibRSqrtEstimate(T op, FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point reciprocal square root step. */
 template <class T>
-T fplibRSqrtStepFused(T op1, T op2, FPSCR &fpscr);
+T fplibRSqrtStepFused(T op1, T op2, FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point reciprocal estimate. */
 template <class T>
-T fplibRecipEstimate(T op, FPSCR &fpscr);
+T fplibRecipEstimate(T op, FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point reciprocal step. */
 template <class T>
-T fplibRecipStepFused(T op1, T op2, FPSCR &fpscr);
+T fplibRecipStepFused(T op1, T op2, FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point reciprocal exponent. */
 template <class T>
-T fplibRecpX(T op, FPSCR &fpscr);
+T fplibRecpX(T op, FPSCR &fpscr, FPCR fpcr = 0);
 /**  Floating-point convert to integer. */
 template <class T>
-T fplibRoundInt(T op, FPRounding rounding, bool exact, FPSCR &fpscr);
+T fplibRoundInt(T op, FPRounding rounding, bool exact, FPSCR &fpscr,
+                FPCR fpcr = 0);
 /**  Floating-point convert to integer. */
 template <class T>
 T fplibRoundIntN(T op, FPRounding rounding, bool exact, int intsize,
-                 FPSCR &fpscr);
+                 FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point adjust exponent. */
 template <class T>
-T fplibScale(T op1, T op2, FPSCR &fpscr);
+T fplibScale(T op1, T op2, FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point square root. */
 template <class T>
-T fplibSqrt(T op, FPSCR &fpscr);
+T fplibSqrt(T op, FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point subtract. */
 template <class T>
-T fplibSub(T op1, T op2, FPSCR &fpscr);
+T fplibSub(T op1, T op2, FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point trigonometric multiply-add coefficient. */
 template <class T>
-T fplibTrigMulAdd(uint8_t coeff_index, T op1, T op2, FPSCR &fpscr);
+T fplibTrigMulAdd(uint8_t coeff_index, T op1, T op2, FPSCR &fpscr,
+                  FPCR fpcr = 0);
 /** Floating-point trigonometric starting value. */
 template <class T>
-T fplibTrigSMul(T op1, T op2, FPSCR &fpscr);
+T fplibTrigSMul(T op1, T op2, FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point trigonometric select coefficient. */
 template <class T>
-T fplibTrigSSel(T op1, T op2, FPSCR &fpscr);
+T fplibTrigSSel(T op1, T op2, FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point convert to fixed-point. */
 template <class T1, class T2>
-T2 fplibFPToFixed(T1 op, int fbits, bool u, FPRounding rounding, FPSCR &fpscr);
+T2 fplibFPToFixed(T1 op, int fbits, bool u, FPRounding rounding, FPSCR &fpscr,
+                  FPCR fpcr = 0);
 /** Floating-point convert from fixed-point. */
 template <class T>
 T fplibFixedToFP(uint64_t op, int fbits, bool u, FPRounding rounding,
-                 FPSCR &fpscr);
+                 FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point value for +/- infinity. */
 template <class T>
 T fplibInfinity(int sgn);
 /** Foating-point value for default NaN. */
 template <class T>
-T fplibDefaultNaN();
+T fplibDefaultNaN(FPCR fpcr = 0);
 /** Floating-point  JS convert to a signed integer, with rounding to zero. */
 uint32_t fplibFPToFixedJS(uint64_t op, FPSCR &fpscr, bool Is64, uint8_t &nz);
 
@@ -192,65 +195,74 @@ T fplib32RecipStep(T op1, T op2, FPSCR &fpscr);
 
 /* Function specializations... */
 template <>
-uint16_t fplibAbs(uint16_t op);
+uint16_t fplibAbs(uint16_t op, FPCR fpcr);
 template <>
-uint32_t fplibAbs(uint32_t op);
+uint32_t fplibAbs(uint32_t op, FPCR fpcr);
 template <>
-uint64_t fplibAbs(uint64_t op);
+uint64_t fplibAbs(uint64_t op, FPCR fpcr);
 template <>
-uint16_t fplibAdd(uint16_t op1, uint16_t op2, FPSCR &fpscr);
+uint16_t fplibAdd(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint32_t fplibAdd(uint32_t op1, uint32_t op2, FPSCR &fpscr);
+uint32_t fplibAdd(uint32_t op1, uint32_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint64_t fplibAdd(uint64_t op1, uint64_t op2, FPSCR &fpscr);
+uint64_t fplibAdd(uint64_t op1, uint64_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-int fplibCompare(uint16_t op1, uint16_t op2, bool signal_nans, FPSCR &fpscr);
+int fplibCompare(uint16_t op1, uint16_t op2, bool signal_nans, FPSCR &fpscr,
+                 FPCR fpcr);
 template <>
-int fplibCompare(uint32_t op1, uint32_t op2, bool signal_nans, FPSCR &fpscr);
+int fplibCompare(uint32_t op1, uint32_t op2, bool signal_nans, FPSCR &fpscr,
+                 FPCR fpcr);
 template <>
-int fplibCompare(uint64_t op1, uint64_t op2, bool signal_nans, FPSCR &fpscr);
+int fplibCompare(uint64_t op1, uint64_t op2, bool signal_nans, FPSCR &fpscr,
+                 FPCR fpcr);
 template <>
-bool fplibCompareEQ(uint16_t op1, uint16_t op2, FPSCR &fpscr);
+bool fplibCompareEQ(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-bool fplibCompareEQ(uint32_t op1, uint32_t op2, FPSCR &fpscr);
+bool fplibCompareEQ(uint32_t op1, uint32_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-bool fplibCompareEQ(uint64_t op1, uint64_t op2, FPSCR &fpscr);
+bool fplibCompareEQ(uint64_t op1, uint64_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-bool fplibCompareGE(uint16_t op1, uint16_t op2, FPSCR &fpscr);
+bool fplibCompareGE(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-bool fplibCompareGE(uint32_t op1, uint32_t op2, FPSCR &fpscr);
+bool fplibCompareGE(uint32_t op1, uint32_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-bool fplibCompareGE(uint64_t op1, uint64_t op2, FPSCR &fpscr);
+bool fplibCompareGE(uint64_t op1, uint64_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-bool fplibCompareGT(uint16_t op1, uint16_t op2, FPSCR &fpscr);
+bool fplibCompareGT(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-bool fplibCompareGT(uint32_t op1, uint32_t op2, FPSCR &fpscr);
+bool fplibCompareGT(uint32_t op1, uint32_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-bool fplibCompareGT(uint64_t op1, uint64_t op2, FPSCR &fpscr);
+bool fplibCompareGT(uint64_t op1, uint64_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-bool fplibCompareUN(uint16_t op1, uint16_t op2, FPSCR &fpscr);
+bool fplibCompareUN(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-bool fplibCompareUN(uint32_t op1, uint32_t op2, FPSCR &fpscr);
+bool fplibCompareUN(uint32_t op1, uint32_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-bool fplibCompareUN(uint64_t op1, uint64_t op2, FPSCR &fpscr);
+bool fplibCompareUN(uint64_t op1, uint64_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint16_t fplibConvert(uint32_t op, FPRounding rounding, FPSCR &fpscr);
+uint16_t fplibConvert(uint32_t op, FPRounding rounding, FPSCR &fpscr,
+                      FPCR fpcr);
 template <>
-uint16_t fplibConvert(uint64_t op, FPRounding rounding, FPSCR &fpscr);
+uint16_t fplibConvert(uint64_t op, FPRounding rounding, FPSCR &fpscr,
+                      FPCR fpcr);
 template <>
-uint32_t fplibConvert(uint16_t op, FPRounding rounding, FPSCR &fpscr);
+uint32_t fplibConvert(uint16_t op, FPRounding rounding, FPSCR &fpscr,
+                      FPCR fpcr);
 template <>
-uint32_t fplibConvert(uint64_t op, FPRounding rounding, FPSCR &fpscr);
+uint32_t fplibConvert(uint64_t op, FPRounding rounding, FPSCR &fpscr,
+                      FPCR fpcr);
 template <>
-uint64_t fplibConvert(uint16_t op, FPRounding rounding, FPSCR &fpscr);
+uint64_t fplibConvert(uint16_t op, FPRounding rounding, FPSCR &fpscr,
+                      FPCR fpcr);
 template <>
-uint64_t fplibConvert(uint32_t op, FPRounding rounding, FPSCR &fpscr);
+uint64_t fplibConvert(uint32_t op, FPRounding rounding, FPSCR &fpscr,
+                      FPCR fpcr);
 template <>
-uint16_t fplibDiv(uint16_t op1, uint16_t op2, FPSCR &fpscr);
+uint16_t fplibDiv(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint32_t fplibDiv(uint32_t op1, uint32_t op2, FPSCR &fpscr);
+uint32_t fplibDiv(uint32_t op1, uint32_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint64_t fplibDiv(uint64_t op1, uint64_t op2, FPSCR &fpscr);
+uint64_t fplibDiv(uint64_t op1, uint64_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
 uint16_t fplibExpA(uint16_t op);
 template <>
@@ -258,173 +270,179 @@ uint32_t fplibExpA(uint32_t op);
 template <>
 uint64_t fplibExpA(uint64_t op);
 template <>
-uint16_t fplibMax(uint16_t op1, uint16_t op2, FPSCR &fpscr);
+uint16_t fplibMax(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint32_t fplibMax(uint32_t op1, uint32_t op2, FPSCR &fpscr);
+uint32_t fplibMax(uint32_t op1, uint32_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint64_t fplibMax(uint64_t op1, uint64_t op2, FPSCR &fpscr);
+uint64_t fplibMax(uint64_t op1, uint64_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint16_t fplibMaxNum(uint16_t op1, uint16_t op2, FPSCR &fpscr);
+uint16_t fplibMaxNum(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint32_t fplibMaxNum(uint32_t op1, uint32_t op2, FPSCR &fpscr);
+uint32_t fplibMaxNum(uint32_t op1, uint32_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint64_t fplibMaxNum(uint64_t op1, uint64_t op2, FPSCR &fpscr);
+uint64_t fplibMaxNum(uint64_t op1, uint64_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint16_t fplibMin(uint16_t op1, uint16_t op2, FPSCR &fpscr);
+uint16_t fplibMin(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint32_t fplibMin(uint32_t op1, uint32_t op2, FPSCR &fpscr);
+uint32_t fplibMin(uint32_t op1, uint32_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint64_t fplibMin(uint64_t op1, uint64_t op2, FPSCR &fpscr);
+uint64_t fplibMin(uint64_t op1, uint64_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint16_t fplibMinNum(uint16_t op1, uint16_t op2, FPSCR &fpscr);
+uint16_t fplibMinNum(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint32_t fplibMinNum(uint32_t op1, uint32_t op2, FPSCR &fpscr);
+uint32_t fplibMinNum(uint32_t op1, uint32_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint64_t fplibMinNum(uint64_t op1, uint64_t op2, FPSCR &fpscr);
+uint64_t fplibMinNum(uint64_t op1, uint64_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint16_t fplibMul(uint16_t op1, uint16_t op2, FPSCR &fpscr);
+uint16_t fplibMul(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint32_t fplibMul(uint32_t op1, uint32_t op2, FPSCR &fpscr);
+uint32_t fplibMul(uint32_t op1, uint32_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint64_t fplibMul(uint64_t op1, uint64_t op2, FPSCR &fpscr);
+uint64_t fplibMul(uint64_t op1, uint64_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
 uint16_t fplibMulAdd(uint16_t addend, uint16_t op1, uint16_t op2,
-                     FPSCR &fpscr);
+                     FPSCR &fpscr, FPCR fpcr);
 template <>
 uint32_t fplibMulAdd(uint32_t addend, uint32_t op1, uint32_t op2,
-                     FPSCR &fpscr);
+                     FPSCR &fpscr, FPCR fpcr);
 template <>
 uint64_t fplibMulAdd(uint64_t addend, uint64_t op1, uint64_t op2,
-                     FPSCR &fpscr);
+                     FPSCR &fpscr, FPCR fpcr);
 template <>
 uint32_t fplibMulAddH(uint32_t addend, uint16_t op1, uint16_t op2,
-                      FPSCR &fpscr);
+                      FPSCR &fpscr, FPCR fpcr);
 template <>
-uint16_t fplibMulX(uint16_t op1, uint16_t op2, FPSCR &fpscr);
+uint16_t fplibMulX(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint32_t fplibMulX(uint32_t op1, uint32_t op2, FPSCR &fpscr);
+uint32_t fplibMulX(uint32_t op1, uint32_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint64_t fplibMulX(uint64_t op1, uint64_t op2, FPSCR &fpscr);
+uint64_t fplibMulX(uint64_t op1, uint64_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint16_t fplibNeg(uint16_t op);
+uint16_t fplibNeg(uint16_t op, FPCR fpcr);
 template <>
-uint32_t fplibNeg(uint32_t op);
+uint32_t fplibNeg(uint32_t op, FPCR fpcr);
 template <>
-uint64_t fplibNeg(uint64_t op);
+uint64_t fplibNeg(uint64_t op, FPCR fpcr);
 template <>
-uint16_t fplibRSqrtEstimate(uint16_t op, FPSCR &fpscr);
+uint16_t fplibRSqrtEstimate(uint16_t op, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint32_t fplibRSqrtEstimate(uint32_t op, FPSCR &fpscr);
+uint32_t fplibRSqrtEstimate(uint32_t op, FPSCR &fpscr, FPCR fpcr);
 template<>
-uint64_t fplibRSqrtEstimate(uint64_t op, FPSCR &fpscr);
+uint64_t fplibRSqrtEstimate(uint64_t op, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint16_t fplibRSqrtStepFused(uint16_t op1, uint16_t op2, FPSCR &fpscr);
+uint16_t fplibRSqrtStepFused(uint16_t op1, uint16_t op2, FPSCR &fpscr,
+                             FPCR fpcr);
 template <>
-uint32_t fplibRSqrtStepFused(uint32_t op1, uint32_t op2, FPSCR &fpscr);
+uint32_t fplibRSqrtStepFused(uint32_t op1, uint32_t op2, FPSCR &fpscr,
+                             FPCR fpcr);
 template <>
-uint64_t fplibRSqrtStepFused(uint64_t op1, uint64_t op2, FPSCR &fpscr);
+uint64_t fplibRSqrtStepFused(uint64_t op1, uint64_t op2, FPSCR &fpscr,
+                             FPCR fpcr);
 template <>
-uint16_t fplibRecipEstimate(uint16_t op, FPSCR &fpscr);
+uint16_t fplibRecipEstimate(uint16_t op, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint32_t fplibRecipEstimate(uint32_t op, FPSCR &fpscr);
+uint32_t fplibRecipEstimate(uint32_t op, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint64_t fplibRecipEstimate(uint64_t op, FPSCR &fpscr);
+uint64_t fplibRecipEstimate(uint64_t op, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint16_t fplibRecipStepFused(uint16_t op1, uint16_t op2, FPSCR &fpscr);
+uint16_t fplibRecipStepFused(uint16_t op1, uint16_t op2, FPSCR &fpscr,
+                             FPCR fpcr);
 template <>
-uint32_t fplibRecipStepFused(uint32_t op1, uint32_t op2, FPSCR &fpscr);
+uint32_t fplibRecipStepFused(uint32_t op1, uint32_t op2, FPSCR &fpscr,
+                             FPCR fpcr);
 template <>
-uint64_t fplibRecipStepFused(uint64_t op1, uint64_t op2, FPSCR &fpscr);
+uint64_t fplibRecipStepFused(uint64_t op1, uint64_t op2, FPSCR &fpscr,
+                             FPCR fpcr);
 template <>
-uint16_t fplibRecpX(uint16_t op, FPSCR &fpscr);
+uint16_t fplibRecpX(uint16_t op, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint32_t fplibRecpX(uint32_t op, FPSCR &fpscr);
+uint32_t fplibRecpX(uint32_t op, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint64_t fplibRecpX(uint64_t op, FPSCR &fpscr);
+uint64_t fplibRecpX(uint64_t op, FPSCR &fpscr, FPCR fpcr);
 template <>
 uint16_t fplibRoundInt(uint16_t op, FPRounding rounding, bool exact,
-                       FPSCR &fpscr);
+                       FPSCR &fpscr, FPCR fpcr);
 template <>
 uint32_t fplibRoundInt(uint32_t op, FPRounding rounding, bool exact,
-                       FPSCR &fpscr);
+                       FPSCR &fpscr, FPCR fpcr);
 template <>
 uint64_t fplibRoundInt(uint64_t op, FPRounding rounding, bool exact,
-                       FPSCR &fpscr);
+                       FPSCR &fpscr, FPCR fpcr);
 template <>
 uint32_t fplibRoundIntN(uint32_t op, FPRounding rounding, bool exact,
-                        int intsize, FPSCR &fpscr);
+                        int intsize, FPSCR &fpscr, FPCR fpcr);
 template <>
 uint64_t fplibRoundIntN(uint64_t op, FPRounding rounding, bool exact,
-                        int intsize, FPSCR &fpscr);
+                        int intsize, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint16_t fplibScale(uint16_t op1, uint16_t op2, FPSCR &fpscr);
+uint16_t fplibScale(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint32_t fplibScale(uint32_t op1, uint32_t op2, FPSCR &fpscr);
+uint32_t fplibScale(uint32_t op1, uint32_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint64_t fplibScale(uint64_t op1, uint64_t op2, FPSCR &fpscr);
+uint64_t fplibScale(uint64_t op1, uint64_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint16_t fplibSqrt(uint16_t op, FPSCR &fpscr);
+uint16_t fplibSqrt(uint16_t op, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint32_t fplibSqrt(uint32_t op, FPSCR &fpscr);
+uint32_t fplibSqrt(uint32_t op, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint64_t fplibSqrt(uint64_t op, FPSCR &fpscr);
+uint64_t fplibSqrt(uint64_t op, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint16_t fplibSub(uint16_t op1, uint16_t op2, FPSCR &fpscr);
+uint16_t fplibSub(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint32_t fplibSub(uint32_t op1, uint32_t op2, FPSCR &fpscr);
+uint32_t fplibSub(uint32_t op1, uint32_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint64_t fplibSub(uint64_t op1, uint64_t op2, FPSCR &fpscr);
+uint64_t fplibSub(uint64_t op1, uint64_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
 uint16_t fplibTrigMulAdd(uint8_t coeff_index, uint16_t op1, uint16_t op2,
-                       FPSCR &fpscr);
+                         FPSCR &fpscr, FPCR fpcr);
 template <>
 uint32_t fplibTrigMulAdd(uint8_t coeff_index, uint32_t op1, uint32_t op2,
-                         FPSCR &fpscr);
+                         FPSCR &fpscr, FPCR fpcr);
 template <>
 uint64_t fplibTrigMulAdd(uint8_t coeff_index, uint64_t op1, uint64_t op2,
-                         FPSCR &fpscr);
+                         FPSCR &fpscr, FPCR fpcr);
 template <>
-uint16_t fplibTrigSMul(uint16_t op1, uint16_t op2, FPSCR &fpscr);
+uint16_t fplibTrigSMul(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint32_t fplibTrigSMul(uint32_t op1, uint32_t op2, FPSCR &fpscr);
+uint32_t fplibTrigSMul(uint32_t op1, uint32_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint64_t fplibTrigSMul(uint64_t op1, uint64_t op2, FPSCR &fpscr);
+uint64_t fplibTrigSMul(uint64_t op1, uint64_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint16_t fplibTrigSSel(uint16_t op1, uint16_t op2, FPSCR &fpscr);
+uint16_t fplibTrigSSel(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint32_t fplibTrigSSel(uint32_t op1, uint32_t op2, FPSCR &fpscr);
+uint32_t fplibTrigSSel(uint32_t op1, uint32_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint64_t fplibTrigSSel(uint64_t op1, uint64_t op2, FPSCR &fpscr);
+uint64_t fplibTrigSSel(uint64_t op1, uint64_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
 uint16_t fplibFPToFixed(uint16_t op, int fbits, bool u, FPRounding rounding,
-                        FPSCR &fpscr);
+                        FPSCR &fpscr, FPCR fpcr);
 template <>
 uint32_t fplibFPToFixed(uint16_t op, int fbits, bool u, FPRounding rounding,
-                        FPSCR &fpscr);
+                        FPSCR &fpscr, FPCR fpcr);
 template <>
 uint32_t fplibFPToFixed(uint32_t op, int fbits, bool u, FPRounding rounding,
-                        FPSCR &fpscr);
+                        FPSCR &fpscr, FPCR fpcr);
 template <>
 uint32_t fplibFPToFixed(uint64_t op, int fbits, bool u, FPRounding rounding,
-                        FPSCR &fpscr);
+                        FPSCR &fpscr, FPCR fpcr);
 template <>
 uint64_t fplibFPToFixed(uint16_t op, int fbits, bool u, FPRounding rounding,
-                        FPSCR &fpscr);
+                        FPSCR &fpscr, FPCR fpcr);
 template <>
 uint64_t fplibFPToFixed(uint32_t op, int fbits, bool u, FPRounding rounding,
-                        FPSCR &fpscr);
+                        FPSCR &fpscr, FPCR fpcr);
 template <>
 uint64_t fplibFPToFixed(uint64_t op, int fbits, bool u, FPRounding rounding,
-                        FPSCR &fpscr);
+                        FPSCR &fpscr, FPCR fpcr);
 template <>
 uint16_t fplibFixedToFP(uint64_t op, int fbits, bool u, FPRounding rounding,
-                        FPSCR &fpscr);
+                        FPSCR &fpscr, FPCR fpcr);
 template <>
 uint32_t fplibFixedToFP(uint64_t op, int fbits, bool u, FPRounding rounding,
-                        FPSCR &fpscr);
+                        FPSCR &fpscr, FPCR fpcr);
 template <>
 uint64_t fplibFixedToFP(uint64_t op, int fbits, bool u, FPRounding rounding,
-                        FPSCR &fpscr);
+                        FPSCR &fpscr, FPCR fpcr);
 template <>
 uint16_t fplibInfinity(int sgn);
 template <>
@@ -432,11 +450,11 @@ uint32_t fplibInfinity(int sgn);
 template <>
 uint64_t fplibInfinity(int sgn);
 template <>
-uint16_t fplibDefaultNaN();
+uint16_t fplibDefaultNaN(FPCR fpcr);
 template <>
-uint32_t fplibDefaultNaN();
+uint32_t fplibDefaultNaN(FPCR fpcr);
 template <>
-uint64_t fplibDefaultNaN();
+uint64_t fplibDefaultNaN(FPCR fpcr);
 
 template <>
 uint16_t fplib32RSqrtStep(uint16_t op1, uint16_t op2, FPSCR &fpscr);

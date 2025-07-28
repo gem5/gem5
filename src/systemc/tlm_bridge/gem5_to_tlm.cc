@@ -284,7 +284,10 @@ Gem5ToTlmBridge<BITWIDTH>::getBackdoor(tlm::tlm_generic_payload &trans)
 
     // If the target gave us one, translate it to a gem5 MemBackdoor and
     // store it in our cache.
-    AddrRange dmi_r(dmi_data.get_start_address(), dmi_data.get_end_address());
+    // The address range presented by tlm::tlm_dmi is inclusive, so when
+    // converting to gem5::MemBackdoor, we should + 1 on end address.
+    AddrRange dmi_r(dmi_data.get_start_address(),
+                    dmi_data.get_end_address() + 1);
     auto backdoor = new MemBackdoor(
             dmi_r, dmi_data.get_dmi_ptr(), MemBackdoor::NoAccess);
     backdoor->readable(dmi_data.is_read_allowed());

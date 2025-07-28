@@ -107,6 +107,7 @@ class ArmExtension(ScopedEnum):
         "FEAT_EVT",
         # Armv8.6
         "FEAT_FGT",
+        "FEAT_AFP",  # Optional in Armv8.6
         # Armv8.7
         "FEAT_HCX",
         "FEAT_XS",
@@ -278,6 +279,7 @@ class Armv85(Armv84):
 class Armv86(Armv85):
     extensions = Armv85.extensions + [
         "FEAT_FGT",
+        "FEAT_AFP",
     ]
 
 

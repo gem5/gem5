@@ -1,5 +1,5 @@
 ---
-# Copyright (c) 2022 Arm Limited
+# Copyright (c) 2022, 2025 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -96,6 +96,14 @@ repos:
             exclude: .*
             language: system
             description: The gem5 style checker hook.
+          - id: gem5-git-clang-format
+            name: gem5 clang-format
+            entry: util/run-git-clang-format.py
+            args: [--pre-commit]
+            always_run: true
+            exclude: .*
+            language: system
+            description: Run git-clang-format on the commit.
           - id: gem5-commit-msg-checker
             name: gem5 commit msg checker
             entry: util/git-commit-msg.py

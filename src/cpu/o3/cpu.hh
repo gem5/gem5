@@ -509,6 +509,14 @@ class CPU : public BaseCPU
     /** Gets a free thread id. Use if thread ids change across system. */
     ThreadID getFreeTid();
 
+    /**
+     * Get whether a thread is in user mode.
+     *
+     * @param tid The thread id
+     * @return true if the thread is in user mode, false otherwise
+     */
+    bool inUserMode(ThreadID tid);
+
   public:
     /** Returns a pointer to a thread context. */
     gem5::ThreadContext *

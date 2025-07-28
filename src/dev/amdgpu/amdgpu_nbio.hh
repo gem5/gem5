@@ -103,6 +103,19 @@ class AMDGPUDevice;
 #define MI300X_INV_ENG17_ACK11                            0x1e2f98
 #define MI300X_EPF0_STRAP0                                0x34d8
 
+//Range of register addresses to store the base addresses of
+//page tables for contexts 0-15
+#define MI200_REG_BM_PAGE_TABLE_BASE_ADDR_START           0x6b0ac
+#define MI200_REG_BM_PAGE_TABLE_BASE_ADDR_END             0x6b128
+//Range of register addresses to store the starting addresses of
+//page tables for contexts 0-15
+#define MI200_REG_BM_PAGE_TABLE_START_ADDR_START          0x6b12c
+#define MI200_REG_BM_PAGE_TABLE_START_ADDR_END            0x6b1a8
+//Range of register addresses to store the ending addresses of
+//page tables for contexts 0-15
+#define MI200_REG_BM_PAGE_TABLE_END_ADDR_START            0x6b1ac
+#define MI200_REG_BM_PAGE_TABLE_END_ADDR_END              0x6b1c8
+
 class AMDGPUNbio
 {
   public:
@@ -115,6 +128,41 @@ class AMDGPUNbio
 
     bool readFrame(PacketPtr pkt, Addr offset);
     void writeFrame(PacketPtr pkt, Addr offset);
+
+    bool is_MI200_regBM_PAGE_TABLE_BASE_ADDR(Addr offset) {
+        return ((offset >= MI200_REG_BM_PAGE_TABLE_BASE_ADDR_START &&
+                    offset <= MI200_REG_BM_PAGE_TABLE_BASE_ADDR_END) ?
+                true : false);
+    }
+
+    bool is_MI200_regBM_PAGE_TABLE_START_ADDR(Addr offset) {
+        return ((offset >= MI200_REG_BM_PAGE_TABLE_START_ADDR_START
+                    && offset <= MI200_REG_BM_PAGE_TABLE_START_ADDR_END) ?
+                true : false);
+    }
+
+    bool is_MI200_regBM_PAGE_TABLE_END_ADDR(Addr offset) {
+        return ((offset >= MI200_REG_BM_PAGE_TABLE_END_ADDR_START
+                    && offset <= MI200_REG_BM_PAGE_TABLE_END_ADDR_END) ?
+                true : false);
+    }
+
+    // The MMIO offsets that correspond to the page table registers in MI200
+    // are shifted left by the driver. The offsets are also in a range where
+    // each subsequent offset corresponds to the register for the next context.
+    // This function right shifts the MMIO offsets to get the register offset,
+    // and extracts context number out of it
+    uint16_t get_context_from_MI200_regBM_PAGE_TABLE_BASE_ADDR(Addr offset) {
+        return (((offset - MI200_REG_BM_PAGE_TABLE_BASE_ADDR_START) >> 2)/2);
+    }
+
+    uint16_t get_context_from_MI200_regBM_PAGE_TABLE_START_ADDR(Addr offset) {
+        return (((offset - MI200_REG_BM_PAGE_TABLE_START_ADDR_START) >> 2)/2);
+    }
+
+    uint16_t get_context_from_MI200_regBM_PAGE_TABLE_END_ADDR(Addr offset) {
+        return (((offset - MI200_REG_BM_PAGE_TABLE_END_ADDR_START) >> 2)/2);
+    }
 
   private:
     AMDGPUDevice *gpuDevice;

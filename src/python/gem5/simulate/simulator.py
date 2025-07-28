@@ -178,6 +178,7 @@ class Simulator:
                 "via it's `is_fullsystem` method."
             )
 
+        self._hypercall_max_ticks = None
         self.set_max_ticks(max_ticks)
 
         if id:
@@ -282,11 +283,63 @@ class Simulator:
             raise ValueError(
                 f"Max ticks must be less than {m5.MaxTick}, not {max_tick}"
             )
+        if self._hypercall_max_ticks:
+            warn(
+                "A hypercall 6 exit has already been scheduled for tick "
+                f"{self._hypercall_max_ticks}. Setting hypercall and classic "
+                "exits in the same simulation is not well tested and the "
+                "simulation may not behave as expected."
+            )
+
         self._max_ticks = max_tick
 
     def get_max_ticks(self) -> int:
         assert hasattr(self, "_max_ticks"), "Max ticks not set"
         return self._max_ticks
+
+    def set_hypercall_absolute_max_ticks(
+        self, max_tick: int, exit_str: str = "Max ticks reached"
+    ) -> None:
+        """Set the maximum number of ticks to simulate before the simulation
+        exits with a hypercall 6 exit. This exit will be handled by
+        ScheduledExitEventHandler by default. See `src/python/gem5/simulate/
+        exit_handler.py` for details.
+
+        Args:
+            max_tick (int): The number of ticks to simulate before exiting.
+            exit_str (str): The reason for the exit.
+        """
+        if self._max_ticks and self._max_ticks != m5.MaxTick:
+            warn(
+                "A classic MAX_TICKS exit has already been scheduled for "
+                f"tick {self._max_ticks}. Setting hypercall and classic "
+                "exits in the same simulation is not well tested and the "
+                "simulation may not behave as expected."
+            )
+        if exit_str == "Tick exit reached":
+            warn(
+                f"The exit string '{exit_str}' will cause the simulation "
+                "to exit with a classic ExitEvent.SCHEDULED_TICK exit event "
+                "instead of a hypercall."
+            )
+        m5.scheduleTickExitAbsolute(max_tick, exit_str)
+        self._hypercall_max_ticks = max_tick
+
+    def set_hypercall_relative_max_ticks(
+        self, ticks_from_current: int, exit_str: str = "Max ticks reached"
+    ) -> None:
+        """Set the number of ticks to simulate from the current tick before the
+        simulation exits with a hypercall 6 exit. This exit will be handled by
+        ScheduledExitEventHandler by default. See `src/python/gem5/simulate/
+        exit_handler.py` for details.
+
+        Args:
+            max_tick (int): The number of ticks to simulate from the current
+            tick before exiting.
+            exit_str (str): The reason for the exit.
+        """
+        max_tick = self.get_current_tick() + ticks_from_current
+        self.set_hypercall_absolute_max_ticks(max_tick, exit_str)
 
     def schedule_simpoint(self, simpoint_start_insts: List[int]) -> None:
         """

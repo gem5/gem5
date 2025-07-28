@@ -53,7 +53,7 @@ let {{
     def threeEqualRegInstX(name, Name, opClass, types, rCount, op,
                            readDest=False, pairwise=False, scalar=False,
                            byElem=False, decoder='Generic', complex=False,
-                           extra=''):
+                           extra='', nepSrc=''):
         assert (not pairwise) or ((not byElem) and (not scalar))
         global header_output, exec_output, decoders
         eWalkCode = simd64EnabledCheckCode + '''
@@ -83,6 +83,26 @@ let {{
                 eWalkCode += '''
         srcReg2.regs[%(reg)d] = htole(AA64FpOp2P%(reg)d_uw);
         ''' % { "reg" : reg }
+        if (not readDest) and scalar and nepSrc:
+            eWalkCode += '''
+        if (((FPCR)Fpcr).nep) {
+        '''
+            for reg in range(rCount):
+                if nepSrc == "vn":
+                    eWalkCode += '''
+            destReg.regs[%(reg)d] = htole(AA64FpOp1P%(reg)d_uw);
+            ''' % { "reg" : reg }
+                elif nepSrc == "vm":
+                    eWalkCode += '''
+            destReg.regs[%(reg)d] = htole(AA64FpOp2P%(reg)d_uw);
+            ''' % { "reg" : reg }
+                elif nepSrc == "vd":
+                    eWalkCode += '''
+            destReg.regs[%(reg)d] = htole(AA64FpDestP%(reg)d_uw);
+            ''' % { "reg" : reg }
+            eWalkCode += '''
+        }
+        '''
         readDestCode = ''
         if readDest:
             readDestCode = 'destElem = letoh(destReg.elements[i]);'
@@ -105,7 +125,17 @@ let {{
         }
         ''' % { "op" : op, "readDest" : readDestCode }
         else:
-            scalarCheck = '''
+            if nepSrc:
+                scalarCheck = '''
+            if (i != 0) {
+                if (!((FPCR)Fpcr).nep) {
+                    destReg.elements[i] = 0;
+                }
+                continue;
+            }
+            '''
+            else:
+                scalarCheck = '''
             if (i != 0) {
                 destReg.elements[i] = 0;
                 continue;
@@ -286,7 +316,7 @@ let {{
 
     def twoEqualRegInstX(name, Name, opClass, types, rCount, op,
                          readDest=False, scalar=False, byElem=False,
-                         hasImm=False, isDup=False, extra_check=''):
+                         hasImm=False, isDup=False, extra_check='', nepSrc=''):
         global header_output, exec_output
         assert (not isDup) or byElem
         if byElem:
@@ -308,10 +338,31 @@ let {{
                 eWalkCode += '''
         destReg.regs[%(reg)d] = htole(AA64FpDestP%(reg)d_uw);
         ''' % { "reg" : reg }
+        if (not readDest) and scalar and nepSrc == 'vd':
+            eWalkCode += '''
+        if (((FPCR)Fpcr).nep) {
+        '''
+            for reg in range(4 if isDup else rCount):
+                eWalkCode += '''
+            destReg.regs[%(reg)d] = htole(AA64FpDestP%(reg)d_uw);
+            ''' % { "reg" : reg }
+            eWalkCode += '''
+        }
+        '''
         readDestCode = ''
         if readDest:
             readDestCode = 'destElem = letoh(destReg.elements[i]);'
-        scalarCheck = '''
+        if nepSrc == 'vd':
+            scalarCheck = '''
+            if (i != 0) {
+                if (!((FPCR)Fpcr).nep) {
+                    destReg.elements[i] = 0;
+                }
+                continue;
+            }
+            '''
+        else:
+            scalarCheck = '''
             if (i != 0) {
                 destReg.elements[i] = 0;
                 continue;
@@ -408,7 +459,7 @@ let {{
             exec_output += NeonXExecDeclare.subst(substDict)
 
     def twoRegNarrowInstX(name, Name, opClass, types, op, readDest=False,
-                          scalar=False, hi=False, hasImm=False):
+                          scalar=False, hi=False, hasImm=False, nepSrc=''):
         global header_output, exec_output
         eWalkCode = simd64EnabledCheckCode + '''
         BigRegVect srcReg1;
@@ -427,10 +478,31 @@ let {{
             eWalkCode += '''
         destReg.elements[0] = 0;
         ''' % { "reg" : reg }
+        if (not readDest) and scalar and nepSrc == 'vd':
+            eWalkCode += '''
+        if (((FPCR)Fpcr).nep) {
+        '''
+            for reg in range(2):
+                eWalkCode += '''
+            destReg.regs[%(reg)d] = htole(AA64FpDestP%(reg)d_uw);
+            ''' % { "reg" : reg }
+            eWalkCode += '''
+        }
+        '''
         readDestCode = ''
         if readDest:
             readDestCode = 'destElem = letoh(destReg.elements[i]);'
-        scalarCheck = '''
+        if nepSrc == 'vd':
+            scalarCheck = '''
+            if (i != 0) {
+                if (!((FPCR)Fpcr).nep) {
+                    destReg.elements[i] = 0;
+                }
+                continue;
+            }
+            '''
+        else:
+            scalarCheck = '''
             if (i != 0) {
                 destReg.elements[i] = 0;
                 continue;
@@ -458,8 +530,20 @@ let {{
                 eWalkCode += '''
         AA64FpDestP%(reg)d_uw = AA64FpDestP%(reg)d_uw;''' % { "reg" : reg }
         else:
-            for reg in range(2, 4):  # zero upper half
+            if (not readDest) and scalar and nepSrc == 'vd':
                 eWalkCode += '''
+        if (!((FPCR)Fpcr).nep) {
+        '''
+                for reg in range(2, 4):  # zero upper half
+                    eWalkCode += '''
+            AA64FpDestP%(reg)d_uw = 0;
+            ''' % { "reg" : reg }
+                eWalkCode += '''
+        }
+        '''
+            else:
+                for reg in range(2, 4):  # zero upper half
+                    eWalkCode += '''
         AA64FpDestP%(reg)d_uw = 0;
         ''' % { "reg" : reg }
 
@@ -1008,6 +1092,7 @@ let {{
         Element el3;
         for (int i = 0; i < eCount/2; ++i) {
             FPSCR fpscr = (FPSCR) FpscrExc;
+            FPCR fpcr = (FPCR)Fpcr;
 
             Element srcElem1_1 = letoh(srcReg1.elements[2*i]);
             Element srcElem1_2 = letoh(srcReg1.elements[2*i+1]);
@@ -1017,14 +1102,14 @@ let {{
             Element destElem_2;
             if (rot) {
                 el1 = srcElem2_2;
-                el3 = fplibNeg<Element>(srcElem2_1);
+                el3 = fplibNeg<Element>(srcElem2_1, fpcr);
             } else {
-                el1 = fplibNeg<Element>(srcElem2_2);
+                el1 = fplibNeg<Element>(srcElem2_2, fpcr);
                 el3 = srcElem2_1;
             }
 
-            destElem_1 = fplibAdd<Element>(srcElem1_1, el1, fpscr);
-            destElem_2 = fplibAdd<Element>(srcElem1_2, el3, fpscr);
+            destElem_1 = fplibAdd<Element>(srcElem1_1, el1, fpscr, fpcr);
+            destElem_2 = fplibAdd<Element>(srcElem1_2, el3, fpscr, fpcr);
 
             FpscrExc = fpscr;
 
@@ -1047,6 +1132,7 @@ let {{
         Element el4;
         for (int i = 0; i < eCount/2; ++i) {
             FPSCR fpscr = (FPSCR) FpscrExc;
+            FPCR fpcr = (FPCR)Fpcr;
 
             Element srcElem1_1 = letoh(srcReg1.elements[2*i]);
             Element srcElem1_2 = letoh(srcReg1.elements[2*i+1]);
@@ -1066,7 +1152,7 @@ let {{
                 }
               case 0x1:
                 {
-                  el1 = fplibNeg<Element>(srcElem2_2);
+                  el1 = fplibNeg<Element>(srcElem2_2, fpcr);
                   el2 = srcElem1_2;
                   el3 = srcElem2_1;
                   el4 = srcElem1_2;
@@ -1074,9 +1160,9 @@ let {{
                 }
               case 0x2:
                 {
-                  el1 = fplibNeg<Element>(srcElem2_1);
+                  el1 = fplibNeg<Element>(srcElem2_1, fpcr);
                   el2 = srcElem1_1;
-                  el3 = fplibNeg<Element>(srcElem2_2);
+                  el3 = fplibNeg<Element>(srcElem2_2, fpcr);
                   el4 = srcElem1_1;
                   break;
                 }
@@ -1084,13 +1170,15 @@ let {{
                 {
                   el1 = srcElem2_2;
                   el2 = srcElem1_2;
-                  el3 = fplibNeg<Element>(srcElem2_1);
+                  el3 = fplibNeg<Element>(srcElem2_1, fpcr);
                   el4 = srcElem1_2;
                   break;
                 }
             }
-            destElem_1 = fplibMulAdd<Element>(destElem_1, el2, el1, fpscr);
-            destElem_2 = fplibMulAdd<Element>(destElem_2, el4, el3, fpscr);
+            destElem_1 = fplibMulAdd<Element>(destElem_1, el2, el1, fpscr,
+                                              fpcr);
+            destElem_2 = fplibMulAdd<Element>(destElem_2, el4, el3, fpscr,
+                                              fpcr);
 
             FpscrExc = fpscr;
 
@@ -1406,32 +1494,35 @@ let {{
     # FABD
     fpOp = '''
             FPSCR fpscr = (FPSCR) FpscrExc;
+            [[maybe_unused]] FPCR fpcr = (FPCR)Fpcr;
             destElem = %s;
             FpscrExc = fpscr;
     '''
-    fabdCode = fpOp % "fplibAbs<Element>(fplibSub(srcElem1, srcElem2, fpscr))"
+    fabdCode = fpOp % ("fplibAbs<Element>(fplibSub"
+                        "(srcElem1, srcElem2, fpscr, fpcr), fpcr)")
     threeEqualRegInstX("fabd", "FabdDX", "SimdFloatAddOp", smallFloatTypes, 2,
                        fabdCode)
     threeEqualRegInstX("fabd", "FabdQX", "SimdFloatAddOp", floatTypes, 4,
                        fabdCode)
     threeEqualRegInstX("fabd", "FabdScX", "SimdFloatAddOp", floatTypes, 4,
-                       fabdCode, scalar=True)
+                       fabdCode, scalar=True, nepSrc="vn")
     # FABS
-    fabsCode = fpOp % "fplibAbs<Element>(srcElem1)"
+    fabsCode = fpOp % "fplibAbs<Element>(srcElem1, fpcr)"
     twoEqualRegInstX("Abs", "FabsDX", "SimdFloatAluOp", smallFloatTypes, 2,
                      fabsCode)
     twoEqualRegInstX("Abs", "FabsQX", "SimdFloatAluOp", floatTypes, 4,
                      fabsCode)
     # FACGE
-    fpCmpAbsOp = fpOp % ("fplibCompare%s<Element>(fplibAbs<Element>(srcElem1),"
-                         " fplibAbs<Element>(srcElem2), fpscr) ? -1 : 0")
+    fpCmpAbsOp = fpOp % ("fplibCompare%s<Element>(fplibAbs<Element>"
+                        "(srcElem1, fpcr), fplibAbs<Element>(srcElem2, fpcr),"
+                        " fpscr, fpcr) ? -1 : 0")
     facgeCode = fpCmpAbsOp % "GE"
     threeEqualRegInstX("facge", "FacgeDX", "SimdFloatCmpOp", smallFloatTypes,
                        2, facgeCode)
     threeEqualRegInstX("facge", "FacgeQX", "SimdFloatCmpOp", floatTypes, 4,
                        facgeCode)
     threeEqualRegInstX("facge", "FacgeScX", "SimdFloatCmpOp", floatTypes, 4,
-                       facgeCode, scalar=True)
+                       facgeCode, scalar=True, nepSrc="vm")
     # FACGT
     facgtCode = fpCmpAbsOp % "GT"
     threeEqualRegInstX("facgt", "FacgtDX", "SimdFloatCmpOp", smallFloatTypes,
@@ -1439,9 +1530,9 @@ let {{
     threeEqualRegInstX("facgt", "FacgtQX", "SimdFloatCmpOp", floatTypes, 4,
                        facgtCode)
     threeEqualRegInstX("facgt", "FacgtScX", "SimdFloatCmpOp", floatTypes, 4,
-                       facgtCode, scalar=True)
+                       facgtCode, scalar=True, nepSrc="vm")
     # FADD
-    fpBinOp = fpOp % "fplib%s<Element>(srcElem1, srcElem2, fpscr)"
+    fpBinOp = fpOp % "fplib%s<Element>(srcElem1, srcElem2, fpscr, fpcr)"
     faddCode = fpBinOp % "Add"
     threeEqualRegInstX("fadd", "FaddDX", "SimdFloatAddOp", smallFloatTypes, 2,
                        faddCode)
@@ -1460,17 +1551,18 @@ let {{
     threeEqualRegInstX("faddp", "FaddpQX", "SimdFloatAddOp", floatTypes, 4,
                        faddCode, pairwise=True)
     # FCMEQ (register)
-    fpCmpOp = fpOp % ("fplibCompare%s<Element>(srcElem1, srcElem2, fpscr) ?"
-                      " -1 : 0")
+    fpCmpOp = fpOp % ("fplibCompare%s<Element>"
+                        "(srcElem1, srcElem2, fpscr, fpcr) ? -1 : 0")
     fcmeqCode = fpCmpOp % "EQ"
     threeEqualRegInstX("fcmeq", "FcmeqDX", "SimdFloatCmpOp", smallFloatTypes,
                        2, fcmeqCode)
     threeEqualRegInstX("fcmeq", "FcmeqQX", "SimdFloatCmpOp", floatTypes, 4,
                        fcmeqCode)
     threeEqualRegInstX("fcmeq", "FcmeqScX", "SimdFloatCmpOp", floatTypes, 4,
-                       fcmeqCode, scalar=True)
+                       fcmeqCode, scalar=True, nepSrc="vm")
     # FCMEQ (zero)
-    fpCmpZeroOp = fpOp % "fplibCompare%s<Element>(srcElem1, 0, fpscr) ? -1 : 0"
+    fpCmpZeroOp = fpOp % ("fplibCompare%s<Element>"
+                        "(srcElem1, 0, fpscr, fpcr) ? -1 : 0")
     fcmeqZeroCode = fpCmpZeroOp % "EQ"
     twoEqualRegInstX("fcmeq", "FcmeqZeroDX", "SimdFloatCmpOp", smallFloatTypes,
                      2, fcmeqZeroCode)
@@ -1485,7 +1577,7 @@ let {{
     threeEqualRegInstX("fcmge", "FcmgeQX", "SimdFloatCmpOp", floatTypes, 4,
                        fcmgeCode)
     threeEqualRegInstX("fcmge", "FcmgeScX", "SimdFloatCmpOp", floatTypes, 4,
-                       fcmgeCode, scalar=True)
+                       fcmgeCode, scalar=True, nepSrc="vm")
     # FCMGE (zero)
     fcmgeZeroCode = fpCmpZeroOp % "GE"
     twoEqualRegInstX("fcmge", "FcmgeZeroDX", "SimdFloatCmpOp", smallFloatTypes,
@@ -1501,7 +1593,7 @@ let {{
     threeEqualRegInstX("fcmgt", "FcmgtQX", "SimdFloatCmpOp", floatTypes, 4,
                        fcmgtCode)
     threeEqualRegInstX("fcmgt", "FcmgtScX", "SimdFloatCmpOp", floatTypes, 4,
-                       fcmgtCode, scalar=True)
+                       fcmgtCode, scalar=True, nepSrc="vm")
     # FCMGT (zero)
     fcmgtZeroCode = fpCmpZeroOp % "GT"
     twoEqualRegInstX("fcmgt", "FcmgtZeroDX", "SimdFloatCmpOp", smallFloatTypes,
@@ -1511,8 +1603,8 @@ let {{
     twoEqualRegInstX("fcmgt", "FcmgtZeroScX", "SimdFloatCmpOp", floatTypes, 4,
                      fcmgtZeroCode, scalar=True)
     # FCMLE (zero)
-    fpCmpRevZeroOp = fpOp % ("fplibCompare%s<Element>(0, srcElem1, fpscr) ?"
-                             " -1 : 0")
+    fpCmpRevZeroOp = fpOp % ("fplibCompare%s<Element>"
+                             "(0, srcElem1, fpscr, fpcr) ? -1 : 0")
     fcmleZeroCode = fpCmpRevZeroOp % "GE"
     twoEqualRegInstX("fcmle", "FcmleZeroDX", "SimdFloatCmpOp", smallFloatTypes,
                      2, fcmleZeroCode)
@@ -1530,14 +1622,14 @@ let {{
                      fcmltZeroCode, scalar=True)
     # FCVTAS
     fcvtCode = fpOp % ("fplibFPToFixed<Element, Element>("
-                       "srcElem1, %s, %s, %s, fpscr)")
+                       "srcElem1, %s, %s, %s, fpscr, fpcr)")
     fcvtasCode = fcvtCode % ("0", "false", "FPRounding_TIEAWAY")
     twoEqualRegInstX("fcvtas", "FcvtasDX", "SimdCvtOp", smallFloatTypes, 2,
                      fcvtasCode)
     twoEqualRegInstX("fcvtas", "FcvtasQX", "SimdCvtOp", floatTypes, 4,
                      fcvtasCode)
     twoEqualRegInstX("fcvtas", "FcvtasScX", "SimdCvtOp", floatTypes, 4,
-                     fcvtasCode, scalar=True)
+                     fcvtasCode, scalar=True, nepSrc="vd")
     # FCVTAU
     fcvtauCode = fcvtCode % ("0", "true", "FPRounding_TIEAWAY")
     twoEqualRegInstX("fcvtau", "FcvtauDX", "SimdCvtOp", smallFloatTypes, 2,
@@ -1545,10 +1637,10 @@ let {{
     twoEqualRegInstX("fcvtau", "FcvtauQX", "SimdCvtOp", floatTypes, 4,
                      fcvtauCode)
     twoEqualRegInstX("fcvtau", "FcvtauScX", "SimdCvtOp", floatTypes, 4,
-                     fcvtauCode, scalar=True)
+                     fcvtauCode, scalar=True, nepSrc="vd")
     # FCVTL, FCVTL2
     fcvtlCode = fpOp % ("fplibConvert<Element, BigElement>("
-                        "srcElem1, FPCRRounding(fpscr), fpscr)")
+                        "srcElem1, FPCRRounding(fpscr), fpscr, fpcr)")
     twoRegLongInstX("fcvtl", "FcvtlX", "SimdCvtOp", ("uint16_t", "uint32_t"),
                     fcvtlCode)
     twoRegLongInstX("fcvtl", "Fcvtl2X", "SimdCvtOp", ("uint16_t", "uint32_t"),
@@ -1560,7 +1652,7 @@ let {{
     twoEqualRegInstX("fcvtms", "FcvtmsQX", "SimdCvtOp", floatTypes, 4,
                      fcvtmsCode)
     twoEqualRegInstX("fcvtms", "FcvtmsScX", "SimdCvtOp", floatTypes, 4,
-                     fcvtmsCode, scalar=True)
+                     fcvtmsCode, scalar=True, nepSrc="vd")
     # FCVTMU
     fcvtmuCode = fcvtCode % ("0", "true", "FPRounding_NEGINF")
     twoEqualRegInstX("fcvtmu", "FcvtmuDX", "SimdCvtOp", smallFloatTypes, 2,
@@ -1568,10 +1660,10 @@ let {{
     twoEqualRegInstX("fcvtmu", "FcvtmuQX", "SimdCvtOp", floatTypes, 4,
                      fcvtmuCode)
     twoEqualRegInstX("fcvtmu", "FcvtmuScX", "SimdCvtOp", floatTypes, 4,
-                     fcvtmuCode, scalar=True)
+                     fcvtmuCode, scalar=True, nepSrc="vd")
     # FCVTN, FCVTN2
     fcvtnCode = fpOp % ("fplibConvert<BigElement, Element>("
-                        "srcElem1, FPCRRounding(fpscr), fpscr)")
+                        "srcElem1, FPCRRounding(fpscr), fpscr, fpcr)")
     twoRegNarrowInstX("fcvtn", "FcvtnX", "SimdCvtOp",
                       ("uint16_t", "uint32_t"), fcvtnCode)
     twoRegNarrowInstX("fcvtn", "Fcvtn2X", "SimdCvtOp",
@@ -1583,7 +1675,7 @@ let {{
     twoEqualRegInstX("fcvtns", "FcvtnsQX", "SimdCvtOp", floatTypes, 4,
                      fcvtnsCode)
     twoEqualRegInstX("fcvtns", "FcvtnsScX", "SimdCvtOp", floatTypes, 4,
-                     fcvtnsCode, scalar=True)
+                     fcvtnsCode, scalar=True, nepSrc="vd")
     # FCVTNU
     fcvtnuCode = fcvtCode % ("0", "true", "FPRounding_TIEEVEN")
     twoEqualRegInstX("fcvtnu", "FcvtnuDX", "SimdCvtOp", smallFloatTypes, 2,
@@ -1591,7 +1683,7 @@ let {{
     twoEqualRegInstX("fcvtnu", "FcvtnuQX", "SimdCvtOp", floatTypes, 4,
                      fcvtnuCode)
     twoEqualRegInstX("fcvtnu", "FcvtnuScX", "SimdCvtOp", floatTypes, 4,
-                     fcvtnuCode, scalar=True)
+                     fcvtnuCode, scalar=True, nepSrc="vd")
     # FCVTPS
     fcvtpsCode = fcvtCode % ("0", "false", "FPRounding_POSINF")
     twoEqualRegInstX("fcvtps", "FcvtpsDX", "SimdCvtOp", smallFloatTypes, 2,
@@ -1599,7 +1691,7 @@ let {{
     twoEqualRegInstX("fcvtps", "FcvtpsQX", "SimdCvtOp", floatTypes, 4,
                      fcvtpsCode)
     twoEqualRegInstX("fcvtps", "FcvtpsScX", "SimdCvtOp", floatTypes, 4,
-                     fcvtpsCode, scalar=True)
+                     fcvtpsCode, scalar=True, nepSrc="vd")
     # FCVTPU
     fcvtpuCode = fcvtCode % ("0", "true", "FPRounding_POSINF")
     twoEqualRegInstX("fcvtpu", "FcvtpuDX", "SimdCvtOp", smallFloatTypes, 2,
@@ -1607,16 +1699,16 @@ let {{
     twoEqualRegInstX("fcvtpu", "FcvtpuQX", "SimdCvtOp", floatTypes, 4,
                      fcvtpuCode)
     twoEqualRegInstX("fcvtpu", "FcvtpuScX", "SimdCvtOp", floatTypes, 4,
-                     fcvtpuCode, scalar=True)
+                     fcvtpuCode, scalar=True, nepSrc="vd")
     # FCVTXN, FCVTXN2
     fcvtxnCode = fpOp % ("fplibConvert<BigElement, Element>("
-                         "srcElem1, FPRounding_ODD, fpscr)")
+                         "srcElem1, FPRounding_ODD, fpscr, fpcr)")
     twoRegNarrowInstX("fcvtxn", "FcvtxnX", "SimdCvtOp", smallFloatTypes,
                       fcvtxnCode)
     twoRegNarrowInstX("fcvtxn", "Fcvtxn2X", "SimdCvtOp", smallFloatTypes,
                       fcvtxnCode, hi=True)
     twoRegNarrowInstX("fcvtxn", "FcvtxnScX", "SimdCvtOp", smallFloatTypes,
-                      fcvtxnCode, scalar=True)
+                      fcvtxnCode, scalar=True, nepSrc="vd")
     # FCVTZS (fixed-point)
     fcvtzsCode = fcvtCode % ("imm", "false", "FPRounding_ZERO")
     twoEqualRegInstX("fcvtzs", "FcvtzsFixedDX", "SimdCvtOp", smallFloatTypes,
@@ -1624,7 +1716,7 @@ let {{
     twoEqualRegInstX("fcvtzs", "FcvtzsFixedQX", "SimdCvtOp", floatTypes, 4,
                      fcvtzsCode, hasImm=True)
     twoEqualRegInstX("fcvtzs", "FcvtzsFixedScX", "SimdCvtOp", floatTypes, 4,
-                     fcvtzsCode, hasImm=True, scalar=True)
+                     fcvtzsCode, hasImm=True, scalar=True, nepSrc="vd")
     # FCVTZS (integer)
     fcvtzsIntCode = fcvtCode % ("0", "false", "FPRounding_ZERO")
     twoEqualRegInstX("fcvtzs", "FcvtzsIntDX", "SimdCvtOp", smallFloatTypes,
@@ -1632,7 +1724,7 @@ let {{
     twoEqualRegInstX("fcvtzs", "FcvtzsIntQX", "SimdCvtOp", floatTypes, 4,
                      fcvtzsIntCode)
     twoEqualRegInstX("fcvtzs", "FcvtzsIntScX", "SimdCvtOp", floatTypes, 4,
-                     fcvtzsIntCode, scalar=True)
+                     fcvtzsIntCode, scalar=True, nepSrc="vd")
     # FCVTZU (fixed-point)
     fcvtzuCode = fcvtCode % ("imm", "true", "FPRounding_ZERO")
     twoEqualRegInstX("fcvtzu", "FcvtzuFixedDX", "SimdCvtOp", smallFloatTypes,
@@ -1640,7 +1732,7 @@ let {{
     twoEqualRegInstX("fcvtzu", "FcvtzuFixedQX", "SimdCvtOp", floatTypes, 4,
                      fcvtzuCode, hasImm=True)
     twoEqualRegInstX("fcvtzu", "FcvtzuFixedScX", "SimdCvtOp", floatTypes, 4,
-                     fcvtzuCode, hasImm=True, scalar=True)
+                     fcvtzuCode, hasImm=True, scalar=True, nepSrc="vd")
     # FCVTZU (integer)
     fcvtzuIntCode = fcvtCode % ("0", "true", "FPRounding_ZERO")
     twoEqualRegInstX("fcvtzu", "FcvtzuIntDX", "SimdCvtOp", smallFloatTypes, 2,
@@ -1648,7 +1740,7 @@ let {{
     twoEqualRegInstX("fcvtzu", "FcvtzuIntQX", "SimdCvtOp", floatTypes, 4,
                      fcvtzuIntCode)
     twoEqualRegInstX("fcvtzu", "FcvtzuIntScX", "SimdCvtOp", floatTypes, 4,
-                     fcvtzuIntCode, scalar=True)
+                     fcvtzuIntCode, scalar=True, nepSrc="vd")
     # FDIV
     fdivCode = fpBinOp % "Div"
     threeEqualRegInstX("fdiv", "FdivDX", "SimdFloatDivOp", smallFloatTypes, 2,
@@ -1681,7 +1773,7 @@ let {{
                        fmaxnmCode, pairwise=True)
     # FMAXNMV
     # Note: SimdFloatCmpOp can be a bit optimistic here
-    fpAcrossOp = fpOp % "fplib%s<Element>(destElem, srcElem1, fpscr)"
+    fpAcrossOp = fpOp % "fplib%s<Element>(destElem, srcElem1, fpscr, fpcr)"
     fmaxnmAcrossCode = fpAcrossOp % "MaxNum"
     twoRegAcrossInstX("fmaxnmv", "FmaxnmvDX", "SimdFloatCmpOp",
                       ("uint16_t", "uint32_t"), 2, fmaxnmAcrossCode,
@@ -1771,13 +1863,14 @@ let {{
           return std::make_shared<UndefinedInstruction>(machInst, true);
     '''
     fmlaCode = fpOp % ("fplibMulAdd<Element>("
-                       "destElem, srcElem1, srcElem2, fpscr)")
+                       "destElem, srcElem1, srcElem2, fpscr, fpcr)")
     threeEqualRegInstX("fmla", "FmlaElemDX", "SimdFloatMultAccOp",
                        smallFloatTypes, 2, fmlaCode, True, byElem=True)
     threeEqualRegInstX("fmla", "FmlaElemQX", "SimdFloatMultAccOp", floatTypes,
                        4, fmlaCode, True, byElem=True)
     threeEqualRegInstX("fmla", "FmlaElemScX", "SimdFloatMultAccOp", floatTypes,
-                       4, fmlaCode, True, byElem=True, scalar=True)
+                       4, fmlaCode, True, byElem=True, scalar=True,
+                       nepSrc="vd")
     # FMLA (vector)
     threeEqualRegInstX("fmla", "FmlaDX", "SimdFloatMultAccOp", smallFloatTypes,
                        2, fmlaCode, True)
@@ -1785,7 +1878,7 @@ let {{
                        fmlaCode, True)
     # FMLAL (by element)
     fmlalCode = fpOp % ("fplibMulAddH("
-                       "destElem, srcElem1, srcElem2, fpscr)")
+                       "destElem, srcElem1, srcElem2, fpscr, fpcr)")
     threeRegLongInstX("fmlal", "FmlalElemDX", "SimdFloatMultAccOp",
                       ("uint16_t",), fmlalCode, True, byElem=True, short=True,
                       extra_check=fhm_check)
@@ -1814,22 +1907,23 @@ let {{
                       ("uint16_t",), fmlalCode, True, hi=True,
                       extra_check=fhm_check)
     # FMLS (by element)
-    fmlsCode = fpOp % ("fplibMulAdd<Element>(destElem,"
-                       " fplibNeg<Element>(srcElem1), srcElem2, fpscr)")
+    fmlsCode = fpOp % ("fplibMulAdd<Element>(destElem, fplibNeg<Element>"
+                        "(srcElem1, fpcr), srcElem2, fpscr, fpcr)")
     threeEqualRegInstX("fmls", "FmlsElemDX", "SimdFloatMultAccOp",
                        smallFloatTypes, 2, fmlsCode, True, byElem=True)
     threeEqualRegInstX("fmls", "FmlsElemQX", "SimdFloatMultAccOp", floatTypes,
                        4, fmlsCode, True, byElem=True)
     threeEqualRegInstX("fmls", "FmlsElemScX", "SimdFloatMultAccOp", floatTypes,
-                       4, fmlsCode, True, byElem=True, scalar=True)
+                       4, fmlsCode, True, byElem=True, scalar=True,
+                       nepSrc="vd")
     # FMLS (vector)
     threeEqualRegInstX("fmls", "FmlsDX", "SimdFloatMultAccOp", smallFloatTypes,
                        2, fmlsCode, True)
     threeEqualRegInstX("fmls", "FmlsQX", "SimdFloatMultAccOp", floatTypes, 4,
                        fmlsCode, True)
     # FMLSL (by element)
-    fmlslCode = fpOp % ("fplibMulAddH(destElem, "
-                       "fplibNeg<Element>(srcElem1), srcElem2, fpscr)")
+    fmlslCode = fpOp % ("fplibMulAddH(destElem, fplibNeg<Element>"
+                        "(srcElem1, fpcr), srcElem2, fpscr, fpcr)")
     threeRegLongInstX("fmlsl", "FmlslElemDX", "SimdFloatMultAccOp",
                       ("uint16_t",), fmlslCode, True, byElem=True, short=True,
                       extra_check=fhm_check)
@@ -1868,7 +1962,7 @@ let {{
     threeEqualRegInstX("fmul", "FmulElemQX", "SimdFloatMultOp", floatTypes, 4,
                        fmulCode, byElem=True)
     threeEqualRegInstX("fmul", "FmulElemScX", "SimdFloatMultOp", floatTypes, 4,
-                       fmulCode, byElem=True, scalar=True)
+                       fmulCode, byElem=True, scalar=True, nepSrc="vn")
     # FMUL (vector)
     threeEqualRegInstX("fmul", "FmulDX", "SimdFloatMultOp", smallFloatTypes, 2,
                        fmulCode)
@@ -1881,28 +1975,28 @@ let {{
     threeEqualRegInstX("fmulx", "FmulxQX", "SimdFloatMultOp", floatTypes, 4,
                        fmulxCode)
     threeEqualRegInstX("fmulx", "FmulxScX", "SimdFloatMultOp", floatTypes, 4,
-                       fmulxCode, scalar=True)
+                       fmulxCode, scalar=True, nepSrc="vn")
     # FMULX (by element)
     threeEqualRegInstX("fmulx", "FmulxElemDX", "SimdFloatMultOp",
                        smallFloatTypes, 2, fmulxCode, byElem=True)
     threeEqualRegInstX("fmulx", "FmulxElemQX", "SimdFloatMultOp", floatTypes,
                        4, fmulxCode, byElem=True)
     threeEqualRegInstX("fmulx", "FmulxElemScX", "SimdFloatMultOp", floatTypes,
-                       4, fmulxCode, byElem=True, scalar=True)
+                       4, fmulxCode, byElem=True, scalar=True, nepSrc="vn")
     # FNEG
-    fnegCode = fpOp % "fplibNeg<Element>(srcElem1)"
+    fnegCode = fpOp % "fplibNeg<Element>(srcElem1, fpcr)"
     twoEqualRegInstX("Neg", "FnegDX", "SimdFloatAluOp", smallFloatTypes, 2,
                      fnegCode)
     twoEqualRegInstX("Neg", "FnegQX", "SimdFloatAluOp", floatTypes, 4,
                      fnegCode)
     # FRECPE
-    frecpeCode = fpOp % "fplibRecipEstimate<Element>(srcElem1, fpscr)"
+    frecpeCode = fpOp % "fplibRecipEstimate<Element>(srcElem1, fpscr, fpcr)"
     twoEqualRegInstX("frecpe", "FrecpeDX", "SimdFloatMultAccOp",
                      smallFloatTypes, 2, frecpeCode)
     twoEqualRegInstX("frecpe", "FrecpeQX", "SimdFloatMultAccOp", floatTypes, 4,
                      frecpeCode)
     twoEqualRegInstX("frecpe", "FrecpeScX", "SimdFloatMultAccOp", floatTypes,
-                     4, frecpeCode, scalar=True)
+                     4, frecpeCode, scalar=True, nepSrc="vd")
     # FRECPS
     frecpsCode = fpBinOp % "RecipStepFused"
     threeEqualRegInstX("frecps", "FrecpsDX", "SimdFloatMultAccOp",
@@ -1910,13 +2004,14 @@ let {{
     threeEqualRegInstX("frecps", "FrecpsQX", "SimdFloatMultAccOp", floatTypes,
                        4, frecpsCode)
     threeEqualRegInstX("frecps", "FrecpsScX", "SimdFloatMultAccOp", floatTypes,
-                       4, frecpsCode, scalar=True)
+                       4, frecpsCode, scalar=True, nepSrc="vn")
     # FRECPX
-    frecpxCode = fpOp % "fplibRecpX<Element>(srcElem1, fpscr)"
+    frecpxCode = fpOp % "fplibRecpX<Element>(srcElem1, fpscr, fpcr)"
     twoEqualRegInstX("frecpx", "FrecpxX", "SimdFloatMultAccOp", floatTypes, 4,
-                     frecpxCode, scalar=True)
+                     frecpxCode, scalar=True, nepSrc="vd")
     # FRINTA
-    frintCode = fpOp % "fplibRoundInt<Element>(srcElem1, %s, %s, fpscr)"
+    frintCode = fpOp % ("fplibRoundInt<Element>"
+                        "(srcElem1, %s, %s, fpscr, fpcr)")
     frintaCode = frintCode % ("FPRounding_TIEAWAY", "false")
     twoEqualRegInstX("frinta", "FrintaDX", "SimdCvtOp", smallFloatTypes, 2,
                      frintaCode)
@@ -1965,7 +2060,7 @@ let {{
           return std::make_shared<UndefinedInstruction>(machInst, true);
     '''
     frint32xCode = fpOp % ("fplibRoundIntN<Element>"
-                        "(srcElem1, FPCRRounding(fpscr), true, 32, fpscr)")
+                    "(srcElem1, FPCRRounding(fpscr), true, 32, fpscr, fpcr)")
     twoEqualRegInstX("frint32x", "Frint32xDX", "SimdCvtOp", ('uint32_t',), 2,
                      frint32xCode, extra_check=frintts_check)
     twoEqualRegInstX("frint32x", "Frint32xQX", "SimdCvtOp",
@@ -1973,7 +2068,7 @@ let {{
                      frint32xCode, extra_check=frintts_check)
     # FRINT32Z
     frint32zCode = fpOp % ("fplibRoundIntN<Element>"
-                        "(srcElem1, FPRounding_ZERO, true, 32, fpscr)")
+                        "(srcElem1, FPRounding_ZERO, true, 32, fpscr, fpcr)")
     twoEqualRegInstX("frint32z", "Frint32zDX", "SimdCvtOp", ('uint32_t',), 2,
                      frint32zCode, extra_check=frintts_check)
     twoEqualRegInstX("frint32z", "Frint32zQX", "SimdCvtOp",
@@ -1981,7 +2076,7 @@ let {{
                      frint32zCode, extra_check=frintts_check)
     # FRINT64X
     frint64xCode = fpOp % ("fplibRoundIntN<Element>"
-                        "(srcElem1, FPCRRounding(fpscr), true, 64, fpscr)")
+                    "(srcElem1, FPCRRounding(fpscr), true, 64, fpscr, fpcr)")
     twoEqualRegInstX("frint64x", "Frint64xDX", "SimdCvtOp", ('uint32_t',), 2,
                      frint64xCode, extra_check=frintts_check)
     twoEqualRegInstX("frint64x", "Frint64xQX", "SimdCvtOp",
@@ -1989,20 +2084,20 @@ let {{
                      frint64xCode, extra_check=frintts_check)
     # FRINT64Z
     frint64zCode = fpOp % ("fplibRoundIntN<Element>"
-                        "(srcElem1, FPRounding_ZERO, true, 64, fpscr)")
+                        "(srcElem1, FPRounding_ZERO, true, 64, fpscr, fpcr)")
     twoEqualRegInstX("frint64z", "Frint64zDX", "SimdCvtOp", ('uint32_t',), 2,
                      frint64zCode, extra_check=frintts_check)
     twoEqualRegInstX("frint64z", "Frint64zQX", "SimdCvtOp",
                      ('uint32_t', 'uint64_t',), 4,
                      frint64zCode, extra_check=frintts_check)
     # FRSQRTE
-    frsqrteCode = fpOp % "fplibRSqrtEstimate<Element>(srcElem1, fpscr)"
+    frsqrteCode = fpOp % "fplibRSqrtEstimate<Element>(srcElem1, fpscr, fpcr)"
     twoEqualRegInstX("frsqrte", "FrsqrteDX", "SimdFloatSqrtOp",
                      smallFloatTypes, 2, frsqrteCode)
     twoEqualRegInstX("frsqrte", "FrsqrteQX", "SimdFloatSqrtOp", floatTypes, 4,
                      frsqrteCode)
     twoEqualRegInstX("frsqrte", "FrsqrteScX", "SimdFloatSqrtOp", floatTypes, 4,
-                     frsqrteCode, scalar=True)
+                     frsqrteCode, scalar=True, nepSrc="vd")
     # FRSQRTS
     frsqrtsCode = fpBinOp % "RSqrtStepFused"
     threeEqualRegInstX("frsqrts", "FrsqrtsDX", "SimdFloatMiscOp",
@@ -2010,9 +2105,9 @@ let {{
     threeEqualRegInstX("frsqrts", "FrsqrtsQX", "SimdFloatMiscOp", floatTypes,
                        4, frsqrtsCode)
     threeEqualRegInstX("frsqrts", "FrsqrtsScX", "SimdFloatMiscOp", floatTypes,
-                       4, frsqrtsCode, scalar=True)
+                       4, frsqrtsCode, scalar=True, nepSrc="vn")
     # FSQRT
-    fsqrtCode = fpOp % "fplibSqrt<Element>(srcElem1, fpscr)"
+    fsqrtCode = fpOp % "fplibSqrt<Element>(srcElem1, fpscr, fpcr)"
     twoEqualRegInstX("fsqrt", "FsqrtDX", "SimdFloatSqrtOp", smallFloatTypes, 2,
                      fsqrtCode)
     twoEqualRegInstX("fsqrt", "FsqrtQX", "SimdFloatSqrtOp", floatTypes, 4,
@@ -2276,7 +2371,7 @@ let {{
     # SCVTF (fixed-point)
     scvtfFixedCode = fpOp % ("fplibFixedToFP<Element>("
                              "sext<sizeof(Element) * 8>(srcElem1), imm,"
-                             " false, FPCRRounding(fpscr), fpscr)")
+                             " false, FPCRRounding(fpscr), fpscr, fpcr)")
     twoEqualRegInstX("scvtf", "ScvtfFixedDX", "SimdCvtOp", smallFloatTypes, 2,
                      scvtfFixedCode, hasImm=True)
     twoEqualRegInstX("scvtf", "ScvtfFixedSQX", "SimdCvtOp", smallFloatTypes, 4,
@@ -2284,13 +2379,15 @@ let {{
     twoEqualRegInstX("scvtf", "ScvtfFixedDQX", "SimdCvtOp", ("uint64_t",), 4,
                      scvtfFixedCode, hasImm=True)
     twoEqualRegInstX("scvtf", "ScvtfFixedScSX", "SimdCvtOp", smallFloatTypes,
-                     4, scvtfFixedCode, hasImm=True, scalar=True)
+                     4, scvtfFixedCode, hasImm=True, scalar=True,
+                     nepSrc="vd")
     twoEqualRegInstX("scvtf", "ScvtfFixedScDX", "SimdCvtOp", ("uint64_t",), 4,
-                     scvtfFixedCode, hasImm=True, scalar=True)
+                     scvtfFixedCode, hasImm=True, scalar=True,
+                     nepSrc="vd")
     # SCVTF (integer)
     scvtfIntCode = fpOp % ("fplibFixedToFP<Element>("
                            "sext<sizeof(Element) * 8>(srcElem1), 0,"
-                           " false, FPCRRounding(fpscr), fpscr)")
+                           " false, FPCRRounding(fpscr), fpscr, fpcr)")
     twoEqualRegInstX("scvtf", "ScvtfIntDX", "SimdCvtOp", smallFloatTypes, 2,
                      scvtfIntCode)
     twoEqualRegInstX("scvtf", "ScvtfIntSQX", "SimdCvtOp", smallFloatTypes, 4,
@@ -2298,11 +2395,11 @@ let {{
     twoEqualRegInstX("scvtf", "ScvtfIntDQX", "SimdCvtOp", ("uint64_t",), 4,
                      scvtfIntCode)
     twoEqualRegInstX("scvtf", "ScvtfIntScHX", "SimdCvtOp", ("uint16_t",), 4,
-                     scvtfIntCode, scalar=True)
+                     scvtfIntCode, scalar=True, nepSrc="vd")
     twoEqualRegInstX("scvtf", "ScvtfIntScSX", "SimdCvtOp", ("uint32_t",), 4,
-                     scvtfIntCode, scalar=True)
+                     scvtfIntCode, scalar=True, nepSrc="vd")
     twoEqualRegInstX("scvtf", "ScvtfIntScDX", "SimdCvtOp", ("uint64_t",), 4,
-                     scvtfIntCode, scalar=True)
+                     scvtfIntCode, scalar=True, nepSrc="vd")
     # SHADD
     haddCode = '''
             Element carryBit =
@@ -3444,22 +3541,22 @@ let {{
                       addlwCode, hi=True)
     # UCVTF (fixed-point)
     ucvtfFixedCode = fpOp % ("fplibFixedToFP<Element>(srcElem1, imm, true,"
-                             " FPCRRounding(fpscr), fpscr)")
+                             " FPCRRounding(fpscr), fpscr, fpcr)")
     twoEqualRegInstX("ucvtf", "UcvtfFixedDX", "SimdCvtOp", smallFloatTypes, 2,
                      ucvtfFixedCode, hasImm=True)
     twoEqualRegInstX("ucvtf", "UcvtfFixedQX", "SimdCvtOp", floatTypes, 4,
                      ucvtfFixedCode, hasImm=True)
     twoEqualRegInstX("ucvtf", "UcvtfFixedScX", "SimdCvtOp", floatTypes, 4,
-                     ucvtfFixedCode, hasImm=True, scalar=True)
+                     ucvtfFixedCode, hasImm=True, scalar=True, nepSrc="vd")
     # UCVTF (integer)
     ucvtfIntCode = fpOp % ("fplibFixedToFP<Element>(srcElem1, 0, true,"
-                           " FPCRRounding(fpscr), fpscr)")
+                           " FPCRRounding(fpscr), fpscr, fpcr)")
     twoEqualRegInstX("ucvtf", "UcvtfIntDX", "SimdCvtOp", smallFloatTypes, 2,
                      ucvtfIntCode)
     twoEqualRegInstX("ucvtf", "UcvtfIntQX", "SimdCvtOp", floatTypes, 4,
                      ucvtfIntCode)
     twoEqualRegInstX("ucvtf", "UcvtfIntScX", "SimdCvtOp", floatTypes, 4,
-                     ucvtfIntCode, scalar=True)
+                     ucvtfIntCode, scalar=True, nepSrc="vd")
     # UHADD
     threeEqualRegInstX("uhadd", "UhaddDX", "SimdAddOp", smallUnsignedTypes, 2,
                        haddCode)

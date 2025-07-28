@@ -307,6 +307,18 @@ class AMDGPUVM : public Serializable
         vmContexts[vmid].ptBase = ptBase;
     }
 
+    void
+    setPageTableBaseL(uint16_t vmid, uint32_t ptBaseL)
+    {
+        vmContexts[vmid].ptBaseL = ptBaseL;
+    }
+
+    void
+    setPageTableBaseH(uint16_t vmid, uint32_t ptBaseH)
+    {
+        vmContexts[vmid].ptBaseH = ptBaseH;
+    }
+
     Addr
     getPageTableBase(uint16_t vmid)
     {
@@ -314,11 +326,47 @@ class AMDGPUVM : public Serializable
         return vmContexts[vmid].ptBase;
     }
 
+    void
+    setPageTableStart(uint16_t vmid, Addr ptStart)
+    {
+        vmContexts[vmid].ptStart = ptStart;
+    }
+
+    void
+    setPageTableStartL(uint16_t vmid, uint32_t ptStartL)
+    {
+        vmContexts[vmid].ptStartL = ptStartL;
+    }
+
+    void
+    setPageTableStartH(uint16_t vmid, uint32_t ptStartH)
+    {
+        vmContexts[vmid].ptStartH = ptStartH;
+    }
+
     Addr
     getPageTableStart(uint16_t vmid)
     {
         assert(vmid > 0 && vmid < vmContexts.size());
         return vmContexts[vmid].ptStart;
+    }
+
+    void
+    setPageTableEnd(uint16_t vmid, Addr ptEnd)
+    {
+        vmContexts[vmid].ptEnd = ptEnd;
+    }
+
+    void
+    setPageTableEndL(uint16_t vmid, uint32_t ptEndL)
+    {
+        vmContexts[vmid].ptEndL = ptEndL;
+    }
+
+    void
+    setPageTableEndH(uint16_t vmid, uint32_t ptEndH)
+    {
+        vmContexts[vmid].ptEndH = ptEndH;
     }
 
     /**

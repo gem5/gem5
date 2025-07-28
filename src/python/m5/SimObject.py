@@ -38,6 +38,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import importlib
 import inspect
 import sys
 from functools import wraps
@@ -449,10 +450,14 @@ class MetaSimObject(type):
         return cls.__name__
 
     def getCCClass(cls):
-        # Ensure that m5.internal.params is available.
-        import m5.internal.params
+        try:
+            # This function can be called from outside gem5
+            # during SimObject parsing.
+            import _m5
 
-        return getattr(m5.internal.params, cls.pybind_class)
+            return getattr(_m5, cls.pybind_class)
+        except ImportError:
+            raise AttributeError("No C++ class exists, not linked to gem5")
 
     # See ParamValue.cxx_predecls for description.
     def cxx_predecls(cls, code):
@@ -1202,10 +1207,12 @@ class SimObject(metaclass=MetaSimObject):
         if self._ccParams:
             return self._ccParams
 
-        # Ensure that m5.internal.params is available.
-        import m5.internal.params
+        try:
+            mod = importlib.import_module(f"_m5.param_{self.type}")
+        except ImportError:
+            raise AttributeError("No C++ class exists, not linked to gem5")
 
-        cc_params_struct = getattr(m5.internal.params, f"{self.type}Params")
+        cc_params_struct = getattr(mod, f"{self.type}Params")
         cc_params = cc_params_struct()
         cc_params.name = str(self)
 

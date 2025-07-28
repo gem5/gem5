@@ -903,6 +903,70 @@ namespace VegaISA
          */
         sdwaInstDstImpl(dst, origDst, clamp, dst_sel, dst_unusedBits_format);
     }
+
+    /**
+     * Unpack MXFP values from a register based on opsel value and type size
+     */
+    template<typename T>
+    std::pair<T, T> unpackMXOperands(uint32_t src, int opsel)
+    {
+        // Specific to packed 2-component operands.
+        constexpr int pack_count = 2;
+        int pack_size = T::size() * pack_count;
+
+        int upper_bit = opsel * pack_size + pack_size - 1;
+        int lower_bit = opsel * pack_size;
+
+        uint32_t opdata = bits(src, upper_bit, lower_bit);
+
+        uint32_t first  = bits(opdata, T::size() - 1, 0);
+        uint32_t second = bits(opdata, 2 * T::size() - 1, T::size());
+
+        return std::make_pair(T(second), T(first));
+    }
+
+    /**
+     * Pack two MXFP values into one dword
+     */
+    template<typename T>
+    uint32_t packMXOperands32(T& upper_operand, T& lower_operand)
+    {
+        assert(upper_operand.size() <= 16);
+        assert(lower_operand.size() == upper_operand.size());
+
+        uint16_t upper_value =
+            bits(upper_operand.data, 31, 32 - upper_operand.size());
+        uint16_t lower_value =
+            bits(lower_operand.data, 31, 32 - lower_operand.size());
+
+        uint32_t result = upper_value;
+        result <<= upper_operand.size();
+        result |= lower_value;
+
+        return result;
+    }
+
+    /**
+     * Pack two MXFP values into one qword
+     */
+    template<typename T>
+    uint64_t packMXOperands64(T& lower_operand, T& upper_operand)
+    {
+        assert(upper_operand.size() <= 32);
+        assert(lower_operand.size() == upper_operand.size());
+
+        uint32_t upper_value =
+            bits(upper_operand.data, 31, 32 - upper_operand.size());
+        uint32_t lower_value =
+            bits(lower_operand.data, 31, 32 - lower_operand.size());
+
+        uint64_t result = upper_value;
+        result <<= upper_operand.size();
+        result |= lower_value;
+
+        return result;
+    }
+
 } // namespace VegaISA
 } // namespace gem5
 

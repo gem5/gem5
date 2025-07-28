@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2014, 2017-2021 ARM Limited
+ * Copyright (c) 2010-2014, 2017-2021, 2025 Arm Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -269,8 +269,9 @@ LSQUnit::LSQUnitStats::LSQUnitStats(statistics::Group *parent)
       ADD_STAT(blockedByCache, statistics::units::Count::get(),
                "Number of times an access to memory failed due to the cache "
                "being blocked"),
-      ADD_STAT(loadToUse, "Distribution of cycle latency between the "
-                "first time a load is issued and its completion"),
+      ADD_STAT(loadToUse, statistics::units::Cycle::get(),
+               "Distribution of cycle latency between the "
+               "first time a load is issued and its completion"),
       ADD_STAT(addedLoadsAndStores, statistics::units::Count::get(),
                "Number of loads and stores written to the Load Store Queue")
 {

@@ -718,24 +718,16 @@ namespace VegaISA
     void
     Inst_VOP2__V_LSHRREV_B32::execute(GPUDynInstPtr gpuDynInst)
     {
-        Wavefront *wf = gpuDynInst->wavefront();
-        ConstVecOperandU32 src0(gpuDynInst, instData.SRC0);
-        ConstVecOperandU32 src1(gpuDynInst, instData.VSRC1);
-        VecOperandU32 vdst(gpuDynInst, instData.VDST);
-
-        src0.readSrc();
-        src1.read();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (wf->execMask(lane)) {
-                vdst[lane] = src1[lane] >> bits(src0[lane], 4, 0);
+        auto opImpl = [](VecOperandU32& src0, VecOperandU32& src1,
+                         VecOperandU32& vdst, Wavefront* wf) {
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    vdst[lane] = src1[lane] >> bits(src0[lane], 4, 0);
+                }
             }
-        }
+        };
 
-        vdst.write();
+        vop2Helper<ConstVecOperandU32, VecOperandU32>(gpuDynInst, opImpl);
     } // execute
     // --- Inst_VOP2__V_ASHRREV_I32 class methods ---
 
@@ -870,49 +862,16 @@ namespace VegaISA
     void
     Inst_VOP2__V_AND_B32::execute(GPUDynInstPtr gpuDynInst)
     {
-        Wavefront *wf = gpuDynInst->wavefront();
-        ConstVecOperandU32 src0(gpuDynInst, instData.SRC0);
-        VecOperandU32 src1(gpuDynInst, instData.VSRC1);
-        VecOperandU32 vdst(gpuDynInst, instData.VDST);
-
-        src0.readSrc();
-        src1.read();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-
-        if (isDPPInst()) {
-            VecOperandU32 src0_dpp(gpuDynInst, extData.iFmt_VOP_DPP.SRC0);
-            src0_dpp.read();
-
-            DPRINTF(VEGA, "Handling V_AND_B32 SRC DPP. SRC0: register v[%d], "
-                    "DPP_CTRL: 0x%#x, SRC0_ABS: %d, SRC0_NEG: %d, "
-                    "SRC1_ABS: %d, SRC1_NEG: %d, BC: %d, "
-                    "BANK_MASK: %d, ROW_MASK: %d\n", extData.iFmt_VOP_DPP.SRC0,
-                    extData.iFmt_VOP_DPP.DPP_CTRL,
-                    extData.iFmt_VOP_DPP.SRC0_ABS,
-                    extData.iFmt_VOP_DPP.SRC0_NEG,
-                    extData.iFmt_VOP_DPP.SRC1_ABS,
-                    extData.iFmt_VOP_DPP.SRC1_NEG,
-                    extData.iFmt_VOP_DPP.BC,
-                    extData.iFmt_VOP_DPP.BANK_MASK,
-                    extData.iFmt_VOP_DPP.ROW_MASK);
-
-            processDPP(gpuDynInst, extData.iFmt_VOP_DPP, src0_dpp, src1);
-
-            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-                if (wf->execMask(lane)) {
-                    vdst[lane] = src0_dpp[lane] & src1[lane];
-                }
-            }
-        } else {
+        auto opImpl = [](VecOperandU32& src0, VecOperandU32& src1,
+                         VecOperandU32& vdst, Wavefront* wf) {
             for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
                 if (wf->execMask(lane)) {
                     vdst[lane] = src0[lane] & src1[lane];
                 }
             }
-        }
+        };
 
-        vdst.write();
+        vop2Helper<ConstVecOperandU32, VecOperandU32>(gpuDynInst, opImpl);
     } // execute
     // --- Inst_VOP2__V_OR_B32 class methods ---
 
@@ -1023,6 +982,62 @@ namespace VegaISA
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (wf->execMask(lane)) {
                 vdst[lane] = src0[lane] ^ src1[lane];
+            }
+        }
+
+        vdst.write();
+    } // execute
+    // --- Inst_VOP2__V_DOT2C_F32_BF16 class methods ---
+
+    Inst_VOP2__V_DOT2C_F32_BF16::Inst_VOP2__V_DOT2C_F32_BF16(InFmt_VOP2 *iFmt)
+        : Inst_VOP2(iFmt, "v_dot2c_f32_bf16")
+    {
+        setFlag(ALU);
+    } // Inst_VOP2__V_DOT2C_F32_BF16
+
+    Inst_VOP2__V_DOT2C_F32_BF16::~Inst_VOP2__V_DOT2C_F32_BF16()
+    {
+    } // ~Inst_VOP2__V_DOT2C_F32_BF16
+
+    void
+    Inst_VOP2__V_DOT2C_F32_BF16::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandU32 src0(gpuDynInst, instData.SRC0);
+        VecOperandU32 src1(gpuDynInst, instData.VSRC1);
+        VecOperandF32 vdst(gpuDynInst, instData.VDST);
+
+        src0.readSrc();
+        src1.read();
+        vdst.read();
+
+        fatal_if(isSDWAInst(), "SDWA not supported for V_DOT2C_F32_BF16");
+
+        VecElemU32 src0d[NumVecElemPerVecReg];
+        if (isDPPInst()) {
+            VecOperandU32 src0_dpp(gpuDynInst, extData.iFmt_VOP_DPP.SRC0);
+            src0_dpp.read();
+
+            processDPP(gpuDynInst, extData.iFmt_VOP_DPP, src0_dpp, src1);
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                src0d[lane] = src0_dpp[lane];
+            }
+        } else {
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                src0d[lane] = src0[lane];
+            }
+        }
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                AMDGPU::mxbfloat16 a1, a2, b1, b2;
+                a1.data = uint16_t(bits(src0d[lane], 15, 0));
+                a2.data = uint16_t(bits(src0d[lane], 31, 16));
+                b1.data = uint16_t(bits(src1[lane], 15, 0));
+                b2.data = uint16_t(bits(src1[lane], 31, 16));
+
+                vdst[lane] += float(a1) * float(b1);
+                vdst[lane] += float(a2) * float(b2);
             }
         }
 
@@ -1823,24 +1838,16 @@ namespace VegaISA
     void
     Inst_VOP2__V_LSHLREV_B16::execute(GPUDynInstPtr gpuDynInst)
     {
-        Wavefront *wf = gpuDynInst->wavefront();
-        ConstVecOperandU16 src0(gpuDynInst, instData.SRC0);
-        ConstVecOperandU16 src1(gpuDynInst, instData.VSRC1);
-        VecOperandU16 vdst(gpuDynInst, instData.VDST);
-
-        src0.readSrc();
-        src1.read();
-
-        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
-
-        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-            if (wf->execMask(lane)) {
-                vdst[lane] = src1[lane] << bits(src0[lane], 3, 0);
+        auto opImpl = [](VecOperandU32& src0, VecOperandU32& src1,
+                         VecOperandU32& vdst, Wavefront* wf) {
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (wf->execMask(lane)) {
+                    vdst[lane] = src1[lane] << bits(src0[lane], 3, 0);
+                }
             }
-        }
+        };
 
-        vdst.write();
+        vop2Helper<ConstVecOperandU32, VecOperandU32>(gpuDynInst, opImpl);
     } // execute
     // --- Inst_VOP2__V_LSHRREV_B16 class methods ---
 

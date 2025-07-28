@@ -56,6 +56,7 @@
 
 import copy
 import datetime
+import importlib
 import math
 import pprint
 import re
@@ -1863,9 +1864,14 @@ class Enum(ParamValue, metaclass=MetaEnum):
         code("}")
 
     def getValue(self):
-        import m5.internal.params
+        try:
+            mod = importlib.import_module(
+                f"_m5.enum_{self.__class__.__name__}"
+            )
+        except ImportError:
+            raise AttributeError("Cannot get enum value, not linked to gem5")
 
-        e = getattr(m5.internal.params, f"enum_{self.__class__.__name__}")
+        e = getattr(mod, f"enum_{self.__class__.__name__}")
         return e(self.map[self.value])
 
     def __str__(self):

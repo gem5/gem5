@@ -381,6 +381,44 @@ void Inst_VOP3P__V_DOT2_F32_F16::execute(GPUDynInstPtr gpuDynInst)
     dotHelper(gpuDynInst, opImpl);
 }
 
+void Inst_VOP3P__V_DOT2_F32_BF16::execute(GPUDynInstPtr gpuDynInst)
+{
+    // Do not use dotHelper here as OPSEL is ignored for this instruction.
+    Wavefront *wf = gpuDynInst->wavefront();
+    ConstVecOperandU32 src0(gpuDynInst, extData.SRC0);
+    ConstVecOperandU32 src1(gpuDynInst, extData.SRC1);
+    ConstVecOperandU32 src2(gpuDynInst, extData.SRC2);
+    VecOperandU32 vdst(gpuDynInst, instData.VDST);
+
+    src0.readSrc();
+    src1.readSrc();
+    src2.readSrc();
+    vdst.read();
+
+    for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+        if (wf->execMask(lane)) {
+            AMDGPU::mxbfloat16 a1, a2, b1, b2;
+            a1.data = uint16_t(bits(src0[lane], 15, 0));
+            a2.data = uint16_t(bits(src0[lane], 31, 16));
+            b1.data = uint16_t(bits(src1[lane], 15, 0));
+            b2.data = uint16_t(bits(src1[lane], 31, 16));
+
+            if (instData.NEG_HI & 0x1) a2 = -a2;
+            if (instData.NEG_HI & 0x2) b2 = -b2;
+            if (extData.NEG & 0x1) a1 = -a1;
+            if (extData.NEG & 0x2) b1 = -b1;
+
+            vdst[lane] += float(a1) * float(b1);
+            vdst[lane] += float(a2) * float(b2);
+            vdst[lane] += src2[lane];
+
+            clampF32(vdst[lane], (bool)instData.CLMP);
+        }
+    }
+
+    vdst.write();
+}
+
 void Inst_VOP3P__V_DOT2_I32_I16::execute(GPUDynInstPtr gpuDynInst)
 {
     auto opImpl =

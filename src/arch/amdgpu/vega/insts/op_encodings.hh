@@ -1111,6 +1111,41 @@ namespace VegaISA
                 injectGlobalMemFence(gpuDynInst, false, req);
         }
 
+        template<int NumDwords, int SignBit = 0>
+        void
+        ldsComplete(GPUDynInstPtr gpuDynInst)
+        {
+            assert(isFlatGlobal() || isFlatScratch());
+
+            Wavefront *wf = gpuDynInst->wavefront();
+            ScalarRegU32 inst_offset = instData.OFFSET;
+            ConstScalarOperandU32 lds_offset(gpuDynInst, REG_M0);
+
+            lds_offset.read();
+
+            // LDS base should be implied by the ldsChunk for the wave.
+            uint32_t m0_offset = bits(lds_offset.rawData(), 17, 2);
+            uint32_t lds_addr = m0_offset * 4 + inst_offset;
+
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (gpuDynInst->exec_mask[lane]) {
+                    uint32_t chunk_addr =
+                        lds_addr + lane * NumDwords * sizeof(VecElemU32);
+
+                    for (int i = 0; i < NumDwords; ++i) {
+                        VecElemU32 val = (reinterpret_cast<VecElemU32*>(
+                            gpuDynInst->d_data))[lane * NumDwords + i];
+                        if constexpr (SignBit != 0) {
+                            val = (VecElemI32)sext<SignBit>(val);
+                        }
+
+                        wf->ldsChunk->write<VecElemU32>(
+                            chunk_addr + i*sizeof(VecElemU32), val);
+                    }
+                }
+            }
+        }
+
         /**
          * MUBUF insructions calculate their addresses as follows:
          *
@@ -1662,6 +1697,40 @@ namespace VegaISA
                     (reinterpret_cast<VecElemU32*>(
                         gpuDynInst->d_data))[lane * N + dword] =
                             data[lane * N + dword];
+                }
+            }
+        }
+
+        template<int NumDwords, int SignBit = 0>
+        void
+        ldsComplete(GPUDynInstPtr gpuDynInst)
+        {
+            assert(isFlatGlobal() || isFlatScratch());
+
+            Wavefront *wf = gpuDynInst->wavefront();
+            ScalarRegI32 inst_offset = sext<13>(instData.OFFSET);
+            ConstScalarOperandU32 lds_offset(gpuDynInst, REG_M0);
+
+            lds_offset.read();
+
+            uint32_t m0_offset = bits(lds_offset.rawData(), 17, 2);
+            uint32_t lds_addr = m0_offset * 4 + inst_offset;
+
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                if (gpuDynInst->exec_mask[lane]) {
+                    uint32_t chunk_addr =
+                        lds_addr + lane * NumDwords * sizeof(VecElemU32);
+
+                    for (int i = 0; i < NumDwords; ++i) {
+                        VecElemU32 val = (reinterpret_cast<VecElemU32*>(
+                            gpuDynInst->d_data))[lane * NumDwords + i];
+                        if constexpr (SignBit != 0) {
+                            val = (VecElemI32)sext<SignBit>(val);
+                        }
+
+                        wf->ldsChunk->write<VecElemU32>(
+                            chunk_addr + i*sizeof(VecElemU32), val);
+                    }
                 }
             }
         }

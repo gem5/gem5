@@ -654,6 +654,12 @@ GPUDynInst::isAtomicMin() const
 }
 
 bool
+GPUDynInst::isAtomicPkAddBF16() const
+{
+    return _staticInst->isAtomicPkAddBF16();
+}
+
+bool
 GPUDynInst::isArgLoad() const
 {
     return _staticInst->isArgLoad();

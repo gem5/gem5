@@ -5013,6 +5013,7 @@ ISA::initializeMiscRegMetadata()
           mmfr1_el1.hpds = release->has(ArmExtension::FEAT_HPDS) ? 0x1 : 0x0;
           mmfr1_el1.pan = release->has(ArmExtension::FEAT_PAN) ? 0x1 : 0x0;
           mmfr1_el1.hcx = release->has(ArmExtension::FEAT_HCX) ? 0x1 : 0x0;
+          mmfr1_el1.afp = release->has(ArmExtension::FEAT_AFP) ? 0x1 : 0x0;
           return mmfr1_el1;
       }())
       .faultRead(EL0, faultIdst)

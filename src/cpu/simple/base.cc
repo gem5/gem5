@@ -175,14 +175,23 @@ void
 BaseSimpleCPU::countCommitInst()
 {
     SimpleExecContext& t_info = *threadInfo[curThread];
+    const ThreadID tid = t_info.thread->threadId();
+    const bool in_user_mode = t_info.thread->getIsaPtr()->inUserMode();
 
     if (!curStaticInst->isMicroop() || curStaticInst->isLastMicroop()) {
         // increment thread level and core level numInsts count
-        commitStats[t_info.thread->threadId()]->numInsts++;
+        commitStats[tid]->numInsts++;
         baseStats.numInsts++;
+        if (in_user_mode) {
+            commitStats[tid]->numUserInsts++;
+        }
     }
+
     // increment thread level numOps count
-    commitStats[t_info.thread->threadId()]->numOps++;
+    commitStats[tid]->numOps++;
+    if (in_user_mode) {
+        commitStats[tid]->numUserOps++;
+    }
 }
 
 Counter
