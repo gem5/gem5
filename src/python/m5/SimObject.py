@@ -777,6 +777,9 @@ class SimObject(metaclass=MetaSimObject):
         self._hr_values = multidict(ancestor._hr_values)
         # clone SimObject-valued parameters
         for key, val in ancestor._values.items():
+            if val == []:
+                self._values[key] = type(val)()
+                continue
             val = tryAsSimObjectOrVector(val)
             if val is not None:
                 self._values[key] = val(_memo=memo_dict)
