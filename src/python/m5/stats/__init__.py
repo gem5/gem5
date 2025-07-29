@@ -435,16 +435,8 @@ def dump(roots=None, message=""):
                 output.end()
 
 
-def reset(message=""):
-    """Reset all statistics to the base state
-
-    Args:
-        message: Optional message to output when resetting stats
-    """
-
-    for output in outputList:
-        if not isinstance(output, JsonOutputVistor):
-            output.printResetMessage(message)
+def reset():
+    """Reset all statistics to the base state"""
 
     # call reset stats on all SimObjects
     root = Root.getInstance()

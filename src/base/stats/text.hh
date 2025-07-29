@@ -100,7 +100,6 @@ class Text : public Output
     bool valid() const override;
     void begin(const std::string& message) override;
     void end() override;
-    void printResetMessage(const std::string& message = "") override;
 };
 
 std::string ValueToString(Result value, int precision);

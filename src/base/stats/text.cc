@@ -150,14 +150,6 @@ Text::end()
     stream->flush();
 }
 
-void
-Text::printResetMessage(const std::string& message)
-{
-    if (!message.empty()) {
-        ccprintf(*stream, "Resetting stats: %s\n", message);
-    }
-}
-
 std::string
 Text::statName(const std::string &name) const
 {

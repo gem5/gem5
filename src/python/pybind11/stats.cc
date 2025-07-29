@@ -134,8 +134,6 @@ pybind_init_stats(py::module_ &m_native)
         .def("valid", &statistics::Output::valid)
         .def("beginGroup", &statistics::Output::beginGroup)
         .def("endGroup", &statistics::Output::endGroup)
-        .def("printResetMessage",
-        &statistics::Output::printResetMessage, py::arg("message") = "")
         ;
 
     py::class_<statistics::Info,

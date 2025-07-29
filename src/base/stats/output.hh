@@ -72,8 +72,6 @@ struct Output
     virtual void beginGroup(const char *name) = 0;
     virtual void endGroup() = 0;
 
-    virtual void printResetMessage(const std::string& message = "") {};
-
     virtual void visit(const ScalarInfo &info) = 0;
     virtual void visit(const VectorInfo &info) = 0;
     virtual void visit(const DistInfo &info) = 0;
