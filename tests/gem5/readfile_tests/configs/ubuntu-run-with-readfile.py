@@ -105,12 +105,12 @@ match isa:
     case _:
         raise Exception("The isa must be arm, x86 or riscv")
 
-expected_binary_output = "running test script from readfile_tests"
+expected_script_output = "running test script from readfile_tests"
 
 with open(terminal_out_path) as file:
     terminal_output = file.read()
 
-    if re.search(expected_binary_output, terminal_output):
+    if re.search(expected_script_output, terminal_output):
         print("Readfile test passed!")
     else:
         print("Readfile test failed!")

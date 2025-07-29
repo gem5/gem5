@@ -1,6 +1,6 @@
 # Readfile Tests
 
-These tests run a series of full-system simulations to verify whether a binary can be executed inside the simulation via the `readfile` argument.
+These tests run a series of full-system simulations to verify whether a script can be executed inside the simulation via the `readfile` argument.
 
 The tests boot an Ubuntu 24.04 image (without systemd) for the X86, RISC-V, and ARM ISAs.
 
