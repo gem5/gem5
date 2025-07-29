@@ -74,7 +74,7 @@ AlwaysBreakAfterDefinitionReturnType: All    # Unless it is a definition
 
 # Pointer/reference alignment
 DerivePointerAlignment: false
-PointerAlignment: Left                       # Foo* p (sec. Pointers)
+PointerAlignment: Right                      # Foo *p (sec. Pointers)
 
 # Decoration
 AlignConsecutiveDeclarations: false          # No aligned declarations
