@@ -145,7 +145,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
      * the direction is always taken
      */
 
-    if (inst->isUncondCtrl()) {
+    if (hist->uncond) {
         // Unconditional branches -----
         hist->condPred = true;
     } else {

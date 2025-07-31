@@ -292,7 +292,7 @@ class BPredUnit : public SimObject
                          const StaticInstPtr & inst)
             : seqNum(sn), tid(_tid), pc(_pc),
               inst(inst), type(getBranchType(inst)),
-              call(inst->isCall()), uncond(inst->isUncondCtrl()),
+              call(inst->isCall()), uncond(!inst->isCondCtrl()),
               predTaken(false), actuallyTaken(false), condPred(false),
               btbHit(false), targetProvider(TargetProvider::NoTarget),
               resteered(false), mispredict(false), target(nullptr),
