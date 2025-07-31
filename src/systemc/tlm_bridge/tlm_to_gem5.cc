@@ -471,6 +471,15 @@ TlmToGem5Bridge<BITWIDTH>::get_direct_mem_ptr(tlm::tlm_generic_payload &trans,
     Addr start_addr = trans.get_address();
     Addr length = trans.get_data_length();
 
+    // The data_length field in trans is not a required field when doing
+    // get_direct_mem_ptr, so the size might be 0.
+    // However, if the length is 0, the created AddrRange in gem5 will have
+    // different meaning.
+    // To avoid the situation, set length to 1 if the original length is 0.
+    if (length == 0) {
+        length = 1;
+    }
+
     MemBackdoorReq req({start_addr, start_addr + length}, flags);
     MemBackdoorPtr backdoor = nullptr;
 
