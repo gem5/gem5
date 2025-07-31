@@ -756,14 +756,7 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 if (mmu->getPMP()->pmpUpdateAddr(pmp_index, val)) {
                     setMiscRegNoEffect(idx, val);
                 }
-            }
-            break;
-          case MISCREG_MIDELEG:
-            {
-                setMiscRegNoEffect(
-                    idx, val & MIDELEG_MASK[getPrivilegeModeSet()]);
-            }
-            break;
+          } break;
           case MISCREG_IP:
             {
                 RegVal mask = MI_MASK[getPrivilegeModeSet()];
