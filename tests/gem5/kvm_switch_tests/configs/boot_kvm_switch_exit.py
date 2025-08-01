@@ -169,17 +169,10 @@ workload = obtain_resource(
     resource_version="5.0.0",
 )
 
-if "kernel_args" in workload.get_parameters():
-    kernel_args = workload.get_parameters()["kernel_args"]
-else:
-    kernel_args = motherboard.get_default_kernel_args()
-
-kernel_args += [args.kernel_args]
-
-workload.set_parameter("kernel_args", kernel_args)
 # Set the Full System workload.
 motherboard.set_workload(workload)
 
+motherboard.append_kernel_arg(args.kernel_args)
 
 # Begin running of the simulation. This will exit once the Linux system boot
 # is complete.
