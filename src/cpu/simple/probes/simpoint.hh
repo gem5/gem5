@@ -94,7 +94,7 @@ class SimPoint : public ProbeListenerObject
      * Called at every macro inst to increment basic block inst counts and
      * to profile block if end of block.
      */
-    void profile(const std::pair<SimpleThread*, StaticInstPtr>&);
+    void profile(const std::pair<SimpleThread*, const StaticInstPtr>&);
 
   private:
     /** SimPoint profiling interval size in instructions */
