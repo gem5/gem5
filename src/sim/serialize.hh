@@ -55,6 +55,7 @@
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
+#include <cstdint>
 
 #include "base/inifile.hh"
 #include "base/logging.hh"
