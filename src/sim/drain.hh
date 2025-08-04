@@ -41,6 +41,7 @@
 #include <atomic>
 #include <mutex>
 #include <vector>
+#include <cstddef>
 
 namespace gem5
 {
@@ -88,7 +89,11 @@ class DrainManager
 
   public:
     /** Get the singleton DrainManager instance */
-    static DrainManager &instance() { return _instance; }
+    static DrainManager &instance() {
+        /** Singleton instance of the drain manager, constructed on first use */
+        static DrainManager _instance;
+        return _instance;
+    }
 
     /**
      * Try to drain the system.
@@ -191,9 +196,6 @@ class DrainManager
 
     /** Global simulator drain state */
     DrainState _state;
-
-    /** Singleton instance of the drain manager */
-    static DrainManager _instance;
 };
 
 /**
