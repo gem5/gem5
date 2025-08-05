@@ -297,9 +297,10 @@ Commit::clearStates(ThreadID tid)
     squashAfterInst[tid] = NULL;
 
     // Clear out any of this thread's instructions being sent to prior stages.
-    for (int i = -cpu->timeBuffer.getPast();
-         i <= cpu->timeBuffer.getFuture(); ++i)
-        cpu->timeBuffer[i].commitInfo[i] = {};
+    for (int i = -cpu->timeBuffer.getPast(); i <= cpu->timeBuffer.getFuture();
+         ++i) {
+        cpu->timeBuffer[i].commitInfo[tid] = {};
+    }
 }
 
 void Commit::drain() { drainPending = true; }
