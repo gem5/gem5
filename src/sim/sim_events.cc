@@ -158,13 +158,27 @@ LocalSimLoopExitEvent::LocalSimLoopExitEvent(const std::string &_cause, int c,
 {
 }
 
+LocalSimLoopExitEvent::LocalSimLoopExitEvent(const std::string& _cause, int c,
+                                             Tick repeat,
+                                             uint64_t hypercall_id)
+    : Event(Sim_Exit_Pri, IsExitEvent), cause(_cause), code(c), repeat(repeat),
+      hypercall_id(hypercall_id)
+{
+}
+
 //
 // handle termination event
 //
 void
 LocalSimLoopExitEvent::process()
 {
-    exitSimLoop(cause, 0);
+    if (hypercall_id == 0) {
+        exitSimLoop(cause, 0);
+    } else {
+        std::map<std::string, std::string> payload = {
+            {"justification", cause}};
+        exitSimLoopWithHypercall(cause, 0, curTick(), 0, payload, 8, false);
+    }
 }
 
 

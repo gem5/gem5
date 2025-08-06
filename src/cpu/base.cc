@@ -774,7 +774,7 @@ void
 BaseCPU::scheduleInstStop(ThreadID tid, Counter insts, std::string cause)
 {
     const Tick now(getCurrentInstCount(tid));
-    Event *event(new LocalSimLoopExitEvent(cause, 0));
+    Event* event(new LocalSimLoopExitEvent(cause, 0, 0, 8));
 
     threadContexts[tid]->scheduleInstCountEvent(event, now + insts);
 }
