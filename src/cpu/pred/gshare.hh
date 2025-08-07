@@ -92,7 +92,7 @@ class GshareBP : public BPredUnit
     unsigned globalCtrBits;
     unsigned globalHistoryMask;
 
-     std::vector<SatCounter8> globalCtrs;
+    std::vector<SatCounter8> globalCtrs;
     unsigned takenThreshold;
 
 };
