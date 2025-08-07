@@ -266,19 +266,19 @@ class ViperShader(Shader):
         # capability at 0x80 and set the PXCAP (PCI express) capability to
         # that address. Mark the type ID as PCI express.
         # We leave the next ID of PXCAP blank to end the list.
-        device.PXCAPBaseOffset = 0x80
-        device.CapabilityPtr = 0x80
-        device.PXCAPCapId = 0x10
-
-        # Set bits 7 and 8 in the second PCIe device capabilities register which
-        # reports support for PCIe atomics for 32 and 64 bits respectively.
-        # Bit 9 for 128-bit compare and swap is not set because the amdgpu driver
-        # does not check this.
-        device.PXCAPDevCap2 = 0x00000180
-
-        # Set bit 6 to enable atomic requestor, meaning this device can request
-        # atomics from other PCI devices.
-        device.PXCAPDevCtrl2 = 0x0040
+        device.px_cap = PciExpressCap(
+            BaseOffset=0x80,
+            # Set bits 7 and 8 in the second PCIe device capabilities register
+            # which reports support for PCIe atomics for 32 and 64 bits
+            # respectively.
+            # Bit 9 for 128-bit compare and swap is not set because the amdgpu
+            # driver does not check this.
+            DevCap2=0x00000180,
+            # Set bit 6 to enable atomic requestor, meaning this device can
+            # request atomics from other PCI devices.
+            DevCtrl2=0x0040,
+        )
+        device.capabilities.append(device.px_cap)
 
         # If there are multiple GPUs in the system, make sure the VBIOS region
         # and the legacy IO bar do not overlap with the ranges from other GPUs.

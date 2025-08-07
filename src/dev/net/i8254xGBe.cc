@@ -148,22 +148,6 @@ IGbE::getPort(const std::string &if_name, PortID idx)
     return EtherDevice::getPort(if_name, idx);
 }
 
-Tick
-IGbE::writeConfig(PacketPtr pkt)
-{
-    int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
-    if (offset < PCI_DEVICE_SPECIFIC)
-        PciEndpoint::writeConfig(pkt);
-    else
-        panic("Device specific PCI config space not implemented.\n");
-
-    //
-    // Some work may need to be done here based for the pci COMMAND bits.
-    //
-
-    return configDelay;
-}
-
 // Handy macro for range-testing register access addresses
 #define IN_RANGE(val, base, len) (val >= base && val < (base + len))
 

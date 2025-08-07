@@ -40,6 +40,7 @@
 #include "dev/amdgpu/pm4_packet_processor.hh"
 #include "dev/amdgpu/sdma_engine.hh"
 #include "dev/hsa/hw_scheduler.hh"
+#include "dev/pci/device.hh"
 #include "gpu-compute/gpu_command_processor.hh"
 #include "gpu-compute/shader.hh"
 #include "mem/abstract_mem.hh"
@@ -81,8 +82,8 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
 
     vramSize = vram_size;
 
-    if (config().expansionROM) {
-        romRange = RangeSize(config().expansionROM, ROM_SIZE);
+    if (config().expansionROM.get()) {
+        romRange = RangeSize(config().expansionROM.get(), ROM_SIZE);
     } else {
         romRange = RangeSize(VGA_ROM_DEFAULT, ROM_SIZE);
     }
@@ -341,52 +342,9 @@ AMDGPUDevice::getAddrRanges() const
 }
 
 Tick
-AMDGPUDevice::readConfig(PacketPtr pkt)
+AMDGPUDevice::readConfig(PacketPtr pkt, Addr offset)
 {
-    int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
-
-    if (offset < PCI_DEVICE_SPECIFIC) {
-        PciEndpoint::readConfig(pkt);
-    } else {
-        if (offset >= PXCAP_BASE && offset < (PXCAP_BASE + sizeof(PXCAP))) {
-            int pxcap_offset = offset - PXCAP_BASE;
-
-            switch (pkt->getSize()) {
-                case sizeof(uint8_t):
-                    pkt->setLE<uint8_t>(pxcap.data[pxcap_offset]);
-                    DPRINTF(AMDGPUDevice,
-                            "Read PXCAP:  dev %#x func %#x reg %#x 1 bytes: "
-                            "data = %#x\n",
-                            _devAddr.dev, _devAddr.func, pxcap_offset,
-                            (uint32_t)pkt->getLE<uint8_t>());
-                    break;
-                case sizeof(uint16_t):
-                    pkt->setLE<uint16_t>(
-                        *(uint16_t *)&pxcap.data[pxcap_offset]);
-                    DPRINTF(AMDGPUDevice,
-                            "Read PXCAP:  dev %#x func %#x reg %#x 2 bytes: "
-                            "data = %#x\n",
-                            _devAddr.dev, _devAddr.func, pxcap_offset,
-                            (uint32_t)pkt->getLE<uint16_t>());
-                    break;
-                case sizeof(uint32_t):
-                    pkt->setLE<uint32_t>(
-                        *(uint32_t *)&pxcap.data[pxcap_offset]);
-                    DPRINTF(AMDGPUDevice,
-                            "Read PXCAP:  dev %#x func %#x reg %#x 4 bytes: "
-                            "data = %#x\n",
-                            _devAddr.dev, _devAddr.func, pxcap_offset,
-                            (uint32_t)pkt->getLE<uint32_t>());
-                    break;
-                default:
-                    panic("Invalid access size (%d) for amdgpu PXCAP %#x\n",
-                          pkt->getSize(), pxcap_offset);
-            }
-            pkt->makeAtomicResponse();
-        } else {
-            warn("Device specific offset %d not implemented!\n", offset);
-        }
-    }
+    PciEndpoint::readConfig(pkt, offset);
 
     // Before sending MMIOs the driver sends three interrupts in a row.
     // Use this to trigger creating a checkpoint to restore in timing mode.
@@ -407,47 +365,23 @@ AMDGPUDevice::readConfig(PacketPtr pkt)
     return configDelay;
 }
 
-Tick
-AMDGPUDevice::writeConfig(PacketPtr pkt)
+void
+AMDGPUDevice::expansionRomConfigWriter(PciConfigBase::Register32 &reg,
+                                       const uint32_t &value)
 {
-    [[maybe_unused]] int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
-    DPRINTF(AMDGPUDevice,
-            "Write Config: from offset: %#x size: %#x "
-            "data: %#x\n",
-            offset, pkt->getSize(), pkt->getUintX(ByteOrder::little));
-
-    if (offset < PCI_DEVICE_SPECIFIC) {
-        // For the Expansion ROM BAR, Linux will write ~0x7ff before reading
-        // the ROM bar size. If we simply return the written value, the ROM
-        // size is only 0x800 which is too small for the GPU VBIOS. Here we
-        // override the default PciDevice behavior and set the next read to
-        // return 4kiB size. This is enough to load the *used* portions of
-        // the VBIOS. See how PCI_ROM_ADDRESS is handled in the function:
-        // github.com/torvalds/linux/blob/master/drivers/pci/probe.c#L176
-        if (offset == PCI0_ROM_BASE_ADDR &&
-            letoh(pkt->getLE<uint32_t>()) == 0xfffff800) {
-            DPRINTF(AMDGPUDevice, "Setting expansion ROM size to 0x1000\n");
-
-            config().expansionROM = 0xfffff000;
-        } else {
-            return PciEndpoint::writeConfig(pkt);
-        }
+    // For the Expansion ROM BAR, Linux will write ~0x7ff before reading
+    // the ROM bar size. If we simply return the written value, the ROM
+    // size is only 0x800 which is too small for the GPU VBIOS. Here we
+    // override the default PciDevice behavior and set the next read to
+    // return 4kiB size. This is enough to load the *used* portions of
+    // the VBIOS. See how PCI_ROM_ADDRESS is handled in the function:
+    // github.com/torvalds/linux/blob/master/drivers/pci/probe.c#L176
+    if (value == 0xfffff800) {
+        DPRINTF(AMDGPUDevice, "Setting expansion ROM size to 0x1000\n");
+        reg.update(0xfffff000);
+    } else {
+        PciEndpoint::expansionRomConfigWriter(reg, value);
     }
-
-    if (offset >= PXCAP_BASE && offset < (PXCAP_BASE + sizeof(PXCAP))) {
-        uint8_t *pxcap_data = &(pxcap.data[0]);
-        int pxcap_offset = offset - PXCAP_BASE;
-
-        DPRINTF(AMDGPUDevice, "Writing PXCAP offset %d size %d\n",
-                pxcap_offset, pkt->getSize());
-
-        memcpy(pxcap_data + pxcap_offset, pkt->getConstPtr<void>(),
-               pkt->getSize());
-    }
-
-    pkt->makeAtomicResponse();
-
-    return configDelay;
 }
 
 void

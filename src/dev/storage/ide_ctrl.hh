@@ -197,9 +197,6 @@ class IdeController : public PciEndpoint
     void dispatchAccess(PacketPtr pkt, bool read);
 
   protected:
-    Tick writeConfig(PacketPtr pkt) override;
-    Tick readConfig(PacketPtr pkt) override;
-
     Tick readDevice(PacketPtr pkt) override;
     Tick writeDevice(PacketPtr pkt) override;
 
