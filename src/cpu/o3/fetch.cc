@@ -74,6 +74,40 @@ namespace gem5
 namespace o3
 {
 
+// clang-format off
+std::string Fetch::FetchStatGroup::statusStrings[ThreadStatusMax] = {
+    "running",
+    "idle",
+    "squashing",
+    "blocked",
+    "fetching",
+    "trapPending",
+    "quiescePending",
+    "itlbWait",
+    "icacheWaitResponse",
+    "icacheWaitRetry",
+    "icacheAccessComplete",
+    "ftqWait",
+    "noGoodAddr",
+};
+
+std::string Fetch::FetchStatGroup::statusDefinitions[ThreadStatusMax] = {
+    "Number of cycles fetch has run and was not squashing or blocked",
+    "Number of cycles fetch was idle",
+    "Number of cycles fetch has spent squashing",
+    "Number of cycles fetch has spent blocked",
+    "Not in use",
+    "Number of cycles fetch is waiting for a trap to be processed",
+    "Number of cycles fetch is waiting for a quiesce instr. to be processed",
+    "Number of cycles fetch is waiting for the ITLB to respond translation",
+    "Number of cycles fetch is waiting for the Icache to respond",
+    "Number of cycles fetch is waiting for the Icache to retry",
+    "Number of cycles fetch is resuming after Icache access",
+    "Number of cycles fetch is waiting for the FTQ to become ready",
+    "Number of cycles fetch is in a 'NoGoodAddr' state",
+};
+// clang-format on
+
 Fetch::IcachePort::IcachePort(Fetch *_fetch, CPU *_cpu) :
         RequestPort(_cpu->name() + ".icache_port"), fetch(_fetch)
 {}
@@ -162,21 +196,9 @@ Fetch::regProbePoints()
 
 Fetch::FetchStatGroup::FetchStatGroup(CPU *cpu, Fetch *fetch)
     : statistics::Group(cpu, "fetch"),
+      ADD_STAT(status, statistics::units::Cycle::get(), "Fetch status cycles"),
       ADD_STAT(predictedBranches, statistics::units::Count::get(),
                "Number of branches that fetch has predicted taken"),
-      ADD_STAT(cycles, statistics::units::Cycle::get(),
-               "Number of cycles fetch has run and was not squashing or "
-               "blocked"),
-      ADD_STAT(squashCycles, statistics::units::Cycle::get(),
-               "Number of cycles fetch has spent squashing"),
-      ADD_STAT(tlbCycles, statistics::units::Cycle::get(),
-               "Number of cycles fetch has spent waiting for tlb"),
-      ADD_STAT(ftqStallCycles, statistics::units::Cycle::get(),
-               "Number of cycles fetch has spent waiting for FTQ to fill."),
-      ADD_STAT(idleCycles, statistics::units::Cycle::get(),
-               "Number of cycles fetch was idle"),
-      ADD_STAT(blockedCycles, statistics::units::Cycle::get(),
-               "Number of cycles fetch has spent blocked"),
       ADD_STAT(
           miscStallCycles, statistics::units::Cycle::get(),
           "Number of cycles fetch has spent waiting on interrupts, or bad "
@@ -185,12 +207,6 @@ Fetch::FetchStatGroup::FetchStatGroup(CPU *cpu, Fetch *fetch)
                "Number of cycles fetch has spent waiting on pipes to drain"),
       ADD_STAT(noActiveThreadStallCycles, statistics::units::Cycle::get(),
                "Number of stall cycles due to no active thread to fetch from"),
-      ADD_STAT(pendingTrapStallCycles, statistics::units::Cycle::get(),
-               "Number of stall cycles due to pending traps"),
-      ADD_STAT(pendingQuiesceStallCycles, statistics::units::Cycle::get(),
-               "Number of stall cycles due to pending quiesce instructions"),
-      ADD_STAT(icacheWaitRetryStallCycles, statistics::units::Cycle::get(),
-               "Number of stall cycles due to full MSHR"),
       ADD_STAT(cacheLines, statistics::units::Count::get(),
                "Number of cache lines fetched"),
       ADD_STAT(icacheSquashes, statistics::units::Count::get(),
@@ -200,50 +216,30 @@ Fetch::FetchStatGroup::FetchStatGroup(CPU *cpu, Fetch *fetch)
       ADD_STAT(nisnDist, statistics::units::Count::get(),
                "Number of instructions fetched each cycle (Total)"),
       ADD_STAT(idleRate, statistics::units::Ratio::get(),
-               "Ratio of cycles fetch was idle",
-               idleCycles / cpu->baseStats.numCycles),
+               "Ratio of cycles fetch was idle"),
       ADD_STAT(ftNumber, statistics::units::Count::get(),
                "Number of fetch targets processed each cycle (Total)")
 {
-        predictedBranches
-            .prereq(predictedBranches);
-        cycles
-            .prereq(cycles);
-        squashCycles
-            .prereq(squashCycles);
-        tlbCycles
-            .prereq(tlbCycles);
-        ftqStallCycles.prereq(ftqStallCycles);
-        idleCycles
-            .prereq(idleCycles);
-        blockedCycles
-            .prereq(blockedCycles);
-        cacheLines
-            .prereq(cacheLines);
-        miscStallCycles
-            .prereq(miscStallCycles);
-        pendingDrainCycles
-            .prereq(pendingDrainCycles);
-        noActiveThreadStallCycles
-            .prereq(noActiveThreadStallCycles);
-        pendingTrapStallCycles
-            .prereq(pendingTrapStallCycles);
-        pendingQuiesceStallCycles
-            .prereq(pendingQuiesceStallCycles);
-        icacheWaitRetryStallCycles
-            .prereq(icacheWaitRetryStallCycles);
-        icacheSquashes
-            .prereq(icacheSquashes);
-        tlbSquashes
-            .prereq(tlbSquashes);
-        ftNumber.init(0, fetch->maxFTPerCycle, 1);
-        nisnDist
-            .init(/* base value */ 0,
+    status.init(ThreadStatusMax).flags(statistics::pdf | statistics::nozero);
+    for (int i = 0; i < ThreadStatusMax; ++i) {
+        status.subname(i, statusStrings[i]);
+        status.subdesc(i, statusDefinitions[i]);
+    }
+    predictedBranches.prereq(predictedBranches);
+    cacheLines.prereq(cacheLines);
+    miscStallCycles.prereq(miscStallCycles);
+    pendingDrainCycles.prereq(pendingDrainCycles);
+    noActiveThreadStallCycles.prereq(noActiveThreadStallCycles);
+    icacheSquashes.prereq(icacheSquashes);
+    tlbSquashes.prereq(tlbSquashes);
+    ftNumber.init(0, fetch->maxFTPerCycle, 1);
+    nisnDist
+        .init(/* base value */ 0,
               /* last value */ fetch->fetchWidth,
               /* bucket size */ 1)
-            .flags(statistics::pdf);
-        idleRate
-            .prereq(idleRate);
+        .flags(statistics::pdf);
+    idleRate.prereq(idleRate);
+    idleRate = status[Idle] / cpu->baseStats.numCycles;
 }
 void
 Fetch::setTimeBuffer(TimeBuffer<TimeStruct> *time_buffer)
@@ -522,7 +518,7 @@ Fetch::ftqReady(ThreadID tid, bool &status_change)
     // If the FTQ is empty, wait until it is available.
     // Need at least two cycles for now.
     if (!ftq->isHeadReady(tid)) {
-        fetchStatus[tid] = FTQEmpty;
+        fetchStatus[tid] = FtqWait;
         status_change = true;
         return false;
     }
@@ -759,7 +755,7 @@ Fetch::doSquash(const PCStateBase &new_pc, const DynInstPtr squashInst,
     // some opportunities to handle interrupts may be missed.
     delayedCommit[tid] = true;
 
-    ++fetchStats.squashCycles;
+    fetchStats.status[Squashing]++;
 }
 
 void
@@ -967,7 +963,7 @@ Fetch::checkSignalsAndUpdate(ThreadID tid)
 
     if (checkStall(tid) && fetchStatus[tid] != IcacheWaitResponse &&
         fetchStatus[tid] != IcacheWaitRetry && fetchStatus[tid] != ItlbWait &&
-        fetchStatus[tid] != FTQEmpty && fetchStatus[tid] != QuiescePending) {
+        fetchStatus[tid] != FtqWait && fetchStatus[tid] != QuiescePending) {
         DPRINTF(Fetch, "[tid:%i] Setting to blocked\n",tid);
 
         fetchStatus[tid] = Blocked;
@@ -982,7 +978,7 @@ Fetch::checkSignalsAndUpdate(ThreadID tid)
         // With a decoupled front-end we can only switch to running if the FTQ
         // is not empty otherwise we need to wait to fillup.
         if (decoupledFrontEnd && ftq->isEmpty(tid)) {
-            fetchStatus[tid] = FTQEmpty;
+            fetchStatus[tid] = FtqWait;
         } else {
             DPRINTF(Fetch, "[tid:%i] Done squashing, switching to running.\n",
                     tid);
@@ -994,7 +990,7 @@ Fetch::checkSignalsAndUpdate(ThreadID tid)
 
     // Check if the FTQ in has filled up and we can witch to running
     // otherwise continue waiting to fill up.
-    if (fetchStatus[tid] == FTQEmpty && !ftq->isEmpty(tid)) {
+    if (fetchStatus[tid] == FtqWait && !ftq->isEmpty(tid)) {
         DPRINTF(Fetch, "[tid:%i] FTQ is refilled -> running\n", tid);
         fetchStatus[tid] = Running;
         return true;
@@ -1085,7 +1081,7 @@ Fetch::fetch(bool &status_change)
         DPRINTF(Fetch, "[tid:%i] FTQ not ready\n", tid);
 
         // No fetch target. We don't know what to fetch.
-        ++fetchStats.ftqStallCycles;
+        fetchStats.status[FtqWait]++;
         return;
     }
 
@@ -1107,7 +1103,7 @@ Fetch::fetch(bool &status_change)
             DPRINTF(Fetch, "[tid:%i] PC:%#x not within fetch target: %s\n",
                     tid, this_pc, curFT->toString());
             bacResteer(this_pc, tid);
-            ++fetchStats.ftqStallCycles;
+            fetchStats.status[FtqWait]++;
             return;
         }
     }
@@ -1137,11 +1133,12 @@ Fetch::fetch(bool &status_change)
 
             if (fetchStatus[tid] == IcacheWaitResponse) {
                 cpu->fetchStats[tid]->icacheStallCycles++;
+                fetchStats.status[IcacheWaitResponse]++;
             }
             else if (fetchStatus[tid] == ItlbWait)
-                ++fetchStats.tlbCycles;
-            else if (fetchStatus[tid] == FTQEmpty) {
-                ++fetchStats.ftqStallCycles;
+                fetchStats.status[ItlbWait]++;
+            else if (fetchStatus[tid] == FtqWait) {
+                fetchStats.status[FtqWait]++;
             } else {
                 ++fetchStats.miscStallCycles;
             }
@@ -1156,7 +1153,7 @@ Fetch::fetch(bool &status_change)
         }
     } else {
         if (fetchStatus[tid] == Idle) {
-            ++fetchStats.idleCycles;
+            fetchStats.status[Idle]++;
             DPRINTF(Fetch, "[tid:%i] Fetch is idle!\n", tid);
         }
 
@@ -1164,7 +1161,7 @@ Fetch::fetch(bool &status_change)
         return;
     }
 
-    ++fetchStats.cycles;
+    fetchStats.status[Running]++;
     std::unique_ptr<PCStateBase> next_pc(this_pc.clone());
 
     StaticInstPtr staticInst = NULL;
@@ -1397,7 +1394,7 @@ Fetch::fetch(bool &status_change)
     issuePipelinedIfetch[tid] =
         fetchBufferBlockPC != fetchBufferPC[tid] &&
         fetchStatus[tid] != IcacheWaitResponse &&
-        fetchStatus[tid] != ItlbWait && fetchStatus[tid] != FTQEmpty &&
+        fetchStatus[tid] != ItlbWait && fetchStatus[tid] != FtqWait &&
         fetchStatus[tid] != IcacheWaitRetry &&
         fetchStatus[tid] != QuiescePending && !curMacroop;
 }
@@ -1616,36 +1613,38 @@ Fetch::profileStall(ThreadID tid)
         ++fetchStats.noActiveThreadStallCycles;
         DPRINTF(Fetch, "Fetch has no active thread!\n");
     } else if (fetchStatus[tid] == Blocked) {
-        ++fetchStats.blockedCycles;
+        fetchStats.status[Blocked]++;
         DPRINTF(Fetch, "[tid:%i] Fetch is blocked!\n", tid);
     } else if (fetchStatus[tid] == Squashing) {
-        ++fetchStats.squashCycles;
+        fetchStats.status[Squashing]++;
         DPRINTF(Fetch, "[tid:%i] Fetch is squashing!\n", tid);
     } else if (fetchStatus[tid] == IcacheWaitResponse) {
         cpu->fetchStats[tid]->icacheStallCycles++;
+        fetchStats.status[IcacheWaitResponse]++;
         DPRINTF(Fetch, "[tid:%i] Fetch is waiting cache response!\n",
                 tid);
     } else if (fetchStatus[tid] == ItlbWait) {
-        ++fetchStats.tlbCycles;
+        fetchStats.status[ItlbWait]++;
         DPRINTF(Fetch, "[tid:%i] Fetch is waiting ITLB walk to "
                 "finish!\n", tid);
-    } else if (fetchStatus[tid] == FTQEmpty) {
-        ++fetchStats.ftqStallCycles;
+    } else if (fetchStatus[tid] == FtqWait) {
+        fetchStats.status[FtqWait]++;
         DPRINTF(Fetch, "[tid:%i] Fetch is waiting for the BPU to fill FTQ!\n",
                 tid);
     } else if (fetchStatus[tid] == TrapPending) {
-        ++fetchStats.pendingTrapStallCycles;
+        fetchStats.status[TrapPending]++;
         DPRINTF(Fetch, "[tid:%i] Fetch is waiting for a pending trap!\n",
                 tid);
     } else if (fetchStatus[tid] == QuiescePending) {
-        ++fetchStats.pendingQuiesceStallCycles;
+        fetchStats.status[QuiescePending]++;
         DPRINTF(Fetch, "[tid:%i] Fetch is waiting for a pending quiesce "
                 "instruction!\n", tid);
     } else if (fetchStatus[tid] == IcacheWaitRetry) {
-        ++fetchStats.icacheWaitRetryStallCycles;
+        fetchStats.status[IcacheWaitRetry]++;
         DPRINTF(Fetch, "[tid:%i] Fetch is waiting for an I-cache retry!\n",
                 tid);
     } else if (fetchStatus[tid] == NoGoodAddr) {
+        fetchStats.status[NoGoodAddr]++;
         DPRINTF(Fetch, "[tid:%i] Fetch predicted non-executable address\n",
                 tid);
     } else {

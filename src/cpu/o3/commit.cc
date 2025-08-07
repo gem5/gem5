@@ -72,6 +72,27 @@ namespace gem5
 namespace o3
 {
 
+// clang-format off
+std::string Commit::CommitStats::statusStrings[ThreadStatusMax] = {
+    "running",
+    "idle",
+    "robSquashing",
+    "trapPending",
+    "fetchTrapPending",
+    "squashAfterPending",
+};
+
+std::string Commit::CommitStats::statusDefinitions[ThreadStatusMax] = {
+    "Number of cycles commit is running",
+    "Number of cycles commit is idle",
+    "Number of cycles commit is squashing the ROB",
+    "Number of cycles commit is processing a trap",
+    "Number of cycles commit is processing a fetch trap",
+    "Number of cycles commit is squashing instructions after a pending "
+    "squash",
+};
+// clang-format on
+
 void
 Commit::processTrapEvent(ThreadID tid)
 {
@@ -146,6 +167,8 @@ Commit::regProbePoints()
 
 Commit::CommitStats::CommitStats(CPU *cpu, Commit *commit)
     : statistics::Group(cpu, "commit"),
+      ADD_STAT(status, statistics::units::Cycle::get(),
+               "Commit status cycles"),
       ADD_STAT(commitSquashedInsts, statistics::units::Count::get(),
                "The number of squashed insts skipped by commit"),
       ADD_STAT(commitNonSpecStalls, statistics::units::Count::get(),
@@ -166,6 +189,11 @@ Commit::CommitStats::CommitStats(CPU *cpu, Commit *commit)
 {
     using namespace statistics;
 
+    status.init(ThreadStatusMax).flags(statistics::pdf | statistics::nozero);
+    for (int i = 0; i < ThreadStatusMax; ++i) {
+        status.subname(i, statusStrings[i]);
+        status.subdesc(i, statusDefinitions[i]);
+    }
     commitSquashedInsts.prereq(commitSquashedInsts);
     commitNonSpecStalls.prereq(commitNonSpecStalls);
     branchMispredicts.prereq(branchMispredicts);
@@ -729,6 +757,7 @@ Commit::commit()
 
     int num_squashing_threads = 0;
     for (ThreadID tid : *activeThreads) {
+        stats.status[commitStatus[tid]]++;
         // Not sure which one takes priority.  I think if we have
         // both, that's a bad sign.
         if (trapSquash[tid]) {

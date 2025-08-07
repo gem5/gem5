@@ -109,6 +109,7 @@ class Commit
         TrapPending,
         FetchTrapPending,
         SquashAfterPending, //< Committing instructions before a squash.
+        ThreadStatusMax
     };
 
   private:
@@ -463,10 +464,16 @@ class Commit
 
     struct CommitStats : public statistics::Group
     {
+        static std::string statusStrings[ThreadStatusMax];
+        static std::string statusDefinitions[ThreadStatusMax];
+
         CommitStats(CPU *cpu, Commit *commit);
         /** Stat for the total number of squashed instructions discarded by
          * commit.
          */
+        /** Stat for total number of cycles spent in each commit state */
+        statistics::Vector status;
+
         statistics::Scalar commitSquashedInsts;
         /** Stat for the total number of times commit has had to stall due
          * to a non-speculative instruction reaching the head of the ROB.

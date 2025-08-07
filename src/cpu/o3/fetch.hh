@@ -183,8 +183,9 @@ class Fetch
         IcacheWaitResponse,
         IcacheWaitRetry,
         IcacheAccessComplete,
-        FTQEmpty,
-        NoGoodAddr
+        FtqWait,
+        NoGoodAddr,
+        ThreadStatusMax
     };
 
   private:
@@ -548,40 +549,23 @@ class Fetch
   protected:
     struct FetchStatGroup : public statistics::Group
     {
+        static std::string statusStrings[ThreadStatusMax];
+        static std::string statusDefinitions[ThreadStatusMax];
+
         FetchStatGroup(CPU *cpu, Fetch *fetch);
         // @todo: Consider making these
         // vectors and tracking on a per thread basis.
+        /** Stat for total number of cycles spent in each fetch state */
+        statistics::Vector status;
         /** Stat for total number of predicted branches. */
         statistics::Scalar predictedBranches;
-        /** Stat for total number of cycles spent fetching. */
-        statistics::Scalar cycles;
-        /** Stat for total number of cycles spent squashing. */
-        statistics::Scalar squashCycles;
-        /** Stat for total number of cycles spent waiting for translation */
-        statistics::Scalar tlbCycles;
-        /** Stat for total number of cycles spent waiting for FTQ to fill. */
-        statistics::Scalar ftqStallCycles;
-        /** Stat for total number of cycles
-         *  spent blocked due to other stages in
-         * the pipeline.
-         */
-        statistics::Scalar idleCycles;
-        /** Total number of cycles spent blocked. */
-        statistics::Scalar blockedCycles;
         /** Total number of cycles spent in any other state. */
         statistics::Scalar miscStallCycles;
         /** Total number of cycles spent in waiting for drains. */
         statistics::Scalar pendingDrainCycles;
         /** Total number of stall cycles caused by no active threads to run. */
         statistics::Scalar noActiveThreadStallCycles;
-        /** Total number of stall cycles caused by pending traps. */
-        statistics::Scalar pendingTrapStallCycles;
-        /** Total number of stall cycles
-         *  caused by pending quiesce instructions. */
-        statistics::Scalar pendingQuiesceStallCycles;
-        /** Total number of stall cycles caused by I-cache wait retrys. */
-        statistics::Scalar icacheWaitRetryStallCycles;
-        /** Stat for total number of fetched cache lines. */
+        // /** Stat for total number of fetched cache lines. */
         statistics::Scalar cacheLines;
         /** Total number of outstanding icache accesses that were dropped
          * due to a squash.
