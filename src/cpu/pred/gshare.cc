@@ -167,8 +167,8 @@ GshareBP::update(ThreadID tid, Addr branchAddr, bool taken,void * &bp_history,
 void
 GshareBP::updateGlobalHistReg(ThreadID tid, bool taken)
 {
-    globalHistoryReg[tid] = taken ? (globalHistoryReg[tid] << 1) | 1 :
-                               (globalHistoryReg[tid] << 1);
+    globalHistoryReg[tid] = taken ? (globalHistoryReg[tid] << 1) | 1 
+                                  : (globalHistoryReg[tid] << 1);
     globalHistoryReg[tid] &= historyRegisterMask;
 }
 
