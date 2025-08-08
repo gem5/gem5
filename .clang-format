@@ -63,10 +63,15 @@ SpaceInEmptyParentheses: false               # No f( ) -> f() (sec. Spacing)
 SpacesInAngles: false                        # No < T > in templates
 
 # Single‐line constructs
-AllowShortIfStatementsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: false
 AllowShortBlocksOnASingleLine: true
 AllowShortLoopsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: InlineOnly
+
+# Require curly braces after control statements (if, else, for, do, while)
+# unless inside macro definitions or if the braces would enclose preprocessor
+# directives
+InsertBraces: true
 
 # Return‐type / function‐name separation
 AlwaysBreakAfterReturnType: None             # Do not break after return type
@@ -74,7 +79,7 @@ AlwaysBreakAfterDefinitionReturnType: All    # Unless it is a definition
 
 # Pointer/reference alignment
 DerivePointerAlignment: false
-PointerAlignment: Left                       # Foo* p (sec. Pointers)
+PointerAlignment: Right                      # Foo *p (sec. Pointers)
 
 # Decoration
 AlignConsecutiveDeclarations: false          # No aligned declarations
