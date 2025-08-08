@@ -51,10 +51,15 @@ AccessModifierOffset: -2                     # Outdent public/protected/private 
 # Brace placement rules
 BreakBeforeBraces: Custom
 BraceWrapping:
-    AfterFunction: true                      # Function/class braces on newline (sec. Braces)
+    AfterFunction: true                      # Function/object braces on newline (sec. Braces)
     AfterClass: true
+    AfterStruct: true
+    AfterUnion: true
+    AfterNamespace: true
     AfterControlStatement: false             # if/for braces same line (sec. Braces)
     BeforeElse: false                        # else on same line (sec. Braces)
+    SplitEmptyFunction: false                # empty function closing brace on same line
+                                             # as openning
 
 # Spacing rules
 SpaceBeforeParens: ControlStatements         # Space before if/for/while (...)
@@ -97,3 +102,7 @@ IncludeCategories:
       Priority: 4
     - Regex: ^".*\\.hh"$
       Priority: 5
+
+# Treat those macro as start and end of block so they are indented correctly.
+MacroBlockBegin: ^(BitUnion(8|16|32|64)|(Signed)?SubBitUnion)$
+MacroBlockEnd: ^(EndBitUnion|EndSubBitUnion)$
