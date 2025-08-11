@@ -78,7 +78,6 @@ Hdf5::~Hdf5()
 {
 }
 
-
 void
 Hdf5::begin(const std::string& message)
 {

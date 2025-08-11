@@ -130,16 +130,12 @@ void
 Text::begin(const std::string& message)
 {
     if (message.empty()) {
-        ccprintf(
-            *stream,
-            "\n---------- Begin Simulation Statistics ----------\n"
-        );
+        ccprintf(*stream,
+                 "\n---------- Begin Simulation Statistics ----------\n");
     } else {
-        ccprintf(
-            *stream,
-            "\n---------- Begin Simulation Statistics : %s ----------\n",
-            message
-        );
+        ccprintf(*stream,
+                 "\n---------- Begin Simulation Statistics : %s ----------\n",
+                 message);
     }
 }
 
