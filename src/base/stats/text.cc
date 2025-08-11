@@ -127,7 +127,7 @@ Text::valid() const
 }
 
 void
-Text::begin(const std::string& message)
+Text::begin(const std::string &message)
 {
     if (message.empty()) {
         ccprintf(*stream,

@@ -79,7 +79,7 @@ Hdf5::~Hdf5()
 }
 
 void
-Hdf5::begin(const std::string& message)
+Hdf5::begin(const std::string &message)
 {
     // HDF5 format ignores the message parameter
     // as it doesn't support text messages
