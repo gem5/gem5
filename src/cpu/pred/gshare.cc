@@ -43,15 +43,14 @@ namespace branch_prediction
 {
 
 GshareBP::GshareBP(const GshareBPParams &params)
-    : BPredUnit(params),
-      globalHistoryReg(params.numThreads, 0),
+    : BPredUnit(params), globalHistoryReg(params.numThreads, 0),
       globalHistoryBits(ceilLog2(params.global_predictor_size)),
       globalPredictorSize(params.global_predictor_size),
       globalCtrBits(params.global_counter_bits),
       globalCtrs(globalPredictorSize, SatCounter8(globalCtrBits))
 {
 
-    if (!isPowerOf2(globalPredictorSize)){
+    if (!isPowerOf2(globalPredictorSize)) {
         fatal("Invalid global history predictor size.\n");
     }
     historyRegisterMask = mask(globalHistoryBits);
@@ -65,18 +64,18 @@ GshareBP::GshareBP(const GshareBPParams &params)
  * chooses the taken array and the taken array predicts taken.
  */
 void
-GshareBP::uncondBranch(ThreadID tid, Addr pc, void * &bp_history)
+GshareBP::uncondBranch(ThreadID tid, Addr pc, void *&bp_history)
 {
     BPHistory *history = new BPHistory;
     history->globalHistoryReg = globalHistoryReg[tid];
     history->finalPred = true;
-    bp_history = static_cast<void*>(history);
+    bp_history = static_cast<void *>(history);
 }
 
 void
-GshareBP::updateHistories(ThreadID tid, Addr pc, bool uncond,
-                          bool taken, Addr target,
-                          const StaticInstPtr &inst, void * &bp_history)
+GshareBP::updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
+                          Addr target, const StaticInstPtr &inst,
+                          void *&bp_history)
 {
     assert(uncond || bp_history);
     if (uncond) {
@@ -85,11 +84,10 @@ GshareBP::updateHistories(ThreadID tid, Addr pc, bool uncond,
     updateGlobalHistReg(tid, taken);
 }
 
-
 void
-GshareBP::squash(ThreadID tid, void * &bp_history)
+GshareBP::squash(ThreadID tid, void *&bp_history)
 {
-    BPHistory *history = static_cast<BPHistory*>(bp_history);
+    BPHistory *history = static_cast<BPHistory *>(bp_history);
     globalHistoryReg[tid] = history->globalHistoryReg;
 
     delete history;
@@ -102,11 +100,11 @@ GshareBP::squash(ThreadID tid, void * &bp_history)
  * index into the counter, which both present a prediction.
  */
 bool
-GshareBP::lookup(ThreadID tid, Addr branchAddr, void * &bp_history)
+GshareBP::lookup(ThreadID tid, Addr branchAddr, void *&bp_history)
 {
-    unsigned globalHistoryIdx = (((branchAddr >> instShiftAmt)
-                                ^ globalHistoryReg[tid])
-                                & globalHistoryMask);
+    unsigned globalHistoryIdx =
+        (((branchAddr >> instShiftAmt) ^ globalHistoryReg[tid]) &
+         globalHistoryMask);
 
     assert(globalHistoryIdx < globalPredictorSize);
 
@@ -115,22 +113,21 @@ GshareBP::lookup(ThreadID tid, Addr branchAddr, void * &bp_history)
     BPHistory *history = new BPHistory;
     history->globalHistoryReg = globalHistoryReg[tid];
     history->finalPred = final_prediction;
-    bp_history = static_cast<void*>(history);
+    bp_history = static_cast<void *>(history);
 
     return final_prediction;
 }
-
 
 /* Updates the counter values based on the actual branch
  * direction.
  */
 void
-GshareBP::update(ThreadID tid, Addr branchAddr, bool taken,void * &bp_history,
-                 bool squashed, const StaticInstPtr & inst, Addr target)
+GshareBP::update(ThreadID tid, Addr branchAddr, bool taken, void *&bp_history,
+                 bool squashed, const StaticInstPtr &inst, Addr target)
 {
     assert(bp_history);
 
-    BPHistory *history = static_cast<BPHistory*>(bp_history);
+    BPHistory *history = static_cast<BPHistory *>(bp_history);
 
     // We do not update the counters speculatively on a squash.
     // We just restore the global history register.
@@ -139,17 +136,16 @@ GshareBP::update(ThreadID tid, Addr branchAddr, bool taken,void * &bp_history,
         return;
     }
 
-    unsigned globalHistoryIdx = (((branchAddr >> instShiftAmt)
-                                ^ history->globalHistoryReg)
-                                & globalHistoryMask);
+    unsigned globalHistoryIdx =
+        (((branchAddr >> instShiftAmt) ^ history->globalHistoryReg) &
+         globalHistoryMask);
 
     assert(globalHistoryIdx < globalPredictorSize);
 
     if (taken) {
-       globalCtrs[globalHistoryIdx]++;
-    }
-    else {
-       globalCtrs[globalHistoryIdx]--;
+        globalCtrs[globalHistoryIdx]++;
+    } else {
+        globalCtrs[globalHistoryIdx]--;
     }
     delete history;
     bp_history = nullptr;

@@ -56,18 +56,18 @@ class GshareBP : public BPredUnit
 {
   public:
     GshareBP(const GshareBPParams &params);
-    bool lookup(ThreadID tid, Addr pc, void * &bp_history) override;
+    bool lookup(ThreadID tid, Addr pc, void *&bp_history) override;
     void updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
                          Addr target, const StaticInstPtr &inst,
-                         void * &bp_history) override;
-    void squash(ThreadID tid, void * &bp_history) override;
-    void update(ThreadID tid, Addr pc, bool taken,
-                void * &bp_history, bool squashed,
-                const StaticInstPtr & inst, Addr target) override;
+                         void *&bp_history) override;
+    void squash(ThreadID tid, void *&bp_history) override;
+    void update(ThreadID tid, Addr pc, bool taken, void *&bp_history,
+                bool squashed, const StaticInstPtr &inst,
+                Addr target) override;
 
   private:
     void updateGlobalHistReg(ThreadID tid, bool taken);
-    void uncondBranch(ThreadID tid, Addr pc, void * &bp_history);
+    void uncondBranch(ThreadID tid, Addr pc, void *&bp_history);
 
     struct BPHistory
     {
@@ -85,7 +85,6 @@ class GshareBP : public BPredUnit
 
     std::vector<SatCounter8> globalCtrs;
     unsigned takenThreshold;
-
 };
 
 } // namespace branch_prediction
