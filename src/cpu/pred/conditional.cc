@@ -1,6 +1,15 @@
 /*
- * Copyright (c) 2003-2005 The Regents of The University of Michigan
- * All rights reserved.
+ * Copyright (c) 2025 Technical University of Munich
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -26,89 +35,31 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "sim/debug.hh"
+/* @file
+ * Conditional branch predictor interface
+ */
 
-#include <string>
-#include <vector>
-
-#include "base/debug.hh"
-#include "sim/eventq.hh"
-#include "sim/global_event.hh"
-#include "sim/sim_events.hh"
-#include "sim/sim_exit.hh"
+#include "cpu/pred/conditional.hh"
 
 namespace gem5
 {
 
-//
-// Debug event: place a breakpoint on the process function and
-// schedule the event to break at a particular cycle
-//
-struct DebugBreakEvent : public GlobalEvent
+namespace branch_prediction
 {
-    DebugBreakEvent(Tick when);
-    void process();     // process event
-    virtual const char *description() const;
-};
 
-//
-// constructor: schedule at specified time
-//
-DebugBreakEvent::DebugBreakEvent(Tick when)
-    : GlobalEvent(when, Debug_Break_Pri, AutoDelete)
+ConditionalPredictor::ConditionalPredictor(const Params &params)
+    : SimObject(params),
+      instShiftAmt(params.instShiftAmt)
 {
 }
 
-//
-// handle debug event: set debugger breakpoint on this function
-//
-void
-DebugBreakEvent::process()
-{
-    debug::breakpoint();
-}
-
-
-const char *
-DebugBreakEvent::description() const
-{
-    return "debug breakpoint";
-}
-
-//
-// handy function to schedule DebugBreakEvent on main event queue
-// (callable from debugger)
-//
-void
-schedBreak(Tick when)
-{
-    new DebugBreakEvent(when);
-    warn("need to stop all queues");
-}
 
 void
-schedRelBreak(Tick delta)
+ConditionalPredictor::branchPlaceholder(ThreadID tid, Addr pc,
+                             bool uncond, void * &bp_history)
 {
-    schedBreak(curTick() + delta);
+    panic("BPredUnit::branchPlaceholder() not implemented for this BP.\n");
 }
 
-///
-/// Function to cause the simulator to take a checkpoint from the debugger
-///
-void
-takeCheckpoint(Tick when)
-{
-    if (!when)
-        when = curTick() + 1;
-    exitSimLoop("checkpoint", 0, when, 0);
-}
-
-void
-eventqDump()
-{
-    for (uint32_t i = 0; i < numMainEventQueues; ++i) {
-        mainEventQueue[i]->dump();
-    }
-}
-
+} // namespace branch_prediction
 } // namespace gem5

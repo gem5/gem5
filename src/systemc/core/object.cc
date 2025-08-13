@@ -28,6 +28,8 @@
 #include "systemc/core/object.hh"
 
 #include <algorithm>
+#include <mutex>
+#include <shared_mutex>
 #include <stack>
 
 #include "systemc/core/event.hh"
@@ -81,13 +83,21 @@ nameIsUnique(Objects *objects, Events *events, const std::string &name)
     return true;
 }
 
+std::shared_mutex globalObjectLock;
+std::stack<sc_core::sc_object *> objParentStack;
+
 } // anonymous namespace
+
+Objects topLevelObjects;
+Objects allObjects;
 
 Object::Object(sc_core::sc_object *_sc_obj) : Object(_sc_obj, nullptr) {}
 
 Object::Object(sc_core::sc_object *_sc_obj, const char *obj_name) :
     _sc_obj(_sc_obj), _basename(obj_name ? obj_name : ""), parent(nullptr)
 {
+    [[maybe_unused]] std::unique_lock lock(globalObjectLock);
+
     if (_basename == "")
         _basename = ::sc_core::sc_gen_unique_name("object");
 
@@ -137,6 +147,8 @@ Object::operator = (const Object &)
 
 Object::~Object()
 {
+    [[maybe_unused]] std::unique_lock lock(globalObjectLock);
+
     // Promote all children to be top level objects.
     for (auto child: children) {
         addObject(&topLevelObjects, child);
@@ -247,12 +259,16 @@ Object::simcontext() const
 EventsIt
 Object::addChildEvent(sc_core::sc_event *e)
 {
+    [[maybe_unused]] std::unique_lock lock(_lock);
+
     return events.emplace(events.end(), e);
 }
 
 void
 Object::delChildEvent(sc_core::sc_event *e)
 {
+    [[maybe_unused]] std::unique_lock lock(_lock);
+
     EventsIt it = std::find(events.begin(), events.end(), e);
     assert(it != events.end());
     std::swap(*it, events.back());
@@ -262,6 +278,7 @@ Object::delChildEvent(sc_core::sc_event *e)
 std::string
 Object::pickUniqueName(std::string base)
 {
+    [[maybe_unused]] std::shared_lock lock(_lock);
     std::string seed = base;
     while (!nameIsUnique(&children, &events, base))
         base = ::sc_core::sc_gen_unique_name(seed.c_str());
@@ -282,10 +299,6 @@ pickUniqueName(::sc_core::sc_object *parent, std::string base)
     return base;
 }
 
-
-Objects topLevelObjects;
-Objects allObjects;
-
 const std::vector<sc_core::sc_object *> &
 getTopLevelScObjects()
 {
@@ -293,18 +306,13 @@ getTopLevelScObjects()
 }
 
 sc_core::sc_object *
-findObject(const char *name, const Objects &objects)
+findObject(const char *name)
 {
+    [[maybe_unused]] std::shared_lock lock(globalObjectLock);
+
     ObjectsIt it = findObjectIn(allObjects, name);
     return it == allObjects.end() ? nullptr : *it;
 }
-
-namespace
-{
-
-std::stack<sc_core::sc_object *> objParentStack;
-
-} // anonymous namespace
 
 sc_core::sc_object *
 pickParentObj()

@@ -477,7 +477,7 @@ let {{
                       "operation triggers invalid implicit conversion");
         uint16_t half_dest1 = %(op1)s;
         uint16_t half_dest2 = %(op2)s;
-        FpDestP0 = (uint32_t)half_dest1 | ((uint32_t)half_dest2 << 16);
+        FpDestP0_uw = (uint32_t)half_dest1 | ((uint32_t)half_dest2 << 16);
         FpscrExc = fpscr;
     '''
 

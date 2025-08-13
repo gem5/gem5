@@ -295,10 +295,18 @@ Walker::startWalkWrapper()
     if (currState && !currState->wasStarted()) {
         if (!e || fault != NoFault) {
             Fault timingFault = currState->walk();
-            if (timingFault != NoFault) {
+
+            // Catch all walker states that have early fault!
+            while (!currStates.empty() && timingFault != NoFault) {
+                // Delete currState due to early fault
                 currStates.pop_front();
                 delete currState;
-                currState = NULL;
+
+                // Get next currState & walk
+                if (currStates.size() > 0) {
+                    currState = currStates.front();
+                    timingFault = currState->walk();
+                }
             }
         }
         else {

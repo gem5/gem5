@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012, 2014-2019 ARM Limited
+ * Copyright (c) 2010-2012, 2014-2019, 2025 Arm Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
@@ -58,6 +58,28 @@ namespace gem5
 namespace o3
 {
 
+// clang-format off
+std::string Rename::RenameStats::statusStrings[ThreadStatusMax] = {
+    "Running",
+    "Idle",
+    "StartSquash",
+    "Squashing",
+    "Blocked",
+    "Unblocking",
+    "SerializeStall",
+};
+
+std::string Rename::RenameStats::statusDefinitions[ThreadStatusMax] = {
+    "Number of cycles rename is running",
+    "Number of cycles rename is idle",
+    "Not Used",
+    "Number of cycles rename is squashing",
+    "Number of cycles rename is blocking",
+    "Number of cycles rename is unblocking",
+    "Number of cycles rename stalled for serializing inst",
+};
+// clang-format on
+
 Rename::Rename(CPU *_cpu, const BaseO3CPUParams &params)
     : cpu(_cpu),
       iewToRenameDelay(params.iewToRenameDelay),
@@ -96,18 +118,8 @@ Rename::name() const
 
 Rename::RenameStats::RenameStats(statistics::Group *parent)
     : statistics::Group(parent, "rename"),
-      ADD_STAT(squashCycles, statistics::units::Cycle::get(),
-               "Number of cycles rename is squashing"),
-      ADD_STAT(idleCycles, statistics::units::Cycle::get(),
-               "Number of cycles rename is idle"),
-      ADD_STAT(blockCycles, statistics::units::Cycle::get(),
-               "Number of cycles rename is blocking"),
-      ADD_STAT(serializeStallCycles, statistics::units::Cycle::get(),
-               "count of cycles rename stalled for serializing inst"),
-      ADD_STAT(runCycles, statistics::units::Cycle::get(),
-               "Number of cycles rename is running"),
-      ADD_STAT(unblockCycles, statistics::units::Cycle::get(),
-               "Number of cycles rename is unblocking"),
+      ADD_STAT(status, statistics::units::Cycle::get(),
+               "Number of cycles spent in each rename state"),
       ADD_STAT(renamedInsts, statistics::units::Count::get(),
                "Number of instructions processed by rename"),
       ADD_STAT(squashedInsts, statistics::units::Count::get(),
@@ -117,7 +129,7 @@ Rename::RenameStats::RenameStats(statistics::Group *parent)
       ADD_STAT(IQFullEvents, statistics::units::Count::get(),
                "Number of times rename has blocked due to IQ full"),
       ADD_STAT(LQFullEvents, statistics::units::Count::get(),
-               "Number of times rename has blocked due to LQ full" ),
+               "Number of times rename has blocked due to LQ full"),
       ADD_STAT(SQFullEvents, statistics::units::Count::get(),
                "Number of times rename has blocked due to SQ full"),
       ADD_STAT(fullRegistersEvents, statistics::units::Count::get(),
@@ -152,12 +164,11 @@ Rename::RenameStats::RenameStats(statistics::Group *parent)
                "count of registers freed and written back to floating point free list")
 
 {
-    squashCycles.prereq(squashCycles);
-    idleCycles.prereq(idleCycles);
-    blockCycles.prereq(blockCycles);
-    serializeStallCycles.flags(statistics::total);
-    runCycles.prereq(idleCycles);
-    unblockCycles.prereq(unblockCycles);
+    status.init(ThreadStatusMax).flags(statistics::pdf | statistics::nozero);
+    for (int i = 0; i < ThreadStatusMax; ++i) {
+        status.subname(i, statusStrings[i]);
+        status.subdesc(i, statusDefinitions[i]);
+    }
 
     renamedInsts.prereq(renamedInsts);
     squashedInsts.prereq(squashedInsts);
@@ -477,11 +488,11 @@ Rename::rename(bool &status_change, ThreadID tid)
     //     check if stall conditions have passed
 
     if (renameStatus[tid] == Blocked) {
-        ++stats.blockCycles;
+        ++stats.status[Blocked];
     } else if (renameStatus[tid] == Squashing) {
-        ++stats.squashCycles;
+        ++stats.status[Squashing];
     } else if (renameStatus[tid] == SerializeStall) {
-        ++stats.serializeStallCycles;
+        ++stats.status[SerializeStall];
         // If we are currently in SerializeStall and resumeSerialize
         // was set, then that means that we are resuming serializing
         // this cycle.  Tell the previous stages to block.
@@ -535,12 +546,12 @@ Rename::renameInsts(ThreadID tid)
         DPRINTF(Rename, "[tid:%i] Nothing to do, breaking out early.\n",
                 tid);
         // Should I change status to idle?
-        ++stats.idleCycles;
+        ++stats.status[Idle];
         return;
     } else if (renameStatus[tid] == Unblocking) {
-        ++stats.unblockCycles;
+        ++stats.status[Unblocking];
     } else if (renameStatus[tid] == Running) {
-        ++stats.runCycles;
+        ++stats.status[Running];
     }
 
     // Will have to do a different calculation for the number of free

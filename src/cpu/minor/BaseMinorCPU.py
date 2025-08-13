@@ -426,7 +426,10 @@ class BaseMinorCPU(BaseCPU):
     )
 
     branchPred = Param.BranchPredictor(
-        TournamentBP(numThreads=Parent.numThreads), "Branch Predictor"
+        BranchPredictor(
+            conditionalBranchPred=TournamentBP(numThreads=Parent.numThreads)
+        ),
+        "Branch Predictor",
     )
 
     def addCheckerCpu(self):

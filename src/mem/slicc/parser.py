@@ -71,6 +71,8 @@ class SLICC(Grammar):
         self.verbose = verbose
         self.symtab = SymbolTable(self)
         self.base_dir = base_dir
+        self.yacc_kwargs["debug"] = self.verbose
+        self.yacc_kwargs["write_tables"] = self.verbose
 
         # Update slicc_interface/ProtocolInfo.cc/hh if updating this.
         self.options = {

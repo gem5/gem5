@@ -1,7 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2019 Inria
-# Copyright (c) 2009 The Hewlett-Packard Development Company
+# Copyright (c) 2025 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,18 +24,49 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+"""
+This runs simple tests to ensure that running binaries via readfile works.
+"""
+import os
+import re
 
-SimObject('BloomFilters.py', sim_objects=[
-    'BloomFilterBase', 'BloomFilterBlock', 'BloomFilterMultiBitSel',
-    'BloomFilterBulk', 'BloomFilterH3', 'BloomFilterMulti',
-    'BloomFilterPerfect'])
+from testlib import *
 
-Source('block_bloom_filter.cc')
-Source('bulk_bloom_filter.cc')
-Source('h3_bloom_filter.cc')
-Source('multi_bit_sel_bloom_filter.cc')
-Source('multi_bloom_filter.cc')
-Source('perfect_bloom_filter.cc')
+if config.bin_path:
+    resource_path = config.bin_path
+else:
+    resource_path = joinpath(absdirpath(__file__), "..", "resources")
 
-GTest('base.test', 'base.test.cc', with_tag('gem5 simobject'))
+readfile_verifier = verifier.MatchRegex(re.compile(r"Readfile test passed!"))
+
+
+def test_readfile(isa: str, length: str):
+    gem5_verify_config(
+        name=f"test_readfile_{isa}",
+        fixtures=(),
+        verifiers=(readfile_verifier,),
+        config=joinpath(
+            config.base_dir,
+            "tests",
+            "gem5",
+            "readfile_tests",
+            "configs",
+            "ubuntu-run-with-readfile.py",
+        ),
+        config_args=[
+            "--isa",
+            isa,
+            "--resource-directory",
+            resource_path,
+        ],
+        valid_isas=(constants.all_compiled_tag,),
+        valid_hosts=constants.supported_hosts,
+        length=length,
+    )
+
+
+test_readfile(isa="x86", length=constants.long_tag)
+
+test_readfile(isa="riscv", length=constants.long_tag)
+
+test_readfile(isa="arm", length=constants.long_tag)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012 ARM Limited
+ * Copyright (c) 2012, 2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -79,14 +79,14 @@ class Decode
     };
 
     /** Individual thread status. */
-    enum ThreadStatus
-    {
+    enum ThreadStatus {
         Running,
         Idle,
         StartSquash,
         Squashing,
         Blocked,
-        Unblocking
+        Unblocking,
+        ThreadStatusMax
     };
 
   private:
@@ -296,18 +296,13 @@ class Decode
 
     struct DecodeStats : public statistics::Group
     {
+        static std::string statusStrings[ThreadStatusMax];
+        static std::string statusDefinitions[ThreadStatusMax];
+
         DecodeStats(CPU *cpu);
 
-        /** Stat for total number of idle cycles. */
-        statistics::Scalar idleCycles;
-        /** Stat for total number of blocked cycles. */
-        statistics::Scalar blockedCycles;
-        /** Stat for total number of normal running cycles. */
-        statistics::Scalar runCycles;
-        /** Stat for total number of unblocking cycles. */
-        statistics::Scalar unblockCycles;
-        /** Stat for total number of squashing cycles. */
-        statistics::Scalar squashCycles;
+        /** Stat for total number of cycles spent in each decode state */
+        statistics::Vector status;
         /** Stat for number of times a branch is resolved at decode. */
         statistics::Scalar branchResolved;
         /** Stat for number of times a branch mispredict is detected. */

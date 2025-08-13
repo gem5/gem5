@@ -54,7 +54,7 @@ namespace branch_prediction
 {
 
 BiModeBP::BiModeBP(const BiModeBPParams &params)
-    : BPredUnit(params),
+    : ConditionalPredictor(params),
       globalHistoryReg(params.numThreads, 0),
       globalHistoryBits(ceilLog2(params.globalPredictorSize)),
       choicePredictorSize(params.choicePredictorSize),
