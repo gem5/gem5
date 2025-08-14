@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016-2024 Arm Limited
+ * Copyright (c) 2010-2013, 2016-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -179,8 +179,8 @@ MMU::getTableWalker(BaseMMU::Mode mode, bool stage2) const
     }
 }
 
-bool
-MMU::translateFunctional(ThreadContext *tc, Addr va, Addr &pa)
+TlbEntry *
+MMU::translateFunctional(ThreadContext *tc, Addr va)
 {
     CachedState& state = updateMiscReg(tc, NormalTran, false);
 
@@ -197,12 +197,18 @@ MMU::translateFunctional(ThreadContext *tc, Addr va, Addr &pa)
     lookup_data.targetRegime = state.currRegime;
     lookup_data.mode = BaseMMU::Read;
 
-    TlbEntry *e = tlb->multiLookup(lookup_data);
+    return tlb->multiLookup(lookup_data);
+}
 
-    if (!e)
+bool
+MMU::translateFunctional(ThreadContext *tc, Addr va, Addr &pa)
+{
+    if (TlbEntry *e = translateFunctional(tc, va); !e) {
         return false;
-    pa = e->pAddr(va);
-    return true;
+    } else {
+        pa = e->pAddr(va);
+        return true;
+    }
 }
 
 void

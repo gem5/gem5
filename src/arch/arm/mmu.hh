@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016, 2019-2024 Arm Limited
+ * Copyright (c) 2010-2013, 2016, 2019-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -231,6 +231,8 @@ class MMU : public BaseMMU
      * @return if the translation was successful
      */
     bool translateFunctional(ThreadContext *tc, Addr vaddr, Addr &paddr);
+
+    TlbEntry *translateFunctional(ThreadContext *tc, Addr vaddr);
 
     Fault translateFunctional(const RequestPtr &req, ThreadContext *tc,
         BaseMMU::Mode mode) override;
