@@ -87,7 +87,7 @@ void statsDump()
     statsEnable();
     statsPrepare();
 
-    output->begin();
+    output->begin("");
     /* gather_stats -> convert_value */
     for (auto i = stats.begin(); i != stats.end(); ++i) {
         gem5::statistics::Info *stat = *i;
