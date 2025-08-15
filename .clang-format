@@ -55,6 +55,7 @@ BraceWrapping:
     AfterClass: true
     AfterStruct: true
     AfterUnion: true
+    AfterEnum: true
     AfterNamespace: true
     AfterControlStatement: false             # if/for braces same line (sec. Braces)
     BeforeElse: false                        # else on same line (sec. Braces)
@@ -77,6 +78,11 @@ AllowShortFunctionsOnASingleLine: InlineOnly
 # unless inside macro definitions or if the braces would enclose preprocessor
 # directives
 InsertBraces: true
+
+# Each constructor initializer in separate line
+BreakConstructorInitializers: BeforeColon
+BreakConstructorInitializersBeforeComma: false
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
 
 # Return‐type / function‐name separation
 AlwaysBreakAfterReturnType: None             # Do not break after return type
