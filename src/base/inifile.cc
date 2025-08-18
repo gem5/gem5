@@ -62,6 +62,15 @@ IniFile::Entry::getValue() const
 }
 
 
+IniFile::Section::~Section()
+{
+    for (auto const& [key, entryPtr] : table) {
+        delete entryPtr;
+    }
+    table.clear();
+}
+
+
 void
 IniFile::Section::addEntry(const std::string &entryName,
                            const std::string &value,

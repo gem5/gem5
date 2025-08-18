@@ -105,6 +105,7 @@ class IniFile
             : table(), referenced(false)
         {
         }
+        ~Section();
 
         /// Has this section been used?
         bool isReferenced() const { return referenced; }
