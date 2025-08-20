@@ -71,7 +71,7 @@ SpacesInAngles: false                        # No < T > in templates
 # Single‐line constructs
 AllowShortIfStatementsOnASingleLine: false
 AllowShortBlocksOnASingleLine: true
-AllowShortLoopsOnASingleLine: true
+AllowShortLoopsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: InlineOnly
 
 # Require curly braces after control statements (if, else, for, do, while)
