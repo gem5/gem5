@@ -284,7 +284,7 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
         node = FdtNode(f"chosen")
         bootargs = self.workload.command_line
         node.append(FdtPropertyStrings("bootargs", [bootargs]))
-        node.append(FdtPropertyStrings("stdout-path", ["/uart@10000000"]))
+        node.append(FdtPropertyStrings("stdout-path", ["/soc/uart@10000000"]))
         root.append(node)
 
         # See Documentation/devicetree/bindings/riscv/cpus.txt for details.
