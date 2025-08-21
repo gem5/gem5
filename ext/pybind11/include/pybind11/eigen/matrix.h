@@ -9,7 +9,9 @@
 
 #pragma once
 
-#include "../numpy.h"
+#include <pybind11/numpy.h>
+
+#include "common.h"
 
 /* HINT: To suppress warnings originating from the Eigen headers, use -isystem.
    See also:
@@ -19,7 +21,9 @@
 PYBIND11_WARNING_PUSH
 PYBIND11_WARNING_DISABLE_MSVC(5054) // https://github.com/pybind/pybind11/pull/3741
 //       C5054: operator '&': deprecated between enumerations of different types
+#if defined(__MINGW32__)
 PYBIND11_WARNING_DISABLE_GCC("-Wmaybe-uninitialized")
+#endif
 
 #include <Eigen/Core>
 #include <Eigen/SparseCore>
@@ -221,19 +225,22 @@ struct EigenProps {
         = !show_c_contiguous && show_order && requires_col_major;
 
     static constexpr auto descriptor
-        = const_name("numpy.ndarray[") + npy_format_descriptor<Scalar>::name + const_name("[")
+        = const_name("typing.Annotated[")
+          + io_name("numpy.typing.ArrayLike, ", "numpy.typing.NDArray[")
+          + npy_format_descriptor<Scalar>::name + io_name("", "]") + const_name(", \"[")
           + const_name<fixed_rows>(const_name<(size_t) rows>(), const_name("m")) + const_name(", ")
-          + const_name<fixed_cols>(const_name<(size_t) cols>(), const_name("n")) + const_name("]")
-          +
+          + const_name<fixed_cols>(const_name<(size_t) cols>(), const_name("n"))
+          + const_name("]\"")
           // For a reference type (e.g. Ref<MatrixXd>) we have other constraints that might need to
           // be satisfied: writeable=True (for a mutable reference), and, depending on the map's
           // stride options, possibly f_contiguous or c_contiguous.  We include them in the
           // descriptor output to provide some hint as to why a TypeError is occurring (otherwise
-          // it can be confusing to see that a function accepts a 'numpy.ndarray[float64[3,2]]' and
-          // an error message that you *gave* a numpy.ndarray of the right type and dimensions.
-          const_name<show_writeable>(", flags.writeable", "")
-          + const_name<show_c_contiguous>(", flags.c_contiguous", "")
-          + const_name<show_f_contiguous>(", flags.f_contiguous", "") + const_name("]");
+          // it can be confusing to see that a function accepts a
+          // 'typing.Annotated[numpy.typing.NDArray[numpy.float64], "[3,2]"]' and an error message
+          // that you *gave* a numpy.ndarray of the right type and dimensions.
+          + const_name<show_writeable>(", \"flags.writeable\"", "")
+          + const_name<show_c_contiguous>(", \"flags.c_contiguous\"", "")
+          + const_name<show_f_contiguous>(", \"flags.f_contiguous\"", "") + const_name("]");
 };
 
 // Casts an Eigen type to numpy array.  If given a base, the numpy array references the src data,
@@ -285,6 +292,8 @@ handle eigen_encapsulate(Type *src) {
 template <typename Type>
 struct type_caster<Type, enable_if_t<is_eigen_dense_plain<Type>::value>> {
     using Scalar = typename Type::Scalar;
+    static_assert(!std::is_pointer<Scalar>::value,
+                  PYBIND11_EIGEN_MESSAGE_POINTER_TYPES_ARE_NOT_SUPPORTED);
     using props = EigenProps<Type>;
 
     bool load(handle src, bool convert) {
@@ -310,8 +319,11 @@ struct type_caster<Type, enable_if_t<is_eigen_dense_plain<Type>::value>> {
             return false;
         }
 
+        PYBIND11_WARNING_PUSH
+        PYBIND11_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // See PR #5516
         // Allocate the new type, then build a numpy reference into it
         value = Type(fits.rows, fits.cols);
+        PYBIND11_WARNING_POP
         auto ref = reinterpret_steal<array>(eigen_ref_array<props>(value));
         if (dims == 1) {
             ref = ref.squeeze();
@@ -403,6 +415,9 @@ private:
 // Base class for casting reference/map/block/etc. objects back to python.
 template <typename MapType>
 struct eigen_map_caster {
+    static_assert(!std::is_pointer<typename MapType::Scalar>::value,
+                  PYBIND11_EIGEN_MESSAGE_POINTER_TYPES_ARE_NOT_SUPPORTED);
+
 private:
     using props = EigenProps<MapType>;
 
@@ -429,7 +444,9 @@ public:
         }
     }
 
-    static constexpr auto name = props::descriptor;
+    // return_descr forces the use of NDArray instead of ArrayLike in args
+    // since Ref<...> args can only accept arrays.
+    static constexpr auto name = return_descr(props::descriptor);
 
     // Explicitly delete these: support python -> C++ conversion on these (i.e. these can be return
     // types but not bound arguments).  We still provide them (with an explicitly delete) so that
@@ -455,6 +472,8 @@ private:
     using Type = Eigen::Ref<PlainObjectType, 0, StrideType>;
     using props = EigenProps<Type>;
     using Scalar = typename props::Scalar;
+    static_assert(!std::is_pointer<Scalar>::value,
+                  PYBIND11_EIGEN_MESSAGE_POINTER_TYPES_ARE_NOT_SUPPORTED);
     using MapType = Eigen::Map<PlainObjectType, 0, StrideType>;
     using Array
         = array_t<Scalar,
@@ -602,6 +621,9 @@ private:
 // regular Eigen::Matrix, then casting that.
 template <typename Type>
 struct type_caster<Type, enable_if_t<is_eigen_other<Type>::value>> {
+    static_assert(!std::is_pointer<typename Type::Scalar>::value,
+                  PYBIND11_EIGEN_MESSAGE_POINTER_TYPES_ARE_NOT_SUPPORTED);
+
 protected:
     using Matrix
         = Eigen::Matrix<typename Type::Scalar, Type::RowsAtCompileTime, Type::ColsAtCompileTime>;
@@ -630,6 +652,8 @@ public:
 template <typename Type>
 struct type_caster<Type, enable_if_t<is_eigen_sparse<Type>::value>> {
     using Scalar = typename Type::Scalar;
+    static_assert(!std::is_pointer<Scalar>::value,
+                  PYBIND11_EIGEN_MESSAGE_POINTER_TYPES_ARE_NOT_SUPPORTED);
     using StorageIndex = remove_reference_t<decltype(*std::declval<Type>().outerIndexPtr())>;
     using Index = typename Type::Index;
     static constexpr bool rowMajor = Type::IsRowMajor;
