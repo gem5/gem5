@@ -542,6 +542,7 @@ fp64_is_infinity(int exp, uint64_t mnt)
     return exp == FP64_EXP_INF && !FP64_MANT(mnt);
 }
 
+[[maybe_unused]]
 static inline int
 fp16_is_denormal(int exp, uint16_t mnt)
 {
@@ -6671,7 +6672,7 @@ bf16_defaultNaN(int mode)
     uint16_t sgn = (mode & FPLIB_AH) > 0 ? 1 : 0;
     return bf16_pack(sgn, BF16_EXP_INF, 1ULL << (BF16_MANT_BITS - 1));
 }
-
+[[maybe_unused]]
 static inline void
 bf16_unpack(int *sgn, int *exp, uint16_t *mnt, uint16_t x, int mode,
             int *flags)
@@ -6707,18 +6708,21 @@ bf16_is_signalling_NaN(int exp, uint16_t mnt)
     return bf16_is_NaN(exp, mnt) && !(mnt >> (BF16_MANT_BITS - 1) & 1);
 }
 
+[[maybe_unused]]
 static inline int
 bf16_is_quiet_NaN(int exp, uint16_t mnt)
 {
     return exp == BF16_EXP_INF && (mnt >> (BF16_MANT_BITS - 1) & 1);
 }
 
+[[maybe_unused]]
 static inline int
 bf16_is_infinity(int exp, uint16_t mnt)
 {
     return exp == BF16_EXP_INF && !BF16_MANT(mnt);
 }
 
+[[maybe_unused]]
 static inline int
 bf16_is_denormal(int exp, uint16_t mnt)
 {
