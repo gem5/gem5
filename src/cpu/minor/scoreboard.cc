@@ -288,7 +288,7 @@ namespace gem5
                     if (numResults[index] != 0)
                     {
                         int dest_reg_fu = fuIndices[index];
-                        if ((returnCycle[index] - 1) > now ||
+                        if ((returnCycle[index]) > now ||
                             numUnpredictableResults[index] != 0)
                         {
                             DPRINTF(MinorTiming, "Inst: %s timing extra decode has"
