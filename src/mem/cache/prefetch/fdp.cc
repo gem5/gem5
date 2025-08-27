@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022-2023 The University of Edinburgh
+ * Copyright (c) 2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -59,7 +60,7 @@ FetchDirectedPrefetcher::FetchDirectedPrefetcher(
       latency(cyclesToTicks(p.latency)),
       pfqSize(p.pfq_size),
       tqSize(p.tq_size),
-      cacheSnoop(true),
+      cacheSnoop(p.cache_snoop),
       stats(this, p.pfq_size, p.tq_size)
 {}
 

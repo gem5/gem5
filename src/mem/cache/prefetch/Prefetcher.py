@@ -1,4 +1,4 @@
-# Copyright (c) 2012, 2014, 2019, 2022-2024 Arm Limited
+# Copyright (c) 2012, 2014, 2019, 2022-2025 Arm Limited
 # Copyright (c) 2023 The University of Edinburgh
 # All rights reserved.
 #
@@ -766,6 +766,11 @@ class FetchDirectedPrefetcher(BasePrefetcher):
         True,
         "Squash the prefetch associated with a fetch target in case it gets "
         "removded fron the the FTQ (Fetch consumes it or a pipeline flush).",
+    )
+    cache_snoop = Param.Bool(
+        True,
+        "Snoop the icache (if present) and do not enqueue prefetches for "
+        "blocks already in the cache.",
     )
 
 
