@@ -37,9 +37,6 @@ RUN apt -y update && apt -y upgrade && apt -y install \
     pre-commit \
     zlib1g \
     zlib1g-dev \
-    libprotobuf-dev \
-    protobuf-compiler \
-    libprotoc-dev \
     libgoogle-perftools-dev \
     libboost-all-dev \
     libhdf5-serial-dev \
@@ -58,6 +55,19 @@ RUN apt -y update && apt -y upgrade && apt -y install \
     vim \
     sudo \
     jq
+
+# Install protobuf
+RUN apt -y update && apt -y install \
+    g++ git curl
+
+RUN curl -L https://github.com/bazelbuild/bazelisk/releases/download/v1.27.0/bazelisk-amd64.deb --output bazel.deb
+RUN dpkg -i bazel.deb
+
+RUN git clone https://github.com/protocolbuffers/protobuf.git
+WORKDIR protobuf
+RUN git submodule update --init --recursive
+RUN bazel build :protoc :protobuf
+RUN cp bazel-bin/protoc /usr/local/bin
 
 # pre-commit, as installed via apt in 24.04, attempts to create a cache
 # directory at "${HOME}/.cache/pre-commit". If running docker with non-root,
