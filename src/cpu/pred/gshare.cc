@@ -43,7 +43,8 @@ namespace branch_prediction
 {
 
 GshareBP::GshareBP(const GshareBPParams &params)
-    : BPredUnit(params), globalHistoryReg(params.numThreads, 0),
+    : BPredUnit(params),
+      globalHistoryReg(params.numThreads, 0),
       globalHistoryBits(ceilLog2(params.global_predictor_size)),
       globalPredictorSize(params.global_predictor_size),
       globalCtrBits(params.global_counter_bits),
