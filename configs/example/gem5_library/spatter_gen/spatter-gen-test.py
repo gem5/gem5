@@ -1,4 +1,4 @@
-# Copyright (c) 2024 The Regents of the University of California
+# Copyright (c) 2024-2025 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -46,12 +46,8 @@ scons build/NULL/gem5.opt
 ./build/NULL/gem5.opt configs/example/gem5_library/spatter_gen/spatter-gen-test.py
 ```
 """
-import argparse
-import json
-from pathlib import Path
 
-import m5
-from m5.objects import Root
+from pathlib import Path
 
 from gem5.components.boards.test_board import TestBoard
 from gem5.components.cachehierarchies.classic.private_l1_cache_hierarchy import (
@@ -92,6 +88,6 @@ board = TestBoard(
     memory=memory,
 )
 
-simulator = Simulator(board=board, full_system=False)
+simulator = Simulator(board=board)
 
 simulator.run()

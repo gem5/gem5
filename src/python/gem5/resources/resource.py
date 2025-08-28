@@ -955,6 +955,17 @@ def obtain_resource(
     :param quiet: If ``True``, suppress output. ``False`` by default.
     """
 
+    # Some basic validation. Resource_id must be of type string and not empty.
+    if not isinstance(resource_id, str):
+        raise TypeError(
+            f"Resource ID must be a string, got {type(resource_id).__name__}."
+        )
+
+    if not resource_id.strip():
+        raise ValueError(
+            "Resource ID cannot be an empty or whitespace-only string."
+        )
+
     # Obtain the resource object entry for this resource
     resource_json = get_resource_json_obj(
         resource_id,

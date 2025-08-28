@@ -518,7 +518,11 @@ class DynInst : public ExecContext, public RefCounted
     const PCStateBase &readPredTarg() { return *predPC; }
 
     /** Returns whether the instruction was predicted taken or not. */
-    bool readPredTaken() { return instFlags[PredTaken]; }
+    bool
+    readPredTaken() const
+    {
+        return instFlags[PredTaken];
+    }
 
     void
     setPredTaken(bool predicted_taken)
@@ -528,7 +532,7 @@ class DynInst : public ExecContext, public RefCounted
 
     /** Returns whether the instruction mispredicted. */
     bool
-    mispredicted()
+    mispredicted() const
     {
         std::unique_ptr<PCStateBase> next_pc(pc->clone());
         staticInst->advancePC(*next_pc);

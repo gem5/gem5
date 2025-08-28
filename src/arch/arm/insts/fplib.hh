@@ -456,11 +456,32 @@ uint32_t fplibDefaultNaN(FPCR fpcr);
 template <>
 uint64_t fplibDefaultNaN(FPCR fpcr);
 
+// Function for AArch32
 template <>
 uint16_t fplib32RSqrtStep(uint16_t op1, uint16_t op2, FPSCR &fpscr);
 template <>
 uint16_t fplib32RecipStep(uint16_t op1, uint16_t op2, FPSCR &fpscr);
 
+// Function for BF16
+uint16_t fplibBfAdd(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
+uint16_t fplibBfMax(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
+uint16_t fplibBfMaxNum(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
+uint16_t fplibBfMin(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
+uint16_t fplibBfMinNum(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
+uint16_t fplibBfMul(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
+uint32_t fplibBfMulH(uint16_t op1, uint16_t op2, FPSCR &fpscr);
+uint16_t fplibBfMulAdd(uint16_t addend, uint16_t op1, uint16_t op2,
+                       FPSCR &fpscr, FPCR fpcr);
+uint32_t fplibBfMulAddH(uint32_t addend, uint16_t op1, uint16_t op2,
+                        FPSCR &fpscr, FPCR fpcr);
+uint16_t fplibBfNeg(uint16_t op, FPCR fpcr);
+uint16_t fplibBfSub(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
+uint32_t fplibAdd_Bf16(uint32_t op1, uint32_t op2, FPSCR &fpscr);
+uint16_t fplibConvertBF(uint32_t op, FPRounding rounding, FPSCR &fpscr,
+                        FPCR fpcr = 0);
+uint32_t fplibBfdotAdd(uint32_t addend, uint16_t op1_a, uint16_t op1_b,
+                       uint16_t op2_a, uint16_t op2_b,
+                       FPSCR &fpscr, FPCR fpcr);
 } // namespace ArmISA
 } // namespace gem5
 

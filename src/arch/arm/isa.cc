@@ -516,6 +516,9 @@ ISA::readMiscReg(RegIndex idx)
               fpcr.ah = 0;
               fpcr.fiz = 0;
           }
+          if (!release->has(ArmExtension::FEAT_EBF16)) {
+              fpcr.ebf = 0;
+          }
           return fpcr;
         }
       case MISCREG_FPSCR:
@@ -875,6 +878,9 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                     fpcr_val.nep = 0;
                     fpcr_val.ah = 0;
                     fpcr_val.fiz = 0;
+                }
+                if (!release->has(ArmExtension::FEAT_EBF16)) {
+                    fpcr_val.ebf = 0;
                 }
                 setMiscRegNoEffect(MISCREG_FPCR, fpcr_val);
             }

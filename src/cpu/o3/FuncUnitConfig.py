@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2017, 2020, 2024 Arm Limited
+# Copyright (c) 2010, 2017, 2020, 2024-2025 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -61,6 +61,7 @@ class FP_ALU(FUDesc):
         OpDesc(opClass="FloatAdd", opLat=2),
         OpDesc(opClass="FloatCmp", opLat=2),
         OpDesc(opClass="FloatCvt", opLat=2),
+        OpDesc(opClass="Bf16Cvt", opLat=2),
     ]
     count = 4
 
@@ -117,6 +118,10 @@ class SIMD_Unit(FUDesc):
         OpDesc(opClass="SimdSha256Hash2"),
         OpDesc(opClass="SimdShaSigma2"),
         OpDesc(opClass="SimdShaSigma3"),
+        OpDesc(opClass="SimdBf16Cvt"),
+        OpDesc(opClass="SimdBf16DotProd"),
+        OpDesc(opClass="SimdBf16MatMultAcc"),
+        OpDesc(opClass="SimdBf16MultAcc"),
     ]
     count = 4
 

@@ -3579,6 +3579,7 @@ ISA::initializeMiscRegMetadata()
         isar6.jscvt = release->has(ArmExtension::FEAT_JSCVT) ? 0x1 : 0x0;
         isar6.fhm = release->has(ArmExtension::FEAT_FP16) ? 0x1 :
                     (release->has(ArmExtension::FEAT_FHM) ? 0x1 : 0x0);
+        isar6.bf16 = release->has(ArmExtension::FEAT_AA32BF16) ? 0x1 : 0x0;
         return isar6;
       }())
       .allPrivileges().exceptUserMode().writes(0);
@@ -4989,6 +4990,8 @@ ISA::initializeMiscRegMetadata()
           isar1_el1.gpa = release->has(ArmExtension::FEAT_PAuth) ? 0x1 : 0x0;
           isar1_el1.frintts =
               release->has(ArmExtension::FEAT_FRINTTS) ? 0x1 : 0x0;
+          isar1_el1.bf16 = release->has(ArmExtension::FEAT_EBF16) ? 0x2 :
+                           (release->has(ArmExtension::FEAT_BF16) ? 0x1 : 0x0);
           return isar1_el1;
       }())
       .faultRead(EL0, faultIdst)
@@ -6724,6 +6727,8 @@ ISA::initializeMiscRegMetadata()
             zfr0_el1.f32mm = release->has(ArmExtension::FEAT_F32MM) ? 1 : 0;
             zfr0_el1.f64mm = release->has(ArmExtension::FEAT_F64MM) ? 1 : 0;
             zfr0_el1.i8mm = release->has(ArmExtension::FEAT_I8MM) ? 1 : 0;
+            zfr0_el1.bf16 = release->has(ArmExtension::FEAT_EBF16) ? 0x2 :
+                          (release->has(ArmExtension::FEAT_BF16) ? 0x1 : 0x0);
             return zfr0_el1;
         }())
         .faultRead(EL0, faultIdst)

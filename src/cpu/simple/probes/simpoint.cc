@@ -68,13 +68,13 @@ SimPoint::init()
 void
 SimPoint::regProbeListeners()
 {
-    typedef ProbeListenerArg<SimPoint, std::pair<SimpleThread*,StaticInstPtr>>
-        SimPointListener;
+    typedef ProbeListenerArg<SimPoint, std::pair<SimpleThread*,
+                             const StaticInstPtr>> SimPointListener;
     connectListener<SimPointListener>(this, "Commit", &SimPoint::profile);
 }
 
 void
-SimPoint::profile(const std::pair<SimpleThread*, StaticInstPtr>& p)
+SimPoint::profile(const std::pair<SimpleThread*, const StaticInstPtr>& p)
 {
     SimpleThread* thread = p.first;
     const StaticInstPtr &inst = p.second;

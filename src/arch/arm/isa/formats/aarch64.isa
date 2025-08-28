@@ -204,6 +204,406 @@ output decoder {{
 namespace Aarch64
 {
     StaticInstPtr
+    decodeSysWithResult(ExtMachInst machInst)
+    {
+        uint8_t op1 = bits(machInst, 18, 16);
+        uint8_t crn = bits(machInst, 15, 12);
+        uint8_t crm = bits(machInst, 11, 8);
+        uint8_t op2 = bits(machInst, 7, 5);
+        uint8_t rt = bits(machInst, 4, 0);
+
+        if (op1 == 0b011 && crn == 0b0011 && op2 == 0b011) {
+            switch (crm) {
+              case 0x0:
+                return new Tstart64(machInst, rt);
+              case 0x1:
+                return new Ttest64(machInst, rt);
+              default:
+                return new Unknown64(machInst);
+            }
+        } else {
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
+    decodeBarriers(ExtMachInst machInst, bool dvmEnabled)
+    {
+        uint8_t crm = bits(machInst, 11, 8);
+        uint8_t op2 = bits(machInst, 7, 5);
+        uint8_t rt = bits(machInst, 4, 0);
+
+        if (rt != 0b11111)
+            return new Unknown64(machInst);
+
+        switch (op2) {
+          case 0x1:
+            switch (bits(crm, 3, 2)) {
+              case 0x1: // Non-Shareable
+                return new Dsb64Local(machInst, crm);
+              case 0x0: // OuterShareable
+              case 0x2: // InnerShareable
+              case 0x3: // FullSystem
+                return new Dsb64Shareable(
+                    machInst, crm, dvmEnabled);
+              default:
+                GEM5_UNREACHABLE;
+            }
+          case 0x2:
+            return new Clrex64(machInst);
+          case 0x3:
+            return new Tcommit64(machInst);
+          case 0x4:
+            switch (bits(crm, 3, 2)) {
+              case 0x1: // Non-Shareable
+                return new Dsb64Local(machInst, crm);
+              case 0x0: // OuterShareable
+              case 0x2: // InnerShareable
+              case 0x3: // FullSystem
+                return new Dsb64Shareable(
+                    machInst, crm, dvmEnabled);
+              default:
+                GEM5_UNREACHABLE;
+            }
+          case 0x5:
+            return new Dmb64(machInst);
+          case 0x6:
+            return new Isb64(machInst, crm);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
+    decodeSys(ExtMachInst machInst, bool dvmEnabled)
+    {
+        bool read = bits(machInst, 21);
+        uint8_t op0 = bits(machInst, 20, 19);
+        uint8_t op1 = bits(machInst, 18, 16);
+        uint8_t crn = bits(machInst, 15, 12);
+        uint8_t crm = bits(machInst, 11, 8);
+        uint8_t op2 = bits(machInst, 7, 5);
+        RegIndex rt = (RegIndex)(uint8_t)bits(machInst, 4, 0);
+
+        MiscRegIndex miscReg =
+            decodeAArch64SysReg(op0, op1, crn, crm, op2);
+
+        // Check for invalid registers
+        if (miscReg == MISCREG_UNKNOWN) {
+            auto full_mnemonic =
+                csprintf("%s op0:%d op1:%d crn:%d crm:%d op2:%d",
+                         read ? "mrs" : "msr",
+                         op0, op1, crn, crm, op2);
+
+            return new FailUnimplemented(read ? "mrs" : "msr",
+                machInst, full_mnemonic);
+
+        } else if (miscReg == MISCREG_IMPDEF_UNIMPL) {
+            auto full_mnemonic =
+                csprintf("%s op0:%d op1:%d crn:%d crm:%d op2:%d",
+                         read ? "mrs" : "msr",
+                         op0, op1, crn, crm, op2);
+
+            return new MiscRegImplDefined64(
+                read ? "mrs" : "msr",
+                machInst, MiscRegNum64(op0, op1, crn, crm, op2),
+                rt, read, full_mnemonic);
+
+        } else {
+            if (read) {
+                switch (miscReg) {
+                  case MISCREG_NZCV:
+                    return new MrsNZCV64(machInst, rt, miscReg);
+                  case MISCREG_DC_CIVAC_Xt:
+                  case MISCREG_DC_CVAC_Xt:
+                  case MISCREG_DC_IVAC_Xt:
+                  case MISCREG_DC_ZVA_Xt:
+                    return new Unknown64(machInst);
+                  default: {
+                    StaticInstPtr si = new Mrs64(machInst, rt, miscReg);
+                    if (lookUpMiscReg[miscReg].info[MISCREG_UNVERIFIABLE])
+                        si->setFlag(StaticInst::IsUnverifiable);
+                    return si;
+                  }
+                }
+            } else {
+                switch (miscReg) {
+                  case MISCREG_NZCV:
+                    return new MsrNZCV64(machInst, miscReg, rt);
+                  case MISCREG_DC_ZVA_Xt:
+                    return new Dczva(machInst, rt, miscReg);
+                  case MISCREG_DC_CVAU_Xt:
+                    return new Dccvau(machInst, rt, miscReg);
+                  case MISCREG_DC_CVAC_Xt:
+                    return new Dccvac(machInst, rt, miscReg);
+                  case MISCREG_DC_CIVAC_Xt:
+                    return new Dccivac(machInst, rt, miscReg);
+                  case MISCREG_DC_IVAC_Xt:
+                    return new Dcivac(machInst, rt, miscReg);
+                  // 64-bit TLBIs split into "Local"
+                  // and "Shareable"
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE3)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE2)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLS12E1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLE1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE3)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE3)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE2)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE2)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_ASIDE1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAAE1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAALE1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2E1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2LE1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAAE1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAALE1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2E1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2LE1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE2)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE2)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE3)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE3)
+                    return new Tlbi64LocalHub(
+                      machInst, miscReg, rt, dvmEnabled);
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE3IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE3OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE2IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE2OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLS12E1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLS12E1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLE1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLE1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE3IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE3OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE3IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE3OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE2IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE2OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE2IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE2OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_ASIDE1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_ASIDE1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAAE1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAAE1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAALE1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAALE1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2E1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2E1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2LE1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2LE1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAAE1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAAE1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAALE1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAALE1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2E1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2E1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2LE1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2LE1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE2IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE2OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE2IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE2OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE3IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE3OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE3IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE3OS)
+                    return new Tlbi64ShareableHub(
+                      machInst, miscReg, rt, dvmEnabled);
+                  // AT instructions
+                  case MISCREG_AT_S1E1R_Xt:
+                  case MISCREG_AT_S1E1W_Xt:
+                  case MISCREG_AT_S1E0R_Xt:
+                  case MISCREG_AT_S1E0W_Xt:
+                  case MISCREG_AT_S1E2R_Xt:
+                  case MISCREG_AT_S1E2W_Xt:
+                  case MISCREG_AT_S12E1R_Xt:
+                  case MISCREG_AT_S12E1W_Xt:
+                  case MISCREG_AT_S12E0R_Xt:
+                  case MISCREG_AT_S12E0W_Xt:
+                  case MISCREG_AT_S1E3R_Xt:
+                  case MISCREG_AT_S1E3W_Xt:
+                    return new At64Hub(machInst, miscReg,
+                      MiscRegIndex::MISCREG_PAR_EL1, rt);
+                  default:
+                    return new Msr64(machInst, miscReg, rt);
+                }
+            }
+        }
+    }
+
+    StaticInstPtr
+    decodeSysInsts(ExtMachInst machInst, bool dvmEnabled)
+    {
+        return decodeSys(machInst, dvmEnabled);
+    }
+
+    StaticInstPtr
+    decodeSysRegMove(ExtMachInst machInst)
+    {
+        // Passing false as dvmEnabled as this only interests
+        // system instructions (TLBIs)
+        return decodeSys(machInst, false);
+    }
+
+    StaticInstPtr
+    decodePstate(ExtMachInst machInst)
+    {
+        uint8_t op1 = bits(machInst, 18, 16);
+        uint8_t crm = bits(machInst, 11, 8);
+        uint8_t op2 = bits(machInst, 7, 5);
+
+        // MSR immediate: moving immediate value to selected
+        // bits of the PSTATE
+        switch (op1 << 3 | op2) {
+          case 0x0:
+            // CFINV
+            return new Cfinv(machInst);
+          case 0x1:
+            // XAFLAG
+            return new Xaflag(machInst);
+          case 0x2:
+            // AXFLAG
+            return new Axflag(machInst);
+          case 0x3:
+            // UAO
+            return new MsrImm64(
+                machInst, MISCREG_UAO, crm);
+          case 0x4:
+            // PAN
+            return new MsrImm64(
+                machInst, MISCREG_PAN, crm);
+          case 0x5:
+            // SP
+            return new MsrImm64(
+                machInst, MISCREG_SPSEL, crm);
+          case 0x1b:
+            // SVE SVCR - SMSTART/SMSTOP
+            return decodeSmeMgmt(machInst);
+          case 0x1e:
+            // DAIFSet
+            return new MsrImmDAIFSet64(
+                machInst, MISCREG_DAIF, crm);
+          case 0x1f:
+            // DAIFClr
+            return new MsrImmDAIFClr64(
+                machInst, MISCREG_DAIF, crm);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
+    decodeHints(ExtMachInst machInst)
+    {
+        uint8_t crm = bits(machInst, 11, 8);
+        uint8_t op2 = bits(machInst, 7, 5);
+        switch (crm) {
+          case 0x0:
+            switch (op2) {
+              case 0x0:
+                return new NopInst(machInst);
+              case 0x1:
+                return new YieldInst(machInst);
+              case 0x2:
+                return new WfeInst(machInst);
+              case 0x3:
+                return new WfiInst(machInst);
+              case 0x4:
+                return new SevInst(machInst);
+              case 0x5:
+                return new SevlInst(machInst);
+              case 0x7:
+                return new Xpaclri(machInst, int_reg::X30);
+            }
+            break;
+          case 0x1:
+            switch (op2) {
+              case 0x0:
+                return new Pacia1716(machInst, int_reg::X17,
+                                               int_reg::X16);
+              case 0x2:
+                return new Pacib1716(machInst, int_reg::X17,
+                                               int_reg::X16);
+              case 0x4:
+                return new Autia1716(machInst, int_reg::X17,
+                                               int_reg::X16);
+              case 0x6:
+                return new Autib1716(machInst, int_reg::X17,
+                                               int_reg::X16);
+            }
+            break;
+          case 0x2:
+            switch (op2) {
+              case 0x0:
+                return new WarnUnimplemented(
+                        "esb", machInst);
+              case 0x1:
+                return new WarnUnimplemented(
+                        "psb csync", machInst);
+              case 0x2:
+                return new WarnUnimplemented(
+                        "tsb csync", machInst);
+              case 0x4:
+                return new WarnUnimplemented(
+                        "csdb", machInst);
+            }
+            break;
+          case 0x3:
+            switch (op2) {
+              case 0x0:
+                return new Paciaz(machInst,
+                         int_reg::X30, int_reg::Zero);
+              case 0x1:
+                return new Paciasp(machInst,
+                         int_reg::X30, int_reg::Spx);
+              case 0x2:
+                return new Pacibz(machInst,
+                         int_reg::X30, int_reg::Zero);
+              case 0x3:
+                return new Pacibsp(machInst,
+                         int_reg::X30, int_reg::Spx);
+              case 0x4:
+                return new Autiaz(machInst,
+                         int_reg::X30, int_reg::Zero);
+              case 0x5:
+                return new Autiasp(machInst,
+                         int_reg::X30, int_reg::Spx);
+              case 0x6:
+                return new Autibz(machInst,
+                         int_reg::X30, int_reg::Zero);
+              case 0x7:
+                return new Autibsp(machInst,
+                         int_reg::X30, int_reg::Spx);
+            }
+            break;
+          case 0x4:
+            switch (op2 & 0x1) {
+              case 0x0:
+                return new WarnUnimplemented(
+                        "bti", machInst);
+            }
+            break;
+        }
+        return new WarnUnimplemented(
+                "unallocated_hint", machInst);
+    }
+
+    StaticInstPtr
     decodeBranchExcSys(const Decoder &dec, ExtMachInst machInst)
     {
         switch (bits(machInst, 30, 29)) {
@@ -278,370 +678,38 @@ namespace Aarch64
                 }
             } else if (bits(machInst, 25, 22) == 0x4) {
                 // bit 31:22=1101010100
-                bool l = bits(machInst, 21);
-                uint8_t op0 = bits(machInst, 20, 19);
-                uint8_t op1 = bits(machInst, 18, 16);
-                uint8_t crn = bits(machInst, 15, 12);
-                uint8_t crm = bits(machInst, 11, 8);
-                uint8_t op2 = bits(machInst, 7, 5);
-                RegIndex rt = (RegIndex)(uint8_t)bits(machInst, 4, 0);
-                switch (op0) {
+                uint8_t bits_20_19 = bits(machInst, 20, 19);
+                uint8_t op2 = bits(machInst, 4, 0);
+                switch (bits_20_19) {
                   case 0x0:
                     // early out for TME
-                    if (crn == 0x3 && op1 == 0x3 && op2 == 0x3) {
-                        switch (crm) {
-                            case 0x0:
-                              if (rt == 0b11111)
-                                return new Tcommit64(machInst);
-                              else
-                                return new Tstart64(machInst, rt);
-                            case 0x1:
-                              return new Ttest64(machInst, rt);
-                            default:
-                              return new Unknown64(machInst);
-                        }
-                    }
-                    else if (rt != 0x1f || l)
-                        return new Unknown64(machInst);
-                    if (crn == 0x2 && op1 == 0x3) {
-                        switch (crm) {
-                          case 0x0:
-                            switch (op2) {
-                              case 0x0:
-                                return new NopInst(machInst);
-                              case 0x1:
-                                return new YieldInst(machInst);
-                              case 0x2:
-                                return new WfeInst(machInst);
-                              case 0x3:
-                                return new WfiInst(machInst);
-                              case 0x4:
-                                return new SevInst(machInst);
-                              case 0x5:
-                                return new SevlInst(machInst);
-                              case 0x7:
-                                return new Xpaclri(machInst, int_reg::X30);
-                            }
-                            break;
-                          case 0x1:
-                            switch (op2) {
-                              case 0x0:
-                                return new Pacia1716(machInst, int_reg::X17,
-                                                               int_reg::X16);
-                              case 0x2:
-                                return new Pacib1716(machInst, int_reg::X17,
-                                                               int_reg::X16);
-                              case 0x4:
-                                return new Autia1716(machInst, int_reg::X17,
-                                                               int_reg::X16);
-                              case 0x6:
-                                return new Autib1716(machInst, int_reg::X17,
-                                                               int_reg::X16);
-                            }
-                            break;
-                          case 0x2:
-                            switch (op2) {
-                              case 0x0:
-                                return new WarnUnimplemented(
-                                        "esb", machInst);
-                              case 0x1:
-                                return new WarnUnimplemented(
-                                        "psb csync", machInst);
-                              case 0x2:
-                                return new WarnUnimplemented(
-                                        "tsb csync", machInst);
-                              case 0x4:
-                                return new WarnUnimplemented(
-                                        "csdb", machInst);
-                            }
-                            break;
-                          case 0x3:
-                            switch (op2) {
-                              case 0x0:
-                                return new Paciaz(machInst,
-                                         int_reg::X30, int_reg::Zero);
-                              case 0x1:
-                                return new Paciasp(machInst,
-                                         int_reg::X30, int_reg::Spx);
-                              case 0x2:
-                                return new Pacibz(machInst,
-                                         int_reg::X30, int_reg::Zero);
-                              case 0x3:
-                                return new Pacibsp(machInst,
-                                         int_reg::X30, int_reg::Spx);
-                              case 0x4:
-                                return new Autiaz(machInst,
-                                         int_reg::X30, int_reg::Zero);
-                              case 0x5:
-                                return new Autiasp(machInst,
-                                         int_reg::X30, int_reg::Spx);
-                              case 0x6:
-                                return new Autibz(machInst,
-                                         int_reg::X30, int_reg::Zero);
-                              case 0x7:
-                                return new Autibsp(machInst,
-                                         int_reg::X30, int_reg::Spx);
-                            }
-                            break;
-                          case 0x4:
-                            switch (op2 & 0x1) {
-                              case 0x0:
-                                return new WarnUnimplemented(
-                                        "bti", machInst);
-                            }
-                            break;
-                        }
-                        return new WarnUnimplemented(
-                                "unallocated_hint", machInst);
-                    } else if (crn == 0x3 && op1 == 0x3) {
-                        switch (op2) {
-                          case 0x1:
-                            if (bits(crm, 1, 0) == 0b10) {
-                                switch (bits(crm, 3, 2)) {
-                                  case 0x1: // Non-Shareable
-                                    return new Dsb64Local(machInst, crm);
-                                  case 0x0: // OuterShareable
-                                  case 0x2: // InnerShareable
-                                  case 0x3: // FullSystem
-                                    return new Dsb64Shareable(
-                                        machInst, crm, dec.dvmEnabled);
-                                  default:
-                                    GEM5_UNREACHABLE;
-                                }
-                            } else {
-                                return new Unknown64(machInst);
-                            }
-                          case 0x2:
-                            return new Clrex64(machInst);
-                          case 0x4:
-                            switch (bits(crm, 3, 2)) {
-                              case 0x1: // Non-Shareable
-                                return new Dsb64Local(machInst, crm);
-                              case 0x0: // OuterShareable
-                              case 0x2: // InnerShareable
-                              case 0x3: // FullSystem
-                                return new Dsb64Shareable(
-                                    machInst, crm, dec.dvmEnabled);
-                              default:
-                                GEM5_UNREACHABLE;
-                            }
-                          case 0x5:
-                            return new Dmb64(machInst);
-                          case 0x6:
-                            return new Isb64(machInst, crm);
-                          default:
-                            return new Unknown64(machInst);
-                        }
-                    } else if (crn == 0x4) {
-                        // MSR immediate: moving immediate value to selected
-                        // bits of the PSTATE
-                        switch (op1 << 3 | op2) {
-                          case 0x0:
-                            // CFINV
-                            return new Cfinv(machInst);
-                          case 0x1:
-                            // XAFLAG
-                            return new Xaflag(machInst);
-                          case 0x2:
-                            // AXFLAG
-                            return new Axflag(machInst);
-                          case 0x3:
-                            // UAO
-                            return new MsrImm64(
-                                machInst, MISCREG_UAO, crm);
-                          case 0x4:
-                            // PAN
-                            return new MsrImm64(
-                                machInst, MISCREG_PAN, crm);
-                          case 0x5:
-                            // SP
-                            return new MsrImm64(
-                                machInst, MISCREG_SPSEL, crm);
-                          case 0x1b:
-                            // SVE SVCR - SMSTART/SMSTOP
-                            return decodeSmeMgmt(machInst);
-                          case 0x1e:
-                            // DAIFSet
-                            return new MsrImmDAIFSet64(
-                                machInst, MISCREG_DAIF, crm);
-                          case 0x1f:
-                            // DAIFClr
-                            return new MsrImmDAIFClr64(
-                                machInst, MISCREG_DAIF, crm);
-                          default:
-                            return new Unknown64(machInst);
-                        }
+                    if (bits(machInst, 21) == 0b1) {
+                        return decodeSysWithResult(machInst);
                     } else {
-                        return new Unknown64(machInst);
+                        switch (bits(machInst, 15, 12)) {
+                          case 0b0001:
+                            return new Unknown64(machInst);
+                          case 0b0010:
+                            if (op2 == 0b11111)
+                                return decodeHints(machInst);
+                            else
+                                return new Unknown64(machInst);
+                          case 0b0011:
+                            return decodeBarriers(machInst, dec.dvmEnabled);
+                          case 0b0100:
+                            return decodePstate(machInst);
+                          default:
+                            return new Unknown64(machInst);
+                        }
                     }
-                    break;
                   case 0x1:
+                    // bit 31:22=1101010100, 20:19=01
+                    return decodeSysInsts(machInst, dec.dvmEnabled);
                   case 0x2:
+                    // bit 31:22=1101010100, 20:19=10
                   case 0x3:
-                  {
                     // bit 31:22=1101010100, 20:19=11
-                    bool read = l;
-                    MiscRegIndex miscReg =
-                        decodeAArch64SysReg(op0, op1, crn, crm, op2);
-
-                    // Check for invalid registers
-                    if (miscReg == MISCREG_UNKNOWN) {
-                        auto full_mnemonic =
-                            csprintf("%s op0:%d op1:%d crn:%d crm:%d op2:%d",
-                                     read ? "mrs" : "msr",
-                                     op0, op1, crn, crm, op2);
-
-                        return new FailUnimplemented(read ? "mrs" : "msr",
-                            machInst, full_mnemonic);
-
-                    } else if (miscReg == MISCREG_IMPDEF_UNIMPL) {
-                        auto full_mnemonic =
-                            csprintf("%s op0:%d op1:%d crn:%d crm:%d op2:%d",
-                                     read ? "mrs" : "msr",
-                                     op0, op1, crn, crm, op2);
-
-                        return new MiscRegImplDefined64(
-                            read ? "mrs" : "msr",
-                            machInst, MiscRegNum64(op0, op1, crn, crm, op2),
-                            rt, read, full_mnemonic);
-
-                    } else {
-                        if (read) {
-                            switch (miscReg) {
-                              case MISCREG_NZCV:
-                                return new MrsNZCV64(machInst, rt, miscReg);
-                              case MISCREG_DC_CIVAC_Xt:
-                              case MISCREG_DC_CVAC_Xt:
-                              case MISCREG_DC_IVAC_Xt:
-                              case MISCREG_DC_ZVA_Xt:
-                                return new Unknown64(machInst);
-                              default: {
-                                StaticInstPtr si = new Mrs64(machInst, rt, miscReg);
-                                if (lookUpMiscReg[miscReg].info[MISCREG_UNVERIFIABLE])
-                                    si->setFlag(StaticInst::IsUnverifiable);
-                                return si;
-                              }
-                            }
-                        } else {
-                            switch (miscReg) {
-                              case MISCREG_NZCV:
-                                return new MsrNZCV64(machInst, miscReg, rt);
-                              case MISCREG_DC_ZVA_Xt:
-                                return new Dczva(machInst, rt, miscReg);
-                              case MISCREG_DC_CVAU_Xt:
-                                return new Dccvau(machInst, rt, miscReg);
-                              case MISCREG_DC_CVAC_Xt:
-                                return new Dccvac(machInst, rt, miscReg);
-                              case MISCREG_DC_CIVAC_Xt:
-                                return new Dccivac(machInst, rt, miscReg);
-                              case MISCREG_DC_IVAC_Xt:
-                                return new Dcivac(machInst, rt, miscReg);
-                              // 64-bit TLBIs split into "Local"
-                              // and "Shareable"
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE3)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE2)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLS12E1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLE1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE3)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE3)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE2)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE2)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ASIDE1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAAE1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAALE1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2E1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2LE1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAAE1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAALE1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2E1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2LE1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE2)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE2)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE3)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE3)
-                                return new Tlbi64LocalHub(
-                                  machInst, miscReg, rt, dec.dvmEnabled);
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE3IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE3OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE2IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE2OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLS12E1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLS12E1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLE1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLE1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE3IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE3OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE3IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE3OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE2IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE2OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE2IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE2OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ASIDE1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ASIDE1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAAE1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAAE1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAALE1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAALE1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2E1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2E1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2LE1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2LE1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAAE1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAAE1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAALE1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAALE1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2E1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2E1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2LE1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2LE1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE2IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE2OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE2IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE2OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE3IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE3OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE3IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE3OS)
-                                return new Tlbi64ShareableHub(
-                                  machInst, miscReg, rt, dec.dvmEnabled);
-                              // AT instructions
-                              case MISCREG_AT_S1E1R_Xt:
-                              case MISCREG_AT_S1E1W_Xt:
-                              case MISCREG_AT_S1E0R_Xt:
-                              case MISCREG_AT_S1E0W_Xt:
-                              case MISCREG_AT_S1E2R_Xt:
-                              case MISCREG_AT_S1E2W_Xt:
-                              case MISCREG_AT_S12E1R_Xt:
-                              case MISCREG_AT_S12E1W_Xt:
-                              case MISCREG_AT_S12E0R_Xt:
-                              case MISCREG_AT_S12E0W_Xt:
-                              case MISCREG_AT_S1E3R_Xt:
-                              case MISCREG_AT_S1E3W_Xt:
-                                return new At64Hub(machInst, miscReg,
-                                  MiscRegIndex::MISCREG_PAR_EL1, rt);
-                              default:
-                                return new Msr64(machInst, miscReg, rt);
-                            }
-                        }
-                    }
-                  }
-                  break;
+                    return decodeSysRegMove(machInst);
                   default:
                     GEM5_UNREACHABLE;
                 }
@@ -3205,6 +3273,11 @@ namespace Aarch64
             else if (type == 3)
                 // FCVT Dd = convertFormat(Hn)
                 return new FcvtFpHFpD(machInst, rd, rn);
+            break;
+          case 0x6:
+            if (type == 1)
+                // FCVT Hd = convertFormat(Sn)
+                return new FcvtFpSBf(machInst, rd, rn);
             break;
           case 0x7:
             if (type == 0)

@@ -477,7 +477,7 @@ let {{
                       "operation triggers invalid implicit conversion");
         uint16_t half_dest1 = %(op1)s;
         uint16_t half_dest2 = %(op2)s;
-        FpDestP0 = (uint32_t)half_dest1 | ((uint32_t)half_dest2 << 16);
+        FpDestP0_uw = (uint32_t)half_dest1 | ((uint32_t)half_dest2 << 16);
         FpscrExc = fpscr;
     '''
 
@@ -1323,6 +1323,41 @@ let {{
     header_output += FpRegRegOpDeclare.subst(vcvtFpSFpHBIop);
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpSFpHBIop);
     exec_output += PredOpExecute.subst(vcvtFpSFpHBIop);
+
+    bf16_check = '''
+      RegVal isar6 = xc->tcBase()->readMiscReg(MISCREG_ID_ISAR6);
+      if (!(bits(isar6, 23, 20) >= 0x1))
+          return std::make_shared<UndefinedInstruction>(machInst, true);
+    '''
+    vcvtFpSBfTCode = vfpEnabledCheckCode + bf16_check + '''
+        FPSCR fpscr = (FPSCR) FpscrExc;
+        uint32_t src_elem = fpToBits(FpOp1);
+        FpDest_uw = insertBits(FpDest_uw, 31, 16,
+                        fplibConvertBF(src_elem, FPCRRounding(fpscr), fpscr));
+        FpscrExc = fpscr;
+    '''
+    vcvtFpSBfTIop = ArmInstObjParams("vcvtt", "VcvtFpSBfT", "FpRegRegOp",
+                                      { "code": vcvtFpSBfTCode,
+                                        "predicate_test": predicateTest,
+                                        "op_class": "SimdBf16CvtOp" }, [])
+    header_output += FpRegRegOpDeclare.subst(vcvtFpSBfTIop);
+    decoder_output += FpRegRegOpConstructor.subst(vcvtFpSBfTIop);
+    exec_output += PredOpExecute.subst(vcvtFpSBfTIop);
+
+    vcvtFpSBfBCode = vfpEnabledCheckCode + bf16_check + '''
+        FPSCR fpscr = (FPSCR) FpscrExc;
+        uint32_t src_elem = fpToBits(FpOp1);
+        FpDest_uw = insertBits(FpDest_uw, 15, 0,
+                        fplibConvertBF(src_elem, FPCRRounding(fpscr), fpscr));
+        FpscrExc = fpscr;
+    '''
+    vcvtFpSBfBIop = ArmInstObjParams("vcvtb", "VcvtFpSBfB", "FpRegRegOp",
+                                      { "code": vcvtFpSBfBCode,
+                                        "predicate_test": predicateTest,
+                                        "op_class": "SimdBf16CvtOp" }, [])
+    header_output += FpRegRegOpDeclare.subst(vcvtFpSBfBIop);
+    decoder_output += FpRegRegOpConstructor.subst(vcvtFpSBfBIop);
+    exec_output += PredOpExecute.subst(vcvtFpSBfBIop);
 
     vcmpSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = (FPSCR) FpscrExc;

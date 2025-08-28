@@ -71,7 +71,6 @@ from gem5.simulate.simulator import Simulator
 from gem5.utils.requires import requires
 
 requires(
-    isa_required=ISA.X86,
     coherence_protocol_required=CoherenceProtocol.GPU_VIPER,
 )
 

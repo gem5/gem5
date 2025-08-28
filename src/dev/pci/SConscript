@@ -48,6 +48,11 @@ DebugFlag('PciDevice')
 DebugFlag('PciEndpoint')
 DebugFlag('PciBridge')
 
+SimObject('PciUpstream.py', sim_objects=['PciUpstream', 'PciOneWayBridge'])
+Source('upstream.cc')
+Source('one_way_bridge.cc')
+DebugFlag('PciUpstream')
+
 SimObject('PciHost.py', sim_objects=['PciHost', 'GenericPciHost'])
 Source('host.cc')
 DebugFlag('PciHost')

@@ -1,4 +1,4 @@
-# Copyright (c) 2022 The Regents of the University of California
+# Copyright (c) 2022-2025 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,42 +24,30 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
-This gem5 configuation script runs a "hello world" binary on the
+This gem5 configuration script runs a "hello world" binary on the
 RISCVMatched prebuilt board found in src/python/gem5/prebuilt/riscvmatched/
 
 Usage
 -----
 
 ```
-scons build/RISCV/gem5.opt
-./build/RISCV/gem5.opt \
-    configs/example/gem5_library/riscvmatched-hello.py
+scons build/ALL/gem5.opt
+./build/ALL/gem5.opt configs/example/gem5_library/riscvmatched-hello.py
 ```
 """
 
-from gem5.isas import ISA
 from gem5.prebuilt.riscvmatched.riscvmatched_board import RISCVMatchedBoard
 from gem5.resources.resource import obtain_resource
 from gem5.simulate.simulator import Simulator
-from gem5.utils.requires import requires
 
-requires(isa_required=ISA.RISCV)
-
-# instantiate the riscv matched board with default parameters
+# Instantiate the RISCV Matched board with default parameters
 board = RISCVMatchedBoard()
 
-# set the hello world riscv binary as the board workload
+# Set the "hello world" RISCV binary as the board's workload
 board.set_se_binary_workload(
     obtain_resource("riscv-hello", resource_version="1.0.0")
 )
 
-# run the simulation with the RISCV Matched board
-simulator = Simulator(board=board, full_system=False)
+# Run the simulation with the RISCV Matched board
+simulator = Simulator(board=board)
 simulator.run()
-
-print(
-    "Exiting @ tick {} because {}.".format(
-        simulator.get_current_tick(),
-        simulator.get_last_exit_event_cause(),
-    )
-)

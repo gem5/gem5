@@ -42,14 +42,14 @@ package ProtoMessage;
 // the trace, the version of this file format, and the tick frequency
 // for all the packet time stamps.
 message InstHeader {
-  required string obj_id = 1;
-  required uint32 ver = 2 [default = 0];
-  required uint64 tick_freq = 3;
-  required bool has_mem = 4;
+  optional string obj_id = 1;
+  optional uint32 ver = 2 [default = 0];
+  optional uint64 tick_freq = 3;
+  optional bool has_mem = 4;
 }
 
 message Inst {
-  required uint64 pc = 1;
+  optional uint64 pc = 1;
 
   // Either inst or inst_bytes must be used, but never both. That should be
   // enforced by the oneof keyword, but that's not supported in all versions
@@ -106,8 +106,8 @@ message Inst {
 
   // If the operation does one or more memory accesses
   message MemAccess {
-      required uint64 addr = 1;
-      required uint32 size = 2;
+      optional uint64 addr = 1;
+      optional uint32 size = 2;
       optional uint32 mem_flags = 3;
   }
   repeated MemAccess mem_access = 8;

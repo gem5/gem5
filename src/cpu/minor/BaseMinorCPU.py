@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014, 2017-2018 ARM Limited
+# Copyright (c) 2012-2014, 2017-2018, 2025 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -180,6 +180,7 @@ class MinorDefaultFloatSimdFU(MinorFU):
             "FloatMultAcc",
             "FloatDiv",
             "FloatSqrt",
+            "Bf16Cvt",
             "SimdAdd",
             "SimdAddAcc",
             "SimdAlu",
@@ -223,6 +224,10 @@ class MinorDefaultFloatSimdFU(MinorFU):
             "SimdFloatExt",
             "SimdFloatCvt",
             "SimdConfig",
+            "SimdBf16Cvt",
+            "SimdBf16DotProd",
+            "SimdBf16MatMultAcc",
+            "SimdBf16MultAcc",
         ]
     )
 
@@ -426,7 +431,10 @@ class BaseMinorCPU(BaseCPU):
     )
 
     branchPred = Param.BranchPredictor(
-        TournamentBP(numThreads=Parent.numThreads), "Branch Predictor"
+        BranchPredictor(
+            conditionalBranchPred=TournamentBP(numThreads=Parent.numThreads)
+        ),
+        "Branch Predictor",
     )
 
     def addCheckerCpu(self):

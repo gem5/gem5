@@ -116,7 +116,8 @@ SimpleNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
     // some destinations don't use all vnets, but Switch requires the size
     // output buffer list to match the number of vnets
     int num_vnets = params().number_of_virtual_networks;
-    gem5_assert(num_vnets >= m_fromNetQueues[local_dest].size());
+    gem5_assert(num_vnets >= m_fromNetQueues[local_dest].size(),
+                "SimpleNetwork::makeExtOutLink");
     m_fromNetQueues[local_dest].resize(num_vnets, nullptr);
 
     m_switches[src]->addOutPort(simple_link->name(),

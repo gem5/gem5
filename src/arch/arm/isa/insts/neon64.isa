@@ -459,9 +459,10 @@ let {{
             exec_output += NeonXExecDeclare.subst(substDict)
 
     def twoRegNarrowInstX(name, Name, opClass, types, op, readDest=False,
-                          scalar=False, hi=False, hasImm=False, nepSrc=''):
+                          scalar=False, hi=False, hasImm=False,
+                          extra_check='', nepSrc=''):
         global header_output, exec_output
-        eWalkCode = simd64EnabledCheckCode + '''
+        eWalkCode = simd64EnabledCheckCode + extra_check + '''
         BigRegVect srcReg1;
         RegVect destReg;
         '''
@@ -3998,4 +3999,171 @@ let {{
             }
         header_output += '''
         };'''
+
+    bf16_check = '''
+      AA64ISAR1 isar1 = xc->tcBase()->readMiscReg(MISCREG_ID_AA64ISAR1_EL1);
+      if (!isar1.bf16)
+          return std::make_shared<UndefinedInstruction>(machInst, true);
+    '''
+    def bfDotInst(name, Name, opClass, rCount, byElem):
+        dotCode = bf16_check + '''
+        using Src1Element = uint16_t;
+        using Src2Element = uint16_t;
+
+        // Neon dot instructions always generate one output element
+        // from 4 pairs of source elements.
+        static_assert(sizeof(Element) == 2 * sizeof(Src1Element));
+        static_assert(sizeof(Element) == 2 * sizeof(Src2Element));
+
+        FPSCR fpscr = (FPSCR) FpscrExc;
+        FPCR fpcr = (FPCR) Fpcr;
+
+        for (unsigned i = 0; i < eCount; ++i) {
+            Element src1ElemsPacked = letoh(srcReg1.elements[i]);
+            Element src2ElemsPacked = letoh(srcReg2.elements[%(src2Index)s]);
+
+            Src1Element *src1Elems =
+                reinterpret_cast<Src1Element*>(&src1ElemsPacked);
+            Src2Element *src2Elems =
+                reinterpret_cast<Src2Element*>(&src2ElemsPacked);
+
+            // Dot instructions accumulate into the dest reg
+            Element destElem = letoh(destReg.elements[i]);
+
+            destElem = fplibBfdotAdd(destElem,
+                                     src1Elems[0], src1Elems[1],
+                                     src2Elems[0], src2Elems[1], fpscr, fpcr);
+            destReg.elements[i] = htole(destElem);
+        }
+        ''' % dict(src2Index="imm" if byElem else "i")
+        threeEqualRegInstX(name, Name, opClass, ("uint32_t",), rCount,
+                           dotCode, readDest=True, byElem=byElem,
+                           complex=True)
+
+    # BFDOT (vector)
+    bfDotInst('bfdot', 'BfdotDX', 'SimdBf16DotProdOp', 2, False)
+    bfDotInst('bfdot', 'BfdotQX', 'SimdBf16DotProdOp', 4, False)
+    # BFDOT (element)
+    bfDotInst('bfdot', 'BfdotElemDX', 'SimdBf16DotProdOp', 2, True)
+    bfDotInst('bfdot', 'BfdotElemQX', 'SimdBf16DotProdOp', 4, True)
+
+    def bfMatMulInst(name, Name, opClass):
+        matMulCode = bf16_check + '''
+        using Src1Element = uint16_t;
+        using Src2Element = uint16_t;
+
+        // Neon MM instructions always generate four output elements
+        // from 16 pairs of source elements.
+        static_assert(sizeof(Element) == 2 * sizeof(Src1Element));
+        static_assert(sizeof(Element) == 2 * sizeof(Src2Element));
+
+        // Properties of the matrices
+        constexpr unsigned destMatSize = 2; // Dest Matrices are dim 2x2
+        constexpr unsigned K = 4;           // Src matrices are dim 2x4 & 4x2
+
+        constexpr unsigned eltsPerMatrix = destMatSize * destMatSize;
+
+        Element destMat[eltsPerMatrix] = {0};
+        for (unsigned j = 0; j < eltsPerMatrix; ++j) {
+            destMat[j] = letoh(destReg.elements[j]);
+        }
+
+        Element src1MatPacked[eltsPerMatrix] = {0};
+        Element src2MatPacked[eltsPerMatrix] = {0};
+        for (unsigned j = 0; j < eltsPerMatrix; ++j) {
+            src1MatPacked[j] = letoh(srcReg1.elements[j]);
+            src2MatPacked[j] = letoh(srcReg2.elements[j]);
+        }
+
+        Src1Element *src1Mat =
+            reinterpret_cast<Src1Element*>(&src1MatPacked);
+        Src2Element *src2Mat =
+            reinterpret_cast<Src2Element*>(&src2MatPacked);
+
+        FPSCR fpscr = (FPSCR) FpscrExc;
+        FPCR fpcr = (FPCR) Fpcr;
+
+        unsigned destEltIdx = 0;
+        for (unsigned rowIdx = 0; rowIdx < destMatSize; ++rowIdx) {
+            for (unsigned colIdx = 0; colIdx < destMatSize; ++colIdx) {
+                Element destElem = destMat[destEltIdx];
+                for (unsigned k = 0; k < K / 2; ++k) {
+                    uint16_t elt1_a = src1Mat[4 * rowIdx + 2 * k + 0];
+                    uint16_t elt1_b = src1Mat[4 * rowIdx + 2 * k + 1];
+                    uint16_t elt2_a = src2Mat[4 * colIdx + 2 * k + 0];
+                    uint16_t elt2_b = src2Mat[4 * colIdx + 2 * k + 1];
+                    destElem = fplibBfdotAdd(destElem, elt1_a, elt1_b,
+                                             elt2_a, elt2_b, fpscr, fpcr);
+                }
+                destMat[destEltIdx++] = destElem;
+            }
+        }
+
+        for (unsigned j = 0; j < eltsPerMatrix; ++j) {
+            destReg.elements[j] = htole(destMat[j]);
+        }
+        '''
+        threeEqualRegInstX(name, Name, opClass, ("uint32_t",), 4,
+                           matMulCode, readDest=True, byElem=False,
+                           complex=True)
+
+    # BFMMLA
+    bfMatMulInst('bfmmla', 'BfmmlaQX', 'SimdBf16MatMultAccOp')
+
+    def bfmlalInst(name, Name, opClass, rCount, byElem, top):
+        mlalCode = bf16_check + '''
+        using Src1Element = uint16_t;
+        using Src2Element = uint16_t;
+
+        FPSCR fpscr = (FPSCR) FpscrExc;
+        FPCR fpcr = (FPCR)Fpcr;
+
+        for (unsigned i = 0; i < eCount; ++i) {
+            Element src1ElemsPacked = letoh(srcReg1.elements[i]);
+            Element src2ElemsPacked = letoh(srcReg2.elements[%(src2Index)s]);
+
+            Src1Element *src1Elems =
+                reinterpret_cast<Src1Element*>(&src1ElemsPacked);
+            Src2Element *src2Elems =
+                reinterpret_cast<Src2Element*>(&src2ElemsPacked);
+
+            // Mla instructions accumulate into the dest reg
+            Element destElem = letoh(destReg.elements[i]);
+
+            destElem = fplibBfMulAddH(
+                destElem, src1Elems[%(src1ElemIndex)s],
+                src2Elems[%(src2ElemIndex)s], fpscr, fpcr);
+            destReg.elements[i] = htole(destElem);
+        }
+
+        FpscrExc = fpscr;
+        ''' % dict(src2Index="imm / 2" if byElem else "i",
+            src1ElemIndex="1" if top else "0",
+            src2ElemIndex="imm % 2" if byElem else ("1" if top else "0"))
+        threeEqualRegInstX(name, Name, opClass, ("uint32_t",), 4,
+                           mlalCode, readDest=True, byElem=byElem,
+                           complex=True)
+
+    # BFMLALB (by element)
+    bfmlalInst("bfmlalb", "BfmlalbElemQX", "SimdBf16MultAccOp",
+                ("uint32_t",), True, False)
+    # BFMLALB (vector)
+    bfmlalInst("bfmlalb", "BfmlalbQX", "SimdBf16MultAccOp",
+                ("uint32_t",), False, False)
+    # BFMLALT (by element)
+    bfmlalInst("bfmlalt", "BfmlaltElemQX", "SimdBf16MultAccOp",
+                ("uint32_t",), True, True)
+    # BFMLALT (vector)
+    bfmlalInst("bfmlalt", "BfmlaltQX", "SimdBf16MultAccOp",
+                ("uint32_t",), False, True)
+
+    # BFCVTN, BFCVTN2
+    bfcvtnCode = fpOp % ("fplibConvertBF"
+                         "(srcElem1, FPCRRounding(fpscr), fpscr, fpcr)")
+    twoRegNarrowInstX("bfcvtn", "BfcvtnX", "SimdBf16CvtOp",
+                      ("uint16_t",), bfcvtnCode, extra_check=bf16_check)
+    twoRegNarrowInstX("bfcvtn", "Bfcvtn2X", "SimdBf16CvtOp",
+                      ("uint16_t",), bfcvtnCode, hi=True,
+                      extra_check=bf16_check)
+
 }};

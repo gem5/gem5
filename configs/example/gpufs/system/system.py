@@ -275,10 +275,12 @@ def makeGpuFSSystem(args):
     system_hub = AMDGPUSystemHub()
     shader.system_hub = system_hub
 
+    # Attach the GPU PCI device to the bus
+    system.pc.attachPciDevice(system.pc.south_bridge.gpu)
+
     # GPU, HSAPP, and GPUCommandProc are DMA devices
     system._dma_ports.append(gpu_hsapp)
     system._dma_ports.append(gpu_cmd_proc)
-    system._dma_ports.append(system.pc.south_bridge.gpu)
     for sdma in sdma_engines:
         system._dma_ports.append(sdma)
     system._dma_ports.append(device_ih)
@@ -293,7 +295,6 @@ def makeGpuFSSystem(args):
 
     gpu_hsapp.pio = system.iobus.mem_side_ports
     gpu_cmd_proc.pio = system.iobus.mem_side_ports
-    system.pc.south_bridge.gpu.pio = system.iobus.mem_side_ports
     for sdma in sdma_engines:
         sdma.pio = system.iobus.mem_side_ports
     device_ih.pio = system.iobus.mem_side_ports

@@ -128,7 +128,7 @@ MultiperspectivePerceptron::ThreadData::ThreadData(int num_filters,
 }
 
 MultiperspectivePerceptron::MultiperspectivePerceptron(
-    const MultiperspectivePerceptronParams &p) : BPredUnit(p),
+    const MultiperspectivePerceptronParams &p) : ConditionalPredictor(p),
     blockSize(p.block_size), pcshift(p.pcshift), threshold(p.threshold),
     bias0(p.bias0), bias1(p.bias1), biasmostly0(p.biasmostly0),
     biasmostly1(p.biasmostly1), nbest(p.nbest), tunebits(p.tunebits),

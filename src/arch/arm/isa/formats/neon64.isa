@@ -767,7 +767,29 @@ namespace Aarch64
             } else
                 return decodeNeonUThreeFpReg<FcaddDX, FcaddQX>(
                                     q, size & 0x1, machInst, vd, vn, vm);
-
+          case 0x1d:
+            if (size == 0x1) {
+               if (q)
+                   return new BfmmlaQX<uint32_t>(machInst, vd, vn, vm);
+               else
+                   return new Unknown64(machInst);
+            } else {
+                return new Unknown64(machInst);
+            }
+          case 0x1f:
+            if (size == 0x1) {
+               if (q)
+                   return new BfdotQX<uint32_t>(machInst, vd, vn, vm);
+               else
+                   return new BfdotDX<uint32_t>(machInst, vd, vn, vm);
+            } else if (size == 0x3) {
+               if (q)
+                   return new BfmlaltQX<uint32_t>(machInst, vd, vn, vm);
+               else
+                   return new BfmlalbQX<uint32_t>(machInst, vd, vn, vm);
+            } else {
+                return new Unknown64(machInst);
+            }
           default:
             return new Unknown64(machInst);
         }
@@ -1048,18 +1070,28 @@ namespace Aarch64
             return decodeNeonSTwoMiscSReg<SqxtnX, Sqxtn2X>(
                 q, size, machInst, vd, vn);
           case 0x16:
-            if (size > 0x1)
-                return new Unknown64(machInst);
             if (q) {
-                if (size)
-                    return new Fcvtn2X<uint32_t>(machInst, vd, vn);
-                else
+                switch (size) {
+                  case 0:
                     return new Fcvtn2X<uint16_t>(machInst, vd, vn);
+                  case 1:
+                    return new Fcvtn2X<uint32_t>(machInst, vd, vn);
+                  case 2:
+                    return new Bfcvtn2X<uint16_t>(machInst, vd, vn);
+                  default:
+                    return new Unknown64(machInst);
+                }
             } else {
-                if (size)
-                    return new FcvtnX<uint32_t>(machInst, vd, vn);
-                else
+                switch (size) {
+                  case 0:
                     return new FcvtnX<uint16_t>(machInst, vd, vn);
+                  case 1:
+                    return new FcvtnX<uint32_t>(machInst, vd, vn);
+                  case 2:
+                    return new BfcvtnX<uint16_t>(machInst, vd, vn);
+                  default:
+                    return new Unknown64(machInst);
+                }
             }
           case 0x17:
             if (size > 0x1)
@@ -1696,6 +1728,7 @@ namespace Aarch64
                     q, size, machInst, vd, vn, vm_fp, index_fp);
             } else if (u && (size == 1 || size == 2)) {
                 // FCMLA by element
+                vm_fp = (M << 4 | vm_bf);
                 if (size == 0x2) {
                     index_fp = H;
                     if (q)
@@ -1728,6 +1761,7 @@ namespace Aarch64
           case 0x3:
             if (u && (size == 1 || size == 2)){
                 // FCMLA by element
+                vm_fp = (M << 4 | vm_bf);
                 if (size == 0x2) {
                     index_fp = H;
                     if (q)
@@ -1778,6 +1812,7 @@ namespace Aarch64
                     q, size, machInst, vd, vn, vm_fp, index_fp);
             } else if (u && (size == 1 || size == 2)) {
                 // FCMLA by element
+                vm_fp = (M << 4 | vm_bf);
                 if (size == 0x2) {
                     index_fp = H;
                     if (q)
@@ -1809,6 +1844,7 @@ namespace Aarch64
           case 0x7:
              if (u && (size == 1 || size == 2)){
                 // FCMLA by element
+                vm_fp = (M << 4 | vm_bf);
                 if (size == 0x2) {
                     index_fp = H;
                     if (q)
@@ -1946,7 +1982,13 @@ namespace Aarch64
                       }
                   case 0x1:
                        // Armv8.2-BF16 BFDOT(elem)
-                       return new Unknown64(machInst);
+                      if (q) {
+                          return new BfdotElemQX<uint32_t>(
+                                  machInst, vd, vn, vm_dp, index_dp);
+                      } else {
+                          return new BfdotElemDX<uint32_t>(
+                                  machInst, vd, vn, vm_dp, index_dp);
+                      }
                   case 0x2:
                       if (q) {
                           return new UsdotElemQX<int32_t>(
@@ -1956,6 +1998,15 @@ namespace Aarch64
                                   machInst, vd, vn, vm_dp, index_dp);
                       }
                   case 0x3:
+                      index_dp = (H << 2) | (L << 1) | M;
+                      vm_dp = (RegIndex)vm_bf;
+                      if (q) {
+                          return new BfmlaltElemQX<uint32_t>(
+                                  machInst, vd, vn, vm_dp, index_dp);
+                      } else {
+                          return new BfmlalbElemQX<uint32_t>(
+                                  machInst, vd, vn, vm_dp, index_dp);
+                      }
                   default:
                        // Armv8.2-BF16 BFMLALB(elem), BFMLALT(elem)
                        return new Unknown64(machInst);

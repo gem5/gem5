@@ -39,6 +39,7 @@ from m5.objects import (
     IdeDisk,
     IOXBar,
     Pc,
+    PciBus,
     Port,
     RawDiskImage,
     X86ACPIMadt,
@@ -128,7 +129,9 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
 
         # Setup memory system specific settings.
         if self.get_cache_hierarchy().is_ruby():
-            self.pc.attachIO(self.get_io_bus(), [self.pc.south_bridge.ide.dma])
+            self.pc.attachIO(
+                self.get_io_bus(), [self.pc.pci_host.mem_request_port()]
+            )
         else:
             self.bridge = Bridge(delay="50ns")
             self.bridge.mem_side_port = self.get_io_bus().cpu_side_ports
@@ -306,13 +309,30 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
             )
 
     @overrides(AbstractSystemBoard)
+    def has_pci_bus(self) -> bool:
+        return self.is_fullsystem()
+
+    @overrides(AbstractSystemBoard)
+    def get_pci_bus(self) -> PciBus:
+        if self.has_pci_bus():
+            return self.pc.pci_bus
+        else:
+            raise Exception(
+                "Cannot execute `get_pci_bus()`: Board does not have a PCI "
+                "bus to return. Use `has_pci_bus()` to check this."
+            )
+
+    @overrides(AbstractSystemBoard)
     def has_dma_ports(self) -> bool:
         return self.is_fullsystem()
 
     @overrides(AbstractSystemBoard)
     def get_dma_ports(self) -> Sequence[Port]:
         if self.has_dma_ports():
-            return [self.pc.south_bridge.ide.dma, self.iobus.mem_side_ports]
+            return [
+                self.pc.pci_host.mem_request_port(),
+                self.iobus.mem_side_ports,
+            ]
         else:
             raise Exception(
                 "Cannot execute `get_dma_ports()`: Board does not have DMA "

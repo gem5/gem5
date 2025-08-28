@@ -1,4 +1,4 @@
-# Copyright (c) 2023 The Regents of the University of California
+# Copyright (c) 2023-2025 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,21 @@ DRAMSys simulator.
 **Important Note**: DRAMSys must be compiled into the gem5 binary to use the
 DRRAMSys simulator. Please consult 'ext/dramsys/README' on how to compile
 correctly. If this is not done correctly this script will run with error.
+
+This script will only run if you launch your run command from the base `gem5`
+directory. E.g. running the following from the `gem5` directory will work,
+
+```bash
+build/ALL/gem5.fast configs/example/gem5_library/dramsys/dramsys-traffic.py
+```
+
+but launching the following after changing directories into
+`gem5/configs` won't work.
+
+```bash
+../build/ALL/gem5.fast example/gem5_library/dramsys-traffic.py
+```
+
 """
 
 from gem5.components.boards.test_board import TestBoard
@@ -55,9 +70,3 @@ board = TestBoard(
 
 simulator = Simulator(board=board)
 simulator.run()
-
-print(
-    "Exiting @ tick {} because {}.".format(
-        simulator.get_current_tick(), simulator.get_last_exit_event_cause()
-    )
-)

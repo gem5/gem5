@@ -542,6 +542,7 @@ fp64_is_infinity(int exp, uint64_t mnt)
     return exp == FP64_EXP_INF && !FP64_MANT(mnt);
 }
 
+[[maybe_unused]]
 static inline int
 fp16_is_denormal(int exp, uint16_t mnt)
 {
@@ -885,6 +886,42 @@ fp64_process_NaNs3(uint64_t a, uint64_t b, uint64_t c, int mode, int *flags)
 }
 
 static uint32_t
+fp32_process_NaNs4(uint32_t a, uint32_t b, uint32_t c, uint32_t d,
+                   int mode, int *flags)
+{
+    int a_exp = FP32_EXP(a);
+    uint32_t a_mnt = FP32_MANT(a);
+    int b_exp = FP32_EXP(b);
+    uint32_t b_mnt = FP32_MANT(b);
+    int c_exp = FP32_EXP(c);
+    uint32_t c_mnt = FP32_MANT(c);
+    int d_exp = FP32_EXP(d);
+    uint32_t d_mnt = FP32_MANT(d);
+
+    // Handle signalling NaNs:
+    if (fp32_is_signalling_NaN(a_exp, a_mnt))
+        return fp32_process_NaN(a, mode, flags);
+    if (fp32_is_signalling_NaN(b_exp, b_mnt))
+        return fp32_process_NaN(b, mode, flags);
+    if (fp32_is_signalling_NaN(c_exp, c_mnt))
+        return fp32_process_NaN(c, mode, flags);
+    if (fp32_is_signalling_NaN(d_exp, d_mnt))
+        return fp32_process_NaN(d, mode, flags);
+
+    // Handle quiet NaNs:
+    if (fp32_is_NaN(a_exp, a_mnt))
+        return fp32_process_NaN(a, mode, flags);
+    if (fp32_is_NaN(b_exp, b_mnt))
+        return fp32_process_NaN(b, mode, flags);
+    if (fp32_is_NaN(c_exp, c_mnt))
+        return fp32_process_NaN(c, mode, flags);
+    if (fp32_is_NaN(d_exp, d_mnt))
+        return fp32_process_NaN(d, mode, flags);
+
+    return 0;
+}
+
+static uint32_t
 fp32_convert_default_nan(uint16_t op)
 {
     uint32_t sgn = op >> (FP16_BITS - 1);
@@ -1082,7 +1119,8 @@ fp16_round(int sgn, int exp, uint16_t mnt, int mode, int *flags)
 }
 
 static uint32_t
-fp32_round_(int sgn, int exp, uint32_t mnt, int rm, int mode, int *flags)
+fp32_round_(int sgn, int exp, uint32_t mnt, int rm, int mode, int *flags,
+            bool rm_odd=false)
 {
     // non-negative exponent value for result
     int biased_exp, biased_exp_afp;
@@ -1181,7 +1219,7 @@ fp32_round_(int sgn, int exp, uint32_t mnt, int rm, int mode, int *flags)
         if (mode & FPLIB_FPEXEC)
             *flags |= FPLIB_OFC | FPLIB_IXC;
         if (rm == FPLIB_RN || (rm == FPLIB_RP && !sgn) ||
-            (rm == FPLIB_RM && sgn)) {
+            (rm == FPLIB_RM && sgn) || rm_odd) {
             return fp32_infinity(sgn);
         } else {
             return fp32_max_normal(sgn);
@@ -1707,7 +1745,8 @@ fp16_add(uint16_t a, uint16_t b, int neg, int mode, int *flags)
 }
 
 static uint32_t
-fp32_add(uint32_t a, uint32_t b, int neg, int mode, int *flags)
+fp32_add(uint32_t a, uint32_t b, int neg, int mode, int *flags,
+         bool rm_odd=false)
 {
     int a_sgn, a_exp, b_sgn, b_exp, x_sgn, x_exp;
     uint32_t a_mnt, b_mnt, x, x_mnt;
@@ -1764,13 +1803,18 @@ fp32_add(uint32_t a, uint32_t b, int neg, int mode, int *flags)
 
     if (!x_mnt) {
         // Sign of exact zero result depends on rounding mode
-        return fp32_zero((mode & 3) == 2);
+        return fp32_zero(!rm_odd && (mode & 3) == 2);
     }
 
     x_mnt = fp32_normalise(x_mnt, &x_exp);
 
-    return fp32_round(x_sgn, x_exp + FP32_EXP_BITS - 3, x_mnt << 1,
-                      mode, flags);
+    if (rm_odd) {
+        return fp32_round_(x_sgn, x_exp + FP32_EXP_BITS - 3, x_mnt << 1,
+                           FPRounding_ODD, mode, flags, true);
+    } else {
+        return fp32_round(x_sgn, x_exp + FP32_EXP_BITS - 3, x_mnt << 1,
+                          mode, flags);
+    }
 }
 
 static uint64_t
@@ -1939,7 +1983,7 @@ fp16_mul(uint16_t a, uint16_t b, int mode, int *flags)
 }
 
 static uint32_t
-fp32_mul(uint32_t a, uint32_t b, int mode, int *flags)
+fp32_mul(uint32_t a, uint32_t b, int mode, int *flags, bool rm_odd=false)
 {
     int a_sgn, a_exp, b_sgn, b_exp, x_sgn, x_exp;
     uint32_t a_mnt, b_mnt, x;
@@ -1979,7 +2023,12 @@ fp32_mul(uint32_t a, uint32_t b, int mode, int *flags)
     // Convert to FP32_BITS bits, collapsing error into bottom bit:
     x_mnt = lsr64(x_mnt, FP32_BITS - 1) | !!lsl64(x_mnt, FP32_BITS + 1);
 
-    return fp32_round(x_sgn, x_exp, x_mnt, mode, flags);
+    if (rm_odd) {
+        return fp32_round_(x_sgn, x_exp, x_mnt, FPRounding_ODD, mode, flags,
+                           true);
+    } else {
+        return fp32_round(x_sgn, x_exp, x_mnt, mode, flags);
+    }
 }
 
 static uint64_t
@@ -2116,7 +2165,7 @@ fp16_muladd(uint16_t a, uint16_t b, uint16_t c, int scale,
 
 static uint32_t
 fp32_muladd(uint32_t a, uint32_t b, uint32_t c, int scale,
-            int mode, int *flags)
+            int mode, int *flags, bool rm_odd=false)
 {
     int a_sgn, a_exp, b_sgn, b_exp, c_sgn, c_exp, x_sgn, x_exp, y_sgn, y_exp;
     uint32_t a_mnt, b_mnt, c_mnt, x;
@@ -2202,14 +2251,23 @@ fp32_muladd(uint32_t a, uint32_t b, uint32_t c, int scale,
 
     if (!x_mnt) {
         // Sign of exact zero result depends on rounding mode
-        return fp32_zero((mode & 3) == 2);
+        if (rm_odd) {
+            return fp32_zero(x_sgn);
+        } else {
+            return fp32_zero((mode & 3) == 2);
+        }
     }
 
     // Normalise into FP32_BITS bits, collapsing error into bottom bit:
     x_mnt = fp64_normalise(x_mnt, &x_exp);
     x_mnt = x_mnt >> (FP32_BITS - 1) | !!(uint32_t)(x_mnt << 1);
 
-    return fp32_round(x_sgn, x_exp + scale, x_mnt, mode, flags);
+    if (rm_odd) {
+        return fp32_round_(x_sgn, x_exp + scale, x_mnt,
+                           FPRounding_ODD, mode, flags, true);
+    } else {
+        return fp32_round(x_sgn, x_exp + scale, x_mnt, mode, flags);
+    }
 }
 
 static uint64_t
@@ -2420,7 +2478,7 @@ fp32_muladdh(uint32_t a, uint16_t b, uint16_t c, int scale,
 
     if (rm_odd) {
         return fp32_round_(x_sgn, x_exp + scale, x_mnt,
-                           FPRounding_ODD, mode, flags);
+                           FPRounding_ODD, mode, flags, true);
     } else {
         return fp32_round(x_sgn, x_exp + scale, x_mnt, mode, flags);
     }
@@ -6564,6 +6622,904 @@ fplib32RecipStep(uint16_t op1, uint16_t op2, FPSCR &fpscr)
     set_fpscr0(fpscr, flags);
 
     return result;
+}
+
+static constexpr int BF16_BITS = 16;
+static constexpr int BF16_EXP_BITS = 8;
+static constexpr int BF16_EXP_BIAS = 127;
+static constexpr int BF16_EXP_INF = ((1ULL << BF16_EXP_BITS) - 1);
+static constexpr int BF16_MANT_BITS = (BF16_BITS - BF16_EXP_BITS - 1);
+
+static inline int
+BF16_EXP(uint16_t x)
+{
+    return ((x) >> BF16_MANT_BITS & ((1ULL << BF16_EXP_BITS) - 1));
+}
+
+static inline uint16_t
+BF16_MANT(uint16_t x)
+{
+    return ((x) & ((1ULL << BF16_MANT_BITS) - 1));
+}
+
+static inline uint16_t
+bf16_pack(uint16_t sgn, uint16_t exp, uint16_t mnt)
+{
+    return sgn << (BF16_BITS - 1) | exp << BF16_MANT_BITS | BF16_MANT(mnt);
+}
+
+static inline uint16_t
+bf16_zero(int sgn)
+{
+    return bf16_pack(sgn, 0, 0);
+}
+
+static inline uint16_t
+bf16_max_normal(int sgn)
+{
+    return bf16_pack(sgn, BF16_EXP_INF - 1, -1);
+}
+
+static inline uint16_t
+bf16_infinity(int sgn)
+{
+    return bf16_pack(sgn, BF16_EXP_INF, 0);
+}
+
+static inline uint16_t
+bf16_defaultNaN(int mode)
+{
+    uint16_t sgn = (mode & FPLIB_AH) > 0 ? 1 : 0;
+    return bf16_pack(sgn, BF16_EXP_INF, 1ULL << (BF16_MANT_BITS - 1));
+}
+[[maybe_unused]]
+static inline void
+bf16_unpack(int *sgn, int *exp, uint16_t *mnt, uint16_t x, int mode,
+            int *flags)
+{
+    *sgn = x >> (BF16_BITS - 1);
+    *exp = BF16_EXP(x);
+    *mnt = BF16_MANT(x);
+
+    if (*exp) {
+        *mnt |= 1ULL << BF16_MANT_BITS;
+    } else {
+        // Handle subnormals:
+        // IDC (Input Denormal) is not set in this case.
+        if (*mnt) {
+            if (mode & FPLIB_FZ16) {
+                *mnt = 0;
+            } else {
+                ++*exp;
+            }
+        }
+    }
+}
+
+static inline int
+bf16_is_NaN(int exp, uint16_t mnt)
+{
+    return exp == BF16_EXP_INF && BF16_MANT(mnt);
+}
+
+static inline int
+bf16_is_signalling_NaN(int exp, uint16_t mnt)
+{
+    return bf16_is_NaN(exp, mnt) && !(mnt >> (BF16_MANT_BITS - 1) & 1);
+}
+
+[[maybe_unused]]
+static inline int
+bf16_is_quiet_NaN(int exp, uint16_t mnt)
+{
+    return exp == BF16_EXP_INF && (mnt >> (BF16_MANT_BITS - 1) & 1);
+}
+
+[[maybe_unused]]
+static inline int
+bf16_is_infinity(int exp, uint16_t mnt)
+{
+    return exp == BF16_EXP_INF && !BF16_MANT(mnt);
+}
+
+[[maybe_unused]]
+static inline int
+bf16_is_denormal(int exp, uint16_t mnt)
+{
+    return exp == 1 && !(mnt >> BF16_MANT_BITS);
+}
+
+static inline uint16_t
+bf16_process_NaN(uint16_t a, int mode, int *flags)
+{
+    if (!(a >> (BF16_MANT_BITS - 1) & 1)) {
+        *flags |= FPLIB_IOC;
+        a |= 1ULL << (BF16_MANT_BITS - 1);
+    }
+    return mode & FPLIB_DN ? bf16_defaultNaN(mode) : a;
+}
+
+static uint16_t
+bf16_process_NaNs(uint16_t a, uint16_t b, int mode, int *flags)
+{
+    int a_exp = BF16_EXP(a);
+    uint16_t a_mnt = BF16_MANT(a);
+    int b_exp = BF16_EXP(b);
+    uint16_t b_mnt = BF16_MANT(b);
+
+    // Handle NaN propogate when enabling FEAT_AFP.
+    if (mode & FPLIB_AH) {
+        if (bf16_is_NaN(a_exp, a_mnt) && bf16_is_NaN(b_exp, b_mnt)) {
+            if (bf16_is_signalling_NaN(a_exp, a_mnt) ||
+                    bf16_is_signalling_NaN(b_exp, b_mnt)) {
+                if (mode & FPLIB_FPEXEC)
+                    *flags |= FPLIB_IOC;
+                a |= 1ULL << (BF16_MANT_BITS - 1);
+            }
+
+            return bf16_process_NaN(a, mode, flags);
+        }
+    }
+
+    // Handle signalling NaNs:
+    if (bf16_is_signalling_NaN(a_exp, a_mnt))
+        return bf16_process_NaN(a, mode, flags);
+    if (bf16_is_signalling_NaN(b_exp, b_mnt))
+        return bf16_process_NaN(b, mode, flags);
+
+    // Handle quiet NaNs:
+    if (bf16_is_NaN(a_exp, a_mnt))
+        return bf16_process_NaN(a, mode, flags);
+    if (bf16_is_NaN(b_exp, b_mnt))
+        return bf16_process_NaN(b, mode, flags);
+
+    return 0;
+}
+
+static uint16_t
+bf16_process_NaNs3(uint16_t a, uint16_t b, uint16_t c, int mode, int *flags)
+{
+    int a_exp = BF16_EXP(a);
+    uint16_t a_mnt = BF16_MANT(a);
+    int b_exp = BF16_EXP(b);
+    uint16_t b_mnt = BF16_MANT(b);
+    int c_exp = BF16_EXP(c);
+    uint16_t c_mnt = BF16_MANT(c);
+
+    if (mode & FPLIB_AH) {
+        bool op1_nan = bf16_is_NaN(a_exp, a_mnt);
+        bool op2_nan = bf16_is_NaN(b_exp, b_mnt);
+        bool op3_nan = bf16_is_NaN(c_exp, c_mnt);
+        bool op1_snan = bf16_is_signalling_NaN(a_exp, a_mnt);
+        bool op2_snan = bf16_is_signalling_NaN(b_exp, b_mnt);
+        bool op3_snan = bf16_is_signalling_NaN(c_exp, c_mnt);
+        if (op1_nan && op2_nan && op3_nan) {
+            if (op1_snan || op2_snan || op3_snan) {
+                if (mode & FPLIB_FPEXEC)
+                    *flags |= FPLIB_IOC;
+                b |= 1ULL << (BF16_MANT_BITS - 1);
+            }
+            return bf16_process_NaN(b, mode, flags);
+        } else if (op2_nan && (op1_nan || op3_nan)) {
+            if (op1_snan || op2_snan || op3_snan) {
+                if (mode & FPLIB_FPEXEC)
+                    *flags |= FPLIB_IOC;
+                b |= 1ULL << (BF16_MANT_BITS - 1);
+            }
+            return bf16_process_NaN(b, mode, flags);
+        } else if (op3_nan && op1_nan) {
+            if (op1_snan || op2_snan || op3_snan) {
+                if (mode & FPLIB_FPEXEC)
+                    *flags |= FPLIB_IOC;
+                c |= 1ULL << (BF16_MANT_BITS - 1);
+            }
+            return bf16_process_NaN(c, mode, flags);
+        }
+    }
+
+    // Handle signalling NaNs:
+    if (bf16_is_signalling_NaN(a_exp, a_mnt))
+        return bf16_process_NaN(a, mode, flags);
+    if (bf16_is_signalling_NaN(b_exp, b_mnt))
+        return bf16_process_NaN(b, mode, flags);
+    if (bf16_is_signalling_NaN(c_exp, c_mnt))
+        return bf16_process_NaN(c, mode, flags);
+
+    // Handle quiet NaNs:
+    if (bf16_is_NaN(a_exp, a_mnt))
+        return bf16_process_NaN(a, mode, flags);
+    if (bf16_is_NaN(b_exp, b_mnt))
+        return bf16_process_NaN(b, mode, flags);
+    if (bf16_is_NaN(c_exp, c_mnt))
+        return bf16_process_NaN(c, mode, flags);
+
+    return 0;
+}
+
+static uint16_t
+bf16_round_(int sgn, int exp, uint16_t mnt, int rm, int mode, int *flags)
+{
+    int biased_exp, biased_exp_afp;
+    // mantissa for result, less than (2 << BF16_MANT_BITS)
+    uint32_t int_mant, int_mant_afp;
+    // 0, 1, 2 or 3, where 2 means int_mant is wrong by exactly 0.5
+    int error, error_afp;
+
+    assert(rm != FPRounding_TIEAWAY);
+
+    // Flush to zero:
+    // Deal with flush-to-zero before rounding if FPCR.AH != '1'.
+    if (((mode & FPLIB_FZ) && !(mode & FPLIB_AH)) && exp < 1) {
+        if (mode & FPLIB_FPEXEC)
+            *flags |= FPLIB_UFC;
+        return bf16_zero(sgn);
+    }
+
+    // The bottom BF16_EXP_BITS bits of mnt are orred together:
+    mnt = (4ULL << BF16_MANT_BITS | mnt >> (BF16_EXP_BITS - 1) |
+           ((mnt & ((1ULL << BF16_EXP_BITS) - 1)) != 0));
+
+    biased_exp_afp = exp;
+    int_mant_afp = mnt >> 2;
+    error_afp = mnt & 3;
+    if (exp > 0) {
+        biased_exp = exp;
+        int_mant = mnt >> 2;
+        error = mnt & 3;
+    } else {
+        biased_exp = 0;
+        int_mant = lsr32(mnt, 3 - exp);
+        error = (lsr32(mnt, 1 - exp) & 3) | !!(mnt & (lsl32(1, 1 - exp) - 1));
+    }
+
+    // Underflow occurs if exponent is too small before rounding, and result is
+    // inexact or the Underflow exception is trapped. This applies before
+    // rounding if FPCR.AH != '1'.
+    // xx should also check fpscr_val<11>
+    if (!(mode & FPLIB_AH) && !biased_exp && error) {
+        if (mode & FPLIB_FPEXEC)
+            *flags |= FPLIB_UFC;
+    }
+
+    // Round up when enabling FEAT_AFP:
+    if (mode & FPLIB_AH) {
+        if ((rm == FPLIB_RN && (error_afp == 3 ||
+                                (error_afp == 2 && (int_mant_afp & 1)))) ||
+            (((rm == FPLIB_RP && !sgn) || (rm == FPLIB_RM && sgn)) &&
+                error_afp)) {
+            ++int_mant_afp;
+            if (int_mant_afp == 2ULL << BF16_MANT_BITS) {
+                // Rounded up to next exponent
+                ++biased_exp_afp;
+                int_mant_afp >>= 1;
+            }
+        }
+    }
+
+    // Round up:
+    if ((rm == FPLIB_RN && (error == 3 ||
+                            (error == 2 && (int_mant & 1)))) ||
+        (((rm == FPLIB_RP && !sgn) || (rm == FPLIB_RM && sgn)) && error)) {
+        ++int_mant;
+        if (int_mant == 1ULL << BF16_MANT_BITS) {
+            // Rounded up from denormalized to normalized
+            biased_exp = 1;
+        }
+        if (int_mant == 2ULL << BF16_MANT_BITS) {
+            // Rounded up to next exponent
+            ++biased_exp;
+            int_mant >>= 1;
+        }
+    }
+
+    // Handle rounding to odd aka Von Neumann rounding:
+    if (error && rm == FPRounding_ODD)
+        int_mant |= 1;
+
+    // Flush to zero:
+    // Deal with overflow and generate result.
+    // Deal with flush-to-zero and underflow after rounding if FPCR.AH == '1'.
+    if (biased_exp_afp < 1) {
+        if ((mode & FPLIB_FZ) && (mode & FPLIB_AH)) {
+            if (mode & FPLIB_FPEXEC)
+                *flags |= FPLIB_UFC | FPLIB_IXC;
+            return bf16_zero(sgn);
+        } else if (error) {
+            if (mode & FPLIB_FPEXEC)
+                *flags |= FPLIB_UFC;
+        }
+    }
+
+    // Handle overflow:
+    if (biased_exp >= (int)BF16_EXP_INF) {
+        if (mode & FPLIB_FPEXEC)
+            *flags |= FPLIB_OFC | FPLIB_IXC;
+        if (rm == FPLIB_RN || (rm == FPLIB_RP && !sgn) ||
+            (rm == FPLIB_RM && sgn)) {
+            return bf16_infinity(sgn);
+        } else {
+            return bf16_max_normal(sgn);
+        }
+    }
+
+    if (error) {
+        if (mode & FPLIB_FPEXEC)
+            *flags |= FPLIB_IXC;
+    }
+
+    return bf16_pack(sgn, biased_exp, int_mant);
+}
+
+static uint32_t
+bf16_round(int sgn, int exp, uint32_t mnt, int mode, int *flags)
+{
+    return bf16_round_(sgn, exp, mnt, mode & 3, mode, flags);
+}
+
+static uint16_t
+bf16_add(uint16_t a, uint16_t b, int neg, int mode, int *flags)
+{
+    int a_sgn, a_exp, b_sgn, b_exp, x_sgn, x_exp;
+    uint32_t a_mnt, b_mnt, x, x_mnt;
+
+    fp32_unpack(&a_sgn, &a_exp, &a_mnt, (uint32_t)a << 16, mode, flags);
+    fp32_unpack(&b_sgn, &b_exp, &b_mnt, (uint32_t)b << 16, mode, flags);
+
+    if ((x = bf16_process_NaNs(a, b, mode, flags))) {
+        return x;
+    }
+
+    // FPProcessDenorms2
+    if (mode & FPLIB_AH) {
+        if (fp32_is_denormal(a_exp, a_mnt) || fp32_is_denormal(b_exp, b_mnt)) {
+            *flags |= FPLIB_IDC;
+        }
+    }
+
+    b_sgn ^= neg;
+
+    // Handle infinities and zeroes:
+    if (a_exp == FP32_EXP_INF && b_exp == FP32_EXP_INF && a_sgn != b_sgn) {
+        *flags |= FPLIB_IOC;
+        return bf16_defaultNaN(mode);
+    } else if (a_exp == FP32_EXP_INF) {
+        return bf16_infinity(a_sgn);
+    } else if (b_exp == FP32_EXP_INF) {
+        return bf16_infinity(b_sgn);
+    } else if (!a_mnt && !b_mnt && a_sgn == b_sgn) {
+        return bf16_zero(a_sgn);
+    }
+
+    a_mnt <<= 3;
+    b_mnt <<= 3;
+    if (a_exp >= b_exp) {
+        b_mnt = (lsr32(b_mnt, a_exp - b_exp) |
+                 !!(b_mnt & (lsl32(1, a_exp - b_exp) - 1)));
+        b_exp = a_exp;
+    } else {
+        a_mnt = (lsr32(a_mnt, b_exp - a_exp) |
+                 !!(a_mnt & (lsl32(1, b_exp - a_exp) - 1)));
+        a_exp = b_exp;
+    }
+    x_sgn = a_sgn;
+    x_exp = a_exp;
+    if (a_sgn == b_sgn) {
+        x_mnt = a_mnt + b_mnt;
+    } else if (a_mnt >= b_mnt) {
+        x_mnt = a_mnt - b_mnt;
+    } else {
+        x_sgn ^= 1;
+        x_mnt = b_mnt - a_mnt;
+    }
+
+    if (!x_mnt) {
+        // Sign of exact zero result depends on rounding mode
+        return bf16_zero((mode & 3) == 2);
+    }
+
+    x_mnt = fp32_normalise(x_mnt, &x_exp);
+
+    return bf16_round(
+        x_sgn, x_exp + FP32_EXP_BITS - 3,
+        x_mnt >> (FP32_BITS - 1 - BF16_BITS) |
+            !!(x_mnt & ((1ULL << (FP32_BITS - 1 - BF16_BITS)) - 1)),
+        mode, flags);
+}
+
+static uint16_t
+bf16_mul(uint16_t a, uint16_t b, int mode, int *flags)
+{
+    int a_sgn, a_exp, b_sgn, b_exp, x_sgn, x_exp;
+    uint32_t a_mnt, b_mnt, x;
+    uint64_t x_mnt;
+
+    fp32_unpack(&a_sgn, &a_exp, &a_mnt, (uint32_t)a << 16, mode, flags);
+    fp32_unpack(&b_sgn, &b_exp, &b_mnt, (uint32_t)b << 16, mode, flags);
+
+    if ((x = bf16_process_NaNs(a, b, mode, flags))) {
+        return x;
+    }
+
+    // FPProcessDenorms2
+    if (mode & FPLIB_AH) {
+        if (fp32_is_denormal(a_exp, a_mnt) || fp32_is_denormal(b_exp, b_mnt)) {
+            *flags |= FPLIB_IDC;
+        }
+    }
+
+    // Handle infinities and zeroes:
+    if ((a_exp == FP32_EXP_INF && !b_mnt) ||
+        (b_exp == FP32_EXP_INF && !a_mnt)) {
+        *flags |= FPLIB_IOC;
+        return bf16_defaultNaN(mode);
+    } else if (a_exp == FP32_EXP_INF || b_exp == FP32_EXP_INF) {
+        return bf16_infinity(a_sgn ^ b_sgn);
+    } else if (!a_mnt || !b_mnt) {
+        return bf16_zero(a_sgn ^ b_sgn);
+    }
+
+    // Multiply and normalise:
+    x_sgn = a_sgn ^ b_sgn;
+    x_exp = a_exp + b_exp - FP32_EXP_BIAS + 2 * FP32_EXP_BITS + 1;
+    x_mnt = (uint64_t)a_mnt * b_mnt;
+    x_mnt = fp64_normalise(x_mnt, &x_exp);
+
+    // Convert to FP32_BITS bits, collapsing error into bottom bit:
+    x_mnt = lsr64(x_mnt, FP32_BITS - 1) | !!lsl64(x_mnt, FP32_BITS + 1);
+
+    return bf16_round(x_sgn, x_exp,
+                      x_mnt >> (FP32_BITS - BF16_BITS) |
+                          !!(x_mnt & ((1ULL << (FP32_BITS - BF16_BITS)) - 1)),
+                      mode, flags);
+}
+
+static uint16_t
+bf16_muladd(uint16_t a, uint16_t b, uint16_t c, int scale,
+            int mode, int *flags)
+{
+    int a_sgn, a_exp, b_sgn, b_exp, c_sgn, c_exp, x_sgn, x_exp, y_sgn, y_exp;
+    uint32_t a_mnt, b_mnt, c_mnt, x;
+    uint64_t x_mnt, y_mnt;
+
+    fp32_unpack(&a_sgn, &a_exp, &a_mnt, (uint32_t)a << 16, mode, flags);
+    fp32_unpack(&b_sgn, &b_exp, &b_mnt, (uint32_t)b << 16, mode, flags);
+    fp32_unpack(&c_sgn, &c_exp, &c_mnt, (uint32_t)c << 16, mode, flags);
+
+    x = bf16_process_NaNs3(a, b, c, mode, flags);
+
+    if (!(mode & FPLIB_AH)) {
+        // Quiet NaN added to product of zero and infinity:
+        if (fp32_is_quiet_NaN(a_exp, a_mnt) &&
+            ((!b_mnt && fp32_is_infinity(c_exp, c_mnt)) ||
+            (!c_mnt && fp32_is_infinity(b_exp, b_mnt)))) {
+            x = bf16_defaultNaN(mode);
+            if (mode & FPLIB_FPEXEC)
+                *flags |= FPLIB_IOC;
+        }
+    }
+
+    if (x) {
+        return x;
+    }
+
+    // Handle infinities and zeroes:
+    if ((b_exp == FP32_EXP_INF && !c_mnt) ||
+        (c_exp == FP32_EXP_INF && !b_mnt) ||
+        (a_exp == FP32_EXP_INF &&
+         (b_exp == FP32_EXP_INF || c_exp == FP32_EXP_INF) &&
+         (a_sgn != (b_sgn ^ c_sgn)))) {
+        if (mode & FPLIB_FPEXEC)
+            *flags |= FPLIB_IOC;
+        return bf16_defaultNaN(mode);
+    }
+
+    // FPProcessDenorms3
+    if (mode & FPLIB_AH) {
+        if (fp32_is_denormal(a_exp, a_mnt) || fp32_is_denormal(b_exp, b_mnt) ||
+                fp32_is_denormal(c_exp, c_mnt)) {
+            *flags |= FPLIB_IDC;
+        }
+    }
+
+    if (a_exp == FP32_EXP_INF)
+        return bf16_infinity(a_sgn);
+    if (b_exp == FP32_EXP_INF || c_exp == FP32_EXP_INF)
+        return bf16_infinity(b_sgn ^ c_sgn);
+    if (!a_mnt && (!b_mnt || !c_mnt) && a_sgn == (b_sgn ^ c_sgn))
+        return bf16_zero(a_sgn);
+
+    x_sgn = a_sgn;
+    x_exp = a_exp + 2 * FP32_EXP_BITS - 3;
+    x_mnt = (uint64_t)a_mnt << (FP32_MANT_BITS + 4);
+
+    // Multiply:
+    y_sgn = b_sgn ^ c_sgn;
+    y_exp = b_exp + c_exp - FP32_EXP_BIAS + 2 * FP32_EXP_BITS + 1 - 3;
+    y_mnt = (uint64_t)b_mnt * c_mnt << 3;
+    if (!y_mnt) {
+        y_exp = x_exp;
+    }
+
+    // Add:
+    if (x_exp >= y_exp) {
+        y_mnt = (lsr64(y_mnt, x_exp - y_exp) |
+                 !!(y_mnt & (lsl64(1, x_exp - y_exp) - 1)));
+        y_exp = x_exp;
+    } else {
+        x_mnt = (lsr64(x_mnt, y_exp - x_exp) |
+                 !!(x_mnt & (lsl64(1, y_exp - x_exp) - 1)));
+        x_exp = y_exp;
+    }
+    if (x_sgn == y_sgn) {
+        x_mnt = x_mnt + y_mnt;
+    } else if (x_mnt >= y_mnt) {
+        x_mnt = x_mnt - y_mnt;
+    } else {
+        x_sgn ^= 1;
+        x_mnt = y_mnt - x_mnt;
+    }
+
+    if (!x_mnt) {
+        // Sign of exact zero result depends on rounding mode
+        return bf16_zero((mode & 3) == 2);
+    }
+
+    // Normalise into FP32_BITS bits, collapsing error into bottom bit:
+    x_mnt = fp64_normalise(x_mnt, &x_exp);
+    x_mnt = x_mnt >> (FP32_BITS - 1) | !!(uint32_t)(x_mnt << 1);
+
+    return bf16_round(x_sgn, x_exp + scale,
+                      x_mnt >> (FP32_BITS - BF16_BITS) |
+                          !!(x_mnt & ((1ULL << (FP32_BITS - BF16_BITS)) - 1)),
+                      mode, flags);
+}
+
+uint32_t
+bf16_dot(uint32_t op1_a, uint32_t op1_b, uint32_t op2_a, uint32_t op2_b,
+         int mode, int* flags)
+{
+    int a1_sgn, b1_sgn, a2_sgn, b2_sgn, a1_exp, b1_exp, a2_exp, b2_exp;
+    int pa_sgn, pb_sgn, pa_exp, pb_exp, x_sgn, x_exp;
+    uint32_t a1_mnt, b1_mnt, a2_mnt, b2_mnt;
+    uint64_t pa_mnt, pb_mnt, x_mnt, x;
+
+    fp32_unpack(&a1_sgn, &a1_exp, &a1_mnt, op1_a, mode, flags);
+    fp32_unpack(&b1_sgn, &b1_exp, &b1_mnt, op1_b, mode, flags);
+    fp32_unpack(&a2_sgn, &a2_exp, &a2_mnt, op2_a, mode, flags);
+    fp32_unpack(&b2_sgn, &b2_exp, &b2_mnt, op2_b, mode, flags);
+
+    x = fp32_process_NaNs4(op1_a, op1_b, op2_a, op2_b, mode, flags);
+    if (x) {
+        return x;
+    }
+
+    bool a1_inf = fp32_is_infinity(a1_exp, a1_mnt);
+    bool a2_inf = fp32_is_infinity(a2_exp, a2_mnt);
+    bool b1_inf = fp32_is_infinity(b1_exp, b1_mnt);
+    bool b2_inf = fp32_is_infinity(b2_exp, b2_mnt);
+
+    bool a1_zero = !a1_exp && !a1_mnt;
+    bool a2_zero = !a2_exp && !a2_mnt;
+    bool b1_zero = !b1_exp && !b1_mnt;
+    bool b2_zero = !b2_exp && !b2_mnt;
+
+    // Determine sign and type products will have if it does not cause an
+    // Invalid Operation.
+    pa_sgn = a1_sgn ^ a2_sgn;
+    pb_sgn = b1_sgn ^ b2_sgn;
+    bool pa_inf = a1_inf || a2_inf;
+    bool pb_inf = b1_inf || b2_inf;
+    bool pa_zero = a1_zero || a2_zero;
+    bool pb_zero = b1_zero || b2_zero;
+
+    // Non SNaN-generated Invalid Operation cases are multiplies of zero
+    // by infinity and additions of opposite-signed infinities.
+    bool invalidop = ((a1_inf && a2_zero) || (a1_zero && a2_inf) ||
+                      (b1_inf && b2_zero) || (b1_zero && b2_inf) ||
+                      (pa_inf && pb_inf && pa_sgn != pb_sgn));
+
+    if (invalidop) {
+        x = fp32_defaultNaN(mode);
+        *flags |= FPLIB_IOC;
+        return x;
+    }
+
+    // Other cases involving infinities produce an infinity of the same sign.
+    if ((pa_inf && !pa_sgn) || (pb_inf && !pb_sgn)) {
+        return fp32_infinity(0);
+    } else if ((pa_inf && pa_sgn) || (pb_inf && pb_sgn)) {
+        return fp32_infinity(1);
+    }
+
+    // Cases where the result is exactly zero and its sign is not determined by
+    // the rounding mode are additions of same-signed zeros.
+    if (pa_zero && pb_zero && (pa_sgn == pb_sgn)) {
+        return fp32_zero(pa_sgn);
+    }
+
+    // Otherwise calculate fused sum of products and round it.
+    // Multiply:
+    pa_exp = a1_exp + a2_exp - FP32_EXP_BIAS + 2 * FP32_EXP_BITS + 1 - 3;
+    pa_mnt = (uint64_t)a1_mnt * a2_mnt << 3;
+
+    pb_exp = b1_exp + b2_exp - FP32_EXP_BIAS + 2 * FP32_EXP_BITS + 1 - 3;
+    pb_mnt = (uint64_t)b1_mnt * b2_mnt << 3;
+    if (!pb_mnt) {
+        pb_exp = pa_exp;
+    }
+
+    // Add:
+    if (pa_exp >= pb_exp) {
+        pb_mnt = (lsr64(pb_mnt, pa_exp - pb_exp) |
+                 !!(pb_mnt & (lsl64(1, pa_exp - pb_exp) - 1)));
+        pb_exp = pa_exp;
+    } else {
+        pa_mnt = (lsr64(pa_mnt, pb_exp - pa_exp) |
+                 !!(pa_mnt & (lsl64(1, pb_exp - pa_exp) - 1)));
+        pa_exp = pb_exp;
+    }
+    x_sgn = pa_sgn;
+    x_exp = pa_exp;
+    if (pa_sgn == pb_sgn) {
+        x_mnt = pa_mnt + pb_mnt;
+    } else if (pa_mnt >= pb_mnt) {
+        x_mnt = pa_mnt - pb_mnt;
+    } else {
+        x_sgn ^= 1;
+        x_mnt = pb_mnt - pa_mnt;
+    }
+
+    if (!x_mnt) {
+        // Sign of exact zero result depends on rounding mode
+        return fp32_zero((mode & 3) == 2);
+    }
+
+    x_mnt = fp64_normalise(x_mnt, &x_exp);
+    x_mnt = x_mnt >> (FP32_BITS - 1) | !!(uint32_t)(x_mnt << 1);
+
+    return fp32_round(x_sgn, x_exp, x_mnt, mode, flags);
+}
+
+static void
+bf16_minmaxnum(uint16_t *op1, uint16_t *op2, int sgn)
+{
+    // Treat a single quiet-NaN as +Infinity/-Infinity
+    if (!((uint16_t)~(*op1 << 1) >> BF16_MANT_BITS) &&
+        (uint16_t)~(*op2 << 1) >> BF16_MANT_BITS)
+        *op1 = bf16_infinity(sgn);
+    if (!((uint16_t)~(*op2 << 1) >> BF16_MANT_BITS) &&
+        (uint16_t)~(*op1 << 1) >> BF16_MANT_BITS)
+        *op2 = bf16_infinity(sgn);
+}
+
+uint16_t
+fplibConvertBF(uint32_t op, FPRounding rounding, FPSCR &fpscr, FPCR fpcr)
+{
+    int mode = modeConv(fpscr, fpcr);
+    int flags = 0;
+    int sgn, exp;
+    uint32_t mnt;
+    uint16_t result;
+
+    // Alternate BFloat16 behaviors
+    if (mode & FPLIB_AH) {
+        // Produce the expected IEEE 754 default result but do not update the
+        // FPSR cumulative exception flag bits.
+        mode &= ~FPLIB_FPEXEC;
+        // Use Round to Nearest Even, ignoring FPCR.RMode.
+        rounding = FPRounding_TIEEVEN;
+        // Flush denormalized inputs and outputs to zero, as if FPCR.{FZ, FIZ}
+        // is {1, 1}.
+        mode |= FPLIB_FIZ | FPLIB_FZ;
+    }
+
+    // Unpack floating-point operand optionally with flush-to-zero:
+    fp32_unpack(&sgn, &exp, &mnt, op, mode, &flags);
+
+    if (fp32_is_NaN(exp, mnt)) {
+        if (fpscr.dn) {
+            result = bf16_defaultNaN(mode);
+        } else {
+            result = (op >> (FP32_MANT_BITS - BF16_MANT_BITS)) |
+                     (1ULL << (BF16_MANT_BITS - 1));
+        }
+        if (!(mnt >> (FP32_MANT_BITS - 1) & 1)) {
+            if (mode & FPLIB_FPEXEC)
+                flags |= FPLIB_IOC;
+        }
+    } else if (exp == FP32_EXP_INF) {
+        result = bf16_infinity(sgn);
+    } else if (!mnt) {
+        result = bf16_zero(sgn);
+    } else {
+        mnt = fp32_normalise(mnt, &exp);
+        result = bf16_round_(
+            sgn, exp - FP32_EXP_BIAS + BF16_EXP_BIAS + BF16_EXP_BITS,
+            mnt >> (FP32_BITS - 1 - BF16_BITS) |
+                !!(mnt & ((1ULL << (FP32_BITS - 1 - BF16_BITS)) - 1)),
+            rounding, mode, &flags);
+    }
+
+    set_fpscr0(fpscr, flags);
+
+    return result;
+}
+
+uint16_t
+fplibBfAdd(uint16_t op1, uint16_t op2, FPSCR& fpscr, FPCR fpcr)
+{
+    int flags = 0;
+    uint16_t result = bf16_add(op1, op2, 0, modeConv(fpscr, fpcr), &flags);
+    set_fpscr0(fpscr, flags);
+    return result;
+}
+
+uint16_t
+fplibBfMax(uint16_t op1, uint16_t op2, FPSCR& fpscr, FPCR fpcr)
+{
+    int flags = 0;
+    uint32_t result = fp32_max((uint32_t)op1 << 16, (uint32_t)op2 << 16,
+                               modeConv(fpscr, fpcr), &flags, fpcr.ah);
+    result = result >> 16;
+    set_fpscr0(fpscr, flags);
+    return result;
+}
+
+uint16_t
+fplibBfMaxNum(uint16_t op1, uint16_t op2, FPSCR& fpscr, FPCR fpcr)
+{
+    int exp1 = BF16_EXP(op1);
+    int exp2 = BF16_EXP(op2);
+    uint16_t mnt1 = BF16_MANT(op1);
+    uint16_t mnt2 = BF16_MANT(op2);
+    if (!(fpcr.ah && bf16_is_NaN(exp1, mnt1) && bf16_is_NaN(exp2, mnt2))) {
+        bf16_minmaxnum(&op1, &op2, 1);
+    }
+
+    int flags = 0;
+    uint32_t result = fp32_max((uint32_t)op1 << 16, (uint32_t)op2 << 16,
+                               modeConv(fpscr, fpcr), &flags, false);
+    result = result >> 16;
+    set_fpscr0(fpscr, flags);
+    return result;
+}
+
+uint16_t
+fplibBfMin(uint16_t op1, uint16_t op2, FPSCR& fpscr, FPCR fpcr)
+{
+    int flags = 0;
+    uint32_t result = fp32_min((uint32_t)op1 << 16, (uint32_t)op2 << 16,
+                               modeConv(fpscr, fpcr), &flags, fpcr.ah);
+    result = result >> 16;
+    set_fpscr0(fpscr, flags);
+    return result;
+}
+
+uint16_t
+fplibBfMinNum(uint16_t op1, uint16_t op2, FPSCR& fpscr, FPCR fpcr)
+{
+    int exp1 = BF16_EXP(op1);
+    int exp2 = BF16_EXP(op2);
+    uint32_t mnt1 = BF16_MANT(op1);
+    uint32_t mnt2 = BF16_MANT(op2);
+    if (!(fpcr.ah && bf16_is_NaN(exp1, mnt1) && bf16_is_NaN(exp2, mnt2))) {
+        bf16_minmaxnum(&op1, &op2, 0);
+    }
+
+    int flags = 0;
+    uint32_t result = fp32_min((uint32_t)op1 << 16, (uint32_t)op2 << 16,
+                               modeConv(fpscr, fpcr), &flags, false);
+    result = result >> 16;
+    set_fpscr0(fpscr, flags);
+    return result;
+}
+
+uint16_t
+fplibBfMul(uint16_t op1, uint16_t op2, FPSCR& fpscr, FPCR fpcr)
+{
+    int flags = 0;
+    uint16_t result = bf16_mul(op1, op2, modeConv(fpscr, fpcr), &flags);
+    set_fpscr0(fpscr, flags);
+    return result;
+}
+
+uint32_t
+fplibBfMulH(uint16_t op1, uint16_t op2, FPSCR &fpscr)
+{
+    int flags = 0;
+    uint32_t result = fp32_mul((uint32_t)op1 << 16, (uint32_t)op2 << 16,
+                               modeConv(fpscr), &flags, true);
+    set_fpscr0(fpscr, flags);
+    return result;
+}
+
+uint16_t
+fplibBfMulAdd(uint16_t addend, uint16_t op1, uint16_t op2,
+              FPSCR &fpscr, FPCR fpcr)
+{
+    int flags = 0;
+    uint16_t result = bf16_muladd(addend, op1, op2, 0, modeConv(fpscr, fpcr),
+                                  &flags);
+    set_fpscr0(fpscr, flags);
+    return result;
+}
+
+uint32_t
+fplibBfMulAddH(uint32_t addend, uint16_t op1, uint16_t op2,
+               FPSCR &fpscr, FPCR fpcr)
+{
+    int flags = 0;
+    int mode = modeConv(fpscr, fpcr);
+    if (mode & FPLIB_AH) {  // altfp
+        mode = mode & (~(int)FPLIB_FPEXEC); // fpexc = !altfp
+        mode = mode | FPLIB_FIZ | FPLIB_FZ; // fpcr.<FIZ.FZ> = '11'
+        mode = mode & (~(int)0x3);          // fpcr.RMode = '00'
+    }
+    uint32_t result = fp32_muladd(
+        addend, (uint32_t)op1 << 16, (uint32_t)op2 << 16, 0, mode, &flags);
+    set_fpscr0(fpscr, flags);
+    return result;
+}
+
+uint16_t
+fplibBfNeg(uint16_t op, FPCR fpcr)
+{
+    if (fpcr.ah) {
+        int exp = BF16_EXP(op);
+        uint16_t mnt = BF16_MANT(op);
+        if (bf16_is_NaN(exp, mnt)) {
+            return op;
+        }
+    }
+    return op ^ 1ULL << (BF16_BITS - 1);
+}
+
+uint16_t
+fplibBfSub(uint16_t op1, uint16_t op2, FPSCR& fpscr, FPCR fpcr)
+{
+    int flags = 0;
+    uint16_t result = bf16_add(op1, op2, 1, modeConv(fpscr, fpcr), &flags);
+    set_fpscr0(fpscr, flags);
+    return result;
+}
+
+uint32_t
+fplibAdd_Bf16(uint32_t op1, uint32_t op2, FPSCR &fpscr)
+{
+    int flags = 0;
+    uint32_t result = fp32_add(op1, op2, 0, modeConv(fpscr), &flags, true);
+    set_fpscr0(fpscr, flags);
+    return result;
+}
+
+uint32_t
+fplibBfdotAdd(uint32_t addend, uint16_t op1_a, uint16_t op1_b,
+              uint16_t op2_a, uint16_t op2_b, FPSCR &fpscr, FPCR fpcr)
+{
+    // Extended BFloat16 behaviors
+    if (fpcr.ebf) {
+        int mode = modeConv(fpscr, fpcr) | FPLIB_DN;
+        int flags = 0;
+        uint32_t product = bf16_dot(
+            (uint32_t)op1_a << 16, (uint32_t)op1_b << 16,
+            (uint32_t)op2_a << 16, (uint32_t)op2_b << 16, mode, &flags);
+        uint32_t result = fp32_add(addend, product, 0, mode, &flags);
+        set_fpscr0(fpscr, flags);
+        return result;
+    }
+    // Standard BFloat16 behaviors
+    else {
+        int mode = modeConv(fpscr, fpcr) | FPLIB_DN | FPLIB_FZ | FPLIB_FIZ;
+        int flags = 0;
+        uint32_t product1 = fp32_mul(
+            (uint32_t)op1_a << 16, (uint32_t)op2_a << 16, mode, &flags, true);
+        uint32_t product2 = fp32_mul(
+            (uint32_t)op1_b << 16, (uint32_t)op2_b << 16, mode, &flags, true);
+        uint32_t product = fp32_add(product1, product2, 0, mode, &flags, true);
+        uint32_t result = fp32_add(addend, product, 0, mode, &flags, true);
+        set_fpscr0(fpscr, flags);
+        return result;
+    }
 }
 
 } // namespace ArmISA

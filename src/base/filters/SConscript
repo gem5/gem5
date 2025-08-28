@@ -40,3 +40,5 @@ Source('h3_bloom_filter.cc')
 Source('multi_bit_sel_bloom_filter.cc')
 Source('multi_bloom_filter.cc')
 Source('perfect_bloom_filter.cc')
+
+GTest('base.test', 'base.test.cc', with_tag('gem5 simobject'))

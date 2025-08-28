@@ -141,6 +141,10 @@ SyscallReturn ignoreFunc(SyscallDesc *desc, ThreadContext *tc);
 SyscallReturn
 ignoreWarnOnceFunc(SyscallDesc *desc, ThreadContext *tc);
 
+/// Handler for unimplemented syscalls that return -ENOSYS to the target
+/// program.
+SyscallReturn ignoreWithEnosysFunc(SyscallDesc *desc, ThreadContext *tc);
+
 /// Target exit() handler: terminate current context.
 SyscallReturn exitFunc(SyscallDesc *desc, ThreadContext *tc, int status);
 

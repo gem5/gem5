@@ -67,22 +67,21 @@ namespace gem5
 PciDevice::PciDevice(const PciDeviceParams &p,
                      std::initializer_list<PciBar *> BARs_init)
     : DmaDevice(p),
-      _busAddr(p.pci_bus, p.pci_dev, p.pci_func),
+      _devAddr(p.pci_dev, p.pci_func),
       PMCAP_BASE(p.PMCAPBaseOffset),
-      PMCAP_ID_OFFSET(p.PMCAPBaseOffset+PMCAP_ID),
-      PMCAP_PC_OFFSET(p.PMCAPBaseOffset+PMCAP_PC),
-      PMCAP_PMCS_OFFSET(p.PMCAPBaseOffset+PMCAP_PMCS),
+      PMCAP_ID_OFFSET(p.PMCAPBaseOffset + PMCAP_ID),
+      PMCAP_PC_OFFSET(p.PMCAPBaseOffset + PMCAP_PC),
+      PMCAP_PMCS_OFFSET(p.PMCAPBaseOffset + PMCAP_PMCS),
       MSICAP_BASE(p.MSICAPBaseOffset),
       MSIXCAP_BASE(p.MSIXCAPBaseOffset),
-      MSIXCAP_ID_OFFSET(p.MSIXCAPBaseOffset+MSIXCAP_ID),
-      MSIXCAP_MXC_OFFSET(p.MSIXCAPBaseOffset+MSIXCAP_MXC),
-      MSIXCAP_MTAB_OFFSET(p.MSIXCAPBaseOffset+MSIXCAP_MTAB),
-      MSIXCAP_MPBA_OFFSET(p.MSIXCAPBaseOffset+MSIXCAP_MPBA),
+      MSIXCAP_ID_OFFSET(p.MSIXCAPBaseOffset + MSIXCAP_ID),
+      MSIXCAP_MXC_OFFSET(p.MSIXCAPBaseOffset + MSIXCAP_MXC),
+      MSIXCAP_MTAB_OFFSET(p.MSIXCAPBaseOffset + MSIXCAP_MTAB),
+      MSIXCAP_MPBA_OFFSET(p.MSIXCAPBaseOffset + MSIXCAP_MPBA),
       PXCAP_BASE(p.PXCAPBaseOffset),
       BARs(BARs_init),
-
-      hostInterface(p.host->registerDevice(this, _busAddr,
-                                            (PciIntPin)p.InterruptPin)),
+      upstreamInterface(p.upstream->registerDevice(this, _devAddr,
+                                                   (PciIntPin)p.InterruptPin)),
       pioDelay(p.pio_latency),
       configDelay(p.config_latency)
 {
@@ -237,23 +236,23 @@ PciDevice::readConfig(PacketPtr pkt)
       case sizeof(uint8_t):
         pkt->setLE<uint8_t>(_config.data[offset]);
         DPRINTF(PciDevice,
-            "readConfig:  dev %#x func %#x reg %#x 1 bytes: data = %#x\n",
-            _busAddr.dev, _busAddr.func, offset,
-            (uint32_t)pkt->getLE<uint8_t>());
+                "readConfig:  dev %#x func %#x reg %#x 1 bytes: data = %#x\n",
+                _devAddr.dev, _devAddr.func, offset,
+                (uint32_t)pkt->getLE<uint8_t>());
         break;
       case sizeof(uint16_t):
         pkt->setLE<uint16_t>(*(uint16_t *)&_config.data[offset]);
         DPRINTF(PciDevice,
-            "readConfig:  dev %#x func %#x reg %#x 2 bytes: data = %#x\n",
-            _busAddr.dev, _busAddr.func, offset,
-            (uint32_t)pkt->getLE<uint16_t>());
+                "readConfig:  dev %#x func %#x reg %#x 2 bytes: data = %#x\n",
+                _devAddr.dev, _devAddr.func, offset,
+                (uint32_t)pkt->getLE<uint16_t>());
         break;
       case sizeof(uint32_t):
         pkt->setLE<uint32_t>(*(uint32_t *)&_config.data[offset]);
         DPRINTF(PciDevice,
-            "readConfig:  dev %#x func %#x reg %#x 4 bytes: data = %#x\n",
-            _busAddr.dev, _busAddr.func, offset,
-            (uint32_t)pkt->getLE<uint32_t>());
+                "readConfig:  dev %#x func %#x reg %#x 4 bytes: data = %#x\n",
+                _devAddr.dev, _devAddr.func, offset,
+                (uint32_t)pkt->getLE<uint32_t>());
         break;
       default:
         panic("invalid access size(?) for PCI configspace!\n");
@@ -261,6 +260,16 @@ PciDevice::readConfig(PacketPtr pkt)
     pkt->makeAtomicResponse();
     return configDelay;
 
+}
+
+Tick
+PciDevice::read(PacketPtr pkt)
+{
+    if (upstreamInterface.configRange().contains(pkt->getAddr())) {
+        return readConfig(pkt);
+    }
+
+    return readDevice(pkt);
 }
 
 AddrRangeList
@@ -274,6 +283,9 @@ PciDevice::getAddrRanges() const
         if (command.memorySpace && bar->isMem())
             ranges.push_back(bar->range());
     }
+
+    ranges.push_back(upstreamInterface.configRange());
+
     return ranges;
 }
 
@@ -331,9 +343,9 @@ PciDevice::writeConfig(PacketPtr pkt)
             panic("writing to a read only register");
         }
         DPRINTF(PciDevice,
-            "writeConfig: dev %#x func %#x reg %#x 1 bytes: data = %#x\n",
-            _busAddr.dev, _busAddr.func, offset,
-            (uint32_t)pkt->getLE<uint8_t>());
+                "writeConfig: dev %#x func %#x reg %#x 1 bytes: data = %#x\n",
+                _devAddr.dev, _devAddr.func, offset,
+                (uint32_t)pkt->getLE<uint8_t>());
         break;
       case sizeof(uint16_t):
         switch (offset) {
@@ -352,9 +364,9 @@ PciDevice::writeConfig(PacketPtr pkt)
             panic("writing to a read only register");
         }
         DPRINTF(PciDevice,
-            "writeConfig: dev %#x func %#x reg %#x 2 bytes: data = %#x\n",
-            _busAddr.dev, _busAddr.func, offset,
-            (uint32_t)pkt->getLE<uint16_t>());
+                "writeConfig: dev %#x func %#x reg %#x 2 bytes: data = %#x\n",
+                _devAddr.dev, _devAddr.func, offset,
+                (uint32_t)pkt->getLE<uint16_t>());
         break;
       case sizeof(uint32_t):
         switch (offset) {
@@ -371,15 +383,31 @@ PciDevice::writeConfig(PacketPtr pkt)
             DPRINTF(PciDevice, "Writing to a read only register");
         }
         DPRINTF(PciDevice,
-            "writeConfig: dev %#x func %#x reg %#x 4 bytes: data = %#x\n",
-            _busAddr.dev, _busAddr.func, offset,
-            (uint32_t)pkt->getLE<uint32_t>());
+                "writeConfig: dev %#x func %#x reg %#x 4 bytes: data = %#x\n",
+                _devAddr.dev, _devAddr.func, offset,
+                (uint32_t)pkt->getLE<uint32_t>());
         break;
       default:
         panic("invalid access size(?) for PCI configspace!\n");
     }
     pkt->makeAtomicResponse();
     return configDelay;
+}
+
+Tick
+PciDevice::write(PacketPtr pkt)
+{
+    if (upstreamInterface.configRange().contains(pkt->getAddr())) {
+        return writeConfig(pkt);
+    }
+
+    return writeDevice(pkt);
+}
+
+void
+PciDevice::recvBusChange()
+{
+    pioPort.sendRangeChange();
 }
 
 void
@@ -581,7 +609,7 @@ PciEndpoint::PciEndpoint(const PciEndpointParams &p)
 
     int idx = 0;
     for (auto *bar : BARs)
-        _config.type0.baseAddr[idx++] = bar->write(hostInterface, 0);
+        _config.type0.baseAddr[idx++] = bar->write(upstreamInterface, 0);
 
     _config.type0.cardbusCIS = htole(p.CardbusCIS);
     _config.type0.subsystemVendorID = htole(p.SubsystemVendorID);
@@ -629,7 +657,7 @@ PciEndpoint::writeConfig(PacketPtr pkt)
         }
         DPRINTF(PciEndpoint,
                 "writeConfig: dev %#x func %#x reg %#x 1 bytes: data = %#x\n",
-                _busAddr.dev, _busAddr.func, offset,
+                _devAddr.dev, _devAddr.func, offset,
                 (uint32_t)pkt->getLE<uint8_t>());
         break;
       case sizeof(uint16_t):
@@ -645,8 +673,8 @@ PciEndpoint::writeConfig(PacketPtr pkt)
             {
                 int num = PCI0_BAR_NUMBER(offset);
                 auto *bar = BARs[num];
-                _config.type0.baseAddr[num] =
-                    htole(bar->write(hostInterface, pkt->getLE<uint32_t>()));
+                _config.type0.baseAddr[num] = htole(
+                    bar->write(upstreamInterface, pkt->getLE<uint32_t>()));
                 pioPort.sendRangeChange();
             }
             break;
@@ -663,7 +691,7 @@ PciEndpoint::writeConfig(PacketPtr pkt)
         }
         DPRINTF(PciEndpoint,
                 "writeConfig: dev %#x func %#x reg %#x 4 bytes: data = %#x\n",
-                _busAddr.dev, _busAddr.func, offset,
+                _devAddr.dev, _devAddr.func, offset,
                 (uint32_t)pkt->getLE<uint32_t>());
         break;
       default:
@@ -679,7 +707,7 @@ PciEndpoint::unserialize(CheckpointIn &cp)
     PciDevice::unserialize(cp);
 
     for (int idx = 0; idx < BARs.size(); idx++)
-        BARs[idx]->write(hostInterface, _config.type0.baseAddr[idx]);
+        BARs[idx]->write(upstreamInterface, _config.type0.baseAddr[idx]);
 
     pioPort.sendRangeChange();
 }
@@ -691,7 +719,7 @@ PciBridge::PciBridge(const PciBridgeParams &p)
 
     int idx = 0;
     for (auto *bar : BARs)
-        _config.type1.baseAddr[idx++] = bar->write(hostInterface, 0);
+        _config.type1.baseAddr[idx++] = bar->write(upstreamInterface, 0);
 
     _config.type1.primaryBusNum = htole(p.PrimaryBusNumber);
     _config.type1.secondaryBusNum = htole(p.SecondaryBusNumber);
@@ -760,7 +788,7 @@ PciBridge::writeConfig(PacketPtr pkt)
         }
         DPRINTF(PciBridge,
                 "writeConfig: dev %#x func %#x reg %#x 1 bytes: data = %#x\n",
-                _busAddr.dev, _busAddr.func, offset,
+                _devAddr.dev, _devAddr.func, offset,
                 (uint32_t)pkt->getLE<uint8_t>());
         break;
       case sizeof(uint16_t):
@@ -794,7 +822,7 @@ PciBridge::writeConfig(PacketPtr pkt)
         }
         DPRINTF(PciBridge,
                 "writeConfig: dev %#x func %#x reg %#x 2 bytes: data = %#x\n",
-                _busAddr.dev, _busAddr.func, offset,
+                _devAddr.dev, _devAddr.func, offset,
                 (uint32_t)pkt->getLE<uint16_t>());
         break;
       case sizeof(uint32_t):
@@ -804,8 +832,8 @@ PciBridge::writeConfig(PacketPtr pkt)
             {
               int num = PCI1_BAR_NUMBER(offset);
               auto *bar = BARs[num];
-              _config.type1.baseAddr[num] = htole(
-                  bar->write(hostInterface, pkt->getLE<uint32_t>()));
+              _config.type1.baseAddr[num] =
+                  htole(bar->write(upstreamInterface, pkt->getLE<uint32_t>()));
               pioPort.sendRangeChange();
             }
             break;
@@ -826,7 +854,7 @@ PciBridge::writeConfig(PacketPtr pkt)
         }
         DPRINTF(PciBridge,
                 "writeConfig: dev %#x func %#x reg %#x 4 bytes: data = %#x\n",
-                _busAddr.dev, _busAddr.func, offset,
+                _devAddr.dev, _devAddr.func, offset,
                 (uint32_t)pkt->getLE<uint32_t>());
         break;
       default:
@@ -842,7 +870,7 @@ PciBridge::unserialize(CheckpointIn &cp)
     PciDevice::unserialize(cp);
 
     for (int idx = 0; idx < BARs.size(); idx++)
-        BARs[idx]->write(hostInterface, _config.type1.baseAddr[idx]);
+        BARs[idx]->write(upstreamInterface, _config.type1.baseAddr[idx]);
 
     pioPort.sendRangeChange();
 }

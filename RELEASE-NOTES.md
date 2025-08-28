@@ -1,3 +1,18 @@
+# Version 25.0.0.1
+
+**[HOTFIX]** This is a hotfix release incorporating the following critical fixes highlighted below. This release addresses urgent issues that required immediate attention outside the regular release schedule.
+
+- [#2492](https://github.com/gem5/gem5/pull/2492): Fixes the writeback type for AArch FP16 instructions.
+- [#2422](https://github.com/gem5/gem5/pull/2422): Fixes incorrect address translation caused by TLB in VEGA.
+- [#2399](https://github.com/gem5/gem5/pull/2399): Fixes Looppoint analysis.
+- [#2397](https://github.com/gem5/gem5/pull/2397): Bumps urlob3 to 2.5.0 for gem5-resources-manager.
+- [#2415](https://github.com/gem5/gem5/pull/2415): Removes duplicate `ClassicGeneratorExitHandler` class.
+- [#2441](https://github.com/gem5/gem5/pull/2441): Adds FEAT_FP16 FP instructions to the ARM ISA.
+- [#2464](https://github.com/gem5/gem5/pull/2464): Populates logBytes/paddr after functional page table walk in the RISC-V. This fixes [#2410](https://github.com/gem5/gem5/pull/2410) which caused the gem5-bridge `readfile` command to fail in RISC-V simulations.
+- [#2502](https://github.com/gem5/gem5/pull/2502): Adds the simpoint listen to new probe structure
+- [#2512](https://github.com/gem5/gem5/pull/2512): Fixes the time buffer in the O3 CPU when clearing states.
+
+
 # Version 25.0
 
 ## Major Highlights
