@@ -1,6 +1,6 @@
+# Copyright (c) 2025 REDS-HEIG-VD and ESL-EPFL
 # Copyright (c) 2022 The Regents of the University of California
 # All rights reserved.
-#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
 # met: redistributions of source code must retain the above copyright
