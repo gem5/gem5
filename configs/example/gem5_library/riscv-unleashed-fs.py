@@ -25,7 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-This gem5 configuration script runs the RISCVMatchedBoard in FS mode with a
+This gem5 configuration script runs the RISCVUnleashedBoard in FS mode with a
 an Ubuntu 20.04 image and calls m5 exit after the simulation has booted the OS.
 
 Usage
