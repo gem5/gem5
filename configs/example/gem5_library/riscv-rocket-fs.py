@@ -1,3 +1,4 @@
+# Copyright (c) 2025 REDS-HEIG-VD and ESL-EPFL
 # Copyright (c) 2022 The Regents of the University of California
 # All rights reserved.
 #
