@@ -418,7 +418,9 @@ class MetaSimObject(type):
             return
 
         # no valid assignment... raise exception
-        raise AttributeError(f"Class {cls.__name__} has no parameter '{attr}'")
+        raise AttributeError(
+            f"Invalid assignment for Class {cls.__name__} with parameter {attr}"
+        )
 
     def __getattr__(cls, attr):
         if attr == "cxx_class_path":
@@ -935,7 +937,8 @@ class SimObject(metaclass=MetaSimObject):
 
         # no valid assignment... raise exception
         raise AttributeError(
-            f"Class {self.__class__.__name__} has no parameter {attr}"
+            f"Invalid assignment for Class {self.__class__.__name__} with"
+            f" parameter {attr}"
         )
 
     # this hack allows tacking a '[0]' onto parameters that may or may
