@@ -1,5 +1,6 @@
 # Copyright (c) 2022-2023 The University of Edinburgh
 # Copyright (c) 2024 Technical University of Munich
+# Copyright (c) 2025 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -137,6 +138,7 @@ class SimpleBTB(BranchTargetBuffer):
             assoc=Parent.associativity,
             num_entries=Parent.numEntries,
             set_shift=Parent.instShiftAmt,
+            tag_bits=Parent.tagBits,
             numThreads=1,
         ),
         "BTB indexing policy",
