@@ -1,4 +1,4 @@
-# Copyright (c) 2009, 2012-2013, 2015-2025 Arm Limited
+# Copyright (c) 2009, 2012-2013, 2015-2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -129,9 +129,16 @@ class ArmExtension(ScopedEnum):
         "FEAT_SVE_PMULL128",
         # Armv9.2
         "FEAT_SME",  # Optional in Armv9.2
+        "FEAT_SME_F64F64",
+        "FEAT_SME_I16I64",
+        # Armv9.3
+        "FEAT_SME2",
         # Armv9.4
         "FEAT_SVE2p1",
+        "FEAT_SME2p1",
         "FEAT_SVE_B16B16",
+        "FEAT_SME_B16B16",
+        "FEAT_SME_F16F16",
         # Others
         "SECURITY",
         "LPAE",
@@ -241,6 +248,7 @@ class ArmDefaultRelease(Armv8):
         "FEAT_SME",  # Optional in Armv9.2
         # Armv9.4
         "FEAT_SVE2p1",
+        "FEAT_SME2p1",
     ]
 
 
