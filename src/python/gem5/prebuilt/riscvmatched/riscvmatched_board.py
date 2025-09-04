@@ -201,11 +201,14 @@ class RISCVMatchedBoard(
             self.iobus.cpu_side_ports = (
                 self.platform.pci_host.up_request_port()
             )
-            self.pci_bus.mem_side_ports = (
+            self.platform.pci_bus.default = (
                 self.platform.pci_host.down_response_port()
             )
-            self.pci_bus.cpu_side_ports = (
+            self.platform.pci_bus.cpu_side_ports = (
                 self.platform.pci_host.down_request_port()
+            )
+            self.platform.pci_bus.config_error_port = (
+                self.platform.pci_host.config_error.pio
             )
 
             # Add Ethernet card
@@ -217,8 +220,8 @@ class RISCVMatchedBoard(
             )
 
             self.ethernet.upstream = self.platform.pci_host
-            self.ethernet.pio = self.pci_bus.mem_side_ports
-            self.ethernet.dma = self.pci_bus.cpu_side_ports
+            self.ethernet.pio = self.platform.pci_bus.mem_side_ports
+            self.ethernet.dma = self.platform.pci_bus.cpu_side_ports
 
             if self.get_cache_hierarchy().is_ruby():
                 for device in self._off_chip_devices + self._on_chip_devices:

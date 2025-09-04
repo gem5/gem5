@@ -156,11 +156,14 @@ class RiscvBoard(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
         # Add PCI
         self.iobus.mem_side_ports = self.platform.pci_host.up_response_port()
         self.iobus.cpu_side_ports = self.platform.pci_host.up_request_port()
-        self.platform.pci_bus.mem_side_ports = (
+        self.platform.pci_bus.default = (
             self.platform.pci_host.down_response_port()
         )
         self.platform.pci_bus.cpu_side_ports = (
             self.platform.pci_host.down_request_port()
+        )
+        self.platform.pci_bus.config_error_port = (
+            self.platform.pci_host.config_error.pio
         )
 
         # Add Ethernet card

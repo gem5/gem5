@@ -130,7 +130,7 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
         # Setup memory system specific settings.
         if self.get_cache_hierarchy().is_ruby():
             self.pc.attachIO(
-                self.get_io_bus(), [self.pc.pci_host.mem_request_port()]
+                self.get_io_bus(), [self.pc.pci_host.up_request_port()]
             )
         else:
             self.bridge = Bridge(delay="50ns")
@@ -330,7 +330,7 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
     def get_dma_ports(self) -> Sequence[Port]:
         if self.has_dma_ports():
             return [
-                self.pc.pci_host.mem_request_port(),
+                self.pc.pci_host.up_request_port(),
                 self.iobus.mem_side_ports,
             ]
         else:

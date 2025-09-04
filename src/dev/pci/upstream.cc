@@ -43,21 +43,41 @@
 #include "debug/PciUpstream.hh"
 #include "dev/pci/device.hh"
 #include "dev/pci/types.hh"
+#include "params/PciConfigError.hh"
+#include "params/PciUpstream.hh"
 
 namespace gem5
 {
 
-PciUpstream::PciUpstream(const Params &p)
-    : ClockedObject(p), upToDown(p.up_to_down), downToUp(p.down_to_up)
+PciConfigError::PciConfigError(const PciConfigErrorParams &p) : IsaFake(p)
+{}
+
+void
+PciConfigError::setAddrRange(AddrRange range)
 {
-    upToDown->setReverseBridge(downToUp);
-    downToUp->setReverseBridge(upToDown);
+    if (range.valid()) {
+        pioAddr = range.start();
+        pioSize = range.size();
+    } else {
+        pioAddr = 0;
+        pioSize = 0;
+    }
+
+    pioPort.sendRangeChange();
 }
+
+PciUpstream::PciUpstream(const Params &p)
+    : ClockedObject(p),
+      upToDown(p.up_to_down),
+      downToUp(p.down_to_up),
+      configErrorDevice(p.config_error)
+{}
 
 void
 PciUpstream::init()
 {
     upToDown->setConfigRange(getConfigAddrRange());
+    configErrorDevice->setAddrRange(getConfigAddrRange());
     sendBusChange();
 }
 

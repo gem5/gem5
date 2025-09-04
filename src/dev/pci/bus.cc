@@ -35,79 +35,63 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DEV_PCI_ONE_WAY_BRIDGE_HH__
-#define __DEV_PCI_ONE_WAY_BRIDGE_HH__
+#include "dev/pci/bus.hh"
 
-#include "mem/bridge.hh"
-#include "params/PciOneWayBridge.hh"
+#include "debug/AddrRanges.hh"
+#include "mem/noncoherent_xbar.hh"
+#include "params/PciBus.hh"
 
 namespace gem5
 {
 
-/**
- * PCI one way bridge is used to connect upstream bus and downstream bus
- * together and let packet passing through. To fully connect up and down buses,
- * two of this bridge must be used, one letting packet pass from up to down and
- * the other from down to up.
- *
- * All the address ranges are dynamically determined based on the connected
- * bus. A PCI configuration range can be set, the bridge will be able to
- * respond to any of the address in that range. It will either let the packet
- * pass through if a PCI device is able to answer to it, or respond with the
- * error code (all bits set to one).
- */
-class PciOneWayBridge : public BridgeBase
+PciBus::PciBus(const Params &p) : NoncoherentXBar(p)
 {
-  private:
-    /** Bridge handling packets for the reverse way, used to avoid creating
-     * loop of ranges between the two bridges. */
-    PciOneWayBridge *reverseBridge;
+    // create a default port that will be used for configuration cycles
+    configErrorPortID = memSidePorts.size();
+    std::string portName = name() + ".config_error_port";
+    RequestPort *bp =
+        new NoncoherentXBarRequestPort(portName, *this, configErrorPortID);
+    memSidePorts.push_back(bp);
+    reqLayers.push_back(
+        new ReqLayer(*bp, *this, csprintf("reqLayer%d", configErrorPortID)));
+}
 
-    /** Addresses ranges that the memory side buses can respond to. */
-    AddrRangeList memSideRanges;
+Port &
+PciBus::getPort(const std::string &if_name, PortID idx)
+{
+    if (if_name == "config_error_port") {
+        return *memSidePorts[configErrorPortID];
+    } else {
+        return NoncoherentXBar::getPort(if_name, idx);
+    }
+}
 
-    /** PCI configuration range that is behind the bridge. */
-    AddrRange configRange;
+void
+PciBus::recvRangeChange(PortID mem_side_port_id)
+{
+    if (mem_side_port_id == configErrorPortID) {
+        // Configuration port is used as a default port for a give range. It
+        // doesn't require any check for overlapping ranges and isn't needed
+        // for gotAllAddrRanges.
+        configRange = memSidePorts[mem_side_port_id]->getAddrRanges();
+        DPRINTF(AddrRanges, "Got new config range: %s\n",
+                configRange.to_string());
+    } else {
+        NoncoherentXBar::recvRangeChange(mem_side_port_id);
+    }
+}
 
-  protected:
-    /**
-     * Get a list of the non-overlapping address ranges the bridge is
-     * responsible for.
-     *
-     * @return a list of ranges responded to
-     */
-    AddrRangeList getAddrRanges() const override;
+PortID
+PciBus::findPort(AddrRange addr_range, PacketPtr pkt)
+{
+    PortID port_id = NoncoherentXBar::findPort(addr_range, pkt);
 
-    /**
-     * Called when the memory side port receives an address range change from
-     * the peer response port. This allows the bridge to dynamically update
-     * address ranges that can pass through with the new ones.
-     */
-    void recvRangeChange() override;
-
-  public:
-    void init() override;
-
-    /**
-     * Set the bridge handlig packet for the reverse way.
-     * This shoudl be called before the init phase.
-     */
-    void
-    setReverseBridge(PciOneWayBridge *reverse_bridge)
-    {
-        reverseBridge = reverse_bridge;
+    // Configuration error port overrides default port for a given range.
+    if (port_id == defaultPortID && addr_range.isSubset(configRange)) {
+        return configErrorPortID;
     }
 
-    /**
-     * Set the PCI configuration range that is behind the bridge.
-     */
-    void setConfigRange(AddrRange config_range);
-
-    PARAMS(PciOneWayBridge);
-
-    PciOneWayBridge(const Params &p);
-};
+    return port_id;
+}
 
 } // namespace gem5
-
-#endif //__DEV_PCI_ONE_WAY_BRIDGE_HH__
