@@ -37,6 +37,7 @@ from typing import (
 )
 
 from m5.objects import (
+    AbstractMemory,
     AddrRange,
     DRAMInterface,
     MemCtrl,
@@ -185,7 +186,7 @@ class ChanneledMemory(AbstractMemorySystem):
         return [ctrl for ctrl in self.mem_ctrl]
 
     @overrides(AbstractMemorySystem)
-    def get_mem_interfaces(self) -> List[DRAMInterface]:
+    def get_mem_interfaces(self) -> List[AbstractMemory]:
         return self._dram
 
     @overrides(AbstractMemorySystem)
