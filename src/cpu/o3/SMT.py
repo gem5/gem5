@@ -1,6 +1,4 @@
-# -*- mode:python -*-
-
-# Copyright (c) 2025 Arm Limited
+# Copyright (c) 2016, 2019 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -12,7 +10,7 @@
 # unmodified and in its entirety in all distributions of the software,
 # modified or unmodified, in source code or in binary form.
 #
-# Copyright (c) 2006 The Regents of The University of Michigan
+# Copyright (c) 2005-2007 The Regents of The University of Michigan
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -38,64 +36,16 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import sys
+from m5.params import ScopedEnum
 
-Import('*')
 
-if env['CONF']['BUILD_ISA']:
-    SimObject('FUPool.py', sim_objects=['FUPool'])
-    SimObject('FuncUnitConfig.py', sim_objects=[])
-    SimObject('BaseO3CPU.py', sim_objects=['BaseO3CPU'])
-    SimObject('IQUnit.py', sim_objects=['IQUnit'])
-    SimObject('SMT.py',
-        enums=['SMTFetchPolicy', 'SMTQueuePolicy', 'CommitPolicy'])
+class SMTFetchPolicy(ScopedEnum):
+    vals = ["RoundRobin", "Branch", "IQCount", "LSQCount"]
 
-    Source('bac.cc')
-    Source('commit.cc')
-    Source('cpu.cc')
-    Source('decode.cc')
-    Source('dyn_inst.cc')
-    Source('fetch.cc')
-    Source('free_list.cc')
-    Source('ftq.cc')
-    Source('fu_pool.cc')
-    Source('iew.cc')
-    Source('inst_queue.cc')
-    Source('lsq.cc')
-    Source('lsq_unit.cc')
-    Source('mem_dep_unit.cc')
-    Source('regfile.cc')
-    Source('rename.cc')
-    Source('rename_map.cc')
-    Source('rob.cc')
-    Source('scoreboard.cc')
-    Source('store_set.cc')
-    Source('thread_context.cc')
-    Source('thread_state.cc')
 
-    DebugFlag('BAC')
-    DebugFlag('CommitRate')
-    DebugFlag('FTQ')
-    DebugFlag('IEW')
-    DebugFlag('IQ')
-    DebugFlag('LSQ')
-    DebugFlag('LSQUnit')
-    DebugFlag('MemDepUnit')
-    DebugFlag('O3CPU')
-    DebugFlag('ROB')
-    DebugFlag('Rename')
-    DebugFlag('Scoreboard')
-    DebugFlag('StoreSet')
-    DebugFlag('Writeback')
+class SMTQueuePolicy(ScopedEnum):
+    vals = ["Dynamic", "Partitioned", "Threshold"]
 
-    CompoundFlag('O3CPUAll', [ 'BAC', 'FTQ', 'Fetch', 'Decode', 'Rename',
-        'IEW', 'Commit',
-        'IQ', 'ROB', 'FreeList', 'LSQ', 'LSQUnit', 'StoreSet', 'MemDepUnit',
-        'DynInst', 'O3CPU', 'Activity', 'Scoreboard', 'Writeback' ])
 
-    SimObject('BaseO3Checker.py', sim_objects=['BaseO3Checker'])
-    Source('checker.cc')
-
-    # For backwards compatibility
-    SimObject('O3CPU.py', sim_objects=[], tags=['isa'])
-    SimObject('O3Checker.py', sim_objects=[], tags=['isa'])
+class CommitPolicy(ScopedEnum):
+    vals = ["RoundRobin", "OldestReady"]

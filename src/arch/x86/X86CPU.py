@@ -30,6 +30,7 @@ from m5.objects.BaseO3CPU import BaseO3CPU
 from m5.objects.BaseTimingSimpleCPU import BaseTimingSimpleCPU
 from m5.objects.FuncUnit import *
 from m5.objects.FUPool import *
+from m5.objects.IQUnit import IQUnit
 from m5.objects.X86Decoder import X86Decoder
 from m5.objects.X86ISA import X86ISA
 from m5.objects.X86LocalApic import X86LocalApic
@@ -100,7 +101,7 @@ class X86O3CPU(BaseO3CPU, X86CPU):
     # issues division microops.  The latency of these microops should really be
     # one (or a small number) cycle each since each of these computes one bit
     # of the quotient.
-    fuPool = DefaultX86FUPool()
+    instQueues = IQUnit(fuPool=DefaultX86FUPool())
 
 
 class X86MinorCPU(BaseMinorCPU, X86CPU):

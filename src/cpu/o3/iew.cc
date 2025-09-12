@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2018-2019 ARM Limited
+ * Copyright (c) 2010-2013, 2018-2019, 2025 Arm Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
@@ -68,7 +68,6 @@ IEW::IEW(CPU *_cpu, const BaseO3CPUParams &params)
       cpu(_cpu),
       instQueue(_cpu, this, params),
       ldstQueue(_cpu, this, params),
-      fuPool(params.fuPool),
       commitToIEWDelay(params.commitToIEWDelay),
       renameToIEWDelay(params.renameToIEWDelay),
       issueToExecuteDelay(params.issueToExecuteDelay),
@@ -102,6 +101,9 @@ IEW::IEW(CPU *_cpu, const BaseO3CPUParams &params)
 
     // Instruction queue needs the queue between issue and execute.
     instQueue.setIssueToExecuteQueue(&issueToExecQueue);
+
+    // Retrieve a list of all available FU pools
+    fuPools = instQueue.allFUPools();
 
     for (ThreadID tid = 0; tid < MaxThreads; tid++) {
         dispatchStatus[tid] = Running;
@@ -361,9 +363,12 @@ IEW::isDrained() const
     // Also check the FU pool as instructions are "stored" in FU
     // completion events until they are done and not accounted for
     // above
-    if (drained && !fuPool->isDrained()) {
-        DPRINTF(Drain, "FU pool still busy.\n");
-        drained = false;
+    for (FUPool *fu_pool : fuPools) {
+        if (!fu_pool->isDrained()) {
+            DPRINTF(Drain, "FU pool still busy.\n");
+            drained = false;
+            break;
+        }
     }
 
     return drained;
@@ -388,7 +393,9 @@ IEW::takeOverFrom()
 
     instQueue.takeOverFrom();
     ldstQueue.takeOverFrom();
-    fuPool->takeOverFrom();
+    for (FUPool *fu_pool : fuPools) {
+        fu_pool->takeOverFrom();
+    }
 
     startupStage();
     cpu->activityThisCycle();
@@ -918,7 +925,7 @@ IEW::dispatchInsts(ThreadID tid)
         }
 
         // Check for full conditions.
-        if (instQueue.isFull(tid)) {
+        if (instQueue.isFull(inst)) {
             DPRINTF(IEW, "[tid:%i] Issue: IQ has become full.\n", tid);
 
             // Call function to start blocking.
@@ -1418,8 +1425,10 @@ IEW::tick()
 
     sortInsts();
 
-    // Free function units marked as being freed this cycle.
-    fuPool->processFreeUnits();
+    for (FUPool *fu_pool : fuPools) {
+        // Free function units marked as being freed this cycle.
+        fu_pool->processFreeUnits();
+    }
 
     // Check stall and squash signals, dispatch any instructions.
     for (ThreadID tid : *activeThreads) {
@@ -1512,7 +1521,8 @@ IEW::tick()
                 tid, toRename->iewInfo[tid].dispatched);
     }
 
-    DPRINTF(IEW, "IQ has %i free entries (Can schedule: %i).  "
+    DPRINTF(IEW,
+            "IQ has %i free entries (Can schedule: %i).  "
             "LQ has %i free entries. SQ has %i free entries.\n",
             instQueue.numFreeEntries(), instQueue.hasReadyInsts(),
             ldstQueue.numFreeLoadEntries(), ldstQueue.numFreeStoreEntries());

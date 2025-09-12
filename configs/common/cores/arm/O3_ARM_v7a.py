@@ -155,6 +155,11 @@ class O3_ARM_v7a_BP(BranchPredictor):
     instShiftAmt = 2
 
 
+class O3_ARM_v7a_IQ(IQUnit):
+    fuPool = O3_ARM_v7a_FUP()
+    numEntries = 32
+
+
 class O3_ARM_v7a_3(ArmO3CPU):
     LQEntries = 16
     SQEntries = 16
@@ -182,7 +187,6 @@ class O3_ARM_v7a_3(ArmO3CPU):
     dispatchWidth = 6
     issueWidth = 8
     wbWidth = 8
-    fuPool = O3_ARM_v7a_FUP()
     iewToCommitDelay = 1
     renameToROBDelay = 1
     commitWidth = 8
@@ -193,11 +197,11 @@ class O3_ARM_v7a_3(ArmO3CPU):
     numPhysIntRegs = 128
     numPhysFloatRegs = 192
     numPhysVecRegs = 48
-    numIQEntries = 32
     numROBEntries = 40
 
     switched_out = False
     branchPred = O3_ARM_v7a_BP()
+    instQueues = O3_ARM_v7a_IQ()
 
 
 # Instruction Cache

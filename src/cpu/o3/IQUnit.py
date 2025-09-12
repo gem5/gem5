@@ -1,5 +1,3 @@
-# -*- mode:python -*-
-
 # Copyright (c) 2025 Arm Limited
 # All rights reserved.
 #
@@ -11,9 +9,6 @@
 # terms below provided that you ensure that this notice is replicated
 # unmodified and in its entirety in all distributions of the software,
 # modified or unmodified, in source code or in binary form.
-#
-# Copyright (c) 2006 The Regents of The University of Michigan
-# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -38,64 +33,28 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import sys
+from m5.objects.FUPool import (
+    DefaultFUPool,
+    FUPool,
+)
+from m5.objects.SMT import SMTQueuePolicy
+from m5.params import *
+from m5.proxy import Parent
+from m5.SimObject import SimObject
 
-Import('*')
 
-if env['CONF']['BUILD_ISA']:
-    SimObject('FUPool.py', sim_objects=['FUPool'])
-    SimObject('FuncUnitConfig.py', sim_objects=[])
-    SimObject('BaseO3CPU.py', sim_objects=['BaseO3CPU'])
-    SimObject('IQUnit.py', sim_objects=['IQUnit'])
-    SimObject('SMT.py',
-        enums=['SMTFetchPolicy', 'SMTQueuePolicy', 'CommitPolicy'])
+class IQUnit(SimObject):
+    type = "IQUnit"
+    cxx_class = "gem5::o3::IQUnit"
+    cxx_header = "cpu/o3/inst_queue.hh"
 
-    Source('bac.cc')
-    Source('commit.cc')
-    Source('cpu.cc')
-    Source('decode.cc')
-    Source('dyn_inst.cc')
-    Source('fetch.cc')
-    Source('free_list.cc')
-    Source('ftq.cc')
-    Source('fu_pool.cc')
-    Source('iew.cc')
-    Source('inst_queue.cc')
-    Source('lsq.cc')
-    Source('lsq_unit.cc')
-    Source('mem_dep_unit.cc')
-    Source('regfile.cc')
-    Source('rename.cc')
-    Source('rename_map.cc')
-    Source('rob.cc')
-    Source('scoreboard.cc')
-    Source('store_set.cc')
-    Source('thread_context.cc')
-    Source('thread_state.cc')
+    numEntries = Param.Unsigned(64, "Number of instruction queue entries")
 
-    DebugFlag('BAC')
-    DebugFlag('CommitRate')
-    DebugFlag('FTQ')
-    DebugFlag('IEW')
-    DebugFlag('IQ')
-    DebugFlag('LSQ')
-    DebugFlag('LSQUnit')
-    DebugFlag('MemDepUnit')
-    DebugFlag('O3CPU')
-    DebugFlag('ROB')
-    DebugFlag('Rename')
-    DebugFlag('Scoreboard')
-    DebugFlag('StoreSet')
-    DebugFlag('Writeback')
+    fuPool = Param.FUPool(DefaultFUPool(), "Functional Unit pool")
 
-    CompoundFlag('O3CPUAll', [ 'BAC', 'FTQ', 'Fetch', 'Decode', 'Rename',
-        'IEW', 'Commit',
-        'IQ', 'ROB', 'FreeList', 'LSQ', 'LSQUnit', 'StoreSet', 'MemDepUnit',
-        'DynInst', 'O3CPU', 'Activity', 'Scoreboard', 'Writeback' ])
+    numThreads = Param.Unsigned(
+        Parent.numThreads, "number of HW thread contexts"
+    )
 
-    SimObject('BaseO3Checker.py', sim_objects=['BaseO3Checker'])
-    Source('checker.cc')
-
-    # For backwards compatibility
-    SimObject('O3CPU.py', sim_objects=[], tags=['isa'])
-    SimObject('O3Checker.py', sim_objects=[], tags=['isa'])
+    smtIQPolicy = Param.SMTQueuePolicy("Partitioned", "SMT IQ Sharing Policy")
+    smtIQThreshold = Param.Int(100, "SMT IQ Threshold Sharing Parameter")

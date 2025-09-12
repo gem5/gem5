@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012, 2014, 2019 ARM Limited
+ * Copyright (c) 2010-2012, 2014, 2019, 2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -360,8 +360,8 @@ class IEW
     /** Load / store queue. */
     LSQ ldstQueue;
 
-    /** Pointer to the functional unit pool. */
-    FUPool *fuPool;
+    /** Vector of pointers to the functional unit pools. */
+    std::vector<FUPool *> fuPools;
     /** Records if the LSQ needs to be updated on the next cycle, so that
      * IEW knows if there will be activity on the next cycle.
      */
