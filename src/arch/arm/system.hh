@@ -65,7 +65,7 @@ class FVPBasePwrCtrl;
 class ThreadContext;
 
 struct ArmReleaseParams;
-struct ArmSemihosting;
+class ArmSemihosting;
 
 class ArmRelease : public SimObject
 {
