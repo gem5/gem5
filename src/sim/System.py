@@ -39,7 +39,7 @@
 
 from m5.objects.DVFSHandler import *
 from m5.objects.SimpleMemory import *
-from m5.objects.Workload import StubWorkload
+from m5.objects.StubWorkload import StubWorkload
 from m5.params import *
 from m5.proxy import *
 from m5.SimObject import *
