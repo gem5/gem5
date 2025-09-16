@@ -316,6 +316,19 @@ class Decode
         /** Stat for total number of squashed instructions. */
         statistics::Scalar squashedInsts;
     } stats;
+
+  public:
+    const DecodeStats &
+    getStats() const
+    {
+        return stats;
+    }
+
+    Cycles
+    getFetchToDecodeDelay()
+    {
+        return fetchToDecodeDelay;
+    }
 };
 
 } // namespace o3

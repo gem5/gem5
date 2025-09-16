@@ -490,7 +490,16 @@ class Commit
 
         /** Number of cycles where the commit bandwidth limit is reached. */
         statistics::Scalar commitEligibleSamples;
+        /** Top Down Methodology, Number of commited instructions*/
+        statistics::Scalar committedInst;
     } stats;
+
+  public:
+    const CommitStats &
+    getStats() const
+    {
+        return stats;
+    }
 };
 
 } // namespace o3

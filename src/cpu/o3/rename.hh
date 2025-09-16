@@ -533,7 +533,28 @@ class Rename
         statistics::Scalar intReturned;
         /** Number of registers freed and written back to floating point free list*/
         statistics::Scalar fpReturned;
+        /** Top Down, IEW stall while there is an in flight load */
+        statistics::Scalar storeStalls;
     } stats;
+
+  public:
+    RenameStats &
+    getStats()
+    {
+        return stats;
+    }
+
+    unsigned
+    getWidth() const
+    {
+        return renameWidth;
+    }
+
+    int
+    getDecodeToRenameDelay()
+    {
+        return decodeToRenameDelay;
+    }
 };
 
 } // namespace o3

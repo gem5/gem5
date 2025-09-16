@@ -923,6 +923,8 @@ class LSQ
 
     void sendRetryResp();
 
+    bool anyCacheLevelMisses(int level);
+
   protected:
     /** D-cache is blocked */
     bool _cacheBlocked;

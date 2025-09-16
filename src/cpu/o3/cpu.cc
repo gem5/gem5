@@ -47,6 +47,7 @@
 #include "cpu/checker/thread_context.hh"
 #include "cpu/o3/dyn_inst.hh"
 #include "cpu/o3/limits.hh"
+#include "cpu/o3/tdm.hh"
 #include "cpu/o3/thread_context.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
@@ -346,7 +347,9 @@ CPU::CPUStats::CPUStats(CPU *cpu)
                "to idling"),
       ADD_STAT(quiesceCycles, statistics::units::Cycle::get(),
                "Total number of cycles that CPU has spent quiesced or waiting "
-               "for an interrupt")
+               "for an interrupt"),
+      topDownStats(cpu, &cpu->fetch, &cpu->rename, &cpu->decode, &cpu->iew,
+                   &cpu->commit)
 {
     // Register any of the O3CPU's stats here.
     timesIdled
