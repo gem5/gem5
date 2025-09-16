@@ -69,7 +69,6 @@ PciConfigError::setAddrRange(AddrRange range)
 PciUpstream::PciUpstream(const Params &p)
     : ClockedObject(p),
       upToDown(p.up_to_down),
-      downToUp(p.down_to_up),
       configErrorDevice(p.config_error)
 {}
 

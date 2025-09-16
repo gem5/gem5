@@ -47,14 +47,14 @@
 #include "dev/isa_fake.hh"
 #include "dev/pci/types.hh"
 #include "dev/pci/up_down_bridge.hh"
+#include "params/PciConfigError.hh"
+#include "params/PciUpstream.hh"
 #include "sim/clocked_object.hh"
 
 namespace gem5
 {
 
 class PciDevice;
-class PciConfigErrorParams;
-class PciUpstreamParams;
 
 class PciConfigError : public IsaFake
 {
@@ -321,7 +321,6 @@ class PciUpstream : public ClockedObject
 
     /** The two one way bridges to connect both side buses */
     PciUpDownBridge *upToDown;
-    BridgeBase *downToUp;
 
     PciConfigError *configErrorDevice;
 };

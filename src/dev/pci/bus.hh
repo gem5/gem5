@@ -39,11 +39,10 @@
 #define __DEV_PCI_BUS_HH__
 
 #include "mem/noncoherent_xbar.hh"
+#include "params/PciBus.hh"
 
 namespace gem5
 {
-
-class PciBusParams;
 
 /**
  * A PCI bus is a non-coherent crossbar with a special port that is used to

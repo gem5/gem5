@@ -39,11 +39,10 @@
 #define __DEV_PCI_ONE_WAY_BRIDGE_HH__
 
 #include "mem/bridge.hh"
+#include "params/PciUpDownBridge.hh"
 
 namespace gem5
 {
-
-class PciUpDownBridgeParams;
 
 /**
  * This bridge lets packets pass from upstream to downstream of a PCI bridge.
