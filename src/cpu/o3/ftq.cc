@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022-2023 The University of Edinburgh
+ * Copyright (c) 2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -84,7 +85,6 @@ FetchTarget::toString()
 
 FTQ::FTQ(CPU *_cpu, const BaseO3CPUParams &params)
     : cpu(_cpu),
-      numThreads(params.numThreads),
       numEntries(params.numFTQEntries),
       stats(_cpu, params.numFTQEntries)
 {

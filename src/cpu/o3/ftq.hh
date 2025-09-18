@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022-2023 The University of Edinburgh
+ * Copyright (c) 2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -248,9 +249,6 @@ class FTQ
 
     /** Pointer to the CPU. */
     CPU *cpu;
-
-    /** Max number of threads */
-    const unsigned numThreads;
 
     /** Number of fetch targets in the FTQ. (per thread) */
     const unsigned numEntries;
