@@ -48,7 +48,7 @@ test_progs/
 Doxyfile
 docs/
 gdbscript
-gem5.log
-gem5_pipeline.log
+*.log
 configs/common/Caches.py
-configs/common/Caches.py
+common/
+gem5_config.py
