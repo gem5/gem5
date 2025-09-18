@@ -785,7 +785,7 @@ class Time(ParamValue):
     def cxx_ini_parse(cls, code, src, dest, ret):
         code("char *_parse_ret = strptime((${src}).c_str(),")
         code('    "%a %b %d %H:%M:%S %Y", &(${dest}));')
-        code("${ret} _parse_ret && *_parse_ret == '\0';")
+        code("${ret} _parse_ret && *_parse_ret == '\\0';")
 
 
 class MemoryBandwidth(float, ParamValue):
