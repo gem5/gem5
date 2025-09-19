@@ -97,13 +97,12 @@ class RefCounted
     /// Increment the reference count
     void incref() const { ++count; }
 
-    /// Decrement the reference count and destroy the object if all
-    /// references are gone.
-    void
+    /// Decrement the reference count and return true if all references
+    /// are gone.
+    bool
     decref() const
     {
-        if (--count <= 0)
-            delete this;
+        return --count <= 0;
     }
 };
 
@@ -167,8 +166,9 @@ class RefCountingPtr
     void
     del()
     {
-        if (data)
-            data->decref();
+        if (data && data->decref()) {
+            delete data;
+        }
     }
 
     /**
