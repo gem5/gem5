@@ -891,12 +891,10 @@ VCpyVsMicroInst::generateDisassembly(Addr pc,
 
 VPinVdMicroInst::VPinVdMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
                                  uint32_t _numVdPins, uint32_t _elen,
-                                 uint32_t _vlen, bool _hasVdOffset,
-                                 bool _copyVs, uint32_t _vsIdx)
+                                 uint32_t _vlen, bool _hasVdOffset)
     : VectorArithMicroInst("vpinvd_v_micro", _machInst, SimdMiscOp, 0,
                            _microIdx, _elen, _vlen)
     , hasVdOffset(_hasVdOffset)
-    , copyVs(_copyVs)
 {
     setRegIdxArrays(
         reinterpret_cast<RegIdArrayPtr>(
@@ -915,10 +913,6 @@ VPinVdMicroInst::VPinVdMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
     RegId Vd = destRegIdx(0);
     Vd.setNumPinnedWrites(_numVdPins);
     setDestRegIdx(0, Vd);
-
-    if (copyVs) {
-        setSrcRegIdx(_numSrcRegs++, vecRegClass[_vsIdx]);
-    }
 }
 
 Fault
@@ -941,14 +935,7 @@ VPinVdMicroInst::execute(ExecContext* xc, trace::InstRecord* traceData) const
     }
 
     if (traceData) {
-        traceData->setData(vecRegClass, xc->getWritableRegOperand(this, 0));
-    }
-
-    if (copyVs) {
-        vreg_t& vs = *(vreg_t *)xc->getWritableRegOperand(this, 1);
-        vreg_t old_vs;
-        xc->getRegOperand(this, 1, &old_vs);
-        vs = old_vs;
+        traceData->setData(vecRegClass, &vd);
     }
 
     return NoFault;

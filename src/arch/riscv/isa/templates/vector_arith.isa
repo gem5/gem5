@@ -2283,15 +2283,11 @@ template<typename ElemType>
         this->microops.push_back(microop);
     }
 
-    uint32_t vs2_end = machInst.vs2 + num_microops - 1;
-    uint32_t vd_end = machInst.vd + num_microops - 1;
-    bool overlap = (machInst.vs2 >= machInst.vd && machInst.vs2 <= vd_end)
-        || (vs2_end >= machInst.vd && vs2_end <= vd_end);
-    bool need_pin = overlap || num_microops > 2;
+    bool need_pin = num_microops > 2;
 
     for (int i = 0; need_pin && i < ceil((float) this->vl/micro_vlmax); i++) {
         microop = new VPinVdMicroInst(machInst, i, std::max(i, 1), elen, vlen,
-                                      true, overlap, machInst.vs2 + i);
+                                      true);
         microop->setFlag(IsDelayedCommit);
         this->microops.push_back(microop);
     }
@@ -2307,7 +2303,7 @@ template<typename ElemType>
 
             microop = new %(class_name)sMicro<ElemType>(
                 _machInst, micro_vl, micro_idx++, i, vs2Idx, vs3Idx, _elen,
-                _vlen, true, j == (std::max(i - 1, 0) - 1), false, overlap);
+                _vlen, true, j == (std::max(i - 1, 0) - 1), false, false);
             microop->setDelayedCommit();
             this->microops.push_back(microop);
         }
@@ -2404,15 +2400,21 @@ template<typename ElemType>
     uint32_t vd_end = machInst.vd + num_microops - 1;
     bool overlap = (machInst.vs2 >= machInst.vd && machInst.vs2 <= vd_end)
         || (vs2_end >= machInst.vd && vs2_end <= vd_end);
-    bool need_pin = overlap || num_microops > 2;
+    bool need_pin = num_microops > 2;
 
-    for (int i = 0; need_pin && i < ceil((float) this->vl / micro_vlmax);
-        i++) {
-        microop = new VPinVdMicroInst(machInst, i,
-            std::max(num_microops-i-1, 1), elen, vlen, false, overlap,
-            machInst.vs2 + i);
-        microop->setFlag(IsDelayedCommit);
-        this->microops.push_back(microop);
+    for (int i = 0; i < ceil((float) this->vl / micro_vlmax); i++) {
+        if (overlap) {
+            microop = new VCpyVsMicroInst(machInst, i, machInst.vs2, elen,
+                                          vlen);
+            microop->setFlag(IsDelayedCommit);
+            this->microops.push_back(microop);
+        }
+        if (need_pin) {
+            microop = new VPinVdMicroInst(machInst, i,
+                std::max(num_microops-i-1, 1), elen, vlen, false);
+            microop->setFlag(IsDelayedCommit);
+            this->microops.push_back(microop);
+        }
     }
 
     int micro_idx = 0;
@@ -2573,10 +2575,6 @@ Fault
         if (overlap && slideUp) {
             return std::make_shared<IllegalInstFault>(
                 "Regs overlap is not allowed for vslideup", machInst);
-        } else if (overlap && !slideUp) {
-            return std::make_shared<IllegalInstFault>(
-                "Regs overlap is not allowed for vslidedown when lmul > 1",
-                machInst);
         }
     }
 
