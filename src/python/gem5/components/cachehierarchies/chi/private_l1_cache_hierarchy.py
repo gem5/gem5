@@ -196,8 +196,8 @@ class PrivateL1CacheHierarchy(AbstractRubyCacheHierarchy):
         core.connect_dcache(cluster.dcache.sequencer.in_ports)
 
         core.connect_walker_ports(
-            cluster.dcache.sequencer.in_ports,
             cluster.icache.sequencer.in_ports,
+            cluster.dcache.sequencer.in_ports,
         )
 
         # Connect the interrupt ports
