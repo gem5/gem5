@@ -91,10 +91,12 @@ namespace X86ISA
         // A sequence number to keep track of LRU.
         uint64_t lruSeq;
 
+        uint8_t pkey;
+
         TlbEntryTrie::Handle trieHandle;
 
         TlbEntry(Addr asn, Addr _vaddr, Addr _paddr,
-                 bool uncacheable, bool read_only);
+                 bool uncacheable, bool read_only, uint8_t pkey);
         TlbEntry();
 
         void
@@ -138,6 +140,7 @@ namespace X86ISA
     // point in the future.
     BitUnion64(PageTableEntry)
         Bitfield<63> nx;
+        Bitfield<62,59> pkey;
         Bitfield<51, 12> base;
         Bitfield<11, 9> avl;
         Bitfield<8> g;

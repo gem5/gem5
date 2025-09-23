@@ -76,6 +76,15 @@ def macroop SMSW_M {
     st t1, seg, sib, disp, dataSize=2
 };
 
+def macroop WRPKRU {
+    .serialize_before
+    movpkru pkru, rax
+};
+
+def macroop RDPKRU {
+    movpkru rax, pkru
+};
+
 def macroop SMSW_P {
     rdcr t1, cr0
     rdip t7, dataSize=asz

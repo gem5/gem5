@@ -452,6 +452,10 @@ BaseSimpleCPU::postExecute()
         ++fetchStats[t_info.thread->threadId()]->numBranches;
     }
 
+    if (strcmp(curStaticInst->getName().c_str(),"movpkru")==0) {
+        commitStats[t_info.thread->threadId()]->wrpkruCommitted++;
+    }
+
     /* Power model statistics */
     //integer alu accesses
     if (curStaticInst->isInteger()){

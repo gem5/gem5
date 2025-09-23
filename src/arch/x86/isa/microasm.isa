@@ -154,6 +154,8 @@ let {{
         assembler.symbols["r%s" % reg] = \
             gpRegIdx("int_reg::R%s" % reg)
 
+    assembler.symbols["pkru"] = gpRegIdx("int_reg::Pkru")
+
     for reg in ('ah', 'bh', 'ch', 'dh'):
         assembler.symbols[reg] = \
             gpRegIdx("X86ISA::intRegFolded(int_reg::%s, IntFoldBit)" %

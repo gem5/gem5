@@ -805,6 +805,9 @@ class BaseCPU : public ClockedObject
         statistics::Scalar numInsts;
         statistics::Scalar numOps;
 
+        /* Number of wrpkru instructions committed */
+        statistics::Scalar wrpkruCommitted;
+
         /* Number of instructions committed that are not NOP or prefetches */
         statistics::Scalar numInstsNotNOP;
         statistics::Scalar numOpsNotNOP;

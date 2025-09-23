@@ -535,7 +535,7 @@ namespace X86ISA
                                     alignedVaddr, pte->paddr);
 
                             TlbEntry gpuEntry(p->pid(), alignedVaddr,
-                                              pte->paddr, false, false);
+                                              pte->paddr, false, false, 0);
                             entry = insert(alignedVaddr, gpuEntry);
                         }
 
@@ -701,14 +701,14 @@ namespace X86ISA
             if (pkt->req->hasNoAddr()) {
                 sender_state->tlbEntry =
                     new TlbEntry(p->pid(), 0, 0,
-                                 false, false);
+                                 false, false, 0);
             } else {
                 TlbEntry *entry = lookup(tmp_req->getVaddr(), false);
                 assert(entry);
 
                 sender_state->tlbEntry =
                     new TlbEntry(p->pid(), entry->vaddr, entry->paddr,
-                                 false, false);
+                                 false, false, 0);
             }
 
             if (update_stats) {
@@ -978,7 +978,7 @@ namespace X86ISA
 
                 sender_state->tlbEntry =
                     new TlbEntry(p->pid(), virtPageAddr, pte->paddr, false,
-                                 false);
+                                 false, 0);
             } else {
                 sender_state->tlbEntry = nullptr;
             }
@@ -1187,7 +1187,7 @@ namespace X86ISA
 
                     sender_state->tlbEntry =
                         new TlbEntry(p->pid(), virt_page_addr,
-                                     pte->paddr, false, false);
+                                     pte->paddr, false, false, 0);
                 } else {
                     // If this was a prefetch, then do the normal thing if it
                     // was a successful translation.  Otherwise, send an empty
@@ -1199,7 +1199,7 @@ namespace X86ISA
 
                         sender_state->tlbEntry =
                             new TlbEntry(p->pid(), virt_page_addr,
-                                         pte->paddr, false, false);
+                                         pte->paddr, false, false, 0);
                     } else {
                         DPRINTF(GPUPrefetch, "Prefetch failed %#x\n",
                                 alignedVaddr);
@@ -1222,7 +1222,7 @@ namespace X86ISA
             auto p = sender_state->tc->getProcessPtr();
             sender_state->tlbEntry =
                 new TlbEntry(p->pid(), entry->vaddr, entry->paddr,
-                             false, false);
+                             false, false, 0);
         }
         // This is the function that would populate pkt->req with the paddr of
         // the translation. But if no translation happens (i.e Prefetch fails)

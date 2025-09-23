@@ -733,6 +733,11 @@ let {{
             }
         '''
 
+    # wrpkru
+    class Movpkru(RdRegOp):
+        code = 'DestReg = SrcReg1'
+        #else_code = 'DestReg = DestReg;'   
+
     # Shift instructions
 
     class Sll(BasicRegOp):
@@ -1406,10 +1411,15 @@ let {{
                   case 4:
                     {
                         CR4 cr4 = newVal;
+                        // Check if any reserved bits are set (except bit 22 which is PKU)
+                        bool reserved_bits_set = (bits(newVal, 63, 32) != 0) ||
+                                                (bits(newVal, 31, 24) != 0) ||
+                                                (bits(newVal, 23, 23) != 0) ||
+                                                (bits(newVal, 21, 11) != 0);
                         // PAE can't be disabled in long mode.
-                        if (bits(newVal, 63, 11) ||
-                                (machInst.mode.mode == LongMode && !cr4.pae))
+                        if (reserved_bits_set || (machInst.mode.mode == LongMode && !cr4.pae)){
                             fault = std::make_shared<GeneralProtection>(0);
+                        }
                     }
                     break;
                   case 8:

@@ -358,6 +358,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
             entry.uncacheable = uncacheable;
             entry.global = pte.g;
             entry.patBit = bits(pte, 12);
+            entry.pkey = pte.pkey;
             entry.vaddr = mbits(entry.vaddr, 63, 21);
             doTLBInsert = true;
             doEndWalk = true;
@@ -378,6 +379,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         entry.uncacheable = uncacheable;
         entry.global = pte.g;
         entry.patBit = bits(pte, 12);
+        entry.pkey = pte.pkey;
         entry.vaddr = mbits(entry.vaddr, 63, 12);
         doTLBInsert = true;
         doEndWalk = true;
@@ -417,6 +419,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
             entry.uncacheable = uncacheable;
             entry.global = pte.g;
             entry.patBit = bits(pte, 12);
+            entry.pkey = pte.pkey;
             entry.vaddr = mbits(entry.vaddr, 63, 21);
             doTLBInsert = true;
             doEndWalk = true;
@@ -438,6 +441,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         entry.uncacheable = uncacheable;
         entry.global = pte.g;
         entry.patBit = bits(pte, 7);
+        entry.pkey = pte.pkey;
         entry.vaddr = mbits(entry.vaddr, 63, 12);
         doTLBInsert = true;
         doEndWalk = true;
@@ -466,6 +470,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
             entry.uncacheable = uncacheable;
             entry.global = pte.g;
             entry.patBit = bits(pte, 12);
+            entry.pkey = pte.pkey;
             entry.vaddr = mbits(entry.vaddr, 63, 22);
             doTLBInsert = true;
             doEndWalk = true;
@@ -502,6 +507,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         entry.uncacheable = uncacheable;
         entry.global = pte.g;
         entry.patBit = bits(pte, 7);
+        entry.pkey = pte.pkey;
         entry.vaddr = mbits(entry.vaddr, 31, 12);
         doTLBInsert = true;
         doEndWalk = true;

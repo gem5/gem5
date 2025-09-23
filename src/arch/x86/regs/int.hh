@@ -96,6 +96,7 @@ enum : RegIndex
     _RemainderIdx,
     _DivisorIdx,
     _DoublebitsIdx,
+    _PkruIdx,
 
     NumRegs
 };
@@ -151,7 +152,8 @@ inline constexpr RegId
     Quotient = intRegClass[_QuotientIdx],
     Remainder = intRegClass[_RemainderIdx],
     Divisor = intRegClass[_DivisorIdx],
-    Doublebits = intRegClass[_DoublebitsIdx];
+    Doublebits = intRegClass[_DoublebitsIdx],
+    Pkru = intRegClass[_PkruIdx];
 
 // Aliases for other register sizes.
 inline constexpr auto

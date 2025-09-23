@@ -637,6 +637,7 @@ BitUnion64(CR3)
 EndBitUnion(CR3)
 
 BitUnion64(CR4)
+    Bitfield<22> pke; // Protection Key Enable
     Bitfield<18> osxsave; // Enable XSAVE and Proc Extended States
     Bitfield<17> pcide; // PCID Enable
     Bitfield<16> fsgsbase; // Enable RDFSBASE, RDGSBASE, WRFSBASE,

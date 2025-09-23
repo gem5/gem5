@@ -137,6 +137,8 @@
                     0x3: decode MODRM_RM {
                         0x0: BasicOperate::SERIALIZE({{/*Nothing*/}},
                                                          IsSerializeAfter);
+                        0x06: Inst::RDPKRU();
+                        0x07: Inst::WRPKRU();
                         }
                     }
                 0x6: Inst::LMSW(Ew);

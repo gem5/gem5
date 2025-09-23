@@ -338,6 +338,13 @@ _llseekFunc(SyscallDesc *desc, ThreadContext *tc,
     return 0;
 }
 
+SyscallReturn
+pkeyAllocFunc(SyscallDesc *desc, ThreadContext *tc,
+        unsigned int flags, unsigned int access_rights)
+{
+    return 1;
+}
+
 
 const char *hostname = "m5.eecs.umich.edu";
 

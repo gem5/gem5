@@ -195,7 +195,7 @@ TLBCoalescer::updatePhysAddresses(PacketPtr pkt)
             auto p = sender_state->tc->getProcessPtr();
             sender_state->tlbEntry =
                 new X86ISA::TlbEntry(p->pid(), first_entry_vaddr,
-                    first_entry_paddr, false, false);
+                    first_entry_paddr, false, false,0);
 
             // update the hitLevel for all uncoalesced reqs
             // so that each packet knows where it hit

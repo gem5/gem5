@@ -473,7 +473,8 @@ TLB::translate(const RequestPtr &req,
                         entry = insert(alignedVaddr, TlbEntry(
                                 p->pTable->pid(), alignedVaddr, pte->paddr,
                                 pte->flags & EmulationPageTable::Uncacheable,
-                                pte->flags & EmulationPageTable::ReadOnly),
+                                pte->flags & EmulationPageTable::ReadOnly,
+                                pte->flags),
                                 pcid);
                     }
                     DPRINTF(TLB, "Miss was serviced.\n");
@@ -484,6 +485,28 @@ TLB::translate(const RequestPtr &req,
                     "doing protection checks.\n", entry->paddr);
             // Do paging protection checks.
             bool inUser = m5Reg.cpl == 3 && !(flags & CPL0FlagBit);
+
+            RegVal pkruVal = tc->getReg(int_reg::Pkru); 
+            uint32_t pkru = (uint32_t)pkruVal; 
+
+            uint8_t pkey = entry->pkey; 
+
+            // Extract AD and WD bits for this key
+            uint32_t ad = (pkru >> (pkey * 2)) & 0x1;
+            uint32_t wd = (pkru >> (pkey * 2 + 1)) & 0x1;
+
+            if (inUser) {
+                if (ad) {
+                    DPRINTF(TLB, "Access Disable bit is set - no access allowed at all\n");  
+                    return std::make_shared<GeneralProtection>(0);
+                }
+                if (wd && mode == BaseMMU::Write) {
+                    DPRINTF(TLB, "Write Disable bit is set and this is a write\n");
+                    return std::make_shared<GeneralProtection>(0);
+                }
+            }
+
+
             CR0 cr0 = tc->readMiscRegNoEffect(misc_reg::Cr0);
             bool badWrite = (!entry->writable && (inUser || cr0.wp));
             if ((inUser && !entry->user) ||

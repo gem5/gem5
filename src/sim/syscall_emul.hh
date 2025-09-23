@@ -170,6 +170,10 @@ SyscallReturn _llseekFunc(SyscallDesc *desc, ThreadContext *tc,
                           int tgt_fd, uint32_t offset_high,
                           uint32_t offset_low, VPtr<> result_ptr, int whence);
 
+/// Target pkey_alloc() handler.
+SyscallReturn pkeyAllocFunc(SyscallDesc *desc, ThreadContext *tc,
+                            unsigned int flags, unsigned int access_rights);
+
 /// Target shutdown() handler.
 SyscallReturn shutdownFunc(SyscallDesc *desc, ThreadContext *tc,
                            int tgt_fd, int how);

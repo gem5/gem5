@@ -1332,6 +1332,9 @@ Commit::updateComInstStats(const DynInstPtr &inst)
         if (in_user_mode) {
             cpu->commitStats[tid]->numUserInsts++;
         }
+        if (strcmp(inst->getName().c_str(),"movpkru")==0) {
+            cpu->commitStats[tid]->wrpkruCommitted++;
+        }
     }
 
     cpu->commitStats[tid]->numOps++;
