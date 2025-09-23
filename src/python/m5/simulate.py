@@ -111,7 +111,7 @@ def _dump_configs(
     if ini_config is None:
         from m5 import options
 
-        dump_config = options.dump_config
+        ini_config = options.dump_config
     if json_config is None:
         from m5 import options
 
