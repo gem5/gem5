@@ -318,6 +318,21 @@ class WorkEndExitHandler(ExitHandler, hypercall_num=5):
         return False
 
 
+class MaxInstsExitHandler(ExitHandler, hypercall_num=8):
+    @overrides(ExitHandler)
+    def get_handler_description(self):
+        return "Reached a maximum number of instructions, set through "
+        "Simulator.schedule_max_insts()."
+
+    @overrides(ExitHandler)
+    def _process(self, simulator: "Simulator") -> None:
+        pass
+
+    @overrides(ExitHandler)
+    def _exit_simulation(self) -> bool:
+        return True
+
+
 class OrchestratorExitHandler(ExitHandler, hypercall_num=1000):
 
     def _get_status(self, simulator: "Simulator") -> Dict[str, str]:
