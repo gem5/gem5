@@ -38,7 +38,6 @@
 #ifndef __ARCH_ARM_SVE_MACROMEM_HH__
 #define __ARCH_ARM_SVE_MACROMEM_HH__
 
-#include "arch/arm/generated/decoder.hh"
 #include "arch/arm/insts/pred_inst.hh"
 
 namespace gem5
@@ -635,58 +634,7 @@ class SveIndexedMemVI : public PredMacroOp
   public:
     SveIndexedMemVI(const char *mnem, ExtMachInst machInst, OpClass __opClass,
                     RegIndex _dest, RegIndex _gp, RegIndex _base,
-                    uint64_t _imm, bool firstFault)
-        : PredMacroOp(mnem, machInst, __opClass),
-          dest(_dest), gp(_gp), base(_base), imm(_imm)
-    {
-        bool isLoad = (__opClass == MemReadOp);
-        assert(!firstFault || isLoad);
-
-        int num_elems = ((machInst.sveLen + 1) * 16) / sizeof(RegElemType);
-
-        numMicroops = num_elems;
-        if (isLoad) {
-            if (firstFault) {
-                numMicroops += 2;
-            } else {
-                numMicroops++;
-            }
-        }
-
-        microOps = new StaticInstPtr[numMicroops];
-
-        StaticInstPtr *uop = microOps;
-
-        for (int i = 0; i < num_elems; i++, uop++) {
-            *uop = new MicroopType<RegElemType, MemElemType>(
-                mnem, machInst, __opClass,
-                isLoad ? (RegIndex)VECREG_UREG0 : _dest, _gp, _base, _imm, i,
-                num_elems, firstFault);
-        }
-
-        if (isLoad) {
-            // The last microop of a gather load copies the auxiliary register
-            // to the destination vector register. Because when any fault
-            // occurs, the destination should keept the same.
-            *uop = new ArmISAInst::SveGatherLoadCpyDstVecMicroop(
-                mnem, machInst, _dest, this);
-            uop++;
-        }
-
-        if (firstFault) {
-            *uop = new FirstFaultWritebackMicroopType<RegElemType>(
-                mnem, machInst, __opClass, num_elems, this);
-        } else {
-            --uop;
-        }
-
-        (*uop)->setLastMicroop();
-        microOps[0]->setFirstMicroop();
-
-        for (StaticInstPtr *uop = microOps; !(*uop)->isLastMicroop(); uop++) {
-            (*uop)->setDelayedCommit();
-        }
-    }
+                    uint64_t _imm, bool firstFault);
 
     Fault
     execute(ExecContext *, trace::InstRecord *) const override
@@ -734,63 +682,8 @@ class SveIndexedMemSV : public PredMacroOp
   public:
     SveIndexedMemSV(const char *mnem, ExtMachInst machInst, OpClass __opClass,
                     RegIndex _dest, RegIndex _gp, RegIndex _base,
-                    RegIndex _offset, bool _offsetIs32,
-                    bool _offsetIsSigned, bool _offsetIsScaled,
-                    bool firstFault)
-        : PredMacroOp(mnem, machInst, __opClass),
-          dest(_dest), gp(_gp), base(_base), offset(_offset),
-          offsetIs32(_offsetIs32), offsetIsSigned(_offsetIsSigned),
-          offsetIsScaled(_offsetIsScaled)
-    {
-        bool isLoad = (__opClass == MemReadOp);
-        assert(!firstFault || isLoad);
-
-        int num_elems = ((machInst.sveLen + 1) * 16) / sizeof(RegElemType);
-
-        numMicroops = num_elems;
-        if (isLoad) {
-            if (firstFault) {
-                numMicroops += 2;
-            } else {
-                numMicroops++;
-            }
-        }
-
-        microOps = new StaticInstPtr[numMicroops];
-
-        StaticInstPtr *uop = microOps;
-
-        for (int i = 0; i < num_elems; i++, uop++) {
-            *uop = new MicroopType<RegElemType, MemElemType>(
-                mnem, machInst, __opClass,
-                isLoad ? (RegIndex)VECREG_UREG0 : _dest, _gp, _base, _offset,
-                _offsetIs32, _offsetIsSigned, _offsetIsScaled, i, num_elems,
-                firstFault);
-        }
-
-        if (isLoad) {
-            // The last microop of a gather load copies the auxiliary register
-            // to the destination vector register. Because when any fault
-            // occurs, the destination should keept the same.
-            *uop = new ArmISAInst::SveGatherLoadCpyDstVecMicroop(
-                mnem, machInst, _dest, this);
-            uop++;
-        }
-
-        if (firstFault) {
-            *uop = new FirstFaultWritebackMicroopType<RegElemType>(
-                mnem, machInst, __opClass, num_elems, this);
-        } else {
-            --uop;
-        }
-
-        (*uop)->setLastMicroop();
-        microOps[0]->setFirstMicroop();
-
-        for (StaticInstPtr *uop = microOps; !(*uop)->isLastMicroop(); uop++) {
-            (*uop)->setDelayedCommit();
-        }
-    }
+                    RegIndex _offset, bool _offsetIs32, bool _offsetIsSigned,
+                    bool _offsetIsScaled, bool firstFault);
 
     Fault
     execute(ExecContext *, trace::InstRecord *) const override
@@ -835,52 +728,7 @@ class SveIndexedMemVS : public PredMacroOp
   public:
     SveIndexedMemVS(const char *mnem, ExtMachInst machInst, OpClass __opClass,
                     RegIndex _dest, RegIndex _gp, RegIndex _base,
-                    RegIndex _offset, bool _offsetIs32)
-        : PredMacroOp(mnem, machInst, __opClass),
-          dest(_dest),
-          gp(_gp),
-          base(_base),
-          offset(_offset),
-          offsetIs32(_offsetIs32)
-    {
-        bool isLoad = (__opClass == MemReadOp);
-
-        int num_elems = ((machInst.sveLen + 1) * 16) / sizeof(RegElemType);
-
-        numMicroops = num_elems;
-        if (isLoad) {
-            numMicroops++;
-        }
-
-        microOps = new StaticInstPtr[numMicroops];
-
-        StaticInstPtr *uop = microOps;
-
-        for (int i = 0; i < num_elems; i++, uop++) {
-            *uop = new MicroopType<RegElemType, MemElemType>(
-                mnem, machInst, __opClass,
-                isLoad ? (RegIndex)VECREG_UREG0 : _dest, _gp, _base, _offset,
-                _offsetIs32, i, num_elems);
-        }
-
-        if (isLoad) {
-            // The last microop of a gather load copies the auxiliary register
-            // to the destination vector register. Because when any fault
-            // occurs, the destination should keept the same.
-            *uop = new ArmISAInst::SveGatherLoadCpyDstVecMicroop(
-                mnem, machInst, _dest, this);
-            uop++;
-        }
-
-        --uop;
-
-        (*uop)->setLastMicroop();
-        microOps[0]->setFirstMicroop();
-
-        for (StaticInstPtr *uop = microOps; !(*uop)->isLastMicroop(); uop++) {
-            (*uop)->setDelayedCommit();
-        }
-    }
+                    RegIndex _offset, bool _offsetIs32);
 
     Fault
     execute(ExecContext *, trace::InstRecord *) const override
