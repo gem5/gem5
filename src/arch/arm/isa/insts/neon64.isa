@@ -269,7 +269,8 @@ let {{
             if hi and not bigDest:  # Explicitly merge with lower half
                 for reg in range(0, destCnt):
                     eWalkCode += '''
-        AA64FpDestP%(reg)d_uw = AA64FpDestP%(reg)d_uw;''' % { "reg" : reg }
+        // THIS CODE IS DUPLICATING!
+        // AA64FpDestP%(reg)d_uw = AA64FpDestP%(reg)d_uw;''' % { "reg" : reg }
             else:  # zero upper half
                 for reg in range(destCnt, 4):
                     eWalkCode += '''
@@ -529,7 +530,8 @@ let {{
         if hi:
             for reg in range(0, 2):  # Explicitly merge with the lower half
                 eWalkCode += '''
-        AA64FpDestP%(reg)d_uw = AA64FpDestP%(reg)d_uw;''' % { "reg" : reg }
+        // THIS CODE IS TWO DUPLICATING!
+        // AA64FpDestP%(reg)d_uw = AA64FpDestP%(reg)d_uw;''' % { "reg" : reg }
         else:
             if (not readDest) and scalar and nepSrc == 'vd':
                 eWalkCode += '''
