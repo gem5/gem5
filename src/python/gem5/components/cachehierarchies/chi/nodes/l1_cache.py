@@ -1,3 +1,15 @@
+# Copyright (c) 2025 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2021 The Regents of the University of California
 # All Rights Reserved.
 #
@@ -31,7 +43,6 @@ from m5.objects import (
     RubyNetwork,
 )
 
-from gem5.components.processors.abstract_core import AbstractCore
 from gem5.isas import ISA
 
 from .abstract_node import AbstractNode
@@ -43,7 +54,7 @@ class L1CacheController(AbstractNode):
         size: str,
         assoc: int,
         network: RubyNetwork,
-        core: AbstractCore,
+        requires_send_evicts: bool,
         cache_line_size,
         target_isa: ISA,
         clk_domain: ClockDomain,
@@ -55,7 +66,7 @@ class L1CacheController(AbstractNode):
         )
 
         self.clk_domain = clk_domain
-        self.send_evictions = core.requires_send_evicts()
+        self.send_evictions = requires_send_evicts
         self.use_prefetcher = False
         self.prefetcher = NULL
 
