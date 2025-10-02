@@ -149,8 +149,6 @@ let {{
         if (testPredicate(CondCodesNZ, CondCodesC, CondCodesV, condCode))
             NPC = purifyTaggedAddr(RawPC + imm, xc->tcBase(),
                                    currEL(xc->tcBase()), true);
-        else
-            NPC = NPC;
     '''
     bIop = ArmInstObjParams("b", "BCond64", "BranchImmCond64", bCode,
                             ['IsCondControl', 'IsDirectControl'])

@@ -167,7 +167,6 @@ def format DataOp(code, flagtype = logic) {{
 }};
 
 def format DataImmOp(code, flagtype = logic) {{
-    code += "resTemp = resTemp;"
     iop = ArmInstObjParams(name, Name, 'PredImmOp',
             { "code" : code, "predicate_test" : pickPredicate(code) })
     ccIop = ArmInstObjParams(name, Name + "Cc", 'PredImmOp',

@@ -174,8 +174,7 @@ def template PredOpExecute {{
             ExecContext *xc, trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
-        uint64_t resTemp = 0;
-        resTemp = resTemp;
+        [[maybe_unused]] uint64_t resTemp = 0;
         %(op_decl)s;
         %(op_rd)s;
 
@@ -198,8 +197,7 @@ def template QuiescePredOpExecute {{
             ExecContext *xc, trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
-        uint64_t resTemp = 0;
-        resTemp = resTemp;
+        [[maybe_unused]] int64_t resTemp = 0;
         %(op_decl)s;
         %(op_rd)s;
 
@@ -224,8 +222,7 @@ def template QuiescePredOpExecuteWithFixup {{
             ExecContext *xc, trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
-        uint64_t resTemp = 0;
-        resTemp = resTemp;
+        [[maybe_unused]] int64_t resTemp = 0;
         %(op_decl)s;
         %(op_rd)s;
 

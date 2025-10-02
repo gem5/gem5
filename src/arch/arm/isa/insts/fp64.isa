@@ -191,8 +191,6 @@ let {{
 
     fmovUCoreRegXCode = vfp64EnabledCheckCode + '''
         /* Explicitly merge with previous value */
-        AA64FpDestP0_uw = AA64FpDestP0_uw;
-        AA64FpDestP1_uw = AA64FpDestP1_uw;
         AA64FpDestP2_uw = XOp1_ud;
         AA64FpDestP3_uw = XOp1_ud >> 32;'''
     fmovUCoreRegXIop = ArmInstObjParams("fmov", "FmovUCoreRegX", "FpRegRegOp",
