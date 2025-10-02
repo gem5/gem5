@@ -454,7 +454,7 @@ VMaskMergeMicroInst::execute(ExecContext* xc,
     auto Vd = tmp_d0.as<uint8_t>();
     uint32_t vlenb = vlen >> 3;
     const uint32_t elems_per_vreg = vlenb / elemSize;
-    size_t bit_cnt = elems_per_vreg;
+    size_t bit_cnt = 0;
 
     // mask tails are always treated as agnostic: writting 1s
     tmp_d0.set(0xff);
