@@ -2485,6 +2485,7 @@ namespace Aarch64
                     default:
                         break;
                 }
+                break;
             default:
                 break;
         }
