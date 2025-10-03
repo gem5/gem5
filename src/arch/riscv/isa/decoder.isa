@@ -4402,7 +4402,7 @@ decode QUADRANT default Unknown::unknown() {
                         uint64_t result = 0;
                         uint64_t src1 = Vs1_vu[i];
                         uint64_t src2 = Vs2_vu[i];
-                        for (int j = 0; j < 64; j++) {
+                        for (int j = 1; j < 64; j++) {
                             if ((src2 >> j) & 1) {
                                 result ^= src1 >> (64-j);
                             }
@@ -5725,7 +5725,7 @@ decode QUADRANT default Unknown::unknown() {
                         uint64_t result = 0;
                         uint64_t src1 = Rs1_vu;
                         uint64_t src2 = Vs2_vu[i];
-                        for (int j = 0; j < 64; j++) {
+                        for (int j = 1; j < 64; j++) {
                             if ((src2 >> j) & 1) {
                                 result ^= src1 >> (64-j);
                             }
