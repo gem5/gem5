@@ -115,6 +115,7 @@ CPU::CPU(const BaseO3CPUParams &params)
       globalSeqNum(1),
       system(params.system),
       lastRunningCycle(curCycle()),
+      subtractIdleCycles(params.subtractIdleCycles),
       cpuStats(this)
 {
     fatal_if(FullSystem && params.numThreads > 1,
@@ -1322,6 +1323,10 @@ CPU::wakeCPU()
         --cycles;
         cpuStats.idleCycles += cycles;
         baseStats.numCycles += cycles;
+        if (!subtractIdleCycles) {
+            cpuStats.tdaCycles += cycles;
+        }
+        rename.addIdleCycles(cycles);
     }
 
     schedule(tickEvent, clockEdge());

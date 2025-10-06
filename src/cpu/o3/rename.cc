@@ -88,6 +88,8 @@ Rename::Rename(CPU *_cpu, const BaseO3CPUParams &params)
       commitToRenameDelay(params.commitToRenameDelay),
       renameWidth(params.renameWidth),
       numThreads(params.numThreads),
+      wait_for_refill(false),
+      refillPenalty(params.fetchToDecodeDelay + params.decodeToRenameDelay),
       stats(_cpu)
 {
     if (renameWidth > MaxWidth)
@@ -108,6 +110,7 @@ Rename::Rename(CPU *_cpu, const BaseO3CPUParams &params)
         stalls[tid] = {false, false};
         serializeInst[tid] = nullptr;
         serializeOnNextInst[tid] = false;
+        last_squash_cycles = Cycles(0);
     }
 }
 
@@ -167,9 +170,18 @@ Rename::RenameStats::RenameStats(statistics::Group *parent)
                "free list"),
       ADD_STAT(storeStalls, statistics::units::Cycle::get(),
                "Number of cycles with few uops executed and no more stores"
-               "can be issued")
+               "can be issued"),
+      ADD_STAT(fetchBubbles, statistics::units::Count::get(),
+               "Stat for Top-Down Methodology, number of instructions not "
+               "delivered to backend"),
+      ADD_STAT(fetchBubblesMax, statistics::units::Count::get(),
+               "Stat for Top-Down Methodology, number of cycles in which no "
+               "instructions are delivered to backend"),
+      ADD_STAT(refillBubbles, statistics::units::Count::get(),
+               "Stat for Top-Down Methodology, number of instructions not "
+               "delivered to backend")
 {
-    status.init(ThreadStatusMax).flags(statistics::pdf | statistics::nozero);
+    status.init(ThreadStatusMax).flags(statistics::pdf | statistics::nozero | statistics::total);
     for (int i = 0; i < ThreadStatusMax; ++i) {
         status.subname(i, statusStrings[i]);
         status.subdesc(i, statusDefinitions[i]);
@@ -201,6 +213,20 @@ Rename::RenameStats::RenameStats(statistics::Group *parent)
     intReturned.prereq(intReturned);
     fpReturned.prereq(fpReturned);
     storeStalls.prereq(storeStalls);
+}
+
+void
+Rename::addIdleCycles(Cycles c)
+{
+    if (renameStatus[0] == Running || renameStatus[0] == Idle) {
+
+        if ((cpu->curCycle() - last_squash_cycles) < refillPenalty) {
+            stats.refillBubbles += c * renameWidth;
+        } else {
+            stats.fetchBubbles += c * renameWidth;
+            stats.fetchBubblesMax += (int)c;
+        }
+    }
 }
 
 void
@@ -546,6 +572,21 @@ Rename::renameInsts(ThreadID tid)
     int insts_available = renameStatus[tid] == Unblocking ?
         skidBuffer[tid].size() : insts[tid].size();
 
+    if (insts_available < renameWidth) {
+        // Check whether no instructions are delivered because of a recent
+        // misprediction.
+        DPRINTF(Rename, "[tid:%i] Only %i available: Last Sq @ %llu\n",
+                tid, insts_available, last_squash_cycles);
+        if ((cpu->curCycle() - last_squash_cycles) < refillPenalty) {
+            // assert(insts_available == 0);
+            stats.refillBubbles += (renameWidth - insts_available);
+        } else {
+            stats.fetchBubbles += (renameWidth - insts_available);
+            if (insts_available == 0)
+                stats.fetchBubblesMax++;
+        }
+    }
+
     // Check the decode queue to see if instructions are available.
     // If there are no available instructions to rename, then do nothing.
     if (insts_available == 0) {
@@ -680,6 +721,7 @@ Rename::renameInsts(ThreadID tid)
                     tid, inst->seqNum, inst->pcState());
 
             ++stats.squashedInsts;
+            stats.refillBubbles++;
 
             // Decrement how many instructions are available.
             --insts_available;
@@ -1364,17 +1406,20 @@ Rename::checkSignalsAndUpdate(ThreadID tid)
             DPRINTF(Rename,
                     "[tid:%i] Done squashing, switching to serialize.\n", tid);
 
+            last_squash_cycles = cpu->curCycle();
             renameStatus[tid] = SerializeStall;
             return true;
         } else if (resumeUnblocking) {
             DPRINTF(Rename,
                     "[tid:%i] Done squashing, switching to unblocking.\n",
                     tid);
+            last_squash_cycles = cpu->curCycle();
             renameStatus[tid] = Unblocking;
             return true;
         } else {
             DPRINTF(Rename, "[tid:%i] Done squashing, switching to running.\n",
                     tid);
+            last_squash_cycles = cpu->curCycle();
             renameStatus[tid] = Running;
             return false;
         }

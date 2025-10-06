@@ -67,6 +67,13 @@ struct TopDownStats : statistics::Group
         statistics::Formula badSpeculation;
         statistics::Formula backendBound;
         statistics::Formula retiring;
+        // Intermediate stats. can be removed after debugging
+        statistics::Formula squashedSlots;
+        statistics::Formula badSpecCycles;
+        statistics::Formula refillSlots;
+        statistics::Formula FESlots;
+        statistics::Formula BESlots;
+        statistics::Formula serializeSlots;
     } topDownL1;
 
     struct TopDownFrontendBoundL2 : statistics::Group
@@ -89,6 +96,8 @@ struct TopDownStats : statistics::Group
         statistics::Formula executionStalls;
         statistics::Formula memoryBound;
         statistics::Formula coreBound;
+        statistics::Formula serializeBound;
+        statistics::Formula serializeStalls;
     } topDownBbL2;
 
     struct TopDownBackendBoundL3 : statistics::Group

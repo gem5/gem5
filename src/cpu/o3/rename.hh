@@ -480,6 +480,10 @@ class Rename
      */
     void incrFullStat(const FullSource &source);
 
+    bool wait_for_refill;
+    Cycles last_squash_cycles;
+    const int refillPenalty;
+
     struct RenameStats : public statistics::Group
     {
         static std::string statusStrings[ThreadStatusMax];
@@ -535,9 +539,18 @@ class Rename
         statistics::Scalar fpReturned;
         /** Top Down, IEW stall while there is an in flight load */
         statistics::Scalar storeStalls;
+        /** Stat for Top-Down Methodology, number of instructions not delivered
+         * to backend */
+        statistics::Scalar fetchBubbles;
+        /** Stat for Top-Down Methodology, number of cycles in which no
+         * instructions are delivered to backend */
+        statistics::Scalar fetchBubblesMax;
+        statistics::Scalar refillBubbles;
     } stats;
 
   public:
+
+  void addIdleCycles(Cycles c);
     RenameStats &
     getStats()
     {

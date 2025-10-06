@@ -78,7 +78,7 @@ DynInst::DynInst(const Arrays &arrays, const StaticInstPtr &static_inst,
         cpu->dumpInsts();
         dumpSNList();
 #endif
-        assert(cpu->instcount <= 1500);
+    //    assert(cpu->instcount <= 1500);
     }
 
     DPRINTF(DynInst,

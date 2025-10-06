@@ -582,6 +582,8 @@ class CPU : public BaseCPU
         return iew.ldstQueue.getDataPort();
     }
 
+    const bool subtractIdleCycles;
+
     struct CPUStats : public statistics::Group
     {
         CPUStats(CPU *cpu);
@@ -590,9 +592,20 @@ class CPU : public BaseCPU
         statistics::Scalar timesIdled;
         /** Stat for total number of cycles the CPU spends descheduled. */
         statistics::Scalar idleCycles;
+        statistics::Scalar tdaCycles;
         /** Stat for total number of cycles the CPU spends descheduled due to a
          * quiesce operation or waiting for an interrupt. */
         statistics::Scalar quiesceCycles;
+
+        statistics::Scalar fetched;
+        statistics::Scalar decoded;
+        statistics::Scalar renamed;
+        statistics::Scalar dispatched;
+        statistics::Scalar issued;
+        statistics::Scalar executed;
+        statistics::Scalar createdInst;
+        statistics::Scalar squashedInROB;
+
         /** Top Down Methodology stats */
         TopDownStats topDownStats;
 
