@@ -56,9 +56,7 @@ class RubyNetwork(ClockedObject):
     int_links = VectorParam.BasicIntLink("Links between internal nodes")
 
     in_port = VectorResponsePort("CPU input port")
-    slave = DeprecatedParam(in_port, "`slave` is now called `in_port`")
     out_port = VectorRequestPort("CPU output port")
-    master = DeprecatedParam(out_port, "`master` is now called `out_port`")
 
     data_msg_size = Param.Int(
         Parent.block_size_bytes,
