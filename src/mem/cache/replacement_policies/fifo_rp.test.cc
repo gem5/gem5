@@ -218,6 +218,10 @@ TEST_F(FIFORPFDeathTest, ResetNull)
 
 TEST_F(FIFORPFDeathTest, TouchNull)
 {
+#ifdef NDEBUG
+    GTEST_SKIP() << "Skipping as assertions are "
+                    "stripped out of fast builds";
+#endif
     ASSERT_DEATH(rp->touch(nullptr), "");
 }
 
