@@ -244,8 +244,15 @@ RiscvProcess::argsInit(int pageSize)
     }
 
     ThreadContext *tc = system->threads[contextIds[0]];
-    tc->setReg(StackPointerReg, memState->getStackMin());
-    tc->setFwdReg(StackPointerReg, memState->getStackMin());
+
+    // Set stack pointer registers to the calculated stack minimum 
+    // tc->setReg(StackPointerReg, memState->getStackMin());
+    // tc->setFwdReg(StackPointerReg, memState->getStackMin());
+
+    // Initialize stack pointer registers to 0 
+    tc->setReg(StackPointerReg, (RegVal)0);
+    tc->setFwdReg(StackPointerReg, (RegVal)0);
+
     tc->pcState(getStartPC());
 
     memState->setStackMin(roundDown(memState->getStackMin(), pageSize));
