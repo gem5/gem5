@@ -48,6 +48,7 @@
 #include "arch/generic/mmu.hh"
 #include "cpu/base.hh"
 #include "cpu/o3/ftq.hh"
+#include "mem/cache/base.hh"
 #include "mem/cache/prefetch/base.hh"
 
 namespace gem5
