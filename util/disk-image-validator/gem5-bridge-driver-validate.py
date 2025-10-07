@@ -26,8 +26,6 @@
 
 import argparse
 
-import m5.options
-
 from gem5.prebuilt.demo.arm_demo_board import ArmDemoBoard
 from gem5.prebuilt.demo.riscv_demo_board import RiscvDemoBoard
 from gem5.prebuilt.demo.x86_demo_board import X86DemoBoard
@@ -119,7 +117,7 @@ board.set_binary_to_run(
 from gem5.simulate.exit_handler import ExitHandler
 
 
-class Gem5BrideDriverTestExitHandler(ExitHandler, hypercall_num=8):
+class Gem5BridgeDriverTestExitHandler(ExitHandler, hypercall_num=1234):
     def _process(self, simulator):
         print("Successfully called m5 hypercall without superuser privileges")
         print("Test passed")

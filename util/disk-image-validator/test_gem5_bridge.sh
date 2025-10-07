@@ -35,7 +35,7 @@ cat << EOF > test.c
 void map_m5_mem();
 int main() {
     map_m5_mem();
-    m5_hypercall_addr(8);
+    m5_hypercall_addr(1234);
     return 0;
 }
 EOF
