@@ -175,12 +175,13 @@ class BaseCPUCore(AbstractCore):
 
     @overrides(AbstractCore)
     def _set_inst_stop_any_thread(
-        self, inst: int, board_initialized: bool
+        self, inst: int, board_initialized: bool, hypercall_num: int = 0
     ) -> None:
         if board_initialized:
-            self.core.scheduleInstStopAnyThread(inst)
+            self.core.scheduleInstStopAnyThread(inst, hypercall_num)
         else:
             self.core.max_insts_any_thread = inst
+            self.core.hypercall_num_max_inst_any_thread = hypercall_num
 
     @overrides(AbstractCore)
     def add_pc_tracker_probe(

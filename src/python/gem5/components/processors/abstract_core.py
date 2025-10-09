@@ -167,7 +167,7 @@ class AbstractCore(SubSystem):
 
     @abstractmethod
     def _set_inst_stop_any_thread(
-        self, inst: int, board_initialized: bool
+        self, inst: int, board_initialized: bool, hypercall_num: int = 0
     ) -> None:
         """Schedule an exit event when any thread in this core reaches the
         given number of instructions. This is called through the simulator
@@ -180,6 +180,7 @@ class AbstractCore(SubSystem):
                                   initialized, otherwise ``False``. This parameter is
                                   necessary as the instruction stop is setup
                                   differently dependent on this.
+        :param hypercall_num: The hypercall number of the exit event.
         """
         raise NotImplementedError("This core type does not support MAX_INSTS")
 

@@ -139,6 +139,10 @@ class BaseCPU(ClockedObject):
     max_insts_any_thread = Param.Counter(
         0, "terminate when any thread reaches this inst count"
     )
+    hypercall_num_max_inst_any_thread = Param.Counter(
+        0,
+        "Hypercall number of the hypercall to call upon exiting with `max_insts_any_thread` param",
+    )
     simpoint_start_insts = VectorParam.Counter(
         [], "starting instruction counts of simpoints"
     )

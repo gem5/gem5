@@ -332,7 +332,10 @@ BaseCPU::init()
     // Set up instruction-count-based termination events, if any. This needs
     // to happen after threadContexts has been constructed.
     if (params().max_insts_any_thread != 0) {
-        scheduleInstStopAnyThread(params().max_insts_any_thread);
+        scheduleInstStopAnyThread(
+            params().max_insts_any_thread,
+            params().hypercall_num_max_inst_any_thread
+        );
     }
 
     // Set up instruction-count-based termination events for SimPoints
@@ -771,10 +774,11 @@ BaseCPU::unserialize(CheckpointIn &cp)
 }
 
 void
-BaseCPU::scheduleInstStop(ThreadID tid, Counter insts, std::string cause)
+BaseCPU::scheduleInstStop(ThreadID tid, Counter insts, std::string cause,
+                        uint64_t hypercall_num)
 {
     const Tick now(getCurrentInstCount(tid));
-    Event* event(new LocalSimLoopExitEvent(cause, 0, 0, 8));
+    Event* event(new LocalSimLoopExitEvent(cause, 0, 0, hypercall_num));
 
     threadContexts[tid]->scheduleInstCountEvent(event, now + insts);
 }
@@ -847,11 +851,11 @@ BaseCPU::scheduleSimpointsInstStop(std::vector<Counter> inst_starts)
 }
 
 void
-BaseCPU::scheduleInstStopAnyThread(Counter max_insts)
+BaseCPU::scheduleInstStopAnyThread(Counter max_insts, uint64_t hypercall_num)
 {
     std::string cause = "a thread reached the max instruction count";
     for (ThreadID tid = 0; tid < numThreads; ++tid) {
-        scheduleInstStop(tid, max_insts, cause);
+        scheduleInstStop(tid, max_insts, cause, hypercall_num);
     }
 }
 
