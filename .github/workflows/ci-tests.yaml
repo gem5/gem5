@@ -74,7 +74,10 @@ jobs:
               id: date
               run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
-    unittests-all-opt:
+    unittests-all-fast-opt:
+        strategy:
+            matrix:
+                type: [fast, opt]
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
@@ -95,9 +98,9 @@ jobs:
                   restore-keys: |
                       testlib-build-all
 
-            - name: CI Unittests
+            - name: CI Unittests (${{ matrix.type }})
               working-directory: ${{ github.workspace }}
-              run: scons --no-compress-debug build/ALL/unittests.opt -j $(nproc)
+              run: scons --no-compress-debug build/ALL/unittests.${{ matrix.type }} -j $(nproc)
             - run: echo "This job's status is ${{ job.status }}."
 
     testlib-quick-matrix:
@@ -288,7 +291,7 @@ jobs:
         needs:
             - testlib-quick-execution
             - clang-fast-compilation
-            - unittests-all-opt
+            - unittests-all-fast-opt
             - pre-commit
             - gpu-tests
         steps:
