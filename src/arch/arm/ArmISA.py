@@ -72,9 +72,11 @@ class ArmDefaultSERelease(ArmRelease):
         "FEAT_FCMA",
         "FEAT_JSCVT",
         "FEAT_PAuth",
+        "FEAT_LRCPC",
         # Armv8.4
         "FEAT_FLAGM",
         "FEAT_FRINTTS",
+        "FEAT_LRCPC2",
         # Armv8.5
         "FEAT_FLAGM2",
         # Armv9.2
@@ -155,9 +157,9 @@ class ArmISA(BaseISA):
     )
 
     # !I8MM | !BF16 | SPECRES = 0 | !SB |
-    # GPI = 0x0 | GPA = 0x1 | API=0x0 | FCMA | JSCVT | APA=0x1
+    # GPI = 0x0 | GPA = 0x1 | LRCPC=0x2 | FCMA | JSCVT | APA=0x1
     id_aa64isar1_el1 = Param.UInt64(
-        0x0000000001011010, "AArch64 Instruction Set Attribute Register 1"
+        0x0000000001211010, "AArch64 Instruction Set Attribute Register 1"
     )
 
     # 4K | 64K | !16K | !BigEndEL0 | !SNSMem | !BigEnd | 8b ASID | 40b PA

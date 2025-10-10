@@ -95,6 +95,7 @@ class ArmExtension(ScopedEnum):
         "FEAT_FCMA",
         "FEAT_JSCVT",
         "FEAT_PAuth",
+        "FEAT_LRCPC",
         # Armv8.4
         "FEAT_SEL2",
         "FEAT_TLBIOS",
@@ -103,6 +104,7 @@ class ArmExtension(ScopedEnum):
         "FEAT_IDST",
         "FEAT_TTST",
         "FEAT_FRINTTS",  # Optional in Armv8.4
+        "FEAT_LRCPC2",
         # Armv8.5
         "FEAT_FLAGM2",
         "FEAT_RNG",

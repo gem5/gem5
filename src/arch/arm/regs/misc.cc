@@ -5011,6 +5011,9 @@ ISA::initializeMiscRegMetadata()
           isar1_el1.apa = release->has(ArmExtension::FEAT_PAuth) ? 0x1 : 0x0;
           isar1_el1.jscvt = release->has(ArmExtension::FEAT_JSCVT) ? 0x1 : 0x0;
           isar1_el1.fcma = release->has(ArmExtension::FEAT_FCMA) ? 0x1 : 0x0;
+          isar1_el1.lrcpc = release->has(ArmExtension::FEAT_LRCPC2)  ? 0x2
+                            : release->has(ArmExtension::FEAT_LRCPC) ? 0x1
+                                                                     : 0x0;
           isar1_el1.gpa = release->has(ArmExtension::FEAT_PAuth) ? 0x1 : 0x0;
           isar1_el1.frintts =
               release->has(ArmExtension::FEAT_FRINTTS) ? 0x1 : 0x0;

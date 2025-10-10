@@ -1358,6 +1358,7 @@ namespace Aarch64
         // bit 27,25=10
         switch (bits(machInst, 29, 28)) {
           case 0x0:
+          {
             if (bits(machInst, 26) == 0) {
                 if (bits(machInst, 24) != 0)
                     return new Unknown64(machInst);
@@ -1562,14 +1563,50 @@ namespace Aarch64
             } else {
                 return decodeNeonMem(machInst);
             }
+          }
           case 0x1:
           {
-            if (bits(machInst, 24) != 0)
-                return new Unknown64(machInst);
-            uint8_t switchVal = (bits(machInst, 26) << 0) |
-                                (bits(machInst, 31, 30) << 1);
             int64_t imm = sext<19>(bits(machInst, 23, 5)) << 2;
             RegIndex rt = (RegIndex)(uint32_t)bits(machInst, 4, 0);
+
+            if (bits(machInst, 24) != 0) {
+               if (bits(machInst, 21) != 0) {
+                  return new Unknown64(machInst);
+               }
+
+               warn_once("LoadAcquirePC implemented with SC\n");
+
+               uint8_t switchVal = (bits(machInst, 23, 22) << 0) |
+                                   (bits(machInst, 31, 30) << 2);
+               RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 9, 5);
+               RegIndex rnsp = makeSP(rn);
+               uint64_t imm = sext<9>(bits(machInst, 20, 12));
+               switch (switchVal) {
+                 case 0x1:
+                   return new LDAPURB64_IMM(machInst, rt, rnsp, imm);
+                 case 0x2:
+                   return new LDAPURSBX64_IMM(machInst, rt, rnsp, imm);
+                 case 0x3:
+                   return new LDAPURSBW64_IMM(machInst, rt, rnsp, imm);
+                 case 0x5:
+                   return new LDAPURH64_IMM(machInst, rt, rnsp, imm);
+                 case 0x6:
+                   return new LDAPURSHX64_IMM(machInst, rt, rnsp, imm);
+                 case 0x7:
+                   return new LDAPURSHW64_IMM(machInst, rt, rnsp, imm);
+                 case 0x9:
+                   return new LDAPURX64_IMM(machInst, rt, rnsp, imm);
+                 case 0xd:
+                   return new LDAPURW64_IMM(machInst, rt, rnsp, imm);
+                 case 0xa:
+                   return new LDAPURSW64_IMM(machInst, rt, rnsp, imm);
+                 default:
+                   return new Unknown64(machInst);
+               }
+            }
+            uint8_t switchVal = (bits(machInst, 26) << 0) |
+                                (bits(machInst, 31, 30) << 1);
+
             switch (switchVal) {
               case 0x0:
                 return new LDRWL64_LIT(machInst, rt, imm);
