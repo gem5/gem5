@@ -486,10 +486,10 @@ TLB::translate(const RequestPtr &req,
             // Do paging protection checks.
             bool inUser = m5Reg.cpl == 3 && !(flags & CPL0FlagBit);
 
-            RegVal pkruVal = tc->getReg(int_reg::Pkru); 
-            uint32_t pkru = (uint32_t)pkruVal; 
+            RegVal pkruVal = tc->getReg(int_reg::Pkru);
+            uint32_t pkru = (uint32_t)pkruVal;
 
-            uint8_t pkey = entry->pkey; 
+            uint8_t pkey = entry->pkey;
 
             // Extract AD and WD bits for this key
             uint32_t ad = (pkru >> (pkey * 2)) & 0x1;
@@ -497,7 +497,7 @@ TLB::translate(const RequestPtr &req,
 
             if (inUser) {
                 if (ad) {
-                    DPRINTF(TLB, "Access Disable bit is set - no access allowed at all\n");  
+                    DPRINTF(TLB, "Access Disable bit is set - no access allowed at all\n");
                     return std::make_shared<GeneralProtection>(0);
                 }
                 if (wd && mode == BaseMMU::Write) {

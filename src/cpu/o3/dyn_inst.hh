@@ -563,7 +563,7 @@ class DynInst : public ExecContext, public RefCounted
     bool isUncondCtrl()   const { return staticInst->isUncondCtrl(); }
     bool isSerializing()  const { return staticInst->isSerializing(); }
     std::string getName() const { return staticInst->getName(); }
-    
+
     bool
     isSerializeBefore() const
     {

@@ -736,7 +736,7 @@ let {{
     # wrpkru
     class Movpkru(RdRegOp):
         code = 'DestReg = SrcReg1'
-        #else_code = 'DestReg = DestReg;'   
+        #else_code = 'DestReg = DestReg;'
 
     # Shift instructions
 
