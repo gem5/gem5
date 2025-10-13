@@ -59,7 +59,7 @@ Arguments:
     --validate-npb       Validate the NAS Parallel Benchmarks (NPB) output (Optional).
 
 Example:
-    build/ALL/gem5.opt util/disk-img-validator/disk-image-validate.py --isa x86 --workload linux-boot --resource_version 1.0 --validate-npb
+    build/ALL/gem5.opt util/disk-img-validator/disk-image-validate.py --isa x86 --workload x86-ubuntu-24.04-npb-is-s --resource_version 3.0.0 --validate-npb
 
 Requirements:
     - gem5 must be installed and properly configured.
@@ -69,7 +69,7 @@ Requirements:
     - Required Python modules: argparse, pathlib.
 
 Functionality:
-    - Selects the appropriate demo board (x86, ARM, or RISC-V) based on the given ISA.
+    - Selects the appropriate demo board (X86, Arm, or RISC-V) based on the given ISA.
     - Loads the specified workload and resource version (if provided).
     - Monitors key hypercalls:
         * Hypercall 1: Kernel boot

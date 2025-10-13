@@ -44,25 +44,25 @@ running a simple C program that makes an m5 hypercall (hypercall number 8)
 without requiring superuser privileges.
 
 Usage:
-    build/ALL/gem5.opt util/disk-img-validator/gem5-bridge-driver-validate.py --isa <ISA> --workload <WORKLOAD_ID> --resource-version <RESOURCE_VERSION>
+    build/ALL/gem5.opt util/disk-image-validator/gem5-bridge-driver-validate.py --isa <ISA> --workload <WORKLOAD_ID> --resource-version <RESOURCE_VERSION>
 
 Arguments:
     --isa                The instruction set architecture (ISA) for the simulation.
                          Options: x86, arm, riscv (Required).
-    --workload           The workload ID to run (Optional).
+    --workload           The workload ID to run (Required).
     --resource-version   The version of the workload resource (Optional).
 
 Example:
-     build/ALL/gem5.opt util/disk-img-validator/gem5-bridge-driver-validate.py --isa x86 --workload test_workload --resource-version 1.0.0
+     build/ALL/gem5.opt util/disk-image-validator/gem5-bridge-driver-validate.py --isa x86 --workload x86-ubuntu-24.04-boot-no-systemd --resource-version 4.0.0
 
 Requirements:
-    - gem5 must be installed and properly configured.
+    - gem5 v25.0 or higher must be installed and properly configured.
     - The necessary prebuilt demo board classes must be available.
     - The gem5 resource system should be able to fetch the specified workload.
     - Python 3 must be installed.
 
 Functionality:
-    - Selects the appropriate demo board (x86, ARM, or RISC-V) based on the given ISA.
+    - Selects the appropriate demo board (X86, Arm, or RISC-V) based on the given ISA.
     - Loads the specified workload and resource version (if provided).
     - Runs a shell script (`test_gem5_bridge.sh`) to check whether m5 hypercall 8
       executes successfully without requiring `sudo`.

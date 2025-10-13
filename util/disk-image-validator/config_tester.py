@@ -262,7 +262,7 @@ def ATOMIC_2_core_test(workload_id, resource_version):
 
     class KernelBootedExit(ExitHandler, hypercall_num=1):
         def _process(self, simulator: "Simulator") -> None:
-            print("Kernel Booted with ATOMIC CPU. Test Passed")
+            print("Kernel Booted with ATOMIC CPU, 2 cores. Test Passed")
 
         def _exit_simulation(self) -> bool:
             return True
@@ -293,7 +293,7 @@ def ATOMIC_4_core_test(workload_id, resource_version):
 
     class KernelBootedExit(ExitHandler, hypercall_num=1):
         def _process(self, simulator: "Simulator") -> None:
-            print("Kernel Booted with ATOMIC CPU. Test Passed")
+            print("Kernel Booted with ATOMIC CPU, 4 cores. Test Passed")
 
         def _exit_simulation(self) -> bool:
             return True
@@ -324,7 +324,7 @@ def ATOMIC_8_core_test(workload_id, resource_version):
 
     class KernelBootedExit(ExitHandler, hypercall_num=1):
         def _process(self, simulator: "Simulator") -> None:
-            print("Kernel Booted with ATOMIC CPU. Test Passed")
+            print("Kernel Booted with ATOMIC CPU, 8 cores. Test Passed")
 
         def _exit_simulation(self) -> bool:
             return True

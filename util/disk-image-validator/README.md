@@ -36,7 +36,7 @@ build/ALL/gem5.opt util/disk-img-validator/gem5-bridge-driver-validate.py --isa 
 
 ### Requirements
 
-- gem5 must be installed and configured correctly.
+- gem5 v25.0 or higher must be installed and configured correctly.
 - Prebuilt demo board classes must be available.
 - The gem5 resources must be able to fetch the specified workload.
 
@@ -80,12 +80,12 @@ build/ALL/gem5.opt util/disk-img-validator/disk-image-validate.py --isa <ISA> --
 ### Example
 
 ```bash
-build/ALL/gem5.opt util/disk-img-validator/disk-image-validate.py --isa x86 --workload test-workload --resource_version 1.0.0 --validate-npb
+build/ALL/gem5.opt util/disk-img-validator/disk-image-validate.py --isa x86 --workload x86-ubuntu-24.04-npb-is-s --resource_version 3.0.0 --validate-npb
 ```
 
 ### Requirements
 
-- gem5 must be installed and properly configured.
+- gem5 v25.0 or higher must be installed and properly configured.
 - The necessary prebuilt demo board classes must be available.
 - The gem5 resources should be able to fetch the specified workload.
 
