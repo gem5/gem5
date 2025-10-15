@@ -164,9 +164,8 @@ Decode::evaluate()
                 StaticInstPtr parent_static_inst = NULL;
                 MinorDynInstPtr output_inst = inst;
 
-                auto* dec_ptr = cpu.getContext(
-                                               inst->id.threadId)
-                                               ->getDecoderPtr();
+                auto *dec_ptr =
+                    cpu.getContext(inst->id.threadId)->getDecoderPtr();
 
                 if (inst->isFault()) {
                     DPRINTF(Decode, "Fault being passed: %d\n",
@@ -185,18 +184,13 @@ Decode::evaluate()
                     }
 
                     if (isRomMicroPC(decode_info.microopPC->microPC())) {
-                      static_micro_inst =
-                        dec_ptr->fetchRomMicroop(
-                                                 decode_info.microopPC
-                                                 ->microPC(),
-                                                 static_inst);
+                        static_micro_inst = dec_ptr->fetchRomMicroop(
+                            decode_info.microopPC->microPC(), static_inst);
                     } else {
                       /* Get the micro-op static instruction from the
                        * static_inst. */
-                      static_micro_inst =
-                        static_inst->fetchMicroop(
-                                                  decode_info.microopPC
-                                                  ->microPC());
+                      static_micro_inst = static_inst->fetchMicroop(
+                          decode_info.microopPC->microPC());
                     }
 
                     output_inst =
