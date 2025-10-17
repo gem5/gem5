@@ -54,9 +54,7 @@
 #include "base/logging.hh"
 #include "base/str.hh"
 #include "base/trace.hh"
-#include "debug/PciBridge.hh"
 #include "debug/PciDevice.hh"
-#include "debug/PciEndpoint.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "sim/byteswap.hh"
@@ -603,7 +601,7 @@ PciDevice::unserialize(CheckpointIn &cp)
 }
 
 PciEndpoint::PciEndpoint(const PciEndpointParams &p)
-    : PciDevice(p, { p.BAR0, p.BAR1, p.BAR2, p.BAR3, p.BAR4, p.BAR5 })
+    : PciDevice(p, {p.BAR0, p.BAR1, p.BAR2, p.BAR3, p.BAR4, p.BAR5})
 {
     fatal_if((_config.common.headerType & 0x7F) != 0, "HeaderType is invalid");
 
@@ -655,7 +653,7 @@ PciEndpoint::writeConfig(PacketPtr pkt)
           default:
             panic("writing to a read only register");
         }
-        DPRINTF(PciEndpoint,
+        DPRINTF(PciDevice,
                 "writeConfig: dev %#x func %#x reg %#x 1 bytes: data = %#x\n",
                 _devAddr.dev, _devAddr.func, offset,
                 (uint32_t)pkt->getLE<uint8_t>());
@@ -687,9 +685,9 @@ PciEndpoint::writeConfig(PacketPtr pkt)
             break;
 
           default:
-            DPRINTF(PciEndpoint, "Writing to a read only register");
+              DPRINTF(PciDevice, "Writing to a read only register");
         }
-        DPRINTF(PciEndpoint,
+        DPRINTF(PciDevice,
                 "writeConfig: dev %#x func %#x reg %#x 4 bytes: data = %#x\n",
                 _devAddr.dev, _devAddr.func, offset,
                 (uint32_t)pkt->getLE<uint32_t>());
@@ -712,8 +710,8 @@ PciEndpoint::unserialize(CheckpointIn &cp)
     pioPort.sendRangeChange();
 }
 
-PciBridge::PciBridge(const PciBridgeParams &p)
-    : PciDevice(p, { p.BAR0, p.BAR1 })
+PciType1Device::PciType1Device(const PciType1DeviceParams &p)
+    : PciDevice(p, {p.BAR0, p.BAR1})
 {
     fatal_if((_config.common.headerType & 0x7F) != 1, "HeaderType is invalid");
 
@@ -741,7 +739,7 @@ PciBridge::PciBridge(const PciBridgeParams &p)
 }
 
 Tick
-PciBridge::writeConfig(PacketPtr pkt)
+PciType1Device::writeConfig(PacketPtr pkt)
 {
     int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
 
@@ -786,7 +784,7 @@ PciBridge::writeConfig(PacketPtr pkt)
           default:
               panic("writing to a read only register");
         }
-        DPRINTF(PciBridge,
+        DPRINTF(PciDevice,
                 "writeConfig: dev %#x func %#x reg %#x 1 bytes: data = %#x\n",
                 _devAddr.dev, _devAddr.func, offset,
                 (uint32_t)pkt->getLE<uint8_t>());
@@ -820,7 +818,7 @@ PciBridge::writeConfig(PacketPtr pkt)
           default:
             panic("writing to a read only register");
         }
-        DPRINTF(PciBridge,
+        DPRINTF(PciDevice,
                 "writeConfig: dev %#x func %#x reg %#x 2 bytes: data = %#x\n",
                 _devAddr.dev, _devAddr.func, offset,
                 (uint32_t)pkt->getLE<uint16_t>());
@@ -852,7 +850,7 @@ PciBridge::writeConfig(PacketPtr pkt)
           default:
             panic("writing to a read only register");
         }
-        DPRINTF(PciBridge,
+        DPRINTF(PciDevice,
                 "writeConfig: dev %#x func %#x reg %#x 4 bytes: data = %#x\n",
                 _devAddr.dev, _devAddr.func, offset,
                 (uint32_t)pkt->getLE<uint32_t>());
@@ -865,7 +863,7 @@ PciBridge::writeConfig(PacketPtr pkt)
 }
 
 void
-PciBridge::unserialize(CheckpointIn &cp)
+PciType1Device::unserialize(CheckpointIn &cp)
 {
     PciDevice::unserialize(cp);
 

@@ -54,13 +54,13 @@
 #include "dev/pci/upstream.hh"
 #include "params/PciBar.hh"
 #include "params/PciBarNone.hh"
-#include "params/PciBridge.hh"
 #include "params/PciDevice.hh"
 #include "params/PciEndpoint.hh"
 #include "params/PciIoBar.hh"
 #include "params/PciLegacyIoBar.hh"
 #include "params/PciMemBar.hh"
 #include "params/PciMemUpperBar.hh"
+#include "params/PciType1Device.hh"
 #include "sim/byteswap.hh"
 
 #define PCI0_BAR_NUMBER(x) (((x) - PCI0_BASE_ADDR0) >> 0x2);
@@ -268,15 +268,35 @@ class PciMemUpperBar : public PciBar
 };
 
 class PciEndpoint;
-class PciBridge;
+class PciType1Device;
 
 /**
- * PCI device, base implementation is only config space.
+ * Base class to represent a PCI device.
+ *
+ * Two main types of PCI device exists:
+ *   - Type 0: Any endpoint card (GPU, network card, ...)
+ *   - Type 1: A bridge that extend the PCI hierarchy with a new bus, where
+ *             endpoints or other bridges can be connected.
+ *
+ * The class PciDevice implements the common behavior between the two types and
+ * should not be inherited directly.
+ *
+ * PCI devices have a configuration header of 256 bytes. The first 64 bytes of
+ * the configuration are specific to the device type and they are represented
+ * by the struct PciConfigType0/1. The remaining bytes are specifics to the
+ * device itself and can contain a set of PCI capabilities (power management,
+ * interrupts, ...) or other registres depending on vendor implementation.
+ *
+ * Devices inheriting from a PCI device type can override readConfig() and
+ * writeConfig() to manage the configuration access after the 64th byte.
+ *
+ * The functions readDevice() and writeDevice() can be overriden to provide
+ * functionnality based on BAR access.
  */
 class PciDevice : public DmaDevice
 {
     friend PciEndpoint;
-    friend PciBridge;
+    friend PciType1Device;
 
   private:
     /** The current config space.  */
@@ -472,6 +492,12 @@ class PciDevice : public DmaDevice
     void recvBusChange();
 };
 
+/**
+ * PCI type 0 device class to represent any PCI endpoint, like a GPU, a network
+ * card and so on.
+ *
+ * This class provides the management of the type 0 configuration header.
+ */
 class PciEndpoint : public PciDevice
 {
   protected:
@@ -505,7 +531,14 @@ class PciEndpoint : public PciDevice
     void unserialize(CheckpointIn &cp) override;
 };
 
-class PciBridge : public PciDevice
+/**
+ * PCI type 1 device class to represent any PCI bridge to extend the PCI
+ * hierarchy with a new bus.
+ *
+ * This class provides the management of the type 1 configuration header.
+ * The actual bridge between two buses isn't implemented by this class.
+ */
+class PciType1Device : public PciDevice
 {
   protected:
     PCIConfigType1 &
@@ -528,7 +561,7 @@ class PciBridge : public PciDevice
      * config file object PCIConfigData and registers the device with
      * a PciHost object.
      */
-    PciBridge(const PciBridgeParams &params);
+    PciType1Device(const PciType1DeviceParams &params);
 
     /**
      * Reconstruct the state of this object from a checkpoint.

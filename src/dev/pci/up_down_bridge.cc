@@ -39,7 +39,7 @@
 
 #include "base/addr_range.hh"
 #include "base/logging.hh"
-#include "debug/PciBridge.hh"
+#include "debug/PciUpstream.hh"
 #include "params/PciUpDownBridge.hh"
 
 namespace gem5
@@ -78,9 +78,9 @@ PciUpDownBridge::recvRangeChange()
 
     // Avoid potential loop of range change.
     if (new_ranges != memSideRanges) {
-        DPRINTF(PciBridge, "Received range change\n");
+        DPRINTF(PciUpstream, "Received range change\n");
         for (const auto &r : new_ranges) {
-            DPRINTF(PciBridge, "-- %s\n", r.to_string());
+            DPRINTF(PciUpstream, "-- %s\n", r.to_string());
         }
 
         memSideRanges = new_ranges;
