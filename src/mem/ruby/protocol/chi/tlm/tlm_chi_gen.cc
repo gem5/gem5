@@ -90,6 +90,8 @@ tlm_chi_generator_pybind(pybind11::module_ &m_tlm_chi)
         .def("inject", &tlm::chi::TlmGenerator::Transaction::inject)
         .def_property("phase", &tlm::chi::TlmGenerator::Transaction::phase,
                       &tlm::chi::TlmGenerator::Transaction::phase)
+        .def_property_readonly("payload",
+                               &tlm::chi::TlmGenerator::Transaction::payload)
         .def_property_readonly("start",
                                &tlm::chi::TlmGenerator::Transaction::start);
 }
