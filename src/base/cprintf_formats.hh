@@ -32,6 +32,7 @@
 #include <cstring>
 #include <ostream>
 #include <sstream>
+#include <cstdint>
 
 namespace gem5
 {

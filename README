@@ -13,6 +13,29 @@ protobuf if you want trace capture and playback support. Please see
 http://www.gem5.org/documentation/general_docs/building for more details
 concerning the minimum versions of these tools.
 
+If you are under UBUNTU 24.04 please do the following steps:
+1) Install dependencies & add repository to install python3.10
+'''
+sudo add-apt-repository ppa:deadsnakes/ppa -y
+sudo apt update
+sudo apt install python3.10
+sudo apt install python3.10-dev
+'''
+2) Create a virtualenv & activate it
+'''
+virtualenv -p python3.10 myenv
+source myenv/bin/activate
+'''
+3) Export env variables
+'''
+export PYTHON=/usr/bin/python3.10
+export PYTHON_CONFIG=/usr/bin/python3.10-config
+'''
+4) Install scons version 4
+'''
+pip3 install scons==4
+'''
+
 Once you have all dependencies resolved, type 'scons
 build/<CONFIG>/gem5.opt' where CONFIG is one of the options in build_opts like
 ARM, NULL, MIPS, POWER, SPARC, X86, Garnet_standalone, etc. This will build an
