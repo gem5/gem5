@@ -67,8 +67,9 @@ TlmGenerator::Transaction::Assertion::run(Transaction *tran)
     }
 }
 
-TlmGenerator::Transaction::Transaction(ARM::CHI::Payload *pa, ARM::CHI::Phase &ph)
-  : passed(true), parent(nullptr), _payload(pa), _phase(ph)
+TlmGenerator::Transaction::Transaction(ARM::CHI::Payload *pa,
+                                       ARM::CHI::Phase &ph, Tick when)
+    : passed(true), parent(nullptr), _payload(pa), _phase(ph), _start(when)
 {
     _payload->ref();
 }

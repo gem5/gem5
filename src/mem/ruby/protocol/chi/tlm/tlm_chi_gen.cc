@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Arm Limited
+ * Copyright (c) 2024-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -61,46 +61,37 @@ tlm_chi_generator_pybind(pybind11::module_ &m_tlm_chi)
     using Assertion = tlm::chi::TlmGenerator::Transaction::Assertion;
     using Callback = Action::Callback;
     py::class_<tlm::chi::TlmGenerator::Transaction>(tlm_chi_gen, "Transaction")
-        .def(py::init<Payload*, Phase&>())
+        .def(py::init<Payload *, Phase &, Tick>())
         .def("EXPECT_STR",
-            [] (tlm::chi::TlmGenerator::Transaction &self,
-                std::string name,
-                Callback cb)
-            {
-                self.addCallback(std::make_unique<Expectation>(name, cb));
-            })
-        .def("EXPECT",
-            [] (tlm::chi::TlmGenerator::Transaction &self,
-                py::function cb)
-            {
+             [](tlm::chi::TlmGenerator::Transaction &self, std::string name,
+                Callback cb) {
+                 self.addCallback(std::make_unique<Expectation>(name, cb));
+             })
+        .def(
+            "EXPECT",
+            [](tlm::chi::TlmGenerator::Transaction &self, py::function cb) {
                 self.addCallback(std::make_unique<Expectation>(
                     cb.attr("__name__").cast<std::string>(),
                     cb.cast<Callback>()));
             })
         .def("ASSERT",
-            [] (tlm::chi::TlmGenerator::Transaction &self,
-                std::string name,
-                Callback cb)
-            {
-                self.addCallback(std::make_unique<Assertion>(name, cb));
-            })
+             [](tlm::chi::TlmGenerator::Transaction &self, std::string name,
+                Callback cb) {
+                 self.addCallback(std::make_unique<Assertion>(name, cb));
+             })
         .def("DO",
-            [] (tlm::chi::TlmGenerator::Transaction &self,
-                Callback cb)
-            {
-                self.addCallback(std::make_unique<Action>(cb, false));
-            })
+             [](tlm::chi::TlmGenerator::Transaction &self, Callback cb) {
+                 self.addCallback(std::make_unique<Action>(cb, false));
+             })
         .def("DO_WAIT",
-            [] (tlm::chi::TlmGenerator::Transaction &self,
-                Callback cb)
-            {
-                self.addCallback(std::make_unique<Action>(cb, true));
-            })
+             [](tlm::chi::TlmGenerator::Transaction &self, Callback cb) {
+                 self.addCallback(std::make_unique<Action>(cb, true));
+             })
         .def("inject", &tlm::chi::TlmGenerator::Transaction::inject)
-        .def_property("phase",
-            &tlm::chi::TlmGenerator::Transaction::phase,
-            &tlm::chi::TlmGenerator::Transaction::phase)
-        ;
+        .def_property("phase", &tlm::chi::TlmGenerator::Transaction::phase,
+                      &tlm::chi::TlmGenerator::Transaction::phase)
+        .def_property_readonly("start",
+                               &tlm::chi::TlmGenerator::Transaction::start);
 }
 
 EmbeddedPyBind embed_("tlm_chi_gen", &tlm_chi_generator_pybind, "tlm_chi");
