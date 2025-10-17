@@ -31,6 +31,7 @@
 
 #include <iostream>
 #include <vector>
+#include <cstdint>
 
 #include "mem/ruby/common/TypeDefines.hh"
 
