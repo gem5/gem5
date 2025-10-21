@@ -51,11 +51,13 @@ class PciBus(NoncoherentXBar):
 
     config_error_port = RequestPort("Port to send config errors to")
 
-    # Set some default values bases on IOXBar
+    # FIXME: There should have some latency added to transfert packets within
+    # the PCI bus/hierarchy, but adding them breaks X86 Board which will hang
+    # forever.
     width = 16
-    frontend_latency = 2
-    forward_latency = 1
-    response_latency = 2
+    frontend_latency = 0
+    forward_latency = 0
+    response_latency = 0
 
 
 class PciConfigError(IsaFake):
