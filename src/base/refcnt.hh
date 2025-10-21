@@ -43,6 +43,8 @@
 
 #include <type_traits>
 
+#include "base/compiler.hh"
+
 /**
  * @file base/refcnt.hh
  *
@@ -163,7 +165,7 @@ class RefCountingPtr
      * @attention this doesn't clear the pointer value, so a double
      * decref could happen if not careful.
      */
-    void
+    GEM5_NO_INLINE void
     del()
     {
         if (data && data->decref()) {
