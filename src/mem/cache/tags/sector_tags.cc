@@ -120,12 +120,18 @@ SectorTags::tagsInit()
             // Set its index and sector offset
             blk->setSectorOffset(k);
 
+            // Register TagExtractor for SubBlk
+            blk->registerTagExtractor(genTagExtractor(indexingPolicy));
+
             // Update block index
             ++blk_index;
         }
 
         // Link block to indexing policy
         indexingPolicy->setEntry(sec_blk, sec_blk_index);
+
+        // Register TagExtractor for SecBlk
+        sec_blk->registerTagExtractor(genTagExtractor(indexingPolicy));
     }
 }
 
