@@ -404,7 +404,7 @@ ROB::updateHead()
 
         DynInstPtr head_inst = (*head_thread);
 
-        assert(head_inst != 0);
+        assert(head_inst);
 
         if (head_inst->seqNum < lowest_num) {
             head = head_thread;
