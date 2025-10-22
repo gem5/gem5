@@ -42,3 +42,19 @@ jobs:
             - name: Compile build/${{ matrix.gem5-compilation }}/gem5${{ matrix.opts }} with ${{ matrix.image }}
               run: /usr/bin/env python3 /usr/bin/scons --ignore-style build/${{ matrix.gem5-compilation }}/gem5${{ matrix.opts }} -j$(nproc)
               timeout-minutes: 600 # 10 hours
+
+    sanitizer-compilation-tests:
+        strategy:
+            fail-fast: false
+            matrix:
+                sanitizer: [asan, ubsan]
+                image: [gcc-version-14]
+                opts: [.opt]
+        runs-on: [self-hosted, linux, x64]
+        timeout-minutes: 2880 # 48 hours
+        container: ghcr.io/gem5/${{ matrix.image }}:latest
+        steps:
+            - uses: actions/checkout@v4
+            - name: Compile build/ALL/gem5${{ matrix.opts }} with ${{ matrix.sanitizer }} in ${{ matrix.image }}
+              run: /usr/bin/env python3 /usr/bin/scons --ignore-style build/ALL/gem5${{ matrix.opts }} -j$(nproc) --with-${{ matrix.sanitizer }}
+              timeout-minutes: 600 # 10 hours
