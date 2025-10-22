@@ -156,6 +156,9 @@ AddOption('--duplicate-sources', action='store_true', default=False,
 AddOption('--no-duplicate-sources', action='store_false',
           dest='duplicate_sources',
           help='Do not create symlinks to sources in the build directory')
+AddOption('--gcov', action='store_true', default=False,
+          help="Build gem5 with symbols used by gcov to enable obtaining code "
+          "coverage metrics")
 
 # Inject the built_tools directory into the python path.
 sys.path[1:1] = [ Dir('#build_tools').abspath ]
@@ -705,6 +708,10 @@ for variant_path in variant_paths:
         env.Append(TCMALLOC_CCFLAGS=[
             '-fno-builtin-malloc', '-fno-builtin-calloc',
             '-fno-builtin-realloc', '-fno-builtin-free'])
+
+        if GetOption('gcov'):
+            env.Append(CCFLAGS=['-fprofile-arcs', '-ftest-coverage'],
+                       LINKFLAGS=['-lgcov', '--coverage'])
 
     elif env['CLANG']:
         clang_min_version = "14"
