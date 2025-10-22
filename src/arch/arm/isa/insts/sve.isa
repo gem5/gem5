@@ -1679,7 +1679,7 @@ let {{
             code += '''
         unsigned length = 1 * eCount;'''
         code += '''
-        bool mask[length];'''
+        std::vector<bool> mask(length);'''
         if toDown:
             code += '''
         for (signed i = length - 1; i >= 0; i--) {'''

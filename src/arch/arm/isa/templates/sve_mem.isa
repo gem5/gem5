@@ -989,11 +989,6 @@ def template SveGatherLoadQuadMicroopInitiateAcc {{
         %(op_rd)s;
         %(ea_code)s;
 
-        union MemData {
-            MemElemType memData = 0;
-            uint8_t memDataArray[sizeof(MemElemType)];
-        } memData;
-
         int index = elemIndex;
         if (%(pred_check_code)s) {
             fault = initiateMemRead(xc, EA, sizeof(MemElemType),
