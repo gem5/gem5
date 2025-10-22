@@ -305,6 +305,7 @@ class MI300X(BaseViperGPU):
             "dd if=/root/roms/mi300.rom of=/dev/mem bs=1k seek=768 count=128\n"
             # Check if exists (backwards compat with ROCm <7.0)
             "if [ -e /usr/lib/firmware/amdgpu/mi300_discovery ]; then\n"
+            "    rm -f /usr/lib/firmware/amdgpu/ip_discovery.bin\n"
             "    ln -s /usr/lib/firmware/amdgpu/mi300_discovery /usr/lib/firmware/amdgpu/ip_discovery.bin\n"
             "fi\n"
             "if [ -f /home/gem5/load_amdgpu.sh ]; then\n"
@@ -366,6 +367,7 @@ class MI355X(MI300X):
             f"{debug_commands}\n"
             "dd if=/root/roms/mi300.rom of=/dev/mem bs=1k seek=768 count=128\n"
             "if [ -e /usr/lib/firmware/amdgpu/mi350_discovery ]; then\n"
+            "    rm -f /usr/lib/firmware/amdgpu/ip_discovery.bin\n"
             "    ln -s /usr/lib/firmware/amdgpu/mi350_discovery /usr/lib/firmware/amdgpu/ip_discovery.bin\n"
             "else\n"
             '    echo "ERROR: ROCm 7.0+ disk image required for MI355X. Exiting gem5."\n'
