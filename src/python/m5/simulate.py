@@ -50,11 +50,9 @@ from m5.util.dot_writer import (
 from m5.util.dot_writer_ruby import do_ruby_dot
 
 # import the wrapped C++ functions
-from _m5 import (
-    core,
-    drain,
-    event,
-)
+from _m5 import core as _m5_core
+from _m5 import drain as _m5_drain
+from _m5 import event as _m5_event
 from _m5.stats import updateEvents as updateStatEvents
 
 from . import (
@@ -71,7 +69,7 @@ from .util import (
 # define a MaxTick parameter, unsigned 64 bit
 MaxTick = 2**64 - 1
 
-_drain_manager = drain.DrainManager.instance()
+_drain_manager = _m5_drain.DrainManager.instance()
 
 _instantiated = False  # Has m5.instantiate() been called?
 
@@ -188,7 +186,7 @@ def _create_cpp_objects(root, ckpt_dir):
     # Restore checkpoint (if any)
     if ckpt_dir:
         _drain_manager.preCheckpointRestore()
-        ckpt = core.getCheckpoint(ckpt_dir)
+        ckpt = _m5_core.getCheckpoint(ckpt_dir)
         for obj in root.descendants():
             obj.loadState(ckpt)
     else:
@@ -264,7 +262,7 @@ def simulate(*args, **kwargs):
         atexit.register(stats.dump)
 
         # register our C++ exit callback function with Python
-        atexit.register(core.doExitCleanup)
+        atexit.register(_m5_core.doExitCleanup)
 
         # Reset to put the stats in a consistent state.
         stats.reset()
@@ -276,7 +274,7 @@ def simulate(*args, **kwargs):
     # output arrive in order.
     sys.stdout.flush()
     sys.stderr.flush()
-    sim_out = event.simulate(*args, **kwargs)
+    sim_out = _m5_event.simulate(*args, **kwargs)
     sys.stdout.flush()
     sys.stderr.flush()
 
@@ -292,12 +290,12 @@ def setMaxTick(tick: int) -> None:
     """
     if tick <= curTick():
         warn("Max tick scheduled for the past. This will not be triggered.")
-    event.setMaxTick(tick=tick)
+    _m5_event.setMaxTick(tick=tick)
 
 
 def getMaxTick() -> int:
     """Returns the current maximum tick."""
-    return event.getMaxTick()
+    return _m5_event.getMaxTick()
 
 
 def getTicksUntilMax() -> int:
@@ -342,9 +340,9 @@ def scheduleTickExitAbsolute(
     # the exit string is used (as it maps the an ExitEvent enum value). For
     # other string values we use the newer approach.
     if exit_string == "Tick exit reached":
-        event.exitSimLoop(exit_string, 0, tick, 0, False)
+        _m5_event.exitSimLoop(exit_string, 0, tick, 0, False)
     else:
-        event.exitSimulationLoop(
+        _m5_event.exitSimulationLoop(
             6,
             {
                 "scheduled_at_tick": str(curTick()),
@@ -376,7 +374,7 @@ def drain():
 
         # WARNING: if a valid exit event occurs while draining, it
         # will not get returned to the user script
-        exit_event = event.simulate()
+        exit_event = _m5_event.simulate()
         while exit_event.getCause() != "Finished drain":
             exit_event = simulate()
 
@@ -412,7 +410,7 @@ def checkpoint(dir):
     os.makedirs(dir, exist_ok=True)
 
     print("Writing checkpoint")
-    core.serializeAll(dir)
+    _m5_core.serializeAll(dir)
 
 
 def _changeMemoryMode(system, mode):
@@ -544,13 +542,13 @@ def fork(simout="%(parent)s.f%(fork_seq)i"):
 
     global fork_count
 
-    if not core.listenersDisabled():
+    if not _m5_core.listenersDisabled():
         raise RuntimeError("Can not fork a simulator with listeners enabled")
 
     drain()
 
     # Terminate helper threads that service parallel event queues.
-    event.terminateEventQueueThreads()
+    _m5_event.terminateEventQueueThreads()
 
     try:
         pid = os.fork()
@@ -568,7 +566,7 @@ def fork(simout="%(parent)s.f%(fork_seq)i"):
             "fork_seq": fork_count,
             "pid": os.getpid(),
         }
-        core.setOutputDir(options.outdir)
+        _m5_core.setOutputDir(options.outdir)
     else:
         fork_count += 1
 
