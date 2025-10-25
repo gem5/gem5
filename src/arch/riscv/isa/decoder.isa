@@ -5439,8 +5439,10 @@ decode QUADRANT default Unknown::unknown() {
                         }
                     }
                     if (vdIdx == 0) {
-                        auto fd = ftype_freg<et>(freg(Fs1_bits));
-                        Vd_vu[0] = fd.v;
+                        if (this->vm || elem_mask(v0, 0)) {
+                            auto fd = ftype_freg<et>(freg(Fs1_bits));
+                            Vd_vu[0] = fd.v;
+                        }
                     }
                 }}, OPFVF, SimdMiscOp);
                 0x0f: VectorFloatSlideDownFormat::vfslide1down_vf({{
@@ -5500,8 +5502,11 @@ decode QUADRANT default Unknown::unknown() {
                         }
                     }
                     if (lastUop) {
-                        auto fd = ftype_freg<et>(freg(Fs1_bits));
-                        Vd_vu[microVl - 1] = fd.v;
+                        if (this->vm || elem_mask(v0,
+                            vdWindowLeft + microVl - 1)) {
+                            auto fd = ftype_freg<et>(freg(Fs1_bits));
+                            Vd_vu[microVl - 1] = fd.v;
+                        }
                     }
                 }}, OPFVF, SimdMiscOp);
                 // VRFUNARY0
@@ -5778,7 +5783,9 @@ decode QUADRANT default Unknown::unknown() {
                         }
                     }
                     if (vdIdx == 0) {
-                        Vd_vu[0] = Rs1_vu;
+                        if (this->vm || elem_mask(v0, 0)) {
+                            Vd_vu[0] = Rs1_vu;
+                        }
                     }
                 }}, OPIVX, SimdMiscOp);
                 0x0f: VectorSlide1DownFormat::vslide1down_vx({{
@@ -5838,7 +5845,10 @@ decode QUADRANT default Unknown::unknown() {
                         }
                     }
                     if (lastUop) {
-                        Vd_vu[microVl - 1] = Rs1_vu;
+                        if (this->vm || elem_mask(v0,
+                            vdWindowLeft + microVl - 1)) {
+                            Vd_vu[microVl - 1] = Rs1_vu;
+                        }
                     }
                 }}, OPIVX, SimdMiscOp);
                 // VRXUNARY0
