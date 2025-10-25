@@ -230,6 +230,10 @@ class SConsFixture(UniqueFixture):
             "--ignore-style",
             "--no-compress-debug",
         ]
+
+        if config.gcov:
+            command.append("--gcov")
+
         command.extend(self.targets)
         log_call(log.test_log, command, time=None, stderr=sys.stderr)
 
