@@ -28,33 +28,34 @@ from itertools import chain
 from typing import List
 
 from m5.objects import (
-    NULL,
     RubyPortProxy,
     RubySequencer,
     RubySystem,
 )
 from m5.objects.SubSystem import SubSystem
-from m5.params import AllMemory
+from m5.params import (
+    NULL,
+    AllMemory,
+)
 
-from gem5.coherence_protocol import CoherenceProtocol
-from gem5.utils.requires import requires
+from ....coherence_protocol import CoherenceProtocol
+from ....utils.requires import requires
 
 requires(coherence_protocol_required=CoherenceProtocol.CHI)
 
-from gem5.components.boards.abstract_board import AbstractBoard
-from gem5.components.cachehierarchies.abstract_cache_hierarchy import (
+from ....isas import ISA
+from ....utils.override import overrides
+from ...boards.abstract_board import AbstractBoard
+from ...processors.abstract_core import AbstractCore
+from ..abstract_cache_hierarchy import (
     AbstractCacheHierarchy,
 )
-from gem5.components.cachehierarchies.ruby.abstract_ruby_cache_hierarchy import (
+from ..ruby.abstract_ruby_cache_hierarchy import (
     AbstractRubyCacheHierarchy,
 )
-from gem5.components.cachehierarchies.ruby.topologies.simple_pt2pt import (
+from ..ruby.topologies.simple_pt2pt import (
     SimplePt2Pt,
 )
-from gem5.components.processors.abstract_core import AbstractCore
-from gem5.isas import ISA
-from gem5.utils.override import overrides
-
 from .nodes.directory import SimpleDirectory
 from .nodes.dma_requestor import DMARequestor
 from .nodes.l1_cache import L1CacheController

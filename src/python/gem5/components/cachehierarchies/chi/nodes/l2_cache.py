@@ -37,15 +37,16 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects import (
-    NULL,
     ClockDomain,
     RubyCache,
     RubyNetwork,
 )
+from m5.params import (
+    NULL,
+)
 
-from gem5.components.processors.abstract_core import AbstractCore
-from gem5.isas import ISA
-
+from .....isas import ISA
+from ....processors.abstract_core import AbstractCore
 from .abstract_node import AbstractNode
 
 

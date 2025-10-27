@@ -40,12 +40,12 @@ import math
 from typing import List
 
 from m5.objects import (
-    NULL,
     ClockDomain,
     RubyCache,
     RubyNetwork,
 )
 from m5.params import (
+    NULL,
     AddrRange,
 )
 
