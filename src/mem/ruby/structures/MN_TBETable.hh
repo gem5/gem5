@@ -38,10 +38,6 @@
 #ifndef __MEM_RUBY_STRUCTURES_MN_TBETABLE_HH__
 #define __MEM_RUBY_STRUCTURES_MN_TBETABLE_HH__
 
-#include <algorithm>
-#include <vector>
-
-#include "mem/ruby/protocol/CHI/MiscNode_TBE.hh"
 #include "mem/ruby/structures/TBETable.hh"
 
 namespace gem5
@@ -53,15 +49,15 @@ namespace ruby
 namespace CHI
 {
 
+class MiscNode_TBE;
+
 // Custom class only used for the CHI protocol Misc Node
 // Includes the definition of the MiscNode_TBE, because it
 // includes functions that rely on fields in the structure
 class MN_TBETable : public TBETable<MiscNode_TBE>
 {
   public:
-    MN_TBETable(int number_of_TBEs)
-      : TBETable(number_of_TBEs)
-    {}
+    MN_TBETable(int number_of_TBEs);
 
     MiscNode_TBE* chooseNewDistributor();
 };

@@ -35,7 +35,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <mem/ruby/structures/MN_TBETable.hh>
+#include "mem/ruby/structures/MN_TBETable.hh"
+
+#include <algorithm>
+#include <vector>
+
+#include "mem/ruby/protocol/CHI/MiscNode_TBE.hh"
+#include "mem/ruby/structures/TBETable.hh"
 
 namespace gem5
 {
@@ -45,6 +51,9 @@ namespace ruby
 
 namespace CHI
 {
+
+MN_TBETable::MN_TBETable(int number_of_TBEs) : TBETable(number_of_TBEs)
+{}
 
 // Based on the current set of TBEs, choose a new "distributor"
 // Can return null -> no distributor
