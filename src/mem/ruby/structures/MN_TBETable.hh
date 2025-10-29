@@ -51,9 +51,8 @@ namespace CHI
 
 class MiscNode_TBE;
 
-// Custom class only used for the CHI protocol Misc Node
-// Includes the definition of the MiscNode_TBE, because it
-// includes functions that rely on fields in the structure
+// Custom class only used for the CHI protocol Misc Node.
+// Implementation relies on MiscNode_TBE fields defined in the protocol.
 class MN_TBETable : public TBETable<MiscNode_TBE>
 {
   public:

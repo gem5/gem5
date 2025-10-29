@@ -49,6 +49,18 @@ namespace gem5
 namespace ruby
 {
 
+CHI::MiscNode_TBE *
+EntryFactory<CHI::MiscNode_TBE>::create(int block_size)
+{
+    return new CHI::MiscNode_TBE(block_size);
+}
+
+void
+EntryFactory<CHI::MiscNode_TBE>::destroy(CHI::MiscNode_TBE *entry)
+{
+    delete entry;
+}
+
 namespace CHI
 {
 
@@ -67,7 +79,7 @@ MN_TBETable::chooseNewDistributor()
     bool has_waiting_sync = false;
     int waiting_count = 0;
     for (auto& keyValuePair : m_map) {
-        MiscNode_TBE& tbe = keyValuePair.second;
+        MiscNode_TBE &tbe = *keyValuePair.second;
 
         switch (tbe.getstate()) {
             case MiscNode_State_DvmSync_Distributing:

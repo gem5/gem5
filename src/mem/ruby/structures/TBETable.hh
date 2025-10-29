@@ -42,6 +42,7 @@
 #define __MEM_RUBY_STRUCTURES_TBETABLE_HH__
 
 #include <iostream>
+#include <memory>
 #include <unordered_map>
 
 #include "mem/ruby/common/Address.hh"
@@ -52,6 +53,41 @@ namespace gem5
 
 namespace ruby
 {
+
+template <class ENTRY> struct EntryFactory
+{
+    static ENTRY *
+    create(int block_size)
+    {
+        return new ENTRY(block_size);
+    }
+
+    static void
+    destroy(ENTRY *entry)
+    {
+        delete entry;
+    }
+};
+
+template <class ENTRY> struct EntryDeleter
+{
+    void
+    operator()(ENTRY *entry) const
+    {
+        EntryFactory<ENTRY>::destroy(entry);
+    }
+};
+
+namespace CHI
+{
+class MiscNode_TBE;
+}
+
+template <> struct EntryFactory<CHI::MiscNode_TBE>
+{
+    static CHI::MiscNode_TBE *create(int block_size);
+    static void destroy(CHI::MiscNode_TBE *entry);
+};
 
 template<class ENTRY>
 class TBETable
@@ -84,8 +120,11 @@ class TBETable
     TBETable(const TBETable& obj);
     TBETable& operator=(const TBETable& obj);
 
+    using EntryPtr = std::unique_ptr<ENTRY, EntryDeleter<ENTRY>>;
+    using MapType = std::unordered_map<Addr, EntryPtr>;
+
     // Data Members (m_prefix)
-    std::unordered_map<Addr, ENTRY> m_map;
+    MapType m_map;
 
   private:
     int m_number_of_TBEs = 0;
@@ -129,9 +168,9 @@ TBETable<ENTRY>::allocate(Addr address)
     assert(!isPresent(address));
     assert(m_map.size() < m_number_of_TBEs);
     assert(m_block_size > 0);
-    ENTRY new_entry = ENTRY(m_block_size);
-    new_entry.setRubySystem(m_ruby_system);
-    m_map.emplace(address, new_entry);
+    EntryPtr new_entry(EntryFactory<ENTRY>::create(m_block_size));
+    new_entry->setRubySystem(m_ruby_system);
+    m_map.emplace(address, std::move(new_entry));
 }
 
 template<class ENTRY>
@@ -155,8 +194,11 @@ template<class ENTRY>
 inline ENTRY*
 TBETable<ENTRY>::lookup(Addr address)
 {
-  if (m_map.find(address) != m_map.end()) return &(m_map.find(address)->second);
-  return NULL;
+    auto it = m_map.find(address);
+    if (it != m_map.end()) {
+        return it->second.get();
+    }
+    return nullptr;
 }
 
 
