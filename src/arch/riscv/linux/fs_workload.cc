@@ -192,7 +192,7 @@ BootloaderKernelWorkload::loadInitrd()
                params().initrd_filename, params().initrd_addr);
 
         loader::ImageFileDataPtr initrd_file_data(
-            new loader::ImageFileData(params().initrd_filename));
+            new loader::ImageFileData(params().initrd_filename, false));
         system->physProxy.writeBlob(params().initrd_addr,
                                     initrd_file_data->data(),
                                     initrd_file_data->len());
