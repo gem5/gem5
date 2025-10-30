@@ -2721,8 +2721,7 @@ WalkUnit::Stage2Walk::finish(const Fault &_fault, const RequestPtr &req,
     }
 
     if (_fault == NoFault && !req->getFlags().isSet(Request::NO_ACCESS)) {
-        parent.getTableWalkerPort().sendTimingReq(req, data,
-            tc->getCpuPtr()->clockPeriod(), event);
+        port->sendTimingReq(req, data, tc->getCpuPtr()->clockPeriod(), event);
     } else {
         // We can't do the DMA access as there's been a problem, so tell the
         // event we're done
