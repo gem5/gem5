@@ -276,7 +276,8 @@ RubyPort::MemResponsePort::recvTimingReq(PacketPtr pkt)
 
     // ruby doesn't support cache maintenance operations at the
     // moment, as a workaround, we respond right away
-    if (pkt->req->isCacheMaintenance()) {
+    if (pkt->req->isCacheMaintenance() &&
+        !owner.m_ruby_system->getProtocolInfo().getSupportsFlushes()) {
         warn_once("Cache maintenance operations are not supported in Ruby.\n");
         pkt->makeResponse();
         schedTimingResp(pkt, curTick());

@@ -79,6 +79,7 @@ class SLICC(Grammar):
             "partial_func_reads": False,
             "use_secondary_load_linked": False,
             "use_secondary_store_conditional": False,
+            "supports_flushes": False,
         }
 
         if not includes:

@@ -738,7 +738,7 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
     // update the data unless it is a non-data-carrying flush
     if (m_ruby_system->getWarmupEnabled()) {
         data.setData(pkt);
-    } else if (!pkt->isFlush()) {
+    } else if (!pkt->isFlush() && !pkt->isCleanInvalidateRequest()) {
         if ((type == RubyRequestType_LD) ||
             (type == RubyRequestType_IFETCH) ||
             (type == RubyRequestType_RMW_Read) ||
@@ -1054,8 +1054,8 @@ Sequencer::makeRequest(PacketPtr pkt)
                     primary_type = secondary_type = RubyRequestType_LD;
                 }
             }
-        } else if (pkt->isFlush()) {
-          primary_type = secondary_type = RubyRequestType_FLUSH;
+        } else if (pkt->isFlush() || pkt->isCleanInvalidateRequest()) {
+            primary_type = secondary_type = RubyRequestType_FLUSH;
         } else if (pkt->cmd == MemCmd::MemSyncReq) {
             primary_type = secondary_type = RubyRequestType_REPLACEMENT;
             assert(!m_cache_inv_pkt);
