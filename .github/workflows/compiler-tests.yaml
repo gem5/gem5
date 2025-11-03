@@ -56,5 +56,7 @@ jobs:
         steps:
             - uses: actions/checkout@v4
             - name: Compile build/ALL/gem5${{ matrix.opts }} with ${{ matrix.sanitizer }} in ${{ matrix.image }}
-              run: /usr/bin/env python3 /usr/bin/scons --ignore-style build/ALL/gem5${{ matrix.opts }} -j$(nproc) --with-${{ matrix.sanitizer }}
+              # The address sanitizer is quite memory intensive; triggering OOM errors on smaller runners.
+              # To mitigate this, we limit scons to a single thread (`-j1`)
+              run: /usr/bin/env python3 /usr/bin/scons --ignore-style build/ALL/gem5${{ matrix.opts }} -j1 --with-${{ matrix.sanitizer }}
               timeout-minutes: 600 # 10 hours

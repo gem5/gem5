@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Arm Limited
+ * Copyright (c) 2024-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -192,7 +192,7 @@ class TlmGenerator : public SimObject
         using Actions = std::list<ActionPtr>;
 
         Transaction(const Transaction &rhs) = delete;
-        Transaction(ARM::CHI::Payload *pa, ARM::CHI::Phase &ph);
+        Transaction(ARM::CHI::Payload *pa, ARM::CHI::Phase &ph, Tick when);
         ~Transaction();
 
         /**
@@ -232,6 +232,11 @@ class TlmGenerator : public SimObject
 
         ARM::CHI::Payload* payload() const { return _payload; }
         ARM::CHI::Phase& phase() { return _phase; }
+        Tick
+        start() const
+        {
+            return _start;
+        }
 
       private:
         Actions actions;
@@ -240,6 +245,7 @@ class TlmGenerator : public SimObject
         TlmGenerator *parent;
         ARM::CHI::Payload *_payload;
         ARM::CHI::Phase _phase;
+        Tick _start;
     };
 
     void scheduleTransaction(Tick when, Transaction *tr);

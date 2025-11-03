@@ -47,5 +47,7 @@ Source('tree_plru_rp.cc')
 Source('weighted_lru_rp.cc')
 
 GTest('replaceable_entry.test', 'replaceable_entry.test.cc')
+GTest('tree_plru_rp.test', 'tree_plru_rp.cc', 'tree_plru_rp.test.cc',
+    with_tag('gem5 simobject'))
 GTest('fifo_rp.test', 'fifo_rp.cc', 'fifo_rp.test.cc',
     with_tag('gem5 simobject'))
