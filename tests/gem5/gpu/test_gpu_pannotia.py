@@ -39,14 +39,14 @@ binary_path = joinpath(resource_path, "pannotia-bins")
 dataset_path = joinpath(resource_path, "pannotia-datasets")
 
 binary_links = {
-    "bc.gem5": "https://dist.gem5.org/dist/v24-0/test-progs/pannotia/bc.gem5",
-    "color_max.gem5": "https://dist.gem5.org/dist/v24-0/test-progs/pannotia/color_max.gem5",
-    "color_maxmin.gem5": "https://dist.gem5.org/dist/v24-0/test-progs/pannotia/color_maxmin.gem5",
-    "mis_hip.gem5": "https://dist.gem5.org/dist/v24-0/test-progs/pannotia/mis_hip.gem5",
+    "bc.gem5": "https://gem5dist.blob.core.windows.net/dist/v24-0/test-progs/pannotia/bc.gem5",
+    "color_max.gem5": "https://gem5dist.blob.core.windows.net/dist/v24-0/test-progs/pannotia/color_max.gem5",
+    "color_maxmin.gem5": "https://gem5dist.blob.core.windows.net/dist/v24-0/test-progs/pannotia/color_maxmin.gem5",
+    "mis_hip.gem5": "https://gem5dist.blob.core.windows.net/dist/v24-0/test-progs/pannotia/mis_hip.gem5",
 }
 
 dataset_links = {
-    "1k_128k.gr": "https://dist.gem5.org/dist/develop/datasets/pannotia/bc/1k_128k.gr",
+    "1k_128k.gr": "https://gem5dist.blob.core.windows.net/dist/develop/datasets/pannotia/bc/1k_128k.gr",
 }
 
 
