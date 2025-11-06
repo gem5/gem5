@@ -3240,6 +3240,14 @@ getrandomFunc(SyscallDesc *desc, ThreadContext *tc,
     return count;
 }
 
+template <typename OS>
+SyscallReturn
+sigreturnFunc(SyscallDesc *desc, ThreadContext *tc)
+{
+    OS::archSigreturn(tc);
+    return SyscallReturn(); // There is no return value for sigreturn.
+}
+
 } // namespace gem5
 
 #endif // __SIM_SYSCALL_EMUL_HH__

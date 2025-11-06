@@ -13,6 +13,7 @@
  *
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * Copyright (c) 2007-2008 The Florida State University
+ * Copyright 2020,2025 Google Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -568,6 +569,45 @@ class ArmLinux64 : public ArmLinux, public OpenFlagTable<ArmLinux64>
         uint64_t cgroup;
     };
 
+    // For sigreturn
+    struct tgt_sigframe
+    {
+        struct tgt_siginfo
+        {
+            int si_signo;
+            int si_errno;
+            int si_code;
+            // union sigval... Not used by us. Pad to correct size instead.
+            unsigned char _pad[128 - 3 * sizeof(int)];
+        } info;
+
+        struct tgt_ucontext
+        {
+            unsigned long int uc_flags;
+            void *uc_link; // not used by us
+            struct
+            {
+                void *ss_sp;
+                size_t ss_size;
+                int ss_flags;
+            } uc_stack;
+            unsigned char uc_sigset_ex[136];
+            struct
+            {
+                unsigned long long int fault_address;
+                unsigned long long int regs[31];
+                unsigned long long int sp;
+                unsigned long long int pc;
+                unsigned long long int pstate;
+                // For FP/SIMD state.
+                unsigned char __reserved[4096]
+                    __attribute__((__aligned__(16)));
+            } uc_mcontext; // Note: This is 304B offset from sp
+            // The start of uc_mcontext is 176B offset from ucontext.
+            long int __glibc_reserved1[5];
+        } uc;
+    };
+
     static void archClone(uint64_t flags,
                           Process *pp, Process *cp,
                           ThreadContext *ptc, ThreadContext *ctc,
@@ -578,6 +618,14 @@ class ArmLinux64 : public ArmLinux, public OpenFlagTable<ArmLinux64>
         if (stack)
             ctc->setReg(ArmISA::int_reg::Sp0, stack);
     }
+
+    /**
+     * This function is called when the kernel restores the context of a
+     * signal handler. The current implementation is a partitial implementation
+     * that only updates the registers and the pc. This is to "restore" state
+     * for binary-based user-mode application snippets.
+     */
+    static void archSigreturn(ThreadContext *ctc);
 };
 
 } // namespace gem5
