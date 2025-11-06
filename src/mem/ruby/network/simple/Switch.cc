@@ -13,6 +13,7 @@
  * modified or unmodified, in source code or in binary form.
  *
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
+ * Copyright (c) 2025 Google
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,6 +42,7 @@
 
 #include "mem/ruby/network/simple/Switch.hh"
 
+#include "base/cprintf.hh"
 #include "mem/ruby/network/MessageBuffer.hh"
 #include "mem/ruby/network/simple/SimpleNetwork.hh"
 
@@ -132,53 +134,6 @@ Switch::addOutPort(std::string link_name,
 }
 
 void
-Switch::regStats()
-{
-    BasicRouter::regStats();
-
-    for (const auto& throttle : throttles) {
-        switchStats.m_avg_utilization += throttle.getUtilization();
-    }
-    switchStats.m_avg_utilization /= statistics::constant(throttles.size());
-
-    for (unsigned int type = MessageSizeType_FIRST;
-         type < MessageSizeType_NUM; ++type) {
-        switchStats.m_msg_counts[type] = new statistics::Formula(&switchStats,
-            csprintf("msg_count.%s",
-                MessageSizeType_to_string(MessageSizeType(type))).c_str());
-        switchStats.m_msg_counts[type]
-            ->flags(statistics::nozero)
-            ;
-
-        switchStats.m_msg_bytes[type] = new statistics::Formula(&switchStats,
-            csprintf("msg_bytes.%s",
-                MessageSizeType_to_string(MessageSizeType(type))).c_str());
-        switchStats.m_msg_bytes[type]
-            ->flags(statistics::nozero)
-            ;
-
-        for (const auto& throttle : throttles) {
-            *(switchStats.m_msg_counts[type]) += throttle.getMsgCount(type);
-        }
-        *(switchStats.m_msg_bytes[type]) =
-            *(switchStats.m_msg_counts[type]) * statistics::constant(
-                Network::MessageSizeType_to_int(MessageSizeType(type)));
-    }
-}
-
-void
-Switch::resetStats()
-{
-    perfectSwitch.clearStats();
-}
-
-void
-Switch::collateStats()
-{
-    perfectSwitch.collateStats();
-}
-
-void
 Switch::print(std::ostream& out) const
 {
     // FIXME printing
@@ -217,12 +172,54 @@ Switch::functionalWrite(Packet *pkt)
     return num_functional_writes;
 }
 
-Switch::
-SwitchStats::SwitchStats(statistics::Group *parent)
+Switch::SwitchStats::SwitchStats(Switch *parent)
     : statistics::Group(parent),
-      m_avg_utilization(this, "percent_links_utilized")
+      parent(parent),
+      ADD_STAT(percent_links_utilized, statistics::units::Ratio::get(),
+               "Percent utilization of all links (out of 100)")
 {
+    for (unsigned int type = MessageSizeType_FIRST; type < MessageSizeType_NUM;
+         ++type) {
+        std::string name_count = csprintf(
+            "msg_count.%s", MessageSizeType_to_string(MessageSizeType(type)));
+        auto msg_count = new statistics::Formula(
+            parent, name_count.c_str(), statistics::units::Count::get(),
+            "Total messages through switch");
+        msg_count->flags(statistics::nozero);
 
+        std::string name_bytes = csprintf(
+            "msg_bytes.%s", MessageSizeType_to_string(MessageSizeType(type)));
+        auto msg_bytes = new statistics::Formula(
+            parent, name_bytes.c_str(), statistics::units::Byte::get(),
+            "Total bytes through switch");
+        msg_bytes->flags(statistics::nozero);
+
+        m_msg_counts.push_back(msg_count);
+        m_msg_bytes.push_back(msg_bytes);
+    }
+}
+
+void
+Switch::SwitchStats::regStats()
+{
+    // Note: Throttles are not available at construction time only at regStats
+    for (const auto &throttle : parent->throttles) {
+        percent_links_utilized += throttle.getUtilization();
+    }
+    percent_links_utilized /= statistics::constant(parent->throttles.size());
+
+    for (unsigned int type = MessageSizeType_FIRST; type < MessageSizeType_NUM;
+         ++type) {
+        for (const auto &throttle : parent->throttles) {
+            *(m_msg_counts[type]) += throttle.getMsgCount(type);
+        }
+        *(m_msg_bytes[type]) =
+            *(m_msg_counts[type]) *
+            statistics::constant(
+                Network::MessageSizeType_to_int(MessageSizeType(type)));
+    }
+
+    statistics::Group::regStats();
 }
 
 } // namespace ruby
