@@ -94,6 +94,7 @@ else:
 Source("interrupts.cc", tags=['arm isa'])
 Source("isa.cc", tags=['arm isa'])
 Source("isa_device.cc", tags=['arm isa'])
+Source("linux/linux.cc", tags=['arm isa'])
 Source("linux/process.cc", tags=['arm isa'])
 Source("linux/se_workload.cc", tags=['arm isa'])
 Source("linux/fs_workload.cc", tags=['arm isa'])

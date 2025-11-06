@@ -574,37 +574,36 @@ class ArmLinux64 : public ArmLinux, public OpenFlagTable<ArmLinux64>
     {
         struct tgt_siginfo
         {
-            int si_signo;
-            int si_errno;
-            int si_code;
+            int32_t si_signo;
+            int32_t si_errno;
+            int32_t si_code;
             // union sigval... Not used by us. Pad to correct size instead.
-            unsigned char _pad[128 - 3 * sizeof(int)];
+            uint8_t _pad[128 - 3 * sizeof(int)];
         } info;
 
         struct tgt_ucontext
         {
-            unsigned long int uc_flags;
-            void *uc_link; // not used by us
+            uint64_t uc_flags;
+            uint64_t uc_link; // (void*) not used by us
             struct
             {
-                void *ss_sp;
-                size_t ss_size;
-                int ss_flags;
+                uint64_t ss_sp; // (void*)
+                uint64_t ss_size;
+                int32_t ss_flags;
             } uc_stack;
-            unsigned char uc_sigset_ex[136];
+            uint8_t uc_sigset_ex[136];
             struct
             {
-                unsigned long long int fault_address;
-                unsigned long long int regs[31];
-                unsigned long long int sp;
-                unsigned long long int pc;
-                unsigned long long int pstate;
+                uint64_t fault_address;
+                uint64_t regs[31];
+                uint64_t sp;
+                uint64_t pc;
+                uint64_t pstate;
                 // For FP/SIMD state.
-                unsigned char __reserved[4096]
-                    __attribute__((__aligned__(16)));
+                uint8_t __reserved[4096] __attribute__((__aligned__(16)));
             } uc_mcontext; // Note: This is 304B offset from sp
             // The start of uc_mcontext is 176B offset from ucontext.
-            long int __glibc_reserved1[5];
+            int64_t __glibc_reserved1[5];
         } uc;
     };
 
