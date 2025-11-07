@@ -33,6 +33,7 @@ from _m5.debug import (
     SimpleFlag,
     allFlags,
     getAllFlagsVersion,
+    schedBreak,
 )
 
 

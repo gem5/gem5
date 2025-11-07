@@ -216,9 +216,7 @@ class TLB : public BaseTLB
 
     void takeOverFrom(BaseTLB *otlb) override;
 
-    void setTableWalker(TableWalker *table_walker);
-
-    TableWalker *getTableWalker() { return tableWalker; }
+    void setTableWalker(TableWalker *table_walker, bool functional = false);
 
     int getsize() const { return size; }
 

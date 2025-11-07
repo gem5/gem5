@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2009, 2012-2013, 2017-2018, 2020, 2024 Arm Limited
+# Copyright (c) 2009, 2012-2013, 2017-2018, 2020, 2024-2025 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -143,10 +143,9 @@ SimObject(
     tags=['arm isa'],
 )
 SimObject(
-    "ArmMMU.py",
-    sim_objects=["ArmTableWalker", "ArmMMU"],
-    tags=['arm isa']
-)
+    'ArmMMU.py',
+    sim_objects=['ArmTableWalker', 'ArmWalkUnit', 'ArmMMU'],
+    tags='arm isa')
 SimObject(
     "ArmNativeTrace.py",
     sim_objects=["ArmNativeTrace"],

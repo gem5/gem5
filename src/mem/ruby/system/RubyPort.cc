@@ -41,12 +41,9 @@
 
 #include "mem/ruby/system/RubyPort.hh"
 
-#include "base/compiler.hh"
-#include "cpu/testers/rubytest/RubyTester.hh"
 #include "debug/Config.hh"
 #include "debug/Drain.hh"
-#include "debug/Ruby.hh"
-#include "mem/ruby/protocol/AccessPermission.hh"
+#include "debug/RubyPort.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/simple_mem.hh"
 #include "sim/full_system.hh"

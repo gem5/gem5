@@ -1,6 +1,6 @@
 /*
  * Copyright 2014 Google, Inc.
- * Copyright (c) 2010-2014, 2017, 2020 ARM Limited
+ * Copyright (c) 2010-2014, 2017, 2020, 2025 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -62,7 +62,6 @@
 #include "debug/Drain.hh"
 #include "debug/ExecFaulting.hh"
 #include "debug/HtmCpu.hh"
-#include "debug/O3PipeView.hh"
 #include "params/BaseO3CPU.hh"
 #include "sim/faults.hh"
 #include "sim/full_system.hh"
@@ -1224,13 +1223,7 @@ Commit::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
     DPRINTF(Commit,
             "[tid:%i] [sn:%llu] Committing instruction with PC %s\n",
             tid, head_inst->seqNum, head_inst->pcState());
-    if (head_inst->traceData) {
-        head_inst->traceData->setFetchSeq(head_inst->seqNum);
-        head_inst->traceData->setCPSeq(thread[tid]->numOp);
-        head_inst->traceData->dump();
-        delete head_inst->traceData;
-        head_inst->traceData = NULL;
-    }
+
     if (head_inst->isReturn()) {
         DPRINTF(Commit,
                 "[tid:%i] [sn:%llu] Return Instruction Committed PC %s \n",
@@ -1251,11 +1244,15 @@ Commit::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
     // Finally clear the head ROB entry.
     rob->retireHead(tid);
 
-#if TRACING_ON
-    if (debug::O3PipeView) {
-        head_inst->commitTick = curTick() - head_inst->fetchTick;
+    head_inst->commitTick = curTick() - head_inst->fetchTick;
+
+    if (head_inst->traceData) {
+        head_inst->traceData->setFetchSeq(head_inst->seqNum);
+        head_inst->traceData->setCPSeq(thread[tid]->numOp);
+        head_inst->traceData->dump();
+        delete head_inst->traceData;
+        head_inst->traceData = NULL;
     }
-#endif
 
     // If this was a store, record it for this cycle.
     if (head_inst->isStore() || head_inst->isAtomic())

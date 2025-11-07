@@ -38,6 +38,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects.ClockedObject import ClockedObject
+from m5.objects.RubyCache import RubyCache
+from m5.objects.RubySystem import RubySystem
+from m5.objects.System import System
 from m5.params import *
 from m5.proxy import *
 

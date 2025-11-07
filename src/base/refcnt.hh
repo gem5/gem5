@@ -43,6 +43,8 @@
 
 #include <type_traits>
 
+#include "base/compiler.hh"
+
 /**
  * @file base/refcnt.hh
  *
@@ -163,7 +165,7 @@ class RefCountingPtr
      * @attention this doesn't clear the pointer value, so a double
      * decref could happen if not careful.
      */
-    void
+    GEM5_NO_INLINE void
     del()
     {
         if (data && data->decref()) {
@@ -259,7 +261,11 @@ class RefCountingPtr
     bool operator!() const { return data == 0; }
 
     /// Check if the pointer is non-empty
-    operator bool() const { return data != 0; }
+    explicit
+    operator bool() const
+    {
+        return data != 0;
+    }
 };
 
 /// Check for equality of two reference counting pointers.

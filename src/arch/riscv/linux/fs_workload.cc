@@ -184,12 +184,36 @@ BootloaderKernelWorkload::loadKernel()
     }
 }
 
+void
+BootloaderKernelWorkload::loadInitrd()
+{
+    if (params().initrd_filename != "") {
+        inform("Loading initrd file: %s at address %#x\n",
+               params().initrd_filename, params().initrd_addr);
+
+        loader::ImageFileDataPtr initrd_file_data(
+            new loader::ImageFileData(params().initrd_filename, false));
+        system->physProxy.writeBlob(params().initrd_addr,
+                                    initrd_file_data->data(),
+                                    initrd_file_data->len());
+        initrd_len = initrd_file_data->len();
+    }
+}
 
 void
 BootloaderKernelWorkload::loadDtb()
 {
     if (params().dtb_filename != "") {
         auto *dtb_file = new loader::DtbFile(params().dtb_filename);
+
+        if (params().initrd_filename != "") {
+            if (!dtb_file->addBootData(params().command_line.c_str(),
+                                       params().command_line.size(),
+                                       params().initrd_addr, initrd_len)) {
+                warn("couldn't append bootargs to DTB file: %s\n",
+                     params().dtb_filename);
+            }
+        }
 
         dtb_file->buildImage().offset(params().dtb_addr)
             .write(system->physProxy);
@@ -236,6 +260,7 @@ BootloaderKernelWorkload::initState()
 {
     loadBootloader();
     loadKernel();
+    loadInitrd();
     loadDtb();
 
     for (auto *tc: system->threads) {

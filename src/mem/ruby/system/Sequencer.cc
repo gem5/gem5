@@ -41,13 +41,9 @@
 
 #include "mem/ruby/system/Sequencer.hh"
 
-#include "arch/x86/ldstflags.hh"
-#include "base/compiler.hh"
 #include "base/logging.hh"
-#include "base/str.hh"
 #include "cpu/testers/rubytest/RubyTester.hh"
 #include "debug/LLSC.hh"
-#include "debug/MemoryAccess.hh"
 #include "debug/ProtocolTrace.hh"
 #include "debug/RubyHitMiss.hh"
 #include "debug/RubySequencer.hh"
@@ -59,7 +55,6 @@
 #include "mem/ruby/slicc_interface/RubyRequest.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
 #include "mem/ruby/system/RubySystem.hh"
-#include "sim/system.hh"
 
 namespace gem5
 {

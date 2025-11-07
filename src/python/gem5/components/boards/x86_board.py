@@ -104,6 +104,15 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
         if self.is_fullsystem():
             self.pc = Pc()
 
+            # FIXME: There should have some latency added to transfer packets
+            # within the PCI bus/hierarchy, but adding them breaks X86 Board
+            # which will hang forever. The hanging can be reproduced b
+            # removing the following three lines then running gem5 with the
+            # "configs/example/gem5_library/x86-ubuntu-run.py" script.
+            self.pc.pci_bus.frontend_latency = 0
+            self.pc.pci_bus.forward_latency = 0
+            self.pc.pci_bus.response_latency = 0
+
             self.workload = X86FsLinux()
 
             # North Bridge
@@ -205,6 +214,7 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
         )
 
         pci_bus = X86IntelMPBus(bus_id=0, bus_type="PCI   ")
+
         base_entries.append(pci_bus)
         isa_bus = X86IntelMPBus(bus_id=1, bus_type="ISA   ")
         base_entries.append(isa_bus)

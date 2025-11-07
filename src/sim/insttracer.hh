@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2017, 2020, 2023 Arm Limited
+ * Copyright (c) 2014, 2017, 2020, 2023, 2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -349,6 +349,14 @@ class InstTracer : public SimObject
         getInstRecord(Tick when, ThreadContext *tc,
                 const StaticInstPtr staticInst, const PCStateBase &pc,
                 const StaticInstPtr macroStaticInst=nullptr) = 0;
+
+    virtual InstRecord *
+    getInstRecord(Tick when, ThreadContext *tc, const ExecContext *xc,
+                  const StaticInstPtr staticInst, const PCStateBase &pc,
+                  const StaticInstPtr macroStaticInst = nullptr)
+    {
+        return getInstRecord(when, tc, staticInst, pc, macroStaticInst);
+    };
 
     std::string
     disassemble(StaticInstPtr inst,

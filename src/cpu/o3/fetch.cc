@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2014 ARM Limited
+ * Copyright (c) 2010-2014, 2025 Arm Limited
  * Copyright (c) 2012-2013 AMD
  * Copyright (c) 2022-2023 The University of Edinburgh
  * All rights reserved.
@@ -60,7 +60,6 @@
 #include "debug/Drain.hh"
 #include "debug/Fetch.hh"
 #include "debug/O3CPU.hh"
-#include "debug/O3PipeView.hh"
 #include "mem/packet.hh"
 #include "params/BaseO3CPU.hh"
 #include "sim/byteswap.hh"
@@ -1033,9 +1032,9 @@ Fetch::buildInst(ThreadID tid, StaticInstPtr staticInst,
 
 #if TRACING_ON
     if (trace) {
-        instruction->traceData =
-            cpu->getTracer()->getInstRecord(curTick(), cpu->tcBase(tid),
-                    instruction->staticInst, this_pc, curMacroop);
+        instruction->traceData = cpu->getTracer()->getInstRecord(
+            curTick(), cpu->tcBase(tid), instruction.get(),
+            instruction->staticInst, this_pc, curMacroop);
     }
 #else
     instruction->traceData = NULL;
@@ -1283,11 +1282,7 @@ Fetch::fetch(bool &status_change)
             ppFetch->notify(instruction);
             numInst++;
 
-#if TRACING_ON
-            if (debug::O3PipeView) {
-                instruction->fetchTick = curTick();
-            }
-#endif
+            instruction->fetchTick = curTick();
 
             set(next_pc, this_pc);
 
