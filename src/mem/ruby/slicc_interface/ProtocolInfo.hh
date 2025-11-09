@@ -75,7 +75,9 @@ class ProtocolInfo
     }
     bool
     getSupportsFlushes() const
-    { return supportsFlushes; }
+    {
+        return supportsFlushes;
+    }
 };
 
 } // namespace ruby
