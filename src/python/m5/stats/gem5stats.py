@@ -1,3 +1,15 @@
+# Copyright (c) 2025 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2021 The Regents of The University of California
 # All rights reserved.
 #
@@ -317,14 +329,30 @@ def _process_simobject_object(simobject: SimObject) -> SimObjectGroup:
             re.compile(f"{to_match}" + r"\d*").search(name)
             for to_match in stats.keys()
         ):
-            stats[name] = Group(**_process_simobject_stats(child))
+            stats[name] = Group(
+                type="Group", **_process_simobject_stats(child)
+            )
 
     return SimObjectGroup(**stats)
 
 
+def _process_group(group: _m5_stats.Group) -> dict:
+    out = {}
+    for stat in group.getStats():
+        val = __get_statistic(stat)
+        if val is not None:
+            out[stat.name] = val
+    for name, sub in group.getStatGroups().items():
+        out[name] = Group(type="Group", **_process_group(sub))
+    return out
+
+
 def _process_simobject_stats(
     simobject: Union[
-        SimObject, SimObjectVector, List[Union[SimObject, SimObjectVector]]
+        _m5_stats.Group,
+        SimObject,
+        SimObjectVector,
+        List[Union[SimObject, SimObjectVector]],
     ],
 ) -> Union[List[Dict], Dict]:
     """
@@ -344,6 +372,9 @@ def _process_simobject_stats(
         for obj in simobject:
             stats_list.append(_process_simobject_stats(obj))
         return SimObjectVectorGroup(value=stats_list)
+
+    if isinstance(simobject, _m5_stats.Group):
+        return _process_group(simobject)
 
     return {}
 
