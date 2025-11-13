@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Checkpoint the first execution
+echo "running 519.lbm_r"
+echo "Reseting stats..."
+/sbin/m5 resetstats
+
+cd /home/CPU/519.lbm_r/run/run_base_refrate_scpc-m64.0000
+../../exe/lbm_r_base.scpc-m64 3000 reference.dat 0 0 100_100_130_ldc.of
+
+echo "Fell through script. Exiting..."
+/sbin/m5 exit

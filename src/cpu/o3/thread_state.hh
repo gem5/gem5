@@ -91,6 +91,9 @@ class ThreadState : public gem5::ThreadState
     /** Pointer to the hardware transactional memory checkpoint. */
     std::unique_ptr<BaseHTMCheckpoint> htmCheckpoint;
 
+    // Microarchitectural protection flag used for speculation
+    bool protectionFlag = false;
+
     ThreadState(CPU *_cpu, int _thread_num, Process *_process);
 
     void serialize(CheckpointOut &cp) const override;

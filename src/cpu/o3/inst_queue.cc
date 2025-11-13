@@ -840,7 +840,7 @@ InstructionQueue::scheduleReadyInsts()
         Cycles op_latency;
         ThreadID tid;
     };
-    std::vector<IssuedInstInfo> issued_insts;
+    std::vector<IssuedInstInfo> issued_inst_protected;
 
     while (total_issued < totalWidth && order_it != order_end_it) {
         OpClass op_class = (*order_it).queueType;
@@ -897,7 +897,7 @@ InstructionQueue::scheduleReadyInsts()
         int idx_shadow = FUPool::NoNeedFU;
         bool has_shadow = false;
         OpClass shadow_op_class = op_class;
-        if(enableShrewd && priorityToShadow){
+        if(enableShrewd && priorityToShadow && issuing_inst->protected_){
         // Ask for shadow unit to check the result.
         requestShadow(idx, idx_shadow, op_class, shadow_op_class, has_shadow, op_latency);
         }
@@ -963,15 +963,15 @@ InstructionQueue::scheduleReadyInsts()
                 }
             }
 
-            // Track issued instructions for delayed shadow processing
-            if (enableShrewd && !priorityToShadow) {
+            // Track issued instructions for delayed shadow processing, only ones protected are added
+            if (enableShrewd && !priorityToShadow && issuing_inst->protected_) {
                 IssuedInstInfo info;
                 info.inst = issuing_inst;
                 info.idx = idx;
                 info.op_class = op_class;
                 info.op_latency = op_latency;
                 info.tid = tid;
-                issued_insts.push_back(info);
+                issued_inst_protected.push_back(info);
             }
 
             DPRINTF(IQ, "Thread %i: Issuing instruction PC %s "
@@ -1028,7 +1028,7 @@ InstructionQueue::scheduleReadyInsts()
 
     // Process shadow requests for issued instructions when priorityToShadow is false
     if (enableShrewd && !priorityToShadow) {
-        for (auto &info : issued_insts) {
+        for (auto &info : issued_inst_protected) {
             int idx_shadow = FUPool::NoNeedFU;
             bool has_shadow = false;
             OpClass shadow_op_class = info.op_class;

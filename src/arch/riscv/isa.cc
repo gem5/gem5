@@ -282,6 +282,8 @@ const std::array<const char *, NUM_MISCREGS> MiscRegNames = {{
 
     [MISCREG_JVT] = "JVT",
 
+    [MISCREG_PROTECTION] = "PROTECTION",
+
     [MISCREG_FFLAGS_EXE]    = "FFLAGS_EXE",
 }};
 
@@ -428,6 +430,9 @@ void ISA::clear()
     // triggers, starting at zero. simply set a different value here.
     miscRegFile[MISCREG_TSELECT] = 1;
     miscRegFile[MISCREG_NMIE] = enableSmrnmi() ? 0 : 1;
+
+    // Protection Status Register
+    miscRegFile[MISCREG_PROTECTION] = 0;
 }
 
 Fault

@@ -292,6 +292,9 @@ enum MiscRegIndex
     MISCREG_HPMCOUNTER31H,
     MISCREG_JVT,
 
+    // Protection Status Register
+    MISCREG_PROTECTION,
+
     NUM_PHYS_MISCREGS,
     MISCREG_FFLAGS_EXE = NUM_PHYS_MISCREGS,
 
@@ -541,6 +544,9 @@ enum CSRIndex
     CSR_MNSTATUS     = 0x744,
 
     CSR_JVT          = 0x017,
+
+    // Protection Status Register
+    CSR_PROTECTION   = 0x800,
 
     // H-extension (RV64) CSRs
 
@@ -1239,6 +1245,10 @@ const std::unordered_map<int, CSRMetadata> CSRData = {
 
     {CSR_JVT,
         {"jvt", MISCREG_JVT, rvTypeFlags(RV64, RV32), isaExtsFlags()}},
+
+    // Custom CSR for secon/secoff instructions
+    {CSR_PROTECTION,
+        {"protection", MISCREG_PROTECTION, rvTypeFlags(RV64, RV32), isaExtsFlags()}},
 
     // H-extension CSR -> MISCREG mappings
     {CSR_MTINST,

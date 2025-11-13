@@ -1,0 +1,16 @@
+Loading new script...
+running 519.lbm_r
+Reseting stats...
+MAIN_printInfo:
+	grid size      : 100 x 100 x 130 = 1.30 * 10^6 Cells
+	nTimeSteps     : 3000
+	result file    : reference.dat
+	action         : nothing
+	simulation type: lid-driven cavity
+	obstacle file  : 100_100_130_ldc.of
+
+LBM_showGridStatistics:
+	nObstacleCells:  112539 nAccelCells:   18432 nFluidCells: 1169029
+	minRho: 1.000000 maxRho: 1.000000 Mass: 1.300000e+06
+	minU  : 0.000000 maxU  : 0.000000
+

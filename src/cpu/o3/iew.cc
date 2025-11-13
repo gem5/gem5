@@ -459,6 +459,9 @@ IEW::squashDueToBranch(const DynInstPtr& inst, ThreadID tid)
             " PC: %s "
             "\n", tid, inst->seqNum, inst->pcState() );
 
+    // Restore protection flag to state before branch
+    cpu->thread[tid]->protectionFlag = inst->savedProtectionFlag;
+
     if (!toCommit->squash[tid] ||
             inst->seqNum < toCommit->squashedSeqNum[tid]) {
         toCommit->squash[tid] = true;

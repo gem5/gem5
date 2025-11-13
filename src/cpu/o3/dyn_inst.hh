@@ -325,6 +325,12 @@ class DynInst : public ExecContext, public RefCounted
     /** Predicted PC state after this instruction. */
     std::unique_ptr<PCStateBase> predPC;
 
+    // Protected Tag
+    bool protected_ = false;
+
+    // Previous protection flag to revert upon misprediction (Only for branches)
+    bool savedProtectionFlag = false;
+
     /** The Macroop if one exists */
     const StaticInstPtr macroop;
 

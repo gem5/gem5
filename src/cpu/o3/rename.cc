@@ -729,6 +729,14 @@ Rename::renameInsts(ThreadID tid)
 
         renameDestRegs(inst, inst->threadNumber);
 
+        // Check for protection insts to update flag immediately
+        const std::string &inst_name = inst->staticInst->getName();
+        if (inst_name == "secon") {
+            cpu->thread[tid]->protectionFlag = true;
+        } else if (inst_name == "secoff") {
+            cpu->thread[tid]->protectionFlag = false;
+        }
+
         if (inst->isAtomic() || inst->isStore()) {
             storesInProgress[tid]++;
         } else if (inst->isLoad()) {
@@ -739,6 +747,14 @@ Rename::renameInsts(ThreadID tid)
         // Notify potential listeners that source and destination registers for
         // this instruction have been renamed.
         ppRename->notify(inst);
+
+        // Capture the protection flag value for this instruction as it enters ROB
+        inst->protected_ = cpu->thread[tid]->protectionFlag;
+        
+        // For branch/speculation-creating instructions, also save the flag for recovery
+        if (inst->isControl()) {
+            inst->savedProtectionFlag = cpu->thread[tid]->protectionFlag;
+        }
 
         // Put instruction in rename queue.
         toIEW->insts[toIEWIndex] = inst;

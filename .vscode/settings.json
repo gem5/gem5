@@ -3,5 +3,15 @@
         "src/python",
         "ext",
         "tests"
-    ]
+    ],
+    "files.associations": {
+        "*.isa": "cpp",
+        "future": "cpp",
+        "istream": "cpp",
+        "ostream": "cpp",
+        "system_error": "cpp",
+        "*.inc": "cpp",
+        "format": "cpp",
+        "thread": "cpp"
+    }
 }
