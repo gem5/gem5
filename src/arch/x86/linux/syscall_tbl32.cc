@@ -87,7 +87,7 @@ SyscallDescTable<EmuLinux::SyscallABI32> EmuLinux::syscallDescs32 = {
     {  34, "nice" },
     {  35, "ftime" },
     {  36, "sync" },
-    {  37, "kill" },
+    {  37, "kill", killFunc<X86Linux32> },
     {  38, "rename" },
     {  39, "mkdir", mkdirFunc },
     {  40, "rmdir", mkdirFunc },

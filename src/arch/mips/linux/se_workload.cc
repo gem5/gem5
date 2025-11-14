@@ -206,7 +206,7 @@ SyscallDescTable<MipsISA::SEWorkload::SyscallABI> EmuLinux::syscallDescs = {
     { 4034, "nice" },
     { 4035, "ftime" },
     { 4036, "sync" },
-    { 4037, "kill" },
+    { 4037, "kill", killFunc<MipsLinux> },
     { 4038, "rename" },
     { 4039, "mkdir", mkdirFunc },
     { 4040, "rmdir" },

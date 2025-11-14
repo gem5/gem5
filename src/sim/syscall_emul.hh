@@ -2586,6 +2586,15 @@ tgkillFunc(SyscallDesc *desc, ThreadContext *tc, int tgid, int tid, int sig)
     return 0;
 }
 
+template <typename OS>
+SyscallReturn
+killFunc(SyscallDesc *desc, ThreadContext *tc, int pid, int sig)
+{
+    // kill is equivalent to tgkill, since tgkill only supports
+    // signals that terminate the entire thread group anyway.
+    return tgkillFunc<OS>(desc, tc, pid, pid, sig);
+}
+
 template <class OS>
 SyscallReturn
 socketFunc(SyscallDesc *desc, ThreadContext *tc,

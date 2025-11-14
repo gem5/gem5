@@ -112,7 +112,7 @@ SyscallDescTable<EmuLinux::SyscallABI64> EmuLinux::syscallDescs64 = {
     {  59, "execve", execveFunc<X86Linux64> },
     {  60, "exit", exitFunc },
     {  61, "wait4", wait4Func<X86Linux64> },
-    {  62, "kill" },
+    {  62, "kill", killFunc<X86Linux64> },
     {  63, "uname", unameFunc },
     {  64, "semget" },
     {  65, "semop" },

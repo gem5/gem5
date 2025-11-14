@@ -134,7 +134,7 @@ SyscallDescTable<SEWorkload::SyscallABI32> EmuLinux::syscall32Descs = {
     {  34, "nice" }, // 32 bit
     {  35, "chown32" },
     {  36, "sync" },
-    {  37, "kill" }, // 32 bit
+    {  37, "kill", killFunc<Sparc32Linux> }, // 32 bit
     {  38, "stat" },
     {  39, "sendfile" }, // 32 bit
     {  40, "lstat" },
@@ -437,7 +437,7 @@ SyscallDescTable<SEWorkload::SyscallABI64> EmuLinux::syscallDescs = {
     { 34, "nice" },
     { 35, "chown32" },
     { 36, "sync" },
-    { 37, "kill" },
+    { 37, "kill", killFunc<SparcLinux> },
     { 38, "stat" },
     { 39, "sendfile" },
     { 40, "lstat" },
