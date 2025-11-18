@@ -314,12 +314,12 @@ ISA::ISA(const Params &p) : BaseISA(p, "riscv"),
     _regClasses.push_back(&ccRegClass);
     _regClasses.push_back(&miscRegClass);
 
-    fatal_if( p.vlen < p.elen,
-    "VLEN should be greater or equal",
-        "than ELEN. Ch. 2RISC-V vector spec.");
+    if (enableRvv) {
+        fatal_if(p.vlen < p.elen, "VLEN should be greater or equal",
+                 "than ELEN. Ch. 2RISC-V vector spec.");
 
-    inform("RVV enabled, VLEN = %d bits, ELEN = %d bits",
-            p.vlen, p.elen);
+        inform("RVV enabled, VLEN = %d bits, ELEN = %d bits", p.vlen, p.elen);
+    }
 
     miscRegFile.resize(NUM_PHYS_MISCREGS);
     clear();
