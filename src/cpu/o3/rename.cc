@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012, 2014-2019 ARM Limited
+ * Copyright (c) 2010-2012, 2014-2019, 2025 Arm Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
@@ -48,7 +48,6 @@
 #include "cpu/o3/limits.hh"
 #include "cpu/reg_class.hh"
 #include "debug/Activity.hh"
-#include "debug/O3PipeView.hh"
 #include "debug/Rename.hh"
 #include "params/BaseO3CPU.hh"
 
@@ -57,6 +56,28 @@ namespace gem5
 
 namespace o3
 {
+
+// clang-format off
+std::string Rename::RenameStats::statusStrings[ThreadStatusMax] = {
+    "Running",
+    "Idle",
+    "StartSquash",
+    "Squashing",
+    "Blocked",
+    "Unblocking",
+    "SerializeStall",
+};
+
+std::string Rename::RenameStats::statusDefinitions[ThreadStatusMax] = {
+    "Number of cycles rename is running",
+    "Number of cycles rename is idle",
+    "Not Used",
+    "Number of cycles rename is squashing",
+    "Number of cycles rename is blocking",
+    "Number of cycles rename is unblocking",
+    "Number of cycles rename stalled for serializing inst",
+};
+// clang-format on
 
 Rename::Rename(CPU *_cpu, const BaseO3CPUParams &params)
     : cpu(_cpu),
@@ -96,18 +117,8 @@ Rename::name() const
 
 Rename::RenameStats::RenameStats(statistics::Group *parent)
     : statistics::Group(parent, "rename"),
-      ADD_STAT(squashCycles, statistics::units::Cycle::get(),
-               "Number of cycles rename is squashing"),
-      ADD_STAT(idleCycles, statistics::units::Cycle::get(),
-               "Number of cycles rename is idle"),
-      ADD_STAT(blockCycles, statistics::units::Cycle::get(),
-               "Number of cycles rename is blocking"),
-      ADD_STAT(serializeStallCycles, statistics::units::Cycle::get(),
-               "count of cycles rename stalled for serializing inst"),
-      ADD_STAT(runCycles, statistics::units::Cycle::get(),
-               "Number of cycles rename is running"),
-      ADD_STAT(unblockCycles, statistics::units::Cycle::get(),
-               "Number of cycles rename is unblocking"),
+      ADD_STAT(status, statistics::units::Cycle::get(),
+               "Number of cycles spent in each rename state"),
       ADD_STAT(renamedInsts, statistics::units::Count::get(),
                "Number of instructions processed by rename"),
       ADD_STAT(squashedInsts, statistics::units::Count::get(),
@@ -117,7 +128,7 @@ Rename::RenameStats::RenameStats(statistics::Group *parent)
       ADD_STAT(IQFullEvents, statistics::units::Count::get(),
                "Number of times rename has blocked due to IQ full"),
       ADD_STAT(LQFullEvents, statistics::units::Count::get(),
-               "Number of times rename has blocked due to LQ full" ),
+               "Number of times rename has blocked due to LQ full"),
       ADD_STAT(SQFullEvents, statistics::units::Count::get(),
                "Number of times rename has blocked due to SQ full"),
       ADD_STAT(fullRegistersEvents, statistics::units::Count::get(),
@@ -152,12 +163,11 @@ Rename::RenameStats::RenameStats(statistics::Group *parent)
                "count of registers freed and written back to floating point free list")
 
 {
-    squashCycles.prereq(squashCycles);
-    idleCycles.prereq(idleCycles);
-    blockCycles.prereq(blockCycles);
-    serializeStallCycles.flags(statistics::total);
-    runCycles.prereq(idleCycles);
-    unblockCycles.prereq(unblockCycles);
+    status.init(ThreadStatusMax).flags(statistics::pdf | statistics::nozero);
+    for (int i = 0; i < ThreadStatusMax; ++i) {
+        status.subname(i, statusStrings[i]);
+        status.subdesc(i, statusDefinitions[i]);
+    }
 
     renamedInsts.prereq(renamedInsts);
     squashedInsts.prereq(squashedInsts);
@@ -425,13 +435,8 @@ Rename::tick()
 
     sortInsts();
 
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
     // Check stall and squash signals.
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         DPRINTF(Rename, "Processing [tid:%i]\n", tid);
 
         status_change = checkSignalsAndUpdate(tid) || status_change;
@@ -448,11 +453,7 @@ Rename::tick()
         cpu->activityThisCycle();
     }
 
-    threads = activeThreads->begin();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         // If we committed this cycle then doneSeqNum will be > 0
         if (fromCommit->commitInfo[tid].doneSeqNum != 0 &&
             !fromCommit->commitInfo[tid].squash &&
@@ -486,11 +487,11 @@ Rename::rename(bool &status_change, ThreadID tid)
     //     check if stall conditions have passed
 
     if (renameStatus[tid] == Blocked) {
-        ++stats.blockCycles;
+        ++stats.status[Blocked];
     } else if (renameStatus[tid] == Squashing) {
-        ++stats.squashCycles;
+        ++stats.status[Squashing];
     } else if (renameStatus[tid] == SerializeStall) {
-        ++stats.serializeStallCycles;
+        ++stats.status[SerializeStall];
         // If we are currently in SerializeStall and resumeSerialize
         // was set, then that means that we are resuming serializing
         // this cycle.  Tell the previous stages to block.
@@ -544,12 +545,12 @@ Rename::renameInsts(ThreadID tid)
         DPRINTF(Rename, "[tid:%i] Nothing to do, breaking out early.\n",
                 tid);
         // Should I change status to idle?
-        ++stats.idleCycles;
+        ++stats.status[Idle];
         return;
     } else if (renameStatus[tid] == Unblocking) {
-        ++stats.unblockCycles;
+        ++stats.status[Unblocking];
     } else if (renameStatus[tid] == Running) {
-        ++stats.runCycles;
+        ++stats.status[Running];
     }
 
     // Will have to do a different calculation for the number of free
@@ -749,6 +750,8 @@ Rename::renameInsts(ThreadID tid)
         // this instruction have been renamed.
         ppRename->notify(inst);
 
+        inst->renameEndTick = curTick() - inst->fetchTick;
+
         // Put instruction in rename queue.
         toIEW->insts[toIEWIndex] = inst;
         ++(toIEW->size);
@@ -820,23 +823,14 @@ Rename::sortInsts()
     for (int i = 0; i < insts_from_decode; ++i) {
         const DynInstPtr &inst = fromDecode->insts[i];
         insts[inst->threadNumber].push_back(inst);
-#if TRACING_ON
-        if (debug::O3PipeView) {
-            inst->renameTick = curTick() - inst->fetchTick;
-        }
-#endif
+        inst->renameTick = curTick() - inst->fetchTick;
     }
 }
 
 bool
 Rename::skidsEmpty()
 {
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (!skidBuffer[tid].empty())
             return false;
     }
@@ -849,12 +843,7 @@ Rename::updateStatus()
 {
     bool any_unblocking = false;
 
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (renameStatus[tid] == Unblocking) {
             any_unblocking = true;
             break;

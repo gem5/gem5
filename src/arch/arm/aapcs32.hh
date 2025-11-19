@@ -312,8 +312,8 @@ struct Argument<Aapcs32, Composite, typename std::enable_if_t<
         size_t bytes = sizeof(Composite);
         using Chunk = uint32_t;
 
-        const int chunk_size = sizeof(Chunk);
-        const int regs = (bytes + chunk_size - 1) / chunk_size;
+        const size_t chunk_size = sizeof(Chunk);
+        const size_t regs = (bytes + chunk_size - 1) / chunk_size;
 
         if (bytes <= chunk_size) {
             if (state.ncrn++ <= state.MAX_CRN) {
@@ -328,26 +328,28 @@ struct Argument<Aapcs32, Composite, typename std::enable_if_t<
             state.ncrn++;
 
         if (state.ncrn + regs - 1 <= state.MAX_CRN) {
-            alignas(alignof(Composite)) uint8_t buf[bytes];
+            std::align_val_t align{alignof(Composite)};
+            auto buf = std::unique_ptr<uint8_t[]>(new (align) uint8_t[bytes]);
             for (int i = 0; i < regs; i++) {
                 Chunk val = tc->getReg(ArmISA::intRegClass[state.ncrn++]);
                 val = htog(val, ArmISA::byteOrder(tc));
-                size_t to_copy = std::min<size_t>(bytes, chunk_size);
-                memcpy(buf + i * chunk_size, &val, to_copy);
+                size_t to_copy = std::min(bytes, chunk_size);
+                memcpy(buf.get() + i * chunk_size, &val, to_copy);
                 bytes -= to_copy;
             }
-            return gtoh(*(Composite *)buf, ArmISA::byteOrder(tc));
+            return gtoh(*(Composite *)buf.get(), ArmISA::byteOrder(tc));
         }
 
         if (!state.stackUsed && state.ncrn <= state.MAX_CRN) {
-            alignas(alignof(Composite)) uint8_t buf[bytes];
+            std::align_val_t align{alignof(Composite)};
+            auto buf = std::unique_ptr<uint8_t[]>(new (align) uint8_t[bytes]);
 
             int offset = 0;
             while (state.ncrn <= state.MAX_CRN) {
                 Chunk val = tc->getReg(ArmISA::intRegClass[state.ncrn++]);
                 val = htog(val, ArmISA::byteOrder(tc));
-                size_t to_copy = std::min<size_t>(bytes, chunk_size);
-                memcpy(buf + offset, &val, to_copy);
+                size_t to_copy = std::min(bytes, chunk_size);
+                memcpy(buf.get() + offset, &val, to_copy);
                 offset += to_copy;
                 bytes -= to_copy;
             }
@@ -358,7 +360,7 @@ struct Argument<Aapcs32, Composite, typename std::enable_if_t<
                 PortProxy &virt_proxy = FullSystem ? fs_proxy : se_proxy;
 
                 virt_proxy.readBlob(
-                    state.nsaa, buf, bytes);
+                    state.nsaa, buf.get(), bytes);
 
                 state.stackUsed = true;
                 state.nsaa += roundUp(bytes, 4);

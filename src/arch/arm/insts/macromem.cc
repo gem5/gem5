@@ -246,7 +246,12 @@ PairMemOp::PairMemOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
                      bool signExt, bool exclusive, bool acrel,
                      int64_t imm, AddrMode mode,
                      RegIndex rn, RegIndex rt, RegIndex rt2) :
-    PredMacroOp(mnem, machInst, __opClass)
+    PredMacroOp(mnem, machInst, __opClass),
+    mode(mode),
+    rn(rn),
+    rt(rt),
+    rt2(rt2),
+    imm(imm)
 {
     bool post = (mode == AddrMd_PostIndex);
     bool writeback = (mode != AddrMd_Offset);
@@ -1640,6 +1645,32 @@ MicroMemPairOp::generateDisassembly(
     ss << ", ";
     ccprintf(ss, "#%d", imm);
     ss << "]";
+    return ss.str();
+}
+
+std::string
+PairMemOp::generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss);
+    printIntReg(ss, rt);
+    ss << ", ";
+    printIntReg(ss, rt2);
+    ss << ", [";
+    printIntReg(ss, rn, 64);
+    if (mode == AddrMd_PostIndex) {
+        ss << "]";
+    }
+    if (imm) {
+        ccprintf(ss, ", #%d", imm);
+    }
+    if (mode != AddrMd_PostIndex) {
+        ss << "]";
+    }
+    if (mode == AddrMd_PreIndex) {
+        ss << "!";
+    }
     return ss.str();
 }
 

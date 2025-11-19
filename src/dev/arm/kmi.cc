@@ -47,6 +47,7 @@
 #include "dev/ps2/device.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
+#include "params/Pl050.hh"
 
 namespace gem5
 {

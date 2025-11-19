@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2014, 2016-2020, 2022-2024 Arm Limited
+ * Copyright (c) 2009-2014, 2016-2020, 2022-2025 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -1283,6 +1283,36 @@ SPAlignmentCheckEnabled(ThreadContext *tc)
         panic("Invalid exception level");
         break;
     }
+}
+
+unsigned
+addrAlignmentFlags(int memsize, unsigned memAccessFlags)
+{
+    unsigned flags = memAccessFlags & (~(unsigned)MMU::AlignmentMask);
+    switch (memsize) {
+        case 1:
+            flags = flags | MMU::AlignByte;
+            break;
+        case 2:
+            flags = flags | MMU::AlignHalfWord;
+            break;
+        case 4:
+            flags = flags | MMU::AlignWord;
+            break;
+        case 8:
+            flags = flags | MMU::AlignDoubleWord;
+            break;
+        case 16:
+            flags = flags | MMU::AlignQuadWord;
+            break;
+        case 32:
+            flags = flags | MMU::AlignOctWord;
+            break;
+        default:
+            flags = flags | MMU::AllowUnaligned;
+            break;
+    }
+    return flags;
 }
 
 int

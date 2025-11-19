@@ -37,6 +37,7 @@
 
 #include "dev/riscv/clint.hh"
 
+#include "arch/riscv/system.hh"
 #include "cpu/base.hh"
 #include "debug/Clint.hh"
 #include "mem/packet.hh"
@@ -78,15 +79,6 @@ Clint::raiseInterruptPin(int id)
     for (int context_id = 0; context_id < nThread; context_id++) {
 
         auto tc = system->threads[context_id];
-
-        // Update misc reg file
-        ISA* isa = dynamic_cast<ISA*>(tc->getIsaPtr());
-        if (isa->rvType() == RV32) {
-            isa->setMiscRegNoEffect(MISCREG_TIME, bits(mtime, 31, 0));
-            isa->setMiscRegNoEffect(MISCREG_TIMEH, bits(mtime, 63, 32));
-        } else {
-            isa->setMiscRegNoEffect(MISCREG_TIME, mtime);
-        }
 
         // Post timer interrupt
         uint64_t mtimecmp = registers.mtimecmp[context_id].get();
@@ -198,6 +190,13 @@ Clint::init()
 {
     registers.init();
     BasicPioDevice::init();
+
+    RiscvSystem *rv_sys = dynamic_cast<RiscvSystem *>(system);
+    if (rv_sys != nullptr) {
+        rv_sys->setClint(this);
+    } else {
+        warn("Set Clint to RiscvSystem failed.");
+    }
 }
 
 Port &

@@ -10,7 +10,7 @@ on:
 jobs:
 
     get-date:
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-24.04
         outputs:
             date: ${{ steps.date.outputs.date }}
         steps:
@@ -38,110 +38,68 @@ jobs:
             - name: Build ALL/gem5.opt
               run: scons --no-compress-debug build/ALL/gem5.opt -j $(nproc)
 
-    build-null-gem5:
-        runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        timeout-minutes: 180
-        needs: get-date
-
-        steps:
-            - uses: actions/checkout@v4
-
-            - name: Cache build/NULL
-              uses: actions/cache@v4
-              with:
-                  path: build/NULL
-                  key: testlib-build-null-${{ needs.get-date.outputs.date }}
-                  restore-keys: |
-                      testlib-build-null
-
-            - name: Build NULL/gem5.opt
-              run: scons --no-compress-debug build/NULL/gem5.opt -j $(nproc)
-
-    build-armx86-gem5:
-        runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        timeout-minutes: 180
-        needs: get-date
-
-        steps:
-            - uses: actions/checkout@v4
-
-            - name: Cache build/ARM_X86
-              uses: actions/cache@v4
-              with:
-                  path: build/ARM_X86
-                  key: testlib-build-armx86-${{ needs.get-date.outputs.date }}
-                  restore-keys: |
-                      testlib-build-armx86
-
-            - name: Build ARM_X86/gem5.opt
-              run: scons --no-compress-debug build/ARM_X86/gem5.opt -j $(nproc)
-
-
-
-    build-vega-gem5:
-        runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/gcn-gpu:latest
-        timeout-minutes: 180
-        needs: get-date
-
-        steps:
-            - uses: actions/checkout@v4
-
-            - name: Cache build/VEGA_X86
-              uses: actions/cache@v4
-              with:
-                  path: build/VEGA_X86
-                  key: testlib-build-vega-${{ needs.get-date.outputs.date }}
-                  restore-keys: |
-                      testlib-build-vega
-
-            - name: Build VEGA_X86/gem5.opt
-              run: scons --no-compress-debug build/VEGA_X86/gem5.opt -j $(nproc)
-
-
   # this builds both unittests.fast and unittests.debug
-    unittests-fast-debug:
+    unittests-debug:
         strategy:
             matrix:
-                type: [fast, debug]
+                type: [debug]
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         timeout-minutes: 60
         steps:
             - uses: actions/checkout@v4
 
-            - name: ALL/unittests.${{ matrix.type }} UnitTests
+            - name: Run ALL/unittests.${{ matrix.type }} UnitTests
               run: scons build/ALL/unittests.${{ matrix.type }} -j $(nproc)
+
+    get-testlib-long-dirs:
+        runs-on: ubuntu-24.04
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        outputs:
+            test-dirs-matrix: ${{ steps.dir-matrix.outputs.test-dirs-matrix }}
+        steps:
+            - uses: actions/checkout@v4
+            - name: Get directories for testlib-long
+              working-directory: ${{ github.workspace }}/tests
+              id: dir-matrix
+              run: |
+                  unset PREV
+                  echo "test-dirs-matrix=$(\
+                    ./main.py list gem5 \
+                    --suites \
+                    --length=long \
+                    --exclude-tags gcn_gpu | \
+                    grep "$SUITEUID:" | \
+                    cut -d: -f2 | \
+                    cut -d/ -f 2- | \
+                    xargs dirname | \
+                    sort -u  | \
+                    while read x; do \
+                      if [ -z "${PREV}" ] || [ "$x" != "${PREV}/*" ]; then \
+                        PREV=$x; \
+                        echo $x; \
+                      fi; \
+                    done  | \
+                    jq -ncR '[inputs]'\
+                  )" >>$GITHUB_OUTPUT
 
   # start running all of the long tests
     testlib-long-tests:
-        strategy:
-            fail-fast: false
-            matrix:
-                test-type: [arm_boot_tests, fs, gpu, insttest_se, learning_gem5, m5threads_test_atomic, memory, replacement_policies, riscv_boot_tests,
-                    stdlib, x86_boot_tests]
+        name: long-tests
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         timeout-minutes: 1440 # 24 hours for entire matrix to run
         needs:
-            - build-null-gem5
             - build-all-gem5
-            - build-armx86-gem5
+            - get-testlib-long-dirs
+            - get-date
+        strategy:
+            fail-fast: false
+            matrix:
+                test-type: ${{ fromJson(needs.get-testlib-long-dirs.outputs.test-dirs-matrix) }}
+
         steps:
-            - name: Clean runner
-              run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
             - uses: actions/checkout@v4
-
-            - name: Restore build/NULL cache
-              uses: actions/cache/restore@v4
-              with:
-                  path: build/NULL
-                  key: testlib-build-null-${{ needs.get-date.outputs.date }}
-                  restore-keys: |
-                      testlib-build-null
-
             - name: Restore build/ALL cache
               uses: actions/cache/restore@v4
               with:
@@ -150,82 +108,38 @@ jobs:
                   restore-keys: |
                       testlib-build-all
 
-            - name: Restore build/ARM_X86 cache
-              uses: actions/cache/restore@v4
-              with:
-                  path: build/ARM_X86
-                  key: testlib-build-armx86-${{ needs.get-date.outputs.date }}
-                  restore-keys: |
-                      testlib-build-armx86
-
-            - name: long ${{ matrix.test-type }} tests
+            - name: Run long ${{ matrix.test-type }} tests
+              id: run-tests
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run gem5/${{ matrix.test-type }} -j$(nproc) --length=long --skip-build -vv -t $(nproc)
-            - name: upload results
+              run: ./main.py run ${{ matrix.test-type }} -j$(nproc) --length=long -vv -t $(nproc) --exclude-tags gcn_gpu
+
+            - name: Sanitize test-dir for artifact name
+              id: sanitize-test-dir
+              if: success() || failure()
+              run: echo "sanitized-test-dir=$(echo '${{ matrix.test-type }}' | sed 's/\//-/g')" >> $GITHUB_OUTPUT
+
+            - name: Upload results
               if: success() || failure()
               uses: actions/upload-artifact@v4
               env:
-                  MY_STEP_VAR: ${{ matrix.test-type }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
+                  MY_STEP_VAR: ${{ steps.sanitize-test-dir.outputs.sanitized-test-dir }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
               with:
-                  name: ${{ env.MY_STEP_VAR }}
+                  name: daily-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-long-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir
+                      }}-status-${{ steps.run-tests.outcome }}-output
                   path: tests/testing-results
-                  retention-days: 7
 
-            - run: echo "This job's status is ${{ job.status }}."
-
-  # split library example tests into runs based on Suite UID
-  # so that they don't hog the runners for too long
-    testlib-long-gem5_library_example_tests:
-        runs-on: [self-hosted, linux, x64]
-        strategy:
-            fail-fast: false
-            matrix:
-                test-type: [gem5-library-example-x86-ubuntu-run-ALL-x86_64-opt, gem5-library-example-riscv-ubuntu-run-ALL-x86_64-opt, lupv-example-ALL-x86_64-opt,
-                    gem5-library-example-arm-ubuntu-run-test-ALL-x86_64-opt, gem5-library-example-riscvmatched-hello-ALL-x86_64-opt]
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        timeout-minutes: 1440 # 24 hours
-        needs: build-all-gem5
-        steps:
-            - name: Clean runner
-              run: rm -rf ./* || true rm -rf ./.??* || true rm -rf ~/.cache || true
-            - uses: actions/checkout@v4
-
-            - name: Cache build/ALL
-              uses: actions/cache/restore@v4
-              with:
-                  path: build/ALL
-                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
-                  restore-keys: |
-                      testlib-build-all
-
-            - name: long ${{ matrix.test-type }} gem5_library_example_tests
-              working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --uid SuiteUID:tests/gem5/gem5_library_example_tests/test_gem5_library_examples.py:test-${{ matrix.test-type }} -j $(nproc)
-                  --length=long -vv --skip-build
-            - name: upload results
-              if: success() || failure()
-              uses: actions/upload-artifact@v4
-              env:
-                  MY_STEP_VAR: ${{ matrix.test-type }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
-              with:
-                  name: ${{ env.MY_STEP_VAR }}
-                  path: tests/testing-results
-                  retention-days: 7
-            - run: echo "This job's status is ${{ job.status }}."
 
     gpu-tests:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/gcn-gpu:latest
-        timeout-minutes: 720 # 12 hours
-        needs: build-vega-gem5
+        timeout-minutes: 1440 # 24 hours
+        needs:
+            - get-date
 
         steps:
             - uses: actions/checkout@v4
-              with:
-                  ref: develop
-
             - name: Cache build/VEGA_X86
-              uses: actions/cache/restore@v4
+              uses: actions/cache@v4
               with:
                   path: build/VEGA_X86
                   key: testlib-build-vega-${{ needs.get-date.outputs.date }}
@@ -234,16 +148,16 @@ jobs:
 
 
             - name: Run Testlib GPU Tests
+              id: run-tests
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --length=long -vvv --skip-build -t $(nproc) --host gcn_gpu  gem5/gpu
+              run: ./main.py run --length=long -vvv -j $(nproc) --host gcn_gpu
 
             - name: Upload results
               if: success() || failure()
               uses: actions/upload-artifact@v4
               with:
-                  name: gpu_tests_${{github.sha}}_RUN_${{github.run_id}}_ATTEMPT_${{github.run_attempt}}
+                  name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gpu-status-${{ steps.run-tests.outcome }}-output
                   path: tests/testing-results
-                  retention-days: 7
 
   # This runs the SST-gem5 integration compilation and tests it with
   # ext/sst/sst/example.py.
@@ -289,19 +203,24 @@ jobs:
             - name: Continue gem5 within SystemC test
               run: LD_LIBRARY_PATH=build/ARM/:/opt/systemc/lib-linux64/ ./util/systemc/gem5_within_systemc/gem5.opt.sc m5out/config.ini
 
-    daily-tests:
-        # The dummy job is used to indicate whether the daily tests have
-        # passed or not. This can be used as status check for pull requests.
-        # I.e., if we want to stop pull requests from being merged if the
-        # daily tests are failing we can add this job as a required status
-        # check.
-        runs-on: ubuntu-latest
-        needs:
-            - unittests-fast-debug
-            - testlib-long-tests
-            - testlib-long-gem5_library_example_tests
-            - sst-test
-            - systemc-test
-            - gpu-tests
+    dramsys-tests:
+        runs-on: [self-hosted, linux, x64]
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        timeout-minutes: 360 # 6 hours
         steps:
-            - run: echo "This daily tests have passed."
+            - uses: actions/checkout@v4
+            - name: Checkout DRAMSys
+              working-directory: ${{ github.workspace }}/ext/dramsys
+              run: git clone https://github.com/tukl-msd/DRAMSys --branch v5.1 --depth 1 DRAMSys
+
+              # gem5 is built separately because it depends on the DRAMSys library
+            - name: Build gem5
+              working-directory: ${{ github.workspace }}
+              run: scons build/ALL/gem5.opt -j $(nproc)
+
+            - name: Run DRAMSys Checks
+              working-directory: ${{ github.workspace }}
+              run: |
+                  ./build/ALL/gem5.opt configs/example/gem5_library/dramsys/arm-hello-dramsys.py
+                  ./build/ALL/gem5.opt configs/example/gem5_library/dramsys/dramsys-traffic.py
+                  ./build/ALL/gem5.opt configs/example/dramsys.py

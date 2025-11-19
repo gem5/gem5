@@ -50,10 +50,11 @@
 
 #include "base/vnc/vncinput.hh"
 #include "dev/arm/amba_device.hh"
-#include "params/Pl050.hh"
 
 namespace gem5
 {
+
+struct Pl050Params;
 
 namespace ps2 {
 class Device;

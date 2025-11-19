@@ -31,9 +31,9 @@ from m5.objects import (
     BaseXBar,
     Cache,
     L2XBar,
-    Port,
     SystemXBar,
 )
+from m5.params import Port
 
 from ....isas import ISA
 from ....utils.override import *

@@ -1,5 +1,5 @@
 # -*- mode:python -*-
-# Copyright (c) 2024 Arm Limited
+# Copyright (c) 2024-2025 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -57,7 +57,7 @@ class TlmGenerator(SimObject):
     def injectAt(self, when, payload, phase):
         from m5.tlm_chi import Transaction
 
-        transaction = Transaction(payload, phase)
+        transaction = Transaction(payload, phase, when)
         self._transactions.append((when, transaction))
         return transaction
 

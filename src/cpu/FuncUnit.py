@@ -1,4 +1,4 @@
-# Copyright (c) 2010, 2017-2018, 2020, 2022 ARM Limited
+# Copyright (c) 2010, 2017-2018, 2020, 2022, 2025 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -113,9 +113,20 @@ class OpClass(Enum):
         "SimdUnitStrideFaultOnlyFirstLoad",
         "SimdUnitStrideSegmentedLoad",
         "SimdUnitStrideSegmentedStore",
+        "SimdUnitStrideSegmentedFaultOnlyFirstLoad",
+        "SimdStrideSegmentedLoad",
+        "SimdStrideSegmentedStore",
         "SimdExt",
         "SimdFloatExt",
         "SimdConfig",
+        "SimdBf16Add",
+        "SimdBf16Cmp",
+        "SimdBf16Cvt",
+        "SimdBf16DotProd",
+        "SimdBf16MatMultAcc",
+        "SimdBf16Mult",
+        "SimdBf16MultAcc",
+        "Bf16Cvt",
     ]
 
 

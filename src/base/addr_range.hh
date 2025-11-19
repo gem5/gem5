@@ -452,8 +452,17 @@ class AddrRange
         // whether it would fit in a continuous segment of the input
         // addr range.
         if (r.interleaved()) {
-            return r.contains(_start) && r.contains(_end - 1) &&
-                size() <= r.granularity();
+          if (r.contains(_start) && size() <= r.granularity()) {
+            // simplify checking for 1 element ranges
+            // no need to re-check r.contains(_end -1) if
+            // it is the same as _start
+            if (_start == _end - 1) {
+              return true;
+            }
+            //otherwise check if it also contains the end.
+            return r.contains(_end -1);
+          }
+          return false;
         } else {
 
             if (_end <= _start){
@@ -541,14 +550,14 @@ class AddrRange
         }
 
         // Get the LSB set from each mask
-        int masks_lsb[masks.size()];
+        auto masks_lsb = std::make_unique<int[]>(masks.size());
         for (unsigned int i = 0; i < masks.size(); i++) {
             masks_lsb[i] = ctz64(masks[i]);
         }
 
         // we need to sort the list of bits we will discard as we
         // discard them one by one starting.
-        std::sort(masks_lsb, masks_lsb + masks.size());
+        std::sort(masks_lsb.get(), masks_lsb.get() + masks.size());
 
         for (unsigned int i = 0; i < masks.size(); i++) {
             const int intlv_bit = masks_lsb[i];
@@ -580,13 +589,13 @@ class AddrRange
         }
 
         // Get the LSB set from each mask
-        int masks_lsb[masks.size()];
+        auto masks_lsb = std::make_unique<int[]>(masks.size());
         for (unsigned int i = 0; i < masks.size(); i++) {
             masks_lsb[i] = ctz64(masks[i]);
         }
 
         // Add bits one-by-one from the LSB side.
-        std::sort(masks_lsb, masks_lsb + masks.size());
+        std::sort(masks_lsb.get(), masks_lsb.get() + masks.size());
         for (unsigned int i = 0; i < masks.size(); i++) {
             const int intlv_bit = masks_lsb[i];
             if (intlv_bit > 0) {

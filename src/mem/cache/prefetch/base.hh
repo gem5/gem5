@@ -404,13 +404,13 @@ class Base : public ClockedObject
 
     virtual Tick nextPrefetchReadyTime() const = 0;
 
-    void
+    virtual void
     prefetchUnused()
     {
         prefetchStats.pfUnused++;
     }
 
-    void
+    virtual void
     incrDemandMhsrMisses()
     {
         prefetchStats.demandMshrMisses++;

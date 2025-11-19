@@ -649,6 +649,12 @@ namespace VegaISA
     void
     Inst_MUBUF__BUFFER_LOAD_UBYTE::completeAcc(GPUDynInstPtr gpuDynInst)
     {
+        if (instData.LDS) {
+            ldsComplete<1>(gpuDynInst);
+
+            return;
+        }
+
         VecOperandU32 vdst(gpuDynInst, extData.VDATA);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
@@ -777,6 +783,12 @@ namespace VegaISA
     void
     Inst_MUBUF__BUFFER_LOAD_USHORT::completeAcc(GPUDynInstPtr gpuDynInst)
     {
+        if (instData.LDS) {
+            ldsComplete<1>(gpuDynInst);
+
+            return;
+        }
+
         VecOperandU32 vdst(gpuDynInst, extData.VDATA);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
@@ -1114,6 +1126,12 @@ namespace VegaISA
     void
     Inst_MUBUF__BUFFER_LOAD_DWORD::completeAcc(GPUDynInstPtr gpuDynInst)
     {
+        if (instData.LDS) {
+            ldsComplete<1>(gpuDynInst);
+
+            return;
+        }
+
         VecOperandU32 vdst(gpuDynInst, extData.VDATA);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
@@ -1137,11 +1155,9 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Load);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
+
+        panic_if(instData.LDS, "Return to LDS not supported for %s", _opcode);
     } // Inst_MUBUF__BUFFER_LOAD_DWORDX2
 
     Inst_MUBUF__BUFFER_LOAD_DWORDX2::~Inst_MUBUF__BUFFER_LOAD_DWORDX2()
@@ -1309,6 +1325,12 @@ namespace VegaISA
     void
     Inst_MUBUF__BUFFER_LOAD_DWORDX3::completeAcc(GPUDynInstPtr gpuDynInst)
     {
+        if (instData.LDS) {
+            ldsComplete<4>(gpuDynInst);
+
+            return;
+        }
+
         VecOperandU32 vdst0(gpuDynInst, extData.VDATA);
         VecOperandU32 vdst1(gpuDynInst, extData.VDATA + 1);
         VecOperandU32 vdst2(gpuDynInst, extData.VDATA + 2);
@@ -1414,6 +1436,12 @@ namespace VegaISA
     void
     Inst_MUBUF__BUFFER_LOAD_DWORDX4::completeAcc(GPUDynInstPtr gpuDynInst)
     {
+        if (instData.LDS) {
+            ldsComplete<4>(gpuDynInst);
+
+            return;
+        }
+
         VecOperandU32 vdst0(gpuDynInst, extData.VDATA);
         VecOperandU32 vdst1(gpuDynInst, extData.VDATA + 1);
         VecOperandU32 vdst2(gpuDynInst, extData.VDATA + 2);
@@ -2623,6 +2651,95 @@ namespace VegaISA
     {
         panicUnimplemented();
     } // execute
+    // --- Inst_MUBUF__BUFFER_ATOMIC_PK_ADD_BF16 class methods ---
+
+    Inst_MUBUF__BUFFER_ATOMIC_PK_ADD_BF16
+        ::Inst_MUBUF__BUFFER_ATOMIC_PK_ADD_BF16(InFmt_MUBUF *iFmt)
+        : Inst_MUBUF(iFmt, "buffer_atomic_pk_add_bf16")
+    {
+        setFlag(AtomicPkAddBF16);
+
+        // MI300 spec: "Float atomics must set SC[0]=0 (no return value)."
+        panic_if(instData.GLC, "Saw float atomic with return set!");
+
+        setFlag(AtomicNoReturn);
+    } // Inst_MUBUF__BUFFER_ATOMIC_PK_ADD_BF16
+
+    Inst_MUBUF__BUFFER_ATOMIC_PK_ADD_BF16::
+        ~Inst_MUBUF__BUFFER_ATOMIC_PK_ADD_BF16()
+    {
+    } // ~Inst_MUBUF__BUFFER_ATOMIC_PK_ADD_BF16
+
+    void
+    Inst_MUBUF__BUFFER_ATOMIC_PK_ADD_BF16::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (gpuDynInst->exec_mask.none()) {
+            wf->decVMemInstsIssued();
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
+
+        ConstVecOperandU32 addr0(gpuDynInst, extData.VADDR);
+        ConstVecOperandU32 addr1(gpuDynInst, extData.VADDR + 1);
+        ConstScalarOperandU128 rsrcDesc(gpuDynInst, extData.SRSRC * 4);
+        ConstScalarOperandU32 offset(gpuDynInst, extData.SOFFSET);
+        ConstVecOperandU32 src(gpuDynInst, extData.VDATA);
+
+        rsrcDesc.read();
+        offset.read();
+        src.read();
+
+        int inst_offset = instData.OFFSET;
+
+        if (!instData.IDXEN && !instData.OFFEN) {
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr0, addr1, rsrcDesc, offset, inst_offset);
+        } else if (!instData.IDXEN && instData.OFFEN) {
+            addr0.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr0, addr1, rsrcDesc, offset, inst_offset);
+        } else if (instData.IDXEN && !instData.OFFEN) {
+            addr0.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr1, addr0, rsrcDesc, offset, inst_offset);
+        } else {
+            addr0.read();
+            addr1.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr1, addr0, rsrcDesc, offset, inst_offset);
+        }
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
+                    = src[lane];
+            }
+        }
+
+        gpuDynInst->computeUnit()->globalMemoryPipe.issueRequest(gpuDynInst);
+    } // execute
+
+    void
+    Inst_MUBUF__BUFFER_ATOMIC_PK_ADD_BF16::
+        initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU32>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_MUBUF__BUFFER_ATOMIC_PK_ADD_BF16::
+        completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+    } // completeAcc
     // --- Inst_MUBUF__BUFFER_ATOMIC_SWAP_X2 class methods ---
 
     Inst_MUBUF__BUFFER_ATOMIC_SWAP_X2

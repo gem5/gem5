@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2019 ARM Limited
+ * Copyright (c) 2010-2013, 2019, 2024-2025 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -809,6 +809,66 @@ fprSqrtEstimate(FPSCR &fpscr, float op)
     }
 }
 
+uint16_t
+fprSqrtEstimateFpH(FPSCR &fpscr, uint16_t op)
+{
+    const uint16_t qnan = 0x7e00;
+    bool sign = bits(op, 15);
+    int fpClass = fpclassifyFpH(op);
+    if (fpClass == FP_NAN) {
+        if ((op & qnan) != qnan)
+            fpscr.ioc = 1;
+        return qnan;
+    } else if ((fpscr.fz16 && fpClass == FP_SUBNORMAL)
+               || fpClass == FP_ZERO) {
+        fpscr.dzc = 1;
+        // Return infinity with the same sign as the operand.
+        return (sign << 15) | (0x1F << 10) | (0 << 0);
+    } else if (sign) {
+        // Set invalid op bit.
+        fpscr.ioc = 1;
+        return qnan;
+    } else if (fpClass == FP_INFINITE) {
+        return 0;
+    } else {
+        uint64_t opBits = op;
+        uint64_t fraction = bits(opBits, 9, 0) << 42;
+        int16_t exp = bits(opBits, 14, 10);
+
+        if (exp == 0) {
+            while (bits(fraction, 51) == 0) {
+                fraction = bits(fraction, 50, 0) << 1;
+                exp = exp - 1;
+            }
+            fraction = bits(fraction, 50, 0) << 1;
+        }
+
+        // scaled input value to the range of [0.25, 0.5) and [0.5, 1).
+        double scaled;
+        if (bits(exp, 0)) {
+            scaled = bitsToFp((0 << 0) | (bits(fraction, 51, 42) << 42) |
+                              (0x3fdULL << 52) | (0ULL << 63),
+                              (double)0.0);
+        } else {
+            scaled = bitsToFp((0 << 0) | (bits(fraction, 51, 41) << 41) |
+                              (0x3feULL << 52) | (0ULL << 63),
+                              (double)0.0);
+        }
+        uint64_t resultExp = (44 - exp) / 2;
+
+        uint64_t estimate = fpToBits(recipSqrtEstimate(scaled));
+
+        // if flush-to-zero, flush denormal.
+        if (fpscr.fz16) {
+            if (resultExp == 0) {
+                return 0;
+            }
+        }
+
+        return (bits(resultExp, 4, 0) << 10) | (bits(estimate, 51, 44) << 2);
+    }
+}
+
 uint32_t
 unsignedRSqrtEstimate(uint32_t op)
 {
@@ -881,6 +941,73 @@ fpRecipEstimate(FPSCR &fpscr, float op)
         return bitsToFp((bits(opBits, 31) << 31) |
                         (bits(resultExp, 7, 0) << 23) |
                         (bits(estimate, 51, 29) << 0), junk);
+    }
+}
+
+uint16_t
+fpRecipEstimateFpH(FPSCR &fpscr, uint16_t op)
+{
+    const uint16_t qnan = 0x7e00;
+    bool sign = bits(op, 15);
+    int fpClass = fpclassifyFpH(op);
+    if (fpClass == FP_NAN) {
+        if ((op & qnan) != qnan)
+            fpscr.ioc = 1;
+        return qnan;
+    } else if (fpClass == FP_INFINITE) {
+        return sign << 15;
+    } else if ((fpscr.fz16 && fpClass == FP_SUBNORMAL)
+               || fpClass == FP_ZERO) {
+        fpscr.dzc = 1;
+        // Return infinity with the same sign as the operand.
+        return (sign << 15) | (0x1F << 10) | (0 << 0);
+    } else if (bits(op, 14, 8) == 0) {
+        fpscr.ofc = 1;
+        fpscr.ixc = 1;
+        return (sign << 15) | (0x1F << 10) | (0 << 0);
+    } else if (fpscr.fz16 && bits(op, 14, 10) >= 29) {
+        fpscr.ufc = 1;
+        return sign << 15;
+    } else {
+        uint64_t opBits = op;
+        uint64_t fraction = bits(opBits, 9, 0) << 42;
+        int16_t exp = bits(opBits, 14, 10);
+
+        if (exp == 0) {
+            if (bits(fraction, 51) == 0) {
+                exp = -1;
+                fraction = bits(fraction, 49, 0) << 2;
+            } else {
+                fraction = bits(fraction, 50, 0) << 1;
+            }
+        }
+
+        // scaled input value to the range of [0.5, 1)
+        double scaled;
+        scaled = bitsToFp((0 << 0) | (bits(fraction, 51, 44) << 44) |
+                          (0x3feULL << 52) | (0ULL << 63),
+                          (double)0.0);
+        uint64_t resultExp = 29 - exp;
+
+        uint64_t estimate = fpToBits(recipEstimate(scaled));
+        fraction = bits(estimate, 51, 0);
+
+        if (resultExp == 0) {
+            fraction = (1ULL << 51) | bits(fraction, 51, 1);
+        } else if (resultExp == -1) {
+            fraction = (1ULL << 50) | bits(fraction, 51, 2);
+            resultExp = 0;
+        }
+
+        // if flush-to-zero, flush denormal.
+        if (fpscr.fz16) {
+            if (resultExp == 0) {
+                return 0;
+            }
+        }
+
+        return (sign << 15) | (bits(resultExp, 4, 0) << 10) |
+               (bits(fraction, 51, 42) << 0);
     }
 }
 
@@ -1204,6 +1331,43 @@ VfpMacroOp::nextIdxs(RegIndex &dest)
     unsigned stride = (machInst.fpscrStride == 0) ? 1 : 2;
     assert(!inScalarBank(dest));
     dest = addStride(dest, stride);
+}
+
+FPSCR
+fpVASimdFPSCRValue(const FPSCR &fpscr)
+{
+    FPSCR new_fpscr(0);
+    new_fpscr.ahp = 0;  // bit 26
+    new_fpscr.dn = 1;   // bit 25
+    new_fpscr.fz = 1;   // bit 24
+    new_fpscr.rMode = VfpRoundNearest;  // bit 23:22
+    new_fpscr.fz16 = fpscr.fz16;    // bit 19
+    return new_fpscr;
+}
+
+FPSCR
+fpVASimdCvtFPSCRValue(const FPSCR &fpscr)
+{
+    FPSCR new_fpscr(0);
+    new_fpscr.ahp = fpscr.ahp;  // bit 26
+    new_fpscr.dn = 1;   // bit 25
+    new_fpscr.fz = 1;   // bit 24
+    new_fpscr.rMode = VfpRoundNearest;  // bit 23:22
+    new_fpscr.fz16 = fpscr.fz16;    // bit 19
+    return new_fpscr;
+}
+
+FPSCR
+fpRestoreFPSCRValue(const FPSCR fpscr_exec, const FPSCR &fpscr)
+{
+    FPSCR new_fpscr(fpscr_exec);
+    new_fpscr.idc = fpscr_exec.idc | fpscr.idc;     // bit 7
+    new_fpscr.ixc = fpscr_exec.ixc | fpscr.ixc;     // bit 4
+    new_fpscr.ufc = fpscr_exec.ufc | fpscr.ufc;     // bit 3
+    new_fpscr.ofc = fpscr_exec.ofc | fpscr.ofc;     // bit 2
+    new_fpscr.dzc = fpscr_exec.dzc | fpscr.dzc;     // bit 1
+    new_fpscr.ioc = fpscr_exec.ioc | fpscr.ioc;     // bit 0
+    return new_fpscr;
 }
 
 } // namespace ArmISA

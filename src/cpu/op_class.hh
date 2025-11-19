@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2017-2018, 2020, 2022 ARM Limited
+ * Copyright (c) 2010, 2017-2018, 2020, 2022, 2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -129,9 +129,23 @@ static const OpClass InstPrefetchOp = enums::InstPrefetch;
 static const OpClass SimdUnitStrideSegmentedLoadOp = enums::SimdUnitStrideSegmentedLoad;
 static const OpClass SimdUnitStrideSegmentedStoreOp
              = enums::SimdUnitStrideSegmentedStore;
+static const OpClass SimdUnitStrideSegmentedFaultOnlyFirstLoadOp
+             = enums::SimdUnitStrideSegmentedFaultOnlyFirstLoad;
+static const OpClass SimdStrideSegmentedLoadOp
+             = enums::SimdStrideSegmentedLoad;
+static const OpClass SimdStrideSegmentedStoreOp
+             = enums::SimdStrideSegmentedStore;
 static const OpClass SimdExtOp = enums::SimdExt;
 static const OpClass SimdFloatExtOp = enums::SimdFloatExt;
 static const OpClass SimdConfigOp = enums::SimdConfig;
+static const OpClass SimdBf16AddOp = enums::SimdBf16Add;
+static const OpClass SimdBf16CmpOp = enums::SimdBf16Cmp;
+static const OpClass SimdBf16CvtOp = enums::SimdBf16Cvt;
+static const OpClass SimdBf16DotProdOp = enums::SimdBf16DotProd;
+static const OpClass SimdBf16MatMultAccOp = enums::SimdBf16MatMultAcc;
+static const OpClass SimdBf16MultOp = enums::SimdBf16Mult;
+static const OpClass SimdBf16MultAccOp = enums::SimdBf16MultAcc;
+static const OpClass Bf16CvtOp = enums::Bf16Cvt;
 static const OpClass Num_OpClasses = enums::Num_OpClass;
 
 } // namespace gem5

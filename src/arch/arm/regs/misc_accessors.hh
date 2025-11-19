@@ -38,6 +38,7 @@
 #ifndef __ARCH_ARM_REGS_MISC_ACCESSORS_HH__
 #define __ARCH_ARM_REGS_MISC_ACCESSORS_HH__
 
+#include "arch/arm/regs/misc.hh"
 #include "arch/arm/regs/misc_types.hh"
 #include "cpu/thread_context.hh"
 

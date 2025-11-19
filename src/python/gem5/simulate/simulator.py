@@ -39,14 +39,12 @@ from typing import (
 )
 
 import m5
-import m5.options
-import m5.ticks
+from m5 import options as m5_options
 from m5.ext.pystats.simstat import SimStat
 from m5.stats import addStatVisitor
 from m5.util import warn
 
-from gem5.components.boards.abstract_board import AbstractBoard
-
+from ..components.boards.abstract_board import AbstractBoard
 from ..resources.resource import WorkloadResource
 from .exit_event import ExitEvent
 from .exit_handler import (
@@ -101,9 +99,9 @@ class Simulator:
             ]
         ] = None,
         expected_execution_order: Optional[List[ExitEvent]] = None,
-        checkpoint_path: Optional[Path] = None,
         max_ticks: Optional[int] = m5.MaxTick,
         id: Optional[int] = None,
+        outdir: Optional[str | Path] = None,
     ) -> None:
         """
         :param board: The board to be simulated.
@@ -138,12 +136,6 @@ class Simulator:
                                 executed each time the associated exit event is encountered.
 
                                 See `ClassicGeneratorExitHandler` for more details
-        :param checkpoint_path: An optional parameter specifying the directory of
-                                the checkpoint to instantiate from. When the path
-                                is ``None``, no checkpoint will be loaded. By default,
-                                the path is ``None``. **This parameter is deprecated.
-                                Please set the checkpoint when setting the board's
-                                workload**.
         :param max_ticks: The maximum number of ticks to execute  in the
                           simulation run before exiting with a ``MAX_TICK``
                           exit event. If not set this value is to `m5.MaxTick`,
@@ -178,6 +170,7 @@ class Simulator:
                 "via it's `is_fullsystem` method."
             )
 
+        self._hypercall_max_ticks = None
         self.set_max_ticks(max_ticks)
 
         if id:
@@ -191,18 +184,6 @@ class Simulator:
         self._last_exit_event = None
         self._exit_event_count = 0
 
-        if checkpoint_path:
-            warn(
-                "Setting the checkpoint path via the Simulator constructor is "
-                "deprecated and will be removed in future releases of gem5. "
-                "Please set this through via the appropriate workload "
-                "function (i.e., `set_se_binary_workload` or "
-                "`set_kernel_disk_workload`). If both are set the workload "
-                "function set takes precedence."
-            )
-
-        self._checkpoint_path = checkpoint_path
-
         # Set up the classic event generators.
         ClassicGeneratorExitHandler.set_exit_event_map(
             on_exit_event, expected_execution_order, board
@@ -213,6 +194,15 @@ class Simulator:
         # matters (say an exit event acts differently for the Nth time it is
         # hit)
         self._exit_event_id_log = {}
+
+        if outdir is None:
+            # Use the command line option from gem5 binary
+            from m5 import options
+
+            self._outdir = Path(options.outdir)
+        else:
+            self._outdir = Path(outdir)
+            self.override_outdir(self._outdir)
 
     def switch_processor(self) -> None:
         """
@@ -282,11 +272,63 @@ class Simulator:
             raise ValueError(
                 f"Max ticks must be less than {m5.MaxTick}, not {max_tick}"
             )
+        if self._hypercall_max_ticks:
+            warn(
+                "A hypercall 6 exit has already been scheduled for tick "
+                f"{self._hypercall_max_ticks}. Setting hypercall and classic "
+                "exits in the same simulation is not well tested and the "
+                "simulation may not behave as expected."
+            )
+
         self._max_ticks = max_tick
 
     def get_max_ticks(self) -> int:
         assert hasattr(self, "_max_ticks"), "Max ticks not set"
         return self._max_ticks
+
+    def set_hypercall_absolute_max_ticks(
+        self, max_tick: int, exit_str: str = "Max ticks reached"
+    ) -> None:
+        """Set the maximum number of ticks to simulate before the simulation
+        exits with a hypercall 6 exit. This exit will be handled by
+        ScheduledExitEventHandler by default. See `src/python/gem5/simulate/
+        exit_handler.py` for details.
+
+        Args:
+            max_tick (int): The number of ticks to simulate before exiting.
+            exit_str (str): The reason for the exit.
+        """
+        if self._max_ticks and self._max_ticks != m5.MaxTick:
+            warn(
+                "A classic MAX_TICKS exit has already been scheduled for "
+                f"tick {self._max_ticks}. Setting hypercall and classic "
+                "exits in the same simulation is not well tested and the "
+                "simulation may not behave as expected."
+            )
+        if exit_str == "Tick exit reached":
+            warn(
+                f"The exit string '{exit_str}' will cause the simulation "
+                "to exit with a classic ExitEvent.SCHEDULED_TICK exit event "
+                "instead of a hypercall."
+            )
+        m5.scheduleTickExitAbsolute(max_tick, exit_str)
+        self._hypercall_max_ticks = max_tick
+
+    def set_hypercall_relative_max_ticks(
+        self, ticks_from_current: int, exit_str: str = "Max ticks reached"
+    ) -> None:
+        """Set the number of ticks to simulate from the current tick before the
+        simulation exits with a hypercall 6 exit. This exit will be handled by
+        ScheduledExitEventHandler by default. See `src/python/gem5/simulate/
+        exit_handler.py` for details.
+
+        Args:
+            max_tick (int): The number of ticks to simulate from the current
+            tick before exiting.
+            exit_str (str): The reason for the exit.
+        """
+        max_tick = self.get_current_tick() + ticks_from_current
+        self.set_hypercall_absolute_max_ticks(max_tick, exit_str)
 
     def schedule_simpoint(self, simpoint_start_insts: List[int]) -> None:
         """
@@ -465,7 +507,7 @@ class Simulator:
         Show exit event messages. This will print the exit event messages to
         the console.
         """
-        m5.options.show_exit_event_messages = True
+        m5_options.show_exit_event_messages = True
 
     def override_outdir(self, new_outdir: Path) -> None:
         """This function can be used to override the output directory locatiomn
@@ -496,8 +538,9 @@ class Simulator:
         if not new_outdir.is_dir():
             raise Exception(f"'{new_outdir}' is not a directory")
 
-        options.outdir = str(new_outdir)
+        options.outdir = str(new_outdir)  # for backwards compatibility
         setOutputDir(options.outdir)
+        self._outdir = new_outdir
 
     def _instantiate(self) -> None:
         """
@@ -513,14 +556,34 @@ class Simulator:
             self._root = self._board._pre_instantiate(
                 full_system=self._full_system
             )
+            assert self._root is not None
 
-            # m5.instantiate() takes a parameter specifying the path to the
+            if m5._simulate_module._instantiated:
+                raise Exception(
+                    "m5.instantiate() called before `Simulator.run`"
+                    " Use either legacy m5.simulate or stdlib."
+                )
+            m5._simulate_module._instantiated = True
+
+            m5._simulate_module._fix_all_objects(self._root)
+            m5._simulate_module._dump_configs(self._root, str(self._outdir))
+
+            # _create_cpp_objects() takes a parameter specifying the path to the
             # checkpoint directory. If the parameter is None, no checkpoint
             # will be restored.
             if self._board._checkpoint:
-                m5.instantiate(self._board._checkpoint.as_posix())
+                m5._simulate_module._create_cpp_objects(
+                    self._root, ckpt_dir=self._board._checkpoint.as_posix()
+                )
             else:
-                m5.instantiate(self._checkpoint_path)
+                m5._simulate_module._create_cpp_objects(
+                    self._root, ckpt_dir=None
+                )
+
+            m5._simulate_module._dump_configs_post_cpp(
+                self._root, str(self._outdir)
+            )
+
             self._instantiated = True
 
             # Let the board know that instantiate has been called so it can do
@@ -577,7 +640,7 @@ class Simulator:
                 exit_event_hypercall_id
             ](self._last_exit_event.getPayload())
 
-            if m5.options.show_exit_event_messages:
+            if m5_options.show_exit_event_messages:
                 print(
                     f"Exit event: {exit_handler.get_handler_description()} called at tick {self.get_current_tick()}"
                 )
@@ -600,3 +663,6 @@ class Simulator:
                                will be saved.
         """
         m5.checkpoint(str(checkpoint_dir))
+
+    def get_checkpoint_dir(self) -> Optional[Path]:
+        return self._board.get_checkpoint_dir()

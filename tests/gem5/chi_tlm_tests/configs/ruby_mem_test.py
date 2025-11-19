@@ -68,7 +68,7 @@ class TLM_RNF(CHI_Node):
         super().__init__(ruby_system)
 
         self._cntrl = TlmController(
-            version=Versions.getVersion(Cache_Controller),
+            version=Versions.getVersion(CHI_Cache_Controller),
             ruby_system=ruby_system,
         )
 

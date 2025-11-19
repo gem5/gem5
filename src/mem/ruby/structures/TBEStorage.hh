@@ -42,7 +42,7 @@
 #include <stack>
 #include <unordered_map>
 
-#include <base/statistics.hh>
+#include "base/statistics.hh"
 
 namespace gem5
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016, 2019-2024 Arm Limited
+ * Copyright (c) 2010-2013, 2016, 2019-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -48,10 +48,11 @@
 #include "base/statistics.hh"
 #include "enums/ArmLookupLevel.hh"
 
-#include "params/ArmMMU.hh"
-
 namespace gem5
 {
+
+struct ArmMMUParams;
+class ArmRelease;
 
 namespace ArmISA {
 
@@ -69,17 +70,13 @@ class MMU : public BaseMMU
     ArmISA::TLB * getDTBPtr() const;
     ArmISA::TLB * getITBPtr() const;
 
-    TLB * getTlb(BaseMMU::Mode mode, bool stage2) const;
-    TableWalker * getTableWalker(BaseMMU::Mode mode, bool stage2) const;
+    TLB *getTlb(BaseMMU::Mode mode, bool stage2) const;
 
   protected:
     TLB *itbStage2;
     TLB *dtbStage2;
 
-    TableWalker *itbWalker;
-    TableWalker *dtbWalker;
-    TableWalker *itbStage2Walker;
-    TableWalker *dtbStage2Walker;
+    TableWalker *walker;
 
   public:
     TranslationGenPtr
@@ -231,6 +228,8 @@ class MMU : public BaseMMU
      */
     bool translateFunctional(ThreadContext *tc, Addr vaddr, Addr &paddr);
 
+    TlbEntry *translateFunctional(ThreadContext *tc, Addr vaddr);
+
     Fault translateFunctional(const RequestPtr &req, ThreadContext *tc,
         BaseMMU::Mode mode) override;
 
@@ -300,6 +299,8 @@ class MMU : public BaseMMU
 
     void takeOverFrom(BaseMMU *old_mmu) override;
 
+    Port *getTableWalkerPort();
+
     void invalidateMiscReg();
 
     void flush(const TLBIOp &tlbi_op);
@@ -354,6 +355,8 @@ class MMU : public BaseMMU
                      bool ignore_asn, TranslationRegime target_regime,
                      bool stage2, BaseMMU::Mode mode);
 
+    void insert(TlbEntry &pte, BaseMMU::Mode mode, bool stage2);
+
     Fault getTE(TlbEntry **te, const RequestPtr &req,
                 ThreadContext *tc, Mode mode,
                 Translation *translation, bool timing, bool functional,
@@ -372,6 +375,8 @@ class MMU : public BaseMMU
                       Translation *translation, bool timing,
                       bool functional, TlbEntry *mergeTe,
                       CachedState &state);
+
+    bool isCompleteTranslation(TlbEntry *te) const;
 
     Fault checkPermissions(TlbEntry *te, const RequestPtr &req, Mode mode,
                            bool stage2);
@@ -412,8 +417,6 @@ class MMU : public BaseMMU
 
   protected:
     bool checkWalkCache() const;
-
-    bool isCompleteTranslation(TlbEntry *te) const;
 
     CachedState& updateMiscReg(
         ThreadContext *tc, ArmTranslationType tran_type,

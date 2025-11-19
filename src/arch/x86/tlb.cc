@@ -418,19 +418,37 @@ TLB::translate(const RequestPtr &req,
             pageAlignedVaddr = concAddrPcid(pageAlignedVaddr, pcid);
             TlbEntry *entry = lookup(pageAlignedVaddr);
 
-            if (mode == BaseMMU::Read) {
-                stats.rdAccesses++;
-            } else {
-                stats.wrAccesses++;
+            switch (mode) {
+                case BaseMMU::Read:
+                    stats.rdAccesses++;
+                    break;
+                case BaseMMU::Write:
+                    stats.wrAccesses++;
+                    break;
+                case BaseMMU::Execute:
+                    stats.exAccesses++;
+                    break;
+                default:
+                    panic("Invalid mode\n");
+                    break;
             }
             if (!entry) {
                 DPRINTF(TLB, "Handling a TLB miss for "
                         "address %#x at pc %#x.\n",
                         vaddr, tc->pcState().instAddr());
-                if (mode == BaseMMU::Read) {
-                    stats.rdMisses++;
-                } else {
-                    stats.wrMisses++;
+                switch (mode) {
+                    case BaseMMU::Read:
+                        stats.rdMisses++;
+                        break;
+                    case BaseMMU::Write:
+                        stats.wrMisses++;
+                        break;
+                    case BaseMMU::Execute:
+                        stats.exMisses++;
+                        break;
+                    default:
+                        panic("Invalid mode\n");
+                        break;
                 }
                 if (FullSystem) {
                     Fault fault = walker->start(tc, translation, req, mode);
@@ -577,15 +595,19 @@ TLB::getWalker()
 }
 
 TLB::TlbStats::TlbStats(statistics::Group *parent)
-  : statistics::Group(parent),
-    ADD_STAT(rdAccesses, statistics::units::Count::get(),
-             "TLB accesses on read requests"),
-    ADD_STAT(wrAccesses, statistics::units::Count::get(),
-             "TLB accesses on write requests"),
-    ADD_STAT(rdMisses, statistics::units::Count::get(),
-             "TLB misses on read requests"),
-    ADD_STAT(wrMisses, statistics::units::Count::get(),
-             "TLB misses on write requests")
+    : statistics::Group(parent),
+      ADD_STAT(rdAccesses, statistics::units::Count::get(),
+               "TLB accesses on read requests"),
+      ADD_STAT(wrAccesses, statistics::units::Count::get(),
+               "TLB accesses on write requests"),
+      ADD_STAT(exAccesses, statistics::units::Count::get(),
+               "TLB accesses on execute (instr) requests"),
+      ADD_STAT(rdMisses, statistics::units::Count::get(),
+               "TLB misses on read requests"),
+      ADD_STAT(wrMisses, statistics::units::Count::get(),
+               "TLB misses on write requests"),
+      ADD_STAT(exMisses, statistics::units::Count::get(),
+               "TLB misses on execute (instr) requests")
 {
 }
 

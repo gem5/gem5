@@ -43,7 +43,7 @@ from m5.ext.pystats.storagetype import *
 from m5.objects import *
 from m5.params import SimObjectVector
 
-import _m5.stats
+from _m5 import stats as _m5_stats
 
 
 class JsonOutputVistor:
@@ -84,7 +84,7 @@ class JsonOutputVistor:
             simstat.dump(fp=fp, **self.json_args)
 
 
-def __get_statistic(statistic: _m5.stats.Info) -> Optional[Statistic]:
+def __get_statistic(statistic: _m5_stats.Info) -> Optional[Statistic]:
     """
     Translates a _m5.stats.Info object into a Statistic object, to process
     statistics at the Python level.
@@ -95,32 +95,32 @@ def __get_statistic(statistic: _m5.stats.Info) -> Optional[Statistic]:
               Info object cannot, or should not, be translated.
     """
 
-    assert isinstance(statistic, _m5.stats.Info)
+    assert isinstance(statistic, _m5_stats.Info)
     statistic.prepare()
 
-    if isinstance(statistic, _m5.stats.ScalarInfo):
+    if isinstance(statistic, _m5_stats.ScalarInfo):
         if statistic.is_nozero and statistic.value == 0.0:
             # In the case where the "nozero" flag is set, and the value is
             # zero, we don't want to include this statistic so return None.
             return None
         return __get_scaler(statistic)
-    elif isinstance(statistic, _m5.stats.DistInfo):
+    elif isinstance(statistic, _m5_stats.DistInfo):
         return __get_distribution(statistic)
-    elif isinstance(statistic, _m5.stats.FormulaInfo):
+    elif isinstance(statistic, _m5_stats.FormulaInfo):
         # We don't do anything with Formula's right now.
         # We may never do so, see https://gem5.atlassian.net/browse/GEM5-868.
         pass
-    elif isinstance(statistic, _m5.stats.VectorInfo):
+    elif isinstance(statistic, _m5_stats.VectorInfo):
         return __get_vector(statistic)
-    elif isinstance(statistic, _m5.stats.Vector2dInfo):
+    elif isinstance(statistic, _m5_stats.Vector2dInfo):
         return __get_vector2d(statistic)
-    elif isinstance(statistic, _m5.stats.SparseHistInfo):
+    elif isinstance(statistic, _m5_stats.SparseHistInfo):
         return __get_sparse_hist(statistic)
 
     return None
 
 
-def __get_scaler(statistic: _m5.stats.ScalarInfo) -> Scalar:
+def __get_scaler(statistic: _m5_stats.ScalarInfo) -> Scalar:
     value = statistic.value
     unit = statistic.unit
     description = statistic.desc
@@ -132,7 +132,7 @@ def __get_scaler(statistic: _m5.stats.ScalarInfo) -> Scalar:
     )
 
 
-def __get_distribution(statistic: _m5.stats.DistInfo) -> Distribution:
+def __get_distribution(statistic: _m5_stats.DistInfo) -> Distribution:
     description = statistic.desc
     value = statistic.values
     bin_size = statistic.bucket_size
@@ -168,7 +168,7 @@ def __get_distribution(statistic: _m5.stats.DistInfo) -> Distribution:
     )
 
 
-def __get_vector(statistic: _m5.stats.VectorInfo) -> Vector:
+def __get_vector(statistic: _m5_stats.VectorInfo) -> Vector:
     vec: Dict[Union[str, int, float], Scalar] = {}
 
     for index in range(statistic.size):
@@ -208,7 +208,7 @@ def __get_vector(statistic: _m5.stats.VectorInfo) -> Vector:
     )
 
 
-def __get_vector2d(statistic: _m5.stats.Vector2dInfo) -> Vector2d:
+def __get_vector2d(statistic: _m5_stats.Vector2dInfo) -> Vector2d:
     # All the values in a 2D Vector are Scalar values
     description = statistic.desc
     x_size = statistic.x_size
@@ -244,7 +244,7 @@ def __get_vector2d(statistic: _m5.stats.Vector2dInfo) -> Vector2d:
     return Vector2d(value=vector_rep, type="Vector2d", description=description)
 
 
-def __get_sparse_hist(statistic: _m5.stats.SparseHistInfo) -> SparseHist:
+def __get_sparse_hist(statistic: _m5_stats.SparseHistInfo) -> SparseHist:
     description = statistic.desc
     value = statistic.values
 
@@ -262,7 +262,7 @@ def __get_sparse_hist(statistic: _m5.stats.SparseHistInfo) -> SparseHist:
     )
 
 
-def _prepare_stats(group: _m5.stats.Group):
+def _prepare_stats(group: _m5_stats.Group):
     """
     Prepares the statistics for dumping.
     """
@@ -375,7 +375,7 @@ def get_simstat(
     """
 
     if prepare_stats:
-        _m5.stats.processDumpQueue()
+        _m5_stats.processDumpQueue()
 
     stats_map = {}
     for r in root:

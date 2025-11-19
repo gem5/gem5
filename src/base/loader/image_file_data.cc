@@ -96,7 +96,7 @@ doGzipLoad(int fd)
     return fd; // return fd to decompressed temporary file for mmap()'ing
 }
 
-ImageFileData::ImageFileData(const std::string &fname)
+ImageFileData::ImageFileData(const std::string &fname, bool try_decompress)
 {
     _filename = fname;
 
@@ -107,7 +107,7 @@ ImageFileData::ImageFileData(const std::string &fname)
         "incorrect.\n", fname);
 
     // Decompress GZ files.
-    if (hasGzipMagic(fd)) {
+    if (try_decompress && hasGzipMagic(fd)) {
         fd = doGzipLoad(fd);
         panic_if(fd < 0, "Failed to unzip file %s.\n", fname);
     }

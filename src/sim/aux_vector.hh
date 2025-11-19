@@ -33,6 +33,7 @@
 #define __AUX_VECTOR_HH__
 
 #include "base/compiler.hh"
+#include "sim/byteswap.hh"
 
 namespace gem5
 {

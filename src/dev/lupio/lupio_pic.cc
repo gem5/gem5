@@ -68,7 +68,7 @@ LupioPIC::lupioPicUpdateIRQ()
 void
 LupioPIC::post(int src_id)
 {
-    gem5_assert(src_id < nSrc && src_id >= 0);
+    gem5_assert(src_id < nSrc && src_id >= 0, "LupioPIC::post");
 
     uint32_t irq_mask = 1UL << src_id;
     pending |= irq_mask;
@@ -78,7 +78,7 @@ LupioPIC::post(int src_id)
 void
 LupioPIC::clear(int src_id)
 {
-    gem5_assert(src_id < nSrc && src_id >= 0);
+    gem5_assert(src_id < nSrc && src_id >= 0, "LupioPIC::clear");
 
     uint32_t irq_mask = 1UL << src_id;
     pending &= ~irq_mask;

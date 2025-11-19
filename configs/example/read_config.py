@@ -1,4 +1,4 @@
-# Copyright (c) 2014,2019 ARM Limited
+# Copyright (c) 2014,2019, 2025 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -208,21 +208,37 @@ class ConfigManager:
         parsed_params = {}
 
         for param_name, param in list(object_class._params.items()):
-            if issubclass(param.ptype, m5.params.ParamValue):
-                if isinstance(param, m5.params.VectorParamDesc):
-                    param_values = self.config.get_param_vector(
-                        object_name, param_name
-                    )
+            if isinstance(param, m5.params.VectorParamDesc) and issubclass(
+                param.ptype, m5.params.ParamValue
+            ):
+                param_values = self.config.get_param_vector(
+                    object_name, param_name
+                )
 
-                    param_value = [
-                        param.ptype.parse_ini(self.flags, value)
-                        for value in param_values
-                    ]
-                else:
-                    param_value = param.ptype.parse_ini(
-                        self.flags,
-                        self.config.get_param(object_name, param_name),
-                    )
+                param_value = [
+                    param.ptype.parse_ini(self.flags, value)
+                    for value in param_values
+                ]
+
+                parsed_params[param_name] = param_value
+            elif isinstance(param, m5.params.DictParamDesc):
+                param_values = self.config.get_param_dict(
+                    object_name, param_name
+                )
+
+                param_value = {
+                    param.key_desc.ptype.parse_ini(
+                        self.flags, key
+                    ): param.val_desc.ptype.parse_ini(self.flags, val)
+                    for key, val in param_values.items()
+                }
+
+                parsed_params[param_name] = param_value
+            elif issubclass(param.ptype, m5.params.ParamValue):
+                param_value = param.ptype.parse_ini(
+                    self.flags,
+                    self.config.get_param(object_name, param_name),
+                )
 
                 parsed_params[param_name] = param_value
 
@@ -439,6 +455,11 @@ class ConfigFile:
         configuration as a list of strings"""
         pass
 
+    def get_param_dict(self, object_name, param_name):
+        """Get a vector param or vector of SimObject references from the
+        configuration as a list of strings"""
+        pass
+
     def get_object_children(self, object_name):
         """Get a list of (name, paths) for each child of this object.
         paths is either a single string object path or a list of object
@@ -466,6 +487,21 @@ class ConfigIniFile(ConfigFile):
 
     def get_param_vector(self, object_name, param_name):
         return self.parser.get(object_name, param_name).split()
+
+    def get_param_dict(self, object_name, param_name):
+        """
+        DictParams in the ini file are stored as a flat list
+        of objects, with keys in the even indices and values
+        in the odd indices. The method is unflattening the
+        list into the matching dictionary
+        """
+        ret = dict()
+        flat_list = self.parser.get(object_name, param_name).split()
+        keys = flat_list[0::2]
+        vals = flat_list[1::2]
+        for key, val in zip(keys, vals):
+            ret[key] = val
+        return ret
 
     def get_object_children(self, object_name):
         if self.parser.has_option(object_name, "children"):

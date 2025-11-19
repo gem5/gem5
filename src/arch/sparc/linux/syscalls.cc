@@ -41,6 +41,7 @@
 #include "mem/se_translating_port_proxy.hh"
 #include "sim/syscall_desc.hh"
 #include "sim/syscall_emul.hh"
+#include "sim/system.hh"
 
 namespace gem5
 {

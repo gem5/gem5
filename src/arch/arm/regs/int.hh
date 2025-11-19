@@ -168,14 +168,14 @@ class IntRegClassOps : public RegClassOps
     RegId flatten(const BaseISA &isa, const RegId &id) const override;
 };
 
-inline constexpr IntRegClassOps intRegClassOps;
+inline const IntRegClassOps intRegClassOps;
 
-inline constexpr RegClass intRegClass =
-    RegClass(IntRegClass, IntRegClassName, int_reg::NumRegs, debug::IntRegs).
-    ops(intRegClassOps).
-    needsFlattening();
+inline const RegClass intRegClass =
+    RegClass(IntRegClass, IntRegClassName, int_reg::NumRegs, debug::IntRegs)
+        .ops(intRegClassOps)
+        .needsFlattening();
 
-inline constexpr RegClass flatIntRegClass =
+inline const RegClass flatIntRegClass =
     RegClass(IntRegClass, IntRegClassName, int_reg::NumRegs, debug::IntRegs);
 
 namespace int_reg

@@ -259,6 +259,9 @@ class InstructionQueue
     /**  Defers a memory instruction when it is cache blocked. */
     void blockMemInst(const DynInstPtr &blocked_inst);
 
+    /**  Retries a memory instruction in the next cycle. */
+    void retryMemInst(const DynInstPtr &retry_inst);
+
     /**  Notify instruction queue that a previous blockage has resolved */
     void cacheUnblocked();
 
@@ -532,7 +535,7 @@ class InstructionQueue
         statistics::Vector statFuBusy;
         // statistics::Vector dist_unissued;
         /** Stat for total number issued for each instruction type. */
-        statistics::Vector2d statIssuedInstType;
+        statistics::Vector2d issuedInstType;
 
         /** Number of instructions issued per cycle. */
         statistics::Formula issueRate;

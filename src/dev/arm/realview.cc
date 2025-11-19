@@ -46,6 +46,7 @@
 
 #include "base/logging.hh"
 #include "dev/arm/base_gic.hh"
+#include "params/RealView.hh"
 
 namespace gem5
 {

@@ -89,7 +89,7 @@ class RiscvBootloaderKernelWorkload(Workload):
         "", "File that contains the bootloader. Don't use bootloader if empty."
     )
     bootloader_addr = Param.Addr(
-        0x0, "Where to place the bootloader in memory."
+        0x80000000, "Where to place the bootloader in memory."
     )
     object_file = Param.String("", "vmlinux file. Don't use kernel if empty.")
     kernel_addr = Param.Addr(
@@ -101,6 +101,13 @@ class RiscvBootloaderKernelWorkload(Workload):
     entry_point = Param.Addr(
         0x80000000, "Where to find the first instruction to execute."
     )
+
+    initrd_filename = Param.String(
+        "",
+        "File that contains the initial ramdisk. Don't use initrd if empty.",
+    )
+    initrd_addr = Param.Addr(0, "initrd/initramfs address")
+
     dtb_filename = Param.String(
         "", "File that contains the Device Tree Blob. Don't use DTB if empty."
     )

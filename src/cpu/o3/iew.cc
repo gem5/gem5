@@ -55,7 +55,6 @@
 #include "debug/Activity.hh"
 #include "debug/Drain.hh"
 #include "debug/IEW.hh"
-#include "debug/O3PipeView.hh"
 #include "params/BaseO3CPU.hh"
 
 namespace gem5
@@ -550,6 +549,12 @@ IEW::blockMemInst(const DynInstPtr& inst)
 }
 
 void
+IEW::retryMemInst(const DynInstPtr& inst)
+{
+    instQueue.retryMemInst(inst);
+}
+
+void
 IEW::cacheUnblocked()
 {
     instQueue.cacheUnblocked();
@@ -609,11 +614,7 @@ IEW::skidCount()
 {
     int max=0;
 
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
+    for (ThreadID tid : *activeThreads) {
         unsigned thread_count = skidBuffer[tid].size();
         if (max < thread_count)
             max = thread_count;
@@ -625,12 +626,7 @@ IEW::skidCount()
 bool
 IEW::skidsEmpty()
 {
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (!skidBuffer[tid].empty())
             return false;
     }
@@ -643,12 +639,7 @@ IEW::updateStatus()
 {
     bool any_unblocking = false;
 
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (dispatchStatus[tid] == Unblocking) {
             any_unblocking = true;
             break;
@@ -1080,9 +1071,8 @@ IEW::dispatchInsts(ThreadID tid)
 
         ++iewStats.dispatchedInsts;
 
-#if TRACING_ON
         inst->dispatchTick = curTick() - inst->fetchTick;
-#endif
+
         ppDispatch->notify(inst);
     }
 
@@ -1129,11 +1119,7 @@ IEW::executeInsts()
     wbNumInst = 0;
     wbCycle = 0;
 
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
+    for (ThreadID tid : *activeThreads) {
         fetchRedirect[tid] = false;
     }
 
@@ -1435,14 +1421,9 @@ IEW::tick()
     // Free function units marked as being freed this cycle.
     fuPool->processFreeUnits();
 
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
     // Check stall and squash signals, dispatch any instructions.
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
-        DPRINTF(IEW,"Issue: Processing [tid:%i]\n",tid);
+    for (ThreadID tid : *activeThreads) {
+        DPRINTF(IEW,"Issue: Processing [tid:%i]\n", tid);
 
         checkSignalsAndUpdate(tid);
         dispatch(tid);
@@ -1479,12 +1460,8 @@ IEW::tick()
     // or store to commit.  Also check if it's being told to execute a
     // nonspeculative instruction.
     // This is pretty inefficient...
-
-    threads = activeThreads->begin();
-    while (threads != end) {
-        ThreadID tid = (*threads++);
-
-        DPRINTF(IEW,"Processing [tid:%i]\n",tid);
+    for (ThreadID tid : *activeThreads) {
+        DPRINTF(IEW,"Processing [tid:%i]\n", tid);
 
         // Update structures based on instructions committed.
         if (fromCommit->commitInfo[tid].doneSeqNum != 0 &&
@@ -1555,11 +1532,22 @@ IEW::updateExeInstStats(const DynInstPtr& inst)
 
     cpu->executeStats[tid]->numInsts++;
 
-#if TRACING_ON
-    if (debug::O3PipeView) {
-        inst->completeTick = curTick() - inst->fetchTick;
+    inst->completeTick = curTick() - inst->fetchTick;
+
+    //
+    // ALU Operations
+    //
+    if (inst->isInteger()) {
+        cpu->executeStats[tid]->numIntAluAccesses++;
     }
-#endif
+
+    if (inst->isFloating()) {
+        cpu->executeStats[tid]->numFpAluAccesses++;
+    }
+
+    if (inst->isVector()) {
+        cpu->executeStats[tid]->numVecAluAccesses++;
+    }
 
     //
     //  Control operations

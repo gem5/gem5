@@ -838,8 +838,7 @@ sc_gen_unique_name(const char *seed)
 bool
 sc_hierarchical_name_exists(const char *name)
 {
-    return sc_gem5::findEvent(name) != sc_gem5::allEvents.end() ||
-        ::sc_gem5::findObject(name, sc_gem5::allObjects);
+    return sc_gem5::findEvent(name) || ::sc_gem5::findObject(name);
 }
 
 bool

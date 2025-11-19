@@ -44,6 +44,7 @@
 #include "debug/AMBA.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
+#include "params/AmbaFake.hh"
 
 namespace gem5
 {

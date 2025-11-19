@@ -167,6 +167,7 @@ class GPUStaticInst : public GPUStaticInstFlags
     bool isAtomicDec() const { return _flags[AtomicDec]; }
     bool isAtomicMax() const { return _flags[AtomicMax]; }
     bool isAtomicMin() const { return _flags[AtomicMin]; }
+    bool isAtomicPkAddBF16() const { return _flags[AtomicPkAddBF16]; }
 
     bool
     isArgLoad() const

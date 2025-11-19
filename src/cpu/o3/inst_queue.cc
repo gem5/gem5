@@ -179,45 +179,48 @@ InstructionQueue::name() const
 
 InstructionQueue::IQStats::IQStats(CPU *cpu, const unsigned &total_width)
     : statistics::Group(cpu),
-    ADD_STAT(instsAdded, statistics::units::Count::get(),
-             "Number of instructions added to the IQ (excludes non-spec)"),
-    ADD_STAT(nonSpecInstsAdded, statistics::units::Count::get(),
-             "Number of non-speculative instructions added to the IQ"),
-    ADD_STAT(instsIssued, statistics::units::Count::get(),
-             "Number of instructions issued"),
-    ADD_STAT(intInstsIssued, statistics::units::Count::get(),
-             "Number of integer instructions issued"),
-    ADD_STAT(floatInstsIssued, statistics::units::Count::get(),
-             "Number of float instructions issued"),
-    ADD_STAT(branchInstsIssued, statistics::units::Count::get(),
-             "Number of branch instructions issued"),
-    ADD_STAT(memInstsIssued, statistics::units::Count::get(),
-             "Number of memory instructions issued"),
-    ADD_STAT(miscInstsIssued, statistics::units::Count::get(),
-             "Number of miscellaneous instructions issued"),
-    ADD_STAT(squashedInstsIssued, statistics::units::Count::get(),
-             "Number of squashed instructions issued"),
-    ADD_STAT(squashedInstsExamined, statistics::units::Count::get(),
-             "Number of squashed instructions iterated over during squash; "
-             "mainly for profiling"),
-    ADD_STAT(squashedOperandsExamined, statistics::units::Count::get(),
-             "Number of squashed operands that are examined and possibly "
-             "removed from graph"),
-    ADD_STAT(squashedNonSpecRemoved, statistics::units::Count::get(),
-             "Number of squashed non-spec instructions that were removed"),
-    ADD_STAT(numIssuedDist, statistics::units::Count::get(),
-             "Number of insts issued each cycle"),
-    ADD_STAT(statFuBusy, statistics::units::Count::get(),
-             "attempts to use FU when none available"),
-    ADD_STAT(statIssuedInstType, statistics::units::Count::get(),
-             "Number of instructions issued per FU type, per thread"),
-    ADD_STAT(issueRate, statistics::units::Rate<
-                statistics::units::Count, statistics::units::Cycle>::get(),
-             "Inst issue rate", instsIssued / cpu->baseStats.numCycles),
-    ADD_STAT(fuBusy, statistics::units::Count::get(), "FU busy when requested"),
-    ADD_STAT(fuBusyRate, statistics::units::Rate<
-                statistics::units::Count, statistics::units::Count>::get(),
-             "FU busy rate (busy events/executed inst)")
+      ADD_STAT(instsAdded, statistics::units::Count::get(),
+               "Number of instructions added to the IQ (excludes non-spec)"),
+      ADD_STAT(nonSpecInstsAdded, statistics::units::Count::get(),
+               "Number of non-speculative instructions added to the IQ"),
+      ADD_STAT(instsIssued, statistics::units::Count::get(),
+               "Number of instructions issued"),
+      ADD_STAT(intInstsIssued, statistics::units::Count::get(),
+               "Number of integer instructions issued"),
+      ADD_STAT(floatInstsIssued, statistics::units::Count::get(),
+               "Number of float instructions issued"),
+      ADD_STAT(branchInstsIssued, statistics::units::Count::get(),
+               "Number of branch instructions issued"),
+      ADD_STAT(memInstsIssued, statistics::units::Count::get(),
+               "Number of memory instructions issued"),
+      ADD_STAT(miscInstsIssued, statistics::units::Count::get(),
+               "Number of miscellaneous instructions issued"),
+      ADD_STAT(squashedInstsIssued, statistics::units::Count::get(),
+               "Number of squashed instructions issued"),
+      ADD_STAT(squashedInstsExamined, statistics::units::Count::get(),
+               "Number of squashed instructions iterated over during squash; "
+               "mainly for profiling"),
+      ADD_STAT(squashedOperandsExamined, statistics::units::Count::get(),
+               "Number of squashed operands that are examined and possibly "
+               "removed from graph"),
+      ADD_STAT(squashedNonSpecRemoved, statistics::units::Count::get(),
+               "Number of squashed non-spec instructions that were removed"),
+      ADD_STAT(numIssuedDist, statistics::units::Count::get(),
+               "Number of insts issued each cycle"),
+      ADD_STAT(statFuBusy, statistics::units::Count::get(),
+               "attempts to use FU when none available"),
+      ADD_STAT(issuedInstType, statistics::units::Count::get(),
+               "Number of instructions issued per FU type, per thread"),
+      ADD_STAT(issueRate,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Cycle>::get(),
+               "Inst issue rate", instsIssued / cpu->baseStats.numCycles),
+      ADD_STAT(fuBusy, statistics::units::Count::get(),
+               "FU busy when requested"),
+      ADD_STAT(fuBusyRate,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Count>::get(),
+               "FU busy rate (busy events/executed inst)")
 {
     instsAdded
         .prereq(instsAdded);
@@ -280,11 +283,9 @@ InstructionQueue::IQStats::IQStats(CPU *cpu, const unsigned &total_width)
         dist_unissued.subname(i, unissued_names[i]);
     }
 */
-    statIssuedInstType
-        .init(cpu->numThreads,enums::Num_OpClass)
-        .flags(statistics::total | statistics::pdf | statistics::dist)
-        ;
-    statIssuedInstType.ysubnames(enums::OpClassStrings);
+    issuedInstType.init(cpu->numThreads, enums::Num_OpClass)
+        .flags(statistics::total | statistics::pdf | statistics::dist);
+    issuedInstType.ysubnames(enums::OpClassStrings);
 
     //
     //  How long did instructions for a particular FU type wait prior to issue
@@ -493,12 +494,7 @@ InstructionQueue::resetEntries()
     if (iqPolicy != SMTQueuePolicy::Dynamic || numThreads > 1) {
         int active_threads = activeThreads->size();
 
-        list<ThreadID>::iterator threads = activeThreads->begin();
-        list<ThreadID>::iterator end = activeThreads->end();
-
-        while (threads != end) {
-            ThreadID tid = *threads++;
-
+        for (ThreadID tid : *activeThreads) {
             if (iqPolicy == SMTQueuePolicy::Partitioned) {
                 maxEntries[tid] = numEntries / active_threads;
             } else if (iqPolicy == SMTQueuePolicy::Threshold &&
@@ -907,7 +903,7 @@ InstructionQueue::scheduleReadyInsts()
             }
 
             listOrder.erase(order_it++);
-            iqStats.statIssuedInstType[tid][op_class]++;
+            iqStats.issuedInstType[tid][op_class]++;
         } else {
             assert(idx == FUPool::NoFreeFU);
             iqStats.statFuBusy[op_class]++;
@@ -1080,6 +1076,8 @@ InstructionQueue::addReadyMemInst(const DynInstPtr &ready_inst)
 {
     OpClass op_class = ready_inst->opClass();
 
+    assert(op_class < Num_OpClasses);
+
     readyInsts[op_class].push(ready_inst);
 
     // Will need to reorder the list if either a queue is not on the list,
@@ -1131,6 +1129,12 @@ InstructionQueue::blockMemInst(const DynInstPtr &blocked_inst)
     DPRINTF(IQ, "Memory inst [sn:%llu] PC %s is blocked, will be "
             "reissued later\n", blocked_inst->seqNum,
             blocked_inst->pcState());
+}
+
+void
+InstructionQueue::retryMemInst(const DynInstPtr &retry_inst)
+{
+    retryMemInsts.push_back(retry_inst);
 }
 
 void
@@ -1444,6 +1448,8 @@ InstructionQueue::addIfReady(const DynInstPtr &inst)
         }
 
         OpClass op_class = inst->opClass();
+
+        assert(op_class < Num_OpClasses);
 
         DPRINTF(IQ, "Instruction is ready to issue, putting it onto "
                 "the ready list, PC %s opclass:%i [sn:%llu].\n",

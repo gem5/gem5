@@ -1,6 +1,6 @@
 /*
  * Copyright 2014 Google, Inc.
- * Copyright (c) 2010-2014, 2017, 2020 ARM Limited
+ * Copyright (c) 2010-2014, 2017, 2020, 2025 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -62,7 +62,6 @@
 #include "debug/Drain.hh"
 #include "debug/ExecFaulting.hh"
 #include "debug/HtmCpu.hh"
-#include "debug/O3PipeView.hh"
 #include "params/BaseO3CPU.hh"
 #include "sim/faults.hh"
 #include "sim/full_system.hh"
@@ -160,8 +159,6 @@ Commit::CommitStats::CommitStats(CPU *cpu, Commit *commit)
                "Number of atomic instructions committed"),
       ADD_STAT(membars, statistics::units::Count::get(),
                "Number of memory barriers committed"),
-      ADD_STAT(functionCalls, statistics::units::Count::get(),
-               "Number of function calls committed."),
       ADD_STAT(committedInstType, statistics::units::Count::get(),
                "Class of committed instruction"),
       ADD_STAT(commitEligibleSamples, statistics::units::Cycle::get(),
@@ -183,10 +180,6 @@ Commit::CommitStats::CommitStats(CPU *cpu, Commit *commit)
 
     membars
         .init(cpu->numThreads)
-        .flags(total);
-
-    functionCalls
-        .init(commit->numThreads)
         .flags(total);
 
     committedInstType
@@ -297,9 +290,10 @@ Commit::clearStates(ThreadID tid)
     squashAfterInst[tid] = NULL;
 
     // Clear out any of this thread's instructions being sent to prior stages.
-    for (int i = -cpu->timeBuffer.getPast();
-         i <= cpu->timeBuffer.getFuture(); ++i)
-        cpu->timeBuffer[i].commitInfo[i] = {};
+    for (int i = -cpu->timeBuffer.getPast(); i <= cpu->timeBuffer.getFuture();
+         ++i) {
+        cpu->timeBuffer[i].commitInfo[tid] = {};
+    }
 }
 
 void Commit::drain() { drainPending = true; }
@@ -371,8 +365,8 @@ Commit::takeOverFrom()
 void
 Commit::deactivateThread(ThreadID tid)
 {
-    std::list<ThreadID>::iterator thread_it = std::find(priority_list.begin(),
-            priority_list.end(), tid);
+    auto thread_it = std::find(
+            priority_list.begin(), priority_list.end(), tid);
 
     if (thread_it != priority_list.end()) {
         priority_list.erase(thread_it);
@@ -403,12 +397,7 @@ void
 Commit::updateStatus()
 {
     // reset ROB changed variable
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         changedROBNumEntries[tid] = false;
 
         // Also check if any of the threads has a trap pending
@@ -432,12 +421,7 @@ Commit::updateStatus()
 bool
 Commit::changedROBEntries()
 {
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (changedROBNumEntries[tid]) {
             return true;
         }
@@ -475,6 +459,7 @@ Commit::generateTrapEvent(ThreadID tid, Fault inst_fault)
     cpu->schedule(trap, cpu->clockEdge(latency));
     trapInFlight[tid] = true;
     thread[tid]->trapPending = true;
+    toIEW->commitInfo[tid].trapPending = true;
 }
 
 void
@@ -531,6 +516,7 @@ Commit::squashFromTrap(ThreadID tid)
     thread[tid]->trapPending = false;
     thread[tid]->noSquashFromTC = false;
     trapInFlight[tid] = false;
+    toIEW->commitInfo[tid].trapPending = false;
 
     trapSquash[tid] = false;
 
@@ -591,14 +577,9 @@ Commit::tick()
     if (activeThreads->empty())
         return;
 
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
     // Check if any of the threads are done squashing.  Change the
     // status if they are done.
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         // Clear the bit saying if the thread has committed stores
         // this cycle.
         committedStores[tid] = false;
@@ -621,11 +602,7 @@ Commit::tick()
 
     markCompletedInsts();
 
-    threads = activeThreads->begin();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (!rob->isEmpty(tid) && rob->readHeadInst(tid)->readyToCommit()) {
             // The ROB has more instructions it can commit. Its next status
             // will be active.
@@ -749,14 +726,9 @@ Commit::commit()
     ////////////////////////////////////
     // Check for any possible squashes, handle them first
     ////////////////////////////////////
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
 
     int num_squashing_threads = 0;
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         // Not sure which one takes priority.  I think if we have
         // both, that's a bad sign.
         if (trapSquash[tid]) {
@@ -863,11 +835,7 @@ Commit::commit()
     }
 
     //Check for any activity
-    threads = activeThreads->begin();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (changedROBNumEntries[tid]) {
             toIEW->commitInfo[tid].usedROB = true;
             toIEW->commitInfo[tid].freeROBEntries = rob->numFreeEntries(tid);
@@ -974,12 +942,12 @@ Commit::commitInsts()
         // so panic.
         } else if (head_inst->noCapableFU() &&
             head_inst->getFault() == NoFault)  {
-            panic("CPU cannot execute [sn:%llu] op_class: %u but"
-              " did not trigger a fault. Do you need to update"
-              " the configuration and add a functional unit for"
-              " that op class?\n",
-              head_inst->seqNum,
-              head_inst->opClass());
+            panic("CPU cannot execute [sn:%llu] op_class: %s but"
+                  " did not trigger a fault. Do you need to update"
+                  " the configuration and add a functional unit for"
+                  " that op class?\n",
+                  head_inst->seqNum,
+                  enums::OpClassStrings[head_inst->opClass()]);
         } else {
             set(pc[tid], head_inst->pcState());
 
@@ -1255,13 +1223,7 @@ Commit::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
     DPRINTF(Commit,
             "[tid:%i] [sn:%llu] Committing instruction with PC %s\n",
             tid, head_inst->seqNum, head_inst->pcState());
-    if (head_inst->traceData) {
-        head_inst->traceData->setFetchSeq(head_inst->seqNum);
-        head_inst->traceData->setCPSeq(thread[tid]->numOp);
-        head_inst->traceData->dump();
-        delete head_inst->traceData;
-        head_inst->traceData = NULL;
-    }
+
     if (head_inst->isReturn()) {
         DPRINTF(Commit,
                 "[tid:%i] [sn:%llu] Return Instruction Committed PC %s \n",
@@ -1282,11 +1244,15 @@ Commit::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
     // Finally clear the head ROB entry.
     rob->retireHead(tid);
 
-#if TRACING_ON
-    if (debug::O3PipeView) {
-        head_inst->commitTick = curTick() - head_inst->fetchTick;
+    head_inst->commitTick = curTick() - head_inst->fetchTick;
+
+    if (head_inst->traceData) {
+        head_inst->traceData->setFetchSeq(head_inst->seqNum);
+        head_inst->traceData->setCPSeq(thread[tid]->numOp);
+        head_inst->traceData->dump();
+        delete head_inst->traceData;
+        head_inst->traceData = NULL;
     }
-#endif
 
     // If this was a store, record it for this cycle.
     if (head_inst->isStore() || head_inst->isAtomic())
@@ -1352,13 +1318,23 @@ Commit::markCompletedInsts()
 void
 Commit::updateComInstStats(const DynInstPtr &inst)
 {
-    ThreadID tid = inst->threadNumber;
+    const ThreadID tid = inst->threadNumber;
+    const bool in_user_mode = cpu->inUserMode(tid);
 
+    // Count number of instructions, ensure we don't
+    // double count Microops as insts.
     if (!inst->isMicroop() || inst->isLastMicroop()) {
         cpu->commitStats[tid]->numInsts++;
         cpu->baseStats.numInsts++;
+        if (in_user_mode) {
+            cpu->commitStats[tid]->numUserInsts++;
+        }
     }
+
     cpu->commitStats[tid]->numOps++;
+    if (in_user_mode) {
+        cpu->commitStats[tid]->numUserOps++;
+    }
 
     // To match the old model, don't count nops and instruction
     // prefetches towards the total commit count.
@@ -1381,7 +1357,7 @@ Commit::updateComInstStats(const DynInstPtr &inst)
             cpu->commitStats[tid]->numLoadInsts++;
         }
 
-        if (inst->isStore()) {
+        if (inst->isStore() || inst->isAtomic()) {
             cpu->commitStats[tid]->numStoreInsts++;
         }
     }
@@ -1405,9 +1381,13 @@ Commit::updateComInstStats(const DynInstPtr &inst)
     }
 
     // Function Calls
-    if (inst->isCall())
-        stats.functionCalls[tid]++;
+    if (inst->isCall()) {
+        cpu->commitStats[tid]->functionCalls++;
+    }
 
+    if (inst->isCall() || inst->isReturn()) {
+        cpu->commitStats[tid]->numCallsReturns++;
+    }
 }
 
 ////////////////////////////////////////
@@ -1464,8 +1444,8 @@ Commit::getCommittingThread()
 ThreadID
 Commit::roundRobin()
 {
-    std::list<ThreadID>::iterator pri_iter = priority_list.begin();
-    std::list<ThreadID>::iterator end      = priority_list.end();
+    auto pri_iter = priority_list.begin();
+    auto end      = priority_list.end();
 
     while (pri_iter != end) {
         ThreadID tid = *pri_iter;
@@ -1495,12 +1475,7 @@ Commit::oldestReady()
     unsigned oldest_seq_num = 0;
     bool first = true;
 
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (!rob->isEmpty(tid) &&
             (commitStatus[tid] == Running ||
              commitStatus[tid] == Idle ||

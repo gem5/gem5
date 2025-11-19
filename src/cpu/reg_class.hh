@@ -168,6 +168,7 @@ class RegId
 class RegClassOps
 {
   public:
+    virtual ~RegClassOps() = default;
     /** Print the name of the register specified in id. */
     virtual std::string regName(const RegId &id) const;
     /** Print the value of a register pointed to by val of size size. */

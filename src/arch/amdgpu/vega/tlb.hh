@@ -105,9 +105,16 @@ class GpuTLB : public ClockedObject
 
   protected:
     typedef std::list<VegaTlbEntry*> EntryList;
-    EntryList::iterator lookupIt(Addr va, bool update_lru=true);
+    EntryList::iterator lookupIt(Addr va, unsigned int ps,
+                                 bool update_lru=true);
     Walker *walker;
     AMDGPUDevice *gpuDevice;
+
+    int getSet(Addr va, unsigned int page_shift);
+
+    //List of possible page size, 4k and 2m for now
+    const std::array<unsigned int, 2>
+    logPageShiftList = {VegaISA::PageShift, 21};
 
     int size;
     int assoc;

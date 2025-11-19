@@ -64,6 +64,7 @@ ROB::ROB(CPU *_cpu, const BaseO3CPUParams &params)
       numThreads(params.numThreads),
       stats(_cpu)
 {
+    assert(!squashWidth.has_value() || (squashWidth > 0));
     //Figure out rob policy
     if (robPolicy == SMTQueuePolicy::Dynamic) {
         //Set Max Entries to Total ROB Capacity
@@ -150,12 +151,7 @@ ROB::resetEntries()
     if (robPolicy != SMTQueuePolicy::Dynamic || numThreads > 1) {
         auto active_threads = activeThreads->size();
 
-        std::list<ThreadID>::iterator threads = activeThreads->begin();
-        std::list<ThreadID>::iterator end = activeThreads->end();
-
-        while (threads != end) {
-            ThreadID tid = *threads++;
-
+        for (ThreadID tid : *activeThreads) {
             if (robPolicy == SMTQueuePolicy::Partitioned) {
                 maxEntries[tid] = numEntries / active_threads;
             } else if (robPolicy == SMTQueuePolicy::Threshold &&
@@ -279,12 +275,7 @@ bool
 ROB::canCommit()
 {
     //@todo: set ActiveThreads through ROB or CPU
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (isHeadReady(tid)) {
             return true;
         }
@@ -326,7 +317,7 @@ ROB::doSquash(ThreadID tid)
 
     bool robTailUpdate = false;
 
-    unsigned int numInstsToSquash = squashWidth;
+    auto numInstsToSquash = squashWidth.has_value() ? squashWidth : numEntries;
 
     // If the CPU is exiting, squash all of the instructions
     // it is told to, even if that exceeds the squashWidth.
@@ -398,12 +389,7 @@ ROB::updateHead()
     bool first_valid = true;
 
     // @todo: set ActiveThreads through ROB or CPU
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (instList[tid].empty())
             continue;
 
@@ -418,7 +404,7 @@ ROB::updateHead()
 
         DynInstPtr head_inst = (*head_thread);
 
-        assert(head_inst != 0);
+        assert(head_inst);
 
         if (head_inst->seqNum < lowest_num) {
             head = head_thread;
@@ -438,12 +424,7 @@ ROB::updateTail()
     tail = instList[0].end();
     bool first_valid = true;
 
-    std::list<ThreadID>::iterator threads = activeThreads->begin();
-    std::list<ThreadID>::iterator end = activeThreads->end();
-
-    while (threads != end) {
-        ThreadID tid = *threads++;
-
+    for (ThreadID tid : *activeThreads) {
         if (instList[tid].empty()) {
             continue;
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2016, 2021 ARM Limited
+ * Copyright (c) 2010, 2016, 2021, 2025 Arm Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -518,7 +518,11 @@ class DynInst : public ExecContext, public RefCounted
     const PCStateBase &readPredTarg() { return *predPC; }
 
     /** Returns whether the instruction was predicted taken or not. */
-    bool readPredTaken() { return instFlags[PredTaken]; }
+    bool
+    readPredTaken() const
+    {
+        return instFlags[PredTaken];
+    }
 
     void
     setPredTaken(bool predicted_taken)
@@ -528,7 +532,7 @@ class DynInst : public ExecContext, public RefCounted
 
     /** Returns whether the instruction mispredicted. */
     bool
-    mispredicted()
+    mispredicted() const
     {
         std::unique_ptr<PCStateBase> next_pc(pc->clone());
         staticInst->advancePC(*next_pc);
@@ -995,19 +999,18 @@ class DynInst : public ExecContext, public RefCounted
     uint64_t htmDepth = 0;
 
   public:
-#if TRACING_ON
     // Value -1 indicates that particular phase
     // hasn't happened (yet).
     /** Tick records used for the pipeline activity viewer. */
     Tick fetchTick = -1;      // instruction fetch is completed.
     int32_t decodeTick = -1;  // instruction enters decode phase
     int32_t renameTick = -1;  // instruction enters rename phase
+    int32_t renameEndTick = -1; // instruction exits rename phase
     int32_t dispatchTick = -1;
     int32_t issueTick = -1;
     int32_t completeTick = -1;
     int32_t commitTick = -1;
     int32_t storeTick = -1;
-#endif
 
     /* Values used by LoadToUse stat */
     Tick firstIssue = -1;
@@ -1100,9 +1103,10 @@ class DynInst : public ExecContext, public RefCounted
                 setRegOperand(staticInst.get(), idx,
                         cpu->getReg(prev_phys_reg, threadNumber));
             } else {
-                uint8_t val[original_dest_reg.regClass().regBytes()];
-                cpu->getReg(prev_phys_reg, val, threadNumber);
-                setRegOperand(staticInst.get(), idx, val);
+                const size_t size = original_dest_reg.regClass().regBytes();
+                auto val = std::make_unique<uint8_t[]>(size);
+                cpu->getReg(prev_phys_reg, val.get(), threadNumber);
+                setRegOperand(staticInst.get(), idx, val.get());
             }
         }
     }

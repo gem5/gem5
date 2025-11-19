@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2016-2020, 2022-2024 Arm Limited
+ * Copyright (c) 2010, 2012-2013, 2016-2020, 2022-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -321,6 +321,8 @@ bool isGenericTimerSystemAccessTrapEL3(const MiscRegIndex miscReg,
                                        ThreadContext *tc);
 
 bool SPAlignmentCheckEnabled(ThreadContext *tc);
+
+unsigned addrAlignmentFlags(int memsize, unsigned memAccessFlags);
 
 Addr truncPage(Addr addr);
 Addr roundPage(Addr addr);

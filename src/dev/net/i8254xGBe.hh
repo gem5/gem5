@@ -475,6 +475,12 @@ class IGbE : public EtherDevice
 
     TxDescCache txDescCache;
 
+  protected:
+    Tick readDevice(PacketPtr pkt) override;
+    Tick writeDevice(PacketPtr pkt) override;
+
+    Tick writeConfig(PacketPtr pkt) override;
+
   public:
     PARAMS(IGbE);
 
@@ -486,11 +492,6 @@ class IGbE : public EtherDevice
                   PortID idx=InvalidPortID) override;
 
     Tick lastInterrupt;
-
-    Tick read(PacketPtr pkt) override;
-    Tick write(PacketPtr pkt) override;
-
-    Tick writeConfig(PacketPtr pkt) override;
 
     bool ethRxPkt(EthPacketPtr packet);
     void ethTxDone();

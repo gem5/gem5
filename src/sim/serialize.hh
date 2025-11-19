@@ -45,8 +45,8 @@
 #ifndef __SERIALIZE_HH__
 #define __SERIALIZE_HH__
 
-
 #include <algorithm>
+#include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -617,6 +617,23 @@ mappingParamIn(CheckpointIn &cp, const char* sectionName,
  */
 #define UNSERIALIZE_ARRAY(member, size)         \
         ::gem5::arrayParamIn(cp, #member, member, size)
+
+/**
+ * \def SERIALIZE_UNIQUE_PTR_ARRAY(member, size)
+ *
+ * @ingroup api_serialize
+ */
+#define SERIALIZE_UNIQUE_PTR_ARRAY(member, size) \
+        ::gem5::arrayParamOut(cp, #member, member.get(), size)
+
+/**
+* \def UNSERIALIZE_UNIQUE_PTR_ARRAY(member, size)
+*
+* @ingroup api_serialize
+*/
+#define UNSERIALIZE_UNIQUE_PTR_ARRAY(member, size) \
+        ::gem5::arrayParamIn(cp, #member, member.get(), size)
+
 
 /**
  * \def SERIALIZE_CONTAINER(member)

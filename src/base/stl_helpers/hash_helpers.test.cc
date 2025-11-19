@@ -70,7 +70,8 @@ TEST(HashHelpers, hashPair)
 
 TEST(HashHelpers, hashTuple)
 {
-    auto t = std::make_tuple(1, "hello", 4.2, std::make_pair(true, 0.f));
+    auto t = std::make_tuple(1, std::string("hello"), 4.2,
+                             std::make_pair(true, 0.f));
     auto hashVal = stl_helpers::hash_value(t);
     auto hashFunc = stl_helpers::hash<decltype(t)>{};
     EXPECT_EQ(hashVal, hashFunc(t));

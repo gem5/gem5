@@ -696,7 +696,14 @@ Decoder::decode(PCStateBase &next_pc)
 StaticInstPtr
 Decoder::fetchRomMicroop(MicroPC micropc, StaticInstPtr curMacroop)
 {
-    return microcodeRom.fetchMicroop(micropc, curMacroop);
+    // The decoupled front-end and return address predictor require
+    // the instruction size to be set. '4' is of no particular reason and
+    // may require a better method. However, since the microop addresses
+    // are anyway not used in the branch predictor and rom instructions
+    // are rare it should not make a large difference.
+    auto si = microcodeRom.fetchMicroop(micropc, curMacroop);
+    si->size(4);
+    return si;
 }
 
 } // namespace X86ISA

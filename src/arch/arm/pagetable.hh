@@ -96,6 +96,8 @@ struct PageTableOps
     typedef enums::ArmLookupLevel LookupLevel;
     typedef int64_t pte_t;
 
+    virtual ~PageTableOps() = default;
+
     virtual bool isValid(pte_t pte, unsigned level) const = 0;
     virtual bool isLeaf(pte_t pte, unsigned level) const = 0;
     virtual bool isWritable(pte_t pte, unsigned level, bool stage2) const = 0;

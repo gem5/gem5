@@ -1,4 +1,5 @@
 # Copyright (c) 2016, 2019 ARM Limited
+# Copyright (c) 2022-2023 The University of Edinburgh
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -36,6 +37,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from m5.citations import add_citation
 from m5.defines import buildEnv
 from m5.objects.BaseCPU import BaseCPU
 
@@ -85,6 +87,8 @@ class BaseO3CPU(BaseCPU):
     )
     cacheLoadPorts = Param.Unsigned(200, "Cache Ports. Constrains loads only.")
 
+    # Backward pipeline delays
+    fetchToBacDelay = Param.Cycles(1, "Fetch to Branch address calc. delay")
     decodeToFetchDelay = Param.Cycles(1, "Decode to fetch delay")
     renameToFetchDelay = Param.Cycles(1, "Rename to fetch delay")
     iewToFetchDelay = Param.Cycles(1, "Issue/Execute/Writeback to fetch delay")
@@ -100,6 +104,9 @@ class BaseO3CPU(BaseCPU):
         1, "Issue/Execute/Writeback to decode delay"
     )
     commitToDecodeDelay = Param.Cycles(1, "Commit to decode delay")
+
+    # Forward pipeline delays
+    bacToFetchDelay = Param.Cycles(1, "Branch address calc. to fetch delay")
     fetchToDecodeDelay = Param.Cycles(1, "Fetch to decode delay")
     decodeWidth = Param.Unsigned(8, "Decode width")
 
@@ -129,7 +136,10 @@ class BaseO3CPU(BaseCPU):
     )
     renameToROBDelay = Param.Cycles(1, "Rename to reorder buffer delay")
     commitWidth = Param.Unsigned(8, "Commit width")
-    squashWidth = Param.Unsigned(8, "Squash width")
+    squashWidth = OptionalParam.Unsigned(
+        "Squash width. If unspecified all instructions are "
+        "squashed instantly within one cycle.",
+    )
     trapLatency = Param.Cycles(13, "Trap latency")
     fetchTrapLatency = Param.Cycles(1, "Fetch trap latency")
 
@@ -203,7 +213,10 @@ class BaseO3CPU(BaseCPU):
     smtCommitPolicy = Param.CommitPolicy("RoundRobin", "SMT Commit Policy")
 
     branchPred = Param.BranchPredictor(
-        TournamentBP(numThreads=Parent.numThreads), "Branch Predictor"
+        BranchPredictor(
+            conditionalBranchPred=TournamentBP(numThreads=Parent.numThreads)
+        ),
+        "Branch Predictor",
     )
     needsTSO = Param.Bool(False, "Enable TSO Memory model")
 
@@ -217,3 +230,43 @@ class BaseO3CPU(BaseCPU):
     recvRespBufferSize = Param.Unsigned(
         64, "Maximum number of receive response bytes per cycle"
     )
+
+    ## Parameters for decoupled front-end
+    decoupledFrontEnd = Param.Bool(False, "Enables the decoupled front-end")
+    numFTQEntries = Param.Unsigned(
+        8,
+        "Number of entries in the Fetch target queue. (only used for "
+        "decoupled front-end)",
+    )
+    minInstSize = Param.Unsigned(
+        1,
+        "Minimum instruction size (bytes). Determines the granularity "
+        "of the instruction minimum search width per cycle",
+    )
+    fetchTargetWidth = Param.Unsigned(
+        32,
+        "Max width (bytes) of Fetch target. "
+        "Determines the maximum search width per cycle",
+    )
+    maxFTPerCycle = Param.Unsigned(4, "Max number of FT created per cycle")
+    maxTakenPredPerCycle = Param.Unsigned(
+        1, "Max number of taken predictions per cycle"
+    )
+
+
+add_citation(
+    BaseO3CPU,
+    """@inproceedings{10.1145/3613424.3614258,
+  author    = {Schall, David and
+               Sandberg, Andreas and
+               Grot, Boris},
+  title     = {Warming Up a Cold Front-End with Ignite},
+  year      = {2023},
+  publisher = {Association for Computing Machinery},
+  address   = {Toronto, ON, Canada},
+  doi       = {10.1145/3613424.3614258},
+  booktitle = {Proceedings of the 56th Annual IEEE/ACM International Symposium on Microarchitecture (MICRO '23)},
+  series    = {MICRO'23}
+}
+""",
+)
