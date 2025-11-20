@@ -228,6 +228,13 @@ def addRunFSOptions(parser):
         help="Frequency in exec cycles of GPU progress prints",
     )
 
+    parser.add_argument(
+        "--dvfs",
+        type=bool,
+        default=False,
+        help="Enable DVFS for GPU",
+    )
+
 
 def runGpuFSSystem(args):
     """
