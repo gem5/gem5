@@ -93,7 +93,7 @@ CacheController::recvSnoopMsg(const CHIRequestMsg *msg)
     payload->ns = msg->m_ns;
     phase.channel = ARM::CHI::CHANNEL_SNP;
     phase.snp_opcode = ruby_to_tlm::snpOpcode(msg->m_type);
-    phase.txn_id = msg->m_txnId % 1024;
+    phase.txn_id = msg->m_txnId;
 
     bw(payload, &phase);
 
@@ -160,7 +160,7 @@ CacheController::Transaction::handle(const CHIResponseMsg *msg)
     phase.channel = ARM::CHI::CHANNEL_RSP;
     phase.rsp_opcode = opcode;
     phase.resp = ruby_to_tlm::rspResp(msg->m_type);
-    phase.txn_id = msg->m_txnId % 1024;
+    phase.txn_id = msg->m_txnId;
 
     controller->bw(payload, &phase);
     return opcode != ARM::CHI::RSP_OPCODE_RETRY_ACK;
@@ -180,7 +180,7 @@ CacheController::ReadTransaction::handle(const CHIDataMsg *msg)
     phase.channel = ARM::CHI::CHANNEL_DAT;
     phase.dat_opcode = ruby_to_tlm::datOpcode(msg->m_type);
     phase.resp = ruby_to_tlm::datResp(msg->m_type);
-    phase.txn_id = msg->m_txnId % 1024;
+    phase.txn_id = msg->m_txnId;
     phase.data_id = dataId(msg->m_addr + msg->m_bitMask.firstBitSet(true));
 
     // This is a hack, we should fix it on the ruby side
@@ -204,7 +204,7 @@ bool
 CacheController::ReadTransaction::handle(const CHIResponseMsg *msg)
 {
     /// TODO: remove this, DBID is not sent
-    phase.dbid = msg->m_dbid % 1024;
+    phase.dbid = msg->m_dbid;
     return Transaction::handle(msg);
 }
 
@@ -249,7 +249,7 @@ CacheController::WriteTransaction::handle(const CHIResponseMsg *msg)
         recvDBID = true;
     }
 
-    phase.dbid = msg->m_dbid % 1024;
+    phase.dbid = msg->m_dbid;
     Transaction::handle(msg);
 
     return recvComp && recvDBID;
@@ -336,7 +336,7 @@ CacheController::sendRequestMsg(ARM::CHI::Payload &payload,
     req_msg->m_allowRetry = phase.allow_retry;
     req_msg->m_Destination.add(mapAddressToDownstreamMachine(payload.address));
 
-    req_msg->m_txnId = phase.txn_id + (payload.lpid * 1024);
+    req_msg->m_txnId = phase.txn_id;
     req_msg->m_ns = payload.ns;
 
     sendRequestMsg(req_msg);
@@ -357,7 +357,7 @@ CacheController::sendDataMsg(ARM::CHI::Payload &payload,
     data_msg->m_type = tlm_to_ruby::datOpcode(phase.dat_opcode, phase.resp);
     data_msg->m_Destination.add(
         mapAddressToDownstreamMachine(payload.address));
-    data_msg->m_txnId = phase.txn_id + (payload.lpid * 1024);
+    data_msg->m_txnId = phase.txn_id;
     data_msg->m_dataBlk.setData(payload.data, 0, cacheLineSize);
 
     std::vector<bool> byte_enabled(cacheLineSize, false);
@@ -385,7 +385,7 @@ CacheController::sendResponseMsg(ARM::CHI::Payload &payload,
     res_msg->m_responder = getMachineID();
     res_msg->m_type = tlm_to_ruby::rspOpcode(phase.rsp_opcode, phase.resp);
     res_msg->m_Destination.add(mapAddressToDownstreamMachine(payload.address));
-    res_msg->m_txnId = phase.txn_id + (payload.lpid * 1024);
+    res_msg->m_txnId = phase.txn_id;
 
     sendResponseMsg(res_msg);
 }
