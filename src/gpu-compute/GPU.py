@@ -48,6 +48,37 @@ class GfxVersion(ScopedEnum):
     vals = ["gfx900", "gfx902", "gfx908", "gfx90a", "gfx942"]
 
 
+# TODO toy values everywhere in this class.
+class GPUDVFSPolicy(ClockedObject):
+    type = "GPUDVFSPolicy"
+    abstract = True
+    cxx_header = "gpu-compute/gpu_dvfs_policy.hh"
+    cxx_class = "gem5::GPUDVFSPolicy"
+
+    dvfs_handler = Param.DVFSHandler(
+        NULL, "DVFS handler managing the GPU clock domain"
+    )
+    gpu_domain_id = Param.Unsigned(
+        975986, "Domain ID of the GPU clock domain in the DVFS handler"
+    )
+    sampling_period = Param.Clock(
+        "1us", "period between samples to evaluate performance level"
+    )
+    voltage_opps = VectorParam.Float(
+        [0.9, 1.0], "list of voltage operating points (in Volts)"
+    )
+    frequency_opps = VectorParam.Clock(
+        ["500MHz", "1GHz"],
+        "list of frequency operating points (in Hz)",
+    )
+
+
+class ToyDVFSPolicy(GPUDVFSPolicy):
+    type = "ToyDVFSPolicy"
+    cxx_header = "gpu-compute/toy_dvfs_policy.hh"
+    cxx_class = "gem5::ToyDVFSPolicy"
+
+
 class PoolManager(SimObject):
     type = "PoolManager"
     abstract = True
