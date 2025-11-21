@@ -577,11 +577,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Load);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_LOAD_UBYTE
 
     Inst_MUBUF__BUFFER_LOAD_UBYTE::~Inst_MUBUF__BUFFER_LOAD_UBYTE()
@@ -650,6 +646,23 @@ namespace VegaISA
     Inst_MUBUF__BUFFER_LOAD_UBYTE::completeAcc(GPUDynInstPtr gpuDynInst)
     {
         if (instData.LDS) {
+            // LDS data is written as dword at minimum. Convert the type size
+            // in place in the dynamic instruction data pointer.
+            VecElemU32 *as_u32 =
+                reinterpret_cast<VecElemU32 *>(gpuDynInst->d_data);
+
+            for (int lane = NumVecElemPerVecReg - 1; lane >= 0; --lane) {
+                // Reverse copy from largest to smallest index as the pointers
+                // are the same. Avoids clobbering.
+                if (gpuDynInst->exec_mask[lane]) {
+                    if (!oobMask[lane]) {
+                        as_u32[lane] = gpuDynInst->d_data[lane];
+                    } else {
+                        as_u32[lane] = 0;
+                    }
+                }
+            }
+
             ldsComplete<1>(gpuDynInst);
 
             return;
@@ -711,11 +724,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Load);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_LOAD_USHORT
 
     Inst_MUBUF__BUFFER_LOAD_USHORT::~Inst_MUBUF__BUFFER_LOAD_USHORT()
@@ -784,6 +793,25 @@ namespace VegaISA
     Inst_MUBUF__BUFFER_LOAD_USHORT::completeAcc(GPUDynInstPtr gpuDynInst)
     {
         if (instData.LDS) {
+            // LDS data is written as dword at minimum. Convert the type size
+            // in place in the dynamic instruction data pointer.
+            VecElemU32 *as_u32 =
+                reinterpret_cast<VecElemU32 *>(gpuDynInst->d_data);
+            VecElemU16 *as_u16 =
+                reinterpret_cast<VecElemU16 *>(gpuDynInst->d_data);
+
+            for (int lane = NumVecElemPerVecReg - 1; lane >= 0; --lane) {
+                // Reverse copy from largest to smallest index as the pointers
+                // are the same. Avoids clobbering.
+                if (gpuDynInst->exec_mask[lane]) {
+                    if (!oobMask[lane]) {
+                        as_u32[lane] = as_u16[lane];
+                    } else {
+                        as_u32[lane] = 0;
+                    }
+                }
+            }
+
             ldsComplete<1>(gpuDynInst);
 
             return;
@@ -845,12 +873,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Load);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-            warn("BUFFER.LDS not implemented!");
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_LOAD_SHORT_D16
 
     Inst_MUBUF__BUFFER_LOAD_SHORT_D16::~Inst_MUBUF__BUFFER_LOAD_SHORT_D16()
@@ -947,12 +970,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Load);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-            warn("BUFFER.LDS not implemented!");
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_LOAD_SHORT_D16_HI
 
     Inst_MUBUF__BUFFER_LOAD_SHORT_D16_HI::
@@ -1050,11 +1068,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Load);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_LOAD_DWORD
 
     Inst_MUBUF__BUFFER_LOAD_DWORD::~Inst_MUBUF__BUFFER_LOAD_DWORD()
@@ -1156,8 +1170,6 @@ namespace VegaISA
         setFlag(MemoryRef);
         setFlag(Load);
         setFlag(GlobalSegment);
-
-        panic_if(instData.LDS, "Return to LDS not supported for %s", _opcode);
     } // Inst_MUBUF__BUFFER_LOAD_DWORDX2
 
     Inst_MUBUF__BUFFER_LOAD_DWORDX2::~Inst_MUBUF__BUFFER_LOAD_DWORDX2()
@@ -1253,11 +1265,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Load);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_LOAD_DWORDX3
 
     Inst_MUBUF__BUFFER_LOAD_DWORDX3::~Inst_MUBUF__BUFFER_LOAD_DWORDX3()
@@ -1364,11 +1372,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Load);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_LOAD_DWORDX4
 
     Inst_MUBUF__BUFFER_LOAD_DWORDX4::~Inst_MUBUF__BUFFER_LOAD_DWORDX4()
@@ -1480,11 +1484,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Store);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_STORE_BYTE
 
     Inst_MUBUF__BUFFER_STORE_BYTE::~Inst_MUBUF__BUFFER_STORE_BYTE()
@@ -1544,7 +1544,7 @@ namespace VegaISA
                     addr1, addr0, rsrcDesc, offset, inst_offset);
         }
 
-       gpuDynInst->computeUnit()->globalMemoryPipe.issueRequest(gpuDynInst);
+        gpuDynInst->computeUnit()->globalMemoryPipe.issueRequest(gpuDynInst);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -1572,11 +1572,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Store);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_STORE_SHORT
 
     Inst_MUBUF__BUFFER_STORE_SHORT::~Inst_MUBUF__BUFFER_STORE_SHORT()
@@ -1664,11 +1660,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Store);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_STORE_DWORD
 
     Inst_MUBUF__BUFFER_STORE_DWORD::~Inst_MUBUF__BUFFER_STORE_DWORD()
@@ -1756,11 +1748,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Store);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_STORE_DWORDX2
 
     Inst_MUBUF__BUFFER_STORE_DWORDX2::~Inst_MUBUF__BUFFER_STORE_DWORDX2()
@@ -1852,11 +1840,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Store);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_STORE_DWORDX3
 
     Inst_MUBUF__BUFFER_STORE_DWORDX3::~Inst_MUBUF__BUFFER_STORE_DWORDX3()
@@ -1952,11 +1936,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Store);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_STORE_DWORDX4
 
     Inst_MUBUF__BUFFER_STORE_DWORDX4::~Inst_MUBUF__BUFFER_STORE_DWORDX4()
@@ -2107,7 +2087,7 @@ namespace VegaISA
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
         } else {
-            fatal("Unsupported scope for flat instruction.\n");
+            fatal("Unsupported scope for buffer instruction.\n");
         }
     } // execute
 
@@ -2167,7 +2147,7 @@ namespace VegaISA
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
         } else {
-            fatal("Unsupported scope for flat instruction.\n");
+            fatal("Unsupported scope for buffer instruction.\n");
         }
     } // execute
     void
