@@ -16,9 +16,14 @@ class GPUDVFSPolicy : public ClockedObject
 public:
     using Params = GPUDVFSPolicyParams;
 
+    /**
+    Schedule first sample
+    */
     void init() override;
 
-    //Checkpointing: preserve state on resume()
+    /**
+    Checkpointing: preserve state on resume()
+    */
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
     GPUDVFSPolicy(const Params &p);
@@ -27,6 +32,9 @@ protected:
     DVFSHandler::PerfLevel minPerfLevel;
     DVFSHandler::PerfLevel maxPerfLevel;
 
+    /**
+    OPP(Operating Performance Point) volts and freqs(GHz)
+    */
     std::vector<double> voltageOpps;
     std::vector<double> frequencyOpps;
 
@@ -43,8 +51,11 @@ protected:
     }
 
 private:
+    /**
+    DVFS Handler to control SrcClockDomain
+    */
     DVFSHandler *dvfsHandler;
-    DVFSHandler::DomainID gpuDomainId; //to control Src
+    DVFSHandler::DomainID gpuDomainId; 
 
     class SampleEvent: public Event
     {
