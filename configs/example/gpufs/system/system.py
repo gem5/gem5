@@ -107,12 +107,14 @@ def makeGpuFSSystem(args):
     if args.dvfs:
 
         # define clock and volatge domains for DVFS.
-        system.dvfs_voltage_domain = VoltageDomain(volatge=[1.05, 0.95, 0.85]) # TODO toy ranges
+        system.dvfs_voltage_domain = VoltageDomain(
+            volatge=[1.05, 0.95, 0.85]
+        )  # TODO toy ranges
         system.dvfs_clk_domain = SrcClockDomain(
-            clock=['1.5Ghz', '1.0Ghz', '0.5Ghz'],
+            clock=["1.5Ghz", "1.0Ghz", "0.5Ghz"],
             voltage_domain=system.dvfs_voltage_domain,
             domain_id=67,
-            init_perf_level=1
+            init_perf_level=1,
         )
 
         # iterate over all GPU components and rewire their clock domains
@@ -128,12 +130,11 @@ def makeGpuFSSystem(args):
         system.dvfs_handler = DVFSHandler(
             domains=[system.dvfs_clk_domain],
             sys_clk_domain=system.clk_domain,
-            enable=True, # TODO this code could be put on main path and use args.dvfs
-            transition_latency='1us' # TODO toy value
+            enable=True,  # TODO this code could be put on main path and use args.dvfs
+            transition_latency="1us",  # TODO toy value
         )
 
         # TODO add policy.
-
 
     # --------------------- END DVFS SUPPORT ---------------------
 
