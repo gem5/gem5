@@ -65,9 +65,7 @@ private:
     void scheduleNextSample() {
         if (!sampleEvent.scheduled())
             schedule(sampleEvent,
-                clockEdge(static_cast<gem5::Cycles>(samplingPeriod)));
-            // TODO this needs to be converted from ticks to cycles first,
-            // but whatever for now.
+                clockEdge(ticksToCycles(samplingPeriod)));
     }
 
     void process() {
