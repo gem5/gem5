@@ -29,14 +29,14 @@ public:
     GPUDVFSPolicy(const Params &p);
 
 protected:
-    DVFSHandler::PerfLevel minPerfLevel;
-    DVFSHandler::PerfLevel maxPerfLevel;
-
     /**
     OPP(Operating Performance Point) volts and freqs(GHz)
     */
     std::vector<double> voltageOpps;
     std::vector<double> frequencyOpps;
+
+    DVFSHandler::PerfLevel minPerfLevel;
+    DVFSHandler::PerfLevel maxPerfLevel;
 
     virtual DVFSHandler::PerfLevel
     sample(DVFSHandler::PerfLevel currentLevel) = 0;
@@ -55,7 +55,7 @@ private:
     DVFS Handler to control SrcClockDomain
     */
     DVFSHandler *dvfsHandler;
-    DVFSHandler::DomainID gpuDomainId; 
+    DVFSHandler::DomainID gpuDomainId;
 
     class SampleEvent: public Event
     {

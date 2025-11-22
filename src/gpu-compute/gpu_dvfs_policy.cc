@@ -11,8 +11,8 @@ GPUDVFSPolicy::GPUDVFSPolicy(const Params &p)
     sampleEvent(this), // TODO fix initialization?
     samplingPeriod(p.sampling_period),
     voltageOpps(p.voltage_opps.begin(), p.voltage_opps.end()),
-    frequencyOpps(p.frequency_opps.begin(), p.frequency_opps.end())
-
+    frequencyOpps(p.frequency_opps.begin(), p.frequency_opps.end()),
+    maxPerfLevel(frequencyOpps.size() - 1)
 {
     DPRINTF(GPUDVFSPolicy, "%s: Initializing GPU DVFS Policy\n", name());
     fatal_if(!dvfsHandler, "%s: DVFSHandler is required", name());
