@@ -230,7 +230,7 @@ def addRunFSOptions(parser):
 
     parser.add_argument(
         "--dvfs",
-        type=bool,
+        action="store_true",
         default=False,
         help="Enable DVFS for GPU",
     )
