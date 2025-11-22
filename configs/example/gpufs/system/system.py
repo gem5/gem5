@@ -108,10 +108,10 @@ def makeGpuFSSystem(args):
 
         # define clock and volatge domains for DVFS.
         system.dvfs_voltage_domain = VoltageDomain(
-            volatge=[1.05, 0.95, 0.85]
+            voltage=["1.05V", "0.95V", "0.85V"]
         )  # TODO toy ranges
         system.dvfs_clk_domain = SrcClockDomain(
-            clock=["1.5Ghz", "1.0Ghz", "0.5Ghz"],
+            clock=["1.5GHz", "1.0GHz", "0.5GHz"],
             voltage_domain=system.dvfs_voltage_domain,
             domain_id=67,
             init_perf_level=1,
