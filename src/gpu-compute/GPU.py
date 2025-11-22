@@ -71,6 +71,7 @@ class GPUDVFSPolicy(ClockedObject):
         ["500MHz", "1GHz"],
         "list of frequency operating points (in Hz)",
     )
+    shader = Param.Shader(NULL, "Shader this DVFS policy controls")
 
 
 class ToyDVFSPolicy(GPUDVFSPolicy):
