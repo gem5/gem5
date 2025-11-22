@@ -35,7 +35,7 @@ protected:
     std::vector<double> voltageOpps;
     std::vector<double> frequencyOpps;
 
-    DVFSHandler::PerfLevel minPerfLevel;
+    DVFSHandler::PerfLevel minPerfLevel = 0;
     DVFSHandler::PerfLevel maxPerfLevel;
 
     virtual DVFSHandler::PerfLevel
