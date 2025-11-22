@@ -2,6 +2,7 @@
 #define __GPU_DVFS_POLICY_HH__
 
 #include "debug/GPUDVFSPolicy.hh"
+#include "gpu-compute/shader.hh"
 #include "params/GPUDVFSPolicy.hh"
 #include "sim/clocked_object.hh"
 #include "sim/dvfs_handler.hh"
@@ -56,6 +57,7 @@ private:
     */
     DVFSHandler *dvfsHandler;
     DVFSHandler::DomainID gpuDomainId;
+    Shader *shader;
 
     class SampleEvent: public Event
     {
