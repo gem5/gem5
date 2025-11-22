@@ -51,6 +51,16 @@ protected:
         return P;
     }
 
+    /**
+     * Access the statistics of a specific CU.
+     */
+    const ComputeUnit::ComputeUnitStats &
+    statsOfCU(int cuIdx) {
+        fatal_if(cuIdx < 0 || cuIdx >= shader->n_cu,
+                 "CU index %d out of range [0, %d)", cuIdx, shader->n_cu);
+        return shader->cuList[cuIdx]->stats;
+    }
+
 private:
     /**
     DVFS Handler to control SrcClockDomain
