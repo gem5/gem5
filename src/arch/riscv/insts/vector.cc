@@ -734,9 +734,8 @@ std::string VsSegMacroInst::generateDisassembly(Addr pc,
         const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
-    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", " <<
-        '(' << registerName(srcRegIdx(0)) << ')' <<
-        ", " << registerName(srcRegIdx(1));
+    ss << mnemonic << ' ' << registerName(srcRegIdx(1)) << ", " << '('
+       << registerName(srcRegIdx(0)) << ')';
     if (!machInst.vm)
         ss << ", v0.t";
     return ss.str();
