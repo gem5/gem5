@@ -39,7 +39,7 @@ SimObject('GPU.py', sim_objects=[
     'ScalarRegisterFile', 'VectorRegisterFile', 'RegisterManager', 'Wavefront',
     'ComputeUnit', 'Shader', 'GPUComputeDriver', 'GPURenderDriver',
     'GPUDispatcher', 'GPUCommandProcessor', 'RegisterFileCache',
-    'GPUDVFSPolicy', 'ToyDVFSPolicy'],
+    'GPUDVFSPolicy', 'ToyDVFSPolicy', 'STALLPolicy'],
     enums=['PrefetchType', 'GfxVersion', 'StorageClassType'])
 SimObject('GPUStaticInstFlags.py', enums=['GPUStaticInstFlags'])
 SimObject('LdsState.py', sim_objects=['LdsState'])
@@ -76,6 +76,7 @@ Source('register_file_cache.cc')
 Source('wavefront.cc')
 
 Source('gpu_dvfs_policy.cc')
+Source('stall_dvfs_policy.cc')
 
 DebugFlag('GPUAgentDisp')
 DebugFlag('GPUCoalescer')
@@ -108,6 +109,7 @@ DebugFlag('GPUWgLatency')
 DebugFlag('Predictor')
 DebugFlag('WavefrontStack')
 DebugFlag('GPUDVFSPolicy')
+DebugFlag('STALLPolicy')
 
 CompoundFlag('GPUALL', ['GPUCoalescer', 'GPUDisp', 'GPUExec', 'GPUFetch',
                         'GPUMem', 'GPUPort', 'GPUSched', 'GPUSRF', 'GPUSync',

@@ -79,6 +79,10 @@ class ToyDVFSPolicy(GPUDVFSPolicy):
     cxx_header = "gpu-compute/toy_dvfs_policy.hh"
     cxx_class = "gem5::ToyDVFSPolicy"
 
+class STALLPolicy(GPUDVFSPolicy):
+    type = "STALLPolicy"
+    cxx_header = "gpu-compute/stall_dvfs_policy.hh"
+    cxx_class = "gem5::STALLPolicy"
 
 class PoolManager(SimObject):
     type = "PoolManager"

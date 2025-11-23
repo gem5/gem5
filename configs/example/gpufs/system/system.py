@@ -144,6 +144,16 @@ def makeGpuFSSystem(args):
             shader=shader,
         )
 
+        system.dvfs_policy = STALLPolicy(
+            dvfs_handler=system.dvfs_handler,
+            gpu_domain_id=67,
+            sampling_period="1000us",  # same toy value as before
+            voltage_opps=[1.05, 0.95, 0.85],
+            frequency_opps=["1.5GHz", "1.0GHz", "0.5GHz"],
+            shader=shader,
+        )
+
+
     # --------------------- END DVFS SUPPORT ---------------------
 
     # The shader core will be whatever is after the CPU cores are accounted for
