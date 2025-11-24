@@ -81,7 +81,7 @@ repos:
       hooks:
           - id: black
     - repo: https://github.com/asottile/pyupgrade
-      rev: v3.21.1
+      rev: v3.21.2
       hooks:
           - id: pyupgrade
             # Python 3.8 is the earliest version supported.
