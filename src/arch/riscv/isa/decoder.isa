@@ -1332,6 +1332,17 @@ decode QUADRANT default Unknown::unknown() {
                 }}, inst_flags=SimdIndexedLoadOp);
             }
         }
+        
+        0x02: decode FUNCT3 {
+            format SystemOp {
+                0x0: secoff({{
+                    xc->setMiscReg(MISCREG_PROTECTION, 0);
+                }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
+                0x1: secon({{
+                    xc->setMiscReg(MISCREG_PROTECTION, 1);
+                }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
+            }
+        }
 
         0x03: decode FUNCT3 {
             format FenceOp {
@@ -2063,16 +2074,8 @@ decode QUADRANT default Unknown::unknown() {
                 }}, inst_flags=SimdIndexedStoreOp);
             }
         }
-//PROTECTION INSTRUCTIONS
+
         0x0b: decode FUNCT3 {
-            format SystemOp {
-                0x0: secoff({{
-                    xc->setMiscReg(MISCREG_PROTECTION, 0);
-                }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
-                0x1: secon({{
-                    xc->setMiscReg(MISCREG_PROTECTION, 1);
-                }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
-            }
             0x2: decode AMOFUNCT {
                 0x2: LoadReserved::lr_w({{
                     Rd_sd = Mem_sw;
