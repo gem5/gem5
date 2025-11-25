@@ -98,6 +98,8 @@ struct ThreadState : public Serializable
         statistics::Scalar numOps;
         /** Stat for number of memory references. */
         statistics::Scalar numMemRefs;
+        /** Stat for last committed instruction's PC. */
+        statistics::Scalar lastCommitPC;
     } threadStats;
 
     /** Number of simulated loads, used for tracking events based on

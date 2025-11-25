@@ -881,6 +881,7 @@ Execute::doInstCommitAccounting(MinorDynInstPtr inst)
     {
         thread->numInst++;
         thread->threadStats.numInsts++;
+        thread->threadStats.lastCommitPC = inst->pc->instAddr();
         cpu.commitStats[tid]->numInsts++;
         cpu.executeStats[tid]->numInsts++;
         cpu.baseStats.numInsts++;

@@ -1159,6 +1159,7 @@ CPU::instDone(ThreadID tid, const DynInstPtr &inst)
     if (!inst->isMicroop() || inst->isLastMicroop()) {
         thread[tid]->numInst++;
         thread[tid]->threadStats.numInsts++;
+        thread[tid]->threadStats.lastCommitPC = inst->pcState().instAddr();
         commitStats[tid]->numInstsNotNOP++;
 
         // Check for instruction-count-based events.

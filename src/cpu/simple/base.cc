@@ -184,6 +184,7 @@ BaseSimpleCPU::countCommitInst()
         commitStats[tid]->numInsts++;
         baseStats.numInsts++;
         t_info.thread->threadStats.numInsts++;
+        t_info.thread->threadStats.lastCommitPC = t_info.pcState().instAddr();
         executeStats[tid]->numInsts++;
         if (!is_nop) {
             commitStats[tid]->numInstsNotNOP++;
