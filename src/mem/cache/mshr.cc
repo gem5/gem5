@@ -787,6 +787,8 @@ MSHR::updateLockedRMWReadTarget(PacketPtr pkt)
 {
     assert(!targets.empty() && targets.front().pkt == pkt);
     RequestPtr r = std::make_shared<Request>(*(pkt->req));
+    // preserve domain id from the original packet request
+    r->setDomainId(pkt->req->domainId());
     targets.front().pkt = new Packet(r, MemCmd::LockedRMWReadReq);
 }
 

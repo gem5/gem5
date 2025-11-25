@@ -57,6 +57,7 @@
 #include "base/compiler.hh"
 #include "base/extensible.hh"
 #include "base/flags.hh"
+#include "base/trace.hh"
 #include "base/logging.hh"
 #include "base/printable.hh"
 #include "base/types.hh"
@@ -375,6 +376,9 @@ class Packet : public Printable, public Extensible<Packet>
 
     /// A pointer to the original request.
     RequestPtr req;
+
+    /** Domain id propagated from the originating Request. */
+    uint32_t _domainId = 0;
 
   private:
    /**
@@ -779,6 +783,14 @@ class Packet : public Printable, public Extensible<Packet>
 
     inline RequestorID requestorId() const { return req->requestorId(); }
 
+    /** Packet domain id accessor */
+    inline uint32_t
+    domainId() const { return _domainId; }
+
+    /** Packet domain id setter */
+    inline void
+    setDomainId(uint32_t d) { _domainId = d; }
+
     // Network error conditions... encapsulate them as methods since
     // their encoding keeps changing (from result field to command
     // field, etc.)
@@ -884,6 +896,20 @@ class Packet : public Printable, public Extensible<Packet>
            payloadDelay(0), senderState(NULL)
     {
         flags.clear();
+        // Propagate domain id from the originating request if present
+        // Log the request's domain at read-time just before copying into
+        // the Packet so we can see if the Request contains a non-zero
+        // domain right here.
+        if (_req) {
+            cprintf("PACKET-READ-REQ-DOMAIN: pkt=%p req=%p req_domain=%u\n",
+                    (void*)this, (void*)_req.get(), _req->domainId());
+        }
+        _domainId = _req ? _req->domainId() : 0;
+        // Debug: log packet construction domain propagation
+        ::gem5::trace::getDebugLogger()->dprintf_flag(
+            ::gem5::curTick(), std::string(), "PacketDomain",
+            "Packet constructed id=%llu domain=%u req=%p\n",
+            (unsigned long long)id, _domainId, (void*)req.get());
         if (req->hasPaddr()) {
             addr = req->getPaddr();
             flags.set(VALID_ADDR);
@@ -925,6 +951,12 @@ class Packet : public Printable, public Extensible<Packet>
            snoopDelay(0), payloadDelay(0), senderState(NULL)
     {
         flags.clear();
+        _domainId = _req ? _req->domainId() : 0;
+        // Debug: log packet construction domain propagation (block-size override)
+        ::gem5::trace::getDebugLogger()->dprintf_flag(
+            ::gem5::curTick(), std::string(), "PacketDomain",
+            "Packet constructed (blk) id=%llu blkSize=%d domain=%u req=%p\n",
+            (unsigned long long)id, _blkSize, _domainId, (void*)req.get());
         if (req->hasPaddr()) {
             addr = req->getPaddr() & ~(_blkSize - 1);
             flags.set(VALID_ADDR);
@@ -955,6 +987,8 @@ class Packet : public Printable, public Extensible<Packet>
            payloadDelay(pkt->payloadDelay),
            senderState(pkt->senderState)
     {
+        // copy domain id
+        _domainId = pkt->_domainId;
         if (!clear_flags)
             flags.set(pkt->flags & COPY_FLAGS);
 

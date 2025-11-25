@@ -74,6 +74,7 @@
 #include <vector>
 
 #include "mem/cache/replacement_policies/base.hh"
+#include <unordered_map>
 
 namespace gem5
 {
@@ -124,6 +125,28 @@ class TreePLRU : public Base
      */
     PLRUTree* treeInstance;
 
+  /* Per-set mapping of domain_id -> policy_fillmap (way bitmask). */
+  typedef std::unordered_map<uint32_t, uint64_t> DomainPolicyMap;
+  std::vector<DomainPolicyMap> setDomainPolicies;
+
+  /* Per-set mapping of domain_id -> packed node mask bits.
+
+    For each internal node index i, bit i is 1 if that node's subtree
+    contains more than one allowed leaf for the domain
+  */
+
+  std::vector<DomainPolicyMap> setDomainNodeMasks;
+
+  /* Per-set mapping of domain_id -> packed single-direction bits.
+
+    For nodes where exactly one leaf is allowed in the node's subtree,
+    this bit is 1 if the single allowed leaf lies in the right subtree;
+    otherwise the bit is 0. Used to force a direction for
+    deterministic victim choice
+   */
+
+   std::vector<DomainPolicyMap> setDomainSingleDir;
+
   protected:
     /**
      * Tree-PLRU-specific implementation of replacement data. Each replacement
@@ -151,7 +174,16 @@ class TreePLRU : public Base
          * @param index Index of the corresponding entry in the tree.
          * @param tree The shared tree pointer.
          */
-        TreePLRUReplData(const uint64_t index, std::shared_ptr<PLRUTree> tree);
+    TreePLRUReplData(const uint64_t index, std::shared_ptr<PLRUTree> tree,
+             class TreePLRU *parent);
+
+  // owner set for this replacement data -> filled by setPosition hook
+  uint32_t owner_set = 0;
+
+  // pointer back to owning policy for registration
+  TreePLRU *parent = nullptr;
+
+  void setOwnerSet(uint32_t set) override;
     };
 
   public:
@@ -167,6 +199,10 @@ class TreePLRU : public Base
      */
     void invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
                                                                     override;
+    void touch(const std::shared_ptr<ReplacementData>& replacement_data,
+         const PacketPtr pkt) override;
+    void reset(const std::shared_ptr<ReplacementData>& replacement_data,
+         const PacketPtr pkt) override;
 
     /**
      * Touch an entry to update its replacement data.
@@ -196,6 +232,10 @@ class TreePLRU : public Base
     ReplaceableEntry* getVictim(const ReplacementCandidates& candidates) const
                                                                      override;
 
+    ReplaceableEntry* getVictimForDomain(
+               const ReplacementCandidates& candidates,
+               const uint32_t domain_id) const override;
+
     /**
      * Instantiate a replacement data entry. Consecutive calls to this
      * function use the same tree up to numLeaves. When numLeaves replacement
@@ -207,6 +247,24 @@ class TreePLRU : public Base
      * @return A shared pointer to the new replacement data.
      */
     std::shared_ptr<ReplacementData> instantiateEntry() override;
+  void setDomainPolicy(const uint32_t set, const uint32_t domain_id,
+             const uint64_t policy_fillmap) override;
+
+  private:
+    // precomputed leaf mask for each internal node (bit i corresponds to leaf i)
+    std::vector<uint64_t> nodeLeafMask;
+
+  /* per-set list of instantiated tree instances (weak_ptr) to
+     sanitize tree bits when policies change for a set. each entry in the
+     outer vector corresponds to a set index and contains the list of tree
+     instances used by replacement entries belonging to that set
+   */
+  std::vector<std::vector<std::weak_ptr<PLRUTree>>> setTrees;
+
+  /* register a tree instance for a set (called from TreePLRUReplData
+     when its owner_set is known)
+   */
+  void registerTreeForSet(uint32_t set, const std::shared_ptr<PLRUTree> &tree);
 };
 
 } // namespace replacement_policy

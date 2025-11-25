@@ -58,6 +58,7 @@
 #include "mem/cache/cache_blk.hh"
 #include "mem/cache/tags/indexing_policies/base.hh"
 #include "mem/packet.hh"
+#include "mem/cache/dawg.hh"
 #include "params/BaseTags.hh"
 #include "sim/clocked_object.hh"
 
@@ -90,6 +91,10 @@ class BaseTags : public ClockedObject
 
     /** Partitioning manager */
     partitioning_policy::PartitionManager *partitionManager;
+
+    // way guard table
+    WayGuardTable *wayGuardTable;
+
 
     /**
      * The number of tags that need to be touched to meet the warmup
@@ -158,11 +163,23 @@ class BaseTags : public ClockedObject
         statistics::Scalar tagAccesses;
         /** Number of data blocks consulted over all accesses. */
         statistics::Scalar dataAccesses;
+
+
+        // DAWG-specific stats
+
+        //how many replacement candidates were filtered out per domain,
+        statistics::Vector dawgFilteredCandidatesPerDomain;
+
+        //how many installs occurred per domain under DAWG control
+        statistics::Vector dawgInstallsPerDomain;
     } stats;
 
   public:
     PARAMS(BaseTags);
     BaseTags(const Params &p);
+
+        // public accessor for WayGuardTable. will returns nullptr if none is set
+        WayGuardTable* getWayGuardTable() const { return wayGuardTable; }
 
     /**
      * Destructor.
@@ -285,7 +302,8 @@ class BaseTags : public ClockedObject
     virtual CacheBlk* findVictim(const CacheBlk::KeyType &key,
                                  const std::size_t size,
                                  std::vector<CacheBlk*>& evict_blks,
-                                 const uint64_t partition_id=0) = 0;
+                                 const uint64_t partition_id=0,
+                                 const PacketPtr pkt = nullptr) = 0;
 
     /**
      * Access block and update replacement data. May not succeed, in which case

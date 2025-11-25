@@ -72,6 +72,18 @@ LSQ::LSQRequest::LSQRequest(LSQ &port_, MinorDynInstPtr inst_, bool isLoad_,
     state(NotIssued)
 {
     request = std::make_shared<Request>();
+    // stamp domain id for requests created inside the Minor LSQ if the owning thread context is available
+
+    // use load selector for loads and store selector for modifying accesses
+    if (port.cpu.threads.size() > 0 && inst && inst->id.threadId < port.cpu.threads.size()) {
+        SimpleThread &thread = *port.cpu.threads[inst->id.threadId];
+        if (thread.getTC()) {
+            if (isLoad)
+                request->setDomainId(thread.getTC()->domainLoad());
+            else
+                request->setDomainId(thread.getTC()->domainStore());
+        }
+    }
 }
 
 void

@@ -182,15 +182,16 @@ class CacheBlk : public TaggedEntry
         if (other.wasPrefetched()) {
             setPrefetched();
         }
-        setCoherenceBits(other.coherence);
+    setCoherenceBits(other.coherence);
         setTaskId(other.getTaskId());
         setPartitionId(other.getPartitionId());
         setWhenReady(curTick());
         setRefCount(other.getRefCount());
-        setSrcRequestorId(other.getSrcRequestorId());
-        std::swap(lockList, other.lockList);
+    setSrcRequestorId(other.getSrcRequestorId());
+    setDomainId(other.getDomainId());
+    std::swap(lockList, other.lockList);
 
-        other.invalidate();
+    other.invalidate();
 
         return *this;
     }
@@ -202,9 +203,10 @@ class CacheBlk : public TaggedEntry
     virtual void invalidate() override
     {
         TaggedEntry::invalidate();
-
         clearPrefetched();
         clearCoherenceBits(AllBits);
+
+        _domainId = 0; // reset domainId on invalidate
 
         setTaskId(context_switch_task_id::Unknown);
         setPartitionId(std::numeric_limits<uint64_t>::max());
@@ -256,6 +258,12 @@ class CacheBlk : public TaggedEntry
      * to the block being invalidated.
      */
     void clearPrefetched() { _prefetched = false; }
+
+    // domain id accessor
+    uint32_t getDomainId() const { return _domainId; }
+
+    // domain id setter
+    void setDomainId(uint32_t d) { _domainId = d; }
 
     /** Marks this blocks as a recently prefetched block. */
     void setPrefetched() { _prefetched = true; }
@@ -497,6 +505,9 @@ class CacheBlk : public TaggedEntry
 
     /** Number of references to this block since it was brought in. */
     unsigned _refCount = 0;
+
+    // domain id of the block
+    uint32_t _domainId = 0;
 
     /**
      * Tick on which the block was inserted in the cache. Its value is only

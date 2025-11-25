@@ -129,6 +129,43 @@ class BaseSetAssoc : public BaseTags
     {
         CacheBlk *blk = findBlock({pkt->getAddr(), pkt->isSecure()});
 
+        if (blk && wayGuardTable && pkt && pkt->req && !pkt->req->isInstFetch()) {
+            Addr vaddr = pkt->req->hasVaddr() ? pkt->req->getVaddr() : 0;
+            bool looksLikeStack = (vaddr >= 0x7fff00000000ULL);
+            if (looksLikeStack) {
+                // still count this as a normal hit; do not apply DAWG mask.
+                goto after_dawg_hit_mask;
+            }
+            const uint32_t domain = pkt->req->domainId();
+            const uint32_t set    = blk->getSet();
+            const uint32_t way    = blk->getWay();
+            uint32_t mask         = wayGuardTable->getMask(set, domain);
+
+            if (mask != 0 && !(mask & (1u << way))) {
+        static int dawgHitMaskLogCount = 0;
+        constexpr int maxDawgHitMaskLogs = 100;
+
+                if (dawgHitMaskLogCount < maxDawgHitMaskLogs) {
+                    bool inst  = pkt->req->isInstFetch();
+                    Addr paddr = pkt->getAddr();
+                    Addr vaddr = pkt->req->hasVaddr() ? pkt->req->getVaddr() : 0;
+
+                    cprintf("DAWG-HIT-MASK: tick=%llu phys=0x%llx virt=0x%llx "
+                            "cmd=%s inst=%d set=%u way=%u domain=%u "
+                            "mask=0x%x -> miss\n",
+                            curTick(), (unsigned long long)paddr,
+                            (unsigned long long)vaddr,
+                            pkt->cmd.toString(), inst,
+                            set, way, domain, mask);
+
+            dawgHitMaskLogCount++;
+        }
+                blk = nullptr;
+            }
+        }
+
+after_dawg_hit_mask:
+
         // Access all tags in parallel, hence one in each way.  The data side
         // either accesses all blocks in parallel, or one block sequentially on
         // a hit.  Sequential access with a miss doesn't access data.
@@ -170,7 +207,8 @@ class BaseSetAssoc : public BaseTags
     CacheBlk* findVictim(const CacheBlk::KeyType& key,
                          const std::size_t size,
                          std::vector<CacheBlk*>& evict_blks,
-                         const uint64_t partition_id=0) override
+                         const uint64_t partition_id=0,
+                         const PacketPtr pkt = nullptr) override
     {
         // Get possible entries to be victimized
         std::vector<ReplaceableEntry*> entries =
@@ -181,12 +219,100 @@ class BaseSetAssoc : public BaseTags
             partitionManager->filterByPartition(entries, partition_id);
         }
 
-        // Choose replacement victim from replacement candidates
-        CacheBlk* victim = entries.empty() ? nullptr :
-            static_cast<CacheBlk*>(replacementPolicy->getVictim(entries));
+        // if there is WayGuardTable and a packet -> apply domain mask
+
+        // prefer domain-allowed ways but fall back to original candidates if no allowed ways exist
+        std::vector<ReplaceableEntry*> filtered_entries;
+        uint32_t dawg_mask = 0;
+        if (wayGuardTable && pkt && pkt->req) {
+            uint32_t domain = pkt->req->domainId();
+            if (!entries.empty()) {
+                const uint32_t set = entries.front()->getSet();
+                dawg_mask = wayGuardTable->getMask(set, domain);
+                // if mask is zero, treat it as "no policy" and allow all
+
+                if (dawg_mask == 0) {
+                    dawg_mask = (1u << allocAssoc) - 1;
+                }
+                for (auto *e : entries) {
+                    uint32_t way = e->getWay();
+                    if (dawg_mask & (1u << way)) {
+                        filtered_entries.push_back(e);
+                    } else {
+                        // log if filtered by DAWG mask
+                        cprintf("DAWG-FILTER: set=%u domain=%u way=%u filtered\n",
+                                set, domain, way);
+                        if (stats.dawgFilteredCandidatesPerDomain.size() >
+                            domain) {
+                            stats.dawgFilteredCandidatesPerDomain[domain]++;
+                        }
+                    }
+                }
+                // if DAWG mask filtered out every candidate, log a fallback notice
+                if (filtered_entries.empty()) {
+                    cprintf("DAWG-FALLBACK: set=%u domain=%u no_allowed_ways;\n"
+                            " falling back to original candidates\n",
+                            set, domain);
+                }
+            }
+        }
+
+        // Choose which candidate set to pass to replacement policy
+        const std::vector<ReplaceableEntry*> &candidates =
+            filtered_entries.empty() ? entries : filtered_entries;
+
+        // Choose replacement victim from replacement candidates. Prefer
+        // domain-aware API if implemented by the replacement policy.
+        ReplaceableEntry *victim_entry = nullptr;
+        uint32_t domain = pkt && pkt->req ? pkt->req->domainId() : 0;
+
+        // If we filtered entries, log that domain-aware selection will be
+        // performed on the reduced candidate set.
+        if (!filtered_entries.empty() && !entries.empty()) {
+            cprintf("DAWG-CANDIDATES: set=%u domain=%u candidates=%u\n",
+                    entries.front()->getSet(), domain, filtered_entries.size());
+        }
+
+        // Try calling domain-aware API (new in replacement policies). The
+        // default implementation falls back to getVictim().
+        victim_entry = replacementPolicy->getVictimForDomain(candidates,
+                                    domain);
+
+        CacheBlk* victim = victim_entry ? static_cast<CacheBlk*>(victim_entry) : nullptr;
+
+        // Debug check: if WayGuardTable was used to filter candidates,
+        // ensure the replacement policy did not pick a victim way that
+        // is disallowed by the DAWG mask. Log a deterministic message
+        // and trigger a fatal in debug builds to catch violations.
+        if (wayGuardTable && pkt && pkt->req) {
+            uint32_t check_domain = pkt->req->domainId();
+            if (!candidates.empty()) {
+                const uint32_t check_set = candidates.front()->getSet();
+                uint32_t check_mask = wayGuardTable->getMask(check_set, check_domain);
+                if (check_mask == 0)
+                    check_mask = (1u << allocAssoc) - 1;
+                if (victim) {
+                    uint32_t victim_way = victim->getWay();
+                    if (!(check_mask & (1u << victim_way))) {
+                        // Deterministic log for violation
+                        cprintf("DAWG-ASSERT-FAIL: set=%u domain=%u victim_way=%u mask=0x%x\n",
+                                check_set, check_domain, victim_way, check_mask);
+                        // In debug builds this should raise immediate attention
+                        panic("WayGuardTable violation: replacement selected disallowed way");
+                    }
+                }
+            }
+        }
 
         // There is only one eviction for this replacement
         evict_blks.push_back(victim);
+
+        if (victim && pkt && pkt->req) {
+            uint32_t install_domain = pkt->req->domainId();
+            if (stats.dawgInstallsPerDomain.size() > install_domain) {
+                stats.dawgInstallsPerDomain[install_domain]++;
+            }
+        }
 
         return victim;
     }
@@ -212,6 +338,13 @@ class BaseSetAssoc : public BaseTags
 
         // Update replacement policy
         replacementPolicy->reset(blk->replacementData, pkt);
+
+        if (pkt && pkt->req) {
+            uint32_t install_domain = pkt->req->domainId();
+            if (stats.dawgInstallsPerDomain.size() > install_domain) {
+                stats.dawgInstallsPerDomain[install_domain]++;
+            }
+        }
     }
 
     void moveBlock(CacheBlk *src_blk, CacheBlk *dest_blk) override;

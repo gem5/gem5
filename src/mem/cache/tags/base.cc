@@ -64,6 +64,7 @@ BaseTags::BaseTags(const Params &p)
       size(p.size), lookupLatency(p.tag_latency),
       system(p.system), indexingPolicy(p.indexing_policy),
       partitionManager(p.partitioning_manager),
+      wayGuardTable(p.way_guard_table),
       warmupBound((p.warmup_percentage/100.0) * (p.size / p.block_size)),
       warmedUp(false), numBlocks(p.size / p.block_size),
       dataBlks(new uint8_t[p.size]), // Allocate data storage in one big chunk
@@ -125,6 +126,16 @@ BaseTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
     // We only need to write into one tag and one data block.
     stats.tagAccesses += 1;
     stats.dataAccesses += 1;
+
+    // log installs to see which set/way/domain combinations are actually populated.
+    if (blk && pkt && pkt->req) {
+        uint32_t set = blk->getSet();
+        uint32_t way = blk->getWay();
+        uint32_t domain = blk->getDomainId();
+        Addr addr = indexingPolicy->regenerateAddr({blk->getTag(), blk->isSecure()}, blk);
+        cprintf("DAWG-INSTALL: set=%u way=%u block_domain=%u addr=0x%llx\n",
+                set, way, domain, (unsigned long long)addr);
+    }
 }
 
 void
@@ -256,7 +267,13 @@ BaseTags::BaseTagStats::BaseTagStats(BaseTags &_tags)
     ADD_STAT(tagAccesses, statistics::units::Count::get(),
              "Number of tag accesses"),
     ADD_STAT(dataAccesses, statistics::units::Count::get(),
-             "Number of data accesses")
+             "Number of data accesses"),
+    ADD_STAT(dawgFilteredCandidatesPerDomain,
+             statistics::units::Count::get(),
+             "Number of DAWG-filtered replacement candidates per domain"),
+    ADD_STAT(dawgInstallsPerDomain,
+             statistics::units::Count::get(),
+             "Number of DAWG-controlled installs per domain")
 {
 }
 
@@ -299,6 +316,23 @@ BaseTags::BaseTagStats::regStats()
     ratioOccsTaskId.flags(nozero);
 
     ratioOccsTaskId = occupanciesTaskId / statistics::constant(tags.numBlocks);
+
+    // initialize DAWG stats per domain
+    // index by RequestorID and label each element with the system's requestor name
+    if (system) {
+        const int max_req = system->maxRequestors();
+        dawgFilteredCandidatesPerDomain
+            .init(max_req)
+            .flags(nozero | nonan);
+        dawgInstallsPerDomain
+            .init(max_req)
+            .flags(nozero | nonan);
+        for (int i = 0; i < max_req; ++i) {
+            const auto &name = system->getRequestorName(i);
+            dawgFilteredCandidatesPerDomain.subname(i, name);
+            dawgInstallsPerDomain.subname(i, name);
+        }
+    }
 }
 
 void

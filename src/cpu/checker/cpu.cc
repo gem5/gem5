@@ -193,6 +193,11 @@ CheckerCPU::readMem(Addr addr, uint8_t *data, unsigned size,
             fault = mmu->translateFunctional(mem_req, tc, BaseMMU::Read);
         }
 
+        // stamp domain selector for this fragment (read)
+        if (predicate && tc) {
+            mem_req->setDomainId(tc->domainLoad());
+        }
+
         if (predicate && !checked_flags && fault == NoFault && unverifiedReq) {
             flags_match = checkFlags(unverifiedReq, mem_req->getVaddr(),
                                      mem_req->getPaddr(), mem_req->getFlags());
@@ -275,6 +280,11 @@ CheckerCPU::writeMem(uint8_t *data, unsigned size,
 
         if (predicate) {
             fault = mmu->translateFunctional(mem_req, tc, BaseMMU::Write);
+        }
+
+        // Stamp domain selector for this fragment (write)
+        if (predicate && tc) {
+            mem_req->setDomainId(tc->domainStore());
         }
 
         if (predicate && !checked_flags && fault == NoFault && unverifiedReq) {

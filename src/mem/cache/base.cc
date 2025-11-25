@@ -251,6 +251,8 @@ BaseCache::handleTimingReqHit(PacketPtr pkt, CacheBlk *blk, Tick request_time)
             // we had missed and just received the response.
             // Request *req2 = new Request(*(pkt->req));
             RequestPtr req2 = std::make_shared<Request>(*(pkt->req));
+            // preserve originating domain from the original request
+            req2->setDomainId(pkt->req->domainId());
             PacketPtr pkt2 = new Packet(req2, pkt->cmd);
             MSHR *mshr = allocateMissBuffer(pkt2, curTick(), true);
             // Mark the MSHR "in service" (even though it's not) to prevent
@@ -429,6 +431,14 @@ BaseCache::recvTimingReq(PacketPtr pkt)
     CacheBlk *blk = nullptr;
     bool satisfied = false;
     {
+        // trace incoming packet -> blockAddr and domain to correlate with future DAWG-INSTALL entries
+        Addr pkt_blk_addr = pkt->getBlockAddr(blkSize);
+        uint32_t pkt_req_dom = pkt->req ? pkt->req->domainId() : 0;
+        cprintf("DAWG-TRACE: incoming pkt_blk_addr=0x%llx pkt_cmd=%u req_domain=%u pkt_addr=0x%llx\n",
+            static_cast<long long unsigned>(pkt_blk_addr),
+            static_cast<unsigned>(pkt->cmd.toInt()),
+            pkt_req_dom, static_cast<long long unsigned>(pkt->getAddr()));
+
         PacketList writebacks;
         // Note that lat is passed by reference here. The function
         // access() will set the lat value.
@@ -438,6 +448,7 @@ BaseCache::recvTimingReq(PacketPtr pkt)
         // to the write buffer to ensure they logically precede anything
         // happening below
         doWritebacks(writebacks, clockEdge(lat + forwardLatency));
+
     }
 
     // Here we charge the headerDelay that takes into account the latencies
@@ -958,10 +969,16 @@ BaseCache::handleEvictions(std::vector<CacheBlk*> &evict_blks,
             const MSHR* mshr =
                 mshrQueue.findMatch(regenerateBlkAddr(blk), blk->isSecure());
             if (mshr) {
-                // Must be an outstanding upgrade or clean request on a block
-                // we're about to replace
-                assert((!blk->isSet(CacheBlk::WritableBit) &&
-                    mshr->needsWritable()) || mshr->isCleaning());
+                // avoid evicting this block and let the miss be retried or handled by the
+                // replacement policy on a different candidate.
+                if (!((!blk->isSet(CacheBlk::WritableBit) &&
+                        mshr->needsWritable()) || mshr->isCleaning())) {
+                    warn("BaseCache::handleEvictions: blocking eviction of "
+                         "writable blk %#llx under needsWritable MSHR; "
+                         "possible DAWG/partition interaction.\n",
+                         regenerateBlkAddr(blk));
+                    return false;
+                }
                 return false;
             }
         }
@@ -1186,7 +1203,24 @@ BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
         blk->clearCoherenceBits(CacheBlk::DirtyBit);
     } else {
         assert(pkt->isInvalidate());
-        invalidateBlock(blk);
+        // if WayGuardTable present, ensure packet domain allows this way
+        WayGuardTable *wgt = tags->getWayGuardTable();
+        if (wgt && pkt && pkt->req) {
+            uint32_t domain = pkt->req->domainId();
+            uint32_t set = blk->getSet();
+            uint32_t way = blk->getWay();
+            uint32_t mask = wgt->getMask(set, domain);
+            if (mask != 0 && !(mask & (1u << way))) {
+                // log a DAWG-FALLBACK
+                cprintf("DAWG-FALLBACK: invalidate set=%u way=%u domain=%u\n",
+                        set, way, domain);
+                invalidateBlock(blk);
+            } else {
+                invalidateBlock(blk);
+            }
+        } else {
+            invalidateBlock(blk);
+        }
         DPRINTF(CacheVerbose, "%s for %s (invalidation)\n", __func__,
                 pkt->print());
     }
@@ -1360,7 +1394,23 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             // If that is the case we might need to evict blocks.
             if (!updateCompressionData(blk, pkt->getConstPtr<uint64_t>(),
                 writebacks)) {
-                invalidateBlock(blk);
+                // FALLBACK
+                WayGuardTable *wgt = tags->getWayGuardTable();
+                if (wgt && pkt && pkt->req) {
+                    uint32_t domain = pkt->req->domainId();
+                    uint32_t set = blk->getSet();
+                    uint32_t way = blk->getWay();
+                    uint32_t mask = wgt->getMask(set, domain);
+                    if (mask != 0 && !(mask & (1u << way))) {
+                        cprintf("DAWG-FALLBACK: invalidate(set=%u, way=%u, domain=%u) - forced to keep coherence\n",
+                                set, way, domain);
+                        invalidateBlock(blk);
+                    } else {
+                        invalidateBlock(blk);
+                    }
+                } else {
+                    invalidateBlock(blk);
+                }
                 return false;
             }
         }
@@ -1439,7 +1489,22 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
             // If that is the case we might need to evict blocks.
             if (!updateCompressionData(blk, pkt->getConstPtr<uint64_t>(),
                 writebacks)) {
-                invalidateBlock(blk);
+                WayGuardTable *wgt = tags->getWayGuardTable();
+                if (wgt && pkt && pkt->req) {
+                    uint32_t domain = pkt->req->domainId();
+                    uint32_t set = blk->getSet();
+                    uint32_t way = blk->getWay();
+                    uint32_t mask = wgt->getMask(set, domain);
+                    if (mask != 0 && !(mask & (1u << way))) {
+                        cprintf("DAWG-FALLBACK: invalidate(set=%u, way=%u, domain=%u) - forced to keep coherence\n",
+                                set, way, domain);
+                        invalidateBlock(blk);
+                    } else {
+                        invalidateBlock(blk);
+                    }
+                } else {
+                    invalidateBlock(blk);
+                }
                 return false;
             }
         }
@@ -1650,7 +1715,7 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
     // Find replacement victim
     std::vector<CacheBlk*> evict_blks;
     CacheBlk *victim = tags->findVictim({addr, is_secure}, blk_size_bits,
-                                        evict_blks, partition_id);
+                                        evict_blks, partition_id, pkt);
 
     // It is valid to return nullptr if there is no victim
     if (!victim)
@@ -1723,6 +1788,9 @@ BaseCache::writebackBlk(CacheBlk *blk)
         req->setFlags(Request::SECURE);
 
     req->taskId(blk->getTaskId());
+    // preserve domain id associated with this cache block when creating writeback/evict
+    // requests so downstream packets carry the originating domain
+    req->setDomainId(blk->getDomainId());
 
     PacketPtr pkt =
         new Packet(req, blk->isSet(CacheBlk::DirtyBit) ?
@@ -1859,6 +1927,11 @@ BaseCache::invalidateVisitor(CacheBlk &blk)
 
     if (blk.isValid()) {
         assert(!blk.isSet(CacheBlk::DirtyBit));
+        WayGuardTable *wgt = tags->getWayGuardTable();
+        // No packet context available here - memInvalidate iterates all
+        // blocks. For such global maintenance operations we conservatively
+        // perform the invalidation (caller-level semantics decide).
+        (void)wgt; // keep unused var if not used elsewhere
         invalidateBlock(&blk);
     }
 }
@@ -1915,10 +1988,23 @@ BaseCache::sendMSHRQueuePacket(MSHR* mshr)
 
     CacheBlk *blk = tags->findBlock({mshr->blkAddr, mshr->isSecure});
 
+    // debug: print MSHR/packet/block state
+    cprintf("DBG-MSHR: blkAddr=0x%llx mshr_needsWritable=%u isWholeLine=%u blk=%p blkValid=%u blkWritable=%u blkDirty=%u pkt_cmd=%d pkt_isUpgrade=%u pkt_hasSharers=%u\n",
+        (unsigned long long)mshr->blkAddr,
+        (unsigned)mshr->needsWritable(),
+        (unsigned)mshr->isWholeLineWrite(),
+        (void*)blk,
+        (unsigned)(blk ? blk->isValid() : 0),
+        (unsigned)(blk ? blk->isSet(CacheBlk::WritableBit) : 0),
+        (unsigned)(blk ? blk->isSet(CacheBlk::DirtyBit) : 0),
+            tgt_pkt->cmd.toInt(),
+        (unsigned)tgt_pkt->isUpgrade(),
+        (unsigned)tgt_pkt->hasSharers());
+
     // either a prefetch that is not present upstream, or a normal
     // MSHR request, proceed to get the packet to send downstream
     PacketPtr pkt = createMissPacket(tgt_pkt, blk, mshr->needsWritable(),
-                                     mshr->isWholeLineWrite());
+                     mshr->isWholeLineWrite());
 
     mshr->isForward = (pkt == nullptr);
 

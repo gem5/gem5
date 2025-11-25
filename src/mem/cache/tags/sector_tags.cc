@@ -158,6 +158,27 @@ SectorTags::accessBlock(const PacketPtr pkt, Cycles &lat)
 {
     CacheBlk *blk = findBlock({pkt->getAddr(), pkt->isSecure()});
 
+    // DAWG domain hit masking: if a data access hits in a way
+    // that is not allowed for the requesting domain according to the
+    // WayGuardTable, treat it as a miss so the access proceeds to memory
+    // or allocates in an allowed way.
+
+    // ran into page fault error... instruction fetches are left unmasked to avoid error(for now).
+
+    // mask of 0 is "no policy" and does not restrict hits.
+    if (blk && wayGuardTable && pkt && pkt->req && !pkt->req->isInstFetch()) {
+        const uint32_t domain = pkt->req->domainId();
+        const uint32_t set    = blk->getSet();
+        const uint32_t way    = blk->getWay();
+        uint32_t mask         = wayGuardTable->getMask(set, domain);
+
+        if (mask != 0 && !(mask & (1u << way))) {
+            cprintf("DAWG-HIT-MASK: set=%u way=%u domain=%u mask=0x%x -> miss\n",
+                    set, way, domain, mask);
+            blk = nullptr;
+        }
+    }
+
     // Access all tags in parallel, hence one in each way.  The data side
     // either accesses all blocks in parallel, or one block sequentially on
     // a hit.  Sequential access with a miss doesn't access data.
@@ -188,6 +209,19 @@ SectorTags::accessBlock(const PacketPtr pkt, Cycles &lat)
     lat = lookupLatency;
 
     return blk;
+
+    if (blk && wayGuardTable && pkt && pkt->req) {
+        const uint32_t domain = pkt->req->domainId();
+        const uint32_t set    = blk->getSet();
+        const uint32_t way    = blk->getWay();
+        uint32_t mask         = wayGuardTable->getMask(set, domain);
+
+        if (mask != 0 && !(mask & (1u << way))) {
+            cprintf("DAWG-HIT-MASK: set=%u way=%u domain=%u mask=0x%x -> miss\n",
+                    set, way, domain, mask);
+            blk = nullptr;
+        }
+    }
 }
 
 void
@@ -288,7 +322,8 @@ CacheBlk*
 SectorTags::findVictim(const CacheBlk::KeyType &key,
                        const std::size_t size,
                        std::vector<CacheBlk*>& evict_blks,
-                       const uint64_t partition_id)
+                       const uint64_t partition_id,
+                       const PacketPtr pkt)
 {
     // Get possible entries to be victimized
     std::vector<ReplaceableEntry*> sector_entries =
@@ -316,9 +351,37 @@ SectorTags::findVictim(const CacheBlk::KeyType &key,
         if (sector_entries.size() == 0){
             return nullptr;
         }
-        // Choose replacement victim from replacement candidates
-        victim_sector = static_cast<SectorBlk*>(replacementPolicy->getVictim(
-                                                sector_entries));
+        // if a way guard table is present and packet provides a domain, filter
+        // candidate entries by the allowed-way mask for that domain
+        std::vector<ReplaceableEntry*> filtered_entries;
+        if (wayGuardTable && pkt && pkt->req && !sector_entries.empty()) {
+            uint32_t domain = pkt->req->domainId();
+            const uint32_t set = sector_entries.front()->getSet();
+            uint32_t mask = wayGuardTable->getMask(set, domain);
+            if (mask == 0) {
+                mask = (1u << allocAssoc) - 1u;
+            }
+            for (auto *e : sector_entries) {
+                uint32_t way = e->getWay();
+                if (mask & (1u << way))
+                    filtered_entries.push_back(e);
+            }
+        }
+
+        const std::vector<ReplaceableEntry*> &candidates =
+            filtered_entries.empty() ? sector_entries : filtered_entries;
+
+        // choose replacement victim from replacement candidates
+        // if domain-aware filter, prefer replacementPolicy->getVictimForDomain
+        // so policies can make domain-aware choices.
+        if (wayGuardTable && pkt && pkt->req && !filtered_entries.empty()) {
+            uint32_t domain = pkt->req->domainId();
+            victim_sector = static_cast<SectorBlk*>(
+                replacementPolicy->getVictimForDomain(candidates, domain));
+        } else {
+            victim_sector = static_cast<SectorBlk*>(replacementPolicy->getVictim(
+                candidates));
+        }
     }
 
     // Get the entry of the victim block within the sector

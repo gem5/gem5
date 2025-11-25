@@ -1452,6 +1452,9 @@ CPU::htmSendAbortSignal(ThreadID tid, uint64_t htm_uid,
 
     req->taskId(taskId());
     req->setContext(thread[tid]->contextId());
+    if (thread[tid] && thread[tid]->getTC()) {
+        req->setDomainId(thread[tid]->getTC()->domainStore());
+    }
     req->setHtmAbortCause(cause);
 
     assert(req->isHTMAbort());

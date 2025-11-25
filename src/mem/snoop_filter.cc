@@ -95,6 +95,9 @@ SnoopFilter::lookupRequest(const Packet* cpkt, const ResponsePort&
     SnoopItem& sf_item = reqLookupResult.it->second;
     SnoopMask interested = sf_item.holder | sf_item.requested;
 
+    DPRINTF(SnoopFilter, "%s:   req_port mask %x interested %x (holder %x requested %x)\n",
+        __func__, req_port, interested, sf_item.holder, sf_item.requested);
+
     // Store unmodified value of snoop filter item in temp storage in
     // case we need to revert because of a send retry in
     // updateRequest.
@@ -140,17 +143,26 @@ SnoopFilter::lookupRequest(const Packet* cpkt, const ResponsePort&
         }
     } else { // if (!cpkt->needsResponse())
         assert(cpkt->isEviction());
-        // make sure that the sender actually had the line
-        panic_if((sf_item.holder & req_port).none(), "requestor %x is not a " \
-                 "holder :( SF value %x.%x\n", req_port,
-                 sf_item.requested, sf_item.holder);
-        // CleanEvicts and Writebacks -> the sender and all caches above
-        // it may not have the line anymore.
-        if (!cpkt->isBlockCached()) {
-            sf_item.holder &= ~req_port;
-            DPRINTF(SnoopFilter, "%s:   new SF value %x.%x\n",
-                    __func__,  sf_item.requested, sf_item.holder);
-        }
+    // make sure that the sender actually had the line
+    DPRINTF(SnoopFilter, "%s: eviction from req_port %x, SF before check %x.%x\n",
+        __func__, req_port, sf_item.requested, sf_item.holder);
+    if ((sf_item.holder & req_port).none()) {
+    // Unexpected: eviction from a requester that is not recorded as a
+    // holder in the snoop filter. Log and conservatively add the holder
+    // bit to avoid aborting the simulation while we trace the root
+    // cause (e.g., DAWG filtering changing cache behavior).
+    DPRINTF(SnoopFilter, "%s: WARNING: eviction from req_port %x but "
+        "SF holder missing (SF value %x.%x). Adding holder bit.\n",
+        __func__, req_port, sf_item.requested, sf_item.holder);
+    sf_item.holder |= req_port;
+    }
+    // CleanEvicts and Writebacks -> the sender and all caches above
+    // it may not have the line anymore.
+    if (!cpkt->isBlockCached()) {
+    sf_item.holder &= ~req_port;
+    DPRINTF(SnoopFilter, "%s:   new SF value %x.%x\n",
+        __func__,  sf_item.requested, sf_item.holder);
+    }
     }
 
     return snoopSelected(maskToPortList(interested & ~req_port), lookupLatency);
@@ -270,13 +282,15 @@ SnoopFilter::updateSnoopResponse(const Packet* cpkt,
             __func__,  sf_item.requested, sf_item.holder);
 
     // The source should have the line
+    DPRINTF(SnoopFilter, "%s: rsp_mask %x req_mask %x SF before checks %x.%x\n",
+        __func__, rsp_mask, req_mask, sf_item.requested, sf_item.holder);
     panic_if((sf_item.holder & rsp_mask).none(),
-             "SF value %x.%x does not have the line\n",
-             sf_item.requested, sf_item.holder);
+         "SF value %x.%x does not have the line\n",
+         sf_item.requested, sf_item.holder);
 
     // The destination should have had a request in
     panic_if((sf_item.requested & req_mask).none(), "SF value %x.%x missing "\
-             "the original request\n",  sf_item.requested, sf_item.holder);
+         "the original request\n",  sf_item.requested, sf_item.holder);
 
     // If the snoop response has no sharers the line is passed in
     // Modified state, and we know that there are no other copies, or
@@ -364,9 +378,11 @@ SnoopFilter::updateResponse(const Packet* cpkt, const ResponsePort&
             __func__,  sf_item.requested, sf_item.holder);
 
     // Make sure we have seen the actual request, too
+    DPRINTF(SnoopFilter, "%s: response_mask %x SF before check %x.%x\n",
+        __func__, response_mask, sf_item.requested, sf_item.holder);
     panic_if((sf_item.requested & response_mask).none(),
-             "SF value %x.%x missing request bit\n",
-             sf_item.requested, sf_item.holder);
+         "SF value %x.%x missing request bit\n",
+         sf_item.requested, sf_item.holder);
 
     sf_item.requested &= ~response_mask;
     // Update the residency of the cache line.

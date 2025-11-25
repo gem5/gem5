@@ -305,6 +305,13 @@ class System : public SimObject, public PCEventScope
      * @param mode Mode to change to (atomic/timing/...)
      */
     void setMemoryMode(enums::MemoryMode mode);
+  /**
+   * Walk all registered ThreadContext objects and set their per-access
+   * domain selectors (ifetch/load/store) based on the CPU id of the
+   * owning CPU. Exposed to Python as a convenience helper to initialize
+   * DAWG selectors after instantiate().
+   */
+  void setThreadDomainSelectorsPerCpu();
     /** @} */
 
     /**

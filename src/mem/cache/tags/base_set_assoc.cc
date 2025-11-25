@@ -86,6 +86,49 @@ BaseSetAssoc::tagsInit()
         // This is not used as of now but we set it for security
         blk->registerTagExtractor(genTagExtractor(indexingPolicy));
     }
+
+    // If a WayGuardTable is present, push per-(set,domain) policy masks to
+    // the replacement policy so it can initialize any per-set/domain state.
+    if (wayGuardTable) {
+        // Compute number of sets from number of blocks and associativity
+        const uint32_t numSets = allocAssoc ? (numBlocks / allocAssoc) : 0;
+        if (numSets > 0) {
+            std::vector<uint32_t> domains = wayGuardTable->getDomains();
+            for (uint32_t domain : domains) {
+                for (uint32_t set = 0; set < numSets; ++set) {
+                    uint32_t mask = wayGuardTable->getMask(set, domain);
+                    // Replacement policies expect a 64-bit fillmap
+                    replacementPolicy->setDomainPolicy(set, domain,
+                                                      static_cast<uint64_t>(mask));
+                }
+            }
+        }
+    }
+
+    // Register callback to forward runtime WayGuardTable mask updates
+    if (wayGuardTable) {
+        WayGuardTable::MaskChangeCallback cb =
+            [this](uint32_t set, uint32_t domain, uint32_t mask) {
+                // Forward to replacement policy (64-bit cast)
+                replacementPolicy->setDomainPolicy(set, domain,
+                                                  static_cast<uint64_t>(mask));
+            };
+        wayGuardTable->registerChangeCallback(cb);
+    }
+
+    // if there exists WayGuardTable, push initial policy masks to the replacement policy so it can prepare masked metadata
+    if (wayGuardTable) {
+        const auto domains = wayGuardTable->getDomains();
+        const uint32_t sets = numBlocks / allocAssoc;
+        for (uint32_t domain : domains) {
+            for (uint32_t s = 0; s < sets; ++s) {
+                uint64_t mask = wayGuardTable->getMask(s, domain);
+                if (mask == 0)
+                    mask = (allocAssoc >= 64) ? UINT64_MAX : ((1ull << allocAssoc) - 1ull);
+                replacementPolicy->setDomainPolicy(s, domain, mask);
+            }
+        }
+    }
 }
 
 void

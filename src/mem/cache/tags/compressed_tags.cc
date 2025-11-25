@@ -118,7 +118,8 @@ CacheBlk*
 CompressedTags::findVictim(const CacheBlk::KeyType& key,
                            const std::size_t compressed_size,
                            std::vector<CacheBlk*>& evict_blks,
-                           const uint64_t partition_id=0)
+                           const uint64_t partition_id,
+                           const PacketPtr pkt)
 {
     // Get all possible locations of this superblock
     std::vector<ReplaceableEntry*> superblock_entries =
@@ -158,11 +159,36 @@ CompressedTags::findVictim(const CacheBlk::KeyType& key,
             return nullptr;
         }
 
-        // Choose replacement victim from replacement candidates
-        victim_superblock = static_cast<SuperBlk*>(
-            replacementPolicy->getVictim(superblock_entries));
+        // choose replacement victim from replacement candidates
 
-        // The whole superblock must be evicted to make room for the new one
+        // if a WayGuardTable is present and a packet/domain is supplied,
+        // filter candidates by the allowed way mask and call a domain-
+        // aware replacement policy if available.
+        if (wayGuardTable && pkt && pkt->req) {
+            const uint32_t domain = pkt->req->domainId();
+            std::vector<ReplaceableEntry*> filtered;
+            for (const auto &entry : superblock_entries) {
+                uint32_t set = entry->getSet();
+                uint32_t mask = wayGuardTable->getMask(set, domain);
+                uint32_t way = entry->getWay();
+                if (mask && (mask & (1u << way)))
+                    filtered.push_back(entry);
+            }
+
+            if (!filtered.empty()) {
+                victim_superblock = static_cast<SuperBlk*>(
+                    replacementPolicy->getVictimForDomain(filtered, domain));
+            } else {
+                // no allowed candidates? fall back to normal selection
+                victim_superblock = static_cast<SuperBlk*>(
+                    replacementPolicy->getVictim(superblock_entries));
+            }
+        } else {
+            victim_superblock = static_cast<SuperBlk*>(
+                replacementPolicy->getVictim(superblock_entries));
+        }
+
+        //  evict whole superblock to make room for new one
         for (const auto& blk : victim_superblock->blks){
             if (blk->isValid()) {
                 evict_blks.push_back(blk);

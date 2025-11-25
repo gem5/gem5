@@ -570,6 +570,9 @@ Fetch::fetchCacheLine(Addr vaddr, ThreadID tid, Addr pc)
         cpu->thread[tid]->contextId());
 
     mem_req->taskId(cpu->taskId());
+    if (cpu->thread[tid] && cpu->thread[tid]->getTC()) {
+        mem_req->setDomainId(cpu->thread[tid]->getTC()->domainIfetch());
+    }
 
     memReq[tid] = mem_req;
 

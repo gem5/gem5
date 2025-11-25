@@ -103,6 +103,29 @@ class Base : public SimObject
     virtual ReplaceableEntry* getVictim(
                            const ReplacementCandidates& candidates) const = 0;
 
+     // domain-aware victim selection: default implementation falls back to the normal getVictim behavior
+    virtual ReplaceableEntry* getVictimForDomain(
+                           const ReplacementCandidates& candidates,
+                           const uint32_t domain_id) const
+    {
+        (void)domain_id;
+        return getVictim(candidates);
+    }
+
+
+    // allow caches or WayGuardTable to push policy_fillmap values to the replacement policy so
+    // it can compute masks and other domain-specific metadata
+
+     // set -> set index being updated
+     // domain_id -> protection domain id
+     // policy_fillmap -> bitmask (ways) allowed for the domain in this set
+
+    virtual void setDomainPolicy(const uint32_t set, const uint32_t domain_id,
+                                 const uint64_t policy_fillmap)
+    {
+        (void)set; (void)domain_id; (void)policy_fillmap;
+    }
+
     /**
      * Instantiate a replacement data entry.
      *

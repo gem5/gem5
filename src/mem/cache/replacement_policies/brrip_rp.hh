@@ -55,6 +55,7 @@
 #include "base/random.hh"
 #include "base/sat_counter.hh"
 #include "mem/cache/replacement_policies/base.hh"
+#include <unordered_map>
 
 namespace gem5
 {
@@ -89,6 +90,12 @@ class BRRIP : public Base
             : rrpv(num_bits), valid(false)
         {
         }
+    // owner set and way populated by ReplaceableEntry::setPosition
+    uint32_t owner_set = 0;
+    uint32_t owner_way = 0;
+
+    void setOwnerSet(uint32_t s) override { owner_set = s; }
+    void setOwnerWay(uint32_t w) override { owner_way = w; }
     };
 
     /**
@@ -114,6 +121,10 @@ class BRRIP : public Base
 
     mutable Random::RandomPtr rng = Random::genRandom();
 
+  // per-set mapping of domain_id -> policy_fillmap (way bitmask)
+  typedef std::unordered_map<uint32_t, uint64_t> DomainPolicyMap;
+  std::vector<DomainPolicyMap> setDomainPolicies;
+
   public:
     typedef BRRIPRPParams Params;
     BRRIP(const Params &p);
@@ -135,6 +146,8 @@ class BRRIP : public Base
      */
     void touch(const std::shared_ptr<ReplacementData>& replacement_data) const
                                                                      override;
+    void touch(const std::shared_ptr<ReplacementData>& replacement_data,
+         const PacketPtr pkt) override;
 
     /**
      * Reset replacement data. Used when an entry is inserted.
@@ -144,6 +157,8 @@ class BRRIP : public Base
      */
     void reset(const std::shared_ptr<ReplacementData>& replacement_data) const
                                                                      override;
+  void reset(const std::shared_ptr<ReplacementData>& replacement_data,
+         const PacketPtr pkt) override;
 
     /**
      * Find replacement victim using rrpv.
@@ -154,12 +169,18 @@ class BRRIP : public Base
     ReplaceableEntry* getVictim(const ReplacementCandidates& candidates) const
                                                                      override;
 
+    ReplaceableEntry* getVictimForDomain(
+               const ReplacementCandidates& candidates,
+               const uint32_t domain_id) const override;
+
     /**
      * Instantiate a replacement data entry.
      *
      * @return A shared pointer to the new replacement data.
      */
     std::shared_ptr<ReplacementData> instantiateEntry() override;
+  void setDomainPolicy(const uint32_t set, const uint32_t domain_id,
+             const uint64_t policy_fillmap) override;
 };
 
 } // namespace replacement_policy

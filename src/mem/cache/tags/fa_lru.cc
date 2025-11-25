@@ -154,6 +154,20 @@ FALRU::accessBlock(const PacketPtr pkt, Cycles &lat,
         moveToHead(blk);
     }
 
+
+    if (blk && wayGuardTable && pkt && pkt->req && !pkt->req->isInstFetch()) {
+        const uint32_t domain = pkt->req->domainId();
+        const uint32_t set    = blk->getSet();
+        const uint32_t way    = blk->getWay();
+        uint32_t mask         = wayGuardTable->getMask(set, domain);
+
+        if (mask != 0 && !(mask & (1u << way))) {
+            cprintf("DAWG-HIT-MASK: set=%u way=%u domain=%u mask=0x%x -> miss\n",
+                    set, way, domain, mask);
+            blk = nullptr;
+        }
+    }
+
     if (in_caches_mask) {
         *in_caches_mask = mask;
     }
@@ -196,10 +210,36 @@ FALRU::findBlockBySetAndWay(int set, int way) const
 CacheBlk*
 FALRU::findVictim(const CacheBlk::KeyType& key, const std::size_t size,
                   std::vector<CacheBlk*>& evict_blks,
-                  const uint64_t partition_id)
+                  const uint64_t partition_id,
+                  const PacketPtr pkt)
 {
-    // The victim is always stored on the tail for the FALRU
+    // Default victim is the LRU (tail)
     FALRUBlk* victim = tail;
+
+    // if a WayGuardTable is present and a packet was supplied, try to
+    // select a victim that is allowed by the way mask. for a fully
+    // associative cache treat the set as 0.
+    if (wayGuardTable && pkt && pkt->req) {
+        const uint32_t domain = pkt->req->domainId();
+        const uint32_t set = 0;
+        uint32_t mask = wayGuardTable->getMask(set, domain);
+
+        // if mask is non-zero, search from LRU upwards for the first
+        // block whose way is allowed by the mask. each block's way is
+        // its position index within the FA array.
+        if (mask) {
+            // start from tail and walk towards head
+            FALRUBlk* cur = tail;
+            while (cur) {
+                int way = cur->getWay();
+                if (way >= 0 && (mask & (1u << way))) {
+                    victim = cur;
+                    break;
+                }
+                cur = cur->prev;
+            }
+        }
+    }
 
     // There is only one eviction for this replacement
     evict_blks.push_back(victim);

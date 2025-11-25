@@ -89,12 +89,42 @@ class ThreadContext : public PCEventScope
 {
   protected:
     bool useForClone = false;
+  // domain id associated with this thread context for DAWG
+  uint32_t domainId_ = 0;
+  // per-access selectors: instruction-fetch (CS), load (DS), store/modify (ES)
+
+  // use the specific accessors when tagging Requests so DAWG can distinguish ifetch/load/store
+
+  uint32_t domainIfetch_ = 0;
+  uint32_t domainLoad_ = 0;
+  uint32_t domainStore_ = 0;
 
   public:
 
     bool getUseForClone() { return useForClone; }
 
     void setUseForClone(bool new_val) { useForClone = new_val; }
+
+  // domain id accessor
+  uint32_t domainId() const { return domainId_; }
+
+  // domain id setter
+  void setDomainId(uint32_t d) {
+      domainId_ = d;
+      domainIfetch_ = d;
+      domainLoad_ = d;
+      domainStore_ = d;
+  }
+
+  // per-access getters
+  uint32_t domainIfetch() const { return domainIfetch_; }
+  uint32_t domainLoad() const { return domainLoad_; }
+  uint32_t domainStore() const { return domainStore_; }
+
+  // per-access setters
+  void setDomainIfetch(uint32_t d) { domainIfetch_ = d; }
+  void setDomainLoad(uint32_t d) { domainLoad_ = d; }
+  void setDomainStore(uint32_t d) { domainStore_ = d; }
 
     enum Status
     {

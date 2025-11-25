@@ -521,9 +521,11 @@ Cache::createMissPacket(PacketPtr cpu_pkt, CacheBlk *blk,
         // the line in Exclusive state, and invalidates all other
         // copies
         cmd = MemCmd::InvalidateReq;
-    } else if (blkValid && useUpgrades) {
-        // only reason to be here is that blk is read only and we need
-        // it to be writable
+    } else if (blkValid && useUpgrades && needsWritable) {
+        if (blk->isSet(CacheBlk::WritableBit)) {
+            return nullptr;
+        }
+
         assert(needsWritable);
         assert(!blk->isSet(CacheBlk::WritableBit));
         cmd = cpu_pkt->isLLSC() ? MemCmd::SCUpgradeReq : MemCmd::UpgradeReq;

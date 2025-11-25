@@ -236,6 +236,30 @@ System::setMemoryMode(enums::MemoryMode mode)
 }
 
 void
+System::setThreadDomainSelectorsPerCpu()
+{
+    // Walk all registered ThreadContext objects in the system and set
+    // their per-access domain selectors to the cpu id of their owning CPU.
+    int count = 0;
+    for (Threads::const_iterator it = threads.begin(); it != threads.end(); ++it) {
+        ThreadContext *tc = *it;
+        if (!tc)
+            continue;
+        BaseCPU *cpu = tc->getCpuPtr();
+        if (!cpu)
+            continue;
+        uint32_t did = static_cast<uint32_t>(cpu->cpuId()) & 0xff;
+        tc->setDomainIfetch(did);
+        tc->setDomainLoad(did);
+        tc->setDomainStore(did);
+        ++count;
+    }
+    // Print how many thread contexts were updated so we can verify at
+    // runtime whether this helper ran before registration completed.
+    cprintf("post-instantiate: setThreadDomainSelectorsPerCpu updated %d thread contexts\n", count);
+}
+
+void
 System::registerThreadContext(ThreadContext *tc)
 {
     threads.insert(tc);

@@ -185,10 +185,11 @@ class SectorTags : public BaseTags
      * @param partition_id Partition ID for resource management.
      * @return Cache block to be replaced.
      */
-    CacheBlk* findVictim(const CacheBlk::KeyType &key,
-                         const std::size_t size,
-                         std::vector<CacheBlk*>& evict_blks,
-                         const uint64_t partition_id) override;
+  CacheBlk* findVictim(const CacheBlk::KeyType &key,
+             const std::size_t size,
+             std::vector<CacheBlk*>& evict_blks,
+             const uint64_t partition_id,
+             const PacketPtr pkt = nullptr) override;
 
     /**
      * Calculate a block's offset in a sector from the address.

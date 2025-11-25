@@ -55,6 +55,7 @@
 #include "sim/faults.hh"
 #include "sim/full_system.hh"
 #include "sim/system.hh"
+#include "base/cprintf.hh"
 
 namespace gem5
 {
@@ -88,6 +89,19 @@ AtomicSimpleCPU::AtomicSimpleCPU(const BaseAtomicSimpleCPUParams &p)
     data_read_req = std::make_shared<Request>();
     data_write_req = std::make_shared<Request>();
     data_amo_req = std::make_shared<Request>();
+
+    // stamp domain id for the per-CPU request objects if ThreadContexts
+    // have been initialized and a ThreadContext is available
+    if (!threadContexts.empty() && threadContexts[0]) {
+        auto tc = threadContexts[0];
+        cprintf("DAWG-DOMAIN: cpu=%d thread=%d in AtomicSimpleCPU ctor: ifetch=%u load=%u store=%u\n",
+                tc->cpuId(), tc->threadId(), tc->domainIfetch(),
+                tc->domainLoad(), tc->domainStore());
+        ifetch_req->setDomainId(tc->domainIfetch());
+        data_read_req->setDomainId(tc->domainLoad());
+        data_write_req->setDomainId(tc->domainStore());
+        data_amo_req->setDomainId(tc->domainStore());
+    }
 }
 
 

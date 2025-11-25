@@ -39,6 +39,11 @@
 #include "base/intmath.hh"
 #include "base/logging.hh"
 #include "params/TreePLRURP.hh"
+#include "mem/packet.hh"
+
+#include <cassert>
+#include <cstdint>
+
 
 namespace gem5
 {
@@ -95,10 +100,19 @@ isRightSubtree(const uint64_t index)
     return index%2 == 0;
 }
 
+
 TreePLRU::TreePLRUReplData::TreePLRUReplData(
-    const uint64_t index, std::shared_ptr<PLRUTree> tree)
-  : index(index), tree(tree)
+        const uint64_t index, std::shared_ptr<PLRUTree> tree, TreePLRU *parent)
+    : index(index), tree(tree), parent(parent)
 {
+}
+
+void
+TreePLRU::TreePLRUReplData::setOwnerSet(uint32_t set)
+{
+        owner_set = set;
+        if (parent && tree)
+                parent->registerTreeForSet(set, tree);
 }
 
 TreePLRU::TreePLRU(const Params &p)
@@ -106,6 +120,32 @@ TreePLRU::TreePLRU(const Params &p)
 {
     fatal_if(numLeaves < 1,
         "numLeaves should never be 0");
+
+    // initialize per-set domain policy containers lazily in setDomainPolicy.
+
+    // precompute nodeLeafMask for internal nodes
+    // represent leaves as bits in a uint64_t (up to 64-way assoc)
+    // if numLeaves is 1, there are no internal nodes.
+    const unsigned int numNodes = (numLeaves > 0) ? (numLeaves - 1) : 0;
+    nodeLeafMask.resize(numNodes);
+
+    for (unsigned int leaf = 0; leaf < numLeaves; ++leaf) {
+        // virtual node index representing this leaf in the full binary tree
+        unsigned int node_idx = leaf + numNodes;
+        // walk up to root, marking parent internal nodes with this leaf
+        while (true) {
+            if (node_idx == 0) break;
+            unsigned int parent = parentIndex(node_idx);
+            if (parent < numNodes) {
+                nodeLeafMask[parent] |= (uint64_t(1) << leaf);
+                node_idx = parent;
+            } else {
+                break;
+            }
+        }
+    }
+
+    // setTrees initialized when sets are known at tagsInit time
 }
 
 void
@@ -172,7 +212,6 @@ TreePLRU::getVictim(const ReplacementCandidates& candidates) const
 {
     // There must be at least one replacement candidate
     assert(candidates.size() > 0);
-
     // Get tree
     const PLRUTree* tree = std::static_pointer_cast<TreePLRUReplData>(
             candidates[0]->replacementData)->tree.get();
@@ -195,6 +234,182 @@ TreePLRU::getVictim(const ReplacementCandidates& candidates) const
     return candidates.at(tree_index - (numLeaves - 1));
 }
 
+ReplaceableEntry*
+TreePLRU::getVictimForDomain(
+    const ReplacementCandidates& candidates,
+    const uint32_t domain_id) const
+{
+    // if no per-set policies exist, fall back to default behavior
+    if (setDomainPolicies.empty())
+        return getVictim(candidates);
+
+    // all candidates share the same set index
+    uint32_t set = candidates[0]->getSet();
+
+    if (set >= setDomainPolicies.size())
+        return getVictim(candidates);
+
+    const DomainPolicyMap &map = setDomainPolicies[set];
+    auto it = map.find(domain_id);
+
+    // if no policy for this domain, fallback
+    if (it == map.end())
+        return getVictim(candidates);
+
+    uint64_t policy = it->second;
+
+    // if policy is all-ones, fallback to default victim selection.
+    if (policy == UINT64_MAX)
+        return getVictim(candidates);
+
+    const PLRUTree* tree = std::static_pointer_cast<TreePLRUReplData>(
+            candidates[0]->replacementData)->tree.get();
+
+    const unsigned int numNodes = (numLeaves > 0) ? (numLeaves - 1) : 0;
+
+    unsigned int node = 0;
+    // load precomputed masks if available
+    uint64_t nodeMaskPacked = 0;
+    uint64_t singleDirPacked = 0;
+    if (set < setDomainNodeMasks.size()) {
+        auto itnm = setDomainNodeMasks[set].find(domain_id);
+        if (itnm != setDomainNodeMasks[set].end())
+            nodeMaskPacked = itnm->second;
+
+        auto itsd = setDomainSingleDir[set].find(domain_id);
+        if (itsd != setDomainSingleDir[set].end())
+            singleDirPacked = itsd->second;
+    }
+
+    while (node < numNodes) {
+        unsigned int left = leftSubtreeIndex(node);
+        unsigned int right = rightSubtreeIndex(node);
+
+        // if nodeMaskPacked has bit=1, there are multiple allowed leaves under
+        // this node and follow the tree bit to choose MRU/LRU direction
+        if (nodeMaskPacked & (uint64_t(1) << node)) {
+            bool goLeft = !tree->at(node);
+            node = goLeft ? left : right;
+            continue;
+        }
+
+        // if single-direction bit is set, force to that side
+        // otherwise determine which side has allowed leaves by checking policy directly
+        if (singleDirPacked & (uint64_t(1) << node)) {
+            node = right;
+            continue;
+        }
+
+        // fallback-> compute which side has allowed leaves
+        uint64_t leftLeaves = 0;
+        uint64_t rightLeaves = 0;
+
+        if (left < numNodes)
+            leftLeaves = nodeLeafMask[left];
+        else {
+            unsigned int leafIdx = left - numNodes;
+            if (leafIdx < numLeaves)
+                leftLeaves = (uint64_t(1) << leafIdx);
+        }
+
+        if (right < numNodes)
+            rightLeaves = nodeLeafMask[right];
+        else {
+            unsigned int leafIdx = right - numNodes;
+            if (leafIdx < numLeaves)
+                rightLeaves = (uint64_t(1) << leafIdx);
+        }
+
+        bool leftHas = (policy & leftLeaves) != 0;
+        bool rightHas = (policy & rightLeaves) != 0;
+
+        if (leftHas && rightHas)
+            node = (!tree->at(node)) ? left : right;
+        else if (leftHas)
+            node = left;
+        else if (rightHas)
+            node = right;
+        else
+            return getVictim(candidates);
+    }
+
+    unsigned int leaf = node - numNodes;
+    unsigned int target_way = leaf;
+
+    for (auto *c : candidates) {
+        if (c->getWay() == target_way)
+            return const_cast<ReplaceableEntry*>(c);
+    }
+
+    // If target way not in candidates, pick first candidate allowed by policy.
+    for (auto *c : candidates) {
+        if (policy & (uint64_t(1) << c->getWay()))
+            return const_cast<ReplaceableEntry*>(c);
+    }
+
+    return getVictim(candidates);
+}
+
+void
+TreePLRU::touch(const std::shared_ptr<ReplacementData>& replacement_data,
+                const PacketPtr pkt)
+{
+    // If no packet or no request, fallback to non-domain touch
+    if (!pkt || !pkt->req) {
+        touch(replacement_data);
+        return;
+    }
+
+    const uint32_t domain = pkt->req->domainId();
+
+    std::shared_ptr<TreePLRUReplData> treePLRU_replacement_data =
+        std::static_pointer_cast<TreePLRUReplData>(replacement_data);
+    PLRUTree* tree = treePLRU_replacement_data->tree.get();
+
+    uint64_t policy = UINT64_MAX;
+    uint32_t set = treePLRU_replacement_data->owner_set;
+    if (set < setDomainPolicies.size()) {
+        auto it = setDomainPolicies[set].find(domain);
+        if (it != setDomainPolicies[set].end())
+            policy = it->second;
+    }
+
+    // If no policy is present, do full touch
+    if (policy == UINT64_MAX) {
+        touch(replacement_data);
+        return;
+    }
+
+    // Load precomputed node mask for this (set,domain), if present.
+    uint64_t nodeMaskPacked = 0;
+    if (set < setDomainNodeMasks.size()) {
+        auto itnm = setDomainNodeMasks[set].find(domain);
+        if (itnm != setDomainNodeMasks[set].end())
+            nodeMaskPacked = itnm->second;
+    }
+
+    // Update only ancestors whose corresponding bit is set in nodeMaskPacked
+    uint64_t tree_index = treePLRU_replacement_data->index;
+    do {
+        const bool right = isRightSubtree(tree_index);
+        tree_index = parentIndex(tree_index);
+
+        if (tree_index < nodeLeafMask.size()) {
+            if (nodeMaskPacked & (uint64_t(1) << tree_index)) {
+                tree->at(tree_index) = !right;
+            }
+        }
+    } while (tree_index != 0);
+}
+
+void
+TreePLRU::reset(const std::shared_ptr<ReplacementData>& replacement_data,
+                const PacketPtr pkt)
+{
+    // Reset behaves like touch for masked updates
+    touch(replacement_data, pkt);
+}
+
 std::shared_ptr<ReplacementData>
 TreePLRU::instantiateEntry()
 {
@@ -206,12 +421,130 @@ TreePLRU::instantiateEntry()
     // Create replacement data using current tree instance
     TreePLRUReplData* treePLRUReplData = new TreePLRUReplData(
         (count % numLeaves) + numLeaves - 1,
-        std::shared_ptr<PLRUTree>(treeInstance));
+        std::shared_ptr<PLRUTree>(treeInstance), this);
 
     // Update instance counter
     count++;
 
     return std::shared_ptr<ReplacementData>(treePLRUReplData);
+}
+
+void
+TreePLRU::setDomainPolicy(const uint32_t set, const uint32_t domain_id,
+                          const uint64_t policy_fillmap)
+{
+    if (set >= setDomainPolicies.size()) {
+        setDomainPolicies.resize(set + 1);
+        setDomainNodeMasks.resize(set + 1);
+        setDomainSingleDir.resize(set + 1);
+    }
+
+    setDomainPolicies[set][domain_id] = policy_fillmap;
+
+    // precompute node masks and single-direction bits for this (set,domain).
+    const unsigned int numNodes = (numLeaves > 0) ? (numLeaves - 1) : 0;
+
+    uint64_t nodeMaskPacked = 0; // bit i -> node i has >1 allowed leaves
+    uint64_t singleDirPacked = 0; // bit i -> node i's single allowed leaf is on right
+
+    for (unsigned int node = 0; node < numNodes; ++node) {
+        uint64_t leftLeaves = 0;
+        uint64_t rightLeaves = 0;
+
+        unsigned int left = leftSubtreeIndex(node);
+        unsigned int right = rightSubtreeIndex(node);
+
+        if (left < numNodes)
+            leftLeaves = nodeLeafMask[left];
+        else {
+            unsigned int leafIdx = left - numNodes;
+            if (leafIdx < numLeaves)
+                leftLeaves = (uint64_t(1) << leafIdx);
+        }
+
+        if (right < numNodes)
+            rightLeaves = nodeLeafMask[right];
+        else {
+            unsigned int leafIdx = right - numNodes;
+            if (leafIdx < numLeaves)
+                rightLeaves = (uint64_t(1) << leafIdx);
+        }
+
+        const uint64_t leftOverlap = policy_fillmap & leftLeaves;
+        const uint64_t rightOverlap = policy_fillmap & rightLeaves;
+
+        const int leftCount = __builtin_popcountll(leftOverlap);
+        const int rightCount = __builtin_popcountll(rightOverlap);
+        const int total = leftCount + rightCount;
+
+        if (total > 1) {
+            nodeMaskPacked |= (uint64_t(1) << node);
+        } else if (total == 1) {
+            // set single-dir bit to indicate which side contains the lone leaf
+            if (rightCount == 1)
+                singleDirPacked |= (uint64_t(1) << node);
+        } else {
+            // no allowed leaves under this node -> leave both bits 0
+        }
+    }
+
+    setDomainNodeMasks[set][domain_id] = nodeMaskPacked;
+    setDomainSingleDir[set][domain_id] = singleDirPacked;
+
+    // container for setTrees exists
+    if (set >= setTrees.size())
+        setTrees.resize(set + 1);
+
+    // sanitize: for each registered tree instance in the set, adjust
+    // the internal node bits so that nodes covering exactly one allowed leaf
+    // point toward that leaf deterministically.
+    //
+    // for nodes with multiple allowed leaves -> leave bits unchanged
+    // for nodes with zero allowed leaves -> skip modification (victim selection will fallback)
+    for (auto &weak_tree : setTrees[set]) {
+        if (auto tree_ptr = weak_tree.lock()) {
+            // for each internal node that has single allowed leaf -> force the corresponding direction
+            // for nodes with multiple allowed leaves -> we don't alter existing bits to preserve recency order.
+            for (unsigned int node = 0; node < numNodes; ++node) {
+                uint64_t maskBit = (uint64_t(1) << node);
+                // if node has exactly one allowed leaf and singleDirPacked set -> force the
+                // node bit to point to the side containing that leaf
+                if (singleDirPacked & maskBit) {
+                    // singleDirPacked==1 means single leaf is on right subtree
+                    tree_ptr->at(node) = true;
+                } else if ((nodeMaskPacked & maskBit) == 0) {
+                    // node has zero or one allowed leaf but not right-side single
+
+                    // if it has zero allowed leaves-> avoid changing it
+                    // if it had exactly one allowed leaf on left -> ensure it points left when possible
+                    // check if left side contains any allowed leaf -> inspect nodeLeafMask
+                    uint64_t overlap = policy_fillmap & nodeLeafMask[node];
+                    if (__builtin_popcountll(overlap) == 1) {
+                        // determine whether the lone leaf is on right or left
+                        unsigned int left = leftSubtreeIndex(node);
+                        uint64_t leftLeaves = 0;
+                        if (left < numNodes)
+                            leftLeaves = nodeLeafMask[left];
+                        else {
+                            unsigned int leafIdx = left - numNodes;
+                            if (leafIdx < numLeaves)
+                                leftLeaves = (uint64_t(1) << leafIdx);
+                        }
+                        bool loneOnRight = (policy_fillmap & leftLeaves) == 0;
+                        tree_ptr->at(node) = loneOnRight;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void
+TreePLRU::registerTreeForSet(uint32_t set, const std::shared_ptr<PLRUTree> &tree)
+{
+    if (set >= setTrees.size())
+        setTrees.resize(set + 1);
+    setTrees[set].push_back(std::weak_ptr<PLRUTree>(tree));
 }
 
 } // namespace replacement_policy

@@ -56,6 +56,7 @@
 #include "sim/faults.hh"
 #include "sim/full_system.hh"
 #include "sim/system.hh"
+#include "base/cprintf.hh"
 
 namespace gem5
 {
@@ -466,6 +467,21 @@ TimingSimpleCPU::initiateMemRead(Addr addr, unsigned size,
     RequestPtr req = std::make_shared<Request>(
         addr, size, flags, dataRequestorId(), pc, thread->contextId());
     req->setByteEnable(byte_enable);
+    // Stamp domain id from the originating ThreadContext using the load selector for loads
+    if (thread && thread->getTC()) {
+        ThreadContext *tc = thread->getTC();
+        cprintf("DAWG-DOMAIN: cpu=%d thread=%d at initiateMemRead(): ifetch=%u load=%u store=%u\n",
+                tc->cpuId(), tc->threadId(), tc->domainIfetch(),
+                tc->domainLoad(), tc->domainStore());
+        {
+            uint32_t dom = tc->domainLoad();
+            if (dom != 0 || (rand() % 1000) == 0) {
+                cprintf("DAWG-DOMAIN-STAMP: cpu=%d thread=%d setting req=%p domain=%u at initiateMemRead()\n",
+                        tc->cpuId(), tc->threadId(), req.get(), dom);
+            }
+            req->setDomainId(dom);
+        }
+    }
 
     req->taskId(taskId());
 
@@ -548,6 +564,21 @@ TimingSimpleCPU::writeMem(uint8_t *data, unsigned size,
     RequestPtr req = std::make_shared<Request>(
         addr, size, flags, dataRequestorId(), pc, thread->contextId());
     req->setByteEnable(byte_enable);
+    // Stamp domain id from the originating ThreadContext using the store selector for writes
+    if (thread && thread->getTC()) {
+        ThreadContext *tc = thread->getTC();
+        cprintf("DAWG-DOMAIN: cpu=%d thread=%d at writeMem(): ifetch=%u load=%u store=%u\n",
+                tc->cpuId(), tc->threadId(), tc->domainIfetch(),
+                tc->domainLoad(), tc->domainStore());
+        {
+            uint32_t dom = tc->domainStore();
+            if (dom != 0 || (rand() % 1000) == 0) {
+                cprintf("DAWG-DOMAIN-STAMP: cpu=%d thread=%d setting req=%p domain=%u at writeMem()\n",
+                        tc->cpuId(), tc->threadId(), req.get(), dom);
+            }
+            req->setDomainId(dom);
+        }
+    }
 
     req->taskId(taskId());
 
@@ -608,6 +639,21 @@ TimingSimpleCPU::initiateMemAMO(Addr addr, unsigned size,
     assert(req->hasAtomicOpFunctor());
 
     req->taskId(taskId());
+    // Stamp domain id from the originating ThreadContext using the store selector for modifying accesses
+    if (thread && thread->getTC()) {
+        ThreadContext *tc = thread->getTC();
+        cprintf("DAWG-DOMAIN: cpu=%d thread=%d at initiateMemAMO(): ifetch=%u load=%u store=%u\n",
+                tc->cpuId(), tc->threadId(), tc->domainIfetch(),
+                tc->domainLoad(), tc->domainStore());
+        {
+            uint32_t dom = tc->domainStore();
+            if (dom != 0 || (rand() % 1000) == 0) {
+                cprintf("DAWG-DOMAIN-STAMP: cpu=%d thread=%d setting req=%p domain=%u at initiateMemAMO()\n",
+                        tc->cpuId(), tc->threadId(), req.get(), dom);
+            }
+            req->setDomainId(dom);
+        }
+    }
 
     Addr split_addr = roundDown(addr + size - 1, block_size);
 

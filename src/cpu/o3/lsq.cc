@@ -1079,10 +1079,20 @@ LSQ::LSQRequest::addReq(Addr addr, unsigned size,
            const std::vector<bool>& byte_enable)
 {
     if (isAnyActiveElement(byte_enable.begin(), byte_enable.end())) {
-        auto req = new Request(
-                addr, size, _flags, _inst->requestorId(),
-                _inst->pcState().instAddr(), _inst->contextId(),
-                std::move(_amo_op));
+    auto req = new Request(
+        addr, size, _flags, _inst->requestorId(),
+        _inst->pcState().instAddr(), _inst->contextId(),
+        std::move(_amo_op));
+    // stamp the request with the originating thread's domain selector so it
+    // propagates through packet creation and cache victim selection
+    if (_inst && _inst->thread && _inst->thread->getTC()) {
+        auto tc = _inst->thread->getTC();
+        // use load selector for loads, store selector for stores/atomic
+        if (isLoad())
+            req->setDomainId(tc->domainLoad());
+        else
+            req->setDomainId(tc->domainStore());
+    }
         req->setByteEnable(byte_enable);
 
         /* If the request is marked as NO_ACCESS, setup a local access */

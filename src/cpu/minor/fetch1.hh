@@ -182,7 +182,8 @@ class Fetch1 : public Named
             pc(pc_),
             fault(NoFault)
         {
-            request = std::make_shared<Request>();
+      request = std::make_shared<Request>();
+      // stamp domain selector for ifetch when a ThreadContext is available
         }
 
         ~FetchRequest();

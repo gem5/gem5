@@ -59,6 +59,7 @@ class System(SimObject):
     cxx_exports = [
         PyBindMethod("getMemoryMode"),
         PyBindMethod("setMemoryMode"),
+        PyBindMethod("setThreadDomainSelectorsPerCpu"),
     ]
 
     memories = VectorParam.AbstractMemory(

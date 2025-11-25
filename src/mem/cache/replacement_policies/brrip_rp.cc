@@ -74,6 +74,47 @@ BRRIP::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
 }
 
 void
+BRRIP::touch(const std::shared_ptr<ReplacementData>& replacement_data,
+             const PacketPtr pkt)
+{
+    // if no packet or no request, fallback
+    if (!pkt || !pkt->req) {
+        touch(replacement_data);
+        return;
+    }
+
+    uint32_t domain = pkt->req->domainId();
+
+    std::shared_ptr<BRRIPReplData> casted_replacement_data =
+        std::static_pointer_cast<BRRIPReplData>(replacement_data);
+
+    // find per-set policy if present
+    uint64_t policy = UINT64_MAX;
+    uint32_t set = casted_replacement_data->owner_set;
+    if (set < setDomainPolicies.size()) {
+        auto it = setDomainPolicies[set].find(domain);
+        if (it != setDomainPolicies[set].end())
+            policy = it->second;
+    }
+
+    // if no policy, do normal touch
+    if (policy == UINT64_MAX) {
+        touch(replacement_data);
+        return;
+    }
+
+    // only update the metadata if this way is allowed by the policy
+    if (policy & (uint64_t(1) << casted_replacement_data->owner_way)) {
+        if (hitPriority) {
+            casted_replacement_data->rrpv.reset();
+        } else {
+            casted_replacement_data->rrpv--;
+        }
+    }
+    // otherwise, do not modify other-domain metadata.
+}
+
+void
 BRRIP::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
 {
     std::shared_ptr<BRRIPReplData> casted_replacement_data =
@@ -89,6 +130,51 @@ BRRIP::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
 
     // Mark entry as ready to be used
     casted_replacement_data->valid = true;
+}
+
+void
+BRRIP::reset(const std::shared_ptr<ReplacementData>& replacement_data,
+             const PacketPtr pkt)
+{
+    // if no packet or no request, fallback
+    if (!pkt || !pkt->req) {
+        reset(replacement_data);
+        return;
+    }
+
+    uint32_t domain = pkt->req->domainId();
+
+    std::shared_ptr<BRRIPReplData> casted_replacement_data =
+        std::static_pointer_cast<BRRIPReplData>(replacement_data);
+
+    // find per-set policy if present
+    uint64_t policy = UINT64_MAX;
+    uint32_t set = casted_replacement_data->owner_set;
+    if (set < setDomainPolicies.size()) {
+        auto it = setDomainPolicies[set].find(domain);
+        if (it != setDomainPolicies[set].end())
+            policy = it->second;
+    }
+
+    // if no policy, do normal reset
+    if (policy == UINT64_MAX) {
+        reset(replacement_data);
+        return;
+    }
+
+    // only initialize metadata if this way is allowed by the policy
+    if (policy & (uint64_t(1) << casted_replacement_data->owner_way)) {
+        casted_replacement_data->rrpv.saturate();
+        if (rng->random<unsigned>(1, 100) <= btp) {
+            casted_replacement_data->rrpv--;
+        }
+
+        // mark entry as ready to be used
+        casted_replacement_data->valid = true;
+    } else {
+        // if way is not allowed for this domain, keep metadata untouched and mark as not valid for this domain's view
+        casted_replacement_data->valid = false;
+    }
 }
 
 ReplaceableEntry*
@@ -138,6 +224,49 @@ BRRIP::getVictim(const ReplacementCandidates& candidates) const
     }
 
     return victim;
+}
+
+ReplaceableEntry*
+BRRIP::getVictimForDomain(
+    const ReplacementCandidates& candidates,
+    const uint32_t domain_id) const
+{
+    // if no per-set domain policies, fallback
+    if (setDomainPolicies.empty())
+        return getVictim(candidates);
+
+    uint32_t set = candidates[0]->getSet();
+    if (set >= setDomainPolicies.size())
+        return getVictim(candidates);
+
+    const DomainPolicyMap &map = setDomainPolicies[set];
+    auto it = map.find(domain_id);
+    if (it == map.end())
+        return getVictim(candidates);
+
+    uint64_t policy = it->second;
+
+    ReplacementCandidates filtered;
+    for (auto *c : candidates) {
+        uint32_t way = c->getWay();
+        if (policy & (uint64_t(1) << way))
+            filtered.push_back(c);
+    }
+
+    if (filtered.empty())
+        return getVictim(candidates);
+
+    // reuse existing BRRIP victim selection on the filtered list
+    return getVictim(filtered);
+}
+
+void
+BRRIP::setDomainPolicy(const uint32_t set, const uint32_t domain_id,
+                       const uint64_t policy_fillmap)
+{
+    if (set >= setDomainPolicies.size())
+        setDomainPolicies.resize(set + 1);
+    setDomainPolicies[set][domain_id] = policy_fillmap;
 }
 
 std::shared_ptr<ReplacementData>

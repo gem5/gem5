@@ -35,6 +35,7 @@
 
 from m5.objects.ClockedObject import ClockedObject
 from m5.objects.IndexingPolicies import *
+from m5.objects.WayGuardTable import WayGuardTable
 from m5.params import *
 from m5.proxy import *
 
@@ -101,6 +102,9 @@ class BaseTags(ClockedObject):
     partitioning_manager = Param.PartitionManager(
         Parent.partitioning_manager, "Cache partitioning manager"
     )
+
+    # WayGuardTable
+    way_guard_table = Param.WayGuardTable(NULL, "DAWG way guard table")
 
     # Set the indexing entry size as the block size
     entry_size = Param.Int(

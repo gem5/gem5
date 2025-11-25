@@ -312,6 +312,11 @@ BaseCPU::mwaitAtomic(ThreadID tid, ThreadContext *tc, BaseMMU *mmu)
     monitor.pAddr = req->getPaddr() & mask;
     monitor.waiting = true;
 
+    // stamp the request with the thread's load domain selector
+    if (tc) {
+        req->setDomainId(tc->domainLoad());
+    }
+
     DPRINTF(Mwait, "[tid:%d] mwait called (vAddr=0x%lx, line's paddr=0x%lx)\n",
             tid, monitor.vAddr, monitor.pAddr);
 }

@@ -64,6 +64,13 @@
 #include "cpu/inst_seq.hh"
 #include "mem/htm.hh"
 #include "sim/cur_tick.hh"
+// Required for getDebugLogger()/dprintf_flag used in debug instrumentation
+#include "base/trace.hh"
+// Optional backtrace support for targeted Request allocation tracing
+#if defined(__linux__)
+#include <execinfo.h>
+#include <stdlib.h>
+#endif
 
 namespace gem5
 {
@@ -403,6 +410,10 @@ class Request : public Extensible<Request>
      */
     RequestorID _requestorId = invldRequestorId;
 
+    /** Domain identifier used by DAWG to track the protection domain of the
+     * originating context. Defaults to 0 (no special domain). */
+    uint32_t _domainId = 0;
+
     /** Flag structure for the request. */
     Flags _flags;
 
@@ -482,7 +493,44 @@ class Request : public Extensible<Request>
      *  _flags and privateFlags are cleared by Flags default
      *  constructor.)
      */
-    Request() {}
+    Request()
+    {
+        // Log new Request allocation for domain propagation tracing
+        cprintf("REQUEST-NEW: req=%p\n", (void*)this);
+
+        // Conditional tracing: if DAWG_TRACE_NEW env var is set, print a
+        // lightweight backtrace for every Request allocation. If DAWG_TRACE_PTR
+        // contains a hex pointer string (e.g. 0x7fff...), only trace that
+        // specific allocation.
+#if defined(__linux__)
+        const char *trace_all = getenv("DAWG_TRACE_NEW");
+        const char *trace_ptr = getenv("DAWG_TRACE_PTR");
+        bool do_trace = false;
+        if (trace_all && trace_all[0] != '\0')
+            do_trace = true;
+        else if (trace_ptr && trace_ptr[0] != '\0') {
+            // Compare pointer string (hex) with this pointer
+            uintptr_t p = 0;
+            if (sscanf(trace_ptr, "%" SCNxPTR, &p) == 1) {
+                if (p == reinterpret_cast<uintptr_t>(this))
+                    do_trace = true;
+            }
+        }
+
+        if (do_trace) {
+            void *bt[32];
+            int bt_size = backtrace(bt, 32);
+            char **bt_syms = backtrace_symbols(bt, bt_size);
+            cprintf("REQUEST-NEW-BT: req=%p frames=%d\n", (void*)this, bt_size);
+            if (bt_syms) {
+                for (int i = 0; i < bt_size; ++i) {
+                    cprintf("REQUEST-NEW-BT %d: %s\n", i, bt_syms[i]);
+                }
+                free(bt_syms);
+            }
+        }
+#endif
+    }
 
     /**
      * Constructor for physical (e.g. device) requests.  Initializes
@@ -496,6 +544,29 @@ class Request : public Extensible<Request>
         privateFlags.set(VALID_PADDR|VALID_SIZE);
         _byteEnable = std::vector<bool>(size, true);
         _isGPUFuncAccess = false;
+        cprintf("REQUEST-NEW: req=%p paddr=0x%llx size=%u\n", (void*)this,
+                (unsigned long long)paddr, size);
+
+#if defined(__linux__)
+        const char *trace_ptr = getenv("DAWG_TRACE_PTR");
+        if (trace_ptr && trace_ptr[0] != '\0') {
+            uintptr_t p = 0;
+            if (sscanf(trace_ptr, "%" SCNxPTR, &p) == 1) {
+                if (p == reinterpret_cast<uintptr_t>(this)) {
+                    void *bt[32];
+                    int bt_size = backtrace(bt, 32);
+                    char **bt_syms = backtrace_symbols(bt, bt_size);
+                    cprintf("REQUEST-NEW-BT: req=%p frames=%d\n", (void*)this, bt_size);
+                    if (bt_syms) {
+                        for (int i = 0; i < bt_size; ++i) {
+                            cprintf("REQUEST-NEW-BT %d: %s\n", i, bt_syms[i]);
+                        }
+                        free(bt_syms);
+                    }
+                }
+            }
+        }
+#endif
     }
 
     Request(Addr vaddr, unsigned size, Flags flags,
@@ -506,6 +577,36 @@ class Request : public Extensible<Request>
         setContext(cid);
         _byteEnable = std::vector<bool>(size, true);
         _isGPUFuncAccess = false;
+    cprintf("REQUEST-NEW: req=%p vaddr=0x%llx size=%u\n", (void*)this,
+        (unsigned long long)vaddr, size);
+
+#if defined(__linux__)
+    const char *trace_all = getenv("DAWG_TRACE_NEW");
+    const char *trace_ptr = getenv("DAWG_TRACE_PTR");
+    bool do_trace = false;
+    if (trace_all && trace_all[0] != '\0')
+        do_trace = true;
+    else if (trace_ptr && trace_ptr[0] != '\0') {
+        uintptr_t p = 0;
+        if (sscanf(trace_ptr, "%" SCNxPTR, &p) == 1) {
+            if (p == reinterpret_cast<uintptr_t>(this))
+                do_trace = true;
+        }
+    }
+
+    if (do_trace) {
+        void *bt[32];
+        int bt_size = backtrace(bt, 32);
+        char **bt_syms = backtrace_symbols(bt, bt_size);
+        cprintf("REQUEST-NEW-BT: req=%p frames=%d\n", (void*)this, bt_size);
+        if (bt_syms) {
+            for (int i = 0; i < bt_size; ++i) {
+                cprintf("REQUEST-NEW-BT %d: %s\n", i, bt_syms[i]);
+            }
+            free(bt_syms);
+        }
+    }
+#endif
     }
 
     Request(const Request& other)
@@ -514,6 +615,7 @@ class Request : public Extensible<Request>
           _byteEnable(other._byteEnable),
           _requestorId(other._requestorId),
           _flags(other._flags),
+                    _domainId(other._domainId),
           _cacheCoherenceFlags(other._cacheCoherenceFlags),
           privateFlags(other.privateFlags),
           _time(other._time),
@@ -526,9 +628,15 @@ class Request : public Extensible<Request>
     {
         atomicOpFunctor.reset(other.atomicOpFunctor ?
                                 other.atomicOpFunctor->clone() : nullptr);
+        // Log copy events so we can correlate source/destination Request
+        cprintf("REQUEST-COPY: src=%p dst=%p domain=%u\n",
+                (void*)&other, (void*)this, other._domainId);
     }
 
-    ~Request() {}
+    ~Request()
+    {
+        cprintf("REQUEST-DEL: req=%p\n", (void*)this);
+    }
 
     /**
      * Factory method for creating memory management requests, with
@@ -554,6 +662,25 @@ class Request : public Extensible<Request>
     {
         _contextId = context_id;
         privateFlags.set(VALID_CONTEXT_ID);
+    }
+
+    /** Domain id accessor */
+    uint32_t
+    domainId() const
+    {
+        return _domainId;
+    }
+
+    /** Domain id setter */
+    void
+    setDomainId(uint32_t did)
+    {
+        uint32_t old = _domainId;
+        _domainId = did;
+        // Debug: log domain id writes
+    // Always print domain writes for debugging
+    cprintf("REQUEST-SET: req=%p old=%u new=%u\n",
+        (void*)this, old, did);
     }
 
     void
