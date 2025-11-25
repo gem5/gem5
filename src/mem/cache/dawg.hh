@@ -3,13 +3,15 @@
 #define __MEM_CACHE_DAWG_HH__
 
 #include <cstdint>
-#include <vector>
-#include <unordered_map>
 #include <functional>
+#include <unordered_map>
+#include <vector>
+
 #include "sim/sim_object.hh"
 
 #if __has_include("params/WayGuardTable.hh")
 #include "params/WayGuardTable.hh"
+
 #endif
 
 namespace gem5 {

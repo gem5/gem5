@@ -71,10 +71,10 @@
 
 #include <cstdint>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 #include "mem/cache/replacement_policies/base.hh"
-#include <unordered_map>
 
 namespace gem5
 {

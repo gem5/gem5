@@ -7,10 +7,10 @@
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
-#include "mem/cache/dawg.hh"
-#include "sim/init.hh"
-#include "mem/cache/tags/base.hh"
 #include "mem/cache/cache_blk.hh"
+#include "mem/cache/dawg.hh"
+#include "mem/cache/tags/base.hh"
+#include "sim/init.hh"
 
 namespace py = pybind11;
 

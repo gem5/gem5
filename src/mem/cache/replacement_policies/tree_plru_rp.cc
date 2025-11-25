@@ -34,16 +34,14 @@
 
 #include "mem/cache/replacement_policies/tree_plru_rp.hh"
 
+#include <cassert>
 #include <cmath>
+#include <cstdint>
 
 #include "base/intmath.hh"
 #include "base/logging.hh"
-#include "params/TreePLRURP.hh"
 #include "mem/packet.hh"
-
-#include <cassert>
-#include <cstdint>
-
+#include "params/TreePLRURP.hh"
 
 namespace gem5
 {

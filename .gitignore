@@ -37,3 +37,4 @@ configs/dram/lowp_sweep.cfg
 typings
 .DS_Store
 venv
+external-microbench

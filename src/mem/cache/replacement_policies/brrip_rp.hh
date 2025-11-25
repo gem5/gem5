@@ -52,10 +52,11 @@
 #ifndef __MEM_CACHE_REPLACEMENT_POLICIES_BRRIP_RP_HH__
 #define __MEM_CACHE_REPLACEMENT_POLICIES_BRRIP_RP_HH__
 
+#include <unordered_map>
+
 #include "base/random.hh"
 #include "base/sat_counter.hh"
 #include "mem/cache/replacement_policies/base.hh"
-#include <unordered_map>
 
 namespace gem5
 {

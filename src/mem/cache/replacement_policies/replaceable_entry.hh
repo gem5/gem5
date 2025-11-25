@@ -45,7 +45,8 @@ namespace replacement_policy
  * The replacement data needed by replacement policies. Each replacement policy
  * should have its own implementation of replacement data.
  */
-struct ReplacementData {
+struct ReplacementData
+{
   virtual ~ReplacementData() = default;
   virtual void setOwnerSet(uint32_t) {}
   virtual void setOwnerWay(uint32_t) {}

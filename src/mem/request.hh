@@ -64,12 +64,16 @@
 #include "cpu/inst_seq.hh"
 #include "mem/htm.hh"
 #include "sim/cur_tick.hh"
+
 // Required for getDebugLogger()/dprintf_flag used in debug instrumentation
 #include "base/trace.hh"
+
 // Optional backtrace support for targeted Request allocation tracing
 #if defined(__linux__)
 #include <execinfo.h>
-#include <stdlib.h>
+
+#include <cstdlib>
+
 #endif
 
 namespace gem5

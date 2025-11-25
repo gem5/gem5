@@ -1,7 +1,7 @@
 #include "mem/cache/dawg.hh"
-#include "params/WayGuardTable.hh"
 
 #include "base/logging.hh"
+#include "params/WayGuardTable.hh"
 
 namespace gem5
 {

@@ -42,6 +42,7 @@
 #include "cpu/simple/atomic.hh"
 
 #include "arch/generic/decoder.hh"
+#include "base/cprintf.hh"
 #include "base/output.hh"
 #include "cpu/exetrace.hh"
 #include "cpu/utils.hh"
@@ -55,7 +56,6 @@
 #include "sim/faults.hh"
 #include "sim/full_system.hh"
 #include "sim/system.hh"
-#include "base/cprintf.hh"
 
 namespace gem5
 {
