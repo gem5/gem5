@@ -467,7 +467,12 @@ TableWalker::completeDrain()
 DrainState
 TableWalker::drain()
 {
-    if (pendingQueue.size()) {
+    auto draining = [](WalkUnit *wu) {
+        return wu->drain() == DrainState::Draining;
+    };
+
+    if (pendingQueue.size() ||
+        std::any_of(walkUnits.begin(), walkUnits.end(), draining)) {
         DPRINTF(Drain, "TableWalker not drained\n");
         return DrainState::Draining;
     } else {
