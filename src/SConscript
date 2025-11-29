@@ -67,6 +67,7 @@ Export('env')
 build_env = list(env['CONF'].items())
 
 from code_formatter import code_formatter
+from gem5_scons.util import compareVersions
 
 def GdbXml(xml_id, symbol, tags=None):
     cc, hh = env.Blob(symbol, xml_id)
@@ -267,14 +268,16 @@ cxx_file.add_emitter('.proto', protoc_emitter)
 
 def ProtoBuf(source, tags=None):
     '''Add a Protocol Buffer to build'''
+    if env['GCC'] and compareVersions(env['CXXVERSION'], '10.0') >= 0:
+        pb_cxx_flags = [ '-Wno-array-bounds',
+                         '-Wno-stringop-overflow' ]
+    else:
+        pb_cxx_flags = ['-Wno-array-bounds']
     Source(
         source,
         tags,
         append={
-            'CXXFLAGS': [
-                '-Wno-array-bounds',
-                '-Wno-stringop-overflow',
-            ],
+            'CXXFLAGS': pb_cxx_flags,
         },
     )
 
