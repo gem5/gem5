@@ -62,6 +62,23 @@ protected:
         return shader->cuList[cuIdx]->stats;
     }
 
+    /**
+     * @brief Choose a performance level that optimizes an objective function
+     *        given an estimated delay function.
+     *
+     * @param delayFunction A function that estimates delay (in ticks)
+     *                      given a frequency.
+     *
+     * @param objectiveFunction A function that computes a score given voltage,
+     *                          frequency, and estimated delay.
+     *                          The score is minimized or maximized
+     *                          based on the `minimize` parameter.
+     *
+     * @param minimize Whether to minimize or maximize the objective function.
+     *                 Defaults to true (minimize).
+     *
+     * @return  `DVFSHandler::PerfLevel`
+     */
     DVFSHandler::PerfLevel chooseOptimalPerfLevel(
         std::function<Tick(double f)> delayFunction,
         std::function<double(double V,double f, Tick t)> objectiveFunction,
