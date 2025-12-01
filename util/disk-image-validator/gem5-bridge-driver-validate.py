@@ -40,7 +40,7 @@ from gem5.simulate.simulator import Simulator
 gem5 Bridge Driver Test Script
 
 This script tests whether the gem5-bridge driver is correctly installed by
-running a simple C program that makes an m5 hypercall (hypercall number 8)
+running a simple C program that makes an m5 hypercall (hypercall number 1234)
 without requiring superuser privileges.
 
 Usage:
@@ -64,7 +64,7 @@ Requirements:
 Functionality:
     - Selects the appropriate demo board (X86, Arm, or RISC-V) based on the given ISA.
     - Loads the specified workload and resource version (if provided).
-    - Runs a shell script (`test_gem5_bridge.sh`) to check whether m5 hypercall 8
+    - Runs a shell script (`test_gem5_bridge.sh`) to check whether m5 hypercall 1234
       executes successfully without requiring `sudo`.
     - Prints a success message if the test passes.
 

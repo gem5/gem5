@@ -46,7 +46,7 @@ Arguments:
     --resource_version   The version of the workload resource.
 
 Example:
-    python3 run_config_tests.py --workload linux-boot --resource_version 1.0
+    python3 run_config_tests.py --workload x86-ubuntu-24.04-boot-no-systemd --resource_version 4.0.0
 
 Requirements:
     - gem5 binary must be built and located at: ./build/ALL/gem5.opt

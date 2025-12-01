@@ -8,12 +8,12 @@ This utility is used to verify that full system workloads in gem5 function as ex
 
 ## gem5-Bridge Driver Validator
 
-To validate the `gem5-bridge` driver, run the `gem5-bridge-driver-validate.py` script. This script verifies the driver installation by executing a simple C program that makes an m5 hypercall (hypercall number 8), without requiring superuser privileges.
+To validate the `gem5-bridge` driver, run the `gem5-bridge-driver-validate.py` script. This script verifies the driver installation by executing a simple C program that makes an m5 hypercall (hypercall number 1234), without requiring superuser privileges.
 
 ### Usage
 
 ```bash
-build/ALL/gem5.opt util/disk-img-validator/gem5-bridge-driver-validate.py --isa <ISA> --workload <WORKLOAD_ID> --resource-version <RESOURCE_VERSION>
+build/ALL/gem5.opt util/disk-image-validator/gem5-bridge-driver-validate.py --isa <ISA> --workload <WORKLOAD_ID> --resource-version <RESOURCE_VERSION>
 ```
 
 ### Arguments
@@ -31,12 +31,12 @@ build/ALL/gem5.opt util/disk-img-validator/gem5-bridge-driver-validate.py --isa 
 ### Example
 
 ```bash
-build/ALL/gem5.opt util/disk-img-validator/gem5-bridge-driver-validate.py --isa x86 --workload test_workload --resource-version 1.0.0
+build/ALL/gem5.opt util/disk-image-validator/gem5-bridge-driver-validate.py --isa x86 --workload x86-ubuntu-24.04-boot-no-systemd --resource-version 4.0.0
 ```
 
 ### Requirements
 
-- gem5 v25.0 or higher must be installed and configured correctly.
+- gem5 v25.0 or higher must be installed and configured correctly.The version of gem5 that is used must support hypercalls.
 - Prebuilt demo board classes must be available.
 - The gem5 resources must be able to fetch the specified workload.
 
@@ -44,12 +44,12 @@ build/ALL/gem5.opt util/disk-img-validator/gem5-bridge-driver-validate.py --isa 
 
 - Selects the appropriate demo board based on the specified ISA (`x86`, `arm`, or `riscv`)
 - Loads the given workload and optional resource version
-- Runs a shell script (`test_gem5_bridge.sh`) to test whether m5 hypercall 8 executes successfully (without requiring `sudo`)
+- Runs a shell script (`test_gem5_bridge.sh`) during the simulation to test whether m5 hypercall 1234 executes successfully (without requiring `sudo`)
 - Prints a success message if the test passes
 
 ### Exit Conditions
 
-- If the hypercall executes successfully, a success message is printed.
+- If the hypercall executes successfully, a success message is printed. No message is printed upon unsuccessful execution.
 - If an invalid ISA is provided, the script raises an exception.
 
 ## gem5 Disk Image Validation Script
@@ -59,7 +59,7 @@ This script tests disk images to ensure they boot correctly and execute hypercal
 ### Usage
 
 ```bash
-build/ALL/gem5.opt util/disk-img-validator/disk-image-validate.py --isa <ISA> --workload <WORKLOAD_ID> --resource_version <RESOURCE_VERSION> [--validate-npb]
+build/ALL/gem5.opt util/disk-image-validator/disk-image-validate.py --isa <ISA> --workload <WORKLOAD_ID> --resource_version <RESOURCE_VERSION> [--validate-npb]
 ```
 
 ### Arguments
@@ -107,7 +107,7 @@ build/ALL/gem5.opt util/disk-img-validator/disk-image-validate.py --isa x86 --wo
 
 - If the hypercalls are executed in the expected order, a success message is printed.
 - If the order is incorrect, an error message is printed.
-- If `--validate-npb` is used and validation fails, an error message is printed.
+- If `--validate-npb` is used and validation fails, an error message is printed. No additional message is printed if the NPB validation fails.
 
 ## gem5 Configuration Test Script
 
@@ -127,7 +127,7 @@ python3 run_config_tests.py --workload <WORKLOAD_ID> --resource_version <RESOURC
 **Example:**
 
 ```bash
-python3 run_config_tests.py --workload test_workload --resource_version 1.0.0
+python3 run_config_tests.py --workload x86-ubuntu-24.04-boot-no-systemd --resource_version 4.0.0
 ```
 
 **Requirements:**
@@ -143,6 +143,9 @@ python3 run_config_tests.py --workload test_workload --resource_version 1.0.0
   - O3_test
   - MINOR_test
   - ATOMIC_test
+  - ATOMIC_2_core_test
+  - ATOMIC_4_core_test
+  - ATOMIC_8_core_test
 - Results are saved in `m5out/<workload_id>-<test_name>`.
 - At the end, it prints a summary of the test results and exits with the appropriate status code.
 
