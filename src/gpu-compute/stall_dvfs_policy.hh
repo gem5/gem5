@@ -24,23 +24,23 @@ class STALLDVFSPolicy : public GPUDVFSPolicy
     STALLDVFSPolicy(const Params &p);
 
   private:
+
     /**
     Per-CU history at the *previous* sample, to convert cumulative
     statistics into per-epoch deltas.
     */
-    std::vector<uint64_t> prevInstrPerCU;
-    std::vector<uint64_t> prevMemPerCU;
     std::vector<uint64_t> prevCyclesPerCU;
+    std::vector<uint64_t> prevMemPerCU;
 
     /**
-     * Core STALL decision function.
+     * @brief Core STALL decision function.
      *
-     * Called once per epoch by the GPUDVFSPolicy base class.  Given the
-     * current performance level, it:
-     *   1. Reads CU stats and computes deltas since last sample.
-     *   2. Derives an IPC and a "stall proxy" (mem ops per instr).
-     *   3. Logs a fake energy estimate based on V^2 * f.
-     *   4. Chooses the next performance level.
+     * Called once per epoch by the GPUDVFSPolicy base class. Uses the STALL
+     * algorithm to decide the optimal performance level based on per-CU stats.
+     *
+     * Specifically, it aggregates per-CU clock and memory stall cycles.
+     * This is then evaluated using `optimalPerfLevel()`.
+     *
      */
     DVFSHandler::PerfLevel
     sample(DVFSHandler::PerfLevel currentLevel) override;
