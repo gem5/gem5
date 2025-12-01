@@ -38,6 +38,7 @@ protected:
 
     DVFSHandler::PerfLevel minPerfLevel = 0;
     DVFSHandler::PerfLevel maxPerfLevel;
+    const Shader * const shader;
 
     virtual DVFSHandler::PerfLevel
     sample(DVFSHandler::PerfLevel currentLevel) = 0;
@@ -67,7 +68,6 @@ private:
     */
     DVFSHandler *dvfsHandler;
     DVFSHandler::DomainID gpuDomainId;
-    Shader *shader;
 
     class SampleEvent: public Event
     {

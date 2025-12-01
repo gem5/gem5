@@ -134,11 +134,20 @@ def makeGpuFSSystem(args):
             transition_latency="1us",  # TODO toy value
         )
 
-        # TODO add policy.
-        system.dvfs_policy = ToyDVFSPolicy(
+        # # TODO add policy.
+        # system.dvfs_policy = ToyDVFSPolicy(
+        #     dvfs_handler=system.dvfs_handler,
+        #     gpu_domain_id=67,
+        #     sampling_period="1000us",  # TODO toy value
+        #     voltage_opps=[1.05, 0.95, 0.85],
+        #     frequency_opps=["1.5GHz", "1.0GHz", "0.5GHz"],
+        #     shader=shader,
+        # )
+
+        system.dvfs_policy = STALLDVFSPolicy(
             dvfs_handler=system.dvfs_handler,
             gpu_domain_id=67,
-            sampling_period="1000us",  # TODO toy value
+            sampling_period="1000us",  # same toy value as before
             voltage_opps=[1.05, 0.95, 0.85],
             frequency_opps=["1.5GHz", "1.0GHz", "0.5GHz"],
             shader=shader,
