@@ -18,7 +18,9 @@ GPUDVFSPolicy::GPUDVFSPolicy(const Params &p)
 {
     DPRINTF(GPUDVFSPolicy, "%s: Initializing GPU DVFS Policy\n", name());
     fatal_if(!dvfsHandler, "%s: DVFSHandler is required", name());
-    // fatal_if(!gpu,         "%s: GPU device pointer is required", name());
+    fatal_if(!shader, "%s: shader pointer must be set for GPUDVFSPolicy!\n",
+             name());
+
 }
 
 void

@@ -1,6 +1,8 @@
 #ifndef __GPU_DVFS_POLICY_HH__
 #define __GPU_DVFS_POLICY_HH__
 
+#include <cmath>
+
 #include "debug/GPUDVFSPolicy.hh"
 #include "gpu-compute/shader.hh"
 #include "params/GPUDVFSPolicy.hh"
@@ -43,13 +45,25 @@ protected:
     virtual DVFSHandler::PerfLevel
     sample(DVFSHandler::PerfLevel currentLevel) = 0;
 
-    template<unsigned int N>
-    uint calculateEDNP(uint E, uint D) {
-        uint P = E;
-        for (unsigned i = 0; i < N; ++i) {
-            P *= D;
-        }
+    template <unsigned int N>
+    double calculateEDNP(double V, double f, double T)
+    {
+
+        // Energy (E) ~ V^2 * f * T
+        // Delay (D) ~ T
+
+        double E = V * V * f * T;
+        double D = std::pow(T, N);
+
+        double P = E * D;
+
         return P;
+    }
+
+
+    int
+    numCUs() const {
+        return shader->n_cu;
     }
 
     /**
@@ -91,7 +105,7 @@ protected:
         DVFSHandler::PerfLevel bestLevel = minPerfLevel;
 
         for (DVFSHandler::PerfLevel level = minPerfLevel;
-            level < maxPerfLevel;
+            level <= maxPerfLevel;
             ++level)
         {
             Tick estimatedDelay = delayFunction(frequencyOpps[level]);
@@ -106,7 +120,18 @@ protected:
 
             bestObjective = bestScore ? score : bestObjective;
             bestLevel = bestScore ? level : bestLevel;
+
+            DPRINTF(GPUDVFSPolicy, "%s: perfLevel=%u, "
+                    "V=%.3f f=%.3fGHz T=%lu score=%f\n",
+                    name(), level,
+                    voltageOpps[level],
+                    frequencyOpps[level],
+                    estimatedDelay,
+                    score);
         }
+
+        DPRINTF(GPUDVFSPolicy, "%s: chosen perfLevel=%u with score=%f\n",
+                name(), bestLevel, bestObjective);
 
         return bestLevel;
     }
@@ -141,9 +166,6 @@ private:
     }
 
     void process() {
-
-        DPRINTF(GPUDVFSPolicy, "%s: sampling at %lu\n", name(), curTick());
-
         DVFSHandler::PerfLevel newPerfLevel = sample(currentPerfLevel());
         setLevel(newPerfLevel);
         scheduleNextSample();
