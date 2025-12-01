@@ -124,6 +124,9 @@ class ScoreboardCheckStage
 
         statistics::Vector stallCycles;
     } stats;
+
+  public:
+    ScoreboardCheckStageStats& getStats() { return stats; }
 };
 
 } // namespace gem5
