@@ -33,11 +33,11 @@ protected:
     /**
     OPP(Operating Performance Point) volts and freqs(GHz)
     */
-    std::vector<double> voltageOpps;
-    std::vector<double> frequencyOpps;
+    const std::vector<double> voltageOpps;
+    const std::vector<double> frequencyOpps;
 
-    DVFSHandler::PerfLevel minPerfLevel = 0;
-    DVFSHandler::PerfLevel maxPerfLevel;
+    const DVFSHandler::PerfLevel minPerfLevel = 0;
+    const DVFSHandler::PerfLevel maxPerfLevel;
     const Shader * const shader;
 
     virtual DVFSHandler::PerfLevel
