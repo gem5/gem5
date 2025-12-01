@@ -62,6 +62,38 @@ protected:
         return shader->cuList[cuIdx]->stats;
     }
 
+    DVFSHandler::PerfLevel chooseOptimalPerfLevel(
+        std::function<Tick(double f)> delayFunction,
+        std::function<double(double V,double f, Tick t)> objectiveFunction,
+        bool minimize = true)
+    {
+        double bestObjective = minimize ?
+            std::numeric_limits<double>::max() :
+            std::numeric_limits<double>::lowest();
+
+        DVFSHandler::PerfLevel bestLevel = minPerfLevel;
+
+        for (DVFSHandler::PerfLevel level = minPerfLevel;
+            level < maxPerfLevel;
+            ++level)
+        {
+            Tick estimatedDelay = delayFunction(frequencyOpps[level]);
+
+            double score = objectiveFunction(
+                voltageOpps[level],
+                frequencyOpps[level],
+                estimatedDelay);
+
+            bool bestScore = minimize ?
+                (score < bestObjective) : (score > bestObjective);
+
+            bestObjective = bestScore ? score : bestObjective;
+            bestLevel = bestScore ? level : bestLevel;
+        }
+
+        return bestLevel;
+    }
+
 private:
     /**
     DVFS Handler to control SrcClockDomain
