@@ -39,7 +39,7 @@ SimObject('GPU.py', sim_objects=[
     'ScalarRegisterFile', 'VectorRegisterFile', 'RegisterManager', 'Wavefront',
     'ComputeUnit', 'Shader', 'GPUComputeDriver', 'GPURenderDriver',
     'GPUDispatcher', 'GPUCommandProcessor', 'RegisterFileCache',
-    'GPUDVFSPolicy', 'ToyDVFSPolicy', 'STALLPolicy'],
+    'GPUDVFSPolicy', 'ToyDVFSPolicy', 'STALLDVFSPolicy'],
     enums=['PrefetchType', 'GfxVersion', 'StorageClassType'])
 SimObject('GPUStaticInstFlags.py', enums=['GPUStaticInstFlags'])
 SimObject('LdsState.py', sim_objects=['LdsState'])

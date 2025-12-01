@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "gpu-compute/gpu_dvfs_policy.hh"
-#include "params/STALLPolicy.hh"
+#include "params/STALLDVFSPolicy.hh"
 
 namespace gem5 {
 
@@ -16,12 +16,12 @@ namespace gem5 {
  * to decide whether the workload is memory-bound (many stalls) or
  * compute-bound, and steps the DVFS performance level up/down accordingly.
  */
-class STALLPolicy : public GPUDVFSPolicy
+class STALLDVFSPolicy : public GPUDVFSPolicy
 {
   public:
-    using Params = STALLPolicyParams;
+    using Params = STALLDVFSPolicyParams;
 
-    STALLPolicy(const Params &p);
+    STALLDVFSPolicy(const Params &p);
 
   private:
     /**
@@ -46,6 +46,6 @@ class STALLPolicy : public GPUDVFSPolicy
     sample(DVFSHandler::PerfLevel currentLevel) override;
 };
 
-} 
+}
 
 #endif // __STALL_DVFS_POLICY_HH__

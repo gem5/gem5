@@ -144,7 +144,7 @@ def makeGpuFSSystem(args):
         #     shader=shader,
         # )
 
-        system.dvfs_policy = STALLPolicy(
+        system.dvfs_policy = STALLDVFSPolicy(
             dvfs_handler=system.dvfs_handler,
             gpu_domain_id=67,
             sampling_period="1000us",  # same toy value as before

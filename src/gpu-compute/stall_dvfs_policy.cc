@@ -4,10 +4,10 @@
 
 namespace gem5 {
 
-STALLPolicy::STALLPolicy(const Params &p)
+STALLDVFSPolicy::STALLDVFSPolicy(const Params &p)
     : GPUDVFSPolicy(p)
 {
-    fatal_if(!shader, "%s: shader pointer must be set for STALLPolicy\n",
+    fatal_if(!shader, "%s: shader pointer must be set for STALLDVFSPolicy\n",
              name());
 
     const int numCUs = shader->n_cu;
@@ -16,12 +16,12 @@ STALLPolicy::STALLPolicy(const Params &p)
     prevMemPerCU.resize(numCUs, 0);
     prevCyclesPerCU.resize(numCUs, 0);
 
-    DPRINTF(GPUDVFSPolicy, "%s: STALLPolicy constructed for %d CUs\n",
+    DPRINTF(GPUDVFSPolicy, "%s: STALLDVFSPolicy constructed for %d CUs\n",
             name(), numCUs);
 }
 
 DVFSHandler::PerfLevel
-STALLPolicy::sample(DVFSHandler::PerfLevel currentLevel)
+STALLDVFSPolicy::sample(DVFSHandler::PerfLevel currentLevel)
 {
     /** Aggregate per-epoch deltas across all CUs. */
     double totalInstrDelta  = 0.0;
@@ -61,7 +61,7 @@ STALLPolicy::sample(DVFSHandler::PerfLevel currentLevel)
     /** If nothing happened in this epoch, just keep the current level. */
     if (totalInstrDelta <= 0.0 || totalCycleDelta <= 0.0) {
         DPRINTF(GPUDVFSPolicy,
-                "%s: STALLPolicy sample: no work this epoch, "
+                "%s: STALLDVFSPolicy sample: no work this epoch, "
                 "staying at level=%u\n",
                 name(), currentLevel);
         return currentLevel;
@@ -90,7 +90,7 @@ STALLPolicy::sample(DVFSHandler::PerfLevel currentLevel)
     const double energyProxy = V * V * f;
 
     DPRINTF(GPUDVFSPolicy,
-            "%s: STALLPolicy epoch: instr=%.0f mem=%.0f cycles=%.0f "
+            "%s: STALLDVFSPolicy epoch: instr=%.0f mem=%.0f cycles=%.0f "
             "IPC=%.3f mem/instr=%.3f Eproxy(V^2*f)=%.3f (level=%u)\n",
             name(), totalInstrDelta, totalMemDelta, totalCycleDelta,
             ipcEpoch, memPerInstr, energyProxy, currentLevel);
@@ -112,11 +112,11 @@ STALLPolicy::sample(DVFSHandler::PerfLevel currentLevel)
 
     if (next != currentLevel) {
         DPRINTF(GPUDVFSPolicy,
-                "%s: STALLPolicy changing perf level %u -> %u\n",
+                "%s: STALLDVFSPolicy changing perf level %u -> %u\n",
                 name(), currentLevel, next);
     }
 
     return next;
 }
 
-} 
+}
