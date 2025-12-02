@@ -507,7 +507,7 @@ class BaseCPU : public ClockedObject
      * @param hypercall_num The hypercall number of the exit event.
      */
     void scheduleInstStopAnyThread(Counter max_insts,
-                                  uint64_t hypercall_num = 0);
+                                   uint64_t hypercall_num = 0);
 
     /**
      * Get the number of instructions executed by the specified thread

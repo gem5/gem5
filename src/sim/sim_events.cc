@@ -158,13 +158,15 @@ LocalSimLoopExitEvent::LocalSimLoopExitEvent(const std::string &_cause, int c,
 {
 }
 
-LocalSimLoopExitEvent::LocalSimLoopExitEvent(const std::string& _cause, int c,
+LocalSimLoopExitEvent::LocalSimLoopExitEvent(const std::string &_cause, int c,
                                              Tick repeat,
                                              uint64_t hypercall_id)
-    : Event(Sim_Exit_Pri, IsExitEvent), cause(_cause), code(c), repeat(repeat),
+    : Event(Sim_Exit_Pri, IsExitEvent),
+      cause(_cause),
+      code(c),
+      repeat(repeat),
       hypercall_id(hypercall_id)
-{
-}
+{}
 
 //
 // handle termination event
