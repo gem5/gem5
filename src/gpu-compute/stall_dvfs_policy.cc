@@ -29,17 +29,19 @@ STALLDVFSPolicy::sample(DVFSHandler::PerfLevel currentLevel)
     {
         ComputeUnit *cu = shader->cuList[i];
 
-        // Get total cycles.
+        // Get # cycles that any WF within this CU was executing.
         uint64_t currCycles = cu->stats.totalCycles.value();
 
-        // Get memory stall cycles.
+        // Get memory stall cycles. These are PER-WF.
         auto& statsStruct = cu->scoreboardCheckStage.getStats();
         uint64_t currMemStallCycles = statsStruct
             .stallCycles[ScoreboardCheckStage::NRDY_WAIT_CNT]
             .value();
 
-        // calculate deltas.
-        uint64_t deltaCycles = currCycles - prevCyclesPerCU[i];
+        // Calculate scaling factor (The number of WFs that could be active
+        // in this CU).
+        const int maxActiveWFsPerCU = cu->numVectorALUs *
+            cu->shader->n_wf;
 
         // calculate deltas.
         uint64_t deltaCycles;
@@ -55,9 +57,12 @@ STALLDVFSPolicy::sample(DVFSHandler::PerfLevel currentLevel)
             deltaMemStallCycles = currMemStallCycles - prevMemPerCU[i];
         }
 
+        // Scale total cycles to be per-active-WF basis.
+        uint64_t scaledDeltaCycles =
+            deltaCycles * maxActiveWFsPerCU;
 
         // Aggregate stats.
-        totalCycles += deltaCycles;
+        totalCycles += scaledDeltaCycles;
         totalStallCycles += deltaMemStallCycles;
 
         // Update Previous Values
