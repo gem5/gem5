@@ -179,7 +179,8 @@ LocalSimLoopExitEvent::process()
     } else {
         std::map<std::string, std::string> payload = {
             {"justification", cause}};
-        exitSimLoopWithHypercall(cause, 0, curTick(), 0, payload, hypercall_id, false);
+        exitSimLoopWithHypercall(cause, 0, curTick(), 0, payload, hypercall_id,
+                                 false);
     }
 }
 
