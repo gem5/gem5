@@ -107,7 +107,7 @@ build/ALL/gem5.opt util/disk-img-validator/disk-image-validate.py --isa x86 --wo
 
 - If the hypercalls are executed in the expected order, a success message is printed.
 - If the order is incorrect, an error message is printed.
-- If `--validate-npb` is used and validation fails, an error message is printed. No additional message is printed if the NPB validation fails.
+- If `--validate-npb` is used and validation fails, an error message is printed. No additional message is printed if the NPB validation succeeds.
 
 ## gem5 Configuration Test Script
 
