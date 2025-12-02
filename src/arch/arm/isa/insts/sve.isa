@@ -5044,7 +5044,7 @@ let {{
     sveAdrInst('adr', 'Adr', 'SimdAddOp', ('uint32_t', 'uint64_t'), adrCode)
     # AESD (vectors)
     cryptoBinCode = '''
-        uint32_t eltspersegment = 16 / sizeof(Element);
+        constexpr uint32_t eltspersegment = 16 / sizeof(Element);
 
         Crypto crypto;
         Element tempElem1[eltspersegment];
@@ -5072,7 +5072,7 @@ let {{
             True, customIterCode=cryptoBinCode % {'op': aeseCode})
     # AESIMC
     cryptoUnaryCode = '''
-        uint32_t eltspersegment = 16 / sizeof(Element);
+        constexpr uint32_t eltspersegment = 16 / sizeof(Element);
 
         Crypto crypto;
         Element tempElem1[eltspersegment];
