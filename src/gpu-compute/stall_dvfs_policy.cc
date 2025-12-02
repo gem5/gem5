@@ -41,8 +41,20 @@ STALLDVFSPolicy::sample(DVFSHandler::PerfLevel currentLevel)
         // calculate deltas.
         uint64_t deltaCycles = currCycles - prevCyclesPerCU[i];
 
-        uint64_t deltaMemStallCycles =
-            currMemStallCycles - prevMemPerCU[i];
+        // calculate deltas.
+        uint64_t deltaCycles;
+        uint64_t deltaMemStallCycles;
+
+        // Detect Reset: If current is less than previous, stats were reset.
+        // Delta is just the current value (assuming reset to 0).
+        if (currCycles < prevCyclesPerCU[i]) {
+            deltaCycles = currCycles;
+            deltaMemStallCycles = currMemStallCycles;
+        } else {
+            deltaCycles = currCycles - prevCyclesPerCU[i];
+            deltaMemStallCycles = currMemStallCycles - prevMemPerCU[i];
+        }
+
 
         // Aggregate stats.
         totalCycles += deltaCycles;
