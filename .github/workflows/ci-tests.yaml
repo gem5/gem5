@@ -160,6 +160,45 @@ jobs:
               working-directory: ${{ github.workspace }}
               run: scons build/ALL/gem5.fast -j $(nproc)
 
+    macos-compilation:
+        runs-on: macos-26
+        if: github.event.pull_request.draft == false
+        needs: [pre-commit, get-date]
+
+        strategy:
+            fail-fast: false
+            matrix:
+                type: [fast, opt]
+
+        steps:
+            - name: Checkout the gem5 repository
+              uses: actions/checkout@v4
+
+            - name: Install the gem5 dependencies
+              run: |
+                  brew update
+                  brew install \
+                    scons \
+                    python \
+                    pkg-config \
+                    protobuf \
+                    grpc \
+                    boost
+
+
+            - name: Restore macOS build/ALL cache
+              uses: actions/cache/restore@v4
+              with:
+                  path: build/ALL
+                  key: macos-all-gem5-${{ matrix.type }}-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      macos-all-gem5-${{ matrix.type }}
+
+            - name: Compile gem5.${{ matrix.type }}
+              working-directory: ${{ github.workspace }}
+              run: scons build/ALL/gem5.${{ matrix.type }} -j $(sysctl -n hw.ncpu)
+              timeout-minutes: 90
+
     testlib-quick-gem5-builds:
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
@@ -292,6 +331,7 @@ jobs:
             - testlib-quick-execution
             - clang-fast-compilation
             - unittests-all-fast-opt
+            - macos-compilation
             - pre-commit
             - gpu-tests
         steps:

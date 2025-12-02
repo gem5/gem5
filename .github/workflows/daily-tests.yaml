@@ -18,6 +18,49 @@ jobs:
               id: date
               run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
+    macos-compilation:
+        # The purpose of this is to cache the macOS compilation.
+        # MacOS compilation checks are run as part of the CI tests but as the
+        # MacOS GitHub action runners are quite costly, it's advantagous to
+        # build upon a cache. Putting this in the daily tests means that the
+        # cache is refreshed on a daily basis.
+        runs-on: macos-26
+        needs: get-date
+
+        strategy:
+            fail-fast: false
+            matrix:
+                type: [fast, opt]
+
+        steps:
+            - name: Checkout the gem5 repository
+              uses: actions/checkout@v4
+
+            - name: Install the gem5 dependencies
+              run: |
+                  brew update
+                  brew install \
+                    scons \
+                    python \
+                    pkg-config \
+                    protobuf \
+                    grpc \
+                    boost
+
+
+            - name: Cache macOS build/ALL
+              uses: actions/cache@v4
+              with:
+                  path: build/ALL
+                  key: macos-all-gem5-${{ matrix.type }}-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      macos-all-gem5-${{ matrix.type }}
+
+            - name: Compile gem5.${{ matrix.type }}
+              working-directory: ${{ github.workspace }}
+              run: scons build/ALL/gem5.${{ matrix.type }} -j $(sysctl -n hw.ncpu)
+              timeout-minutes: 90
+
     build-all-gem5:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
