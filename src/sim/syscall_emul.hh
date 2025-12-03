@@ -1832,8 +1832,7 @@ doClone(SyscallDesc *desc, ThreadContext *tc, RegVal flags, RegVal newStack,
     for (BaseCPU *cpu : BaseCPU::getCpuList()) {
         // Skip the current CPU and only consider switched-out CPUs with
         // matching ID
-        if (cpu != current_cpu &&
-            cpu->switchedOut() &&
+        if (cpu != current_cpu && cpu->switchedOut() &&
             cpu->cpuId() == current_cpu->cpuId()) {
 
             // Find the corresponding thread context on the switched-out CPU
@@ -1843,7 +1842,8 @@ doClone(SyscallDesc *desc, ThreadContext *tc, RegVal flags, RegVal newStack,
 
                 // Update the process pointer to match the active CPU
                 if (switched_tc) {
-                    DPRINTF(SyscallVerbose, "doClone: Updating switched-out "
+                    DPRINTF(SyscallVerbose,
+                            "doClone: Updating switched-out "
                             "CPU %d thread %d process pointer from %p to %p\n",
                             cpu->cpuId(), current_thread_id,
                             switched_tc->getProcessPtr(), cp);
