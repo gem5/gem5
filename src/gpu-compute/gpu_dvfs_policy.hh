@@ -32,12 +32,6 @@ public:
     GPUDVFSPolicy(const Params &p);
 
 protected:
-    /**
-    OPP(Operating Performance Point) volts and freqs(GHz)
-    */
-    const std::vector<double> voltageOpps;
-    const std::vector<double> frequencyOpps;
-
     const DVFSHandler::PerfLevel minPerfLevel = 0;
     const DVFSHandler::PerfLevel maxPerfLevel;
     const Shader * const shader;
@@ -94,7 +88,7 @@ protected:
      * @return  `DVFSHandler::PerfLevel`
      */
     DVFSHandler::PerfLevel chooseOptimalPerfLevel(
-        std::function<Tick(double f)> delayFunction,
+        std::function<Tick(DVFSHandler::PerfLevel level)> delayFunction,
         std::function<double(double V,double f, Tick t)> objectiveFunction,
         bool minimize = true)
     {
@@ -108,11 +102,11 @@ protected:
             level <= maxPerfLevel;
             ++level)
         {
-            Tick estimatedDelay = delayFunction(frequencyOpps[level]);
+            Tick estimatedDelay = delayFunction(level);
 
             double score = objectiveFunction(
-                voltageOpps[level],
-                frequencyOpps[level],
+                voltageAtPerfLevel(level),
+                frequencyAtPerfLevel(level),
                 estimatedDelay);
 
             bool bestScore = minimize ?
@@ -124,8 +118,8 @@ protected:
             DPRINTF(GPUDVFSPolicy, "%s: perfLevel=%u, "
                     "V=%.3f f=%.3fGHz T=%lu score=%f\n",
                     name(), level,
-                    voltageOpps[level],
-                    frequencyOpps[level],
+                    voltageAtPerfLevel(level),
+                    frequencyAtPerfLevel(level) / 1e9,
                     estimatedDelay,
                     score);
         }
@@ -134,6 +128,24 @@ protected:
                 name(), bestLevel, bestObjective);
 
         return bestLevel;
+    }
+
+
+    double voltageAtPerfLevel(DVFSHandler::PerfLevel level) const
+    {
+        return dvfsHandler->voltageAtPerfLevel(gpuDomainId, level);
+    }
+
+    double frequencyAtPerfLevel(DVFSHandler::PerfLevel level) const
+    {
+        Tick clkPeriod = dvfsHandler->clkPeriodAtPerfLevel(gpuDomainId, level);
+        return static_cast<double>(sim_clock::Frequency) /
+               static_cast<double>(clkPeriod);
+    }
+
+    Tick clkPeriodAtPerfLevel(DVFSHandler::PerfLevel level) const
+    {
+        return dvfsHandler->clkPeriodAtPerfLevel(gpuDomainId, level);
     }
 
 private:

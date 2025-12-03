@@ -97,18 +97,18 @@ STALLDVFSPolicy::sample(DVFSHandler::PerfLevel currentLevel)
     uint64_t totalBusyCycles = (totalCycles > totalStallCycles) ?
         (totalCycles - totalStallCycles) : 0;
 
-
-    double T_fcurr = 1.0 / frequencyOpps[currentLevel];
-
-    // TODO check units here.
+    DPRINTF(GPUDVFSPolicy,
+            "%s: totalCycles=%lu totalStallCycles=%lu totalBusyCycles=%lu\n",
+            name(), totalCycles, totalStallCycles, totalBusyCycles);
 
     auto delayFunction =
-    [totalBusyCycles, totalStallCycles, T_fcurr](double targetFreq) -> Tick {
-        double T_fnew = 1.0 / targetFreq;
+    [this, totalBusyCycles, totalStallCycles, currentLevel]
+    (DVFSHandler::PerfLevel level) -> Tick {
+        Tick T_fcurr =  clkPeriodAtPerfLevel(currentLevel);
+        Tick T_fnew =   clkPeriodAtPerfLevel(level);
 
-        Tick t_new =
-            (totalBusyCycles * T_fnew) +
-            (totalStallCycles * T_fcurr);
+    Tick t_new = static_cast<Tick>( (totalBusyCycles * T_fnew) +
+                                    (totalStallCycles * T_fcurr));
 
         return t_new;
     };

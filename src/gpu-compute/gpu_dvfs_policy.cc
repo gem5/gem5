@@ -7,14 +7,12 @@ namespace gem5 {
 
 GPUDVFSPolicy::GPUDVFSPolicy(const Params &p)
   : ClockedObject(p),
+    maxPerfLevel(p.dvfs_handler->numPerfLevels(p.gpu_domain_id) - 1),
+    shader(p.shader),
     dvfsHandler(p.dvfs_handler),
     gpuDomainId(p.gpu_domain_id),
     sampleEvent(this), // TODO fix initialization?
-    samplingPeriod(p.sampling_period),
-    voltageOpps(p.voltage_opps.begin(), p.voltage_opps.end()),
-    frequencyOpps(p.frequency_opps.begin(), p.frequency_opps.end()),
-    maxPerfLevel(frequencyOpps.size() - 1),
-    shader(p.shader)
+    samplingPeriod(p.sampling_period)
 {
     DPRINTF(GPUDVFSPolicy, "%s: Initializing GPU DVFS Policy\n", name());
     fatal_if(!dvfsHandler, "%s: DVFSHandler is required", name());
