@@ -172,8 +172,62 @@ ComputeUnit::ComputeUnit(const Params &p) : ClockedObject(p),
             {"v_mfma_f64_4x4x4_4b_f64", 16},
             {"v_mfma_f32_16x16x32_bf8_bf8", 16},
             {"v_mfma_f32_16x16x32_bf8_fp8", 16},
+            {"v_mfma_f32_16x16x32_fp8_bf8", 16},
+            {"v_mfma_f32_16x16x32_fp8_fp8", 16},
+            {"v_mfma_f32_32x32x16_bf8_bf8", 32},
+            {"v_mfma_f32_32x32x16_bf8_fp8", 32},
             {"v_mfma_f32_32x32x16_fp8_bf8", 32},
             {"v_mfma_f32_32x32x16_fp8_fp8", 32},
+        }},
+        // gfx950 is CDNA4. The latency values are taken from table 28 in
+        // section 7.1.2 in the CDNA4 Instruction Set Architecture reference:
+        // https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/
+        //          instruction-set-architectures/
+        //          amd-instinct-cdna4-instruction-set-architecture.pdf
+        {GfxVersion::gfx950, {
+            {"v_mfma_f32_32x32x1_2b_f32", 64},
+            {"v_mfma_f32_16x16x1_4b_f32", 32},
+            {"v_mfma_f32_4x4x1_16b_f32", 8},
+            {"v_mfma_f32_32x32x2_f32", 64},
+            {"v_mfma_f32_16x16x4_f32", 32},
+            {"v_mfma_f32_32x32x4_2b_f16", 64},
+            {"v_mfma_f32_16x16x4_4b_f16", 32},
+            {"v_mfma_f32_4x4x4_16b_f16", 8},
+            {"v_mfma_f32_32x32x8_f16", 32},
+            {"v_mfma_f32_16x16x16_f16", 16},
+            {"v_mfma_f32_32x32x4_2b_bf16", 64},
+            {"v_mfma_f32_16x16x4_4b_bf16", 32},
+            {"v_mfma_f32_4x4x4_16b_bf16", 8},
+            {"v_mfma_f32_32x32x8_bf16", 32},
+            {"v_mfma_f32_16x16x16_bf16", 16},
+            {"v_mfma_i32_32x32x4_2b_i8", 64},
+            {"v_mfma_i32_16x16x4_4b_i8", 32},
+            {"v_mfma_i32_4x4x4_16b_i8", 8},
+            {"v_mfma_i32_32x32x16_i8", 32},
+            {"v_mfma_i32_16x16x32_i8", 16},
+            {"v_mfma_f64_16x16x4_f64", 64},
+            {"v_mfma_f64_4x4x4_4b_f64", 32},
+            {"v_mfma_f32_16x16x32_bf8_bf8", 16},
+            {"v_mfma_f32_16x16x32_bf8_fp8", 16},
+            {"v_mfma_f32_16x16x32_fp8_bf8", 16},
+            {"v_mfma_f32_16x16x32_fp8_fp8", 16},
+            {"v_mfma_f32_32x32x16_bf8_bf8", 32},
+            {"v_mfma_f32_32x32x16_bf8_fp8", 32},
+            {"v_mfma_f32_32x32x16_fp8_bf8", 32},
+            {"v_mfma_f32_32x32x16_fp8_fp8", 32},
+            {"v_mfma_f32_16x16x32_bf16", 16},
+            {"v_mfma_f32_16x16x32_f16", 16},
+            {"v_mfma_f32_32x32x16_bf16", 16},
+            {"v_mfma_f32_32x32x16_f16", 16},
+            {"v_mfma_i32_16x16x64_i8", 16},
+            {"v_mfma_i32_32x32x32_i8", 32},
+            // The next MFMAs have two timings depending on data type. It
+            // will be easiest to assume one timing here and have logic
+            // elsewhere which will fixup the timing.
+            {"v_mfma_f32_16x16x128_f8f6f4", 16},       // Assume best case
+            {"v_mfma_f32_32x32x64_f8f6f4", 32},        // Assume best case
+            {"v_mfma_scale_f32_16x16x128_f8f6f4", 16}, // Assume best case
+            {"v_mfma_scale_f32_32x32x64_f8f6f4", 32},  // Assume best case
         }}
     }),
     _requestorId(p.system->getRequestorId(this, "ComputeUnit")),
