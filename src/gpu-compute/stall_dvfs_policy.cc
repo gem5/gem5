@@ -1,6 +1,7 @@
 #include "gpu-compute/stall_dvfs_policy.hh"
 
 #include "base/trace.hh"
+#include "gpu-compute/compute_unit.hh"
 #include "gpu-compute/scoreboard_check_stage.hh"
 
 namespace gem5 {
