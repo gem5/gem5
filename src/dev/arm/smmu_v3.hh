@@ -53,7 +53,6 @@
 #include "dev/arm/smmu_v3_ports.hh"
 #include "dev/arm/smmu_v3_proc.hh"
 #include "mem/packet.hh"
-#include "params/SMMUv3.hh"
 #include "sim/clocked_object.hh"
 #include "sim/eventq.hh"
 
@@ -80,8 +79,10 @@ namespace gem5
 {
 
 class ArmInterruptPin;
-
 class SMMUTranslationProcess;
+class System;
+
+struct SMMUv3Params;
 
 class SMMUv3 : public ClockedObject
 {

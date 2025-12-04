@@ -41,7 +41,7 @@ variable "CACHE_TAG" {
 }
 
 variable "TAG" {
-  default = "v25-0"
+  default = "latest"
 }
 
 # Common attributes across all targets. Note: these can be overwritten.

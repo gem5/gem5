@@ -98,9 +98,6 @@ class PMP : public SimObject
     /** variable to keep track of active number of rules any time */
     int numRules;
 
-    /** variable to keep track of any lock of entry */
-    bool hasLockEntry;
-
     /** single pmp entry struct*/
     struct PmpEntry
     {
@@ -159,16 +156,6 @@ class PMP : public SimObject
 
   private:
     /**
-     * This function is called during a memory
-     * access to determine if the pmp table
-     * should be consulted for this access.
-     * @param pmode current privilege mode of memory (U, S, M).
-     * @param tc thread context.
-     * @return true or false.
-     */
-    bool shouldCheckPMP(PrivilegeMode pmode, ThreadContext *tc);
-
-    /**
      * createAddrfault creates an address fault
      * if the pmp checks fail to pass for a given
      * access. This function is used by pmpCheck().
@@ -179,6 +166,18 @@ class PMP : public SimObject
      * @return Fault.
      */
     Fault createAddrfault(Addr vaddr, BaseMMU::Mode mode);
+
+    /**
+     * createDefaultFault creates an address fault when numRules = 0
+     * @param req memory request.
+     * @param mode mode of request (read, write, execute).
+     * @param pmode current privilege mode of memory (U, S, M).
+     * @param vaddr optional parameter to pass vaddr of original
+     * request for which a page table walk is consulted by pmp unit
+     * @return Fault.
+     */
+    Fault createDefaultFault(const RequestPtr &req, BaseMMU::Mode mode,
+                             PrivilegeMode pmode, Addr vaddr = 0);
 
     /**
      * pmpUpdateRule updates the pmp rule for a

@@ -45,7 +45,6 @@
 
 #include "base/bitfield.hh"
 #include "debug/RubyPrefetcher.hh"
-#include "mem/ruby/slicc_interface/RubySlicc_ComponentMapping.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 namespace gem5

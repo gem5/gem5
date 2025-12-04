@@ -196,18 +196,19 @@ class IdeController : public PciEndpoint
 
     void dispatchAccess(PacketPtr pkt, bool read);
 
+  protected:
+    Tick writeConfig(PacketPtr pkt) override;
+    Tick readConfig(PacketPtr pkt) override;
+
+    Tick readDevice(PacketPtr pkt) override;
+    Tick writeDevice(PacketPtr pkt) override;
+
   public:
     PARAMS(IdeController);
     IdeController(const Params &p);
 
     virtual void postInterrupt(bool is_primary);
     virtual void clearInterrupt(bool is_primary);
-
-    Tick writeConfig(PacketPtr pkt) override;
-    Tick readConfig(PacketPtr pkt) override;
-
-    Tick read(PacketPtr pkt) override;
-    Tick write(PacketPtr pkt) override;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

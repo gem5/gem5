@@ -40,10 +40,11 @@
 
 #include "dev/io_device.hh"
 #include "dev/reg_bank.hh"
-#include "params/SysSecCtrl.hh"
 
 namespace gem5
 {
+
+struct SysSecCtrlParams;
 
 /** System Security Control registers */
 class SysSecCtrl : public BasicPioDevice

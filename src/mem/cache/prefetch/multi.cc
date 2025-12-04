@@ -90,5 +90,21 @@ Multi::getPacket()
     return nullptr;
 }
 
+void
+Multi::prefetchUnused()
+{
+    for (auto pf : prefetchers) {
+        pf->prefetchUnused();
+    }
+}
+
+void
+Multi::incrDemandMhsrMisses()
+{
+    for (auto pf : prefetchers) {
+        pf->incrDemandMhsrMisses();
+    }
+}
+
 } // namespace prefetch
 } // namespace gem5

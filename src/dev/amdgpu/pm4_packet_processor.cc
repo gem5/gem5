@@ -290,22 +290,23 @@ PM4PacketProcessor::decodeHeader(PM4Queue *q, PM4Header header)
                     dmaBuffer);
         } break;
       case IT_MAP_PROCESS: {
-        if (gpuDevice->getGfxVersion() == GfxVersion::gfx90a ||
-            gpuDevice->getGfxVersion() == GfxVersion::gfx942) {
-            dmaBuffer = new PM4MapProcessV2();
-            cb = new DmaVirtCallback<uint64_t>(
-                [ = ] (const uint64_t &)
-                    { mapProcessV2(q, (PM4MapProcessV2 *)dmaBuffer); });
-            dmaReadVirt(getGARTAddr(q->rptr()), sizeof(PM4MapProcessV2),
-                        cb, dmaBuffer);
-        } else {
-            dmaBuffer = new PM4MapProcess();
-            cb = new DmaVirtCallback<uint64_t>(
-                [ = ] (const uint64_t &)
-                    { mapProcessV1(q, (PM4MapProcess *)dmaBuffer); });
-            dmaReadVirt(getGARTAddr(q->rptr()), sizeof(PM4MapProcess), cb,
-                        dmaBuffer);
-        }
+          if (gpuDevice->getGfxVersion() == GfxVersion::gfx90a ||
+              gpuDevice->getGfxVersion() == GfxVersion::gfx942 ||
+              gpuDevice->getGfxVersion() == GfxVersion::gfx950) {
+              dmaBuffer = new PM4MapProcessV2();
+              cb = new DmaVirtCallback<uint64_t>([=](const uint64_t &) {
+                  mapProcessV2(q, (PM4MapProcessV2 *)dmaBuffer);
+              });
+              dmaReadVirt(getGARTAddr(q->rptr()), sizeof(PM4MapProcessV2), cb,
+                          dmaBuffer);
+          } else {
+              dmaBuffer = new PM4MapProcess();
+              cb = new DmaVirtCallback<uint64_t>([=](const uint64_t &) {
+                  mapProcessV1(q, (PM4MapProcess *)dmaBuffer);
+              });
+              dmaReadVirt(getGARTAddr(q->rptr()), sizeof(PM4MapProcess), cb,
+                          dmaBuffer);
+          }
         } break;
 
       case IT_UNMAP_QUEUES: {

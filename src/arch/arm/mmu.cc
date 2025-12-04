@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016-2024 Arm Limited
+ * Copyright (c) 2010-2013, 2016-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -43,14 +43,17 @@
 #include "arch/arm/isa.hh"
 #include "arch/arm/mpam.hh"
 #include "arch/arm/reg_abi.hh"
+#include "arch/arm/self_debug.hh"
 #include "arch/arm/stage2_lookup.hh"
 #include "arch/arm/table_walker.hh"
 #include "arch/arm/tlb.hh"
 #include "arch/arm/tlbi_op.hh"
+#include "arch/arm/types.hh"
 #include "debug/MMU.hh"
 #include "mem/packet_access.hh"
-#include "sim/pseudo_inst.hh"
+#include "params/ArmMMU.hh"
 #include "sim/process.hh"
+#include "sim/pseudo_inst.hh"
 
 namespace gem5
 {
@@ -58,18 +61,18 @@ namespace gem5
 using namespace ArmISA;
 
 MMU::MMU(const ArmMMUParams &p)
-  : BaseMMU(p),
-    itbStage2(p.stage2_itb), dtbStage2(p.stage2_dtb),
-    itbWalker(p.itb_walker), dtbWalker(p.dtb_walker),
-    itbStage2Walker(p.stage2_itb_walker),
-    dtbStage2Walker(p.stage2_dtb_walker),
-    test(nullptr),
-    miscRegContext(0),
-    s1State(this, false), s2State(this, true),
-    _attr(0),
-    _release(nullptr),
-    _hasWalkCache(false),
-    stats(this)
+    : BaseMMU(p),
+      itbStage2(p.stage2_itb),
+      dtbStage2(p.stage2_dtb),
+      walker(p.walker),
+      test(nullptr),
+      miscRegContext(0),
+      s1State(this, false),
+      s2State(this, true),
+      _attr(0),
+      _release(nullptr),
+      _hasWalkCache(false),
+      stats(this)
 {
     // Cache system-level properties
     if (FullSystem) {
@@ -92,16 +95,14 @@ MMU::MMU(const ArmMMUParams &p)
 void
 MMU::init()
 {
-    itbWalker->setMmu(this);
-    dtbWalker->setMmu(this);
-    itbStage2Walker->setMmu(this);
-    dtbStage2Walker->setMmu(this);
+    walker->setMmu(this);
 
-    itbStage2->setTableWalker(itbStage2Walker);
-    dtbStage2->setTableWalker(dtbStage2Walker);
+    itbStage2->setTableWalker(walker);
+    dtbStage2->setTableWalker(walker);
+    getITBPtr()->setTableWalker(walker);
+    getDTBPtr()->setTableWalker(walker);
 
-    getITBPtr()->setTableWalker(itbWalker);
-    getDTBPtr()->setTableWalker(dtbWalker);
+    getDTBPtr()->setTableWalker(walker, true);
 
     BaseMMU::init();
 
@@ -162,24 +163,8 @@ MMU::getTlb(BaseMMU::Mode mode, bool stage2) const
     }
 }
 
-TableWalker *
-MMU::getTableWalker(BaseMMU::Mode mode, bool stage2) const
-{
-    if (mode == BaseMMU::Execute) {
-        if (stage2)
-            return itbStage2Walker;
-        else
-            return itbWalker;
-    } else {
-        if (stage2)
-            return dtbStage2Walker;
-        else
-            return dtbWalker;
-    }
-}
-
-bool
-MMU::translateFunctional(ThreadContext *tc, Addr va, Addr &pa)
+TlbEntry *
+MMU::translateFunctional(ThreadContext *tc, Addr va)
 {
     CachedState& state = updateMiscReg(tc, NormalTran, false);
 
@@ -196,12 +181,18 @@ MMU::translateFunctional(ThreadContext *tc, Addr va, Addr &pa)
     lookup_data.targetRegime = state.currRegime;
     lookup_data.mode = BaseMMU::Read;
 
-    TlbEntry *e = tlb->multiLookup(lookup_data);
+    return tlb->multiLookup(lookup_data);
+}
 
-    if (!e)
+bool
+MMU::translateFunctional(ThreadContext *tc, Addr va, Addr &pa)
+{
+    if (TlbEntry *e = translateFunctional(tc, va); !e) {
         return false;
-    pa = e->pAddr(va);
-    return true;
+    } else {
+        pa = e->pAddr(va);
+        return true;
+    }
 }
 
 void
@@ -1416,6 +1407,45 @@ MMU::updateMiscReg(ThreadContext *tc,
     }
 }
 
+MMU::CachedState::CachedState(MMU *_mmu, bool stage2)
+    : mmu(_mmu), isStage2(stage2), computeAddrTop(ArmISA::computeAddrTop)
+{}
+
+MMU::CachedState &
+MMU::CachedState::operator=(const CachedState &rhs)
+{
+    isStage2 = rhs.isStage2;
+    cpsr = rhs.cpsr;
+    aarch64 = rhs.aarch64;
+    exceptionLevel = rhs.exceptionLevel;
+    currRegime = rhs.currRegime;
+    sctlr = rhs.sctlr;
+    scr = rhs.scr;
+    isPriv = rhs.isPriv;
+    securityState = rhs.securityState;
+    ttbcr = rhs.ttbcr;
+    tcr2 = rhs.tcr2;
+    pir = rhs.pir;
+    pire0 = rhs.pire0;
+    pie = rhs.pie;
+    asid = rhs.asid;
+    vmid = rhs.vmid;
+    prrr = rhs.prrr;
+    nmrr = rhs.nmrr;
+    hcr = rhs.hcr;
+    dacr = rhs.dacr;
+    miscRegValid = rhs.miscRegValid;
+    curTranType = rhs.curTranType;
+    stage2Req = rhs.stage2Req;
+    stage2DescReq = rhs.stage2DescReq;
+    directToStage2 = rhs.directToStage2;
+
+    // When we copy we just flush the memoizer cache
+    computeAddrTop.flush();
+
+    return *this;
+}
+
 void
 MMU::CachedState::updateMiscReg(ThreadContext *tc,
     ArmTranslationType tran_type)
@@ -1640,6 +1670,13 @@ MMU::lookup(Addr va, uint16_t asid, vmid_t vmid, SecurityState ss,
     return tlb->multiLookup(lookup_data);
 }
 
+void
+MMU::insert(TlbEntry &entry, BaseMMU::Mode mode, bool stage2)
+{
+    TLB *tlb = getTlb(mode, stage2);
+    tlb->multiInsert(TlbEntry::KeyType(entry), entry);
+}
+
 Fault
 MMU::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
         Translation *translation, bool timing, bool functional,
@@ -1683,10 +1720,10 @@ MMU::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
                 vaddr_tainted, state.asid, state.vmid);
 
         Fault fault;
-        fault = getTableWalker(mode, state.isStage2)->walk(
-            req, tc, state.asid, state.vmid, mode,
-            translation, timing, functional, ss,
-            ipaspace, tran_type, state.stage2DescReq, *te);
+        fault =
+            walker->walk(req, tc, state.asid, state.vmid, mode, translation,
+                         timing, functional, ss, ipaspace, tran_type,
+                         state.stage2DescReq, state.isStage2, *te);
 
         // for timing mode, return and wait for table walk,
         if (timing || fault != NoFault) {
@@ -1788,15 +1825,24 @@ MMU::isCompleteTranslation(TlbEntry *entry) const
 void
 MMU::takeOverFrom(BaseMMU *old_mmu)
 {
-    BaseMMU::takeOverFrom(old_mmu);
-
     auto *ommu = dynamic_cast<MMU*>(old_mmu);
     assert(ommu);
+
+    Port *old_tbw_port = ommu->getTableWalkerPort();
+    Port *new_tbw_port = getTableWalkerPort();
+
+    new_tbw_port->takeOverFrom(old_tbw_port);
 
     _attr = ommu->_attr;
 
     s1State = ommu->s1State;
     s2State = ommu->s2State;
+}
+
+Port *
+MMU::getTableWalkerPort()
+{
+    return &walker->getTableWalkerPort();
 }
 
 void
@@ -1808,10 +1854,7 @@ MMU::setTestInterface(SimObject *_ti)
         TlbTestInterface *ti(dynamic_cast<TlbTestInterface *>(_ti));
         fatal_if(!ti, "%s is not a valid ARM TLB tester\n", _ti->name());
         test = ti;
-        itbWalker->setTestInterface(test);
-        dtbWalker->setTestInterface(test);
-        itbStage2Walker->setTestInterface(test);
-        dtbStage2Walker->setTestInterface(test);
+        walker->setTestInterface(ti);
     }
 }
 

@@ -40,12 +40,13 @@
 import m5
 from m5.objects import Root
 from m5.params import isNullPointer
+from m5.SimObject import isSimObjectVector
 from m5.util import (
     attrdict,
     fatal,
 )
 
-import _m5.stats
+from _m5 import stats as _m5_stats
 
 # Stat exports
 from _m5.stats import periodicStatDump
@@ -150,10 +151,10 @@ def _textFactory(fn, desc=True, spaces=True):
 
     """
 
-    return _m5.stats.initText(fn, desc, spaces)
+    return _m5_stats.initText(fn, desc, spaces)
 
 
-@_url_factory(["h5"], enable=hasattr(_m5.stats, "initHDF5"))
+@_url_factory(["h5"], enable=hasattr(_m5_stats, "initHDF5"))
 def _hdf5Factory(fn, chunking=10, desc=True, formulas=True):
     """Output stats in HDF5 format.
 
@@ -187,7 +188,7 @@ def _hdf5Factory(fn, chunking=10, desc=True, formulas=True):
 
     """
 
-    return _m5.stats.initHDF5(fn, chunking, desc, formulas)
+    return _m5_stats.initHDF5(fn, chunking, desc, formulas)
 
 
 @_url_factory(["json"])
@@ -253,8 +254,8 @@ def printStatVisitorTypes():
 
 
 def initSimStats():
-    _m5.stats.initSimStats()
-    _m5.stats.registerPythonStatsHandlers()
+    _m5_stats.initSimStats()
+    _m5_stats.registerPythonStatsHandlers()
 
 
 def _visit_groups(visitor, root=None):
@@ -277,7 +278,7 @@ def _bindStatHierarchy(root):
     def _bind_obj(name, obj):
         if isNullPointer(obj):
             return
-        if m5.SimObject.isSimObjectVector(obj):
+        if isSimObjectVector(obj):
             if len(obj) == 1:
                 _bind_obj(name, obj[0])
             else:
@@ -289,7 +290,7 @@ def _bindStatHierarchy(root):
             # class of SystemC_ScModule, is not a subclass of Stat::Group. So
             # it will cause a type error if obj is a SystemC_ScModule when
             # calling addStatGroup().
-            if isinstance(obj.getCCObject(), _m5.stats.Group):
+            if isinstance(obj.getCCObject(), _m5_stats.Group):
                 parent = root
                 while parent:
                     if hasattr(parent, "addStatGroup"):
@@ -327,7 +328,7 @@ def enable():
 
     # Legacy stat
     global stats_list
-    stats_list = list(_m5.stats.statsList())
+    stats_list = list(_m5_stats.statsList())
 
     for stat in stats_list:
         check_stat(None, stat)
@@ -341,7 +342,7 @@ def enable():
     _visit_stats(check_stat)
     _visit_stats(lambda g, s: s.enable())
 
-    _m5.stats.enable()
+    _m5_stats.enable()
 
 
 def prepare():
@@ -388,8 +389,13 @@ lastDump = 0
 global_dump_roots = []
 
 
-def dump(roots=None):
-    """Dump all statistics data to the registered outputs"""
+def dump(roots=None, message=""):
+    """Dump all statistics data to the registered outputs
+
+    Args:
+        roots: Optional list of roots to dump
+        message: Optional message to include in text output headers
+    """
 
     all_roots = []
     if roots is not None:
@@ -410,7 +416,7 @@ def dump(roots=None):
 
     # Only prepare stats the first time we dump them in the same tick.
     if new_dump:
-        _m5.stats.processDumpQueue()
+        _m5_stats.processDumpQueue()
         # Notify new-style stats group that we are about to dump stats.
         sim_root = Root.getInstance()
         if sim_root:
@@ -425,7 +431,7 @@ def dump(roots=None):
                 output.dump(all_roots)
         else:
             if output.valid():
-                output.begin()
+                output.begin(message)
                 _dump_to_visitor(output, roots=all_roots)
                 output.end()
 
@@ -442,7 +448,7 @@ def reset():
     for stat in stats_list:
         stat.reset()
 
-    _m5.stats.processResetQueue()
+    _m5_stats.processResetQueue()
 
 
 flags = attrdict(

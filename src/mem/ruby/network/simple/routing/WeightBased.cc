@@ -62,7 +62,7 @@ WeightBased::addOutPort(LinkID link_id,
                     const PortDirection &direction,
                     int link_weight)
 {
-    gem5_assert(link_id == m_links.size());
+    gem5_assert(link_id == m_links.size(), "WeightBased::addOutPort");
     m_links.emplace_back(new LinkInfo{link_id,
                         routing_table_entry,
                         m_out_buffer,
@@ -123,7 +123,7 @@ WeightBased::findRoute(const Message &msg,
         }
     }
 
-    gem5_assert(msg_dsts.count() == 0);
+    gem5_assert(msg_dsts.count() == 0, "WeightBased::findRoute");
 }
 
 } // namespace ruby

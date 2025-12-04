@@ -24,7 +24,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects.Device import BasicPioDevice
-from m5.objects.IntPin import IntSourcePin
 from m5.objects.Iris import IrisBaseCPU
 from m5.params import *
 from m5.proxy import *

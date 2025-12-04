@@ -1,3 +1,15 @@
+# Copyright (c) 2025 Arm Limited
+# All rights reserved
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2012 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -38,7 +50,7 @@ class O3_ARM_v7a_Complex_Int(FUDesc):
     opList = [
         OpDesc(opClass="IntMult", opLat=3, pipelined=True),
         OpDesc(opClass="IntDiv", opLat=12, pipelined=False),
-        OpDesc(opClass="IprAccess", opLat=3, pipelined=True),
+        OpDesc(opClass="System", opLat=3, pipelined=True),
     ]
     count = 1
 
@@ -68,6 +80,13 @@ class O3_ARM_v7a_FP(FUDesc):
         OpDesc(opClass="SimdFloatMultAcc", opLat=5),
         OpDesc(opClass="SimdFloatMatMultAcc", opLat=5),
         OpDesc(opClass="SimdFloatSqrt", opLat=9),
+        OpDesc(opClass="SimdBf16Add", opLat=4),
+        OpDesc(opClass="SimdBf16Cmp", opLat=4),
+        OpDesc(opClass="SimdBf16Cvt", opLat=3),
+        OpDesc(opClass="SimdBf16DotProd", opLat=4),
+        OpDesc(opClass="SimdBf16MatMultAcc", opLat=5),
+        OpDesc(opClass="SimdBf16Mult", opLat=3),
+        OpDesc(opClass="SimdBf16MultAcc", opLat=4),
         OpDesc(opClass="FloatAdd", opLat=5),
         OpDesc(opClass="FloatCmp", opLat=5),
         OpDesc(opClass="FloatCvt", opLat=5),
@@ -76,6 +95,7 @@ class O3_ARM_v7a_FP(FUDesc):
         OpDesc(opClass="FloatMult", opLat=4),
         OpDesc(opClass="FloatMultAcc", opLat=5),
         OpDesc(opClass="FloatMisc", opLat=3),
+        OpDesc(opClass="Bf16Cvt", opLat=3),
     ]
     count = 2
 
@@ -123,14 +143,21 @@ class O3_ARM_v7a_BTB(SimpleBTB):
 
 
 # Bi-Mode Branch Predictor
-class O3_ARM_v7a_BP(BiModeBP):
+class O3_ARM_v7a_BP(BranchPredictor):
+    conditionalBranchPred = BiModeBP(
+        globalPredictorSize=8192,
+        globalCtrBits=2,
+        choicePredictorSize=8192,
+        choiceCtrBits=2,
+    )
     btb = O3_ARM_v7a_BTB()
     ras = ReturnAddrStack(numEntries=16)
-    globalPredictorSize = 8192
-    globalCtrBits = 2
-    choicePredictorSize = 8192
-    choiceCtrBits = 2
     instShiftAmt = 2
+
+
+class O3_ARM_v7a_IQ(IQUnit):
+    fuPool = O3_ARM_v7a_FUP()
+    numEntries = 32
 
 
 class O3_ARM_v7a_3(ArmO3CPU):
@@ -160,7 +187,6 @@ class O3_ARM_v7a_3(ArmO3CPU):
     dispatchWidth = 6
     issueWidth = 8
     wbWidth = 8
-    fuPool = O3_ARM_v7a_FUP()
     iewToCommitDelay = 1
     renameToROBDelay = 1
     commitWidth = 8
@@ -171,11 +197,11 @@ class O3_ARM_v7a_3(ArmO3CPU):
     numPhysIntRegs = 128
     numPhysFloatRegs = 192
     numPhysVecRegs = 48
-    numIQEntries = 32
     numROBEntries = 40
 
     switched_out = False
     branchPred = O3_ARM_v7a_BP()
+    instQueues = O3_ARM_v7a_IQ()
 
 
 # Instruction Cache

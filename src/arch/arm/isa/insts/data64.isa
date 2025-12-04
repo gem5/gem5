@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2011-2013, 2016-2024 Arm Limited
+// Copyright (c) 2011-2013, 2016-2025 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -244,22 +244,22 @@ let {{
     );
     '''
     buildDataXRegInst("crc32b", 2,
-        crcCode % {"sz": 1, "polynom": "0x04C11DB7"})
+        crcCode % {"sz": 1, "polynom": "0x04C11DB7"}, overrideOpClass="SimdCrcOp")
     buildDataXRegInst("crc32h", 2,
-        crcCode % {"sz": 2, "polynom": "0x04C11DB7"})
+        crcCode % {"sz": 2, "polynom": "0x04C11DB7"}, overrideOpClass="SimdCrcOp")
     buildDataXRegInst("crc32w", 2,
-        crcCode % {"sz": 4, "polynom": "0x04C11DB7"})
+        crcCode % {"sz": 4, "polynom": "0x04C11DB7"}, overrideOpClass="SimdCrcOp")
     buildDataXRegInst("crc32x", 2,
-        crcCode % {"sz": 8, "polynom": "0x04C11DB7"})
+        crcCode % {"sz": 8, "polynom": "0x04C11DB7"}, overrideOpClass="SimdCrcOp")
 
     buildDataXRegInst("crc32cb", 2,
-        crcCode % {"sz": 1, "polynom": "0x1EDC6F41"})
+        crcCode % {"sz": 1, "polynom": "0x1EDC6F41"}, overrideOpClass="SimdCrcOp")
     buildDataXRegInst("crc32ch", 2,
-        crcCode % {"sz": 2, "polynom": "0x1EDC6F41"})
+        crcCode % {"sz": 2, "polynom": "0x1EDC6F41"}, overrideOpClass="SimdCrcOp")
     buildDataXRegInst("crc32cw", 2,
-        crcCode % {"sz": 4, "polynom": "0x1EDC6F41"})
+        crcCode % {"sz": 4, "polynom": "0x1EDC6F41"}, overrideOpClass="SimdCrcOp")
     buildDataXRegInst("crc32cx", 2,
-        crcCode % {"sz": 8, "polynom": "0x1EDC6F41"})
+        crcCode % {"sz": 8, "polynom": "0x1EDC6F41"}, overrideOpClass="SimdCrcOp")
 
     buildDataXRegInst("sdiv", 2, '''
         int64_t op1 = Op164;
@@ -329,11 +329,26 @@ let {{
         XDest = MiscOp1_ud;
     '''
     mrsIop = ArmInstObjParams("mrs", "Mrs64", "RegMiscRegImmOp64",
-                              mrsCode,
+                              { "code" : mrsCode, "op_class" : "SystemOp"},
                               ["IsSerializeBefore"])
     header_output += RegMiscRegOp64Declare.subst(mrsIop)
     decoder_output += RegMiscRegOp64Constructor.subst(mrsIop)
     exec_output += BasicExecute.subst(mrsIop)
+
+    mrsNonSerIop = ArmInstObjParams("mrs", "MrsNonSer64", "RegMiscRegImmOp64",
+                                    { "code" : mrsCode, "op_class" : "SystemOp"})
+    header_output += RegMiscRegOp64Declare.subst(mrsNonSerIop)
+    decoder_output += RegMiscRegOp64Constructor.subst(mrsNonSerIop)
+    exec_output += BasicExecute.subst(mrsNonSerIop)
+
+    mrsSpCode = mrs_check_code + '''
+        XDest = SpOp1;
+    '''
+    mrsSpIop = ArmInstObjParams("mrs", "MrsSp64", "RegMiscRegImmOp64",
+                                { "code" : mrsSpCode, "op_class" : "SystemOp"})
+    header_output += RegMiscRegOp64Declare.subst(mrsSpIop)
+    decoder_output += RegMiscRegOp64Constructor.subst(mrsSpIop)
+    exec_output += BasicExecute.subst(mrsSpIop)
 
     mrsNZCVCode = '''
         CPSR cpsr = 0;
@@ -342,8 +357,9 @@ let {{
         cpsr.v = CondCodesV;
         XDest = cpsr;
     '''
-    mrsNZCViop = ArmInstObjParams("mrs", "MrsNZCV64",
-                                  "RegMiscRegImmOp64", mrsNZCVCode)
+    mrsNZCViop = ArmInstObjParams("mrs", "MrsNZCV64", "RegMiscRegImmOp64",
+                                  { "code" : mrsNZCVCode,
+                                    "op_class" : "SystemOp"})
     header_output += RegMiscRegOp64Declare.subst(mrsNZCViop)
     decoder_output += RegMiscRegOp64Constructor.subst(mrsNZCViop)
     exec_output += BasicExecute.subst(mrsNZCViop)
@@ -352,11 +368,27 @@ let {{
         MiscDest_ud = XOp1;
     '''
     msrIop = ArmInstObjParams("msr", "Msr64", "MiscRegRegImmOp64",
-                              msrCode,
+                              { "code" : msrCode, "op_class" : "SystemOp"},
                               ["IsSerializeAfter", "IsNonSpeculative"])
     header_output += MiscRegRegOp64Declare.subst(msrIop)
     decoder_output += MiscRegRegOp64Constructor.subst(msrIop)
     exec_output += BasicExecute.subst(msrIop)
+
+    msrNonSerIop = ArmInstObjParams("msr", "MsrNonSer64", "MiscRegRegImmOp64",
+                                    { "code" : msrCode, "op_class" : "SystemOp"},
+                                    ["IsNonSpeculative"])
+    header_output += MiscRegRegOp64Declare.subst(msrNonSerIop)
+    decoder_output += MiscRegRegOp64Constructor.subst(msrNonSerIop)
+    exec_output += BasicExecute.subst(msrNonSerIop)
+
+    msrSpCode = msr_check_code + '''
+        SpDest = XOp1;
+    '''
+    msrSpIop = ArmInstObjParams("msr", "MsrSp64", "MiscRegRegImmOp64",
+                                { "code" : msrSpCode, "op_class" : "SystemOp"})
+    header_output += MiscRegRegOp64Declare.subst(msrSpIop)
+    decoder_output += MiscRegRegOp64Constructor.subst(msrSpIop)
+    exec_output += BasicExecute.subst(msrSpIop)
 
     tlbiCode = msr_check_code + '''
         performTlbi(xc, flat_idx, XOp1);
@@ -422,11 +454,11 @@ let {{
         CondCodesV = cpsr.v;
     '''
     msrNZCVIop = ArmInstObjParams("msr", "MsrNZCV64", "MiscRegRegImmOp64",
-                                  msrNZCVCode)
+                                  { "code" : msrNZCVCode,
+                                    "op_class" : "SystemOp"})
     header_output += MiscRegRegOp64Declare.subst(msrNZCVIop)
     decoder_output += MiscRegRegOp64Constructor.subst(msrNZCVIop)
     exec_output += BasicExecute.subst(msrNZCVIop)
-
 
     msrdczva_ea_code = msr_check_code
     msrdczva_ea_code += '''
@@ -577,7 +609,8 @@ let {{
 
         '''
         msrIop = ArmInstObjParams("msr", inst_name, "MiscRegImmOp64",
-                                  msrImmPermission + code,
+                                  { "code" : msrImmPermission + code,
+                                    "op_class" : "SystemOp"},
                                   ["IsSerializeAfter", "IsNonSpeculative"])
         header_output += MiscRegOp64Declare.subst(msrIop)
         decoder_output += MiscRegOp64Constructor.subst(msrIop)

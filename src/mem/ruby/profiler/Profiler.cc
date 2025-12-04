@@ -56,7 +56,7 @@
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/profiler/AddressProfiler.hh"
 #include "mem/ruby/protocol/MachineType.hh"
-#include "mem/ruby/protocol/RubyRequest.hh"
+#include "mem/ruby/slicc_interface/RubyRequest.hh"
 
 /**
  * the profiler uses GPUCoalescer code even

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2014,2017-2018,2020-2021 ARM Limited
+ * Copyright (c) 2012-2014,2017-2018,2020-2021,2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -287,7 +287,11 @@ class LSQUnit
     /** Returns if there is a memory ordering violation. Value is reset upon
      * call to getMemDepViolator().
      */
-    bool violation() { return memDepViolator; }
+    bool
+    violation() const
+    {
+        return static_cast<bool>(memDepViolator);
+    }
 
     /** Returns the memory ordering violator. */
     DynInstPtr getMemDepViolator();
@@ -303,6 +307,16 @@ class LSQUnit
 
     /** Returns the number of stores in the SQ. */
     int numStores() { return storeQueue.size(); }
+
+    /** Returns the current occupancy of the passed
+     * queue (store queue or load queue) */
+    template <typename Queue>
+    double
+    queueOccupancy(const Queue &queue) const
+    {
+        return static_cast<double>(queue.size()) /
+               static_cast<double>(queue.capacity());
+    }
 
     // hardware transactional memory
     int numHtmStarts() const { return htmStarts; }
@@ -541,6 +555,11 @@ class LSQUnit
 
         /** Total number of loads and stores written to the load store queue */
         statistics::Scalar addedLoadsAndStores;
+
+        /** LQ Occupancy */
+        statistics::Average lqAvgOccupancy;
+        /** SQ Occupancy */
+        statistics::Average sqAvgOccupancy;
     } stats;
 
   public:

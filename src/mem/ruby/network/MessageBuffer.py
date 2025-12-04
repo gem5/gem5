@@ -73,9 +73,7 @@ class MessageBuffer(SimObject):
     )
 
     out_port = RequestPort("Request port to MessageBuffer receiver")
-    master = DeprecatedParam(out_port, "`master` is now called `out_port`")
     in_port = ResponsePort("Response port from MessageBuffer sender")
-    slave = DeprecatedParam(in_port, "`slave` is now called `in_port`")
     max_dequeue_rate = Param.Unsigned(
         0,
         "Maximum number of messages that can \

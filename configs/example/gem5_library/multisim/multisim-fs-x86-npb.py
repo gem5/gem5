@@ -1,4 +1,4 @@
-# Copyright (c) 2024 The Regents of the University of California.
+# Copyright (c) 2024-2025 The Regents of the University of California.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,16 +24,17 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""An example of a single configuration script for defining multiple
-simulations through the gem5 `multisim` module.
+"""
+An example of using a single configuration script to define and run multiple
+simulations using gem5's `multisim` module.
 
-This script creates 6 full system simulations by interating through a suite
-of benchmarks and different cores counts.
+This script creates 18 full system simulations by iterating through NPB
+benchmarks and different core counts.
 
 Usage
 -----
 
-1. To run all the simulations defined in this script::
+1. To run all the simulations defined in this script:
 
 ```shell
 <gem5-binary> -m gem5.utils.multisim \
@@ -44,7 +45,7 @@ Usage
 
 ```shell
 <gem5-binary> configs/example/gem5_library/multisim/multisim-fs-x86-npb.py \
-    <process_id> # e.g. npb-bt-a_cores-1
+    <process_id> # e.g. npb-bt-s_cores-1
 ```
 
 3. To list all the IDs of the simulations defined in this script:
@@ -53,9 +54,6 @@ Usage
 <gem5-binary> configs/example/gem5_library/multisim/multisim-fs-x86-npb.py -l
 ```
 """
-
-import m5
-from m5.simulate import scheduleTickExitAbsolute
 
 import gem5.utils.multisim as multisim
 from gem5.coherence_protocol import CoherenceProtocol
@@ -67,10 +65,7 @@ from gem5.components.processors.simple_switchable_processor import (
 )
 from gem5.isas import ISA
 from gem5.resources.resource import obtain_resource
-from gem5.simulate.simulator import (
-    ExitEvent,
-    Simulator,
-)
+from gem5.simulate.simulator import Simulator
 from gem5.utils.requires import requires
 
 requires(
@@ -82,24 +77,13 @@ from gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import
     MESITwoLevelCacheHierarchy,
 )
 
-
-def handle_workbegin():
-    m5.stats.reset()
-    processor.switch()
-    yield False
-
-
-def handle_workend():
-    m5.stats.dump()
-    yield True
-
-
-# Set the maximum number of concurrent processes to be 3.
-multisim.set_num_processes(3)
+# Set the maximum number of concurrent processes to be 6.
+multisim.set_num_processes(6)
 
 # Here we imagine an experiment wanting to run each NPB benchmark on the same
 # system twice: once with 1 core and once with 2 cores.
-for benchmark in obtain_resource("npb-benchmark-suite"):
+
+for benchmark in ["bt", "cg", "ep", "ft", "is", "lu", "mg", "sp", "ua"]:
     for num_cores in [1, 2]:
         cache_hierarchy = MESITwoLevelCacheHierarchy(
             l1d_size="32KiB",
@@ -124,26 +108,26 @@ for benchmark in obtain_resource("npb-benchmark-suite"):
             cache_hierarchy=cache_hierarchy,
         )
 
-        board.set_workload(benchmark)
-
-        simulator = Simulator(
-            board=board,
-            on_exit_event={
-                ExitEvent.WORKBEGIN: handle_workbegin(),
-                ExitEvent.WORKEND: handle_workend(),
-            },
+        board.set_workload(
+            obtain_resource(
+                f"x86-ubuntu-24.04-npb-{benchmark}-s", resource_version="3.0.0"
+            )
         )
+
+        simulator = Simulator(board=board)
 
         # As this is just an example we will only run the simulation for a
-        # billion ticks. In a real like would be days of time to simulate.
-        scheduleTickExitAbsolute(
-            1000000000, "To exit the simulation as this is just an example."
+        # billion ticks. An actual run could take days of time to simulate.
+        #
+        # We use `set_hypercall_absolute_max_ticks` to schedule a hypercall 6
+        # exit at 1 billion ticks. The default hypercall 6 behavior is to
+        # end simulation, but this can be overridden with a custom hypercall
+        # handler. See `src/python/gem5/simulate/exit_handler.py` for more
+        # information.
+        simulator.set_hypercall_absolute_max_ticks(
+            1_000_000_000, "To exit the simulation as this is just an example."
         )
 
-        simulator.set_id(f"{benchmark.get_id()}_cores-{num_cores}")
+        simulator.set_id(f"npb-{benchmark}-s_cores-{num_cores}")
 
-        multisim.add_simulator(simulator)
-
-        if multisim.num_simulators() >= 5:
-            # This is just an example, so we will only run 5 simulations.
-            break
+        multisim.add_simulator(simulator=simulator)

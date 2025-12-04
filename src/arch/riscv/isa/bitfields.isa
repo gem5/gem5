@@ -164,3 +164,6 @@ def bitfield BIT31      bit31;
 def bitfield BIT30      bit30;
 def bitfield SIMM5      uimm_vsetivli;
 def bitfield SIMM3      simm3;
+
+// Zvbb
+def bitfield BIT26      <26>;

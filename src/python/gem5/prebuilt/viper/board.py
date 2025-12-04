@@ -32,11 +32,19 @@ import os
 from typing import (
     List,
     Optional,
+    Sequence,
+    Tuple,
 )
 
+from m5.objects import X86E820Entry
+from m5.params import (
+    AddrRange,
+    Port,
+)
 from m5.util import warn
 
 from ...components.boards.abstract_board import AbstractBoard
+from ...components.boards.abstract_system_board import AbstractSystemBoard
 from ...components.boards.kernel_disk_workload import KernelDiskWorkload
 from ...components.boards.x86_board import X86Board
 from ...components.cachehierarchies.abstract_cache_hierarchy import (
@@ -44,6 +52,7 @@ from ...components.cachehierarchies.abstract_cache_hierarchy import (
 )
 from ...components.devices.gpus.amdgpu import BaseViperGPU
 from ...components.memory.abstract_memory_system import AbstractMemorySystem
+from ...components.memory.single_channel import SingleChannelDDR4_2400
 from ...components.processors.abstract_processor import AbstractProcessor
 from ...utils.override import overrides
 
@@ -52,7 +61,16 @@ class ViperBoard(X86Board):
     """
     A derivative of X86Board capable of full system simulation for X86 with a
     GPU device. Provides all the functionality of the X86Board with helper
-    methods specific to booting a disk with GPU libraries installed.
+    methods specific to booting a disk with GPU libraries installed, enables
+    AVX on supported CPU models (KVM only right now) for PyTorch, a workaround
+    for X86Board 3GiB memory limitation, and helper methods to create a
+    temporary readfile which reads in a binary blob into the simulator.
+
+    **Limitations**
+    * Only KVM and ATOMIC CPU models can be used due to issue CPU Ruby protocol
+    * 3GiB limit workaround is a VIPER specific hack which silently creates an
+      additional memory controller with 128MiB of additional memory.
+    * This board should not be used to measure CPU performance.
     """
 
     def __init__(
@@ -68,6 +86,15 @@ class ViperBoard(X86Board):
             processor=processor,
             memory=memory,
             cache_hierarchy=cache_hierarchy,
+        )
+
+        # Low memory for CPU side which allows the OS to boot. The rest of
+        # main memory is then mapped above 4GiB. The memory type does not
+        # matter as it is on the CPU side and should not be used much.
+        low_mem_size = "128MiB"
+        self.low_mem = SingleChannelDDR4_2400(size=low_mem_size)
+        self.low_mem.mem_ctrl[0].dram.range = AddrRange(
+            start=0x0, size=low_mem_size
         )
 
         self.gpus = gpus
@@ -129,7 +156,10 @@ class ViperBoard(X86Board):
         # the CPU side. To avoid this we manually assign the memories param to
         # the CPU side memories. We need the MemInterface which is called dram
         # in the MemCtrl class even though it might not be modelling dram.
-        self.memories = self.memory.get_mem_interfaces()
+        self.memories = (
+            self.memory.get_mem_interfaces()
+            + self.low_mem.get_mem_interfaces()
+        )
 
     def get_pci_host(self):
         return self.pc.pci_host
@@ -155,6 +185,58 @@ class ViperBoard(X86Board):
             "modprobe.blacklist=psmouse",
         ]
 
+    def get_low_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
+        return [(ctrl.dram.range, ctrl.port) for ctrl in self.low_mem.mem_ctrl]
+
+    @overrides(AbstractSystemBoard)
+    def _setup_memory_ranges(self):
+        # This is exactly the same code as x86_board.py but with the memory
+        # size >3GiB exception removed.
+        memory = self.get_memory()
+
+        data_range = AddrRange(start=0x100000000, size=memory.get_size())
+        memory.set_memory_range([data_range])
+
+        # Add the address range for the IO
+        self.mem_ranges = [
+            data_range,  # All data
+            AddrRange(0xC0000000, size=0x100000),  # For I/0
+        ]
+
+    @overrides(X86Board)
+    def _setup_io_devices(self):
+        # Call the base class which handles many more things and then
+        # overwrite the e820 table for our memory ranges.
+        super()._setup_io_devices()
+
+        entries = [
+            # Mark the first megabyte of memory as reserved
+            X86E820Entry(addr=0, size="639KiB", range_type=1),
+            X86E820Entry(addr=0x9FC00, size="385KiB", range_type=2),
+            # Kernel memory
+            X86E820Entry(
+                addr=0x100000,
+                size=f"{self.low_mem.mem_ctrl[0].dram.range.size() - 0x100000:d}B",
+                range_type=1,
+            ),
+        ]
+
+        # Map the real main memory above 4GiB
+        entries.append(
+            X86E820Entry(
+                addr=0x100000000,
+                size=f"{self.mem_ranges[0].size()}B",
+                range_type=1,
+            )
+        )
+
+        # Reserve the last 16KiB of the 32-bit address space for m5ops
+        entries.append(
+            X86E820Entry(addr=0xFFFF0000, size="64KiB", range_type=2)
+        )
+
+        self.workload.e820_table.entries = entries
+
     @overrides(KernelDiskWorkload)
     def _set_readfile_contents(self, readfile_contents):
         """In the case of a GPU workload, we need to load the GPU driver first.
@@ -175,14 +257,14 @@ class ViperBoard(X86Board):
     # Replicate the capability of the old GPUFS config, which embed a binary
     # application or script into a bash script setting up the environment and
     # loading the GPU driver.
-    def make_gpu_app(self, gpu: BaseViperGPU, app: str, debug: bool = False):
+    def make_gpu_app(self, gpu: BaseViperGPU, app: str, opts: str):
         with open(os.path.abspath(app), "rb") as binfile:
             encodedBin = base64.b64encode(binfile.read()).decode()
 
         application_command = (
             f'echo "{encodedBin}" | base64 -d > myapp\n'
             "chmod +x myapp\n"
-            "./myapp {}\n"
+            f"./myapp {opts}\n"
             "/sbin/m5 exit\n"
         )
 

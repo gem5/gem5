@@ -41,12 +41,11 @@
 #include <unistd.h>
 
 #include <cassert>
-#include <sstream>
 #include <string>
-#include <typeinfo>
 
 #include "debug/RubyCHIGeneric.hh"
 #include "mem/ruby/network/Network.hh"
+#include "mem/ruby/protocol/CHI/CHIProtocolInfo.hh"
 #include "mem/ruby/protocol/MemoryMsg.hh"
 #include "mem/ruby/system/RubySystem.hh"
 #include "mem/ruby/system/Sequencer.hh"

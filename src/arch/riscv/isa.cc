@@ -41,12 +41,13 @@
 #include "arch/riscv/interrupts.hh"
 #include "arch/riscv/mmu.hh"
 #include "arch/riscv/pagetable.hh"
-#include "arch/riscv/pmp.hh"
 #include "arch/riscv/pcstate.hh"
+#include "arch/riscv/pmp.hh"
 #include "arch/riscv/regs/float.hh"
 #include "arch/riscv/regs/int.hh"
 #include "arch/riscv/regs/misc.hh"
 #include "arch/riscv/regs/vector.hh"
+#include "arch/riscv/system.hh"
 #include "base/bitfield.hh"
 #include "base/compiler.hh"
 #include "base/logging.hh"
@@ -57,6 +58,7 @@
 #include "debug/MatRegs.hh"
 #include "debug/RiscvMisc.hh"
 #include "debug/VecRegs.hh"
+#include "dev/riscv/clint.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
 #include "params/RiscvISA.hh"
@@ -312,12 +314,12 @@ ISA::ISA(const Params &p) : BaseISA(p, "riscv"),
     _regClasses.push_back(&ccRegClass);
     _regClasses.push_back(&miscRegClass);
 
-    fatal_if( p.vlen < p.elen,
-    "VLEN should be greater or equal",
-        "than ELEN. Ch. 2RISC-V vector spec.");
+    if (enableRvv) {
+        fatal_if(p.vlen < p.elen, "VLEN should be greater or equal",
+                 "than ELEN. Ch. 2RISC-V vector spec.");
 
-    inform("RVV enabled, VLEN = %d bits, ELEN = %d bits",
-            p.vlen, p.elen);
+        inform("RVV enabled, VLEN = %d bits, ELEN = %d bits", p.vlen, p.elen);
+    }
 
     miscRegFile.resize(NUM_PHYS_MISCREGS);
     clear();
@@ -397,10 +399,6 @@ void ISA::clear()
         case RV64:
           misa.rv64_mxl = 2;
           status.uxl = status.sxl = 2;
-          if (getEnableRvv()) {
-              status.vs = VPUStatus::INITIAL;
-              misa.rvv = 1;
-          }
           if (misa.rvh) {
               HSTATUS hstatus = 0;
               hstatus.vsxl = 2;
@@ -418,6 +416,10 @@ void ISA::clear()
           break;
         default:
           panic("%s: Unknown _rvType: %d", name(), (int)_rvType);
+    }
+    if (getEnableRvv()) {
+        status.vs = VPUStatus::INITIAL;
+        misa.rvv = 1;
     }
 
     miscRegFile[MISCREG_ISA] = misa;
@@ -445,6 +447,14 @@ ISA::hpmCounterCheck(int misc_reg, ExtMachInst machInst) const
 
     PrivilegeMode prv = (PrivilegeMode)readMiscRegNoEffect(MISCREG_PRV);
     MISA misa = readMiscRegNoEffect(MISCREG_ISA);
+    RiscvSystem *sys = dynamic_cast<RiscvSystem *>(tc->getSystemPtr());
+    bool is_time_csr = misc_reg == MISCREG_TIME || misc_reg == MISCREG_TIMEH;
+
+    // Check if the clint is exists in system
+    if (is_time_csr && (sys == nullptr || sys->getClint() == nullptr)) {
+        return std::make_shared<IllegalInstFault>("Can't find CLINT in system",
+                                                  machInst);
+    }
 
     RegVal mcounteren = miscRegFile[MISCREG_MCOUNTEREN];
     RegVal hcounteren = misa.rvh ? miscRegFile[MISCREG_HCOUNTEREN] : 0;
@@ -498,10 +508,16 @@ ISA::readMiscReg(RegIndex idx)
             return static_cast<RegVal>(tc->getCpuPtr()->curCycle());
       case MISCREG_CYCLEH:
             return bits<RegVal>(tc->getCpuPtr()->curCycle(), 63, 32);
-      case MISCREG_TIME:
-            return readMiscRegNoEffect(MISCREG_TIME);
-      case MISCREG_TIMEH:
-            return readMiscRegNoEffect(MISCREG_TIMEH);
+      case MISCREG_TIME: {
+          RiscvSystem *sys = dynamic_cast<RiscvSystem *>(tc->getSystemPtr());
+          panic_if(!sys, "read MISCREG_TIME not in RiscvSystem");
+          return sys->tryReadMtime();
+      }
+      case MISCREG_TIMEH: {
+          RiscvSystem *sys = dynamic_cast<RiscvSystem *>(tc->getSystemPtr());
+          panic_if(!sys, "read MISCREG_TIME not in RiscvSystem");
+          return bits(sys->tryReadMtime(), 63, 32);
+      }
       case MISCREG_INSTRET:
             return static_cast<RegVal>(tc->getCpuPtr()->totalInsts());
       case MISCREG_INSTRETH:
@@ -756,14 +772,7 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 if (mmu->getPMP()->pmpUpdateAddr(pmp_index, val)) {
                     setMiscRegNoEffect(idx, val);
                 }
-            }
-            break;
-          case MISCREG_MIDELEG:
-            {
-                setMiscRegNoEffect(
-                    idx, val & MIDELEG_MASK[getPrivilegeModeSet()]);
-            }
-            break;
+          } break;
           case MISCREG_IP:
             {
                 RegVal mask = MI_MASK[getPrivilegeModeSet()];

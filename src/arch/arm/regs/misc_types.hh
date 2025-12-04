@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2024 Arm Limited
+ * Copyright (c) 2010-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -135,6 +135,7 @@ namespace ArmISA
     BitUnion64(AA64ISAR1)
         Bitfield<59, 56> xs;
         Bitfield<55, 52> i8mm;
+        Bitfield<47, 44> bf16;
         Bitfield<43, 40> specres;
         Bitfield<39, 36> sb;
         Bitfield<35, 32> frintts;
@@ -165,6 +166,7 @@ namespace ArmISA
     EndBitUnion(AA64MMFR0)
 
     BitUnion64(AA64MMFR1)
+        Bitfield<47, 44> afp;
         Bitfield<43, 40> hcx;
         Bitfield<31, 28> xnx;
         Bitfield<27, 24> specsei;
@@ -514,6 +516,26 @@ namespace ArmISA
         Bitfield<12> ext;
         Bitfield<13> cm;  // LPAE
     EndBitUnion(FSR)
+
+    BitUnion32(FPCR)
+        Bitfield<0> fiz;
+        Bitfield<1> ah;
+        Bitfield<2> nep;
+        Bitfield<8> ioe;
+        Bitfield<9> dze;
+        Bitfield<10> ofe;
+        Bitfield<11> ufe;
+        Bitfield<12> ixe;
+        Bitfield<13> ebf;
+        Bitfield<15> ide;
+        Bitfield<18, 16> len;
+        Bitfield<19> fz16;
+        Bitfield<21, 20> stride;
+        Bitfield<23, 22> rMode;
+        Bitfield<24> fz;
+        Bitfield<25> dn;
+        Bitfield<26> ahp;
+    EndBitUnion(FPCR)
 
     BitUnion32(FPSCR)
         Bitfield<0> ioc;

@@ -75,6 +75,7 @@ from m5.objects.PciDevice import (
     PciLegacyIoBar,
 )
 from m5.objects.PciHost import *
+from m5.objects.PciUpstream import PciBus
 from m5.objects.Platform import Platform
 from m5.objects.PS2 import *
 from m5.objects.Scmi import *
@@ -847,6 +848,9 @@ class RealView(Platform):
     def _off_chip_memory(self):
         return []
 
+    def _platform_pci_devices(self):
+        return []
+
     _off_chip_ranges = []
 
     def _attach_memory(self, mem, bus, mem_ports=None):
@@ -865,6 +869,11 @@ class RealView(Platform):
             else:
                 dma_ports.append(device.dma)
 
+    def _attach_pci_device(self, device, upstream, bus):
+        device.pio = bus.mem_side_ports
+        device.dma = bus.cpu_side_ports
+        device.upstream = upstream
+
     def _attach_io(self, devices, *args, **kwargs):
         for d in devices:
             self._attach_device(d, *args, **kwargs)
@@ -873,12 +882,18 @@ class RealView(Platform):
         for mem in memories:
             self._attach_memory(mem, *args, **kwargs)
 
+    def _attach_pci(self, devices, bus, dma_ports=None):
+        pass
+
     def _attach_clk(self, devices, clkdomain):
         for d in devices:
             if hasattr(d, "clk_domain"):
                 d.clk_domain = clkdomain
 
-    def attachPciDevices(self):
+    def attachPciDevice(self, device):
+        pass
+
+    def attachPlatformPciDevices(self):
         pass
 
     def enableMSIX(self):
@@ -899,6 +914,7 @@ class RealView(Platform):
     def attachIO(self, bus, dma_ports=None, mem_ports=None):
         self._attach_mem(self._off_chip_memory(), bus, mem_ports)
         self._attach_io(self._off_chip_devices(), bus, dma_ports)
+        self._attach_pci(self._platform_pci_devices(), bus, dma_ports)
 
     def setupBootLoader(self, cur_sys, boot_loader, dtb_addr, load_offset):
         cur_sys.workload.boot_loader = boot_loader
@@ -996,6 +1012,7 @@ class VExpress_EMM(RealView):
         conf_device_bits=16,
         pci_pio_base=0,
     )
+    pci_bus = PciBus()
 
     sys_counter = SystemCounter()
     generic_timer = GenericTimer(
@@ -1033,7 +1050,6 @@ class VExpress_EMM(RealView):
         disks=[],
         pci_func=0,
         pci_dev=0,
-        pci_bus=2,
         io_shift=2,
         ctrl_offset=2,
         Command=0x1,
@@ -1063,13 +1079,11 @@ class VExpress_EMM(RealView):
         devices = [
             self.uart,
             self.realview_io,
-            self.pci_host,
             self.timer0,
             self.timer1,
             self.clcd,
             self.kmi0,
             self.kmi1,
-            self.cf_ctrl,
             self.rtc,
             self.vram,
             self.l2x0_fake,
@@ -1084,6 +1098,12 @@ class VExpress_EMM(RealView):
             self.mmc_fake,
             self.energy_ctrl,
         ]
+        return devices
+
+    def _platform_pci_devices(self):
+        devices = [
+            self.cf_ctrl,
+        ]
         # Try to attach the I/O if it exists
         if hasattr(self, "ide"):
             devices.append(self.ide)
@@ -1092,18 +1112,34 @@ class VExpress_EMM(RealView):
         return devices
 
     # Attach any PCI devices that are supported
-    def attachPciDevices(self):
+    def attachPlatformPciDevices(self):
         self.ethernet = IGbE_e1000(
-            pci_bus=0, pci_dev=0, pci_func=0, InterruptLine=1, InterruptPin=1
+            pci_dev=0, pci_func=0, InterruptLine=1, InterruptPin=1
         )
         self.ide = IdeController(
             disks=[],
-            pci_bus=0,
             pci_dev=1,
             pci_func=0,
             InterruptLine=2,
             InterruptPin=2,
         )
+
+    def attachPciDevice(self, device):
+        self._attach_pci_device(device, self.pci_host, self.pci_bus)
+
+    def _attach_pci(self, devices, bus, dma_ports=None):
+        self.pci_bus.cpu_side_ports = self.pci_host.down_request_port()
+        self.pci_bus.default = self.pci_host.down_response_port()
+        self.pci_bus.config_error_port = self.pci_host.config_error.pio
+
+        bus.mem_side_ports = self.pci_host.up_response_port()
+        if dma_ports is None:
+            bus.cpu_side_ports = self.pci_host.up_request_port()
+        else:
+            dma_ports.append(self.pci_host.up_request_port())
+
+        for d in devices:
+            self._attach_pci_device(d, self.pci_host, self.pci_bus)
 
     def enableMSIX(self):
         self.gic = Gic400(
@@ -1433,6 +1469,7 @@ class VExpress_GEM5_Base(RealView):
         int_base=100,
         int_count=4,
     )
+    pci_bus = PciBus()
 
     energy_ctrl = EnergyCtrl(pio_addr=0x10000000)
 
@@ -1464,7 +1501,6 @@ class VExpress_GEM5_Base(RealView):
             self.kmi1,
             self.watchdog,
             self.rtc,
-            self.pci_host,
             self.energy_ctrl,
             self.pwr_ctrl,
             self.clock32KHz,
@@ -1483,13 +1519,25 @@ class VExpress_GEM5_Base(RealView):
         self.system_watchdog.clk_domain = self.dcc.osc_sys
         self.watchdog.clk_domain = self.clock32KHz
 
-    def attachPciDevice(self, device, *args, **kwargs):
-        device.host = self.pci_host
+    def attachPciDevice(self, device):
         self._num_pci_dev += 1
-        device.pci_bus = 0
         device.pci_dev = self._num_pci_dev
         device.pci_func = 0
-        self._attach_device(device, *args, **kwargs)
+        self._attach_pci_device(device, self.pci_host, self.pci_bus)
+
+    def _attach_pci(self, devices, bus, dma_ports=None):
+        self.pci_bus.cpu_side_ports = self.pci_host.down_request_port()
+        self.pci_bus.default = self.pci_host.down_response_port()
+        self.pci_bus.config_error_port = self.pci_host.config_error.pio
+
+        bus.mem_side_ports = self.pci_host.up_response_port()
+        if dma_ports is None:
+            bus.cpu_side_ports = self.pci_host.up_request_port()
+        else:
+            dma_ports.append(self.pci_host.up_request_port())
+
+        for d in devices:
+            self._attach_pci_device(d, self.pci_host, self.pci_bus)
 
     def attachSmmu(self, devices, bus):
         """

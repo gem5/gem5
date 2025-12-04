@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2012, 2014 ARM Limited
+ * Copyright (c) 2012, 2014, 2025 Arm Limited
+ * Copyright (c) 2022-2023 The University of Edinburgh
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -47,7 +48,6 @@
 #include "cpu/o3/limits.hh"
 #include "debug/Activity.hh"
 #include "debug/Decode.hh"
-#include "debug/O3PipeView.hh"
 #include "params/BaseO3CPU.hh"
 #include "sim/full_system.hh"
 
@@ -60,6 +60,26 @@ namespace gem5
 
 namespace o3
 {
+
+// clang-format off
+std::string Decode::DecodeStats::statusStrings[ThreadStatusMax] = {
+    "Running",
+    "Idle",
+    "StartSquash",
+    "Squashing",
+    "Blocked",
+    "Unblocking",
+};
+
+std::string Decode::DecodeStats::statusDefinitions[ThreadStatusMax] = {
+    "Number of cycles decode is running",
+    "Number of cycles decode is idle",
+    "Not Used",
+    "Number of cycles decode is squashing",
+    "Number of cycles decode is blocking",
+    "Number of cycles decode is unblocking",
+};
+// clang-format on
 
 Decode::Decode(CPU *_cpu, const BaseO3CPUParams &params)
     : cpu(_cpu),
@@ -137,16 +157,8 @@ Decode::name() const
 
 Decode::DecodeStats::DecodeStats(CPU *cpu)
     : statistics::Group(cpu, "decode"),
-      ADD_STAT(idleCycles, statistics::units::Cycle::get(),
+      ADD_STAT(status, statistics::units::Cycle::get(),
                "Number of cycles decode is idle"),
-      ADD_STAT(blockedCycles, statistics::units::Cycle::get(),
-               "Number of cycles decode is blocked"),
-      ADD_STAT(runCycles, statistics::units::Cycle::get(),
-               "Number of cycles decode is running"),
-      ADD_STAT(unblockCycles, statistics::units::Cycle::get(),
-               "Number of cycles decode is unblocking"),
-      ADD_STAT(squashCycles, statistics::units::Cycle::get(),
-               "Number of cycles decode is squashing"),
       ADD_STAT(branchResolved, statistics::units::Count::get(),
                "Number of times decode resolved a branch"),
       ADD_STAT(branchMispred, statistics::units::Count::get(),
@@ -159,11 +171,11 @@ Decode::DecodeStats::DecodeStats(CPU *cpu)
       ADD_STAT(squashedInsts, statistics::units::Count::get(),
                "Number of squashed instructions handled by decode")
 {
-    idleCycles.prereq(idleCycles);
-    blockedCycles.prereq(blockedCycles);
-    runCycles.prereq(runCycles);
-    unblockCycles.prereq(unblockCycles);
-    squashCycles.prereq(squashCycles);
+    status.init(ThreadStatusMax).flags(statistics::pdf | statistics::nozero);
+    for (int i = 0; i < ThreadStatusMax; ++i) {
+        status.subname(i, statusStrings[i]);
+        status.subdesc(i, statusDefinitions[i]);
+    }
     branchResolved.prereq(branchResolved);
     branchMispred.prereq(branchMispred);
     controlMispred.prereq(controlMispred);
@@ -296,14 +308,14 @@ Decode::unblock(ThreadID tid)
 }
 
 void
-Decode::squash(const DynInstPtr &inst, ThreadID tid)
+Decode::squash(const DynInstPtr &inst, bool control_miss, ThreadID tid)
 {
     DPRINTF(Decode, "[tid:%i] [sn:%llu] Squashing due to incorrect branch "
             "prediction detected at decode.\n", tid, inst->seqNum);
 
     // Send back mispredict information.
     toFetch->decodeInfo[tid].branchMispredict = true;
-    toFetch->decodeInfo[tid].predIncorrect = true;
+    toFetch->decodeInfo[tid].controlMispredict = control_miss;
     toFetch->decodeInfo[tid].mispredictInst = inst;
     toFetch->decodeInfo[tid].squash = true;
     toFetch->decodeInfo[tid].doneSeqNum = inst->seqNum;
@@ -587,9 +599,9 @@ Decode::decode(bool &status_change, ThreadID tid)
     //     check if stall conditions have passed
 
     if (decodeStatus[tid] == Blocked) {
-        ++stats.blockedCycles;
+        ++stats.status[Blocked];
     } else if (decodeStatus[tid] == Squashing) {
-        ++stats.squashCycles;
+        ++stats.status[Squashing];
     }
 
     // Decode should try to decode as many instructions as its bandwidth
@@ -632,14 +644,14 @@ Decode::decodeInsts(ThreadID tid)
         DPRINTF(Decode, "[tid:%i] Nothing to do, breaking out"
                 " early.\n",tid);
         // Should I change the status to idle?
-        ++stats.idleCycles;
+        ++stats.status[Idle];
         return;
     } else if (decodeStatus[tid] == Unblocking) {
         DPRINTF(Decode, "[tid:%i] Unblocking, removing insts from skid "
                 "buffer.\n",tid);
-        ++stats.unblockCycles;
+        ++stats.status[Unblocking];
     } else if (decodeStatus[tid] == Running) {
-        ++stats.runCycles;
+        ++stats.status[Running];
     }
 
     std::queue<DynInstPtr>
@@ -688,11 +700,7 @@ Decode::decodeInsts(ThreadID tid)
         ++stats.decodedInsts;
         --insts_available;
 
-#if TRACING_ON
-        if (debug::O3PipeView) {
-            inst->decodeTick = curTick() - inst->fetchTick;
-        }
-#endif
+        inst->decodeTick = curTick() - inst->fetchTick;
 
         // Ensure that if it was predicted as a branch, it really is a
         // branch.
@@ -703,7 +711,7 @@ Decode::decodeInsts(ThreadID tid)
 
             // Might want to set some sort of boolean and just do
             // a check at the end
-            squash(inst, inst->threadNumber);
+            squash(inst, true, inst->threadNumber);
 
             break;
         }
@@ -722,7 +730,7 @@ Decode::decodeInsts(ThreadID tid)
 
                 // Might want to set some sort of boolean and just do
                 // a check at the end
-                squash(inst, inst->threadNumber);
+                squash(inst, false, inst->threadNumber);
 
                 DPRINTF(Decode,
                         "[tid:%i] [sn:%llu] "

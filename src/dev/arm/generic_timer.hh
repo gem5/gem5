@@ -79,6 +79,7 @@ class SystemCounterListener
     /// Called from the SystemCounter when a change in counting speed occurred
     /// Events should be rescheduled properly inside this member function
     virtual void notify(void) = 0;
+    virtual ~SystemCounterListener() = default;
 };
 
 /// Global system counter.  It is shared by the architected and memory-mapped

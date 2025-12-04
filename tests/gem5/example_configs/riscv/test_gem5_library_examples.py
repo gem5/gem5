@@ -76,7 +76,7 @@ gem5_verify_config(
         "gem5_library",
         "riscvmatched-fs.py",
     ),
-    config_args=["--to-init"],
+    config_args=["--to-kernel-init"],
     valid_isas=(constants.all_compiled_tag,),
     valid_hosts=constants.supported_hosts,
     length=constants.long_tag,

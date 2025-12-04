@@ -83,13 +83,11 @@ class SimpleExecContext : public ExecContext
     struct ExecContextStats : public statistics::Group
     {
         ExecContextStats(BaseSimpleCPU *cpu, SimpleThread *thread)
-            : statistics::Group(cpu,
-                           csprintf("exec_context.thread_%i",
-                                    thread->threadId()).c_str()),
+            : statistics::Group(
+                  cpu, csprintf("exec_context.thread_%i", thread->threadId())
+                           .c_str()),
               ADD_STAT(numMatAluAccesses, statistics::units::Count::get(),
                        "Number of matrix alu accesses"),
-              ADD_STAT(numCallsReturns, statistics::units::Count::get(),
-                       "Number of times a function call or return occured"),
               ADD_STAT(numMatInsts, statistics::units::Count::get(),
                        "Number of matrix instructions"),
               ADD_STAT(numIdleCycles, statistics::units::Cycle::get(),
@@ -110,9 +108,8 @@ class SimpleExecContext : public ExecContext
                   &(cpu->executeStats[thread->threadId()]->numVecRegReads),
                   &(cpu->executeStats[thread->threadId()]->numVecRegReads),
                   &(cpu->executeStats[thread->threadId()]->numVecPredRegReads),
-                  &(cpu->executeStats[thread->threadId()]->numCCRegReads),
-                  &numMatRegReads
-              },
+                  &numMatRegReads,
+                  &(cpu->executeStats[thread->threadId()]->numCCRegReads)},
               numRegWrites{
                   &(cpu->executeStats[thread->threadId()]->numIntRegWrites),
                   &(cpu->executeStats[thread->threadId()]->numFpRegWrites),
@@ -120,9 +117,8 @@ class SimpleExecContext : public ExecContext
                   &(cpu->executeStats[thread->threadId()]->numVecRegWrites),
                   &(cpu->executeStats[thread->threadId()]
                         ->numVecPredRegWrites),
-                  &(cpu->executeStats[thread->threadId()]->numCCRegWrites),
-                  &numMatRegWrites
-              }
+                  &numMatRegWrites,
+                  &(cpu->executeStats[thread->threadId()]->numCCRegWrites)}
         {
             idleFraction = statistics::constant(1.0) - notIdleFraction;
             numIdleCycles = idleFraction * cpu->baseStats.numCycles;
@@ -137,9 +133,6 @@ class SimpleExecContext : public ExecContext
 
         // Number of matrix alu accesses
         statistics::Scalar numMatAluAccesses;
-
-        // Number of function calls/returns
-        statistics::Scalar numCallsReturns;
 
         // Number of matrix instructions
         statistics::Scalar numMatInsts;
@@ -170,12 +163,35 @@ class SimpleExecContext : public ExecContext
 
     } execContextStats;
 
+    struct IssueStats : public statistics::Group
+    {
+        IssueStats(BaseSimpleCPU *cpu)
+            : statistics::Group(cpu),
+              ADD_STAT(issuedInstType, statistics::units::Count::get(),
+                       "Number of insts issued per FU, per thread")
+        {
+            issuedInstType.init(cpu->numThreads, enums::Num_OpClass)
+                .flags(statistics::total | statistics::pdf | statistics::dist);
+            issuedInstType.ysubnames(enums::OpClassStrings);
+        }
+        statistics::Vector2d issuedInstType;
+
+    } issueStats;
+
   public:
     /** Constructor */
-    SimpleExecContext(BaseSimpleCPU* _cpu, SimpleThread* _thread)
-        : cpu(_cpu), thread(_thread), fetchOffset(0), stayAtPC(false),
-        numInst(0), numOp(0), numLoad(0), lastIcacheStall(0),
-        lastDcacheStall(0), execContextStats(cpu, thread)
+    SimpleExecContext(BaseSimpleCPU *_cpu, SimpleThread *_thread)
+        : cpu(_cpu),
+          thread(_thread),
+          fetchOffset(0),
+          stayAtPC(false),
+          numInst(0),
+          numOp(0),
+          numLoad(0),
+          lastIcacheStall(0),
+          lastDcacheStall(0),
+          execContextStats(cpu, thread),
+          issueStats(cpu)
     { }
 
     RegVal

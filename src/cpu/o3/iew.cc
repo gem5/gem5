@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2018-2019 ARM Limited
+ * Copyright (c) 2010-2013, 2018-2019, 2025 Arm Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
@@ -55,7 +55,6 @@
 #include "debug/Activity.hh"
 #include "debug/Drain.hh"
 #include "debug/IEW.hh"
-#include "debug/O3PipeView.hh"
 #include "params/BaseO3CPU.hh"
 
 namespace gem5
@@ -64,12 +63,22 @@ namespace gem5
 namespace o3
 {
 
+// clang-format off
+std::string IEW::IEWStats::statusStrings[ThreadStatusMax] = {
+    "running",
+    "blocked",
+    "idle",
+    "startSquash",
+    "squashing",
+    "unblocking",
+};
+// clang-format on
+
 IEW::IEW(CPU *_cpu, const BaseO3CPUParams &params)
     : issueToExecQueue(params.backComSize, params.forwardComSize),
       cpu(_cpu),
       instQueue(_cpu, this, params),
       ldstQueue(_cpu, this, params),
-      fuPool(params.fuPool),
       commitToIEWDelay(params.commitToIEWDelay),
       renameToIEWDelay(params.renameToIEWDelay),
       issueToExecuteDelay(params.issueToExecuteDelay),
@@ -103,6 +112,9 @@ IEW::IEW(CPU *_cpu, const BaseO3CPUParams &params)
 
     // Instruction queue needs the queue between issue and execute.
     instQueue.setIssueToExecuteQueue(&issueToExecQueue);
+
+    // Retrieve a list of all available FU pools
+    fuPools = instQueue.allFUPools();
 
     for (ThreadID tid = 0; tid < MaxThreads; tid++) {
         dispatchStatus[tid] = Running;
@@ -143,53 +155,64 @@ IEW::regProbePoints()
 
 IEW::IEWStats::IEWStats(CPU *cpu)
     : statistics::Group(cpu, "iew"),
-    ADD_STAT(idleCycles, statistics::units::Cycle::get(),
-             "Number of cycles IEW is idle"),
-    ADD_STAT(squashCycles, statistics::units::Cycle::get(),
-             "Number of cycles IEW is squashing"),
-    ADD_STAT(blockCycles, statistics::units::Cycle::get(),
-             "Number of cycles IEW is blocking"),
-    ADD_STAT(unblockCycles, statistics::units::Cycle::get(),
-             "Number of cycles IEW is unblocking"),
-    ADD_STAT(dispatchedInsts, statistics::units::Count::get(),
-             "Number of instructions dispatched to IQ"),
-    ADD_STAT(dispSquashedInsts, statistics::units::Count::get(),
-             "Number of squashed instructions skipped by dispatch"),
-    ADD_STAT(dispLoadInsts, statistics::units::Count::get(),
-             "Number of dispatched load instructions"),
-    ADD_STAT(dispStoreInsts, statistics::units::Count::get(),
-             "Number of dispatched store instructions"),
-    ADD_STAT(dispNonSpecInsts, statistics::units::Count::get(),
-             "Number of dispatched non-speculative instructions"),
-    ADD_STAT(iqFullEvents, statistics::units::Count::get(),
-             "Number of times the IQ has become full, causing a stall"),
-    ADD_STAT(lsqFullEvents, statistics::units::Count::get(),
-             "Number of times the LSQ has become full, causing a stall"),
-    ADD_STAT(memOrderViolationEvents, statistics::units::Count::get(),
-             "Number of memory order violations"),
-    ADD_STAT(predictedTakenIncorrect, statistics::units::Count::get(),
-             "Number of branches that were predicted taken incorrectly"),
-    ADD_STAT(predictedNotTakenIncorrect, statistics::units::Count::get(),
-             "Number of branches that were predicted not taken incorrectly"),
-    ADD_STAT(branchMispredicts, statistics::units::Count::get(),
-             "Number of branch mispredicts detected at execute",
-             predictedTakenIncorrect + predictedNotTakenIncorrect),
-    executedInstStats(cpu),
-    ADD_STAT(instsToCommit, statistics::units::Count::get(),
-             "Cumulative count of insts sent to commit"),
-    ADD_STAT(writebackCount, statistics::units::Count::get(),
-             "Cumulative count of insts written-back"),
-    ADD_STAT(producerInst, statistics::units::Count::get(),
-             "Number of instructions producing a value"),
-    ADD_STAT(consumerInst, statistics::units::Count::get(),
-             "Number of instructions consuming a value"),
-    ADD_STAT(wbRate, statistics::units::Rate<
-                statistics::units::Count, statistics::units::Cycle>::get(),
-             "Insts written-back per cycle"),
-    ADD_STAT(wbFanout, statistics::units::Rate<
-                statistics::units::Count, statistics::units::Count>::get(),
-             "Average fanout of values written-back")
+      ADD_STAT(dispatchStatus, statistics::units::Cycle::get(),
+               "Dispatch status cycles"),
+      ADD_STAT(execStatus, statistics::units::Cycle::get(),
+               "Number of cycles IEW is blocking"),
+      ADD_STAT(dispatchedInsts, statistics::units::Count::get(),
+               "Number of instructions dispatched to IQ"),
+      ADD_STAT(dispSquashedInsts, statistics::units::Count::get(),
+               "Number of squashed instructions skipped by dispatch"),
+      ADD_STAT(dispLoadInsts, statistics::units::Count::get(),
+               "Number of dispatched load instructions"),
+      ADD_STAT(dispStoreInsts, statistics::units::Count::get(),
+               "Number of dispatched store instructions"),
+      ADD_STAT(dispNonSpecInsts, statistics::units::Count::get(),
+               "Number of dispatched non-speculative instructions"),
+      ADD_STAT(iqFullEvents, statistics::units::Count::get(),
+               "Number of times the IQ has become full, causing a stall"),
+      ADD_STAT(lsqFullEvents, statistics::units::Count::get(),
+               "Number of times the LSQ has become full, causing a stall"),
+      ADD_STAT(memOrderViolationEvents, statistics::units::Count::get(),
+               "Number of memory order violations"),
+      ADD_STAT(predictedTakenIncorrect, statistics::units::Count::get(),
+               "Number of branches that were predicted taken incorrectly"),
+      ADD_STAT(predictedNotTakenIncorrect, statistics::units::Count::get(),
+               "Number of branches that were predicted not taken incorrectly"),
+      ADD_STAT(branchMispredicts, statistics::units::Count::get(),
+               "Number of branch mispredicts detected at execute",
+               predictedTakenIncorrect + predictedNotTakenIncorrect),
+      executedInstStats(cpu),
+      ADD_STAT(instsToCommit, statistics::units::Count::get(),
+               "Cumulative count of insts sent to commit"),
+      ADD_STAT(writebackCount, statistics::units::Count::get(),
+               "Cumulative count of insts written-back"),
+      ADD_STAT(producerInst, statistics::units::Count::get(),
+               "Number of instructions producing a value"),
+      ADD_STAT(consumerInst, statistics::units::Count::get(),
+               "Number of instructions consuming a value"),
+      ADD_STAT(wbRate,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Cycle>::get(),
+               "Insts written-back per cycle"),
+      ADD_STAT(wbFanout,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Count>::get(),
+               "Average fanout of values written-back")
 {
+    dispatchStatus.init(ThreadStatusMax)
+        .flags(statistics::pdf | statistics::nozero);
+    execStatus.init(ThreadStatusMax)
+        .flags(statistics::pdf | statistics::nozero);
+    for (int i = 0; i < ThreadStatusMax; ++i) {
+        dispatchStatus.subname(i, statusStrings[i]);
+        dispatchStatus.subdesc(i, "Number of cycles dispatch is " +
+                                      statusStrings[i]);
+        execStatus.subname(i, statusStrings[i]);
+        execStatus.subdesc(i,
+                           "Number of cycles dispatch is " + statusStrings[i]);
+    }
+
     instsToCommit
         .init(cpu->numThreads)
         .flags(statistics::total);
@@ -362,9 +385,12 @@ IEW::isDrained() const
     // Also check the FU pool as instructions are "stored" in FU
     // completion events until they are done and not accounted for
     // above
-    if (drained && !fuPool->isDrained()) {
-        DPRINTF(Drain, "FU pool still busy.\n");
-        drained = false;
+    for (FUPool *fu_pool : fuPools) {
+        if (!fu_pool->isDrained()) {
+            DPRINTF(Drain, "FU pool still busy.\n");
+            drained = false;
+            break;
+        }
     }
 
     return drained;
@@ -389,7 +415,9 @@ IEW::takeOverFrom()
 
     instQueue.takeOverFrom();
     ldstQueue.takeOverFrom();
-    fuPool->takeOverFrom();
+    for (FUPool *fu_pool : fuPools) {
+        fu_pool->takeOverFrom();
+    }
 
     startupStage();
     cpu->activityThisCycle();
@@ -819,13 +847,7 @@ IEW::dispatch(ThreadID tid)
     //     buffer any instructions coming from rename
     //     continue trying to empty skid buffer
     //     check if stall conditions have passed
-
-    if (dispatchStatus[tid] == Blocked) {
-        ++iewStats.blockCycles;
-
-    } else if (dispatchStatus[tid] == Squashing) {
-        ++iewStats.squashCycles;
-    }
+    iewStats.dispatchStatus[dispatchStatus[tid]]++;
 
     // Dispatch should try to dispatch as many instructions as its bandwidth
     // will allow, as long as it is not currently blocked.
@@ -844,8 +866,6 @@ IEW::dispatch(ThreadID tid)
         // buffer were used.  Remove those instructions and handle
         // the rest of unblocking.
         dispatchInsts(tid);
-
-        ++iewStats.unblockCycles;
 
         if (fromRename->size != 0) {
             // Add the current inputs to the skid buffer so they can be
@@ -919,7 +939,7 @@ IEW::dispatchInsts(ThreadID tid)
         }
 
         // Check for full conditions.
-        if (instQueue.isFull(tid)) {
+        if (instQueue.isFull(inst)) {
             DPRINTF(IEW, "[tid:%i] Issue: IQ has become full.\n", tid);
 
             // Call function to start blocking.
@@ -1072,9 +1092,8 @@ IEW::dispatchInsts(ThreadID tid)
 
         ++iewStats.dispatchedInsts;
 
-#if TRACING_ON
         inst->dispatchTick = curTick() - inst->fetchTick;
-#endif
+
         ppDispatch->notify(inst);
     }
 
@@ -1420,8 +1439,10 @@ IEW::tick()
 
     sortInsts();
 
-    // Free function units marked as being freed this cycle.
-    fuPool->processFreeUnits();
+    for (FUPool *fu_pool : fuPools) {
+        // Free function units marked as being freed this cycle.
+        fu_pool->processFreeUnits();
+    }
 
     // Check stall and squash signals, dispatch any instructions.
     for (ThreadID tid : *activeThreads) {
@@ -1514,7 +1535,8 @@ IEW::tick()
                 tid, toRename->iewInfo[tid].dispatched);
     }
 
-    DPRINTF(IEW, "IQ has %i free entries (Can schedule: %i).  "
+    DPRINTF(IEW,
+            "IQ has %i free entries (Can schedule: %i).  "
             "LQ has %i free entries. SQ has %i free entries.\n",
             instQueue.numFreeEntries(), instQueue.hasReadyInsts(),
             ldstQueue.numFreeLoadEntries(), ldstQueue.numFreeStoreEntries());
@@ -1534,11 +1556,22 @@ IEW::updateExeInstStats(const DynInstPtr& inst)
 
     cpu->executeStats[tid]->numInsts++;
 
-#if TRACING_ON
-    if (debug::O3PipeView) {
-        inst->completeTick = curTick() - inst->fetchTick;
+    inst->completeTick = curTick() - inst->fetchTick;
+
+    //
+    // ALU Operations
+    //
+    if (inst->isInteger()) {
+        cpu->executeStats[tid]->numIntAluAccesses++;
     }
-#endif
+
+    if (inst->isFloating()) {
+        cpu->executeStats[tid]->numFpAluAccesses++;
+    }
+
+    if (inst->isVector()) {
+        cpu->executeStats[tid]->numVecAluAccesses++;
+    }
 
     //
     //  Control operations

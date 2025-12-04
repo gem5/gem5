@@ -1,4 +1,4 @@
-# Copyright (c) 2022 The Regents of the University of California
+# Copyright (c) 2022-2025 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,10 +26,10 @@
 
 """
 This gem5 configuation script creates a simple board to run the first
-10^6 ticks of "riscv-hello" binary simulation and saves a checkpoint.
+million ticks of the "riscv-hello" binary simulation and saves a checkpoint.
 This configuration serves as an example of taking a checkpoint.
 
-This is setup is the close to the simplest setup possible using the gem5
+This setup is close to the simplest setup possible using the gem5
 library. It does not contain any kind of caching, IO, or any non-essential
 components.
 
@@ -37,9 +37,9 @@ Usage
 -----
 
 ```
-scons build/RISCV/gem5.opt
-./build/RISCV/gem5.opt \
-    configs/example/gem5_library/checkpoint/riscv-hello-save-checkpoint.py
+scons build/ALL/gem5.opt
+./build/ALL/gem5.opt \
+    configs/example/gem5_library/checkpoints/riscv-hello-save-checkpoint.py
 ```
 """
 
@@ -52,7 +52,9 @@ from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.isas import ISA
 from gem5.resources.resource import obtain_resource
+from gem5.simulate.exit_handler import ScheduledExitEventHandler
 from gem5.simulate.simulator import Simulator
+from gem5.utils.override import overrides
 from gem5.utils.requires import requires
 
 parser = argparse.ArgumentParser()
@@ -67,7 +69,7 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-# This check ensures the gem5 binary is compiled to the RISCV ISA target.
+# This check ensures the gem5 binary contains the RISCV ISA target.
 # If not, an exception will be thrown.
 requires(isa_required=ISA.RISCV)
 
@@ -82,8 +84,7 @@ processor = SimpleProcessor(
     cpu_type=CPUTypes.TIMING, isa=ISA.RISCV, num_cores=1
 )
 
-# The gem5 library simple board which can be used to run simple SE-mode
-# simulations.
+# The gem5 library simple board which can be used to run SE-mode simulations.
 board = SimpleBoard(
     clk_freq="3GHz",
     processor=processor,
@@ -92,30 +93,32 @@ board = SimpleBoard(
 )
 
 # Here we set the workload. In this case we want to run a simple "Hello World!"
-# program compiled to the RISCV ISA. The `Resource` class will automatically
-# download the binary from the gem5 Resources cloud bucket if it's not already
-# present.
+# program compiled to the RISCV ISA. The `obtain_resource` function will
+# automatically download the binary from the gem5 Resources cloud bucket if
+# it's not already present.
 board.set_se_binary_workload(
-    # The `Resource` class reads the `resources.json` file from the gem5
-    # resources repository:
-    # https://github.com/gem5/gem5-resources.
-    # Any resource specified in this file will be automatically retrieved.
-    # At the time of writing, this file is a WIP and does not contain all
-    # resources. Jira ticket: https://gem5.atlassian.net/browse/GEM5-1096
-    obtain_resource("riscv-hello")
+    obtain_resource("riscv-hello", resource_version="1.0.0")
 )
+
+
+class SimpointScheduledExitHandler(ScheduledExitEventHandler):
+    warmed_up = False
+
+    @overrides(ScheduledExitEventHandler)
+    def _process(self, simulator: "Simulator") -> None:
+        print("Taking a checkpoint at", args.checkpoint_path)
+        simulator.save_checkpoint(args.checkpoint_path)
+        print("Done taking a checkpoint")
+
+    @overrides(ScheduledExitEventHandler)
+    def _exit_simulation(self) -> bool:
+        return True
+
 
 # Lastly we run the simulation.
-max_ticks = 10**6
-simulator = Simulator(board=board, full_system=False, max_ticks=max_ticks)
-simulator.run()
-
-print(
-    "Exiting @ tick {} because {}.".format(
-        simulator.get_current_tick(), simulator.get_last_exit_event_cause()
-    )
+simulator = Simulator(board=board)
+simulator.set_hypercall_absolute_max_ticks(
+    1_000_000, "Max ticks reached, taking checkpoint!"
 )
 
-print("Taking a checkpoint at", args.checkpoint_path)
-simulator.save_checkpoint(args.checkpoint_path)
-print("Done taking a checkpoint")
+simulator.run()
