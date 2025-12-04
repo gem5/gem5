@@ -22,6 +22,17 @@ class STALLDVFSPolicy : public GPUDVFSPolicy
     using Params = STALLDVFSPolicyParams;
 
     STALLDVFSPolicy(const Params &p);
+    void serialize(CheckpointOut &cp) const override {
+        GPUDVFSPolicy::serialize(cp);
+        SERIALIZE_CONTAINER(prevCyclesPerCU);
+        SERIALIZE_CONTAINER(prevMemPerCU);
+    }
+
+    void unserialize(CheckpointIn &cp) override {
+        GPUDVFSPolicy::unserialize(cp);
+        UNSERIALIZE_CONTAINER(prevCyclesPerCU);
+        UNSERIALIZE_CONTAINER(prevMemPerCU);
+    }
 
   private:
 
