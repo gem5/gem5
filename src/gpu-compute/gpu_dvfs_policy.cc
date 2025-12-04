@@ -33,13 +33,13 @@ GPUDVFSPolicy::init()
 void
 GPUDVFSPolicy::serialize(CheckpointOut &cp) const
 {
-    // TODO implement.
+    ClockedObject::serialize(cp);
 }
 
 void
 GPUDVFSPolicy::unserialize(CheckpointIn &cp)
 {
-    // TODO implement.
+    ClockedObject::unserialize(cp);
 }
 
 } // namespace gem5
