@@ -144,13 +144,23 @@ def makeGpuFSSystem(args):
         #     shader=shader,
         # )
 
-        system.dvfs_policy = STALLDVFSPolicy(
+        # system.dvfs_policy = STALLDVFSPolicy(
+        #     dvfs_handler=system.dvfs_handler,
+        #     gpu_domain_id=67,
+        #     sampling_period="1000us",  # same toy value as before
+        #     voltage_opps=[0.85, 0.95, 1.05],
+        #     frequency_opps=["1.1GHz", "1.0GHz", "0.9GHz"],
+        #     shader=shader,
+        # )
+
+        system.dvfs_policy = PCSTALLDVFSPolicy(
             dvfs_handler=system.dvfs_handler,
             gpu_domain_id=67,
-            sampling_period="1000us",  # same toy value as before
-            voltage_opps=[0.85, 0.95, 1.05],
-            frequency_opps=["1.1GHz", "1.0GHz", "0.9GHz"],
+            sampling_period="1000us",
             shader=shader,
+            numPcBuckets=128,
+            pcAlpha=0.2,
+            edExponent=2,
         )
 
     # --------------------- END DVFS SUPPORT ---------------------
