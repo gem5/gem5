@@ -6,10 +6,9 @@ from typing import (
 )
 
 from chiplets.BaseChipletSystem import BaseChipletSystem
-from chiplets.ChipletSystem import ChipletSystem
 from topologies.BaseTopology import BaseTopology
 
-from m5.defines import buildEnv
+from m5.defines import buildEnv  # type: ignore
 from m5.objects import *
 
 if TYPE_CHECKING:
@@ -28,6 +27,7 @@ class Chiplet(BaseChipletSystem):
     def __init__(
         self,
         system: System,
+        full_system: bool,
         TopologyClass: Type[BaseTopology],
         MemoryClass: Type[AbstractMemory],
         inter_node_link_lat: int,
@@ -37,6 +37,7 @@ class Chiplet(BaseChipletSystem):
         BaseChipletSystem.__init__(
             self,
             system=system,
+            full_system=full_system,
             TopologyClass=TopologyClass,
             MemoryClass=MemoryClass,
             nodes=nodes,

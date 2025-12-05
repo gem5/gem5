@@ -7,7 +7,7 @@ from typing import (
     Type,
 )
 
-from m5.defines import buildEnv
+from m5.defines import buildEnv  # type: ignore
 from m5.objects import *
 from m5.util import (
     addToPath,
@@ -43,7 +43,10 @@ class BaseChipletSystem(ABC):
     protocol: str
 
     # the gem5 `System` SimObject that this object is part of
-    system: System
+    _system: System
+
+    # if full-system simulation mode is enabled in gem5
+    _is_full_system: bool
 
     # topology class. used internally to create the topology.
     # Ruby.py currently requires a name (string) to be specified
@@ -56,6 +59,9 @@ class BaseChipletSystem(ABC):
 
     # list of *direct* nodes/children (ChipletSystems or Chiplets)
     nodes: list[BaseChipletSystem]
+
+    # topology of the children for *only this layer of the hierarchy*
+    topology: BaseTopology | None
 
     # default latency (in cycles) of the links between nodes
     # for this layer of abstraction (i.e., direct child nodes)
@@ -71,9 +77,13 @@ class BaseChipletSystem(ABC):
     # ChipletSystem to which this node has *direct* connections
     connected_nodes: list[BaseChipletSystem]
 
+    # `GarnetNetwork` for this object
+    _garnet_network: GarnetNetwork
+
     def __init__(
         self,
         system: System,
+        full_system: bool,
         TopologyClass: type[BaseTopology],
         MemoryClass: type[AbstractMemory],
         nodes: Sequence[BaseChipletSystem],
@@ -89,6 +99,8 @@ class BaseChipletSystem(ABC):
             system (System):
                 The gem5 `System` SimObject that this `BaseChipletSystem`
                 is part of.
+            full_system (bool):
+                If gem5 is running in full-system simulation mode.
             TopologyClass (Type[BaseTopology]):
                 The class, derived from `BaseTopology`, corresponding
                 to the topology to be used in this `ChipletSystem`.
@@ -113,10 +125,13 @@ class BaseChipletSystem(ABC):
 
         self.nodes = list(nodes)
 
-        self.system = system
+        self._system = system
+        self._is_full_system = full_system
 
         self._topology_cls = TopologyClass
         self._memory_cls = MemoryClass
+
+        self.topology = None  # created in `createSystem()`
 
         self.default_inter_node_link_lat = inter_node_link_lat
         self.default_inter_node_router_lat = inter_node_router_lat
@@ -126,7 +141,7 @@ class BaseChipletSystem(ABC):
         self,
     ):
         """
-        Add a node/child to this Chiplet(System)
+        Add a node/child to this `Chiplet[System]`
         """
 
         # todo: implement
@@ -148,10 +163,10 @@ class BaseChipletSystem(ABC):
     ) -> GarnetIntLink | None:
         """
         Retrieve the Garnet link object, if one exists, between the two
-        specified nodes (which must be children of this Chiplet[System]).
-        Note that the Chiplet[System] abstracts the GarnetIntLink,
-        since an actual GarnetIntLink is between two routers, not two
-        Chiplet[System]s directly.
+        specified nodes, which must be children of this `Chiplet[System]`.
+        Note that the `Chiplet[System]` abstracts the `GarnetIntLink`,
+        since an actual `GarnetIntLink` is between two routers, not two
+        `Chiplet[System]`s directly.
 
         Args:
             node1 (BaseChipletSystem): One end of the link.
@@ -183,8 +198,7 @@ class BaseChipletSystem(ABC):
             fatal(
                 "This BaseChipletSystem has no parent, "
                 "but the user attempted to connect it "
-                "to another BaseChipletSystem sharing "
-                "the same parent."
+                "to another BaseChipletSystem."
             )
 
         if self.parent != node.parent:
