@@ -126,7 +126,6 @@ def makeGpuFSSystem(args):
                 "0.8V",
                 "0.8V",
                 "0.8V",
-                "0.8V",
             ]
         )  # TODO toy ranges
         system.dvfs_clk_domain = SrcClockDomain(
@@ -143,11 +142,11 @@ def makeGpuFSSystem(args):
                 "1.11GHz",
                 "1.06GHz",
                 "1.00GHz",
-                "0.940Hz",
-                "0.880GHz",
-                "0.820GHz",
+                "0.94GHz",
+                "0.88GHz",
+                "0.82GHz",
                 "0.76GHz",
-                "0.70Ghz",
+                "0.70GHz",
             ],
             voltage_domain=system.dvfs_voltage_domain,
             domain_id=67,
