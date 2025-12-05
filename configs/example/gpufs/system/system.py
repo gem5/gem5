@@ -160,44 +160,31 @@ def makeGpuFSSystem(args):
         for cu in shader.CUs:
             cu.clk_domain = system.dvfs_clk_domain
 
-        # TODO other GPU components could be on some uncore domain.
-
         # DVFS backend
         system.dvfs_handler = DVFSHandler(
             domains=[system.dvfs_clk_domain],
             sys_clk_domain=system.clk_domain,
             enable=True,  # TODO this code could be put on main path and use args.dvfs
-            transition_latency="1us",  # TODO toy value
+            transition_latency=args.dvfs_transition_latency,
         )
 
-        # # TODO add policy.
-        # system.dvfs_policy = ToyDVFSPolicy(
-        #     dvfs_handler=system.dvfs_handler,
-        #     gpu_domain_id=67,
-        #     sampling_period="1000us",  # TODO toy value
-        #     voltage_opps=[1.05, 0.95, 0.85],
-        #     frequency_opps=["1.5GHz", "1.0GHz", "0.5GHz"],
-        #     shader=shader,
-        # )
+        # Choose DVFS policy
+        match args.dvfs_policy:
+            case "STALL":
+                system.dvfs_policy = STALLDVFSPolicy()
+            case "PCSTALL":
+                system.dvfs_policy = PCSTALLDVFSPolicy(
+                    numPcBuckets=args.pcstall_num_buckets,
+                    pcAlpha=args.pcstall_alpha,
+                    edExponent=args.dvfs_edp_exponent,
+                )
+            case _:
+                panic(f"Unknown DVFS policy: {args.dvfs_policy}")
 
-        # system.dvfs_policy = STALLDVFSPolicy(
-        #     dvfs_handler=system.dvfs_handler,
-        #     gpu_domain_id=67,
-        #     sampling_period="1000us",  # same toy value as before
-        #     voltage_opps=[0.85, 0.95, 1.05],
-        #     frequency_opps=["1.1GHz", "1.0GHz", "0.9GHz"],
-        #     shader=shader,
-        # )
-
-        system.dvfs_policy = PCSTALLDVFSPolicy(
-            dvfs_handler=system.dvfs_handler,
-            gpu_domain_id=67,
-            sampling_period="1000us",
-            shader=shader,
-            numPcBuckets=128,
-            pcAlpha=0.2,
-            edExponent=2,
-        )
+        system.dvfs_policy.shader = shader
+        system.dvfs_policy.dvfs_handler = system.dvfs_handler
+        system.dvfs_policy.gpu_domain_id = system.dvfs_clk_domain.domain_id
+        system.dvfs_policy.sampling_period = args.dvfs_sampling_period
 
     # --------------------- END DVFS SUPPORT ---------------------
 

@@ -235,6 +235,50 @@ def addRunFSOptions(parser):
         help="Enable DVFS for GPU",
     )
 
+    parser.add_argument(
+        "--dvfs-sampling-period",
+        type=str,
+        default="1000us",
+        help="Sampling period for DVFS policy",
+    )
+
+    parser.add_argument(
+        "--dvfs-policy",
+        type=str,
+        default="STALL",
+        choices=["STALL", "PCSTALL"],
+        help="DVFS policy to use",
+    )
+
+    parser.add_argument(
+        "--pcstall-num-buckets",
+        type=int,
+        default=128,
+        help="Number of PC buckets for PCSTALL DVFS policy",
+    )
+
+    parser.add_argument(
+        "--pcstall-alpha",
+        type=float,
+        default=0.2,
+        help="Alpha value for PC history exponential "
+        "moving average in PCSTALL DVFS policy",
+    )
+
+    parser.add_argument(
+        "--dvfs-edp-exponent",
+        type=int,
+        default=2,
+        help="Exponent for EDP calculation in DVFS policies",
+    )
+
+    parser.add_argument(
+        "--dvfs-transition-latency",
+        type=str,
+        default="10us",
+        help="DVFS handler voltage/frequency transition latency",
+    )
+
 
 def runGpuFSSystem(args):
     """
