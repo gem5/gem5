@@ -96,13 +96,13 @@ PCSTALLDVFSPolicy::sample(DVFSHandler::PerfLevel currentLevel)
         uint64_t deltaMemStallCycles;
 
         // Detect stats reset (e.g., between kernels).
-        if (currCycles < prevCyclesPerCU[i]) {
-            deltaCycles = currCycles;
+        if (currCycles < prevCyclesPerCU[i] ||
+            currMemStallCycles < prevMemPerCU[i]) {
+            deltaCycles         = currCycles;
             deltaMemStallCycles = currMemStallCycles;
         } else {
-            deltaCycles = currCycles - prevCyclesPerCU[i];
-            deltaMemStallCycles =
-                currMemStallCycles - prevMemPerCU[i];
+            deltaCycles         = currCycles        - prevCyclesPerCU[i];
+            deltaMemStallCycles = currMemStallCycles - prevMemPerCU[i];
         }
 
         prevCyclesPerCU[i] = currCycles;
@@ -130,25 +130,36 @@ PCSTALLDVFSPolicy::sample(DVFSHandler::PerfLevel currentLevel)
             uint64_t deltaTotal;
             uint64_t deltaCritical;
 
-            // Detect stats reset for this bucket.
-            if (curTotal < entry.lastTotal) {
-                deltaTotal = curTotal;
+            // Detect stats reset for this bucket (either counter can reset).
+            if (curTotal < entry.lastTotal ||
+                curCritical < entry.lastCritical) {
+                deltaTotal    = curTotal;
                 deltaCritical = curCritical;
             } else {
-                deltaTotal = curTotal - entry.lastTotal;
+                deltaTotal    = curTotal    - entry.lastTotal;
                 deltaCritical = curCritical - entry.lastCritical;
             }
 
-            entry.lastTotal = curTotal;
+            entry.lastTotal    = curTotal;
             entry.lastCritical = curCritical;
 
             if (deltaTotal == 0) {
+                // No contribution from this bucket this epoch.
                 continue;
             }
 
-            const double obsSens =
+            // Safety: critical cycles should never exceed total cycles.
+            if (deltaCritical > deltaTotal) {
+                deltaCritical = deltaTotal;
+            }
+
+            double obsSens =
                 static_cast<double>(deltaCritical) /
                 static_cast<double>(deltaTotal);
+
+            // Extra safety clamp [0, 1]
+            if (obsSens < 0.0) obsSens = 0.0;
+            if (obsSens > 1.0) obsSens = 1.0;
 
             if (!entry.valid) {
                 entry.sensitivity = obsSens;
@@ -181,20 +192,33 @@ PCSTALLDVFSPolicy::sample(DVFSHandler::PerfLevel currentLevel)
 
     double predCritFrac = -1.0;
     if (weightedTotal > 0.0) {
-        predCritFrac = weightedCrit / weightedTotal;
-        if (predCritFrac < 0.0) {
-            predCritFrac = 0.0;
-        }
-        if (predCritFrac > 1.0) {
-            predCritFrac = 1.0;
-        }
+    predCritFrac = weightedCrit / weightedTotal;
 
-        const double critCycles =
-            predCritFrac * static_cast<double>(totalCycles);
-        predictedBusyCycles =
-            static_cast<uint64_t>(critCycles);
-        predictedStallCycles =
-            totalCycles - predictedBusyCycles;
+    // Clamp predictor to [0, 1]
+    if (predCritFrac < 0.0) {
+        predCritFrac = 0.0;
+    } else if (predCritFrac > 1.0) {
+        predCritFrac = 1.0;
+    }
+
+    double critCycles =
+        predCritFrac * static_cast<double>(totalCycles);
+
+    // Round to nearest integer
+    uint64_t busy =
+        static_cast<uint64_t>(critCycles + 0.5);
+
+    // Clamp busy ≤ totalCycles to avoid underflow in stall
+    if (busy > totalCycles) {
+        DPRINTF(GPUDVFSPolicy,
+                "%s: predictedBusy(%lu) > total(%lu); "
+                "clamping busy\n",
+                name(), busy, totalCycles);
+        busy = totalCycles;
+    }
+
+    predictedBusyCycles  = busy;
+    predictedStallCycles = totalCycles - predictedBusyCycles;
     }
 
     DPRINTF(GPUDVFSPolicy,
