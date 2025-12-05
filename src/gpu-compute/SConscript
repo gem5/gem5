@@ -77,6 +77,7 @@ Source('wavefront.cc')
 
 Source('gpu_dvfs_policy.cc')
 Source('stall_dvfs_policy.cc')
+Source('pcstall_dvfs_policy.cc')
 
 DebugFlag('GPUAgentDisp')
 DebugFlag('GPUCoalescer')

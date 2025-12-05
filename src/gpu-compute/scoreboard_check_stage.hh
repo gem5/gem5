@@ -121,12 +121,15 @@ class ScoreboardCheckStage
     struct ScoreboardCheckStageStats : public statistics::Group
     {
         ScoreboardCheckStageStats(statistics::Group *parent);
-
+        statistics::Vector pcBucketTotalCycles;
+        statistics::Vector pcBucketCriticalCycles;
         statistics::Vector stallCycles;
     } stats;
 
   public:
     ScoreboardCheckStageStats& getStats() { return stats; }
+    static constexpr unsigned NumPcBuckets  = 128;
+    static constexpr unsigned PcBucketShift = 4;
 };
 
 } // namespace gem5

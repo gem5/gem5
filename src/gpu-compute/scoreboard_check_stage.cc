@@ -300,6 +300,30 @@ ScoreboardCheckStage::exec()
             } else {
                 curWave->lastInstRdyStatus = rdyStatusStr(rdyStatus);
             }
+            // Attribute this wavefront-cycle to the PC bucket of its next
+            // instruction, if there *is* a next instruction.
+            GPUDynInstPtr ii_for_stats = curWave->nextInstr();
+            if (ii_for_stats) {
+                GPUStaticInst *si = ii_for_stats->staticInstruction();
+                if (si) {
+                    Addr pc = si->instAddr();
+
+                    // Bucket PCs by shifting and masking.
+                    unsigned bucket =
+                        ((pc >> ScoreboardCheckStage::PcBucketShift) &
+                         (ScoreboardCheckStage::NumPcBuckets - 1));
+
+                    // Total wavefront-cycles seen for this bucket.
+                    stats.pcBucketTotalCycles[bucket]++;
+
+                    // Treat only NRDY_WAIT_CNT as “memory-stall” cycles.
+                    // Everything else (including INST_RDY) is “critical”
+                    // frequency-sensitive work from PCSTALL’s perspective.
+                    if (rdyStatus != NRDY_WAIT_CNT) {
+                        stats.pcBucketCriticalCycles[bucket]++;
+                    }
+                }
+            }
             collectStatistics(rdyStatus);
         }
     }
@@ -309,6 +333,10 @@ ScoreboardCheckStage::
 ScoreboardCheckStageStats::ScoreboardCheckStageStats(statistics::Group *parent)
     : statistics::Group(parent, "ScoreboardCheckStage"),
       ADD_STAT(stallCycles, "number of cycles wave stalled in SCB")
+      ADD_STAT(pcBucketTotalCycles,
+               "total wavefront-cycles per PC bucket (for PCSTALL)"),
+      ADD_STAT(pcBucketCriticalCycles,
+               "critical (non-mem-stall) wavefront-cycles per PC bucket")
 {
     stallCycles.init(NRDY_CONDITIONS);
 
@@ -320,6 +348,15 @@ ScoreboardCheckStageStats::ScoreboardCheckStageStats(statistics::Group *parent)
     stallCycles.subname(NRDY_SGPR_NRDY, csprintf("SgprBusy"));
     stallCycles.subname(NRDY_MATRIX_CORE, csprintf("MatrixCore"));
     stallCycles.subname(INST_RDY, csprintf("InstrReady"));
+
+    // NEW: per-PC bucket stats – fixed size per CU.
+    pcBucketTotalCycles.init(ScoreboardCheckStage::NumPcBuckets);
+    pcBucketCriticalCycles.init(ScoreboardCheckStage::NumPcBuckets);
+
+    for (unsigned b = 0; b < ScoreboardCheckStage::NumPcBuckets; ++b) {
+        pcBucketTotalCycles.subname(b,     csprintf("PcBkt%d", b));
+        pcBucketCriticalCycles.subname(b,  csprintf("PcCritBkt%d", b));
+    }
 }
 
 } // namespace gem5
