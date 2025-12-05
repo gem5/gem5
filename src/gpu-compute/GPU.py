@@ -64,21 +64,7 @@ class GPUDVFSPolicy(ClockedObject):
     sampling_period = Param.Clock(
         "1us", "period between samples to evaluate performance level"
     )
-    voltage_opps = VectorParam.Float(
-        [0.9, 1.0], "list of voltage operating points (in Volts)"
-    )
-    frequency_opps = VectorParam.Clock(
-        ["500MHz", "1GHz"],
-        "list of frequency operating points (in Hz)",
-    )
     shader = Param.Shader(NULL, "Shader this DVFS policy controls")
-    numPcBuckets = Param.Unsigned(128, "Number of PC buckets per CU")
-    pcAlpha = Param.Float(
-        0.2, "EMA factor for per-PC sensitivity (0<alpha<=1)"
-    )
-    edExponent = Param.Unsigned(
-        2, "n in ED^nP objective (1=EDP, 2=ED^2P, ...)"
-    )
 
 
 class ToyDVFSPolicy(GPUDVFSPolicy):
@@ -97,6 +83,14 @@ class PCSTALLDVFSPolicy(GPUDVFSPolicy):
     type = "PCSTALLDVFSPolicy"
     cxx_class = "gem5::PCSTALLDVFSPolicy"
     cxx_header = "gpu-compute/pcstall_dvfs_policy.hh"
+
+    numPcBuckets = Param.Unsigned(128, "Number of PC buckets per CU")
+    pcAlpha = Param.Float(
+        0.2, "EMA factor for per-PC sensitivity (0<alpha<=1)"
+    )
+    edExponent = Param.Unsigned(
+        2, "n in ED^nP objective (1=EDP, 2=ED^2P, ...)"
+    )
 
 
 class PoolManager(SimObject):

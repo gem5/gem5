@@ -302,25 +302,29 @@ ScoreboardCheckStage::exec()
             }
             // Attribute this wavefront-cycle to the PC bucket of its next
             // instruction, if there *is* a next instruction.
-            GPUDynInstPtr ii_for_stats = curWave->nextInstr();
-            if (ii_for_stats) {
-                GPUStaticInst *si = ii_for_stats->staticInstruction();
-                if (si) {
-                    Addr pc = si->instAddr();
+            if (!curWave) continue;
 
-                    // Bucket PCs by shifting and masking.
-                    unsigned bucket =
-                        ((pc >> ScoreboardCheckStage::PcBucketShift) &
-                         (ScoreboardCheckStage::NumPcBuckets - 1));
+            if (!curWave->instructionBuffer.empty()) {
+                GPUDynInstPtr ii_for_stats = curWave->nextInstr();
+                if (ii_for_stats) {
+                    GPUStaticInst *si = ii_for_stats->staticInstruction();
+                    if (si) {
+                        Addr pc = si->instAddr();
 
-                    // Total wavefront-cycles seen for this bucket.
-                    stats.pcBucketTotalCycles[bucket]++;
+                        // Bucket PCs by shifting and masking.
+                        unsigned bucket =
+                            ((pc >> ScoreboardCheckStage::PcBucketShift) &
+                             (ScoreboardCheckStage::NumPcBuckets - 1));
 
-                    // Treat only NRDY_WAIT_CNT as “memory-stall” cycles.
-                    // Everything else (including INST_RDY) is “critical”
-                    // frequency-sensitive work from PCSTALL’s perspective.
-                    if (rdyStatus != NRDY_WAIT_CNT) {
-                        stats.pcBucketCriticalCycles[bucket]++;
+                        // Total wavefront-cycles seen for this bucket.
+                        stats.pcBucketTotalCycles[bucket]++;
+
+                        // Treat only NRDY_WAIT_CNT as “memory-stall” cycles.
+                        // Everything else (including INST_RDY) is “critical”
+                        // frequency-sensitive work from PCSTALL’s perspective.
+                        if (rdyStatus != NRDY_WAIT_CNT) {
+                            stats.pcBucketCriticalCycles[bucket]++;
+                        }
                     }
                 }
             }
@@ -332,7 +336,7 @@ ScoreboardCheckStage::exec()
 ScoreboardCheckStage::
 ScoreboardCheckStageStats::ScoreboardCheckStageStats(statistics::Group *parent)
     : statistics::Group(parent, "ScoreboardCheckStage"),
-      ADD_STAT(stallCycles, "number of cycles wave stalled in SCB")
+      ADD_STAT(stallCycles, "number of cycles wave stalled in SCB"),
       ADD_STAT(pcBucketTotalCycles,
                "total wavefront-cycles per PC bucket (for PCSTALL)"),
       ADD_STAT(pcBucketCriticalCycles,
