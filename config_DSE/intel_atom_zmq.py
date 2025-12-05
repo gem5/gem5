@@ -2,18 +2,10 @@
 import argparse
 import os
 import sys
+import threading
 
 import m5
 from m5.objects import *
-
-# Adding zeroMQ python libs to the path
-current_dir = os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-)
-python_lib_path = os.path.join(current_dir, "python_libs")
-sys.path.insert(0, python_lib_path)
-
-import zmq
 
 
 # parse the arguments
@@ -94,33 +86,5 @@ root = Root(full_system=False, system=system)
 m5.instantiate()
 
 
-# Create the socket
-context = zmq.Context()
-socket = context.socket(zmq.REQ)
-socket.connect("tcp://localhost:5555")
-
-message = "Simulation started"
-print(f"[GEM5] Sending message to controller: {message}")
-socket.send_string(message)
-
-# Wait for the reply
-reply = socket.recv_string()
-
-# Starting sending the message
-while reply != "ENDING":
-    print(f"[GEM5] Received reply from controller: {reply}")
-
-    # Advance the simulation by one cycle
-    # exit_event = m5.simulate(1)
-
-    # Send the next message
-    message = "Next cycle completed"
-    print(f"[GEM5] Sending message to controller: {message}")
-    socket.send_string(message)
-
-    # Wait for the reply
-    reply = socket.recv_string()
-
-print("[GEM5] Simulation ending as per controller request")
-
-# exit_event = m5.simulate()
+# Advance the simulation
+exit_event = m5.simulate()
