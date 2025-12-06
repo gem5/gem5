@@ -20,6 +20,16 @@ PCSTALLDVFSPolicy::PCSTALLDVFSPolicy(const Params &p)
 {
     const int numCUs = shader->n_cu;
 
+     // Safety: don't let the policy ask for more buckets than the SCB exports.
+    if (numPcBuckets > ScoreboardCheckStage::NumPcBuckets) {
+        warn("%s: numPcBuckets (%u) > Scoreboard NumPcBuckets (%u); "
+             "clamping to %u\n",
+             name(), numPcBuckets,
+             ScoreboardCheckStage::NumPcBuckets,
+             ScoreboardCheckStage::NumPcBuckets);
+        numPcBuckets = ScoreboardCheckStage::NumPcBuckets;
+    }
+
     prevCyclesPerCU.resize(numCUs, 0);
     prevMemPerCU.resize(numCUs, 0);
 
@@ -169,6 +179,13 @@ PCSTALLDVFSPolicy::sample(DVFSHandler::PerfLevel currentLevel)
                     (1.0 - pcAlpha) * entry.sensitivity +
                     pcAlpha * obsSens;
             }
+
+            DPRINTF(GPUDVFSPolicy,
+                    "%s: CU %d bucket %u: deltaTotal=%lu deltaCrit=%lu "
+                    "obsSens=%.3f sens=%.3f\n",
+                    name(), i, b,
+                    deltaTotal, deltaCritical,
+                    obsSens, entry.sensitivity);
 
             weightedCrit +=
                 entry.sensitivity *

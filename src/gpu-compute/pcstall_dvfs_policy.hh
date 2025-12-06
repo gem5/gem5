@@ -32,7 +32,7 @@ class PCSTALLDVFSPolicy : public GPUDVFSPolicy
     std::vector<uint64_t> prevMemPerCU;
 
     /** Number of PC buckets per CU (must match ScoreboardCheckStage). */
-    const unsigned numPcBuckets;
+    unsigned numPcBuckets;
 
     /** EMA factor for per-PC sensitivity (0 < alpha <= 1). */
     const double pcAlpha;

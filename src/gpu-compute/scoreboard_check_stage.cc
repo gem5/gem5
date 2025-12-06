@@ -52,6 +52,11 @@ ScoreboardCheckStage::ScoreboardCheckStage(const ComputeUnitParams &p,
     : computeUnit(cu), toSchedule(to_schedule),
       _name(cu.name() + ".ScoreboardCheckStage"), stats(&cu)
 {
+    DPRINTF(GPUExec,
+            "%s: init PC buckets: NumPcBuckets=%u PcBucketShift=%u\n",
+            _name,
+            ScoreboardCheckStage::NumPcBuckets,
+            ScoreboardCheckStage::PcBucketShift);
 }
 
 ScoreboardCheckStage::~ScoreboardCheckStage()
@@ -304,7 +309,8 @@ ScoreboardCheckStage::exec()
             // instruction, if there *is* a next instruction.
             if (!curWave) continue;
 
-            if (!curWave->instructionBuffer.empty()) {
+            if (ScoreboardCheckStage::NumPcBuckets
+                && !curWave->instructionBuffer.empty()) {
                 GPUDynInstPtr ii_for_stats = curWave->nextInstr();
                 if (ii_for_stats) {
                     GPUStaticInst *si = ii_for_stats->staticInstruction();
