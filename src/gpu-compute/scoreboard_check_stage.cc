@@ -317,6 +317,13 @@ ScoreboardCheckStage::exec()
                     if (si) {
                         Addr pc = si->instAddr();
 
+                        if (pc == 0) {
+                            pc = static_cast<Addr>(ii_for_stats->seqNum());
+                            DPRINTF(GPUExec,
+                                    "%s: fallback PC from seqNum=%llu\n",
+                                    _name, (unsigned long long)pc);
+                        }
+
                         // Bucket PCs by shifting and masking.
                         unsigned bucket =
                             ((pc >> ScoreboardCheckStage::PcBucketShift) &
