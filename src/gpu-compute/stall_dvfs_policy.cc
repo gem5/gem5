@@ -42,7 +42,7 @@ STALLDVFSPolicy::sample(DVFSHandler::PerfLevel currentLevel)
         // Calculate scaling factor (The number of WFs that could be active
         // in this CU).
         const int maxActiveWFsPerCU = cu->numVectorALUs *
-            cu->shader->n_wf;
+            cu->activeWaves;
 
         // calculate deltas.
         uint64_t deltaCycles;
