@@ -34,6 +34,7 @@ if TYPE_CHECKING:
     from src.mem.AbstractMemory import AbstractMemory
     from src.mem.ruby.network.garnet.GarnetLink import *
     from src.mem.ruby.network.garnet.GarnetNetwork import *
+    from src.mem.ruby.network.Network import RubyNetwork
     from src.mem.ruby.system.RubySystem import RubySystem
     from src.mem.ruby.system.Sequencer import RubyPortProxy
     from src.mem.SimpleMemory import SimpleMemory
@@ -50,7 +51,7 @@ class ChipletSystem(BaseChipletSystem):
     multiple chiplets linked by interconnects. Uses Ruby and Garnet.
     """
 
-    #! see BaseChipletSystem for additional key properties, namely:
+    #! see BaseChipletSystem for additional key properties, including:
     #  - nodes
     #  - default_inter_node_link_lat
     #  - default_inter_node_router_lat
@@ -59,10 +60,6 @@ class ChipletSystem(BaseChipletSystem):
 
     # whether createSystem() has been called (successfully)
     _created: bool
-
-    # class-local reference to `self.system.ruby`
-    # (gem5 system SimObject's RubySystem)
-    _ruby_system: RubySystem
 
     # see `createSystem()` or `class ChipletMetaTopology`
     _meta_topology: ChipletMetaTopology
@@ -75,7 +72,7 @@ class ChipletSystem(BaseChipletSystem):
         MemoryClass: Type[AbstractMemory],
         inter_node_link_lat: int,
         inter_node_router_lat: int,
-        nodes: list[BaseChipletSystem] = [],
+        nodes: Sequence[BaseChipletSystem] = [],
     ):
         """
         Instantiate a `ChipletSystem` object.
@@ -100,7 +97,7 @@ class ChipletSystem(BaseChipletSystem):
                 The default latency (in cycles) of the routers
                 corresponding to the the links between nodes
                 for this layer of abstraction.
-            nodes (list[BaseChipletSystem]):
+            nodes (Sequence[BaseChipletSystem]):
                 Optional list of nodes. May be passed to constructor
                 or added separately using `addNode()`.
         """
@@ -129,6 +126,7 @@ class ChipletSystem(BaseChipletSystem):
         piobus: IOXBar | None = None,
         dma_ports: list[DmaDevice] = [],
         bootmem: AbstractMemory | None = None,
+        l2_is_private: bool = False,
     ):
         """
         Recursively construct this `ChipletSystem` based on the list
@@ -154,6 +152,10 @@ class ChipletSystem(BaseChipletSystem):
             bootmem (AbstractMemory, optional):
                 Boot memory. Defaults to None.
                 Usually not needed, seemingly only for some FS configs.
+            l2_is_private (bool, optional):
+                If the L2 cache is private (one per CPU).
+                Used for distributing controllers.
+                Defaults to False.
         """
 
         if self._created is True:
@@ -163,7 +165,10 @@ class ChipletSystem(BaseChipletSystem):
             )
             return
 
-        if use_legacy_ruby and options is not None:
+        if options is None:
+            fatal("Called createSystem() with no argparse options.")
+
+        if use_legacy_ruby:
             # at top level, run `Ruby.create_system()`
             # the way Ruby seems to be set up right now,
             # this should only run once, and not sure if
@@ -208,6 +213,7 @@ class ChipletSystem(BaseChipletSystem):
                 netifs=[],
             )
 
+            #! create Ruby system
             # * this block should only run for the parent `ChipletSystem`.
             if self._system.ruby is not None:
                 # `Ruby.py` does this, not sure why since `RubySystem`
@@ -267,61 +273,65 @@ class ChipletSystem(BaseChipletSystem):
                         cpus=self._system.cpu,
                     )
                     # `options.topology` should've initially been the same
-                    # as `self.TopologyClass`, but just in case it wasn't:
+                    # as `self._topology_cls`, but just in case it wasn't:
                     if tmp:
                         options.topology = tmp
-
-                    protocol_controllers = self._meta_topology.nodes
                 except Exception as e:
                     panic(
                         "Could not create Ruby system for Ruby protocol "
                         f"{buildEnv['PROTOCOL']}; exception thrown: {e}"
                     )
 
-                #! instantiate topology for this layer of the hierarchy
-                # type error ignorable because subclasses of `BaseTopology`
-                # typically override constructor with this signature
-                # todo: actually distribute controllers properly
-                self.topology = self._topology_cls(
-                    protocol_controllers  # type: ignore
-                )
+            #! instantiate topology for this layer of the hierarchy
+            # type error ignorable because subclasses of `BaseTopology`
+            # typically override constructor with this signature
+            all_controllers = self.getRoot()._meta_topology.nodes
 
-                # * setup topology
-                # latter 3 args are the literal classes for the
-                # corresponding objects. they can technically be
-                # based on either `GarnetNetwork` or `SimpleNetwork`,
-                # but we're using Garnet and don't allow Simple.
-                self.topology.makeTopology(
-                    options=options,
-                    network=self._garnet_network,
-                    IntLink=GarnetIntLink,
-                    ExtLink=GarnetExtLink,
-                    Router=GarnetRouter,
-                )
+            for c in all_controllers:
+                if self.getControllerCPU(c, l2_is_private) is None:
+                    # if it doesn't belong to a CPU, it doesn't belong
+                    # to a Chiplet, so it should be ours
+                    #! for now this assumes that LLC is globally shared.
+                    # todo: make ^ not the case
+                    self._ruby_controllers.append(c)
 
-                # if in SE mode, register topology with (faux) filesystem
-                # only some topologies implement this (as of now, only
-                # `Mesh_XY` and `MeshDirCorners_XY` do.)
-                if not self._is_full_system:
-                    # notes: `Mesh_XY` requires
-                    # `options.num_cpus` and `options.mem_size`.
-                    # `MeshDirCorners_XY` requires only `options.mem_size`.
-                    self.topology.registerTopology(options)
+            #! create topology
+            # need to populate `self._ruby_controllers` first
+            self._createTopology(options)
 
-                # * initialize network
-                # `Network.py` does this without any major obstacles to
-                # what we're doing in `ChipletSystem` as of now
-                #! effectively requires `.int_links` and `.ext_links` of
-                #! our `GarnetNetwork` to be set before this
-                # todo: we might have to adapt this so that we can add ...
-                # todo: ...links after calling `createSystem()`, not sure
-                options.network = "garnet"  # only required by `Network.py`
-                init_network(
-                    options=options,
-                    network=self._garnet_network,
-                    InterfaceClass=GarnetNetworkInterface,
-                )
+            self._defineMainRouterParams()
 
+        # * need to instantiate children before we connect hierarchy
+        # * and init networks
+        for node in self.nodes:
+            node._ruby_system = self._ruby_system
+            if node is ChipletSystem:
+                node.createSystem(options, use_legacy_ruby)
+            elif isinstance(node, Chiplet):
+                # not sure why, but `is` doesn't work here
+                node.createChiplet(options, l2_is_private)
+
+        if not use_legacy_ruby:
+
+            self._connectHierarchyGarnet()
+
+            # * initialize network
+            # `Network.py` does this without any major obstacles to
+            # what we're doing in `ChipletSystem` as of now
+            #! effectively requires `.int_links` and `.ext_links` of
+            #! our `GarnetNetwork` to be set before this
+            # todo: we might have to adapt this so that we can add ...
+            # todo: ...links after calling `createSystem()`, not sure
+            options.network = "garnet"  # only required by `Network.py`
+            init_network(
+                options=options,
+                network=self._garnet_network,
+                InterfaceClass=GarnetNetworkInterface,
+            )
+
+            #! other Ruby config
+            # * this block should only run for the parent `ChipletSystem`.
+            if self._system.ruby is not None:
                 # * do some port configuration from `Ruby.py`
                 self._ruby_connect_system_ports(piobus)
 
@@ -355,13 +365,13 @@ class ChipletSystem(BaseChipletSystem):
                         range=self._system.mem_ranges[0], in_addr_map=False
                     )
 
-        for node in self.nodes:
-            if node is ChipletSystem:
-                node._ruby_system = self._ruby_system
-                node.createSystem(options, use_legacy_ruby)
-            elif node is Chiplet:
-                # todo: initialize chiplet
-                pass
+        # for node in self.nodes:
+        #     node._ruby_system = self._ruby_system
+        #     if node is ChipletSystem:
+        #         node.createSystem(options, use_legacy_ruby)
+        #     elif isinstance(node, Chiplet):
+        #         # not sure why, but `is` doesn't work here
+        #         node.createChiplet(options, l2_is_private)
 
         self._x86_connect_ruby_ports()
 
@@ -427,3 +437,24 @@ class ChipletSystem(BaseChipletSystem):
                                 "Interrupt controller was created, "
                                 "but no interrupts were found."
                             )
+
+    def to_string(self):
+        import textwrap
+
+        parent_id = "None"
+        if hasattr(self, "parent") and self.parent is not None:
+            parent_id = self.parent.id
+        return f"""
+        {self.__class__.__name__} (ID: {self.id}) [
+            Parent ID: {parent_id}
+            Created: {self._created}
+            Protocol: {self.protocol}
+            Topology: {self._topology_cls.__name__}
+            Connections: {self.connected_nodes}
+            Nodes: [
+        {textwrap.indent(
+            "\n\n        ".join([n.to_string() for n in self.nodes]),
+            "        "
+        )}
+            ]:{self.id}n
+        ]:{self.id}"""
