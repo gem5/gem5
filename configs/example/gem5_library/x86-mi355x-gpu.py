@@ -55,7 +55,7 @@ Example:
 import argparse
 
 from gem5.coherence_protocol import CoherenceProtocol
-from gem5.components.devices.gpus.amdgpu import MI300X
+from gem5.components.devices.gpus.amdgpu import MI355X
 from gem5.components.memory import HBM2Stack
 from gem5.components.memory.single_channel import SingleChannelDDR4_2400
 from gem5.components.processors.cpu_types import CPUTypes
@@ -125,7 +125,7 @@ for core in processor.cores:
 
 # The GPU must be created first so we can assign CPU-side DMA ports to the
 # CPU cache hierarchy.
-gpu0 = MI300X(gpu_memory=HBM2Stack(size="16GiB"))
+gpu0 = MI355X(gpu_memory=HBM2Stack(size="16GiB"))
 
 board = ViperBoard(
     clk_freq="3GHz",

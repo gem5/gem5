@@ -709,11 +709,7 @@ SDMAEngine::copy(SDMAQueue *q, sdmaCopy *pkt)
             pkt->source, pkt->dest, pkt->count);
     q->incRptr(sizeof(sdmaCopy));
     // count represents the number of bytes - 1 to be copied
-    // However, when vmid != 0, the sdma copies count number
-    // of bytes
-    if (cur_vmid == 0) {
-        pkt->count++;
-    }
+    pkt->count++;
 
     if (q->priv() && cur_vmid == 0) {
         if (!gpuDevice->getVM().inMMHUB(pkt->source)) {

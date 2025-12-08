@@ -151,6 +151,16 @@ class ViperBoard(X86Board):
                 isa.ExtendedState = avx_extended_state
                 isa.FamilyModelStepping = avx_cpu_features
 
+        # By default stdlib creates multiple event queues whenever KVM CPU is
+        # used. Multiple event queues break many things in the GPU model
+        # including m5 commands, simulation exits before all kernels launched,
+        # and more. Disable them until multiple event queues are more stable.
+        if len(self.get_processor().get_cores()) == 1:
+            for core_wrapper in self.get_processor().get_cores():
+                if core_wrapper.is_kvm_core():
+                    core = core_wrapper.get_simobject()
+                    core.eventq_index = 0
+
         # The System() object in gem5 has a memories parameter which defaults
         # to Self.all. This will collect *all* AbstractMemories and connect to
         # the CPU side. To avoid this we manually assign the memories param to
@@ -265,6 +275,7 @@ class ViperBoard(X86Board):
             f'echo "{encodedBin}" | base64 -d > myapp\n'
             "chmod +x myapp\n"
             f"./myapp {opts}\n"
+            "sleep 20\n"
             "/sbin/m5 exit\n"
         )
 
