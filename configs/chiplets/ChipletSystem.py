@@ -58,6 +58,10 @@ class ChipletSystem(BaseChipletSystem):
     #  - parent
     #  - connected_nodes
 
+    type = "ChipletSystem"
+    abstract = False
+    clk_domain = Param.ClockDomain(Parent.clk_domain, "Clock domain")
+
     # whether createSystem() has been called (successfully)
     _created: bool
 
@@ -112,9 +116,19 @@ class ChipletSystem(BaseChipletSystem):
             inter_node_router_lat=inter_node_router_lat,
         )
 
-        for node in self.nodes:
-            if not hasattr(node, "parent"):
-                node.parent = self
+        if not self.has_parent():
+            self.set_parent(
+                self._system, f"{self.__class__.__name__}{self.id}"
+            )
+
+        for node in self._nodes:
+            if not hasattr(node, "_parent_sys"):
+                node._parent_sys = self
+
+        # clock domain must propagate down to routers
+        if not hasattr(self, "clk_domain"):
+            print(f"ChipletSystem {self.id} has no clock domain!")
+            # self.clk_domain = self._system.clk_domain
 
         self._created = False
         self._ruby_system = None
@@ -173,7 +187,7 @@ class ChipletSystem(BaseChipletSystem):
             # the way Ruby seems to be set up right now,
             # this should only run once, and not sure if
             # hierarchical topologies are plausible
-            if not hasattr(self, "parent"):
+            if not hasattr(self, "_parent_sys"):
                 # configure options that Ruby.py expects
                 options.network = "garnet"
                 options.topology = self._topology_cls.__name__
@@ -211,6 +225,7 @@ class ChipletSystem(BaseChipletSystem):
                 ext_links=[],
                 int_links=[],
                 netifs=[],
+                ignore_mesh_chk=True,
             )
 
             #! create Ruby system
@@ -254,7 +269,7 @@ class ChipletSystem(BaseChipletSystem):
                     # Thus, we must temporarily change `options.topology`
                     # to get the Ruby protocol to use our meta topology.
                     tmp = None
-                    if hasattr(options, "topology"):
+                    if hasattr(options, "_topology"):
                         tmp = options.topology
                     options.topology = "ChipletMetaTopology"
                     (
@@ -282,13 +297,28 @@ class ChipletSystem(BaseChipletSystem):
                         f"{buildEnv['PROTOCOL']}; exception thrown: {e}"
                     )
 
+            # set `SimObject` parent hierarchy
+            # make sure not to set root `GarnetNetwork` parent
+            # if we did, it would break Ruby because it expects
+            # the gem5 `System` to have a `.network` param
+            if not self._garnet_network.has_parent():
+                print(
+                    f"setting gem5 parent for GarnetNetwork of "
+                    f"ChipletSystem ID {self.id}"
+                )
+                self._garnet_network.set_parent(self, "network")
+
             #! instantiate topology for this layer of the hierarchy
             # type error ignorable because subclasses of `BaseTopology`
             # typically override constructor with this signature
             all_controllers = self.getRoot()._meta_topology.nodes
 
             for c in all_controllers:
-                if self.getControllerCPU(c, l2_is_private) is None:
+                if self.isDirController(c):
+                    # if directory controller, don't include in main
+                    # ruby controllers list
+                    self._dir_controllers.append(c)
+                elif self.getControllerCPU(c, l2_is_private) is None:
                     # if it doesn't belong to a CPU, it doesn't belong
                     # to a Chiplet, so it should be ours
                     #! for now this assumes that LLC is globally shared.
@@ -301,9 +331,35 @@ class ChipletSystem(BaseChipletSystem):
 
             self._defineMainRouterParams()
 
+            # # goal of this block is to create only one ext_link for
+            # # each directory controller
+            linked_dcs = [dc for dc, lnk in self._dir_controller_link_map]
+            for dir_ctrl in self._dir_controllers:
+                if dir_ctrl not in linked_dcs:
+                    num_routers = len(self._garnet_network.routers)
+                    dir_router = GarnetRouter(
+                        router_id=num_routers,
+                        latency=self.default_inter_node_router_lat,
+                        # the following are default parameters
+                        # gem5 complains if I don't include these params
+                        vcs_per_vnet=4,
+                    )
+                    self._garnet_network.routers.append(dir_router)
+                    self._connectRubyControllerGarnet(
+                        ctrl=dir_ctrl,
+                        router=dir_router,
+                        link_lat=self.default_inter_node_link_lat,
+                    )
+                    self._biLinkGarnetRouters(self._main_router, dir_router)
+                    self._dir_controller_router_map.append(
+                        (dir_ctrl, dir_router)
+                    )
+
         # * need to instantiate children before we connect hierarchy
         # * and init networks
-        for node in self.nodes:
+        for node in self._nodes:
+            # set `SimObject` parent hierarchy
+            node.set_parent(self, f"{node.__class__.__name__}{node.id}")
             node._ruby_system = self._ruby_system
             if node is ChipletSystem:
                 node.createSystem(options, use_legacy_ruby)
@@ -314,6 +370,10 @@ class ChipletSystem(BaseChipletSystem):
         if not use_legacy_ruby:
 
             self._connectHierarchyGarnet()
+
+            # * this block should only run for the parent `ChipletSystem`.
+            if self._system.ruby is not None:
+                self._combineHierarchyGarnetNetworks(self._garnet_network)
 
             # * initialize network
             # `Network.py` does this without any major obstacles to
@@ -328,6 +388,8 @@ class ChipletSystem(BaseChipletSystem):
                 network=self._garnet_network,
                 InterfaceClass=GarnetNetworkInterface,
             )
+
+            self._fixAllGarnetObjectParams()
 
             #! other Ruby config
             # * this block should only run for the parent `ChipletSystem`.
@@ -364,14 +426,6 @@ class ChipletSystem(BaseChipletSystem):
                     self._ruby_system.phys_mem = SimpleMemory(
                         range=self._system.mem_ranges[0], in_addr_map=False
                     )
-
-        # for node in self.nodes:
-        #     node._ruby_system = self._ruby_system
-        #     if node is ChipletSystem:
-        #         node.createSystem(options, use_legacy_ruby)
-        #     elif isinstance(node, Chiplet):
-        #         # not sure why, but `is` doesn't work here
-        #         node.createChiplet(options, l2_is_private)
 
         self._x86_connect_ruby_ports()
 
@@ -442,18 +496,18 @@ class ChipletSystem(BaseChipletSystem):
         import textwrap
 
         parent_id = "None"
-        if hasattr(self, "parent") and self.parent is not None:
-            parent_id = self.parent.id
+        if hasattr(self, "_parent_sys") and self._parent_sys is not None:
+            parent_id = self._parent_sys.id
         return f"""
         {self.__class__.__name__} (ID: {self.id}) [
             Parent ID: {parent_id}
             Created: {self._created}
             Protocol: {self.protocol}
             Topology: {self._topology_cls.__name__}
-            Connections: {self.connected_nodes}
+            Connections: {self._connected_nodes}
             Nodes: [
         {textwrap.indent(
-            "\n\n        ".join([n.to_string() for n in self.nodes]),
+            "\n\n        ".join([n.to_string() for n in self._nodes]),
             "        "
         )}
             ]:{self.id}n

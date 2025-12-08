@@ -13,6 +13,7 @@ from topologies.BaseTopology import BaseTopology
 
 from m5.defines import buildEnv  # type: ignore
 from m5.objects import *
+from m5.util import panic
 
 if TYPE_CHECKING:
     from argparse import Namespace
@@ -32,6 +33,9 @@ class Chiplet(BaseChipletSystem):
     are processor objects (cores) -- in other words, "leaf" nodes.
     """
 
+    type = "Chiplet"
+    abstract = False
+
     def __init__(
         self,
         system: System,
@@ -42,8 +46,8 @@ class Chiplet(BaseChipletSystem):
         inter_node_router_lat: int,
         cores: Sequence[BaseCPU],
     ):
-        BaseChipletSystem.__init__(
-            self,
+        super().__init__(
+            # self,
             system=system,
             full_system=full_system,
             TopologyClass=TopologyClass,
@@ -56,14 +60,14 @@ class Chiplet(BaseChipletSystem):
         # it will let other things that depend on `.nodes` work properly.
         # todo: refactor this ^ better
 
-        self.cores = cores
+        self._cores = cores
 
     def createChiplet(
         self,
         options: Namespace,
         l2_is_private: bool,
     ):
-        print(f"createChiplet() called for chiplet ID {self.id}")
+        # print(f"createChiplet() called for chiplet ID {self.id}")
 
         # todo: currently this is basically just duplicate code from...
         # todo: ...`ChipletSystem`, refactor somehow
@@ -75,9 +79,21 @@ class Chiplet(BaseChipletSystem):
             ext_links=[],
             int_links=[],
             netifs=[],
+            ignore_mesh_chk=True,
         )
 
+        # set `SimObject` parent hierarchy
+        # make sure not to set root `GarnetNetwork` parent
+        # if we did, it would break Ruby because it expects
+        # the gem5 `System` to have a `.network` param
+        if not self._garnet_network.has_parent():
+            # print(f"setting gem5 parent for GarnetNetwork of "
+            #       f"Chiplet ID {self.id}")
+            self._garnet_network.set_parent(self, "network")
+
         root = self.getRoot()
+        if root == self:
+            panic("Chiplet is root, this should never happen!")
         all_controllers = root._meta_topology.nodes  # type: ignore
 
         for c in all_controllers:
@@ -85,16 +101,18 @@ class Chiplet(BaseChipletSystem):
 
             if controller_cpu is None:
                 continue
-            elif controller_cpu in self.cores:
+            elif controller_cpu in self._cores:
                 self._ruby_controllers.append(c)
-                print(
-                    f"Chiplet {self.id} found controller {c} "
-                    f"(v{c.version})"
-                )
+                # print(
+                #     f"Chiplet {self.id} found controller {c} "
+                #     f"(v{c.version})"
+                # )
 
         #! create topology
         # need to populate `self._ruby_controllers` first
         self._createTopology(options)
+
+        # self._defineMainRouterParams()
 
         self._connectHierarchyGarnet()
 
@@ -112,22 +130,32 @@ class Chiplet(BaseChipletSystem):
             InterfaceClass=GarnetNetworkInterface,
         )
 
+        self._fixAllGarnetObjectParams()
+
+        # if hasattr(self._garnet_network, "number_of_virtual_networks"):
+        #     print(f"Chiplet{self.id}'s GarnetNetwork has param "
+        #           f"number_of_virtual_networks = "
+        #           f"{self._garnet_network.number_of_virtual_networks}")
+        # else:
+        #     print(f"Chiplet{self.id}'s GarnetNetwork has NO param "
+        #           f"number_of_virtual_networks!")
+
         # self._defineMainRouterParams()
 
     def to_string(self):
         import textwrap
 
         parent_id = "None"
-        if hasattr(self, "parent") and self.parent is not None:
-            parent_id = self.parent.id
+        if hasattr(self, "_parent_sys") and self._parent_sys is not None:
+            parent_id = self._parent_sys.id
         return f"""{self.__class__.__name__} (ID: {self.id}) [
             Parent ID: {parent_id}
             Protocol: {self.protocol}
             Topology: {self._topology_cls.__name__}
-            Connections (IDs): {[n.id for n in self.connected_nodes]}
+            Connections (IDs): {[int(f"{n.id}") for n in self._connected_nodes]}
             Cores: [
         {textwrap.indent(
-            "\n        ".join([f"{n}\n" for n in self.nodes]),
+            "\n        ".join([f"{n}\n" for n in self._nodes]),
             "        "
         ).rstrip('\n')
         }
