@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2013, 2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -151,6 +151,14 @@ FUPool::FUPool(const Params &p)
     for (int i = 0; i < numFU; i++) {
         unitBusy[i] = false;
     }
+}
+
+bool
+FUPool::isCapable(OpClass capability)
+{
+    //  If this pool doesn't have the specified capability,
+    //  return this information to the caller
+    return capabilityList[capability];
 }
 
 int

@@ -69,94 +69,30 @@ Interrupts::globalMask() const
     PrivilegeMode prv = (PrivilegeMode)tc->readMiscReg(MISCREG_PRV);
     switch (prv) {
         case PRV_U:
-            if (misa.rvh && virtualizationEnabled(tc)) {
-                STATUS vsstatus = tc->readMiscReg(MISCREG_VSSTATUS);
+            if (misa.rvh && !virtualizationEnabled(tc)) {
                 INTERRUPT hideleg = tc->readMiscReg(MISCREG_HIDELEG);
-
-                mask.local = ~hideleg.local | ~mideleg.local;
-
-                mask.vsei = (~hideleg.vsei)|(hideleg.vsei & vsstatus.sie);
-                mask.vssi = (~hideleg.vssi)|(hideleg.vssi & vsstatus.sie);
-                mask.vsti = (~hideleg.vsti)|(hideleg.vsti & vsstatus.sie);
-
-                mask.mei = (~mideleg.mei | ~hideleg.mei)
-                        |  (mideleg.mei & hideleg.mei & vsstatus.sie);
-
-                mask.mti = (~mideleg.mti | ~hideleg.mti)
-                        |  (mideleg.mti & hideleg.mti & vsstatus.sie);
-
-                mask.msi = (~mideleg.msi | ~hideleg.msi)
-                        |  (mideleg.msi & hideleg.msi & vsstatus.sie);
-
-                mask.sei = (~mideleg.sei | ~hideleg.sei)
-                        |  (mideleg.sei & hideleg.sei & vsstatus.sie);
-
-                mask.sti = (~mideleg.sti | ~hideleg.sti)
-                        |  (mideleg.sti & hideleg.sti & vsstatus.sie);
-
-                mask.ssi = (~mideleg.ssi | ~hideleg.ssi)
-                        |  (mideleg.ssi & hideleg.ssi & vsstatus.sie);
+                mask = ~mideleg | (mideleg & ~hideleg);
             } else {
-                mask.local = gem5::mask(48);
-                mask.mei = 1;
-                mask.mti = 1;
-                mask.msi = 1;
-                mask.sei = 1;
-                mask.sti = 1;
-                mask.ssi = 1;
+                mask = gem5::mask(64);
             }
             break;
         case PRV_S:
-            if (misa.rvh && virtualizationEnabled(tc)) {
-                STATUS vsstatus = tc->readMiscReg(MISCREG_VSSTATUS);
+            mask = ~mideleg;
+            if (misa.rvh) {
                 INTERRUPT hideleg = tc->readMiscReg(MISCREG_HIDELEG);
-
-                mask.local = ~hideleg.local | ~mideleg.local;
-                if (status.sie) {
-                    mask.local = mask.local | (hideleg.local & mideleg.local);
+                if (status.sie || virtualizationEnabled(tc)) {
+                    mask |= (mideleg & ~hideleg);
                 }
-
-                mask.vsei = (~hideleg.vsei)|(hideleg.vsei & vsstatus.sie);
-                mask.vssi = (~hideleg.vssi)|(hideleg.vssi & vsstatus.sie);
-                mask.vsti = (~hideleg.vsti)|(hideleg.vsti & vsstatus.sie);
-
-                // status.sie is always 0 if misa.rvn is disabled
-                mask.mei = (~mideleg.mei | ~hideleg.mei)
-                        |  (mideleg.mei & hideleg.mei & vsstatus.sie);
-
-                mask.mti = (~mideleg.mti | ~hideleg.mti)
-                        |  (mideleg.mti & hideleg.mti & vsstatus.sie);
-
-                mask.msi = (~mideleg.msi | ~hideleg.msi)
-                        |  (mideleg.msi & hideleg.msi & vsstatus.sie);
-
-
-                mask.sei = (~mideleg.sei | ~hideleg.sei)
-                        |  (mideleg.sei & hideleg.sei & vsstatus.sie);
-
-                mask.sti = (~mideleg.sti | ~hideleg.sti)
-                        |  (mideleg.sti & hideleg.sti & vsstatus.sie);
-
-                mask.ssi = (~mideleg.ssi | ~hideleg.ssi)
-                        |  (mideleg.ssi & hideleg.ssi & vsstatus.sie);
+                if (virtualizationEnabled(tc)) {
+                    STATUS vsstatus = tc->readMiscReg(MISCREG_VSSTATUS);
+                    if (vsstatus.sie) { mask |= (mideleg & hideleg); }
+                }
             } else {
-                mask.local = ~mideleg.local;
-                mask.mei = (~mideleg.mei) | (mideleg.mei & status.sie);
-                mask.mti = (~mideleg.mti) | (mideleg.mti & status.sie);
-                mask.msi = (~mideleg.msi) | (mideleg.msi & status.sie);
-                if (status.sie) {
-                    mask.sei = mask.sti = mask.ssi = 1;
-                    mask.local = mask.local | mideleg.local;
-                }
+                if (status.sie) { mask |= mideleg; }
             }
-
             break;
         case PRV_M:
-            if (status.mie) {
-                mask.local = gem5::mask(48);
-                mask.mei = mask.mti = mask.msi = 1;
-            }
-            mask.sei = mask.sti = mask.ssi = 0;
+            if (status.mie) { mask = ~mideleg; }
             break;
         default:
             panic("Unknown privilege mode %d.", prv);

@@ -10,7 +10,7 @@ on:
 jobs:
 
     get-date:
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-24.04
         outputs:
             date: ${{ steps.date.outputs.date }}
         steps:
@@ -19,8 +19,8 @@ jobs:
               run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
     get-testlib-very-long-dirs:
-        runs-on: ubuntu-latest
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:v25-0
+        runs-on: ubuntu-24.04
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         outputs:
             test-dirs-matrix: ${{ steps.dir-matrix.outputs.test-dirs-matrix }}
         steps:
@@ -57,7 +57,7 @@ jobs:
             matrix:
                 test-type: ${{ fromJson(needs.get-testlib-very-long-dirs.outputs.test-dirs-matrix) }}
         runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:v25-0
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         timeout-minutes: 4320 # 3 days
         needs: [get-date, get-testlib-very-long-dirs]
         steps:
@@ -91,7 +91,7 @@ jobs:
 
     gpu-tests:
         runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/gcn-gpu:v25-0
+        container: ghcr.io/gem5/gcn-gpu:latest
         timeout-minutes: 1440 # 24 hours
         needs: get-date
 

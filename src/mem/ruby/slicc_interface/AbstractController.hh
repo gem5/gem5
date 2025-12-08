@@ -59,12 +59,13 @@
 #include "mem/ruby/network/MessageBuffer.hh"
 #include "mem/ruby/protocol/AccessPermission.hh"
 #include "mem/ruby/system/CacheRecorder.hh"
-#include "params/RubyController.hh"
 #include "sim/clocked_object.hh"
 #include "sim/eventq.hh"
 
 namespace gem5
 {
+
+struct RubyControllerParams;
 
 namespace ruby
 {

@@ -30,7 +30,6 @@
 from typing import List
 
 from m5.objects import (
-    AddrRange,
     AMDGPUDevice,
     AMDGPUInterruptHandler,
     AMDGPUMemoryManager,
@@ -44,6 +43,7 @@ from m5.objects import (
     HSAPacketProcessor,
     LdsState,
     PciLegacyIoBar,
+    PciMemBar,
     PM4PacketProcessor,
     RegisterFileCache,
     RegisterManager,
@@ -56,6 +56,7 @@ from m5.objects import (
     VegaTLBCoalescer,
     Wavefront,
 )
+from m5.params import AddrRange
 
 
 class ViperCU(ComputeUnit):
@@ -179,6 +180,7 @@ class ViperShader(Shader):
         num_cus: int,
         cache_line_size: int,
         device: AMDGPUDevice,
+        vram_size: int,
     ):
         """
         The shader defines something the represents a single software visible
@@ -213,7 +215,7 @@ class ViperShader(Shader):
         self._create_tlbs(device)
 
         # This arbitrary address is something in the X86 I/O hole
-        hsapp_gpu_map_paddr = 0xE00000000
+        hsapp_gpu_map_paddr = 0xE00000000 + 0x1000 * shader_id
         self.dispatcher = GPUDispatcher()
         self.gpu_cmd_proc = GPUCommandProcessor(
             hsapp=HSAPacketProcessor(
@@ -232,6 +234,8 @@ class ViperShader(Shader):
 
         self.system_hub = AMDGPUSystemHub()
         self._cpu_dma_ports.append(self.system_hub.dma)
+
+        self._vram_size = vram_size
 
         self._setup_device(device)
 
@@ -281,6 +285,11 @@ class ViperShader(Shader):
             device.ExpansionROM = 0xD0000000 + (0x20000 * self._shader_id)
             bar4_addr = 0xF000 + (0x100 * self._shader_id)
             device.BAR4 = PciLegacyIoBar(addr=bar4_addr, size="256B")
+
+        # To enable large BAR access, BAR0 must equal VRAM size.
+        device.BAR0 = PciMemBar(size=f"{self._vram_size}B")
+
+        device.gpu_id = self._shader_id
 
     def _create_pm4s(self, pm4_starts: List[int], pm4_ends: List[int]):
         """Create PM4 packet processors."""
@@ -360,12 +369,12 @@ class ViperShader(Shader):
 
         self._gpu_dma_ports.append(self.l3_tlb.walker.port)
 
-    def connect_iobus(self, iobus: BaseXBar):
+    def connect_iobus(self, iobus: BaseXBar, pci_bus: BaseXBar):
         """Connect the GPU objects to the IO bus."""
         self.gpu_cmd_proc.pio = iobus.mem_side_ports
         self.gpu_cmd_proc.hsapp.pio = iobus.mem_side_ports
         self.system_hub.pio = iobus.mem_side_ports
-        self._device.pio = iobus.mem_side_ports
+        self._device.pio = pci_bus.mem_side_ports
         self._device.device_ih.pio = iobus.mem_side_ports
         for sdma in self._device.sdmas:
             sdma.pio = iobus.mem_side_ports

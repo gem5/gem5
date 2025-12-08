@@ -51,6 +51,7 @@
 #include "dev/arm/base_gic.hh"
 #include "dev/arm/smmu_v3_transl.hh"
 #include "mem/packet_access.hh"
+#include "params/SMMUv3.hh"
 #include "sim/system.hh"
 
 namespace gem5

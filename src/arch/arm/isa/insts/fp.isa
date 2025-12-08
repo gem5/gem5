@@ -724,25 +724,25 @@ let {{
     buildSimpleUnaryFpOp("vabs", "Vabs", "FpRegRegOp", "SimdFloatMiscOp",
                          "fplibAbs(half_src1)", "fplibAbs(half_src2)",
                          "fplibAbs(FpOp1_uw)", "fplibAbs(cOp1)")
-    buildSimpleUnaryFpOp("vrintp", "VRIntP", "FpRegRegOp", "SimdFloatMiscOp",
+    buildSimpleUnaryFpOp("vrintp", "VRIntP", "FpRegRegOp", "SimdCvtOp",
         "fplibRoundInt<uint16_t>(half_src1, FPRounding_POSINF, false, fpscr)",
         "fplibRoundInt<uint16_t>(half_src2, FPRounding_POSINF, false, fpscr)",
         "fplibRoundInt<uint32_t>(FpOp1_uw, FPRounding_POSINF, false, fpscr)",
         "fplibRoundInt<uint64_t>(cOp1, FPRounding_POSINF, false, fpscr)"
         )
-    buildSimpleUnaryFpOp("vrintm", "VRIntM", "FpRegRegOp", "SimdFloatMiscOp",
+    buildSimpleUnaryFpOp("vrintm", "VRIntM", "FpRegRegOp", "SimdCvtOp",
         "fplibRoundInt<uint16_t>(half_src1, FPRounding_NEGINF, false, fpscr)",
         "fplibRoundInt<uint16_t>(half_src2, FPRounding_NEGINF, false, fpscr)",
         "fplibRoundInt<uint32_t>(FpOp1_uw, FPRounding_NEGINF, false, fpscr)",
         "fplibRoundInt<uint64_t>(cOp1, FPRounding_NEGINF, false, fpscr)"
         )
-    buildSimpleUnaryFpOp("vrinta", "VRIntA", "FpRegRegOp", "SimdFloatMiscOp",
+    buildSimpleUnaryFpOp("vrinta", "VRIntA", "FpRegRegOp", "SimdCvtOp",
         "fplibRoundInt<uint16_t>(half_src1, FPRounding_TIEAWAY, false, fpscr)",
         "fplibRoundInt<uint16_t>(half_src2, FPRounding_TIEAWAY, false, fpscr)",
         "fplibRoundInt<uint32_t>(FpOp1_uw, FPRounding_TIEAWAY, false, fpscr)",
         "fplibRoundInt<uint64_t>(cOp1, FPRounding_TIEAWAY, false, fpscr)"
         )
-    buildSimpleUnaryFpOp("vrintn", "VRIntN", "FpRegRegOp", "SimdFloatMiscOp",
+    buildSimpleUnaryFpOp("vrintn", "VRIntN", "FpRegRegOp", "SimdCvtOp",
         "fplibRoundInt<uint16_t>(half_src1, FPRounding_TIEEVEN, false, fpscr)",
         "fplibRoundInt<uint16_t>(half_src2, FPRounding_TIEEVEN, false, fpscr)",
         "fplibRoundInt<uint32_t>(FpOp1_uw, FPRounding_TIEEVEN, false, fpscr)",
@@ -1323,6 +1323,41 @@ let {{
     header_output += FpRegRegOpDeclare.subst(vcvtFpSFpHBIop);
     decoder_output += FpRegRegOpConstructor.subst(vcvtFpSFpHBIop);
     exec_output += PredOpExecute.subst(vcvtFpSFpHBIop);
+
+    bf16_check = '''
+      RegVal isar6 = xc->tcBase()->readMiscReg(MISCREG_ID_ISAR6);
+      if (!(bits(isar6, 23, 20) >= 0x1))
+          return std::make_shared<UndefinedInstruction>(machInst, true);
+    '''
+    vcvtFpSBfTCode = vfpEnabledCheckCode + bf16_check + '''
+        FPSCR fpscr = (FPSCR) FpscrExc;
+        uint32_t src_elem = fpToBits(FpOp1);
+        FpDest_uw = insertBits(FpDest_uw, 31, 16,
+                        fplibConvertBF(src_elem, FPCRRounding(fpscr), fpscr));
+        FpscrExc = fpscr;
+    '''
+    vcvtFpSBfTIop = ArmInstObjParams("vcvtt", "VcvtFpSBfT", "FpRegRegOp",
+                                      { "code": vcvtFpSBfTCode,
+                                        "predicate_test": predicateTest,
+                                        "op_class": "SimdBf16CvtOp" }, [])
+    header_output += FpRegRegOpDeclare.subst(vcvtFpSBfTIop);
+    decoder_output += FpRegRegOpConstructor.subst(vcvtFpSBfTIop);
+    exec_output += PredOpExecute.subst(vcvtFpSBfTIop);
+
+    vcvtFpSBfBCode = vfpEnabledCheckCode + bf16_check + '''
+        FPSCR fpscr = (FPSCR) FpscrExc;
+        uint32_t src_elem = fpToBits(FpOp1);
+        FpDest_uw = insertBits(FpDest_uw, 15, 0,
+                        fplibConvertBF(src_elem, FPCRRounding(fpscr), fpscr));
+        FpscrExc = fpscr;
+    '''
+    vcvtFpSBfBIop = ArmInstObjParams("vcvtb", "VcvtFpSBfB", "FpRegRegOp",
+                                      { "code": vcvtFpSBfBCode,
+                                        "predicate_test": predicateTest,
+                                        "op_class": "SimdBf16CvtOp" }, [])
+    header_output += FpRegRegOpDeclare.subst(vcvtFpSBfBIop);
+    decoder_output += FpRegRegOpConstructor.subst(vcvtFpSBfBIop);
+    exec_output += PredOpExecute.subst(vcvtFpSBfBIop);
 
     vcmpSCode = vfpEnabledCheckCode + '''
         FPSCR fpscr = (FPSCR) FpscrExc;

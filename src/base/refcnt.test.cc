@@ -149,7 +149,7 @@ TEST(RefcntTest, BoolAndLogicalNotOperatorOverloads)
 {
     // Test bool and ! operator overloads.
     Ptr boolTest = new TestRC();
-    EXPECT_EQ(boolTest, true);
+    EXPECT_EQ(static_cast<bool>(boolTest), true);
     EXPECT_EQ(!boolTest, false);
     boolTest = NULL;
     EXPECT_FALSE(boolTest);

@@ -46,9 +46,8 @@ import m5
 from m5 import options
 from m5.util import warn
 
-from gem5.simulate.exit_event import ExitEvent
-from gem5.utils.override import overrides
-
+from ..utils.override import overrides
+from .exit_event import ExitEvent
 from .exit_event_generators import (
     dump_stats_generator,
     exit_generator,
@@ -322,9 +321,16 @@ class WorkEndExitHandler(ExitHandler, hypercall_num=5):
 class OrchestratorExitHandler(ExitHandler, hypercall_num=1000):
 
     def _get_status(self, simulator: "Simulator") -> Dict[str, str]:
+        import _m5.core
+
+        if not simulator.get_workload():
+            workload_id = "No workload set"
+        else:
+            workload_id = simulator.get_workload().get_id()
         return {
-            "workload": simulator.get_workload().get_id(),
+            "workload": workload_id,
             "tick": simulator.get_current_tick(),
+            "ticks_per_second": _m5.core.getClockFrequency(),
             "sim_id": simulator.get_id(),
             "curr_instructions_executed": simulator.get_instruction_count(),
         }

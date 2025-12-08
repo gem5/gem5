@@ -48,6 +48,8 @@ MRU::MRU(const Params &p)
 void
 MRU::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
 {
+    assert(replacement_data);
+
     // Reset last touch timestamp
     std::static_pointer_cast<MRUReplData>(
         replacement_data)->lastTouchTick = Tick(0);
@@ -56,6 +58,8 @@ MRU::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
 void
 MRU::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
 {
+    assert(replacement_data);
+
     // Update last touch timestamp
     std::static_pointer_cast<MRUReplData>(
         replacement_data)->lastTouchTick = curTick();
@@ -64,6 +68,8 @@ MRU::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
 void
 MRU::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
 {
+    assert(replacement_data);
+
     // Set last touch timestamp
     std::static_pointer_cast<MRUReplData>(
         replacement_data)->lastTouchTick = curTick();
@@ -81,7 +87,7 @@ MRU::getVictim(const ReplacementCandidates& candidates) const
         std::shared_ptr<MRUReplData> candidate_replacement_data =
             std::static_pointer_cast<MRUReplData>(candidate->replacementData);
 
-        // Stop searching entry if a cache line that doesn't warm up is found.
+        // Stop searching entry if an invalid entry is found
         if (candidate_replacement_data->lastTouchTick == 0) {
             victim = candidate;
             break;

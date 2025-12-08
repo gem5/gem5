@@ -39,6 +39,7 @@
 #include "arch/riscv/semihosting.hh"
 #include "arch/riscv/utility.hh"
 #include "cpu/static_inst.hh"
+#include "sim/system.hh"
 
 namespace gem5
 {

@@ -405,15 +405,15 @@ let {{
                     // VCMLA
                     bool s = bits (machInst, 20);
                     if (s) {
-                      if (q)
-                          return new VcmlaQ<uint32_t>(machInst, vd, vn, vm);
-                      else
-                          return new VcmlaD<uint32_t>(machInst, vd, vn, vm);
+                        if (q)
+                            return new VcmlaQ<uint32_t>(machInst, vd, vn, vm);
+                        else
+                            return new VcmlaD<uint32_t>(machInst, vd, vn, vm);
                     } else {
-                      if (q)
-                          return new VcmlaQ<uint16_t>(machInst, vd, vn, vm);
-                      else
-                          return new VcmlaD<uint16_t>(machInst, vd, vn, vm);
+                        if (q)
+                            return new VcmlaQ<uint16_t>(machInst, vd, vn, vm);
+                        else
+                            return new VcmlaD<uint16_t>(machInst, vd, vn, vm);
                     }
                 }
               case 4: case 5:
@@ -438,6 +438,15 @@ let {{
             }
         } else if (bit_31_24 == 0xFC && bit_11_8 == 0xc) {
             switch (op1_op2) {
+              case 0:
+                if (u) {
+                    return new Unknown64(machInst);
+                } else {
+                    if (q)
+                        return new VmmlaBfQ<uint32_t>(machInst, vd, vn, vm);
+                    else
+                        return new Unknown64(machInst);
+                }
               case 2:
                 if (u) {
                     if (q)
@@ -464,6 +473,15 @@ let {{
             }
         } else if (bit_31_24 == 0xFC && bit_11_8 == 0xd) {
             switch (op1_op2) {
+              case 0:
+                if (u) {
+                    return new Unknown64(machInst);
+                } else {
+                    if (q)
+                        return new VdotBfQ<uint32_t>(machInst, vd, vn, vm);
+                    else
+                        return new VdotBfD<uint32_t>(machInst, vd, vn, vm);
+                }
               case 2:
                 if (u) {
                     if (q)
@@ -529,7 +547,6 @@ let {{
                 return new Unknown64(machInst);
             }
         } else if (bit_31_24 == 0xFE && bit_11_8 == 0x8) {
-            vm = (RegIndex)(2 * bits(machInst, 2, 0));
 
             if (u) {
                 if (op1_op2 == 0) {
@@ -603,6 +620,17 @@ let {{
             uint8_t index = bits(machInst, 5);
 
             switch (op1_op2) {
+              case 0:
+                if (u) {
+                    return new Unknown64(machInst);
+                } else {
+                    if (q)
+                        return new VdotElemBfQ<uint32_t>(
+                            machInst, vd, vn, vm, index);
+                    else
+                        return new VdotElemBfD<uint32_t>(
+                            machInst, vd, vn, vm, index);
+                }
               case 2:
                 if (u) {
                     if (q)
@@ -2524,6 +2552,10 @@ let {{
                     if (size != 1 || (vm % 2))
                         return new Unknown(machInst);
                     return new NVcvts2h<uint16_t>(machInst, vd, vm);
+                } else if (b == 0x19) {
+                    if (size != 1 || (vm % 2))
+                        return new Unknown(machInst);
+                    return new NVcvts2bf<uint16_t>(machInst, vd, vm);
                 } else if (b == 0x1c) {
                     if (size != 1 || (vd % 2))
                         return new Unknown(machInst);
@@ -3563,7 +3595,7 @@ let {{
         RegIndex vd;
         RegIndex vm;
         RegIndex vn;
-        if (single) {
+        if (size <= 2) {
             vd = (RegIndex)(bits(machInst, 22) |
                     (bits(machInst, 15, 12) << 1));
             vm = (RegIndex)(bits(machInst, 5) |
@@ -3787,15 +3819,35 @@ let {{
                     const bool top = bits(machInst, 7);
                     if (top) {
                         if (toHalf) {
-                            return new VcvtFpSFpHT(machInst, vd, vm);
+                            switch (size) {
+                              case 1:
+                                return new VcvtFpSBfT(machInst, vd, vm);
+                              default:
+                                return new VcvtFpSFpHT(machInst, vd, vm);
+                            }
                         } else {
-                            return new VcvtFpHTFpS(machInst, vd, vm);
+                            switch (size) {
+                              case 1:
+                                return new Unknown(machInst);
+                              default:
+                                return new VcvtFpHTFpS(machInst, vd, vm);
+                            }
                         }
                     } else {
                         if (toHalf) {
-                            return new VcvtFpSFpHB(machInst, vd, vm);
+                            switch (size) {
+                              case 1:
+                                return new VcvtFpSBfB(machInst, vd, vm);
+                              default:
+                                return new VcvtFpSFpHB(machInst, vd, vm);
+                            }
                         } else {
-                            return new VcvtFpHBFpS(machInst, vd, vm);
+                            switch (size) {
+                              case 1:
+                                return new Unknown(machInst);
+                              default:
+                                return new VcvtFpHBFpS(machInst, vd, vm);
+                            }
                         }
                     }
                 }

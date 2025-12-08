@@ -1,4 +1,4 @@
-# Copyright (c) 2021 The Regents of the University of California.
+# Copyright (c) 2021-2025 The Regents of the University of California.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -49,13 +49,10 @@ scons build/X86/gem5.opt
 """
 
 import argparse
-import json
 import os
 import time
 
 import m5
-from m5.objects import Root
-from m5.stats.gem5stats import get_simstat
 from m5.util import (
     fatal,
     warn,
@@ -72,15 +69,19 @@ from gem5.isas import ISA
 from gem5.resources.resource import (
     DiskImageResource,
     Resource,
+    obtain_resource,
 )
-from gem5.simulate.exit_event import ExitEvent
+from gem5.simulate.exit_handler import (
+    WorkBeginExitHandler,
+    WorkEndExitHandler,
+)
 from gem5.simulate.simulator import Simulator
+from gem5.utils.override import overrides
 from gem5.utils.requires import requires
 
 # We check for the required gem5 build.
 
 requires(
-    isa_required=ISA.X86,
     coherence_protocol_required=CoherenceProtocol.MESI_TWO_LEVEL,
     kvm_required=True,
 )
@@ -177,6 +178,7 @@ if args.image[0] != "/":
     # present on the current working directory.
     args.image = os.path.abspath(args.image)
 
+
 if not os.path.exists(args.image):
     warn("Disk image not found!")
     print("Instructions on building the disk image can be found at: ")
@@ -245,7 +247,7 @@ except FileExistsError:
 
 # Here we set the FS workload, i.e., SPEC CPU2006 benchmark
 # After simulation has ended you may inspect
-# `m5out/system.pc.com_1.device` to the stdout, if any.
+# `m5out/board.pc.com_1.device` to the stdout, if any.
 
 # After the system boots, we execute the benchmark program and wait till the
 # `m5_exit instruction encountered` is encountered. We start collecting
@@ -263,30 +265,44 @@ board.set_kernel_disk_workload(
     # `~/.cache/gem5` directory if not already present.
     # SPEC CPU2006 benchamarks were tested with kernel version 4.19.83 and
     # 5.4.49
-    kernel=Resource("x86-linux-kernel-4.19.83"),
+    kernel=obtain_resource("x86-linux-kernel-4.19.83"),
     # The location of the x86 SPEC CPU 2017 image
     disk_image=DiskImageResource(args.image, root_partition=args.partition),
     readfile_contents=command,
 )
 
 
-def handle_exit():
-    print("Done bootling Linux")
-    print("Resetting stats at the start of ROI!")
-    m5.stats.reset()
-    processor.switch()
-    yield False  # E.g., continue the simulation.
-    print("Dump stats at the end of the ROI!")
-    m5.stats.dump()
-    yield True  # Stop the simulation. We're done.
+# def handle_exit():
+#     print("Done bootling Linux")
+#     print("Resetting stats at the start of ROI!")
+#     m5.stats.reset()
+#     processor.switch()
+#     yield False  # E.g., continue the simulation.
+#     print("Dump stats at the end of the ROI!")
+#     m5.stats.dump()
+#     yield True  # Stop the simulation. We're done.
 
 
-simulator = Simulator(
-    board=board,
-    on_exit_event={
-        ExitEvent.EXIT: handle_exit(),
-    },
-)
+class CustomWorkBeginExitHandler(WorkBeginExitHandler):
+    # The default behavior on work begin is to reset stats via
+    # m5.stats.reset() and continue simulation. We override `_process`
+    # so we can also switch processors.
+    @overrides(WorkBeginExitHandler)
+    def _process(self, simulator: "Simulator") -> None:
+        m5.stats.reset()
+        simulator.switch_processor()
+
+
+class CustomWorkEndExitHandler(WorkEndExitHandler):
+    # The default behavior for work end is to dump stats via
+    # m5.stats.dump() and continue simulation.
+    # We override `_exit_simulation` to exit simulation at this exit event.
+    @overrides(WorkEndExitHandler)
+    def _exit_simulation(self) -> bool:
+        return True
+
+
+simulator = Simulator(board=board)
 
 # We maintain the wall clock time.
 
@@ -299,23 +315,3 @@ m5.stats.reset()
 
 # We start the simulation
 simulator.run()
-
-# Simulation is over at this point. We acknowledge that all the simulation
-# events were successful.
-print("All simulation events were successful.")
-# We print the final simulation statistics.
-
-print("Performance statistics:")
-
-roi_begin_ticks = simulator.get_tick_stopwatch()[0][1]
-roi_end_ticks = simulator.get_tick_stopwatch()[1][1]
-
-print("roi simulated ticks: " + str(roi_end_ticks - roi_begin_ticks))
-
-print(
-    "Ran a total of", simulator.get_current_tick() / 1e12, "simulated seconds"
-)
-print(
-    "Total wallclock time: %.2fs, %.2f min"
-    % (time.time() - globalStart, (time.time() - globalStart) / 60)
-)

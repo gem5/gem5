@@ -108,8 +108,8 @@ let {{
     exec_output = ""
 
     class FpOpMeta(type):
-        def buildCppClasses(self, name, Name, suffix, code, flag_code,
-                cond_check, else_code, op_class, operand_types):
+        def buildCppClasses(self, name, Name, suffix, code, big_code,
+                flag_code, cond_check, else_code, op_class, operand_types):
 
             # Globals to stick the output in
             global header_output
@@ -122,16 +122,22 @@ let {{
             # If there's something optional to do with flags, generate
             # a version without it and fix up this version to use it.
             if flag_code != "" or cond_check != "true":
-                self.buildCppClasses(name, Name, suffix,
-                        code, "", "true", else_code, op_class, operand_types)
+                self.buildCppClasses(name, Name, suffix, code, big_code, "",
+                                     "true", "", op_class, operand_types)
                 suffix = "Flags" + suffix
+
+            # If there is a "big" variant, recursively generate a big version.
+            if big_code:
+                self.buildCppClasses(name, Name, suffix + "Big", big_code, "",
+                                     flag_code, cond_check, else_code,
+                                     op_class, operand_types)
 
             base = "X86ISA::InstOperands<" + \
                 ", ".join(["X86ISA::FpOp"] +
                           [op.cxx_class() for op in operand_types]) + ">"
 
             # Get everything ready for the substitution
-            iop_tag = InstObjParams(name, Name + suffix + "TopTag", base,
+            iop_tag = InstObjParams(name, Name + "TopTag" + suffix, base,
                     {"code" : code,
                      "flag_code" : flag_code,
                      "cond_check" : cond_check,
@@ -139,7 +145,7 @@ let {{
                      "tag_code" : "FTW = genX87Tags(FTW, TOP, spm);",
                      "top_code" : "TOP = (TOP + spm + 8) % 8;",
                      "op_class" : op_class})
-            iop_top = InstObjParams(name, Name + suffix + "Top", base,
+            iop_top = InstObjParams(name, Name + "Top" + suffix, base,
                     {"code" : code,
                      "flag_code" : flag_code,
                      "cond_check" : cond_check,
@@ -180,6 +186,7 @@ let {{
                 cls.className = Name
                 cls.mnemonic = name
                 code = cls.code
+                big_code = cls.big_code
                 flag_code = cls.flag_code
                 cond_check = cls.cond_check
                 else_code = cls.else_code
@@ -188,8 +195,8 @@ let {{
 
                 # Set up the C++ classes
                 mcls.buildCppClasses(cls, name, Name, "",
-                        code, flag_code, cond_check, else_code, op_class,
-                        operand_types)
+                        code, big_code, flag_code, cond_check, else_code,
+                        op_class, operand_types)
 
                 # Hook into the microassembler dict
                 global microopClasses
@@ -202,6 +209,7 @@ let {{
         abstract = True
 
         # Default template parameter values
+        big_code = ""
         flag_code = ""
         cond_check = "true"
         else_code = ";"
@@ -225,12 +233,24 @@ let {{
             ops = list([Type(op_iter).ctor_args() for
                     Type in self.operand_types])
             spm_ops = [str(self.spm)] + ops
-            return '''new %(class_name)s(machInst, macrocodeBlock,
-                    %(flags)s, %(dataSize)s, %(spm_ops)s)''' % {
-                "class_name" : self.className,
-                "flags" : self.microFlagsText(microFlags),
-                "dataSize" : self.dataSize,
-                "spm_ops" : ", ".join(spm_ops)}
+            alloc_fmt = """(StaticInstPtr) new {class_name}(
+                machInst, macrocodeBlock, {flags}, {dataSize},
+                {spm_ops})"""
+            alloc_subst = {
+                "flags": self.microFlagsText(microFlags),
+                "dataSize": self.dataSize,
+                "spm_ops": ", ".join(spm_ops),
+            }
+            alloc_small = alloc_fmt.format(
+                class_name=self.className, **alloc_subst)
+            alloc_big = alloc_fmt.format(
+                class_name=self.className + "Big", **alloc_subst)
+            if self.big_code:
+                alloc_str = f"""{self.dataSize} == 8 ?
+                                {alloc_big} : {alloc_small};"""
+            else:
+                alloc_str = f"{alloc_small};"
+            return alloc_str
 
     class Fp0Op(FpOp):
         abstract = True
@@ -265,6 +285,7 @@ let {{
             FpDestReg_uqw = FpSrcReg1_uqw;
         }
         '''
+        big_code = 'FpDestReg_uqw = FpSrcReg1_uqw;'
         else_code = 'FpDestReg_uqw = FpDestReg_uqw;'
         cond_check = "checkCondition(ccFlagBits | cfofBits | dfBit | \
                                      ecfBit | ezfBit, src1)"

@@ -1026,6 +1026,8 @@ class RegisterBank : public RegisterBankBase
     Addr base() const { return _base; }
     Addr size() const { return _size; }
     const std::string &name() const { return _name; }
+    const std::map<Addr, std::reference_wrapper<RegisterBase>> &
+    offsetMap() const { return _offsetMap; }
 
     virtual void
     read(Addr addr, void *buf, Addr bytes)

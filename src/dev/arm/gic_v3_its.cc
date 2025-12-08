@@ -50,6 +50,7 @@
 #include "dev/arm/gic_v3_distributor.hh"
 #include "dev/arm/gic_v3_redistributor.hh"
 #include "mem/packet_access.hh"
+#include "params/Gicv3Its.hh"
 
 #define COMMAND(x, method) { x, DispatchEntry(#x, method) }
 

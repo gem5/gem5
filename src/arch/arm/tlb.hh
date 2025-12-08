@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016, 2019-2022, 2024 Arm Limited
+ * Copyright (c) 2010-2013, 2016, 2019-2022, 2024-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -50,11 +50,12 @@
 #include "base/statistics.hh"
 #include "enums/TypeTLB.hh"
 #include "mem/request.hh"
-#include "params/ArmTLB.hh"
 #include "sim/probe/pmu.hh"
 
 namespace gem5
 {
+
+struct ArmTLBParams;
 
 class ThreadContext;
 
@@ -174,7 +175,8 @@ class TLB : public BaseTLB
     } stats;
 
     /** PMU probe for TLB refills */
-    probing::PMUUPtr ppRefills;
+    probing::PMUUPtr ppInstRefills;
+    probing::PMUUPtr ppDataRefills;
 
     int rangeMRU; //On lookup, only move entries ahead when outside rangeMRU
     vmid_t vmid;
@@ -214,9 +216,7 @@ class TLB : public BaseTLB
 
     void takeOverFrom(BaseTLB *otlb) override;
 
-    void setTableWalker(TableWalker *table_walker);
-
-    TableWalker *getTableWalker() { return tableWalker; }
+    void setTableWalker(TableWalker *table_walker, bool functional = false);
 
     int getsize() const { return size; }
 

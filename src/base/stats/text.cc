@@ -127,9 +127,16 @@ Text::valid() const
 }
 
 void
-Text::begin()
+Text::begin(const std::string &message)
 {
-    ccprintf(*stream, "\n---------- Begin Simulation Statistics ----------\n");
+    if (message.empty()) {
+        ccprintf(*stream,
+                 "\n---------- Begin Simulation Statistics ----------\n");
+    } else {
+        ccprintf(*stream,
+                 "\n---------- Begin Simulation Statistics : %s ----------\n",
+                 message);
+    }
 }
 
 void
@@ -498,9 +505,12 @@ DistPrint::operator()(std::ostream &stream) const
     }
 
     Result stdev = Nan;
-    if (data.samples)
-        stdev = sqrt((data.samples * data.squares - data.sum * data.sum) /
-                     (data.samples * (data.samples - 1.0)));
+    if (data.samples) {
+        if (data.samples * (data.samples - 1.0) != 0.0) {
+            stdev = sqrt((data.samples * data.squares - data.sum * data.sum) /
+                         (data.samples * (data.samples - 1.0)));
+        }
+    }
     print.name = base + "stdev";
     print.value = stdev;
     print(stream);

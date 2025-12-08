@@ -1,3 +1,15 @@
+# Copyright (c) 2025 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2022 The Regents of the University of California
 # All rights reserved.
 #
@@ -29,6 +41,7 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
+from pathlib import Path
 from typing import (
     List,
     Optional,
@@ -37,14 +50,17 @@ from typing import (
 )
 
 from m5.objects import (
-    AddrRange,
     ClockDomain,
     IOXBar,
-    Port,
+    PciBus,
     Root,
     SrcClockDomain,
     System,
     VoltageDomain,
+)
+from m5.params import (
+    AddrRange,
+    Port,
 )
 
 from ...resources.resource import WorkloadResource
@@ -136,6 +152,18 @@ class AbstractBoard:
         :returns: The memory system.
         """
         return self.memory
+
+    def get_mem_ranges(self) -> Sequence[AddrRange]:
+        """Get all the mem ranges in the board, This
+        tries to account for boards instantiating memories other
+        than main DRAM.
+        Using get_mem_ports might return some duplicate ranges
+        (when not considering interleaving) when the board
+        memory has multiple ports
+
+        :returns: All the memory ranges
+        """
+        return self.get_memory().get_uninterleaved_range()
 
     def get_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
         """Get the memory ports exposed on this board
@@ -322,6 +350,28 @@ class AbstractBoard:
         raise NotImplementedError
 
     @abstractmethod
+    def has_pci_bus(self) -> bool:
+        """Determine whether the board has an PCI bus or not.
+
+        :returns: ``True`` if the board has an PCI bus, otherwise ``False``.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_pci_bus(self) -> PciBus:
+        """Get the board's main PCI Bus.
+
+        This abstract method must be implemented within the subclasses if they
+        support PCI and/or full system simulation.
+
+        The PCI bus is a non-coherent bus (in the classic caches). This bus is
+        connected to the PCI host bridge and to each PCI devices of the system.
+
+        :returns: The PCI Bus.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def has_coherent_io(self) -> bool:
         """Determine whether the board needs coherent I/O
 
@@ -339,6 +389,9 @@ class AbstractBoard:
         CPU-side port for which coherent I/O (DMA) is issued.
         """
         raise NotImplementedError
+
+    def get_checkpoint_dir(self) -> Optional[Path]:
+        return self._checkpoint
 
     @abstractmethod
     def _setup_memory_ranges(self) -> None:

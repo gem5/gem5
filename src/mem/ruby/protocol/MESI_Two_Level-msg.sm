@@ -41,6 +41,10 @@ enumeration(CoherenceRequestType, desc="...") {
 
   DMA_READ, desc="DMA Read";
   DMA_WRITE, desc="DMA Write";
+
+  FLUSH, desc="Flush request";
+  FLUSH_NP, desc="Flush request (not present in L1 and L0)";
+  FLUSH_DATA, desc="Get data for flush request";
 }
 
 // CoherenceResponseType
@@ -54,6 +58,8 @@ enumeration(CoherenceResponseType, desc="...") {
   UNBLOCK, desc="unblock";
   EXCLUSIVE_UNBLOCK, desc="exclusive unblock";
   INV, desc="Invalidate from directory";
+
+  FLUSH_ACK, desc="Flush ack";
 }
 
 // RequestMsg

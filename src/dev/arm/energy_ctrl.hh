@@ -54,10 +54,11 @@
 #define __DEV_ARM_ENERGY_CTRL_HH__
 
 #include "dev/io_device.hh"
-#include "params/EnergyCtrl.hh"
 
 namespace gem5
 {
+
+struct EnergyCtrlParams;
 
 class DVFSHandler;
 
@@ -116,7 +117,7 @@ class EnergyCtrl : public BasicPioDevice
         PIO_NUM_FIELDS
     };
 
-    typedef EnergyCtrlParams Params;
+    using Params = EnergyCtrlParams;
     EnergyCtrl(const Params &p);
 
     /**

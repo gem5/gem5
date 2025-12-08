@@ -72,7 +72,7 @@ LupioTTY::lupioTTYUpdateIRQ()
 void
 LupioTTY::dataAvailable()
 {
-    gem5_assert(terminal->dataAvailable());
+    gem5_assert(terminal->dataAvailable(), "LupioTTY::dataAvailable");
 
     // prevent from overwritting an unread character
     if (readChar != -1) {

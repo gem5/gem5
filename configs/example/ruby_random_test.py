@@ -94,6 +94,8 @@ args.l3_assoc = 2
 check_flush = False
 if buildEnv["PROTOCOL"] == "MOESI_hammer":
     check_flush = True
+if buildEnv["PROTOCOL"] == "MESI_Three_Level":
+    check_flush = True
 
 tester = RubyTester(
     check_flush=check_flush,

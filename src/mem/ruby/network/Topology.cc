@@ -35,6 +35,7 @@
 #include "debug/RubyNetwork.hh"
 #include "mem/ruby/common/NetDest.hh"
 #include "mem/ruby/network/BasicLink.hh"
+#include "mem/ruby/network/BasicRouter.hh"
 #include "mem/ruby/network/Network.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/ruby/system/RubySystem.hh"

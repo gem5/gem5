@@ -45,7 +45,7 @@ class PrefetchType(Enum):
 
 
 class GfxVersion(ScopedEnum):
-    vals = ["gfx900", "gfx902", "gfx908", "gfx90a", "gfx942"]
+    vals = ["gfx900", "gfx902", "gfx908", "gfx90a", "gfx942", "gfx950"]
 
 
 class PoolManager(SimObject):

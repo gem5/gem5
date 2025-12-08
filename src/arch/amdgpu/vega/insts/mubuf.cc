@@ -577,11 +577,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Load);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_LOAD_UBYTE
 
     Inst_MUBUF__BUFFER_LOAD_UBYTE::~Inst_MUBUF__BUFFER_LOAD_UBYTE()
@@ -649,6 +645,29 @@ namespace VegaISA
     void
     Inst_MUBUF__BUFFER_LOAD_UBYTE::completeAcc(GPUDynInstPtr gpuDynInst)
     {
+        if (instData.LDS) {
+            // LDS data is written as dword at minimum. Convert the type size
+            // in place in the dynamic instruction data pointer.
+            VecElemU32 *as_u32 =
+                reinterpret_cast<VecElemU32 *>(gpuDynInst->d_data);
+
+            for (int lane = NumVecElemPerVecReg - 1; lane >= 0; --lane) {
+                // Reverse copy from largest to smallest index as the pointers
+                // are the same. Avoids clobbering.
+                if (gpuDynInst->exec_mask[lane]) {
+                    if (!oobMask[lane]) {
+                        as_u32[lane] = gpuDynInst->d_data[lane];
+                    } else {
+                        as_u32[lane] = 0;
+                    }
+                }
+            }
+
+            ldsComplete<1>(gpuDynInst);
+
+            return;
+        }
+
         VecOperandU32 vdst(gpuDynInst, extData.VDATA);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
@@ -705,11 +724,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Load);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_LOAD_USHORT
 
     Inst_MUBUF__BUFFER_LOAD_USHORT::~Inst_MUBUF__BUFFER_LOAD_USHORT()
@@ -777,6 +792,31 @@ namespace VegaISA
     void
     Inst_MUBUF__BUFFER_LOAD_USHORT::completeAcc(GPUDynInstPtr gpuDynInst)
     {
+        if (instData.LDS) {
+            // LDS data is written as dword at minimum. Convert the type size
+            // in place in the dynamic instruction data pointer.
+            VecElemU32 *as_u32 =
+                reinterpret_cast<VecElemU32 *>(gpuDynInst->d_data);
+            VecElemU16 *as_u16 =
+                reinterpret_cast<VecElemU16 *>(gpuDynInst->d_data);
+
+            for (int lane = NumVecElemPerVecReg - 1; lane >= 0; --lane) {
+                // Reverse copy from largest to smallest index as the pointers
+                // are the same. Avoids clobbering.
+                if (gpuDynInst->exec_mask[lane]) {
+                    if (!oobMask[lane]) {
+                        as_u32[lane] = as_u16[lane];
+                    } else {
+                        as_u32[lane] = 0;
+                    }
+                }
+            }
+
+            ldsComplete<1>(gpuDynInst);
+
+            return;
+        }
+
         VecOperandU32 vdst(gpuDynInst, extData.VDATA);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
@@ -833,12 +873,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Load);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-            warn("BUFFER.LDS not implemented!");
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_LOAD_SHORT_D16
 
     Inst_MUBUF__BUFFER_LOAD_SHORT_D16::~Inst_MUBUF__BUFFER_LOAD_SHORT_D16()
@@ -935,12 +970,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Load);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-            warn("BUFFER.LDS not implemented!");
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_LOAD_SHORT_D16_HI
 
     Inst_MUBUF__BUFFER_LOAD_SHORT_D16_HI::
@@ -1038,11 +1068,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Load);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_LOAD_DWORD
 
     Inst_MUBUF__BUFFER_LOAD_DWORD::~Inst_MUBUF__BUFFER_LOAD_DWORD()
@@ -1114,6 +1140,12 @@ namespace VegaISA
     void
     Inst_MUBUF__BUFFER_LOAD_DWORD::completeAcc(GPUDynInstPtr gpuDynInst)
     {
+        if (instData.LDS) {
+            ldsComplete<1>(gpuDynInst);
+
+            return;
+        }
+
         VecOperandU32 vdst(gpuDynInst, extData.VDATA);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
@@ -1137,11 +1169,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Load);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_LOAD_DWORDX2
 
     Inst_MUBUF__BUFFER_LOAD_DWORDX2::~Inst_MUBUF__BUFFER_LOAD_DWORDX2()
@@ -1237,11 +1265,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Load);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_LOAD_DWORDX3
 
     Inst_MUBUF__BUFFER_LOAD_DWORDX3::~Inst_MUBUF__BUFFER_LOAD_DWORDX3()
@@ -1309,6 +1333,12 @@ namespace VegaISA
     void
     Inst_MUBUF__BUFFER_LOAD_DWORDX3::completeAcc(GPUDynInstPtr gpuDynInst)
     {
+        if (instData.LDS) {
+            ldsComplete<4>(gpuDynInst);
+
+            return;
+        }
+
         VecOperandU32 vdst0(gpuDynInst, extData.VDATA);
         VecOperandU32 vdst1(gpuDynInst, extData.VDATA + 1);
         VecOperandU32 vdst2(gpuDynInst, extData.VDATA + 2);
@@ -1342,11 +1372,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Load);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_LOAD_DWORDX4
 
     Inst_MUBUF__BUFFER_LOAD_DWORDX4::~Inst_MUBUF__BUFFER_LOAD_DWORDX4()
@@ -1414,6 +1440,12 @@ namespace VegaISA
     void
     Inst_MUBUF__BUFFER_LOAD_DWORDX4::completeAcc(GPUDynInstPtr gpuDynInst)
     {
+        if (instData.LDS) {
+            ldsComplete<4>(gpuDynInst);
+
+            return;
+        }
+
         VecOperandU32 vdst0(gpuDynInst, extData.VDATA);
         VecOperandU32 vdst1(gpuDynInst, extData.VDATA + 1);
         VecOperandU32 vdst2(gpuDynInst, extData.VDATA + 2);
@@ -1452,11 +1484,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Store);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_STORE_BYTE
 
     Inst_MUBUF__BUFFER_STORE_BYTE::~Inst_MUBUF__BUFFER_STORE_BYTE()
@@ -1516,7 +1544,7 @@ namespace VegaISA
                     addr1, addr0, rsrcDesc, offset, inst_offset);
         }
 
-       gpuDynInst->computeUnit()->globalMemoryPipe.issueRequest(gpuDynInst);
+        gpuDynInst->computeUnit()->globalMemoryPipe.issueRequest(gpuDynInst);
 
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
@@ -1544,11 +1572,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Store);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_STORE_SHORT
 
     Inst_MUBUF__BUFFER_STORE_SHORT::~Inst_MUBUF__BUFFER_STORE_SHORT()
@@ -1636,11 +1660,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Store);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_STORE_DWORD
 
     Inst_MUBUF__BUFFER_STORE_DWORD::~Inst_MUBUF__BUFFER_STORE_DWORD()
@@ -1728,11 +1748,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Store);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_STORE_DWORDX2
 
     Inst_MUBUF__BUFFER_STORE_DWORDX2::~Inst_MUBUF__BUFFER_STORE_DWORDX2()
@@ -1824,11 +1840,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Store);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_STORE_DWORDX3
 
     Inst_MUBUF__BUFFER_STORE_DWORDX3::~Inst_MUBUF__BUFFER_STORE_DWORDX3()
@@ -1924,11 +1936,7 @@ namespace VegaISA
     {
         setFlag(MemoryRef);
         setFlag(Store);
-        if (instData.LDS) {
-            setFlag(GroupSegment);
-        } else {
-            setFlag(GlobalSegment);
-        }
+        setFlag(GlobalSegment);
     } // Inst_MUBUF__BUFFER_STORE_DWORDX4
 
     Inst_MUBUF__BUFFER_STORE_DWORDX4::~Inst_MUBUF__BUFFER_STORE_DWORDX4()
@@ -2079,7 +2087,7 @@ namespace VegaISA
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
         } else {
-            fatal("Unsupported scope for flat instruction.\n");
+            fatal("Unsupported scope for buffer instruction.\n");
         }
     } // execute
 
@@ -2139,7 +2147,7 @@ namespace VegaISA
             gpuDynInst->computeUnit()->globalMemoryPipe.
                 issueRequest(gpuDynInst);
         } else {
-            fatal("Unsupported scope for flat instruction.\n");
+            fatal("Unsupported scope for buffer instruction.\n");
         }
     } // execute
     void
@@ -2623,6 +2631,95 @@ namespace VegaISA
     {
         panicUnimplemented();
     } // execute
+    // --- Inst_MUBUF__BUFFER_ATOMIC_PK_ADD_BF16 class methods ---
+
+    Inst_MUBUF__BUFFER_ATOMIC_PK_ADD_BF16
+        ::Inst_MUBUF__BUFFER_ATOMIC_PK_ADD_BF16(InFmt_MUBUF *iFmt)
+        : Inst_MUBUF(iFmt, "buffer_atomic_pk_add_bf16")
+    {
+        setFlag(AtomicPkAddBF16);
+
+        // MI300 spec: "Float atomics must set SC[0]=0 (no return value)."
+        panic_if(instData.GLC, "Saw float atomic with return set!");
+
+        setFlag(AtomicNoReturn);
+    } // Inst_MUBUF__BUFFER_ATOMIC_PK_ADD_BF16
+
+    Inst_MUBUF__BUFFER_ATOMIC_PK_ADD_BF16::
+        ~Inst_MUBUF__BUFFER_ATOMIC_PK_ADD_BF16()
+    {
+    } // ~Inst_MUBUF__BUFFER_ATOMIC_PK_ADD_BF16
+
+    void
+    Inst_MUBUF__BUFFER_ATOMIC_PK_ADD_BF16::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (gpuDynInst->exec_mask.none()) {
+            wf->decVMemInstsIssued();
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(gpuDynInst->computeUnit()->clockPeriod());
+
+        ConstVecOperandU32 addr0(gpuDynInst, extData.VADDR);
+        ConstVecOperandU32 addr1(gpuDynInst, extData.VADDR + 1);
+        ConstScalarOperandU128 rsrcDesc(gpuDynInst, extData.SRSRC * 4);
+        ConstScalarOperandU32 offset(gpuDynInst, extData.SOFFSET);
+        ConstVecOperandU32 src(gpuDynInst, extData.VDATA);
+
+        rsrcDesc.read();
+        offset.read();
+        src.read();
+
+        int inst_offset = instData.OFFSET;
+
+        if (!instData.IDXEN && !instData.OFFEN) {
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr0, addr1, rsrcDesc, offset, inst_offset);
+        } else if (!instData.IDXEN && instData.OFFEN) {
+            addr0.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr0, addr1, rsrcDesc, offset, inst_offset);
+        } else if (instData.IDXEN && !instData.OFFEN) {
+            addr0.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr1, addr0, rsrcDesc, offset, inst_offset);
+        } else {
+            addr0.read();
+            addr1.read();
+            calcAddr<ConstVecOperandU32, ConstVecOperandU32,
+                ConstScalarOperandU128, ConstScalarOperandU32>(gpuDynInst,
+                    addr1, addr0, rsrcDesc, offset, inst_offset);
+        }
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
+                    = src[lane];
+            }
+        }
+
+        gpuDynInst->computeUnit()->globalMemoryPipe.issueRequest(gpuDynInst);
+    } // execute
+
+    void
+    Inst_MUBUF__BUFFER_ATOMIC_PK_ADD_BF16::
+        initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        initAtomicAccess<VecElemU32>(gpuDynInst);
+    } // initiateAcc
+
+    void
+    Inst_MUBUF__BUFFER_ATOMIC_PK_ADD_BF16::
+        completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+    } // completeAcc
     // --- Inst_MUBUF__BUFFER_ATOMIC_SWAP_X2 class methods ---
 
     Inst_MUBUF__BUFFER_ATOMIC_SWAP_X2

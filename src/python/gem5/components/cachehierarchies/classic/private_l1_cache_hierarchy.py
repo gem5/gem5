@@ -1,4 +1,4 @@
-# Copyright (c) 2021 The Regents of the University of California
+# Copyright (c) 2021, 2025 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,11 +28,12 @@ from typing import Optional
 
 from m5.objects import (
     BadAddr,
+    BaseCPU,
     BaseXBar,
     Cache,
-    Port,
     SystemXBar,
 )
+from m5.params import Port
 
 from ....isas import ISA
 from ....utils.override import *
@@ -41,12 +42,13 @@ from ..abstract_cache_hierarchy import AbstractCacheHierarchy
 from .abstract_classic_cache_hierarchy import AbstractClassicCacheHierarchy
 from .caches.l1dcache import L1DCache
 from .caches.l1icache import L1ICache
-from .caches.mmu_cache import MMUCache
 
 
 class PrivateL1CacheHierarchy(AbstractClassicCacheHierarchy):
     """
     A cache setup where each core has a private L1 data and instruction Cache.
+    Table walker ports connect directly to the membus by default so walk caches
+    are only instantiated via subclasses such as PrivateL1WalkCacheHierarchy.
     """
 
     def _get_default_membus(self) -> SystemXBar:
@@ -108,16 +110,6 @@ class PrivateL1CacheHierarchy(AbstractClassicCacheHierarchy):
             L1DCache(size=self._l1d_size)
             for i in range(board.get_processor().get_num_cores())
         ]
-        # ITLB Page walk caches
-        self.iptw_caches = [
-            MMUCache(size="8KiB")
-            for _ in range(board.get_processor().get_num_cores())
-        ]
-        # DTLB Page walk caches
-        self.dptw_caches = [
-            MMUCache(size="8KiB")
-            for _ in range(board.get_processor().get_num_cores())
-        ]
 
         if board.has_coherent_io():
             self._setup_io_cache(board)
@@ -128,13 +120,7 @@ class PrivateL1CacheHierarchy(AbstractClassicCacheHierarchy):
 
             self.l1icaches[i].mem_side = self.membus.cpu_side_ports
             self.l1dcaches[i].mem_side = self.membus.cpu_side_ports
-
-            self.iptw_caches[i].mem_side = self.membus.cpu_side_ports
-            self.dptw_caches[i].mem_side = self.membus.cpu_side_ports
-
-            cpu.connect_walker_ports(
-                self.iptw_caches[i].cpu_side, self.dptw_caches[i].cpu_side
-            )
+            self._connect_table_walker(i, cpu)
 
             if board.get_processor().get_isa() == ISA.X86:
                 int_req_port = self.membus.mem_side_ports
@@ -142,6 +128,23 @@ class PrivateL1CacheHierarchy(AbstractClassicCacheHierarchy):
                 cpu.connect_interrupt(int_req_port, int_resp_port)
             else:
                 cpu.connect_interrupt()
+
+    def _connect_table_walker(self, cpu_id: int, cpu: BaseCPU) -> None:
+        walker_ports = cpu.get_mmu().walkerPorts() if cpu.has_mmu() else []
+        if len(walker_ports) > 2:
+            raise RuntimeError(
+                "Unexpected number of walker ports "
+                f"from CPU {cpu_id}: {len(walker_ports)}.\n"
+                "Expected 0, 1, or 2"
+            )
+
+        if len(walker_ports) == 0:
+            return
+
+        cpu.connect_walker_ports(
+            self.membus.cpu_side_ports,
+            self.membus.cpu_side_ports,
+        )
 
     def _setup_io_cache(self, board: AbstractBoard) -> None:
         """Create a cache for coherent I/O connections"""

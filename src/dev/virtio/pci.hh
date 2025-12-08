@@ -54,12 +54,12 @@ class PciVirtIO : public PciEndpoint
     PciVirtIO(const Params &params);
     virtual ~PciVirtIO();
 
-    Tick read(PacketPtr pkt);
-    Tick write(PacketPtr pkt);
-
     void kick();
 
   protected:
+    Tick readDevice(PacketPtr pkt) override;
+    Tick writeDevice(PacketPtr pkt) override;
+
     /** @{ */
     /** Offsets into VirtIO header (BAR0 relative). */
 

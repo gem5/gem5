@@ -44,8 +44,7 @@ from m5.util import (
 
 from _m5 import core
 
-from gem5.gem5_default_config import config
-
+from ..gem5_default_config import config
 from .client_api.azure_functions_client import AzureFunctionsAPIClient
 from .client_api.client_query import ClientQuery
 from .client_api.jsonclient import JSONClient

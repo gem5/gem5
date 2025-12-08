@@ -36,6 +36,7 @@
 #include "arch/sparc/page_size.hh"
 #include "base/loader/object_file.hh"
 #include "mem/page_table.hh"
+#include "params/Process.hh"
 #include "sim/process.hh"
 
 namespace gem5
@@ -79,7 +80,7 @@ class Sparc32Process : public SparcProcess
         brk_point = roundUp(brk_point, SparcISA::PageBytes);
 
         // Reserve 8M for main stack.
-        Addr max_stack_size = 8 * 1024 * 1024;
+        Addr max_stack_size = params.maxStackSize;
 
         // Set up stack. On SPARC Linux, stack goes from the top of memory
         // downward, less the hole for the kernel address space.
@@ -113,7 +114,7 @@ class Sparc64Process : public SparcProcess
         Addr brk_point = image.maxAddr();
         brk_point = roundUp(brk_point, SparcISA::PageBytes);
 
-        Addr max_stack_size = 8 * 1024 * 1024;
+        Addr max_stack_size = params.maxStackSize;
 
         // Set up stack. On SPARC Linux, stack goes from the top of memory
         // downward, less the hole for the kernel address space.

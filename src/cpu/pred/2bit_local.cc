@@ -52,7 +52,7 @@ namespace branch_prediction
 {
 
 LocalBP::LocalBP(const LocalBPParams &params)
-    : BPredUnit(params),
+    : ConditionalPredictor(params),
       localPredictorSize(params.localPredictorSize),
       localCtrBits(params.localCtrBits),
       localPredictorSets(localPredictorSize / localCtrBits),
@@ -76,6 +76,12 @@ LocalBP::LocalBP(const LocalBPParams &params)
 
     DPRINTF(Fetch, "instruction shift amount: %i\n",
             instShiftAmt);
+}
+
+void LocalBP::branchPlaceholder(ThreadID tid, Addr pc,
+                                bool uncond, void * &bpHistory)
+{
+// Placeholder for a function that only returns history items
 }
 
 void

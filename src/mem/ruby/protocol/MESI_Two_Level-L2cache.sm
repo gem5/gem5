@@ -93,6 +93,9 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     MT_IB, AccessPermission:Busy, desc="Blocked for L1_GETS from MT, got unblock, waiting for data";
     MT_SB, AccessPermission:Busy, desc="Blocked for L1_GETS from MT, got data,  waiting for unblock";
 
+    I_F, AccessPermission:Busy, desc="Flushing from NP,SS,M state, waiting for memory ack/sharers ack";
+    I_FF, AccessPermission:Busy, desc="Flushing from SS state, waiting for sharers acks and memory ack";
+    MT_F, AccessPermission:Busy, desc="Flushing from MT state, waiting for data from owner";
   }
 
   // EVENTS
@@ -126,6 +129,13 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     Exclusive_Unblock, desc="Unblock from L1 requestor";
 
     MEM_Inv, desc="Invalidation from directory";
+
+    Flush, desc="Flush request, write to mem";
+    Flush_NP, desc="Flush request not present in requestor L1 and L0, write to mem";
+    Flush_Clean, desc="Flush request, clean data, no write to mem";
+    Flush_NP_Clean, desc="Flush request not present in requestor L1 and L0, clean data, no write to mem";
+    Flush_Data, desc="Data from L1 for flush, need to write to mem";
+    Flush_Data_Clean, desc="Data from L1 for flush, no write to mem";
   }
 
   // TYPES
@@ -145,6 +155,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     State TBEState,             desc="Transient state";
     DataBlock DataBlk,          desc="Buffer for the data block";
     bool Dirty, default="false", desc="Data is Dirty";
+    MachineID Requestor,        desc="Who allocated this TBE";
 
     NetDest L1_GetS_IDs,            desc="Set of the internal processors that want the block in shared state";
     MachineID L1_GetX_ID,          desc="ID of the L1 cache to forward the block to once we get a response";
@@ -283,6 +294,12 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
       } else {
         return Event:L1_PUTX_old;
       }
+    } else if (type == CoherenceRequestType:FLUSH) {
+      return Event:Flush;
+    } else if (type == CoherenceRequestType:FLUSH_NP) {
+      return Event:Flush_NP;
+    } else if (type == CoherenceRequestType:FLUSH_DATA) {
+      return Event:Flush_Data;
     } else {
       DPRINTF(RubySlicc, "address: %#x, Request Type: %s\n", addr, type);
       error("Invalid L1 forwarded request type");
@@ -381,7 +398,25 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
         assert(machineIDToMachineType(in_msg.Requestor) == MachineType:L1Cache);
         assert(in_msg.Destination.isElement(machineID));
 
-        if (is_valid(cache_entry)) {
+        if (in_msg.Type == CoherenceRequestType:FLUSH) {
+          if (in_msg.Dirty || (is_valid(cache_entry) && cache_entry.Dirty)) {
+            trigger(Event:Flush, in_msg.addr, cache_entry, tbe);
+          } else {
+            trigger(Event:Flush_Clean, in_msg.addr, cache_entry, tbe);
+          }
+        } else if (in_msg.Type == CoherenceRequestType:FLUSH_NP) {
+          if (is_valid(cache_entry) && cache_entry.Dirty) {
+            trigger(Event:Flush_NP, in_msg.addr, cache_entry, tbe);
+          } else {
+            trigger(Event:Flush_NP_Clean, in_msg.addr, cache_entry, tbe);
+          }
+        } else if (in_msg.Type == CoherenceRequestType:FLUSH_DATA) {
+          if (in_msg.Dirty || cache_entry.Dirty) {// must be valid because asked for data
+            trigger(Event:Flush_Data, in_msg.addr, cache_entry, tbe);
+          } else {
+            trigger(Event:Flush_Data_Clean, in_msg.addr, cache_entry, tbe);
+          }
+        } else if (is_valid(cache_entry)) {
           // The L2 contains the block, so proceeded with handling the request
           trigger(L1Cache_request_type_to_event(in_msg.Type, in_msg.addr,
                                                 in_msg.Requestor, cache_entry),
@@ -735,6 +770,83 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     }
   }
 
+  action(f_sendFlushAckToL1, "fsf", desc="send flush ack to L1") {
+    enqueue(responseL2Network_out, ResponseMsg, l2_response_latency) {
+      out_msg.addr := address;
+      out_msg.Type := CoherenceResponseType:FLUSH_ACK;
+      if (is_valid(tbe)) {
+        out_msg.Destination.add(tbe.Requestor);
+      } else {
+        peek(L1RequestL2Network_in, RequestMsg) {
+          out_msg.Destination.add(in_msg.Requestor);
+        }
+      }
+      out_msg.MessageSize := MessageSizeType:Control;
+    }
+  }
+
+  action(f_sendFlushNotNeededAckToL1, "fsfn", desc="send flush ack to L1 when flush not needed") {
+    peek(L1RequestL2Network_in, RequestMsg) {
+      enqueue(responseL2Network_out, ResponseMsg, l2_response_latency) {
+        out_msg.addr := address;
+        out_msg.Type := CoherenceResponseType:FLUSH_ACK;
+        out_msg.Destination.add(in_msg.Requestor);
+        out_msg.MessageSize := MessageSizeType:Control;
+      }
+    }
+  }
+
+  action(f_flushGetDataFromOwner, "fgd", desc="get data from owner before flush") {
+    enqueue(L1RequestL2Network_out, RequestMsg, to_l1_latency) {
+      assert(is_valid(cache_entry));
+      out_msg.addr := address;
+      out_msg.Type := CoherenceRequestType:FLUSH_DATA;
+      out_msg.Requestor := machineID;
+      out_msg.Destination.add(cache_entry.Exclusive);
+      out_msg.MessageSize := MessageSizeType:Control;
+    }
+  }
+
+  action(t_setTbeRequestor, "tst", desc="set TBE requestor from l1 cache") {
+    peek(L1RequestL2Network_in, RequestMsg) {
+      tbe.Requestor := in_msg.Requestor;
+    }
+  }
+
+  action(c_exclusiveFlushReplacement, "cef", desc="Send flushed data to memory") {
+    peek(L1RequestL2Network_in, RequestMsg) {
+      enqueue(responseL2Network_out, ResponseMsg, l2_response_latency) {
+        assert(is_valid(cache_entry));
+        out_msg.addr := address;
+        out_msg.Type := CoherenceResponseType:MEMORY_DATA;
+        out_msg.Sender := machineID;
+        out_msg.Destination.add(mapAddressToMachine(address, MachineType:Directory));
+        out_msg.DataBlk := cache_entry.DataBlk;
+        out_msg.Dirty := cache_entry.Dirty;
+        if (in_msg.Dirty) {
+          out_msg.DataBlk := in_msg.DataBlk;
+          out_msg.Dirty := in_msg.Dirty;
+        }
+        out_msg.MessageSize := MessageSizeType:Response_Data;
+      }
+    }
+  }
+
+  action(fwn_sendInvToSharersMinusRequestorFlush, "fwn", desc="invalidate sharers for L2 replacement, requestor is sharer") {
+    peek(L1RequestL2Network_in, RequestMsg) {
+      enqueue(L1RequestL2Network_out, RequestMsg, to_l1_latency) {
+        assert(is_valid(cache_entry));
+        out_msg.addr := address;
+        out_msg.Type := CoherenceRequestType:INV;
+        out_msg.Requestor := machineID;
+        out_msg.Destination := cache_entry.Sharers;
+        out_msg.Destination.remove(in_msg.Requestor);
+        out_msg.MessageSize := MessageSizeType:Request_Control;
+        tbe.pendingAcks := out_msg.Destination.count();
+      }
+    }
+  }
+
   action(uu_profileMiss, "\um", desc="Profile the demand miss") {
     L2cache.profileDemandMiss();
   }
@@ -821,7 +933,7 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     jj_popL1RequestQueue;
   }
 
-  transition({IM, IS, ISS, SS_MB, MT_MB, MT_IIB, MT_IB, MT_SB}, {L2_Replacement, L2_Replacement_clean}) {
+  transition({IM, IS, ISS, SS_MB, MT_MB, MT_IIB, MT_IB, MT_SB}, {L2_Replacement, L2_Replacement_clean, Flush, Flush_Data, Flush_NP, Flush_Clean, Flush_NP_Clean, Flush_Data_Clean}) {
     zz_stallAndWaitL1RequestQueue;
   }
 
@@ -838,6 +950,9 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
     zz_stallAndWaitL1RequestQueue;
   }
 
+  transition({I_F, MT_F, I_FF}, {L1_GETS, L1_GET_INSTR, L1_GETX, L1_UPGRADE, L1_PUTX, L1_PUTX_old, L2_Replacement, L2_Replacement_clean, WB_Data, WB_Data_clean, MEM_Inv, Unblock, Exclusive_Unblock}) {
+    zz_stallAndWaitL1RequestQueue;
+  }
 
   transition(NP, L1_GETS,  ISS) {
     qq_allocateL2CacheBlock;
@@ -1079,6 +1194,100 @@ machine(MachineType:L2Cache, "MESI Directory L2 Cache CMP")
 
   transition(MCT_I, {WB_Data_clean, Ack_all}, M_I) {
     c_exclusiveCleanReplacement;
+    o_popIncomingResponseQueue;
+  }
+
+  // Flush transitions
+  transition(NP, {Flush, Flush_NP, Flush_Clean, Flush_NP_Clean}) {
+    f_sendFlushNotNeededAckToL1;
+    jj_popL1RequestQueue;
+  }
+
+  transition(SS, {Flush, Flush_NP}, I_FF) {
+    i_allocateTBE;
+    t_setTbeRequestor;
+    fwn_sendInvToSharersMinusRequestorFlush;
+    c_exclusiveFlushReplacement;
+    jj_popL1RequestQueue;
+  }
+
+  transition(SS, {Flush_Clean, Flush_NP_Clean}, I_FF) {
+    i_allocateTBE;
+    t_setTbeRequestor;
+    fwn_sendInvToSharersMinusRequestorFlush;
+    c_exclusiveCleanReplacement;
+    jj_popL1RequestQueue;
+  }
+
+  transition(M, Flush_NP, I_F) {
+    i_allocateTBE;
+    t_setTbeRequestor;
+    c_exclusiveFlushReplacement;
+    jj_popL1RequestQueue;
+  }
+
+  transition(M, Flush_NP_Clean, I_F) {
+    i_allocateTBE;
+    t_setTbeRequestor;
+    c_exclusiveCleanReplacement;
+    jj_popL1RequestQueue;
+  }
+
+  transition(MT, Flush, I_F) {
+    i_allocateTBE;
+    t_setTbeRequestor;
+    c_exclusiveFlushReplacement;
+    jj_popL1RequestQueue;
+  }
+
+  transition(MT, Flush_Clean, I_F) {
+    i_allocateTBE;
+    t_setTbeRequestor;
+    c_exclusiveCleanReplacement;
+    jj_popL1RequestQueue;
+  }
+
+  transition(MT, {Flush_NP, Flush_NP_Clean}, MT_F) {
+    i_allocateTBE;
+    t_setTbeRequestor;
+    f_flushGetDataFromOwner;
+    jj_popL1RequestQueue;
+  }
+
+  transition(MT_F, Flush_Data, I_F) {
+    c_exclusiveFlushReplacement;
+    jj_popL1RequestQueue;
+  }
+
+  transition(MT_F, Flush_Data_Clean, NP) {
+    f_sendFlushAckToL1;
+    s_deallocateTBE;
+    rr_deallocateL2CacheBlock;
+    jj_popL1RequestQueue;
+  }
+
+  transition(I_FF, Mem_Ack, I_F) {
+    o_popIncomingResponseQueue;
+  }
+
+  transition(I_FF, Ack) {
+    q_updateAck;
+    o_popIncomingResponseQueue;
+  }
+
+  transition(I_F, Ack) {
+    q_updateAck;
+    o_popIncomingResponseQueue;
+  }
+
+  transition(I_FF, Ack_all, I_F) {
+    o_popIncomingResponseQueue;
+  }
+
+  transition(I_F, {Mem_Ack, Ack_all}, NP) {
+    f_sendFlushAckToL1;
+    s_deallocateTBE;
+    rr_deallocateL2CacheBlock;
     o_popIncomingResponseQueue;
   }
 

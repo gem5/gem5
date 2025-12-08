@@ -38,6 +38,7 @@
 #ifndef __ARCH_ARM_INSTS_MULT_HH__
 #define __ARCH_ARM_INSTS_MULT_HH__
 
+#include "arch/arm/insts/pred_inst.hh"
 #include "arch/arm/insts/static_inst.hh"
 #include "base/trace.hh"
 

@@ -809,15 +809,13 @@ class VPinVdMicroInst : public VectorArithMicroInst
 {
     private:
         RegId srcRegIdxArr[1];
-        RegId destRegIdxArr[2];
+        RegId destRegIdxArr[1];
         const bool hasVdOffset;
-        const bool copyVs;
 
-    public:
+      public:
         VPinVdMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
                         uint32_t _numVdPins, uint32_t _elen, uint32_t _vlen,
-                        bool _hasVdOffset=false, bool _copyVs = false,
-                        uint32_t _vsIdx = 0);
+                        bool _hasVdOffset = false);
         Fault execute(ExecContext *, trace::InstRecord *) const override;
         std::string generateDisassembly(
                 Addr pc, const loader::SymbolTable *symtab) const override;
