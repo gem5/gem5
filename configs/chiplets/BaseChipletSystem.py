@@ -299,7 +299,7 @@ class BaseChipletSystem(SubSystem):
     # * Root ChipletSystem Methods
     # *
 
-    def getRoot(self) -> ChipletSystem:
+    def getRoot(self):  # -> ChipletSystem:
         """
         Retrieve a reference to the root `ChipletSystem`,
         i.e., the `ChipletSystem` at the top of the hierarchy.
@@ -307,7 +307,7 @@ class BaseChipletSystem(SubSystem):
 
         if (
             not hasattr(self, "_parent_sys") or self._parent_sys == None
-        ) and isinstance(self, ChipletSystem):
+        ):  # and isinstance(self, ChipletSystem):
             return self
         elif self._parent_sys is not None:
             return self._parent_sys.getRoot()
@@ -326,7 +326,7 @@ class BaseChipletSystem(SubSystem):
                 f"Self was {was_cs_or_not_str}ChipletSystem."
             )
             # below will never be reached, just to satisfy type checker
-            assert self is ChipletSystem
+            # assert self is ChipletSystem
             return self
 
     def isRoot(self):
@@ -522,11 +522,11 @@ class BaseChipletSystem(SubSystem):
         # the point of this is t
 
         # ! connect to main router
+        print(
+            f"Linking Routers with main for "
+            f"{self.__class__.__name__} ID {self.id}"
+        )
         for r in gnw.routers:
-            print(
-                f"Linking Routers with main for "
-                f"{self.__class__.__name__} ID {self.id}"
-            )
             self._biLinkGarnetRouters(self._main_router, r)
 
         # * add main router to my routers

@@ -192,13 +192,19 @@ class ChipletSystem(BaseChipletSystem):
         self._global_router_count = 0
         self._global_link_count = 0
 
+        self._root_all_routers_dict = {}
+        self._root_all_ext_links_dict = {}
+        self._root_all_int_links_dict = {}
+
+        self._root_main_routers_dict = {}
+        self._root_fake_garnet_networks_dict = {}
+
         self._garnet_network = FakeGarnetNetwork()
 
         self._main_router = self.create_and_register_router(
             latency=inter_node_router_lat,
             description=f"{self.__class__.__name__}{self.id} main router",
         )
-        # register to dict later, `getRoot()` won't work right now
 
         self._created = False
         self._ruby_system = None
@@ -286,7 +292,7 @@ class ChipletSystem(BaseChipletSystem):
 
         root = self.getRoot()
 
-        new_router_id = self._generate_router_id()
+        new_router_id = root._generate_router_id()
 
         new_router = GarnetRouter(
             router_id=new_router_id,
@@ -331,8 +337,8 @@ class ChipletSystem(BaseChipletSystem):
 
         for router in net2.routers:
             if root is not None:
-                info = root._root_all_routers_dict[router]
-                if info is not None:
+                if router in root._root_all_routers_dict.keys():
+                    info = root._root_all_routers_dict[router]
                     info.original_id = router.router_id
                 elif add_to_dict_if_missing:
                     root._registerNetworkObject(
@@ -359,12 +365,12 @@ class ChipletSystem(BaseChipletSystem):
 
         for ext_link in net2.ext_links:
             if root is not None:
-                info = root._root_all_ext_links_dict[ext_link]
-                if info is not None:
+                if ext_link in root._root_all_ext_links_dict.keys():
+                    info = root._root_all_ext_links_dict[ext_link]
                     info.original_id = ext_link.link_id
                 elif add_to_dict_if_missing:
                     root._registerNetworkObject(
-                        router,
+                        ext_link,
                         ChipletGarnetObjectInfo(
                             # assume that callee is parent of `net1`
                             original_parent=self,
@@ -387,12 +393,12 @@ class ChipletSystem(BaseChipletSystem):
 
         for int_link in net2.int_links:
             if root is not None:
-                info = root._root_all_int_links_dict[int_link]
-                if info is not None:
+                if int_link in root._root_all_int_links_dict.keys():
+                    info = root._root_all_int_links_dict[int_link]
                     info.original_id = int_link.link_id
                 elif add_to_dict_if_missing:
                     root._registerNetworkObject(
-                        router,
+                        int_link,
                         ChipletGarnetObjectInfo(
                             # assume that callee is parent of `net1`
                             original_parent=self,
@@ -439,6 +445,38 @@ class ChipletSystem(BaseChipletSystem):
             add_to_dict_if_missing=True,
             skip_duplicates=True,
         )
+
+    def _rootReAssignAllIDs(self):
+        root = self.getRoot()
+        rnet = root._garnet_network
+
+        # reset counters
+        root._global_router_count = 0
+        root._global_link_count = 0
+
+        for router in root.getRootRouters():
+            str = f"router id {router.router_id}"
+            info = root._root_all_routers_dict[router]
+            info.original_id = router.router_id
+            router.router_id = root._generate_router_id()
+            str += f", new id = {router.router_id}; info = {info}"
+            print(str)
+
+        for ext_link in root.getRootExtLinks():
+            str = f"ext_link id {ext_link.link_id}"
+            info = root._root_all_ext_links_dict[ext_link]
+            info.original_id = ext_link.link_id
+            ext_link.link_id = root._generate_link_id()
+            str += f", new id = {ext_link.link_id}; info = {info}"
+            print(str)
+
+        for int_link in root.getRootIntLinks():
+            str = f"int_link id {int_link.link_id}"
+            info = root._root_all_int_links_dict[int_link]
+            info.original_id = int_link.link_id
+            int_link.link_id = root._generate_link_id()
+            str += f", new id = {int_link.link_id}; info = {info}"
+            print(str)
 
     # * helper methods for `createSystem()`
     def _createLegacyRubyChiplet(
@@ -727,14 +765,9 @@ class ChipletSystem(BaseChipletSystem):
                 #! for now this assumes that LLC is globally shared.
                 # todo: make ^ not the case
 
-                self._non_dir_controllers.append(c)
-                self._ruby_controllers.append(c)
-
-                if self.getControllerCPU(c, l2_is_private) is not None:
-                    warn(
-                        f"Found non-directory controller that seems to "
-                        f"belong to a CPU: {c}"
-                    )
+                if self.getControllerCPU(c, l2_is_private) is None:
+                    self._non_dir_controllers.append(c)
+                    self._ruby_controllers.append(c)
 
     def _linkDirectoryControllers(self):
         for dir_ctrl in self._dir_controllers:
@@ -902,27 +935,29 @@ class ChipletSystem(BaseChipletSystem):
         # * so we expect that and prepare accordingly
         # we likely don't have many routers/links in the fake network yet,
         # but better to be safe
-        gn = self._garnet_network
-        tmp_routers = [r for r in gn.routers]
-        tmp_ext_links = [l for l in gn.ext_links]
-        tmp_int_links = [l for l in gn.int_links]
-        tmp_network = FakeGarnetNetwork(
-            tmp_routers, tmp_ext_links, tmp_int_links
-        )
+        self._rootAccumulateNetworkObjects(self._garnet_network)
+
+        # gn = self._garnet_network
+        # tmp_routers = [r for r in gn.routers]
+        # tmp_ext_links = [l for l in gn.ext_links]
+        # tmp_int_links = [l for l in gn.int_links]
+        # tmp_network = FakeGarnetNetwork(
+        #     tmp_routers, tmp_ext_links, tmp_int_links
+        # )
 
         # populate `FakeGarnetNetwork` with routers and links
         # based on the specified topology for this `Chiplet[System]`
         self._createTopology(options, self._ruby_controllers)
 
         # recombine existing routers/links with those from the topology
-        self._mergeFakeGarnetNetworks(
-            tmp_network,
-            self._garnet_network,
-            add_to_dict_if_missing=True,
-            skip_duplicates=True,
-        )
-        self._garnet_network = tmp_network
-        root._root_fake_garnet_networks_dict[self] = self._garnet_network
+        # self._mergeFakeGarnetNetworks(
+        #     tmp_network,
+        #     self._garnet_network,
+        #     add_to_dict_if_missing=True,
+        #     skip_duplicates=True,
+        # )
+        # self._garnet_network = tmp_network
+        # root._root_fake_garnet_networks_dict[self] = self._garnet_network
 
         # * need to instantiate and connect to children before init network
         for node in self._nodes:
@@ -957,6 +992,8 @@ class ChipletSystem(BaseChipletSystem):
             # work on any hierarchy, although it might be rather slow
             self._rootAccumulateNetworkObjects(node._garnet_network)
 
+        self._rootAccumulateNetworkObjects(self._garnet_network)
+
         if is_root:
             #! this where the rest of the magic happens.
             """
@@ -967,6 +1004,7 @@ class ChipletSystem(BaseChipletSystem):
             topologies (from `configs/topologies`), without having to
             manually define the hierarchical topology at a low level.
             """
+            self._rootReAssignAllIDs()
 
             # replace the root's `FakeGarnetNetwork` with the real one here
             self._garnet_network = root_garnet_network
