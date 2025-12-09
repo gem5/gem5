@@ -63,7 +63,11 @@ AMDGPUDevice::AMDGPUDevice(const AMDGPUDeviceParams &p)
       _lastVMID(0),
       deviceMem(name() + ".deviceMem", p.memories, false, "", false),
       system(p.system),
-      gpuId(p.gpu_id)
+      gpuId(p.gpu_id),
+      xgmiHive(p.xgmi_hive),
+      xgmiNode(p.xgmi_node),
+      forceP2PGartRemap(p.force_p2p_gart_remap),
+      p2pPeerId(p.p2p_peer_id)
 {
     uint64_t vram_size = 0;
 
@@ -431,7 +435,11 @@ AMDGPUDevice::writeConfig(PacketPtr pkt)
 
             config().expansionROM = 0xfffff000;
         } else {
-            return PciEndpoint::writeConfig(pkt);
+            Tick delay = PciEndpoint::writeConfig(pkt);
+            if (xgmiHive) {
+                xgmiHive->updateAddressRange(gpuId, BARs[0]->range());
+            }
+            return delay;
         }
     }
 
@@ -560,7 +568,39 @@ AMDGPUDevice::writeFrame(PacketPtr pkt, Addr offset)
 
     // Record the value
     if (aperture == gpuvm.gartBase()) {
-        gpuvm.gartTable[aperture_offset] = pkt->getUintX(ByteOrder::little);
+        uint64_t pte_val = pkt->getUintX(ByteOrder::little);
+
+        if (forceP2PGartRemap && xgmiHive) {
+            const auto &devices = xgmiHive->getDevices();
+            auto peer_it = devices.find(p2pPeerId);
+            if (peer_it != devices.end()) {
+                const uint64_t lower_mask = (1ULL << 12) - 1;
+                Addr page_base = (pte_val >> 12) << 12;
+                Addr peer_frame_size = xgmiHive->getFrameSize(p2pPeerId);
+
+                if (page_base < peer_frame_size) {
+                    Addr peer_base = xgmiHive->getDeviceBase(p2pPeerId);
+                    Addr remapped = peer_base + page_base;
+                    uint64_t flags = pte_val & lower_mask;
+                    uint64_t remapped_pfn = remapped >> 12;
+                    pte_val = (remapped_pfn << 12) | flags;
+
+                    DPRINTF(AMDGPUDevice,
+                            "GART P2P remap peer %d: base %#lx offset %#lx -> %#lx\n",
+                            p2pPeerId, peer_base, page_base, remapped);
+                } else {
+                    DPRINTF(AMDGPUDevice,
+                            "GART P2P remap skipped for offset %#lx (peer %d size %#lx)\n",
+                            page_base, p2pPeerId, peer_frame_size);
+                }
+            } else {
+                DPRINTF(AMDGPUDevice,
+                        "GART P2P remap requested but peer %d not in hive\n",
+                        p2pPeerId);
+            }
+        }
+
+        gpuvm.gartTable[aperture_offset] = pte_val;
         DPRINTF(AMDGPUDevice, "GART translation %p -> %p\n", aperture_offset,
                 gpuvm.gartTable[aperture_offset]);
     }
