@@ -88,6 +88,11 @@ class ChipletSystem(BaseChipletSystem):
     package, a multi-chip module (MCM), or CCD, insofar as its role in
     containing multiple processors (heterogeneous or homogenous) across
     multiple chiplets linked by interconnects. Uses Ruby and Garnet.
+
+    As of now, it is intended to be used to build a hierarchy bottom-up,
+    i.e., first create `Chiplet`s with the system CPUs, then instantiate
+    `ChipletSystem`s, passing in those `Chiplet`s into the constructor as
+    nodes, and so on.
     """
 
     #! see BaseChipletSystem for additional important attributes
@@ -100,6 +105,8 @@ class ChipletSystem(BaseChipletSystem):
     # (gem5 system SimObject's RubySystem)
     _ruby_system: RubySystem
 
+    _root_garnet_network: GarnetNetwork
+
     # whether createSystem() has been called (successfully)
     _created: bool
 
@@ -111,7 +118,14 @@ class ChipletSystem(BaseChipletSystem):
     _root_all_ext_links_dict: dict[GarnetExtLink, ChipletGarnetObjectInfo]
     _root_all_int_links_dict: dict[GarnetIntLink, ChipletGarnetObjectInfo]
 
-    _fake_garnet_networks_dict: dict[BaseChipletSystem, FakeGarnetNetwork]
+    _global_router_count: int
+    _global_link_count: int
+
+    # store direct ref to main routers
+    _root_main_routers_dict: dict[BaseChipletSystem, GarnetRouter]
+
+    # store fake garnet networks (mostly for the one for the root)
+    _root_fake_garnet_networks_dict: dict[BaseChipletSystem, FakeGarnetNetwork]
 
     def __init__(
         self,
@@ -167,11 +181,24 @@ class ChipletSystem(BaseChipletSystem):
                 self._system, f"{self.__class__.__name__}{self.id}"
             )
 
+        # * set gem5 `SimObject` parent property for nodes
         # * set _parent_sys property for children
         # currently only adding nodes in constructor is really supported
         for node in self._nodes:
+            node.set_parent(self, f"{node.__class__.__name__}{node.id}")
             if not hasattr(node, "_parent_sys"):
                 node._parent_sys = self
+
+        self._global_router_count = 0
+        self._global_link_count = 0
+
+        self._garnet_network = FakeGarnetNetwork()
+
+        self._main_router = self.create_and_register_router(
+            latency=inter_node_router_lat,
+            description=f"{self.__class__.__name__}{self.id} main router",
+        )
+        # register to dict later, `getRoot()` won't work right now
 
         self._created = False
         self._ruby_system = None
@@ -211,21 +238,215 @@ class ChipletSystem(BaseChipletSystem):
         if info is not None:
             return info.original_parent
 
-    # * helper methods for `createSystem()`
-
-    def _createChildren(
+    # * helper methods for creating and registering network objects
+    def _registerNetworkObject(
         self,
-        options: Namespace,  # argparse Namespace (parsed args)
-        l2_is_private: bool = False,
+        object: GarnetRouter | GarnetExtLink | GarnetIntLink,
+        info: ChipletGarnetObjectInfo,
     ):
-        pass
+        """
+        Registers a Garnet network object (router or link) in
+        the root dictionaries mapping routers/links to information
+        such as original parent, original ID, and description.
 
+        ! Does NOT add the specified object to any `GarnetNetwork`
+        ! or `FakeGarnetNetwork`!
+
+        Args:
+            object (GarnetRouter | GarnetExtLink | GarnetIntLink):
+                The network object to register.
+            info (ChipletGarnetObjectInfo): _description_
+        """
+        if isinstance(object, GarnetRouter):
+            self.getRoot()._root_all_routers_dict[object] = info
+
+        if isinstance(object, GarnetExtLink):
+            self.getRoot()._root_all_ext_links_dict[object] = info
+
+        if isinstance(object, GarnetIntLink):
+            self.getRoot()._root_all_int_links_dict[object] = info
+
+    def _generate_router_id(self):
+        self._global_router_count += 1
+        return self._global_router_count - 1
+
+    def _generate_link_id(self):
+        self._global_link_count += 1
+        return self._global_link_count - 1
+
+    def create_and_register_router(
+        self,
+        latency: int = -1,
+        vcs_per_vnet: int = 4,
+        description: str = "",
+        add_router_to_self: bool = False,
+    ) -> GarnetRouter:
+        if latency == -1:
+            latency = self.default_inter_node_router_lat
+
+        root = self.getRoot()
+
+        new_router_id = self._generate_router_id()
+
+        new_router = GarnetRouter(
+            router_id=new_router_id,
+            latency=latency,
+            vcs_per_vnet=vcs_per_vnet,
+        )
+
+        new_router_info = ChipletGarnetObjectInfo(
+            original_parent=self,
+            original_id=new_router_id,
+            description=description,
+        )
+
+        root._registerNetworkObject(new_router, new_router_info)
+
+        if add_router_to_self:
+            self._garnet_network.routers.append(new_router)
+
+        return new_router
+
+    def create_and_register_and_add_router(
+        self,
+        latency: int = -1,
+        vcs_per_vnet: int = 4,
+        description: str = "",
+    ) -> GarnetRouter:
+        return self.create_and_register_router(
+            latency, vcs_per_vnet, description
+        )
+
+    def _mergeFakeGarnetNetworks(
+        self,
+        net1: FakeGarnetNetwork,
+        net2: FakeGarnetNetwork,
+        add_to_dict_if_missing: bool = True,
+        skip_duplicates: bool = True,
+    ):
+        local_router_id = len(net1.routers)
+        local_link_id = len(net1.ext_links) + len(net1.int_links)
+
+        root = self.getRoot()
+
+        for router in net2.routers:
+            if root is not None:
+                info = root._root_all_routers_dict[router]
+                if info is not None:
+                    info.original_id = router.router_id
+                elif add_to_dict_if_missing:
+                    root._registerNetworkObject(
+                        router,
+                        ChipletGarnetObjectInfo(
+                            # assume that callee is parent of `net1`
+                            original_parent=self,
+                            original_id=router.router_id,
+                            description=f"combined into "
+                            f"{net1} from {net2}",
+                        ),
+                    )
+            if router in net1.routers:
+                if skip_duplicates:
+                    continue
+                else:
+                    warn(
+                        f"adding duplicate router {router}"
+                        f"during FakeGarnetNetwork merge"
+                    )
+            router.router_id = local_router_id
+            local_router_id += 1
+            net1.routers.append(router)
+
+        for ext_link in net2.ext_links:
+            if root is not None:
+                info = root._root_all_ext_links_dict[ext_link]
+                if info is not None:
+                    info.original_id = ext_link.link_id
+                elif add_to_dict_if_missing:
+                    root._registerNetworkObject(
+                        router,
+                        ChipletGarnetObjectInfo(
+                            # assume that callee is parent of `net1`
+                            original_parent=self,
+                            original_id=ext_link.link_id,
+                            description=f"combined into "
+                            f"{net1} from {net2}",
+                        ),
+                    )
+            if ext_link in net1.ext_links:
+                if skip_duplicates:
+                    continue
+                else:
+                    warn(
+                        f"adding duplicate ext_link {ext_link}"
+                        f"during FakeGarnetNetwork merge"
+                    )
+            ext_link.link_id = local_link_id
+            local_link_id += 1
+            net1.ext_links.append(ext_link)
+
+        for int_link in net2.int_links:
+            if root is not None:
+                info = root._root_all_int_links_dict[int_link]
+                if info is not None:
+                    info.original_id = int_link.link_id
+                elif add_to_dict_if_missing:
+                    root._registerNetworkObject(
+                        router,
+                        ChipletGarnetObjectInfo(
+                            # assume that callee is parent of `net1`
+                            original_parent=self,
+                            original_id=int_link.link_id,
+                            description=f"combined into "
+                            f"{net1} from {net2}",
+                        ),
+                    )
+            if int_link in net1.int_links:
+                if skip_duplicates:
+                    continue
+                else:
+                    warn(
+                        f"adding duplicate int_link {int_link}"
+                        f"during FakeGarnetNetwork merge"
+                    )
+            int_link.link_id = local_link_id
+            local_link_id += 1
+            net1.int_links.append(int_link)
+
+    def _rootAccumulateNetworkObjects(
+        self,
+        net: FakeGarnetNetwork,
+    ):
+        """
+        Given a `FakeGarnetNetwork`, add all of its network objects
+        to the root network object dictionaries.
+        After this, accessing the lists via the appropriate getters
+        (e.g., `self.getRootRouters()`) should include the objects
+        in `net` appended to any existing registered objects.
+
+        Args:
+            net (FakeGarnetNetwork):
+                The `FakeGarnetNetwork` to accumulate objects from.
+        """
+        root_existing = FakeGarnetNetwork(
+            self.getRootRouters(),
+            self.getRootExtLinks(),
+            self.getRootIntLinks(),
+        )
+        self._mergeFakeGarnetNetworks(
+            root_existing,
+            net,
+            add_to_dict_if_missing=True,
+            skip_duplicates=True,
+        )
+
+    # * helper methods for `createSystem()`
     def _createLegacyRubyChiplet(
         self,
         options: Namespace,  # argparse Namespace (parsed args)
-        piobus: IOXBar | None = None,
-        dma_ports: list[DmaDevice] = [],
-        bootmem: AbstractMemory | None = None,
+        piobus: IOXBar | None,
+        dma_ports: list[DmaDevice],
+        bootmem: AbstractMemory | None,
     ):
         """
         Creates a `ChipletSystem` using `Ruby.py`'s `create_system()`
@@ -264,10 +485,7 @@ class ChipletSystem(BaseChipletSystem):
 
             self._x86_connect_ruby_ports()
 
-    def _createRootGarnetNetwork(
-        self,
-        options: Namespace,  # argparse Namespace (parsed args)
-    ):
+    def _instantiateRootGarnetNetwork(self):
         if not self.isRoot():
             fatal(
                 f"User tried to instantiate GarnetNetwork for "
@@ -283,15 +501,18 @@ class ChipletSystem(BaseChipletSystem):
             )
 
         # Create the `GarnetNetwork` for the entire `ChipletSystem`
-        self._garnet_network = GarnetNetwork(
+        root_garnet_network = GarnetNetwork(
             ruby_system=self._ruby_system,
             topology=self._topology_cls.__name__,
-            routers=self.getRootRouters(),
-            ext_links=self.getRootExtLinks(),
-            int_links=self.getRootIntLinks(),
+            routers=[],  # populate later
+            ext_links=[],  # populate later
+            int_links=[],  # populate later
             netifs=[],  # will be populated by `init_network()`
             ignore_mesh_chk=True,
         )
+        #! routers, ext/int links, and netifs will be assigned
+        #! in `_initializeRootGarnetNetwork()`, after being
+        #! created via topology templates.
 
         # * ignore_mesh_chk:
         # if `num_rows > 0` we will fail an assertion
@@ -301,14 +522,28 @@ class ChipletSystem(BaseChipletSystem):
         # so we had to add an override to prevent this
         # TODO NEW HIERARCHY: this might not be needed anymore
 
+        return root_garnet_network
+
+    def _initializeRootGarnetNetwork(
+        self,
+        options: Namespace,  # argparse Namespace (parsed args)
+    ):
+        assert isinstance(self._garnet_network, GarnetNetwork)
+
+        # * populate `GarnetNetwork` with routers and links.
+        # these should've been created since calling
+        # `_instantiateRootGarnetNetwork()` by all `Chiplet[System]`s
+        # using `_createTopology()` (and thus `makeTopology()`).
+        self._garnet_network.routers = self.getRootRouters()
+        self._garnet_network.ext_links = self.getRootExtLinks()
+        self._garnet_network.int_links = self.getRootIntLinks()
+
         # * initialize network
-        # `Network.py` does this without any major obstacles to
-        # what we're doing in `ChipletSystem` as of now
-        #! effectively requires `.int_links` and `.ext_links` of
-        #! our `GarnetNetwork` to be set before this
-        # todo: we might have to adapt this so that we can add ...
-        # todo: ...links after calling `createSystem()`, not sure
+        # `Network.py:init_network()` does what we need without
+        # any major problems as of now
         options.network = "garnet"  # only required by `Network.py`
+        #! `init_network` requires the int and ext links to be set.
+        #! it also instantiates all the requisite network interfaces.
         init_network(
             options=options,
             network=self._garnet_network,
@@ -339,7 +574,7 @@ class ChipletSystem(BaseChipletSystem):
                 f"{self.__class__.__name__} {self.id}!"
             )
 
-    def _createRubySystem(
+    def _rubyProtocolCreateSystem(
         self,
         options: Namespace,  # argparse Namespace (parsed args)
         dma_ports: list[DmaDevice] = [],
@@ -348,6 +583,8 @@ class ChipletSystem(BaseChipletSystem):
         """
         Creates the Ruby system.
         The `RubySystem` object must be instantiated first.
+        ! `self._system.ruby.network` must be set to a valid
+        ! `GarnetNetwork` before calling this method.
         Sets the following attributes of this `ChipletSystem`:
          - `self._cpu_sequencers`
          - `self._dir_controllers`
@@ -373,20 +610,20 @@ class ChipletSystem(BaseChipletSystem):
                     "gem5 System!"
                 )
 
-        if not hasattr(self, "_garnet_network"):
-            fatal(
-                "User tried to create Ruby system, but Garnet network "
-                "has not yet been created. Do not call "
-                "_createRubySystem() from outside ChipletSystem."
-            )
+        # if not hasattr(self, "_garnet_network"):
+        #     fatal(
+        #         "User tried to create Ruby system, but Garnet network "
+        #         "has not yet been created. Do not call "
+        #         "_createRubySystem() from outside ChipletSystem."
+        #     )
 
-        if isinstance(self._garnet_network, FakeGarnetNetwork):
-            panic(
-                "ChipletSystem's GarnetNetwork is FakeGarnetNetwork! "
-                "Either GarnetNetwork failed to instantiate, or "
-                "_createRubySystem() was called before "
-                "_createRootGarnetNetwork()!"
-            )
+        # if isinstance(self._garnet_network, FakeGarnetNetwork):
+        #     panic(
+        #         "ChipletSystem's GarnetNetwork is FakeGarnetNetwork! "
+        #         "Either GarnetNetwork failed to instantiate, or "
+        #         "_createRubySystem() was called before "
+        #         "_createRootGarnetNetwork()!"
+        #     )
 
         # * Create the Ruby/memory system
         try:
@@ -460,6 +697,7 @@ class ChipletSystem(BaseChipletSystem):
          - `self._ruby_controllers`
          - `self._dir_controllers`
          - `self._non_dir_controllers`
+        ! `_rubyProtocolCreateSystem()` needs to be called before this.
         """
 
         # grab all controllers
@@ -498,14 +736,82 @@ class ChipletSystem(BaseChipletSystem):
                         f"belong to a CPU: {c}"
                     )
 
+    def _linkDirectoryControllers(self):
+        for dir_ctrl in self._dir_controllers:
+            # is dir ctrl linked?
+            lnk = self._findExtLinkFromController(dir_ctrl)
+            if lnk is None:
+                dir_router = self.create_and_register_and_add_router(
+                    latency=self.default_inter_node_router_lat,
+                )
+                self._connectRubyControllerGarnet(
+                    ctrl=dir_ctrl,
+                    router=dir_router,
+                    link_lat=self.default_inter_node_link_lat,
+                )
+                self._biLinkGarnetRouters(self._main_router, dir_router)
+
+    def _rubyFinalSetup(
+        self,
+        options: Namespace,  # argparse Namespace (parsed args)
+        piobus: IOXBar | None,
+    ):
+        if not self.isRoot():
+            fatal(
+                "User tried to call _rubyFinalSetup() on "
+                "non-root ChipletSystem."
+            )
+
+        if not isinstance(self._garnet_network, GarnetNetwork):
+            fatal(
+                "_rubyFinalSetup() was called before "
+                "GarnetNetwork was properly initialized. "
+                "(Probably out of order with respect to "
+                "`_createChipletHierarchy()`)"
+            )
+        # * do some port configuration from `Ruby.py`
+        self._ruby_connect_system_ports(piobus)
+
+        # todo: don't rely on `Ruby.py` for this
+        # unfortunately, in order to get `dir_cntrls`, the Ruby
+        # protocols also call back to `Ruby.create_directories`.
+        # so can't completely avoid it without major refactoring
+        options.mem_type = self._memory_cls.__name__
+        Ruby.setup_memory_controllers(
+            system=self._system,
+            ruby=self._ruby_system,
+            dir_cntrls=self._dir_controllers,
+            options=options,
+        )
+
+        # * more stuff from `Ruby.py`
+        # Connect the cpu sequencers and the piobus
+        if piobus != None:
+            for cpu_seq in self._cpu_sequencers:
+                cpu_seq.connectIOPorts(piobus)
+
+        assert isinstance(self._ruby_system.network, GarnetNetwork)
+        self._ruby_system.number_of_virtual_networks = (
+            self._ruby_system.network.number_of_virtual_networks
+        )  # implicit line break on assign due to 76 char limit
+        self._ruby_system._cpu_ports = self._cpu_sequencers
+        self._ruby_system.num_of_sequencers = len(self._cpu_sequencers)
+
+        # Create a backing copy of physical memory in case required
+        if options.access_backing_store:
+            self._ruby_system.access_backing_store = True
+            self._ruby_system.phys_mem = SimpleMemory(
+                range=self._system.mem_ranges[0], in_addr_map=False
+            )
+
     def _createChipletHierarchy(
         self,
         options: Namespace,  # argparse Namespace (parsed args)
-        piobus: IOXBar | None = None,
-        dma_ports: list[DmaDevice] = [],
-        bootmem: AbstractMemory | None = None,
-        l2_is_private: bool = False,
-        include_dir_ctrls_in_topology: bool = False,
+        piobus: IOXBar | None,
+        dma_ports: list[DmaDevice],
+        bootmem: AbstractMemory | None,
+        l2_is_private: bool,
+        include_dir_ctrls_in_topology: bool,
     ):
         """
         Recursively create this chiplet hierarchy.
@@ -519,23 +825,7 @@ class ChipletSystem(BaseChipletSystem):
         #! this code is adapted from `Ruby.py` and `Network.py`,
         #! as changes were needed in order to support hierarchies.
         is_root = self.isRoot()
-
-        #! this is where (some of) the magic happens.
-        """
-        We recursively "create" the children (nodes). Each has its own
-        topology (from `configs/topologies`). To create a Ruby system and
-        Garnet network representing a hierarchical topology without
-        breaking all the existing topologies and interfering with the
-        cache coherence protocol, for each child/node, we use
-        `makeTopology()` on a fake Garnet network to collect all the
-        Garnet routers and links, all structured according to the topology
-        of the child. Creating multiple `GarnetNetwork`s and trying to
-        combine them does not work properly, so this method is better.
-        The root `ChipletSystem` also has a topology, so we also need to
-        do the same thing for it (this), and we do that first.
-        """
-        self._garnet_network = FakeGarnetNetwork()
-        self._fake_garnet_networks_dict[self] = self._garnet_network
+        root = self.getRoot()
 
         # TODO NEW HIERARCHY:
         """
@@ -562,6 +852,112 @@ class ChipletSystem(BaseChipletSystem):
             # also some filesystem config
             self._instantiateRubySystem(options)
 
+            root_garnet_network = self._instantiateRootGarnetNetwork()
+
+            # Ruby expects the `System` object to have a `ruby` attr,
+            # and that the `ruby` property has a `network` attribute.
+            self._system.ruby.network = root_garnet_network
+            # note that our `self._ruby_system` should reference the same
+            # object as `self._system.ruby`, but Ruby doesn't know or care
+            # about our `self._ruby_system`, so avoid setting its attrs.
+            # reading or using it as a `RubySystem` is fine.
+
+            # call `create_system()` for the appropriate Ruby protocol
+            # this populates the lists of sequencers, dir controllers,
+            # and creates the meta topology (to get list of all ctrls)
+            self._rubyProtocolCreateSystem(options, dma_ports, bootmem)
+
+            # after this, our lists of controllers should be populated
+            self._sortRubyControllers(
+                l2_is_private,
+                include_dir_ctrls_in_topology,
+            )
+
+            if not include_dir_ctrls_in_topology:
+                self._linkDirectoryControllers()
+
+        #! this is where (some of) the magic happens.
+        """
+        We recursively "create" the children (nodes). Each has its own
+        topology (from `configs/topologies`). To create a Ruby system and
+        Garnet network representing a hierarchical topology without
+        breaking all the existing topologies and interfering with the
+        cache coherence protocol, for each child/node, we use
+        `makeTopology()` on a fake Garnet network to collect all the
+        Garnet routers and links, all structured according to the topology
+        of the child. Creating multiple `GarnetNetwork`s and trying to
+        combine them does not work properly, so this method is better.
+        The root `ChipletSystem` also has a topology, so we also need to
+        do the same thing for it (this), and we do that first.
+        """
+        # instantiating FakeGarnetNetwork has no prereqs
+        # so just do it in the constructor
+        # self._garnet_network = FakeGarnetNetwork()
+        root._root_fake_garnet_networks_dict[self] = self._garnet_network
+
+        # register main router in main routers dict
+        root._root_main_routers_dict[self] = self._main_router
+
+        # * some topologies override network's lists of routers/links,
+        # * so we expect that and prepare accordingly
+        # we likely don't have many routers/links in the fake network yet,
+        # but better to be safe
+        gn = self._garnet_network
+        tmp_routers = [r for r in gn.routers]
+        tmp_ext_links = [l for l in gn.ext_links]
+        tmp_int_links = [l for l in gn.int_links]
+        tmp_network = FakeGarnetNetwork(
+            tmp_routers, tmp_ext_links, tmp_int_links
+        )
+
+        # populate `FakeGarnetNetwork` with routers and links
+        # based on the specified topology for this `Chiplet[System]`
+        self._createTopology(options, self._ruby_controllers)
+
+        # recombine existing routers/links with those from the topology
+        self._mergeFakeGarnetNetworks(
+            tmp_network,
+            self._garnet_network,
+            add_to_dict_if_missing=True,
+            skip_duplicates=True,
+        )
+        self._garnet_network = tmp_network
+        root._root_fake_garnet_networks_dict[self] = self._garnet_network
+
+        # * need to instantiate and connect to children before init network
+        for node in self._nodes:
+            # todo: SimObject parenting to __init__(), hopefully that works
+            # set `SimObject` parent hierarchy
+            # node.set_parent(self, f"{node.__class__.__name__}{node.id}")
+
+            # * create node
+            if isinstance(node, ChipletSystem):
+                # cascade ruby system, although it shouldn't be needed
+                node._ruby_system = self._ruby_system
+
+                # most of these args technically shouldn't be needed
+                # for any child systems, since they're only used by root
+                node._createChipletHierarchy(
+                    options,
+                    piobus,
+                    dma_ports,
+                    bootmem,
+                    l2_is_private,
+                    include_dir_ctrls_in_topology,
+                )
+            elif isinstance(node, Chiplet):
+                node.createChiplet(options, l2_is_private)
+
+            # * connect to node
+            self._biLinkGarnetRouters(self._main_router, node._main_router)
+
+            #! renumber all of the routers and links as we
+            #! transfer all of them into the root lists
+            # since this triggers for all `ChipletSystem`s, it should
+            # work on any hierarchy, although it might be rather slow
+            self._rootAccumulateNetworkObjects(node._garnet_network)
+
+        if is_root:
             #! this where the rest of the magic happens.
             """
             Once we have created all of the topologies of all children,
@@ -571,21 +967,16 @@ class ChipletSystem(BaseChipletSystem):
             topologies (from `configs/topologies`), without having to
             manually define the hierarchical topology at a low level.
             """
-            self._createRootGarnetNetwork(options)
-            #! ^ also instantiates network via `init_network()`...
-            #! not sure if this needs to be done later
 
-            # Ruby expects the `System` object to have a `ruby` attr,
-            # and that the `ruby` property has a `network` attribute.
-            self._ruby_system.network = self._garnet_network
+            # replace the root's `FakeGarnetNetwork` with the real one here
+            self._garnet_network = root_garnet_network
 
-            self._createRubySystem(options, dma_ports, bootmem)
+            # * do the actual combination into the real `GarnetNetwork`
+            self._initializeRootGarnetNetwork(options)
 
-            # after this, our lists of controllers should be populated
-            self._sortRubyControllers(
-                l2_is_private,
-                include_dir_ctrls_in_topology,
-            )
+            self._rubyFinalSetup(options, piobus)
+
+            self._x86_connect_ruby_ports()
 
     def createSystem(
         self,
@@ -644,9 +1035,21 @@ class ChipletSystem(BaseChipletSystem):
             fatal("Called createSystem() with no argparse options.")
 
         if use_legacy_ruby:
-            self._createLegacyRubyChiplet(options)
+            self._createLegacyRubyChiplet(
+                options,
+                piobus,
+                dma_ports,
+                bootmem,
+            )
         else:
-            self._createChipletHierarchy(options)
+            self._createChipletHierarchy(
+                options,
+                piobus,
+                dma_ports,
+                bootmem,
+                l2_is_private,
+                include_dir_ctrls_in_topology,
+            )
 
         self._created = True
 

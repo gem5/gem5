@@ -20,7 +20,10 @@ if TYPE_CHECKING:
     from argparse import Namespace
 
     # below import only used to type check BaseChipletSystem.parent
-    from chiplets.ChipletSystem import ChipletSystem
+    from chiplets.ChipletSystem import (
+        ChipletSystem,
+        ChipletGarnetObjectInfo,
+    )
     from src.cpu.BaseCPU import BaseCPU
     from src.sim.System import System
     from src.sim.SubSystem import SubSystem
@@ -48,10 +51,15 @@ class FakeGarnetNetwork:
     ext_links: list[GarnetExtLink]
     int_links: list[GarnetIntLink]
 
-    def __init__(self):
-        self.routers = []
-        self.ext_links = []
-        self.int_links = []
+    def __init__(
+        self,
+        routers: list[GarnetRouter] = [],
+        ext_links: list[GarnetExtLink] = [],
+        int_links: list[GarnetIntLink] = [],
+    ):
+        self.routers = routers
+        self.ext_links = ext_links
+        self.int_links = int_links
 
 
 class BaseChipletSystem(SubSystem):
@@ -138,6 +146,7 @@ class BaseChipletSystem(SubSystem):
     _sibling_links: list[tuple[GarnetIntLink, GarnetIntLink]]
 
     # `GarnetNetwork` for this object
+    # ! will always be fake except for root after `createSystem()` is done
     _garnet_network: GarnetNetwork | FakeGarnetNetwork
 
     # `RubyController`s that correspond to this `Chiplet[System]`
@@ -248,7 +257,7 @@ class BaseChipletSystem(SubSystem):
         self._connected_nodes = []
 
         self._main_router = GarnetRouter(
-            router_id=-1,  # temporary, is replaced later
+            router_id=0,  # some hijinks occur with this later
             latency=self.default_inter_node_router_lat,
             # the following are default parameters
             # gem5 complains if I don't include these params
@@ -414,6 +423,28 @@ class BaseChipletSystem(SubSystem):
         options: Namespace,
         controllers: list[RubyController],
     ):
+        """
+        Instantiate and make the topology corresponding to
+        `self._topology_cls` (should've been specified in constructor),
+        using the specified `controllers`.
+
+        ! also connects all the passed `controllers` to the
+        ! main router of this `Chiplet[System]`
+
+        In the hierarchy scheme (using `_createChipletHierarchy()`),
+        the topology is used with a `FakeGarnetNetwork` to create the
+        topological structure of each node in the hierarchy without
+        instantiating an actual `GarnetNetwork`. Then all routers and
+        links are collected and instantiated into one root network.
+        See `_createChipletHierarchy()` for more details.
+
+        Args:
+            options (Namespace): _description_
+            controllers (list[RubyController]):
+                This should usually be `self._ruby_controllers`.
+                May or may not include the directory controllers
+                depending on what was passed to `createSystem()`.
+        """
         # for reference, this is what you would do for a flat topology
         if False:
             self._topology = self._topology_cls(
@@ -439,6 +470,14 @@ class BaseChipletSystem(SubSystem):
         ):
             # temp set CPU count option to number of nodes
             options.num_cpus = len(self._nodes)
+
+        if not isinstance(self._garnet_network, FakeGarnetNetwork):
+            warn(
+                "_createTopology() called, but self._garnet_network "
+                "is not a FakeGarnetNetwork. Either using legacy ruby, "
+                "user is calling methods in places they shouldn't be "
+                "called, or something is very broken."
+            )
 
         # * setup topology
         # latter 3 args are the literal classes for the
@@ -482,21 +521,21 @@ class BaseChipletSystem(SubSystem):
         # one controller can map to a given router.
         # the point of this is t
 
+        # ! connect to main router
         for r in gnw.routers:
-            pass
-
-        # store mappings of controller to router
-        # also connect to main router
-        print(
-            f"Linking Routers with main for "
-            f"{self.__class__.__name__} ID {self.id}"
-        )
-        for c, r in zip(controllers, gnw.routers, strict=True):
-            print(f"    controller {c} :: router {r.router_id} {r}")
-            # self._ruby_controller_router_map.append((c, r))
+            print(
+                f"Linking Routers with main for "
+                f"{self.__class__.__name__} ID {self.id}"
+            )
             self._biLinkGarnetRouters(self._main_router, r)
 
+        # * add main router to my routers
         gnw.routers += self._main_router
+
+        for c in controllers:
+            r = self._findRouterFromController(c, False)
+            if r is not None:
+                print(f"    controller {c} :: router {r.router_id} {r}")
 
     # *
     # * Low-Level Network Connection/Instantiation Methods

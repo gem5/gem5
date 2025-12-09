@@ -83,8 +83,12 @@ class Chiplet(BaseChipletSystem):
         if root == self:  # could use `self.isRoot()` but alr have `root`
             panic("Chiplet is root, this should never happen!")
 
+        # at this time, `create_system()` should've been called by
+        # the root `ChipletSystem`, so the meta topology should be
+        # populated with all controllers
         all_controllers = root._meta_topology.nodes  # type: ignore
 
+        # now let's figure out which controllers belong to this Chiplet
         for c in all_controllers:
             controller_cpu = self.getControllerCPU(c, l2_is_private)
 
@@ -97,9 +101,6 @@ class Chiplet(BaseChipletSystem):
                 #     f"(v{c.version})"
                 # )
 
-        # TODO NEW HIERARCHY: revise/refactor to indicate that ...
-        # TODO ... it's more of generating routers/links than ...
-        # TODO ... actually creating a topology
         #! create topology
         # need to populate `self._ruby_controllers` first
         self._createTopology(options, self._ruby_controllers)
