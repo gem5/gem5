@@ -12,6 +12,7 @@ from m5.objects import *
 from m5.util import (
     addToPath,
     fatal,
+    panic,
     warn,
 )
 
@@ -26,10 +27,31 @@ if TYPE_CHECKING:
     from src.mem.ruby.system.RubySystem import RubySystem
     from src.mem.AbstractMemory import AbstractMemory
     from src.mem.ruby.slicc_interface.Controller import RubyController
+    from src.mem.ruby.system.Sequencer import RubySequencer
     from src.mem.ruby.network.garnet.GarnetLink import *
     from src.mem.ruby.network.garnet.GarnetNetwork import *
 
 from topologies.BaseTopology import BaseTopology
+
+
+class FakeGarnetNetwork:
+    """
+    Used to collect routers and links from topologies without
+    actually instantiating a `GarnetNetwork` C++ object.
+    !! It is assumed that topologies only use the `network`
+    !! param to add routers and links to the `GarnetNetwork`.
+    This is currently true for all existing topologies, but
+    if it is ever not true for a topology you use, it will break.
+    """
+
+    routers: list[GarnetRouter]
+    ext_links: list[GarnetExtLink]
+    int_links: list[GarnetIntLink]
+
+    def __init__(self):
+        self.routers = []
+        self.ext_links = []
+        self.int_links = []
 
 
 class BaseChipletSystem(SubSystem):
@@ -48,26 +70,9 @@ class BaseChipletSystem(SubSystem):
     # ruby/cache coherence protocol string
     protocol = Param.String("String name corresponding to Ruby protocol")
 
-    # the gem5 `System` SimObject that this object is part of
-    _system: System
-
-    # if full-system simulation mode is enabled in gem5
-    _is_full_system: bool
-
-    # topology class. used internally to create the topology.
-    # `Ruby.py` currently requires a name (string) to be specified
-    # to create the topology, instead of a class.
-    # Since `Ruby.py` may be deprecated, we use a class to enable
-    # easier refactoring later on if needed.
-    _topology_cls: type[BaseTopology]
-
-    _memory_cls: type[AbstractMemory]
-
-    # list of *direct* nodes/children (`ChipletSystem`s or `Chiplet`s)
-    _nodes: list[BaseChipletSystem]
-
-    # topology of the children for *only this layer of the hierarchy*
-    _topology: BaseTopology | None
+    # *
+    # * Latency parameters
+    # *
 
     # default latency (in cycles) of the links between nodes
     # for this layer of abstraction (i.e., direct child nodes)
@@ -82,12 +87,45 @@ class BaseChipletSystem(SubSystem):
         "the links between nodes in this level of the hierarchy"
     )
 
+    # *
+    # * Attributes related to gem5 logistics
+    # *
+
+    # the gem5 `System` SimObject that this object is part of
+    _system: System
+
+    # if full-system simulation mode is enabled in gem5
+    _is_full_system: bool
+
+    # memory class of the gem5 system
+    _memory_cls: type[AbstractMemory]
+
+    # *
+    # * Topology and Nodes
+    # *
+
+    # topology of the children for *only this layer of the hierarchy*
+    _topology: BaseTopology | None
+
+    # topology class. used internally to create the topology.
+    # legacy Ruby (`Ruby.py`) requires a name (string) to be specified
+    # to create the topology; this is obtained from the class.
+    # hierarchical chiplet construction uses the class directly.
+    _topology_cls: type[BaseTopology]
+
+    # list of *direct* nodes/children (`ChipletSystem`s or `Chiplet`s)
+    _nodes: list[BaseChipletSystem] | list[BaseCPU]
+
     # parent `ChipletSystem` (if present)
     _parent_sys: ChipletSystem | None
 
     # list of nodes on the same hierarchical level of this node's parent
     # `ChipletSystem` to which this node has *direct* connections
     _connected_nodes: list[BaseChipletSystem]
+
+    # *
+    # * Links, Routers, and Controllers
+    # *
 
     # main router for this node/`Chiplet[System]`
     # used to make connections to parent and siblings
@@ -100,32 +138,57 @@ class BaseChipletSystem(SubSystem):
     _sibling_links: list[tuple[GarnetIntLink, GarnetIntLink]]
 
     # `GarnetNetwork` for this object
-    _garnet_network: GarnetNetwork
-
-    # class-local reference to `self.system.ruby`
-    # (gem5 system SimObject's RubySystem)
-    _ruby_system: RubySystem
+    _garnet_network: GarnetNetwork | FakeGarnetNetwork
 
     # `RubyController`s that correspond to this `Chiplet[System]`
-    # excludes directory controllers
+    # includes all controllers used to create the topology
     _ruby_controllers: list[RubyController]
 
     # `GarnetExtLink`s that connect this object to parent `RubyController`s
-    _ruby_controller_link_map: list[GarnetExtLink]
-    _ruby_controller_router_map: list[tuple[RubyController, GarnetRouter]]
+    _ruby_controller_links: list[GarnetExtLink]
+    # _ruby_controller_router_map: list[tuple[RubyController, GarnetRouter]]
 
     # directory controllers in this `Chiplet[System]`
+    # these are returned by `create_system()` of the Ruby protocol
     _dir_controllers: list[RubyController]
-    _dir_controller_link_map: list[tuple[RubyController, GarnetExtLink]]
-    _dir_controller_router_map: list[tuple[RubyController, GarnetRouter]]
+    # _dir_controller_link_map: list[tuple[RubyController, GarnetExtLink]]
+    # _dir_controller_router_map: list[tuple[RubyController, GarnetRouter]]
 
-    # unique ID for each
+    # controllers that are not directory controllers
+    # e.g., LLC controller
+    _non_dir_controllers: list[RubyController]
+
+    # Ruby CPU sequencers for this `Chiplet[System]`
+    # includes sequencers for all CPUs
+    _cpu_sequencers: list[RubySequencer]
+
+    # *
+    # * Other
+    # *
+
+    # used to generate a unique ID for each `Chiplet[System]`
+    # note that this is global to all classes that inherit from
+    # `BaseChipletSystem`, regardless of their actual class.
+    # do not override `_generate_id()`.
     __id = 0
 
     @classmethod
     def _generate_id(cls):
+        """
+        Used to generate a unique ID for each `Chiplet[System]`.
+        The ID is unique among all instances of classes that
+        inherit from `BaseChipletSystem`.
+        !! Do not override this method !!
+
+        Returns:
+            int: an ID for the `Chiplet[System]`.
+        """
         cls.__id += 1
         return cls.__id - 1
+
+    # *
+    # * Constructor
+    # *
 
     def __init__(
         self,
@@ -133,7 +196,7 @@ class BaseChipletSystem(SubSystem):
         full_system: bool,
         TopologyClass: type[BaseTopology],
         MemoryClass: type[AbstractMemory],
-        nodes: Sequence[BaseChipletSystem],
+        nodes: Sequence[BaseChipletSystem] | Sequence[BaseCPU],
         inter_node_link_lat: int,
         inter_node_router_lat: int,
     ):
@@ -155,7 +218,7 @@ class BaseChipletSystem(SubSystem):
             MemoryClass (Type[AbstractMemory]):
                 The class corresponding to the memory configuration
                 for the gem5 `System` this `ChipletSystem` is part of.
-            nodes (Sequence[BaseChipletSystem]):
+            nodes (Sequence[BaseChipletSystem] | Sequence[BaseCPU]):
                 Optional list of nodes. May be passed to constructor
                 or added separately using `addNode()`.
             inter_node_link_lat (int):
@@ -195,12 +258,14 @@ class BaseChipletSystem(SubSystem):
         self._sibling_links = []
 
         self._ruby_controllers = []
-        self._ruby_controller_link_map = []
-        self._ruby_controller_router_map = []
+        self._ruby_controller_links = []
+        # self._ruby_controller_router_map = []
 
         self._dir_controllers = []
-        self._dir_controller_link_map = []
-        self._dir_controller_router_map = []
+        # self._dir_controller_link_map = []
+        # self._dir_controller_router_map = []
+
+        self._non_dir_controllers = []
 
         self.id = BaseChipletSystem._generate_id()
 
@@ -215,62 +280,55 @@ class BaseChipletSystem(SubSystem):
         """
 
         # todo: implement
+        warn(
+            "As of now, Chiplet[System] nodes must be specified "
+            "at instantiation time in the constructor."
+        )
         raise NotImplementedError
 
-    def getRoot(self):
+    # *
+    # * Root ChipletSystem Methods
+    # *
+
+    def getRoot(self) -> ChipletSystem:
         """
         Retrieve a reference to the root `ChipletSystem`,
         i.e., the `ChipletSystem` at the top of the hierarchy.
         """
 
-        if not hasattr(self, "_parent_sys") or self._parent_sys == None:
-            return self
-        else:
-            return self._parent_sys.getRoot()
-
-    def getIntLink(
-        self, node1: BaseChipletSystem, node2: BaseChipletSystem
-    ) -> GarnetIntLink | None:
-        """
-        Retrieve the Garnet link object, if one exists, between the two
-        specified nodes, which must be children of this `Chiplet[System]`.
-        Note that the `Chiplet[System]` abstracts the `GarnetIntLink`,
-        since an actual `GarnetIntLink` is between two routers, not two
-        `Chiplet[System]`s directly.
-
-        Args:
-            node1 (BaseChipletSystem): One end of the link.
-            node2 (BaseChipletSystem): The other end of the link.
-        """
-
         if (
-            (len(self._nodes) == 0)
-            or node1 not in self._nodes
-            or node2 not in self._nodes
-        ):
-            # no nodes, or one or both nodes are not children of `self`
-            return None
-
-        # todo: get the GarnetIntLinks
-
-        return None
-
-    def _getRouterParent(self, router: GarnetRouter, startRoot: bool = True):
-        # if we aren't already at the root, start search from there
-        if startRoot and hasattr(self, "_parent_sys"):
-            return self.getRoot()._getRouterParent(router, startRoot=False)
-
-        # grab routers and search
-        routers = self._garnet_network.routers
-        if router in routers:
+            not hasattr(self, "_parent_sys") or self._parent_sys == None
+        ) and isinstance(self, ChipletSystem):
             return self
-        else:
-            for node in self._nodes:
-                if issubclass(node.__class__, BaseChipletSystem):
-                    res = node._getRouterParent(router, startRoot=False)
-                    if res is not None:
-                        return res
-            return None
+        elif self._parent_sys is not None:
+            return self._parent_sys.getRoot()
+        else:  # major failure
+            if not hasattr(self, "_parent_sys"):
+                par_str = " attribute doesn't exist"
+            else:  # is none
+                par_str = " was None"
+            was_cs_or_not_str = ""
+            if not isinstance(self, ChipletSystem):
+                was_cs_or_not_str = "not "
+            fatal(
+                f"Failed to retrieve root ChipletSystem for "
+                f"{self.__class__.__name__} ID {self.id}. "
+                f"_parent_sys {par_str}. "
+                f"Self was {was_cs_or_not_str}ChipletSystem."
+            )
+            # below will never be reached, just to satisfy type checker
+            assert self is ChipletSystem
+            return self
+
+    def isRoot(self):
+        """
+        Determine if this `Chiplet[System]` is the root or not.
+        """
+        return not hasattr(self, "_parent_sys") or self._parent_sys == None
+
+    # *
+    # * Debugging Methods
+    # *
 
     def getAllLinksString(self):
         str = ""
@@ -304,6 +362,27 @@ class BaseChipletSystem(SubSystem):
     def to_string(self):
         raise NotImplementedError
 
+    # *
+    # * Network and Controller Classification
+    # *
+
+    def _getRouterParent(self, router: GarnetRouter, startRoot: bool = True):
+        # if we aren't already at the root, start search from there
+        if startRoot and hasattr(self, "_parent_sys"):
+            return self.getRoot()._getRouterParent(router, startRoot=False)
+
+        # grab routers and search
+        routers = self._garnet_network.routers
+        if router in routers:
+            return self
+        else:
+            for node in self._nodes:
+                if issubclass(node.__class__, BaseChipletSystem):
+                    res = node._getRouterParent(router, startRoot=False)
+                    if res is not None:
+                        return res
+            return None
+
     def getControllerCPU(
         self,
         controller: RubyController,
@@ -326,18 +405,29 @@ class BaseChipletSystem(SubSystem):
         # example name: `<orphan System>.ruby.dir_cntrl0`
         return "dir_cntrl" in name
 
-    def _createTopology(self, options: Namespace):
+    # *
+    # * `_createTopology()`
+    # *
+
+    def _createTopology(
+        self,
+        options: Namespace,
+        controllers: list[RubyController],
+    ):
         # for reference, this is what you would do for a flat topology
         if False:
             self._topology = self._topology_cls(
                 self.getRoot()._meta_topology.nodes  # type: ignore
             )
 
-        self._topology = self._topology_cls(
-            self._ruby_controllers  # type: ignore
-        )
+        # actually instantiate the topology
+        self._topology = self._topology_cls(controllers)  # type: ignore
 
-        # if mesh we need to temporarily adjust CPU count option
+        # if mesh, we need to temporarily adjust CPU count option
+        # so that the topology is generated correctly
+        # and its assertions don't fail.
+        # mesh topology understandably assumes it is in a vacuum
+        # and that number of routers = number of CPUs
         from topologies.Mesh_westfirst import Mesh_westfirst
         from topologies.Mesh_XY import Mesh_XY
         from topologies.MeshDirCorners_XY import MeshDirCorners_XY
@@ -353,7 +443,7 @@ class BaseChipletSystem(SubSystem):
         # * setup topology
         # latter 3 args are the literal classes for the
         # corresponding objects. they can technically be
-        # based on either `GarnetNetwork` or `SimpleNetwork`,
+        # from either `GarnetNetwork` or `SimpleNetwork`,
         # but we're using Garnet and don't allow Simple.
         self._topology.makeTopology(
             options=options,
@@ -373,14 +463,6 @@ class BaseChipletSystem(SubSystem):
             # ? this might interact very strangely with
             # ? `registerTopology()`
 
-        # if `num_rows > 0` we will fail an assertion
-        # when the C++ objects are instantiated
-        # (`m_num_rows * m_num_cols == m_routers.size()`)
-        # (which will not be true since we added routers)
-        print(f"NUM ROWS is currently {self._garnet_network.num_rows}")
-        self._garnet_network.num_rows = 0
-        print(f"NUM ROWS is {self._garnet_network.num_rows} after set = 0")
-
         # if in SE mode, register topology with (faux) filesystem
         # only some topologies implement this (as of now, only
         # `Mesh_XY` and `MeshDirCorners_XY` do.)
@@ -390,7 +472,18 @@ class BaseChipletSystem(SubSystem):
             # `MeshDirCorners_XY` requires only `options.mem_size`.
             self._topology.registerTopology(options)
 
-        gn = self._garnet_network
+        # grab reference to my network
+        # is ok (and expected) for this to be a `FakeGarnetNetwork`
+        # since all we care about here is iterating and adding
+        gnw = self._garnet_network
+
+        # iterate through ext_links and map controllers to routers
+        # note that this is (one or more)-to-one, i.e., more than
+        # one controller can map to a given router.
+        # the point of this is t
+
+        for r in gnw.routers:
+            pass
 
         # store mappings of controller to router
         # also connect to main router
@@ -398,18 +491,70 @@ class BaseChipletSystem(SubSystem):
             f"Linking Routers with main for "
             f"{self.__class__.__name__} ID {self.id}"
         )
-        for c, r in zip(self._ruby_controllers, gn.routers, strict=True):
+        for c, r in zip(controllers, gnw.routers, strict=True):
             print(f"    controller {c} :: router {r.router_id} {r}")
-            self._ruby_controller_router_map.append((c, r))
+            # self._ruby_controller_router_map.append((c, r))
             self._biLinkGarnetRouters(self._main_router, r)
 
-        gn.routers = gn.routers + [self._main_router]
+        gnw.routers += self._main_router
+
+    # *
+    # * Low-Level Network Connection/Instantiation Methods
+    # *
+
+    def _findExtLinkFromController(
+        self,
+        controller: RubyController,
+        searchFromRoot: bool = True,
+    ) -> GarnetExtLink | None:
+        if searchFromRoot and not self.isRoot():
+            return self.getRoot()._findExtLinkFromController(controller, False)
+            # don't need to set searchFromRoot = False but why not
+
+        ext_links = self._garnet_network.ext_links
+        for ext_link in ext_links:
+            if controller == ext_link.ext_node:
+                return ext_link
+
+        return None
+
+    def _findRouterFromController(
+        self,
+        controller: RubyController,
+        searchFromRoot: bool = True,
+    ) -> GarnetRouter | None:
+        ext_link = self._findExtLinkFromController(controller, searchFromRoot)
+        if ext_link is not None:
+            return ext_link.int_node
+        else:
+            return None
+
+    def _findIntLinkFromRouters(
+        self,
+        routerFrom: GarnetRouter,
+        routerTo: GarnetRouter,
+        searchFromRoot: bool = True,
+    ) -> GarnetIntLink | None:
+        if searchFromRoot and not self.isRoot():
+            return self.getRoot()._findIntLinkFromRouters(
+                routerFrom, routerTo, False
+            )
+            # don't need to set searchFromRoot = False but why not
+
+        int_links = self._garnet_network.int_links
+        for int_link in int_links:
+            if (
+                int_link.src_node == routerFrom
+                and int_link.dst_node == routerTo
+            ):
+                return int_link
+        return None
 
     def _biLinkGarnetRouters(
         self,
         router1: GarnetRouter,
         router2: GarnetRouter,
-        auto_reg_parent: bool = True,
+        # auto_reg_parent: bool = True,
     ):
         num_links = len(self._garnet_network.int_links) + len(
             self._garnet_network.ext_links
@@ -437,9 +582,10 @@ class BaseChipletSystem(SubSystem):
         self._garnet_network.int_links += l12
         self._garnet_network.int_links += l21
 
-        if auto_reg_parent:
-            l12.set_parent(self._garnet_network, f"int_links{num_links}")
-            l21.set_parent(self._garnet_network, f"int_links{num_links + 1}")
+        # TODO NEW HIERARCHY: remove this
+        # if auto_reg_parent:
+        #     l12.set_parent(self._garnet_network, f"int_links{num_links}")
+        #     l21.set_parent(self._garnet_network, f"int_links{num_links + 1}")
 
         return l12, l21
 
@@ -465,6 +611,7 @@ class BaseChipletSystem(SubSystem):
     ):
         """
         Don't call this directly; instead call `connectChildren()`.
+        This function doesn't do any checks (is relatively unsafe).
 
         Args:
             node1 (BaseChipletSystem): The node to connect from.
@@ -475,67 +622,6 @@ class BaseChipletSystem(SubSystem):
         )
         node1._sibling_links.append((l12, l21))
         node2._sibling_links.append((l12, l21))
-
-    def connect(self, node: BaseChipletSystem):
-        """
-        Register a connection between this `ChipletSystem` or `Chiplet`
-        and another `ChipletSystem` or `Chiplet` sharing the same parent.
-
-        Args:
-            node (BaseChipletSystem): The node to connect to.
-        """
-
-        if self._parent_sys is None:
-            fatal(
-                f"This {self.__class__.__name__} has no parent, "
-                f"but the user attempted to connect it "
-                f"to another {node.__class__.__name__}."
-            )
-        assert self._parent_sys is not None
-
-        if self._parent_sys != node._parent_sys:
-            fatal(
-                "User attempted to connect two nodes "
-                "that do not share a parent ChipletSystem."
-            )
-
-        self._parent_sys.connectChildren(self, node)
-
-    def connectChildren(
-        self, node1: BaseChipletSystem, node2: BaseChipletSystem
-    ):
-        """
-        Register a connection between two specified `ChipletSystem`s
-        or `Chiplet`s *which are children of this `ChipletSystem`.*
-
-        Args:
-            node1 (BaseChipletSystem): The node to connect from.
-            node2 (BaseChipletSystem): The node to connect to.
-        """
-
-        if node1 not in self._nodes:
-            fatal(
-                f"User attempted to connect from node {node1} to {node2}, "
-                f"but it is not a child of this {self.__class__.__name__}!"
-            )
-
-        if node2 not in self._nodes:
-            fatal(
-                f"User attempted to connect to node {node2} from {node1}, "
-                f"but it is not a child of this {self.__class__.__name__}!"
-            )
-
-        if (
-            node2 not in node1._connected_nodes
-            and node1 not in node2._connected_nodes
-        ):
-            self._connectChildrenGarnet(node1, node2)
-
-        if node2 not in node1._connected_nodes:
-            node1._connected_nodes.append(node2)
-
-        if node1 not in node2._connected_nodes:
-            node2._connected_nodes.append(node1)
 
     def _connectRubyControllerGarnet(
         self,
@@ -597,14 +683,322 @@ class BaseChipletSystem(SubSystem):
 
         self._garnet_network.ext_links += link
 
-        if self.isDirController(ctrl):
-            self._dir_controller_link_map.append(link)
-        else:
-            self._ruby_controller_link_map.append(link)
+        # TODO NEW HIERARCHY: remove this
+        # if self.isDirController(ctrl):
+        #     self._dir_controller_link_map.append(link)
+        # else:
+        #     self._ruby_controller_links.append(link)
 
-        if auto_reg_parent:
-            link.set_parent(self._garnet_network, f"ext_links{num_links}")
+        # TODO NEW HIERARCHY: remove this
+        # if auto_reg_parent:
+        #     link.set_parent(self._garnet_network, f"ext_links{num_links}")
         return link
+
+    def _getNodeLinks(
+        self, node1: BaseChipletSystem, node2: BaseChipletSystem
+    ) -> tuple[GarnetIntLink | None, GarnetIntLink | None]:
+        """
+        Retrieve the Garnet link objects, if they exist, between the two
+        specified nodes, which must be children of this `Chiplet[System]`.
+        Note that the `Chiplet[System]` abstracts the `GarnetIntLink`,
+        since an actual `GarnetIntLink` is between two routers, not two
+        `Chiplet[System]`s directly.
+
+        Args:
+            node1 (BaseChipletSystem): One end of the link.
+            node2 (BaseChipletSystem): The other end of the link.
+        """
+
+        if (
+            (len(self._nodes) == 0)
+            or node1 not in self._nodes
+            or node2 not in self._nodes
+        ):
+            # no nodes, or one or both nodes are not children of `self`
+            warn(
+                f"_getNodeLinks() was called, but either there are no "
+                f"nodes (actual len = {len(self._nodes)}), or one of "
+                f"the nodes is not a child of this Chiplet[System] "
+                f"(node1 is child? {node1 in self._nodes}) "
+                f"(node2 is child? {node2 in self._nodes})."
+            )
+            return (None, None)
+
+        n1r = node1._main_router
+        n2r = node2._main_router
+
+        l12 = self._findIntLinkFromRouters(n1r, n2r)
+        l21 = self._findIntLinkFromRouters(n2r, n1r)
+
+        return (l12, l21)
+
+    # *
+    # * High-Level Chiplet-to-Chiplet Connection Methods
+    # *
+
+    def connect(self, node: BaseChipletSystem):
+        """
+        Register a connection between this `ChipletSystem` or `Chiplet`
+        and another `ChipletSystem` or `Chiplet` sharing the same parent.
+
+        Args:
+            node (BaseChipletSystem): The node to connect to.
+        """
+
+        if self._parent_sys is None:
+            fatal(
+                f"This {self.__class__.__name__} has no parent, "
+                f"but the user attempted to connect it "
+                f"to another {node.__class__.__name__}."
+            )
+        assert self._parent_sys is not None
+
+        if self._parent_sys != node._parent_sys:
+            fatal(
+                "User attempted to connect two nodes "
+                "that do not share a parent ChipletSystem."
+            )
+
+        self._parent_sys.connectChildren(self, node)
+
+    def connectChildren(
+        self, node1: BaseChipletSystem, node2: BaseChipletSystem
+    ):
+        """
+        Register a connection between two specified `ChipletSystem`s
+        or `Chiplet`s *which are children of this `ChipletSystem`.*
+
+        Args:
+            node1 (BaseChipletSystem): The node to connect from.
+            node2 (BaseChipletSystem): The node to connect to.
+        """
+
+        if node1 not in self._nodes:
+            fatal(
+                f"User attempted to connect from node {node1} to {node2}, "
+                f"but it is not a child of this {self.__class__.__name__}!"
+            )
+
+        if node2 not in self._nodes:
+            fatal(
+                f"User attempted to connect to node {node2} from {node1}, "
+                f"but it is not a child of this {self.__class__.__name__}!"
+            )
+
+        # check if they are already connected
+        (l12, l21) = self._getNodeLinks(node1, node2)
+        if l12 is not None and l21 is not None:
+            warn(
+                f"Attempted to connect to node {node2} from {node1}, "
+                f"but these nodes are already connected."
+            )
+            return
+        elif l12 is not None or l21 is not None:
+            panic(
+                f"Attempted to connect to node {node2} from {node1}, "
+                f"but only one direction of int link was found. "
+                f"Link 1->2: {l12}; Link 2->1: {l21}"
+                f"(one of these should be None)."
+            )
+        elif l12 is None and l21 is None:
+
+            if (
+                node2 not in node1._connected_nodes
+                and node1 not in node2._connected_nodes
+            ):
+                self._connectChildrenGarnet(node1, node2)
+
+            if node2 not in node1._connected_nodes:
+                node1._connected_nodes.append(node2)
+
+            if node1 not in node2._connected_nodes:
+                node2._connected_nodes.append(node1)
+
+        else:
+            panic("This shouldn't be possible to reach in connectChildren()!")
+
+    # *
+    # * Granular Connection Configuration Methods
+    # *
+
+    def enableNodeLinkSerDes(
+        self,
+        node1: BaseChipletSystem,
+        node2: BaseChipletSystem,
+        enable_node_1: bool = True,
+        enable_node_2: bool = True,
+    ):
+        """
+        Enable the serializer-deserializer units on either end of
+        the links between the two specified nodes (`ChipletSystem`s
+        or `Chiplet`s) *which are children of this `ChipletSystem`.*
+
+        Args:
+            node1 (BaseChipletSystem): One node.
+            node2 (BaseChipletSystem): The other node.
+            enable_node_1 (bool):
+                Whether to enable SerDes on node 1. Defaults to True.
+            enable_node_2 (bool):
+                Whether to enable SerDes on node 2. Defaults to True.
+        """
+        (l12, l21) = self._getNodeLinks(node1, node2)
+
+        if l12 is None and l21 is None:
+            warn(
+                f"int links between {node1.__class__.__name__}{node1.id} "
+                f"and {node2.__class__.__name__}{node2.id} do not exist!"
+            )
+            return
+
+        if l12 is not None:
+            if enable_node_1:
+                l12.src_serdes = True
+            if enable_node_2:
+                l12.dst_serdes = True
+
+            if l21 is None:
+                warn(
+                    f"int link from {node1.__class__.__name__}{node1.id} "
+                    f"to {node2.__class__.__name__}{node2.id} exists "
+                    f"but int link in other direction does not. "
+                )
+
+        if l21 is not None:
+            if enable_node_2:
+                l21.src_serdes = True
+            if enable_node_1:
+                l21.dst_serdes = True
+
+            if l12 is None:
+                warn(
+                    f"int link from {node1.__class__.__name__}{node1.id} "
+                    f"to {node2.__class__.__name__}{node2.id} exists "
+                    f"but int link in other direction does not. "
+                )
+
+    def enableNodeLinkCDC(
+        self,
+        node1: BaseChipletSystem,
+        node2: BaseChipletSystem,
+        enable_node_1: bool = True,
+        enable_node_2: bool = True,
+    ):
+        """
+        Enable the clock domain crossing units on either end of
+        the links between the two specified nodes (`ChipletSystem`s
+        or `Chiplet`s) *which are children of this `ChipletSystem`.*
+
+        Args:
+            node1 (BaseChipletSystem): One node.
+            node2 (BaseChipletSystem): The other node.
+            enable_node_1 (bool):
+                Whether to enable CDC on node 1. Defaults to True.
+            enable_node_2 (bool):
+                Whether to enable CDC on node 2. Defaults to True.
+        """
+        (l12, l21) = self._getNodeLinks(node1, node2)
+
+        if l12 is None and l21 is None:
+            warn(
+                f"int links between {node1.__class__.__name__}{node1.id} "
+                f"and {node2.__class__.__name__}{node2.id} do not exist!"
+            )
+            return
+
+        if l12 is not None:
+            if enable_node_1:
+                l12.src_cdc = True
+            if enable_node_2:
+                l12.dst_cdc = True
+
+            if l21 is None:
+                warn(
+                    f"int link from {node1.__class__.__name__}{node1.id} "
+                    f"to {node2.__class__.__name__}{node2.id} exists "
+                    f"but int link in other direction does not. "
+                )
+
+        if l21 is not None:
+            if enable_node_2:
+                l21.src_cdc = True
+            if enable_node_1:
+                l21.dst_cdc = True
+
+            if l12 is None:
+                warn(
+                    f"int link from {node1.__class__.__name__}{node1.id} "
+                    f"to {node2.__class__.__name__}{node2.id} exists "
+                    f"but int link in other direction does not. "
+                )
+
+    def setNodeLinkFlitWidth(
+        self,
+        node1: BaseChipletSystem,
+        node2: BaseChipletSystem,
+        width: int,
+        set_width_link_1_to_2: bool = True,
+        set_width_link_2_to_1: bool = True,
+    ):
+        """
+        Adjust flit size (width) of the links between the two specified
+        nodes (`ChipletSystem`s or `Chiplet`s) *which are children of
+        this `ChipletSystem`.*
+
+        Note that since internal links are unidirectional, the user has
+        the option to change the flit size for only one of the links
+        (i.e., only for traffic from node1 to node2, or vice versa)
+        by setting the set_width_link_1_to_2 (or ...2_to_1) flags.
+
+        By default, both unidirectional links comprising the connection
+        between node1 and node2 will have their width/flit size changed.
+
+        Args:
+            node1 (BaseChipletSystem): _description_
+            node2 (BaseChipletSystem): _description_
+            width (int): The flit width to set on the link.
+            set_width_link_1_to_2 (bool, optional):
+                Whether to set the width of the unidirectional
+                internal link from node1 to node2.
+                Defaults to True.
+            set_width_link_2_to_1 (bool, optional):
+                Whether to set the width of the unidirectional
+                internal link from node2 to node1.
+                Defaults to True.
+        """
+        (l12, l21) = self._getNodeLinks(node1, node2)
+
+        if l12 is None and l21 is None:
+            warn(
+                f"int links between {node1.__class__.__name__}{node1.id} "
+                f"and {node2.__class__.__name__}{node2.id} do not exist!"
+            )
+            return
+
+        if l12 is not None:
+            if set_width_link_1_to_2:
+                l12.width = width
+
+            if l21 is None:
+                warn(
+                    f"int link from {node1.__class__.__name__}{node1.id} "
+                    f"to {node2.__class__.__name__}{node2.id} exists "
+                    f"but int link in other direction does not. "
+                )
+
+        if l21 is not None:
+            if set_width_link_2_to_1:
+                l21.width = width
+
+            if l12 is None:
+                warn(
+                    f"int link from {node1.__class__.__name__}{node1.id} "
+                    f"to {node2.__class__.__name__}{node2.id} exists "
+                    f"but int link in other direction does not. "
+                )
+
+    # *
+    # * Deprecated
+    # *
 
     def _defineMainRouterParams(self):
         """
@@ -612,6 +1006,7 @@ class BaseChipletSystem(SubSystem):
         defined for `_main_router`, probably because it was instantiated
         seperately. Should just nee to be called before `m5.instantiate()`.
         """
+        assert isinstance(self._garnet_network, GarnetNetwork)
         # gem5 will complain if params aren't defined for main router
         mr = self._main_router
         gn = self._garnet_network
@@ -624,6 +1019,12 @@ class BaseChipletSystem(SubSystem):
         # mr.eventq_index = gn.eventq_index
 
     def _fixAllGarnetObjectParams(self):
+
+        import traceback
+
+        fatal(f"do not use this function! tb: {traceback.print_stack()}")
+
+        assert isinstance(self._garnet_network, GarnetNetwork)
 
         def _recursiveUnproxyParams(sim_obj, set_clk_domain=False):
             if len(sim_obj) > 1:
@@ -690,6 +1091,9 @@ class BaseChipletSystem(SubSystem):
         creates connections between the main routers of the current
         level of the hierarchy and its parents/siblings.
         """
+        import traceback
+
+        fatal(f"do not use this function! tb: {traceback.print_stack()}")
         # topologies tend to overwrite garnet links/routers entirely
         # so just create our links (and add our main router) afterwards
         num_routers = len(self._garnet_network.routers)
@@ -720,6 +1124,9 @@ class BaseChipletSystem(SubSystem):
     def _mergeGarnetNetworks(
         self, merge_into: GarnetNetwork, merge_from: GarnetNetwork
     ):
+        import traceback
+
+        fatal(f"do not use this function! tb: {traceback.print_stack()}")
         mi_router_ct = len(merge_into.routers)
         mi_link_ct = len(merge_into.int_links) + len(merge_into.ext_links)
         for r in merge_from.routers:
@@ -728,21 +1135,21 @@ class BaseChipletSystem(SubSystem):
             merge_into.routers.append(r)
             mi_router_ct += 1
 
-        # merge_from.routers = []
+        merge_from.routers = []
 
         for el in merge_from.ext_links:
             el.link_id = mi_link_ct
             merge_into.ext_links.append(el)
             mi_link_ct += 1
 
-        # merge_from.ext_links = []
+        merge_from.ext_links = []
 
         for il in merge_from.int_links:
             il.link_id = mi_link_ct
             merge_into.int_links.append(il)
             mi_link_ct += 1
 
-        # merge_from.int_links = []
+        merge_from.int_links = []
 
     def _combineHierarchyGarnetNetworks(self, merge_into: GarnetNetwork):
         """
@@ -755,8 +1162,13 @@ class BaseChipletSystem(SubSystem):
                 the `GarnetNetwork` of the root `ChipletSystem`, so that
                 recursive calls continue merging properly.
         """
+        import traceback
+
+        fatal(f"do not use this function! tb: {traceback.print_stack()}")
+
         for n in self._nodes:
             if hasattr(n, "_garnet_network"):
+                assert isinstance(n._garnet_network, GarnetNetwork)
                 self._mergeGarnetNetworks(merge_into, n._garnet_network)
             if hasattr(n, "_nodes"):
                 n._combineHierarchyGarnetNetworks(merge_into)

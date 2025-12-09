@@ -7,13 +7,19 @@ from typing import (
     Type,
 )
 
-from chiplets.BaseChipletSystem import BaseChipletSystem
+from chiplets.BaseChipletSystem import (
+    BaseChipletSystem,
+    FakeGarnetNetwork,
+)
 from network.Network import init_network
 from topologies.BaseTopology import BaseTopology
 
 from m5.defines import buildEnv  # type: ignore
 from m5.objects import *
-from m5.util import panic
+from m5.util import (
+    fatal,
+    panic,
+)
 
 if TYPE_CHECKING:
     from argparse import Namespace
@@ -52,28 +58,67 @@ class Chiplet(BaseChipletSystem):
             full_system=full_system,
             TopologyClass=TopologyClass,
             MemoryClass=MemoryClass,
-            nodes=cores,  #! note below
+            nodes=cores,
             inter_node_link_lat=inter_node_link_lat,
             inter_node_router_lat=inter_node_router_lat,
         )
-        # nodes=cores: this is a type issue, but it's okay for now because
-        # it will let other things that depend on `.nodes` work properly.
-        # todo: refactor this ^ better
 
-        self._cores = cores
+    # * alias Chiplet._cores to Chiplet._nodes
+    def get_cores(self):
+        return self._nodes
+
+    def set_cores(self, cores):
+        self._nodes = cores
+
+    _cores = property(get_cores, set_cores)
 
     def createChiplet(
         self,
         options: Namespace,
         l2_is_private: bool,
     ):
+        self._garnet_network = FakeGarnetNetwork()
+
+        root = self.getRoot()
+        if root == self:  # could use `self.isRoot()` but alr have `root`
+            panic("Chiplet is root, this should never happen!")
+
+        all_controllers = root._meta_topology.nodes  # type: ignore
+
+        for c in all_controllers:
+            controller_cpu = self.getControllerCPU(c, l2_is_private)
+
+            if controller_cpu is None:
+                continue
+            elif controller_cpu in self._cores:
+                self._ruby_controllers.append(c)
+                # print(
+                #     f"Chiplet {self.id} found controller {c} "
+                #     f"(v{c.version})"
+                # )
+
+        # TODO NEW HIERARCHY: revise/refactor to indicate that ...
+        # TODO ... it's more of generating routers/links than ...
+        # TODO ... actually creating a topology
+        #! create topology
+        # need to populate `self._ruby_controllers` first
+        self._createTopology(options, self._ruby_controllers)
+
+    def createChipletOld(
+        self,
+        options: Namespace,
+        l2_is_private: bool,
+    ):
+        import traceback
+
+        fatal(f"do not use this function! tb: {traceback.print_stack()}")
         # print(f"createChiplet() called for chiplet ID {self.id}")
 
         # todo: currently this is basically just duplicate code from...
         # todo: ...`ChipletSystem`, refactor somehow
         # Create the `GarnetNetwork` for this level of the hierarchy
         self._garnet_network = GarnetNetwork(
-            ruby_system=self._ruby_system,
+            ruby_system=self.getRoot()._ruby_system,
             topology=self._topology_cls.__name__,
             routers=[],
             ext_links=[],
@@ -110,7 +155,7 @@ class Chiplet(BaseChipletSystem):
 
         #! create topology
         # need to populate `self._ruby_controllers` first
-        self._createTopology(options)
+        self._createTopology(options, self._ruby_controllers)
 
         # self._defineMainRouterParams()
 
