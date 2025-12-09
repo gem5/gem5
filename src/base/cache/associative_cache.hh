@@ -234,7 +234,7 @@ class AssociativeCache : public Named
      * @result entry to be victimized
      */
     virtual Entry*
-    findVictim(const KeyType &key)
+    findVictim(const KeyType &key, bool do_invalidate = true)
     {
         auto candidates = indexingPolicy->getPossibleEntries(key);
 
@@ -246,7 +246,9 @@ class AssociativeCache : public Named
                 "Replacing entry: %s\n", victim->print());
         }
 
-        invalidate(victim);
+        if (do_invalidate) {
+            invalidate(victim);
+        }
 
         return victim;
     }

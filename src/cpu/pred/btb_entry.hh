@@ -151,7 +151,11 @@ class BTBEntry : public ReplaceableEntry
 
     /** Default constructor */
     BTBEntry(TagExtractor ext)
-        : inst(nullptr), extractTag(ext), valid(false), tag({MaxAddr, -1})
+        : inst(nullptr),
+          extractTag(ext),
+          valid(false),
+          tag({MaxAddr, -1}),
+          branchAddr(0)
     {}
 
     /** Update the target and instruction in the BTB entry.
@@ -184,6 +188,7 @@ class BTBEntry : public ReplaceableEntry
     {
         setValid();
         setTag({extractTag(key.address), key.tid});
+        branchAddr = key.address;
     }
 
     /** Copy constructor */
@@ -193,6 +198,7 @@ class BTBEntry : public ReplaceableEntry
         tag        = other.tag;
         inst       = other.inst;
         extractTag = other.extractTag;
+        branchAddr = other.branchAddr;
         set(target, other.target);
     }
 
@@ -203,6 +209,7 @@ class BTBEntry : public ReplaceableEntry
         tag        = other.tag;
         inst       = other.inst;
         extractTag = other.extractTag;
+        branchAddr = other.branchAddr;
         set(target, other.target);
 
         return *this;
@@ -231,6 +238,9 @@ class BTBEntry : public ReplaceableEntry
 
     /** Pointer to the static branch inst at this address */
     StaticInstPtr inst;
+
+    /** Get the entry's branch address. */
+    Addr getBranchAddr() const { return branchAddr; }
 
     std::string
     print() const override
@@ -266,6 +276,9 @@ class BTBEntry : public ReplaceableEntry
 
     /** The entry's tag. */
     KeyType tag;
+
+    /** The entry's branch address. */
+    Addr branchAddr;
 };
 
 } // namespace gem5::branch_prediction

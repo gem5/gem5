@@ -148,9 +148,9 @@ class BPredUnit : public SimObject
      * and/or copied for use later.
      * @param tid The thread id.
      * @param pc The PC to look up.
-     * @return The address of the target of the branch.
+     * @return The target of the branch and the lookup latency.
      */
-    const PCStateBase *
+    const BTBLookupResult
     BTBLookup(ThreadID tid, PCStateBase &pc)
     {
         return btb->lookup(tid, pc.instAddr());

@@ -85,6 +85,7 @@ class BranchTargetBuffer(ClockedObject):
     abstract = True
 
     numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
+    latency = Param.Cycles(0, "Latency of the BTB (in cycles)")
 
 
 class BTBIndexingPolicy(SimObject):
@@ -143,6 +144,78 @@ class SimpleBTB(BranchTargetBuffer):
         ),
         "BTB indexing policy",
     )
+
+
+class MultiLevelBTB(BranchTargetBuffer):
+    type = "MultiLevelBTB"
+    cxx_class = "gem5::branch_prediction::MultiLevelBTB"
+    cxx_header = "cpu/pred/multi_level_btb.hh"
+
+    threeLevel = Param.Bool(False, "Enable the third-level BTB")
+    inclusive = Param.Bool(
+        False,
+        "Let L2-BTB be inclusive of L1-BTB; otherwise, "
+        "L2-BTB is a victim buffer of L1-BTB (mostly-exclusive).",
+    )
+
+    # L1-BTB configuration
+    l1NumEntries = Param.Unsigned(256, "Number of L1 BTB entries")
+    l1Associativity = Param.Unsigned(8, "L1 BTB associativity")
+    l1Latency = Param.Cycles(0, "L1 BTB access latency in cycles")
+    l1ReplPolicy = Param.BaseReplacementPolicy(
+        LRURP(), "L1 BTB replacement policy"
+    )
+    l1IndexingPolicy = Param.BTBIndexingPolicy(
+        BTBSetAssociative(
+            assoc=Parent.l1Associativity,
+            num_entries=Parent.l1NumEntries,
+            set_shift=Parent.instShiftAmt,
+            numThreads=1,
+        ),
+        "L1-BTB indexing policy",
+    )
+
+    # L2-BTB configuration
+    l2NumEntries = Param.Unsigned(4096, "Number of L2-BTB entries")
+    l2Associativity = Param.Unsigned(8, "L2-BTB associativity")
+    l2Latency = Param.Cycles(1, "L2-BTB override latency in cycles")
+    l2ReplPolicy = Param.BaseReplacementPolicy(
+        LRURP(), "L2-BTB replacement policy"
+    )
+    l2IndexingPolicy = Param.BTBIndexingPolicy(
+        BTBSetAssociative(
+            assoc=Parent.l2Associativity,
+            num_entries=Parent.l2NumEntries,
+            set_shift=Parent.instShiftAmt,
+            numThreads=1,
+        ),
+        "L2-BTB indexing policy",
+    )
+
+    # L3-BTB configuration, ignored when threeLevel set False
+    l3NumEntries = Param.Unsigned(16384, "Number of L3-BTB entries")
+    l3Associativity = Param.Unsigned(8, "L3-BTB associativity")
+    l3Latency = Param.Cycles(3, "L3-BTB override latency in cycles")
+    l3ReplPolicy = Param.BaseReplacementPolicy(
+        LRURP(), "L3-BTB replacement policy"
+    )
+    l3IndexingPolicy = Param.BTBIndexingPolicy(
+        BTBSetAssociative(
+            assoc=Parent.l3Associativity,
+            num_entries=Parent.l3NumEntries,
+            set_shift=Parent.instShiftAmt,
+            numThreads=1,
+        ),
+        "L3-BTB indexing policy",
+    )
+
+
+class TwoLevelBTB(MultiLevelBTB):
+    threeLevel = False
+
+
+class ThreeLevelBTB(MultiLevelBTB):
+    threeLevel = True
 
 
 class ConditionalPredictor(ClockedObject):
