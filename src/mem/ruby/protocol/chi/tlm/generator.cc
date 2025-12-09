@@ -159,6 +159,7 @@ TlmGenerator::TlmGenerator(const Params &p)
       transPerCycle(p.tran_per_cycle),
       maxPendingTrans(
           p.max_pending_tran.value_or(std::numeric_limits<uint16_t>::max())),
+      pCredit(0),
       tickEvent([this] { tick(); }, "TlmGenerator tick", false,
                 Event::CPU_Tick_Pri),
       outPort(name() + ".out_port", 0, this),
@@ -204,9 +205,19 @@ TlmGenerator::scheduleTransaction(Tick when, Transaction *transaction)
 }
 
 void
-TlmGenerator::enqueueTransaction(Transaction *transaction)
+TlmGenerator::enqueueBack(Transaction *transaction)
 {
     unscheduledTransactions.push_back(transaction);
+
+    if (!tickEvent.scheduled()) {
+        schedule(tickEvent, nextCycle());
+    }
+}
+
+void
+TlmGenerator::enqueueFront(Transaction *transaction)
+{
+    unscheduledTransactions.push_front(transaction);
 
     if (!tickEvent.scheduled()) {
         schedule(tickEvent, nextCycle());
@@ -251,14 +262,38 @@ TlmGenerator::terminate(Transaction *transaction)
     }
 }
 
+TlmGenerator::Transaction *
+TlmGenerator::getPCrdWaiting()
+{
+    if (waitingForPCrd.empty()) {
+        return nullptr;
+    } else {
+        auto waiting = waitingForPCrd.front();
+        waitingForPCrd.pop_front();
+        return waiting;
+    }
+}
+
+bool
+TlmGenerator::getPCrd()
+{
+    if (pCredit > 0) {
+        return pCredit--;
+    } else {
+        return pCredit;
+    }
+}
+
 void
 TlmGenerator::recv(ARM::CHI::Payload *payload, ARM::CHI::Phase *phase)
 {
     DPRINTF(TLM, "[c%d] rcvd %s\n", cpuId, transactionToString(*payload, *phase));
 
-    auto txn_id = phase->txn_id;
-    if (auto it = pendingTransactions.find(txn_id);
-        it != pendingTransactions.end()) {
+    if (handlePCredit(phase)) {
+        return;
+    } else if (auto it = pendingTransactions.find(phase->txn_id);
+               it != pendingTransactions.end()) {
+
         // Copy the new phase
         it->second->phase() = *phase;
 
@@ -266,6 +301,53 @@ TlmGenerator::recv(ARM::CHI::Payload *payload, ARM::CHI::Phase *phase)
         it->second->runCallbacks();
     } else {
         warn("Transaction untested\n");
+    }
+}
+
+bool
+TlmGenerator::isRetryAck(ARM::CHI::Phase *phase) const
+{
+    return phase->channel == ARM::CHI::CHANNEL_RSP &&
+           phase->rsp_opcode == ARM::CHI::RSP_OPCODE_RETRY_ACK;
+}
+
+bool
+TlmGenerator::isPCrdGrant(ARM::CHI::Phase *phase) const
+{
+    return phase->channel == ARM::CHI::CHANNEL_RSP &&
+           phase->rsp_opcode == ARM::CHI::RSP_OPCODE_PCRD_GRANT;
+}
+
+bool
+TlmGenerator::handlePCredit(ARM::CHI::Phase *phase)
+{
+    if (isPCrdGrant(phase)) {
+        if (auto tran = getPCrdWaiting(); tran) {
+            // There is a waiting transaction, pass it the credit
+            tran->phase().allow_retry = false;
+            enqueueFront(tran);
+        } else {
+            pCredit++;
+        }
+        return true;
+    } else if (isRetryAck(phase)) {
+        auto it = pendingTransactions.find(phase->txn_id);
+        panic_if(it == pendingTransactions.end(),
+                 "Can't find transaction id: %u\n", phase->txn_id);
+
+        auto tran = it->second;
+
+        pendingTransactions.erase(it);
+
+        if (getPCrd()) {
+            tran->phase().allow_retry = false;
+            enqueueFront(tran);
+        } else {
+            waitingForPCrd.push_back(tran);
+        }
+        return true;
+    } else {
+        return false;
     }
 }
 

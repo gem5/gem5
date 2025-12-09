@@ -54,7 +54,7 @@ class TlmGenerator(ClockedObject):
 
     cxx_exports = [
         PyBindMethod("scheduleTransaction"),
-        PyBindMethod("enqueueTransaction"),
+        PyBindMethod("enqueueBack"),
     ]
 
     _transactions = []
@@ -67,7 +67,7 @@ class TlmGenerator(ClockedObject):
         if when:
             self._transactions.append((when, transaction))
         else:
-            self.getCCObject().enqueueTransaction(transaction)
+            self.getCCObject().enqueueBack(transaction)
 
         return transaction
 

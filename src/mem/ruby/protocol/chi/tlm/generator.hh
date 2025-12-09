@@ -276,7 +276,8 @@ class TlmGenerator : public ClockedObject
     void tick();
 
     void scheduleTransaction(Tick when, Transaction *tr);
-    void enqueueTransaction(Transaction *tr);
+    void enqueueFront(Transaction *tr);
+    void enqueueBack(Transaction *tr);
 
     Port &getPort(const std::string &if_name, PortID idx) override;
 
@@ -317,6 +318,35 @@ class TlmGenerator : public ClockedObject
     void recv(ARM::CHI::Payload *payload, ARM::CHI::Phase *phase);
     void passFailCheck();
 
+    /**
+     * Check if incoming request is a RetryAck
+     */
+    bool isRetryAck(ARM::CHI::Phase *phase) const;
+
+    /**
+     * Check if incoming request is a PCrdGrant
+     */
+    bool isPCrdGrant(ARM::CHI::Phase *phase) const;
+
+    /**
+     * Require a P-credit from the generator
+     * Returns true if a p-credit is available
+     */
+    bool getPCrd();
+
+    /**
+     * Return a list of transactions waiting for
+     * a p-credit
+     */
+    Transaction *getPCrdWaiting();
+
+    /**
+     * Potentially handle a P-credit related
+     * response. Return true if the response was
+     * a RetryAck or a PCrdGrant, false otherwise
+     */
+    bool handlePCredit(ARM::CHI::Phase *phase);
+
   protected:
     /** cpuId to mimic the behaviour of a CPU */
     uint8_t cpuId;
@@ -326,6 +356,9 @@ class TlmGenerator : public ClockedObject
 
     /** Max number of pending transactions allowed */
     const uint16_t maxPendingTrans;
+
+    /** Numbers of p-credit available to the generator */
+    unsigned pCredit;
 
     /** tick event used to schedule unscheduled transactions */
     EventFunctionWrapper tickEvent;
@@ -339,6 +372,9 @@ class TlmGenerator : public ClockedObject
 
     /** List of transactions whose injection needs to be scheduled */
     std::list<Transaction *> unscheduledTransactions;
+
+    /** List of processes waiting for a P-credit grant */
+    std::list<Transaction *> waitingForPCrd;
 
     /** Map of pending (injected) transactions indexed by the txn_id */
     std::unordered_map<uint16_t, Transaction*> pendingTransactions;
