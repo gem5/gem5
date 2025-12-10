@@ -141,7 +141,7 @@ class GarnetExtLink(BasicExtLink):
     _cls.append(CreditLink())
     credit_links = VectorParam.CreditLink(_cls, "backward flow-control links")
 
-    # The ext_cdc and intt_cdc flags are used to enable the
+    # The ext_cdc and int_cdc flags are used to enable the
     # clock domain crossing(CDC) at the external and internal
     # end of the link respectively. This is required when the
     # link and the objected connected to the link are operating
