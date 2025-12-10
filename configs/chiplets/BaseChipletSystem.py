@@ -27,6 +27,7 @@ if TYPE_CHECKING:
     from src.cpu.BaseCPU import BaseCPU
     from src.sim.System import System
     from src.sim.SubSystem import SubSystem
+    from src.sim.ClockDomain import ClockDomain
     from src.mem.ruby.system.RubySystem import RubySystem
     from src.mem.AbstractMemory import AbstractMemory
     from src.mem.ruby.slicc_interface.Controller import RubyController
@@ -76,7 +77,7 @@ class BaseChipletSystem(SubSystem):
     id = Param.Int("ID in relation to other Chiplet[System]s")
 
     # ruby/cache coherence protocol string
-    protocol = Param.String("String name corresponding to Ruby protocol")
+    protocol = Param.String("String name corresponding to the Ruby protocol")
 
     # *
     # * Latency parameters
@@ -85,14 +86,49 @@ class BaseChipletSystem(SubSystem):
     # default latency (in cycles) of the links between nodes
     # for this layer of abstraction (i.e., direct child nodes)
     default_inter_node_link_lat = Param.Int(
-        "default latency (in cycles) of the links between nodes "
-        "in this level of the hierarchy"
+        "Default latency (in cycles) of the links between nodes "
+        "in this level of the hierarchy."
     )
 
-    # same as above, but for the routers corresponding to the links
-    default_inter_node_router_lat = Param.Int(
-        "default latency (in cycles) of the routers corresponding to "
-        "the links between nodes in this level of the hierarchy"
+    # same as above, but for links within a ChipletSystem that
+    # aren't from one child node to another
+    default_intra_node_link_lat = Param.Int(
+        "Default latency (in cycles) of the routers corresponding to "
+        "the links between routers *within one node* in this level of "
+        "the hierarchy."
+    )
+
+    # same as default_inter_node_link_lat,
+    # but for the routers corresponding to the links
+    default_node_main_router_lat = Param.Int(
+        "Default latency (in cycles) of the routers corresponding to "
+        "the links between nodes in this level of the hierarchy."
+    )
+
+    default_cache_controller_link_lat = Param.Int(
+        "Default latency (in cycles) of the links between "
+        "each cache controller and its corresponding router. "
+        "(*not* between that router and the main router of this "
+        "`ChipletSystem`). Defaults to `default_inter_node_link_lat`."
+    )
+
+    default_cache_controller_router_lat = Param.Int(
+        "The default latency (in cycles) of the router "
+        "corresponding to each cache controller. "
+        "Defaults to `default_node_main_router_lat`."
+    )
+
+    default_dir_controller_link_lat = Param.Int(
+        "Default latency (in cycles) of the links between "
+        "each directory controller and its corresponding router "
+        "(*not* between that router and the main router of this "
+        "`ChipletSystem`). Defaults to `default_inter_node_link_lat`."
+    )
+
+    default_dir_controller_router_lat = Param.Int(
+        "The default latency (in cycles) of the router "
+        "corresponding to each dir controller. "
+        "Defaults to `default_node_main_router_lat`."
     )
 
     # *
@@ -143,32 +179,33 @@ class BaseChipletSystem(SubSystem):
     _parent_link: tuple[GarnetIntLink, GarnetIntLink]
 
     # list of Garnet link pairs for siblings
+    # corresponds to `_connected_nodes`, which holds the relevant node refs
     _sibling_links: list[tuple[GarnetIntLink, GarnetIntLink]]
 
     # `GarnetNetwork` for this object
     # ! will always be fake except for root after `createSystem()` is done
     _garnet_network: GarnetNetwork | FakeGarnetNetwork
 
-    # `RubyController`s that correspond to this `Chiplet[System]`
-    # includes all controllers used to create the topology
-    _ruby_controllers: list[RubyController]
-
-    # `GarnetExtLink`s that connect this object to parent `RubyController`s
-    _ruby_controller_links: list[GarnetExtLink]
-    # _ruby_controller_router_map: list[tuple[RubyController, GarnetRouter]]
+    # `RubyController`s corresponding to the topology of this
+    # `Chiplet[System]` specifically. in other words, this
+    # includes all controllers used to generate the core topology via
+    # `_createTopology()`. However, it may not include *all* controllers
+    # present in this `Chiplet[System]` depending on the parameters
+    # specified when calling `createSystem()`.
+    _topology_controllers: list[RubyController]
 
     # directory controllers in this `Chiplet[System]`
     # these are returned by `create_system()` of the Ruby protocol
     _dir_controllers: list[RubyController]
-    # _dir_controller_link_map: list[tuple[RubyController, GarnetExtLink]]
-    # _dir_controller_router_map: list[tuple[RubyController, GarnetRouter]]
 
     # controllers that are not directory controllers
     # e.g., LLC controller
-    _non_dir_controllers: list[RubyController]
+    # does not include *all* cache controllers in the system
+    _cache_controllers: list[RubyController]
 
     # Ruby CPU sequencers for this `Chiplet[System]`
     # includes sequencers for all CPUs
+    # should only be populated at the root
     _cpu_sequencers: list[RubySequencer]
 
     # *
@@ -207,7 +244,12 @@ class BaseChipletSystem(SubSystem):
         MemoryClass: type[AbstractMemory],
         nodes: Sequence[BaseChipletSystem] | Sequence[BaseCPU],
         inter_node_link_lat: int,
-        inter_node_router_lat: int,
+        intra_node_link_lat: int,
+        node_main_router_lat: int,
+        cache_controller_link_lat: int,
+        cache_controller_router_lat: int,
+        dir_controller_link_lat: int,
+        dir_controller_router_lat: int,
     ):
         """
         Create a `BaseChipletSystem`.
@@ -222,8 +264,8 @@ class BaseChipletSystem(SubSystem):
                 If gem5 is running in full-system simulation mode.
             TopologyClass (Type[BaseTopology]):
                 The class, derived from `BaseTopology`, corresponding
-                to the topology to be used in this `ChipletSystem`.
-                Only the root `ChipletSystem` needs to specify this.
+                to the topology to be used in this level of the
+                `ChipletSystem` hierarchy.
             MemoryClass (Type[AbstractMemory]):
                 The class corresponding to the memory configuration
                 for the gem5 `System` this `ChipletSystem` is part of.
@@ -233,10 +275,32 @@ class BaseChipletSystem(SubSystem):
             inter_node_link_lat (int):
                 The default latency (in cycles) of the links between
                 nodes for this layer of abstraction.
-            inter_node_router_lat (int):
-                The default latency (in cycles) of the routers
+            intra_node_link_lat (int):
+                The default latency (in cycles) of the links between
+                each routers in the same level of the hierarchy;
+                e.g., between the main router and the router corresponding
+                to a directory controller or cache controller.
+            node_main_router_lat (int):
+                The default latency (in cycles) of the main router
+                for this `Chiplet[System]`. This is also the router
                 corresponding to the the links between nodes
                 for this layer of abstraction.
+            cache_controller_link_lat (int, optional):
+                The default latency (in cycles) of the links between
+                each cache controller and its corresponding router.
+                Defaults to `inter_node_link_lat`.
+            cache_controller_router_lat (int, optional):
+                The default latency (in cycles) of the router
+                corresponding to each cache controller.
+                Defaults to `node_main_router_lat`.
+            dir_controller_link_lat (int, optional):
+                The default latency (in cycles) of the links between
+                each directory controller and its corresponding router.
+                Defaults to `inter_node_link_lat`.
+            dir_controller_router_lat (int, optional):
+                The default latency (in cycles) of the router
+                corresponding to each directory controller.
+                Defaults to `node_main_router_lat`.
         """
         super().__init__()
 
@@ -253,12 +317,34 @@ class BaseChipletSystem(SubSystem):
         self._topology = None  # created in `createSystem()`
 
         self.default_inter_node_link_lat = inter_node_link_lat
-        self.default_inter_node_router_lat = inter_node_router_lat
+        self.default_intra_node_link_lat = intra_node_link_lat
+        self.default_node_main_router_lat = node_main_router_lat
+
+        if cache_controller_link_lat == -1:
+            self.default_cache_controller_link_lat = (
+                self.default_inter_node_link_lat
+            )
+
+        if cache_controller_router_lat == -1:
+            self.default_cache_controller_router_lat = (
+                self.default_node_main_router_lat
+            )
+
+        if dir_controller_link_lat == -1:
+            self.default_dir_controller_link_lat = (
+                self.default_inter_node_link_lat
+            )
+
+        if dir_controller_router_lat == -1:
+            self.default_dir_controller_router_lat = (
+                self.default_node_main_router_lat
+            )
+
         self._connected_nodes = []
 
         self._main_router = GarnetRouter(
             router_id=0,  # some hijinks occur with this later
-            latency=self.default_inter_node_router_lat,
+            latency=self.default_node_main_router_lat,
             # the following are default parameters
             # gem5 complains if I don't include these params
             vcs_per_vnet=4,
@@ -266,15 +352,9 @@ class BaseChipletSystem(SubSystem):
 
         self._sibling_links = []
 
-        self._ruby_controllers = []
-        self._ruby_controller_links = []
-        # self._ruby_controller_router_map = []
-
+        self._topology_controllers = []
         self._dir_controllers = []
-        # self._dir_controller_link_map = []
-        # self._dir_controller_router_map = []
-
-        self._non_dir_controllers = []
+        self._cache_controllers = []
 
         self.id = BaseChipletSystem._generate_id()
 
@@ -368,6 +448,11 @@ class BaseChipletSystem(SubSystem):
 
         return str
 
+    @classmethod
+    def recursivelyPrintClockDomains(cls, base):
+        print(f"Starting clock domain traversal from {base}.")
+        cls._traverseClockDomains(base, True, False)
+
     def to_string(self):
         raise NotImplementedError
 
@@ -441,7 +526,7 @@ class BaseChipletSystem(SubSystem):
         Args:
             options (Namespace): _description_
             controllers (list[RubyController]):
-                This should usually be `self._ruby_controllers`.
+                This should usually be `self._topology_controllers`.
                 May or may not include the directory controllers
                 depending on what was passed to `createSystem()`.
         """
@@ -478,6 +563,17 @@ class BaseChipletSystem(SubSystem):
                 "user is calling methods in places they shouldn't be "
                 "called, or something is very broken."
             )
+
+        # assert options.network == "garnet"
+
+        # * set topology latencies
+        # the topology will configure router and link latencies based
+        # on `options`, so we have to set that here.
+        options.router_latency = self.default_node_main_router_lat
+        options.link_latency = self.default_intra_node_link_lat
+        # we don't really care what these values were because all
+        # our latency values are specified elsewhere,
+        # and we (probably) don't want them to be all uniform either.
 
         # * setup topology
         # latter 3 args are the literal classes for the
@@ -533,7 +629,7 @@ class BaseChipletSystem(SubSystem):
         gnw.routers += self._main_router
 
         for c in controllers:
-            r = self._findRouterFromController(c, False)
+            r = self._getRouterFromController(c, False)
             if r is not None:
                 print(f"    controller {c} :: router {r.router_id} {r}")
 
@@ -541,13 +637,13 @@ class BaseChipletSystem(SubSystem):
     # * Low-Level Network Connection/Instantiation Methods
     # *
 
-    def _findExtLinkFromController(
+    def _getExtLinkFromController(
         self,
         controller: RubyController,
         searchFromRoot: bool = True,
     ) -> GarnetExtLink | None:
         if searchFromRoot and not self.isRoot():
-            return self.getRoot()._findExtLinkFromController(controller, False)
+            return self.getRoot()._getExtLinkFromController(controller, False)
             # don't need to set searchFromRoot = False but why not
 
         ext_links = self._garnet_network.ext_links
@@ -557,25 +653,25 @@ class BaseChipletSystem(SubSystem):
 
         return None
 
-    def _findRouterFromController(
+    def _getRouterFromController(
         self,
         controller: RubyController,
         searchFromRoot: bool = True,
     ) -> GarnetRouter | None:
-        ext_link = self._findExtLinkFromController(controller, searchFromRoot)
+        ext_link = self._getExtLinkFromController(controller, searchFromRoot)
         if ext_link is not None:
             return ext_link.int_node
         else:
             return None
 
-    def _findIntLinkFromRouters(
+    def _getIntLinkFromRouters(
         self,
         routerFrom: GarnetRouter,
         routerTo: GarnetRouter,
         searchFromRoot: bool = True,
     ) -> GarnetIntLink | None:
         if searchFromRoot and not self.isRoot():
-            return self.getRoot()._findIntLinkFromRouters(
+            return self.getRoot()._getIntLinkFromRouters(
                 routerFrom, routerTo, False
             )
             # don't need to set searchFromRoot = False but why not
@@ -589,12 +685,57 @@ class BaseChipletSystem(SubSystem):
                 return int_link
         return None
 
+    def _getRoutersFromIntLink(
+        self, int_link: GarnetIntLink
+    ) -> tuple[GarnetRouter | None, GarnetRouter | None]:
+        if int_link is None:
+            return (None, None)
+
+        return int_link.src_node, int_link.dst_node
+
+    def _setLinkLatency(
+        self,
+        link: GarnetIntLink | GarnetExtLink,
+        new_latency: int,
+    ):
+        """
+        Manually set the latency for a specific network link.
+        If using externally to `Chiplet[System]`, find the link
+        with `_getIntLinkFromRouters()` for internal links between
+        two routers, or `_getExtLinkFromController()` for external
+        links between a router and a `RubyController`.
+
+        Args:
+            link (GarnetIntLink | GarnetExtLink):
+                The link for which to set the latency.
+            new_latency (int): The new latency to set.
+        """
+        link.latency = new_latency
+
     def _biLinkGarnetRouters(
         self,
         router1: GarnetRouter,
         router2: GarnetRouter,
-        # auto_reg_parent: bool = True,
-    ):
+        link_latency: int = -1,
+    ) -> tuple[GarnetIntLink | None, GarnetIntLink | None]:
+        """
+        Create internal links (`GarnetIntLink`s) between two specified
+        routers in a `GarnetNetwork` (can be a `FakeGarnetNetwork`).
+
+        Args:
+            router1 (GarnetRouter): The first router to link.
+            router2 (GarnetRouter): The second router to link.
+            link_latency (int, optional):
+                The link latency.
+                Defaults to `self.default_inter_node_link_lat`.
+
+        Returns:
+            tuple[GarnetIntLink | None, GarnetIntLink | None]:
+                the internal links, if successfully created.
+        """
+        if link_latency == -1:
+            link_latency = self.default_inter_node_link_lat
+
         num_links = len(self._garnet_network.int_links) + len(
             self._garnet_network.ext_links
         )
@@ -606,14 +747,14 @@ class BaseChipletSystem(SubSystem):
             link_id=num_links,
             src_node=router1,
             dst_node=router2,
-            latency=self.default_inter_node_link_lat,
+            latency=link_latency,
         )
 
         l21 = GarnetIntLink(
             link_id=num_links + 1,
             src_node=router2,
             dst_node=router1,
-            latency=self.default_inter_node_link_lat,
+            latency=link_latency,
         )
 
         # self._garnet_network.int_links.append(l12)
@@ -621,29 +762,14 @@ class BaseChipletSystem(SubSystem):
         self._garnet_network.int_links += l12
         self._garnet_network.int_links += l21
 
-        # TODO NEW HIERARCHY: remove this
-        # if auto_reg_parent:
-        #     l12.set_parent(self._garnet_network, f"int_links{num_links}")
-        #     l21.set_parent(self._garnet_network, f"int_links{num_links + 1}")
-
         return l12, l21
 
-    def _connectParentGarnet(self, copy_links_to_parent: bool = True):
+    def _connectParentGarnet(self):
+        warn("It is recommended to connect from parent instead of child.")
         if hasattr(self, "_parent_sys") and self._parent_sys is not None:
             self._parent_link = self._biLinkGarnetRouters(
                 self._main_router, self._parent_sys._main_router
             )
-            # if copy_links_to_parent:
-            #     pgn = self.parent._garnet_network
-            #     pgn.int_links.append(self._parent_link[0])
-            #     pgn.int_links.append(self._parent_link[1])
-
-    def _connectSiblingGarnet(self, sibl: BaseChipletSystem):
-        warn("This may cause unexpected behavior.")
-        l_to, l_from = self._biLinkGarnetRouters(
-            self._main_router, sibl._main_router
-        )
-        self._sibling_links.append((l_to, l_from))
 
     def _connectChildrenGarnet(
         self, node1: BaseChipletSystem, node2: BaseChipletSystem
@@ -667,8 +793,7 @@ class BaseChipletSystem(SubSystem):
         ctrl: RubyController,
         router: GarnetRouter | None = None,
         link_lat: int = -1,
-        auto_reg_parent: bool = True,
-    ):
+    ) -> GarnetExtLink:
         """
         Creates and registers a `GarnetExtLink` between the specified
         `RubyController` object and the specified `GarnetRouter`
@@ -681,17 +806,13 @@ class BaseChipletSystem(SubSystem):
             router (GarnetRouter, optional):
                 The `GarnetRouter` to link the controller to.
                 This is the internal node of the resulting `GarnetExtLink`.
-                Defaults to None, which results in using the main router.
+                Defaults to the main router.
                 Usually this should be specified only when creating a link
                 to a directory controller, which does things differently.
             link_lat (int, optional):
                 The link latency for the resulting `GarnetExtLink`.
                 Defaults to -1, which results in using the default link
                 latency stored in this `Chiplet[System]`.
-            auto_reg_parent (bool, optional):
-                Whether to automatically register the parent of the
-                resultant `GarnetExtLink`. Defaults to `True`, and usually
-                it should be left that way.
 
         Returns:
             GarnetExtLink:
@@ -722,15 +843,6 @@ class BaseChipletSystem(SubSystem):
 
         self._garnet_network.ext_links += link
 
-        # TODO NEW HIERARCHY: remove this
-        # if self.isDirController(ctrl):
-        #     self._dir_controller_link_map.append(link)
-        # else:
-        #     self._ruby_controller_links.append(link)
-
-        # TODO NEW HIERARCHY: remove this
-        # if auto_reg_parent:
-        #     link.set_parent(self._garnet_network, f"ext_links{num_links}")
         return link
 
     def _getNodeLinks(
@@ -766,8 +878,8 @@ class BaseChipletSystem(SubSystem):
         n1r = node1._main_router
         n2r = node2._main_router
 
-        l12 = self._findIntLinkFromRouters(n1r, n2r)
-        l21 = self._findIntLinkFromRouters(n2r, n1r)
+        l12 = self._getIntLinkFromRouters(n1r, n2r)
+        l21 = self._getIntLinkFromRouters(n2r, n1r)
 
         return (l12, l21)
 
@@ -811,6 +923,14 @@ class BaseChipletSystem(SubSystem):
             node1 (BaseChipletSystem): The node to connect from.
             node2 (BaseChipletSystem): The node to connect to.
         """
+
+        if hasattr(self, "_created"):
+            if self._created:
+                warn(
+                    f"connectChildren() was called after createSystem()! "
+                    f"This may result in unexpected behavior! "
+                    f"Nodes: {node1}; {node2}"
+                )
 
         if node1 not in self._nodes:
             fatal(
@@ -986,14 +1106,14 @@ class BaseChipletSystem(SubSystem):
         Note that since internal links are unidirectional, the user has
         the option to change the flit size for only one of the links
         (i.e., only for traffic from node1 to node2, or vice versa)
-        by setting the set_width_link_1_to_2 (or ...2_to_1) flags.
+        by setting the `set_width_link_1_to_2` (or `...2_to_1`) flags.
 
         By default, both unidirectional links comprising the connection
         between node1 and node2 will have their width/flit size changed.
 
         Args:
-            node1 (BaseChipletSystem): _description_
-            node2 (BaseChipletSystem): _description_
+            node1 (BaseChipletSystem): One node.
+            node2 (BaseChipletSystem): The other node.
             width (int): The flit width to set on the link.
             set_width_link_1_to_2 (bool, optional):
                 Whether to set the width of the unidirectional
@@ -1035,179 +1155,286 @@ class BaseChipletSystem(SubSystem):
                     f"but int link in other direction does not. "
                 )
 
-    # *
-    # * Deprecated
-    # *
-
-    def _defineMainRouterParams(self):
-        """
-        For some reason gem5 hates it when these aren't automatically
-        defined for `_main_router`, probably because it was instantiated
-        seperately. Should just nee to be called before `m5.instantiate()`.
-        """
-        assert isinstance(self._garnet_network, GarnetNetwork)
-        # gem5 will complain if params aren't defined for main router
-        mr = self._main_router
-        gn = self._garnet_network
-        if int(mr.router_id) == -1:
-            num_routers = len(self._garnet_network.routers)
-            mr.router_id = num_routers - 1
-        mr.vcs_per_vnet = gn.vcs_per_vnet
-        # mr.virt_nets = self._garnet_network.number_of_virtual_networks
-        # mr.ni_flit_size = gn.ni_flit_size
-        # mr.eventq_index = gn.eventq_index
-
-    def _fixAllGarnetObjectParams(self):
-
-        import traceback
-
-        fatal(f"do not use this function! tb: {traceback.print_stack()}")
-
-        assert isinstance(self._garnet_network, GarnetNetwork)
-
-        def _recursiveUnproxyParams(sim_obj, set_clk_domain=False):
-            if len(sim_obj) > 1:
-                for i, obj in enumerate(sim_obj):
-                    _recursiveUnproxyParams(obj, set_clk_domain)
-                return
-            if not isSimObject(sim_obj):
-                warn(f"{sim_obj} is not a SimObject.")
-                return
-            if set_clk_domain:
-                if hasattr(sim_obj, "clk_domain"):
-                    # warn(f"setting clock domain for {sim_obj}")
-                    sim_obj.clk_domain = self._system.clk_domain
-                # if hasattr(sim_obj, 'vcs_per_vnet'):
-                #     vcs = self._garnet_network.vcs_per_vnet
-                #     warn(f"setting vcs_per_vnet for {sim_obj} = {vcs}")
-                #     sim_obj.vcs_per_vnet = vcs
-            sim_obj.unproxyParams()
-            children = sim_obj._children.values()
-            for child in children:
-                _recursiveUnproxyParams(child, set_clk_domain)
-
-        # fix network params
-        if not hasattr(self._garnet_network, "number_of_virtual_networks"):
-            self._garnet_network.number_of_virtual_networks = (
-                self._system.ruby.network.number_of_virtual_networks
-            )
-
-        # fix router params
-        for r in self._garnet_network.routers:
-            # print(f"setting clk_domain for {r}")
-            r.clk_domain = self._system.clk_domain
-            # print(f"setting eqidx = 0 for {r}")
-            # default for all `SimObject`s should be 0
-            r.eventq_index = 0
-            r.power_state.eventq_index = r.eventq_index
-            r.unproxyParams()
-
-        # fix int link params
-        for il in self._garnet_network.int_links:
-            # il.clk_domain = self._system.clk_domain
-            il.eventq_index = 0
-            _recursiveUnproxyParams(il)
-            # il.unproxyParams()
-            # il_attrs = dir(il)
-            # for attr_str in il_attrs:
-            #     attr = getattr(il, attr)
-            #     if isSimObject(attr):
-            #         attr.unproxyParams()
-            # if hasattr(il, 'credit_link'):
-            #     il.credit_link.unproxyParams()
-            #     il.credit_link.power_state.unproxyParams()
-            # #     il.credit_link.clk_domain = self._system.clk_domain
-
-        # fix ext link params
-        for el in self._garnet_network.ext_links:
-            el.eventq_index = 0
-            _recursiveUnproxyParams(el, True)
-
-    def _connectHierarchyGarnet(self):
-        """
-        Should be called after `_createTopology()`.
-        Adds the main router to the `GarnetNetwork` list and
-        creates connections between the main routers of the current
-        level of the hierarchy and its parents/siblings.
-        """
-        import traceback
-
-        fatal(f"do not use this function! tb: {traceback.print_stack()}")
-        # topologies tend to overwrite garnet links/routers entirely
-        # so just create our links (and add our main router) afterwards
-        num_routers = len(self._garnet_network.routers)
-        if self._main_router.router_id == -1:
-            self._main_router.router_id = num_routers  # - 1
-        if self._main_router not in self._garnet_network.routers:
-            self._garnet_network.routers.append(self._main_router)
-        # self._garnet_network.mainrouter = self._main_router  # load bearing
-        self._connectParentGarnet()
-        if hasattr(self, "_parent_sys") and self._parent_sys is not None:
-            for node in self._parent_sys._nodes:
-                if node is not self:
-                    self._parent_sys.connectChildren(self, node)
-                    # self._connectSiblingGarnet(node)
-            # for rc in self._parent_sys._ruby_controllers:
-            #     self._connectRubyControllerGarnet(rc)
-        # setattr(
-        #     self._garnet_network,
-        #     f'mainrouterc{self.id}',
-        #     self._main_router
-        # )
-        # setattr(
-        #     self._garnet_network,
-        #     f'routers{self.id}',
-        #     self._main_router
-        # )
-
-    def _mergeGarnetNetworks(
-        self, merge_into: GarnetNetwork, merge_from: GarnetNetwork
+    def setNodeLatencies(
+        self,
+        node1: BaseChipletSystem,
+        node2: BaseChipletSystem,
+        link_latency: int = -1,
+        router_latency: int = -1,
+        set_lat_link_1_to_2: bool = True,
+        set_lat_link_2_to_1: bool = True,
+        set_lat_router_1: bool = True,
+        set_lat_router_2: bool = True,
     ):
-        import traceback
-
-        fatal(f"do not use this function! tb: {traceback.print_stack()}")
-        mi_router_ct = len(merge_into.routers)
-        mi_link_ct = len(merge_into.int_links) + len(merge_into.ext_links)
-        for r in merge_from.routers:
-            # ensure unique IDs in resulting network
-            r.router_id = mi_router_ct
-            merge_into.routers.append(r)
-            mi_router_ct += 1
-
-        merge_from.routers = []
-
-        for el in merge_from.ext_links:
-            el.link_id = mi_link_ct
-            merge_into.ext_links.append(el)
-            mi_link_ct += 1
-
-        merge_from.ext_links = []
-
-        for il in merge_from.int_links:
-            il.link_id = mi_link_ct
-            merge_into.int_links.append(il)
-            mi_link_ct += 1
-
-        merge_from.int_links = []
-
-    def _combineHierarchyGarnetNetworks(self, merge_into: GarnetNetwork):
         """
-        Call from parent `ChipletSystem` to combine all `GarnetNetwork`s
-        after topologies have been created.
+        Adjust latency of the links (and their routers) between the two
+        specified nodes (`ChipletSystem`s or `Chiplet`s) *which are
+        children of this `ChipletSystem`.*
+
+        Note that since internal links are unidirectional, the user has
+        the option to change the latencies for only one of the links
+        (i.e., only for traffic from node1 to node2, or vice versa)
+        by setting the `set_lat_link_1_to_2` (or `...2_to_1`) flags, and
+        similarly for the routers with set_lat_router_1 (or `..._2`).
 
         Args:
-            merge_into (GarnetNetwork):
-                The `GarnetNetwork` to merge into. This should always be
-                the `GarnetNetwork` of the root `ChipletSystem`, so that
-                recursive calls continue merging properly.
+            node1 (BaseChipletSystem): One node.
+            node2 (BaseChipletSystem): The other node.
+            link_latency (int):
+                The link latency to set.
+                If none is provided, it will not be set.
+            router_latency (int):
+                The router latency to set.
+                If none is provided, it will not be set.
+            set_lat_link_1_to_2 (bool, optional):
+                Whether to set the latency of the unidirectional
+                internal link from node1 to node2.
+                Defaults to True.
+            set_lat_link_2_to_1 (bool, optional):
+                Whether to set the latency of the unidirectional
+                internal link from node2 to node1.
+                Defaults to True.
+            set_lat_router_1 (bool, optional):
+                Whether to set the latency of the router on
+                node1's end of the internal links.
+                Defaults to True.
+            set_lat_router_2 (bool, optional):
+                Whether to set the latency of the router on
+                node2's end of the internal links.
+                Defaults to True.
         """
-        import traceback
+        (l12, l21) = self._getNodeLinks(node1, node2)
 
-        fatal(f"do not use this function! tb: {traceback.print_stack()}")
+        if l12 is None and l21 is None:
+            warn(
+                f"int links between {node1.__class__.__name__}{node1.id} "
+                f"and {node2.__class__.__name__}{node2.id} do not exist!"
+            )
+            return
 
-        for n in self._nodes:
-            if hasattr(n, "_garnet_network"):
-                assert isinstance(n._garnet_network, GarnetNetwork)
-                self._mergeGarnetNetworks(merge_into, n._garnet_network)
-            if hasattr(n, "_nodes"):
-                n._combineHierarchyGarnetNetworks(merge_into)
+        if link_latency != -1:
+            if l12 is not None:
+                if set_lat_link_1_to_2:
+                    l12.width = link_latency
+
+                if l21 is None:
+                    warn(
+                        f"int link "
+                        f"from {node1.__class__.__name__}{node1.id} "
+                        f"to {node2.__class__.__name__}{node2.id} exists "
+                        f"but int link in other direction does not. "
+                    )
+
+            if l21 is not None:
+                if set_lat_link_2_to_1:
+                    l21.width = link_latency
+
+                if l12 is None:
+                    warn(
+                        f"int link "
+                        f"from {node1.__class__.__name__}{node1.id} "
+                        f"to {node2.__class__.__name__}{node2.id} exists "
+                        f"but int link in other direction does not. "
+                    )
+
+        if router_latency != -1:
+            node1_router = None
+            node2_router = None
+            if l12 is not None:
+                node1_router, node2_router = self._getRoutersFromIntLink(l12)
+            elif l21 is not None:
+                node1_router, node2_router = self._getRoutersFromIntLink(l21)
+
+            if node1_router is None:
+                warn(
+                    f"main router for node1 may be missing! "
+                    f"latency not set for router belonging to "
+                    f"node {node1}"
+                )
+            elif set_lat_router_1:
+                node1_router.latency = router_latency
+
+            if node2_router is None:
+                warn(
+                    f"main router for node2 may be missing! "
+                    f"latency not set for router belonging to "
+                    f"node {node1}"
+                )
+            elif set_lat_router_2:
+                node2_router.latency = router_latency
+
+    @classmethod
+    def setClockDomain(
+        cls,
+        obj: BaseChipletSystem | BaseCPU | GarnetRouter | GarnetExtLink,
+        new_clk_domain: ClockDomain,
+        recursive: bool = False,
+        print_clk_domains: bool = False,
+    ):
+        """
+        Set the clock domain of the specified `SimObject` (typically a
+        `BaseChipletSystem`, CPU, or Garnet router/link).
+        Optionally, recursively traverse down `SimObject` hierarchy
+        starting at `obj`, setting a new (specified) clock domain
+        for any `SimObject` that has a clock domain.
+
+        Note that this is a class method, not an instance method.
+        This method does NOT automatically set the clock domain of the
+        `BaseChipletSystem` it is called on, or its children (although
+        this method should be called from the class, not any instance).
+        Instead, a base `SimObject` `obj` must be specified.
+
+        Args:
+            obj (BaseChipletSystem|BaseCPU|GarnetRouter|GarnetExtLink):
+                `SimObject` to set the clock domain of, or, if `recursive`,
+                to traverse from. Specified types are generally what
+                might be used. This method should be used alongside
+                `enableNodeLinkCDC()`, `_findExtLinkFromController()`,
+                `_getNodeLinks()`, and/or `_findRouterFromController()`,
+                as these methods will be needed to find `obj` and enable
+                the CDC units corresponding to the appropriate links.
+            new_clk_domain (ClockDomain):
+                Any clock domains found will be updated/set to
+                this new clock domain.
+            recursive (bool, optional):
+                Whether to recursively traverse the `SimObject` hierarchy
+                and explicitly set all child clock domains.
+                Generally this should be done if the clock domains are not
+                properly inherited (you can check this using the method
+                `recursivelyPrintClockDomains()`). Typically, `SimObject`s
+                should automatically inherit the clock domain of their
+                parent, so setting the parent object's clock domain should
+                be sufficient. Defaults to `False`.
+            print_clk_domains (bool, optional):
+                Whether to print the clock domain(s) *before* they are set.
+        """
+        if print_clk_domains:
+            print(f"Setting clock domain for {obj} to {new_clk_domain}.")
+        if hasattr(obj, "clk_domain"):
+            if print_clk_domains:
+                print(f"{obj} : {obj.clk_domain}")
+            if obj.clk_domain == new_clk_domain:
+                warn(
+                    f"The clock domain of {obj} is already set to "
+                    f"{new_clk_domain}!"
+                )
+            obj.clk_domain = new_clk_domain
+        elif hasattr(obj, "_clk_domain"):
+            if print_clk_domains:
+                print(f"{obj} : {obj._clk_domain}")
+            if obj._clk_domain == new_clk_domain:
+                warn(
+                    f"The clock domain of {obj} is already set to "
+                    f"{new_clk_domain}!"
+                )
+            obj._clk_domain = new_clk_domain
+        if recursive:
+            if print_clk_domains:
+                print(f"Starting clock domain traversal from {obj}.")
+            cls._traverseClockDomains(
+                obj, print_clk_domains, True, new_clk_domain
+            )
+
+    @classmethod
+    def _traverseClockDomains(
+        cls,
+        base: BaseChipletSystem | BaseCPU | GarnetRouter | GarnetExtLink,
+        print_clk_domains: bool = True,
+        set_clk_domains: bool = False,
+        new_clk_domain: ClockDomain | None = None,
+    ):
+        """
+        Recursively traverse down `SimObject` hierarchy starting at `base`.
+        Optionally print found clock domains or recursively set new ones.
+
+        Args:
+            base (BaseChipletSystem|BaseCPU|GarnetRouter|GarnetExtLink):
+                `SimObject` to traverse from. Specified types are generally
+                what might be used. This method should be used alongside
+                `enableNodeLinkCDC()`, `_findExtLinkFromController()`,
+                `_getNodeLinks()`, and/or `_findRouterFromController()`,
+                as these methods will be needed to find `base` and enable
+                the CDC units corresponding to the appropriate links.
+            print_clk_domains (bool, optional):
+                Whether to print the clock domains that are found during
+                traversal. Defaults to True. Note that if also setting
+                new clock domains, `m5.instantiate()` should probably be
+                called before checking the hierarchy.
+            set_clk_domains (bool, optional):
+                Whether to set the clock domains found during traversal
+                to `new_clk_domain`. Defaults to False. Has no effect
+                if `new_clk_domain` is unspecified (`None`).
+            new_clk_domain (ClockDomain, optional):
+                If `set` is `True`, any clock domains found will be updated
+                to this new clock domain. Defaults to None. Has no effect
+                if `set` is `False`.
+        """
+        if not print_clk_domains and not set_clk_domains:
+            warn(
+                f"_traverseClockDomains() was called, but no actions "
+                f"were specified (base = {base})."
+            )
+            return
+        if set_clk_domains is True and new_clk_domain is None:
+            warn(
+                f"_traverseClockDomains() was called, and "
+                f"`set_clock_domains` was set to True, but no "
+                f"clock domain was specified (base = {base})."
+            )
+            return
+
+        if hasattr(base, "clk_domain"):
+            if print_clk_domains:
+                print(f"{base} : {base.clk_domain}")
+            if set_clk_domains:
+                base.clk_domain = new_clk_domain
+        elif hasattr(base, "_clk_domain"):
+            if print_clk_domains:
+                print(f"{base} : {base._clk_domain}")
+            if set_clk_domains:
+                base._clk_domain = new_clk_domain
+
+        if isSimObject(base):
+            # * check for SimObject children
+            # print(f"{base} is SimObject")
+            for child in base._children.values():
+                #   print(f"   child: {child}")
+                cls._traverseClockDomains(
+                    child, print_clk_domains, set_clk_domains, new_clk_domain
+                )
+
+            # * check for `ChipletSystem` children
+            if hasattr(base, "_nodes"):
+                for node in base._nodes:
+                    # but don't print/set redundantly
+                    if node not in base._children.values():
+                        cls._traverseClockDomains(
+                            node,
+                            print_clk_domains,
+                            set_clk_domains,
+                            new_clk_domain,
+                        )
+        elif isSimObjectSequence(base):
+            # * handle lists of SimObjects
+            # print(f"{base} is SimObject Vector")
+            for obj in base:
+                if isinstance(obj, list):
+                    # list in a list
+                    # type checker seems to think this will happen
+                    # not sure about that
+                    for child in obj:
+                        cls._traverseClockDomains(
+                            child,
+                            print_clk_domains,
+                            set_clk_domains,
+                            new_clk_domain,
+                        )
+                else:  # not a list in a list
+                    for child in obj._children.values():
+                        # print(f"   child: {child}")
+                        cls._traverseClockDomains(
+                            child,
+                            print_clk_domains,
+                            set_clk_domains,
+                            new_clk_domain,
+                        )

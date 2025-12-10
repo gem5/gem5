@@ -49,9 +49,63 @@ class Chiplet(BaseChipletSystem):
         TopologyClass: type[BaseTopology],
         MemoryClass: type[AbstractMemory],
         inter_node_link_lat: int,
-        inter_node_router_lat: int,
+        intra_node_link_lat: int,
+        node_main_router_lat: int,
         cores: Sequence[BaseCPU],
+        cache_controller_link_lat: int = -1,
+        cache_controller_router_lat: int = -1,
+        dir_controller_link_lat: int = -1,
+        dir_controller_router_lat: int = -1,
     ):
+        """
+        Instantiate a `Chiplet` object.
+
+        Args:
+            system (System):
+                The gem5 `System` SimObject that this `Chiplet`
+                is part of.
+            full_system (bool):
+                If gem5 is running in full-system simulation mode.
+            TopologyClass (Type[BaseTopology]):
+                The class, derived from `BaseTopology`, corresponding
+                to the topology to be used in this level of the
+                `ChipletSystem` hierarchy.
+            MemoryClass (Type[AbstractMemory]):
+                The class corresponding to the memory configuration
+                for the gem5 `System` this `ChipletSystem` is part of.
+            inter_node_link_lat (int):
+                The default latency (in cycles) of the links between
+                nodes for this layer of abstraction.
+            intra_node_link_lat (int):
+                The default latency (in cycles) of the links between
+                each routers in the same level of the hierarchy;
+                e.g., between the main router and the router corresponding
+                to a directory controller or cache controller.
+            node_main_router_lat (int):
+                The default latency (in cycles) of the main router
+                for this `Chiplet[System]`. This is also the router
+                corresponding to the the links between nodes
+                for this layer of abstraction.
+            nodes (Sequence[BaseChipletSystem]):
+                Optional list of nodes. May be passed to constructor
+                or added separately using `addNode()`.
+            cache_controller_link_lat (int, optional):
+                The default latency (in cycles) of the links between
+                each cache controller and its corresponding router.
+                Defaults to `inter_node_link_lat`.
+            cache_controller_router_lat (int, optional):
+                The default latency (in cycles) of the router
+                corresponding to each cache controller.
+                Defaults to `inter_node_router_lat`.
+            dir_controller_link_lat (int, optional):
+                The default latency (in cycles) of the links between
+                each directory controller and its corresponding router.
+                Defaults to `inter_node_link_lat`.
+            dir_controller_router_lat (int, optional):
+                The default latency (in cycles) of the router
+                corresponding to each directory controller.
+                Defaults to `inter_node_router_lat`.
+        """
         super().__init__(
             # self,
             system=system,
@@ -60,8 +114,15 @@ class Chiplet(BaseChipletSystem):
             MemoryClass=MemoryClass,
             nodes=cores,
             inter_node_link_lat=inter_node_link_lat,
-            inter_node_router_lat=inter_node_router_lat,
+            node_main_router_lat=node_main_router_lat,
+            intra_node_link_lat=intra_node_link_lat,
+            cache_controller_link_lat=cache_controller_link_lat,
+            cache_controller_router_lat=cache_controller_router_lat,
+            dir_controller_link_lat=dir_controller_link_lat,
+            dir_controller_router_lat=dir_controller_router_lat,
         )
+
+        self._garnet_network = FakeGarnetNetwork()
 
     # * alias Chiplet._cores to Chiplet._nodes
     def get_cores(self):
@@ -77,7 +138,7 @@ class Chiplet(BaseChipletSystem):
         options: Namespace,
         l2_is_private: bool,
     ):
-        self._garnet_network = FakeGarnetNetwork()
+        # self._garnet_network = FakeGarnetNetwork()
 
         root = self.getRoot()
         if root == self:  # could use `self.isRoot()` but alr have `root`
@@ -95,98 +156,15 @@ class Chiplet(BaseChipletSystem):
             if controller_cpu is None:
                 continue
             elif controller_cpu in self._cores:
-                self._ruby_controllers.append(c)
+                self._topology_controllers.append(c)
                 # print(
                 #     f"Chiplet {self.id} found controller {c} "
                 #     f"(v{c.version})"
                 # )
 
         #! create topology
-        # need to populate `self._ruby_controllers` first
-        self._createTopology(options, self._ruby_controllers)
-
-    def createChipletOld(
-        self,
-        options: Namespace,
-        l2_is_private: bool,
-    ):
-        import traceback
-
-        fatal(f"do not use this function! tb: {traceback.print_stack()}")
-        # print(f"createChiplet() called for chiplet ID {self.id}")
-
-        # todo: currently this is basically just duplicate code from...
-        # todo: ...`ChipletSystem`, refactor somehow
-        # Create the `GarnetNetwork` for this level of the hierarchy
-        self._garnet_network = GarnetNetwork(
-            ruby_system=self.getRoot()._ruby_system,
-            topology=self._topology_cls.__name__,
-            routers=[],
-            ext_links=[],
-            int_links=[],
-            netifs=[],
-            ignore_mesh_chk=True,
-        )
-
-        # set `SimObject` parent hierarchy
-        # make sure not to set root `GarnetNetwork` parent
-        # if we did, it would break Ruby because it expects
-        # the gem5 `System` to have a `.network` param
-        if not self._garnet_network.has_parent():
-            # print(f"setting gem5 parent for GarnetNetwork of "
-            #       f"Chiplet ID {self.id}")
-            self._garnet_network.set_parent(self, "network")
-
-        root = self.getRoot()
-        if root == self:
-            panic("Chiplet is root, this should never happen!")
-        all_controllers = root._meta_topology.nodes  # type: ignore
-
-        for c in all_controllers:
-            controller_cpu = self.getControllerCPU(c, l2_is_private)
-
-            if controller_cpu is None:
-                continue
-            elif controller_cpu in self._cores:
-                self._ruby_controllers.append(c)
-                # print(
-                #     f"Chiplet {self.id} found controller {c} "
-                #     f"(v{c.version})"
-                # )
-
-        #! create topology
-        # need to populate `self._ruby_controllers` first
-        self._createTopology(options, self._ruby_controllers)
-
-        # self._defineMainRouterParams()
-
-        self._connectHierarchyGarnet()
-
-        # * initialize network
-        # `Network.py` does this without any major obstacles to
-        # what we're doing in `ChipletSystem` as of now
-        #! effectively requires `.int_links` and `.ext_links` of
-        #! our `GarnetNetwork` to be set before this
-        # todo: we might have to adapt this so that we can add ...
-        # todo: ...links after calling `createSystem()`, not sure
-        options.network = "garnet"  # only required by `Network.py`
-        init_network(
-            options=options,
-            network=self._garnet_network,
-            InterfaceClass=GarnetNetworkInterface,
-        )
-
-        self._fixAllGarnetObjectParams()
-
-        # if hasattr(self._garnet_network, "number_of_virtual_networks"):
-        #     print(f"Chiplet{self.id}'s GarnetNetwork has param "
-        #           f"number_of_virtual_networks = "
-        #           f"{self._garnet_network.number_of_virtual_networks}")
-        # else:
-        #     print(f"Chiplet{self.id}'s GarnetNetwork has NO param "
-        #           f"number_of_virtual_networks!")
-
-        # self._defineMainRouterParams()
+        # need to populate `self._topology_controllers` first
+        self._createTopology(options, self._topology_controllers)
 
     def to_string(self):
         import textwrap
