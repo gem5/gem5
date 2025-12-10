@@ -495,7 +495,7 @@ class ChipletSystem(BaseChipletSystem):
             info.original_id = router.router_id
             router.router_id = root._generate_router_id()
             str += f", new id = {router.router_id}; info = {info}"
-            print(str)
+            # print(str)
 
         for ext_link in root.getRootExtLinks():
             str = f"ext_link id {ext_link.link_id}"
@@ -503,7 +503,7 @@ class ChipletSystem(BaseChipletSystem):
             info.original_id = ext_link.link_id
             ext_link.link_id = root._generate_link_id()
             str += f", new id = {ext_link.link_id}; info = {info}"
-            print(str)
+            # print(str)
 
         for int_link in root.getRootIntLinks():
             str = f"int_link id {int_link.link_id}"
@@ -511,7 +511,7 @@ class ChipletSystem(BaseChipletSystem):
             info.original_id = int_link.link_id
             int_link.link_id = root._generate_link_id()
             str += f", new id = {int_link.link_id}; info = {info}"
-            print(str)
+            # print(str)
 
     # * helper methods for `createSystem()`
     def _createLegacyRubyChiplet(
