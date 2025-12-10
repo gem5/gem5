@@ -723,6 +723,7 @@ Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk)
         // below from generating another response.
         assert(initial_tgt->pkt->cmd == MemCmd::LockedRMWReadReq);
         delete initial_tgt->pkt;
+        initial_tgt->pkt = nullptr;
         mshr->popTarget();
         initial_tgt = nullptr;
     }
