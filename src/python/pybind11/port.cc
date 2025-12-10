@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2025 Arm Limited
+ * Copyright (c) 2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -35,23 +35,49 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __PYTHON_PYBIND11_PYBIND_HH__
-#define __PYTHON_PYBIND11_PYBIND_HH__
-
 #include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
+
+#include "mem/port_proxy.hh"
+
+namespace py = pybind11;
 
 namespace gem5
 {
 
-void pybind_init_core(pybind11::module_ &m_native);
-void pybind_init_debug(pybind11::module_ &m_native);
+void
+pybind_init_port(py::module_ &m_native)
+{
+    py::module_ m = m_native.def_submodule("port");
 
-void pybind_init_event(pybind11::module_ &m_native);
-void pybind_init_stats(pybind11::module_ &m_native);
+    py::class_<gem5::PortProxy>(m, "PyPort")
+        .def(
+            "read",
+            [](gem5::PortProxy &self, Addr phys_addr, uint64_t size) {
+                std::vector<uint8_t> buffer(size);
+                if (!self.tryReadBlob(phys_addr, buffer.data(), size)) {
+                    throw std::runtime_error(csprintf(
+                        "Failed to read from address: %#x\n", phys_addr));
+                }
+                return py::bytes(reinterpret_cast<const char *>(buffer.data()),
+                                 size);
+            },
+            py::arg("addr"), py::arg("size"),
+            "Read size bytes from addr and return as Python bytes")
+        .def(
+            "write",
+            [](gem5::PortProxy &self, Addr phys_addr, py::buffer src_buf) {
+                py::buffer_info info = src_buf.request();
 
-void pybind_init_port(pybind11::module_ &m_native);
+                if (!self.tryWriteBlob(
+                        phys_addr, reinterpret_cast<const uint8_t *>(info.ptr),
+                        info.size)) {
+                    throw std::runtime_error(csprintf(
+                        "Failed to write to address: %#x\n", phys_addr));
+                }
+            },
+            py::arg("addr"), py::arg("data"),
+            "Write from any 1D byte-like buffer into memory at addr");
+}
 
 } // namespace gem5
-
-#endif

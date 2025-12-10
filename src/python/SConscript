@@ -1,5 +1,17 @@
 # -*- mode:python -*-
 
+# Copyright (c) 2025 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2004-2005 The Regents of The University of Michigan
 # All rights reserved.
 #
@@ -437,6 +449,7 @@ Source('pybind11/core.cc', tags=['python'])
 Source('pybind11/debug.cc', tags=['python'])
 Source('pybind11/event.cc', tags=['python'])
 Source('pybind11/object_file.cc', tags=['python'])
+Source('pybind11/port.cc', tags=['python'])
 Source('pybind11/stats.cc', tags=['python'])
 
 SimObject('m5/objects/SimObject.py', sim_objects=['SimObject'],
