@@ -26,7 +26,6 @@
  */
 
 #include <gtest/gtest.h>
-#include <mutex>
 #include <thread>
 #include <vector>
 
@@ -87,4 +86,75 @@ TEST(UncontendedMutex, HeavyContention)
         t.join();
     }
     EXPECT_EQ(data, num_of_iter * num_of_thread);
+}
+
+TEST(UncontendedMutex, SingleThread)
+{
+    int num_of_iter = 100000000;
+
+    UncontendedMutex m;
+    int data = 0;
+    for (int i = 0; i < num_of_iter; i++) {
+        std::lock_guard<UncontendedMutex> g(m);
+        ++data;
+    }
+    EXPECT_EQ(data, num_of_iter);
+}
+
+/*
+ * FairUncontendedMutex solves the barging issue.
+ * This test makes sure the lock is not occupied by a same thread continuously.
+ */
+TEST(FairUncontendedMutex, NoBarging)
+{
+    int num_of_iter = 1000;
+    int num_of_thread = 10;
+    std::vector<std::thread> threads;
+
+    int data = 0;
+    int last_served_id = -1;
+    int occupy_streaks = 0;
+    int max_occupy_streaks = 0;
+
+    FairUncontendedMutex m;
+    m.lock();
+    for (int t = 0; t < num_of_thread; ++t) {
+        threads.emplace_back([&, t]() {
+            for (int k = 0; k < num_of_iter; ++k) {
+                std::lock_guard<FairUncontendedMutex> g(m);
+
+                if (last_served_id == t) {
+                    ++occupy_streaks;
+                } else {
+                    last_served_id = t;
+                    occupy_streaks = 1;
+                }
+                max_occupy_streaks =
+                    std::max(max_occupy_streaks, occupy_streaks);
+
+                data++;
+            }
+        });
+    }
+    m.unlock(); // Start when all threads created.
+
+    for (auto &t : threads) {
+        t.join();
+    }
+
+    EXPECT_EQ(data, num_of_iter * num_of_thread);
+    EXPECT_LE(max_occupy_streaks, num_of_iter / 10);
+}
+
+TEST(FairUncontendedMutex, SingleThread)
+{
+    int num_of_iter = 100000000;
+
+    FairUncontendedMutex m;
+    int data = 0;
+    for (int i = 0; i < num_of_iter; i++) {
+        std::lock_guard<FairUncontendedMutex> g(m);
+        ++data;
+    }
+    EXPECT_EQ(data, num_of_iter);
 }
