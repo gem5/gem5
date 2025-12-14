@@ -92,6 +92,15 @@ class ThreadContext;
  */
 class CPU : public BaseCPU
 {
+
+  public:
+    /**Safe public access to the ROB
+    */
+    ROB* getROB() {
+        return commit.rob;
+    }
+
+
   public:
     typedef std::list<DynInstPtr>::iterator ListIt;
 

@@ -55,7 +55,8 @@ LocalBP::LocalBP(const LocalBPParams &params)
     : BPredUnit(params),
       localPredictorSize(params.localPredictorSize),
       localCtrBits(params.localCtrBits),
-      localPredictorSets(localPredictorSize / localCtrBits),
+      //localPredictorSets(localPredictorSize / localCtrBits),
+      localPredictorSets(localPredictorSize),
       localCtrs(localPredictorSets, SatCounter8(localCtrBits)),
       indexMask(localPredictorSets - 1)
 {
@@ -89,6 +90,8 @@ LocalBP::updateHistories(ThreadID tid, Addr pc, bool uncond,
 bool
 LocalBP::lookup(ThreadID tid, Addr branch_addr, void * &bp_history)
 {
+
+
     bool taken;
     unsigned local_predictor_idx = getLocalIndex(branch_addr);
 
@@ -101,6 +104,13 @@ LocalBP::lookup(ThreadID tid, Addr branch_addr, void * &bp_history)
             (int)counter_val);
 
     taken = getPrediction(counter_val);
+
+    const unsigned idx = getLocalIndex(branch_addr); // row number
+    DPRINTF(Fetch,
+        "PC %#x reads LocalBP row %u and get %u\n",
+        branch_addr, idx, (int)counter_val);
+
+
 
     return taken;
 }
@@ -121,6 +131,13 @@ LocalBP::update(ThreadID tid, Addr branch_addr, bool taken, void *&bp_history,
     // Update the local predictor.
     local_predictor_idx = getLocalIndex(branch_addr);
 
+    /* -------- 1. Locate the entry ----------------------------------- */
+    const unsigned idx = getLocalIndex(branch_addr);
+
+    /* -------- 2. Remember the old counter value --------------------- */
+    uint8_t old_val = localCtrs[idx];
+
+
     DPRINTF(Fetch, "Looking up index %#x\n", local_predictor_idx);
 
     if (taken) {
@@ -130,6 +147,13 @@ LocalBP::update(ThreadID tid, Addr branch_addr, bool taken, void *&bp_history,
         DPRINTF(Fetch, "Branch updated as not taken.\n");
         localCtrs[local_predictor_idx]--;
     }
+
+     uint8_t new_val = localCtrs[idx];
+    /* -------- 4.  Log the change ----------------------------------- */
+    DPRINTF(Fetch,
+        "PC %#x updates LocalBP row %u : %u to %u\n",
+        branch_addr, idx, old_val, new_val);
+
 }
 
 inline

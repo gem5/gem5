@@ -1258,6 +1258,33 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
     DPRINTF(Cache, "%s for %s %s\n", __func__, pkt->print(),
             blk ? "hit " + blk->print() : "miss");
 
+    const bool wr = pkt->isWrite();
+    const bool rd = pkt->isRead();
+    const bool hit  = static_cast<bool>(blk);
+//    const char *kind =
+//        wr ? (hit ? "WriteHit" : "WriteMiss")
+//        : (hit ? "ReadHit"  : "ReadMiss");
+    const char *kind = "None";
+    if (wr) {
+        kind = hit ? "WriteHit" : "WriteMiss";
+    } else if (rd) {
+        kind = hit ? "ReadHit"  : "ReadMiss";
+    }
+
+    const unsigned way = hit ? blk->getWay() : 0xFF;   // 0xFF = no block yet
+//    const unsigned set = hit ? blk->getSet() : 0xFF;   // 0xFF = no block yet
+    const unsigned set = hit ? blk->getSet() : tags->extractSet(pkt->getAddr());   // 0xFF = no block yet
+    const Addr pc     = pkt->req->hasPC() ? pkt->req->getPC() : 0;
+
+    /* Log every classified access */
+    if (kind != nullptr && kind[0] != 'N') {
+        //    DPRINTF(Cache, "%s pc=%#lx set=%u way=%u addr=%#llx\n",
+            //                kind, pc, set, way, pkt->getBlockAddr(blkSize));
+        DPRINTF(Cache,
+            "%s pc=%#lx set=%u way=%u addr=%#llx block_addr=%#llx\n",
+            kind, pc, set, way, pkt->getAddr(), pkt->getBlockAddr(blkSize));
+}
+
     if (pkt->req->isCacheMaintenance()) {
         // A cache maintenance operation is always forwarded to the
         // memory below even if the block is found in dirty state.
@@ -1658,6 +1685,33 @@ BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
 
     // Print victim block's information
     DPRINTF(CacheRepl, "Replacement victim: %s\n", victim->print());
+
+
+//    Addr curPc = pkt->req->hasPC() ? pkt->req->getPC() : 0;
+//    const char *kind = victim->isSet(CacheBlk::DirtyBit) ? "EvictDirty" : "EvictClean";
+//    DPRINTF(CacheRepl, "%s trigger_pc=%#lx replacement victim: %s\n", kind, curPc, victim->print());
+//
+//
+//    DPRINTF(CacheCov,
+//        "%s trigger_pc=%s victim_pc=%#lx set=%u way=%u addr=%#llx\n",
+//        kind,
+//        pkt->req->hasPC() ? csprintf("%#lx", triggerPc) : "N/A",
+//        victim->lastPc, set, way, regenerateBlkAddr(victim));
+
+
+    Addr triggerPc = pkt->req->hasPC() ? pkt->req->getPC() : ~0ULL; // 0xFFFFFFFF_FFFFFFFF
+    const char* kind = victim->isSet(CacheBlk::DirtyBit) ?
+                       "EvictDirty" : "EvictClean";
+
+    const unsigned set = victim->getSet();
+    const unsigned way = victim->getWay();
+
+    DPRINTF(CacheRepl,
+            "%s trigger_pc=%s victim set=%u way=%u addr=%#llx\n",
+            kind,
+            pkt->req->hasPC() ? csprintf("%#lx", triggerPc) : "N/A",
+            set, way, regenerateBlkAddr(victim));
+
 
     // Try to evict blocks; if it fails, give up on allocation
     if (!handleEvictions(evict_blks, writebacks)) {

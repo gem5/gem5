@@ -164,6 +164,14 @@ class BaseTags : public ClockedObject
     PARAMS(BaseTags);
     BaseTags(const Params &p);
 
+   /**
+    * calculate the set ID given access address
+    */
+    unsigned extractSet(Addr addr) const
+    {
+        return indexingPolicy->getSetIndex(addr);
+    }
+
     /**
      * Destructor.
      */

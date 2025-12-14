@@ -85,6 +85,9 @@ class BiModeBP : public BPredUnit
     void updateGlobalHistReg(ThreadID tid, bool taken);
     void uncondBranch(ThreadID tid, Addr pc, void * &bp_history);
 
+    void traceUpdate(const char *table, Addr pc,
+                 unsigned row, uint8_t oldVal, uint8_t newVal);
+
     struct BPHistory
     {
         unsigned globalHistoryReg;

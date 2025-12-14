@@ -142,8 +142,8 @@ StoreSet::violation(Addr store_PC, Addr load_PC)
         assert(new_set < LFSTSize);
 
         DPRINTF(StoreSet, "StoreSet: Neither load nor store had a valid "
-                "storeset, creating a new one: %i for load %#x, store %#x\n",
-                new_set, load_PC, store_PC);
+                "storeset, creating a new one: %i for load %#x with index %i, store %#x with index %i\n",
+                new_set, load_PC, load_index, store_PC, store_index);
     } else if (valid_load_SSID && !valid_store_SSID) {
         SSID load_SSID = SSIT[load_index];
 
@@ -153,9 +153,9 @@ StoreSet::violation(Addr store_PC, Addr load_PC)
 
         assert(load_SSID < LFSTSize);
 
-        DPRINTF(StoreSet, "StoreSet: Load had a valid store set.  Adding "
-                "store to that set: %i for load %#x, store %#x\n",
-                load_SSID, load_PC, store_PC);
+        DPRINTF(StoreSet, "StoreSet: Load had a valid store set. Adding "
+                "store to that set: %i for load %#x with index %i, store %#x with index %i\n",
+                load_SSID, load_PC, load_index, store_PC, store_index);
     } else if (!valid_load_SSID && valid_store_SSID) {
         SSID store_SSID = SSIT[store_index];
 
@@ -164,8 +164,8 @@ StoreSet::violation(Addr store_PC, Addr load_PC)
         SSIT[load_index] = store_SSID;
 
         DPRINTF(StoreSet, "StoreSet: Store had a valid store set: %i for "
-                "load %#x, store %#x\n",
-                store_SSID, load_PC, store_PC);
+                "load %#x with index %i, store %#x with index %i\n",
+                store_SSID, load_PC, load_index, store_PC, store_index);
     } else {
         SSID load_SSID = SSIT[load_index];
         SSID store_SSID = SSIT[store_index];
@@ -177,14 +177,14 @@ StoreSet::violation(Addr store_PC, Addr load_PC)
             SSIT[store_index] = load_SSID;
 
             DPRINTF(StoreSet, "StoreSet: Load had smaller store set: %i; "
-                    "for load %#x, store %#x\n",
-                    load_SSID, load_PC, store_PC);
+                    "for load %#x with index %i, store %#x with index %i, replace set %i\n",
+                    load_SSID, load_PC, load_index, store_PC, store_index, store_SSID);
         } else {
             SSIT[load_index] = store_SSID;
 
             DPRINTF(StoreSet, "StoreSet: Store had smaller store set: %i; "
-                    "for load %#x, store %#x\n",
-                    store_SSID, load_PC, store_PC);
+                    "for load %#x with index %i, store %#x with index %i, replace set %i\n",
+                    store_SSID, load_PC, load_index, store_PC, store_index, load_SSID);
         }
     }
 }
@@ -230,12 +230,20 @@ StoreSet::insertStore(Addr store_PC, InstSeqNum store_seq_num, ThreadID tid)
         // Update the last store that was fetched with the current one.
         LFST[store_SSID] = store_seq_num;
 
+        if (validLFST[store_SSID]) {
+            DPRINTF(StoreSet, "Store %#x validated the LFST, SSID: %i\n",
+                    store_PC, store_SSID);
+        } else {
+            DPRINTF(StoreSet, "Store %#x replaced the LFST, SSID: %i\n",
+                store_PC, store_SSID);
+        }
+
         validLFST[store_SSID] = 1;
 
         storeList[store_seq_num] = store_SSID;
 
-        DPRINTF(StoreSet, "Store %#x updated the LFST, SSID: %i\n",
-                store_PC, store_SSID);
+//        DPRINTF(StoreSet, "Store %#x updated the LFST, SSID: %i\n",
+//                store_PC, store_SSID);
     }
 }
 
@@ -306,7 +314,7 @@ StoreSet::issued(Addr issued_PC, InstSeqNum issued_seq_num, bool is_store)
     // If the last fetched store in the store set refers to the store that
     // was just issued, then invalidate the entry.
     if (validLFST[store_SSID] && LFST[store_SSID] == issued_seq_num) {
-        DPRINTF(StoreSet, "StoreSet: store invalidated itself in LFST.\n");
+        DPRINTF(StoreSet, "StoreSet: store %#x with SSID %i invalidated itself in LFST.\n", issued_PC, store_SSID);
         validLFST[store_SSID] = false;
     }
 }

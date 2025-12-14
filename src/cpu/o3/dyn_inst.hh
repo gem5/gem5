@@ -79,6 +79,13 @@ class DynInst : public ExecContext, public RefCounted
   public:
     int iq_position = -1; // position in the physical issue queue
     int assigned_fu = -1; // Function unit id assigned to the instruction
+    int rob_tag = -1; // ROB entry
+
+    // Keep track of latency to implement the issue queue policy of issueing based on the latency
+    int opLat = 1;
+    void setOpLatency(int lat) {opLat = lat;}
+    int getOpLatency() const {return opLat;}
+
   //
 
   private:

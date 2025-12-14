@@ -581,11 +581,23 @@ InstructionQueue::insert(const DynInstPtr &new_inst)
     instList[new_inst->threadNumber].push_back(new_inst);
 
     // Modified by Mutian
+
+    // Record the latency of the instruction
+    OpClass op_class = new_inst->opClass();
+    int lat = fuPool->getOpLatency(op_class);
+    new_inst->setOpLatency(lat);
+
     iqEntries[new_inst->threadNumber].push_back(new_inst);
     new_inst -> iq_position = 0;
 //    DPRINTF(IQ, "Insertion of PC %s: entry %d took new value (PC: %s, SN: %llu)\n",
 //                    new_inst->pcState(), new_inst->iq_position, new_inst->pcState(),
 //                    new_inst->seqNum);
+
+     DPRINTF(IQ, "Issue queue entry %d took new value (PC: %s, SN: %llu)\n",
+                    new_inst->iq_position, new_inst->pcState(),
+                    new_inst->seqNum);
+
+
     auto it = iqEntries[new_inst->threadNumber].end();
     --it; // Now points to the newly inserted instruction at the end
     while (it != iqEntries[new_inst->threadNumber].begin()){
@@ -595,6 +607,11 @@ InstructionQueue::insert(const DynInstPtr &new_inst)
 //            DPRINTF(IQ, "Insertion of PC %s: entry %d took new value (PC: %s, SN: %llu)\n",
 //                    new_inst->pcState(), (*prev)->iq_position, (*prev)->pcState(),
 //                    (*prev)->seqNum);
+
+            DPRINTF(IQ, "Issue queue entry %d took new value (PC: %s, SN: %llu)\n",
+                    (*prev)->iq_position, (*prev)->pcState(),
+                    (*prev)->seqNum);
+
         } else {
 //            DPRINTF(IQ, "Insertion of PC %s: entry %d keep the original value (PC: %s, SN: %llu)\n",
 //                    new_inst->pcState(), (*prev)->iq_position, (*prev)->pcState(),
@@ -941,7 +958,8 @@ InstructionQueue::scheduleReadyInsts()
                 // Modified by Mutian
                 iqEntries[issuing_inst->threadNumber].remove(issuing_inst);
 //                DPRINTF(IQ, "Issued [sn:%llu] PC %s from iq_position %d to FU index %d\n", issuing_inst->seqNum, issuing_inst->pcState(), issuing_inst->iq_position, idx);
-                //
+                DPRINTF(IQ, "Issue queue entry %d current value removed\n", issuing_inst->iq_position);
+
 
 
 
@@ -1053,9 +1071,8 @@ InstructionQueue::wakeDependents(const DynInstPtr &completed_inst)
 
         // Modified by Mutian
         iqEntries[completed_inst->threadNumber].remove(completed_inst);
+        DPRINTF(IQ, "Issue queue entry %d current value removed\n", completed_inst->iq_position);
         //
-
-
 
         completed_inst->memOpDone(true);
         count[tid]--;
@@ -1364,6 +1381,7 @@ InstructionQueue::doSquash(ThreadID tid)
 
             // Modified by Mutian
             iqEntries[squashed_inst->threadNumber].remove(squashed_inst);
+            DPRINTF(IQ, "Issue queue entry %d current value removed\n", squashed_inst->iq_position);
             //
 
 
@@ -1394,12 +1412,35 @@ InstructionQueue::doSquash(ThreadID tid)
     }
 }
 
+
+////Policy 1:oldest instruction first
+//bool
+//InstructionQueue::PqCompare::operator()(
+//        const DynInstPtr &lhs, const DynInstPtr &rhs) const
+//{
+//    return lhs->seqNum > rhs->seqNum;
+//}
+
+// Policy 2: higher latency first, then oldest
 bool
-InstructionQueue::PqCompare::operator()(
-        const DynInstPtr &lhs, const DynInstPtr &rhs) const
+InstructionQueue::PqCompare::operator()(const DynInstPtr &lhs, const DynInstPtr &rhs) const
 {
+    int lhs_lat = lhs->getOpLatency();
+    int rhs_lat = rhs->getOpLatency();
+
+    // Prefer higher-latency instructions
+    if (lhs_lat != rhs_lat)
+        return lhs_lat < rhs_lat;
+
+    // Tie-break: oldest instruction first
     return lhs->seqNum > rhs->seqNum;
 }
+
+
+
+
+
+
 
 bool
 InstructionQueue::addToDependents(const DynInstPtr &new_inst)

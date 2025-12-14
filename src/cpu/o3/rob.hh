@@ -44,6 +44,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <deque>
 
 #include "base/statistics.hh"
 #include "base/types.hh"
@@ -65,11 +66,49 @@ class CPU;
 
 struct DerivO3CPUParams;
 
+
+/**
+*
+*/
+class RobTagManager {
+public:
+    RobTagManager(int numEntries) : numEntries(numEntries), freeTags(numEntries) {
+        for (int i = 0; i < numEntries; ++i) {
+            freeTags[i] = i;
+        }
+    }
+
+    // Allocate a new tag
+    int allocateTag() {
+        assert(!freeTags.empty());
+        int tag = freeTags.front();
+        freeTags.pop_front();
+        return tag;
+    }
+
+    // Free a tag (on commit or squash)
+    void releaseTag(int tag) {
+        freeTags.push_back(tag);
+    }
+
+private:
+    int numEntries;
+    std::deque<int> freeTags;
+};
+
+
+
+
 /**
  * ROB class.  The ROB is largely what drives squashing.
  */
 class ROB
 {
+
+  private:
+    RobTagManager tagManager;
+
+
   public:
     typedef std::pair<RegIndex, RegIndex> UnmapInfo;
     typedef typename std::list<DynInstPtr>::iterator InstIt;
@@ -301,6 +340,16 @@ class ROB
     /** Iterator pointing to the instruction which is the first instruction in
      *  in the ROB*/
     InstIt head;
+
+
+    /** Provides read-only access to the ROB instruction list
+    */
+
+    const std::list<DynInstPtr>&
+    getInstList(ThreadID tid) const {
+        return instList[tid];
+    }
+
 
   private:
     /** Iterator used for walking through the list of instructions when

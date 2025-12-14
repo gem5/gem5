@@ -1311,6 +1311,39 @@ Commit::getInsts()
             DPRINTF(Commit, "[tid:%i] [sn:%llu] Inserting PC %s into ROB.\n",
                     tid, inst->seqNum, inst->pcState());
 
+
+            // Look up ROB and see if there is any dependency
+            auto &insts = rob->getInstList(tid);
+            auto *isa = inst->tcBase()->getIsaPtr();
+
+            for (int src_idx = 0; src_idx < inst->numSrcRegs(); ++src_idx) {
+                const RegId &src_reg = inst->srcRegIdx(src_idx);
+                const RegId flat_src = src_reg.flatten(*isa);
+
+                for (auto it = insts.rbegin(); it != insts.rend(); ++it) {
+                    DynInstPtr rob_inst = *it;
+
+                    if (!rob_inst || rob_inst->isSquashed() || rob_inst->numDestRegs() == 0)
+                        continue;
+                    int dst_idx = 0;
+                    const RegId flat_dst = rob_inst->destRegIdx(dst_idx).flatten(*isa);
+                    if (flat_dst == flat_src) {
+                        DPRINTF(Commit,
+                            "[tid:%i] [RAW] PC %s src[%d] (%s) reads from PC %s dst[%d] (%s); ROB entry %d\n",
+                            tid,
+                            inst->pcState(), src_idx, flat_src.index(),
+                            rob_inst->pcState(), dst_idx, flat_dst.index(),
+                            rob_inst->rob_tag
+                        );
+//                            goto raw_found_next_src; // break out of inner 2 loops
+                        break;
+                    }
+                }
+//            raw_found_next_src:;
+            }
+
+
+
             rob->insertInst(inst);
 
             assert(rob->getThreadEntries(tid) <= rob->getMaxEntries(tid));

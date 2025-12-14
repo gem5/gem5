@@ -1078,6 +1078,38 @@ Rename::renameSrcRegs(const DynInstPtr &inst, ThreadID tid)
         }
 
         ++stats.lookups;
+
+
+//        // Policy: Look up ROB to see if the source register is ready
+//        const auto& insts = cpu->getROB()->getInstList(tid);
+//        for (auto it = insts.rbegin(); it != insts.rend(); ++it){
+//            DynInstPtr rob_inst = *it;
+//
+//            if (!rob_inst || rob_inst->isSquashed())
+//                continue;
+//
+//            // Skip instructions that don't write to any destination registers
+//            if (rob_inst->numDestRegs() == 0)
+//            continue;
+//
+//            if (rob_inst->destRegIdx(0).flatten(*isa) == flat_reg) {
+//                DPRINTF(Rename,
+//                "[tid:%i] PC %s has src register match with the dest register of PC %s in ROB entry %d\n",
+//                tid,
+//                inst->pcState(), rob_inst->pcState(),
+//                rob_inst->rob_tag
+//            );
+//            break; // found the youngest producer
+//            } else {
+//                DPRINTF(Rename,
+//                "[tid:%i] PC %s does not have src register match with the dest register of PC %s in ROB entry %d\n",
+//                tid,
+//                inst->pcState(), rob_inst->pcState(),
+//                rob_inst->rob_tag
+//                );
+//            }
+//        }
+
     }
 }
 

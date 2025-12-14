@@ -62,7 +62,8 @@ ROB::ROB(CPU *_cpu, const BaseO3CPUParams &params)
       squashWidth(params.squashWidth),
       numInstsInROB(0),
       numThreads(params.numThreads),
-      stats(_cpu)
+      stats(_cpu),
+      tagManager(params.numROBEntries)
 {
     //Figure out rob policy
     if (robPolicy == SMTQueuePolicy::Dynamic) {
@@ -228,6 +229,24 @@ ROB::insertInst(const DynInstPtr &inst)
 
     DPRINTF(ROB, "[tid:%i] Now has %d instructions.\n", tid,
             threadEntries[tid]);
+
+    // Assign an ROB tag to the instruction
+    int rob_tag = tagManager.allocateTag();
+    inst->rob_tag = rob_tag;
+    DPRINTF(ROB,
+        "[tid:%i] Instruction with PC %s inserted at ROB entry %d; head = ROB entry %d; numInstsInROB = %d \n",
+        tid,
+        inst->pcState(),
+        inst->rob_tag,
+        (*head)->rob_tag,
+        numInstsInROB
+    );
+
+    DPRINTF(ROB, "ROB entry %d took new value (PC: %s, SN: %llu)\n",
+                    inst->rob_tag, inst->pcState(),
+                    inst->seqNum);
+
+
 }
 
 void
@@ -251,6 +270,33 @@ ROB::retireHead(ThreadID tid)
 
     --numInstsInROB;
     --threadEntries[tid];
+
+    // Manage the value of head and tail
+    tagManager.releaseTag(head_inst->rob_tag);
+    tail = instList[tid].end();
+    tail--;
+    if (head_inst->isSquashed()) {
+            DPRINTF(ROB,
+                "[tid:%i] Squashed instruction with PC %s removed from ROB entry %d; tail = %d; numInstsInROB = %d \n",
+                tid,
+                head_inst->pcState(),
+                head_inst->rob_tag,
+                instList[tid].empty() ? head_inst->rob_tag : (*tail)->rob_tag,
+                numInstsInROB
+            );
+        } else {
+            DPRINTF(ROB,
+                "[tid:%i] Instruction with PC %s graduated at ROB entry %d; tail = %s; numInstsInROB = %d \n",
+                tid,
+                head_inst->pcState(),
+                head_inst->rob_tag,
+                instList[tid].empty() ? head_inst->rob_tag : (*tail)->rob_tag,
+                numInstsInROB
+            );
+    }
+    DPRINTF(ROB, "ROB entry %d current value removed\n",
+                    head_inst->rob_tag);
+
 
     head_inst->clearInROB();
     head_inst->setCommitted();

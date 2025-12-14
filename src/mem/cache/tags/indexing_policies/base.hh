@@ -106,6 +106,15 @@ class IndexingPolicyTemplate : public SimObject
     const int tagShift;
 
   public:
+
+    /** Return the set index for this address (public wrapper). */
+      uint32_t
+      getSetIndex(Addr addr) const
+      {
+          return (addr >> setShift) & setMask;
+      }
+
+
     /**
      * Construct and initialize this policy.
      */

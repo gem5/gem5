@@ -47,6 +47,10 @@
 #include "base/bitfield.hh"
 #include "base/intmath.hh"
 
+#include "base/logging.hh"
+#include "base/trace.hh"
+#include "debug/Fetch.hh"
+
 namespace gem5
 {
 
@@ -107,6 +111,15 @@ BiModeBP::updateHistories(ThreadID tid, Addr pc, bool uncond,
     updateGlobalHistReg(tid, taken);
 }
 
+inline void
+BiModeBP::traceUpdate(const char *tableName,
+                      Addr pc, unsigned row,
+                      uint8_t oldVal, uint8_t newVal)
+{
+    DPRINTF(Fetch,
+        "bi-mode: PC %#x updates %s row %u: %u to %u\n",
+        pc, tableName, row, oldVal, newVal);
+}
 
 void
 BiModeBP::squash(ThreadID tid, void * &bp_history)
@@ -162,6 +175,18 @@ BiModeBP::lookup(ThreadID tid, Addr branchAddr, void * &bp_history)
     history->finalPred = finalPrediction;
     bp_history = static_cast<void*>(history);
 
+    uint8_t choice_val = choiceCounters[choiceHistoryIdx];
+
+    std::string table_chosen =
+    choicePrediction ? "TakenPHT" : "NotTakenPHT";
+
+    uint8_t cur_value =
+    choicePrediction ? takenCounters[globalHistoryIdx] : notTakenCounters[globalHistoryIdx];
+
+    DPRINTF(Fetch,
+        "bi-mode: GH=%#x PC=%#x lookups Choice row %u get %u looks up %s row %u get %u\n",
+        globalHistoryReg[tid], branchAddr, choiceHistoryIdx, choice_val, table_chosen, globalHistoryIdx, cur_value);
+
     return finalPrediction;
 }
 
@@ -198,18 +223,32 @@ BiModeBP::update(ThreadID tid, Addr branchAddr, bool taken,void * &bp_history,
 
     if (history->takenUsed) {
         // if the taken array's prediction was used, update it
+
+        uint8_t old = takenCounters[globalHistoryIdx];
+
         if (taken) {
             takenCounters[globalHistoryIdx]++;
         } else {
             takenCounters[globalHistoryIdx]--;
         }
+
+        uint8_t cur = takenCounters[globalHistoryIdx];
+
+        traceUpdate("TakenPHT", branchAddr,
+                    globalHistoryIdx, old, cur);
+
     } else {
         // if the not-taken array's prediction was used, update it
+        uint8_t old = notTakenCounters[globalHistoryIdx];
         if (taken) {
             notTakenCounters[globalHistoryIdx]++;
         } else {
             notTakenCounters[globalHistoryIdx]--;
         }
+        uint8_t cur = notTakenCounters[globalHistoryIdx];
+
+        traceUpdate("NotTakenPHT", branchAddr,
+                    globalHistoryIdx, old, cur);
     }
 
     if (history->finalPred == taken) {
@@ -224,19 +263,30 @@ BiModeBP::update(ThreadID tid, Addr branchAddr, bool taken,void * &bp_history,
         * atypical case when a branch deviates from its bias.
         */
         if (history->finalPred == history->takenUsed) {
+
+            uint8_t old = choiceCounters[choiceHistoryIdx];
             if (taken) {
                 choiceCounters[choiceHistoryIdx]++;
             } else {
                 choiceCounters[choiceHistoryIdx]--;
             }
+            uint8_t cur = choiceCounters[choiceHistoryIdx];
+
+            traceUpdate("Choice", branchAddr,
+                    choiceHistoryIdx, old, cur);
+
         }
     } else {
         // always update the choice predictor on an incorrect prediction
+        uint8_t old = choiceCounters[choiceHistoryIdx];
         if (taken) {
             choiceCounters[choiceHistoryIdx]++;
         } else {
             choiceCounters[choiceHistoryIdx]--;
         }
+        uint8_t cur = choiceCounters[choiceHistoryIdx];
+        traceUpdate("Choice", branchAddr,
+                    choiceHistoryIdx, old, cur);
     }
 
     delete history;
