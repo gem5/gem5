@@ -5,11 +5,8 @@ This release consists of 649 commits git commits contributed to gem5 via 291 mer
 
 ## Major Highlights
 
-* **Neoverse V2 core model and decoupled front end.**  A new configuration file models the Arm Neoverse V2 CPU based on the public information released at HotChips 2025.
+* **Neoverse V2 core model.**  A new configuration file models the Arm Neoverse V2 CPU based on the public information released at HotChips 2025.
   The model uses a distributed instruction queue with eight schedulers and 22 entries per scheduler, realistic functional‑unit latencies, and enables fetch‑directed prefetching and branch prediction for instruction streams.
-  In tandem with this core, gem5 now supports a **decoupled front end**.
-  The front end can fetch and decode instructions independently of the back end, buffering decoded micro‑ops until they are ready to issue, and has been tested on both x86 and Arm ISAs (see [#2724](https://github.com/gem5/gem5/pull/2724) and [#359](https://github.com/gem5/gem5/pull/359)).
-  However there are known problems when using the decoupled front end with the X86 ISA, so its use with X86 is not recommended.
 
 * **New branch predictor.**  A gshare branch predictor model has been added to the CPU library, providing a configurable alternative to the existing predictors ([#2303](https://github.com/gem5/gem5/pull/2303)).
 
@@ -17,10 +14,14 @@ This release consists of 649 commits git commits contributed to gem5 via 291 mer
   A separate change adds the crypto subset of SVE/SVE2, introducing AES, SHA3, SM3 and SM4 vector instructions.
   Users can now enable SVE2 on Armv9 platforms and execute these vector and crypto instructions in both timing and atomic modes ([#2656](https://github.com/gem5/gem5/pull/2656), [#2765](https://github.com/gem5/gem5/pull/2765)).
 
-* **Fetch‑directed prefetcher and distributed instruction queue.**  A new fetch‑directed prefetcher monitors the fetch target queue and prefetches cache lines needed by the instruction stream.
-  The O3 CPU can now be configured with multiple instruction‑queue units; a new `IQUnit` SimObject allows the front end to dispatch micro‑ops into several independent queues tied to specific functional‑unit pools.
-  This enables more realistic modelling of modern out‑of‑order processors ([#2598](https://github.com/gem5/gem5/pull/2598), [#2600](https://github.com/gem5/gem5/pull/2600), [#2652](https://github.com/gem5/gem5/pull/2652)).
-  The out‑of‑order (O3) CPU benefits significantly from the decoupled front end and the distributed instruction queue; this is the biggest improvement to the O3 CPU model in more than a decade ([#2652](https://github.com/gem5/gem5/pull/2652)).
+* **Decoupled front end and Fetch‑directed prefetcher (FDP).**
+  gem5 now supports a **decoupled front end**.
+  The front end can fetch and decode instructions independently of the back end, buffering decoded micro‑ops until they are ready to issue, and has been tested on both x86 and Arm ISAs (see [#2724](https://github.com/gem5/gem5/pull/2724) and [#359](https://github.com/gem5/gem5/pull/359)).
+  However there are known problems when using the decoupled front end with the X86 ISA, so its use with X86 is not recommended.
+  A new fetch‑directed prefetcher monitors the fetch target queue and prefetches cache lines needed by the instruction stream ([#2598](https://github.com/gem5/gem5/pull/2598), [#2600](https://github.com/gem5/gem5/pull/2600)).
+
+* **Distributed instruction/issue queue.**  The O3 CPU can now be configured with multiple instruction‑queue units; a new `IQUnit` SimObject allows the front end to dispatch micro‑ops into several independent queues tied to specific functional‑unit pools.
+  This enables more realistic modelling of modern out‑of‑order processors ([#2652](https://github.com/gem5/gem5/pull/2652)).
 
 * **Improved table‑walk machinery.**  The Arm page‑table walker has been reworked so that the number of outstanding walks is configurable and no longer limited to one.
   Existing table walkers have been renamed as `WalkUnit` objects, and a new `SingleTableWalker` retains legacy behaviour.
