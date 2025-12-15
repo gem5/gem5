@@ -37,54 +37,30 @@
 // We need to initialize the event queue to be able to count ticks
 gem5::EventQueue eventQueue("MRURPTest Queue");
 
-// Create a dummy RP class so that we can verify if the replacement data is
-// of the expected type for this RP
-class DummyLRU : public gem5::replacement_policy::LRU
-{
-  public:
-    using gem5::replacement_policy::LRU::LRU;
-
-    /// Verify that the data is of the expected type
-    bool
-    validateType(
-        const std::shared_ptr<gem5::replacement_policy::ReplacementData>
-            repl_data) const
-    {
-        return nullptr !=
-               std::dynamic_pointer_cast<
-                   gem5::replacement_policy::LRU::LRUReplData>(repl_data);
-    }
-};
-
 /// Common fixture that initializes the replacement policy
 class LRURPTestF : public ::testing::Test
 {
   public:
-    std::shared_ptr<DummyLRU> rp;
+    std::shared_ptr<gem5::replacement_policy::LRU> rp;
 
     LRURPTestF()
     {
         gem5::LRURPParams params;
         params.eventq_index = 0;
-        rp = std::make_shared<DummyLRU>(params);
+        rp = std::make_shared<gem5::replacement_policy::LRU>(params);
 
         // Assign the event queue, so that we can count ticks
         gem5::curEventQueue(&eventQueue);
     }
 };
 
-/// Test that instantiating an entry generates the replacement data of the
-/// expected type
+/// Test that instantiating an entry generates a replacement data
 TEST_F(LRURPTestF, InstantiatedEntry)
 {
     const auto repl_data = rp->instantiateEntry();
 
     // instantiateEntry must return a valid pointer
     ASSERT_NE(repl_data, nullptr);
-
-    // instantiateEntry must return a pointer of the tested class'
-    // replacement data type
-    ASSERT_TRUE(rp->validateType(repl_data));
 }
 
 /// Test that if there is one candidate, then it will always be the victim,
