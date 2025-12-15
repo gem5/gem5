@@ -77,9 +77,6 @@ class ArmTableWalker(ClockedObject):
   If willing to generate one, the PrivateL1PrivateL2WalkCacheHierarchy should be used instead.
   Additionally, an exception is raised if a CPU advertises more than two walker ports ([#2716](https://github.com/gem5/gem5/pull/2716)).
 
-* **Fetch‑directed instruction prefetch and prefetcher parameters.**  The fetch‑directed prefetcher can prefetch all blocks spanned by a fetch target and provides a `cache_snoop` parameter to determine whether prefetch requests snoop the cache hierarchy.
-  These parameters improve instruction‑side prefetching efficacy.
-
 * **Branch predictor fix.**  A bug in the simple BTB’s set‑index calculation has been corrected to ensure the branch predictor receives the proper number of sets.
   Users employing custom branch‑predictor configurations should rebuild against the new code.
 
@@ -99,15 +96,6 @@ class ArmTableWalker(ClockedObject):
 
 * **SVE/SVE2 crypto support.**  Adds AES, SHA3, SM3 and SM4 vector instructions to the SVE/SVE2 implementations ([#2765](https://github.com/gem5/gem5/pull/2765)).
 
-### CPU and MMU enhancements
-
-* **Neoverse V2 core configuration.**  Provides a new Arm CPU configuration with a distributed instruction queue, realistic functional‑unit latencies and support for fetch‑directed prefetching.
-  This configuration reflects the architecture of Arm’s Neoverse V2 microarchitecture ([#2724](https://github.com/gem5/gem5/pull/2724)).
-
-* **Decoupled front end and gshare branch predictor.**  The pipeline front end can operate independently of the back end, buffering decoded instructions before dispatch ([#359](https://github.com/gem5/gem5/pull/359)).
-  A gshare predictor model is available ([#2303](https://github.com/gem5/gem5/pull/2303)).
-
-* **Configurable page‑table walker and walk caches.**  The number of outstanding translation walks is now configurable, walk caches are only created when the CPU exposes walker ports, can be disabled from Python configurations, and bound checks ensure a CPU does not request more than two walker ports ([#2650](https://github.com/gem5/gem5/pull/2650), [#2716](https://github.com/gem5/gem5/pull/2716)).
 
 ## RISC‑V
 
