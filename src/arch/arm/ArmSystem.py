@@ -316,8 +316,26 @@ class Armv89(Armv87):
     extensions = Armv87.extensions + ["FEAT_SCTLR2", "FEAT_TCR2", "FEAT_S1PIE"]
 
 
-class Armv92(Armv89):
-    extensions = Armv89.extensions + ["FEAT_SME"]
+class Armv90(Armv89):
+    extensions = Armv89.extensions + [
+        "FEAT_SVE2",
+        "FEAT_SVE_BitPerm",
+        "FEAT_SVE_AES",
+        "FEAT_SVE_SHA3",
+        "FEAT_SVE_SM4",
+        "FEAT_SVE_PMULL128",
+    ]
+
+
+class Armv92(Armv90):
+    extensions = Armv90.extensions + ["FEAT_SME"]
+
+
+class Armv94(Armv92):
+    extensions = Armv92.extensions + [
+        "FEAT_SVE2p1",
+        "FEAT_SVE_B16B16",
+    ]
 
 
 class ArmAllRelease(ArmRelease):
