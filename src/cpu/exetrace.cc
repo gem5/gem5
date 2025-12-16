@@ -44,18 +44,50 @@
 #include <sstream>
 
 #include "arch/generic/mmu.hh"
+#include "arch/generic/pcstate.hh"
+#include "base/cprintf.hh"
 #include "base/loader/symtab.hh"
+#include "base/trace.hh"
+#include "base/types.hh"
 #include "cpu/base.hh"
 #include "cpu/static_inst.hh"
+#include "cpu/static_inst_fwd.hh"
 #include "cpu/thread_context.hh"
-#include "debug/ExecAll.hh"
-#include "debug/FmtTicksOff.hh"
+#include "debug/ExecAsid.hh"
+#include "debug/ExecCPSeq.hh"
+#include "debug/ExecEffAddr.hh"
+#include "debug/ExecEnable.hh"
+#include "debug/ExecFetchSeq.hh"
+#include "debug/ExecFlags.hh"
+#include "debug/ExecKernel.hh"
+#include "debug/ExecMacro.hh"
+#include "debug/ExecMicro.hh"
+#include "debug/ExecOpClass.hh"
+#include "debug/ExecResult.hh"
+#include "debug/ExecSymbol.hh"
+#include "debug/ExecThread.hh"
+#include "debug/ExecUser.hh"
 #include "enums/OpClass.hh"
+#include "sim/full_system.hh"
+#include "sim/insttracer.hh"
 
 namespace gem5
 {
 
 namespace trace {
+
+InstRecord *
+ExeTracer::getInstRecord(Tick when, ThreadContext *tc,
+                         const StaticInstPtr staticInst, const PCStateBase &pc,
+                         const StaticInstPtr macroStaticInst)
+{
+    if (!debug::ExecEnable) {
+        return NULL;
+    }
+
+    return new ExeTracerRecord(when, tc, staticInst, pc, *this,
+                               macroStaticInst);
+}
 
 void
 ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
