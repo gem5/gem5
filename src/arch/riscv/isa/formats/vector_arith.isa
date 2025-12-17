@@ -44,6 +44,12 @@ let {{
     def setSrcVm():
         return "if (!this->vm)\n" + \
                "    setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);"
+    def setSrcVmOrTmp0():
+        return "if (!this->vm){\n" + \
+               "(_machInst.vd == 0) ? " + \
+               "setSrcRegIdx(_numSrcRegs++,vecRegClass[VecMemInternalReg0]):"+\
+               "setSrcRegIdx(_numSrcRegs++,vecRegClass[0]);\n" + \
+               "}\n"
     def vmDeclAndReadData():
         return '''
             [[maybe_unused]] RiscvISA::vreg_t tmp_v0;
@@ -279,6 +285,72 @@ def format VectorIntFormat(code, category, *flags) {{
     decode_block = VectorIntDecodeBlock.subst(iop)
 }};
 
+def format VectorCompressFormat(code, category, *flags) {{
+    macroop_class_name = 'VectorArithMacroInst'
+    microop_class_name = 'VectorArithMicroInst'
+
+    iop = InstObjParams(
+        name,
+        Name,
+        macroop_class_name,
+        {'code': code,
+         'declare_varith_template': declareVArithTemplate(Name)},
+        flags
+    )
+    inst_name, inst_suffix = name.split("_", maxsplit=1)
+
+    dest_reg_id = "vecRegClass[_machInst.vd + \
+        (_microIdx)%vtype_regs_per_group(vtype)]"
+
+    num_src_regs = 0
+
+    src2_reg_id = "vecRegClass[_machInst.vs2 + _microIdx]"
+    num_src_regs += 1
+
+    src1_reg_id = "vecRegClass[_machInst.vs1]"
+    num_src_regs += 1
+
+    old_vd_idx = num_src_regs
+
+    set_dest_reg_idx = setDestWrapper(dest_reg_id)
+
+    set_src_reg_idx = ""
+    set_src_reg_idx += setSrcWrapper(src1_reg_id)
+    set_src_reg_idx += setSrcWrapper(src2_reg_id)
+
+    dest_set_src_reg_idx = setSrcWrapper(dest_reg_id)
+
+    set_src_reg_idx += dest_set_src_reg_idx
+    set_src_reg_idx += setSrcVm()
+
+    # code
+
+    vm_decl_rd = vmDeclAndReadData()
+
+    set_vlenb = setVlenb()
+
+    microiop = InstObjParams(name + "_micro",
+        Name + "Micro",
+        microop_class_name,
+        {'code': code,
+         'set_dest_reg_idx': set_dest_reg_idx,
+         'set_src_reg_idx': set_src_reg_idx,
+         'set_vlenb' : set_vlenb,
+         'vm_decl_rd': vm_decl_rd,
+         'copy_old_vd': copyOldVd(old_vd_idx),
+         'declare_varith_template': declareVArithTemplate(Name + "Micro")},
+        flags)
+
+    header_output = \
+        VectorIntMicroDeclare.subst(microiop) + \
+        VectorIntMacroDeclare.subst(iop)
+    decoder_output = \
+        VectorIntMicroConstructor.subst(microiop) + \
+        VectorCompressMacroConstructor.subst(iop)
+    exec_output = VectorIntMicroExecute.subst(microiop)
+    decode_block = VectorIntDecodeBlock.subst(iop)
+}};
+
 
 def format VectorIntExtFormat(code, category, *flags) {{
     iop = InstObjParams(
@@ -362,11 +434,13 @@ def format VectorIntWideningFormat(code, category, *flags) {{
         src1_is_vec = True
     elif category in ["OPIVX", "OPMVX"]:
         src1_reg_id = "intRegClass[_machInst.rs1]"
+    elif category == "OPIVI":
+        pass
     else:
         error("not supported category for VectorIntFormat: %s" % category)
     src2_reg_id = ""
     src2_sew_mul = 1
-    if inst_suffix in ["vv", "vx"]:
+    if inst_suffix in ["vv", "vx", "vi"]:
         src2_reg_id = "vecRegClass[_machInst.vs2 + _microIdx / 2]"
     elif inst_suffix in ["wv", "wx"]:
         src2_reg_id = "vecRegClass[_machInst.vs2 + _microIdx]"
@@ -375,7 +449,8 @@ def format VectorIntWideningFormat(code, category, *flags) {{
     set_dest_reg_idx = setDestWrapper(dest_reg_id)
 
     set_src_reg_idx = ""
-    set_src_reg_idx += setSrcWrapper(src1_reg_id)
+    if category != "OPIVI":
+        set_src_reg_idx += setSrcWrapper(src1_reg_id)
     set_src_reg_idx += setSrcWrapper(src2_reg_id)
 
     dest_set_src_reg_idx = setSrcWrapper(dest_reg_id)
@@ -1225,7 +1300,7 @@ def format VectorReduceIntFormat(code, category, *flags) {{
     set_dest_reg_idx = setDestWrapper(dest_reg_id)
     set_src_reg_idx = setSrcWrapper(src1_reg_id)
     set_src_reg_idx += setSrcWrapper(src2_reg_id)
-    set_src_reg_idx += setSrcVm()
+    set_src_reg_idx += setSrcVmOrTmp0()
     vm_decl_rd = vmDeclAndReadData()
     set_vlenb = setVlenb()
 
@@ -1274,7 +1349,7 @@ def format VectorReduceFloatFormat(code, category, *flags) {{
     set_dest_reg_idx = setDestWrapper(dest_reg_id)
     set_src_reg_idx = setSrcWrapper(src1_reg_id)
     set_src_reg_idx += setSrcWrapper(src2_reg_id)
-    set_src_reg_idx += setSrcVm()
+    set_src_reg_idx += setSrcVmOrTmp0()
     vm_decl_rd = vmDeclAndReadData()
     set_vlenb = setVlenb()
 
@@ -1328,7 +1403,7 @@ def format VectorReduceFloatWideningFormat(code, category, *flags) {{
     set_dest_reg_idx = setDestWrapper(dest_reg_id)
     set_src_reg_idx = setSrcWrapper(src1_reg_id)
     set_src_reg_idx += setSrcWrapper(src2_reg_id)
-    set_src_reg_idx += setSrcVm()
+    set_src_reg_idx += setSrcVmOrTmp0()
     vm_decl_rd = vmDeclAndReadData()
     set_vlenb = setVlenb()
     type_def = '''
@@ -1441,7 +1516,7 @@ def format VectorReduceIntWideningFormat(code, category, *flags) {{
     set_dest_reg_idx = setDestWrapper(dest_reg_id)
     set_src_reg_idx = setSrcWrapper(src1_reg_id)
     set_src_reg_idx += setSrcWrapper(src2_reg_id)
-    set_src_reg_idx += setSrcVm()
+    set_src_reg_idx += setSrcVmOrTmp0()
     vm_decl_rd = vmDeclAndReadData()
     set_vlenb = setVlenb()
 
@@ -1466,6 +1541,7 @@ def format VectorReduceIntWideningFormat(code, category, *flags) {{
     exec_output = VectorReduceIntWideningMicroExecute.subst(microiop)
     decode_block = VectorIntWideningDecodeBlock.subst(iop)
 }};
+
 
 let {{
 
@@ -1502,16 +1578,28 @@ def VectorSlideBase(name, Name, category, code, flags, macro_construtor,
     src1_ireg_id = "intRegClass[_machInst.rs1]"
     src1_freg_id = "floatRegClass[_machInst.rs1]"
 
+    num_src_regs = 0
     if category == "OPIVX":
         set_src_reg_idx += setSrcWrapper(src1_ireg_id)
-    elif category in ["OPFVF"]:
+        num_src_regs += 1
+    elif category == "OPFVF":
         set_src_reg_idx += setSrcWrapper(src1_freg_id)
+        num_src_regs += 1
+
     set_src_reg_idx += setSrcWrapper(src2_reg_id)
     set_src_reg_idx += setSrcWrapper(src3_reg_id)
+    num_src_regs += 2
 
-    if name not in ["vslideup_vx", "vslidedown_vx"]:
-        set_src_reg_idx += tailMaskCondSetSrcWrapper( \
-            setSrcWrapper(dest_reg_id))
+    dest_set_src_reg_idx = ""
+    # No dest reg pin: Bypass tail/mask policy to copy unchanged elements
+    if name == "vslideup_vi":
+        dest_set_src_reg_idx = f"oldDstIdx = {num_src_regs};\n"
+        dest_set_src_reg_idx += setSrcWrapper(dest_reg_id)
+    elif name not in ["vslideup_vx", "vslidedown_vx"]:
+        dest_set_src_reg_idx = tailMaskCondSetSrcWrapper(
+            setSrcWrapper(dest_reg_id)
+        )
+    set_src_reg_idx += dest_set_src_reg_idx
 
     set_dest_reg_idx = setDestWrapper(dest_reg_id)
     set_vlenb = setVlenb()

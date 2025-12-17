@@ -9,9 +9,11 @@ from typing import (
 
 import m5
 from m5.objects import (
-    AddrRange,
     DRAMsim3,
     MemCtrl,
+)
+from m5.params import (
+    AddrRange,
     Port,
 )
 from m5.util.convert import toMemorySize

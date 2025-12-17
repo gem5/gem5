@@ -602,9 +602,22 @@ class PMU : public SimObject, public ArmISA::BaseISADevice
      */
     void updateAllCounters();
 
+    /**
+     * Checks if a PMU exit event needs to be generated. This
+     * should be called after a write to the following PMU
+     * control registers: PMCR, PMCNTENSET, PMCNTENCLR.
+     *
+     * @param check_reset if true, check for reset event. Only
+     * used after a write to PMCR register
+     */
+    void pmuExitEvent(bool check_reset);
+
   protected: /* State that needs to be serialized */
     /** Determine whether to use 64-bit or 32-bit counters. */
     bool use64bitCounters;
+
+    /** Is there an enabled counter */
+    bool pmuEnabled;
 
     /**
      * Determine whether we merge event counting with

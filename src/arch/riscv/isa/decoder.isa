@@ -3701,6 +3701,9 @@ decode QUADRANT default Unknown::unknown() {
                     0x0: vadd_vv({{
                         Vd_vu[i] = Vs2_vu[i] + Vs1_vu[i];
                     }}, OPIVV, SimdAddOp);
+                    0x1: vandn_vv({{
+                        Vd_vu[i] = Vs2_vu[i] & (~Vs1_vu[i]);
+                    }}, OPIVV, SimdAluOp);
                     0x2: vsub_vv({{
                         Vd_vu[i] = Vs2_vu[i] - Vs1_vu[i];
                     }}, OPIVV, SimdAddOp);
@@ -3771,6 +3774,16 @@ decode QUADRANT default Unknown::unknown() {
                         }}, OPIVV, SimdAddOp);
                         // the unmasked versions (vm=1) are reserved
                     }
+                    0x14: vror_vv({{
+                        Vd_vu[i] =   (Vs2_vu[i] >> (Vs1_vu[i] & (sew - 1)))
+                                   | (Vs2_vu[i] <<
+                                        ((sew - Vs1_vu[i]) & (sew - 1)));
+                    }}, OPIVV, SimdShiftOp);
+                    0x15: vrol_vv({{
+                        Vd_vu[i] =   (Vs2_vu[i] << (Vs1_vu[i] & (sew - 1)))
+                                   | (Vs2_vu[i] >>
+                                        ((sew - Vs1_vu[i]) & (sew - 1)));
+                    }}, OPIVV, SimdShiftOp);
                     0x17: decode VM {
                         0x0: vmerge_vvm({{
                             Vd_vu[i] = elem_mask(v0, ei)
@@ -3949,6 +3962,12 @@ decode QUADRANT default Unknown::unknown() {
 
                         Vd_vi[i + offset] = (vi)res;
                     }}, OPIVV, SimdCvtOp);
+                }
+                format VectorIntWideningFormat {
+                    0x35: vwsll_vv({{
+                        Vd_vwu[i] = vwu(Vs2_vu[i + offset]) <<
+                            (vwu(Vs1_vu[i + offset]) & ((vwu(sew) << 1) - 1));
+                    }}, OPIVV, SimdShiftOp);
                 }
             }
             // OPFVV
@@ -4368,6 +4387,28 @@ decode QUADRANT default Unknown::unknown() {
                         res = int_rounding<__uint128_t>(res, 0 /* TODO */, 1);
                         Vd_vi[i] = res >> 1;
                     }}, OPMVV, SimdAddOp);
+                    0x0c: vclmul_vv({{
+                        uint64_t result = 0;
+                        uint64_t src1 = Vs1_vu[i];
+                        uint64_t src2 = Vs2_vu[i];
+                        for (int j = 0; j < 64; j++) {
+                            if ((src2 >> j) & 1) {
+                                result ^= src1 << j;
+                            }
+                        }
+                        Vd_vu[i] = result;
+                    }}, OPMVV, SimdMultOp);
+                    0x0d: vclmulh_vv({{
+                        uint64_t result = 0;
+                        uint64_t src1 = Vs1_vu[i];
+                        uint64_t src2 = Vs2_vu[i];
+                        for (int j = 1; j < 64; j++) {
+                            if ((src2 >> j) & 1) {
+                                result ^= src1 >> (64-j);
+                            }
+                        }
+                        Vd_vu[i] = result;
+                    }}, OPMVV, SimdMultOp);
                 }
                 // VWXUNARY0
                 0x10: decode VS1 {
@@ -4498,6 +4539,30 @@ decode QUADRANT default Unknown::unknown() {
                     }}, OPMVV, SimdAluOp);
                     0x11: VectorIntFormat::vid_v({{
                         Vd_vu[i] = ei;
+                    }}, OPMVV, SimdMiscOp);
+                }
+                format VectorCompressFormat {
+                    0x17: vcompress_vm({{
+                        static uint64_t vcompress_cnt;
+                        static uint64_t vcompress_buf[65536];
+                        if(this->microIdx == 0) {
+                            vcompress_cnt = 0;
+                        }
+                        for (uint32_t i = 0; i < microVl; i++) {
+                            uint32_t num_regs = vtype_regs_per_group(vtype);
+                            uint32_t ei = i + num_elements_reg(vtype, vlen) *
+                                (this->microIdx % num_regs);
+                            if (elem_mask(Vs1_vu, ei) &&
+                                this->microIdx < num_regs) {
+                                vcompress_buf[vcompress_cnt] = Vs2_vu[i];
+                                Vd_vu[i] = vcompress_buf[vcompress_cnt];
+                                vcompress_cnt ++;
+                            }
+                            if (ei < vcompress_cnt &&
+                                this->microIdx >= num_regs) {
+                                Vd_vu[i] = vcompress_buf[ei];
+                            }
+                        }
                     }}, OPMVV, SimdMiscOp);
                 }
                 format VectorMaskFormat {
@@ -4680,13 +4745,13 @@ decode QUADRANT default Unknown::unknown() {
                         int frontLen = microVlmax - backLen;
                         int vdOffset = 0;
                         for (int i = 0; vdOffset < frontLen
-                            && vdOffset < microVl; vdOffset++) {
+                            && vdOffset < microVl; vdOffset++, i++) {
                             if (this->vm || elem_mask(v0,
                                 vdOffset + vdWindowLeft)) {
                                 Vd_vu[vdOffset] = Vs2_vu[i + backLen];
                             }
                         }
-                        for (int i = 0; vdOffset < microVl; vdOffset++) {
+                        for (int i = 0; vdOffset < microVl; vdOffset++, i++) {
                             if (this->vm || elem_mask(v0,
                                 vdOffset + vdWindowLeft)) {
                                 Vd_vu[vdOffset] = Vs3_vu[i];
@@ -4774,6 +4839,12 @@ decode QUADRANT default Unknown::unknown() {
                         }}, OPIVI, SimdAddOp);
                         // the unmasked versions (vm=1) are reserved
                     }
+                    0x14, 0x15: vror_vi({{
+                        uint64_t shamt = SIMM5 | (BIT26 << 5);
+                        Vd_vu[i] =   (Vs2_vu[i] >> (shamt & (sew - 1)))
+                                   | (Vs2_vu[i] <<
+                                        ((sew - shamt) & (sew - 1)));
+                    }}, OPIVI, SimdShiftOp);
                     0x17: decode VM {
                         0x0: vmerge_vim({{
                             Vd_vi[i] = elem_mask(v0, ei)
@@ -4924,6 +4995,12 @@ decode QUADRANT default Unknown::unknown() {
                         Vd_vi[i + offset] = (vi)res;
                     }}, OPIVI, SimdCvtOp);
                 }
+                format VectorIntWideningFormat {
+                    0x35: vwsll_vi({{
+                        Vd_vwu[i] = vwu(Vs2_vu[i + offset]) <<
+                            (vwu(SIMM5) & ((vwu(sew) << 1) - 1));
+                    }}, OPIVI, SimdShiftOp);
+                }
             }
             // OPIVX
             0x4: decode VFUNCT6 {
@@ -4931,6 +5008,9 @@ decode QUADRANT default Unknown::unknown() {
                     0x0: vadd_vx({{
                         Vd_vu[i] = Vs2_vu[i] + Rs1_vu;
                     }}, OPIVX, SimdAddOp);
+                    0x1: vandn_vx({{
+                        Vd_vu[i] = Vs2_vu[i] & (~Rs1_vu);
+                    }}, OPIVX, SimdAluOp);
                     0x2: vsub_vx({{
                         Vd_vu[i] = Vs2_vu[i] - Rs1_vu;
                     }}, OPIVX, SimdAddOp);
@@ -4973,13 +5053,13 @@ decode QUADRANT default Unknown::unknown() {
                         int frontLen = microVlmax - backLen;
                         int vdOffset = 0;
                         for (int i = 0; vdOffset < frontLen
-                            && vdOffset < microVl; vdOffset++) {
+                            && vdOffset < microVl; vdOffset++, i++) {
                             if (this->vm || elem_mask(v0,
                                 vdOffset + vdWindowLeft)) {
                                 Vd_vu[vdOffset] = Vs2_vu[i + backLen];
                             }
                         }
-                        for (int i = 0; vdOffset < microVl; vdOffset++) {
+                        for (int i = 0; vdOffset < microVl; vdOffset++, i++) {
                             if (this->vm || elem_mask(v0,
                                 vdOffset + vdWindowLeft)) {
                                 Vd_vu[vdOffset] = Vs3_vu[i];
@@ -5083,6 +5163,16 @@ decode QUADRANT default Unknown::unknown() {
                         }}, OPIVX, SimdAddOp);
                         // the unmasked versions (vm=1) are reserved
                     }
+                    0x14: vror_vx({{
+                        Vd_vu[i] =   (Vs2_vu[i] >> (Rs1_vu & (sew - 1)))
+                                   | (Vs2_vu[i] <<
+                                        ((sew - Rs1_vu) & (sew - 1)));
+                    }}, OPIVX, SimdShiftOp);
+                    0x15: vrol_vx({{
+                        Vd_vu[i] =   (Vs2_vu[i] << (Rs1_vu & (sew - 1)))
+                                   | (Vs2_vu[i] >>
+                                        ((sew - Rs1_vu) & (sew - 1)));
+                    }}, OPIVX, SimdShiftOp);
                     0x17: decode VM {
                         0x0: vmerge_vxm({{
                             Vd_vu[i] = elem_mask(v0, ei) ? Rs1_vu : Vs2_vu[i];
@@ -5258,6 +5348,12 @@ decode QUADRANT default Unknown::unknown() {
                             (Vs2_vi[i] > Rs1_vi));
                     }}, OPIVX, SimdCmpOp);
                 }
+                format VectorIntWideningFormat {
+                    0x35: vwsll_vx({{
+                        Vd_vwu[i] = vwu(Vs2_vu[i + offset]) <<
+                            (vwu(Rs1_vu) & ((vwu(sew) << 1) - 1));
+                    }}, OPIVX, SimdShiftOp);
+                }
             }
             // OPFVF
             0x5: decode VFUNCT6 {
@@ -5343,8 +5439,10 @@ decode QUADRANT default Unknown::unknown() {
                         }
                     }
                     if (vdIdx == 0) {
-                        auto fd = ftype_freg<et>(freg(Fs1_bits));
-                        Vd_vu[0] = fd.v;
+                        if (this->vm || elem_mask(v0, 0)) {
+                            auto fd = ftype_freg<et>(freg(Fs1_bits));
+                            Vd_vu[0] = fd.v;
+                        }
                     }
                 }}, OPFVF, SimdMiscOp);
                 0x0f: VectorFloatSlideDownFormat::vfslide1down_vf({{
@@ -5404,8 +5502,11 @@ decode QUADRANT default Unknown::unknown() {
                         }
                     }
                     if (lastUop) {
-                        auto fd = ftype_freg<et>(freg(Fs1_bits));
-                        Vd_vu[microVl - 1] = fd.v;
+                        if (this->vm || elem_mask(v0,
+                            vdWindowLeft + microVl - 1)) {
+                            auto fd = ftype_freg<et>(freg(Fs1_bits));
+                            Vd_vu[microVl - 1] = fd.v;
+                        }
                     }
                 }}, OPFVF, SimdMiscOp);
                 // VRFUNARY0
@@ -5614,6 +5715,28 @@ decode QUADRANT default Unknown::unknown() {
                         res = int_rounding<__uint128_t>(res, 0 /* TODO */, 1);
                         Vd_vi[i] = res >> 1;
                     }}, OPMVX, SimdAddOp);
+                   0x0c: vclmul_vx({{
+                        uint64_t result = 0;
+                        uint64_t src1 = Rs1_vu;
+                        uint64_t src2 = Vs2_vu[i];
+                        for (int j = 0; j < 64; j++) {
+                            if ((src2 >> j) & 1) {
+                                result ^= src1 << j;
+                            }
+                        }
+                        Vd_vu[i] = result;
+                    }}, OPMVX, SimdMultOp);
+                    0x0d: vclmulh_vx({{
+                        uint64_t result = 0;
+                        uint64_t src1 = Rs1_vu;
+                        uint64_t src2 = Vs2_vu[i];
+                        for (int j = 1; j < 64; j++) {
+                            if ((src2 >> j) & 1) {
+                                result ^= src1 >> (64-j);
+                            }
+                        }
+                        Vd_vu[i] = result;
+                    }}, OPMVX, SimdMultOp);
                 }
                 0x0e: VectorSlide1UpFormat::vslide1up_vx({{
                     int offset = 1;
@@ -5631,13 +5754,13 @@ decode QUADRANT default Unknown::unknown() {
                         int frontLen = microVlmax - backLen;
                         int vdOffset = 0;
                         for (int i = 0; vdOffset < frontLen
-                            && vdOffset < microVl; vdOffset++) {
+                            && vdOffset < microVl; vdOffset++, i++) {
                             if (this->vm || elem_mask(v0,
                                 vdOffset + vdWindowLeft)) {
                                 Vd_vu[vdOffset] = Vs2_vu[i + backLen];
                             }
                         }
-                        for (int i = 0; vdOffset < microVl; vdOffset++) {
+                        for (int i = 0; vdOffset < microVl; vdOffset++, i++) {
                             if (this->vm || elem_mask(v0,
                                 vdOffset + vdWindowLeft)) {
                                 Vd_vu[vdOffset] = Vs3_vu[i];
@@ -5660,7 +5783,9 @@ decode QUADRANT default Unknown::unknown() {
                         }
                     }
                     if (vdIdx == 0) {
-                        Vd_vu[0] = Rs1_vu;
+                        if (this->vm || elem_mask(v0, 0)) {
+                            Vd_vu[0] = Rs1_vu;
+                        }
                     }
                 }}, OPIVX, SimdMiscOp);
                 0x0f: VectorSlide1DownFormat::vslide1down_vx({{
@@ -5720,7 +5845,10 @@ decode QUADRANT default Unknown::unknown() {
                         }
                     }
                     if (lastUop) {
-                        Vd_vu[microVl - 1] = Rs1_vu;
+                        if (this->vm || elem_mask(v0,
+                            vdWindowLeft + microVl - 1)) {
+                            Vd_vu[microVl - 1] = Rs1_vu;
+                        }
                     }
                 }}, OPIVX, SimdMiscOp);
                 // VRXUNARY0

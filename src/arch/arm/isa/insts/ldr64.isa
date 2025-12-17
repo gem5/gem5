@@ -94,6 +94,10 @@ let {{
                 self.instFlags.extend(["IsWriteBarrier", "IsReadBarrier"])
                 self.memFlags.append("Request::ACQUIRE")
 
+            if self.flavor in ("acquire_pc"):
+                self.instFlags.extend(["IsWriteBarrier", "IsReadBarrier"])
+                self.memFlags.append("Request::ACQUIRE_PC")
+
             if self.flavor in ("acex", "exclusive", "exp", "acexp"):
                 self.memFlags.append("Request::LLSC")
 
@@ -474,6 +478,25 @@ let {{
     LoadRaw64("ldar", "LDARW64", size=4, flavor="acquire").emit()
     LoadRaw64("ldarh", "LDARH64", size=2, flavor="acquire").emit()
     LoadRaw64("ldarb", "LDARB64", size=1, flavor="acquire").emit()
+
+    LoadImm64("ldapurb", "LDAPURB64_IMM", size=1,
+              sign=False, flavor="acquire_pc").emit()
+    LoadImm64("ldapursb", "LDAPURSBW64_IMM", size=1,
+              sign=True, flavor="acquire_pc").emit()
+    LoadImm64("ldapursb", "LDAPURSBX64_IMM", size=1,
+              sign=True, flavor="acquire_pc").emit()
+    LoadImm64("ldapurh", "LDAPURH64_IMM", size=2,
+              sign=False, flavor="acquire_pc").emit()
+    LoadImm64("ldapursh", "LDAPURSHW64_IMM", size=2,
+              sign=True, flavor="acquire_pc").emit()
+    LoadImm64("ldapursh", "LDAPURSHX64_IMM", size=2,
+              sign=True, flavor="acquire_pc").emit()
+    LoadImm64("ldapursw", "LDAPURSW64_IMM", size=4,
+              sign=True, flavor="acquire_pc").emit()
+    LoadImm64("ldapur", "LDAPURW64_IMM", size=4,
+              sign=False, flavor="acquire_pc").emit()
+    LoadImm64("ldapur", "LDAPURX64_IMM", size=8,
+              sign=False, flavor="acquire_pc").emit()
 
     LoadEx64("ldaxr", "LDAXRX64", size=8, flavor="acex").emit()
     LoadEx64("ldaxr", "LDAXRW64", size=4, flavor="acex").emit()

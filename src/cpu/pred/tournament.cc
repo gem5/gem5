@@ -51,7 +51,7 @@ namespace branch_prediction
 {
 
 TournamentBP::TournamentBP(const TournamentBPParams &params)
-    : BPredUnit(params),
+    : ConditionalPredictor(params),
       localPredictorSize(params.localPredictorSize),
       localCtrBits(params.localCtrBits),
       localCtrs(localPredictorSize, SatCounter8(localCtrBits)),

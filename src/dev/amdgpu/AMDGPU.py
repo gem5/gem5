@@ -69,6 +69,8 @@ class AMDGPUDevice(PciEndpoint):
     SubClassCode = 0x00
     ProgIF = 0x00
 
+    gpu_id = Param.Int(0, "ID of GPU, if multiple GPUs are instantiated")
+
     # Use max possible BAR size for Vega 10. We can override with driver param
     BAR0 = PciMemBar(size="16GiB")
     BAR1 = PciMemUpperBar()

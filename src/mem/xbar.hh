@@ -347,7 +347,7 @@ class BaseXBar : public ClockedObject
      * @param pkt Packet that containing the address range.
      * @return id of port that the packet should be sent ou of.
      */
-    PortID findPort(AddrRange addr_range, PacketPtr pkt=nullptr);
+    virtual PortID findPort(AddrRange addr_range, PacketPtr pkt = nullptr);
 
     PortID
     findPort(PacketPtr pkt)

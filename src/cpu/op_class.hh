@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2017-2018, 2020, 2022 ARM Limited
+ * Copyright (c) 2010, 2017-2018, 2020, 2022, 2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -100,6 +100,9 @@ static const OpClass SimdSha256HashOp = enums::SimdSha256Hash;
 static const OpClass SimdSha256Hash2Op = enums::SimdSha256Hash2;
 static const OpClass SimdShaSigma2Op = enums::SimdShaSigma2;
 static const OpClass SimdShaSigma3Op = enums::SimdShaSigma3;
+static const OpClass SimdSha3Op = enums::SimdSha3;
+static const OpClass SimdSm4eOp = enums::SimdSm4e;
+static const OpClass SimdCrcOp = enums::SimdCrc;
 static const OpClass SimdPredAluOp = enums::SimdPredAlu;
 static const OpClass MatrixOp = enums::Matrix;
 static const OpClass MatrixMovOp = enums::MatrixMov;
@@ -122,9 +125,7 @@ static const OpClass SimdUnitStrideFaultOnlyFirstLoadOp
              = enums::SimdUnitStrideFaultOnlyFirstLoad;
 static const OpClass SimdWholeRegisterLoadOp
              = enums::SimdWholeRegisterLoad;
-static const OpClass SimdWholeRegisterStoreOp
-             = enums::SimdWholeRegisterStore;
-static const OpClass IprAccessOp = enums::IprAccess;
+static const OpClass SimdWholeRegisterStoreOp = enums::SimdWholeRegisterStore;
 static const OpClass InstPrefetchOp = enums::InstPrefetch;
 static const OpClass SimdUnitStrideSegmentedLoadOp = enums::SimdUnitStrideSegmentedLoad;
 static const OpClass SimdUnitStrideSegmentedStoreOp
@@ -138,6 +139,16 @@ static const OpClass SimdStrideSegmentedStoreOp
 static const OpClass SimdExtOp = enums::SimdExt;
 static const OpClass SimdFloatExtOp = enums::SimdFloatExt;
 static const OpClass SimdConfigOp = enums::SimdConfig;
+static const OpClass SimdBf16AddOp = enums::SimdBf16Add;
+static const OpClass SimdBf16CmpOp = enums::SimdBf16Cmp;
+static const OpClass SimdBf16CvtOp = enums::SimdBf16Cvt;
+static const OpClass SimdBf16DotProdOp = enums::SimdBf16DotProd;
+static const OpClass SimdBf16MatMultAccOp = enums::SimdBf16MatMultAcc;
+static const OpClass SimdBf16MultOp = enums::SimdBf16Mult;
+static const OpClass SimdBf16MultAccOp = enums::SimdBf16MultAcc;
+static const OpClass Bf16CvtOp = enums::Bf16Cvt;
+static const OpClass SimdDotProdOp = enums::SimdDotProd;
+static const OpClass SystemOp = enums::System;
 static const OpClass Num_OpClasses = enums::Num_OpClass;
 
 } // namespace gem5

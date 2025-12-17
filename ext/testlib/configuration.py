@@ -226,7 +226,7 @@ def define_defaults(defaults):
         os.path.join(absdirpath(__file__), os.pardir, os.pardir)
     )
     defaults.result_path = os.path.join(os.getcwd(), "testing-results")
-    defaults.resource_url = "http://dist.gem5.org/dist/develop"
+    defaults.resource_url = "https://dist.gem5.org/dist/develop"
     defaults.resource_path = os.path.abspath(
         os.path.join(defaults.base_dir, "tests", "gem5", "resources")
     )

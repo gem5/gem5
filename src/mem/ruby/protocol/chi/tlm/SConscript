@@ -1,5 +1,5 @@
 # -*- mode:python -*-
-# Copyright (c) 2024 Arm Limited
+# Copyright (c) 2024-2025 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -59,6 +59,9 @@ if env["CONF"]["BUILD_TLM"]:
     env.Append(LIBPATH=lib_path)
     env.Append(LIBS=[tlm_lib])
 
+    PySource("m5.tlm_chi", "python/__init__.py")
+    PySource("m5.tlm_chi", "python/port.py")
+    PySource("m5.tlm_chi", "python/utils.py")
     SimObject(
         "TlmController.py",
         sim_objects=["TlmController"],
@@ -74,8 +77,8 @@ if env["CONF"]["BUILD_TLM"]:
     Source('tlm_chi.cc', tags=['arm isa', 'python'])
     Source('tlm_chi_gen.cc', tags=['arm isa', 'python'])
     Source('generator.cc', tags=['arm isa'])
-    PySource('m5', 'tlm_chi.py')
     DebugFlag("TLM", tags=['arm isa'])
+    DebugFlag("TLMPort", tags=['arm isa'])
 
     print(
         "BUILD_TLM set: "

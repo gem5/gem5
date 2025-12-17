@@ -39,7 +39,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects.MemCtrl import MemCtrl
-from m5.objects.MemInterface import *
+from m5.objects.MemInterface import MemInterface
+from m5.params import *
+from m5.proxy import Self
 
 
 # Enum for the page policy, either open, open_adaptive, close, or

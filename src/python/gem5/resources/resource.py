@@ -955,6 +955,17 @@ def obtain_resource(
     :param quiet: If ``True``, suppress output. ``False`` by default.
     """
 
+    # Some basic validation. Resource_id must be of type string and not empty.
+    if not isinstance(resource_id, str):
+        raise TypeError(
+            f"Resource ID must be a string, got {type(resource_id).__name__}."
+        )
+
+    if not resource_id.strip():
+        raise ValueError(
+            "Resource ID cannot be an empty or whitespace-only string."
+        )
+
     # Obtain the resource object entry for this resource
     resource_json = get_resource_json_obj(
         resource_id,
@@ -1259,19 +1270,40 @@ def _get_workload(
     if "parameters" not in workload:
         workload["parameters"] = {}
 
-    for resource in workload["resources"].values():
-        db_query.append(
-            ClientQuery(
-                resource_id=resource["id"],
-                resource_version=resource["resource_version"],
-                gem5_version=gem5_version,
+    for resource_param in workload["resources"].values():
+        # Each Key in the resources dictionary represents a parameter name in the function that is called by the workload
+        # Each value in the resources dictionary can be a single resource or a list of resources that the parameter can take
+
+        if isinstance(resource_param, list):
+            for res in resource_param:
+                db_query.append(
+                    ClientQuery(
+                        resource_id=res["id"],
+                        resource_version=res["resource_version"],
+                        gem5_version=gem5_version,
+                    )
+                )
+        elif isinstance(resource_param, dict):
+            db_query.append(
+                ClientQuery(
+                    resource_id=resource_param["id"],
+                    resource_version=resource_param["resource_version"],
+                    gem5_version=gem5_version,
+                )
             )
-        )
+        else:
+            raise Exception(
+                f"The resources field in the workload {workload['id']} with version {workload['resource_version']} is invalid.\n"
+                f"The current value of the resources field is {workload['resources']}.\n"
+                f"Each value in the resources field must be a list or a dict containing resources information."
+            )
     # Fetching resources as a list of dicts
     resource_details_list = get_multiple_resource_json_obj(db_query, clients)
 
-    # Creating the resource objects for each resource
-    for param_name, param_resource in workload["resources"].items():
+    def create_resource_object(
+        param_resource: Dict[str, str],
+        resource_details_list: List[Dict[str, str]],
+    ) -> AbstractResource:
         resource_match = None
         for resource in resource_details_list:
             if (
@@ -1307,11 +1339,23 @@ def _get_workload(
             resource_match["category"]
         ]
 
-        workload["parameters"][param_name] = resource_class(
+        return resource_class(
             local_path=to_path,
             downloader=downloader,
             **resource_match,
         )
+
+    # Creating the resource objects for each resource
+    for param_name, param_resource in workload["resources"].items():
+        if isinstance(param_resource, list):
+            workload["parameters"][param_name] = [
+                create_resource_object(resource, resource_details_list)
+                for resource in param_resource
+            ]
+        else:
+            workload["parameters"][param_name] = create_resource_object(
+                param_resource, resource_details_list
+            )
 
     del workload["resources"]
 
@@ -1395,7 +1439,9 @@ def _get_to_path_and_downloader_partial(
                     )
 
             # This is the path to which the resource is to be stored.
-            to_path = os.path.join(resource_directory, resource_id)
+            to_path = os.path.join(
+                resource_directory, f"{resource_id}-{resource_version}"
+            )
 
         assert to_path
 

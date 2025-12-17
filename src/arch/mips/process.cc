@@ -60,7 +60,7 @@ MipsProcess::MipsProcess(const ProcessParams &params,
     // user address space. MIPS stack grows down from here
     Addr stack_base = 0x7FFFFFFF;
 
-    Addr max_stack_size = 8 * 1024 * 1024;
+    Addr max_stack_size = params.maxStackSize;
 
     // Set pointer for next thread stack.  Reserve 8M for main stack.
     Addr next_thread_stack_base = stack_base - max_stack_size;

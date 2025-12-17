@@ -1,4 +1,4 @@
-# Copyright (c) 2016, 2019 Arm Limited
+# Copyright (c) 2016, 2019, 2025 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -224,8 +224,9 @@ def parse_options():
     option(
         "--stats-file",
         metavar="FILE",
-        default="stats.txt",
-        help="Sets the output file for statistics [Default: %default]",
+        action="append",
+        default=[],
+        help="Append additional file for statistics output (Defaults to stats.txt if unset)",
     )
     option(
         "--stats-help",
@@ -570,7 +571,11 @@ def main():
     sys.path[0:0] = options.path
 
     # set stats options
-    stats.addStatVisitor(options.stats_file)
+    if not options.stats_file:
+        options.stats_file.append("stats.txt")
+
+    for visitor in options.stats_file:
+        stats.addStatVisitor(visitor)
 
     # Disable listeners unless running interactively or explicitly
     # enabled

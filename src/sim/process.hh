@@ -40,7 +40,6 @@
 #include "base/loader/memory_image.hh"
 #include "base/statistics.hh"
 #include "base/types.hh"
-#include "mem/se_translating_port_proxy.hh"
 #include "sim/fd_array.hh"
 #include "sim/fd_entry.hh"
 #include "sim/mem_state.hh"

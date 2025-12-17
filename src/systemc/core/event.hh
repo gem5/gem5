@@ -158,10 +158,10 @@ class Event
     mutable DynamicSensitivities dynamicSenseThread;
 };
 
-extern Events topLevelEvents;
-extern Events allEvents;
+Events &topLevelEvents();
+Events &allEvents();
 
-EventsIt findEvent(const std::string &name);
+sc_core::sc_event *findEvent(const char *name);
 
 } // namespace sc_gem5
 

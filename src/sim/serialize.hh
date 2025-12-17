@@ -45,8 +45,8 @@
 #ifndef __SERIALIZE_HH__
 #define __SERIALIZE_HH__
 
-
 #include <algorithm>
+#include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <iterator>

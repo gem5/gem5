@@ -137,7 +137,7 @@ MipsISA::dspAbs(int32_t a, int32_t fmt, uint32_t *dspctl)
     int32_t result;
     int64_t svalue;
     uint32_t ouflag = 0;
-    uint64_t a_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
 
     simdUnpack(a, a_values, fmt, SIGNED);
 
@@ -168,8 +168,8 @@ MipsISA::dspAdd(int32_t a, int32_t b, int32_t fmt, int32_t saturate,
     int nvals = SIMD_NVALS[fmt];
     int32_t result;
     uint32_t ouflag = 0;
-    uint64_t a_values[SIMD_MAX_VALS];
-    uint64_t b_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
+    uint64_t b_values[SIMD_MAX_VALS] = {};
 
     simdUnpack(a, a_values, fmt, sign);
     simdUnpack(b, b_values, fmt, sign);
@@ -199,8 +199,8 @@ MipsISA::dspAddh(int32_t a, int32_t b, int32_t fmt, int32_t round,
 {
     int nvals = SIMD_NVALS[fmt];
     int32_t result;
-    uint64_t a_values[SIMD_MAX_VALS];
-    uint64_t b_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
+    uint64_t b_values[SIMD_MAX_VALS] = {};
 
     simdUnpack(a, a_values, fmt, sign);
     simdUnpack(b, b_values, fmt, sign);
@@ -224,8 +224,8 @@ MipsISA::dspSub(int32_t a, int32_t b, int32_t fmt, int32_t saturate,
     int nvals = SIMD_NVALS[fmt];
     int32_t result;
     uint32_t ouflag = 0;
-    uint64_t a_values[SIMD_MAX_VALS];
-    uint64_t b_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
+    uint64_t b_values[SIMD_MAX_VALS] = {};
 
     simdUnpack(a, a_values, fmt, sign);
     simdUnpack(b, b_values, fmt, sign);
@@ -254,8 +254,8 @@ MipsISA::dspSubh(int32_t a, int32_t b, int32_t fmt, int32_t round,
 {
     int nvals = SIMD_NVALS[fmt];
     int32_t result;
-    uint64_t a_values[SIMD_MAX_VALS];
-    uint64_t b_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
+    uint64_t b_values[SIMD_MAX_VALS] = {};
 
     simdUnpack(a, a_values, fmt, sign);
     simdUnpack(b, b_values, fmt, sign);
@@ -280,7 +280,7 @@ MipsISA::dspShll(int32_t a, uint32_t sa, int32_t fmt, int32_t saturate,
     int nvals = SIMD_NVALS[fmt];
     int32_t result;
     uint32_t ouflag = 0;
-    uint64_t a_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
 
     sa = bits(sa, SIMD_LOG2N[fmt] - 1, 0);
     simdUnpack(a, a_values, fmt, sign);
@@ -307,7 +307,7 @@ MipsISA::dspShrl(int32_t a, uint32_t sa, int32_t fmt, int32_t sign)
 {
     int nvals = SIMD_NVALS[fmt];
     int32_t result;
-    uint64_t a_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
 
     sa = bits(sa, SIMD_LOG2N[fmt] - 1, 0);
 
@@ -327,7 +327,7 @@ MipsISA::dspShra(int32_t a, uint32_t sa, int32_t fmt, int32_t round,
 {
     int nvals = SIMD_NVALS[fmt];
     int32_t result;
-    uint64_t a_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
 
     sa = bits(sa, SIMD_LOG2N[fmt] - 1, 0);
 
@@ -353,8 +353,8 @@ MipsISA::dspMulq(int32_t a, int32_t b, int32_t fmt, int32_t saturate,
     int sa = SIMD_NBITS[fmt];
     int32_t result;
     uint32_t ouflag = 0;
-    uint64_t a_values[SIMD_MAX_VALS];
-    uint64_t b_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
+    uint64_t b_values[SIMD_MAX_VALS] = {};
     int64_t temp;
 
     simdUnpack(a, a_values, fmt, SIGNED);
@@ -393,8 +393,8 @@ MipsISA::dspMul(int32_t a, int32_t b, int32_t fmt, int32_t saturate,
     int nvals = SIMD_NVALS[fmt];
     int32_t result;
     uint32_t ouflag = 0;
-    uint64_t a_values[SIMD_MAX_VALS];
-    uint64_t b_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
+    uint64_t b_values[SIMD_MAX_VALS] = {};
 
     simdUnpack(a, a_values, fmt, SIGNED);
     simdUnpack(b, b_values, fmt, SIGNED);
@@ -424,8 +424,8 @@ MipsISA::dspMuleu(int32_t a, int32_t b, int32_t mode, uint32_t *dspctl)
     int nvals = SIMD_NVALS[SIMD_FMT_PH];
     int32_t result;
     uint32_t ouflag = 0;
-    uint64_t a_values[SIMD_MAX_VALS];
-    uint64_t b_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
+    uint64_t b_values[SIMD_MAX_VALS] = {};
 
     simdUnpack(a, a_values, SIMD_FMT_QB, UNSIGNED);
     simdUnpack(b, b_values, SIMD_FMT_PH, UNSIGNED);
@@ -458,9 +458,9 @@ MipsISA::dspMuleq(int32_t a, int32_t b, int32_t mode, uint32_t *dspctl)
     int nvals = SIMD_NVALS[SIMD_FMT_W];
     int32_t result;
     uint32_t ouflag = 0;
-    uint64_t a_values[SIMD_MAX_VALS];
-    uint64_t b_values[SIMD_MAX_VALS];
-    uint64_t c_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
+    uint64_t b_values[SIMD_MAX_VALS] = {};
+    uint64_t c_values[SIMD_MAX_VALS] = {};
 
     memset(c_values, 0, sizeof(c_values));
 
@@ -498,8 +498,8 @@ MipsISA::dspDpaq(int64_t dspac, int32_t a, int32_t b, int32_t ac,
     int64_t result = 0;
     int64_t temp = 0;
     uint32_t ouflag = 0;
-    uint64_t a_values[SIMD_MAX_VALS];
-    uint64_t b_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
+    uint64_t b_values[SIMD_MAX_VALS] = {};
 
     simdUnpack(a, a_values, infmt, SIGNED);
     simdUnpack(b, b_values, infmt, SIGNED);
@@ -565,8 +565,8 @@ MipsISA::dspDpsq(int64_t dspac, int32_t a, int32_t b, int32_t ac,
     int64_t result = 0;
     int64_t temp = 0;
     uint32_t ouflag = 0;
-    uint64_t a_values[SIMD_MAX_VALS];
-    uint64_t b_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
+    uint64_t b_values[SIMD_MAX_VALS] = {};
 
     simdUnpack(a, a_values, infmt, SIGNED);
     simdUnpack(b, b_values, infmt, SIGNED);
@@ -628,8 +628,8 @@ MipsISA::dspDpa(int64_t dspac, int32_t a, int32_t b, int32_t ac,
                 int32_t fmt, int32_t sign, int32_t mode)
 {
     int nvals = SIMD_NVALS[fmt];
-    uint64_t a_values[SIMD_MAX_VALS];
-    uint64_t b_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
+    uint64_t b_values[SIMD_MAX_VALS] = {};
 
     simdUnpack(a, a_values, fmt, sign);
     simdUnpack(b, b_values, fmt, sign);
@@ -656,8 +656,8 @@ MipsISA::dspDps(int64_t dspac, int32_t a, int32_t b, int32_t ac,
                 int32_t fmt, int32_t sign, int32_t mode)
 {
     int nvals = SIMD_NVALS[fmt];
-    uint64_t a_values[SIMD_MAX_VALS];
-    uint64_t b_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
+    uint64_t b_values[SIMD_MAX_VALS] = {};
 
     simdUnpack(a, a_values, fmt, sign);
     simdUnpack(b, b_values, fmt, sign);
@@ -684,8 +684,8 @@ MipsISA::dspMaq(int64_t dspac, int32_t a, int32_t b, int32_t ac,
                  int32_t fmt, int32_t mode, int32_t saturate, uint32_t *dspctl)
 {
     int nvals = SIMD_NVALS[fmt - 1];
-    uint64_t a_values[SIMD_MAX_VALS];
-    uint64_t b_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
+    uint64_t b_values[SIMD_MAX_VALS] = {};
     int64_t temp = 0;
     uint32_t ouflag = 0;
 
@@ -726,8 +726,8 @@ MipsISA::dspMaq(int64_t dspac, int32_t a, int32_t b, int32_t ac,
 int64_t
 MipsISA::dspMulsa(int64_t dspac, int32_t a, int32_t b, int32_t ac, int32_t fmt)
 {
-    uint64_t a_values[SIMD_MAX_VALS];
-    uint64_t b_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
+    uint64_t b_values[SIMD_MAX_VALS] = {};
 
     simdUnpack(a, a_values, fmt, SIGNED);
     simdUnpack(b, b_values, fmt, SIGNED);
@@ -742,8 +742,8 @@ MipsISA::dspMulsaq(int64_t dspac, int32_t a, int32_t b, int32_t ac,
     int32_t fmt, uint32_t *dspctl)
 {
     int nvals = SIMD_NVALS[fmt];
-    uint64_t a_values[SIMD_MAX_VALS];
-    uint64_t b_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
+    uint64_t b_values[SIMD_MAX_VALS] = {};
     int64_t temp[2] = {0, 0};
     uint32_t ouflag = 0;
 
@@ -772,8 +772,8 @@ MipsISA::dspCmp(int32_t a, int32_t b, int32_t fmt, int32_t sign, int32_t op,
 {
     int nvals = SIMD_NVALS[fmt];
     int ccond = 0;
-    uint64_t a_values[SIMD_MAX_VALS];
-    uint64_t b_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
+    uint64_t b_values[SIMD_MAX_VALS] = {};
 
     simdUnpack(a, a_values, fmt, sign);
     simdUnpack(b, b_values, fmt, sign);
@@ -804,8 +804,8 @@ MipsISA::dspCmpg(int32_t a, int32_t b, int32_t fmt, int32_t sign, int32_t op)
 {
     int nvals = SIMD_NVALS[fmt];
     int32_t result = 0;
-    uint64_t a_values[SIMD_MAX_VALS];
-    uint64_t b_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
+    uint64_t b_values[SIMD_MAX_VALS] = {};
 
     simdUnpack(a, a_values, fmt, sign);
     simdUnpack(b, b_values, fmt, sign);
@@ -838,8 +838,8 @@ MipsISA::dspCmpgd(int32_t a, int32_t b, int32_t fmt, int32_t sign, int32_t op,
     int nvals = SIMD_NVALS[fmt];
     int32_t result = 0;
     int ccond = 0;
-    uint64_t a_values[SIMD_MAX_VALS];
-    uint64_t b_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
+    uint64_t b_values[SIMD_MAX_VALS] = {};
 
     simdUnpack(a, a_values, fmt, sign);
     simdUnpack(b, b_values, fmt, sign);
@@ -876,8 +876,8 @@ MipsISA::dspPrece(int32_t a, int32_t infmt, int32_t insign, int32_t outfmt,
     int ninvals = SIMD_NVALS[infmt];
     int noutvals = SIMD_NVALS[outfmt];
     int32_t result;
-    uint64_t in_values[SIMD_MAX_VALS];
-    uint64_t out_values[SIMD_MAX_VALS];
+    uint64_t in_values[SIMD_MAX_VALS] = {};
+    uint64_t out_values[SIMD_MAX_VALS] = {};
 
     if (insign == SIGNED && outsign == SIGNED)
       sa = SIMD_NBITS[infmt];
@@ -913,9 +913,9 @@ MipsISA::dspPrece(int32_t a, int32_t infmt, int32_t insign, int32_t outfmt,
 int32_t
 MipsISA::dspPrecrqu(int32_t a, int32_t b, uint32_t *dspctl)
 {
-    uint64_t a_values[SIMD_MAX_VALS];
-    uint64_t b_values[SIMD_MAX_VALS];
-    uint64_t r_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
+    uint64_t b_values[SIMD_MAX_VALS] = {};
+    uint64_t r_values[SIMD_MAX_VALS] = {};
     uint32_t ouflag = 0;
     int32_t result = 0;
 
@@ -942,9 +942,9 @@ MipsISA::dspPrecrqu(int32_t a, int32_t b, uint32_t *dspctl)
 int32_t
 MipsISA::dspPrecrq(int32_t a, int32_t b, int32_t fmt, uint32_t *dspctl)
 {
-    uint64_t a_values[SIMD_MAX_VALS];
-    uint64_t b_values[SIMD_MAX_VALS];
-    uint64_t r_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
+    uint64_t b_values[SIMD_MAX_VALS] = {};
+    uint64_t r_values[SIMD_MAX_VALS] = {};
     uint32_t ouflag = 0;
     int32_t result;
 
@@ -969,9 +969,9 @@ MipsISA::dspPrecrSra(int32_t a, int32_t b, int32_t sa, int32_t fmt,
     int32_t round)
 {
     int nvals = SIMD_NVALS[fmt];
-    uint64_t a_values[SIMD_MAX_VALS];
-    uint64_t b_values[SIMD_MAX_VALS];
-    uint64_t c_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
+    uint64_t b_values[SIMD_MAX_VALS] = {};
+    uint64_t c_values[SIMD_MAX_VALS] = {};
     int32_t result = 0;
 
     simdUnpack(a, a_values, fmt, SIGNED);
@@ -997,9 +997,9 @@ MipsISA::dspPick(int32_t a, int32_t b, int32_t fmt, uint32_t *dspctl)
 {
     int nvals = SIMD_NVALS[fmt];
     int32_t result;
-    uint64_t a_values[SIMD_MAX_VALS];
-    uint64_t b_values[SIMD_MAX_VALS];
-    uint64_t c_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
+    uint64_t b_values[SIMD_MAX_VALS] = {};
+    uint64_t c_values[SIMD_MAX_VALS] = {};
 
     simdUnpack(a, a_values, fmt, UNSIGNED);
     simdUnpack(b, b_values, fmt, UNSIGNED);
@@ -1021,9 +1021,9 @@ int32_t
 MipsISA::dspPack(int32_t a, int32_t b, int32_t fmt)
 {
     int32_t result;
-    uint64_t a_values[SIMD_MAX_VALS];
-    uint64_t b_values[SIMD_MAX_VALS];
-    uint64_t c_values[SIMD_MAX_VALS];
+    uint64_t a_values[SIMD_MAX_VALS] = {};
+    uint64_t b_values[SIMD_MAX_VALS] = {};
+    uint64_t c_values[SIMD_MAX_VALS] = {};
 
     simdUnpack(a, a_values, fmt, UNSIGNED);
     simdUnpack(b, b_values, fmt, UNSIGNED);

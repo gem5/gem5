@@ -53,9 +53,9 @@ RUN mkdir --parents --mode=0755 /etc/apt/keyrings
 RUN wget https://repo.radeon.com/rocm/rocm.gpg.key -O - | \
     gpg --dearmor | tee /etc/apt/keyrings/rocm.gpg > /dev/null
 
-RUN echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/amdgpu/6.4/ubuntu noble main" \
+RUN echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/amdgpu/7.0/ubuntu noble main" \
     | tee /etc/apt/sources.list.d/amdgpu.list
-RUN echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/6.4 noble main" \
+RUN echo "deb [arch=amd64 signed-by=/etc/apt/keyrings/rocm.gpg] https://repo.radeon.com/rocm/apt/7.0 noble main" \
     | tee --append /etc/apt/sources.list.d/rocm.list
 # Note: Need to remove 'echo -e' in docker.
 RUN echo 'Package: *\nPin: release o=repo.radeon.com\nPin-Priority: 600' \

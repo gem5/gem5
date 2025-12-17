@@ -52,5 +52,5 @@ gem5_verify_config(
         "x86-parsec",
     ],
     valid_isas=(constants.all_compiled_tag,),
-    length=constants.long_tag,
+    length=constants.very_long_tag,
 )

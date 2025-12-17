@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2014, 2017-2021 ARM Limited
+ * Copyright (c) 2010-2014, 2017-2021, 2025 Arm Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -51,7 +51,6 @@
 #include "debug/HtmCpu.hh"
 #include "debug/IEW.hh"
 #include "debug/LSQUnit.hh"
-#include "debug/O3PipeView.hh"
 #include "mem/packet.hh"
 #include "mem/request.hh"
 
@@ -269,14 +268,23 @@ LSQUnit::LSQUnitStats::LSQUnitStats(statistics::Group *parent)
       ADD_STAT(blockedByCache, statistics::units::Count::get(),
                "Number of times an access to memory failed due to the cache "
                "being blocked"),
-      ADD_STAT(loadToUse, "Distribution of cycle latency between the "
-                "first time a load is issued and its completion"),
+      ADD_STAT(loadToUse, statistics::units::Cycle::get(),
+               "Distribution of cycle latency between the "
+               "first time a load is issued and its completion"),
       ADD_STAT(addedLoadsAndStores, statistics::units::Count::get(),
-               "Number of loads and stores written to the Load Store Queue")
+               "Number of loads and stores written to the Load Store Queue"),
+      ADD_STAT(lqAvgOccupancy, statistics::units::Ratio::get(),
+               "Average LQ Occupancy (UsedSlots/TotalSlots)"),
+      ADD_STAT(sqAvgOccupancy, statistics::units::Ratio::get(),
+               "Average SQ Occupancy (UsedSlots/TotalSlots)")
 {
     loadToUse
         .init(0, 299, 10)
         .flags(statistics::nozero);
+
+    lqAvgOccupancy.precision(2);
+
+    sqAvgOccupancy.precision(2);
 }
 
 void
@@ -338,6 +346,8 @@ LSQUnit::insertLoad(const DynInstPtr &load_inst)
     assert(load_inst->lqIdx > 0);
     load_inst->lqIt = loadQueue.getIterator(load_inst->lqIdx);
 
+    stats.lqAvgOccupancy = queueOccupancy(loadQueue);
+
     // hardware transactional memory
     // transactional state and nesting depth must be tracked
     // in the in-order part of the core.
@@ -398,6 +408,8 @@ LSQUnit::insertStore(const DynInstPtr& store_inst)
     store_inst->lqIt = loadQueue.end();
 
     storeQueue.back().set(store_inst);
+
+    stats.sqAvgOccupancy = queueOccupancy(storeQueue);
 }
 
 DynInstPtr
@@ -745,6 +757,8 @@ LSQUnit::commitLoad()
 
     loadQueue.front().clear();
     loadQueue.pop_front();
+
+    stats.lqAvgOccupancy = queueOccupancy(loadQueue);
 }
 
 void
@@ -969,6 +983,8 @@ LSQUnit::squash(const InstSeqNum &squashed_num)
         ++stats.squashedLoads;
     }
 
+    stats.lqAvgOccupancy = queueOccupancy(loadQueue);
+
     // hardware transactional memory
     // scan load queue (from oldest to youngest) for most recent valid htmUid
     auto scan_it = loadQueue.begin();
@@ -1039,6 +1055,7 @@ LSQUnit::squash(const InstSeqNum &squashed_num)
         storeQueue.pop_back();
         ++stats.squashedStores;
     }
+    stats.sqAvgOccupancy = queueOccupancy(storeQueue);
 }
 
 uint64_t
@@ -1166,16 +1183,13 @@ LSQUnit::completeStore(typename StoreQueue::iterator store_idx)
         iewStage->updateLSQNextCycle = true;
     }
 
+    stats.sqAvgOccupancy = queueOccupancy(storeQueue);
+
     DPRINTF(LSQUnit, "Completing store [sn:%lli], idx:%i, store head "
             "idx:%i\n",
             store_inst->seqNum, store_idx.idx() - 1, storeQueue.head() - 1);
 
-#if TRACING_ON
-    if (debug::O3PipeView) {
-        store_inst->storeTick =
-            curTick() - store_inst->fetchTick;
-    }
-#endif
+    store_inst->storeTick = curTick() - store_inst->fetchTick;
 
     if (isStalled() &&
         store_inst->seqNum == stallingStoreIsn) {

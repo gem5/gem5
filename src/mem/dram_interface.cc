@@ -46,6 +46,7 @@
 #include "debug/DRAM.hh"
 #include "debug/DRAMPower.hh"
 #include "debug/DRAMState.hh"
+#include "mem/mem_ctrl.hh"
 #include "sim/system.hh"
 
 namespace gem5

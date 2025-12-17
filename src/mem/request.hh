@@ -103,6 +103,7 @@ class Request : public Extensible<Request>
 
     enum : FlagsType
     {
+        // clang-format off
         /**
          * Architecture specific flags.
          *
@@ -168,6 +169,8 @@ class Request : public Extensible<Request>
         EVICT_NEXT                  = 0x04000000,
         /** The request should be marked with ACQUIRE. */
         ACQUIRE                     = 0x00020000,
+        /** The request should be marked with ACQUIRE_PC. */
+        ACQUIRE_PC                  = 0x00002000,
         /** The request should be marked with RELEASE. */
         RELEASE                     = 0x00040000,
 
@@ -259,6 +262,7 @@ class Request : public Extensible<Request>
         /** TLBI_EXT_SYNC_COMP seems to be the largest value
             of FlagsType, so HAS_NO_ADDR's value is that << 1 */
         HAS_NO_ADDR                = 0x0001000000000000,
+        // clang-format on
     };
     static const FlagsType STORE_NO_DATA = CACHE_BLOCK_ZERO |
         CLEAN | INVALIDATE;
@@ -1086,7 +1090,11 @@ class Request : public Extensible<Request>
     Flags getDest() const { return _flags & DST_BITS; }
 
     bool isAcquire() const { return _cacheCoherenceFlags.isSet(ACQUIRE); }
-
+    bool
+    isAcquirePC() const
+    {
+        return _cacheCoherenceFlags.isSet(ACQUIRE_PC);
+    }
 
     /**
      * Accessor functions for the cache bypass flags. The cache bypass

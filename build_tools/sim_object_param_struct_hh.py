@@ -39,195 +39,217 @@
 import argparse
 import importlib
 import os.path
-import sys
+from typing import Type
 
-import importer
 from code_formatter import code_formatter
 
-parser = argparse.ArgumentParser()
-parser.add_argument("modpath", help="module the simobject belongs to")
-parser.add_argument("param_hh", help="parameter header file to generate")
 
-args = parser.parse_args()
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("modpath", help="module the simobject belongs to")
+    parser.add_argument("param_hh", help="parameter header file to generate")
 
-basename = os.path.basename(args.param_hh)
-sim_object_name = os.path.splitext(basename)[0]
-
-importer.install()
-module = importlib.import_module(args.modpath)
-sim_object = getattr(module, sim_object_name)
-
-from m5.objects.SimObject import SimObject
-from m5.params import Enum
-
-code = code_formatter()
-
-# The 'local' attribute restricts us to the params declared in
-# the object itself, not including inherited params (which
-# will also be inherited from the base class's param struct
-# here). Sort the params based on their key
-params = list(
-    map(lambda k_v: k_v[1], sorted(sim_object._params.local.items()))
-)
-ports = sim_object._ports.local
-try:
-    ptypes = [single_type for p in params for single_type in p.ptypes]
-except:
-    print(sim_object)
-    print(params)
-    raise
-
-warned_about_nested_templates = False
+    args = parser.parse_args()
+    return args
 
 
-class CxxClass:
-    def __init__(self, sig, template_params=[]):
-        # Split the signature into its constituent parts. This could
-        # potentially be done with regular expressions, but
-        # it's simple enough to pick appart a class signature
-        # manually.
-        parts = sig.split("<", 1)
-        base = parts[0]
-        t_args = []
-        if len(parts) > 1:
-            # The signature had template arguments.
-            text = parts[1].rstrip(" \t\n>")
-            arg = ""
-            # Keep track of nesting to avoid splitting on ","s embedded
-            # in the arguments themselves.
-            depth = 0
-            for c in text:
-                if c == "<":
-                    depth = depth + 1
-                    if depth > 0 and not warned_about_nested_templates:
-                        warned_about_nested_templates = True
-                        print(
-                            "Nested template argument in cxx_class."
-                            " This feature is largely untested and "
-                            " may not work."
-                        )
-                elif c == ">":
-                    depth = depth - 1
-                elif c == "," and depth == 0:
+def write_header_file(sim_object: Type, param_hh: str):
+    """Write the parameter header file for a SimObject.
+
+    This function generates a C++ header file that declares the
+    parameter struct for a given SimObject. It includes necessary
+    preprocessor directives, includes, and the struct definition
+    with its parameters and ports.
+
+    Args:
+        sim_object: The SimObject class for which to generate the header.
+        param_hh: The path to the header file to write.
+    """
+
+    # Need to import after the importer is installed
+    from m5.objects.SimObject import SimObject
+    from m5.params import Enum
+
+    code = code_formatter()
+
+    # The 'local' attribute restricts us to the params declared in
+    # the object itself, not including inherited params (which
+    # will also be inherited from the base class's param struct
+    # here). Sort the params based on their key
+    params = list(
+        map(lambda k_v: k_v[1], sorted(sim_object._params.local.items()))
+    )
+    ports = sim_object._ports.local
+    try:
+        ptypes = [single_type for p in params for single_type in p.ptypes]
+    except:
+        print(sim_object)
+        print(params)
+        raise
+
+    warned_about_nested_templates = False
+
+    class CxxClass:
+        def __init__(self, sig, template_params=[]):
+            # Split the signature into its constituent parts. This could
+            # potentially be done with regular expressions, but
+            # it's simple enough to pick appart a class signature
+            # manually.
+            parts = sig.split("<", 1)
+            base = parts[0]
+            t_args = []
+            if len(parts) > 1:
+                # The signature had template arguments.
+                text = parts[1].rstrip(" \t\n>")
+                arg = ""
+                # Keep track of nesting to avoid splitting on ","s embedded
+                # in the arguments themselves.
+                depth = 0
+                for c in text:
+                    if c == "<":
+                        depth = depth + 1
+                        if depth > 0 and not warned_about_nested_templates:
+                            warned_about_nested_templates = True
+                            print(
+                                "Nested template argument in cxx_class."
+                                " This feature is largely untested and "
+                                " may not work."
+                            )
+                    elif c == ">":
+                        depth = depth - 1
+                    elif c == "," and depth == 0:
+                        t_args.append(arg.strip())
+                        arg = ""
+                    else:
+                        arg = arg + c
+                if arg:
                     t_args.append(arg.strip())
-                    arg = ""
+            # Split the non-template part on :: boundaries.
+            class_path = base.split("::")
+
+            # The namespaces are everything except the last part of the class path.
+            self.namespaces = class_path[:-1]
+            # And the class name is the last part.
+            self.name = class_path[-1]
+
+            self.template_params = template_params
+            self.template_arguments = []
+            # Iterate through the template arguments and their values. This
+            # will likely break if parameter packs are used.
+            for arg, param in zip(t_args, template_params):
+                type_keys = ("class", "typename")
+                # If a parameter is a type, parse it recursively. Otherwise
+                # assume it's a constant, and store it verbatim.
+                if any(param.strip().startswith(kw) for kw in type_keys):
+                    self.template_arguments.append(CxxClass(arg))
                 else:
-                    arg = arg + c
-            if arg:
-                t_args.append(arg.strip())
-        # Split the non-template part on :: boundaries.
-        class_path = base.split("::")
+                    self.template_arguments.append(arg)
 
-        # The namespaces are everything except the last part of the class path.
-        self.namespaces = class_path[:-1]
-        # And the class name is the last part.
-        self.name = class_path[-1]
+        def declare(self, code):
+            # First declare any template argument types.
+            for arg in self.template_arguments:
+                if isinstance(arg, CxxClass):
+                    arg.declare(code)
+            # Re-open the target namespace.
+            for ns in self.namespaces:
+                code("namespace $ns {")
+            # If this is a class template...
+            if self.template_params:
+                code('template <${{", ".join(self.template_params)}}>')
+            # The actual class declaration.
+            code("class ${{self.name}};")
+            # Close the target namespaces.
+            for ns in reversed(self.namespaces):
+                code("} // namespace $ns")
 
-        self.template_params = template_params
-        self.template_arguments = []
-        # Iterate through the template arguments and their values. This
-        # will likely break if parameter packs are used.
-        for arg, param in zip(t_args, template_params):
-            type_keys = ("class", "typename")
-            # If a parameter is a type, parse it recursively. Otherwise
-            # assume it's a constant, and store it verbatim.
-            if any(param.strip().startswith(kw) for kw in type_keys):
-                self.template_arguments.append(CxxClass(arg))
-            else:
-                self.template_arguments.append(arg)
-
-    def declare(self, code):
-        # First declare any template argument types.
-        for arg in self.template_arguments:
-            if isinstance(arg, CxxClass):
-                arg.declare(code)
-        # Re-open the target namespace.
-        for ns in self.namespaces:
-            code("namespace $ns {")
-        # If this is a class template...
-        if self.template_params:
-            code('template <${{", ".join(self.template_params)}}>')
-        # The actual class declaration.
-        code("class ${{self.name}};")
-        # Close the target namespaces.
-        for ns in reversed(self.namespaces):
-            code("} // namespace $ns")
-
-
-code(
-    """\
-#ifndef __PARAMS__${sim_object}__
-#define __PARAMS__${sim_object}__
-
-"""
-)
-
-
-# The base SimObject has a couple of params that get
-# automatically set from Python without being declared through
-# the normal Param mechanism; we slip them in here (needed
-# predecls now, actual declarations below)
-if sim_object == SimObject:
-    code("""#include <string>""", add_once=True)
-
-cxx_class = CxxClass(
-    sim_object._value_dict["cxx_class"],
-    sim_object._value_dict["cxx_template_params"],
-)
-
-# A forward class declaration is sufficient since we are just
-# declaring a pointer.
-cxx_class.declare(code)
-
-for param in params:
-    param.cxx_predecls(code)
-for port in ports.values():
-    port.cxx_predecls(code)
-code()
-
-if sim_object._base:
-    code('#include "params/${{sim_object._base.type}}.hh"', add_once=True)
-    code()
-
-for ptype in ptypes:
-    if issubclass(ptype, Enum):
-        code('#include "enums/${{ptype.__name__}}.hh"', add_once=True)
-        code()
-
-code("namespace gem5")
-code("{")
-code("")
-
-# now generate the actual param struct
-code("struct ${sim_object}Params")
-if sim_object._base:
-    code("    : public ${{sim_object._base.type}}Params")
-code("{")
-if not hasattr(sim_object, "abstract") or not sim_object.abstract:
-    if "type" in sim_object.__dict__:
-        code("    ${{sim_object.cxx_type}} create() const;")
-
-code.indent()
-if sim_object == SimObject:
     code(
-        """
-virtual ~SimObjectParams() = default;
+        """\
+    #ifndef __PARAMS__${sim_object}__
+    #define __PARAMS__${sim_object}__
 
-std::string name;
     """
     )
 
-for param in params:
-    param.cxx_decl(code)
-for port in ports.values():
-    port.cxx_decl(code)
+    # The base SimObject has a couple of params that get
+    # automatically set from Python without being declared through
+    # the normal Param mechanism; we slip them in here (needed
+    # predecls now, actual declarations below)
+    if sim_object == SimObject:
+        code("""#include <string>""", add_once=True)
 
-code.dedent()
-code("};")
-code()
-code("} // namespace gem5")
+    cxx_class = CxxClass(
+        sim_object._value_dict["cxx_class"],
+        sim_object._value_dict["cxx_template_params"],
+    )
 
-code()
-code("#endif // __PARAMS__${sim_object}__")
+    # A forward class declaration is sufficient since we are just
+    # declaring a pointer.
+    cxx_class.declare(code)
 
-code.write(args.param_hh)
+    for param in params:
+        param.cxx_predecls(code)
+    for port in ports.values():
+        port.cxx_predecls(code)
+    code()
+
+    if sim_object._base:
+        code('#include "params/${{sim_object._base.type}}.hh"', add_once=True)
+        code()
+
+    for ptype in ptypes:
+        if issubclass(ptype, Enum):
+            code('#include "enums/${{ptype.__name__}}.hh"', add_once=True)
+            code()
+
+    code("namespace gem5")
+    code("{")
+    code("")
+
+    # now generate the actual param struct
+    code("struct ${sim_object}Params")
+    if sim_object._base:
+        code("    : public ${{sim_object._base.type}}Params")
+    code("{")
+    if not hasattr(sim_object, "abstract") or not sim_object.abstract:
+        if "type" in sim_object.__dict__:
+            code("    ${{sim_object.cxx_type}} create() const;")
+
+    code.indent()
+    if sim_object == SimObject:
+        code(
+            """
+    virtual ~SimObjectParams() = default;
+
+    std::string name;
+        """
+        )
+
+    for param in params:
+        param.cxx_decl(code)
+    for port in ports.values():
+        port.cxx_decl(code)
+
+    code.dedent()
+    code("};")
+    code()
+    code("} // namespace gem5")
+
+    code()
+    code("#endif // __PARAMS__${sim_object}__")
+
+    code.write(param_hh)
+
+
+if __name__ == "__main__":
+    args = parse_args()
+
+    basename = os.path.basename(args.param_hh)
+    sim_object_name = os.path.splitext(basename)[0]
+
+    # Note: Import here to remove dependence if importing from this file
+    import importer
+
+    importer.install()
+    module = importlib.import_module(args.modpath)
+    sim_object = getattr(module, sim_object_name)
+    write_header_file(sim_object, args.param_hh)

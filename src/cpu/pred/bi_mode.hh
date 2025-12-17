@@ -46,7 +46,7 @@
 #define __CPU_PRED_BI_MODE_PRED_HH__
 
 #include "base/sat_counter.hh"
-#include "cpu/pred/bpred_unit.hh"
+#include "cpu/pred/conditional.hh"
 #include "params/BiModeBP.hh"
 
 namespace gem5
@@ -69,7 +69,7 @@ namespace branch_prediction
  * the branch's PC to choose between the two, destructive aliasing is reduced.
  */
 
-class BiModeBP : public BPredUnit
+class BiModeBP : public ConditionalPredictor
 {
   public:
     BiModeBP(const BiModeBPParams &params);

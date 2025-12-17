@@ -275,6 +275,14 @@ class StateMachine(Symbol):
 from m5.params import *
 from m5.SimObject import SimObject
 from m5.objects.Controller import RubyController
+"""
+        )
+
+        if "BasePrefetcher" in python_class_map.values():
+            code("from m5.objects.Prefetcher import BasePrefetcher")
+
+        code(
+            """
 
 class $py_ident(RubyController):
     type = '$py_ident'

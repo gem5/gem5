@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 ARM Limited
+ * Copyright (c) 2018, 2025 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -75,6 +75,11 @@ class Crypto
      */
     static const uint8_t aesFFEXP[256];
 
+    /**
+     * Look up table for SM4E crypto instruction
+     */
+    static const uint8_t sm4Sbox[256];
+
     /** Finite field multiplication of two elements in the field G(256) */
     uint8_t aesFFMul(uint8_t a, uint8_t b);
 
@@ -92,6 +97,12 @@ class Crypto
     uint32_t ror(uint32_t x, uint8_t shift)
     {
         return (x >> shift) | (x << (32 - shift));
+    }
+
+    uint32_t
+    rol(uint32_t x, uint8_t shift)
+    {
+        return (x << shift) | (x >> (32 - shift));
     }
 
     uint32_t choose(uint32_t X, uint32_t Y, uint32_t Z)
@@ -119,6 +130,8 @@ class Crypto
         return ror(X,6) ^ ror(X,11) ^ ror(X,25);
     }
 
+    uint32_t _sm4Sbox(uint32_t input);
+
     void sha256Op(uint32_t *X, uint32_t *Y, uint32_t *Z);
     void sha1Op(uint8_t *output, uint8_t *input, uint8_t *input2, SHAOp op);
     void _sha1Op(uint32_t *X, uint32_t *Y, uint32_t *Z, SHAOp op);
@@ -144,6 +157,9 @@ class Crypto
     void sha1H(uint8_t *output, uint8_t *input);
     void sha1Su0(uint8_t *output, uint8_t *input, uint8_t *input2);
     void sha1Su1(uint8_t *output, uint8_t *input);
+
+    void sm4e(uint32_t *output, uint32_t *input, uint32_t *key);
+    void sm4ekey(uint32_t *output, uint32_t *input, uint32_t *key);
 };
 
 } // namespace ArmISA

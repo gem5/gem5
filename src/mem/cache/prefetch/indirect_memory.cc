@@ -26,10 +26,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
- #include "mem/cache/prefetch/indirect_memory.hh"
+#include "mem/cache/prefetch/indirect_memory.hh"
 
- #include "mem/cache/base.hh"
- #include "params/IndirectMemoryPrefetcher.hh"
+#include "params/IndirectMemoryPrefetcher.hh"
+#include "sim/system.hh"
 
 namespace gem5
 {

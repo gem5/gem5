@@ -1,4 +1,4 @@
-// Copyright (c) 2022 ARM Limited
+// Copyright (c) 2022, 2025 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -48,6 +48,8 @@ namespace Aarch64
         StaticInstPtr decodeSmeOp64(ExtMachInst);
             StaticInstPtr decodeSmeOpFp64(ExtMachInst);
             StaticInstPtr decodeSmeOpInt16(ExtMachInst);
+
+        StaticInstPtr decodeSmeMemMultiContig(ExtMachInst);
 
         StaticInstPtr decodeSmeMovaInsert(ExtMachInst);
         StaticInstPtr decodeSmeMovaExtract(ExtMachInst);
@@ -106,6 +108,12 @@ namespace Aarch64
                 if ((op3 & 0b010) == 0b000) {
                     return decodeSmeOp64(machInst);
                 }
+            }
+        }
+
+        if (op0 == 0b01) {
+            if ((op1 & 0b110000) == 0b000000) {
+                return decodeSmeMemMultiContig(machInst);
             }
         }
 
@@ -734,5 +742,177 @@ namespace Aarch64
 
         return new SmeSt1q<__uint128_t>(machInst, ZAt, Rn, Pg, Rs, Rm, V);
     }
+
+    // C4.1.5.1 SME2 multi-vec contiguous load (scalar plus scalar,
+    // two registers)
+    StaticInstPtr
+    decodeSmeMultiContigLoadSSTwoRegs(ExtMachInst machInst)
+    {
+        RegIndex zt = (RegIndex)((uint8_t) bits(machInst, 4, 1) << 1);
+        RegIndex rn = makeSP((RegIndex) (uint8_t) bits(machInst, 9, 5));
+        RegIndex rm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex png = (RegIndex)(0b1000 + (uint8_t) bits(machInst, 12, 10));
+        uint8_t msz = bits(machInst, 14, 13);
+        uint8_t nt = bits(machInst, 0);
+
+        return decodeSveContigConseLoadSSInsts(
+            msz, machInst, zt, png, rn, rm, 2, nt);
+    }
+
+    // C4.1.5.2 SME2 multi-vec contiguous load (scalar plus scalar,
+    // four registers)
+    StaticInstPtr
+    decodeSmeMultiContigLoadSSFourRegs(ExtMachInst machInst)
+    {
+        if (bits(machInst, 1) != 0) {
+            return new Unknown64(machInst);
+        }
+
+        RegIndex zt = (RegIndex)((uint8_t) bits(machInst, 4, 2) << 2);
+        RegIndex rn = makeSP((RegIndex) (uint8_t) bits(machInst, 9, 5));
+        RegIndex rm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex png = (RegIndex)(0b1000 + (uint8_t) bits(machInst, 12, 10));
+        uint8_t msz = bits(machInst, 14, 13);
+        uint8_t nt = bits(machInst, 0);
+
+        return decodeSveContigConseLoadSSInsts(
+            msz, machInst, zt, png, rn, rm, 4, nt);
+    }
+
+    // C4.1.5.3 SME2 multi-vec contiguous store (scalar plus scalar,
+    // two registers)
+    StaticInstPtr
+    decodeSmeMultiContigStoreSSTwoRegs(ExtMachInst machInst)
+    {
+        RegIndex zt = (RegIndex)((uint8_t) bits(machInst, 4, 1) << 1);
+        RegIndex rn = makeSP((RegIndex) (uint8_t) bits(machInst, 9, 5));
+        RegIndex rm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex png = (RegIndex)(0b1000 + (uint8_t) bits(machInst, 12, 10));
+        uint8_t msz = bits(machInst, 14, 13);
+        uint8_t nt = bits(machInst, 0);
+
+        return decodeSveContigConseStoreSSInsts(
+            msz, machInst, zt, png, rn, rm, 2, nt);
+    }
+
+    // C4.1.5.4 SME2 multi-vec contiguous store (scalar plus scalar,
+    // four registers)
+    StaticInstPtr
+    decodeSmeMultiContigStoreSSFourRegs(ExtMachInst machInst)
+    {
+        if (bits(machInst, 1) != 0) {
+            return new Unknown64(machInst);
+        }
+
+        RegIndex zt = (RegIndex)((uint8_t) bits(machInst, 4, 2) << 2);
+        RegIndex rn = makeSP((RegIndex) (uint8_t) bits(machInst, 9, 5));
+        RegIndex rm = (RegIndex) (uint8_t) bits(machInst, 20, 16);
+        RegIndex png = (RegIndex)(0b1000 + (uint8_t) bits(machInst, 12, 10));
+        uint8_t msz = bits(machInst, 14, 13);
+        uint8_t nt = bits(machInst, 0);
+
+        return decodeSveContigConseStoreSSInsts(
+            msz, machInst, zt, png, rn, rm, 4, nt);
+    }
+
+    // C4.1.5.5 SME2 multi-vec contiguous load (scalar plus immediate,
+    // two registers)
+    StaticInstPtr
+    decodeSmeMultiContigLoadSITwoRegs(ExtMachInst machInst)
+    {
+        RegIndex zt = (RegIndex)((uint8_t) bits(machInst, 4, 1) << 1);
+        RegIndex rn = makeSP((RegIndex) (uint8_t) bits(machInst, 9, 5));
+        uint64_t imm = sext<4>(bits(machInst, 19, 16)) << 1;
+        RegIndex png = (RegIndex)(0b1000 + (uint8_t) bits(machInst, 12, 10));
+        uint8_t msz = bits(machInst, 14, 13);
+        uint8_t nt = bits(machInst, 0);
+
+        return decodeSveContigConseLoadSIInsts(
+            msz, machInst, zt, png, rn, imm, 2, nt);
+    }
+
+    // C4.1.5.6 SME2 multi-vec contiguous load (scalar plus immediate,
+    // four registers)
+    StaticInstPtr
+    decodeSmeMultiContigLoadSIFourRegs(ExtMachInst machInst)
+    {
+        if (bits(machInst, 1) != 0) {
+            return new Unknown64(machInst);
+        }
+
+        RegIndex zt = (RegIndex)((uint8_t) bits(machInst, 4, 1) << 1);
+        RegIndex rn = makeSP((RegIndex) (uint8_t) bits(machInst, 9, 5));
+        uint64_t imm = sext<4>(bits(machInst, 19, 16)) << 2;
+        RegIndex png = (RegIndex)(0b1000 + (uint8_t) bits(machInst, 12, 10));
+        uint8_t msz = bits(machInst, 14, 13);
+        uint8_t nt = bits(machInst, 0);
+
+        return decodeSveContigConseLoadSIInsts(
+            msz, machInst, zt, png, rn, imm, 4, nt);
+    }
+
+    // C4.1.5.7 SME2 multi-vec contiguous store (scalar plus immediate,
+    // two registers)
+    StaticInstPtr
+    decodeSmeMultiContigStoreSITwoRegs(ExtMachInst machInst)
+    {
+        RegIndex zt = (RegIndex)((uint8_t) bits(machInst, 4, 1) << 1);
+        RegIndex rn = makeSP((RegIndex) (uint8_t) bits(machInst, 9, 5));
+        uint64_t imm = sext<4>(bits(machInst, 19, 16)) << 1;
+        RegIndex png = (RegIndex)(0b1000 + (uint8_t) bits(machInst, 12, 10));
+        uint8_t msz = bits(machInst, 14, 13);
+        uint8_t nt = bits(machInst, 0);
+
+        return decodeSveContigConseStoreSIInsts(
+            msz, machInst, zt, png, rn, imm, 2, nt);
+    }
+
+    // C4.1.5.8 SME2 multi-vec contiguous store (scalar plus immediate,
+    // four registers)
+    StaticInstPtr
+    decodeSmeMultiContigStoreSIFourRegs(ExtMachInst machInst)
+    {
+        if (bits(machInst, 1) != 0) {
+            return new Unknown64(machInst);
+        }
+
+        RegIndex zt = (RegIndex)((uint8_t) bits(machInst, 4, 1) << 1);
+        RegIndex rn = makeSP((RegIndex) (uint8_t) bits(machInst, 9, 5));
+        uint64_t imm = sext<4>(bits(machInst, 19, 16)) << 2;
+        RegIndex png = (RegIndex)(0b1000 + (uint8_t) bits(machInst, 12, 10));
+        uint8_t msz = bits(machInst, 14, 13);
+        uint8_t nt = bits(machInst, 0);
+
+        return decodeSveContigConseStoreSIInsts(
+            msz, machInst, zt, png, rn, imm, 4, nt);
+    }
+
+    // C4.1.5 SME2 Multi-vector - Memory (Contiguous)
+    StaticInstPtr
+    decodeSmeMemMultiContig(ExtMachInst machInst)
+    {
+        uint8_t op0_op1 = (bits(machInst, 22, 20) << 1) | bits(machInst, 15);
+
+        switch (op0_op1) {
+          case 0x0: case 0x2:   // op0=00x op1=0
+            return decodeSmeMultiContigLoadSSTwoRegs(machInst);
+          case 0x1: case 0x3:   // op0=00x op1=1
+            return decodeSmeMultiContigLoadSSFourRegs(machInst);
+          case 0x4: case 0x6:   // op0=01x op1=0
+            return decodeSmeMultiContigStoreSSTwoRegs(machInst);
+          case 0x5: case 0x7:   // op0=01x op1=1
+            return decodeSmeMultiContigStoreSSFourRegs(machInst);
+          case 0x8:             // op0=100 op1=0
+            return decodeSmeMultiContigLoadSITwoRegs(machInst);
+          case 0x9:             // op0=100 op1=1
+            return decodeSmeMultiContigLoadSIFourRegs(machInst);
+          case 0xc:             // op0=110 op1=0
+            return decodeSmeMultiContigStoreSITwoRegs(machInst);
+          case 0xd:             // op0=110 op1=1
+            return decodeSmeMultiContigStoreSIFourRegs(machInst);
+        }
+        return new Unknown64(machInst);
+    }
+
 }
 }};

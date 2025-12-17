@@ -35,6 +35,9 @@
 #include "arch/amdgpu/common/dtype/binary32.hh"
 #include "arch/amdgpu/common/dtype/fp16_e5m10.hh"
 #include "arch/amdgpu/common/dtype/fp16_e8m7.hh"
+#include "arch/amdgpu/common/dtype/fp4_e2m1.hh"
+#include "arch/amdgpu/common/dtype/fp6_e2m3.hh"
+#include "arch/amdgpu/common/dtype/fp6_e3m2.hh"
 #include "arch/amdgpu/common/dtype/fp8_e4m3.hh"
 #include "arch/amdgpu/common/dtype/fp8_e5m2.hh"
 

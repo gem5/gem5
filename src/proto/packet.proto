@@ -42,9 +42,9 @@ package ProtoMessage;
 // the trace, the version of this file format, and the tick frequency
 // for all the packet time stamps.
 message PacketHeader {
-  required string obj_id = 1;
+  optional string obj_id = 1;
   optional uint32 ver = 2 [default = 0];
-  required uint64 tick_freq = 3;
+  optional uint64 tick_freq = 3;
 
   // This is supposed to be wire equivalent to the "map" construct supported
   // by the proto3 version of the protobuf description syntax. When that
@@ -68,10 +68,10 @@ message PacketHeader {
 // An optional field for PC of the instruction for which this request is made
 // is provided.
 message Packet {
-  required uint64 tick = 1;
-  required uint32 cmd = 2;
-  required uint64 addr = 3;
-  required uint32 size = 4;
+  optional uint64 tick = 1;
+  optional uint32 cmd = 2;
+  optional uint64 addr = 3;
+  optional uint32 size = 4;
   optional uint32 flags = 5;
   optional uint64 pkt_id = 6;
   optional uint64 pc = 7;
