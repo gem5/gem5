@@ -59,6 +59,7 @@ from testlib.fixture import Fixture
 from testlib.helper import (
     absdirpath,
     cacheresult,
+    gcov_delete_files,
     joinpath,
     log_call,
 )
@@ -237,6 +238,17 @@ class SConsFixture(UniqueFixture):
         command.extend(self.targets)
         log_call(log.test_log, command, time=None, stderr=sys.stderr)
 
+        # Remove gcda files that are created during the build process, as they
+        # cause problems when running gcov after the tests finish.
+        # Similarly, remove gcno files for Python files as they also cause
+        # problems when running gcov.
+        log.test_log.message(
+            "Now removing gcda and .py.gcno files generated during the build "
+            "process..."
+        )
+        if config.gcov:
+            gcov_delete_files(self.target_dir, "all")
+
 
 class Gem5Fixture(SConsFixture):
     def __new__(cls, isa, variant, protocol=None):
@@ -254,6 +266,8 @@ class Gem5Fixture(SConsFixture):
         self.targets = [self.target]
         self.path = self.target
         self.directory = config.base_dir
+
+        self.gcov = config.gcov
 
         self.isa = isa
         self.protocol = protocol
