@@ -376,7 +376,6 @@ if __name__ == "__main__":
         # Run git-clang-format in 'CI' context
         command = [
             "git-clang-format",
-            "--quiet",
             "--style=file",
             f"--commit={ci_pr_base_commit}",
         ]

@@ -50,7 +50,7 @@ jobs:
 
             - name: Run clang-format check
               run: |
-                  python util/run-git-clang-format.py --ci-pr-base-commit ${{ steps.get-base-commit.outputs.base_commit }}
+                  python util/run-git-clang-format.py --verbose --ci-pr-base-commit ${{ steps.get-base-commit.outputs.base_commit }}
                   if [ $? -ne 0 ]; then
                     echo "::error::Code formatting issues detected! Please run clang-format on your changes."
                     exit 1
