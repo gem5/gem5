@@ -34,6 +34,11 @@ This release consists of 649 commits git commits contributed to gem5 via 291 mer
 * **Distributed instruction/issue queue.**  The O3 CPU can now be configured with multiple instruction‑queue units; a new `IQUnit` SimObject allows the front end to dispatch micro‑ops into several independent queues tied to specific functional‑unit pools.
   This enables more realistic modelling of modern out‑of‑order processors ([#2652](https://github.com/gem5/gem5/pull/2652)).
 
+* **Enable non-serializing behaviour for O3CPU MiscRegClass registers.**  We traditionally enforce System register read/writes consistency by marking writes as IsNonSpeculative && IsSerializeAfter.
+ While this could make sense for particular system registers with side effects, some registers can be safely updated speculatively.
+ Imposing a serializing behaviour for every misc reg read/write is a big performance penalty especially for cores with a big instruction window.
+ Being able to read and write without serializing behaviour means allowing the CPU to recognise producer-consumer dependencies between system register writes/reads. The PR allows some MiscRegs to be tagged as non-serializing. ([#2700](https://github.com/gem5/gem5/pull/2700))
+
 * **Improved Arm table‑walk machinery.**  The Arm page‑table walker has been reworked so that the number of outstanding walks is configurable and no longer limited to one therefore theoretically increasing MLP.
   Existing table walkers have been renamed as `ArmWalkUnit` objects, and the new `ArmTableWalker` orchestrates the formers. For example:
 
