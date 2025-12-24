@@ -268,6 +268,7 @@ class Gem5Fixture(SConsFixture):
         self.directory = config.base_dir
 
         self.gcov = config.gcov
+        self.test_threads = config.test_threads
 
         self.isa = isa
         self.protocol = protocol

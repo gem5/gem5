@@ -187,6 +187,7 @@ def _create_test_run_gem5(config, config_args, gem5_args):
         gcov = gem5_fixture.gcov
         gem5_build_target_dir = gem5_fixture.target_dir
         gem5_base_dir = gem5_fixture.directory
+        test_threads = gem5_fixture.test_threads
 
         if gcov == "ind-test-and-gcov":
             params.log.message(
@@ -213,7 +214,6 @@ def _create_test_run_gem5(config, config_args, gem5_args):
             stdout=sys.stdout,
             stderr=sys.stderr,
         )
-
         # run gcovr to get coverage metrics for each individual test
         if gcov == "ind-test-and-gcov":
             params.log.message(
@@ -240,6 +240,8 @@ def _create_test_run_gem5(config, config_args, gem5_args):
                 "--json-summary",
                 os.path.join(tempdir, "gcov-summary.json"),
                 "--json-summary-pretty",
+                "-j",
+                test_threads,
             ]
             log_call(
                 params.log,

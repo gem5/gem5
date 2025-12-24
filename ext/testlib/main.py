@@ -317,8 +317,19 @@ def run_schedule(test_schedule, log_handler):
 
     # Build global fixtures and exectute scheduled test suites.
     if configuration.config.test_threads > 1:
-        library_runner = runner.LibraryParallelRunner(test_schedule)
-        library_runner.set_threads(configuration.config.test_threads)
+        if configuration.config.gcov == "ind-test-and-gcov":
+            log.test_log.message(
+                "WARNING: When running with --gcov=ind-test-and-gcov, tests "
+                "will not be run in parallel, as running multiple tests at "
+                "once will cause their coverage results to become mixed "
+                "together. "
+                "Instead, the value passed into --test-threads will be used "
+                "in the gcovr command."
+            )
+            library_runner = runner.LibraryRunner(test_schedule)
+        else:
+            library_runner = runner.LibraryParallelRunner(test_schedule)
+            library_runner.set_threads(configuration.config.test_threads)
     else:
         library_runner = runner.LibraryRunner(test_schedule)
     library_runner.run()
