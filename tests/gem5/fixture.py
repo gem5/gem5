@@ -250,7 +250,7 @@ class SConsFixture(UniqueFixture):
         # problems when running gcov.
         log.test_log.message(
             "Now removing gcda and .py.gcno files generated during the build "
-            "process..."
+            f"process. In the directory {self.target_dir}."
         )
         if config.gcov:
             gcov_delete_files(self.target_dir, "all")

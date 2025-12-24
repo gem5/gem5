@@ -192,7 +192,8 @@ def _create_test_run_gem5(config, config_args, gem5_args):
         if gcov == "ind-test-and-gcov":
             params.log.message(
                 "Now cleaning up gcda and .py.gcno files from previous runs "
-                "or build process..."
+                "or the build process. In the directory "
+                f"{gem5_build_target_dir}."
             )
             gcov_delete_files(gem5_build_target_dir, "all")
 
@@ -218,7 +219,8 @@ def _create_test_run_gem5(config, config_args, gem5_args):
         if gcov == "ind-test-and-gcov":
             params.log.message(
                 "Now removing .py.gcno and .py.gcda files after running tests"
-                ", but before running gcovr"
+                ", but before running gcovr. In the directory "
+                f"{gem5_build_target_dir}."
             )
             gcov_delete_files(gem5_build_target_dir, "py")
 
