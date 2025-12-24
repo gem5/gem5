@@ -159,6 +159,12 @@ class SConsFixture(UniqueFixture):
 
     def _setup(self, testitem):
         if config.skip_build:
+            if config.gcov:
+                log.test_log.message(
+                    "Now removing gcda and .py.gcno files in the directory "
+                    f"{self.target_dir}"
+                )
+                gcov_delete_files(self.target_dir, "all")
             return
 
         if not self.targets:
