@@ -229,7 +229,7 @@ let {{
                         matcher.sub(src2_name, cond_control_flag_init),
                         matcher.sub(src2_name, invalidate_srcs),
                         op_class, operand_types)
-                imm_name = '(int8_t)imm8' if match.group("prefix") else 'imm8'
+                imm_name = '(int64_t)imm64' if match.group("prefix") else 'imm64'
                 self.buildCppClasses(name + "i", Name, suffix + "Imm",
                         matcher.sub(imm_name, code),
                         matcher.sub(imm_name, big_code),
