@@ -236,6 +236,7 @@ def _create_test_run_gem5(config, config_args, gem5_args):
                 "--object-directory",
                 gem5_build_target_dir,
                 "--gcov-ignore-parse-errors=suspicious_hits.warn",
+                "--gcov-ignore-parse-errors=negative_hits.warn",
                 "--json",
                 os.path.join(tempdir, "gcov-results.json"),
                 "--json-pretty",
