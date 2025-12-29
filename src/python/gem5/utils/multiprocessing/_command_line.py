@@ -67,6 +67,11 @@ def _gem5_args_for_multiprocessing(name):
     # --allow-remote-connections, --listener-mode, --dump-config, --json-config
     # --dot-config, --dot-dvfs-config, --debug-file, --remote-gdb-port, -c
 
+    stats_files = options.stats_file or ["stats.txt"]
+    # The stats option supports multiple visitors; forward each one explicitly.
+    if isinstance(stats_files, str):
+        stats_files = [stats_files]
+
     arguments = [
         # Keep the original outdir. This will be overridden by multisim
         f"--outdir={options.outdir}",
@@ -75,9 +80,9 @@ def _gem5_args_for_multiprocessing(name):
         f"--stdout-file={name}_{options.stdout_file}",
         f"--stderr-file={name}_{options.stderr_file}",
     ]
-    # Keep the stats files names. They will be in the new outdir
-    for filepath in options.stats_file:
-        arguments.append(f"--stats-file={filepath}")
+    # Keep the stats file names. They will be in the new outdir.
+    for stats_file in stats_files:
+        arguments.append(f"--stats-file={stats_file}")
     if options.redirect_stdout:
         arguments.append("--redirect-stdout")
     if options.redirect_stderr:
