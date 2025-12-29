@@ -98,7 +98,7 @@ class TempdirFixture(Fixture):
         shutil.copytree(self.path, testing_result_folder)
 
     def teardown(self, testitem):
-        if testitem.result == Result.Passed:
+        if str(testitem.result) == "Passed":
             shutil.rmtree(self.path)
 
 
