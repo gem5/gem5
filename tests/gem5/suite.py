@@ -246,6 +246,21 @@ def _create_test_run_gem5(config, config_args, gem5_args):
                 "-j",
                 test_threads,
             ]
+
+            # Prevent gcovr from looking at builds other than the one used by
+            # the current test. E.g. If the current test uses `build/ALL`, but
+            # NULL is also in the `build` directory, then `build/NULL` will be
+            # excluded. This prevents errors when running gcovr.
+            curr_build_isas = os.listdir(
+                os.path.dirname(gem5_build_target_dir)
+            )
+            for isa in curr_build_isas:
+                if isa != gem5_fixture.isa:
+                    command.append("--gcov-exclude-directory")
+                    command.append(
+                        f'"{os.path.dirname(gem5_build_target_dir)}/{isa}$"'
+                    )
+
             log_call(
                 params.log,
                 command,
