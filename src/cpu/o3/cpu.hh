@@ -298,9 +298,6 @@ class CPU : public BaseCPU
     /** Sets the enableShrewd flag in the instruction queue. */
     void setEnableShrewd(bool enable) { iew.getInstQueue()->setEnableShrewd(enable); }
 
-    /** Sets the priorityToShadow flag in the instruction queue. */
-    void setPriorityToShadow(bool enable) { iew.getInstQueue()->setPriorityToShadow(enable); }
-
     /** Register accessors.  Index refers to the physical register index. */
 
     /** Reads a miscellaneous register. */

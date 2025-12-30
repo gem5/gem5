@@ -182,6 +182,12 @@ class FUPool : public SimObject
     /** Frees a FU at the end of this cycle. */
     void freeUnitNextCycle(int fu_idx);
 
+    /** Frees a FU immediately (same cycle). */
+    void freeUnitImmediately(int fu_idx);
+
+    /** Counts free FUs for a given capability. */
+    int countFreeUnits(OpClass capability);
+
     /** Frees all FUs on the list. */
     void processFreeUnits();
 

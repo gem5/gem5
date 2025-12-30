@@ -42,6 +42,7 @@
 #include "cpu/o3/inst_queue.hh"
 
 #include <limits>
+#include <set>
 #include <vector>
 
 #include "base/logging.hh"
@@ -92,11 +93,10 @@ InstructionQueue::InstructionQueue(CPU *cpu_ptr, IEW *iew_ptr,
       fuPool(params.fuPool),
       iqPolicy(params.smtIQPolicy),
       numThreads(params.numThreads),
+      enableShrewd(params.enableShrewd),
       numEntries(params.numIQEntries),
       totalWidth(params.issueWidth),
       commitToIEWDelay(params.commitToIEWDelay),
-      enableShrewd(params.enableShrewd),
-      priorityToShadow(params.priorityToShadow),
       iqStats(cpu, totalWidth),
       iqIOStats(cpu)
 {
@@ -405,7 +405,29 @@ InstructionQueue::IQIOStats::IQIOStats(statistics::Group *parent)
     ADD_STAT(ShadowIsSameFU, statistics::units::Count::get(),
              "Did shadow acquire the same FU."),
     ADD_STAT(ShadowIsNotSameFU, statistics::units::Count::get(),
-             "Did shadow not acquire the same FU.")
+             "Did shadow not acquire the same FU."),
+    ADD_STAT(protectedStalled, statistics::units::Count::get(),
+             "Number of protected instructions stalled waiting for shadow FU"),
+    ADD_STAT(protectedStalledIssued, statistics::units::Count::get(),
+             "Number of stalled protected instructions that were eventually issued"),
+    ADD_STAT(protectedStallCycles, statistics::units::Cycle::get(),
+             "Total cycles protected instructions spent in stall queue"),
+    ADD_STAT(avgProtectedStallCycles, statistics::units::Rate<statistics::units::Cycle, statistics::units::Count>::get(),
+             "Average cycles protected instructions spent in stall queue"),
+    ADD_STAT(protectedForcedIssueNoShadow, statistics::units::Count::get(),
+             "Number of protected instructions force-issued without shadow after max stall"),
+    ADD_STAT(fuReserved, statistics::units::Count::get(),
+             "Number of FUs reserved in reservation stage"),
+    ADD_STAT(fuReservedProtected, statistics::units::Count::get(),
+             "Number of FUs reserved for protected instructions"),
+    ADD_STAT(fuCommitted, statistics::units::Count::get(),
+             "Number of FUs committed (instruction issued)"),
+    ADD_STAT(fuCommittedProtected, statistics::units::Count::get(),
+             "Number of FUs committed for protected instructions"),
+    ADD_STAT(fuCommittedWithShadow, statistics::units::Count::get(),
+             "Number of protected instructions committed with shadow FU"),
+    ADD_STAT(fuDeallocatedNoShadow, statistics::units::Count::get(),
+             "Number of FUs deallocated because shadow was not available")
 {
     using namespace statistics;
     intInstQueueReads
@@ -443,6 +465,8 @@ InstructionQueue::IQIOStats::IQIOStats(statistics::Group *parent)
 
     vecAluAccesses
         .flags(total);
+
+    avgProtectedStallCycles = protectedStallCycles / protectedStalledIssued;
 }
 
 void
@@ -481,6 +505,7 @@ InstructionQueue::resetState()
     deferredMemInsts.clear();
     blockedMemInsts.clear();
     retryMemInsts.clear();
+    stalledProtectedInsts.clear();
     wbOutstanding = 0;
 }
 
@@ -820,30 +845,41 @@ InstructionQueue::scheduleReadyInsts()
         addReadyMemInst(mem_inst);
     }
 
-    // Have iterator to head of the list
-    // While I haven't exceeded bandwidth or reached the end of the list,
-    // Try to get a FU that can do what this op needs.
-    // If successful, change the oldestInst to the new top of the list, put
-    // the queue in the proper place in the list.
-    // Increment the iterator.
-    // This will avoid trying to schedule a certain op class if there are no
-    // FUs that handle it.
-    int total_issued = 0;
-    ListOrderIt order_it = listOrder.begin();
-    ListOrderIt order_end_it = listOrder.end();
+    
+    // Priority allocation: stalled instructions get first chance at FU pairs
+    if (enableShrewd) {
+        processStallQueue();
+    }
 
-    // Structure to track issued instructions for delayed shadow requests
-    struct IssuedInstInfo {
+    // ==== PHASE 1: RESERVATION - Collect all instructions that can get primary FUs ====
+    // Structure to track reserved instructions
+    struct ReservedInstInfo {
         DynInstPtr inst;
-        int idx;
+        int idx;                    // Primary FU index
         OpClass op_class;
         Cycles op_latency;
         ThreadID tid;
+        ListOrderIt order_it;       // Iterator for cleanup
+        bool needs_shadow;          // True if protected instruction needs shadow
     };
-    std::vector<IssuedInstInfo> issued_inst_protected;
+    std::vector<ReservedInstInfo> reserved_insts;
 
-    while (total_issued < totalWidth && order_it != order_end_it) {
+    int total_reserved = 0;
+    ListOrderIt order_it = listOrder.begin();
+    ListOrderIt order_end_it = listOrder.end();
+
+    // Track OpClasses that have stalled a protected instruction this cycle
+    std::set<OpClass> stalledOpClasses;
+
+    // RESERVATION PASS: Allocate primary FUs for all ready instructions
+    while (total_reserved < (int)totalWidth && order_it != order_end_it) {
         OpClass op_class = (*order_it).queueType;
+
+        // Skip if we've already stalled a protected instruction from this OpClass
+        if (stalledOpClasses.count(op_class)) {
+            ++order_it;
+            continue;
+        }
 
         assert(!readyInsts[op_class].empty());
 
@@ -859,6 +895,7 @@ InstructionQueue::scheduleReadyInsts()
 
         assert(issuing_inst->seqNum == (*order_it).oldestInst);
 
+        // Handle squashed instructions
         if (issuing_inst->isSquashed()) {
             readyInsts[op_class].pop();
 
@@ -876,6 +913,7 @@ InstructionQueue::scheduleReadyInsts()
             continue;
         }
 
+        // Try to allocate primary FU
         int idx = FUPool::NoNeedFU;
         Cycles op_latency = Cycles(1);
         ThreadID tid = issuing_inst->threadNumber;
@@ -894,131 +932,30 @@ InstructionQueue::scheduleReadyInsts()
             }
         }
 
-        int idx_shadow = FUPool::NoNeedFU;
-        bool has_shadow = false;
-        OpClass shadow_op_class = op_class;
-        if(enableShrewd && priorityToShadow && issuing_inst->protected_){
-        // Ask for shadow unit to check the result.
-        requestShadow(idx, idx_shadow, op_class, shadow_op_class, has_shadow, op_latency);
-        }
-        // If we have an instruction that doesn't require a FU, or a
-        // valid FU, then schedule for execution.
+        // If we got a primary FU (or don't need one), add to reserved list
         if (idx > FUPool::NoFreeFU || idx == FUPool::NoNeedFU || idx == FUPool::NoCapableFU) {
-            if (op_latency == Cycles(1)) {
-                i2e_info->size++;
-                instsToExecute.push_back(issuing_inst);
+            ReservedInstInfo info;
+            info.inst = issuing_inst;
+            info.idx = idx;
+            info.op_class = op_class;
+            info.op_latency = op_latency;
+            info.tid = tid;
+            info.order_it = order_it;
+            info.needs_shadow = (enableShrewd && issuing_inst->protected_);
+            reserved_insts.push_back(info);
+            ++total_reserved;
 
-                // Add the FU onto the list of FU's to be freed next
-                // cycle if we used one.
-                if (idx >= 0)
-                {
-                    fuPool->freeUnitNextCycle(idx);
-
-                    if (has_shadow)
-                        fuPool->freeUnitNextCycle(idx_shadow);
-                }
-
-                // CPU has no capable FU for the instruction
-                // but this may be OK if the instruction gets
-                // squashed. Remember this and give IEW
-                // the opportunity to trigger a fault
-                // if the instruction is unsupported.
-                // Otherwise, commit will panic.
-                if (idx == FUPool::NoCapableFU)
-                  issuing_inst->setNoCapableFU();
-            } else {
-                assert(idx != FUPool::NoCapableFU);
-                bool pipelined = fuPool->isPipelined(op_class);
-                // Generate completion event for the FU
-                ++wbOutstanding;
-                FUCompletion *execution = new FUCompletion(issuing_inst, idx, this);
-
-                cpu->schedule(execution, cpu->clockEdge(Cycles(op_latency - 1)));
-
-                if (!pipelined) {
-                    // If FU isn't pipelined, then it must be freed
-                    // upon the execution completing.
-                    execution->setFreeFU();
-                } else {
-                    // Add the FU onto the list of FU's to be freed next cycle.
-                    fuPool->freeUnitNextCycle(idx);
-                }
-
-                if (has_shadow)
-                {
-                    ++wbOutstanding;
-                    bool shadow_pipelined = fuPool->isPipelined(shadow_op_class);
-                    FUCompletion *execution_shadow = new FUCompletion(NULL, idx_shadow, this);
-
-                    cpu->schedule(execution_shadow, cpu->clockEdge(Cycles(op_latency - 1)));
-
-                    if (!shadow_pipelined) {
-                        // If FU isn't pipelined, then it must be freed
-                        // upon the execution completing.
-                        execution_shadow->setFreeFU();
-                    } else {
-                        // Add the FU onto the list of FU's to be freed next cycle.
-                        fuPool->freeUnitNextCycle(idx_shadow);
-                    }
+            // Track reservation stats
+            if (idx > FUPool::NoFreeFU) {
+                iqIOStats.fuReserved++;
+                if (issuing_inst->protected_) {
+                    iqIOStats.fuReservedProtected++;
                 }
             }
 
-            // Track issued instructions for delayed shadow processing, only ones protected are added
-            if (enableShrewd && !priorityToShadow && issuing_inst->protected_) {
-                IssuedInstInfo info;
-                info.inst = issuing_inst;
-                info.idx = idx;
-                info.op_class = op_class;
-                info.op_latency = op_latency;
-                info.tid = tid;
-                issued_inst_protected.push_back(info);
-            }
-
-            DPRINTF(IQ, "Thread %i: Issuing instruction PC %s "
-                    "[sn:%llu]\n",
-                    tid, issuing_inst->pcState(),
-                    issuing_inst->seqNum);
-
-            readyInsts[op_class].pop();
-
-            if (!readyInsts[op_class].empty()) {
-                moveToYoungerInst(order_it);
-            } else {
-                readyIt[op_class] = listOrder.end();
-                queueOnList[op_class] = false;
-            }
-
-            issuing_inst->setIssued();
-            ++total_issued;
-
-#if TRACING_ON
-            issuing_inst->issueTick = curTick() - issuing_inst->fetchTick;
-#endif
-            if (issuing_inst->fetchCycle != Cycles(-1)) {
-                issuing_inst->issueCycle = Cycles(cpu->baseStats.numCycles.value()) - issuing_inst->fetchCycle;
-            }
-            // Update IEW stats for average issue latency (ready to issue)
-            if (issuing_inst->readyCycle != Cycles(-1)) {
-                Cycles ready_to_issue_latency = Cycles(cpu->baseStats.numCycles.value()) - issuing_inst->readyCycle;
-                iewStage->updateIssueLatencyStats(ready_to_issue_latency);
-            }
-
-            if (issuing_inst->firstIssue == -1)
-                issuing_inst->firstIssue = curTick();
-
-            if (!issuing_inst->isMemRef()) {
-                // Memory instructions can not be freed from the IQ until they
-                // complete.
-                ++freeEntries;
-                count[tid]--;
-                issuing_inst->clearInIQ();
-            } else {
-                memDepUnit[tid].issue(issuing_inst);
-            }
-
-            listOrder.erase(order_it++);
-            iqStats.statIssuedInstType[tid][op_class]++;
+            ++order_it;
         } else {
+            // No free FU
             assert(idx == FUPool::NoFreeFU);
             iqStats.statFuBusy[op_class]++;
             iqStats.fuBusy[tid]++;
@@ -1026,43 +963,163 @@ InstructionQueue::scheduleReadyInsts()
         }
     }
 
-    // Process shadow requests for issued instructions when priorityToShadow is false
-    if (enableShrewd && !priorityToShadow) {
-        for (auto &info : issued_inst_protected) {
-            int idx_shadow = FUPool::NoNeedFU;
-            bool has_shadow = false;
-            OpClass shadow_op_class = info.op_class;
-            Cycles shadow_op_latency = info.op_latency;
-            
-            // Request shadow for this issued instruction
-            requestShadow(info.idx, idx_shadow, info.op_class, shadow_op_class, has_shadow, shadow_op_latency);
-            
-            if (has_shadow) {
-                // Schedule the shadow execution
-                if (shadow_op_latency == Cycles(1)) {
-                    // Single-cycle shadow operation - only free if valid FU index
-                    if (idx_shadow >= 0) {
-                        fuPool->freeUnitNextCycle(idx_shadow);
-                    }
-                } else {
-                    // Multi-cycle shadow operation
-                    ++wbOutstanding;
-                    bool shadow_pipelined = fuPool->isPipelined(shadow_op_class);
-                    FUCompletion *execution_shadow = new FUCompletion(NULL, idx_shadow, this);
-                    
-                    cpu->schedule(execution_shadow, cpu->clockEdge(Cycles(shadow_op_latency - 1)));
-                    
-                    if (!shadow_pipelined) {
-                        // If FU isn't pipelined, then it must be freed
-                        // upon the execution completing.
-                        execution_shadow->setFreeFU();
+    // ==== PHASE 2: SHADOW - For protected instructions, try to get shadow FUs ====
+    // Process in order, stalling those that can't get shadows
+    int total_issued = 0;
+    for (auto &info : reserved_insts) {
+        DynInstPtr issuing_inst = info.inst;
+        int idx = info.idx;
+        OpClass op_class = info.op_class;
+        Cycles op_latency = info.op_latency;
+        ThreadID tid = info.tid;
+
+        int idx_shadow = FUPool::NoNeedFU;
+        bool has_shadow = false;
+        OpClass shadow_op_class = op_class;
+
+        if (info.needs_shadow && idx != FUPool::NoNeedFU && idx != FUPool::NoCapableFU) {
+            // Try to get shadow FU
+            requestShadow(idx, idx_shadow, op_class, shadow_op_class, has_shadow, op_latency);
+
+            if (!has_shadow) {
+                // No shadow available - STALL this instruction
+                // Free the primary FU we reserved
+                if (idx >= 0) {
+                    fuPool->freeUnitImmediately(idx);
+                    iqIOStats.fuDeallocatedNoShadow++;
+                }
+
+                // Add to stall queue if not full
+                if (stalledProtectedInsts.size() < StalledProtectedInst::MAX_STALLED_QUEUE) {
+                    StalledProtectedInst stalled;
+                    stalled.inst = issuing_inst;
+                    stalled.op_class = op_class;
+                    stalled.op_latency = op_latency;
+                    stalled.tid = tid;
+                    stalled.stallAge = 0;
+                    stalledProtectedInsts.push_back(stalled);
+                    iqIOStats.protectedStalled++;
+
+                    DPRINTF(IQ, "Thread %i: Stalling protected instruction PC %s "
+                            "[sn:%llu] - no shadow FU available\n",
+                            tid, issuing_inst->pcState(),
+                            issuing_inst->seqNum);
+
+                    // Pop from readyInsts and update listOrder
+                    readyInsts[op_class].pop();
+
+                    if (!readyInsts[op_class].empty()) {
+                        moveToYoungerInst(info.order_it);
                     } else {
-                        // Add the FU onto the list of FU's to be freed next cycle.
-                        fuPool->freeUnitNextCycle(idx_shadow);
+                        readyIt[op_class] = listOrder.end();
+                        queueOnList[op_class] = false;
                     }
+
+                    listOrder.erase(info.order_it);
+                }
+                // Mark this OpClass as stalled
+                stalledOpClasses.insert(op_class);
+                continue;  // Skip to next instruction
+            }
+
+            // Add extra latency cycle for protected instruction with shadow
+            op_latency = op_latency + Cycles(1);
+        }
+
+        // ==== PHASE 3: COMMIT - Issue the instruction ====
+        if (op_latency == Cycles(1)) {
+            i2e_info->size++;
+            instsToExecute.push_back(issuing_inst);
+
+            // Add the FU onto the list of FU's to be freed next cycle
+            if (idx >= 0) {
+                fuPool->freeUnitNextCycle(idx);
+
+                if (has_shadow)
+                    fuPool->freeUnitNextCycle(idx_shadow);
+            }
+
+            if (idx == FUPool::NoCapableFU)
+                issuing_inst->setNoCapableFU();
+        } else {
+            assert(idx != FUPool::NoCapableFU);
+            bool pipelined = fuPool->isPipelined(op_class);
+            ++wbOutstanding;
+            FUCompletion *execution = new FUCompletion(issuing_inst, idx, this);
+
+            cpu->schedule(execution, cpu->clockEdge(Cycles(op_latency - 1)));
+
+            if (!pipelined) {
+                execution->setFreeFU();
+            } else {
+                fuPool->freeUnitNextCycle(idx);
+            }
+
+            if (has_shadow) {
+                ++wbOutstanding;
+                bool shadow_pipelined = fuPool->isPipelined(shadow_op_class);
+                FUCompletion *execution_shadow = new FUCompletion(NULL, idx_shadow, this);
+
+                cpu->schedule(execution_shadow, cpu->clockEdge(Cycles(op_latency - 1)));
+
+                if (!shadow_pipelined) {
+                    execution_shadow->setFreeFU();
+                } else {
+                    fuPool->freeUnitNextCycle(idx_shadow);
                 }
             }
         }
+
+        DPRINTF(IQ, "Thread %i: Issuing instruction PC %s "
+                "[sn:%llu]\n",
+                tid, issuing_inst->pcState(),
+                issuing_inst->seqNum);
+
+        readyInsts[op_class].pop();
+
+        if (!readyInsts[op_class].empty()) {
+            moveToYoungerInst(info.order_it);
+        } else {
+            readyIt[op_class] = listOrder.end();
+            queueOnList[op_class] = false;
+        }
+
+        issuing_inst->setIssued();
+        ++total_issued;
+
+        // Track commit stats
+        iqIOStats.fuCommitted++;
+        if (issuing_inst->protected_) {
+            iqIOStats.fuCommittedProtected++;
+            if (has_shadow) {
+                iqIOStats.fuCommittedWithShadow++;
+            }
+        }
+
+#if TRACING_ON
+        issuing_inst->issueTick = curTick() - issuing_inst->fetchTick;
+#endif
+        if (issuing_inst->fetchCycle != Cycles(-1)) {
+            issuing_inst->issueCycle = Cycles(cpu->baseStats.numCycles.value()) - issuing_inst->fetchCycle;
+        }
+        if (issuing_inst->readyCycle != Cycles(-1)) {
+            Cycles ready_to_issue_latency = Cycles(cpu->baseStats.numCycles.value()) - issuing_inst->readyCycle;
+            iewStage->updateIssueLatencyStats(ready_to_issue_latency);
+        }
+
+        if (issuing_inst->firstIssue == -1)
+            issuing_inst->firstIssue = curTick();
+
+        if (!issuing_inst->isMemRef()) {
+            ++freeEntries;
+            count[tid]--;
+            issuing_inst->clearInIQ();
+        } else {
+            memDepUnit[tid].issue(issuing_inst);
+        }
+
+        listOrder.erase(info.order_it);
+        iqStats.statIssuedInstType[tid][op_class]++;
     }
 
     iqStats.numIssuedDist.sample(total_issued);
@@ -1076,6 +1133,209 @@ InstructionQueue::scheduleReadyInsts()
         cpu->activityThisCycle();
     } else {
         DPRINTF(IQ, "Not able to schedule any instructions.\n");
+    }
+}
+
+void
+InstructionQueue::processStallQueue()
+{
+    // Process stalled protected instructions at the start of each cycle
+    // These get priority for atomic FU pair allocation
+
+    if (stalledProtectedInsts.empty()) {
+        return;
+    }
+
+    IssueStruct *i2e_info = issueToExecuteQueue->access(0);
+
+    auto stall_it = stalledProtectedInsts.begin();
+    while (stall_it != stalledProtectedInsts.end()) {
+        StalledProtectedInst &stalled = *stall_it;
+        DynInstPtr inst = stalled.inst;
+
+        // Check if instruction was squashed while stalled
+        if (inst->isSquashed()) {
+            DPRINTF(IQ, "Removing squashed stalled instruction [sn:%llu]\n",
+                    inst->seqNum);
+            stall_it = stalledProtectedInsts.erase(stall_it);
+            continue;
+        }
+
+        // Increment stall age
+        stalled.stallAge++;
+
+        // Check if max stall cycles exceeded - force issue without shadow
+        if (stalled.stallAge >= StalledProtectedInst::MAX_STALL_CYCLES) {
+            DPRINTF(IQ, "Force issuing stalled protected instruction [sn:%llu] "
+                    "after %d cycles without shadow\n",
+                    inst->seqNum, stalled.stallAge);
+
+            // Try to get primary FU
+            int idx = fuPool->getUnit(stalled.op_class, false, stalled.op_class);
+
+            if (idx > FUPool::NoFreeFU || idx == FUPool::NoNeedFU) {
+                // Issue without shadow
+                Cycles op_latency = (idx > FUPool::NoFreeFU) ?
+                    fuPool->getOpLatency(stalled.op_class) : Cycles(1);
+
+                if (op_latency == Cycles(1)) {
+                    i2e_info->size++;
+                    instsToExecute.push_back(inst);
+                    if (idx >= 0) {
+                        fuPool->freeUnitNextCycle(idx);
+                    }
+                } else {
+                    bool pipelined = fuPool->isPipelined(stalled.op_class);
+                    ++wbOutstanding;
+                    FUCompletion *execution = new FUCompletion(inst, idx, this);
+                    cpu->schedule(execution, cpu->clockEdge(Cycles(op_latency - 1)));
+                    if (!pipelined) {
+                        execution->setFreeFU();
+                    } else {
+                        fuPool->freeUnitNextCycle(idx);
+                    }
+                }
+
+                inst->setIssued();
+#if TRACING_ON
+                inst->issueTick = curTick() - inst->fetchTick;
+#endif
+                if (inst->fetchCycle != Cycles(-1)) {
+                    inst->issueCycle = Cycles(cpu->baseStats.numCycles.value()) - inst->fetchCycle;
+                }
+                if (inst->readyCycle != Cycles(-1)) {
+                    Cycles ready_to_issue_latency = Cycles(cpu->baseStats.numCycles.value()) - inst->readyCycle;
+                    iewStage->updateIssueLatencyStats(ready_to_issue_latency);
+                }
+                if (inst->firstIssue == -1) {
+                    inst->firstIssue = curTick();
+                }
+
+                if (!inst->isMemRef()) {
+                    ++freeEntries;
+                    count[stalled.tid]--;
+                    inst->clearInIQ();
+                } else {
+                    memDepUnit[stalled.tid].issue(inst);
+                }
+
+                iqStats.instsIssued++;
+                iqStats.statIssuedInstType[stalled.tid][stalled.op_class]++;
+                iqIOStats.protectedForcedIssueNoShadow++;
+                iqIOStats.protectedStalledIssued++;
+                iqIOStats.protectedStallCycles += stalled.stallAge;
+                iqIOStats.fuCommitted++;
+                iqIOStats.fuCommittedProtected++;
+
+                stall_it = stalledProtectedInsts.erase(stall_it);
+                continue;
+            } else {
+                // Still can't get primary FU, keep waiting
+                ++stall_it;
+                continue;
+            }
+        }
+
+        // Try atomic pair allocation: need 2 free FUs for the same OpClass
+        int freeCount = fuPool->countFreeUnits(stalled.op_class);
+        if (freeCount >= 2) {
+            // Allocate primary FU
+            int idx = fuPool->getUnit(stalled.op_class, false, stalled.op_class);
+
+            if (idx > FUPool::NoFreeFU) {
+                // Allocate shadow FU
+                int idx_shadow = FUPool::NoNeedFU;
+                bool has_shadow = false;
+                OpClass shadow_op_class = stalled.op_class;
+                Cycles op_latency = fuPool->getOpLatency(stalled.op_class);
+
+                requestShadow(idx, idx_shadow, stalled.op_class, shadow_op_class, has_shadow, op_latency);
+
+                if (has_shadow) {
+                    // Add extra latency cycle for protected instruction with shadow
+                    op_latency = op_latency + Cycles(1);
+
+                    // Success! Issue the instruction with shadow
+                    DPRINTF(IQ, "Issuing stalled protected instruction [sn:%llu] "
+                            "with shadow after %d cycles\n",
+                            inst->seqNum, stalled.stallAge);
+
+                    if (op_latency == Cycles(1)) {
+                        i2e_info->size++;
+                        instsToExecute.push_back(inst);
+                        if (idx >= 0) {
+                            fuPool->freeUnitNextCycle(idx);
+                        }
+                        if (idx_shadow >= 0) {
+                            fuPool->freeUnitNextCycle(idx_shadow);
+                        }
+                    } else {
+                        bool pipelined = fuPool->isPipelined(stalled.op_class);
+                        ++wbOutstanding;
+                        FUCompletion *execution = new FUCompletion(inst, idx, this);
+                        cpu->schedule(execution, cpu->clockEdge(Cycles(op_latency - 1)));
+                        if (!pipelined) {
+                            execution->setFreeFU();
+                        } else {
+                            fuPool->freeUnitNextCycle(idx);
+                        }
+
+                        ++wbOutstanding;
+                        bool shadow_pipelined = fuPool->isPipelined(shadow_op_class);
+                        FUCompletion *execution_shadow = new FUCompletion(NULL, idx_shadow, this);
+                        cpu->schedule(execution_shadow, cpu->clockEdge(Cycles(op_latency - 1)));
+                        if (!shadow_pipelined) {
+                            execution_shadow->setFreeFU();
+                        } else {
+                            fuPool->freeUnitNextCycle(idx_shadow);
+                        }
+                    }
+
+                    inst->setIssued();
+#if TRACING_ON
+                    inst->issueTick = curTick() - inst->fetchTick;
+#endif
+                    if (inst->fetchCycle != Cycles(-1)) {
+                        inst->issueCycle = Cycles(cpu->baseStats.numCycles.value()) - inst->fetchCycle;
+                    }
+                    if (inst->readyCycle != Cycles(-1)) {
+                        Cycles ready_to_issue_latency = Cycles(cpu->baseStats.numCycles.value()) - inst->readyCycle;
+                        iewStage->updateIssueLatencyStats(ready_to_issue_latency);
+                    }
+                    if (inst->firstIssue == -1) {
+                        inst->firstIssue = curTick();
+                    }
+
+                    if (!inst->isMemRef()) {
+                        ++freeEntries;
+                        count[stalled.tid]--;
+                        inst->clearInIQ();
+                    } else {
+                        memDepUnit[stalled.tid].issue(inst);
+                    }
+
+                    iqStats.instsIssued++;
+                    iqStats.statIssuedInstType[stalled.tid][stalled.op_class]++;
+                    iqIOStats.protectedStalledIssued++;
+                    iqIOStats.protectedStallCycles += stalled.stallAge;
+                    iqIOStats.fuCommitted++;
+                    iqIOStats.fuCommittedProtected++;
+                    iqIOStats.fuCommittedWithShadow++;
+
+                    stall_it = stalledProtectedInsts.erase(stall_it);
+                    continue;
+                } else {
+                    // Shadow allocation failed even with 2 free FUs
+                    // (unlikely but handle it) - free primary and keep stalled
+                    fuPool->freeUnitImmediately(idx);
+                    ++stall_it;
+                    continue;
+                }
+            }
+        }
+
+        // Not enough free FUs or allocation failed, keep stalled
+        ++stall_it;
     }
 }
 
@@ -1586,6 +1846,18 @@ InstructionQueue::doSquash(ThreadID tid)
         }
         instList[tid].erase(squash_it--);
         ++iqStats.squashedInstsExamined;
+    }
+
+    // Also clean up any stalled protected instructions that were squashed
+    auto stall_it = stalledProtectedInsts.begin();
+    while (stall_it != stalledProtectedInsts.end()) {
+        if (stall_it->tid == tid && stall_it->inst->seqNum > squashedSeqNum[tid]) {
+            DPRINTF(IQ, "[tid:%i] Removing stalled protected instruction [sn:%llu] "
+                    "due to squash\n", tid, stall_it->inst->seqNum);
+            stall_it = stalledProtectedInsts.erase(stall_it);
+        } else {
+            ++stall_it;
+        }
     }
 }
 

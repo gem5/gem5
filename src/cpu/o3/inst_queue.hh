@@ -154,9 +154,6 @@ class InstructionQueue
     /** Sets the enableShrewd flag. */
     void setEnableShrewd(bool enable) { enableShrewd = enable; }
 
-    /** Sets the priorityToShadow flag. */
-    void setPriorityToShadow(bool enable) { priorityToShadow = enable; }
-
     /** Determine if we are drained. */
     bool isDrained() const;
 
@@ -431,8 +428,22 @@ class InstructionQueue
     /** Enable SHREWD features */
     bool enableShrewd;
 
-    /** Enable priority to shadow functionality */
-    bool priorityToShadow;
+    /** Structure to track stalled protected instructions */
+    struct StalledProtectedInst {
+        DynInstPtr inst;
+        OpClass op_class;
+        Cycles op_latency;
+        ThreadID tid;
+        int stallAge;
+        static constexpr int MAX_STALL_CYCLES = 8;
+        static constexpr int MAX_STALLED_QUEUE = 16;
+    };
+
+    /** List of stalled protected instructions waiting for shadow FU */
+    std::list<StalledProtectedInst> stalledProtectedInsts;
+
+    /** Process stalled protected instructions at start of cycle */
+    void processStallQueue();
 
     /** Per Thread IQ count */
     unsigned count[MaxThreads];
@@ -577,6 +588,9 @@ class InstructionQueue
         statistics::Scalar intAluAccesses;
         statistics::Scalar fpAluAccesses;
         statistics::Scalar vecAluAccesses;
+        statistics::Scalar intAluReservations;
+        statistics::Scalar fpAluReservations;
+        statistics::Scalar vecAluReservations;
 
         statistics::Scalar shadowAvailable;
         statistics::Scalar shadowNotAvailable;
@@ -604,6 +618,17 @@ class InstructionQueue
         statistics::Scalar FloatMiscShadowNotAvailable;
         statistics::Scalar ShadowIsSameFU;
         statistics::Scalar ShadowIsNotSameFU;
+        statistics::Scalar protectedStalled;
+        statistics::Scalar protectedStalledIssued;
+        statistics::Scalar protectedStallCycles;
+        statistics::Formula avgProtectedStallCycles;
+        statistics::Scalar protectedForcedIssueNoShadow;
+        statistics::Scalar fuReserved;
+        statistics::Scalar fuReservedProtected;
+        statistics::Scalar fuCommitted;
+        statistics::Scalar fuCommittedProtected;
+        statistics::Scalar fuCommittedWithShadow;
+        statistics::Scalar fuDeallocatedNoShadow;
     } iqIOStats;
 };
 

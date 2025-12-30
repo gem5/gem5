@@ -68,7 +68,6 @@ class BaseO3CPU(BaseCPU):
 
     cxx_exports = [
         PyBindMethod("setEnableShrewd"),
-        PyBindMethod("setPriorityToShadow"),
     ]
 
     @classmethod
@@ -224,4 +223,3 @@ class BaseO3CPU(BaseCPU):
     )
 
     enableShrewd = Param.Bool(False, "Enable SHREWD features")
-    priorityToShadow = Param.Bool(False, "Enable priority to shadow functionality")
