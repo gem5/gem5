@@ -49,6 +49,7 @@ import re
 import shutil
 import stat
 import subprocess
+import sys
 import tempfile
 import threading
 import time
@@ -583,3 +584,57 @@ def gcov_delete_files(target_dir, what):
             elif what == "py":
                 if ".py.gcno" in file or ".py.gcda" in file:
                     os.remove(os.path.join(root, file))
+
+
+def run_gcovr(
+    base_dir, build_target_dir, gcovr_outdir, test_threads, isa, log, time
+):
+
+    log.message("Now in the run_gcovr() helper...")
+    log.message(
+        "Now removing .py.gcno and .py.gcda files after running test(s), but "
+        f"before running gcovr. In the directory {build_target_dir}."
+    )
+    gcov_delete_files(build_target_dir, "py")
+
+    log.message("Now running gcovr...")
+
+    # must use gcovr version >= 7.1, otherwise gcovr won't be able to handle
+    # more than 9999 lines of code
+    command = [
+        "gcovr",
+        # "--verbose",
+        "--merge-mode-functions",
+        "separate",
+        "--root",
+        base_dir,
+        "--object-directory",
+        build_target_dir,
+        "--gcov-ignore-parse-errors=suspicious_hits.warn",
+        "--gcov-ignore-parse-errors=negative_hits.warn",
+        "--json",
+        os.path.join(gcovr_outdir, "gcov-results.json"),
+        "--json-pretty",
+        "--json-summary",
+        os.path.join(gcovr_outdir, "gcov-summary.json"),
+        "--json-summary-pretty",
+        "-j",
+        test_threads,
+    ]
+
+    # Prevent gcovr from looking at builds other than the one used by
+    # the current test. E.g. If the current test uses `build/ALL`, but
+    # NULL is also in the `build` directory, then `build/NULL` will be
+    # excluded. This prevents errors when running gcovr.
+    curr_build_isas = os.listdir(os.path.dirname(build_target_dir))
+    for dir in curr_build_isas:
+        if dir != isa:
+            command.append("--gcov-exclude-directory")
+            command.append(f'"{os.path.dirname(build_target_dir)}/{dir}$"')
+    log_call(
+        log,
+        command,
+        time=time,
+        stdout=sys.stdout,
+        stderr=sys.stderr,
+    )
