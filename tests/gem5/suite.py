@@ -45,6 +45,7 @@ from testlib.configuration import constants
 from testlib.helper import (
     gcov_delete_files,
     log_call,
+    run_gcovr,
 )
 from testlib.suite import TestSuite
 from testlib.test_util import TestFunction
@@ -215,58 +216,16 @@ def _create_test_run_gem5(config, config_args, gem5_args):
             stdout=sys.stdout,
             stderr=sys.stderr,
         )
-        # run gcovr to get coverage metrics for each individual test
         if gcov == "ind-test-and-gcov":
-            params.log.message(
-                "Now removing .py.gcno and .py.gcda files after running tests"
-                ", but before running gcovr. In the directory "
-                f"{gem5_build_target_dir}."
-            )
-            gcov_delete_files(gem5_build_target_dir, "py")
-
-            params.log.message("Now running gcovr...")
-
-            command = [
-                "gcovr",  # must be on gcovr version >= 7.1, otherwise gcovr won't be able to handle more than 9999 lines of code
-                # "--verbose",
-                "--merge-mode-functions",
-                "separate",
-                "--root",
+            # run gcovr to get coverage metrics for each individual test
+            run_gcovr(
                 gem5_base_dir,
-                "--object-directory",
                 gem5_build_target_dir,
-                "--gcov-ignore-parse-errors=suspicious_hits.warn",
-                "--gcov-ignore-parse-errors=negative_hits.warn",
-                "--json",
-                os.path.join(tempdir, "gcov-results.json"),
-                "--json-pretty",
-                "--json-summary",
-                os.path.join(tempdir, "gcov-summary.json"),
-                "--json-summary-pretty",
-                "-j",
+                tempdir,
                 test_threads,
-            ]
-
-            # Prevent gcovr from looking at builds other than the one used by
-            # the current test. E.g. If the current test uses `build/ALL`, but
-            # NULL is also in the `build` directory, then `build/NULL` will be
-            # excluded. This prevents errors when running gcovr.
-            curr_build_isas = os.listdir(
-                os.path.dirname(gem5_build_target_dir)
-            )
-            for isa in curr_build_isas:
-                if isa != gem5_fixture.isa:
-                    command.append("--gcov-exclude-directory")
-                    command.append(
-                        f'"{os.path.dirname(gem5_build_target_dir)}/{isa}$"'
-                    )
-
-            log_call(
+                gem5_fixture.isa,
                 params.log,
-                command,
-                time=params.time,
-                stdout=sys.stdout,
-                stderr=sys.stderr,
+                params.time,
             )
 
     return test_run_gem5
