@@ -286,6 +286,8 @@ def define_constants(constants):
             constants.power_tag,
             constants.null_tag,
             constants.all_compiled_tag,
+            constants.null_all_ruby,
+            constants.arm_x86_tag,
         ),
         constants.variant_tag_type: (
             constants.opt_tag,
