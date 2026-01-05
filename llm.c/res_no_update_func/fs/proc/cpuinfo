@@ -1,0 +1,19 @@
+processor       : 0
+vendor_id       : Generic
+cpu family      : 0
+model           : 0
+model name      : Generic
+stepping        : 0
+cpu MHz         : 2000.000
+cache size:     : 2048.0K
+physical id     : 0
+siblings        : 1
+core id         : 0
+cpu cores       : 1
+fpu             : yes
+fpu exception   : yes
+cpuid level     : 1
+wp              : yes
+flags           : fpu
+cache alignment : 64
+
