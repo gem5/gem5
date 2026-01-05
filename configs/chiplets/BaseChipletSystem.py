@@ -1215,7 +1215,7 @@ class BaseChipletSystem(SubSystem):
         if link_latency != -1:
             if l12 is not None:
                 if set_lat_link_1_to_2:
-                    l12.width = link_latency
+                    l12.latency = link_latency
 
                 if l21 is None:
                     warn(
@@ -1227,7 +1227,7 @@ class BaseChipletSystem(SubSystem):
 
             if l21 is not None:
                 if set_lat_link_2_to_1:
-                    l21.width = link_latency
+                    l21.latency = link_latency
 
                 if l12 is None:
                     warn(
