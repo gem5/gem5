@@ -40,6 +40,7 @@
 
 #include <cassert>
 #include <stack>
+#include <string>
 #include <unordered_map>
 
 #include "base/statistics.hh"
@@ -79,7 +80,8 @@ namespace ruby
 class TBEStorage
 {
   public:
-    TBEStorage(statistics::Group *parent, int number_of_TBEs);
+    TBEStorage(statistics::Group *parent, int number_of_TBEs,
+               std::string_view name);
 
     // Returns the current number of slots allocated
     int size() const { return m_slots_used.size(); }
@@ -123,10 +125,11 @@ class TBEStorage
     int m_reserved;
     std::stack<int> m_slots_avail;
     std::unordered_map<int, int> m_slots_used;
+    std::string name;
 
     struct TBEStorageStats : public statistics::Group
     {
-        TBEStorageStats(statistics::Group *parent);
+        TBEStorageStats(statistics::Group *parent, std::string_view name);
 
         // Statistical variables
         statistics::Average avg_size;
