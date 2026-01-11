@@ -206,3 +206,20 @@ class AzureFunctionsAPIClient(AbstractClient):
                         f"Resource {resource.get_resource_id()} is not compatible with gem5 version {resource.get_gem5_version()}."
                     )
         return resources_by_id
+
+    def get_all_resources(self, gem5_version: str) -> List[Dict[str, Any]]:
+        url = self.url
+        url += "/list-all-resources"
+
+        # If the gem5_version is not DEVELOP, add it to the url
+        if gem5_version.startswith("DEVELOP"):
+            raise ValueError(
+                "All resources are compatible with DEVELOP version. Please pass a specific gem5 version from gem5 releases."
+            )
+
+        resources = self._functions_http_json_req(
+            url,
+            data_json=[{"gem5-version": gem5_version}],
+            purpose_of_request="Get All Resources",
+        )
+        return resources

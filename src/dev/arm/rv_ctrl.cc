@@ -41,6 +41,9 @@
 #include "debug/RVCTRL.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
+#include "params/RealViewCtrl.hh"
+#include "params/RealViewOsc.hh"
+#include "params/RealViewTemperatureSensor.hh"
 #include "sim/power/thermal_model.hh"
 #include "sim/system.hh"
 #include "sim/voltage_domain.hh"
@@ -300,6 +303,14 @@ RealViewOsc::write(uint32_t freq)
     DPRINTF(RVCTRL, "Setting new OSC frequency: %f MHz\n", freq / 1E6);
     clockPeriod(sim_clock::as_float::s / freq);
 }
+
+RealViewTemperatureSensor::RealViewTemperatureSensor(
+    const RealViewTemperatureSensorParams &p)
+    : SimObject(p),
+      RealViewCtrl::Device(*p.parent, RealViewCtrl::FUNC_TEMP, p.site,
+                           p.position, p.dcc, p.device),
+      system(p.system)
+{}
 
 uint32_t
 RealViewTemperatureSensor::read() const

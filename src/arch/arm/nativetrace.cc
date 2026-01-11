@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2011, 2014, 2016-2017 ARM Limited
+ * Copyright (c) 2010-2011, 2014, 2016-2017, 2025 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -66,6 +66,10 @@ namespace trace {
     "f23", "f24", "f25", "f26", "f27", "f28", "f29", "f30",
     "f31", "fpscr"
 };
+
+ArmNativeTrace::ArmNativeTrace(const Params &p)
+    : NativeTrace(p), stopOnPCError(p.stop_on_pc_error)
+{}
 
 void
 ArmNativeTrace::ThreadState::update(NativeTrace *parent)
@@ -136,7 +140,7 @@ ArmNativeTrace::ThreadState::update(ThreadContext *tc)
         newState[STATE_F0 + 2*i] = vec[0];
         newState[STATE_F0 + 2*i + 1] = vec[1];
     }
-    newState[STATE_FPSCR] = tc->readMiscRegNoEffect(MISCREG_FPSCR) |
+    newState[STATE_FPSCR] = tc->readMiscReg(MISCREG_FPSCR) |
                             tc->getReg(cc_reg::Fp);
 }
 

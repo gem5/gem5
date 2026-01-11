@@ -308,15 +308,23 @@ TAGEBase::updateGHist(ThreadID tid, uint64_t bv, uint8_t n)
     ThreadHistory& tHist = threadHistory[tid];
     if (tHist.ptGhist < n) {
         DPRINTF(Tage, "Rolling over the histories\n");
-        // Copy beginning of globalHistoryBuffer to end, such that
-        // the last maxHist outcomes are still reachable
-        // through globalHist[0 .. maxHist - 1].
-        for (int i = 0; i < maxHist; i++) {
-            tHist.globalHist[histBufferSize - maxHist + i] =
+        // Copy beginning of globalHistoryBuffer to end, such that the last
+        // maxHist outcomes are still reachable through
+        // globalHist[0 .. maxHist - 1].
+        // The rollover may happen when the predictor is in a speculative state
+        // where multiple predictions are already in flight. In case of a
+        // misprediction we must be able to recover the history but if we just
+        // copy the maxHist length at rollover we will run out-of-bounce.
+        // To avoid this we copy an addition rollback window of 1k additional
+        // bit. This should allow more than 500 predictions (TAGE-SC-L) in
+        // flight.
+        const int rollbackBuffer = 1000;
+        for (int i = 0; i < (maxHist + rollbackBuffer); i++) {
+            tHist.globalHist[histBufferSize - maxHist - rollbackBuffer + i] =
                 tHist.globalHist[tHist.ptGhist + i];
         }
 
-        tHist.ptGhist = histBufferSize - maxHist;
+        tHist.ptGhist = histBufferSize - maxHist - rollbackBuffer;
     }
 
     // Update the global history
@@ -717,6 +725,10 @@ TAGEBase::restoreHistState(ThreadID tid, BranchInfo* bi)
             tHist.computeTags[1][i].restore(gh_ptr);
         }
         tHist.ptGhist++;
+        // Make sure we do not go out of bounds.
+        // If we do its likely that there where too many branches in flight
+        // during a rollover. Consider increasing the `rollbackBuffer`
+        assert((tHist.ptGhist + maxHist) < tHist.globalHist.size());
     }
     bi->nGhist = 0;
     bi->modified = false;

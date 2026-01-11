@@ -78,7 +78,7 @@ decode BIGTHUMB {
             default: decode HTOPCODE_9_8 {
                 0x2: decode LTOPCODE_4 {
                     0x0: decode LTCOPROC {
-                        0xa, 0xb: VfpData::vfpData();
+                        0x9, 0xa, 0xb: VfpData::vfpData();
                         default: WarnUnimpl::cdp(); // cdp2
                     }
                     0x1: decode LTCOPROC {

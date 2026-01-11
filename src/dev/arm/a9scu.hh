@@ -39,7 +39,6 @@
 #define __DEV_ARM_A9SCU_HH__
 
 #include "dev/io_device.hh"
-#include "params/A9SCU.hh"
 
 /** @file
  * This defines the snoop control unit register on an A9
@@ -47,6 +46,8 @@
 
 namespace gem5
 {
+
+struct A9SCUParams;
 
 class A9SCU : public BasicPioDevice
 {
@@ -58,7 +59,7 @@ class A9SCU : public BasicPioDevice
     };
 
   public:
-    typedef A9SCUParams Params;
+    using Params = A9SCUParams;
 
     /**
       * The constructor for RealView just registers itself with the MMU.

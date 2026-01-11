@@ -38,8 +38,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import importlib
 import inspect
-import sys
 from functools import wraps
 from types import (
     FunctionType,
@@ -49,10 +49,6 @@ from types import (
 
 import m5
 from m5.citations import gem5_citations
-
-# Use the pyfdt and not the helper class, because the fdthelper
-# relies on the SimObject definition
-from m5.ext.pyfdt import pyfdt
 
 # There are a few things we need that aren't in params.__all__ since
 # normal users don't need them
@@ -417,7 +413,9 @@ class MetaSimObject(type):
             return
 
         # no valid assignment... raise exception
-        raise AttributeError(f"Class {cls.__name__} has no parameter '{attr}'")
+        raise AttributeError(
+            f"Invalid assignment for Class {cls.__name__} with parameter {attr}"
+        )
 
     def __getattr__(cls, attr):
         if attr == "cxx_class_path":
@@ -449,10 +447,14 @@ class MetaSimObject(type):
         return cls.__name__
 
     def getCCClass(cls):
-        # Ensure that m5.internal.params is available.
-        import m5.internal.params
+        try:
+            # This function can be called from outside gem5
+            # during SimObject parsing.
+            import _m5
 
-        return getattr(m5.internal.params, cls.pybind_class)
+            return getattr(_m5, cls.pybind_class)
+        except ImportError:
+            raise AttributeError("No C++ class exists, not linked to gem5")
 
     # See ParamValue.cxx_predecls for description.
     def cxx_predecls(cls, code):
@@ -772,6 +774,9 @@ class SimObject(metaclass=MetaSimObject):
         self._hr_values = multidict(ancestor._hr_values)
         # clone SimObject-valued parameters
         for key, val in ancestor._values.items():
+            if val == []:
+                self._values[key] = type(val)()
+                continue
             val = tryAsSimObjectOrVector(val)
             if val is not None:
                 self._values[key] = val(_memo=memo_dict)
@@ -927,7 +932,8 @@ class SimObject(metaclass=MetaSimObject):
 
         # no valid assignment... raise exception
         raise AttributeError(
-            f"Class {self.__class__.__name__} has no parameter {attr}"
+            f"Invalid assignment for Class {self.__class__.__name__} with"
+            f" parameter {attr}"
         )
 
     # this hack allows tacking a '[0]' onto parameters that may or may
@@ -1202,10 +1208,12 @@ class SimObject(metaclass=MetaSimObject):
         if self._ccParams:
             return self._ccParams
 
-        # Ensure that m5.internal.params is available.
-        import m5.internal.params
+        try:
+            mod = importlib.import_module(f"_m5.param_{self.type}")
+        except ImportError:
+            raise AttributeError("No C++ class exists, not linked to gem5")
 
-        cc_params_struct = getattr(m5.internal.params, f"{self.type}Params")
+        cc_params_struct = getattr(mod, f"{self.type}Params")
         cc_params = cc_params_struct()
         cc_params.name = str(self)
 
@@ -1411,7 +1419,7 @@ def isSimObjectOrSequence(value):
 
 
 def isRoot(obj):
-    from m5.objects import Root
+    from m5.objects.Root import Root
 
     return obj and obj is Root.getInstance()
 

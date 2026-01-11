@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019 ARM Limited
+ * Copyright (c) 2017-2019,2025 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -68,6 +68,24 @@ SvePredCountPredOp::generateDisassembly(Addr pc,
     printVecPredReg(ss, gp);
     ccprintf(ss, ", ");
     printVecPredReg(ss, op1);
+    return ss.str();
+}
+
+std::string
+SvePredCountPngOp::generateDisassembly(Addr pc,
+                                       const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    printIntReg(ss, dest);
+    ccprintf(ss, ", ");
+    printVecPredReg(ss, op1, true);
+    ccprintf(ss, ", ");
+    if (imm == 0) {
+        ccprintf(ss, "VLx2");
+    } else {
+        ccprintf(ss, "VLx4");
+    }
     return ss.str();
 }
 
@@ -162,6 +180,55 @@ SveWhileOp::generateDisassembly(
 }
 
 std::string
+SveWhilePairOp::generateDisassembly(Addr pc,
+                                    const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    ccprintf(ss, "{");
+    printVecPredReg(ss, dest);
+    ccprintf(ss, ", ");
+    printVecPredReg(ss, dest2);
+    ccprintf(ss, "}, ");
+    uint8_t opWidth;
+    if (srcIs32b) {
+        opWidth = 32;
+    } else {
+        opWidth = 64;
+    }
+    printIntReg(ss, op1, opWidth);
+    ccprintf(ss, ", ");
+    printIntReg(ss, op2, opWidth);
+    return ss.str();
+}
+
+std::string
+SveWhilePngOp::generateDisassembly(Addr pc,
+                                   const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    printVecPredReg(ss, dest, true);
+    ccprintf(ss, ", ");
+    uint8_t opWidth;
+    if (srcIs32b) {
+        opWidth = 32;
+    } else {
+        opWidth = 64;
+    }
+    printIntReg(ss, op1, opWidth);
+    ccprintf(ss, ", ");
+    printIntReg(ss, op2, opWidth);
+    ccprintf(ss, ", ");
+    if (imm == 0) {
+        ccprintf(ss, "VLx2");
+    } else {
+        ccprintf(ss, "VLx4");
+    }
+    return ss.str();
+}
+
+std::string
 SvePselOp::generateDisassembly(Addr pc,
                                const loader::SymbolTable *symtab) const
 {
@@ -176,6 +243,39 @@ SvePselOp::generateDisassembly(Addr pc,
     printIntReg(ss, op2);
     ss << ", ";
     ccprintf(ss, "#%d", imm);
+    return ss.str();
+}
+
+std::string
+SvePextOp::generateDisassembly(Addr pc,
+                               const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    printVecPredReg(ss, dest);
+    ss << ", ";
+    printVecPredReg(ss, op1, true);
+    ss << "[";
+    ccprintf(ss, "%d", imm);
+    ss << "]";
+    return ss.str();
+}
+
+std::string
+SvePextPairOp::generateDisassembly(Addr pc,
+                                   const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    ss << "{";
+    printVecPredReg(ss, dest);
+    ss << ", ";
+    printVecPredReg(ss, dest2);
+    ss << "}, ";
+    printVecPredReg(ss, op1, true);
+    ss << "[";
+    ccprintf(ss, "%d", imm);
+    ss << "]";
     return ss.str();
 }
 
@@ -252,7 +352,7 @@ SveBinImmUnpredConstrOp::generateDisassembly(
     printMnemonic(ss, "", false);
     printVecReg(ss, dest, true);
     ccprintf(ss, ", ");
-    printVecPredReg(ss, op1);
+    printVecReg(ss, op1, true);
     ccprintf(ss, ", #");
     ss << imm;
     return ss.str();
@@ -360,7 +460,7 @@ SvePredLogicalOp::generateDisassembly(
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    printVecReg(ss, dest, true);
+    printVecPredReg(ss, dest);
     ccprintf(ss, ", ");
     printVecPredReg(ss, gp);
     if (isSel) {
@@ -466,6 +566,23 @@ SveTerImmUnpredOp::generateDisassembly(
 }
 
 std::string
+SveTerIdxUnpredOp::generateDisassembly(Addr pc,
+                                       const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    printVecReg(ss, dest, true);
+    ccprintf(ss, ", ");
+    printVecReg(ss, op1, true);
+    ccprintf(ss, ", ");
+    printVecReg(ss, op2, true);
+    ccprintf(ss, "[");
+    ss << (uint64_t)index;
+    ccprintf(ss, "]");
+    return ss.str();
+}
+
+std::string
 SveReducOp::generateDisassembly(
         Addr pc, const loader::SymbolTable *symtab) const
 {
@@ -506,6 +623,16 @@ SvePtrueOp::generateDisassembly(
         ccprintf(ss, ", ");
         ss << sveDisasmPredCountImm(imm);
     }
+    return ss.str();
+}
+
+std::string
+SvePtruePngOp::generateDisassembly(Addr pc,
+                                   const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    printVecPredReg(ss, dest, true);
     return ss.str();
 }
 
@@ -659,11 +786,11 @@ SveUnaryPredPredOp::generateDisassembly(
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    printVecPredReg(ss, dest);
+    printVecReg(ss, dest, true);
     ccprintf(ss, ", ");
     printVecPredReg(ss, gp);
     ccprintf(ss, ", ");
-    printVecPredReg(ss, op1);
+    printVecReg(ss, op1, true);
     return ss.str();
 }
 
@@ -677,6 +804,22 @@ SveTblOp::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
     printVecReg(ss, op1, true);
     ccprintf(ss, " }, ");
     printVecReg(ss, op2, true);
+    return ss.str();
+}
+
+std::string
+SveTblThreeSrcOp::generateDisassembly(Addr pc,
+                                      const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    printVecReg(ss, dest, true);
+    ccprintf(ss, ", { ");
+    printVecReg(ss, op1, true);
+    ccprintf(ss, ", ");
+    printVecReg(ss, op2, true);
+    ccprintf(ss, " }, ");
+    printVecReg(ss, op3, true);
     return ss.str();
 }
 
@@ -772,7 +915,7 @@ SveBinImmIdxUnpredOp::generateDisassembly(
     ccprintf(ss, ", ");
     printVecReg(ss, op1, true);
     ccprintf(ss, "[");
-    ss << imm;
+    ss << (uint64_t)imm;
     ccprintf(ss, "]");
     return ss.str();
 }
@@ -830,13 +973,31 @@ SveComplexOp::generateDisassembly(
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    printVecPredReg(ss, dest);
+    printVecReg(ss, dest, true);
     ccprintf(ss, ", ");
     printVecPredReg(ss, gp);
     ccprintf(ss, "/m, ");
-    printVecPredReg(ss, op1);
+    printVecReg(ss, op1, true);
     ccprintf(ss, ", ");
-    printVecPredReg(ss, op2);
+    printVecReg(ss, op2, true);
+    ccprintf(ss, ", #");
+    const char *rotstr[4] = {"0", "90", "180", "270"};
+    ccprintf(ss, rotstr[rot]);
+
+    return ss.str();
+}
+
+std::string
+SveComplexUnpredOp::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    printVecReg(ss, dest, true);
+    ccprintf(ss, ", ");
+    printVecReg(ss, op1, true);
+    ccprintf(ss, ", ");
+    printVecReg(ss, op2, true);
     ccprintf(ss, ", #");
     const char* rotstr[4] = {"0", "90", "180", "270"};
     ccprintf(ss, rotstr[rot]);
@@ -850,13 +1011,13 @@ SveComplexIdxOp::generateDisassembly(
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
-    printVecPredReg(ss, dest);
+    printVecReg(ss, dest, true);
     ccprintf(ss, ", ");
-    printVecPredReg(ss, op1);
+    printVecReg(ss, op1, true);
     ccprintf(ss, ", ");
-    printVecPredReg(ss, op2);
+    printVecReg(ss, op2, true);
     ccprintf(ss, "[");
-    ss << imm;
+    ss << (uint64_t)imm;
     ccprintf(ss, "], #");
     const char* rotstr[4] = {"0", "90", "180", "270"};
     ccprintf(ss, rotstr[rot]);
@@ -874,6 +1035,65 @@ SveClampOp::generateDisassembly(
     printVecReg(ss, op1, true);
     ss << ", ";
     printVecReg(ss, op2, true);
+    return ss.str();
+}
+
+std::string
+SvePredMovePredOp::generateDisassembly(Addr pc,
+                                       const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    printVecPredReg(ss, dest);
+    ccprintf(ss, ", ");
+    printVecReg(ss, op1, true);
+    ccprintf(ss, ", #");
+    ss << imm;
+    return ss.str();
+}
+
+std::string
+SvePredMoveVecOp::generateDisassembly(Addr pc,
+                                      const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    printVecReg(ss, dest, true);
+    ccprintf(ss, ", ");
+    printVecPredReg(ss, op1);
+    ccprintf(ss, ", #");
+    ss << imm;
+    return ss.str();
+}
+
+std::string
+SveMultiNarrowOp::generateDisassembly(Addr pc,
+                                      const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    printVecReg(ss, dest, true);
+    ccprintf(ss, ", {");
+    printVecReg(ss, op1, true);
+    ccprintf(ss, ", ");
+    printVecReg(ss, op2, true);
+    ccprintf(ss, "}");
+    return ss.str();
+}
+
+std::string
+SveMultiNarrowImmOp::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    printVecReg(ss, dest, true);
+    ccprintf(ss, ", {");
+    printVecReg(ss, op1, true);
+    ccprintf(ss, ", ");
+    printVecReg(ss, op2, true);
+    ccprintf(ss, "}, #");
+    ss << imm;
     return ss.str();
 }
 
@@ -1013,6 +1233,94 @@ sveExpandFpImmMul(uint8_t imm, uint8_t size)
       default:
         panic("Unsupported size");
     }
+}
+
+void
+sveCounterToPredicate(VecPredRegContainer &pred_mask, uint16_t pred,
+                      unsigned pred_width, unsigned vl, unsigned regidx)
+{
+    uint8_t tail_zero = bits(pred, 3, 0);
+    unsigned elem_cnt = 0;
+    unsigned count = 0;
+    bool invert = bits(pred, 15);
+    pred_mask.reset();
+
+    if ((tail_zero & 0x1) == 0x1) {
+        elem_cnt = pred_width;
+        count = bits(pred, 14, 1) & (elem_cnt * 4 - 1);
+        auto auxMask = pred_mask.as<uint8_t>();
+        for (unsigned e = 0; e < elem_cnt; e++) {
+            bool pbit = ((e + regidx * elem_cnt) < count) ? true : false;
+            if (invert) {
+                pbit = !pbit;
+            }
+            auxMask[e] = pbit;
+        }
+    } else if ((tail_zero & 0x2) == 0x2) {
+        elem_cnt = pred_width / 2;
+        count = bits(pred, 14, 2) & (elem_cnt * 4 - 1);
+        auto auxMask = pred_mask.as<uint16_t>();
+        for (unsigned e = 0; e < elem_cnt; e++) {
+            bool pbit = ((e + regidx * elem_cnt) < count) ? true : false;
+            if (invert) {
+                pbit = !pbit;
+            }
+            auxMask[e] = pbit;
+        }
+    } else if ((tail_zero & 0x4) == 0x4) {
+        elem_cnt = pred_width / 4;
+        count = bits(pred, 14, 3) & (elem_cnt * 4 - 1);
+        auto auxMask = pred_mask.as<uint32_t>();
+        for (unsigned e = 0; e < elem_cnt; e++) {
+            bool pbit = ((e + regidx * elem_cnt) < count) ? true : false;
+            if (invert) {
+                pbit = !pbit;
+            }
+            auxMask[e] = pbit;
+        }
+    } else if ((tail_zero & 0x8) == 0x8) {
+        elem_cnt = pred_width / 8;
+        count = bits(pred, 14, 4) & (elem_cnt * 4 - 1);
+        auto auxMask = pred_mask.as<uint64_t>();
+        for (unsigned e = 0; e < elem_cnt; e++) {
+            bool pbit = ((e + regidx * elem_cnt) < count) ? true : false;
+            if (invert) {
+                pbit = !pbit;
+            }
+            auxMask[e] = pbit;
+        }
+    }
+}
+
+uint16_t
+sveEncodePredCount(int esize, int elements, int count_in, bool invert_in)
+{
+    uint16_t count = count_in;
+    uint16_t invert = invert_in;
+
+    if (count_in == 0) {
+        return 0;
+    }
+
+    if (invert_in) {
+        count = elements - count;
+    } else if (count == elements) {
+        count = 0;
+        invert = true;
+    }
+    uint16_t inv = invert ? 0x1 : 0x0;
+
+    uint16_t pred = 0;
+    if (esize == 1) {
+        pred = inv << 15 | ((count & 0x3FFF) << 1) | 0x1;
+    } else if (esize == 2) {
+        pred = inv << 15 | ((count & 0x1FFF) << 2) | 0x2;
+    } else if (esize == 4) {
+        pred = inv << 15 | ((count & 0x0FFF) << 3) | 0x4;
+    } else if (esize == 8) {
+        pred = inv << 15 | ((count & 0x07FF) << 4) | 0x8;
+    }
+    return pred;
 }
 
 } // namespace ArmISA

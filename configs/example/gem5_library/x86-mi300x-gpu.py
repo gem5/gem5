@@ -35,7 +35,7 @@ Usage:
 ```
 scons build/VEGA_X86/gem5.opt
 ./build/VEGA_X86/gem5.opt
-    configs/example/gem5_library/x86-viper-gpu.py
+    configs/example/gem5_library/x86-mi300x-gpu.py
     --image <disk image>
     --kernel <kernel>
     --app <gpu application>
@@ -45,7 +45,7 @@ Example:
 --------
 ```
 ./build/VEGA_X86/gem5.opt
-    configs/example/gem5_library/x86-viper-gpu.py
+    configs/example/gem5_library/x86-mix300x-gpu.py
     --image ./gem5-resources/src/x86-ubuntu-gpu-ml/disk-image/x86-ubuntu-gpu-ml
     --kernel ./gem5-resources/src/x86-ubuntu-gpu-ml/vmlinux-gpu-ml
     --app ./gem5-resources/src/gpu/square/bin.default/square.default
@@ -71,7 +71,6 @@ from gem5.simulate.simulator import Simulator
 from gem5.utils.requires import requires
 
 requires(
-    isa_required=ISA.X86,
     coherence_protocol_required=CoherenceProtocol.GPU_VIPER,
 )
 
@@ -100,6 +99,13 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    "--opts",
+    type=str,
+    default="",
+    help="Additional arguments for the GPU application",
+)
+
+parser.add_argument(
     "--kvm-perf",
     default=False,
     action="store_true",
@@ -108,12 +114,10 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-# stdlib only supports up to 3GiB currently. This will need to be expanded in
-# the future.
-memory = SingleChannelDDR4_2400(size="3GiB")
+memory = SingleChannelDDR4_2400(size="8GiB")
 
 # Note: Only KVM and ATOMIC work due to buggy MOESI_AMD_Base protocol.
-processor = SimpleProcessor(cpu_type=CPUTypes.KVM, isa=ISA.X86, num_cores=2)
+processor = SimpleProcessor(cpu_type=CPUTypes.KVM, isa=ISA.X86, num_cores=1)
 
 for core in processor.cores:
     if core.is_kvm_core():
@@ -123,24 +127,14 @@ for core in processor.cores:
 # CPU cache hierarchy.
 gpu0 = MI300X(gpu_memory=HBM2Stack(size="16GiB"))
 
-cache_hierarchy = ViperCPUCacheHierarchy(
-    l1d_size="32KiB",
-    l1d_assoc=8,
-    l1i_size="32KiB",
-    l1i_assoc=8,
-    l2_size="1MiB",
-    l2_assoc=16,
-    l3_size="16MiB",
-    l3_assoc=16,
-)
-
 board = ViperBoard(
     clk_freq="3GHz",
     processor=processor,
     memory=memory,
-    cache_hierarchy=cache_hierarchy,
+    cache_hierarchy=ViperCPUCacheHierarchy(),
     gpus=[gpu0],
 )
+
 
 # Example of using a local disk image resource
 disk = DiskImageResource(local_path=args.image, root_partition="1")
@@ -149,7 +143,7 @@ kernel = FileResource(local_path=args.kernel)
 board.set_kernel_disk_workload(
     kernel=kernel,
     disk_image=disk,
-    readfile_contents=board.make_gpu_app(gpu0, args.app),
+    readfile_contents=board.make_gpu_app(gpu0, args.app, args.opts),
 )
 
 simulator = Simulator(board=board)

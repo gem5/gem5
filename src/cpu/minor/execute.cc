@@ -60,39 +60,37 @@ namespace gem5
 namespace minor
 {
 
-Execute::Execute(const std::string &name_,
-    MinorCPU &cpu_,
-    const BaseMinorCPUParams &params,
-    Latch<ForwardInstData>::Output inp_,
-    Latch<BranchData>::Input out_) :
-    Named(name_),
-    inp(inp_),
-    out(out_),
-    cpu(cpu_),
-    issueLimit(params.executeIssueLimit),
-    memoryIssueLimit(params.executeMemoryIssueLimit),
-    commitLimit(params.executeCommitLimit),
-    memoryCommitLimit(params.executeMemoryCommitLimit),
-    processMoreThanOneInput(params.executeCycleInput),
-    fuDescriptions(*params.executeFuncUnits),
-    numFuncUnits(fuDescriptions.funcUnits.size()),
-    setTraceTimeOnCommit(params.executeSetTraceTimeOnCommit),
-    setTraceTimeOnIssue(params.executeSetTraceTimeOnIssue),
-    allowEarlyMemIssue(params.executeAllowEarlyMemoryIssue),
-    noCostFUIndex(fuDescriptions.funcUnits.size() + 1),
-    lsq(name_ + ".lsq", name_ + ".dcache_port",
-        cpu_, *this,
-        params.executeMaxAccessesInMemory,
-        params.executeMemoryWidth,
-        params.executeLSQRequestsQueueSize,
-        params.executeLSQTransfersQueueSize,
-        params.executeLSQStoreBufferSize,
-        params.executeLSQMaxStoreBufferStoresPerCycle),
-    executeInfo(params.numThreads,
-            ExecuteThreadInfo(params.executeCommitLimit)),
-    interruptPriority(0),
-    issuePriority(0),
-    commitPriority(0)
+Execute::Execute(const std::string &name_, MinorCPU &cpu_,
+                 const BaseMinorCPUParams &params,
+                 Latch<ForwardInstData>::Output inp_,
+                 Latch<BranchData>::Input out_)
+    : Named(name_),
+      inp(inp_),
+      out(out_),
+      cpu(cpu_),
+      issueLimit(params.executeIssueLimit),
+      memoryIssueLimit(params.executeMemoryIssueLimit),
+      commitLimit(params.executeCommitLimit),
+      memoryCommitLimit(params.executeMemoryCommitLimit),
+      processMoreThanOneInput(params.executeCycleInput),
+      fuDescriptions(*params.executeFuncUnits),
+      numFuncUnits(fuDescriptions.funcUnits.size()),
+      setTraceTimeOnCommit(params.executeSetTraceTimeOnCommit),
+      setTraceTimeOnIssue(params.executeSetTraceTimeOnIssue),
+      allowEarlyMemIssue(params.executeAllowEarlyMemoryIssue),
+      noCostFUIndex(fuDescriptions.funcUnits.size() + 1),
+      lsq(name_ + ".lsq", name_ + ".dcache_port", cpu_, *this,
+          params.executeMaxAccessesInMemory, params.executeMemoryWidth,
+          params.executeLSQRequestsQueueSize,
+          params.executeLSQTransfersQueueSize,
+          params.executeLSQStoreBufferSize,
+          params.executeLSQMaxStoreBufferStoresPerCycle),
+      executeInfo(params.numThreads,
+                  ExecuteThreadInfo(params.executeCommitLimit)),
+      interruptPriority(0),
+      issuePriority(0),
+      commitPriority(0),
+      issueStats(&cpu_)
 {
     if (commitLimit < 1) {
         fatal("%s: executeCommitLimit must be >= 1 (%d)\n", name_,
@@ -406,8 +404,6 @@ Execute::handleMemResponse(MinorDynInstPtr inst,
             context.readPredicate() : false));
     }
 
-    doInstCommitAccounting(inst);
-
     /* Generate output to account for branches */
     tryToBranch(inst, fault, branch);
 }
@@ -682,7 +678,19 @@ Execute::issue(ThreadID thread_id)
                         DPRINTF(MinorExecute, "Issuing inst: %s"
                             " into FU %d\n", *inst,
                             fu_index);
-
+                        // Update ALU access stats.
+                        if (!inst->isFault()) {
+                            auto tid = thread_id;
+                            if (inst->staticInst->isInteger()) {
+                                cpu.executeStats[tid]->numIntAluAccesses++;
+                            }
+                            if (inst->staticInst->isFloating()) {
+                                cpu.executeStats[tid]->numFpAluAccesses++;
+                            }
+                            if (inst->staticInst->isVector()) {
+                                cpu.executeStats[tid]->numVecAluAccesses++;
+                            }
+                        }
                         Cycles extra_dest_retire_lat = Cycles(0);
                         TimingExpr *extra_dest_retire_lat_expr = NULL;
                         Cycles extra_assumed_lat = Cycles(0);
@@ -742,6 +750,12 @@ Execute::issue(ThreadID thread_id)
                             DPRINTF(MinorExecute, "Pushing mem inst: %s\n",
                                 *inst);
                             thread.inFUMemInsts->push(fu_inst);
+                        }
+
+                        /* Update the # of insts. issued per OpClass type */
+                        if (!inst->isFault()) {
+                            auto opclass = inst->staticInst->opClass();
+                            issueStats.issuedInstType[thread_id][opclass]++;
                         }
 
                         /* Issue to FU */
@@ -856,8 +870,10 @@ void
 Execute::doInstCommitAccounting(MinorDynInstPtr inst)
 {
     assert(!inst->isFault());
-
-    MinorThread *thread = cpu.threads[inst->id.threadId];
+    bool is_nop = inst->staticInst->isNop();
+    const ThreadID tid = inst->id.threadId;
+    MinorThread *thread = cpu.threads[tid];
+    const bool in_user_mode = thread->getIsaPtr()->inUserMode();
 
     /* Increment the many and various inst and op counts in the
      *  thread and system */
@@ -865,17 +881,68 @@ Execute::doInstCommitAccounting(MinorDynInstPtr inst)
     {
         thread->numInst++;
         thread->threadStats.numInsts++;
-        cpu.commitStats[inst->id.threadId]->numInsts++;
+        cpu.commitStats[tid]->numInsts++;
+        cpu.executeStats[tid]->numInsts++;
         cpu.baseStats.numInsts++;
+        if (in_user_mode) {
+            cpu.commitStats[tid]->numUserInsts++;
+        }
+
+        if (!is_nop) {
+            cpu.commitStats[inst->id.threadId]->numInstsNotNOP++;
+        }
 
         /* Act on events related to instruction counts */
         thread->comInstEventQueue.serviceEvents(thread->numInst);
     }
+
     thread->numOp++;
     thread->threadStats.numOps++;
-    cpu.commitStats[inst->id.threadId]->numOps++;
-    cpu.commitStats[inst->id.threadId]
+    if (!is_nop) {
+        cpu.commitStats[tid]->numOpsNotNOP++;
+    }
+
+    if (inst->staticInst->isMemRef()) {
+        cpu.executeStats[tid]->numMemRefs++;
+        cpu.commitStats[tid]->numMemRefs++;
+        thread->threadStats.numMemRefs++;
+    }
+    if (inst->staticInst->isLoad()) {
+        cpu.executeStats[tid]->numLoadInsts++;
+        cpu.commitStats[tid]->numLoadInsts++;
+    }
+
+    if (inst->staticInst->isStore() || inst->staticInst->isAtomic()) {
+        cpu.commitStats[tid]->numStoreInsts++;
+    }
+    if (inst->staticInst->isInteger()) {
+        cpu.commitStats[tid]->numIntInsts++;
+    }
+
+    if (inst->staticInst->isFloating()) {
+        cpu.commitStats[tid]->numFpInsts++;
+    }
+
+    if (inst->staticInst->isVector()) {
+        cpu.commitStats[tid]->numVecInsts++;
+    }
+    if (inst->staticInst->isControl()) {
+        cpu.executeStats[tid]->numBranches++;
+    }
+    if (inst->staticInst->isCall() || inst->staticInst->isReturn()) {
+        cpu.commitStats[tid]->numCallsReturns++;
+    }
+    if (inst->staticInst->isCall()) {
+        cpu.commitStats[tid]->functionCalls++;
+    }
+
+    cpu.commitStats[tid]->numOps++;
+    cpu.commitStats[tid]
         ->committedInstType[inst->staticInst->opClass()]++;
+    cpu.commitStats[tid]->updateComCtrlStats(inst->staticInst);
+    if (in_user_mode) {
+        cpu.commitStats[tid]->numUserOps++;
+    }
 
     /* Set the CP SeqNum to the numOps commit number */
     if (inst->traceData)
@@ -992,7 +1059,6 @@ Execute::commitInst(MinorDynInstPtr inst, bool early_memory_issue,
             fault->invoke(thread, inst->staticInst);
         }
 
-        doInstCommitAccounting(inst);
         tryToBranch(inst, fault, branch);
     }
 
@@ -1406,6 +1472,10 @@ Execute::commit(ThreadID thread_id, bool only_commit_microops, bool discard,
 
             if (num_mem_refs_committed == memoryCommitLimit)
                 DPRINTF(MinorExecute, "Reached mem ref commit limit\n");
+
+            if (fault == NoFault) {
+                doInstCommitAccounting(inst);
+            }
         }
     }
 }
@@ -1890,6 +1960,16 @@ MinorCPU::MinorCPUPort &
 Execute::getDcachePort()
 {
     return lsq.getDcachePort();
+}
+
+Execute::IssueStats::IssueStats(MinorCPU *cpu)
+    : statistics::Group(cpu),
+      ADD_STAT(issuedInstType, statistics::units::Count::get(),
+               "Number of instructions issued per FU type, per thread")
+{
+    issuedInstType.init(cpu->numThreads, enums::Num_OpClass)
+        .flags(statistics::total | statistics::pdf | statistics::dist);
+    issuedInstType.ysubnames(enums::OpClassStrings);
 }
 
 } // namespace minor

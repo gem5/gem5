@@ -1812,26 +1812,19 @@ CSRMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
 // If the mask is present it is used, otherwise the write mask
 // that should be used is the "visible bits" mask define above.
 
+// clang-format off
 const std::unordered_map<int, RegVal>
 CSRWriteMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
     [RV32] = {
-        [enums::M] = {},
-        [enums::MU] = {},
-        [enums::MSU] = {},
-    },
-    [RV64] = {
         [enums::M] = {
             {CSR_MIDELEG, 0ULL},
             {CSR_MEDELEG, 0ULL},
             {CSR_MSTATUS,
                 STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
                 STATUS_MIE_MASK | STATUS_MPIE_MASK | STATUS_MPP_MASK |
-                STATUS_TW_MASK  | STATUS_TVM_MASK
+                STATUS_TW_MASK
             },
-            {CSR_MIP, 0ULL},
-            {CSR_MIE,
-                MSI_MASK | MTI_MASK | MEI_MASK
-            },
+            {CSR_MIP, LOCAL_MASK},
         },
         [enums::MU] = {
             {CSR_MIDELEG, 0ULL},
@@ -1839,16 +1832,13 @@ CSRWriteMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
             {CSR_MSTATUS,
                 STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
                 STATUS_MIE_MASK | STATUS_MPIE_MASK | STATUS_MPP_MASK |
-                STATUS_TW_MASK  | STATUS_TVM_MASK  |
+                STATUS_TW_MASK |
                 STATUS_MPRV_MASK // added for U
             },
-            {CSR_MIP, 0ULL},
-            {CSR_MIE,
-                MSI_MASK | MTI_MASK | MEI_MASK
-            },
+            {CSR_MIP, LOCAL_MASK},
         },
         [enums::MSU] = {
-            {CSR_MIDELEG, SSI_MASK | STI_MASK | SEI_MASK},
+            {CSR_MIDELEG, MIDELEG_MASK[enums::MSU]},
             {CSR_MEDELEG, DELEGABLE_EXCPS},
             {CSR_MSTATUS,
                 STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
@@ -1860,11 +1850,8 @@ CSRWriteMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
                 // added for S
             },
             {CSR_MIP,
+                LOCAL_MASK |
                 SEI_MASK | SSI_MASK | STI_MASK // added for S
-            },
-            {CSR_MIE,
-                MSI_MASK | MTI_MASK | MEI_MASK |
-                SSI_MASK | STI_MASK | SEI_MASK // added for S
             },
             {CSR_SSTATUS,
                 STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
@@ -1873,14 +1860,62 @@ CSRWriteMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
                 // added for S
             },
             {CSR_SIP,
+                LOCAL_MASK |
                 SSI_MASK // added for S
             },
-            {CSR_SIE,
-                SSI_MASK | STI_MASK | SEI_MASK // added for S
+        },
+    },
+    [RV64] = {
+        [enums::M] = {
+            {CSR_MIDELEG, 0ULL},
+            {CSR_MEDELEG, 0ULL},
+            {CSR_MSTATUS,
+                STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
+                STATUS_MIE_MASK | STATUS_MPIE_MASK | STATUS_MPP_MASK |
+                STATUS_TW_MASK
+            },
+            {CSR_MIP, LOCAL_MASK},
+        },
+        [enums::MU] = {
+            {CSR_MIDELEG, 0ULL},
+            {CSR_MEDELEG, 0ULL},
+            {CSR_MSTATUS,
+                STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
+                STATUS_MIE_MASK | STATUS_MPIE_MASK | STATUS_MPP_MASK |
+                STATUS_TW_MASK  |
+                STATUS_MPRV_MASK // added for U
+            },
+            {CSR_MIP, LOCAL_MASK},
+        },
+        [enums::MSU] = {
+            {CSR_MIDELEG, MIDELEG_MASK[enums::MSU]},
+            {CSR_MEDELEG, DELEGABLE_EXCPS},
+            {CSR_MSTATUS,
+                STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
+                STATUS_MIE_MASK | STATUS_MPIE_MASK | STATUS_MPP_MASK |
+                STATUS_TW_MASK  | STATUS_TVM_MASK  |
+                STATUS_MPRV_MASK | // added for U
+                STATUS_TSR_MASK  | STATUS_SIE_MASK | STATUS_SPIE_MASK |
+                STATUS_SPP_MASK  | STATUS_SUM_MASK | STATUS_MXR_MASK
+                // added for S
+            },
+            {CSR_MIP,
+                LOCAL_MASK |
+                SEI_MASK | SSI_MASK | STI_MASK // added for S
+            },
+            {CSR_SSTATUS,
+                STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
+                STATUS_SIE_MASK | STATUS_SPIE_MASK | // no TSR here!
+                STATUS_SPP_MASK  | STATUS_SUM_MASK | STATUS_MXR_MASK
+                // added for S
+            },
+            {CSR_SIP,
+                LOCAL_MASK |
+                SSI_MASK // added for S
             },
         },
         [enums::MHSU] = {
-            {CSR_MIDELEG, SSI_MASK | STI_MASK | SEI_MASK},
+            {CSR_MIDELEG, MIDELEG_MASK[enums::MHSU]},
             {CSR_MEDELEG, DELEGABLE_EXCPS_WITH_RVH},
             {CSR_MSTATUS,
                 STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
@@ -1893,13 +1928,9 @@ CSRWriteMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
                 STATUS_GVA_MASK | STATUS_MPV_MASK // added for H
             },
             {CSR_MIP,
+                LOCAL_MASK |
                 SEI_MASK | SSI_MASK | STI_MASK | // added for S
                 VSSI_MASK // added for H
-            },
-            {CSR_MIE,
-                MSI_MASK | MTI_MASK | MEI_MASK |
-                SSI_MASK | STI_MASK | SEI_MASK | // added for S
-                HS_INTERRUPTS // added for H (multiple bits)
             },
             {CSR_SSTATUS,
                 STATUS_XS_MASK | STATUS_FS_MASK | STATUS_VS_MASK |
@@ -1908,10 +1939,8 @@ CSRWriteMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
                 // added for S
             },
             {CSR_SIP,
+                LOCAL_MASK |
                 SSI_MASK // added for S
-            },
-            {CSR_SIE,
-                SSI_MASK | STI_MASK | SEI_MASK // added for S
             },
             {CSR_HSTATUS,
                 HSTATUS_VTSR_MASK | HSTATUS_VTW_MASK |
@@ -1921,9 +1950,6 @@ CSRWriteMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
             },
             {CSR_HIP,
                 VSSI_MASK // added for H
-            },
-            {CSR_HIE,
-                HS_INTERRUPTS // added for H
             },
             {CSR_HVIP,
                 HS_INTERRUPTS & ~SGEI_MASK // added for H
@@ -1937,13 +1963,10 @@ CSRWriteMasks[enums::Num_RiscvType][enums::Num_PrivilegeModeSet] = {
             {CSR_VSIP,
                 VSSI_MASK // added for H
             },
-            {CSR_VSIE,
-                HS_INTERRUPTS & ~SGEI_MASK // added for H
-            },
-
         },
     },
 };
+// clang-format on
 
 } // namespace RiscvISA
 } // namespace gem5

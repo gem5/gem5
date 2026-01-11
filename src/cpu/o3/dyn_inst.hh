@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2016, 2021 ARM Limited
+ * Copyright (c) 2010, 2016, 2021, 2025 Arm Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -518,7 +518,11 @@ class DynInst : public ExecContext, public RefCounted
     const PCStateBase &readPredTarg() { return *predPC; }
 
     /** Returns whether the instruction was predicted taken or not. */
-    bool readPredTaken() { return instFlags[PredTaken]; }
+    bool
+    readPredTaken() const
+    {
+        return instFlags[PredTaken];
+    }
 
     void
     setPredTaken(bool predicted_taken)
@@ -528,7 +532,7 @@ class DynInst : public ExecContext, public RefCounted
 
     /** Returns whether the instruction mispredicted. */
     bool
-    mispredicted()
+    mispredicted() const
     {
         std::unique_ptr<PCStateBase> next_pc(pc->clone());
         staticInst->advancePC(*next_pc);
@@ -793,10 +797,23 @@ class DynInst : public ExecContext, public RefCounted
     //Instruction Queue Entry
     //-----------------------
     /** Sets this instruction as a entry the IQ. */
-    void setInIQ() { status.set(IqEntry); }
+    void
+    setInIQ(IQUnit *_iq)
+    {
+        assert(!iq);
+        status.set(IqEntry);
+        iq = _iq;
+    }
 
-    /** Sets this instruction as a entry the IQ. */
-    void clearInIQ() { status.reset(IqEntry); }
+    /** Clears this instruction as a entry the IQ. */
+    void
+    clearInIQ()
+    {
+        assert(iq);
+        status.reset(IqEntry);
+        iq->remove(this);
+        iq = nullptr;
+    }
 
     /** Returns whether or not this instruction has issued. */
     bool isInIQ() const { return status[IqEntry]; }
@@ -807,6 +824,8 @@ class DynInst : public ExecContext, public RefCounted
     /** Returns whether or not this instruction is squashed in the IQ. */
     bool isSquashedInIQ() const { return status[SquashedInIQ]; }
 
+    /** Pointer to the IQ storing the instruction */
+    IQUnit *iq = nullptr;
 
     //Load / Store Queue Functions
     //-----------------------
@@ -995,19 +1014,18 @@ class DynInst : public ExecContext, public RefCounted
     uint64_t htmDepth = 0;
 
   public:
-#if TRACING_ON
     // Value -1 indicates that particular phase
     // hasn't happened (yet).
     /** Tick records used for the pipeline activity viewer. */
     Tick fetchTick = -1;      // instruction fetch is completed.
     int32_t decodeTick = -1;  // instruction enters decode phase
     int32_t renameTick = -1;  // instruction enters rename phase
+    int32_t renameEndTick = -1; // instruction exits rename phase
     int32_t dispatchTick = -1;
     int32_t issueTick = -1;
     int32_t completeTick = -1;
     int32_t commitTick = -1;
     int32_t storeTick = -1;
-#endif
 
     /* Values used by LoadToUse stat */
     Tick firstIssue = -1;
@@ -1063,6 +1081,23 @@ class DynInst : public ExecContext, public RefCounted
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.is(MiscRegClass));
         setMiscReg(reg.index(), val);
+
+        /** If the MiscReg allows non-serializing updates, we
+         * can update the value immediately without waiting
+         * for commit, but only if the instruction is non
+         * speculative
+         */
+        if (!reg.regClass().isSerializing(reg)) {
+            assert(isNonSpeculative());
+
+            bool no_squash_from_TC = thread->noSquashFromTC;
+            thread->noSquashFromTC = true;
+
+            /** Update the architectural state with the new value */
+            cpu->setMiscReg(reg.index(), val, threadNumber);
+
+            thread->noSquashFromTC = no_squash_from_TC;
+        }
     }
 
     /** Called at the commit stage to update the misc. registers. */

@@ -220,12 +220,14 @@ PMU::setMiscReg(int misc_reg, RegVal val)
       case MISCREG_PMCNTENSET:
         reg_pmcnten |= val;
         updateAllCounters();
+        pmuExitEvent(false);
         return;
 
       case MISCREG_PMCNTENCLR_EL0:
       case MISCREG_PMCNTENCLR:
         reg_pmcnten &= ~val;
         updateAllCounters();
+        pmuExitEvent(false);
         return;
 
       case MISCREG_PMOVSCLR_EL0:
@@ -436,23 +438,36 @@ PMU::setControlReg(PMCR_t val)
     if (reg_pmcr.d != val.d)
         clock_remainder = 0;
 
-    // Optionally exit the simulation on various PMU control events.
-    // Exit on enable/disable takes precedence over exit on reset.
-    if (exitOnPMUControl) {
-        if (!reg_pmcr.e && val.e) {
-            inform("Exiting simulation: PMU enable detected");
-            exitSimLoop("performance counter enabled", 0);
-        } else if (reg_pmcr.e && !val.e) {
-            inform("Exiting simulation: PMU disable detected");
-            exitSimLoop("performance counter disabled", 0);
-        } else if (val.p) {
-            inform("Exiting simulation: PMU reset detected");
-            exitSimLoop("performance counter reset", 0);
-        }
+    reg_pmcr = val & reg_pmcr_wr_mask;
+
+    updateAllCounters();
+    pmuExitEvent(true);
+}
+
+void
+PMU::pmuExitEvent(bool check_reset)
+{
+    if (!exitOnPMUControl) {
+        return;
     }
 
-    reg_pmcr = val & reg_pmcr_wr_mask;
-    updateAllCounters();
+    // Optionally exit the simulation on various PMU control events.
+    // Exit on enable/disable takes precedence over exit on reset.
+    if (bool any_counter_enabled = reg_pmcr.e && reg_pmcnten;
+        any_counter_enabled != pmuEnabled) {
+
+        pmuEnabled = any_counter_enabled;
+        if (pmuEnabled) {
+            inform("Exiting simulation: PMU enable detected");
+            exitSimLoop("performance counter enabled", 0);
+        } else {
+            inform("Exiting simulation: PMU disable detected");
+            exitSimLoop("performance counter disabled", 0);
+        }
+    } else if (check_reset && reg_pmcr.p) {
+        inform("Exiting simulation: PMU reset detected");
+        exitSimLoop("performance counter reset", 0);
+    }
 }
 
 void
@@ -778,6 +793,8 @@ PMU::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(reg_pmselr);
     UNSERIALIZE_SCALAR(reg_pminten);
     UNSERIALIZE_SCALAR(reg_pmovsr);
+
+    pmuEnabled = reg_pmcr.e && reg_pmcnten;
 
     // Old checkpoints used to store the entire PMCEID value in a
     // single 64-bit entry (reg_pmceid). The register was extended in

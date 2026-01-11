@@ -95,8 +95,6 @@ if env['CONF']['HAVE_PROTOBUF']:
     )
     Source('inst_pb_trace.cc', tags=['protobuf'])
 
-SimObject('CheckerCPU.py', sim_objects=['CheckerCPU'])
-
 SimObject('BaseCPU.py', sim_objects=['BaseCPU'])
 SimObject('CpuCluster.py', sim_objects=['CpuCluster'])
 SimObject('CPUTracers.py', sim_objects=[
@@ -127,5 +125,5 @@ if env['CONF']['USE_CAPSTONE']:
     SimObject('Capstone.py', sim_objects=['CapstoneDisassembler'])
 
 SimObject('DummyChecker.py', sim_objects=['DummyChecker'])
-Source('checker/cpu.cc')
+
 DebugFlag('Checker')

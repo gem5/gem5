@@ -32,6 +32,7 @@
 #include <iostream>
 #include <unordered_map>
 
+#include "base/intmath.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/MachineID.hh"
 #include "mem/ruby/common/NetDest.hh"

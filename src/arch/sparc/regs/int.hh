@@ -73,7 +73,7 @@ class IntRegClassOps : public RegClassOps
     RegId flatten(const BaseISA &isa, const RegId &id) const override;
 };
 
-inline constexpr IntRegClassOps intRegClassOps;
+inline const IntRegClassOps intRegClassOps;
 
 inline constexpr RegClass intRegClass =
     RegClass(IntRegClass, IntRegClassName, int_reg::NumRegs, debug::IntRegs).

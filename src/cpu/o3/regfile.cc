@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2018 ARM Limited
+ * Copyright (c) 2016-2018, 2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -59,29 +59,28 @@ PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
     : intRegFile(*reg_classes.at(IntRegClass), _numPhysicalIntRegs),
       floatRegFile(*reg_classes.at(FloatRegClass), _numPhysicalFloatRegs),
       vectorRegFile(*reg_classes.at(VecRegClass), _numPhysicalVecRegs),
-      vectorElemRegFile(*reg_classes.at(VecElemClass), _numPhysicalVecRegs * (
-                  reg_classes.at(VecElemClass)->numRegs() /
-                  reg_classes.at(VecRegClass)->numRegs())),
+      vectorElemRegFile(*reg_classes.at(VecElemClass),
+                        _numPhysicalVecRegs *
+                            (reg_classes.at(VecElemClass)->numRegs() /
+                             reg_classes.at(VecRegClass)->numRegs())),
       vecPredRegFile(*reg_classes.at(VecPredRegClass),
-              _numPhysicalVecPredRegs),
+                     _numPhysicalVecPredRegs),
       matRegFile(*reg_classes.at(MatRegClass), _numPhysicalMatRegs),
       ccRegFile(*reg_classes.at(CCRegClass), _numPhysicalCCRegs),
       numPhysicalIntRegs(_numPhysicalIntRegs),
       numPhysicalFloatRegs(_numPhysicalFloatRegs),
       numPhysicalVecRegs(_numPhysicalVecRegs),
-      numPhysicalVecElemRegs(_numPhysicalVecRegs * (
-                  reg_classes.at(VecElemClass)->numRegs() /
-                  reg_classes.at(VecRegClass)->numRegs())),
+      numPhysicalVecElemRegs(_numPhysicalVecRegs *
+                             (reg_classes.at(VecElemClass)->numRegs() /
+                              reg_classes.at(VecRegClass)->numRegs())),
       numPhysicalVecPredRegs(_numPhysicalVecPredRegs),
       numPhysicalMatRegs(_numPhysicalMatRegs),
       numPhysicalCCRegs(_numPhysicalCCRegs),
-      totalNumRegs(_numPhysicalIntRegs
-                   + _numPhysicalFloatRegs
-                   + _numPhysicalVecRegs
-                   + numPhysicalVecElemRegs
-                   + _numPhysicalVecPredRegs
-                   + _numPhysicalMatRegs
-                   + _numPhysicalCCRegs)
+      totalNumRegs(_numPhysicalIntRegs + _numPhysicalFloatRegs +
+                   _numPhysicalVecRegs + numPhysicalVecElemRegs +
+                   _numPhysicalVecPredRegs + _numPhysicalMatRegs +
+                   _numPhysicalCCRegs +
+                   reg_classes.at(MiscRegClass)->numRegs())
 {
     RegIndex phys_reg;
     RegIndex flat_reg_idx = 0;
@@ -136,7 +135,8 @@ PhysRegFile::PhysRegFile(unsigned _numPhysicalIntRegs,
     // Misc regs have a fixed mapping but still need PhysRegIds.
     for (phys_reg = 0; phys_reg < reg_classes.at(MiscRegClass)->numRegs();
             phys_reg++) {
-        miscRegIds.emplace_back(*reg_classes.at(MiscRegClass), phys_reg, 0);
+        miscRegIds.emplace_back(*reg_classes.at(MiscRegClass), phys_reg,
+                                flat_reg_idx++);
     }
 }
 

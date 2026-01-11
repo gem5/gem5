@@ -151,17 +151,18 @@
 #include "debug/UFSHostDevice.hh"
 #include "dev/arm/abstract_nvm.hh"
 #include "dev/arm/base_gic.hh"
-#include "dev/storage/disk_image.hh"
 #include "dev/dma_device.hh"
 #include "dev/io_device.hh"
+#include "dev/storage/disk_image.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
-#include "params/UFSHostDevice.hh"
 #include "sim/serialize.hh"
 #include "sim/stats.hh"
 
 namespace gem5
 {
+
+struct UFSHostDeviceParams;
 
 /**
  * Host controller layer: This is your Host controller

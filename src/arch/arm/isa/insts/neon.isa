@@ -1973,9 +1973,10 @@ let {{
                           "class_name" : Name }
             exec_output += NeonExecDeclare.subst(substDict)
 
-    def twoRegNarrowMiscInst(name, Name, opClass, types, op, readDest=False):
+    def twoRegNarrowMiscInst(name, Name, opClass, types, op, readDest=False,
+                             extra_check=''):
         global header_output, exec_output
-        eWalkCode = simdEnabledCheckCode + '''
+        eWalkCode = simdEnabledCheckCode + extra_check + '''
         BigRegVect srcReg1;
         RegVect destReg;
         '''
@@ -3096,6 +3097,11 @@ let {{
     twoRegLongInst("vfmsl", "NVfmslElemQ", "SimdFloatMultAccOp", ("uint16_t",),
                      vfmslfpCode, True, extra_check=fhm_check)
 
+    bf16_check = '''
+      RegVal isar6 = xc->tcBase()->readMiscReg(MISCREG_ID_ISAR6);
+      if (!(bits(isar6, 23, 20) >= 0x1))
+          return std::make_shared<UndefinedInstruction>(machInst, true);
+    '''
     vfmabtElemBfCode = '''
         int sel = %(sel)s;
         int immsel = bits(machInst, 3);
@@ -3108,10 +3114,12 @@ let {{
 
         FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
     '''
-    twoEqualRegInst("vfmab", "VfmabElemQ", "SimdMultOp", ("uint32_t",), 4,
-        vfmabtElemBfCode % {"sel": "0"}, True)
-    twoEqualRegInst("vfmat", "VfmatElemQ", "SimdMultOp", ("uint32_t",), 4,
-        vfmabtElemBfCode % {"sel": "1"}, True)
+    twoEqualRegInst("vfmab", "VfmabElemQ", "SimdBf16MultAccOp",
+        ("uint32_t",), 4, vfmabtElemBfCode % {"sel": "0"},
+        True, extra=bf16_check)
+    twoEqualRegInst("vfmat", "VfmatElemQ", "SimdBf16MultAccOp",
+        ("uint32_t",), 4, vfmabtElemBfCode % {"sel": "1"},
+        True, extra=bf16_check)
 
     vfmabtBfCode = '''
         int sel = %(sel)s;
@@ -3124,10 +3132,10 @@ let {{
 
         FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
     '''
-    threeEqualRegInst("vfmab", "VfmabQ", "SimdMultOp", ("uint32_t",), 4,
-        vfmabtBfCode % {"sel": "0"}, True)
-    threeEqualRegInst("vfmat", "VfmatQ", "SimdMultOp", ("uint32_t",), 4,
-        vfmabtBfCode % {"sel": "1"}, True)
+    threeEqualRegInst("vfmab", "VfmabQ", "SimdBf16MultAccOp", ("uint32_t",), 4,
+        vfmabtBfCode % {"sel": "0"}, True, extra=bf16_check)
+    threeEqualRegInst("vfmat", "VfmatQ", "SimdBf16MultAccOp", ("uint32_t",), 4,
+        vfmabtBfCode % {"sel": "1"}, True, extra=bf16_check)
 
     vmlsfpCode = '''
         FPSCR fpscr = (FPSCR) FpscrExc;
@@ -3439,6 +3447,28 @@ let {{
     threeEqualRegInst("vusdot", "VusdotQ", "SimdMultOp", ("int32_t",), 4,
         vdotCode % {"src1_type": "uint8_t", "src2_type": "int8_t"}, True)
 
+    vdotBfCode = '''
+        FPSCR fpscr = fpVASimdCvtFPSCRValue((FPSCR)FpscrExc);
+
+        uint32_t sum = 0;
+        for (int w = 0; w < 2; w ++) {
+            uint16_t src1_elem = (uint16_t)(srcElem1 >> (16 * w));
+            uint16_t src2_elem = (uint16_t)(srcElem2 >> (16 * w));
+            uint32_t product = fplibBfMulH(src1_elem, src2_elem, fpscr);
+            sum = !w ? product : fplibAdd_Bf16(sum, product, fpscr);
+        }
+        destElem = fplibAdd_Bf16(destElem, sum, fpscr);
+    '''
+    twoEqualRegInst("vdot.bf16", "VdotElemBfD", "SimdBf16DotProdOp",
+        ("uint32_t",), 2, vdotBfCode, True, extra=bf16_check)
+    twoEqualRegInst("vdot.bf16", "VdotElemBfQ", "SimdBf16DotProdOp",
+        ("uint32_t",), 4, vdotBfCode, True, extra=bf16_check)
+
+    threeEqualRegInst("vdot.bf16", "VdotBfD", "SimdBf16DotProdOp",
+        ("uint32_t",), 2, vdotBfCode, True, extra=bf16_check)
+    threeEqualRegInst("vdot.bf16", "VdotBfQ", "SimdBf16DotProdOp",
+        ("uint32_t",), 4, vdotBfCode, True, extra=bf16_check)
+
     vmmla8bCode = '''
         for (int i = 0; i < 2; i ++) {
             for (int j = 0; j < 2; j ++) {
@@ -3467,6 +3497,34 @@ let {{
     threeEqualRegInst("vusmmla", "VusmmlaQ", "SimdMultOp", ("int32_t",), 4,
         vmmla8bCode % {"src1_type": "uint8_t", "src2_type": "int8_t"},
         readDest=True, complex=True)
+
+    vmmlaBfCode = '''
+        FPSCR fpscr = fpVASimdCvtFPSCRValue((FPSCR)FpscrExc);
+
+        for (int i = 0; i < 2; i ++) {
+            for (int j = 0; j < 2; j ++) {
+                uint32_t sum = letoh(destReg.elements[2 * i + j]);
+                for (int k = 0; k < 2; k ++) {
+                    uint32_t srcElem1 = letoh(srcReg1.elements[2 * i + k]);
+                    uint32_t srcElem2 = letoh(srcReg2.elements[2 * j + k]);
+
+                    uint16_t elt1_a = (uint16_t)(srcElem1 >> (16 * 0));
+                    uint16_t elt1_b = (uint16_t)(srcElem2 >> (16 * 0));
+                    uint16_t elt2_a = (uint16_t)(srcElem1 >> (16 * 1));
+                    uint16_t elt2_b = (uint16_t)(srcElem2 >> (16 * 1));
+
+                    uint32_t product = fplibAdd_Bf16(
+                        fplibBfMulH(elt1_a, elt1_b, fpscr),
+                        fplibBfMulH(elt2_a, elt2_b, fpscr), fpscr);
+                    sum = fplibAdd_Bf16(sum, product, fpscr);
+                }
+                destReg.elements[2 * i + j] = htole(sum);
+            }
+        }
+    '''
+    threeEqualRegInst("vmmla", "VmmlaBfQ", "SimdBf16MatMultAccOp",
+        ("uint32_t",), 4, vmmlaBfCode, readDest=True, complex=True,
+        extra=bf16_check)
 
     vshrCode = '''
         if (imm >= sizeof(srcElem1) * 8) {
@@ -3979,6 +4037,14 @@ let {{
         FpscrExc = fpscr;
     '''
     twoRegNarrowMiscInst("vcvt", "NVcvts2h", "SimdCvtOp", ("uint16_t",), vcvts2hCode)
+
+    vcvts2bfCode = '''
+        FPSCR fpscr = fpVASimdCvtFPSCRValue((FPSCR)FpscrExc);
+        destElem = fplibConvertBF(srcElem1, FPCRRounding(fpscr), fpscr);
+        FpscrExc = fpRestoreFPSCRValue(FpscrExc, fpscr);
+    '''
+    twoRegNarrowMiscInst("vcvt", "NVcvts2bf", "SimdCvtOp", ("uint16_t",),
+                         vcvts2bfCode, extra_check=bf16_check)
 
     vcvth2sCode = '''
         destElem = 0;

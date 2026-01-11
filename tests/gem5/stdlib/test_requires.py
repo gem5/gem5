@@ -29,7 +29,6 @@ from testlib import *
 isa_map = {
     "sparc": constants.sparc_tag,
     "mips": constants.mips_tag,
-    "null": constants.null_tag,
     "arm": constants.arm_tag,
     "x86": constants.vega_x86_tag,
     "power": constants.power_tag,
@@ -37,50 +36,47 @@ isa_map = {
 }
 
 length_map = {
-    "sparc": constants.long_tag,
-    "mips": constants.long_tag,
-    "null": constants.long_tag,
+    "sparc": constants.very_long_tag,
+    "mips": constants.very_long_tag,
     "arm": constants.long_tag,
     "x86": constants.long_tag,
-    "power": constants.long_tag,
+    "power": constants.very_long_tag,
     "riscv": constants.long_tag,
 }
 
 for isa in isa_map.keys():
-    if isa in ("x86", "arm"):
-        # We only do these checks for X86 and ARM to save compiling
-        # other ISAs.
-        gem5_verify_config(
-            name=f"requires-isa-{isa}",
-            verifiers=(),
-            fixtures=(),
-            config=joinpath(
-                config.base_dir,
-                "tests",
-                "gem5",
-                "stdlib",
-                "configs",
-                "requires_check.py",
-            ),
-            config_args=["-i", isa],
-            valid_isas=(constants.all_compiled_tag,),
-            length=length_map[isa],
-        )
+    gem5_verify_config(
+        name=f"requires-isa-{isa}",
+        verifiers=(),
+        fixtures=(),
+        config=joinpath(
+            config.base_dir,
+            "tests",
+            "gem5",
+            "stdlib",
+            "configs",
+            "requires_check.py",
+        ),
+        config_args=["-i", isa],
+        valid_isas=(isa_map[isa],),
+        valid_hosts=constants.supported_hosts,
+        length=length_map[isa],
+    )
 
-    if isa != "null":
-        gem5_verify_config(
-            name=f"requires-isa-{isa}-with-all-compiled",
-            verifiers=(),
-            fixtures=(),
-            config=joinpath(
-                config.base_dir,
-                "tests",
-                "gem5",
-                "stdlib",
-                "configs",
-                "requires_check.py",
-            ),
-            config_args=["-i", isa],
-            valid_isas=(constants.all_compiled_tag,),
-            length=constants.quick_tag,
-        )
+    gem5_verify_config(
+        name=f"requires-isa-{isa}-with-all-compiled",
+        verifiers=(),
+        fixtures=(),
+        config=joinpath(
+            config.base_dir,
+            "tests",
+            "gem5",
+            "stdlib",
+            "configs",
+            "requires_check.py",
+        ),
+        config_args=["-i", isa],
+        valid_isas=(constants.all_compiled_tag,),
+        valid_hosts=constants.supported_hosts,
+        length=constants.quick_tag,
+    )

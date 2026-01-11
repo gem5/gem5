@@ -29,6 +29,7 @@ from m5.objects.Device import (
     IsaFake,
 )
 from m5.objects.PciHost import GenericPciHost
+from m5.objects.PciUpstream import PciBus
 from m5.objects.Platform import Platform
 from m5.objects.SouthBridge import SouthBridge
 from m5.objects.Terminal import Terminal
@@ -58,6 +59,7 @@ class Pc(Platform):
 
     south_bridge = Param.SouthBridge(SouthBridge(), "Southbridge")
     pci_host = PcPciHost()
+    pci_bus = PciBus()
 
     # Serial port and terminal
     com_1 = Uart8250()
@@ -90,12 +92,24 @@ class Pc(Platform):
     bad_addr = BadAddr(pio=default_bus.default)
 
     def attachIO(self, bus, dma_ports=[]):
-        self.south_bridge.attachIO(bus, dma_ports)
+        self.south_bridge.attachIO(bus, self.pci_bus, dma_ports)
         self.com_1.pio = bus.mem_side_ports
         self.fake_com_2.pio = bus.mem_side_ports
         self.fake_com_3.pio = bus.mem_side_ports
         self.fake_com_4.pio = bus.mem_side_ports
         self.fake_floppy.pio = bus.mem_side_ports
-        self.pci_host.pio = bus.mem_side_ports
+
+        self.pci_bus.default = self.pci_host.down_response_port()
+        self.pci_bus.cpu_side_ports = self.pci_host.down_request_port()
+        self.pci_bus.config_error_port = self.pci_host.config_error.pio
+
+        bus.mem_side_ports = self.pci_host.up_response_port()
+
+        if dma_ports.count(self.pci_host.up_request_port()) == 0:
+            bus.cpu_side_ports = self.pci_host.up_request_port()
 
         self.default_bus.cpu_side_ports = bus.default
+
+    def attachPciDevice(self, device):
+        self.pci_bus.cpu_side_ports = device.dma
+        self.pci_bus.mem_side_ports = device.pio

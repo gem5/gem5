@@ -60,6 +60,7 @@
 #include <linux/kdev_t.h>
 #include <sched.h>
 #include <sys/eventfd.h>
+#include <sys/sendfile.h>
 #include <sys/statfs.h>
 
 #else
@@ -109,6 +110,7 @@
 #include "sim/syscall_desc.hh"
 #include "sim/syscall_emul_buf.hh"
 #include "sim/syscall_return.hh"
+#include "sim/system.hh"
 
 #if defined(__APPLE__) && defined(__MACH__) && !defined(CMSG_ALIGN)
 #define CMSG_ALIGN(len) (((len) + sizeof(size_t) - 1) & ~(sizeof(size_t) - 1))
@@ -140,6 +142,10 @@ SyscallReturn ignoreFunc(SyscallDesc *desc, ThreadContext *tc);
 /// Like above, but only prints a warning once per syscall desc it's used with.
 SyscallReturn
 ignoreWarnOnceFunc(SyscallDesc *desc, ThreadContext *tc);
+
+/// Handler for unimplemented syscalls that return -ENOSYS to the target
+/// program.
+SyscallReturn ignoreWithEnosysFunc(SyscallDesc *desc, ThreadContext *tc);
 
 /// Target exit() handler: terminate current context.
 SyscallReturn exitFunc(SyscallDesc *desc, ThreadContext *tc, int status);
@@ -1814,6 +1820,39 @@ doClone(SyscallDesc *desc, ThreadContext *tc, RegVal flags, RegVal newStack,
     cp->assignThreadContext(ctc->contextId());
     owner->revokeThreadContext(ctc->contextId());
 
+    // For switchable CPU configurations, we need to also set the process
+    // pointer on any switched-out CPUs that have the same CPU ID and thread
+    // context ID. This ensures that when CPU switching occurs, both CPUs
+    // have consistent process pointers, preventing assertion failures in
+    // takeOverFrom().
+    BaseCPU *current_cpu = ctc->getCpuPtr();
+    ThreadID current_thread_id = ctc->threadId();
+
+    // Iterate through all CPUs in the system to find switchable partners
+    for (BaseCPU *cpu : BaseCPU::getCpuList()) {
+        // Skip the current CPU and only consider switched-out CPUs with
+        // matching ID
+        if (cpu != current_cpu && cpu->switchedOut() &&
+            cpu->cpuId() == current_cpu->cpuId()) {
+
+            // Find the corresponding thread context on the switched-out CPU
+            if (current_thread_id < cpu->numThreadContexts()) {
+                ThreadContext *switched_tc =
+                    cpu->getThreadContext(current_thread_id);
+
+                // Update the process pointer to match the active CPU
+                if (switched_tc) {
+                    DPRINTF(SyscallVerbose,
+                            "doClone: Updating switched-out "
+                            "CPU %d thread %d process pointer from %p to %p\n",
+                            cpu->cpuId(), current_thread_id,
+                            switched_tc->getProcessPtr(), cp);
+                    switched_tc->setProcessPtr(cp);
+                }
+            }
+        }
+    }
+
     if (flags & OS::TGT_CLONE_PARENT_SETTID) {
         BufferArg ptidBuf(ptidPtr, sizeof(long));
         long *ptid = (long *)ptidBuf.bufferPtr();
@@ -3233,6 +3272,45 @@ getrandomFunc(SyscallDesc *desc, ThreadContext *tc,
     buf.copyOut(proxy);
 
     return count;
+}
+
+template <typename OS>
+SyscallReturn
+sigreturnFunc(SyscallDesc *desc, ThreadContext *tc)
+{
+    OS::archSigreturn(tc);
+    return SyscallReturn(); // There is no return value for sigreturn.
+}
+
+template <typename OS>
+SyscallReturn
+sendfileFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_out_fd,
+             int tgt_in_fd, VPtr<typename OS::off_t> tgt_offset,
+             typename OS::size_t count)
+{
+#if defined(__linux__)
+    auto p = tc->getProcessPtr();
+    auto out_fdp = std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[tgt_out_fd]);
+    auto in_fdp = std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[tgt_in_fd]);
+    panic_if(!out_fdp || !in_fdp, "sendfile: unhandled non-host-backed FDs\n");
+    const int sim_out_fd = out_fdp->getSimFD();
+    const int sim_in_fd = in_fdp->getSimFD();
+
+    off_t sim_offset;
+    if (tgt_offset) {
+        sim_offset = *tgt_offset;
+    }
+    ssize_t result = sendfile(sim_out_fd, sim_in_fd,
+                              tgt_offset ? &sim_offset : nullptr, count);
+    if (tgt_offset) {
+        *tgt_offset = sim_offset;
+    }
+
+    return result;
+#else
+    warnUnsupportedOS("sendfile");
+    return -ENOSYS;
+#endif
 }
 
 } // namespace gem5

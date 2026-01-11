@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 ARM Limited
+ * Copyright (c) 2023,2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -40,12 +40,13 @@
 
 #include <ARM/TLM/arm_chi.h>
 
-#include "mem/ruby/protocol/chi/generic/CHIGenericController.hh"
 #include "mem/ruby/protocol/CHI/CHIDataType.hh"
 #include "mem/ruby/protocol/CHI/CHIRequestType.hh"
 #include "mem/ruby/protocol/CHI/CHIResponseType.hh"
 #include "mem/ruby/protocol/RequestStatus.hh"
 #include "mem/ruby/protocol/WriteMask.hh"
+#include "mem/ruby/protocol/chi/generic/CHIGenericController.hh"
+#include "mem/ruby/protocol/chi/tlm/port.hh"
 #include "params/TlmController.hh"
 
 namespace gem5 {
@@ -94,8 +95,16 @@ class CacheController : public ruby::CHIGenericController
     PARAMS(TlmController);
     CacheController(const Params &p);
 
+    /** Request input port */
+    SinkPort<CacheController> inPort;
+
+    /** Response output port */
+    SourcePort<CacheController> outPort;
+
     /** Set this to send data upstream */
     std::function<void(ARM::CHI::Payload* payload, ARM::CHI::Phase* phase)> bw;
+
+    Port &getPort(const std::string &if_name, PortID idx) override;
 
     bool recvRequestMsg(const CHIRequestMsg *msg) override;
     bool recvSnoopMsg(const CHIRequestMsg *msg) override;

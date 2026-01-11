@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017, 2020-2022 Arm Limited
+# Copyright (c) 2016-2017, 2020-2022, 2025 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -99,6 +99,11 @@ def config_ruby(system, args):
         clock=args.ruby_clock, voltage_domain=system.voltage_domain
     )
 
+    # Connect the sequencer ports to the CPU
+    for cluster in system.cpu_cluster:
+        for i, cpu in enumerate(cluster.cpus):
+            system.ruby._cpu_ports[i].connectCpuPorts(cpu)
+
 
 def create(args):
     """Create and configure the system object."""
@@ -148,10 +153,12 @@ def create(args):
     for dev in system.pci_devices:
         system.attach_pci(dev)
 
-    config_ruby(system, args)
-
     # Wire up the system's memory system
     system.connect()
+
+    # Generate a ruby system. This has to happen after connection
+    # so that we have extracted the dma ports
+    config_ruby(system, args)
 
     # Setup gem5's minimal Linux boot loader.
     system.realview.setupBootLoader(system, SysPaths.binary)

@@ -669,23 +669,53 @@ def construct_gpudirs(options, system, ruby_system, network):
 
         # Create memory controllers too
         mem_type = ObjectList.mem_list.get(options.dgpu_mem_type)
-        dram_intf = MemConfig.create_mem_intf(
-            mem_type,
-            gpu_mem_range,
-            i,
-            int(math.log(options.dgpu_num_dirs, 2)),
-            options.cacheline_size,
-            xor_low_bit,
-        )
+
+        if options.hbm_ctrl:
+            # If HBM controller is enabled,
+            # set up dram interfaces for two pseudo channels per HBMCtrl
+            dram_intf = MemConfig.create_mem_intf(
+                mem_type,
+                gpu_mem_range,
+                2 * i,
+                int(math.log(options.dgpu_num_dirs, 2)) + 1,
+                options.cacheline_size,
+                xor_low_bit,
+            )
+            dram_intf_2 = MemConfig.create_mem_intf(
+                mem_type,
+                gpu_mem_range,
+                2 * i + 1,
+                int(math.log(options.dgpu_num_dirs, 2)) + 1,
+                options.cacheline_size,
+                xor_low_bit,
+            )
+        else:
+            dram_intf = MemConfig.create_mem_intf(
+                mem_type,
+                gpu_mem_range,
+                i,
+                int(math.log(options.dgpu_num_dirs, 2)),
+                options.cacheline_size,
+                xor_low_bit,
+            )
+
         if issubclass(mem_type, DRAMInterface):
-            mem_ctrl = m5.objects.MemCtrl(dram=dram_intf)
+            if options.hbm_ctrl:
+                mem_ctrl = m5.objects.HBMCtrl(
+                    dram=dram_intf, dram_2=dram_intf_2
+                )
+            else:
+                mem_ctrl = m5.objects.MemCtrl(dram=dram_intf)
         else:
             mem_ctrl = dram_intf
 
         mem_ctrl.port = dir_cntrl.memory_out_port
         mem_ctrl.dram.enable_dram_powerdown = False
-        dir_cntrl.addr_ranges = dram_intf.range
 
+        if options.hbm_ctrl:
+            dir_cntrl.addr_ranges = [dram_intf.range, dram_intf_2.range]
+        else:
+            dir_cntrl.addr_ranges = dram_intf.range
         # Append
         exec("ruby_system.gpu_dir_cntrl%d = dir_cntrl" % i)
         dir_cntrl_nodes.append(dir_cntrl)

@@ -442,6 +442,7 @@ KvmVM::disableMemSlot(const KvmVM::MemSlot num)
     if (slot.active)
         setUserMemoryRegion(num.num, NULL, 0, 0, 0);
     slot.active = false;
+    _slotPad.erase(num.num);
 }
 
 void
@@ -457,23 +458,62 @@ KvmVM::setUserMemoryRegion(uint32_t slot,
                            void *host_addr, Addr guest_addr,
                            uint64_t len, uint32_t flags)
 {
-    struct kvm_userspace_memory_region m;
+    const long page_sysconf = sysconf(_SC_PAGESIZE);
 
-    memset(&m, 0, sizeof(m));
+    warn_if(page_sysconf <= 0,
+            "Defaulting to 4 KiB page size for KVM alignment");
+
+    // 4096 is the most common page size
+    const size_t page_size = (page_sysconf > 0) ? (size_t)page_sysconf : 4096;
+    const uint64_t remainder = len % page_size;
+
+    void *padded_host = nullptr;
+    uint64_t mapped_len = len;
+
+    if (remainder != 0) {
+        const uint64_t new_len = len + (page_size - remainder);
+
+        int ret_code = posix_memalign(&padded_host, page_size, new_len);
+        if (ret_code != 0 || !padded_host) {
+            panic("KVM: Failed to allocate padded buffer of size 0x%llx\n",
+                  (unsigned long long)new_len);
+        }
+
+        if (host_addr) {
+            std::memcpy(padded_host, host_addr, len);
+        }
+
+        std::memset(static_cast<char *>(padded_host) + len, 0, new_len - len);
+
+        host_addr = padded_host;
+        mapped_len = new_len;
+
+        _slotPad[slot].reset(padded_host);
+
+        DPRINTF(Kvm,
+                "Padding memslot %u from 0x%llx to 0x%llx bytes "
+                "(host page 0x%zx)\n",
+                slot, (unsigned long long)len, (unsigned long long)mapped_len,
+                page_size);
+    }
+
+    struct kvm_userspace_memory_region m;
+    std::memset(&m, 0, sizeof(m));
     m.slot = slot;
     m.flags = flags;
     m.guest_phys_addr = (uint64_t)guest_addr;
-    m.memory_size = len;
+    m.memory_size = mapped_len;
     m.userspace_addr = (__u64)host_addr;
 
     if (ioctl(KVM_SET_USER_MEMORY_REGION, (void *)&m) == -1) {
         panic("Failed to setup KVM memory region:\n"
-              "\tHost Address: 0x%p\n"
-              "\tGuest Address: 0x%llx\n",
-              "\tSize: %ll\n",
-              "\tFlags: 0x%x\n",
-              m.userspace_addr, m.guest_phys_addr,
-              m.memory_size, m.flags);
+              "\tHost Address: 0x%llx\n"
+              "\tGuest Address: 0x%llx\n"
+              "\tSize:        0x%llx\n"
+              "\tFlags:       0x%x\n",
+              (unsigned long long)m.userspace_addr,
+              (unsigned long long)m.guest_phys_addr,
+              (unsigned long long)m.memory_size, m.flags);
     }
 }
 

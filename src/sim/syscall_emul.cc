@@ -102,6 +102,13 @@ ignoreWarnOnceFunc(SyscallDesc *desc, ThreadContext *tc)
     return 0;
 }
 
+SyscallReturn
+ignoreWithEnosysFunc(SyscallDesc *desc, ThreadContext *tc)
+{
+    warn("ignoring syscall %s(...) returning -ENOSYS", desc->name());
+    return -ENOSYS;
+}
+
 static void
 exitFutexWake(ThreadContext *tc, VPtr<> addr, uint64_t tgid)
 {

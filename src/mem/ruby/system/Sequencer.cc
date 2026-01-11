@@ -41,13 +41,9 @@
 
 #include "mem/ruby/system/Sequencer.hh"
 
-#include "arch/x86/ldstflags.hh"
-#include "base/compiler.hh"
 #include "base/logging.hh"
-#include "base/str.hh"
 #include "cpu/testers/rubytest/RubyTester.hh"
 #include "debug/LLSC.hh"
-#include "debug/MemoryAccess.hh"
 #include "debug/ProtocolTrace.hh"
 #include "debug/RubyHitMiss.hh"
 #include "debug/RubySequencer.hh"
@@ -59,7 +55,6 @@
 #include "mem/ruby/slicc_interface/RubyRequest.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
 #include "mem/ruby/system/RubySystem.hh"
-#include "sim/system.hh"
 
 namespace gem5
 {
@@ -367,6 +362,14 @@ Sequencer::insertRequest(PacketPtr pkt, RubyRequestType primary_type,
     Addr line_addr = makeLineAddress(pkt->getAddr());
     // Check if there is any outstanding request for the same cache line.
     auto &seq_req_list = m_RequestTable[line_addr];
+
+    // For software prefetches, if the same cache line is already requested we
+    // can return aliased and skip emplacing it on the request table, this way
+    // we won't need to handle any response at all
+    if (pkt->cmd.isSWPrefetch() && seq_req_list.size() > 1) {
+        return RequestStatus_Aliased;
+    }
+
     // Create a default entry
     seq_req_list.emplace_back(pkt, primary_type,
         secondary_type, curCycle());
@@ -730,13 +733,21 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
     // update the data unless it is a non-data-carrying flush
     if (m_ruby_system->getWarmupEnabled()) {
         data.setData(pkt);
-    } else if (!pkt->isFlush()) {
+    } else if (!pkt->isFlush() && !pkt->isCleanInvalidateRequest()) {
         if ((type == RubyRequestType_LD) ||
             (type == RubyRequestType_IFETCH) ||
             (type == RubyRequestType_RMW_Read) ||
             (type == RubyRequestType_Locked_RMW_Read) ||
             (type == RubyRequestType_Load_Linked) ||
             (type == RubyRequestType_ATOMIC_RETURN)) {
+
+            // For software prefetches, since we've already sent an early
+            // response back to the core, we can just ignore this
+            if (pkt->cmd.isSWPrefetch()) {
+                delete pkt;
+                return;
+            }
+
             pkt->setData(
                 data.getData(getOffset(request_address), pkt->getSize()));
 
@@ -1038,8 +1049,8 @@ Sequencer::makeRequest(PacketPtr pkt)
                     primary_type = secondary_type = RubyRequestType_LD;
                 }
             }
-        } else if (pkt->isFlush()) {
-          primary_type = secondary_type = RubyRequestType_FLUSH;
+        } else if (pkt->isFlush() || pkt->isCleanInvalidateRequest()) {
+            primary_type = secondary_type = RubyRequestType_FLUSH;
         } else if (pkt->cmd == MemCmd::MemSyncReq) {
             primary_type = secondary_type = RubyRequestType_REPLACEMENT;
             assert(!m_cache_inv_pkt);

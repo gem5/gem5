@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2020 ARM Limited
+// Copyright (c) 2017-2020, 2025 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -42,9 +42,11 @@ output header {{
     StaticInstPtr
     decodeSveContigLoadSSInsts(uint8_t dtype, ExtMachInst machInst,
                                RegIndex zt, RegIndex pg, RegIndex rn,
-                               RegIndex rm, bool firstFaulting)
+                               RegIndex rm, bool firstFaulting,
+                               bool nonTemporal)
     {
-        const char* mn = firstFaulting ? "ldff1" : "ld1";
+        const char* mn = firstFaulting ? "ldff1" :
+                         (nonTemporal ? "ldnt1" : "ld1");
         switch (dtype) {
           case 0x0:
             return new Base<uint8_t, uint8_t>(mn, machInst, zt, pg, rn, rm);
@@ -88,10 +90,12 @@ output header {{
     decodeSveContigLoadSIInsts(uint8_t dtype, ExtMachInst machInst,
                                RegIndex zt, RegIndex pg, RegIndex rn,
                                uint64_t imm, bool nonFaulting,
-                               bool replicate = false)
+                               bool nonTemporal, bool replicate = false)
     {
         assert(!(nonFaulting && replicate));
-        const char* mn = replicate ? "ld1r" : (nonFaulting ? "ldnf1" : "ld1");
+        const char* mn = replicate ? "ld1r" :
+                         (nonFaulting ? "ldnf1" :
+                         (nonTemporal ? "ldnt1" : "ld1"));
         switch (dtype) {
           case 0x0:
             return new Base<uint8_t, uint8_t>(mn, machInst, zt, pg, rn, imm);
@@ -134,9 +138,9 @@ output header {{
     StaticInstPtr
     decodeSveContigStoreSSInsts(uint8_t dtype, ExtMachInst machInst,
                                 RegIndex zt, RegIndex pg, RegIndex rn,
-                                RegIndex rm)
+                                RegIndex rm, bool nonTemporal)
     {
-        const char* mn = "st1";
+        const char* mn = nonTemporal ? "stnt1" : "st1";
         switch (dtype) {
           case 0x0:
             return new Base<uint8_t, uint8_t>(mn, machInst, zt, pg, rn, rm);
@@ -167,9 +171,9 @@ output header {{
     StaticInstPtr
     decodeSveContigStoreSIInsts(uint8_t dtype, ExtMachInst machInst,
                                 RegIndex zt, RegIndex pg, RegIndex rn,
-                                int8_t imm)
+                                int8_t imm, bool nonTemporal)
     {
-        const char* mn = "st1";
+        const char* mn = nonTemporal ? "stnt1" : "st1";
         switch (dtype) {
           case 0x0:
             return new Base<uint8_t, uint8_t>(mn, machInst, zt, pg, rn, imm);
@@ -209,8 +213,8 @@ output decoder {{
             int64_t imm, int numregs)
     {
         static const char* nm[5][4] = {
-            { nullptr, nullptr, nullptr, nullptr},
-            { nullptr, nullptr, nullptr, nullptr},
+            { nullptr, nullptr, nullptr, nullptr },
+            { nullptr, nullptr, nullptr, nullptr },
             { "ld2b", "ld2h", "ld2w", "ld2d" },
             { "ld3b", "ld3h", "ld3w", "ld3d" },
             { "ld4b", "ld4h", "ld4w", "ld4d" } };
@@ -266,9 +270,9 @@ output decoder {{
             RegIndex zt, RegIndex pg, RegIndex xn,
             int64_t imm, int numregs)
     {
-        static const char* nm[5][4] = {
-            { nullptr, nullptr, nullptr, nullptr},
-            { nullptr, nullptr, nullptr, nullptr},
+        static const char* nm[5][5] = {
+            { nullptr, nullptr, nullptr, nullptr },
+            { nullptr, nullptr, nullptr, nullptr },
             { "st2b", "st2h", "st2w", "st2d" },
             { "st3b", "st3h", "st3w", "st3d" },
             { "st4b", "st4h", "st4w", "st4d" } };
@@ -324,9 +328,9 @@ output decoder {{
             RegIndex zt, RegIndex pg, RegIndex xn,
             RegIndex xm, int numregs)
     {
-        static const char* nm[5][4] = {
-            { nullptr, nullptr, nullptr, nullptr},
-            { nullptr, nullptr, nullptr, nullptr},
+        static const char* nm[5][5] = {
+            { nullptr, nullptr, nullptr, nullptr },
+            { nullptr, nullptr, nullptr, nullptr },
             { "ld2b", "ld2h", "ld2w", "ld2d" },
             { "ld3b", "ld3h", "ld3w", "ld3d" },
             { "ld4b", "ld4h", "ld4w", "ld4d" } };
@@ -382,9 +386,9 @@ output decoder {{
             RegIndex zt, RegIndex pg, RegIndex xn,
             RegIndex xm, int numregs)
     {
-        static const char* nm[5][4] = {
-            { nullptr, nullptr, nullptr, nullptr},
-            { nullptr, nullptr, nullptr, nullptr},
+        static const char* nm[5][5] = {
+            { nullptr, nullptr, nullptr, nullptr },
+            { nullptr, nullptr, nullptr, nullptr },
             { "st2b", "st2h", "st2w", "st2d" },
             { "st3b", "st3h", "st3w", "st3d" },
             { "st4b", "st4h", "st4w", "st4d" } };
@@ -430,6 +434,366 @@ output decoder {{
             case 3:
                 return decodeSveStructStoreSSInstsByNReg<uint64_t>(esize,
                             machInst, zt, pg, xn, xm, numregs);
+        }
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSveStructLoadQuadSIInstsByNReg(ExtMachInst machInst,
+            RegIndex zt, RegIndex pg, RegIndex xn,
+            int64_t imm, int numregs)
+    {
+        static const char* nm[5] = {
+            nullptr, nullptr, "ld2q", "ld3q", "ld4q"};
+
+        switch (numregs) {
+            case 2:
+                return new SveLdStructSI<__uint128_t,
+                        SveLoadRegImmQuadMicroop,
+                        SveDeIntrlv2Microop>(
+                               nm[numregs], machInst, MemReadOp,
+                               zt, pg, xn, imm, numregs);
+            case 3:
+                return new SveLdStructSI<__uint128_t,
+                        SveLoadRegImmQuadMicroop,
+                        SveDeIntrlv3Microop>(
+                               nm[numregs], machInst, MemReadOp,
+                               zt, pg, xn, imm, numregs);
+            case 4:
+                return new SveLdStructSI<__uint128_t,
+                        SveLoadRegImmQuadMicroop,
+                        SveDeIntrlv4Microop>(
+                               nm[numregs], machInst, MemReadOp,
+                               zt, pg, xn, imm, numregs);
+        }
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSveStructStoreQuadSIInstsByNReg(ExtMachInst machInst,
+            RegIndex zt, RegIndex pg, RegIndex xn,
+            int64_t imm, int numregs)
+    {
+        static const char* nm[5] = {
+            nullptr, nullptr, "st2q", "st3q", "st4q"};
+
+        switch (numregs) {
+            case 2:
+                return new SveStStructSI<__uint128_t,
+                        SveStoreRegImmQuadMicroop,
+                        SveIntrlv2Microop>(
+                            nm[numregs], machInst, MemWriteOp,
+                            zt, pg, xn, imm, numregs);
+            case 3:
+                return new SveStStructSI<__uint128_t,
+                        SveStoreRegImmQuadMicroop,
+                        SveIntrlv3Microop>(
+                            nm[numregs], machInst, MemWriteOp,
+                            zt, pg, xn, imm, numregs);
+           case 4:
+                return new SveStStructSI<__uint128_t,
+                        SveStoreRegImmQuadMicroop,
+                        SveIntrlv4Microop>(
+                            nm[numregs], machInst, MemWriteOp,
+                            zt, pg, xn, imm, numregs);
+        }
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSveStructLoadQuadSSInstsByNReg(ExtMachInst machInst,
+            RegIndex zt, RegIndex pg, RegIndex xn,
+            RegIndex xm, int numregs)
+    {
+        static const char* nm[5] = {
+            nullptr, nullptr, "ld2q", "ld3q", "ld4q"};
+
+        switch (numregs) {
+            case 2:
+                return new SveLdStructSS<__uint128_t,
+                        SveLoadRegRegQuadMicroop,
+                        SveDeIntrlv2Microop>(
+                               nm[numregs], machInst, MemReadOp,
+                               zt, pg, xn, xm, numregs);
+            case 3:
+                return new SveLdStructSS<__uint128_t,
+                        SveLoadRegRegQuadMicroop,
+                        SveDeIntrlv3Microop>(
+                               nm[numregs], machInst, MemReadOp,
+                               zt, pg, xn, xm, numregs);
+            case 4:
+                return new SveLdStructSS<__uint128_t,
+                        SveLoadRegRegQuadMicroop,
+                        SveDeIntrlv4Microop>(
+                               nm[numregs], machInst, MemReadOp,
+                               zt, pg, xn, xm, numregs);
+        }
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSveStructStoreQuadSSInstsByNReg(ExtMachInst machInst,
+            RegIndex zt, RegIndex pg, RegIndex xn,
+            RegIndex xm, int numregs)
+    {
+        static const char* nm[5] = {
+            nullptr, nullptr, "st2q", "st3q", "st4q"};
+
+        switch (numregs) {
+            case 2:
+                return new SveStStructSS<__uint128_t,
+                        SveStoreRegRegQuadMicroop,
+                        SveIntrlv2Microop>(
+                               nm[numregs], machInst, MemWriteOp,
+                               zt, pg, xn, xm, numregs);
+            case 3:
+                return new SveStStructSS<__uint128_t,
+                        SveStoreRegRegQuadMicroop,
+                        SveIntrlv3Microop>(
+                               nm[numregs], machInst, MemWriteOp,
+                               zt, pg, xn, xm, numregs);
+            case 4:
+                return new SveStStructSS<__uint128_t,
+                        SveStoreRegRegQuadMicroop,
+                        SveIntrlv4Microop>(
+                               nm[numregs], machInst, MemWriteOp,
+                               zt, pg, xn, xm, numregs);
+        }
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSveContigConseLoadSIInsts(uint8_t msz, ExtMachInst machInst,
+            RegIndex zt, RegIndex pg, RegIndex rn,
+            int64_t imm, int numregs, bool nonTemporal)
+    {
+        static const char* nm[2][4] = {
+            { "ld1b", "ld1h", "ld1w", "ld1d" },
+            { "ldnt1b", "ldnt1h", "ldnt1w", "ldnt1d" } };
+
+        if (!nonTemporal) {
+            switch (msz) {
+                case 0:
+                    return new SveLdContigConseSI<uint8_t,
+                            SveLoadRegImmPngMicroop>(
+                                nm[nonTemporal][msz], machInst, MemReadOp,
+                                zt, pg, rn, imm, numregs);
+                case 1:
+                    return new SveLdContigConseSI<uint16_t,
+                            SveLoadRegImmPngMicroop>(
+                                nm[nonTemporal][msz], machInst, MemReadOp,
+                                zt, pg, rn, imm, numregs);
+                case 2:
+                    return new SveLdContigConseSI<uint32_t,
+                            SveLoadRegImmPngMicroop>(
+                                nm[nonTemporal][msz], machInst, MemReadOp,
+                                zt, pg, rn, imm, numregs);
+                case 3:
+                    return new SveLdContigConseSI<uint64_t,
+                            SveLoadRegImmPngMicroop>(
+                                nm[nonTemporal][msz], machInst, MemReadOp,
+                                zt, pg, rn, imm, numregs);
+            }
+        } else {
+            switch (msz) {
+                case 0:
+                    return new SveLdContigConseSI<uint8_t,
+                            SveLoadRegImmPngNTMicroop>(
+                                nm[nonTemporal][msz], machInst, MemReadOp,
+                                zt, pg, rn, imm, numregs);
+                case 1:
+                    return new SveLdContigConseSI<uint16_t,
+                            SveLoadRegImmPngNTMicroop>(
+                                nm[nonTemporal][msz], machInst, MemReadOp,
+                                zt, pg, rn, imm, numregs);
+                case 2:
+                    return new SveLdContigConseSI<uint32_t,
+                            SveLoadRegImmPngNTMicroop>(
+                                nm[nonTemporal][msz], machInst, MemReadOp,
+                                zt, pg, rn, imm, numregs);
+                case 3:
+                    return new SveLdContigConseSI<uint64_t,
+                            SveLoadRegImmPngNTMicroop>(
+                                nm[nonTemporal][msz], machInst, MemReadOp,
+                                zt, pg, rn, imm, numregs);
+            }
+        }
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSveContigConseStoreSIInsts(uint8_t msz, ExtMachInst machInst,
+            RegIndex zt, RegIndex pg, RegIndex xn,
+            int64_t imm, int numregs, bool nonTemporal)
+    {
+        static const char* nm[2][4] = {
+            { "st1b", "st1h", "st1w", "st1d" },
+            { "stnt1b", "stnt1h", "stnt1w", "stnt1d" } };
+
+        if (!nonTemporal) {
+            switch (msz) {
+                case 0:
+                    return new SveStContigConseSI<uint8_t,
+                            SveStoreRegImmPngMicroop>(
+                                nm[nonTemporal][msz], machInst, MemWriteOp,
+                                zt, pg, xn, imm, numregs);
+                case 1:
+                    return new SveStContigConseSI<uint16_t,
+                            SveStoreRegImmPngMicroop>(
+                                nm[nonTemporal][msz], machInst, MemWriteOp,
+                                zt, pg, xn, imm, numregs);
+                case 2:
+                    return new SveStContigConseSI<uint32_t,
+                            SveStoreRegImmPngMicroop>(
+                                nm[nonTemporal][msz], machInst, MemWriteOp,
+                                zt, pg, xn, imm, numregs);
+                case 3:
+                    return new SveStContigConseSI<uint64_t,
+                            SveStoreRegImmPngMicroop>(
+                                nm[nonTemporal][msz], machInst, MemWriteOp,
+                                zt, pg, xn, imm, numregs);
+            }
+        } else {
+            switch (msz) {
+                case 0:
+                    return new SveStContigConseSI<uint8_t,
+                            SveStoreRegImmPngNTMicroop>(
+                                nm[nonTemporal][msz], machInst, MemWriteOp,
+                                zt, pg, xn, imm, numregs);
+                case 1:
+                    return new SveStContigConseSI<uint16_t,
+                            SveStoreRegImmPngNTMicroop>(
+                                nm[nonTemporal][msz], machInst, MemWriteOp,
+                                zt, pg, xn, imm, numregs);
+                case 2:
+                    return new SveStContigConseSI<uint32_t,
+                            SveStoreRegImmPngNTMicroop>(
+                                nm[nonTemporal][msz], machInst, MemWriteOp,
+                                zt, pg, xn, imm, numregs);
+                case 3:
+                    return new SveStContigConseSI<uint64_t,
+                            SveStoreRegImmPngNTMicroop>(
+                                nm[nonTemporal][msz], machInst, MemWriteOp,
+                                zt, pg, xn, imm, numregs);
+            }
+        }
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSveContigConseLoadSSInsts(uint8_t msz, ExtMachInst machInst,
+            RegIndex zt, RegIndex pg, RegIndex rn,
+            RegIndex rm, int numregs, bool nonTemporal)
+    {
+        static const char* nm[2][4] = {
+            { "ld1b", "ld1h", "ld1w", "ld1d" },
+            { "ldnt1b", "ldnt1h", "ldnt1w", "ldnt1d" } };
+
+        if (!nonTemporal) {
+            switch (msz) {
+                case 0:
+                    return new SveLdContigConseSS<uint8_t,
+                            SveLoadRegRegPngMicroop>(
+                                nm[nonTemporal][msz], machInst, MemReadOp,
+                                zt, pg, rn, rm, numregs);
+                case 1:
+                    return new SveLdContigConseSS<uint16_t,
+                            SveLoadRegRegPngMicroop>(
+                                nm[nonTemporal][msz], machInst, MemReadOp,
+                                zt, pg, rn, rm, numregs);
+                case 2:
+                    return new SveLdContigConseSS<uint32_t,
+                            SveLoadRegRegPngMicroop>(
+                                nm[nonTemporal][msz], machInst, MemReadOp,
+                                zt, pg, rn, rm, numregs);
+                case 3:
+                    return new SveLdContigConseSS<uint64_t,
+                            SveLoadRegRegPngMicroop>(
+                                nm[nonTemporal][msz], machInst, MemReadOp,
+                                zt, pg, rn, rm, numregs);
+            }
+        } else {
+            switch (msz) {
+                case 0:
+                    return new SveLdContigConseSS<uint8_t,
+                            SveLoadRegRegPngNTMicroop>(
+                                nm[nonTemporal][msz], machInst, MemReadOp,
+                                zt, pg, rn, rm, numregs);
+                case 1:
+                    return new SveLdContigConseSS<uint16_t,
+                            SveLoadRegRegPngNTMicroop>(
+                                nm[nonTemporal][msz], machInst, MemReadOp,
+                                zt, pg, rn, rm, numregs);
+                case 2:
+                    return new SveLdContigConseSS<uint32_t,
+                            SveLoadRegRegPngNTMicroop>(
+                                nm[nonTemporal][msz], machInst, MemReadOp,
+                                zt, pg, rn, rm, numregs);
+                case 3:
+                    return new SveLdContigConseSS<uint64_t,
+                            SveLoadRegRegPngNTMicroop>(
+                                nm[nonTemporal][msz], machInst, MemReadOp,
+                                zt, pg, rn, rm, numregs);
+            }
+        }
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeSveContigConseStoreSSInsts(uint8_t msz, ExtMachInst machInst,
+            RegIndex zt, RegIndex pg, RegIndex rn,
+            RegIndex rm, int numregs, bool nonTemporal)
+    {
+        static const char* nm[2][4] = {
+            { "st1b", "st1h", "st1w", "st1d" },
+            { "stnt1b", "stnt1h", "stnt1w", "stnt1d" } };
+
+        if (!nonTemporal) {
+            switch (msz) {
+                case 0:
+                    return new SveStContigConseSS<uint8_t,
+                            SveStoreRegRegPngMicroop>(
+                                nm[nonTemporal][msz], machInst, MemWriteOp,
+                                zt, pg, rn, rm, numregs);
+                case 1:
+                    return new SveStContigConseSS<uint16_t,
+                            SveStoreRegRegPngMicroop>(
+                                nm[nonTemporal][msz], machInst, MemWriteOp,
+                                zt, pg, rn, rm, numregs);
+                case 2:
+                    return new SveStContigConseSS<uint32_t,
+                            SveStoreRegRegPngMicroop>(
+                                nm[nonTemporal][msz], machInst, MemWriteOp,
+                                zt, pg, rn, rm, numregs);
+                case 3:
+                    return new SveStContigConseSS<uint64_t,
+                            SveStoreRegRegPngMicroop>(
+                                nm[nonTemporal][msz], machInst, MemWriteOp,
+                                zt, pg, rn, rm, numregs);
+            }
+        } else {
+            switch (msz) {
+                case 0:
+                    return new SveStContigConseSS<uint8_t,
+                            SveStoreRegRegPngNTMicroop>(
+                                nm[nonTemporal][msz], machInst, MemWriteOp,
+                                zt, pg, rn, rm, numregs);
+                case 1:
+                    return new SveStContigConseSS<uint16_t,
+                            SveStoreRegRegPngNTMicroop>(
+                                nm[nonTemporal][msz], machInst, MemWriteOp,
+                                zt, pg, rn, rm, numregs);
+                case 2:
+                    return new SveStContigConseSS<uint32_t,
+                            SveStoreRegRegPngNTMicroop>(
+                                nm[nonTemporal][msz], machInst, MemWriteOp,
+                                zt, pg, rn, rm, numregs);
+                case 3:
+                    return new SveStContigConseSS<uint64_t,
+                            SveStoreRegRegPngNTMicroop>(
+                                nm[nonTemporal][msz], machInst, MemWriteOp,
+                                zt, pg, rn, rm, numregs);
+            }
         }
         return new Unknown64(machInst);
     }
@@ -628,6 +992,95 @@ output decoder {{
     }
 
     StaticInstPtr
+    decodeSveGatherLoadVSInsts(uint8_t dtype, ExtMachInst machInst,
+                               RegIndex zt, RegIndex pg, RegIndex rn,
+                               RegIndex zm, bool esizeIs32)
+    {
+        const char* mn = "ldnt1";
+        switch (dtype) {
+          case 0x0:
+            if (esizeIs32) {
+                return new SveIndexedMemVS<int32_t, int8_t,
+                                           SveGatherLoadVSMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemReadOp, zt, pg, rn, zm, esizeIs32);
+            } else {
+                return new SveIndexedMemVS<int64_t, int8_t,
+                                           SveGatherLoadVSMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemReadOp, zt, pg, rn, zm, esizeIs32);
+            }
+          case 0x1:
+            if (esizeIs32) {
+                return new SveIndexedMemVS<uint32_t, uint8_t,
+                                           SveGatherLoadVSMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemReadOp, zt, pg, rn, zm, esizeIs32);
+            } else {
+                return new SveIndexedMemVS<uint64_t, uint8_t,
+                                           SveGatherLoadVSMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemReadOp, zt, pg, rn, zm, esizeIs32);
+            }
+          case 0x2:
+            if (esizeIs32) {
+                return new SveIndexedMemVS<int32_t, int16_t,
+                                           SveGatherLoadVSMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemReadOp, zt, pg, rn, zm, esizeIs32);
+            } else {
+                return new SveIndexedMemVS<int64_t, int16_t,
+                                           SveGatherLoadVSMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemReadOp, zt, pg, rn, zm, esizeIs32);
+            }
+          case 0x3:
+            if (esizeIs32) {
+                return new SveIndexedMemVS<uint32_t, uint16_t,
+                                           SveGatherLoadVSMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemReadOp, zt, pg, rn, zm, esizeIs32);
+            } else {
+                return new SveIndexedMemVS<uint64_t, uint16_t,
+                                           SveGatherLoadVSMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemReadOp, zt, pg, rn, zm, esizeIs32);
+            }
+          case 0x4:
+            if (esizeIs32) {
+                break;
+            } else {
+                return new SveIndexedMemVS<int64_t, int32_t,
+                                           SveGatherLoadVSMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemReadOp, zt, pg, rn, zm, esizeIs32);
+            }
+          case 0x5:
+            if (esizeIs32) {
+                return new SveIndexedMemVS<uint32_t, uint32_t,
+                                           SveGatherLoadVSMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemReadOp, zt, pg, rn, zm, esizeIs32);
+            } else {
+                return new SveIndexedMemVS<uint64_t, uint32_t,
+                                           SveGatherLoadVSMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemReadOp, zt, pg, rn, zm, esizeIs32);
+            }
+          case 0x7:
+            if (esizeIs32) {
+                break;
+            } else {
+                return new SveIndexedMemVS<uint64_t, uint64_t,
+                                           SveGatherLoadVSMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemReadOp, zt, pg, rn, zm, esizeIs32);
+            }
+        }
+        return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
     decodeSveScatterStoreVIInsts(uint8_t msz, ExtMachInst machInst,
                                  RegIndex zt, RegIndex pg,
                                  RegIndex zn, uint64_t imm,
@@ -749,6 +1202,63 @@ output decoder {{
         return new Unknown64(machInst);
     }
 
+    StaticInstPtr
+    decodeSveScatterStoreVSInsts(uint8_t msz, ExtMachInst machInst,
+                                 RegIndex zt, RegIndex pg,
+                                 RegIndex rn, RegIndex zm,
+                                 bool esizeIs32)
+    {
+        const char* mn = "stnt1";
+        switch (msz) {
+          case 0x0:
+            if (esizeIs32) {
+                return new SveIndexedMemVS<uint32_t, uint8_t,
+                                           SveScatterStoreVSMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemWriteOp, zt, pg, rn, zm, esizeIs32);
+            } else {
+                return new SveIndexedMemVS<uint64_t, uint8_t,
+                                           SveScatterStoreVSMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemWriteOp, zt, pg, rn, zm, esizeIs32);
+            }
+          case 0x1:
+            if (esizeIs32) {
+                return new SveIndexedMemVS<uint32_t, uint16_t,
+                                           SveScatterStoreVSMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemWriteOp, zt, pg, rn, zm, esizeIs32);
+            } else {
+                return new SveIndexedMemVS<uint64_t, uint16_t,
+                                           SveScatterStoreVSMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemWriteOp, zt, pg, rn, zm, esizeIs32);
+            }
+          case 0x2:
+            if (esizeIs32) {
+                return new SveIndexedMemVS<uint32_t, uint32_t,
+                                           SveScatterStoreVSMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemWriteOp, zt, pg, rn, zm, esizeIs32);
+            } else {
+                return new SveIndexedMemVS<uint64_t, uint32_t,
+                                           SveScatterStoreVSMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemWriteOp, zt, pg, rn, zm, esizeIs32);
+            }
+          case 0x3:
+            if (esizeIs32) {
+                break;
+            } else {
+                return new SveIndexedMemVS<uint64_t, uint64_t,
+                                           SveScatterStoreVSMicroop,
+                                           SveFirstFaultWritebackMicroop>(
+                    mn, machInst, MemWriteOp, zt, pg, rn, zm, esizeIs32);
+            }
+        }
+        return new Unknown64(machInst);
+    }
+
 }};
 
 
@@ -765,12 +1275,23 @@ let {{
         }
     '''
 
+    load_fa_code = '''
+            fault->annotate(ArmISA::ArmFault::WnR, 0);'''
+    store_fa_code = '''
+            fault->annotate(ArmISA::ArmFault::WnR, 1);'''
+
     def emitSveMemFillSpill(isPred):
         global header_output, exec_output, decoders
         eaCode = SPAlignmentCheckCode + '''
         int memAccessSize = %(memacc_size)s;
-        EA = XBase + ((int64_t) imm * %(memacc_size)s)''' % {
+        EA = XBase + ((int64_t) imm * %(memacc_size)s);''' % {
             'memacc_size': 'eCount / 8' if isPred else 'eCount'}
+        if isPred:
+            eaCode += '''
+        memAccessFlags = addrAlignmentFlags(2, this->memAccessFlags);'''
+        else:
+            eaCode += '''
+        memAccessFlags = addrAlignmentFlags(16, this->memAccessFlags);'''
         loadRdEnableCode = '''
         auto rdEn = std::vector<bool>(memAccessSize, true);
         '''
@@ -802,12 +1323,15 @@ let {{
         else:
             loadMemAccCode = '''
             for (int i = 0; i < eCount; i++) {
-                AA64FpDest_x[i] = memDataView[i];
+                AA64FpDest_x[i] = cSwap<RegElemType>(memDataView[i],
+                                        isBigEndian64(xc->tcBase()));
+
             }
             '''
             storeMemAccCode = '''
             for (int i = 0; i < eCount; i++) {
-                memDataView[i] = AA64FpDest_x[i];
+                memDataView[i] = cSwap<RegElemType>(AA64FpDest_x[i],
+                                        isBigEndian64(xc->tcBase()));
             }
             '''
             storeWrEnableCode = '''
@@ -819,10 +1343,10 @@ let {{
             {'tpl_header': '',
              'tpl_args': '',
              'memacc_code': loadMemAccCode,
-             'ea_code' : sveEnabledCheckCode + eaCode,
+             'ea_code' : (sveEnabledCheckCode + eaCode),
              'rden_code' : loadRdEnableCode,
              'fault_code' : '',
-             'fa_code' : ''},
+             'fa_code' : load_fa_code},
             ['IsLoad'])
         storeIop = ArmInstObjParams('str',
             'SveStrPred' if isPred else 'SveStrVec',
@@ -831,16 +1355,16 @@ let {{
              'tpl_args': '',
              'wren_code': storeWrEnableCode,
              'memacc_code': storeMemAccCode,
-             'ea_code' : sveEnabledCheckCode + eaCode,
-             'fa_code' : ''},
+             'ea_code' : (sveEnabledCheckCode + eaCode),
+             'fa_code' : store_fa_code},
             ['IsStore'])
         header_output += SveMemFillSpillOpDeclare.subst(loadIop)
         header_output += SveMemFillSpillOpDeclare.subst(storeIop)
         exec_output += (
-            SveContigLoadExecute.subst(loadIop) +
+            SveContigLoadUnpredExecute.subst(loadIop) +
             SveContigLoadInitiateAcc.subst(loadIop) +
             SveContigLoadCompleteAcc.subst(loadIop) +
-            SveContigStoreExecute.subst(storeIop) +
+            SveContigStoreUnpredExecute.subst(storeIop) +
             SveContigStoreInitiateAcc.subst(storeIop) +
             SveContigStoreCompleteAcc.subst(storeIop))
 
@@ -876,6 +1400,16 @@ let {{
         ('uint64_t', 'uint64_t'),
     )
 
+    loadQuadTplArgs = (
+        ('__uint128_t', 'uint32_t'),
+        ('__uint128_t', 'uint64_t'),
+    )
+
+    storeQuadTplArgs = (
+        ('__uint128_t', 'uint32_t'),
+        ('__uint128_t', 'uint64_t'),
+    )
+
     gatherLoadTplArgs = (
         ('int32_t', 'int8_t'),
         ('int64_t', 'int8_t'),
@@ -899,6 +1433,14 @@ let {{
         ('uint32_t', 'uint32_t'),
         ('uint64_t', 'uint32_t'),
         ('uint64_t', 'uint64_t'),
+    )
+
+    gatherLoadQuadTplArgs = (
+        ('__uint128_t', '__uint128_t'),
+    )
+
+    scatterStoreQuadTplArgs = (
+        ('__uint128_t', '__uint128_t'),
     )
 
     # Generates definitions for SVE contiguous loads
@@ -931,7 +1473,8 @@ let {{
         loadMemAccCode = '''
         for (int i = 0; i < eCount; i++) {
             if (GpOp_x[i]) {
-                AA64FpDest_x[i] = memDataView[i];
+                AA64FpDest_x[i] = cSwap<RegElemType>(memDataView[i],
+                                        isBigEndian64(xc->tcBase()));
             } else {
                 AA64FpDest_x[i] = 0;
             }
@@ -940,7 +1483,8 @@ let {{
         storeMemAccCode = '''
         for (int i = 0; i < eCount; i++) {
             if (GpOp_x[i]) {
-                memDataView[i] = AA64FpDest_x[i];
+                memDataView[i] = cSwap<RegElemType>(AA64FpDest_x[i],
+                                        isBigEndian64(xc->tcBase()));
             } else {
                 memDataView[i] = 0;
                 for (int j = 0; j < sizeof(MemElemType); j++) {
@@ -957,7 +1501,8 @@ let {{
         fautlingLoadmemAccCode = '''
         for (int i = 0; i < eCount; i++) {
             if (GpOp_x[i] && firstFaultReg[i * sizeof(RegElemType)]) {
-                AA64FpDest_x[i] = memDataView[i];
+                AA64FpDest_x[i] = cSwap<RegElemType>(memDataView[i],
+                                        isBigEndian64(xc->tcBase()));
             } else {
                 AA64FpDest_x[i] = 0;
             }
@@ -1004,9 +1549,20 @@ let {{
              'tpl_args': tplArgs,
              'rden_code' : loadRdEnableCode,
              'memacc_code': loadMemAccCode,
-             'ea_code' : sveEnabledCheckCode + eaCode,
+             'ea_code' : (sveEnabledCheckCode + eaCode),
              'fault_code' : '',
-             'fa_code' : ''},
+             'fa_code' : load_fa_code},
+            ['IsLoad'])
+        loadNtIop = ArmInstObjParams('ldnt1',
+            'SveContigNTLoadSI' if offsetIsImm else 'SveContigNTLoadSS',
+            'SveContigMemSI' if offsetIsImm else 'SveContigMemSS',
+            {'tpl_header': tplHeader,
+             'tpl_args': tplArgs,
+             'rden_code' : loadRdEnableCode,
+             'memacc_code': loadMemAccCode,
+             'ea_code' : (sveEnabledCheckCode + eaCode),
+             'fault_code' : '',
+             'fa_code' : load_fa_code},
             ['IsLoad'])
         storeIop = ArmInstObjParams('st1',
             'SveContigStoreSI' if offsetIsImm else 'SveContigStoreSS',
@@ -1015,8 +1571,18 @@ let {{
              'tpl_args': tplArgs,
              'wren_code': storeWrEnableCode,
              'memacc_code': storeMemAccCode,
-             'ea_code' : sveEnabledCheckCode + eaCode,
-             'fa_code' : ''},
+             'ea_code' : (sveEnabledCheckCode + eaCode),
+             'fa_code' : store_fa_code},
+            ['IsStore'])
+        storeNtIop = ArmInstObjParams('st1',
+            'SveContigNtStoreSI' if offsetIsImm else 'SveContigNtStoreSS',
+            'SveContigMemSI' if offsetIsImm else 'SveContigMemSS',
+            {'tpl_header': tplHeader,
+             'tpl_args': tplArgs,
+             'wren_code': storeWrEnableCode,
+             'memacc_code': storeMemAccCode,
+             'ea_code' : (sveEnabledCheckCode + eaCode),
+             'fa_code' : store_fa_code},
             ['IsStore'])
         faultIop = ArmInstObjParams('ldff1' if firstFaulting else 'ldnf1',
             'SveContigFFLoadSS' if firstFaulting else 'SveContigNFLoadSI',
@@ -1025,27 +1591,37 @@ let {{
              'tpl_args': tplArgs,
              'rden_code' : loadRdEnableCode,
              'memacc_code': fautlingLoadmemAccCode,
-             'ea_code' : sveEnabledCheckCode + eaCode,
+             'ea_code' : (sveEnabledCheckCode + eaCode),
              'fault_code' : faultCode,
-             'fa_code' : ''},
+             'fa_code' : load_fa_code},
             ['IsLoad'])
         faultIop.snippets['memacc_code'] = (ffrReadBackCode +
                                            faultIop.snippets['memacc_code'])
         if offsetIsImm:
             header_output += SveContigMemSIOpDeclare.subst(loadIop)
+            header_output += SveContigMemSIOpDeclare.subst(loadNtIop)
             header_output += SveContigMemSIOpDeclare.subst(storeIop)
+            header_output += SveContigMemSIOpDeclare.subst(storeNtIop)
             header_output += SveContigMemSIOpDeclare.subst(faultIop)
         else:
             header_output += SveContigMemSSOpDeclare.subst(loadIop)
+            header_output += SveContigMemSIOpDeclare.subst(loadNtIop)
             header_output += SveContigMemSSOpDeclare.subst(storeIop)
+            header_output += SveContigMemSSOpDeclare.subst(storeNtIop)
             header_output += SveContigMemSSOpDeclare.subst(faultIop)
         exec_output += (
             SveContigLoadExecute.subst(loadIop) +
             SveContigLoadInitiateAcc.subst(loadIop) +
             SveContigLoadCompleteAcc.subst(loadIop) +
+            SveContigLoadExecute.subst(loadNtIop) +
+            SveContigLoadInitiateAcc.subst(loadNtIop) +
+            SveContigLoadCompleteAcc.subst(loadNtIop) +
             SveContigStoreExecute.subst(storeIop) +
             SveContigStoreInitiateAcc.subst(storeIop) +
             SveContigStoreCompleteAcc.subst(storeIop) +
+            SveContigStoreExecute.subst(storeNtIop) +
+            SveContigStoreInitiateAcc.subst(storeNtIop) +
+            SveContigStoreCompleteAcc.subst(storeNtIop) +
             SveContigLoadExecute.subst(faultIop) +
             SveContigLoadInitiateAcc.subst(faultIop) +
             SveContigLoadCompleteAcc.subst(faultIop))
@@ -1055,10 +1631,20 @@ let {{
                          'class_name': 'SveContigLoadSI' if offsetIsImm
                                        else 'SveContigLoadSS'}
             exec_output += SveContigMemExecDeclare.subst(substDict)
+        for args in loadTplArgs:
+            substDict = {'tpl_args': '<%s>' % ', '.join(args),
+                         'class_name': 'SveContigNTLoadSI' if offsetIsImm
+                                       else 'SveContigNTLoadSS'}
+            exec_output += SveContigMemExecDeclare.subst(substDict)
         for args in storeTplArgs:
             substDict = {'tpl_args': '<%s>' % ', '.join(args),
                          'class_name': 'SveContigStoreSI' if offsetIsImm
                                        else 'SveContigStoreSS'}
+            exec_output += SveContigMemExecDeclare.subst(substDict)
+        for args in storeTplArgs:
+            substDict = {'tpl_args': '<%s>' % ', '.join(args),
+                         'class_name': 'SveContigNtStoreSI' if offsetIsImm
+                                       else 'SveContigNtStoreSS'}
             exec_output += SveContigMemExecDeclare.subst(substDict)
         for args in loadTplArgs:
             substDict = {'tpl_args': '<%s>' % ', '.join(args),
@@ -1066,6 +1652,104 @@ let {{
                                        else 'SveContigNFLoadSI'}
             exec_output += SveContigMemExecDeclare.subst(substDict)
 
+    # Generates definitions for SVE contiguous loads
+    def emitSveContigMemQuadInsts(offsetIsImm):
+        global header_output, exec_output, decoders
+        # First-faulting instructions only have a scalar plus scalar form,
+        # while non-faulting instructions only a scalar plus immediate form, so
+        # `offsetIsImm` is used to determine which class of instructions is
+        # generated
+        tplHeader = 'template <class RegElemType, class MemElemType>'
+        tplArgs = '<RegElemType, MemElemType>'
+        eaCode = SPAlignmentCheckCode + '''
+        int memAccessSize = eCount * sizeof(MemElemType);
+        EA = XBase + '''
+        if offsetIsImm:
+            eaCode += '((int64_t) this->imm * eCount * sizeof(MemElemType))'
+        else:
+            eaCode += '(XOffset * sizeof(MemElemType));'
+        loadRdEnableCode = '''
+        auto rdEn = std::vector<bool>(sizeof(MemElemType) * eCount, true);
+        for (int i = 0; i < eCount; i++) {
+            if (!GpOp_x[i]) {
+                for (int j = 0; j < sizeof(MemElemType); j++) {
+                    rdEn[sizeof(MemElemType) * i + j] = false;
+                }
+            }
+        }
+        '''
+        loadMemAccCode = '''
+        for (int i = 0; i < eCount; i++) {
+            if (GpOp_x[i]) {
+                AA64FpDest_x[i] = cSwap<RegElemType>(memDataView[i],
+                                        isBigEndian64(xc->tcBase()));
+            } else {
+                AA64FpDest_x[i] = 0;
+            }
+        }
+        '''
+        storeMemAccCode = '''
+        for (int i = 0; i < eCount; i++) {
+            if (GpOp_x[i]) {
+                memDataView[i] = cSwap<RegElemType>(AA64FpDest_x[i],
+                                        isBigEndian64(xc->tcBase()));
+            } else {
+                memDataView[i] = 0;
+                for (int j = 0; j < sizeof(MemElemType); j++) {
+                    wrEn[sizeof(MemElemType) * i + j] = false;
+                }
+            }
+        }
+        '''
+        storeWrEnableCode = '''
+        auto wrEn = std::vector<bool>(sizeof(MemElemType) * eCount, true);
+        '''
+
+        loadIop = ArmInstObjParams('ld1',
+            'SveContigLoadQuadSI' if offsetIsImm else 'SveContigLoadQuadSS',
+            'SveContigMemSI' if offsetIsImm else 'SveContigMemSS',
+            {'tpl_header': tplHeader,
+             'tpl_args': tplArgs,
+             'rden_code' : loadRdEnableCode,
+             'memacc_code': loadMemAccCode,
+             'ea_code' : (sveEnabledCheckCode + eaCode),
+             'fault_code' : '',
+             'fa_code' : load_fa_code},
+            ['IsLoad'])
+        storeIop = ArmInstObjParams('st1',
+            'SveContigStoreQuadSI' if offsetIsImm else 'SveContigStoreQuadSS',
+            'SveContigMemSI' if offsetIsImm else 'SveContigMemSS',
+            {'tpl_header': tplHeader,
+             'tpl_args': tplArgs,
+             'wren_code': storeWrEnableCode,
+             'memacc_code': storeMemAccCode,
+             'ea_code' : (sveEnabledCheckCode + eaCode),
+             'fa_code' : store_fa_code},
+            ['IsStore'])
+        if offsetIsImm:
+            header_output += SveContigMemSIOpDeclare.subst(loadIop)
+            header_output += SveContigMemSIOpDeclare.subst(storeIop)
+        else:
+            header_output += SveContigMemSSOpDeclare.subst(loadIop)
+            header_output += SveContigMemSSOpDeclare.subst(storeIop)
+        exec_output += (
+            SveContigLoadExecute.subst(loadIop) +
+            SveContigLoadInitiateAcc.subst(loadIop) +
+            SveContigLoadCompleteAcc.subst(loadIop) +
+            SveContigStoreExecute.subst(storeIop) +
+            SveContigStoreInitiateAcc.subst(storeIop) +
+            SveContigStoreCompleteAcc.subst(storeIop))
+
+        for args in loadQuadTplArgs:
+            substDict = {'tpl_args': '<%s>' % ', '.join(args),
+                         'class_name': 'SveContigLoadQuadSI' if offsetIsImm
+                                       else 'SveContigLoadQuadSS'}
+            exec_output += SveContigMemExecDeclare.subst(substDict)
+        for args in storeQuadTplArgs:
+            substDict = {'tpl_args': '<%s>' % ', '.join(args),
+                         'class_name': 'SveContigStoreQuadSI' if offsetIsImm
+                                       else 'SveContigStoreQuadSS'}
+            exec_output += SveContigMemExecDeclare.subst(substDict)
 
     # Generates definitions for SVE load-and-replicate instructions
     def emitSveLoadAndRepl():
@@ -1089,8 +1773,8 @@ let {{
             {'tpl_header': tplHeader,
              'tpl_args': tplArgs,
              'memacc_code': memAccCode,
-             'ea_code' : sveEnabledCheckCode + eaCode,
-             'fa_code' : ''},
+             'ea_code' : (sveEnabledCheckCode + eaCode),
+             'fa_code' : load_fa_code},
             ['IsLoad'])
         header_output += SveContigMemSIOpDeclare.subst(iop)
         exec_output += (
@@ -1105,12 +1789,14 @@ let {{
     class IndexedAddrForm:
         VEC_PLUS_IMM = 0
         SCA_PLUS_VEC = 1
+        VEC_PLUS_SCA = 2
 
     # Generates definitions for the transfer microops of SVE indexed memory
     # operations (gather loads, scatter stores)
     def emitSveIndexedMemMicroops(indexed_addr_form):
         assert indexed_addr_form in (IndexedAddrForm.VEC_PLUS_IMM,
-                                     IndexedAddrForm.SCA_PLUS_VEC)
+                                     IndexedAddrForm.SCA_PLUS_VEC,
+                                     IndexedAddrForm.VEC_PLUS_SCA)
         global header_output, exec_output, decoders
         tplHeader = 'template <class RegElemType, class MemElemType>'
         tplArgs = '<RegElemType, MemElemType>'
@@ -1118,8 +1804,8 @@ let {{
             eaCode_store = '''
         EA = AA64FpBase_x[elemIndex] + imm * sizeof(MemElemType)'''
             eaCode_load = '''
-        EA = AA64FpUreg0_x[elemIndex] + imm * sizeof(MemElemType)'''
-        else:
+        EA = AA64FpBase_x[elemIndex] + imm * sizeof(MemElemType)'''
+        elif indexed_addr_form == IndexedAddrForm.SCA_PLUS_VEC:
             offset_code = '''
         if (offsetIs32) {
             offset &= (1ULL << 32) - 1;
@@ -1134,13 +1820,20 @@ let {{
             eaCode_store = '''
         uint64_t offset = AA64FpOffset_x[elemIndex];''' + offset_code
             eaCode_load = '''
-        uint64_t offset = AA64FpUreg0_x[elemIndex];''' + offset_code
+        uint64_t offset = AA64FpOffset_x[elemIndex];''' + offset_code
+        else:
+            eaCode_store = '''
+        EA = AA64FpBase_x[elemIndex] + XOffset'''
+            eaCode_load = '''
+        EA = AA64FpBase_x[elemIndex] + XOffset'''
 
         loadMemAccCode = '''
-            AA64FpDest_x[elemIndex] = memData;
+            AA64FpDest_x[elemIndex] = cSwap<RegElemType>(memData,
+                                        isBigEndian64(xc->tcBase()));
         '''
         storeMemAccCode = '''
-            memData = AA64FpDest_x[elemIndex];
+            memData = cSwap<RegElemType>(AA64FpDest_x[elemIndex],
+                                        isBigEndian64(xc->tcBase()));
         '''
         predCheckCode = 'GpOp_x[index]'
         faultStatusSetCode = 'PUreg0_x[elemIndex] = 1;'
@@ -1148,35 +1841,42 @@ let {{
         loadIop = ArmInstObjParams('ld1',
             ('SveGatherLoadVIMicroop'
              if indexed_addr_form == IndexedAddrForm.VEC_PLUS_IMM
-             else 'SveGatherLoadSVMicroop'),
+             else 'SveGatherLoadSVMicroop'
+             if indexed_addr_form == IndexedAddrForm.SCA_PLUS_VEC
+             else 'SveGatherLoadVSMicroop'),
             'MicroOp',
             {'tpl_header': tplHeader,
              'tpl_args': tplArgs,
              'memacc_code': loadMemAccCode,
-             'ea_code' : sveEnabledCheckCode + eaCode_load,
+             'ea_code' : (sveEnabledCheckCode + eaCode_load),
              'fault_status_set_code' : faultStatusSetCode,
              'fault_status_reset_code' : faultStatusResetCode,
              'pred_check_code' : predCheckCode,
-             'fa_code' : ''},
+             'fa_code' : load_fa_code},
             ['IsMicroop', 'IsLoad'])
         storeIop = ArmInstObjParams('st1',
             ('SveScatterStoreVIMicroop'
              if indexed_addr_form == IndexedAddrForm.VEC_PLUS_IMM
-             else 'SveScatterStoreSVMicroop'),
+             else 'SveScatterStoreSVMicroop'
+             if indexed_addr_form == IndexedAddrForm.SCA_PLUS_VEC
+             else 'SveScatterStoreVSMicroop'),
             'MicroOp',
             {'tpl_header': tplHeader,
              'tpl_args': tplArgs,
              'memacc_code': storeMemAccCode,
-             'ea_code' : sveEnabledCheckCode + eaCode_store,
+             'ea_code' : (sveEnabledCheckCode + eaCode_store),
              'pred_check_code' : predCheckCode,
-             'fa_code' : ''},
+             'fa_code' : store_fa_code},
             ['IsMicroop', 'IsStore'])
         if indexed_addr_form == IndexedAddrForm.VEC_PLUS_IMM:
             header_output += SveIndexedMemVIMicroopDeclare.subst(loadIop)
             header_output += SveIndexedMemVIMicroopDeclare.subst(storeIop)
-        else:
+        elif indexed_addr_form == IndexedAddrForm.SCA_PLUS_VEC:
             header_output += SveIndexedMemSVMicroopDeclare.subst(loadIop)
             header_output += SveIndexedMemSVMicroopDeclare.subst(storeIop)
+        else:
+            header_output += SveIndexedMemVSMicroopDeclare.subst(loadIop)
+            header_output += SveIndexedMemVSMicroopDeclare.subst(storeIop)
         exec_output += (
             SveGatherLoadMicroopExecute.subst(loadIop) +
             SveGatherLoadMicroopInitiateAcc.subst(loadIop) +
@@ -1190,7 +1890,10 @@ let {{
                              'SveGatherLoadVIMicroop'
                              if indexed_addr_form == \
                                  IndexedAddrForm.VEC_PLUS_IMM
-                             else 'SveGatherLoadSVMicroop')}
+                             else 'SveGatherLoadSVMicroop'
+                             if indexed_addr_form == \
+                                 IndexedAddrForm.SCA_PLUS_VEC
+                             else 'SveGatherLoadVSMicroop')}
             # TODO: this should become SveMemExecDeclare
             exec_output += SveContigMemExecDeclare.subst(substDict)
         for args in scatterStoreTplArgs:
@@ -1199,7 +1902,77 @@ let {{
                              'SveScatterStoreVIMicroop'
                              if indexed_addr_form == \
                                  IndexedAddrForm.VEC_PLUS_IMM
-                             else 'SveScatterStoreSVMicroop')}
+                             else 'SveScatterStoreSVMicroop'
+                             if indexed_addr_form == \
+                                 IndexedAddrForm.SCA_PLUS_VEC
+                             else 'SveScatterStoreVSMicroop')}
+            # TODO: this should become SveMemExecDeclare
+            exec_output += SveContigMemExecDeclare.subst(substDict)
+
+    # Generates definitions for the transfer microops of SVE indexed memory
+    # operations (gather loads, scatter stores)
+    def emitSveIndexedMemQuadMicroops(indexed_addr_form):
+        assert indexed_addr_form in (IndexedAddrForm.VEC_PLUS_SCA,)
+        global header_output, exec_output, decoders
+        tplHeader = 'template <class RegElemType, class MemElemType>'
+        tplArgs = '<RegElemType, MemElemType>'
+
+        eaCode_store = '''
+        EA = (AA64FpBase_x[elemIndex] & mask(64)) + XOffset'''
+        eaCode_load = '''
+        EA = (AA64FpBase_x[elemIndex] & mask(64)) + XOffset'''
+
+        loadMemAccCode = '''
+            AA64FpDest_x[elemIndex] = cSwap<RegElemType>(memData.memData,
+                                        isBigEndian64(xc->tcBase()));
+        '''
+        storeMemAccCode = '''
+            memData.memData = cSwap<RegElemType>(AA64FpDest_x[elemIndex],
+                                        isBigEndian64(xc->tcBase()));
+        '''
+        predCheckCode = 'GpOp_x[index]'
+        faultStatusSetCode = 'PUreg0_x[elemIndex] = 1;'
+        faultStatusResetCode = 'PUreg0_x[elemIndex] = 0;'
+        loadIop = ArmInstObjParams('ld1',
+            'SveGatherLoadQuadVSMicroop',
+            'MicroOp',
+            {'tpl_header': tplHeader,
+             'tpl_args': tplArgs,
+             'memacc_code': loadMemAccCode,
+             'ea_code' : (sveEnabledCheckCode + eaCode_load),
+             'fault_status_set_code' : faultStatusSetCode,
+             'fault_status_reset_code' : faultStatusResetCode,
+             'pred_check_code' : predCheckCode,
+             'fa_code' : load_fa_code},
+            ['IsMicroop', 'IsLoad'])
+        storeIop = ArmInstObjParams('st1',
+            'SveScatterStoreQuadVSMicroop',
+            'MicroOp',
+            {'tpl_header': tplHeader,
+             'tpl_args': tplArgs,
+             'memacc_code': storeMemAccCode,
+             'ea_code' : (sveEnabledCheckCode + eaCode_store),
+             'pred_check_code' : predCheckCode,
+             'fa_code' : store_fa_code},
+            ['IsMicroop', 'IsStore'])
+
+        header_output += SveIndexedMemVSMicroopDeclare.subst(loadIop)
+        header_output += SveIndexedMemVSMicroopDeclare.subst(storeIop)
+        exec_output += (
+            SveGatherLoadQuadMicroopExecute.subst(loadIop) +
+            SveGatherLoadQuadMicroopInitiateAcc.subst(loadIop) +
+            SveGatherLoadQuadMicroopCompleteAcc.subst(loadIop) +
+            SveScatterStoreQuadMicroopExecute.subst(storeIop) +
+            SveScatterStoreQuadMicroopInitiateAcc.subst(storeIop) +
+            SveScatterStoreQuadMicroopCompleteAcc.subst(storeIop))
+        for args in gatherLoadQuadTplArgs:
+            substDict = {'tpl_args': '<%s>' % ', '.join(args),
+                         'class_name': 'SveGatherLoadQuadVSMicroop'}
+            # TODO: this should become SveMemExecDeclare
+            exec_output += SveContigMemExecDeclare.subst(substDict)
+        for args in scatterStoreQuadTplArgs:
+            substDict = {'tpl_args': '<%s>' % ', '.join(args),
+                         'class_name': 'SveScatterStoreQuadVSMicroop'}
             # TODO: this should become SveMemExecDeclare
             exec_output += SveContigMemExecDeclare.subst(substDict)
 
@@ -1238,21 +2011,21 @@ let {{
 
     # Generates definitions for the first microop of SVE gather loads, required
     # to propagate the source vector register to the transfer microops
-    def emitSveGatherLoadCpySrcVecMicroop():
+    def emitSveGatherLoadCpyDstVecMicroop():
         global header_output, exec_output, decoders
         code = sveEnabledCheckCode + '''
         unsigned eCount = ArmStaticInst::getCurSveVecLen<uint8_t>(
                 xc->tcBase());
         for (unsigned i = 0; i < eCount; i++) {
-            AA64FpUreg0_ub[i] = AA64FpOp1_ub[i];
+            AA64FpDest_ub[i] = AA64FpUreg0_ub[i];
         }'''
         iop = ArmInstObjParams('ld1',
-            'SveGatherLoadCpySrcVecMicroop',
+            'SveGatherLoadCpyDstVecMicroop',
             'MicroOp',
             {'code': code},
             ['IsMicroop'])
-        header_output += SveGatherLoadCpySrcVecMicroopDeclare.subst(iop)
-        exec_output += SveGatherLoadCpySrcVecMicroopExecute.subst(iop)
+        header_output += SveGatherLoadCpyDstVecMicroopDeclare.subst(iop)
+        exec_output += SveGatherLoadCpyDstVecMicroopExecute.subst(iop)
 
     def emitSveInterleaveMicroop():
         global header_output, exec_output, decoders
@@ -1322,7 +2095,8 @@ let {{
         exec_output += SveIntrlvMicroopExecute.subst(iop2);
         exec_output += SveIntrlvMicroopExecute.subst(iop3);
         exec_output += SveIntrlvMicroopExecute.subst(iop4);
-        for type in ('uint8_t', 'uint16_t', 'uint32_t', 'uint64_t'):
+        for type in ('uint8_t', 'uint16_t', 'uint32_t', 'uint64_t',
+                     '__uint128_t'):
             for nreg in range(2,5):
                 substDict = {'targs' : type,
                         'class_name' : 'SveIntrlv' + str(nreg) + 'Microop'}
@@ -1396,7 +2170,8 @@ let {{
         exec_output += SveIntrlvMicroopExecute.subst(iop2);
         exec_output += SveIntrlvMicroopExecute.subst(iop3);
         exec_output += SveIntrlvMicroopExecute.subst(iop4);
-        for type in ('uint8_t', 'uint16_t', 'uint32_t', 'uint64_t'):
+        for type in ('uint8_t', 'uint16_t', 'uint32_t', 'uint64_t',
+                     '__uint128_t'):
             for nreg in range(2,5):
                 substDict = {'targs' : type,
                         'class_name' : 'SveDeIntrlv' + str(nreg) + 'Microop'}
@@ -1412,11 +2187,17 @@ let {{
             eaCode += '((int64_t) this->imm * eCount * sizeof(Element))'
         else:
             eaCode += '(XOffset * sizeof(Element));'
+        auxgpCode = '''
+        for (int i = 0; i < eCount; i ++) {
+            int gpIdx = (regIndex * eCount + i) / numRegs;
+            auxGp[i] = GpOp_x[gpIdx];
+        }
+        '''
         loadMemAccCode = '''
         for (int i = 0; i < eCount; i++) {
-            int gpIdx = (regIndex * eCount + i) / numRegs;
-            if (GpOp_x[gpIdx]) {
-                AA64FpDest_x[i] = memDataView[i];
+            if (auxGp[i]) {
+                AA64FpDest_x[i] = cSwap<Element>(memDataView[i],
+                                        isBigEndian64(xc->tcBase()));
             } else {
                 AA64FpDest_x[i] = 0;
             }
@@ -1424,9 +2205,9 @@ let {{
         '''
         storeMemAccCode = '''
         for (int i = 0; i < eCount; i++) {
-            int gpIdx = (regIndex * eCount + i) / numRegs;
-            if (GpOp_x[gpIdx]) {
-                memDataView[i] = AA64FpDest_x[i];
+            if (auxGp[i]) {
+                memDataView[i] = cSwap<Element>(AA64FpDest_x[i],
+                                        isBigEndian64(xc->tcBase()));
             } else {
                 memDataView[i] = 0;
                 for (int j = 0; j < sizeof(Element); j++) {
@@ -1443,8 +2224,9 @@ let {{
             'MicroOp',
             {'targs': 'Element',
              'memacc_code': loadMemAccCode,
-             'ea_code' : sveEnabledCheckCode + eaCode,
-             'fa_code' : ''},
+             'ea_code' : (sveEnabledCheckCode + eaCode),
+             'fa_code' : load_fa_code,
+             'auxgp_code' : auxgpCode},
             ['IsLoad', 'IsMicroop'])
         storeIop = ArmInstObjParams('stxx',
             'SveStoreRegImmMicroop' if offsetIsImm
@@ -1453,8 +2235,9 @@ let {{
             {'targs': 'Element',
              'wren_code': storeWrEnableCode,
              'memacc_code': storeMemAccCode,
-             'ea_code' : sveEnabledCheckCode + eaCode,
-             'fa_code' : ''},
+             'ea_code' : (sveEnabledCheckCode + eaCode),
+             'fa_code' : store_fa_code,
+             'auxgp_code' : auxgpCode},
             ['IsStore', 'IsMicroop'])
         if offsetIsImm:
             header_output += SveStructMemSIMicroopDeclare.subst(loadIop)
@@ -1477,6 +2260,223 @@ let {{
             exec_output += SveStructMemExecDeclare.subst(substDict)
             substDict['class_name'] = ('SveStoreRegImmMicroop' if offsetIsImm
                                        else 'SveStoreRegRegMicroop')
+            exec_output += SveStructMemExecDeclare.subst(substDict)
+
+    # Generates definitions for SVE struct load/store microops
+    def emitSveStructMemQuadInsts(offsetIsImm):
+        global header_output, exec_output, decoders
+        eaCode = SPAlignmentCheckCode + '''
+        int memAccessSize = eCount * sizeof(Element);
+        EA = memAccessSize * regIndex + XBase + '''
+        if offsetIsImm:
+            eaCode += '((int64_t) this->imm * eCount * sizeof(Element))'
+        else:
+            eaCode += '(XOffset * sizeof(Element));'
+        auxgpCode = '''
+        for (int i = 0; i < eCount; i ++) {
+            int gpIdx = (regIndex * eCount + i) / numRegs;
+            auxGp[i] = GpOp_x[gpIdx];
+        }
+        '''
+        loadMemAccCode = '''
+        for (int i = 0; i < eCount; i++) {
+            if (auxGp[i]) {
+                AA64FpDest_x[i] = cSwap<Element>(memDataView[i],
+                                        isBigEndian64(xc->tcBase()));
+            } else {
+                AA64FpDest_x[i] = 0;
+            }
+        }
+        '''
+        storeMemAccCode = '''
+        for (int i = 0; i < eCount; i++) {
+            if (auxGp[i]) {
+                memDataView[i] = cSwap<Element>(AA64FpDest_x[i],
+                                        isBigEndian64(xc->tcBase()));
+            } else {
+                memDataView[i] = 0;
+                for (int j = 0; j < sizeof(Element); j++) {
+                    wrEn[sizeof(Element) * i + j] = false;
+                }
+            }
+        }
+        '''
+        storeWrEnableCode = '''
+        auto wrEn = std::vector<bool>(sizeof(Element) * eCount, true);
+        '''
+        loadIop = ArmInstObjParams('ldxx',
+            'SveLoadRegImmQuadMicroop' if offsetIsImm
+                                       else 'SveLoadRegRegQuadMicroop',
+            'MicroOp',
+            {'targs': 'Element',
+             'memacc_code': loadMemAccCode,
+             'ea_code' : (sveEnabledCheckCode + eaCode),
+             'fa_code' : load_fa_code,
+             'auxgp_code' : auxgpCode},
+            ['IsLoad', 'IsMicroop'])
+        storeIop = ArmInstObjParams('stxx',
+            'SveStoreRegImmQuadMicroop' if offsetIsImm
+                                        else 'SveStoreRegRegQuadMicroop',
+            'MicroOp',
+            {'targs': 'Element',
+             'wren_code': storeWrEnableCode,
+             'memacc_code': storeMemAccCode,
+             'ea_code' : (sveEnabledCheckCode + eaCode),
+             'fa_code' : store_fa_code,
+             'auxgp_code' : auxgpCode},
+            ['IsStore', 'IsMicroop'])
+        if offsetIsImm:
+            header_output += SveStructMemSIMicroopDeclare.subst(loadIop)
+            header_output += SveStructMemSIMicroopDeclare.subst(storeIop)
+        else:
+            header_output += SveStructMemSSMicroopDeclare.subst(loadIop)
+            header_output += SveStructMemSSMicroopDeclare.subst(storeIop)
+        exec_output += (
+            SveStructLoadExecute.subst(loadIop) +
+            SveStructLoadInitiateAcc.subst(loadIop) +
+            SveStructLoadCompleteAcc.subst(loadIop) +
+            SveStructStoreExecute.subst(storeIop) +
+            SveStructStoreInitiateAcc.subst(storeIop) +
+            SveStructStoreCompleteAcc.subst(storeIop))
+        tplArgs = ('__uint128_t',)
+        for type in tplArgs:
+            substDict = {'targs': type,
+                         'class_name': ('SveLoadRegImmQuadMicroop'
+                                        if offsetIsImm
+                                        else 'SveLoadRegRegQuadMicroop')}
+            exec_output += SveStructMemExecDeclare.subst(substDict)
+            substDict['class_name'] = ('SveStoreRegImmQuadMicroop'
+                                       if offsetIsImm
+                                       else 'SveStoreRegRegQuadMicroop')
+            exec_output += SveStructMemExecDeclare.subst(substDict)
+
+    # Generates definitions for SVE consecutive load/store microops
+    def emitSveConseMemInsts(offsetIsImm):
+        global header_output, exec_output, decoders
+        eaCode = SPAlignmentCheckCode + '''
+        int memAccessSize = eCount * sizeof(Element);
+        EA = memAccessSize * regIndex + XBase + '''
+        if offsetIsImm:
+            eaCode += '((int64_t) this->imm * eCount * sizeof(Element))'
+        else:
+            eaCode += '(XOffset * sizeof(Element));'
+        pngDecoder = '''
+        uint16_t png = 0;
+        for (unsigned b = 0; b < 16; b ++) {
+            png = png | ((uint16_t)GpOp_ub[b] << b);
+        }
+        sveCounterToPredicate(
+            auxGpReg, png, sizeof(Element) * eCount, 0, regIndex);
+        '''
+        loadMemAccCode = '''
+        for (int i = 0; i < eCount; i++) {
+            if (auxGp[i]) {
+                AA64FpDest_x[i] = cSwap<Element>(memDataView[i],
+                                        isBigEndian64(xc->tcBase()));
+            } else {
+                AA64FpDest_x[i] = 0;
+            }
+        }
+        '''
+        storeMemAccCode = '''
+        for (int i = 0; i < eCount; i++) {
+            if (auxGp[i]) {
+                memDataView[i] = cSwap<Element>(AA64FpDest_x[i],
+                                        isBigEndian64(xc->tcBase()));
+            } else {
+                memDataView[i] = 0;
+                for (int j = 0; j < sizeof(Element); j++) {
+                    wrEn[sizeof(Element) * i + j] = false;
+                }
+            }
+        }
+        '''
+        storeWrEnableCode = '''
+        auto wrEn = std::vector<bool>(sizeof(Element) * eCount, true);
+        '''
+        loadIop = ArmInstObjParams('ldxx',
+            ('SveLoadRegImmPngMicroop' if offsetIsImm else
+             'SveLoadRegRegPngMicroop'),
+            'MicroOp',
+            {'targs': 'Element',
+             'memacc_code': loadMemAccCode,
+             'ea_code' : (sveEnabledCheckCode + eaCode),
+             'fa_code' : load_fa_code,
+             'auxgp_code': pngDecoder},
+            ['IsLoad', 'IsMicroop'])
+        loadNTIop = ArmInstObjParams('ldntxx',
+            ('SveLoadRegImmPngNTMicroop' if offsetIsImm else
+             'SveLoadRegRegPngNTMicroop'),
+            'MicroOp',
+            {'targs': 'Element',
+             'memacc_code': loadMemAccCode,
+             'ea_code' : (sveEnabledCheckCode + eaCode),
+             'fa_code' : load_fa_code,
+             'auxgp_code': pngDecoder},
+            ['IsLoad', 'IsMicroop'])
+        storeIop = ArmInstObjParams('stxx',
+            ('SveStoreRegImmPngMicroop' if offsetIsImm else
+             'SveStoreRegRegPngMicroop'),
+            'MicroOp',
+            {'targs': 'Element',
+             'wren_code': storeWrEnableCode,
+             'memacc_code': storeMemAccCode,
+             'ea_code' : (sveEnabledCheckCode + eaCode),
+             'fa_code' : store_fa_code,
+             'auxgp_code': pngDecoder},
+            ['IsStore', 'IsMicroop'])
+        storeNTIop = ArmInstObjParams('stntxx',
+            ('SveStoreRegImmPngNTMicroop' if offsetIsImm else
+             'SveStoreRegRegPngNTMicroop'),
+            'MicroOp',
+            {'targs': 'Element',
+             'wren_code': storeWrEnableCode,
+             'memacc_code': storeMemAccCode,
+             'ea_code' : (sveEnabledCheckCode + eaCode),
+             'fa_code' : store_fa_code,
+             'auxgp_code': pngDecoder},
+            ['IsStore', 'IsMicroop'])
+        if offsetIsImm:
+            header_output += SveStructMemSIMicroopDeclare.subst(loadIop)
+            header_output += SveStructMemSIMicroopDeclare.subst(loadNTIop)
+            header_output += SveStructMemSIMicroopDeclare.subst(storeIop)
+            header_output += SveStructMemSIMicroopDeclare.subst(storeNTIop)
+        else:
+            header_output += SveStructMemSSMicroopDeclare.subst(loadIop)
+            header_output += SveStructMemSSMicroopDeclare.subst(loadNTIop)
+            header_output += SveStructMemSSMicroopDeclare.subst(storeIop)
+            header_output += SveStructMemSSMicroopDeclare.subst(storeNTIop)
+        exec_output += (
+            SveStructLoadExecute.subst(loadIop) +
+            SveStructLoadInitiateAcc.subst(loadIop) +
+            SveStructLoadCompleteAcc.subst(loadIop) +
+            SveStructLoadExecute.subst(loadNTIop) +
+            SveStructLoadInitiateAcc.subst(loadNTIop) +
+            SveStructLoadCompleteAcc.subst(loadNTIop) +
+            SveStructStoreExecute.subst(storeIop) +
+            SveStructStoreInitiateAcc.subst(storeIop) +
+            SveStructStoreCompleteAcc.subst(storeIop) +
+            SveStructStoreExecute.subst(storeNTIop) +
+            SveStructStoreInitiateAcc.subst(storeNTIop) +
+            SveStructStoreCompleteAcc.subst(storeNTIop))
+        tplArgs = ('uint8_t', 'uint16_t', 'uint32_t', 'uint64_t')
+        for type in tplArgs:
+            substDict = {'targs': type,
+                         'class_name': 'SveLoadRegImmPngMicroop'
+                                        if offsetIsImm
+                                        else 'SveLoadRegRegPngMicroop'}
+            exec_output += SveStructMemExecDeclare.subst(substDict)
+            substDict['class_name'] = ('SveLoadRegImmPngNTMicroop'
+                                       if offsetIsImm
+                                       else 'SveLoadRegRegPngNTMicroop')
+            exec_output += SveStructMemExecDeclare.subst(substDict)
+            substDict['class_name'] = ('SveStoreRegImmPngMicroop'
+                                       if offsetIsImm
+                                       else 'SveStoreRegRegPngMicroop')
+            exec_output += SveStructMemExecDeclare.subst(substDict)
+            substDict['class_name'] = ('SveStoreRegImmPngNTMicroop'
+                                       if offsetIsImm
+                                       else 'SveStoreRegRegPngNTMicroop')
             exec_output += SveStructMemExecDeclare.subst(substDict)
 
     # Generates definitions for SVE load-and-replicate quadword instructions
@@ -1523,7 +2523,9 @@ let {{
         RegElemType* qp = reinterpret_cast<RegElemType*>(&qwords);
         for (int i = 0; i < eCount; ++i) {
             if (GpOp_x[i]) {
-                qp[i] = memDataView[i];
+                qp[i] = cSwap<RegElemType>(memDataView[i],
+                                            isBigEndian64(xc->tcBase()));
+
             } else {
                 qp[i] = 0;
             }
@@ -1552,9 +2554,9 @@ let {{
                  'tpl_args': tplArgs,
                  'rden_code': loadRdEnableCode,
                  'memacc_code': memAccCode,
-                 'ea_code': sveEnabledCheckCode + eaCode,
+                 'ea_code': (sveEnabledCheckCode + eaCode),
                  'fault_code': '',
-                 'fa_code': ''},
+                 'fa_code': load_fa_code},
                 ['IsLoad'])
         if offsetIsImm:
             header_output += SveContigMemSIOpDeclare.subst(iop)
@@ -1570,13 +2572,24 @@ let {{
             exec_output += SveContigMemExecDeclare.subst(substDict)
 
     # LD1[S]{B,H,W,D} (scalar plus immediate)
+    # LDNT1[S]{B,H,W,D} (scalar plus immediate)
     # ST1[S]{B,H,W,D} (scalar plus immediate)
+    # STNT1[S]{B,H,W,D} (scalar plus immediate)
     # LDNF1[S]{B,H,W,D} (scalar plus immediate)
     emitSveContigMemInsts(True)
     # LD1[S]{B,H,W,D} (scalar plus scalar)
+    # LDNT1[S]{B,H,W,D} (scalar plus scalar)
     # ST1[S]{B,H,W,D} (scalar plus scalar)
-    # LDFF1[S]{B,H,W,D} (scalar plus vector)
+    # STNT1[S]{B,H,W,D} (scalar plus scalar)
+    # LDFF1[S]{B,H,W,D} (scalar plus scalar)
     emitSveContigMemInsts(False)
+
+    # LD1{W,D} (scalar plus immediate, quad)
+    # ST1{W,D} (scalar plus immediate, quad)
+    emitSveContigMemQuadInsts(True)
+    # LD1{W,D} (scalar plus scalar, quad)
+    # ST1{W,D} (scalar plus scalar, quad)
+    emitSveContigMemQuadInsts(False)
 
     # LD1R[S]{B,H,W,D}
     emitSveLoadAndRepl()
@@ -1598,6 +2611,24 @@ let {{
     # ST{2,3,4}{B,H,W,D} (scalar plus scalar)
     emitSveStructMemInsts(offsetIsImm = False)
 
+    # LD{2,3,4}{Q} (scalar plus immediate)
+    # ST{2,3,4}{Q} (scalar plus immediate)
+    emitSveStructMemQuadInsts(offsetIsImm = True)
+    # LD{2,3,4}{Q} (scalar plus scalar)
+    # ST{2,3,4}{Q} (scalar plus scalar)
+    emitSveStructMemQuadInsts(offsetIsImm = False)
+
+    # LD1{B,H,W,D} {scalar plus immediate, consecutive registers}
+    # LDNT1{B,H,W,D} {scalar plus immediate, consecutive registers}
+    # ST1{B,H,W,D} {scalar plus immediate, consecutive registers}
+    # STNT1{B,H,W,D} {scalar plus immediate, consecutive registers}
+    emitSveConseMemInsts(offsetIsImm = True)
+    # LD1{B,H,W,D} {scalar plus scalar, consecutive registers}
+    # LDNT1{B,H,W,D} {scalar plus scalar, consecutive registers}
+    # ST1{B,H,W,D} {scalar plus scalar, consecutive registers}
+    # STNT1{B,H,W,D} {scalar plus scalar, consecutive registers}
+    emitSveConseMemInsts(offsetIsImm = False)
+
     # LDR (predicate), STR (predicate)
     emitSveMemFillSpill(True)
     # LDR (vector), STR (vector)
@@ -1611,12 +2642,18 @@ let {{
     # ST1[S]{B,H,W,D} (scalar plus vector)
     # LDFF1[S]{B,H,W,D} (scalar plus vector)
     emitSveIndexedMemMicroops(IndexedAddrForm.SCA_PLUS_VEC)
+    # LDNT1[S]{B,H,W,D} (vector plus scalar)
+    # STNT1[S]{B,H,W,D} (vector plus scalar)
+    emitSveIndexedMemMicroops(IndexedAddrForm.VEC_PLUS_SCA)
+    # LD1Q
+    # ST1Q
+    emitSveIndexedMemQuadMicroops(IndexedAddrForm.VEC_PLUS_SCA)
 
     # FFR writeback microop for gather loads
     emitSveFirstFaultWritebackMicroop()
 
     # Source vector copy microop for gather loads
-    emitSveGatherLoadCpySrcVecMicroop()
+    emitSveGatherLoadCpyDstVecMicroop()
 
     # ST/LD struct de/interleave microops
     emitSveInterleaveMicroop()
