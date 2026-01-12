@@ -35,7 +35,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <mem/ruby/structures/TBEStorage.hh>
+#include "mem/ruby/structures/TBEStorage.hh"
+
+#include <string>
+
+#include "base/stats/group.hh"
 
 namespace gem5
 {

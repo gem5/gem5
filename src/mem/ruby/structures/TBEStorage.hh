@@ -44,6 +44,7 @@
 #include <unordered_map>
 
 #include "base/statistics.hh"
+#include "base/stats/group.hh"
 
 namespace gem5
 {
