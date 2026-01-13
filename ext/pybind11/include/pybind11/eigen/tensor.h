@@ -7,7 +7,9 @@
 
 #pragma once
 
-#include "../numpy.h"
+#include <pybind11/numpy.h>
+
+#include "common.h"
 
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__INTEL_COMPILER)
 static_assert(__GNUC__ > 5, "Eigen Tensor support in pybind11 requires GCC > 5.0");
@@ -17,7 +19,9 @@ static_assert(__GNUC__ > 5, "Eigen Tensor support in pybind11 requires GCC > 5.0
 PYBIND11_WARNING_PUSH
 PYBIND11_WARNING_DISABLE_MSVC(4554)
 PYBIND11_WARNING_DISABLE_MSVC(4127)
+#if defined(__MINGW32__)
 PYBIND11_WARNING_DISABLE_GCC("-Wmaybe-uninitialized")
+#endif
 
 #include <unsupported/Eigen/CXX11/Tensor>
 
@@ -67,7 +71,7 @@ struct eigen_tensor_helper<Eigen::Tensor<Scalar_, NumIndices_, Options_, IndexTy
 
     template <size_t... Is>
     struct helper<index_sequence<Is...>> {
-        static constexpr auto value = concat(const_name(((void) Is, "?"))...);
+        static constexpr auto value = ::pybind11::detail::concat(const_name(((void) Is, "?"))...);
     };
 
     static constexpr auto dimensions_descriptor
@@ -101,7 +105,8 @@ struct eigen_tensor_helper<
         return get_shape() == shape;
     }
 
-    static constexpr auto dimensions_descriptor = concat(const_name<Indices>()...);
+    static constexpr auto dimensions_descriptor
+        = ::pybind11::detail::concat(const_name<Indices>()...);
 
     template <typename... Args>
     static Type *alloc(Args &&...args) {
@@ -119,13 +124,16 @@ struct eigen_tensor_helper<
 template <typename Type, bool ShowDetails, bool NeedsWriteable = false>
 struct get_tensor_descriptor {
     static constexpr auto details
-        = const_name<NeedsWriteable>(", flags.writeable", "")
-          + const_name<static_cast<int>(Type::Layout) == static_cast<int>(Eigen::RowMajor)>(
-              ", flags.c_contiguous", ", flags.f_contiguous");
+        = const_name<NeedsWriteable>(", \"flags.writeable\"", "") + const_name
+              < static_cast<int>(Type::Layout)
+          == static_cast<int>(Eigen::RowMajor)
+                 > (", \"flags.c_contiguous\"", ", \"flags.f_contiguous\"");
     static constexpr auto value
-        = const_name("numpy.ndarray[") + npy_format_descriptor<typename Type::Scalar>::name
-          + const_name("[") + eigen_tensor_helper<remove_cv_t<Type>>::dimensions_descriptor
-          + const_name("]") + const_name<ShowDetails>(details, const_name("")) + const_name("]");
+        = const_name("typing.Annotated[")
+          + io_name("numpy.typing.ArrayLike, ", "numpy.typing.NDArray[")
+          + npy_format_descriptor<typename Type::Scalar>::name + io_name("", "]")
+          + const_name(", \"[") + eigen_tensor_helper<remove_cv_t<Type>>::dimensions_descriptor
+          + const_name("]\"") + const_name<ShowDetails>(details, const_name("")) + const_name("]");
 };
 
 // When EIGEN_AVOID_STL_ARRAY is defined, Eigen::DSizes<T, 0> does not have the begin() member
@@ -162,6 +170,8 @@ PYBIND11_WARNING_POP
 
 template <typename Type>
 struct type_caster<Type, typename eigen_tensor_helper<Type>::ValidType> {
+    static_assert(!std::is_pointer<typename Type::Scalar>::value,
+                  PYBIND11_EIGEN_MESSAGE_POINTER_TYPES_ARE_NOT_SUPPORTED);
     using Helper = eigen_tensor_helper<Type>;
     static constexpr auto temp_name = get_tensor_descriptor<Type, false>::value;
     PYBIND11_TYPE_CASTER(Type, temp_name);
@@ -357,6 +367,8 @@ struct get_storage_pointer_type<MapType, void_t<typename MapType::PointerArgType
 template <typename Type, int Options>
 struct type_caster<Eigen::TensorMap<Type, Options>,
                    typename eigen_tensor_helper<remove_cv_t<Type>>::ValidType> {
+    static_assert(!std::is_pointer<typename Type::Scalar>::value,
+                  PYBIND11_EIGEN_MESSAGE_POINTER_TYPES_ARE_NOT_SUPPORTED);
     using MapType = Eigen::TensorMap<Type, Options>;
     using Helper = eigen_tensor_helper<remove_cv_t<Type>>;
 
@@ -461,9 +473,6 @@ struct type_caster<Eigen::TensorMap<Type, Options>,
                 parent_object = reinterpret_borrow<object>(parent);
                 break;
 
-            case return_value_policy::take_ownership:
-                delete src;
-                // fallthrough
             default:
                 // move, take_ownership don't make any sense for a ref/map:
                 pybind11_fail("Invalid return_value_policy for Eigen Map type, must be either "
@@ -496,7 +505,10 @@ protected:
     std::unique_ptr<MapType> value;
 
 public:
-    static constexpr auto name = get_tensor_descriptor<Type, true, needs_writeable>::value;
+    // return_descr forces the use of NDArray instead of ArrayLike since refs can only reference
+    // arrays
+    static constexpr auto name
+        = return_descr(get_tensor_descriptor<Type, true, needs_writeable>::value);
     explicit operator MapType *() { return value.get(); }
     explicit operator MapType &() { return *value; }
     explicit operator MapType &&() && { return std::move(*value); }

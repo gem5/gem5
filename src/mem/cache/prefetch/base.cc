@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013-2014, 2022-2024 Arm Limited
+ * Copyright (c) 2013-2014, 2022-2025 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -48,7 +48,6 @@
 #include <cassert>
 
 #include "base/intmath.hh"
-#include "mem/cache/base.hh"
 #include "params/BasePrefetcher.hh"
 #include "sim/system.hh"
 
@@ -280,9 +279,9 @@ Base::regProbeListeners()
         listeners.push_back(probeManager->connect<PrefetchListener>(
             *this, "Miss", false, true));
         listeners.push_back(probeManager->connect<PrefetchListener>(
-            *this, "Fill", false, true));
+            *this, "Fill", true, false));
         listeners.push_back(probeManager->connect<PrefetchListener>(
-            *this, "Hit", false, true));
+            *this, "Hit", false, false));
         listeners.push_back(probeManager->connect<PrefetchEvictListener>(
             *this, "Data Update"));
     }

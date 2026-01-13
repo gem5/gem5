@@ -63,6 +63,7 @@ Source('pmp.cc', tags=['riscv isa'])
 Source('reg_abi.cc', tags=['riscv isa'])
 Source('remote_gdb.cc', tags=['riscv isa'])
 Source('semihosting.cc', tags=['riscv isa'])
+Source('system.cc', tags=['riscv isa'])
 Source('tlb.cc', tags=['riscv isa'])
 
 Source('linux/se_workload.cc', tags=['riscv isa'])
@@ -120,6 +121,7 @@ SimObject(
 )
 
 SimObject('RiscvCPU.py', sim_objects=[], tags=['riscv isa'])
+SimObject('RiscvSystem.py', sim_objects=['RiscvSystem'], tags=['riscv isa'])
 
 DebugFlag('RiscvMisc', tags=['riscv isa'])
 DebugFlag('PMP', tags=['riscv isa'])

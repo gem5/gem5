@@ -67,7 +67,7 @@ class Hdf5 : public Output
     Hdf5(const Hdf5 &other) = delete;
 
   public: // Output interface
-    void begin() override;
+    void begin(const std::string &message = "") override;
     void end() override;
     bool valid() const override;
 

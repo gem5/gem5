@@ -1,5 +1,5 @@
 # -*- mode:python -*-
-# Copyright (c) 2024 Arm Limited
+# Copyright (c) 2024-2025 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -34,7 +34,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.tlm_chi import *
+from m5.tlm_chi.utils import *
 
 
 def payload_gen():
@@ -82,7 +82,7 @@ def wait_data(transaction):
 def do_comp_ack(transaction):
     transaction.phase.channel = Channel.RSP
     transaction.phase.opcode = RspOpcode.COMP_ACK
-    transaction.inject()
+    transaction.send()
     return False
 
 
@@ -90,7 +90,7 @@ def test_all(generator):
     payload = payload_gen()
     phase = phase_gen()
 
-    tran = generator.injectAt(10, payload, phase)
+    tran = generator.inject(payload, phase, when=10)
     tran.EXPECT(channel_check)
     tran.EXPECT(opcode_check)
     tran.EXPECT(cacheline_check)

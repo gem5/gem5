@@ -46,7 +46,7 @@
 
 #include "base/sat_counter.hh"
 #include "base/types.hh"
-#include "cpu/pred/bpred_unit.hh"
+#include "cpu/pred/conditional.hh"
 #include "params/TournamentBP.hh"
 
 namespace gem5
@@ -63,7 +63,7 @@ namespace branch_prediction
  * predictor chooses between the two.  Both the global history register
  * and the selected local history are speculatively updated.
  */
-class TournamentBP : public BPredUnit
+class TournamentBP : public ConditionalPredictor
 {
   public:
     /**
@@ -74,10 +74,11 @@ class TournamentBP : public BPredUnit
     // Base class methods.
     bool lookup(ThreadID tid, Addr pc, void* &bp_history) override;
     void updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
-                         Addr target,  void * &bp_history) override;
-    void update(ThreadID tid, Addr pc, bool taken,
-                void * &bp_history, bool squashed,
-                const StaticInstPtr & inst, Addr target) override;
+                         Addr target, const StaticInstPtr &inst,
+                         void * &bp_history) override;
+    void update(ThreadID tid, Addr pc, bool taken, void * &bp_history,
+                bool squashed, const StaticInstPtr & inst,
+                Addr target) override;
     void squash(ThreadID tid, void * &bp_history) override;
 
   private:

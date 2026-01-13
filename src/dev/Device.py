@@ -100,13 +100,11 @@ class DmaDevice(PioDevice):
 
     _iommu = None
 
-    sid = Param.Unsigned(
-        0,
+    sid = OptionalParam.Unsigned(
         "Stream identifier used by an IOMMU to distinguish amongst "
         "several devices attached to it",
     )
-    ssid = Param.Unsigned(
-        0,
+    ssid = OptionalParam.Unsigned(
         "Substream identifier used by an IOMMU to distinguish amongst "
         "several devices attached to it",
     )

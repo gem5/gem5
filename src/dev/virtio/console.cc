@@ -105,9 +105,9 @@ VirtIOConsole::TermTransQueue::onNotifyDescriptor(VirtDescriptor *desc)
 
     // Copy the data from the guest and forward it to the
     // terminal.
-    const size_t size(desc->chainSize());
-    uint8_t data[size];
-    desc->chainRead(0, data, size);
+    const size_t size = desc->chainSize();
+    auto data = std::make_unique<uint8_t[]>(size);
+    desc->chainRead(0, data.get(), size);
     for (int i = 0; i < desc->size(); ++i)
         parent.device.writeData(data[i]);
 

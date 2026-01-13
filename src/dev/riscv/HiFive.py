@@ -37,6 +37,7 @@
 
 from m5.objects.Clint import Clint
 from m5.objects.PciHost import GenericPciHost
+from m5.objects.PciUpstream import PciBus
 from m5.objects.Platform import Platform
 from m5.objects.Plic import Plic
 from m5.objects.PMAChecker import PMAChecker
@@ -188,6 +189,7 @@ class HiFive(HiFiveBase):
         pci_pio_base=0x2F000000,
         pci_mem_base=0x40000000,
     )
+    pci_bus = PciBus()
 
     # Uart
     uart = RiscvUart8250(pio_addr=0x10000000)

@@ -38,8 +38,6 @@
 #ifndef __SIM_THERMAL_ENTITY_HH__
 #define __SIM_THERMAL_ENTITY_HH__
 
-#include "sim/sim_object.hh"
-
 namespace gem5
 {
 
@@ -57,6 +55,8 @@ class ThermalEntity
     // Get the equation given a node and a step in seconds (assuming N nodes)
     virtual LinearEquation getEquation(ThermalNode *tn, unsigned n,
                                        double step) const = 0;
+
+    virtual ~ThermalEntity() = default;
 };
 
 } // namespace gem5

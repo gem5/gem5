@@ -314,3 +314,10 @@ def addAmdGPUOptions(parser):
         default=1,
         help="Scale how long an mfma consumes the matrix core unit",
     )
+
+    parser.add_argument(
+        "--hbm-ctrl",
+        action="store_true",
+        default=False,
+        help="Use HBMCtrl",
+    )

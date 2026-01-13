@@ -32,6 +32,29 @@ from testlib import *
 from testlib.log import *
 
 gem5_verify_config(
+    name="test-multisim-checkpoint-restore-hello",
+    fixtures=(),
+    verifiers=(),
+    gem5_args=[
+        "-m",
+        "gem5.utils.multisim",
+    ],
+    config=joinpath(
+        config.base_dir,
+        "tests",
+        "gem5",
+        "multisim",
+        "configs",
+        "hello-restore-checkpoint.py",
+    ),
+    config_args=[],
+    valid_isas=(constants.all_compiled_tag,),
+    valid_hosts=constants.supported_hosts,
+    length=constants.quick_tag,
+    uses_kvm=False,
+)
+
+gem5_verify_config(
     name="test-multisim-longer-workloads-22-proc",
     fixtures=(),
     verifiers=(),
@@ -53,3 +76,28 @@ gem5_verify_config(
     length=constants.very_long_tag,
     uses_kvm=False,
 )
+
+# For now, skip this test because there are issues with obtaining one of the
+# checkpoints with obtain_resource
+# gem5_verify_config(
+#     name="test-multisim-checkpoint-restore-riscv-hello",
+#     fixtures=(),
+#     verifiers=(),
+#     gem5_args=[
+#         "-m",
+#         "gem5.utils.multisim",
+#     ],
+#     config=joinpath(
+#         config.base_dir,
+#         "tests",
+#         "gem5",
+#         "multisim",
+#         "configs",
+#         "riscv-hello-restore-checkpoints.py",
+#     ),
+#     config_args=[],
+#     valid_isas=(constants.all_compiled_tag,),
+#     valid_hosts=constants.supported_hosts,
+#     length=constants.quick_tag,
+#     uses_kvm=False,
+# )

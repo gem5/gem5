@@ -43,7 +43,6 @@
 #include "base/bitunion.hh"
 #include "base/types.hh"
 #include "dev/arm/amba_device.hh"
-#include "params/Sp804.hh"
 #include "sim/eventq.hh"
 #include "sim/serialize.hh"
 
@@ -55,6 +54,7 @@ namespace gem5
 {
 
 class BaseGic;
+struct Sp804Params;
 
 class Sp804 : public AmbaPioDevice
 {

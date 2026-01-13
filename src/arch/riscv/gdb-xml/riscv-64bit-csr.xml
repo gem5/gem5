@@ -10,17 +10,7 @@
 <feature name="org.gnu.gdb.riscv.csr">
   <reg name="cycle" bitsize="64"/>
   <reg name="time" bitsize="64"/>
-  <reg name="ustatus" bitsize="64"/>
-  <reg name="uie" bitsize="64"/>
-  <reg name="utvec" bitsize="64"/>
-  <reg name="uscratch" bitsize="64"/>
-  <reg name="uepc" bitsize="64"/>
-  <reg name="ucause" bitsize="64"/>
-  <reg name="utval" bitsize="64"/>
-  <reg name="uip" bitsize="64"/>
   <reg name="sstatus" bitsize="64"/>
-  <reg name="sedeleg" bitsize="64"/>
-  <reg name="sideleg" bitsize="64"/>
   <reg name="sie" bitsize="64"/>
   <reg name="stvec" bitsize="64"/>
   <reg name="scounteren" bitsize="64"/>

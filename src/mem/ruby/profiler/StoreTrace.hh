@@ -34,6 +34,7 @@
 #include "base/types.hh"
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/Histogram.hh"
+#include "mem/ruby/common/TypeDefines.hh"
 
 namespace gem5
 {

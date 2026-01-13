@@ -30,14 +30,14 @@ from typing import (
     Optional,
 )
 
-import m5.stats
+import m5
+from m5 import stats as m5_stats
 from m5.util import warn
-
-from gem5.resources.looppoint import Looppoint
 
 from ..components.processors.abstract_processor import AbstractProcessor
 from ..components.processors.spatter_gen import SpatterGenerator
 from ..components.processors.switchable_processor import SwitchableProcessor
+from ..resources.looppoint import Looppoint
 from ..resources.resource import SimpointResource
 
 """
@@ -92,8 +92,8 @@ def dump_reset_generator():
     generator.
     """
     while True:
-        m5.stats.dump()
-        m5.stats.reset()
+        m5_stats.dump()
+        m5_stats.reset()
         yield False
 
 
@@ -120,7 +120,7 @@ def reset_stats_generator():
     the stats before resetting them.
     """
     while True:
-        m5.stats.reset()
+        m5_stats.reset()
         yield False
 
 
@@ -129,7 +129,7 @@ def dump_stats_generator():
     This generator dumps the stats every time it is called.
     """
     while True:
-        m5.stats.dump()
+        m5_stats.dump()
         yield False
 
 

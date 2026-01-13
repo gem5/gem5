@@ -120,6 +120,7 @@ namespace units
 class Base
 {
   public:
+    virtual ~Base() = default;
     virtual std::string getUnitString() const = 0;
 };
 

@@ -42,7 +42,7 @@
 #include "base/logging.hh"
 #include "base/trace.hh"
 #include "params/WayPartitioningPolicy.hh"
-#include "way_allocation.hh"
+#include "mem/cache/tags/partitioning_policies/way_allocation.hh"
 
 namespace gem5
 {

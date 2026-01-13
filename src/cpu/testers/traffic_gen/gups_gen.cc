@@ -79,17 +79,17 @@ GUPSGen::startup()
 {
     int block_size = 64; // Write the initial values in 64 byte blocks.
     uint64_t stride_size = block_size / elementSize;
+    auto write_data = std::make_unique<uint8_t[]>(block_size);
     if (initMemory) {
         for (uint64_t start_index = 0; start_index < tableSize;
                                     start_index += stride_size) {
-            uint8_t write_data[block_size];
             for (uint64_t offset = 0; offset < stride_size; offset++) {
                 uint64_t value = start_index + offset;
-                std::memcpy(write_data + offset * elementSize,
+                std::memcpy(write_data.get() + offset * elementSize,
                             &value, elementSize);
             }
             Addr addr = indexToAddr(start_index);
-            PacketPtr pkt = getWritePacket(addr, block_size, write_data);
+            PacketPtr pkt = getWritePacket(addr, block_size, write_data.get());
             port.sendFunctionalPacket(pkt);
             delete pkt;
         }

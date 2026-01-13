@@ -93,6 +93,7 @@ class BootloaderKernelWorkload: public Workload
     loader::SymbolTable bootloaderSymbolTable;
     const std::string bootArgs;
     RiscvSemihosting *semihosting;
+    size_t initrd_len;
 
     /**
      * Event to halt the simulator if the kernel calls panic() or
@@ -106,6 +107,7 @@ class BootloaderKernelWorkload: public Workload
     void loadKernelSymbolTable();
     void loadBootloader();
     void loadKernel();
+    void loadInitrd();
     void loadDtb();
     void addExitOnKernelPanicEvent();
     void addExitOnKernelOopsEvent();

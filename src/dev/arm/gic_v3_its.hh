@@ -48,7 +48,6 @@
 #include "base/coroutine.hh"
 #include "base/types.hh"
 #include "dev/dma_device.hh"
-#include "params/Gicv3Its.hh"
 
 namespace gem5
 {
@@ -58,6 +57,8 @@ class Gicv3Redistributor;
 class ItsProcess;
 class ItsTranslation;
 class ItsCommand;
+
+struct Gicv3ItsParams;
 
 enum class ItsActionType
 {

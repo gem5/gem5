@@ -94,10 +94,11 @@ class HSAQueueEntry
         // LLVM docs: https://www.llvm.org/docs/AMDGPUUsage.html
         //     #code-object-v3-kernel-descriptor
         //
-        // Currently, the only supported gfx versions in gem5 that compute
-        // VGPR count differently are gfx90a and gfx942.
+        // Currently, gem5 supported gfx version use a multiplier of 8. The
+        // only exception is gfx900 (Vega10).
         if (gfx_version == GfxVersion::gfx90a ||
-            gfx_version == GfxVersion::gfx942) {
+            gfx_version == GfxVersion::gfx942 ||
+            gfx_version == GfxVersion::gfx950) {
             numVgprs = (akc->granulated_workitem_vgpr_count + 1) * 8;
         } else {
             numVgprs = (akc->granulated_workitem_vgpr_count + 1) * 4;
@@ -106,10 +107,11 @@ class HSAQueueEntry
         // SGPR allocation granulary is 16 in GFX9
         // Source: https://llvm.org/docs/AMDGPUUsage.html
         if (gfx_version == GfxVersion::gfx900 ||
-                gfx_version == GfxVersion::gfx902 ||
-                gfx_version == GfxVersion::gfx908 ||
-                gfx_version == GfxVersion::gfx90a ||
-                gfx_version == GfxVersion::gfx942) {
+            gfx_version == GfxVersion::gfx902 ||
+            gfx_version == GfxVersion::gfx908 ||
+            gfx_version == GfxVersion::gfx90a ||
+            gfx_version == GfxVersion::gfx942 ||
+            gfx_version == GfxVersion::gfx950) {
             numSgprs = ((akc->granulated_wavefront_sgpr_count + 1) * 16)/2;
         } else {
             panic("Saw unknown gfx version setting up GPR counts\n");
@@ -407,6 +409,32 @@ class HSAQueueEntry
         return _accumOffset;
     }
 
+    void
+    preloadLength(unsigned val)
+    {
+        _preloadLength = val;
+
+        /**
+         * set the enable bit for KernargPreload if used. The preloaded
+         * kernargs go between private segment size and sgpr workgroup IDs.
+         */
+        if (_preloadLength) {
+            initialSgprState.set(KernargPreload, true);
+        }
+    }
+
+    unsigned
+    preloadLength() const
+    {
+        return _preloadLength;
+    }
+
+    uint32_t *
+    preloadArgs()
+    {
+        return &(_preloadArgs[0]);
+    }
+
   private:
     void
     parseKernelCode(AMDKernelCode *akc)
@@ -504,6 +532,13 @@ class HSAQueueEntry
     std::bitset<NumScalarInitFields> initialSgprState;
 
     unsigned _accumOffset;
+
+    // For preloading args there are extra bytes of space after the dispatch
+    // packet containing values that should be preloaded into SGPRs. This
+    // field serves as a buffer to DMA into and therefore is sized at the
+    // max amount. It is of dword type to easily access during wave start.
+    unsigned _preloadLength = 0;
+    uint32_t _preloadArgs[KernargPreloadPktSize / sizeof(uint32_t)];
 };
 
 } // namespace gem5

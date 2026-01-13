@@ -63,7 +63,7 @@ TAGE_SC_L_8KB_StatisticalCorrector::TAGE_SC_L_8KB_StatisticalCorrector(
 TAGE_SC_L_8KB_StatisticalCorrector::SCThreadHistory *
 TAGE_SC_L_8KB_StatisticalCorrector::makeThreadHistory()
 {
-    SC_8KB_ThreadHistory *sh = new SC_8KB_ThreadHistory();
+    SC_8KB_ThreadHistory *sh = new SC_8KB_ThreadHistory(instShiftAmt);
     sh->setNumOrdinalHistories(1);
     sh->initLocalHistory(1, numEntriesFirstLocalHistories, 2);
     return sh;
@@ -71,30 +71,35 @@ TAGE_SC_L_8KB_StatisticalCorrector::makeThreadHistory()
 
 unsigned
 TAGE_SC_L_8KB_StatisticalCorrector::getIndBiasBank(Addr branch_pc,
-        BranchInfo* bi, int hitBank, int altBank) const
+                                                   BranchInfo *bi,
+                                                   int hitBank,
+                                                   int altBank) const
 {
-    return (bi->predBeforeSC + (((hitBank+1)/4)<<4) + (bi->highConf<<1) +
-            (bi->lowConf <<2) +((altBank!=0)<<3)) & ((1<<logBias) -1);
+    return (bi->predBeforeSC
+         + (((hitBank + 1) / 4) << 4)
+         + (bi->highConf << 1)
+         + (bi->lowConf << 2)
+         + ((altBank != 0) << 3))
+         & ((1 << logBias) -1);
 }
 
 int
 TAGE_SC_L_8KB_StatisticalCorrector::gPredictions(
-    ThreadID tid, Addr branch_pc, BranchInfo* bi, int & lsum, int64_t phist)
+    ThreadID tid, Addr branch_pc, BranchInfo *bi, int &lsum)
 {
-    SC_8KB_ThreadHistory *sh = static_cast<SC_8KB_ThreadHistory *>(scHistory);
     lsum += gPredict(
-        branch_pc, sh->globalHist, gm, ggehl, gnb, logGnb, wg);
+        branch_pc, bi->globalHist, gm, ggehl, gnb, logGnb, wg);
 
     lsum += gPredict(
-        branch_pc, sh->bwHist, bwm, bwgehl, bwnb, logBwnb, wbw);
+        branch_pc, bi->bwHist, bwm, bwgehl, bwnb, logBwnb, wbw);
 
     // only 1 local history here
     lsum += gPredict(
-        branch_pc, sh->getLocalHistory(1, branch_pc), lm,
+        branch_pc, bi->localHistories[1], lm,
         lgehl, lnb, logLnb, wl);
 
     lsum += gPredict(
-        branch_pc, sh->imliCount, im, igehl, inb, logInb, wi);
+        branch_pc, bi->imliCount, im, igehl, inb, logInb, wi);
 
     int thres = (updateThreshold>>3)+pUpdateThreshold[getIndUpd(branch_pc)];
 
@@ -108,8 +113,9 @@ int TAGE_SC_L_8KB_StatisticalCorrector::gIndexLogsSubstr(int nbr, int i)
 
 void
 TAGE_SC_L_8KB_StatisticalCorrector::scHistoryUpdate(Addr branch_pc,
-    const StaticInstPtr &inst, bool taken, BranchInfo *tage_bi,
-    Addr corrTarget)
+                                                    const StaticInstPtr &inst,
+                                                    bool taken, Addr target,
+                                                    int64_t phist)
 {
     int brtype = inst->isDirectCtrl() ? 0 : 2;
     if (! inst->isUncondCtrl()) {
@@ -122,20 +128,39 @@ TAGE_SC_L_8KB_StatisticalCorrector::scHistoryUpdate(Addr branch_pc,
         sh->globalHist = (sh->globalHist << 1) + taken;
     }
 
-    StatisticalCorrector::scHistoryUpdate(branch_pc, inst, taken, tage_bi,
-                                          corrTarget);
+    StatisticalCorrector::scHistoryUpdate(branch_pc, inst, taken,
+                                          target, phist);
+}
+
+void
+TAGE_SC_L_8KB_StatisticalCorrector::scRecordHistState(Addr branch_pc,
+                                                      BranchInfo *bi)
+{
+    StatisticalCorrector::scRecordHistState(branch_pc, bi);
+    auto sh = static_cast<SC_8KB_ThreadHistory *>(scHistory);
+    bi->globalHist = sh->globalHist;
+}
+
+bool
+TAGE_SC_L_8KB_StatisticalCorrector::scRestoreHistState(BranchInfo *bi)
+{
+    if (!StatisticalCorrector::scRestoreHistState(bi)) {
+        return false;
+    }
+    auto sh = static_cast<SC_8KB_ThreadHistory *>(scHistory);
+    sh->globalHist = bi->globalHist;
+    return true;
 }
 
 void
 TAGE_SC_L_8KB_StatisticalCorrector::gUpdates(ThreadID tid, Addr pc, bool taken,
-        BranchInfo* bi, int64_t phist)
+                                             BranchInfo *bi)
 {
-    SC_8KB_ThreadHistory *sh = static_cast<SC_8KB_ThreadHistory *>(scHistory);
-    gUpdate(pc, taken, sh->globalHist, gm, ggehl, gnb, logGnb, wg, bi);
-    gUpdate(pc, taken, sh->bwHist, bwm, bwgehl, bwnb, logBwnb, wbw, bi);
-    gUpdate(pc, taken, sh->getLocalHistory(1, pc), lm, lgehl, lnb, logLnb, wl,
+    gUpdate(pc, taken, bi->globalHist, gm, ggehl, gnb, logGnb, wg, bi);
+    gUpdate(pc, taken, bi->bwHist, bwm, bwgehl, bwnb, logBwnb, wbw, bi);
+    gUpdate(pc, taken, bi->localHistories[1], lm, lgehl, lnb, logLnb, wl,
             bi);
-    gUpdate(pc, taken, sh->imliCount, im, igehl, inb, logInb, wi, bi);
+    gUpdate(pc, taken, bi->imliCount, im, igehl, inb, logInb, wi, bi);
 }
 
 TAGE_SC_L_8KB::TAGE_SC_L_8KB(const TAGE_SC_L_8KBParams &params)
@@ -144,7 +169,7 @@ TAGE_SC_L_8KB::TAGE_SC_L_8KB(const TAGE_SC_L_8KBParams &params)
 }
 
 void
-TAGE_SC_L_TAGE_8KB::initFoldedHistories(ThreadHistory & history)
+TAGE_SC_L_TAGE_8KB::initFoldedHistories(ThreadHistory &history)
 {
     // Some hardcoded values are used here
     // (they do not seem to depend on any parameter)
@@ -170,8 +195,9 @@ TAGE_SC_L_TAGE_8KB::gindex_ext(int index, int bank) const
 uint16_t
 TAGE_SC_L_TAGE_8KB::gtag(ThreadID tid, Addr pc, int bank) const
 {
-    int tag = (threadHistory[tid].computeIndices[bank - 1].comp << 2) ^ pc ^
-              (pc >> instShiftAmt) ^
+    Addr shifted_pc = pc >> instShiftAmt;
+    int tag = (threadHistory[tid].computeIndices[bank - 1].comp << 2)
+            ^ shifted_pc ^ (shifted_pc >> 2) ^
               threadHistory[tid].computeIndices[bank].comp;
     int hlen = (histLengths[bank] > pathHistBits) ? pathHistBits :
                                                     histLengths[bank];
@@ -186,8 +212,8 @@ TAGE_SC_L_TAGE_8KB::gtag(ThreadID tid, Addr pc, int bank) const
 }
 
 void
-TAGE_SC_L_TAGE_8KB::handleAllocAndUReset(
-    bool alloc, bool taken, TAGEBase::BranchInfo* bi, int nrand)
+TAGE_SC_L_TAGE_8KB::handleAllocAndUReset(bool alloc, bool taken,
+                                         TAGEBase::BranchInfo *bi, int nrand)
 {
     if (!alloc) {
         return;
@@ -246,7 +272,7 @@ TAGE_SC_L_TAGE_8KB::handleAllocAndUReset(
 }
 
 void
-TAGE_SC_L_TAGE_8KB::resetUctr(uint8_t & u)
+TAGE_SC_L_TAGE_8KB::resetUctr(uint8_t &u)
 {
     // On real HW it should be u >>= 1 instead of if > 0 then u--
     if (u > 0) {
@@ -256,7 +282,7 @@ TAGE_SC_L_TAGE_8KB::resetUctr(uint8_t & u)
 
 void
 TAGE_SC_L_TAGE_8KB::handleTAGEUpdate(Addr branch_pc, bool taken,
-                                     TAGEBase::BranchInfo* bi)
+                                     TAGEBase::BranchInfo *bi)
 {
     if (bi->hitBank > 0) {
         if (abs (2 * gtable[bi->hitBank][bi->hitBankIndex].ctr + 1) == 1) {

@@ -38,211 +38,43 @@
 #ifndef __DEV_PCI_HOST_HH__
 #define __DEV_PCI_HOST_HH__
 
-#include "dev/io_device.hh"
+#include "base/addr_range.hh"
 #include "dev/pci/types.hh"
+#include "dev/pci/upstream.hh"
+#include "params/PciHost.hh"
 
 namespace gem5
 {
 
-struct PciHostParams;
 struct GenericPciHostParams;
 
-class PciDevice;
 class Platform;
 
 /**
- * The PCI host describes the interface between PCI devices and a
+ * The PCI host describes the interface between PCI main bus and a
  * simulated system.
  *
  * The PCI host controller has three main responsibilities:
  * <ol>
- *     <li>Expose a configuration memory space that allows devices to
- *         be discovered and configured.
+ *     <li>Bridge memory packet between the PCI main bus and the system bus.
  *     <li>Map and deliver interrupts to the CPU.
  *     <li>Map memory addresses from the PCI bus's various memory
  *         spaces (Legacy IO, non-prefetchable memory, and
  *         prefetchable memory) to physical memory.
  * </ol>
  *
- * PCI devices need to register themselves with a PCI host using the
- * PciHost::registerDevice() call. This call returns a
- * PciHost::DeviceInterface that provides for common functionality
- * such as interrupt delivery and memory mapping.
+ * PCI devices that are on the main PCI bus need to register themselves with a
+ * PCI host using the PciUptream API to receive a PciUpstream::DeviceInterface.
  *
  * The PciHost class itself provides very little functionality. Simple
- * PciHost functionality is implemented by the GenericPciHost class.
+ * PciHost functionality is implemented by the GenericPciHost class. The actual
+ * bridge is implemented by PciHostBridge which is a member of this class.
  */
-class PciHost : public PioDevice
+class PciHost : public PciUpstream
 {
   public:
     PciHost(const PciHostParams &p);
     virtual ~PciHost();
-
-  public:
-    /**
-     * @{
-     * @name Device interface
-     */
-
-    /**
-     * Callback interface from PCI devices to the host.
-     *
-     * Devices get an instance of this object when they register
-     * themselves with the host using the PciHost::registerDevice()
-     * call.
-     */
-    class DeviceInterface
-    {
-        friend class gem5::PciHost;
-
-      protected:
-        /**
-         * Instantiate a device interface
-         *
-         * @param host PCI host that this device belongs to.
-         * @param bus_addr The device's position on the PCI bus
-         * @param pin Interrupt pin
-         */
-        DeviceInterface(PciHost &host, PciBusAddr &bus_addr, PciIntPin pin);
-
-      public:
-        DeviceInterface() = delete;
-        void operator=(const DeviceInterface &) = delete;
-
-        const std::string name() const;
-
-        /**
-         * Post a PCI interrupt to the CPU.
-         */
-        void postInt();
-
-        /**
-         * Clear a posted PCI interrupt
-         */
-        void clearInt();
-
-        /**
-         * Calculate the physical address of an IO location on the PCI
-         * bus.
-         *
-         * @param addr Address in the PCI IO address space
-         * @return Address in the system's physical address space.
-         */
-        Addr pioAddr(Addr addr) const { return host.pioAddr(busAddr, addr); }
-
-        /**
-         * Calculate the physical address of a non-prefetchable memory
-         * location in the PCI address space.
-         *
-         * @param addr Address in the PCI memory address space
-         * @return Address in the system's physical address space.
-         */
-        Addr memAddr(Addr addr) const { return host.memAddr(busAddr, addr); }
-
-        /**
-         * Calculate the physical address of a prefetchable memory
-         * location in the PCI address space.
-         *
-         * @param addr Address in the PCI DMA memory address space
-         * @return Address in the system's physical address space.
-         */
-        Addr dmaAddr(Addr addr) const { return host.dmaAddr(busAddr, addr); }
-
-      protected:
-        PciHost &host;
-
-        const PciBusAddr busAddr;
-        const PciIntPin interruptPin;
-    };
-
-    /**
-     * Register a PCI device with the host.
-     *
-     * @param device Device to register
-     * @param bus_addr The device's position on the PCI bus
-     * @param pin Interrupt pin
-     * @return A device-specific DeviceInterface instance.
-     */
-    virtual DeviceInterface registerDevice(PciDevice *device,
-                                           PciBusAddr bus_addr, PciIntPin pin);
-
-    /** @} */
-
-  protected:
-    /**
-     * @{
-     * @name PciHost controller interface
-     */
-
-    /**
-     * Post an interrupt to the CPU.
-     *
-     * @param bus_addr The device's position on the PCI bus
-     * @param pin PCI interrupt pin
-     */
-    virtual void postInt(const PciBusAddr &bus_addr, PciIntPin pin) = 0;
-
-    /**
-     * Post an interrupt to the CPU.
-     *
-     * @param bus_addr The device's position on the PCI bus
-     * @param pin PCI interrupt pin
-     */
-    virtual void clearInt(const PciBusAddr &bus_addr, PciIntPin pin) = 0;
-
-    /**
-     * Calculate the physical address of an IO location on the PCI
-     * bus.
-     *
-     * @param bus_addr The device's position on the PCI bus
-     * @param pci_addr Address in the PCI IO address space
-     * @return Address in the system's physical address space.
-     */
-    virtual Addr pioAddr(const PciBusAddr &bus_addr, Addr pci_addr) const = 0;
-
-    /**
-     * Calculate the physical address of a non-prefetchable memory
-     * location in the PCI address space.
-     *
-     * @param bus_addr The device's position on the PCI bus
-     * @param pci_addr Address in the PCI memory address space
-     * @return Address in the system's physical address space.
-     */
-    virtual Addr memAddr(const PciBusAddr &bus_addr, Addr pci_addr) const = 0;
-
-
-    /**
-     * Calculate the physical address of a prefetchable memory
-     * location in the PCI address space.
-     *
-     * @param bus_addr The device's position on the PCI bus
-     * @param pci_addr Address in the PCI DMA memory address space
-     * @return Address in the system's physical address space.
-     */
-    virtual Addr dmaAddr(const PciBusAddr &bus_addr, Addr pci_addr) const = 0;
-
-    /** @} */
-
-  protected:
-    /**
-     * Retrieve a PCI device from its bus address.
-     *
-     * @return Pointer to a PciDevice instance or nullptr if the
-     *         device doesn't exist.
-     */
-    PciDevice *getDevice(const PciBusAddr &addr);
-
-    /**
-     * Retrieve a PCI device from its bus address.
-     *
-     * @return Pointer to a constant PciDevice instance or nullptr if
-     *         the device doesn't exist.
-     */
-    const PciDevice *getDevice(const PciBusAddr &addr) const;
-
-  private:
-    /** Currently registered PCI devices */
-    std::map<PciBusAddr, PciDevice *> devices;
 };
 
 /**
@@ -266,7 +98,7 @@ class PciHost : public PioDevice
  * Platform::clearInt() calls. Interrupt numbers are mapped statically
  * using the interrupt line (PciDevice::interruptLine()) returned from
  * the device. Implementations may override mapPciInterrupt() to
- * dynamically map a PciBusAddr and PciIntPin to a platform-specific
+ * dynamically map a PciDevAddr and PciIntPin to a platform-specific
  * interrupt.
  *
  * All PCI memory spaces (IO, prefetchable, and non-prefetchable)
@@ -279,41 +111,40 @@ class GenericPciHost : public PciHost
     GenericPciHost(const GenericPciHostParams &p);
     virtual ~GenericPciHost();
 
-  public: // PioDevice
-    Tick read(PacketPtr pkt) override;
-    Tick write(PacketPtr pkt) override;
+    AddrRange getConfigAddrRange() const override;
 
-    AddrRangeList getAddrRanges() const override;
+  protected: // PciUpstream
+    AddrRange interfaceConfigRange(const PciDevAddr &dev_addr) const override;
 
-  protected: // PciHost
-    Addr pioAddr(const PciBusAddr &bus_addr, Addr pci_addr) const override {
+    Addr
+    interfacePioAddr(const PciDevAddr &dev_addr, Addr pci_addr) const override
+    {
         return pciPioBase + pci_addr;
     }
 
-    Addr memAddr(const PciBusAddr &bus_addr, Addr pci_addr) const override {
+    Addr
+    interfaceMemAddr(const PciDevAddr &dev_addr, Addr pci_addr) const override
+    {
         return pciMemBase + pci_addr;
     }
 
-    Addr dmaAddr(const PciBusAddr &bus_addr, Addr pci_addr) const override {
+    Addr
+    interfaceDmaAddr(const PciDevAddr &dev_addr, Addr pci_addr) const override
+    {
         return pciDmaBase + pci_addr;
     }
 
-  protected: // Configuration address space handling
-    /**
-     * Decode a configuration space address.
-     *
-     *
-     * @param addr Offset into the configuration space
-     * @return Tuple containing the PCI bus address and an offset into
-     *         the device's configuration space.
-     */
-    virtual std::pair<PciBusAddr, Addr> decodeAddress(Addr address);
+    PciBusNum
+    getBusNum() const override
+    {
+        return 0;
+    }
 
   protected: // Interrupt handling
-    void postInt(const PciBusAddr &addr, PciIntPin pin) override;
-    void clearInt(const PciBusAddr &addr, PciIntPin pin) override;
+    void interfacePostInt(const PciDevAddr &addr, PciIntPin pin) override;
+    void interfaceClearInt(const PciDevAddr &addr, PciIntPin pin) override;
 
-    virtual uint32_t mapPciInterrupt(const PciBusAddr &bus_addr,
+    virtual uint32_t mapPciInterrupt(const PciDevAddr &dev_addr,
                                      PciIntPin pin) const;
 
   protected:

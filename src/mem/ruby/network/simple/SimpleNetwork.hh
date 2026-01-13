@@ -12,6 +12,7 @@
  * modified or unmodified, in source code or in binary form.
  *
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
+ * Copyright (c) 2025 Google
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -71,8 +72,9 @@ class SimpleNetwork : public Network
     int getBufferSize() { return m_buffer_size; }
     int getEndpointBandwidth() { return m_endpoint_bandwidth; }
 
-    void collateStats();
-    void regStats();
+    void
+    collateStats()
+    {} // SimpleNetwork uses new-style stats
 
     bool isVNetOrdered(int vnet) const { return m_ordered[vnet]; }
 
@@ -110,11 +112,16 @@ class SimpleNetwork : public Network
 
     struct NetworkStats : public statistics::Group
     {
-        NetworkStats(statistics::Group *parent);
+      private:
+        SimpleNetwork *parent;
+
+      public:
+        void regStats() override; // Need to override as switches created late
+        NetworkStats(SimpleNetwork *parent);
 
         //Statistical variables
-        statistics::Formula* m_msg_counts[MessageSizeType_NUM];
-        statistics::Formula* m_msg_bytes[MessageSizeType_NUM];
+        std::vector<statistics::Formula *> m_msg_counts;
+        std::vector<statistics::Formula *> m_msg_bytes;
     } networkStats;
 };
 

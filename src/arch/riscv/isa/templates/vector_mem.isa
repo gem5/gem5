@@ -153,19 +153,11 @@ Fault
 
     RiscvISA::vreg_t tmp_v0;
     uint8_t *v0;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
 
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
-
-    status.vs = VPUStatus::DIRTY;
-    xc->setMiscReg(MISCREG_STATUS, status);
+    bool set_dirty = true;
+    bool check_vill = true;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
 
     if(!machInst.vm) {
         xc->getRegOperand(this, _numSrcRegs - 1, &tmp_v0);
@@ -212,14 +204,10 @@ Fault
     %(set_vlenb)s;
     %(ea_code)s;
 
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+    bool set_dirty = false;
+    bool check_vill = true;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
 
     uint32_t mem_size = width_EEW(this->machInst.width) / 8 * this->microVl;
 
@@ -243,9 +231,10 @@ Fault
     %(op_decl)s;
     %(op_rd)s;
 
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    status.vs = VPUStatus::DIRTY;
-    xc->setMiscReg(MISCREG_STATUS, status);
+    bool set_dirty = true;
+    bool check_vill = false;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
 
     // tail/mask policy: both undisturbed if one is, 1s if none
     %(tail_mask_policy_code)s
@@ -360,14 +349,11 @@ Fault
 
     RiscvISA::vreg_t tmp_v0;
     uint8_t *v0;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    bool set_dirty = false;
+    bool check_vill = true;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
     if(!machInst.vm) {
         xc->getRegOperand(this, _numSrcRegs - 1, &tmp_v0);
         v0 = tmp_v0.as<uint8_t>();
@@ -410,14 +396,12 @@ Fault
 
     RiscvISA::vreg_t tmp_v0;
     uint8_t *v0;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    bool set_dirty = false;
+    bool check_vill = true;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
+
     if(!machInst.vm) {
         xc->getRegOperand(this, _numSrcRegs - 1, &tmp_v0);
         v0 = tmp_v0.as<uint8_t>();
@@ -587,12 +571,12 @@ Fault
 %(class_name)s::execute(ExecContext *xc, trace::InstRecord *traceData) const
 {
     Addr EA;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
+
+    bool set_dirty = false;
+    bool check_vill = false;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
+
     %(op_decl)s;
     %(op_rd)s;
     %(set_vlenb)s;
@@ -617,12 +601,12 @@ Fault
         trace::InstRecord* traceData) const
 {
     Addr EA;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
+
+    bool set_dirty = false;
+    bool check_vill = false;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
+
     %(op_decl)s;
     %(op_rd)s;
     %(set_vlenb)s;
@@ -725,15 +709,11 @@ Fault
 %(class_name)s::execute(ExecContext *xc, trace::InstRecord *traceData) const
 {
     Addr EA;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
 
-    status.vs = VPUStatus::DIRTY;
-    xc->setMiscReg(MISCREG_STATUS, status);
+    bool set_dirty = true;
+    bool check_vill = false;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
 
     %(op_decl)s;
     %(op_rd)s;
@@ -764,12 +744,12 @@ Fault
                             trace::InstRecord* traceData) const
 {
     Addr EA;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
+
+    bool set_dirty = false;
+    bool check_vill = false;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
+
     %(op_src_decl)s;
     %(op_rd)s;
     %(set_vlenb)s;
@@ -791,9 +771,10 @@ Fault
     %(op_decl)s;
     %(op_rd)s;
 
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    status.vs = VPUStatus::DIRTY;
-    xc->setMiscReg(MISCREG_STATUS, status);
+    bool set_dirty = true;
+    bool check_vill = false;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
 
     memcpy(Mem.as<uint8_t>(), pkt->getPtr<uint8_t>(), pkt->getSize());
 
@@ -812,11 +793,14 @@ def template VlStrideConstructor {{
 
 %(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _elen,
                                uint32_t _vlen)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _elen, _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, true, _elen,
+                     _vlen)
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
 
+    const uint32_t nf = _machInst.nf + 1;
+    const uint32_t emul = get_emul(eew, sew, vflmul, false);
     const int32_t num_elems_per_vreg = vlen / width_EEW(_machInst.width);
     int32_t remaining_vl = this->vl;
     // Num of elems in one vreg
@@ -826,202 +810,48 @@ def template VlStrideConstructor {{
     if (micro_vl == 0) {
         microop = new VectorNopMicroInst(_machInst);
         this->microops.push_back(microop);
-    }
+    } else {
 
-    const uint8_t num_pinvd_microops = ceil((float) this->vl /
-                                                    num_elems_per_vreg);
-    for (uint32_t i = 0; i < num_pinvd_microops; i++) {
-        uint32_t vdNumElems = (vl >= num_elems_per_vreg*(i+1))
-                              ? num_elems_per_vreg : vl-num_elems_per_vreg*i;
-        microop = new VPinVdMicroInst(machInst, i, vdNumElems, elen, vlen);
-        microop->setFlag(IsDelayedCommit);
-        this->microops.push_back(microop);
-    }
+        for (int fn = 0; fn < nf; fn++) {
+            remaining_vl = this->vl;
+            micro_vl = std::min(remaining_vl, num_elems_per_vreg);
+            uint32_t segIdx = fn * emul;
+            uint32_t offset = fn * eew / 8;
+            for (int i = 0; micro_vl > 0; ++i) {
+                bool illegal = (machInst.vd + segIdx + i) >= 32;
+                if (illegal) {
+                    microop = new VectorNopMicroInst(_machInst,
+                        std::make_shared<IllegalInstFault>("vd is illegal",
+                        machInst));
+                    this->microops.push_back(microop);
+                    this->microops.front()->setFlag(IsFirstMicroop);
+                    this->microops.back()->setFlag(IsLastMicroop);
+                    this->flags[IsVector] = true;
+                    return;
+                }
 
-    for (int i = 0; micro_vl > 0; ++i) {
-        for (int j = 0; j < micro_vl; ++j) {
-            microop = new %(class_name)sMicro(machInst, i, j, micro_vl, elen,
-                                              vlen);
-            microop->setFlag(IsDelayedCommit);
-            microop->setFlag(IsLoad);
-            this->microops.push_back(microop);
+                microop = new VPinVdMicroInst(machInst, segIdx + i,
+                    micro_vl, elen, vlen);
+                microop->setFlag(IsDelayedCommit);
+                this->microops.push_back(microop);
+
+                for (int j = 0; j < micro_vl; ++j) {
+                    microop = new %(class_name)sMicro(machInst, i, segIdx, j,
+                                                      micro_vl, offset, true,
+                                                      elen, vlen);
+                    microop->setFlag(IsDelayedCommit);
+                    microop->setFlag(IsLoad);
+                    this->microops.push_back(microop);
+                }
+                remaining_vl -= num_elems_per_vreg;
+                micro_vl = std::min(remaining_vl, num_elems_per_vreg);
+            }
         }
-        remaining_vl -= num_elems_per_vreg;
-        micro_vl = std::min(remaining_vl, num_elems_per_vreg);
     }
 
     this->microops.front()->setFlag(IsFirstMicroop);
     this->microops.back()->setFlag(IsLastMicroop);
     this->flags[IsVector] = true;
-}
-
-}};
-
-def template VlStrideMicroDeclare {{
-
-class %(class_name)s : public %(base_class)s
-{
-private:
-    // rs1, rs2, vtmp0, vm
-    RegId srcRegIdxArr[4];
-    RegId destRegIdxArr[1];
-public:
-    %(class_name)s(ExtMachInst _machInst, uint32_t _regIdx, uint32_t _microIdx,
-                   uint32_t _microVl, uint32_t _elen, uint32_t _vlen);
-
-    Fault execute(ExecContext *, trace::InstRecord *) const override;
-    Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
-    Fault completeAcc(PacketPtr, ExecContext *,
-                      trace::InstRecord *) const override;
-    using %(base_class)s::generateDisassembly;
-};
-
-}};
-
-def template VlStrideMicroConstructor {{
-
-%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _regIdx,
-                               uint32_t _microIdx, uint32_t _microVl,
-                               uint32_t _elen, uint32_t _vlen)
-  : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _regIdx, _microIdx,
-                   _microVl, _elen, _vlen)
-{
-    %(set_reg_idx_arr)s;
-    _numSrcRegs = 0;
-    _numDestRegs = 0;
-    setDestRegIdx(_numDestRegs++, vecRegClass[_machInst.vd + _regIdx]);
-    _numTypedDestRegs[VecRegClass]++;
-    setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
-    setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs2]);
-    // vtmp0 as dummy src reg to create dependency with pin vd micro
-    setSrcRegIdx(_numSrcRegs++, vecRegClass[VecMemInternalReg0]);
-    if (!_machInst.vm) {
-        setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
-    }
-    this->flags[IsLoad] = true;
-}
-
-}};
-
-def template VlStrideMicroExecute {{
-
-Fault
-%(class_name)s::execute(ExecContext *xc, trace::InstRecord *traceData) const
-{
-    Fault fault = NoFault;
-    Addr EA;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
-
-    status.vs = VPUStatus::DIRTY;
-    xc->setMiscReg(MISCREG_STATUS, status);
-
-    %(op_decl)s;
-    %(op_rd)s;
-    %(set_vlenb)s;
-    constexpr uint8_t elem_size = sizeof(Vd[0]);
-    %(ea_code)s; // ea_code depends on elem_size
-
-    RiscvISA::vreg_t tmp_v0;
-    uint8_t *v0;
-    if (!machInst.vm) {
-        xc->getRegOperand(this, _numSrcRegs-1, &tmp_v0);
-        v0 = tmp_v0.as<uint8_t>();
-    }
-
-    uint32_t mem_size = elem_size;
-    const std::vector<bool> byte_enable(mem_size, true);
-
-    size_t ei = this->regIdx * vlenb / elem_size + this->microIdx;
-    if (machInst.vm || elem_mask(v0, ei)) {
-        fault = xc->readMem(EA, Mem.as<uint8_t>(), mem_size,
-                                memAccessFlags, byte_enable);
-        if (fault != NoFault)
-            return fault;
-        %(memacc_code)s; /* Vd[this->microIdx] = Mem[0]; */
-    }
-
-    %(op_wb)s;
-    return fault;
-}
-
-}};
-
-def template VlStrideMicroInitiateAcc {{
-
-Fault
-%(class_name)s::initiateAcc(ExecContext* xc,
-                            trace::InstRecord* traceData) const
-{
-    Fault fault = NoFault;
-    Addr EA;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
-    %(op_src_decl)s;
-    %(op_rd)s;
-    %(set_vlenb)s;
-    constexpr uint8_t elem_size = sizeof(Vd[0]);
-    %(ea_code)s; // ea_code depends on elem_size
-
-    RiscvISA::vreg_t tmp_v0;
-    uint8_t *v0;
-    if (!machInst.vm) {
-        xc->getRegOperand(this, _numSrcRegs-1, &tmp_v0);
-        v0 = tmp_v0.as<uint8_t>();
-    }
-
-    uint32_t mem_size = elem_size;
-    size_t ei = this->regIdx * vlenb / elem_size + this->microIdx;
-    bool need_load = machInst.vm || elem_mask(v0, ei);
-    const std::vector<bool> byte_enable(mem_size, need_load);
-    fault = initiateMemRead(xc, EA, mem_size, memAccessFlags, byte_enable);
-    return fault;
-}
-
-}};
-
-def template VlStrideMicroCompleteAcc {{
-
-Fault
-%(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
-                            trace::InstRecord *traceData) const
-{
-    %(op_decl)s;
-    %(op_rd)s;
-    %(set_vlenb)s;
-
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    status.vs = VPUStatus::DIRTY;
-    xc->setMiscReg(MISCREG_STATUS, status);
-
-    RiscvISA::vreg_t tmp_v0;
-    uint8_t *v0;
-    if (!machInst.vm) {
-        xc->getRegOperand(this, _numSrcRegs-1, &tmp_v0);
-        v0 = tmp_v0.as<uint8_t>();
-    }
-
-    size_t ei = this->regIdx * vlenb / sizeof(Vd[0]) + this->microIdx;
-    if (machInst.vm || elem_mask(v0, ei)) {
-        memcpy(Mem.as<uint8_t>(), pkt->getPtr<uint8_t>(), pkt->getSize());
-        %(memacc_code)s; /* Vd[this->microIdx] = Mem[0]; */
-    }
-
-    %(op_wb)s;
-    return NoFault;
 }
 
 }};
@@ -1030,11 +860,14 @@ def template VsStrideConstructor {{
 
 %(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _elen,
                                uint32_t _vlen)
-    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _elen, _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, true, _elen,
+                     _vlen)
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
 
+    const uint32_t nf = _machInst.nf + 1;
+    const uint32_t emul = get_emul(eew, sew, vflmul, false);
     const int32_t num_elems_per_vreg = vlen / width_EEW(_machInst.width);
     int32_t remaining_vl = this->vl;
     // Num of elems in one vreg
@@ -1044,161 +877,42 @@ def template VsStrideConstructor {{
     if (micro_vl == 0) {
         microop = new VectorNopMicroInst(_machInst);
         this->microops.push_back(microop);
-    }
-    for (int i = 0; micro_vl > 0; ++i) {
-        for (int j = 0; j < micro_vl; ++j) {
-            microop = new %(class_name)sMicro(machInst, i, j, micro_vl, elen,
-                                              vlen);
-            microop->setFlag(IsDelayedCommit);
-            microop->setFlag(IsStore);
-            this->microops.push_back(microop);
+    } else {
+        for (int fn = 0; fn < nf; fn++) {
+            remaining_vl = this->vl;
+            micro_vl = std::min(remaining_vl, num_elems_per_vreg);
+            uint32_t segIdx = fn * emul;
+            uint32_t offset = fn * eew / 8;
+            for (int i = 0; micro_vl > 0; ++i) {
+                bool illegal = (machInst.vs3 + segIdx + i) >= 32;
+                if (illegal) {
+                    microop = new VectorNopMicroInst(_machInst,
+                        std::make_shared<IllegalInstFault>("vs3 is illegal",
+                        machInst));
+                    this->microops.push_back(microop);
+                    this->microops.front()->setFlag(IsFirstMicroop);
+                    this->microops.back()->setFlag(IsLastMicroop);
+                    this->flags[IsVector] = true;
+                    return;
+                }
+
+                for (int j = 0; j < micro_vl; ++j) {
+                    microop = new %(class_name)sMicro(machInst, i, segIdx, j,
+                                                      micro_vl, offset, true,
+                                                      elen, _vlen);
+                    microop->setFlag(IsDelayedCommit);
+                    microop->setFlag(IsStore);
+                    this->microops.push_back(microop);
+                }
+                remaining_vl -= num_elems_per_vreg;
+                micro_vl = std::min(remaining_vl, num_elems_per_vreg);
+            }
         }
-        remaining_vl -= num_elems_per_vreg;
-        micro_vl = std::min(remaining_vl, num_elems_per_vreg);
     }
 
     this->microops.front()->setFlag(IsFirstMicroop);
     this->microops.back()->setFlag(IsLastMicroop);
     this->flags[IsVector] = true;
-}
-
-}};
-
-def template VsStrideMicroDeclare {{
-
-class %(class_name)s : public %(base_class)s
-{
-private:
-    // rs1, rs2, vs3, vm
-    RegId srcRegIdxArr[4];
-    RegId destRegIdxArr[0];
-public:
-    %(class_name)s(ExtMachInst _machInst, uint32_t _regIdx, uint32_t _microIdx,
-                   uint32_t _microVl, uint32_t _elen, uint32_t _vlen);
-    Fault execute(ExecContext *, trace::InstRecord *) const override;
-    Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
-    Fault completeAcc(PacketPtr, ExecContext *,
-                      trace::InstRecord *) const override;
-    using %(base_class)s::generateDisassembly;
-};
-
-}};
-
-def template VsStrideMicroConstructor {{
-
-%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _regIdx,
-                               uint32_t _microIdx, uint32_t _microVl,
-                               uint32_t _elen, uint32_t _vlen)
-  : %(base_class)s("%(mnemonic)s""_micro", _machInst, %(op_class)s, _regIdx,
-                   _microIdx, _microVl, _elen, _vlen)
-{
-    %(set_reg_idx_arr)s;
-    _numSrcRegs = 0;
-    _numDestRegs = 0;
-    setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
-    setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs2]);
-    setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs3 + _regIdx]);
-    if (!_machInst.vm) {
-        setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
-    }
-    this->flags[IsStore] = true;
-}
-
-}};
-
-def template VsStrideMicroExecute {{
-
-Fault
-%(class_name)s::execute(ExecContext *xc, trace::InstRecord *traceData) const
-{
-    Fault fault = NoFault;
-    Addr EA;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
-    %(op_decl)s;
-    %(op_rd)s;
-    %(set_vlenb)s;
-    constexpr uint8_t elem_size = sizeof(Vs3[0]);
-    %(ea_code)s;
-
-    RiscvISA::vreg_t tmp_v0;
-    uint8_t *v0;
-    if(!machInst.vm) {
-        xc->getRegOperand(this, _numSrcRegs - 1, &tmp_v0);
-        v0 = tmp_v0.as<uint8_t>();
-    }
-
-    uint32_t mem_size = elem_size;
-    const std::vector<bool> byte_enable(mem_size, true);
-
-    size_t ei = this->regIdx * vlenb / elem_size + this->microIdx;
-    if (machInst.vm || elem_mask(v0, ei)) {
-        %(memacc_code)s;
-        fault = xc->writeMem(Mem.as<uint8_t>(), mem_size, EA,
-                             memAccessFlags, nullptr, byte_enable);
-    }
-    return fault;
-}
-
-}};
-
-def template VsStrideMicroInitiateAcc {{
-
-Fault
-%(class_name)s::initiateAcc(ExecContext* xc,
-                            trace::InstRecord* traceData) const
-{
-    Fault fault = NoFault;
-    Addr EA;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
-    RiscvISA::vreg_t tmp_v0;
-    uint8_t *v0;
-    if(!machInst.vm) {
-        xc->getRegOperand(this, _numSrcRegs - 1, &tmp_v0);
-        v0 = tmp_v0.as<uint8_t>();
-    }
-
-    %(op_decl)s;
-    %(op_rd)s;
-    %(set_vlenb)s;
-    constexpr uint8_t elem_size = sizeof(Vs3[0]);
-    %(ea_code)s;
-
-    uint32_t mem_size = elem_size;
-
-    size_t ei = this->regIdx * vlenb / elem_size + this->microIdx;
-    bool need_store = machInst.vm || elem_mask(v0, ei);
-    if (need_store) {
-        const std::vector<bool> byte_enable(mem_size, need_store);
-        %(memacc_code)s;
-        fault = xc->writeMem(Mem.as<uint8_t>(), mem_size, EA,
-                            memAccessFlags, nullptr, byte_enable);
-    }
-    return fault;
-}
-
-}};
-
-def template VsStrideMicroCompleteAcc {{
-
-Fault
-%(class_name)s::completeAcc(PacketPtr pkt, ExecContext* xc,
-                            trace::InstRecord* traceData) const
-{
-    return NoFault;
 }
 
 }};
@@ -1228,14 +942,18 @@ template<typename ElemType>
         this->microops.push_back(microop);
     }
 
-    const uint32_t vd_vlmax = vlenb / vd_eewb;
-    const uint8_t num_pinvdcpyvs_microops = ceil((float) this->vl/vd_vlmax);
-    for (uint32_t i = 0; i < num_pinvdcpyvs_microops; i++) {
-        uint32_t vdNumElems = (vl >= vd_vlmax*(i+1)) ? vd_vlmax:vl-vd_vlmax*i;
-
+    const uint32_t vs2_vlmax = vlenb / vs2_eewb;
+    const uint8_t num_cpyvs_microops = ceil((float) this->vl/vs2_vlmax);
+    for (uint32_t i = 0; i < num_cpyvs_microops; i++) {
         microop = new VCpyVsMicroInst(machInst, i, machInst.vs2, elen, vlen);
         microop->setFlag(IsDelayedCommit);
         this->microops.push_back(microop);
+    }
+
+    const uint32_t vd_vlmax = vlenb / vd_eewb;
+    const uint8_t num_pinvd_microops = ceil((float) this->vl/vd_vlmax);
+    for (uint32_t i = 0; i < num_pinvd_microops; i++) {
+        uint32_t vdNumElems = (vl >= vd_vlmax*(i+1)) ? vd_vlmax:vl-vd_vlmax*i;
 
         microop = new VPinVdMicroInst(machInst, i, vdNumElems, elen, vlen);
         microop->setFlag(IsDelayedCommit);
@@ -1329,18 +1047,11 @@ Fault
     using vu = std::make_unsigned_t<ElemType>;
     Fault fault = NoFault;
     Addr EA;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
 
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
-
-    status.vs = VPUStatus::DIRTY;
-    xc->setMiscReg(MISCREG_STATUS, status);
+    bool set_dirty = true;
+    bool check_vill = true;
+    fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (fault != NoFault) { return fault; }
 
     %(op_decl)s;
     %(op_rd)s;
@@ -1381,14 +1092,12 @@ Fault
     using vu = std::make_unsigned_t<ElemType>;
     Fault fault = NoFault;
     Addr EA;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    bool set_dirty = false;
+    bool check_vill = true;
+    fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (fault != NoFault) { return fault; }
+
     %(op_src_decl)s;
     %(op_rd)s;
     %(set_vlenb)s;
@@ -1420,9 +1129,10 @@ Fault
 %(class_name)s<ElemType>::completeAcc(PacketPtr pkt, ExecContext *xc,
                             trace::InstRecord *traceData) const
 {
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    status.vs = VPUStatus::DIRTY;
-    xc->setMiscReg(MISCREG_STATUS, status);
+    bool set_dirty = true;
+    bool check_vill = false;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
 
     using vu = std::make_unsigned_t<ElemType>;
     %(op_decl)s;
@@ -1565,14 +1275,12 @@ Fault
     using vu = std::make_unsigned_t<ElemType>;
     Fault fault = NoFault;
     Addr EA;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    bool set_dirty = false;
+    bool check_vill = true;
+    fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (fault != NoFault) { return fault; }
+
     %(op_decl)s;
     %(op_rd)s;
     %(set_vlenb)s;
@@ -1609,14 +1317,12 @@ Fault
     using vu = std::make_unsigned_t<ElemType>;
     Fault fault = NoFault;
     Addr EA;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    bool set_dirty = false;
+    bool check_vill = true;
+    fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (fault != NoFault) { return fault; }
+
     %(op_decl)s;
     %(op_rd)s;
     %(set_vlenb)s;
@@ -1682,6 +1388,18 @@ def template VlSegConstructor {{
             remaining_vl = this->vl;
             micro_vl = std::min(remaining_vl, micro_vlmax);
             for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
+                bool illegal = (_machInst.vd + i + (f * num_microops)) >= 32;
+                if (illegal) {
+                    microop = new VectorNopMicroInst(_machInst,
+                        std::make_shared<IllegalInstFault>("vd is illegal",
+                        _machInst));
+                    this->microops.push_back(microop);
+                    this->microops.front()->setFlag(IsFirstMicroop);
+                    this->microops.back()->setFlag(IsLastMicroop);
+                    this->flags[IsVector] = true;
+                    return;
+                }
+
                 microop = new %(class_name)sMicro(_machInst, micro_vl, i,
                                                   num_microops, f, NFIELDS,
                                                   elen, vlen);
@@ -1701,6 +1419,12 @@ def template VlSegConstructor {{
                 this->microops.push_back(microop);
                 micro_vl = std::min(remaining_vl -= micro_vlmax, micro_vlmax);
             }
+        }
+
+        if (microop->opClass() == SimdUnitStrideSegmentedFaultOnlyFirstLoadOp) {
+            microop = new VlFFTrimVlMicroOp(_machInst, this->vl, num_microops,
+                                            elen, vlen, microops);
+            this->microops.push_back(microop);
         }
     }
 
@@ -1780,23 +1504,17 @@ Fault
 
     RiscvISA::vreg_t tmp_v0;
     uint8_t *v0;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
 
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
+    bool set_dirty = true;
+    bool check_vill = true;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
 
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
 
     const int64_t vlmul = vtype_vlmul(machInst.vtype8);
     if (((1 << vlmul) * this->numFields) > 8)
         return std::make_shared<IllegalInstFault>("LMUL value is illegal for vlseg inst", machInst);
 
-    status.vs = VPUStatus::DIRTY;
-    xc->setMiscReg(MISCREG_STATUS, status);
 
     if(!machInst.vm) {
         xc->getRegOperand(this, _numSrcRegs - 1, &tmp_v0);
@@ -1806,6 +1524,8 @@ Fault
     const std::vector<bool> byte_enable(mem_size, true);
     Fault fault = xc->readMem(EA, Mem.as<uint8_t>(), mem_size, memAccessFlags,
                               byte_enable);
+
+    %(fault_code)s;
 
     if (fault != NoFault)
         return fault;
@@ -1840,14 +1560,10 @@ Fault
     %(op_rd)s;
     %(ea_code)s;
 
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+    bool set_dirty = false;
+    bool check_vill = true;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
 
     const int64_t vlmul = vtype_vlmul(machInst.vtype8);
     if (((1 << vlmul) * this->numFields) > 8)
@@ -1856,6 +1572,9 @@ Fault
     const std::vector<bool> byte_enable(mem_size, true);
     Fault fault = initiateMemRead(xc, EA, mem_size, memAccessFlags,
                                   byte_enable);
+
+    %(fault_code)s;
+
     return fault;
 }
 
@@ -1870,9 +1589,10 @@ Fault
     %(op_decl)s;
     %(op_rd)s;
 
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    status.vs = VPUStatus::DIRTY;
-    xc->setMiscReg(MISCREG_STATUS, status);
+    bool set_dirty = true;
+    bool check_vill = false;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
 
     // tail/mask policy: both undisturbed if one is, 1s if none
     %(tail_mask_policy_code)s
@@ -1926,6 +1646,18 @@ def template VsSegConstructor {{
             remaining_vl = this->vl;
             micro_vl = std::min(remaining_vl, micro_vlmax);
             for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
+                bool illegal = (_machInst.vs3 + i + (f * num_microops)) >= 32;
+                if (illegal) {
+                    microop = new VectorNopMicroInst(_machInst,
+                        std::make_shared<IllegalInstFault>("vs3 is illegal",
+                        _machInst));
+                    this->microops.push_back(microop);
+                    this->microops.front()->setFlag(IsFirstMicroop);
+                    this->microops.back()->setFlag(IsLastMicroop);
+                    this->flags[IsVector] = true;
+                    return;
+                }
+
                 microop = new VsSegIntrlvMicroInst(_machInst, micro_vl,
                     _machInst.vs3, NFIELDS, i, num_microops, f, elen, vlen,
                     size_per_elem);
@@ -2020,14 +1752,12 @@ Fault
 
     RiscvISA::vreg_t tmp_v0;
     uint8_t *v0;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    bool set_dirty = false;
+    bool check_vill = true;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
+
     if(!machInst.vm) {
         xc->getRegOperand(this, _numSrcRegs - 1, &tmp_v0);
         v0 = tmp_v0.as<uint8_t>();
@@ -2077,14 +1807,12 @@ Fault
 
     RiscvISA::vreg_t tmp_v0;
     uint8_t *v0;
-    MISA misa = xc->readMiscReg(MISCREG_ISA);
-    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-    if (!misa.rvv || status.vs == VPUStatus::OFF) {
-        return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
-    }
-    if (machInst.vill)
-        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+
+    bool set_dirty = false;
+    bool check_vill = true;
+    Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
+    if (update_fault != NoFault) { return update_fault; }
+
     if(!machInst.vm) {
         xc->getRegOperand(this, _numSrcRegs - 1, &tmp_v0);
         v0 = tmp_v0.as<uint8_t>();
@@ -2121,6 +1849,314 @@ Fault
 }};
 
 def template VsSegMicroCompleteAcc {{
+
+Fault
+%(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
+                            trace::InstRecord *traceData) const
+{
+    return NoFault;
+}
+
+}};
+
+def template VlElementMicroDeclare {{
+
+class %(class_name)s : public %(base_class)s
+{
+private:
+    // rs1, rs2, dest, vm
+    RegId srcRegIdxArr[4];
+    RegId destRegIdxArr[1];
+public:
+    %(class_name)s(ExtMachInst _machInst, uint32_t _regIdx, uint32_t _segIdx,
+                    uint32_t _microIdx, uint32_t _microVl, uint32_t _offset,
+                    bool _has_rs2, uint32_t _elen, uint32_t _vlen);
+
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
+    Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
+    Fault completeAcc(PacketPtr, ExecContext *,
+                        trace::InstRecord *) const override;
+    using %(base_class)s::generateDisassembly;
+};
+
+}};
+
+def template VlElementMicroConstructor {{
+
+%(class_name)s::%(class_name)s(ExtMachInst _machInst, uint32_t _regIdx,
+                               uint32_t _segIdx, uint32_t _microIdx,
+                               uint32_t _microVl, uint32_t _offset,
+                               bool _has_rs2, uint32_t _elen, uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _regIdx,
+                     _microIdx, _microVl, _offset, _has_rs2, _elen, _vlen)
+{
+    %(set_reg_idx_arr)s;
+    _numSrcRegs = 0;
+    _numDestRegs = 0;
+    setDestRegIdx(_numDestRegs++,
+        vecRegClass[_machInst.vd + _segIdx +_regIdx]);
+    _numTypedDestRegs[VecRegClass]++;
+    setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
+    if (_has_rs2) {
+        setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs2]);
+    }
+    this->flags[IsLoad] = true;
+}
+
+}};
+
+def template VlElementMicroExecute {{
+
+Fault
+%(class_name)s::execute(ExecContext *xc, trace::InstRecord *traceData) const
+{
+    Fault fault = NoFault;
+    Addr EA;
+    MISA misa = xc->readMiscReg(MISCREG_ISA);
+    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+    if (!misa.rvv || status.vs == VPUStatus::OFF) {
+        return std::make_shared<IllegalInstFault>(
+            "RVV is disabled or VPU is off", machInst);
+    }
+
+    if (machInst.vill)
+        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+    if ((machInst.nf + 1) * get_emul(eew, sew, vflmul, false) > 8)
+        return std::make_shared<IllegalInstFault>("nf * emul is illegal",
+        machInst);
+
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
+
+    %(op_decl)s;
+    %(op_rd)s;
+    %(set_vlenb)s;
+    constexpr uint8_t elem_size = sizeof(Vd[0]);
+
+    VM_REQUIRED();
+
+    uint32_t mem_size = elem_size;
+    const std::vector<bool> byte_enable(mem_size, true);
+
+    size_t ei = this->regIdx * vlenb / elem_size + this->microIdx;
+    %(ea_code)s; // ea_code depends on elem_size
+
+    if (machInst.vm || elem_mask(v0, ei)) {
+        fault = xc->readMem(EA, Mem.as<uint8_t>(), mem_size,
+                                memAccessFlags, byte_enable);
+        if (fault != NoFault)
+            return fault;
+        %(memacc_code)s; /* Vd[this->microIdx] = Mem[0]; */
+    }
+
+    %(op_wb)s;
+    return fault;
+}
+
+}};
+
+def template VlElementMicroInitiateAcc {{
+
+Fault
+%(class_name)s::initiateAcc(ExecContext* xc,
+                            trace::InstRecord* traceData) const
+{
+    Fault fault = NoFault;
+    Addr EA;
+    MISA misa = xc->readMiscReg(MISCREG_ISA);
+    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+    if (!misa.rvv || status.vs == VPUStatus::OFF) {
+        return std::make_shared<IllegalInstFault>(
+            "RVV is disabled or VPU is off", machInst);
+    }
+    if (machInst.vill)
+        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+    if ((machInst.nf + 1) * get_emul(eew, sew, vflmul, false) > 8)
+        return std::make_shared<IllegalInstFault>("nf * emul is illegal",
+        machInst);
+
+    %(op_src_decl)s;
+    %(op_rd)s;
+    %(set_vlenb)s;
+    constexpr uint8_t elem_size = sizeof(Vd[0]);
+
+    VM_REQUIRED();
+
+    uint32_t mem_size = elem_size;
+    size_t ei = this->regIdx * vlenb / elem_size + this->microIdx;
+    %(ea_code)s; // ea_code depends on elem_size
+
+    bool need_load = machInst.vm || elem_mask(v0, ei);
+    const std::vector<bool> byte_enable(mem_size, need_load);
+    fault = initiateMemRead(xc, EA, mem_size, memAccessFlags, byte_enable);
+    return fault;
+}
+
+}};
+
+def template VlElementMicroCompleteAcc {{
+
+Fault
+%(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
+                            trace::InstRecord *traceData) const
+{
+    %(op_decl)s;
+    %(op_rd)s;
+    %(set_vlenb)s;
+
+    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+    status.vs = VPUStatus::DIRTY;
+    xc->setMiscReg(MISCREG_STATUS, status);
+
+    VM_REQUIRED();
+
+    size_t ei = this->regIdx * vlenb / sizeof(Vd[0]) + this->microIdx;
+    if (machInst.vm || elem_mask(v0, ei)) {
+        memcpy(Mem.as<uint8_t>(), pkt->getPtr<uint8_t>(), pkt->getSize());
+        %(memacc_code)s; /* Vd[this->microIdx] = Mem[0]; */
+    }
+
+    %(op_wb)s;
+    return NoFault;
+}
+
+}};
+
+
+def template VsElementMicroDeclare {{
+
+class %(class_name)s : public %(base_class)s
+{
+private:
+    // rs1, rs2, vs3, vm
+    RegId srcRegIdxArr[4];
+    RegId destRegIdxArr[1];
+public:
+    %(class_name)s(ExtMachInst _machInst, uint32_t _regIdx, uint32_t _segIdx,
+                   uint32_t _microIdx, uint32_t _microVl, uint32_t _offset,
+                   bool _has_rs2, uint32_t _elen, uint32_t _vlen);
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
+    Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
+    Fault completeAcc(PacketPtr, ExecContext *,
+                      trace::InstRecord *) const override;
+    using %(base_class)s::generateDisassembly;
+};
+
+}};
+
+def template VsElementMicroConstructor {{
+
+    %(class_name)s::%(class_name)s(ExtMachInst _machInst,uint32_t _regIdx,
+                                   uint32_t _segIdx, uint32_t _microIdx,
+                                   uint32_t _microVl, uint32_t _offset,
+                                   bool _has_rs2, uint32_t _elen,
+                                   uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s""_micro", _machInst, %(op_class)s,
+                     _regIdx, _microIdx, _microVl, _offset, _has_rs2, _elen,
+                     _vlen)
+{
+    %(set_reg_idx_arr)s;
+    _numSrcRegs = 0;
+    _numDestRegs = 0;
+    setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
+    if (_has_rs2) {
+        setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs2]);
+    }
+    setSrcRegIdx(_numSrcRegs++,
+        vecRegClass[_machInst.vs3 + _segIdx + _regIdx]);
+    SET_VM_SRC();
+    this->flags[IsStore] = true;
+}
+
+}};
+
+def template VsElementMicroExecute {{
+
+Fault
+%(class_name)s::execute(ExecContext *xc, trace::InstRecord *traceData) const
+{
+    Fault fault = NoFault;
+    Addr EA;
+    MISA misa = xc->readMiscReg(MISCREG_ISA);
+    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+    if (!misa.rvv || status.vs == VPUStatus::OFF) {
+        return std::make_shared<IllegalInstFault>(
+            "RVV is disabled or VPU is off", machInst);
+    }
+    if (machInst.vill)
+        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+    if ((machInst.nf + 1) * get_emul(eew, sew, vflmul, false) > 8)
+        return std::make_shared<IllegalInstFault>("nf * emul is illegal",
+        machInst);
+
+    %(op_decl)s;
+    %(op_rd)s;
+    %(set_vlenb)s;
+    constexpr uint8_t elem_size = sizeof(Vs3[0]);
+
+    VM_REQUIRED();
+
+    uint32_t mem_size = elem_size;
+    const std::vector<bool> byte_enable(mem_size, true);
+
+    size_t ei = this->regIdx * vlenb / elem_size + this->microIdx;
+    %(ea_code)s;
+
+    if (machInst.vm || elem_mask(v0, ei)) {
+        %(memacc_code)s;
+        fault = xc->writeMem(Mem.as<uint8_t>(), mem_size, EA,
+                             memAccessFlags, nullptr, byte_enable);
+    }
+    return fault;
+}
+
+}};
+
+def template VsElementMicroInitiateAcc {{
+
+Fault
+%(class_name)s::initiateAcc(ExecContext* xc,
+                            trace::InstRecord* traceData) const
+{
+    Fault fault = NoFault;
+    Addr EA;
+    MISA misa = xc->readMiscReg(MISCREG_ISA);
+    STATUS status = xc->readMiscReg(MISCREG_STATUS);
+    if (!misa.rvv || status.vs == VPUStatus::OFF) {
+        return std::make_shared<IllegalInstFault>(
+            "RVV is disabled or VPU is off", machInst);
+    }
+    if (machInst.vill)
+        return std::make_shared<IllegalInstFault>("VILL is set", machInst);
+    if ((machInst.nf + 1) * get_emul(eew, sew, vflmul, false) > 8)
+        return std::make_shared<IllegalInstFault>("nf * emul is illegal",
+        machInst);
+
+    VM_REQUIRED();
+
+    %(op_decl)s;
+    %(op_rd)s;
+    %(set_vlenb)s;
+    constexpr uint8_t elem_size = sizeof(Vs3[0]);
+
+    uint32_t mem_size = elem_size;
+
+    size_t ei = this->regIdx * vlenb / elem_size + this->microIdx;
+    %(ea_code)s;
+
+    bool need_store = machInst.vm || elem_mask(v0, ei);
+    if (need_store) {
+        const std::vector<bool> byte_enable(mem_size, need_store);
+        %(memacc_code)s;
+        fault = xc->writeMem(Mem.as<uint8_t>(), mem_size, EA,
+                            memAccessFlags, nullptr, byte_enable);
+    }
+    return fault;
+}
+
+}};
+
+def template VsElementMicroCompleteAcc {{
 
 Fault
 %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,

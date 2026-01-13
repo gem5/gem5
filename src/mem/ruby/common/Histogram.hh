@@ -33,8 +33,6 @@
 #include <iostream>
 #include <vector>
 
-#include "mem/ruby/common/TypeDefines.hh"
-
 namespace gem5
 {
 

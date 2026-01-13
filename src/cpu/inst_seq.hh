@@ -26,8 +26,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __STD_TYPES_HH__
-#define __STD_TYPES_HH__
+#ifndef __CPU_INST_SEQ_HH__
+#define __CPU_INST_SEQ_HH__
 
 #include "base/types.hh"
 
@@ -44,4 +44,4 @@ typedef unsigned int InstTag;
 
 } // namespace gem5
 
-#endif // __STD_TYPES_HH__
+#endif // __CPU_INST_SEQ_HH__

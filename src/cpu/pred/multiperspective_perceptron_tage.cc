@@ -201,9 +201,9 @@ MPP_TAGE::adjustAlloc(bool & alloc, bool taken, bool pred_taken)
 }
 
 void
-MPP_TAGE::updateHistories(
-    ThreadID tid, Addr branch_pc, bool taken, TAGEBase::BranchInfo* b,
-    bool speculative, const StaticInstPtr &inst, Addr target)
+MPP_TAGE::updateHistories(ThreadID tid, Addr branch_pc, bool speculative,
+                          bool taken, Addr target, const StaticInstPtr &inst,
+                          TAGEBase::BranchInfo* bi)
 {
     if (speculative != speculativeHistUpdate) {
         return;
@@ -211,38 +211,27 @@ MPP_TAGE::updateHistories(
     // speculation is not implemented
     assert(! speculative);
 
-    ThreadHistory& tHist = threadHistory[tid];
-
     int brtype = inst->isDirectCtrl() ? 0 : 2;
     if (! inst->isUncondCtrl()) {
         ++brtype;
     }
-    updatePathAndGlobalHistory(tHist, brtype, taken, branch_pc, target);
-}
 
-void
-MPP_TAGE::updatePathAndGlobalHistory(
-    ThreadHistory& tHist, int brtype, bool taken, Addr branch_pc, Addr target)
-{
     // TAGE update
     int tmp = (branch_pc << 1) + taken;
     int path = branch_pc;
 
     int maxt = (brtype & 1) ? 1 : 4;
 
+    // Update path history
     for (int t = 0; t < maxt; t++) {
-        bool dir = (tmp & 1);
-        tmp >>= 1;
         int pathbit = (path & 127);
         path >>= 1;
-        updateGHist(tHist.gHist, dir, tHist.globalHistory, tHist.ptGhist);
-        tHist.pathHist = (tHist.pathHist << 1) ^ pathbit;
-        for (int i = 1; i <= nHistoryTables; i++) {
-            tHist.computeIndices[i].update(tHist.gHist);
-            tHist.computeTags[0][i].update(tHist.gHist);
-            tHist.computeTags[1][i].update(tHist.gHist);
-        }
+        threadHistory[tid].pathHist
+                        = (threadHistory[tid].pathHist << 1) ^ pathbit;
     }
+
+    // Update global history
+    updateGHist(tid, tmp, maxt);
 }
 
 bool
@@ -352,7 +341,7 @@ MPP_StatisticalCorrector::scPredict(ThreadID tid, Addr branch_pc,
         bool cond_branch, StatisticalCorrector::BranchInfo* bi,
         bool prev_pred_taken, bool bias_bit, bool use_conf_ctr,
         int8_t conf_ctr, unsigned conf_bits, int hitBank, int altBank,
-        int64_t phist, int init_lsum)
+        int init_lsum)
 {
     bool pred_taken = prev_pred_taken;
     if (cond_branch) {
@@ -363,7 +352,7 @@ MPP_StatisticalCorrector::scPredict(ThreadID tid, Addr branch_pc,
 
         getBiasLSUM(branch_pc, bi, lsum);
 
-        int thres = gPredictions(tid, branch_pc, bi, lsum, phist);
+        int thres = gPredictions(tid, branch_pc, bi, lsum);
 
         // These will be needed at update time
         bi->lsum = lsum;
@@ -551,7 +540,7 @@ MultiperspectivePerceptronTAGE::lookup(ThreadID tid, Addr instPC,
             bi->scBranchInfo, pred_taken, false /* bias_bit: unused */,
             false /* use_tage_ctr: unused */, 0 /* conf_ctr: unused */,
             0 /* conf_bits: unused */, 0 /* hitBank: unused */,
-            0 /* altBank: unused */, tage->getPathHist(tid), init_lsum);
+            0 /* altBank: unused */, init_lsum);
     bi->predictedTaken = pred_taken;
     bi->lpBranchInfo->predTaken = pred_taken;
     return pred_taken;
@@ -561,7 +550,7 @@ MultiperspectivePerceptronTAGE::lookup(ThreadID tid, Addr instPC,
 void
 MPP_StatisticalCorrector::condBranchUpdate(ThreadID tid, Addr branch_pc,
         bool taken, StatisticalCorrector::BranchInfo *bi, Addr target,
-        bool bias_bit, int hitBank, int altBank, int64_t phist)
+        bool bias_bit, int hitBank, int altBank)
 {
     bool scPred = (bi->lsum >= 0);
 
@@ -595,7 +584,7 @@ MPP_StatisticalCorrector::condBranchUpdate(ThreadID tid, Addr branch_pc,
         ctrUpdate(bias[indBias], taken, scCountersWidth);
         ctrUpdate(biasSK[indBiasSK], taken, scCountersWidth);
 
-        gUpdates(tid, branch_pc, taken, bi, phist);
+        gUpdates(tid, branch_pc, taken, bi);
     }
 }
 
@@ -612,7 +601,7 @@ MultiperspectivePerceptronTAGE::update(ThreadID tid, Addr pc, bool taken,
         if (tage->isSpeculativeUpdateEnabled()) {
             // This restores the global history, then update it
             // and recomputes the folded histories.
-            tage->squash(tid, taken, bi->tageBranchInfo, target);
+            tage->squash(tid, taken, target, inst, bi->tageBranchInfo);
             if (bi->tageBranchInfo->condBranch) {
                 loopPredictor->squashLoop(bi->lpBranchInfo);
             }
@@ -621,10 +610,11 @@ MultiperspectivePerceptronTAGE::update(ThreadID tid, Addr pc, bool taken,
     }
 
     if (bi->isUnconditional()) {
-        statisticalCorrector->scHistoryUpdate(pc, inst, taken,
-                bi->scBranchInfo, target);
-        tage->updateHistories(tid, pc, taken, bi->tageBranchInfo, false,
-                inst, target);
+        tage->updateHistories(tid, pc, false, taken, target,
+                              inst, bi->tageBranchInfo);
+        statisticalCorrector->updateHistories(pc, false, inst, taken,
+                                              bi->scBranchInfo, target,
+                                              tage->getPathHist(tid, false));
     } else {
         tage->updateStats(taken, bi->tageBranchInfo);
         loopPredictor->updateStats(taken, bi->lpBranchInfo);
@@ -639,9 +629,10 @@ MultiperspectivePerceptronTAGE::update(ThreadID tid, Addr pc, bool taken,
             updatePartial(tid, *bi, taken);
         }
         statisticalCorrector->condBranchUpdate(tid, pc, taken,
-                bi->scBranchInfo, target, false /* bias_bit: unused */,
-                0 /* hitBank: unused */, 0 /* altBank: unused*/,
-                tage->getPathHist(tid));
+                                               bi->scBranchInfo, target,
+                                               false /* bias_bit: unused */,
+                                               0 /* hitBank: unused */,
+                                               0 /* altBank: unused*/);
 
         tage->condBranchUpdate(tid, pc, taken, bi->tageBranchInfo,
                                rng->random<int>(), target,
@@ -669,11 +660,12 @@ MultiperspectivePerceptronTAGE::update(ThreadID tid, Addr pc, bool taken,
                 }
             }
 
-            statisticalCorrector->scHistoryUpdate(pc, inst, taken,
-                    bi->scBranchInfo, target);
-
-            tage->updateHistories(tid, pc, taken, bi->tageBranchInfo,
-                                  false, inst, target);
+            tage->updateHistories(tid, pc, false, taken, target,
+                                  inst, bi->tageBranchInfo);
+            statisticalCorrector->updateHistories(pc, false, inst, taken,
+                                                  bi->scBranchInfo, target,
+                                                  tage->getPathHist(tid,
+                                                                    false));
         }
     }
     delete bi;
@@ -682,8 +674,9 @@ MultiperspectivePerceptronTAGE::update(ThreadID tid, Addr pc, bool taken,
 
 void
 MultiperspectivePerceptronTAGE::updateHistories(ThreadID tid, Addr pc,
-                                            bool uncond, bool taken,
-                                            Addr target, void * &bp_history)
+                                    bool uncond, bool taken, Addr target,
+                                    const StaticInstPtr &inst,
+                                    void * &bp_history)
 {
     assert(uncond || bp_history);
 

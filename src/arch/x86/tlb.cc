@@ -418,19 +418,37 @@ TLB::translate(const RequestPtr &req,
             pageAlignedVaddr = concAddrPcid(pageAlignedVaddr, pcid);
             TlbEntry *entry = lookup(pageAlignedVaddr);
 
-            if (mode == BaseMMU::Read) {
-                stats.rdAccesses++;
-            } else {
-                stats.wrAccesses++;
+            switch (mode) {
+                case BaseMMU::Read:
+                    stats.rdAccesses++;
+                    break;
+                case BaseMMU::Write:
+                    stats.wrAccesses++;
+                    break;
+                case BaseMMU::Execute:
+                    stats.exAccesses++;
+                    break;
+                default:
+                    panic("Invalid mode\n");
+                    break;
             }
             if (!entry) {
                 DPRINTF(TLB, "Handling a TLB miss for "
                         "address %#x at pc %#x.\n",
                         vaddr, tc->pcState().instAddr());
-                if (mode == BaseMMU::Read) {
-                    stats.rdMisses++;
-                } else {
-                    stats.wrMisses++;
+                switch (mode) {
+                    case BaseMMU::Read:
+                        stats.rdMisses++;
+                        break;
+                    case BaseMMU::Write:
+                        stats.wrMisses++;
+                        break;
+                    case BaseMMU::Execute:
+                        stats.exMisses++;
+                        break;
+                    default:
+                        panic("Invalid mode\n");
+                        break;
                 }
                 if (FullSystem) {
                     Fault fault = walker->start(tc, translation, req, mode);
@@ -560,12 +578,13 @@ TLB::translateTiming(const RequestPtr &req, ThreadContext *tc,
     bool delayedResponse;
     assert(translation);
     // CLFLUSHOPT/WB/FLUSH should be treated as read for protection checks
+    BaseMMU::Mode orig_mode = mode;
     if (req->isCacheClean())
         mode = BaseMMU::Read;
     Fault fault =
         TLB::translate(req, tc, translation, mode, delayedResponse, true);
     if (!delayedResponse)
-        translation->finish(fault, req, tc, mode);
+        translation->finish(fault, req, tc, orig_mode);
     else
         translation->markDelayed();
 }
@@ -577,15 +596,19 @@ TLB::getWalker()
 }
 
 TLB::TlbStats::TlbStats(statistics::Group *parent)
-  : statistics::Group(parent),
-    ADD_STAT(rdAccesses, statistics::units::Count::get(),
-             "TLB accesses on read requests"),
-    ADD_STAT(wrAccesses, statistics::units::Count::get(),
-             "TLB accesses on write requests"),
-    ADD_STAT(rdMisses, statistics::units::Count::get(),
-             "TLB misses on read requests"),
-    ADD_STAT(wrMisses, statistics::units::Count::get(),
-             "TLB misses on write requests")
+    : statistics::Group(parent),
+      ADD_STAT(rdAccesses, statistics::units::Count::get(),
+               "TLB accesses on read requests"),
+      ADD_STAT(wrAccesses, statistics::units::Count::get(),
+               "TLB accesses on write requests"),
+      ADD_STAT(exAccesses, statistics::units::Count::get(),
+               "TLB accesses on execute (instr) requests"),
+      ADD_STAT(rdMisses, statistics::units::Count::get(),
+               "TLB misses on read requests"),
+      ADD_STAT(wrMisses, statistics::units::Count::get(),
+               "TLB misses on write requests"),
+      ADD_STAT(exMisses, statistics::units::Count::get(),
+               "TLB misses on execute (instr) requests")
 {
 }
 

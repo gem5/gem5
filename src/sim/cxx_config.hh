@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014 ARM Limited
+ * Copyright (c) 2014, 2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -79,13 +79,17 @@ class CxxConfigDirectoryEntry
         /* Is this a vector or singleton parameters/SimObject */
         const bool isVector;
 
+        /* Is this a dictionary */
+        const bool isDict;
+
         /** Is this a SimObject, and so is to be set with setSimObject...
          *  or another from-string parameter set with setParam... */
         const bool isSimObject;
 
         ParamDesc(const std::string &name_,
-            bool isVector_, bool isSimObject_) :
-            name(name_), isVector(isVector_), isSimObject(isSimObject_)
+            bool is_vector, bool is_dict, bool is_simobj)
+          : name(name_), isVector(is_vector),
+            isDict(is_dict), isSimObject(is_simobj)
         { }
     };
 
@@ -179,10 +183,17 @@ class CxxConfigParams
         const std::string &value, const Flags flags)
     { return false; }
 
-    /** As setParamVector but for parameters given as vectors pre-separated
+    /** As setParam but for parameters given as vectors pre-separated
      *  into elements */
     virtual bool setParamVector(const std::string &name,
         const std::vector<std::string> &values, const Flags flags)
+    { return false; }
+
+    /** As setParamVector but for parameters given as dictionaries
+     * pre-separated into elements */
+    virtual bool setParamDict(const std::string &name,
+        const std::unordered_map<std::string, std::string> &values,
+        const Flags flags)
     { return false; }
 
     /** Set the number of connections expected for the named port.  Returns
@@ -217,6 +228,11 @@ class CxxConfigFileBase
     virtual bool getParamVector(const std::string &object_name,
         const std::string &param_name,
         std::vector<std::string> &values) const = 0;
+
+    /** Get a dictionary parameter */
+    virtual bool getParamDict(const std::string &object_name,
+        const std::string &param_name,
+        std::unordered_map<std::string, std::string> &values) const = 0;
 
     /** Get the peer (connected) ports of the named ports */
     virtual bool getPortPeers(const std::string &object_name,

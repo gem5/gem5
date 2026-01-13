@@ -9,9 +9,11 @@ from typing import (
 
 import m5
 from m5.objects import (
-    AddrRange,
     DRAMsim3,
     MemCtrl,
+)
+from m5.params import (
+    AddrRange,
     Port,
 )
 from m5.util.convert import toMemorySize
@@ -131,7 +133,7 @@ class SingleChannel(AbstractMemorySystem):
 
     @overrides(AbstractMemorySystem)
     def set_memory_range(self, ranges: List[AddrRange]) -> None:
-        if len(ranges != 1) or ranges[0].size != self._size:
+        if len(ranges) != 1 or ranges[0].size() != self._size:
             raise Exception(
                 "Single channel DRAMSim memory controller requires a single "
                 "range which matches the memory's size."

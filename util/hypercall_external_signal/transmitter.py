@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-
-# Copyright (c) 2023 The Regents of the University of California
+# Copyright (c) 2025 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,9 +26,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-Generic transmitter for sending JSON payloads to gem5 via shared memory and signals.
+Generic transmitter for sending JSON payloads to gem5 via shared memory and
+signals.
 
-This module provides functionality to send correctly formatted JSON strings to gem5.
+This module provides functionality to send correctly formatted JSON strings to
+gem5.
 
 The JSON payload must:
     * Be a valid JSON string
@@ -58,8 +59,8 @@ Command line usage::
 Note:
     All payloads must be valid JSON strings, even for numeric values.
 
-The module uses logging for debug output which is disabled by default. To enable debug
-logging, Set environment variable::
+The module uses logging for debug output which is disabled by default. To
+enable debug logging, set environment variable::
 
     export PYTHONLOG=DEBUG
 """
@@ -98,43 +99,63 @@ def send_signal(pid: int, id: int, payload: str) -> None:
     try:
         final_payload = create_json(id, payload)
         shm.buf[: len(final_payload.encode())] = final_payload.encode()
-        # Note: SIGHUP is used as SIGUSR1 and SIGUSR2 are already in used by
+        # Note: SIGCONT is used as SIGUSR1 and SIGUSR2 are already in used by
         # gem5 for other purposes. SIGRTMIN and SIGRTMAX (usually the suggested
         # alternative when SIGUSR1 and SIGUSR2 unavailable) cannot be used in
         # this case as they are not supported on MacOS.
         #
-        # SIGHUP is compatible with both Linux and MacOS and was not otherwise
-        # used by gem5. In general, SIGHUP is a signal that is
-        # for use in interacting with system daemons to request reloading of
-        # their configurations.
-        os.kill(pid, signal.SIGHUP)
+        # SIGCONT is compatible with both Linux and MacOS and was not otherwise
+        # used by gem5. In general, SIGCONT is used to continue a process if it
+        # was stopped. It is ignored by default, which makes it preferable to
+        # signals that kill processes by default, as this means it won't kill
+        # newly launched gem5 simulations that haven't registered signal
+        # handlers yet.
+
+        os.kill(pid, signal.SIGCONT)
     except ProcessLookupError:
-        logger.error(
-            "Process does not exist! Check that you are using the correct PID."
-        )
+        # This is a hacky solution to prevent the error message from being
+        # printed to the gem5 dashboard
+        if __name__ == "__main__":
+            logger.error(
+                "Process does not exist! Check that you are using the correct PID."
+            )
         shm.close()
         shm.unlink()
-        sys.exit(1)
+        return
     except json.decoder.JSONDecodeError as e:
         logger.error(
-            f"JSON Parsing Error: {str(e)}\nPayload that caused error: {payload}"
+            f"JSON Parsing Error: {str(e)}\nPayload that caused error:"
+            f"{payload}"
         )
         shm.close()
         shm.unlink()
-        sys.exit(1)
+        return
     except Exception as e:
         logger.error(f"An error occurred: {str(e)}")
         shm.close()
         shm.unlink()
-        sys.exit(1)
+        return
 
     logger.debug(
         f"Sent a SIGHUP signal to PID {pid} with payload: '{final_payload}'"
     )
 
+    timeout = 10
+    sleep_count = 0
     while bytes(shm.buf[:shared_mem_size]).decode().strip("\x00") != "done":
         logger.debug("Waiting for gem5 to finish using shared memory...")
+        try:
+            os.kill(pid, 0)
+        except ProcessLookupError:
+            logger.debug("Process has ended!")
+            break
         sleep(1)
+        sleep_count += 1
+        if sleep_count == timeout:
+            logger.debug(
+                "Timeout waiting for gem5 to finish using shared memory!"
+            )
+            break
     logger.debug("Done message received")
     shm.close()
     try:

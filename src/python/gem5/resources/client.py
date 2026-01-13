@@ -44,9 +44,8 @@ from m5.util import (
 
 from _m5 import core
 
-from gem5.gem5_default_config import config
-
-from .client_api.atlasclient import AtlasClient
+from ..gem5_default_config import config
+from .client_api.azure_functions_client import AzureFunctionsAPIClient
 from .client_api.client_query import ClientQuery
 from .client_api.jsonclient import JSONClient
 
@@ -214,7 +213,7 @@ def _create_clients(
         client_source = config["sources"][client]
         try:
             if client_source["isMongo"]:
-                clients[client] = AtlasClient(client_source)
+                clients[client] = AzureFunctionsAPIClient(client_source)
             else:
                 clients[client] = JSONClient(client_source["url"])
         except Exception as e:
@@ -239,7 +238,9 @@ def _list_all_resources(
             raise Exception(f"Client: {client} does not exist")
         try:
             resources.extend(
-                clientwrapper[client].get_resources(gem5_version=gem5_version)
+                clientwrapper[client].get_all_resources(
+                    gem5_version=gem5_version
+                )
             )
         except Exception as e:
             warn(f"Error getting resources from client {client}: {str(e)}")

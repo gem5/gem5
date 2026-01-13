@@ -180,6 +180,8 @@ BitUnion64(ExtMachInst)
     Bitfield<19, 15>    uimm_vsetivli;
     // vsetvl
     Bitfield<31, 25>    bit31_25;
+    // Zvbb
+    Bitfield<26> bit26;
 
 EndBitUnion(ExtMachInst)
 

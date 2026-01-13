@@ -54,7 +54,7 @@ namespace branch_prediction
 {
 
 BiModeBP::BiModeBP(const BiModeBPParams &params)
-    : BPredUnit(params),
+    : ConditionalPredictor(params),
       globalHistoryReg(params.numThreads, 0),
       globalHistoryBits(ceilLog2(params.globalPredictorSize)),
       choicePredictorSize(params.choicePredictorSize),
@@ -97,8 +97,9 @@ BiModeBP::uncondBranch(ThreadID tid, Addr pc, void * &bp_history)
 }
 
 void
-BiModeBP::updateHistories(ThreadID tid, Addr pc, bool uncond,
-                         bool taken, Addr target, void * &bp_history)
+BiModeBP::updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
+                          Addr target, const StaticInstPtr &inst,
+                          void * &bp_history)
 {
     assert(uncond || bp_history);
     if (uncond) {

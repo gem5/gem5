@@ -243,7 +243,7 @@ class VecPredRegContainer
     using MyClass = VecPredRegContainer<NumBits, Packed>;
 
   public:
-    VecPredRegContainer() {}
+    VecPredRegContainer() { reset(); }
     VecPredRegContainer(const VecPredRegContainer &) = default;
 
     MyClass&

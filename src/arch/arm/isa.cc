@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2024 Arm Limited
+ * Copyright (c) 2010-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -45,6 +45,7 @@
 #include "arch/arm/pmu.hh"
 #include "arch/arm/regs/misc.hh"
 #include "arch/arm/regs/misc_accessors.hh"
+#include "arch/arm/regs/misc_info.hh"
 #include "arch/arm/self_debug.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/utility.hh"
@@ -395,6 +396,37 @@ ISA::redirectRegVHE(int misc_reg)
     }
 }
 
+int
+ISA::snsBankedIndex64(MiscRegIndex reg, bool ns) const
+{
+    int reg_as_int = static_cast<int>(reg);
+    if (lookUpMiscReg[reg].info[MISCREG_BANKED64]) {
+        reg_as_int += (release->has(ArmExtension::SECURITY) && !ns) ? 2 : 1;
+    }
+    return reg_as_int;
+}
+
+std::pair<int, int>
+ISA::getMiscIndices(int misc_reg) const
+{
+    // Note: indexes of AArch64 registers are left unchanged
+    int flat_idx = flattenMiscIndex(misc_reg);
+
+    if (lookUpMiscReg[flat_idx].lower == 0) {
+        return std::make_pair(flat_idx, 0);
+    }
+
+    // do additional S/NS flattenings if mapped to NS while in S
+    bool S = !highestELIs64 && inSecureState();
+
+    int lower = lookUpMiscReg[flat_idx].lower;
+    int upper = lookUpMiscReg[flat_idx].upper;
+    // upper == 0, which is CPSR, is not MISCREG_BANKED_CHILD (no-op)
+    lower += S && lookUpMiscReg[lower].info[MISCREG_BANKED_CHILD];
+    upper += S && lookUpMiscReg[upper].info[MISCREG_BANKED_CHILD];
+    return std::make_pair(lower, upper);
+}
+
 RegVal
 ISA::readMiscRegNoEffect(RegIndex idx) const
 {
@@ -508,39 +540,39 @@ ISA::readMiscReg(RegIndex idx)
 
       case MISCREG_CPSR_Q:
         panic("shouldn't be reading this register seperately\n");
-      case MISCREG_FPSCR_QC:
-        return readMiscRegNoEffect(MISCREG_FPSCR) & ~FpscrQcMask;
-      case MISCREG_FPSCR_EXC:
-        return readMiscRegNoEffect(MISCREG_FPSCR) & ~FpscrExcMask;
-      case MISCREG_FPSR:
-        {
-            const uint32_t ones = (uint32_t)(-1);
-            FPSCR fpscrMask = 0;
-            fpscrMask.ioc = ones;
-            fpscrMask.dzc = ones;
-            fpscrMask.ofc = ones;
-            fpscrMask.ufc = ones;
-            fpscrMask.ixc = ones;
-            fpscrMask.idc = ones;
-            fpscrMask.qc = ones;
-            fpscrMask.v = ones;
-            fpscrMask.c = ones;
-            fpscrMask.z = ones;
-            fpscrMask.n = ones;
-            return readMiscRegNoEffect(MISCREG_FPSCR) & (uint32_t)fpscrMask;
-        }
       case MISCREG_FPCR:
         {
-            const uint32_t ones = (uint32_t)(-1);
-            FPSCR fpscrMask  = 0;
-            fpscrMask.len    = ones;
-            fpscrMask.fz16   = ones;
-            fpscrMask.stride = ones;
-            fpscrMask.rMode  = ones;
-            fpscrMask.fz     = ones;
-            fpscrMask.dn     = ones;
-            fpscrMask.ahp    = ones;
-            return readMiscRegNoEffect(MISCREG_FPSCR) & (uint32_t)fpscrMask;
+          FPCR fpcr = readMiscRegNoEffect(MISCREG_FPCR);
+          if (!release->has(ArmExtension::FEAT_AFP)) {
+              fpcr.nep = 0;
+              fpcr.ah = 0;
+              fpcr.fiz = 0;
+          }
+          if (!release->has(ArmExtension::FEAT_EBF16)) {
+              fpcr.ebf = 0;
+          }
+          return fpcr;
+        }
+      case MISCREG_FPSCR:
+        {
+          FPCR fpcr = readMiscRegNoEffect(MISCREG_FPCR);
+          FPSCR fpsr = readMiscRegNoEffect(MISCREG_FPSR);
+          FPSCR fpscr = (fpsr & FpscrFpsrMask) | (fpcr & FpscrFpcrMask);
+          return fpscr;
+        }
+      case MISCREG_FPSCR_QC:
+        {
+          FPCR fpcr = readMiscRegNoEffect(MISCREG_FPCR);
+          FPSCR fpsr = readMiscRegNoEffect(MISCREG_FPSR);
+          FPSCR fpscr = (fpsr & FpscrFpsrMask) | (fpcr & FpscrFpcrMask);
+          return fpscr & ~FpscrQcMask;
+        }
+      case MISCREG_FPSCR_EXC:
+        {
+          FPCR fpcr = readMiscRegNoEffect(MISCREG_FPCR);
+          FPSCR fpsr = readMiscRegNoEffect(MISCREG_FPSR);
+          FPSCR fpscr = (fpsr & FpscrFpsrMask) | (fpcr & FpscrFpcrMask);
+          return fpscr & ~FpscrExcMask;
         }
       case MISCREG_NZCV:
         {
@@ -656,8 +688,15 @@ ISA::readMiscReg(RegIndex idx)
       // Generic Timer registers
       case MISCREG_CNTFRQ ... MISCREG_CNTVOFF:
       case MISCREG_CNTFRQ_EL0 ... MISCREG_CNTVOFF_EL2:
-        return getGenericTimer().readMiscReg(idx);
-
+          if (FullSystem) {
+              return getGenericTimer().readMiscReg(idx);
+          } else {
+              warn("Call to %s attempts to access a system timer which is "
+                   "inaccessible within SE mode. Divergent behaviour is "
+                   "possible.",
+                   miscRegName[idx]);
+              return 0;
+          }
       case MISCREG_ICC_AP0R0 ... MISCREG_ICH_LRC15:
       case MISCREG_ICC_PMR_EL1 ... MISCREG_ICC_IGRPEN1_EL3:
       case MISCREG_ICH_AP0R0_EL2 ... MISCREG_ICH_LR15_EL2:
@@ -871,45 +910,31 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             warn("Calling DC ZVA! Not Implemeted! Expect WEIRD results\n");
             return;
 
-          case MISCREG_FPSCR:
-            tc->getDecoderPtr()->as<Decoder>().setContext(newVal);
-            break;
-          case MISCREG_FPSR:
-            {
-                const uint32_t ones = (uint32_t)(-1);
-                FPSCR fpscrMask = 0;
-                fpscrMask.ioc = ones;
-                fpscrMask.dzc = ones;
-                fpscrMask.ofc = ones;
-                fpscrMask.ufc = ones;
-                fpscrMask.ixc = ones;
-                fpscrMask.idc = ones;
-                fpscrMask.qc = ones;
-                fpscrMask.v = ones;
-                fpscrMask.c = ones;
-                fpscrMask.z = ones;
-                fpscrMask.n = ones;
-                newVal = (newVal & (uint32_t)fpscrMask) |
-                         (readMiscRegNoEffect(MISCREG_FPSCR) &
-                          ~(uint32_t)fpscrMask);
-                idx = MISCREG_FPSCR;
-            }
-            break;
           case MISCREG_FPCR:
             {
-                const uint32_t ones = (uint32_t)(-1);
-                FPSCR fpscrMask  = 0;
-                fpscrMask.len    = ones;
-                fpscrMask.fz16   = ones;
-                fpscrMask.stride = ones;
-                fpscrMask.rMode  = ones;
-                fpscrMask.fz     = ones;
-                fpscrMask.dn     = ones;
-                fpscrMask.ahp    = ones;
-                newVal = (newVal & (uint32_t)fpscrMask) |
-                         (readMiscRegNoEffect(MISCREG_FPSCR) &
-                          ~(uint32_t)fpscrMask);
-                idx = MISCREG_FPSCR;
+                FPCR fpcr_val = (FPCR)newVal;
+                if (!release->has(ArmExtension::FEAT_AFP)) {
+                    fpcr_val.nep = 0;
+                    fpcr_val.ah = 0;
+                    fpcr_val.fiz = 0;
+                }
+                if (!release->has(ArmExtension::FEAT_EBF16)) {
+                    fpcr_val.ebf = 0;
+                }
+                setMiscRegNoEffect(MISCREG_FPCR, fpcr_val);
+            }
+            break;
+          case MISCREG_FPSCR:
+            tc->getDecoderPtr()->as<Decoder>().setContext(newVal);
+            {
+                FPCR fpcr_val = (newVal & FpscrFpcrMask) |
+                    (readMiscRegNoEffect(MISCREG_FPCR) &
+                     ~(uint32_t)FpscrFpcrMask);
+                setMiscRegNoEffect(MISCREG_FPCR, fpcr_val);
+                FPSCR fpsr_val = (newVal & FpscrFpsrMask) |
+                    (readMiscRegNoEffect(MISCREG_FPSR) &
+                     ~(uint32_t)FpscrFpsrMask);
+                setMiscRegNoEffect(MISCREG_FPSR, fpsr_val);
             }
             break;
           case MISCREG_CPSR_Q:
@@ -921,16 +946,16 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             break;
           case MISCREG_FPSCR_QC:
             {
-                newVal = readMiscRegNoEffect(MISCREG_FPSCR) |
+                newVal = readMiscRegNoEffect(MISCREG_FPSR) |
                          (newVal & FpscrQcMask);
-                idx = MISCREG_FPSCR;
+                idx = MISCREG_FPSR;
             }
             break;
           case MISCREG_FPSCR_EXC:
             {
-                newVal = readMiscRegNoEffect(MISCREG_FPSCR) |
+                newVal = readMiscRegNoEffect(MISCREG_FPSR) |
                          (newVal & FpscrExcMask);
-                idx = MISCREG_FPSCR;
+                idx = MISCREG_FPSR;
             }
             break;
           case MISCREG_FPEXC:
@@ -1041,6 +1066,7 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 miscRegs[sctlr_idx] = (RegVal)new_sctlr;
                 getMMUPtr(tc)->invalidateMiscReg();
             }
+                [[fallthrough]];
           case MISCREG_MIDR:
           case MISCREG_ID_PFR0:
           case MISCREG_ID_PFR1:
@@ -1366,6 +1392,114 @@ ISA::setMiscRegReset(RegIndex idx, RegVal val)
     InitReg(flat_idx).reset(val);
 }
 
+int
+ISA::flattenMiscIndex(int reg) const
+{
+    assert(reg >= 0);
+    int flat_idx = reg;
+
+    if (reg == MISCREG_SPSR) {
+        CPSR cpsr = miscRegs[MISCREG_CPSR];
+        switch (cpsr.mode) {
+            case MODE_EL0T:
+                warn("User mode does not have SPSR\n");
+                flat_idx = MISCREG_SPSR;
+                break;
+            case MODE_EL1T:
+            case MODE_EL1H:
+                flat_idx = MISCREG_SPSR_EL1;
+                break;
+            case MODE_EL2T:
+            case MODE_EL2H:
+                flat_idx = MISCREG_SPSR_EL2;
+                break;
+            case MODE_EL3T:
+            case MODE_EL3H:
+                flat_idx = MISCREG_SPSR_EL3;
+                break;
+            case MODE_USER:
+                warn("User mode does not have SPSR\n");
+                flat_idx = MISCREG_SPSR;
+                break;
+            case MODE_FIQ:
+                flat_idx = MISCREG_SPSR_FIQ;
+                break;
+            case MODE_IRQ:
+                flat_idx = MISCREG_SPSR_IRQ;
+                break;
+            case MODE_SVC:
+                flat_idx = MISCREG_SPSR_SVC;
+                break;
+            case MODE_MON:
+                flat_idx = MISCREG_SPSR_MON;
+                break;
+            case MODE_ABORT:
+                flat_idx = MISCREG_SPSR_ABT;
+                break;
+            case MODE_HYP:
+                flat_idx = MISCREG_SPSR_HYP;
+                break;
+            case MODE_UNDEFINED:
+                flat_idx = MISCREG_SPSR_UND;
+                break;
+            default:
+                warn("Trying to access SPSR in an invalid mode: %d\n",
+                     cpsr.mode);
+                flat_idx = MISCREG_SPSR;
+                break;
+        }
+    } else if (lookUpMiscReg[reg].info[MISCREG_MUTEX]) {
+        // Mutually exclusive CP15 register
+        switch (reg) {
+            case MISCREG_PRRR_MAIR0:
+            case MISCREG_PRRR_MAIR0_NS:
+            case MISCREG_PRRR_MAIR0_S: {
+                TTBCR ttbcr = readMiscRegNoEffect(MISCREG_TTBCR);
+                // If the muxed reg has been flattened, work out the
+                // offset and apply it to the unmuxed reg
+                int idxOffset = reg - MISCREG_PRRR_MAIR0;
+                if (ttbcr.eae) {
+                    flat_idx = flattenMiscIndex(MISCREG_MAIR0 + idxOffset);
+                } else {
+                    flat_idx = flattenMiscIndex(MISCREG_PRRR + idxOffset);
+                }
+            } break;
+            case MISCREG_NMRR_MAIR1:
+            case MISCREG_NMRR_MAIR1_NS:
+            case MISCREG_NMRR_MAIR1_S: {
+                TTBCR ttbcr = readMiscRegNoEffect(MISCREG_TTBCR);
+                // If the muxed reg has been flattened, work out the
+                // offset and apply it to the unmuxed reg
+                int idxOffset = reg - MISCREG_NMRR_MAIR1;
+                if (ttbcr.eae) {
+                    flat_idx = flattenMiscIndex(MISCREG_MAIR1 + idxOffset);
+                } else {
+                    flat_idx = flattenMiscIndex(MISCREG_NMRR + idxOffset);
+                }
+            } break;
+            case MISCREG_PMXEVTYPER_PMCCFILTR: {
+                PMSELR pmselr = miscRegs[MISCREG_PMSELR];
+                if (pmselr.sel == 31) {
+                    flat_idx = flattenMiscIndex(MISCREG_PMCCFILTR);
+                } else {
+                    flat_idx = flattenMiscIndex(MISCREG_PMXEVTYPER);
+                }
+            } break;
+            default:
+                panic("Unrecognized misc. register.\n");
+                break;
+        }
+    } else {
+        if (lookUpMiscReg[reg].info[MISCREG_BANKED]) {
+            bool secure_reg = !highestELIs64 && inSecureState();
+            flat_idx += secure_reg ? 2 : 1;
+        } else {
+            flat_idx = snsBankedIndex64((MiscRegIndex)reg, !inSecureState());
+        }
+    }
+    return flat_idx;
+}
+
 BaseISADevice &
 ISA::getGenericTimer()
 {
@@ -1409,6 +1543,44 @@ ISA::getGICv3CPUInterface(ThreadContext *tc)
         return gicv3->getCPUInterface(tc->contextId());
     } else {
         return nullptr;
+    }
+}
+
+void
+ISA::updateRegMap(CPSR cpsr)
+{
+    if (cpsr.width == 0) {
+        intRegMap = int_reg::Reg64Map;
+    } else {
+        switch (cpsr.mode) {
+            case MODE_USER:
+            case MODE_SYSTEM:
+                intRegMap = int_reg::RegUsrMap;
+                break;
+            case MODE_FIQ:
+                intRegMap = int_reg::RegFiqMap;
+                break;
+            case MODE_IRQ:
+                intRegMap = int_reg::RegIrqMap;
+                break;
+            case MODE_SVC:
+                intRegMap = int_reg::RegSvcMap;
+                break;
+            case MODE_MON:
+                intRegMap = int_reg::RegMonMap;
+                break;
+            case MODE_ABORT:
+                intRegMap = int_reg::RegAbtMap;
+                break;
+            case MODE_HYP:
+                intRegMap = int_reg::RegHypMap;
+                break;
+            case MODE_UNDEFINED:
+                intRegMap = int_reg::RegUndMap;
+                break;
+            default:
+                panic("Unrecognized mode setting in CPSR.\n");
+        }
     }
 }
 

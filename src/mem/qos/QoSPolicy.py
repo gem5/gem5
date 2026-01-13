@@ -63,14 +63,6 @@ class QoSFixedPriorityPolicy(QoSPolicy):
 
         self._requestor_priorities.append([request_port, priority])
 
-    def setMasterPriority(self, request_port, priority):
-        warn(
-            "QosFixedPriority.setMasterPriority is deprecated in favor of "
-            "setRequestorPriority. See src/mem/qos/QoSPolicy.py for more "
-            "information"
-        )
-        self.setRequestorPriority(request_port, priority)
-
     def init(self):
         if not self._requestor_priorities:
             print(

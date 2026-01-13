@@ -28,6 +28,7 @@
 
 #include "mem/ruby/profiler/StoreTrace.hh"
 
+#include "base/types.hh"
 #include "sim/cur_tick.hh"
 
 namespace gem5

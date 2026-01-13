@@ -37,6 +37,8 @@
 
 #include "dev/arm/ssc.hh"
 
+#include "params/SysSecCtrl.hh"
+
 namespace gem5
 {
 

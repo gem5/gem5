@@ -115,4 +115,5 @@ def operands {{
     'ZcmtSecondFetch': PCStateOp(
         'bl', 'zcmtSecondFetch', (None, None, 'IsControl'), 13),
     'ZcmtPC': PCStateOp('ud', 'zcmtPc', (None, None, 'IsControl'), 13),
+    'IsVset': PCStateOp('ub', 'new_vconf', (None, None, 'IsControl'), 13),
 }};

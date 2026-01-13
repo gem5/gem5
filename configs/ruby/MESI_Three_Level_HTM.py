@@ -151,7 +151,7 @@ def create_system(
                 block_size=options.cacheline_size,
             )
 
-            l0_cntrl = L0Cache_Controller(
+            l0_cntrl = MESI_Three_Level_HTM_L0Cache_Controller(
                 version=i * num_cpus_per_cluster + j,
                 Icache=l0i_cache,
                 Dcache=l0d_cache,
@@ -179,7 +179,7 @@ def create_system(
                 is_icache=False,
             )
 
-            l1_cntrl = L1Cache_Controller(
+            l1_cntrl = MESI_Three_Level_HTM_L1Cache_Controller(
                 version=i * num_cpus_per_cluster + j,
                 cache=l1_cache,
                 l2_select_num_bits=l2_bits,
@@ -232,7 +232,7 @@ def create_system(
                 start_index_bit=l2_index_start,
             )
 
-            l2_cntrl = L2Cache_Controller(
+            l2_cntrl = MESI_Three_Level_HTM_L2Cache_Controller(
                 version=i * num_l2caches_per_cluster + j,
                 L2cache=l2_cache,
                 cluster_id=i,
@@ -295,7 +295,7 @@ def create_system(
         #
         dma_seq = DMASequencer(version=i, ruby_system=ruby_system)
 
-        dma_cntrl = DMA_Controller(
+        dma_cntrl = MESI_Three_Level_HTM_DMA_Controller(
             version=i,
             dma_sequencer=dma_seq,
             transitions_per_cycle=options.ports,
@@ -325,7 +325,7 @@ def create_system(
     if full_system:
         io_seq = DMASequencer(version=len(dma_ports), ruby_system=ruby_system)
         ruby_system._io_port = io_seq
-        io_controller = DMA_Controller(
+        io_controller = MESI_Three_Level_HTM_DMA_Controller(
             version=len(dma_ports),
             dma_sequencer=io_seq,
             ruby_system=ruby_system,

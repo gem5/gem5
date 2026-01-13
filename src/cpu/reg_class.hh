@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-2019 ARM Limited
+ * Copyright (c) 2016-2019, 2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -168,6 +168,7 @@ class RegId
 class RegClassOps
 {
   public:
+    virtual ~RegClassOps() = default;
     /** Print the name of the register specified in id. */
     virtual std::string regName(const RegId &id) const;
     /** Print the value of a register pointed to by val of size size. */
@@ -177,6 +178,15 @@ class RegClassOps
     flatten(const BaseISA &isa, const RegId &id) const
     {
         return id;
+    }
+    /**
+     * By default non renameable registers cannot be
+     * read/written speculatively
+     */
+    virtual bool
+    serializing(const RegId &id) const
+    {
+        return !id.isRenameable();
     }
 };
 
@@ -240,6 +250,12 @@ class RegClass
     constexpr size_t regShift() const { return _regShift; }
     constexpr const debug::Flag &debug() const { return debugFlag; }
     constexpr bool isFlat() const { return _flat; }
+
+    bool
+    isSerializing(const RegId &id) const
+    {
+        return _ops->serializing(id);
+    }
 
     std::string regName(const RegId &id) const { return _ops->regName(id); }
     std::string
@@ -467,6 +483,12 @@ class PhysRegId : private RegId
      * architectural register.
      */
     bool isFixedMapping() const { return !isRenameable(); }
+
+    bool
+    isAlwaysReady() const
+    {
+        return regClass().isSerializing(regClass()[index()]);
+    }
 
     /** Flat index accessor */
     const RegIndex& flatIndex() const { return flatIdx; }

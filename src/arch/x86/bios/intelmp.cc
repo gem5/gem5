@@ -85,22 +85,17 @@ writeOutField(PortProxy& proxy, Addr addr, T val)
 uint8_t
 writeOutString(PortProxy& proxy, Addr addr, std::string str, int length)
 {
-    char cleanedString[length + 1];
-    cleanedString[length] = 0;
-
+    std::string nullPadded(length, '\0');
+    memcpy(nullPadded.data(), str.data(), std::min<int>(str.length(), length));
     if (str.length() > length) {
-        memcpy(cleanedString, str.c_str(), length);
         warn("Intel MP configuration table string \"%s\" "
-             "will be truncated to \"%s\".\n", str, (char *)&cleanedString);
-    } else {
-        memcpy(cleanedString, str.c_str(), str.length());
-        memset(cleanedString + str.length(), 0, length - str.length());
+             "will be truncated to \"%s\".\n", str, nullPadded);
     }
-    proxy.writeBlob(addr, &cleanedString, length);
+    proxy.writeBlob(addr, nullPadded.data(), length);
 
     uint8_t checkSum = 0;
     for (int i = 0; i < length; i++)
-        checkSum += cleanedString[i];
+        checkSum += nullPadded[i];
 
     return checkSum;
 }

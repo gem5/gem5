@@ -37,9 +37,12 @@ from typing import (
 )
 
 from m5.objects import (
-    AddrRange,
+    AbstractMemory,
     DRAMInterface,
     MemCtrl,
+)
+from m5.params import (
+    AddrRange,
     Port,
 )
 from m5.util.convert import toMemorySize
@@ -185,7 +188,7 @@ class ChanneledMemory(AbstractMemorySystem):
         return [ctrl for ctrl in self.mem_ctrl]
 
     @overrides(AbstractMemorySystem)
-    def get_mem_interfaces(self) -> List[DRAMInterface]:
+    def get_mem_interfaces(self) -> List[AbstractMemory]:
         return self._dram
 
     @overrides(AbstractMemorySystem)
