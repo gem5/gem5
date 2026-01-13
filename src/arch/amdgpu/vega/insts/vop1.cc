@@ -2554,6 +2554,38 @@ namespace VegaISA
 
         vdst.write();
     } // execute
+    // --- Inst_VOP1__V_CVT_F32_BF16 class methods ---
+
+    Inst_VOP1__V_CVT_F32_BF16::Inst_VOP1__V_CVT_F32_BF16(InFmt_VOP1 *iFmt)
+        : Inst_VOP1(iFmt, "v_cvt_f32_bf16")
+    {
+        setFlag(ALU);
+    } // Inst_VOP1__V_CVT_F32_BF16
+
+    Inst_VOP1__V_CVT_F32_BF16::~Inst_VOP1__V_CVT_F32_BF16()
+    {
+    } // ~Inst_VOP1__V_CVT_F32_BF16
+
+    void
+    Inst_VOP1__V_CVT_F32_BF16::execute(GPUDynInstPtr gpuDynInst)
+    {
+        // Using U16/U32 to avoid implicit conversions
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandU16 src(gpuDynInst, instData.SRC0);
+        VecOperandF32 vdst(gpuDynInst, instData.VDST);
+
+        src.readSrc();
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                AMDGPU::mxbfloat16 tmp;
+                tmp.data = src[lane];
+                vdst[lane] = float(tmp);
+            }
+        }
+
+        vdst.write();
+    } // execute
     // --- Inst_VOP1__V_ACCVGPR_MOV_B32 class methods ---
 
     Inst_VOP1__V_ACCVGPR_MOV_B32::
@@ -2587,6 +2619,393 @@ namespace VegaISA
             }
         }
 
+        vdst.write();
+    } // execute
+    // --- Inst_VOP2__V_CVT_F32_FP8 class methods ---
+
+    Inst_VOP1__V_CVT_F32_FP8::
+        Inst_VOP1__V_CVT_F32_FP8(InFmt_VOP1 *iFmt)
+        : Inst_VOP1(iFmt, "v_cvt_f32_fp8")
+    {
+        setFlag(ALU);
+    } // Inst_VOP1__V_CVT_F32_FP8
+
+    Inst_VOP1__V_CVT_F32_FP8::~Inst_VOP1__V_CVT_F32_FP8()
+    {
+    } // ~Inst_VOP1__V_CVT_F32_FP8
+
+    void
+    Inst_VOP1__V_CVT_F32_FP8::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        ConstVecOperandU32 src(gpuDynInst, instData.SRC0);
+        VecOperandU32 vdst(gpuDynInst, instData.VDST);
+
+        src.readSrc();
+
+        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
+
+        std::array<uint32_t, NumVecElemPerVecReg> srcData;
+
+        unsigned byte = 0;
+        if (isSDWAInst()) {
+            // Assume that the byte select is between 0 and 3. These are
+            // "reserved" in the spec, but the other possible values are
+            // 4, 5, 6 for lower word, upper word, and dword.
+            byte = extData.iFmt_VOP_SDWA.SRC0_SEL;
+            assert(byte <= 3);
+
+            VecOperandU32 realSrc0(gpuDynInst, extData.iFmt_VOP_SDWA.SRC0);
+
+            realSrc0.readSrc();
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                srcData[lane] = realSrc0[lane];
+            }
+        } else {
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                srcData[lane] = src[lane];
+            }
+        }
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                AMDGPU::mxfloat8
+                    in(bits(srcData[lane], byte * 8 + 7, byte * 8));
+                AMDGPU::mxfloat32 out;
+
+                // Implicit conversion
+                out = in;
+
+                vdst[lane] = out.data;
+            }
+        }
+
+        vdst.write();
+    } // execute
+    // --- Inst_VOP1__V_CVT_F32_BF8 class methods ---
+
+    Inst_VOP1__V_CVT_F32_BF8::
+        Inst_VOP1__V_CVT_F32_BF8(InFmt_VOP1 *iFmt)
+        : Inst_VOP1(iFmt, "v_cvt_f32_bf8")
+    {
+        setFlag(ALU);
+    } // Inst_VOP1__V_CVT_F32_BF8
+
+    Inst_VOP1__V_CVT_F32_BF8::~Inst_VOP1__V_CVT_F32_BF8()
+    {
+    } // ~Inst_VOP1__V_CVT_F32_BF8
+
+    void
+    Inst_VOP1__V_CVT_F32_BF8::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        ConstVecOperandU32 src(gpuDynInst, instData.SRC0);
+        VecOperandU32 vdst(gpuDynInst, instData.VDST);
+
+        src.readSrc();
+
+        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
+
+        std::array<uint32_t, NumVecElemPerVecReg> srcData;
+
+        unsigned byte = 0;
+        if (isSDWAInst()) {
+            // Assume that the byte select is between 0 and 3. These are
+            // "reserved" in the spec, but the other possible values are
+            // 4, 5, 6 for lower word, upper word, and dword.
+            byte = extData.iFmt_VOP_SDWA.SRC0_SEL;
+            assert(byte <= 3);
+
+            VecOperandU32 realSrc0(gpuDynInst, extData.iFmt_VOP_SDWA.SRC0);
+
+            realSrc0.readSrc();
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                srcData[lane] = realSrc0[lane];
+            }
+        } else {
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                srcData[lane] = src[lane];
+            }
+        }
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                AMDGPU::mxbfloat8
+                    in(bits(srcData[lane], byte * 8 + 7, byte * 8));
+                AMDGPU::mxfloat32 out;
+
+                // Implicit conversion
+                out = in;
+
+                vdst[lane] = out.data;
+            }
+        }
+
+        vdst.write();
+    } // execute
+    // --- Inst_VOP2__V_CVT_PK_F32_FP8 class methods ---
+
+    Inst_VOP1__V_CVT_PK_F32_FP8::
+        Inst_VOP1__V_CVT_PK_F32_FP8(InFmt_VOP1 *iFmt)
+        : Inst_VOP1(iFmt, "v_cvt_pk_f32_fp8")
+    {
+        setFlag(ALU);
+    } // Inst_VOP1__V_CVT_PK_F32_FP8
+
+    Inst_VOP1__V_CVT_PK_F32_FP8::~Inst_VOP1__V_CVT_PK_F32_FP8()
+    {
+    } // ~Inst_VOP1__V_CVT_PK_F32_FP8
+
+    void
+    Inst_VOP1__V_CVT_PK_F32_FP8::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        ConstVecOperandU32 src(gpuDynInst, instData.SRC0);
+        VecOperandU64 vdst(gpuDynInst, instData.VDST);
+
+        src.readSrc();
+
+        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
+
+        std::array<uint32_t, NumVecElemPerVecReg> srcData;
+
+        unsigned word = 0;
+        if (isSDWAInst()) {
+            // Assume that the byte select is between 0 and 3. These are
+            // "reserved" in the spec, but the other possible values are
+            // 4, 5, 6 for lower word, upper word, and dword.
+            word = extData.iFmt_VOP_SDWA.SRC0_SEL;
+            assert(word == SDWA_WORD_0 || word == SDWA_WORD_1);
+
+            VecOperandU32 realSrc0(gpuDynInst, extData.iFmt_VOP_SDWA.SRC0);
+
+            realSrc0.readSrc();
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                srcData[lane] = realSrc0[lane];
+            }
+        } else {
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                srcData[lane] = src[lane];
+            }
+        }
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                uint32_t packed_vals =
+                    bits(srcData[lane], word * 16 + 15, word * 16);
+
+                AMDGPU::mxfloat8 in1(bits(packed_vals, 7, 0));
+                AMDGPU::mxfloat8 in2(bits(packed_vals, 15, 8));
+
+                AMDGPU::mxfloat32 out1;
+                AMDGPU::mxfloat32 out2;
+
+                // Implicit conversion
+                out1 = in1;
+                out2 = in2;
+
+                vdst[lane] = out2.data;
+                vdst[lane] <<= 32;
+                vdst[lane] |= out1.data;
+            }
+        }
+
+        vdst.write();
+    } // execute
+    // --- Inst_VOP2__V_CVT_PK_F32_BF8 class methods ---
+
+    Inst_VOP1__V_CVT_PK_F32_BF8::
+        Inst_VOP1__V_CVT_PK_F32_BF8(InFmt_VOP1 *iFmt)
+        : Inst_VOP1(iFmt, "v_cvt_pk_f32_bf8")
+    {
+        setFlag(ALU);
+    } // Inst_VOP1__V_CVT_PK_F32_BF8
+
+    Inst_VOP1__V_CVT_PK_F32_BF8::~Inst_VOP1__V_CVT_PK_F32_BF8()
+    {
+    } // ~Inst_VOP1__V_CVT_PK_F32_BF8
+
+    void
+    Inst_VOP1__V_CVT_PK_F32_BF8::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        ConstVecOperandU32 src(gpuDynInst, instData.SRC0);
+        VecOperandU64 vdst(gpuDynInst, instData.VDST);
+
+        src.readSrc();
+
+        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
+
+        std::array<uint32_t, NumVecElemPerVecReg> srcData;
+
+        unsigned word = 0;
+        if (isSDWAInst()) {
+            // Assume that the byte select is between 0 and 3. These are
+            // "reserved" in the spec, but the other possible values are
+            // 4, 5, 6 for lower word, upper word, and dword.
+            word = extData.iFmt_VOP_SDWA.SRC0_SEL;
+            assert(word == SDWA_WORD_0 || word == SDWA_WORD_1);
+
+            VecOperandU32 realSrc0(gpuDynInst, extData.iFmt_VOP_SDWA.SRC0);
+
+            realSrc0.readSrc();
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                srcData[lane] = realSrc0[lane];
+            }
+        } else {
+            for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+                srcData[lane] = src[lane];
+            }
+        }
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                uint32_t packed_vals =
+                    bits(srcData[lane], word * 16 + 15, word * 16);
+
+                AMDGPU::mxbfloat8 in1(bits(packed_vals, 7, 0));
+                AMDGPU::mxbfloat8 in2(bits(packed_vals, 15, 8));
+
+                AMDGPU::mxfloat32 out1;
+                AMDGPU::mxfloat32 out2;
+
+                // Implicit conversion
+                out1 = in1;
+                out2 = in2;
+
+                vdst[lane] = out2.data;
+                vdst[lane] <<= 32;
+                vdst[lane] |= out1.data;
+            }
+        }
+
+        vdst.write();
+    } // execute
+    // --- Inst_VOP1__V_PRNG_B32 class methods ---
+
+    Inst_VOP1__V_PRNG_B32::Inst_VOP1__V_PRNG_B32(InFmt_VOP1 *iFmt)
+        : Inst_VOP1(iFmt, "v_prng_b32")
+    {
+        setFlag(ALU);
+    } // Inst_VOP1__V_PRNG_B32
+
+    Inst_VOP1__V_PRNG_B32::~Inst_VOP1__V_PRNG_B32()
+    {} // ~Inst_VOP1__V_PRNG_B32
+
+    // Generate a pseudorandom number using an LFSR (linear feedback shift
+    // register) seeded with the vector input, then store the result into a
+    // vector register.
+    //
+    // in = S0.u32;
+    // D0.u32 = ((in << 1U) ^ (in[31] ? 197U : 0U))
+    //
+    // Notes: This function produces a sequence of pseudorandom numbers with
+    // period 2**32 - 1 unless the input is zero, in which case the period is
+    // 1.
+    void
+    Inst_VOP1__V_PRNG_B32::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandU32 src(gpuDynInst, instData.SRC0);
+        VecOperandU32 vdst(gpuDynInst, instData.VDST);
+
+        src.readSrc();
+
+        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
+
+        auto randFunc = [](VecElemU32 in) {
+            return ((in << 1) ^ (((in >> 31) & 1) ? 0xc5 : 0x00));
+        };
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                vdst[lane] = randFunc(src[lane]);
+            }
+        }
+
+        vdst.write();
+    } // execute
+    // --- Inst_VOP1__V_PERMLANE16_SWAP_B32 class methods ---
+
+    Inst_VOP1__V_PERMLANE16_SWAP_B32::Inst_VOP1__V_PERMLANE16_SWAP_B32(
+        InFmt_VOP1 *iFmt)
+        : Inst_VOP1(iFmt, "v_permlane16_swap_b32")
+    {
+        setFlag(ALU);
+    } // Inst_VOP1__V_PERMLANE16_SWAP_B32
+
+    Inst_VOP1__V_PERMLANE16_SWAP_B32::~Inst_VOP1__V_PERMLANE16_SWAP_B32()
+    {} // ~Inst_VOP1__V_PERMLANE16_SWAP_B32
+
+    // Swap data between two vector registers. Odd rows of the first operand
+    // are swapped with even rows of the second operand (one row is 16 lanes).
+    //
+    // Notes: ABS, NEG and OMOD modifiers should all be zeroed for this
+    // instruction. This instruction is useful for BFP data conversions.
+    void
+    Inst_VOP1__V_PERMLANE16_SWAP_B32::execute(GPUDynInstPtr gpuDynInst)
+    {
+        VecOperandU32 src(gpuDynInst, instData.SRC0);
+        VecOperandU32 vdst(gpuDynInst, instData.VDST);
+
+        src.read();
+        vdst.read();
+
+        // Ignores EXEC MASK
+        for (int pass = 0; pass < 2; ++pass) {
+            for (int lane = 0; lane < 16; ++lane) {
+                int dlane = pass * 32 + lane + 16;
+                int slane = pass * 32 + lane;
+
+                VecElemU32 tmp = src[slane];
+                src[slane] = vdst[dlane];
+                vdst[dlane] = tmp;
+            }
+        }
+
+        src.write();
+        vdst.write();
+    } // execute
+    // --- Inst_VOP1__V_PERMLANE32_SWAP_B32 class methods ---
+
+    Inst_VOP1__V_PERMLANE32_SWAP_B32::Inst_VOP1__V_PERMLANE32_SWAP_B32(
+        InFmt_VOP1 *iFmt)
+        : Inst_VOP1(iFmt, "v_permlane32_swap_b32")
+    {
+        setFlag(ALU);
+    } // Inst_VOP1__V_PERMLANE32_SWAP_B32
+
+    Inst_VOP1__V_PERMLANE32_SWAP_B32::~Inst_VOP1__V_PERMLANE32_SWAP_B32()
+    {} // ~Inst_VOP1__V_PERMLANE32_SWAP_B32
+
+    // Swap data between two vector registers. Rows 2 and 3 of the first
+    // operand are swapped with rows 0 and 1 of the second operand (one row
+    // is 16 lanes).
+    //
+    // Notes: ABS, NEG and OMOD modifiers should all be zeroed for this
+    // instruction. This instruction is useful for BFP data conversions.
+    void
+    Inst_VOP1__V_PERMLANE32_SWAP_B32::execute(GPUDynInstPtr gpuDynInst)
+    {
+        VecOperandU32 src(gpuDynInst, instData.SRC0);
+        VecOperandU32 vdst(gpuDynInst, instData.VDST);
+
+        src.read();
+        vdst.read();
+
+        // Ignores EXEC MASK
+        for (int lane = 0; lane < 32; ++lane) {
+            VecElemU32 tmp = src[lane];
+            src[lane] = vdst[lane + 32];
+            vdst[lane + 32] = tmp;
+        }
+
+        src.write();
         vdst.write();
     } // execute
 } // namespace VegaISA

@@ -1121,10 +1121,10 @@ BaseRemoteGDB::cmdDetach(GdbCommand::Context &ctx)
 bool
 BaseRemoteGDB::cmdRegR(GdbCommand::Context &ctx)
 {
-    char buf[2 * regCachePtr->size() + 1];
-    buf[2 * regCachePtr->size()] = '\0';
-    mem2hex(buf, regCachePtr->data(), regCachePtr->size());
-    send(buf);
+    std::string buf;
+    buf.reserve(2 * regCachePtr->size());
+    mem2hex(buf.data(), regCachePtr->data(), regCachePtr->size());
+    send(buf.c_str());
     return true;
 }
 
@@ -1211,14 +1211,14 @@ BaseRemoteGDB::cmdMemR(GdbCommand::Context &ctx)
     if (!acc(addr, len))
         throw CmdError("E05");
 
-    char buf[len];
-    if (!read(addr, len, buf))
+    auto buf = std::make_unique<char[]>(len);
+    if (!read(addr, len, buf.get()))
         throw CmdError("E05");
 
-    char temp[2 * len + 1];
-    temp[2 * len] = '\0';
-    mem2hex(temp, buf, len);
-    send(temp);
+    std::string temp;
+    temp.reserve(2 * len);
+    mem2hex(temp.data(), buf.get(), len);
+    send(temp.c_str());
     return true;
 }
 
@@ -1234,13 +1234,13 @@ BaseRemoteGDB::cmdMemW(GdbCommand::Context &ctx)
         throw CmdError("E07");
     if (len * 2 > ctx.len - (p - ctx.data))
         throw CmdError("E08");
-    char buf[len];
-    p = (char *)hex2mem(buf, p, len);
+    auto buf = std::make_unique<char[]>(len);
+    p = (char *)hex2mem(buf.get(), p, len);
     if (p == NULL)
         throw CmdError("E09");
     if (!acc(addr, len))
         throw CmdError("E0A");
-    if (!write(addr, len, buf))
+    if (!write(addr, len, buf.get()))
         throw CmdError("E0B");
     send("OK");
     return true;

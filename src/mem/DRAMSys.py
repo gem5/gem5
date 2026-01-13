@@ -40,7 +40,6 @@ class DRAMSys(AbstractMemory):
 
     configuration = Param.String("Path to the DRAMSys configuration")
     resource_directory = Param.String("Path to the DRAMSys resource directory")
-    recordable = Param.Bool(True, "Whether DRAMSys should record a trace file")
 
 
 add_citation(

@@ -93,7 +93,8 @@ group "clang-compilers" {
     "clang-version-15",
     "clang-version-16",
     "clang-version-17",
-    "clang-version-18"
+    "clang-version-18",
+    "clang-version-19"
   ]
 }
 
@@ -157,28 +158,26 @@ target "clang-version-18" {
   tags = ["${IMAGE_URI}/clang-version-18:${TAG}"]
 }
 
+target "clang-version-19" {
+  inherits = ["common"]
+  annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a Clang v19 compiler."]
+  args = {
+    version = "19"
+  }
+  context = "clang-compiler"
+  cache-from = ["${CACHE_PREFIX}/clang-version-19:${CACHE_TAG}"]
+  cache-to = ["${CACHE_PREFIX}/clang-version-19:${CACHE_TAG}"]
+  tags = ["${IMAGE_URI}/clang-version-19:${TAG}"]
+}
+
 group "gcc-compilers" {
   targets = [
-    "gcc-version-10",
     "gcc-version-11",
     "gcc-version-12",
     "gcc-version-13",
     "gcc-version-14"
   ]
 }
-
-target "gcc-version-10" {
-  inherits = ["common"]
-  annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a GCC v10 compiler"]
-  args = {
-    version = "10"
-  }
-  context = "gcc-compiler"
-  cache-from = ["${CACHE_PREFIX}/gcc-version-10:${CACHE_TAG}"]
-  cache-to = ["${CACHE_PREFIX}/gcc-version-10:${CACHE_TAG}"]
-  tags = ["${IMAGE_URI}/gcc-version-10:${TAG}"]
-}
-
 target "gcc-version-11" {
   inherits = ["common"]
   annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a GCC v11 compiler."]

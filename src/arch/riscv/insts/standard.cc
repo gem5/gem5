@@ -39,6 +39,7 @@
 #include "arch/riscv/semihosting.hh"
 #include "arch/riscv/utility.hh"
 #include "cpu/static_inst.hh"
+#include "sim/system.hh"
 
 namespace gem5
 {
@@ -102,7 +103,9 @@ SystemOp::executeEBreakOrSemihosting(ExecContext *xc) const
         }
     }
     // No semihosting, raise a standard breakpoint exception.
-    return std::make_shared<BreakpointFault>(xc->pcState());
+    MISA misa = xc->readMiscReg(MISCREG_ISA);
+    bool virtualized = misa.rvh ? virtualizationEnabled(xc) : false;
+    return std::make_shared<BreakpointFault>(xc->pcState(), virtualized);
 }
 
 } // namespace RiscvISA

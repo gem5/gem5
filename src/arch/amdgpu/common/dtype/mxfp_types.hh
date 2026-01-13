@@ -39,6 +39,10 @@ namespace gem5
 namespace AMDGPU
 {
 
+using mxfp4 = mxfp<fp4_e2m1_info>;
+using mxfp6 = mxfp<fp6_e2m3_info>;
+using mxbf6 = mxfp<fp6_e3m2_info>;
+
 using mxbfloat8 = mxfp<fp8_e5m2_info>;
 using mxfloat8 = mxfp<fp8_e4m3_info>;
 

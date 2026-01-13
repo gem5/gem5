@@ -42,6 +42,7 @@
 #ifndef __BASE_CACHE_ASSOCIATIVE_CACHE_HH__
 #define __BASE_CACHE_ASSOCIATIVE_CACHE_HH__
 
+#include <string_view>
 #include <type_traits>
 #include <vector>
 
@@ -102,7 +103,7 @@ class AssociativeCache : public Named
     /**
      * Empty constructor - need to call init() later with all args
      */
-    AssociativeCache(const char *name) : Named(std::string(name)) {}
+    AssociativeCache(std::string_view name) : Named(name) {}
 
     /**
      * Public constructor
@@ -113,12 +114,12 @@ class AssociativeCache : public Named
      * @param repl_policy replacement policy
      * @param indexing_policy indexing policy
      */
-    AssociativeCache(const char *name, const size_t num_entries,
+    AssociativeCache(std::string_view name, const size_t num_entries,
                      const size_t associativity_,
                      BaseReplacementPolicy *repl_policy,
                      IndexingPolicy *indexing_policy,
                      Entry const &init_val = Entry())
-        : Named(std::string(name)),
+        : Named(name),
           associativity(associativity_),
           replPolicy(repl_policy),
           indexingPolicy(indexing_policy),

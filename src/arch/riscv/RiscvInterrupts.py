@@ -30,9 +30,9 @@
 
 from m5.citations import add_citation
 from m5.objects.BaseInterrupts import BaseInterrupts
-from m5.objects.IntPin import VectorIntSinkPin
 from m5.params import (
     Param,
+    VectorIntSinkPin,
     VectorParam,
 )
 

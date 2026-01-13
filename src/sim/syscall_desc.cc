@@ -94,7 +94,7 @@ void
 SyscallDesc::handleReturn(ThreadContext *tc, const SyscallReturn &ret)
 {
     if (ret.suppressed()) {
-        DPRINTF_SYSCALL(Base, "No return value.\n", name());
+        DPRINTF_SYSCALL(Base, "No return value for %s.\n", name());
     } else {
         returnInto(tc, ret);
         DPRINTF_SYSCALL(Base, "Returned %d.\n", ret.encodedValue());

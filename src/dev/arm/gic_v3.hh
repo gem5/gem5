@@ -57,6 +57,7 @@ class Gicv3Its;
 class Gicv3Registers
 {
   public:
+    virtual ~Gicv3Registers() = default;
     virtual uint32_t readDistributor(Addr daddr) = 0;
     virtual uint32_t readRedistributor(const ArmISA::Affinity &aff,
                                        Addr daddr) = 0;

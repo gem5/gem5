@@ -30,9 +30,9 @@ from m5.objects import (
     BadAddr,
     BaseXBar,
     Bridge,
-    Port,
     SystemXBar,
 )
+from m5.params import Port
 
 from ....isas import ISA
 from ....utils.override import *

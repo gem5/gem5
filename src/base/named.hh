@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2025 Arm Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2021 Daniel R. Carvalho
  * All rights reserved
  *
@@ -30,6 +42,7 @@
 #define __BASE_NAMED_HH__
 
 #include <string>
+#include <string_view>
 
 namespace gem5
 {
@@ -41,7 +54,7 @@ class Named
     const std::string _name;
 
   public:
-    Named(const std::string &name_) : _name(name_) { }
+    Named(std::string_view name_) : _name(name_) { }
     virtual ~Named() = default;
 
     virtual std::string name() const { return _name; }

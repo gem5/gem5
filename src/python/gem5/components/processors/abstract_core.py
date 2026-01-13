@@ -36,10 +36,12 @@ from typing import (
 from m5.objects import (
     BaseMMU,
     PcCountTrackerManager,
-    Port,
     SubSystem,
 )
-from m5.params import PcCountPair
+from m5.params import (
+    PcCountPair,
+    Port,
+)
 
 from ...isas import ISA
 
@@ -124,6 +126,17 @@ class AbstractCore(SubSystem):
         optional ports can be implemented as cache ports.
         """
         raise NotImplementedError
+
+    def has_mmu(self) -> bool:
+        """Return True if this core has an MMU.
+
+        This is needed to check a core has a MMU before trying to get it.
+        There are cores without MMUs. E.g, some generator cores.
+        """
+        try:
+            return isinstance(self.get_mmu(), BaseMMU)
+        except NotImplementedError:
+            return False
 
     @abstractmethod
     def get_mmu(self) -> BaseMMU:

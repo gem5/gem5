@@ -491,7 +491,7 @@ TesterThread::printAllOutstandingReqs(std::stringstream& ss) const
 std::string
 TesterThread::printAddress(Addr addr) const
 {
-    return ruby::printAddress(addr, cacheLineSize * 8);
+    return ruby::printAddress(addr, floorLog2(cacheLineSize));
 }
 
 } // namespace gem5

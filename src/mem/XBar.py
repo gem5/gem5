@@ -52,14 +52,8 @@ class BaseXBar(ClockedObject):
     cpu_side_ports = VectorResponsePort(
         "Vector port for connecting mem side ports"
     )
-    slave = DeprecatedParam(
-        cpu_side_ports, "`slave` is now called `cpu_side_ports`"
-    )
     mem_side_ports = VectorRequestPort(
         "Vector port for connecting cpu side ports"
-    )
-    master = DeprecatedParam(
-        mem_side_ports, "`master` is now called `mem_side_ports`"
     )
 
     # Latencies governing the time taken for the variuos paths a

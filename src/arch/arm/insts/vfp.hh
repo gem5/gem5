@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2019, 2024 Arm Limited
+ * Copyright (c) 2010-2013, 2019, 2024-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -117,6 +117,31 @@ static inline double bitsToFp(uint64_t, double);
 static inline uint32_t fpToBits(float);
 static inline uint64_t fpToBits(double);
 
+constexpr int
+fpclassifyFpH(uint16_t __x)
+{
+    // Extract sign, exponent, and fraction
+    uint16_t exponent = bits(__x, 14, 10);
+    uint16_t fraction = bits(__x, 9, 0);
+
+    // Classification logic
+    if (exponent == 0) {
+        if (fraction == 0) {
+            return FP_ZERO;  // Zero (positive or negative)
+        } else {
+            return FP_SUBNORMAL;  // Subnormal number
+        }
+    } else if (exponent == 0x1F) {
+        if (fraction == 0) {
+            return FP_INFINITE;  // Infinity (positive or negative)
+        } else {
+            return FP_NAN;  // Not a Number (NaN)
+        }
+    } else {
+        return FP_NORMAL;  // Normalized number
+    }
+}
+
 template <class fpType>
 static inline bool
 flushToZero(fpType &op)
@@ -125,6 +150,16 @@ flushToZero(fpType &op)
     if (std::fpclassify(op) == FP_SUBNORMAL) {
         uint64_t bitMask = 0x1ULL << (sizeof(fpType) * 8 - 1);
         op = bitsToFp(fpToBits(op) & bitMask, junk);
+        return true;
+    }
+    return false;
+}
+
+static inline bool
+flushToZeroFpH(uint16_t& op)
+{
+    if (fpclassifyFpH(op) == FP_SUBNORMAL) {
+        op = op & 0x8000;
         return true;
     }
     return false;
@@ -144,6 +179,14 @@ static inline void
 vfpFlushToZero(FPSCR &fpscr, fpType &op)
 {
     if (fpscr.fz == 1 && flushToZero(op)) {
+        fpscr.idc = 1;
+    }
+}
+
+static inline void
+vfpFlushToZeroFpH(FPSCR &fpscr, uint16_t& op)
+{
+    if (fpscr.fz16 == 1 && flushToZeroFpH(op)) {
         fpscr.idc = 1;
     }
 }
@@ -561,9 +604,11 @@ double vfpSFixedToFpD(bool flush, bool defaultNan,
         int64_t val, uint8_t width, uint8_t imm);
 
 float fprSqrtEstimate(FPSCR &fpscr, float op);
+uint16_t fprSqrtEstimateFpH(FPSCR &fpscr, uint16_t op);
 uint32_t unsignedRSqrtEstimate(uint32_t op);
 
 float fpRecipEstimate(FPSCR &fpscr, float op);
+uint16_t fpRecipEstimateFpH(FPSCR &fpscr, uint16_t op);
 uint32_t unsignedRecipEstimate(uint32_t op);
 
 FPSCR
@@ -1186,6 +1231,13 @@ class FpRegRegRegImmOp : public FpOp
     std::string generateDisassembly(
             Addr pc, const loader::SymbolTable *symtab) const override;
 };
+
+
+FPSCR fpVASimdFPSCRValue(const FPSCR &fpscr);
+
+FPSCR fpVASimdCvtFPSCRValue(const FPSCR &fpscr);
+
+FPSCR fpRestoreFPSCRValue(const FPSCR fpscr_exec, const FPSCR &fpscr);
 
 } // namespace ArmISA
 } // namespace gem5

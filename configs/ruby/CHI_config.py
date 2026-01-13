@@ -368,7 +368,7 @@ class CHI_MNController(CHI_MiscNode_Controller):
         self, ruby_system, addr_range, l1d_caches, early_nonsync_comp
     ):
         super().__init__(
-            version=Versions.getVersion(MiscNode_Controller),
+            version=Versions.getVersion(CHI_MiscNode_Controller),
             ruby_system=ruby_system,
             mandatoryQueue=MessageBuffer(),
             triggerQueue=TriggerMessageBuffer(),

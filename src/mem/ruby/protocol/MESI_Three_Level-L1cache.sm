@@ -95,6 +95,11 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     M_IL0, AccessPermission:Maybe_Stale, desc="Modified in L1, invalidation sent to L0, have not seen response yet";
     MM_IL0, AccessPermission:Read_Write, desc="Invalidation sent to L0, have not seen response yet";
     SM_IL0, AccessPermission:Busy, desc="Invalidation sent to L0, have not seen response yet";
+
+    // Flush states
+    I_F, AccessPermission:Busy, desc="Send flush to L2, entry is invalid";
+    V_F, AccessPermission:Busy, desc="Send flush to L2, entry is valid";
+    D_F, AccessPermission:Busy, desc="Sending data to L2 during flush";
   }
 
   // EVENTS
@@ -138,6 +143,12 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     // sent a NAK (because of htm abort) saying that the data
     // in L1 is the latest value.
     L0_DataNak,      desc="L0 received INV message, specifies its data is also stale";
+
+    Flush,     desc="Flush request from L0, valid in L0";
+    Flush_NP,   desc="Flush request from L0, not present in L0";
+    Flush_Ack,  desc="Flush ack from L1";
+    External_Flush_Data, desc="Send flush data to L2";
+    External_Flush_Data_Ack, desc="Flush data received from L1";
   }
 
   // TYPES
@@ -264,6 +275,12 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
       return Event:Store;
     } else if (type == CoherenceClass:PUTX) {
       return Event:WriteBack;
+    } else if (type == CoherenceClass:FLUSH) {
+      return Event:Flush;
+    } else if (type == CoherenceClass:FLUSH_NP) {
+      return Event:Flush_NP;
+    } else if (type == CoherenceClass:FLUSH_DATA) {
+      return Event:External_Flush_Data_Ack;
     } else {
       error("Invalid RequestType");
     }
@@ -320,6 +337,8 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
           }
         } else if (in_msg.Type == CoherenceResponseType:WB_ACK) {
           trigger(Event:WB_Ack, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Type == CoherenceResponseType:FLUSH_ACK) {
+          trigger(Event:Flush_Ack, in_msg.addr, cache_entry, tbe);
         } else {
           error("Invalid L1 response type");
         }
@@ -357,6 +376,8 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
             } else {
                 trigger(Event:Fwd_GETS, in_msg.addr, cache_entry, tbe);
             }
+        } else if (in_msg.Type == CoherenceRequestType:FLUSH_DATA) {
+            trigger(Event:External_Flush_Data, in_msg.addr, cache_entry, tbe);
         } else {
           error("Invalid forwarded request type");
         }
@@ -379,6 +400,12 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
               trigger(Event:L0_DataCopy, in_msg.addr, cache_entry, tbe);
         }  else if (in_msg.Class == CoherenceClass:INV_ACK) {
             trigger(Event:L0_Ack, in_msg.addr, cache_entry, tbe);
+        }  else if (in_msg.Class == CoherenceClass:FLUSH) {
+            trigger(Event:Flush, in_msg.addr, cache_entry, tbe);
+        }  else if (in_msg.Class == CoherenceClass:FLUSH_NP) {
+            trigger(Event:Flush_NP, in_msg.addr, cache_entry, tbe);
+        }  else if (in_msg.Class == CoherenceClass:FLUSH_DATA) {
+            trigger(Event:External_Flush_Data_Ack, in_msg.addr, cache_entry, tbe);
         }  else {
             if (is_valid(cache_entry)) {
                 trigger(mandatory_request_type_to_event(in_msg.Class),
@@ -636,6 +663,90 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     }
   }
 
+  action(f_sendFlushToL2, "fsf", desc="send flush to L2") {
+    peek(messageBufferFromL0_in, CoherenceMsg) {
+      enqueue(requestNetwork_out, RequestMsg, l1_request_latency) {
+        out_msg.addr := address;
+        out_msg.Type := CoherenceRequestType:FLUSH;
+        out_msg.Requestor := machineID;
+        out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
+                            l2_select_low_bit, l2_select_num_bits, clusterID));
+        if (in_msg.Dirty) {
+          out_msg.MessageSize := MessageSizeType:Data;
+          out_msg.DataBlk := in_msg.DataBlk;
+          out_msg.Dirty := true;
+        } else if (is_valid(cache_entry) && cache_entry.Dirty) {
+          out_msg.MessageSize := MessageSizeType:Data;
+          out_msg.DataBlk := cache_entry.DataBlk;
+          out_msg.Dirty := true;
+        } else {
+          out_msg.MessageSize := in_msg.MessageSize;
+          out_msg.Dirty := false;
+        }
+      }
+    }
+  }
+
+  action(f_sendFlushNPToL2, "fsfnp", desc="send flush to L2") {
+    peek(messageBufferFromL0_in, CoherenceMsg) {
+      enqueue(requestNetwork_out, RequestMsg, l1_request_latency) {
+        out_msg.addr := address;
+        out_msg.Type := CoherenceRequestType:FLUSH_NP;
+        out_msg.Requestor := machineID;
+        out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
+                            l2_select_low_bit, l2_select_num_bits, clusterID));
+        out_msg.MessageSize := in_msg.MessageSize;
+        out_msg.Dirty := false;
+      }
+    }
+  }
+
+  action(f_sendFlushAckToL0, "fa", desc="send flush ack to L0") {
+    enqueue(bufferToL0_out, CoherenceMsg, l1_response_latency) {
+      out_msg.addr := address;
+      out_msg.Class := CoherenceClass:FLUSH_ACK;
+      out_msg.Dest := createMachineID(MachineType:L0Cache, version);
+    }
+  }
+
+  action(f_sendFlushDataToL2, "fsfd", desc="send flush data to L2") {
+    enqueue(requestNetwork_out, RequestMsg, l1_request_latency) {
+      assert(is_valid(cache_entry));
+      out_msg.addr := address;
+      out_msg.Type := CoherenceRequestType:FLUSH_DATA;
+      out_msg.Requestor := machineID;
+      out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
+                          l2_select_low_bit, l2_select_num_bits, clusterID));
+      out_msg.MessageSize := MessageSizeType:Data;
+      out_msg.DataBlk := cache_entry.DataBlk;
+      out_msg.Dirty := cache_entry.Dirty;
+    }
+  }
+
+  action(f_fwdFlushDataToL2, "ffd2", desc="forward flush data to L2") {
+    peek(messageBufferFromL0_in, CoherenceMsg) {
+      enqueue(requestNetwork_out, RequestMsg, l1_request_latency) {
+        assert(is_valid(cache_entry));
+        out_msg.addr := address;
+        out_msg.Type := CoherenceRequestType:FLUSH_DATA;
+        out_msg.Requestor := machineID;
+        out_msg.Destination.add(mapAddressToRange(address, MachineType:L2Cache,
+                            l2_select_low_bit, l2_select_num_bits, clusterID));
+        out_msg.MessageSize := MessageSizeType:Data;
+        out_msg.DataBlk := in_msg.DataBlk;
+        out_msg.Dirty := in_msg.Dirty;
+      }
+    }
+  }
+
+  action(f_fwdFlushDataReqToL0, "ffd", desc="forward flush data request to L0") {
+    enqueue(bufferToL0_out, CoherenceMsg, l1_request_latency) {
+      out_msg.addr := address;
+      out_msg.Class := CoherenceClass:FLUSH_DATA;
+      out_msg.Dest := createMachineID(MachineType:L0Cache, version);
+    }
+  }
+
   action(h_data_to_l0, "h", desc="If not prefetch, send data to the L0 cache.") {
       enqueue(bufferToL0_out, CoherenceMsg, l1_response_latency) {
           assert(is_valid(cache_entry));
@@ -690,6 +801,12 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
     set_tbe(TBEs[address]);
     tbe.Dirty := cache_entry.Dirty;
     tbe.DataBlk := cache_entry.DataBlk;
+  }
+
+  action(i_allocateTBE_flush, "if", desc="Allocate TBE for flush (block not present, will not be present)") {
+    check_allocate(TBEs);
+    TBEs.allocate(address);
+    set_tbe(TBEs[address]);
   }
 
   action(k_popL0RequestQueue, "k", desc="Pop mandatory queue.") {
@@ -791,8 +908,8 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
   //*****************************************************
 
   // Transitions for Load/Store/Replacement/WriteBack from transient states
-  transition({IS, IM, IS_I, M_I, SM, SINK_WB_ACK, S_IL0, M_IL0, E_IL0, MM_IL0},
-             {Load, Store, L1_Replacement}) {
+  transition({IS, IM, IS_I, M_I, SM, SINK_WB_ACK, S_IL0, M_IL0, E_IL0, MM_IL0, I_F, V_F, D_F},
+             {Load, Store, L1_Replacement, Flush, External_Flush_Data, Flush_NP}) {
     z0_stallAndWaitL0Queue;
   }
 
@@ -1147,5 +1264,51 @@ machine(MachineType:L1Cache, "MESI Directory L1 Cache CMP")
 
   transition(I, L1_Replacement) {
     ff_deallocateCacheBlock;
+  }
+
+  // flush transitions
+  transition(I, Flush_NP, I_F) {
+    i_allocateTBE_flush;
+    f_sendFlushNPToL2;
+    k_popL0RequestQueue;
+  }
+
+  transition({S, SS, E, EE, M, MM}, {Flush, Flush_NP}, V_F) {
+    i_allocateTBE;
+    f_sendFlushToL2;
+    k_popL0RequestQueue;
+  }
+
+  transition(V_F, Flush_Ack, I) {
+    f_sendFlushAckToL0;
+    s_deallocateTBE;
+    o_popL2ResponseQueue;
+    ff_deallocateCacheBlock;
+    kd_wakeUpDependents;
+  }
+
+  transition(I_F, Flush_Ack, I) {
+    f_sendFlushAckToL0;
+    s_deallocateTBE;
+    o_popL2ResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition({EE, MM}, External_Flush_Data, I) {
+    f_sendFlushDataToL2;
+    ff_deallocateCacheBlock;
+    l_popL2RequestQueue;
+  }
+
+  transition({E,M}, External_Flush_Data, D_F) {
+    i_allocateTBE;
+    f_fwdFlushDataReqToL0;
+    l_popL2RequestQueue;
+  }
+
+  transition(D_F, External_Flush_Data_Ack, I) {
+    f_fwdFlushDataToL2;
+    ff_deallocateCacheBlock;
+    k_popL0RequestQueue;
   }
 }

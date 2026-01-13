@@ -1,3 +1,15 @@
+# Copyright (c) 2025 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2012 The Regents of The University of Michigan
 # Copyright (c) 2016 Centre National de la Recherche Scientifique
 # All rights reserved.
@@ -43,7 +55,7 @@ class ex5_big_Complex_Int(FUDesc):
     opList = [
         OpDesc(opClass="IntMult", opLat=4, pipelined=True),
         OpDesc(opClass="IntDiv", opLat=11, pipelined=False),
-        OpDesc(opClass="IprAccess", opLat=3, pipelined=True),
+        OpDesc(opClass="System", opLat=3, pipelined=True),
     ]
     count = 1
 
@@ -120,14 +132,22 @@ class ex5_big_BTB(SimpleBTB):
 
 
 # Bi-Mode Branch Predictor
-class ex5_big_BP(BiModeBP):
+class ex5_big_BP(BranchPredictor):
+    conditionalBranchPred = BiModeBP(
+        globalPredictorSize=4096,
+        globalCtrBits=2,
+        choicePredictorSize=1024,
+        choiceCtrBits=3,
+    )
     btb = ex5_big_BTB()
     ras = ReturnAddrStack(numEntries=48)
-    globalPredictorSize = 4096
-    globalCtrBits = 2
-    choicePredictorSize = 1024
-    choiceCtrBits = 3
     instShiftAmt = 2
+
+
+# Instruction Queue
+class ex5_big_IQ(IQUnit):
+    fuPool = ex5_big_FUP()
+    numEntries = 48
 
 
 class ex5_big(ArmO3CPU):
@@ -157,7 +177,6 @@ class ex5_big(ArmO3CPU):
     dispatchWidth = 6
     issueWidth = 8
     wbWidth = 8
-    fuPool = ex5_big_FUP()
     iewToCommitDelay = 1
     renameToROBDelay = 1
     commitWidth = 8
@@ -167,11 +186,11 @@ class ex5_big(ArmO3CPU):
     forwardComSize = 5
     numPhysIntRegs = 90
     numPhysFloatRegs = 256
-    numIQEntries = 48
     numROBEntries = 60
 
     switched_out = False
     branchPred = ex5_big_BP()
+    instQueues = ex5_big_IQ()
 
 
 class L1Cache(Cache):

@@ -1,6 +1,6 @@
-#!/bin/sed -f
+#!/usr/bin/env -S sed -f
 #
-# Copyright (c) 2016 ARM Limited
+# Copyright (c) 2016, 2025 Arm Limited
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall

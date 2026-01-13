@@ -28,6 +28,7 @@
 #include "arch/arm/fastmodel/iris/cpu.hh"
 
 #include "arch/arm/fastmodel/iris/thread_context.hh"
+#include "cpu/thread_context.hh"
 #include "scx/scx.h"
 #include "sim/serialize.hh"
 
@@ -55,6 +56,15 @@ BaseCPU::~BaseCPU()
     for (auto &tc: threadContexts)
         delete tc;
     threadContexts.clear();
+}
+
+void
+BaseCPU::wakeup(ThreadID tid)
+{
+    auto *tc = threadContexts.at(tid);
+    if (tc->status() == gem5::ThreadContext::Suspended) {
+        tc->activate();
+    }
 }
 
 Counter

@@ -153,17 +153,18 @@ VirtIO9PBase::FSQueue::onNotifyDescriptor(VirtDescriptor *desc)
     desc->chainRead(0, (uint8_t *)&header, sizeof(header));
     header = p9toh(header);
 
-    uint8_t data[header.len - sizeof(header)];
-    desc->chainRead(sizeof(header), data, sizeof(data));
+    const size_t data_size = header.len - sizeof(header);
+    auto data = std::make_unique<uint8_t[]>(data_size);
+    desc->chainRead(sizeof(header), data.get(), data_size);
 
     // Keep track of pending transactions
     parent.pendingTransactions[header.tag] = desc;
 
     DPRINTF(VIO9P, "recvTMsg\n");
-    parent.dumpMsg(header, data, sizeof(data));
+    parent.dumpMsg(header, data.get(), data_size);
 
     // Notify device of message
-    parent.recvTMsg(header, data, sizeof(data));
+    parent.recvTMsg(header, data.get(), data_size);
 }
 
 void
@@ -257,14 +258,18 @@ VirtIO9PProxy::recvTMsg(const P9MsgHeader &header,
                         const uint8_t *data, size_t size)
 {
     deviceUsed = true;
-    assert(header.len == sizeof(header) + size);
+    const size_t buf_size = sizeof(header) + size;
+    panic_if(buf_size != header.len,
+            "header.len (%d) != header size (%d) + payload size (%d)!\n",
+                buf_size, sizeof(header), size);
     // While technically not needed, we send the packet as one
     // contiguous segment to make some packet dissectors happy.
-    uint8_t out[header.len];
+    auto buf = static_cast<uint8_t*>(malloc(buf_size));
     P9MsgHeader header_out(htop9(header));
-    memcpy(out, (uint8_t *)&header_out, sizeof(header_out));
-    memcpy(out + sizeof(header_out), data, size);
-    writeAll(out, sizeof(header_out) + size);
+    memcpy(buf, &header_out, sizeof(header_out));
+    memcpy(buf + sizeof(header_out), data, size);
+    writeAll(buf, buf_size);
+    free(buf);
 }
 
 void
@@ -274,13 +279,13 @@ VirtIO9PProxy::serverDataReady()
     readAll((uint8_t *)&header, sizeof(header));
     header = p9toh(header);
 
-    const ssize_t payload_len(header.len - sizeof(header));
+    const ssize_t payload_len = header.len - sizeof(header);
     if (payload_len < 0)
         panic("Payload length is negative!\n");
-    uint8_t data[payload_len];
-    readAll(data, payload_len);
+    auto data = std::make_unique<uint8_t[]>(payload_len);
+    readAll(data.get(), payload_len);
 
-    sendRMsg(header, data, payload_len);
+    sendRMsg(header, data.get(), payload_len);
 }
 
 

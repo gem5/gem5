@@ -86,6 +86,9 @@ namespace VegaISA
           case REG_EXEC_LO:
             reg_sym = "exec";
             break;
+          case REG_EXEC_HI:
+            reg_sym = "exec";
+            break;
           case REG_ZERO:
             reg_sym = "0";
             break;

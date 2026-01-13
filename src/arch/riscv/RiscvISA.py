@@ -81,10 +81,9 @@ class RiscvType(Enum):
 class PrivilegeModeSet(Enum):
     vals = [
         "M",  # Machine privilege mode only
-        "MU",  # Machine and user privlege modes implemented
-        "MNU",  # MU privilege modes with user-mode trap
-        "MSU",  # Machine, supervisor and user modes implemented
-        "MNSU",  # MSU privilege modes with user-mode trap
+        "MU",  # Machine and user privlege modes
+        "MSU",  # Machine, supervisor and user modes
+        "MHSU",  # Machine, hypervisor, supervisor and user modes
     ]
 
 
@@ -107,7 +106,12 @@ class RiscvISA(BaseISA):
         ELEN in Ch. 2 of RISC-V vector spec",
     )
     privilege_mode_set = Param.PrivilegeModeSet(
-        "MSU",
+        "MSU",  # set MHSU to enable hypervisor (H-extension)
+        # No timing CPUs are supported in MHSU currently
+        # *ONLY THE ATOMIC CPU / ATOMIC MEMORY* is supported
+        # PTW does not yet implement timing walks with H extension on
+        # (P.S.: look at the change for MIDELEG in isa.cc:readMiscReg
+        # if working with old bbl bootloader)
         "The combination of privilege modes \
         in Privilege Levels section of RISC-V privileged spec",
     )
@@ -147,6 +151,12 @@ class RiscvISA(BaseISA):
         # check for the vector extension
         if self.enable_rvv.value == True:
             isa_extensions.append("v")
+
+        # H-extension is enabled whenever we choose
+        # MHSU privilege mode set
+        if self.privilege_mode_set.value == "MHSU":
+            isa_extensions.append("h")
+
         isa_string = "".join(isa_extensions)
 
         if self.enable_Zicbom_fs.value:

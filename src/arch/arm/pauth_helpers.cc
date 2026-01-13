@@ -39,12 +39,20 @@
 #include "arch/arm/pauth_helpers.hh"
 
 #include "arch/arm/faults.hh"
+#include "arch/arm/regs/misc.hh"
 #include "base/bitfield.hh"
 
 namespace gem5
 {
 
 using namespace ArmISA;
+
+bool
+ArmISA::upperAndLowerRange(ThreadContext *tc, ExceptionLevel el)
+{
+    HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
+    return (el == EL1 || el == EL0 || (el == EL2 && hcr.e2h == 1));
+}
 
 bool
 ArmISA::calculateTBI(ThreadContext* tc, ExceptionLevel el,

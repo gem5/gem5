@@ -35,6 +35,7 @@ class Process(SimObject):
     type = "Process"
     cxx_header = "sim/process.hh"
     cxx_class = "gem5::Process"
+    override_create = True
 
     @cxxMethod
     def map(self, vaddr, paddr, size, cacheable=False):
@@ -51,6 +52,11 @@ class Process(SimObject):
     )
     kvmInSE = Param.Bool("false", "initialize the process for KvmCPU in SE")
     maxStackSize = Param.MemorySize("64MiB", "maximum size of the stack")
+    zeroPages = Param.Bool(
+        True,
+        "ensure all allocated pages are zero-filled. glibc malloc generally "
+        "requires this. Disable at your own risk.",
+    )
 
     uid = Param.Int(100, "user id")
     euid = Param.Int(100, "effective user id")

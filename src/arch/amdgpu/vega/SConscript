@@ -38,7 +38,8 @@ if not env['CONF']['BUILD_GPU']:
 
 SimObject('VegaGPUTLB.py', sim_objects=['VegaPagetableWalker',
                                         'VegaGPUTLB',
-                                        'VegaTLBCoalescer'])
+                                        'VegaTLBCoalescer',
+                                        'VegaPWCIndexingPolicy',])
 
 Source('faults.cc')
 Source('pagetable.cc')

@@ -233,22 +233,32 @@ static void
 externalProcessHandler(int sigtype)
 {
     async_event = true;
+    async_hypercall = true;
+    /* Wake up some event queue to handle event */
+    getEventQueue(0)->wakeup();
 
-    std::string shared_mem_name_str = "shared_gem5_signal_mem_" +
+}
+
+void
+processExternalSignal(void)
+{
+    std::string shared_mem_name_str = "/shared_gem5_signal_mem_" +
         std::to_string(getpid());
     const char* shared_mem_name = shared_mem_name_str.c_str();
     const std::size_t shared_mem_size = 4096;
 
     int shm_fd = shm_open(shared_mem_name, O_RDWR, 0666); //0666 = rw-rw-rw-
     if (shm_fd == -1) {
-        std::cerr << "Error: Unable to open shared memory" << std::endl;
+        DPRINTF(ExternalSignal, "Error: Unable to open shared memory: %s\n",
+                std::strerror(errno));
         return;
     }
 
     void* shm_ptr = mmap(0, shared_mem_size, PROT_READ | PROT_WRITE,
         MAP_SHARED, shm_fd, 0);
     if (shm_ptr == MAP_FAILED) {
-        std::cerr << "Error: Unable to map shared memory" << std::endl;
+        DPRINTF(ExternalSignal, "Error: Unable to map shared memory: %s\n",
+                std::strerror(errno));
         close(shm_fd);
         return;
     }
@@ -381,7 +391,8 @@ externalProcessHandler(int sigtype)
     munmap(shm_ptr, shared_mem_size);
     close(shm_fd);
 
-    exitSimulationLoopNow(hypercall_id, payload_map);
+    exitSimLoopWithHypercall("Handling external signal!", 0, curTick(), 0,
+                             payload_map, hypercall_id, false);
 }
 
 std::string
@@ -453,9 +464,9 @@ initSignals()
     installSignalHandler(SIGIO, ioHandler);
 }
 
-void initSigRtmin()
+void initSigCont()
 {
-    installSignalHandler(SIGHUP, externalProcessHandler);
+    installSignalHandler(SIGCONT, externalProcessHandler);
 }
 
 struct sigaction old_int_sa;

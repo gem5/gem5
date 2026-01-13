@@ -35,6 +35,7 @@
 #ifndef __ARCH_RISCV_ISA_HH__
 #define __ARCH_RISCV_ISA_HH__
 
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -57,6 +58,8 @@ enum PrivilegeMode
 {
     PRV_U = 0,
     PRV_S = 1,
+    // NEVER SET prv = PRV_HS!
+    PRV_HS = 2, // H-extension
     PRV_M = 3
 };
 
@@ -154,6 +157,12 @@ class ISA : public BaseISA
         return CSRMasks[_rvType][_privilegeModeSet];
     }
 
+    virtual const std::unordered_map<int, RegVal>&
+    getCSRWriteMaskMap() const
+    {
+        return CSRWriteMasks[_rvType][_privilegeModeSet];
+    }
+
     bool inUserMode() const override;
     void copyRegsFrom(ThreadContext *src) override;
 
@@ -176,6 +185,8 @@ class ISA : public BaseISA
     RiscvType rvType() const { return _rvType; }
 
     bool getEnableRvv() const { return enableRvv; }
+
+    bool virtualizationEnabled() const;
 
     void
     clearLoadReservation(ContextID cid)
@@ -206,7 +217,33 @@ class ISA : public BaseISA
     {
         return (_rvType == RV32) ? sext<32>(addr) : addr;
     }
+
+    void swapToVirtCSR(uint64_t& csr, RegIndex& midx, std::string& csrName);
+
+    Fault hpmCounterCheck(int counter, ExtMachInst machInst) const;
+    Fault tvmChecks(uint64_t csr, PrivilegeMode pm, ExtMachInst machInst);
+
+    RegVal backdoorReadCSRAllBits(ExecContext *xc, uint64_t csr);
+    RegVal readCSR(ExecContext *xc, uint64_t csr);
+    void writeCSR(ExecContext *xc, uint64_t csr, RegVal writeData);
 };
+
+// V-bit utilities (H-extension)
+
+bool virtualizationEnabled(ExecContext *xc);
+bool virtualizationEnabled(ThreadContext *tc);
+
+void setV(ExecContext *xc);
+void setV(ThreadContext *tc);
+
+void resetV(ExecContext *xc);
+void resetV(ThreadContext *tc);
+
+Fault updateFPUStatus(
+    ExecContext *xc, ExtMachInst machInst, bool set_dirty);
+
+Fault updateVPUStatus(
+    ExecContext *xc, ExtMachInst machInst, bool set_dirty, bool check_vill);
 
 } // namespace RiscvISA
 } // namespace gem5

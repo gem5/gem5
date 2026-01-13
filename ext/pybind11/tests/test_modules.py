@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+import builtins
+
 import pytest
 
 import env
@@ -17,6 +21,7 @@ def test_nested_modules():
     )
     assert m.__name__ == "pybind11_tests.modules"
     assert ms.__name__ == "pybind11_tests.modules.subsubmodule"
+    assert m.__file__ == ms.__file__
 
     assert ms.submodule_func() == "submodule_func()"
 
@@ -34,6 +39,9 @@ def test_reference_internal():
     assert str(b.a1) == "A[42]"
     assert str(b.get_a2()) == "A[43]"
     assert str(b.a2) == "A[43]"
+
+    if env.GRAALPY:
+        pytest.skip("ConstructorStats is incompatible with GraalPy.")
 
     astats, bstats = ConstructorStats.get(ms.A), ConstructorStats.get(ms.B)
     assert astats.alive() == 2
@@ -61,7 +69,6 @@ def test_importing():
     from pybind11_tests.modules import OD
 
     assert OD is OrderedDict
-    assert str(OD([(1, "a"), (2, "b")])) == "OrderedDict([(1, 'a'), (2, 'b')])"
 
 
 def test_pydoc():
@@ -75,6 +82,13 @@ def test_pydoc():
     assert pydoc.text.docmodule(pybind11_tests)
 
 
+def test_module_handle_type_name():
+    assert (
+        m.def_submodule.__doc__
+        == "def_submodule(arg0: types.ModuleType, arg1: str) -> types.ModuleType\n"
+    )
+
+
 def test_duplicate_registration():
     """Registering two things with the same name"""
 
@@ -86,12 +100,7 @@ def test_builtin_key_type():
 
     Previous versions of pybind11 would add a unicode key in python 2.
     """
-    if hasattr(__builtins__, "keys"):
-        keys = __builtins__.keys()
-    else:  # this is to make pypy happy since builtins is different there.
-        keys = __builtins__.__dict__.keys()
-
-    assert {type(k) for k in keys} == {str}
+    assert all(type(k) == str for k in dir(builtins))
 
 
 @pytest.mark.xfail("env.PYPY", reason="PyModule_GetName()")
@@ -99,19 +108,18 @@ def test_def_submodule_failures():
     sm = m.def_submodule(m, b"ScratchSubModuleName")  # Using bytes to show it works.
     assert sm.__name__ == m.__name__ + "." + "ScratchSubModuleName"
     malformed_utf8 = b"\x80"
-    if env.PYPY:
+    if env.PYPY or env.GRAALPY:
         # It is not worth the effort finding a trigger for a failure when running with PyPy.
-        pytest.skip("Sufficiently exercised on platforms other than PyPy.")
+        pytest.skip("Sufficiently exercised on platforms other than PyPy/GraalPy.")
     else:
         # Meant to trigger PyModule_GetName() failure:
         sm_name_orig = sm.__name__
         sm.__name__ = malformed_utf8
         try:
-            with pytest.raises(Exception):
-                # Seen with Python 3.9: SystemError: nameless module
-                # But we do not want to exercise the internals of PyModule_GetName(), which could
-                # change in future versions of Python, but a bad __name__ is very likely to cause
-                # some kind of failure indefinitely.
+            # We want to assert that a bad __name__ causes some kind of failure, although we do not want to exercise
+            # the internals of PyModule_GetName(). Currently all supported Python versions raise SystemError. If that
+            # changes in future Python versions, simply add the new expected exception types here.
+            with pytest.raises(SystemError):
                 m.def_submodule(sm, b"SubSubModuleName")
         finally:
             # Clean up to ensure nothing gets upset by a module with an invalid __name__.

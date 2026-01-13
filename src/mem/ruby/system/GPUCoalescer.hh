@@ -398,13 +398,17 @@ class GPUCoalescer : public RubyPort
                      Cycles forwardRequestTime,
                      Cycles firstResponseTime,
                      bool isRegion,
-                     bool externalHit);
-    void recordMissLatency(CoalescedRequest* crequest,
+                     bool externalHit,
+                     bool mshrHitUnderMiss);
+
+    void recordStats(CoalescedRequest* crequest,
                            MachineType mach,
                            Cycles initialRequestTime,
                            Cycles forwardRequestTime,
                            Cycles firstResponseTime,
-                           bool success, bool isRegion);
+                           bool isRegion,
+                           bool mshrHitUnderMiss);
+
     void completeHitCallback(std::vector<PacketPtr> & mylist);
 
     virtual RubyRequestType getRequestType(PacketPtr pkt);
@@ -467,6 +471,18 @@ class GPUCoalescer : public RubyPort
 
     EventFunctionWrapper deadlockCheckEvent;
     bool assumingRfOCoherence;
+
+    struct GPUCoalescerStats : public statistics::Group
+    {
+        GPUCoalescerStats(statistics::Group *parent);
+        statistics::Scalar m_mshr_ld_hits_under_miss;
+        statistics::Scalar m_mshr_ld_misses;
+
+        statistics::Scalar m_mshr_st_misses;
+
+        statistics::Formula m_mshr_accesses;
+    } stats;
+
 
 // TODO - Need to update the following stats once the VIPER protocol
 //        is re-integrated.

@@ -46,6 +46,7 @@
 #include <vector>
 
 #include "arch/generic/interrupts.hh"
+#include "arch/generic/mmu.hh"
 #include "base/statistics.hh"
 #include "debug/Mwait.hh"
 #include "dev/intpin.hh"
@@ -58,7 +59,6 @@
 #include "sim/probe/pmu.hh"
 #include "sim/probe/probe.hh"
 #include "sim/signal.hh"
-#include "sim/system.hh"
 
 namespace gem5
 {
@@ -67,6 +67,7 @@ class BaseCPU;
 struct BaseCPUParams;
 class CheckerCPU;
 class ThreadContext;
+class System;
 
 struct AddressMonitor
 {
@@ -322,11 +323,7 @@ class BaseCPU : public ClockedObject
     }
 
     /// Convert ContextID to threadID
-    ThreadID
-    contextToThread(ContextID cid)
-    {
-        return static_cast<ThreadID>(cid - threadContexts[0]->contextId());
-    }
+    ThreadID contextToThread(ContextID cid);
 
   public:
     PARAMS(BaseCPU);
@@ -632,6 +629,41 @@ class BaseCPU : public ClockedObject
     }
 
     static int numSimulatedCPUs() { return cpuList.size(); }
+
+    /**
+     * Get access to the global CPU list for switchable CPU synchronization.
+     * @return Reference to the static CPU list
+     */
+    static const std::vector<BaseCPU *> &
+    getCpuList()
+    {
+        return cpuList;
+    }
+
+    /**
+     * Get the number of thread contexts for this CPU.
+     * @return Number of thread contexts
+     */
+    size_t
+    numThreadContexts() const
+    {
+        return threadContexts.size();
+    }
+
+    /**
+     * Get a thread context by index for switchable CPU synchronization.
+     * @param tid Thread ID to retrieve
+     * @return Pointer to thread context or nullptr if index is invalid
+     */
+    ThreadContext *
+    getThreadContext(ThreadID tid) const
+    {
+        if (tid < threadContexts.size()) {
+            return threadContexts[tid];
+        }
+        return nullptr;
+    }
+
     static Counter
     totalNumSimulatedInsts()
     {
@@ -812,6 +844,14 @@ class BaseCPU : public ClockedObject
         statistics::Scalar numInstsNotNOP;
         statistics::Scalar numOpsNotNOP;
 
+        /* Number of instructions committed in user mode */
+        statistics::Scalar numUserInsts;
+        statistics::Scalar numUserOps;
+
+        /* Ratio of instructions committed in user mode */
+        statistics::Formula ratioUserInsts;
+        statistics::Formula ratioUserOps;
+
         /* CPI/IPC for total cycle counts and macro insts */
         statistics::Formula cpi;
         statistics::Formula ipc;
@@ -839,6 +879,13 @@ class BaseCPU : public ClockedObject
 
         /* number of control instructions committed by control inst type */
         statistics::Vector committedControl;
+
+        /* number of function calls committed */
+        statistics::Scalar functionCalls;
+
+        /* Number of function calls and returns committed */
+        statistics::Scalar numCallsReturns;
+
         void updateComCtrlStats(const StaticInstPtr staticInst);
 
     };

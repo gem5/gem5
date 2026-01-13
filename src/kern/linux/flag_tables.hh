@@ -43,6 +43,8 @@
 #include <fcntl.h>
 #include <sys/mman.h>
 
+#include <map>
+
 /*
  * @file flag_tables.hh
  *

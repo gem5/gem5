@@ -62,7 +62,7 @@ LupioBLK::LupioBLK(const Params &params) :
     static_assert(SECTOR_SIZE == SectorSize, "Sector size of disk image must"
                     " match LupIO device\n");
     nbBlocks = image.size();
-    gem5_assert(isPowerOf2(nbBlocks));
+    gem5_assert(isPowerOf2(nbBlocks), "LupioBLK::LupioBLK");
     gem5_assert(ceilLog2(nbBlocks) <= 32, "Max number of blocks is 2^32\n");
     DPRINTF(LupioBLK, "LupioBLK initalized\n");
 }

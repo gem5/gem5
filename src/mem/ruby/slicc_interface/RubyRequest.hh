@@ -47,10 +47,10 @@
 #include "mem/ruby/common/Address.hh"
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/common/WriteMask.hh"
-#include "mem/ruby/protocol/Message.hh"
 #include "mem/ruby/protocol/PrefetchBit.hh"
 #include "mem/ruby/protocol/RubyAccessMode.hh"
 #include "mem/ruby/protocol/RubyRequestType.hh"
+#include "mem/ruby/slicc_interface/Message.hh"
 
 namespace gem5
 {

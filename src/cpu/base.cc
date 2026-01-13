@@ -219,6 +219,10 @@ BaseCPU::BaseCPU(const Params &p, bool is_checker)
         CommitCPUStats* commitStatptr = new CommitCPUStats(this, i);
         commitStatptr->ipc = commitStatptr->numInsts / baseStats.numCycles;
         commitStatptr->cpi = baseStats.numCycles / commitStatptr->numInsts;
+        commitStatptr->ratioUserInsts = commitStatptr->numUserInsts /
+            commitStatptr->numInsts;
+        commitStatptr->ratioUserOps = commitStatptr->numUserOps /
+            commitStatptr->numOps;
         commitStats.emplace_back(commitStatptr);
     }
 }
@@ -231,6 +235,12 @@ BaseCPU::enableFunctionTrace()
 
 BaseCPU::~BaseCPU()
 {
+}
+
+ThreadID
+BaseCPU::contextToThread(ContextID cid)
+{
+    return static_cast<ThreadID>(cid - threadContexts[0]->contextId());
 }
 
 void
@@ -1007,39 +1017,55 @@ ExecuteCPUStats::ExecuteCPUStats(statistics::Group *parent, int thread_id)
         .prereq(numVecRegWrites);
 }
 
-BaseCPU::
-CommitCPUStats::CommitCPUStats(statistics::Group *parent, int thread_id)
+BaseCPU::CommitCPUStats::CommitCPUStats(statistics::Group *parent,
+                                        int thread_id)
     : statistics::Group(parent, csprintf("commitStats%i", thread_id).c_str()),
-    ADD_STAT(numInsts, statistics::units::Count::get(),
-             "Number of instructions committed (thread level)"),
-    ADD_STAT(numOps, statistics::units::Count::get(),
-             "Number of ops (including micro ops) committed (thread level)"),
-    ADD_STAT(numInstsNotNOP, statistics::units::Count::get(),
-             "Number of instructions committed excluding NOPs or prefetches"),
-    ADD_STAT(numOpsNotNOP, statistics::units::Count::get(),
-             "Number of Ops (including micro ops) Simulated"),
-    ADD_STAT(cpi, statistics::units::Rate<
-                statistics::units::Cycle, statistics::units::Count>::get(),
-             "CPI: cycles per instruction (thread level)"),
-    ADD_STAT(ipc, statistics::units::Rate<
-                statistics::units::Count, statistics::units::Cycle>::get(),
-             "IPC: instructions per cycle (thread level)"),
-    ADD_STAT(numMemRefs, statistics::units::Count::get(),
-            "Number of memory references committed"),
-    ADD_STAT(numFpInsts, statistics::units::Count::get(),
-            "Number of float instructions"),
-    ADD_STAT(numIntInsts, statistics::units::Count::get(),
-            "Number of integer instructions"),
-    ADD_STAT(numLoadInsts, statistics::units::Count::get(),
-            "Number of load instructions"),
-    ADD_STAT(numStoreInsts, statistics::units::Count::get(),
-            "Number of store instructions"),
-    ADD_STAT(numVecInsts, statistics::units::Count::get(),
-            "Number of vector instructions"),
-    ADD_STAT(committedInstType, statistics::units::Count::get(),
-            "Class of committed instruction."),
-    ADD_STAT(committedControl, statistics::units::Count::get(),
-             "Class of control type instructions committed")
+      ADD_STAT(numInsts, statistics::units::Count::get(),
+               "Number of instructions committed (thread level)"),
+      ADD_STAT(numOps, statistics::units::Count::get(),
+               "Number of ops (including micro ops) committed (thread level)"),
+      ADD_STAT(
+          numInstsNotNOP, statistics::units::Count::get(),
+          "Number of instructions committed excluding NOPs or prefetches"),
+      ADD_STAT(numOpsNotNOP, statistics::units::Count::get(),
+               "Number of Ops (including micro ops) Simulated"),
+      ADD_STAT(numUserInsts, statistics::units::Count::get(),
+               "Numbrer of instructions committed in user mode"),
+      ADD_STAT(numUserOps, statistics::units::Count::get(),
+               "Number of ops committed in user mode"),
+      ADD_STAT(ratioUserInsts, statistics::units::Ratio::get(),
+               "Ratio of instructions committed in user mode"),
+      ADD_STAT(ratioUserOps, statistics::units::Ratio::get(),
+               "Ratio of ops committed in user mode"),
+      ADD_STAT(cpi,
+               statistics::units::Rate<statistics::units::Cycle,
+                                       statistics::units::Count>::get(),
+               "CPI: cycles per instruction (thread level)"),
+      ADD_STAT(ipc,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Cycle>::get(),
+               "IPC: instructions per cycle (thread level)"),
+      ADD_STAT(numMemRefs, statistics::units::Count::get(),
+               "Number of memory references committed"),
+      ADD_STAT(numFpInsts, statistics::units::Count::get(),
+               "Number of float instructions"),
+      ADD_STAT(numIntInsts, statistics::units::Count::get(),
+               "Number of integer instructions"),
+      ADD_STAT(numLoadInsts, statistics::units::Count::get(),
+               "Number of load instructions"),
+      ADD_STAT(numStoreInsts, statistics::units::Count::get(),
+               "Number of store instructions"),
+      ADD_STAT(numVecInsts, statistics::units::Count::get(),
+               "Number of vector instructions"),
+      ADD_STAT(committedInstType, statistics::units::Count::get(),
+               "Class of committed instruction."),
+      ADD_STAT(committedControl, statistics::units::Count::get(),
+               "Class of control type instructions committed"),
+      ADD_STAT(functionCalls, statistics::units::Count::get(),
+               "Number of function calls committed"),
+      ADD_STAT(numCallsReturns, statistics::units::Count::get(),
+               "Number of function calls and returns committed")
+
 {
     numInsts
         .prereq(numInsts);

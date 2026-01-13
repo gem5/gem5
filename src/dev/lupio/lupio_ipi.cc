@@ -32,6 +32,7 @@
 #include "debug/LupioIPI.hh"
 #include "mem/packet_access.hh"
 #include "params/LupioIPI.hh"
+#include "sim/system.hh"
 
 namespace gem5
 {

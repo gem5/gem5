@@ -1,3 +1,15 @@
+# Copyright (c) 2025 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2022 The Regents of the University of California
 # All rights reserved.
 #
@@ -34,10 +46,12 @@ from m5.objects import (
     BaseMMU,
     PcCountTracker,
     PcCountTrackerManager,
-    Port,
     Process,
 )
-from m5.params import PcCountPair
+from m5.params import (
+    PcCountPair,
+    Port,
+)
 
 from ...isas import ISA
 from ...utils.override import overrides
@@ -119,17 +133,7 @@ class BaseCPUCore(AbstractCore):
 
     @overrides(AbstractCore)
     def connect_walker_ports(self, port1: Port, port2: Port) -> None:
-        if self.get_isa() == ISA.ARM:
-            # Unlike X86 and RISCV MMU, the ARM MMU has two L1 TLB walker ports
-            # named `walker` and `stage2_walker` for both data and instruction.
-            # The gem5 standard library currently supports one TLB walker port
-            # per cache level. Therefore, we are explicitly setting the walker
-            # ports and not setting the stage2_walker ports for ARM systems.
-
-            self.core.mmu.itb_walker.port = port1
-            self.core.mmu.dtb_walker.port = port2
-        else:
-            self.core.mmu.connectWalkerPorts(port1, port2)
+        self.core.mmu.connectWalkerPorts(port1, port2)
 
     @overrides(AbstractCore)
     def set_workload(self, process: Process) -> None:
