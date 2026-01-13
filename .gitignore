@@ -1,3 +1,5 @@
+MODULE.bazel.lock
+bazel-*
 build
 gem5_build
 parser.out

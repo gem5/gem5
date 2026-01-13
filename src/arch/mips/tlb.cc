@@ -59,7 +59,7 @@ using namespace MipsISA;
 TLB::TLB(const Params &p) : BaseTLB(p), size(p.size), nlu(0)
 {
     table = new PTE[size];
-    memset(table, 0, sizeof(PTE[size]));
+    memset(table, 0, sizeof(PTE) * size);
     smallPages = 0;
 }
 
@@ -186,7 +186,7 @@ void
 TLB::flushAll()
 {
     DPRINTF(TLB, "flushAll\n");
-    memset(table, 0, sizeof(PTE[size]));
+    memset(table, 0, sizeof(PTE) * size);
     lookupTable.clear();
     nlu = 0;
 }

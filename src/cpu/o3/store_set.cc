@@ -40,11 +40,11 @@ namespace gem5
 namespace o3
 {
 
-StoreSet::StoreSet(std::string name_, uint64_t clear_period,
+StoreSet::StoreSet(std::string_view name_, uint64_t clear_period,
                    size_t _SSIT_entries, int _SSIT_assoc,
                    replacement_policy::Base *_replPolicy,
                    BaseIndexingPolicy *_indexingPolicy, int _LFST_size)
-  : Named(std::string(name_)),
+  : Named(name_),
     SSIT("SSIT", _SSIT_entries, _SSIT_assoc,
 	 _replPolicy, _indexingPolicy,
 	 SSITEntry(genTagExtractor(_indexingPolicy))),

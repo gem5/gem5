@@ -54,14 +54,16 @@
 #include "dev/arm/base_gic.hh"
 #include "dev/io_device.hh"
 #include "dev/platform.hh"
-#include "params/GicV2.hh"
 
 namespace gem5
 {
 
+struct GicV2Params;
+
 class GicV2Registers
 {
   public:
+    virtual ~GicV2Registers() = default;
     virtual uint32_t readDistributor(ContextID ctx, Addr daddr) = 0;
     virtual uint32_t readCpu(ContextID ctx, Addr daddr) = 0;
 

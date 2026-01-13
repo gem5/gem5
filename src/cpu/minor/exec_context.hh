@@ -48,13 +48,13 @@
 #ifndef __CPU_MINOR_EXEC_CONTEXT_HH__
 #define __CPU_MINOR_EXEC_CONTEXT_HH__
 
+#include "cpu/base.hh"
 #include "cpu/exec_context.hh"
 #include "cpu/minor/execute.hh"
 #include "cpu/minor/pipeline.hh"
-#include "cpu/base.hh"
 #include "cpu/simple_thread.hh"
-#include "mem/request.hh"
 #include "debug/MinorExecute.hh"
+#include "mem/request.hh"
 
 namespace gem5
 {
@@ -147,35 +147,134 @@ class ExecContext : public gem5::ExecContext
     getRegOperand(const StaticInst *si, int idx) override
     {
         const RegId &reg = si->srcRegIdx(idx);
+        int tid = thread.threadId();
         if (reg.is(InvalidRegClass))
             return 0;
+        switch (reg.classValue()) {
+            case IntRegClass:
+                cpu.executeStats[tid]->numIntRegReads++;
+                break;
+            case FloatRegClass:
+                cpu.executeStats[tid]->numFpRegReads++;
+                break;
+            case CCRegClass:
+                cpu.executeStats[tid]->numCCRegReads++;
+                break;
+            case VecRegClass:
+            case VecElemClass:
+                cpu.executeStats[tid]->numVecRegReads++;
+                break;
+            case VecPredRegClass:
+                cpu.executeStats[tid]->numVecPredRegReads++;
+                break;
+            default:
+                break;
+        }
         return thread.getReg(reg);
     }
 
     void
     getRegOperand(const StaticInst *si, int idx, void *val) override
     {
+        const RegId &reg = si->srcRegIdx(idx);
+        int tid = thread.threadId();
+        switch (reg.classValue()) {
+            case IntRegClass:
+                cpu.executeStats[tid]->numIntRegReads++;
+                break;
+            case FloatRegClass:
+                cpu.executeStats[tid]->numFpRegReads++;
+                break;
+            case CCRegClass:
+                cpu.executeStats[tid]->numCCRegReads++;
+                break;
+            case VecRegClass:
+            case VecElemClass:
+                cpu.executeStats[tid]->numVecRegReads++;
+                break;
+            case VecPredRegClass:
+                cpu.executeStats[tid]->numVecPredRegReads++;
+                break;
+            default:
+                break;
+        }
+
         thread.getReg(si->srcRegIdx(idx), val);
     }
 
     void *
     getWritableRegOperand(const StaticInst *si, int idx) override
     {
-        return thread.getWritableReg(si->destRegIdx(idx));
+        const RegId &reg = si->destRegIdx(idx);
+        int tid = thread.threadId();
+        switch (reg.classValue()) {
+            case VecRegClass:
+                cpu.executeStats[tid]->numVecRegWrites++;
+                break;
+            case VecPredRegClass:
+                cpu.executeStats[tid]->numVecPredRegWrites++;
+                break;
+            default:
+                break;
+        }
+        return thread.getWritableReg(reg);
     }
 
     void
     setRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
         const RegId &reg = si->destRegIdx(idx);
+        int tid = thread.threadId();
         if (reg.is(InvalidRegClass))
             return;
+        switch (reg.classValue()) {
+            case IntRegClass:
+                cpu.executeStats[tid]->numIntRegWrites++;
+                break;
+            case FloatRegClass:
+                cpu.executeStats[tid]->numFpRegWrites++;
+                break;
+            case CCRegClass:
+                cpu.executeStats[tid]->numCCRegWrites++;
+                break;
+            case VecRegClass:
+            case VecElemClass:
+                cpu.executeStats[tid]->numVecRegWrites++;
+                break;
+            case VecPredRegClass:
+                cpu.executeStats[tid]->numVecPredRegWrites++;
+                break;
+            default:
+                break;
+        }
         thread.setReg(si->destRegIdx(idx), val);
     }
 
     void
     setRegOperand(const StaticInst *si, int idx, const void *val) override
     {
+        const RegId &reg = si->destRegIdx(idx);
+        int tid = thread.threadId();
+        switch (reg.classValue()) {
+            case IntRegClass:
+                cpu.executeStats[tid]->numIntRegWrites++;
+                break;
+            case FloatRegClass:
+                cpu.executeStats[tid]->numFpRegWrites++;
+                break;
+            case CCRegClass:
+                cpu.executeStats[tid]->numCCRegWrites++;
+                break;
+            case VecRegClass:
+            case VecElemClass:
+                cpu.executeStats[tid]->numVecRegWrites++;
+                break;
+            case VecPredRegClass:
+                cpu.executeStats[tid]->numVecPredRegWrites++;
+                break;
+            default:
+                break;
+        }
         thread.setReg(si->destRegIdx(idx), val);
     }
 

@@ -17,21 +17,18 @@
                 "ms-python.isort",
                 "ms-python.python",
                 "ms-python.vscode-pylance",
-                "ms-vscode.cpptools",
                 "ms-vscode.cpptools-extension-pack",
-                "ms-vscode.cpptools-themes",
                 "ms-vscode.makefile-tools",
                 "ms-vscode-remote.remote-containers",
-                "Tsinghua-Hexin-Joint-Institute.gem5-slicc",
-                "VisualStudioExptTeam.vscodeintellicode"
+                "Tsinghua-Hexin-Joint-Institute.gem5-slicc"
             ]
         }
     },
     "features": {
         "ghcr.io/devcontainers/features/docker-in-docker:2": {},
         "ghcr.io/devcontainers/features/github-cli:1": {},
-        "ghcr.io/devcontainers-contrib/features/actionlint:1": {},
-        "ghcr.io/devcontainers-contrib/features/vscode-cli:1": {}
+        "ghcr.io/devcontainers-extra/features/actionlint:1": {},
+        "ghcr.io/devcontainers-extra/features/vscode-cli:1": {}
     },
     "onCreateCommand": "./.devcontainer/on-create.sh"
 }

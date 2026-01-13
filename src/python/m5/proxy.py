@@ -225,7 +225,7 @@ class AttrProxy(BaseProxy):
             elif isinstance(m, int):
                 val = val[m]
             else:
-                assert "Item must be string or integer"
+                assert False, "Item must be string or integer"
             while isproxy(val):
                 val = val.unproxy(obj)
         return val, True
@@ -238,7 +238,7 @@ class AttrProxy(BaseProxy):
             elif isinstance(m, int):
                 p += "[%d]" % m
             else:
-                assert "Item must be string or integer"
+                assert False, "Item must be string or integer"
         return p
 
 
@@ -282,7 +282,7 @@ class ProxyFactory:
             return AnyProxy(self.search_self, self.search_up)
         elif attr == "all":
             if self.search_up:
-                assert "Parant.all is not supported"
+                assert False, "Parent.all is not supported"
             return AllProxy(self.search_self, self.search_up)
         else:
             return AttrProxy(self.search_self, self.search_up, attr)

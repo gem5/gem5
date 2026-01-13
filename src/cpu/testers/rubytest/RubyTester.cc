@@ -120,10 +120,6 @@ RubyTester::init()
     assert(writePorts.size() > 0 && readPorts.size() > 0);
 
     m_last_progress_vector.resize(m_num_cpus);
-    for (int i = 0; i < m_last_progress_vector.size(); i++) {
-        m_last_progress_vector[i] = Cycles(0);
-    }
-
     m_num_writers = writePorts.size();
     m_num_readers = readPorts.size();
     assert(m_num_readers == m_num_cpus);
@@ -225,9 +221,6 @@ RubyTester::getWritableCpuPort(int idx)
 void
 RubyTester::hitCallback(ruby::NodeID proc, ruby::SubBlock* data)
 {
-    // Mark that we made progress
-    m_last_progress_vector[proc] = curCycle();
-
     DPRINTF(RubyTest, "completed request for proc: %d", proc);
     DPRINTFR(RubyTest, " addr: 0x%x, size: %d, data: ",
             data->getAddress(), data->getSize());
@@ -250,7 +243,7 @@ RubyTester::wakeup()
         // Try to perform an action or check
         Check* check_ptr = m_checkTable_ptr->getRandomCheck();
         assert(check_ptr != NULL);
-        check_ptr->initiate();
+        check_ptr->initiate(curCycle());
 
         checkForDeadlock();
 
@@ -266,14 +259,41 @@ RubyTester::checkForDeadlock()
     int size = m_last_progress_vector.size();
     Cycles current_time = curCycle();
     for (int processor = 0; processor < size; processor++) {
-        if ((current_time - m_last_progress_vector[processor]) >
-                m_deadlock_threshold) {
-            panic("Deadlock detected: current_time: %d last_progress_time: %d "
-                  "difference:  %d processor: %d\n",
-                  current_time, m_last_progress_vector[processor],
-                  current_time - m_last_progress_vector[processor], processor);
+        if (m_last_progress_vector[processor].empty()) {
+            DPRINTF(RubyTest, "Processor %d is idle now, skip\n", processor);
+            continue;
+        }
+        for (const auto& [addr, last_cycle] :
+            m_last_progress_vector[processor]) {
+            if ((current_time - last_cycle) > m_deadlock_threshold) {
+                panic("Possible deadlock detected:\n"
+                      "  Processor: %d\n"
+                      "  Addr: %#x\n"
+                      "  Current Time: %d\n"
+                      "  Last Progress Time: %d\n"
+                      "  Difference: %d cycles\n",
+                      processor, addr, current_time,
+                      last_cycle, current_time - last_cycle);
+            }
         }
     }
+}
+
+void
+RubyTester::updateProgress(int index, Addr address, Cycles current_time){
+    m_last_progress_vector[index].emplace(address, current_time);
+    DPRINTF(RubyTest, "Update progress: index: %d \
+        address: %#x current_time: %d\n",
+        index, address, current_time);
+}
+
+void
+RubyTester::eraseProgress(int index, Addr address){
+    auto i = m_last_progress_vector[index].find(address);
+    assert(i != m_last_progress_vector[index].end());
+    m_last_progress_vector[index].erase(i);
+    DPRINTF(RubyTest, "Erase progress: index: %d address: %#x\n",
+                index, address);
 }
 
 void

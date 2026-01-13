@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2019 ARM Limited
+// Copyright (c) 2017-2019, 2025 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -160,6 +160,63 @@ def template SveContigLoadExecute {{
         [[maybe_unused]] bool aarch64 = true;
         unsigned eCount =
             ArmStaticInst::getCurSveVecLen<RegElemType>(xc->tcBase());
+        unsigned memAccessFlags = addrAlignmentFlags(
+            sizeof(MemElemType), this->memAccessFlags);
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        ArmISA::VecRegContainer memData;
+        auto memDataView = memData.as<MemElemType>();
+
+        %(rden_code)s;
+
+        bool predAll = true;
+        for (int i = 0; i < eCount; i ++) {
+            if (!GpOp[i]) {
+                predAll = false;
+                break;
+            }
+        }
+        if (predAll) {
+            fault = readMemAtomic(xc, EA, memData.as<uint8_t>(),
+                memAccessSize, memAccessFlags, rdEn);
+        } else {
+            for (int i = 0; i < eCount; i ++) {
+                if (GpOp[i] && fault == NoFault) {
+                    fault = readMemAtomic(xc, EA + sizeof(MemElemType) * i,
+                        memData.as<uint8_t>() + sizeof(MemElemType) * i,
+                        sizeof(MemElemType), memAccessFlags,
+                        std::vector<bool>(sizeof(MemElemType), true));
+                }
+            }
+        }
+
+        %(fault_code)s;
+
+        if (fault == NoFault) {
+            %(memacc_code)s;
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template SveContigLoadUnpredExecute {{
+    %(tpl_header)s
+    Fault
+    %(class_name)s%(tpl_args)s::execute(ExecContext *xc,
+            trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+        [[maybe_unused]] bool aarch64 = true;
+        unsigned eCount =
+            ArmStaticInst::getCurSveVecLen<RegElemType>(xc->tcBase());
+        unsigned memAccessFlags = addrAlignmentFlags(
+            sizeof(MemElemType), this->memAccessFlags);
 
         %(op_decl)s;
         %(op_rd)s;
@@ -171,7 +228,7 @@ def template SveContigLoadExecute {{
         %(rden_code)s;
 
         fault = readMemAtomic(xc, EA, memData.as<uint8_t>(),
-            memAccessSize, this->memAccessFlags, rdEn);
+            memAccessSize, memAccessFlags, rdEn);
 
         %(fault_code)s;
 
@@ -195,6 +252,8 @@ def template SveContigLoadInitiateAcc {{
         [[maybe_unused]] bool aarch64 = true;
         unsigned eCount =
             ArmStaticInst::getCurSveVecLen<RegElemType>(xc->tcBase());
+        unsigned memAccessFlags = addrAlignmentFlags(
+            sizeof(MemElemType), this->memAccessFlags);
 
         %(op_src_decl)s;
         %(op_rd)s;
@@ -202,8 +261,7 @@ def template SveContigLoadInitiateAcc {{
 
         %(rden_code)s;
 
-        fault = initiateMemRead(xc, EA, memAccessSize,
-            this->memAccessFlags, rdEn);
+        fault = initiateMemRead(xc, EA, memAccessSize, memAccessFlags, rdEn);
 
         %(fault_code)s;
 
@@ -250,6 +308,67 @@ def template SveContigStoreExecute {{
         [[maybe_unused]] bool aarch64 = true;
         unsigned eCount =
             ArmStaticInst::getCurSveVecLen<RegElemType>(xc->tcBase());
+        unsigned memAccessFlags = addrAlignmentFlags(
+            sizeof(MemElemType), this->memAccessFlags);
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        ArmISA::VecRegContainer memData;
+        auto memDataView = memData.as<MemElemType>();
+
+        %(wren_code)s;
+
+        if (fault == NoFault) {
+            %(memacc_code)s;
+        }
+
+        bool predAll = true;
+        for (int i = 0; i < eCount; i ++) {
+            if (!GpOp[i]) {
+                predAll = false;
+                break;
+            }
+        }
+        if (predAll) {
+            if (fault == NoFault) {
+                fault = writeMemAtomic(xc, memData.as<uint8_t>(),
+                    EA, memAccessSize, memAccessFlags, nullptr, wrEn);
+            }
+        } else {
+            for (int i = 0; i < eCount; i ++) {
+                if (GpOp[i] && fault == NoFault) {
+                    fault = writeMemAtomic(xc,
+                        memData.as<uint8_t>() + sizeof(MemElemType) * i,
+                        EA + sizeof(MemElemType) * i, sizeof(MemElemType),
+                        memAccessFlags, nullptr,
+                        std::vector<bool>(sizeof(MemElemType), true));
+                }
+            }
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template SveContigStoreUnpredExecute {{
+    %(tpl_header)s
+    Fault
+    %(class_name)s%(tpl_args)s::execute(ExecContext *xc,
+            trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+        [[maybe_unused]] bool aarch64 = true;
+        unsigned eCount =
+            ArmStaticInst::getCurSveVecLen<RegElemType>(xc->tcBase());
+        unsigned memAccessFlags = addrAlignmentFlags(
+            sizeof(MemElemType), this->memAccessFlags);
 
         %(op_decl)s;
         %(op_rd)s;
@@ -266,7 +385,7 @@ def template SveContigStoreExecute {{
 
         if (fault == NoFault) {
             fault = writeMemAtomic(xc, memData.as<uint8_t>(),
-                EA, memAccessSize, this->memAccessFlags, nullptr, wrEn);
+                EA, memAccessSize, memAccessFlags, nullptr, wrEn);
         }
 
         if (fault == NoFault) {
@@ -288,6 +407,8 @@ def template SveContigStoreInitiateAcc {{
         [[maybe_unused]] bool aarch64 = true;
         unsigned eCount =
             ArmStaticInst::getCurSveVecLen<RegElemType>(xc->tcBase());
+        unsigned memAccessFlags = addrAlignmentFlags(
+            sizeof(MemElemType), this->memAccessFlags);
 
         %(op_decl)s;
         %(op_rd)s;
@@ -304,7 +425,7 @@ def template SveContigStoreInitiateAcc {{
 
         if (fault == NoFault) {
             fault = writeMemTiming(xc, memData.as<uint8_t>(),
-                EA, memAccessSize, this->memAccessFlags, nullptr, wrEn);
+                EA, memAccessSize, memAccessFlags, nullptr, wrEn);
         }
 
         return fault;
@@ -332,6 +453,8 @@ def template SveLoadAndReplExecute {{
         [[maybe_unused]] bool aarch64 = true;
         unsigned eCount =
             ArmStaticInst::getCurSveVecLen<RegElemType>(xc->tcBase());
+        unsigned memAccessFlags = addrAlignmentFlags(
+            sizeof(MemElemType), this->memAccessFlags);
 
         %(op_decl)s;
         %(op_rd)s;
@@ -339,13 +462,22 @@ def template SveLoadAndReplExecute {{
 
         MemElemType memData = 0;
 
-        if (fault == NoFault) {
-            fault = readMemAtomicLE(xc, traceData, EA, memData,
-                this->memAccessFlags);
-            %(memacc_code)s;
+        bool predClear = true;
+        for (int i = 0; i < eCount; i ++) {
+            if (GpOp[i]) {
+                predClear = false;
+                break;
+            }
+        }
+        if (!predClear) {
+            if (fault == NoFault) {
+                fault = readMemAtomicLE(xc, traceData, EA, memData,
+                    memAccessFlags);
+            }
         }
 
         if (fault == NoFault) {
+            %(memacc_code)s;
             %(op_wb)s;
         }
 
@@ -362,6 +494,8 @@ def template SveLoadAndReplInitiateAcc {{
         Addr EA;
         Fault fault = NoFault;
         [[maybe_unused]] bool aarch64 = true;
+        unsigned memAccessFlags = addrAlignmentFlags(
+            sizeof(MemElemType), this->memAccessFlags);
 
         %(op_src_decl)s;
         %(op_rd)s;
@@ -372,7 +506,7 @@ def template SveLoadAndReplInitiateAcc {{
 
         if (fault == NoFault) {
             fault = initiateMemRead(xc, traceData, EA, memData,
-                this->memAccessFlags);
+                memAccessFlags);
         }
 
         return fault;
@@ -577,6 +711,92 @@ def template SveIndexedMemSVMicroopDeclare {{
     };
 }};
 
+def template SveIndexedMemVSMicroopDeclare {{
+    %(tpl_header)s
+    class %(class_name)s : public %(base_class)s
+    {
+      private:
+        %(reg_idx_arr_decl)s;
+
+      protected:
+        typedef RegElemType TPElem;
+
+        RegIndex dest;
+        RegIndex gp;
+        RegIndex base;
+        RegIndex offset;
+
+        bool offsetIs32;
+        bool offsetIsSigned;
+        bool offsetIsScaled;
+
+        int elemIndex;
+        int numElems;
+        bool firstFault;
+
+        unsigned memAccessFlags;
+
+      public:
+        %(class_name)s(const char* mnem, ExtMachInst machInst,
+                OpClass __opClass, RegIndex _dest, RegIndex _gp,
+                RegIndex _base, RegIndex _offset, bool _offsetIs32,
+                int _elemIndex, int _numElems) :
+            %(base_class)s(mnem, machInst, %(op_class)s),
+            dest(_dest), gp(_gp), base(_base), offset(_offset),
+            offsetIs32(_offsetIs32), offsetIsSigned(false),
+            offsetIsScaled(false), elemIndex(_elemIndex),
+            numElems(_numElems), firstFault(false),
+            memAccessFlags(ArmISA::MMU::AllowUnaligned)
+        {
+            %(set_reg_idx_arr)s;
+            %(constructor)s;
+            if (_opClass == MemReadOp && elemIndex == 0) {
+                // The first micro-op is responsible for pinning the
+                // destination and the fault status registers
+                assert(_numDestRegs == 2);
+                for (int i = 0; i < _numDestRegs; i++) {
+                    auto dr = destRegIdx(i);
+                    dr.setNumPinnedWrites(numElems - 1);
+                    setDestRegIdx(i, dr);
+                }
+            }
+        }
+
+        Fault execute(ExecContext *, trace::InstRecord *) const override;
+        Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
+        Fault completeAcc(PacketPtr, ExecContext *,
+                          trace::InstRecord *) const override;
+
+        void
+        annotateFault(ArmISA::ArmFault *fault) override
+        {
+            %(fa_code)s
+        }
+
+        std::string
+        generateDisassembly(Addr pc,
+                            const loader::SymbolTable *symtab) const override
+        {
+            // TODO: add suffix to transfer and base registers
+            std::stringstream ss;
+            printMnemonic(ss, "", false);
+            ccprintf(ss, "{");
+            printVecReg(ss, dest, true);
+            ccprintf(ss, "}, ");
+            printVecPredReg(ss, gp);
+            if (_opClass == MemReadOp) {
+                ccprintf(ss, "/z");
+            }
+            ccprintf(ss, ", [");
+            printVecReg(ss, base, true);
+            ccprintf(ss, ", ");
+            printIntReg(ss, offset);
+            ccprintf(ss, "]");
+            return ss.str();
+        }
+    };
+}};
+
 def template SveGatherLoadMicroopExecute {{
     %(tpl_header)s
     Fault
@@ -586,6 +806,8 @@ def template SveGatherLoadMicroopExecute {{
         Addr EA;
         Fault fault = NoFault;
         [[maybe_unused]] bool aarch64 = true;
+        unsigned memAccessFlags = addrAlignmentFlags(
+            sizeof(MemElemType), this->memAccessFlags);
 
         %(op_decl)s;
         %(op_rd)s;
@@ -596,7 +818,7 @@ def template SveGatherLoadMicroopExecute {{
         int index = elemIndex;
         if (%(pred_check_code)s) {
             fault = readMemAtomicLE(xc, traceData, EA, memData,
-                this->memAccessFlags);
+                memAccessFlags);
         }
 
         if (fault == NoFault) {
@@ -635,6 +857,8 @@ def template SveGatherLoadMicroopInitiateAcc {{
         Addr EA;
         Fault fault = NoFault;
         [[maybe_unused]] bool aarch64 = true;
+        unsigned memAccessFlags = addrAlignmentFlags(
+            sizeof(MemElemType), this->memAccessFlags);
 
         %(op_src_decl)s;
         %(op_rd)s;
@@ -645,7 +869,7 @@ def template SveGatherLoadMicroopInitiateAcc {{
         int index = elemIndex;
         if (%(pred_check_code)s) {
             fault = initiateMemRead(xc, traceData, EA, memData,
-                    this->memAccessFlags);
+                    memAccessFlags);
             if (fault != NoFault) {
                 %(fault_status_set_code)s;
                 if (firstFault) {
@@ -694,6 +918,134 @@ def template SveGatherLoadMicroopCompleteAcc {{
     }
 }};
 
+def template SveGatherLoadQuadMicroopExecute {{
+    %(tpl_header)s
+    Fault
+    %(class_name)s%(tpl_args)s::execute(ExecContext *xc,
+            trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+        [[maybe_unused]] bool aarch64 = true;
+        unsigned memAccessFlags = addrAlignmentFlags(
+            sizeof(MemElemType), this->memAccessFlags);
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        union MemData {
+            MemElemType memData = 0;
+            uint8_t memDataArray[sizeof(MemElemType)];
+        } memData;
+
+        int index = elemIndex;
+        if (%(pred_check_code)s) {
+            fault = readMemAtomic(xc, EA, memData.memDataArray,
+                sizeof(MemElemType), memAccessFlags,
+                std::vector<bool>(sizeof(MemElemType), true));
+        }
+
+        if (fault == NoFault) {
+            %(fault_status_reset_code)s;
+            %(memacc_code)s;
+            if (traceData) {
+                traceData->setData(memData.memDataArray[0]);
+            }
+        } else {
+            %(fault_status_set_code)s;
+            if (firstFault) {
+               for (index = 0;
+                    index < numElems && !(%(pred_check_code)s);
+                    index++);
+
+               if (index < elemIndex) {
+                  fault = NoFault;
+                  memData.memData = 0;
+                  %(memacc_code)s;
+                  if (traceData) {
+                      traceData->setData(memData.memDataArray[0]);
+                  }
+               }
+            }
+        }
+        return fault;
+    }
+}};
+
+def template SveGatherLoadQuadMicroopInitiateAcc {{
+    %(tpl_header)s
+    Fault
+    %(class_name)s%(tpl_args)s::initiateAcc(ExecContext *xc,
+            trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+        [[maybe_unused]] bool aarch64 = true;
+        unsigned memAccessFlags = addrAlignmentFlags(
+            sizeof(MemElemType), this->memAccessFlags);
+
+        %(op_src_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        int index = elemIndex;
+        if (%(pred_check_code)s) {
+            fault = initiateMemRead(xc, EA, sizeof(MemElemType),
+                    memAccessFlags,
+                    std::vector<bool>(sizeof(MemElemType), true));
+            if (fault != NoFault) {
+                %(fault_status_set_code)s;
+                if (firstFault) {
+                    for (index = 0;
+                         index < numElems && !(%(pred_check_code)s);
+                         index++) {}
+                    if (index < elemIndex) {
+                        fault = NoFault;
+                        xc->setMemAccPredicate(false);
+                    }
+                }
+            } else {
+                %(fault_status_reset_code)s;
+            }
+        } else {
+            xc->setMemAccPredicate(false);
+            %(fault_status_reset_code)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template SveGatherLoadQuadMicroopCompleteAcc {{
+    %(tpl_header)s
+    Fault
+    %(class_name)s%(tpl_args)s::completeAcc(PacketPtr pkt,
+            ExecContext *xc, trace::InstRecord *traceData) const
+    {
+        [[maybe_unused]] bool aarch64 = true;
+
+        %(op_decl)s;
+        %(op_rd)s;
+
+        union MemData {
+            MemElemType memData = 0;
+            uint8_t memDataArray[sizeof(MemElemType)];
+        } memData;
+        if (xc->readMemAccPredicate()) {
+            memcpy(memData.memDataArray, pkt->getPtr<uint8_t>(),
+                   pkt->getSize());
+        }
+
+        %(memacc_code)s;
+        if (traceData) {
+            traceData->setData(memData.memDataArray[0]);
+        }
+
+        return NoFault;
+    }
+}};
+
 def template SveScatterStoreMicroopExecute {{
     %(tpl_header)s
     Fault
@@ -703,6 +1055,8 @@ def template SveScatterStoreMicroopExecute {{
         Addr EA;
         Fault fault = NoFault;
         [[maybe_unused]] bool aarch64 = true;
+        unsigned memAccessFlags = addrAlignmentFlags(
+            sizeof(MemElemType), this->memAccessFlags);
 
         %(op_decl)s;
         %(op_rd)s;
@@ -714,7 +1068,7 @@ def template SveScatterStoreMicroopExecute {{
         int index = elemIndex;
         if (%(pred_check_code)s) {
             fault = writeMemAtomicLE(xc, traceData, memData, EA,
-                                     this->memAccessFlags, nullptr);
+                                     memAccessFlags, nullptr);
         }
 
         if (fault == NoFault) {
@@ -734,6 +1088,8 @@ def template SveScatterStoreMicroopInitiateAcc {{
         Addr EA;
         Fault fault = NoFault;
         [[maybe_unused]] bool aarch64 = true;
+        unsigned memAccessFlags = addrAlignmentFlags(
+            sizeof(MemElemType), this->memAccessFlags);
 
         %(op_decl)s;
         %(op_rd)s;
@@ -745,7 +1101,7 @@ def template SveScatterStoreMicroopInitiateAcc {{
         int index = elemIndex;
         if (%(pred_check_code)s) {
             fault = writeMemTimingLE(xc, traceData, memData, EA,
-                                   this->memAccessFlags, nullptr);
+                                     memAccessFlags, nullptr);
         } else {
             xc->setPredicate(false);
         }
@@ -755,6 +1111,88 @@ def template SveScatterStoreMicroopInitiateAcc {{
 }};
 
 def template SveScatterStoreMicroopCompleteAcc {{
+    %(tpl_header)s
+    Fault
+    %(class_name)s%(tpl_args)s::completeAcc(PacketPtr pkt,
+            ExecContext *xc, trace::InstRecord *traceData) const
+    {
+        return NoFault;
+    }
+}};
+
+def template SveScatterStoreQuadMicroopExecute {{
+    %(tpl_header)s
+    Fault
+    %(class_name)s%(tpl_args)s::execute(ExecContext *xc,
+            trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+        [[maybe_unused]] bool aarch64 = true;
+        unsigned memAccessFlags = addrAlignmentFlags(
+            sizeof(MemElemType), this->memAccessFlags);
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        union MemData {
+            MemElemType memData = 0;
+            uint8_t memDataArray[sizeof(MemElemType)];
+        } memData;
+        %(memacc_code)s;
+
+        int index = elemIndex;
+        if (%(pred_check_code)s) {
+            fault = writeMemAtomic(xc, memData.memDataArray, EA,
+                    sizeof(MemElemType), memAccessFlags, nullptr,
+                    std::vector<bool>(sizeof(MemElemType), true));
+        }
+
+        if (fault == NoFault) {
+            %(op_wb)s;
+        }
+
+        return fault;
+    }
+}};
+
+def template SveScatterStoreQuadMicroopInitiateAcc {{
+    %(tpl_header)s
+    Fault
+    %(class_name)s%(tpl_args)s::initiateAcc(ExecContext *xc,
+            trace::InstRecord *traceData) const
+    {
+        Addr EA;
+        Fault fault = NoFault;
+        [[maybe_unused]] bool aarch64 = true;
+        unsigned memAccessFlags = addrAlignmentFlags(
+            sizeof(MemElemType), this->memAccessFlags);
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        union MemData {
+            MemElemType memData = 0;
+            uint8_t memDataArray[sizeof(MemElemType)];
+        } memData;
+        %(memacc_code)s;
+
+        int index = elemIndex;
+        if (%(pred_check_code)s) {
+            fault = writeMemTiming(xc, memData.memDataArray,
+                EA, sizeof(MemElemType), memAccessFlags, nullptr,
+                std::vector<bool>(sizeof(MemElemType), true));
+        } else {
+            xc->setPredicate(false);
+        }
+
+        return fault;
+    }
+}};
+
+def template SveScatterStoreQuadMicroopCompleteAcc {{
     %(tpl_header)s
     Fault
     %(class_name)s%(tpl_args)s::completeAcc(PacketPtr pkt,
@@ -827,21 +1265,21 @@ def template SveFirstFaultWritebackMicroopExecute {{
     }
 }};
 
-def template SveGatherLoadCpySrcVecMicroopDeclare {{
-    class SveGatherLoadCpySrcVecMicroop : public MicroOp
+def template SveGatherLoadCpyDstVecMicroopDeclare {{
+    class SveGatherLoadCpyDstVecMicroop : public MicroOp
     {
       private:
         %(reg_idx_arr_decl)s;
 
       protected:
-        RegIndex op1;
+        RegIndex dest;
 
         StaticInst *macroOp;
 
       public:
-        SveGatherLoadCpySrcVecMicroop(const char* mnem, ExtMachInst machInst,
-                RegIndex _op1, StaticInst *_macroOp) :
-            MicroOp(mnem, machInst, SimdAluOp), op1(_op1), macroOp(_macroOp)
+        SveGatherLoadCpyDstVecMicroop(const char* mnem, ExtMachInst machInst,
+                RegIndex _dest, StaticInst *_macroOp) :
+            MicroOp(mnem, machInst, SimdAluOp), dest(_dest), macroOp(_macroOp)
         {
             %(set_reg_idx_arr)s;
             %(constructor)s;
@@ -855,15 +1293,15 @@ def template SveGatherLoadCpySrcVecMicroopDeclare {{
         {
             std::stringstream ss;
             ccprintf(ss, "%s", macroOp->disassemble(pc, symtab));
-            ccprintf(ss, " (uop src vec cpy)");
+            ccprintf(ss, " (uop dst vec cpy)");
             return ss.str();
         }
     };
 }};
 
-def template SveGatherLoadCpySrcVecMicroopExecute {{
+def template SveGatherLoadCpyDstVecMicroopExecute {{
     Fault
-    SveGatherLoadCpySrcVecMicroop::execute(ExecContext *xc,
+    SveGatherLoadCpyDstVecMicroop::execute(ExecContext *xc,
             trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
@@ -992,6 +1430,8 @@ def template SveStructLoadExecute {{
         [[maybe_unused]] bool aarch64 = true;
         unsigned eCount =
             ArmStaticInst::getCurSveVecLen<Element>(xc->tcBase());
+        unsigned memAccessFlags = addrAlignmentFlags(
+            sizeof(Element), this->memAccessFlags);
 
         %(op_decl)s;
         %(op_rd)s;
@@ -1000,14 +1440,37 @@ def template SveStructLoadExecute {{
         ArmISA::VecRegContainer memData;
         auto memDataView = memData.as<Element>();
 
-        if (fault == NoFault) {
-            fault = readMemAtomic(xc, EA, memData.as<uint8_t>(),
-                memAccessSize, this->memAccessFlags,
-                std::vector<bool>(memAccessSize, true));
-            %(memacc_code)s;
+        // aux predicate register.
+        ArmISA::VecPredRegContainer auxGpReg;
+        auto auxGp = auxGpReg.as<Element>();
+        %(auxgp_code)s;
+
+        bool predAll = true;
+        for (int i = 0; i < eCount; i ++) {
+            if (!auxGp[i]) {
+                predAll = false;
+                break;
+            }
+        }
+        if (predAll) {
+            if (fault == NoFault) {
+                fault = readMemAtomic(xc, EA, memData.as<uint8_t>(),
+                    memAccessSize, memAccessFlags,
+                    std::vector<bool>(memAccessSize, true));
+            }
+        } else {
+            for (int i = 0; i < eCount; i ++) {
+                if (auxGp[i] && fault == NoFault) {
+                    fault = readMemAtomic(xc, EA + sizeof(Element) * i,
+                        memData.as<uint8_t>() + sizeof(Element) * i,
+                        sizeof(Element), memAccessFlags,
+                        std::vector<bool>(sizeof(Element), true));
+                }
+            }
         }
 
         if (fault == NoFault) {
+            %(memacc_code)s;
             %(op_wb)s;
         }
 
@@ -1026,6 +1489,8 @@ def template SveStructLoadInitiateAcc {{
         [[maybe_unused]] bool aarch64 = true;
         unsigned eCount =
             ArmStaticInst::getCurSveVecLen<Element>(xc->tcBase());
+        unsigned memAccessFlags = addrAlignmentFlags(
+            sizeof(Element), this->memAccessFlags);
 
         %(op_src_decl)s;
         %(op_rd)s;
@@ -1034,7 +1499,7 @@ def template SveStructLoadInitiateAcc {{
 
         if (fault == NoFault) {
             fault = initiateMemRead(xc, EA,
-                memAccessSize, this->memAccessFlags,
+                memAccessSize, memAccessFlags,
                 std::vector<bool>(memAccessSize, true));
         }
 
@@ -1062,6 +1527,11 @@ def template SveStructLoadCompleteAcc {{
         memcpy(memData.as<uint8_t>(), pkt->getPtr<uint8_t>(),
                 pkt->getSize());
 
+        // aux predicate register.
+        ArmISA::VecPredRegContainer auxGpReg;
+        auto auxGp = auxGpReg.as<Element>();
+        %(auxgp_code)s;
+
         if (fault == NoFault) {
             %(memacc_code)s;
         }
@@ -1085,6 +1555,8 @@ def template SveStructStoreExecute {{
         [[maybe_unused]] bool aarch64 = true;
         unsigned eCount =
             ArmStaticInst::getCurSveVecLen<Element>(xc->tcBase());
+        unsigned memAccessFlags = addrAlignmentFlags(
+            sizeof(Element), this->memAccessFlags);
 
         %(op_decl)s;
         %(op_rd)s;
@@ -1095,13 +1567,37 @@ def template SveStructStoreExecute {{
 
         %(wren_code)s;
 
+        // aux predicate register.
+        ArmISA::VecPredRegContainer auxGpReg;
+        auto auxGp = auxGpReg.as<Element>();
+        %(auxgp_code)s;
+
         if (fault == NoFault) {
             %(memacc_code)s;
         }
 
-        if (fault == NoFault) {
-            fault = writeMemAtomic(xc, memData.as<uint8_t>(),
-                EA, memAccessSize, this->memAccessFlags, nullptr, wrEn);
+        bool predAll = true;
+        for (int i = 0; i < eCount; i ++) {
+            if (!auxGp[i]) {
+                predAll = false;
+                break;
+            }
+        }
+        if (predAll) {
+            if (fault == NoFault) {
+                fault = writeMemAtomic(xc, memData.as<uint8_t>(),
+                    EA, memAccessSize, memAccessFlags, nullptr, wrEn);
+            }
+        } else {
+            for (int i = 0; i < eCount; i ++) {
+                if (auxGp[i] && fault == NoFault) {
+                    fault = writeMemAtomic(xc,
+                        memData.as<uint8_t>() + sizeof(Element) * i,
+                        EA + sizeof(Element) * i, sizeof(Element),
+                        memAccessFlags, nullptr,
+                        std::vector<bool>(sizeof(Element), true));
+                }
+            }
         }
 
         if (fault == NoFault) {
@@ -1123,6 +1619,8 @@ def template SveStructStoreInitiateAcc {{
         [[maybe_unused]] bool aarch64 = true;
         unsigned eCount =
             ArmStaticInst::getCurSveVecLen<Element>(xc->tcBase());
+        unsigned memAccessFlags = addrAlignmentFlags(
+            sizeof(Element), this->memAccessFlags);
 
         %(op_decl)s;
         %(op_rd)s;
@@ -1133,13 +1631,18 @@ def template SveStructStoreInitiateAcc {{
 
         %(wren_code)s;
 
+        // aux predicate register.
+        ArmISA::VecPredRegContainer auxGpReg;
+        auto auxGp = auxGpReg.as<Element>();
+        %(auxgp_code)s;
+
         if (fault == NoFault) {
             %(memacc_code)s;
         }
 
         if (fault == NoFault) {
             fault = writeMemTiming(xc, memData.as<uint8_t>(),
-                EA, memAccessSize, this->memAccessFlags, nullptr, wrEn);
+                EA, memAccessSize, memAccessFlags, nullptr, wrEn);
         }
 
         return fault;

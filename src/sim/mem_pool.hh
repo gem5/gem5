@@ -35,6 +35,7 @@
 #include <vector>
 
 #include "base/addr_range.hh"
+#include "base/free_list.hh"
 #include "base/types.hh"
 #include "sim/serialize.hh"
 
@@ -50,13 +51,12 @@ class MemPool : public Serializable
     /** Start page of pool. */
     Counter startPageNum = 0;
 
-    /** Page number of free memory. */
-    Counter freePageNum = 0;
-
     /** The size of the pool, in number of pages. */
     Counter _totalPages = 0;
 
-    MemPool() {}
+    FreeList<Addr> freePhysPages;
+
+    MemPool() = default;
 
     friend class MemPools;
 
@@ -64,9 +64,6 @@ class MemPool : public Serializable
     MemPool(Addr page_shift, Addr ptr, Addr limit);
 
     Counter startPage() const;
-    Counter freePage() const;
-    void setFreePage(Counter value);
-    Addr freePageAddr() const;
     Counter totalPages() const;
 
     Counter allocatedPages() const;
@@ -78,6 +75,7 @@ class MemPool : public Serializable
     Addr totalBytes() const;
 
     Addr allocate(Addr npages);
+    void deallocate(Addr start, Addr npages);
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
@@ -98,6 +96,10 @@ class MemPools : public Serializable
     /// Allocate npages contiguous unused physical pages.
     /// @return Starting address of first page
     Addr allocPhysPages(int npages, int pool_id=0);
+
+    /// Deallocate physical pages. These may be reallocated by
+    /// allocPhysPages later on.
+    void deallocPhysPages(Addr page_addr, int npages, int pool_id=0);
 
     /** Amount of physical memory that exists in a pool. */
     Addr memSize(int pool_id=0) const;

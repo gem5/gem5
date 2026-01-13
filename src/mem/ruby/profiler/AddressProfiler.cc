@@ -31,9 +31,7 @@
 #include <vector>
 
 #include "base/bitfield.hh"
-#include "base/stl_helpers.hh"
 #include "mem/ruby/profiler/Profiler.hh"
-#include "mem/ruby/protocol/RubyRequest.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 namespace gem5

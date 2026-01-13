@@ -27,10 +27,10 @@
 from typing import Union
 
 from m5.objects import (
-    Port,
     SpatterGen,
     SpatterProcessingMode,
 )
+from m5.params import Port
 
 from ....utils.override import overrides
 from ..abstract_core import AbstractCore

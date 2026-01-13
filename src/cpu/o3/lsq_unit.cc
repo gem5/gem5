@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2014, 2017-2021 ARM Limited
+ * Copyright (c) 2010-2014, 2017-2021, 2025 Arm Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -42,18 +42,30 @@
 #include "cpu/o3/lsq_unit.hh"
 
 #include "arch/generic/debugfaults.hh"
-#include "base/str.hh"
+#include "arch/generic/mmu.hh"
+#include "base/cprintf.hh"
+#include "base/logging.hh"
+#include "base/stats/group.hh"
+#include "base/stats/info.hh"
+#include "base/stats/units.hh"
+#include "base/trace.hh"
+#include "base/types.hh"
 #include "cpu/checker/cpu.hh"
+#include "cpu/inst_seq.hh"
+#include "cpu/o3/cpu.hh"
 #include "cpu/o3/dyn_inst.hh"
+#include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/o3/lsq.hh"
-#include "debug/Activity.hh"
 #include "debug/HtmCpu.hh"
-#include "debug/IEW.hh"
 #include "debug/LSQUnit.hh"
-#include "debug/O3PipeView.hh"
+#include "mem/htm.hh"
 #include "mem/packet.hh"
+#include "mem/port.hh"
 #include "mem/request.hh"
+#include "sim/cur_tick.hh"
+#include "sim/eventq.hh"
+#include "sim/faults.hh"
 
 namespace gem5
 {
@@ -269,14 +281,23 @@ LSQUnit::LSQUnitStats::LSQUnitStats(statistics::Group *parent)
       ADD_STAT(blockedByCache, statistics::units::Count::get(),
                "Number of times an access to memory failed due to the cache "
                "being blocked"),
-      ADD_STAT(loadToUse, "Distribution of cycle latency between the "
-                "first time a load is issued and its completion"),
+      ADD_STAT(loadToUse, statistics::units::Cycle::get(),
+               "Distribution of cycle latency between the "
+               "first time a load is issued and its completion"),
       ADD_STAT(addedLoadsAndStores, statistics::units::Count::get(),
-               "Number of loads and stores written to the Load Store Queue")
+               "Number of loads and stores written to the Load Store Queue"),
+      ADD_STAT(lqAvgOccupancy, statistics::units::Ratio::get(),
+               "Average LQ Occupancy (UsedSlots/TotalSlots)"),
+      ADD_STAT(sqAvgOccupancy, statistics::units::Ratio::get(),
+               "Average SQ Occupancy (UsedSlots/TotalSlots)")
 {
     loadToUse
         .init(0, 299, 10)
         .flags(statistics::nozero);
+
+    lqAvgOccupancy.precision(2);
+
+    sqAvgOccupancy.precision(2);
 }
 
 void
@@ -338,6 +359,8 @@ LSQUnit::insertLoad(const DynInstPtr &load_inst)
     assert(load_inst->lqIdx > 0);
     load_inst->lqIt = loadQueue.getIterator(load_inst->lqIdx);
 
+    stats.lqAvgOccupancy = queueOccupancy(loadQueue);
+
     // hardware transactional memory
     // transactional state and nesting depth must be tracked
     // in the in-order part of the core.
@@ -398,6 +421,8 @@ LSQUnit::insertStore(const DynInstPtr& store_inst)
     store_inst->lqIt = loadQueue.end();
 
     storeQueue.back().set(store_inst);
+
+    stats.sqAvgOccupancy = queueOccupancy(storeQueue);
 }
 
 DynInstPtr
@@ -601,6 +626,11 @@ LSQUnit::executeLoad(const DynInstPtr &inst)
 
     assert(!inst->isSquashed());
 
+    if (inst->isExecuted()) {
+        DPRINTF(LSQUnit, "Load [sn:%lli] already executed\n", inst->seqNum);
+        return NoFault;
+    }
+
     load_fault = inst->initiateAcc();
 
     if (load_fault == NoFault && !inst->readMemAccPredicate()) {
@@ -740,6 +770,8 @@ LSQUnit::commitLoad()
 
     loadQueue.front().clear();
     loadQueue.pop_front();
+
+    stats.lqAvgOccupancy = queueOccupancy(loadQueue);
 }
 
 void
@@ -964,6 +996,8 @@ LSQUnit::squash(const InstSeqNum &squashed_num)
         ++stats.squashedLoads;
     }
 
+    stats.lqAvgOccupancy = queueOccupancy(loadQueue);
+
     // hardware transactional memory
     // scan load queue (from oldest to youngest) for most recent valid htmUid
     auto scan_it = loadQueue.begin();
@@ -1034,6 +1068,7 @@ LSQUnit::squash(const InstSeqNum &squashed_num)
         storeQueue.pop_back();
         ++stats.squashedStores;
     }
+    stats.sqAvgOccupancy = queueOccupancy(storeQueue);
 }
 
 uint64_t
@@ -1161,16 +1196,13 @@ LSQUnit::completeStore(typename StoreQueue::iterator store_idx)
         iewStage->updateLSQNextCycle = true;
     }
 
+    stats.sqAvgOccupancy = queueOccupancy(storeQueue);
+
     DPRINTF(LSQUnit, "Completing store [sn:%lli], idx:%i, store head "
             "idx:%i\n",
             store_inst->seqNum, store_idx.idx() - 1, storeQueue.head() - 1);
 
-#if TRACING_ON
-    if (debug::O3PipeView) {
-        store_inst->storeTick =
-            curTick() - store_inst->fetchTick;
-    }
-#endif
+    store_inst->storeTick = curTick() - store_inst->fetchTick;
 
     if (isStalled() &&
         store_inst->seqNum == stallingStoreIsn) {
@@ -1596,10 +1628,18 @@ LSQUnit::read(LSQRequest *request, ssize_t load_idx)
     // and arbitrate between loads and stores.
 
     // if we the cache is not blocked, do cache access
+    // if the request is not sent and cache is unblocked
+    // then put the instruction into retry queue so we do not need
+    // an extra cycle to re-issue and execute
     request->buildPackets();
     request->sendPacketToCache();
-    if (!request->isSent())
-        iewStage->blockMemInst(load_inst);
+    if (!request->isSent()) {
+        if (!lsq->cacheBlocked()) {
+            iewStage->retryMemInst(load_inst);
+       } else {
+            iewStage->blockMemInst(load_inst);
+       }
+    }
 
     return NoFault;
 }
@@ -1650,6 +1690,52 @@ LSQUnit::getStoreHeadSeqNum()
     else
         return 0;
 }
+
+LSQEntry::~LSQEntry()
+{
+    if (_request != nullptr) {
+        _request->freeLSQEntry();
+        _request = nullptr;
+    }
+}
+
+void
+LSQEntry::clear()
+{
+    _inst = nullptr;
+    if (_request != nullptr) {
+        _request->freeLSQEntry();
+    }
+    _request = nullptr;
+    _valid = false;
+    _size = 0;
+}
+
+void
+LSQEntry::set(const DynInstPtr &new_inst)
+{
+    assert(!_valid);
+    _inst = new_inst;
+    _valid = true;
+    _size = 0;
+}
+
+SQEntry::SQEntry()
+{ std::memset(_data, 0, DataSize); }
+
+void
+SQEntry::set(const DynInstPtr &inst)
+{ LSQEntry::set(inst); }
+
+void
+SQEntry::clear()
+{
+    LSQEntry::clear();
+    _canWB = _completed = _committed = _isAllZeros = false;
+}
+
+LSQUnit::LSQUnit(const LSQUnit &l) : stats(nullptr)
+{ panic("LSQUnit is not copy-able"); }
 
 } // namespace o3
 } // namespace gem5

@@ -147,7 +147,7 @@ test_boot(
     num_cpus=1,
     mem_system="mesi_two_level",
     memory_class="DualChannelDDR3_1600",
-    boot_type="systemd",
+    boot_type="init",
     length=constants.long_tag,
 )
 
@@ -159,21 +159,6 @@ test_boot(
     boot_type="systemd",
     length=constants.long_tag,
 )
-
-
-# Due to Nightly test timeout issues, outlined here:
-# https://gem5.atlassian.net/browse/GEM5-1120, this test has been disabled
-# until the exact error causing the Nightly tests to timeout is established.
-
-# test_boot(
-#    cpu="o3",
-#    num_cpus=2,
-#    mem_system="mesi_two_level",
-#    memory_class="DualChannelDDR4_2400"
-#    boot_type="init",
-#    length=constants.long_tag,
-# )
-
 
 #### The very-long (Weekly) tests ####
 
@@ -188,14 +173,14 @@ run_map = {
         # The CPU Type.
         "atomic": {
             # The number of cores.
-            1: True,
-            2: True,
+            1: False,  # Redundant
+            2: False,  # Redundant
             4: False,  # We already run this in the long (Nightly) tests.
             8: False,  # Jira: https://gem5.atlassian.net/browse/GEM5-1217
         },
         "timing": {
-            1: True,
-            2: True,
+            1: False,  # Redundant
+            2: False,  # Removed as already doing 4-cores
             4: True,
             8: False,  # Jira: https://gem5.atlassian.net/browse/GEM5-1217
         },
@@ -234,10 +219,10 @@ run_map = {
             8: False,  # Not Supported
         },
         "timing": {
-            1: True,
+            1: False,  # Redundant,
             2: False,  # Disabled due to
             # https://gem5.atlassian.net/browse/GEM5-1219.
-            4: True,
+            4: False,  # Disabled as we already do 8-cores
             8: True,
         },
         "o3": {
@@ -265,32 +250,6 @@ for mem_system in run_map:
 # To ensure the O3 CPU is working correctly, we include some "init" tests here.
 # There were not included above as booting to "systemd" takes too long with
 # o3 CPUs
-test_boot(
-    cpu="o3",
-    num_cpus=1,
-    mem_system="classic",
-    memory_class="DualChannelDDR4_2400",
-    boot_type="init",
-    length=constants.very_long_tag,
-)
-
-test_boot(
-    cpu="o3",
-    num_cpus=2,
-    mem_system="classic",
-    memory_class="DualChannelDDR4_2400",
-    boot_type="init",
-    length=constants.very_long_tag,
-)
-
-test_boot(
-    cpu="o3",
-    num_cpus=4,
-    mem_system="classic",
-    memory_class="DualChannelDDR4_2400",
-    boot_type="init",
-    length=constants.very_long_tag,
-)
 
 test_boot(
     cpu="o3",

@@ -26,7 +26,7 @@
 
 from abc import abstractmethod
 
-from m5.objects import Port
+from m5.params import Port
 
 from ....coherence_protocol import CoherenceProtocol
 from ....utils.override import overrides

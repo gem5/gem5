@@ -956,13 +956,15 @@ ${{self.c_ident}}_to_string(const ${{self.c_ident}}& obj)
         for enum in self.enums.values():
             code("  case ${{self.c_ident}}_${{enum.ident}}:")
             code('    return "${{enum.ident}}";')
+        code("  case ${{self.c_ident}}_NUM:")
+        code('    return "NUM (invalid)";')
         code.dedent()
 
         # Trailer
         code(
             """
       default:
-        panic("Invalid range for type ${{self.c_ident}}");
+        panic("Invalid value for type ${{self.c_ident}} %d\\n", obj);
     }
     // Appease the compiler since this function has a return value
     return "";
@@ -1033,7 +1035,7 @@ ${{self.c_ident}}_base_level(const ${{self.c_ident}}& obj)
         return ${{len(self.enums)}};
 
       default:
-        panic("Invalid range for type ${{self.c_ident}}");
+        panic("Invalid value for type ${{self.c_ident}} %d\\n", obj);
     }
     // Appease the compiler since this function has a return value
     return -1;
@@ -1061,7 +1063,7 @@ ${{self.c_ident}}_from_base_level(int type)
             code(
                 """
       default:
-        panic("Invalid range for type ${{self.c_ident}}");
+        panic("Invalid value for type ${{self.c_ident}} %d\\n", type);
     }
 }
 
@@ -1093,7 +1095,7 @@ RubySystem::${{self.c_ident}}_base_number(const ${{self.c_ident}}& obj)
             code(
                 """
       default:
-        panic("Invalid range for type ${{self.c_ident}}");
+        panic("Invalid value for type ${{self.c_ident}} %d\\n", obj);
     }
 
     return base;
@@ -1121,7 +1123,7 @@ RubySystem::${{self.c_ident}}_base_count(const ${{self.c_ident}}& obj)
                 """
       case ${{self.c_ident}}_NUM:
       default:
-        panic("Invalid range for type ${{self.c_ident}}");
+        panic("Invalid value for type ${{self.c_ident}} %d\\n", obj);
     }
     // Appease the compiler since this function has a return value
     return -1;

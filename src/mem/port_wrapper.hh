@@ -93,8 +93,13 @@ class RequestPortWrapper : public RequestPort
 
   private:
     RecvRangeChangeCallback recvRangeChangeCb = nullptr;
-    RecvTimingRespCallback recvTimingRespCb = nullptr;
-    RecvReqRetryCallback recvReqRetryCb = nullptr;
+    RecvTimingRespCallback recvTimingRespCb = [this](PacketPtr) {
+        panic("RecvTimingRespCallback in port %s is empty.", name());
+        return false;
+    };
+    RecvReqRetryCallback recvReqRetryCb = [this]() {
+        panic("RecvReqRetryCallback in port %s is empty.", name());
+    };
 };
 
 /**
@@ -143,12 +148,25 @@ class ResponsePortWrapper : public ResponsePort
                                 RecvMemBackdoorReqCallback = nullptr);
 
   private:
-    GetAddrRangesCallback getAddrRangesCb = nullptr;
-    RecvTimingReqCallback recvTimingReqCb = nullptr;
-    RecvRespRetryCallback recvRespRetryCb = nullptr;
-    RecvAtomicCallback recvAtomicCb = nullptr;
+    GetAddrRangesCallback getAddrRangesCb = [this]() {
+        panic("GetAddrRangesCallback in port %s is empty.", name());
+        return AddrRangeList();
+    };
+    RecvTimingReqCallback recvTimingReqCb = [this](PacketPtr) {
+        panic("RecvTimingReqCallback in port %s is empty.", name());
+        return false;
+    };
+    RecvRespRetryCallback recvRespRetryCb = [this]() {
+        panic("RecvRespRetryCallback in port %s is empty.", name());
+    };
+    RecvAtomicCallback recvAtomicCb = [this](PacketPtr) {
+        panic("RecvAtomicCallback in port %s is empty.", name());
+        return 0;
+    };
     RecvAtomicBackdoorCallback recvAtomicBackdoorCb = nullptr;
-    RecvFunctionalCallback recvFunctionalCb = nullptr;
+    RecvFunctionalCallback recvFunctionalCb = [this](PacketPtr) {
+        panic("RecvFunctionalCallback in port %s is empty.", name());
+    };
     RecvMemBackdoorReqCallback recvMemBackdoorReqCb = nullptr;
 };
 

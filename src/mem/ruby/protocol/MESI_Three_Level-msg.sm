@@ -66,6 +66,12 @@ enumeration(CoherenceClass, desc="...") {
   // shared block before it got the data. So the L0 cache can use the data
   // but not store it.
   STALE_DATA;
+
+  // Flush messages
+  FLUSH, desc="Flush request from L0";
+  FLUSH_NP, desc="Flush request from L0, not present in L0";
+  FLUSH_ACK, desc="Flush ack from L1";
+  FLUSH_DATA, desc="Send flush data to L2";
 }
 
 // Class for messages sent between the L0 and the L1 controllers.

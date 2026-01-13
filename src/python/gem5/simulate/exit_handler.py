@@ -46,9 +46,8 @@ import m5
 from m5 import options
 from m5.util import warn
 
-from gem5.simulate.exit_event import ExitEvent
-from gem5.utils.override import overrides
-
+from ..utils.override import overrides
+from .exit_event import ExitEvent
 from .exit_event_generators import (
     dump_stats_generator,
     exit_generator,
@@ -178,69 +177,6 @@ def register_exit_handler(
         processing function, and description.
     """
     return _ExitHandlerFactory(hypercall_num, func, description)
-
-
-class ClassicGeneratorExitHandler(ExitHandler, hypercall_num=0):
-
-    def __init__(self, payload: Dict[str, str]) -> None:
-        super().__init__(payload)
-        self._exit_on_completion = None
-
-    @overrides(ExitHandler)
-    def _process(self, simulator: "Simulator") -> None:
-        #  # Translate the exit event cause to the exit event enum.
-        exit_enum = ExitEvent.translate_exit_status(
-            simulator.get_last_exit_event_cause()
-        )
-
-        # Check to see the run is corresponding to the expected execution
-        # order (assuming this check is demanded by the user).
-        if simulator._expected_execution_order:
-            expected_enum = simulator._expected_execution_order[
-                simulator._exit_event_count
-            ]
-            if exit_enum.value != expected_enum.value:
-                raise Exception(
-                    f"Expected a '{expected_enum.value}' exit event but a "
-                    f"'{exit_enum.value}' exit event was encountered."
-                )
-
-        # Record the current tick and exit event enum.
-        simulator._tick_stopwatch.append(
-            (exit_enum, simulator.get_current_tick())
-        )
-
-        try:
-            # If the user has specified their own generator for this exit
-            # event, use it.
-            self._exit_on_completion = next(
-                simulator._on_exit_event[exit_enum]
-            )
-        except StopIteration:
-            # If the user's generator has ended, throw a warning and use
-            # the default generator for this exit event.
-            warn(
-                "User-specified generator/function list for the exit "
-                f"event'{exit_enum.value}' has ended. Using the default "
-                "generator."
-            )
-            self._exit_on_completion = next(
-                simulator._default_on_exit_dict[exit_enum]
-            )
-
-        except KeyError:
-            # If the user has not specified their own generator for this
-            # exit event, use the default.
-            self._exit_on_completion = next(
-                simulator._default_on_exit_dict[exit_enum]
-            )
-
-    @overrides(ExitHandler)
-    def _exit_simulation(self) -> bool:
-        assert (
-            self._exit_on_completion is not None
-        ), "Exit on completion boolean var is not set."
-        return self._exit_on_completion
 
 
 class ScheduledExitEventHandler(ExitHandler, hypercall_num=6):
@@ -385,11 +321,47 @@ class WorkEndExitHandler(ExitHandler, hypercall_num=5):
 class OrchestratorExitHandler(ExitHandler, hypercall_num=1000):
 
     def _get_status(self, simulator: "Simulator") -> Dict[str, str]:
+        import _m5.core
+
+        if not simulator.get_workload():
+            workload_id = "No workload set"
+        else:
+            workload_id = simulator.get_workload().get_id()
         return {
-            "workload": simulator.get_workload().get_id(),
+            "workload": workload_id,
             "tick": simulator.get_current_tick(),
+            "ticks_per_second": _m5.core.getClockFrequency(),
             "sim_id": simulator.get_id(),
-            "instruction_count": simulator.get_instruction_count(),
+            "curr_instructions_executed": simulator.get_instruction_count(),
+        }
+
+    def _add_debug_flags(self, debug_flags: List[str]) -> Dict[str, str]:
+        from m5 import debug
+
+        flags_disabled = []
+        flags_enabled = []
+        invalid_flags = []
+        for flag in debug_flags:
+            off = False
+            if flag.startswith("-"):
+                flag = flag[1:]
+                off = True
+
+            if flag not in debug.flags:
+                invalid_flags.append(flag)
+                continue
+
+            if off:
+                flags_disabled.append(flag)
+                debug.flags[flag].disable()
+            else:
+                flags_enabled.append(flag)
+                debug.flags[flag].enable()
+
+        return {
+            "flags_enabled": str(flags_enabled),
+            "flags_disabled": str(flags_disabled),
+            "invalid_flags": str(invalid_flags),
         }
 
     @overrides(ExitHandler)
@@ -397,7 +369,7 @@ class OrchestratorExitHandler(ExitHandler, hypercall_num=1000):
         try:
             socket_path = self._payload.get("response_socket")
             function = self._payload.get("function", "status")
-
+            arguments = self._payload.get("arguments")
             if socket_path:
                 sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
                 sock.connect(socket_path)
@@ -407,6 +379,9 @@ class OrchestratorExitHandler(ExitHandler, hypercall_num=1000):
                 elif function == "get_stats":
                     stats = simulator.get_stats()
                     response = json.dumps(stats)
+                elif function == "update_debug_flags":
+                    debug_flags = arguments.split(",")
+                    response = json.dumps(self._add_debug_flags(debug_flags))
                 else:
                     response = json.dumps(
                         {"error": f"Unknown function: {function}"}

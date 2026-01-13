@@ -82,7 +82,7 @@ def slicc_emitter(target, source, env):
                 )
             ],
             protocol_base.abspath,
-            verbose=False,
+            verbose=GetOption("verbose"),
         )
         slicc.process()
         slicc.writeCodeFiles(output_dir.abspath, slicc_includes)
@@ -112,7 +112,7 @@ def slicc_action(target, source, env):
                 )
             ],
             protocol_base.abspath,
-            verbose=True,
+            verbose=GetOption("verbose"),
         )
         slicc.process()
         slicc.writeCodeFiles(output_dir.abspath, slicc_includes)

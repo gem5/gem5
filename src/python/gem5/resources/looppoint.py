@@ -35,7 +35,7 @@ from typing import (
     Union,
 )
 
-import m5
+from m5 import options
 from m5.objects import PcCountTrackerManager
 from m5.params import PcCountPair
 
@@ -376,7 +376,7 @@ class Looppoint:
     def output_json_file(
         self,
         input_indent: int = 4,
-        filepath: str = os.path.join(m5.options.outdir, "looppoint.json"),
+        filepath: Optional[str] = None,
     ) -> Dict[int, Dict]:
         """
         This function is used to output the ``_json_file`` into a json file.
@@ -384,6 +384,8 @@ class Looppoint:
         :param input_indent: The indent value of the json file.
         :param filepath: The path of the output json file.
         """
+        if filepath is None:
+            filepath = os.path.join(options.outdir, "looppoint.json")
         with open(filepath, "w") as file:
             json.dump(self.to_json(), file, indent=input_indent)
 

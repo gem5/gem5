@@ -87,9 +87,6 @@ class FUDesc : public SimObject
         : SimObject(p), opDescList(p.opList), number(p.count) {};
 };
 
-typedef std::vector<OpDesc *>::const_iterator OPDDiterator;
-typedef std::vector<FUDesc *>::const_iterator FUDDiterator;
-
 
 
 

@@ -184,7 +184,7 @@ NSGigE::getPort(const std::string &if_name, PortID idx)
  * spec sheet
  */
 Tick
-NSGigE::read(PacketPtr pkt)
+NSGigE::readDevice(PacketPtr pkt)
 {
     assert(ioEnable);
 
@@ -406,7 +406,7 @@ NSGigE::read(PacketPtr pkt)
 }
 
 Tick
-NSGigE::write(PacketPtr pkt)
+NSGigE::writeDevice(PacketPtr pkt)
 {
     assert(ioEnable);
 

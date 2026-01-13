@@ -46,7 +46,7 @@
 
 #include "base/sat_counter.hh"
 #include "base/types.hh"
-#include "cpu/pred/bpred_unit.hh"
+#include "cpu/pred/conditional.hh"
 #include "params/TournamentBP.hh"
 
 namespace gem5
@@ -63,7 +63,7 @@ namespace branch_prediction
  * predictor chooses between the two.  Both the global history register
  * and the selected local history are speculatively updated.
  */
-class TournamentBP : public BPredUnit
+class TournamentBP : public ConditionalPredictor
 {
   public:
     /**

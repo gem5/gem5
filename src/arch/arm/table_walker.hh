@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2016, 2019, 2021-2024 Arm Limited
+ * Copyright (c) 2010-2016, 2019, 2021-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -47,33 +47,37 @@
 #include "arch/arm/tlb.hh"
 #include "arch/arm/types.hh"
 #include "arch/generic/mmu.hh"
+#include "enums/ArmLookupLevel.hh"
 #include "mem/packet_queue.hh"
 #include "mem/qport.hh"
 #include "mem/request.hh"
-#include "params/ArmTableWalker.hh"
 #include "sim/clocked_object.hh"
 #include "sim/eventq.hh"
 
 namespace gem5
 {
 
+struct ArmTableWalkerParams;
+struct ArmWalkUnitParams;
+
 class ThreadContext;
 
 namespace ArmISA {
+class WalkUnit;
 class Translation;
 class TLB;
 
 class TableWalker : public ClockedObject
 {
+  public:
     using LookupLevel = enums::ArmLookupLevel;
 
-  public:
     class WalkerState;
-
     class DescriptorBase
     {
       public:
         DescriptorBase() : lookupLevel(LookupLevel::L0) {}
+        virtual ~DescriptorBase() = default;
 
         /** Current lookup level for this descriptor */
         LookupLevel lookupLevel;
@@ -122,6 +126,7 @@ class TableWalker : public ClockedObject
         {
             lookupLevel = LookupLevel::L1;
         }
+        virtual ~L1Descriptor() = default;
 
         uint8_t*
         getRawPtr() override
@@ -297,6 +302,8 @@ class TableWalker : public ClockedObject
         {
             lookupLevel = LookupLevel::L2;
         }
+
+        virtual ~L2Descriptor() = default;
 
         uint8_t*
         getRawPtr() override
@@ -844,6 +851,13 @@ class TableWalker : public ClockedObject
         }
     };
 
+    class TableWalkerState : public Packet::SenderState
+    {
+      public:
+        Tick delay = 0;
+        Event *event = nullptr;
+    };
+
     class WalkerState
     {
       public:
@@ -951,6 +965,9 @@ class TableWalker : public ClockedObject
         /** Flag indicating if a second stage of lookup is required */
         bool stage2Req;
 
+        /** Is the access is a stage2 access */
+        bool isStage2;
+
         /** A pointer to the stage 2 translation that's in progress */
         BaseMMU::Translation *stage2Tran;
 
@@ -995,17 +1012,10 @@ class TableWalker : public ClockedObject
         std::string name() const { return tableWalker->name(); }
     };
 
-    class TableWalkerState : public Packet::SenderState
-    {
-      public:
-        Tick delay = 0;
-        Event *event = nullptr;
-    };
-
     class Port : public QueuedRequestPort
     {
       public:
-        Port(TableWalker& _walker);
+        Port(TableWalker &_walker, RequestorID id);
 
         void sendFunctionalReq(const RequestPtr &req, uint8_t *data);
         void sendAtomicReq(const RequestPtr &req, uint8_t *data, Tick delay);
@@ -1013,6 +1023,12 @@ class TableWalker : public ClockedObject
             Event *event);
 
         bool recvTimingResp(PacketPtr pkt) override;
+
+        RequestorID
+        requestorId() const
+        {
+            return _requestorId;
+        }
 
       private:
         void handleRespPacket(PacketPtr pkt, Tick delay=0);
@@ -1023,14 +1039,148 @@ class TableWalker : public ClockedObject
                                Tick delay, Event *event);
 
       private:
-        TableWalker& owner;
+        TableWalker &owner;
 
         /** Packet queue used to store outgoing requests. */
         ReqPacketQueue reqQueue;
 
         /** Packet queue used to store outgoing snoop responses. */
         SnoopRespPacketQueue snoopRespQueue;
+
+        /** Cached requestorId of the table walker */
+        RequestorID _requestorId;
     };
+
+    PARAMS(ArmTableWalker);
+    TableWalker(const Params &p);
+
+    gem5::Port &getPort(const std::string &if_name,
+                        PortID idx = InvalidPortID) override;
+
+    void setMmu(MMU *_mmu);
+    void setTestInterface(TlbTestInterface *ti);
+
+    WalkUnit *getAvailableWalk(BaseMMU::Mode mode, bool stage2,
+                               bool functional) const;
+
+    WalkUnit *busyOnSamePage(Addr iaddr, BaseMMU::Mode mode,
+                             bool stage2) const;
+
+    Port &getTableWalkerPort();
+
+    Fault walk(const RequestPtr &req, ThreadContext *tc, uint16_t asid,
+               vmid_t vmid, MMU::Mode mode, MMU::Translation *trans,
+               bool timing, bool functional, SecurityState ss,
+               PASpace ipaspace, MMU::ArmTranslationType tran_type,
+               bool stage2_req, bool stage2, const TlbEntry *walk_entry);
+
+    /**
+     * A walk has finished. Schedule a look in
+     * the pending queue to see if there is a pending walk awaiting
+     * to be executed next
+     *
+     * @param wu WalkUnit calling the method. With this param the walk unit
+     *           signals the Table Walker it is ready to accept a new walk
+     *           request
+     */
+    void nextWalk(WalkUnit *wu);
+
+    /**
+     * Squash the walk passed as first argument. This would happen
+     * in two cases
+     * 1) The instruction generating the memory ref has been squashed
+     * 2) No need to walk as the translation is now available in the TLB
+     */
+    void squashWalk(WalkerState *curr_state);
+
+    void completeDrain();
+    DrainState drain() override;
+
+  public:
+    TypeTLB modeToType(BaseMMU::Mode mode) const;
+
+    bool
+    haveLargeAsid64() const
+    {
+        return _haveLargeAsid64;
+    }
+    uint8_t
+    physAddrRange() const
+    {
+        return _physAddrRange;
+    }
+
+  private:
+    MMU *mmu;
+
+    /** Pool of walking units */
+    std::vector<WalkUnit *> walkUnits;
+
+    /** walking unit for functional walks*/
+    WalkUnit *walkUnitFunctionalS1;
+    WalkUnit *walkUnitFunctionalS2;
+
+    /** Requestor id assigned by the MMU. */
+    RequestorID requestorId;
+
+    /** Table Walker port */
+    Port *port;
+
+    /** Cached copies of system-level properties */
+    const ArmRelease *release;
+    uint8_t _physAddrRange;
+    bool _haveLargeAsid64;
+
+  private:
+    /** Statistics */
+    void pendingChange();
+
+  public:
+    /** Statistics */
+    static const unsigned REQUESTED = 0;
+    static const unsigned COMPLETED = 1;
+
+    mutable unsigned pendingReqs;
+    mutable Tick pendingChangeTick;
+
+    struct TableWalkerStats : public statistics::Group
+    {
+        TableWalkerStats(statistics::Group *parent);
+        statistics::Scalar instructionWalksS1;
+        statistics::Scalar instructionWalksS2;
+        statistics::Scalar dataWalksS1;
+        statistics::Scalar dataWalksS2;
+        statistics::Scalar walksShortDescriptor;
+        statistics::Scalar walksLongDescriptor;
+        statistics::Vector walksShortTerminatedAtLevel;
+        statistics::Vector walksLongTerminatedAtLevel;
+        statistics::Scalar squashedBefore;
+        statistics::Scalar squashedAfter;
+        statistics::Histogram walkWaitTime;
+        statistics::Histogram walkServiceTime;
+        // Essentially "L" of queueing theory
+        statistics::Histogram pendingWalks;
+        statistics::Vector pageSizes;
+        statistics::Vector2d requestOrigin;
+
+        statistics::Formula walks;
+    } stats;
+
+    /** Queue of requests that have passed are waiting because the walker is
+     * currently busy. */
+    std::list<WalkerState *> pendingQueue;
+    std::vector<WalkerState *> inCompletionWalks;
+};
+
+class WalkUnit : public ClockedObject
+{
+  public:
+    using LookupLevel = enums::ArmLookupLevel;
+    using WalkerState = TableWalker::WalkerState;
+    using DescriptorBase = TableWalker::DescriptorBase;
+    using L1Descriptor = TableWalker::L1Descriptor;
+    using L2Descriptor = TableWalker::L2Descriptor;
+    using LongDescriptor = TableWalker::LongDescriptor;
 
     /** This translation class is used to trigger the data fetch once a timing
         translation returns the translated physical address */
@@ -1041,17 +1191,20 @@ class TableWalker : public ClockedObject
         int          numBytes;
         RequestPtr   req;
         Event        *event;
-        TableWalker  &parent;
+        WalkUnit &parent;
         Addr         oVAddr;
         BaseMMU::Mode mode;
         MMU::ArmTranslationType tranType;
 
+        TableWalker::Port *port;
+
       public:
         Fault fault;
 
-        Stage2Walk(TableWalker &_parent, uint8_t *_data, Event *_event,
+        Stage2Walk(WalkUnit &_parent, uint8_t *_data, Event *_event,
                    Addr vaddr, BaseMMU::Mode mode,
-                   MMU::ArmTranslationType tran_type);
+                   MMU::ArmTranslationType tran_type,
+                   TableWalker::Port *_port);
 
         void markDelayed() {}
 
@@ -1077,23 +1230,22 @@ class TableWalker : public ClockedObject
                        Stage2Walk *translation, int num_bytes,
                        Request::Flags flags);
 
+    /** Timing mode: saves the currState into the stateQueues */
+    void stashCurrState(WalkerState *state, int queue_idx);
+    bool busyOnSamePage(Addr iaddr) const;
+
   protected:
 
     /** Queues of requests for all the different lookup levels */
     std::list<WalkerState *> stateQueues[LookupLevel::Num_ArmLookupLevel];
 
-    /** Queue of requests that have passed are waiting because the walker is
-     * currently busy. */
-    std::list<WalkerState *> pendingQueue;
-
     /** The MMU to forward second stage look upts to */
     MMU *mmu;
 
-    /** Requestor id assigned by the MMU. */
-    RequestorID requestorId;
+    /** Pointer to the parent table walker */
+    TableWalker *parent;
 
-    /** Port shared by the two table walkers. */
-    Port* port;
+    TableWalker::Port *port;
 
     /** Indicates whether this table walker is part of the stage 2 mmu */
     const bool isStage2;
@@ -1101,98 +1253,119 @@ class TableWalker : public ClockedObject
     /** TLB that is initiating these table walks */
     TLB *tlb;
 
-    /** Cached copy of the sctlr as it existed when translation began */
-    SCTLR sctlr;
+    /** Walk type */
+    const TypeTLB walkType;
 
-    WalkerState *currState;
+    /** Functional */
+    const bool isFunctional;
 
-    /** If a timing translation is currently in progress */
-    bool pending;
-
-    /** The number of walks belonging to squashed instructions that can be
-     * removed from the pendingQueue per cycle. */
-    unsigned numSquashable;
-
-    /** Cached copies of system-level properties */
-    const ArmRelease *release;
-    uint8_t _physAddrRange;
-    bool _haveLargeAsid64;
-
-    /** Statistics */
-    struct TableWalkerStats : public statistics::Group
-    {
-        TableWalkerStats(statistics::Group *parent);
-        statistics::Scalar walks;
-        statistics::Scalar walksShortDescriptor;
-        statistics::Scalar walksLongDescriptor;
-        statistics::Vector walksShortTerminatedAtLevel;
-        statistics::Vector walksLongTerminatedAtLevel;
-        statistics::Scalar squashedBefore;
-        statistics::Scalar squashedAfter;
-        statistics::Histogram walkWaitTime;
-        statistics::Histogram walkServiceTime;
-        // Essentially "L" of queueing theory
-        statistics::Histogram pendingWalks;
-        statistics::Vector pageSizes;
-        statistics::Vector2d requestOrigin;
-    } stats;
-
-    mutable unsigned pendingReqs;
-    mutable Tick pendingChangeTick;
-
-    static const unsigned REQUESTED = 0;
-    static const unsigned COMPLETED = 1;
+    /** Is the walk unit free? */
+    bool available;
 
   public:
-    PARAMS(ArmTableWalker);
-    TableWalker(const Params &p);
-    virtual ~TableWalker();
+    PARAMS(ArmWalkUnit);
+    WalkUnit(const Params &p);
+    virtual ~WalkUnit();
 
-    bool haveLargeAsid64() const { return _haveLargeAsid64; }
-    uint8_t physAddrRange() const { return _physAddrRange; }
+    TypeTLB
+    type() const
+    {
+        return walkType;
+    }
+
+    bool
+    stage2() const
+    {
+        return isStage2;
+    }
+
+    bool
+    functional() const
+    {
+        return isFunctional;
+    }
+
+    bool
+    isAvailable() const
+    {
+        return available;
+    }
+    void
+    isAvailable(bool _available)
+    {
+        available = _available;
+    }
+
     /** Checks if all state is cleared and if so, completes drain */
-    void completeDrain();
+    bool completeDrain();
     DrainState drain() override;
-    void drainResume() override;
 
-    gem5::Port &getPort(const std::string &if_name,
-                    PortID idx=InvalidPortID) override;
+    Fault walk(WalkerState *state);
 
-    Port &getTableWalkerPort();
-
-    Fault walk(const RequestPtr &req, ThreadContext *tc,
-               uint16_t asid, vmid_t _vmid,
-               BaseMMU::Mode mode, BaseMMU::Translation *_trans,
-               bool timing, bool functional, SecurityState ss,
-               PASpace ipaspace,
-               MMU::ArmTranslationType tran_type, bool stage2,
-               const TlbEntry *walk_entry);
+    void scheduleWalk(WalkerState *next_walk, Tick when);
 
     void setMmu(MMU *_mmu);
-    void setTlb(TLB *_tlb) { tlb = _tlb; }
-    TLB* getTlb() { return tlb; }
-    void memAttrs(ThreadContext *tc, TlbEntry &te, SCTLR sctlr,
-                  uint8_t texcb, bool s);
-    void memAttrsLPAE(ThreadContext *tc, TlbEntry &te,
+    void
+    setPort(TableWalker::Port *_port)
+    {
+        port = _port;
+    }
+    TableWalker::Port &
+    getTableWalkerPort() const
+    {
+        return *port;
+    }
+    void
+    setTableWalker(TableWalker *_parent)
+    {
+        parent = _parent;
+    }
+
+    void memAttrs(WalkerState *state, TlbEntry &te, uint8_t texcb, bool s);
+    void memAttrsLPAE(WalkerState *state, TlbEntry &te,
                       LongDescriptor &lDescriptor);
-    void memAttrsAArch64(ThreadContext *tc, TlbEntry &te,
+    void memAttrsAArch64(WalkerState *state, TlbEntry &te,
                          LongDescriptor &lDescriptor);
-    void memAttrsWalkAArch64(TlbEntry &te);
+    void memAttrsWalkAArch64(WalkerState *state, TlbEntry &te);
     bool uncacheableFromAttrs(uint8_t attrs);
 
     static LookupLevel toLookupLevel(uint8_t lookup_level_as_int);
 
   private:
+    class WalkEvent : public Event, public Named
+    {
+      public:
+        WalkEvent(WalkUnit *_parent, const std::string &_name)
+            : Event(), Named(_name), parent(_parent)
+        {}
 
-    void doL1Descriptor();
+        void
+        process() override
+        {
+            parent->processWalkWrapper(state);
+        }
+
+        void
+        setState(WalkerState *next_state)
+        {
+            state = next_state;
+        }
+
+      private:
+        WalkUnit *parent;
+        WalkerState *state;
+    } doProcessEvent;
+    void processWalkWrapper(WalkerState *state);
+
+    void doL1Descriptor(WalkerState *state);
     void doL1DescriptorWrapper();
     EventFunctionWrapper doL1DescEvent;
 
-    void doL2Descriptor();
+    void doL2Descriptor(WalkerState *state);
     void doL2DescriptorWrapper();
     EventFunctionWrapper doL2DescEvent;
 
-    void doLongDescriptor();
+    void doLongDescriptor(WalkerState *state);
 
     void doL0LongDescriptorWrapper();
     EventFunctionWrapper doL0LongDescEvent;
@@ -1206,62 +1379,55 @@ class TableWalker : public ClockedObject
     void doLongDescriptorWrapper(LookupLevel curr_lookup_level);
     Event* LongDescEventByLevel[4];
 
-    void fetchDescriptor(Addr desc_addr,
-        DescriptorBase &descriptor, int num_bytes,
-        Request::Flags flags, LookupLevel lookup_lvl, Event *event,
-        void (TableWalker::*doDescriptor)());
+    void fetchDescriptor(Addr desc_addr, DescriptorBase &descriptor,
+                         int num_bytes, Request::Flags flags,
+                         LookupLevel lookup_lvl, Event *event,
+                         void (WalkUnit::*doDescriptor)(WalkerState *state),
+                         WalkerState *state);
 
-    Fault generateLongDescFault(ArmFault::FaultSource src);
+    Fault generateLongDescFault(WalkerState *state, ArmFault::FaultSource src);
 
-    void insertTableEntry(DescriptorBase &descriptor, bool longDescriptor);
-    void insertPartialTableEntry(LongDescriptor &descriptor);
+    void insertTableEntry(WalkerState *state, DescriptorBase &descriptor,
+                          bool long_descriptor);
+    void insertPartialTableEntry(WalkerState *state);
 
     /** Returns a tuple made of:
      * 1) The address of the first page table
      * 2) The address of the first descriptor within the table
      * 3) The page table level
      */
-    std::tuple<Addr, Addr, LookupLevel> walkAddresses(
-        Addr ttbr, GrainSize tg, int tsz, int pa_range);
+    std::tuple<Addr, Addr, LookupLevel> walkAddresses(WalkerState *state,
+                                                      Addr ttbr, GrainSize tg,
+                                                      int tsz, int pa_range);
 
-    Fault processWalk();
-    Fault processWalkLPAE();
+    Fault processWalk(WalkerState *state);
+    Fault processWalkLPAE(WalkerState *state);
+    Fault processWalkAArch64(WalkerState *state);
 
-    Addr maxTxSz(GrainSize tg) const;
-    Addr s1MinTxSz(GrainSize tg) const;
-    bool s1TxSzFault(GrainSize tg, int tsz) const;
-    bool checkVAOutOfRange(Addr addr, int top_bit,
-        int tsz, bool low_range);
+    Addr maxTxSz(WalkerState *state, GrainSize tg) const;
+    Addr s1MinTxSz(WalkerState *state, GrainSize tg) const;
+    bool s1TxSzFault(WalkerState *state, GrainSize tg, int tsz) const;
+    bool checkVAOutOfRange(WalkerState *state, int top_bit, int tsz,
+                           bool low_range);
 
     /// Returns true if the address exceeds the range permitted by the
     /// system-wide setting or by the TCR_ELx IPS/PS setting
     bool checkAddrSizeFaultAArch64(Addr addr, int pa_range);
 
     /// Returns true if the table walk should be uncacheable
-    bool uncacheableWalk() const;
-
-    Fault processWalkAArch64();
-    void processWalkWrapper();
-    EventFunctionWrapper doProcessEvent;
-
-    void nextWalk(ThreadContext *tc);
-
-    void pendingChange();
-
-    /** Timing mode: saves the currState into the stateQueues */
-    void stashCurrState(int queue_idx);
+    bool uncacheableWalk(WalkerState *state) const;
 
     static uint8_t pageSizeNtoStatBin(uint8_t N);
 
-    void mpamTagTableWalk(RequestPtr &req) const;
+    void mpamTagTableWalk(WalkerState *state, RequestPtr &req) const;
 
   public: /* Testing */
     TlbTestInterface *test;
 
     void setTestInterface(TlbTestInterface *ti);
 
-    Fault testWalk(const RequestPtr &walk_req, DomainType domain,
-                   LookupLevel lookup_level);
+    Fault testWalk(WalkerState *state, const RequestPtr &walk_req,
+                   DomainType domain, LookupLevel lookup_level);
 };
 
 } // namespace ArmISA

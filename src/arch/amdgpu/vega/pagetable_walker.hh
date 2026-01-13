@@ -34,6 +34,7 @@
 
 #include <vector>
 
+#include "arch/amdgpu/vega/page_walk_cache.hh"
 #include "arch/amdgpu/vega/pagetable.hh"
 #include "arch/amdgpu/vega/tlb.hh"
 #include "base/types.hh"
@@ -54,6 +55,9 @@ namespace VegaISA
 class Walker : public ClockedObject
 {
   protected:
+
+    PageWalkCache pwc;
+
     // Port for accessing memory
     class WalkerPort : public RequestPort
     {
@@ -164,7 +168,10 @@ class Walker : public ClockedObject
     void setDevRequestor(RequestorID mid) { deviceRequestorId = mid; }
     RequestorID getDevRequestor() const { return deviceRequestorId; }
 
+    void invalidatePWC();
+
   protected:
+    bool enable_pwc;
     // The TLB we're supposed to load.
     GpuTLB *tlb;
     RequestorID requestorId;
@@ -193,8 +200,12 @@ class Walker : public ClockedObject
 
     Walker(const VegaPagetableWalkerParams &p)
       : ClockedObject(p),
+        pwc(name()+".pwc", p.page_walk_cache_entries,
+            p.page_walk_cache_entries, p.pwc_replacement_policy,
+            p.pwc_indexing_policy),
         port(name() + ".port", this),
-        funcState(this, nullptr, true), tlb(nullptr),
+        funcState(this, nullptr, true),
+        enable_pwc(p.enable_pwc), tlb(nullptr),
         requestorId(p.system->getRequestorId(this)),
         deviceRequestorId(999), system(p.system)
     {

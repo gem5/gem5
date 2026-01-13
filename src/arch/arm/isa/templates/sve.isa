@@ -1,4 +1,4 @@
-// Copyright (c) 2018-2020 ARM Limited
+// Copyright (c) 2018-2020, 2025 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -332,6 +332,33 @@ class %(class_name)s : public %(base_class)s
 };
 }};
 
+def template SveBinUnpred3SrcOpDeclare {{
+  template <class _Element>
+  class %(class_name)s : public %(base_class)s
+  {
+    private:
+      %(reg_idx_arr_decl)s;
+
+    protected:
+      typedef _Element Element;
+      typedef _Element TPElem;
+
+    public:
+      // Constructor
+      %(class_name)s(ExtMachInst machInst,
+                     RegIndex _dest, RegIndex _op1,
+                     RegIndex _op2, RegIndex _op3) :
+          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _dest, _op1, _op2, _op3)
+      {
+          %(set_reg_idx_arr)s;
+          %(constructor)s;
+      }
+
+      Fault execute(ExecContext *, trace::InstRecord *) const override;
+  };
+  }};
+
 def template SveBinIdxUnpredOpDeclare {{
 template <class _Element>
 class %(class_name)s : public %(base_class)s
@@ -514,6 +541,32 @@ class %(class_name)s : public %(base_class)s
     Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
+
+def template SveTerIdxUnpredOpDeclare {{
+  template <class _Element>
+  class %(class_name)s : public %(base_class)s
+  {
+    private:
+      %(reg_idx_arr_decl)s;
+
+    protected:
+      typedef _Element Element;
+      typedef _Element TPElem;
+
+    public:
+      // Constructor
+      %(class_name)s(ExtMachInst machInst, RegIndex _dest,
+                     RegIndex _op1, RegIndex _op2, uint8_t _index) :
+          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _dest, _op1, _op2, _index)
+      {
+          %(set_reg_idx_arr)s;
+          %(constructor)s;
+      }
+
+      Fault execute(ExecContext *, trace::InstRecord *) const override;
+  };
+  }};
 
 def template SveMatMulOpDeclare {{
 template <typename DestElement,
@@ -777,6 +830,32 @@ class %(class_name)s : public %(base_class)s
 
 }};
 
+def template SvePredCountPngOpDeclare {{
+  template <class _Element>
+  class %(class_name)s : public %(base_class)s
+  {
+    private:
+      %(reg_idx_arr_decl)s;
+
+    protected:
+      typedef _Element Element;
+      typedef _Element TPElem;
+
+    public:
+      %(class_name)s(ExtMachInst machInst, RegIndex _dest,
+                     RegIndex _op1, uint64_t _vl) :
+          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _dest, _op1, _vl)
+      {
+          %(set_reg_idx_arr)s;
+          %(constructor)s;
+      }
+
+      Fault execute(ExecContext *, trace::InstRecord *) const override;
+  };
+
+  }};
+
 def template SvePtrueOpDeclare {{
 template <class _Element>
 class %(class_name)s : public %(base_class)s
@@ -853,6 +932,56 @@ class %(class_name)s : public %(base_class)s
 };
 }};
 
+def template SveWhilePairOpDeclare {{
+template <class _Element>
+class %(class_name)s : public %(base_class)s
+{
+  private:
+    %(reg_idx_arr_decl)s;
+
+  protected:
+    typedef _Element Element;
+    typedef _Element TPElem;
+
+  public:
+    %(class_name)s(ExtMachInst machInst, RegIndex _dest, RegIndex _dest2,
+                    RegIndex _op1, RegIndex _op2) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                        _dest, _dest2, _op1, _op2, %(srcIs32b)s)
+    {
+        %(set_reg_idx_arr)s;
+        %(constructor)s;
+    }
+
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
+};
+}};
+
+def template SveWhilePngOpDeclare {{
+template <class _Element>
+class %(class_name)s : public %(base_class)s
+{
+  private:
+    %(reg_idx_arr_decl)s;
+
+  protected:
+    typedef _Element Element;
+    typedef _Element TPElem;
+
+  public:
+    %(class_name)s(ExtMachInst machInst, RegIndex _dest,
+                    RegIndex _op1, RegIndex _op2, uint64_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                        _dest, _op1, _op2, _imm, %(srcIs32b)s)
+    {
+        %(set_reg_idx_arr)s;
+        %(constructor)s;
+    }
+
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
+};
+}};
+
 def template SvePselOpDeclare {{
 template <class _Element>
 class %(class_name)s : public %(base_class)s
@@ -879,6 +1008,57 @@ class %(class_name)s : public %(base_class)s
     Fault execute(ExecContext *, trace::InstRecord *) const override;
 };
 }};
+
+def template SvePextOpDeclare {{
+  template <class _Element>
+  class %(class_name)s : public %(base_class)s
+  {
+    private:
+      %(reg_idx_arr_decl)s;
+
+    protected:
+      typedef _Element Element;
+      typedef _Element TPElem;
+
+    public:
+      %(class_name)s(ExtMachInst machInst,
+                     RegIndex dest, RegIndex op1, uint64_t imm)
+          : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                            dest, op1, imm)
+      {
+          %(set_reg_idx_arr)s;
+          %(constructor)s;
+      }
+
+      Fault execute(ExecContext *, trace::InstRecord *) const override;
+  };
+  }};
+
+def template SvePextPairOpDeclare {{
+  template <class _Element>
+  class %(class_name)s : public %(base_class)s
+  {
+    private:
+      %(reg_idx_arr_decl)s;
+
+    protected:
+      typedef _Element Element;
+      typedef _Element TPElem;
+
+    public:
+      %(class_name)s(ExtMachInst machInst,
+                     RegIndex dest, RegIndex dest2,
+                     RegIndex op1, uint64_t imm)
+          : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                            dest, dest2, op1, imm)
+      {
+          %(set_reg_idx_arr)s;
+          %(constructor)s;
+      }
+
+      Fault execute(ExecContext *, trace::InstRecord *) const override;
+  };
+  }};
 
 def template SveCompTermOpDeclare {{
 template <class _Element>
@@ -1230,6 +1410,33 @@ class %(class_name)s : public %(base_class)s
 };
 }};
 
+def template SveComplexUnpredOpDeclare {{
+  template <class _Element>
+  class %(class_name)s : public %(base_class)s
+  {
+    private:
+      %(reg_idx_arr_decl)s;
+
+    protected:
+      typedef _Element Element;
+      typedef _Element TPElem;
+
+    public:
+      // Constructor
+      %(class_name)s(ExtMachInst machInst,
+                     RegIndex _dest, RegIndex _op1, RegIndex _op2,
+                     uint8_t _rot) :
+          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _dest, _op1, _op2, _rot)
+      {
+          %(set_reg_idx_arr)s;
+          %(constructor)s;
+      }
+
+      Fault execute(ExecContext *, trace::InstRecord *) const override;
+  };
+  }};
+
 def template SveComplexIndexOpDeclare {{
 template <class _Element>
 class %(class_name)s : public %(base_class)s
@@ -1240,6 +1447,70 @@ class %(class_name)s : public %(base_class)s
   protected:
     typedef _Element Element;
     typedef _Element TPElem;
+
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst,
+                   RegIndex _dest, RegIndex _op1, RegIndex _op2,
+                   uint8_t _rot, uint8_t _imm) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                       _dest, _op1, _op2, _rot, _imm)
+    {
+        %(set_reg_idx_arr)s;
+        %(constructor)s;
+    }
+
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
+};
+}};
+
+def template SveComplexDotOpDeclare {{
+template <class _SElementA, class _SElementB, class _DElement>
+  class %(class_name)s : public %(base_class)s
+  {
+    private:
+      %(reg_idx_arr_decl)s;
+
+    protected:
+      typedef _DElement Element;
+      typedef _SElementA SElementA;
+      typedef _SElementB SElementB;
+      typedef _DElement DElement;
+      typedef _SElementA TPSrcAElem;
+      typedef _SElementB TPSrcBElem;
+      typedef _DElement TPDElem;
+
+    public:
+      // Constructor
+      %(class_name)s(ExtMachInst machInst,
+                     RegIndex _dest, RegIndex _op1, RegIndex _op2,
+                     uint8_t _rot) :
+          %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                         _dest, _op1, _op2, _rot)
+      {
+          %(set_reg_idx_arr)s;
+          %(constructor)s;
+      }
+
+      Fault execute(ExecContext *, trace::InstRecord *) const override;
+  };
+  }};
+
+def template SveComplexDotIndexOpDeclare {{
+template <class _SElementA, class _SElementB, class _DElement>
+class %(class_name)s : public %(base_class)s
+{
+  private:
+    %(reg_idx_arr_decl)s;
+
+  protected:
+    typedef _DElement Element;
+    typedef _SElementA SElementA;
+    typedef _SElementB SElementB;
+    typedef _DElement DElement;
+    typedef _SElementA TPSrcAElem;
+    typedef _SElementB TPSrcBElem;
+    typedef _DElement TPDElem;
 
   public:
     // Constructor
@@ -1274,6 +1545,59 @@ class %(class_name)s : public %(base_class)s
                    RegIndex dest, RegIndex op1, RegIndex op2)
         : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
                          dest, op1, op2)
+    {
+        %(set_reg_idx_arr)s;
+        %(constructor)s;
+    }
+
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
+};
+}};
+
+def template SveMultiNarrowOpDeclare {{
+template <class _Element>
+class %(class_name)s : public %(base_class)s
+{
+  private:
+    %(reg_idx_arr_decl)s;
+
+  protected:
+    typedef _Element Element;
+    typedef _Element TPElem;
+
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst,
+                    RegIndex _dest, RegIndex _op1, RegIndex _op2)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                          _dest, _op1, _op2)
+    {
+        %(set_reg_idx_arr)s;
+        %(constructor)s;
+    }
+
+    Fault execute(ExecContext *, trace::InstRecord *) const override;
+};
+}};
+
+def template SveMultiNarrowImmOpDeclare {{
+template <class _Element>
+class %(class_name)s : public %(base_class)s
+{
+  private:
+    %(reg_idx_arr_decl)s;
+
+  protected:
+    typedef _Element Element;
+    typedef _Element TPElem;
+
+  public:
+    // Constructor
+    %(class_name)s(ExtMachInst machInst,
+                    RegIndex _dest, RegIndex _op1, RegIndex _op2,
+                    uint64_t _imm)
+        : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                          _dest, _op1, _op2, _imm)
     {
         %(set_reg_idx_arr)s;
         %(constructor)s;
@@ -1392,4 +1716,30 @@ def template SveMatMulOpExecDeclare {{
     Fault
     %(class_name)s<%(destEltType)s,%(srcEltAType)s,%(srcEltBType)s>
     ::execute(ExecContext *, trace::InstRecord *) const;
+}};
+
+def template SvePredMovOpDeclare {{
+  template <class _Element>
+  class %(class_name)s : public %(base_class)s
+  {
+    private:
+      %(reg_idx_arr_decl)s;
+
+    protected:
+      typedef _Element Element;
+      typedef _Element TPElem;
+
+    public:
+      // Constructor
+      %(class_name)s(ExtMachInst machInst,
+                   RegIndex _dest, RegIndex _op1, uint64_t _imm)
+          : %(base_class)s("%(mnemonic)s", machInst, %(op_class)s,
+                           _dest, _op1, _imm)
+      {
+          %(set_reg_idx_arr)s;
+          %(constructor)s;
+      }
+
+      Fault execute(ExecContext *, trace::InstRecord *) const override;
+  };
 }};

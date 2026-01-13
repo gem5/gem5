@@ -102,34 +102,47 @@ GPUCommandProcessor::translate(Addr vaddr, Addr size)
 }
 
 void
-GPUCommandProcessor::performTimingRead(PacketPtr pkt)
+GPUCommandProcessor::performTimingRead(PacketPtr pkt, int dispType)
 {
-        // Use the shader to access the CUs and call the read request from
-        // the SQC port. Call submit kernel dispatch in the timing response
-        // function in receive timing response of SQC port. Schedule this
-        // timing read when...just currTick
-        ComputeUnit *cu = shader()->cuList[0];
-        pkt->senderState = new ComputeUnit::SQCPort::SenderState(
-                cu->wfList[0][0], true);
-        ComputeUnit::SQCPort::SenderState *sender_state =
-            safe_cast<ComputeUnit::SQCPort::SenderState*>(pkt->senderState);
-        ComputeUnit::SQCPort sqc_port = cu->sqcPort;
-        if (!sqc_port.sendTimingReq(pkt)) {
-                sqc_port.retries.push_back(
-                        std::pair<PacketPtr, Wavefront*>(pkt,
-                            sender_state->wavefront));
-        }
+    // Use the shader to access the CUs and call the read request from
+    // the SQC port. Call submit kernel dispatch in the timing response
+    // function in receive timing response of SQC port. Schedule this
+    // timing read when...just currTick
+    ComputeUnit *cu = shader()->cuList[0];
+    pkt->senderState = new ComputeUnit::SQCPort::SenderState(
+            cu->wfList[0][0], true);
+    ComputeUnit::SQCPort::SenderState *sender_state =
+        safe_cast<ComputeUnit::SQCPort::SenderState*>(pkt->senderState);
+    sender_state->dispatchType = dispType;
+    ComputeUnit::SQCPort sqc_port = cu->sqcPort;
+
+    if (!sqc_port.sendTimingReq(pkt)) {
+        sqc_port.retries.push_back(
+            std::pair<PacketPtr, Wavefront*>(pkt, sender_state->wavefront)
+        );
+    }
 }
 
 void
-GPUCommandProcessor::completeTimingRead()
+GPUCommandProcessor::completeTimingRead(int dispType)
 {
-        struct KernelDispatchData dispatchData = kernelDispatchList.front();
-        kernelDispatchList.pop_front();
-        delete dispatchData.readPkt;
-        if (kernelDispatchList.size() == 0)
-                dispatchKernelObject(dispatchData.akc, dispatchData.raw_pkt,
-                        dispatchData.queue_id, dispatchData.host_pkt_addr);
+    struct KernelDispatchData dispatchData = kernelDispatchList.front();
+    kernelDispatchList.pop_front();
+    delete dispatchData.readPkt;
+
+    // Only one of the following can happen at any time from one CP. Figure
+    // out what performed the timing read and call to appropriate function.
+    if (kernelDispatchList.size() == 0) {
+        switch (dispType) {
+          case ComputeUnit::SQCPort::SenderState::DISPATCH_KERNEL_OBJECT:
+            dispatchKernelObject(dispatchData.akc, dispatchData.raw_pkt,
+                    dispatchData.queue_id, dispatchData.host_pkt_addr);
+            break;
+          case ComputeUnit::SQCPort::SenderState::DISPATCH_PRELOAD_ARG:
+            initPreload(dispatchData.akc, dispatchData.task);
+            break;
+        }
+    }
 }
 
 /**
@@ -280,7 +293,8 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
                 dispatchData.host_pkt_addr = host_pkt_addr;
                 dispatchData.readPkt = readPkt;
                 kernelDispatchList.push_back(dispatchData);
-                performTimingRead(readPkt);
+                performTimingRead(readPkt,
+                    ComputeUnit::SQCPort::SenderState::DISPATCH_KERNEL_OBJECT);
             }
         }
     }
@@ -291,6 +305,16 @@ GPUCommandProcessor::dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
                                         uint32_t queue_id, Addr host_pkt_addr)
 {
     _hsa_dispatch_packet_t *disp_pkt = (_hsa_dispatch_packet_t*)raw_pkt;
+
+    /**
+     * If the kernarg_preload_spec_length is non-zero, the CP firmware will
+     * append additional bytes to the kernel_code_entry_byte_offset.
+     *
+     * https://llvm.org/docs/AMDGPUUsage.html#amdgpu-amdhsa-kernarg-preload
+     */
+    if (akc->kernarg_preload_spec_length != 0) {
+        akc->kernel_code_entry_byte_offset += KernargPreloadPktSize;
+    }
 
     sanityCheckAKC(akc);
 
@@ -376,11 +400,16 @@ GPUCommandProcessor::dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
         "LDS size: %d)\n", kernel_name, task->numVectorRegs(),
         task->numScalarRegs(), task->codeAddr(), 0, 0);
 
-    initABI(task);
+    if (akc->kernarg_preload_spec_length == 0) {
+        initABI(task);
+
+        delete akc;
+    } else {
+        readPreload(akc, task);
+    }
+
     ++dynamic_task_id;
     if (!is_blit_kernel) ++non_blit_kernel_id;
-
-    delete akc;
 }
 
 void
@@ -692,6 +721,117 @@ GPUCommandProcessor::signalWakeupEvent(uint32_t event_id)
     _driver->signalWakeupEvent(event_id);
 }
 
+void
+GPUCommandProcessor::readPreload(AMDKernelCode *akc, HSAQueueEntry *task)
+{
+    _hsa_dispatch_packet_t *disp_pkt =
+        (_hsa_dispatch_packet_t*)task->dispPktPtr();
+
+    // Data preloaded is copied from the kernarg segment. Preloading starts at
+    // the dword offset specified by kernarg_preload_spec_offset.
+    Addr preload_addr = (Addr)disp_pkt->kernarg_address
+        + akc->kernarg_preload_spec_offset * 4;
+
+    DPRINTF(GPUCommandProc, "Kernarg preload starts at addr: %#x\n",
+            preload_addr);
+
+    /**
+     * In full system mode, the page table entry may point to a system
+     * page or a device page. System pages use the proxy as normal, but
+     * a device page needs to be read from device memory. Check what type
+     * it is here.
+     */
+    bool is_system_page = true;
+    Addr phys_addr = preload_addr;
+
+    /**
+     * Full system currently only supports running on single VMID (one
+     * virtual memory space), i.e., one application running on GPU at a
+     * time. Because of this, for now we know the VMID is always 1. Later
+     * the VMID would have to be passed on to the command processor.
+     */
+    int vmid = 1;
+    unsigned tmp_bytes;
+    walker->startFunctional(gpuDevice->getVM().getPageTableBase(vmid),
+                            phys_addr, tmp_bytes, BaseMMU::Mode::Read,
+                            is_system_page);
+
+    DPRINTF(GPUCommandProc, "Kernarg preload data is in %s memory\n",
+            is_system_page ? "host" : "device");
+
+    /**
+     * System objects use DMA device. Device objects need to use device
+     * memory.
+     */
+    if (is_system_page) {
+        // Unclear if this is even possible as the point of kernarg preload
+        // is to avoid loads from host memory by explicitly placing them in
+        // device memory. It is not difficult to implement so issue a warning
+        // for now to indicate a possible place to debug if something goes
+        // wrong and this warning is seen.
+        warn("Preload kernarg from host untested!\n");
+
+        auto cb = new DmaVirtCallback<uint32_t>(
+            [ = ] (const uint32_t&) {
+                initPreload(akc, task);
+            });
+
+        dmaReadVirt(preload_addr,
+                sizeof(uint32_t) * akc->kernarg_preload_spec_length,
+                cb, task->preloadArgs());
+    } else {
+        // Read from GPU memory manager one cache line at a time to prevent
+        // rare cases where the preload data spans two memory pages.
+        constexpr unsigned alignment_granularity = 64;
+        ChunkGenerator gen(preload_addr,
+                sizeof(uint32_t) * akc->kernarg_preload_spec_length,
+                alignment_granularity);
+
+        for (; !gen.done(); gen.next()) {
+            Addr chunk_addr = gen.addr();
+            int vmid = 1;
+            unsigned dummy;
+            walker->startFunctional(
+                gpuDevice->getVM().getPageTableBase(vmid), chunk_addr,
+                dummy, BaseMMU::Mode::Read, is_system_page);
+
+            Request::Flags flags = Request::PHYSICAL;
+            RequestPtr request = std::make_shared<Request>(chunk_addr,
+                alignment_granularity, flags,
+                walker->getDevRequestor());
+
+            PacketPtr readPkt = new Packet(request, MemCmd::ReadReq);
+            readPkt->dataStatic((uint8_t *)task->preloadArgs()
+                                 + gen.complete());
+
+            struct KernelDispatchData dispatchData;
+            dispatchData.akc = akc;
+            dispatchData.task = task;
+            dispatchData.readPkt = readPkt;
+            kernelDispatchList.push_back(dispatchData);
+            performTimingRead(readPkt,
+                ComputeUnit::SQCPort::SenderState::DISPATCH_PRELOAD_ARG);
+        }
+    }
+}
+
+void
+GPUCommandProcessor::initPreload(AMDKernelCode *akc, HSAQueueEntry *task)
+{
+    // Fill in SGPRs
+    int num_sgprs = akc->kernarg_preload_spec_length;
+
+    task->preloadLength(num_sgprs);
+    for (int i = 0; i < num_sgprs; ++i) {
+        DPRINTF(GPUCommandProc, "Task preload user SGPR[%d] = %x\n",
+                i, task->preloadArgs()[i]);
+    }
+
+    delete akc;
+
+    initABI(task);
+}
+
 /**
  * The CP is responsible for traversing all HSA-ABI-related data
  * structures from memory and initializing the ABI state.
@@ -813,9 +953,6 @@ GPUCommandProcessor::sanityCheckAKC(AMDKernelCode *akc)
     warn_if(akc->bulky, "Bulky code object bit ignored\n");
     // TODO: All the IEEE bits
 
-    warn_if(akc->kernarg_preload_spec_length ||
-            akc->kernarg_preload_spec_offset,
-            "Kernarg preload not implemented\n");
     warn_if(akc->tg_split, "TG split not implemented\n");
 }
 
@@ -849,6 +986,12 @@ Shader*
 GPUCommandProcessor::shader()
 {
     return _shader;
+}
+
+GfxVersion
+GPUCommandProcessor::getGfxVersion() const
+{
+    return FullSystem ? gpuDevice->getGfxVersion() : _driver->getGfxVersion();
 }
 
 } // namespace gem5

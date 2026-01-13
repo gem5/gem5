@@ -30,10 +30,8 @@ from typing import (
     Iterator,
 )
 
-from m5.objects import (
-    Port,
-    PyTrafficGen,
-)
+from m5.objects import PyTrafficGen
+from m5.params import Port
 from m5.ticks import fromSeconds
 from m5.util.convert import (
     toLatency,

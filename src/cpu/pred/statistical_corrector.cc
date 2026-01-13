@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018 Metempsy Technology Consulting
+ * Copyright (c) 2024 Technical University of Munich
  * All rights reserved.
  *
  * Copyright (c) 2006 INRIA (Institut National de Recherche en
@@ -70,6 +71,8 @@ StatisticalCorrector::StatisticalCorrector(
     pUpdateThresholdWidth(p.pUpdateThresholdWidth),
     extraWeightsWidth(p.extraWeightsWidth),
     scCountersWidth(p.scCountersWidth),
+    instShiftAmt(p.instShiftAmt),
+    speculativeHistUpdate(p.speculativeHistUpdate),
     firstH(0),
     secondH(0),
     stats(this)
@@ -98,7 +101,7 @@ StatisticalCorrector::makeBranchInfo()
 StatisticalCorrector::SCThreadHistory*
 StatisticalCorrector::makeThreadHistory()
 {
-    return new SCThreadHistory();
+    return new SCThreadHistory(instShiftAmt);
 }
 
 void
@@ -132,8 +135,10 @@ StatisticalCorrector::initBias()
 
 void
 StatisticalCorrector::initGEHLTable(unsigned numLenghts,
-    std::vector<int> lengths, std::vector<int8_t> * & table,
-    unsigned logNumEntries, std::vector<int8_t> & w, int8_t wInitValue)
+                                    std::vector<int> lengths,
+                                    std::vector<int8_t> *&table,
+                                    unsigned logNumEntries,
+                                    std::vector<int8_t> &w, int8_t wInitValue)
 {
     assert(lengths.size() == numLenghts);
     if (numLenghts == 0) {
@@ -156,34 +161,41 @@ unsigned
 StatisticalCorrector::getIndBias(Addr branch_pc, BranchInfo* bi,
                                  bool bias) const
 {
-    return (((((branch_pc ^(branch_pc >>2))<<1) ^ (bi->lowConf & bias)) <<1)
-            +  bi->predBeforeSC) & ((1<<logBias) -1);
+    Addr shifted_pc = branch_pc >> instShiftAmt;
+    return (((((shifted_pc ^ (shifted_pc >> 2)) << 1)
+            ^ (bi->lowConf & bias)) << 1) +  bi->predBeforeSC)
+            & ((1 << logBias) - 1);
 }
 
 unsigned
-StatisticalCorrector::getIndBiasSK(Addr branch_pc, BranchInfo* bi) const
+StatisticalCorrector::getIndBiasSK(Addr branch_pc, BranchInfo *bi) const
 {
-    return (((((branch_pc ^ (branch_pc >> (logBias-2)))<<1) ^
-           (bi->highConf))<<1) + bi->predBeforeSC) & ((1<<logBias) -1);
+    Addr shifted_pc = branch_pc >> instShiftAmt;
+    return (((((shifted_pc ^ (shifted_pc >> (logBias - 2))) << 1)
+            ^ bi->highConf) << 1) + bi->predBeforeSC)
+            & ((1 << logBias) - 1);
 }
 
 unsigned
 StatisticalCorrector::getIndUpd(Addr branch_pc) const
 {
-    return ((branch_pc ^ (branch_pc >>2)) & ((1 << (logSizeUp)) - 1));
+    Addr shifted_pc = branch_pc >> instShiftAmt;
+    return ((shifted_pc ^ (shifted_pc >> 2)) & ((1 << logSizeUp) - 1));
 }
 
 unsigned
 StatisticalCorrector::getIndUpds(Addr branch_pc) const
 {
-    return ((branch_pc ^ (branch_pc >>2)) & ((1 << (logSizeUps)) - 1));
+    Addr shifted_pc = branch_pc >> instShiftAmt;
+    return ((shifted_pc ^ (shifted_pc >> 2)) & ((1 << logSizeUps) - 1));
 }
 
 int64_t
 StatisticalCorrector::gIndex(Addr branch_pc, int64_t bhist, int logs, int nbr,
                              int i)
 {
-    return (((int64_t) branch_pc) ^ bhist ^ (bhist >> (8 - i)) ^
+    return (((int64_t) branch_pc >> instShiftAmt) ^
+             bhist ^ (bhist >> (8 - i)) ^
             (bhist >> (16 - 2 * i)) ^ (bhist >> (24 - 3 * i)) ^
             (bhist >> (32 - 3 * i)) ^ (bhist >> (40 - 4 * i))) &
            ((1 << (logs - gIndexLogsSubstr(nbr, i))) - 1);
@@ -191,8 +203,9 @@ StatisticalCorrector::gIndex(Addr branch_pc, int64_t bhist, int logs, int nbr,
 
 int
 StatisticalCorrector::gPredict(Addr branch_pc, int64_t hist,
-        std::vector<int> & length, std::vector<int8_t> * tab, int nbr,
-        int logs, std::vector<int8_t> & w)
+                               std::vector<int> &length,
+                               std::vector<int8_t> *tab, int nbr, int logs,
+                               std::vector<int8_t> &w)
 {
     int percsum = 0;
     for (int i = 0; i < nbr; i++) {
@@ -207,9 +220,9 @@ StatisticalCorrector::gPredict(Addr branch_pc, int64_t hist,
 
 void
 StatisticalCorrector::gUpdate(Addr branch_pc, bool taken, int64_t hist,
-                   std::vector<int> & length, std::vector<int8_t> * tab,
-                   int nbr, int logs, std::vector<int8_t> & w,
-                   BranchInfo* bi)
+                              std::vector<int> &length,
+                              std::vector<int8_t> *tab, int nbr, int logs,
+                              std::vector<int8_t> &w, BranchInfo *bi)
 {
     int percsum = 0;
     for (int i = 0; i < nbr; i++) {
@@ -228,34 +241,26 @@ StatisticalCorrector::gUpdate(Addr branch_pc, bool taken, int64_t hist,
 
 bool
 StatisticalCorrector::scPredict(ThreadID tid, Addr branch_pc, bool cond_branch,
-                     BranchInfo* bi, bool prev_pred_taken, bool bias_bit,
-                     bool use_conf_ctr, int8_t conf_ctr, unsigned conf_bits,
-                     int hitBank, int altBank, int64_t phist, int init_lsum)
+                                BranchInfo *bi, bool prev_pred_taken,
+                                bool bias_bit, bool use_conf_ctr,
+                                int8_t conf_ctr, unsigned conf_bits,
+                                int hitBank, int altBank, int init_lsum)
 {
     bool pred_taken = prev_pred_taken;
     if (cond_branch) {
 
         bi->predBeforeSC = prev_pred_taken;
-
-        // first calc/update the confidences from the TAGE prediction
-        if (use_conf_ctr) {
-            bi->lowConf = (abs(2 * conf_ctr + 1) == 1);
-            bi->medConf = (abs(2 * conf_ctr + 1) == 5);
-            bi->highConf = (abs(2 * conf_ctr + 1) >= (1<<conf_bits) - 1);
-        }
-
         int lsum = init_lsum;
 
-        int8_t ctr = bias[getIndBias(branch_pc, bi, bias_bit)];
-        lsum += (2 * ctr + 1);
-        ctr = biasSK[getIndBiasSK(branch_pc, bi)];
-        lsum += (2 * ctr + 1);
-        ctr = biasBank[getIndBiasBank(branch_pc, bi, hitBank, altBank)];
-        lsum += (2 * ctr + 1);
+        lsum += calcBias(branch_pc, bi, bias_bit,
+                         use_conf_ctr, conf_ctr, conf_bits, hitBank, altBank);
 
-        lsum = (1 + (wb[getIndUpds(branch_pc)] >= 0)) * lsum;
+        // Record the history state to be able to recover
+        // The gPredictions function will use the recorded state to
+        // make the predictions
+        scRecordHistState(branch_pc, bi);
 
-        int thres = gPredictions(tid, branch_pc, bi, lsum, phist);
+        int thres = gPredictions(tid, branch_pc, bi, lsum);
 
         // These will be needed at update time
         bi->lsum = lsum;
@@ -291,18 +296,73 @@ StatisticalCorrector::scPredict(ThreadID tid, Addr branch_pc, bool cond_branch,
     return pred_taken;
 }
 
+int
+StatisticalCorrector::calcBias(Addr branch_pc, BranchInfo *bi, bool bias_bit,
+                               bool use_conf_ctr, int8_t conf_ctr,
+                               unsigned conf_bits, int hitBank, int altBank)
+{
+    // first calc/update the confidences from the TAGE prediction
+    if (use_conf_ctr) {
+        bi->lowConf = (abs(2 * conf_ctr + 1) == 1);
+        bi->medConf = (abs(2 * conf_ctr + 1) == 5);
+        bi->highConf = (abs(2 * conf_ctr + 1) >= (1<<conf_bits) - 1);
+    }
+
+    int lsum = 0;
+
+    int8_t ctr = bias[getIndBias(branch_pc, bi, bias_bit)];
+    lsum += (2 * ctr + 1);
+    ctr = biasSK[getIndBiasSK(branch_pc, bi)];
+    lsum += (2 * ctr + 1);
+    ctr = biasBank[getIndBiasBank(branch_pc, bi, hitBank, altBank)];
+    lsum += (2 * ctr + 1);
+
+    lsum = (1 + (wb[getIndUpds(branch_pc)] >= 0)) * lsum;
+    return lsum;
+}
+
+
+void
+StatisticalCorrector::updateHistories(Addr branch_pc, bool speculative,
+                                      const StaticInstPtr &inst, bool taken,
+                                      BranchInfo *bi, Addr target,
+                                      int64_t phist)
+{
+    if (speculative != speculativeHistUpdate) {
+        return;
+    }
+
+    // If this is the first time we see this branch record the current
+    // state of the history to be able to recover.
+    if (speculativeHistUpdate && (!bi->modified)) {
+        scRecordHistState(branch_pc, bi);
+    }
+
+    // In case the branch already updated the history
+    // we need to revert the previous update first.
+    if (bi->modified) {
+        scRestoreHistState(bi);
+    }
+
+    // Update the SC histories
+    scHistoryUpdate(branch_pc, inst, taken, target, phist);
+    bi->modified = true;
+}
+
 void
 StatisticalCorrector::scHistoryUpdate(Addr branch_pc,
-        const StaticInstPtr &inst, bool taken, BranchInfo * tage_bi,
-        Addr corrTarget)
+                                      const StaticInstPtr &inst, bool taken,
+                                      Addr target, int64_t phist)
 {
+    // Update the path history from TAGE
+    scHistory->pHist = phist;
     int brtype = inst->isDirectCtrl() ? 0 : 2;
     if (! inst->isUncondCtrl()) {
         ++brtype;
     }
     // Non speculative SC histories update
     if (brtype & 1) {
-        if (corrTarget < branch_pc) {
+        if (target < branch_pc) {
             //This branch corresponds to a loop
             if (!taken) {
                 //exit of the "loop"
@@ -315,16 +375,50 @@ StatisticalCorrector::scHistoryUpdate(Addr branch_pc,
         }
 
         scHistory->bwHist = (scHistory->bwHist << 1) +
-                                (taken & (corrTarget < branch_pc));
+                                (taken & (target < branch_pc));
         scHistory->updateLocalHistory(1, branch_pc, taken);
     }
 }
 
 void
-StatisticalCorrector::condBranchUpdate(ThreadID tid, Addr branch_pc,
-        bool taken, BranchInfo *bi, Addr corrTarget, bool b, int hitBank,
-        int altBank, int64_t phist)
+StatisticalCorrector::scRecordHistState(Addr branch_pc, BranchInfo *bi)
 {
+    bi->pc = branch_pc;
+    bi->bwHist = scHistory->bwHist;
+    bi->imliCount = scHistory->imliCount;
+    bi->pHist = scHistory->pHist;
+    bi->localHistories[1] = scHistory->getLocalHistory(1, branch_pc);
+}
+
+bool
+StatisticalCorrector::scRestoreHistState(BranchInfo *bi)
+{
+    if (!bi->modified) {
+        return false;
+    }
+    scHistory->bwHist = bi->bwHist;
+    scHistory->imliCount = bi->imliCount;
+    scHistory->setLocalHistory(1, bi->pc, bi->localHistories[1]);
+    return true;
+}
+
+
+void
+StatisticalCorrector::condBranchUpdate(ThreadID tid, Addr branch_pc,
+                                       bool taken, BranchInfo *bi,
+                                       Addr corrTarget, bool b, int hitBank,
+                                       int altBank)
+{
+
+    if (speculativeHistUpdate) {
+        // For speculative updates we recalculate the lsum as it might
+        // have changed since the last update
+
+        bi->lsum = calcBias(branch_pc, bi, b, false/* was already recorded*/,
+                            0, 0, hitBank, altBank);
+        bi->thres = gPredictions(tid, branch_pc, bi, bi->lsum);
+    }
+
     bool scPred = (bi->lsum >= 0);
 
     if (bi->predBeforeSC != scPred) {
@@ -375,7 +469,7 @@ StatisticalCorrector::condBranchUpdate(ThreadID tid, Addr branch_pc,
         ctrUpdate(biasSK[indBiasSK], taken, scCountersWidth);
         ctrUpdate(biasBank[indBiasBank], taken, scCountersWidth);
 
-        gUpdates(tid, branch_pc, taken, bi, phist);
+        gUpdates(tid, branch_pc, taken, bi);
     }
 }
 

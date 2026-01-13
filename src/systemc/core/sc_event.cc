@@ -402,15 +402,13 @@ sc_event::sc_event(bool, const char *_name) :
 const std::vector<sc_event *> &
 sc_get_top_level_events()
 {
-    return ::sc_gem5::topLevelEvents;
+    return ::sc_gem5::topLevelEvents();
 }
 
 sc_event *
 sc_find_event(const char *name)
 {
-    std::string str(name);
-    ::sc_gem5::EventsIt it = ::sc_gem5::findEvent(str);
-    return it == ::sc_gem5::allEvents.end() ? nullptr : *it;
+    return ::sc_gem5::findEvent(name);
 }
 
 } // namespace sc_core

@@ -55,7 +55,7 @@
 #include <vector>
 
 #include "base/random.hh"
-#include "cpu/pred/bpred_unit.hh"
+#include "cpu/pred/conditional.hh"
 #include "params/MultiperspectivePerceptron.hh"
 
 namespace gem5
@@ -64,7 +64,7 @@ namespace gem5
 namespace branch_prediction
 {
 
-class MultiperspectivePerceptron : public BPredUnit
+class MultiperspectivePerceptron : public ConditionalPredictor
 {
   protected:
     /**

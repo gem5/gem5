@@ -60,11 +60,9 @@
 #include "enums/Clusivity.hh"
 #include "mem/cache/cache_blk.hh"
 #include "mem/cache/cache_probe_arg.hh"
-#include "mem/cache/compressors/base.hh"
 #include "mem/cache/mshr_queue.hh"
 #include "mem/cache/tags/base.hh"
 #include "mem/cache/write_queue.hh"
-#include "mem/cache/write_queue_entry.hh"
 #include "mem/packet.hh"
 #include "mem/packet_queue.hh"
 #include "mem/qport.hh"
@@ -88,9 +86,15 @@ namespace partitioning_policy
 {
     class PartitionManager;
 }
+namespace compression
+{
+class Base;
+}
 class MSHR;
+class MSHRQueue;
 class RequestPort;
 class QueueEntry;
+class WriteQueueEntry;
 struct BaseCacheParams;
 
 /**
@@ -421,15 +425,7 @@ class BaseCache : public ClockedObject
         }
     }
 
-    void markInService(WriteQueueEntry *entry)
-    {
-        bool wasFull = writeBuffer.isFull();
-        writeBuffer.markInService(entry);
-
-        if (wasFull && !writeBuffer.isFull()) {
-            clearBlocked(Blocked_NoWBBuffers);
-        }
-    }
+    void markInService(WriteQueueEntry *entry);
 
     /**
      * Determine whether we should allocate on a fill or not. If this
@@ -1194,37 +1190,7 @@ class BaseCache : public ClockedObject
         return mshr;
     }
 
-    void allocateWriteBuffer(PacketPtr pkt, Tick time)
-    {
-        // should only see writes or clean evicts here
-        assert(pkt->isWrite() || pkt->cmd == MemCmd::CleanEvict);
-
-        Addr blk_addr = pkt->getBlockAddr(blkSize);
-
-        // If using compression, on evictions the block is decompressed and
-        // the operation's latency is added to the payload delay. Consume
-        // that payload delay here, meaning that the data is always stored
-        // uncompressed in the writebuffer
-        if (compressor) {
-            time += pkt->payloadDelay;
-            pkt->payloadDelay = 0;
-        }
-
-        WriteQueueEntry *wq_entry =
-            writeBuffer.findMatch(blk_addr, pkt->isSecure());
-        if (wq_entry && !wq_entry->inService) {
-            DPRINTF(Cache, "Potential to merge writeback %s", pkt->print());
-        }
-
-        writeBuffer.allocate(blk_addr, blkSize, pkt, time, order++);
-
-        if (writeBuffer.isFull()) {
-            setBlocked((BlockedCause)MSHRQueue_WriteBuffer);
-        }
-
-        // schedule the send
-        schedMemSideSendEvent(time);
-    }
+    void allocateWriteBuffer(PacketPtr pkt, Tick time);
 
     /**
      * Returns true if the cache is blocked for accesses.

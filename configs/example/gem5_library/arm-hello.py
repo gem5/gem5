@@ -1,4 +1,4 @@
-# Copyright (c) 2021 The Regents of the University of California
+# Copyright (c) 2021-2025 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,7 @@
 This gem5 configuation script creates a simple board to run an ARM
 "hello world" binary.
 
-This is setup is the close to the simplest setup possible using the gem5
+This setup is close to the simplest setup possible using the gem5
 library. It does not contain any kind of caching, IO, or any non-essential
 components.
 
@@ -36,8 +36,8 @@ Usage
 -----
 
 ```
-scons build/ARM/gem5.opt
-./build/ARM/gem5.opt configs/example/gem5_library/arm-hello.py
+scons build/ALL/gem5.opt
+./build/ALL/gem5.opt configs/example/gem5_library/arm-hello.py
 ```
 """
 
@@ -51,8 +51,8 @@ from gem5.resources.resource import obtain_resource
 from gem5.simulate.simulator import Simulator
 from gem5.utils.requires import requires
 
-# This check ensures the gem5 binary is compiled to the ARM ISA target. If not,
-# an exception will be thrown.
+# This check ensures the gem5 binary contains the ARM ISA target. If not, an
+# exception will be thrown.
 requires(isa_required=ISA.ARM)
 
 # In this setup we don't have a cache. `NoCache` can be used for such setups.
@@ -64,8 +64,7 @@ memory = SingleChannelDDR3_1600(size="32MiB")
 # We use a simple Timing processor with one core.
 processor = SimpleProcessor(cpu_type=CPUTypes.TIMING, isa=ISA.ARM, num_cores=1)
 
-# The gem5 library simple board which can be used to run simple SE-mode
-# simulations.
+# The gem5 library simple board which can be used to run SE-mode simulations.
 board = SimpleBoard(
     clk_freq="3GHz",
     processor=processor,
@@ -74,25 +73,13 @@ board = SimpleBoard(
 )
 
 # Here we set the workload. In this case we want to run a simple "Hello World!"
-# program compiled to the ARM ISA. The `Resource` class will automatically
-# download the binary from the gem5 Resources cloud bucket if it's not already
-# present.
+# program compiled to the ARM ISA. The `obtain_resource` function will
+# automatically download the binary from the gem5 Resources cloud bucket if
+# it's not already present.
 board.set_se_binary_workload(
-    # The `Resource` class reads the `resources.json` file from the gem5
-    # resources repository:
-    # https://github.com/gem5/gem5-resources.
-    # Any resource specified in this file will be automatically retrieved.
-    # At the time of writing, this file is a WIP and does not contain all
-    # resources. Jira ticket: https://gem5.atlassian.net/browse/GEM5-1096
     obtain_resource("arm-hello64-static", resource_version="1.0.0")
 )
 
 # Lastly we run the simulation.
 simulator = Simulator(board=board)
 simulator.run()
-
-print(
-    "Exiting @ tick {} because {}.".format(
-        simulator.get_current_tick(), simulator.get_last_exit_event_cause()
-    )
-)
