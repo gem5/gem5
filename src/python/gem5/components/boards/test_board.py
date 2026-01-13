@@ -30,8 +30,11 @@ from typing import (
 )
 
 from m5.objects import (
-    AddrRange,
     IOXBar,
+    PciBus,
+)
+from m5.params import (
+    AddrRange,
     Port,
 )
 
@@ -83,6 +86,17 @@ class TestBoard(AbstractSystemBoard):
         raise NotImplementedError(
             "The TestBoard does not have an IO Bus. "
             "Use `has_io_bus()` to check this."
+        )
+
+    @overrides(AbstractSystemBoard)
+    def has_pci_bus(self) -> bool:
+        return False
+
+    @overrides(AbstractSystemBoard)
+    def get_pci_bus(self) -> PciBus:
+        raise NotImplementedError(
+            "The TestBoard does not have an PCI Bus. "
+            "Use `has_pci_bus()` to check this."
         )
 
     @overrides(AbstractSystemBoard)

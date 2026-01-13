@@ -31,6 +31,7 @@
 
 #include <list>
 #include <map>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -91,7 +92,7 @@ class StoreSet : public Named
     StoreSet() : Named("StoreSets"), SSIT("SSIT") {};
 
     /** Creates store set predictor with given table sizes. */
-    StoreSet(std::string name, uint64_t clear_period,
+    StoreSet(std::string_view name, uint64_t clear_period,
              size_t SSIT_entries, int SSIT_assoc,
              replacement_policy::Base *replPolicy,
              BaseIndexingPolicy *indexingPolicy, int LFST_size);

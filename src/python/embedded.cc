@@ -75,9 +75,9 @@ EmbeddedPython::getList()
 py::object
 EmbeddedPython::getCode() const
 {
-    Bytef marshalled[len];
+    auto marshalled = std::make_unique<Bytef[]>(len);
     uLongf unzlen = len;
-    int ret = uncompress(marshalled, &unzlen, (const Bytef *)code, zlen);
+    int ret = uncompress(marshalled.get(), &unzlen, code, zlen);
     if (ret != Z_OK) {
         std::cerr << "Could not uncompress code: " << zError(ret) << std::endl;
         std::abort();
@@ -85,7 +85,7 @@ EmbeddedPython::getCode() const
     assert(unzlen == (uLongf)len);
 
     auto marshal = py::module_::import("marshal");
-    return marshal.attr("loads")(py::bytes((char *)marshalled, len));
+    return marshal.attr("loads")(py::bytes((char*)marshalled.get(), len));
 }
 
 bool

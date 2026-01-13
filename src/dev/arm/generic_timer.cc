@@ -41,6 +41,7 @@
 #include <string_view>
 
 #include "arch/arm/page_size.hh"
+#include "arch/arm/regs/misc.hh"
 #include "arch/arm/system.hh"
 #include "arch/arm/utility.hh"
 #include "base/logging.hh"

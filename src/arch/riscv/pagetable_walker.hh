@@ -87,6 +87,22 @@ namespace RiscvISA
         {
           friend class Walker;
           private:
+
+            struct WalkFlags
+            {
+              bool doEndWalk = false;
+              bool doTLBInsert = false;
+              bool doWrite = false;
+              bool pteIsLeaf = false;
+            };
+
+            enum WalkType
+            {
+                OneStage,
+                TwoStage,
+                GstageOnly,
+            };
+
             enum State
             {
                 Ready,
@@ -96,19 +112,27 @@ namespace RiscvISA
 
           protected:
             Walker *walker;
+            WalkType walkType;
             ThreadContext *tc;
             RequestPtr req;
             State state;
             State nextState;
+            State gstate;
+            State nextgState;
             int level;
+            int glevel;
             unsigned inflight;
+            TlbEntry gresult;
             TlbEntry entry;
             PacketPtr read;
             std::vector<PacketPtr> writes;
             Fault timingFault;
             BaseMMU::Translation * translation;
             BaseMMU::Mode mode;
+            MemAccessInfo memaccess;
+            XlateStage curstage;
             SATP satp;
+            SATP hgatp;
             STATUS status;
             PrivilegeMode pmode;
             bool functional;
@@ -120,7 +144,7 @@ namespace RiscvISA
             WalkerState(Walker * _walker, BaseMMU::Translation *_translation,
                         const RequestPtr &_req, bool _isFunctional = false) :
                 walker(_walker), req(_req), state(Ready),
-                nextState(Ready), level(0), inflight(0),
+                nextState(Ready), level(0), glevel(0), inflight(0),
                 translation(_translation),
                 functional(_isFunctional), timing(false),
                 retrying(false), started(false), squashed(false)
@@ -128,7 +152,8 @@ namespace RiscvISA
             }
             void initState(ThreadContext * _tc, BaseMMU::Mode _mode,
                            bool _isTiming = false);
-            Fault startWalk();
+
+            Fault walk();
             Fault startFunctional(Addr &addr, unsigned &logBytes);
             bool recvPacket(PacketPtr pkt);
             unsigned numInflight() const;
@@ -140,11 +165,19 @@ namespace RiscvISA
             std::string name() const {return walker->name();}
 
           private:
-            void setupWalk(Addr vaddr);
+            Fault checkPTEPermissions(
+              PTESv39 pte, WalkFlags& stepWalkFlags, int level);
+            Addr setupWalk(Addr vaddr);
             Fault stepWalk(PacketPtr &write);
+            Fault stepWalkGStage(PacketPtr &write);
+            Fault walkGStage(Addr guest_paddr, Addr& host_paddr);
+            Fault walkOneStage(Addr vaddr);
+            Fault walkTwoStage(Addr vaddr);
             void sendPackets();
             void endWalk();
-            Fault pageFault(bool present);
+            Fault pageFault();
+            Fault guestToHostPage(Addr vaddr);
+            PacketPtr createReqPacket(Addr paddr, MemCmd cmd, size_t bytes);
         };
 
         friend class WalkerState;
@@ -164,7 +197,8 @@ namespace RiscvISA
       public:
         // Kick off the state machine.
         Fault start(ThreadContext * _tc, BaseMMU::Translation *translation,
-                const RequestPtr &req, BaseMMU::Mode mode);
+                const RequestPtr &req, BaseMMU::Mode mode,
+                TlbEntry* result_entry = nullptr);
         Fault startFunctional(ThreadContext * _tc, Addr &addr,
                 unsigned &logBytes, BaseMMU::Mode mode);
         Port &getPort(const std::string &if_name,

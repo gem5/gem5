@@ -48,13 +48,14 @@
 #define __DEV_ARM_RealView_HH__
 
 #include "dev/platform.hh"
-#include "params/RealView.hh"
 
 namespace gem5
 {
 
 class BaseGic;
 class IdeController;
+
+struct RealViewParams;
 
 class RealView : public Platform
 {

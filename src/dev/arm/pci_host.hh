@@ -55,7 +55,7 @@ class GenericArmPciHost
     virtual ~GenericArmPciHost() {}
 
   protected:
-    uint32_t mapPciInterrupt(const PciBusAddr &addr,
+    uint32_t mapPciInterrupt(const PciDevAddr &addr,
                              PciIntPin pin) const override;
 
   protected:

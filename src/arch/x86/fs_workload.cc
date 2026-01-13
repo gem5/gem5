@@ -43,9 +43,13 @@
 #include "arch/x86/bios/smbios.hh"
 #include "arch/x86/faults.hh"
 #include "base/loader/object_file.hh"
+#include "base/trace.hh"
+#include "cpu/pc_event.hh"
 #include "cpu/thread_context.hh"
 #include "debug/ACPI.hh"
+#include "kern/linux/events.hh"
 #include "params/X86FsWorkload.hh"
+#include "sim/sim_exit.hh"
 #include "sim/system.hh"
 
 namespace gem5
@@ -102,6 +106,53 @@ installSegDesc(ThreadContext *tc, int seg, SegDescriptor desc, bool longmode)
     tc->setMiscReg(misc_reg::segLimit(seg), desc.limit);
     tc->setMiscReg(misc_reg::segAttr(seg), (RegVal)attr);
 }
+
+void
+FsWorkload::startup()
+{
+    KernelWorkload::startup();
+    addExitOnKernelPanicEvent();
+    addExitOnKernelOopsEvent();
+}
+
+void
+FsWorkload::addExitOnKernelPanicEvent()
+{
+    const std::string dmesg_output = name() + ".dmesg";
+    if (params().exit_on_kernel_panic) {
+        // This was taken from the RISCV implementation. Some kernels may not
+        // have kernel symbols, causing `kernelSymtab` to be empty.
+        // In that case, addKernelFuncEvent tries to access the "panic" symbol
+        // in the symbol table but can't, so the event won't be added and the
+        // simulation will hang upon kernel panic.
+        kernelPanicPcEvent = addKernelFuncEvent<linux::PanicOrOopsEvent>(
+            "panic", "Kernel panic in simulated system.",
+            dmesg_output, params().on_panic
+        );
+        warn_if(!kernelPanicPcEvent, "Failed to find kernel symbol 'panic'");
+    }
+}
+
+void
+FsWorkload::addExitOnKernelOopsEvent()
+{
+    const std::string dmesg_output = name() + ".dmesg";
+    // This was taken from the RISCV implementation. Some kernels may not
+    // have kernel symbols, causing `kernelSymtab` to be empty.
+    // In that case, addKernelFuncEvent tries to access the "oops_exit" symbol
+    // in the symbol table but can't, so the event won't be added and the
+    // simulation will continue upon kernel oops.
+    if (params().exit_on_kernel_oops) {
+        kernelOopsPcEvent = addKernelFuncEvent<linux::PanicOrOopsEvent>(
+            "oops_exit", "Kernel oops in simulated system.",
+            dmesg_output, params().on_oops
+        );
+        warn_if(!kernelOopsPcEvent,
+                "Failed to find kernel symbol 'oops_exit'");
+    }
+
+}
+
 
 void
 FsWorkload::initState()

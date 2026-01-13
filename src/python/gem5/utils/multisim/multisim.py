@@ -205,6 +205,11 @@ def run(module_path: Path, processes: Optional[int] = None) -> None:
         "Simulators instantiated in main thread instead of child thread "
         "(after determining number of jobs)."
     )
+    assert max_num_processes is not None, (
+        "The maximum number of processes to use has not been set. Please "
+        "call `multisim.set_num_processes(num_processes)` in your "
+        "configuration script."
+    )
 
     active_processes = []
     remaining_ids = list(ids).copy()

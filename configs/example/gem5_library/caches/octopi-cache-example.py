@@ -1,4 +1,4 @@
-# Copyright (c) 2023 The Regents of the University of California
+# Copyright (c) 2023-2025 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,14 +25,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-This script boots Ubuntu 20.04 with 8 timing cores in 1 CCD.
+This script boots Ubuntu 24.04 with 8 timing cores in 1 CCD.
 
 Usage
 -----
 
 ```
-scons build/ARM_MESI_Three_Level/gem5.opt -j `nproc`
-./build/ARM_MESI_Three_Level/gem5.opt \
+scons build/ALL/gem5.opt -j `nproc`
+./build/ALL/gem5.opt \
     configs/example/gem5_library/caches/octopi-cache-example.py
 ```
 """
@@ -45,7 +45,7 @@ from m5.objects import (
 
 from gem5.coherence_protocol import CoherenceProtocol
 from gem5.components.boards.arm_board import ArmBoard
-from gem5.components.cachehierarchies.ruby.caches.mesi_three_level.octopi import (
+from gem5.components.cachehierarchies.ruby.caches.prebuilt.octopi_cache.octopi import (
     OctopiCache,
 )
 from gem5.components.memory import DualChannelDDR4_2400
@@ -98,7 +98,9 @@ board = ArmBoard(
 )
 
 board.set_workload(
-    obtain_resource("arm64-ubuntu-20.04-boot", resource_version="2.0.0")
+    obtain_resource(
+        "arm-ubuntu-24.04-boot-with-systemd", resource_version="3.0.0"
+    )
 )
 
 simulator = Simulator(board=board)

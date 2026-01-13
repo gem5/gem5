@@ -56,7 +56,7 @@ class Check
     Check(Addr address, Addr pc, int _num_writers,
           int _num_readers, RubyTester* _tester);
 
-    void initiate(); // Does Action or Check or nether
+    void initiate(Cycles current_time); // Does Action or Check or nether
     void performCallback(ruby::NodeID proc, ruby::SubBlock* data,
         Cycles curTime);
     Addr getAddress() const { return m_address; }
@@ -65,10 +65,10 @@ class Check
     void print(std::ostream& out) const;
 
   private:
-    void initiateFlush();
-    void initiatePrefetch();
-    void initiateAction();
-    void initiateCheck();
+    void initiateFlush(Cycles current_time);
+    void initiatePrefetch(Cycles current_time);
+    void initiateAction(Cycles current_time);
+    void initiateCheck(Cycles current_time);
 
     void pickValue();
     void pickInitiatingNode();

@@ -135,26 +135,29 @@ class SymbolTable:
 
     def writeCodeFiles(self, path, includes):
         makeDir(path)
-        makeDir(os.path.join(path, self.slicc.protocol))
 
-        code = self.codeFormatter()
+        # Note: This will be None if generated only the shared code.
+        if self.slicc.protocol:
+            makeDir(os.path.join(path, self.slicc.protocol))
 
-        for include_path in includes:
-            code('#include "${{include_path}}"')
+            code = self.codeFormatter()
 
-        for symbol in self.sym_vec:
-            if isinstance(symbol, Type) and not symbol.isPrimitive:
-                ident = symbol.c_ident
-                if not symbol.shared and not symbol.isExternal:
-                    ident = f"{self.slicc.protocol}/{ident}"
-                code('#include "mem/ruby/protocol/${{ident}}.hh"')
+            for include_path in includes:
+                code('#include "${{include_path}}"')
 
-        code(
-            f'#include "mem/ruby/protocol/{self.slicc.protocol}/{self.slicc.protocol}ProtocolInfo.hh"'
-        )
-        code.write(path, f"{self.slicc.protocol}/Types.hh")
+            for symbol in self.sym_vec:
+                if isinstance(symbol, Type) and not symbol.isPrimitive:
+                    ident = symbol.c_ident
+                    if not symbol.shared and not symbol.isExternal:
+                        ident = f"{self.slicc.protocol}/{ident}"
+                    code('#include "mem/ruby/protocol/${{ident}}.hh"')
 
-        self.writeProtocolInfo(path)
+            code(
+                f'#include "mem/ruby/protocol/{self.slicc.protocol}/{self.slicc.protocol}ProtocolInfo.hh"'
+            )
+            code.write(path, f"{self.slicc.protocol}/Types.hh")
+
+            self.writeProtocolInfo(path)
 
         for symbol in self.sym_vec:
             symbol.writeCodeFiles(path, includes)

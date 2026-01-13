@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2014 The University of Wisconsin
+ * Copyright (c) 2024 Technical University of Munich
  *
  * Copyright (c) 2006 INRIA (Institut National de Recherche en
  * Informatique et en Automatique  / French National Research Institute
@@ -138,7 +139,6 @@ class TAGEBase : public SimObject
         const bool condBranch;
 
         int pathHist;
-        int ptGhist;
         int hitBank;
         int hitBankIndex;
         int altBank;
@@ -474,7 +474,9 @@ class TAGEBase : public SimObject
     unsigned getGHR(ThreadID tid) const;
     int8_t getCtr(int hitBank, int hitBankIndex) const;
     unsigned getTageCtrBits() const;
-    int getPathHist(ThreadID tid) const;
+    int getPathHist(ThreadID tid, bool speculative=true) const;
+    virtual int calcNewPathHist(ThreadID tid, Addr pc, int cur_phist,
+                                bool taken, int brtype, Addr target) const;
     bool isSpeculativeUpdateEnabled() const;
     size_t getSizeInBits() const;
 
@@ -502,14 +504,12 @@ class TAGEBase : public SimObject
         // Speculative path history
         // (LSB of branch address)
         int pathHist;
+        // Non-speculative path history
+        int nonSpecPathHist;
 
         // Speculative branch direction
         // history (circular buffer)
-        // @TODO Convert to std::vector<bool>
-        uint8_t *globalHistory;
-
-        // Pointer to most recent branch outcome
-        uint8_t* gHist;
+        std::vector<uint8_t> globalHist;
 
         // Index to most recent branch outcome
         int ptGhist;
@@ -537,6 +537,8 @@ class TAGEBase : public SimObject
     unsigned numUseAltOnNa;
     unsigned useAltOnNaBits;
     unsigned maxNumAlloc;
+    /** Use taken only history. */
+    const bool takenOnlyHistory;
 
     // Tells which tables are active
     // (for the base TAGE implementation all are active)

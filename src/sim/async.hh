@@ -47,7 +47,9 @@ extern volatile bool async_statreset;   ///< Async request to reset stats.
 extern volatile bool async_exit;        ///< Async request to exit simulator.
 extern volatile bool async_io;          ///< Async I/O request (SIGIO).
 extern volatile bool async_exception;   ///< Python exception.
+extern volatile bool async_hypercall;
 //@}
+
 
 } // namespace gem5
 

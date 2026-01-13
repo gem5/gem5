@@ -31,13 +31,17 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 from urllib.error import HTTPError
+from urllib.parse import (
+    parse_qsl,
+    urlparse,
+)
 
 from gem5.resources.client import (
     _create_clients,
     get_resource_json_obj,
 )
-from gem5.resources.client_api.atlasclient import (
-    AtlasClientHttpJsonRequestError,
+from gem5.resources.client_api.azure_functions_client import (
+    AzureFunctionsAPIClientHttpJsonRequestError,
 )
 
 mock_json_path = Path(__file__).parent / "refs/resources.json"
@@ -56,9 +60,7 @@ mock_config_mongo = {
             "dataSource": "gem5-vision",
             "database": "gem5-vision",
             "collection": "versions_test",
-            "url": "https://data.mongodb-api.com/app/data-ejhjf/endpoint/data/v1",
-            "authUrl": "https://realm.mongodb.com/api/client/v2.0/app/data-ejhjf/auth/providers/api-key/login",
-            "apiKey": "OIi5bAP7xxIGK782t8ZoiD2BkBGEzMdX3upChf9zdCxHSnMoiTnjI22Yw5kOSgy9",
+            "url": "https://api.gem5.org/api/resources",
             "isMongo": True,
         }
     },
@@ -88,50 +90,49 @@ def mocked_requests_post(*args, **kwargs):
         def read(self):
             return json.dumps(self.json_data).encode("utf-8")
 
-    data = json.loads(args[0].data)
+    url = args[0].full_url
+
+    # Parse the query string into a list of (key, value) pairs, then group every two consecutive pairs
+    # (e.g., ('id', '...'), ('resource_version', '...')) into a single dictionary for each resource
+    pairs = parse_qsl(urlparse(url).query)
+    data = [dict(pairs[i : i + 2]) for i in range(0, len(pairs), 2)]
+
     if "/api-key/login" in args[0].full_url:
         return MockResponse({"access_token": "test-token"}, 200)
-    if "/endpoint/data/v1/action/find" in args[0].full_url:
+    if "/find-resources-in-batch" in args[0].full_url:
         if data:
-            if data["filter"]["$or"][0]["id"] == "x86-ubuntu-18.04-img":
-                if "resource_version" in data["filter"]["$or"][0]:
-                    resource_version = data["filter"]["$or"][0][
-                        "resource_version"
-                    ]
+            if data[0]["id"] == "x86-ubuntu-18.04-img":
+                if (
+                    "resource_version" in data[0]
+                    and data[0]["resource_version"] != "None"
+                ):
+                    resource_version = data[0]["resource_version"]
                     ret_json = [
                         resource
                         for resource in mock_json
                         if resource["resource_version"] == resource_version
                     ]
                     return MockResponse(
-                        {
-                            "documents": ret_json,
-                        },
+                        ret_json,
                         200,
                     )
                 return MockResponse(
-                    {
-                        "documents": mock_json,
-                    },
+                    mock_json,
                     200,
                 )
-            if data["filter"]["$or"][0]["id"] == "test-duplicate":
+            if data[0]["id"] == "test-duplicate":
                 return MockResponse(
-                    {
-                        "documents": duplicate_mock_json,
-                    },
+                    duplicate_mock_json,
                     200,
                 )
-            if data["filter"]["$or"][0]["id"] == "test-too-many":
+            if data[0]["id"] == "test-too-many":
                 error_file = io.BytesIO()
                 error_file.status = 429
                 raise HTTPError(
                     args[0].full_url, 429, "Too Many Requests", {}, error_file
                 )
         return MockResponse(
-            {
-                "documents": [],
-            },
+            [],
             200,
         )
     error_file = io.BytesIO()
@@ -483,7 +484,9 @@ class ClientWrapperTestSuite(unittest.TestCase):
     @patch("urllib.request.urlopen", side_effect=mocked_requests_post)
     def test_invalid_url(self, mock_get, mock_create_clients):
         resource_id = "test-resource"
-        with self.assertRaises(AtlasClientHttpJsonRequestError) as context:
+        with self.assertRaises(
+            AzureFunctionsAPIClientHttpJsonRequestError
+        ) as context:
             get_resource_json_obj(
                 resource_id,
                 gem5_version="develop",
@@ -496,7 +499,9 @@ class ClientWrapperTestSuite(unittest.TestCase):
     @patch("urllib.request.urlopen", side_effect=mocked_requests_post)
     def test_invalid_url(self, mock_get, mock_create_clients):
         resource_id = "test-too-many"
-        with self.assertRaises(AtlasClientHttpJsonRequestError) as context:
+        with self.assertRaises(
+            AzureFunctionsAPIClientHttpJsonRequestError
+        ) as context:
             get_resource_json_obj(
                 resource_id,
                 gem5_version="develop",

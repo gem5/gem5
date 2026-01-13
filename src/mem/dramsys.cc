@@ -40,7 +40,7 @@ DRAMSys::DRAMSys(Params const& params) :
     config(::DRAMSys::Config::from_path(params.configuration,
                                         params.resource_directory)),
     dramSysWrapper(
-        params.name.c_str(), config, params.recordable, params.range)
+        params.name.c_str(), config, params.range)
 {
     dramSysWrapper.dramsys->registerIdleCallback(
         [this]
@@ -85,7 +85,6 @@ void DRAMSys::serialize(CheckpointOut& cp) const
             if (serializableObject != nullptr)
             {
                 std::string dumpFileName(object->name());
-                dumpFileName += ".pmem";
                 std::ofstream stream(checkpointPath / dumpFileName,
                                      std::ios::binary);
                 serializableObject->serialize(stream);
@@ -118,7 +117,6 @@ void DRAMSys::unserialize(CheckpointIn& cp)
             if (deserializableObject != nullptr)
             {
                 std::string dumpFileName(object->name());
-                dumpFileName += ".pmem";
                 std::ifstream stream(checkpointPath / dumpFileName,
                                      std::ios::binary);
                 deserializableObject->deserialize(stream);

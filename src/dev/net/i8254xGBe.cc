@@ -167,7 +167,7 @@ IGbE::writeConfig(PacketPtr pkt)
 #define IN_RANGE(val, base, len) (val >= base && val < (base + len))
 
 Tick
-IGbE::read(PacketPtr pkt)
+IGbE::readDevice(PacketPtr pkt)
 {
     int bar;
     Addr daddr;
@@ -355,7 +355,7 @@ IGbE::read(PacketPtr pkt)
 }
 
 Tick
-IGbE::write(PacketPtr pkt)
+IGbE::writeDevice(PacketPtr pkt)
 {
     int bar;
     Addr daddr;

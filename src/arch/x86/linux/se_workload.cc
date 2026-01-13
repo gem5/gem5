@@ -159,10 +159,10 @@ EmuLinux::pageFault(ThreadContext *tc)
         SETranslatingPortProxy proxy(tc);
         // at this point we should have 6 values on the interrupt stack
         int size = 6;
-        uint64_t is[size];
+        size_t is_bytes = sizeof(uint64_t) * size;
+        auto is = std::make_unique<uint64_t[]>(size);
         // reading the interrupt handler stack
-        proxy.readBlob(ISTVirtAddr + PageBytes - size * sizeof(uint64_t),
-                       &is, sizeof(is));
+        proxy.readBlob(ISTVirtAddr + PageBytes - is_bytes, is.get(), is_bytes);
         panic("Page fault at addr %#x\n\tInterrupt handler stack:\n"
                 "\tss: %#x\n"
                 "\trsp: %#x\n"

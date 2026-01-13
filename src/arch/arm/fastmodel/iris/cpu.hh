@@ -75,13 +75,7 @@ class BaseCPU : public gem5::BaseCPU
         panic("%s not implemented.", __FUNCTION__);
     }
 
-    void
-    wakeup(ThreadID tid) override
-    {
-        auto *tc = threadContexts.at(tid);
-        if (tc->status() == gem5::ThreadContext::Suspended)
-            tc->activate();
-    }
+    void wakeup(ThreadID tid) override;
 
     Counter totalInsts() const override;
     Counter totalOps() const override { return totalInsts(); }

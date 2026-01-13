@@ -75,6 +75,7 @@ FetchUnit::init()
         fetchStatusQueue[i] = std::make_pair(wf, false);
         fetchBuf[i].allocateBuf(fetchDepth, computeUnit.cacheLineSize(), wf);
         fetchBuf[i].decoder(&decoder);
+        decoder.setGfxVersion(computeUnit.shader->getGfxVersion());
     }
 
     fetchScheduler.bindList(&fetchQueue);

@@ -1,4 +1,5 @@
-# Copyright (c) 2012, 2014, 2019, 2022-2024 Arm Limited
+# Copyright (c) 2012, 2014, 2019, 2022-2025 Arm Limited
+# Copyright (c) 2023 The University of Edinburgh
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -36,6 +37,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from m5.citations import add_citation
 from m5.objects.ClockedObject import ClockedObject
 from m5.objects.IndexingPolicies import *
 from m5.objects.ReplacementPolicies import *
@@ -727,3 +729,64 @@ class PIFPrefetcher(QueuedPrefetcher):
         self.addEvent(
             HWPProbeEventRetiredInsts(self, simObj, "RetiredInstsPC")
         )
+
+
+class FetchDirectedPrefetcher(BasePrefetcher):
+    type = "FetchDirectedPrefetcher"
+    cxx_class = "gem5::prefetch::FetchDirectedPrefetcher"
+    cxx_header = "mem/cache/prefetch/fdp.hh"
+    cxx_exports = [PyBindMethod("setCache")]
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self._cache = None
+
+    def regProbeListeners(self):
+        if self._cache:
+            self.getCCObject().setCache(self._cache.getCCObject())
+        super().regProbeListeners()
+
+    def registerCache(self, simObj):
+        if not isinstance(simObj, SimObject):
+            raise TypeError("argument must be a SimObject type")
+        self._cache = simObj
+
+    cpu = Param.BaseCPU(Parent.any, "The CPU to train the predictor")
+
+    latency = Param.Cycles(1, "Latency for generated prefetches")
+    pfq_size = Param.Unsigned(64, "Maximum number of queued prefetches")
+    tq_size = Param.Unsigned(64, "Maximum number of outstanding translations")
+
+    mark_req_as_prefetch = Param.Bool(
+        True,
+        "Mark memory requests as prefetches. Allows different handlings of "
+        "request. E.g. the Arm TLB drops prefetch requests on a miss.",
+    )
+    squash_prefetches = Param.Bool(
+        True,
+        "Squash the prefetch associated with a fetch target in case it gets "
+        "removded fron the the FTQ (Fetch consumes it or a pipeline flush).",
+    )
+    cache_snoop = Param.Bool(
+        True,
+        "Snoop the icache (if present) and do not enqueue prefetches for "
+        "blocks already in the cache.",
+    )
+
+
+add_citation(
+    FetchDirectedPrefetcher,
+    """@inproceedings{10.1145/3613424.3614258,
+  author    = {Schall, David and
+               Sandberg, Andreas and
+               Grot, Boris},
+  title     = {Warming Up a Cold Front-End with Ignite},
+  year      = {2023},
+  publisher = {Association for Computing Machinery},
+  address   = {Toronto, ON, Canada},
+  doi       = {10.1145/3613424.3614258},
+  booktitle = {Proceedings of the 56th Annual IEEE/ACM International Symposium on Microarchitecture (MICRO '23)},
+  series    = {MICRO'23}
+}
+""",
+)

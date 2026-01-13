@@ -1,3 +1,15 @@
+# Copyright (c) 2025 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2022 The Regents of the University of California
 # All rights reserved.
 #
@@ -93,6 +105,18 @@ parser.add_argument(
     help="The python class for the memory interface to use",
 )
 
+systemd_group = parser.add_mutually_exclusive_group(required=True)
+systemd_group.add_argument(
+    "--systemd",
+    action="store_true",
+    help="Enable systemd on boot.",
+)
+systemd_group.add_argument(
+    "--no-systemd",
+    action="store_true",
+    help="Disable systemd on boot.",
+)
+
 parser.add_argument(
     "-t",
     "--tick-exit",
@@ -130,13 +154,17 @@ elif args.mem_system == "classic":
 
 elif args.mem_system == "chi":
     requires(coherence_protocol_required=CoherenceProtocol.CHI)
-    from gem5.components.cachehierarchies.chi.private_l1_cache_hierarchy import (
-        PrivateL1CacheHierarchy,
+    from gem5.components.cachehierarchies.chi.private_l1_private_l2_cache_hierarchy import (
+        PrivateL1PrivateL2CacheHierarchy,
     )
 
-    cache_hierarchy = PrivateL1CacheHierarchy(
-        size="16KiB",
-        assoc=4,
+    cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
+        l1d_size="32KiB",
+        l1d_assoc=4,
+        l1i_size="32KiB",
+        l1i_assoc=4,
+        l2_size="512KiB",
+        l2_assoc=8,
     )
 
 elif args.mem_system == "mesi_two_level":
@@ -201,21 +229,15 @@ board = ArmBoard(
 )
 
 # Set the Full System workload.
-board.set_kernel_disk_workload(
-    kernel=obtain_resource(
-        "arm64-linux-kernel-5.4.49",
+board.set_workload(
+    obtain_resource(
+        (
+            "arm-ubuntu-24.04-boot-with-systemd"
+            if args.systemd
+            else "arm-ubuntu-24.04-boot-no-systemd"
+        ),
         resource_directory=args.resource_directory,
-        resource_version="1.0.0",
-    ),
-    bootloader=obtain_resource(
-        "arm64-bootloader-foundation",
-        resource_directory=args.resource_directory,
-        resource_version="1.0.0",
-    ),
-    disk_image=obtain_resource(
-        "arm64-ubuntu-20.04-img",
-        resource_directory=args.resource_directory,
-        resource_version="1.0.0",
+        resource_version=("3.0.0" if args.systemd else "2.0.0"),
     ),
 )
 

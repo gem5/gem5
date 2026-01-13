@@ -51,7 +51,6 @@
 #include "base/intmath.hh"
 #include "base/logging.hh"
 #include "base/types.hh"
-#include "mem/cache/base.hh"
 #include "mem/cache/replacement_policies/base.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "mem/cache/tags/indexing_policies/base.hh"
@@ -121,12 +120,18 @@ SectorTags::tagsInit()
             // Set its index and sector offset
             blk->setSectorOffset(k);
 
+            // Register TagExtractor for SubBlk
+            blk->registerTagExtractor(genTagExtractor(indexingPolicy));
+
             // Update block index
             ++blk_index;
         }
 
         // Link block to indexing policy
         indexingPolicy->setEntry(sec_blk, sec_blk_index);
+
+        // Register TagExtractor for SecBlk
+        sec_blk->registerTagExtractor(genTagExtractor(indexingPolicy));
     }
 }
 

@@ -64,6 +64,10 @@ namespace
         .def(pybind11::self -= pybind11::self)
         .def(pybind11::self *= double())
         .def(pybind11::self /= double())
+        .def(pybind11::self + pybind11::self)
+        .def(pybind11::self - pybind11::self)
+        .def(pybind11::self * double())
+        .def(pybind11::self / double())
         ;
 
     pybind11::enum_<sc_core::sc_time_unit>(sc_time, "sc_time_unit")

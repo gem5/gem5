@@ -37,7 +37,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects.Device import DmaDevice
-from m5.objects.PciHost import PciHost
+from m5.objects.PciUpstream import PciUpstream
 from m5.params import *
 from m5.proxy import *
 from m5.SimObject import SimObject
@@ -96,8 +96,7 @@ class PciDevice(DmaDevice):
     cxx_header = "dev/pci/device.hh"
     abstract = True
 
-    host = Param.PciHost(Parent.any, "PCI host")
-    pci_bus = Param.Int("PCI bus")
+    upstream = Param.PciUpstream(Parent.any, "PCI upstream")
     pci_dev = Param.Int("PCI device number")
     pci_func = Param.Int("PCI function code")
 
@@ -217,9 +216,9 @@ class PciEndpoint(PciDevice):
     MinimumGrant = Param.UInt8(0x00, "Minimum Grant")
 
 
-class PciBridge(PciDevice):
-    type = "PciBridge"
-    cxx_class = "gem5::PciBridge"
+class PciType1Device(PciDevice):
+    type = "PciType1Device"
+    cxx_class = "gem5::PciType1Device"
     cxx_header = "dev/pci/device.hh"
     abstract = True
 

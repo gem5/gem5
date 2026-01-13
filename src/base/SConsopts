@@ -52,7 +52,7 @@ with gem5_scons.Configure(main) as conf:
 
     conf.env['CONF']['HAVE_POSIX_CLOCK'] = \
         conf.CheckLibWithHeader([None, 'rt'], 'time.h', 'C',
-                                'clock_nanosleep(0,0,NULL,NULL);')
+                                call='clock_nanosleep(0,0,NULL,NULL);')
     if not conf.env['CONF']['HAVE_POSIX_CLOCK']:
         warning("Can't find library for POSIX clocks.")
 

@@ -116,9 +116,9 @@ VirtDescriptor::dump() const
             _index, desc.addr, desc.len, desc.flags, desc.next);
 
     if (isIncoming()) {
-        uint8_t data[desc.len];
-        read(0, data, desc.len);
-        DDUMP(VIO, data, desc.len);
+        auto data = std::make_unique<uint8_t[]>(desc.len);
+        read(0, data.get(), desc.len);
+        DDUMP(VIO, data.get(), desc.len);
     }
 }
 

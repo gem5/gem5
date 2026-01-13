@@ -58,6 +58,7 @@ class Root(SimObject):
     type = "Root"
     cxx_header = "sim/root.hh"
     cxx_class = "gem5::Root"
+    override_create = True
 
     # By default, root sim object and hence all other sim objects schedule
     # event on the eventq with index 0.

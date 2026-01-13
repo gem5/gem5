@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2025 Arm Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2005-2006 The Regents of The University of Michigan
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved.
@@ -82,8 +94,11 @@ class Scoreboard
     bool
     getReg(PhysRegIdPtr phys_reg) const
     {
-        if (phys_reg->isFixedMapping()) {
-            // Fixed mapping regs are always ready
+        if (phys_reg->isAlwaysReady()) {
+            // This is usually the case for registers that
+            // can only be updated non-speculatively
+            // (The register is not being written by another
+            // inflight instruction)
             return true;
         }
 
@@ -96,9 +111,11 @@ class Scoreboard
     void
     setReg(PhysRegIdPtr phys_reg)
     {
-        if (phys_reg->isFixedMapping()) {
-            // Fixed mapping regs are always ready, ignore attempts to change
-            // that
+        if (phys_reg->isAlwaysReady()) {
+            // This is usually the case for registers that
+            // can only be updated non-speculatively
+            // (The register is not being written by another
+            // inflight instruction)
             return;
         }
 
@@ -114,13 +131,18 @@ class Scoreboard
     void
     unsetReg(PhysRegIdPtr phys_reg)
     {
-        if (phys_reg->isFixedMapping()) {
-            // Fixed mapping regs are always ready, ignore attempts to
-            // change that
+        if (phys_reg->isAlwaysReady()) {
+            // This is usually the case for registers that
+            // can only be updated non-speculatively
+            // (The register is not being written by another
+            // inflight instruction)
             return;
         }
 
         assert(phys_reg->flatIndex() < numPhysRegs);
+
+        DPRINTF(Scoreboard, "Setting reg %i (%s) as busy\n", phys_reg->index(),
+                phys_reg->className());
 
         regScoreBoard[phys_reg->flatIndex()] = false;
     }

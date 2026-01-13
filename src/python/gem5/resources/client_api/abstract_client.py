@@ -188,3 +188,14 @@ class AbstractClient(ABC):
         :return: A list of all the Resources with the given ID.
         """
         return self.get_resources(client_queries=client_queries)
+
+    @abstractmethod
+    def get_all_resources(
+        self,
+        gem5_version: str,
+    ) -> List[Dict[str, Any]]:
+        """
+        :param gem5_version: The version of gem5.
+        :return: A list of all the Resources compatible with the given gem5 version.
+        """
+        raise NotImplementedError

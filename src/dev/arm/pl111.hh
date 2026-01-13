@@ -50,13 +50,14 @@
 #include "base/framebuffer.hh"
 #include "base/output.hh"
 #include "dev/arm/amba_device.hh"
-#include "params/Pl111.hh"
 #include "sim/serialize.hh"
 
 namespace gem5
 {
 
 class VncInput;
+
+struct Pl111Params;
 
 class Pl111: public AmbaDmaDevice
 {

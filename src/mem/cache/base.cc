@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2018-2019, 2023-2024 ARM Limited
+ * Copyright (c) 2012-2013, 2018-2019, 2023-2025 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -55,6 +55,7 @@
 #include "debug/HWPrefetch.hh"
 #include "mem/cache/compressors/base.hh"
 #include "mem/cache/mshr.hh"
+#include "mem/cache/mshr_queue.hh"
 #include "mem/cache/prefetch/base.hh"
 #include "mem/cache/queue_entry.hh"
 #include "mem/cache/tags/compressed_tags.hh"
@@ -129,8 +130,9 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
         genTagExtractor(tags->params().indexing_policy));
 
     tags->tagsInit();
-    if (prefetcher)
+    if (prefetcher) {
         prefetcher->setParentInfo(system, getProbeManager(), getBlockSize());
+    }
 
     fatal_if(compressor && !dynamic_cast<CompressedTags*>(tags),
         "The tags of compressed cache %s must derive from CompressedTags",
@@ -223,6 +225,50 @@ BaseCache::inRange(Addr addr) const
        }
     }
     return false;
+}
+
+void
+BaseCache::allocateWriteBuffer(PacketPtr pkt, Tick time)
+{
+    // should only see writes or clean evicts here
+    assert(pkt->isWrite() || pkt->cmd == MemCmd::CleanEvict);
+
+    Addr blk_addr = pkt->getBlockAddr(blkSize);
+
+    // If using compression, on evictions the block is decompressed and
+    // the operation's latency is added to the payload delay. Consume
+    // that payload delay here, meaning that the data is always stored
+    // uncompressed in the writebuffer
+    if (compressor) {
+        time += pkt->payloadDelay;
+        pkt->payloadDelay = 0;
+    }
+
+    WriteQueueEntry *wq_entry =
+        writeBuffer.findMatch(blk_addr, pkt->isSecure());
+    if (wq_entry && !wq_entry->inService) {
+        DPRINTF(Cache, "Potential to merge writeback %s", pkt->print());
+    }
+
+    writeBuffer.allocate(blk_addr, blkSize, pkt, time, order++);
+
+    if (writeBuffer.isFull()) {
+        setBlocked((BlockedCause)MSHRQueue_WriteBuffer);
+    }
+
+    // schedule the send
+    schedMemSideSendEvent(time);
+}
+
+void
+BaseCache::markInService(WriteQueueEntry *entry)
+{
+    bool wasFull = writeBuffer.isFull();
+    writeBuffer.markInService(entry);
+
+    if (wasFull && !writeBuffer.isFull()) {
+        clearBlocked(Blocked_NoWBBuffers);
+    }
 }
 
 void
@@ -2408,6 +2454,7 @@ BaseCache::CacheStats::regStats()
     blockedCycles.init(NUM_BLOCKED_CAUSES);
     blockedCycles
         .subname(Blocked_NoMSHRs, "no_mshrs")
+        .subname(Blocked_NoWBBuffers, "no_wbuffers")
         .subname(Blocked_NoTargets, "no_targets")
         ;
 
@@ -2415,11 +2462,13 @@ BaseCache::CacheStats::regStats()
     blockedCauses.init(NUM_BLOCKED_CAUSES);
     blockedCauses
         .subname(Blocked_NoMSHRs, "no_mshrs")
+        .subname(Blocked_NoWBBuffers, "no_wbuffers")
         .subname(Blocked_NoTargets, "no_targets")
         ;
 
     avgBlocked
         .subname(Blocked_NoMSHRs, "no_mshrs")
+        .subname(Blocked_NoWBBuffers, "no_wbuffers")
         .subname(Blocked_NoTargets, "no_targets")
         ;
     avgBlocked = blockedCycles / blockedCauses;

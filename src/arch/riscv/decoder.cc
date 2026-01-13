@@ -51,11 +51,13 @@ Decoder::Decoder(const RiscvDecoderParams &p) : InstDecoder(p, &machInst)
 
 void Decoder::reset()
 {
+    InstDecoder::reset();
     aligned = true;
     mid = false;
     machInst = 0;
     emi = 0;
     jvtEntry = 0;
+    squashed = true;
 }
 
 void
@@ -151,9 +153,19 @@ Decoder::decode(PCStateBase &_next_pc)
         next_pc.compressed(false);
     }
 
-    emi.vl      = next_pc.vl();
-    emi.vtype8  = next_pc.vtype() & 0xff;
-    emi.vill    = next_pc.vtype().vill;
+    if (GEM5_UNLIKELY(squashed || next_pc.new_vconf())) {
+        squashed = false;
+        next_pc.new_vconf(false);
+        vl = next_pc.vl();
+        vtype = next_pc.vtype();
+    } else {
+        next_pc.vl(vl);
+        next_pc.vtype(vtype);
+    }
+
+    emi.vl      = vl;
+    emi.vtype8  = vtype & 0xff;
+    emi.vill    = vtype.vill;
     emi.rv_type = static_cast<int>(next_pc.rvType());
     emi.enable_zcd = _enableZcd;
 

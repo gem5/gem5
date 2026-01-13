@@ -38,6 +38,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects.ClockedObject import ClockedObject
+from m5.objects.RubyCache import RubyCache
+from m5.objects.RubySystem import RubySystem
+from m5.objects.System import System
 from m5.params import *
 from m5.proxy import *
 
@@ -56,30 +59,17 @@ class RubyPort(ClockedObject):
         "has multiple ports (e.g., I/D ports) all of the ports for a "
         "single CPU can connect to one RubyPort."
     )
-    slave = DeprecatedParam(in_ports, "`slave` is now called `in_ports`")
 
     interrupt_out_port = VectorRequestPort(
         "Port to connect to x86 interrupt "
         "controller to send the CPU requests from outside."
     )
-    master = DeprecatedParam(
-        interrupt_out_port, "`master` is now called `interrupt_out_port`"
-    )
 
     pio_request_port = RequestPort("Ruby pio request port")
-    pio_master_port = DeprecatedParam(
-        pio_request_port, "`pio_master_port` is now called `pio_request_port`"
-    )
 
     mem_request_port = RequestPort("Ruby mem request port")
-    mem_master_port = DeprecatedParam(
-        mem_request_port, "`mem_master_port` is now called `mem_request_port`"
-    )
 
     pio_response_port = ResponsePort("Ruby pio response port")
-    pio_slave_port = DeprecatedParam(
-        pio_response_port, "`pio_slave_port` is now called `pio_response_port`"
-    )
 
     using_ruby_tester = Param.Bool(False, "")
     no_retry_on_stall = Param.Bool(False, "")

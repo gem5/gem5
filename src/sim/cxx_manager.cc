@@ -39,6 +39,7 @@
 
 #include <cstdlib>
 #include <sstream>
+#include <unordered_map>
 
 #include "base/str.hh"
 #include "base/trace.hh"
@@ -107,8 +108,8 @@ CxxConfigManager::unRename(const std::string &to_name)
     return to_name;
 }
 
-static
-std::string formatParamList(const std::vector<std::string> &param_values)
+static std::string
+formatParamList(const std::vector<std::string> &param_values)
 {
     std::ostringstream params;
 
@@ -126,6 +127,105 @@ std::string formatParamList(const std::vector<std::string> &param_values)
     params << ']';
 
     return params.str();
+}
+
+// Formats the dictionary parameter to be printed as a string
+// in the python canonical format {key1: value, key2: value}
+static std::string
+formatParamList(const std::unordered_map<std::string, std::string> &param_values)
+{
+    std::ostringstream params;
+
+    auto i = param_values.begin();
+    auto end_i = param_values.end();
+
+    params << '{';
+    while (i != end_i) {
+        params << (i->first);
+        params << ": ";
+        params << (i->second);
+        ++i;
+
+        if (i != end_i)
+            params << ", ";
+    }
+    params << '}';
+
+    return params.str();
+}
+
+void
+CxxConfigManager::populateParams(const std::string &object_name,
+    const std::string &instance_name,
+    CxxConfigParams *object_params,
+    const CxxConfigDirectoryEntry::ParamDesc *param)
+{
+    if (param->isVector) {
+        std::vector<std::string> param_values;
+
+        if (!configFile.getParamVector(object_name, param->name,
+            param_values))
+        {
+            throw Exception(object_name, csprintf(
+                "Element not found for parameter: %s",
+                param->name));
+        }
+
+        if (!object_params->setParamVector(param->name,
+            param_values, flags))
+        {
+            throw Exception(instance_name, csprintf(
+                "Bad parameter value: .%s=X=\"%s\"",
+                param->name, formatParamList(param_values)));
+        }
+
+        DPRINTF(CxxConfig, "Setting parameter"
+            " %s.%s=%s\n", instance_name, param->name,
+            formatParamList(param_values));
+    } else if (param->isDict) {
+        std::unordered_map<std::string, std::string> param_values;
+
+        if (!configFile.getParamDict(object_name, param->name,
+            param_values))
+        {
+            throw Exception(object_name, csprintf(
+                "Element not found for parameter: %s",
+                param->name));
+        }
+
+        if (!object_params->setParamDict(param->name,
+            param_values, flags))
+        {
+            throw Exception(instance_name, csprintf(
+                "Bad parameter value: .%s=X=\"%s\"",
+                param->name, formatParamList(param_values)));
+        }
+
+        DPRINTF(CxxConfig, "Setting parameter"
+            " %s.%s=%s\n", instance_name, param->name,
+            formatParamList(param_values));
+    } else {
+        std::string param_value;
+
+        if (!configFile.getParam(object_name, param->name,
+            param_value))
+        {
+            throw Exception(object_name, csprintf(
+                "Element not found for parameter: %s",
+                param->name));
+        }
+
+        if (!object_params->setParam(param->name, param_value,
+            flags))
+        {
+            throw Exception(instance_name, csprintf(
+                "Bad parameter value: .%s=X=\"%s\"",
+                param->name, param_value));
+        }
+
+        DPRINTF(CxxConfig, "Setting parameter %s.%s=%s\n",
+            instance_name, param->name, param_value);
+    }
 }
 
 SimObject *
@@ -291,53 +391,10 @@ CxxConfigManager::findObjectParams(const std::string &object_name)
         {
             const CxxConfigDirectoryEntry::ParamDesc *param = (*i).second;
 
+            /* Only handle non-SimObject parameters here (see below) */
             if (!param->isSimObject) {
-                /* Only handle non-SimObject parameters here (see below) */
-
-                if (param->isVector) {
-                    std::vector<std::string> param_values;
-
-                    if (!configFile.getParamVector(object_name, param->name,
-                        param_values))
-                    {
-                        throw Exception(object_name, csprintf(
-                            "Element not found for parameter: %s",
-                            param->name));
-                    }
-
-                    if (!object_params->setParamVector(param->name,
-                        param_values, flags))
-                    {
-                        throw Exception(instance_name, csprintf(
-                            "Bad parameter value: .%s=X=\"%s\"",
-                            param->name, formatParamList(param_values)));
-                    }
-
-                    DPRINTF(CxxConfig, "Setting parameter"
-                        " %s.%s=%s\n", instance_name, param->name,
-                        formatParamList(param_values));
-                } else {
-                    std::string param_value;
-
-                    if (!configFile.getParam(object_name, param->name,
-                        param_value))
-                    {
-                        throw Exception(object_name, csprintf(
-                            "Element not found for parameter: %s",
-                            param->name));
-                    }
-
-                    if (!object_params->setParam(param->name, param_value,
-                        flags))
-                    {
-                        throw Exception(instance_name, csprintf(
-                            "Bad parameter value: .%s=X=\"%s\"",
-                            param->name, param_value));
-                    }
-
-                    DPRINTF(CxxConfig, "Setting parameter %s.%s=%s\n",
-                        instance_name, param->name, param_value);
-                }
+                populateParams(object_name, instance_name,
+                    object_params, param);
             }
         }
 

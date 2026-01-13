@@ -40,6 +40,7 @@
 #include "base/callback.hh"
 #include "base/output.hh"
 #include "base/trace.hh"
+#include "cpu/o3/cpu.hh"
 #include "cpu/o3/dyn_inst.hh"
 #include "cpu/reg_class.hh"
 #include "debug/ElasticTrace.hh"

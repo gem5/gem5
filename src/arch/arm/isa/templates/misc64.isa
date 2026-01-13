@@ -331,7 +331,7 @@ def template DvmDeclare {{
 
       public:
         /// Constructor.
-        %(class_name)s(ExtMachInst machInst, bool dvm_enabled);
+        %(class_name)s(ExtMachInst machInst, uint64_t imm, bool dvm_enabled);
         Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
         Fault completeAcc(PacketPtr, ExecContext *,
                           trace::InstRecord *) const override;
@@ -368,8 +368,9 @@ def template AtConstructor {{
 }};
 
 def template DvmConstructor {{
-    %(class_name)s::%(class_name)s(ExtMachInst machInst, bool dvm_enabled) :
-        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s),
+    %(class_name)s::%(class_name)s(ExtMachInst machInst, uint64_t imm,
+                                   bool dvm_enabled) :
+        %(base_class)s("%(mnemonic)s", machInst, %(op_class)s, imm),
         dvmEnabled(dvm_enabled)
     {
         %(set_reg_idx_arr)s;
