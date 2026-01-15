@@ -37,8 +37,9 @@
 
 #include "mem/ruby/protocol/chi/tlm/generator.hh"
 
-#include "mem/ruby/protocol/chi/tlm/controller.hh"
 #include "debug/TLM.hh"
+#include "mem/ruby/protocol/chi/tlm/controller.hh"
+#include "sim/sim_exit.hh"
 
 namespace gem5 {
 
@@ -300,6 +301,10 @@ TlmGenerator::recv(ARM::CHI::Payload *payload, ARM::CHI::Phase *phase)
         it->second->runCallbacks();
     } else {
         warn("%u: Transaction untested\n", phase->txn_id);
+    }
+
+    if (!isActive()) {
+        exitSimLoop("TlmGenerator done");
     }
 }
 
