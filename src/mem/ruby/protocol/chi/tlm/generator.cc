@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Arm Limited
+ * Copyright (c) 2024-2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -47,7 +47,8 @@ namespace tlm::chi {
 bool
 TlmGenerator::Transaction::Expectation::run(Transaction *tran)
 {
-    auto res_print = csprintf("Checking %s...", name());
+    auto res_print =
+        csprintf("%u: Checking %s...", tran->phase().txn_id, name());
     if (cb(tran)) {
         inform("%s\n", res_print + " Success ");
         return true;
@@ -63,7 +64,7 @@ TlmGenerator::Transaction::Assertion::run(Transaction *tran)
     if (Expectation::run(tran)) {
         return true;
     } else {
-        panic("Failing assertion\n");
+        panic("%u: Failing assertion\n", tran->phase().txn_id);
     }
 }
 
@@ -256,7 +257,7 @@ TlmGenerator::terminate(Transaction *transaction)
         // If the transaction has failed, mark the suite as failure
         suiteFailure = suiteFailure || transaction->failed();
     } else {
-        panic("Can't find transaction id: %u\n", phase.txn_id);
+        panic("%u: Can't find transaction id.\n", phase.txn_id);
     }
 }
 
@@ -298,7 +299,7 @@ TlmGenerator::recv(ARM::CHI::Payload *payload, ARM::CHI::Phase *phase)
         // Check existing expectations
         it->second->runCallbacks();
     } else {
-        warn("Transaction untested\n");
+        warn("%u: Transaction untested\n", phase->txn_id);
     }
 }
 
@@ -331,7 +332,7 @@ TlmGenerator::handlePCredit(ARM::CHI::Phase *phase)
     } else if (isRetryAck(phase)) {
         auto it = pendingTransactions.find(phase->txn_id);
         panic_if(it == pendingTransactions.end(),
-                 "Can't find transaction id: %u\n", phase->txn_id);
+                 "%u: Can't find transaction id\n", phase->txn_id);
 
         auto tran = it->second;
 
@@ -358,6 +359,10 @@ TlmGenerator::passFailCheck()
         inform(" Suite Fail: failed transaction ");
     } else if (!pendingTransactions.empty()) {
         inform(" Suite Fail: non-empty transaction queue ");
+        inform(" Pending transactions:");
+        for (auto &[txn_id, txn] : pendingTransactions) {
+            inform("\t%s", txn->str());
+        }
     } else {
         inform(" Suite Success ");
     }
