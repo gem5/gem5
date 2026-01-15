@@ -199,8 +199,6 @@ TlmGenerator::scheduleTransaction(Tick when, Transaction *transaction)
 
     auto event = new TransactionEvent(transaction, when);
 
-    scheduledTransactions.push(event);
-
     schedule(event, when);
 }
 

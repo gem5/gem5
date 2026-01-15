@@ -363,13 +363,6 @@ class TlmGenerator : public ClockedObject
     /** tick event used to schedule unscheduled transactions */
     EventFunctionWrapper tickEvent;
 
-    using SchedulingQueue = std::priority_queue<TransactionEvent*,
-        std::vector<TransactionEvent*>,
-        TransactionEvent::Compare>;
-
-    /** PQ of transactions whose injection has been scheduled */
-    SchedulingQueue scheduledTransactions;
-
     /** List of transactions whose injection needs to be scheduled */
     std::list<Transaction *> unscheduledTransactions;
 
