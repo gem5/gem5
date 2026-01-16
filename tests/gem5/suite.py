@@ -226,6 +226,7 @@ def _create_test_run_gem5(config, config_args, gem5_args):
                 gem5_fixture.isa,
                 params.log,
                 params.time,
+                gcov,
             )
 
     return test_run_gem5

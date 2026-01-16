@@ -586,18 +586,39 @@ def gcov_delete_files(target_dir, what):
                     os.remove(os.path.join(root, file))
 
 
+def isas_in_build_dir(build_dir):
+    return [
+        dir
+        for dir in os.listdir(build_dir)
+        if os.path.isdir(os.path.join(build_dir, dir))
+    ]
+
+
 def run_gcovr(
-    base_dir, build_target_dir, gcovr_outdir, test_threads, isa, log, time
+    base_dir,
+    build_target_dir,
+    gcovr_outdir,
+    test_threads,
+    isa,
+    log,
+    time,
+    gcov_option,
 ):
 
-    log.message("Now in the run_gcovr() helper...")
     log.message(
         "Now removing .py.gcno and .py.gcda files after running test(s), but "
-        f"before running gcovr. In the directory {build_target_dir}."
+        f"before running gcovr. In the directory {base_dir}."
     )
-    gcov_delete_files(build_target_dir, "py")
+    gcov_delete_files(base_dir, "py")
 
     log.message("Now running gcovr...")
+
+    gcov_result_json_name = "gcov-results.json"
+    gcov_summary_json_name = "gcov-summary.json"
+
+    if gcov_option == "all-test-and-gcov":
+        gcov_result_json_name = f"{isa}-{gcov_result_json_name}"
+        gcov_summary_json_name = f"{isa}-{gcov_summary_json_name}"
 
     # must use gcovr version >= 7.1, otherwise gcovr won't be able to handle
     # more than 9999 lines of code
@@ -613,10 +634,10 @@ def run_gcovr(
         "--gcov-ignore-parse-errors=suspicious_hits.warn",
         "--gcov-ignore-parse-errors=negative_hits.warn",
         "--json",
-        os.path.join(gcovr_outdir, "gcov-results.json"),
+        os.path.join(gcovr_outdir, gcov_result_json_name),
         "--json-pretty",
         "--json-summary",
-        os.path.join(gcovr_outdir, "gcov-summary.json"),
+        os.path.join(gcovr_outdir, gcov_summary_json_name),
         "--json-summary-pretty",
         "-j",
         test_threads,
@@ -626,8 +647,8 @@ def run_gcovr(
     # the current test. E.g. If the current test uses `build/ALL`, but
     # NULL is also in the `build` directory, then `build/NULL` will be
     # excluded. This prevents errors when running gcovr.
-    curr_build_isas = os.listdir(os.path.dirname(build_target_dir))
-    for dir in curr_build_isas:
+    curr_built_isas = isas_in_build_dir(os.path.dirname(build_target_dir))
+    for dir in curr_built_isas:
         if dir != isa:
             command.append("--gcov-exclude-directory")
             command.append(f'"{os.path.dirname(build_target_dir)}/{dir}$"')

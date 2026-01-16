@@ -38,6 +38,10 @@ import testlib.result as result
 import testlib.runner as runner
 import testlib.terminal as terminal
 import testlib.uid as uid
+from testlib.helper import (
+    isas_in_build_dir,
+    run_gcovr,
+)
 
 
 def entry_message():
@@ -337,6 +341,29 @@ def run_schedule(test_schedule, log_handler):
     failed = log_handler.unsuccessful()
 
     log_handler.finish_testing()
+
+    if configuration.config.gcov == "all-test-and-gcov":
+        # log.test_log.message(configuration.config.base_dir)
+        # log.test_log.message(configuration.config.build_dir)
+        cfg = configuration.config
+        # log.test_log.message(cfg.result_path)
+        # log.test_log.message(cfg.isa)
+        # Run gcovr on each ISA in the build directory
+        # built_isas = [dir for dir in os.listdir(cfg.build_dir) if os.path.isdir(os.path.join(cfg.build_dir, dir))]
+        built_isas = isas_in_build_dir(cfg.build_dir)
+        # log.test_log.message(f"List of build ISAs is {built_isas}")
+
+        for isa_dir in built_isas:
+            run_gcovr(
+                cfg.base_dir,
+                os.path.join(cfg.build_dir, isa_dir),
+                cfg.result_path,
+                cfg.test_threads,
+                isa_dir,
+                log.test_log,
+                None,
+                configuration.config.gcov,
+            )
 
     return 1 if failed else 0
 
