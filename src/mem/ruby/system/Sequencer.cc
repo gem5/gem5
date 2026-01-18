@@ -68,8 +68,6 @@ Sequencer::Sequencer(const Params &p)
 {
     m_outstanding_count = 0;
 
-    m_ruby_system = p.ruby_system;
-
     m_dataCache_ptr = p.dcache;
     m_max_outstanding_requests = p.max_outstanding_requests;
     m_deadlock_threshold = p.deadlock_threshold;
