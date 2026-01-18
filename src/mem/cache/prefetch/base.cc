@@ -64,7 +64,7 @@ Base::PrefetchInfo::PrefetchInfo(PacketPtr pkt, Addr addr, bool miss)
     paddress(pkt->req->getPaddr()), cacheMiss(miss)
 {
     unsigned int req_size = pkt->req->getSize();
-    if ((!write && miss) || !pkt->hasData()) {
+    if ((!write && miss) && !pkt->hasData()) {
         data = nullptr;
     } else {
         data = new uint8_t[req_size];
