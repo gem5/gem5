@@ -52,7 +52,9 @@ class TlmGenerator(SimObject):
         PyBindMethod("scheduleTransaction"),
     ]
 
-    _transactions = []
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._transactions = []
 
     def injectAt(self, when, payload, phase):
         from m5.tlm_chi import Transaction
