@@ -42,6 +42,7 @@
 #include "mem/ruby/system/Sequencer.hh"
 
 #include "base/logging.hh"
+#include "config/ruby_protocol_chi.hh"
 #include "cpu/testers/rubytest/RubyTester.hh"
 #include "debug/LLSC.hh"
 #include "debug/ProtocolTrace.hh"
@@ -1009,7 +1010,7 @@ Sequencer::makeRequest(PacketPtr pkt)
     } else if (pkt->req->isTlbiCmd()) {
         primary_type = secondary_type = tlbiCmdToRubyRequestType(pkt);
         DPRINTF(RubySequencer, "Issuing TLBI\n");
-#if defined (PROTOCOL_CHI)
+#if defined (RUBY_PROTOCOL_CHI)
     } else if (pkt->isAtomicOp()) {
         if (pkt->req->isAtomicReturn()){
             DPRINTF(RubySequencer, "Issuing ATOMIC RETURN \n");
