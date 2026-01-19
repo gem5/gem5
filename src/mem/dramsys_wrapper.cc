@@ -28,6 +28,9 @@
 
 #include "dramsys_wrapper.hh"
 
+#include "sim/core.hh"
+#include "systemc/core/kernel.hh"
+
 namespace gem5
 {
 

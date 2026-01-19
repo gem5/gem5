@@ -1,9 +1,9 @@
 Follow these steps to build DRAMSys as part of gem5
 
 1. Go to ext/dramsys (this directory)
-2. Clone DRAMSys: 'git clone https://github.com/tukl-msd/DRAMSys --branch v5.1 --depth 1 DRAMSys'
+2. Clone DRAMSys: 'git clone https://github.com/tukl-msd/DRAMSys --branch v5.3.1 --depth 1 DRAMSys'
 
-The latest verified working version is v5.1, but later versions might work too.
+The latest verified working version is v5.3.1, but later versions might work too.
 gem5 will automatically pick up DRAMSys as an external module when it is rebuilt.
 
 If you wish to run a simulation using the gem5 processor cores, make sure to enable the storage mode in DRAMSys.
