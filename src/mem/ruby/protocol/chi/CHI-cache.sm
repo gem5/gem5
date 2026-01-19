@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Arm Limited
+ * Copyright (c) 2021-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -618,6 +618,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     Addr addr,           desc="Line address";
     bool usesTxnId,      desc="Uses a transaction ID instead of a memory address";
     MachineID retryDest, desc="Retry destination";
+    uint8_t lpid,        desc="Retry destination";
   }
 
   // Queue for event triggers. Used to specify a list of actions that need
@@ -635,7 +636,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     void pushFrontNB(Event);
     void pop();
     // For the retry queue
-    void emplace(Addr,bool,MachineID);
+    void push(RetryQueueEntry);
     RetryQueueEntry next(); //SLICC won't allow to reuse front()
   }
 
@@ -855,6 +856,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     MachineID retryDest;
     bool usesTxnId;
     Addr txnId;
+    uint8_t lpid;
 
     bool functionalRead(Packet *pkt) { return false; }
     bool functionalRead(Packet *pkt, WriteMask &mask) { return false; }

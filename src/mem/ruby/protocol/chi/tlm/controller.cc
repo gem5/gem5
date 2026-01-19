@@ -104,8 +104,10 @@ CacheController::recvSnoopMsg(const CHIRequestMsg *msg)
 void
 CacheController::pCreditGrant(const CHIResponseMsg *msg)
 {
-    ARM::CHI::Phase phase;
     ARM::CHI::Payload *payload = ARM::CHI::Payload::new_payload();
+    payload->lpid = msg->m_lpid;
+
+    ARM::CHI::Phase phase;
     phase.channel = ARM::CHI::CHANNEL_RSP;
     phase.rsp_opcode = ARM::CHI::RSP_OPCODE_PCRD_GRANT;
     phase.pcrd_type = 0; // TODO: set this one depending on allow retry
@@ -338,6 +340,7 @@ CacheController::sendRequestMsg(ARM::CHI::Payload &payload,
 
     req_msg->m_txnId = phase.txn_id;
     req_msg->m_ns = payload.ns;
+    req_msg->m_lpid = payload.lpid;
 
     sendRequestMsg(req_msg);
 

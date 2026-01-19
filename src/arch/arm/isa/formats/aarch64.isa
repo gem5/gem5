@@ -1690,15 +1690,18 @@ namespace Aarch64
                     mnemonic = "ldpsw";
                 else
                     mnemonic = "ldp";
+
+                return new Ldp(mnemonic, machInst, size, fp, noAlloc,
+                        signExt, false, false, imm, mode, rn, rt, rt2);
             } else {
                 if (noAlloc)
                     mnemonic = "stnp";
                 else
                     mnemonic = "stp";
-            }
 
-            return new LdpStp(mnemonic, machInst, size, fp, load, noAlloc,
-                    signExt, false, false, imm, mode, rn, rt, rt2);
+                return new Stp(mnemonic, machInst, size, fp, noAlloc,
+                        signExt, false, false, imm, mode, rn, rt, rt2);
+            }
           }
           // bit 29:27=111, 25=0
           case 0x3:

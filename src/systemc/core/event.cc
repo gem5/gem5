@@ -75,8 +75,19 @@ std::shared_mutex globalEventLock;
 
 } // anonymous namespace
 
-Events topLevelEvents;
-Events allEvents;
+Events &
+topLevelEvents()
+{
+    static Events topLevelEvents;
+    return topLevelEvents;
+}
+
+Events &
+allEvents()
+{
+    static Events allEvents;
+    return allEvents;
+}
 
 Event::Event(sc_core::sc_event *_sc_event, bool internal) :
     Event(_sc_event, nullptr, internal)
@@ -96,7 +107,7 @@ Event::Event(sc_core::sc_event *_sc_event, const char *_basename_cstr,
     parent = internal ? nullptr : pickParentObj();
 
     if (internal) {
-        _basename = globalNameGen.gen(_basename);
+        _basename = globalNameGen().gen(_basename);
         _name = _basename;
     } else {
         std::string original_name = _basename;
@@ -106,7 +117,7 @@ Event::Event(sc_core::sc_event *_sc_event, const char *_basename_cstr,
             Object *obj = Object::getFromScObject(parent);
             obj->addChildEvent(_sc_event);
         } else {
-            addEvent(&topLevelEvents, _sc_event);
+            addEvent(&topLevelEvents(), _sc_event);
         }
 
         std::string path = parent ? (std::string(parent->name()) + ".") : "";
@@ -122,7 +133,7 @@ Event::Event(sc_core::sc_event *_sc_event, const char *_basename_cstr,
         _name = path + _basename;
     }
 
-    addEvent(&allEvents, _sc_event);
+    addEvent(&allEvents(), _sc_event);
 
     // Determine if we're in the hierarchy (created once initialization starts
     // means no).
@@ -136,13 +147,13 @@ Event::~Event()
         Object *obj = Object::getFromScObject(parent);
         obj->delChildEvent(_sc_event);
     } else if (inHierarchy()) {
-        popEvent(&topLevelEvents, _name);
+        popEvent(&topLevelEvents(), _name);
     }
 
-    popEvent(&allEvents, _name);
+    popEvent(&allEvents(), _name);
 
     if (delayedNotify.scheduled())
-        scheduler.deschedule(&delayedNotify);
+        scheduler().deschedule(&delayedNotify);
 }
 
 const std::string &
@@ -193,14 +204,15 @@ Event::notify(DynamicSensitivities &senses)
 void
 Event::notify()
 {
-    if (scheduler.inUpdate())
+    if (scheduler().inUpdate()) {
         SC_REPORT_ERROR(sc_core::SC_ID_IMMEDIATE_NOTIFICATION_, "");
+    }
 
     // An immediate notification overrides any pending delayed notification.
     if (delayedNotify.scheduled())
-        scheduler.deschedule(&delayedNotify);
+        scheduler().deschedule(&delayedNotify);
 
-    _triggeredStamp = scheduler.changeStamp();
+    _triggeredStamp = scheduler().changeStamp();
     notify(staticSenseMethod);
     notify(dynamicSenseMethod);
     notify(staticSenseThread);
@@ -211,12 +223,13 @@ void
 Event::notify(const sc_core::sc_time &t)
 {
     if (delayedNotify.scheduled()) {
-        if (scheduler.delayed(t) >= delayedNotify.when())
+        if (scheduler().delayed(t) >= delayedNotify.when()) {
             return;
+        }
 
-        scheduler.deschedule(&delayedNotify);
+        scheduler().deschedule(&delayedNotify);
     }
-    scheduler.schedule(&delayedNotify, t);
+    scheduler().schedule(&delayedNotify, t);
 }
 
 void
@@ -231,13 +244,13 @@ void
 Event::cancel()
 {
     if (delayedNotify.scheduled())
-        scheduler.deschedule(&delayedNotify);
+        scheduler().deschedule(&delayedNotify);
 }
 
 bool
 Event::triggered() const
 {
-    return _triggeredStamp == scheduler.changeStamp();
+    return _triggeredStamp == scheduler().changeStamp();
 }
 
 void
@@ -249,7 +262,7 @@ Event::clearParent()
         return;
     Object::getFromScObject(parent)->delChildEvent(_sc_event);
     parent = nullptr;
-    addEvent(&topLevelEvents, _sc_event);
+    addEvent(&topLevelEvents(), _sc_event);
 }
 
 sc_core::sc_event *
@@ -257,8 +270,8 @@ findEvent(const char *name)
 {
     [[maybe_unused]] std::shared_lock lock(globalEventLock);
 
-    EventsIt it = findEventIn(allEvents, name);
-    return it == allEvents.end() ? nullptr : *it;
+    EventsIt it = findEventIn(allEvents(), name);
+    return it == allEvents().end() ? nullptr : *it;
 }
 
 } // namespace sc_gem5

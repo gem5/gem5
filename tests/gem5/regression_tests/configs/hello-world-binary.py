@@ -115,7 +115,7 @@ stats = simulator.get_stats()
 # the tests on gem5 v25.0.0.1, commit ddd4ae35adb0a3df1f1ba11e9a973a5c2f8c2944.
 
 reference_ipcs = {
-    "arm": 0.007182533150689518,
+    "arm": 0.00745645746683752,
     "riscv": 0.0063129307138331215,
     "x86": 0.00578978714017867,
 }

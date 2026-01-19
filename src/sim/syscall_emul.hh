@@ -2598,17 +2598,24 @@ tgkillFunc(SyscallDesc *desc, ThreadContext *tc, int tgid, int tid, int sig)
         }
     }
 
-    if (sig != 0 && sig != OS::TGT_SIGABRT)
-        return -EINVAL;
-
     if (tgt_proc == nullptr)
         return -ESRCH;
 
     if (tgid != -1 && tgt_proc->tgid() != tgid)
         return -ESRCH;
 
-    if (sig == OS::TGT_SIGABRT)
-        exitGroupFunc(desc, tc, 0);
+    switch (sig) {
+        case 0:
+            break;
+        case OS::TGT_SIGABRT:
+        case OS::TGT_SIGINT:
+        case OS::TGT_SIGTERM:
+        case OS::TGT_SIGKILL:
+            exitGroupFunc(desc, tc, 128 + sig);
+            break;
+        default:
+            return -EINVAL;
+    }
 
     return 0;
 }

@@ -40,20 +40,31 @@
 #include <algorithm>
 
 #include "arch/generic/pcstate.hh"
+#include "base/logging.hh"
+#include "base/stats/group.hh"
+#include "base/stats/info.hh"
+#include "base/stats/units.hh"
 #include "base/trace.hh"
+#include "base/types.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/o3/comm.hh"
+#include "cpu/o3/cpu.hh"
 #include "cpu/o3/dyn_inst.hh"
+#include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/ftq.hh"
 #include "cpu/o3/limits.hh"
+#include "cpu/pred/bpred_unit.hh"
+#include "cpu/pred/branch_type.hh"
+#include "cpu/static_inst_fwd.hh"
+#include "cpu/timebuf.hh"
 #include "debug/Activity.hh"
 #include "debug/BAC.hh"
 #include "debug/Branch.hh"
 #include "debug/Drain.hh"
 #include "debug/FTQ.hh"
 #include "debug/Fetch.hh"
-#include "debug/O3PipeView.hh"
+#include "enums/BranchType.hh"
 #include "params/BaseO3CPU.hh"
-#include "sim/full_system.hh"
 
 using namespace gem5::branch_prediction;
 

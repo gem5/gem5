@@ -1,14 +1,5 @@
-# Copyright (c) 2020-2021,2024 Arm Limited
+# Copyright (c) 2025 The Regents of the University of California
 # All rights reserved.
-#
-# The license below extends only to copyright in the software and shall
-# not be construed as granting a license to any other intellectual
-# property including but not limited to intellectual property relating
-# to a hardware implementation of the functionality of the software
-# licensed hereunder.  You may use the software subject to the license
-# terms below provided that you ensure that this notice is replicated
-# unmodified and in its entirety in all distributions of the software,
-# modified or unmodified, in source code or in binary form.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -33,21 +24,42 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects.AbstractMemory import AbstractMemory
+"""
+This runs simple tests to ensure that running binaries via readfile works.
+"""
+import os
+import re
+
+from testlib import *
+
+if config.bin_path:
+    resource_path = config.bin_path
+else:
+    resource_path = joinpath(absdirpath(__file__), "..", "resources")
+
+readfile_verifier = verifier.MatchRegex(re.compile(r"Readfile test passed!"))
 
 
-class QoSMemSinkInterface(AbstractMemory):
-    type = "QoSMemSinkInterface"
-    cxx_header = "mem/qos/mem_sink.hh"
-    cxx_class = "gem5::memory::qos::MemSinkInterface"
-
-    def controller(self):
-        """
-        Instantiate the memory controller and bind it to
-        the current interface.
-        """
-        from m5.objects.QoSMemSinkCtrl import QoSMemSinkCtrl
-
-        controller = QoSMemSinkCtrl()
-        controller.interface = self
-        return controller
+def test_readfile(isa: str, length: str):
+    gem5_verify_config(
+        name=f"test_readfile_{isa}",
+        fixtures=(),
+        verifiers=(readfile_verifier,),
+        config=joinpath(
+            config.base_dir,
+            "tests",
+            "gem5",
+            "readfile_tests",
+            "configs",
+            "ubuntu-run-with-readfile.py",
+        ),
+        config_args=[
+            "--isa",
+            isa,
+            "--resource-directory",
+            resource_path,
+        ],
+        valid_isas=(constants.all_compiled_tag,),
+        valid_hosts=constants.supported_hosts,
+        length=length,
+    )
