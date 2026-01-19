@@ -1,3 +1,167 @@
+# Version 25.1
+
+gem5 Version 25.1 is the second major release of 2025.
+This release consists of 649 commits contributed to gem5 via 291 merged GitHub pull requests from 58 unique contributors.
+
+## Major Highlights
+
+* **Neoverse V2 core model.**
+  A new configuration file models the Arm Neoverse V2 CPU based on the public information released at Hot Chips 2025.
+  The model uses a distributed instruction queue with eight schedulers and 22 entries per scheduler, realistic functional-unit latencies, and enables fetch-directed prefetching and branch prediction for instruction streams.
+
+* **New branch predictor.**
+  A gshare branch predictor model has been added to the CPU library, providing a configurable alternative to the existing predictors ([#2303](https://github.com/gem5/gem5/pull/2303)).
+
+* **Towards Armv9 support with a full FEAT_SVE2 implementation.**
+  The Arm ISA has been extended to include the SVE2 and SVE2p1 extensions, including bit-permutation and B16B16 instructions.
+  A separate change adds the crypto subset of SVE/SVE2, introducing AES, SHA3, SM3, and SM4 vector instructions. This is a major stepping stone toward full Armv9 support.
+  The main difference between SVE2 and SVE is the functional coverage of the instruction set. SVE was designed for HPC and ML applications, while SVE2 extends the instruction set to support data-processing domains beyond HPC and ML.
+  The SVE2 instruction set can also accelerate common algorithms used in the following application domains:
+
+    Computer vision
+    Multimedia
+    Long-Term Evolution (LTE) baseband processing
+    Genomics
+    In-memory databases
+    Web serving
+    General-purpose software
+
+  Users can now enable SVE2 on Armv9 platforms and execute these vector and crypto instructions in both timing and atomic modes ([#2656](https://github.com/gem5/gem5/pull/2656), [#2765](https://github.com/gem5/gem5/pull/2765)).
+
+* **Decoupled front end and fetch-directed prefetcher (FDP).**
+  gem5 now supports a **decoupled front end**.
+  The front end can fetch and decode instructions independently of the back end, buffering decoded micro-ops until they are ready to issue. This has been tested on both x86 and Arm ISAs (see [#2724](https://github.com/gem5/gem5/pull/2724) and [#359](https://github.com/gem5/gem5/pull/359)).
+  However, there are known issues when using the decoupled front end with the x86 ISA, and its use on x86 is not recommended.
+  A new fetch-directed prefetcher monitors the fetch target queue and prefetches cache lines needed by the instruction stream ([#2598](https://github.com/gem5/gem5/pull/2598), [#2600](https://github.com/gem5/gem5/pull/2600)).
+
+* **Distributed instruction/issue queue.**
+  The O3 CPU can now be configured with multiple instruction-queue units. A new `IQUnit` SimObject allows the front end to dispatch micro-ops into several independent queues tied to specific functional-unit pools.
+  This enables more realistic modeling of modern out-of-order processors ([#2652](https://github.com/gem5/gem5/pull/2652)).
+
+* **Non-serializing behavior for O3CPU MiscRegClass registers.**
+  Traditionally, system register reads and writes were enforced as serializing operations by marking writes as `IsNonSpeculative` and `IsSerializeAfter`.
+  While appropriate for some system registers with side effects, many registers can safely be updated speculatively.
+  Enforcing serialization for all such accesses imposes a significant performance penalty, especially for cores with large instruction windows.
+  This change allows certain `MiscReg` instances to be tagged as non-serializing, enabling proper producer–consumer dependency tracking without unnecessary serialization ([#2700](https://github.com/gem5/gem5/pull/2700)).
+
+* **Improved Arm table-walk machinery.**
+  The Arm page-table walker has been reworked so that the number of outstanding walks is configurable and no longer limited to one, thereby increasing potential memory-level parallelism.
+  Existing table walkers have been renamed `ArmWalkUnit` objects, and the new `ArmTableWalker` orchestrates them.
+
+```python
+class ArmTableWalker(ClockedObject):
+    walk_units = VectorParam.ArmWalkUnit(
+        [
+            ArmWalkUnit(walk_type="instruction"),
+            ArmWalkUnit(walk_type="data"),
+            ArmWalkUnit(walk_type="unified"),
+            ArmWalkUnit(walk_type="unified"),
+            ArmWalkUnit(walk_type="instruction", is_stage2=True),
+            ArmWalkUnit(walk_type="data", is_stage2=True),
+            ArmWalkUnit(walk_type="unified", is_stage2=True),
+            ArmWalkUnit(walk_type="unified", is_stage2=True),
+        ],
+        "Walk Units",
+    )
+```
+
+  With this setup, the page-table walker is configured to allow four outstanding stage-1 and four outstanding stage-2 walks ([#2650](https://github.com/gem5/gem5/pull/2650)).
+
+* **Multiple GPUs and configurable GPU memory size.**
+  The GPU model now supports multi-GPU setups with adjustable framebuffer capacity. See *GPU Model Enhancements* for configuration details ([#2633](https://github.com/gem5/gem5/pull/2633)).
+
+* **Improved statistics infrastructure.**
+  Statistics now preserve the `m5_stats.Group` hierarchy and can emit multiple outputs simultaneously; see *Statistics and Instrumentation* for the new flags ([#2761](https://github.com/gem5/gem5/pull/2761), [#2764](https://github.com/gem5/gem5/pull/2764)).
+
+## User-Facing Enhancements
+
+* **System call improvements.**
+  System-call emulation in SE mode now implements the `sendfile` system call, enabling zero-copy transfers between file descriptors ([#2752](https://github.com/gem5/gem5/pull/2752)).
+  On RISC-V, the `rseq` system call is now ignored and returns `-ENOSYS`, fixing SE workloads compiled against modern glibc versions ([#2525](https://github.com/gem5/gem5/pull/2525)).
+
+* **RISC-V FSWorkload enhancements.**
+  The RISC-V full-system workload now accepts an `initrd` parameter for flexible boot configurations; see the RISC-V section for decoder hardening and RVV instruction updates ([#2714](https://github.com/gem5/gem5/pull/2714)).
+
+* **Explicit handling of walk caches.**
+  Memory walk caches are now created only when the CPU exposes a walker port and are shared when a single walker services both instruction and data requests.
+  The standard library now treats walk caches as an explicit part of the cache hierarchy, requiring users to select appropriate configurations.
+  Previously, a walk cache was always implicitly instantiated downstream of the MMU. This is no longer the case; for example, `PrivateL1PrivateL2` will not instantiate a walk cache by default.
+  To include one, `PrivateL1PrivateL2WalkCacheHierarchy` must be used.
+  An exception is raised if a CPU advertises more than two walker ports ([#2716](https://github.com/gem5/gem5/pull/2716)).
+
+* **Branch predictor fix.**
+  A bug in the simple BTB’s set-index calculation has been corrected to ensure the branch predictor receives the correct number of sets.
+  Users employing custom branch-predictor configurations should rebuild against the updated code.
+
+* **Miscellaneous improvements.**
+  Software prefetches in Ruby now return an early response to avoid stalling the memory hierarchy ([#2311](https://github.com/gem5/gem5/pull/2311)).
+  Several configuration scripts have been updated to default to the new Arm Neoverse V2 model and to make MMU walk caches optional.
+
+## Arm ISA Changes and Improvements
+
+### Architectural Extensions
+
+* **FEAT_SVE2, FEAT_SVE2p1, and FEAT_SVE bit-permutation/B16B16.**
+  Enable these Armv9 extensions via the CPU’s `extensions` list; see *Major Highlights* for instruction coverage ([#2656](https://github.com/gem5/gem5/pull/2656)).
+
+* **FEAT_AFP.**
+  Models the Armv8.6 alternate floating-point mode with FPCR.AH, FPCR.FIZ, and FPCR.NEP control bits ([#2393](https://github.com/gem5/gem5/pull/2393)).
+
+* **LRCPC2 instructions.**
+  Implements the RCpc memory model by treating LRCPC2 instructions as RCsc operations ([#2632](https://github.com/gem5/gem5/pull/2632)).
+
+* **SVE/SVE2 crypto support.**
+  Adds AES, SHA3, SM3, and SM4 vector instructions to the SVE/SVE2 implementations ([#2765](https://github.com/gem5/gem5/pull/2765)).
+
+## RISC-V
+
+* **New vector instructions and bug fixes.**
+  Support has been added for the `vandn`, `vwsll`, `vror`, `vrol`, `vcompress`, `vclmul`, and `vclmulh` instructions.
+  Numerous corrections improve handling of pinned registers, vector slide operations, and RVV instruction disassembly.
+  A new `initrd` option for `FsWorkload` simplifies full-system booting, and the `rseq` system call is ignored on riscv64, returning `-ENOSYS` to satisfy recent glibc implementations.
+
+## GPU Model Enhancements
+
+* **Multiple GPU support and configurable memory size.**
+  The GPU model now allows the framebuffer size to be configured and supports multiple GPU devices by adding additional ROM and MMIO regions to expose PCI configuration and firmware to the host.
+  This enables modeling of systems with multiple discrete GPUs ([#2633](https://github.com/gem5/gem5/pull/2633)).
+
+## AMBA CHI Changes and Improvements
+
+* **CHI-TLM interface.**
+  The Ruby CHI-TLM interface now uses a proper CHI-TLM port to connect components via ports rather than pointers ([#2689](https://github.com/gem5/gem5/pull/2689)).
+
+* **CHI-TLM generator as a CPU.**
+  The programming interface of the CHI-TLM generator has been expanded for greater flexibility.
+  Instead of scheduling CHI transactions at predetermined times, transactions can now be injected after `m5.instantiate`, with issuance governed by configurable parameters such as generator frequency and maximum outstanding transactions.
+  This allows the generator to behave more like a CPU and enables performance-oriented unit tests ([#2780](https://github.com/gem5/gem5/pull/2780)).
+
+## Statistics and Instrumentation
+
+* **Statistics groups.**
+  `m5_stats.Group` objects are now processed during statistics dumping, preserving hierarchical groupings of related counters ([#2761](https://github.com/gem5/gem5/pull/2761)).
+
+* **Multiple output formats.**
+  Passing `--stats-file` multiple times will generate multiple statistics files; for example, `--stats-file=stats.txt --stats-file=stats.json` produces both human-readable and JSON outputs ([#2764](https://github.com/gem5/gem5/pull/2764)).
+
+## Miscellaneous
+
+* **Software prefetch handling.**
+  Ruby now returns an immediate response to software prefetch requests to prevent stalling the memory system.
+
+* **Improved debugging and testing.**
+  New Neoverse V2 and fetch-directed prefetcher demonstration scripts provide out-of-the-box examples for new CPU features.
+  Many unit tests have been updated or extended to exercise new branch predictor, prefetcher, and page-table walker functionality.
+
+* **Pybind update.**
+  The Python bindings have been upgraded to a newer version of pybind11, improving integration between C++ and Python and enabling builds with newer compilers ([#2551](https://github.com/gem5/gem5/pull/2551)).
+
+* **clang-format integration.**
+  The continuous integration system now runs clang-format as part of the GitHub Actions workflow to enforce a consistent coding style across the codebase ([#2314](https://github.com/gem5/gem5/pull/2314)).
+
+* **Cloud migration announcement.**
+  The gem5-resources cloud infrastructure has been migrated from Google Cloud to Microsoft Azure to improve reliability and performance.
+
 # Version 25.0.0.1
 
 **[HOTFIX]** This is a hotfix release incorporating the following critical fixes highlighted below. This release addresses urgent issues that required immediate attention outside the regular release schedule.
