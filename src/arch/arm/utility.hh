@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2016-2020, 2022-2024 Arm Limited
+ * Copyright (c) 2010, 2012-2013, 2016-2020, 2022-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -44,7 +44,7 @@
 
 #include "arch/arm/regs/cc.hh"
 #include "arch/arm/regs/int.hh"
-#include "arch/arm/regs/misc.hh"
+#include "arch/arm/regs/misc_types.hh"
 #include "arch/arm/types.hh"
 #include "base/logging.hh"
 #include "base/trace.hh"
@@ -267,83 +267,12 @@ mcrrMrrcIssBuild(bool isRead, uint32_t crm, RegIndex rt, RegIndex rt2,
            (opc1 << 16);
 }
 
-Fault mcrMrc15Trap(const MiscRegIndex miscReg, ExtMachInst machInst,
-                   ThreadContext *tc, uint32_t imm);
-bool mcrMrc15TrapToHyp(const MiscRegIndex miscReg, ThreadContext *tc,
-                       uint32_t iss, ExceptionClass *ec=nullptr);
-
-bool mcrMrc14TrapToHyp(const MiscRegIndex miscReg, ThreadContext *tc,
-                       uint32_t iss);
-
-Fault mcrrMrrc15Trap(const MiscRegIndex miscReg, ExtMachInst machInst,
-                     ThreadContext *tc, uint32_t imm);
-bool mcrrMrrc15TrapToHyp(const MiscRegIndex miscReg, ThreadContext *tc,
-                         uint32_t iss, ExceptionClass *ec=nullptr);
-
-Fault AArch64AArch32SystemAccessTrap(const MiscRegIndex miscReg,
-                                     ExtMachInst machInst, ThreadContext *tc,
-                                     uint32_t imm, ExceptionClass ec);
-bool isAArch64AArch32SystemAccessTrapEL1(const MiscRegIndex miscReg,
-                                         ThreadContext *tc);
-bool isAArch64AArch32SystemAccessTrapEL2(const MiscRegIndex miscReg,
-                                         ThreadContext *tc);
-bool isGenericTimerHypTrap(const MiscRegIndex miscReg, ThreadContext *tc,
-                           ExceptionClass *ec);
-bool condGenericTimerPhysHypTrap(const MiscRegIndex miscReg,
-                                 ThreadContext *tc);
-bool isGenericTimerCommonEL0HypTrap(const MiscRegIndex miscReg,
-                                    ThreadContext *tc, ExceptionClass *ec);
-bool isGenericTimerPhysHypTrap(const MiscRegIndex miscReg, ThreadContext *tc,
-                               ExceptionClass *ec);
-bool condGenericTimerPhysHypTrap(const MiscRegIndex miscReg,
-                                 ThreadContext *tc);
-bool isGenericTimerSystemAccessTrapEL1(const MiscRegIndex miscReg,
-                                       ThreadContext *tc);
-bool condGenericTimerSystemAccessTrapEL1(const MiscRegIndex miscReg,
-                                         ThreadContext *tc);
-bool isGenericTimerSystemAccessTrapEL2(const MiscRegIndex miscReg,
-                                       ThreadContext *tc);
-bool isGenericTimerCommonEL0SystemAccessTrapEL2(const MiscRegIndex miscReg,
-                                                ThreadContext *tc);
-bool isGenericTimerPhysEL0SystemAccessTrapEL2(const MiscRegIndex miscReg,
-                                              ThreadContext *tc);
-bool isGenericTimerPhysEL1SystemAccessTrapEL2(const MiscRegIndex miscReg,
-                                              ThreadContext *tc);
-bool isGenericTimerVirtSystemAccessTrapEL2(const MiscRegIndex miscReg,
-                                           ThreadContext *tc);
-bool condGenericTimerCommonEL0SystemAccessTrapEL2(const MiscRegIndex miscReg,
-                                                  ThreadContext *tc);
-bool condGenericTimerCommonEL1SystemAccessTrapEL2(const MiscRegIndex miscReg,
-                                                  ThreadContext *tc);
-bool condGenericTimerPhysEL1SystemAccessTrapEL2(const MiscRegIndex miscReg,
-                                                ThreadContext *tc);
-bool isGenericTimerSystemAccessTrapEL3(const MiscRegIndex miscReg,
-                                       ThreadContext *tc);
-
 bool SPAlignmentCheckEnabled(ThreadContext *tc);
+
+unsigned addrAlignmentFlags(int memsize, unsigned memAccessFlags);
 
 Addr truncPage(Addr addr);
 Addr roundPage(Addr addr);
-
-// Decodes the register index to access based on the fields used in a MSR
-// or MRS instruction
-bool decodeMrsMsrBankedReg(uint8_t sysM, bool r, bool &isIntReg, int &regIdx,
-                           CPSR cpsr, SCR scr, NSACR nsacr,
-                           bool checkSecurity=true);
-
-// This wrapper function is used to turn the register index into a source
-// parameter for the instruction. See Operands.isa
-static inline int
-decodeMrsMsrBankedIntRegIndex(uint8_t sysM, bool r)
-{
-    int  regIdx;
-    bool isIntReg;
-    bool validReg;
-
-    validReg = decodeMrsMsrBankedReg(
-            sysM, r, isIntReg, regIdx, 0, 0, 0, false);
-    return (validReg && isIntReg) ? regIdx : int_reg::Zero;
-}
 
 /**
  * Returns the n. of PA bits corresponding to the specified encoding.

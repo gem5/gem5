@@ -42,11 +42,17 @@ Import('*')
 
 SimObject('PciDevice.py', sim_objects=[
     'PciBar', 'PciBarNone', 'PciIoBar', 'PciLegacyIoBar', 'PciMemBar',
-    'PciMemUpperBar', 'PciDevice', 'PciEndpoint', 'PciBridge'])
+    'PciMemUpperBar', 'PciDevice', 'PciEndpoint', 'PciType1Device'])
 Source('device.cc')
 DebugFlag('PciDevice')
-DebugFlag('PciEndpoint')
-DebugFlag('PciBridge')
+
+SimObject('PciUpstream.py', sim_objects=[
+    'PciUpstream', 'PciUpDownBridge', 'PciBus', 'PciConfigError'
+])
+Source('upstream.cc')
+Source('up_down_bridge.cc')
+Source('bus.cc')
+DebugFlag('PciUpstream')
 
 SimObject('PciHost.py', sim_objects=['PciHost', 'GenericPciHost'])
 Source('host.cc')

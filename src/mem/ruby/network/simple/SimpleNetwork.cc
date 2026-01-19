@@ -13,6 +13,7 @@
  * modified or unmodified, in source code or in binary form.
  *
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
+ * Copyright (c) 2025 Google
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -116,7 +117,8 @@ SimpleNetwork::makeExtOutLink(SwitchID src, NodeID global_dest,
     // some destinations don't use all vnets, but Switch requires the size
     // output buffer list to match the number of vnets
     int num_vnets = params().number_of_virtual_networks;
-    gem5_assert(num_vnets >= m_fromNetQueues[local_dest].size());
+    gem5_assert(num_vnets >= m_fromNetQueues[local_dest].size(),
+                "SimpleNetwork::makeExtOutLink");
     m_fromNetQueues[local_dest].resize(num_vnets, nullptr);
 
     m_switches[src]->addOutPort(simple_link->name(),
@@ -157,47 +159,6 @@ SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
     // Maitain a global list of buffers (used for functional accesses only)
     m_int_link_buffers.insert(m_int_link_buffers.end(),
             simple_link->m_buffers.begin(), simple_link->m_buffers.end());
-}
-
-void
-SimpleNetwork::regStats()
-{
-    Network::regStats();
-
-    for (MessageSizeType type = MessageSizeType_FIRST;
-         type < MessageSizeType_NUM; ++type) {
-        networkStats.m_msg_counts[(unsigned int) type] =
-            new statistics::Formula(&networkStats,
-            csprintf("msg_count.%s", MessageSizeType_to_string(type)).c_str());
-        networkStats.m_msg_counts[(unsigned int) type]
-            ->flags(statistics::nozero)
-            ;
-
-        networkStats.m_msg_bytes[(unsigned int) type] =
-            new statistics::Formula(&networkStats,
-            csprintf("msg_byte.%s", MessageSizeType_to_string(type)).c_str());
-        networkStats.m_msg_bytes[(unsigned int) type]
-            ->flags(statistics::nozero)
-            ;
-
-        // Now state what the formula is.
-        for (auto& it : m_switches) {
-            *(networkStats.m_msg_counts[(unsigned int) type]) +=
-                sum(it.second->getMsgCount(type));
-        }
-
-        *(networkStats.m_msg_bytes[(unsigned int) type]) =
-            *(networkStats.m_msg_counts[(unsigned int) type]) *
-                statistics::constant(Network::MessageSizeType_to_int(type));
-    }
-}
-
-void
-SimpleNetwork::collateStats()
-{
-    for (auto& it : m_switches) {
-        it.second->collateStats();
-    }
 }
 
 void
@@ -256,11 +217,45 @@ SimpleNetwork::functionalWrite(Packet *pkt)
     return num_functional_writes;
 }
 
-SimpleNetwork::
-NetworkStats::NetworkStats(statistics::Group *parent)
-    : statistics::Group(parent)
+SimpleNetwork::NetworkStats::NetworkStats(SimpleNetwork *parent)
+    : statistics::Group(parent), parent(parent)
 {
+    for (MessageSizeType type = MessageSizeType_FIRST;
+         type < MessageSizeType_NUM; ++type) {
+        std::string name_count = csprintf(
+            "msg_count.%s", MessageSizeType_to_string(MessageSizeType(type)));
+        auto msg_count = new statistics::Formula(
+            parent, name_count.c_str(), statistics::units::Count::get(),
+            "Total messages through network");
+        msg_count->flags(statistics::nozero);
 
+        std::string name_bytes = csprintf(
+            "msg_byte.%s", MessageSizeType_to_string(MessageSizeType(type)));
+        auto msg_bytes = new statistics::Formula(
+            parent, name_bytes.c_str(), statistics::units::Byte::get(),
+            "Total bytes through network");
+        msg_bytes->flags(statistics::nozero);
+
+        m_msg_counts.push_back(msg_count);
+        m_msg_bytes.push_back(msg_bytes);
+    }
+}
+
+void
+SimpleNetwork::NetworkStats::regStats()
+{
+    // Note: Switches are not available at construction time only at regStats
+    for (MessageSizeType type = MessageSizeType_FIRST;
+         type < MessageSizeType_NUM; ++type) {
+        for (auto &it : parent->m_switches) {
+            *(m_msg_counts[type]) += sum(it.second->getMsgCount(type));
+        }
+        *(m_msg_bytes[type]) =
+            *(m_msg_counts[type]) *
+            statistics::constant(Network::MessageSizeType_to_int(type));
+    }
+
+    statistics::Group::regStats();
 }
 
 } // namespace ruby

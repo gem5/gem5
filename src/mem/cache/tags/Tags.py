@@ -35,8 +35,10 @@
 
 from m5.objects.ClockedObject import ClockedObject
 from m5.objects.IndexingPolicies import *
+from m5.objects.PartitioningPolicies import PartitionManager
 from m5.params import *
 from m5.proxy import *
+from m5.SimObject import SimObject
 
 
 class TaggedIndexingPolicy(SimObject):

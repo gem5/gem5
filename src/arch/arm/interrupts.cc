@@ -38,9 +38,15 @@
 #include "arch/arm/interrupts.hh"
 
 #include "arch/arm/system.hh"
+#include "params/ArmInterrupts.hh"
 
 namespace gem5
 {
+
+ArmISA::Interrupts::Interrupts(const Params &p) : BaseInterrupts(p)
+{
+    clearAll();
+}
 
 bool
 ArmISA::Interrupts::takeInt32(InterruptTypes int_type) const

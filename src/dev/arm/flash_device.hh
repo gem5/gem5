@@ -43,11 +43,12 @@
 #include "debug/FlashDevice.hh"
 #include "dev/arm/abstract_nvm.hh"
 #include "enums/DataDistribution.hh"
-#include "params/FlashDevice.hh"
 #include "sim/serialize.hh"
 
 namespace gem5
 {
+
+struct FlashDeviceParams;
 
 /**
  * Flash Device model

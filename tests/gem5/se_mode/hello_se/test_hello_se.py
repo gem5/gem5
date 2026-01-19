@@ -52,11 +52,11 @@ isa_str_map = {
     constants.mips_tag: "mips",
     constants.riscv_tag: "riscv",
     constants.sparc_tag: "sparc",
-    constants.vega_x86_tag: "x86",
+    constants.x86_tag: "x86",
 }
 
 static_progs = {
-    constants.vega_x86_tag: ("x86-hello64-static", "x86-hello32-static"),
+    constants.x86_tag: ("x86-hello64-static", "x86-hello32-static"),
     constants.arm_tag: ("arm-hello64-static", "arm-hello32-static"),
     constants.mips_tag: ("mips-hello",),
     constants.riscv_tag: ("riscv-hello",),
@@ -64,14 +64,14 @@ static_progs = {
 }
 
 take_params_progs = {
-    constants.vega_x86_tag: ("x86-print-this",),
+    constants.x86_tag: ("x86-print-this",),
     constants.riscv_tag: ("riscv-print-this",),
 }
 
-dynamic_progs = {constants.vega_x86_tag: ("x86-hello64-dynamic",)}
+dynamic_progs = {constants.x86_tag: ("x86-hello64-dynamic",)}
 
 cpu_types = {
-    constants.vega_x86_tag: ("timing", "atomic", "o3"),
+    constants.x86_tag: ("timing", "atomic", "o3"),
     constants.arm_tag: ("timing", "atomic", "o3", "minor"),
     constants.mips_tag: ("timing", "atomic", "o3"),
     constants.riscv_tag: ("timing", "atomic", "o3", "minor"),

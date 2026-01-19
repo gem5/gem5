@@ -102,3 +102,30 @@ TEST(MxfpTest, MxFp8Test)
 
     EXPECT_EQ(errors, 0);
 }
+
+TEST(MxfpTest, MxBf6Test)
+{
+    using T = gem5::AMDGPU::mxbf6;
+
+    int errors = test_type<T>(T::size());
+
+    EXPECT_EQ(errors, 0);
+}
+
+TEST(MxfpTest, MxFp6Test)
+{
+    using T = gem5::AMDGPU::mxfp6;
+
+    int errors = test_type<T>(T::size());
+
+    EXPECT_EQ(errors, 0);
+}
+
+TEST(MxfpTest, MxFp4Test)
+{
+    using T = gem5::AMDGPU::mxfp4;
+
+    int errors = test_type<T>(T::size());
+
+    EXPECT_EQ(errors, 0);
+}

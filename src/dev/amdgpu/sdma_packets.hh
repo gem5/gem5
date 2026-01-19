@@ -217,8 +217,15 @@ static_assert(sizeof(sdmaSRBMWrite) == 8);
 
 typedef struct GEM5_PACKED
 {
-    uint32_t reserved : 28;
-    uint32_t byteEnable : 4;
+    union
+    {
+        struct
+        {
+            uint32_t reserved : 28;
+            uint32_t byteEnable : 4;
+        };
+        uint32_t ordinal;
+    };
 }  sdmaSRBMWriteHeader;
 static_assert(sizeof(sdmaSRBMWriteHeader) == 4);
 
@@ -235,10 +242,17 @@ static_assert(sizeof(sdmaPollRegMem) == 20);
 
 typedef struct GEM5_PACKED
 {
-    uint32_t reserved : 26;
-    uint32_t op : 2;            // Operation
-    uint32_t func : 3;          // Comparison function
-    uint32_t mode : 1;          // Mode: register or memory polling
+    union
+    {
+        struct
+        {
+            uint32_t reserved : 26;
+            uint32_t op : 2;            // Operation
+            uint32_t func : 3;          // Comparison function
+            uint32_t mode : 1;          // Mode: register or memory polling
+        };
+        uint32_t ordinal;
+    };
 }  sdmaPollRegMemHeader;
 static_assert(sizeof(sdmaPollRegMemHeader) == 4);
 
@@ -302,10 +316,17 @@ static_assert(sizeof(sdmaAtomic) == 28);
 
 typedef struct GEM5_PACKED
 {
-    int unused2 : 16;
-    int loop : 1;
-    int unused1 : 8;
-    int opcode : 7;
+    union
+    {
+        struct
+        {
+            int unused2 : 16;
+            int loop : 1;
+            int unused1 : 8;
+            int opcode : 7;
+        };
+        uint32_t ordinal;
+    };
 }  sdmaAtomicHeader;
 static_assert(sizeof(sdmaAtomicHeader) == 4);
 

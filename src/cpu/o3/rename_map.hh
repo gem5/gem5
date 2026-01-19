@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015-2017 ARM Limited
+ * Copyright (c) 2015-2017, 2025 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -208,6 +208,11 @@ class UnifiedRenameMap
         if (!arch_reg.isRenameable()) {
             // misc regs aren't really renamed, just remapped
             PhysRegIdPtr phys_reg = lookup(arch_reg);
+            if (!phys_reg->isAlwaysReady()) {
+                phys_reg->setNumPinnedWrites(arch_reg.getNumPinnedWrites());
+                phys_reg->setNumPinnedWritesToComplete(
+                    arch_reg.getNumPinnedWrites() + 1);
+            }
             // Set the new register to the previous one to keep the same
             // mapping throughout the execution.
             return RenameInfo(phys_reg, phys_reg);

@@ -39,21 +39,18 @@
 #define __MEM_RUBY_PROTOCOL_CHI_CHIGenericController_HH__
 
 #include <iostream>
-#include <sstream>
-#include <string>
 
-#include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/network/MessageBuffer.hh"
 #include "mem/ruby/protocol/AccessPermission.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/ruby/system/CacheRecorder.hh"
+#include "mem/ruby/system/RubySystem.hh"
 #include "params/CHIGenericController.hh"
 
 // Generated from SLICC
 #include "mem/ruby/protocol/CHI/CHIDataMsg.hh"
 #include "mem/ruby/protocol/CHI/CHIRequestMsg.hh"
 #include "mem/ruby/protocol/CHI/CHIResponseMsg.hh"
-#include "mem/ruby/protocol/CHI/Cache_Controller.hh"
 
 namespace gem5
 {

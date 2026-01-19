@@ -44,6 +44,10 @@
 #ifndef __SIM_CXX_CONFIG_INI_HH__
 #define __SIM_CXX_CONFIG_INI_HH__
 
+#include <string>
+#include <unordered_map>
+#include <vector>
+
 #include "base/inifile.hh"
 #include "sim/cxx_config.hh"
 
@@ -68,6 +72,15 @@ class CxxIniFile : public CxxConfigFileBase
     bool getParamVector(const std::string &object_name,
         const std::string &param_name,
         std::vector<std::string> &values) const;
+
+    /**
+     * Finds the dictionary parameter of the object in the ini file
+     * and unserializes it into the values argument which is
+     * passed by reference.
+     */
+    bool getParamDict(const std::string &object_name,
+        const std::string &param_name,
+        std::unordered_map<std::string, std::string> &values) const;
 
     bool getPortPeers(const std::string &object_name,
         const std::string &port_name,

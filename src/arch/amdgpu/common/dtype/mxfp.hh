@@ -145,6 +145,11 @@ class mxfp
         FMT in = getFmt();
         int exp = in.exp;
 
+        // Our value is zero, scaling by anything remains zero.
+        if (exp == 0 && in.mant == 0) {
+            return;
+        }
+
         if (exp + scale_val > max_exp<FMT>()) {
             in.exp = max_exp<FMT>();
         } else if (exp + scale_val < min_exp<FMT>()) {
@@ -176,6 +181,11 @@ class mxfp
         FMT in = getFmt();
         int exp = in.exp;
 
+        // Our value is zero, scaling by anything remains zero.
+        if (exp == 0 && in.mant == 0) {
+            return;
+        }
+
         if (exp - scale_val > max_exp<FMT>()) {
             in.exp = max_exp<FMT>();
         } else if (exp - scale_val < min_exp<FMT>()) {
@@ -192,6 +202,50 @@ class mxfp
         }
 
         data = in.storage;
+    }
+
+    // Helper method specific to AMDGPU instructions.
+    void
+    omodModifier(unsigned omod)
+    {
+        // When the VOP3 form is used, instructions with a floating-point
+        // result can apply an output modifier (OMOD field) that multiplies
+        // the result by: 0.5, 1.0, 2.0 or 4.0
+        //
+        // 2-bit field in encoding:
+        //   0:  Do nothing
+        //   1:  Multiply by 2
+        //   2:  Multiply by 4
+        //   3:  Divide by 2 (multiply by 1/2)
+        assert(omod < 4);
+
+        if (omod == 1) scaleMul(2.0f);
+        if (omod == 2) scaleMul(4.0f);
+        if (omod == 3) scaleDiv(2.0f);
+    }
+
+    void
+    clamp(bool do_clamp)
+    {
+        if (do_clamp) {
+            if (*this > 1.0f) {
+                *this = 1.0f;
+            } else if (*this < 0.0f) {
+                *this = 0.0f;
+            }
+        }
+    }
+
+    void
+    fabs()
+    {
+        data &= 0x7fffffff;
+    }
+
+    void
+    neg()
+    {
+        data ^= 0x80000000;
     }
 
   private:

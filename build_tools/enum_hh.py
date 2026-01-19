@@ -39,85 +39,108 @@
 import argparse
 import importlib
 import os.path
-import sys
+from typing import Type
 
-import importer
 from code_formatter import code_formatter
 
-parser = argparse.ArgumentParser()
-parser.add_argument("modpath", help="module the enum belongs to")
-parser.add_argument("enum_hh", help="enum header file to generate")
 
-args = parser.parse_args()
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("modpath", help="module the enum belongs to")
+    parser.add_argument("enum_hh", help="enum header file to generate")
+    args = parser.parse_args()
+    return args
 
-basename = os.path.basename(args.enum_hh)
-enum_name = os.path.splitext(basename)[0]
 
-importer.install()
-module = importlib.import_module(args.modpath)
-enum = getattr(module, enum_name)
+def write_header_file(enum: Type, enum_hh: str):
+    """Write the header file for an Enum.
 
-code = code_formatter()
+    This function generates a C++ header file that declares an enum,
+    either as a standard enum within a namespace or as an enum class.
+    It also declares an associated string array for converting enum values
+    to strings.
 
-# Generate C++ class declaration for this enum type.
-# Note that we wrap the enum in a class/struct to act as a namespace,
-# so that the enum strings can be brief w/o worrying about collisions.
-wrapper_name = enum.wrapper_name
-wrapper = "struct" if enum.wrapper_is_struct else "namespace"
-name = enum.__name__ if enum.enum_name is None else enum.enum_name
-idem_macro = f"__ENUM__{wrapper_name}__{name}__"
+    Args:
+        enum: The Enum class for which to generate the header.
+        enum_hh: The path to the header file to write.
+    """
+    code = code_formatter()
 
-code(
-    """\
+    # Generate C++ class declaration for this enum type.
+    # Note that we wrap the enum in a class/struct to act as a namespace,
+    # so that the enum strings can be brief w/o worrying about collisions.
+    wrapper_name = enum.wrapper_name
+    wrapper = "struct" if enum.wrapper_is_struct else "namespace"
+    name = enum.__name__ if enum.enum_name is None else enum.enum_name
+    idem_macro = f"__ENUM__{wrapper_name}__{name}__"
+
+    code(
+        """\
 #ifndef $idem_macro
 #define $idem_macro
 
 namespace gem5
 {
 """
-)
-if enum.is_class:
-    code(
-        """\
+    )
+    if enum.is_class:
+        code(
+            """\
 enum class $name
 {
 """
-    )
-else:
-    code(
-        """\
+        )
+    else:
+        code(
+            """\
 $wrapper $wrapper_name {
 enum $name
 {
 """
-    )
+        )
+        code.indent(1)
     code.indent(1)
-code.indent(1)
-for val in enum.vals:
-    code("$val = ${{enum.map[val]}},")
-code("Num_$name = ${{len(enum.vals)}}")
-code.dedent(1)
-code("};")
+    for val in enum.vals:
+        code("$val = ${{enum.map[val]}},")
+    code("Num_$name = ${{len(enum.vals)}}")
+    code.dedent(1)
+    code("};")
 
-if enum.is_class:
-    code(
-        """\
+    if enum.is_class:
+        code(
+            """\
 extern const char *${name}Strings[static_cast<int>(${name}::Num_${name})];
 """
-    )
-elif enum.wrapper_is_struct:
-    code("static const char *${name}Strings[Num_${name}];")
-else:
-    code("extern const char *${name}Strings[Num_${name}];")
+        )
+    elif enum.wrapper_is_struct:
+        code("static const char *${name}Strings[Num_${name}];")
+    else:
+        code("extern const char *${name}Strings[Num_${name}];")
 
-if not enum.is_class:
-    code.dedent(1)
-    code("}; // $wrapper_name")
+    if not enum.is_class:
+        code.dedent(1)
+        code("}; // $wrapper_name")
 
-code()
-code("} // namespace gem5")
+    code()
+    code("} // namespace gem5")
 
-code()
-code("#endif // $idem_macro")
+    code()
+    code("#endif // $idem_macro")
 
-code.write(args.enum_hh)
+    code.write(enum_hh)
+
+
+if __name__ == "__main__":
+    args = parse_args()
+
+    basename = os.path.basename(args.enum_hh)
+    enum_name = os.path.splitext(basename)[0]
+
+    # Note: Import here to remove dependence if importing from this file
+    import importer
+
+    importer.install()
+    module = importlib.import_module(args.modpath)
+    enum = getattr(module, enum_name)
+
+    write_header_file(enum, args.enum_hh)

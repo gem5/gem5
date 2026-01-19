@@ -56,8 +56,10 @@ IsaFake::read(PacketPtr pkt)
     pkt->makeAtomicResponse();
 
     if (params().warn_access != "")
-        warn("Device %s accessed by read to address %#x size=%d\n",
-                name(), pkt->getAddr(), pkt->getSize());
+        warn(
+            "Device %s accessed by read to address %#x size=%d. "
+            "Access message: %s\n",
+            name(), pkt->getAddr(), pkt->getSize(), params().warn_access);
     if (params().ret_bad_addr) {
         DPRINTF(IsaFake, "read to bad address va=%#x size=%d\n",
                 pkt->getAddr(), pkt->getSize());
@@ -111,8 +113,10 @@ IsaFake::write(PacketPtr pkt)
           default:
             panic("invalid access size: %u\n", pkt->getSize());
         }
-        warn("Device %s accessed by write to address %#x size=%d data=%#x\n",
-                name(), pkt->getAddr(), pkt->getSize(), data);
+        warn(
+            "Device %s accessed by write to address %#x size=%d data=%#x. "
+            "Access message: %s\n",
+            name(), pkt->getAddr(), pkt->getSize(), data, params().warn_access);
     }
     if (params().ret_bad_addr) {
         DPRINTF(IsaFake, "write to bad address va=%#x size=%d \n",

@@ -73,7 +73,7 @@ LooppointAnalysis::updateLocalBBV(const Addr pc)
 
 void
 LooppointAnalysis::checkPc(
-    const std::pair<SimpleThread*,StaticInstPtr>& inst_pair
+    const std::pair<SimpleThread*,const StaticInstPtr>& inst_pair
 )
 {
     const StaticInstPtr &inst = inst_pair.second;

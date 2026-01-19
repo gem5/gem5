@@ -38,6 +38,8 @@
 #ifndef __CPU_UTILS_HH__
 #define __CPU_UTILS_HH__
 
+#include <vector>
+
 #include "base/types.hh"
 
 namespace gem5
@@ -92,6 +94,27 @@ isAnyActiveElement(const std::vector<bool>::const_iterator& it_start,
     auto it_tmp = it_start;
     for (;it_tmp != it_end && !(*it_tmp); ++it_tmp);
     return (it_tmp != it_end);
+}
+
+/**
+ * Get size of inactive tail in an enablement range (0 if none).
+ */
+inline unsigned
+inactiveTailSize(const std::vector<bool>::const_iterator& it_start,
+                 const std::vector<bool>::const_iterator& it_end)
+{
+    std::vector<bool>::const_reverse_iterator rit_start(it_end);
+    std::vector<bool>::const_reverse_iterator rit_end(it_start);
+
+    unsigned count = 0;
+    for (auto it = rit_start; it != rit_end; ++it) {
+        if (!(*it)) {
+            count++;
+        } else {
+            break;
+        }
+    }
+    return count;
 }
 
 } // namespace gem5

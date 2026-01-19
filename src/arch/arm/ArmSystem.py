@@ -1,4 +1,4 @@
-# Copyright (c) 2009, 2012-2013, 2015-2024 Arm Limited
+# Copyright (c) 2009, 2012-2013, 2015-2025 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -77,6 +77,7 @@ class ArmExtension(ScopedEnum):
         "FEAT_HPDS",
         "FEAT_VMID16",
         "FEAT_RDM",
+        "FEAT_FHM",  # Optional in Armv8.1
         # Armv8.2
         "FEAT_SVE",
         "FEAT_UAO",
@@ -87,10 +88,14 @@ class ArmExtension(ScopedEnum):
         "FEAT_I8MM",  # Optional in Armv8.2
         "FEAT_DOTPROD",  # Optional in Armv8.2
         "FEAT_FP16",
+        "FEAT_BF16",  # Optional in Armv8.2
+        "FEAT_AA32BF16",  # Optional in Armv8.2
+        "FEAT_EBF16",  # Optional in Armv8.2
         # Armv8.3
         "FEAT_FCMA",
         "FEAT_JSCVT",
         "FEAT_PAuth",
+        "FEAT_LRCPC",
         # Armv8.4
         "FEAT_SEL2",
         "FEAT_TLBIOS",
@@ -98,6 +103,8 @@ class ArmExtension(ScopedEnum):
         "FEAT_FLAGM",
         "FEAT_IDST",
         "FEAT_TTST",
+        "FEAT_FRINTTS",  # Optional in Armv8.4
+        "FEAT_LRCPC2",
         # Armv8.5
         "FEAT_FLAGM2",
         "FEAT_RNG",
@@ -105,6 +112,7 @@ class ArmExtension(ScopedEnum):
         "FEAT_EVT",
         # Armv8.6
         "FEAT_FGT",
+        "FEAT_AFP",  # Optional in Armv8.6
         # Armv8.7
         "FEAT_HCX",
         "FEAT_XS",
@@ -112,8 +120,18 @@ class ArmExtension(ScopedEnum):
         "FEAT_SCTLR2",
         "FEAT_TCR2",
         "FEAT_S1PIE",
+        # Armv9.0
+        "FEAT_SVE2",
+        "FEAT_SVE_BitPerm",
+        "FEAT_SVE_AES",
+        "FEAT_SVE_SHA3",
+        "FEAT_SVE_SM4",
+        "FEAT_SVE_PMULL128",
         # Armv9.2
         "FEAT_SME",  # Optional in Armv9.2
+        # Armv9.4
+        "FEAT_SVE2p1",
+        "FEAT_SVE_B16B16",
         # Others
         "SECURITY",
         "LPAE",
@@ -217,8 +235,12 @@ class ArmDefaultRelease(Armv8):
         # Armv8.7
         "FEAT_HCX",
         "FEAT_XS",
+        # Armv9.0
+        "FEAT_SVE2",
         # Armv9.2
-        "FEAT_SME",
+        "FEAT_SME",  # Optional in Armv9.2
+        # Armv9.4
+        "FEAT_SVE2p1",
     ]
 
 
@@ -230,6 +252,7 @@ class Armv81(Armv8):
         "FEAT_HPDS",
         "FEAT_VMID16",
         "FEAT_RDM",
+        "FEAT_FHM",
     ]
 
 
@@ -244,6 +267,9 @@ class Armv82(Armv81):
         "FEAT_I8MM",
         "FEAT_DOTPROD",
         "FEAT_FP16",
+        "FEAT_BF16",
+        "FEAT_AA32BF16",
+        "FEAT_EBF16",
     ]
 
 
@@ -259,6 +285,7 @@ class Armv84(Armv83):
         "FEAT_FLAGM",
         "FEAT_IDST",
         "FEAT_TTST",
+        "FEAT_FRINTTS",
     ]
 
 
@@ -274,6 +301,7 @@ class Armv85(Armv84):
 class Armv86(Armv85):
     extensions = Armv85.extensions + [
         "FEAT_FGT",
+        "FEAT_AFP",
     ]
 
 
@@ -288,8 +316,26 @@ class Armv89(Armv87):
     extensions = Armv87.extensions + ["FEAT_SCTLR2", "FEAT_TCR2", "FEAT_S1PIE"]
 
 
-class Armv92(Armv89):
-    extensions = Armv89.extensions + ["FEAT_SME"]
+class Armv90(Armv89):
+    extensions = Armv89.extensions + [
+        "FEAT_SVE2",
+        "FEAT_SVE_BitPerm",
+        "FEAT_SVE_AES",
+        "FEAT_SVE_SHA3",
+        "FEAT_SVE_SM4",
+        "FEAT_SVE_PMULL128",
+    ]
+
+
+class Armv92(Armv90):
+    extensions = Armv90.extensions + ["FEAT_SME"]
+
+
+class Armv94(Armv92):
+    extensions = Armv92.extensions + [
+        "FEAT_SVE2p1",
+        "FEAT_SVE_B16B16",
+    ]
 
 
 class ArmAllRelease(ArmRelease):

@@ -29,7 +29,8 @@
 #ifndef __SIM_SYSCALLRETURN_HH__
 #define __SIM_SYSCALLRETURN_HH__
 
-#include <inttypes.h>
+#include <cassert>
+#include <cinttypes>
 
 namespace gem5
 {

@@ -1,4 +1,4 @@
-# Copyright (c) 2023 ARM Limited
+# Copyright (c) 2023, 2025 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -34,10 +34,16 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects.CHIGeneric import CHIGenericController
-from m5.params import *
+from m5.tlm_chi.port import (
+    TlmSinkPort,
+    TlmSourcePort,
+)
 
 
 class TlmController(CHIGenericController):
     type = "TlmController"
     cxx_header = "mem/ruby/protocol/chi/tlm/controller.hh"
     cxx_class = "gem5::tlm::chi::CacheController"
+
+    in_port = TlmSinkPort("CHI TLM input port")
+    out_port = TlmSourcePort("CHI TLM output port")

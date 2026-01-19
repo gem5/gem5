@@ -830,17 +830,17 @@ Gicv3Redistributor::update()
 
         const uint32_t largest_lpi_id = 1 << (lpiIDBits + 1);
         const uint32_t number_lpis = largest_lpi_id - SMALLEST_LPI_ID + 1;
-
-        uint8_t lpi_pending_table[largest_lpi_id / 8];
-        uint8_t lpi_config_table[number_lpis];
+        const size_t table_size = largest_lpi_id / 8;
+        auto lpi_pending_table = std::make_unique<uint8_t[]>(table_size);
+        auto lpi_config_table = std::make_unique<uint8_t[]>(number_lpis);
 
         memProxy->readBlob(lpiPendingTablePtr,
-                           lpi_pending_table,
-                           sizeof(lpi_pending_table));
+                           lpi_pending_table.get(),
+                           table_size);
 
         memProxy->readBlob(lpiConfigurationTablePtr,
-                           lpi_config_table,
-                           sizeof(lpi_config_table));
+                           lpi_config_table.get(),
+                           number_lpis);
 
         for (int lpi_id = SMALLEST_LPI_ID; lpi_id < largest_lpi_id;
              lpi_id++) {

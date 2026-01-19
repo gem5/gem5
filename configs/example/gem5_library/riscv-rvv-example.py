@@ -1,5 +1,6 @@
 # Copyright (c) 2024 Barcelona Supercomputing Center
-#
+# Copyright (c) 2025 The Regents of the University of California
+
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
 #
@@ -37,11 +38,11 @@ parameters until completion.
 Usage
 -----
 
-# Compile gem5 for RISC-V
-scons build/RISCV/gem5.opt
+# Compile gem5. The ALL build includes the RISCV target ISA.
+scons build/ALL/gem5.opt
 
 # Run the simulation
-./build/RISCV/gem5.opt configs/example/gem5_library/riscv-rvv-example.py \
+./build/ALL/gem5.opt configs/example/gem5_library/riscv-rvv-example.py \
     [-c CORES] [-v VLEN] [-e ELEN] <resource>
 
 """
@@ -60,7 +61,6 @@ from gem5.components.processors.base_cpu_processor import BaseCPUProcessor
 from gem5.isas import ISA
 from gem5.resources.resource import obtain_resource
 from gem5.simulate.simulator import Simulator
-from gem5.utils.requires import requires
 
 
 class RVVCore(BaseCPUCore):
@@ -69,8 +69,6 @@ class RVVCore(BaseCPUCore):
         self.core.isa[0].elen = elen
         self.core.isa[0].vlen = vlen
 
-
-requires(isa_required=ISA.RISCV)
 
 resources = [
     "rvv-branch",
@@ -115,6 +113,6 @@ board = SimpleBoard(
 binary = obtain_resource(args.resource)
 board.set_se_binary_workload(binary)
 
-simulator = Simulator(board=board, full_system=False)
+simulator = Simulator(board=board)
 print("Beginning simulation!")
 simulator.run()

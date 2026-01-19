@@ -69,6 +69,8 @@ class AMDGPUDevice(PciEndpoint):
     SubClassCode = 0x00
     ProgIF = 0x00
 
+    gpu_id = Param.Int(0, "ID of GPU, if multiple GPUs are instantiated")
+
     # Use max possible BAR size for Vega 10. We can override with driver param
     BAR0 = PciMemBar(size="16GiB")
     BAR1 = PciMemUpperBar()
@@ -81,6 +83,7 @@ class AMDGPUDevice(PciEndpoint):
     InterruptPin = 2
     ExpansionROM = 0
 
+    ipt_binary = Param.String("", "IP table dump from hardware")
     checkpoint_before_mmios = Param.Bool(
         False, "Take a checkpoint before the device begins sending MMIOs"
     )

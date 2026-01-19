@@ -107,8 +107,17 @@ class Disjoint_VIPER(RubySystem):
         system.memories = cpu_abstract_mems
 
         gpu_abstract_mems = []
+
         for mem_ctrl in gpu_mem_ctrls:
-            gpu_abstract_mems.append(mem_ctrl.dram)
+            # memctrl
+            if hasattr(mem_ctrl, "dram"):
+                gpu_abstract_mems.append(mem_ctrl.dram)
+            else:
+                gpu_abstract_mems.append(mem_ctrl)
+            # hbmctrl
+            if hasattr(mem_ctrl, "dram_2"):
+                gpu_abstract_mems.append(mem_ctrl.dram_2)
+
         system.pc.south_bridge.gpu.memories = gpu_abstract_mems
 
         # Setup DMA controllers

@@ -12,17 +12,7 @@
   <reg name="time" bitsize="32"/>
   <reg name="cycleh" bitsize="32"/>
   <reg name="timeh" bitsize="32"/>
-  <reg name="ustatus" bitsize="32"/>
-  <reg name="uie" bitsize="32"/>
-  <reg name="utvec" bitsize="32"/>
-  <reg name="uscratch" bitsize="32"/>
-  <reg name="uepc" bitsize="32"/>
-  <reg name="ucause" bitsize="32"/>
-  <reg name="utval" bitsize="32"/>
-  <reg name="uip" bitsize="32"/>
   <reg name="sstatus" bitsize="32"/>
-  <reg name="sedeleg" bitsize="32"/>
-  <reg name="sideleg" bitsize="32"/>
   <reg name="sie" bitsize="32"/>
   <reg name="stvec" bitsize="32"/>
   <reg name="scounteren" bitsize="32"/>

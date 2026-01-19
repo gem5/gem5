@@ -88,6 +88,9 @@ class DMASequencer : public RubyPort
     typedef std::unordered_map<Addr, DMARequest> RequestTable;
     RequestTable m_RequestTable;
 
+    // Map from block address to original line address
+    std::unordered_map<Addr, Addr> m_blockToLineMap;
+
     int m_outstanding_count;
     int m_max_outstanding_requests;
 };

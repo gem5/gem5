@@ -59,7 +59,7 @@ sc_argv()
 void
 sc_start()
 {
-    gem5::Tick now = ::sc_gem5::scheduler.getCurTick();
+    gem5::Tick now = ::sc_gem5::scheduler().getCurTick();
     sc_start(sc_time::from_value(gem5::MaxTick - now), SC_EXIT_ON_STARVATION);
 }
 
@@ -67,19 +67,19 @@ void
 sc_pause()
 {
     if (::sc_gem5::Kernel::status() == SC_RUNNING)
-        ::sc_gem5::scheduler.schedulePause();
+        ::sc_gem5::scheduler().schedulePause();
 }
 
 void
 sc_start(const sc_time &time, sc_starvation_policy p)
 {
     if (time.value() == 0) {
-        ::sc_gem5::scheduler.oneCycle();
+        ::sc_gem5::scheduler().oneCycle();
     } else {
-        gem5::Tick now = ::sc_gem5::scheduler.getCurTick();
+        gem5::Tick now = ::sc_gem5::scheduler().getCurTick();
         if (gem5::MaxTick - now < time.value())
             SC_REPORT_ERROR(SC_ID_SIMULATION_TIME_OVERFLOW_, "");
-        ::sc_gem5::scheduler.start(now + time.value(), p == SC_RUN_TO_TIME);
+        ::sc_gem5::scheduler().start(now + time.value(), p == SC_RUN_TO_TIME);
     }
 }
 
@@ -117,7 +117,7 @@ sc_stop()
 
     if ((sc_get_status() & SC_RUNNING)) {
         bool finish_delta = (_stop_mode == SC_STOP_FINISH_DELTA);
-        ::sc_gem5::scheduler.scheduleStop(finish_delta);
+        ::sc_gem5::scheduler().scheduleStop(finish_delta);
     } else {
         ::sc_gem5::Kernel::stop();
     }
@@ -127,14 +127,14 @@ const sc_time &
 sc_time_stamp()
 {
     static sc_time tstamp(1.0, SC_SEC);
-    tstamp = sc_time::from_value(::sc_gem5::scheduler.getCurTick());
+    tstamp = sc_time::from_value(::sc_gem5::scheduler().getCurTick());
     return tstamp;
 }
 
 sc_dt::uint64
 sc_delta_count()
 {
-    return sc_gem5::scheduler.numCycles();
+    return sc_gem5::scheduler().numCycles();
 }
 
 bool
@@ -146,13 +146,13 @@ sc_is_running()
 bool
 sc_pending_activity_at_current_time()
 {
-    return ::sc_gem5::scheduler.pendingCurr();
+    return ::sc_gem5::scheduler().pendingCurr();
 }
 
 bool
 sc_pending_activity_at_future_time()
 {
-    return ::sc_gem5::scheduler.pendingFuture();
+    return ::sc_gem5::scheduler().pendingFuture();
 }
 
 bool
@@ -165,7 +165,7 @@ sc_pending_activity()
 sc_time
 sc_time_to_pending_activity()
 {
-    return sc_time::from_value(::sc_gem5::scheduler.timeToPending());
+    return sc_time::from_value(::sc_gem5::scheduler().timeToPending());
 }
 
 sc_status

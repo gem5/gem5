@@ -39,6 +39,7 @@ namespace RiscvISA
 Interrupts::Interrupts(const Params &p) : BaseInterrupts(p),
                                           ip(0),
                                           ie(0),
+                                          hvip(0),
                                           nmi_cause(p.nmi_cause)
 {
     for (uint8_t i = 0;
@@ -62,43 +63,36 @@ Interrupts::globalMask() const
     STATUS status = tc->readMiscReg(MISCREG_STATUS);
     MISA misa = tc->readMiscRegNoEffect(MISCREG_ISA);
     INTERRUPT mideleg = 0;
-    if (misa.rvs || misa.rvn) {
+    if (misa.rvs) {
         mideleg = tc->readMiscReg(MISCREG_MIDELEG);
-    }
-    INTERRUPT sideleg = 0;
-    if (misa.rvs && misa.rvn) {
-        sideleg = tc->readMiscReg(MISCREG_SIDELEG);
     }
     PrivilegeMode prv = (PrivilegeMode)tc->readMiscReg(MISCREG_PRV);
     switch (prv) {
         case PRV_U:
-            // status.uie is always 0 if misa.rvn is disabled
-            if (misa.rvs) {
-                mask = ~mideleg | (mideleg & ~sideleg);
-                if (status.uie) {
-                    mask |= sideleg;
-                }
+            if (misa.rvh && !virtualizationEnabled(tc)) {
+                INTERRUPT hideleg = tc->readMiscReg(MISCREG_HIDELEG);
+                mask = ~mideleg | (mideleg & ~hideleg);
             } else {
-                // According to the RISC-V privilege spec v1.10, if the
-                // S privilege mode is not implemented and user-trap
-                // support, setting mideleg/medeleg bits will delegate the
-                // trap to U-mode trap handler
-                mask = ~mideleg;
-                if (status.uie) {
-                    mask |= mideleg;
-                }
+                mask = gem5::mask(64);
             }
             break;
         case PRV_S:
             mask = ~mideleg;
-            if (status.sie) {
-                mask |= (mideleg & ~sideleg);
+            if (misa.rvh) {
+                INTERRUPT hideleg = tc->readMiscReg(MISCREG_HIDELEG);
+                if (status.sie || virtualizationEnabled(tc)) {
+                    mask |= (mideleg & ~hideleg);
+                }
+                if (virtualizationEnabled(tc)) {
+                    STATUS vsstatus = tc->readMiscReg(MISCREG_VSSTATUS);
+                    if (vsstatus.sie) { mask |= (mideleg & hideleg); }
+                }
+            } else {
+                if (status.sie) { mask |= mideleg; }
             }
             break;
         case PRV_M:
-            if (status.mie) {
-                mask = ~mideleg;
-            }
+            if (status.mie) { mask = ~mideleg; }
             break;
         default:
             panic("Unknown privilege mode %d.", prv);
@@ -129,9 +123,12 @@ Interrupts::getInterrupt()
             INT_LOCAL_11, INT_LOCAL_10, INT_LOCAL_9, INT_LOCAL_8,
             INT_LOCAL_7, INT_LOCAL_6, INT_LOCAL_5, INT_LOCAL_4,
             INT_LOCAL_3, INT_LOCAL_2, INT_LOCAL_1, INT_LOCAL_0,
+            //Table 5.1 from riscv-interrupts-1.0-RC3.pdf
+            //https://github.com/riscv/riscv-aia
             INT_EXT_MACHINE, INT_SOFTWARE_MACHINE, INT_TIMER_MACHINE,
             INT_EXT_SUPER, INT_SOFTWARE_SUPER, INT_TIMER_SUPER,
-            INT_EXT_USER, INT_SOFTWARE_USER, INT_TIMER_USER
+            INT_EXT_SUPER_GUEST, INT_EXT_VIRTUAL_SUPER,
+            INT_SOFTWARE_VIRTUAL_SUPER, INT_TIMER_VIRTUAL_SUPER
         };
         for (const int &id : interrupt_order) {
             if (checkInterrupt(id) && mask[id]) {
@@ -145,8 +142,7 @@ Interrupts::getInterrupt()
             INT_LOCAL_7, INT_LOCAL_6, INT_LOCAL_5, INT_LOCAL_4,
             INT_LOCAL_3, INT_LOCAL_2, INT_LOCAL_1, INT_LOCAL_0,
             INT_EXT_MACHINE, INT_SOFTWARE_MACHINE, INT_TIMER_MACHINE,
-            INT_EXT_SUPER, INT_SOFTWARE_SUPER, INT_TIMER_SUPER,
-            INT_EXT_USER, INT_SOFTWARE_USER, INT_TIMER_USER
+            INT_EXT_SUPER, INT_SOFTWARE_SUPER, INT_TIMER_SUPER
         };
         for (const int &id : interrupt_order) {
             if (checkInterrupt(id) && mask[id]) {
@@ -197,8 +193,10 @@ void
 Interrupts::serialize(CheckpointOut &cp) const
 {
     unsigned long ip_ulong = ip.to_ulong();
+    unsigned long hvip_ulong = hvip.to_ulong();
     unsigned long ie_ulong = ie.to_ulong();
     SERIALIZE_SCALAR(ip_ulong);
+    SERIALIZE_SCALAR(hvip_ulong);
     SERIALIZE_SCALAR(ie_ulong);
 }
 
@@ -206,9 +204,12 @@ void
 Interrupts::unserialize(CheckpointIn &cp)
 {
     unsigned long ip_ulong;
+    unsigned long hvip_ulong;
     unsigned long ie_ulong;
     UNSERIALIZE_SCALAR(ip_ulong);
     ip = ip_ulong;
+    UNSERIALIZE_SCALAR(hvip_ulong);
+    hvip = hvip_ulong;
     UNSERIALIZE_SCALAR(ie_ulong);
     ie = ie_ulong;
 }

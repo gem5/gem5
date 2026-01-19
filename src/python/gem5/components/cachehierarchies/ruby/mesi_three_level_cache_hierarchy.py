@@ -64,13 +64,13 @@ class MESIThreeLevelCacheHierarchy(
     def __init__(
         self,
         l1i_size: str,
-        l1i_assoc: str,
+        l1i_assoc: int,
         l1d_size: str,
-        l1d_assoc: str,
+        l1d_assoc: int,
         l2_size: str,
-        l2_assoc: str,
+        l2_assoc: int,
         l3_size: str,
-        l3_assoc: str,
+        l3_assoc: int,
         num_l3_banks: int,
     ):
         AbstractRubyCacheHierarchy.__init__(self=self)

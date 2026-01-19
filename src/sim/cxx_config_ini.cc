@@ -35,6 +35,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <cassert>
+
 #include "sim/cxx_config_ini.hh"
 
 #include "base/str.hh"
@@ -62,6 +64,32 @@ CxxIniFile::getParamVector(const std::string &object_name,
         std::vector<std::string> sub_object_names;
 
         tokenize(values, value, ' ', true);
+    }
+
+    return ret;
+}
+
+bool
+CxxIniFile::getParamDict(const std::string &object_name,
+    const std::string &param_name,
+    std::unordered_map<std::string, std::string> &values) const
+{
+    std::vector<std::string> vec_values;
+    auto ret = getParamVector(object_name, param_name, vec_values);
+
+    // Fail if number of vector entries is odd as it means we are
+    // missing a key or a value
+    assert(vec_values.size() % 2 == 0);
+
+    if (ret) {
+        for (auto idx = 0; idx < vec_values.size(); idx+=2) {
+            const std::string &key = vec_values[idx];
+            const std::string &val = vec_values[idx + 1];
+
+            panic_if(values.find(key) != values.end(),
+                "Key %s already present in Dict", key);
+            values[key] = val;
+        }
     }
 
     return ret;

@@ -83,7 +83,7 @@ class MemBus(SystemXBar):
     default = Self.badaddr_responder.pio
 
 
-def attach_9p(parent, bus):
+def attach_9p(parent):
     viopci = PciVirtIO()
     viopci.vio = VirtIO9PDiod()
     viodir = os.path.realpath(os.path.join(m5.options.outdir, "9p"))
@@ -93,7 +93,7 @@ def attach_9p(parent, bus):
     if os.path.exists(viopci.vio.socketPath):
         os.remove(viopci.vio.socketPath)
     parent.viopci = viopci
-    parent.attachPciDevice(viopci, bus)
+    parent.attachPciDevice(viopci)
 
 
 def fillInCmdline(mdesc, template, **kwargs):
@@ -245,7 +245,7 @@ def makeArmSystem(
     self._bootmem = self.realview.bootmem
 
     # Attach any PCI devices this platform supports
-    self.realview.attachPciDevices()
+    self.realview.attachPlatformPciDevices()
 
     disks = makeCowDisks(mdesc.disks())
     # Old platforms have a built-in IDE or CF controller. Default to
@@ -384,15 +384,13 @@ def makeArmSystem(
         self.realview.attachIO(self.iobus)
 
     for dev in pci_devices:
-        self.realview.attachPciDevice(
-            dev, self.iobus, dma_ports=self._dma_ports if ruby else None
-        )
+        self.realview.attachPciDevice(dev)
 
     self.terminal = Terminal()
     self.vncserver = VncServer()
 
     if vio_9p:
-        attach_9p(self.realview, self.iobus)
+        attach_9p(self.realview)
 
     if not ruby:
         self.system_port = self.membus.cpu_side_ports
@@ -410,10 +408,8 @@ def makeArmSystem(
 
 def makeLinuxMipsSystem(mem_mode, mdesc=None, cmdline=None):
     class BaseMalta(Malta):
-        ethernet = NSGigE(pci_bus=0, pci_dev=1, pci_func=0)
-        ide = IdeController(
-            disks=Parent.disks, pci_func=0, pci_dev=0, pci_bus=0
-        )
+        ethernet = NSGigE(pci_dev=1, pci_func=0)
+        ide = IdeController(disks=Parent.disks, pci_func=0, pci_dev=0)
 
     self = System()
     if not mdesc:
@@ -501,9 +497,9 @@ def connectX86RubySystem(x86_sys):
     # North Bridge
     x86_sys.iobus = IOXBar()
 
-    # add the ide to the list of dma devices that later need to attach to
-    # dma controllers
-    x86_sys._dma_ports = [x86_sys.pc.south_bridge.ide.dma]
+    # add the PCI host bridge to the list of dma devices that later
+    # need to attach to dma controllers
+    x86_sys._dma_ports = [x86_sys.pc.pci_host.up_request_port()]
     x86_sys.pc.attachIO(x86_sys.iobus, x86_sys._dma_ports)
 
 

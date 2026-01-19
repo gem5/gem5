@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2011-2012, 2014, 2016, 2017, 2019-2020, 2024 Arm Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
+ * Copyright (c) 2022-2023 The University of Edinburgh
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -72,26 +73,24 @@ namespace o3
 CPU::CPU(const BaseO3CPUParams &params)
     : BaseCPU(params),
       mmu(params.mmu),
-      tickEvent([this]{ tick(); }, "O3CPU tick",
-                false, Event::CPU_Tick_Pri),
-      threadExitEvent([this]{ exitThreads(); }, "O3CPU exit threads",
-                false, Event::CPU_Exit_Pri),
+      tickEvent([this] { tick(); }, "O3CPU tick", false, Event::CPU_Tick_Pri),
+      threadExitEvent([this] { exitThreads(); }, "O3CPU exit threads", false,
+                      Event::CPU_Exit_Pri),
 #ifndef NDEBUG
       instcount(0),
 #endif
       removeInstsThisCycle(false),
+      bac(this, params),
+      ftq(this, params),
       fetch(this, params),
       decode(this, params),
       rename(this, params),
       iew(this, params),
       commit(this, params),
 
-      regFile(params.numPhysIntRegs,
-              params.numPhysFloatRegs,
-              params.numPhysVecRegs,
-              params.numPhysVecPredRegs,
-              params.numPhysMatRegs,
-              params.numPhysCCRegs,
+      regFile(params.numPhysIntRegs, params.numPhysFloatRegs,
+              params.numPhysVecRegs, params.numPhysVecPredRegs,
+              params.numPhysMatRegs, params.numPhysCCRegs,
               params.isa[0]->regClasses()),
 
       freeList(name() + ".freelist", &regFile),
@@ -108,10 +107,10 @@ CPU::CPU(const BaseO3CPUParams &params)
       renameQueue(params.backComSize, params.forwardComSize),
       iewQueue(params.backComSize, params.forwardComSize),
       activityRec(name(), NumStages,
-                  params.backComSize + params.forwardComSize,
-                  params.activity),
+                  params.backComSize + params.forwardComSize, params.activity),
 
       globalSeqNum(1),
+      globalFTSeqNum(1),
       system(params.system),
       lastRunningCycle(curCycle()),
       cpuStats(this)
@@ -148,6 +147,7 @@ CPU::CPU(const BaseO3CPUParams &params)
     // to the upper level CPU, and not this CPU.
 
     // Set up Pointers to the activeThreads list for each stage
+    bac.setActiveThreads(&activeThreads);
     fetch.setActiveThreads(&activeThreads);
     decode.setActiveThreads(&activeThreads);
     rename.setActiveThreads(&activeThreads);
@@ -155,6 +155,7 @@ CPU::CPU(const BaseO3CPUParams &params)
     commit.setActiveThreads(&activeThreads);
 
     // Give each of the stages the time buffer they will use.
+    bac.setTimeBuffer(&timeBuffer);
     fetch.setTimeBuffer(&timeBuffer);
     decode.setTimeBuffer(&timeBuffer);
     rename.setTimeBuffer(&timeBuffer);
@@ -162,6 +163,8 @@ CPU::CPU(const BaseO3CPUParams &params)
     commit.setTimeBuffer(&timeBuffer);
 
     // Also setup each of the stages' queues.
+    bac.setFetchTargetQueue(&ftq);
+    fetch.setBACandFTQPtr(&bac, &ftq);
     fetch.setFetchQueue(&fetchQueue);
     decode.setFetchQueue(&fetchQueue);
     commit.setFetchQueue(&fetchQueue);
@@ -330,6 +333,8 @@ CPU::regProbePoints()
         std::pair<DynInstPtr, PacketPtr>>(
                 getProbeManager(), "DataAccessComplete");
 
+    ftq.regProbePoints();
+    bac.regProbePoints();
     fetch.regProbePoints();
     rename.regProbePoints();
     iew.regProbePoints();
@@ -372,6 +377,8 @@ CPU::tick()
 //    activity = false;
 
     //Tick each of the stages
+    bac.tick();
+
     fetch.tick();
 
     decode.tick();
@@ -440,6 +447,7 @@ CPU::startup()
 {
     BaseCPU::startup();
 
+    bac.startupStage();
     fetch.startupStage();
     decode.startupStage();
     iew.startupStage();
@@ -483,6 +491,7 @@ CPU::deactivateThread(ThreadID tid)
         activeThreads.erase(active_it);
     }
 
+    bac.deactivateThread(tid);
     fetch.deactivateThread(tid);
     commit.deactivateThread(tid);
 }
@@ -646,6 +655,7 @@ CPU::removeThread(ThreadID tid)
     // clear all thread-specific states in each stage of the pipeline
     // since this thread is going to be completely removed from the CPU
     commit.clearStates(tid);
+    bac.clearStates(tid);
     fetch.clearStates(tid);
     decode.clearStates(tid);
     rename.clearStates(tid);
@@ -657,6 +667,7 @@ CPU::removeThread(ThreadID tid)
     assert(iew.instQueue.getCount(tid) == 0);
     assert(iew.ldstQueue.getCount(tid) == 0);
     assert(commit.rob->isEmpty(tid));
+    assert(ftq.isEmpty(tid));
 
     // Reset ROB/IQ/LSQ Entries
 
@@ -795,6 +806,7 @@ void
 CPU::drainSanityCheck() const
 {
     assert(isCpuDrained());
+    bac.drainSanityCheck();
     fetch.drainSanityCheck();
     decode.drainSanityCheck();
     rename.drainSanityCheck();
@@ -809,6 +821,11 @@ CPU::isCpuDrained() const
 
     if (!instList.empty() || !removeList.empty()) {
         DPRINTF(Drain, "Main CPU structures not drained.\n");
+        drained = false;
+    }
+
+    if (!bac.isDrained()) {
+        DPRINTF(Drain, "BAC not drained.\n");
         drained = false;
     }
 
@@ -840,7 +857,12 @@ CPU::isCpuDrained() const
     return drained;
 }
 
-void CPU::commitDrained(ThreadID tid) { fetch.drainStall(tid); }
+void
+CPU::commitDrained(ThreadID tid)
+{
+    bac.drainStall(tid);
+    fetch.drainStall(tid);
+}
 
 void
 CPU::drainResume()
@@ -851,6 +873,7 @@ CPU::drainResume()
     DPRINTF(Drain, "Resuming...\n");
     verifyMemoryMode();
 
+    bac.drainResume();
     fetch.drainResume();
     commit.drainResume();
 
@@ -890,6 +913,7 @@ CPU::takeOverFrom(BaseCPU *oldCPU)
 {
     BaseCPU::takeOverFrom(oldCPU);
 
+    bac.takeOverFrom();
     fetch.takeOverFrom();
     decode.takeOverFrom();
     rename.takeOverFrom();
@@ -1140,6 +1164,11 @@ CPU::instDone(ThreadID tid, const DynInstPtr &inst)
         // Check for instruction-count-based events.
         thread[tid]->comInstEventQueue.serviceEvents(thread[tid]->numInst);
     }
+
+    if (inst->isMemRef()) {
+        thread[tid]->threadStats.numMemRefs++;
+    }
+
     thread[tid]->numOp++;
     thread[tid]->threadStats.numOps++;
     commitStats[tid]->numOpsNotNOP++;
@@ -1347,6 +1376,12 @@ CPU::getFreeTid()
     }
 
     return InvalidThreadID;
+}
+
+bool
+CPU::inUserMode(ThreadID tid)
+{
+    return isa[tid]->inUserMode();
 }
 
 void

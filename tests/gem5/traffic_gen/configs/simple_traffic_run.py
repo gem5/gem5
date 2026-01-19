@@ -126,11 +126,11 @@ def cache_factory(cache_class: str):
 
         return MESITwoLevelCacheHierarchy(
             l1i_size="32KiB",
-            l1i_assoc="8",
+            l1i_assoc=8,
             l1d_size="32KiB",
-            l1d_assoc="8",
+            l1d_assoc=8,
             l2_size="256KiB",
-            l2_assoc="4",
+            l2_assoc=4,
             num_l2_banks=1,
         )
     elif cache_class == "MIExample":
@@ -158,13 +158,13 @@ def cache_factory(cache_class: str):
 
         return MESIThreeLevelCacheHierarchy(
             l1i_size="32KiB",
-            l1i_assoc="8",
+            l1i_assoc=8,
             l1d_size="32KiB",
-            l1d_assoc="8",
+            l1d_assoc=8,
             l2_size="256KiB",
-            l2_assoc="4",
+            l2_assoc=4,
             l3_size="16MiB",
-            l3_assoc="16",
+            l3_assoc=16,
             num_l3_banks=1,
         )
     elif cache_class == "OctopiCache":

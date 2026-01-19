@@ -811,7 +811,7 @@ TEST_F(SerializeFixture, OptParamOutIn)
 /** Check for death when there is no section and paramIn is requested. */
 TEST_F(SerializableFixtureDeathTest, NoSectionParamIn)
 {
-#ifndef NDEBUG
+#ifdef NDEBUG
     GTEST_SKIP() << "Skipping as assertions are "
         "stripped out of fast builds";
 #endif

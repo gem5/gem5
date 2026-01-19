@@ -108,11 +108,13 @@ class MatchGoldStandard(Verifier):
         fixtures = params.fixtures
         # Get the file from the tempdir of the test.
         tempdir = fixtures[constants.tempdir_fixture_name].path
-        self.test_filename = joinpath(tempdir, self.test_filename)
+        # Use a local path so reused verifier instances don't retain the
+        # previous test's tempdir.
+        test_filename = joinpath(tempdir, self.test_filename)
 
         diff = diff_out_file(
             self.standard_filename,
-            self.test_filename,
+            test_filename,
             ignore_regexes=self.ignore_regex,
             logger=params.log,
         )

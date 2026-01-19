@@ -156,6 +156,7 @@ class TaggedEntry : public ReplaceableEntry
     bool
     match(const KeyType &key) const
     {
+        assert(extractTag);
         return isValid() && (getTag() == extractTag(key.address)) &&
             (isSecure() == key.secure);
     }
@@ -169,6 +170,7 @@ class TaggedEntry : public ReplaceableEntry
     virtual void
     insert(const KeyType &key)
     {
+        assert(extractTag);
         setValid();
         setTag(extractTag(key.address));
         if (key.secure) {

@@ -13,6 +13,7 @@
  *
  * Copyright (c) 2003-2005 The Regents of The University of Michigan
  * Copyright (c) 2007-2008 The Florida State University
+ * Copyright 2020,2025 Google Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,8 +45,10 @@
 
 #include <map>
 
-#include "arch/arm/utility.hh"
+#include "arch/arm/regs/int.hh"
+#include "arch/arm/regs/misc.hh"
 #include "base/compiler.hh"
+#include "cpu/thread_context.hh"
 #include "kern/linux/flag_tables.hh"
 #include "kern/linux/linux.hh"
 
@@ -568,6 +571,44 @@ class ArmLinux64 : public ArmLinux, public OpenFlagTable<ArmLinux64>
         uint64_t cgroup;
     };
 
+    // For sigreturn
+    struct tgt_sigframe
+    {
+        struct tgt_siginfo
+        {
+            int32_t si_signo;
+            int32_t si_errno;
+            int32_t si_code;
+            // union sigval... Not used by us. Pad to correct size instead.
+            uint8_t _pad[128 - 3 * sizeof(int)];
+        } info;
+
+        struct tgt_ucontext
+        {
+            uint64_t uc_flags;
+            uint64_t uc_link; // (void*) not used by us
+            struct
+            {
+                uint64_t ss_sp; // (void*)
+                uint64_t ss_size;
+                int32_t ss_flags;
+            } uc_stack;
+            uint8_t uc_sigset_ex[136];
+            struct
+            {
+                uint64_t fault_address;
+                uint64_t regs[31];
+                uint64_t sp;
+                uint64_t pc;
+                uint64_t pstate;
+                // For FP/SIMD state.
+                uint8_t __reserved[4096] __attribute__((__aligned__(16)));
+            } uc_mcontext; // Note: This is 304B offset from sp
+            // The start of uc_mcontext is 176B offset from ucontext.
+            int64_t __glibc_reserved1[5];
+        } uc;
+    };
+
     static void archClone(uint64_t flags,
                           Process *pp, Process *cp,
                           ThreadContext *ptc, ThreadContext *ctc,
@@ -578,6 +619,14 @@ class ArmLinux64 : public ArmLinux, public OpenFlagTable<ArmLinux64>
         if (stack)
             ctc->setReg(ArmISA::int_reg::Sp0, stack);
     }
+
+    /**
+     * This function is called when the kernel restores the context of a
+     * signal handler. The current implementation is a partitial implementation
+     * that only updates the registers and the pc. This is to "restore" state
+     * for binary-based user-mode application snippets.
+     */
+    static void archSigreturn(ThreadContext *ctc);
 };
 
 } // namespace gem5

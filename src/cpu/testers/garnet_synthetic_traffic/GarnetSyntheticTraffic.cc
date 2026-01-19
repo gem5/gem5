@@ -103,6 +103,8 @@ GarnetSyntheticTraffic::GarnetSyntheticTraffic(const Params &p)
     traffic = trafficStringToEnum[trafficType];
 
     id = TESTER_NETWORK++;
+    // Initialize random generator with unique seed based on tester ID
+    rng = Random::genRandom(Random::globalSeed + id);
     DPRINTF(GarnetSyntheticTraffic,"Config Created: Name = %s , and id = %d\n",
             name(), id);
 }

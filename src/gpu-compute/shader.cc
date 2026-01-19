@@ -589,6 +589,12 @@ Shader::vramRequestorId()
     return gpuCmdProc.vramRequestorId();
 }
 
+GfxVersion
+Shader::getGfxVersion() const
+{
+    return gpuCmdProc.getGfxVersion();
+}
+
 Shader::ShaderStats::ShaderStats(statistics::Group *parent, int wf_size)
     : statistics::Group(parent),
       ADD_STAT(allLatencyDist, "delay distribution for all"),

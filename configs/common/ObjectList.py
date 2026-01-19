@@ -38,8 +38,9 @@ import inspect
 import sys
 from textwrap import TextWrapper
 
-import m5.internal.params
 import m5.objects
+
+import _m5.enum_AddrMap
 
 from gem5.isas import ISA
 from gem5.runtime import get_supported_isas
@@ -201,9 +202,7 @@ cpu_list = CPUList(getattr(m5.objects, "BaseCPU", None))
 hwp_list = ObjectList(getattr(m5.objects, "BasePrefetcher", None))
 indirect_bp_list = ObjectList(getattr(m5.objects, "IndirectPredictor", None))
 mem_list = ObjectList(getattr(m5.objects, "AbstractMemory", None))
-dram_addr_map_list = EnumList(
-    getattr(m5.internal.params, "enum_AddrMap", None)
-)
+dram_addr_map_list = EnumList(getattr(_m5.enum_AddrMap, "enum_AddrMap", None))
 
 # Platform aliases. The platforms listed here might not be compiled,
 # we make sure they exist before we add them to the platform list.

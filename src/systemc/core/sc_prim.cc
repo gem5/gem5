@@ -34,7 +34,11 @@
 namespace sc_gem5
 {
 
-uint64_t getChangeStamp() { return scheduler.changeStamp(); }
+uint64_t
+getChangeStamp()
+{
+    return scheduler().changeStamp();
+}
 
 } // namespace sc_gem5
 
@@ -46,7 +50,7 @@ sc_prim_channel::sc_prim_channel() : _gem5_channel(nullptr)
     if (sc_is_running()) {
         SC_REPORT_ERROR(SC_ID_INSERT_PRIM_CHANNEL_, "simulation running");
     }
-    if (::sc_gem5::scheduler.elaborationDone()) {
+    if (::sc_gem5::scheduler().elaborationDone()) {
         SC_REPORT_ERROR(SC_ID_INSERT_PRIM_CHANNEL_, "elaboration done");
     }
     _gem5_channel = new sc_gem5::Channel(this);
@@ -58,7 +62,7 @@ sc_prim_channel::sc_prim_channel(const char *_name) :
     if (sc_is_running()) {
         SC_REPORT_ERROR(SC_ID_INSERT_PRIM_CHANNEL_, "simulation running");
     }
-    if (::sc_gem5::scheduler.elaborationDone()) {
+    if (::sc_gem5::scheduler().elaborationDone()) {
         SC_REPORT_ERROR(SC_ID_INSERT_PRIM_CHANNEL_, "elaboration done");
     }
     _gem5_channel = new sc_gem5::Channel(this);

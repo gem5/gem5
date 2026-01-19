@@ -79,6 +79,7 @@ class GPUCommandProcessor : public DmaVirtDevice
 
     HSAPacketProcessor& hsaPacketProc();
     RequestorID vramRequestorId();
+    GfxVersion getGfxVersion() const;
 
     void setGPUDevice(AMDGPUDevice *gpu_device);
     void setShader(Shader *shader);

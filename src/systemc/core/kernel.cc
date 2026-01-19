@@ -59,7 +59,7 @@ Kernel::Kernel(const Params &params, int) :
     t0Event(*this, false, gem5::EventBase::Default_Pri - 1)
 {
     // Install ourselves as the scheduler's event manager.
-    ::sc_gem5::scheduler.setEventQueue(eventQueue());
+    ::sc_gem5::scheduler().setEventQueue(eventQueue());
 }
 
 void
@@ -79,7 +79,7 @@ Kernel::init()
     for (auto c: sc_gem5::allChannels)
         c->sc_chan()->before_end_of_elaboration();
 
-    ::sc_gem5::scheduler.elaborationDone(true);
+    ::sc_gem5::scheduler().elaborationDone(true);
 }
 
 void
@@ -104,7 +104,7 @@ Kernel::regStats()
         for (auto c: sc_gem5::allChannels)
             c->sc_chan()->end_of_elaboration();
     } catch (...) {
-        ::sc_gem5::scheduler.throwUp();
+        ::sc_gem5::scheduler().throwUp();
     }
 }
 
@@ -128,7 +128,7 @@ Kernel::startup()
         for (auto c: sc_gem5::allChannels)
             c->sc_chan()->start_of_simulation();
     } catch (...) {
-        ::sc_gem5::scheduler.throwUp();
+        ::sc_gem5::scheduler().throwUp();
     }
 
     startComplete = true;
@@ -160,7 +160,7 @@ Kernel::stopWork()
         for (auto c: sc_gem5::allChannels)
             c->sc_chan()->end_of_simulation();
     } catch (...) {
-        ::sc_gem5::scheduler.throwUp();
+        ::sc_gem5::scheduler().throwUp();
     }
 
     endComplete = true;
@@ -172,11 +172,11 @@ void
 Kernel::t0Handler()
 {
     if (stopAfterCallbacks) {
-        scheduler.clear();
-        ::sc_gem5::scheduler.initPhase();
-        scheduler.scheduleStop(false);
+        scheduler().clear();
+        ::sc_gem5::scheduler().initPhase();
+        scheduler().scheduleStop(false);
     } else {
-        ::sc_gem5::scheduler.initPhase();
+        ::sc_gem5::scheduler().initPhase();
         status(::sc_core::SC_RUNNING);
     }
 }

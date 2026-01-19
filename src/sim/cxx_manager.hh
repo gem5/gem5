@@ -210,6 +210,13 @@ class CxxConfigManager
     SimObject *findObject(const std::string &object_name,
         bool visit_children = false);
 
+    /** Assign a parameter to the named object.
+     *  This is called from within the findObject method */
+    void populateParams(const std::string &object_name,
+        const std::string &instance_name,
+        CxxConfigParams *object_params,
+        const CxxConfigDirectoryEntry::ParamDesc *param);
+
     /** Find the parameters for the named object.  Returns NULL if the
      *  object isn't in the configuration.  For the first call with a
      *  particular object name, a new CxxConfigParams descended object

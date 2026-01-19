@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2017 ARM Limited
+ * Copyright (c) 2012, 2017, 2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -103,7 +103,8 @@ class Rename
         Squashing,
         Blocked,
         Unblocking,
-        SerializeStall
+        SerializeStall,
+        ThreadStatusMax
     };
 
   private:
@@ -253,6 +254,9 @@ class Rename
 
     /** Renames the destination registers of an instruction. */
     void renameDestRegs(const DynInstPtr &inst, ThreadID tid);
+
+    /** Should we SerializeBefore the current instruction */
+    void handleMiscRegWaW(DynInstPtr &inst, ThreadID tid);
 
     /** Calculates the number of free ROB entries for a specific thread. */
     int calcFreeROBEntries(ThreadID tid);
@@ -481,21 +485,13 @@ class Rename
 
     struct RenameStats : public statistics::Group
     {
+        static std::string statusStrings[ThreadStatusMax];
+        static std::string statusDefinitions[ThreadStatusMax];
+
         RenameStats(statistics::Group *parent);
 
-        /** Stat for total number of cycles spent squashing. */
-        statistics::Scalar squashCycles;
-        /** Stat for total number of cycles spent idle. */
-        statistics::Scalar idleCycles;
-        /** Stat for total number of cycles spent blocking. */
-        statistics::Scalar blockCycles;
-        /** Stat for total number of cycles spent stalling for a serializing
-         *  inst. */
-        statistics::Scalar serializeStallCycles;
-        /** Stat for total number of cycles spent running normally. */
-        statistics::Scalar runCycles;
-        /** Stat for total number of cycles spent unblocking. */
-        statistics::Scalar unblockCycles;
+        /** Stat for total number of cycles spent in each rename state */
+        statistics::Vector status;
         /** Stat for total number of renamed instructions. */
         statistics::Scalar renamedInsts;
         /** Stat for total number of squashed instructions that rename

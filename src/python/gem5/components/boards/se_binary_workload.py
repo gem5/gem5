@@ -37,9 +37,8 @@ from m5.objects import (
 )
 from m5.util import warn
 
-from gem5.resources.elfie import ELFieInfo
-from gem5.resources.looppoint import Looppoint
-
+from ...resources.elfie import ELFieInfo
+from ...resources.looppoint import Looppoint
 from ...resources.resource import (
     AbstractResource,
     BinaryResource,

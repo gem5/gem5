@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2014, 2016-2020,2022 Arm Limited
+ * Copyright (c) 2010-2014, 2016-2020,2022,2025 Arm Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -355,9 +355,10 @@ ArmStaticInst::printVecReg(std::ostream &os, RegIndex reg_idx,
 }
 
 void
-ArmStaticInst::printVecPredReg(std::ostream &os, RegIndex reg_idx) const
+ArmStaticInst::printVecPredReg(std::ostream &os, RegIndex reg_idx,
+                               bool is_png) const
 {
-    ccprintf(os, "p%d", reg_idx);
+    ccprintf(os, "%s%d", is_png ? "pn" : "p", reg_idx);
 }
 
 void
@@ -752,17 +753,17 @@ ArmStaticInst::checkAdvSIMDOrFPEnabled32(ThreadContext *tc,
 
     if (have_virtualization && !is_secure) {
         HCPTR hcptr = tc->readMiscReg(MISCREG_HCPTR);
-        bool hcptr_cp10 = hcptr.tcp10;
+        bool hcptr_tcp10 = hcptr.tcp10;
         bool hcptr_tase = hcptr.tase;
 
         if (have_security && !ELIs64(tc, EL3) && !is_secure) {
             if (nsacr.nsasedis)
                 hcptr_tase = true;
-            if (nsacr.cp10)
-                hcptr_cp10 = true;
+            if (!nsacr.cp10)
+                hcptr_tcp10 = true;
         }
 
-        if ((advsimd && hcptr_tase) || hcptr_cp10) {
+        if ((advsimd && hcptr_tase) || hcptr_tcp10) {
             const uint32_t iss = advsimd ? (1 << 5) : 0xA;
             if (cur_el == EL2) {
                 return std::make_shared<UndefinedInstruction>(

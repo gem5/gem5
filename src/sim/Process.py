@@ -35,6 +35,7 @@ class Process(SimObject):
     type = "Process"
     cxx_header = "sim/process.hh"
     cxx_class = "gem5::Process"
+    override_create = True
 
     @cxxMethod
     def map(self, vaddr, paddr, size, cacheable=False):

@@ -43,14 +43,14 @@ package ProtoMessage;
 // file format, the tick frequency of the object and the window size used to
 // limit the register dependencies during capture.
 message InstDepRecordHeader {
-  required string obj_id = 1;
+  optional string obj_id = 1;
   optional uint32 ver = 2 [default = 0];
-  required uint64 tick_freq = 3;
-  required uint32 window_size = 4;
+  optional uint64 tick_freq = 3;
+  optional uint32 window_size = 4;
 }
 
 // Packet to encapsulate an instruction in the o3cpu data dependency trace.
-// The required fields include the instruction sequence number and the type
+// The optional fields include the instruction sequence number and the type
 // of the record associated with the instruction e.g. load. The request related
 // fields are optional, namely address, size and flags. The dependency related
 // information includes a repeated field for order dependencies and register
@@ -68,13 +68,13 @@ message InstDepRecord {
     STORE = 2;
     COMP = 3;
   }
-  required uint64 seq_num = 1;
-  required RecordType type = 2 [default = INVALID];
+  optional uint64 seq_num = 1;
+  optional RecordType type = 2 [default = INVALID];
   optional uint64 p_addr = 3;
   optional uint32 size = 4;
   optional uint32 flags = 5;
   repeated uint64 rob_dep = 6;
-  required uint64 comp_delay = 7;
+  optional uint64 comp_delay = 7;
   repeated uint64 reg_dep = 8;
   optional uint32 weight = 9;
   optional uint64 pc = 10;

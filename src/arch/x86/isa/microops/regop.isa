@@ -633,7 +633,7 @@ let {{
             if (divisor == 0) {
                 fault = std::make_shared<DivideError>();
             } else {
-                divideStep(dividend, divisor, quotient, remainder);
+                divideStep(dividend, divisor, quotient, remainder, fault);
                 //Record the final results.
                 Remainder = remainder;
                 Quotient = quotient;
@@ -660,7 +660,7 @@ let {{
                     while (remaining && !(dividend & (1ULL << 63))) {
                         dividend = (dividend << 1) |
                             bits(SrcReg1, remaining - 1);
-                        quotient <<= 1;
+                        addCheckUnsignedOverflow(quotient, quotient, fault);
                         remaining--;
                     }
                     if (dividend & (1ULL << 63)) {
@@ -669,11 +669,12 @@ let {{
                             highBit = true;
                             dividend = (dividend << 1) |
                                 bits(SrcReg1, remaining - 1);
-                            quotient <<= 1;
+                            addCheckUnsignedOverflow(quotient, quotient,
+                                                     fault);
                             remaining--;
                         }
                         if (highBit || divisor <= dividend) {
-                            quotient++;
+                            addCheckUnsignedOverflow(quotient, 1, fault);
                             dividend -= divisor;
                         }
                     }
@@ -683,12 +684,12 @@ let {{
                     while (dividend < divisor && remaining) {
                         dividend = (dividend << 1) |
                             bits(SrcReg1, remaining - 1);
-                        quotient <<= 1;
+                        addCheckUnsignedOverflow(quotient, quotient, fault);
                         remaining--;
                     }
                     remainder = dividend;
                     //Do the division.
-                    divideStep(dividend, divisor, quotient, remainder);
+                    divideStep(dividend, divisor, quotient, remainder, fault);
                 }
             }
             //Keep track of how many bits there are still to pull in.
@@ -707,7 +708,13 @@ let {{
         '''
 
     class Divq(RdRegOp):
-        code = 'DestReg = merge(SrcReg1, dest, Quotient, dataSize);'
+        code = '''
+            if (Quotient != signedPick(Quotient, 0, dataSize)) {
+                fault = std::make_shared<DivideError>();
+            } else {
+                DestReg = merge(SrcReg1, dest, Quotient, dataSize);
+            }
+        '''
         big_code = 'DestReg = Quotient & mask(dataSize * 8);'
 
     class Divr(RdRegOp):

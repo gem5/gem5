@@ -24,8 +24,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects.Device import PioDevice
-from m5.objects.SimObject import SimObject
 from m5.params import *
+from m5.SimObject import SimObject
 
 
 class QemuFwCfgItem(SimObject):

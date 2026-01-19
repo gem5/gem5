@@ -102,8 +102,6 @@ def createHiFivePlatform(system):
 
     system.platform = HiFive()
 
-    system.platform.pci_host.pio = system.membus.mem_side_ports
-
     system.platform.rtc = RiscvRTC(frequency=Frequency("10MHz"))
     system.platform.clint.int_pin = system.platform.rtc.int_pin
 
@@ -112,6 +110,19 @@ def createHiFivePlatform(system):
     system.bridge.mem_side_port = system.iobus.cpu_side_ports
     system.bridge.cpu_side_port = system.membus.mem_side_ports
     system.bridge.ranges = system.platform._off_chip_ranges()
+
+    system.iobus.cpu_side_ports = system.platform.pci_host.up_request_port()
+    system.iobus.mem_side_ports = system.platform.pci_host.up_response_port()
+
+    system.platform.pci_bus.cpu_side_ports = (
+        system.platform.pci_host.down_request_port()
+    )
+    system.platform.pci_bus.default = (
+        system.platform.pci_host.down_response_port()
+    )
+    system.platform.pci_bus.config_error_port = (
+        system.platform.pci_host.config_error.pio
+    )
 
     system.platform.setNumCores(1)
 

@@ -45,9 +45,7 @@ from m5.objects.ClockDomain import *
 from m5.objects.ClockedObject import ClockedObject
 from m5.objects.CPUTracers import ExeTracer
 from m5.objects.InstTracer import InstTracer
-from m5.objects.IntPin import VectorIntSourcePin
 from m5.objects.Platform import Platform
-from m5.objects.ResetPort import ResetResponsePort
 from m5.objects.SubSystem import SubSystem
 from m5.objects.XBar import L2XBar
 from m5.params import *

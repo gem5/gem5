@@ -43,6 +43,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstring>
+#include <optional>
 #include <utility>
 
 #include "base/logging.hh"
@@ -56,7 +57,7 @@ namespace gem5
 {
 
 DmaPort::DmaPort(ClockedObject *dev, System *s,
-                 uint32_t sid, uint32_t ssid)
+                 std::optional<uint32_t> sid, std::optional<uint32_t> ssid)
     : RequestPort(dev->name() + ".dma"),
       device(dev), sys(s), requestorId(s->getRequestorId(dev)),
       sendEvent([this]{ sendDma(); }, dev->name()),
@@ -129,8 +130,12 @@ DmaPort::DmaReqState::createPacket()
 {
     RequestPtr req = std::make_shared<Request>(
             gen.addr(), gen.size(), flags, id);
-    req->setStreamId(sid);
-    req->setSubstreamId(ssid);
+    if (sid.has_value()) {
+        req->setStreamId(sid.value());
+    }
+    if (ssid.has_value()) {
+        req->setSubstreamId(ssid.value());
+    }
     req->taskId(context_switch_task_id::DMA);
 
     PacketPtr pkt = new Packet(req, cmd);
@@ -187,7 +192,8 @@ DmaPort::recvReqRetry()
 
 void
 DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
-                   uint8_t *data, uint32_t sid, uint32_t ssid, Tick delay,
+                   uint8_t *data, std::optional<uint32_t> sid,
+                   std::optional<uint32_t> ssid, Tick delay,
                    Request::Flags flag)
 {
     DPRINTF(DMA, "Starting DMA for addr: %#x size: %d sched: %d\n", addr, size,

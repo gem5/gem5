@@ -84,6 +84,9 @@ class AtomicRequestProtocol
      * Receive an atomic snoop request packet from our peer.
      */
     virtual Tick recvAtomicSnoop(PacketPtr pkt) = 0;
+
+  public:
+    virtual ~AtomicRequestProtocol() = default;
 };
 
 class AtomicResponseProtocol
@@ -114,6 +117,9 @@ class AtomicResponseProtocol
      */
     virtual Tick recvAtomicBackdoor(
             PacketPtr pkt, MemBackdoorPtr &backdoor) = 0;
+
+  public:
+    virtual ~AtomicResponseProtocol() = default;
 };
 
 } // namespace gem5
