@@ -1,0 +1,11 @@
+linkify-it-py==2.0.3
+markdown-it-py==4.0.0
+mdit-py-plugins==0.5.0
+mdurl==0.1.2
+platformdirs==4.5.1
+psutil==7.2.1
+Pygments==2.19.2
+rich==14.2.0
+textual==7.3.0
+typing_extensions==4.15.0
+uc-micro-py==1.0.3

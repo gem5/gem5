@@ -1,0 +1,166 @@
+# Copyright (c) 2026 The Regents of the University of California
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+import os
+
+import psutil
+from action_registry import ENABLED_ACTIONS
+from process_details import ProcessDetails
+from textual.app import (
+    App,
+    ComposeResult,
+)
+from textual.containers import Horizontal
+from textual.widgets import (
+    DataTable,
+    Footer,
+    Header,
+)
+
+
+class Gem5Dashboard(App):
+    CSS = """
+    DataTable {
+        width: 70%;
+        height: 100%;
+        border-right: solid $primary;
+    }
+    """
+    BINDINGS = [("q", "quit", "Quit"), ("r", "refresh", "Refresh")]
+
+    def compose(self) -> ComposeResult:
+        yield Header()
+        # Use Horizontal to split screen: Table (Left) | Details (Right)
+        with Horizontal():
+            yield DataTable(id="proc_table")
+            yield ProcessDetails(actions=ENABLED_ACTIONS, id="sidebar")
+        yield Footer()
+
+    def on_mount(self) -> None:
+        table = self.query_one(DataTable)
+        table.cursor_type = "row"
+        table.zebra_stripes = True
+        table.add_column("PID", key="PID")
+        table.add_column("User", key="User")
+        table.add_column("Status", key="Status")
+        table.add_column("Command", key="Command")
+        self.update_processes()
+        self.set_interval(2, self.update_processes)
+
+    def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
+        # Get the PID (row key) from the event
+        pid = event.row_key.value
+        # Pass it to the sidebar component
+        self.query_one(ProcessDetails).set_pid(pid)
+
+    def update_processes(self) -> None:
+        """
+        Fetches running gem5 processes, applies filters, and updates the TUI table.
+        """
+        table = self.query_one(DataTable)
+        sidebar = self.query_one(ProcessDetails)
+        current_pids = set()
+
+        # We iterate over all processes provided by psutil
+        # attrs defines what data we want to fetch to avoid extra syscalls
+        attrs = ["pid", "name", "username", "status", "cmdline", "create_time"]
+
+        for proc in psutil.process_iter(attrs):
+            try:
+                # Skip the dashboard process itself
+                if proc.pid == os.getpid():
+                    continue
+
+                # 1. Ownership Filter: psutil handles this internally usually,
+                # but we explicitly check if the process belongs to the current user.
+                if proc.info["username"] != psutil.Process().username():
+                    continue
+
+                # 2. Name Filter: Check if 'gem5' is in the name
+                # We also check cmdline as gem5
+                cmd_list = proc.info["cmdline"] or []
+                cmd_str = " ".join(cmd_list)
+
+                if "gem5" not in proc.info["name"] and "gem5" not in cmd_str:
+                    continue
+
+                # 3. Multisim & Wrapper Filter (logic from original dashboard PR)
+                # We filter out the orchestration scripts to show only the actual simulation
+                exclusion_patterns = [
+                    "gem5.utils.multisim",
+                    "multiprocessing.resource_tracker",
+                    "multiprocessing.spawn",
+                ]
+
+                if any(pattern in cmd_str for pattern in exclusion_patterns):
+                    continue
+
+                # 4. macOS specific check (Ported from original dashboard PR)
+                # If it's a spawn process without an outdir, ignore it
+                if (
+                    "multiprocessing.spawn" in cmd_str
+                    and "--outdir" not in cmd_str
+                ):
+                    continue
+
+                pid = str(proc.info["pid"])
+                current_pids.add(pid)
+
+                # Check if row exists to update it, or add new one
+                if pid in table.rows:
+                    # Update status if it changed (e.g. running -> sleeping)
+                    table.update_cell(pid, "Status", proc.info["status"])
+                else:
+                    table.add_row(
+                        pid,
+                        proc.info["username"],
+                        proc.info["status"],
+                        cmd_str,
+                        key=pid,
+                    )
+
+            except (
+                psutil.NoSuchProcess,
+                psutil.AccessDenied,
+                psutil.ZombieProcess,
+            ):
+                # Process died or we lost permission while iterating
+                continue
+
+        # Cleanup: Remove rows for processes that are no longer running and reset sidebar if needed
+        rows_to_remove = [
+            row_key for row_key in table.rows if row_key not in current_pids
+        ]
+        for row_key in rows_to_remove:
+            table.remove_row(row_key)
+
+        if sidebar.current_pid and sidebar.current_pid not in current_pids:
+            sidebar.reset()
+
+
+if __name__ == "__main__":
+    app = Gem5Dashboard()
+    app.run()
