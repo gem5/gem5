@@ -29,6 +29,7 @@ import os
 import psutil
 from action_registry import ENABLED_ACTIONS
 from process_details import ProcessDetails
+from table_column_map import COLUMNS
 from textual.app import (
     App,
     ComposeResult,
@@ -44,12 +45,22 @@ from textual.widgets import (
 class Gem5Dashboard(App):
     CSS = """
     DataTable {
-        width: 70%;
+        width: 1fr;
         height: 100%;
         border-right: solid $primary;
     }
+
+    DataTable.full-width {
+        width: 100%;
+        border-right: none;
+    }
+
     """
-    BINDINGS = [("q", "quit", "Quit"), ("r", "refresh", "Refresh")]
+    BINDINGS = [
+        ("q", "quit", "Quit"),
+        ("r", "refresh", "Refresh"),
+        ("t", "toggle_sidebar", "Toggle Sidebar"),
+    ]
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -63,18 +74,36 @@ class Gem5Dashboard(App):
         table = self.query_one(DataTable)
         table.cursor_type = "row"
         table.zebra_stripes = True
-        table.add_column("PID", key="PID")
-        table.add_column("User", key="User")
-        table.add_column("Status", key="Status")
-        table.add_column("Command", key="Command")
+        for col in COLUMNS:
+            table.add_column(
+                col["name"], key=col["key"], width=col.get("width")
+            )
+
         self.update_processes()
         self.set_interval(2, self.update_processes)
+
+    def action_toggle_sidebar(self) -> None:
+        """Toggle sidebar with 't' key"""
+        sidebar = self.query_one(ProcessDetails)
+        table = self.query_one(DataTable)
+        sidebar.toggle_class("sidebar-hidden")
+        table.toggle_class("full-width")
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         # Get the PID (row key) from the event
         pid = event.row_key.value
-        # Pass it to the sidebar component
-        self.query_one(ProcessDetails).set_pid(pid)
+        sidebar = self.query_one(ProcessDetails)
+        table = self.query_one(DataTable)
+
+        # Hide sidebar if same PID is selected again
+        # Otherwise, show sidebar with new PID
+        if sidebar.get_current_pid() == pid:
+            sidebar.toggle_class("sidebar-hidden")
+            table.toggle_class("full-width")
+        else:
+            sidebar.set_pid(pid)
+            sidebar.remove_class("sidebar-hidden")
+            table.remove_class("full-width")
 
     def update_processes(self) -> None:
         """
@@ -104,7 +133,10 @@ class Gem5Dashboard(App):
                 cmd_list = proc.info["cmdline"] or []
                 cmd_str = " ".join(cmd_list)
 
-                if "gem5" not in proc.info["name"] and "gem5" not in cmd_str:
+                if (
+                    "gem5.opt" not in proc.info["name"]
+                    and "gem5.opt" not in cmd_str
+                ):
                     continue
 
                 # 3. Multisim & Wrapper Filter (logic from original dashboard PR)
@@ -129,18 +161,19 @@ class Gem5Dashboard(App):
                 pid = str(proc.info["pid"])
                 current_pids.add(pid)
 
-                # Check if row exists to update it, or add new one
+                row_data = []
+                for col in COLUMNS:
+                    try:
+                        value = col["func"](proc)
+                        row_data.append(value)
+                    except Exception:
+                        row_data.append("N/A")
+
                 if pid in table.rows:
-                    # Update status if it changed (e.g. running -> sleeping)
-                    table.update_cell(pid, "Status", proc.info["status"])
+                    for col, value in zip(COLUMNS, row_data):
+                        table.update_cell(pid, col["key"], value)
                 else:
-                    table.add_row(
-                        pid,
-                        proc.info["username"],
-                        proc.info["status"],
-                        cmd_str,
-                        key=pid,
-                    )
+                    table.add_row(*row_data, key=pid)
 
             except (
                 psutil.NoSuchProcess,

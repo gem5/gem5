@@ -49,6 +49,9 @@ class ProcessDetails(Vertical):
     .hidden {
         display: none;
     }
+    ProcessDetails.sidebar-hidden {
+        display: none;
+    }
     """
     current_pid: str | None = None
 
@@ -78,6 +81,10 @@ class ProcessDetails(Vertical):
         # Reveal the buttons
         self.query(".hidden").remove_class("hidden")
         self.query_one("#output_log", Static).update("")  # Clear old logs
+
+    def get_current_pid(self) -> str | None:
+        """Returns the currently selected PID, or None if none is selected."""
+        return self.current_pid
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         if not self.current_pid:
