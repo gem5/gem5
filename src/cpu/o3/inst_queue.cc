@@ -1452,9 +1452,9 @@ InstructionQueue::doSquash(ThreadID tid)
             if (dest_reg->isAlwaysReady()) {
                 continue;
             }
-            if (!dependGraph.empty(dest_reg->flatIndex())) {
-                dependGraph.clearInst(dest_reg->flatIndex());
-            }
+            // Clear the producer even if there are no dependents; otherwise
+            // the head node can retain a DynInstPtr and leak squashed insts.
+            dependGraph.clearInst(dest_reg->flatIndex());
         }
         instList[tid].erase(squash_it--);
         ++iqStats.squashedInstsExamined;
