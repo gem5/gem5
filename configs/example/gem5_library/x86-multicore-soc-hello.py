@@ -172,3 +172,66 @@ def get_cpu_type(cpu_str):
         "minor": CPUTypes.MINOR,
     }
     return cpu_map[cpu_str.lower()]
+
+
+def configure_system(args):
+    """Configure the multi-CPU SoC based on command line arguments."""
+
+    # Validate requirements
+    requires(
+        isa_required=ISA.X86,
+        coherence_protocol_required=CoherenceProtocol.MESI_TWO_LEVEL,
+        kvm_required=(args.boot_cpu == "kvm" or args.exec_cpu == "kvm"),
+    )
+
+    # Configure cache hierarchy
+    cache_hierarchy = MESITwoLevelCacheHierarchy(
+        l1d_size=args.l1d_size,
+        l1d_assoc=8,
+        l1i_size=args.l1i_size,
+        l1i_assoc=8,
+        l2_size=args.l2_size,
+        l2_assoc=16,
+        num_l2_banks=1,
+    )
+
+    # Configure memory
+    memory = SingleChannelDDR4_2400(size=args.memory_size)
+
+    # Configure processor
+    if args.no_switch:
+        # Use single CPU type throughout
+        processor = SimpleSwitchableProcessor(
+            starting_core_type=get_cpu_type(args.boot_cpu),
+            switch_core_type=get_cpu_type(args.boot_cpu),  # Same as starting
+            isa=ISA.X86,
+            num_cores=args.num_cores,
+        )
+    else:
+        # Switch from boot CPU to execution CPU
+        processor = SimpleSwitchableProcessor(
+            starting_core_type=get_cpu_type(args.boot_cpu),
+            switch_core_type=get_cpu_type(args.exec_cpu),
+            isa=ISA.X86,
+            num_cores=args.num_cores,
+        )
+
+    # Disable perf for KVM CPUs if not explicitly enabled
+    if not args.kvm_perf:
+        for proc in processor.start:
+            if hasattr(proc.core, 'usePerf'):
+                proc.core.usePerf = False
+
+    # Configure board
+    board = X86Board(
+        clk_freq=args.clk_freq,
+        processor=processor,
+        memory=memory,
+        cache_hierarchy=cache_hierarchy,
+    )
+
+    # Set workload
+    workload = obtain_resource("x86-ubuntu-24.04-boot-with-systemd")
+    board.set_workload(workload)
+
+    return board, processor
