@@ -4,11 +4,11 @@
 
 """Tests for x86-multicore-soc-hello.py configuration script."""
 
-import unittest
-import tempfile
 import os
 import sys
+import tempfile
 import types
+import unittest
 
 # Mock gem5 modules before importing
 CPUTypes = types.SimpleNamespace()
@@ -19,47 +19,93 @@ CPUTypes.O3 = "o3"
 CPUTypes.MINOR = "minor"
 
 # Create mock gem5 modules
-sys.modules['gem5'] = types.ModuleType('gem5')
-sys.modules['gem5.coherence_protocol'] = types.ModuleType('gem5.coherence_protocol')
-sys.modules['gem5.coherence_protocol'].CoherenceProtocol = types.SimpleNamespace()
-sys.modules['gem5.coherence_protocol'].CoherenceProtocol.MESI_TWO_LEVEL = "mesi_two_level"
-sys.modules['gem5.components'] = types.ModuleType('gem5.components')
-sys.modules['gem5.components.boards'] = types.ModuleType('gem5.components.boards')
-sys.modules['gem5.components.boards.x86_board'] = types.ModuleType('gem5.components.boards.x86_board')
-sys.modules['gem5.components.boards.x86_board'].X86Board = type('X86Board', (), {})
-sys.modules['gem5.components.cachehierarchies'] = types.ModuleType('gem5.components.cachehierarchies')
-sys.modules['gem5.components.cachehierarchies.ruby'] = types.ModuleType('gem5.components.cachehierarchies.ruby')
-sys.modules['gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy'] = types.ModuleType('gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy')
-sys.modules['gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy'].MESITwoLevelCacheHierarchy = type('MESITwoLevelCacheHierarchy', (), {})
-sys.modules['gem5.components.memory'] = types.ModuleType('gem5.components.memory')
-sys.modules['gem5.components.memory.single_channel'] = types.ModuleType('gem5.components.memory.single_channel')
-sys.modules['gem5.components.memory.single_channel'].SingleChannelDDR4_2400 = type('SingleChannelDDR4_2400', (), {})
-sys.modules['gem5.components.processors'] = types.ModuleType('gem5.components.processors')
-sys.modules['gem5.components.processors.cpu_types'] = types.ModuleType('gem5.components.processors.cpu_types')
-sys.modules['gem5.components.processors.cpu_types'].CPUTypes = CPUTypes
-sys.modules['gem5.components.processors.simple_switchable_processor'] = types.ModuleType('gem5.components.processors.simple_switchable_processor')
-sys.modules['gem5.components.processors.simple_switchable_processor'].SimpleSwitchableProcessor = type('SimpleSwitchableProcessor', (), {})
-sys.modules['gem5.isas'] = types.ModuleType('gem5.isas')
-sys.modules['gem5.isas'].ISA = types.SimpleNamespace()
-sys.modules['gem5.isas'].ISA.X86 = "x86"
-sys.modules['gem5.resources'] = types.ModuleType('gem5.resources')
-sys.modules['gem5.resources.resource'] = types.ModuleType('gem5.resources.resource')
-sys.modules['gem5.resources.resource'].obtain_resource = lambda x: None
-sys.modules['gem5.simulate'] = types.ModuleType('gem5.simulate')
-sys.modules['gem5.simulate.exit_event'] = types.ModuleType('gem5.simulate.exit_event')
-sys.modules['gem5.simulate.exit_event'].ExitEvent = types.SimpleNamespace()
-sys.modules['gem5.simulate.exit_event'].ExitEvent.EXIT = "exit"
-sys.modules['gem5.simulate.simulator'] = types.ModuleType('gem5.simulate.simulator')
-sys.modules['gem5.simulate.simulator'].Simulator = type('Simulator', (), {})
-sys.modules['gem5.utils'] = types.ModuleType('gem5.utils')
-sys.modules['gem5.utils.requires'] = types.ModuleType('gem5.utils.requires')
-sys.modules['gem5.utils.requires'].requires = lambda **kwargs: None
+sys.modules["gem5"] = types.ModuleType("gem5")
+sys.modules["gem5.coherence_protocol"] = types.ModuleType(
+    "gem5.coherence_protocol"
+)
+sys.modules["gem5.coherence_protocol"].CoherenceProtocol = (
+    types.SimpleNamespace()
+)
+sys.modules["gem5.coherence_protocol"].CoherenceProtocol.MESI_TWO_LEVEL = (
+    "mesi_two_level"
+)
+sys.modules["gem5.components"] = types.ModuleType("gem5.components")
+sys.modules["gem5.components.boards"] = types.ModuleType(
+    "gem5.components.boards"
+)
+sys.modules["gem5.components.boards.x86_board"] = types.ModuleType(
+    "gem5.components.boards.x86_board"
+)
+sys.modules["gem5.components.boards.x86_board"].X86Board = type(
+    "X86Board", (), {}
+)
+sys.modules["gem5.components.cachehierarchies"] = types.ModuleType(
+    "gem5.components.cachehierarchies"
+)
+sys.modules["gem5.components.cachehierarchies.ruby"] = types.ModuleType(
+    "gem5.components.cachehierarchies.ruby"
+)
+sys.modules[
+    "gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy"
+] = types.ModuleType(
+    "gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy"
+)
+sys.modules[
+    "gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy"
+].MESITwoLevelCacheHierarchy = type("MESITwoLevelCacheHierarchy", (), {})
+sys.modules["gem5.components.memory"] = types.ModuleType(
+    "gem5.components.memory"
+)
+sys.modules["gem5.components.memory.single_channel"] = types.ModuleType(
+    "gem5.components.memory.single_channel"
+)
+sys.modules["gem5.components.memory.single_channel"].SingleChannelDDR4_2400 = (
+    type("SingleChannelDDR4_2400", (), {})
+)
+sys.modules["gem5.components.processors"] = types.ModuleType(
+    "gem5.components.processors"
+)
+sys.modules["gem5.components.processors.cpu_types"] = types.ModuleType(
+    "gem5.components.processors.cpu_types"
+)
+sys.modules["gem5.components.processors.cpu_types"].CPUTypes = CPUTypes
+sys.modules["gem5.components.processors.simple_switchable_processor"] = (
+    types.ModuleType("gem5.components.processors.simple_switchable_processor")
+)
+sys.modules[
+    "gem5.components.processors.simple_switchable_processor"
+].SimpleSwitchableProcessor = type("SimpleSwitchableProcessor", (), {})
+sys.modules["gem5.isas"] = types.ModuleType("gem5.isas")
+sys.modules["gem5.isas"].ISA = types.SimpleNamespace()
+sys.modules["gem5.isas"].ISA.X86 = "x86"
+sys.modules["gem5.resources"] = types.ModuleType("gem5.resources")
+sys.modules["gem5.resources.resource"] = types.ModuleType(
+    "gem5.resources.resource"
+)
+sys.modules["gem5.resources.resource"].obtain_resource = lambda x: None
+sys.modules["gem5.simulate"] = types.ModuleType("gem5.simulate")
+sys.modules["gem5.simulate.exit_event"] = types.ModuleType(
+    "gem5.simulate.exit_event"
+)
+sys.modules["gem5.simulate.exit_event"].ExitEvent = types.SimpleNamespace()
+sys.modules["gem5.simulate.exit_event"].ExitEvent.EXIT = "exit"
+sys.modules["gem5.simulate.simulator"] = types.ModuleType(
+    "gem5.simulate.simulator"
+)
+sys.modules["gem5.simulate.simulator"].Simulator = type("Simulator", (), {})
+sys.modules["gem5.utils"] = types.ModuleType("gem5.utils")
+sys.modules["gem5.utils.requires"] = types.ModuleType("gem5.utils.requires")
+sys.modules["gem5.utils.requires"].requires = lambda **kwargs: None
 
 # Add configs directory to path and import the script
 import importlib.util
+
 spec = importlib.util.spec_from_file_location(
     "x86_multicore_soc_hello",
-    os.path.join(os.path.dirname(__file__), '../../configs/example/gem5_library/x86-multicore-soc-hello.py')
+    os.path.join(
+        os.path.dirname(__file__),
+        "../../configs/example/gem5_library/x86-multicore-soc-hello.py",
+    ),
 )
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
@@ -76,7 +122,7 @@ class TestMultiCoreSoCConfig(unittest.TestCase):
         """Test parsing default arguments."""
         old_argv = sys.argv
         try:
-            sys.argv = ['x86-multicore-soc-hello.py']
+            sys.argv = ["x86-multicore-soc-hello.py"]
             args = parse_args()
             self.assertEqual(args.num_cores, 2)
             self.assertEqual(args.boot_cpu, "kvm")
@@ -95,15 +141,23 @@ class TestMultiCoreSoCConfig(unittest.TestCase):
         """Test parsing custom arguments."""
         test_args = [
             "x86-multicore-soc-hello.py",
-            "--num-cores", "4",
-            "--boot-cpu", "atomic",
-            "--exec-cpu", "o3",
+            "--num-cores",
+            "4",
+            "--boot-cpu",
+            "atomic",
+            "--exec-cpu",
+            "o3",
             "--no-switch",
-            "--l1d-size", "64KiB",
-            "--l1i-size", "64KiB",
-            "--l2-size", "1MiB",
-            "--memory-size", "8GiB",
-            "--clk-freq", "4GHz",
+            "--l1d-size",
+            "64KiB",
+            "--l1i-size",
+            "64KiB",
+            "--l2-size",
+            "1MiB",
+            "--memory-size",
+            "8GiB",
+            "--clk-freq",
+            "4GHz",
             "--kvm-perf",
         ]
 
@@ -143,7 +197,7 @@ class TestMultiCoreSoCConfig(unittest.TestCase):
         self.assertTrue(os.access(workload_path, os.X_OK))
 
         # Check content
-        with open(workload_path, 'r') as f:
+        with open(workload_path) as f:
             content = f.read()
             self.assertIn("Hello from gem5 Multi-CPU X86 SoC!", content)
             self.assertIn("m5 exit", content)

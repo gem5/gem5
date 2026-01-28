@@ -58,6 +58,8 @@ For custom configuration:
 ```
 """
 
+import argparse
+
 from gem5.coherence_protocol import CoherenceProtocol
 from gem5.components.boards.x86_board import X86Board
 from gem5.components.cachehierarchies.ruby.mesi_two_level_cache_hierarchy import (
@@ -73,7 +75,6 @@ from gem5.resources.resource import obtain_resource
 from gem5.simulate.exit_event import ExitEvent
 from gem5.simulate.simulator import Simulator
 from gem5.utils.requires import requires
-import argparse
 
 
 def parse_args():
@@ -87,7 +88,7 @@ def parse_args():
         "--num-cores",
         type=int,
         default=2,
-        help="Number of CPU cores (default: 2)"
+        help="Number of CPU cores (default: 2)",
     )
 
     # CPU type configuration
@@ -97,7 +98,7 @@ def parse_args():
         type=str,
         default="kvm",
         choices=cpu_type_choices,
-        help="CPU type for boot phase (default: kvm)"
+        help="CPU type for boot phase (default: kvm)",
     )
 
     parser.add_argument(
@@ -105,13 +106,13 @@ def parse_args():
         type=str,
         default="timing",
         choices=cpu_type_choices,
-        help="CPU type for execution phase (default: timing)"
+        help="CPU type for execution phase (default: timing)",
     )
 
     parser.add_argument(
         "--no-switch",
         action="store_true",
-        help="Disable CPU switching (use boot CPU for entire simulation)"
+        help="Disable CPU switching (use boot CPU for entire simulation)",
     )
 
     # Cache configuration
@@ -119,21 +120,21 @@ def parse_args():
         "--l1d-size",
         type=str,
         default="32KiB",
-        help="L1 data cache size (default: 32KiB)"
+        help="L1 data cache size (default: 32KiB)",
     )
 
     parser.add_argument(
         "--l1i-size",
         type=str,
         default="32KiB",
-        help="L1 instruction cache size (default: 32KiB)"
+        help="L1 instruction cache size (default: 32KiB)",
     )
 
     parser.add_argument(
         "--l2-size",
         type=str,
         default="512KiB",
-        help="L2 cache size (default: 512KiB)"
+        help="L2 cache size (default: 512KiB)",
     )
 
     # Memory configuration
@@ -141,7 +142,7 @@ def parse_args():
         "--memory-size",
         type=str,
         default="3GiB",
-        help="Main memory size (default: 3GiB)"
+        help="Main memory size (default: 3GiB)",
     )
 
     # Clock frequency
@@ -149,14 +150,14 @@ def parse_args():
         "--clk-freq",
         type=str,
         default="3GHz",
-        help="System clock frequency (default: 3GHz)"
+        help="System clock frequency (default: 3GHz)",
     )
 
     # KVM perf setting
     parser.add_argument(
         "--kvm-perf",
         action="store_true",
-        help="Enable perf for KVM CPUs (default: disabled)"
+        help="Enable perf for KVM CPUs (default: disabled)",
     )
 
     return parser.parse_args()
@@ -219,7 +220,7 @@ def configure_system(args):
     # Disable perf for KVM CPUs if not explicitly enabled
     if not args.kvm_perf:
         for proc in processor.start:
-            if hasattr(proc.core, 'usePerf'):
+            if hasattr(proc.core, "usePerf"):
                 proc.core.usePerf = False
 
     # Configure board
@@ -242,14 +243,18 @@ def create_exit_event_handler(processor, args):
 
     def exit_event_handler():
         # Phase 1: Kernel boot complete
-        print(f"[Phase 1] Ubuntu kernel booted with {args.num_cores} {args.boot_cpu.upper()} cores")
+        print(
+            f"[Phase 1] Ubuntu kernel booted with {args.num_cores} {args.boot_cpu.upper()} cores"
+        )
         yield False  # Continue to systemd startup
 
         # Phase 2: Systemd started, ready for workload
         print("[Phase 2] Systemd started, ready for workload execution")
 
         if not args.no_switch and args.boot_cpu != args.exec_cpu:
-            print(f"[Phase 2] Switching from {args.boot_cpu.upper()} to {args.exec_cpu.upper()} CPUs")
+            print(
+                f"[Phase 2] Switching from {args.boot_cpu.upper()} to {args.exec_cpu.upper()} CPUs"
+            )
             processor.switch()
 
         yield False  # Continue to workload execution
@@ -296,8 +301,8 @@ def run_simulation(board, processor, args):
 
 def create_hello_world_workload():
     """Create a simple hello world workload for testing."""
-    import tempfile
     import os
+    import tempfile
 
     # Create a simple shell script that prints hello and exits
     script_content = """#!/bin/bash
@@ -310,7 +315,9 @@ m5 exit
 """
 
     # Create temporary file
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.sh', delete=False) as f:
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".sh", delete=False
+    ) as f:
         f.write(script_content)
         script_path = f.name
 
@@ -334,13 +341,16 @@ def main():
         workload_path = create_hello_world_workload()
         print(f"[Info] Created hello world workload at: {workload_path}")
         print("[Info] Pass this file via 'm5 readfile' in the guest")
-        print("[Info] The Ubuntu after_boot.sh script will automatically execute it")
+        print(
+            "[Info] The Ubuntu after_boot.sh script will automatically execute it"
+        )
 
         # Run simulation
         run_simulation(board, processor, args)
 
         # Cleanup
         import os
+
         os.unlink(workload_path)
 
     except Exception as e:
@@ -350,7 +360,9 @@ def main():
         print(f"Error: {e}")
         print(f"\nCommon issues:")
         print("1. Ensure gem5 is built with X86 and MESI_TWO_LEVEL support")
-        print("2. For KVM: Ensure host has KVM enabled and user has permissions")
+        print(
+            "2. For KVM: Ensure host has KVM enabled and user has permissions"
+        )
         print("3. Check internet connection for resource download")
         print(f"{'='*60}")
         raise
