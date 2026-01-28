@@ -45,7 +45,7 @@ TrafficGenerator::TrafficGenerator(sc_core::sc_module_name name)
 void
 TrafficGenerator::process()
 {
-    auto rnd = gem5::Random::genRandom(time(NULL));
+    auto rnd = gem5::Random::genRandom();
 
     unsigned const memSize = (1 << 10); // 512 MB
 
