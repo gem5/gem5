@@ -235,3 +235,60 @@ def configure_system(args):
     board.set_workload(workload)
 
     return board, processor
+
+
+def create_exit_event_handler(processor, args):
+    """Create exit event handler for boot and workload execution phases."""
+
+    def exit_event_handler():
+        # Phase 1: Kernel boot complete
+        print(f"[Phase 1] Ubuntu kernel booted with {args.num_cores} {args.boot_cpu.upper()} cores")
+        yield False  # Continue to systemd startup
+
+        # Phase 2: Systemd started, ready for workload
+        print("[Phase 2] Systemd started, ready for workload execution")
+
+        if not args.no_switch and args.boot_cpu != args.exec_cpu:
+            print(f"[Phase 2] Switching from {args.boot_cpu.upper()} to {args.exec_cpu.upper()} CPUs")
+            processor.switch()
+
+        yield False  # Continue to workload execution
+
+        # Phase 3: Workload complete, exit simulation
+        print("[Phase 3] Workload execution complete")
+        print("[Phase 3] Exiting simulation via m5 exit")
+        yield True  # Terminate simulation
+
+    return exit_event_handler
+
+
+def run_simulation(board, processor, args):
+    """Run the simulation with configured exit events."""
+
+    simulator = Simulator(
+        board=board,
+        on_exit_event={
+            ExitEvent.EXIT: create_exit_event_handler(processor, args)()
+        },
+    )
+
+    print(f"\n{'='*60}")
+    print("Starting Multi-CPU X86 SoC Simulation")
+    print(f"{'='*60}")
+    print(f"Configuration:")
+    print(f"  Cores: {args.num_cores}")
+    print(f"  Boot CPU: {args.boot_cpu.upper()}")
+    print(f"  Exec CPU: {args.exec_cpu.upper()}")
+    print(f"  CPU Switch: {'Disabled' if args.no_switch else 'Enabled'}")
+    print(f"  L1D Cache: {args.l1d_size}")
+    print(f"  L1I Cache: {args.l1i_size}")
+    print(f"  L2 Cache: {args.l2_size}")
+    print(f"  Memory: {args.memory_size}")
+    print(f"  Clock: {args.clk_freq}")
+    print(f"{'='*60}\n")
+
+    simulator.run()
+
+    print(f"\n{'='*60}")
+    print("Simulation Complete")
+    print(f"{'='*60}")
