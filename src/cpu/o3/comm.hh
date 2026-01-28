@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2011, 2016-2017 ARM Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
+ * Copyright (c) 2022-2023 The University of Edinburgh
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -111,19 +112,29 @@ struct IssueStruct
 /** Struct that defines all backwards communication. */
 struct TimeStruct
 {
+    struct FetchComm
+    {
+        bool block;
+        /** Signals to redirect BAC if something goes wrong. */
+        bool squash;
+        std::unique_ptr<PCStateBase> nextPC;
+    };
+
+    FetchComm fetchInfo[MaxThreads];
+
     struct DecodeComm
     {
         std::unique_ptr<PCStateBase> nextPC;
         DynInstPtr mispredictInst;
         DynInstPtr squashInst;
-        InstSeqNum doneSeqNum;
-        Addr mispredPC;
-        uint64_t branchAddr;
-        unsigned branchCount;
-        bool squash;
-        bool predIncorrect;
-        bool branchMispredict;
-        bool branchTaken;
+        InstSeqNum doneSeqNum = 0;
+        Addr mispredPC = 0;
+        uint64_t branchAddr = 0;
+        unsigned branchCount = 0;
+        bool squash = false;
+        bool controlMispredict = false;
+        bool branchMispredict = false;
+        bool branchTaken = false;
     };
 
     DecodeComm decodeInfo[MaxThreads];
@@ -135,18 +146,18 @@ struct TimeStruct
     struct IewComm
     {
         // Also eventually include skid buffer space.
-        unsigned freeIQEntries;
-        unsigned freeLQEntries;
-        unsigned freeSQEntries;
-        unsigned dispatchedToLQ;
-        unsigned dispatchedToSQ;
+        unsigned freeIQEntries = 0;
+        unsigned freeLQEntries = 0;
+        unsigned freeSQEntries = 0;
+        unsigned dispatchedToLQ = 0;
+        unsigned dispatchedToSQ = 0;
 
-        unsigned iqCount;
-        unsigned ldstqCount;
+        unsigned iqCount = 0;
+        unsigned ldstqCount = 0;
 
-        unsigned dispatched;
-        bool usedIQ;
-        bool usedLSQ;
+        unsigned dispatched = 0;
+        bool usedIQ = false;
+        bool usedLSQ = false;
     };
 
     IewComm iewInfo[MaxThreads];
@@ -183,35 +194,37 @@ struct TimeStruct
 
         /// Communication specifically to the IQ to tell the IQ that it can
         /// schedule a non-speculative instruction.
-        InstSeqNum nonSpecSeqNum; // *I
+        InstSeqNum nonSpecSeqNum = 0; // *I
 
         /// Represents the instruction that has either been retired or
         /// squashed.  Similar to having a single bus that broadcasts the
         /// retired or squashed sequence number.
-        InstSeqNum doneSeqNum; // *F, I
+        InstSeqNum doneSeqNum = 0; // *F, I
 
         /// Tell Rename how many free entries it has in the ROB
-        unsigned freeROBEntries; // *R
+        unsigned freeROBEntries = 0; // *R
 
-        bool squash; // *F, D, R, I
-        bool robSquashing; // *F, D, R, I
+        bool squash = false; // *F, D, R, I
+        bool robSquashing = false; // *F, D, R, I
 
         /// Rename should re-read number of free rob entries
-        bool usedROB; // *R
+        bool usedROB = false; // *R
 
         /// Notify Rename that the ROB is empty
-        bool emptyROB; // *R
+        bool emptyROB = false; // *R
 
         /// Was the branch taken or not
-        bool branchTaken; // *F
+        bool branchTaken = false; // *F
         /// If an interrupt is pending and fetch should stall
-        bool interruptPending; // *F
+        bool interruptPending = false; // *F
         /// If the interrupt ended up being cleared before being handled
-        bool clearInterrupt; // *F
+        bool clearInterrupt = false; // *F
+        /// If a trap is pending
+        bool trapPending = false; // *F
 
         /// Hack for now to send back an strictly ordered access to
         /// the IEW stage.
-        bool strictlyOrdered; // *I
+        bool strictlyOrdered = false; // *I
 
     };
 
@@ -224,6 +237,25 @@ struct TimeStruct
     bool iewBlock[MaxThreads];
     bool iewUnblock[MaxThreads];
 };
+
+/**
+ * Remove instructions belonging to given thread from the
+ * given comm struct's instruction array. Automatically
+ * updates the array size.
+ */
+template <class CommStruct>
+void
+removeCommThreadInsts(ThreadID tid, CommStruct& comm_struct)
+{
+    auto has_tid = [tid] (const auto &inst) -> bool {
+        return inst && inst->threadNumber == tid;
+    };
+    DynInstPtr *last = std::remove_if(comm_struct.insts,
+                                      comm_struct.insts + comm_struct.size,
+                                      has_tid);
+    std::fill(last, comm_struct.insts + comm_struct.size, nullptr);
+    comm_struct.size = last - comm_struct.insts;
+}
 
 } // namespace o3
 } // namespace gem5

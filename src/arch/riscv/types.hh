@@ -149,6 +149,7 @@ BitUnion64(ExtMachInst)
     Bitfield<12>        cimm1;
     Bitfield< 7,  4>    rlist;
     Bitfield< 3,  2>    spimm;
+    Bitfield< 9,  2>    jt_index;
     // Pseudo instructions
     Bitfield<31, 25>    m5func;
     // vector
@@ -179,6 +180,8 @@ BitUnion64(ExtMachInst)
     Bitfield<19, 15>    uimm_vsetivli;
     // vsetvl
     Bitfield<31, 25>    bit31_25;
+    // Zvbb
+    Bitfield<26> bit26;
 
 EndBitUnion(ExtMachInst)
 

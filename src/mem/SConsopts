@@ -33,6 +33,6 @@ import gem5_scons
 with gem5_scons.Configure(main) as conf:
     have_shm_open = \
         conf.CheckLibWithHeader([None, 'rt'], 'sys/mman.h', 'C',
-                                'shm_open("/test", 0, 0);')
+                                call='shm_open("/test", 0, 0);')
     if not have_shm_open:
         warning("Can't find library for sys/mman.")

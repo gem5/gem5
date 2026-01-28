@@ -38,6 +38,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import math
+from importlib import import_module
 
 import m5
 from m5.defines import buildEnv
@@ -125,9 +126,8 @@ def define_options(parser):
         help="Recycle latency for ruby controller input buffers",
     )
 
-    protocol = buildEnv["PROTOCOL"]
-    exec(f"from . import {protocol}")
-    eval(f"{protocol}.define_options(parser)")
+    import_module(f"ruby.{buildEnv['PROTOCOL']}").define_options(parser)
+
     Network.define_options(parser)
 
 
@@ -213,8 +213,10 @@ def create_topology(controllers, options):
     found in configs/topologies/BaseTopology.py
     This is a wrapper for the legacy topologies.
     """
-    exec(f"import topologies.{options.topology} as Topo")
-    topology = eval(f"Topo.{options.topology}(controllers)")
+    topology_class = getattr(
+        import_module(f"topologies.{options.topology}"), options.topology
+    )
+    topology = topology_class(controllers=controllers)
     return topology
 
 
@@ -246,16 +248,17 @@ def create_system(
     if cpus is None:
         cpus = system.cpu
 
-    protocol = buildEnv["PROTOCOL"]
-    exec(f"from . import {protocol}")
     try:
-        (cpu_sequencers, dir_cntrls, topology) = eval(
-            "%s.create_system(options, full_system, system, dma_ports,\
-                                    bootmem, ruby, cpus)"
-            % protocol
+        (cpu_sequencers, dir_cntrls, topology) = import_module(
+            f"ruby.{buildEnv['PROTOCOL']}"
+        ).create_system(
+            options, full_system, system, dma_ports, bootmem, ruby, cpus
         )
     except:
-        print(f"Error: could not create sytem for ruby protocol {protocol}")
+        print(
+            "Error: could not create sytem for ruby protocol "
+            f"{buildEnv['PROTOCOL']}"
+        )
         raise
 
     # Create the network topology
@@ -304,6 +307,25 @@ def create_system(
 
 
 def create_directories(options, bootmem, ruby_system, system):
+    import importlib
+
+    try:
+        # The supported way to use Ruby is now to use the protocol name as
+        # part of the names for all of the controllers. This is *required*
+        # when using `MULTIPLE` as the protocol and the `ALL` target.
+        Directory_Controller = getattr(
+            importlib.import_module("m5.objects"),
+            f"{options.protocol}_Directory_Controller",
+        )
+    except AttributeError:
+        # This is a fallback for the legacy Ruby protocols. If you can't
+        # find the protocol-specific directory controller, then use the
+        # generic one. This is a hack that only works if you have a single
+        # protocol.
+        Directory_Controller = getattr(
+            importlib.import_module("m5.objects"), "Directory_Controller"
+        )
+
     dir_cntrl_nodes = []
     for i in range(options.num_dirs):
         dir_cntrl = Directory_Controller()

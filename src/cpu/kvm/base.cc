@@ -806,10 +806,16 @@ BaseKvmCPU::kvmRun(Tick ticks)
         ticksExecuted = runTimer->ticksFromHostCycles(hostCyclesExecuted);
 
         /* Update statistics */
-        baseStats.numCycles += simCyclesExecuted;;
-        commitStats[thread->threadId()]->numInsts += instsExecuted;
+        baseStats.numCycles += simCyclesExecuted;
         baseStats.numInsts += instsExecuted;
         ctrInsts += instsExecuted;
+
+        const ThreadID tid = thread->threadId();
+        const bool in_user_mode = thread->getIsaPtr()->inUserMode();
+        commitStats[tid]->numInsts += instsExecuted;
+        if (in_user_mode) {
+            commitStats[tid]->numUserInsts += instsExecuted;
+        }
 
         DPRINTF(KvmRun,
                 "KVM: Executed %i instructions in %i cycles "

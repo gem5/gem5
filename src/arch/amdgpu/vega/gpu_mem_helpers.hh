@@ -133,7 +133,10 @@ template<int N>
 inline void
 initScratchReqHelper(GPUDynInstPtr gpuDynInst, MemCmd mem_req_type)
 {
-    int req_size = N * sizeof(VegaISA::VecElemU32);
+    // This function should be used for 1+ DWORD scratch accesses. 1+ DWORD
+    // scratch accesses are special in that they send multiple single DWORD
+    // requests in a swizzled manner to memory.
+    int req_size = sizeof(VegaISA::VecElemU32);
     int block_size = gpuDynInst->computeUnit()->cacheLineSize();
 
     gpuDynInst->resetEntireStatusVector();

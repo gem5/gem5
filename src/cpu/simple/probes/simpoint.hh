@@ -43,7 +43,7 @@
 #include "base/output.hh"
 #include "cpu/simple_thread.hh"
 #include "params/SimPoint.hh"
-#include "sim/probe/probe.hh"
+#include "sim/probe/probe_listener_object.hh"
 
 namespace gem5
 {
@@ -94,7 +94,7 @@ class SimPoint : public ProbeListenerObject
      * Called at every macro inst to increment basic block inst counts and
      * to profile block if end of block.
      */
-    void profile(const std::pair<SimpleThread*, StaticInstPtr>&);
+    void profile(const std::pair<SimpleThread*, const StaticInstPtr>&);
 
   private:
     /** SimPoint profiling interval size in instructions */

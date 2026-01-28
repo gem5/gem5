@@ -61,6 +61,7 @@ namespace VegaISA
 
         if (gpuDynInst->exec_mask.none()) {
             wf->decLGKMInstsIssued();
+            wf->untrackLGKMInst(gpuDynInst);
             return;
         }
 
@@ -315,6 +316,7 @@ namespace VegaISA
 
         if (gpuDynInst->exec_mask.none()) {
             wf->decLGKMInstsIssued();
+            wf->untrackLGKMInst(gpuDynInst);
             return;
         }
 
@@ -422,6 +424,7 @@ namespace VegaISA
 
         if (gpuDynInst->exec_mask.none()) {
             wf->decLGKMInstsIssued();
+            wf->untrackLGKMInst(gpuDynInst);
             return;
         }
 
@@ -486,6 +489,7 @@ namespace VegaISA
 
         if (gpuDynInst->exec_mask.none()) {
             wf->decLGKMInstsIssued();
+            wf->untrackLGKMInst(gpuDynInst);
             return;
         }
 
@@ -553,6 +557,7 @@ namespace VegaISA
 
         if (gpuDynInst->exec_mask.none()) {
             wf->decLGKMInstsIssued();
+            wf->untrackLGKMInst(gpuDynInst);
             return;
         }
 
@@ -718,6 +723,7 @@ namespace VegaISA
     Inst_DS__DS_NOP::execute(GPUDynInstPtr gpuDynInst)
     {
         gpuDynInst->wavefront()->decLGKMInstsIssued();
+        gpuDynInst->wavefront()->untrackLGKMInst(gpuDynInst);
     } // execute
     // --- Inst_DS__DS_ADD_F32 class methods ---
 
@@ -746,6 +752,7 @@ namespace VegaISA
 
         if (gpuDynInst->exec_mask.none()) {
             wf->decLGKMInstsIssued();
+            wf->untrackLGKMInst(gpuDynInst);
             return;
         }
 
@@ -808,6 +815,7 @@ namespace VegaISA
 
         if (gpuDynInst->exec_mask.none()) {
             wf->decLGKMInstsIssued();
+            wf->untrackLGKMInst(gpuDynInst);
             return;
         }
 
@@ -870,6 +878,7 @@ namespace VegaISA
 
         if (gpuDynInst->exec_mask.none()) {
             wf->decLGKMInstsIssued();
+            wf->untrackLGKMInst(gpuDynInst);
             return;
         }
 
@@ -932,6 +941,7 @@ namespace VegaISA
 
         if (gpuDynInst->exec_mask.none()) {
             wf->decLGKMInstsIssued();
+            wf->untrackLGKMInst(gpuDynInst);
             return;
         }
 
@@ -976,6 +986,9 @@ namespace VegaISA
     Inst_DS__DS_ADD_RTN_U32::Inst_DS__DS_ADD_RTN_U32(InFmt_DS *iFmt)
         : Inst_DS(iFmt, "ds_add_rtn_u32")
     {
+        setFlag(MemoryRef);
+        setFlag(AtomicAdd);
+        setFlag(AtomicReturn);
     } // Inst_DS__DS_ADD_RTN_U32
 
     Inst_DS__DS_ADD_RTN_U32::~Inst_DS__DS_ADD_RTN_U32()
@@ -990,8 +1003,59 @@ namespace VegaISA
     void
     Inst_DS__DS_ADD_RTN_U32::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (gpuDynInst->exec_mask.none()) {
+            wf->decLGKMInstsIssued();
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(
+                gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
+        ConstVecOperandU32 addr(gpuDynInst, extData.ADDR);
+        ConstVecOperandU32 data(gpuDynInst, extData.DATA0);
+
+        addr.read();
+        data.read();
+
+        calcAddr(gpuDynInst, addr);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
+                    = data[lane];
+            }
+        }
+
+        gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
     } // execute
+
+    void
+    Inst_DS__DS_ADD_RTN_U32::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        Addr offset0 = instData.OFFSET0;
+        Addr offset1 = instData.OFFSET1;
+        Addr offset = (offset1 << 8) | offset0;
+
+        initAtomicAccess<VecElemU32>(gpuDynInst, offset);
+    } // initiateAcc
+
+    void
+    Inst_DS__DS_ADD_RTN_U32::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        VecOperandU32 vdst(gpuDynInst, extData.VDST);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                vdst[lane] = (reinterpret_cast<VecElemU32*>(
+                    gpuDynInst->d_data))[lane];
+            }
+        }
+
+        vdst.write();
+    } // completeAcc
     // --- Inst_DS__DS_SUB_RTN_U32 class methods ---
 
     Inst_DS__DS_SUB_RTN_U32::Inst_DS__DS_SUB_RTN_U32(InFmt_DS *iFmt)
@@ -1309,6 +1373,9 @@ namespace VegaISA
     Inst_DS__DS_CMPST_RTN_B32::Inst_DS__DS_CMPST_RTN_B32(InFmt_DS *iFmt)
         : Inst_DS(iFmt, "ds_cmpst_rtn_b32")
     {
+        setFlag(MemoryRef);
+        setFlag(AtomicCAS);
+        setFlag(AtomicReturn);
     } // Inst_DS__DS_CMPST_RTN_B32
 
     Inst_DS__DS_CMPST_RTN_B32::~Inst_DS__DS_CMPST_RTN_B32()
@@ -1328,8 +1395,66 @@ namespace VegaISA
     void
     Inst_DS__DS_CMPST_RTN_B32::execute(GPUDynInstPtr gpuDynInst)
     {
-        panicUnimplemented();
+        //panicUnimplemented();
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (gpuDynInst->exec_mask.none()) {
+            wf->decLGKMInstsIssued();
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(
+                gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
+
+        ConstVecOperandU32 addr(gpuDynInst, extData.ADDR);
+        ConstVecOperandU32 src(gpuDynInst, extData.DATA1);
+        ConstVecOperandU32 cmp(gpuDynInst, extData.DATA0);
+
+        addr.read();
+        src.read();
+        cmp.read();
+        calcAddr(gpuDynInst, addr);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                (reinterpret_cast<VecElemU32*>(gpuDynInst->x_data))[lane]
+                    = src[lane];
+                (reinterpret_cast<VecElemU32*>(gpuDynInst->a_data))[lane]
+                    = cmp[lane];
+            }
+        }
+
+        gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
+
     } // execute
+    // --- Inst_DS__DS_CMPST_RTN_F32 class methods ---
+
+    void
+    Inst_DS__DS_CMPST_RTN_B32::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        Addr offset0 = instData.OFFSET0;
+        Addr offset1 = instData.OFFSET1;
+        Addr offset = (offset1 << 8) | offset0;
+
+        initAtomicAccess<VecElemU32>(gpuDynInst, offset);
+    } // initiateAcc
+
+    void
+    Inst_DS__DS_CMPST_RTN_B32::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        VecOperandU32 vdst(gpuDynInst, extData.VDST);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (gpuDynInst->exec_mask[lane]) {
+                vdst[lane] = (reinterpret_cast<VecElemU32*>(
+                    gpuDynInst->d_data))[lane];
+            }
+        }
+
+        vdst.write();
+    } // completeAcc
     // --- Inst_DS__DS_CMPST_RTN_F32 class methods ---
 
     Inst_DS__DS_CMPST_RTN_F32::Inst_DS__DS_CMPST_RTN_F32(InFmt_DS *iFmt)
@@ -1475,6 +1600,7 @@ namespace VegaISA
 
         if (gpuDynInst->exec_mask.none()) {
             wf->decLGKMInstsIssued();
+            wf->untrackLGKMInst(gpuDynInst);
             return;
         }
 
@@ -1539,6 +1665,7 @@ namespace VegaISA
 
         if (gpuDynInst->exec_mask.none()) {
             wf->decLGKMInstsIssued();
+            wf->untrackLGKMInst(gpuDynInst);
             return;
         }
 
@@ -1606,6 +1733,7 @@ namespace VegaISA
 
         if (gpuDynInst->exec_mask.none()) {
             wf->decLGKMInstsIssued();
+            wf->untrackLGKMInst(gpuDynInst);
             return;
         }
 
@@ -1672,6 +1800,7 @@ namespace VegaISA
 
         if (gpuDynInst->exec_mask.none()) {
             wf->decLGKMInstsIssued();
+            wf->untrackLGKMInst(gpuDynInst);
             return;
         }
 
@@ -1735,6 +1864,7 @@ namespace VegaISA
 
         if (gpuDynInst->exec_mask.none()) {
             wf->decLGKMInstsIssued();
+            wf->untrackLGKMInst(gpuDynInst);
             return;
         }
 
@@ -1819,6 +1949,7 @@ namespace VegaISA
 
         if (gpuDynInst->exec_mask.none()) {
             wf->decLGKMInstsIssued();
+            wf->untrackLGKMInst(gpuDynInst);
             return;
         }
 
@@ -1882,6 +2013,7 @@ namespace VegaISA
 
         if (gpuDynInst->exec_mask.none()) {
             wf->decLGKMInstsIssued();
+            wf->untrackLGKMInst(gpuDynInst);
             return;
         }
 
@@ -1946,6 +2078,7 @@ namespace VegaISA
 
         if (gpuDynInst->exec_mask.none()) {
             wf->decLGKMInstsIssued();
+            wf->untrackLGKMInst(gpuDynInst);
             return;
         }
 
@@ -2013,6 +2146,7 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         wf->decLGKMInstsIssued();
+        wf->untrackLGKMInst(gpuDynInst);
 
         if (gpuDynInst->exec_mask.none()) {
             return;
@@ -2149,6 +2283,7 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         wf->decLGKMInstsIssued();
+        wf->untrackLGKMInst(gpuDynInst);
 
         if (gpuDynInst->exec_mask.none()) {
             return;
@@ -2237,6 +2372,7 @@ namespace VegaISA
     {
         Wavefront *wf = gpuDynInst->wavefront();
         wf->decLGKMInstsIssued();
+        wf->untrackLGKMInst(gpuDynInst);
 
         if (gpuDynInst->exec_mask.none()) {
             return;
@@ -2326,6 +2462,7 @@ namespace VegaISA
 
         if (gpuDynInst->exec_mask.none()) {
             wf->decLGKMInstsIssued();
+            wf->untrackLGKMInst(gpuDynInst);
             return;
         }
 
@@ -2644,6 +2781,7 @@ namespace VegaISA
 
         if (gpuDynInst->exec_mask.none()) {
             wf->decLGKMInstsIssued();
+            wf->untrackLGKMInst(gpuDynInst);
             return;
         }
 
@@ -2708,6 +2846,7 @@ namespace VegaISA
 
         if (gpuDynInst->exec_mask.none()) {
             wf->decLGKMInstsIssued();
+            wf->untrackLGKMInst(gpuDynInst);
             return;
         }
 
@@ -2775,6 +2914,7 @@ namespace VegaISA
 
         if (gpuDynInst->exec_mask.none()) {
             wf->decLGKMInstsIssued();
+            wf->untrackLGKMInst(gpuDynInst);
             return;
         }
 
@@ -3384,6 +3524,7 @@ namespace VegaISA
 
         if (gpuDynInst->exec_mask.none()) {
             wf->decLGKMInstsIssued();
+            wf->untrackLGKMInst(gpuDynInst);
             return;
         }
 
@@ -3448,6 +3589,7 @@ namespace VegaISA
 
         if (gpuDynInst->exec_mask.none()) {
             wf->decLGKMInstsIssued();
+            wf->untrackLGKMInst(gpuDynInst);
             return;
         }
 
@@ -3515,6 +3657,7 @@ namespace VegaISA
 
         if (gpuDynInst->exec_mask.none()) {
             wf->decLGKMInstsIssued();
+            wf->untrackLGKMInst(gpuDynInst);
             return;
         }
 
@@ -4557,11 +4700,11 @@ namespace VegaISA
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
                 (reinterpret_cast<VecElemU32*>(
-                    gpuDynInst->d_data))[lane * 4] = data0[lane];
+                    gpuDynInst->d_data))[lane * 3] = data0[lane];
                 (reinterpret_cast<VecElemU32*>(
-                    gpuDynInst->d_data))[lane * 4 + 1] = data1[lane];
+                    gpuDynInst->d_data))[lane * 3 + 1] = data1[lane];
                 (reinterpret_cast<VecElemU32*>(
-                    gpuDynInst->d_data))[lane * 4 + 2] = data2[lane];
+                    gpuDynInst->d_data))[lane * 3 + 2] = data2[lane];
             }
         }
 
@@ -4702,11 +4845,11 @@ namespace VegaISA
         for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
             if (gpuDynInst->exec_mask[lane]) {
                 vdst0[lane] = (reinterpret_cast<VecElemU32*>(
-                    gpuDynInst->d_data))[lane * 4];
+                    gpuDynInst->d_data))[lane * 3];
                 vdst1[lane] = (reinterpret_cast<VecElemU32*>(
-                    gpuDynInst->d_data))[lane * 4 + 1];
+                    gpuDynInst->d_data))[lane * 3 + 1];
                 vdst2[lane] = (reinterpret_cast<VecElemU32*>(
-                    gpuDynInst->d_data))[lane * 4 + 2];
+                    gpuDynInst->d_data))[lane * 3 + 2];
             }
         }
 
@@ -4781,6 +4924,493 @@ namespace VegaISA
         vdst1.write();
         vdst2.write();
         vdst3.write();
+    } // completeAcc
+    // --- Inst_DS__DS_READ_B64_TR_B4 class methods ---
+
+    Inst_DS__DS_READ_B64_TR_B4::Inst_DS__DS_READ_B64_TR_B4(InFmt_DS *iFmt)
+        : Inst_DS(iFmt, "ds_read_b64_tr_b4")
+    {
+        setFlag(Load);
+    } // Inst_DS__DS_READ_B64_TR_B4
+
+    Inst_DS__DS_READ_B64_TR_B4::~Inst_DS__DS_READ_B64_TR_B4()
+    {
+    } // ~Inst_DS__DS_READ_B64_TR_B4
+
+    void
+    Inst_DS__DS_READ_B64_TR_B4::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (gpuDynInst->exec_mask.none()) {
+            wf->decLGKMInstsIssued();
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(
+                gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
+        ConstVecOperandU32 addr(gpuDynInst, extData.ADDR);
+
+        addr.read();
+
+        calcAddr(gpuDynInst, addr);
+
+        gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
+    } // execute
+
+    void
+    Inst_DS__DS_READ_B64_TR_B4::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        Addr offset0 = instData.OFFSET0;
+        Addr offset1 = instData.OFFSET1;
+        Addr offset = (offset1 << 8) | offset0;
+
+        initMemRead<VecElemU64>(gpuDynInst, offset);
+    } // initiateAcc
+
+    void
+    Inst_DS__DS_READ_B64_TR_B4::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        VecOperandU64 vdst(gpuDynInst, extData.VDST);
+
+        // Operate on 16 threads per cycle. For simulation we do 4 passes.
+        for (int pass = 0; pass < 4; ++pass) {
+            // With 4-bit datatype and 64-bits per thread, there are at most
+            // 1024 elements (e.g. 32x32 matrix).
+            //
+            // Pack into sixteen 16x 4-bit arrays to get memory-like layout
+            // (a 8x16 matrix). Invert on each pass to 16x8 and get 32x16.
+            // This looks like unpacked[0]  = 00h, 10h, 20h, ... f0h
+            //                 unpacked[1]  = 01h, 11h, 21h, ... f1h
+            //                 unpacked[2]  = 02h, 12h, 22h, ... f2h
+            //                 unpacked[3]  = 03h, 13h, 23h, ... f3h
+            //                 unpacked[4]  = 04h, 14h, 24h, ... f4h
+            //                 unpacked[5]  = 05h, 15h, 25h, ... f5h
+            //                                    ...
+            //                 unpacked[15] = 0fh, 1fh, 2fh, ... ffh
+            // 2nd pass has same values + 100h, 3rd pass has same + 200h and
+            // 4th pass has same values + 300h.
+            // +--------------+--------------+
+            // | 16x16 pass 1 | 16x16 pass 2 |
+            // +--------------+--------------+
+            // | 16x16 pass 3 | 16x16 pass 4 |
+            // +-------------+---------------+
+            uint8_t unpacked[16][16];
+
+            // 16 values per lane (64-bit read / 4-bit type).
+            for (int x = 0; x < 16; ++x) {
+                // 1 lane per column (16 values per lane and 16 rows)
+                int lane = pass * 16 + x;
+                VecElemU64 qword = (reinterpret_cast<VecElemU64*>(
+                    gpuDynInst->d_data))[lane];
+                unpacked[x][0]  = bits(qword, 63, 60);
+                unpacked[x][1]  = bits(qword, 59, 56);
+                unpacked[x][2]  = bits(qword, 55, 52);
+                unpacked[x][3]  = bits(qword, 51, 48);
+                unpacked[x][4]  = bits(qword, 47, 44);
+                unpacked[x][5]  = bits(qword, 43, 40);
+                unpacked[x][6]  = bits(qword, 39, 36);
+                unpacked[x][7]  = bits(qword, 35, 32);
+                unpacked[x][8]  = bits(qword, 31, 28);
+                unpacked[x][9]  = bits(qword, 27, 24);
+                unpacked[x][10] = bits(qword, 23, 20);
+                unpacked[x][11] = bits(qword, 19, 16);
+                unpacked[x][12] = bits(qword, 15, 12);
+                unpacked[x][13] = bits(qword, 11,  8);
+                unpacked[x][14] = bits(qword,  7,  4);
+                unpacked[x][15] = bits(qword,  3,  0);
+            }
+
+            // Next repack these 16 4-bit values into one dword for each lane.
+            // The values are the ith element of each of the 16 x16 arrays.
+            // +--------+--------+
+            // |  16x16 | 16x16  |
+            // | pass 1 | pass 2 |
+            // +--------+--------+
+            // |  16x16 | 16x16  |
+            // | pass 3 | pass 4 |
+            // +--------+--------+
+            for (int i = 0; i < 16; ++i) {
+                vdst[pass * 16 + i] = 0;
+                replaceBits(vdst[pass * 16 + i], 63, 60, unpacked[0][i]);
+                replaceBits(vdst[pass * 16 + i], 59, 56, unpacked[1][i]);
+                replaceBits(vdst[pass * 16 + i], 55, 52, unpacked[2][i]);
+                replaceBits(vdst[pass * 16 + i], 51, 48, unpacked[3][i]);
+                replaceBits(vdst[pass * 16 + i], 47, 44, unpacked[4][i]);
+                replaceBits(vdst[pass * 16 + i], 43, 40, unpacked[5][i]);
+                replaceBits(vdst[pass * 16 + i], 39, 36, unpacked[6][i]);
+                replaceBits(vdst[pass * 16 + i], 35, 32, unpacked[7][i]);
+                replaceBits(vdst[pass * 16 + i], 31, 28, unpacked[8][i]);
+                replaceBits(vdst[pass * 16 + i], 27, 24, unpacked[9][i]);
+                replaceBits(vdst[pass * 16 + i], 23, 20, unpacked[10][i]);
+                replaceBits(vdst[pass * 16 + i], 19, 16, unpacked[11][i]);
+                replaceBits(vdst[pass * 16 + i], 15, 12, unpacked[12][i]);
+                replaceBits(vdst[pass * 16 + i], 11,  8, unpacked[13][i]);
+                replaceBits(vdst[pass * 16 + i],  7,  4, unpacked[14][i]);
+                replaceBits(vdst[pass * 16 + i],  3,  0, unpacked[15][i]);
+            }
+        }
+
+        vdst.write();
+    } // completeAcc
+    // --- Inst_DS__DS_READ_B96_TR_B6 class methods ---
+
+    Inst_DS__DS_READ_B96_TR_B6::Inst_DS__DS_READ_B96_TR_B6(InFmt_DS *iFmt)
+        : Inst_DS(iFmt, "ds_read_b96_tr_b6")
+    {
+        setFlag(Load);
+    } // Inst_DS__DS_READ_B96_TR_B6
+
+    Inst_DS__DS_READ_B96_TR_B6::~Inst_DS__DS_READ_B96_TR_B6()
+    {
+    } // ~Inst_DS__DS_READ_B96_TR_B6
+
+    void
+    Inst_DS__DS_READ_B96_TR_B6::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (gpuDynInst->exec_mask.none()) {
+            wf->decLGKMInstsIssued();
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(
+                gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
+        ConstVecOperandU32 addr(gpuDynInst, extData.ADDR);
+
+        addr.read();
+
+        calcAddr(gpuDynInst, addr);
+
+        gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
+    } // execute
+
+    void
+    Inst_DS__DS_READ_B96_TR_B6::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        Addr offset0 = instData.OFFSET0;
+        Addr offset1 = instData.OFFSET1;
+        Addr offset = (offset1 << 8) | offset0;
+
+        initMemRead<3>(gpuDynInst, offset);
+    } // initiateAcc
+
+    void
+    Inst_DS__DS_READ_B96_TR_B6::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        VecOperandU32 vdst0(gpuDynInst, extData.VDST + 0);
+        VecOperandU32 vdst1(gpuDynInst, extData.VDST + 1);
+        VecOperandU32 vdst2(gpuDynInst, extData.VDST + 2);
+
+        // Operate on 16 threads per cycle. For simulation we do 4 passes.
+        for (int pass = 0; pass < 4; ++pass) {
+            // With 6-bit datatype and 96-bits per thread, there are at most
+            // 1024 elements (e.g. 32x32 matrix).
+            //
+            // Pack into sixteen 16x 4-bit arrays to get memory-like layout
+            // (a 8x16 matrix). Invert on each pass to 16x8 and get 32x16.
+            // This looks like unpacked[0]  = 00h, 10h, 20h, ... f0h
+            //                 unpacked[1]  = 01h, 11h, 21h, ... f1h
+            //                 unpacked[2]  = 02h, 12h, 22h, ... f2h
+            //                 unpacked[3]  = 03h, 13h, 23h, ... f3h
+            //                 unpacked[4]  = 04h, 14h, 24h, ... f4h
+            //                 unpacked[5]  = 05h, 15h, 25h, ... f5h
+            //                                    ...
+            //                 unpacked[15] = 0fh, 1fh, 2fh, ... ffh
+            // 2nd pass has same values + 100h, 3rd pass has same + 200h and
+            // 4th pass has same values + 300h.
+            // +--------------+--------------+
+            // | 16x16 pass 1 | 16x16 pass 2 |
+            // +--------------+--------------+
+            // | 16x16 pass 3 | 16x16 pass 4 |
+            // +-------------+---------------+
+            uint8_t unpacked[16][16];
+
+            // 16 values per lane (64-bit read / 4-bit type).
+            for (int x = 0; x < 16; ++x) {
+                // 1 lane per column (16 values per lane and 16 rows)
+                int lane = pass * 16 + x;
+                VecElemU32 dword0 = (reinterpret_cast<VecElemU64*>(
+                    gpuDynInst->d_data))[lane * 4 + 0];
+                VecElemU32 dword1 = (reinterpret_cast<VecElemU64*>(
+                    gpuDynInst->d_data))[lane * 4 + 1];
+                VecElemU32 dword2 = (reinterpret_cast<VecElemU64*>(
+                    gpuDynInst->d_data))[lane * 4 + 2];
+
+                PackedReg<96, 6> tdword;
+                tdword.setDword(0, dword0);
+                tdword.setDword(1, dword1);
+                tdword.setDword(2, dword2);
+
+                unpacked[x][0]  = tdword.getElem(15);
+                unpacked[x][1]  = tdword.getElem(14);
+                unpacked[x][2]  = tdword.getElem(13);
+                unpacked[x][3]  = tdword.getElem(12);
+                unpacked[x][4]  = tdword.getElem(11);
+                unpacked[x][5]  = tdword.getElem(10);
+                unpacked[x][6]  = tdword.getElem(9);
+                unpacked[x][7]  = tdword.getElem(8);
+                unpacked[x][8]  = tdword.getElem(7);
+                unpacked[x][9]  = tdword.getElem(6);
+                unpacked[x][10] = tdword.getElem(5);
+                unpacked[x][11] = tdword.getElem(4);
+                unpacked[x][12] = tdword.getElem(3);
+                unpacked[x][13] = tdword.getElem(2);
+                unpacked[x][14] = tdword.getElem(1);
+                unpacked[x][15] = tdword.getElem(0);
+            }
+
+            // Next repack these 16 6-bit values into 3 dwords for each lane.
+            // Each lane is simply the values in the unpacked array, but some
+            // value will span multiple dwords, so we use the PackedReg helper.
+            // +--------+--------+
+            // |  16x16 | 16x16  |
+            // | pass 1 | pass 2 |
+            // +--------+--------+
+            // |  16x16 | 16x16  |
+            // | pass 3 | pass 4 |
+            // +--------+--------+
+            for (int i = 0; i < 16; ++i) {
+                PackedReg<96, 6> tdword;
+                tdword.setDword(0, 0);
+                tdword.setDword(1, 0);
+                tdword.setDword(2, 0);
+
+                tdword.setElem(15, unpacked[0][i]);
+                tdword.setElem(14, unpacked[1][i]);
+                tdword.setElem(13, unpacked[2][i]);
+                tdword.setElem(12, unpacked[3][i]);
+                tdword.setElem(11, unpacked[4][i]);
+                tdword.setElem(10, unpacked[5][i]);
+                tdword.setElem(9,  unpacked[6][i]);
+                tdword.setElem(8,  unpacked[7][i]);
+                tdword.setElem(7,  unpacked[8][i]);
+                tdword.setElem(6,  unpacked[9][i]);
+                tdword.setElem(5,  unpacked[10][i]);
+                tdword.setElem(4,  unpacked[11][i]);
+                tdword.setElem(3,  unpacked[12][i]);
+                tdword.setElem(2,  unpacked[13][i]);
+                tdword.setElem(1,  unpacked[14][i]);
+                tdword.setElem(0,  unpacked[15][i]);
+            }
+        }
+
+        vdst0.write();
+        vdst1.write();
+        vdst2.write();
+    } // completeAcc
+    // --- Inst_DS__DS_READ_B64_TR_B8 class methods ---
+
+    Inst_DS__DS_READ_B64_TR_B8::Inst_DS__DS_READ_B64_TR_B8(InFmt_DS *iFmt)
+        : Inst_DS(iFmt, "ds_read_b64_tr_b8")
+    {
+        setFlag(Load);
+    } // Inst_DS__DS_READ_B64_TR_B8
+
+    Inst_DS__DS_READ_B64_TR_B8::~Inst_DS__DS_READ_B64_TR_B8()
+    {
+    } // ~Inst_DS__DS_READ_B64_TR_B8
+
+    void
+    Inst_DS__DS_READ_B64_TR_B8::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (gpuDynInst->exec_mask.none()) {
+            wf->decLGKMInstsIssued();
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(
+                gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
+        ConstVecOperandU32 addr(gpuDynInst, extData.ADDR);
+
+        addr.read();
+
+        calcAddr(gpuDynInst, addr);
+
+        gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
+    } // execute
+
+    void
+    Inst_DS__DS_READ_B64_TR_B8::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        Addr offset0 = instData.OFFSET0;
+        Addr offset1 = instData.OFFSET1;
+        Addr offset = (offset1 << 8) | offset0;
+
+        initMemRead<VecElemU64>(gpuDynInst, offset);
+    } // initiateAcc
+
+    void
+    Inst_DS__DS_READ_B64_TR_B8::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        VecOperandU64 vdst(gpuDynInst, extData.VDST);
+
+        // Operate on 16 threads per cycle. For simulation we do 4 passes.
+        for (int pass = 0; pass < 4; ++pass) {
+            // With 8-bit datatype and 64-bits per thread, there are at most
+            // 512 elements (e.g. 16x32 matrix).
+            //
+            // Pack into eight 16x 8-bit arrays to get memory-like layout
+            // (a 8x16 matrix). Invert on each pass to 16x8 and get 32x16.
+            // This looks like unpacked[0] = 00h, 10h, 20h, ... f0h
+            //                 unpacked[1] = 01h, 11h, 21h, ... f1h
+            //                 unpacked[2] = 02h, 12h, 22h, ... f2h
+            //                 unpacked[3] = 03h, 13h, 23h, ... f3h
+            //                 unpacked[4] = 04h, 14h, 24h, ... f4h
+            //                 unpacked[5] = 05h, 15h, 25h, ... f5h
+            //                 unpacked[6] = 06h, 16h, 26h, ... f6h
+            //                 unpacked[7] = 07h, 17h, 27h, ... f7h
+            // 2nd pass has lower nibbles 8-f. 3rd and 4th have same as
+            // 1st and 2nd pass with 100h added:
+            // +-------------+-------------+
+            // | 8x16 pass 1 | 8x16 pass 2 |
+            // +-------------+-------------+
+            // | 8x16 pass 3 | 8x16 pass 4 |
+            // +-------------+-------------+
+            uint8_t unpacked[8][16];
+
+            // 8 values per lane (64-bit read / 8-bit type)
+            for (int x = 0; x < 8; ++x) {
+                // 2 lanes per column (8 values per lane and 16 rows)
+                for (int y = 0; y < 2; ++y) {
+                    int lane = pass * 16 + x * 2 + y;
+                    VecElemU64 qword = (reinterpret_cast<VecElemU64*>(
+                        gpuDynInst->d_data))[lane];
+                    unpacked[x][y * 8 + 0] = bits(qword, 63, 56);
+                    unpacked[x][y * 8 + 1] = bits(qword, 55, 48);
+                    unpacked[x][y * 8 + 2] = bits(qword, 47, 40);
+                    unpacked[x][y * 8 + 3] = bits(qword, 39, 32);
+                    unpacked[x][y * 8 + 4] = bits(qword, 31, 24);
+                    unpacked[x][y * 8 + 5] = bits(qword, 23, 16);
+                    unpacked[x][y * 8 + 6] = bits(qword, 15, 8);
+                    unpacked[x][y * 8 + 7] = bits(qword,  7, 0);
+                }
+            }
+
+            // Next repack these 8 8-bit values into one dword for each lane.
+            // The values are the ith element of each of the eight x16 arrays.
+            // +--------+--------+
+            // |  16x8  |  16x8  |
+            // | pass 1 | pass 2 |
+            // +--------+--------+
+            // |  16x8  |  16x8  |
+            // | pass 3 | pass 4 |
+            // +--------+--------+
+            for (int i = 0; i < 16; ++i) {
+                vdst[pass * 16 + i] = 0;
+                replaceBits(vdst[pass * 16 + i], 63, 56, unpacked[0][i]);
+                replaceBits(vdst[pass * 16 + i], 55, 48, unpacked[1][i]);
+                replaceBits(vdst[pass * 16 + i], 47, 40, unpacked[2][i]);
+                replaceBits(vdst[pass * 16 + i], 39, 32, unpacked[3][i]);
+                replaceBits(vdst[pass * 16 + i], 31, 24, unpacked[4][i]);
+                replaceBits(vdst[pass * 16 + i], 23, 16, unpacked[5][i]);
+                replaceBits(vdst[pass * 16 + i], 15,  8, unpacked[6][i]);
+                replaceBits(vdst[pass * 16 + i],  7,  0, unpacked[7][i]);
+            }
+        }
+
+        vdst.write();
+    } // completeAcc
+    // --- Inst_DS__DS_READ_B64_TR_B16 class methods ---
+
+    Inst_DS__DS_READ_B64_TR_B16::Inst_DS__DS_READ_B64_TR_B16(InFmt_DS *iFmt)
+        : Inst_DS(iFmt, "ds_read_b64_tr_b16")
+    {
+        setFlag(Load);
+    } // Inst_DS__DS_READ_B64_TR_B16
+
+    Inst_DS__DS_READ_B64_TR_B16::~Inst_DS__DS_READ_B64_TR_B16()
+    {
+    } // ~Inst_DS__DS_READ_B64_TR_B16
+
+    void
+    Inst_DS__DS_READ_B64_TR_B16::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+
+        if (gpuDynInst->exec_mask.none()) {
+            wf->decLGKMInstsIssued();
+            return;
+        }
+
+        gpuDynInst->execUnitId = wf->execUnitId;
+        gpuDynInst->latency.init(gpuDynInst->computeUnit());
+        gpuDynInst->latency.set(
+                gpuDynInst->computeUnit()->cyclesToTicks(Cycles(24)));
+        ConstVecOperandU32 addr(gpuDynInst, extData.ADDR);
+
+        addr.read();
+
+        calcAddr(gpuDynInst, addr);
+
+        gpuDynInst->computeUnit()->localMemoryPipe.issueRequest(gpuDynInst);
+    } // execute
+
+    void
+    Inst_DS__DS_READ_B64_TR_B16::initiateAcc(GPUDynInstPtr gpuDynInst)
+    {
+        Addr offset0 = instData.OFFSET0;
+        Addr offset1 = instData.OFFSET1;
+        Addr offset = (offset1 << 8) | offset0;
+
+        initMemRead<VecElemU64>(gpuDynInst, offset);
+    } // initiateAcc
+
+    void
+    Inst_DS__DS_READ_B64_TR_B16::completeAcc(GPUDynInstPtr gpuDynInst)
+    {
+        VecOperandU64 vdst(gpuDynInst, extData.VDST);
+
+        // Operate on 16 threads per cycle. For simulation we do 4 passes.
+        for (int pass = 0; pass < 4; ++pass) {
+            // With 16-bit datatype and 64-bits per thread, there are at most
+            // 256 elements (e.g. 16x16 matrix).
+            //
+            // Pack into four 16x 16-bit arrays to get memory-like layout
+            // (a 4x16 matrix). Inverts to a 16x4 on each pass to 16x16.
+            // This looks like unpacked[0] = 00h, 10h, 20h, ... f0h
+            //                 unpacked[1] = 01h, 11h, 21h, ... f1h
+            //                 unpacked[2] = 02h, 12h, 22h, ... f2h
+            //                 unpacked[3] = 03h, 13h, 23h, ... f3h
+            // 2nd pass has lower nibbles 4-7, 3rd has 8-b, 4th has c-f.
+            uint16_t unpacked[4][16];
+
+            for (int x = 0; x < 4; ++x) {
+                for (int y = 0; y < 4; ++y) {
+                    int lane = pass * 16 + x * 4 + y;
+                    VecElemU64 qword = (reinterpret_cast<VecElemU64*>(
+                        gpuDynInst->d_data))[lane];
+                    unpacked[x][y * 4 + 0] = bits(qword, 63, 48);
+                    unpacked[x][y * 4 + 1] = bits(qword, 47, 32);
+                    unpacked[x][y * 4 + 2] = bits(qword, 31, 16);
+                    unpacked[x][y * 4 + 3] = bits(qword, 15, 0);
+                }
+            }
+
+            // Next repack these 4 16-bit values into one dword for each lane.
+            // The values are the ith element of each of the four x16 arrays.
+            for (int i = 0; i < 16; ++i) {
+                vdst[pass * 16 + i] = insertBits(vdst[pass * 16 + i], 63, 48,
+                                                 unpacked[0][i]);
+                vdst[pass * 16 + i] = insertBits(vdst[pass * 16 + i], 47, 32,
+                                                 unpacked[1][i]);
+                vdst[pass * 16 + i] = insertBits(vdst[pass * 16 + i], 31, 16,
+                                                 unpacked[2][i]);
+                vdst[pass * 16 + i] = insertBits(vdst[pass * 16 + i], 15, 0,
+                                                 unpacked[3][i]);
+            }
+        }
+
+        vdst.write();
     } // completeAcc
 } // namespace VegaISA
 } // namespace gem5

@@ -45,6 +45,7 @@
 #include "dev/arm/base_gic.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
+#include "params/VGic.hh"
 
 namespace gem5
 {

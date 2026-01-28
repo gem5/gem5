@@ -46,6 +46,7 @@
 #include <memory>
 
 #include "arch/arm/regs/misc.hh"
+#include "arch/arm/regs/misc_info.hh"
 #include "arch/arm/tracers/tarmac_base.hh"
 #include "base/printable.hh"
 #include "cpu/reg_class.hh"

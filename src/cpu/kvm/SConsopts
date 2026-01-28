@@ -44,7 +44,7 @@ with gem5_scons.Configure(main) as conf:
         warning("Info: Compatible header file <linux/kvm.h> not found, "
                 "disabling KVM support.")
     elif not conf.CheckLibWithHeader([None, 'rt'], [ 'time.h', 'signal.h' ],
-            'C', 'timer_create(CLOCK_MONOTONIC, NULL, NULL);'):
+            'C', call='timer_create(CLOCK_MONOTONIC, NULL, NULL);'):
         warning("Cannot enable KVM, host doesn't support POSIX timers")
     else:
         # Generic support is available. We'll let the ISAs figure out if

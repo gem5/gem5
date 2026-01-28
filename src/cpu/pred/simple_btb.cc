@@ -55,8 +55,8 @@ SimpleBTB::SimpleBTB(const SimpleBTBParams &p)
 {
     DPRINTF(BTB, "BTB: Creating BTB object.\n");
 
-    if (!isPowerOf2(p.numEntries)) {
-        fatal("BTB entries is not a power of 2!");
+    if (!isPowerOf2(p.numEntries / p.associativity)) {
+        fatal("BTB sets is not a power of 2!");
     }
 }
 

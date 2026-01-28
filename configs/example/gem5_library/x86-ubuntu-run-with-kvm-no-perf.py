@@ -1,4 +1,4 @@
-# Copyright (c) 2023 The Regents of the University of California
+# Copyright (c) 2023-2025 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,15 +26,15 @@
 
 """
 
-This script demonstrates how to use KVM CPU without perf.
-This simulation boots Ubuntu 18.04 using 2 KVM CPUs without using perf.
+This script demonstrates how to use the KVM CPU without perf.
+This simulation boots Ubuntu 24.04 using 2 KVM CPUs without using perf.
 
 Usage
 -----
 
 ```
-scons build/X86/gem5.opt -j`nproc`
-./build/X86/gem5.opt configs/example/gem5_library/x86-ubuntu-run-with-kvm-no-perf.py
+scons build/ALL/gem5.opt -j`nproc`
+./build/ALL/gem5.opt configs/example/gem5_library/x86-ubuntu-run-with-kvm-no-perf.py
 ```
 """
 
@@ -50,14 +50,17 @@ from gem5.components.processors.simple_switchable_processor import (
 )
 from gem5.isas import ISA
 from gem5.resources.resource import obtain_resource
-from gem5.simulate.exit_event import ExitEvent
+from gem5.simulate.exit_handler import (
+    AfterBootExitHandler,
+    ExitHandler,
+)
 from gem5.simulate.simulator import Simulator
+from gem5.utils.override import overrides
 from gem5.utils.requires import requires
 
-# This simulation requires using KVM with gem5 compiled for X86 simulation
-# and with MESI_Two_Level cache coherence protocol.
+# This checks if the host system supports KVM. It also checks if the gem5
+# binary is compiled to include the MESI_Two_Level cache coherence protocol.
 requires(
-    isa_required=ISA.X86,
     coherence_protocol_required=CoherenceProtocol.MESI_TWO_LEVEL,
     kvm_required=True,
 )
@@ -79,12 +82,13 @@ cache_hierarchy = MESITwoLevelCacheHierarchy(
 # Main memory
 memory = SingleChannelDDR4_2400(size="3GiB")
 
-# This is a switchable CPU. We first boot Ubuntu using KVM, then the guest
-# will exit the simulation by calling "m5 exit" (see the `command` variable
-# below, which contains the command to be run in the guest after booting).
-# Upon exiting from the simulation, the Exit Event handler will switch the
-# CPU type (see the ExitEvent.EXIT line below, which contains a map to
-# a function to be called when an exit event happens).
+# Here we set up the processor. This is a special switchable processor in which
+# a starting core type and a switch core type must be specified. Once a
+# configuration is instantiated a user may call `processor.switch()` or
+# `simulator.switch_processor()`, if using a hypercall exit handler, to switch
+# from the starting core types to the switch core types. In this simulation
+# we start with KVM cores to simulate the OS boot, then switch to the Timing
+# cores for the command we wish to run after boot.
 processor = SimpleSwitchableProcessor(
     starting_core_type=CPUTypes.KVM,
     switch_core_type=CPUTypes.TIMING,
@@ -96,7 +100,7 @@ processor = SimpleSwitchableProcessor(
 for proc in processor.start:
     proc.core.usePerf = False
 
-# Here we setup the board. The X86Board allows for Full-System X86 simulations.
+# Here we set up the board. The X86Board allows for Full-System X86 simulations.
 board = X86Board(
     clk_freq="3GHz",
     processor=processor,
@@ -104,33 +108,54 @@ board = X86Board(
     cache_hierarchy=cache_hierarchy,
 )
 
-workload = obtain_resource("x86-ubuntu-24.04-boot-with-systemd")
+workload = obtain_resource(
+    "x86-ubuntu-24.04-boot-with-systemd", resource_version="5.0.0"
+)
 board.set_workload(workload)
 
+# Examples of how you can override the default exit handler behaviors.
+# Exit handlers don't have to be specified in the config script if you don't
+# want to modify/override their default behaviors. Below, we override the
+# default after-boot exit handler to switch processors.
 
-def exit_event_handler():
-    print("First exit: kernel booted")
-    yield False  # gem5 is now executing systemd startup
-    print("Second exit: Started `after_boot.sh` script")
-    # The after_boot.sh script is executed after the kernel and systemd have
-    # booted.
-    # Here we switch the CPU type to Timing.
-    print("Switching to Timing CPU")
-    processor.switch()
-    yield False  # gem5 is now executing the `after_boot.sh` script
-    print("Third exit: Finished `after_boot.sh` script")
-    # The after_boot.sh script will run a script if it is passed via
-    # m5 readfile. This is the last exit event before the simulation exits.
-    yield True
+# You can inherit from either the class that handles a certain hypercall by
+# default, or inherit directly from ExitHandler and specify a hypercall number.
+# See src/python/gem5/simulate/exit_handler.py for more information on which
+# behaviors map to which hypercalls, and what the default behaviors are.
 
 
-simulator = Simulator(
-    board=board,
-    on_exit_event={
-        # Here we want override the default behavior for the first m5 exit
-        # exit event.
-        ExitEvent.EXIT: exit_event_handler()
-    },
-)
+class CustomKernelBootedExitHandler(ExitHandler, hypercall_num=1):
+    @overrides(ExitHandler)
+    def _process(self, simulator: "Simulator") -> None:
+        print("First exit: kernel booted")
+
+    @overrides(ExitHandler)
+    def _exit_simulation(self) -> bool:
+        return False
+
+
+class SwitchProcessorAfterBootExitHandler(AfterBootExitHandler):
+    @overrides(AfterBootExitHandler)
+    def _process(self, simulator: "Simulator") -> None:
+        print("Second exit: Started `after_boot.sh` script")
+        print("Switching to Timing CPU")
+        simulator.switch_processor()
+
+    @overrides(AfterBootExitHandler)
+    def _exit_simulation(self) -> bool:
+        return False
+
+
+class AfterBootScriptExitHandler(ExitHandler, hypercall_num=3):
+    @overrides(ExitHandler)
+    def _process(self, simulator: "Simulator") -> None:
+        print(f"Third exit: {self.get_handler_description()}")
+
+    @overrides(ExitHandler)
+    def _exit_simulation(self) -> bool:
+        return True
+
+
+simulator = Simulator(board=board)
 
 simulator.run()

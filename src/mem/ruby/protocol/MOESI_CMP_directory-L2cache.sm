@@ -2900,14 +2900,12 @@ machine(MachineType:L2Cache, "Token protocol")
 
   transition({MI, OI}, Writeback_Ack, I) {
     qq_sendDataFromTBEToMemory;
-    removeFromDir;
     s_deallocateTBE;
     n_popResponseQueue;
     wa_wakeUpDependents;
   }
 
   transition(MII, Writeback_Nack, I) {
-    removeFromDir;
     s_deallocateTBE;
     n_popResponseQueue;
     wa_wakeUpDependents;
@@ -2927,7 +2925,6 @@ machine(MachineType:L2Cache, "Token protocol")
 
   transition(MII, Writeback_Ack, I) {
     f_sendUnblock;
-    removeFromDir;
     s_deallocateTBE;
     n_popResponseQueue;
     wa_wakeUpDependents;

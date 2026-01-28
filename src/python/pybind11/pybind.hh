@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 ARM Limited
+ * Copyright (c) 2017, 2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -49,6 +49,8 @@ void pybind_init_debug(pybind11::module_ &m_native);
 
 void pybind_init_event(pybind11::module_ &m_native);
 void pybind_init_stats(pybind11::module_ &m_native);
+
+void pybind_init_port(pybind11::module_ &m_native);
 
 } // namespace gem5
 

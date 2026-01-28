@@ -77,8 +77,14 @@ dFMT convertMXFP(sFMT in, mxfpRoundingMode mode = roundTiesToEven,
     dFMT out;
     out.storage = 0;
 
-    if (int(sFMT::mbits) >= int(dFMT::mbits) &&
-        int(sFMT::ebits) >= int(dFMT::ebits)) {
+    // Optimize self-conversions which may happen due to copy constructors.
+    if (std::is_same_v<sFMT, dFMT>) {
+        out.storage = in.storage;
+        return out;
+    }
+
+    if constexpr (int(sFMT::mbits) >= int(dFMT::mbits) &&
+                  int(sFMT::ebits) >= int(dFMT::ebits)) {
         // Input format is larger, truncate and round mantissa. MX formats
         // are subnormal if exp == 0. Zero out exp in that case.
 
@@ -134,7 +140,7 @@ dFMT convertMXFP(sFMT in, mxfpRoundingMode mode = roundTiesToEven,
             mant >>= (sFMT::mbits - dFMT::mbits);
 
             // Output became subnormal
-            if (exp < 1) {
+            if (exp < 1 && in.exp) {
                 int shift = 1 - exp;
                 mant >>= shift;
                 out.exp = 0;
@@ -197,17 +203,6 @@ dFMT convertMXFP(sFMT in, mxfpRoundingMode mode = roundTiesToEven,
 
                 if (check_test > 0x4) {
                     round_up = true;
-                } else if (check_test == 0x4) {
-                    // We are exactly between two FP values. Round to nearest
-                    // even by looking at the last bit of output mantissa.
-                    // If the last bit of the output mantissa is 1, round to
-                    // nearest even (0 in last bit) which would simply be
-                    // rounding down. The bit position of the last bit in this
-                    // case is 0x8 since we kept three extra bits for guard,
-                    // round, sticky.
-                    if (check_mant & 0x8) {
-                        out.mant -= 1;
-                    }
                 }
 
                 if (round_up) {
@@ -249,7 +244,7 @@ dFMT convertMXFP(sFMT in, mxfpRoundingMode mode = roundTiesToEven,
                 // Round up if the number we drew is less than the rounding
                 // probability. E.g., if round_prob is 90% (0.9) we choose
                 // values 0.0f - 0.90f to round up.
-                if (round_prob >= draw_prob) {
+                if (round_prob <= draw_prob) {
                     if (out.mant == mask(dFMT::mbits)) {
                         // mantissa at max value, increment exponent if not inf
                         if (out.exp != mask(dFMT::ebits)) {
@@ -262,8 +257,8 @@ dFMT convertMXFP(sFMT in, mxfpRoundingMode mode = roundTiesToEven,
                 }
             }
         }
-    } else if (int(sFMT::mbits) <= int(dFMT::mbits) &&
-               int(sFMT::ebits) <= int(dFMT::ebits)) {
+    } else if constexpr (int(sFMT::mbits) <= int(dFMT::mbits) &&
+                         int(sFMT::ebits) <= int(dFMT::ebits)) {
         // Input format is smaller. Extend mantissa / exponent and pad with 0.
         // Should be the same for all non-stochastic rounding modes.
 
@@ -307,7 +302,9 @@ dFMT convertMXFP(sFMT in, mxfpRoundingMode mode = roundTiesToEven,
             out.exp  = in.exp + dFMT::bias - sFMT::bias;
             out.sign = in.sign;
 
-            // Normalize input denormals
+            // Normalize input denormals. This only applies when exponents are
+            // different. Otherwise, the operation is simply a zero extend of
+            // mantissa (e.g., bf16 -> f32).
             if (!in.exp && int(sFMT::ebits) != int(dFMT::ebits)) {
                 uint32_t m = out.mant;
                 if (m != 0) {
@@ -318,12 +315,6 @@ dFMT convertMXFP(sFMT in, mxfpRoundingMode mode = roundTiesToEven,
                     }
                     out.mant = m & mask(dFMT::mbits);
                 }
-            } else if (!in.exp) {
-                // Exponent is the same, but output is not denorm, so add
-                // implicit 1. This is specific mainly to bf16 -> f32.
-                uint32_t m = out.mant;
-                m <<= 1;
-                out.mant = m & mask(dFMT::mbits);
             }
         }
     } else {

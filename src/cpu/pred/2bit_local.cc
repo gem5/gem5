@@ -52,7 +52,7 @@ namespace branch_prediction
 {
 
 LocalBP::LocalBP(const LocalBPParams &params)
-    : BPredUnit(params),
+    : ConditionalPredictor(params),
       localPredictorSize(params.localPredictorSize),
       localCtrBits(params.localCtrBits),
       localPredictorSets(localPredictorSize / localCtrBits),
@@ -78,9 +78,16 @@ LocalBP::LocalBP(const LocalBPParams &params)
             instShiftAmt);
 }
 
+void LocalBP::branchPlaceholder(ThreadID tid, Addr pc,
+                                bool uncond, void * &bpHistory)
+{
+// Placeholder for a function that only returns history items
+}
+
 void
-LocalBP::updateHistories(ThreadID tid, Addr pc, bool uncond,
-                         bool taken, Addr target, void * &bp_history)
+LocalBP::updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
+                         Addr target, const StaticInstPtr &inst,
+                         void * &bp_history)
 {
 // Place holder for a function that is called to update predictor history
 }

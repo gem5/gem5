@@ -62,7 +62,7 @@ using namespace PowerISA;
 TLB::TLB(const Params &p) : BaseTLB(p), size(p.size), nlu(0)
 {
     table = new PowerISA::PTE[size];
-    memset(table, 0, sizeof(PowerISA::PTE[size]));
+    memset(table, 0, sizeof(PowerISA::PTE) * size);
     smallPages = 0;
 }
 
@@ -184,7 +184,7 @@ void
 TLB::flushAll()
 {
     DPRINTF(TLB, "flushAll\n");
-    memset(table, 0, sizeof(PowerISA::PTE[size]));
+    memset(table, 0, sizeof(PowerISA::PTE) * size);
     lookupTable.clear();
     nlu = 0;
 }

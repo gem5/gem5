@@ -30,36 +30,61 @@
 
 Import('*')
 
-if env['CONF']['USE_POWER_ISA']:
-    env.TagImplies('power isa', 'gem5 lib')
+if not env['CONF']['USE_POWER_ISA']:
+    Return()
 
-Source('decoder.cc', tags='power isa')
-Source('faults.cc', tags='power isa')
-Source('insts/branch.cc', tags='power isa')
-Source('insts/mem.cc', tags='power isa')
-Source('insts/integer.cc', tags='power isa')
-Source('insts/floating.cc', tags='power isa')
-Source('insts/condition.cc', tags='power isa')
-Source('insts/static_inst.cc', tags='power isa')
-Source('linux/se_workload.cc', tags='power isa')
-Source('isa.cc', tags='power isa')
-Source('pagetable.cc', tags='power isa')
-Source('process.cc', tags='power isa')
-Source('remote_gdb.cc', tags='power isa')
-Source('se_workload.cc', tags='power isa')
-Source('tlb.cc', tags='power isa')
+env.TagImplies('power isa', 'gem5 lib')
 
-SimObject('PowerDecoder.py', sim_objects=['PowerDecoder'], tags='power isa')
-SimObject('PowerInterrupts.py', sim_objects=['PowerInterrupts'],
-    tags='power isa')
-SimObject('PowerISA.py', sim_objects=['PowerISA'], tags='power isa')
-SimObject('PowerMMU.py', sim_objects=['PowerMMU'], tags='power isa')
-SimObject('PowerSeWorkload.py', sim_objects=[
-    'PowerSEWorkload', 'PowerEmuLinux'], tags='power isa')
-SimObject('PowerTLB.py', sim_objects=['PowerTLB'], tags='power isa')
+env.TagImplies('isa', 'power isa')
 
-SimObject('PowerCPU.py', sim_objects=[], tags='power isa')
+Source('decoder.cc', tags=['power isa'])
+Source('faults.cc', tags=['power isa'])
+Source('insts/branch.cc', tags=['power isa'])
+Source('insts/mem.cc', tags=['power isa'])
+Source('insts/integer.cc', tags=['power isa'])
+Source('insts/floating.cc', tags=['power isa'])
+Source('insts/condition.cc', tags=['power isa'])
+Source('insts/static_inst.cc', tags=['power isa'])
+Source('linux/se_workload.cc', tags=['power isa'])
+Source('isa.cc', tags=['power isa'])
+Source('pagetable.cc', tags=['power isa'])
+Source('process.cc', tags=['power isa'])
+Source('remote_gdb.cc', tags=['power isa'])
+Source('se_workload.cc', tags=['power isa'])
+Source('tlb.cc', tags=['power isa'])
 
-DebugFlag('Power', tags='power isa')
+SimObject(
+    'PowerDecoder.py',
+    sim_objects=['PowerDecoder'],
+    tags=['power isa']
+)
+SimObject(
+    'PowerInterrupts.py',
+    sim_objects=['PowerInterrupts'],
+    tags=['power isa']
+)
+SimObject(
+    'PowerISA.py',
+    sim_objects=['PowerISA'],
+    tags=['power isa']
+)
+SimObject(
+    'PowerMMU.py',
+    sim_objects=['PowerMMU'],
+    tags=['power isa']
+)
+SimObject(
+    'PowerSeWorkload.py',
+    sim_objects=['PowerSEWorkload', 'PowerEmuLinux'],
+    tags=['power isa'])
+SimObject(
+    'PowerTLB.py',
+    sim_objects=['PowerTLB'],
+    tags=['power isa']
+)
 
-ISADesc('isa/main.isa', tags='power isa')
+SimObject('PowerCPU.py', sim_objects=[], tags=['power isa'])
+
+DebugFlag('Power', tags=['power isa'])
+
+ISADesc('isa/main.isa', tags=['power isa'])

@@ -34,7 +34,7 @@
 #include "debug/InstTracker.hh"
 #include "params/GlobalInstTracker.hh"
 #include "params/LocalInstTracker.hh"
-#include "sim/probe/probe.hh"
+#include "sim/probe/probe_listener_object.hh"
 #include "sim/sim_exit.hh"
 
 namespace gem5

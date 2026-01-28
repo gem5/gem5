@@ -495,7 +495,8 @@ TLBTypes::KeyType::KeyType(const TlbEntry &entry)
     vmid(entry.vmid), ss(entry.ss),
     functional(false),
     targetRegime(entry.regime),
-    mode(BaseMMU::Read)
+    mode(entry.type == TypeTLB::instruction ?
+        BaseMMU::Execute : BaseMMU::Read)
 {}
 
 } // namespace ArmISA

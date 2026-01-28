@@ -121,7 +121,7 @@ def create_system(
 
         clk_domain = cpus[i].clk_domain
 
-        l1_cntrl = L1Cache_Controller(
+        l1_cntrl = MOESI_CMP_token_L1Cache_Controller(
             version=i,
             L1Icache=l1i_cache,
             L1Dcache=l1d_cache,
@@ -179,7 +179,7 @@ def create_system(
             start_index_bit=l2_index_start,
         )
 
-        l2_cntrl = L2Cache_Controller(
+        l2_cntrl = MOESI_CMP_token_L2Cache_Controller(
             version=i,
             L2cache=l2_cache,
             N_tokens=n_tokens,
@@ -253,7 +253,7 @@ def create_system(
             version=i, ruby_system=ruby_system, in_ports=dma_port
         )
 
-        dma_cntrl = DMA_Controller(
+        dma_cntrl = MOESI_CMP_token_DMA_Controller(
             version=i,
             dma_sequencer=dma_seq,
             transitions_per_cycle=options.ports,
@@ -278,7 +278,7 @@ def create_system(
     if full_system:
         io_seq = DMASequencer(version=len(dma_ports), ruby_system=ruby_system)
         ruby_system._io_port = io_seq
-        io_controller = DMA_Controller(
+        io_controller = MOESI_CMP_token_DMA_Controller(
             version=len(dma_ports),
             dma_sequencer=io_seq,
             ruby_system=ruby_system,

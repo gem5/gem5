@@ -63,9 +63,15 @@
 #include "dev/io_device.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
+#include "params/Gicv2m.hh"
+#include "params/Gicv2mFrame.hh"
 
 namespace gem5
 {
+
+Gicv2mFrame::Gicv2mFrame(const Params &p)
+    : SimObject(p), addr(p.addr), spi_base(p.spi_base), spi_len(p.spi_len)
+{}
 
 Gicv2m::Gicv2m(const Params &p)
     : PioDevice(p), pioDelay(p.pio_delay), frames(p.frames), gic(p.gic)

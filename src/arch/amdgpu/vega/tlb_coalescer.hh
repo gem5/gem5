@@ -34,6 +34,7 @@
 
 #include <list>
 #include <queue>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -90,8 +91,11 @@ class VegaTLBCoalescer : public ClockedObject
      * of the pkt from the ComputeUnit's perspective, but another
      * option is to change it to curTick(), so we coalesce based
      * on the receive time.
+     *
+     * pair.second represents the assume page size.
      */
-    typedef std::map<Tick, std::vector<coalescedReq>> CoalescingFIFO;
+    typedef std::map<Tick, std::vector<std::pair<coalescedReq, Addr> > >
+      CoalescingFIFO;
 
     CoalescingFIFO coalescerFIFO;
 
@@ -128,7 +132,7 @@ class VegaTLBCoalescer : public ClockedObject
    // latency of a request to be completed
     statistics::Formula latency;
 
-    bool canCoalesce(PacketPtr pkt1, PacketPtr pkt2);
+    bool canCoalesce(PacketPtr pkt1, PacketPtr pkt2, Addr pagebytes);
     void updatePhysAddresses(PacketPtr pkt);
     void regStats() override;
 
@@ -203,6 +207,11 @@ class VegaTLBCoalescer : public ClockedObject
     /// The cleanupEvent is scheduled after a TLBEvent triggers
     /// in order to free memory and do the required clean-up
     EventFunctionWrapper cleanupEvent;
+
+    void reissue_pkt_helper(PacketPtr pkt);
+
+    Addr default_pgSize = 1ULL << 21;
+    std::set<Addr> potentialPagesize;
 
     int tlb_level;
     int maxDownstream;

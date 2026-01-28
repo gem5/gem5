@@ -82,8 +82,6 @@ struct SequencerRequest
     }
 };
 
-std::ostream& operator<<(std::ostream& out, const SequencerRequest& obj);
-
 class Sequencer : public RubyPort
 {
   public:

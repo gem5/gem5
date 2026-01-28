@@ -102,6 +102,10 @@ VIPERSequencer::processReadCallback(SequencerRequest &seq_req,
             seq_req, data, ruby_request, externalHit, mach, initialRequestTime,
             forwardRequestTime, firstResponseTime);
     }
+    else if (!ruby_request) {
+        issueRequest(seq_req.pkt, seq_req.m_second_type);
+        return true;
+    }
     return false;
 }
 

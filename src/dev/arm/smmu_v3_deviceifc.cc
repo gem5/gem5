@@ -41,6 +41,7 @@
 #include "debug/SMMUv3.hh"
 #include "dev/arm/smmu_v3.hh"
 #include "dev/arm/smmu_v3_transl.hh"
+#include "params/SMMUv3DeviceInterface.hh"
 
 namespace gem5
 {

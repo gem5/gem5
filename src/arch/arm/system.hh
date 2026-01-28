@@ -48,16 +48,16 @@
 
 #include "arch/arm/page_size.hh"
 #include "arch/arm/types.hh"
+#include "enums/ArmExtension.hh"
 #include "kern/linux/events.hh"
-#include "params/ArmSystem.hh"
 #include "sim/full_system.hh"
 #include "sim/sim_object.hh"
 #include "sim/system.hh"
-#include "enums/ArmExtension.hh"
-
 
 namespace gem5
 {
+
+struct ArmSystemParams;
 
 class GenericTimer;
 class BaseGic;
@@ -65,6 +65,7 @@ class FVPBasePwrCtrl;
 class ThreadContext;
 
 struct ArmReleaseParams;
+class ArmSemihosting;
 
 class ArmRelease : public SimObject
 {

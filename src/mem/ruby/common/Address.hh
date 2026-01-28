@@ -29,11 +29,6 @@
 #ifndef __MEM_RUBY_COMMON_ADDRESS_HH__
 #define __MEM_RUBY_COMMON_ADDRESS_HH__
 
-#include <cassert>
-#include <iomanip>
-#include <iostream>
-
-#include "base/intmath.hh"
 #include "base/types.hh"
 
 namespace gem5

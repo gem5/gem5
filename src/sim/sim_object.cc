@@ -61,7 +61,7 @@ SimObject::SimObject(const Params &p)
       _params(p)
 {
     simObjectList.push_back(this);
-    probeManager = new ProbeManager(this);
+    probeManager = new ProbeManager(name());
 }
 
 SimObject::~SimObject()

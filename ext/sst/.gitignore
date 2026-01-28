@@ -1,0 +1,6 @@
+gem5.d
+gem5.o
+libgem5.so
+sst_*.d
+sst_*.o
+sst-stats.txt

@@ -40,7 +40,6 @@
 #include "base/loader/memory_image.hh"
 #include "base/statistics.hh"
 #include "base/types.hh"
-#include "mem/se_translating_port_proxy.hh"
 #include "sim/fd_array.hh"
 #include "sim/fd_entry.hh"
 #include "sim/mem_state.hh"
@@ -120,6 +119,12 @@ class Process : public SimObject
     // requested, and may configure more if necessary.
     void allocateMem(Addr vaddr, int64_t size, bool clobber=false);
 
+    /**
+     * Unmap the given virtual address range and deallocate any physical
+     * pages that it mapped to.
+     */
+    void deallocateMem(Addr vaddr, int64_t size);
+
     /// Attempt to fix up a fault at vaddr by allocating a page on the stack.
     /// @return Whether the fault has been fixed.
     bool fixupFault(Addr vaddr);
@@ -180,6 +185,12 @@ class Process : public SimObject
     bool kvmInSE;
     // flag for using the process as a thread which shares page tables
     bool useForClone;
+
+    /**
+     * Whether to ensure that all newly allocated pages are zero-filled.
+     * glibc malloc generally requires this. Disable at your own risk.
+     */
+    bool zeroPages;
 
     EmulationPageTable *pTable;
 

@@ -1505,3 +1505,59 @@ TEST_F(RegisterBankTest, WriteFullPartial)
                 Access(PartialWrite, 0x0000aa99, 15, 0, 0)
                 ));
 }
+
+
+/*
+ * VectorRegisterBank test
+ */
+
+class VectorRegisterBankTest : public testing::Test
+{
+  protected:
+    using Register = RegisterBankLE::Register32LE;
+
+    static constexpr size_t BankSize = 3;
+    static constexpr size_t BankOffset = 8;
+    const std::string BankName = "bank";
+    static constexpr Addr BankBase = 0x10000;
+
+    Register reg0, reg1, reg2;
+    std::vector<RegisterBankLE> bank;
+
+    VectorRegisterBankTest() :
+        reg0("reg0", 0xd3d2d1d0), reg1("reg1", 0xe3e2e1e0),
+        reg2("reg2", 0xf3f2f1f0)
+    {
+        bank.reserve(BankSize);
+        for (int i = 0; i < BankSize; i++) {
+            bank.emplace_back(
+                BankName + std::to_string(i), BankBase + i * BankOffset);
+        }
+        bank[0].addRegister(reg0);
+        bank[1].addRegister(reg1);
+        bank[2].addRegister(reg2);
+    }
+};
+
+TEST_F(VectorRegisterBankTest, CheckVectorRegisterBankSize)
+{
+    EXPECT_EQ(bank.size(), 3);
+}
+
+TEST_F(VectorRegisterBankTest, CheckVectorRegisterBankName)
+{
+    EXPECT_EQ(bank[0].name(), BankName + std::to_string(0));
+    EXPECT_EQ(bank[1].name(), BankName + std::to_string(1));
+    EXPECT_EQ(bank[2].name(), BankName + std::to_string(2));
+}
+
+TEST_F(VectorRegisterBankTest, GetVectorRegisterBankData)
+{
+    uint32_t val0, val1, val2;
+    bank[0].read(BankBase, &val0, 4);
+    EXPECT_EQ(val0, reg0.get());
+    bank[1].read(BankBase + 1 * BankOffset, &val1, 4);
+    EXPECT_EQ(val1, reg1.get());
+    bank[2].read(BankBase + 2 * BankOffset, &val2, 4);
+    EXPECT_EQ(val2, reg2.get());
+}

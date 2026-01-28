@@ -71,7 +71,7 @@ BareMetal::initState()
             "Could not load sections to memory.");
 
     for (auto *tc: system->threads) {
-        RiscvISA::Reset().invoke(tc);
+        tc->getIsaPtr()->resetThread();
         tc->activate();
     }
 }

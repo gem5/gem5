@@ -1,4 +1,4 @@
-# Copyright (c) 2016-2017,2019-2023 Arm Limited
+# Copyright (c) 2016-2017,2019-2023, 2025 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -190,6 +190,7 @@ def create(args):
             interrupt_numbers = [args.pmu_ppi_number] * len(cluster)
             cluster.addPMUs(
                 interrupt_numbers,
+                stat_counters=args.pmu_stat_counters,
                 exit_sim_on_control=exit_sim_on_control,
                 exit_sim_on_interrupt=exit_sim_on_interrupt,
             )
@@ -353,6 +354,16 @@ def main():
         action="append",
         choices=pmu_stats_events.keys(),
         help="Specify the PMU events on which to reset the gem5 stats. "
+        "This option may be specified multiple times to enable multiple "
+        "PMU events.",
+    )
+    parser.add_argument(
+        "--pmu-stat-counters",
+        type=str,
+        action="append",
+        default=[],
+        choices=EventTypeId.vals + ["ALL"],
+        help="Specify the PMU events on which to dump the gem5 stats. "
         "This option may be specified multiple times to enable multiple "
         "PMU events.",
     )

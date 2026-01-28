@@ -204,3 +204,141 @@ class WorkloadTestSuite(unittest.TestCase):
 
         # We set the overridden parameter back to it's old value.
         self.workload.set_parameter("readfile_contents", old_value)
+
+
+class MultiBinaryWorkloadTestSuite(unittest.TestCase):
+    """
+    Tests the `gem5.resources.workload.Workload` class with multiple binary
+    resources (list of resources).
+    """
+
+    @classmethod
+    @patch(
+        "gem5.resources.client.clientwrapper",
+        new=None,
+    )
+    @patch(
+        "gem5.resources.client._create_clients",
+        side_effect=lambda x: _create_clients(mock_config_json),
+    )
+    def setUpClass(cls, mock_create_client):
+        cls.multi_binary_workload = WorkloadResource(
+            function="set_se_multi_binary_workload",
+            parameters={
+                "binaries": [
+                    obtain_resource(
+                        "x86-hello64-static-example", gem5_version="develop"
+                    ),
+                    obtain_resource(
+                        "x86-hello64-static-example", gem5_version="develop"
+                    ),
+                ],
+                "arguments": [],
+            },
+        )
+
+    def test_get_function_str(self) -> None:
+        # Tests `WorkloadResource.get_function_str` for multi-binary workload
+
+        self.assertEqual(
+            "set_se_multi_binary_workload",
+            self.multi_binary_workload.get_function_str(),
+        )
+
+    def test_get_parameters(self) -> None:
+        # Tests `WorkloadResource.get_parameters` for multi-binary workload
+
+        parameters = self.multi_binary_workload.get_parameters()
+        self.assertTrue(isinstance(parameters, Dict))
+        self.assertEqual(2, len(parameters))
+
+        self.assertTrue("binaries" in parameters)
+        self.assertTrue(isinstance(parameters["binaries"], list))
+        self.assertEqual(2, len(parameters["binaries"]))
+
+        # Verify each element in the binaries list is a BinaryResource
+        for binary in parameters["binaries"]:
+            self.assertTrue(isinstance(binary, BinaryResource))
+
+        self.assertTrue("arguments" in parameters)
+        self.assertTrue(isinstance(parameters["arguments"], list))
+
+    def test_add_parameters(self) -> None:
+        # Tests `WorkloadResource.set_parameter` for the case where we add a
+        # new parameter value to a multi-binary workload.
+
+        self.multi_binary_workload.set_parameter("test_param", 10)
+
+        self.assertTrue(
+            "test_param" in self.multi_binary_workload.get_parameters()
+        )
+        self.assertEqual(
+            10, self.multi_binary_workload.get_parameters()["test_param"]
+        )
+
+        # Cleanup
+        del self.multi_binary_workload.get_parameters()["test_param"]
+
+    @patch(
+        "gem5.resources.client.clientwrapper",
+        new=None,
+    )
+    @patch(
+        "gem5.resources.client._create_clients",
+        side_effect=lambda x: _create_clients(mock_config_json),
+    )
+    def test_override_parameter_with_list(self, mock_create_client) -> None:
+        # Tests `WorkloadResource.set_parameter` for the case where we
+        # override a list parameter's value.
+
+        old_value = self.multi_binary_workload.get_parameters()["binaries"]
+
+        new_binaries = [
+            obtain_resource(
+                "x86-hello64-static-example", gem5_version="develop"
+            )
+        ]
+        self.multi_binary_workload.set_parameter("binaries", new_binaries)
+
+        self.assertTrue(
+            "binaries" in self.multi_binary_workload.get_parameters()
+        )
+        self.assertEqual(
+            1, len(self.multi_binary_workload.get_parameters()["binaries"])
+        )
+
+        # We set the overridden parameter back to its old value
+        self.multi_binary_workload.set_parameter("binaries", old_value)
+
+    @patch(
+        "gem5.resources.client.clientwrapper",
+        new=None,
+    )
+    @patch(
+        "gem5.resources.client._create_clients",
+        side_effect=lambda x: _create_clients(mock_config_json),
+    )
+    def test_append_to_binaries_list(self, mock_create_client) -> None:
+        # Tests that we can append additional binaries to the list
+
+        original_count = len(
+            self.multi_binary_workload.get_parameters()["binaries"]
+        )
+
+        new_binary = obtain_resource(
+            "x86-hello64-static-example", gem5_version="develop"
+        )
+        current_binaries = self.multi_binary_workload.get_parameters()[
+            "binaries"
+        ]
+        current_binaries.append(new_binary)
+        self.multi_binary_workload.set_parameter("binaries", current_binaries)
+
+        self.assertEqual(
+            original_count + 1,
+            len(self.multi_binary_workload.get_parameters()["binaries"]),
+        )
+
+        # Cleanup - remove the appended binary
+        current_binaries.pop()
+        self.multi_binary_workload.set_parameter("binaries", current_binaries)

@@ -62,7 +62,7 @@ with gem5_scons.Configure(main) as conf:
             (conf.env['HAVE_PKG_CONFIG'] and
             conf.CheckPkgConfig('protobuf', '--cflags', '--libs')) or
             conf.CheckLibWithHeader('protobuf', 'google/protobuf/message.h',
-                                    'C++', 'GOOGLE_PROTOBUF_VERIFY_VERSION;'))
+                                    'C++', call='GOOGLE_PROTOBUF_VERIFY_VERSION;'))
     )
 
 # If we have the compiler but not the library, print another warning.
@@ -76,3 +76,4 @@ if main['CONF']['HAVE_PROTOBUF']:
     # explanded to 0 but since we use -Wundef they end up generating
     # warnings.
     main.Append(CCFLAGS='-DPROTOBUF_INLINE_NOT_IN_HEADERS=0')
+    main.Append(CCFLAGS='-DPROTOBUF_ENABLE_DEBUG_LOGGING_MAY_LEAK_PII=0')

@@ -311,6 +311,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     ReadNotSharedDirty,          desc="", in_trans="yes";
     ReadUnique,                  desc="", in_trans="yes";
     ReadUnique_PoC,              desc="", in_trans="yes";
+    ReadNoSnp,                   desc="", in_trans="yes";
     ReadOnce,                    desc="", in_trans="yes";
     CleanUnique,                 desc="", in_trans="yes";
     MakeReadUnique,              desc="", in_trans="yes";

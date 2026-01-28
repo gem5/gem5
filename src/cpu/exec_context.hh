@@ -71,6 +71,7 @@ namespace gem5
 class ExecContext
 {
   public:
+    virtual ~ExecContext() = default;
 
     virtual RegVal getRegOperand(const StaticInst *si, int idx) = 0;
     virtual void getRegOperand(const StaticInst *si, int idx, void *val) = 0;

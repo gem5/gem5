@@ -36,10 +36,12 @@ from typing import (
 from m5.objects import (
     BaseMMU,
     PcCountTrackerManager,
-    Port,
     SubSystem,
 )
-from m5.params import PcCountPair
+from m5.params import (
+    PcCountPair,
+    Port,
+)
 
 from ...isas import ISA
 
@@ -125,6 +127,17 @@ class AbstractCore(SubSystem):
         """
         raise NotImplementedError
 
+    def has_mmu(self) -> bool:
+        """Return True if this core has an MMU.
+
+        This is needed to check a core has a MMU before trying to get it.
+        There are cores without MMUs. E.g, some generator cores.
+        """
+        try:
+            return isinstance(self.get_mmu(), BaseMMU)
+        except NotImplementedError:
+            return False
+
     @abstractmethod
     def get_mmu(self) -> BaseMMU:
         """Return the MMU for this core.
@@ -174,4 +187,12 @@ class AbstractCore(SubSystem):
     def add_pc_tracker_probe(
         self, target_pair: List[PcCountPair], manager: PcCountTrackerManager
     ) -> None:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_total_instructions(self) -> int:
+        """Return the number of instructions executed by this core.
+
+        Note: This total is the sum since the last call to reset stats
+        """
         raise NotImplementedError

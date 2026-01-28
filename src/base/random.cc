@@ -53,25 +53,20 @@ Random::Random(uint32_t s)
 
 Random::~Random()
 {
-    assert(instances);
+    if (instances) {
+        // Remove expired weak pointers
+        instances->erase(
+            std::remove_if(instances->begin(), instances->end(),
+                [](const std::weak_ptr<Random>& ptr) {
+                    return ptr.expired();
+                }),
+            instances->end());
 
-    int removed = 0;
-
-    instances->erase(std::remove_if(instances->begin(), instances->end(),
-    [&](const auto& s_ptr)
-    {
-        removed += s_ptr.expired();
-        return s_ptr.expired();
-    }));
-
-    // Can only remove one pointer
-    // since we are destroying one
-    // object
-    assert(removed == 1);
-
-    if (instances->empty()) {
-        delete instances;
-        instances = nullptr;
+        // Clean up instances if empty
+        if (instances->empty()) {
+            delete instances;
+            instances = nullptr;
+        }
     }
 }
 

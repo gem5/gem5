@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Arm Limited
+# Copyright (c) 2024-2025 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -45,7 +45,7 @@ import sys
 import m5
 from m5.defines import buildEnv
 from m5.objects import *
-from m5.tlm_chi import *
+from m5.tlm_chi.utils import *
 from m5.util import addToPath
 
 m5.util.addToPath(os.path.join(m5.util.repoPath(), "configs"))
@@ -68,11 +68,12 @@ class TLM_RNF(CHI_Node):
         super().__init__(ruby_system)
 
         self._cntrl = TlmController(
-            version=Versions.getVersion(Cache_Controller),
+            version=Versions.getVersion(CHI_Cache_Controller),
             ruby_system=ruby_system,
         )
 
-        parent.chi_controller = self._cntrl
+        parent.out_port = self._cntrl.in_port
+        parent.in_port = self._cntrl.out_port
         self.connectController(self._cntrl)
 
     def getSequencers(self):

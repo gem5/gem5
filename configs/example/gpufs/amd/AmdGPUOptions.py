@@ -306,3 +306,18 @@ def addAmdGPUOptions(parser):
         default=0,
         help="Latency for scalar responses from ruby to the cu.",
     )
+
+    parser.add_argument(
+        "--mfma-scale",
+        type=float,
+        # Set to a default of 1 to not scale MFMA cycles
+        default=1,
+        help="Scale how long an mfma consumes the matrix core unit",
+    )
+
+    parser.add_argument(
+        "--hbm-ctrl",
+        action="store_true",
+        default=False,
+        help="Use HBMCtrl",
+    )

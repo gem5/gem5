@@ -161,7 +161,7 @@ def makeGpuFSSystem(args):
             0x7D000,
         ]
         sdma_sizes = [0x1000] * 8
-    elif args.gpu_device == "MI200" or args.gpu_device == "MI300X":
+    elif args.gpu_device == "MI200":
         num_sdmas = 5
         sdma_bases = [
             0x4980,
@@ -171,6 +171,32 @@ def makeGpuFSSystem(args):
             0x7A000,
         ]
         sdma_sizes = [0x1000] * 5
+    elif args.gpu_device == "MI300X" or args.gpu_device == "MI355X":
+        # These MMIO addresses are based on the IP discovery file associated
+        # with the disk image. Changes to these values require changes to the
+        # discovery file base addresses.
+        #
+        # These are the same for MI300X and MI355X.
+        num_sdmas = 16
+        sdma_bases = [
+            0x4980,
+            0x6180,
+            0x65000,
+            0x66000,
+            0x84980,
+            0x86180,
+            0xE5000,
+            0xE6000,
+            0x104980,
+            0x106180,
+            0x165000,
+            0x166000,
+            0x184980,
+            0x186180,
+            0x1E5000,
+            0x1E6000,
+        ]
+        sdma_sizes = [0x1000] * num_sdmas
     else:
         m5.util.panic(f"Unknown GPU device {args.gpu_device}")
 
@@ -190,11 +216,56 @@ def makeGpuFSSystem(args):
 
     # Setup PM4 packet processors
     pm4_procs = []
-    pm4_procs.append(
-        PM4PacketProcessor(
-            ip_id=0, mmio_range=AddrRange(start=0xC000, end=0xD000)
+    if args.gpu_device == "MI300X" or args.gpu_device == "MI355X":
+        # These MMIO addresses are based on the IP discovery file associated
+        # with the disk image. Changes to these values require changes to the
+        # discovery file base addresses.
+        pm4_procs.append(
+            PM4PacketProcessor(
+                ip_id=0, mmio_range=AddrRange(start=0xC000, end=0xD000)
+            )
         )
-    )
+        pm4_procs.append(
+            PM4PacketProcessor(
+                ip_id=1, mmio_range=AddrRange(start=0x4C000, end=0x4D000)
+            )
+        )
+        pm4_procs.append(
+            PM4PacketProcessor(
+                ip_id=2, mmio_range=AddrRange(start=0x8C000, end=0x8D000)
+            )
+        )
+        pm4_procs.append(
+            PM4PacketProcessor(
+                ip_id=3, mmio_range=AddrRange(start=0xCC000, end=0xCD000)
+            )
+        )
+        pm4_procs.append(
+            PM4PacketProcessor(
+                ip_id=4, mmio_range=AddrRange(start=0x10C000, end=0x10D000)
+            )
+        )
+        pm4_procs.append(
+            PM4PacketProcessor(
+                ip_id=5, mmio_range=AddrRange(start=0x14C000, end=0x14D000)
+            )
+        )
+        pm4_procs.append(
+            PM4PacketProcessor(
+                ip_id=6, mmio_range=AddrRange(start=0x18C000, end=0x18D000)
+            )
+        )
+        pm4_procs.append(
+            PM4PacketProcessor(
+                ip_id=7, mmio_range=AddrRange(start=0x1CC000, end=0x1CD000)
+            )
+        )
+    else:
+        pm4_procs.append(
+            PM4PacketProcessor(
+                ip_id=0, mmio_range=AddrRange(start=0xC000, end=0xD000)
+            )
+        )
 
     system.pc.south_bridge.gpu.pm4_pkt_procs = pm4_procs
 
@@ -206,10 +277,12 @@ def makeGpuFSSystem(args):
     system_hub = AMDGPUSystemHub()
     shader.system_hub = system_hub
 
+    # Attach the GPU PCI device to the bus
+    system.pc.attachPciDevice(system.pc.south_bridge.gpu)
+
     # GPU, HSAPP, and GPUCommandProc are DMA devices
     system._dma_ports.append(gpu_hsapp)
     system._dma_ports.append(gpu_cmd_proc)
-    system._dma_ports.append(system.pc.south_bridge.gpu)
     for sdma in sdma_engines:
         system._dma_ports.append(sdma)
     system._dma_ports.append(device_ih)
@@ -224,7 +297,6 @@ def makeGpuFSSystem(args):
 
     gpu_hsapp.pio = system.iobus.mem_side_ports
     gpu_cmd_proc.pio = system.iobus.mem_side_ports
-    system.pc.south_bridge.gpu.pio = system.iobus.mem_side_ports
     for sdma in sdma_engines:
         sdma.pio = system.iobus.mem_side_ports
     device_ih.pio = system.iobus.mem_side_ports

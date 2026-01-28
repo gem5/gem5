@@ -58,8 +58,8 @@ Code copied and adapted from main.py
 def override_re_outdir(new_outdir):
     options = m5.options
 
-    stdout_file = Path(new_outdir) / "stdout.txt"
-    stderr_file = Path(new_outdir) / "stderr.txt"
+    stdout_file = Path(new_outdir) / "simout.txt"
+    stderr_file = Path(new_outdir) / "simerr.txt"
     if options.redirect_stdout:
         redir_fd = os.open(stdout_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
         os.dup2(redir_fd, sys.stdout.fileno())

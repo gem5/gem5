@@ -188,17 +188,17 @@ let {{
     decoder_output += BasicConstructor64.subst(unknown64Iop)
     exec_output += BasicExecute.subst(unknown64Iop)
 
-    isbIop = ArmInstObjParams("isb", "Isb64", "ArmStaticInst", "",
+    isbIop = ArmInstObjParams("isb", "Isb64", "IsbOp64", "",
                               ['IsSquashAfter'])
-    header_output += BasicDeclare.subst(isbIop)
-    decoder_output += BasicConstructor64.subst(isbIop)
+    header_output += ImmOp64Declare.subst(isbIop)
+    decoder_output += ImmOp64Constructor.subst(isbIop)
     exec_output += BasicExecute.subst(isbIop)
 
-    dsbLocalIop = ArmInstObjParams("dsb", "Dsb64Local", "ArmStaticInst", "",
+    dsbLocalIop = ArmInstObjParams("dsb", "Dsb64Local", "DsbOp64", "",
                                    ['IsReadBarrier', 'IsWriteBarrier',
                                    'IsSerializeAfter'])
-    header_output += BasicDeclare.subst(dsbLocalIop)
-    decoder_output += BasicConstructor64.subst(dsbLocalIop)
+    header_output += ImmOp64Declare.subst(dsbLocalIop)
+    decoder_output += ImmOp64Constructor.subst(dsbLocalIop)
     exec_output += BasicExecute.subst(dsbLocalIop)
 
     dvmCode = '''
@@ -215,7 +215,7 @@ let {{
             PendingDvm = false;
         }
     '''
-    dsbShareableIop = ArmInstObjParams("dsb", "Dsb64Shareable", "ArmStaticInst",
+    dsbShareableIop = ArmInstObjParams("dsb", "Dsb64Shareable", "DsbOp64",
                                        { "code" : "", "dvm_code" : dvmCode },
                                        ['IsReadBarrier', 'IsWriteBarrier',
                                         'IsSerializeAfter'])

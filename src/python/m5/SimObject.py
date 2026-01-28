@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2020 ARM Limited
+# Copyright (c) 2017-2020, 2025 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -38,8 +38,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import importlib
 import inspect
-import sys
 from functools import wraps
 from types import (
     FunctionType,
@@ -50,10 +50,6 @@ from types import (
 import m5
 from m5.citations import gem5_citations
 
-# Use the pyfdt and not the helper class, because the fdthelper
-# relies on the SimObject definition
-from m5.ext.pyfdt import pyfdt
-
 # There are a few things we need that aren't in params.__all__ since
 # normal users don't need them
 # Have to import params up top since Param is referenced on initial
@@ -61,6 +57,7 @@ from m5.ext.pyfdt import pyfdt
 # variable, the 'name' param)...
 from m5.params import *
 from m5.params import (
+    DictParamDesc,
     ParamDesc,
     Port,
     SimObjectVector,
@@ -145,6 +142,7 @@ class MetaSimObject(type):
         "cxx_exports": list,
         "cxx_param_exports": list,
         "cxx_template_params": list,
+        "override_create": bool,  # True if overrides the default create()
     }
     # Attributes that can be set any time
     keywords = {"check": FunctionType}
@@ -186,6 +184,8 @@ class MetaSimObject(type):
             value_dict["cxx_param_exports"] = []
         if "cxx_template_params" not in value_dict:
             value_dict["cxx_template_params"] = []
+        if "override_create" not in value_dict:
+            value_dict["override_create"] = False
         cls_dict["_value_dict"] = value_dict
         cls = super().__new__(mcls, name, bases, cls_dict)
         if "type" in value_dict:
@@ -413,7 +413,9 @@ class MetaSimObject(type):
             return
 
         # no valid assignment... raise exception
-        raise AttributeError(f"Class {cls.__name__} has no parameter '{attr}'")
+        raise AttributeError(
+            f"Invalid assignment for Class {cls.__name__} with parameter {attr}"
+        )
 
     def __getattr__(cls, attr):
         if attr == "cxx_class_path":
@@ -445,17 +447,21 @@ class MetaSimObject(type):
         return cls.__name__
 
     def getCCClass(cls):
-        # Ensure that m5.internal.params is available.
-        import m5.internal.params
+        try:
+            # This function can be called from outside gem5
+            # during SimObject parsing.
+            import _m5
 
-        return getattr(m5.internal.params, cls.pybind_class)
+            return getattr(_m5, cls.pybind_class)
+        except ImportError:
+            raise AttributeError("No C++ class exists, not linked to gem5")
 
     # See ParamValue.cxx_predecls for description.
     def cxx_predecls(cls, code):
-        code('#include "params/$cls.hh"')
+        code('#include "params/$cls.hh"', add_once=True)
 
     def pybind_predecls(cls, code):
-        code('#include "${{cls.cxx_header}}"')
+        code('#include "${{cls.cxx_header}}"', add_once=True)
 
 
 # This *temporary* definition is required to support calls from the
@@ -680,6 +686,9 @@ class SimObject(metaclass=MetaSimObject):
                     if isinstance(values, VectorParamDesc):
                         type_str = f"Vector_{values.ptype_str}"
                         ptype = values
+                    elif isinstance(values, DictParamDesc):
+                        type_str = f"Dict_{values.key_desc.ptype_str}_{values.val_desc.ptype_str}"
+                        ptype = values
                     else:
                         type_str = f"{values.ptype_str}"
                         ptype = values.ptype
@@ -765,6 +774,9 @@ class SimObject(metaclass=MetaSimObject):
         self._hr_values = multidict(ancestor._hr_values)
         # clone SimObject-valued parameters
         for key, val in ancestor._values.items():
+            if val == []:
+                self._values[key] = type(val)()
+                continue
             val = tryAsSimObjectOrVector(val)
             if val is not None:
                 self._values[key] = val(_memo=memo_dict)
@@ -920,7 +932,8 @@ class SimObject(metaclass=MetaSimObject):
 
         # no valid assignment... raise exception
         raise AttributeError(
-            f"Class {self.__class__.__name__} has no parameter {attr}"
+            f"Invalid assignment for Class {self.__class__.__name__} with"
+            f" parameter {attr}"
         )
 
     # this hack allows tacking a '[0]' onto parameters that may or may
@@ -1049,6 +1062,10 @@ class SimObject(metaclass=MetaSimObject):
                 found_obj = child
         # search param space
         for pname, pdesc in self._params.items():
+            if isinstance(pdesc, DictParamDesc):
+                # DictParams are not supported
+                continue
+
             if issubclass(pdesc.ptype, ptype):
                 match_obj = self._values[pname]
                 if found_obj != None and found_obj != match_obj:
@@ -1082,6 +1099,10 @@ class SimObject(metaclass=MetaSimObject):
                     all.update(dict(zip(child_all, [done] * len(child_all))))
         # search param space
         for pname, pdesc in self._params.items():
+            if isinstance(pdesc, DictParamDesc):
+                # DictParams are not supported
+                continue
+
             if issubclass(pdesc.ptype, ptype):
                 match_obj = self._values[pname]
                 if not isproxy(match_obj) and not isNullPointer(match_obj):
@@ -1187,10 +1208,12 @@ class SimObject(metaclass=MetaSimObject):
         if self._ccParams:
             return self._ccParams
 
-        # Ensure that m5.internal.params is available.
-        import m5.internal.params
+        try:
+            mod = importlib.import_module(f"_m5.param_{self.type}")
+        except ImportError:
+            raise AttributeError("No C++ class exists, not linked to gem5")
 
-        cc_params_struct = getattr(m5.internal.params, f"{self.type}Params")
+        cc_params_struct = getattr(mod, f"{self.type}Params")
         cc_params = cc_params_struct()
         cc_params.name = str(self)
 
@@ -1233,6 +1256,18 @@ class SimObject(metaclass=MetaSimObject):
                 else:
                     for v in value:
                         getattr(cc_params, param).append(v)
+            elif isinstance(self._params[param], DictParamDesc):
+                assert isinstance(value, dict)
+                dic = getattr(cc_params, param)
+                assert not len(
+                    dic
+                ), "Dictionary parameter has already been set"
+                if isinstance(dic, dict):
+                    setattr(cc_params, param, dict(value))
+                else:
+                    raise TypeError(
+                        f"Must provide dictionary for param {param}"
+                    )
             else:
                 setattr(cc_params, param, value)
 
@@ -1384,7 +1419,7 @@ def isSimObjectOrSequence(value):
 
 
 def isRoot(obj):
-    from m5.objects import Root
+    from m5.objects.Root import Root
 
     return obj and obj is Root.getInstance()
 

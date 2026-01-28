@@ -33,7 +33,7 @@ from m5.objects.Device import (
     DmaVirtDevice,
 )
 from m5.objects.PciDevice import (
-    PciDevice,
+    PciEndpoint,
     PciLegacyIoBar,
     PciMemBar,
     PciMemUpperBar,
@@ -49,7 +49,7 @@ from m5.proxy import *
 # This class requires a ROM binary and an MMIO trace to initialize the
 # device registers and memory. It is intended only to be used in full-system
 # simulation under Linux where the amdgpu driver is modprobed.
-class AMDGPUDevice(PciDevice):
+class AMDGPUDevice(PciEndpoint):
     type = "AMDGPUDevice"
     cxx_header = "dev/amdgpu/amdgpu_device.hh"
     cxx_class = "gem5::AMDGPUDevice"
@@ -69,6 +69,8 @@ class AMDGPUDevice(PciDevice):
     SubClassCode = 0x00
     ProgIF = 0x00
 
+    gpu_id = Param.Int(0, "ID of GPU, if multiple GPUs are instantiated")
+
     # Use max possible BAR size for Vega 10. We can override with driver param
     BAR0 = PciMemBar(size="16GiB")
     BAR1 = PciMemUpperBar()
@@ -81,6 +83,7 @@ class AMDGPUDevice(PciDevice):
     InterruptPin = 2
     ExpansionROM = 0
 
+    ipt_binary = Param.String("", "IP table dump from hardware")
     checkpoint_before_mmios = Param.Bool(
         False, "Take a checkpoint before the device begins sending MMIOs"
     )

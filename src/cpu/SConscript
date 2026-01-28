@@ -87,10 +87,13 @@ SimObject('FuncUnit.py', sim_objects=['OpDesc', 'FUDesc'], enums=['OpClass'])
 SimObject('StaticInstFlags.py', enums=['StaticInstFlags'])
 
 # Only build the protobuf instructions tracer if we have protobuf support.
-SimObject('InstPBTrace.py', sim_objects=['InstPBTrace'], tags='protobuf')
-Source('inst_pb_trace.cc', tags='protobuf')
-
-SimObject('CheckerCPU.py', sim_objects=['CheckerCPU'])
+if env['CONF']['HAVE_PROTOBUF']:
+    SimObject(
+        'InstPBTrace.py',
+        sim_objects=['InstPBTrace'],
+        tags=['protobuf']
+    )
+    Source('inst_pb_trace.cc', tags=['protobuf'])
 
 SimObject('BaseCPU.py', sim_objects=['BaseCPU'])
 SimObject('CpuCluster.py', sim_objects=['CpuCluster'])
@@ -122,5 +125,5 @@ if env['CONF']['USE_CAPSTONE']:
     SimObject('Capstone.py', sim_objects=['CapstoneDisassembler'])
 
 SimObject('DummyChecker.py', sim_objects=['DummyChecker'])
-Source('checker/cpu.cc')
+
 DebugFlag('Checker')

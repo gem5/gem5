@@ -122,6 +122,9 @@ class RubyTester : public ClockedObject
     void print(std::ostream& out) const;
     bool getCheckFlush() { return m_check_flush; }
 
+    void updateProgress(int idx, Addr address, Cycles current_time);
+    void eraseProgress(int idx, Addr address);
+
     RequestorID requestorId() { return _requestorId; }
   protected:
     EventFunctionWrapper checkStartEvent;
@@ -138,7 +141,7 @@ class RubyTester : public ClockedObject
     RubyTester& operator=(const RubyTester& obj);
 
     CheckTable* m_checkTable_ptr;
-    std::vector<Cycles> m_last_progress_vector;
+    std::vector<std::unordered_map<Addr, Cycles>> m_last_progress_vector;
 
     int m_num_cpus;
     uint64_t m_checks_completed;

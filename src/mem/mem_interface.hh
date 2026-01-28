@@ -131,7 +131,7 @@ class MemInterface : public AbstractMemory
      * ranks and banks, the burst size, and the row buffer size.
      */
     const uint32_t burstSize;
-    const uint32_t deviceSize;
+    const uint64_t deviceSize;
     const uint32_t deviceRowBufferSize;
     const uint32_t devicesPerRank;
     const uint32_t rowBufferSize;

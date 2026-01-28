@@ -30,8 +30,11 @@
 
 from m5.citations import add_citation
 from m5.objects.BaseInterrupts import BaseInterrupts
-from m5.objects.IntPin import VectorIntSinkPin
-from m5.params import VectorParam
+from m5.params import (
+    Param,
+    VectorIntSinkPin,
+    VectorParam,
+)
 
 
 class RiscvInterrupts(BaseInterrupts):
@@ -43,6 +46,7 @@ class RiscvInterrupts(BaseInterrupts):
     local_interrupt_ids = VectorParam.Unsigned(
         [], "list of local interrupt ids"
     )
+    nmi_cause = Param.Int(0, "Non-maskable interrupt(NMI) cause")
 
 
 add_citation(

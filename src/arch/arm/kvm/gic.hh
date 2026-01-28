@@ -248,15 +248,17 @@ class KvmKernelGicV3 : public KvmKernelGic, public Gicv3Registers
     const AddrRange distRange;
 };
 
-struct GicV2Types
+class GicV2Types
 {
+  public:
     using SimGic = GicV2;
     using KvmGic = KvmKernelGicV2;
     using Params = MuxingKvmGicV2Params;
 };
 
-struct GicV3Types
+class GicV3Types
 {
+  public:
     using SimGic = Gicv3;
     using KvmGic = KvmKernelGicV3;
     using Params = MuxingKvmGicV3Params;

@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2017, 2020 ARM Limited
+# Copyright (c) 2014-2017, 2020, 2025 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -1413,6 +1413,7 @@ class HPI_FloatSimdFU(MinorFU):
             "FloatSqrt",
             "FloatMisc",
             "FloatMultAcc",
+            "Bf16Cvt",
             "SimdAdd",
             "SimdAddAcc",
             "SimdAlu",
@@ -1435,6 +1436,13 @@ class HPI_FloatSimdFU(MinorFU):
             "SimdFloatMultAcc",
             "SimdFloatMatMultAcc",
             "SimdFloatSqrt",
+            "SimdBf16Add",
+            "SimdBf16Cmp",
+            "SimdBf16Cvt",
+            "SimdBf16DotProd",
+            "SimdBf16MatMultAcc",
+            "SimdBf16Mult",
+            "SimdBf16MultAcc",
         ]
     )
 
@@ -1659,7 +1667,7 @@ class HPI_MemFU(MinorFU):
 
 
 class HPI_MiscFU(MinorFU):
-    opClasses = minorMakeOpClassSet(["IprAccess", "InstPrefetch"])
+    opClasses = minorMakeOpClassSet(["InstPrefetch", "System"])
     opLat = 1
 
 
@@ -1694,16 +1702,18 @@ class HPI_BTB(SimpleBTB):
     )
 
 
-class HPI_BP(TournamentBP):
+class HPI_BP(BranchPredictor):
+    conditionalBranchPred = TournamentBP(
+        localPredictorSize=64,
+        localCtrBits=2,
+        localHistoryTableSize=64,
+        globalPredictorSize=1024,
+        globalCtrBits=2,
+        choicePredictorSize=1024,
+        choiceCtrBits=2,
+    )
     btb = HPI_BTB()
     ras = ReturnAddrStack(numEntries=8)
-    localPredictorSize = 64
-    localCtrBits = 2
-    localHistoryTableSize = 64
-    globalPredictorSize = 1024
-    globalCtrBits = 2
-    choicePredictorSize = 1024
-    choiceCtrBits = 2
     instShiftAmt = 2
 
 

@@ -29,13 +29,7 @@ from m5.objects.FastModel import (
     AmbaInitiatorSocket,
     AmbaTargetSocket,
 )
-from m5.objects.IntPin import (
-    IntSinkPin,
-    IntSourcePin,
-    VectorIntSinkPin,
-)
 from m5.objects.Iris import IrisBaseCPU
-from m5.objects.ResetPort import ResetResponsePort
 from m5.objects.SystemC import SystemC_ScModule
 from m5.params import *
 from m5.proxy import *

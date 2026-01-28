@@ -1,4 +1,4 @@
-protocol "MESI_Three_Level" use_secondary_load_linked, use_secondary_store_conditional;
+protocol "MESI_Three_Level" use_secondary_load_linked, use_secondary_store_conditional, supports_flushes;
 include "MESI_Two_Level-msg.sm";
 include "MESI_Three_Level-msg.sm";
 include "MESI_Three_Level-L0cache.sm";

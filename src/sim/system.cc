@@ -166,6 +166,8 @@ int System::numSystemsRunning = 0;
 
 System::System(const Params &p)
     : SimObject(p), _systemPort("system_port"),
+      externalMemRanges(p.external_memory_ranges.begin(),
+                         p.external_memory_ranges.end()),
       multiThread(p.multi_thread),
       init_param(p.init_param),
       physProxy(_systemPort, p.cache_line_size),
@@ -287,7 +289,18 @@ System::memSize() const
 bool
 System::isMemAddr(Addr addr) const
 {
-    return physmem.isMemAddr(addr);
+    if (physmem.isMemAddr(addr)) {
+        return true;
+    } else {
+        // Check the external memory ranges as well
+        for (const auto& range : externalMemRanges) {
+            if (range.contains(addr)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
 
 void

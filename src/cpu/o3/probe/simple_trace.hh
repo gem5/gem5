@@ -46,7 +46,7 @@
 
 #include "cpu/o3/dyn_inst_ptr.hh"
 #include "params/SimpleTrace.hh"
-#include "sim/probe/probe.hh"
+#include "sim/probe/probe_listener_object.hh"
 
 namespace gem5
 {

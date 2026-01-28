@@ -28,11 +28,13 @@
 from typing import Optional
 
 from m5.objects import (
-    Addr,
     GUPSGen,
-    Port,
     SrcClockDomain,
     VoltageDomain,
+)
+from m5.params import (
+    Addr,
+    Port,
 )
 
 from ...utils.override import overrides

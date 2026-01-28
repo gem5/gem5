@@ -98,6 +98,17 @@ AMDGPUNbio::readMMIO(PacketPtr pkt, Addr offset)
       case MI100_INV_ENG17_ACK2:
       case MI100_INV_ENG17_ACK3:
       case MI200_INV_ENG17_ACK2:
+      case MI300X_INV_ENG17_ACK1:
+      case MI300X_INV_ENG17_ACK2:
+      case MI300X_INV_ENG17_ACK3:
+      case MI300X_INV_ENG17_ACK4:
+      case MI300X_INV_ENG17_ACK5:
+      case MI300X_INV_ENG17_ACK6:
+      case MI300X_INV_ENG17_ACK7:
+      case MI300X_INV_ENG17_ACK8:
+      case MI300X_INV_ENG17_ACK9:
+      case MI300X_INV_ENG17_ACK10:
+      case MI300X_INV_ENG17_ACK11:
         pkt->setLE<uint32_t>(0x10001);
         break;
       case VEGA10_INV_ENG17_SEM1:
@@ -114,6 +125,18 @@ AMDGPUNbio::readMMIO(PacketPtr pkt, Addr offset)
       case AMDGPU_MP1_SMN_C2PMSG_90:
         pkt->setLE<uint32_t>(0x1);
         break;
+      case MI300X_EPF0_STRAP0:
+        // This contains a revision ID for the chip. It is required for MI300X
+        // to see the GFX target as gfx942 instead of gfx941.
+        if (gpuDevice->getGfxVersion() == GfxVersion::gfx942) {
+          pkt->setLE<uint32_t>(2 << 24);
+        } else {
+          pkt->setLE<uint32_t>(0);
+        }
+        break;
+      case MI200_BIOS_SCRATCH_7:
+          pkt->setLE<uint32_t>(0x200); // ATOM_S7_ASIC_INIT_COMPLETE_MASK
+          break;
       default:
         if (triggered_reads.count(offset)) {
             DPRINTF(AMDGPUDevice, "Found triggered read for %#x\n", offset);
@@ -184,14 +207,55 @@ AMDGPUNbio::writeMMIO(PacketPtr pkt, Addr offset)
     } else if (offset == AMDGPU_MP0_SMN_C2PMSG_71) {
         // PSP ring size
         psp_ring_size = pkt->getLE<uint32_t>();
+    } else if (is_MI200_regBM_PAGE_TABLE_BASE_ADDR(offset)) {
+        uint16_t context_id =
+            get_context_from_MI200_regBM_PAGE_TABLE_BASE_ADDR(offset);
+        regs[offset] = pkt->getLE<uint32_t>();
+        if ((offset % 8) == 0) {
+            // The register write is to ptBaseH
+            gpuDevice->getVM().setPageTableBaseH(context_id,
+                    pkt->getLE<uint32_t>());
+        } else {
+            // The register write is to ptBaseL
+            gpuDevice->getVM().setPageTableBaseL(context_id,
+                    pkt->getLE<uint32_t>());
+        }
+    } else if (is_MI200_regBM_PAGE_TABLE_START_ADDR(offset)) {
+        uint16_t context_id =
+            get_context_from_MI200_regBM_PAGE_TABLE_START_ADDR(offset);
+        regs[offset] = pkt->getLE<uint32_t>();
+        if ((offset % 8) == 0) {
+            // The register write is to ptBaseH
+            gpuDevice->getVM().setPageTableStartH(context_id,
+                    pkt->getLE<uint32_t>());
+        } else {
+            // The register write is to ptBaseL
+            gpuDevice->getVM().setPageTableStartL(context_id,
+                    pkt->getLE<uint32_t>());
+        }
+    } else if (is_MI200_regBM_PAGE_TABLE_END_ADDR(offset)) {
+        uint16_t context_id =
+            get_context_from_MI200_regBM_PAGE_TABLE_END_ADDR(offset);
+        regs[offset] = pkt->getLE<uint32_t>();
+        // MI200 page table addresses are 64 bits long. There are
+        // separate registers to handle the lower 32 bits and upper 32
+        // bits. Use the MMIO offset to figure out which part of the
+        // address is being written to
+        if ((offset % 8) == 0) {
+            // The register write is to ptBaseH
+            gpuDevice->getVM().setPageTableEndH(context_id,
+                    pkt->getLE<uint32_t>());
+        } else {
+            // The register write is to ptBaseL
+            gpuDevice->getVM().setPageTableEndL(context_id,
+                    pkt->getLE<uint32_t>());
+        }
     } else {
         // Fallback to a map of register values. This was previously in the
         // AMDGPUDevice, however that short-circuited some reads from other
         // IP blocks. Since this is an end point IP block it is safer to use
         // here.
         regs[offset] = pkt->getLE<uint32_t>();
-        DPRINTF(AMDGPUDevice, "Writing value of unknown MMIO offset "
-                "%x: %x\n", offset, regs[offset]);
     }
 }
 

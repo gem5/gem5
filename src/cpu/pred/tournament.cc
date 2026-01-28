@@ -51,7 +51,7 @@ namespace branch_prediction
 {
 
 TournamentBP::TournamentBP(const TournamentBPParams &params)
-    : BPredUnit(params),
+    : ConditionalPredictor(params),
       localPredictorSize(params.localPredictorSize),
       localCtrBits(params.localCtrBits),
       localCtrs(localPredictorSize, SatCounter8(localCtrBits)),
@@ -195,8 +195,9 @@ TournamentBP::lookup(ThreadID tid, Addr pc, void * &bp_history)
 }
 
 void
-TournamentBP::updateHistories(ThreadID tid, Addr pc, bool uncond,
-                         bool taken, Addr target, void * &bp_history)
+TournamentBP::updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
+                              Addr target, const StaticInstPtr &inst,
+                              void * &bp_history)
 {
     assert(uncond || bp_history);
     if (uncond) {

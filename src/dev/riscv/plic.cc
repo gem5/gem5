@@ -57,6 +57,7 @@ Plic::Plic(const Params &params) :
     PlicBase(params),
     system(params.system),
     nSrc(params.n_src),
+    outputLatency(params.output_latency),
     registers(params.name, pioAddr, this),
     update([this]{updateOutput();}, name() + ".update")
 {
@@ -415,7 +416,7 @@ Plic::propagateOutput()
     }
 
     // Add new output to outputQueue
-    Tick next_update = curTick() + cyclesToTicks(Cycles(3));
+    Tick next_update = clockEdge(Cycles(outputLatency));
     if (outputQueue.find(next_update) != outputQueue.end()) {
         outputQueue[next_update] = new_output;
     } else {

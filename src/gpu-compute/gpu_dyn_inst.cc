@@ -654,6 +654,12 @@ GPUDynInst::isAtomicMin() const
 }
 
 bool
+GPUDynInst::isAtomicPkAddBF16() const
+{
+    return _staticInst->isAtomicPkAddBF16();
+}
+
+bool
 GPUDynInst::isArgLoad() const
 {
     return _staticInst->isArgLoad();
@@ -882,6 +888,7 @@ GPUDynInst::resolveFlatSegment(const VectorMask &mask)
         }
         wavefront()->execUnitId =  wavefront()->flatLmUnitId;
         wavefront()->decVMemInstsIssued();
+        wavefront()->vmemIssued.erase(seqNum());
         if (isLoad()) {
             wavefront()->rdGmReqsInPipe--;
         } else if (isStore()) {
@@ -924,7 +931,8 @@ GPUDynInst::resolveFlatSegment(const VectorMask &mask)
 
         ComputeUnit *cu = wavefront()->computeUnit;
 
-        if (wavefront()->gfxVersion == GfxVersion::gfx942) {
+        if (wavefront()->gfxVersion == GfxVersion::gfx942 ||
+            wavefront()->gfxVersion == GfxVersion::gfx950) {
             // Architected flat scratch base address is in a dedicated hardware
             // register.
             for (int lane = 0; lane < cu->wfSize(); ++lane) {
@@ -963,6 +971,7 @@ GPUDynInst::resolveFlatSegment(const VectorMask &mask)
         // decrement these counters if we are explicitly a FLAT instruction.
         if (isFlat()) {
             wavefront()->decLGKMInstsIssued();
+            wavefront()->lgkmIssued.erase(seqNum());
             if (isLoad()) {
                 wavefront()->rdLmReqsInPipe--;
             } else if (isStore()) {

@@ -1,4 +1,4 @@
-# Copyright (c) 2021 The Regents of the University of California.
+# Copyright (c) 2021-2025 The Regents of the University of California.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -26,9 +26,10 @@
 
 """
 Script to run SPEC CPU2017 benchmarks with gem5.
-The script expects a benchmark program name and the simulation
-size. The system is fixed with 2 CPU cores, MESI Two Level system
-cache and 3 GiB DDR4 memory. It uses the x86 board.
+The script expects a benchmark program name, the simulation size, the path to
+the SPEC 2017 disk image, and the disk partition for the image. The system is
+fixed with 2 CPU cores, MESI Two Level system cache and 3 GiB DDR4 memory. It
+uses the x86 board.
 
 This script will count the total number of instructions executed
 in the ROI. It also tracks how much wallclock and simulated time.
@@ -36,8 +37,8 @@ in the ROI. It also tracks how much wallclock and simulated time.
 Usage:
 ------
 ```
-scons build/X86/gem5.opt
-./build/X86/gem5.opt \
+scons build/ALL/gem5.opt
+./build/ALL/gem5.opt \
     configs/example/gem5_library/x86-spec-cpu2017-benchmarks.py \
     --image <full_path_to_the_spec-2017_disk_image> \
     --partition <root_partition_to_mount> \
@@ -47,13 +48,10 @@ scons build/X86/gem5.opt
 """
 
 import argparse
-import json
 import os
 import time
 
 import m5
-from m5.objects import Root
-from m5.stats.gem5stats import get_simstat
 from m5.util import (
     fatal,
     warn,
@@ -71,21 +69,22 @@ from gem5.resources.resource import (
     DiskImageResource,
     obtain_resource,
 )
-from gem5.simulate.exit_event import ExitEvent
+from gem5.simulate.exit_handler import (
+    WorkBeginExitHandler,
+    WorkEndExitHandler,
+)
 from gem5.simulate.simulator import Simulator
+from gem5.utils.override import overrides
 from gem5.utils.requires import requires
 
 # We check for the required gem5 build.
 
 requires(
-    isa_required=ISA.X86,
     coherence_protocol_required=CoherenceProtocol.MESI_TWO_LEVEL,
     kvm_required=True,
 )
 
 # Following are the list of benchmark programs for SPEC CPU2017.
-# More information is available at:
-# https://www.gem5.org/documentation/benchmark_status/gem5-20
 
 benchmark_choices = [
     "500.perlbench_r",
@@ -148,8 +147,6 @@ parser = argparse.ArgumentParser(
 
 # The arguments accepted are: a. disk-image name, b. benchmark name, c.
 # simulation size, and, d. root partition.
-
-# root partition is set to 1 by default.
 
 parser.add_argument(
     "--image",
@@ -259,11 +256,11 @@ except FileExistsError:
 
 # Here we set the FS workload, i.e., SPEC CPU2017 benchmark
 # After simulation has ended you may inspect
-# `m5out/system.pc.com_1.device` to the stdout, if any.
+# `m5out/board.pc.com_1.device` to see the simulated system's stdout.
 
-# After the system boots, we execute the benchmark program and wait till the
+# After the system boots, we execute the benchmark program and wait until the
 # `m5_exit instruction encountered` is encountered. We start collecting
-# the number of committed instructions till ROI ends (marked by another
+# the number of committed instructions until ROI ends (marked by another
 # `m5_exit instruction encountered`). We then start copying the output logs,
 # present in the /home/gem5/spec2017/results directory to the `output_dir`.
 
@@ -286,23 +283,37 @@ board.set_kernel_disk_workload(
 )
 
 
-def handle_exit():
-    print("Done bootling Linux")
-    print("Resetting stats at the start of ROI!")
-    m5.stats.reset()
-    processor.switch()
-    yield False  # E.g., continue the simulation.
-    print("Dump stats at the end of the ROI!")
-    m5.stats.dump()
-    yield True  # Stop the simulation. We're done.
+# def handle_exit():
+#     print("Done bootling Linux")
+#     print("Resetting stats at the start of ROI!")
+#     m5.stats.reset()
+#     processor.switch()
+#     yield False  # E.g., continue the simulation.
+#     print("Dump stats at the end of the ROI!")
+#     m5.stats.dump()
+#     yield True  # Stop the simulation. We're done.
 
 
-simulator = Simulator(
-    board=board,
-    on_exit_event={
-        ExitEvent.EXIT: handle_exit(),
-    },
-)
+class CustomWorkBeginExitHandler(WorkBeginExitHandler):
+    # The default behavior on work begin is to reset stats via
+    # m5.stats.reset() and continue simulation. We override `_process`
+    # so we can also switch processors.
+    @overrides(WorkBeginExitHandler)
+    def _process(self, simulator: "Simulator") -> None:
+        m5.stats.reset()
+        simulator.switch_processor()
+
+
+class CustomWorkEndExitHandler(WorkEndExitHandler):
+    # The default behavior for work end is to dump stats via
+    # m5.stats.dump() and continue simulation.
+    # We override `_exit_simulation` to exit simulation at this exit event.
+    @overrides(WorkEndExitHandler)
+    def _exit_simulation(self) -> bool:
+        return True
+
+
+simulator = Simulator(board=board)
 
 # We maintain the wall clock time.
 
@@ -315,22 +326,3 @@ m5.stats.reset()
 
 # We start the simulation
 simulator.run()
-
-# We print the final simulation statistics.
-
-print("Done with the simulation")
-print()
-print("Performance statistics:")
-
-roi_begin_ticks = simulator.get_tick_stopwatch()[0][1]
-roi_end_ticks = simulator.get_tick_stopwatch()[1][1]
-
-print("roi simulated ticks: " + str(roi_end_ticks - roi_begin_ticks))
-
-print(
-    "Ran a total of", simulator.get_current_tick() / 1e12, "simulated seconds"
-)
-print(
-    "Total wallclock time: %.2fs, %.2f min"
-    % (time.time() - globalStart, (time.time() - globalStart) / 60)
-)

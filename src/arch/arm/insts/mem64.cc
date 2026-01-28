@@ -51,8 +51,7 @@ std::string
 SysDC64::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
-    printMnemonic(ss, "", false);
-    ccprintf(ss, ", ");
+    ss << "  " << mnemonic << ", ";
     printIntReg(ss, base);
     return ss.str();
 }
@@ -155,9 +154,9 @@ MemoryPostIndex64::generateDisassembly(
 {
     std::stringstream ss;
     startDisassembly(ss);
-    if (imm)
-        ccprintf(ss, "], #%d", imm);
     ccprintf(ss, "]");
+    if (imm)
+        ccprintf(ss, ", #%d", imm);
     return ss.str();
 }
 
