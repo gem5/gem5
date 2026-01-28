@@ -74,3 +74,101 @@ from gem5.simulate.exit_event import ExitEvent
 from gem5.simulate.simulator import Simulator
 from gem5.utils.requires import requires
 import argparse
+
+
+def parse_args():
+    """Parse command line arguments for multi-CPU SoC configuration."""
+    parser = argparse.ArgumentParser(
+        description="Multi-CPU X86 SoC with Ubuntu boot and hello world workload"
+    )
+
+    # Core configuration
+    parser.add_argument(
+        "--num-cores",
+        type=int,
+        default=2,
+        help="Number of CPU cores (default: 2)"
+    )
+
+    # CPU type configuration
+    cpu_type_choices = ["kvm", "atomic", "timing", "o3", "minor"]
+    parser.add_argument(
+        "--boot-cpu",
+        type=str,
+        default="kvm",
+        choices=cpu_type_choices,
+        help="CPU type for boot phase (default: kvm)"
+    )
+
+    parser.add_argument(
+        "--exec-cpu",
+        type=str,
+        default="timing",
+        choices=cpu_type_choices,
+        help="CPU type for execution phase (default: timing)"
+    )
+
+    parser.add_argument(
+        "--no-switch",
+        action="store_true",
+        help="Disable CPU switching (use boot CPU for entire simulation)"
+    )
+
+    # Cache configuration
+    parser.add_argument(
+        "--l1d-size",
+        type=str,
+        default="32KiB",
+        help="L1 data cache size (default: 32KiB)"
+    )
+
+    parser.add_argument(
+        "--l1i-size",
+        type=str,
+        default="32KiB",
+        help="L1 instruction cache size (default: 32KiB)"
+    )
+
+    parser.add_argument(
+        "--l2-size",
+        type=str,
+        default="512KiB",
+        help="L2 cache size (default: 512KiB)"
+    )
+
+    # Memory configuration
+    parser.add_argument(
+        "--memory-size",
+        type=str,
+        default="3GiB",
+        help="Main memory size (default: 3GiB)"
+    )
+
+    # Clock frequency
+    parser.add_argument(
+        "--clk-freq",
+        type=str,
+        default="3GHz",
+        help="System clock frequency (default: 3GHz)"
+    )
+
+    # KVM perf setting
+    parser.add_argument(
+        "--kvm-perf",
+        action="store_true",
+        help="Enable perf for KVM CPUs (default: disabled)"
+    )
+
+    return parser.parse_args()
+
+
+def get_cpu_type(cpu_str):
+    """Map string CPU type to CPUTypes enum."""
+    cpu_map = {
+        "kvm": CPUTypes.KVM,
+        "atomic": CPUTypes.ATOMIC,
+        "timing": CPUTypes.TIMING,
+        "o3": CPUTypes.O3,
+        "minor": CPUTypes.MINOR,
+    }
+    return cpu_map[cpu_str.lower()]
