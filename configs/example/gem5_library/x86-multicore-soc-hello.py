@@ -292,3 +292,69 @@ def run_simulation(board, processor, args):
     print(f"\n{'='*60}")
     print("Simulation Complete")
     print(f"{'='*60}")
+
+
+def create_hello_world_workload():
+    """Create a simple hello world workload for testing."""
+    import tempfile
+    import os
+
+    # Create a simple shell script that prints hello and exits
+    script_content = """#!/bin/bash
+echo "========================================"
+echo "Hello from gem5 Multi-CPU X86 SoC!"
+echo "Running on Ubuntu in full-system mode"
+echo "Number of CPU cores configured: $1"
+echo "========================================"
+m5 exit
+"""
+
+    # Create temporary file
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.sh', delete=False) as f:
+        f.write(script_content)
+        script_path = f.name
+
+    # Make executable
+    os.chmod(script_path, 0o755)
+
+    return script_path
+
+
+def main():
+    """Main function to run the multi-CPU SoC simulation."""
+
+    # Parse command line arguments
+    args = parse_args()
+
+    try:
+        # Configure system
+        board, processor = configure_system(args)
+
+        # Create hello world workload
+        workload_path = create_hello_world_workload()
+        print(f"[Info] Created hello world workload at: {workload_path}")
+        print("[Info] Pass this file via 'm5 readfile' in the guest")
+        print("[Info] The Ubuntu after_boot.sh script will automatically execute it")
+
+        # Run simulation
+        run_simulation(board, processor, args)
+
+        # Cleanup
+        import os
+        os.unlink(workload_path)
+
+    except Exception as e:
+        print(f"\n{'='*60}")
+        print("Simulation Failed")
+        print(f"{'='*60}")
+        print(f"Error: {e}")
+        print(f"\nCommon issues:")
+        print("1. Ensure gem5 is built with X86 and MESI_TWO_LEVEL support")
+        print("2. For KVM: Ensure host has KVM enabled and user has permissions")
+        print("3. Check internet connection for resource download")
+        print(f"{'='*60}")
+        raise
+
+
+if __name__ == "__main__":
+    main()
