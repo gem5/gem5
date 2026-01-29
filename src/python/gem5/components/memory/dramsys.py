@@ -120,28 +120,40 @@ class DRAMSysMem(AbstractMemorySystem):
 
 
 class DRAMSysDDR4_1866(DRAMSysMem):
-    """
-    An example DDR4 1866 DRAMSys configuration.
+    """An example DDR4 1866 DRAMSys configuration.
+
+    Notes
+    -----
+    gem5 uses functional accesses (i.e., TLM debug transport) during
+    SE-mode binary loading. DRAMSys requires a storage-backed configuration
+    for debug transport. Therefore, for gem5 SE usage we point to a
+    configuration using DRAMSys's `simconfig/gem5_se.json`.
     """
 
     def __init__(self):
         super().__init__(
-            configuration=(
-                DEFAULT_DRAMSYS_DIRECTORY / "configs/ddr4-example.json"
+            configuration=Path(
+                "ext/dramsys/gem5_configs/ddr4-gem5-se.json"
             ).as_posix(),
             size="4GiB",
         )
 
 
 class DRAMSysDDR3_1600(DRAMSysMem):
-    """
-    An example DDR3 1600 DRAMSys configuration.
+    """An example DDR3 1600 DRAMSys configuration.
+
+    Notes
+    -----
+    gem5 uses functional accesses (i.e., TLM debug transport) during
+    SE-mode binary loading. DRAMSys requires a storage-backed configuration
+    for debug transport. Therefore, for gem5 SE usage we point to a
+    configuration using DRAMSys's `simconfig/gem5_se.json`.
     """
 
     def __init__(self):
         super().__init__(
-            configuration=(
-                DEFAULT_DRAMSYS_DIRECTORY / "configs/ddr3-example.json"
+            configuration=Path(
+                "ext/dramsys/gem5_configs/ddr3-gem5-se.json"
             ).as_posix(),
             size="1GiB",
         )

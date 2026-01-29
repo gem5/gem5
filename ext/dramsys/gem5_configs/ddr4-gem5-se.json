@@ -1,0 +1,17 @@
+{
+    "simulation": {
+        "addressmapping": "addressmapping/am_ddr4_8x4Gbx8_dimm_p1KB_brc.json",
+        "mcconfig": "mcconfig/fr_fcfs.json",
+        "memspec": "memspec/JEDEC_4Gb_DDR4-1866_8bit_A.json",
+        "simconfig": "simconfig/gem5_se.json",
+        "simulationid": "ddr4-gem5-se",
+        "tracesetup": [
+            {
+                "type": "player",
+                "clkMhz": 200,
+                "dataLength": 64,
+                "name": "traces/example.stl"
+            }
+        ]
+    }
+}
