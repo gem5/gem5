@@ -1,0 +1,22 @@
+{
+    "simconfig": {
+        "AddressOffset": 0,
+        "DatabaseRecording": true,
+        "Debug": false,
+        "EnableWindowing": true,
+        "PowerAnalysis": false,
+        "SimulationName": "example",
+        "SimulationProgressBar": true,
+        "StoreMode": "Store",
+        "UseMalloc": false,
+        "WindowSize": 1000,
+        "TogglingRate": {
+            "togglingRateRead": 0.5,
+            "togglingRateWrite": 0.5,
+            "dutyCycleRead": 0.5,
+            "dutyCycleWrite": 0.5,
+            "idlePatternRead": "L",
+            "idlePatternWrite": "L"
+        }
+    }
+}

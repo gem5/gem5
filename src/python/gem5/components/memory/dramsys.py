@@ -139,11 +139,17 @@ class DRAMSysDDR3_1600(DRAMSysMem):
     """
 
     def __init__(self):
+        # NOTE: DRAMSys' default example simconfig uses StoreMode=NoStorage.
+        # gem5 may issue functional/debug transactions (transport_dbg) during
+        # SE-mode process initialization, which DRAMSys does not support with
+        # NoStorage enabled.
+        #
+        # We therefore provide a gem5-local example configuration which uses
+        # StoreMode=Store while still referencing the DRAMSys resources.
         super().__init__(
-            configuration=(
-                DEFAULT_DRAMSYS_DIRECTORY / "configs/ddr3-example.json"
-            ).as_posix(),
+            configuration="configs/dramsys/ddr3-example-store.json",
             size="1GiB",
+            resource_directory=".",
         )
 
 

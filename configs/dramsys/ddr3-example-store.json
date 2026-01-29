@@ -1,0 +1,19 @@
+{
+    "simulation": {
+        "addressmapping":
+            "ext/dramsys/DRAMSys/configs/addressmapping/am_ddr3_8x1Gbx8_dimm_p1KB_rbc.json",
+        "mcconfig": "ext/dramsys/DRAMSys/configs/mcconfig/fr_fcfs.json",
+        "memspec":
+            "ext/dramsys/DRAMSys/configs/memspec/MICRON_1Gb_DDR3-1600_8bit_G.json",
+        "simconfig": "configs/dramsys/simconfig/example-store.json",
+        "simulationid": "ddr3-example",
+        "tracesetup": [
+            {
+                "type": "player",
+                "clkMhz": 800,
+                "dataLength": 64,
+                "name": "ext/dramsys/DRAMSys/configs/traces/example.stl"
+            }
+        ]
+    }
+}
