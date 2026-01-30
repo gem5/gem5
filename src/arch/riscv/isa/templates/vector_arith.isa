@@ -1737,7 +1737,10 @@ template<typename ElemType>
     for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
         microop = new %(class_name)sMicro<ElemType>(_machInst, micro_vl, i,
                                                     _elen, _vlen);
-        if (flags[IsSerializeAfter] && i < num_microops-1) { // ordered
+        // serialize all ordered and initial unordered µop(s) (unless last) to
+        // guarantee architectural correcness with OoO execution
+        if ((flags[IsSerializeAfter] && i < num_microops-1)
+                || (i == 0 && num_microops > 1)) {
             microop->setFlag(StaticInst::IsSerializeAfter);
         }
         microop->setDelayedCommit();
