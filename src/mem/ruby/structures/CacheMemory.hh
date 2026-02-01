@@ -195,6 +195,7 @@ class CacheMemory : public SimObject
     int m_start_index_bit;
     bool m_resource_stalls;
     int m_block_size;
+    bool m_is_power_of_2_sets;
 
     /**
      * We store all the ReplacementData in a 2-dimensional array. By doing
