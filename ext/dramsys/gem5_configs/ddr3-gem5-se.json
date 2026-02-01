@@ -1,16 +1,18 @@
 {
     "simulation": {
-        "addressmapping": "addressmapping/am_ddr3_8x1Gbx8_dimm_p1KB_rbc.json",
-        "mcconfig": "mcconfig/fr_fcfs.json",
-        "memspec": "memspec/MICRON_1Gb_DDR3-1600_8bit_G.json",
-        "simconfig": "simconfig/gem5_se.json",
+        "addressmapping":
+            "../DRAMSys/configs/addressmapping/am_ddr3_8x1Gbx8_dimm_p1KB_rbc.json",
+        "mcconfig": "../DRAMSys/configs/mcconfig/fr_fcfs.json",
+        "memspec":
+            "../DRAMSys/configs/memspec/MICRON_1Gb_DDR3-1600_8bit_G.json",
+        "simconfig": "../DRAMSys/configs/simconfig/gem5_se.json",
         "simulationid": "ddr3-gem5-se",
         "tracesetup": [
             {
                 "type": "player",
                 "clkMhz": 800,
                 "dataLength": 64,
-                "name": "traces/example.stl"
+                "name": "../DRAMSys/configs/traces/example.stl"
             }
         ]
     }
