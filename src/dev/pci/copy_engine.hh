@@ -58,7 +58,7 @@
 namespace gem5
 {
 
-class CopyEngine : public PciDevice
+class CopyEngine : public PciEndpoint
 {
     class CopyEngineChannel : public Drainable, public Serializable
     {
@@ -164,6 +164,10 @@ class CopyEngine : public PciDevice
     // Array of channels each one with regs/dma port/etc
     std::vector<CopyEngineChannel*> chan;
 
+  protected:
+    Tick readDevice(PacketPtr pkt) override;
+    Tick writeDevice(PacketPtr pkt) override;
+
   public:
     PARAMS(CopyEngine);
     CopyEngine(const Params &params);
@@ -171,9 +175,6 @@ class CopyEngine : public PciDevice
 
     Port &getPort(const std::string &if_name,
             PortID idx = InvalidPortID) override;
-
-    Tick read(PacketPtr pkt) override;
-    Tick write(PacketPtr pkt) override;
 
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;

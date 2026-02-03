@@ -356,6 +356,16 @@ namespace VegaISA
         void execute(GPUDynInstPtr gpuDynInst) override;
     };
 
+    class Inst_VOP3P__V_DOT2_F32_BF16 : public Inst_VOP3P__3OP_X16
+    {
+      public:
+        Inst_VOP3P__V_DOT2_F32_BF16(InFmt_VOP3P *iFmt)
+            : Inst_VOP3P__3OP_X16(iFmt, "v_dot2_f32_bf16")
+        { }
+
+        void execute(GPUDynInstPtr gpuDynInst) override;
+    };
+
     class Inst_VOP3P__V_DOT2_I32_I16 : public Inst_VOP3P__3OP_X16
     {
       public:

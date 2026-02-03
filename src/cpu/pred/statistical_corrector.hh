@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018 Metempsy Technology Consulting
+ * Copyright (c) 2024 Technical University of Munich
  * All rights reserved.
  *
  * Copyright (c) 2006 INRIA (Institut National de Recherche en
@@ -74,16 +75,22 @@ class StatisticalCorrector : public SimObject
     // histories used for the statistical corrector
     struct SCThreadHistory
     {
-        SCThreadHistory() {
+        SCThreadHistory(unsigned instShiftAmt)
+          : instShiftAmt(instShiftAmt)
+        {
             bwHist = 0;
             numOrdinalHistories = 0;
             imliCount = 0;
+            pHist = 0;
         }
+        const unsigned instShiftAmt;
         int64_t bwHist;  // backward global history
         int64_t imliCount;
+        int64_t pHist;   // path history from TAGE
 
         void setNumOrdinalHistories(unsigned num)
         {
+            assert(num < MaxOrdinalHistories);
             numOrdinalHistories = num;
             assert(num > 0);
             shifts.resize(num);
@@ -103,6 +110,13 @@ class StatisticalCorrector : public SimObject
             assert((ordinal >= 1) && (ordinal <= numOrdinalHistories));
             unsigned idx = ordinal - 1;
             return localHistories[idx][getEntry(pc, idx)];
+        }
+
+        void setLocalHistory(int ordinal, Addr pc, int64_t value)
+        {
+            assert((ordinal >= 1) && (ordinal <= numOrdinalHistories));
+            unsigned idx = ordinal - 1;
+            localHistories[idx][getEntry(pc, idx)] = value;
         }
 
         void updateLocalHistory(
@@ -128,7 +142,9 @@ class StatisticalCorrector : public SimObject
 
         unsigned getEntry(Addr pc, unsigned idx)
         {
-            return (pc ^ (pc >> shifts[idx])) & (localHistories[idx].size()-1);
+            Addr shifted_pc = pc >> instShiftAmt;
+            return (shifted_pc ^ (shifted_pc >> shifts[idx]))
+                 & (localHistories[idx].size()-1);
         }
     };
 
@@ -186,6 +202,13 @@ class StatisticalCorrector : public SimObject
 
     const unsigned scCountersWidth;
 
+    const unsigned instShiftAmt;
+
+    // Enable speculative updates of the SC histories
+    const bool speculativeHistUpdate;
+    // Maximum number of ordinal histories
+    static const int MaxOrdinalHistories = 4;
+
     int8_t firstH;
     int8_t secondH;
 
@@ -201,7 +224,9 @@ class StatisticalCorrector : public SimObject
     {
         BranchInfo() : lowConf(false), highConf(false), altConf(false),
               medConf(false), scPred(false), lsum(0), thres(0),
-              predBeforeSC(false), usedScPred(false)
+              predBeforeSC(false), usedScPred(false),
+              modified(false), pc(0), bwHist(0), imliCount(0), pHist(0),
+              globalHist(0), imHist(0)
         {}
 
         // confidences calculated on tage and used on the statistical
@@ -216,6 +241,19 @@ class StatisticalCorrector : public SimObject
         int thres;
         bool predBeforeSC;
         bool usedScPred;
+
+        // Variables to take a checkpoint of the SC history state
+        // and restore it after a misprediction
+        bool modified;     // indicator when the SC history was modified
+        Addr pc;
+        int64_t bwHist;    // backward global history
+        int64_t imliCount; // inner most loop interation count
+        int64_t pHist;     // path history from TAGE
+        int64_t localHistories[MaxOrdinalHistories] = {0};
+        // 8KB SC another global history
+        int64_t globalHist;
+        // 64KB SC uses multiple imliCount
+        int64_t imHist;
     };
 
     StatisticalCorrector(const StatisticalCorrectorParams &p);
@@ -226,23 +264,27 @@ class StatisticalCorrector : public SimObject
     virtual void initBias();
 
     virtual bool scPredict(
-        ThreadID tid, Addr branch_pc, bool cond_branch, BranchInfo* bi,
+        ThreadID tid, Addr branch_pc, bool cond_branch, BranchInfo *bi,
         bool prev_pred_taken, bool bias_bit, bool use_conf_ctr,
         int8_t conf_ctr, unsigned conf_bits, int hitBank, int altBank,
-        int64_t phist, int init_lsum = 0);
+        int init_lsum = 0);
 
-    virtual unsigned getIndBias(Addr branch_pc, BranchInfo* bi, bool b) const;
+    virtual unsigned getIndBias(Addr branch_pc, BranchInfo *bi, bool b) const;
 
-    virtual unsigned getIndBiasSK(Addr branch_pc, BranchInfo* bi) const;
+    virtual unsigned getIndBiasSK(Addr branch_pc, BranchInfo *bi) const;
 
-    virtual unsigned getIndBiasBank( Addr branch_pc, BranchInfo* bi,
-        int hitBank, int altBank) const = 0;
+    virtual unsigned getIndBiasBank(
+        Addr branch_pc, BranchInfo *bi, int hitBank, int altBank) const = 0;
 
     virtual unsigned getIndUpd(Addr branch_pc) const;
     unsigned getIndUpds(Addr branch_pc) const;
 
-    virtual int gPredictions(ThreadID tid, Addr branch_pc, BranchInfo* bi,
-        int & lsum, int64_t phist) = 0;
+    virtual int gPredictions(
+        ThreadID tid, Addr branch_pc, BranchInfo *bi, int &lsum) = 0;
+
+    int calcBias(
+        Addr branch_pc, BranchInfo *bi, bool bias_bit, bool use_conf_ctr,
+        int8_t conf_ctr, unsigned conf_bits, int hitBank, int altBank);
 
     int64_t gIndex(Addr branch_pc, int64_t bhist, int logs, int nbr, int i);
 
@@ -254,28 +296,36 @@ class StatisticalCorrector : public SimObject
         std::vector<int8_t> & w);
 
     virtual void gUpdate(
-        Addr branch_pc, bool taken, int64_t hist, std::vector<int> & length,
-        std::vector<int8_t> * tab, int nbr, int logs,
-        std::vector<int8_t> & w, BranchInfo* bi);
+        Addr branch_pc, bool taken, int64_t hist, std::vector<int> &length,
+        std::vector<int8_t> *tab, int nbr, int logs,
+        std::vector<int8_t> &w, BranchInfo *bi);
 
     void initGEHLTable(
         unsigned numLenghts, std::vector<int> lengths,
-        std::vector<int8_t> * & table, unsigned logNumEntries,
-        std::vector<int8_t> & w, int8_t wInitValue);
+        std::vector<int8_t> *&table, unsigned logNumEntries,
+        std::vector<int8_t> &w, int8_t wInitValue);
 
     virtual void scHistoryUpdate(
-        Addr branch_pc, const StaticInstPtr &inst , bool taken,
-        BranchInfo * tage_bi, Addr corrTarget);
+        Addr branch_pc, const StaticInstPtr &inst,
+        bool taken, Addr target, int64_t phist);
 
-    virtual void gUpdates( ThreadID tid, Addr pc, bool taken, BranchInfo* bi,
-        int64_t phist) = 0;
+    void updateHistories(
+        Addr branch_pc, bool speculative,
+        const StaticInstPtr &inst , bool taken,
+        BranchInfo *bi, Addr target, int64_t phist);
+
+    virtual void scRecordHistState(Addr branch_pc, BranchInfo *bi);
+    virtual bool scRestoreHistState(BranchInfo *bi);
+
+    virtual void gUpdates(
+        ThreadID tid, Addr pc, bool taken, BranchInfo *bi) = 0;
 
     void init() override;
     void updateStats(bool taken, BranchInfo *bi);
 
     virtual void condBranchUpdate(ThreadID tid, Addr branch_pc, bool taken,
                           BranchInfo *bi, Addr corrTarget, bool bias_bit,
-                          int hitBank, int altBank, int64_t phist);
+                          int hitBank, int altBank);
 
     virtual size_t getSizeInBits() const;
 };

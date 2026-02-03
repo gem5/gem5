@@ -60,7 +60,7 @@ if env['CONF']['USE_SYSTEMC'] and GetOption('with_systemc_tests'):
                 'deps' : self.deps
             }
 
-    test_dir = Dir('.')
+    test_dir = Dir('#/src/systemc/tests')
     class SystemCTestBin(Executable):
         def __init__(self, test):
             all_sources = test.sources + [with_tag('main')]

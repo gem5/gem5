@@ -279,6 +279,8 @@ class DataWrap : public InfoAccess
             warn_once("One of the stats is a legacy stat. " + common_message);
     }
 
+    virtual ~DataWrap() { delete info(); }
+
     /**
      * Set the name and marks this stat to print at the end of simulation.
      * @param name The new name.
@@ -1004,7 +1006,7 @@ class VectorBase : public DataWrapVec<Derived, VectorInfoProxy>
     zero() const
     {
         for (off_type i = 0; i < size(); ++i)
-            if (data(i)->zero())
+            if (!data(i)->zero())
                 return false;
         return true;
     }
@@ -1315,6 +1317,15 @@ class DistBase : public DataWrap<Derived, DistInfoProxy>
              const char *desc)
         : DataWrap<Derived, DistInfoProxy>(parent, name, unit, desc)
     {
+    }
+
+    virtual ~DistBase()
+    {
+        if (this->info()) {
+            // Note: we have to do a direct call of the constructor because of
+            // placement new used above.
+            data()->~Storage();
+        }
     }
 
     /**

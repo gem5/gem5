@@ -1,5 +1,5 @@
 // -*- mode:c++ -*-
-// Copyright (c) 2010-2014, 2016-2018, 2021-2022, 2024 Arm Limited
+// Copyright (c) 2010-2014, 2016-2018, 2021-2022, 2024-2025 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -266,9 +266,6 @@ let {{
         def __init__(self, idx, id=srtNormal, ctype='ud'):
             super().__init__(idx, id, ctype)
 
-    class CntrlRegNC(CntrlReg):
-        pass
-
     class PCStateReg(PCStateOp):
         def __init__(self, idx, id):
             super().__init__('ud', idx, (None, None, 'IsControl'), id)
@@ -313,6 +310,8 @@ def operands {{
     'PInt1': PIntReg('reg1'),
     'PInt2': PIntReg('reg2'),
     'PInt3': PIntReg('reg3'),
+    'SpDest': IntRegX64('spMapping(dest)'),
+    'SpOp1': IntRegX64('spMapping(op1)'),
 
     #Fixed index integer reg operands
     'SpMode': IntRegNPC('int_reg::regInMode((OperatingMode)regMode, '
@@ -460,6 +459,7 @@ def operands {{
     'POp1': VecPredReg('op1'),
     'POp2': VecPredReg('op2'),
     'PDest': VecPredReg('dest'),
+    'PDest2': VecPredReg('dest2'),
     'PDestMerge': VecPredReg('dest'),
     'Ffr': VecPredReg('PREDREG_FFR'),
     'FfrAux': VecPredReg('PREDREG_FFR'),
@@ -480,17 +480,18 @@ def operands {{
     #Fixed index control regs
     'Cpsr': CntrlReg('MISCREG_CPSR', srtCpsr),
     'CpsrQ': CntrlReg('MISCREG_CPSR_Q', srtCpsr),
-    'Spsr': CntrlRegNC('MISCREG_SPSR'),
-    'Fpsr': CntrlRegNC('MISCREG_FPSR'),
-    'Fpsid': CntrlRegNC('MISCREG_FPSID'),
-    'Fpscr': CntrlRegNC('MISCREG_FPSCR'),
-    'FpscrQc': CntrlRegNC('MISCREG_FPSCR_QC'),
-    'FpscrExc': CntrlRegNC('MISCREG_FPSCR_EXC'),
+    'Spsr': CntrlReg('MISCREG_SPSR'),
+    'Fpsr': CntrlReg('MISCREG_FPSR'),
+    'Fpsid': CntrlReg('MISCREG_FPSID'),
+    'Fpscr': CntrlReg('MISCREG_FPSCR'),
+    'FpscrQc': CntrlReg('MISCREG_FPSCR_QC'),
+    'FpscrExc': CntrlReg('MISCREG_FPSCR_EXC'),
+    'Fpcr': CntrlReg('MISCREG_FPCR'),
     'Cpacr': CntrlReg('MISCREG_CPACR'),
     'Cpacr64': CntrlReg64('MISCREG_CPACR_EL1'),
-    'Fpexc': CntrlRegNC('MISCREG_FPEXC'),
+    'Fpexc': CntrlReg('MISCREG_FPEXC'),
     'Nsacr': CntrlReg('MISCREG_NSACR'),
-    'ElrHyp': CntrlRegNC('MISCREG_ELR_HYP'),
+    'ElrHyp': CntrlReg('MISCREG_ELR_HYP'),
     'Hcr': CntrlReg('MISCREG_HCR'),
     'Hcr64': CntrlReg64('MISCREG_HCR_EL2'),
     'CptrEl264': CntrlReg64('MISCREG_CPTR_EL2'),
@@ -498,11 +499,11 @@ def operands {{
     'Hstr': CntrlReg('MISCREG_HSTR'),
     'Scr': CntrlReg('MISCREG_SCR'),
     'Scr64': CntrlReg64('MISCREG_SCR_EL3'),
-    'Sctlr': CntrlRegNC('MISCREG_SCTLR'),
-    'SevMailbox': CntrlRegNC('MISCREG_SEV_MAILBOX'),
-    'LLSCLock': CntrlRegNC('MISCREG_LOCKFLAG'),
-    'Dczid' : CntrlRegNC('MISCREG_DCZID_EL0'),
-    'PendingDvm': CntrlRegNC('MISCREG_TLBINEEDSYNC'),
+    'Sctlr': CntrlReg('MISCREG_SCTLR'),
+    'SevMailbox': CntrlReg('MISCREG_SEV_MAILBOX'),
+    'LLSCLock': CntrlReg('MISCREG_LOCKFLAG'),
+    'Dczid' : CntrlReg('MISCREG_DCZID_EL0'),
+    'PendingDvm': CntrlReg('MISCREG_TLBINEEDSYNC'),
     'Svcr' : CntrlReg('MISCREG_SVCR'),
 
     #Register fields for microops

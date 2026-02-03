@@ -689,22 +689,23 @@ ArmFault::invoke64(ThreadContext *tc, const StaticInstPtr &inst)
     // information
     [[maybe_unused]] ArmStaticInst *arm_inst = instrAnnotate(inst);
 
+    // Save exception syndrome
+    MiscRegIndex syndrome_index = getSyndromeReg64();
+    if ((nextMode() != MODE_IRQ) && (nextMode() != MODE_FIQ))
+        setSyndrome(tc, syndrome_index);
+
     // Set PC to start of exception handler
     Addr new_pc = purifyTaggedAddr(vec_address, tc, toEL, true);
     DPRINTF(Faults, "Invoking Fault (AArch64 target EL):%s cpsr:%#x PC:%#x "
-            "elr:%#x newVec: %#x %s\n", name(), cpsr, curr_pc, ret_addr,
-            new_pc, arm_inst ? csprintf("inst: %#x", arm_inst->encoding()) :
-            std::string());
+            "elr:%#x esr_el%d: %#x %s\n", name(), cpsr, curr_pc, ret_addr,
+            toEL, tc->readMiscRegNoEffect(syndrome_index), arm_inst ?
+            csprintf("inst: %#x", arm_inst->encoding()) : std::string());
     PCState pc(new_pc);
     pc.aarch64(!cpsr.width);
     pc.nextAArch64(!cpsr.width);
     pc.illegalExec(false);
     pc.stepped(false);
     tc->pcState(pc);
-
-    // Save exception syndrome
-    if ((nextMode() != MODE_IRQ) && (nextMode() != MODE_FIQ))
-        setSyndrome(tc, getSyndromeReg64());
 }
 
 ArmStaticInst *

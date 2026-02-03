@@ -30,6 +30,7 @@ import re
 import sys
 
 from testlib import *
+from testlib import verifier
 
 resources = [
     "rvv-branch",
@@ -49,7 +50,9 @@ resources = [
 vlens = [2**x for x in range(7, 15)]
 
 for resource in resources:
-    out_verifier = verifier.MatchRegex(re.compile(f"^.*{resource}: pass$"))
+    out_verifier = verifier.MatchRegex(
+        re.compile(f"^.*{resource}-\\d+\\.\\d+\\.\\d+: pass$")
+    )
 
     for vlen in vlens:
         gem5_verify_config(

@@ -34,6 +34,7 @@
 #include "base/bitfield.hh"
 #include "debug/GPUExec.hh"
 #include "debug/GPUInitAbi.hh"
+#include "debug/GPUTrace.hh"
 #include "debug/WavefrontStack.hh"
 #include "gpu-compute/compute_unit.hh"
 #include "gpu-compute/gpu_dyn_inst.hh"
@@ -97,6 +98,9 @@ Wavefront::Wavefront(const Params &p)
     rawDist.clear();
     lastInstExec = 0;
     vecReads.clear();
+
+    lastInstSeqNum = 0;
+    lastInstDisasm = "none";
 }
 
 void
@@ -342,6 +346,24 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
                         wfSlotId, wfDynId, physSgprIdx,
                         task->privMemPerItem());
                 break;
+              case KernargPreload:
+                DPRINTF(GPUInitAbi, "Preload %d user SGPRs starting at virtual"
+                        " SGPR s[%d]\n", task->preloadLength(), regInitIdx);
+
+                for (int idx = 0; idx < task->preloadLength(); ++idx) {
+                    uint32_t finalValue = task->preloadArgs()[idx];
+                    physSgprIdx =
+                        computeUnit->registerManager->mapSgpr(this,
+                                                              regInitIdx);
+
+                    DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] Setting "
+                            "s[%d] = %x\n", computeUnit->cu_id, simdId,
+                            wfSlotId, wfDynId, physSgprIdx, finalValue);
+
+                    computeUnit->srf[simdId]->write(physSgprIdx, finalValue);
+                    ++regInitIdx;
+                }
+                break;
               case WorkgroupIdX:
                 physSgprIdx =
                     computeUnit->registerManager->mapSgpr(this, regInitIdx);
@@ -383,9 +405,14 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
                 // For architected flat scratch, this enable is reused to set
                 // the FLAT_SCRATCH register pair to the scratch backing
                 // memory: https://llvm.org/docs/AMDGPUUsage.html#flat-scratch
-                if (task->gfxVersion() == GfxVersion::gfx942) {
+                if (task->gfxVersion() == GfxVersion::gfx942 ||
+                    task->gfxVersion() == GfxVersion::gfx950) {
+                    uint32_t scratchPerWI =
+                        task->amdQueue.scratch_workitem_byte_size;
+
                     archFlatScratchAddr =
-                        task->amdQueue.scratch_backing_memory_location;
+                        task->amdQueue.scratch_backing_memory_location
+                        + (scratchPerWI * 64 * wfId);
 
                     DPRINTF(GPUInitAbi, "CU%d: WF[%d][%d]: wave[%d] "
                             "Setting architected flat scratch = %x\n",
@@ -464,7 +491,8 @@ Wavefront::initRegState(HSAQueueEntry *task, int wgSizeInWorkItems)
     bool packed_work_item_id = false;
 
     if (task->gfxVersion() == GfxVersion::gfx90a ||
-        task->gfxVersion() == GfxVersion::gfx942) {
+        task->gfxVersion() == GfxVersion::gfx942 ||
+        task->gfxVersion() == GfxVersion::gfx950) {
         packed_work_item_id = true;
     }
 
@@ -944,6 +972,9 @@ Wavefront::exec()
 
     const Addr old_pc = pc();
     DPRINTF(GPUExec, "CU%d: WF[%d][%d]: wave[%d] Executing inst: %s "
+            "(pc: %#x; seqNum: %d)\n", computeUnit->cu_id, simdId, wfSlotId,
+            wfDynId, ii->disassemble(), old_pc, ii->seqNum());
+    DPRINTF(GPUTrace, "CU%d: WF[%d][%d]: wave[%d] Executing inst: %s "
             "(pc: %#x; seqNum: %d)\n", computeUnit->cu_id, simdId, wfSlotId,
             wfDynId, ii->disassemble(), old_pc, ii->seqNum());
 
@@ -1435,6 +1466,105 @@ Wavefront::decLGKMInstsIssued()
     --lgkmInstsIssued;
 }
 
+void
+Wavefront::trackVMemInst(GPUDynInstPtr gpu_dyn_inst)
+{
+    if (!computeUnit->shader->getProgressInterval()) {
+        return;
+    }
+
+    assert(!vmemIssued.count(gpu_dyn_inst->seqNum()));
+    vmemIssued.insert(gpu_dyn_inst->seqNum());
+    trackInst(gpu_dyn_inst);
+}
+
+void
+Wavefront::trackLGKMInst(GPUDynInstPtr gpu_dyn_inst)
+{
+    if (!computeUnit->shader->getProgressInterval()) {
+        return;
+    }
+
+    assert(!lgkmIssued.count(gpu_dyn_inst->seqNum()));
+    lgkmIssued.insert(gpu_dyn_inst->seqNum());
+    trackInst(gpu_dyn_inst);
+}
+
+void
+Wavefront::trackExpInst(GPUDynInstPtr gpu_dyn_inst)
+{
+    if (!computeUnit->shader->getProgressInterval()) {
+        return;
+    }
+
+    assert(!expIssued.count(gpu_dyn_inst->seqNum()));
+    expIssued.insert(gpu_dyn_inst->seqNum());
+    trackInst(gpu_dyn_inst);
+}
+
+void
+Wavefront::trackInst(GPUDynInstPtr gpu_dyn_inst)
+{
+    if (!computeUnit->shader->getProgressInterval()) {
+        return;
+    }
+
+    cntInsts.insert({gpu_dyn_inst->seqNum(), gpu_dyn_inst->disassemble()});
+}
+
+void
+Wavefront::untrackVMemInst(GPUDynInstPtr gpu_dyn_inst)
+{
+    if (!computeUnit->shader->getProgressInterval()) {
+        return;
+    }
+
+    warn_if(!vmemIssued.count(gpu_dyn_inst->seqNum()),
+            "%d not in VMEM issued!\n", gpu_dyn_inst->seqNum());
+    vmemIssued.erase(gpu_dyn_inst->seqNum());
+    untrackInst(gpu_dyn_inst->seqNum());
+}
+
+void
+Wavefront::untrackLGKMInst(GPUDynInstPtr gpu_dyn_inst)
+{
+    if (!computeUnit->shader->getProgressInterval()) {
+        return;
+    }
+
+    warn_if(!lgkmIssued.count(gpu_dyn_inst->seqNum()),
+            "%d not in LGKM issued!\n", gpu_dyn_inst->seqNum());
+    lgkmIssued.erase(gpu_dyn_inst->seqNum());
+    untrackInst(gpu_dyn_inst->seqNum());
+}
+
+void
+Wavefront::untrackExpInst(GPUDynInstPtr gpu_dyn_inst)
+{
+    if (!computeUnit->shader->getProgressInterval()) {
+        return;
+    }
+
+    warn_if(!expIssued.count(gpu_dyn_inst->seqNum()),
+            "%d not in EXP issued!\n", gpu_dyn_inst->seqNum());
+    expIssued.erase(gpu_dyn_inst->seqNum());
+    untrackInst(gpu_dyn_inst->seqNum());
+}
+
+void
+Wavefront::untrackInst(InstSeqNum seqNum)
+{
+    if (!computeUnit->shader->getProgressInterval()) {
+        return;
+    }
+
+    if (!vmemIssued.count(seqNum) &&
+        !lgkmIssued.count(seqNum) &&
+        !expIssued.count(seqNum)) {
+        cntInsts.erase(seqNum);
+    }
+}
+
 Addr
 Wavefront::pc() const
 {
@@ -1510,6 +1640,93 @@ void
 Wavefront::releaseBarrier()
 {
     barId = WFBarrier::InvalidID;
+}
+
+std::string
+Wavefront::statusToString(status_e status)
+{
+    switch (status) {
+        case S_STOPPED: return "S_STOPPED";
+        case S_RETURNING: return "S_RETURNING";
+        case S_RUNNING: return "S_RUNNING";
+        case S_STALLED: return "S_STALLED";
+        case S_STALLED_SLEEP: return "S_STALLED_SLEEP";
+        case S_WAITCNT: return "S_WAITCNT";
+        case S_BARRIER: return "S_BARRIER";
+        default: break;
+    }
+
+    return "Unknown";
+}
+
+void
+Wavefront::printProgress()
+{
+    std::cout << "wave[" << wfDynId << "] status: "
+              << statusToString(getStatus()) << " last inst: "
+              << lastInstDisasm << " waitcnts: vmem: " << vmemInstsIssued
+              << "/" << vmWaitCnt << "(";
+    for (auto &elem : vmemIssued) {
+        std::cout << elem << ' ';
+    }
+    std::cout << ") exp: " << expInstsIssued << "/"
+              << expWaitCnt << "(";
+    for (auto &elem : expIssued) {
+        std::cout << elem << ' ';
+    }
+
+    std::cout << ") lgkm: " << lgkmInstsIssued << " / "
+              << lgkmWaitCnt << "(";
+    for (auto &elem : lgkmIssued) {
+        std::cout << elem << ' ';
+    }
+    std::cout << ") last ready status: " << lastInstRdyStatus
+              << " status VRF/SRF: " << lastVrfStatus << "/" << lastSrfStatus
+              << " wait insts:\n";
+
+    for (auto &elem : vmemIssued) {
+        std::cout << "\t" << cntInsts[elem] << "\n";
+    }
+    for (auto &elem : lgkmIssued) {
+        std::cout << "\t" << cntInsts[elem] << "\n";
+    }
+    for (auto &elem : expIssued) {
+        std::cout << "\t" << cntInsts[elem] << "\n";
+    }
+}
+
+void
+Wavefront::setMfmaAScale(int idx, uint8_t value)
+{
+    assert(idx < VegaISA::NumVecElemPerVecReg);
+    mfmaAScale[idx] = value;
+}
+
+void
+Wavefront::setMfmaBScale(int idx, uint8_t value)
+{
+    assert(idx < VegaISA::NumVecElemPerVecReg);
+    mfmaBScale[idx] = value;
+}
+
+uint8_t
+Wavefront::getMfmaAScale(int idx)
+{
+    assert(idx < VegaISA::NumVecElemPerVecReg);
+    uint8_t rv = mfmaAScale[idx];
+    mfmaAScale[idx] = 0;
+
+    return rv;
+}
+
+uint8_t
+Wavefront::getMfmaBScale(int idx)
+{
+    assert(idx < VegaISA::NumVecElemPerVecReg);
+    uint8_t rv = mfmaBScale[idx];
+    mfmaBScale[idx] = 0;
+
+    return rv;
 }
 
 Wavefront::WavefrontStats::WavefrontStats(statistics::Group *parent)

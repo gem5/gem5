@@ -275,6 +275,14 @@ class StateMachine(Symbol):
 from m5.params import *
 from m5.SimObject import SimObject
 from m5.objects.Controller import RubyController
+"""
+        )
+
+        if "BasePrefetcher" in python_class_map.values():
+            code("from m5.objects.Prefetcher import BasePrefetcher")
+
+        code(
+            """
 
 class $py_ident(RubyController):
     type = '$py_ident'
@@ -822,6 +830,10 @@ $c_ident::init()
                     if "non_obj" not in vtype and not vtype.isEnumeration:
                         args = var.get("constructor", "")
 
+                    if args == "" and "DataBlock" in vtype.c_ident:
+                        # DataBlock constructor requires a blk_size argument
+                        args = "m_ruby_system->getBlockSizeBytes()"
+
                     code("$expr($args);")
                     code("assert($vid != NULL);")
 
@@ -831,13 +843,13 @@ $c_ident::init()
                         comment = f"Type {vtype.ident} default"
                         code('*$vid = ${{vtype["default"]}}; // $comment')
 
-                    # For objects that require knowing the cache line size,
+                    # For objects that require a pointer to RubySystem,
                     # set the value here.
-                    if vtype.c_ident in ("TBETable"):
-                        block_size_func = "m_ruby_system->getBlockSizeBytes()"
-                        code(f"(*{vid}).setBlockSize({block_size_func});")
-
-                    if vtype.c_ident in ("NetDest", "PerfectCacheMemory"):
+                    if vtype.c_ident in (
+                        "NetDest",
+                        "PerfectCacheMemory",
+                        "TBETable",
+                    ):
                         code(f"(*{vid}).setRubySystem(m_ruby_system);")
 
         for param in self.config_parameters:
@@ -1271,7 +1283,6 @@ void
 $c_ident::set_tbe(${{self.TBEType.c_ident}}*& m_tbe_ptr, ${{self.TBEType.c_ident}}* m_new_tbe)
 {
   m_tbe_ptr = m_new_tbe;
-  m_tbe_ptr->setRubySystem(m_ruby_system);
 }
 
 void

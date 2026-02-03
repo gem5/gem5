@@ -117,6 +117,7 @@ Process::Process(const ProcessParams &params, EmulationPageTable *pTable,
       useArchPT(params.useArchPT),
       kvmInSE(params.kvmInSE),
       useForClone(false),
+      zeroPages(params.zeroPages),
       pTable(pTable),
       objFile(obj_file),
       argv(params.cmd), envp(params.env),
@@ -344,6 +345,44 @@ Process::allocateMem(Addr vaddr, int64_t size, bool clobber)
 }
 
 void
+Process::deallocateMem(Addr vaddr, int64_t size)
+{
+    const auto page_size = pTable->pageSize();
+    const Addr page_vbase = roundDown(vaddr, page_size);
+    const Addr page_vend = roundUp(vaddr + size, page_size);
+    const int npages = (page_vend - page_vbase) / page_size;
+
+    // Free any physical pages that were mapped to by this virtual
+    // address range.
+    for (int i = 0; i < npages; ++i) {
+        const Addr page_vaddr = page_vbase + page_size * i;
+        Addr page_paddr;
+        if (pTable->translate(page_vaddr, page_paddr)) {
+            if (zeroPages) {
+                // Zero out the physical page upon deallocation.
+                // Pages that have never been allocated before are already
+                // zero-filled. Zeroing out deallocated pages ensures that
+                // if they're ever reallocated, they will be zero-filled.
+                // Note that zeroing out pages before allocation would
+                // achieve the same result, but would be more expensive
+                // because it would unnecessarily zero out pages that
+                // were allocated for the first time.
+                SETranslatingPortProxy virt_mem(
+                    system->threads[0], SETranslatingPortProxy::Always);
+                const std::vector<uint8_t> zero_page(page_size, 0);
+                virt_mem.writeBlob(page_vaddr, zero_page.data(), page_size);
+            }
+
+            // Unmap the virtual page.
+            pTable->unmap(page_vaddr, page_size);
+
+            // Deallocate the physical page.
+            seWorkload->deallocPhysPage(page_paddr);
+        }
+    }
+}
+
+void
 Process::replicatePage(Addr vaddr, Addr new_paddr, ThreadContext *old_tc,
                        ThreadContext *new_tc, bool allocate_page)
 {
@@ -351,14 +390,15 @@ Process::replicatePage(Addr vaddr, Addr new_paddr, ThreadContext *old_tc,
         new_paddr = seWorkload->allocPhysPages(1);
 
     // Read from old physical page.
-    uint8_t buf_p[pTable->pageSize()];
-    SETranslatingPortProxy(old_tc).readBlob(vaddr, buf_p, sizeof(buf_p));
+    const size_t buf_size = pTable->pageSize();
+    auto buf_p = std::make_unique<uint8_t[]>(buf_size);
+    SETranslatingPortProxy(old_tc).readBlob(vaddr, buf_p.get(), buf_size);
 
     // Create new mapping in process address space by clobbering existing
     // mapping (if any existed) and then write to the new physical page.
     bool clobber = true;
-    pTable->map(vaddr, new_paddr, sizeof(buf_p), clobber);
-    SETranslatingPortProxy(new_tc).writeBlob(vaddr, buf_p, sizeof(buf_p));
+    pTable->map(vaddr, new_paddr, buf_size, clobber);
+    SETranslatingPortProxy(new_tc).writeBlob(vaddr, buf_p.get(), buf_size);
 }
 
 bool

@@ -26,14 +26,14 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
- This script grabs all resources categorically from a specified collection in a MongoDB
- database and adds a new gem5 version to the gem5_versions field of each
- resource.
+This script grabs all resources categorically from a specified collection in a MongoDB
+database and adds a new gem5 version to the gem5_versions field of each
+resource.
 
- To run this script you use the following command:
- python3 ./update-gem5-versions.py --uri <uri> --db <db_name> /
-    --collection <collection_name> --version <version> /
-    --category <category> --outfile <outfile>
+To run this script you use the following command:
+python3 ./update-gem5-versions.py --uri <uri> --db <db_name> /
+   --collection <collection_name> --version <version> /
+   --category <category> --outfile <outfile>
 """
 import argparse
 import json

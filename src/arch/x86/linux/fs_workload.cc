@@ -39,10 +39,13 @@
 
 #include "arch/x86/regs/int.hh"
 #include "base/trace.hh"
+#include "cpu/pc_event.hh"
 #include "cpu/thread_context.hh"
+#include "kern/linux/events.hh"
 #include "mem/port_proxy.hh"
 #include "params/X86FsLinux.hh"
 #include "sim/byteswap.hh"
+#include "sim/sim_exit.hh"
 #include "sim/system.hh"
 
 namespace gem5
@@ -54,6 +57,51 @@ namespace X86ISA
 FsLinux::FsLinux(const Params &p) :
     X86ISA::FsWorkload(p), e820Table(p.e820_table)
 {}
+
+void
+FsLinux::startup()
+{
+    KernelWorkload::startup();
+
+    addExitOnKernelOopsEvent();
+    addExitOnKernelPanicEvent();
+}
+
+
+void
+FsLinux::addExitOnKernelPanicEvent()
+{
+    const std::string dmesg_output = name() + ".dmesg";
+
+    if (params().exit_on_kernel_panic) {
+        // This was taken from the RISCV implementation. Some kernels may not
+        // have kernel symbols, causing `kernelSymtab` to be empty.
+        // In that case, addKernelFuncEvent tries to access the "panic" symbol
+        // in the symbol table but can't, so the event won't be added and the
+        // simulation will hang upon kernel panic.
+        kernelPanicPcEvent = addKernelFuncEvent<linux::PanicOrOopsEvent>(
+            "panic", "Kernel panic in simulated system.",
+            dmesg_output, params().on_panic
+        );
+    }
+}
+
+void
+FsLinux::addExitOnKernelOopsEvent()
+{
+    const std::string dmesg_output = name() + ".dmesg";
+    if (params().exit_on_kernel_oops) {
+        // This was taken from the RISCV implementation. Some kernels may not
+        // have kernel symbols, causing `kernelSymtab` to be empty.
+        // In that case, addKernelFuncEvent tries to access the "panic" symbol
+        // in the symbol table but can't, so the event won't be added and the
+        // simulation will continue upon kernel oops.
+        kernelOopsPcEvent = addKernelFuncEvent<linux::PanicOrOopsEvent>(
+            "oops_exit", "Kernel oops in simulated system.",
+            dmesg_output, params().on_oops
+        );
+    }
+}
 
 void
 FsLinux::initState()

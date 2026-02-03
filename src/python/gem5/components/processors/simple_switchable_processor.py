@@ -37,6 +37,7 @@ from ..processors.cpu_types import (
     get_mem_mode,
 )
 from ..processors.simple_core import SimpleCore
+from .abstract_processor import AbstractProcessor
 from .switchable_processor import SwitchableProcessor
 
 
@@ -105,6 +106,7 @@ class SimpleSwitchableProcessor(SwitchableProcessor):
             self._mem_mode = MemMode.ATOMIC_NONCACHING
         board.set_mem_mode(self._mem_mode)
 
+    @overrides(AbstractProcessor)
     def switch(self):
         """Switches to the "switched out" cores."""
         if self._current_is_start:

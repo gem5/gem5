@@ -37,7 +37,7 @@ PortTerminator::PortTerminator(const PortTerminatorParams &params):
         reqPorts.emplace_back(name() + ".req_ports" + std::to_string(i));
     }
     for (int j = 0; j < params.port_resp_ports_connection_count; ++j) {
-        reqPorts.emplace_back(name() + ".resp_ports" +
+        respPorts.emplace_back(name() + ".resp_ports" +
                                 std::to_string(j));
     }
 }

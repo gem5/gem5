@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012, 2017-2018, 2023 Arm Limited
+ * Copyright (c) 2010, 2012, 2017-2018, 2023, 2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -78,7 +78,7 @@ ArmProcess32::ArmProcess32(const ProcessParams &params,
 {
     Addr brk_point = roundUp(image.maxAddr(), PageBytes);
     Addr stack_base = 0xbf000000L;
-    Addr max_stack_size = 8 * 1024 * 1024;
+    Addr max_stack_size = params.maxStackSize;
     Addr next_thread_stack_base = stack_base - max_stack_size;
     Addr mmap_end = 0x40000000L;
 
@@ -94,7 +94,7 @@ ArmProcess64::ArmProcess64(
 {
     Addr brk_point = roundUp(image.maxAddr(), PageBytes);
     Addr stack_base = 0x7fffff0000L;
-    Addr max_stack_size = 8 * 1024 * 1024;
+    Addr max_stack_size = params.maxStackSize;
     Addr next_thread_stack_base = stack_base - max_stack_size;
     Addr mmap_end = 0x4000000000L;
 
@@ -322,11 +322,24 @@ ArmProcess64::armHwcapImpl2() const
 
     const AA64ISAR1 isa_r1 = tc->readMiscReg(MISCREG_ID_AA64ISAR1_EL1);
     hwcap |= (isa_r1.i8mm >= 1) ? Arm_I8mm : Arm_None;
+    hwcap |= (isa_r1.frintts == 1) ? Arm_Frint : Arm_None;
 
     const AA64ZFR0 zf_r0 = tc->readMiscReg(MISCREG_ID_AA64ZFR0_EL1);
     hwcap |= (zf_r0.f32mm >= 1) ? Arm_Svef32mm : Arm_None;
     hwcap |= (zf_r0.f64mm >= 1) ? Arm_Svef64mm : Arm_None;
     hwcap |= (zf_r0.i8mm >= 1) ? Arm_Svei8mm : Arm_None;
+
+    const AA64PFR1 pf_r1 = tc->readMiscReg(MISCREG_ID_AA64PFR1_EL1);
+    hwcap |= (pf_r1.sme == 1) ? Arm_Sme : Arm_None;
+
+    const AA64SMFR0 smfr_r0 = tc->readMiscReg(MISCREG_ID_AA64SMFR0_EL1);
+    hwcap |= (smfr_r0.i16i64 == 0b1111) ? Arm_Sme_I16i64 : Arm_None;
+    hwcap |= (smfr_r0.f64f64 == 1) ? Arm_Sme_F64f64 : Arm_None;
+    hwcap |= (smfr_r0.i8i32 == 0b1111) ? Arm_Sme_I8i32 : Arm_None;
+    hwcap |= (smfr_r0.f16f32 == 1) ? Arm_Sme_F16f32 : Arm_None;
+    hwcap |= (smfr_r0.b16f32 == 1) ? Arm_Sme_B16f32 : Arm_None;
+    hwcap |= (smfr_r0.f32f32 == 1) ? Arm_Sme_F32f32 : Arm_None;
+    hwcap |= (smfr_r0.fa64 == 1) ? Arm_Sme_Fa64 : Arm_None;
 
     return hwcap;
 }

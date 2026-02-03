@@ -41,6 +41,7 @@
 ##include "vector_arith.isa"
 ##include "vector_mem.isa"
 ##include "zcmp.isa"
+##include "zcmt.isa"
 
 // Include formats for nonstandard extensions
 ##include "compressed.isa"

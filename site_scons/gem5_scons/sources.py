@@ -129,32 +129,42 @@ def resolve_tags(env, tags):
 class SourceFilter:
     factories = {}
 
-    def __init__(self, predicate):
+    def __init__(self, filter_name, predicate):
+        self.filter_name = filter_name
         self.predicate = predicate
 
     def __or__(self, other):
         return SourceFilter(
+            f"or({str(self)}, {str(other)})",
             lambda env, tags: self.predicate(env, tags)
-            or other.predicate(env, tags)
+            or other.predicate(env, tags),
         )
 
     def __and__(self, other):
         return SourceFilter(
+            f"and({str(self)}, {str(other)})",
             lambda env, tags: self.predicate(env, tags)
-            and other.predicate(env, tags)
+            and other.predicate(env, tags),
         )
+
+    def __str__(self):
+        return f"{self.filter_name}"
 
 
 def with_any_tags(*tags):
     """Return a list of sources with any of the supplied tags."""
     return SourceFilter(
-        lambda env, stags: len(resolve_tags(env, tags) & stags) > 0
+        f"with_any_tags{str(tags)}",
+        lambda env, stags: len(resolve_tags(env, tags) & stags) > 0,
     )
 
 
 def with_all_tags(*tags):
     """Return a list of sources with all of the supplied tags."""
-    return SourceFilter(lambda env, stags: resolve_tags(env, tags) <= stags)
+    return SourceFilter(
+        f"with_all_tags{str(tags)}",
+        lambda env, stags: resolve_tags(env, tags) <= stags,
+    )
 
 
 def with_tag(tag):
@@ -165,7 +175,8 @@ def with_tag(tag):
 def without_tags(*tags):
     """Return a list of sources without any of the supplied tags."""
     return SourceFilter(
-        lambda env, stags: len(resolve_tags(env, tags) & stags) == 0
+        f"without_tags{str(tags)}",
+        lambda env, stags: len(resolve_tags(env, tags) & stags) == 0,
     )
 
 
@@ -188,7 +199,7 @@ SourceFilter.factories.update(
 class SourceList(list):
     def apply_filter(self, env, f):
         def match(source):
-            return f.predicate(env, resolve_tags(env, source.tags))
+            return f.predicate(env, source.tags)
 
         return SourceList(filter(match, self))
 
@@ -202,6 +213,10 @@ class SourceList(list):
             return self.apply_filter(env, func(*args, **kwargs))
 
         return wrapper
+
+    def __str__(self):
+        srcs = ",".join(str(src) for src in self)
+        return f"{srcs}"
 
 
 class SourceMeta(type):
@@ -218,15 +233,22 @@ class SourceItem(metaclass=SourceMeta):
     gem5. This specifies a set of tags which help group components into groups
     based on arbitrary properties."""
 
-    def __init__(self, source, tags=None, add_tags=None, append=None):
+    def __init__(
+        self, source, tags=None, add_tags=None, append=None, tag_gem5_lib=True
+    ):
         self.source = source
 
+        # Force the tags param to be of type set
         if tags is None:
-            tags = "gem5 lib"
+            tags = {}
         if isinstance(tags, str):
             tags = {tags}
         if not isinstance(tags, set):
             tags = set(tags)
+
+        if tag_gem5_lib:
+            tags |= {"gem5 lib"}
+
         self.tags = tags.copy()
 
         if add_tags:
@@ -248,8 +270,17 @@ class SourceFile(SourceItem):
     This includes, the source node, target node, various manipulations
     of those."""
 
-    def __init__(self, source, tags=None, add_tags=None, append=None):
-        super().__init__(source, tags=tags, add_tags=add_tags, append=append)
+    # By default we assume that all sources files are part of the gem5 lib
+    def __init__(
+        self, source, tags=None, add_tags=None, append=None, tag_gem5_lib=True
+    ):
+        super().__init__(
+            source,
+            tags=tags,
+            add_tags=add_tags,
+            append=append,
+            tag_gem5_lib=tag_gem5_lib,
+        )
 
         tnode = SCons.Script.File(source)
 
@@ -268,6 +299,9 @@ class SourceFile(SourceItem):
             env = env.Clone()
             env.Append(**self.append)
         return env.SharedObject(self.tnode.abspath)
+
+    def __str__(self):
+        return f"{self.filename}"
 
 
 __all__ = [

@@ -37,6 +37,7 @@
 #include "base/trace.hh"
 #include "base/types.hh"
 #include "debug/GPUSRF.hh"
+#include "debug/GPUTrace.hh"
 #include "gpu-compute/register_file.hh"
 #include "gpu-compute/wavefront.hh"
 
@@ -93,6 +94,9 @@ class ScalarRegisterFile : public RegisterFile
     {
         DPRINTF(GPUSRF, "WF[%d][%d]: Id%d s[%d] = %#x\n", wf->simdId,
             wf->wfSlotId, wf->wfDynId, regIdx, regFile[regIdx]);
+        DPRINTF(GPUTrace, "WF[%d][%d]: Id%d s[%d] = %#x (%f)\n", wf->simdId,
+            wf->wfSlotId, wf->wfDynId, regIdx, regFile[regIdx],
+            *reinterpret_cast<const float*>(&regFile[regIdx]));
     }
 
   private:

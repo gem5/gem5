@@ -161,6 +161,8 @@ ScoreboardCheckStage::ready(Wavefront *w, nonrdytype_e *rdyStatus,
 
     DPRINTF(GPUExec, "CU%d: WF[%d][%d]: Checking Ready for Inst : %s\n",
             computeUnit.cu_id, w->simdId, w->wfSlotId, ii->disassemble());
+    w->lastInstSeqNum = ii->seqNum();
+    w->lastInstDisasm = ii->disassemble();
 
     // Non-scalar (i.e., vector) instructions may use VGPRs
     if (!ii->isScalar()) {
@@ -193,6 +195,28 @@ ScoreboardCheckStage::ready(Wavefront *w, nonrdytype_e *rdyStatus,
         w->setWaitCnts(0, 0, 0);
         if (!w->waitCntsSatisfied()) {
             *rdyStatus = NRDY_WAIT_CNT;
+            return false;
+        }
+    }
+
+    if (ii->isMFMA()) {
+        std::string opcode = ii->staticInstruction()->opcode();
+        const char *gfx_str = GfxVersionStrings[int(w->gfxVersion)];
+
+        panic_if(!computeUnit.mfma_cycles.count(w->gfxVersion),
+            "No MFMA timings for %s\n", gfx_str);
+        panic_if(!computeUnit.mfma_cycles[w->gfxVersion].count(opcode),
+            "No %s MFMA timings for %s opcode\n", gfx_str, opcode);
+
+        if (computeUnit.matrix_core_ready[w->simdId] <= curTick()) {
+            computeUnit.matrix_core_ready[w->simdId] =
+                curTick() +
+                computeUnit.cyclesToTicks(Cycles(
+                    computeUnit.mfma_scale *
+                    computeUnit.mfma_cycles[w->gfxVersion][opcode]
+                ));
+        } else {
+            *rdyStatus = NRDY_MATRIX_CORE;
             return false;
         }
     }
@@ -264,6 +288,7 @@ ScoreboardCheckStage::exec()
             // check WF readiness: If the WF's oldest
             // instruction is ready to issue then add the WF to the ready list
             if (ready(curWave, &rdyStatus, &exeResType, wfSlot)) {
+                curWave->lastInstRdyStatus = rdyStatusStr(rdyStatus);
                 assert(curWave->simdId == simdId);
                 DPRINTF(GPUSched,
                         "Adding to readyList[%d]: SIMD[%d] WV[%d]: %d: %s\n",
@@ -272,6 +297,8 @@ ScoreboardCheckStage::exec()
                         curWave->nextInstr()->seqNum(),
                         curWave->nextInstr()->disassemble());
                 toSchedule.markWFReady(curWave, exeResType);
+            } else {
+                curWave->lastInstRdyStatus = rdyStatusStr(rdyStatus);
             }
             collectStatistics(rdyStatus);
         }
@@ -291,6 +318,7 @@ ScoreboardCheckStageStats::ScoreboardCheckStageStats(statistics::Group *parent)
     stallCycles.subname(NRDY_BARRIER_WAIT, csprintf("BarrierWait"));
     stallCycles.subname(NRDY_VGPR_NRDY, csprintf("VgprBusy"));
     stallCycles.subname(NRDY_SGPR_NRDY, csprintf("SgprBusy"));
+    stallCycles.subname(NRDY_MATRIX_CORE, csprintf("MatrixCore"));
     stallCycles.subname(INST_RDY, csprintf("InstrReady"));
 }
 

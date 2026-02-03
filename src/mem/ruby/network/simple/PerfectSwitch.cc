@@ -306,16 +306,6 @@ PerfectSwitch::storeEventInfo(int info)
 }
 
 void
-PerfectSwitch::clearStats()
-{
-}
-void
-PerfectSwitch::collateStats()
-{
-}
-
-
-void
 PerfectSwitch::print(std::ostream& out) const
 {
     out << "[PerfectSwitch " << m_switch_id << "]";

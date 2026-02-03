@@ -57,6 +57,7 @@
 #include "debug/CacheVerbose.hh"
 #include "enums/Clusivity.hh"
 #include "mem/cache/cache_blk.hh"
+#include "mem/cache/compressors/base.hh"
 #include "mem/cache/mshr.hh"
 #include "mem/cache/tags/base.hh"
 #include "mem/cache/write_queue_entry.hh"
@@ -721,8 +722,9 @@ Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk)
         // don't need to respond now, so pop it off to prevent the loop
         // below from generating another response.
         assert(initial_tgt->pkt->cmd == MemCmd::LockedRMWReadReq);
-        mshr->popTarget();
         delete initial_tgt->pkt;
+        initial_tgt->pkt = nullptr;
+        mshr->popTarget();
         initial_tgt = nullptr;
     }
 

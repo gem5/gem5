@@ -43,6 +43,7 @@
 #include "base/stats/group.hh"
 #include "base/types.hh"
 #include "config/the_gpu_isa.hh"
+#include "enums/GfxVersion.hh"
 #include "enums/PrefetchType.hh"
 #include "gpu-compute/comm.hh"
 #include "gpu-compute/exec_stage.hh"
@@ -363,6 +364,10 @@ class ComputeUnit : public ClockedObject
     Tick scalar_resp_tick_latency;
 
     Tick memtime_latency;
+    float mfma_scale;
+
+    // Keeps track of mfma instructions occupying matrix core engine per SM
+    std::vector<Tick> matrix_core_ready;
 
     /**
      * Number of WFs to schedule to each SIMD. This vector is populated
@@ -385,6 +390,9 @@ class ComputeUnit : public ClockedObject
     // per memory instruction per wavefront. The hash map
     // is cleared in GPUDynInst::updateStats() in gpu_dyn_inst.cc.
     std::map<Addr, int> pagesTouched;
+
+    // get cycles for mfma instructions based on their memonic
+    std::map<GfxVersion, std::map<std::string, int>> mfma_cycles;
 
     void insertInPipeMap(Wavefront *w);
     void deleteFromPipeMap(Wavefront *w);
@@ -477,6 +485,8 @@ class ComputeUnit : public ClockedObject
     void handleSQCReturn(PacketPtr pkt);
 
     void sendInvL2(Addr paddr);
+
+    void printProgress();
 
   protected:
     RequestorID _requestorId;
@@ -681,11 +691,19 @@ class ComputeUnit : public ClockedObject
 
         struct SenderState : public Packet::SenderState
         {
+            enum : int
+            {
+                DISPATCH_NONE,
+                DISPATCH_KERNEL_OBJECT,
+                DISPATCH_PRELOAD_ARG
+            };
+
             Wavefront *wavefront;
             Packet::SenderState *saved;
             // kernel id to be used in handling I-Cache invalidate response
             int kernId;
             bool isKernDispatch;
+            int dispatchType = DISPATCH_NONE;
             SenderState(Wavefront *_wavefront, Packet::SenderState
                     *sender_state=nullptr, int _kernId=-1)
                 : wavefront(_wavefront), saved(sender_state),
@@ -980,6 +998,7 @@ class ComputeUnit : public ClockedObject
     int cacheLineBits;
     InstSeqNum globalSeqNum;
     int wavefrontSize;
+    uint64_t execCycles;
 
     /**
      * TODO: Update these comments once the pipe stage interface has

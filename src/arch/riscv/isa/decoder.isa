@@ -58,16 +58,9 @@ decode QUADRANT default Unknown::unknown() {
                 0x1: c_fld({{
                     offset = CIMM3 << 3 | CIMM2 << 6;
                 }}, {{
-                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                    if (status.fs == FPUStatus::OFF)
-                        return std::make_shared<IllegalInstFault>("FPU is off",
-                                                                   machInst);
-
-                    // Mutating any floating point register changes the FS bit
-                    // of the STATUS CSR.
-                    status.fs = FPUStatus::DIRTY;
-                    xc->setMiscReg(MISCREG_STATUS, status);
-
+                    bool set_dirty = true;
+                    Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                    if (fault != NoFault) { return fault; }
                     Fp2_bits = Mem;
                 }}, {{
                     EA = rvSext(Rp1 + offset);
@@ -88,13 +81,9 @@ decode QUADRANT default Unknown::unknown() {
                              CIMM3 << 3 |
                              CIMM2<0:0> << 6;
                 }}, {{
-                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                    if (status.fs == FPUStatus::OFF)
-                        return std::make_shared<IllegalInstFault>("FPU is off",
-                                                                   machInst);
-
-                    status.fs = FPUStatus::DIRTY;
-                    xc->setMiscReg(MISCREG_STATUS, status);
+                    bool set_dirty = true;
+                    Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                    if (fault != NoFault) { return fault; }
 
                     freg_t fd = freg(f32(Mem_uw));
                     Fp2_bits = fd.v;
@@ -158,11 +147,9 @@ decode QUADRANT default Unknown::unknown() {
                 0x1: c_fsd({{
                     offset = CIMM3 << 3 | CIMM2 << 6;
                 }}, {{
-                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                    if (status.fs == FPUStatus::OFF)
-                        return std::make_shared<IllegalInstFault>("FPU is off",
-                                                                   machInst);
-
+                    bool set_dirty = false;
+                    Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                    if (fault != NoFault) { return fault; }
                     Mem = Fp2_bits;
                 }}, {{
                     EA = rvSext(Rp1 + offset);
@@ -183,10 +170,9 @@ decode QUADRANT default Unknown::unknown() {
                              CIMM3 << 3 |
                              CIMM2<0:0> << 6;
                 }}, {{
-                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                    if (status.fs == FPUStatus::OFF)
-                        return std::make_shared<IllegalInstFault>("FPU is off",
-                                                                   machInst);
+                    bool set_dirty = false;
+                    Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                    if (fault != NoFault) { return fault; }
 
                     Mem_uw = unboxF32(boxF32(Fp2_bits));
                 }}, {{
@@ -391,14 +377,9 @@ decode QUADRANT default Unknown::unknown() {
                              CIMM1 << 5 |
                              CIMM5<2:0> << 6;
                 }}, {{
-                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                    if (status.fs == FPUStatus::OFF)
-                        return std::make_shared<IllegalInstFault>("FPU is off",
-                                                                   machInst);
-
-                    status.fs = FPUStatus::DIRTY;
-                    xc->setMiscReg(MISCREG_STATUS, status);
-
+                    bool set_dirty = true;
+                    Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                    if (fault != NoFault) { return fault; }
                     Fc1_bits = Mem;
                 }}, {{
                     EA = rvSext(sp + offset);
@@ -423,13 +404,9 @@ decode QUADRANT default Unknown::unknown() {
                              CIMM1 << 5 |
                              CIMM5<1:0> << 6;
                 }}, {{
-                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                    if (status.fs == FPUStatus::OFF)
-                        return std::make_shared<IllegalInstFault>("FPU is off",
-                                                                   machInst);
-
-                    status.fs = FPUStatus::DIRTY;
-                    xc->setMiscReg(MISCREG_STATUS, status);
+                    bool set_dirty = true;
+                    Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                    if (fault != NoFault) { return fault; }
 
                     freg_t fd;
                     fd = freg(f32(Mem_uw));
@@ -469,10 +446,13 @@ decode QUADRANT default Unknown::unknown() {
             0x1: decode RC2 {
                 0x0: decode RC1 {
                     0x0: SystemOp::c_ebreak({{
+                        MISA misa = xc->readMiscReg(MISCREG_ISA);
+                        bool virtualized = misa.rvh ?
+                            virtualizationEnabled(xc) : false;
                         // NB: Semihosting spec requires uncompressed ebreak,
                         // so this instruction does not check for semihosting.
                         return std::make_shared<BreakpointFault>(
-                            xc->pcState());
+                            xc->pcState(), virtualized);
                     }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
                     default: CJump::c_jalr({{
                         ra = rvSext(NPC);
@@ -488,6 +468,15 @@ decode QUADRANT default Unknown::unknown() {
         format CompressedStore {
             0x5: decode ENABLE_ZCD {
                 0x0: decode CFUNCT6LOW3 {
+                    0x0: decode JTINDEX5TO7 {
+                        0x0: CmJalt::cm_jt({{
+                            NPC = rvSext((base + imm) & (~0x1));
+                        }}, IsIndirectControl, IsUncondControl);
+                        default: CmJalt::cm_jalt({{
+                            ra = rvSext(NPC);
+                            NPC = rvSext((base + imm) & (~0x1));
+                        }}, IsIndirectControl, IsUncondControl, IsCall);
+                    }
                     0x3: decode CFUNCT2LOW {
                         0x1: CmMvsa01::cm_mvsa01();
                         0x3: CmMva01s::cm_mva01s();
@@ -505,11 +494,9 @@ decode QUADRANT default Unknown::unknown() {
                     offset = CIMM6<5:3> << 3 |
                              CIMM6<2:0> << 6;
                 }}, {{
-                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                    if (status.fs == FPUStatus::OFF)
-                        return std::make_shared<IllegalInstFault>("FPU is off",
-                                                                   machInst);
-
+                    bool set_dirty = false;
+                    Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                    if (fault != NoFault) { return fault; }
                     Mem_ud = Fc2_bits;
                 }}, {{
                     EA = rvSext(sp + offset);
@@ -528,10 +515,9 @@ decode QUADRANT default Unknown::unknown() {
                     offset = CIMM6<5:2> << 2 |
                              CIMM6<1:0> << 6;
                 }}, {{
-                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                    if (status.fs == FPUStatus::OFF)
-                        return std::make_shared<IllegalInstFault>("FPU is off",
-                                                                   machInst);
+                    bool set_dirty = false;
+                    Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                    if (fault != NoFault) { return fault; }
 
                     Mem_uw = unboxF32(boxF32(Fc2_bits));
                 }}, {{
@@ -582,39 +568,27 @@ decode QUADRANT default Unknown::unknown() {
         0x01: decode FUNCT3 {
             format Load {
                 0x1: flh({{
-                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                    if (status.fs == FPUStatus::OFF)
-                        return std::make_shared<IllegalInstFault>(
-                                    "FPU is off", machInst);
-
-                    status.fs = FPUStatus::DIRTY;
-                    xc->setMiscReg(MISCREG_STATUS, status);
+                    bool set_dirty = true;
+                    Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                    if (fault != NoFault) { return fault; }
 
                     freg_t fd;
                     fd = freg(f16(Mem_uh));
                     Fd_bits = fd.v;
                 }}, inst_flags=FloatMemReadOp);
                 0x2: flw({{
-                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                    if (status.fs == FPUStatus::OFF)
-                        return std::make_shared<IllegalInstFault>(
-                                    "FPU is off", machInst);
-
-                    status.fs = FPUStatus::DIRTY;
-                    xc->setMiscReg(MISCREG_STATUS, status);
+                    bool set_dirty = true;
+                    Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                    if (fault != NoFault) { return fault; }
 
                     freg_t fd;
                     fd = freg(f32(Mem_uw));
                     Fd_bits = fd.v;
                 }}, inst_flags=FloatMemReadOp);
                 0x3: fld({{
-                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                    if (status.fs == FPUStatus::OFF)
-                        return std::make_shared<IllegalInstFault>(
-                                    "FPU is off", machInst);
-
-                    status.fs = FPUStatus::DIRTY;
-                    xc->setMiscReg(MISCREG_STATUS, status);
+                    bool set_dirty = true;
+                    Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                    if (fault != NoFault) { return fault; }
 
                     freg_t fd;
                     fd = freg(f64(Mem));
@@ -633,43 +607,50 @@ decode QUADRANT default Unknown::unknown() {
                         }}, inst_flags=SimdUnitStrideLoadOp);
                         format VlSegOp {
                             0x01: vlseg2e8_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 2)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 2)) &&
                                     i < this->microVl) {
                                     Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x02: vlseg3e8_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 3)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 3)) &&
                                     i < this->microVl) {
                                     Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x03: vlseg4e8_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 4)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 4)) &&
                                     i < this->microVl) {
                                     Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x04: vlseg5e8_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 5)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 5)) &&
                                     i < this->microVl) {
                                     Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x05: vlseg6e8_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 6)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 6)) &&
                                     i < this->microVl) {
                                     Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x06: vlseg7e8_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 7)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 7)) &&
                                     i < this->microVl) {
                                     Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x07: vlseg8e8_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 8)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 8)) &&
                                     i < this->microVl) {
                                     Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
                                 }
@@ -695,21 +676,106 @@ decode QUADRANT default Unknown::unknown() {
                     0x0b: VlmOp::vlm_v({{
                         Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
                     }}, inst_flags=SimdUnitStrideMaskLoadOp);
-                    0x10: VleOp::vle8ff_v({{
-                        if ((machInst.vm || elem_mask(v0, ei)) &&
-                            i < this->microVl && i < this->faultIdx) {
-                            Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
+                    0x10: decode NF {
+                        0x00: VleOp::vle8ff_v({{
+                            if ((machInst.vm || elem_mask(v0, ei)) &&
+                                i < this->microVl && i < this->faultIdx) {
+                                Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
+                            }
+                        }}, inst_flags=SimdUnitStrideFaultOnlyFirstLoadOp);
+                        format VlSegOp {
+                            0x01: vlseg2e8ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 2)) &&
+                                    i < this->microVl) {
+                                    Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
+                            0x02: vlseg3e8ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 3)) &&
+                                    i < this->microVl) {
+                                    Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
+                            0x03: vlseg4e8ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 4)) &&
+                                    i < this->microVl) {
+                                    Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
+                            0x04: vlseg5e8ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 5)) &&
+                                    i < this->microVl) {
+                                    Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
+                            0x05: vlseg6e8ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 6)) &&
+                                    i < this->microVl) {
+                                    Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
+                            0x06: vlseg7e8ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 7)) &&
+                                    i < this->microVl) {
+                                    Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
+                            0x07: vlseg8e8ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 8)) &&
+                                    i < this->microVl) {
+                                    Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
                         }
-                    }}, inst_flags=SimdUnitStrideFaultOnlyFirstLoadOp);
+                    }
                 }
                 0x1: VlIndexOp::vluxei8_v({{
                     Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
                 }}, {{
                     EA = Rs1 + Vs2_ub[vs2ElemIdx];
                 }}, inst_flags=SimdIndexedLoadOp);
-                0x2: VlStrideOp::vlse8_v({{
-                    Vd_ub[microIdx] = Mem_vc.as<uint8_t>()[0];
-                }}, inst_flags=SimdStridedLoadOp);
+                0x2: decode NF {
+                    format VlStrideOp {
+                        0x0: vlse8_v({{
+                            Vd_ub[microIdx] = Mem_vc.as<uint8_t>()[0];
+                        }}, inst_flags=SimdStridedLoadOp);
+                        0x1: vlsseg2e8_v({{
+                            Vd_ub[microIdx] = Mem_vc.as<uint8_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                        0x2: vlsseg3e8_v({{
+                            Vd_ub[microIdx] = Mem_vc.as<uint8_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                        0x3: vlsseg4e8_v({{
+                            Vd_ub[microIdx] = Mem_vc.as<uint8_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                        0x4: vlsseg5e8_v({{
+                            Vd_ub[microIdx] = Mem_vc.as<uint8_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                        0x5: vlsseg6e8_v({{
+                            Vd_ub[microIdx] = Mem_vc.as<uint8_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                        0x6: vlsseg7e8_v({{
+                            Vd_ub[microIdx] = Mem_vc.as<uint8_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                        0x7: vlsseg8e8_v({{
+                            Vd_ub[microIdx] = Mem_vc.as<uint8_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                    }
+                }
                 0x3: VlIndexOp::vloxei8_v({{
                     Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
                 }}, {{
@@ -727,43 +793,50 @@ decode QUADRANT default Unknown::unknown() {
                         }}, inst_flags=SimdUnitStrideLoadOp);
                         format VlSegOp {
                             0x01: vlseg2e16_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 2)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 2)) &&
                                     i < this->microVl) {
                                     Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x02: vlseg3e16_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 3)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 3)) &&
                                     i < this->microVl) {
                                     Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x03: vlseg4e16_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 4)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 4)) &&
                                     i < this->microVl) {
                                     Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x04: vlseg5e16_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 5)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 5)) &&
                                     i < this->microVl) {
                                     Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x05: vlseg6e16_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 6)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 6)) &&
                                     i < this->microVl) {
                                     Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x06: vlseg7e16_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 7)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 7)) &&
                                     i < this->microVl) {
                                     Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x07: vlseg8e16_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 8)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 8)) &&
                                     i < this->microVl) {
                                     Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
                                 }
@@ -786,21 +859,106 @@ decode QUADRANT default Unknown::unknown() {
                             }}, inst_flags=SimdWholeRegisterLoadOp);
                         }
                     }
-                    0x10: VleOp::vle16ff_v({{
-                        if ((machInst.vm || elem_mask(v0, ei)) &&
-                            i < this->microVl && i < this->faultIdx) {
-                            Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
+                    0x10: decode NF {
+                        0x00: VleOp::vle16ff_v({{
+                            if ((machInst.vm || elem_mask(v0, ei)) &&
+                                i < this->microVl && i < this->faultIdx) {
+                                Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
+                            }
+                        }}, inst_flags=SimdUnitStrideFaultOnlyFirstLoadOp);
+                        format VlSegOp {
+                            0x01: vlseg2e16ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 2)) &&
+                                    i < this->microVl) {
+                                    Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
+                            0x02: vlseg3e16ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 3)) &&
+                                    i < this->microVl) {
+                                    Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
+                            0x03: vlseg4e16ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 4)) &&
+                                    i < this->microVl) {
+                                    Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
+                            0x04: vlseg5e16ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 5)) &&
+                                    i < this->microVl) {
+                                    Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
+                            0x05: vlseg6e16ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 6)) &&
+                                    i < this->microVl) {
+                                    Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
+                            0x06: vlseg7e16ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 7)) &&
+                                    i < this->microVl) {
+                                    Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
+                            0x07: vlseg8e16ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 8)) &&
+                                    i < this->microVl) {
+                                    Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
                         }
-                    }}, inst_flags=SimdUnitStrideFaultOnlyFirstLoadOp);
+                    }
                 }
                 0x1: VlIndexOp::vluxei16_v({{
                     Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
                 }}, {{
                     EA = Rs1 + Vs2_uh[vs2ElemIdx];
                 }}, inst_flags=SimdIndexedLoadOp);
-                0x2: VlStrideOp::vlse16_v({{
-                    Vd_uh[microIdx] = Mem_vc.as<uint16_t>()[0];
-                }}, inst_flags=SimdStridedLoadOp);
+                0x2: decode NF {
+                    format VlStrideOp {
+                        0x0: vlse16_v({{
+                            Vd_uh[microIdx] = Mem_vc.as<uint16_t>()[0];
+                        }}, inst_flags=SimdStridedLoadOp);
+                        0x1: vlsseg2e16_v({{
+                            Vd_uh[microIdx] = Mem_vc.as<uint16_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                        0x2: vlsseg3e16_v({{
+                            Vd_uh[microIdx] = Mem_vc.as<uint16_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                        0x3: vlsseg4e16_v({{
+                            Vd_uh[microIdx] = Mem_vc.as<uint16_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                        0x4: vlsseg5e16_v({{
+                            Vd_uh[microIdx] = Mem_vc.as<uint16_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                        0x5: vlsseg6e16_v({{
+                            Vd_uh[microIdx] = Mem_vc.as<uint16_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                        0x6: vlsseg7e16_v({{
+                            Vd_uh[microIdx] = Mem_vc.as<uint16_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                        0x7: vlsseg8e16_v({{
+                            Vd_uh[microIdx] = Mem_vc.as<uint16_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                    }
+                }
                 0x3: VlIndexOp::vloxei16_v({{
                     Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
                 }}, {{
@@ -818,43 +976,50 @@ decode QUADRANT default Unknown::unknown() {
                         }}, inst_flags=SimdUnitStrideLoadOp);
                         format VlSegOp {
                             0x01: vlseg2e32_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 2)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 2)) &&
                                     i < this->microVl) {
                                     Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x02: vlseg3e32_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 3)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 3)) &&
                                     i < this->microVl) {
                                     Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x03: vlseg4e32_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 4)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 4)) &&
                                     i < this->microVl) {
                                     Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x04: vlseg5e32_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 5)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 5)) &&
                                     i < this->microVl) {
                                     Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x05: vlseg6e32_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 6)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 6)) &&
                                     i < this->microVl) {
                                     Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x06: vlseg7e32_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 7)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 7)) &&
                                     i < this->microVl) {
                                     Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x07: vlseg8e32_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 8)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 8)) &&
                                     i < this->microVl) {
                                     Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
                                 }
@@ -877,21 +1042,106 @@ decode QUADRANT default Unknown::unknown() {
                             }}, inst_flags=SimdWholeRegisterLoadOp);
                         }
                     }
-                    0x10: VleOp::vle32ff_v({{
-                        if ((machInst.vm || elem_mask(v0, ei)) &&
-                            i < this->microVl && i < this->faultIdx) {
-                            Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
+                    0x10: decode NF {
+                        0x00: VleOp::vle32ff_v({{
+                            if ((machInst.vm || elem_mask(v0, ei)) &&
+                                i < this->microVl && i < this->faultIdx) {
+                                Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
+                            }
+                        }}, inst_flags=SimdUnitStrideFaultOnlyFirstLoadOp);
+                        format VlSegOp {
+                            0x01: vlseg2e32ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 2)) &&
+                                    i < this->microVl) {
+                                    Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
+                            0x02: vlseg3e32ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 3)) &&
+                                    i < this->microVl) {
+                                    Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
+                            0x03: vlseg4e32ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 4)) &&
+                                    i < this->microVl) {
+                                    Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
+                            0x04: vlseg5e32ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 5)) &&
+                                    i < this->microVl) {
+                                    Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
+                            0x05: vlseg6e32ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 6)) &&
+                                    i < this->microVl) {
+                                    Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
+                            0x06: vlseg7e32ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 7)) &&
+                                    i < this->microVl) {
+                                    Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
+                            0x07: vlseg8e32ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 8)) &&
+                                    i < this->microVl) {
+                                    Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
                         }
-                    }}, inst_flags=SimdUnitStrideFaultOnlyFirstLoadOp);
+                    }
                 }
                 0x1: VlIndexOp::vluxei32_v({{
                     Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
                 }}, {{
                     EA = Rs1 + Vs2_uw[vs2ElemIdx];
                 }}, inst_flags=SimdIndexedLoadOp);
-                0x2: VlStrideOp::vlse32_v({{
-                    Vd_uw[microIdx] = Mem_vc.as<uint32_t>()[0];
-                }}, inst_flags=SimdStridedLoadOp);
+                0x2: decode NF {
+                    format VlStrideOp {
+                        0x0: vlse32_v({{
+                            Vd_uw[microIdx] = Mem_vc.as<uint32_t>()[0];
+                        }}, inst_flags=SimdStridedLoadOp);
+                        0x1: vlsseg2e32_v({{
+                            Vd_uw[microIdx] = Mem_vc.as<uint32_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                        0x2: vlsseg3e32_v({{
+                            Vd_uw[microIdx] = Mem_vc.as<uint32_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                        0x3: vlsseg4e32_v({{
+                            Vd_uw[microIdx] = Mem_vc.as<uint32_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                        0x4: vlsseg5e32_v({{
+                            Vd_uw[microIdx] = Mem_vc.as<uint32_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                        0x5: vlsseg6e32_v({{
+                            Vd_uw[microIdx] = Mem_vc.as<uint32_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                        0x6: vlsseg7e32_v({{
+                            Vd_uw[microIdx] = Mem_vc.as<uint32_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                        0x7: vlsseg8e32_v({{
+                            Vd_uw[microIdx] = Mem_vc.as<uint32_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                    }
+                }
                 0x3: VlIndexOp::vloxei32_v({{
                     Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
                 }}, {{
@@ -909,43 +1159,50 @@ decode QUADRANT default Unknown::unknown() {
                         }}, inst_flags=SimdUnitStrideLoadOp);
                         format VlSegOp {
                             0x01: vlseg2e64_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 2)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 2)) &&
                                     i < this->microVl) {
                                     Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x02: vlseg3e64_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 3)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 3)) &&
                                     i < this->microVl) {
                                     Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x03: vlseg4e64_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 4)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 4)) &&
                                     i < this->microVl) {
                                     Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x04: vlseg5e64_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 5)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 5)) &&
                                     i < this->microVl) {
                                     Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x05: vlseg6e64_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 6)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 6)) &&
                                     i < this->microVl) {
                                     Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x06: vlseg7e64_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 7)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 7)) &&
                                     i < this->microVl) {
                                     Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
                                 }
                             }}, inst_flags=SimdUnitStrideSegmentedLoadOp);
                             0x07: vlseg8e64_v({{
-                                if ((machInst.vm || elem_mask_vseg(v0, ei + (field * micro_elems), 8)) &&
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                    ei + (field * micro_elems), 8)) &&
                                     i < this->microVl) {
                                     Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
                                 }
@@ -968,21 +1225,106 @@ decode QUADRANT default Unknown::unknown() {
                             }}, inst_flags=SimdWholeRegisterLoadOp);
                         }
                     }
-                    0x10: VleOp::vle64ff_v({{
-                        if ((machInst.vm || elem_mask(v0, ei)) &&
-                            i < this->microVl && i < this->faultIdx) {
-                            Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
+                    0x10: decode NF {
+                        0x00: VleOp::vle64ff_v({{
+                            if ((machInst.vm || elem_mask(v0, ei)) &&
+                                i < this->microVl && i < this->faultIdx) {
+                                Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
+                            }
+                        }}, inst_flags=SimdUnitStrideFaultOnlyFirstLoadOp);
+                        format VlSegOp {
+                            0x01: vlseg2e64ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                ei + (field * micro_elems), 2)) &&
+                                    i < this->microVl) {
+                                    Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
+                            0x02: vlseg3e64ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                ei + (field * micro_elems), 3)) &&
+                                    i < this->microVl) {
+                                    Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
+                            0x03: vlseg4e64ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                ei + (field * micro_elems), 4)) &&
+                                    i < this->microVl) {
+                                    Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
+                            0x04: vlseg5e64ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                ei + (field * micro_elems), 5)) &&
+                                    i < this->microVl) {
+                                    Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
+                            0x05: vlseg6e64ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                ei + (field * micro_elems), 6)) &&
+                                    i < this->microVl) {
+                                    Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
+                            0x06: vlseg7e64ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                ei + (field * micro_elems), 7)) &&
+                                    i < this->microVl) {
+                                    Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
+                            0x07: vlseg8e64ff_v({{
+                                if ((machInst.vm || elem_mask_vseg(v0,
+                                ei + (field * micro_elems), 8)) &&
+                                    i < this->microVl) {
+                                    Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
+                                }
+                            }}, inst_flags=
+                            SimdUnitStrideSegmentedFaultOnlyFirstLoadOp);
                         }
-                    }}, inst_flags=SimdUnitStrideFaultOnlyFirstLoadOp);
+                    }
                 }
                 0x1: VlIndexOp::vluxei64_v({{
                     Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
                 }}, {{
                     EA = Rs1 + Vs2_ud[vs2ElemIdx];
                 }}, inst_flags=SimdIndexedLoadOp);
-                0x2: VlStrideOp::vlse64_v({{
-                    Vd_ud[microIdx] = Mem_vc.as<uint64_t>()[0];
-                }}, inst_flags=SimdStridedLoadOp);
+                0x2: decode NF {
+                    format VlStrideOp {
+                        0x0: vlse64_v({{
+                            Vd_ud[microIdx] = Mem_vc.as<uint64_t>()[0];
+                        }}, inst_flags=SimdStridedLoadOp);
+                        0x1: vlsseg2e64_v({{
+                            Vd_ud[microIdx] = Mem_vc.as<uint64_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                        0x2: vlsseg3e64_v({{
+                            Vd_ud[microIdx] = Mem_vc.as<uint64_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                        0x3: vlsseg4e64_v({{
+                            Vd_ud[microIdx] = Mem_vc.as<uint64_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                        0x4: vlsseg5e64_v({{
+                            Vd_ud[microIdx] = Mem_vc.as<uint64_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                        0x5: vlsseg6e64_v({{
+                            Vd_ud[microIdx] = Mem_vc.as<uint64_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                        0x6: vlsseg7e64_v({{
+                            Vd_ud[microIdx] = Mem_vc.as<uint64_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                        0x7: vlsseg8e64_v({{
+                            Vd_ud[microIdx] = Mem_vc.as<uint64_t>()[0];
+                        }}, inst_flags=SimdStrideSegmentedLoadOp);
+                    }
+                }
                 0x3: VlIndexOp::vloxei64_v({{
                     Vd_vu[vdElemIdx] = Mem_vc.as<vu>()[0];
                 }}, {{
@@ -1000,88 +1342,92 @@ decode QUADRANT default Unknown::unknown() {
                     IsSquashAfter, No_OpClass);
             }
 
-            0x2: decode FUNCT12 {
-                format CBMOp {
-                    0x0: cbo_inval({{
-                        SENVCFG senvcfg = xc->readMiscReg(MISCREG_SENVCFG);
-                        auto pm = (PrivilegeMode)xc->readMiscReg(
-                                MISCREG_PRV);
+            0x2: decode RD {
+                0x0: decode FUNCT12 {
+                    format CBMOp {
+                        0x0: cbo_inval({{
+                            SENVCFG senvcfg = xc->readMiscReg(MISCREG_SENVCFG);
+                            auto pm = (PrivilegeMode)xc->readMiscReg(
+                                    MISCREG_PRV);
 
-                        if (pm == PRV_U) {
-                            if (senvcfg.cbie == 0) {
-                                return std::make_shared<IllegalInstFault>(
-                                        "Can't execute cbo.clean in current "
-                                        "privilege mode!", machInst);
-                            }
-                            else if (senvcfg.cbie == 1){ //flush
+                            if (pm == PRV_U) {
+                                if (senvcfg.cbie == 0) {
+                                    return std::make_shared<IllegalInstFault>(
+                                            "Can't execute cbo.clean in current"
+                                            " privilege mode!", machInst);
+                                }
+                                else if (senvcfg.cbie == 1){ //flush
+                                    Mem = 0;
+                                }
+                                else if (senvcfg.cbie == 3) { // invalidate
+                                    Mem = 0;
+                                } else { //sebvcfg.cbie == 2, reserved
+                                    return std::make_shared<IllegalInstFault>(
+                                            "Invalid value for senvcfg.cbie!",
+                                            machInst);
+                                }
+                            } else if (pm == PRV_M){ // all invalidate
+                                Mem = 0;
+                            } else if (pm == PRV_S) {
+                                // whether it's a flush or invalidate depends
+                                // on menvcfg (01 and 11 respectively)
                                 Mem = 0;
                             }
-                            else if (senvcfg.cbie == 3) { // invalidate
-                                Mem = 0;
-                            } else { //sebvcfg.cbie == 2, reserved
+                        }}, mem_flags = [INVALIDATE, DST_POC]);
+                            // mem_flags might need a conditional to add CLEAN
+                            // in certain cases; unsure of syntax for that
+
+                        0x1: cbo_clean({{
+                            SENVCFG senvcfg = xc->readMiscReg(MISCREG_SENVCFG);
+                            auto pm = (PrivilegeMode)xc->readMiscReg(
+                                    MISCREG_PRV);
+
+                            if (pm == PRV_U && !senvcfg.cbcfe){
                                 return std::make_shared<IllegalInstFault>(
-                                        "Invalid value for senvcfg.cbie!",
-                                        machInst);
+                                            "Can't execute cbo.clean in "
+                                            "current privilege mode!",
+                                            machInst);
+                            // the specification has more conditions/privilege
+                            // modes to check, but menvcfg and henvcfg are not
+                            // implemented
+                            } else {
+                                Mem = 0;
                             }
-                        } else if (pm == PRV_M){ // all invalidate
-                            Mem = 0;
-                        } else if (pm == PRV_S) {
-                            // whether it's a flush or invalidate depends on
-                            // menvcfg (01 and 11 respectively)
-                            Mem = 0;
-                        }
-                    }}, mem_flags = [INVALIDATE, DST_POC]);
-                        // mem_flags might need a conditional to add CLEAN
-                        // in certain cases; unsure of syntax for that
+                        }}, mem_flags=[CLEAN, DST_POC]);
+                        0x2: cbo_flush({{
+                            SENVCFG senvcfg = xc->readMiscReg(MISCREG_SENVCFG);
+                            auto pm = (PrivilegeMode)xc->readMiscReg(
+                                    MISCREG_PRV);
 
-                    0x1: cbo_clean({{
-                        SENVCFG senvcfg = xc->readMiscReg(MISCREG_SENVCFG);
-                        auto pm = (PrivilegeMode)xc->readMiscReg(
-                                MISCREG_PRV);
+                            if (pm == PRV_U && !senvcfg.cbcfe){
+                                return std::make_shared<IllegalInstFault>(
+                                            "Can't execute cbo.flush in "
+                                            "current privilege mode!",
+                                            machInst);
+                            // the specification has more conditions/privilege
+                            // modes to check, but menvcfg and henvcfg are not
+                            // implemented
+                            } else {
+                                Mem = 0;
+                            }
+                        }}, mem_flags=[CLEAN, INVALIDATE, DST_POC]);
+                        0x4: cbo_zero({{
+                            SENVCFG senvcfg = xc->readMiscReg(MISCREG_SENVCFG);
+                            auto pm = (PrivilegeMode)xc->readMiscReg(
+                                    MISCREG_PRV);
 
-                        if (pm == PRV_U && !senvcfg.cbcfe){
-                            return std::make_shared<IllegalInstFault>(
-                                        "Can't execute cbo.clean in current "
-                                        "privilege mode!", machInst);
-                        // the specification has more conditions/privilege
-                        // modes to check, but menvcfg and henvcfg are not
-                        // implemented
-                        } else {
-                            Mem = 0;
-                        }
-                    }}, mem_flags=[CLEAN, DST_POC]);
-                    0x2: cbo_flush({{
-                        SENVCFG senvcfg = xc->readMiscReg(MISCREG_SENVCFG);
-                        auto pm = (PrivilegeMode)xc->readMiscReg(
-                                MISCREG_PRV);
-
-                        if (pm == PRV_U && !senvcfg.cbcfe){
-                            return std::make_shared<IllegalInstFault>(
-                                        "Can't execute cbo.flush in current "
-                                        "privilege mode!", machInst);
-                        // the specification has more conditions/privilege
-                        // modes to check, but menvcfg and henvcfg are not
-                        // implemented
-                        } else {
-                            Mem = 0;
-                        }
-                    }}, mem_flags=[CLEAN, INVALIDATE, DST_POC]);
-                    0x4: cbo_zero({{
-                        SENVCFG senvcfg = xc->readMiscReg(MISCREG_SENVCFG);
-                        auto pm = (PrivilegeMode)xc->readMiscReg(
-                                MISCREG_PRV);
-
-                        if (pm == PRV_U && !senvcfg.cbze){
-                            return std::make_shared<IllegalInstFault>(
-                                        "Can't execute cbo.zero in current "
-                                        "privilege mode!", machInst);
-                        // the specification has more conditions/privilege
-                        // modes to check, but menvcfg and henvcfg are not
-                        // implemented
-                        } else {
-                            Mem = 0;
-                        }
-                    }}, mem_flags=[CACHE_BLOCK_ZERO]);
+                            if (pm == PRV_U && !senvcfg.cbze){
+                                return std::make_shared<IllegalInstFault>(
+                                            "Can't execute cbo.zero in current"
+                                            " privilege mode!", machInst);
+                            // the specification has more conditions/privilege
+                            // modes to check, but menvcfg and henvcfg are not
+                            // implemented
+                            } else {
+                                Mem = 0;
+                            }
+                        }}, mem_flags=[CACHE_BLOCK_ZERO]);
+                    }
                 }
             }
         }
@@ -1181,13 +1527,16 @@ decode QUADRANT default Unknown::unknown() {
                 format ROp {
                     0x0c: decode RS2 {
                         0x00: clz({{
-                            Rd = (machInst.rv_type == RV32) ? clz32(Rs1) : clz64(Rs1);
+                            Rd = (machInst.rv_type == RV32)
+                                ? clz32(Rs1) : clz64(Rs1);
                         }});
                         0x01: ctz({{
-                            Rd = (machInst.rv_type == RV32) ? ctz32(Rs1) : ctz64(Rs1);
+                            Rd = (machInst.rv_type == RV32)
+                                ? ctz32(Rs1) : ctz64(Rs1);
                         }});
                         0x02: cpop({{
-                            Rd = (machInst.rv_type == RV32) ? popCount(Rs1<31:0>) : popCount(Rs1);
+                            Rd = (machInst.rv_type == RV32)
+                                ? popCount(Rs1<31:0>) : popCount(Rs1);
                         }});
                         0x04: sext_b({{
                             Rd = sext<8>(Rs1_ub);
@@ -1333,10 +1682,12 @@ decode QUADRANT default Unknown::unknown() {
                     0x1: decode FS3 {
                         0x0: slliw({{
                             Rd_sd = Rs1_sw << imm;
-                        }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT5; }});
+                        }}, imm_type = uint64_t,
+                        imm_code = {{ imm = SHAMT5; }});
                         0x1: slli_uw({{
                             Rd = ((uint64_t)(Rs1_uw)) << imm;
-                        }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT6; }});
+                        }}, imm_type = uint64_t,
+                        imm_code = {{ imm = SHAMT6; }});
                         0xc: decode FS2 {
                             0x0: clzw({{
                                 Rd = clz32(Rs1);
@@ -1352,13 +1703,17 @@ decode QUADRANT default Unknown::unknown() {
                     0x5: decode FS3 {
                         0x0: srliw({{
                             Rd_sd = (int32_t)(Rs1_uw >> imm);
-                        }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT5; }});
+                        }}, imm_type = uint64_t,
+                        imm_code = {{ imm = SHAMT5; }});
                         0x8: sraiw({{
                             Rd_sd = Rs1_sw >> imm;
-                        }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT5; }});
+                        }}, imm_type = uint64_t,
+                        imm_code = {{ imm = SHAMT5; }});
                         0xc: roriw({{
-                            Rd = (int32_t) ((Rs1_uw >> imm) | (Rs1_uw << ((32 - imm) & (32 - 1))));
-                        }}, imm_type = uint64_t, imm_code = {{ imm = SHAMT5; }});
+                            Rd = (int32_t) ((Rs1_uw >> imm)
+                                | (Rs1_uw << ((32 - imm) & (32 - 1))));
+                        }}, imm_type = uint64_t,
+                        imm_code = {{ imm = SHAMT5; }});
                     }
                 }
             }
@@ -1386,26 +1741,23 @@ decode QUADRANT default Unknown::unknown() {
         0x09: decode FUNCT3 {
             format Store {
                 0x1: fsh({{
-                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                    if (status.fs == FPUStatus::OFF)
-                        return std::make_shared<IllegalInstFault>(
-                                "FPU is off", machInst);
+                    bool set_dirty = false;
+                    Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                    if (fault != NoFault) { return fault; }
 
                     Mem_uh = unboxF16(boxF16(Fs2_bits));
                 }}, inst_flags=FloatMemWriteOp);
                 0x2: fsw({{
-                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                    if (status.fs == FPUStatus::OFF)
-                        return std::make_shared<IllegalInstFault>(
-                                "FPU is off", machInst);
+                    bool set_dirty = false;
+                    Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                    if (fault != NoFault) { return fault; }
 
                     Mem_uw = unboxF32(boxF32(Fs2_bits));
                 }}, inst_flags=FloatMemWriteOp);
                 0x3: fsd({{
-                    STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                    if (status.fs == FPUStatus::OFF)
-                        return std::make_shared<IllegalInstFault>(
-                                "FPU is off", machInst);
+                    bool set_dirty = false;
+                    Fault fault = updateFPUStatus(xc, machInst, set_dirty);
+                    if (fault != NoFault) { return fault; }
 
                     Mem_ud = Fs2_bits;
                 }}, inst_flags=FloatMemWriteOp);
@@ -1466,9 +1818,34 @@ decode QUADRANT default Unknown::unknown() {
                 }}, {{
                     EA = Rs1 + Vs2_ub[vs2ElemIdx];
                 }}, inst_flags=SimdIndexedStoreOp);
-                0x2: VsStrideOp::vsse8_v({{
-                    Mem_vc.as<uint8_t>()[0] = Vs3_ub[microIdx];
-                }}, inst_flags=SimdStridedStoreOp);
+                0x2: decode NF {
+                    format VsStrideOp {
+                        0x0: vsse8_v({{
+                            Mem_vc.as<uint8_t>()[0] = Vs3_ub[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x1: vssseg2e8_v({{
+                            Mem_vc.as<uint8_t>()[0] = Vs3_ub[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x2: vssseg3e8_v({{
+                            Mem_vc.as<uint8_t>()[0] = Vs3_ub[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x3: vssseg4e8_v({{
+                            Mem_vc.as<uint8_t>()[0] = Vs3_ub[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x4: vssseg5e8_v({{
+                            Mem_vc.as<uint8_t>()[0] = Vs3_ub[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x5: vssseg6e8_v({{
+                            Mem_vc.as<uint8_t>()[0] = Vs3_ub[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x6: vssseg7e8_v({{
+                            Mem_vc.as<uint8_t>()[0] = Vs3_ub[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x7: vssseg8e8_v({{
+                            Mem_vc.as<uint8_t>()[0] = Vs3_ub[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                    }
+                }
                 0x3: VsIndexOp::vsoxei8_v({{
                     Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
                 }}, {{
@@ -1511,9 +1888,34 @@ decode QUADRANT default Unknown::unknown() {
                 }}, {{
                     EA = Rs1 + Vs2_uh[vs2ElemIdx];
                 }}, inst_flags=SimdIndexedStoreOp);
-                0x2: VsStrideOp::vsse16_v({{
-                    Mem_vc.as<uint16_t>()[0] = Vs3_uh[microIdx];
-                }}, inst_flags=SimdStridedStoreOp);
+                0x2: decode NF {
+                    format VsStrideOp{
+                        0x0:vsse16_v({{
+                            Mem_vc.as<uint16_t>()[0] = Vs3_uh[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x1:vssseg2e16_v({{
+                            Mem_vc.as<uint16_t>()[0] = Vs3_uh[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x2:vssseg3e16_v({{
+                            Mem_vc.as<uint16_t>()[0] = Vs3_uh[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x3:vssseg4e16_v({{
+                            Mem_vc.as<uint16_t>()[0] = Vs3_uh[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x4:vssseg5e16_v({{
+                            Mem_vc.as<uint16_t>()[0] = Vs3_uh[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x5:vssseg6e16_v({{
+                            Mem_vc.as<uint16_t>()[0] = Vs3_uh[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x6:vssseg7e16_v({{
+                            Mem_vc.as<uint16_t>()[0] = Vs3_uh[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x7:vssseg8e16_v({{
+                            Mem_vc.as<uint16_t>()[0] = Vs3_uh[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                    }
+                }
                 0x3: VsIndexOp::vsoxei16_v({{
                     Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
                 }}, {{
@@ -1556,9 +1958,34 @@ decode QUADRANT default Unknown::unknown() {
                 }}, {{
                     EA = Rs1 + Vs2_uw[vs2ElemIdx];
                 }}, inst_flags=SimdIndexedStoreOp);
-                0x2: VsStrideOp::vsse32_v({{
-                    Mem_vc.as<uint32_t>()[0] = Vs3_uw[microIdx];
-                }}, inst_flags=SimdStridedStoreOp);
+                0x2: decode NF {
+                    format VsStrideOp {
+                        0x0: vsse32_v({{
+                            Mem_vc.as<uint32_t>()[0] = Vs3_uw[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x1: vssseg2e32_v({{
+                            Mem_vc.as<uint32_t>()[0] = Vs3_uw[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x2: vssseg3e32_v({{
+                            Mem_vc.as<uint32_t>()[0] = Vs3_uw[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x3: vssseg4e32_v({{
+                            Mem_vc.as<uint32_t>()[0] = Vs3_uw[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x4: vssseg5e32_v({{
+                            Mem_vc.as<uint32_t>()[0] = Vs3_uw[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x5: vssseg6e32_v({{
+                            Mem_vc.as<uint32_t>()[0] = Vs3_uw[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x6: vssseg7e32_v({{
+                            Mem_vc.as<uint32_t>()[0] = Vs3_uw[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x7: vssseg8e32_v({{
+                            Mem_vc.as<uint32_t>()[0] = Vs3_uw[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                    }
+                }
                 0x3: VsIndexOp::vsoxei32_v({{
                     Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
                 }}, {{
@@ -1601,9 +2028,34 @@ decode QUADRANT default Unknown::unknown() {
                 }}, {{
                     EA = Rs1 + Vs2_ud[vs2ElemIdx];
                 }}, inst_flags=SimdIndexedStoreOp);
-                0x2: VsStrideOp::vsse64_v({{
-                    Mem_vc.as<uint64_t>()[0] = Vs3_ud[microIdx];
-                }}, inst_flags=SimdStridedStoreOp);
+                0x2: decode NF {
+                    format VsStrideOp {
+                        0x0: vsse64_v({{
+                            Mem_vc.as<uint64_t>()[0] = Vs3_ud[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x1: vssseg2e64_v({{
+                            Mem_vc.as<uint64_t>()[0] = Vs3_ud[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x2: vssseg3e64_v({{
+                            Mem_vc.as<uint64_t>()[0] = Vs3_ud[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x3: vssseg4e64_v({{
+                            Mem_vc.as<uint64_t>()[0] = Vs3_ud[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x4: vssseg5e64_v({{
+                            Mem_vc.as<uint64_t>()[0] = Vs3_ud[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x5: vssseg6e64_v({{
+                            Mem_vc.as<uint64_t>()[0] = Vs3_ud[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x6: vssseg7e64_v({{
+                            Mem_vc.as<uint64_t>()[0] = Vs3_ud[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                        0x7: vssseg8e64_v({{
+                            Mem_vc.as<uint64_t>()[0] = Vs3_ud[microIdx];
+                        }}, inst_flags=SimdStridedStoreOp);
+                    }
+                }
                 0x3: VsIndexOp::vsoxei64_v({{
                     Mem_vc.as<vu>()[0] = Vs3_vu[vs3ElemIdx];
                 }}, {{
@@ -1616,7 +2068,7 @@ decode QUADRANT default Unknown::unknown() {
             0x2: decode AMOFUNCT {
                 0x2: LoadReserved::lr_w({{
                     Rd_sd = Mem_sw;
-                }}, mem_flags=LLSC);
+                }}, mem_flags=[LLSC, 'ARCH_BITS & XlateFlags::LR']);
                 0x3: StoreCond::sc_w({{
                     Mem_uw = Rs2_uw;
                 }}, {{
@@ -1627,7 +2079,11 @@ decode QUADRANT default Unknown::unknown() {
                 }}, {{
                     TypedAtomicOpFunctor<int32_t> *amo_op =
                           new AtomicGenericOp<int32_t>(Rs2_sw,
-                                  [](int32_t* b, int32_t a){ *b += a; });
+                                  [](int32_t* b, int32_t a){
+                                      int32_t mem_data = letoh(*b);
+                                      int32_t new_data = mem_data + a;
+                                      *b = htole(new_data);
+                                  });
                 }}, mem_flags=ATOMIC_RETURN_OP);
                 0x1: AtomicMemOp::amoswap_w({{
                     Rd_sd = Mem_sw;
@@ -1641,56 +2097,84 @@ decode QUADRANT default Unknown::unknown() {
                 }}, {{
                     TypedAtomicOpFunctor<uint32_t> *amo_op =
                           new AtomicGenericOp<uint32_t>(Rs2_uw,
-                                  [](uint32_t* b, uint32_t a){ *b ^= a; });
+                                  [](uint32_t* b, uint32_t a){
+                                      uint32_t mem_data = letoh(*b);
+                                      uint32_t new_data = mem_data ^ a;
+                                      *b = htole(new_data);
+                                  });
                 }}, mem_flags=ATOMIC_RETURN_OP);
                 0x8: AtomicMemOp::amoor_w({{
                     Rd_sd = Mem_sw;
                 }}, {{
                     TypedAtomicOpFunctor<uint32_t> *amo_op =
                           new AtomicGenericOp<uint32_t>(Rs2_uw,
-                                  [](uint32_t* b, uint32_t a){ *b |= a; });
+                                  [](uint32_t* b, uint32_t a){
+                                      uint32_t mem_data = letoh(*b);
+                                      uint32_t new_data = mem_data | a;
+                                      *b = htole(new_data);
+                                  });
                 }}, mem_flags=ATOMIC_RETURN_OP);
                 0xc: AtomicMemOp::amoand_w({{
                     Rd_sd = Mem_sw;
                 }}, {{
                     TypedAtomicOpFunctor<uint32_t> *amo_op =
                           new AtomicGenericOp<uint32_t>(Rs2_uw,
-                                  [](uint32_t* b, uint32_t a){ *b &= a; });
+                                  [](uint32_t* b, uint32_t a){
+                                      uint32_t mem_data = letoh(*b);
+                                      uint32_t new_data = mem_data & a;
+                                      *b = htole(new_data);
+                                  });
                 }}, mem_flags=ATOMIC_RETURN_OP);
                 0x10: AtomicMemOp::amomin_w({{
                     Rd_sd = Mem_sw;
                 }}, {{
                     TypedAtomicOpFunctor<int32_t> *amo_op =
                       new AtomicGenericOp<int32_t>(Rs2_sw,
-                        [](int32_t* b, int32_t a){ if (a < *b) *b = a; });
+                        [](int32_t* b, int32_t a){
+                            int32_t mem_data = letoh(*b);
+                            int32_t new_data = (a < mem_data) ? a : mem_data;
+                            *b = htole(new_data);
+                        });
                 }}, mem_flags=ATOMIC_RETURN_OP);
                 0x14: AtomicMemOp::amomax_w({{
                     Rd_sd = Mem_sw;
                 }}, {{
                     TypedAtomicOpFunctor<int32_t> *amo_op =
                       new AtomicGenericOp<int32_t>(Rs2_sw,
-                        [](int32_t* b, int32_t a){ if (a > *b) *b = a; });
+                        [](int32_t* b, int32_t a){
+                            int32_t mem_data = letoh(*b);
+                            int32_t new_data = (a > mem_data) ? a : mem_data;
+                            *b = htole(new_data);
+                        });
                 }}, mem_flags=ATOMIC_RETURN_OP);
                 0x18: AtomicMemOp::amominu_w({{
                     Rd_sd = Mem_sw;
                 }}, {{
                     TypedAtomicOpFunctor<uint32_t> *amo_op =
                       new AtomicGenericOp<uint32_t>(Rs2_uw,
-                        [](uint32_t* b, uint32_t a){ if (a < *b) *b = a; });
+                        [](uint32_t* b, uint32_t a){
+                            uint32_t mem_data = letoh(*b);
+                            uint32_t new_data = (a < mem_data) ? a : mem_data;
+                            *b = htole(new_data);
+                        });
                 }}, mem_flags=ATOMIC_RETURN_OP);
                 0x1c: AtomicMemOp::amomaxu_w({{
                     Rd_sd = Mem_sw;
                 }}, {{
                     TypedAtomicOpFunctor<uint32_t> *amo_op =
                       new AtomicGenericOp<uint32_t>(Rs2_uw,
-                        [](uint32_t* b, uint32_t a){ if (a > *b) *b = a; });
+                        [](uint32_t* b, uint32_t a){
+                            uint32_t mem_data = letoh(*b);
+                            uint32_t new_data = (a > mem_data) ? a : mem_data;
+                            *b = htole(new_data);
+                        });
                 }}, mem_flags=ATOMIC_RETURN_OP);
             }
             0x3: decode RVTYPE {
                 0x1: decode AMOFUNCT {
                     0x2: LoadReserved::lr_d({{
                         Rd_sd = Mem_sd;
-                    }}, mem_flags=LLSC);
+                    }}, mem_flags=[LLSC, 'ARCH_BITS & XlateFlags::LR']);
                     0x3: StoreCond::sc_d({{
                         Mem = Rs2;
                     }}, {{
@@ -1701,7 +2185,11 @@ decode QUADRANT default Unknown::unknown() {
                     }}, {{
                         TypedAtomicOpFunctor<int64_t> *amo_op =
                               new AtomicGenericOp<int64_t>(Rs2_sd,
-                                      [](int64_t* b, int64_t a){ *b += a; });
+                                      [](int64_t* b, int64_t a){
+                                          int64_t mem_data = letoh(*b);
+                                          int64_t new_data = mem_data + a;
+                                          *b = htole(new_data);
+                                      });
                     }}, mem_flags=ATOMIC_RETURN_OP);
                     0x1: AtomicMemOp::amoswap_d({{
                         Rd_sd = Mem_sd;
@@ -1715,35 +2203,57 @@ decode QUADRANT default Unknown::unknown() {
                     }}, {{
                         TypedAtomicOpFunctor<uint64_t> *amo_op =
                               new AtomicGenericOp<uint64_t>(Rs2_ud,
-                                     [](uint64_t* b, uint64_t a){ *b ^= a; });
+                                     [](uint64_t* b, uint64_t a){
+                                         uint64_t mem_data = letoh(*b);
+                                         uint64_t new_data = mem_data ^ a;
+                                         *b = htole(new_data);
+                                     });
                     }}, mem_flags=ATOMIC_RETURN_OP);
                     0x8: AtomicMemOp::amoor_d({{
                         Rd_sd = Mem_sd;
                     }}, {{
                         TypedAtomicOpFunctor<uint64_t> *amo_op =
                               new AtomicGenericOp<uint64_t>(Rs2_ud,
-                                     [](uint64_t* b, uint64_t a){ *b |= a; });
+                                     [](uint64_t* b, uint64_t a){
+                                         uint64_t mem_data = letoh(*b);
+                                         uint64_t new_data = mem_data | a;
+                                         *b = htole(new_data);
+                                     });
                     }}, mem_flags=ATOMIC_RETURN_OP);
                     0xc: AtomicMemOp::amoand_d({{
                         Rd_sd = Mem_sd;
                     }}, {{
                         TypedAtomicOpFunctor<uint64_t> *amo_op =
                               new AtomicGenericOp<uint64_t>(Rs2_ud,
-                                     [](uint64_t* b, uint64_t a){ *b &= a; });
+                                     [](uint64_t* b, uint64_t a){
+                                         uint64_t mem_data = letoh(*b);
+                                         uint64_t new_data = mem_data & a;
+                                         *b = htole(new_data);
+                                     });
                     }}, mem_flags=ATOMIC_RETURN_OP);
                     0x10: AtomicMemOp::amomin_d({{
                         Rd_sd = Mem_sd;
                     }}, {{
                         TypedAtomicOpFunctor<int64_t> *amo_op =
                           new AtomicGenericOp<int64_t>(Rs2_sd,
-                            [](int64_t* b, int64_t a){ if (a < *b) *b = a; });
+                            [](int64_t* b, int64_t a){
+                                int64_t mem_data = letoh(*b);
+                                int64_t new_data = (a < mem_data) ?
+                                                    a : mem_data;
+                                *b = htole(new_data);
+                            });
                     }}, mem_flags=ATOMIC_RETURN_OP);
                     0x14: AtomicMemOp::amomax_d({{
                         Rd_sd = Mem_sd;
                     }}, {{
                         TypedAtomicOpFunctor<int64_t> *amo_op =
                           new AtomicGenericOp<int64_t>(Rs2_sd,
-                            [](int64_t* b, int64_t a){ if (a > *b) *b = a; });
+                            [](int64_t* b, int64_t a){
+                                int64_t mem_data = letoh(*b);
+                                int64_t new_data = (a > mem_data) ?
+                                                    a : mem_data;
+                                *b = htole(new_data);
+                            });
                     }}, mem_flags=ATOMIC_RETURN_OP);
                     0x18: AtomicMemOp::amominu_d({{
                         Rd_sd = Mem_sd;
@@ -1751,7 +2261,10 @@ decode QUADRANT default Unknown::unknown() {
                         TypedAtomicOpFunctor<uint64_t> *amo_op =
                           new AtomicGenericOp<uint64_t>(Rs2_ud,
                             [](uint64_t* b, uint64_t a){
-                              if (a < *b) *b = a;
+                                uint64_t mem_data = letoh(*b);
+                                uint64_t new_data = (a < mem_data) ?
+                                                     a : mem_data;
+                                *b = htole(new_data);
                             });
                     }}, mem_flags=ATOMIC_RETURN_OP);
                     0x1c: AtomicMemOp::amomaxu_d({{
@@ -1760,7 +2273,10 @@ decode QUADRANT default Unknown::unknown() {
                         TypedAtomicOpFunctor<uint64_t> *amo_op =
                           new AtomicGenericOp<uint64_t>(Rs2_ud,
                             [](uint64_t* b, uint64_t a){
-                              if (a > *b) *b = a;
+                                uint64_t mem_data = letoh(*b);
+                                uint64_t new_data = (a > mem_data) ?
+                                                     a : mem_data;
+                                *b = htole(new_data);
                             });
                     }}, mem_flags=ATOMIC_RETURN_OP);
                 }
@@ -2124,7 +2640,8 @@ decode QUADRANT default Unknown::unknown() {
                         }});
                         0x30: rolw({{
                             int shamt = Rs2 & (32 - 1);
-                            Rd = (int32_t) ((Rs1_uw << shamt) | (Rs1_uw >> ((32 - shamt) & (32 - 1))));
+                            Rd = (int32_t) ((Rs1_uw << shamt)
+                                | (Rs1_uw >> ((32 - shamt) & (32 - 1))));
                         }});
                     }
                     0x2: decode FUNCT7 {
@@ -2155,7 +2672,8 @@ decode QUADRANT default Unknown::unknown() {
                         }});
                         0x30: rorw({{
                             int shamt = Rs2 & (32 - 1);
-                            Rd = (int32_t) ((Rs1_uw >> shamt) | (Rs1_uw << ((32 - shamt) & (32 - 1))));
+                            Rd = (int32_t) ((Rs1_uw >> shamt)
+                                | (Rs1_uw << ((32 - shamt) & (32 - 1))));
                         }});
                     }
                     0x6:  decode FUNCT7 {
@@ -2448,6 +2966,30 @@ decode QUADRANT default Unknown::unknown() {
                             fd = f32(defaultNaNF32UI);
                         Fd_bits = freg(fd).v;
                         }}, FloatCmpOp);
+                    0x2: fminm_s({{
+                        float32_t fs1 = f32(freg(Fs1_bits));
+                        float32_t fs2 = f32(freg(Fs2_bits));
+                        bool less = f32_lt_quiet(fs1, fs2) ||
+                                    (f32_eq(fs2, fs1) && (fs1.v & F32_SIGN));
+                        if (isNaNF32UI(fs1.v) || isNaNF32UI(fs2.v)) {
+                            Fd_bits = freg(f32(defaultNaNF32UI)).v;
+                        }
+                        else {
+                            Fd_bits = less ? fs1.v : fs2.v;
+                        }
+                        }}, FloatCmpOp);
+                    0x3: fmaxm_s({{
+                        float32_t fs1 = f32(freg(Fs1_bits));
+                        float32_t fs2 = f32(freg(Fs2_bits));
+                        bool greater = f32_lt_quiet(fs2, fs1) ||
+                                    (f32_eq(fs2, fs1) && (fs2.v & F32_SIGN));
+                        if (isNaNF32UI(fs1.v) || isNaNF32UI(fs2.v)) {
+                            Fd_bits = freg(f32(defaultNaNF32UI)).v;
+                        }
+                        else {
+                            Fd_bits = greater ? fs1.v : fs2.v;
+                        }
+                        }}, FloatCmpOp);
                 }
                 0x15: decode ROUND_MODE {
                     0x0: fmin_d({{
@@ -2473,6 +3015,30 @@ decode QUADRANT default Unknown::unknown() {
                         if (isNaNF64UI(fs1.v) && isNaNF64UI(fs2.v))
                             fd = f64(defaultNaNF64UI);
                         Fd_bits = freg(fd).v;
+                    }}, FloatCmpOp);
+                    0x2: fminm_d({{
+                        float64_t fs1 = f64(freg(Fs1_bits));
+                        float64_t fs2 = f64(freg(Fs2_bits));
+                        bool less = f64_lt_quiet(fs1, fs2) ||
+                                    (f64_eq(fs2, fs1) && (fs1.v & F64_SIGN));
+                        if (isNaNF64UI(fs1.v) || isNaNF64UI(fs2.v)) {
+                            Fd_bits = freg(f64(defaultNaNF64UI)).v;
+                        }
+                        else {
+                            Fd_bits = less ? fs1.v : fs2.v;
+                        }
+                    }}, FloatCmpOp);
+                    0x3: fmaxm_d({{
+                        float64_t fs1 = f64(freg(Fs1_bits));
+                        float64_t fs2 = f64(freg(Fs2_bits));
+                        bool greater = f64_lt_quiet(fs2, fs1) ||
+                                    (f64_eq(fs2, fs1) && (fs2.v & F64_SIGN));
+                        if (isNaNF64UI(fs1.v) || isNaNF64UI(fs2.v)) {
+                            Fd_bits = freg(f64(defaultNaNF64UI)).v;
+                        }
+                        else {
+                            Fd_bits = greater ? fs1.v : fs2.v;
+                        }
                     }}, FloatCmpOp);
                 }
                 0x16: decode ROUND_MODE {
@@ -2500,6 +3066,28 @@ decode QUADRANT default Unknown::unknown() {
                             fd = f16(defaultNaNF16UI);
                         Fd_bits = freg(fd).v;
                         }}, FloatCmpOp);
+                    0x3: fminm_h({{
+                        float16_t fs1 = f16(freg(Fs1_bits));
+                        float16_t fs2 = f16(freg(Fs2_bits));
+                        bool less = f16_lt_quiet(fs1, fs2) ||
+                                    (f16_eq(fs2, fs1) && (fs1.v & F16_SIGN));
+                        if (isNaNF16UI(fs1.v) || isNaNF16UI(fs2.v)) {
+                            Fd_bits = freg(f16(defaultNaNF16UI)).v;
+                        }
+                        else {
+                            Fd_bits = less ? fs1.v : fs2.v;
+                        }
+                        }}, FloatCmpOp);
+                    0x4: fmaxm_h({{
+                        float16_t fs1 = f16(freg(Fs1_bits));
+                        float16_t fs2 = f16(freg(Fs2_bits));
+                        bool greater = f16_lt_quiet(fs2, fs1) ||
+                                    (f16_eq(fs2, fs1) && (fs2.v & F16_SIGN));
+                        if (isNaNF16UI(fs1.v) || isNaNF16UI(fs2.v))
+                            Fd_bits = freg(f16(defaultNaNF16UI)).v;
+                        else
+                            Fd_bits = greater ? fs1.v : fs2.v;
+                        }}, FloatCmpOp);
                 }
                 0x20: decode CONV_SGN {
                     0x1: fcvt_s_d({{
@@ -2512,6 +3100,20 @@ decode QUADRANT default Unknown::unknown() {
                         RM_REQUIRED;
                         freg_t fd;
                         fd = freg(f16_to_f32(f16(freg(Fs1_bits))));
+                        Fd_bits = fd.v;
+                    }}, FloatCvtOp);
+                    0x4: fround_s({{
+                        RM_REQUIRED;
+                        freg_t fd;
+                        fd = freg(f32_roundToInt(
+                            f32(freg(Fs1_bits)), rm, false));
+                        Fd_bits = fd.v;
+                    }}, FloatCvtOp);
+                    0x5: froundnx_s({{
+                        RM_REQUIRED;
+                        freg_t fd;
+                        fd = freg(f32_roundToInt(
+                            f32(freg(Fs1_bits)), rm, true));
                         Fd_bits = fd.v;
                     }}, FloatCvtOp);
                 }
@@ -2528,6 +3130,20 @@ decode QUADRANT default Unknown::unknown() {
                         fd = freg(f16_to_f64(f16(freg(Fs1_bits))));
                         Fd_bits = fd.v;
                     }}, FloatCvtOp);
+                    0x4: fround_d({{
+                        RM_REQUIRED;
+                        freg_t fd;
+                        fd = freg(f64_roundToInt(
+                            f64(freg(Fs1_bits)), rm, false));
+                        Fd_bits = fd.v;
+                    }}, FloatCvtOp);
+                    0x5: froundnx_d({{
+                        RM_REQUIRED;
+                        freg_t fd;
+                        fd = freg(f64_roundToInt(
+                            f64(freg(Fs1_bits)), rm, true));
+                        Fd_bits = fd.v;
+                    }}, FloatCvtOp);
                 }
                 0x22: decode CONV_SGN {
                     0x0: fcvt_h_s({{
@@ -2540,6 +3156,20 @@ decode QUADRANT default Unknown::unknown() {
                         RM_REQUIRED;
                         freg_t fd;
                         fd = freg(f64_to_f16(f64(freg(Fs1_bits))));
+                        Fd_bits = fd.v;
+                    }}, FloatCvtOp);
+                    0x4: fround_h({{
+                        RM_REQUIRED;
+                        freg_t fd;
+                        fd = freg(f16_roundToInt(
+                            f16(freg(Fs1_bits)), rm, false));
+                        Fd_bits = fd.v;
+                    }}, FloatCvtOp);
+                    0x5: froundnx_h({{
+                        RM_REQUIRED;
+                        freg_t fd;
+                        fd = freg(f16_roundToInt(
+                            f16(freg(Fs1_bits)), rm, true));
                         Fd_bits = fd.v;
                     }}, FloatCvtOp);
                 }
@@ -2583,6 +3213,14 @@ decode QUADRANT default Unknown::unknown() {
                     0x2: feq_s({{
                         Rd = f32_eq(f32(freg(Fs1_bits)), f32(freg(Fs2_bits)));
                     }}, FloatCmpOp);
+                    0x4: fleq_s({{
+                        Rd = f32_le_quiet(f32(freg(Fs1_bits)),
+                            f32(freg(Fs2_bits)));
+                    }}, FloatCmpOp);
+                    0x5: fltq_s({{
+                        Rd = f32_lt_quiet(f32(freg(Fs1_bits)),
+                            f32(freg(Fs2_bits)));
+                    }}, FloatCmpOp);
                 }
                 0x51: decode ROUND_MODE {
                     0x0: fle_d({{
@@ -2593,6 +3231,14 @@ decode QUADRANT default Unknown::unknown() {
                     }}, FloatCmpOp);
                     0x2: feq_d({{
                         Rd = f64_eq(f64(freg(Fs1_bits)), f64(freg(Fs2_bits)));
+                    }}, FloatCmpOp);
+                    0x4: fleq_d({{
+                        Rd = f64_le_quiet(f64(freg(Fs1_bits)),
+                            f64(freg(Fs2_bits)));
+                    }}, FloatCmpOp);
+                    0x5: fltq_d({{
+                        Rd = f64_lt_quiet(f64(freg(Fs1_bits)),
+                            f64(freg(Fs2_bits)));
                     }}, FloatCmpOp);
                 }
                 0x52: decode ROUND_MODE {
@@ -2605,6 +3251,24 @@ decode QUADRANT default Unknown::unknown() {
                     0x2: feq_h({{
                         Rd = f16_eq(f16(freg(Fs1_bits)), f16(freg(Fs2_bits)));
                     }}, FloatCmpOp);
+                    0x4: fleq_h({{
+                        Rd = f16_le_quiet(f16(freg(Fs1_bits)),
+                            f16(freg(Fs2_bits)));
+                    }}, FloatCmpOp);
+                    0x5: fltq_h({{
+                        Rd = f16_lt_quiet(f16(freg(Fs1_bits)),
+                            f16(freg(Fs2_bits)));
+                    }}, FloatCmpOp);
+                }
+                0x59: decode ROUND_MODE {
+                    0x0: decode RVTYPE {
+                        0x0: fmvp_d_x({{
+                            ui64_f64 ui;
+                            ui.ui = ((uint64_t)Rs2) << 32;
+                            ui.ui |= (uint32_t)Rs1;
+                            Fd_bits = freg(f64(ui.ui)).v;
+                        }}, FloatCvtOp);
+                    }
                 }
                 0x60: decode CONV_SGN {
                     0x0: fcvt_w_s({{
@@ -2653,6 +3317,71 @@ decode QUADRANT default Unknown::unknown() {
                             Rd = f64_to_ui64(f64(freg(Fs1_bits)), rm, true);
                         }}, FloatCvtOp);
                     }
+                    0x8: fcvtmod_w_d({{
+                        RM_REQUIRED;
+
+                        uint64_t a = f64(freg(Fs1_bits)).v;
+
+                        uint32_t sign = signF64UI(a);
+                        uint32_t exp  = expF64UI(a);
+                        uint64_t frac = fracF64UI(a);
+
+                        bool inexact = false;
+                        bool invalid = false;
+
+                        if (exp == 0) {
+                            inexact = (frac != 0);
+                            frac = 0;
+                        } else if (exp == 0x7ff) {
+                            /* inf or NaN */
+                            invalid = true;
+                            frac = 0;
+                        } else {
+                            int true_exp = exp - 1023;
+                            int shift = true_exp - 52;
+
+                            /* Restore implicit bit.  */
+                            frac |= 1ull << 52;
+
+                            /* Shift the fraction into place.  */
+                            if (shift >= 64) {
+                                /* The fraction is shifted out entirely. */
+                                frac = 0;
+                            } else  if ((shift >= 0) && (shift < 64)) {
+                                /* The number is so large we must shift the
+                                fraction left.  */
+                                frac <<= shift;
+                            } else if ((shift > -64) && (shift < 0)) {
+                                /* Normal case -- shift right and notice if
+                                bits shift out. */
+                                inexact = (frac << (64 + shift)) != 0;
+                                frac >>= -shift;
+                            } else {
+                                /* The fraction is shifted out entirely. */
+                                frac = 0;
+                                inexact = true;
+                            }
+
+                            /* Handle overflows */
+                            if (true_exp > 31 || frac
+                                > (sign ? 0x80000000ull : 0x7fffffff)) {
+                                /* Overflow, for which this operation raises
+                                invalid. */
+                                invalid = true;
+                                inexact = false;  /* invalid takes precedence */
+                            }
+
+                            /* Honor the sign.  */
+                            if (sign) {
+                                frac = -frac;
+                            }
+                        }
+
+                        Rd = sext<32>(frac);
+                        softfloat_exceptionFlags =
+                            (inexact ? softfloat_flag_inexact : 0) |
+                            (invalid ? softfloat_flag_invalid : 0);
+                    }}, FloatCvtOp);
                 }
                 0x62: decode CONV_SGN {
                     0x0: fcvt_w_h({{
@@ -2781,10 +3510,19 @@ decode QUADRANT default Unknown::unknown() {
                     }}, FloatMiscOp);
                 }
                 0x71: decode ROUND_MODE {
-                    0x0: decode RVTYPE {
-                        0x1: fmv_x_d({{
-                            Rd = freg(Fs1_bits).v;
-                        }}, FloatCvtOp);
+                    0x0: decode RS2 {
+                        0x0: decode RVTYPE {
+                            0x1: fmv_x_d({{
+                                Rd = freg(Fs1_bits).v;
+                            }}, FloatCvtOp);
+                        }
+                        0x1: decode RVTYPE {
+                            0x0: fmvh_x_d({{
+                                ui64_f64 ui;
+                                ui.f = f64(freg(Fs1_bits));
+                                Rd = sext<32>(ui.ui >> 32);
+                            }}, FloatCvtOp);
+                        }
                     }
                     0x1: fclass_d({{
                         Rd = f64_classify(f64(freg(Fs1_bits)));
@@ -2802,23 +3540,157 @@ decode QUADRANT default Unknown::unknown() {
                         Rd = f16_classify(f16(freg(Fs1_bits)));
                     }}, FloatMiscOp);
                 }
-                0x78: fmv_w_x({{
-                    freg_t fd;
-                    fd = freg(f32(Rs1_uw));
-                    Fd_bits = fd.v;
-                }}, FloatCvtOp);
-                0x79: decode RVTYPE {
-                    0x1: fmv_d_x({{
+                0x78: decode ROUND_MODE {
+                    0x0: decode CONV_SGN {
+                        0x00: fmv_w_x({{
+                            freg_t fd;
+                            fd = freg(f32(Rs1_uw));
+                            Fd_bits = fd.v;
+                        }}, FloatCvtOp);
+                        0x01: fli_s({{
+                            static const uint32_t imm[32] = {
+                                [0b00000] = 0xbf800000,  /* -1.0 */
+                                [0b00001] = 0x00800000,  /* minimum positive
+                                    normal */
+                                [0b00010] = 0x37800000,  /* 1.0 * 2^-16 */
+                                [0b00011] = 0x38000000,  /* 1.0 * 2^-15 */
+                                [0b00100] = 0x3b800000,  /* 1.0 * 2^-8  */
+                                [0b00101] = 0x3c000000,  /* 1.0 * 2^-7  */
+                                [0b00110] = 0x3d800000,  /* 1.0 * 2^-4  */
+                                [0b00111] = 0x3e000000,  /* 1.0 * 2^-3  */
+                                [0b01000] = 0x3e800000,  /* 0.25 */
+                                [0b01001] = 0x3ea00000,  /* 0.3125 */
+                                [0b01010] = 0x3ec00000,  /* 0.375 */
+                                [0b01011] = 0x3ee00000,  /* 0.4375 */
+                                [0b01100] = 0x3f000000,  /* 0.5 */
+                                [0b01101] = 0x3f200000,  /* 0.625 */
+                                [0b01110] = 0x3f400000,  /* 0.75 */
+                                [0b01111] = 0x3f600000,  /* 0.875 */
+                                [0b10000] = 0x3f800000,  /* 1.0 */
+                                [0b10001] = 0x3fa00000,  /* 1.25 */
+                                [0b10010] = 0x3fc00000,  /* 1.5 */
+                                [0b10011] = 0x3fe00000,  /* 1.75 */
+                                [0b10100] = 0x40000000,  /* 2.0 */
+                                [0b10101] = 0x40200000,  /* 2.5 */
+                                [0b10110] = 0x40400000,  /* 3 */
+                                [0b10111] = 0x40800000,  /* 4 */
+                                [0b11000] = 0x41000000,  /* 8 */
+                                [0b11001] = 0x41800000,  /* 16 */
+                                [0b11010] = 0x43000000,  /* 2^7 */
+                                [0b11011] = 0x43800000,  /* 2^8 */
+                                [0b11100] = 0x47000000,  /* 2^15 */
+                                [0b11101] = 0x47800000,  /* 2^16 */
+                                [0b11110] = 0x7f800000,  /* +inf */
+                                [0b11111] = defaultNaNF32UI
+                            };
+                            freg_t fd;
+                            fd = freg(f32(imm[RS1]));
+                            Fd_bits = fd.v;
+                        }}, FloatCvtOp);
+                    }
+                }
+                0x79: decode CONV_SGN {
+                    0x00: decode RVTYPE {
+                        0x1: fmv_d_x({{
+                            freg_t fd;
+                            fd = freg(f64(Rs1));
+                            Fd_bits = fd.v;
+                        }}, FloatCvtOp);
+                    }
+                    0x01: fli_d({{
+                        static const uint64_t imm[32] = {
+                            [0b00000] = 0xbff0000000000000ull,  /* -1.0 */
+                            [0b00001] = 0x0010000000000000ull,  /* minimum
+                                positive normal */
+                            [0b00010] = 0x3ef0000000000000ull,  /* 1.0
+                                * 2^-16 */
+                            [0b00011] = 0x3f00000000000000ull,  /* 1.0
+                                * 2^-15 */
+                            [0b00100] = 0x3f70000000000000ull,  /* 1.0
+                                * 2^-8  */
+                            [0b00101] = 0x3f80000000000000ull,  /* 1.0
+                                * 2^-7  */
+                            [0b00110] = 0x3fb0000000000000ull,  /* 1.0
+                                * 2^-4  */
+                            [0b00111] = 0x3fc0000000000000ull,  /* 1.0
+                                * 2^-3  */
+                            [0b01000] = 0x3fd0000000000000ull,  /* 0.25 */
+                            [0b01001] = 0x3fd4000000000000ull,  /* 0.3125 */
+                            [0b01010] = 0x3fd8000000000000ull,  /* 0.375 */
+                            [0b01011] = 0x3fdc000000000000ull,  /* 0.4375 */
+                            [0b01100] = 0x3fe0000000000000ull,  /* 0.5 */
+                            [0b01101] = 0x3fe4000000000000ull,  /* 0.625 */
+                            [0b01110] = 0x3fe8000000000000ull,  /* 0.75 */
+                            [0b01111] = 0x3fec000000000000ull,  /* 0.875 */
+                            [0b10000] = 0x3ff0000000000000ull,  /* 1.0 */
+                            [0b10001] = 0x3ff4000000000000ull,  /* 1.25 */
+                            [0b10010] = 0x3ff8000000000000ull,  /* 1.5 */
+                            [0b10011] = 0x3ffc000000000000ull,  /* 1.75 */
+                            [0b10100] = 0x4000000000000000ull,  /* 2.0 */
+                            [0b10101] = 0x4004000000000000ull,  /* 2.5 */
+                            [0b10110] = 0x4008000000000000ull,  /* 3 */
+                            [0b10111] = 0x4010000000000000ull,  /* 4 */
+                            [0b11000] = 0x4020000000000000ull,  /* 8 */
+                            [0b11001] = 0x4030000000000000ull,  /* 16 */
+                            [0b11010] = 0x4060000000000000ull,  /* 2^7 */
+                            [0b11011] = 0x4070000000000000ull,  /* 2^8 */
+                            [0b11100] = 0x40e0000000000000ull,  /* 2^15 */
+                            [0b11101] = 0x40f0000000000000ull,  /* 2^16 */
+                            [0b11110] = 0x7ff0000000000000ull,  /* +inf */
+                            [0b11111] = defaultNaNF64UI
+                        };
                         freg_t fd;
-                        fd = freg(f64(Rs1));
+                        fd = freg(f64(imm[RS1]));
                         Fd_bits = fd.v;
                     }}, FloatCvtOp);
                 }
-                0x7a: fmv_h_x({{
-                    freg_t fd;
-                    fd = freg(f16(Rs1_uh));
-                    Fd_bits = fd.v;
-                }}, FloatCvtOp);
+                0x7a: decode CONV_SGN {
+                    0x00:fmv_h_x({{
+                        freg_t fd;
+                        fd = freg(f16(Rs1_uh));
+                        Fd_bits = fd.v;
+                    }}, FloatCvtOp);
+                    0x01:fli_h({{
+                        static const uint16_t imm[32] = {
+                            [0b00000] = 0xbc00,  /* -1.0 */
+                            [0b00001] = 0x0400,  /* minimum positive normal */
+                            [0b00010] = 0x0100,  /* 1.0 * 2^-16 */
+                            [0b00011] = 0x0200,  /* 1.0 * 2^-15 */
+                            [0b00100] = 0x1c00,  /* 1.0 * 2^-8  */
+                            [0b00101] = 0x2000,  /* 1.0 * 2^-7  */
+                            [0b00110] = 0x2c00,  /* 1.0 * 2^-4  */
+                            [0b00111] = 0x3000,  /* 1.0 * 2^-3  */
+                            [0b01000] = 0x3400,  /* 0.25 */
+                            [0b01001] = 0x3500,  /* 0.3125 */
+                            [0b01010] = 0x3600,  /* 0.375 */
+                            [0b01011] = 0x3700,  /* 0.4375 */
+                            [0b01100] = 0x3800,  /* 0.5 */
+                            [0b01101] = 0x3900,  /* 0.625 */
+                            [0b01110] = 0x3a00,  /* 0.75 */
+                            [0b01111] = 0x3b00,  /* 0.875 */
+                            [0b10000] = 0x3c00,  /* 1.0 */
+                            [0b10001] = 0x3d00,  /* 1.25 */
+                            [0b10010] = 0x3e00,  /* 1.5 */
+                            [0b10011] = 0x3f00,  /* 1.75 */
+                            [0b10100] = 0x4000,  /* 2.0 */
+                            [0b10101] = 0x4100,  /* 2.5 */
+                            [0b10110] = 0x4200,  /* 3 */
+                            [0b10111] = 0x4400,  /* 4 */
+                            [0b11000] = 0x4800,  /* 8 */
+                            [0b11001] = 0x4c00,  /* 16 */
+                            [0b11010] = 0x5800,  /* 2^7 */
+                            [0b11011] = 0x5c00,  /* 2^8 */
+                            [0b11100] = 0x7800,  /* 2^15 */
+                            [0b11101] = 0x7c00,  /* +inf (2^16 is not
+                                expressible) */
+                            [0b11110] = 0x7c00,  /* +inf */
+                            [0b11111] = defaultNaNF16UI
+                        };
+                        freg_t fd;
+                        fd = freg(f16(imm[RS1]));
+                        Fd_bits = fd.v;
+                    }}, FloatCvtOp);
+                }
             }
         }
 
@@ -2829,6 +3701,9 @@ decode QUADRANT default Unknown::unknown() {
                     0x0: vadd_vv({{
                         Vd_vu[i] = Vs2_vu[i] + Vs1_vu[i];
                     }}, OPIVV, SimdAddOp);
+                    0x1: vandn_vv({{
+                        Vd_vu[i] = Vs2_vu[i] & (~Vs1_vu[i]);
+                    }}, OPIVV, SimdAluOp);
                     0x2: vsub_vv({{
                         Vd_vu[i] = Vs2_vu[i] - Vs1_vu[i];
                     }}, OPIVV, SimdAddOp);
@@ -2899,6 +3774,16 @@ decode QUADRANT default Unknown::unknown() {
                         }}, OPIVV, SimdAddOp);
                         // the unmasked versions (vm=1) are reserved
                     }
+                    0x14: vror_vv({{
+                        Vd_vu[i] =   (Vs2_vu[i] >> (Vs1_vu[i] & (sew - 1)))
+                                   | (Vs2_vu[i] <<
+                                        ((sew - Vs1_vu[i]) & (sew - 1)));
+                    }}, OPIVV, SimdShiftOp);
+                    0x15: vrol_vv({{
+                        Vd_vu[i] =   (Vs2_vu[i] << (Vs1_vu[i] & (sew - 1)))
+                                   | (Vs2_vu[i] >>
+                                        ((sew - Vs1_vu[i]) & (sew - 1)));
+                    }}, OPIVV, SimdShiftOp);
                     0x17: decode VM {
                         0x0: vmerge_vvm({{
                             Vd_vu[i] = elem_mask(v0, ei)
@@ -3078,6 +3963,12 @@ decode QUADRANT default Unknown::unknown() {
                         Vd_vi[i + offset] = (vi)res;
                     }}, OPIVV, SimdCvtOp);
                 }
+                format VectorIntWideningFormat {
+                    0x35: vwsll_vv({{
+                        Vd_vwu[i] = vwu(Vs2_vu[i + offset]) <<
+                            (vwu(Vs1_vu[i + offset]) & ((vwu(sew) << 1) - 1));
+                    }}, OPIVV, SimdShiftOp);
+                }
             }
             // OPFVV
             0x1: decode VFUNCT6 {
@@ -3100,7 +3991,7 @@ decode QUADRANT default Unknown::unknown() {
                     Vd_vu[0] = reduce_loop([](const vu& src1, const vu& src2) {
                         return fadd<et>(ftype<et>(src1), ftype<et>(src2));
                     }, Vs1_vu, Vs2_vu);
-                }}, OPFVV, SimdFloatReduceAddOp);
+                }}, OPFVV, SimdFloatReduceAddOp, IsSerializeAfter);
                 0x04: VectorFloatFormat::vfmin_vv({{
                     auto fd = fmin<et>(ftype<et>(Vs2_vu[i]),
                                        ftype<et>(Vs1_vu[i]));
@@ -3368,7 +4259,7 @@ decode QUADRANT default Unknown::unknown() {
                                     f_to_wf<et>(ftype<et>(src2))
                                 );
                             }, Vs1_vwu, Vs2_vu);
-                    }}, OPFVV, SimdFloatReduceAddOp);
+                    }}, OPFVV, SimdFloatReduceAddOp, IsSerializeAfter);
                 }
                 format VectorFloatWideningFormat {
                     0x30: vfwadd_vv({{
@@ -3496,6 +4387,28 @@ decode QUADRANT default Unknown::unknown() {
                         res = int_rounding<__uint128_t>(res, 0 /* TODO */, 1);
                         Vd_vi[i] = res >> 1;
                     }}, OPMVV, SimdAddOp);
+                    0x0c: vclmul_vv({{
+                        uint64_t result = 0;
+                        uint64_t src1 = Vs1_vu[i];
+                        uint64_t src2 = Vs2_vu[i];
+                        for (int j = 0; j < 64; j++) {
+                            if ((src2 >> j) & 1) {
+                                result ^= src1 << j;
+                            }
+                        }
+                        Vd_vu[i] = result;
+                    }}, OPMVV, SimdMultOp);
+                    0x0d: vclmulh_vv({{
+                        uint64_t result = 0;
+                        uint64_t src1 = Vs1_vu[i];
+                        uint64_t src2 = Vs2_vu[i];
+                        for (int j = 1; j < 64; j++) {
+                            if ((src2 >> j) & 1) {
+                                result ^= src1 >> (64-j);
+                            }
+                        }
+                        Vd_vu[i] = result;
+                    }}, OPMVV, SimdMultOp);
                 }
                 // VWXUNARY0
                 0x10: decode VS1 {
@@ -3626,6 +4539,30 @@ decode QUADRANT default Unknown::unknown() {
                     }}, OPMVV, SimdAluOp);
                     0x11: VectorIntFormat::vid_v({{
                         Vd_vu[i] = ei;
+                    }}, OPMVV, SimdMiscOp);
+                }
+                format VectorCompressFormat {
+                    0x17: vcompress_vm({{
+                        static uint64_t vcompress_cnt;
+                        static uint64_t vcompress_buf[65536];
+                        if(this->microIdx == 0) {
+                            vcompress_cnt = 0;
+                        }
+                        for (uint32_t i = 0; i < microVl; i++) {
+                            uint32_t num_regs = vtype_regs_per_group(vtype);
+                            uint32_t ei = i + num_elements_reg(vtype, vlen) *
+                                (this->microIdx % num_regs);
+                            if (elem_mask(Vs1_vu, ei) &&
+                                this->microIdx < num_regs) {
+                                vcompress_buf[vcompress_cnt] = Vs2_vu[i];
+                                Vd_vu[i] = vcompress_buf[vcompress_cnt];
+                                vcompress_cnt ++;
+                            }
+                            if (ei < vcompress_cnt &&
+                                this->microIdx >= num_regs) {
+                                Vd_vu[i] = vcompress_buf[ei];
+                            }
+                        }
                     }}, OPMVV, SimdMiscOp);
                 }
                 format VectorMaskFormat {
@@ -3790,67 +4727,106 @@ decode QUADRANT default Unknown::unknown() {
                         }
                     }
                 }}, OPIVI, SimdMiscOp);
-                0x0e: VectorSlideUpFormat::vslideup_vi({{
-                    const int offset = (int)(uint64_t)(SIMM5);
-                    const int microVlmax = vtype_VLMAX(machInst.vtype8,
-                        vlen, true);
-                    const int vregOffset = vdIdx - vs2Idx;
-                    const int offsetInVreg = offset - vregOffset * microVlmax;
-                    if (std::abs(offsetInVreg) < uint32_t(microVlmax)) {
-                        const int upperBound = (offsetInVreg >= 0)
-                            ? microVlmax - offsetInVreg
-                            : microVlmax + offsetInVreg;
-                        const int vdOffset = (offsetInVreg >= 0)
-                            ? offsetInVreg
-                            : 0;
-                        const int vs2Offset = (offsetInVreg >= 0)
-                            ? 0
-                            : -offsetInVreg;
-                        const int elemOffset = vdOffset + vdIdx * microVlmax;
-                        for (int i = 0;
-                            i < upperBound && i + vdOffset < microVl;
-                            i++) {
-                            if (this->vm || elem_mask(v0, i + elemOffset)) {
-                                Vd_vu[i + vdOffset] = Vs2_vu[i + vs2Offset];
+                0x0e: VectorSlideUpVIFormat::vslideup_vi({{
+                    int offset = (int)(uint64_t)(SIMM5);
+                    int microVlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
+                    int vdWindowLeft = microVlmax * vdIdx;
+                    int vdWindowRight = microVlmax * (vdIdx + 1);
+                    int vs3WindowLeft = microVlmax * (vs2Idx + 1) + offset;
+                    bool copyAll = vs3WindowLeft >= vdWindowLeft
+                        && vs3WindowLeft < vdWindowRight;
+
+                    RiscvISA::vreg_t old_vd;
+                    xc->getRegOperand(this, oldDstIdx, &old_vd);
+                    tmp_d0 = old_vd;
+
+                    if (copyAll) {
+                        int backLen = vdWindowRight - vs3WindowLeft;
+                        int frontLen = microVlmax - backLen;
+                        int vdOffset = 0;
+                        for (int i = 0; vdOffset < frontLen
+                            && vdOffset < microVl; vdOffset++, i++) {
+                            if (this->vm || elem_mask(v0,
+                                vdOffset + vdWindowLeft)) {
+                                Vd_vu[vdOffset] = Vs2_vu[i + backLen];
+                            }
+                        }
+                        for (int i = 0; vdOffset < microVl; vdOffset++, i++) {
+                            if (this->vm || elem_mask(v0,
+                                vdOffset + vdWindowLeft)) {
+                                Vd_vu[vdOffset] = Vs3_vu[i];
+                            }
+                        }
+                    } else {
+                        int vs2WindowLeft = microVlmax * vs2Idx + offset;
+                        bool copyBack = vs2Idx == 0 && vs2WindowLeft
+                            >= vdWindowLeft && vs2WindowLeft < vdWindowRight;
+                        if (copyBack) {
+                            int backLen = vdWindowRight - vs2WindowLeft;
+                            int vdOffset = microVlmax - backLen;
+                            for (int i = 0; i < backLen && vdOffset < microVl;
+                                vdOffset++, i++) {
+                                if (this->vm || elem_mask(v0,
+                                    vdOffset + vdWindowLeft)) {
+                                    Vd_vu[vdOffset] = Vs2_vu[i];
+                                }
                             }
                         }
                     }
                 }}, OPIVI, SimdMiscOp);
-                0x0f: VectorSlideDownFormat::vslidedown_vi({{
-                    const int offset = (int)(uint64_t)(SIMM5);
-                    const int microVlmax = vtype_VLMAX(machInst.vtype8,
-                        vlen, true);
-                    const int vregOffset = vs2Idx - vdIdx;
-                    const int offsetInVreg = offset - vregOffset * microVlmax;
-                    const int numVs2s = vtype_regs_per_group(vtype);
-                    if (std::abs(offsetInVreg) < uint32_t(microVlmax)) {
-                        const bool needZeroTail = numVs2s == vs2Idx + 1;
-                        const int upperBound = (offsetInVreg >= 0)
-                            ? microVlmax - offsetInVreg
-                            : microVlmax + offsetInVreg;
-                        const int vdOffset = (offsetInVreg >= 0)
-                            ? 0
-                            : -offsetInVreg;
-                        const int vs2Offset = (offsetInVreg >= 0)
-                            ? offsetInVreg
-                            : 0;
-                        const int elemIdxBase = vdIdx * microVlmax;
-                        vreg_t resVreg;
-                        auto res = resVreg.as<vu>();
-                        for (int i = 0;
-                            i < upperBound && i + vdOffset < microVl;
-                            i++) {
-                            res[i + vdOffset] = Vs2_vu[i + vs2Offset];
-                        }
-                        if (needZeroTail) {
-                            for (int i = upperBound + vdOffset;
-                                i < microVlmax; i++) {
-                                res[i] = 0;
+                0x0f: VectorSlideDownVIFormat::vslidedown_vi({{
+                    int offset = (int)(uint64_t)(SIMM5);
+                    int microVlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
+                    int offsetWindow = offset % microVlmax;
+                    int vdWindowLeft = microVlmax * vdIdx;
+                    int vdWindowRight = microVlmax * (vdIdx + 1);
+                    int vs3WindowLeftSlide = microVlmax * vs3Idx - offset;
+                    int vs3WindowRightSlide = microVlmax * (vs3Idx + 1)
+                        - offset;
+                    bool copyFrontFromVs2 = vs3WindowLeftSlide > vdWindowLeft
+                        && vs3WindowLeftSlide <= vdWindowRight;
+                    bool copyFrontFromVs3 = lastUopForVd && vs3WindowRightSlide
+                        > vdWindowLeft && vs3WindowRightSlide <= vdWindowRight;
+                    bool needZeroTail = lastUopForVd && vs3WindowRightSlide
+                        <= vdWindowLeft;
+                    int vdOffset = 0;
+
+                    COPY_OLD_VD(oldDstIdx);
+
+                    if (copyFrontFromVs2) {
+                        int frontLen = vs3WindowLeftSlide - vdWindowLeft;
+                        for (; vdOffset < frontLen && vdOffset < microVl;
+                            vdOffset++) {
+                            if (this->vm || elem_mask(v0,
+                                vdWindowLeft + vdOffset)) {
+                                Vd_vu[vdOffset] =
+                                    Vs2_vu[vdOffset + offsetWindow];
                             }
                         }
-                        for (int i = vdOffset; i < microVl ; i++) {
-                            if (vm || elem_mask(v0, i + elemIdxBase)) {
-                                Vd_vu[i] = res[i];
+                        for (int i = 0; vdOffset < microVl; vdOffset++, i++) {
+                            if (this->vm || elem_mask(v0,
+                                vdWindowLeft + vdOffset)) {
+                                Vd_vu[vdOffset] = Vs3_vu[i];
+                            }
+                        }
+                    } else {
+                        if (copyFrontFromVs3) {
+                            int frontLen = vs3WindowRightSlide - vdWindowLeft;
+                            for (; vdOffset < frontLen && vdOffset < microVl;
+                                vdOffset++) {
+                                if (this->vm || elem_mask(v0,
+                                    vdWindowLeft + vdOffset)) {
+                                    Vd_vu[vdOffset] =
+                                        Vs3_vu[vdOffset + offsetWindow];
+                                }
+                            }
+                        }
+                        if (copyFrontFromVs3 || needZeroTail) {
+                            for (; vdOffset < microVl; vdOffset++) {
+                                if (this->vm || elem_mask(v0,
+                                    vdWindowLeft + vdOffset)) {
+                                    Vd_vu[vdOffset] = 0;
+                                }
                             }
                         }
                     }
@@ -3863,6 +4839,12 @@ decode QUADRANT default Unknown::unknown() {
                         }}, OPIVI, SimdAddOp);
                         // the unmasked versions (vm=1) are reserved
                     }
+                    0x14, 0x15: vror_vi({{
+                        uint64_t shamt = SIMM5 | (BIT26 << 5);
+                        Vd_vu[i] =   (Vs2_vu[i] >> (shamt & (sew - 1)))
+                                   | (Vs2_vu[i] <<
+                                        ((sew - shamt) & (sew - 1)));
+                    }}, OPIVI, SimdShiftOp);
                     0x17: decode VM {
                         0x0: vmerge_vim({{
                             Vd_vi[i] = elem_mask(v0, ei)
@@ -4013,6 +4995,12 @@ decode QUADRANT default Unknown::unknown() {
                         Vd_vi[i + offset] = (vi)res;
                     }}, OPIVI, SimdCvtOp);
                 }
+                format VectorIntWideningFormat {
+                    0x35: vwsll_vi({{
+                        Vd_vwu[i] = vwu(Vs2_vu[i + offset]) <<
+                            (vwu(SIMM5) & ((vwu(sew) << 1) - 1));
+                    }}, OPIVI, SimdShiftOp);
+                }
             }
             // OPIVX
             0x4: decode VFUNCT6 {
@@ -4020,6 +5008,9 @@ decode QUADRANT default Unknown::unknown() {
                     0x0: vadd_vx({{
                         Vd_vu[i] = Vs2_vu[i] + Rs1_vu;
                     }}, OPIVX, SimdAddOp);
+                    0x1: vandn_vx({{
+                        Vd_vu[i] = Vs2_vu[i] & (~Rs1_vu);
+                    }}, OPIVX, SimdAluOp);
                     0x2: vsub_vx({{
                         Vd_vu[i] = Vs2_vu[i] - Rs1_vu;
                     }}, OPIVX, SimdAddOp);
@@ -4049,66 +5040,99 @@ decode QUADRANT default Unknown::unknown() {
                     }}, OPIVX, SimdAluOp);
                 }
                 0x0e: VectorSlideUpFormat::vslideup_vx({{
-                    const int offset = (int)Rs1_vu;
-                    const int microVlmax = vtype_VLMAX(machInst.vtype8,
-                        vlen, true);
-                    const int vregOffset = vdIdx - vs2Idx;
-                    const int offsetInVreg = offset - vregOffset * microVlmax;
-                    if (std::abs(offsetInVreg) < uint32_t(microVlmax)) {
-                        const int upperBound = (offsetInVreg >= 0)
-                            ? microVlmax - offsetInVreg
-                            : microVlmax + offsetInVreg;
-                        const int vdOffset = (offsetInVreg >= 0)
-                            ? offsetInVreg
-                            : 0;
-                        const int vs2Offset = (offsetInVreg >= 0)
-                            ? 0
-                            : -offsetInVreg;
-                        const int elemOffset = vdOffset + vdIdx * microVlmax;
-                        for (int i = 0;
-                            i < upperBound && i + vdOffset < microVl;
-                            i++) {
-                            if (this->vm || elem_mask(v0, i + elemOffset)) {
-                                Vd_vu[i + vdOffset] = Vs2_vu[i + vs2Offset];
+                    int offset = (int)Rs1_vu;
+                    int microVlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
+                    int vdWindowLeft = microVlmax * vdIdx;
+                    int vdWindowRight = microVlmax * (vdIdx + 1);
+                    int vs3WindowLeft = microVlmax * (vs2Idx + 1) + offset;
+                    bool copyAll = vs3WindowLeft >= vdWindowLeft
+                        && vs3WindowLeft < vdWindowRight;
+
+                    if (copyAll) {
+                        int backLen = vdWindowRight - vs3WindowLeft;
+                        int frontLen = microVlmax - backLen;
+                        int vdOffset = 0;
+                        for (int i = 0; vdOffset < frontLen
+                            && vdOffset < microVl; vdOffset++, i++) {
+                            if (this->vm || elem_mask(v0,
+                                vdOffset + vdWindowLeft)) {
+                                Vd_vu[vdOffset] = Vs2_vu[i + backLen];
+                            }
+                        }
+                        for (int i = 0; vdOffset < microVl; vdOffset++, i++) {
+                            if (this->vm || elem_mask(v0,
+                                vdOffset + vdWindowLeft)) {
+                                Vd_vu[vdOffset] = Vs3_vu[i];
+                            }
+                        }
+                    } else {
+                        int vs2WindowLeft = microVlmax * vs2Idx + offset;
+                        bool copyBack = vs2Idx == 0 && vs2WindowLeft
+                            >= vdWindowLeft && vs2WindowLeft < vdWindowRight;
+                        if (copyBack) {
+                            int backLen = vdWindowRight - vs2WindowLeft;
+                            int vdOffset = microVlmax - backLen;
+                            for (int i = 0; i < backLen && vdOffset < microVl;
+                                vdOffset++, i++) {
+                                if (this->vm || elem_mask(v0,
+                                    vdOffset + vdWindowLeft)) {
+                                    Vd_vu[vdOffset] = Vs2_vu[i];
+                                }
                             }
                         }
                     }
                 }}, OPIVX, SimdMiscOp);
                 0x0f: VectorSlideDownFormat::vslidedown_vx({{
-                    const int offset = (int)Rs1_vu;
-                    const int microVlmax = vtype_VLMAX(machInst.vtype8,
-                        vlen, true);
-                    const int vregOffset = vs2Idx - vdIdx;
-                    const int offsetInVreg = offset - vregOffset * microVlmax;
-                    const int numVs2s = vtype_regs_per_group(vtype);
-                    if (std::abs(offsetInVreg) < uint32_t(microVlmax)) {
-                        const bool needZeroTail = numVs2s == vs2Idx + 1;
-                        const int upperBound = (offsetInVreg >= 0)
-                            ? microVlmax - offsetInVreg
-                            : microVlmax + offsetInVreg;
-                        const int vdOffset = (offsetInVreg >= 0)
-                            ? 0
-                            : -offsetInVreg;
-                        const int vs2Offset = (offsetInVreg >= 0)
-                            ? offsetInVreg
-                            : 0;
-                        const int elemIdxBase = vdIdx * microVlmax;
-                        vreg_t resVreg;
-                        auto res = resVreg.as<vu>();
-                        for (int i = 0;
-                            i < upperBound && i + vdOffset < microVl;
-                            i++) {
-                            res[i + vdOffset] = Vs2_vu[i + vs2Offset];
-                        }
-                        if (needZeroTail) {
-                            for (int i = upperBound + vdOffset;
-                                i < microVlmax; i++) {
-                                res[i] = 0;
+                    int offset = (int)Rs1_vu;
+                    int microVlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
+                    int offsetWindow = offset % microVlmax;
+                    int vdWindowLeft = microVlmax * vdIdx;
+                    int vdWindowRight = microVlmax * (vdIdx + 1);
+                    int vs3WindowLeftSlide = microVlmax * vs3Idx - offset;
+                    int vs3WindowRightSlide = microVlmax * (vs3Idx + 1)
+                        - offset;
+                    bool copyFrontFromVs2 = vs3WindowLeftSlide > vdWindowLeft
+                        && vs3WindowLeftSlide <= vdWindowRight;
+                    bool copyFrontFromVs3 = lastUopForVd && vs3WindowRightSlide
+                        > vdWindowLeft && vs3WindowRightSlide <= vdWindowRight;
+                    bool needZeroTail = lastUopForVd && vs3WindowRightSlide
+                        <= vdWindowLeft;
+                    int vdOffset = 0;
+
+                    if (copyFrontFromVs2) {
+                        int frontLen = vs3WindowLeftSlide - vdWindowLeft;
+                        for (; vdOffset < frontLen && vdOffset < microVl;
+                            vdOffset++) {
+                            if (this->vm || elem_mask(v0,
+                                vdWindowLeft + vdOffset)) {
+                                Vd_vu[vdOffset] =
+                                    Vs2_vu[vdOffset + offsetWindow];
                             }
                         }
-                        for (int i = vdOffset; i < microVl ; i++) {
-                            if (vm || elem_mask(v0, i + elemIdxBase)) {
-                                Vd_vu[i] = res[i];
+                        for (int i = 0; vdOffset < microVl; vdOffset++, i++) {
+                            if (this->vm || elem_mask(v0,
+                                vdWindowLeft + vdOffset)) {
+                                Vd_vu[vdOffset] = Vs3_vu[i];
+                            }
+                        }
+                    } else {
+                        if (copyFrontFromVs3) {
+                            int frontLen = vs3WindowRightSlide - vdWindowLeft;
+                            for (; vdOffset < frontLen && vdOffset < microVl;
+                                vdOffset++) {
+                                if (this->vm || elem_mask(v0,
+                                    vdWindowLeft + vdOffset)) {
+                                    Vd_vu[vdOffset] =
+                                        Vs3_vu[vdOffset + offsetWindow];
+                                }
+                            }
+                        }
+                        if (copyFrontFromVs3 || needZeroTail) {
+                            for (; vdOffset < microVl; vdOffset++) {
+                                if (this->vm || elem_mask(v0,
+                                    vdWindowLeft + vdOffset)) {
+                                    Vd_vu[vdOffset] = 0;
+                                }
                             }
                         }
                     }
@@ -4139,6 +5163,16 @@ decode QUADRANT default Unknown::unknown() {
                         }}, OPIVX, SimdAddOp);
                         // the unmasked versions (vm=1) are reserved
                     }
+                    0x14: vror_vx({{
+                        Vd_vu[i] =   (Vs2_vu[i] >> (Rs1_vu & (sew - 1)))
+                                   | (Vs2_vu[i] <<
+                                        ((sew - Rs1_vu) & (sew - 1)));
+                    }}, OPIVX, SimdShiftOp);
+                    0x15: vrol_vx({{
+                        Vd_vu[i] =   (Vs2_vu[i] << (Rs1_vu & (sew - 1)))
+                                   | (Vs2_vu[i] >>
+                                        ((sew - Rs1_vu) & (sew - 1)));
+                    }}, OPIVX, SimdShiftOp);
                     0x17: decode VM {
                         0x0: vmerge_vxm({{
                             Vd_vu[i] = elem_mask(v0, ei) ? Rs1_vu : Vs2_vu[i];
@@ -4314,6 +5348,12 @@ decode QUADRANT default Unknown::unknown() {
                             (Vs2_vi[i] > Rs1_vi));
                     }}, OPIVX, SimdCmpOp);
                 }
+                format VectorIntWideningFormat {
+                    0x35: vwsll_vx({{
+                        Vd_vwu[i] = vwu(Vs2_vu[i + offset]) <<
+                            (vwu(Rs1_vu) & ((vwu(sew) << 1) - 1));
+                    }}, OPIVX, SimdShiftOp);
+                }
             }
             // OPFVF
             0x5: decode VFUNCT6 {
@@ -4355,74 +5395,117 @@ decode QUADRANT default Unknown::unknown() {
                     }}, OPFVF, SimdFloatExtOp);
                 }
                 0x0e: VectorFloatSlideUpFormat::vfslide1up_vf({{
-                    const int offset = 1;
-                    const int microVlmax = vtype_VLMAX(machInst.vtype8,
-                        vlen, true);
-                    const int vregOffset = vdIdx - vs2Idx;
-                    const int offsetInVreg = offset - vregOffset * microVlmax;
-                    if (std::abs(offsetInVreg) < uint32_t(microVlmax)) {
-                        const int upperBound = (offsetInVreg >= 0)
-                            ? microVlmax - offsetInVreg
-                            : microVlmax + offsetInVreg;
-                        const int vdOffset = (offsetInVreg >= 0)
-                            ? offsetInVreg
-                            : 0;
-                        const int vs2Offset = (offsetInVreg >= 0)
-                            ? 0
-                            : -offsetInVreg;
-                        const int elemOffset = vdOffset + vdIdx * microVlmax;
-                        for (int i = 0;
-                            i < upperBound && i + vdOffset < microVl;
-                            i++) {
-                            if (this->vm || elem_mask(v0, i + elemOffset)) {
-                                Vd_vu[i + vdOffset] = Vs2_vu[i + vs2Offset];
+                    int offset = 1;
+                    int microVlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
+                    int vdWindowLeft = microVlmax * vdIdx;
+                    int vdWindowRight = microVlmax * (vdIdx + 1);
+                    int vs3WindowLeft = microVlmax * (vs2Idx + 1) + offset;
+                    bool copyAll = vs3WindowLeft >= vdWindowLeft
+                        && vs3WindowLeft < vdWindowRight;
+
+                    COPY_OLD_VD(oldDstIdx);
+
+                    if (copyAll) {
+                        int backLen = vdWindowRight - vs3WindowLeft;
+                        int frontLen = microVlmax - backLen;
+                        int vdOffset = 0;
+                        for (int i = 0; vdOffset < frontLen
+                            && vdOffset < microVl; vdOffset++) {
+                            if (this->vm || elem_mask(v0,
+                                vdOffset + vdWindowLeft)) {
+                                Vd_vu[vdOffset] = Vs2_vu[i + backLen];
                             }
                         }
-                        // TODO: dirty code
-                        if (vdIdx == 0 && vs2Idx == 0 &&
-                                (this->vm || elem_mask(v0, 0))) {
-                            tmp_d0.as<vu>()[0] = Rs1_vu;
+                        for (int i = 0; vdOffset < microVl; vdOffset++) {
+                            if (this->vm || elem_mask(v0,
+                                vdOffset + vdWindowLeft)) {
+                                Vd_vu[vdOffset] = Vs3_vu[i];
+                            }
+                        }
+                    } else {
+                        int vs2WindowLeft = microVlmax * vs2Idx + offset;
+                        bool copyBack = vs2Idx == 0 && vs2WindowLeft
+                            >= vdWindowLeft && vs2WindowLeft < vdWindowRight;
+                        if (copyBack) {
+                            int backLen = vdWindowRight - vs2WindowLeft;
+                            int vdOffset = microVlmax - backLen;
+                            for (int i = 0; i < backLen && vdOffset < microVl;
+                                vdOffset++, i++) {
+                                if (this->vm || elem_mask(v0,
+                                    vdOffset + vdWindowLeft)) {
+                                    Vd_vu[vdOffset] = Vs2_vu[i];
+                                }
+                            }
+                        }
+                    }
+                    if (vdIdx == 0) {
+                        if (this->vm || elem_mask(v0, 0)) {
+                            auto fd = ftype_freg<et>(freg(Fs1_bits));
+                            Vd_vu[0] = fd.v;
                         }
                     }
                 }}, OPFVF, SimdMiscOp);
                 0x0f: VectorFloatSlideDownFormat::vfslide1down_vf({{
-                    const int offset = 1;
-                    const int microVlmax = vtype_VLMAX(machInst.vtype8,
-                        vlen, true);
-                    const int vregOffset = vs2Idx - vdIdx;
-                    const int offsetInVreg = offset - vregOffset * microVlmax;
-                    const int numVs2s = vtype_regs_per_group(vtype);
-                    if (std::abs(offsetInVreg) < uint32_t(microVlmax)) {
-                        const bool needZeroTail = numVs2s == vs2Idx + 1;
-                        const int upperBound = (offsetInVreg >= 0)
-                            ? microVlmax - offsetInVreg
-                            : microVlmax + offsetInVreg;
-                        const int vdOffset = (offsetInVreg >= 0)
-                            ? 0
-                            : -offsetInVreg;
-                        const int vs2Offset = (offsetInVreg >= 0)
-                            ? offsetInVreg
-                            : 0;
-                        const int elemIdxBase = vdIdx * microVlmax;
-                        vreg_t resVreg;
-                        auto res = resVreg.as<vu>();
-                        for (int i = 0;
-                            i < upperBound && i + vdOffset < microVl;
-                            i++) {
-                            res[i + vdOffset] = Vs2_vu[i + vs2Offset];
-                        }
-                        if (needZeroTail) {
-                            for (int i = upperBound + vdOffset;
-                                i < microVlmax; i++) {
-                                res[i] = 0;
+                    int offset = 1;
+                    int microVlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
+                    int offsetWindow = offset % microVlmax;
+                    int vdWindowLeft = microVlmax * vdIdx;
+                    int vdWindowRight = microVlmax * (vdIdx + 1);
+                    int vs3WindowLeftSlide = microVlmax * vs3Idx - offset;
+                    int vs3WindowRightSlide = microVlmax * (vs3Idx + 1)
+                        - offset;
+                    bool copyFrontFromVs2 = vs3WindowLeftSlide > vdWindowLeft
+                        && vs3WindowLeftSlide <= vdWindowRight;
+                    bool copyFrontFromVs3 = lastUopForVd && vs3WindowRightSlide
+                        > vdWindowLeft && vs3WindowRightSlide <= vdWindowRight;
+                    bool needZeroTail = lastUopForVd && vs3WindowRightSlide
+                        <= vdWindowLeft;
+                    int vdOffset = 0;
+
+                    COPY_OLD_VD(oldDstIdx);
+
+                    if (copyFrontFromVs2) {
+                        int frontLen = vs3WindowLeftSlide - vdWindowLeft;
+                        for (; vdOffset < frontLen && vdOffset < microVl;
+                            vdOffset++) {
+                            if (this->vm || elem_mask(v0,
+                                vdWindowLeft + vdOffset)) {
+                                Vd_vu[vdOffset] =
+                                    Vs2_vu[vdOffset + offsetWindow];
                             }
                         }
-                        for (int i = vdOffset; i < microVl ; i++) {
-                            if (vm || elem_mask(v0, i + elemIdxBase)) {
-                                Vd_vu[i] = (i + elemIdxBase != machInst.vl - 1)
-                                    ? res[i]
-                                    : Rs1_vu;
+                        for (int i = 0; vdOffset < microVl; vdOffset++, i++) {
+                            if (this->vm || elem_mask(v0,
+                                vdWindowLeft + vdOffset)) {
+                                Vd_vu[vdOffset] = Vs3_vu[i];
                             }
+                        }
+                    } else {
+                        if (copyFrontFromVs3) {
+                            int frontLen = vs3WindowRightSlide - vdWindowLeft;
+                            for (; vdOffset < frontLen && vdOffset < microVl;
+                                vdOffset++) {
+                                if (this->vm || elem_mask(v0,
+                                    vdWindowLeft + vdOffset)) {
+                                    Vd_vu[vdOffset] =
+                                        Vs3_vu[vdOffset + offsetWindow];
+                                }
+                            }
+                        }
+                        if (copyFrontFromVs3 || needZeroTail) {
+                            for (; vdOffset < microVl; vdOffset++) {
+                                if (this->vm || elem_mask(v0,
+                                    vdWindowLeft + vdOffset)) {
+                                    Vd_vu[vdOffset] = 0;
+                                }
+                            }
+                        }
+                    }
+                    if (lastUop) {
+                        if (this->vm || elem_mask(v0,
+                            vdWindowLeft + microVl - 1)) {
+                            auto fd = ftype_freg<et>(freg(Fs1_bits));
+                            Vd_vu[microVl - 1] = fd.v;
                         }
                     }
                 }}, OPFVF, SimdMiscOp);
@@ -4632,76 +5715,139 @@ decode QUADRANT default Unknown::unknown() {
                         res = int_rounding<__uint128_t>(res, 0 /* TODO */, 1);
                         Vd_vi[i] = res >> 1;
                     }}, OPMVX, SimdAddOp);
-                }
-                0x0e: VectorSlideUpFormat::vslide1up_vx({{
-                    const int offset = 1;
-                    const int microVlmax = vtype_VLMAX(machInst.vtype8,
-                        vlen, true);
-                    const int vregOffset = vdIdx - vs2Idx;
-                    const int offsetInVreg = offset - vregOffset * microVlmax;
-                    if (std::abs(offsetInVreg) < uint32_t(microVlmax)) {
-                        const int upperBound = (offsetInVreg >= 0)
-                            ? microVlmax - offsetInVreg
-                            : microVlmax + offsetInVreg;
-                        const int vdOffset = (offsetInVreg >= 0)
-                            ? offsetInVreg
-                            : 0;
-                        const int vs2Offset = (offsetInVreg >= 0)
-                            ? 0
-                            : -offsetInVreg;
-                        const int elemOffset = vdOffset + vdIdx * microVlmax;
-                        for (int i = 0;
-                            i < upperBound && i + vdOffset < microVl;
-                            i++) {
-                            if (this->vm || elem_mask(v0, i + elemOffset)) {
-                                Vd_vu[i + vdOffset] = Vs2_vu[i + vs2Offset];
+                   0x0c: vclmul_vx({{
+                        uint64_t result = 0;
+                        uint64_t src1 = Rs1_vu;
+                        uint64_t src2 = Vs2_vu[i];
+                        for (int j = 0; j < 64; j++) {
+                            if ((src2 >> j) & 1) {
+                                result ^= src1 << j;
                             }
                         }
-                        // TODO: dirty code
-                        if (vdIdx == 0 && vs2Idx == 0 &&
-                                (this->vm || elem_mask(v0, 0))) {
-                            tmp_d0.as<vu>()[0] = Rs1_vu;
+                        Vd_vu[i] = result;
+                    }}, OPMVX, SimdMultOp);
+                    0x0d: vclmulh_vx({{
+                        uint64_t result = 0;
+                        uint64_t src1 = Rs1_vu;
+                        uint64_t src2 = Vs2_vu[i];
+                        for (int j = 1; j < 64; j++) {
+                            if ((src2 >> j) & 1) {
+                                result ^= src1 >> (64-j);
+                            }
+                        }
+                        Vd_vu[i] = result;
+                    }}, OPMVX, SimdMultOp);
+                }
+                0x0e: VectorSlide1UpFormat::vslide1up_vx({{
+                    int offset = 1;
+                    int microVlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
+                    int vdWindowLeft = microVlmax * vdIdx;
+                    int vdWindowRight = microVlmax * (vdIdx + 1);
+                    int vs3WindowLeft = microVlmax * (vs2Idx + 1) + offset;
+                    bool copyAll = vs3WindowLeft >= vdWindowLeft
+                        && vs3WindowLeft < vdWindowRight;
+
+                    COPY_OLD_VD(oldDstIdx);
+
+                    if (copyAll) {
+                        int backLen = vdWindowRight - vs3WindowLeft;
+                        int frontLen = microVlmax - backLen;
+                        int vdOffset = 0;
+                        for (int i = 0; vdOffset < frontLen
+                            && vdOffset < microVl; vdOffset++, i++) {
+                            if (this->vm || elem_mask(v0,
+                                vdOffset + vdWindowLeft)) {
+                                Vd_vu[vdOffset] = Vs2_vu[i + backLen];
+                            }
+                        }
+                        for (int i = 0; vdOffset < microVl; vdOffset++, i++) {
+                            if (this->vm || elem_mask(v0,
+                                vdOffset + vdWindowLeft)) {
+                                Vd_vu[vdOffset] = Vs3_vu[i];
+                            }
+                        }
+                    } else {
+                        int vs2WindowLeft = microVlmax * vs2Idx + offset;
+                        bool copyBack = vs2Idx == 0 && vs2WindowLeft
+                            >= vdWindowLeft && vs2WindowLeft < vdWindowRight;
+                        if (copyBack) {
+                            int backLen = vdWindowRight - vs2WindowLeft;
+                            int vdOffset = microVlmax - backLen;
+                            for (int i = 0; i < backLen && vdOffset < microVl;
+                                vdOffset++, i++) {
+                                if (this->vm || elem_mask(v0,
+                                    vdOffset + vdWindowLeft)) {
+                                    Vd_vu[vdOffset] = Vs2_vu[i];
+                                }
+                            }
+                        }
+                    }
+                    if (vdIdx == 0) {
+                        if (this->vm || elem_mask(v0, 0)) {
+                            Vd_vu[0] = Rs1_vu;
                         }
                     }
                 }}, OPIVX, SimdMiscOp);
-                0x0f: VectorSlideDownFormat::vslide1down_vx({{
-                    const int offset = 1;
-                    const int microVlmax = vtype_VLMAX(machInst.vtype8,
-                        vlen, true);
-                    const int vregOffset = vs2Idx - vdIdx;
-                    const int offsetInVreg = offset - vregOffset * microVlmax;
-                    const int numVs2s = vtype_regs_per_group(vtype);
-                    if (std::abs(offsetInVreg) < uint32_t(microVlmax)) {
-                        const bool needZeroTail = numVs2s == vs2Idx + 1;
-                        const int upperBound = (offsetInVreg >= 0)
-                            ? microVlmax - offsetInVreg
-                            : microVlmax + offsetInVreg;
-                        const int vdOffset = (offsetInVreg >= 0)
-                            ? 0
-                            : -offsetInVreg;
-                        const int vs2Offset = (offsetInVreg >= 0)
-                            ? offsetInVreg
-                            : 0;
-                        const int elemIdxBase = vdIdx * microVlmax;
-                        vreg_t resVreg;
-                        auto res = resVreg.as<vu>();
-                        for (int i = 0;
-                            i < upperBound && i + vdOffset < microVl;
-                            i++) {
-                            res[i + vdOffset] = Vs2_vu[i + vs2Offset];
-                        }
-                        if (needZeroTail) {
-                            for (int i = upperBound + vdOffset;
-                                i < microVlmax; i++) {
-                                res[i] = 0;
+                0x0f: VectorSlide1DownFormat::vslide1down_vx({{
+                    int offset = 1;
+                    int microVlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
+                    int offsetWindow = offset % microVlmax;
+                    int vdWindowLeft = microVlmax * vdIdx;
+                    int vdWindowRight = microVlmax * (vdIdx + 1);
+                    int vs3WindowLeftSlide = microVlmax * vs3Idx - offset;
+                    int vs3WindowRightSlide = microVlmax * (vs3Idx + 1)
+                        - offset;
+                    bool copyFrontFromVs2 = vs3WindowLeftSlide > vdWindowLeft
+                        && vs3WindowLeftSlide <= vdWindowRight;
+                    bool copyFrontFromVs3 = lastUopForVd && vs3WindowRightSlide
+                        > vdWindowLeft && vs3WindowRightSlide <= vdWindowRight;
+                    bool needZeroTail = lastUopForVd && vs3WindowRightSlide
+                        <= vdWindowLeft;
+                    int vdOffset = 0;
+
+                    COPY_OLD_VD(oldDstIdx);
+
+                    if (copyFrontFromVs2) {
+                        int frontLen = vs3WindowLeftSlide - vdWindowLeft;
+                        for (; vdOffset < frontLen && vdOffset < microVl;
+                            vdOffset++) {
+                            if (this->vm || elem_mask(v0,
+                                vdWindowLeft + vdOffset)) {
+                                Vd_vu[vdOffset] =
+                                    Vs2_vu[vdOffset + offsetWindow];
                             }
                         }
-                        for (int i = vdOffset; i < microVl ; i++) {
-                            if (vm || elem_mask(v0, i + elemIdxBase)) {
-                                Vd_vu[i] = (i + elemIdxBase != machInst.vl - 1)
-                                    ? res[i]
-                                    : Rs1_vu;
+                        for (int i = 0; vdOffset < microVl; vdOffset++, i++) {
+                            if (this->vm || elem_mask(v0,
+                                vdWindowLeft + vdOffset)) {
+                                Vd_vu[vdOffset] = Vs3_vu[i];
                             }
+                        }
+                    } else {
+                        if (copyFrontFromVs3) {
+                            int frontLen = vs3WindowRightSlide - vdWindowLeft;
+                            for (; vdOffset < frontLen && vdOffset < microVl;
+                                vdOffset++) {
+                                if (this->vm || elem_mask(v0,
+                                    vdWindowLeft + vdOffset)) {
+                                    Vd_vu[vdOffset] =
+                                        Vs3_vu[vdOffset + offsetWindow];
+                                }
+                            }
+                        }
+                        if (copyFrontFromVs3 || needZeroTail) {
+                            for (; vdOffset < microVl; vdOffset++) {
+                                if (this->vm || elem_mask(v0,
+                                    vdWindowLeft + vdOffset)) {
+                                    Vd_vu[vdOffset] = 0;
+                                }
+                            }
+                        }
+                    }
+                    if (lastUop) {
+                        if (this->vm || elem_mask(v0,
+                            vdWindowLeft + microVl - 1)) {
+                            Vd_vu[microVl - 1] = Rs1_vu;
                         }
                     }
                 }}, OPIVX, SimdMiscOp);
@@ -4830,6 +5976,7 @@ decode QUADRANT default Unknown::unknown() {
                         Rd_ud = new_vl;
                         VL = new_vl;
                         Vtype = new_vtype;
+                        IsVset = true;
                     }}, VSetVlDeclare, VSetVliBranchTarget
                       , SimdConfigOp, IsUncondControl
                       , IsIndirectControl);
@@ -4845,6 +5992,7 @@ decode QUADRANT default Unknown::unknown() {
                             Rd_ud = new_vl;
                             VL = new_vl;
                             Vtype = new_vtype;
+                            IsVset = true;
                         }}, VSetVlDeclare, VSetVlBranchTarget
                           , SimdConfigOp, IsUncondControl
                           , IsIndirectControl);
@@ -4859,6 +6007,7 @@ decode QUADRANT default Unknown::unknown() {
                             Rd_ud = new_vl;
                             VL = new_vl;
                             Vtype = new_vtype;
+                            IsVset = true;
                         }}, VSetiVliDeclare, VSetiVliBranchTarget
                           , SimdConfigOp, IsUncondControl
                           , IsDirectControl);
@@ -4931,64 +6080,109 @@ decode QUADRANT default Unknown::unknown() {
                 0x0: decode FUNCT7 {
                     0x0: decode RS2 {
                         0x0: ecall({{
+                            MISA misa = xc->readMiscReg(MISCREG_ISA);
+                            bool virtualized = misa.rvh ?
+                                virtualizationEnabled(xc) : false;
                             return std::make_shared<SyscallFault>(
-                                (PrivilegeMode)xc->readMiscReg(MISCREG_PRV));
+                                (PrivilegeMode)xc->readMiscReg(MISCREG_PRV),
+                                                                virtualized);
                         }}, IsSerializeAfter, IsNonSpeculative, IsSyscall,
                             No_OpClass);
                         0x1: ebreak({{
                             return executeEBreakOrSemihosting(xc);
                         }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
-                        0x2: uret({{
-                           MISA misa = xc->readMiscReg(MISCREG_ISA);
-                            if (!misa.rvn) {
-                                return std::make_shared<IllegalInstFault>(
-                                    "sret can't execute without N systems",
-                                    machInst);
-                            }
-                            STATUS status = xc->readMiscReg(MISCREG_STATUS);
-                            status.uie = status.upie;
-                            status.upie = 1;
-                            xc->setMiscReg(MISCREG_STATUS, status);
-                            NPC = rvSext(xc->readMiscReg(MISCREG_UEPC));
-                        }}, IsSerializeAfter, IsNonSpeculative, IsReturn);
                     }
                     0x8: decode RS2 {
                         0x2: sret({{
-                            MISA misa = xc->readMiscReg(MISCREG_ISA);
+                            // This sret implementation conforms to
+                            // RISCV Privileged Spec 20211203
+                             MISA misa = xc->readMiscReg(MISCREG_ISA);
                             if (!misa.rvs) {
                                 return std::make_shared<IllegalInstFault>(
                                             "sret can't execute without RVS",
                                             machInst);
                             }
-                            STATUS status = xc->readMiscReg(MISCREG_STATUS);
+
+                            HSTATUS hstatus = misa.rvh ?
+                                xc->readMiscReg(MISCREG_HSTATUS) : 0;
+
+                            MiscRegIndex status_idx = \
+                                virtualizationEnabled(xc) ?
+                                MISCREG_VSSTATUS : MISCREG_STATUS;
+
+                            STATUS status = xc->readMiscReg(status_idx);
+
                             auto pm = (PrivilegeMode)xc->readMiscReg(
-                                MISCREG_PRV);
-                            if (pm == PRV_U ||
-                                (pm == PRV_S && status.tsr == 1)) {
-                                return std::make_shared<IllegalInstFault>(
-                                            "sret in user mode or TSR enabled",
+                                                        MISCREG_PRV);
+
+                            if (misa.rvh && virtualizationEnabled(xc)) {
+                                if (pm == PRV_U || hstatus.vtsr) {
+                                    return std::make_shared<VirtualInstFault>(
+                                            "sret in PRV_U or VTSR enabled",
                                             machInst);
+                                }
                                 NPC = NPC;
                             } else {
-                                xc->setMiscReg(MISCREG_PRV, status.spp);
-                                status.sie = status.spie;
-                                status.spie = 1;
-                                status.spp = PRV_U;
-                                xc->setMiscReg(MISCREG_STATUS, status);
-                                NPC = rvSext(xc->readMiscReg(MISCREG_SEPC));
+                                if (pm == PRV_U ||
+                                (pm == PRV_S && status.tsr == 1)) {
+                                    return std::make_shared<IllegalInstFault>(
+                                            "sret in PRV_U or TSR enabled",
+                                            machInst);
+                                }
+                                NPC = NPC;
                             }
+
+                            NPC = virtualizationEnabled(xc) ?
+                                rvSext(xc->readMiscReg(MISCREG_VSEPC)) :
+                                rvSext(xc->readMiscReg(MISCREG_SEPC));
+
+                            xc->setMiscReg(MISCREG_PRV, status.spp);
+                            status.sie = status.spie;
+                            status.spie = 1;
+                            status.spp = PRV_U;
+
+                            if (!virtualizationEnabled(xc)) {
+                                if (misa.rvh) {
+                                    if (hstatus.spv) {
+                                        setV(xc);
+                                    }
+                                    hstatus.spv = 0;
+                                    xc->setMiscReg(MISCREG_HSTATUS, hstatus);
+                                }
+                                status.mprv = 0; // 20211203
+                            }
+
+                            xc->setMiscReg(status_idx, status);
+
                         }}, IsSerializeAfter, IsNonSpeculative, IsReturn);
                         0x5: wfi({{
                             MISA misa = xc->readMiscReg(MISCREG_ISA);
                             STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                            HSTATUS hstatus = xc->readMiscReg(MISCREG_HSTATUS);
                             auto pm = (PrivilegeMode)xc->readMiscReg(
                                 MISCREG_PRV);
-                            if (misa.rvs && (pm == PRV_U ||
-                                (pm == PRV_S && status.tw == 1))) {
+
+
+                            if (misa.rvh && virtualizationEnabled(xc) &&
+                                 pm == PRV_U) {
+                                return std::make_shared<VirtualInstFault>(
+                                            "wfi in VU mode",
+                                            machInst);
+                            } else if (pm != PRV_M && status.tw == 1) {
                                 return std::make_shared<IllegalInstFault>(
-                                            "wfi in user mode or TW enabled",
+                                        "wfi not in M mode with TW enabled",
+                                        machInst);
+                            } else if (misa.rvh && virtualizationEnabled(xc) &&
+                                        pm == PRV_S && hstatus.vtw == 1) {
+                                return std::make_shared<VirtualInstFault>(
+                                        "wfi in VS mode with VTW enabled",
+                                        machInst);
+                            } else if (misa.rvs && pm < PRV_S) {
+                                return std::make_shared<IllegalInstFault>(
+                                            "wfi in user mode",
                                             machInst);
                             }
+
                             auto tc = xc->tcBase();
                             auto cpu = tc->getCpuPtr();
                             auto ic = dynamic_cast<RiscvISA::Interrupts*>(
@@ -5023,31 +6217,165 @@ decode QUADRANT default Unknown::unknown() {
                                 "sfence_vma can't execute without RVS",
                                 machInst);
                         }
+
                         STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                        HSTATUS hstatus = xc->readMiscReg(MISCREG_HSTATUS);
                         auto pm = (PrivilegeMode)xc->readMiscReg(MISCREG_PRV);
-                        if (pm == PRV_U || (pm == PRV_S && status.tvm == 1)) {
+
+                        if (misa.rvh && virtualizationEnabled(xc) &&
+                            (pm == PRV_U || hstatus.vtvm == 1)) {
+                            return std::make_shared<VirtualInstFault>(
+                                    "sfence in VU mode or VTVM enabled",
+                                    machInst);
+                        }
+                        else if (pm == PRV_U ||
+                        (pm == PRV_S && status.tvm == 1)) {
                             return std::make_shared<IllegalInstFault>(
                                         "sfence in user mode or TVM enabled",
                                         machInst);
                         }
+
                         xc->tcBase()->getMMUPtr()->demapPage(Rs1, Rs2);
                     }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
+
+                    0xb: sinval_vvma({{
+                        warn("sinval_vvma not implemented");
+                    }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
+
+                    0xc: decode RS2{
+                        0x0: sfence_w_inval({{
+                            warn("sfence_w_inval not implemented");
+                        }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
+
+                        0x1: sfence_inval_ir({{
+                            warn("sfence_inval_ir not implemented");
+                        }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
+                    }
+
+                     0x11: hfence_vvma({{
+                        auto pm = (PrivilegeMode)xc->readMiscReg(MISCREG_PRV);
+                        MISA misa = xc->readMiscReg(MISCREG_ISA);
+
+                        if (!misa.rvh) {
+                            return std::make_shared<IllegalInstFault>(
+                                            "hfence needs RVH",
+                                            machInst);
+                        }
+                        if (virtualizationEnabled(xc)) {
+                            return std::make_shared<VirtualInstFault>(
+                                            "hfence with V=1",
+                                            machInst);
+                        }
+                        if (pm < PRV_S) {
+                            return std::make_shared<IllegalInstFault>(
+                                        "hfence needs at least S priv",
+                                        machInst);
+                        }
+                        xc->tcBase()->getMMUPtr()->demapPage(Rs1, Rs2);
+                        return NoFault;
+
+                    }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
+
+                    0x13: hinval_vvma({{
+                        warn("hinval_vvma not implemented");
+                    }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
+
+
                     0x18: mret({{
                         if (xc->readMiscReg(MISCREG_PRV) != PRV_M) {
-                            return std::make_shared<IllegalInstFault>(
-                                        "mret at lower privilege", machInst);
+                            if (virtualizationEnabled(xc)) { // H-extension
+                                return std::make_shared<VirtualInstFault>(
+                                    "mret at lower prv (V=1)", machInst);
+                            }
+                            else {
+                                return std::make_shared<IllegalInstFault>(
+                                    "mret at lower privilege", machInst);
+                            }
                             NPC = NPC;
                         } else {
                             STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                            if (status.mpp != PRV_M) {
+                                if (status.mpv == 1) { // H-extension
+                                    setV(xc);
+                                }
+                                status.mprv = 0;
+                            }
+                            MISA misa = xc->readMiscReg(MISCREG_ISA);
                             xc->setMiscReg(MISCREG_PRV, status.mpp);
                             xc->setMiscReg(MISCREG_NMIE, 1);
                             status.mie = status.mpie;
                             status.mpie = 1;
-                            status.mpp = PRV_U;
+                            status.mpp = misa.rvu ? PRV_U : PRV_M;
+                            status.mpv = 0; // H-extension
+
                             xc->setMiscReg(MISCREG_STATUS, status);
+                            // TODO: is rvSext mandated by the spec?
                             NPC = rvSext(xc->readMiscReg(MISCREG_MEPC));
                         }
                     }}, IsSerializeAfter, IsNonSpeculative, IsReturn);
+                    0x38: mnret({{
+                        auto isa = dynamic_cast<RiscvISA::ISA*>(
+                            xc->tcBase()->getIsaPtr());
+                        if (!isa->enableSmrnmi()) {
+                            return std::make_shared<IllegalInstFault>(
+                                        "mnret requires smrnmi enabled.",
+                                        machInst);
+                        }
+                        if (xc->readMiscReg(MISCREG_PRV) != PRV_M) {
+                            return std::make_shared<IllegalInstFault>(
+                                        "mnret at lower privilege", machInst);
+                            NPC = NPC;
+                        } else {
+                            NSTATUS nstatus = xc->readMiscReg(
+                                MISCREG_MNSTATUS);
+                            STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                            xc->setMiscReg(MISCREG_PRV, nstatus.mnpp);
+                            if (nstatus.mnpp != PRV_M) {
+                                status.mprv = 0;
+                            }
+                            nstatus.nmie = 1;
+                            nstatus.mnpp = PRV_U;
+                            xc->setMiscReg(MISCREG_MNSTATUS, nstatus);
+                            xc->setMiscReg(MISCREG_STATUS, status);
+                            NPC = rvSext(xc->readMiscReg(MISCREG_MNEPC));
+                        }
+                    }}, IsSerializeAfter, IsNonSpeculative, IsReturn);
+
+                    0x31: decode FUNCT3 {
+                        0x0: hfence_gvma({{
+                            auto pm = (PrivilegeMode)xc->readMiscReg(
+                                                        MISCREG_PRV);
+                            STATUS status = xc->readMiscReg(MISCREG_STATUS);
+                            MISA misa = xc->readMiscReg(MISCREG_ISA);
+
+                            if (!misa.rvh) {
+                                return std::make_shared<IllegalInstFault>(
+                                                "hfence needs RVH",
+                                                machInst);
+                            }
+                            if (virtualizationEnabled(xc)) {
+                                return std::make_shared<VirtualInstFault>(
+                                                "hfence with V=1",
+                                                machInst);
+                            }
+
+                            if (pm < PRV_S ||
+                                (pm == PRV_S && status.tvm == 1)) {
+                                return std::make_shared<IllegalInstFault>(
+                                            "hfence in U or TVM on",
+                                            machInst);
+                            }
+                            xc->tcBase()->getMMUPtr()->demapPage(Rs1, Rs2);
+                            return NoFault;
+
+                        }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
+                    }
+
+                    0x33: decode FUNCT3 {
+                        0x0: hinval_gvma({{
+                            warn("hinval_gvma unimplemented");
+                        }}, IsSerializeAfter, IsNonSpeculative, No_OpClass);
+                    }
                 }
             }
             format CSROp {
@@ -5081,6 +6409,82 @@ decode QUADRANT default Unknown::unknown() {
                     data = rvZext(data & ~uimm);
                 }}, 'true', 'uimm != 0'
                   , IsSerializeAfter, IsNonSpeculative, No_OpClass);
+            }
+            0x4: decode FUNCT7{
+                0x30: decode RS2 {
+                    0x0: HyperLoad::hlv_b({{
+                        Rd_sd = Mem_sb;
+                    }}, mem_flags=[
+                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
+                    ]);
+                    0x1: HyperLoad::hlv_bu({{
+                        Rd = Mem_ub;
+                    }}, mem_flags=[
+                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
+                    ]);
+                }
+                0x31: HyperStore::hsv_b({{
+                    Mem_ub = Rs2_ub;
+                }}, mem_flags=[
+                    'ARCH_BITS & XlateFlags::FORCE_VIRT'
+                ]);
+                0x32: decode RS2 {
+                    0x0: HyperLoad::hlv_h({{
+                        Rd_sd = Mem_sh;
+                    }}, mem_flags=[
+                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
+                    ]);
+                    0x1: HyperLoad::hlv_hu({{
+                        Rd = Mem_uh;
+                    }}, mem_flags=[
+                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
+                    ]);
+                    0x3: HyperLoad::hlvx_hu({{
+                        Rd = Mem_uh;
+                    }}, mem_flags=[
+                        'ARCH_BITS & XlateFlags::FORCE_VIRT',
+                        'ARCH_BITS & XlateFlags::HLVX'
+                    ]);
+                }
+                0x33: HyperStore::hsv_h({{
+                        Mem_uh = Rs2_uh
+                    }}, mem_flags=[
+                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
+                    ]);
+                0x34: decode RS2 {
+                    0x0: HyperLoad::hlv_w({{
+                        Rd_sd = Mem_sw;
+                    }}, mem_flags=[
+                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
+                    ]);
+                    0x1: HyperLoad::hlv_wu({{
+                        Rd = Mem_uw;
+                    }}, mem_flags=[
+                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
+                    ]);
+                    0x3: HyperLoad::hlvx_wu({{
+                        Rd = Mem_uw;
+                    }}, mem_flags=[
+                        'ARCH_BITS & XlateFlags::FORCE_VIRT',
+                        'ARCH_BITS & XlateFlags::HLVX'
+                    ]);
+                }
+                0x35: HyperStore::hsv_w({{
+                    Mem_uw = Rs2_uw;
+                }}, mem_flags=[
+                    'ARCH_BITS & XlateFlags::FORCE_VIRT'
+                ]);
+                0x36: HyperLoad::hlv_d({{
+                    Rd_sd = Mem_sd;
+                }}, mem_flags=[
+                    'ARCH_BITS & XlateFlags::FORCE_VIRT'
+                ]);
+                0x37: HyperStore::hsv_d({{
+                    Mem_ud = Rs2_ud;
+                }}, mem_flags=[
+                    'ARCH_BITS & XlateFlags::FORCE_VIRT'
+                ]);
+
             }
         }
 

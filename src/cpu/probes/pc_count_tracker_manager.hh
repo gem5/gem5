@@ -33,9 +33,10 @@
 #include <unordered_set>
 
 #include "cpu/base.hh"
+#include "cpu/probes/pc_count_pair.hh"
+#include "debug/PcCountTracker.hh"
 #include "params/PcCountTrackerManager.hh"
 #include "sim/sim_exit.hh"
-#include "debug/PcCountTracker.hh"
 
 namespace gem5
 {

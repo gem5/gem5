@@ -83,7 +83,8 @@ generated_dir = Dir('protocol')
 def MakeIncludeAction(target, source, env):
     with open(str(target[0]), 'w') as f:
         for s in source:
-            print('#include "%s"' % str(s.abspath), file=f)
+            relpath = os.path.relpath(s.abspath, target[0].dir.abspath)
+            print('#include "%s"' % relpath, file=f)
 
 def MakeInclude(source):
     target = generated_dir.File(basename(source))

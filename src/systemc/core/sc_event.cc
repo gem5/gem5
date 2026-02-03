@@ -408,9 +408,7 @@ sc_get_top_level_events()
 sc_event *
 sc_find_event(const char *name)
 {
-    std::string str(name);
-    ::sc_gem5::EventsIt it = ::sc_gem5::findEvent(str);
-    return it == ::sc_gem5::allEvents.end() ? nullptr : *it;
+    return ::sc_gem5::findEvent(name);
 }
 
 } // namespace sc_core

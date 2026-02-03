@@ -977,7 +977,7 @@ namespace VegaISA
         int opNum = 0;
 
         int numSrc = numSrcRegOperands() - readsVCC();
-        int numDst = numDstRegOperands() - writesVCC();
+        int numDst = numDstRegOperands() - writesVCC() - writesEXEC();
 
         for (opNum = 0; opNum < numSrc; opNum++) {
             srcOps.emplace_back(srcs[opNum], getOperandSize(opNum), true,
@@ -1004,8 +1004,12 @@ namespace VegaISA
                                   true, false, false);
         }
 
+        // Completely ignore if writesEXEC() is true. Instructions which write
+        // EXEC do so by writing to a wavefront register rather than SGPRs.
+        // The SGPR index values for EXEC are used as aliases to the wavefront
+        // register in gem5.
         assert(srcOps.size() == numSrcRegOperands());
-        assert(dstOps.size() == numDstRegOperands());
+        assert(dstOps.size() == numDst);
     }
 
     int

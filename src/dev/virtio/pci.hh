@@ -47,19 +47,19 @@ namespace gem5
 
 struct PciVirtIOParams;
 
-class PciVirtIO : public PciDevice
+class PciVirtIO : public PciEndpoint
 {
   public:
     typedef PciVirtIOParams Params;
     PciVirtIO(const Params &params);
     virtual ~PciVirtIO();
 
-    Tick read(PacketPtr pkt);
-    Tick write(PacketPtr pkt);
-
     void kick();
 
   protected:
+    Tick readDevice(PacketPtr pkt) override;
+    Tick writeDevice(PacketPtr pkt) override;
+
     /** @{ */
     /** Offsets into VirtIO header (BAR0 relative). */
 

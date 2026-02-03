@@ -39,12 +39,32 @@ import argparse
 
 from code_formatter import code_formatter
 
-parser = argparse.ArgumentParser()
-parser.add_argument("cc", help="the path of the debug flag cc file")
-parser.add_argument("name", help="the name of the debug flag")
 
-args = parser.parse_args()
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("cc", help="the path of the debug flag cc file")
+    parser.add_argument("name", help="the name of the debug flag")
+    args = parser.parse_args()
+    return args
 
-code = code_formatter()
-code('#include "debug/${{args.name}}.hh"')
-code.write(args.cc)
+
+def write_cc_file(cc: str, name: str):
+    """
+    Generates the C++ source file for a debug flag.
+
+    This function creates a C++ source file that simply includes the
+    corresponding debug flag header file. This is often all that's needed
+    for flags that are defined entirely within their header.
+
+    Args:
+        cc: The path to the C++ source file to generate.
+        name: The name of the debug flag.
+    """
+    code = code_formatter()
+    code(f'#include "debug/{name}.hh"')
+    code.write(cc)
+
+
+if __name__ == "__main__":
+    args = parse_args()
+    write_cc_file(args.cc, args.name)

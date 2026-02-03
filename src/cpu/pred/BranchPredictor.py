@@ -1,4 +1,6 @@
 # Copyright (c) 2022-2023 The University of Edinburgh
+# Copyright (c) 2024 Technical University of Munich
+# Copyright (c) 2025 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -136,9 +138,26 @@ class SimpleBTB(BranchTargetBuffer):
             assoc=Parent.associativity,
             num_entries=Parent.numEntries,
             set_shift=Parent.instShiftAmt,
+            tag_bits=Parent.tagBits,
             numThreads=1,
         ),
         "BTB indexing policy",
+    )
+
+
+class ConditionalPredictor(SimObject):
+    type = "ConditionalPredictor"
+    cxx_class = "gem5::branch_prediction::ConditionalPredictor"
+    cxx_header = "cpu/pred/conditional.hh"
+    abstract = True
+
+    numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
+    instShiftAmt = Param.Unsigned(
+        Parent.instShiftAmt, "Number of bits to shift instructions by"
+    )
+    speculativeHistUpdate = Param.Bool(
+        Parent.speculativeHistUpdate,
+        "Use speculative update for the conditional predictor",
     )
 
 
@@ -172,17 +191,31 @@ class SimpleIndirectPredictor(IndirectPredictor):
         "pipeline depth or a high value e.g. 256 to make it 'unlimited'.",
     )
     indirectGHRBits = Param.Unsigned(13, "Indirect GHR number of bits")
-    instShiftAmt = Param.Unsigned(2, "Number of bits to shift instructions by")
+    instShiftAmt = Param.Unsigned(
+        Parent.instShiftAmt, "Number of bits to shift instructions by"
+    )
 
 
 class BranchPredictor(SimObject):
     type = "BranchPredictor"
     cxx_class = "gem5::branch_prediction::BPredUnit"
     cxx_header = "cpu/pred/bpred_unit.hh"
-    abstract = True
 
     numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
-    instShiftAmt = Param.Unsigned(2, "Number of bits to shift instructions by")
+    instShiftAmt = Param.Unsigned(
+        0,
+        "The `instShiftAmt` is intended for fixed size instruction sets "
+        "(Arm,RISC-V) to shift the FULL PC by `n` bits (e.g. 2 for 4 byte "
+        "instructions) as the two least significant bits are always zero and "
+        "therefore not useful for prediction. For variable size instruction "
+        "sets (x86) all bits are used and the `instShiftAmt` should be set "
+        "to 0.",
+    )
+    speculativeHistUpdate = Param.Bool(
+        True,
+        "Use speculative update for histories",
+    )
+
     requiresBTBHit = Param.Bool(
         False,
         "Requires the BTB to hit for returns and indirect branches. For an"
@@ -192,10 +225,20 @@ class BranchPredictor(SimObject):
         "This info is only available from the BTB. "
         "Low-end CPUs predecoding might be used to identify branches. ",
     )
+    updateBTBAtSquash = Param.Bool(
+        True,
+        "Update the BTB at squash time instead of commit. This can be useful "
+        "to update the BTB earlier to avoid BTB misses on subsequent "
+        "branches. However, it can also lead to BTB pollution if the branch "
+        "is on the false path and will be squashed later.",
+    )
 
     btb = Param.BranchTargetBuffer(SimpleBTB(), "Branch target buffer (BTB)")
     ras = Param.ReturnAddrStack(
         ReturnAddrStack(), "Return address stack, set to NULL to disable RAS."
+    )
+    conditionalBranchPred = Param.ConditionalPredictor(
+        "Conditional branch predictor"
     )
     indirectBranchPred = Param.IndirectPredictor(
         SimpleIndirectPredictor(),
@@ -203,8 +246,16 @@ class BranchPredictor(SimObject):
         "indirect predictions",
     )
 
+    # Taken only history as used in most modern server CPUs.
+    takenOnlyHistory = Param.Bool(
+        False,
+        "Build the global history only from taken branches (2-bit) "
+        "instead of direction history from all branches. Widely implemented "
+        "in modern server CPUs: https://ieeexplore.ieee.org/document/9246215",
+    )
 
-class LocalBP(BranchPredictor):
+
+class LocalBP(ConditionalPredictor):
     type = "LocalBP"
     cxx_class = "gem5::branch_prediction::LocalBP"
     cxx_header = "cpu/pred/2bit_local.hh"
@@ -213,7 +264,7 @@ class LocalBP(BranchPredictor):
     localCtrBits = Param.Unsigned(2, "Bits per counter")
 
 
-class TournamentBP(BranchPredictor):
+class TournamentBP(ConditionalPredictor):
     type = "TournamentBP"
     cxx_class = "gem5::branch_prediction::TournamentBP"
     cxx_header = "cpu/pred/tournament.hh"
@@ -227,7 +278,7 @@ class TournamentBP(BranchPredictor):
     choiceCtrBits = Param.Unsigned(2, "Bits of choice counters")
 
 
-class BiModeBP(BranchPredictor):
+class BiModeBP(ConditionalPredictor):
     type = "BiModeBP"
     cxx_class = "gem5::branch_prediction::BiModeBP"
     cxx_header = "cpu/pred/bi_mode.hh"
@@ -288,13 +339,21 @@ class TAGEBase(SimObject):
     noSkip = VectorParam.Bool([], "Vector of enabled TAGE tables")
 
     speculativeHistUpdate = Param.Bool(
-        True, "Use speculative update for histories"
+        Parent.speculativeHistUpdate, "Use speculative update for histories"
+    )
+
+    # Taken only history as used in most modern server CPUs.
+    takenOnlyHistory = Param.Bool(
+        Parent.takenOnlyHistory,
+        "Build the global history only from taken branches (2-bit) "
+        "instead of direction history from all branches. Widely implemented "
+        "in modern server CPUs: https://ieeexplore.ieee.org/document/9246215",
     )
 
 
 # TAGE branch predictor as described in https://www.jilp.org/vol8/v8paper1.pdf
 # The default sizes below are for the 8C-TAGE configuration (63.5 Kbits)
-class TAGE(BranchPredictor):
+class TAGE(ConditionalPredictor):
     type = "TAGE"
     cxx_class = "gem5::branch_prediction::TAGE"
     cxx_header = "cpu/pred/tage.hh"
@@ -368,8 +427,6 @@ class TAGE_SC_L_TAGE(TAGEBase):
     logUResetPeriod = 10
     initialTCounterValue = 1 << 9
     useAltOnNaBits = 5
-    # TODO No speculation implemented as of now
-    speculativeHistUpdate = False
 
     # This size does not set the final sizes of the tables (it is just used
     # for some calculations)
@@ -561,6 +618,10 @@ class StatisticalCorrector(SimObject):
     cxx_header = "cpu/pred/statistical_corrector.hh"
     abstract = True
 
+    instShiftAmt = Param.Unsigned(
+        Parent.instShiftAmt, "Number of bits to shift instructions by"
+    )
+
     # Statistical corrector parameters
 
     numEntriesFirstLocalHistories = Param.Unsigned(
@@ -616,6 +677,11 @@ class StatisticalCorrector(SimObject):
         0, "Initial pUpdate threshold counter value"
     )
 
+    speculativeHistUpdate = Param.Bool(
+        Parent.speculativeHistUpdate,
+        "Use speculative update for the statistical corrector",
+    )
+
 
 # TAGE-SC-L branch predictor as desribed in
 # https://www.jilp.org/cbp2016/paper/AndreSeznecLimited.pdf
@@ -635,7 +701,9 @@ class TAGE_SC_L(LTAGE):
     cxx_header = "cpu/pred/tage_sc_l.hh"
     abstract = True
 
-    statistical_corrector = Param.StatisticalCorrector("Statistical Corrector")
+    statistical_corrector = Param.StatisticalCorrector(
+        "Statistical Corrector. Set to NULL to disable it"
+    )
 
 
 class TAGE_SC_L_64KB_LoopPredictor(TAGE_SC_L_LoopPredictor):
@@ -749,7 +817,7 @@ class TAGE_SC_L_8KB(TAGE_SC_L):
     statistical_corrector = TAGE_SC_L_8KB_StatisticalCorrector()
 
 
-class MultiperspectivePerceptron(BranchPredictor):
+class MultiperspectivePerceptron(ConditionalPredictor):
     type = "MultiperspectivePerceptron"
     cxx_class = "gem5::branch_prediction::MultiperspectivePerceptron"
     cxx_header = "cpu/pred/multiperspective_perceptron.hh"
@@ -915,7 +983,6 @@ class MPP_TAGE(TAGEBase):
     logUResetPeriod = 10
     initialTCounterValue = 0
     numUseAltOnNa = 512
-    speculativeHistUpdate = False
 
 
 class MPP_LoopPredictor(LoopPredictor):
@@ -1034,6 +1101,7 @@ class MultiperspectivePerceptronTAGE64KB(MultiperspectivePerceptronTAGE):
     cxx_header = "cpu/pred/multiperspective_perceptron_tage_64KB.hh"
 
     budgetbits = 65536 * 8 + 2048
+    speculativeHistUpdate = False
 
     tage = MPP_TAGE()
     loop_predictor = MPP_LoopPredictor()
@@ -1084,7 +1152,17 @@ class MultiperspectivePerceptronTAGE8KB(MultiperspectivePerceptronTAGE):
     cxx_header = "cpu/pred/multiperspective_perceptron_tage_8KB.hh"
 
     budgetbits = 8192 * 8 + 2048
+    speculativeHistUpdate = False
 
     tage = MPP_TAGE_8KB()
     loop_predictor = MPP_LoopPredictor_8KB()
     statistical_corrector = MPP_StatisticalCorrector_8KB()
+
+
+class GshareBP(BranchPredictor):
+    type = "GshareBP"
+    cxx_class = "gem5::branch_prediction::GshareBP"
+    cxx_header = "cpu/pred/gshare.hh"
+
+    global_predictor_size = Param.Unsigned(512, "Size of global predictor")
+    global_counter_bits = Param.Unsigned(2, "Bits per counter")

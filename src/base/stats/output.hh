@@ -65,7 +65,7 @@ struct Output
 {
     virtual ~Output() {}
 
-    virtual void begin() = 0;
+    virtual void begin(const std::string &message = "") = 0;
     virtual void end() = 0;
     virtual bool valid() const = 0;
 

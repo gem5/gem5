@@ -28,12 +28,18 @@
 
 Import('*')
 
-SimObject('T1000.py', sim_objects=['MmDisk', 'DumbTOD', 'Iob', 'T1000'],
-    tags='sparc isa')
+if not env['CONF']['USE_SPARC_ISA']:
+    Return()
 
-Source('dtod.cc', tags='sparc isa')
-Source('iob.cc', tags='sparc isa')
-Source('t1000.cc', tags='sparc isa')
-Source('mm_disk.cc', tags='sparc isa')
+SimObject(
+    'T1000.py',
+    sim_objects=['MmDisk', 'DumbTOD', 'Iob', 'T1000'],
+    tags=['sparc isa']
+)
 
-DebugFlag('Iob', tags='sparc isa')
+Source('dtod.cc', tags=['sparc isa'])
+Source('iob.cc', tags=['sparc isa'])
+Source('t1000.cc', tags=['sparc isa'])
+Source('mm_disk.cc', tags=['sparc isa'])
+
+DebugFlag('Iob', tags=['sparc isa'])

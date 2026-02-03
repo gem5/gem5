@@ -26,12 +26,12 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
- This script grabs all documents from a specified collection in a MongoDB
- database and creates a new collection with the same documents.
+This script grabs all documents from a specified collection in a MongoDB
+database and creates a new collection with the same documents.
 
- To run this script you use the following command:
- python3 ./create-new-collection.py --uri <uri> --db_name <db_name> --collection_name <collection_name> /
-    --new_collection_name <new_collection_name>
+To run this script you use the following command:
+python3 ./create-new-collection.py --uri <uri> --db_name <db_name> --collection_name <collection_name> /
+   --new_collection_name <new_collection_name>
 """
 import argparse
 import json

@@ -34,6 +34,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects.Controller import RubyController
+from m5.objects.MessageBuffer import MessageBuffer
 from m5.params import *
 
 

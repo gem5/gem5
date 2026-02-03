@@ -37,6 +37,7 @@ namespace gem5
 {
 namespace backdoor_manager_test
 {
+
 const std::vector<AddrRange> kOriginalRange({AddrRange(0x0, 0x1000)});
 const std::vector<AddrRange> kRemappedRange({AddrRange(0x1000, 0x2000)});
 
@@ -46,6 +47,8 @@ class BackdoorManagerTest : public BackdoorManager, public ::testing::Test
     BackdoorManagerTest() : BackdoorManager(kOriginalRange, kRemappedRange)
     {
     }
+
+    uint8_t *dummy_ptr = reinterpret_cast<uint8_t *>(0x10000);
 };
 
 TEST_F(BackdoorManagerTest, BasicRemapTest)
@@ -56,14 +59,13 @@ TEST_F(BackdoorManagerTest, BasicRemapTest)
      */
     AddrRange pkt_range = originalRanges[0];
 
-    uint8_t *ptr = nullptr;
-    MemBackdoor remapped_backdoor(remappedRanges[0], ptr,
+    MemBackdoor remapped_backdoor(remappedRanges[0], dummy_ptr,
                                   MemBackdoor::Flags::Readable);
     MemBackdoorPtr reverted_backdoor =
         getRevertedBackdoor(&remapped_backdoor, pkt_range);
 
     EXPECT_EQ(reverted_backdoor->range(), originalRanges[0]);
-    EXPECT_EQ(reverted_backdoor->ptr(), ptr);
+    EXPECT_EQ(reverted_backdoor->ptr(), dummy_ptr);
     ASSERT_EQ(backdoorLists[0].size(), 1);
     EXPECT_EQ(backdoorLists[0].begin()->get(), reverted_backdoor);
 
@@ -88,14 +90,13 @@ TEST_F(BackdoorManagerTest, ShrinkTest)
         remappedRanges[0].start() - diff,  // 0x0
         remappedRanges[0].end() + diff);   // 0x3000
 
-    uint8_t *ptr = nullptr;
-    MemBackdoor remapped_backdoor(remapped_backdoor_range, ptr,
+    MemBackdoor remapped_backdoor(remapped_backdoor_range, dummy_ptr,
                                   MemBackdoor::Flags::Readable);
     MemBackdoorPtr reverted_backdoor =
         getRevertedBackdoor(&remapped_backdoor, pkt_range);
 
     EXPECT_EQ(reverted_backdoor->range(), originalRanges[0]);
-    EXPECT_EQ(reverted_backdoor->ptr(), ptr + diff);
+    EXPECT_EQ(reverted_backdoor->ptr(), dummy_ptr + diff);
 
     remapped_backdoor.invalidate();
 }
@@ -114,8 +115,7 @@ TEST_F(BackdoorManagerTest, ReuseTest)
      * The address range of the backdoor covers the whole address range, so
      * both packets can be fulfilled by this backdoor.
      */
-    uint8_t *ptr = nullptr;
-    MemBackdoor remapped_backdoor(remappedRanges[0], ptr,
+    MemBackdoor remapped_backdoor(remappedRanges[0], dummy_ptr,
                                   MemBackdoor::Flags::Readable);
     /**
      * For the first packet, a new backdoor should be constructed.

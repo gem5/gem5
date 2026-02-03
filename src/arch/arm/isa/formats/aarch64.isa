@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2024 Arm Limited
+// Copyright (c) 2011-2025 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -43,10 +43,6 @@ namespace Aarch64
 
     template <typename DecoderFeatures>
     StaticInstPtr decodeFpAdvSIMD(ExtMachInst machInst);
-    StaticInstPtr decodeFp(ExtMachInst machInst);
-    template <typename DecoderFeatures>
-    StaticInstPtr decodeAdvSIMD(ExtMachInst machInst);
-    StaticInstPtr decodeAdvSIMDScalar(ExtMachInst machInst);
 
     StaticInstPtr decodeSveInt(ExtMachInst machInst);
     StaticInstPtr decodeSveFp(ExtMachInst machInst);
@@ -208,6 +204,423 @@ output decoder {{
 namespace Aarch64
 {
     StaticInstPtr
+    decodeSysWithResult(ExtMachInst machInst)
+    {
+        uint8_t op1 = bits(machInst, 18, 16);
+        uint8_t crn = bits(machInst, 15, 12);
+        uint8_t crm = bits(machInst, 11, 8);
+        uint8_t op2 = bits(machInst, 7, 5);
+        uint8_t rt = bits(machInst, 4, 0);
+
+        if (op1 == 0b011 && crn == 0b0011 && op2 == 0b011) {
+            switch (crm) {
+              case 0x0:
+                return new Tstart64(machInst, rt);
+              case 0x1:
+                return new Ttest64(machInst, rt);
+              default:
+                return new Unknown64(machInst);
+            }
+        } else {
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
+    decodeBarriers(ExtMachInst machInst, bool dvmEnabled)
+    {
+        uint8_t crm = bits(machInst, 11, 8);
+        uint8_t op2 = bits(machInst, 7, 5);
+        uint8_t rt = bits(machInst, 4, 0);
+
+        if (rt != 0b11111)
+            return new Unknown64(machInst);
+
+        switch (op2) {
+          case 0x1:
+            switch (bits(crm, 3, 2)) {
+              case 0x1: // Non-Shareable
+                return new Dsb64Local(machInst, crm);
+              case 0x0: // OuterShareable
+              case 0x2: // InnerShareable
+              case 0x3: // FullSystem
+                return new Dsb64Shareable(
+                    machInst, crm, dvmEnabled);
+              default:
+                GEM5_UNREACHABLE;
+            }
+          case 0x2:
+            return new Clrex64(machInst);
+          case 0x3:
+            return new Tcommit64(machInst);
+          case 0x4:
+            switch (bits(crm, 3, 2)) {
+              case 0x1: // Non-Shareable
+                return new Dsb64Local(machInst, crm);
+              case 0x0: // OuterShareable
+              case 0x2: // InnerShareable
+              case 0x3: // FullSystem
+                return new Dsb64Shareable(
+                    machInst, crm, dvmEnabled);
+              default:
+                GEM5_UNREACHABLE;
+            }
+          case 0x5:
+            return new Dmb64(machInst);
+          case 0x6:
+            return new Isb64(machInst, crm);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
+    decodeSys(ExtMachInst machInst, bool dvmEnabled)
+    {
+        bool read = bits(machInst, 21);
+        uint8_t op0 = bits(machInst, 20, 19);
+        uint8_t op1 = bits(machInst, 18, 16);
+        uint8_t crn = bits(machInst, 15, 12);
+        uint8_t crm = bits(machInst, 11, 8);
+        uint8_t op2 = bits(machInst, 7, 5);
+        RegIndex rt = (RegIndex)(uint8_t)bits(machInst, 4, 0);
+
+        MiscRegIndex miscReg =
+            decodeAArch64SysReg(op0, op1, crn, crm, op2);
+
+        // Check for invalid registers
+        if (miscReg == MISCREG_UNKNOWN) {
+            auto full_mnemonic =
+                csprintf("%s op0:%d op1:%d crn:%d crm:%d op2:%d",
+                         read ? "mrs" : "msr",
+                         op0, op1, crn, crm, op2);
+
+            return new FailUnimplemented(read ? "mrs" : "msr",
+                machInst, full_mnemonic);
+
+        } else if (miscReg == MISCREG_IMPDEF_UNIMPL) {
+            auto full_mnemonic =
+                csprintf("%s op0:%d op1:%d crn:%d crm:%d op2:%d",
+                         read ? "mrs" : "msr",
+                         op0, op1, crn, crm, op2);
+
+            return new MiscRegImplDefined64(
+                read ? "mrs" : "msr",
+                machInst, MiscRegNum64(op0, op1, crn, crm, op2),
+                rt, read, full_mnemonic);
+
+        } else {
+            if (read) {
+                switch (miscReg) {
+                  case MISCREG_SP_EL0:
+                  case MISCREG_SP_EL1:
+                  case MISCREG_SP_EL2:
+                        return new MrsSp64(machInst, rt, miscReg);
+                  case MISCREG_NZCV:
+                    return new MrsNZCV64(machInst, rt, miscReg);
+                  case MISCREG_DC_CIVAC_Xt:
+                  case MISCREG_DC_CVAC_Xt:
+                  case MISCREG_DC_IVAC_Xt:
+                  case MISCREG_DC_ZVA_Xt:
+                    return new Unknown64(machInst);
+                  default: {
+                    StaticInstPtr si = nullptr;
+                    if (miscRegClass.isSerializing(miscRegClass[miscReg])) {
+                        si = new Mrs64(machInst, rt, miscReg);
+                    } else {
+                        si = new MrsNonSer64(machInst, rt, miscReg);
+                    }
+                    if (lookUpMiscReg[miscReg].info[MISCREG_UNVERIFIABLE])
+                        si->setFlag(StaticInst::IsUnverifiable);
+                    return si;
+                  }
+                }
+            } else {
+                switch (miscReg) {
+                  case MISCREG_SP_EL0:
+                  case MISCREG_SP_EL1:
+                  case MISCREG_SP_EL2:
+                    return new MsrSp64(machInst, miscReg, rt);
+                  case MISCREG_NZCV:
+                    return new MsrNZCV64(machInst, miscReg, rt);
+                  case MISCREG_DC_ZVA_Xt:
+                    return new Dczva(machInst, rt, miscReg);
+                  case MISCREG_DC_CVAU_Xt:
+                    return new Dccvau(machInst, rt, miscReg);
+                  case MISCREG_DC_CVAC_Xt:
+                    return new Dccvac(machInst, rt, miscReg);
+                  case MISCREG_DC_CIVAC_Xt:
+                    return new Dccivac(machInst, rt, miscReg);
+                  case MISCREG_DC_IVAC_Xt:
+                    return new Dcivac(machInst, rt, miscReg);
+                  // 64-bit TLBIs split into "Local"
+                  // and "Shareable"
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE3)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE2)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLS12E1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLE1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE3)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE3)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE2)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE2)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_ASIDE1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAAE1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAALE1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2E1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2LE1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAAE1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAALE1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2E1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2LE1)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE2)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE2)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE3)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE3)
+                    return new Tlbi64LocalHub(
+                      machInst, miscReg, rt, dvmEnabled);
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE3IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE3OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE2IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE2OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLS12E1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLS12E1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLE1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLE1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE3IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE3OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE3IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE3OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE2IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE2OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE2IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE2OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_ASIDE1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_ASIDE1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAAE1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAAE1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAALE1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_VAALE1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2E1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2E1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2LE1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2LE1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAAE1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAAE1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAALE1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAALE1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2E1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2E1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2LE1IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2LE1OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE2IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE2OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE2IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE2OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE3IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE3OS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE3IS)
+                  TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE3OS)
+                    return new Tlbi64ShareableHub(
+                      machInst, miscReg, rt, dvmEnabled);
+                  // AT instructions
+                  case MISCREG_AT_S1E1R_Xt:
+                  case MISCREG_AT_S1E1W_Xt:
+                  case MISCREG_AT_S1E0R_Xt:
+                  case MISCREG_AT_S1E0W_Xt:
+                  case MISCREG_AT_S1E2R_Xt:
+                  case MISCREG_AT_S1E2W_Xt:
+                  case MISCREG_AT_S12E1R_Xt:
+                  case MISCREG_AT_S12E1W_Xt:
+                  case MISCREG_AT_S12E0R_Xt:
+                  case MISCREG_AT_S12E0W_Xt:
+                  case MISCREG_AT_S1E3R_Xt:
+                  case MISCREG_AT_S1E3W_Xt:
+                    return new At64Hub(machInst, miscReg,
+                      MiscRegIndex::MISCREG_PAR_EL1, rt);
+                  default:
+                    if (miscRegClass.isSerializing(miscRegClass[miscReg])) {
+                        return new Msr64(machInst, miscReg, rt);
+                    } else {
+                        return new MsrNonSer64(machInst, miscReg, rt);
+                    }
+                }
+            }
+        }
+    }
+
+    StaticInstPtr
+    decodeSysInsts(ExtMachInst machInst, bool dvmEnabled)
+    {
+        return decodeSys(machInst, dvmEnabled);
+    }
+
+    StaticInstPtr
+    decodeSysRegMove(ExtMachInst machInst)
+    {
+        // Passing false as dvmEnabled as this only interests
+        // system instructions (TLBIs)
+        return decodeSys(machInst, false);
+    }
+
+    StaticInstPtr
+    decodePstate(ExtMachInst machInst)
+    {
+        uint8_t op1 = bits(machInst, 18, 16);
+        uint8_t crm = bits(machInst, 11, 8);
+        uint8_t op2 = bits(machInst, 7, 5);
+
+        // MSR immediate: moving immediate value to selected
+        // bits of the PSTATE
+        switch (op1 << 3 | op2) {
+          case 0x0:
+            // CFINV
+            return new Cfinv(machInst);
+          case 0x1:
+            // XAFLAG
+            return new Xaflag(machInst);
+          case 0x2:
+            // AXFLAG
+            return new Axflag(machInst);
+          case 0x3:
+            // UAO
+            return new MsrImm64(
+                machInst, MISCREG_UAO, crm);
+          case 0x4:
+            // PAN
+            return new MsrImm64(
+                machInst, MISCREG_PAN, crm);
+          case 0x5:
+            // SP
+            return new MsrImm64(
+                machInst, MISCREG_SPSEL, crm);
+          case 0x1b:
+            // SVE SVCR - SMSTART/SMSTOP
+            return decodeSmeMgmt(machInst);
+          case 0x1e:
+            // DAIFSet
+            return new MsrImmDAIFSet64(
+                machInst, MISCREG_DAIF, crm);
+          case 0x1f:
+            // DAIFClr
+            return new MsrImmDAIFClr64(
+                machInst, MISCREG_DAIF, crm);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
+    decodeHints(ExtMachInst machInst)
+    {
+        uint8_t crm = bits(machInst, 11, 8);
+        uint8_t op2 = bits(machInst, 7, 5);
+        switch (crm) {
+          case 0x0:
+            switch (op2) {
+              case 0x0:
+                return new NopInst(machInst);
+              case 0x1:
+                return new YieldInst(machInst);
+              case 0x2:
+                return new WfeInst(machInst);
+              case 0x3:
+                return new WfiInst(machInst);
+              case 0x4:
+                return new SevInst(machInst);
+              case 0x5:
+                return new SevlInst(machInst);
+              case 0x7:
+                return new Xpaclri(machInst, int_reg::X30);
+            }
+            break;
+          case 0x1:
+            switch (op2) {
+              case 0x0:
+                return new Pacia1716(machInst, int_reg::X17,
+                                               int_reg::X16);
+              case 0x2:
+                return new Pacib1716(machInst, int_reg::X17,
+                                               int_reg::X16);
+              case 0x4:
+                return new Autia1716(machInst, int_reg::X17,
+                                               int_reg::X16);
+              case 0x6:
+                return new Autib1716(machInst, int_reg::X17,
+                                               int_reg::X16);
+            }
+            break;
+          case 0x2:
+            switch (op2) {
+              case 0x0:
+                return new WarnUnimplemented(
+                        "esb", machInst);
+              case 0x1:
+                return new WarnUnimplemented(
+                        "psb csync", machInst);
+              case 0x2:
+                return new WarnUnimplemented(
+                        "tsb csync", machInst);
+              case 0x4:
+                return new WarnUnimplemented(
+                        "csdb", machInst);
+            }
+            break;
+          case 0x3:
+            switch (op2) {
+              case 0x0:
+                return new Paciaz(machInst,
+                         int_reg::X30, int_reg::Zero);
+              case 0x1:
+                return new Paciasp(machInst,
+                         int_reg::X30, int_reg::Spx);
+              case 0x2:
+                return new Pacibz(machInst,
+                         int_reg::X30, int_reg::Zero);
+              case 0x3:
+                return new Pacibsp(machInst,
+                         int_reg::X30, int_reg::Spx);
+              case 0x4:
+                return new Autiaz(machInst,
+                         int_reg::X30, int_reg::Zero);
+              case 0x5:
+                return new Autiasp(machInst,
+                         int_reg::X30, int_reg::Spx);
+              case 0x6:
+                return new Autibz(machInst,
+                         int_reg::X30, int_reg::Zero);
+              case 0x7:
+                return new Autibsp(machInst,
+                         int_reg::X30, int_reg::Spx);
+            }
+            break;
+          case 0x4:
+            switch (op2 & 0x1) {
+              case 0x0:
+                return new WarnUnimplemented(
+                        "bti", machInst);
+            }
+            break;
+        }
+        return new WarnUnimplemented(
+                "unallocated_hint", machInst);
+    }
+
+    StaticInstPtr
     decodeBranchExcSys(const Decoder &dec, ExtMachInst machInst)
     {
         switch (bits(machInst, 30, 29)) {
@@ -282,370 +695,38 @@ namespace Aarch64
                 }
             } else if (bits(machInst, 25, 22) == 0x4) {
                 // bit 31:22=1101010100
-                bool l = bits(machInst, 21);
-                uint8_t op0 = bits(machInst, 20, 19);
-                uint8_t op1 = bits(machInst, 18, 16);
-                uint8_t crn = bits(machInst, 15, 12);
-                uint8_t crm = bits(machInst, 11, 8);
-                uint8_t op2 = bits(machInst, 7, 5);
-                RegIndex rt = (RegIndex)(uint8_t)bits(machInst, 4, 0);
-                switch (op0) {
+                uint8_t bits_20_19 = bits(machInst, 20, 19);
+                uint8_t op2 = bits(machInst, 4, 0);
+                switch (bits_20_19) {
                   case 0x0:
                     // early out for TME
-                    if (crn == 0x3 && op1 == 0x3 && op2 == 0x3) {
-                        switch (crm) {
-                            case 0x0:
-                              if (rt == 0b11111)
-                                return new Tcommit64(machInst);
-                              else
-                                return new Tstart64(machInst, rt);
-                            case 0x1:
-                              return new Ttest64(machInst, rt);
-                            default:
-                              return new Unknown64(machInst);
-                        }
-                    }
-                    else if (rt != 0x1f || l)
-                        return new Unknown64(machInst);
-                    if (crn == 0x2 && op1 == 0x3) {
-                        switch (crm) {
-                          case 0x0:
-                            switch (op2) {
-                              case 0x0:
-                                return new NopInst(machInst);
-                              case 0x1:
-                                return new YieldInst(machInst);
-                              case 0x2:
-                                return new WfeInst(machInst);
-                              case 0x3:
-                                return new WfiInst(machInst);
-                              case 0x4:
-                                return new SevInst(machInst);
-                              case 0x5:
-                                return new SevlInst(machInst);
-                              case 0x7:
-                                return new Xpaclri(machInst, int_reg::X30);
-                            }
-                            break;
-                          case 0x1:
-                            switch (op2) {
-                              case 0x0:
-                                return new Pacia1716(machInst, int_reg::X17,
-                                                               int_reg::X16);
-                              case 0x2:
-                                return new Pacib1716(machInst, int_reg::X17,
-                                                               int_reg::X16);
-                              case 0x4:
-                                return new Autia1716(machInst, int_reg::X17,
-                                                               int_reg::X16);
-                              case 0x6:
-                                return new Autib1716(machInst, int_reg::X17,
-                                                               int_reg::X16);
-                            }
-                            break;
-                          case 0x2:
-                            switch (op2) {
-                              case 0x0:
-                                return new WarnUnimplemented(
-                                        "esb", machInst);
-                              case 0x1:
-                                return new WarnUnimplemented(
-                                        "psb csync", machInst);
-                              case 0x2:
-                                return new WarnUnimplemented(
-                                        "tsb csync", machInst);
-                              case 0x4:
-                                return new WarnUnimplemented(
-                                        "csdb", machInst);
-                            }
-                            break;
-                          case 0x3:
-                            switch (op2) {
-                              case 0x0:
-                                return new Paciaz(machInst,
-                                         int_reg::X30, int_reg::Zero);
-                              case 0x1:
-                                return new Paciasp(machInst,
-                                         int_reg::X30, int_reg::Spx);
-                              case 0x2:
-                                return new Pacibz(machInst,
-                                         int_reg::X30, int_reg::Zero);
-                              case 0x3:
-                                return new Pacibsp(machInst,
-                                         int_reg::X30, int_reg::Spx);
-                              case 0x4:
-                                return new Autiaz(machInst,
-                                         int_reg::X30, int_reg::Zero);
-                              case 0x5:
-                                return new Autiasp(machInst,
-                                         int_reg::X30, int_reg::Spx);
-                              case 0x6:
-                                return new Autibz(machInst,
-                                         int_reg::X30, int_reg::Zero);
-                              case 0x7:
-                                return new Autibsp(machInst,
-                                         int_reg::X30, int_reg::Spx);
-                            }
-                            break;
-                          case 0x4:
-                            switch (op2 & 0x1) {
-                              case 0x0:
-                                return new WarnUnimplemented(
-                                        "bti", machInst);
-                            }
-                            break;
-                        }
-                        return new WarnUnimplemented(
-                                "unallocated_hint", machInst);
-                    } else if (crn == 0x3 && op1 == 0x3) {
-                        switch (op2) {
-                          case 0x1:
-                            if (bits(crm, 1, 0) == 0b10) {
-                                switch (bits(crm, 3, 2)) {
-                                  case 0x1: // Non-Shareable
-                                    return new Dsb64Local(machInst);
-                                  case 0x0: // OuterShareable
-                                  case 0x2: // InnerShareable
-                                  case 0x3: // FullSystem
-                                    return new Dsb64Shareable(
-                                        machInst, dec.dvmEnabled);
-                                  default:
-                                    GEM5_UNREACHABLE;
-                                }
-                            } else {
-                                return new Unknown64(machInst);
-                            }
-                          case 0x2:
-                            return new Clrex64(machInst);
-                          case 0x4:
-                            switch (bits(crm, 3, 2)) {
-                              case 0x1: // Non-Shareable
-                                return new Dsb64Local(machInst);
-                              case 0x0: // OuterShareable
-                              case 0x2: // InnerShareable
-                              case 0x3: // FullSystem
-                                return new Dsb64Shareable(
-                                    machInst, dec.dvmEnabled);
-                              default:
-                                GEM5_UNREACHABLE;
-                            }
-                          case 0x5:
-                            return new Dmb64(machInst);
-                          case 0x6:
-                            return new Isb64(machInst);
-                          default:
-                            return new Unknown64(machInst);
-                        }
-                    } else if (crn == 0x4) {
-                        // MSR immediate: moving immediate value to selected
-                        // bits of the PSTATE
-                        switch (op1 << 3 | op2) {
-                          case 0x0:
-                            // CFINV
-                            return new Cfinv(machInst);
-                          case 0x1:
-                            // XAFLAG
-                            return new Xaflag(machInst);
-                          case 0x2:
-                            // AXFLAG
-                            return new Axflag(machInst);
-                          case 0x3:
-                            // UAO
-                            return new MsrImm64(
-                                machInst, MISCREG_UAO, crm);
-                          case 0x4:
-                            // PAN
-                            return new MsrImm64(
-                                machInst, MISCREG_PAN, crm);
-                          case 0x5:
-                            // SP
-                            return new MsrImm64(
-                                machInst, MISCREG_SPSEL, crm);
-                          case 0x1b:
-                            // SVE SVCR - SMSTART/SMSTOP
-                            return decodeSmeMgmt(machInst);
-                          case 0x1e:
-                            // DAIFSet
-                            return new MsrImmDAIFSet64(
-                                machInst, MISCREG_DAIF, crm);
-                          case 0x1f:
-                            // DAIFClr
-                            return new MsrImmDAIFClr64(
-                                machInst, MISCREG_DAIF, crm);
-                          default:
-                            return new Unknown64(machInst);
-                        }
+                    if (bits(machInst, 21) == 0b1) {
+                        return decodeSysWithResult(machInst);
                     } else {
-                        return new Unknown64(machInst);
+                        switch (bits(machInst, 15, 12)) {
+                          case 0b0001:
+                            return new Unknown64(machInst);
+                          case 0b0010:
+                            if (op2 == 0b11111)
+                                return decodeHints(machInst);
+                            else
+                                return new Unknown64(machInst);
+                          case 0b0011:
+                            return decodeBarriers(machInst, dec.dvmEnabled);
+                          case 0b0100:
+                            return decodePstate(machInst);
+                          default:
+                            return new Unknown64(machInst);
+                        }
                     }
-                    break;
                   case 0x1:
+                    // bit 31:22=1101010100, 20:19=01
+                    return decodeSysInsts(machInst, dec.dvmEnabled);
                   case 0x2:
+                    // bit 31:22=1101010100, 20:19=10
                   case 0x3:
-                  {
                     // bit 31:22=1101010100, 20:19=11
-                    bool read = l;
-                    MiscRegIndex miscReg =
-                        decodeAArch64SysReg(op0, op1, crn, crm, op2);
-
-                    // Check for invalid registers
-                    if (miscReg == MISCREG_UNKNOWN) {
-                        auto full_mnemonic =
-                            csprintf("%s op0:%d op1:%d crn:%d crm:%d op2:%d",
-                                     read ? "mrs" : "msr",
-                                     op0, op1, crn, crm, op2);
-
-                        return new FailUnimplemented(read ? "mrs" : "msr",
-                            machInst, full_mnemonic);
-
-                    } else if (miscReg == MISCREG_IMPDEF_UNIMPL) {
-                        auto full_mnemonic =
-                            csprintf("%s op0:%d op1:%d crn:%d crm:%d op2:%d",
-                                     read ? "mrs" : "msr",
-                                     op0, op1, crn, crm, op2);
-
-                        return new MiscRegImplDefined64(
-                            read ? "mrs" : "msr",
-                            machInst, MiscRegNum64(op0, op1, crn, crm, op2),
-                            rt, read, full_mnemonic);
-
-                    } else {
-                        if (read) {
-                            switch (miscReg) {
-                              case MISCREG_NZCV:
-                                return new MrsNZCV64(machInst, rt, miscReg);
-                              case MISCREG_DC_CIVAC_Xt:
-                              case MISCREG_DC_CVAC_Xt:
-                              case MISCREG_DC_IVAC_Xt:
-                              case MISCREG_DC_ZVA_Xt:
-                                return new Unknown64(machInst);
-                              default: {
-                                StaticInstPtr si = new Mrs64(machInst, rt, miscReg);
-                                if (lookUpMiscReg[miscReg].info[MISCREG_UNVERIFIABLE])
-                                    si->setFlag(StaticInst::IsUnverifiable);
-                                return si;
-                              }
-                            }
-                        } else {
-                            switch (miscReg) {
-                              case MISCREG_NZCV:
-                                return new MsrNZCV64(machInst, miscReg, rt);
-                              case MISCREG_DC_ZVA_Xt:
-                                return new Dczva(machInst, rt, miscReg);
-                              case MISCREG_DC_CVAU_Xt:
-                                return new Dccvau(machInst, rt, miscReg);
-                              case MISCREG_DC_CVAC_Xt:
-                                return new Dccvac(machInst, rt, miscReg);
-                              case MISCREG_DC_CIVAC_Xt:
-                                return new Dccivac(machInst, rt, miscReg);
-                              case MISCREG_DC_IVAC_Xt:
-                                return new Dcivac(machInst, rt, miscReg);
-                              // 64-bit TLBIs split into "Local"
-                              // and "Shareable"
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE3)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE2)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLS12E1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLE1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE3)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE3)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE2)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE2)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ASIDE1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAAE1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAALE1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2E1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2LE1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAAE1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAALE1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2E1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2LE1)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE2)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE2)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE3)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE3)
-                                return new Tlbi64LocalHub(
-                                  machInst, miscReg, rt, dec.dvmEnabled);
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE3IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE3OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE2IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE2OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ALLE1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLS12E1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLS12E1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLE1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VMALLE1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE3IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE3OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE3IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE3OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE2IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE2OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE2IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE2OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAE1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VALE1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ASIDE1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_ASIDE1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAAE1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAAE1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAALE1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_VAALE1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2E1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2E1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2LE1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_IPAS2LE1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAAE1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAAE1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAALE1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAALE1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2E1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2E1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2LE1IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RIPAS2LE1OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE2IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE2OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE2IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE2OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE3IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVAE3OS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE3IS)
-                              TLBI_CASE_VARIANTS(MISCREG_TLBI_RVALE3OS)
-                                return new Tlbi64ShareableHub(
-                                  machInst, miscReg, rt, dec.dvmEnabled);
-                              // AT instructions
-                              case MISCREG_AT_S1E1R_Xt:
-                              case MISCREG_AT_S1E1W_Xt:
-                              case MISCREG_AT_S1E0R_Xt:
-                              case MISCREG_AT_S1E0W_Xt:
-                              case MISCREG_AT_S1E2R_Xt:
-                              case MISCREG_AT_S1E2W_Xt:
-                              case MISCREG_AT_S12E1R_Xt:
-                              case MISCREG_AT_S12E1W_Xt:
-                              case MISCREG_AT_S12E0R_Xt:
-                              case MISCREG_AT_S12E0W_Xt:
-                              case MISCREG_AT_S1E3R_Xt:
-                              case MISCREG_AT_S1E3W_Xt:
-                                return new At64Hub(machInst, miscReg,
-                                  MiscRegIndex::MISCREG_PAR_EL1, rt);
-                              default:
-                                return new Msr64(machInst, miscReg, rt);
-                            }
-                        }
-                    }
-                  }
-                  break;
+                    return decodeSysRegMove(machInst);
                   default:
                     GEM5_UNREACHABLE;
                 }
@@ -1294,6 +1375,7 @@ namespace Aarch64
         // bit 27,25=10
         switch (bits(machInst, 29, 28)) {
           case 0x0:
+          {
             if (bits(machInst, 26) == 0) {
                 if (bits(machInst, 24) != 0)
                     return new Unknown64(machInst);
@@ -1498,14 +1580,50 @@ namespace Aarch64
             } else {
                 return decodeNeonMem(machInst);
             }
+          }
           case 0x1:
           {
-            if (bits(machInst, 24) != 0)
-                return new Unknown64(machInst);
-            uint8_t switchVal = (bits(machInst, 26) << 0) |
-                                (bits(machInst, 31, 30) << 1);
             int64_t imm = sext<19>(bits(machInst, 23, 5)) << 2;
             RegIndex rt = (RegIndex)(uint32_t)bits(machInst, 4, 0);
+
+            if (bits(machInst, 24) != 0) {
+               if (bits(machInst, 21) != 0) {
+                  return new Unknown64(machInst);
+               }
+
+               warn_once("LoadAcquirePC implemented with SC\n");
+
+               uint8_t switchVal = (bits(machInst, 23, 22) << 0) |
+                                   (bits(machInst, 31, 30) << 2);
+               RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 9, 5);
+               RegIndex rnsp = makeSP(rn);
+               uint64_t imm = sext<9>(bits(machInst, 20, 12));
+               switch (switchVal) {
+                 case 0x1:
+                   return new LDAPURB64_IMM(machInst, rt, rnsp, imm);
+                 case 0x2:
+                   return new LDAPURSBX64_IMM(machInst, rt, rnsp, imm);
+                 case 0x3:
+                   return new LDAPURSBW64_IMM(machInst, rt, rnsp, imm);
+                 case 0x5:
+                   return new LDAPURH64_IMM(machInst, rt, rnsp, imm);
+                 case 0x6:
+                   return new LDAPURSHX64_IMM(machInst, rt, rnsp, imm);
+                 case 0x7:
+                   return new LDAPURSHW64_IMM(machInst, rt, rnsp, imm);
+                 case 0x9:
+                   return new LDAPURX64_IMM(machInst, rt, rnsp, imm);
+                 case 0xd:
+                   return new LDAPURW64_IMM(machInst, rt, rnsp, imm);
+                 case 0xa:
+                   return new LDAPURSW64_IMM(machInst, rt, rnsp, imm);
+                 default:
+                   return new Unknown64(machInst);
+               }
+            }
+            uint8_t switchVal = (bits(machInst, 26) << 0) |
+                                (bits(machInst, 31, 30) << 1);
+
             switch (switchVal) {
               case 0x0:
                 return new LDRWL64_LIT(machInst, rt, imm);
@@ -2507,720 +2625,1182 @@ namespace Aarch64
 output decoder {{
 namespace Aarch64
 {
-    template <typename DecoderFeatures>
     StaticInstPtr
-    decodeAdvSIMD(ExtMachInst machInst)
+    decodeFpConvFixed(ExtMachInst machInst)
     {
-        if (bits(machInst, 24) == 1) {
-            if (bits(machInst, 10) == 0) {
-                return decodeNeonIndexedElem<DecoderFeatures>(machInst);
-            } else if (bits(machInst, 23) == 1) {
+        bool s = bits(machInst, 29);
+        if (s)
+            return new Unknown64(machInst);
+        uint8_t switchVal = bits(machInst, 20, 16);
+        uint8_t type      = bits(machInst, 23, 22);
+        uint8_t scale     = bits(machInst, 15, 10);
+        RegIndex rd    = (RegIndex)(uint32_t)bits(machInst, 4, 0);
+        RegIndex rn    = (RegIndex)(uint32_t)bits(machInst, 9, 5);
+        if (bits(machInst, 18, 17) == 3 && scale != 0)
+            return new Unknown64(machInst);
+        // 30:24=0011110, 21=0
+        switch (switchVal) {
+          case 0x00:
+            return new FailUnimplemented("fcvtns", machInst);
+          case 0x01:
+            return new FailUnimplemented("fcvtnu", machInst);
+          case 0x02:
+            switch ( (bits(machInst, 31) << 2) | type ) {
+              case 0: // SCVTF Sd = convertFromInt(Wn/(2^fbits))
+                return new FcvtSFixedFpSW(machInst, rd, rn, scale);
+              case 1: // SCVTF Dd = convertFromInt(Wn/(2^fbits))
+                return new FcvtSFixedFpDW(machInst, rd, rn, scale);
+              case 3: // SCVTF Hd = convertFromInt(Wn/(2^fbits))
+                return new FcvtSFixedFpHW(machInst, rd, rn, scale);
+              case 4: // SCVTF Sd = convertFromInt(Xn/(2^fbits))
+                return new FcvtSFixedFpSX(machInst, rd, rn, scale);
+              case 5: // SCVTF Dd = convertFromInt(Xn/(2^fbits))
+                return new FcvtSFixedFpDX(machInst, rd, rn, scale);
+              case 7: // SCVTF Hd = convertFromInt(Xn/(2^fbits))
+                return new FcvtSFixedFpHX(machInst, rd, rn, scale);
+              default:
                 return new Unknown64(machInst);
-            } else {
-                if (bits(machInst, 22, 19)) {
-                    return decodeNeonShiftByImm(machInst);
-                } else {
-                    return decodeNeonModImm(machInst);
-                }
             }
-        } else if (bits(machInst, 21) == 1) {
-            if (bits(machInst, 10) == 1) {
-                return decodeNeon3Same<DecoderFeatures>(machInst);
-            } else if (bits(machInst, 11) == 0) {
-                return decodeNeon3Diff(machInst);
-            } else if (bits(machInst, 20, 17) == 0x0) {
-                return decodeNeon2RegMisc(machInst);
-            } else if (bits(machInst, 20, 17) == 0x4) {
-                return decodeCryptoAES(machInst);
-            } else if (bits(machInst, 20, 17) == 0x8) {
-                return decodeNeonAcrossLanes(machInst);
-            } else {
+          case 0x03:
+            switch ( (bits(machInst, 31) << 2) | type ) {
+              case 0: // UCVTF Sd = convertFromInt(Wn/(2^fbits))
+                return new FcvtUFixedFpSW(machInst, rd, rn, scale);
+              case 1: // UCVTF Dd = convertFromInt(Wn/(2^fbits))
+                return new FcvtUFixedFpDW(machInst, rd, rn, scale);
+              case 3: // UCVTF Hd = convertFromInt(Wn/(2^fbits))
+                return new FcvtUFixedFpHW(machInst, rd, rn, scale);
+              case 4: // UCVTF Sd = convertFromInt(Xn/(2^fbits))
+                return new FcvtUFixedFpSX(machInst, rd, rn, scale);
+              case 5: // UCVTF Dd = convertFromInt(Xn/(2^fbits))
+                return new FcvtUFixedFpDX(machInst, rd, rn, scale);
+              case 7: // UCVTF Hd = convertFromInt(Xn/(2^fbits))
+                return new FcvtUFixedFpHX(machInst, rd, rn, scale);
+              default:
                 return new Unknown64(machInst);
             }
-        } else if (bits(machInst, 15) == 1) {
-            return decodeNeon3RegExtension<DecoderFeatures>(machInst);
-        } else if (bits(machInst, 10) == 1) {
-            if (bits(machInst, 23, 22))
+          case 0x04:
+            return new FailUnimplemented("fcvtas", machInst);
+          case 0x05:
+            return new FailUnimplemented("fcvtau", machInst);
+          case 0x08:
+            return new FailUnimplemented("fcvtps", machInst);
+          case 0x09:
+            return new FailUnimplemented("fcvtpu", machInst);
+          case 0x0e:
+            return new FailUnimplemented("fmov elem. to 64", machInst);
+          case 0x0f:
+            return new FailUnimplemented("fmov 64 bit", machInst);
+          case 0x10:
+            return new FailUnimplemented("fcvtms", machInst);
+          case 0x11:
+            return new FailUnimplemented("fcvtmu", machInst);
+          case 0x18:
+            switch ( (bits(machInst, 31) << 2) | type ) {
+              case 0: // FCVTZS Wd = convertToIntExactTowardZero(Sn*(2^fbits))
+                return new FcvtFpSFixedSW(machInst, rd, rn, scale);
+              case 1: // FCVTZS Wd = convertToIntExactTowardZero(Dn*(2^fbits))
+                return new FcvtFpSFixedDW(machInst, rd, rn, scale);
+              case 3: // FCVTZS Wd = convertToIntExactTowardZero(Hn*(2^fbits))
+                return new FcvtFpSFixedHW(machInst, rd, rn, scale);
+              case 4: // FCVTZS Xd = convertToIntExactTowardZero(Sn*(2^fbits))
+                return new FcvtFpSFixedSX(machInst, rd, rn, scale);
+              case 5: // FCVTZS Xd = convertToIntExactTowardZero(Dn*(2^fbits))
+                return new FcvtFpSFixedDX(machInst, rd, rn, scale);
+              case 7: // FCVTZS Xd = convertToIntExactTowardZero(Hn*(2^fbits))
+                return new FcvtFpSFixedHX(machInst, rd, rn, scale);
+              default:
                 return new Unknown64(machInst);
-            return decodeNeonCopy(machInst);
-        } else if (bits(machInst, 29) == 1) {
-            return decodeNeonExt(machInst);
-        } else if (bits(machInst, 11) == 1) {
-            return decodeNeonZipUzpTrn(machInst);
-        } else if (bits(machInst, 23, 22) == 0x0) {
-            return decodeNeonTblTbx(machInst);
+            }
+          case 0x19:
+            switch ( (bits(machInst, 31) << 2) | type ) {
+              case 0: // FCVTZU Wd = convertToIntExactTowardZero(Sn*(2^fbits))
+                return new FcvtFpUFixedSW(machInst, rd, rn, scale);
+              case 1: // FCVTZU Wd = convertToIntExactTowardZero(Dn*(2^fbits))
+                return new FcvtFpUFixedDW(machInst, rd, rn, scale);
+              case 3: // FCVTZU Wd = convertToIntExactTowardZero(Hn*(2^fbits))
+                return new FcvtFpUFixedHW(machInst, rd, rn, scale);
+              case 4: // FCVTZU Xd = convertToIntExactTowardZero(Sn*(2^fbits))
+                return new FcvtFpUFixedSX(machInst, rd, rn, scale);
+              case 5: // FCVTZU Xd = convertToIntExactTowardZero(Dn*(2^fbits))
+                return new FcvtFpUFixedDX(machInst, rd, rn, scale);
+              case 7: // FCVTZU Xd = convertToIntExactTowardZero(Hn*(2^fbits))
+                return new FcvtFpUFixedHX(machInst, rd, rn, scale);
+              default:
+                return new Unknown64(machInst);
+            }
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
+    decodeFpConvFp(ExtMachInst machInst)
+    {
+        if (bits(machInst, 29))
+            return new Unknown64(machInst);
+        uint8_t type       = bits(machInst, 23, 22);
+        uint8_t rmode      = bits(machInst, 20, 19);
+        uint8_t switchVal1 = bits(machInst, 18, 16);
+        uint8_t switchVal2 = (type << 1) | bits(machInst, 31);
+
+        RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 4, 0);
+        RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 9, 5);
+        // 30:24=0011110, 21=1, 15:10=000000
+        switch (switchVal1) {
+          case 0x0:
+            switch ((switchVal2 << 2) | rmode) {
+              case 0x0: //FCVTNS Wd = convertToIntExactTiesToEven(Sn)
+                return new FcvtFpSIntWSN(machInst, rd, rn);
+              case 0x1: //FCVTPS Wd = convertToIntExactTowardPlusInf(Sn)
+                return new FcvtFpSIntWSP(machInst, rd, rn);
+              case 0x2: //FCVTMS Wd = convertToIntExactTowardMinusInf(Sn)
+                return new FcvtFpSIntWSM(machInst, rd, rn);
+              case 0x3: //FCVTZS Wd = convertToIntExactTowardZero(Sn)
+                return new FcvtFpSIntWSZ(machInst, rd, rn);
+              case 0x4: //FCVTNS Xd = convertToIntExactTiesToEven(Sn)
+                return new FcvtFpSIntXSN(machInst, rd, rn);
+              case 0x5: //FCVTPS Xd = convertToIntExactTowardPlusInf(Sn)
+                return new FcvtFpSIntXSP(machInst, rd, rn);
+              case 0x6: //FCVTMS Xd = convertToIntExactTowardMinusInf(Sn)
+                return new FcvtFpSIntXSM(machInst, rd, rn);
+              case 0x7: //FCVTZS Xd = convertToIntExactTowardZero(Sn)
+                return new FcvtFpSIntXSZ(machInst, rd, rn);
+              case 0x8: //FCVTNS Wd = convertToIntExactTiesToEven(Dn)
+                return new FcvtFpSIntWDN(machInst, rd, rn);
+              case 0x9: //FCVTPS Wd = convertToIntExactTowardPlusInf(Dn)
+                return new FcvtFpSIntWDP(machInst, rd, rn);
+              case 0xA: //FCVTMS Wd = convertToIntExactTowardMinusInf(Dn)
+                return new FcvtFpSIntWDM(machInst, rd, rn);
+              case 0xB: //FCVTZS Wd = convertToIntExactTowardZero(Dn)
+                return new FcvtFpSIntWDZ(machInst, rd, rn);
+              case 0xC: //FCVTNS Xd = convertToIntExactTiesToEven(Dn)
+                return new FcvtFpSIntXDN(machInst, rd, rn);
+              case 0xD: //FCVTPS Xd = convertToIntExactTowardPlusInf(Dn)
+                return new FcvtFpSIntXDP(machInst, rd, rn);
+              case 0xE: //FCVTMS Xd = convertToIntExactTowardMinusInf(Dn)
+                return new FcvtFpSIntXDM(machInst, rd, rn);
+              case 0xF: //FCVTZS Xd = convertToIntExactTowardZero(Dn)
+                return new FcvtFpSIntXDZ(machInst, rd, rn);
+              case 0x18: //FCVTNS Wd = convertToIntExactTiesToEven(Hn)
+                return new FcvtFpSIntWHN(machInst, rd, rn);
+              case 0x19: //FCVTPS Wd = convertToIntExactTowardPlusInf(Hn)
+                return new FcvtFpSIntWHP(machInst, rd, rn);
+              case 0x1A: //FCVTMS Wd = convertToIntExactTowardMinusInf(Hn)
+                return new FcvtFpSIntWHM(machInst, rd, rn);
+              case 0x1B: //FCVTZS Wd = convertToIntExactTowardZero(Hn)
+                return new FcvtFpSIntWHZ(machInst, rd, rn);
+              case 0x1C: //FCVTNS Xd = convertToIntExactTiesToEven(Hn)
+                return new FcvtFpSIntXHN(machInst, rd, rn);
+              case 0x1D: //FCVTPS Xd = convertToIntExactTowardPlusInf(Hn)
+                return new FcvtFpSIntXHP(machInst, rd, rn);
+              case 0x1E: //FCVTMS Xd = convertToIntExactTowardMinusInf(Hn)
+                return new FcvtFpSIntXHM(machInst, rd, rn);
+              case 0x1F: //FCVTZS Xd = convertToIntExactTowardZero(Hn)
+                return new FcvtFpSIntXHZ(machInst, rd, rn);
+              default:
+                return new Unknown64(machInst);
+            }
+          case 0x1:
+            switch ((switchVal2 << 2) | rmode) {
+              case 0x0: //FCVTNU Wd = convertToIntExactTiesToEven(Sn)
+                return new FcvtFpUIntWSN(machInst, rd, rn);
+              case 0x1: //FCVTPU Wd = convertToIntExactTowardPlusInf(Sn)
+                return new FcvtFpUIntWSP(machInst, rd, rn);
+              case 0x2: //FCVTMU Wd = convertToIntExactTowardMinusInf(Sn)
+                return new FcvtFpUIntWSM(machInst, rd, rn);
+              case 0x3: //FCVTZU Wd = convertToIntExactTowardZero(Sn)
+                return new FcvtFpUIntWSZ(machInst, rd, rn);
+              case 0x4: //FCVTNU Xd = convertToIntExactTiesToEven(Sn)
+                return new FcvtFpUIntXSN(machInst, rd, rn);
+              case 0x5: //FCVTPU Xd = convertToIntExactTowardPlusInf(Sn)
+                return new FcvtFpUIntXSP(machInst, rd, rn);
+              case 0x6: //FCVTMU Xd = convertToIntExactTowardMinusInf(Sn)
+                return new FcvtFpUIntXSM(machInst, rd, rn);
+              case 0x7: //FCVTZU Xd = convertToIntExactTowardZero(Sn)
+                return new FcvtFpUIntXSZ(machInst, rd, rn);
+              case 0x8: //FCVTNU Wd = convertToIntExactTiesToEven(Dn)
+                return new FcvtFpUIntWDN(machInst, rd, rn);
+              case 0x9: //FCVTPU Wd = convertToIntExactTowardPlusInf(Dn)
+                return new FcvtFpUIntWDP(machInst, rd, rn);
+              case 0xA: //FCVTMU Wd = convertToIntExactTowardMinusInf(Dn)
+                return new FcvtFpUIntWDM(machInst, rd, rn);
+              case 0xB: //FCVTZU Wd = convertToIntExactTowardZero(Dn)
+                return new FcvtFpUIntWDZ(machInst, rd, rn);
+              case 0xC: //FCVTNU Xd = convertToIntExactTiesToEven(Dn)
+                return new FcvtFpUIntXDN(machInst, rd, rn);
+              case 0xD: //FCVTPU Xd = convertToIntExactTowardPlusInf(Dn)
+                return new FcvtFpUIntXDP(machInst, rd, rn);
+              case 0xE: //FCVTMU Xd = convertToIntExactTowardMinusInf(Dn)
+                return new FcvtFpUIntXDM(machInst, rd, rn);
+              case 0xF: //FCVTZU Xd = convertToIntExactTowardZero(Dn)
+                return new FcvtFpUIntXDZ(machInst, rd, rn);
+              case 0x18: //FCVTNU Wd = convertToIntExactTiesToEven(Hn)
+                return new FcvtFpUIntWHN(machInst, rd, rn);
+              case 0x19: //FCVTPU Wd = convertToIntExactTowardPlusInf(Hn)
+                return new FcvtFpUIntWHP(machInst, rd, rn);
+              case 0x1A: //FCVTMU Wd = convertToIntExactTowardMinusInf(Hn)
+                return new FcvtFpUIntWHM(machInst, rd, rn);
+              case 0x1B: //FCVTZU Wd = convertToIntExactTowardZero(Hn)
+                return new FcvtFpUIntWHZ(machInst, rd, rn);
+              case 0x1C: //FCVTNU Xd = convertToIntExactTiesToEven(Hn)
+                return new FcvtFpUIntXHN(machInst, rd, rn);
+              case 0x1D: //FCVTPU Xd = convertToIntExactTowardPlusInf(Hn)
+                return new FcvtFpUIntXHP(machInst, rd, rn);
+              case 0x1E: //FCVTMU Xd = convertToIntExactTowardMinusInf(Hn)
+                return new FcvtFpUIntXHM(machInst, rd, rn);
+              case 0x1F: //FCVTZU Xd = convertToIntExactTowardZero(Hn)
+                return new FcvtFpUIntXHZ(machInst, rd, rn);
+              default:
+                return new Unknown64(machInst);
+            }
+          case 0x2:
+            if (rmode != 0)
+                return new Unknown64(machInst);
+            switch (switchVal2) {
+              case 0: // SCVTF Sd = convertFromInt(Wn)
+                return new FcvtWSIntFpS(machInst, rd, rn);
+              case 1: // SCVTF Sd = convertFromInt(Xn)
+                return new FcvtXSIntFpS(machInst, rd, rn);
+              case 2: // SCVTF Dd = convertFromInt(Wn)
+                return new FcvtWSIntFpD(machInst, rd, rn);
+              case 3: // SCVTF Dd = convertFromInt(Xn)
+                return new FcvtXSIntFpD(machInst, rd, rn);
+              case 6: // SCVTF Hd = convertFromInt(Wn)
+                return new FcvtWSIntFpH(machInst, rd, rn);
+              case 7: // SCVTF Hd = convertFromInt(Xn)
+                return new FcvtXSIntFpH(machInst, rd, rn);
+              default:
+                return new Unknown64(machInst);
+            }
+          case 0x3:
+            switch (switchVal2) {
+              case 0: // UCVTF Sd = convertFromInt(Wn)
+                return new FcvtWUIntFpS(machInst, rd, rn);
+              case 1: // UCVTF Sd = convertFromInt(Xn)
+                return new FcvtXUIntFpS(machInst, rd, rn);
+              case 2: // UCVTF Dd = convertFromInt(Wn)
+                return new FcvtWUIntFpD(machInst, rd, rn);
+              case 3: // UCVTF Dd = convertFromInt(Xn)
+                return new FcvtXUIntFpD(machInst, rd, rn);
+              case 6: // UCVTF Hd = convertFromInt(Wn)
+                return new FcvtWUIntFpH(machInst, rd, rn);
+              case 7: // UCVTF Hd = convertFromInt(Xn)
+                return new FcvtXUIntFpH(machInst, rd, rn);
+              default:
+                return new Unknown64(machInst);
+            }
+          case 0x4:
+            if (rmode != 0)
+                return new Unknown64(machInst);
+            switch (switchVal2) {
+              case 0: // FCVTAS Wd = convertToIntExactTiesToAway(Sn)
+                return new FcvtFpSIntWSA(machInst, rd, rn);
+              case 1: // FCVTAS Xd = convertToIntExactTiesToAway(Sn)
+                return new FcvtFpSIntXSA(machInst, rd, rn);
+              case 2: // FCVTAS Wd = convertToIntExactTiesToAway(Dn)
+                return new FcvtFpSIntWDA(machInst, rd, rn);
+              case 3: // FCVTAS Wd = convertToIntExactTiesToAway(Dn)
+                return new FcvtFpSIntXDA(machInst, rd, rn);
+              case 6: // FCVTAS Wd = convertToIntExactTiesToAway(Hn)
+                return new FcvtFpSIntWHA(machInst, rd, rn);
+              case 7: // FCVTAS Xd = convertToIntExactTiesToAway(Hn)
+                return new FcvtFpSIntXHA(machInst, rd, rn);
+              default:
+                return new Unknown64(machInst);
+            }
+          case 0x5:
+            switch (switchVal2) {
+              case 0: // FCVTAU Wd = convertToIntExactTiesToAway(Sn)
+                return new FcvtFpUIntWSA(machInst, rd, rn);
+              case 1: // FCVTAU Xd = convertToIntExactTiesToAway(Sn)
+                return new FcvtFpUIntXSA(machInst, rd, rn);
+              case 2: // FCVTAU Wd = convertToIntExactTiesToAway(Dn)
+                return new FcvtFpUIntWDA(machInst, rd, rn);
+              case 3: // FCVTAU Xd = convertToIntExactTiesToAway(Dn)
+                return new FcvtFpUIntXDA(machInst, rd, rn);
+              case 6: // FCVTAU Wd = convertToIntExactTiesToAway(Hn)
+                return new FcvtFpUIntWHA(machInst, rd, rn);
+              case 7: // FCVTAU Xd = convertToIntExactTiesToAway(Hn)
+                return new FcvtFpUIntXHA(machInst, rd, rn);
+              default:
+                return new Unknown64(machInst);
+            }
+          case 0x06:
+            switch (switchVal2) {
+              case 0: // FMOV Wd = Sn
+                if (rmode != 0)
+                    return new Unknown64(machInst);
+                return new FmovRegCoreW(machInst, rd, rn);
+              case 2:
+                return new FJcvtFpSFixedDW(machInst, rd, rn);
+              case 3: // FMOV Xd = Dn
+                if (rmode != 0)
+                    return new Unknown64(machInst);
+                return new FmovRegCoreX(machInst, rd, rn);
+              case 5: // FMOV Xd = Vn<127:64>
+                if (rmode != 1)
+                    return new Unknown64(machInst);
+                return new FmovURegCoreX(machInst, rd, rn);
+              case 6: // FMOV Wd = Hn
+                if (rmode != 0)
+                    return new Unknown64(machInst);
+                return new FmovRegCoreWH(machInst, rd, rn);
+              case 7: // FMOV Xd = Hn
+                if (rmode != 0)
+                    return new Unknown64(machInst);
+                return new FmovRegCoreXH(machInst, rd, rn);
+              default:
+                return new Unknown64(machInst);
+            }
+            break;
+          case 0x07:
+            switch (switchVal2) {
+              case 0: // FMOV Sd = Wn
+                if (rmode != 0)
+                    return new Unknown64(machInst);
+                return new FmovCoreRegW(machInst, rd, rn);
+              case 3: // FMOV Xd = Dn
+                if (rmode != 0)
+                    return new Unknown64(machInst);
+                return new FmovCoreRegX(machInst, rd, rn);
+              case 5: // FMOV Xd = Vn<127:64>
+                if (rmode != 1)
+                    return new Unknown64(machInst);
+                return new FmovUCoreRegX(machInst, rd, rn);
+              case 6: // FMOV Hd = Wn
+                if (rmode != 0)
+                    return new Unknown64(machInst);
+                return new FmovCoreRegHW(machInst, rd, rn);
+              case 7: // FMOV Hd = Xn
+                if (rmode != 0)
+                    return new Unknown64(machInst);
+                return new FmovCoreRegHX(machInst, rd, rn);
+              default:
+                return new Unknown64(machInst);
+            }
+            break;
+          default: // Warning! missing cases in switch statement above, that still need to be added
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
+    decodeFpDataProc(ExtMachInst machInst)
+    {
+        if (bits(machInst, 31) || bits(machInst, 29))
+            return new Unknown64(machInst);
+        RegIndex rd    = (RegIndex)(uint32_t)bits(machInst, 4, 0);
+        RegIndex rn    = (RegIndex)(uint32_t)bits(machInst, 9, 5);
+        RegIndex rm    = (RegIndex)(uint32_t)bits(machInst, 20, 16);
+        RegIndex ra    = (RegIndex)(uint32_t)bits(machInst, 14, 10);
+        uint8_t switchVal = (bits(machInst, 23, 21) << 1) |
+                            (bits(machInst, 15)     << 0);
+        switch (switchVal) {
+          case 0x0: // FMADD Sd = Sa + Sn*Sm
+            return new FMAddS(machInst, rd, rn, rm, ra);
+          case 0x1: // FMSUB Sd = Sa + (-Sn)*Sm
+            return new FMSubS(machInst, rd, rn, rm, ra);
+          case 0x2: // FNMADD Sd = (-Sa) + (-Sn)*Sm
+            return new FNMAddS(machInst, rd, rn, rm, ra);
+          case 0x3: // FNMSUB Sd = (-Sa) + Sn*Sm
+            return new FNMSubS(machInst, rd, rn, rm, ra);
+          case 0x4: // FMADD Dd = Da + Dn*Dm
+            return new FMAddD(machInst, rd, rn, rm, ra);
+          case 0x5: // FMSUB Dd = Da + (-Dn)*Dm
+            return new FMSubD(machInst, rd, rn, rm, ra);
+          case 0x6: // FNMADD Dd = (-Da) + (-Dn)*Dm
+            return new FNMAddD(machInst, rd, rn, rm, ra);
+          case 0x7: // FNMSUB Dd = (-Da) + Dn*Dm
+            return new FNMSubD(machInst, rd, rn, rm, ra);
+          case 0xc: // FMADD Hd = Ha + Hn*Hm
+            return new FMAddH(machInst, rd, rn, rm, ra);
+          case 0xd: // FMSUB Hd = Ha + (-Hn)*Hm
+            return new FMSubH(machInst, rd, rn, rm, ra);
+          case 0xe: // FNMADD Hd = (-Ha) + (-Hn)*Hm
+            return new FNMAddH(machInst, rd, rn, rm, ra);
+          case 0xf: // FNMSUB Hd = (-Ha) + Hn*Hm
+            return new FNMSubH(machInst, rd, rn, rm, ra);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
+    decodeFpCondSel(ExtMachInst machInst)
+    {
+        if (bits(machInst, 31) || bits(machInst, 29))
+            return new Unknown64(machInst);
+        uint8_t type = bits(machInst, 23, 22);
+        RegIndex rd = (RegIndex)(uint32_t)bits(machInst,  4,  0);
+        RegIndex rn = (RegIndex)(uint32_t)bits(machInst,  9,  5);
+        RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 20, 16);
+        ConditionCode cond =
+            (ConditionCode)(uint8_t)(bits(machInst, 15, 12));
+        if (type == 0) // FCSEL Sd = if cond then Sn else Sm
+            return new FCSelS(machInst, rd, rn, rm, cond);
+        else if (type == 1) // FCSEL Dd = if cond then Dn else Dm
+            return new FCSelD(machInst, rd, rn, rm, cond);
+        else if (type == 3) // FCSEL Hd = if cond then Hn else Hm
+            return new FCSelH(machInst, rd, rn, rm, cond);
+        else
+            return new Unknown64(machInst);
+    }
+
+    StaticInstPtr
+    decodeFpCondCompare(ExtMachInst machInst)
+    {
+        if (bits(machInst, 31) ||
+            bits(machInst, 29)) {
+            return new Unknown64(machInst);
+        }
+        RegIndex rm = (RegIndex)(uint32_t) bits(machInst, 20, 16);
+        RegIndex rn = (RegIndex)(uint32_t) bits(machInst, 9, 5);
+        uint8_t    imm = (RegIndex)(uint32_t) bits(machInst, 3, 0);
+        ConditionCode cond =
+            (ConditionCode)(uint8_t)(bits(machInst, 15, 12));
+        uint8_t switchVal = (bits(machInst, 4) << 0) |
+                            (bits(machInst, 23, 22) << 1);
+        // 31:23=000111100, 21=1, 11:10=01
+        switch (switchVal) {
+          case 0x0:
+            // FCCMP flags = if cond the compareQuiet(Sn,Sm) else #nzcv
+            return new FCCmpRegS(machInst, rn, rm, cond, imm);
+          case 0x1:
+            // FCCMP flags = if cond then compareSignaling(Sn,Sm)
+            //               else #nzcv
+            return new FCCmpERegS(machInst, rn, rm, cond, imm);
+          case 0x2:
+            // FCCMP flags = if cond then compareQuiet(Dn,Dm) else #nzcv
+            return new FCCmpRegD(machInst, rn, rm, cond, imm);
+          case 0x3:
+            // FCCMP flags = if cond then compareSignaling(Dn,Dm)
+            //               else #nzcv
+            return new FCCmpERegD(machInst, rn, rm, cond, imm);
+          case 0x6:
+            // FCCMP flags = if cond then compareQuiet(Hn,Hm) else #nzcv
+            return new FCCmpRegH(machInst, rn, rm, cond, imm);
+          case 0x7:
+            // FCCMP flags = if cond then compareSignaling(Hn,Hm)
+            //               else #nzcv
+            return new FCCmpERegH(machInst, rn, rm, cond, imm);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
+    decodeFpDataProc2Source(ExtMachInst machInst)
+    {
+        if (bits(machInst, 31) ||
+                bits(machInst, 29)) {
+            return new Unknown64(machInst);
+        }
+        RegIndex rd = (RegIndex)(uint32_t)bits(machInst,  4,  0);
+        RegIndex rn = (RegIndex)(uint32_t)bits(machInst,  9,  5);
+        RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 20, 16);
+        uint8_t switchVal = (bits(machInst, 15, 12) << 0) |
+                            (bits(machInst, 23, 22) << 4);
+        switch (switchVal) {
+          case 0x00: // FMUL Sd = Sn * Sm
+            return new FMulS(machInst, rd, rn, rm);
+          case 0x10: // FMUL Dd = Dn * Dm
+            return new FMulD(machInst, rd, rn, rm);
+          case 0x30: // FMUL Hd = Hn * Hm
+            return new FMulH(machInst, rd, rn, rm);
+          case 0x01: // FDIV Sd = Sn / Sm
+            return new FDivS(machInst, rd, rn, rm);
+          case 0x11: // FDIV Dd = Dn / Dm
+            return new FDivD(machInst, rd, rn, rm);
+          case 0x31: // FDIV Hd = Hn / Hm
+            return new FDivH(machInst, rd, rn, rm);
+          case 0x02: // FADD Sd = Sn + Sm
+            return new FAddS(machInst, rd, rn, rm);
+          case 0x12: // FADD Dd = Dn + Dm
+            return new FAddD(machInst, rd, rn, rm);
+          case 0x32: // FADD Hd = Hn + Hm
+            return new FAddH(machInst, rd, rn, rm);
+          case 0x03: // FSUB Sd = Sn - Sm
+            return new FSubS(machInst, rd, rn, rm);
+          case 0x13: // FSUB Dd = Dn - Dm
+            return new FSubD(machInst, rd, rn, rm);
+          case 0x33: // FSUB Hd = Hn - Hm
+            return new FSubH(machInst, rd, rn, rm);
+          case 0x04: // FMAX Sd = max(Sn, Sm)
+            return new FMaxS(machInst, rd, rn, rm);
+          case 0x14: // FMAX Dd = max(Dn, Dm)
+            return new FMaxD(machInst, rd, rn, rm);
+          case 0x34: // FMAX Hd = max(Hn, Hm)
+            return new FMaxH(machInst, rd, rn, rm);
+          case 0x05: // FMIN Sd = min(Sn, Sm)
+            return new FMinS(machInst, rd, rn, rm);
+          case 0x15: // FMIN Dd = min(Dn, Dm)
+            return new FMinD(machInst, rd, rn, rm);
+          case 0x35: // FMIN Hd = min(Hn, Hm)
+            return new FMinH(machInst, rd, rn, rm);
+          case 0x06: // FMAXNM Sd = maxNum(Sn, Sm)
+            return new FMaxNMS(machInst, rd, rn, rm);
+          case 0x16: // FMAXNM Dd = maxNum(Dn, Dm)
+            return new FMaxNMD(machInst, rd, rn, rm);
+          case 0x36: // FMAXNM Hd = maxNum(Hn, Hm)
+            return new FMaxNMH(machInst, rd, rn, rm);
+          case 0x07: // FMINNM Sd = minNum(Sn, Sm)
+            return new FMinNMS(machInst, rd, rn, rm);
+          case 0x17: // FMINNM Dd = minNum(Dn, Dm)
+            return new FMinNMD(machInst, rd, rn, rm);
+          case 0x37: // FMINNM Hd = minNum(Hn, Hm)
+            return new FMinNMH(machInst, rd, rn, rm);
+          case 0x08: // FNMUL Sd = -(Sn * Sm)
+            return new FNMulS(machInst, rd, rn, rm);
+          case 0x18: // FNMUL Dd = -(Dn * Dm)
+            return new FNMulD(machInst, rd, rn, rm);
+          case 0x38: // FNMUL Hd = -(Hn * Hm)
+            return new FNMulH(machInst, rd, rn, rm);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
+    decodeFpCompare(ExtMachInst machInst)
+    {
+        if (bits(machInst, 31) ||
+                bits(machInst, 29) ||
+                bits(machInst, 15, 14) ||
+                bits(machInst, 2, 0)) {
+            return new Unknown64(machInst);
+        }
+        uint8_t switchVal = (bits(machInst, 4, 3) << 0) |
+                            (bits(machInst, 23, 22) << 2);
+        RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 9, 5);
+        RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 20, 16);
+
+        // 28:23=000111100, 21=1, 15:10=001000, 2:0=000
+        switch (switchVal) {
+          case 0x0:
+            // FCMP flags = compareQuiet(Sn,Sm)
+            return new FCmpRegS(machInst, rn, rm);
+          case 0x1:
+            // FCMP flags = compareQuiet(Sn,0.0)
+            return new FCmpImmS(machInst, rn, 0);
+          case 0x2:
+            // FCMPE flags = compareSignaling(Sn,Sm)
+            return new FCmpERegS(machInst, rn, rm);
+          case 0x3:
+            // FCMPE flags = compareSignaling(Sn,0.0)
+            return new FCmpEImmS(machInst, rn, 0);
+          case 0x4:
+            // FCMP flags = compareQuiet(Dn,Dm)
+            return new FCmpRegD(machInst, rn, rm);
+          case 0x5:
+            // FCMP flags = compareQuiet(Dn,0.0)
+            return new FCmpImmD(machInst, rn, 0);
+          case 0x6:
+            // FCMPE flags = compareSignaling(Dn,Dm)
+            return new FCmpERegD(machInst, rn, rm);
+          case 0x7:
+            // FCMPE flags = compareSignaling(Dn,0.0)
+            return new FCmpEImmD(machInst, rn, 0);
+          case 0xc:
+            // FCMP flags = compareQuiet(Hn,Hm)
+            return new FCmpRegH(machInst, rn, rm);
+          case 0xd:
+            // FCMP flags = compareQuiet(Hn,0.0)
+            return new FCmpImmH(machInst, rn, 0);
+          case 0xe:
+            // FCMPE flags = compareSignaling(Hn,Hm)
+            return new FCmpERegH(machInst, rn, rm);
+          case 0xf:
+            // FCMPE flags = compareSignaling(Hn,0.0)
+            return new FCmpEImmH(machInst, rn, 0);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
+    StaticInstPtr
+    decodeFpImmediate(ExtMachInst machInst)
+    {
+        if (bits(machInst, 31) ||
+                bits(machInst, 29) ||
+                bits(machInst, 9, 5)) {
+            return new Unknown64(machInst);
+        }
+        uint8_t type   = bits(machInst, 23, 22);
+        uint8_t imm8   = bits(machInst, 20, 13);
+
+        RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 4, 0);
+
+        // 31:29=000, 28:24=11110, 21=1, 12:10=100
+        if (type == 0) {
+            // FMOV S[d] = imm8<7>:NOT(imm8<6>):Replicate(imm8<6>,5)
+            //             :imm8<5:0>:Zeros(19)
+            uint32_t imm = vfp_modified_imm(imm8,
+                                            FpDataType::Fp32);
+            return new FmovImmS(machInst, rd, imm);
+        } else if (type == 1) {
+            // FMOV D[d] = imm8<7>:NOT(imm8<6>):Replicate(imm8<6>,8)
+            //             :imm8<5:0>:Zeros(48)
+            uint64_t imm = vfp_modified_imm(imm8,
+                                            FpDataType::Fp64);
+            return new FmovImmD(machInst, rd, imm);
+        } else if (type == 3) {
+            // FMOV H[d] = imm8<7>:NOT(imm8<6>):Replicate(imm8<6>,8)
+            //             :imm8<5:0>:Zeros(48)
+            uint64_t imm = vfp_modified_imm(imm8,
+                                            FpDataType::Fp16);
+            return new FmovImmH(machInst, rd, imm);
         } else {
             return new Unknown64(machInst);
         }
-        return new FailUnimplemented("Unhandled Case3", machInst);
     }
-}
-}};
 
-
-output decoder {{
-namespace Aarch64
-{
     StaticInstPtr
-    // bit 30=0, 28:25=1111
-    decodeFp(ExtMachInst machInst)
+    decodeFpDataProc1Source(ExtMachInst machInst)
     {
-        if (bits(machInst, 24) == 1) {
-            if (bits(machInst, 31) || bits(machInst, 29))
-                return new Unknown64(machInst);
-            RegIndex rd    = (RegIndex)(uint32_t)bits(machInst, 4, 0);
-            RegIndex rn    = (RegIndex)(uint32_t)bits(machInst, 9, 5);
-            RegIndex rm    = (RegIndex)(uint32_t)bits(machInst, 20, 16);
-            RegIndex ra    = (RegIndex)(uint32_t)bits(machInst, 14, 10);
-            uint8_t switchVal = (bits(machInst, 23, 21) << 1) |
-                                (bits(machInst, 15)     << 0);
-            switch (switchVal) {
-              case 0x0: // FMADD Sd = Sa + Sn*Sm
-                return new FMAddS(machInst, rd, rn, rm, ra);
-              case 0x1: // FMSUB Sd = Sa + (-Sn)*Sm
-                return new FMSubS(machInst, rd, rn, rm, ra);
-              case 0x2: // FNMADD Sd = (-Sa) + (-Sn)*Sm
-                return new FNMAddS(machInst, rd, rn, rm, ra);
-              case 0x3: // FNMSUB Sd = (-Sa) + Sn*Sm
-                return new FNMSubS(machInst, rd, rn, rm, ra);
-              case 0x4: // FMADD Dd = Da + Dn*Dm
-                return new FMAddD(machInst, rd, rn, rm, ra);
-              case 0x5: // FMSUB Dd = Da + (-Dn)*Dm
-                return new FMSubD(machInst, rd, rn, rm, ra);
-              case 0x6: // FNMADD Dd = (-Da) + (-Dn)*Dm
-                return new FNMAddD(machInst, rd, rn, rm, ra);
-              case 0x7: // FNMSUB Dd = (-Da) + Dn*Dm
-                return new FNMSubD(machInst, rd, rn, rm, ra);
-              default:
-                return new Unknown64(machInst);
-            }
-        } else if (bits(machInst, 21) == 0) {
-            bool s = bits(machInst, 29);
-            if (s)
-                return new Unknown64(machInst);
-            uint8_t switchVal = bits(machInst, 20, 16);
-            uint8_t type      = bits(machInst, 23, 22);
-            uint8_t scale     = bits(machInst, 15, 10);
-            RegIndex rd    = (RegIndex)(uint32_t)bits(machInst, 4, 0);
-            RegIndex rn    = (RegIndex)(uint32_t)bits(machInst, 9, 5);
-            if (bits(machInst, 18, 17) == 3 && scale != 0)
-                return new Unknown64(machInst);
-            // 30:24=0011110, 21=0
-            switch (switchVal) {
-              case 0x00:
-                return new FailUnimplemented("fcvtns", machInst);
-              case 0x01:
-                return new FailUnimplemented("fcvtnu", machInst);
-              case 0x02:
-                switch ( (bits(machInst, 31) << 2) | type ) {
-                  case 0: // SCVTF Sd = convertFromInt(Wn/(2^fbits))
-                    return new FcvtSFixedFpSW(machInst, rd, rn, scale);
-                  case 1: // SCVTF Dd = convertFromInt(Wn/(2^fbits))
-                    return new FcvtSFixedFpDW(machInst, rd, rn, scale);
-                  case 4: // SCVTF Sd = convertFromInt(Xn/(2^fbits))
-                    return new FcvtSFixedFpSX(machInst, rd, rn, scale);
-                  case 5: // SCVTF Dd = convertFromInt(Xn/(2^fbits))
-                    return new FcvtSFixedFpDX(machInst, rd, rn, scale);
-                  default:
-                    return new Unknown64(machInst);
-                }
-              case 0x03:
-                switch ( (bits(machInst, 31) << 2) | type ) {
-                  case 0: // UCVTF Sd = convertFromInt(Wn/(2^fbits))
-                    return new FcvtUFixedFpSW(machInst, rd, rn, scale);
-                  case 1: // UCVTF Dd = convertFromInt(Wn/(2^fbits))
-                    return new FcvtUFixedFpDW(machInst, rd, rn, scale);
-                  case 4: // UCVTF Sd = convertFromInt(Xn/(2^fbits))
-                    return new FcvtUFixedFpSX(machInst, rd, rn, scale);
-                  case 5: // UCVTF Dd = convertFromInt(Xn/(2^fbits))
-                    return new FcvtUFixedFpDX(machInst, rd, rn, scale);
-                  default:
-                    return new Unknown64(machInst);
-                }
-              case 0x04:
-                return new FailUnimplemented("fcvtas", machInst);
-              case 0x05:
-                return new FailUnimplemented("fcvtau", machInst);
-              case 0x08:
-                return new FailUnimplemented("fcvtps", machInst);
-              case 0x09:
-                return new FailUnimplemented("fcvtpu", machInst);
-              case 0x0e:
-                return new FailUnimplemented("fmov elem. to 64", machInst);
-              case 0x0f:
-                return new FailUnimplemented("fmov 64 bit", machInst);
-              case 0x10:
-                return new FailUnimplemented("fcvtms", machInst);
-              case 0x11:
-                return new FailUnimplemented("fcvtmu", machInst);
-              case 0x18:
-                switch ( (bits(machInst, 31) << 2) | type ) {
-                  case 0: // FCVTZS Wd = convertToIntExactTowardZero(Sn*(2^fbits))
-                    return new FcvtFpSFixedSW(machInst, rd, rn, scale);
-                  case 1: // FCVTZS Wd = convertToIntExactTowardZero(Dn*(2^fbits))
-                    return new FcvtFpSFixedDW(machInst, rd, rn, scale);
-                  case 4: // FCVTZS Xd = convertToIntExactTowardZero(Sn*(2^fbits))
-                    return new FcvtFpSFixedSX(machInst, rd, rn, scale);
-                  case 5: // FCVTZS Xd = convertToIntExactTowardZero(Dn*(2^fbits))
-                    return new FcvtFpSFixedDX(machInst, rd, rn, scale);
-                  default:
-                    return new Unknown64(machInst);
-                }
-              case 0x19:
-                switch ( (bits(machInst, 31) << 2) | type ) {
-                  case 0: // FCVTZU Wd = convertToIntExactTowardZero(Sn*(2^fbits))
-                    return new FcvtFpUFixedSW(machInst, rd, rn, scale);
-                  case 1: // FCVTZU Wd = convertToIntExactTowardZero(Dn*(2^fbits))
-                    return new FcvtFpUFixedDW(machInst, rd, rn, scale);
-                  case 4: // FCVTZU Xd = convertToIntExactTowardZero(Sn*(2^fbits))
-                    return new FcvtFpUFixedSX(machInst, rd, rn, scale);
-                  case 5: // FCVTZU Xd = convertToIntExactTowardZero(Dn*(2^fbits))
-                    return new FcvtFpUFixedDX(machInst, rd, rn, scale);
-                  default:
-                    return new Unknown64(machInst);
-                }
-              default:
-                return new Unknown64(machInst);
-            }
-        } else {
-            // 30=0, 28:24=11110, 21=1
-            uint8_t type   = bits(machInst, 23, 22);
-            uint8_t imm8   = bits(machInst, 20, 13);
-            RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 4, 0);
-            RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 9, 5);
-            switch (bits(machInst, 11, 10)) {
-              case 0x0:
-                if (bits(machInst, 12) == 1) {
-                    if (bits(machInst, 31) ||
-                            bits(machInst, 29) ||
-                            bits(machInst, 9, 5)) {
-                        return new Unknown64(machInst);
-                    }
-                    // 31:29=000, 28:24=11110, 21=1, 12:10=100
-                    if (type == 0) {
-                        // FMOV S[d] = imm8<7>:NOT(imm8<6>):Replicate(imm8<6>,5)
-                        //             :imm8<5:0>:Zeros(19)
-                        uint32_t imm = vfp_modified_imm(imm8,
-                                                        FpDataType::Fp32);
-                        return new FmovImmS(machInst, rd, imm);
-                    } else if (type == 1) {
-                        // FMOV D[d] = imm8<7>:NOT(imm8<6>):Replicate(imm8<6>,8)
-                        //             :imm8<5:0>:Zeros(48)
-                        uint64_t imm = vfp_modified_imm(imm8,
-                                                        FpDataType::Fp64);
-                        return new FmovImmD(machInst, rd, imm);
-                    } else {
-                        return new Unknown64(machInst);
-                    }
-                } else if (bits(machInst, 13) == 1) {
-                    if (bits(machInst, 31) ||
-                            bits(machInst, 29) ||
-                            bits(machInst, 15, 14) ||
-                            bits(machInst, 23) ||
-                            bits(machInst, 2, 0)) {
-                        return new Unknown64(machInst);
-                    }
-                    uint8_t switchVal = (bits(machInst, 4, 3) << 0) |
-                                        (bits(machInst, 22) << 2);
-                    RegIndex rm = (RegIndex)(uint32_t)
-                                        bits(machInst, 20, 16);
-                    // 28:23=000111100, 21=1, 15:10=001000, 2:0=000
-                    switch (switchVal) {
-                      case 0x0:
-                        // FCMP flags = compareQuiet(Sn,Sm)
-                        return new FCmpRegS(machInst, rn, rm);
-                      case 0x1:
-                        // FCMP flags = compareQuiet(Sn,0.0)
-                        return new FCmpImmS(machInst, rn, 0);
-                      case 0x2:
-                        // FCMPE flags = compareSignaling(Sn,Sm)
-                        return new FCmpERegS(machInst, rn, rm);
-                      case 0x3:
-                        // FCMPE flags = compareSignaling(Sn,0.0)
-                        return new FCmpEImmS(machInst, rn, 0);
-                      case 0x4:
-                        // FCMP flags = compareQuiet(Dn,Dm)
-                        return new FCmpRegD(machInst, rn, rm);
-                      case 0x5:
-                        // FCMP flags = compareQuiet(Dn,0.0)
-                        return new FCmpImmD(machInst, rn, 0);
-                      case 0x6:
-                        // FCMPE flags = compareSignaling(Dn,Dm)
-                        return new FCmpERegD(machInst, rn, rm);
-                      case 0x7:
-                        // FCMPE flags = compareSignaling(Dn,0.0)
-                        return new FCmpEImmD(machInst, rn, 0);
-                      default:
-                        return new Unknown64(machInst);
-                    }
-                } else if (bits(machInst, 14) == 1) {
-                    if (bits(machInst, 31) || bits(machInst, 29))
-                        return new Unknown64(machInst);
-                    uint8_t opcode = bits(machInst, 20, 15);
-                    // Bits 31:24=00011110, 21=1, 14:10=10000
-                    switch (opcode) {
-                      case 0x0:
-                        if (type == 0)
-                            // FMOV Sd = Sn
-                            return new FmovRegS(machInst, rd, rn);
-                        else if (type == 1)
-                            // FMOV Dd = Dn
-                            return new FmovRegD(machInst, rd, rn);
-                        break;
-                      case 0x1:
-                        if (type == 0)
-                            // FABS Sd = abs(Sn)
-                            return new FAbsS(machInst, rd, rn);
-                        else if (type == 1)
-                            // FABS Dd = abs(Dn)
-                            return new FAbsD(machInst, rd, rn);
-                        break;
-                      case 0x2:
-                        if (type == 0)
-                            // FNEG Sd = -Sn
-                            return new FNegS(machInst, rd, rn);
-                        else if (type == 1)
-                            // FNEG Dd = -Dn
-                            return new FNegD(machInst, rd, rn);
-                        break;
-                      case 0x3:
-                        if (type == 0)
-                            // FSQRT Sd = sqrt(Sn)
-                            return new FSqrtS(machInst, rd, rn);
-                        else if (type == 1)
-                            // FSQRT Dd = sqrt(Dn)
-                            return new FSqrtD(machInst, rd, rn);
-                        break;
-                      case 0x4:
-                        if (type == 1)
-                            // FCVT Sd = convertFormat(Dn)
-                            return new FcvtFpDFpS(machInst, rd, rn);
-                        else if (type == 3)
-                            // FCVT Sd = convertFormat(Hn)
-                            return new FcvtFpHFpS(machInst, rd, rn);
-                        break;
-                      case 0x5:
-                        if (type == 0)
-                            // FCVT Dd = convertFormat(Sn)
-                            return new FCvtFpSFpD(machInst, rd, rn);
-                        else if (type == 3)
-                            // FCVT Dd = convertFormat(Hn)
-                            return new FcvtFpHFpD(machInst, rd, rn);
-                        break;
-                      case 0x7:
-                        if (type == 0)
-                            // FCVT Hd = convertFormat(Sn)
-                            return new FcvtFpSFpH(machInst, rd, rn);
-                        else if (type == 1)
-                            // FCVT Hd = convertFormat(Dn)
-                            return new FcvtFpDFpH(machInst, rd, rn);
-                        break;
-                      case 0x8:
-                        if (type == 0) // FRINTN Sd = roundToIntegralTiesToEven(Sn)
-                            return new FRIntNS(machInst, rd, rn);
-                        else if (type == 1) // FRINTN Dd = roundToIntegralTiesToEven(Dn)
-                            return new FRIntND(machInst, rd, rn);
-                        break;
-                      case 0x9:
-                        if (type == 0) // FRINTP Sd = roundToIntegralTowardPlusInf(Sn)
-                            return new FRIntPS(machInst, rd, rn);
-                        else if (type == 1) // FRINTP Dd = roundToIntegralTowardPlusInf(Dn)
-                            return new FRIntPD(machInst, rd, rn);
-                        break;
-                      case 0xa:
-                        if (type == 0) // FRINTM Sd = roundToIntegralTowardMinusInf(Sn)
-                            return new FRIntMS(machInst, rd, rn);
-                        else if (type == 1) // FRINTM Dd = roundToIntegralTowardMinusInf(Dn)
-                            return new FRIntMD(machInst, rd, rn);
-                        break;
-                      case 0xb:
-                        if (type == 0) // FRINTZ Sd = roundToIntegralTowardZero(Sn)
-                            return new FRIntZS(machInst, rd, rn);
-                        else if (type == 1) // FRINTZ Dd = roundToIntegralTowardZero(Dn)
-                            return new FRIntZD(machInst, rd, rn);
-                        break;
-                      case 0xc:
-                        if (type == 0) // FRINTA Sd = roundToIntegralTiesToAway(Sn)
-                            return new FRIntAS(machInst, rd, rn);
-                        else if (type == 1) // FRINTA Dd = roundToIntegralTiesToAway(Dn)
-                            return new FRIntAD(machInst, rd, rn);
-                        break;
-                      case 0xe:
-                        if (type == 0) // FRINTX Sd = roundToIntegralExact(Sn)
-                            return new FRIntXS(machInst, rd, rn);
-                        else if (type == 1) // FRINTX Dd = roundToIntegralExact(Dn)
-                            return new FRIntXD(machInst, rd, rn);
-                        break;
-                      case 0xf:
-                        if (type == 0) // FRINTI Sd = roundToIntegral(Sn)
-                            return new FRIntIS(machInst, rd, rn);
-                        else if (type == 1) // FRINTI Dd = roundToIntegral(Dn)
-                            return new FRIntID(machInst, rd, rn);
-                        break;
-                      default:
-                        return new Unknown64(machInst);
-                    }
-                    return new Unknown64(machInst);
-                } else if (bits(machInst, 15) == 1) {
-                    return new Unknown64(machInst);
-                } else {
-                    if (bits(machInst, 29))
-                        return new Unknown64(machInst);
-                    uint8_t rmode      = bits(machInst, 20, 19);
-                    uint8_t switchVal1 = bits(machInst, 18, 16);
-                    uint8_t switchVal2 = (type << 1) | bits(machInst, 31);
-                    // 30:24=0011110, 21=1, 15:10=000000
-                    switch (switchVal1) {
-                      case 0x0:
-                        switch ((switchVal2 << 2) | rmode) {
-                          case 0x0: //FCVTNS Wd = convertToIntExactTiesToEven(Sn)
-                            return new FcvtFpSIntWSN(machInst, rd, rn);
-                          case 0x1: //FCVTPS Wd = convertToIntExactTowardPlusInf(Sn)
-                            return new FcvtFpSIntWSP(machInst, rd, rn);
-                          case 0x2: //FCVTMS Wd = convertToIntExactTowardMinusInf(Sn)
-                            return new FcvtFpSIntWSM(machInst, rd, rn);
-                          case 0x3: //FCVTZS Wd = convertToIntExactTowardZero(Sn)
-                            return new FcvtFpSIntWSZ(machInst, rd, rn);
-                          case 0x4: //FCVTNS Xd = convertToIntExactTiesToEven(Sn)
-                            return new FcvtFpSIntXSN(machInst, rd, rn);
-                          case 0x5: //FCVTPS Xd = convertToIntExactTowardPlusInf(Sn)
-                            return new FcvtFpSIntXSP(machInst, rd, rn);
-                          case 0x6: //FCVTMS Xd = convertToIntExactTowardMinusInf(Sn)
-                            return new FcvtFpSIntXSM(machInst, rd, rn);
-                          case 0x7: //FCVTZS Xd = convertToIntExactTowardZero(Sn)
-                            return new FcvtFpSIntXSZ(machInst, rd, rn);
-                          case 0x8: //FCVTNS Wd = convertToIntExactTiesToEven(Dn)
-                            return new FcvtFpSIntWDN(machInst, rd, rn);
-                          case 0x9: //FCVTPS Wd = convertToIntExactTowardPlusInf(Dn)
-                            return new FcvtFpSIntWDP(machInst, rd, rn);
-                          case 0xA: //FCVTMS Wd = convertToIntExactTowardMinusInf(Dn)
-                            return new FcvtFpSIntWDM(machInst, rd, rn);
-                          case 0xB: //FCVTZS Wd = convertToIntExactTowardZero(Dn)
-                            return new FcvtFpSIntWDZ(machInst, rd, rn);
-                          case 0xC: //FCVTNS Xd = convertToIntExactTiesToEven(Dn)
-                            return new FcvtFpSIntXDN(machInst, rd, rn);
-                          case 0xD: //FCVTPS Xd = convertToIntExactTowardPlusInf(Dn)
-                            return new FcvtFpSIntXDP(machInst, rd, rn);
-                          case 0xE: //FCVTMS Xd = convertToIntExactTowardMinusInf(Dn)
-                            return new FcvtFpSIntXDM(machInst, rd, rn);
-                          case 0xF: //FCVTZS Xd = convertToIntExactTowardZero(Dn)
-                            return new FcvtFpSIntXDZ(machInst, rd, rn);
-                          default:
-                            return new Unknown64(machInst);
-                        }
-                      case 0x1:
-                        switch ((switchVal2 << 2) | rmode) {
-                          case 0x0: //FCVTNU Wd = convertToIntExactTiesToEven(Sn)
-                            return new FcvtFpUIntWSN(machInst, rd, rn);
-                          case 0x1: //FCVTPU Wd = convertToIntExactTowardPlusInf(Sn)
-                            return new FcvtFpUIntWSP(machInst, rd, rn);
-                          case 0x2: //FCVTMU Wd = convertToIntExactTowardMinusInf(Sn)
-                            return new FcvtFpUIntWSM(machInst, rd, rn);
-                          case 0x3: //FCVTZU Wd = convertToIntExactTowardZero(Sn)
-                            return new FcvtFpUIntWSZ(machInst, rd, rn);
-                          case 0x4: //FCVTNU Xd = convertToIntExactTiesToEven(Sn)
-                            return new FcvtFpUIntXSN(machInst, rd, rn);
-                          case 0x5: //FCVTPU Xd = convertToIntExactTowardPlusInf(Sn)
-                            return new FcvtFpUIntXSP(machInst, rd, rn);
-                          case 0x6: //FCVTMU Xd = convertToIntExactTowardMinusInf(Sn)
-                            return new FcvtFpUIntXSM(machInst, rd, rn);
-                          case 0x7: //FCVTZU Xd = convertToIntExactTowardZero(Sn)
-                            return new FcvtFpUIntXSZ(machInst, rd, rn);
-                          case 0x8: //FCVTNU Wd = convertToIntExactTiesToEven(Dn)
-                            return new FcvtFpUIntWDN(machInst, rd, rn);
-                          case 0x9: //FCVTPU Wd = convertToIntExactTowardPlusInf(Dn)
-                            return new FcvtFpUIntWDP(machInst, rd, rn);
-                          case 0xA: //FCVTMU Wd = convertToIntExactTowardMinusInf(Dn)
-                            return new FcvtFpUIntWDM(machInst, rd, rn);
-                          case 0xB: //FCVTZU Wd = convertToIntExactTowardZero(Dn)
-                            return new FcvtFpUIntWDZ(machInst, rd, rn);
-                          case 0xC: //FCVTNU Xd = convertToIntExactTiesToEven(Dn)
-                            return new FcvtFpUIntXDN(machInst, rd, rn);
-                          case 0xD: //FCVTPU Xd = convertToIntExactTowardPlusInf(Dn)
-                            return new FcvtFpUIntXDP(machInst, rd, rn);
-                          case 0xE: //FCVTMU Xd = convertToIntExactTowardMinusInf(Dn)
-                            return new FcvtFpUIntXDM(machInst, rd, rn);
-                          case 0xF: //FCVTZU Xd = convertToIntExactTowardZero(Dn)
-                            return new FcvtFpUIntXDZ(machInst, rd, rn);
-                          default:
-                            return new Unknown64(machInst);
-                        }
-                      case 0x2:
-                        if (rmode != 0)
-                            return new Unknown64(machInst);
-                        switch (switchVal2) {
-                          case 0: // SCVTF Sd = convertFromInt(Wn)
-                            return new FcvtWSIntFpS(machInst, rd, rn);
-                          case 1: // SCVTF Sd = convertFromInt(Xn)
-                            return new FcvtXSIntFpS(machInst, rd, rn);
-                          case 2: // SCVTF Dd = convertFromInt(Wn)
-                            return new FcvtWSIntFpD(machInst, rd, rn);
-                          case 3: // SCVTF Dd = convertFromInt(Xn)
-                            return new FcvtXSIntFpD(machInst, rd, rn);
-                          default:
-                            return new Unknown64(machInst);
-                        }
-                      case 0x3:
-                        switch (switchVal2) {
-                          case 0: // UCVTF Sd = convertFromInt(Wn)
-                            return new FcvtWUIntFpS(machInst, rd, rn);
-                          case 1: // UCVTF Sd = convertFromInt(Xn)
-                            return new FcvtXUIntFpS(machInst, rd, rn);
-                          case 2: // UCVTF Dd = convertFromInt(Wn)
-                            return new FcvtWUIntFpD(machInst, rd, rn);
-                          case 3: // UCVTF Dd = convertFromInt(Xn)
-                            return new FcvtXUIntFpD(machInst, rd, rn);
-                          default:
-                            return new Unknown64(machInst);
-                        }
-                      case 0x4:
-                        if (rmode != 0)
-                            return new Unknown64(machInst);
-                        switch (switchVal2) {
-                          case 0: // FCVTAS Wd = convertToIntExactTiesToAway(Sn)
-                            return new FcvtFpSIntWSA(machInst, rd, rn);
-                          case 1: // FCVTAS Xd = convertToIntExactTiesToAway(Sn)
-                            return new FcvtFpSIntXSA(machInst, rd, rn);
-                          case 2: // FCVTAS Wd = convertToIntExactTiesToAway(Dn)
-                            return new FcvtFpSIntWDA(machInst, rd, rn);
-                          case 3: // FCVTAS Wd = convertToIntExactTiesToAway(Dn)
-                            return new FcvtFpSIntXDA(machInst, rd, rn);
-                          default:
-                            return new Unknown64(machInst);
-                        }
-                      case 0x5:
-                        switch (switchVal2) {
-                          case 0: // FCVTAU Wd = convertToIntExactTiesToAway(Sn)
-                            return new FcvtFpUIntWSA(machInst, rd, rn);
-                          case 1: // FCVTAU Xd = convertToIntExactTiesToAway(Sn)
-                            return new FcvtFpUIntXSA(machInst, rd, rn);
-                          case 2: // FCVTAU Wd = convertToIntExactTiesToAway(Dn)
-                            return new FcvtFpUIntWDA(machInst, rd, rn);
-                          case 3: // FCVTAU Xd = convertToIntExactTiesToAway(Dn)
-                            return new FcvtFpUIntXDA(machInst, rd, rn);
-                          default:
-                            return new Unknown64(machInst);
-                        }
-                      case 0x06:
-                        switch (switchVal2) {
-                          case 0: // FMOV Wd = Sn
-                            if (rmode != 0)
-                                return new Unknown64(machInst);
-                            return new FmovRegCoreW(machInst, rd, rn);
-                          case 2:
-                            return new FJcvtFpSFixedDW(machInst, rd, rn);
-                          case 3: // FMOV Xd = Dn
-                            if (rmode != 0)
-                                return new Unknown64(machInst);
-                            return new FmovRegCoreX(machInst, rd, rn);
-                          case 5: // FMOV Xd = Vn<127:64>
-                            if (rmode != 1)
-                                return new Unknown64(machInst);
-                            return new FmovURegCoreX(machInst, rd, rn);
-                          default:
-                            return new Unknown64(machInst);
-                        }
-                        break;
-                      case 0x07:
-                        switch (switchVal2) {
-                          case 0: // FMOV Sd = Wn
-                            if (rmode != 0)
-                                return new Unknown64(machInst);
-                            return new FmovCoreRegW(machInst, rd, rn);
-                          case 3: // FMOV Xd = Dn
-                            if (rmode != 0)
-                                return new Unknown64(machInst);
-                            return new FmovCoreRegX(machInst, rd, rn);
-                          case 5: // FMOV Xd = Vn<127:64>
-                            if (rmode != 1)
-                                return new Unknown64(machInst);
-                            return new FmovUCoreRegX(machInst, rd, rn);
-                          default:
-                            return new Unknown64(machInst);
-                        }
-                        break;
-                      default: // Warning! missing cases in switch statement above, that still need to be added
-                        return new Unknown64(machInst);
-                    }
-                }
-                GEM5_UNREACHABLE;
-              case 0x1:
-              {
-                if (bits(machInst, 31) ||
-                    bits(machInst, 29) ||
-                    bits(machInst, 23)) {
-                    return new Unknown64(machInst);
-                }
-                RegIndex rm = (RegIndex)(uint32_t) bits(machInst, 20, 16);
-                RegIndex rn = (RegIndex)(uint32_t) bits(machInst, 9, 5);
-                uint8_t    imm = (RegIndex)(uint32_t) bits(machInst, 3, 0);
-                ConditionCode cond =
-                    (ConditionCode)(uint8_t)(bits(machInst, 15, 12));
-                uint8_t switchVal = (bits(machInst, 4) << 0) |
-                                    (bits(machInst, 22) << 1);
-                // 31:23=000111100, 21=1, 11:10=01
-                switch (switchVal) {
-                  case 0x0:
-                    // FCCMP flags = if cond the compareQuiet(Sn,Sm) else #nzcv
-                    return new FCCmpRegS(machInst, rn, rm, cond, imm);
-                  case 0x1:
-                    // FCCMP flags = if cond then compareSignaling(Sn,Sm)
-                    //               else #nzcv
-                    return new FCCmpERegS(machInst, rn, rm, cond, imm);
-                  case 0x2:
-                    // FCCMP flags = if cond then compareQuiet(Dn,Dm) else #nzcv
-                    return new FCCmpRegD(machInst, rn, rm, cond, imm);
-                  case 0x3:
-                    // FCCMP flags = if cond then compareSignaling(Dn,Dm)
-                    //               else #nzcv
-                    return new FCCmpERegD(machInst, rn, rm, cond, imm);
-                  default:
-                    return new Unknown64(machInst);
-                }
-              }
-              case 0x2:
-              {
-                if (bits(machInst, 31) ||
-                        bits(machInst, 29) ||
-                        bits(machInst, 23)) {
-                    return new Unknown64(machInst);
-                }
-                RegIndex rd = (RegIndex)(uint32_t)bits(machInst,  4,  0);
-                RegIndex rn = (RegIndex)(uint32_t)bits(machInst,  9,  5);
-                RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 20, 16);
-                uint8_t switchVal = (bits(machInst, 15, 12) << 0) |
-                                    (bits(machInst, 22) << 4);
-                switch (switchVal) {
-                  case 0x00: // FMUL Sd = Sn * Sm
-                    return new FMulS(machInst, rd, rn, rm);
-                  case 0x10: // FMUL Dd = Dn * Dm
-                    return new FMulD(machInst, rd, rn, rm);
-                  case 0x01: // FDIV Sd = Sn / Sm
-                    return new FDivS(machInst, rd, rn, rm);
-                  case 0x11: // FDIV Dd = Dn / Dm
-                    return new FDivD(machInst, rd, rn, rm);
-                  case 0x02: // FADD Sd = Sn + Sm
-                    return new FAddS(machInst, rd, rn, rm);
-                  case 0x12: // FADD Dd = Dn + Dm
-                    return new FAddD(machInst, rd, rn, rm);
-                  case 0x03: // FSUB Sd = Sn - Sm
-                    return new FSubS(machInst, rd, rn, rm);
-                  case 0x13: // FSUB Dd = Dn - Dm
-                    return new FSubD(machInst, rd, rn, rm);
-                  case 0x04: // FMAX Sd = max(Sn, Sm)
-                    return new FMaxS(machInst, rd, rn, rm);
-                  case 0x14: // FMAX Dd = max(Dn, Dm)
-                    return new FMaxD(machInst, rd, rn, rm);
-                  case 0x05: // FMIN Sd = min(Sn, Sm)
-                    return new FMinS(machInst, rd, rn, rm);
-                  case 0x15: // FMIN Dd = min(Dn, Dm)
-                    return new FMinD(machInst, rd, rn, rm);
-                  case 0x06: // FMAXNM Sd = maxNum(Sn, Sm)
-                    return new FMaxNMS(machInst, rd, rn, rm);
-                  case 0x16: // FMAXNM Dd = maxNum(Dn, Dm)
-                    return new FMaxNMD(machInst, rd, rn, rm);
-                  case 0x07: // FMINNM Sd = minNum(Sn, Sm)
-                    return new FMinNMS(machInst, rd, rn, rm);
-                  case 0x17: // FMINNM Dd = minNum(Dn, Dm)
-                    return new FMinNMD(machInst, rd, rn, rm);
-                  case 0x08: // FNMUL Sd = -(Sn * Sm)
-                    return new FNMulS(machInst, rd, rn, rm);
-                  case 0x18: // FNMUL Dd = -(Dn * Dm)
-                    return new FNMulD(machInst, rd, rn, rm);
-                  default:
-                    return new Unknown64(machInst);
-                }
-              }
-              case 0x3:
-              {
-                if (bits(machInst, 31) || bits(machInst, 29))
-                    return new Unknown64(machInst);
-                uint8_t type = bits(machInst, 23, 22);
-                RegIndex rd = (RegIndex)(uint32_t)bits(machInst,  4,  0);
-                RegIndex rn = (RegIndex)(uint32_t)bits(machInst,  9,  5);
-                RegIndex rm = (RegIndex)(uint32_t)bits(machInst, 20, 16);
-                ConditionCode cond =
-                    (ConditionCode)(uint8_t)(bits(machInst, 15, 12));
-                if (type == 0) // FCSEL Sd = if cond then Sn else Sm
-                    return new FCSelS(machInst, rd, rn, rm, cond);
-                else if (type == 1) // FCSEL Dd = if cond then Dn else Dm
-                    return new FCSelD(machInst, rd, rn, rm, cond);
-                else
-                    return new Unknown64(machInst);
-              }
-              default:
-                GEM5_UNREACHABLE;
-            }
-        }
-        GEM5_UNREACHABLE;
-    }
-}
-}};
+        if (bits(machInst, 31) || bits(machInst, 29))
+            return new Unknown64(machInst);
 
-output decoder {{
-namespace Aarch64
-{
-    StaticInstPtr
-    decodeAdvSIMDScalar(ExtMachInst machInst)
-    {
-        if (bits(machInst, 24) == 1) {
-            if (bits(machInst, 10) == 0) {
-                return decodeNeonScIndexedElem(machInst);
-            } else if (bits(machInst, 23) == 0) {
-                return decodeNeonScShiftByImm(machInst);
-            }
-        } else if (bits(machInst, 21) == 1) {
-            if (bits(machInst, 10) == 1) {
-                return decodeNeonSc3Same(machInst);
-            } else if (bits(machInst, 11) == 0) {
-                return decodeNeonSc3Diff(machInst);
-            } else if (bits(machInst, 20, 17) == 0x0) {
-                return decodeNeonSc2RegMisc(machInst);
-            } else if (bits(machInst, 20, 17) == 0x4) {
-                return decodeCryptoTwoRegSHA(machInst);
-            } else if (bits(machInst, 20, 17) == 0x8) {
-                return decodeNeonScPwise(machInst);
-            } else {
-                return new Unknown64(machInst);
-            }
-        } else if (bits(machInst, 15) && bits(machInst, 10) == 1) {
-            return decodeNeonSc3SameExtra(machInst);
-        } else if (bits(machInst, 23, 22) == 0 &&
-                   bits(machInst, 15) == 0) {
-            if (bits(machInst, 10) == 1) {
-                return decodeNeonScCopy(machInst);
-            } else {
-                return decodeCryptoThreeRegSHA(machInst);
-            }
-        } else {
+        uint8_t type   = bits(machInst, 23, 22);
+        uint8_t opcode = bits(machInst, 20, 15);
+
+        RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 9, 5);
+        RegIndex rd = (RegIndex)(uint32_t)bits(machInst, 4, 0);
+
+        // Bits 31:24=00011110, 21=1, 14:10=10000
+        switch (opcode) {
+          case 0x0:
+            if (type == 0)
+                // FMOV Sd = Sn
+                return new FmovRegS(machInst, rd, rn);
+            else if (type == 1)
+                // FMOV Dd = Dn
+                return new FmovRegD(machInst, rd, rn);
+            else if (type == 3)
+                // FMOV Hd = Hn
+                return new FmovRegH(machInst, rd, rn);
+            break;
+          case 0x1:
+            if (type == 0)
+                // FABS Sd = abs(Sn)
+                return new FAbsS(machInst, rd, rn);
+            else if (type == 1)
+                // FABS Dd = abs(Dn)
+                return new FAbsD(machInst, rd, rn);
+            else if (type == 3)
+                // FABS Hd = abs(Hn)
+                return new FAbsH(machInst, rd, rn);
+            break;
+          case 0x2:
+            if (type == 0)
+                // FNEG Sd = -Sn
+                return new FNegS(machInst, rd, rn);
+            else if (type == 1)
+                // FNEG Dd = -Dn
+                return new FNegD(machInst, rd, rn);
+            else if (type == 3)
+                // FNEG Hd = -Hn
+                return new FNegH(machInst, rd, rn);
+            break;
+          case 0x3:
+            if (type == 0)
+                // FSQRT Sd = sqrt(Sn)
+                return new FSqrtS(machInst, rd, rn);
+            else if (type == 1)
+                // FSQRT Dd = sqrt(Dn)
+                return new FSqrtD(machInst, rd, rn);
+            else if (type == 3)
+                // FSQRT Hd = sqrt(Hn)
+                return new FSqrtH(machInst, rd, rn);
+            break;
+          case 0x4:
+            if (type == 1)
+                // FCVT Sd = convertFormat(Dn)
+                return new FcvtFpDFpS(machInst, rd, rn);
+            else if (type == 3)
+                // FCVT Sd = convertFormat(Hn)
+                return new FcvtFpHFpS(machInst, rd, rn);
+            break;
+          case 0x5:
+            if (type == 0)
+                // FCVT Dd = convertFormat(Sn)
+                return new FCvtFpSFpD(machInst, rd, rn);
+            else if (type == 3)
+                // FCVT Dd = convertFormat(Hn)
+                return new FcvtFpHFpD(machInst, rd, rn);
+            break;
+          case 0x6:
+            if (type == 1)
+                // FCVT Hd = convertFormat(Sn)
+                return new FcvtFpSBf(machInst, rd, rn);
+            break;
+          case 0x7:
+            if (type == 0)
+                // FCVT Hd = convertFormat(Sn)
+                return new FcvtFpSFpH(machInst, rd, rn);
+            else if (type == 1)
+                // FCVT Hd = convertFormat(Dn)
+                return new FcvtFpDFpH(machInst, rd, rn);
+            break;
+          case 0x8:
+            if (type == 0) // FRINTN Sd = roundToIntegralTiesToEven(Sn)
+                return new FRIntNS(machInst, rd, rn);
+            else if (type == 1) // FRINTN Dd = roundToIntegralTiesToEven(Dn)
+                return new FRIntND(machInst, rd, rn);
+            else if (type == 3) // FRINTN Hd = roundToIntegralTiesToEven(Hn)
+                return new FRIntNH(machInst, rd, rn);
+            break;
+          case 0x9:
+            if (type == 0) // FRINTP Sd = roundToIntegralTowardPlusInf(Sn)
+                return new FRIntPS(machInst, rd, rn);
+            else if (type == 1) // FRINTP Dd = roundToIntegralTowardPlusInf(Dn)
+                return new FRIntPD(machInst, rd, rn);
+            else if (type == 3) // FRINTP Hd = roundToIntegralTowardPlusInf(Hn)
+                return new FRIntPH(machInst, rd, rn);
+            break;
+          case 0xa:
+            if (type == 0) // FRINTM Sd = roundToIntegralTowardMinusInf(Sn)
+                return new FRIntMS(machInst, rd, rn);
+            else if (type == 1) // FRINTM Dd = roundToIntegralTowardMinusInf(Dn)
+                return new FRIntMD(machInst, rd, rn);
+            else if (type == 3) // FRINTM Hd = roundToIntegralTowardMinusInf(Hn)
+                return new FRIntMH(machInst, rd, rn);
+            break;
+          case 0xb:
+            if (type == 0) // FRINTZ Sd = roundToIntegralTowardZero(Sn)
+                return new FRIntZS(machInst, rd, rn);
+            else if (type == 1) // FRINTZ Dd = roundToIntegralTowardZero(Dn)
+                return new FRIntZD(machInst, rd, rn);
+            else if (type == 3) // FRINTZ Hd = roundToIntegralTowardZero(Hn)
+                return new FRIntZH(machInst, rd, rn);
+            break;
+          case 0xc:
+            if (type == 0) // FRINTA Sd = roundToIntegralTiesToAway(Sn)
+                return new FRIntAS(machInst, rd, rn);
+            else if (type == 1) // FRINTA Dd = roundToIntegralTiesToAway(Dn)
+                return new FRIntAD(machInst, rd, rn);
+            else if (type == 3) // FRINTA Hd = roundToIntegralTiesToAway(Hn)
+                return new FRIntAH(machInst, rd, rn);
+            break;
+          case 0xe:
+            if (type == 0) // FRINTX Sd = roundToIntegralExact(Sn)
+                return new FRIntXS(machInst, rd, rn);
+            else if (type == 1) // FRINTX Dd = roundToIntegralExact(Dn)
+                return new FRIntXD(machInst, rd, rn);
+            else if (type == 3) // FRINTX Hd = roundToIntegralExact(Hn)
+                return new FRIntXH(machInst, rd, rn);
+            break;
+          case 0xf:
+            if (type == 0) // FRINTI Sd = roundToIntegral(Sn)
+                return new FRIntIS(machInst, rd, rn);
+            else if (type == 1) // FRINTI Dd = roundToIntegral(Dn)
+                return new FRIntID(machInst, rd, rn);
+            else if (type == 3) // FRINTI Hd = roundToIntegral(Hn)
+                return new FRIntIH(machInst, rd, rn);
+            break;
+          case 0x10:
+            if (type == 0) // FRINT32Z
+                return new FRInt32ZS(machInst, rd, rn);
+            else if (type == 1) // FRINT32Z
+                return new FRInt32ZD(machInst, rd, rn);
+            break;
+          case 0x11:
+            if (type == 0) // FRINT32X
+                return new FRInt32XS(machInst, rd, rn);
+            else if (type == 1) // FRINT32X
+                return new FRInt32XD(machInst, rd, rn);
+            break;
+          case 0x12:
+            if (type == 0) // FRINT64Z
+                return new FRInt64ZS(machInst, rd, rn);
+            else if (type == 1) // FRINT64Z
+                return new FRInt64ZD(machInst, rd, rn);
+            break;
+          case 0x13:
+            if (type == 0) // FRINT64X
+                return new FRInt64XS(machInst, rd, rn);
+            else if (type == 1) // FRINT64X
+                return new FRInt64XD(machInst, rd, rn);
+            break;
+          default:
             return new Unknown64(machInst);
         }
-        return new FailUnimplemented("Unhandled Case6", machInst);
+        return new Unknown64(machInst);
     }
 }
 }};
 
 output decoder {{
+    inline constexpr auto isCryptoAES = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','1','0','0', // op0
+        '1','1','1',
+        '0','X', // op1
+        'X','1','0','1', // op2
+        '0','0','X','X','X','X','X','1','0'>(); // op3
+
+    inline constexpr auto isCrypto3SHA = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','1','0','1', // op0
+        '1','1','1',
+        '0','X', // op1
+        'X','0','X','X', // op2
+        'X','X','X','0','X','X','X','0','0'>(); // op3
+
+    inline constexpr auto isCrypto2SHA = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','1','0','1', // op0
+        '1','1','1',
+        '0','X', // op1
+        'X','1','0','1', // op2
+        '0','0','X','X','X','X','X','1','0'>(); // op3
+
+    inline constexpr auto isAdvSIMDScCopy = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','1','X','1', // op0
+        '1','1','1',
+        '0','0', // op1
+        '0','0','X','X', // op2
+        'X','X','X','0','X','X','X','X','1'>(); // op3
+
+    inline constexpr auto isAdvSIMDSc3SameFp16 = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','1','X','1', // op0
+        '1','1','1',
+        '0','X', // op1
+        '1','0','X','X', // op2
+        'X','X','X','0','0','X','X','X','1'>(); // op3
+
+    inline constexpr auto isAdvSIMDSc2RegMiscFp16 = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','1','X','1', // op0
+        '1','1','1',
+        '0','X', // op1
+        '1','1','1','1', // op2
+        '0','0','X','X','X','X','X','1','0'>(); // op3
+
+    inline constexpr auto isAdvSIMDSc3SameExtra = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','1','X','1', // op0
+        '1','1','1',
+        '0','X', // op1
+        'X','0','X','X', // op2
+        'X','X','X','1','X','X','X','X','1'>(); // op3
+
+    inline constexpr auto isAdvSIMDSc2RegMisc = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','1','X','1', // op0
+        '1','1','1',
+        '0','X', // op1
+        'X','1','0','0', // op2
+        '0','0','X','X','X','X','X','1','0'>(); // op3
+
+    inline constexpr auto isAdvSIMDSc2Pwise = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','1','X','1', // op0
+        '1','1','1',
+        '0','X', // op1
+        'X','1','1','0', // op2
+        '0','0','X','X','X','X','X','1','0'>(); // op3
+
+    inline constexpr auto isAdvSIMDSc3Diff = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','1','X','1', // op0
+        '1','1','1',
+        '0','X', // op1
+        'X','1','X','X', // op2
+        'X','X','X','X','X','X','X','0','0'>(); // op3
+
+    inline constexpr auto isAdvSIMDSc3Same = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','1','X','1', // op0
+        '1','1','1',
+        '0','X', // op1
+        'X','1','X','X', // op2
+        'X','X','X','X','X','X','X','X','1'>(); // op3
+
+    inline constexpr auto isAdvSIMDScShiftByImm = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','1','X','1', // op0
+        '1','1','1',
+        '1','0', // op1
+        'X','X','X','X', // op2
+        'X','X','X','X','X','X','X','X','1'>(); // op3
+
+    inline constexpr auto isAdvSIMDScIndexedElem = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','1','X','1', // op0
+        '1','1','1',
+        '1','X', // op1
+        'X','X','X','X', // op2
+        'X','X','X','X','X','X','X','X','0'>(); // op3
+
+    inline constexpr auto isAdvSIMDTblLookup = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','X','0','0', // op0
+        '1','1','1',
+        '0','X', // op1
+        'X','0','X','X', // op2
+        'X','X','X','0','X','X','X','0','0'>(); // op3
+
+    inline constexpr auto isAdvSIMDPermute = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','X','0','0', // op0
+        '1','1','1',
+        '0','X', // op1
+        'X','0','X','X', // op2
+        'X','X','X','0','X','X','X','1','0'>(); // op3
+
+    inline constexpr auto isAdvSIMDExtract = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','X','1','0', // op0
+        '1','1','1',
+        '0','X', // op1
+        'X','0','X','X', // op2
+        'X','X','X','0','X','X','X','X','0'>(); // op3
+
+    inline constexpr auto isAdvSIMDCopy = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','X','X','0', // op0
+        '1','1','1',
+        '0','0', // op1
+        '0','0','X','X', // op2
+        'X','X','X','0','X','X','X','X','1'>(); // op3
+
+    inline constexpr auto isAdvSIMD3SameFp16 = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','X','X','0', // op0
+        '1','1','1',
+        '0','X', // op1
+        '1','0','X','X', // op2
+        'X','X','X','0','0','X','X','X','1'>(); // op3
+
+    inline constexpr auto isAdvSIMD2RegMiscFp16 = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','X','X','0', // op0
+        '1','1','1',
+        '0','X', // op1
+        '1','1','1','1', // op2
+        '0','0','X','X','X','X','X','1','0'>(); // op3
+
+    inline constexpr auto isAdvSIMD3RegExt = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','X','X','0', // op0
+        '1','1','1',
+        '0','X', // op1
+        'X','0','X','X', // op2
+        'X','X','X','1','X','X','X','X','1'>(); // op3
+
+    inline constexpr auto isAdvSIMD2RegMisc = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','X','X','0', // op0
+        '1','1','1',
+        '0','X', // op1
+        'X','1','0','0', // op2
+        '0','0','X','X','X','X','X','1','0'>(); // op3
+
+    inline constexpr auto isAdvSIMDAcrossLanes = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','X','X','0', // op0
+        '1','1','1',
+        '0','X', // op1
+        'X','1','1','0', // op2
+        '0','0','X','X','X','X','X','1','0'>(); // op3
+
+    inline constexpr auto isAdvSIMD3Diff = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','X','X','0', // op0
+        '1','1','1',
+        '0','X', // op1
+        'X','1','X','X', // op2
+        'X','X','X','X','X','X','X','0','0'>(); // op3
+
+    inline constexpr auto isAdvSIMD3Same = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','X','X','0', // op0
+        '1','1','1',
+        '0','X', // op1
+        'X','1','X','X', // op2
+        'X','X','X','X','X','X','X','X','1'>(); // op3
+
+    inline constexpr auto isAdvSIMDModImm = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','X','X','0', // op0
+        '1','1','1',
+        '1','0', // op1
+        '0','0','0','0', // op2
+        'X','X','X','X','X','X','X','X','1'>(); // op3
+
+    inline constexpr auto isAdvSIMDShiftByImm = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','X','X','0', // op0
+        '1','1','1',
+        '1','0', // op1
+        'X','X','X','X', // op2
+        'X','X','X','X','X','X','X','X','1'>(); // op3
+
+    inline constexpr auto isAdvSIMDIndexedElem = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '0','X','X','0', // op0
+        '1','1','1',
+        '1','X', // op1
+        'X','X','X','X', // op2
+        'X','X','X','X','X','X','X','X','0'>(); // op3
+
+    inline constexpr auto isConvFloatPFixedP = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        'X','0','X','1', // op0
+        '1','1','1',
+        '0','X', // op1
+        'X','0','X','X', // op2
+        'X','X','X','X','X','X','X','X','X'>(); // op3
+
+    inline constexpr auto isConvFloatPInt = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        'X','0','X','1', // op0
+        '1','1','1',
+        '0','X', // op1
+        'X','1','X','X', // op2
+        'X','X','X','0','0','0','0','0','0'>(); // op3
+
+    inline constexpr auto isFpDataProc1Source = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        'X','0','X','1', // op0
+        '1','1','1',
+        '0','X', // op1
+        'X','1','X','X', // op2
+        'X','X','X','X','1','0','0','0','0'>(); // op3
+
+    inline constexpr auto isFpCompare = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        'X','0','X','1', // op0
+        '1','1','1',
+        '0','X', // op1
+        'X','1','X','X', // op2
+        'X','X','X','X','X','1','0','0','0'>(); // op3
+
+    inline constexpr auto isFpImmediate = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        'X','0','X','1', // op0
+        '1','1','1',
+        '0','X', // op1
+        'X','1','X','X', // op2
+        'X','X','X','X','X','X','1','0','0'>(); // op3
+
+    inline constexpr auto isFpCondCompare = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        'X','0','X','1', // op0
+        '1','1','1',
+        '0','X', // op1
+        'X','1','X','X', // op2
+        'X','X','X','X','X','X','X','0','1'>(); // op3
+
+    inline constexpr auto isFpDataProc2Source = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        'X','0','X','1', // op0
+        '1','1','1',
+        '0','X', // op1
+        'X','1','X','X', // op2
+        'X','X','X','X','X','X','X','1','0'>(); // op3
+
+    inline constexpr auto isFpCondSel = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        'X','0','X','1', // op0
+        '1','1','1',
+        '0','X', // op1
+        'X','1','X','X', // op2
+        'X','X','X','X','X','X','X','1','1'>(); // op3
+
+    inline constexpr auto isFpDataProc = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        'X','0','X','1', // op0
+        '1','1','1',
+        '1','X', // op1
+        'X','X','X','X', // op2
+        'X','X','X','X','X','X','X','X','X'>(); // op3
+}};
+
+output decoder {{
 namespace Aarch64
 {
+
     template <typename DecoderFeatures>
     StaticInstPtr
     decodeFpAdvSIMD(ExtMachInst machInst)
     {
+        if (isCryptoAES(machInst)) return decodeCryptoAES(machInst);
+        if (isCrypto3SHA(machInst)) return decodeCryptoThreeRegSHA(machInst);
+        if (isCrypto2SHA(machInst)) return decodeCryptoTwoRegSHA(machInst);
+        if (isAdvSIMDScCopy(machInst)) return decodeNeonScCopy(machInst);
+        if (isAdvSIMDSc3SameFp16(machInst)) return decodeNeonSc3SameFp16(machInst);
+        if (isAdvSIMDSc2RegMiscFp16(machInst)) return decodeNeonSc2RegMiscFp16(machInst);
+        if (isAdvSIMDSc3SameExtra(machInst)) return decodeNeonSc3SameExtra(machInst);
+        if (isAdvSIMDSc2RegMisc(machInst)) return decodeNeonSc2RegMisc(machInst);
+        if (isAdvSIMDSc2Pwise(machInst)) return decodeNeonScPwise(machInst);
+        if (isAdvSIMDSc3Diff(machInst)) return decodeNeonSc3Diff(machInst);
+        if (isAdvSIMDSc3Same(machInst)) return decodeNeonSc3Same(machInst);
+        if (isAdvSIMDScShiftByImm(machInst)) return decodeNeonScShiftByImm(machInst);
+        if (isAdvSIMDScIndexedElem(machInst)) return decodeNeonScIndexedElem(machInst);
+        if (isAdvSIMDTblLookup(machInst)) return decodeNeonTblTbx(machInst);
+        if (isAdvSIMDPermute(machInst)) return decodeNeonZipUzpTrn(machInst);
+        if (isAdvSIMDExtract(machInst)) return decodeNeonExt(machInst);
+        if (isAdvSIMDCopy(machInst)) return decodeNeonCopy(machInst);
+        if (isAdvSIMD3SameFp16(machInst)) return decodeNeon3SameFp16(machInst);
+        if (isAdvSIMD2RegMiscFp16(machInst)) return decodeNeon2RegMiscFp16(machInst);
+        if (isAdvSIMD3RegExt(machInst)) return decodeNeon3RegExtension<DecoderFeatures>(machInst);
+        if (isAdvSIMD2RegMisc(machInst)) return decodeNeon2RegMisc(machInst);
+        if (isAdvSIMDAcrossLanes(machInst)) return decodeNeonAcrossLanes(machInst);
+        if (isAdvSIMD3Diff(machInst)) return decodeNeon3Diff(machInst);
+        if (isAdvSIMD3Same(machInst)) return decodeNeon3Same<DecoderFeatures>(machInst);
+        if (isAdvSIMDModImm(machInst)) return decodeNeonModImm(machInst);
+        if (isAdvSIMDShiftByImm(machInst)) return decodeNeonShiftByImm(machInst);
+        if (isAdvSIMDIndexedElem(machInst)) return decodeNeonIndexedElem<DecoderFeatures>(machInst);
+        if (isConvFloatPFixedP(machInst)) return decodeFpConvFixed(machInst);
+        if (isConvFloatPInt(machInst)) return decodeFpConvFp(machInst);
+        if (isFpDataProc1Source(machInst)) return decodeFpDataProc1Source(machInst);
+        if (isFpCompare(machInst)) return decodeFpCompare(machInst);
+        if (isFpImmediate(machInst)) return decodeFpImmediate(machInst);
+        if (isFpCondCompare(machInst)) return decodeFpCondCompare(machInst);
+        if (isFpDataProc2Source(machInst)) return decodeFpDataProc2Source(machInst);
+        if (isFpCondSel(machInst)) return decodeFpCondSel(machInst);
+        if (isFpDataProc(machInst)) return decodeFpDataProc(machInst);
 
-        if (bits(machInst, 28) == 0) {
-            if (bits(machInst, 31) == 0) {
-                return decodeAdvSIMD<DecoderFeatures>(machInst);
-            } else {
-                return new Unknown64(machInst);
-            }
-        } else if (bits(machInst, 30) == 0) {
-            return decodeFp(machInst);
-        } else if (bits(machInst, 31) == 0) {
-            return decodeAdvSIMDScalar(machInst);
-        } else {
-            return new Unknown64(machInst);
-        }
+        return new Unknown64(machInst);
     }
 }
 }};

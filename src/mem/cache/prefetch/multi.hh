@@ -56,10 +56,12 @@ class Multi : public Base
     Multi(const MultiPrefetcherParams &p);
 
   public:
-    void
-    setParentInfo(System *sys, ProbeManager *pm, unsigned blk_size) override;
+    void setParentInfo(System *sys, ProbeManager *pm,
+                       unsigned blk_size) override;
     PacketPtr getPacket() override;
     Tick nextPrefetchReadyTime() const override;
+    void prefetchUnused() override;
+    void incrDemandMhsrMisses() override;
 
     /** @{ */
     /**

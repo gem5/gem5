@@ -303,6 +303,13 @@ parser.add_argument(
     default=41,
     help="Latency for memtimes in scalar memory pipeline.",
 )
+parser.add_argument(
+    "--mfma-scale",
+    type=float,
+    # Set to a default of 1 to not scale MFMA cycles
+    default=1,
+    help="Scale how long an MFMA instruction reserves the matrix core unit",
+)
 
 parser.add_argument("--TLB-prefetch", type=int, help="prefetch depth for TLBs")
 parser.add_argument(
@@ -424,6 +431,13 @@ parser.add_argument(
 )
 
 parser.add_argument(
+    "--download-resource-version",
+    type=str,
+    default=None,
+    required=False,
+    help="Specify version of resource to download",
+)
+parser.add_argument(
     "--download-dir",
     type=str,
     default=None,
@@ -442,6 +456,7 @@ args = parser.parse_args()
 if args.download_resource:
     resources = obtain_resource(
         resource_id=args.download_resource,
+        resource_version=args.download_resource_version,
         resource_directory=args.download_dir,
     )
 
@@ -552,6 +567,7 @@ for i in range(n_cu):
             scalar_mem_req_latency=args.scalar_mem_req_latency,
             scalar_mem_resp_latency=args.scalar_mem_resp_latency,
             memtime_latency=args.memtime_latency,
+            mfma_scale=args.mfma_scale,
             localDataStore=LdsState(
                 banks=args.numLdsBanks,
                 bankConflictPenalty=args.ldsBankConflictPenalty,

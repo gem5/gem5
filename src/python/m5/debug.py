@@ -28,10 +28,11 @@ from collections.abc import Mapping
 
 from m5.util import printList
 
-import _m5.debug
 from _m5.debug import (
     CompoundFlag,
     SimpleFlag,
+    allFlags,
+    getAllFlagsVersion,
     schedBreak,
 )
 
@@ -72,12 +73,12 @@ class AllFlags(Mapping):
         self._dict = {}
 
     def _update(self):
-        current_version = _m5.debug.getAllFlagsVersion()
+        current_version = getAllFlagsVersion()
         if self._version == current_version:
             return
 
         self._dict.clear()
-        for name, flag in _m5.debug.allFlags().items():
+        for name, flag in allFlags().items():
             self._dict[name] = flag
         self._version = current_version
 

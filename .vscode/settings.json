@@ -3,5 +3,42 @@
         "src/python",
         "ext",
         "tests"
+    ],
+    "githubPullRequests.overrideDefaultBranch": "develop",
+    "githubPullRequests.pushBranch": "always",
+    "githubPullRequests.queries": [
+        {
+            "label": "[gem5] My PRs in review",
+            "query": "repo:gem5/gem5 is:open -is:draft author:${user}"
+        },
+        {
+            "label": "[gem5] My draft PRs",
+            "query": "repo:gem5/gem5 is:open is:draft author:${user}"
+        },
+        {
+            "label": "[gem5] PRs I am reviewing",
+            "query": "repo:gem5/gem5 is:open -is:draft review-requested:${user}"
+        },
+        {
+            "label": "[gem5] All PRs in review",
+            "query": "repo:gem5/gem5 is:open -is:draft sort:created-desc"
+        }
+    ],
+    "githubIssues.queries": [
+        {
+            "label": "[gem5] Open Issues I am assigned",
+            "query": "is:open assignee:${user} repo:${owner}/${repository}",
+            "groupBy": [
+                "milestone"
+            ]
+        },
+        {
+            "label": "[gem5] Open Issues I created",
+            "query": "author:${user} state:open repo:gem5/gem5 sort:created-desc"
+        },
+        {
+            "label": "[gem5] All open Issues",
+            "query": "state:open repo:${owner}/${repository} sort:updated-desc"
+        }
     ]
 }

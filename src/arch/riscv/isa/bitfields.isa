@@ -105,6 +105,7 @@ def bitfield CFUNCT1BIT6 <6>;
 def bitfield CFUNCT2HIGH <11:10>;
 def bitfield CFUNCT2LOW <6:5>;
 def bitfield CFUNCT2MID <9:8>;
+def bitfield JTINDEX5TO7 <9:7>;
 def bitfield RC1 <11:7>;
 def bitfield RC2 <6:2>;
 def bitfield RP1 <9:7>;
@@ -163,3 +164,6 @@ def bitfield BIT31      bit31;
 def bitfield BIT30      bit30;
 def bitfield SIMM5      uimm_vsetivli;
 def bitfield SIMM3      simm3;
+
+// Zvbb
+def bitfield BIT26      <26>;

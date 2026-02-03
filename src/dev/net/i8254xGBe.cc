@@ -136,7 +136,7 @@ IGbE::~IGbE()
 void
 IGbE::init()
 {
-    PciDevice::init();
+    PciEndpoint::init();
 }
 
 Port &
@@ -152,7 +152,7 @@ IGbE::writeConfig(PacketPtr pkt)
 {
     int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
     if (offset < PCI_DEVICE_SPECIFIC)
-        PciDevice::writeConfig(pkt);
+        PciEndpoint::writeConfig(pkt);
     else
         panic("Device specific PCI config space not implemented.\n");
 
@@ -167,7 +167,7 @@ IGbE::writeConfig(PacketPtr pkt)
 #define IN_RANGE(val, base, len) (val >= base && val < (base + len))
 
 Tick
-IGbE::read(PacketPtr pkt)
+IGbE::readDevice(PacketPtr pkt)
 {
     int bar;
     Addr daddr;
@@ -355,7 +355,7 @@ IGbE::read(PacketPtr pkt)
 }
 
 Tick
-IGbE::write(PacketPtr pkt)
+IGbE::writeDevice(PacketPtr pkt)
 {
     int bar;
     Addr daddr;
@@ -2361,7 +2361,7 @@ IGbE::ethTxDone()
 void
 IGbE::serialize(CheckpointOut &cp) const
 {
-    PciDevice::serialize(cp);
+    PciEndpoint::serialize(cp);
 
     regs.serialize(cp);
     SERIALIZE_SCALAR(eeOpBits);
@@ -2412,7 +2412,7 @@ IGbE::serialize(CheckpointOut &cp) const
 void
 IGbE::unserialize(CheckpointIn &cp)
 {
-    PciDevice::unserialize(cp);
+    PciEndpoint::unserialize(cp);
 
     regs.unserialize(cp);
     UNSERIALIZE_SCALAR(eeOpBits);

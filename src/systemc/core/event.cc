@@ -29,6 +29,8 @@
 
 #include <algorithm>
 #include <cstring>
+#include <mutex>
+#include <shared_mutex>
 #include <utility>
 
 #include "systemc/core/module.hh"
@@ -40,6 +42,42 @@
 namespace sc_gem5
 {
 
+namespace
+{
+
+EventsIt
+findEventIn(Events &events, const std::string &name)
+{
+    EventsIt it;
+    for (it = events.begin(); it != events.end(); it++)
+        if (!strcmp((*it)->name(), name.c_str()))
+            break;
+
+    return it;
+}
+
+void
+addEvent(Events *events, sc_core::sc_event *event)
+{
+    events->emplace(events->end(), event);
+}
+
+void
+popEvent(Events* events, const std::string &name)
+{
+    EventsIt it = findEventIn(*events, name);
+    assert(it != events->end());
+    std::swap(events->back(), *it);
+    events->pop_back();
+}
+
+std::shared_mutex globalEventLock;
+
+} // anonymous namespace
+
+Events topLevelEvents;
+Events allEvents;
+
 Event::Event(sc_core::sc_event *_sc_event, bool internal) :
     Event(_sc_event, nullptr, internal)
 {}
@@ -50,6 +88,8 @@ Event::Event(sc_core::sc_event *_sc_event, const char *_basename_cstr,
     _inHierarchy(!internal), delayedNotify([this]() { this->notify(); }),
     _triggeredStamp(~0ULL)
 {
+    [[maybe_unused]] std::unique_lock lock(globalEventLock);
+
     if (_basename == "" && ::sc_core::sc_is_running())
         _basename = ::sc_core::sc_gen_unique_name("event");
 
@@ -66,7 +106,7 @@ Event::Event(sc_core::sc_event *_sc_event, const char *_basename_cstr,
             Object *obj = Object::getFromScObject(parent);
             obj->addChildEvent(_sc_event);
         } else {
-            topLevelEvents.emplace(topLevelEvents.end(), _sc_event);
+            addEvent(&topLevelEvents, _sc_event);
         }
 
         std::string path = parent ? (std::string(parent->name()) + ".") : "";
@@ -82,7 +122,7 @@ Event::Event(sc_core::sc_event *_sc_event, const char *_basename_cstr,
         _name = path + _basename;
     }
 
-    allEvents.emplace(allEvents.end(), _sc_event);
+    addEvent(&allEvents, _sc_event);
 
     // Determine if we're in the hierarchy (created once initialization starts
     // means no).
@@ -90,20 +130,16 @@ Event::Event(sc_core::sc_event *_sc_event, const char *_basename_cstr,
 
 Event::~Event()
 {
+    [[maybe_unused]] std::unique_lock lock(globalEventLock);
+
     if (parent) {
         Object *obj = Object::getFromScObject(parent);
         obj->delChildEvent(_sc_event);
     } else if (inHierarchy()) {
-        EventsIt it = find(topLevelEvents.begin(), topLevelEvents.end(),
-                           _sc_event);
-        assert(it != topLevelEvents.end());
-        std::swap(*it, topLevelEvents.back());
-        topLevelEvents.pop_back();
+        popEvent(&topLevelEvents, _name);
     }
 
-    EventsIt it = findEvent(_name);
-    std::swap(*it, allEvents.back());
-    allEvents.pop_back();
+    popEvent(&allEvents, _name);
 
     if (delayedNotify.scheduled())
         scheduler.deschedule(&delayedNotify);
@@ -207,25 +243,22 @@ Event::triggered() const
 void
 Event::clearParent()
 {
+    [[maybe_unused]] std::unique_lock lock(globalEventLock);
+
     if (!parent)
         return;
-    Object::getFromScObject(parent)->delChildEvent(sc_event());
+    Object::getFromScObject(parent)->delChildEvent(_sc_event);
     parent = nullptr;
-    topLevelEvents.emplace(topLevelEvents.end(), sc_event());
+    addEvent(&topLevelEvents, _sc_event);
 }
 
-Events topLevelEvents;
-Events allEvents;
-
-EventsIt
-findEvent(const std::string &name)
+sc_core::sc_event *
+findEvent(const char *name)
 {
-    EventsIt it;
-    for (it = allEvents.begin(); it != allEvents.end(); it++)
-        if (!strcmp((*it)->name(), name.c_str()))
-            break;
+    [[maybe_unused]] std::shared_lock lock(globalEventLock);
 
-    return it;
+    EventsIt it = findEventIn(allEvents, name);
+    return it == allEvents.end() ? nullptr : *it;
 }
 
 } // namespace sc_gem5

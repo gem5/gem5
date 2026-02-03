@@ -36,6 +36,7 @@
 
 #include "cpu/testers/gpu_ruby_test/protocol_tester.hh"
 #include "cpu/testers/gpu_ruby_test/tester_thread.hh"
+#include "debug/EpisodeCount.hh"
 
 namespace gem5
 {
@@ -62,7 +63,7 @@ Episode::Episode(ProtocolTester* _tester, TesterThread* _thread, int num_loads,
     initActions();
     isActive = true;
 
-    DPRINTFN("Episode %d\n", episodeId);
+    DPRINTF(EpisodeCount,"Episode %d\n", episodeId);
 }
 
 Episode::~Episode()

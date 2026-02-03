@@ -481,8 +481,10 @@ class MSHR : public QueueEntry, public Printable
      */
     void popTarget()
     {
-        DPRINTF(MSHR, "Force deallocating MSHR targets: %s\n",
-                targets.front().pkt->print());
+        if (targets.front().pkt) {
+            DPRINTF(MSHR, "Force deallocating MSHR targets: %s\n",
+                    targets.front().pkt->print());
+        }
         targets.pop_front();
     }
 

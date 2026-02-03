@@ -57,7 +57,7 @@
 #include "cpu/static_inst.hh"
 #include "cpu/thread_context.hh"
 #include "enums/RiscvType.hh"
-#include "rvk.hh"
+#include "arch/riscv/rvk.hh"
 
 namespace gem5
 {
@@ -837,6 +837,13 @@ int_rounding(T result, uint8_t xrm, unsigned gb) {
     }
 
     return result;
+}
+
+inline uint64_t
+num_elements_reg(const uint64_t vtype, const uint64_t vlen)
+{
+    int64_t vsew = bits(vtype, 5, 3);
+    return vlen >> (vsew + 3);
 }
 
 } // namespace RiscvISA

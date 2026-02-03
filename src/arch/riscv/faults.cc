@@ -42,6 +42,7 @@
 #include "debug/Faults.hh"
 #include "sim/debug.hh"
 #include "sim/full_system.hh"
+#include "sim/system.hh"
 #include "sim/workload.hh"
 
 namespace gem5
@@ -69,34 +70,56 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         PrivilegeMode prv = PRV_M;
         MISA misa = tc->readMiscRegNoEffect(MISCREG_ISA);
         STATUS status = tc->readMiscReg(MISCREG_STATUS);
+        NSTATUS nstatus = tc->readMiscReg(MISCREG_MNSTATUS);
+        auto* isa = static_cast<RiscvISA::ISA*>(tc->getIsaPtr());
+        bool is_rnmi = isResumableNonMaskableInterrupt(isa);
+
+        // previous virtualization (H-extension)
+        bool pv = misa.rvh ? virtualizationEnabled(tc) : false;
+
+        // MISCREG_PRV (mirroring mpp) cannot have PRV_HS == 2
+        // it can only be 0 (U), 1 (S), 3 (M).
+        // Consult Table 8.8, 8.9 RISCV Privileged Spec V20211203
+        if (misa.rvh && pp == PRV_HS) {
+            panic("Privilege in MISCREG_PRV is PRV_HS == 2!");
+        }
 
         // According to riscv-privileged-v1.11, if a NMI occurs at the middle
         // of a M-mode trap handler, the state (epc/cause) will be overwritten
-        // and is not necessary recoverable. There's nothing we can do here so
-        // we'll just warn our user that the CPU state might be broken.
-        warn_if(isNonMaskableInterrupt() && pp == PRV_M && status.mie == 0,
+        // and is not necessary recoverable unless smrnmi enabled.
+        warn_if(!isa->enableSmrnmi() && isNonMaskableInterrupt() &&
+                pp == PRV_M && status.mie == 0,
                 "NMI overwriting M-mode trap handler state");
 
         // Set fault handler privilege mode
         if (isNonMaskableInterrupt()) {
             prv = PRV_M;
         } else if (isInterrupt()) {
-            if (pp != PRV_M &&
+            if (pp != PRV_M && misa.rvs &&
                 bits(tc->readMiscReg(MISCREG_MIDELEG), _code) != 0) {
-                prv = (misa.rvs) ? PRV_S : ((misa.rvn) ? PRV_U : PRV_M);
-            }
-            if (pp == PRV_U && misa.rvs && misa.rvn &&
-                bits(tc->readMiscReg(MISCREG_SIDELEG), _code) != 0) {
-                prv = PRV_U;
+                prv = PRV_S;
+                // when rvh is true we know rvs is true so prv is S
+                if (misa.rvh) {
+                    if (virtualizationEnabled(tc) &&
+                        bits(tc->readMiscReg(MISCREG_HIDELEG), _code) == 0) {
+                        resetV(tc); // No delegation, go to HS (S with V = 0)
+                    }
+                    // otherwise handled in VS (S with V = 1)
+                }
             }
         } else {
-            if (pp != PRV_M &&
+            if (pp != PRV_M && misa.rvs &&
                 bits(tc->readMiscReg(MISCREG_MEDELEG), _code) != 0) {
-                prv = (misa.rvs) ? PRV_S : ((misa.rvn) ? PRV_U : PRV_M);
-            }
-            if (pp == PRV_U && misa.rvs && misa.rvn &&
-                bits(tc->readMiscReg(MISCREG_SEDELEG), _code) != 0) {
-                prv = PRV_U;
+                prv = PRV_S;
+
+                // when rvh is true we know rvs is true so prv is S
+                if (misa.rvh) {
+                    if (virtualizationEnabled(tc) &&
+                        bits(tc->readMiscReg(MISCREG_HEDELEG), _code) == 0) {
+                        resetV(tc); // No delegation, go to HS (S with V = 0)
+                    }
+                    // otherwise handled in VS (S with V = 1)
+                }
             }
         }
 
@@ -104,13 +127,7 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         MiscRegIndex cause, epc, tvec, tval;
         switch (prv) {
           case PRV_U:
-            cause = MISCREG_UCAUSE;
-            epc = MISCREG_UEPC;
-            tvec = MISCREG_UTVEC;
-            tval = MISCREG_UTVAL;
-
-            status.upie = status.uie;
-            status.uie = 0;
+            panic("Delegating interrupt to user mode is removed.");
             break;
           case PRV_S:
             cause = MISCREG_SCAUSE;
@@ -123,18 +140,79 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
             status.sie = 0;
             break;
           case PRV_M:
-            cause = MISCREG_MCAUSE;
-            epc = MISCREG_MEPC;
+            cause = is_rnmi ? MISCREG_MNCAUSE : MISCREG_MCAUSE;
+            epc = is_rnmi ? MISCREG_MNEPC : MISCREG_MEPC;
             tvec = isNonMaskableInterrupt() ? MISCREG_NMIVEC : MISCREG_MTVEC;
             tval = MISCREG_MTVAL;
 
-            status.mpp = pp;
-            status.mpie = status.mie;
-            status.mie = 0;
+            if (is_rnmi) {
+                nstatus.mnpp = pp;
+            } else {
+                status.mpp = pp;
+                status.mpie = status.mie;
+                status.mie = 0;
+            }
             break;
           default:
             panic("Unknown privilege mode %d.", prv);
             break;
+        }
+
+        // H-extension extra handling for invoke
+        if (misa.rvh) {
+            if (prv == PRV_M) {
+                status.mpv = pv;
+                status.gva = mustSetGva();
+                // Paragraph 8.5.2 RISCV Privileged Spec 20211203
+                if (isGuestPageFault()) {
+                    tc->setMiscReg(MISCREG_MTVAL2, trap_value() >> 2);
+                }
+                // Going to M-mode for handling, disable V if it's on
+                if (virtualizationEnabled(tc)) { resetV(tc); }
+            } else if (prv == PRV_S &&
+                    !virtualizationEnabled(tc)) { // essentially HS-mode
+                HSTATUS hstatus = tc->readMiscReg(MISCREG_HSTATUS);
+                hstatus.spv = pv;
+                if (pv) { // if V-bit was on
+                    hstatus.spvp = status.spp;
+                    hstatus.gva = mustSetGva();
+                    // Paragraph 8.5.2 RISCV Privileged Spec 20211203
+                    if (isGuestPageFault()) {
+                        tc->setMiscReg(MISCREG_HTVAL, trap_value2());
+                    }
+                }
+                // Write changes to hstatus
+                tc->setMiscReg(MISCREG_HSTATUS, hstatus);
+            } else if (prv == PRV_S &&
+                    virtualizationEnabled(tc)) { // essentially VS-mode
+                STATUS vsstatus = tc->readMiscReg(MISCREG_VSSTATUS);
+                cause = MISCREG_VSCAUSE;
+                epc = MISCREG_VSEPC;
+                tvec = MISCREG_VSTVEC;
+                tval = MISCREG_VSTVAL;
+                vsstatus.spp = pp;
+                vsstatus.spie = vsstatus.sie;
+                vsstatus.sie = 0;
+                tc->setMiscReg(MISCREG_VSSTATUS, vsstatus);
+
+                // Paragraph 8.2.2 RISCV Privileged Spec 20211203
+                switch (_code) {
+                    case INT_SOFTWARE_VIRTUAL_SUPER:
+                        _code = INT_SOFTWARE_SUPER;
+                        break;
+                    case INT_TIMER_VIRTUAL_SUPER:
+                        _code = INT_TIMER_SUPER;
+                        break;
+                    case INT_EXT_VIRTUAL_SUPER:
+                        _code = INT_EXT_SUPER;
+                        break;
+                    default:
+                        break;
+                }
+            } else {
+                panic("Unknown case in hypervisor fault handler."
+                      "prv = %d, V = %d", prv, virtualizationEnabled(tc));
+            }
         }
 
         // Set fault cause, privilege, and return PC
@@ -143,10 +221,18 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
            _cause |= CAUSE_INTERRUPT_MASKS[pc_state.rvType()];
         }
         tc->setMiscReg(cause, _cause);
-        tc->setMiscReg(epc, tc->pcState().instAddr());
+        if (pc_state.zcmtSecondFetch()) {
+            tc->setMiscReg(epc, pc_state.zcmtPc());
+        } else {
+            tc->setMiscReg(epc, pc_state.instAddr());
+        }
         tc->setMiscReg(tval, trap_value());
         tc->setMiscReg(MISCREG_PRV, prv);
-        tc->setMiscReg(MISCREG_STATUS, status);
+        if (is_rnmi) {
+            tc->setMiscReg(MISCREG_MNSTATUS, nstatus);
+        } else {
+            tc->setMiscReg(MISCREG_STATUS, status);
+        }
         // Temporarily mask NMI while we're in NMI handler. Otherweise, the
         // checkNonMaskableInterrupt will always return true and we'll be
         // stucked in an infinite loop.
@@ -155,11 +241,14 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         }
 
         // Clear load reservation address
-        auto isa = static_cast<RiscvISA::ISA*>(tc->getIsaPtr());
         isa->clearLoadReservation(tc->contextId());
 
         // Set PC to fault handler address
         Addr addr = isa->getFaultHandlerAddr(tvec, _code, isInterrupt());
+        if (pc_state.zcmtSecondFetch()) {
+            pc_state.zcmtSecondFetch(false);
+            pc_state.zcmtPc(0);
+        }
         pc_state.set(isa->rvSext(addr));
         tc->pcState(pc_state);
     } else {

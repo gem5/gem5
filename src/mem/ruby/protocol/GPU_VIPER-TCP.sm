@@ -54,10 +54,6 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
 {
   state_declaration(State, desc="TCP Cache States", default="TCP_State_I") {
     I, AccessPermission:Invalid,   desc="Invalid";
-    // Note: currently IV in the TCP is only for pending loads to a given cache
-    // line. Since the TCP is write through, stores should be allowed to pass
-    // through without requiring them to wait.
-    IV, AccessPermission:Invalid,  desc="Going from I to V, waiting on TCC data";
     V, AccessPermission:Read_Only, desc="Valid";
     A, AccessPermission:Invalid,   desc="Waiting on Atomic";
 
@@ -742,18 +738,14 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
   // they can cause a resource stall deadlock!
 
   // if another request arrives for the same cache line that has a pending
-  // atomic or load, put it on the wakeup buffer instead of z_stall'ing it.  By
+  // atomic, put it on the wakeup buffer instead of z_stall'ing it.  By
   // doing so we reduce resource contention since they won't try again every cycle
   // and will instead only try again once woken up
-  transition({A, IV}, {Load, LoadBypassEvict, Atomic, Store, StoreThrough, Flush}) {
+  transition(A, {Load, LoadBypassEvict, Atomic, Store, StoreThrough, Flush}) {
       st_stallAndWaitRequest;
   }
 
-  // if we have a load that misses, allocate TBE entry and transition to IV
-  // to prevent subsequent requests to same cache line from also going to TCC
-  // while this request is pending
-  transition(I, Load, IV) {TagArrayRead} {
-    t_allocateTBE;
+  transition(I, Load) {TagArrayRead} {
     n_issueRdBlk;
     uu_profileDataMiss;
     p_popMandatoryQueue;
@@ -808,38 +800,16 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     p_popMandatoryQueue;
   }
 
-  // if we got a response for a load where the line is in I, then
-  // another request must have come in that replaced the line in question in
-  // the cache.  Thus, complete this request without allocating the line, but
-  // still deallocate TBE and wakeup any dependent addresses.
-  // (Note: this assumes TCC_AckWB is what stores use)
-  transition(I, TCC_Ack) {TagArrayRead, TagArrayWrite} {
-    wada_wakeUpAllDependentsAddr;
-    // NOTE: Because we invalidated the cache line, the assert in l_loadDoneMiss
-    // will fail -- unlike atomics that automatically go to I when the line returns
-    // loads do not automatically go to I.  Resolve this by passing data from
-    // message.
-    ldmi_loadDoneMissInv;
-    d_deallocateTBE;
-    pr_popResponseQueue;
-  }
-
-  // if line is currently in IV, then TCC_Ack is returning the data for a
-  // pending load, so transition to V, deallocate TBE, and wakeup any dependent
-  // requests so they will be replayed now that this request has returned.
-  transition(IV, TCC_Ack, V) {TagArrayRead, TagArrayWrite, DataArrayRead, DataArrayWrite} {
+  transition(I, TCC_Ack, V) {TagArrayRead, TagArrayWrite, DataArrayRead, DataArrayWrite} {
     a_allocate;
     w_writeCache;
-    wada_wakeUpAllDependentsAddr;
     l_loadDoneMiss;
-    d_deallocateTBE;
     pr_popResponseQueue;
   }
 
-  // if a bypass request arrives back at the TCP, regardless of whether the line
-  // is in I (from the bypass request) or IV (from a subsequent non-bypassing
-  // load), retain the current state and complete the bypassing request.
-  transition({I, IV}, Bypass) {
+  // if a bypass request arrives back at the TCP,
+  // retain the current state and complete the bypassing request.
+  transition(I, Bypass) {
     rb_bypassDone;
     pr_popResponseQueue;
   }
@@ -871,12 +841,6 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
   }
 
   transition({A}, Repl) {TagArrayRead, TagArrayWrite} {
-    ic_invCache;
-  }
-
-  // if a line with a pending load gets evicted, transition the line to I and
-  // invalidate it.
-  transition(IV, Repl, I) {TagArrayRead, TagArrayWrite} {
     ic_invCache;
   }
 
@@ -913,11 +877,8 @@ machine(MachineType:TCP, "GPU TCP (L1 Data Cache)")
     pr_popResponseQueue;
   }
 
-  // if a line is in IV and a TCC_AckWB comes back, we must have had a WT
-  // store followed by a load. Thus, complete the store without affecting
-  // TBE or line state.
   // TCC_AckWB only snoops TBE
-  transition({V, I, IV}, TCC_AckWB) {
+  transition({V, I}, TCC_AckWB) {
     wd_wtDone;
     pr_popResponseQueue;
   }

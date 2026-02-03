@@ -36,6 +36,7 @@
 
 #include "arch/amdgpu/vega/gpu_registers.hh"
 #include "arch/generic/vec_reg.hh"
+#include "debug/GPUTrace.hh"
 #include "gpu-compute/scalar_register_file.hh"
 #include "gpu-compute/shader.hh"
 #include "gpu-compute/vector_register_file.hh"
@@ -157,6 +158,9 @@ namespace VegaISA
                 vrfData[i] = &cu->vrf[wf->simdId]->readWriteable(vgprIdx);
 
                 DPRINTF(GPUVRF, "Read v[%d]\n", vgprIdx);
+                DPRINTF(GPUTrace, "wave[%d] Read v[%d] by instruction %s\n",
+                        wf->wfDynId, vgprIdx,
+                        _gpuDynInst->disassemble().c_str());
                 cu->vrf[wf->simdId]->printReg(wf, vgprIdx);
             }
 
@@ -221,6 +225,9 @@ namespace VegaISA
                 }
 
                 DPRINTF(GPUVRF, "Write v[%d]\n", vgprIdx);
+                DPRINTF(GPUTrace, "wave[%d] Write v[%d] by instruction %s\n",
+                        wf->wfDynId, vgprIdx,
+                        _gpuDynInst->disassemble().c_str());
                 cu->vrf[wf->simdId]->printReg(wf, vgprIdx);
             } else if (NumDwords == 2) {
                 int vgprIdx0 = cu->registerManager->mapVgpr(wf, _opIdx);
@@ -241,6 +248,9 @@ namespace VegaISA
                 }
 
                 DPRINTF(GPUVRF, "Write v[%d:%d]\n", vgprIdx0, vgprIdx1);
+                DPRINTF(GPUTrace, "wave[%d] Write v[%d:%d] by instruction "
+                        "%s\n", wf->wfDynId, vgprIdx0, vgprIdx1,
+                        _gpuDynInst->disassemble().c_str());
                 cu->vrf[wf->simdId]->printReg(wf, vgprIdx0);
                 cu->vrf[wf->simdId]->printReg(wf, vgprIdx1);
             }
@@ -418,6 +428,9 @@ namespace VegaISA
                     int sgprIdx = regIdx(i);
                     srfData[i] = cu->srf[wf->simdId]->read(sgprIdx);
                     DPRINTF(GPUSRF, "Read s[%d]\n", sgprIdx);
+                    DPRINTF(GPUTrace, "wave[%d] Read s[%d] by instruction "
+                            "%s\n", wf->wfDynId, sgprIdx,
+                            _gpuDynInst->disassemble().c_str());
                     cu->srf[wf->simdId]->printReg(wf, sgprIdx);
                 }
             }
@@ -478,6 +491,9 @@ namespace VegaISA
                         sgpr = srfData[i];
                     }
                     DPRINTF(GPUSRF, "Write s[%d]\n", sgprIdx);
+                    DPRINTF(GPUTrace, "wave[%d] Write s[%d] by instruction "
+                            "%s\n", wf->wfDynId, sgprIdx,
+                            _gpuDynInst->disassemble().c_str());
                     cu->srf[wf->simdId]->printReg(wf, sgprIdx);
                 }
             }

@@ -366,7 +366,8 @@ SDMAEngine::decodeNext(SDMAQueue *q)
         auto cb = new DmaVirtCallback<uint32_t>(
             [ = ] (const uint32_t &header)
                 { decodeHeader(q, header); });
-        dmaReadVirt(q->rptr(), sizeof(uint32_t), cb, &cb->dmaBuffer);
+        dmaReadVirt(q->rptr(), sizeof(uint32_t), cb, &cb->dmaBuffer,
+                sdma_delay);
     } else {
         // The driver expects the rptr to be written back to host memory
         // periodically. In simulation, we writeback rptr after each burst of
@@ -382,6 +383,9 @@ SDMAEngine::decodeNext(SDMAQueue *q)
         q->processing(false);
         if (q->parent()) {
             DPRINTF(SDMAEngine, "SDMA switching queues\n");
+            // If current vmid is non-zero, set it back to 0 before
+            // switching back to parent
+            cur_vmid = 0;
             decodeNext(q->parent());
         }
         cur_vmid = 0;
@@ -399,7 +403,8 @@ SDMAEngine::decodeHeader(SDMAQueue *q, uint32_t header)
     DmaVirtCallback<uint64_t> *cb = nullptr;
     void *dmaBuffer = nullptr;
 
-    DPRINTF(SDMAEngine, "SDMA opcode %p sub-opcode %p\n", opcode, sub_opcode);
+    DPRINTF(SDMAEngine, "SDMA header %x opcode %x sub-opcode %x\n",
+            header, opcode, sub_opcode);
 
     switch(opcode) {
       case SDMA_OP_NOP: {
@@ -424,7 +429,8 @@ SDMAEngine::decodeHeader(SDMAQueue *q, uint32_t header)
             cb = new DmaVirtCallback<uint64_t>(
                 [ = ] (const uint64_t &)
                     { copy(q, (sdmaCopy *)dmaBuffer); });
-            dmaReadVirt(q->rptr(), sizeof(sdmaCopy), cb, dmaBuffer);
+            dmaReadVirt(q->rptr(), sizeof(sdmaCopy), cb, dmaBuffer,
+                    sdma_delay);
             } break;
           case SDMA_SUBOP_COPY_LINEAR_SUB_WIND: {
             panic("SDMA_SUBOP_COPY_LINEAR_SUB_WIND not implemented");
@@ -460,7 +466,8 @@ SDMAEngine::decodeHeader(SDMAQueue *q, uint32_t header)
             cb = new DmaVirtCallback<uint64_t>(
                 [ = ] (const uint64_t &)
                     { write(q, (sdmaWrite *)dmaBuffer); });
-            dmaReadVirt(q->rptr(), sizeof(sdmaWrite), cb, dmaBuffer);
+            dmaReadVirt(q->rptr(), sizeof(sdmaWrite), cb, dmaBuffer,
+                    sdma_delay);
             } break;
           case SDMA_SUBOP_WRITE_TILED: {
             panic("SDMA_SUBOP_WRITE_TILED not implemented.\n");
@@ -474,8 +481,10 @@ SDMAEngine::decodeHeader(SDMAQueue *q, uint32_t header)
         dmaBuffer = new sdmaIndirectBuffer();
         cb = new DmaVirtCallback<uint64_t>(
             [ = ] (const uint64_t &)
-                { indirectBuffer(q, (sdmaIndirectBuffer *)dmaBuffer); });
-        dmaReadVirt(q->rptr(), sizeof(sdmaIndirectBuffer), cb, dmaBuffer);
+                { indirectBuffer(q, (sdmaIndirectBuffer *)dmaBuffer,
+                        header); });
+        dmaReadVirt(q->rptr(), sizeof(sdmaIndirectBuffer), cb, dmaBuffer,
+                sdma_delay);
         } break;
       case SDMA_OP_FENCE: {
         DPRINTF(SDMAEngine, "SDMA Fence packet\n");
@@ -483,7 +492,8 @@ SDMAEngine::decodeHeader(SDMAQueue *q, uint32_t header)
         cb = new DmaVirtCallback<uint64_t>(
             [ = ] (const uint64_t &)
                 { fence(q, (sdmaFence *)dmaBuffer); });
-        dmaReadVirt(q->rptr(), sizeof(sdmaFence), cb, dmaBuffer);
+        dmaReadVirt(q->rptr(), sizeof(sdmaFence), cb, dmaBuffer,
+                sdma_delay);
         } break;
       case SDMA_OP_TRAP: {
         DPRINTF(SDMAEngine, "SDMA Trap packet\n");
@@ -491,7 +501,8 @@ SDMAEngine::decodeHeader(SDMAQueue *q, uint32_t header)
         cb = new DmaVirtCallback<uint64_t>(
             [ = ] (const uint64_t &)
                 { trap(q, (sdmaTrap *)dmaBuffer); });
-        dmaReadVirt(q->rptr(), sizeof(sdmaTrap), cb, dmaBuffer);
+        dmaReadVirt(q->rptr(), sizeof(sdmaTrap), cb, dmaBuffer,
+                sdma_delay);
         } break;
       case SDMA_OP_SEM: {
         q->incRptr(sizeof(sdmaSemaphore));
@@ -500,13 +511,12 @@ SDMAEngine::decodeHeader(SDMAQueue *q, uint32_t header)
         } break;
       case SDMA_OP_POLL_REGMEM: {
         DPRINTF(SDMAEngine, "SDMA PollRegMem packet\n");
-        sdmaPollRegMemHeader *h = new sdmaPollRegMemHeader();
-        *h = *(sdmaPollRegMemHeader *)&header;
         dmaBuffer = new sdmaPollRegMem();
         cb = new DmaVirtCallback<uint64_t>(
             [ = ] (const uint64_t &)
-                { pollRegMem(q, h, (sdmaPollRegMem *)dmaBuffer); });
-        dmaReadVirt(q->rptr(), sizeof(sdmaPollRegMem), cb, dmaBuffer);
+                { pollRegMem(q, header, (sdmaPollRegMem *)dmaBuffer); });
+        dmaReadVirt(q->rptr(), sizeof(sdmaPollRegMem), cb, dmaBuffer,
+                sdma_delay);
         switch (sub_opcode) {
           case SDMA_SUBOP_POLL_REG_WRITE_MEM: {
             panic("SDMA_SUBOP_POLL_REG_WRITE_MEM not implemented");
@@ -529,12 +539,11 @@ SDMAEngine::decodeHeader(SDMAQueue *q, uint32_t header)
       case SDMA_OP_ATOMIC: {
         DPRINTF(SDMAEngine, "SDMA Atomic packet\n");
         dmaBuffer = new sdmaAtomic();
-        sdmaAtomicHeader *h = new sdmaAtomicHeader();
-        *h = *(sdmaAtomicHeader *)&header;
         cb = new DmaVirtCallback<uint64_t>(
             [ = ] (const uint64_t &)
-                { atomic(q, h, (sdmaAtomic *)dmaBuffer); });
-        dmaReadVirt(q->rptr(), sizeof(sdmaAtomic), cb, dmaBuffer);
+                { atomic(q, header, (sdmaAtomic *)dmaBuffer); });
+        dmaReadVirt(q->rptr(), sizeof(sdmaAtomic), cb, dmaBuffer,
+                sdma_delay);
         } break;
       case SDMA_OP_CONST_FILL: {
         DPRINTF(SDMAEngine, "SDMA Constant fill packet\n");
@@ -542,7 +551,8 @@ SDMAEngine::decodeHeader(SDMAQueue *q, uint32_t header)
         cb = new DmaVirtCallback<uint64_t>(
             [ = ] (const uint64_t &)
                 { constFill(q, (sdmaConstFill *)dmaBuffer, header); });
-        dmaReadVirt(q->rptr(), sizeof(sdmaConstFill), cb, dmaBuffer);
+        dmaReadVirt(q->rptr(), sizeof(sdmaConstFill), cb, dmaBuffer,
+                sdma_delay);
         } break;
       case SDMA_OP_PTEPDE: {
         DPRINTF(SDMAEngine, "SDMA PTEPDE packet\n");
@@ -553,7 +563,8 @@ SDMAEngine::decodeHeader(SDMAQueue *q, uint32_t header)
             cb = new DmaVirtCallback<uint64_t>(
                 [ = ] (const uint64_t &)
                     { ptePde(q, (sdmaPtePde *)dmaBuffer); });
-            dmaReadVirt(q->rptr(), sizeof(sdmaPtePde), cb, dmaBuffer);
+            dmaReadVirt(q->rptr(), sizeof(sdmaPtePde), cb, dmaBuffer,
+                    sdma_delay);
             break;
           case SDMA_SUBOP_PTEPDE_COPY:
             panic("SDMA_SUBOP_PTEPDE_COPY not implemented");
@@ -588,13 +599,12 @@ SDMAEngine::decodeHeader(SDMAQueue *q, uint32_t header)
         } break;
       case SDMA_OP_SRBM_WRITE: {
         DPRINTF(SDMAEngine, "SDMA SRBMWrite packet\n");
-        sdmaSRBMWriteHeader *header = new sdmaSRBMWriteHeader();
-        *header = *(sdmaSRBMWriteHeader *)&header;
         dmaBuffer = new sdmaSRBMWrite();
         cb = new DmaVirtCallback<uint64_t>(
             [ = ] (const uint64_t &)
                 { srbmWrite(q, header, (sdmaSRBMWrite *)dmaBuffer); });
-        dmaReadVirt(q->rptr(), sizeof(sdmaSRBMWrite), cb, dmaBuffer);
+        dmaReadVirt(q->rptr(), sizeof(sdmaSRBMWrite), cb, dmaBuffer,
+                sdma_delay);
         } break;
       case SDMA_OP_PRE_EXE: {
         q->incRptr(sizeof(sdmaPredExec));
@@ -626,7 +636,7 @@ SDMAEngine::write(SDMAQueue *q, sdmaWrite *pkt)
     auto cb = new DmaVirtCallback<uint64_t>(
         [ = ] (const uint64_t &) { writeReadData(q, pkt, dmaBuffer); });
     dmaReadVirt(q->rptr(), sizeof(uint32_t) * pkt->count, cb,
-                (void *)dmaBuffer);
+                (void *)dmaBuffer, sdma_delay);
 }
 
 /* Completion of data reading for a write packet. */
@@ -653,7 +663,7 @@ SDMAEngine::writeReadData(SDMAQueue *q, sdmaWrite *pkt, uint32_t *dmaBuffer)
         gpuDevice->getMemMgr()->writeRequest(mmhub_addr, (uint8_t *)dmaBuffer,
                                            bufferSize, 0, cb);
     } else {
-        if (q->priv()) {
+        if (q->priv() && cur_vmid == 0) {
             pkt->dest = getGARTAddr(pkt->dest);
         }
         auto cb = new DmaVirtCallback<uint32_t>(
@@ -700,7 +710,8 @@ SDMAEngine::copy(SDMAQueue *q, sdmaCopy *pkt)
     q->incRptr(sizeof(sdmaCopy));
     // count represents the number of bytes - 1 to be copied
     pkt->count++;
-    if (q->priv()) {
+
+    if (q->priv() && cur_vmid == 0) {
         if (!gpuDevice->getVM().inMMHUB(pkt->source)) {
             DPRINTF(SDMAEngine, "Getting GART addr for %lx\n", pkt->source);
             pkt->source = getGARTAddr(pkt->source);
@@ -735,7 +746,8 @@ SDMAEngine::copy(SDMAQueue *q, sdmaCopy *pkt)
     } else {
         auto cb = new DmaVirtCallback<uint64_t>(
             [ = ] (const uint64_t &) { copyReadData(q, pkt, dmaBuffer); });
-        dmaReadVirt(pkt->source, pkt->count, cb, (void *)dmaBuffer);
+        dmaReadVirt(pkt->source, pkt->count, cb, (void *)dmaBuffer,
+                sdma_delay);
     }
 }
 
@@ -831,9 +843,11 @@ SDMAEngine::copyCleanup(uint8_t *dmaBuffer)
 
 /* Implements an indirect buffer packet. */
 void
-SDMAEngine::indirectBuffer(SDMAQueue *q, sdmaIndirectBuffer *pkt)
+SDMAEngine::indirectBuffer(SDMAQueue *q, sdmaIndirectBuffer *pkt,
+        uint32_t header)
 {
-    if (q->priv()) {
+    cur_vmid = (header >> 16) & 0xF;
+    if (q->priv() && cur_vmid == 0) {
         q->ib()->base(getGARTAddr(pkt->base));
     } else {
         q->ib()->base(pkt->base);
@@ -853,7 +867,7 @@ void
 SDMAEngine::fence(SDMAQueue *q, sdmaFence *pkt)
 {
     q->incRptr(sizeof(sdmaFence));
-    if (q->priv()) {
+    if (q->priv() && cur_vmid == 0) {
         pkt->dest = getGARTAddr(pkt->dest);
     }
 
@@ -886,6 +900,23 @@ SDMAEngine::trap(SDMAQueue *q, sdmaTrap *pkt)
     int node_id = 0;
     int local_id = getId();
 
+    if (gpuDevice->getGfxVersion() == GfxVersion::gfx942 ||
+        gpuDevice->getGfxVersion() == GfxVersion::gfx950) {
+        node_id = getId() >> 2;
+
+        // For most SDMAs the "node_id" for the interrupt handler is the SDMA
+        // id / 4. node_id of 2 is used by some other IP, so this gets changed
+        // to node_id 4:
+        // SDMA 0-3: node_id 0
+        // SDMA 4-7: node_id 1
+        // SDMA 8-11: node_id 4
+        // SDMA 12-15: node_id 3
+        if (node_id == 2) {
+            node_id += 2;
+        }
+
+        local_id = getId() % 4;
+    }
     gpuDevice->getIH()->prepareInterruptCookie(pkt->intrContext, ring_id,
                                                getIHClientId(local_id),
                                                TRAP_ID, 2*node_id);
@@ -897,18 +928,20 @@ SDMAEngine::trap(SDMAQueue *q, sdmaTrap *pkt)
 
 /* Implements a write SRBM packet. */
 void
-SDMAEngine::srbmWrite(SDMAQueue *q, sdmaSRBMWriteHeader *header,
-                      sdmaSRBMWrite *pkt)
+SDMAEngine::srbmWrite(SDMAQueue *q, uint32_t header, sdmaSRBMWrite *pkt)
 {
     q->incRptr(sizeof(sdmaSRBMWrite));
+
+    sdmaSRBMWriteHeader srbm_header;
+    srbm_header.ordinal = header;
 
     [[maybe_unused]] uint32_t reg_addr = pkt->regAddr << 2;
     uint32_t reg_mask = 0x00000000;
 
-    if (header->byteEnable & 0x8) reg_mask |= 0xFF000000;
-    if (header->byteEnable & 0x4) reg_mask |= 0x00FF0000;
-    if (header->byteEnable & 0x2) reg_mask |= 0x0000FF00;
-    if (header->byteEnable & 0x1) reg_mask |= 0x000000FF;
+    if (srbm_header.byteEnable & 0x8) reg_mask |= 0xFF000000;
+    if (srbm_header.byteEnable & 0x4) reg_mask |= 0x00FF0000;
+    if (srbm_header.byteEnable & 0x2) reg_mask |= 0x0000FF00;
+    if (srbm_header.byteEnable & 0x1) reg_mask |= 0x000000FF;
     pkt->data &= reg_mask;
 
     DPRINTF(SDMAEngine, "SRBM write to %#x with data %#x\n",
@@ -916,7 +949,6 @@ SDMAEngine::srbmWrite(SDMAQueue *q, sdmaSRBMWriteHeader *header,
 
     gpuDevice->setRegVal(reg_addr, pkt->data);
 
-    delete header;
     delete pkt;
     decodeNext(q);
 }
@@ -927,26 +959,32 @@ SDMAEngine::srbmWrite(SDMAQueue *q, sdmaSRBMWriteHeader *header,
  * unsuccessfull it retries indefinitely or for a limited number of times.
  */
 void
-SDMAEngine::pollRegMem(SDMAQueue *q, sdmaPollRegMemHeader *header,
-                       sdmaPollRegMem *pkt)
+SDMAEngine::pollRegMem(SDMAQueue *q, uint32_t header, sdmaPollRegMem *pkt)
 {
     q->incRptr(sizeof(sdmaPollRegMem));
 
+    sdmaPollRegMemHeader prm_header;
+    prm_header.ordinal = header;
+
+    if (q->priv() && cur_vmid == 0) {
+        pkt->address = getGARTAddr(pkt->address);
+    }
+
     DPRINTF(SDMAEngine, "POLL_REGMEM: M=%d, func=%d, op=%d, addr=%p, ref=%d, "
-            "mask=%p, retry=%d, pinterval=%d\n", header->mode, header->func,
-            header->op, pkt->address, pkt->ref, pkt->mask, pkt->retryCount,
-            pkt->pollInt);
+            "mask=%p, retry=%d, pinterval=%d\n", prm_header.mode,
+            prm_header.func, prm_header.op, pkt->address, pkt->ref, pkt->mask,
+            pkt->retryCount, pkt->pollInt);
 
     bool skip = false;
 
-    if (header->mode == 1) {
+    if (prm_header.mode == 1) {
         // polling on a memory location
-        if (header->op == 0) {
+        if (prm_header.op == 0) {
             auto cb = new DmaVirtCallback<uint32_t>(
                 [ = ] (const uint32_t &dma_buffer) {
                     pollRegMemRead(q, header, pkt, dma_buffer, 0); });
             dmaReadVirt(pkt->address, sizeof(uint32_t), cb,
-                        (void *)&cb->dmaBuffer);
+                        (void *)&cb->dmaBuffer, sdma_delay);
         } else {
             panic("SDMA poll mem operation not implemented.");
             skip = true;
@@ -958,19 +996,21 @@ SDMAEngine::pollRegMem(SDMAQueue *q, sdmaPollRegMemHeader *header,
     }
 
     if (skip) {
-        delete header;
         delete pkt;
         decodeNext(q);
     }
 }
 
 void
-SDMAEngine::pollRegMemRead(SDMAQueue *q, sdmaPollRegMemHeader *header,
-                           sdmaPollRegMem *pkt, uint32_t dma_buffer, int count)
+SDMAEngine::pollRegMemRead(SDMAQueue *q, uint32_t header, sdmaPollRegMem *pkt,
+                           uint32_t dma_buffer, int count)
 {
-    assert(header->mode == 1 && header->op == 0);
+    sdmaPollRegMemHeader prm_header;
+    prm_header.ordinal = header;
 
-    if (!pollRegMemFunc(dma_buffer, pkt->ref, header->func) &&
+    assert(prm_header.mode == 1 && prm_header.op == 0);
+
+    if (!pollRegMemFunc(dma_buffer, pkt->ref, prm_header.func) &&
         ((count < (pkt->retryCount + 1) && pkt->retryCount != 0xfff) ||
          pkt->retryCount == 0xfff)) {
 
@@ -983,12 +1023,11 @@ SDMAEngine::pollRegMemRead(SDMAQueue *q, sdmaPollRegMemHeader *header,
             [ = ] (const uint32_t &dma_buffer) {
                 pollRegMemRead(q, header, pkt, dma_buffer, count + 1); });
         dmaReadVirt(pkt->address, sizeof(uint32_t), cb,
-                    (void *)&cb->dmaBuffer);
+                    (void *)&cb->dmaBuffer, sdma_delay);
     } else {
         DPRINTF(SDMAEngine, "SDMA polling mem addr %p, val %d ref %d done.\n",
                 pkt->address, dma_buffer, pkt->ref);
 
-        delete header;
         delete pkt;
         decodeNext(q);
     }
@@ -1055,7 +1094,7 @@ SDMAEngine::ptePde(SDMAQueue *q, sdmaPtePde *pkt)
                                              sizeof(uint64_t) * pkt->count, 0,
                                              cb);
     } else {
-        if (q->priv()) {
+        if (q->priv() && cur_vmid == 0) {
             pkt->dest = getGARTAddr(pkt->dest);
         }
         auto cb = new DmaVirtCallback<uint64_t>(
@@ -1095,29 +1134,37 @@ SDMAEngine::ptePdeCleanup(uint64_t *dmaBuffer)
 }
 
 void
-SDMAEngine::atomic(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt)
+SDMAEngine::atomic(SDMAQueue *q, uint32_t header, sdmaAtomic *pkt)
 {
     q->incRptr(sizeof(sdmaAtomic));
+
+    sdmaAtomicHeader at_header;
+    at_header.ordinal = header;
+
     DPRINTF(SDMAEngine, "Atomic op %d on addr %#lx, src: %ld, cmp: %ld, loop?"
-            " %d loopInt: %d\n", header->opcode, pkt->addr, pkt->srcData,
-            pkt->cmpData, header->loop, pkt->loopInt);
+            " %d loopInt: %d\n", at_header.opcode, pkt->addr, pkt->srcData,
+            pkt->cmpData, at_header.loop, pkt->loopInt);
 
     // Read the data at pkt->addr
     uint64_t *dmaBuffer = new uint64_t;
     auto cb = new DmaVirtCallback<uint64_t>(
         [ = ] (const uint64_t &)
             { atomicData(q, header, pkt, dmaBuffer); });
-    dmaReadVirt(pkt->addr, sizeof(uint64_t), cb, (void *)dmaBuffer);
+    dmaReadVirt(pkt->addr, sizeof(uint64_t), cb, (void *)dmaBuffer,
+            sdma_delay);
 }
 
 void
-SDMAEngine::atomicData(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt,
+SDMAEngine::atomicData(SDMAQueue *q, uint32_t header, sdmaAtomic *pkt,
                        uint64_t *dmaBuffer)
 {
-    DPRINTF(SDMAEngine, "Atomic op %d on addr %#lx got data %#lx\n",
-            header->opcode, pkt->addr, *dmaBuffer);
+    sdmaAtomicHeader at_header;
+    at_header.ordinal = header;
 
-    if (header->opcode == SDMA_ATOMIC_ADD64) {
+    DPRINTF(SDMAEngine, "Atomic op %d on addr %#lx got data %#lx\n",
+            at_header.opcode, pkt->addr, *dmaBuffer);
+
+    if (at_header.opcode == SDMA_ATOMIC_ADD64) {
         // Atomic add with return -- dst = dst + src
         int64_t dst_data = *dmaBuffer;
         int64_t src_data = pkt->srcData;
@@ -1133,19 +1180,21 @@ SDMAEngine::atomicData(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt,
                 { atomicDone(q, header, pkt, dmaBuffer); });
         dmaWriteVirt(pkt->addr, sizeof(uint64_t), cb, (void *)dmaBuffer);
     } else {
-        panic("Unsupported SDMA atomic opcode: %d\n", header->opcode);
+        panic("Unsupported SDMA atomic opcode: %d\n", at_header.opcode);
     }
 }
 
 void
-SDMAEngine::atomicDone(SDMAQueue *q, sdmaAtomicHeader *header, sdmaAtomic *pkt,
+SDMAEngine::atomicDone(SDMAQueue *q, uint32_t header, sdmaAtomic *pkt,
                        uint64_t *dmaBuffer)
 {
+    sdmaAtomicHeader at_header;
+    at_header.ordinal = header;
+
     DPRINTF(SDMAEngine, "Atomic op %d op addr %#lx complete (sent %lx)\n",
-            header->opcode, pkt->addr, *dmaBuffer);
+            at_header.opcode, pkt->addr, *dmaBuffer);
 
     delete dmaBuffer;
-    delete header;
     delete pkt;
     decodeNext(q);
 }
@@ -1245,11 +1294,11 @@ SDMAEngine::serialize(CheckpointOut &cp) const
     queues.push_back((SDMAQueue *)&gfxIb);
     queues.push_back((SDMAQueue *)&pageIb);
 
-    Addr base[num_queues];
-    Addr rptr[num_queues];
-    Addr wptr[num_queues];
-    Addr size[num_queues];
-    bool processing[num_queues];
+    auto base = std::make_unique<Addr[]>(num_queues);
+    auto rptr = std::make_unique<Addr[]>(num_queues);
+    auto wptr = std::make_unique<Addr[]>(num_queues);
+    auto size = std::make_unique<Addr[]>(num_queues);
+    auto processing = std::make_unique<bool[]>(num_queues);
 
     for (int i = 0; i < num_queues; i++) {
         base[i] = queues[i]->base();
@@ -1259,11 +1308,67 @@ SDMAEngine::serialize(CheckpointOut &cp) const
         processing[i] = queues[i]->processing();
     }
 
-    SERIALIZE_ARRAY(base, num_queues);
-    SERIALIZE_ARRAY(rptr, num_queues);
-    SERIALIZE_ARRAY(wptr, num_queues);
-    SERIALIZE_ARRAY(size, num_queues);
-    SERIALIZE_ARRAY(processing, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(base, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rptr, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(wptr, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(size, num_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(processing, num_queues);
+
+    // Capture RLC queue information in checkpoint
+    // Only two RLC queues are supported right now
+    const int num_rlc_queues = 2;
+    std::vector<SDMAQueue *> rlc_queues;
+    rlc_queues.push_back((SDMAQueue *)&rlc0);
+    rlc_queues.push_back((SDMAQueue *)&rlc1);
+
+    auto rlc_info = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_valid = std::make_unique<bool[]>(num_rlc_queues);
+    auto rlc_base = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_rptr = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_global_rptr = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_wptr = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_size = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_rptr_wb_addr = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_processing = std::make_unique<bool[]>(num_rlc_queues);
+    auto rlc_mqd_addr = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_priv = std::make_unique<bool[]>(num_rlc_queues);
+    auto rlc_static = std::make_unique<bool[]>(num_rlc_queues);
+    auto rlc_mqd = std::make_unique<uint32_t[]>(num_rlc_queues * 128);
+
+    // Save RLC queue information in arrays that
+    // are easier to serialize
+    for (int i = 0; i < num_rlc_queues; i++) {
+        rlc_valid[i] = rlc_queues[i]->valid();
+        if (rlc_valid[i]) {
+            rlc_info[i] = rlcInfo[i];
+            rlc_base[i] = rlc_queues[i]->base();
+            rlc_rptr[i] = rlc_queues[i]->getRptr();
+            rlc_global_rptr[i] = rlc_queues[i]->globalRptr();
+            rlc_wptr[i] = rlc_queues[i]->getWptr();
+            rlc_size[i] = rlc_queues[i]->size();
+            rlc_rptr_wb_addr[i] = rlc_queues[i]->rptrWbAddr();
+            rlc_processing[i] = rlc_queues[i]->processing();
+            rlc_mqd_addr[i] = rlc_queues[i]->getMQDAddr();
+            rlc_priv[i] = rlc_queues[i]->priv();
+            rlc_static[i] = rlc_queues[i]->isStatic();
+            memcpy(rlc_mqd.get() + 128*i, rlc_queues[i]->getMQD(),
+                    sizeof(SDMAQueueDesc));
+        }
+    }
+
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_info, num_rlc_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_valid, num_rlc_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_base, num_rlc_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_rptr, num_rlc_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_global_rptr, num_rlc_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_wptr, num_rlc_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_size, num_rlc_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_rptr_wb_addr, num_rlc_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_processing, num_rlc_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_mqd_addr, num_rlc_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_priv, num_rlc_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_static, num_rlc_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_mqd, num_rlc_queues * 128);
 }
 
 void
@@ -1284,17 +1389,17 @@ SDMAEngine::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(pageWptr);
 
     int num_queues = 4;
-    Addr base[num_queues];
-    Addr rptr[num_queues];
-    Addr wptr[num_queues];
-    Addr size[num_queues];
-    bool processing[num_queues];
+    auto base = std::make_unique<Addr[]>(num_queues);
+    auto rptr = std::make_unique<Addr[]>(num_queues);
+    auto wptr = std::make_unique<Addr[]>(num_queues);
+    auto size = std::make_unique<Addr[]>(num_queues);
+    auto processing = std::make_unique<bool[]>(num_queues);
 
-    UNSERIALIZE_ARRAY(base, num_queues);
-    UNSERIALIZE_ARRAY(rptr, num_queues);
-    UNSERIALIZE_ARRAY(wptr, num_queues);
-    UNSERIALIZE_ARRAY(size, num_queues);
-    UNSERIALIZE_ARRAY(processing, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(base, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rptr, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(wptr, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(size, num_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(processing, num_queues);
 
     std::vector<SDMAQueue *> queues;
     queues.push_back((SDMAQueue *)&gfx);
@@ -1308,6 +1413,62 @@ SDMAEngine::unserialize(CheckpointIn &cp)
         queues[i]->wptr(wptr[i]);
         queues[i]->size(size[i]);
         queues[i]->processing(processing[i]);
+    }
+
+    // Restore RLC queue state information from checkpoint
+    // Only two RLC queues are supported right now
+    const int num_rlc_queues = 2;
+    auto rlc_info = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_valid = std::make_unique<bool[]>(num_rlc_queues);
+    auto rlc_base = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_rptr = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_global_rptr = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_wptr = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_size = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_rptr_wb_addr = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_processing = std::make_unique<bool[]>(num_rlc_queues);
+    auto rlc_mqd_addr = std::make_unique<Addr[]>(num_rlc_queues);
+    auto rlc_priv = std::make_unique<bool[]>(num_rlc_queues);
+    auto rlc_static = std::make_unique<bool[]>(num_rlc_queues);
+    auto rlc_mqd = std::make_unique<uint32_t[]>(num_rlc_queues * 128);
+
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_info, num_rlc_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_valid, num_rlc_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_base, num_rlc_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_rptr, num_rlc_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_global_rptr, num_rlc_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_wptr, num_rlc_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_size, num_rlc_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_rptr_wb_addr, num_rlc_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_processing, num_rlc_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_mqd_addr, num_rlc_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_priv, num_rlc_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_static, num_rlc_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_mqd, num_rlc_queues * 128);
+
+    // Save RLC queue information into RLC0, RLC1
+    std::vector<SDMAQueue *> rlc_queues;
+    rlc_queues.push_back((SDMAQueue *)&rlc0);
+    rlc_queues.push_back((SDMAQueue *)&rlc1);
+
+    for (int i = 0; i < num_rlc_queues; i++) {
+        rlc_queues[i]->valid(rlc_valid[i]);
+        if (rlc_valid[i]) {
+            rlcInfo[i] = rlc_info[i];
+            rlc_queues[i]->base(rlc_base[i]);
+            rlc_queues[i]->rptr(rlc_rptr[i]);
+            rlc_queues[i]->setGlobalRptr(rlc_global_rptr[i]);
+            rlc_queues[i]->wptr(rlc_wptr[i]);
+            rlc_queues[i]->size(rlc_size[i]);
+            rlc_queues[i]->rptrWbAddr(rlc_rptr_wb_addr[i]);
+            rlc_queues[i]->processing(rlc_processing[i]);
+            rlc_queues[i]->setMQDAddr(rlc_mqd_addr[i]);
+            rlc_queues[i]->setPriv(rlc_priv[i]);
+            rlc_queues[i]->setStatic(rlc_static[i]);
+            SDMAQueueDesc* mqd = new SDMAQueueDesc();
+            memcpy(mqd, rlc_mqd.get() + 128*i, sizeof(SDMAQueueDesc));
+            rlc_queues[i]->setMQD(mqd);
+        }
     }
 }
 

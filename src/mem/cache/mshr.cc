@@ -60,20 +60,16 @@ namespace gem5
 {
 
 MSHR::MSHR(const std::string &name)
-    :   QueueEntry(name),
-        downstreamPending(false),
-        pendingModified(false),
-        postInvalidate(false), postDowngrade(false),
-        wasWholeLineWrite(false), isForward(false),
-        targets(name + ".targets"),
-        deferredTargets(name + ".deferredTargets")
+    : QueueEntry(name), Printable(), downstreamPending(false),
+      pendingModified(false), postInvalidate(false), postDowngrade(false),
+      wasWholeLineWrite(false), isForward(false), readyIter(), allocIter(),
+      targets(name + ".targets"), deferredTargets(name + ".deferredTargets")
 {
 }
 
 MSHR::TargetList::TargetList(const std::string &name)
-    :   Named(name),
-        needsWritable(false), hasUpgrade(false),
-        allocOnFill(false), hasFromCache(false)
+    : Named(name), needsWritable(false), hasUpgrade(false), allocOnFill(false),
+      hasFromCache(false), canMergeWrites(true)
 {}
 
 

@@ -86,13 +86,20 @@ class Decoder : public InstDecoder
 
         InstBytes() : lastOffset(0)
         {}
-    };
 
-    InstBytes dummy;
+        void
+        reset()
+        {
+            si = nullptr;
+            chunks.clear();
+            masks.clear();
+            lastOffset = 0;
+        }
+    };
 
     // The bytes to be predecoded.
     MachInst fetchChunk;
-    InstBytes *instBytes = &dummy;
+    InstBytes instBytes;
     int chunkIdx;
     // The pc of the start of fetchChunk.
     Addr basePC = 0;
@@ -149,13 +156,13 @@ class Decoder : public InstDecoder
         assert(offset <= sizeof(MachInst));
         if (offset == sizeof(MachInst)) {
             DPRINTF(Decoder, "At the end of a chunk, idx = %d, chunks = %d.\n",
-                    chunkIdx, instBytes->chunks.size());
+                    chunkIdx, instBytes.chunks.size());
             chunkIdx++;
-            if (chunkIdx == instBytes->chunks.size()) {
+            if (chunkIdx == instBytes.chunks.size()) {
                 outOfBytes = true;
             } else {
                 offset = 0;
-                fetchChunk = instBytes->chunks[chunkIdx];
+                fetchChunk = instBytes.chunks[chunkIdx];
                 basePC += sizeof(MachInst);
             }
         }
@@ -210,7 +217,6 @@ class Decoder : public InstDecoder
 
     // Functions to handle each of the states
     State doResetState();
-    State doFromCacheState();
     State doPrefixState(uint8_t);
     State doVex2Of2State(uint8_t);
     State doVex2Of3State(uint8_t);
@@ -235,11 +241,6 @@ class Decoder : public InstDecoder
     /// Caching for decoded instruction objects.
 
     typedef RegVal CacheKey;
-
-    typedef decode_cache::AddrMap<Decoder::InstBytes> DecodePages;
-    DecodePages *decodePages = nullptr;
-    typedef std::unordered_map<CacheKey, DecodePages *> AddrCacheMap;
-    AddrCacheMap addrCacheMap;
 
     decode_cache::InstMap<ExtMachInst> *instMap = nullptr;
     typedef std::unordered_map<
@@ -278,14 +279,6 @@ class Decoder : public InstDecoder
         altAddr = m5Reg.altAddr;
         defAddr = m5Reg.defAddr;
         stack = m5Reg.stack;
-
-        AddrCacheMap::iterator amIter = addrCacheMap.find(m5Reg);
-        if (amIter != addrCacheMap.end()) {
-            decodePages = amIter->second;
-        } else {
-            decodePages = new DecodePages;
-            addrCacheMap[m5Reg] = decodePages;
-        }
 
         InstCacheMap::iterator imIter = instCacheMap.find(m5Reg);
         if (imIter != instCacheMap.end()) {

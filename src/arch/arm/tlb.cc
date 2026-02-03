@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2016-2024 Arm Limited
+ * Copyright (c) 2010-2013, 2016-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -140,10 +140,9 @@ TLB::~TLB()
 }
 
 void
-TLB::setTableWalker(TableWalker *table_walker)
+TLB::setTableWalker(TableWalker *table_walker, bool functional)
 {
     tableWalker = table_walker;
-    tableWalker->setTlb(this);
 }
 
 TlbEntry*
@@ -162,13 +161,15 @@ TLB::lookup(Lookup lookup_data)
     }
 
     DPRINTF(TLBVerbose, "Lookup %#x, asn %#x -> %s vmn 0x%x ss %s "
-            "ppn %#x size: %#x pa: %#x ap:%d ns:%d ss:%s g:%d asid: %d "
+            "ppn %#x size: %#x pa: %#x ap:%d piindex:%d "
+            "ns:%d ss:%s g:%d asid: %d "
             "xs: %d regime: %s\n",
             lookup_data.va, lookup_data.asn, retval ? "hit" : "miss",
             lookup_data.vmid, lookup_data.ss,
             retval ? retval->pfn       : 0, retval ? retval->size  : 0,
             retval ? retval->pAddr(lookup_data.va) : 0,
             retval ? retval->ap        : 0,
+            retval ? retval->piindex   : 0,
             retval ? retval->ns        : 0,
             retval ? retval->ss : SecurityState::NonSecure,
             retval ? retval->global    : 0, retval ? retval->asid  : 0,
@@ -253,7 +254,12 @@ TLB::insert(const Lookup &lookup_data, TlbEntry &entry)
 
     observedPageSizes.insert(entry.N);
     stats.inserts++;
-    ppRefills->notify(1);
+
+    if (lookup_data.mode == BaseMMU::Execute) {
+        ppInstRefills->notify(1);
+    } else {
+        ppDataRefills->notify(1);
+    }
 }
 
 void
@@ -385,7 +391,11 @@ TLB::TlbStats::TlbStats(TLB &parent)
 void
 TLB::regProbePoints()
 {
-    ppRefills.reset(new probing::PMU(getProbeManager(), "Refills"));
+    ppInstRefills.reset(
+        new probing::PMU(getProbeManager(), "InstRefills"));
+
+    ppDataRefills.reset(
+        new probing::PMU(getProbeManager(), "DataRefills"));
 }
 
 Port *

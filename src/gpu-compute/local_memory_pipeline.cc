@@ -83,6 +83,7 @@ LocalMemPipeline::exec()
                 m->cu_id, m->simdId, m->wfSlotId, m->disassemble());
         m->completeAcc(m);
         w->decLGKMInstsIssued();
+        w->untrackLGKMInst(m);
 
         if (m->isLoad() || m->isAtomicRet()) {
             w->computeUnit->vrf[w->simdId]->
@@ -148,6 +149,12 @@ LocalMemPipeline::issueRequest(GPUDynInstPtr gpuDynInst)
     lmIssuedRequests.push(gpuDynInst);
 }
 
+void
+LocalMemPipeline::printProgress()
+{
+    std::cout << "LMPipe issued: " << lmIssuedRequests.size()
+              << " returned: "<< lmReturnedRequests.size() << "\n";
+}
 
 LocalMemPipeline::
 LocalMemPipelineStats::LocalMemPipelineStats(statistics::Group *parent)
