@@ -35,11 +35,13 @@ SimObject('ThermalDomain.py', sim_objects=['ThermalDomain'])
 SimObject('ThermalModel.py', sim_objects=[
     'ThermalNode', 'ThermalResistor', 'ThermalCapacitor',
     'ThermalReference', 'ThermalModel'])
+SimObject('PowerModelPyFunc.py', sim_objects=['PowerModelPyFunc'])
 
 Source('power_model.cc')
 Source('mathexpr_powermodel.cc')
 Source('thermal_domain.cc')
 Source('thermal_model.cc')
 Source('thermal_node.cc')
+Source('power_model_pyfunc.cc')
 
 DebugFlag('ThermalDomain')
