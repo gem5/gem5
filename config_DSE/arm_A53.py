@@ -50,7 +50,7 @@ def argument_parse():
         # default=["1.0", "2.0", "3.0"],
         default=[
             "/home/abg309/PhD/RCL/Controllers_GEM5/controllers-binary/Quadruped_Controllers/config.yaml",
-            "latte3",
+            "PI_Zero",
         ],
         help="Input array",
     )
@@ -62,7 +62,7 @@ def argument_parse():
 
 # setting up the cache hierarchy
 cache_hierarchy = MESITwoLevelCacheHierarchy(
-    l1d_size="24KiB",
+    l1d_size="32KiB",
     l1d_assoc=6,
     l1i_size="32KiB",
     l1i_assoc=8,
@@ -88,7 +88,7 @@ processor = SimpleSwitchableProcessor(
 
 # create a processor
 board = X86Board(
-    clk_freq="3.4GHz",
+    clk_freq="1.0GHz",
     processor=processor,
     memory=memory,
     cache_hierarchy=cache_hierarchy,
