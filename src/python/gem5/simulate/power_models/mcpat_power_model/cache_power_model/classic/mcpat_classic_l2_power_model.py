@@ -25,16 +25,10 @@ class L2PowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
     def dynamic_power(self):
         """Returns dynamic power in Watts"""
         total_energy = self.l2cache_energy()
-        print(f"L2cache energy: {total_energy}")
         total_energy += self.miss_buffer_energy()
-        print(f"\t+ mb energy: {total_energy}")
         total_energy += self.inst_fill_buffer_energy()
-        print(f"\t+ ifb energy: {total_energy}")
         total_energy += self.prefetch_buffer_energy()
-        print(f"\t+ prefetch energy: {total_energy}")
         total_energy += self.writeback_buffer_energy()
-        print(f"\t+ wbb energy: {total_energy}")
-        print(f"L2 power: {self.convert_to_watts(total_energy)}")
         return self.convert_to_watts(total_energy)
 
     def l2cache_energy(self):
@@ -51,7 +45,7 @@ class L2PowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
         read_hits = read_accesses - read_misses
         write_hits = write_accesses - write_misses
         return (
-            read_hits * self._l2cache_read_ae
+            read_hits * self._act_energies["L2Cache"]["Read"]
             + read_misses * self._act_energies["L2CacheTag"]["Read"]
             + write_misses * self._act_energies["L2CacheTag"]["Write"]
             + write_accesses * self._act_energies["L2Cache"]["Write"]

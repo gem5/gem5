@@ -99,6 +99,7 @@ class ChanneledMemory(AbstractMemorySystem):
         """
         num_channels = _try_convert(num_channels, int)
         interleaving_size = _try_convert(interleaving_size, int)
+        self._block_size = 0
 
         if size:
             size = _try_convert(size, str)
@@ -171,6 +172,7 @@ class ChanneledMemory(AbstractMemorySystem):
 
     @overrides(AbstractMemorySystem)
     def incorporate_memory(self, board: AbstractBoard) -> None:
+        self._block_size = board.get_cache_line_size()
         if self._intlv_size < int(board.get_cache_line_size()):
             raise ValueError(
                 "Memory interleaving size can not be smaller than"
@@ -213,3 +215,6 @@ class ChanneledMemory(AbstractMemorySystem):
     @overrides(AbstractMemorySystem)
     def get_uninterleaved_range(self) -> List[AddrRange]:
         return [self._mem_range]
+
+    def get_cache_line_size(self) -> int:
+        return self._block_size

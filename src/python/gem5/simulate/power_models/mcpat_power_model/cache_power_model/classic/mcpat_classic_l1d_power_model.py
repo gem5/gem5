@@ -25,16 +25,10 @@ class L1DPowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
     def dynamic_power(self):
         """Returns dynamic power in Watts"""
         total_energy = self.dcache_energy()
-        print(f"L1Dcache energy: {total_energy}")
         total_energy += self.miss_buffer_energy()
-        print(f"\t+ mb energy: {total_energy}")
         total_energy += self.inst_fill_buffer_energy()
-        print(f"\t+ ifb energy: {total_energy}")
         total_energy += self.prefetch_buffer_energy()
-        print(f"\t+ prefetch energy: {total_energy}")
         total_energy += self.writeback_buffer_energy()
-        print(f"\t+ wbb energy: {total_energy}")
-        print(f"L1D power: {self.convert_to_watts(total_energy)}")
         return self.convert_to_watts(total_energy)
 
     def dcache_energy(self):
@@ -50,7 +44,7 @@ class L1DPowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
         energy = (
             read_hits * self._act_energies["DataCache"]["Read"]
             + read_misses * self._act_energies["DataCache"]["Read"]
-            + write_misses * self._dcache_tag_ae
+            + write_misses * self._act_energies["DataCacheTag"]
             + write_accesses * self._act_energies["DataCache"]["Write"]
         )
         if self._writeback:

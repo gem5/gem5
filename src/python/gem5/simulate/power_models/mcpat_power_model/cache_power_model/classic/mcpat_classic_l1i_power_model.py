@@ -28,7 +28,6 @@ class L1IPowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
         energy += self.miss_buffer_energy()
         energy += self.inst_fill_buffer_energy()
         energy += self.prefetch_buffer_energy()
-        print(f"L1I power: {self.convert_to_watts(energy)}")
         return self.convert_to_watts(energy)
 
     def icache_energy(self):
