@@ -49,6 +49,214 @@ PySource('gem5.simulate', 'gem5/simulate/simulator.py')
 PySource('gem5.simulate', 'gem5/simulate/exit_event.py')
 PySource('gem5.simulate', 'gem5/simulate/exit_event_generators.py')
 PySource('gem5.simulate', 'gem5/simulate/exit_handler.py')
+PySource('gem5.simulate.power_models',
+         'gem5/simulate/power_models/__init__.py')
+
+PySource('gem5.simulate.power_models',
+         'gem5/simulate/power_models/abstract_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/__init__.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/'
+         'base_mcpat_power_model.py')
+
+# CPU Power Models
+PySource('gem5.simulate.power_models.mcpat_power_model.cpu_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cpu_power_model/'
+         '__init__.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.cpu_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cpu_power_model/'
+         'mcpat_cpu_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.cpu_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cpu_power_model/'
+         'mcpat_cpu_fetch_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.cpu_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cpu_power_model/'
+         'mcpat_cpu_decode_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.cpu_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cpu_power_model/'
+         'mcpat_cpu_btb_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.cpu_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cpu_power_model/'
+         'mcpat_cpu_tournament_bp_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.cpu_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cpu_power_model/'
+         'mcpat_cpu_exec_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.cpu_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cpu_power_model/'
+         'mcpat_cpu_rf_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.cpu_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cpu_power_model/'
+         'mcpat_cpu_alu_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.cpu_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cpu_power_model/'
+         'mcpat_cpu_inst_scheduler_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.cpu_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cpu_power_model/'
+         'mcpat_cpu_lsu_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.cpu_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cpu_power_model/'
+         'mcpat_cpu_mmu_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.cpu_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cpu_power_model/'
+         'mcpat_cpu_renaming_unit_power_model.py')
+
+# Memory Control Power Models
+PySource('gem5.simulate.power_models.mcpat_power_model.mem_ctrl_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/mem_ctrl_power_model/'
+         '__init__.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.mem_ctrl_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/mem_ctrl_power_model/'
+         'mcpat_mem_ctrl_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.mem_ctrl_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/mem_ctrl_power_model/'
+         'mcpat_mem_phy_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.mem_ctrl_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/mem_ctrl_power_model/'
+         'mcpat_mem_frontend_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.mem_ctrl_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/mem_ctrl_power_model/'
+         'mcpat_mem_backend_power_model.py')
+
+# Cache Power Models
+PySource('gem5.simulate.power_models.mcpat_power_model.'
+         'cache_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cache_power_model/'
+         '__init__.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.'
+         'cache_power_model.classic',
+         'gem5/simulate/power_models/mcpat_power_model/cache_power_model/'
+         'classic/__init__.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.'
+         'cache_power_model.classic',
+         'gem5/simulate/power_models/mcpat_power_model/cache_power_model/'
+         'classic/mcpat_classic_l1i_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.'
+         'cache_power_model.classic',
+         'gem5/simulate/power_models/mcpat_power_model/cache_power_model/'
+         'classic/mcpat_classic_l1d_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.'
+         'cache_power_model.classic',
+         'gem5/simulate/power_models/mcpat_power_model/cache_power_model/'
+         'classic/mcpat_classic_l2_power_model.py')
+
+# Accelwattch Power Model
+PySource('gem5.simulate.power_models.accelwattch_power_model',
+         'gem5/simulate/power_models/accelwattch_power_model/__init__.py')
+PySource('gem5.simulate.power_models.accelwattch_power_model',
+         'gem5/simulate/power_models/accelwattch_power_model/'
+         'base_accelwattch_power_model.py')
+PySource('gem5.simulate.power_models.accelwattch_power_model.gpu_power_model',
+         'gem5/simulate/power_models/accelwattch_power_model/gpu_power_model/'
+         '__init__.py')
+PySource('gem5.simulate.power_models.accelwattch_power_model.gpu_power_model',
+         'gem5/simulate/power_models/accelwattch_power_model/gpu_power_model/'
+         'accelwattch_inst_buffer_power_model.py')
+
+PySource('gem5.simulate.power_models.accelwattch_power_model.gpu_power_model',
+         'gem5/simulate/power_models/accelwattch_power_model/gpu_power_model/'
+         'accelwattch_reg_file_power_model.py')
+
+PySource('gem5.simulate.power_models.accelwattch_power_model.gpu_power_model',
+         'gem5/simulate/power_models/accelwattch_power_model/gpu_power_model/'
+         'accelwattch_lds_power_model.py')
+
+PySource('gem5.simulate.power_models.accelwattch_power_model.gpu_power_model',
+         'gem5/simulate/power_models/accelwattch_power_model/gpu_power_model/'
+         'accelwattch_alu_power_model.py')
+PySource('gem5.simulate.power_models.accelwattch_power_model.gpu_power_model',
+         'gem5/simulate/power_models/accelwattch_power_model/gpu_power_model/'
+         'accelwattch_fpu_power_model.py')
+PySource('gem5.simulate.power_models.accelwattch_power_model.gpu_power_model',
+         'gem5/simulate/power_models/accelwattch_power_model/gpu_power_model/'
+         'accelwattch_sfu_power_model.py')
+PySource('gem5.simulate.power_models.accelwattch_power_model.gpu_power_model',
+         'gem5/simulate/power_models/accelwattch_power_model/gpu_power_model/'
+         'accelwattch_scheduler_power_model.py')
+PySource('gem5.simulate.power_models.accelwattch_power_model.gpu_power_model',
+         'gem5/simulate/power_models/accelwattch_power_model/gpu_power_model/'
+         'accelwattch_pipeline_power_model.py')
+PySource('gem5.simulate.power_models.accelwattch_power_model.gpu_power_model',
+         'gem5/simulate/power_models/accelwattch_power_model/gpu_power_model/'
+         'accelwattch_idle_power_model.py')
+
+PySource('gem5.simulate.power_models.'
+         'accelwattch_power_model.gpu_memory_power_model',
+         'gem5/simulate/power_models/accelwattch_power_model/'
+         'gpu_memory_power_model/__init__.py')
+
+PySource('gem5.simulate.power_models.'
+         'accelwattch_power_model.gpu_memory_power_model',
+         'gem5/simulate/power_models/accelwattch_power_model/'
+         'gpu_memory_power_model/base_accelwattch_memory_power_model.py')
+
+PySource('gem5.simulate.power_models.'
+         'accelwattch_power_model.gpu_memory_power_model',
+         'gem5/simulate/power_models/accelwattch_power_model/'
+         'gpu_memory_power_model/accelwattch_memory_ctrl_power_model.py')
+PySource('gem5.simulate.power_models.'
+         'accelwattch_power_model.gpu_memory_power_model',
+         'gem5/simulate/power_models/accelwattch_power_model/'
+         'gpu_memory_power_model/accelwattch_memory_phy_power_model.py')
+PySource('gem5.simulate.power_models.'
+         'accelwattch_power_model.gpu_memory_power_model',
+         'gem5/simulate/power_models/accelwattch_power_model/'
+         'gpu_memory_power_model/accelwattch_memory_frontend_power_model.py')
+PySource('gem5.simulate.power_models.'
+         'accelwattch_power_model.gpu_memory_power_model',
+         'gem5/simulate/power_models/accelwattch_power_model/'
+         'gpu_memory_power_model/accelwattch_memory_backend_power_model.py')
+PySource('gem5.simulate.power_models.'
+         'accelwattch_power_model.gpu_memory_power_model',
+         'gem5/simulate/power_models/accelwattch_power_model/'
+         'gpu_memory_power_model/accelwattch_dram_power_model.py')
+
+PySource('gem5.simulate.power_models.'
+         'accelwattch_power_model.gpu_caches_power_model',
+         'gem5/simulate/power_models/accelwattch_power_model/'
+         'gpu_caches_power_model/__init__.py')
+PySource('gem5.simulate.power_models.'
+         'accelwattch_power_model.gpu_caches_power_model',
+         'gem5/simulate/power_models/accelwattch_power_model/'
+         'gpu_caches_power_model/accelwattch_icache_power_model.py')
+PySource('gem5.simulate.power_models.'
+         'accelwattch_power_model.gpu_caches_power_model',
+         'gem5/simulate/power_models/accelwattch_power_model/'
+         'gpu_caches_power_model/accelwattch_dcache_power_model.py')
+PySource('gem5.simulate.power_models.'
+         'accelwattch_power_model.gpu_caches_power_model',
+         'gem5/simulate/power_models/accelwattch_power_model/'
+         'gpu_caches_power_model/accelwattch_l2cache_power_model.py')
+PySource('gem5.simulate.power_models.'
+         'accelwattch_power_model.gpu_caches_power_model',
+         'gem5/simulate/power_models/accelwattch_power_model/'
+         'gpu_caches_power_model/accelwattch_noc_power_model.py')
+
+
+
+
 PySource('gem5.components', 'gem5/components/__init__.py')
 PySource('gem5.components.boards', 'gem5/components/boards/__init__.py')
 PySource('gem5.components.boards', 'gem5/components/boards/abstract_board.py')
