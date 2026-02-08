@@ -388,9 +388,6 @@ def define_post_processors(config):
             return isa
 
     def default_variant(variant):
-        # If running TestLib for gcov, build gem5.debug
-        if config._lookup_val("gcov")[0]:
-            return [[constants.debug_tag]]
         if not variant[0]:
             # Default variant is only opt. No need to run tests with multiple
             # different compilation targets
