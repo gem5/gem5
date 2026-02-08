@@ -613,12 +613,10 @@ def run_gcovr(
 
     log.message("Now running gcovr...")
 
-    gcov_result_json_name = "gcov-results.json"
-    gcov_summary_json_name = "gcov-summary.json"
+    gcov_result_xml_name = "gcov-results.xml"
 
     if gcov_option == "all-test-and-gcov":
-        gcov_result_json_name = f"{isa}-{gcov_result_json_name}"
-        gcov_summary_json_name = f"{isa}-{gcov_summary_json_name}"
+        gcov_result_xml_name = f"{isa}-{gcov_result_xml_name}"
 
     # must use gcovr version >= 7.1, otherwise gcovr won't be able to handle
     # more than 9999 lines of code
@@ -633,12 +631,8 @@ def run_gcovr(
         build_target_dir,
         "--gcov-ignore-parse-errors=suspicious_hits.warn",
         "--gcov-ignore-parse-errors=negative_hits.warn",
-        "--json",
-        os.path.join(gcovr_outdir, gcov_result_json_name),
-        "--json-pretty",
-        "--json-summary",
-        os.path.join(gcovr_outdir, gcov_summary_json_name),
-        "--json-summary-pretty",
+        "--xml",
+        os.path.join(gcovr_outdir, gcov_result_xml_name),
         "-j",
         test_threads,
     ]
