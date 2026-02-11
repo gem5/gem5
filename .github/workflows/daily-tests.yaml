@@ -166,7 +166,6 @@ jobs:
             - name: Run long ${{ matrix.test-type }} tests
               id: run-tests
               timeout-minutes: 1410
-              continue-on-error: true
               working-directory: ${{ github.workspace }}/tests
               run: ./main.py run ${{ matrix.test-type }} -j$(nproc) --length=long -vv -t $(nproc) --exclude-tags gcn_gpu
 
@@ -207,7 +206,6 @@ jobs:
             - name: Run Testlib GPU Tests
               id: run-tests
               timeout-minutes: 1410
-              continue-on-error: true
               working-directory: ${{ github.workspace }}/tests
               run: ./main.py run --length=long -vvv -j $(nproc) --host gcn_gpu
 

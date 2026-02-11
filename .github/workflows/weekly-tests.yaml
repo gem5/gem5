@@ -74,7 +74,6 @@ jobs:
             - name: Run very-long ${{ matrix.test-type }} tests
               id: run-tests
               timeout-minutes: 4290
-              continue-on-error: true
               working-directory: ${{ github.workspace }}/tests
               run: ./main.py run ${{ matrix.test-type }} --length very-long -j$(nproc) -vv --exclude-tags gcn_gpu
 
@@ -113,7 +112,6 @@ jobs:
               working-directory: ${{ github.workspace }}/tests
               run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu
               timeout-minutes: 1410
-              continue-on-error: true
 
             - name: Upload results
               if: always()
