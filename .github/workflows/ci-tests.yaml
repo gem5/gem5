@@ -211,7 +211,7 @@ jobs:
 
             - name: Sanitize build-target for artifact name
               id: sanitize-build-target
-              if: success() || failure()
+              if: always()
               run: echo "sanitized-build-target=$(echo '${{ matrix.build-target }}' | sed 's/[\\|\.]/-/g' | sed 's/[\/|__w|gem5|build]//g')" >> $GITHUB_OUTPUT
 
         # Upload the gem5 binary as an artifact.
@@ -266,12 +266,12 @@ jobs:
         # Get the basename of the matrix.test-dir path (to name the artifact).
             - name: Sanitize test-dir for artifact name
               id: sanitize-test-dir
-              if: success() || failure()
+              if: always()
               run: echo "sanitized-test-dir=$(echo '${{ matrix.test-dir }}' | sed 's/\//-/g')" >> $GITHUB_OUTPUT
 
         # Upload the tests/testing-results directory as an artifact.
             - name: Upload results
-              if: success() || failure()
+              if: always()
               uses: actions/upload-artifact@v4
               with:
                   name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-quick-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir
@@ -304,7 +304,7 @@ jobs:
 
             # Upload the tests/testing-results directory as an artifact.
             - name: Upload results
-              if: success() || failure()
+              if: always()
               uses: actions/upload-artifact@v4
               with:
                   name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gpu-status-${{ steps.run-tests.outcome }}-output

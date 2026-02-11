@@ -78,11 +78,11 @@ jobs:
 
             - name: Sanitize test-dir for artifact name
               id: sanitize-test-dir
-              if: success() || failure()
+              if: always()
               run: echo "sanitized-test-dir=$(echo '${{ matrix.test-type }}' | sed 's/\//-/g')" >> $GITHUB_OUTPUT
 
             - name: Upload results
-              if: success() || failure()
+              if: always()
               uses: actions/upload-artifact@v4
               with:
                   name: weekly-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-very-long-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir
@@ -112,7 +112,7 @@ jobs:
               run: ./main.py run --length=very-long -vvv -j $(nproc) --host gcn_gpu
 
             - name: Upload results
-              if: success() || failure()
+              if: always()
               uses: actions/upload-artifact@v4
               with:
                   name: weekly-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gpu-status-${{ steps.run-tests.outcome }}-output
