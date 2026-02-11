@@ -40,6 +40,7 @@
 #include <linux/kvm.h>
 
 #include "arch/arm/regs/int.hh"
+#include "arch/arm/regs/misc_info.hh"
 #include "arch/arm/regs/vec.hh"
 #include "arch/arm/utility.hh"
 #include "debug/KvmContext.hh"
