@@ -78,14 +78,18 @@ std::shared_mutex globalEventLock;
 Events &
 topLevelEvents()
 {
-    static Events topLevelEvents;
+    // Intentionally use a reference to a leaked heap allocation to avoid
+    // destruction order issues.
+    static Events &topLevelEvents = *new Events;
     return topLevelEvents;
 }
 
 Events &
 allEvents()
 {
-    static Events allEvents;
+    // Intentionally use a reference to a leaked heap allocation to avoid
+    // destruction order issues.
+    static Events &allEvents = *new Events;
     return allEvents;
 }
 
