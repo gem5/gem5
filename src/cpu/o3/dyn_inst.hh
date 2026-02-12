@@ -595,6 +595,12 @@ class DynInst : public ExecContext, public RefCounted
     bool isHtmCancel() const { return staticInst->isHtmCancel(); }
     bool isHtmCmd() const { return staticInst->isHtmCmd(); }
 
+    bool
+    isCsrInst() const
+    {
+        return staticInst->isCsrInst();
+    }
+
     uint64_t
     getHtmTransactionUid() const override
     {

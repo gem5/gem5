@@ -198,6 +198,8 @@ class StaticInst : public RefCounted, public StaticInstFlags
 
     bool isInvalid() const { return flags[IsInvalid]; }
 
+    bool isCsrInst() const { return flags[IsCsrInst]; }
+
     bool
     isHtmCmd() const
     {

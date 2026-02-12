@@ -701,6 +701,31 @@ Rename::renameInsts(ThreadID tid)
             handleMiscRegWaW(inst, tid);
         }
 
+        //***clear the serialization of csr read***///
+        /**for riscv isa specificly**/
+        gem5::ThreadContext *tc = inst->tcBase();
+        UnifiedRenameMap *map = renameMap[tid];
+        auto *isa = tc->getIsaPtr();
+        //check csr inst in user mode
+        if (isa->readMiscRegNoEffect(0) == 0 && inst->isCsrInst()){
+            bool writesCsr = false;
+
+            for (int i = 0; i < inst->numDestRegs(); i++) {
+                const RegId &dest_reg = inst->destRegIdx(i);
+                const RegId flat_reg = dest_reg.flatten(*isa);
+                PhysRegIdPtr phys_reg = map->lookup(flat_reg);
+                if (phys_reg->classValue() == MiscRegClass) {
+                    writesCsr = true;
+                    break;
+                }
+            }
+
+            if (!writesCsr){
+                //inst->clearSerializeAfter();
+                inst->setSerializeHandled();
+            }
+        }
+
         // Handle serializeAfter/serializeBefore instructions.
         // serializeAfter marks the next instruction as serializeBefore.
         // serializeBefore makes the instruction wait in rename until the ROB
