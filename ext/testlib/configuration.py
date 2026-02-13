@@ -797,6 +797,7 @@ class ListParser(ArgParser):
         common_args.host.add_to(parser)
         common_args.include_tags.add_to(parser)
         common_args.exclude_tags.add_to(parser)
+        common_args.gcov.add_to(parser)
 
 
 class RerunParser(ArgParser):
