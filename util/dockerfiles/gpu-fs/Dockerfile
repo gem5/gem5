@@ -35,7 +35,7 @@ LABEL org.opencontainers.image.licenses=BSD-3-Clause
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt -y update && apt -y upgrade && \
-    apt -y install build-essential git m4 scons zlib1g zlib1g-dev \
+    apt -y install build-essential git m4 cmake ninja-build zlib1g zlib1g-dev \
     libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
     python3-dev python-is-python3 doxygen libboost-all-dev \
     libhdf5-serial-dev python3-pydot libpng-dev libelf-dev pkg-config wget

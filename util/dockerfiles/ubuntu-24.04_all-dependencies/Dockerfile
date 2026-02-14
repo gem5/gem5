@@ -31,7 +31,7 @@ LABEL org.opencontainers.image.licenses=BSD-3-Clause
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt -y update && apt -y upgrade && apt -y install \
     build-essential \
-    scons \
+    ninja-build \
     python3-dev \
     git \
     pre-commit \

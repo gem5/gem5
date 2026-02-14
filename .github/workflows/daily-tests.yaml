@@ -82,7 +82,7 @@ jobs:
                   restore-keys: |
                       testlib-build-all
 
-            - name: Build ALL/gem5.opt
+            - name: Build ALL/gem5
               run: |
                   cmake -G Ninja -DCMAKE_BUILD_TYPE=GEM5_OPT -DGEM5_BUILD_VARIANT=ALL -DGEM5_NO_COMPRESS_DEBUG=ON -B build/ALL
                   ninja -C build/ALL -j$(nproc)
@@ -221,7 +221,7 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
-            - name: Build RISCV/libgem5_opt.so with SST
+            - name: Build RISCV/libgem5_shared.so with SST
               run: |
                   cmake -G Ninja -DCMAKE_BUILD_TYPE=GEM5_OPT -DGEM5_BUILD_VARIANT=RISCV -DGEM5_WITH_TCMALLOC=OFF -B build/RISCV
                   ninja -C build/RISCV gem5_shared -j$(nproc)
@@ -244,19 +244,19 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
-            - name: Build ARM/gem5.opt
+            - name: Build ARM/gem5
               run: |
                   cmake -G Ninja -DCMAKE_BUILD_TYPE=GEM5_OPT -DGEM5_BUILD_VARIANT=ARM -B build/ARM
                   ninja -C build/ARM -j$(nproc)
-            - name: Build ARM/libgem5_opt.so (without SystemC, with C++ config)
+            - name: Build ARM/libgem5_shared.so (without SystemC, with C++ config)
               run: |
                   cmake -G Ninja -DCMAKE_BUILD_TYPE=GEM5_OPT -DGEM5_BUILD_VARIANT=ARM \
                     -DGEM5_WITH_CXX_CONFIG=ON -DGEM5_WITHOUT_PYTHON=ON -DGEM5_WITH_TCMALLOC=OFF \
                     -B build/ARM-shared
                   ninja -C build/ARM-shared gem5_shared -j$(nproc)
-            - name: Compile gem5 withing SystemC
+            - name: Compile gem5 within SystemC
               working-directory: ${{ github.workspace }}/util/systemc/gem5_within_systemc
-              run: make
+              run: make GEM5_BUILD_DIR=../../../build/ARM-shared
             - name: Run gem5 within SystemC test
               run: ./build/ARM/gem5 configs/deprecated/example/se.py -c tests/test-progs/hello/bin/arm/linux/hello
             - name: Continue gem5 within SystemC test

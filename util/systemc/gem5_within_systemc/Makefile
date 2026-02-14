@@ -35,15 +35,18 @@
 
 ARCH = ARM
 VARIANT = opt
+GEM5_ROOT = ../../..
+GEM5_BUILD_DIR = $(GEM5_ROOT)/build/$(ARCH)
 
 SYSTEMC_INC = /opt/systemc/include
 SYSTEMC_LIB = /opt/systemc/lib-linux64
 
-CXXFLAGS = -I../../../build/$(ARCH) -L../../../build/$(ARCH) -I../../../ext/
+CXXFLAGS = -I$(GEM5_ROOT)/src -I$(GEM5_BUILD_DIR)/generated -I$(GEM5_ROOT)/include -I$(GEM5_ROOT)/ext
+CXXFLAGS += -L$(GEM5_BUILD_DIR)
 CXXFLAGS += -I$(SYSTEMC_INC) -L$(SYSTEMC_LIB)
 CXXFLAGS += -std=c++17
 CXXFLAGS += -g -DTRACING_ON
-LIBS = -lgem5_$(VARIANT) -lsystemc -lpng
+LIBS = -lgem5_shared -lsystemc -lpng
 
 ALL = gem5.$(VARIANT).sc
 

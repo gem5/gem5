@@ -37,7 +37,7 @@ RUN apt -y update && \
     # General gem5 requirements when building/running in Ubuntu 20.04, also
     # some utilities needed to compile and obtain the right packages that
     # make up this Docker image.
-    build-essential git m4 scons zlib1g zlib1g-dev \
+    build-essential git m4 ninja-build zlib1g zlib1g-dev \
     libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
     python3-dev python-is-python3 doxygen libboost-all-dev \
     libhdf5-serial-dev python3-pydot libpng-dev libelf-dev pkg-config gdb \

@@ -218,9 +218,10 @@ jobs:
 
             - name: Build gem5
               run: |
-                  # Parse SCons-style target: build/<VARIANT>/gem5.<type>
+                  # Parse build target: build/<VARIANT>/gem5.<type>
+                  # Use sed to robustly extract variant (works with absolute paths)
                   TARGET="${{ matrix.build-target }}"
-                  VARIANT=$(echo "$TARGET" | cut -d/ -f2)
+                  VARIANT=$(echo "$TARGET" | sed 's|.*/build/||;s|/.*||')
                   TYPE=$(echo "$TARGET" | sed 's/.*gem5\.\(.*\)/\1/')
                   BUILD_TYPE="GEM5_$(echo $TYPE | tr '[:lower:]' '[:upper:]')"
                   cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DGEM5_BUILD_VARIANT=$VARIANT -DGEM5_NO_COMPRESS_DEBUG=ON -B build/$VARIANT
