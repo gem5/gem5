@@ -24,14 +24,20 @@ list(APPEND _lib_sources "${CMAKE_SOURCE_DIR}/src/base/date.cc")
 # PySource .cc files are compiled separately so that gem5_all can depend on
 # SimObject codegen targets (which depend on gem5py_m5) without creating a
 # dependency cycle through shared source files.
-get_property(_py_srcs GLOBAL PROPERTY GEM5_PYSOURCES)
-add_library(gem5_pysources OBJECT ${_py_srcs})
-target_include_directories(gem5_pysources PRIVATE
-    "${CMAKE_SOURCE_DIR}/src"
-    "${GEM5_GEN_DIR}"
-)
-target_link_libraries(gem5_pysources PRIVATE pybind11::pybind11)
-set_target_properties(gem5_pysources PROPERTIES POSITION_INDEPENDENT_CODE ON)
+#
+# When building without Python (GEM5_WITHOUT_PYTHON=ON), the embedded Python
+# bytecode sources are excluded from the library. The SCons build achieves
+# this by filtering out sources tagged 'python' from the library filter.
+if(NOT GEM5_WITHOUT_PYTHON)
+    get_property(_py_srcs GLOBAL PROPERTY GEM5_PYSOURCES)
+    add_library(gem5_pysources OBJECT ${_py_srcs})
+    target_include_directories(gem5_pysources PRIVATE
+        "${CMAKE_SOURCE_DIR}/src"
+        "${GEM5_GEN_DIR}"
+    )
+    target_link_libraries(gem5_pysources PRIVATE pybind11::pybind11)
+    set_target_properties(gem5_pysources PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endif()
 
 # ---------------------------------------------------------------------------
 # Common dependencies (INTERFACE library to avoid duplication)
@@ -72,10 +78,16 @@ endif()
 # System / found libraries
 target_link_libraries(gem5_deps INTERFACE
     ZLIB::ZLIB
-    Python3::Python
-    pybind11::embed
     Threads::Threads
 )
+# Python3 and pybind11 are only needed when building with Python support.
+# Without Python, gem5 uses C++-based configuration (--with-cxx-config).
+if(NOT GEM5_WITHOUT_PYTHON)
+    target_link_libraries(gem5_deps INTERFACE
+        Python3::Python
+        pybind11::embed
+    )
+endif()
 
 if(HAVE_PROTOBUF)
     target_link_libraries(gem5_deps INTERFACE protobuf::libprotobuf)
@@ -98,6 +110,12 @@ if(HAVE_LIBRT)
     target_link_libraries(gem5_deps INTERFACE rt)
 endif()
 
+# Additional libraries registered by subsystems (e.g., TLM armtlmchi)
+get_property(_extra_libs GLOBAL PROPERTY GEM5_LINK_LIBRARIES)
+if(_extra_libs)
+    target_link_libraries(gem5_deps INTERFACE ${_extra_libs})
+endif()
+
 # -rdynamic so Python extensions can see gem5 symbols
 if(NOT WIN32)
     target_link_options(gem5_deps INTERFACE -rdynamic)
@@ -115,8 +133,10 @@ get_property(_codegen_phase1 GLOBAL PROPERTY GEM5_CODEGEN_TARGETS_PHASE1)
 add_library(gem5_all STATIC ${_lib_sources})
 target_link_libraries(gem5_all PUBLIC gem5_deps)
 
-# Link PySource objects into gem5_all
-target_sources(gem5_all PRIVATE $<TARGET_OBJECTS:gem5_pysources>)
+# Link PySource objects into gem5_all (only with Python support)
+if(NOT GEM5_WITHOUT_PYTHON)
+    target_sources(gem5_all PRIVATE $<TARGET_OBJECTS:gem5_pysources>)
+endif()
 
 # Phase 1 codegen targets (debug flags, ISA parser): created in subdirectories.
 # Target-level deps ensure ordering before compilation starts.
@@ -156,7 +176,9 @@ add_custom_command(TARGET gem5 POST_BUILD
 # ---------------------------------------------------------------------------
 add_library(gem5_shared SHARED ${_lib_sources})
 target_link_libraries(gem5_shared PUBLIC gem5_deps)
-target_sources(gem5_shared PRIVATE $<TARGET_OBJECTS:gem5_pysources>)
+if(NOT GEM5_WITHOUT_PYTHON)
+    target_sources(gem5_shared PRIVATE $<TARGET_OBJECTS:gem5_pysources>)
+endif()
 
 if(_codegen_phase1)
     add_dependencies(gem5_shared ${_codegen_phase1})

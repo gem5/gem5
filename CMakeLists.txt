@@ -192,6 +192,45 @@ option(GEM5_WITHOUT_PYTHON "Build without Python configuration support" OFF)
 # C++ config
 option(GEM5_WITH_CXX_CONFIG "Build with support for C++-based configuration" OFF)
 
+# CHI-TLM integration (requires external libarmtlmchi.so)
+set(GEM5_TLM_PATH "" CACHE PATH "Path to the AMBA CHI TLM library (libarmtlmchi.so)")
+# Auto-detect from environment variable if not set via CMake option
+if(NOT GEM5_TLM_PATH OR GEM5_TLM_PATH STREQUAL "")
+    if(DEFINED ENV{TLM_PATH} AND NOT "$ENV{TLM_PATH}" STREQUAL "" AND NOT "$ENV{TLM_PATH}" STREQUAL ".")
+        set(GEM5_TLM_PATH "$ENV{TLM_PATH}" CACHE PATH "" FORCE)
+        message(STATUS "Setting TLM_PATH from environment: ${GEM5_TLM_PATH}")
+    endif()
+endif()
+if(GEM5_TLM_PATH AND NOT GEM5_TLM_PATH STREQUAL "" AND NOT GEM5_TLM_PATH STREQUAL ".")
+    set(CONF_BUILD_TLM TRUE)
+else()
+    set(CONF_BUILD_TLM FALSE)
+endif()
+
+# ---------------------------------------------------------------------------
+# EXTRAS: external source directories injected into the build
+# ---------------------------------------------------------------------------
+# Equivalent of SCons EXTRAS variable.  Pass a semicolon-separated list of
+# absolute paths to external directories that should be compiled into gem5.
+# Each directory may contain a CMakeLists.txt (included via add_subdirectory)
+# and/or a Kconfig (sourced into the Kconfig tree).
+#
+# Example:
+#   cmake -DGEM5_EXTRAS="/path/to/ext1;/path/to/ext2" ..
+set(GEM5_EXTRAS "" CACHE STRING
+    "Semicolon-separated list of external source directories to include in the build")
+
+# Validate EXTRAS paths early
+if(GEM5_EXTRAS)
+    foreach(_extras_dir IN LISTS GEM5_EXTRAS)
+        get_filename_component(_extras_abs "${_extras_dir}" ABSOLUTE)
+        if(NOT IS_DIRECTORY "${_extras_abs}")
+            message(FATAL_ERROR
+                "GEM5_EXTRAS directory does not exist: ${_extras_abs}")
+        endif()
+    endforeach()
+endif()
+
 # ---------------------------------------------------------------------------
 # Dependency detection
 # ---------------------------------------------------------------------------
@@ -249,6 +288,27 @@ gem5_build_gem5py()
 # Call gem5_build_gem5py_m5() at the end of source processing.
 
 add_subdirectory(src)
+
+# ---------------------------------------------------------------------------
+# EXTRAS source directories
+# ---------------------------------------------------------------------------
+# Include external source directories specified via GEM5_EXTRAS.
+# Each directory with a CMakeLists.txt is added as a subdirectory, allowing
+# external projects to register sources, SimObjects, etc. using the same
+# gem5_add_source() / gem5_add_simobject() API as in-tree code.
+if(GEM5_EXTRAS)
+    foreach(_extras_dir IN LISTS GEM5_EXTRAS)
+        get_filename_component(_extras_abs "${_extras_dir}" ABSOLUTE)
+        get_filename_component(_extras_name "${_extras_abs}" NAME)
+        if(EXISTS "${_extras_abs}/CMakeLists.txt")
+            message(STATUS "Including EXTRAS directory: ${_extras_abs}")
+            add_subdirectory("${_extras_abs}"
+                "${CMAKE_BINARY_DIR}/extras/${_extras_name}")
+        else()
+            message(STATUS "EXTRAS directory has no CMakeLists.txt, skipping: ${_extras_abs}")
+        endif()
+    endforeach()
+endif()
 
 # ---------------------------------------------------------------------------
 # Generate m5/defines.py and m5/info.py (must be after Kconfig and before gem5py_m5)
@@ -314,5 +374,10 @@ message(STATUS "  LTO:               ${GEM5_WITH_LTO}")
 message(STATUS "  ASAN:              ${GEM5_WITH_ASAN}")
 message(STATUS "  UBSAN:             ${GEM5_WITH_UBSAN}")
 message(STATUS "  Without Python:    ${GEM5_WITHOUT_PYTHON}")
+message(STATUS "  C++ Config:        ${GEM5_WITH_CXX_CONFIG}")
+message(STATUS "  CHI-TLM:           ${CONF_BUILD_TLM}")
+if(GEM5_EXTRAS)
+    message(STATUS "  EXTRAS:            ${GEM5_EXTRAS}")
+endif()
 message(STATUS "====================================================")
 message(STATUS "")

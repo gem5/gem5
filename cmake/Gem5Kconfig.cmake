@@ -36,6 +36,23 @@ endif()
 # Output file for generated CMake variables
 set(_kconfig_output "${CMAKE_BINARY_DIR}/gem5_kconfig.cmake")
 
+# Determine the top-level Kconfig file.  If EXTRAS directories are specified,
+# generate a base Kconfig that sources the main gem5 Kconfig plus any Kconfig
+# files found in EXTRAS directories (matching the SCons kconfig_base.py logic).
+if(GEM5_EXTRAS)
+    set(_kconfig_file "${CMAKE_BINARY_DIR}/Kconfig.base")
+    set(_base_kconfig "# Auto-generated base Kconfig -- DO NOT EDIT!\n")
+    string(APPEND _base_kconfig "source \"${CMAKE_SOURCE_DIR}/src/Kconfig\"\n")
+    foreach(_extras_dir IN LISTS GEM5_EXTRAS)
+        get_filename_component(_extras_abs "${_extras_dir}" ABSOLUTE)
+        string(APPEND _base_kconfig "osource \"${_extras_abs}/Kconfig\"\n")
+    endforeach()
+    file(WRITE "${_kconfig_file}" "${_base_kconfig}")
+    message(STATUS "Generated base Kconfig with EXTRAS: ${_kconfig_file}")
+else()
+    set(_kconfig_file "${CMAKE_SOURCE_DIR}/src/Kconfig")
+endif()
+
 # Build the list of -D arguments to pass dependency detection results
 # to the Python script.  Kconfig files use $(VAR) macros that resolve
 # from environment variables; the script sets these before loading Kconfig.
@@ -72,9 +89,22 @@ check_cxx_source_compiles("
 unset(CMAKE_REQUIRED_FLAGS)
 _kconfig_bool_arg(HAVE_DEPRECATED_NAMESPACE HAVE_DEPRECATED_NAMESPACE)
 
-# HAVE_SYSTEMC: we have it in ext/systemc
+# HAVE_SYSTEMC: we have it in ext/systemc, but disable on RISC-V and macOS
+# (matching SCons src/systemc/SConsopts behavior)
 if(EXISTS "${CMAKE_SOURCE_DIR}/ext/systemc/src")
-    list(APPEND _kconfig_defines "-D" "HAVE_SYSTEMC=y")
+    set(_systemc_available TRUE)
+    if(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "^riscv")
+        message(WARNING "SystemC may not work on RISC-V -- disabling")
+        set(_systemc_available FALSE)
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+        message(WARNING "SystemC may not work on macOS -- disabling")
+        set(_systemc_available FALSE)
+    endif()
+    if(_systemc_available)
+        list(APPEND _kconfig_defines "-D" "HAVE_SYSTEMC=y")
+    else()
+        list(APPEND _kconfig_defines "-D" "HAVE_SYSTEMC=n")
+    endif()
 else()
     list(APPEND _kconfig_defines "-D" "HAVE_SYSTEMC=n")
 endif()
@@ -95,10 +125,22 @@ endif()
 # MAIN_MENU_TEXT: used by the top-level mainmenu directive
 list(APPEND _kconfig_defines "-D" "MAIN_MENU_TEXT=gem5 ${GEM5_BUILD_VARIANT}")
 
-# FastModel paths (optional, usually empty)
-list(APPEND _kconfig_defines "-D" "PVLIB_HOME=")
-list(APPEND _kconfig_defines "-D" "MAXCORE_HOME=")
-list(APPEND _kconfig_defines "-D" "ARMLMD_LICENSE_FILE=")
+# FastModel paths (read from environment, matching SCons SConsopts behavior)
+if(DEFINED ENV{PVLIB_HOME})
+    list(APPEND _kconfig_defines "-D" "PVLIB_HOME=$ENV{PVLIB_HOME}")
+else()
+    list(APPEND _kconfig_defines "-D" "PVLIB_HOME=")
+endif()
+if(DEFINED ENV{MAXCORE_HOME})
+    list(APPEND _kconfig_defines "-D" "MAXCORE_HOME=$ENV{MAXCORE_HOME}")
+else()
+    list(APPEND _kconfig_defines "-D" "MAXCORE_HOME=")
+endif()
+if(DEFINED ENV{ARMLMD_LICENSE_FILE})
+    list(APPEND _kconfig_defines "-D" "ARMLMD_LICENSE_FILE=$ENV{ARMLMD_LICENSE_FILE}")
+else()
+    list(APPEND _kconfig_defines "-D" "ARMLMD_LICENSE_FILE=")
+endif()
 
 # HAVE_PERF_ATTR_EXCLUDE_HOST: check for the perf attribute
 if(HAVE_KVM)
@@ -121,7 +163,7 @@ message(STATUS "Processing Kconfig for variant: ${GEM5_BUILD_VARIANT}")
 execute_process(
     COMMAND "${Python3_EXECUTABLE}"
             "${CMAKE_SOURCE_DIR}/cmake/kconfig_to_cmake.py"
-            "--kconfig" "${CMAKE_SOURCE_DIR}/src/Kconfig"
+            "--kconfig" "${_kconfig_file}"
             "--defconfig" "${_variant_file}"
             "--output" "${_kconfig_output}"
             ${_kconfig_defines}
@@ -155,3 +197,90 @@ message(STATUS "Kconfig: CONF_USE_POWER_ISA = ${CONF_USE_POWER_ISA}")
 message(STATUS "Kconfig: CONF_RUBY = ${CONF_RUBY}")
 message(STATUS "Kconfig: CONF_PROTOCOL = ${CONF_PROTOCOL}")
 message(STATUS "Kconfig: CONF_BUILD_GPU = ${CONF_BUILD_GPU}")
+
+# ---------------------------------------------------------------------------
+# Kconfig interactive tool targets
+# ---------------------------------------------------------------------------
+# These targets mirror the SCons kconfig actions (menuconfig, defconfig,
+# oldconfig, savedefconfig).  They invoke the kconfiglib scripts from
+# ext/Kconfiglib/ with the same environment variables used at configure time.
+#
+# Usage:
+#   cmake --build <build_dir> --target menuconfig
+#   cmake --build <build_dir> --target oldconfig
+#   cmake --build <build_dir> --target savedefconfig
+#   cmake -DGEM5_DEFCONFIG_FILE=<path> <source_dir> && \
+#       cmake --build <build_dir> --target defconfig
+
+set(_kconfig_config "${CMAKE_BINARY_DIR}/.config")
+set(_kconfiglib_dir "${CMAKE_SOURCE_DIR}/ext/Kconfiglib")
+
+# Build environment variable list for kconfiglib tools by extracting
+# KEY=VALUE pairs from _kconfig_defines (which has "-D" "KEY=VALUE" pairs).
+set(_kconfig_env_vars "CONFIG_=")
+foreach(_item IN LISTS _kconfig_defines)
+    if(NOT _item STREQUAL "-D")
+        list(APPEND _kconfig_env_vars "${_item}")
+    endif()
+endforeach()
+
+# -- menuconfig: interactive curses-based configuration editor --
+add_custom_target(menuconfig
+    COMMAND "${CMAKE_COMMAND}" -E env
+        ${_kconfig_env_vars}
+        "KCONFIG_CONFIG=${_kconfig_config}"
+        "MENUCONFIG_STYLE=aquatic"
+        "PYTHONPATH=${CMAKE_SOURCE_DIR}/ext/Kconfiglib/import"
+        "${Python3_EXECUTABLE}" "${_kconfiglib_dir}/menuconfig.py"
+        "${_kconfig_file}"
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    COMMENT "Running Kconfig menuconfig for ${GEM5_BUILD_VARIANT}..."
+    USES_TERMINAL
+)
+
+# -- oldconfig: update .config, prompting for new symbols --
+add_custom_target(oldconfig
+    COMMAND "${CMAKE_COMMAND}" -E env
+        ${_kconfig_env_vars}
+        "KCONFIG_CONFIG=${_kconfig_config}"
+        "PYTHONPATH=${CMAKE_SOURCE_DIR}/ext/Kconfiglib/import"
+        "${Python3_EXECUTABLE}" "${_kconfiglib_dir}/oldconfig.py"
+        "${_kconfig_file}"
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    COMMENT "Running Kconfig oldconfig for ${GEM5_BUILD_VARIANT}..."
+    USES_TERMINAL
+)
+
+# -- savedefconfig: save current .config as a minimal defconfig --
+set(GEM5_SAVEDEFCONFIG_FILE "${CMAKE_BINARY_DIR}/defconfig" CACHE FILEPATH
+    "Output path for the 'savedefconfig' target")
+
+add_custom_target(savedefconfig
+    COMMAND "${CMAKE_COMMAND}" -E env
+        ${_kconfig_env_vars}
+        "KCONFIG_CONFIG=${_kconfig_config}"
+        "PYTHONPATH=${CMAKE_SOURCE_DIR}/ext/Kconfiglib/import"
+        "${Python3_EXECUTABLE}" "${_kconfiglib_dir}/savedefconfig.py"
+        "--kconfig" "${_kconfig_file}"
+        "--out" "${GEM5_SAVEDEFCONFIG_FILE}"
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    COMMENT "Saving defconfig to ${GEM5_SAVEDEFCONFIG_FILE}..."
+    USES_TERMINAL
+)
+
+# -- defconfig: apply a defconfig file to create .config --
+set(GEM5_DEFCONFIG_FILE "" CACHE FILEPATH
+    "Input defconfig file for the 'defconfig' target (e.g. build_opts/ARM)")
+
+add_custom_target(defconfig
+    COMMAND "${CMAKE_COMMAND}" -E env
+        ${_kconfig_env_vars}
+        "KCONFIG_CONFIG=${_kconfig_config}"
+        "PYTHONPATH=${CMAKE_SOURCE_DIR}/ext/Kconfiglib/import"
+        "${Python3_EXECUTABLE}" "${_kconfiglib_dir}/defconfig.py"
+        "--kconfig" "${_kconfig_file}"
+        "${GEM5_DEFCONFIG_FILE}"
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    COMMENT "Applying defconfig from ${GEM5_DEFCONFIG_FILE}..."
+    USES_TERMINAL
+)

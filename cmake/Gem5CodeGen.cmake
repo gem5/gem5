@@ -694,10 +694,21 @@ function(gem5_create_simobject_commands)
                 COMMENT "Generating param bindings: python/_m5/param_${_obj}.cc"
                 VERBATIM
             )
+
+            # Generate cxx_config header/source when C++ config is enabled.
+            # In SCons, cxx_config .hh/.cc are always generated but the .cc
+            # is only compiled when --with-cxx-config is set. Here we only
+            # generate them when the option is ON.
+            if(GEM5_WITH_CXX_CONFIG)
+                gem5_add_cxx_config("${_obj}" "${_modpath}")
+            endif()
         endforeach()
     endif()
 
     message(STATUS "Created ${_count} SimObject param custom commands")
+    if(GEM5_WITH_CXX_CONFIG)
+        message(STATUS "  (with C++ config generation enabled)")
+    endif()
 
     # --- Enums ---
     get_property(_enames GLOBAL PROPERTY GEM5_SIMOBJ_ENUM_NAMES)

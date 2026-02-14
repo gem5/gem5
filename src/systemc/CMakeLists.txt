@@ -15,3 +15,8 @@ add_subdirectory(utils)
 if(NOT GEM5_WITHOUT_PYTHON)
     add_subdirectory(python)
 endif()
+
+option(GEM5_WITH_SYSTEMC_TESTS "Build SystemC regression tests" OFF)
+if(GEM5_WITH_SYSTEMC_TESTS)
+    add_subdirectory(tests)
+endif()
