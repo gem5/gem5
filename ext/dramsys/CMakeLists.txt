@@ -1,34 +1,55 @@
-# Copyright (c) 2023 Fraunhofer IESE
-# All rights reserved
+# DRAMSys is optional: only built if the DRAMSys/ subdirectory has been
+# cloned into ext/dramsys/.
 #
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are
-# met: redistributions of source code must retain the above copyright
-# notice, this list of conditions and the following disclaimer;
-# redistributions in binary form must reproduce the above copyright
-# notice, this list of conditions and the following disclaimer in the
-# documentation and/or other materials provided with the distribution;
-# neither the name of the copyright holders nor the names of its
-# contributors may be used to endorse or promote products derived from
-# this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+# DRAMSys has its own CMake build system.  The original SConscript invoked
+# cmake as an external process; here we integrate it natively via
+# add_subdirectory() since we are already in a CMake build.
 
-cmake_minimum_required(VERSION 3.22.0)
-project(DRAMSys)
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/DRAMSys")
+    set(HAVE_DRAMSYS OFF PARENT_SCOPE)
+    message(STATUS "ext/dramsys: DRAMSys/ not found, skipping")
+    return()
+endif()
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+set(HAVE_DRAMSYS ON PARENT_SCOPE)
+message(STATUS "ext/dramsys: DRAMSys/ found, building")
 
+# DRAMSys build options
 set(BUILD_SHARED_LIBS OFF)
+set(DRAMSYS_BUILD_CLI OFF CACHE BOOL "" FORCE)
+set(DRAMSYS_USE_FETCH_CONTENT ON CACHE BOOL "" FORCE)
+set(DRAMSYS_USE_FETCH_CONTENT_INTERNAL OFF CACHE BOOL "" FORCE)
+set(DRAMSYS_USE_FETCH_CONTENT_SYSTEMC OFF CACHE BOOL "" FORCE)
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 add_subdirectory(DRAMSys)
+
+# Wrap DRAMSys targets with gem5 conventions
+add_library(gem5_ext_dramsys INTERFACE)
+
+# Link against DRAMSys libraries
+if(TARGET libdramsys)
+    target_link_libraries(gem5_ext_dramsys INTERFACE libdramsys)
+endif()
+if(TARGET configuration)
+    target_link_libraries(gem5_ext_dramsys INTERFACE configuration)
+endif()
+
+target_include_directories(gem5_ext_dramsys INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/DRAMSys/src/libdramsys
+    ${CMAKE_CURRENT_SOURCE_DIR}/DRAMSys/src/configuration
+    ${CMAKE_CURRENT_SOURCE_DIR}/DRAMSys/src/util
+)
+
+# nlohmann_json include path (fetched by DRAMSys)
+if(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/_deps/nlohmann_json-src/include")
+    target_include_directories(gem5_ext_dramsys INTERFACE
+        ${CMAKE_CURRENT_BINARY_DIR}/_deps/nlohmann_json-src/include
+    )
+endif()
+
+target_compile_definitions(gem5_ext_dramsys INTERFACE
+    SYSTEMC_VERSION=20191203
+    DRAMSYS_RESOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}/DRAMSys/configs"
+)

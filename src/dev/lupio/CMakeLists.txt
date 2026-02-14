@@ -1,0 +1,30 @@
+# src/dev/lupio/CMakeLists.txt
+# Converted from src/dev/lupio/SConscript
+# Conditional on CONF_USE_RISCV_ISA (guarded by parent CMakeLists.txt)
+
+gem5_add_source(lupio_blk.cc)
+gem5_add_source(lupio_ipi.cc)
+gem5_add_source(lupio_pic.cc)
+gem5_add_source(lupio_rng.cc)
+gem5_add_source(lupio_rtc.cc)
+gem5_add_source(lupio_tmr.cc)
+gem5_add_source(lupio_tty.cc)
+gem5_add_source(lupio_sys.cc)
+
+gem5_add_debug_flag(LupioBLK "LupioBLK debugging")
+gem5_add_debug_flag(LupioIPI "LupioIPI debugging")
+gem5_add_debug_flag(LupioPIC "LupioPIC debugging")
+gem5_add_debug_flag(LupioRNG "LupioRNG debugging")
+gem5_add_debug_flag(LupioRTC "LupioRTC debugging")
+gem5_add_debug_flag(LupioTMR "LupioTMR debugging")
+gem5_add_debug_flag(LupioTTY "LupioTTY debugging")
+gem5_add_debug_flag(LupioSYS "LupioSYS debugging")
+
+gem5_add_simobject(LupioBLK.py SIM_OBJECTS LupioBLK)
+gem5_add_simobject(LupioIPI.py SIM_OBJECTS LupioIPI)
+gem5_add_simobject(LupioPIC.py SIM_OBJECTS LupioPIC)
+gem5_add_simobject(LupioRNG.py SIM_OBJECTS LupioRNG)
+gem5_add_simobject(LupioRTC.py SIM_OBJECTS LupioRTC)
+gem5_add_simobject(LupioTMR.py SIM_OBJECTS LupioTMR)
+gem5_add_simobject(LupioTTY.py SIM_OBJECTS LupioTTY)
+gem5_add_simobject(LupioSYS.py SIM_OBJECTS LupioSYS)

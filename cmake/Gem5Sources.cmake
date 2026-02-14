@@ -1,0 +1,217 @@
+# cmake/Gem5Sources.cmake
+# Helper CMake functions for registering gem5 sources, python files,
+# SimObjects, and debug flags.
+#
+# In the SCons build, each SConscript calls functions like Source(),
+# SimObject(), PySource(), DebugFlag() etc.  These CMake equivalents
+# collect sources into global properties that are later consumed when
+# building the gem5 library target.
+
+# ---------------------------------------------------------------------------
+# Global source collectors (CMake global properties)
+# ---------------------------------------------------------------------------
+
+# We use GLOBAL properties to accumulate sources across subdirectories.
+# Each property stores a list of absolute file paths or generator expressions.
+
+define_property(GLOBAL PROPERTY GEM5_SOURCES
+    BRIEF_DOCS "C++ sources for the gem5 library"
+    FULL_DOCS "Accumulated list of C++ source files for the gem5 library target")
+set_property(GLOBAL PROPERTY GEM5_SOURCES "")
+
+define_property(GLOBAL PROPERTY GEM5_GENERATED_SOURCES
+    BRIEF_DOCS "Generated C++ sources for the gem5 library"
+    FULL_DOCS "Accumulated list of generated C++ source files (debug flags, etc.)")
+set_property(GLOBAL PROPERTY GEM5_GENERATED_SOURCES "")
+
+define_property(GLOBAL PROPERTY GEM5_PYSOURCES
+    BRIEF_DOCS "Python source embedding .cc files"
+    FULL_DOCS "Accumulated list of marshal-generated .cc files for Python embedding")
+set_property(GLOBAL PROPERTY GEM5_PYSOURCES "")
+
+# Parallel lists for deferred PySource custom command creation.
+# Custom commands are created centrally at the top level (not in subdirectories)
+# to avoid CMake/Ninja cross-directory custom command stub issues.
+define_property(GLOBAL PROPERTY GEM5_PYSOURCE_INPUTS
+    BRIEF_DOCS "Input .py files for PySource generation"
+    FULL_DOCS "Parallel list with GEM5_PYSOURCES: input .py file paths")
+set_property(GLOBAL PROPERTY GEM5_PYSOURCE_INPUTS "")
+
+define_property(GLOBAL PROPERTY GEM5_PYSOURCE_MODPATHS
+    BRIEF_DOCS "Module paths for PySource generation"
+    FULL_DOCS "Parallel list with GEM5_PYSOURCES: Python module paths")
+set_property(GLOBAL PROPERTY GEM5_PYSOURCE_MODPATHS "")
+
+define_property(GLOBAL PROPERTY GEM5_PYSOURCE_ABSPATHS
+    BRIEF_DOCS "Absolute paths for PySource generation"
+    FULL_DOCS "Parallel list with GEM5_PYSOURCES: filesystem-style import paths")
+set_property(GLOBAL PROPERTY GEM5_PYSOURCE_ABSPATHS "")
+
+define_property(GLOBAL PROPERTY GEM5_DEBUG_FLAG_HEADERS
+    BRIEF_DOCS "Generated debug flag .hh files"
+    FULL_DOCS "Headers for debug flags, needed as dependencies")
+set_property(GLOBAL PROPERTY GEM5_DEBUG_FLAG_HEADERS "")
+
+# Phase 1 codegen targets: debug flags, ISA parser, blobs.
+# These do NOT depend on gem5py_m5.
+define_property(GLOBAL PROPERTY GEM5_CODEGEN_TARGETS_PHASE1
+    BRIEF_DOCS "Codegen targets that do not depend on gem5py_m5"
+    FULL_DOCS "Custom target names for debug flags, ISA parser, etc.")
+set_property(GLOBAL PROPERTY GEM5_CODEGEN_TARGETS_PHASE1 "")
+
+# Phase 2 codegen: deferred SimObject param/enum custom command data.
+# Same pattern as PySource: custom commands created centrally at top level.
+define_property(GLOBAL PROPERTY GEM5_SIMOBJ_PARAM_NAMES
+    BRIEF_DOCS "SimObject param names for deferred codegen"
+    FULL_DOCS "Parallel list: SimObject class names for param struct generation")
+set_property(GLOBAL PROPERTY GEM5_SIMOBJ_PARAM_NAMES "")
+
+define_property(GLOBAL PROPERTY GEM5_SIMOBJ_PARAM_MODPATHS
+    BRIEF_DOCS "SimObject param modpaths"
+    FULL_DOCS "Parallel list: Python module paths for SimObject params")
+set_property(GLOBAL PROPERTY GEM5_SIMOBJ_PARAM_MODPATHS "")
+
+define_property(GLOBAL PROPERTY GEM5_SIMOBJ_PARAM_PYFILES
+    BRIEF_DOCS "SimObject param source .py files"
+    FULL_DOCS "Parallel list: .py source files for SimObject params")
+set_property(GLOBAL PROPERTY GEM5_SIMOBJ_PARAM_PYFILES "")
+
+define_property(GLOBAL PROPERTY GEM5_SIMOBJ_ENUM_NAMES
+    BRIEF_DOCS "Enum names for deferred codegen"
+    FULL_DOCS "Parallel list: enum names for enum header/source generation")
+set_property(GLOBAL PROPERTY GEM5_SIMOBJ_ENUM_NAMES "")
+
+define_property(GLOBAL PROPERTY GEM5_SIMOBJ_ENUM_MODPATHS
+    BRIEF_DOCS "Enum modpaths"
+    FULL_DOCS "Parallel list: Python module paths for enum generation")
+set_property(GLOBAL PROPERTY GEM5_SIMOBJ_ENUM_MODPATHS "")
+
+define_property(GLOBAL PROPERTY GEM5_SIMOBJ_ENUM_PYFILES
+    BRIEF_DOCS "Enum source .py files"
+    FULL_DOCS "Parallel list: .py source files for enum generation")
+set_property(GLOBAL PROPERTY GEM5_SIMOBJ_ENUM_PYFILES "")
+
+# Phase 2 codegen targets: SimObject params/enums.
+# These depend on gem5py_m5.
+define_property(GLOBAL PROPERTY GEM5_CODEGEN_TARGETS_PHASE2
+    BRIEF_DOCS "Codegen targets that depend on gem5py_m5"
+    FULL_DOCS "Custom target names for SimObject params, enums, etc.")
+set_property(GLOBAL PROPERTY GEM5_CODEGEN_TARGETS_PHASE2 "")
+
+# Deferred protobuf custom command data (same cross-directory stub workaround).
+define_property(GLOBAL PROPERTY GEM5_PROTO_FILES
+    BRIEF_DOCS "Protobuf .proto source files"
+    FULL_DOCS "Absolute paths to .proto files for deferred protoc invocation")
+set_property(GLOBAL PROPERTY GEM5_PROTO_FILES "")
+
+define_property(GLOBAL PROPERTY GEM5_PROTO_SUPPRESS_FLAGS
+    BRIEF_DOCS "Compile flags for generated protobuf code"
+    FULL_DOCS "Warning suppression flags applied to generated .pb.cc files")
+set_property(GLOBAL PROPERTY GEM5_PROTO_SUPPRESS_FLAGS "")
+
+define_property(GLOBAL PROPERTY GEM5_TEST_SOURCES
+    BRIEF_DOCS "GTest source files"
+    FULL_DOCS "Accumulated list of GTest source files")
+set_property(GLOBAL PROPERTY GEM5_TEST_SOURCES "")
+
+define_property(GLOBAL PROPERTY GEM5_LINK_LIBRARIES
+    BRIEF_DOCS "Additional libraries to link into the gem5 target"
+    FULL_DOCS "Accumulated list of library targets/names for the gem5 executable")
+set_property(GLOBAL PROPERTY GEM5_LINK_LIBRARIES "")
+
+# Central generated output directory
+set(GEM5_GEN_DIR "${CMAKE_BINARY_DIR}/generated" CACHE PATH
+    "Directory for generated source files")
+file(MAKE_DIRECTORY "${GEM5_GEN_DIR}")
+
+# build_tools/ directory
+set(GEM5_BUILD_TOOLS_DIR "${CMAKE_SOURCE_DIR}/build_tools" CACHE PATH
+    "Directory containing build tool Python scripts")
+
+# ---------------------------------------------------------------------------
+# gem5_add_source(<file> [CONDITION <cond>] [APPEND_FLAGS <flags...>])
+#
+# Register a C++ source file for compilation into the gem5 library.
+# If CONDITION is specified, the source is only added when the condition
+# evaluates to TRUE.
+# ---------------------------------------------------------------------------
+function(gem5_add_source file)
+    cmake_parse_arguments(ARG "" "CONDITION" "APPEND_FLAGS" ${ARGN})
+
+    if(ARG_CONDITION)
+        if(NOT ${ARG_CONDITION})
+            return()
+        endif()
+    endif()
+
+    # Convert to absolute path if relative
+    if(NOT IS_ABSOLUTE "${file}")
+        set(file "${CMAKE_CURRENT_SOURCE_DIR}/${file}")
+    endif()
+
+    set_property(GLOBAL APPEND PROPERTY GEM5_SOURCES "${file}")
+
+    if(ARG_APPEND_FLAGS)
+        set_source_files_properties("${file}" PROPERTIES
+            COMPILE_OPTIONS "${ARG_APPEND_FLAGS}")
+    endif()
+endfunction()
+
+# ---------------------------------------------------------------------------
+# gem5_add_sources(<file1> [file2 ...] [CONDITION <cond>])
+#
+# Register multiple C++ source files at once.
+# ---------------------------------------------------------------------------
+function(gem5_add_sources)
+    cmake_parse_arguments(ARG "" "CONDITION" "" ${ARGN})
+
+    if(ARG_CONDITION)
+        if(NOT ${ARG_CONDITION})
+            return()
+        endif()
+    endif()
+
+    foreach(file ${ARG_UNPARSED_ARGUMENTS})
+        if(NOT IS_ABSOLUTE "${file}")
+            set(file "${CMAKE_CURRENT_SOURCE_DIR}/${file}")
+        endif()
+        set_property(GLOBAL APPEND PROPERTY GEM5_SOURCES "${file}")
+    endforeach()
+endfunction()
+
+# ---------------------------------------------------------------------------
+# gem5_add_generated_source(<file>)
+#
+# Register a generated C++ source file (already an absolute path in the
+# build tree).
+# ---------------------------------------------------------------------------
+function(gem5_add_generated_source file)
+    set_property(GLOBAL APPEND PROPERTY GEM5_GENERATED_SOURCES "${file}")
+endfunction()
+
+# ---------------------------------------------------------------------------
+# gem5_add_test(<name> <source> [extra_sources...])
+#
+# Register a GTest unit test.  Creates an executable and adds it to CTest.
+# ---------------------------------------------------------------------------
+function(gem5_add_test name)
+    set(_sources ${ARGN})
+    set_property(GLOBAL APPEND PROPERTY GEM5_TEST_SOURCES "${name}")
+
+    # Test targets will be created in Phase 5 when the gem5 library is available.
+    # For now, just record the information.
+    # The actual add_executable + add_test will be done centrally.
+endfunction()
+
+# ---------------------------------------------------------------------------
+# Helper: get all accumulated sources
+# ---------------------------------------------------------------------------
+function(gem5_get_all_sources out_var)
+    get_property(_srcs GLOBAL PROPERTY GEM5_SOURCES)
+    get_property(_gen_srcs GLOBAL PROPERTY GEM5_GENERATED_SOURCES)
+    # Note: GEM5_PYSOURCES are NOT included here. They are compiled into a
+    # separate static library (gem5_pysources) to avoid a dependency cycle:
+    #   gem5_all -> SimObject codegen -> gem5py_m5 -> PySource .cc -> gem5_all
+    # By separating them, gem5_all can safely depend on SimObject codegen.
+    set(${out_var} ${_srcs} ${_gen_srcs} PARENT_SCOPE)
+endfunction()

@@ -1,0 +1,108 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 20,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "default",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build_cmake/${presetName}",
+            "cacheVariables": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            }
+        },
+        {
+            "name": "debug",
+            "displayName": "gem5 Debug",
+            "description": "Debug build: -O0, full debug info, tracing enabled",
+            "inherits": "default",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "GEM5_DEBUG"
+            }
+        },
+        {
+            "name": "opt",
+            "displayName": "gem5 Opt",
+            "description": "Optimized build: -O3, debug info, tracing enabled",
+            "inherits": "default",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "GEM5_OPT"
+            }
+        },
+        {
+            "name": "fast",
+            "displayName": "gem5 Fast",
+            "description": "Fast build: -O3, no debug/tracing, NDEBUG",
+            "inherits": "default",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "GEM5_FAST"
+            }
+        },
+        {
+            "name": "debug-x86",
+            "displayName": "gem5 Debug (X86)",
+            "inherits": "debug",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "X86"
+            }
+        },
+        {
+            "name": "opt-x86",
+            "displayName": "gem5 Opt (X86)",
+            "inherits": "opt",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "X86"
+            }
+        },
+        {
+            "name": "fast-x86",
+            "displayName": "gem5 Opt (X86)",
+            "inherits": "fast",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "X86"
+            }
+        },
+        {
+            "name": "opt-all",
+            "displayName": "gem5 Opt (ALL)",
+            "inherits": "opt",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "ALL"
+            }
+        },
+        {
+            "name": "opt-arm",
+            "displayName": "gem5 Opt (ARM)",
+            "inherits": "opt",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "ARM"
+            }
+        },
+        {
+            "name": "opt-riscv",
+            "displayName": "gem5 Opt (RISCV)",
+            "inherits": "opt",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "RISCV"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "debug",
+            "configurePreset": "debug"
+        },
+        {
+            "name": "opt",
+            "configurePreset": "opt"
+        },
+        {
+            "name": "fast",
+            "configurePreset": "fast"
+        }
+    ]
+}
