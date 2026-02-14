@@ -100,15 +100,10 @@ first identify what ABI(s) you're targetting.
  x86     | amd64/x86_64 | instruction, address
  riscv   | 64 bit RISCV | instruction
 
-## SCons
+## CMake
 
-The m5 utility uses a scons based build system. gem5 itself also uses SCons,
-but these builds are (mostly) not related and separate.
-
-The SConscript for this utility is set up to use a build directory called
-"build", similar to gem5 itself. The build directory is structured so that you
-can ask scons to build a portion of it to help narrow down what you want to
-build.
+The m5 utility is built as part of the gem5 CMake build system. It can also
+be built standalone using its own CMakeLists.txt.
 
 ### native
 
@@ -144,21 +139,13 @@ build products. This includes:
 
 ## Build options
 
-### SCons variables
+### Cross-compilation variables
 
 There are some variables which set build options which need to be controlled on
 a per ABI level. Currently, these are:
 
 - CROSS_COMPILE: The cross compiler prefix.
 - QEMU_ARCH: The QEMU architecture suffix.
-
-To set these for a particular ABI, prefix the variable name with the ABI's name
-and then a dot. For instance, to set the cross compiler prefix to
-"x86_64-linux-gnu-" for x86, you would run scons like this:
-
-```shell
-scons x86.CROSS_COMPILE=x86_64-linux-gnu- build/x86/out/m5
-```
 
    ABI   | QEMU_ARCH |     CROSS_COMPILE
 ---------|-----------|---------------------
@@ -174,7 +161,7 @@ meaning that the native/host compiler will be used. If building on a non-x86
 host, then you'll need to set an appopriate prefix and may be able to clear
 some other prefix corresponding to that host.
 
-### SCons command line flags
+### Build flags
 
 --debug-build: Compile with the -g option, and -O0.
 --run-tests:   Allow the test result XML files to be build targets.
@@ -187,17 +174,17 @@ gracefully exclude some targets which depend on it. These include:
 
 ### Java support
 
-The SConscript will attempt to find the javac and jar programs. If it can't, it
-will disable building the Java support files.
+The build system will attempt to find the javac and jar programs. If it can't,
+it will disable building the Java support files.
 
 ### Lua support
 
-The SConscript will attempt to find lua51 support using pkg-config. If it
+The build system will attempt to find lua51 support using pkg-config. If it
 can't, it will disable building the lua module/library.
 
 ### Non-native tests
 
-The SConscript will attempt to find various QEMU binaries so that it can run
+The build system will attempt to find various QEMU binaries so that it can run
 non-native tests using QEMU's application level emulation. The name of the
 binary it looks for depends on the ABI and is set to qemu-${QEMU_ARCH}. See
 above for a description of per ABI build variables, including QEMU_ARCH.

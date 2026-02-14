@@ -22,7 +22,11 @@ jobs:
         steps:
             - uses: actions/checkout@v4
             - name: Compile build/ALL/gem5${{ matrix.opts }} with ${{ matrix.image }}
-              run: /usr/bin/env python3 /usr/bin/scons --ignore-style build/ALL/gem5${{ matrix.opts }} -j$(nproc)
+              run: |
+                  TYPE=$(echo '${{ matrix.opts }}' | tr -d '.')
+                  BUILD_TYPE="GEM5_$(echo $TYPE | tr '[:lower:]' '[:upper:]')"
+                  cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DGEM5_BUILD_VARIANT=ALL -B build/ALL
+                  ninja -C build/ALL -j$(nproc)
               timeout-minutes: 600 # 10 hours
 
   # Tests the two latest gcc and clang supported compilers against all gem5 compilations.
@@ -40,7 +44,11 @@ jobs:
         steps:
             - uses: actions/checkout@v4
             - name: Compile build/${{ matrix.gem5-compilation }}/gem5${{ matrix.opts }} with ${{ matrix.image }}
-              run: /usr/bin/env python3 /usr/bin/scons --ignore-style build/${{ matrix.gem5-compilation }}/gem5${{ matrix.opts }} -j$(nproc)
+              run: |
+                  TYPE=$(echo '${{ matrix.opts }}' | tr -d '.')
+                  BUILD_TYPE="GEM5_$(echo $TYPE | tr '[:lower:]' '[:upper:]')"
+                  cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DGEM5_BUILD_VARIANT=${{ matrix.gem5-compilation }} -B build/${{ matrix.gem5-compilation }}
+                  ninja -C build/${{ matrix.gem5-compilation }} -j$(nproc)
               timeout-minutes: 600 # 10 hours
 
     sanitizer-compilation-tests:
@@ -62,6 +70,16 @@ jobs:
             - uses: actions/checkout@v4
             - name: Compile build/ALL/gem5${{ matrix.opts }} with ${{ matrix.sanitizer }} in ${{ matrix.image }}
               # The address sanitizer is quite memory intensive; triggering OOM errors on smaller runners.
-              # To mitigate this, we limit scons to a single thread (`-j1`)
-              run: /usr/bin/env python3 /usr/bin/scons --ignore-style build/ALL/gem5${{ matrix.opts }} -j1 --with-${{ matrix.sanitizer }}
+              # To mitigate this, we limit ninja to a single thread (`-j1`)
+              run: |
+                  TYPE=$(echo '${{ matrix.opts }}' | tr -d '.')
+                  BUILD_TYPE="GEM5_$(echo $TYPE | tr '[:lower:]' '[:upper:]')"
+                  SANITIZER_FLAG=""
+                  if [ "${{ matrix.sanitizer }}" = "asan" ]; then
+                    SANITIZER_FLAG="-DGEM5_WITH_ASAN=ON"
+                  elif [ "${{ matrix.sanitizer }}" = "ubsan" ]; then
+                    SANITIZER_FLAG="-DGEM5_WITH_UBSAN=ON"
+                  fi
+                  cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DGEM5_BUILD_VARIANT=ALL $SANITIZER_FLAG -B build/ALL
+                  ninja -C build/ALL -j1
               timeout-minutes: 1200 # 20 hours

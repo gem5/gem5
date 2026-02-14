@@ -9,14 +9,15 @@ docker build -t <image_name> .
 ### Building gem5 using the image
 The following command assumes the gem5 directory is a subdirectory of your current directory
 ```
-docker run --rm -v $PWD/gem5:/gem5 -w /gem5 <image_name> scons -sQ -j$(nproc) build/VEGA_X86/gem5.opt
+docker run --rm -v $PWD/gem5:/gem5 -w /gem5 <image_name> \
+    bash -c "cmake -G Ninja --preset opt -DGEM5_BUILD_VARIANT=VEGA_X86 -B build && ninja -C build"
 ```
 
 ### Test gem5 using a prebuilt application
 ```
 wget http://dist.gem5.org/dist/current/test-progs/hip_sample_bins/MatrixTranspose
 docker run --rm -v $PWD/MatrixTranspose:/MatrixTranspose -v $PWD/public_gem5:/gem5 -w /gem5 \
-        <image_name> build/VEGA_X86/gem5.opt configs/example/apu_se.py -n2 --benchmark-root=/ -cMatrixTranspose
+        <image_name> build/gem5 configs/example/apu_se.py -n2 --benchmark-root=/ -cMatrixTranspose
 ```
 
 ### Notes

@@ -21,7 +21,7 @@ Steps to reproduce the behavior. Please assume starting from a clean repository:
 1. Compile gem5 with command ...
 2. Execute the simulation with...
 
-If writing code, or a terminal command, use code blocks. Either an inline code block, `scons build/ALL/gem5.opt` (enclosed in two '`') or a multi-line codeblock:
+If writing code, or a terminal command, use code blocks. Either an inline code block, `cmake --preset opt-all -B build && ninja -C build` (enclosed in two '`') or a multi-line codeblock:
 
 
 ```python

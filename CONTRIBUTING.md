@@ -207,16 +207,19 @@ cd tests
 be run on multiple threads with the `-j` flag. E.g.: `python main.py run
 -j6`.**
 
-The unit tests should also pass. To run the unit tests:
+The unit tests should also pass. To build and run the unit tests:
 
 ```sh
-scons build/NULL/unittests.opt
+cmake -G Ninja --preset opt -DGEM5_BUILD_VARIANT=NULL -B build
+ninja -C build gem5_unittests
+ctest --test-dir build
 ```
 
-To compile an individual gem5 binary:
+To compile the gem5 binary:
 
 ```sh
-scons build/ALL/gem5.opt
+cmake -G Ninja --preset opt-all -B build
+ninja -C build
 ```
 
 This compiles a gem5 binary containing "ALL" ISA targets. For more information

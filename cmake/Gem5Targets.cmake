@@ -171,7 +171,68 @@ endif()
 # ---------------------------------------------------------------------------
 # Discover all .test.cc files under src/ and create test executables.
 # Each test links against the full gem5 static library + gtest.
+
+# gem5 GTest logging support: provides gtestLogOutput used by many tests.
+add_library(gem5_gtest_logging STATIC
+    "${CMAKE_SOURCE_DIR}/src/base/gtest/logging.cc"
+)
+target_include_directories(gem5_gtest_logging PUBLIC
+    "${CMAKE_SOURCE_DIR}/src"
+    "${CMAKE_BINARY_DIR}/generated"
+    "${CMAKE_SOURCE_DIR}/ext/googletest/googletest/include"
+    "${CMAKE_SOURCE_DIR}/ext/googletest/googlemock/include"
+)
+target_link_libraries(gem5_gtest_logging PUBLIC gem5_ext_gtest)
+set_target_properties(gem5_gtest_logging PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+)
+
+# gem5 GTest mock loggers: replaces Logger::getPanic()/getWarn()/etc. with
+# mock versions that redirect output to gtestLogOutput instead of stderr.
+# Must be linked with --whole-archive BEFORE gem5_all.
+add_library(gem5_gtest_mock STATIC
+    "${CMAKE_SOURCE_DIR}/src/base/gtest/logging_mock.cc"
+)
+target_include_directories(gem5_gtest_mock PUBLIC
+    "${CMAKE_SOURCE_DIR}/src"
+    "${CMAKE_BINARY_DIR}/generated"
+    "${CMAKE_SOURCE_DIR}/ext/googletest/googletest/include"
+    "${CMAKE_SOURCE_DIR}/ext/googletest/googlemock/include"
+)
+target_link_libraries(gem5_gtest_mock PUBLIC gem5_gtest_logging)
+add_dependencies(gem5_gtest_mock gem5_all)
+set_target_properties(gem5_gtest_mock PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+)
+
 file(GLOB_RECURSE _test_sources "${CMAKE_SOURCE_DIR}/src/*.test.cc")
+
+# Filter out tests from ISA/GPU directories that are not enabled in this build.
+set(_isa_test_filters "")
+if(NOT CONF_USE_ARM_ISA)
+    list(APPEND _isa_test_filters "src/arch/arm/")
+endif()
+if(NOT CONF_USE_X86_ISA)
+    list(APPEND _isa_test_filters "src/arch/x86/")
+endif()
+if(NOT CONF_USE_RISCV_ISA)
+    list(APPEND _isa_test_filters "src/arch/riscv/")
+endif()
+if(NOT CONF_USE_SPARC_ISA)
+    list(APPEND _isa_test_filters "src/arch/sparc/")
+endif()
+if(NOT CONF_USE_MIPS_ISA)
+    list(APPEND _isa_test_filters "src/arch/mips/")
+endif()
+if(NOT CONF_USE_POWER_ISA)
+    list(APPEND _isa_test_filters "src/arch/power/")
+endif()
+if(NOT CONF_BUILD_GPU)
+    list(APPEND _isa_test_filters "src/arch/amdgpu/")
+endif()
+foreach(_filter ${_isa_test_filters})
+    list(FILTER _test_sources EXCLUDE REGEX "${_filter}")
+endforeach()
 
 foreach(_test_src ${_test_sources})
     # Derive test name from path: src/base/bitfield.test.cc -> test_base_bitfield
@@ -181,14 +242,36 @@ foreach(_test_src ${_test_sources})
     set(_test_name "test_${_test_name}")
 
     add_executable(${_test_name} EXCLUDE_FROM_ALL "${_test_src}")
-    target_link_libraries(${_test_name} PRIVATE
-        gem5_all
-        gem5_ext_gtest
-    )
+
+    # The logging test uses skip_lib=True in SCons: it tests the REAL
+    # Logger (which writes to cerr) rather than the mock (which redirects
+    # to gtestLogOutput).  Link it without the mock library.
+    if("${_test_name}" STREQUAL "test_base_logging")
+        target_link_libraries(${_test_name} PRIVATE
+            gem5_gtest_logging
+            gem5_all
+            gem5_ext_gmock
+            gem5_ext_gtest
+        )
+    else()
+        # Use --whole-archive for gem5_gtest_mock to force inclusion of mock
+        # Logger symbols that would otherwise not be pulled from the archive.
+        target_link_libraries(${_test_name} PRIVATE
+            -Wl,--whole-archive gem5_gtest_mock -Wl,--no-whole-archive
+            gem5_all
+            gem5_ext_gmock
+            gem5_ext_gtest
+        )
+    endif()
     target_include_directories(${_test_name} PRIVATE
         "${CMAKE_SOURCE_DIR}/ext/googletest/googletest/include"
         "${CMAKE_SOURCE_DIR}/ext/googletest/googlemock/include"
     )
+    # Ensure all generated headers (enums, params from phase 2 codegen) are
+    # available before compiling test sources.  The simplest way is to wait
+    # for gem5_all to finish: it already depends on all codegen targets, and
+    # tests link against it anyway.
+    add_dependencies(${_test_name} gem5_all)
     add_test(NAME ${_test_name} COMMAND ${_test_name})
 endforeach()
 

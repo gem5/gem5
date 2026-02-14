@@ -3,7 +3,7 @@ Overview
 
 This subfolder (/ext/systemc)  is a custom redistribution of the Accellera
 SystemC 2.3.1 library [[1]][sysc]. This distribution replaces Accellera's
-Autoconf build system with a SCons build system, which is used by gem5.
+Autoconf build system with the CMake build system used by gem5.
 
 In the past it happened several times that some changes in gem5 broke the
 SystemC coupling. Recently Accelera has changed the licence for SystemC from
