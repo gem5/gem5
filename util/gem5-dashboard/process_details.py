@@ -58,7 +58,6 @@ class ProcessDetails(Vertical):
     def __init__(self, actions: List[DashboardAction], **kwargs):
         super().__init__(**kwargs)
         self.actions = actions
-        super().__init__(**kwargs)
 
     def compose(self) -> ComposeResult:
         yield Label("Select a process...", id="lbl_status")

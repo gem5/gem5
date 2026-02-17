@@ -28,6 +28,7 @@ import os
 
 import psutil
 from action_registry import ENABLED_ACTIONS
+from gem5_data_manager import Gem5DataManager
 from process_details import ProcessDetails
 from table_column_map import COLUMNS
 from textual.app import (
@@ -61,6 +62,11 @@ class Gem5Dashboard(App):
         ("r", "refresh", "Refresh"),
         ("t", "toggle_sidebar", "Toggle Sidebar"),
     ]
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Initialize the centralized gem5 data manager
+        self.gem5_data_manager = Gem5DataManager(cache_ttl=2)
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -132,11 +138,17 @@ class Gem5Dashboard(App):
                 # We also check cmdline as gem5
                 cmd_list = proc.info["cmdline"] or []
                 cmd_str = " ".join(cmd_list)
+                gem5_binaries = ["gem5.opt", "gem5.debug", "gem5.fast"]
 
-                if (
-                    "gem5.opt" not in proc.info["name"]
-                    and "gem5.opt" not in cmd_str
+                if not any(
+                    gem5_bin in proc.info["name"] for gem5_bin in gem5_binaries
+                ) and not any(
+                    gem5_bin in cmd_str for gem5_bin in gem5_binaries
                 ):
+                    print(
+                        f"process name: {proc.info['name']}, cmdline: {proc.info['cmdline']}"
+                    )
+
                     continue
 
                 # 3. Multisim & Wrapper Filter (logic from original dashboard PR)
@@ -161,10 +173,13 @@ class Gem5Dashboard(App):
                 pid = str(proc.info["pid"])
                 current_pids.add(pid)
 
+                # Fetch gem5 data once for this process
+                gem5_data = self.gem5_data_manager.get_data(pid)
+
                 row_data = []
                 for col in COLUMNS:
                     try:
-                        value = col["func"](proc)
+                        value = col["func"](proc, gem5_data)
                         row_data.append(value)
                     except Exception:
                         row_data.append("N/A")
@@ -189,6 +204,8 @@ class Gem5Dashboard(App):
         ]
         for row_key in rows_to_remove:
             table.remove_row(row_key)
+            # Also invalidate cache for removed processes
+            self.gem5_data_manager.invalidate(row_key)
 
         if sidebar.current_pid and sidebar.current_pid not in current_pids:
             sidebar.reset()
