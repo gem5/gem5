@@ -137,7 +137,7 @@ class CacheController : public ruby::CHIGenericController
         Transaction(CacheController *parent,
             ARM::CHI::Payload &_payload,
             ARM::CHI::Phase &_phase);
-        ~Transaction();
+        virtual ~Transaction();
 
         static std::unique_ptr<Transaction> gen(CacheController *parent,
             ARM::CHI::Payload &_payload,
