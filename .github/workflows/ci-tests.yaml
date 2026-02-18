@@ -138,8 +138,8 @@ jobs:
     clang-fast-compilation:
         # gem5 binaries built in `quick-gem5-builds` always use GCC.
         # Clang is more strict than GCC. This job checks that gem5 compiles
-        # with Clang. It compiles build/ALL/gem5.fast to maximize the change
-        # for compilation error to be exposed.
+        # with Clang. It compiles build/ALL/gem5 with GEM5_FAST to maximize the
+        # chance for compilation errors to be exposed.
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
         container: ghcr.io/gem5/clang-version-19:latest
@@ -241,11 +241,11 @@ jobs:
               run: echo "sanitized-build-target=$(echo '${{ matrix.build-target }}' | sed 's/[\\|\.]/-/g' | sed 's/[\/|__w|gem5|build]//g')" >> $GITHUB_OUTPUT
 
         # Upload the gem5 binary as an artifact.
-        # Note: the "achor.txt" file is a hack to make sure the paths are
-        # preserverd in the artifact. The upload-artifact action finds the
+        # Note: the "anchor.txt" file is a hack to make sure the paths are
+        # preserved in the artifact. The upload-artifact action finds the
         # closest common directory and uploads everything relative to that.
-        # E.g., if we upload "build/ARM/gem5.opt" and "build/RISCV/gem5.opt"
-        # Then upload-artifact will upload "ARM/gem5.opt" and "RISCV/gem5.opt",
+        # E.g., if we upload "build/ARM/gem5" and "build/RISCV/gem5"
+        # Then upload-artifact will upload "ARM/gem5" and "RISCV/gem5",
         # stripping the "build" directory. By adding the "anchor.txt" file, we
         # ensure the "build" directory is preserved.
             - run: echo "anchor" > anchor.txt
@@ -269,7 +269,7 @@ jobs:
             matrix:
                 test-dir: ${{ fromJson(needs.testlib-quick-matrix.outputs.test-dirs-matrix) }}
         steps:
-        # Checkout the repository then download the gem5.opt artifact.
+        # Checkout the repository then download the gem5 build artifacts.
             - uses: actions/checkout@v4
             - uses: actions/download-artifact@v4
               name: Download gem5 artifacts

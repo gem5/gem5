@@ -101,10 +101,11 @@ without python.
 > ninja -C build_cxx gem5_shared
 > cd util/tlm
 
-To build all sources of the SystemC binding and the examples, run make
-from the util/tlm directory:
+To build all sources of the SystemC binding and the examples, run cmake
+from the repository root:
 
-> make
+> cmake -S util/tlm -B build/tlm -DGEM5_BUILD_DIR=$PWD/build_cxx
+> cmake --build build/tlm
 
 
 IV. Simple Examples

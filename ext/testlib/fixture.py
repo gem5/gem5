@@ -86,7 +86,7 @@ class Fixture:
         # If this is a gem5 build it will return the target gem5 build path
         # and any additional build information. E.g.:
         #
-        # /path/to/gem5/build/NULL/gem5.opt--default=NULL PROTOCOL=MI_example
+        # /path/to/gem5/build/NULL/gem5--default=NULL PROTOCOL=MI_example
         #
         # In this example this may be passed to cmake/ninja to build gem5
         # in accordance to the test's build requirements.

@@ -42,7 +42,7 @@ No specific checks on the stats are performed.
 
 **Important Note**: This test has a major design flaw, noted here:
 https://gem5.atlassian.net/browse/GEM5-1073.
-It will not run if the build/ARM/gem5.opt has not been built. As this is not
+It will not run if the build/ARM/gem5 has not been built. As this is not
 built prior to this test being processed during the Weekly run, this test is
 not run.
 """

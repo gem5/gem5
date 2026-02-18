@@ -13,7 +13,7 @@ To validate the `gem5-bridge` driver, run the `gem5-bridge-driver-validate.py` s
 ### Usage
 
 ```bash
-build/ALL/gem5.opt util/disk-image-validator/gem5-bridge-driver-validate.py --isa <ISA> --workload <WORKLOAD_ID> --resource-version <RESOURCE_VERSION>
+build/ALL/gem5 util/disk-image-validator/gem5-bridge-driver-validate.py --isa <ISA> --workload <WORKLOAD_ID> --resource-version <RESOURCE_VERSION>
 ```
 
 ### Arguments
@@ -31,7 +31,7 @@ build/ALL/gem5.opt util/disk-image-validator/gem5-bridge-driver-validate.py --is
 ### Example
 
 ```bash
-build/ALL/gem5.opt util/disk-image-validator/gem5-bridge-driver-validate.py --isa x86 --workload x86-ubuntu-24.04-boot-no-systemd --resource-version 4.0.0
+build/ALL/gem5 util/disk-image-validator/gem5-bridge-driver-validate.py --isa x86 --workload x86-ubuntu-24.04-boot-no-systemd --resource-version 4.0.0
 ```
 
 ### Requirements
@@ -59,7 +59,7 @@ This script tests disk images to ensure they boot correctly and execute hypercal
 ### Usage
 
 ```bash
-build/ALL/gem5.opt util/disk-image-validator/disk-image-validate.py --isa <ISA> --workload <WORKLOAD_ID> --resource_version <RESOURCE_VERSION> [--validate-npb]
+build/ALL/gem5 util/disk-image-validator/disk-image-validate.py --isa <ISA> --workload <WORKLOAD_ID> --resource_version <RESOURCE_VERSION> [--validate-npb]
 ```
 
 ### Arguments
@@ -80,7 +80,7 @@ build/ALL/gem5.opt util/disk-image-validator/disk-image-validate.py --isa <ISA> 
 ### Example
 
 ```bash
-build/ALL/gem5.opt util/disk-img-validator/disk-image-validate.py --isa x86 --workload x86-ubuntu-24.04-npb-is-s --resource_version 3.0.0 --validate-npb
+build/ALL/gem5 util/disk-image-validator/disk-image-validate.py --isa x86 --workload x86-ubuntu-24.04-npb-is-s --resource_version 3.0.0 --validate-npb
 ```
 
 ### Requirements
@@ -132,7 +132,7 @@ python3 run_config_tests.py --workload x86-ubuntu-24.04-boot-no-systemd --resour
 
 **Requirements:**
 
-- The gem5 binary must be built and located at `./build/ALL/gem5.opt`.
+- The gem5 binary must be built and located at `./build/ALL/gem5`.
 - The configuration script must be located at `util/disk-image-validator/config_tester.py`.
 
 **Functionality:**

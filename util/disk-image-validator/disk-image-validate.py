@@ -49,7 +49,7 @@ This script tests disk images to ensure they boot correctly and execute
 hypercalls in the intended order.
 
 Usage:
-    build/ALL/gem5.opt util/disk-image-validator/disk-image-validate.py --isa <ISA> --workload <WORKLOAD_ID> --resource_version <RESOURCE_VERSION> [--validate-npb]
+    build/ALL/gem5 util/disk-image-validator/disk-image-validate.py --isa <ISA> --workload <WORKLOAD_ID> --resource_version <RESOURCE_VERSION> [--validate-npb]
 
 Arguments:
     --isa                The instruction set architecture (ISA) for the simulation.
@@ -59,7 +59,7 @@ Arguments:
     --validate-npb       Validate the NAS Parallel Benchmarks (NPB) output (Optional).
 
 Example:
-    build/ALL/gem5.opt util/disk-img-validator/disk-image-validate.py --isa x86 --workload x86-ubuntu-24.04-npb-is-s --resource_version 3.0.0 --validate-npb
+    build/ALL/gem5 util/disk-img-validator/disk-image-validate.py --isa x86 --workload x86-ubuntu-24.04-npb-is-s --resource_version 3.0.0 --validate-npb
 
 Requirements:
     - gem5 must be installed and properly configured.
