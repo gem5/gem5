@@ -110,7 +110,7 @@ class TestSERun(unittest.TestCase):
         self.assertEqual(
             self.run.command,
             [
-                "gem5/build/X86/gem5.opt",
+                "gem5/build/gem5",
                 "-re",
                 f"--outdir={os.path.abspath('results/run_test/out')}",
                 "configs-tests/run_test.py",
