@@ -66,7 +66,7 @@ Then run make:
 
 Make a config file for the C++-configured gem5 using normal gem5
 
-> ../../../build/gem5 ../../../configs/deprecated/example/se.py -c \
+> ../../../build/gem5 ../../../configs/example/se.py -c \
 >       ../../../tests/test-progs/hello/bin/arm/linux/hello
 
 The binary 'gem5.cxx' can now be used to load in the generated config

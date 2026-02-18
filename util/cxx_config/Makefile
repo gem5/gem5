@@ -44,6 +44,21 @@ LIBS = -lgem5_shared
 # CXXFLAGS += $(shell pkg-config --cflags --libs-only-L protobuf)
 # LIBS += $(shell pkg-config --libs protobuf)
 
+# Preflight: verify gem5 build directory exists
+ifeq (,$(wildcard $(BUILD_DIR)))
+$(error gem5 build directory not found at $(BUILD_DIR). Build it first: cmake -B ../../build_cxx -S ../.. -DGEM5_BUILD_VARIANT=ARM -DGEM5_WITH_CXX_CONFIG=ON -DGEM5_WITHOUT_PYTHON=ON && ninja -C ../../build_cxx gem5_shared)
+endif
+
+# Preflight: verify generated headers exist
+ifeq (,$(wildcard $(BUILD_DIR)/generated/config/the_isa.hh))
+$(error Generated headers not found at $(BUILD_DIR)/generated/config/the_isa.hh. Build gem5 first: cmake -B ../../build_cxx -S ../.. -DGEM5_BUILD_VARIANT=ARM -DGEM5_WITH_CXX_CONFIG=ON -DGEM5_WITHOUT_PYTHON=ON && ninja -C ../../build_cxx gem5_shared)
+endif
+
+# Preflight: verify gem5 shared library exists
+ifeq (,$(wildcard $(BUILD_DIR)/libgem5_shared.so))
+$(error gem5 shared library not found at $(BUILD_DIR)/libgem5_shared.so. Build it first: cmake -B ../../build_cxx -S ../.. -DGEM5_BUILD_VARIANT=ARM -DGEM5_WITH_CXX_CONFIG=ON -DGEM5_WITHOUT_PYTHON=ON && ninja -C ../../build_cxx gem5_shared)
+endif
+
 ALL = gem5.cxx
 
 all: $(ALL)

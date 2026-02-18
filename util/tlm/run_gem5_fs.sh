@@ -48,4 +48,4 @@ echo -e "\n${BGre}Create gem5 Configuration${RCol}\n"
 
 echo -e "\n${BGre}Run gem5 ${RCol}\n"
 
-time ./build/examples/slave_port/gem5.sc m5out/config.ini -o 2147483648
+time ../../build/tlm/gem5_sc_slave m5out/config.ini -o 2147483648

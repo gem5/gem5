@@ -15,6 +15,15 @@ calls to the C++11 STL. This repository also contains the TLM 2.0
 protocol-checker from Doulos [[4]][doulos].
 
 
+Build System Note
+=================
+
+The `SConscript.sc` files found throughout `ext/systemc/src/` are historical
+artifacts from the upstream Accellera distribution. They are **not used** by
+the gem5 CMake build system. The SystemC library is built entirely via the
+CMake targets defined in `cmake/gem5_systemc.cmake`.
+
+
 [sysc]: http://accellera.org/downloads/standards/systemc
 [gem5]: http://www.gem5.org/
 [doulos]: https://www.doulos.com/knowhow/systemc/tlm2/base_protocol_checker/

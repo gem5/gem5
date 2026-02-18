@@ -36,7 +36,7 @@
 ARCH = ARM
 VARIANT = opt
 GEM5_ROOT = ../../..
-GEM5_BUILD_DIR = $(GEM5_ROOT)/build/$(ARCH)
+GEM5_BUILD_DIR = $(GEM5_ROOT)/build_cxx
 
 SYSTEMC_INC = /opt/systemc/include
 SYSTEMC_LIB = /opt/systemc/lib-linux64

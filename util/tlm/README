@@ -99,7 +99,6 @@ without python.
 >       -DGEM5_WITH_CXX_CONFIG=ON -DGEM5_WITHOUT_PYTHON=ON \
 >       -DGEM5_WITH_TCMALLOC=OFF
 > ninja -C build_cxx gem5_shared
-> cd util/tlm
 
 To build all sources of the SystemC binding and the examples, run cmake
 from the repository root:
@@ -115,24 +114,24 @@ In order to run our example simulation, we first need to create a config.ini
 that represents the gem5 configuration. We do so by starting gem5 with the
 desired python configuration script.
 
-> ../../build/gem5 conf/tlm_{master,slave}.py
+> build/gem5 util/tlm/conf/tlm_{master,slave}.py
 
 The message "fatal: Can't find port handler type 'tlm_{master,slave}'" is okay.
 The configuration will be stored in the m5out/ directory
 
-The build step creates a binary 'gem5.sc' for each example in the
-build/examples/{master|slave}_port directories. It can now be used to load in
-the generated configuration file from the previous normal gem5 run.
+The build step creates executables 'gem5_sc_master' and 'gem5_sc_slave' in the
+build/tlm directory. They can now be used to load in the generated
+configuration file from the previous normal gem5 run.
 
 Try:
 
-> build/examples/{master,slave}_port/gem5.sc m5out/config.ini -e 1000000
+> build/tlm/gem5_sc_{master,slave} m5out/config.ini -e 1000000
 
 It should run a simulation for 1us.
 
 To see more information what happens inside the TLM modules use the -v flag:
 
-> build/{master,slave}_port/gem5.sc m5out/config.ini -e 1000000 -v
+> build/tlm/gem5_sc_{master,slave} m5out/config.ini -e 1000000 -v
 
 
 V. Full System Setup
@@ -144,7 +143,7 @@ the gem5-to-TLM bridge.
 Build gem5 as described in Section III. Then, make a config file for the
 C++-configured gem5 using normal gem5
 
-> ../../build/gem5 ../../configs/example/fs.py                       \
+> build/gem5 configs/example/fs.py                                   \
   --tlm-memory=transactor --cpu-type=TimingSimpleCPU --num-cpu=1     \
   --mem-type=SimpleMemory --mem-size=512MB --mem-channels=1 --caches \
   --l2cache --machine-type=VExpress_GEM5_Foundation                  \
@@ -154,12 +153,12 @@ C++-configured gem5 using normal gem5
 The message "fatal: Can't find port handler type 'tlm_slave'" is okay.
 The configuration will be stored in the m5out/ directory
 
-The binary 'build/examples/slave_port/gem5.sc' can now be used to load in the
+The binary 'build/tlm/gem5_sc_slave' can now be used to load in the
 generated config file from the previous normal gem5 run.
 
 Try:
 
-> build/examples/slave_port/gem5.sc m5out/config.ini -o 2147483648
+> build/tlm/gem5_sc_slave m5out/config.ini -o 2147483648
 
 The parameter -o specifies the begining of the memory region (0x80000000).
 The system should boot now.
@@ -183,15 +182,15 @@ For more information on elastic traces please refer to:
 
 Similar to IV. the simulation can be set up with this command:
 
-> ../../build/gem5 ./conf/tlm_elastic_slave.py
+> build/gem5 util/tlm/conf/tlm_elastic_slave.py
 
 or
 
-> ../../build/gem5 ./conf/tlm_elastic_slave_with_l2.py
+> build/gem5 util/tlm/conf/tlm_elastic_slave_with_l2.py
 
 Then:
 
-> build/examples/slave_port/gem5.sc m5out/config.ini
+> build/tlm/gem5_sc_slave m5out/config.ini
 
 
 VII. Knwon issues

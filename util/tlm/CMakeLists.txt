@@ -5,14 +5,12 @@
 # environment using the gem5 shared library.
 #
 # Prerequisites:
-#   - A pre-built gem5 shared library (libgem5_<variant>.so)
+#   - A pre-built gem5 shared library (libgem5_shared.so)
 #   - SystemC library (built as part of gem5's ext/systemc)
 #
 # Usage (standalone):
 #   cmake -S util/tlm -B build/tlm \
-#       -DGEM5_ARCH=ARM \
-#       -DGEM5_VARIANT=opt \
-#       [-DGEM5_BUILD_DIR=/path/to/gem5/build]
+#       -DGEM5_BUILD_DIR=/path/to/gem5/build_cxx
 #   cmake --build build/tlm
 #
 # Note: This build requires the gem5 shared library to be built first.
@@ -28,8 +26,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # ---------------------------------------------------------------------------
 get_filename_component(GEM5_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
 
-set(GEM5_ARCH "ARM" CACHE STRING "gem5 architecture (e.g., ARM, X86)")
-set(GEM5_VARIANT "opt" CACHE STRING "gem5 build variant (debug, opt, fast)")
 set(GEM5_BUILD_DIR "${GEM5_ROOT}/build" CACHE PATH "Path to gem5 build directory")
 
 set(SYSTEMC_SRC_DIR "${GEM5_ROOT}/ext/systemc/src")
@@ -39,7 +35,7 @@ set(SYSTEMC_UTIL_DIR "${GEM5_ROOT}/util/systemc/gem5_within_systemc")
 # Include paths
 # ---------------------------------------------------------------------------
 include_directories(
-    ${GEM5_BUILD_DIR}/${GEM5_ARCH}
+    ${GEM5_BUILD_DIR}
     ${SYSTEMC_UTIL_DIR}
     ${SYSTEMC_SRC_DIR}
     ${GEM5_ROOT}/ext
@@ -91,14 +87,14 @@ add_library(tlm_examples_common STATIC
 # ---------------------------------------------------------------------------
 # Find gem5 shared library and SystemC library
 # ---------------------------------------------------------------------------
-set(_gem5_lib "${GEM5_BUILD_DIR}/${GEM5_ARCH}/libgem5_${GEM5_VARIANT}${CMAKE_SHARED_LIBRARY_SUFFIX}")
+set(_gem5_lib "${GEM5_BUILD_DIR}/libgem5_shared${CMAKE_SHARED_LIBRARY_SUFFIX}")
 set(_systemc_lib "${CMAKE_CURRENT_BINARY_DIR}/build/systemc/libsystemc${CMAKE_SHARED_LIBRARY_SUFFIX}")
 
 # Try to find systemc in the build tree
 find_library(SYSTEMC_LIBRARY NAMES systemc
     PATHS
         "${CMAKE_CURRENT_BINARY_DIR}/build/systemc"
-        "${GEM5_BUILD_DIR}/${GEM5_ARCH}"
+        "${GEM5_BUILD_DIR}"
         "${GEM5_ROOT}/ext/systemc"
     NO_DEFAULT_PATH
 )
