@@ -17,8 +17,8 @@ SystemC is built automatically as part of the gem5 CMake build. To build
 gem5 with SystemC support:
 
 ```sh
-cmake -G Ninja --preset opt-all -B build
-ninja -C build
+cmake -G Ninja --preset opt-all -B build/ALL
+ninja -C build/ALL
 ```
 
 [sysc]: http://accellera.org/downloads/standards/systemc

@@ -38,7 +38,7 @@ Once you have all dependencies resolved, execute the following to build an
 optimized version of the gem5 binary (`gem5`) containing all gem5 ISAs:
 
 ```sh
-cmake -G Ninja --preset opt-all -B build && ninja -C build
+cmake -G Ninja --preset opt-all -B build/ALL && ninja -C build/ALL
 ```
 
 If you only wish to compile gem5 for a single ISA, use the
@@ -47,7 +47,7 @@ If you only wish to compile gem5 for a single ISA, use the
 can be found in the build_opts directory. For example, to build for X86:
 
 ```sh
-cmake -G Ninja --preset opt -DGEM5_BUILD_VARIANT=X86 -B build && ninja -C build
+cmake -G Ninja --preset opt -DGEM5_BUILD_VARIANT=X86 -B build/X86 && ninja -C build/X86
 ```
 
 See https://www.gem5.org/documentation/general_docs/building for more

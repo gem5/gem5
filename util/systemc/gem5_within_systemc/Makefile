@@ -34,7 +34,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ARCH = ARM
-VARIANT = opt
 GEM5_ROOT = ../../..
 GEM5_BUILD_DIR = $(GEM5_ROOT)/build_cxx
 
@@ -48,7 +47,7 @@ CXXFLAGS += -std=c++17
 CXXFLAGS += -g -DTRACING_ON
 LIBS = -lgem5_shared -lsystemc -lpng
 
-ALL = gem5.$(VARIANT).sc
+ALL = gem5.sc
 
 all: $(ALL)
 
@@ -61,7 +60,7 @@ sc_module.o: sc_module.cc sc_module.hh
 stats.o: stats.cc stats.hh
 main.o: main.cc sc_logger.hh sc_module.hh stats.hh
 
-gem5.$(VARIANT).sc: main.o stats.o \
+gem5.sc: main.o stats.o \
 	sc_gem5_control.o sc_logger.o sc_module.o
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
 

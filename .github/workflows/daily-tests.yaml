@@ -258,9 +258,12 @@ jobs:
               working-directory: ${{ github.workspace }}/util/systemc/gem5_within_systemc
               run: make GEM5_BUILD_DIR=../../../build/ARM-shared
             - name: Run gem5 within SystemC test
+              # Note: Uses deprecated/example/se.py intentionally because
+              # CxxConfigManager requires the traditional config.ini format
+              # that the old-style configs produce.
               run: ./build/ARM/gem5 configs/deprecated/example/se.py -c tests/test-progs/hello/bin/arm/linux/hello
             - name: Continue gem5 within SystemC test
-              run: LD_LIBRARY_PATH=build/ARM-shared/:/opt/systemc/lib-linux64/ ./util/systemc/gem5_within_systemc/gem5.opt.sc m5out/config.ini
+              run: LD_LIBRARY_PATH=build/ARM-shared/:/opt/systemc/lib-linux64/ ./util/systemc/gem5_within_systemc/gem5.sc m5out/config.ini
 
     dramsys-tests:
         runs-on: [self-hosted, linux, x64]

@@ -61,12 +61,12 @@ echo "export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$SST_CORE_HOME/lib/pkgconfig/" >> 
 At the root of the gem5 folder, you need to compile gem5 as a shared library:
 
 ```sh
-cmake -G Ninja --preset opt -DGEM5_BUILD_VARIANT=RISCV -B build
-ninja -C build gem5_shared
+cmake -G Ninja --preset opt -DGEM5_BUILD_VARIANT=RISCV -B build/RISCV
+ninja -C build/RISCV gem5_shared
 ```
 
-The shared library will be located at `build/libgem5_shared.so` (Linux) or
-`build/libgem5_shared.dylib` (macOS).
+The shared library will be located at `build/RISCV/libgem5_shared.so` (Linux) or
+`build/RISCV/libgem5_shared.dylib` (macOS).
 
 **Note:**
 * The Mac version was tested on a Macbook Air with M2 processor.

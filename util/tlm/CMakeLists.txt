@@ -26,7 +26,20 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # ---------------------------------------------------------------------------
 get_filename_component(GEM5_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../.." ABSOLUTE)
 
-set(GEM5_BUILD_DIR "${GEM5_ROOT}/build" CACHE PATH "Path to gem5 build directory")
+set(GEM5_BUILD_DIR "${GEM5_ROOT}/build_cxx" CACHE PATH "Path to gem5 build directory (must contain libgem5_shared and generated headers)")
+
+# Validate that GEM5_BUILD_DIR exists and contains required files
+if(NOT EXISTS "${GEM5_BUILD_DIR}")
+    message(FATAL_ERROR
+        "GEM5_BUILD_DIR not found: ${GEM5_BUILD_DIR}\n"
+        "Build gem5 shared library first:\n"
+        "  cmake -B ${GEM5_ROOT}/build_cxx -S ${GEM5_ROOT} "
+        "-DGEM5_BUILD_VARIANT=ARM -DGEM5_WITH_CXX_CONFIG=ON "
+        "-DGEM5_WITHOUT_PYTHON=ON\n"
+        "  ninja -C ${GEM5_ROOT}/build_cxx gem5_shared\n"
+        "Or specify a custom path: cmake -DGEM5_BUILD_DIR=/path/to/build ..."
+    )
+endif()
 
 set(SYSTEMC_SRC_DIR "${GEM5_ROOT}/ext/systemc/src")
 set(SYSTEMC_UTIL_DIR "${GEM5_ROOT}/util/systemc/gem5_within_systemc")

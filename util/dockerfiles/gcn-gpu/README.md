@@ -10,7 +10,7 @@ docker build -t <image_name> .
 The following command assumes the gem5 directory is a subdirectory of your current directory
 ```
 docker run --rm -v $PWD/gem5:/gem5 -w /gem5 <image_name> \
-    bash -c "cmake -G Ninja --preset opt -DGEM5_BUILD_VARIANT=VEGA_X86 -B build && ninja -C build"
+    bash -c "cmake -G Ninja --preset opt -DGEM5_BUILD_VARIANT=VEGA_X86 -B build/VEGA_X86 && ninja -C build/VEGA_X86"
 ```
 
 ### Test gem5 using a prebuilt application

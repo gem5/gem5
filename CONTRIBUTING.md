@@ -210,16 +210,16 @@ be run on multiple threads with the `-j` flag. E.g.: `python main.py run
 The unit tests should also pass. To build and run the unit tests:
 
 ```sh
-cmake -G Ninja --preset opt -DGEM5_BUILD_VARIANT=NULL -B build
-ninja -C build gem5_unittests
-ctest --test-dir build
+cmake -G Ninja --preset opt -DGEM5_BUILD_VARIANT=NULL -B build/NULL
+ninja -C build/NULL gem5_unittests
+ctest --test-dir build/NULL
 ```
 
 To compile the gem5 binary:
 
 ```sh
-cmake -G Ninja --preset opt-all -B build
-ninja -C build
+cmake -G Ninja --preset opt-all -B build/ALL
+ninja -C build/ALL
 ```
 
 This compiles a gem5 binary containing "ALL" ISA targets. For more information
