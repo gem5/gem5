@@ -33,8 +33,12 @@ Then run make:
 
 Make a config file for the C++-configured gem5 using normal gem5
 
-> ../../build/ARM/gem5 ../../configs/example/se.py -c \
+> ../../build/ARM/gem5 ../../configs/deprecated/example/se.py -c \
 >       ../../tests/test-progs/hello/bin/arm/linux/hello
+
+Note: The deprecated se.py config is required here because CxxConfigManager
+needs the traditional config.ini format that the old-style configs produce.
+The non-deprecated configs/example/se.py is a redirect stub and will not work.
 
 The binary 'gem5.cxx' can now be used to load in the generated config
 file from the previous normal gem5 run.
