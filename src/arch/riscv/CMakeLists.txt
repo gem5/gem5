@@ -9,6 +9,15 @@ endif()
 gem5_add_sources(
     decoder.cc
     faults.cc
+    insts/amo.cc
+    insts/bs.cc
+    insts/compressed.cc
+    insts/mem.cc
+    insts/standard.cc
+    insts/static_inst.cc
+    insts/vector.cc
+    insts/zcmp.cc
+    insts/zcmt.cc
     interrupts.cc
     isa.cc
     process.cc

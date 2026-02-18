@@ -10,10 +10,11 @@ gem5_add_sources(
     decoder.cc
     faults.cc
     insts/branch.cc
-    insts/mem.cc
-    insts/integer.cc
-    insts/floating.cc
     insts/condition.cc
+    insts/floating.cc
+    insts/integer.cc
+    insts/mem.cc
+    insts/misc.cc
     insts/static_inst.cc
     linux/se_workload.cc
     isa.cc

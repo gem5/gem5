@@ -33,8 +33,6 @@
 namespace gem5
 {
 
-using namespace RiscvISA;
-
 void
 IdleStartEvent::process(ThreadContext *tc)
 {
