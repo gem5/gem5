@@ -92,19 +92,18 @@ Second build gem5 as a library with cxx-config support and (optionally)
 without python.
 
 > cd ../..
-> scons build/ARM/gem5.opt
-> scons setconfig build/ARM USE_SYSTEMC=n
-> scons --with-cxx-config --without-python --without-tcmalloc \
->       --duplicate-sources build/ARM/libgem5_opt.so
+> cmake -B build -S . -DGEM5_ISA=ARM
+> ninja -C build gem5
+> cmake -B build_cxx -S . -DGEM5_ISA=ARM -DCONF_USE_SYSTEMC=OFF \
+>       -DGEM5_WITH_CXX_CONFIG=ON -DGEM5_WITHOUT_PYTHON=ON \
+>       -DGEM5_WITHOUT_TCMALLOC=ON
+> ninja -C build_cxx gem5_shared
 > cd util/tlm
 
-Note: For MAC / OSX this command should be used:
-> scons --with-cxx-config --without-python --without-tcmalloc \
->       --duplicate-sources build/ARM/libgem5_opt.dylib
+To build all sources of the SystemC binding and the examples, run make
+from the util/tlm directory:
 
-To build all sources of the SystemC binding and the examples simply run scons:
-
-> scons
+> make
 
 
 IV. Simple Examples

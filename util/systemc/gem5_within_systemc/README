@@ -30,20 +30,17 @@ without python.  When building the library, disable gem5's native SystemC
 API support, as that will conflict with the external version.  Also build a
 normal gem5 (cxx-config not needed, Python needed)
 
-Note: The `--duplicate-source` option is also needed as
-"util/systemc/gem5_within_systemc" depends on generated source files to be
-present in the "build" directory.
+Note: With CMake, generated source files are placed in the build directory
+automatically.
 
 > cd ../../..
-> scons build/ARM/gem5.opt
-> scons setconfig build/ARM USE_SYSTEMC=n
-> scons --with-cxx-config --without-python --without-tcmalloc \
->       --duplicate-source build/ARM/libgem5_opt.so
+> cmake -B build -S . -DGEM5_ISA=ARM
+> ninja -C build gem5
+> cmake -B build_cxx -S . -DGEM5_ISA=ARM -DCONF_USE_SYSTEMC=OFF \
+>       -DGEM5_WITH_CXX_CONFIG=ON -DGEM5_WITHOUT_PYTHON=ON \
+>       -DGEM5_WITHOUT_TCMALLOC=ON
+> ninja -C build_cxx gem5_shared
 > cd util/systemc
-
-Note: For MAC / OSX this command should be used:
-> scons --with-cxx-config --without-python --without-tcmalloc \
->       --duplicate-sources build/ARM/libgem5_opt.dylib
 
 Set a proper LD_LIBRARY_PATH e.g. for bash:
 > export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/path/to/gem5/build/ARM/"

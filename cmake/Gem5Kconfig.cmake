@@ -186,6 +186,23 @@ endif()
 # Include the generated variables
 include("${_kconfig_output}")
 
+# Apply user-specified Kconfig overrides (e.g., from test fixtures).
+# GEM5_KCONFIG_OVERRIDE is a semicolon-separated list of KEY=value pairs
+# that override the corresponding CONF_* variables after Kconfig processing.
+# Example: -DGEM5_KCONFIG_OVERRIDE="RUBY_PROTOCOL_CHI=y;RUBY_PROTOCOL_MESI=n"
+if(DEFINED GEM5_KCONFIG_OVERRIDE)
+    foreach(_override IN LISTS GEM5_KCONFIG_OVERRIDE)
+        string(FIND "${_override}" "=" _eq_pos)
+        if(_eq_pos GREATER -1)
+            string(SUBSTRING "${_override}" 0 ${_eq_pos} _key)
+            math(EXPR _val_pos "${_eq_pos} + 1")
+            string(SUBSTRING "${_override}" ${_val_pos} -1 _val)
+            set(CONF_${_key} "${_val}")
+            message(STATUS "Kconfig override: CONF_${_key} = ${_val}")
+        endif()
+    endforeach()
+endif()
+
 # Print a summary of key Kconfig-derived variables
 message(STATUS "Kconfig: CONF_BUILD_ISA = ${CONF_BUILD_ISA}")
 message(STATUS "Kconfig: CONF_USE_X86_ISA = ${CONF_USE_X86_ISA}")

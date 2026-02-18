@@ -209,7 +209,7 @@ jobs:
 
             - name: Cache build/ALL
               uses: actions/cache/restore@v4
-              if: ${{ endsWith(matrix.build-target, 'build/ALL/gem5.opt') }}
+              if: ${{ endsWith(matrix.build-target, 'build/ALL/gem5.opt') || endsWith(matrix.build-target, 'build/ALL/gem5') }}
               with:
                   path: build/ALL
                   key: testlib-build-all-${{ needs.get-date.outputs.date }}
@@ -218,15 +218,21 @@ jobs:
 
             - name: Build gem5
               run: |
-                  # Parse build target: build/<VARIANT>/gem5.<type>
+                  # Parse build target: build/<VARIANT>/gem5[.<type>]
                   # Use sed to robustly extract variant (works with absolute paths)
                   TARGET="${{ matrix.build-target }}"
                   VARIANT=$(echo "$TARGET" | sed 's|.*/build/||;s|/.*||')
-                  TYPE=$(echo "$TARGET" | sed 's/.*gem5\.\(.*\)/\1/')
+                  # Extract build type: "gem5.TYPE" -> TYPE, plain "gem5" -> "opt"
+                  BASENAME=$(basename "$TARGET")
+                  if echo "$BASENAME" | grep -q 'gem5\.'; then
+                      TYPE=$(echo "$BASENAME" | sed 's/.*gem5\.\(.*\)/\1/')
+                  else
+                      TYPE="opt"
+                  fi
                   BUILD_TYPE="GEM5_$(echo $TYPE | tr '[:lower:]' '[:upper:]')"
                   cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DGEM5_BUILD_VARIANT=$VARIANT -DGEM5_NO_COMPRESS_DEBUG=ON -B build/$VARIANT
                   ninja -C build/$VARIANT -j$(nproc)
-                  # Create compatibility symlink for testlib
+                  # Create compatibility copy for testlib
                   cp build/$VARIANT/gem5 build/$VARIANT/gem5.$TYPE
 
             - name: Sanitize build-target for artifact name

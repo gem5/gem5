@@ -108,7 +108,12 @@ set(_all_slicc_cc_files "")
 foreach(_protocol ${_enabled_protocols})
     set(_slicc_file "${CMAKE_CURRENT_SOURCE_DIR}/${_protocol}.slicc")
     if(NOT EXISTS "${_slicc_file}")
-        message(FATAL_ERROR "SLICC file not found: ${_slicc_file}")
+        # Some protocols (e.g. CHI) live in a lowercase subdirectory
+        string(TOLOWER "${_protocol}" _proto_lower)
+        set(_slicc_file "${CMAKE_CURRENT_SOURCE_DIR}/${_proto_lower}/${_protocol}.slicc")
+    endif()
+    if(NOT EXISTS "${_slicc_file}")
+        message(FATAL_ERROR "SLICC file not found for protocol ${_protocol}")
     endif()
 
     set(_manifest "${_slicc_output_dir}/.slicc_manifest_${_protocol}")
