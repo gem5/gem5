@@ -658,8 +658,17 @@ json_path = os.path.join(main_args.build_dir, json_rel_path)
 
 if main_args.update_json:
     # With CMake, tests.json is generated at configure time.
-    # Re-running cmake on the build directory regenerates it.
-    subprocess.check_call(["cmake", main_args.build_dir])
+    if os.path.exists(os.path.join(main_args.build_dir, "CMakeCache.txt")):
+        # Re-configure existing build directory
+        subprocess.check_call(["cmake", main_args.build_dir])
+    else:
+        # Fresh configure from source directory
+        subprocess.check_call([
+            "cmake", "-G", "Ninja",
+            "-DGEM5_WITH_SYSTEMC_TESTS=ON",
+            "-S", main_args.source_dir,
+            "-B", main_args.build_dir,
+        ])
 
 with open(json_path) as f:
     test_data = json.load(f)
