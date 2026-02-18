@@ -58,9 +58,9 @@ class X86DemoBoard(X86Board):
 
     .. code-block::
 
-        cmake -B build -DGEM5_BUILD_VARIANT=X86
-        ninja -C build -j`nproc`
-        ./build/gem5 configs/example/gem5_library/x86-ubuntu-run.py
+        cmake -B build/X86 -DGEM5_BUILD_VARIANT=X86
+        ninja -C build/X86 -j`nproc`
+        ./build/X86/gem5 configs/example/gem5_library/x86-ubuntu-run.py
 
     """
 

@@ -39,11 +39,11 @@ Usage
 -----
 
 # Compile gem5. The ALL build includes the RISCV target ISA.
-cmake -B build -DGEM5_BUILD_VARIANT=ALL
-ninja -C build
+cmake -B build/ALL -DGEM5_BUILD_VARIANT=ALL
+ninja -C build/ALL
 
 # Run the simulation
-./build/gem5 configs/example/gem5_library/riscv-rvv-example.py \
+./build/ALL/gem5 configs/example/gem5_library/riscv-rvv-example.py \
     [-c CORES] [-v VLEN] [-e ELEN] <resource>
 
 """

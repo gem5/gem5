@@ -47,11 +47,11 @@
  *  This file contains a demonstration main using CxxConfigManager.
  *  Build with something like:
  *
- *      cmake -B build -DGEM5_BUILD_VARIANT=ARM -DGEM5_WITHOUT_PYTHON=ON
- *      ninja -C build gem5_shared
+ *      cmake -B build_cxx -DGEM5_BUILD_VARIANT=ARM -DGEM5_WITHOUT_PYTHON=ON
+ *      ninja -C build_cxx gem5_shared
  *
- *      g++ -DTRACING_ON -std=c++0x -Ibuild src/sim/cxx_main.cc \
- *          -o gem5cxx.opt -Lbuild -lgem5_shared
+ *      g++ -DTRACING_ON -std=c++0x -Ibuild_cxx src/sim/cxx_main.cc \
+ *          -o gem5cxx.opt -Lbuild_cxx -lgem5_shared
  */
 
 #include <cstdlib>

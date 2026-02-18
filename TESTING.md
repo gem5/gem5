@@ -15,9 +15,9 @@ be built through CMake and run with CTest.
 To build and run all the unit tests:
 
 ```shell
-cmake -G Ninja --preset opt-all -B build
-ninja -C build gem5_unittests
-ctest --test-dir build
+cmake -G Ninja --preset opt-all -B build/ALL
+ninja -C build/ALL gem5_unittests
+ctest --test-dir build/ALL
 ```
 
 All unit tests should be run prior to creating a pull request at
@@ -26,13 +26,13 @@ https://github.com/gem5/gem5/pulls/
 To list the available test targets:
 
 ```shell
-ctest --test-dir build -N
+ctest --test-dir build/ALL -N
 ```
 
 To run a specific test (e.g., bitunion tests):
 
 ```shell
-ctest --test-dir build -R bitunion
+ctest --test-dir build/ALL -R bitunion
 ```
 
 ## Running the Python unit tests
@@ -45,14 +45,14 @@ To run these tests a gem5 binary must first be compiled.
 We recommend building with the `opt-all` preset:
 
 ```sh
-cmake -G Ninja --preset opt-all -B build
-ninja -C build
+cmake -G Ninja --preset opt-all -B build/ALL
+ninja -C build/ALL
 ```
 
 Then the Pyunit tests may be executed using:
 
 ```sh
-./build/gem5 tests/run_pyunit.py
+./build/ALL/gem5 tests/run_pyunit.py
 ```
 
 **Note**: These tests are also run via the 'quick' system-level tests, explained below.

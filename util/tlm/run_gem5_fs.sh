@@ -34,7 +34,7 @@ RCol='\e[0m'; # Text Reset
 BGre='\e[1;31m';
 echo -e "\n${BGre}Create gem5 Configuration${RCol}\n"
 
-../../build/gem5 ../../configs/example/fs.py \
+../../build/ARM/gem5 ../../configs/example/fs.py \
 --tlm-memory=transactor                                     \
 --cpu-type=TimingSimpleCPU                                  \
 --num-cpu=1                                                 \

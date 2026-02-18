@@ -15,8 +15,8 @@ without python.  Also build a normal gem5 (cxx-config not needed, Python
 needed):
 
 > cd ../..
-> cmake -B build -DGEM5_BUILD_VARIANT=ARM
-> ninja -C build gem5
+> cmake -B build/ARM -DGEM5_BUILD_VARIANT=ARM
+> ninja -C build/ARM gem5
 > cmake -B build_cxx -DGEM5_BUILD_VARIANT=ARM -DGEM5_WITH_CXX_CONFIG=ON -DGEM5_WITHOUT_PYTHON=ON
 > ninja -C build_cxx gem5_shared
 > cd util/cxx_config
@@ -33,7 +33,7 @@ Then run make:
 
 Make a config file for the C++-configured gem5 using normal gem5
 
-> ../../build/gem5 ../../configs/example/se.py -c \
+> ../../build/ARM/gem5 ../../configs/example/se.py -c \
 >       ../../tests/test-progs/hello/bin/arm/linux/hello
 
 The binary 'gem5.cxx' can now be used to load in the generated config
@@ -49,4 +49,4 @@ This should print:
 
 The .ini file can also be read by the Python .ini file reader example:
 
-> ../../build/gem5 ../../configs/example/read_config.py m5out/config.ini
+> ../../build/ARM/gem5 ../../configs/example/read_config.py m5out/config.ini

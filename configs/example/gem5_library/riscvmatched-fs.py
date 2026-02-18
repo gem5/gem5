@@ -33,10 +33,10 @@ Usage
 ---
 
 ```
-cmake -B build -DGEM5_BUILD_VARIANT=ALL
-ninja -C build
+cmake -B build/ALL -DGEM5_BUILD_VARIANT=ALL
+ninja -C build/ALL
 
-./build/gem5 configs/example/gem5_library/riscvmatched-fs.py
+./build/ALL/gem5 configs/example/gem5_library/riscvmatched-fs.py
 ```
 """
 

@@ -44,8 +44,8 @@ class TestSERun(unittest.TestCase):
                 "name": "test-gem5",
                 "type": "test-binary",
                 "documentation": "This is a description of gem5 artifact",
-                "command": "cmake -B build -DGEM5_BUILD_VARIANT=X86 && ninja -C build",
-                "path": "gem5/build/gem5",
+                "command": "cmake -B build/X86 -DGEM5_BUILD_VARIANT=X86 && ninja -C build/X86",
+                "path": "gem5/build/X86/gem5",
                 "hash": hashlib.md5().hexdigest(),
                 "git": artifact.getGit(Path(".")),
                 "cwd": "/",
@@ -110,7 +110,7 @@ class TestSERun(unittest.TestCase):
         self.assertEqual(
             self.run.command,
             [
-                "gem5/build/gem5",
+                "gem5/build/X86/gem5",
                 "-re",
                 f"--outdir={os.path.abspath('results/run_test/out')}",
                 "configs-tests/run_test.py",

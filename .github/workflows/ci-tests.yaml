@@ -209,7 +209,7 @@ jobs:
 
             - name: Cache build/ALL
               uses: actions/cache/restore@v4
-              if: ${{ endsWith(matrix.build-target, 'build/ALL/gem5.opt') || endsWith(matrix.build-target, 'build/ALL/gem5') }}
+              if: ${{ endsWith(matrix.build-target, 'build/ALL/gem5') }}
               with:
                   path: build/ALL
                   key: testlib-build-all-${{ needs.get-date.outputs.date }}
@@ -232,8 +232,6 @@ jobs:
                   BUILD_TYPE="GEM5_$(echo $TYPE | tr '[:lower:]' '[:upper:]')"
                   cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DGEM5_BUILD_VARIANT=$VARIANT -DGEM5_NO_COMPRESS_DEBUG=ON -B build/$VARIANT
                   ninja -C build/$VARIANT -j$(nproc)
-                  # Create compatibility copy for testlib
-                  cp build/$VARIANT/gem5 build/$VARIANT/gem5.$TYPE
 
             - name: Sanitize build-target for artifact name
               id: sanitize-build-target
@@ -254,7 +252,6 @@ jobs:
                   name: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds-${{ steps.sanitize-build-target.outputs.sanitized-build-target }}
                   path: |
                       build/*/gem5
-                      build/*/gem5.*
                       anchor.txt
 
     testlib-quick-execution:
@@ -281,9 +278,6 @@ jobs:
             - name: Chmod gem5 binaries to be executable
               run: |
                   find . -name "gem5" -exec chmod u+x {} \;
-                  find . -name "gem5.opt" -exec chmod u+x {} \;
-                  find . -name "gem5.debug" -exec chmod u+x {} \;
-                  find . -name "gem5.fast" -exec chmod u+x {} \;
 
         # Run the testlib quick tests in the given directory.
             - name: Run quick ${{ matrix.test-dir }} tests

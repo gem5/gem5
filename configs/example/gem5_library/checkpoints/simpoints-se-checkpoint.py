@@ -38,12 +38,12 @@ Usage
 -----
 
 ```
-cmake -B build -DGEM5_BUILD_VARIANT=ALL
-ninja -C build
-./build/gem5 \
+cmake -B build/ALL -DGEM5_BUILD_VARIANT=ALL
+ninja -C build/ALL
+./build/ALL/gem5 \
     configs/example/gem5_library/checkpoints/simpoints-se-checkpoint.py
 
-./build/gem5 \
+./build/ALL/gem5 \
     configs/example/gem5_library/checkpoints/simpoints-se-restore.py
 ```
 """

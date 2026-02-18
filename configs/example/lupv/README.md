@@ -11,15 +11,15 @@ these devices can be found [here](https://gitlab.com/luplab/lupio/linux).
 To build the RISCV gem5 binary execute:
 
 ```sh
-cmake -G Ninja --preset opt -DGEM5_BUILD_VARIANT=RISCV -B build
-ninja -C build
+cmake -G Ninja --preset opt -DGEM5_BUILD_VARIANT=RISCV -B build/RISCV
+ninja -C build/RISCV
 ```
 
 Then, to run the LupIO example execute:
 
 
 ``` bash
-./build/gem5 configs/example/lupv/run_lupv.py  [cpu type] [num cpus]
+./build/RISCV/gem5 configs/example/lupv/run_lupv.py  [cpu type] [num cpus]
 ```
 
 Note: valid cpu types are `atomic` and `timing` for now.
@@ -27,7 +27,7 @@ Note: valid cpu types are `atomic` and `timing` for now.
 For example:
 
 ```bash
-./build/gem5 configs/example/lupv/run_lupv.py atomic 1
+./build/RISCV/gem5 configs/example/lupv/run_lupv.py atomic 1
 ```
 
 You can observe the stdout of the simulated system in `m5out/system.terminal`.

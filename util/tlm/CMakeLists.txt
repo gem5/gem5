@@ -36,6 +36,7 @@ set(SYSTEMC_UTIL_DIR "${GEM5_ROOT}/util/systemc/gem5_within_systemc")
 # ---------------------------------------------------------------------------
 include_directories(
     ${GEM5_BUILD_DIR}
+    ${GEM5_BUILD_DIR}/generated
     ${SYSTEMC_UTIL_DIR}
     ${SYSTEMC_SRC_DIR}
     ${GEM5_ROOT}/ext

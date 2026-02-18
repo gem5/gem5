@@ -37,7 +37,7 @@ checkpoints.
 Usage
 -----
 ```
-./build/gem5 \
+./build/ALL/gem5 \
     configs/example/gem5_library/looppoints/restore-looppoint-checkpoint.py
 ```
 """

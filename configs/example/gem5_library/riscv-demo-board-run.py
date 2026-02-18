@@ -37,10 +37,10 @@ Usage
 -----
 
 ```
-cmake -B build -DGEM5_BUILD_VARIANT=ALL
-ninja -C build
+cmake -B build/ALL -DGEM5_BUILD_VARIANT=ALL
+ninja -C build/ALL
 
-./build/gem5 configs/example/gem5_library/riscv-demo-board-run.py \
+./build/ALL/gem5 configs/example/gem5_library/riscv-demo-board-run.py \
 --workload=riscv-ubuntu-24.04-boot-no-systemd
 ```
 """

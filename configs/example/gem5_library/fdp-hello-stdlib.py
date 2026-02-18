@@ -50,9 +50,9 @@ Usage
 -----
 
 ```
-cmake -B build -DGEM5_BUILD_VARIANT=ALL
-ninja -C build
-./build/gem5 \
+cmake -B build/ALL -DGEM5_BUILD_VARIANT=ALL
+ninja -C build/ALL
+./build/ALL/gem5 \
     configs/example/gem5_library/fdp-hello.py \
     --isa <isa> \
     [--disable-fdp]

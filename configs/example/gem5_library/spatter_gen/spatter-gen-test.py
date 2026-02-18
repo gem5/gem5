@@ -42,9 +42,9 @@ Usage:
 ------
 
 ```
-cmake -B build -DGEM5_BUILD_VARIANT=NULL
-ninja -C build
-./build/gem5 configs/example/gem5_library/spatter_gen/spatter-gen-test.py
+cmake -B build/NULL -DGEM5_BUILD_VARIANT=NULL
+ninja -C build/NULL
+./build/NULL/gem5 configs/example/gem5_library/spatter_gen/spatter-gen-test.py
 ```
 """
 
