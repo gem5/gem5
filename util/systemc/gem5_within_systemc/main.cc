@@ -46,8 +46,8 @@
  *      cmake -B build -DGEM5_BUILD_VARIANT=ARM -DGEM5_WITHOUT_PYTHON=ON
  *      ninja -C build gem5_shared
  *
- *      g++ -std=c++0x -Ibuild/ARM -Isrc -DTRACING_ON \
- *          -o gem5cxx.opt -Lbuild/ARM -lgem5_opt \
+ *      g++ -std=c++0x -Ibuild -Isrc -DTRACING_ON \
+ *          -o gem5cxx.opt -Lbuild -lgem5_shared \
  *          src/sim/sc_main_cxx.cc src/sim/cxx_stats.cc \
  *          src/sim/sc_module.cc src/sim/sc_logger.cc
  */

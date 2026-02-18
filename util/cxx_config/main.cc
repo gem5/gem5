@@ -50,8 +50,8 @@
  *      cmake -B build -DGEM5_BUILD_VARIANT=ARM -DGEM5_WITHOUT_PYTHON=ON
  *      ninja -C build gem5_shared
  *
- *      g++ -DTRACING_ON -std=c++0x -Ibuild/ARM src/sim/cxx_main.cc \
- *          -o gem5cxx.opt -Lbuild/ARM -lgem5_opt
+ *      g++ -DTRACING_ON -std=c++0x -Ibuild src/sim/cxx_main.cc \
+ *          -o gem5cxx.opt -Lbuild -lgem5_shared
  */
 
 #include <cstdlib>

@@ -33,18 +33,18 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-ARCH ?= ARM
-VARIANT = opt
+# Path to the gem5 CMake build directory (built with -DGEM5_WITH_CXX_CONFIG=ON)
+BUILD_DIR ?= ../../build_cxx
 
-CXXFLAGS = -I../../build/$(ARCH) -L../../build/$(ARCH) -DTRACING_ON=1
+CXXFLAGS = -I$(BUILD_DIR) -L$(BUILD_DIR) -DTRACING_ON=1
 CXXFLAGS += -std=c++17
-LIBS = -lgem5_$(VARIANT)
+LIBS = -lgem5_shared
 
 ## You may also need protobuf flags
 # CXXFLAGS += $(shell pkg-config --cflags --libs-only-L protobuf)
 # LIBS += $(shell pkg-config --libs protobuf)
 
-ALL = gem5.$(VARIANT).cxx
+ALL = gem5.cxx
 
 all: $(ALL)
 
@@ -54,7 +54,7 @@ all: $(ALL)
 stats.o: stats.cc stats.hh
 main.o: main.cc stats.hh
 
-gem5.$(VARIANT).cxx: main.o stats.o
+gem5.cxx: main.o stats.o
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
 
 clean:

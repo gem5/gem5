@@ -49,7 +49,7 @@ Example:
     python3 run_config_tests.py --workload x86-ubuntu-24.04-boot-no-systemd --resource_version 4.0.0
 
 Requirements:
-    - gem5 binary must be built and located at: ./build/ALL/gem5.opt
+    - gem5 binary must be built and located at: ./build/gem5
     - Configuration script must be present at: util/disk-image-validator/config_tester.py
     - Python 3 must be installed
     - Required Python modules: argparse, subprocess, os
@@ -75,7 +75,7 @@ Exit Codes:
 
 
 # Path to gem5 binary
-GEM5_BINARY = "./build/ALL/gem5.opt"
+GEM5_BINARY = "./build/gem5"
 
 # Path to the config script
 GEM5_CONFIG = "util/disk-image-validator/config_tester.py"

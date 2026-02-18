@@ -45,7 +45,7 @@ class TestSERun(unittest.TestCase):
                 "type": "test-binary",
                 "documentation": "This is a description of gem5 artifact",
                 "command": "cmake -B build -DGEM5_BUILD_VARIANT=X86 && ninja -C build",
-                "path": "gem5/build/X86/gem5.opt",
+                "path": "gem5/build/gem5",
                 "hash": hashlib.md5().hexdigest(),
                 "git": artifact.getGit(Path(".")),
                 "cwd": "/",
