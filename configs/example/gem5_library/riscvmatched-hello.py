@@ -31,8 +31,9 @@ Usage
 -----
 
 ```
-scons build/ALL/gem5.opt
-./build/ALL/gem5.opt configs/example/gem5_library/riscvmatched-hello.py
+cmake -B build -DGEM5_BUILD_VARIANT=ALL
+ninja -C build
+./build/gem5 configs/example/gem5_library/riscvmatched-hello.py
 ```
 """
 

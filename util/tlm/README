@@ -92,11 +92,11 @@ Second build gem5 as a library with cxx-config support and (optionally)
 without python.
 
 > cd ../..
-> cmake -B build -S . -DGEM5_ISA=ARM
+> cmake -B build -S . -DGEM5_BUILD_VARIANT=ARM
 > ninja -C build gem5
-> cmake -B build_cxx -S . -DGEM5_ISA=ARM -DCONF_USE_SYSTEMC=OFF \
+> cmake -B build_cxx -S . -DGEM5_BUILD_VARIANT=ARM -DCONF_USE_SYSTEMC=OFF \
 >       -DGEM5_WITH_CXX_CONFIG=ON -DGEM5_WITHOUT_PYTHON=ON \
->       -DGEM5_WITHOUT_TCMALLOC=ON
+>       -DGEM5_WITH_TCMALLOC=OFF
 > ninja -C build_cxx gem5_shared
 > cd util/tlm
 

@@ -32,7 +32,7 @@ Usage
 -----
 
 ```sh
-./build/ALL/gem5.opt \
+./build/gem5 \
     configs/example/gem5_library/exit_handling/user-exit-handler.py
 ```
 """

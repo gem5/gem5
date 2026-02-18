@@ -35,8 +35,9 @@ Usage
 -----
 
 ```
-scons build/ALL/gem5.opt -j<NUM_CPUS>
-./build/ALL/gem5.opt configs/example/gem5_library/arm-ubuntu-run.py
+cmake -B build -DGEM5_BUILD_VARIANT=ALL
+ninja -C build
+./build/gem5 configs/example/gem5_library/arm-ubuntu-run.py
 ```
 
 """

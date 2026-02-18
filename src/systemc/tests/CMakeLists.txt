@@ -15,7 +15,9 @@ if(NOT GEM5_WITH_SYSTEMC_TESTS)
 endif()
 
 set(_sc_tests_src_dir "${CMAKE_CURRENT_SOURCE_DIR}")
-set(_sc_tests_bin_dir "${CMAKE_CURRENT_BINARY_DIR}")
+# Use build_dir/systemc/tests (without src/ prefix) to match the layout
+# that verify.py expects: build_dir/systemc/tests/<path>/<name>.<flavor>
+set(_sc_tests_bin_dir "${CMAKE_BINARY_DIR}/systemc/tests")
 
 # ---------------------------------------------------------------------------
 # Helper: scan a subdirectory tree for SystemC test directories.
@@ -182,10 +184,12 @@ foreach(_test_dir ${_test_dirs})
 
     add_dependencies(${_target_name} gem5_all)
 
-    # Set output directory to mirror source tree layout
+    # Set output directory to mirror source tree layout.
+    # Use <name>.opt suffix to match verify.py expectations (name.flavor)
+    # and avoid conflicts with CTest's built-in "test" target.
     set_target_properties(${_target_name} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${_sc_tests_bin_dir}/${_test_dir}"
-        OUTPUT_NAME "${_test_name}"
+        OUTPUT_NAME "${_test_name}.opt"
     )
 
     # File-level dependencies (DEPS marker)
@@ -204,10 +208,16 @@ foreach(_test_dir ${_test_dirs})
     endif()
 
     # Accumulate JSON metadata for verify.py
+    # Convert CMake booleans to JSON booleans (lowercase true/false)
+    if(_compile_only)
+        set(_compile_only_json "true")
+    else()
+        set(_compile_only_json "false")
+    endif()
     string(APPEND _tests_json_entries
         "\"${_test_dir}/${_test_name}\": {\"name\": \"${_test_name}\", "
         "\"path\": \"${_test_dir}\", "
-        "\"compile_only\": ${_compile_only}, "
+        "\"compile_only\": ${_compile_only_json}, "
         "\"deps\": []},\n"
     )
 endforeach()

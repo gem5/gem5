@@ -191,6 +191,9 @@ include("${_kconfig_output}")
 # that override the corresponding CONF_* variables after Kconfig processing.
 # Example: -DGEM5_KCONFIG_OVERRIDE="RUBY_PROTOCOL_CHI=y;RUBY_PROTOCOL_MESI=n"
 if(DEFINED GEM5_KCONFIG_OVERRIDE)
+    # Track which protocol(s) are being explicitly enabled via overrides
+    set(_override_protocols "")
+
     foreach(_override IN LISTS GEM5_KCONFIG_OVERRIDE)
         string(FIND "${_override}" "=" _eq_pos)
         if(_eq_pos GREATER -1)
@@ -199,8 +202,38 @@ if(DEFINED GEM5_KCONFIG_OVERRIDE)
             string(SUBSTRING "${_override}" ${_val_pos} -1 _val)
             set(CONF_${_key} "${_val}")
             message(STATUS "Kconfig override: CONF_${_key} = ${_val}")
+
+            # Detect RUBY_PROTOCOL_*=y overrides for normalization
+            if(_key MATCHES "^RUBY_PROTOCOL_(.+)$" AND _val STREQUAL "y")
+                list(APPEND _override_protocols "${CMAKE_MATCH_1}")
+            endif()
         endif()
     endforeach()
+
+    # Protocol choice normalization: when a RUBY_PROTOCOL_*=y override is
+    # set, disable all other RUBY_PROTOCOL_* choices and update CONF_PROTOCOL.
+    # This replicates SCons setconfig semantics where enabling one protocol
+    # implicitly disables all others (Kconfig choice group behavior).
+    if(_override_protocols)
+        # All known Ruby protocol names
+        set(_all_protocols
+            MOESI_AMD_Base MESI_Two_Level MESI_Three_Level
+            MESI_Three_Level_HTM MI_example MOESI_CMP_directory
+            MOESI_CMP_token MOESI_hammer Garnet_standalone
+            CHI MSI GPU_VIPER)
+
+        # Disable every protocol not in the override list
+        foreach(_proto ${_all_protocols})
+            if(NOT _proto IN_LIST _override_protocols)
+                set(CONF_RUBY_PROTOCOL_${_proto} "")
+            endif()
+        endforeach()
+
+        # Update CONF_PROTOCOL to the (last) enabled protocol name
+        list(GET _override_protocols -1 _active_protocol)
+        set(CONF_PROTOCOL "${_active_protocol}")
+        message(STATUS "Protocol normalization: active protocol = ${CONF_PROTOCOL}")
+    endif()
 endif()
 
 # Print a summary of key Kconfig-derived variables

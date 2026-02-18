@@ -37,8 +37,9 @@ Usage:
 ------
 
 ```
-scons build/X86/gem5.opt
-./build/X86/gem5.opt \
+cmake -B build -DGEM5_BUILD_VARIANT=X86
+ninja -C build
+./build/gem5 \
     configs/example/gem5_library/x86-spec-cpu2006-benchmarks.py \
     --image <full_path_to_the_spec-2006_disk_image> \
     --partition <root_partition_to_mount> \

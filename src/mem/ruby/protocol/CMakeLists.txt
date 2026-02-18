@@ -91,12 +91,26 @@ endif()
 
 message(STATUS "SLICC protocols: ${_enabled_protocols}")
 
+# Additional directories where SLICC protocol files may reside.
+# The SCons build used PROTOCOL_DIRS for this; we replicate it here.
+# Currently only src/learning_gem5/part3 houses an out-of-tree protocol (MSI).
+set(_slicc_extra_dirs
+    "${CMAKE_SOURCE_DIR}/src/learning_gem5/part3"
+)
+
 # Add configure-time dependency on .sm and .slicc files so CMake re-runs
 # if protocol definitions change.
 file(GLOB_RECURSE _slicc_dep_files
     "${CMAKE_CURRENT_SOURCE_DIR}/*.sm"
     "${CMAKE_CURRENT_SOURCE_DIR}/*.slicc"
 )
+foreach(_extra_dir ${_slicc_extra_dirs})
+    file(GLOB_RECURSE _extra_dep_files
+        "${_extra_dir}/*.sm"
+        "${_extra_dir}/*.slicc"
+    )
+    list(APPEND _slicc_dep_files ${_extra_dep_files})
+endforeach()
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${_slicc_dep_files})
 
 # Collect all SLICC Python module dependencies for the stamp target
@@ -111,6 +125,15 @@ foreach(_protocol ${_enabled_protocols})
         # Some protocols (e.g. CHI) live in a lowercase subdirectory
         string(TOLOWER "${_protocol}" _proto_lower)
         set(_slicc_file "${CMAKE_CURRENT_SOURCE_DIR}/${_proto_lower}/${_protocol}.slicc")
+    endif()
+    if(NOT EXISTS "${_slicc_file}")
+        # Search additional SLICC protocol directories (e.g. learning_gem5/part3 for MSI)
+        foreach(_extra_dir ${_slicc_extra_dirs})
+            if(EXISTS "${_extra_dir}/${_protocol}.slicc")
+                set(_slicc_file "${_extra_dir}/${_protocol}.slicc")
+                break()
+            endif()
+        endforeach()
     endif()
     if(NOT EXISTS "${_slicc_file}")
         message(FATAL_ERROR "SLICC file not found for protocol ${_protocol}")

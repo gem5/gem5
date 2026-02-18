@@ -42,8 +42,9 @@ Usage:
 ------
 
 ```
-scons build/NULL/gem5.opt
-./build/NULL/gem5.opt configs/example/gem5_library/spatter_gen/spatter-gen-test.py
+cmake -B build -DGEM5_BUILD_VARIANT=NULL
+ninja -C build
+./build/gem5 configs/example/gem5_library/spatter_gen/spatter-gen-test.py
 ```
 """
 

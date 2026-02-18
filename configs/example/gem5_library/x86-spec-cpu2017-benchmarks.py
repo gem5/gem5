@@ -37,8 +37,9 @@ in the ROI. It also tracks how much wallclock and simulated time.
 Usage:
 ------
 ```
-scons build/ALL/gem5.opt
-./build/ALL/gem5.opt \
+cmake -B build -DGEM5_BUILD_VARIANT=ALL
+ninja -C build
+./build/gem5 \
     configs/example/gem5_library/x86-spec-cpu2017-benchmarks.py \
     --image <full_path_to_the_spec-2017_disk_image> \
     --partition <root_partition_to_mount> \

@@ -37,9 +37,10 @@ Usage
 -----
 
 ```
-scons build/ALL/gem5.opt
+cmake -B build -DGEM5_BUILD_VARIANT=ALL
+ninja -C build
 
-./build/ALL/gem5.opt configs/example/gem5_library/riscv-demo-board-run.py \
+./build/gem5 configs/example/gem5_library/riscv-demo-board-run.py \
 --workload=riscv-ubuntu-24.04-boot-no-systemd
 ```
 """

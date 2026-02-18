@@ -36,7 +36,7 @@ Usage
 -----
 
 ```
-cmake -B build -S . -DGEM5_ISA=ALL
+cmake -B build -DGEM5_BUILD_VARIANT=ALL
 ninja -C build gem5
 ./build/gem5 configs/example/gem5_library/arm-hello.py
 ```

@@ -45,8 +45,9 @@ instructions.
 Usage:
 ------
 
-scons build/ALL/gem5.opt
-./build/ALL/gem5.opt [--debug-flags=InstTracker] \
+cmake -B build -DGEM5_BUILD_VARIANT=ALL
+ninja -C build
+./build/gem5 [--debug-flags=InstTracker] \
     configs/example/gem5_library/x86-global-inst-tracker.py
 
 # Note: This config script will only run on an X86 host.

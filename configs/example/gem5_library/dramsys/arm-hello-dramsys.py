@@ -36,14 +36,14 @@ This script will only run if you launch your run command from the base `gem5`
 directory. E.g. running the following from the `gem5` directory will work,
 
 ```bash
-build/ALL/gem5.fast configs/example/gem5_library/dramsys/arm-hello-dramsys.py
+./build/gem5 configs/example/gem5_library/dramsys/arm-hello-dramsys.py
 ```
 
 but launching the following after changing directories into `gem5/configs`
 won't work.
 
 ```bash
-../build/ALL/gem5.fast example/gem5_library/arm-hello-dramsys.py
+../build/gem5 example/gem5_library/arm-hello-dramsys.py
 ```
 
 """
