@@ -15,18 +15,17 @@ without python.  Also build a normal gem5 (cxx-config not needed, Python
 needed):
 
 > cd ../..
-> scons build/ARM/gem5.opt
-> scons --with-cxx-config --without-python build/ARM/libgem5_opt.so
+> cmake -B build -DGEM5_BUILD_VARIANT=ARM
+> ninja -C build gem5
+> cmake -B build_cxx -DGEM5_BUILD_VARIANT=ARM -DGEM5_WITH_CXX_CONFIG=ON -DGEM5_WITHOUT_PYTHON=ON
+> ninja -C build_cxx gem5_shared
 > cd util/cxx_config
 
-Note: For MAC / OSX this command should be used:
-> scons --with-cxx-config --without-python build/ARM/libgem5_opt.dylib
-
 Set a proper LD_LIBRARY_PATH e.g. for bash:
-> export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/path/to/gem5/build/ARM/"
+> export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/path/to/gem5/build_cxx/"
 
 or for MAC / OSX:
-> export DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH:/path/to/gem5/build/ARM/"
+> export DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH:/path/to/gem5/build_cxx/"
 
 Then edit Makefile to set the paths for PYTHON and run make
 
@@ -34,7 +33,7 @@ Then edit Makefile to set the paths for PYTHON and run make
 
 Make a config file for the C++-configured gem5 using normal gem5
 
-> ../../build/ARM/gem5.opt ../../configs/example/se.py -c \
+> ../../build/gem5 ../../configs/example/se.py -c \
 >       ../../tests/test-progs/hello/bin/arm/linux/hello
 
 The binary 'gem5.opt.cxx' can now be used to load in the generated config
@@ -50,4 +49,4 @@ This should print:
 
 The .ini file can also be read by the Python .ini file reader example:
 
-> ../../build/ARM/gem5.opt ../../configs/example/read_config.py m5out/config.ini
+> ../../build/gem5 ../../configs/example/read_config.py m5out/config.ini

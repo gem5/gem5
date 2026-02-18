@@ -139,13 +139,15 @@ class CompilePhase(TestPhaseBase):
 
         j = args.j if args.j != 0 else self.main_args.j
 
-        # Build the systemc_tests convenience target which compiles all
-        # SystemC test executables. Individual target names in CMake use
-        # a different naming convention, so the convenience target is
-        # the simplest and most reliable approach.
+        # Map filtered tests to their CMake target names
+        targets = [
+            "sc_test_" + test.path.replace("/", "_")
+            for test in tests
+        ]
+
         ninja_build(
             self.main_args.build_dir,
-            targets=["systemc_tests"],
+            targets=targets,
             j=j,
             extra_args=leftovers if leftovers else None,
         )
