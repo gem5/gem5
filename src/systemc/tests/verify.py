@@ -51,9 +51,20 @@ tests_rel_path = os.path.join(systemc_rel_path, "tests")
 json_rel_path = os.path.join(tests_rel_path, "tests.json")
 
 
-def scons(*args):
-    args = ["scons", "--with-systemc-tests"] + list(args)
-    subprocess.check_call(args)
+def ninja_build(build_dir, targets=None, j=0, extra_args=None):
+    """Build targets using ninja in the given build directory.
+
+    This replaces the old scons() helper. The build directory should already
+    be configured with cmake -DGEM5_WITH_SYSTEMC_TESTS=ON.
+    """
+    cmd = ["ninja", "-C", build_dir]
+    if j > 0:
+        cmd.extend(["-j", str(j)])
+    if extra_args:
+        cmd.extend(extra_args)
+    if targets:
+        cmd.extend(targets)
+    subprocess.check_call(cmd)
 
 
 class Test:
@@ -122,20 +133,22 @@ class CompilePhase(TestPhaseBase):
     number = 1
 
     def run(self, tests):
-        targets = list([test.full_path() for test in tests])
-
         parser = argparse.ArgumentParser()
         parser.add_argument("-j", type=int, default=0)
         args, leftovers = parser.parse_known_args(self.args)
-        if args.j == 0:
-            self.args = ("-j", str(self.main_args.j)) + self.args
 
-        scons_args = (
-            ["--directory", self.main_args.scons_dir, "USE_SYSTEMC=1"]
-            + list(self.args)
-            + targets
+        j = args.j if args.j != 0 else self.main_args.j
+
+        # Build the systemc_tests convenience target which compiles all
+        # SystemC test executables. Individual target names in CMake use
+        # a different naming convention, so the convenience target is
+        # the simplest and most reliable approach.
+        ninja_build(
+            self.main_args.build_dir,
+            targets=["systemc_tests"],
+            j=j,
+            extra_args=leftovers if leftovers else None,
         )
-        scons(*scons_args)
 
 
 class RunPhase(TestPhaseBase):
@@ -590,10 +603,10 @@ parser.add_argument(
 
 parser.add_argument(
     "-C",
-    "--scons-dir",
-    metavar="SCONS_DIR",
+    "--source-dir",
+    metavar="SOURCE_DIR",
     default=checkout_dir,
-    help="Directory to run scons from",
+    help="Top-level source directory (used for cmake configure)",
 )
 
 filter_opts = parser.add_mutually_exclusive_group()
@@ -642,7 +655,9 @@ if len(phases) == 0:
 json_path = os.path.join(main_args.build_dir, json_rel_path)
 
 if main_args.update_json:
-    scons("--directory", main_args.scons_dir, os.path.join(json_path))
+    # With CMake, tests.json is generated at configure time.
+    # Re-running cmake on the build directory regenerates it.
+    subprocess.check_call(["cmake", main_args.build_dir])
 
 with open(json_path) as f:
     test_data = json.load(f)

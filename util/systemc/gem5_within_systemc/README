@@ -36,17 +36,18 @@ automatically.
 > cd ../../..
 > cmake -B build -S . -DGEM5_BUILD_VARIANT=ARM
 > ninja -C build gem5
-> cmake -B build_cxx -S . -DGEM5_BUILD_VARIANT=ARM -DCONF_USE_SYSTEMC=OFF \
+> cmake -B build_cxx -S . -DGEM5_BUILD_VARIANT=ARM \
+>       -DGEM5_KCONFIG_OVERRIDE="USE_SYSTEMC=n" \
 >       -DGEM5_WITH_CXX_CONFIG=ON -DGEM5_WITHOUT_PYTHON=ON \
 >       -DGEM5_WITH_TCMALLOC=OFF
 > ninja -C build_cxx gem5_shared
 > cd util/systemc
 
 Set a proper LD_LIBRARY_PATH e.g. for bash:
-> export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/path/to/gem5/build/ARM/"
+> export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/path/to/gem5/build_cxx/"
 
 or for MAC / OSX:
-> export DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH:/path/to/gem5/build/ARM/"
+> export DYLD_LIBRARY_PATH="$DYLD_LIBRARY_PATH:/path/to/gem5/build_cxx/"
 
 
 Then edit the Makefile to set the paths for SystemC, e.g:
@@ -65,7 +66,7 @@ Then run make:
 
 Make a config file for the C++-configured gem5 using normal gem5
 
-> ../../../build/ARM/gem5.opt ../../../configs/deprecated/example/se.py -c \
+> ../../../build/gem5 ../../../configs/deprecated/example/se.py -c \
 >       ../../../tests/test-progs/hello/bin/arm/linux/hello
 
 The binary 'gem5.opt.cxx' can now be used to load in the generated config
@@ -81,7 +82,7 @@ This should print:
 
 The .ini file can also be read by the Python .ini file reader example:
 
-> ../../../build/ARM/gem5.opt ../../../configs/example/read_ini.py \
+> ../../../build/gem5 ../../../configs/example/read_ini.py \
 >       m5out/config.ini
 
 If you are interested in SystemC Transaction Level Modeling (TLM2) please have
