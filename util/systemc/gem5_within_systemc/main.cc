@@ -43,7 +43,8 @@
  *
  *  Build with something like:
  *
- *      scons --without-python build/ARM/libgem5_opt.so
+ *      cmake -B build -DGEM5_BUILD_VARIANT=ARM -DGEM5_WITHOUT_PYTHON=ON
+ *      ninja -C build gem5_shared
  *
  *      g++ -std=c++0x -Ibuild/ARM -Isrc -DTRACING_ON \
  *          -o gem5cxx.opt -Lbuild/ARM -lgem5_opt \

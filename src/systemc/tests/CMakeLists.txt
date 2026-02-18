@@ -14,6 +14,16 @@ if(NOT GEM5_WITH_SYSTEMC_TESTS)
     return()
 endif()
 
+# Derive flavor suffix from build type for verify.py compatibility
+string(TOLOWER "${CMAKE_BUILD_TYPE}" _build_type_lower)
+if(_build_type_lower STREQUAL "gem5_debug")
+    set(_sc_test_flavor "debug")
+elseif(_build_type_lower STREQUAL "gem5_fast")
+    set(_sc_test_flavor "fast")
+else()
+    set(_sc_test_flavor "opt")
+endif()
+
 set(_sc_tests_src_dir "${CMAKE_CURRENT_SOURCE_DIR}")
 # Use build_dir/systemc/tests (without src/ prefix) to match the layout
 # that verify.py expects: build_dir/systemc/tests/<path>/<name>.<flavor>
@@ -185,11 +195,11 @@ foreach(_test_dir ${_test_dirs})
     add_dependencies(${_target_name} gem5_all)
 
     # Set output directory to mirror source tree layout.
-    # Use <name>.opt suffix to match verify.py expectations (name.flavor)
+    # Use <name>.<flavor> suffix to match verify.py expectations (name.flavor)
     # and avoid conflicts with CTest's built-in "test" target.
     set_target_properties(${_target_name} PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY "${_sc_tests_bin_dir}/${_test_dir}"
-        OUTPUT_NAME "${_test_name}.opt"
+        OUTPUT_NAME "${_test_name}.${_sc_test_flavor}"
     )
 
     # File-level dependencies (DEPS marker)

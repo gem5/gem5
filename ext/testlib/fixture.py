@@ -88,8 +88,8 @@ class Fixture:
         #
         # /path/to/gem5/build/NULL/gem5.opt--default=NULL PROTOCOL=MI_example
         #
-        # In this example this may be passed to scons to build gem5 in
-        # accordance to the test's build requirements.
+        # In this example this may be passed to cmake/ninja to build gem5
+        # in accordance to the test's build requirements.
         #
         # If this fixtures is not a build of gem5, None is returned.
         return None
