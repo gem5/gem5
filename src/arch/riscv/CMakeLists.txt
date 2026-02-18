@@ -53,25 +53,33 @@ gem5_isa_parser(riscv
 # --- GDB XML ---
 gem5_add_blob(gdb_xml_riscv_32bit_target
     "${CMAKE_CURRENT_SOURCE_DIR}/gdb-xml/riscv-32bit.xml"
-    "${GEM5_GEN_DIR}/blobs/gdb_xml_riscv_32bit_target.cc")
+    "${GEM5_GEN_DIR}/arch/riscv/gdb-xml/gdb_xml_riscv_32bit_target.cc"
+    OUTPUT_HH "${GEM5_GEN_DIR}/arch/riscv/gdb-xml/gdb_xml_riscv_32bit_target.hh")
 gem5_add_blob(gdb_xml_riscv_32bit_cpu
     "${CMAKE_CURRENT_SOURCE_DIR}/gdb-xml/riscv-32bit-cpu.xml"
-    "${GEM5_GEN_DIR}/blobs/gdb_xml_riscv_32bit_cpu.cc")
+    "${GEM5_GEN_DIR}/arch/riscv/gdb-xml/gdb_xml_riscv_32bit_cpu.cc"
+    OUTPUT_HH "${GEM5_GEN_DIR}/arch/riscv/gdb-xml/gdb_xml_riscv_32bit_cpu.hh")
 gem5_add_blob(gdb_xml_riscv_32bit_fpu
     "${CMAKE_CURRENT_SOURCE_DIR}/gdb-xml/riscv-32bit-fpu.xml"
-    "${GEM5_GEN_DIR}/blobs/gdb_xml_riscv_32bit_fpu.cc")
+    "${GEM5_GEN_DIR}/arch/riscv/gdb-xml/gdb_xml_riscv_32bit_fpu.cc"
+    OUTPUT_HH "${GEM5_GEN_DIR}/arch/riscv/gdb-xml/gdb_xml_riscv_32bit_fpu.hh")
 gem5_add_blob(gdb_xml_riscv_32bit_csr
     "${CMAKE_CURRENT_SOURCE_DIR}/gdb-xml/riscv-32bit-csr.xml"
-    "${GEM5_GEN_DIR}/blobs/gdb_xml_riscv_32bit_csr.cc")
+    "${GEM5_GEN_DIR}/arch/riscv/gdb-xml/gdb_xml_riscv_32bit_csr.cc"
+    OUTPUT_HH "${GEM5_GEN_DIR}/arch/riscv/gdb-xml/gdb_xml_riscv_32bit_csr.hh")
 gem5_add_blob(gdb_xml_riscv_64bit_target
     "${CMAKE_CURRENT_SOURCE_DIR}/gdb-xml/riscv-64bit.xml"
-    "${GEM5_GEN_DIR}/blobs/gdb_xml_riscv_64bit_target.cc")
+    "${GEM5_GEN_DIR}/arch/riscv/gdb-xml/gdb_xml_riscv_64bit_target.cc"
+    OUTPUT_HH "${GEM5_GEN_DIR}/arch/riscv/gdb-xml/gdb_xml_riscv_64bit_target.hh")
 gem5_add_blob(gdb_xml_riscv_64bit_cpu
     "${CMAKE_CURRENT_SOURCE_DIR}/gdb-xml/riscv-64bit-cpu.xml"
-    "${GEM5_GEN_DIR}/blobs/gdb_xml_riscv_64bit_cpu.cc")
+    "${GEM5_GEN_DIR}/arch/riscv/gdb-xml/gdb_xml_riscv_64bit_cpu.cc"
+    OUTPUT_HH "${GEM5_GEN_DIR}/arch/riscv/gdb-xml/gdb_xml_riscv_64bit_cpu.hh")
 gem5_add_blob(gdb_xml_riscv_64bit_fpu
     "${CMAKE_CURRENT_SOURCE_DIR}/gdb-xml/riscv-64bit-fpu.xml"
-    "${GEM5_GEN_DIR}/blobs/gdb_xml_riscv_64bit_fpu.cc")
+    "${GEM5_GEN_DIR}/arch/riscv/gdb-xml/gdb_xml_riscv_64bit_fpu.cc"
+    OUTPUT_HH "${GEM5_GEN_DIR}/arch/riscv/gdb-xml/gdb_xml_riscv_64bit_fpu.hh")
 gem5_add_blob(gdb_xml_riscv_64bit_csr
     "${CMAKE_CURRENT_SOURCE_DIR}/gdb-xml/riscv-64bit-csr.xml"
-    "${GEM5_GEN_DIR}/blobs/gdb_xml_riscv_64bit_csr.cc")
+    "${GEM5_GEN_DIR}/arch/riscv/gdb-xml/gdb_xml_riscv_64bit_csr.cc"
+    OUTPUT_HH "${GEM5_GEN_DIR}/arch/riscv/gdb-xml/gdb_xml_riscv_64bit_csr.hh")

@@ -42,4 +42,5 @@ gem5_isa_parser(mips
 # --- GDB XML ---
 gem5_add_blob(gdb_xml_mips
     "${CMAKE_CURRENT_SOURCE_DIR}/gdb-xml/mips.xml"
-    "${GEM5_GEN_DIR}/blobs/gdb_xml_mips.cc")
+    "${GEM5_GEN_DIR}/arch/mips/gdb-xml/gdb_xml_mips.cc"
+    OUTPUT_HH "${GEM5_GEN_DIR}/arch/mips/gdb-xml/gdb_xml_mips.hh")

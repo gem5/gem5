@@ -130,6 +130,12 @@ function(gem5_add_blob symbol input_file output_cc)
     )
 
     gem5_add_generated_source("${output_cc}")
+
+    # Create a custom target so Ninja can resolve cross-directory dependencies
+    # (custom commands are directory-scoped in Ninja). Blob generation uses
+    # Python3 directly (not gem5py_m5), so it belongs in Phase 1.
+    add_custom_target(gen_blob_${symbol} DEPENDS "${output_cc}" "${_output_hh}")
+    set_property(GLOBAL APPEND PROPERTY GEM5_CODEGEN_TARGETS_PHASE1 "gen_blob_${symbol}")
 endfunction()
 
 # ---------------------------------------------------------------------------

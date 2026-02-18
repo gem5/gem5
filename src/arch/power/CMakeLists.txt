@@ -44,16 +44,21 @@ gem5_isa_parser(power
 # --- GDB XML ---
 gem5_add_blob(gdb_xml_power_core
     "${CMAKE_CURRENT_SOURCE_DIR}/gdb-xml/power-core.xml"
-    "${GEM5_GEN_DIR}/blobs/gdb_xml_power_core.cc")
+    "${GEM5_GEN_DIR}/arch/power/gdb-xml/gdb_xml_power_core.cc"
+    OUTPUT_HH "${GEM5_GEN_DIR}/arch/power/gdb-xml/gdb_xml_power_core.hh")
 gem5_add_blob(gdb_xml_power64_core
     "${CMAKE_CURRENT_SOURCE_DIR}/gdb-xml/power64-core.xml"
-    "${GEM5_GEN_DIR}/blobs/gdb_xml_power64_core.cc")
+    "${GEM5_GEN_DIR}/arch/power/gdb-xml/gdb_xml_power64_core.cc"
+    OUTPUT_HH "${GEM5_GEN_DIR}/arch/power/gdb-xml/gdb_xml_power64_core.hh")
 gem5_add_blob(gdb_xml_power_fpu
     "${CMAKE_CURRENT_SOURCE_DIR}/gdb-xml/power-fpu.xml"
-    "${GEM5_GEN_DIR}/blobs/gdb_xml_power_fpu.cc")
+    "${GEM5_GEN_DIR}/arch/power/gdb-xml/gdb_xml_power_fpu.cc"
+    OUTPUT_HH "${GEM5_GEN_DIR}/arch/power/gdb-xml/gdb_xml_power_fpu.hh")
 gem5_add_blob(gdb_xml_powerpc_32
     "${CMAKE_CURRENT_SOURCE_DIR}/gdb-xml/powerpc-32.xml"
-    "${GEM5_GEN_DIR}/blobs/gdb_xml_powerpc_32.cc")
+    "${GEM5_GEN_DIR}/arch/power/gdb-xml/gdb_xml_powerpc_32.cc"
+    OUTPUT_HH "${GEM5_GEN_DIR}/arch/power/gdb-xml/gdb_xml_powerpc_32.hh")
 gem5_add_blob(gdb_xml_powerpc_64
     "${CMAKE_CURRENT_SOURCE_DIR}/gdb-xml/powerpc-64.xml"
-    "${GEM5_GEN_DIR}/blobs/gdb_xml_powerpc_64.cc")
+    "${GEM5_GEN_DIR}/arch/power/gdb-xml/gdb_xml_powerpc_64.cc"
+    OUTPUT_HH "${GEM5_GEN_DIR}/arch/power/gdb-xml/gdb_xml_powerpc_64.hh")

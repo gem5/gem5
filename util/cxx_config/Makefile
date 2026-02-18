@@ -36,7 +36,7 @@
 # Path to the gem5 CMake build directory (built with -DGEM5_WITH_CXX_CONFIG=ON)
 BUILD_DIR ?= ../../build_cxx
 
-CXXFLAGS = -I$(BUILD_DIR) -I$(BUILD_DIR)/generated -I../../src -L$(BUILD_DIR) -DTRACING_ON=1
+CXXFLAGS = -I$(BUILD_DIR) -I$(BUILD_DIR)/generated -I../../src -I../../ext -L$(BUILD_DIR) -DTRACING_ON=1
 CXXFLAGS += -std=c++17
 LIBS = -lgem5_shared
 

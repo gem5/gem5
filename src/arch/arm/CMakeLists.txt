@@ -128,22 +128,28 @@ endif()
 # --- GDB XML ---
 gem5_add_blob(gdb_xml_arm_target
     "${CMAKE_CURRENT_SOURCE_DIR}/gdb-xml/arm-with-neon.xml"
-    "${GEM5_GEN_DIR}/blobs/gdb_xml_arm_target.cc")
+    "${GEM5_GEN_DIR}/arch/arm/gdb-xml/gdb_xml_arm_target.cc"
+    OUTPUT_HH "${GEM5_GEN_DIR}/arch/arm/gdb-xml/gdb_xml_arm_target.hh")
 gem5_add_blob(gdb_xml_arm_core
     "${CMAKE_CURRENT_SOURCE_DIR}/gdb-xml/arm-core.xml"
-    "${GEM5_GEN_DIR}/blobs/gdb_xml_arm_core.cc")
+    "${GEM5_GEN_DIR}/arch/arm/gdb-xml/gdb_xml_arm_core.cc"
+    OUTPUT_HH "${GEM5_GEN_DIR}/arch/arm/gdb-xml/gdb_xml_arm_core.hh")
 gem5_add_blob(gdb_xml_arm_vfpv3
     "${CMAKE_CURRENT_SOURCE_DIR}/gdb-xml/arm-vfpv3.xml"
-    "${GEM5_GEN_DIR}/blobs/gdb_xml_arm_vfpv3.cc")
+    "${GEM5_GEN_DIR}/arch/arm/gdb-xml/gdb_xml_arm_vfpv3.cc"
+    OUTPUT_HH "${GEM5_GEN_DIR}/arch/arm/gdb-xml/gdb_xml_arm_vfpv3.hh")
 gem5_add_blob(gdb_xml_aarch64_target
     "${CMAKE_CURRENT_SOURCE_DIR}/gdb-xml/aarch64.xml"
-    "${GEM5_GEN_DIR}/blobs/gdb_xml_aarch64_target.cc")
+    "${GEM5_GEN_DIR}/arch/arm/gdb-xml/gdb_xml_aarch64_target.cc"
+    OUTPUT_HH "${GEM5_GEN_DIR}/arch/arm/gdb-xml/gdb_xml_aarch64_target.hh")
 gem5_add_blob(gdb_xml_aarch64_core
     "${CMAKE_CURRENT_SOURCE_DIR}/gdb-xml/aarch64-core.xml"
-    "${GEM5_GEN_DIR}/blobs/gdb_xml_aarch64_core.cc")
+    "${GEM5_GEN_DIR}/arch/arm/gdb-xml/gdb_xml_aarch64_core.cc"
+    OUTPUT_HH "${GEM5_GEN_DIR}/arch/arm/gdb-xml/gdb_xml_aarch64_core.hh")
 gem5_add_blob(gdb_xml_aarch64_fpu
     "${CMAKE_CURRENT_SOURCE_DIR}/gdb-xml/aarch64-fpu.xml"
-    "${GEM5_GEN_DIR}/blobs/gdb_xml_aarch64_fpu.cc")
+    "${GEM5_GEN_DIR}/arch/arm/gdb-xml/gdb_xml_aarch64_fpu.cc"
+    OUTPUT_HH "${GEM5_GEN_DIR}/arch/arm/gdb-xml/gdb_xml_aarch64_fpu.hh")
 
 # --- KVM ---
 if(CONF_KVM_ISA STREQUAL "arm")
