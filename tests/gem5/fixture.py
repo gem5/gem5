@@ -190,12 +190,16 @@ class CMakeFixture(UniqueFixture):
             "-DGEM5_NO_COMPRESS_DEBUG=ON",
         ]
 
-        # If there is a cache coherence protocol specified,
-        # set it via a Kconfig override.
+        # Kconfig overrides: enable test SimObjects (default n in
+        # Kconfig) and, if specified, the cache coherence protocol.
+        kconfig_overrides = ["USE_TEST_OBJECTS=y"]
         if self.protocol:
-            cmake_command.append(
-                f"-DGEM5_KCONFIG_OVERRIDE=RUBY_PROTOCOL_{self.protocol}=y"
+            kconfig_overrides.append(
+                f"RUBY_PROTOCOL_{self.protocol}=y"
             )
+        cmake_command.append(
+            "-DGEM5_KCONFIG_OVERRIDE=" + ";".join(kconfig_overrides)
+        )
 
         cmake_command.extend([
             "-S",
