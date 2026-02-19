@@ -132,12 +132,31 @@ class CompilePhase(TestPhaseBase):
     name = "compile"
     number = 1
 
+    # Map flavor to CMake build type
+    _flavor_to_build_type = {
+        "opt": "GEM5_OPT",
+        "debug": "GEM5_DEBUG",
+        "fast": "GEM5_FAST",
+    }
+
     def run(self, tests):
         parser = argparse.ArgumentParser()
         parser.add_argument("-j", type=int, default=0)
         args, leftovers = parser.parse_known_args(self.args)
 
         j = args.j if args.j != 0 else self.main_args.j
+
+        # Reconfigure the build directory to match the requested flavor
+        # so that the compiled test binaries have the correct suffix.
+        build_type = self._flavor_to_build_type.get(
+            self.main_args.flavor,
+            f"GEM5_{self.main_args.flavor.upper()}",
+        )
+        subprocess.check_call([
+            "cmake",
+            f"-DCMAKE_BUILD_TYPE={build_type}",
+            self.main_args.build_dir,
+        ])
 
         # Map filtered tests to their CMake target names
         targets = [
