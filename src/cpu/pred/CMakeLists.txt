@@ -5,6 +5,7 @@ gem5_add_source(bpred_unit.cc)
 gem5_add_source(2bit_local.cc)
 gem5_add_source(simple_indirect.cc)
 gem5_add_source(conditional.cc)
+gem5_add_source(it_tage.cc)
 gem5_add_source(indirect.cc)
 gem5_add_source(ras.cc)
 gem5_add_source(tournament.cc)
@@ -43,6 +44,7 @@ gem5_add_simobject(BranchPredictor.py
         IndirectPredictor SimpleIndirectPredictor
         BranchTargetBuffer SimpleBTB BTBIndexingPolicy BTBSetAssociative
         ReturnAddrStack
+        ITTAGE ITTAGE_TAGE
         LocalBP TournamentBP BiModeBP TAGEBase TAGE LoopPredictor
         TAGE_SC_L_TAGE TAGE_SC_L_TAGE_64KB TAGE_SC_L_TAGE_8KB
         LTAGE TAGE_SC_L_LoopPredictor StatisticalCorrector TAGE_SC_L

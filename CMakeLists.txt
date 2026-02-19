@@ -81,6 +81,9 @@ add_compile_options(
     -Wall
     -Wundef
     -Wextra
+    -Werror
+    -Wno-error=deprecated-declarations
+    -Wno-error=deprecated
     -Wno-sign-compare
     -Wno-unused-parameter
 )

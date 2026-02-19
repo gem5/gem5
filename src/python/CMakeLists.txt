@@ -270,7 +270,6 @@ gem5_add_pysource("gem5.utils.multiprocessing" "gem5/utils/multiprocessing/popen
 # m5 core Python modules
 # ---------------------------------------------------------------------------
 
-gem5_add_pysource("" "importer.py")
 gem5_add_pysource("m5" "m5/__init__.py")
 gem5_add_pysource("m5" "m5/SimObject.py")
 gem5_add_pysource("m5" "m5/citations.py")
