@@ -98,8 +98,8 @@ set(GEM5_WERROR_FLAGS
 # changed.
 if(GEM5_CLANG)
     list(APPEND GEM5_WERROR_FLAGS
-        -Wno-error=self-assign
-        -Wno-error=self-assign-overloaded
+        -Wno-self-assign
+        -Wno-self-assign-overloaded
         -Wno-error=parentheses-equality
     )
 endif()
