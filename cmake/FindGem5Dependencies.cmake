@@ -132,6 +132,15 @@ endif()
 # librt (POSIX clock_gettime, needed on older glibc)
 check_library_exists(rt clock_gettime "" HAVE_LIBRT)
 
+# POSIX clock support: clock_gettime may be in libc or librt
+include(CheckSymbolExists)
+set(CMAKE_REQUIRED_LIBRARIES "")
+if(HAVE_LIBRT)
+    set(CMAKE_REQUIRED_LIBRARIES "rt")
+endif()
+check_symbol_exists(clock_gettime "time.h" HAVE_POSIX_CLOCK)
+unset(CMAKE_REQUIRED_LIBRARIES)
+
 # ---------------------------------------------------------------------------
 # Linker selection
 # ---------------------------------------------------------------------------

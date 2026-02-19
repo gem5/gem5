@@ -61,8 +61,14 @@ target_link_libraries(gem5_deps INTERFACE
     gem5_ext_iostream3
     gem5_ext_magic_enum
     gem5_ext_softfloat
-    gem5_ext_systemc
 )
+
+# SystemC is only linked when enabled; integrations like
+# gem5_within_systemc and util/tlm link an external libsystemc
+# and require the internal one to be absent.
+if(CONF_USE_SYSTEMC)
+    target_link_libraries(gem5_deps INTERFACE gem5_ext_systemc)
+endif()
 
 # Optional ext libraries
 if(HAVE_DRAMSIM)
