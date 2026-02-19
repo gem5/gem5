@@ -94,7 +94,9 @@ class Test:
         return os.path.join(self.src_dir(), "golden")
 
     def bin(self):
-        return ".".join([self.name, self.suffix])
+        # CMake produces binaries without a flavor suffix (the flavor
+        # determines CMAKE_BUILD_TYPE, not the binary name).
+        return self.name
 
     def full_path(self):
         return os.path.join(self.dir(), self.bin())
@@ -657,13 +659,23 @@ if len(phases) == 0:
 json_path = os.path.join(main_args.build_dir, json_rel_path)
 
 if main_args.update_json:
+    # Map flavor to CMake build type
+    _flavor_to_build_type = {
+        "opt": "GEM5_OPT",
+        "debug": "GEM5_DEBUG",
+        "fast": "GEM5_FAST",
+    }
+    _build_type = _flavor_to_build_type.get(
+        main_args.flavor, f"GEM5_{main_args.flavor.upper()}"
+    )
+
     # With CMake, tests.json is generated at configure time.
     if os.path.exists(os.path.join(main_args.build_dir, "CMakeCache.txt")):
-        # Re-configure existing build directory (pass the same
-        # SystemC-tests flag so tests.json is generated)
+        # Re-configure existing build directory
         subprocess.check_call([
             "cmake",
             "-DGEM5_WITH_SYSTEMC_TESTS=ON",
+            f"-DCMAKE_BUILD_TYPE={_build_type}",
             main_args.build_dir,
         ])
     else:
@@ -671,6 +683,7 @@ if main_args.update_json:
         subprocess.check_call([
             "cmake", "-G", "Ninja",
             "-DGEM5_WITH_SYSTEMC_TESTS=ON",
+            f"-DCMAKE_BUILD_TYPE={_build_type}",
             "-S", main_args.source_dir,
             "-B", main_args.build_dir,
         ])
