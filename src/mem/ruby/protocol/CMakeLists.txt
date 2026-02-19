@@ -93,10 +93,17 @@ message(STATUS "SLICC protocols: ${_enabled_protocols}")
 
 # Additional directories where SLICC protocol files may reside.
 # The SCons build used PROTOCOL_DIRS for this; we replicate it here.
-# Currently only src/learning_gem5/part3 houses an out-of-tree protocol (MSI).
 set(_slicc_extra_dirs
     "${CMAKE_SOURCE_DIR}/src/learning_gem5/part3"
 )
+# Include GEM5_EXTRAS paths so external projects can provide custom
+# Ruby protocols via the EXTRAS mechanism.
+if(GEM5_EXTRAS)
+    foreach(_extras_dir IN LISTS GEM5_EXTRAS)
+        get_filename_component(_extras_abs "${_extras_dir}" ABSOLUTE)
+        list(APPEND _slicc_extra_dirs "${_extras_abs}")
+    endforeach()
+endif()
 
 # Add configure-time dependency on .sm and .slicc files so CMake re-runs
 # if protocol definitions change.

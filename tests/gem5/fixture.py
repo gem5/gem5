@@ -209,11 +209,13 @@ class CMakeFixture(UniqueFixture):
         ])
         log_call(log.test_log, cmake_command, time=None, stderr=sys.stderr)
 
-        # Ninja build
+        # Ninja build (only the gem5 executable, not the full default target
+        # which also builds gem5_shared and other targets)
         ninja_command = [
             "ninja",
             "-C",
             self.target_dir,
+            "gem5",
             "-j",
             str(config.threads),
         ]
