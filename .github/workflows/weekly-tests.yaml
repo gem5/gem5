@@ -63,13 +63,13 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - name: Cache build/ALL
+            - name: Cache build/ALL_opt
               uses: actions/cache@v4
               with:
-                  path: build/ALL
-                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
+                  path: build/ALL_opt
+                  key: testlib-build-all-opt-${{ needs.get-date.outputs.date }}
                   restore-keys: |
-                      testlib-build-all
+                      testlib-build-all-opt
 
             - name: Run very-long ${{ matrix.test-type }} tests
               id: run-tests

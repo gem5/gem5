@@ -94,9 +94,7 @@ class Test:
         return os.path.join(self.src_dir(), "golden")
 
     def bin(self):
-        # CMake produces binaries without a flavor suffix (the flavor
-        # determines CMAKE_BUILD_TYPE, not the binary name).
-        return self.name
+        return ".".join([self.name, self.suffix])
 
     def full_path(self):
         return os.path.join(self.dir(), self.bin())
