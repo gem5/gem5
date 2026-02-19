@@ -190,19 +190,19 @@ class CMakeFixture(UniqueFixture):
         # Kconfig) and, if specified, the cache coherence protocol.
         kconfig_overrides = ["USE_TEST_OBJECTS=y"]
         if self.protocol:
-            kconfig_overrides.append(
-                f"RUBY_PROTOCOL_{self.protocol}=y"
-            )
+            kconfig_overrides.append(f"RUBY_PROTOCOL_{self.protocol}=y")
         cmake_command.append(
             "-DGEM5_KCONFIG_OVERRIDE=" + ";".join(kconfig_overrides)
         )
 
-        cmake_command.extend([
-            "-S",
-            self.directory,
-            "-B",
-            self.target_dir,
-        ])
+        cmake_command.extend(
+            [
+                "-S",
+                self.directory,
+                "-B",
+                self.target_dir,
+            ]
+        )
         log_call(log.test_log, cmake_command, time=None, stderr=sys.stderr)
 
         # Ninja build (only the gem5 executable, not the full default target

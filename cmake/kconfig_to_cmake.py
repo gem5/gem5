@@ -31,15 +31,19 @@ def main():
         "--kconfig", required=True, help="Path to top-level Kconfig file"
     )
     parser.add_argument(
-        "--defconfig", required=True,
-        help="Path to defconfig file (build_opts/<variant>)"
+        "--defconfig",
+        required=True,
+        help="Path to defconfig file (build_opts/<variant>)",
     )
     parser.add_argument(
         "--output", required=True, help="Path to output .cmake file"
     )
     parser.add_argument(
-        "-D", action="append", dest="defines", default=[],
-        help="Environment variables for Kconfig macros (KEY=VALUE)"
+        "-D",
+        action="append",
+        dest="defines",
+        default=[],
+        help="Environment variables for Kconfig macros (KEY=VALUE)",
     )
     args = parser.parse_args()
 
@@ -111,19 +115,19 @@ def main():
 
             if sym.type == kconfiglib.BOOL:
                 cmake_val = "TRUE" if val == "y" else "FALSE"
-                f.write(f'set({cmake_name} {cmake_val})\n')
+                f.write(f"set({cmake_name} {cmake_val})\n")
             elif sym.type == kconfiglib.TRISTATE:
                 cmake_val = "TRUE" if val == "y" else "FALSE"
-                f.write(f'set({cmake_name} {cmake_val})\n')
+                f.write(f"set({cmake_name} {cmake_val})\n")
             elif sym.type == kconfiglib.INT:
                 cmake_val = val if val else "0"
-                f.write(f'set({cmake_name} {cmake_val})\n')
+                f.write(f"set({cmake_name} {cmake_val})\n")
             elif sym.type == kconfiglib.HEX:
                 # kconfiglib returns hex values with 0x prefix already
                 cmake_val = val if val else "0x0"
                 if not cmake_val.startswith("0x"):
                     cmake_val = "0x" + cmake_val
-                f.write(f'set({cmake_name} {cmake_val})\n')
+                f.write(f"set({cmake_name} {cmake_val})\n")
             elif sym.type == kconfiglib.STRING:
                 f.write(f'set({cmake_name} "{val}")\n')
             else:
@@ -132,7 +136,9 @@ def main():
 
         f.write("\n# End of generated Kconfig variables\n")
 
-    print(f"Generated {args.output} with {len(kconf.unique_defined_syms)} symbols")
+    print(
+        f"Generated {args.output} with {len(kconf.unique_defined_syms)} symbols"
+    )
 
 
 if __name__ == "__main__":

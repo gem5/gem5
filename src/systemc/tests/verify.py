@@ -155,17 +155,16 @@ class CompilePhase(TestPhaseBase):
         # Reconfigure the build directory to match the requested flavor
         # so that the compiled test binaries have the correct suffix.
         build_type = flavor_to_cmake_build_type(self.main_args.flavor)
-        subprocess.check_call([
-            "cmake",
-            f"-DCMAKE_BUILD_TYPE={build_type}",
-            self.main_args.build_dir,
-        ])
+        subprocess.check_call(
+            [
+                "cmake",
+                f"-DCMAKE_BUILD_TYPE={build_type}",
+                self.main_args.build_dir,
+            ]
+        )
 
         # Map filtered tests to their CMake target names
-        targets = [
-            "sc_test_" + test.path.replace("/", "_")
-            for test in tests
-        ]
+        targets = ["sc_test_" + test.path.replace("/", "_") for test in tests]
 
         ninja_build(
             self.main_args.build_dir,
@@ -684,21 +683,29 @@ if main_args.update_json:
     # With CMake, tests.json is generated at configure time.
     if os.path.exists(os.path.join(main_args.build_dir, "CMakeCache.txt")):
         # Re-configure existing build directory
-        subprocess.check_call([
-            "cmake",
-            "-DGEM5_WITH_SYSTEMC_TESTS=ON",
-            f"-DCMAKE_BUILD_TYPE={_build_type}",
-            main_args.build_dir,
-        ])
+        subprocess.check_call(
+            [
+                "cmake",
+                "-DGEM5_WITH_SYSTEMC_TESTS=ON",
+                f"-DCMAKE_BUILD_TYPE={_build_type}",
+                main_args.build_dir,
+            ]
+        )
     else:
         # Fresh configure from source directory
-        subprocess.check_call([
-            "cmake", "-G", "Ninja",
-            "-DGEM5_WITH_SYSTEMC_TESTS=ON",
-            f"-DCMAKE_BUILD_TYPE={_build_type}",
-            "-S", main_args.source_dir,
-            "-B", main_args.build_dir,
-        ])
+        subprocess.check_call(
+            [
+                "cmake",
+                "-G",
+                "Ninja",
+                "-DGEM5_WITH_SYSTEMC_TESTS=ON",
+                f"-DCMAKE_BUILD_TYPE={_build_type}",
+                "-S",
+                main_args.source_dir,
+                "-B",
+                main_args.build_dir,
+            ]
+        )
 
 with open(json_path) as f:
     test_data = json.load(f)

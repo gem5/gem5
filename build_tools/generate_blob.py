@@ -62,8 +62,7 @@ def generate(symbol, input_file, output_cc, output_hh, include_path):
 
     # Generate header
     hh_code = code_formatter()
-    hh_code(
-        """\
+    hh_code("""\
 #include <cstddef>
 #include <cstdint>
 
@@ -77,14 +76,12 @@ extern const std::uint8_t ${symbol}[];
 
 } // namespace Blobs
 } // namespace gem5
-"""
-    )
+""")
     hh_code.write(output_hh)
 
     # Generate source
     cc_code = code_formatter()
-    cc_code(
-        """\
+    cc_code("""\
 #include "${include_path}"
 
 namespace gem5
@@ -93,15 +90,12 @@ namespace Blobs
 {
 
 const std::size_t ${symbol}_len = ${{len(data)}};
-"""
-    )
+""")
     bytesToCppArray(cc_code, symbol, data)
-    cc_code(
-        """
+    cc_code("""
 } // namespace Blobs
 } // namespace gem5
-"""
-    )
+""")
     cc_code.write(output_cc)
 
 

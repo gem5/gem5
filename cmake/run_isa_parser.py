@@ -11,6 +11,7 @@ the parser.
 import os
 import sys
 
+
 def main():
     if len(sys.argv) != 3:
         print(f"Usage: {sys.argv[0]} <isa_file> <output_dir>", file=sys.stderr)
@@ -38,8 +39,10 @@ def main():
     os.makedirs(output_dir, exist_ok=True)
 
     import isa_parser
+
     parser = isa_parser.ISAParser(output_dir)
     parser.parse_isa_desc(isa_file)
+
 
 if __name__ == "__main__":
     main()

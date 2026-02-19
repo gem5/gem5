@@ -26,7 +26,9 @@ def main():
         description="Run SLICC protocol compiler for CMake"
     )
     parser.add_argument("slicc_file", help="Path to the .slicc file")
-    parser.add_argument("output_dir", help="Output directory for generated code")
+    parser.add_argument(
+        "output_dir", help="Output directory for generated code"
+    )
     parser.add_argument(
         "source_dir", help="gem5 source root directory (for module path setup)"
     )
