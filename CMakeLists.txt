@@ -93,6 +93,15 @@ set(GEM5_WERROR_FLAGS
     -Wno-error=deprecated
     CACHE INTERNAL "Warning-as-error flags for gem5 targets"
 )
+# ISA-parser-generated code contains self-assignments (e.g. resTemp = resTemp)
+# that Clang warns about. Whitelist these since the generated code cannot be
+# changed.
+if(GEM5_CLANG)
+    list(APPEND GEM5_WERROR_FLAGS
+        -Wno-error=self-assign
+        -Wno-error=self-assign-overloaded
+    )
+endif()
 
 # Link flag: --as-needed (GNU ld only; not accepted by macOS ld64)
 include(CheckLinkerFlag)
