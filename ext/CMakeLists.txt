@@ -35,3 +35,10 @@ add_subdirectory(pybind11)
 add_subdirectory(dramsim2)
 add_subdirectory(dramsim3)
 add_subdirectory(dramsys)
+
+# Forward HAVE_* flags to the top-level scope.  The subdirectories above
+# use PARENT_SCOPE which only reaches this (ext/) scope; the top-level
+# CMakeLists.txt and cmake/Gem5Targets.cmake need these flags too.
+set(HAVE_DRAMSIM  "${HAVE_DRAMSIM}"  PARENT_SCOPE)
+set(HAVE_DRAMSIM3 "${HAVE_DRAMSIM3}" PARENT_SCOPE)
+set(HAVE_DRAMSYS  "${HAVE_DRAMSYS}"  PARENT_SCOPE)
