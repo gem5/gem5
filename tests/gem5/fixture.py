@@ -194,7 +194,7 @@ class CMakeFixture(UniqueFixture):
         # set it via a Kconfig override.
         if self.protocol:
             cmake_command.append(
-                f"-DGEM5_KCONFIG_OVERRIDE=RUBY_PROTOCOL_{self.protocol.upper()}=y"
+                f"-DGEM5_KCONFIG_OVERRIDE=RUBY_PROTOCOL_{self.protocol}=y"
             )
 
         cmake_command.extend([

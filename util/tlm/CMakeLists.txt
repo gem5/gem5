@@ -102,7 +102,14 @@ add_library(tlm_examples_common STATIC
 # Find gem5 shared library and SystemC library
 # ---------------------------------------------------------------------------
 set(_gem5_lib "${GEM5_BUILD_DIR}/libgem5_shared${CMAKE_SHARED_LIBRARY_SUFFIX}")
-set(_systemc_lib "${CMAKE_CURRENT_BINARY_DIR}/build/systemc/libsystemc${CMAKE_SHARED_LIBRARY_SUFFIX}")
+
+if(NOT EXISTS "${_gem5_lib}")
+    message(FATAL_ERROR
+        "gem5 shared library not found: ${_gem5_lib}\n"
+        "Build it first:\n"
+        "  ninja -C ${GEM5_BUILD_DIR} gem5_shared"
+    )
+endif()
 
 # Try to find systemc in the build tree
 find_library(SYSTEMC_LIBRARY NAMES systemc
@@ -112,6 +119,16 @@ find_library(SYSTEMC_LIBRARY NAMES systemc
         "${GEM5_ROOT}/ext/systemc"
     NO_DEFAULT_PATH
 )
+if(NOT SYSTEMC_LIBRARY)
+    message(FATAL_ERROR
+        "SystemC library (libsystemc) not found.\n"
+        "Searched in:\n"
+        "  ${CMAKE_CURRENT_BINARY_DIR}/build/systemc\n"
+        "  ${GEM5_BUILD_DIR}\n"
+        "  ${GEM5_ROOT}/ext/systemc\n"
+        "Ensure that the gem5 build includes SystemC (ext/systemc)."
+    )
+endif()
 
 # ---------------------------------------------------------------------------
 # Example: master_port
@@ -123,13 +140,9 @@ add_executable(gem5_sc_master
 target_link_libraries(gem5_sc_master PRIVATE
     gem5_tlm
     tlm_examples_common
+    "${_gem5_lib}"
+    "${SYSTEMC_LIBRARY}"
 )
-if(EXISTS "${_gem5_lib}")
-    target_link_libraries(gem5_sc_master PRIVATE "${_gem5_lib}")
-endif()
-if(SYSTEMC_LIBRARY)
-    target_link_libraries(gem5_sc_master PRIVATE "${SYSTEMC_LIBRARY}")
-endif()
 
 # ---------------------------------------------------------------------------
 # Example: slave_port
@@ -141,13 +154,9 @@ add_executable(gem5_sc_slave
 target_link_libraries(gem5_sc_slave PRIVATE
     gem5_tlm
     tlm_examples_common
+    "${_gem5_lib}"
+    "${SYSTEMC_LIBRARY}"
 )
-if(EXISTS "${_gem5_lib}")
-    target_link_libraries(gem5_sc_slave PRIVATE "${_gem5_lib}")
-endif()
-if(SYSTEMC_LIBRARY)
-    target_link_libraries(gem5_sc_slave PRIVATE "${SYSTEMC_LIBRARY}")
-endif()
 
 # ---------------------------------------------------------------------------
 # Install
