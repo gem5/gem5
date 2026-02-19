@@ -200,11 +200,19 @@ if(DEFINED GEM5_KCONFIG_OVERRIDE)
             string(SUBSTRING "${_override}" 0 ${_eq_pos} _key)
             math(EXPR _val_pos "${_eq_pos} + 1")
             string(SUBSTRING "${_override}" ${_val_pos} -1 _val)
+            # Normalize Kconfig booleans (y/n) to CMake booleans
+            # (TRUE/FALSE) so downstream generators (defines.py, etc.)
+            # treat them consistently.
+            if(_val STREQUAL "y")
+                set(_val "TRUE")
+            elseif(_val STREQUAL "n")
+                set(_val "FALSE")
+            endif()
             set(CONF_${_key} "${_val}")
             message(STATUS "Kconfig override: CONF_${_key} = ${_val}")
 
             # Detect RUBY_PROTOCOL_*=y overrides for normalization
-            if(_key MATCHES "^RUBY_PROTOCOL_(.+)$" AND _val STREQUAL "y")
+            if(_key MATCHES "^RUBY_PROTOCOL_(.+)$" AND _val STREQUAL "TRUE")
                 list(APPEND _override_protocols "${CMAKE_MATCH_1}")
             endif()
         endif()
