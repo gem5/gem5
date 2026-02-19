@@ -74,18 +74,18 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - name: Cache build/ALL
+            - name: Cache build/ALL_opt
               uses: actions/cache@v4
               with:
-                  path: build/ALL
-                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
+                  path: build/ALL_opt
+                  key: testlib-build-all-opt-${{ needs.get-date.outputs.date }}
                   restore-keys: |
-                      testlib-build-all
+                      testlib-build-all-opt
 
-            - name: Build ALL/gem5
+            - name: Build ALL_opt/gem5
               run: |
-                  cmake -G Ninja -DCMAKE_BUILD_TYPE=GEM5_OPT -DGEM5_BUILD_VARIANT=ALL -DGEM5_NO_COMPRESS_DEBUG=ON -B build/ALL
-                  ninja -C build/ALL -j$(nproc)
+                  cmake -G Ninja -DCMAKE_BUILD_TYPE=GEM5_OPT -DGEM5_BUILD_VARIANT=ALL -DGEM5_NO_COMPRESS_DEBUG=ON -B build/ALL_opt
+                  ninja -C build/ALL_opt -j$(nproc)
 
   # this builds both unittests.fast and unittests.debug
     unittests-debug:
@@ -153,13 +153,13 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
-            - name: Restore build/ALL cache
+            - name: Restore build/ALL_opt cache
               uses: actions/cache/restore@v4
               with:
-                  path: build/ALL
-                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
+                  path: build/ALL_opt
+                  key: testlib-build-all-opt-${{ needs.get-date.outputs.date }}
                   restore-keys: |
-                      testlib-build-all
+                      testlib-build-all-opt
 
             - name: Run long ${{ matrix.test-type }} tests
               id: run-tests
@@ -252,6 +252,7 @@ jobs:
               run: |
                   cmake -G Ninja -DCMAKE_BUILD_TYPE=GEM5_OPT -DGEM5_BUILD_VARIANT=ARM \
                     -DGEM5_WITH_CXX_CONFIG=ON -DGEM5_WITHOUT_PYTHON=ON -DGEM5_WITH_TCMALLOC=OFF \
+                    -DGEM5_KCONFIG_OVERRIDE="USE_SYSTEMC=n" \
                     -B build/ARM-shared
                   ninja -C build/ARM-shared gem5_shared -j$(nproc)
             - name: Compile gem5 within SystemC
