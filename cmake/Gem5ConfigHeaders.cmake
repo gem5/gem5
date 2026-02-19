@@ -19,7 +19,7 @@ function(_gem5_gen_config_header opt_name opt_value)
     # Convert the value to the right C++ format
     if(opt_value STREQUAL "TRUE")
         set(_define_value "1")
-    elseif(opt_value STREQUAL "FALSE")
+    elseif(opt_value STREQUAL "FALSE" OR opt_value STREQUAL "")
         set(_define_value "0")
     elseif(opt_value MATCHES "^[0-9]+$" OR opt_value MATCHES "^0x[0-9a-fA-F]+$")
         set(_define_value "${opt_value}")

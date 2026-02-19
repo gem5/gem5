@@ -31,6 +31,10 @@ def main():
     build_tools_dir = os.path.join(source_root, "build_tools")
     sys.path.insert(0, build_tools_dir)
 
+    # Add ext/ply to sys.path so the vendored PLY package is available
+    ext_ply_dir = os.path.join(source_root, "ext", "ply")
+    sys.path.insert(0, ext_ply_dir)
+
     os.makedirs(output_dir, exist_ok=True)
 
     import isa_parser

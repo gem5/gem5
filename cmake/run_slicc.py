@@ -56,10 +56,13 @@ def main():
     # Setup sys.path so SLICC can find its dependencies:
     #   - build_tools/ provides code_formatter, grammar, etc.
     #   - src/mem/ provides the slicc package (slicc.parser, slicc.ast, ...)
+    #   - ext/ply/ provides the vendored PLY package (ply.lex, ply.yacc)
     build_tools = os.path.join(args.source_dir, "build_tools")
     src_mem = os.path.join(args.source_dir, "src", "mem")
+    ext_ply = os.path.join(args.source_dir, "ext", "ply")
     sys.path.insert(0, build_tools)
     sys.path.insert(0, src_mem)
+    sys.path.insert(0, ext_ply)
 
     from slicc.parser import SLICC
 
