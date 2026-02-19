@@ -18,7 +18,7 @@
         {
             "name": "debug",
             "displayName": "gem5 Debug",
-            "description": "Debug build: -O0, full debug info, tracing enabled",
+            "description": "Debug: -O0, full debug, tracing",
             "inherits": "default",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "GEM5_DEBUG"
