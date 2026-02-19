@@ -160,10 +160,6 @@ class CMakeFixture(UniqueFixture):
         "fast": "GEM5_FAST",
     }
 
-    def __new__(cls, target):
-        obj = super().__new__(cls, target)
-        return obj
-
     def _setup(self, testitem):
         if config.skip_build:
             return

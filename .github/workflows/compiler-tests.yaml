@@ -71,12 +71,7 @@ jobs:
               # To mitigate this, we limit ninja to a single thread (`-j1`)
               run: |
                   BUILD_TYPE="GEM5_$(echo '${{ matrix.build-type }}' | tr '[:lower:]' '[:upper:]')"
-                  SANITIZER_FLAG=""
-                  if [ "${{ matrix.sanitizer }}" = "asan" ]; then
-                    SANITIZER_FLAG="-DGEM5_WITH_ASAN=ON"
-                  elif [ "${{ matrix.sanitizer }}" = "ubsan" ]; then
-                    SANITIZER_FLAG="-DGEM5_WITH_UBSAN=ON"
-                  fi
-                  cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DGEM5_BUILD_VARIANT=ALL $SANITIZER_FLAG -B build/ALL
+                  SANITIZER_OPT="GEM5_WITH_$(echo '${{ matrix.sanitizer }}' | tr '[:lower:]' '[:upper:]')"
+                  cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DGEM5_BUILD_VARIANT=ALL -D${SANITIZER_OPT}=ON -B build/ALL
                   ninja -C build/ALL -j1
               timeout-minutes: 1200 # 20 hours

@@ -167,15 +167,7 @@ endif()
 # gem5 executable
 # ---------------------------------------------------------------------------
 add_executable(gem5 "${CMAKE_SOURCE_DIR}/src/sim/main.cc")
-# Use whole-archive to include all objects from gem5_all.
-# Without this, the linker drops objects that are only referenced via
-# global constructors (EmbeddedPython registrations, SimObject factories).
-if(APPLE)
-    target_link_libraries(gem5 PRIVATE -Wl,-force_load gem5_all)
-else()
-    target_link_libraries(gem5 PRIVATE
-        -Wl,--whole-archive gem5_all -Wl,--no-whole-archive)
-endif()
+gem5_target_link_whole_archive(gem5 PRIVATE gem5_all)
 
 # Stripped binary
 add_custom_command(TARGET gem5 POST_BUILD
@@ -243,38 +235,35 @@ set_target_properties(gem5_gtest_mock PROPERTIES
 file(GLOB_RECURSE _test_sources "${CMAKE_SOURCE_DIR}/src/*.test.cc")
 
 # Filter out tests from ISA/GPU directories that are not enabled in this build.
-set(_isa_test_filters "")
-if(NOT CONF_USE_ARM_ISA)
-    list(APPEND _isa_test_filters "src/arch/arm/")
-endif()
-if(NOT CONF_USE_X86_ISA)
-    list(APPEND _isa_test_filters "src/arch/x86/")
-endif()
-if(NOT CONF_USE_RISCV_ISA)
-    list(APPEND _isa_test_filters "src/arch/riscv/")
-endif()
-if(NOT CONF_USE_SPARC_ISA)
-    list(APPEND _isa_test_filters "src/arch/sparc/")
-endif()
-if(NOT CONF_USE_MIPS_ISA)
-    list(APPEND _isa_test_filters "src/arch/mips/")
-endif()
-if(NOT CONF_USE_POWER_ISA)
-    list(APPEND _isa_test_filters "src/arch/power/")
-endif()
-if(NOT CONF_BUILD_GPU)
-    list(APPEND _isa_test_filters "src/arch/amdgpu/")
-endif()
-foreach(_filter ${_isa_test_filters})
-    list(FILTER _test_sources EXCLUDE REGEX "${_filter}")
+# Paired list: each entry is "<cmake_variable> <source_path_regex>".
+set(_isa_filter_pairs
+    CONF_USE_ARM_ISA   "src/arch/arm/"
+    CONF_USE_X86_ISA   "src/arch/x86/"
+    CONF_USE_RISCV_ISA "src/arch/riscv/"
+    CONF_USE_SPARC_ISA "src/arch/sparc/"
+    CONF_USE_MIPS_ISA  "src/arch/mips/"
+    CONF_USE_POWER_ISA "src/arch/power/"
+    CONF_BUILD_GPU     "src/arch/amdgpu/"
+)
+list(LENGTH _isa_filter_pairs _filter_len)
+math(EXPR _filter_last "${_filter_len} - 1")
+foreach(_i RANGE 0 ${_filter_last} 2)
+    math(EXPR _j "${_i} + 1")
+    list(GET _isa_filter_pairs ${_i} _var)
+    list(GET _isa_filter_pairs ${_j} _dir)
+    if(NOT ${_var})
+        list(FILTER _test_sources EXCLUDE REGEX "${_dir}")
+    endif()
 endforeach()
 
+set(_all_test_names "")
 foreach(_test_src ${_test_sources})
     # Derive test name from path: src/base/bitfield.test.cc -> test_base_bitfield
     file(RELATIVE_PATH _rel "${CMAKE_SOURCE_DIR}/src" "${_test_src}")
     string(REPLACE "/" "_" _test_name "${_rel}")
     string(REPLACE ".test.cc" "" _test_name "${_test_name}")
     set(_test_name "test_${_test_name}")
+    list(APPEND _all_test_names ${_test_name})
 
     add_executable(${_test_name} EXCLUDE_FROM_ALL "${_test_src}")
 
@@ -289,23 +278,12 @@ foreach(_test_src ${_test_sources})
             gem5_ext_gtest
         )
     else()
-        # Use whole-archive for gem5_gtest_mock to force inclusion of mock
-        # Logger symbols that would otherwise not be pulled from the archive.
-        if(APPLE)
-            target_link_libraries(${_test_name} PRIVATE
-                -Wl,-force_load gem5_gtest_mock
-                gem5_all
-                gem5_ext_gmock
-                gem5_ext_gtest
-            )
-        else()
-            target_link_libraries(${_test_name} PRIVATE
-                -Wl,--whole-archive gem5_gtest_mock -Wl,--no-whole-archive
-                gem5_all
-                gem5_ext_gmock
-                gem5_ext_gtest
-            )
-        endif()
+        gem5_target_link_whole_archive(${_test_name} PRIVATE gem5_gtest_mock)
+        target_link_libraries(${_test_name} PRIVATE
+            gem5_all
+            gem5_ext_gmock
+            gem5_ext_gtest
+        )
     endif()
     target_include_directories(${_test_name} PRIVATE
         "${CMAKE_SOURCE_DIR}/ext/googletest/googletest/include"
@@ -321,13 +299,9 @@ endforeach()
 
 # Convenience target: build all unit tests
 add_custom_target(gem5_tests)
-foreach(_test_src ${_test_sources})
-    file(RELATIVE_PATH _rel "${CMAKE_SOURCE_DIR}/src" "${_test_src}")
-    string(REPLACE "/" "_" _test_name "${_rel}")
-    string(REPLACE ".test.cc" "" _test_name "${_test_name}")
-    set(_test_name "test_${_test_name}")
-    add_dependencies(gem5_tests ${_test_name})
-endforeach()
+if(_all_test_names)
+    add_dependencies(gem5_tests ${_all_test_names})
+endif()
 
 # ---------------------------------------------------------------------------
 # Install targets

@@ -54,24 +54,24 @@ endif()
 # ---------------------------------------------------------------------------
 
 # For now, record the list of active ISAs so src/arch/CMakeLists.txt can use them.
+set(_isa_conf_pairs
+    CONF_USE_X86_ISA   x86
+    CONF_USE_ARM_ISA   arm
+    CONF_USE_RISCV_ISA riscv
+    CONF_USE_SPARC_ISA sparc
+    CONF_USE_MIPS_ISA  mips
+    CONF_USE_POWER_ISA power
+)
 set(GEM5_ACTIVE_ISAS "")
-if(CONF_USE_X86_ISA)
-    list(APPEND GEM5_ACTIVE_ISAS "x86")
-endif()
-if(CONF_USE_ARM_ISA)
-    list(APPEND GEM5_ACTIVE_ISAS "arm")
-endif()
-if(CONF_USE_RISCV_ISA)
-    list(APPEND GEM5_ACTIVE_ISAS "riscv")
-endif()
-if(CONF_USE_SPARC_ISA)
-    list(APPEND GEM5_ACTIVE_ISAS "sparc")
-endif()
-if(CONF_USE_MIPS_ISA)
-    list(APPEND GEM5_ACTIVE_ISAS "mips")
-endif()
-if(CONF_USE_POWER_ISA)
-    list(APPEND GEM5_ACTIVE_ISAS "power")
-endif()
+list(LENGTH _isa_conf_pairs _isa_len)
+math(EXPR _isa_last "${_isa_len} - 1")
+foreach(_i RANGE 0 ${_isa_last} 2)
+    math(EXPR _j "${_i} + 1")
+    list(GET _isa_conf_pairs ${_i} _var)
+    list(GET _isa_conf_pairs ${_j} _name)
+    if(${_var})
+        list(APPEND GEM5_ACTIVE_ISAS "${_name}")
+    endif()
+endforeach()
 
 message(STATUS "Active ISAs: ${GEM5_ACTIVE_ISAS}")

@@ -215,3 +215,20 @@ function(gem5_get_all_sources out_var)
     # By separating them, gem5_all can safely depend on SimObject codegen.
     set(${out_var} ${_srcs} ${_gen_srcs} PARENT_SCOPE)
 endfunction()
+
+# ---------------------------------------------------------------------------
+# gem5_target_link_whole_archive(<target> <visibility> <library>)
+#
+# Link a static library with --whole-archive (Linux) or -force_load (macOS).
+# Needed for libraries containing objects only referenced via global
+# constructors (EmbeddedPython registrations, SimObject factories, GTest
+# mock loggers, etc.).
+# ---------------------------------------------------------------------------
+function(gem5_target_link_whole_archive target visibility library)
+    if(APPLE)
+        target_link_libraries(${target} ${visibility} -Wl,-force_load ${library})
+    else()
+        target_link_libraries(${target} ${visibility}
+            -Wl,--whole-archive ${library} -Wl,--no-whole-archive)
+    endif()
+endfunction()

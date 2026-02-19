@@ -14,15 +14,10 @@ if(NOT GEM5_WITH_SYSTEMC_TESTS)
     return()
 endif()
 
-# Derive flavor suffix from build type for verify.py compatibility
+# Derive flavor suffix from build type for verify.py compatibility.
+# Build types follow the pattern GEM5_<FLAVOR>, so strip the prefix and lowercase.
 string(TOLOWER "${CMAKE_BUILD_TYPE}" _build_type_lower)
-if(_build_type_lower STREQUAL "gem5_debug")
-    set(_sc_test_flavor "debug")
-elseif(_build_type_lower STREQUAL "gem5_fast")
-    set(_sc_test_flavor "fast")
-else()
-    set(_sc_test_flavor "opt")
-endif()
+string(REPLACE "gem5_" "" _sc_test_flavor "${_build_type_lower}")
 
 set(_sc_tests_src_dir "${CMAKE_CURRENT_SOURCE_DIR}")
 # Use build_dir/systemc/tests (without src/ prefix) to match the layout
@@ -178,12 +173,7 @@ foreach(_test_dir ${_test_dirs})
     )
 
     # Link against gem5 (whole-archive to pull in global constructors)
-    if(APPLE)
-        target_link_libraries(${_target_name} PRIVATE -Wl,-force_load gem5_all)
-    else()
-        target_link_libraries(${_target_name} PRIVATE
-            -Wl,--whole-archive gem5_all -Wl,--no-whole-archive)
-    endif()
+    gem5_target_link_whole_archive(${_target_name} PRIVATE gem5_all)
 
     # Remove strict warning flags for test sources
     get_target_property(_existing_flags ${_target_name} COMPILE_OPTIONS)

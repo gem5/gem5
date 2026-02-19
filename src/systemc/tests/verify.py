@@ -50,6 +50,19 @@ systemc_rel_path = "systemc"
 tests_rel_path = os.path.join(systemc_rel_path, "tests")
 json_rel_path = os.path.join(tests_rel_path, "tests.json")
 
+# Mapping from gem5 flavor names to CMake build types.
+# Used by CompilePhase and the --update-json code path.
+FLAVOR_TO_BUILD_TYPE = {
+    "opt": "GEM5_OPT",
+    "debug": "GEM5_DEBUG",
+    "fast": "GEM5_FAST",
+}
+
+
+def flavor_to_cmake_build_type(flavor):
+    """Convert a gem5 flavor name to its CMake build type string."""
+    return FLAVOR_TO_BUILD_TYPE.get(flavor, f"GEM5_{flavor.upper()}")
+
 
 def ninja_build(build_dir, targets=None, j=0, extra_args=None):
     """Build targets using ninja in the given build directory.
@@ -132,13 +145,6 @@ class CompilePhase(TestPhaseBase):
     name = "compile"
     number = 1
 
-    # Map flavor to CMake build type
-    _flavor_to_build_type = {
-        "opt": "GEM5_OPT",
-        "debug": "GEM5_DEBUG",
-        "fast": "GEM5_FAST",
-    }
-
     def run(self, tests):
         parser = argparse.ArgumentParser()
         parser.add_argument("-j", type=int, default=0)
@@ -148,10 +154,7 @@ class CompilePhase(TestPhaseBase):
 
         # Reconfigure the build directory to match the requested flavor
         # so that the compiled test binaries have the correct suffix.
-        build_type = self._flavor_to_build_type.get(
-            self.main_args.flavor,
-            f"GEM5_{self.main_args.flavor.upper()}",
-        )
+        build_type = flavor_to_cmake_build_type(self.main_args.flavor)
         subprocess.check_call([
             "cmake",
             f"-DCMAKE_BUILD_TYPE={build_type}",
@@ -676,15 +679,7 @@ if len(phases) == 0:
 json_path = os.path.join(main_args.build_dir, json_rel_path)
 
 if main_args.update_json:
-    # Map flavor to CMake build type
-    _flavor_to_build_type = {
-        "opt": "GEM5_OPT",
-        "debug": "GEM5_DEBUG",
-        "fast": "GEM5_FAST",
-    }
-    _build_type = _flavor_to_build_type.get(
-        main_args.flavor, f"GEM5_{main_args.flavor.upper()}"
-    )
+    _build_type = flavor_to_cmake_build_type(main_args.flavor)
 
     # With CMake, tests.json is generated at configure time.
     if os.path.exists(os.path.join(main_args.build_dir, "CMakeCache.txt")):

@@ -35,21 +35,14 @@ set(CMAKE_C_FLAGS_GEM5_FAST          "-O3" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS_GEM5_FAST        "-O3" CACHE STRING "" FORCE)
 set(CMAKE_EXE_LINKER_FLAGS_GEM5_FAST "" CACHE STRING "" FORCE)
 
-# Apply compile definitions based on build type
+# Apply compile definitions and build description based on build type
 if(_build_type_upper STREQUAL "GEM5_DEBUG")
     add_compile_definitions(GEM5_DEBUG TRACING_ON=1)
-elseif(_build_type_upper STREQUAL "GEM5_OPT")
-    add_compile_definitions(TRACING_ON=1)
-elseif(_build_type_upper STREQUAL "GEM5_FAST")
-    add_compile_definitions(NDEBUG TRACING_ON=0)
-endif()
-
-# Make build type visible for status messages
-set(GEM5_BUILD_TYPE_DESCRIPTION "")
-if(_build_type_upper STREQUAL "GEM5_DEBUG")
     set(GEM5_BUILD_TYPE_DESCRIPTION "Debug (-O0, full debug info, tracing enabled)")
 elseif(_build_type_upper STREQUAL "GEM5_OPT")
+    add_compile_definitions(TRACING_ON=1)
     set(GEM5_BUILD_TYPE_DESCRIPTION "Optimized (-O3, debug info, tracing enabled)")
 elseif(_build_type_upper STREQUAL "GEM5_FAST")
+    add_compile_definitions(NDEBUG TRACING_ON=0)
     set(GEM5_BUILD_TYPE_DESCRIPTION "Fast (-O3, no debug/tracing, NDEBUG)")
 endif()
