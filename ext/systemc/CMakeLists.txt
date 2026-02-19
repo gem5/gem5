@@ -162,6 +162,19 @@ if(GEM5_GCC)
         -Wno-cast-function-type
         -Wno-catch-value
     )
+elseif(GEM5_CLANG)
+    target_compile_options(gem5_ext_systemc PRIVATE
+        -Wno-cast-function-type-mismatch
+    )
+endif()
+
+# The .s assembly file inherits C++ compile options that the assembler
+# does not understand.  Strip warnings for that single file.
+if(SYSTEMC_COROUTINE_LIB STREQUAL "qt")
+    set_source_files_properties(
+        src/sysc/qt/md/${SYSTEMC_QT_ARCH}.s
+        PROPERTIES COMPILE_OPTIONS "-w"
+    )
 endif()
 
 if(SYSTEMC_COROUTINE_LIB STREQUAL "pthreads")
