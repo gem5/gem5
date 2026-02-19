@@ -223,15 +223,19 @@ SConsFixture = CMakeFixture
 
 class Gem5Fixture(CMakeFixture):
     def __new__(cls, isa, variant, protocol=None):
-        target_dir = joinpath(config.build_dir, isa.upper())
+        # Build the ISA component (e.g., "ALL", "ALL_MESI_Two_Level")
+        isa_component = isa.upper()
         if protocol:
-            target_dir += "_" + protocol
-        # Include variant in the unique key so different variants get
-        # separate fixture instances, even though the CMake binary name
-        # is always just "gem5".
-        target = joinpath(target_dir, f"gem5.{variant}")
+            isa_component += "_" + protocol
+        # Append variant so each CMAKE_BUILD_TYPE gets a separate build
+        # directory (CMake does not support multiple build types in a
+        # single build tree).
+        dir_name = f"{isa_component}_{variant}"
+        target_dir = joinpath(config.build_dir, dir_name)
+        target = joinpath(target_dir, "gem5")
         obj = super().__new__(cls, target)
         obj.target_dir = target_dir
+        obj._isa_component = isa_component
         return obj
 
     def _init(self, isa, variant, protocol=None):
@@ -247,7 +251,11 @@ class Gem5Fixture(CMakeFixture):
         self.set_global()
 
     def get_get_build_info(self) -> Optional[str]:
-        return self.path
+        # Return variant-qualified path so CI and listing tools can
+        # distinguish opt/debug/fast targets.  Format:
+        #   build/<ISA>_<variant>/gem5
+        # CI parses ISA and variant by splitting on the last underscore.
+        return joinpath(self.target_dir, "gem5")
 
 
 class MakeFixture(Fixture):

@@ -207,31 +207,29 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - name: Cache build/ALL
+            - name: Cache build/ALL_opt
               uses: actions/cache/restore@v4
-              if: ${{ endsWith(matrix.build-target, 'build/ALL/gem5') }}
+              if: ${{ contains(matrix.build-target, 'build/ALL_opt/') }}
               with:
-                  path: build/ALL
-                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
+                  path: build/ALL_opt
+                  key: testlib-build-all-opt-${{ needs.get-date.outputs.date }}
                   restore-keys: |
-                      testlib-build-all
+                      testlib-build-all-opt
 
             - name: Build gem5
               run: |
-                  # Parse build target: build/<VARIANT>/gem5[.<type>]
-                  # Use sed to robustly extract variant (works with absolute paths)
+                  # Parse build target: build/<ISA>_<variant>/gem5
+                  # The directory name encodes both ISA and variant, split
+                  # on the last underscore.
                   TARGET="${{ matrix.build-target }}"
-                  VARIANT=$(echo "$TARGET" | sed 's|.*/build/||;s|/.*||')
-                  # Extract build type: "gem5.TYPE" -> TYPE, plain "gem5" -> "opt"
-                  BASENAME=$(basename "$TARGET")
-                  if echo "$BASENAME" | grep -q 'gem5\.'; then
-                      TYPE=$(echo "$BASENAME" | sed 's/.*gem5\.\(.*\)/\1/')
-                  else
-                      TYPE="opt"
-                  fi
+                  DIR_NAME=$(echo "$TARGET" | sed 's|.*/build/||;s|/.*||')
+                  # Split on last underscore: ISA_variant -> ISA + variant
+                  VARIANT="${DIR_NAME%_*}"
+                  TYPE="${DIR_NAME##*_}"
                   BUILD_TYPE="GEM5_$(echo $TYPE | tr '[:lower:]' '[:upper:]')"
-                  cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DGEM5_BUILD_VARIANT=$VARIANT -DGEM5_NO_COMPRESS_DEBUG=ON -B build/$VARIANT
-                  ninja -C build/$VARIANT -j$(nproc)
+                  BUILD_DIR="build/${DIR_NAME}"
+                  cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DGEM5_BUILD_VARIANT=$VARIANT -DGEM5_NO_COMPRESS_DEBUG=ON -B $BUILD_DIR
+                  ninja -C $BUILD_DIR -j$(nproc)
 
             - name: Sanitize build-target for artifact name
               id: sanitize-build-target

@@ -158,11 +158,15 @@ endif()
 # gem5 executable
 # ---------------------------------------------------------------------------
 add_executable(gem5 "${CMAKE_SOURCE_DIR}/src/sim/main.cc")
-# Use --whole-archive to include all objects from gem5_all.
+# Use whole-archive to include all objects from gem5_all.
 # Without this, the linker drops objects that are only referenced via
 # global constructors (EmbeddedPython registrations, SimObject factories).
-target_link_libraries(gem5 PRIVATE
-    -Wl,--whole-archive gem5_all -Wl,--no-whole-archive)
+if(APPLE)
+    target_link_libraries(gem5 PRIVATE -Wl,-force_load gem5_all)
+else()
+    target_link_libraries(gem5 PRIVATE
+        -Wl,--whole-archive gem5_all -Wl,--no-whole-archive)
+endif()
 
 # Stripped binary
 add_custom_command(TARGET gem5 POST_BUILD
@@ -276,14 +280,23 @@ foreach(_test_src ${_test_sources})
             gem5_ext_gtest
         )
     else()
-        # Use --whole-archive for gem5_gtest_mock to force inclusion of mock
+        # Use whole-archive for gem5_gtest_mock to force inclusion of mock
         # Logger symbols that would otherwise not be pulled from the archive.
-        target_link_libraries(${_test_name} PRIVATE
-            -Wl,--whole-archive gem5_gtest_mock -Wl,--no-whole-archive
-            gem5_all
-            gem5_ext_gmock
-            gem5_ext_gtest
-        )
+        if(APPLE)
+            target_link_libraries(${_test_name} PRIVATE
+                -Wl,-force_load gem5_gtest_mock
+                gem5_all
+                gem5_ext_gmock
+                gem5_ext_gtest
+            )
+        else()
+            target_link_libraries(${_test_name} PRIVATE
+                -Wl,--whole-archive gem5_gtest_mock -Wl,--no-whole-archive
+                gem5_all
+                gem5_ext_gmock
+                gem5_ext_gtest
+            )
+        endif()
     endif()
     target_include_directories(${_test_name} PRIVATE
         "${CMAKE_SOURCE_DIR}/ext/googletest/googletest/include"

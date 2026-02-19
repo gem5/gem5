@@ -85,8 +85,12 @@ add_compile_options(
     -Wno-unused-parameter
 )
 
-# Link flag: --as-needed
-add_link_options(-Wl,--as-needed)
+# Link flag: --as-needed (GNU ld only; not accepted by macOS ld64)
+include(CheckLinkerFlag)
+check_linker_flag(CXX "-Wl,--as-needed" _has_as_needed)
+if(_has_as_needed)
+    add_link_options(-Wl,--as-needed)
+endif()
 
 # Clang-specific warnings to disable
 if(GEM5_CLANG)
@@ -161,7 +165,11 @@ if(GEM5_WITH_GPROF)
 endif()
 if(GEM5_WITH_PPROF)
     add_compile_options(-g)
-    add_link_options(-Wl,--no-as-needed -lprofiler -Wl,--as-needed)
+    if(_has_as_needed)
+        add_link_options(-Wl,--no-as-needed -lprofiler -Wl,--as-needed)
+    else()
+        add_link_options(-lprofiler)
+    endif()
 endif()
 
 # Debug compression and fission
