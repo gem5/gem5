@@ -145,7 +145,7 @@ add_library(gem5_ext_systemc STATIC
     ${SYSTEMC_SOURCES}
 )
 
-target_include_directories(gem5_ext_systemc PUBLIC
+target_include_directories(gem5_ext_systemc SYSTEM PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 

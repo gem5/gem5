@@ -8,7 +8,7 @@ add_library(gem5_ext_libfdt STATIC
     fdt_strerror.c
 )
 
-target_include_directories(gem5_ext_libfdt PUBLIC
+target_include_directories(gem5_ext_libfdt SYSTEM PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 

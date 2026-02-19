@@ -23,7 +23,7 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/DRAMsim3/CMakeLists.txt")
     if(NOT TARGET gem5_ext_dramsim3)
         add_library(gem5_ext_dramsim3 INTERFACE)
         target_link_libraries(gem5_ext_dramsim3 INTERFACE dramsim3)
-        target_include_directories(gem5_ext_dramsim3 INTERFACE
+        target_include_directories(gem5_ext_dramsim3 SYSTEM INTERFACE
             ${CMAKE_CURRENT_SOURCE_DIR}
             ${CMAKE_CURRENT_SOURCE_DIR}/DRAMsim3/src
         )
@@ -35,7 +35,7 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/DRAMsim3/CMakeLists.txt")
 else()
     # No CMake build -- expect a pre-built library in DRAMsim3/
     add_library(gem5_ext_dramsim3 INTERFACE)
-    target_include_directories(gem5_ext_dramsim3 INTERFACE
+    target_include_directories(gem5_ext_dramsim3 SYSTEM INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/DRAMsim3/src
     )

@@ -12,7 +12,7 @@ add_library(gem5_ext_nomali STATIC
     lib/nomali_api.cc
 )
 
-target_include_directories(gem5_ext_nomali PUBLIC
+target_include_directories(gem5_ext_nomali SYSTEM PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 

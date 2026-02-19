@@ -4,7 +4,7 @@ add_library(gem5_ext_iostream3 STATIC
     zfstream.cc
 )
 
-target_include_directories(gem5_ext_iostream3 PUBLIC
+target_include_directories(gem5_ext_iostream3 SYSTEM PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 

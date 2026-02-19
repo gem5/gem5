@@ -3,7 +3,7 @@ add_library(gem5_ext_fputils STATIC
     fp80.c
 )
 
-target_include_directories(gem5_ext_fputils PUBLIC
+target_include_directories(gem5_ext_fputils SYSTEM PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 

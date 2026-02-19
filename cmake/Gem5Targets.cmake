@@ -47,9 +47,14 @@ add_library(gem5_deps INTERFACE)
 
 target_include_directories(gem5_deps INTERFACE
     "${CMAKE_SOURCE_DIR}/src"
-    "${CMAKE_SOURCE_DIR}/ext"
     "${CMAKE_SOURCE_DIR}/include"
     "${GEM5_GEN_DIR}"
+)
+# ext/ headers are third-party code; mark them SYSTEM so that warnings
+# from vendored headers (e.g. libfdt macro redefinitions) do not trigger
+# -Werror in gem5 translation units.
+target_include_directories(gem5_deps SYSTEM INTERFACE
+    "${CMAKE_SOURCE_DIR}/ext"
 )
 
 # Always-built ext libraries

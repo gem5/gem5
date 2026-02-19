@@ -98,7 +98,7 @@ add_library(gem5_ext_elf STATIC
     ${CMAKE_CURRENT_BINARY_DIR}/native-elf-format.h
 )
 
-target_include_directories(gem5_ext_elf PUBLIC
+target_include_directories(gem5_ext_elf SYSTEM PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 

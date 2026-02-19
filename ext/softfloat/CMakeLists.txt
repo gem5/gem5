@@ -376,7 +376,7 @@ add_library(gem5_ext_softfloat STATIC
     ${SOFTFLOAT_SOURCES}
 )
 
-target_include_directories(gem5_ext_softfloat PUBLIC
+target_include_directories(gem5_ext_softfloat SYSTEM PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 

@@ -14,7 +14,7 @@ add_library(gem5_ext_drampower STATIC
     src/MemBankWiseParams.cc
 )
 
-target_include_directories(gem5_ext_drampower PUBLIC
+target_include_directories(gem5_ext_drampower SYSTEM PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
