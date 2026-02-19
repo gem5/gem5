@@ -100,7 +100,7 @@ if(GEM5_CLANG)
     list(APPEND GEM5_WERROR_FLAGS
         -Wno-self-assign
         -Wno-self-assign-overloaded
-        -Wno-error=parentheses-equality
+        -Wno-parentheses-equality
     )
 endif()
 
