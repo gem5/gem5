@@ -162,7 +162,13 @@ foreach(_test_dir ${_test_dirs})
 
     # Create the test executable (EXCLUDE_FROM_ALL so `ninja` alone does not
     # build hundreds of test binaries; use `ninja systemc_tests` instead).
-    add_executable(${_target_name} EXCLUDE_FROM_ALL ${_test_sources})
+    # Include src/sim/main.cc as gem5_all excludes it, but verify.py runs
+    # these tests as gem5 binaries with CLI flags (-rd, --quiet, etc.)
+    # that require gem5's main() entrypoint.
+    add_executable(${_target_name} EXCLUDE_FROM_ALL
+        ${_test_sources}
+        "${CMAKE_SOURCE_DIR}/src/sim/main.cc"
+    )
 
     # Include paths: the tests/include directory has shared test headers
     target_include_directories(${_target_name} PRIVATE
@@ -172,9 +178,12 @@ foreach(_test_dir ${_test_dirs})
     )
 
     # Link against gem5 (whole-archive to pull in global constructors)
-    target_link_libraries(${_target_name} PRIVATE
-        -Wl,--whole-archive gem5_all -Wl,--no-whole-archive
-    )
+    if(APPLE)
+        target_link_libraries(${_target_name} PRIVATE -Wl,-force_load gem5_all)
+    else()
+        target_link_libraries(${_target_name} PRIVATE
+            -Wl,--whole-archive gem5_all -Wl,--no-whole-archive)
+    endif()
 
     # Remove strict warning flags for test sources
     get_target_property(_existing_flags ${_target_name} COMPILE_OPTIONS)
