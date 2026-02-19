@@ -81,11 +81,17 @@ add_compile_options(
     -Wall
     -Wundef
     -Wextra
+    -Wno-sign-compare
+    -Wno-unused-parameter
+)
+
+# Treat warnings as errors for gem5's own code only (not ext/ third-party).
+# Applied to gem5 targets in Gem5Targets.cmake via target_compile_options().
+set(GEM5_WERROR_FLAGS
     -Werror
     -Wno-error=deprecated-declarations
     -Wno-error=deprecated
-    -Wno-sign-compare
-    -Wno-unused-parameter
+    CACHE INTERNAL "Warning-as-error flags for gem5 targets"
 )
 
 # Link flag: --as-needed (GNU ld only; not accepted by macOS ld64)

@@ -36,6 +36,7 @@ if(NOT GEM5_WITHOUT_PYTHON)
         "${GEM5_GEN_DIR}"
     )
     target_link_libraries(gem5_pysources PRIVATE pybind11::pybind11)
+    target_compile_options(gem5_pysources PRIVATE ${GEM5_WERROR_FLAGS})
     set_target_properties(gem5_pysources PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
 
@@ -138,6 +139,7 @@ get_property(_codegen_phase1 GLOBAL PROPERTY GEM5_CODEGEN_TARGETS_PHASE1)
 # ---------------------------------------------------------------------------
 add_library(gem5_all STATIC ${_lib_sources})
 target_link_libraries(gem5_all PUBLIC gem5_deps)
+target_compile_options(gem5_all PRIVATE ${GEM5_WERROR_FLAGS})
 
 # Link PySource objects into gem5_all (only with Python support)
 if(NOT GEM5_WITHOUT_PYTHON)
@@ -181,6 +183,7 @@ add_custom_command(TARGET gem5 POST_BUILD
 # ---------------------------------------------------------------------------
 add_library(gem5_shared SHARED ${_lib_sources})
 target_link_libraries(gem5_shared PUBLIC gem5_deps)
+target_compile_options(gem5_shared PRIVATE ${GEM5_WERROR_FLAGS})
 if(NOT GEM5_WITHOUT_PYTHON)
     target_sources(gem5_shared PRIVATE $<TARGET_OBJECTS:gem5_pysources>)
 endif()
