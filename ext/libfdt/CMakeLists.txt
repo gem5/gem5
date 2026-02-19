@@ -12,6 +12,11 @@ target_include_directories(gem5_ext_libfdt SYSTEM PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+# Suppress Clang warning from vendored pointer overflow check.
+target_compile_options(gem5_ext_libfdt PRIVATE
+    -Wno-tautological-compare
+)
+
 set_target_properties(gem5_ext_libfdt PROPERTIES
     POSITION_INDEPENDENT_CODE ON
 )
