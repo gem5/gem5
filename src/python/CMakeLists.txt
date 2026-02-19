@@ -339,18 +339,23 @@ gem5_add_pysource("m5.ext.pystats" "m5/ext/pystats/jsonloader.py")
 # embedded.cc and importer.cc define the EmbeddedPython infrastructure used
 # by all marshalled .py.cc files. They must be in gem5_all (not just gem5py_m5).
 # importer.cc depends on the m5ImporterCode blob header.
+#
+# All of these require pybind11/Python headers and are excluded from
+# no-Python (C++ config / shared-library) builds.
 # ---------------------------------------------------------------------------
-gem5_add_source(embedded.cc)
-gem5_add_source(importer.cc)
+if(NOT GEM5_WITHOUT_PYTHON)
+    gem5_add_source(embedded.cc)
+    gem5_add_source(importer.cc)
 
-gem5_add_sources(
-    pybind11/core.cc
-    pybind11/debug.cc
-    pybind11/event.cc
-    pybind11/object_file.cc
-    pybind11/port.cc
-    pybind11/stats.cc
-)
+    gem5_add_sources(
+        pybind11/core.cc
+        pybind11/debug.cc
+        pybind11/event.cc
+        pybind11/object_file.cc
+        pybind11/port.cc
+        pybind11/stats.cc
+    )
+endif()
 
 # ---------------------------------------------------------------------------
 # SimObjects
