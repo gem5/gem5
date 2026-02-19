@@ -132,13 +132,22 @@ endif()
 # librt (POSIX clock_gettime, needed on older glibc)
 check_library_exists(rt clock_gettime "" HAVE_LIBRT)
 
-# POSIX clock support: clock_gettime may be in libc or librt
-include(CheckSymbolExists)
+# POSIX clock support: clock_gettime may be in libc or librt.
+# Use a C++ compile-and-link check with _POSIX_C_SOURCE so POSIX
+# declarations are visible (plain C check_symbol_exists can miss them).
+include(CheckCXXSourceCompiles)
 set(CMAKE_REQUIRED_LIBRARIES "")
 if(HAVE_LIBRT)
     set(CMAKE_REQUIRED_LIBRARIES "rt")
 endif()
-check_symbol_exists(clock_gettime "time.h" HAVE_POSIX_CLOCK)
+check_cxx_source_compiles("
+    #define _POSIX_C_SOURCE 199309L
+    #include <time.h>
+    int main() {
+        struct timespec ts;
+        return clock_gettime(CLOCK_MONOTONIC, &ts);
+    }
+" HAVE_POSIX_CLOCK)
 unset(CMAKE_REQUIRED_LIBRARIES)
 
 # ---------------------------------------------------------------------------

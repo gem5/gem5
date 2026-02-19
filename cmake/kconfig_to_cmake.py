@@ -119,8 +119,11 @@ def main():
                 cmake_val = val if val else "0"
                 f.write(f'set({cmake_name} {cmake_val})\n')
             elif sym.type == kconfiglib.HEX:
-                cmake_val = val if val else "0"
-                f.write(f'set({cmake_name} 0x{cmake_val})\n')
+                # kconfiglib returns hex values with 0x prefix already
+                cmake_val = val if val else "0x0"
+                if not cmake_val.startswith("0x"):
+                    cmake_val = "0x" + cmake_val
+                f.write(f'set({cmake_name} {cmake_val})\n')
             elif sym.type == kconfiglib.STRING:
                 f.write(f'set({cmake_name} "{val}")\n')
             else:
