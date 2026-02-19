@@ -155,10 +155,14 @@ target_compile_definitions(gem5_ext_systemc PRIVATE
 
 # Suppress warnings from vendored SystemC source code.
 target_compile_options(gem5_ext_systemc PRIVATE
-    -Wno-cast-function-type
-    -Wno-catch-value
     -Wno-shift-negative-value
 )
+if(GEM5_GCC)
+    target_compile_options(gem5_ext_systemc PRIVATE
+        -Wno-cast-function-type
+        -Wno-catch-value
+    )
+endif()
 
 if(SYSTEMC_COROUTINE_LIB STREQUAL "pthreads")
     target_compile_definitions(gem5_ext_systemc PRIVATE
