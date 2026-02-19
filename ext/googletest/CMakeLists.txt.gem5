@@ -11,7 +11,7 @@ add_library(gem5_ext_gtest STATIC
     ${_gtest_dir}/googletest/src/gtest_main.cc
 )
 
-target_include_directories(gem5_ext_gtest PUBLIC
+target_include_directories(gem5_ext_gtest SYSTEM PUBLIC
     ${_gtest_dir}/googletest/include
     ${_gtest_dir}/googlemock/include
 )
@@ -41,7 +41,7 @@ add_library(gem5_ext_gmock STATIC
     ${_gtest_dir}/googlemock/src/gmock-all.cc
 )
 
-target_include_directories(gem5_ext_gmock PUBLIC
+target_include_directories(gem5_ext_gmock SYSTEM PUBLIC
     ${_gtest_dir}/googlemock/include
     ${_gtest_dir}/googletest/include
 )

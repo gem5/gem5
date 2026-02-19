@@ -214,6 +214,8 @@ add_library(gem5_gtest_logging STATIC
 target_include_directories(gem5_gtest_logging PUBLIC
     "${CMAKE_SOURCE_DIR}/src"
     "${CMAKE_BINARY_DIR}/generated"
+)
+target_include_directories(gem5_gtest_logging SYSTEM PUBLIC
     "${CMAKE_SOURCE_DIR}/ext/googletest/googletest/include"
     "${CMAKE_SOURCE_DIR}/ext/googletest/googlemock/include"
 )
@@ -231,6 +233,8 @@ add_library(gem5_gtest_mock STATIC
 target_include_directories(gem5_gtest_mock PUBLIC
     "${CMAKE_SOURCE_DIR}/src"
     "${CMAKE_BINARY_DIR}/generated"
+)
+target_include_directories(gem5_gtest_mock SYSTEM PUBLIC
     "${CMAKE_SOURCE_DIR}/ext/googletest/googletest/include"
     "${CMAKE_SOURCE_DIR}/ext/googletest/googlemock/include"
 )
@@ -293,7 +297,7 @@ foreach(_test_src ${_test_sources})
             gem5_ext_gtest
         )
     endif()
-    target_include_directories(${_test_name} PRIVATE
+    target_include_directories(${_test_name} SYSTEM PRIVATE
         "${CMAKE_SOURCE_DIR}/ext/googletest/googletest/include"
         "${CMAKE_SOURCE_DIR}/ext/googletest/googlemock/include"
     )
