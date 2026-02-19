@@ -150,8 +150,11 @@ endif()
 
 set_target_properties(gem5_all PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-if(TARGET slicc_${CONF_PROTOCOL})
-    add_dependencies(gem5_all slicc_${CONF_PROTOCOL})
+# Depend on all SLICC protocol targets (handles MULTIPLE builds where
+# CONF_PROTOCOL is not a single slicc_* target name).
+get_property(_slicc_targets GLOBAL PROPERTY GEM5_SLICC_TARGETS)
+if(_slicc_targets)
+    add_dependencies(gem5_all ${_slicc_targets})
 endif()
 
 # ---------------------------------------------------------------------------
@@ -188,8 +191,8 @@ if(_codegen_phase1)
     add_dependencies(gem5_shared ${_codegen_phase1})
 endif()
 
-if(TARGET slicc_${CONF_PROTOCOL})
-    add_dependencies(gem5_shared slicc_${CONF_PROTOCOL})
+if(_slicc_targets)
+    add_dependencies(gem5_shared ${_slicc_targets})
 endif()
 
 # ---------------------------------------------------------------------------

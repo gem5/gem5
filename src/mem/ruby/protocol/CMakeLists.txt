@@ -206,6 +206,7 @@ foreach(_protocol ${_enabled_protocols})
         VERBATIM
     )
     add_custom_target(slicc_${_protocol} DEPENDS "${_stamp}")
+    set_property(GLOBAL APPEND PROPERTY GEM5_SLICC_TARGETS slicc_${_protocol})
 endforeach()
 
 message(STATUS "SLICC generated ${_all_slicc_cc_files}" )

@@ -308,13 +308,13 @@ jobs:
             - uses: actions/checkout@v4
 
             # Obtain the cache if available.
-            - name: Cache build/VEGA_X86
+            - name: Cache build/VEGA_X86_opt
               uses: actions/cache/restore@v4
               with:
-                  path: build/VEGA_X86
-                  key: testlib-build-vega-${{ needs.get-date.outputs.date }}
+                  path: build/VEGA_X86_opt
+                  key: testlib-build-vega-opt-${{ needs.get-date.outputs.date }}
                   restore-keys: |
-                      testlib-build-vega
+                      testlib-build-vega-opt
 
             # Run the GPU tests.
             - name: Run Testlib GPU Tests
