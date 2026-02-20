@@ -21,7 +21,7 @@ jobs:
     macos-compilation:
         # The purpose of this is to cache the macOS compilation.
         # MacOS compilation checks are run as part of the CI tests but as the
-        # MacOS GitHub action runners are quite costly, it's advantagous to
+        # MacOS GitHub action runners are quite costly, it's advantageous to
         # build upon a cache. Putting this in the daily tests means that the
         # cache is refreshed on a daily basis.
         runs-on: macos-26
@@ -163,6 +163,7 @@ jobs:
 
             - name: Run long ${{ matrix.test-type }} tests
               id: run-tests
+              timeout-minutes: 1410
               working-directory: ${{ github.workspace }}/tests
               run: ./main.py run ${{ matrix.test-type }} -j$(nproc) --length=long -vv -t $(nproc) --exclude-tags gcn_gpu
 
@@ -202,6 +203,7 @@ jobs:
 
             - name: Run Testlib GPU Tests
               id: run-tests
+              timeout-minutes: 1410
               working-directory: ${{ github.workspace }}/tests
               run: ./main.py run --length=long -vvv -j $(nproc) --host gcn_gpu
 
@@ -274,7 +276,7 @@ jobs:
             - uses: actions/checkout@v4
             - name: Checkout DRAMSys
               working-directory: ${{ github.workspace }}/ext/dramsys
-              run: git clone https://github.com/tukl-msd/DRAMSys --branch v5.1 --depth 1 DRAMSys
+              run: git clone https://github.com/tukl-msd/DRAMSys --branch v5.3.1 --depth 1 DRAMSys
 
               # gem5 is built separately because it depends on the DRAMSys library
             - name: Build gem5
