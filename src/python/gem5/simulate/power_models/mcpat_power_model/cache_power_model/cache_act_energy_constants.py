@@ -28,12 +28,14 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 # Below are pre-defined cache activation energy constants
+# based on the McPAT Power Model (which, is based on CACTI-7.0 by extension)
 # Note that these are exclusively for a Private L1I/D$
 # and Shared L2$ of 32kB/32kB/1MB, 8/4/8 associtivities
 # respectively.
 
 # While you can technically use these on caches of other sizes/assocs.
-# you will lose out on accuracy (relative to the model).
+# the obtained power values will be misrepresentitive of what McPAT
+# will actually output and you will lose accuracy.
 
 cache_act_energies = {
     "DataCacheData": 7.80998e-12,
