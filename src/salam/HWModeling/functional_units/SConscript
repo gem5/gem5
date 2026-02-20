@@ -1,0 +1,14 @@
+Import('*')
+if env['CONF']['USE_ARM_ISA']:
+
+    Source('float_divider.cc')
+    Source('float_adder.cc')
+    Source('double_multiplier.cc')
+    Source('double_adder.cc')
+    Source('bit_shifter.cc')
+    Source('integer_multiplier.cc')
+    Source('bit_register.cc')
+    Source('double_divider.cc')
+    Source('float_multiplier.cc')
+    Source('integer_adder.cc')
+    Source('bitwise_operations.cc')
