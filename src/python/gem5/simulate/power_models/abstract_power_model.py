@@ -27,11 +27,18 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+from abc import (
+    ABCMeta,
+    abstractmethod,
+)
+
 from m5.objects import Root
 from m5.util import panic
 
 
 class AbstractPowerModel:
+    __metaclass__ = ABCMeta
+
     def __init__(self, simobj):
         self._simobj = simobj
         self.name = "AbstractPowerModel"
@@ -44,18 +51,30 @@ class AbstractPowerModel:
             panic(f"{stat} not found in stats!")
             return 0.0
 
+    # Both static and dynamic power methods should NOT be specified
+    # in the base class.
+    @abstractmethod
     def dynamic_power(self) -> float:
-        """Returns dynamic power in Watts"""
-        # These should not be implemented in this (abstract) base class
+        """Gets the dynamic power in Watts
+
+        :returns: dynamic power
+        """
         raise NotImplementedError
 
+    @abstractmethod
     def static_power(self) -> float:
-        """Returns static power in Watts"""
-        # These should not be implemented in this (abstract) base class
+        """Gets the static power in Watts
+
+        :returns: dynamic Power
+        """
         raise NotImplementedError
 
+    @abstractmethod
     def convert_to_watts(self, value: float) -> float:
-        """Convert energy in nanojoules to Watts"""
-        # Don't implement this in the abstract class-- each power model
+        """Converts energy in nanojoules to Watts
+
+        :returns: power in Watts from energy
+        """
+        # Don't implement this in the abstract class, each power model
         # has a different way of calculating power
         raise NotImplementedError
