@@ -156,11 +156,14 @@ target_compile_definitions(gem5_ext_systemc PRIVATE
 # Suppress warnings from vendored SystemC source code.
 target_compile_options(gem5_ext_systemc PRIVATE
     -Wno-shift-negative-value
+    -Wno-deprecated-declarations
+    -Wno-implicit-fallthrough
 )
 if(GEM5_GCC)
     target_compile_options(gem5_ext_systemc PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-catch-value>
         -Wno-cast-function-type
-        -Wno-catch-value
+        -Wno-mismatched-new-delete
     )
 elseif(GEM5_CLANG)
     target_compile_options(gem5_ext_systemc PRIVATE
