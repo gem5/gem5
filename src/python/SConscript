@@ -143,6 +143,11 @@ PySource('gem5.simulate.power_models.mcpat_power_model.'
          '__init__.py')
 
 PySource('gem5.simulate.power_models.mcpat_power_model.'
+         'cache_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cache_power_model/'
+         'cache_act_energy_constants.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.'
          'cache_power_model.classic',
          'gem5/simulate/power_models/mcpat_power_model/cache_power_model/'
          'classic/__init__.py')
