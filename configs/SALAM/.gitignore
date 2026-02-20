@@ -1,0 +1,6 @@
+# Ignore everything
+*
+
+# Except these two files
+!HWAcc.py
+!HWAccConfig.py
