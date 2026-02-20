@@ -70,6 +70,7 @@
 import atexit
 import itertools
 import os
+import subprocess
 import sys
 
 from os import mkdir, remove, environ, listdir
@@ -438,6 +439,81 @@ main.Prepend(CPPPATH=Dir('include'))
 if not GetOption('duplicate_sources'):
     main.Prepend(CPPPATH=Dir('src'))
 
+
+########################################################################
+# LLVM Configuration
+#
+# Find a supported LLVM version and configure compilation and linking
+# flags using llvm-config.
+########################################################################
+
+# This function uses only tools available in the SConstruct context
+def _llvm_out(llvm_config_path, *args):
+    """Executes llvm-config and returns the output as a list of strings."""
+    try:
+        # Use the existing readCommand utility for robustness
+        command = [llvm_config_path] + list(args)
+        # readCommand returns a string, Split turns it into a list for SCons
+        return Split(readCommand(command))
+    except (subprocess.CalledProcessError, SCons.Errors.UserError) as e:
+        error(f"Command '{' '.join(command)}' failed:\n{e}")
+
+# Find llvm-config executable
+# Define which LLVM versions are supported by your project.
+SUPPORTED_LLVM_VERSIONS = {11, 12, 13, 14, 15, 16, 17, 18, 19, 20}
+llvm_config = None
+
+# Check for an explicit override from the LLVM_CONFIG environment variable.
+if candidate := environ.get("LLVM_CONFIG"):
+    if isfile(candidate):
+        llvm_config = candidate
+    else:
+        warning(f"LLVM_CONFIG is set to '{candidate}' but it's not a file.")
+
+# If no override, check for a plain 'llvm-config' on the PATH.
+if not llvm_config:
+    llvm_config = main.WhereIs("llvm-config")
+
+# If still not found, search for versioned binaries (e.g., 'llvm-config-18').
+if not llvm_config:
+    search_paths = set(environ.get("PATH", "").split(os.pathsep))
+    search_paths.update(["/usr/bin", "/usr/local/bin",
+                         "/opt/homebrew/opt/llvm/bin"])
+
+    candidates = []
+    for path in filter(isdir, search_paths):
+        for f in listdir(path):
+            if not f.startswith("llvm-config-"):
+                continue
+            try:
+                # Extract version from filename like 'llvm-config-18'
+                version = int(f.split('-')[-1].split('.')[0])
+                if version in SUPPORTED_LLVM_VERSIONS:
+                    candidates.append((version, join(path, f)))
+            except (ValueError, IndexError):
+                continue # Ignore files that don't match the expected format
+
+    if candidates:
+        # Use the one with the highest version number
+        llvm_config = sorted(candidates, reverse=True)[0][1]
+
+# If no suitable llvm-config was found after all checks, exit with an error.
+if not llvm_config:
+    error(f"Could not locate a supported 'llvm-config' executable.\n"
+          f"Supported versions: {sorted(list(SUPPORTED_LLVM_VERSIONS))}\n"
+          f"Fix: Install a supported LLVM, ensure it's on PATH, "
+          f"or set the LLVM_CONFIG environment variable.")
+
+# Configure the Environment
+print(f"scons: Using LLVM config at '{llvm_config}'")
+
+main.Append(CPPFLAGS=_llvm_out(llvm_config, "--cppflags"))
+libdir = _llvm_out(llvm_config, "--libdir")
+main.Append(LIBPATH=libdir)
+main.Append(RPATH=libdir)
+main.Append(LIBS=_llvm_out(llvm_config, "--libs", "all"))
+main.Append(CPPPATH=_llvm_out(llvm_config, "--includedir"))
+main.Append(CPPDEFINES=['LLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1'])
 
 ########################################################################
 #
