@@ -118,11 +118,13 @@ target_compile_options(gem5_ext_elf PRIVATE
     $<$<C_COMPILER_ID:Clang>:
         -Wno-initializer-overrides
         -Wno-pointer-sign
+        -Wno-unused-but-set-variable
         -std=gnu89
     >
     $<$<C_COMPILER_ID:AppleClang>:
         -Wno-initializer-overrides
         -Wno-pointer-sign
+        -Wno-unused-but-set-variable
         -std=gnu89
     >
 )
