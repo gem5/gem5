@@ -26,7 +26,7 @@ function(_ruby_make_include _subpath)
     get_filename_component(_basename "${_subpath}" NAME)
     set(_target "${_slicc_output_dir}/${_basename}")
     # Use source-tree relative include so it works from the generated dir
-    file(WRITE "${_target}" "#include \"mem/ruby/${_subpath}\"\n")
+    gem5_write_if_unchanged("${_target}" "#include \"mem/ruby/${_subpath}\"\n")
 endfunction()
 
 # slicc_interface types
@@ -207,6 +207,7 @@ foreach(_protocol ${_enabled_protocols})
         DEPENDS ${_slicc_dep_files} ${_slicc_py_deps}
                 "${_run_slicc}"
                 "${CMAKE_SOURCE_DIR}/build_tools/code_formatter.py"
+                "${CMAKE_SOURCE_DIR}/build_tools/file_utils.py"
                 "${CMAKE_SOURCE_DIR}/build_tools/grammar.py"
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
         COMMENT "Regenerating SLICC protocol: ${_protocol}"

@@ -20,6 +20,15 @@ import argparse
 import os
 import sys
 
+# Allow importing file_utils from build_tools/ regardless of how this
+# script is invoked (direct execution or via sys.path setup below).
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+_build_tools = os.path.join(os.path.dirname(_script_dir), "build_tools")
+if _build_tools not in sys.path:
+    sys.path.insert(0, _build_tools)
+
+from file_utils import write_if_changed
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -114,10 +123,8 @@ def main():
             if info_hh not in all_files:
                 all_files.append(info_hh)
 
-        os.makedirs(os.path.dirname(args.file_manifest), exist_ok=True)
-        with open(args.file_manifest, "w") as f:
-            for name in all_files:
-                f.write(name + "\n")
+        manifest_content = "".join(name + "\n" for name in all_files)
+        write_if_changed(args.file_manifest, manifest_content)
 
 
 if __name__ == "__main__":

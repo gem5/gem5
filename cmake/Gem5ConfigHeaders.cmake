@@ -28,7 +28,7 @@ function(_gem5_gen_config_header opt_name opt_value)
         set(_define_value "\"${opt_value}\"")
     endif()
 
-    file(WRITE "${_output}" "#define ${opt_name} ${_define_value}\n")
+    gem5_write_if_unchanged("${_output}" "#define ${opt_name} ${_define_value}\n")
 endfunction()
 
 # Generate a config header for each CONF_* variable
@@ -54,16 +54,12 @@ if(CONF_BUILD_GPU AND CONF_TARGET_GPU_ISA)
     string(TOLOWER "${_rest}" _rest)
     set(_namespace "${_first}${_rest}ISA")
 
-    file(WRITE "${GEM5_GEN_DIR}/config/the_gpu_isa.hh"
-        "#ifndef TheGpuISA\n"
-        "#define TheGpuISA ${_namespace}\n"
-        "#endif // TheGpuISA\n"
+    gem5_write_if_unchanged("${GEM5_GEN_DIR}/config/the_gpu_isa.hh"
+        "#ifndef TheGpuISA\n#define TheGpuISA ${_namespace}\n#endif // TheGpuISA\n"
     )
 else()
-    file(WRITE "${GEM5_GEN_DIR}/config/the_gpu_isa.hh"
-        "#ifndef TheGpuISA\n"
-        "#define TheGpuISA None\n"
-        "#endif // TheGpuISA\n"
+    gem5_write_if_unchanged("${GEM5_GEN_DIR}/config/the_gpu_isa.hh"
+        "#ifndef TheGpuISA\n#define TheGpuISA None\n#endif // TheGpuISA\n"
     )
 endif()
 

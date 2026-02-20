@@ -8,8 +8,11 @@ package and its dependencies (grammar, PLY) can be imported, then runs
 the parser.
 """
 
+import filecmp
 import os
+import shutil
 import sys
+import tempfile
 
 
 def main():
@@ -38,10 +41,36 @@ def main():
 
     os.makedirs(output_dir, exist_ok=True)
 
-    import isa_parser
+    # Run the ISA parser into a temporary directory, then copy only files
+    # whose content actually changed into the real output directory.
+    # This preserves mtime on unchanged outputs so ninja's restat
+    # optimization can skip downstream recompilation.
+    tmp_dir = tempfile.mkdtemp(prefix="isa_parser_")
+    try:
+        import isa_parser
 
-    parser = isa_parser.ISAParser(output_dir)
-    parser.parse_isa_desc(isa_file)
+        parser = isa_parser.ISAParser(tmp_dir)
+        parser.parse_isa_desc(isa_file)
+
+        # Walk the temp directory and copy only changed files
+        for dirpath, _dirnames, filenames in os.walk(tmp_dir):
+            for fname in filenames:
+                tmp_path = os.path.join(dirpath, fname)
+                rel_path = os.path.relpath(tmp_path, tmp_dir)
+                real_path = os.path.join(output_dir, rel_path)
+
+                real_dir = os.path.dirname(real_path)
+                if real_dir:
+                    os.makedirs(real_dir, exist_ok=True)
+
+                if os.path.exists(real_path) and filecmp.cmp(
+                    tmp_path, real_path, shallow=False
+                ):
+                    continue
+
+                shutil.copy2(tmp_path, real_path)
+    finally:
+        shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
 if __name__ == "__main__":

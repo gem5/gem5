@@ -1,4 +1,15 @@
 cmake_minimum_required(VERSION 3.20)
+
+# Use ccache if available to speed up rebuilds.
+if(NOT DEFINED CMAKE_C_COMPILER_LAUNCHER AND NOT DEFINED CMAKE_CXX_COMPILER_LAUNCHER)
+    find_program(_GEM5_CCACHE ccache)
+    if(_GEM5_CCACHE)
+        set(CMAKE_C_COMPILER_LAUNCHER "${_GEM5_CCACHE}")
+        set(CMAKE_CXX_COMPILER_LAUNCHER "${_GEM5_CCACHE}")
+    endif()
+    unset(_GEM5_CCACHE CACHE)
+endif()
+
 project(gem5 LANGUAGES C CXX)
 
 # ---------------------------------------------------------------------------

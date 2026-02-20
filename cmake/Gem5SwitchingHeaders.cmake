@@ -36,7 +36,7 @@ if(CONF_BUILD_GPU AND CONF_TARGET_GPU_ISA)
     endif()
 
     foreach(_hdr ${_gpu_headers})
-        file(WRITE "${GEM5_GEN_DIR}/arch/${_hdr}"
+        gem5_write_if_unchanged("${GEM5_GEN_DIR}/arch/${_hdr}"
             "#include \"arch/${_gpu_isa_dir}/${_hdr}\"\n"
         )
     endforeach()

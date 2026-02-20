@@ -87,6 +87,7 @@ function(gem5_generate_importer_blob out_cc_var out_hh_var)
                 "${GEM5_BUILD_TOOLS_DIR}/generate_blob.py"
                 "${GEM5_BUILD_TOOLS_DIR}/blob.py"
                 "${GEM5_BUILD_TOOLS_DIR}/code_formatter.py"
+                "${GEM5_BUILD_TOOLS_DIR}/file_utils.py"
         WORKING_DIRECTORY "${GEM5_BUILD_TOOLS_DIR}"
         COMMENT "Generating importer blob: m5ImporterCode"
         VERBATIM
