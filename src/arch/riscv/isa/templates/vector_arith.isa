@@ -1200,9 +1200,9 @@ template<typename ElemType>
 class %(class_name)s : public %(base_class)s
 {
 private:
-    // vs1(rs1), vs2, v0 for *.vv[m] or *.vx[m]
-    // vs2, v0 for *.vi[m]
-    RegId srcRegIdxArr[3];
+    // vs1(rs1), vs2, old_vd, v0 for *.vv[m] or *.vx[m]
+    // vs2, old_vd, v0 for *.vi[m]
+    RegId srcRegIdxArr[4];
     RegId destRegIdxArr[1];
     bool vm;
 public:
@@ -1255,6 +1255,7 @@ Fault
     %(op_rd)s;
     %(set_vlenb)s;
     %(vm_decl_rd)s;
+    %(copy_old_vd)s;
 
     const uint32_t bit_offset = vlenb / sizeof(ElemType);
     const uint32_t offset = bit_offset * microIdx;
@@ -1321,8 +1322,8 @@ template<typename ElemType>
 class %(class_name)s : public %(base_class)s
 {
 private:
-    // vs1(rs1), vs2, v0 for *.vv or *.vf
-    RegId srcRegIdxArr[3];
+    // vs1(rs1), vs2, old_vd, v0 for *.vv or *.vf
+    RegId srcRegIdxArr[4];
     RegId destRegIdxArr[1];
     bool vm;
 public:
@@ -1375,6 +1376,7 @@ Fault
     %(op_rd)s;
     %(set_vlenb)s;
     %(vm_decl_rd)s;
+    %(copy_old_vd)s;
 
     const uint32_t bit_offset = vlenb / sizeof(ElemType);
     const uint32_t offset = bit_offset * microIdx;
