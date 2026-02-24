@@ -34,9 +34,9 @@
 #include "debug/AMDGPUDevice.hh"
 #include "dev/amdgpu/amdgpu_device.hh"
 #include "mem/packet_access.hh"
+#include "sim/eventq.hh"
 
-namespace gem5
-{
+namespace gem5 {
 
 AMDGPUNbio::AMDGPUNbio()
 {
@@ -45,7 +45,7 @@ AMDGPUNbio::AMDGPUNbio()
 }
 
 void
-AMDGPUNbio::setGPUDevice(AMDGPUDevice *gpu_device)
+AMDGPUNbio::setGPUDevice(AMDGPUDevice* gpu_device)
 {
     gpuDevice = gpu_device;
 }
