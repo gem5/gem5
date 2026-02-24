@@ -336,6 +336,19 @@ class Linux : public OperatingSystem
     static const unsigned TGT_WEXITED               = 0x00000004;
     static const unsigned TGT_WCONTINUED            = 0x00000008;
     static const unsigned TGT_WNOWAIT               = 0x01000000;
+
+    static const unsigned TGT_CLOCK_REALTIME        = 0x00000000;
+    static const unsigned TGT_CLOCK_MONOTONIC       = 0x00000001;
+    static const unsigned TGT_CLOCK_PROCESS_CPUTIME = 0x00000002;
+    static const unsigned TGT_CLOCK_THREAD_CPUTIME  = 0x00000003;
+    static const unsigned TGT_CLOCK_MONOTONIC_RAW   = 0x00000004;
+    static const unsigned TGT_CLOCK_REALTIME_COARSE = 0x00000005;
+    static const unsigned TGT_CLOCK_MONOTONIC_COARSE= 0x00000006;
+    static const unsigned TGT_CLOCK_BOOTTIME        = 0x00000007;
+    static const unsigned TGT_CLOCK_REALTIME_ALARM  = 0x00000008;
+    static const unsigned TGT_CLOCK_BOOTTIME_ALARM  = 0x00000009;
+    static const unsigned TGT_CLOCK_TAI             = 0x0000000b;
+    static const unsigned TGT_MAX_CLOCKS            = 0x00000010;
 };  // class Linux
 
 } // namespace gem5
