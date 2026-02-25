@@ -1728,7 +1728,8 @@ template<typename ElemType>
         micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
     }
 
-    microop = new VPinVdMicroInst(machInst, 0, k, elen, vlen);
+    microop = new VPinVdMicroInst(machInst, 0, k, elen, vlen,
+                                  /*isSlideUpVx=*/false, /*isReduction=*/true);
     microop->setFlag(IsDelayedCommit);
     this->microops.push_back(microop);
 
@@ -2349,7 +2350,7 @@ template<typename ElemType>
 
     for (int i = 0; need_pin && i < ceil((float) this->vl/micro_vlmax); i++) {
         microop = new VPinVdMicroInst(machInst, i, std::max(i, 1), elen, vlen,
-                                      true);
+                                      /*isSlideUpVx=*/true);
         microop->setFlag(IsDelayedCommit);
         this->microops.push_back(microop);
     }
@@ -2472,8 +2473,8 @@ template<typename ElemType>
             this->microops.push_back(microop);
         }
         if (need_pin) {
-            microop = new VPinVdMicroInst(machInst, i,
-                std::max(num_microops-i-1, 1), elen, vlen, false);
+            uint32_t num_pins = std::max(num_microops-i-1, 1);
+            microop = new VPinVdMicroInst(machInst, i, num_pins, elen, vlen);
             microop->setFlag(IsDelayedCommit);
             this->microops.push_back(microop);
         }
