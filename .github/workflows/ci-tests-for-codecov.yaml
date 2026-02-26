@@ -87,7 +87,15 @@ jobs:
             - uses: actions/checkout@v4
             - name: CI Unittests (${{ matrix.type }})
               working-directory: ${{ github.workspace }}
-              run: scons --no-compress-debug build/ALL/unittests.${{ matrix.type }} -j $(nproc)
+              run: scons --no-compress-debug build/ALL/unittests.${{ matrix.type }} --gcov -j $(nproc)
+
+            - name: Run gcovr
+              working-directory: ${{ github.workspace }}
+              run: gcovr --verbose --merge-mode-functions separate --gcov-ignore-parse-errors=suspicious_hits.warn --gcov-ignore-parse-errors=negative_hits.warn
+                  --root /__w/gem5/gem5 --object-directory /__w/gem5/gem5/build/ALL --exclude-directory /__w/gem5/gem5/ext --xml unittests.xml
+
+
+
             - run: echo "This job's status is ${{ job.status }}."
 
     testlib-quick-matrix:
@@ -125,7 +133,7 @@ jobs:
             - name: Get the build targets for testlib-quick-gem5-builds
               working-directory: ${{ github.workspace }}/tests
               id: build-matrix
-              run: echo "build-matrix=$(./main.py list --build-targets --exclude-tags VEGA_X86 -q | jq -ncR '[inputs]')" >>$GITHUB_OUTPUT
+              run: echo "build-matrix=$(./main.py list --build-targets --exclude-tags VEGA_X86 -q --gcov=test-only | jq -ncR '[inputs]')" >>$GITHUB_OUTPUT
 
         outputs:
             build-matrix: ${{ steps.build-matrix.outputs.build-matrix }}
@@ -207,7 +215,7 @@ jobs:
                       testlib-build-all
 
             - name: Build gem5
-              run: scons --no-compress-debug ${{ matrix.build-target }} -j $(nproc)
+              run: scons --no-compress-debug ${{ matrix.build-target }} --gcov -j $(nproc)
 
             - name: Sanitize build-target for artifact name
               id: sanitize-build-target
@@ -261,7 +269,8 @@ jobs:
             - name: Run quick ${{ matrix.test-dir }} tests
               id: run-tests
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --skip-build --exclude-tags gcn_gpu ${{  matrix.test-dir }}
+              run: ./main.py run --skip-build --exclude-tags gcn_gpu --gcov=test-only ${{  matrix.test-dir }}
+
 
         # Get the basename of the matrix.test-dir path (to name the artifact).
             - name: Sanitize test-dir for artifact name
