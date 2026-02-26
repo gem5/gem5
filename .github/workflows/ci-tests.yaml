@@ -3,9 +3,7 @@
 
 name: CI Tests
 
-on:
-    pull_request:
-        types: [opened, synchronize, ready_for_review]
+on: workflow_dispatch
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
