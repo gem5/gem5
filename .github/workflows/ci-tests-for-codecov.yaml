@@ -94,7 +94,11 @@ jobs:
               run: gcovr --verbose --merge-mode-functions separate --gcov-ignore-parse-errors=suspicious_hits.warn --gcov-ignore-parse-errors=negative_hits.warn
                   --root /__w/gem5/gem5 --object-directory /__w/gem5/gem5/build/ALL --exclude-directory /__w/gem5/gem5/ext --xml unittests.xml
 
-
+            - name: Upload coverage reports to Codecov
+              uses: codecov/codecov-action@v5
+              with:
+                  token: ${{ secrets.CODECOV_TOKEN }}
+                  files: ./unittests.xml
 
             - run: echo "This job's status is ${{ job.status }}."
 
@@ -271,6 +275,10 @@ jobs:
               working-directory: ${{ github.workspace }}/tests
               run: ./main.py run --skip-build --exclude-tags gcn_gpu --gcov=test-only ${{  matrix.test-dir }}
 
+            - name: Upload coverage reports to Codecov
+              uses: codecov/codecov-action@v5
+              with:
+                  token: ${{ secrets.CODECOV_TOKEN }}
 
         # Get the basename of the matrix.test-dir path (to name the artifact).
             - name: Sanitize test-dir for artifact name
