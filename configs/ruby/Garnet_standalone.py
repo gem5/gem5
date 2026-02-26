@@ -25,6 +25,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import math
+
 import m5
 from m5.defines import buildEnv
 from m5.objects import *
@@ -71,6 +73,11 @@ def create_system(
     # Must create the individual controllers before the network to ensure the
     # controller constructors are called before the network constructor
     #
+    # keshav (initilly the below line was not here)
+    print(f"----options.cache_line_size:{options.cacheline_size}----")
+    # this name (block_size_bits) is little inappropriate
+    block_size_bits = int(math.log(options.cacheline_size, 2))
+    print(f"----(inappropriate) block_size_bits:{block_size_bits}----")
 
     for i in range(options.num_cpus):
         #
@@ -78,7 +85,14 @@ def create_system(
         # Only one cache exists for this protocol, so by default use the L1D
         # config parameters.
         #
-        cache = L1Cache(size=options.l1d_size, assoc=options.l1d_assoc)
+        cache = L1Cache(
+            size=options.l1d_size,
+            assoc=options.l1d_assoc,
+            # start_index_bit=block_size_bits, # keshav (added, initially absent)
+            block_size=str(
+                options.cacheline_size
+            ),  # keshav (initialy not here)
+        )
 
         #
         # Only one unified L1 cache exists.  Can cache instructions and data.

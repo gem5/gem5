@@ -25,9 +25,12 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+from pathlib import Path
 from typing import (
     List,
+    Optional,
     Sequence,
+    Union,
 )
 
 from m5.objects import (
@@ -40,7 +43,9 @@ from m5.objects import (
     IOXBar,
     Pc,
     Port,
+    Process,
     RawDiskImage,
+    SEWorkload,
     X86ACPIMadt,
     X86ACPIMadtIntSourceOverride,
     X86ACPIMadtIOAPIC,
@@ -54,20 +59,114 @@ from m5.objects import (
     X86IntelMPProcessor,
     X86SMBiosBiosInformation,
 )
+from m5.util import warn
 from m5.util.convert import toMemorySize
 
 from ...components.boards.se_binary_workload import SEBinaryWorkload
 from ...isas import ISA
-from ...resources.resource import AbstractResource
+from ...resources.resource import (
+    AbstractResource,
+    BinaryResource,
+    CheckpointResource,
+    FileResource,
+)
 from ...utils.override import overrides
 from ..cachehierarchies.abstract_cache_hierarchy import AbstractCacheHierarchy
 from ..memory.abstract_memory_system import AbstractMemorySystem
 from ..processors.abstract_processor import AbstractProcessor
+from ..processors.switchable_processor import SwitchableProcessor
+from .abstract_board import AbstractBoard
 from .abstract_system_board import AbstractSystemBoard
 from .kernel_disk_workload import KernelDiskWorkload
 
 
-class X86Board(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
+class SEBinaryWorkloadPerCore(SEBinaryWorkload):
+    """
+    keshav
+    this is a modification of SEBinaryWorkload to
+    run different application on each core in deterministic
+    or assigned way.
+    """
+
+    def set_se_binary_workload_per_core(
+        self,
+        binary: List[BinaryResource],
+        exit_on_work_items: bool = True,
+        stdin_file: Optional[FileResource] = None,
+        stdout_file: Optional[Path] = None,
+        stderr_file: Optional[Path] = None,
+        env_list: Optional[List[str]] = None,
+        arguments: List[List[str]] = [[]],
+        checkpoint: Optional[Union[Path, CheckpointResource]] = None,
+    ) -> None:
+        """
+        a updated version of set_se_binary_workload
+        """
+        assert isinstance(self, AbstractBoard)
+
+        if self.is_workload_set():
+            warn("Workload has been set more than once!")
+        self.set_is_workload_set(True)
+
+        # This needs to be clarified
+        self._set_fullsystem(False)
+
+        process = [Process(pid=100 + i) for i in range(len(binary))]
+        # for i,proc in enumerate(process):
+        for bin_file, proc, args_var in zip(binary, process, arguments):
+            # this self.workload is not being used anywhere
+            print(f"type(bin_file):{type(bin_file)}")
+            binary_path = bin_file.get_local_path()
+            self.workload = SEWorkload.init_compatible(binary_path)
+            proc.executable = binary_path
+            proc.cmd = [binary_path] + args_var
+            # for now we are not supporting std_files
+            if stdin_file is not None:
+                proc.input = stdin_file.get_local_path()
+            if stdout_file is not None:
+                proc.output = stdout_file.as_posix()
+            if stderr_file is not None:
+                proc.errout = stderr_file.as_posix()
+            if env_list is not None:
+                proc.env = env_list
+
+        if any(
+            core.is_kvm_core()
+            for i, core in enumerate(self.get_processor().get_cores())
+        ):
+            # Running KVM in SE mode requires special flags to be set for the
+            # process
+            self.m5ops_base = max(0xFFFF0000, self.get_memory().get_size())
+            process[i].kvmInSE = True
+            process[i].useArchPT = True
+
+        if isinstance(self.get_processor(), SwitchableProcessor):
+            for i, core in enumerate(self.get_processor()._all_cores()):
+                core.set_workload(process[i])
+        else:
+            for i, core in enumerate(self.get_processor().get_cores()):
+                core.set_workload(process[i])
+
+        # Set whether to exit on the work items for se_workload
+        self.exit_on_work_items = exit_on_work_items
+
+        # for now we are not supporting checkpoints
+        if checkpoint:
+            if isinstance(checkpoint, Path):
+                self._checkpoint = checkpoint
+            elif isinstance(checkpoint, AbstractResource):
+                self._checkpoint = Path(checkpoint.get_local_path())
+            else:
+                raise Exception(
+                    "The chcekpoint must be None, Path, or "
+                    "AbstractResource."
+                )
+
+
+# class X86Board(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
+class X86Board(
+    AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkloadPerCore
+):
     """
     A board capable of full system simulation for X86.
 

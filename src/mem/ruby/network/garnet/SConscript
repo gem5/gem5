@@ -53,3 +53,6 @@ Source('flitBuffer.cc')
 Source('flit.cc')
 Source('Credit.cc')
 Source('NetworkBridge.cc')
+
+DebugFlag('LinkTrace')
+DebugFlag('PacketTrace')

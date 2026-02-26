@@ -1,0 +1,7 @@
+Import("*")
+
+SimObject("InspectorGadget.py",sim_objects=['InspectorGadget'])
+
+Source("inspector_gadget.cc")
+
+DebugFlag("InspectorGadget")

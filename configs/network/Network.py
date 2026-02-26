@@ -167,6 +167,9 @@ def create_network(options, ruby):
 
 def init_network(options, network, InterfaceClass):
     if options.network == "garnet":
+        network.buffers_per_data_vc = (
+            options.buffers_per_data_vc
+        )  # added by keshav to control from cmd line
         network.num_rows = options.mesh_rows
         network.vcs_per_vnet = options.vcs_per_vnet
         network.ni_flit_size = options.link_width_bits / 8

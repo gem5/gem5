@@ -62,6 +62,7 @@ GarnetSyntheticTraffic::CpuPort::recvReqRetry()
     tester->doRetry();
 }
 
+
 void
 GarnetSyntheticTraffic::sendPkt(PacketPtr pkt)
 {
@@ -348,5 +349,6 @@ GarnetSyntheticTraffic::printAddr(Addr a)
 {
     cachePort.printAddr(a);
 }
+
 
 } // namespace gem5

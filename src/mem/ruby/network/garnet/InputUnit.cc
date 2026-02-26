@@ -35,6 +35,9 @@
 #include "mem/ruby/network/garnet/Credit.hh"
 #include "mem/ruby/network/garnet/Router.hh"
 
+//keshav
+#include "debug/LinkTrace.hh"
+
 namespace gem5
 {
 
@@ -81,6 +84,10 @@ InputUnit::wakeup()
 
         t_flit = m_in_link->consumeLink();
         DPRINTF(RubyNetwork, "Router[%d] Consuming:%s Width: %d Flit:%s\n",
+        m_router->get_id(), m_in_link->name(),
+        m_router->getBitWidth(), *t_flit);
+    // keshav
+        DPRINTF(LinkTrace, "Router[%d] Consuming:%s Width: %d Flit:%s\n",
         m_router->get_id(), m_in_link->name(),
         m_router->getBitWidth(), *t_flit);
         assert(t_flit->m_width == m_router->getBitWidth());

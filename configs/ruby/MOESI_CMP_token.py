@@ -121,6 +121,10 @@ def create_system(
 
         clk_domain = cpus[i].clk_domain
 
+        # keshav
+        L1Cache_Controller = eval(
+            buildEnv["PROTOCOL"] + "_L1Cache_Controller"
+        )  # originally absent
         l1_cntrl = L1Cache_Controller(
             version=i,
             L1Icache=l1i_cache,
@@ -179,6 +183,10 @@ def create_system(
             start_index_bit=l2_index_start,
         )
 
+        # keshav
+        L2Cache_Controller = eval(
+            buildEnv["PROTOCOL"] + "_L2Cache_Controller"
+        )  # originally absent
         l2_cntrl = L2Cache_Controller(
             version=i,
             L2cache=l2_cache,
@@ -253,6 +261,8 @@ def create_system(
             version=i, ruby_system=ruby_system, in_ports=dma_port
         )
 
+        # keshav
+        DMA_Controller = eval(buildEnv["PROTOCOL"] + "_DMA_Controller")
         dma_cntrl = DMA_Controller(
             version=i,
             dma_sequencer=dma_seq,

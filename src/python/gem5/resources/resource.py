@@ -953,7 +953,6 @@ def obtain_resource(
                     ``resource_directory`` parameter.
     :param quiet: If ``True``, suppress output. ``False`` by default.
     """
-
     # Obtain the resource object entry for this resource
     resource_json = get_resource_json_obj(
         resource_id,

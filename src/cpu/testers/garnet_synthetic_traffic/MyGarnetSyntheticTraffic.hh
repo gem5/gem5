@@ -1,0 +1,180 @@
+/*
+ * Copyright (c) 2016 Georgia Institute of Technology
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+#ifndef __CPU_TESTERS_GARNET_SYNTHETIC_TRAFFIC_MY_GARNET_SYNTHETIC_TRAFFIC_HH__
+#define __CPU_TESTERS_GARNET_SYNTHETIC_TRAFFIC_MY_GARNET_SYNTHETIC_TRAFFIC_HH__
+
+// C++ standard library headers
+#include <iostream>
+#include <random>
+#include <set>
+
+// gem5 headers
+#include "base/random.hh"
+#include "base/statistics.hh"
+#include "mem/port.hh"
+#include "params/MyGarnetSyntheticTraffic.hh"
+#include "sim/clocked_object.hh"
+#include "sim/eventq.hh"
+#include "sim/sim_exit.hh"
+#include "sim/sim_object.hh"
+#include "sim/stats.hh"
+
+namespace gem5
+{
+
+//enum TrafficType {BIT_COMPLEMENT_ = 0,
+enum MyTrafficType
+{
+                  BIT_COMPLEMENT_ = 0,	//keshav
+                  BIT_REVERSE_ = 1,
+                  BIT_ROTATION_ = 2,
+                  NEIGHBOR_ = 3,
+                  SHUFFLE_ = 4,
+                  TORNADO_ = 5,
+                  TRANSPOSE_ = 6,
+                  UNIFORM_RANDOM_ = 7,
+                  NUM_TRAFFIC_PATTERNS_
+};	// at line 47,116,113
+
+class Packet;
+class MyGarnetSyntheticTraffic : public ClockedObject
+{
+  public:
+    typedef MyGarnetSyntheticTrafficParams Params;
+    MyGarnetSyntheticTraffic(const Params &p);
+
+    void init() override;
+
+    // main simulation loop (one cycle)
+    void tick();
+
+    Port &getPort(const std::string &if_name,
+                  PortID idx=InvalidPortID) override;
+
+    /**
+     * Print state of address in memory system via PrintReq (for
+     * debugging).
+     */
+    void printAddr(Addr a);
+
+  protected:
+    EventFunctionWrapper tickEvent;
+
+    class CpuPort : public RequestPort
+    {
+        MyGarnetSyntheticTraffic *tester;
+
+      public:
+
+        CpuPort(const std::string &_name, MyGarnetSyntheticTraffic *_tester)
+            : RequestPort(_name), tester(_tester)
+        { }
+
+      protected:
+
+        virtual bool recvTimingResp(PacketPtr pkt);
+
+        virtual void recvReqRetry();
+    };
+
+    CpuPort cachePort;
+
+    class MyGarnetSyntheticTrafficSenderState : public Packet::SenderState
+    {
+      public:
+        /** Constructor. */
+        MyGarnetSyntheticTrafficSenderState(uint8_t *_data)
+            : data(_data)
+        { }
+
+        // Hold onto data pointer
+        uint8_t *data;
+    };
+
+    PacketPtr retryPkt;
+    unsigned size;
+    int id;
+
+    //std::map<std::string, TrafficType> trafficStringToEnum;
+    std::map<std::string, MyTrafficType> trafficStringToEnum;	//keshav
+
+    unsigned blockSizeBits;
+
+    Tick noResponseCycles;
+
+    int numDestinations;
+    Tick simCycles;
+    int numPacketsMax;
+    int numPacketsSent;
+    int singleSender;
+    int singleDest;
+
+    std::string trafficType; // string
+    //TrafficType traffic; // enum from string
+    MyTrafficType traffic; // enum from string	//keshav
+    double injRate;
+    int injVnet;
+    int precision;
+
+    const Cycles responseLimit;
+
+    RequestorID requestorId;
+
+    Random::RandomPtr rng = Random::genRandom();
+    //Random::RandomPtr rng = Random::genRandom(static_cast<uint32_t>(id));
+    // //keshav. we provided a unique seed to all cpu
+
+    void completeRequest(PacketPtr pkt);
+
+    void generatePkt();
+    void sendPkt(PacketPtr pkt);
+    void initTrafficType();
+
+    void doRetry();
+
+    friend class MemCompleteEvent;
+    // keshav code begins
+    //std::mt19937 gen(id);
+    //std::poisson_distribution<long unsigned int> \
+    // pd(static_cast<unsigned int>(id));
+    // // pd(inj_rate); it's temp injectionrate
+    //std::poisson_distribution<long unsigned int> my_pd();
+    // // pd(inj_rate); it's temp injectionrate
+    typedef double my_mean;
+    my_mean mean1=100;
+    std::poisson_distribution<long unsigned int> my_pd(my_mean);
+    // pd(inj_rate); it's temp injectionrate
+    //Tick tick_old_packet_injected=curTick();
+    //Tick next_inter_arrival;
+    // keshav code ends
+};
+
+} // namespace gem5
+
+//__CPU_TESTERS_GARNET_SYNTHETIC_TRAFFIC_MY_GARNET_SYNTHETIC_TRAFFIC_HH__
+#endif

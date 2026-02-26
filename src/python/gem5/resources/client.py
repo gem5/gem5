@@ -171,6 +171,7 @@ def get_resource_json_obj(
                          is not performed.
     """
     _get_clientwrapper()
+    print(f"get_resource_json_obj | clients:{clients}")
     if resource_version:
         client_queries = [
             ClientQuery(resource_id, resource_version, gem5_version)
@@ -272,6 +273,7 @@ def _get_resource_json_obj_from_client(
                 If not found, exception is thrown.
     """
     # getting all the resources with the given id from the dictionary
+    print(f"client_queries:{client_queries}\n,clients:{clients}")
     resources_list = _get_all_resources_by_id(client_queries, clients)
 
     for id, resources in resources_list.items():

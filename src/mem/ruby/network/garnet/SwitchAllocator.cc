@@ -27,10 +27,13 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-
 #include "mem/ruby/network/garnet/SwitchAllocator.hh"
 
+// C++ standard library headers
+// (none needed)
+
+// gem5 headers
+#include "debug/PacketTrace.hh"
 #include "debug/RubyNetwork.hh"
 #include "mem/ruby/network/garnet/GarnetNetwork.hh"
 #include "mem/ruby/network/garnet/InputUnit.hh"
@@ -90,8 +93,41 @@ SwitchAllocator::init()
 void
 SwitchAllocator::wakeup()
 {
-    arbitrate_inports(); // First stage of allocation
-    arbitrate_outports(); // Second stage of allocation
+    // keshav added different flow control ways
+    FlowControl flow_control =
+        (FlowControl) m_router->get_net_ptr()->getFlowControl();
+    switch (flow_control) {
+        case RR_:
+            DPRINTF(LinkTrace, \
+                "m_router:%s, flow_control%d\n",m_router,flow_control);
+                //keshav
+                arbitrate_inports(); arbitrate_outports(); break;
+        case SVCP_:
+                DPRINTF(LinkTrace, \
+                    "m_router:%s, flow_control%d\n",\
+                    m_router,flow_control); //keshav
+                unimplemented_arbotrate_inports();
+            unimplemented_arbitrate_outports(); break;
+        case SVNP_:
+                DPRINTF(LinkTrace, "m_router:%s, flow_control%d\n",\
+                    m_router,flow_control); //keshav
+                unimplemented_arbotrate_inports();
+            unimplemented_arbitrate_outports(); break;
+        case CPFP_:
+                DPRINTF(LinkTrace, "m_router:%s, flow_control%d\n",\
+                    m_router,flow_control); //keshav
+                unimplemented_arbotrate_inports();
+            unimplemented_arbitrate_outports(); break;
+        default :
+                DPRINTF(LinkTrace, "m_router:%s, flow_control%d\n",\
+                    m_router,flow_control); //keshav
+                unimplemented_arbotrate_inports();
+            unimplemented_arbitrate_outports(); break;
+    }
+    // below one is original just one flow control
+    // arbitrate_inports(); // First stage of allocation
+    // arbitrate_outports(); // Second stage of allocation
+    // original-code-ends
 
     clear_request_vector();
     check_for_wakeup();
@@ -114,6 +150,9 @@ SwitchAllocator::arbitrate_inports()
     // Independent arbiter at each input port
     for (int inport = 0; inport < m_num_inports; inport++) {
         int invc = m_round_robin_invc[inport];
+    Tick min_enqueue_time = -1;
+    //int vc_priority[m_num_vcs];
+    //vc_priority=[];
 
         for (int invc_iter = 0; invc_iter < m_num_vcs; invc_iter++) {
             auto input_unit = m_router->getInputUnit(inport);
@@ -128,7 +167,20 @@ SwitchAllocator::arbitrate_inports()
                 // send_allowed conditions described in that function.
                 bool make_request =
                     send_allowed(inport, invc, outport, outvc);
-
+        // keshav. the below code give proiority to max waiting time
+        if (make_request) {
+            if (min_enqueue_time == -1) {
+            min_enqueue_time=input_unit->get_enqueue_time(invc);
+            m_port_requests[inport]=outport; m_vc_winners[inport]=invc;
+            m_input_arbiter_activity++;
+            } else {
+            if (min_enqueue_time > input_unit->get_enqueue_time(invc)) {
+                min_enqueue_time=input_unit->get_enqueue_time(invc);
+                m_port_requests[inport]=outport; m_vc_winners[inport]=invc;
+            }
+            }
+        // original code below (break at first winner)
+        /*
                 if (make_request) {
                     m_input_arbiter_activity++;
                     m_port_requests[inport] = outport;
@@ -136,7 +188,10 @@ SwitchAllocator::arbitrate_inports()
 
                     break; // got one vc winner for this port
                 }
-            }
+        */
+        // original code not used till here
+                }
+        }
 
             invc++;
             if (invc >= m_num_vcs)
@@ -165,6 +220,9 @@ SwitchAllocator::arbitrate_outports()
     // Now there are a set of input vc requests for output vcs.
     // Again do round robin arbitration on these requests
     // Independent arbiter at each output port
+    DPRINTF(RubyNetwork, \
+        "m_router:%s, num_inports:%d, num_outports:%d\n",\
+        m_router,m_num_inports,m_num_outports); //keshav
     for (int outport = 0; outport < m_num_outports; outport++) {
         int inport = m_round_robin_inport[outport];
 
@@ -188,10 +246,23 @@ SwitchAllocator::arbitrate_outports()
                 // remove flit from Input VC
                 flit *t_flit = input_unit->getTopFlit(invc);
 
-                DPRINTF(RubyNetwork, "SwitchAllocator at Router %d "
-                                     "granted outvc %d at outport %d "
-                                     "to invc %d at inport %d to flit %s at "
-                                     "cycle: %lld\n",
+            DPRINTF(RubyNetwork, "SwitchAllocator at Router %d "
+                            "granted outvc %d at outport %d "
+                            "to invc %d at inport %d to flit %s at "
+                            "cycle: %lld\n",
+                        m_router->get_id(), outvc,
+                        m_router->getPortDirectionName(
+                            output_unit->get_direction()),
+                        invc,
+                        m_router->getPortDirectionName(
+                            input_unit->get_direction()),
+                            *t_flit,
+                        m_router->curCycle());
+        // keshav
+                DPRINTF(PacketTrace, "SwitchAllocator at Router %d "
+                            "granted outvc %d at outport %d "
+                            "to invc %d at inport %d to flit %s at "
+                            "cycle: %lld\n",
                         m_router->get_id(), outvc,
                         m_router->getPortDirectionName(
                             output_unit->get_direction()),
@@ -394,6 +465,18 @@ SwitchAllocator::resetStats()
 {
     m_input_arbiter_activity = 0;
     m_output_arbiter_activity = 0;
+}
+
+int
+SwitchAllocator::unimplemented_arbitrate_inports()
+{
+    panic("%s placeholder executed", __FUNCTION__);
+}
+
+    int
+SwitchAllocator::unimplemented_arbitrate_outports()
+{
+    panic("%s placeholder executed", __FUNCTION__);
 }
 
 } // namespace garnet

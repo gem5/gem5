@@ -63,6 +63,10 @@ class SwitchAllocator : public Consumer
     void print(std::ostream& out) const {};
     void arbitrate_inports();
     void arbitrate_outports();
+    // below functions are added by keshav
+    int unimplemented_arbitrate_inports();
+    int unimplemented_arbitrate_outports();
+    // newly added function ends
     bool send_allowed(int inport, int invc, int outport, int outvc);
     int vc_allocate(int outport, int inport, int invc);
 

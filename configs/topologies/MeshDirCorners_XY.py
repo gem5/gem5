@@ -57,14 +57,26 @@ class MeshDirCorners_XY(SimpleTopology):
         dir_nodes = []
         dma_nodes = []
         for node in nodes:
+            print(f"node.type:{node.type}")
             if (
                 node.type == "L1Cache_Controller"
                 or node.type == "L2Cache_Controller"
+                or node.type == "Garnet_standalone_L1Cache_Controller"
+                or node.type == "Garnet_standalone_L2Cache_Controller"
+                or node.type == buildEnv["PROTOCOL"] + "_L0Cache_Controller"
+                or node.type == buildEnv["PROTOCOL"] + "_L1Cache_Controller"
+                or node.type == buildEnv["PROTOCOL"] + "_L2Cache_Controller"
             ):
                 cache_nodes.append(node)
-            elif node.type == "Directory_Controller":
+            elif (
+                (node.type == "Directory_Controller")
+                or (node.type == "Garnet_standalone_Directory_Controller")
+                or (node.type[-20:] == "Directory_Controller")
+            ):
                 dir_nodes.append(node)
-            elif node.type == "DMA_Controller":
+            elif (node.type == "DMA_Controller") or (
+                node.type == buildEnv["PROTOCOL"] + "_DMA_Controller"
+            ):
                 dma_nodes.append(node)
 
         # Obviously the number or rows must be <= the number of routers
@@ -76,6 +88,7 @@ class MeshDirCorners_XY(SimpleTopology):
         assert num_columns * num_rows == num_routers
         caches_per_router, remainder = divmod(len(cache_nodes), num_routers)
         assert remainder == 0
+        print(f"len(dir_nodes):{len(dir_nodes)}")
         assert len(dir_nodes) == 4
 
         # Create the routers in the mesh
@@ -116,6 +129,9 @@ class MeshDirCorners_XY(SimpleTopology):
             else:
                 numa_nodes[3].append(i)
 
+        print(f"numa_nodes:{numa_nodes}")
+        self.numa_nodes = numa_nodes
+        # added by keshav (initially not here)
         num_numa_nodes = 0
         for n in numa_nodes:
             if n:
@@ -161,7 +177,10 @@ class MeshDirCorners_XY(SimpleTopology):
 
         # Connect the dma nodes to router 0.  These should only be DMA nodes.
         for i, node in enumerate(dma_nodes):
-            assert node.type == "DMA_Controller"
+            # assert node.type == "DMA_Controller" original
+            assert (node.type == buildEnv["PROTOCOL"] + "_DMA_Controller") or (
+                node.type == "DMA_Controller"
+            )
             ext_links.append(
                 ExtLink(
                     link_id=link_count,
@@ -257,7 +276,10 @@ class MeshDirCorners_XY(SimpleTopology):
     # Register nodes with filesystem
     def registerTopology(self, options):
         i = 0
-        for n in numa_nodes:
+        print(f"self.numa_nodes:{self.numa_nodes}")
+        num_numa_nodes = sum([len(i) for i in self.numa_nodes])
+        for n in self.numa_nodes:  # keshav: updated with self
+            # for n in numa_nodes:   #original
             if n:
                 FileSystemConfig.register_node(
                     n, MemorySize(options.mem_size) // num_numa_nodes, i

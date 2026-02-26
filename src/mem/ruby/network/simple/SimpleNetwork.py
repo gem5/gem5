@@ -64,7 +64,7 @@ class SimpleNetwork(RubyNetwork):
     )
 
     physical_vnets_bandwidth = VectorParam.Int(
-        [],
+        [16, 8, 16, 8, 16],
         "Assign a different link bandwidth factor for each vnet channels."
         "Only valid when physical_vnets_channels is set. This overrides the"
         "bandwidth_factor parameter set for the  individual links.",

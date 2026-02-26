@@ -126,6 +126,8 @@ def define_options(parser):
     )
 
     protocol = buildEnv["PROTOCOL"]
+    print(f"----buildEnv['PROTOCOL']:{buildEnv['PROTOCOL']}")
+    print(f"protocol:{protocol}")
     exec(f"from . import {protocol}")
     eval(f"{protocol}.define_options(parser)")
     Network.define_options(parser)
@@ -254,6 +256,10 @@ def create_system(
                                     bootmem, ruby, cpus)"
             % protocol
         )
+        print(f"----protocol----\n")
+        print(f"----protocol:{protocol}----\n")
+        # import sys
+        # sys.exit();
     except:
         print(f"Error: could not create sytem for ruby protocol {protocol}")
         raise
@@ -306,6 +312,10 @@ def create_system(
 def create_directories(options, bootmem, ruby_system, system):
     dir_cntrl_nodes = []
     for i in range(options.num_dirs):
+        # keshav
+        Directory_Controller = eval(
+            buildEnv["PROTOCOL"] + "_Directory_Controller"
+        )  # originally absent
         dir_cntrl = Directory_Controller()
         dir_cntrl.version = i
         dir_cntrl.directory = RubyDirectoryMemory(
