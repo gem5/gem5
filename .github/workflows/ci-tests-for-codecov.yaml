@@ -76,7 +76,7 @@ jobs:
         strategy:
             matrix:
                 type: [fast, opt]
-        runs-on: [self-hosted, linux, x64]
+        runs-on: ubuntu-24.04
         if: github.event.pull_request.draft == false
         container: ejleucd/ubuntu-24.04-gcovr-codecov:latest
         needs: [pre-commit] # only runs if pre-commit passes.
@@ -146,7 +146,7 @@ jobs:
         # Clang is more strict than GCC. This job checks that gem5 compiles
         # with Clang. It compiles build/ALL/gem5.fast to maximize the change
         # for compilation error to be exposed.
-        runs-on: [self-hosted, linux, x64]
+        runs-on: ubuntu-24.04
         if: github.event.pull_request.draft == false
         container: ghcr.io/gem5/clang-version-19:latest
         needs: [pre-commit]
@@ -197,7 +197,7 @@ jobs:
               timeout-minutes: 90
 
     testlib-quick-gem5-builds:
-        runs-on: [self-hosted, linux, x64]
+        runs-on: ubuntu-24.04
         if: github.event.pull_request.draft == false
         container: ejleucd/ubuntu-24.04-gcovr-codecov:latest
         needs: [pre-commit, testlib-quick-matrix, get-date]
@@ -242,7 +242,7 @@ jobs:
 
     testlib-quick-execution:
         name: quick-tests
-        runs-on: [self-hosted, linux, x64]
+        runs-on: ubuntu-24.04
         if: github.event.pull_request.draft == false
         container: ejleucd/ubuntu-24.04-gcovr-codecov:latest
         needs: [pre-commit, testlib-quick-matrix, testlib-quick-gem5-builds]
@@ -295,7 +295,7 @@ jobs:
                   retention-days: 30
 
     gpu-tests:
-        runs-on: [self-hosted, linux, x64]
+        runs-on: ubuntu-24.04
         container: ghcr.io/gem5/gcn-gpu:latest
         timeout-minutes: 180
         needs: [pre-commit, get-date]
