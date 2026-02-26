@@ -47,6 +47,10 @@ class FUPool(SimObject):
     cxx_class = "gem5::o3::FUPool"
     cxx_header = "cpu/o3/fu_pool.hh"
     FUList = VectorParam.FUDesc("list of FU's for this pool")
+    # below line is added by keshav
+    # maxOpLatencies = VectorParam.Cycles([5],"max latency of each FU in Pool")
+    # maxOpLatencies is a "private" member of the class.
+    # and we are unsure about the number of units there
 
 
 class DefaultFUPool(FUPool):

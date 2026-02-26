@@ -90,6 +90,16 @@ NetworkLink::wakeup()
         flit *t_flit = link_srcQueue->getTopFlit();
         DPRINTF(RubyNetwork, "Transmission will finish at %ld :%s\n",
                 clockEdge(m_latency), *t_flit);
+        DPRINTF(RubyNetwork, \
+            "Monitoring error at %ld, t_flit->get_vnet():%d, mVnets.size():%d,
+            m_type:%d, NUM_LINK_TYPES_:%d\n",
+                clockEdge(m_latency), \
+                t_flit->get_vnet(), mVnets.size(), m_type, NUM_LINK_TYPES_);
+        //DPRINTF(RubyNetwork, "Monitoring error at %ld, \
+        // mVnets.begin():%d, mVnets.end():%d,
+    //		t_flit->get_vnet():%s, mVnets.size():%d\n",
+        //        clockEdge(m_latency), \
+        // mVnets.begin(), mVnets.end(), t_flit->get_vnet(), mVnets.size());
         if (m_type != NUM_LINK_TYPES_) {
             // Only for assertions and debug messages
             assert(t_flit->m_width == bitWidth);

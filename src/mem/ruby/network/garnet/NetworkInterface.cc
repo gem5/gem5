@@ -43,6 +43,9 @@
 #include "mem/ruby/slicc_interface/Message.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
+// keshav
+#include "debug/LinkTrace.hh"
+
 namespace gem5
 {
 
@@ -231,6 +234,8 @@ NetworkInterface::wakeup()
         if (inNetLink->isReady(curTick())) {
             flit *t_flit = inNetLink->consumeLink();
             DPRINTF(RubyNetwork, "Recieved flit:%s\n", *t_flit);
+            //keshav
+            DPRINTF(LinkTrace, "Recieved flit:%s\n", *t_flit);
             assert(t_flit->m_width == iPort->bitWidth());
 
             int vnet = t_flit->get_vnet();

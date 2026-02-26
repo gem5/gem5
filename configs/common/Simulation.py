@@ -682,6 +682,7 @@ def run(options, root, testsys, cpu_class):
     if options.checkpoint_restore:
         cpt_starttick, checkpoint_dir = findCptDir(options, cptdir, testsys)
     root.apply_config(options.param)
+    print(f"---- inside checkpoint_dir:{checkpoint_dir}")
     m5.instantiate(checkpoint_dir)
 
     # Initialization is complete.  If we're not in control of simulation

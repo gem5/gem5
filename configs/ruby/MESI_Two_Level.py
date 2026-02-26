@@ -98,7 +98,12 @@ def create_system(
 
         clk_domain = cpus[i].clk_domain
 
-        l1_cntrl = MESI_Two_Level_L1Cache_Controller(
+        # keshav
+        L1Cache_Controller = eval(
+            buildEnv["PROTOCOL"] + "_L1Cache_Controller"
+        )  # originally absent
+        l1_cntrl = L1Cache_Controller(
+        #l1_cntrl = MESI_Two_Level_L1Cache_Controller(
             version=i,
             L1Icache=l1i_cache,
             L1Dcache=l1d_cache,
@@ -153,7 +158,12 @@ def create_system(
             start_index_bit=l2_index_start,
         )
 
-        l2_cntrl = MESI_Two_Level_L2Cache_Controller(
+        # keshav
+        L2Cache_Controller = eval(
+            buildEnv["PROTOCOL"] + "_L2Cache_Controller"
+        )  # originaly absent
+        l2_cntrl = L2Cache_Controller(
+        #l2_cntrl = MESI_Two_Level_L2Cache_Controller(
             version=i,
             L2cache=l2_cache,
             transitions_per_cycle=options.ports,
@@ -208,7 +218,11 @@ def create_system(
             version=i, ruby_system=ruby_system, in_ports=dma_port
         )
 
-        dma_cntrl = MESI_Two_Level_DMA_Controller(
+        DMA_Controller = eval(
+            buildEnv["PROTOCOL"] + "_DMA_Controller"
+        )  # originally absent
+        dma_cntrl = DMA_Controller(
+        #dma_cntrl = MESI_Two_Level_DMA_Controller(
             version=i,
             dma_sequencer=dma_seq,
             transitions_per_cycle=options.ports,
@@ -233,7 +247,12 @@ def create_system(
     if full_system:
         io_seq = DMASequencer(version=len(dma_ports), ruby_system=ruby_system)
         ruby_system._io_port = io_seq
-        io_controller = MESI_Two_Level_DMA_Controller(
+        
+        DMA_Controller = eval(
+            buildEnv["PROTOCOL"] + "_DMA_Controller"
+        )  # originally absent
+        io_controller = DMA_Controller(
+        #io_controller = MESI_Two_Level_DMA_Controller(
             version=len(dma_ports),
             dma_sequencer=io_seq,
             ruby_system=ruby_system,

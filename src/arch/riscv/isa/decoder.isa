@@ -2690,6 +2690,29 @@ decode QUADRANT default Unknown::unknown() {
                 }
             }
         }
+    //keshav we addd one custome instructoion here. add16
+    0x1d: decode FUNCT3 {
+              format ROp {
+            0x0: decode FUNCT7 {
+                0x20: add16({{
+                    uint16_t Rd_16 = (uint16_t)(
+                        Rs1_ud)+(uint16_t)(Rs2_ud);
+                    uint16_t Rd_32 = (uint16_t)(
+                        Rs1_ud >> 16)+(uint16_t)(Rs2_ud >> 16);
+                    uint16_t Rd_48 = (uint16_t)(
+                        Rs1_ud >> 32)+(uint16_t)(Rs2_ud >> 32);
+                    uint16_t Rd_64 = (uint16_t)(
+                        Rs1_ud >> 48)+(uint16_t)(Rs2_ud >> 48);
+                    uint64_t result=Rd_64;
+                    result=result << 16 | Rd_48;
+                    result=result << 16 | Rd_32;
+                    result=result << 16 | Rd_16;
+                    Rd=result;
+                              }});
+                 }
+              }
+          }
+
 
         format FPROp {
             0x10: decode FUNCT2 {

@@ -36,3 +36,15 @@ SimObject('GarnetSyntheticTraffic.py', sim_objects=['GarnetSyntheticTraffic'])
 Source('GarnetSyntheticTraffic.cc')
 
 DebugFlag('GarnetSyntheticTraffic')
+
+#SimObject('MyGarnetSyntheticTraffic.py',
+# sim_objects=['MyGarnetSyntheticTraffic'])
+
+SimObject('MyGarnetSyntheticTraffic.py', \
+sim_objects=['MyGarnetSyntheticTraffic',\
+'GarnetSyntheticTrafficV2','GarnetSyntheticTrafficV4'])
+
+DebugFlag('MyGarnetSyntheticTraffic')
+Source('MyGarnetSyntheticTraffic.cc')
+Source('GarnetSyntheticTrafficV2.cc')
+Source('GarnetSyntheticTrafficV4.cc')

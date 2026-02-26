@@ -111,7 +111,12 @@ def create_system(
 
         clk_domain = cpus[i].clk_domain
 
-        l1_cntrl = MOESI_CMP_directory_L1Cache_Controller(
+        # keshav
+        L1Cache_Controller = eval(
+            buildEnv["PROTOCOL"] + "_L1Cache_Controller"
+        )  # originally absent
+        l1_cntrl = L1Cache_Controller(
+        #l1_cntrl = MOESI_CMP_directory_L1Cache_Controller(
             version=i,
             L1Icache=l1i_cache,
             L1Dcache=l1d_cache,
@@ -177,7 +182,12 @@ def create_system(
             start_index_bit=block_size_bits + l2_bits,
         )
 
-        l2_cntrl = MOESI_CMP_directory_L2Cache_Controller(
+        # keshav
+        L2Cache_Controller = eval(
+            buildEnv["PROTOCOL"] + "_L2Cache_Controller"
+        )  # originally absent
+        l2_cntrl = L2Cache_Controller(
+        #l2_cntrl = MOESI_CMP_directory_L2Cache_Controller(
             version=i,
             L2cache=l2_cache,
             transitions_per_cycle=options.ports,
@@ -241,7 +251,12 @@ def create_system(
             version=i, ruby_system=ruby_system, in_ports=dma_port
         )
 
-        dma_cntrl = MOESI_CMP_directory_DMA_Controller(
+        # keshav
+        DMA_Controller = eval(
+            buildEnv["PROTOCOL"] + "_DMA_Controller"
+        )  # originally absent
+        dma_cntrl = DMA_Controller(
+        #dma_cntrl = MOESI_CMP_directory_DMA_Controller(
             version=i,
             dma_sequencer=dma_seq,
             transitions_per_cycle=options.ports,

@@ -86,7 +86,12 @@ def create_system(
         clk_domain = cpus[i].clk_domain
 
         # Only one unified L1 cache exists. Can cache instructions and data.
-        l1_cntrl = MI_example_L1Cache_Controller(
+        # keshav
+        L1Cache_Controller = eval(
+            buildEnv["PROTOCOL"] + "_L1Cache_Controller"
+        )  # originally absent
+        l1_cntrl = L1Cache_Controller(
+        #l1_cntrl = MI_example_L1Cache_Controller(
             version=i,
             cacheMemory=cache,
             send_evictions=send_evicts(options),
@@ -159,7 +164,12 @@ def create_system(
         #
         dma_seq = DMASequencer(version=i, ruby_system=ruby_system)
 
-        dma_cntrl = MI_example_DMA_Controller(
+        # keshav
+        DMA_Controller = eval(
+            buildEnv["PROTOCOL"] + "_DMA_Controller"
+        )  # originally absent
+        dma_cntrl = DMA_Controller(
+        #dma_cntrl = MI_example_DMA_Controller(
             version=i,
             dma_sequencer=dma_seq,
             transitions_per_cycle=options.ports,

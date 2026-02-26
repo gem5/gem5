@@ -47,7 +47,16 @@ from .caches.mesi_two_level.directory import Directory
 from .caches.mesi_two_level.dma_controller import DMAController
 from .caches.mesi_two_level.l1_cache import L1Cache
 from .caches.mesi_two_level.l2_cache import L2Cache
-from .topologies.simple_pt2pt import SimplePt2Pt
+
+# keshav we added the below lines
+# from .topologies.simple_pt2pt import SimplePt2PtV2
+from .topologies.simple_pt2pt import (
+    Garnet_Mesh_XY,
+    GarnetPt2Pt,
+    SimplePt2Pt,
+)
+
+# from .topologies.Mesh_XY import Garnet_Mesh_XY
 
 
 class MESITwoLevelCacheHierarchy(
@@ -97,7 +106,19 @@ class MESITwoLevelCacheHierarchy(
         # MESI_Two_Level needs 3 virtual networks
         self.ruby_system.number_of_virtual_networks = 3
 
-        self.ruby_system.network = SimplePt2Pt(self.ruby_system)
+        # old code of by default SimplePt2Pt
+        # self.ruby_system.network = SimplePt2Pt(self.ruby_system)
+        # self.ruby_system.network.number_of_virtual_networks = 3
+        ## keshav SimplePt2Pt uses simple network and demands the
+        ## info about physical_vnets. added code begins
+        ## if nothing is specified in list all vnets use one physical channel
+        # self.ruby_system.network.physical_vnets_channels = []
+        # self.ruby_system.network.physical_vnets_bandwidth = []
+        ## keshav added code ends.
+
+        # self.ruby_system.network = SimplePt2PtV2(self.ruby_system)
+        # self.ruby_system.network = GarnetPt2Pt(self.ruby_system)
+        self.ruby_system.network = Garnet_Mesh_XY(self.ruby_system)
         self.ruby_system.network.number_of_virtual_networks = 3
 
         self._l1_controllers = []
@@ -198,7 +219,12 @@ class MESITwoLevelCacheHierarchy(
             + self._directory_controllers
             + self._dma_controllers
         )
-        self.ruby_system.network.setup_buffers()
+        # keshav: the original code (only one line)
+        # self.ruby_system.network.setup_buffers()
+        if self.ruby_system.network.type == "SimpleNetwork":
+            self.ruby_system.network.setup_buffers()
+        elif self.ruby_system.network.type == "GarnetNetwork":
+            pass
 
         # Set up a proxy port for the system_port. Used for load binaries and
         # other functional-only things.

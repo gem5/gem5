@@ -126,7 +126,15 @@ def define_options(parser):
         help="Recycle latency for ruby controller input buffers",
     )
 
-    import_module(f"ruby.{buildEnv['PROTOCOL']}").define_options(parser)
+    # keshav (not added it'sa confict merge)
+    # it appeares as on eliner of the below code
+    #import_module(f"ruby.{buildEnv['PROTOCOL']}").define_options(parser)
+
+    protocol = buildEnv["PROTOCOL"]
+    print(f"----buildEnv['PROTOCOL']:{buildEnv['PROTOCOL']}")
+    print(f"protocol:{protocol}")
+    exec(f"from . import {protocol}")
+    eval(f"{protocol}.define_options(parser)")
 
     Network.define_options(parser)
 
@@ -254,6 +262,10 @@ def create_system(
         ).create_system(
             options, full_system, system, dma_ports, bootmem, ruby, cpus
         )
+        print(f"----protocol----\n")
+        print(f"----protocol:{protocol}----\n")
+        # import sys
+        # sys.exit();
     except:
         print(
             "Error: could not create sytem for ruby protocol "
@@ -328,6 +340,10 @@ def create_directories(options, bootmem, ruby_system, system):
 
     dir_cntrl_nodes = []
     for i in range(options.num_dirs):
+        # keshav
+        Directory_Controller = eval(
+            buildEnv["PROTOCOL"] + "_Directory_Controller"
+        )  # originally absent
         dir_cntrl = Directory_Controller()
         dir_cntrl.version = i
         dir_cntrl.directory = RubyDirectoryMemory(

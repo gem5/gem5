@@ -106,7 +106,16 @@ class Mesh_westfirst(SimpleTopology):
         # Connect the remainding nodes to router 0.  These should only be
         # DMA nodes.
         for i, node in enumerate(remainder_nodes):
-            assert node.type == "DMA_Controller"
+            print(f"inside Mesh_westfirst.py node.type:{node.type}")
+            # assert node.type == "DMA_Controller" # keshav (original)
+            assert (
+                (node.type == "DMA_Controller")
+                or (node.type == buildEnv["PROTOCOL"] + "_DMA_Controller")
+                or (node.type == "Garnet_standalone_Directory_Controller")
+                or (
+                    node.type == buildEnv["PROTOCOL"] + "_Directory_Controller"
+                )
+            )
             assert i < remainder
             ext_links.append(
                 ExtLink(

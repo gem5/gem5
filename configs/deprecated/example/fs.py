@@ -152,6 +152,7 @@ def build_test_system(np, isa: ISA):
         TestCPUClass(clk_domain=test_sys.cpu_clk_domain, cpu_id=i)
         for i in range(np)
     ]
+    print(f"test_sys.cpu:{test_sys.cpu}")
 
     if args.ruby:
         bootmem = getattr(test_sys, "_bootmem", None)
@@ -249,6 +250,7 @@ def build_test_system(np, isa: ISA):
             for obj in cpu.descendants():
                 obj.eventq_index = 0
             cpu.eventq_index = i + 1
+            cpu.usePerf = False
         test_sys.kvm_vm = KvmVM()
 
     return test_sys
@@ -307,6 +309,8 @@ def build_drive_system(np):
 
     if ObjectList.is_kvm_cpu(DriveCPUClass):
         drive_sys.kvm_vm = KvmVM()
+        # for cpu in drive_sys.cpu:
+        #    cpu.usePerf=False
 
     drive_sys.iobridge = Bridge(delay="50ns", ranges=drive_sys.mem_ranges)
     drive_sys.iobridge.cpu_side_port = drive_sys.iobus.mem_side_ports
@@ -329,23 +333,47 @@ warn(
     "The fs.py script is deprecated. It will be removed in future releases of "
     " gem5."
 )
-
+# buildEnv['PROTOCOL']='MESI_Three_Level'
+# buildEnv['HAVE_DEPRECATED_NAMESPACE']=True
+print(f"----buildEnv----\n:{buildEnv}")
 # Add args
 parser = argparse.ArgumentParser()
 Options.addCommonOptions(parser)
 Options.addFSOptions(parser)
 
+parser.add_argument(
+    "--buffers-per-data-vc",
+    type=int,
+    default=1,
+    help="number of buffers pre data virtual channel",
+)
+from gem5.runtime import get_supported_isas
+
+isa = list(get_supported_isas())[0]
+parser.add_argument(
+    "--switch-to-cpu-keshav",
+    action="store",
+    default=CpuConfig.isa_string_map[isa] + "AtomicSimpleCPU",
+    choices=ObjectList.cpu_list.get_names(),
+    help="cpu type for switching (added by keshav)",
+)
 # Add the ruby specific and protocol specific args
 if "--ruby" in sys.argv:
     Ruby.define_options(parser)
 
 args = parser.parse_args()
+print(f"----args----\n{args}")
+print(f"{parser.print_help()}")
 
 # system under test can be any CPU
 (TestCPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(args)
+print(
+    f"----(TestCPUClass, test_mem_mode, FutureClass)----:{TestCPUClass, test_mem_mode, FutureClass}"
+)
 
 # Match the memories with the CPUs, based on the options for the test system
 TestMemClass = Simulation.setMemClass(args)
+print(f"TestMemClass:{TestMemClass}")
 
 if args.benchmark:
     try:
@@ -446,4 +474,144 @@ if args.wait_gdb:
     test_sys.workload.wait_for_remote_gdb = True
 
 Simulation.setWorkCountOptions(test_sys, args)
-Simulation.run(args, root, test_sys, FutureClass)
+# test_sys.workload.command_line="earlyprintk=ttyS0 lpj=7999923 root=/dev/sda2 console=ttyS0"
+# print(f"bm[0].root:{bm[0].root}")
+print(f"args:{args}")
+# exit(1)
+print(f"FutureClass:{FutureClass}")
+
+# needed for long running jobs
+# need to be called before m5.instantiate()
+if (args.checkpoint_dir != None) & (args.checkpoint_restore == None):
+    m5.disableAllListeners()
+
+Simulation.run(args, root, test_sys, FutureClass)  # orignal
+# Simulation.run(args, root, test_sys, args.switch_to_cpu_keshav) # keshav
+# Simulation.run(args, root, test_sys, X86O3CPU) # keshav
+
+# print(f"test_sys:{test_sys.mem_mode}"); exit(1)
+# switch_cpu_list=[(test_sys.cpu[i], test_sys.switch_cpus[i]) for i in range(len(test_sys.cpu))]
+
+
+def enable_debug_flags():
+    flags_list = ["ExecAll", "RubyNetwork"]
+    temp_list = ["LinkTrace", "PacketTrace"]
+    for flag in temp_list:
+        cmd_var = "m5.debug.flags['" + flag + "'].enable()"
+        eval(cmd_var)
+
+
+def disable_debug_flags():
+    flags_list = ["ExecAll", "RubyNetwork"]
+    temp_list = ["LinkTrace", "PacketTrace"]
+    for flag in temp_list:
+        cmd_var = "m5.debug.flags['" + flag + "'].disable()"
+        eval(cmd_var)
+
+
+def exit_event_handler():
+    m5.simulate()
+    print("first exit event: kernal booted")
+    # yield False     # if we yield true the simulation will be killed immediately
+    print("second exit event: In after_boot.sh")
+    # m5.switchCpus(test_sys, switch_cpu_list)
+    m5.simulate()
+    # yield False
+    print("third exit event: Ster run script or after_boot.sh")
+    m5.switchCpus(test_sys, switch_cpu_list)
+    m5.stats.reset()
+    print(f"test_sys.mem_mode:{test_sys.mem_mode}")
+    test_sys.mem_mode = "timing"
+    print(f"test_sys.mem_mode:{test_sys.mem_mode}")
+    enable_debug_flags()
+    m5.simulate()
+    disable_debug_flags()
+    m5.stats.dump()
+    # yield False     # True will kill the simulation
+    # yield True
+    # the below one will continue further even after executing read_file_contents
+    # m5.simulate()
+    print("----Simulation terminated succesfully----")
+
+
+def checkpoint_create():
+    m5.simulate()
+    print("first exit event: kernal already booted")
+    print("second exit event: In after_boot.sh")
+    m5.simulate()
+    # print('third exit event: Start run script or after_boot.sh')
+    # m5.simulate()
+    from os.path import join as joinpath
+
+    # m5.checkpoint(joinpath(args.checkpoint_dir, 'my_checkpoint3'))
+    m5.checkpoint(joinpath(args.checkpoint_dir, "cpt.1"))
+    print(f"----checkpoint done flag from python inside----")
+
+
+# checkpoint_create()
+
+
+def restore_from_checkpoint():
+    # test_sys.readfile=args.script # already there
+    # m5.disableAllListeners()
+    m5.stats.reset()
+    enable_debug_flags()
+    print("----just begining simulation----")
+    m5.simulate()
+    m5.stats.dump()
+
+
+# restore_from_checkpoint()
+
+# m5.simulate()
+# exit(1)
+# exit_event_handler()
+# while exit_event_handler()!=True:
+#    a=0;
+"""
+print("Running the simulation")
+exit_event = m5.simulate()
+m5.stats.reset()
+start_tick = m5.curTick()
+#start_insts = test_sys.totalInsts()
+print(f"exit_event:{exit_event}")
+"""
+"""
+if exit_event.getCause() == "workbegin":
+    print("Done booting Linux")
+    # Reached the start of ROI
+    # start of ROI is marked by an
+    # m5_work_begin() call
+    print("Resetting stats at the start of ROI!")
+    m5.stats.reset()
+    start_tick = m5.curTick()
+    start_insts = system.totalInsts()
+
+    # switching cpu if argument cpu == atomic or timing
+    #if cpu == 'atomic':
+    #    system.switchCpus(system.cpu, system.atomicCpu)
+    #if cpu == 'timing':
+    #    system.switchCpus(system.cpu, system.timingCpu)
+
+else:
+    print("Unexpected termination of simulation !")
+    print(f"exit_event.getCause():{exit_event.getCause()}")
+    exit(1)
+"""
+"""
+# Simulate the ROI
+exit_event = m5.simulate()
+# Reached the end of ROI
+# Finish executing the benchmark
+print("Dump stats at the end of the ROI!")
+m5.stats.dump()
+end_tick = m5.curTick()
+#end_insts = test_sys.totalInsts()
+m5.stats.reset()
+print("Done with the simulation")
+print()
+print("Performance statistics:")
+print("Simulated time in ROI: %.2fs" % ((end_tick-start_tick)/1e12))
+#print("Instructions executed in ROI: %d" % ((end_insts-start_insts)))
+print("Ran a total of", m5.curTick()/1e12, "simulated seconds")
+"""

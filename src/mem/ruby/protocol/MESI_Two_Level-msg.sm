@@ -83,6 +83,16 @@ structure(RequestMsg, desc="...", interface="Message") {
 
     return false;
   }
+  // keshav: functionalRead(Packet*, WriteMask) was not here
+  bool functionalRead(Packet *pkt, WriteMask &mask) {
+    // Only PUTX messages contains the data block
+    if (Type == CoherenceRequestType:PUTX) {
+        return testAndRead(addr, DataBlk, pkt);
+    }
+
+    return false;
+  }
+  // keshav added code ends
 
   bool functionalWrite(Packet *pkt) {
     // No check on message type required since the protocol should

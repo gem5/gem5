@@ -679,6 +679,12 @@ for variant_path in variant_paths:
             )
 
 
+        #if compareVersions(env['CXXVERSION'], "10") < 0:
+        #if compareVersions(env['CXXVERSION'], "9") < 0:
+        #    error('gcc version 10 or newer required.\n'
+        #          'Installed version:', env['CXXVERSION'])
+
+
         # Add the appropriate Link-Time Optimization (LTO) flags if
         # `--with-lto` is set.
         if GetOption('with_lto'):

@@ -34,6 +34,7 @@
 #include "base/compiler.hh"
 #include "debug/RubyNetwork.hh"
 #include "mem/ruby/network/garnet/InputUnit.hh"
+#include "mem/ruby/network/garnet/OutputUnit.hh"
 #include "mem/ruby/network/garnet/Router.hh"
 #include "mem/ruby/slicc_interface/Message.hh"
 
@@ -112,10 +113,15 @@ RoutingUnit::lookupRoutingTable(int vnet, NetDest msg_destination)
     for (int link = 0; link < m_routing_table[vnet].size(); link++) {
         if (msg_destination.intersectionIsNotEmpty(
             m_routing_table[vnet][link])) {
-
+    // old code based on minimun weight
         if (m_weight_table[link] <= min_weight)
             min_weight = m_weight_table[link];
+        DPRINTF(RubyNetwork,\
+            "--keshav--\nm_routing_table[%d][%d]%s\n"\
+            ,vnet,link,m_routing_table[vnet][link]);
         }
+    // from link extract the next router to visit and
+    // from there extract the unoccupany
     }
 
     // Collect all candidate output links with this minimum weight
@@ -139,11 +145,82 @@ RoutingUnit::lookupRoutingTable(int vnet, NetDest msg_destination)
     int candidate = 0;
     if (!(m_router->get_net_ptr())->isVNetOrdered(vnet))
         candidate = rand() % num_candidates;
-
     output_link = output_link_candidates.at(candidate);
+
     return output_link;
 }
 
+int
+RoutingUnit::minForwardOccupancy(int vnet, NetDest msg_destination)
+{
+    // First find all possible output link candidates
+    // For ordered vnet, just choose the first
+    // (to make sure different packets don't choose different routes)
+    // For unordered vnet, randomly choose any of the links
+    // To have a strict ordering between links, they should be given
+    // different weights in the topology file
+
+    int output_link = -1;
+    int min_weight = INFINITE_;
+    std::vector<int> output_link_candidates;
+    int num_candidates = 0;
+
+    // Identify the minimum weight among the candidate output links
+    for (int link = 0; link < m_routing_table[vnet].size(); link++) {
+        if (msg_destination.intersectionIsNotEmpty(
+            m_routing_table[vnet][link])) {
+    // old code based on minimun weight
+        if (m_weight_table[link] <= min_weight)
+            min_weight = m_weight_table[link];
+        DPRINTF(RubyNetwork,\
+            "--keshav--\nm_routing_table[%d][%d]%s\n"\
+            ,vnet,link,m_routing_table[vnet][link]);
+        }
+    // from link extract the next router to visit and
+    // from there extract the unoccupany
+    }
+
+    // Collect all candidate output links with this minimum weight
+    for (int link = 0; link < m_routing_table[vnet].size(); link++) {
+        if (msg_destination.intersectionIsNotEmpty(
+            m_routing_table[vnet][link])) {
+
+            if (m_weight_table[link] == min_weight) {
+                num_candidates++;
+                output_link_candidates.push_back(link);
+            }
+        }
+    }
+
+    if (output_link_candidates.size() == 0) {
+    fatal("Fatal Error:: No Route exists from this Router.");
+    exit(0);
+    }
+
+    // keshav. Here we will chose the min
+    // occupany among the outports (code begins)
+    // The below code chose the max unoccupied space downstream router
+    int max_free_vc=0; auto final_link =output_link_candidates[0];
+    int vc_per_vnet=m_router->get_vc_per_vnet();
+    for (auto link : output_link_candidates) {
+    int free_vc_downstream=0;
+    for (int vc_var=(vnet-1)*vc_per_vnet; \
+        vc_var<(vnet*vc_per_vnet); vc_var+=1) {
+        auto output_unit = m_router->getOutputUnit(link);
+            if (output_unit->is_vc_idle(vc_var,curTick())) {
+            free_vc_downstream+=1;
+        }
+    }
+    if (max_free_vc<free_vc_downstream) {
+        max_free_vc=free_vc_downstream;
+        final_link=link;
+    }
+    }
+    output_link=final_link;
+    // keshav code ends
+
+    return output_link;
+}
 
 void
 RoutingUnit::addInDirection(PortDirection inport_dirn, int inport_idx)
@@ -193,6 +270,12 @@ RoutingUnit::outportCompute(RouteInfo route, int inport,
         // any custom algorithm
         case CUSTOM_: outport =
             outportComputeCustom(route, inport, inport_dirn); break;
+    // minimum forward occupancy
+        case MFO_:  outport =
+            minForwardOccupancy(route.vnet, route.net_dest); break;
+    // (upcoming) router state based
+        case URSB_:  outport =
+            upcomingRouterStateBased(route.vnet, route.net_dest); break;
         default: outport =
             lookupRoutingTable(route.vnet, route.net_dest); break;
     }
@@ -256,7 +339,10 @@ RoutingUnit::outportComputeXY(RouteInfo route,
         // already checked that in outportCompute() function
         panic("x_hops == y_hops == 0");
     }
-
+    DPRINTF(RubyNetwork, \
+        "outport_dirn:%s, m_outports_dirn2idx[%s]:%s",\
+        outport_dirn,outport_dirn,m_outports_dirn2idx[outport_dirn]);
+        //keshav
     return m_outports_dirn2idx[outport_dirn];
 }
 
@@ -266,6 +352,12 @@ int
 RoutingUnit::outportComputeCustom(RouteInfo route,
                                  int inport,
                                  PortDirection inport_dirn)
+{
+    panic("%s placeholder executed", __FUNCTION__);
+}
+
+int
+RoutingUnit::upcomingRouterStateBased(route.vnet, route.net_dest)
 {
     panic("%s placeholder executed", __FUNCTION__);
 }

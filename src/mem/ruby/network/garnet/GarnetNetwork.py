@@ -46,7 +46,18 @@ class GarnetNetwork(RubyNetwork):
     vcs_per_vnet = Param.UInt32(4, "virtual channels per virtual network")
     buffers_per_data_vc = Param.UInt32(4, "buffers per data virtual channel")
     buffers_per_ctrl_vc = Param.UInt32(1, "buffers per ctrl virtual channel")
-    routing_algorithm = Param.Int(0, "0: Weight-based Table, 1: XY, 2: Custom")
+    routing_algorithm = Param.Int(
+        0,
+        "0: Weight-based Table, 1: XY,\
+        2:CUSTOM, 3: min-forward-occu,\
+        4:Upcoming Router State based, 5:more",
+    )
+    flow_control = Param.Int(
+        0,
+        "0: round-robin(maxwaitingtime),\
+            1:static channel (VC) based priority, 2:static packet type (VN) based priority,\
+            3:flagged packet for priority, 4:more",
+    )
     enable_fault_model = Param.Bool(False, "enable network fault model")
     fault_model = Param.FaultModel(NULL, "network fault model")
     garnet_deadlock_threshold = Param.UInt32(

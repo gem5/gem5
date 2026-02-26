@@ -955,6 +955,7 @@ def obtain_resource(
     :param quiet: If ``True``, suppress output. ``False`` by default.
     """
 
+    # they were absent initially (keshav)
     # Some basic validation. Resource_id must be of type string and not empty.
     if not isinstance(resource_id, str):
         raise TypeError(
