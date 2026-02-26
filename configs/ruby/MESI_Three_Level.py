@@ -151,13 +151,12 @@ def create_system(
                 block_size=options.cacheline_size,
             )
 
-
             # keshav
             L0Cache_Controller = eval(
                 buildEnv["PROTOCOL"] + "_L0Cache_Controller"
             )  # originally absent
             l0_cntrl = L0Cache_Controller(
-            #l0_cntrl = MESI_Three_Level_L0Cache_Controller(
+                # l0_cntrl = MESI_Three_Level_L0Cache_Controller(
                 version=i * num_cpus_per_cluster + j,
                 Icache=l0i_cache,
                 Dcache=l0d_cache,
@@ -190,7 +189,7 @@ def create_system(
                 buildEnv["PROTOCOL"] + "_L1Cache_Controller"
             )  # originally absent
             l1_cntrl = L1Cache_Controller(
-            #l1_cntrl = MESI_Three_Level_L1Cache_Controller(
+                # l1_cntrl = MESI_Three_Level_L1Cache_Controller(
                 version=i * num_cpus_per_cluster + j,
                 cache=l1_cache,
                 l2_select_num_bits=l2_bits,
@@ -247,7 +246,7 @@ def create_system(
                 buildEnv["PROTOCOL"] + "_L2Cache_Controller"
             )
             l2_cntrl = L2Cache_Controller(
-            #l2_cntrl = MESI_Three_Level_L2Cache_Controller(
+                # l2_cntrl = MESI_Three_Level_L2Cache_Controller(
                 version=i * num_l2caches_per_cluster + j,
                 L2cache=l2_cache,
                 cluster_id=i,
@@ -315,7 +314,7 @@ def create_system(
             buildEnv["PROTOCOL"] + "_DMA_Controller"
         )  # originally absent
         dma_cntrl = DMA_Controller(
-        #dma_cntrl = MESI_Three_Level_DMA_Controller(
+            # dma_cntrl = MESI_Three_Level_DMA_Controller(
             version=i,
             dma_sequencer=dma_seq,
             transitions_per_cycle=options.ports,

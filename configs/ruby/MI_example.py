@@ -91,7 +91,7 @@ def create_system(
             buildEnv["PROTOCOL"] + "_L1Cache_Controller"
         )  # originally absent
         l1_cntrl = L1Cache_Controller(
-        #l1_cntrl = MI_example_L1Cache_Controller(
+            # l1_cntrl = MI_example_L1Cache_Controller(
             version=i,
             cacheMemory=cache,
             send_evictions=send_evicts(options),
@@ -169,7 +169,7 @@ def create_system(
             buildEnv["PROTOCOL"] + "_DMA_Controller"
         )  # originally absent
         dma_cntrl = DMA_Controller(
-        #dma_cntrl = MI_example_DMA_Controller(
+            # dma_cntrl = MI_example_DMA_Controller(
             version=i,
             dma_sequencer=dma_seq,
             transitions_per_cycle=options.ports,

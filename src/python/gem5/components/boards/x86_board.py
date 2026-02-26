@@ -33,6 +33,9 @@ from typing import (
     Union,
 )
 
+from m5.objects import PciBus  # came from latest branch
+from m5.objects import Port  # came with old commit
+from m5.objects import Process  # cmae with old commit
 from m5.objects import (
     BaseXBar,
     Bridge,
@@ -40,11 +43,6 @@ from m5.objects import (
     IdeDisk,
     IOXBar,
     Pc,
-
-    PciBus, # came from latest branch
-
-    Port,   # came with old commit
-    Process, # cmae with old commit
     RawDiskImage,
     SEWorkload,
     X86ACPIMadt,
@@ -60,13 +58,11 @@ from m5.objects import (
     X86IntelMPProcessor,
     X86SMBiosBiosInformation,
 )
-
 from m5.params import (
     Addr,
     AddrRange,
     Port,
 )
-
 from m5.util import warn
 from m5.util.convert import toMemorySize
 

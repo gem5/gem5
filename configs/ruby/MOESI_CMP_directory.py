@@ -116,7 +116,7 @@ def create_system(
             buildEnv["PROTOCOL"] + "_L1Cache_Controller"
         )  # originally absent
         l1_cntrl = L1Cache_Controller(
-        #l1_cntrl = MOESI_CMP_directory_L1Cache_Controller(
+            # l1_cntrl = MOESI_CMP_directory_L1Cache_Controller(
             version=i,
             L1Icache=l1i_cache,
             L1Dcache=l1d_cache,
@@ -187,7 +187,7 @@ def create_system(
             buildEnv["PROTOCOL"] + "_L2Cache_Controller"
         )  # originally absent
         l2_cntrl = L2Cache_Controller(
-        #l2_cntrl = MOESI_CMP_directory_L2Cache_Controller(
+            # l2_cntrl = MOESI_CMP_directory_L2Cache_Controller(
             version=i,
             L2cache=l2_cache,
             transitions_per_cycle=options.ports,
@@ -256,7 +256,7 @@ def create_system(
             buildEnv["PROTOCOL"] + "_DMA_Controller"
         )  # originally absent
         dma_cntrl = DMA_Controller(
-        #dma_cntrl = MOESI_CMP_directory_DMA_Controller(
+            # dma_cntrl = MOESI_CMP_directory_DMA_Controller(
             version=i,
             dma_sequencer=dma_seq,
             transitions_per_cycle=options.ports,

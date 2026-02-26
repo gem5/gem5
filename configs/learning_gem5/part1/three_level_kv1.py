@@ -24,7 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-""" This file creates a single CPU and a two-level cache system.
+"""This file creates a single CPU and a two-level cache system.
 This script takes a single parameter which specifies a binary to execute.
 If none is provided it executes 'hello' by default (mostly used for testing)
 

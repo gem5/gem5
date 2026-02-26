@@ -88,14 +88,11 @@ def create_system(
         cache = L1Cache(
             size=options.l1d_size,
             assoc=options.l1d_assoc,
-
             block_size=f"{options.cacheline_size}B",
-
             ## start_index_bit=block_size_bits, # keshav (added, initially absent)
-            #block_size=str(
+            # block_size=str(
             #    options.cacheline_size
-            #),  # keshav (initialy not here)
-
+            # ),  # keshav (initialy not here)
         )
 
         #

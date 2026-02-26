@@ -24,13 +24,13 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 # Authors: Jason Lowe-Power, Ayaz Akram
-""" Script to run NAS parallel benchmarks with gem5.
-    The script expects kernel, diskimage, mem_sys,
-    cpu (kvm, atomic, or timing), benchmark to run
-    and number of cpus as arguments.
-    If your application has ROI annotations, this script will count the total
-    number of instructions executed in the ROI. It also tracks how much
-    wallclock and simulated time.
+"""Script to run NAS parallel benchmarks with gem5.
+The script expects kernel, diskimage, mem_sys,
+cpu (kvm, atomic, or timing), benchmark to run
+and number of cpus as arguments.
+If your application has ROI annotations, this script will count the total
+number of instructions executed in the ROI. It also tracks how much
+wallclock and simulated time.
 """
 import errno
 import os
