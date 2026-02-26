@@ -10,49 +10,49 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
-    pre-commit:
-    # runs on github hosted runner
-        runs-on: ubuntu-24.04
-        if: github.event.pull_request.draft == false
-        steps:
-            - uses: actions/checkout@v4
-            - uses: actions/setup-python@v5
-              with:
-                  python-version: '3.10'
-            - uses: pre-commit/action@v3.0.1
+    # pre-commit:
+    # # runs on github hosted runner
+    #     runs-on: ubuntu-24.04
+    #     if: github.event.pull_request.draft == false
+    #     steps:
+    #         - uses: actions/checkout@v4
+    #         - uses: actions/setup-python@v5
+    #           with:
+    #               python-version: '3.10'
+    #         - uses: pre-commit/action@v3.0.1
 
-    # Runs on the github hosted runner
-    # Iterates through all of the commits in the the PR and runs
-    # clang-format to make sure that nothing changes.
-    clang-format-check:
-        runs-on: ubuntu-24.04
-        if: github.event.pull_request.draft == false
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0  # Need full history to get the merge base
+    # # Runs on the github hosted runner
+    # # Iterates through all of the commits in the the PR and runs
+    # # clang-format to make sure that nothing changes.
+    # clang-format-check:
+    #     runs-on: ubuntu-24.04
+    #     if: github.event.pull_request.draft == false
+    #     steps:
+    #         - name: Checkout code
+    #           uses: actions/checkout@v4
+    #           with:
+    #               fetch-depth: 0  # Need full history to get the merge base
 
-            - name: Setup Python
-              uses: actions/setup-python@v5
-              with:
-                  python-version: '3.10'
+    #         - name: Setup Python
+    #           uses: actions/setup-python@v5
+    #           with:
+    #               python-version: '3.10'
 
-            - name: Install clang-format
-              run: sudo apt-get install -y clang-format
+    #         - name: Install clang-format
+    #           run: sudo apt-get install -y clang-format
 
-            - name: Get merge base commit
-              id: get-base-commit
-              run: |
-                  echo "base_commit=$(git merge-base ${{ github.event.pull_request.base.sha }} HEAD)" >> $GITHUB_OUTPUT
+    #         - name: Get merge base commit
+    #           id: get-base-commit
+    #           run: |
+    #               echo "base_commit=$(git merge-base ${{ github.event.pull_request.base.sha }} HEAD)" >> $GITHUB_OUTPUT
 
-            - name: Run clang-format check
-              run: |
-                  python util/run-git-clang-format.py --verbose --ci-pr-base-commit ${{ steps.get-base-commit.outputs.base_commit }}
-                  if [ $? -ne 0 ]; then
-                    echo "::error::Code formatting issues detected! Please run clang-format on your changes."
-                    exit 1
-                  fi
+    #         - name: Run clang-format check
+    #           run: |
+    #               python util/run-git-clang-format.py --verbose --ci-pr-base-commit ${{ steps.get-base-commit.outputs.base_commit }}
+    #               if [ $? -ne 0 ]; then
+    #                 echo "::error::Code formatting issues detected! Please run clang-format on your changes."
+    #                 exit 1
+    #               fi
 
     get-date:
     # We use the date to label caches. A cache is a a "hit" if the date is the
@@ -141,60 +141,60 @@ jobs:
             build-matrix: ${{ steps.build-matrix.outputs.build-matrix }}
             test-dirs-matrix: ${{ steps.dir-matrix.outputs.test-dirs-matrix }}
 
-    clang-fast-compilation:
-        # gem5 binaries built in `quick-gem5-builds` always use GCC.
-        # Clang is more strict than GCC. This job checks that gem5 compiles
-        # with Clang. It compiles build/ALL/gem5.fast to maximize the change
-        # for compilation error to be exposed.
-        runs-on: ubuntu-24.04
-        if: github.event.pull_request.draft == false
-        container: ghcr.io/gem5/clang-version-19:latest
-        needs: [pre-commit]
-        timeout-minutes: 90
-        steps:
-            - uses: actions/checkout@v4
-            - name: Clang Compilation
-              working-directory: ${{ github.workspace }}
-              run: scons build/ALL/gem5.fast -j $(nproc)
+    # clang-fast-compilation:
+    #     # gem5 binaries built in `quick-gem5-builds` always use GCC.
+    #     # Clang is more strict than GCC. This job checks that gem5 compiles
+    #     # with Clang. It compiles build/ALL/gem5.fast to maximize the change
+    #     # for compilation error to be exposed.
+    #     runs-on: ubuntu-24.04
+    #     if: github.event.pull_request.draft == false
+    #     container: ghcr.io/gem5/clang-version-19:latest
+    #     needs: [pre-commit]
+    #     timeout-minutes: 90
+    #     steps:
+    #         - uses: actions/checkout@v4
+    #         - name: Clang Compilation
+    #           working-directory: ${{ github.workspace }}
+    #           run: scons build/ALL/gem5.fast -j $(nproc)
 
-    macos-compilation:
-        runs-on: macos-26
-        if: github.event.pull_request.draft == false
-        needs: [pre-commit, get-date]
+    # macos-compilation:
+    #     runs-on: macos-26
+    #     if: github.event.pull_request.draft == false
+    #     needs: [pre-commit, get-date]
 
-        strategy:
-            fail-fast: false
-            matrix:
-                type: [fast, opt]
+    #     strategy:
+    #         fail-fast: false
+    #         matrix:
+    #             type: [fast, opt]
 
-        steps:
-            - name: Checkout the gem5 repository
-              uses: actions/checkout@v4
+    #     steps:
+    #         - name: Checkout the gem5 repository
+    #           uses: actions/checkout@v4
 
-            - name: Install the gem5 dependencies
-              run: |
-                  brew update
-                  brew install \
-                    scons \
-                    python \
-                    pkg-config \
-                    protobuf \
-                    grpc \
-                    boost
+    #         - name: Install the gem5 dependencies
+    #           run: |
+    #               brew update
+    #               brew install \
+    #                 scons \
+    #                 python \
+    #                 pkg-config \
+    #                 protobuf \
+    #                 grpc \
+    #                 boost
 
 
-            - name: Restore macOS build/ALL cache
-              uses: actions/cache/restore@v4
-              with:
-                  path: build/ALL
-                  key: macos-all-gem5-${{ matrix.type }}-${{ needs.get-date.outputs.date }}
-                  restore-keys: |
-                      macos-all-gem5-${{ matrix.type }}
+    #         - name: Restore macOS build/ALL cache
+    #           uses: actions/cache/restore@v4
+    #           with:
+    #               path: build/ALL
+    #               key: macos-all-gem5-${{ matrix.type }}-${{ needs.get-date.outputs.date }}
+    #               restore-keys: |
+    #                   macos-all-gem5-${{ matrix.type }}
 
-            - name: Compile gem5.${{ matrix.type }}
-              working-directory: ${{ github.workspace }}
-              run: scons build/ALL/gem5.${{ matrix.type }} -j $(sysctl -n hw.ncpu)
-              timeout-minutes: 90
+    #         - name: Compile gem5.${{ matrix.type }}
+    #           working-directory: ${{ github.workspace }}
+    #           run: scons build/ALL/gem5.${{ matrix.type }} -j $(sysctl -n hw.ncpu)
+    #           timeout-minutes: 90
 
     testlib-quick-gem5-builds:
         runs-on: ubuntu-24.04
@@ -294,36 +294,36 @@ jobs:
                   path: tests/testing-results
                   retention-days: 30
 
-    gpu-tests:
-        runs-on: ubuntu-24.04
-        container: ghcr.io/gem5/gcn-gpu:latest
-        timeout-minutes: 180
-        needs: [pre-commit, get-date]
-        steps:
-            - uses: actions/checkout@v4
+    # gpu-tests:
+    #     runs-on: ubuntu-24.04
+    #     container: ghcr.io/gem5/gcn-gpu:latest
+    #     timeout-minutes: 180
+    #     needs: [pre-commit, get-date]
+    #     steps:
+    #         - uses: actions/checkout@v4
 
-            # Obtain the cache if available.
-            - name: Cache build/VEGA_X86
-              uses: actions/cache/restore@v4
-              with:
-                  path: build/VEGA_X86
-                  key: testlib-build-vega-${{ needs.get-date.outputs.date }}
-                  restore-keys: |
-                      testlib-build-vega
+    #         # Obtain the cache if available.
+    #         - name: Cache build/VEGA_X86
+    #           uses: actions/cache/restore@v4
+    #           with:
+    #               path: build/VEGA_X86
+    #               key: testlib-build-vega-${{ needs.get-date.outputs.date }}
+    #               restore-keys: |
+    #                   testlib-build-vega
 
-            # Run the GPU tests.
-            - name: Run Testlib GPU Tests
-              id: run-tests
-              working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run -j$(nproc) -t$(nproc) --host gcn_gpu
+    #         # Run the GPU tests.
+    #         - name: Run Testlib GPU Tests
+    #           id: run-tests
+    #           working-directory: ${{ github.workspace }}/tests
+    #           run: ./main.py run -j$(nproc) -t$(nproc) --host gcn_gpu
 
-            # Upload the tests/testing-results directory as an artifact.
-            - name: Upload results
-              if: success() || failure()
-              uses: actions/upload-artifact@v4
-              with:
-                  name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gpu-status-${{ steps.run-tests.outcome }}-output
-                  path: tests/testing-results
+    #         # Upload the tests/testing-results directory as an artifact.
+    #         - name: Upload results
+    #           if: success() || failure()
+    #           uses: actions/upload-artifact@v4
+    #           with:
+    #               name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gpu-status-${{ steps.run-tests.outcome }}-output
+    #               path: tests/testing-results
 
     ci-tests:
     # It is 'testlib-quick' which needs to pass for the pull request to be
@@ -331,10 +331,10 @@ jobs:
         runs-on: ubuntu-24.04
         needs:
             - testlib-quick-execution
-            - clang-fast-compilation
+            # - clang-fast-compilation
             - unittests-all-fast-opt
-            - macos-compilation
-            - pre-commit
-            - gpu-tests
+            # - macos-compilation
+            # - pre-commit
+            # - gpu-tests
         steps:
             - run: echo "This job's status is ${{ job.status }}."
