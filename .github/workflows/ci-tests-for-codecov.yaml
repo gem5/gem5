@@ -10,16 +10,16 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
-    # pre-commit:
-    # # runs on github hosted runner
-    #     runs-on: ubuntu-24.04
-    #     if: github.event.pull_request.draft == false
-    #     steps:
-    #         - uses: actions/checkout@v4
-    #         - uses: actions/setup-python@v5
-    #           with:
-    #               python-version: '3.10'
-    #         - uses: pre-commit/action@v3.0.1
+    pre-commit:
+    # runs on github hosted runner
+        runs-on: ubuntu-24.04
+        if: github.event.pull_request.draft == false
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-python@v5
+              with:
+                  python-version: '3.10'
+            - uses: pre-commit/action@v3.0.1
 
     # # Runs on the github hosted runner
     # # Iterates through all of the commits in the the PR and runs
