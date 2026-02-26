@@ -34,7 +34,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.citations import add_citation
-
 from m5.objects.AbstractMemory import *
 from m5.params import *
 
