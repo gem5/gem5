@@ -57,7 +57,9 @@ class TlmGenerator(ClockedObject):
         PyBindMethod("enqueueBack"),
     ]
 
-    _transactions = []
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._transactions = []
 
     def inject(self, payload, phase, when=None):
         from m5.tlm_chi.utils import Transaction

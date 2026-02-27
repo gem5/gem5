@@ -69,6 +69,9 @@ TLB::TLB(const Params &p)
     if (!size)
         fatal("TLBs must have a non-zero size.\n");
 
+    fatal_if(nextLevel(), "The x86 backend does not support multi-level "
+                          "TLBs.\n");
+
     for (int x = 0; x < size; x++) {
         tlb[x].trieHandle = NULL;
         freeList.push_back(&tlb[x]);

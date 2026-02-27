@@ -1452,9 +1452,8 @@ InstructionQueue::doSquash(ThreadID tid)
             if (dest_reg->isAlwaysReady()) {
                 continue;
             }
-            if (!dependGraph.empty(dest_reg->flatIndex())) {
-                dependGraph.clearInst(dest_reg->flatIndex());
-            }
+            assert(dependGraph.empty(dest_reg->flatIndex()));
+            dependGraph.clearInst(dest_reg->flatIndex());
         }
         instList[tid].erase(squash_it--);
         ++iqStats.squashedInstsExamined;
@@ -1536,8 +1535,7 @@ InstructionQueue::addToProducers(const DynInstPtr &new_inst)
             continue;
         }
 
-        if (!dependGraph.empty(dest_reg->flatIndex()) &&
-            new_inst->isNonSpeculative()) {
+        if (!dependGraph.empty(dest_reg->flatIndex())) {
             dependGraph.dump();
             panic("Dependency graph %i (%s) (flat: %i) not empty!",
                   dest_reg->index(), dest_reg->className(),

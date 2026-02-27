@@ -41,6 +41,8 @@
 
 #include "cpu/pred/conditional.hh"
 
+#include "base/types.hh"
+
 namespace gem5
 {
 
@@ -48,11 +50,10 @@ namespace branch_prediction
 {
 
 ConditionalPredictor::ConditionalPredictor(const Params &params)
-    : SimObject(params),
-      instShiftAmt(params.instShiftAmt)
-{
-}
-
+    : ClockedObject(params),
+      instShiftAmt(params.instShiftAmt),
+      defaultLatency(params.defaultLatency)
+{}
 
 void
 ConditionalPredictor::branchPlaceholder(ThreadID tid, Addr pc,

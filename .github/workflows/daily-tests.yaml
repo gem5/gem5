@@ -165,16 +165,17 @@ jobs:
 
             - name: Run long ${{ matrix.test-type }} tests
               id: run-tests
+              timeout-minutes: 1410
               working-directory: ${{ github.workspace }}/tests
               run: ./main.py run ${{ matrix.test-type }} -j$(nproc) --length=long -vv -t $(nproc) --exclude-tags gcn_gpu
 
             - name: Sanitize test-dir for artifact name
               id: sanitize-test-dir
-              if: success() || failure()
+              if: always()
               run: echo "sanitized-test-dir=$(echo '${{ matrix.test-type }}' | sed 's/\//-/g')" >> $GITHUB_OUTPUT
 
             - name: Upload results
-              if: success() || failure()
+              if: always()
               uses: actions/upload-artifact@v4
               env:
                   MY_STEP_VAR: ${{ steps.sanitize-test-dir.outputs.sanitized-test-dir }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
@@ -204,11 +205,12 @@ jobs:
 
             - name: Run Testlib GPU Tests
               id: run-tests
+              timeout-minutes: 1410
               working-directory: ${{ github.workspace }}/tests
               run: ./main.py run --length=long -vvv -j $(nproc) --host gcn_gpu
 
             - name: Upload results
-              if: success() || failure()
+              if: always()
               uses: actions/upload-artifact@v4
               with:
                   name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gpu-status-${{ steps.run-tests.outcome }}-output
