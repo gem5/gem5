@@ -39,6 +39,6 @@ class RegisterBank(AbstractMemory):
     type = "RegisterBank"
     cxx_header = "salam/register_bank.hh"
 
-    reg_port = ResponsePort("Responder port for private acclerator accesses")
+    reg_port = ResponsePort("Responder port for private accelerator accesses")
     load_port = ResponsePort("Responder port for preloading the registers")
     delta_time = Param.Latency("10ns", "Request to response latency")
