@@ -196,7 +196,7 @@ machine(MachineType:Memory, "Memory controller interface") :
   }
 
   TBETable TBEs, template="<Memory_TBE>", constructor="m_number_of_TBEs";
-  TBEStorage storTBEs, constructor="this, m_number_of_TBEs";
+  TBEStorage storTBEs, constructor='this, m_number_of_TBEs, "TBEs"';
 
   // Tracks all pending MemoryAcks (debug purposes only)
   int pendingWrites, default="0";

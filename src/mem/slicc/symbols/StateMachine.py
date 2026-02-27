@@ -776,7 +776,7 @@ $c_ident::init()
                         # DataBlock constructor requires a blk_size argument
                         args = "m_ruby_system->getBlockSizeBytes()"
 
-                    code("$expr($args);")
+                    code("$expr(${{args}});")
                     code("assert($vid != NULL);")
 
                     if "default" in var:
