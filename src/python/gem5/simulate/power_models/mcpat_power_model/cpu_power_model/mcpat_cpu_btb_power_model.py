@@ -30,11 +30,16 @@ from m5.objects import (
     BaseCPU,
 )
 
-from ..base_mcpat_power_model import BaseMcPATPowerModel
+from ..base_mcpat_power_model import (
+    ActEnergyType,
+    BaseMcPATPowerModel,
+)
 
 
 class McPATCpuBtbPowerModel(BaseMcPATPowerModel):
-    def __init__(self, cpu: BaseCPU, act_energies, has_predictor):
+    def __init__(
+        self, cpu: BaseCPU, act_energies: ActEnergyType, has_predictor: bool
+    ):
         super().__init__(cpu, act_energies)
         self.name = "McPATCpuBtbPowerModel"
         self._has_predictor = has_predictor
@@ -48,7 +53,7 @@ class McPATCpuBtbPowerModel(BaseMcPATPowerModel):
         )
 
     def static_power(self) -> float:
-        """Returns static power in Watts"""
+        # Static Power in Watts, 1.0 is a placeholder.
         return 1.0
 
     def dynamic_power(self) -> float:

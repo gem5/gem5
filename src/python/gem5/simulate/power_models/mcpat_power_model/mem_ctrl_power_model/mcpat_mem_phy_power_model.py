@@ -41,12 +41,12 @@ class McPATMemPhyPowerModel(BaseMcPATPowerModel):
         super().__init__(mem_ctrl, act_energies)
         self.name = "McPATMemPhyPowerModel"
         self._curve_fitted_constant = 0.00135072
-        """ TODO: The above value is just for LPDDR3, could change for other DRAM types?
-            McPAT also doesn't support higher than DDR3...
-        """
+        # The above value is just for LPDDR3, could change for other DRAM types?
+        # McPAT also doesn't support higher than DDR3...
         self._data_bus_width = 0
         self._llc_block_size = 0
         self._clock_rate = 0
+        self._dimm_data_width = 72
 
     def set_mem_vars(self):
         self._llc_block_size = ceil(
@@ -86,7 +86,7 @@ class McPATMemPhyPowerModel(BaseMcPATPowerModel):
             self._curve_fitted_constant
             * (peakBW * 8 * 1e6 / 1e9)
             * self._data_bus_width
-            / 72
+            / self._dimm_data_width
             * self._simobj._parent._num_channels
         ) / self._clock_rate
         return energy

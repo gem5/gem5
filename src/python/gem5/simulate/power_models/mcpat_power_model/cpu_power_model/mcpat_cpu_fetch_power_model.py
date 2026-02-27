@@ -34,24 +34,40 @@ from m5.objects import (
     Root,
 )
 
-from ..base_mcpat_power_model import BaseMcPATPowerModel
+from ..base_mcpat_power_model import (
+    ActEnergyType,
+    BaseMcPATPowerModel,
+)
 from .mcpat_cpu_btb_power_model import McPATCpuBtbPowerModel
 from .mcpat_cpu_decode_power_model import McPATCpuDecodePowerModel
 from .mcpat_cpu_tournament_bp_power_model import McPATCpuTournamentBpPowerModel
 
 
 class McPATCpuFetchPowerModel(BaseMcPATPowerModel):
+    """
+    This class models power for McPAT's fetch stage.
+    Fetch and decode are one stage in McPAT, so there is a pipeline
+    cost here, but none in the McPATDecodePowerModel() class. This
+    includes the Branch Predictor, Btb, and ID; but not the I$.
+
+    Even though McPAT considers the I$ in the IF stage, it is
+    separated in this implementation since the caches are decoupled
+    from the CPU in gem5.
+    """
+
     def __init__(
         self,
         cpu: BaseCPU,
-        act_energies,
+        act_energies: ActEnergyType,
         pipeline_act_factor: float,
         ifu_act_factor: float,
     ):
+
         super().__init__(cpu, act_energies)
         self.name = "McPATCpuFetchPowerModel"
 
-        """ Below is to ensure that our PM doesn't panic if user hasn't given a BP """
+        # Below enforces constraint that we need to have a BP to model a BP's
+        # power.
         self._has_predictor = False
         for desc in self._simobj.descendants():
             if isinstance(desc, BranchPredictor):
@@ -71,19 +87,20 @@ class McPATCpuFetchPowerModel(BaseMcPATPowerModel):
             cpu=cpu, act_energies=act_energies
         )
 
-        """ The Activity Factor of the Inst. Fetch Unit (default: 0.9): """
+        # The Activity Factor of the Inst. Fetch Unit (default: 0.9)
         self._ifu_act_factor = ifu_act_factor
 
-        """ The Activity Factor of the Pipeline itself (default: 1.0): """
+        # The Activity Factor of the Pipeline itself (default: 1.0)
         self._pipeline_act_factor = pipeline_act_factor
 
-        """ Number of Pipeline Stages for any Inorder CPU in McPAT: """
+        # Number of Pipeline Stages for any Inorder CPU in McPAT
+        # This is 4 for In-Order, 5 for OoO.
         self._num_units = 4.0
 
         if isinstance(self._simobj, BaseO3CPU):
             self._num_units = 5.0
 
-        """ The number of pipelines our CPU has (assume 1): """
+        # The number of pipelines our CPU has (assume 1)
         self._num_pipelines = 1.0
 
     def print_mcpat(self, indent):
@@ -111,7 +128,7 @@ class McPATCpuFetchPowerModel(BaseMcPATPowerModel):
         return total_power
 
     def static_power(self) -> float:
-        """Returns static power in Watts"""
+        # Placeholder value for static power.
         return 1.0
 
     def pipeline_energy(self) -> float:

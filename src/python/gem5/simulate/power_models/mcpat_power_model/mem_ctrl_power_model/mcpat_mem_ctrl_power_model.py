@@ -33,14 +33,24 @@ from m5.objects import (
     PowerModelPyFunc,
 )
 
+from ..base_mcpat_power_model import ActEnergyType
 from .mcpat_mem_backend_power_model import McPATMemBackendPowerModel
 from .mcpat_mem_frontend_power_model import McPATMemFrontendPowerModel
 from .mcpat_mem_phy_power_model import McPATMemPhyPowerModel
 
 
 class McPATMemCtrlPowerOn(PowerModelPyFunc):
-    def __init__(self, mem_ctrl: MemCtrl, act_energies):
-        """mem must be a MemCtrl!"""
+    """
+    This class models the Memory Controller using McPAT's power model.
+    This has three main components: The frontend, the backend, and the
+    physical layer. Each of these are in their own separate class
+
+    It is assumed that when you are grabbing power for all of these
+    components, they are converted into watts using the processor's clock
+    (i.e., P = total_mem_energy / workload_exec_time)
+    """
+
+    def __init__(self, mem_ctrl: MemCtrl, act_energies: ActEnergyType):
         super().__init__()
         self._phy = McPATMemPhyPowerModel(
             mem_ctrl=mem_ctrl, act_energies=act_energies
@@ -56,6 +66,7 @@ class McPATMemCtrlPowerOn(PowerModelPyFunc):
         self.st = self.static_power
 
     def static_power(self):
+        # Placeholder value for static power.
         return 1.0
 
     def dynamic_power(self):
@@ -83,7 +94,7 @@ class McPATMemCtrlPowerOff(PowerModelPyFunc):
 
 
 class McPATMemCtrlPowerModel(PowerModel):
-    def __init__(self, mem_ctrl, act_energies):
+    def __init__(self, mem_ctrl: MemCtrl, act_energies: ActEnergyType):
         super().__init__()
         # Choose a power model for every power state
         self.pm = [

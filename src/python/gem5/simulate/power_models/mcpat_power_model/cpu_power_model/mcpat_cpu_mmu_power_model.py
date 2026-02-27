@@ -32,13 +32,25 @@ from m5.objects import (
     BaseO3CPU,
 )
 
-from ..base_mcpat_power_model import BaseMcPATPowerModel
+from ..base_mcpat_power_model import (
+    ActEnergyType,
+    BaseMcPATPowerModel,
+)
 
 
 class McPATCpuMmuPowerModel(BaseMcPATPowerModel):
-    # avoid the use of default values
+    """
+    This class models power for McPAT's MMU stage.
+    McPAT Considers the LSU to be in its' own stage, combined with the D$
+    and LSQ. So, the LSU and the MMU have their own pipeline costs.
+    """
+
     def __init__(
-        self, cpu: BaseCPU, act_energies, pipeline_act_factor, mmu_act_factor
+        self,
+        cpu: BaseCPU,
+        act_energies: ActEnergyType,
+        pipeline_act_factor: float,
+        mmu_act_factor: float,
     ):
         super().__init__(cpu, act_energies)
 
@@ -92,13 +104,8 @@ class McPATCpuMmuPowerModel(BaseMcPATPowerModel):
         return self.convert_to_watts(energy)
 
     def mmu_pipeline_energy(self) -> float:
-        """
-        McPAT Considers the LSU to be in its' own stage
-        Combined with the DCache and LSQ. So, the LSU
-        and the MMU have their own pipeline costs.
-        """
         cycles = self.get_stat("numCycles").total
-        """ McPAT uses 0.5 + 0.5*lsu_act_factor for figuring out MMU pipeline costs... """
+        # McPAT uses 0.5 + 0.5*lsu_act_factor for MMU pipeline costs
         rtp_pipeline_coe = (
             self._pipeline_act_factor
             * cycles

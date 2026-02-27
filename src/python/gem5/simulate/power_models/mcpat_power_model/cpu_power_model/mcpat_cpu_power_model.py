@@ -34,6 +34,7 @@ from m5.objects import (
     PowerModelPyFunc,
 )
 
+from ..base_mcpat_power_model import ActEnergyType
 from .mcpat_cpu_exec_power_model import McPATCpuExecutePowerModel
 from .mcpat_cpu_fetch_power_model import McPATCpuFetchPowerModel
 from .mcpat_cpu_lsu_power_model import McPATCpuLsuPowerModel
@@ -42,8 +43,18 @@ from .mcpat_cpu_renaming_unit_power_model import McPATCpuRenamingUnitPowerModel
 
 
 class McPATCpuPowerOn(PowerModelPyFunc):
-    def __init__(self, cpu: BaseCPU, act_energies):
-        """cpu must be a BaseCPU core"""
+    """
+    This class implements the CPU power model from McPAT. Each stage
+    that McPAT models power for is split into its' own class where
+    activity factors (how often is a particular stage active, and
+    how often is the pipeline active) and each component's activation
+    energy (the energy cost of operations) are passed in.
+
+    Power is calculated through a runtime average (total watts / workload
+    time). The units are returned in watts.
+    """
+
+    def __init__(self, cpu: BaseCPU, act_energies: ActEnergyType):
         super().__init__()
         self._cpu = cpu
         self._fetch = McPATCpuFetchPowerModel(
@@ -79,9 +90,12 @@ class McPATCpuPowerOn(PowerModelPyFunc):
         self.st = self.static_power
 
     def static_power(self):
+        # Placeholder for dynamic power
         return 1.0
 
     def dynamic_power(self):
+        # Sum up each stage's dynamic power to get
+        # the total power.
         total = (
             self._fetch.dynamic_power()
             + self._lsu.dynamic_power()
@@ -94,6 +108,16 @@ class McPATCpuPowerOn(PowerModelPyFunc):
         return total
 
     def print_mcpat(self, indent, total):
+        """
+        This function prints out power per class and component
+        in the same style as McPAT.
+
+        :param indent: how many spaces to indent by
+        :param total: total power consumed, this should be calculated by
+                      your dynamic_power() + static_power() functions.
+
+        :returns: Nothing.
+        """
         print("*" * 80)
         print("Core:")
         print(" " * indent + f"Runtime Dynamic = {total}\n")
@@ -114,7 +138,7 @@ class McPATCpuPowerOff(PowerModelPyFunc):
 
 
 class McPATCpuPowerModel(PowerModel):
-    def __init__(self, cpu: BaseCPU, act_energies):
+    def __init__(self, cpu: BaseCPU, act_energies: ActEnergyType):
         super().__init__()
         # Choose a power model for every power state
         self.pm = [

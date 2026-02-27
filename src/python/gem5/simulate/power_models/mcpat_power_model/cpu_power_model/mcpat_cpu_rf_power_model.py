@@ -31,14 +31,16 @@ from m5.objects import (
     BaseCPU,
 )
 
-from ..base_mcpat_power_model import BaseMcPATPowerModel
+from ..base_mcpat_power_model import (
+    ActEnergyType,
+    BaseMcPATPowerModel,
+)
 
 
 class McPATCpuRfPowerModel(BaseMcPATPowerModel):
-    def __init__(self, cpu: BaseCPU, act_energies):
+    def __init__(self, cpu: BaseCPU, act_energies: ActEnergyType):
         super().__init__(cpu, act_energies)
-        # _rf isn't really needed since you have `_simobj`
-        self.name = "McPatCpuRFPowerModel"
+        self.name = "McPATCpuRFPowerModel"
 
     def print_mcpat(self, indent):
         int_rf_energy = self.int_energy()
@@ -64,6 +66,7 @@ class McPATCpuRfPowerModel(BaseMcPATPowerModel):
         return self.convert_to_watts(energy)
 
     def static_power(self) -> float:
+        # Placeholder for static power
         return 1.0
 
     def int_energy(self) -> float:

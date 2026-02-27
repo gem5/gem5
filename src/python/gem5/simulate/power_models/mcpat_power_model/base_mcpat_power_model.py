@@ -26,24 +26,53 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-from m5.objects import Root
+from typing import (
+    Dict,
+    Union,
+)
+
+from m5.objects import (
+    Root,
+    SimObject,
+)
 
 from ..abstract_power_model import AbstractPowerModel
 
+ActEnergyType = Dict[str, Union[float, Dict[str, float]]]
+
 
 class BaseMcPATPowerModel(AbstractPowerModel):
-    def __init__(self, simobj, act_energies):
+    def __init__(self, simobj: SimObject, act_energies: ActEnergyType):
         super().__init__(simobj)
         self.name = "BaseMcPATPowerModel"
         self._act_energies = act_energies
 
+    """
+    BaseMcPATPowerModel takes a SimObject and an activation energy
+    dictionary, which is the number of joules a given operation consumes
+    mapped such as addition or cache hits.
+
+    Objects modeled using the McPAT Power Model inherit from this class.
+    Each class which inherits from this class must implement/describe
+    how dynamic and static energy are modeled.
+    """
+
     def getExecutionTime(self):
-        """Note that this you are running 1 workload and *only*
-        want power values after your ROI/simulation"""
+        """
+        Obtains the execution time of a given program,
+        assuming only one region of interest/workload
+
+        :returns: the number of seconds your simulation ran for
+        """
         return Root.getInstance().resolveStat("simSeconds").total
 
     def convert_to_watts(self, value: float) -> float:
-        """Note that McPAT AEs are already in terms of J,
-        no need for conversion"""
+        """
+        Obtains the number of watts, given the number of joules
+
+        :param value: A given number of Joules
+
+        :returns: value converted into Watts
+        """
         time = self.getExecutionTime()
         return value / time

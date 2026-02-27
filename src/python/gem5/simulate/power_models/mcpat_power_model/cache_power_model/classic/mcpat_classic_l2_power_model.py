@@ -33,11 +33,23 @@ from m5.objects import (
     PowerModelPyFunc,
 )
 
-from ...base_mcpat_power_model import BaseMcPATPowerModel
+from ...base_mcpat_power_model import (
+    ActEnergyType,
+    BaseMcPATPowerModel,
+)
 
 
 class L2PowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
-    def __init__(self, l1dcache: Cache, writeback: bool, act_energies):
+    """
+    This class implements McPAT's power model for an L2$.
+    Even though McPAT has options for a private L2 cache, and
+    a cache which uses Ruby, this assumes that the cache is
+    a classic cache and is shared.
+    """
+
+    def __init__(
+        self, l1dcache: Cache, writeback: bool, act_energies: ActEnergyType
+    ):
         super().__init__()
         # The SimObject that contains the stats we need.
         self._simobj = l1dcache
@@ -48,11 +60,10 @@ class L2PowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
         self.st = lambda: self.static_power()
 
     def static_power(self):
-        """Returns static power in Watts"""
+        # Placeholder value for static power.
         return 1.0
 
     def dynamic_power(self):
-        """Returns dynamic power in Watts"""
         total_energy = self.l2cache_energy()
         total_energy += self.miss_buffer_energy()
         total_energy += self.inst_fill_buffer_energy()
@@ -81,7 +92,6 @@ class L2PowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
         )
 
     def miss_buffer_energy(self):
-        # by default, there is WB in caches (to my knowledge)
         read_accesses = write_accesses = (
             self.get_stat("overallMisses").total
             - self.get_stat("ReadExReq.misses").total
@@ -133,7 +143,9 @@ class L2PowerOff(PowerModelPyFunc):
 
 
 class McPATClassicL2PowerModel(PowerModel):
-    def __init__(self, L1Dcache, writeback, act_energies):
+    def __init__(
+        self, L1Dcache: Cache, writeback: bool, act_energies: ActEnergyType
+    ):
         super().__init__()
         # Choose a power model for every power state
         self.pm = [

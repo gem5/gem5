@@ -29,24 +29,38 @@
 
 from m5.objects import BaseO3CPU
 
-from ..base_mcpat_power_model import BaseMcPATPowerModel
+from ..base_mcpat_power_model import (
+    ActEnergyType,
+    BaseMcPATPowerModel,
+)
 
 
 class McPATCpuRenamingUnitPowerModel(BaseMcPATPowerModel):
-    def __init__(self, cpu: BaseO3CPU, act_energies, pipeline_act_factor):
+    """
+    This class implements the power model for McPAT's renaming stage.
+    This is separate from the execute stage, and is only for Out-of-Order
+    CPUs.
+
+    Even though McPAT supports Physical Register Files and Reservation Station
+    based renaming, gem5 only implements the latter combined with a free list,
+    so this implementation assumes that.
+    """
+
+    def __init__(
+        self,
+        cpu: BaseO3CPU,
+        act_energies: ActEnergyType,
+        pipeline_act_factor: float,
+    ):
         super().__init__(cpu, act_energies)
         self.name = "McPATCpuRenamingUnitPower"
 
-        """
-         McPAT supports PRF and RS based renaming, but gem5 only renames using
-         a PRF combined with a free list.
-        """
-        """ The Activity Factor of the Pipeline itself (default: 1.0): """
+        # The Activity Factor of the Pipeline itself (default: 1.0)
         self._pipeline_act_factor = pipeline_act_factor
-        """ Number of Pipeline Stages for any Inorder CPU in McPAT: """
+        # Number of Pipeline Stages for any Inorder CPU in McPAT
         self._num_units = 5.0
 
-        """ The number of pipelines our CPU has (assume 1): """
+        # The number of pipelines our CPU has (assume 1)
         self._num_pipelines = 1.0
 
     def print_mcpat(self, indent):
@@ -94,7 +108,7 @@ class McPATCpuRenamingUnitPowerModel(BaseMcPATPowerModel):
         return self.convert_to_watts(energy)
 
     def static_power(self) -> float:
-        """Returns static power in Watts"""
+        # Placeholder value for static power
         return 1.0
 
     def int_frat_energy(self) -> float:

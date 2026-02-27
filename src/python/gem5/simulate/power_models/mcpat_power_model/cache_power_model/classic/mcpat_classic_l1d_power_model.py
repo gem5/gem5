@@ -33,13 +33,23 @@ from m5.objects import (
     PowerModelPyFunc,
 )
 
-from ...base_mcpat_power_model import BaseMcPATPowerModel
+from ...base_mcpat_power_model import (
+    ActEnergyType,
+    BaseMcPATPowerModel,
+)
 
 
 class L1DPowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
-    def __init__(self, l1dcache: Cache, writeback: bool, act_energies):
+    """
+    This class implements McPAT's power model for an L1D$.
+    This is not a part of the LSU stage in gem5 (it is in McPAT)
+    because gem5 decouples the cache hierarchy from the CPU.
+    """
+
+    def __init__(
+        self, l1dcache: Cache, writeback: bool, act_energies: ActEnergyType
+    ):
         super().__init__()
-        # The SimObject that contains the stats we need.
         self._simobj = l1dcache
         self._act_energies = act_energies
         self._writeback = writeback
@@ -48,11 +58,11 @@ class L1DPowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
         self.st = lambda: self.static_power()
 
     def static_power(self):
-        """Returns static power in Watts"""
+        # Placeholder for static power.
         return 1.0
 
     def dynamic_power(self):
-        """Returns dynamic power in Watts"""
+        # Dynamic power returned in Watts.
         total_energy = self.dcache_energy()
         total_energy += self.miss_buffer_energy()
         total_energy += self.inst_fill_buffer_energy()
@@ -77,12 +87,12 @@ class L1DPowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
             + write_accesses * self._act_energies["DataCache"]["Write"]
         )
         if self._writeback:
-            # extra write for write misses since wb policy
+            # if the cache is writeback, then this accounts for
+            # extra energy costs for an extra write.
             energy += write_misses * self._act_energies["DataCache"]["Write"]
         return energy
 
     def miss_buffer_energy(self):
-        # by default, there is WB in caches (to my knowledge)
         if self._writeback:
             read_accesses = write_accesses = self.get_stat(
                 "WriteReq.misses"
@@ -147,7 +157,9 @@ class L1DPowerOff(PowerModelPyFunc):
 
 
 class McPATClassicL1DPowerModel(PowerModel):
-    def __init__(self, L1Dcache, writeback, act_energies):
+    def __init__(
+        self, L1Dcache: Cache, writeback: bool, act_energies: ActEnergyType
+    ):
         super().__init__()
         # Choose a power model for every power state
         self.pm = [

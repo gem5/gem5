@@ -32,7 +32,10 @@ from m5.objects import (
     BaseO3CPU,
 )
 
-from ..base_mcpat_power_model import BaseMcPATPowerModel
+from ..base_mcpat_power_model import (
+    ActEnergyType,
+    BaseMcPATPowerModel,
+)
 from .mcpat_cpu_alu_power_model import McPATCpuAluPowerModel
 from .mcpat_cpu_inst_scheduler_power_model import (
     McPATCpuInstructionSchedulerPowerModel,
@@ -41,10 +44,24 @@ from .mcpat_cpu_rf_power_model import McPATCpuRfPowerModel
 
 
 class McPATCpuExecutePowerModel(BaseMcPATPowerModel):
-    # avoid the use of default values
+    """
+    This class models power for the McPAT's execution stage.
+    This includes the instruction scheduler, ALU, and register files
+    (RF). Since this is a stage in the pipeline, the energy cost for
+    pipelining is included in this class.
+
+    Renaming for O3 processors is NOT considered in this stage, and is
+    a separate stage in McPAT.
+    """
+
     def __init__(
-        self, cpu: BaseCPU, act_energies, pipeline_act_factor, exu_act_factor
+        self,
+        cpu: BaseCPU,
+        act_energies: ActEnergyType,
+        pipeline_act_factor: float,
+        exu_act_factor: float,
     ):
+
         super().__init__(cpu, act_energies)
         self.name = "McPATCpuExecutePowerModel"
         self._alu = McPATCpuAluPowerModel(cpu=cpu, act_energies=act_energies)
@@ -53,18 +70,20 @@ class McPATCpuExecutePowerModel(BaseMcPATPowerModel):
             cpu=cpu, act_energies=act_energies
         )
 
-        """ The Activity Factor of the Execution Unit (default: 0.76): """
+        # The Activity Factor of the Execution Unit (default: 0.76)
         self._exu_act_factor = exu_act_factor
 
-        """ The Activity Factor of the Pipeline itself (default: 1.0): """
+        # The Activity Factor of the Pipeline itself (default: 1.0)
         self._pipeline_act_factor = pipeline_act_factor
 
-        """ Number of Pipeline Stages for any CPUs in McPAT: """
+        # Number of Pipeline Stages for any CPUs in McPAT.
+        # In-Order CPUs in McPAT have 4 stages, O3CPUs add an additional
+        # renaming stage.
         self._num_units = 4.0
         if isinstance(cpu, BaseO3CPU):
             self._num_units = 5.0
 
-        """ The number of pipelines our CPU has (assume 1): """
+        # The number of pipelines our CPU has (assume 1):
         self._num_pipelines = 1.0
 
     def print_mcpat(self, indent):

@@ -31,14 +31,16 @@ from m5.objects import (
     BaseCPU,
 )
 
-from ..base_mcpat_power_model import BaseMcPATPowerModel
+from ..base_mcpat_power_model import (
+    ActEnergyType,
+    BaseMcPATPowerModel,
+)
 
 
 class McPATCpuDecodePowerModel(BaseMcPATPowerModel):
-    def __init__(self, cpu: BaseCPU, act_energies):
+    def __init__(self, cpu: BaseCPU, act_energies: ActEnergyType):
         super().__init__(cpu, act_energies)
         self.name = "McPATCpuDecodePowerModel"
-        # No pipeline cost here, since McPAT considers IF + ID as 1 stage
 
     def print_mcpat(self, indent):
         ib_energy = self.inst_buffer_energy()
@@ -55,7 +57,7 @@ class McPATCpuDecodePowerModel(BaseMcPATPowerModel):
         )
 
     def static_power(self) -> float:
-        """Returns static power in Watts"""
+        # Placeholder value for static power.
         return 1.0
 
     def dynamic_power(self) -> float:

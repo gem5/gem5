@@ -32,12 +32,14 @@ from m5.objects import (
     Root,
 )
 
-from ..base_mcpat_power_model import BaseMcPATPowerModel
+from ..base_mcpat_power_model import (
+    ActEnergyType,
+    BaseMcPATPowerModel,
+)
 
 
 class McPATCpuInstructionSchedulerPowerModel(BaseMcPATPowerModel):
-    # avoid the use of default values
-    def __init__(self, cpu: BaseO3CPU, act_energies):
+    def __init__(self, cpu: BaseO3CPU, act_energies: ActEnergyType):
         super().__init__(cpu, act_energies)
         self.name = "McPATCpuInstructionSchedulerPowerModel"
 

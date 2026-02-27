@@ -33,11 +33,22 @@ from m5.objects import (
     PowerModelPyFunc,
 )
 
-from ...base_mcpat_power_model import BaseMcPATPowerModel
+from ...base_mcpat_power_model import (
+    ActEnergyType,
+    BaseMcPATPowerModel,
+)
 
 
 class L1IPowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
-    def __init__(self, l1icache: Cache, writeback: bool, act_energies):
+    """
+    This class implements McPAT's power model for an L1I$
+    This is not a part of the IF stage in gem5 (it is in McPAT)
+    because gem5 decouples the cache hierarchy from the CPU.
+    """
+
+    def __init__(
+        self, l1icache: Cache, writeback: bool, act_energies: ActEnergyType
+    ):
         super().__init__()
         # The SimObject that contains the stats we need.
         self._simobj = l1icache
@@ -48,11 +59,10 @@ class L1IPowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
         self.st = lambda: self.static_power()
 
     def static_power(self):
-        """Returns static power in Watts"""
+        # Placeholder value for static power.
         return 1.0
 
     def dynamic_power(self):
-        """Returns dynamic power in Watts"""
         energy = self.icache_energy()
         energy += self.miss_buffer_energy()
         energy += self.inst_fill_buffer_energy()
@@ -105,7 +115,9 @@ class L1IPowerOff(PowerModelPyFunc):
 
 
 class McPATClassicL1IPowerModel(PowerModel):
-    def __init__(self, l1icache, writeback, act_energies):
+    def __init__(
+        self, l1icache: Cache, writeback: bool, act_energies: ActEnergyType
+    ):
         super().__init__()
         # Choose a power model for every power state
         self.pm = [

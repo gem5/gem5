@@ -45,6 +45,7 @@ class McPATMemFrontendPowerModel(BaseMcPATPowerModel):
         self._curve_fitted_constant = 0.00135072
         self._data_bus_width = 0
         self._llc_block_size = 0
+        self._dimm_data_width = 72
         # this is the number of read/write/search ports, in McPAT
         # they are set to all the same value (and this is just
         # the number of mem channels on the MC)
@@ -63,7 +64,7 @@ class McPATMemFrontendPowerModel(BaseMcPATPowerModel):
         self._clock_rate = clk * 2 * 1e6
 
     def static_power(self) -> float:
-        """Returns static power in Watts"""
+        # Placeholder value for static power.
         return 1.0
 
     def dynamic_power(self) -> float:
@@ -72,7 +73,10 @@ class McPATMemFrontendPowerModel(BaseMcPATPowerModel):
         reads = self.get_stat("readReqs").total
         writes = self.get_stat("writeReqs").total
         frontendBufReads = (
-            reads * sched_result_modifier * self._data_bus_width / 72
+            reads
+            * sched_result_modifier
+            * self._data_bus_width
+            / self._dimm_data_width
         )
         frontendBufWrites = (
             writes * sched_result_modifier * self._data_bus_width / 72

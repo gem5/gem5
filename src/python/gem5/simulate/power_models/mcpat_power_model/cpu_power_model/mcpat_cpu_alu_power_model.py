@@ -31,22 +31,21 @@ from m5.objects import (
     BaseCPU,
 )
 
-from ..base_mcpat_power_model import BaseMcPATPowerModel
+from ..base_mcpat_power_model import (
+    ActEnergyType,
+    BaseMcPATPowerModel,
+)
 
 
 class McPATCpuAluPowerModel(BaseMcPATPowerModel):
-    def __init__(self, cpu: BaseCPU, act_energies):
+    def __init__(self, cpu: BaseCPU, act_energies: ActEnergyType):
         super().__init__(cpu, act_energies)
         self.name = "McPATCpuAluPowerModel"
-        """
-        Note that for vec access energy I'm using
-        McPAT's access energy for Mul/Div ops.
-        I suspect this is actually larger, but this
-        is a placeholder. Surprisingly, McPAT doesn't
-        actually account for SIMD insts.
-        """
 
     def print_mcpat(self, indent):
+        # get_stat returns a stat type, we can't just use total,
+        # since we want to figure out how many of each inst. type
+        # our ALU executed
         issued_insts = self.get_stat("issuedInstType")
         int_energy = self.int_energy(issued_insts)
         fp_energy = self.fp_energy(issued_insts)
@@ -77,10 +76,13 @@ class McPATCpuAluPowerModel(BaseMcPATPowerModel):
         return self.convert_to_watts(energy)
 
     def static_power(self) -> float:
+        # Static power in W, 1.0 is a placeholder.
         return 1.0
 
     def int_energy(self, issued_insts) -> float:
-        """Note: below is used to sort btwn mult/non-mult insts"""
+        # For below, we explicitly exclude IntMult/Div instructions
+        # b/c McPAT assumes you have a Complex FuncUnit to perform
+        # said operations.
         int_accesses = issued_insts.value[
             issued_insts.ysubnames.index("IntAlu")
         ]

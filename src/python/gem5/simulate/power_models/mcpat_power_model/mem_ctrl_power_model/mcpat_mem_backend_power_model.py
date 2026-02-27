@@ -33,11 +33,14 @@ from m5.objects import (
     MemCtrl,
 )
 
-from ..base_mcpat_power_model import BaseMcPATPowerModel
+from ..base_mcpat_power_model import (
+    ActEnergyType,
+    BaseMcPATPowerModel,
+)
 
 
 class McPATMemBackendPowerModel(BaseMcPATPowerModel):
-    def __init__(self, mem_ctrl: MemCtrl, act_energies):
+    def __init__(self, mem_ctrl: MemCtrl, act_energies: ActEnergyType):
         super().__init__(mem_ctrl, act_energies)
         self.name = "McPATMemBackendPower"
         self._curve_fitted_constant = 0.00135072
@@ -45,6 +48,7 @@ class McPATMemBackendPowerModel(BaseMcPATPowerModel):
         self._llc_block_size = 0
         self._clock_rate = 0
         self._backend_dyn = 0
+        self._dimm_data_width = 72
 
     def set_mem_vars(self):
         self._llc_block_size = ceil(
@@ -57,11 +61,23 @@ class McPATMemBackendPowerModel(BaseMcPATPowerModel):
         self._clock_rate = clk * 2 * 1e6
 
     def calc_backend_dyn(self):
+        """
+        The following function calculates the backend dynamic energy based
+        on several things:
+        (1) If the memory is low power or not
+        (2) the technology node, if the technology node is between two known
+            ones (e.g., 32 <= 40 <= 45), then the Vdd is obtained by
+            linearly interpolating between the two known technology nodes.
+        (3) the peak bandwidth of a MC.
+        """
         low_power = True
         if low_power:
             peakBW = self.get_stat("dram.peakBW").total
             Vdd = 0.661538
             tech_node = 40
+            # Some of the constants below (e.g., 0.9e-9, 12800)
+            # I'm not actually sure how McPAT obtains them? Seems
+            # to be modeled based on w/e Cadence ChipEstimate says.
             backend_dyn = (
                 0.9e-9
                 / 800e6
@@ -69,7 +85,7 @@ class McPATMemBackendPowerModel(BaseMcPATPowerModel):
                 / 12800
                 * peakBW
                 * self._data_bus_width
-                / 72
+                / self._dimm_data_width
                 * Vdd
                 / 1.1
                 * Vdd
@@ -79,7 +95,7 @@ class McPATMemBackendPowerModel(BaseMcPATPowerModel):
         self._backend_dyn = backend_dyn
 
     def static_power(self) -> float:
-        """Returns static power in Watts"""
+        # Placeholder value for static power.
         return 1.0
 
     def dynamic_power(self) -> float:

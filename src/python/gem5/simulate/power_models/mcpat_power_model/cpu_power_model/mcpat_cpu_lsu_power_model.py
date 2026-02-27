@@ -32,28 +32,42 @@ from m5.objects import (
     BaseO3CPU,
 )
 
-from ..base_mcpat_power_model import BaseMcPATPowerModel
+from ..base_mcpat_power_model import (
+    ActEnergyType,
+    BaseMcPATPowerModel,
+)
 
 
 class McPATCpuLsuPowerModel(BaseMcPATPowerModel):
-    # avoid the use of default values
+    """
+    This class models power for McPAT's LSU Stage. In McPAT, this includes
+    the LSU and the D$, but similar to the IF Power Model, the D$ is
+    in a separate class and applied directly to the D$ since the caches
+    in gem5 are decoupled from the CPU.
+    """
+
     def __init__(
-        self, cpu: BaseCPU, act_energies, pipeline_act_factor, lsu_act_factor
+        self,
+        cpu: BaseCPU,
+        act_energies: ActEnergyType,
+        pipeline_act_factor: float,
+        lsu_act_factor: float,
     ):
         super().__init__(cpu, act_energies)
-        self.name = "McPATCpuLsuPower"
-        """ The Activity Factor of the LSU (default: 0.71): """
+        self.name = "McPATCpuLsuPowerModel"
+        # The Activity Factor of the LSU (default: 0.71)
         self._lsu_act_factor = lsu_act_factor
 
-        """ The Activity Factor of the Pipeline itself (default: 1.0): """
+        # The Activity Factor of the Pipeline itself (default: 1.0)
         self._pipeline_act_factor = pipeline_act_factor
 
-        """ Number of Pipeline Stages for any Inorder CPU in McPAT: """
+        # Number of Pipeline Stages for any Inorder CPU in McPAT.
+        # This is 5 stages (+ Renaming) for O3 CPUs.
         self._num_units = 4.0
         if isinstance(cpu, BaseO3CPU):
             self._num_units = 5.0
 
-        """ The number of pipelines our CPU has (assume 1): """
+        # The number of pipelines our CPU has (assume 1)
         self._num_pipelines = 1.0
 
     def print_mcpat(self, indent):
@@ -62,7 +76,7 @@ class McPATCpuLsuPowerModel(BaseMcPATPowerModel):
         total_energy = (
             self.lsu_pipeline_energy() + loadq_energy + storeq_energy
         )
-        """ LoadQ should effectively be half of StoreQ's energy """
+        # LoadQ should effectively be half of StoreQ's energy
         print(" " * indent + f"Load Store Unit")
         print(
             " " * (indent + 2)
@@ -80,7 +94,7 @@ class McPATCpuLsuPowerModel(BaseMcPATPowerModel):
         )
 
     def static_power(self) -> float:
-        """Returns static power in Watts"""
+        # Placeholder for static power.
         return 1.0
 
     def dynamic_power(self) -> float:
@@ -93,7 +107,7 @@ class McPATCpuLsuPowerModel(BaseMcPATPowerModel):
     def storeq_energy(self) -> float:
         loads = self.get_stat("commitStats0.numLoadInsts").total
         stores = self.get_stat("commitStats0.numStoreInsts").total
-        """ 'Accesses' considers the overhead for flush """
+        # 'Accesses' considers the overhead for flush
         accesses = (loads + stores) * 2
         return (
             accesses
