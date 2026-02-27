@@ -53,10 +53,12 @@ class PowerModelPyFunc : public PowerModelState
      PowerModelPyFunc(const Params &p);
      double getDynamicPower() const override {
              pybind11::object result_py = dyn_func();
+             assert(pybind11::isinstance<pybind11::float_>(result_py));
              return result_py.cast<double>();
      }
      double getStaticPower() const override {
              pybind11::object result_py = st_func();
+             assert(pybind11::isinstance<pybind11::float_>(result_py));
              return result_py.cast<double>();
      }
 };
