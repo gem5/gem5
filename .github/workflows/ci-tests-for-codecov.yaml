@@ -273,11 +273,6 @@ jobs:
               working-directory: ${{ github.workspace }}/tests
               run: ./main.py run --skip-build --exclude-tags gcn_gpu --gcov=test-only ${{  matrix.test-dir }}
 
-            - name: Upload coverage reports to Codecov
-              uses: codecov/codecov-action@v5
-              with:
-                  token: ${{ secrets.CODECOV_TOKEN }}
-
         # Get the basename of the matrix.test-dir path (to name the artifact).
             - name: Sanitize test-dir for artifact name
               id: sanitize-test-dir
@@ -293,6 +288,11 @@ jobs:
                       }}-status-${{ steps.run-tests.outcome }}-output
                   path: tests/testing-results
                   retention-days: 30
+            - name: Upload coverage reports to Codecov
+              uses: codecov/codecov-action@v5
+              with:
+                  token: ${{ secrets.CODECOV_TOKEN }}
+                  flags: ${{ steps.sanitize-test-dir.outputs.sanitized-test-dir}}
 
     # gpu-tests:
     #     runs-on: ubuntu-24.04
