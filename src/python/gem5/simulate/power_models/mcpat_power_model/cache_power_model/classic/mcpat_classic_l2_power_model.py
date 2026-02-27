@@ -83,7 +83,6 @@ class L2PowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
         write_misses = self.get_stat("overallMisses").total - read_misses
 
         read_hits = read_accesses - read_misses
-        write_hits = write_accesses - write_misses
         return (
             read_hits * self._act_energies["L2Cache"]["Read"]
             + read_misses * self._act_energies["L2CacheTag"]["Read"]

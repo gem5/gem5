@@ -78,7 +78,6 @@ class L1DPowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
         write_misses = self.get_stat("WriteReq.misses").total
 
         read_hits = read_accesses - read_misses
-        write_hits = write_accesses - write_misses
 
         energy = (
             read_hits * self._act_energies["DataCache"]["Read"]

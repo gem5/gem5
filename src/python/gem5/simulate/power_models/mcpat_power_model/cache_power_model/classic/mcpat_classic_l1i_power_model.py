@@ -82,7 +82,6 @@ class L1IPowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
 
     def miss_buffer_energy(self):
         read_accesses = write_accesses = self.get_stat("ReadReq.misses").total
-        read_misses = self.get_stat("ReadReq.misses").total
 
         return (
             read_accesses
