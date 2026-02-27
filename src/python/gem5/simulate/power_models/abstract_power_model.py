@@ -32,18 +32,38 @@ from abc import (
     abstractmethod,
 )
 
-from m5.objects import Root
+from m5.objects import (
+    Root,
+    SimObject,
+)
 from m5.util import panic
 
 
 class AbstractPowerModel:
     __metaclass__ = ABCMeta
 
-    def __init__(self, simobj):
+    def __init__(self, simobj: SimObject):
         self._simobj = simobj
         self.name = "AbstractPowerModel"
 
+    """
+    A Power Model takes a given SimObject, and describes power consumption of
+    the given SimObject. Power Models which inherit from AbstractPowerModel
+    need to explicitly describe how dynamic and static power are modeled.
+
+    Dynamic and static power should NOT be described in this base class
+    as this should be done by the inherited classes.
+    """
+
     def get_stat(self, stat):
+        """
+        Obtains a stat from the SimObject passed in this class and
+        checks that a given stat actually exists.
+
+        :param stat: the stat to obtain from the SimObject passed
+
+        :returns: The stat, regardless of type.
+        """
         try:
             stat = self._simobj.resolveStat(stat)
             return stat
@@ -51,29 +71,27 @@ class AbstractPowerModel:
             panic(f"{stat} not found in stats!")
             return 0.0
 
-    # Both static and dynamic power methods should NOT be specified
-    # in the base class.
     @abstractmethod
     def dynamic_power(self) -> float:
-        """Gets the dynamic power in Watts
+        """Gets the dynamic power in watts
 
-        :returns: dynamic power
+        :returns: dynamic power in watts
         """
         raise NotImplementedError
 
     @abstractmethod
     def static_power(self) -> float:
-        """Gets the static power in Watts
+        """Gets the static power in watts
 
-        :returns: dynamic Power
+        :returns: dynamic power in watts
         """
         raise NotImplementedError
 
     @abstractmethod
     def convert_to_watts(self, value: float) -> float:
-        """Converts energy in nanojoules to Watts
+        """Converts energy in nanojoules to watts
 
-        :returns: power in Watts from energy
+        :returns: power in watts from energy
         """
         # Don't implement this in the abstract class, each power model
         # has a different way of calculating power
