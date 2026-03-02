@@ -7,16 +7,21 @@
 include(CTest)
 
 # ---------------------------------------------------------------------------
-# Collect all sources into a single list
+# Collect OBJECT library sources
 # ---------------------------------------------------------------------------
-gem5_get_all_sources(_all_sources)
+# Each src/ subdirectory creates its own OBJECT library via gem5_add_source().
+# Collect all their compiled objects for composing the final link targets.
+gem5_get_all_object_sources(_all_obj_sources)
 
-# Build the library source list: everything EXCEPT main.cc
-set(_lib_sources ${_all_sources})
-list(FILTER _lib_sources EXCLUDE REGEX "sim/main\\.cc$")
-
-# date.cc is compiled as part of the library (embeds compile timestamp)
-list(APPEND _lib_sources "${CMAKE_SOURCE_DIR}/src/base/date.cc")
+# Generated sources (debug flags, SimObject params, etc.) are compiled
+# centrally in a single OBJECT target.
+get_property(_gen_srcs GLOBAL PROPERTY GEM5_GENERATED_SOURCES)
+if(_gen_srcs)
+    add_library(gem5_generated_objs OBJECT ${_gen_srcs})
+    target_link_libraries(gem5_generated_objs PRIVATE gem5_deps)
+    target_compile_options(gem5_generated_objs PRIVATE ${GEM5_WERROR_FLAGS})
+    set_target_properties(gem5_generated_objs PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endif()
 
 # ---------------------------------------------------------------------------
 # PySource object library (breaks gem5py_m5 dependency cycle)
@@ -125,9 +130,46 @@ endif()
 get_property(_codegen_phase1 GLOBAL PROPERTY GEM5_CODEGEN_TARGETS_PHASE1)
 
 # ---------------------------------------------------------------------------
+# Propagate codegen dependencies to all OBJECT libraries
+# ---------------------------------------------------------------------------
+# OBJECT targets need generated headers (debug flags, ISA decoder, SimObject
+# params) to exist before compilation.  These targets are only known after all
+# subdirectories have been processed, so we add the deps retroactively.
+get_property(_obj_libs GLOBAL PROPERTY GEM5_OBJECT_LIBS)
+get_property(_slicc_targets GLOBAL PROPERTY GEM5_SLICC_TARGETS)
+
+foreach(_obj ${_obj_libs})
+    if(_codegen_phase1)
+        add_dependencies(${_obj} ${_codegen_phase1})
+    endif()
+    if(_slicc_targets)
+        add_dependencies(${_obj} ${_slicc_targets})
+    endif()
+endforeach()
+
+if(TARGET gem5_generated_objs)
+    if(_codegen_phase1)
+        add_dependencies(gem5_generated_objs ${_codegen_phase1})
+    endif()
+    if(_slicc_targets)
+        add_dependencies(gem5_generated_objs ${_slicc_targets})
+    endif()
+endif()
+
+# ---------------------------------------------------------------------------
 # Static library: libgem5_all
 # ---------------------------------------------------------------------------
-add_library(gem5_all STATIC ${_lib_sources})
+# Composed from per-directory OBJECT libraries + generated objects + date.cc.
+# date.cc embeds the compile timestamp and is compiled directly by gem5_all.
+set(_gem5_all_sources
+    ${_all_obj_sources}
+    "${CMAKE_SOURCE_DIR}/src/base/date.cc"
+)
+if(TARGET gem5_generated_objs)
+    list(APPEND _gem5_all_sources "$<TARGET_OBJECTS:gem5_generated_objs>")
+endif()
+
+add_library(gem5_all STATIC ${_gem5_all_sources})
 target_link_libraries(gem5_all PUBLIC gem5_deps)
 target_compile_options(gem5_all PRIVATE ${GEM5_WERROR_FLAGS})
 
@@ -136,24 +178,7 @@ if(NOT GEM5_WITHOUT_PYTHON)
     target_sources(gem5_all PRIVATE $<TARGET_OBJECTS:gem5_pysources>)
 endif()
 
-# Phase 1 codegen targets (debug flags, ISA parser): created in subdirectories.
-# Target-level deps ensure ordering before compilation starts.
-if(_codegen_phase1)
-    add_dependencies(gem5_all ${_codegen_phase1})
-endif()
-
-# Phase 2 codegen (SimObject params/enums): custom commands are created at the
-# top level via gem5_create_simobject_commands(), so file-level dependencies
-# work correctly with Ninja (no cross-directory stubs).
-
 set_target_properties(gem5_all PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
-# Depend on all SLICC protocol targets (handles MULTIPLE builds where
-# CONF_PROTOCOL is not a single slicc_* target name).
-get_property(_slicc_targets GLOBAL PROPERTY GEM5_SLICC_TARGETS)
-if(_slicc_targets)
-    add_dependencies(gem5_all ${_slicc_targets})
-endif()
 
 # ---------------------------------------------------------------------------
 # gem5 executable
@@ -171,19 +196,20 @@ add_custom_command(TARGET gem5 POST_BUILD
 # ---------------------------------------------------------------------------
 # Shared library: libgem5_shared
 # ---------------------------------------------------------------------------
-add_library(gem5_shared SHARED ${_lib_sources})
+# Uses the same OBJECT targets as gem5_all (all compiled with -fPIC).
+set(_gem5_shared_sources
+    ${_all_obj_sources}
+    "${CMAKE_SOURCE_DIR}/src/base/date.cc"
+)
+if(TARGET gem5_generated_objs)
+    list(APPEND _gem5_shared_sources "$<TARGET_OBJECTS:gem5_generated_objs>")
+endif()
+
+add_library(gem5_shared SHARED ${_gem5_shared_sources})
 target_link_libraries(gem5_shared PUBLIC gem5_deps)
 target_compile_options(gem5_shared PRIVATE ${GEM5_WERROR_FLAGS})
 if(NOT GEM5_WITHOUT_PYTHON)
     target_sources(gem5_shared PRIVATE $<TARGET_OBJECTS:gem5_pysources>)
-endif()
-
-if(_codegen_phase1)
-    add_dependencies(gem5_shared ${_codegen_phase1})
-endif()
-
-if(_slicc_targets)
-    add_dependencies(gem5_shared ${_slicc_targets})
 endif()
 
 # ---------------------------------------------------------------------------

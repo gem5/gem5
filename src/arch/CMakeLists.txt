@@ -31,6 +31,10 @@ if(CONF_BUILD_ISA)
 endif()
 
 # --- GPU ISA ---
+# Register GPU tests here (always parsed) so the safety check in
+# Gem5Targets.cmake sees them even when CONF_BUILD_GPU is false.
+gem5_add_test_source(amdgpu/common/dtype/mxfp.test.cc CONDITION CONF_BUILD_GPU)
+
 if(CONF_BUILD_GPU)
     add_subdirectory(amdgpu)
 endif()

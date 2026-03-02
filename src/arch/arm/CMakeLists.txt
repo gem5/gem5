@@ -5,6 +5,11 @@
 # See comment in original SConscript about amdgpu dependencies.
 gem5_add_source(insts/fplib.cc)
 
+# Register tests before the early return so the safety check in
+# Gem5Targets.cmake sees them even when ARM ISA is disabled.
+gem5_add_test_source(aapcs64.test.cc CONDITION CONF_USE_ARM_ISA)
+gem5_add_test_source(matrix.test.cc CONDITION CONF_USE_ARM_ISA)
+
 if(NOT CONF_USE_ARM_ISA)
     return()
 endif()
@@ -226,7 +231,3 @@ if(CONF_USE_ARM_FASTMODEL)
     gem5_add_simobject(fastmodel/reset_controller/FastModelResetControllerExample.py
         SIM_OBJECTS FastModelResetControllerExample)
 endif()
-
-# --- Unit tests ---
-gem5_add_test_source(aapcs64.test.cc CONDITION CONF_USE_ARM_ISA)
-gem5_add_test_source(matrix.test.cc CONDITION CONF_USE_ARM_ISA)

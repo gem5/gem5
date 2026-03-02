@@ -1,5 +1,6 @@
 # src/arch/amdgpu/common/dtype/CMakeLists.txt
 # AMD GPU MXFP data types (header-only; test only)
-
-# --- Unit tests ---
-gem5_add_test_source(mxfp.test.cc CONDITION CONF_BUILD_GPU)
+#
+# Test registration is in the parent src/arch/amdgpu/CMakeLists.txt
+# (before the CONF_BUILD_GPU early return) so the safety check in
+# Gem5Targets.cmake works correctly for non-GPU builds.

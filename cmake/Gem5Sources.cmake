@@ -11,13 +11,16 @@
 # Global source collectors (CMake global properties)
 # ---------------------------------------------------------------------------
 
-# We use GLOBAL properties to accumulate sources across subdirectories.
-# Each property stores a list of absolute file paths or generator expressions.
+# We use GLOBAL properties to accumulate data across subdirectories.
+# Each property stores a list of target names, absolute file paths, or
+# generator expressions.
 
-define_property(GLOBAL PROPERTY GEM5_SOURCES
-    BRIEF_DOCS "C++ sources for the gem5 library"
-    FULL_DOCS "Accumulated list of C++ source files for the gem5 library target")
-set_property(GLOBAL PROPERTY GEM5_SOURCES "")
+# Per-directory OBJECT libraries (replacing the old flat GEM5_SOURCES list).
+# Each src/ subdirectory that registers sources gets its own OBJECT target.
+define_property(GLOBAL PROPERTY GEM5_OBJECT_LIBS
+    BRIEF_DOCS "OBJECT library target names"
+    FULL_DOCS "Accumulated list of per-directory OBJECT library targets for gem5")
+set_property(GLOBAL PROPERTY GEM5_OBJECT_LIBS "")
 
 define_property(GLOBAL PROPERTY GEM5_GENERATED_SOURCES
     BRIEF_DOCS "Generated C++ sources for the gem5 library"
@@ -91,12 +94,10 @@ define_property(GLOBAL PROPERTY GEM5_SIMOBJ_ENUM_PYFILES
     FULL_DOCS "Parallel list: .py source files for enum generation")
 set_property(GLOBAL PROPERTY GEM5_SIMOBJ_ENUM_PYFILES "")
 
-# Phase 2 codegen targets: SimObject params/enums.
-# These depend on gem5py_m5.
-define_property(GLOBAL PROPERTY GEM5_CODEGEN_TARGETS_PHASE2
-    BRIEF_DOCS "Codegen targets that depend on gem5py_m5"
-    FULL_DOCS "Custom target names for SimObject params, enums, etc.")
-set_property(GLOBAL PROPERTY GEM5_CODEGEN_TARGETS_PHASE2 "")
+# Phase 2 codegen (SimObject params/enums) depends on gem5py_m5.
+# Dependency is tracked implicitly: each add_custom_command for param/enum
+# .cc files lists gem5py_m5 in DEPENDS, so CMake resolves the ordering.
+# No explicit custom-target wrappers are created for phase 2 outputs.
 
 # Deferred protobuf custom command data (same cross-directory stub workaround).
 define_property(GLOBAL PROPERTY GEM5_PROTO_FILES
@@ -137,9 +138,47 @@ set(GEM5_BUILD_TOOLS_DIR "${CMAKE_SOURCE_DIR}/build_tools" CACHE PATH
     "Directory containing build tool Python scripts")
 
 # ---------------------------------------------------------------------------
+# OBJECT library helpers
+# ---------------------------------------------------------------------------
+# Each src/ subdirectory that registers sources gets its own OBJECT library.
+# This follows modern CMake practice (per ripopov's review) while preserving
+# gem5's cross-directory header coupling through the gem5_deps INTERFACE.
+#
+# Naming: src/base -> gem5_obj_base, src/mem/cache -> gem5_obj_mem_cache.
+
+# Derive a deterministic OBJECT target name from the calling directory.
+function(_gem5_object_target_name out_var)
+    file(RELATIVE_PATH _rel "${CMAKE_SOURCE_DIR}/src" "${CMAKE_CURRENT_SOURCE_DIR}")
+    if(_rel STREQUAL "." OR _rel STREQUAL "")
+        message(FATAL_ERROR
+            "gem5_add_source() called from src/ root directory. "
+            "Sources must be registered from a subdirectory of src/.")
+    endif()
+    string(REPLACE "/" "_" _name "${_rel}")
+    set(${out_var} "gem5_obj_${_name}" PARENT_SCOPE)
+endfunction()
+
+# Get or create the OBJECT library for the calling directory.
+# Created lazily on first source registration; subsequent calls reuse it.
+function(_gem5_ensure_object_target out_var)
+    _gem5_object_target_name(_tgt)
+    if(NOT TARGET "${_tgt}")
+        # OBJECT libraries compile sources but produce no archive; their
+        # .o files are consumed via $<TARGET_OBJECTS:...> in Gem5Targets.cmake.
+        add_library("${_tgt}" OBJECT)
+        target_link_libraries("${_tgt}" PRIVATE gem5_deps)
+        target_compile_options("${_tgt}" PRIVATE ${GEM5_WERROR_FLAGS})
+        set_target_properties("${_tgt}" PROPERTIES POSITION_INDEPENDENT_CODE ON)
+        set_property(GLOBAL APPEND PROPERTY GEM5_OBJECT_LIBS "${_tgt}")
+    endif()
+    set(${out_var} "${_tgt}" PARENT_SCOPE)
+endfunction()
+
+# ---------------------------------------------------------------------------
 # gem5_add_source(<file> [CONDITION <cond>] [APPEND_FLAGS <flags...>])
 #
 # Register a C++ source file for compilation into the gem5 library.
+# The source is added to the OBJECT library for the calling directory.
 # If CONDITION is specified, the source is only added when the condition
 # evaluates to TRUE.
 # ---------------------------------------------------------------------------
@@ -152,15 +191,18 @@ function(gem5_add_source file)
         endif()
     endif()
 
-    # Convert to absolute path if relative
     if(NOT IS_ABSOLUTE "${file}")
         set(file "${CMAKE_CURRENT_SOURCE_DIR}/${file}")
     endif()
 
-    set_property(GLOBAL APPEND PROPERTY GEM5_SOURCES "${file}")
+    _gem5_ensure_object_target(_obj_tgt)
+    target_sources("${_obj_tgt}" PRIVATE "${file}")
 
     if(ARG_APPEND_FLAGS)
-        set_source_files_properties("${file}" PROPERTIES
+        # Source file properties are directory-scoped in CMake.  Since the
+        # OBJECT target is created in the same directory, the property is
+        # correctly visible during compilation.
+        set_source_files_properties("${file}" APPEND PROPERTY
             COMPILE_OPTIONS "${ARG_APPEND_FLAGS}")
     endif()
 endfunction()
@@ -179,11 +221,12 @@ function(gem5_add_sources)
         endif()
     endif()
 
+    _gem5_ensure_object_target(_obj_tgt)
     foreach(file ${ARG_UNPARSED_ARGUMENTS})
         if(NOT IS_ABSOLUTE "${file}")
             set(file "${CMAKE_CURRENT_SOURCE_DIR}/${file}")
         endif()
-        set_property(GLOBAL APPEND PROPERTY GEM5_SOURCES "${file}")
+        target_sources("${_obj_tgt}" PRIVATE "${file}")
     endforeach()
 endfunction()
 
@@ -191,7 +234,8 @@ endfunction()
 # gem5_add_generated_source(<file>)
 #
 # Register a generated C++ source file (already an absolute path in the
-# build tree).
+# build tree).  Generated sources are compiled centrally via the
+# gem5_generated_objs OBJECT target in Gem5Targets.cmake.
 # ---------------------------------------------------------------------------
 function(gem5_add_generated_source file)
     set_property(GLOBAL APPEND PROPERTY GEM5_GENERATED_SOURCES "${file}")
@@ -227,16 +271,19 @@ function(gem5_add_test_source file)
 endfunction()
 
 # ---------------------------------------------------------------------------
-# Helper: get all accumulated sources
+# Helper: collect $<TARGET_OBJECTS:...> from all registered OBJECT libraries
 # ---------------------------------------------------------------------------
-function(gem5_get_all_sources out_var)
-    get_property(_srcs GLOBAL PROPERTY GEM5_SOURCES)
-    get_property(_gen_srcs GLOBAL PROPERTY GEM5_GENERATED_SOURCES)
+function(gem5_get_all_object_sources out_var)
+    get_property(_obj_libs GLOBAL PROPERTY GEM5_OBJECT_LIBS)
+    set(_objs "")
+    foreach(_lib ${_obj_libs})
+        list(APPEND _objs "$<TARGET_OBJECTS:${_lib}>")
+    endforeach()
     # Note: GEM5_PYSOURCES are NOT included here. They are compiled into a
-    # separate static library (gem5_pysources) to avoid a dependency cycle:
+    # separate OBJECT library (gem5_pysources) to avoid a dependency cycle:
     #   gem5_all -> SimObject codegen -> gem5py_m5 -> PySource .cc -> gem5_all
     # By separating them, gem5_all can safely depend on SimObject codegen.
-    set(${out_var} ${_srcs} ${_gen_srcs} PARENT_SCOPE)
+    set(${out_var} ${_objs} PARENT_SCOPE)
 endfunction()
 
 # ---------------------------------------------------------------------------

@@ -32,7 +32,8 @@ gem5_add_source(futex_map.cc)
 gem5_add_source(global_event.cc)
 gem5_add_source(globals.cc)
 gem5_add_source(init_signals.cc)
-gem5_add_source(main.cc)
+# main.cc is NOT registered here; it is added directly to the gem5 executable
+# target in Gem5Targets.cmake and excluded from the library targets.
 gem5_add_source(kernel_workload.cc)
 gem5_add_source(port.cc)
 gem5_add_source(redirect_path.cc)

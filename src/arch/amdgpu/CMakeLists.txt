@@ -1,5 +1,9 @@
 # src/arch/amdgpu/CMakeLists.txt
 # AMD GPU ISA
+#
+# Test registration for common/dtype/mxfp.test.cc is in the parent
+# src/arch/CMakeLists.txt (always parsed), because this file is only
+# included when CONF_BUILD_GPU is true.
 
 if(NOT CONF_BUILD_GPU)
     return()
