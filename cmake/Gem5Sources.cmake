@@ -114,6 +114,14 @@ define_property(GLOBAL PROPERTY GEM5_TEST_CC_SOURCES
     FULL_DOCS "Accumulated list of absolute paths to .test.cc unit test files")
 set_property(GLOBAL PROPERTY GEM5_TEST_CC_SOURCES "")
 
+# Tracks all .test.cc registrations regardless of CONDITION, so that the
+# safety check in Gem5Targets.cmake can compare against the on-disk GLOB
+# without false positives from condition-excluded tests.
+define_property(GLOBAL PROPERTY GEM5_TEST_CC_ALL_SOURCES
+    BRIEF_DOCS "All registered .test.cc paths (unconditional)"
+    FULL_DOCS "Accumulated list of all .test.cc paths passed to gem5_add_test_source(), regardless of CONDITION")
+set_property(GLOBAL PROPERTY GEM5_TEST_CC_ALL_SOURCES "")
+
 define_property(GLOBAL PROPERTY GEM5_LINK_LIBRARIES
     BRIEF_DOCS "Additional libraries to link into the gem5 target"
     FULL_DOCS "Accumulated list of library targets/names for the gem5 executable")
@@ -200,14 +208,19 @@ endfunction()
 function(gem5_add_test_source file)
     cmake_parse_arguments(ARG "" "CONDITION" "" ${ARGN})
 
+    if(NOT IS_ABSOLUTE "${file}")
+        set(file "${CMAKE_CURRENT_SOURCE_DIR}/${file}")
+    endif()
+
+    # Always track the registration regardless of condition, so the safety
+    # check in Gem5Targets.cmake can detect genuinely unregistered files
+    # without false positives from condition-excluded tests.
+    set_property(GLOBAL APPEND PROPERTY GEM5_TEST_CC_ALL_SOURCES "${file}")
+
     if(ARG_CONDITION)
         if(NOT ${ARG_CONDITION})
             return()
         endif()
-    endif()
-
-    if(NOT IS_ABSOLUTE "${file}")
-        set(file "${CMAKE_CURRENT_SOURCE_DIR}/${file}")
     endif()
 
     set_property(GLOBAL APPEND PROPERTY GEM5_TEST_CC_SOURCES "${file}")

@@ -196,11 +196,9 @@ endif()
 add_library(gem5_gtest_logging STATIC
     "${CMAKE_SOURCE_DIR}/src/base/gtest/logging.cc"
 )
+# gem5_ext_gtest propagates googletest/googlemock include paths as SYSTEM PUBLIC,
+# so no explicit target_include_directories is needed here.
 target_link_libraries(gem5_gtest_logging PUBLIC gem5_deps gem5_ext_gtest)
-target_include_directories(gem5_gtest_logging SYSTEM PUBLIC
-    "${CMAKE_SOURCE_DIR}/ext/googletest/googletest/include"
-    "${CMAKE_SOURCE_DIR}/ext/googletest/googlemock/include"
-)
 set_target_properties(gem5_gtest_logging PROPERTIES
     POSITION_INDEPENDENT_CODE ON
 )
@@ -211,11 +209,8 @@ set_target_properties(gem5_gtest_logging PROPERTIES
 add_library(gem5_gtest_mock STATIC
     "${CMAKE_SOURCE_DIR}/src/base/gtest/logging_mock.cc"
 )
+# Include paths are inherited transitively through gem5_gtest_logging -> gem5_ext_gtest.
 target_link_libraries(gem5_gtest_mock PUBLIC gem5_gtest_logging)
-target_include_directories(gem5_gtest_mock SYSTEM PUBLIC
-    "${CMAKE_SOURCE_DIR}/ext/googletest/googletest/include"
-    "${CMAKE_SOURCE_DIR}/ext/googletest/googlemock/include"
-)
 add_dependencies(gem5_gtest_mock gem5_all)
 set_target_properties(gem5_gtest_mock PROPERTIES
     POSITION_INDEPENDENT_CODE ON
@@ -225,19 +220,18 @@ set_target_properties(gem5_gtest_mock PROPERTIES
 # by CONDITION parameters in each gem5_add_test_source() call).
 get_property(_test_sources GLOBAL PROPERTY GEM5_TEST_CC_SOURCES)
 
-# Safety check: compare registered tests against GLOB to catch forgotten
-# registrations.  This warning fires only when they differ, indicating a
-# .test.cc file exists on disk but was not registered with
-# gem5_add_test_source() in its CMakeLists.txt.
+# Safety check: detect .test.cc files on disk that have no gem5_add_test_source()
+# call at all. GEM5_TEST_CC_ALL_SOURCES includes every registration regardless
+# of CONDITION, so condition-excluded tests do not produce false positives.
+get_property(_all_registered_sources GLOBAL PROPERTY GEM5_TEST_CC_ALL_SOURCES)
 file(GLOB_RECURSE _glob_test_sources "${CMAKE_SOURCE_DIR}/src/*.test.cc")
-list(LENGTH _test_sources _registered_count)
-list(LENGTH _glob_test_sources _glob_count)
-if(NOT _registered_count EQUAL _glob_count)
-    message(WARNING
-        "Test registration mismatch: ${_registered_count} tests registered "
-        "via gem5_add_test_source() but ${_glob_count} .test.cc files found "
-        "on disk. Some tests may not be registered in their CMakeLists.txt.")
-endif()
+foreach(_glob_src ${_glob_test_sources})
+    if(NOT "${_glob_src}" IN_LIST _all_registered_sources)
+        message(WARNING
+            "Test file not registered: ${_glob_src}\n"
+            "Add gem5_add_test_source() for this file in its CMakeLists.txt.")
+    endif()
+endforeach()
 
 set(_all_test_names "")
 foreach(_test_src ${_test_sources})
@@ -268,10 +262,8 @@ foreach(_test_src ${_test_sources})
             gem5_ext_gtest
         )
     endif()
-    target_include_directories(${_test_name} SYSTEM PRIVATE
-        "${CMAKE_SOURCE_DIR}/ext/googletest/googletest/include"
-        "${CMAKE_SOURCE_DIR}/ext/googletest/googlemock/include"
-    )
+    # googletest/googlemock include paths are propagated transitively through
+    # gem5_ext_gtest and gem5_ext_gmock (both declare them SYSTEM PUBLIC).
     # Ensure all generated headers (enums, params from phase 2 codegen) are
     # available before compiling test sources.  The simplest way is to wait
     # for gem5_all to finish: it already depends on all codegen targets, and
