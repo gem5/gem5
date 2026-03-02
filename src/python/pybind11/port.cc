@@ -71,7 +71,7 @@ pybind_init_port(py::module_ &m_native)
 
                 if (!self.tryWriteBlob(
                         phys_addr, reinterpret_cast<const uint8_t *>(info.ptr),
-                        info.size)) {
+                        info.size * info.itemsize)) {
                     throw std::runtime_error(csprintf(
                         "Failed to write to address: %#x\n", phys_addr));
                 }
