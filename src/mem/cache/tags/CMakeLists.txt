@@ -18,3 +18,6 @@ gem5_add_simobject(Tags.py
     SIM_OBJECTS
         BaseTags BaseSetAssoc SectorTags CompressedTags FALRU
         TaggedIndexingPolicy TaggedSetAssociative)
+
+# --- Unit tests ---
+gem5_add_test_source(dueling.test.cc)

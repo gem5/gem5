@@ -58,3 +58,6 @@ if(CONF_BUILD_GPU)
         add_subdirectory(amdgpu)
     endif()
 endif()
+
+# --- Unit tests ---
+gem5_add_test_source(reg_bank.test.cc)

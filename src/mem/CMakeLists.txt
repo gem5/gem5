@@ -145,3 +145,7 @@ endif()
 if(HAVE_DRAMSYS)
     gem5_add_simobject(DRAMSys.py SIM_OBJECTS DRAMSys)
 endif()
+
+# --- Unit tests ---
+gem5_add_test_source(backdoor_manager.test.cc)
+gem5_add_test_source(translation_gen.test.cc)

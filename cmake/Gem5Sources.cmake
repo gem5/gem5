@@ -109,10 +109,10 @@ define_property(GLOBAL PROPERTY GEM5_PROTO_SUPPRESS_FLAGS
     FULL_DOCS "Warning suppression flags applied to generated .pb.cc files")
 set_property(GLOBAL PROPERTY GEM5_PROTO_SUPPRESS_FLAGS "")
 
-define_property(GLOBAL PROPERTY GEM5_TEST_SOURCES
-    BRIEF_DOCS "GTest source files"
-    FULL_DOCS "Accumulated list of GTest source files")
-set_property(GLOBAL PROPERTY GEM5_TEST_SOURCES "")
+define_property(GLOBAL PROPERTY GEM5_TEST_CC_SOURCES
+    BRIEF_DOCS "GTest .test.cc source file paths"
+    FULL_DOCS "Accumulated list of absolute paths to .test.cc unit test files")
+set_property(GLOBAL PROPERTY GEM5_TEST_CC_SOURCES "")
 
 define_property(GLOBAL PROPERTY GEM5_LINK_LIBRARIES
     BRIEF_DOCS "Additional libraries to link into the gem5 target"
@@ -190,17 +190,27 @@ function(gem5_add_generated_source file)
 endfunction()
 
 # ---------------------------------------------------------------------------
-# gem5_add_test(<name> <source> [extra_sources...])
+# gem5_add_test_source(<file> [CONDITION <cond>])
 #
-# Register a GTest unit test.  Creates an executable and adds it to CTest.
+# Register a .test.cc file for GTest unit testing.
+# If CONDITION is specified, the test is only registered when the condition
+# evaluates to TRUE.  Test executables are created centrally in
+# Gem5Targets.cmake from the accumulated list.
 # ---------------------------------------------------------------------------
-function(gem5_add_test name)
-    set(_sources ${ARGN})
-    set_property(GLOBAL APPEND PROPERTY GEM5_TEST_SOURCES "${name}")
+function(gem5_add_test_source file)
+    cmake_parse_arguments(ARG "" "CONDITION" "" ${ARGN})
 
-    # Test targets will be created in Phase 5 when the gem5 library is available.
-    # For now, just record the information.
-    # The actual add_executable + add_test will be done centrally.
+    if(ARG_CONDITION)
+        if(NOT ${ARG_CONDITION})
+            return()
+        endif()
+    endif()
+
+    if(NOT IS_ABSOLUTE "${file}")
+        set(file "${CMAKE_CURRENT_SOURCE_DIR}/${file}")
+    endif()
+
+    set_property(GLOBAL APPEND PROPERTY GEM5_TEST_CC_SOURCES "${file}")
 endfunction()
 
 # ---------------------------------------------------------------------------

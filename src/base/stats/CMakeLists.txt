@@ -14,3 +14,9 @@ if(CONF_HAVE_HDF5)
         gem5_add_source(hdf5.cc)
     endif()
 endif()
+
+# --- Unit tests ---
+gem5_add_test_source(group.test.cc)
+gem5_add_test_source(info.test.cc)
+gem5_add_test_source(storage.test.cc)
+gem5_add_test_source(units.test.cc)

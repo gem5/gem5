@@ -84,16 +84,24 @@ else()
 endif()
 
 # ---------------------------------------------------------------------------
-# Global compiler flags (matching SCons: shared GCC/Clang flags)
+# Global compiler flags
 # ---------------------------------------------------------------------------
+# Truly global flags: ABI/codegen settings that must apply to ALL targets
+# (including vendored ext/ code) for correctness.
 add_compile_options(
     -pipe
     -fno-strict-aliasing
+)
+
+# Warning flags for gem5's own code only -- applied via gem5_deps INTERFACE
+# library so that ext/ third-party code is not affected.
+set(GEM5_WARNING_FLAGS
     -Wall
     -Wundef
     -Wextra
     -Wno-sign-compare
     -Wno-unused-parameter
+    CACHE INTERNAL "Warning flags for gem5 targets (via gem5_deps INTERFACE)"
 )
 
 # Treat warnings as errors for gem5's own code only (not ext/ third-party).
@@ -122,16 +130,16 @@ if(_has_as_needed)
     add_link_options(-Wl,--as-needed)
 endif()
 
-# Clang-specific warnings to disable
+# Clang-specific warning suppressions (gem5 code only, via gem5_deps)
 if(GEM5_CLANG)
     include(CheckCXXCompilerFlag)
     check_cxx_compiler_flag(-Wno-c99-designator _has_c99_designator)
     if(_has_c99_designator)
-        add_compile_options(-Wno-c99-designator)
+        list(APPEND GEM5_WARNING_FLAGS -Wno-c99-designator)
     endif()
     check_cxx_compiler_flag(-Wno-defaulted-function-deleted _has_defaulted_func_deleted)
     if(_has_defaulted_func_deleted)
-        add_compile_options(-Wno-defaulted-function-deleted)
+        list(APPEND GEM5_WARNING_FLAGS -Wno-defaulted-function-deleted)
     endif()
 endif()
 
@@ -292,24 +300,37 @@ include(Gem5Py)
 include(Gem5ConfigHeaders)
 include(Gem5SwitchingHeaders)
 
-# Generated sources include path (for debug/*.hh, params/*.hh, enums/*.hh, config/*.hh)
-include_directories("${GEM5_GEN_DIR}")
+# ---------------------------------------------------------------------------
+# gem5_deps INTERFACE library (include paths + warning flags)
+# ---------------------------------------------------------------------------
+# Created early so that all gem5 targets (gem5_all, gem5_shared, tests) can
+# link gem5_deps and inherit correct include paths and warning flags.
+# Link libraries are added later in Gem5Targets.cmake (after ext/ targets
+# are created by add_subdirectory(ext)).
+add_library(gem5_deps INTERFACE)
 
-# ---------------------------------------------------------------------------
-# Include paths
-# ---------------------------------------------------------------------------
-# ext/ directory for third-party headers
-include_directories("${CMAKE_SOURCE_DIR}/ext")
-# Shared top-level headers
-include_directories("${CMAKE_SOURCE_DIR}/include")
-# Source tree (for non-duplicated source builds)
-include_directories("${CMAKE_SOURCE_DIR}/src")
+# Include paths for gem5's own code
+target_include_directories(gem5_deps INTERFACE
+    "${CMAKE_SOURCE_DIR}/src"
+    "${CMAKE_SOURCE_DIR}/include"
+    "${GEM5_GEN_DIR}"
+)
+# ext/ headers are third-party code; mark them SYSTEM so that warnings
+# from vendored headers do not trigger -Werror in gem5 translation units.
+target_include_directories(gem5_deps SYSTEM INTERFACE
+    "${CMAKE_SOURCE_DIR}/ext"
+)
 
 # SystemC/TLM include paths (matching SCons: systemc_home/include and ext/)
 if(CONF_USE_SYSTEMC)
-    include_directories("${CMAKE_SOURCE_DIR}/src/systemc/ext/systemc_home/include")
-    include_directories("${CMAKE_SOURCE_DIR}/src/systemc/ext")
+    target_include_directories(gem5_deps INTERFACE
+        "${CMAKE_SOURCE_DIR}/src/systemc/ext/systemc_home/include"
+        "${CMAKE_SOURCE_DIR}/src/systemc/ext"
+    )
 endif()
+
+# Warning flags scoped to gem5 targets only (not ext/ third-party code)
+target_compile_options(gem5_deps INTERFACE ${GEM5_WARNING_FLAGS})
 
 # ---------------------------------------------------------------------------
 # Subdirectories

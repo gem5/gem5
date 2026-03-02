@@ -132,3 +132,13 @@ gem5_add_simobject(PowerDomain.py SIM_OBJECTS PowerDomain)
 gem5_add_simobject(SignalPort.py)
 gem5_add_simobject(InstTracer.py SIM_OBJECTS InstTracer InstDisassembler)
 gem5_add_simobject(Process.py SIM_OBJECTS Process EmulatedDriver)
+
+# --- Unit tests ---
+gem5_add_test_source(bufval.test.cc)
+gem5_add_test_source(byteswap.test.cc)
+gem5_add_test_source(globals.test.cc)
+gem5_add_test_source(guest_abi.test.cc)
+gem5_add_test_source(port.test.cc)
+gem5_add_test_source(proxy_ptr.test.cc)
+gem5_add_test_source(serialize.test.cc)
+gem5_add_test_source(serialize_handlers.test.cc)

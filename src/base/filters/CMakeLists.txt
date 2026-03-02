@@ -11,3 +11,6 @@ gem5_add_source(perfect_bloom_filter.cc)
 gem5_add_simobject(BloomFilters.py SIM_OBJECTS
     BloomFilterBase BloomFilterBlock BloomFilterMultiBitSel
     BloomFilterBulk BloomFilterH3 BloomFilterMulti BloomFilterPerfect)
+
+# --- Unit tests ---
+gem5_add_test_source(base.test.cc)

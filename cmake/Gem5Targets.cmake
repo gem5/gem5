@@ -31,31 +31,17 @@ list(APPEND _lib_sources "${CMAKE_SOURCE_DIR}/src/base/date.cc")
 if(NOT GEM5_WITHOUT_PYTHON)
     get_property(_py_srcs GLOBAL PROPERTY GEM5_PYSOURCES)
     add_library(gem5_pysources OBJECT ${_py_srcs})
-    target_include_directories(gem5_pysources PRIVATE
-        "${CMAKE_SOURCE_DIR}/src"
-        "${GEM5_GEN_DIR}"
-    )
-    target_link_libraries(gem5_pysources PRIVATE pybind11::pybind11)
+    target_link_libraries(gem5_pysources PRIVATE gem5_deps pybind11::pybind11)
     target_compile_options(gem5_pysources PRIVATE ${GEM5_WERROR_FLAGS})
     set_target_properties(gem5_pysources PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
 
 # ---------------------------------------------------------------------------
-# Common dependencies (INTERFACE library to avoid duplication)
+# Common dependencies: link libraries into gem5_deps
 # ---------------------------------------------------------------------------
-add_library(gem5_deps INTERFACE)
-
-target_include_directories(gem5_deps INTERFACE
-    "${CMAKE_SOURCE_DIR}/src"
-    "${CMAKE_SOURCE_DIR}/include"
-    "${GEM5_GEN_DIR}"
-)
-# ext/ headers are third-party code; mark them SYSTEM so that warnings
-# from vendored headers (e.g. libfdt macro redefinitions) do not trigger
-# -Werror in gem5 translation units.
-target_include_directories(gem5_deps SYSTEM INTERFACE
-    "${CMAKE_SOURCE_DIR}/ext"
-)
+# gem5_deps INTERFACE library is created in the top-level CMakeLists.txt
+# (with include directories and warning flags). Here we add link libraries
+# that depend on ext/ targets created by add_subdirectory(ext).
 
 # Always-built ext libraries
 target_link_libraries(gem5_deps INTERFACE
@@ -112,11 +98,10 @@ if(HAVE_HDF5)
     target_include_directories(gem5_deps INTERFACE ${HDF5_CXX_INCLUDE_DIRS})
 endif()
 if(HAVE_TCMALLOC)
-    target_link_libraries(gem5_deps INTERFACE ${TCMALLOC_LIB})
+    target_link_libraries(gem5_deps INTERFACE tcmalloc::tcmalloc)
 endif()
 if(HAVE_CAPSTONE)
-    target_link_libraries(gem5_deps INTERFACE ${CAPSTONE_LIB})
-    target_include_directories(gem5_deps INTERFACE ${CAPSTONE_INCLUDE_DIR})
+    target_link_libraries(gem5_deps INTERFACE Capstone::Capstone)
 endif()
 if(HAVE_LIBRT)
     target_link_libraries(gem5_deps INTERFACE rt)
@@ -211,15 +196,11 @@ endif()
 add_library(gem5_gtest_logging STATIC
     "${CMAKE_SOURCE_DIR}/src/base/gtest/logging.cc"
 )
-target_include_directories(gem5_gtest_logging PUBLIC
-    "${CMAKE_SOURCE_DIR}/src"
-    "${CMAKE_BINARY_DIR}/generated"
-)
+target_link_libraries(gem5_gtest_logging PUBLIC gem5_deps gem5_ext_gtest)
 target_include_directories(gem5_gtest_logging SYSTEM PUBLIC
     "${CMAKE_SOURCE_DIR}/ext/googletest/googletest/include"
     "${CMAKE_SOURCE_DIR}/ext/googletest/googlemock/include"
 )
-target_link_libraries(gem5_gtest_logging PUBLIC gem5_ext_gtest)
 set_target_properties(gem5_gtest_logging PROPERTIES
     POSITION_INDEPENDENT_CODE ON
 )
@@ -230,43 +211,33 @@ set_target_properties(gem5_gtest_logging PROPERTIES
 add_library(gem5_gtest_mock STATIC
     "${CMAKE_SOURCE_DIR}/src/base/gtest/logging_mock.cc"
 )
-target_include_directories(gem5_gtest_mock PUBLIC
-    "${CMAKE_SOURCE_DIR}/src"
-    "${CMAKE_BINARY_DIR}/generated"
-)
+target_link_libraries(gem5_gtest_mock PUBLIC gem5_gtest_logging)
 target_include_directories(gem5_gtest_mock SYSTEM PUBLIC
     "${CMAKE_SOURCE_DIR}/ext/googletest/googletest/include"
     "${CMAKE_SOURCE_DIR}/ext/googletest/googlemock/include"
 )
-target_link_libraries(gem5_gtest_mock PUBLIC gem5_gtest_logging)
 add_dependencies(gem5_gtest_mock gem5_all)
 set_target_properties(gem5_gtest_mock PROPERTIES
     POSITION_INDEPENDENT_CODE ON
 )
 
-file(GLOB_RECURSE _test_sources "${CMAKE_SOURCE_DIR}/src/*.test.cc")
+# Collect explicitly registered test sources (ISA/GPU filtering is handled
+# by CONDITION parameters in each gem5_add_test_source() call).
+get_property(_test_sources GLOBAL PROPERTY GEM5_TEST_CC_SOURCES)
 
-# Filter out tests from ISA/GPU directories that are not enabled in this build.
-# Paired list: each entry is "<cmake_variable> <source_path_regex>".
-set(_isa_filter_pairs
-    CONF_USE_ARM_ISA   "src/arch/arm/"
-    CONF_USE_X86_ISA   "src/arch/x86/"
-    CONF_USE_RISCV_ISA "src/arch/riscv/"
-    CONF_USE_SPARC_ISA "src/arch/sparc/"
-    CONF_USE_MIPS_ISA  "src/arch/mips/"
-    CONF_USE_POWER_ISA "src/arch/power/"
-    CONF_BUILD_GPU     "src/arch/amdgpu/"
-)
-list(LENGTH _isa_filter_pairs _filter_len)
-math(EXPR _filter_last "${_filter_len} - 1")
-foreach(_i RANGE 0 ${_filter_last} 2)
-    math(EXPR _j "${_i} + 1")
-    list(GET _isa_filter_pairs ${_i} _var)
-    list(GET _isa_filter_pairs ${_j} _dir)
-    if(NOT ${_var})
-        list(FILTER _test_sources EXCLUDE REGEX "${_dir}")
-    endif()
-endforeach()
+# Safety check: compare registered tests against GLOB to catch forgotten
+# registrations.  This warning fires only when they differ, indicating a
+# .test.cc file exists on disk but was not registered with
+# gem5_add_test_source() in its CMakeLists.txt.
+file(GLOB_RECURSE _glob_test_sources "${CMAKE_SOURCE_DIR}/src/*.test.cc")
+list(LENGTH _test_sources _registered_count)
+list(LENGTH _glob_test_sources _glob_count)
+if(NOT _registered_count EQUAL _glob_count)
+    message(WARNING
+        "Test registration mismatch: ${_registered_count} tests registered "
+        "via gem5_add_test_source() but ${_glob_count} .test.cc files found "
+        "on disk. Some tests may not be registered in their CMakeLists.txt.")
+endif()
 
 set(_all_test_names "")
 foreach(_test_src ${_test_sources})

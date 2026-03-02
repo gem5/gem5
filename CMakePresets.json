@@ -17,7 +17,7 @@
         },
         {
             "name": "debug",
-            "displayName": "gem5 Debug",
+            "displayName": "gem5 Debug (X86)",
             "description": "Debug: -O0, full debug, tracing",
             "inherits": "default",
             "cacheVariables": {
@@ -26,7 +26,7 @@
         },
         {
             "name": "opt",
-            "displayName": "gem5 Opt",
+            "displayName": "gem5 Opt (X86)",
             "description": "Optimized build: -O3, debug info, tracing enabled",
             "inherits": "default",
             "cacheVariables": {
@@ -35,7 +35,7 @@
         },
         {
             "name": "fast",
-            "displayName": "gem5 Fast",
+            "displayName": "gem5 Fast (X86)",
             "description": "Fast build: -O3, no debug/tracing, NDEBUG",
             "inherits": "default",
             "cacheVariables": {
@@ -43,27 +43,11 @@
             }
         },
         {
-            "name": "debug-x86",
-            "displayName": "gem5 Debug (X86)",
+            "name": "debug-all",
+            "displayName": "gem5 Debug (ALL)",
             "inherits": "debug",
             "cacheVariables": {
-                "GEM5_BUILD_VARIANT": "X86"
-            }
-        },
-        {
-            "name": "opt-x86",
-            "displayName": "gem5 Opt (X86)",
-            "inherits": "opt",
-            "cacheVariables": {
-                "GEM5_BUILD_VARIANT": "X86"
-            }
-        },
-        {
-            "name": "fast-x86",
-            "displayName": "gem5 Opt (X86)",
-            "inherits": "fast",
-            "cacheVariables": {
-                "GEM5_BUILD_VARIANT": "X86"
+                "GEM5_BUILD_VARIANT": "ALL"
             }
         },
         {
@@ -75,6 +59,22 @@
             }
         },
         {
+            "name": "fast-all",
+            "displayName": "gem5 Fast (ALL)",
+            "inherits": "fast",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "ALL"
+            }
+        },
+        {
+            "name": "debug-arm",
+            "displayName": "gem5 Debug (ARM)",
+            "inherits": "debug",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "ARM"
+            }
+        },
+        {
             "name": "opt-arm",
             "displayName": "gem5 Opt (ARM)",
             "inherits": "opt",
@@ -83,9 +83,33 @@
             }
         },
         {
+            "name": "fast-arm",
+            "displayName": "gem5 Fast (ARM)",
+            "inherits": "fast",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "ARM"
+            }
+        },
+        {
+            "name": "debug-riscv",
+            "displayName": "gem5 Debug (RISCV)",
+            "inherits": "debug",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "RISCV"
+            }
+        },
+        {
             "name": "opt-riscv",
             "displayName": "gem5 Opt (RISCV)",
             "inherits": "opt",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "RISCV"
+            }
+        },
+        {
+            "name": "fast-riscv",
+            "displayName": "gem5 Fast (RISCV)",
+            "inherits": "fast",
             "cacheVariables": {
                 "GEM5_BUILD_VARIANT": "RISCV"
             }
@@ -103,6 +127,42 @@
         {
             "name": "fast",
             "configurePreset": "fast"
+        },
+        {
+            "name": "debug-all",
+            "configurePreset": "debug-all"
+        },
+        {
+            "name": "opt-all",
+            "configurePreset": "opt-all"
+        },
+        {
+            "name": "fast-all",
+            "configurePreset": "fast-all"
+        },
+        {
+            "name": "debug-arm",
+            "configurePreset": "debug-arm"
+        },
+        {
+            "name": "opt-arm",
+            "configurePreset": "opt-arm"
+        },
+        {
+            "name": "fast-arm",
+            "configurePreset": "fast-arm"
+        },
+        {
+            "name": "debug-riscv",
+            "configurePreset": "debug-riscv"
+        },
+        {
+            "name": "opt-riscv",
+            "configurePreset": "opt-riscv"
+        },
+        {
+            "name": "fast-riscv",
+            "configurePreset": "fast-riscv"
         }
     ]
 }

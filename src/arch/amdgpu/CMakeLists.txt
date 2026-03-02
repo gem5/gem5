@@ -60,3 +60,5 @@ if(CONF_TARGET_GPU_ISA STREQUAL "vega")
 
     gem5_add_debug_flag(VEGA "Debug flag for VEGA GPU ISA")
 endif()
+
+add_subdirectory(common/dtype)

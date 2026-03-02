@@ -27,8 +27,88 @@
 cmake_minimum_required (VERSION 2.6)
 
 project (DSENT)
-# find out all the file that need to be compiled
-file(GLOB_RECURSE SRCS  "*.h" "*.cc")
+
+set(SRCS
+    DSENT.cc
+    interface.cc
+    libutil/Calculator.cc
+    libutil/Config.cc
+    libutil/Exception.cc
+    libutil/Log.cc
+    libutil/MathUtil.cc
+    libutil/String.cc
+    model/ElectricalModel.cc
+    model/EventInfo.cc
+    model/Model.cc
+    model/ModelGen.cc
+    model/OpticalModel.cc
+    model/PortInfo.cc
+    model/TransitionInfo.cc
+    model/electrical/BarrelShifter.cc
+    model/electrical/BroadcastHTree.cc
+    model/electrical/DFFRAM.cc
+    model/electrical/Decoder.cc
+    model/electrical/DemuxTreeDeserializer.cc
+    model/electrical/MatrixArbiter.cc
+    model/electrical/Multiplexer.cc
+    model/electrical/MultiplexerCrossbar.cc
+    model/electrical/MuxTreeSerializer.cc
+    model/electrical/OR.cc
+    model/electrical/RepeatedLink.cc
+    model/electrical/RippleAdder.cc
+    model/electrical/SeparableAllocator.cc
+    model/electrical/TestModel.cc
+    model/electrical/router/Router.cc
+    model/electrical/router/RouterInputPort.cc
+    model/electrical/router/RouterSwitchAllocator.cc
+    model/network/ElectricalClos.cc
+    model/network/ElectricalMesh.cc
+    model/network/PhotonicClos.cc
+    model/optical/GatedLaserSource.cc
+    model/optical/LaserSource.cc
+    model/optical/OpticalLinkBackendRx.cc
+    model/optical/OpticalLinkBackendTx.cc
+    model/optical/OpticalTestModel.cc
+    model/optical/RingDetector.cc
+    model/optical/RingFilter.cc
+    model/optical/RingModulator.cc
+    model/optical/SWMRLink.cc
+    model/optical/SWSRLink.cc
+    model/optical/ThrottledLaserSource.cc
+    model/optical_graph/OpticalDetector.cc
+    model/optical_graph/OpticalFilter.cc
+    model/optical_graph/OpticalGraph.cc
+    model/optical_graph/OpticalLaser.cc
+    model/optical_graph/OpticalModulator.cc
+    model/optical_graph/OpticalNode.cc
+    model/optical_graph/OpticalWaveguide.cc
+    model/optical_graph/OpticalWavelength.cc
+    model/std_cells/ADDF.cc
+    model/std_cells/AND2.cc
+    model/std_cells/BUF.cc
+    model/std_cells/CellMacros.cc
+    model/std_cells/DFFQ.cc
+    model/std_cells/INV.cc
+    model/std_cells/LATQ.cc
+    model/std_cells/MUX2.cc
+    model/std_cells/NAND2.cc
+    model/std_cells/NOR2.cc
+    model/std_cells/OR2.cc
+    model/std_cells/StdCell.cc
+    model/std_cells/StdCellLib.cc
+    model/std_cells/XOR2.cc
+    model/timing_graph/ElectricalDelay.cc
+    model/timing_graph/ElectricalDriver.cc
+    model/timing_graph/ElectricalDriverMultiplier.cc
+    model/timing_graph/ElectricalLoad.cc
+    model/timing_graph/ElectricalNet.cc
+    model/timing_graph/ElectricalTimingNode.cc
+    model/timing_graph/ElectricalTimingOptimizer.cc
+    model/timing_graph/ElectricalTimingTree.cc
+    tech/TechModel.cc
+    util/Constants.cc
+    util/Result.cc
+)
 
 # add the library
 add_library(dsent MODULE ${SRCS})

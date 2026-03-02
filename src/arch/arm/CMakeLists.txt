@@ -226,3 +226,7 @@ if(CONF_USE_ARM_FASTMODEL)
     gem5_add_simobject(fastmodel/reset_controller/FastModelResetControllerExample.py
         SIM_OBJECTS FastModelResetControllerExample)
 endif()
+
+# --- Unit tests ---
+gem5_add_test_source(aapcs64.test.cc CONDITION CONF_USE_ARM_ISA)
+gem5_add_test_source(matrix.test.cc CONDITION CONF_USE_ARM_ISA)

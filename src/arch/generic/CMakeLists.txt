@@ -23,3 +23,7 @@ if(CONF_USE_ARM_ISA OR CONF_USE_RISCV_ISA)
     gem5_add_simobject(BaseSemihosting.py SIM_OBJECTS BaseSemihosting)
     gem5_add_debug_flag(Semihosting "Semihosting debugging")
 endif()
+
+# --- Unit tests ---
+gem5_add_test_source(vec_pred_reg.test.cc)
+gem5_add_test_source(vec_reg.test.cc)

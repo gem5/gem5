@@ -24,8 +24,13 @@ message(STATUS "Python3 libraries: ${Python3_LIBRARIES}")
 # Optional dependencies
 # ---------------------------------------------------------------------------
 
-# Protobuf
-find_package(Protobuf QUIET)
+# Protobuf: prefer CONFIG mode (resolves abseil transitive deps on v22+),
+# fall back to CMake's FindProtobuf module for older installations.
+set(protobuf_MODULE_COMPATIBLE TRUE)
+find_package(Protobuf CONFIG QUIET)
+if(NOT Protobuf_FOUND)
+    find_package(Protobuf QUIET)
+endif()
 if(Protobuf_FOUND)
     set(HAVE_PROTOBUF TRUE)
     message(STATUS "Protobuf found: ${Protobuf_VERSION}")
@@ -61,6 +66,9 @@ if(GEM5_WITH_TCMALLOC)
     find_library(TCMALLOC_LIB NAMES tcmalloc_minimal tcmalloc)
     if(TCMALLOC_LIB)
         set(HAVE_TCMALLOC TRUE)
+        add_library(tcmalloc::tcmalloc UNKNOWN IMPORTED)
+        set_target_properties(tcmalloc::tcmalloc PROPERTIES
+            IMPORTED_LOCATION "${TCMALLOC_LIB}")
         message(STATUS "tcmalloc found: ${TCMALLOC_LIB}")
     else()
         message(STATUS "tcmalloc not found -- you can get a 12% performance "
@@ -74,6 +82,10 @@ find_library(CAPSTONE_LIB NAMES capstone)
 find_path(CAPSTONE_INCLUDE_DIR NAMES capstone/capstone.h)
 if(CAPSTONE_LIB AND CAPSTONE_INCLUDE_DIR)
     set(HAVE_CAPSTONE TRUE)
+    add_library(Capstone::Capstone UNKNOWN IMPORTED)
+    set_target_properties(Capstone::Capstone PROPERTIES
+        IMPORTED_LOCATION "${CAPSTONE_LIB}"
+        INTERFACE_INCLUDE_DIRECTORIES "${CAPSTONE_INCLUDE_DIR}")
     message(STATUS "Capstone found: ${CAPSTONE_LIB}")
 else()
     set(HAVE_CAPSTONE FALSE)

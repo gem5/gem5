@@ -20,3 +20,11 @@ gem5_add_simobject(ReplacementPolicies.py
         BaseReplacementPolicy DuelingRP FIFORP SecondChanceRP
         LFURP LRURP BIPRP MRURP RandomRP BRRIPRP SHiPRP
         SHiPMemRP SHiPPCRP TreePLRURP WeightedLRURP)
+
+# --- Unit tests ---
+gem5_add_test_source(fifo_rp.test.cc)
+gem5_add_test_source(lfu_rp.test.cc)
+gem5_add_test_source(lru_rp.test.cc)
+gem5_add_test_source(mru_rp.test.cc)
+gem5_add_test_source(replaceable_entry.test.cc)
+gem5_add_test_source(tree_plru_rp.test.cc)

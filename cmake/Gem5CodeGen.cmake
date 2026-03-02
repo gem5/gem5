@@ -797,6 +797,15 @@ function(gem5_create_proto_commands)
         return()
     endif()
 
+    # Prefer the protobuf::protoc imported target (set by CONFIG mode on
+    # protobuf v22+) for correct transitive dependency resolution.
+    # Fall back to the Protobuf_PROTOC_EXECUTABLE variable for older installs.
+    if(TARGET protobuf::protoc)
+        set(_protoc_cmd "$<TARGET_FILE:protobuf::protoc>")
+    else()
+        set(_protoc_cmd "${Protobuf_PROTOC_EXECUTABLE}")
+    endif()
+
     set(_proto_out "${GEM5_GEN_DIR}/proto")
     file(MAKE_DIRECTORY "${_proto_out}")
 
@@ -809,7 +818,7 @@ function(gem5_create_proto_commands)
 
         add_custom_command(
             OUTPUT "${_pb_cc}" "${_pb_h}"
-            COMMAND "${Protobuf_PROTOC_EXECUTABLE}"
+            COMMAND "${_protoc_cmd}"
                     "--cpp_out=${_proto_out}"
                     "--proto_path=${_proto_dir}"
                     "${_proto_file}"

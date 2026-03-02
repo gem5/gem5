@@ -210,12 +210,15 @@ if(DEFINED GEM5_KCONFIG_OVERRIDE)
     # This replicates SCons setconfig semantics where enabling one protocol
     # implicitly disables all others (Kconfig choice group behavior).
     if(_override_protocols)
-        # All known Ruby protocol names
-        set(_all_protocols
-            MOESI_AMD_Base MESI_Two_Level MESI_Three_Level
-            MESI_Three_Level_HTM MI_example MOESI_CMP_directory
-            MOESI_CMP_token MOESI_hammer Garnet_standalone
-            CHI MSI GPU_VIPER)
+        # Auto-discover all known Ruby protocol names from Kconfig-generated
+        # CONF_RUBY_PROTOCOL_* variables (avoids maintaining a hardcoded list).
+        set(_all_protocols "")
+        get_cmake_property(_kconfig_vars VARIABLES)
+        foreach(_kvar ${_kconfig_vars})
+            if(_kvar MATCHES "^CONF_RUBY_PROTOCOL_(.+)$")
+                list(APPEND _all_protocols "${CMAKE_MATCH_1}")
+            endif()
+        endforeach()
 
         # Disable every protocol not in the override list
         foreach(_proto ${_all_protocols})
