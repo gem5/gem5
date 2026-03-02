@@ -36,7 +36,7 @@ from testlib import *
 if config.bin_path:
     resource_path = config.bin_path
 else:
-    resource_path = joinpath(absdirpath(__file__), "..", "resources")
+    resource_path = joinpath(absdirpath(__file__), "..", "..", "resources")
 
 readfile_verifier = verifier.MatchRegex(re.compile(r"Readfile test passed!"))
 
