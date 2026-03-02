@@ -176,13 +176,20 @@ class CMakeFixture(UniqueFixture):
             self.variant, f"GEM5_{self.variant.upper()}"
         )
 
+        # Build variant corresponds to a file in build_opts/.  When a
+        # protocol is specified the combined name (e.g. X86_MOESI_AMD_Base)
+        # is used so that protocol-specific defaults are picked up.
+        build_variant = self.isa.upper()
+        if self.protocol:
+            build_variant += "_" + self.protocol
+
         # CMake configure
         cmake_command = [
             "cmake",
             "-G",
             "Ninja",
             f"-DCMAKE_BUILD_TYPE={build_type}",
-            f"-DGEM5_BUILD_VARIANT={self.isa.upper()}",
+            f"-DGEM5_BUILD_VARIANT={build_variant}",
             "-DGEM5_NO_COMPRESS_DEBUG=ON",
         ]
 
