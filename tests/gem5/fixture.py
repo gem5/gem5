@@ -190,7 +190,9 @@ class CMakeFixture(UniqueFixture):
         # Kconfig) and, if specified, the cache coherence protocol.
         kconfig_overrides = ["USE_TEST_OBJECTS=y"]
         if self.protocol:
-            kconfig_overrides.append(f"RUBY_PROTOCOL_{self.protocol}=y")
+            kconfig_overrides.append(
+                f"RUBY_PROTOCOL_{self.protocol.upper()}=y"
+            )
         cmake_command.append(
             "-DGEM5_KCONFIG_OVERRIDE=" + ";".join(kconfig_overrides)
         )
