@@ -40,7 +40,8 @@ namespace memory
 DRAMSys::DRAMSys(Params const &params)
     : AbstractMemory(params),
       tlmWrapper(dramSysWrapper.tSocket, params.name + ".tlm", InvalidPortID),
-      config(::DRAMSys::Config::from_path(params.configuration)),
+      config(::DRAMSys::Config::from_path(params.configuration,
+                                          params.resource_directory)),
       dramSysWrapper(params.name.c_str(), config, params.range)
 {
     dramSysWrapper.dramsys->registerIdleCallback(
