@@ -69,6 +69,15 @@ pybind_init_port(py::module_ &m_native)
             [](gem5::PortProxy &self, Addr phys_addr, py::buffer src_buf) {
                 py::buffer_info info = src_buf.request();
 
+                if (info.ndim != 1) {
+                    throw std::invalid_argument(
+                        "PyPort.write: buffer must be 1-dimensional");
+                }
+                if (info.strides[0] != info.itemsize) {
+                    throw std::invalid_argument(
+                        "PyPort.write: buffer must be C-contiguous");
+                }
+
                 if (!self.tryWriteBlob(
                         phys_addr, reinterpret_cast<const uint8_t *>(info.ptr),
                         info.size * info.itemsize)) {
