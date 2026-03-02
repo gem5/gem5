@@ -260,11 +260,7 @@ class Gem5Fixture(CMakeFixture):
         self.set_global()
 
     def get_get_build_info(self) -> Optional[str]:
-        # Return variant-qualified path so CI and listing tools can
-        # distinguish opt/debug/fast targets.  Format:
-        #   build/<ISA>_<variant>/gem5
-        # CI parses ISA and variant by splitting on the last underscore.
-        return joinpath(self.target_dir, "gem5")
+        return self.path
 
 
 class MakeFixture(Fixture):

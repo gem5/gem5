@@ -682,32 +682,16 @@ if main_args.update_json:
     _build_type = flavor_to_cmake_build_type(main_args.flavor)
 
     # With CMake, tests.json is generated at configure time.
-    if os.path.exists(os.path.join(main_args.build_dir, "CMakeCache.txt")):
-        # Re-configure existing build directory
-        subprocess.check_call(
-            [
-                "cmake",
-                "-DGEM5_WITH_SYSTEMC_TESTS=ON",
-                f"-DCMAKE_BUILD_TYPE={_build_type}",
-                "-B",
-                main_args.build_dir,
-            ]
-        )
-    else:
-        # Fresh configure from source directory
-        subprocess.check_call(
-            [
-                "cmake",
-                "-G",
-                "Ninja",
-                "-DGEM5_WITH_SYSTEMC_TESTS=ON",
-                f"-DCMAKE_BUILD_TYPE={_build_type}",
-                "-S",
-                main_args.source_dir,
-                "-B",
-                main_args.build_dir,
-            ]
-        )
+    _cmake_cmd = [
+        "cmake",
+        "-DGEM5_WITH_SYSTEMC_TESTS=ON",
+        f"-DCMAKE_BUILD_TYPE={_build_type}",
+    ]
+    # Fresh configure needs generator and source dir; reconfigure does not.
+    if not os.path.exists(os.path.join(main_args.build_dir, "CMakeCache.txt")):
+        _cmake_cmd.extend(["-G", "Ninja", "-S", main_args.source_dir])
+    _cmake_cmd.extend(["-B", main_args.build_dir])
+    subprocess.check_call(_cmake_cmd)
 
 with open(json_path) as f:
     test_data = json.load(f)

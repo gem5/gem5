@@ -272,15 +272,26 @@ foreach(_item IN LISTS _kconfig_defines)
     endif()
 endforeach()
 
+# Common prefix for all kconfiglib tool invocations:
+#   cmake -E env <vars> KCONFIG_CONFIG=... PYTHONPATH=... python3
+set(_kconfig_tool_prefix
+    "${CMAKE_COMMAND}" -E env
+    ${_kconfig_env_vars}
+    "KCONFIG_CONFIG=${_kconfig_config}"
+    "PYTHONPATH=${CMAKE_SOURCE_DIR}/ext/Kconfiglib/import"
+    "${Python3_EXECUTABLE}"
+)
+
 # -- menuconfig: interactive curses-based configuration editor --
+# menuconfig needs MENUCONFIG_STYLE in addition to the common env vars.
 add_custom_target(menuconfig
     COMMAND "${CMAKE_COMMAND}" -E env
         ${_kconfig_env_vars}
         "KCONFIG_CONFIG=${_kconfig_config}"
         "MENUCONFIG_STYLE=aquatic"
         "PYTHONPATH=${CMAKE_SOURCE_DIR}/ext/Kconfiglib/import"
-        "${Python3_EXECUTABLE}" "${_kconfiglib_dir}/menuconfig.py"
-        "${_kconfig_file}"
+        "${Python3_EXECUTABLE}"
+        "${_kconfiglib_dir}/menuconfig.py" "${_kconfig_file}"
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     COMMENT "Running Kconfig menuconfig for ${GEM5_BUILD_VARIANT}..."
     USES_TERMINAL
@@ -288,12 +299,8 @@ add_custom_target(menuconfig
 
 # -- oldconfig: update .config, prompting for new symbols --
 add_custom_target(oldconfig
-    COMMAND "${CMAKE_COMMAND}" -E env
-        ${_kconfig_env_vars}
-        "KCONFIG_CONFIG=${_kconfig_config}"
-        "PYTHONPATH=${CMAKE_SOURCE_DIR}/ext/Kconfiglib/import"
-        "${Python3_EXECUTABLE}" "${_kconfiglib_dir}/oldconfig.py"
-        "${_kconfig_file}"
+    COMMAND ${_kconfig_tool_prefix}
+        "${_kconfiglib_dir}/oldconfig.py" "${_kconfig_file}"
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     COMMENT "Running Kconfig oldconfig for ${GEM5_BUILD_VARIANT}..."
     USES_TERMINAL
@@ -304,11 +311,8 @@ set(GEM5_SAVEDEFCONFIG_FILE "${CMAKE_BINARY_DIR}/defconfig" CACHE FILEPATH
     "Output path for the 'savedefconfig' target")
 
 add_custom_target(savedefconfig
-    COMMAND "${CMAKE_COMMAND}" -E env
-        ${_kconfig_env_vars}
-        "KCONFIG_CONFIG=${_kconfig_config}"
-        "PYTHONPATH=${CMAKE_SOURCE_DIR}/ext/Kconfiglib/import"
-        "${Python3_EXECUTABLE}" "${_kconfiglib_dir}/savedefconfig.py"
+    COMMAND ${_kconfig_tool_prefix}
+        "${_kconfiglib_dir}/savedefconfig.py"
         "--kconfig" "${_kconfig_file}"
         "--out" "${GEM5_SAVEDEFCONFIG_FILE}"
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
@@ -321,11 +325,8 @@ set(GEM5_DEFCONFIG_FILE "" CACHE FILEPATH
     "Input defconfig file for the 'defconfig' target (e.g. build_opts/ARM)")
 
 add_custom_target(defconfig
-    COMMAND "${CMAKE_COMMAND}" -E env
-        ${_kconfig_env_vars}
-        "KCONFIG_CONFIG=${_kconfig_config}"
-        "PYTHONPATH=${CMAKE_SOURCE_DIR}/ext/Kconfiglib/import"
-        "${Python3_EXECUTABLE}" "${_kconfiglib_dir}/defconfig.py"
+    COMMAND ${_kconfig_tool_prefix}
+        "${_kconfiglib_dir}/defconfig.py"
         "--kconfig" "${_kconfig_file}"
         "${GEM5_DEFCONFIG_FILE}"
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"

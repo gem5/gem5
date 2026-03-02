@@ -1,26 +1,25 @@
 # src/dev/net/CMakeLists.txt
-# Converted from src/dev/net/SConscript
 
-# Basic Ethernet infrastructure
-gem5_add_source(etherbus.cc)
-gem5_add_source(etherswitch.cc)
-gem5_add_source(etherdevice.cc)
-gem5_add_source(etherdump.cc)
-gem5_add_source(etherint.cc)
-gem5_add_source(etherlink.cc)
-gem5_add_source(etherpkt.cc)
-gem5_add_source(ethertap.cc)
-gem5_add_source(pktfifo.cc)
-
-# Dist gem5
-gem5_add_source(dist_iface.cc)
-gem5_add_source(dist_etherlink.cc)
-gem5_add_source(tcp_iface.cc)
-
-# Ethernet controllers
-gem5_add_source(i8254xGBe.cc)
-gem5_add_source(ns_gige.cc)
-gem5_add_source(sinic.cc)
+gem5_add_sources(
+    # Ethernet infrastructure
+    etherbus.cc
+    etherswitch.cc
+    etherdevice.cc
+    etherdump.cc
+    etherint.cc
+    etherlink.cc
+    etherpkt.cc
+    ethertap.cc
+    pktfifo.cc
+    # Dist gem5
+    dist_iface.cc
+    dist_etherlink.cc
+    tcp_iface.cc
+    # Ethernet controllers
+    i8254xGBe.cc
+    ns_gige.cc
+    sinic.cc
+)
 
 # --- Debug flags ---
 gem5_add_debug_flag(Ethernet "Ethernet debugging")

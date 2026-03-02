@@ -138,6 +138,9 @@ if(NOT SYSTEMC_LIBRARY)
     )
 endif()
 
+# Common link libraries for all TLM example executables
+set(_tlm_example_libs gem5_tlm tlm_examples_common "${_gem5_lib}" "${SYSTEMC_LIBRARY}")
+
 # ---------------------------------------------------------------------------
 # Example: master_port
 # ---------------------------------------------------------------------------
@@ -145,12 +148,7 @@ add_executable(gem5_sc_master
     examples/master_port/main.cc
     examples/master_port/traffic_generator.cc
 )
-target_link_libraries(gem5_sc_master PRIVATE
-    gem5_tlm
-    tlm_examples_common
-    "${_gem5_lib}"
-    "${SYSTEMC_LIBRARY}"
-)
+target_link_libraries(gem5_sc_master PRIVATE ${_tlm_example_libs})
 
 # ---------------------------------------------------------------------------
 # Example: slave_port
@@ -159,12 +157,7 @@ add_executable(gem5_sc_slave
     examples/slave_port/main.cc
     examples/slave_port/sc_target.cc
 )
-target_link_libraries(gem5_sc_slave PRIVATE
-    gem5_tlm
-    tlm_examples_common
-    "${_gem5_lib}"
-    "${SYSTEMC_LIBRARY}"
-)
+target_link_libraries(gem5_sc_slave PRIVATE ${_tlm_example_libs})
 
 # ---------------------------------------------------------------------------
 # Install

@@ -138,47 +138,42 @@ get_property(_codegen_phase1 GLOBAL PROPERTY GEM5_CODEGEN_TARGETS_PHASE1)
 get_property(_obj_libs GLOBAL PROPERTY GEM5_OBJECT_LIBS)
 get_property(_slicc_targets GLOBAL PROPERTY GEM5_SLICC_TARGETS)
 
-foreach(_obj ${_obj_libs})
-    if(_codegen_phase1)
-        add_dependencies(${_obj} ${_codegen_phase1})
+# Combine all codegen deps into a single list for cleaner propagation.
+set(_codegen_deps ${_codegen_phase1} ${_slicc_targets})
+if(_codegen_deps)
+    foreach(_obj ${_obj_libs})
+        add_dependencies(${_obj} ${_codegen_deps})
+    endforeach()
+    if(TARGET gem5_generated_objs)
+        add_dependencies(gem5_generated_objs ${_codegen_deps})
     endif()
-    if(_slicc_targets)
-        add_dependencies(${_obj} ${_slicc_targets})
-    endif()
-endforeach()
+endif()
 
+# ---------------------------------------------------------------------------
+# Common source list for static and shared library targets
+# ---------------------------------------------------------------------------
+# Composed from per-directory OBJECT libraries + generated objects + date.cc.
+# date.cc embeds the compile timestamp and is compiled directly.
+set(_gem5_lib_sources
+    ${_all_obj_sources}
+    "${CMAKE_SOURCE_DIR}/src/base/date.cc"
+)
 if(TARGET gem5_generated_objs)
-    if(_codegen_phase1)
-        add_dependencies(gem5_generated_objs ${_codegen_phase1})
-    endif()
-    if(_slicc_targets)
-        add_dependencies(gem5_generated_objs ${_slicc_targets})
-    endif()
+    list(APPEND _gem5_lib_sources "$<TARGET_OBJECTS:gem5_generated_objs>")
 endif()
 
 # ---------------------------------------------------------------------------
 # Static library: libgem5_all
 # ---------------------------------------------------------------------------
-# Composed from per-directory OBJECT libraries + generated objects + date.cc.
-# date.cc embeds the compile timestamp and is compiled directly by gem5_all.
-set(_gem5_all_sources
-    ${_all_obj_sources}
-    "${CMAKE_SOURCE_DIR}/src/base/date.cc"
-)
-if(TARGET gem5_generated_objs)
-    list(APPEND _gem5_all_sources "$<TARGET_OBJECTS:gem5_generated_objs>")
-endif()
-
-add_library(gem5_all STATIC ${_gem5_all_sources})
+add_library(gem5_all STATIC ${_gem5_lib_sources})
 target_link_libraries(gem5_all PUBLIC gem5_deps)
 target_compile_options(gem5_all PRIVATE ${GEM5_WERROR_FLAGS})
+set_target_properties(gem5_all PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # Link PySource objects into gem5_all (only with Python support)
 if(NOT GEM5_WITHOUT_PYTHON)
     target_sources(gem5_all PRIVATE $<TARGET_OBJECTS:gem5_pysources>)
 endif()
-
-set_target_properties(gem5_all PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # ---------------------------------------------------------------------------
 # gem5 executable
@@ -197,15 +192,7 @@ add_custom_command(TARGET gem5 POST_BUILD
 # Shared library: libgem5_shared
 # ---------------------------------------------------------------------------
 # Uses the same OBJECT targets as gem5_all (all compiled with -fPIC).
-set(_gem5_shared_sources
-    ${_all_obj_sources}
-    "${CMAKE_SOURCE_DIR}/src/base/date.cc"
-)
-if(TARGET gem5_generated_objs)
-    list(APPEND _gem5_shared_sources "$<TARGET_OBJECTS:gem5_generated_objs>")
-endif()
-
-add_library(gem5_shared SHARED ${_gem5_shared_sources})
+add_library(gem5_shared SHARED ${_gem5_lib_sources})
 target_link_libraries(gem5_shared PUBLIC gem5_deps)
 target_compile_options(gem5_shared PRIVATE ${GEM5_WERROR_FLAGS})
 if(NOT GEM5_WITHOUT_PYTHON)

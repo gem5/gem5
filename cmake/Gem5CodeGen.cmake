@@ -6,6 +6,12 @@
 # automatically registered via gem5_add_generated_source() so they end
 # up in the final gem5 library.
 
+# Common build tool script dependencies shared by many custom commands.
+set(GEM5_BUILD_TOOLS_COMMON_DEPS
+    "${GEM5_BUILD_TOOLS_DIR}/code_formatter.py"
+    "${GEM5_BUILD_TOOLS_DIR}/file_utils.py"
+)
+
 # ---------------------------------------------------------------------------
 # gem5_write_if_unchanged(<filepath> <content>)
 #
@@ -68,8 +74,7 @@ function(gem5_add_debug_flag name description)
                 "${GEM5_BUILD_TOOLS_DIR}/debugflaghh.py"
                 "${_hh}" "${name}" "${description}" "${_fmt}" "${_components}"
         DEPENDS "${GEM5_BUILD_TOOLS_DIR}/debugflaghh.py"
-                "${GEM5_BUILD_TOOLS_DIR}/code_formatter.py"
-                "${GEM5_BUILD_TOOLS_DIR}/file_utils.py"
+                ${GEM5_BUILD_TOOLS_COMMON_DEPS}
                 ${_component_deps}
         WORKING_DIRECTORY "${GEM5_BUILD_TOOLS_DIR}"
         COMMENT "Generating debug flag header: debug/${name}.hh"
@@ -83,8 +88,7 @@ function(gem5_add_debug_flag name description)
                 "${GEM5_BUILD_TOOLS_DIR}/debugflagcc.py"
                 "${_cc}" "${name}"
         DEPENDS "${GEM5_BUILD_TOOLS_DIR}/debugflagcc.py"
-                "${GEM5_BUILD_TOOLS_DIR}/code_formatter.py"
-                "${GEM5_BUILD_TOOLS_DIR}/file_utils.py"
+                ${GEM5_BUILD_TOOLS_COMMON_DEPS}
                 "${_hh}"
         WORKING_DIRECTORY "${GEM5_BUILD_TOOLS_DIR}"
         COMMENT "Generating debug flag source: debug/${name}.cc"
@@ -142,8 +146,7 @@ function(gem5_add_blob symbol input_file output_cc)
                 "${_include_path}"
         DEPENDS "${GEM5_BUILD_TOOLS_DIR}/generate_blob.py"
                 "${GEM5_BUILD_TOOLS_DIR}/blob.py"
-                "${GEM5_BUILD_TOOLS_DIR}/code_formatter.py"
-                "${GEM5_BUILD_TOOLS_DIR}/file_utils.py"
+                ${GEM5_BUILD_TOOLS_COMMON_DEPS}
                 "${input_file}"
         WORKING_DIRECTORY "${GEM5_BUILD_TOOLS_DIR}"
         COMMENT "Generating blob: ${symbol}"
@@ -302,8 +305,7 @@ function(gem5_add_cxx_config sim_object modpath)
                 "${modpath}" "${_hh}"
         DEPENDS gem5py_m5
                 "${GEM5_BUILD_TOOLS_DIR}/cxx_config_hh.py"
-                "${GEM5_BUILD_TOOLS_DIR}/code_formatter.py"
-                "${GEM5_BUILD_TOOLS_DIR}/file_utils.py"
+                ${GEM5_BUILD_TOOLS_COMMON_DEPS}
         WORKING_DIRECTORY "${GEM5_BUILD_TOOLS_DIR}"
         COMMENT "Generating cxx_config header: ${sim_object}.hh"
         VERBATIM
@@ -316,8 +318,7 @@ function(gem5_add_cxx_config sim_object modpath)
                 "${modpath}" "${_cc}"
         DEPENDS gem5py_m5 "${_hh}"
                 "${GEM5_BUILD_TOOLS_DIR}/cxx_config_cc.py"
-                "${GEM5_BUILD_TOOLS_DIR}/code_formatter.py"
-                "${GEM5_BUILD_TOOLS_DIR}/file_utils.py"
+                ${GEM5_BUILD_TOOLS_COMMON_DEPS}
         WORKING_DIRECTORY "${GEM5_BUILD_TOOLS_DIR}"
         COMMENT "Generating cxx_config source: ${sim_object}.cc"
         VERBATIM
@@ -469,8 +470,7 @@ function(gem5_slicc_protocol protocol slicc_file output_dir)
         COMMAND "${CMAKE_COMMAND}" -E touch "${_stamp}"
         DEPENDS ${_slicc_deps} ${_slicc_py_deps}
                 "${_run_slicc}"
-                "${CMAKE_SOURCE_DIR}/build_tools/code_formatter.py"
-                "${CMAKE_SOURCE_DIR}/build_tools/file_utils.py"
+                ${GEM5_BUILD_TOOLS_COMMON_DEPS}
                 "${CMAKE_SOURCE_DIR}/build_tools/grammar.py"
         WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
         COMMENT "Generating SLICC protocol: ${protocol}"
@@ -522,12 +522,6 @@ function(gem5_add_config_header name value)
     )
 endfunction()
 
-# ---------------------------------------------------------------------------
-# gem5_add_info_py()
-#
-# Generate the python/m5/info.py file with build information.
-# Uses infopy.py.
-# ---------------------------------------------------------------------------
 # ---------------------------------------------------------------------------
 # gem5_generate_defines_py()
 #
@@ -644,8 +638,7 @@ function(gem5_create_pysource_commands)
                     "${_output}" "${_pyfile}" "${_modpath}" "${_abspath}"
             DEPENDS "${GEM5_BUILD_TOOLS_DIR}/marshal.py"
                     "${GEM5_BUILD_TOOLS_DIR}/blob.py"
-                    "${GEM5_BUILD_TOOLS_DIR}/code_formatter.py"
-                    "${GEM5_BUILD_TOOLS_DIR}/file_utils.py"
+                    ${GEM5_BUILD_TOOLS_COMMON_DEPS}
                     "${_pyfile}"
             WORKING_DIRECTORY "${GEM5_BUILD_TOOLS_DIR}"
             COMMENT "Embedding Python: ${_modpath}/${_basename}"
@@ -696,8 +689,7 @@ function(gem5_create_simobject_commands)
                         "${_modpath}" "${_param_hh}"
                 DEPENDS gem5py_m5 "${_pyfile}"
                         "${GEM5_BUILD_TOOLS_DIR}/sim_object_param_struct_hh.py"
-                        "${GEM5_BUILD_TOOLS_DIR}/code_formatter.py"
-                        "${GEM5_BUILD_TOOLS_DIR}/file_utils.py"
+                        ${GEM5_BUILD_TOOLS_COMMON_DEPS}
                 WORKING_DIRECTORY "${GEM5_BUILD_TOOLS_DIR}"
                 COMMENT "Generating params header: params/${_obj}.hh"
                 VERBATIM
@@ -709,8 +701,7 @@ function(gem5_create_simobject_commands)
                         "${_modpath}" "${_param_cc}" "${_use_python}"
                 DEPENDS gem5py_m5 "${_pyfile}" "${_param_hh}"
                         "${GEM5_BUILD_TOOLS_DIR}/sim_object_param_struct_cc.py"
-                        "${GEM5_BUILD_TOOLS_DIR}/code_formatter.py"
-                        "${GEM5_BUILD_TOOLS_DIR}/file_utils.py"
+                        ${GEM5_BUILD_TOOLS_COMMON_DEPS}
                 WORKING_DIRECTORY "${GEM5_BUILD_TOOLS_DIR}"
                 COMMENT "Generating param bindings: python/_m5/param_${_obj}.cc"
                 VERBATIM
@@ -753,8 +744,7 @@ function(gem5_create_simobject_commands)
                         "${_modpath}" "${_enum_hh}"
                 DEPENDS gem5py_m5 "${_pyfile}"
                         "${GEM5_BUILD_TOOLS_DIR}/enum_hh.py"
-                        "${GEM5_BUILD_TOOLS_DIR}/code_formatter.py"
-                        "${GEM5_BUILD_TOOLS_DIR}/file_utils.py"
+                        ${GEM5_BUILD_TOOLS_COMMON_DEPS}
                 WORKING_DIRECTORY "${GEM5_BUILD_TOOLS_DIR}"
                 COMMENT "Generating enum header: enums/${_enum}.hh"
                 VERBATIM
@@ -766,8 +756,7 @@ function(gem5_create_simobject_commands)
                         "${_modpath}" "${_enum_cc}" "${_use_python}"
                 DEPENDS gem5py_m5 "${_pyfile}" "${_enum_hh}"
                         "${GEM5_BUILD_TOOLS_DIR}/enum_cc.py"
-                        "${GEM5_BUILD_TOOLS_DIR}/code_formatter.py"
-                        "${GEM5_BUILD_TOOLS_DIR}/file_utils.py"
+                        ${GEM5_BUILD_TOOLS_COMMON_DEPS}
                 WORKING_DIRECTORY "${GEM5_BUILD_TOOLS_DIR}"
                 COMMENT "Generating enum source: enums/${_enum}.cc"
                 VERBATIM

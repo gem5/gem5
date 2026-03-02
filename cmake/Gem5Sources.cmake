@@ -15,118 +15,73 @@
 # Each property stores a list of target names, absolute file paths, or
 # generator expressions.
 
+# Helper: define and initialize an empty global list property.
+macro(_gem5_define_global_property name doc)
+    define_property(GLOBAL PROPERTY ${name} BRIEF_DOCS "${doc}")
+    set_property(GLOBAL PROPERTY ${name} "")
+endmacro()
+
 # Per-directory OBJECT libraries (replacing the old flat GEM5_SOURCES list).
-# Each src/ subdirectory that registers sources gets its own OBJECT target.
-define_property(GLOBAL PROPERTY GEM5_OBJECT_LIBS
-    BRIEF_DOCS "OBJECT library target names"
-    FULL_DOCS "Accumulated list of per-directory OBJECT library targets for gem5")
-set_property(GLOBAL PROPERTY GEM5_OBJECT_LIBS "")
-
-define_property(GLOBAL PROPERTY GEM5_GENERATED_SOURCES
-    BRIEF_DOCS "Generated C++ sources for the gem5 library"
-    FULL_DOCS "Accumulated list of generated C++ source files (debug flags, etc.)")
-set_property(GLOBAL PROPERTY GEM5_GENERATED_SOURCES "")
-
-define_property(GLOBAL PROPERTY GEM5_PYSOURCES
-    BRIEF_DOCS "Python source embedding .cc files"
-    FULL_DOCS "Accumulated list of marshal-generated .cc files for Python embedding")
-set_property(GLOBAL PROPERTY GEM5_PYSOURCES "")
+_gem5_define_global_property(GEM5_OBJECT_LIBS
+    "Per-directory OBJECT library targets for gem5")
+_gem5_define_global_property(GEM5_GENERATED_SOURCES
+    "Generated C++ source files (debug flags, etc.)")
+_gem5_define_global_property(GEM5_PYSOURCES
+    "Marshal-generated .cc files for Python embedding")
 
 # Parallel lists for deferred PySource custom command creation.
 # Custom commands are created centrally at the top level (not in subdirectories)
 # to avoid CMake/Ninja cross-directory custom command stub issues.
-define_property(GLOBAL PROPERTY GEM5_PYSOURCE_INPUTS
-    BRIEF_DOCS "Input .py files for PySource generation"
-    FULL_DOCS "Parallel list with GEM5_PYSOURCES: input .py file paths")
-set_property(GLOBAL PROPERTY GEM5_PYSOURCE_INPUTS "")
+_gem5_define_global_property(GEM5_PYSOURCE_INPUTS
+    "Input .py files for PySource generation")
+_gem5_define_global_property(GEM5_PYSOURCE_MODPATHS
+    "Python module paths for PySource generation")
+_gem5_define_global_property(GEM5_PYSOURCE_ABSPATHS
+    "Filesystem-style import paths for PySource generation")
 
-define_property(GLOBAL PROPERTY GEM5_PYSOURCE_MODPATHS
-    BRIEF_DOCS "Module paths for PySource generation"
-    FULL_DOCS "Parallel list with GEM5_PYSOURCES: Python module paths")
-set_property(GLOBAL PROPERTY GEM5_PYSOURCE_MODPATHS "")
-
-define_property(GLOBAL PROPERTY GEM5_PYSOURCE_ABSPATHS
-    BRIEF_DOCS "Absolute paths for PySource generation"
-    FULL_DOCS "Parallel list with GEM5_PYSOURCES: filesystem-style import paths")
-set_property(GLOBAL PROPERTY GEM5_PYSOURCE_ABSPATHS "")
-
-define_property(GLOBAL PROPERTY GEM5_DEBUG_FLAG_HEADERS
-    BRIEF_DOCS "Generated debug flag .hh files"
-    FULL_DOCS "Headers for debug flags, needed as dependencies")
-set_property(GLOBAL PROPERTY GEM5_DEBUG_FLAG_HEADERS "")
+_gem5_define_global_property(GEM5_DEBUG_FLAG_HEADERS
+    "Generated debug flag .hh files")
 
 # Phase 1 codegen targets: debug flags, ISA parser, blobs.
 # These do NOT depend on gem5py_m5.
-define_property(GLOBAL PROPERTY GEM5_CODEGEN_TARGETS_PHASE1
-    BRIEF_DOCS "Codegen targets that do not depend on gem5py_m5"
-    FULL_DOCS "Custom target names for debug flags, ISA parser, etc.")
-set_property(GLOBAL PROPERTY GEM5_CODEGEN_TARGETS_PHASE1 "")
+_gem5_define_global_property(GEM5_CODEGEN_TARGETS_PHASE1
+    "Codegen targets that do not depend on gem5py_m5")
 
 # Phase 2 codegen: deferred SimObject param/enum custom command data.
 # Same pattern as PySource: custom commands created centrally at top level.
-define_property(GLOBAL PROPERTY GEM5_SIMOBJ_PARAM_NAMES
-    BRIEF_DOCS "SimObject param names for deferred codegen"
-    FULL_DOCS "Parallel list: SimObject class names for param struct generation")
-set_property(GLOBAL PROPERTY GEM5_SIMOBJ_PARAM_NAMES "")
-
-define_property(GLOBAL PROPERTY GEM5_SIMOBJ_PARAM_MODPATHS
-    BRIEF_DOCS "SimObject param modpaths"
-    FULL_DOCS "Parallel list: Python module paths for SimObject params")
-set_property(GLOBAL PROPERTY GEM5_SIMOBJ_PARAM_MODPATHS "")
-
-define_property(GLOBAL PROPERTY GEM5_SIMOBJ_PARAM_PYFILES
-    BRIEF_DOCS "SimObject param source .py files"
-    FULL_DOCS "Parallel list: .py source files for SimObject params")
-set_property(GLOBAL PROPERTY GEM5_SIMOBJ_PARAM_PYFILES "")
-
-define_property(GLOBAL PROPERTY GEM5_SIMOBJ_ENUM_NAMES
-    BRIEF_DOCS "Enum names for deferred codegen"
-    FULL_DOCS "Parallel list: enum names for enum header/source generation")
-set_property(GLOBAL PROPERTY GEM5_SIMOBJ_ENUM_NAMES "")
-
-define_property(GLOBAL PROPERTY GEM5_SIMOBJ_ENUM_MODPATHS
-    BRIEF_DOCS "Enum modpaths"
-    FULL_DOCS "Parallel list: Python module paths for enum generation")
-set_property(GLOBAL PROPERTY GEM5_SIMOBJ_ENUM_MODPATHS "")
-
-define_property(GLOBAL PROPERTY GEM5_SIMOBJ_ENUM_PYFILES
-    BRIEF_DOCS "Enum source .py files"
-    FULL_DOCS "Parallel list: .py source files for enum generation")
-set_property(GLOBAL PROPERTY GEM5_SIMOBJ_ENUM_PYFILES "")
+_gem5_define_global_property(GEM5_SIMOBJ_PARAM_NAMES
+    "SimObject class names for param struct generation")
+_gem5_define_global_property(GEM5_SIMOBJ_PARAM_MODPATHS
+    "Python module paths for SimObject params")
+_gem5_define_global_property(GEM5_SIMOBJ_PARAM_PYFILES
+    ".py source files for SimObject params")
+_gem5_define_global_property(GEM5_SIMOBJ_ENUM_NAMES
+    "Enum names for enum header/source generation")
+_gem5_define_global_property(GEM5_SIMOBJ_ENUM_MODPATHS
+    "Python module paths for enum generation")
+_gem5_define_global_property(GEM5_SIMOBJ_ENUM_PYFILES
+    ".py source files for enum generation")
 
 # Phase 2 codegen (SimObject params/enums) depends on gem5py_m5.
 # Dependency is tracked implicitly: each add_custom_command for param/enum
 # .cc files lists gem5py_m5 in DEPENDS, so CMake resolves the ordering.
-# No explicit custom-target wrappers are created for phase 2 outputs.
 
 # Deferred protobuf custom command data (same cross-directory stub workaround).
-define_property(GLOBAL PROPERTY GEM5_PROTO_FILES
-    BRIEF_DOCS "Protobuf .proto source files"
-    FULL_DOCS "Absolute paths to .proto files for deferred protoc invocation")
-set_property(GLOBAL PROPERTY GEM5_PROTO_FILES "")
+_gem5_define_global_property(GEM5_PROTO_FILES
+    "Absolute paths to .proto files for deferred protoc invocation")
+_gem5_define_global_property(GEM5_PROTO_SUPPRESS_FLAGS
+    "Warning suppression flags applied to generated .pb.cc files")
 
-define_property(GLOBAL PROPERTY GEM5_PROTO_SUPPRESS_FLAGS
-    BRIEF_DOCS "Compile flags for generated protobuf code"
-    FULL_DOCS "Warning suppression flags applied to generated .pb.cc files")
-set_property(GLOBAL PROPERTY GEM5_PROTO_SUPPRESS_FLAGS "")
-
-define_property(GLOBAL PROPERTY GEM5_TEST_CC_SOURCES
-    BRIEF_DOCS "GTest .test.cc source file paths"
-    FULL_DOCS "Accumulated list of absolute paths to .test.cc unit test files")
-set_property(GLOBAL PROPERTY GEM5_TEST_CC_SOURCES "")
-
+_gem5_define_global_property(GEM5_TEST_CC_SOURCES
+    "Absolute paths to .test.cc unit test files")
 # Tracks all .test.cc registrations regardless of CONDITION, so that the
 # safety check in Gem5Targets.cmake can compare against the on-disk GLOB
 # without false positives from condition-excluded tests.
-define_property(GLOBAL PROPERTY GEM5_TEST_CC_ALL_SOURCES
-    BRIEF_DOCS "All registered .test.cc paths (unconditional)"
-    FULL_DOCS "Accumulated list of all .test.cc paths passed to gem5_add_test_source(), regardless of CONDITION")
-set_property(GLOBAL PROPERTY GEM5_TEST_CC_ALL_SOURCES "")
+_gem5_define_global_property(GEM5_TEST_CC_ALL_SOURCES
+    "All .test.cc paths passed to gem5_add_test_source(), regardless of CONDITION")
 
-define_property(GLOBAL PROPERTY GEM5_LINK_LIBRARIES
-    BRIEF_DOCS "Additional libraries to link into the gem5 target"
-    FULL_DOCS "Accumulated list of library targets/names for the gem5 executable")
-set_property(GLOBAL PROPERTY GEM5_LINK_LIBRARIES "")
+_gem5_define_global_property(GEM5_LINK_LIBRARIES
+    "Additional library targets/names for the gem5 executable")
 
 # Central generated output directory
 set(GEM5_GEN_DIR "${CMAKE_BINARY_DIR}/generated" CACHE PATH
