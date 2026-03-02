@@ -159,6 +159,7 @@ class CompilePhase(TestPhaseBase):
             [
                 "cmake",
                 f"-DCMAKE_BUILD_TYPE={build_type}",
+                "-B",
                 self.main_args.build_dir,
             ]
         )
@@ -688,6 +689,7 @@ if main_args.update_json:
                 "cmake",
                 "-DGEM5_WITH_SYSTEMC_TESTS=ON",
                 f"-DCMAKE_BUILD_TYPE={_build_type}",
+                "-B",
                 main_args.build_dir,
             ]
         )
