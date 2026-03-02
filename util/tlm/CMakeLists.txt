@@ -111,9 +111,12 @@ if(NOT EXISTS "${_gem5_lib}")
     )
 endif()
 
-# Try to find SystemC in the gem5 build tree.
-# The CMake gem5 build produces libgem5_ext_systemc.a (in the build dir
-# under ext/systemc/); older or external builds may produce libsystemc.
+# Try to find SystemC in the gem5 build tree first, then fall back to
+# system-installed SystemC.  The gem5 build produces libgem5_ext_systemc.a
+# when USE_SYSTEMC=y, but the documented TLM build flow uses
+# USE_SYSTEMC=n (see README), so the library may not exist in the build
+# tree.  Omitting NO_DEFAULT_PATH lets CMake search CMAKE_PREFIX_PATH and
+# system library directories as a fallback.
 find_library(SYSTEMC_LIBRARY
     NAMES gem5_ext_systemc systemc
     PATHS
@@ -121,7 +124,6 @@ find_library(SYSTEMC_LIBRARY
         "${GEM5_BUILD_DIR}"
         "${CMAKE_CURRENT_BINARY_DIR}/build/systemc"
         "${GEM5_ROOT}/ext/systemc"
-    NO_DEFAULT_PATH
 )
 if(NOT SYSTEMC_LIBRARY)
     message(FATAL_ERROR
@@ -130,7 +132,9 @@ if(NOT SYSTEMC_LIBRARY)
         "  ${GEM5_BUILD_DIR}/ext/systemc\n"
         "  ${GEM5_BUILD_DIR}\n"
         "  ${GEM5_ROOT}/ext/systemc\n"
-        "Ensure that the gem5 build includes SystemC (ext/systemc)."
+        "  (and default system library paths)\n"
+        "Either build gem5 with SystemC enabled (omit USE_SYSTEMC=n),\n"
+        "or install SystemC system-wide / set CMAKE_PREFIX_PATH."
     )
 endif()
 
