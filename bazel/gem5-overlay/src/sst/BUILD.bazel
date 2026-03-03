@@ -4,6 +4,9 @@ load("@rules_cc//cc:defs.bzl", "cc_library")
 
 package(default_visibility = ["//visibility:public"])
 
+
+exports_files(glob(["**/*.py"]))
+
 # -- Header filegroup for gem5_hdrs aggregation --
 filegroup(
     name = "hdrs_files",

@@ -10,6 +10,9 @@ load("//rules:defs.bzl", "gem5_debug_flag", "gem5_compound_flag")
 
 package(default_visibility = ["//visibility:public"])
 
+
+exports_files(glob(["**/*.py"]))
+
 # -- Header filegroup for gem5_hdrs aggregation --
 # Includes base device headers and all ISA-specific device headers
 # (unconditionally, matching CMake's global gem5_src_hdrs behavior).

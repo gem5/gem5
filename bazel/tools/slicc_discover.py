@@ -13,21 +13,30 @@ import sys
 
 
 def discover_protocol_files(src_root, protocol_name, slicc_file):
-    """Run SLICC parser for a protocol and return expected output files."""
+    """Run SLICC parser for a protocol and return (cc_files, py_files)."""
     protocol_dir = os.path.join(src_root, "src", "mem", "ruby", "protocol")
     interfaces = os.path.join(protocol_dir, "RubySlicc_interfaces.slicc")
     slicc_path = os.path.join(protocol_dir, slicc_file)
 
     if not os.path.exists(slicc_path):
-        return []
+        return [], []
 
     from slicc.parser import SLICC
 
     try:
         slicc = SLICC(slicc_path, [interfaces], protocol_dir)
-        # Filter to C++ files only; SLICC also emits .py files that
-        # cannot be fed into cc_library.
-        return sorted(f for f in slicc.files() if f.endswith((".cc", ".hh")))
+        all_files = slicc.files()
+        cc_files = {f for f in all_files if f.endswith((".cc", ".hh"))}
+        py_files = sorted(f for f in all_files if f.endswith(".py"))
+        # parser.files() omits ProtocolInfo.hh; add it explicitly since
+        # writeProtocolInfo() always generates it alongside Types.hh.
+        if slicc.protocol:
+            cc_files.add(
+                os.path.join(
+                    slicc.protocol, slicc.protocol + "ProtocolInfo.hh"
+                )
+            )
+        return sorted(cc_files), py_files
     except Exception as e:
         print(
             "WARNING: SLICC discovery failed for {}: {}".format(
@@ -35,7 +44,7 @@ def discover_protocol_files(src_root, protocol_name, slicc_file):
             ),
             file=sys.stderr,
         )
-        return []
+        return [], []
 
 
 PROTOCOLS = {
@@ -63,11 +72,20 @@ def main():
 
     print('"""Generated SLICC output manifests. Do not edit."""')
     print()
-    print("SLICC_MANIFESTS = {")
 
+    all_cc = {}
+    all_py = {}
     for name in sorted(PROTOCOLS.keys()):
         slicc_file = PROTOCOLS[name]
-        files = discover_protocol_files(src_root, name, slicc_file)
+        cc_files, py_files = discover_protocol_files(
+            src_root, name, slicc_file
+        )
+        all_cc[name] = cc_files
+        all_py[name] = py_files
+
+    print("SLICC_MANIFESTS = {")
+    for name in sorted(all_cc.keys()):
+        files = all_cc[name]
         if files:
             print(f'    "{name}": [')
             for f in files:
@@ -75,7 +93,19 @@ def main():
             print("    ],")
         else:
             print(f'    "{name}": [],')
+    print("}")
 
+    print()
+    print("SLICC_PY_MANIFESTS = {")
+    for name in sorted(all_py.keys()):
+        files = all_py[name]
+        if files:
+            print(f'    "{name}": [')
+            for f in files:
+                print(f'        "{f}",')
+            print("    ],")
+        else:
+            print(f'    "{name}": [],')
     print("}")
 
 

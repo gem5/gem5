@@ -5,6 +5,9 @@ load("//rules:defs.bzl", "gem5_debug_flag")
 
 package(default_visibility = ["//visibility:public"])
 
+
+exports_files(glob(["**/*.py"]))
+
 # -- Header filegroup for dev hdrs_files aggregation --
 filegroup(
     name = "hdrs_files",

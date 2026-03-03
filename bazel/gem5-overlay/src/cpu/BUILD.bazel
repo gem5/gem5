@@ -10,6 +10,9 @@ load("//rules:defs.bzl", "gem5_debug_flag", "gem5_compound_flag")
 
 package(default_visibility = ["//visibility:public"])
 
+
+exports_files(glob(["**/*.py"]))
+
 # -- Header filegroup for gem5_hdrs aggregation --
 filegroup(
     name = "hdrs_files",
@@ -364,6 +367,11 @@ cc_library(
         "//configs:python_enabled": [
             "@system_python//:python",
             "@gem5_ext_pybind11//:pybind11",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:ruby_enabled": [
+            "//src/mem/ruby/protocol:active_protocol",
         ],
         "//conditions:default": [],
     }),

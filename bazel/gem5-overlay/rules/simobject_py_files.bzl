@@ -19,8 +19,9 @@ DRAMSim3, DRAMSys, capstone, protobuf-dependent, Ruby) are excluded from
 BASE because their class headers transitively include external library
 headers that may not be available. Feature-gated in BUILD.bazel:
   DRAMSim3 -> dramsim3_enabled, TrafficGen -> protobuf_enabled.
-BaseSemihosting is in ARM and RISC-V lists (its C++ is only compiled for
-those ISAs). Others should be added back via select() when properly gated.
+BaseSemihosting is gated on semihosting_isa_enabled (ARM or RISC-V)
+via select() in BUILD.bazel. Others should be added back via select()
+when properly gated.
 """
 
 # ISA-independent SimObject .py files (always compiled)
@@ -195,7 +196,6 @@ SIMOBJECT_PY_FILES_X86 = [
 
 # ARM ISA-specific SimObject .py files
 SIMOBJECT_PY_FILES_ARM = [
-    "src/arch/generic/BaseSemihosting.py",
     "src/arch/arm/ArmCPU.py",
     "src/arch/arm/ArmDecoder.py",
     "src/arch/arm/ArmFsWorkload.py",
@@ -252,7 +252,6 @@ SIMOBJECT_PY_FILES_POWER = [
 
 # RISC-V ISA-specific SimObject .py files
 SIMOBJECT_PY_FILES_RISCV = [
-    "src/arch/generic/BaseSemihosting.py",
     "src/arch/riscv/PMAChecker.py",
     "src/arch/riscv/PMP.py",
     "src/arch/riscv/RiscvCPU.py",
@@ -296,6 +295,44 @@ SIMOBJECT_PY_FILES_SPARC = [
     "src/dev/sparc/T1000.py",
 ]
 
+# Ruby-specific SimObject .py files (gated on ruby_enabled)
+SIMOBJECT_PY_FILES_RUBY = [
+    "src/mem/ruby/network/BasicLink.py",
+    "src/mem/ruby/network/BasicRouter.py",
+    "src/mem/ruby/network/MessageBuffer.py",
+    "src/mem/ruby/network/Network.py",
+    "src/mem/ruby/network/fault_model/FaultModel.py",
+    "src/mem/ruby/network/garnet/GarnetLink.py",
+    "src/mem/ruby/network/garnet/GarnetNetwork.py",
+    "src/mem/ruby/network/simple/SimpleLink.py",
+    "src/mem/ruby/network/simple/SimpleNetwork.py",
+    "src/mem/ruby/slicc_interface/Controller.py",
+    "src/mem/ruby/structures/DirectoryMemory.py",
+    "src/mem/ruby/structures/RubyCache.py",
+    "src/mem/ruby/structures/RubyPrefetcher.py",
+    "src/mem/ruby/structures/WireBuffer.py",
+    "src/mem/ruby/system/RubySystem.py",
+    "src/mem/ruby/system/Sequencer.py",
+    # cpu testers gated on Ruby
+    "src/cpu/testers/directedtest/RubyDirectedTester.py",
+    "src/cpu/testers/garnet_synthetic_traffic/GarnetSyntheticTraffic.py",
+    "src/cpu/testers/rubytest/RubyTester.py",
+]
+
+# Ruby GPU-specific SimObject .py files (gated on ruby + gpu)
+SIMOBJECT_PY_FILES_RUBY_GPU = [
+    "src/mem/ruby/system/GPUCoalescer.py",
+    "src/mem/ruby/system/VIPERCoalescer.py",
+    "src/mem/ruby/system/VIPERSequencer.py",
+    # cpu testers gated on Ruby + GPU
+    "src/cpu/testers/gpu_ruby_test/CpuThread.py",
+    "src/cpu/testers/gpu_ruby_test/DmaThread.py",
+    "src/cpu/testers/gpu_ruby_test/GpuWavefront.py",
+    "src/cpu/testers/gpu_ruby_test/ProtocolTester.py",
+    "src/cpu/testers/gpu_ruby_test/TesterDma.py",
+    "src/cpu/testers/gpu_ruby_test/TesterThread.py",
+]
+
 # GPU-specific SimObject .py files
 SIMOBJECT_PY_FILES_GPU = [
     "src/arch/amdgpu/common/X86GPUTLB.py",
@@ -306,3 +343,61 @@ SIMOBJECT_PY_FILES_GPU = [
     "src/gpu-compute/GPUStaticInstFlags.py",
     "src/gpu-compute/LdsState.py",
 ]
+
+# -- Path-to-label conversion for declaring .py files as Bazel inputs --
+# Sorted by depth (deepest first) for longest-prefix matching.
+_OVERLAY_PACKAGES = [
+    "src/arch/amdgpu",
+    "src/arch/arm",
+    "src/arch/generic",
+    "src/arch/isa_parser",
+    "src/arch/mips",
+    "src/arch/null",
+    "src/arch/power",
+    "src/arch/riscv",
+    "src/arch/sparc",
+    "src/arch/x86",
+    "src/dev/amdgpu",
+    "src/dev/arm",
+    "src/dev/hsa",
+    "src/dev/lupio",
+    "src/dev/mips",
+    "src/dev/riscv",
+    "src/dev/sparc",
+    "src/dev/x86",
+    "src/learning_gem5/part2",
+    "src/mem/ruby/protocol/chi/tlm",
+    "src/mem/ruby/protocol",
+    "src/mem/ruby",
+    "src/mem/slicc",
+    "src/arch",
+    "src/base",
+    "src/cpu",
+    "src/dev",
+    "src/gpu-compute",
+    "src/kern",
+    "src/mem",
+    "src/proto",
+    "src/python",
+    "src/sim",
+    "src/sst",
+    "src/systemc",
+    "src/test_objects",
+    "src",
+]
+
+def simobject_path_to_label(path):
+    """Convert a SimObject .py file path to a Bazel label.
+
+    Maps e.g. "src/sim/Root.py" -> "//src/sim:Root.py",
+              "src/cpu/o3/FUPool.py" -> "//src/cpu:o3/FUPool.py".
+    """
+    for pkg in _OVERLAY_PACKAGES:
+        if path.startswith(pkg + "/"):
+            rest = path[len(pkg) + 1:]
+            return "//{}:{}".format(pkg, rest)
+    return "//:" + path
+
+def simobject_paths_to_labels(paths):
+    """Convert a list of SimObject .py file paths to Bazel labels."""
+    return [simobject_path_to_label(p) for p in paths]

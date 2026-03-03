@@ -7,6 +7,7 @@ ISA selection uses .bazelrc presets that directly set individual bool_flag
 values. No Starlark transitions are used.
 """
 
+load("@bazel_skylib//lib:selects.bzl", "selects")
 load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 
 package(default_visibility = ["//visibility:public"])
@@ -26,7 +27,7 @@ string_flag(name = "primary_isa", build_setting_default = "x86")
 
 # ---- Ruby protocol ----
 string_flag(name = "ruby_protocol", build_setting_default = "MESI_Two_Level")
-bool_flag(name = "use_ruby", build_setting_default = False)
+bool_flag(name = "use_ruby", build_setting_default = True)
 
 # ---- GPU ----
 bool_flag(name = "build_gpu", build_setting_default = False)
@@ -99,6 +100,21 @@ config_setting(
 config_setting(
     name = "tlm_python_enabled",
     flag_values = {":build_tlm": "True", ":use_python": "True"},
+)
+
+# Compound: Ruby + GPU both enabled (for GPU coalescer SimObjects)
+config_setting(
+    name = "ruby_gpu_enabled",
+    flag_values = {":use_ruby": "True", ":build_gpu": "True"},
+)
+
+# Compound: semihosting available when either ARM or RISC-V is enabled
+selects.config_setting_group(
+    name = "semihosting_isa_enabled",
+    match_any = [
+        ":arm_isa_enabled",
+        ":riscv_isa_enabled",
+    ],
 )
 
 # ---- Feature detection config_settings ----

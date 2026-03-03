@@ -8,7 +8,7 @@ Provides two approaches:
    deferred gem5_create_simobject_commands() pattern.
 """
 
-load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_cc//cc:defs.bzl", "cc_import", "cc_library")
 
 # ---------------------------------------------------------------------------
 # Per-file SimObject generation (kept for fine-grained control if needed)
@@ -246,6 +246,29 @@ for line in _SIMOBJ_PY_FILES.strip().split("\\n"):
 
 print(f"Registered {{_loaded}} SimObject .py files with importer ({{_failed}} failed)")
 
+# --- Generated SimObject .py files (from SLICC, etc.) ---
+# These are build artifacts passed via argv[7:]. Each is an absolute path
+# to a .py file in the sandbox. Register them with the importer using the
+# filename stem as the m5.objects module name.
+_gen_loaded = 0
+for gen_path in sys.argv[7:]:
+    if not gen_path or not os.path.exists(gen_path):
+        continue
+    stem = os.path.splitext(os.path.basename(gen_path))[0]
+    modpath = f"m5.objects.{{stem}}"
+    try:
+        with open(gen_path) as f:
+            source = f.read()
+        code = compile(source, gen_path, "exec")
+        _importer_instance.add_module(gen_path, modpath, code)
+        _gen_loaded += 1
+    except Exception as e:
+        print(f"Warning: failed to register generated {{modpath}}: {{e}}",
+              file=sys.stderr)
+
+if _gen_loaded:
+    print(f"Registered {{_gen_loaded}} generated SimObject .py files")
+
 # Now import all m5.objects.* modules to trigger SimObject metaclass registration.
 import m5
 
@@ -319,23 +342,27 @@ print("Generated", len(generated_enums), "enum types")
     # "external/gem5_sources".
     src_root = "/".join(build_tools_dir.split("/")[:-1]) if build_tools_dir else "."
 
+    # Collect generated .py file paths (from SLICC, etc.) for argv[7:].
+    gen_py_files = ctx.files.generated_simobject_py_srcs
+    gen_py_args = " ".join([f.path for f in gen_py_files]) if gen_py_files else ""
+
     ctx.actions.run_shell(
         outputs = [params_dir, enums_dir, pybind_dir],
-        inputs = [script] + gen_scripts,
+        inputs = [script] + gen_scripts + ctx.files.simobject_py_srcs + gen_py_files,
         tools = [gem5py_m5],
-        command = "{} {} {} {} {} {} {} {}".format(
-            gem5py_m5.path,
-            script.path,
-            params_dir.path,
-            enums_dir.path,
-            pybind_dir.path,
-            build_tools_dir,
-            use_python,
-            src_root,
+        command = "{exe} {script} {params} {enums} {pybind} {tools} {python} {src} {gen}".format(
+            exe = gem5py_m5.path,
+            script = script.path,
+            params = params_dir.path,
+            enums = enums_dir.path,
+            pybind = pybind_dir.path,
+            tools = build_tools_dir,
+            python = use_python,
+            src = src_root,
+            gen = gen_py_args,
         ),
         mnemonic = "SimObjectAggregate",
         progress_message = "Generating all SimObject params and enums",
-        execution_requirements = {"no-sandbox": "1"},
     )
 
     return [
@@ -357,6 +384,16 @@ _sim_object_aggregate_gen = rule(
         ),
         "use_python": attr.bool(default = True),
         "simobject_py_files": attr.string_list(default = []),
+        "simobject_py_srcs": attr.label_list(
+            default = [],
+            allow_files = [".py"],
+            doc = "Declared .py file inputs for hermetic builds.",
+        ),
+        "generated_simobject_py_srcs": attr.label_list(
+            default = [],
+            allow_files = [".py"],
+            doc = "Generated SimObject .py files from SLICC or other codegen.",
+        ),
         "_gen_scripts": attr.label(
             default = "//build_tools:simobj_gen_scripts",
             allow_files = True,
@@ -366,6 +403,8 @@ _sim_object_aggregate_gen = rule(
 
 def gem5_sim_object_aggregate(name, gem5py_m5 = "//src/python:gem5py_m5",
                                use_python = True, simobject_py_files = [],
+                               simobject_py_srcs = [],
+                               generated_simobject_py_srcs = [],
                                visibility = None, deps = [],
                                compiled_deps = []):
     """Generate all SimObject params and enums in one pass.
@@ -400,6 +439,8 @@ def gem5_sim_object_aggregate(name, gem5py_m5 = "//src/python:gem5py_m5",
         use_python: Whether to generate pybind11 bindings.
         simobject_py_files: List of SimObject .py file paths relative to
             the source root (e.g., ["src/sim/Root.py", "src/cpu/BaseCPU.py"]).
+        simobject_py_srcs: Bazel labels for the .py files (declared inputs
+            for hermetic sandboxed builds and incremental correctness).
         visibility: Visibility.
         deps: Dependencies for the header-only library.
         compiled_deps: Dependencies for compiling the .cc sources. Should
@@ -411,6 +452,8 @@ def gem5_sim_object_aggregate(name, gem5py_m5 = "//src/python:gem5py_m5",
         gem5py_m5 = gem5py_m5,
         use_python = use_python,
         simobject_py_files = simobject_py_files,
+        simobject_py_srcs = simobject_py_srcs,
+        generated_simobject_py_srcs = generated_simobject_py_srcs,
     )
 
     # Header-only library: exports params/*.hh and enums/*.hh via include
@@ -429,10 +472,34 @@ def gem5_sim_object_aggregate(name, gem5py_m5 = "//src/python:gem5py_m5",
     # python/_m5/param_*.cc (pybind11 bindings). These include
     # sim/sim_object.hh and other headers that transitively pull in
     # debug/*.hh, so compiled_deps must include all debug flag targets.
+    #
+    # We compile the tree artifact sources via a normal cc_library (no
+    # alwayslink), then copy the resulting .a archive and re-import it
+    # with cc_import(alwayslink=True). This works around a Bazel bug
+    # where cc_library(alwayslink=True) with tree-artifact sources wraps
+    # individual .o files in --start-lib/--end-lib instead of linking
+    # them directly, causing the linker to drop objects whose symbols
+    # have no external references (such as pybind11 static constructors).
+    # cc_import with alwayslink uses --whole-archive, which correctly
+    # overrides --start-lib lazy loading.
     cc_library(
-        name = name + "_srcs",
+        name = name + "_compile",
         srcs = [gen_name],
         deps = compiled_deps + [":" + name],
-        visibility = visibility,
         alwayslink = True,
+        features = ["-supports_dynamic_linker"],
+    )
+
+    native.genrule(
+        name = name + "_archive",
+        srcs = [":" + name + "_compile"],
+        outs = ["lib" + name + "_alwayslink.a"],
+        cmd = "for f in $(SRCS); do case \"$$f\" in *.pic.lo) ;; *.lo) cp \"$$f\" \"$@\";; esac; done",
+    )
+
+    cc_import(
+        name = name + "_srcs",
+        static_library = ":" + name + "_archive",
+        alwayslink = True,
+        visibility = visibility,
     )

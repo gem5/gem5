@@ -98,7 +98,7 @@ def _generate_slicc_manifests(repository_ctx, src_root, module_root):
         repository_ctx.file(
             "configs/slicc_manifests.bzl",
             content = '"""SLICC manifests (empty -- discovery unavailable)."""\n\n' +
-                      "SLICC_MANIFESTS = {}\n",
+                      "SLICC_MANIFESTS = {}\n\nSLICC_PY_MANIFESTS = {}\n",
         )
         return
 
@@ -121,7 +121,7 @@ def _generate_slicc_manifests(repository_ctx, src_root, module_root):
         repository_ctx.file(
             "configs/slicc_manifests.bzl",
             content = '"""SLICC manifests (empty -- discovery failed)."""\n\n' +
-                      "SLICC_MANIFESTS = {}\n",
+                      "SLICC_MANIFESTS = {}\n\nSLICC_PY_MANIFESTS = {}\n",
         )
 
 def _setup_tlm_library(repository_ctx):

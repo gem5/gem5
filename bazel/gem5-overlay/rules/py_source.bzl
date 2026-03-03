@@ -218,7 +218,7 @@ print(f"Embedded {{count}} SimObject .py files as m5.objects modules")
 
     ctx.actions.run_shell(
         outputs = [output_dir],
-        inputs = [script] + marshal_scripts,
+        inputs = [script] + marshal_scripts + ctx.files.simobject_py_srcs,
         command = "python3 {} {} {} {}".format(
             script.path,
             output_dir.path,
@@ -227,7 +227,6 @@ print(f"Embedded {{count}} SimObject .py files as m5.objects modules")
         ),
         mnemonic = "SimObjectEmbed",
         progress_message = "Embedding SimObject .py files as m5.objects modules",
-        execution_requirements = {"no-sandbox": "1"},
     )
 
     return [DefaultInfo(files = depset([output_dir]))]
@@ -236,6 +235,11 @@ _simobject_embed_gen = rule(
     implementation = _simobject_embed_gen_impl,
     attrs = {
         "simobject_py_files": attr.string_list(default = []),
+        "simobject_py_srcs": attr.label_list(
+            default = [],
+            allow_files = [".py"],
+            doc = "Declared .py file inputs for hermetic sandboxed builds.",
+        ),
         "_marshal_scripts": attr.label(
             default = "//build_tools:build_tools_files",
             allow_files = True,
@@ -243,7 +247,8 @@ _simobject_embed_gen = rule(
     },
 )
 
-def gem5_simobject_pysources(name, simobject_py_files, visibility = None, deps = []):
+def gem5_simobject_pysources(name, simobject_py_files, simobject_py_srcs = [],
+                              visibility = None, deps = []):
     """Embed SimObject .py files as m5.objects.* Python modules.
 
     Takes a list of .py file paths relative to the source root and
@@ -256,6 +261,8 @@ def gem5_simobject_pysources(name, simobject_py_files, visibility = None, deps =
         name: Target name (creates {name} cc_import with alwayslink).
         simobject_py_files: List of .py file paths relative to the source
             root (e.g., ["src/sim/Root.py", "src/cpu/BaseCPU.py"]).
+        simobject_py_srcs: Bazel labels for the .py files (declared inputs
+            for hermetic sandboxed builds and incremental correctness).
         visibility: Visibility.
         deps: Additional dependencies (should include embedded_hdr).
     """
@@ -263,6 +270,7 @@ def gem5_simobject_pysources(name, simobject_py_files, visibility = None, deps =
     _simobject_embed_gen(
         name = gen_name,
         simobject_py_files = simobject_py_files,
+        simobject_py_srcs = simobject_py_srcs,
     )
 
     # Compile the tree artifact. Use alwayslink + disable dynamic linker

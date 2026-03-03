@@ -12,6 +12,9 @@ load("//rules:defs.bzl", "gem5_debug_flag", "gem5_compound_flag")
 
 package(default_visibility = ["//visibility:public"])
 
+
+exports_files(glob(["**/*.py"]))
+
 # -- Header filegroup for mem hdrs_files aggregation --
 filegroup(
     name = "hdrs_files",
@@ -100,6 +103,7 @@ cc_library(
         "structures/*.hh",
         "system/*.hh",
     ]),
+    defines = ["NUMBER_BITS_PER_SET=64"],
     includes = ["."],
     deps = [
         "//src:gem5_hdrs",

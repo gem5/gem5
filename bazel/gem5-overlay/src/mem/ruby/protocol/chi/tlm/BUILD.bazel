@@ -72,6 +72,7 @@ gem5_embedded_python_library(
 )
 
 # Python package: m5.tlm_chi (port definitions and utilities)
+# Gated on both TLM and Python (matching CMake's conditional inclusion).
 gem5_embedded_python_library(
     name = "chi_tlm_pysources",
     modules = {
@@ -84,7 +85,7 @@ gem5_embedded_python_library(
         "//src:_gem5_base_hdrs",
     ],
     target_compatible_with = select({
-        "//configs:tlm_enabled": [],
+        "//configs:tlm_python_enabled": [],
         "//conditions:default": ["@platforms//:incompatible"],
     }),
 )

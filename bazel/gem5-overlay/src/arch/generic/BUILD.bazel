@@ -8,6 +8,9 @@ load("//rules:defs.bzl", "gem5_debug_flag")
 
 package(default_visibility = ["//visibility:public"])
 
+
+exports_files(glob(["**/*.py"]))
+
 filegroup(
     name = "hdrs_files",
     srcs = glob(["*.hh"]),
