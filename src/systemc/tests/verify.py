@@ -155,10 +155,12 @@ class CompilePhase(TestPhaseBase):
         # Reconfigure the build directory to match the requested flavor
         # so that the compiled test binaries have the correct suffix.
         build_type = flavor_to_cmake_build_type(self.main_args.flavor)
+        variant = os.path.basename(os.path.normpath(self.main_args.build_dir))
         subprocess.check_call(
             [
                 "cmake",
                 f"-DCMAKE_BUILD_TYPE={build_type}",
+                f"-DGEM5_BUILD_VARIANT={variant}",
                 "-B",
                 self.main_args.build_dir,
             ]
@@ -682,10 +684,12 @@ if main_args.update_json:
     _build_type = flavor_to_cmake_build_type(main_args.flavor)
 
     # With CMake, tests.json is generated at configure time.
+    _variant = os.path.basename(os.path.normpath(main_args.build_dir))
     _cmake_cmd = [
         "cmake",
         "-DGEM5_WITH_SYSTEMC_TESTS=ON",
         f"-DCMAKE_BUILD_TYPE={_build_type}",
+        f"-DGEM5_BUILD_VARIANT={_variant}",
     ]
     # Fresh configure needs generator and source dir; reconfigure does not.
     if not os.path.exists(os.path.join(main_args.build_dir, "CMakeCache.txt")):
