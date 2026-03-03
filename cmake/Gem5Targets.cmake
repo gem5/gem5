@@ -14,13 +14,14 @@ include(CTest)
 gem5_get_all_object_sources(_all_obj_sources)
 
 # Generated sources (debug flags, SimObject params, etc.) are compiled
-# centrally in a single OBJECT target.
+# centrally in a STATIC library. Using STATIC (not OBJECT) allows
+# individual whole-archive linking into the gem5 executable.
 get_property(_gen_srcs GLOBAL PROPERTY GEM5_GENERATED_SOURCES)
 if(_gen_srcs)
-    add_library(gem5_generated_objs OBJECT ${_gen_srcs})
-    target_link_libraries(gem5_generated_objs PRIVATE gem5_deps)
-    target_compile_options(gem5_generated_objs PRIVATE ${GEM5_WERROR_FLAGS})
-    set_target_properties(gem5_generated_objs PROPERTIES POSITION_INDEPENDENT_CODE ON)
+    add_library(gem5_generated STATIC ${_gen_srcs})
+    target_link_libraries(gem5_generated PRIVATE gem5_deps)
+    target_compile_options(gem5_generated PRIVATE ${GEM5_WERROR_FLAGS})
+    set_target_properties(gem5_generated PROPERTIES POSITION_INDEPENDENT_CODE ON)
 endif()
 
 # ---------------------------------------------------------------------------
@@ -30,12 +31,16 @@ endif()
 # SimObject codegen targets (which depend on gem5py_m5) without creating a
 # dependency cycle through shared source files.
 #
+# Using STATIC (not OBJECT) allows individual whole-archive linking into
+# the gem5 executable, preserving EmbeddedPython global constructor
+# registrations.
+#
 # When building without Python (GEM5_WITHOUT_PYTHON=ON), the embedded Python
 # bytecode sources are excluded from the library. The SCons build achieves
 # this by filtering out sources tagged 'python' from the library filter.
 if(NOT GEM5_WITHOUT_PYTHON)
     get_property(_py_srcs GLOBAL PROPERTY GEM5_PYSOURCES)
-    add_library(gem5_pysources OBJECT ${_py_srcs})
+    add_library(gem5_pysources STATIC ${_py_srcs})
     target_link_libraries(gem5_pysources PRIVATE gem5_deps pybind11::pybind11)
     target_compile_options(gem5_pysources PRIVATE ${GEM5_WERROR_FLAGS})
     set_target_properties(gem5_pysources PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -48,7 +53,15 @@ endif()
 # (with include directories and warning flags). Here we add link libraries
 # that depend on ext/ targets created by add_subdirectory(ext).
 
-# Always-built ext libraries
+# All ext/ libraries stay on gem5_deps for compile-time include paths.
+# Each ext/ library provides SYSTEM PUBLIC include directories (e.g.,
+# ext/libelf/, ext/nomali/include/, ext/drampower/src/) that OBJECT targets
+# need at compile time. Moving them to subsystems would break compilation
+# of any source that transitively includes their headers.
+#
+# Subsystem STATIC libraries in Gem5Subsystems.cmake also declare these as
+# LINK_DEPS for documentation and link-time scoping, but the compile-time
+# visibility must remain global via gem5_deps.
 target_link_libraries(gem5_deps INTERFACE
     gem5_ext_elf
     gem5_ext_fputils
@@ -144,42 +157,77 @@ if(_codegen_deps)
     foreach(_obj ${_obj_libs})
         add_dependencies(${_obj} ${_codegen_deps})
     endforeach()
-    if(TARGET gem5_generated_objs)
-        add_dependencies(gem5_generated_objs ${_codegen_deps})
+    if(TARGET gem5_generated)
+        add_dependencies(gem5_generated ${_codegen_deps})
     endif()
 endif()
 
 # ---------------------------------------------------------------------------
-# Common source list for static and shared library targets
+# Subsystem STATIC libraries
 # ---------------------------------------------------------------------------
-# Composed from per-directory OBJECT libraries + generated objects + date.cc.
-# date.cc embeds the compile timestamp and is compiled directly.
-set(_gem5_lib_sources
+# Define subsystem STATIC libraries from per-directory OBJECT library manifests.
+# Must happen after codegen deps are propagated (subsystems need codegen deps)
+# and before final target creation (gem5 executable links subsystems).
+include(Gem5Subsystems)
+
+# ---------------------------------------------------------------------------
+# Static library: libgem5_all (thin aggregation for unit tests)
+# ---------------------------------------------------------------------------
+# gem5_all aggregates all subsystem STATIC libraries, gem5_generated,
+# gem5_pysources, and gem5_deps. Unit tests and downstream consumers
+# link gem5_all for convenience (no need for per-subsystem linking).
+#
+# gem5_all contains date.cc directly and links (not whole-archives)
+# the subsystem STATIC libraries and gem5_generated/gem5_pysources.
+# For unit tests, normal linking (not whole-archive) is sufficient
+# because tests explicitly reference the symbols they need.
+add_library(gem5_all STATIC
     ${_all_obj_sources}
     "${CMAKE_SOURCE_DIR}/src/base/date.cc"
 )
-if(TARGET gem5_generated_objs)
-    list(APPEND _gem5_lib_sources "$<TARGET_OBJECTS:gem5_generated_objs>")
-endif()
-
-# ---------------------------------------------------------------------------
-# Static library: libgem5_all
-# ---------------------------------------------------------------------------
-add_library(gem5_all STATIC ${_gem5_lib_sources})
 target_link_libraries(gem5_all PUBLIC gem5_deps)
 target_compile_options(gem5_all PRIVATE ${GEM5_WERROR_FLAGS})
 set_target_properties(gem5_all PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-# Link PySource objects into gem5_all (only with Python support)
+# Link gem5_generated and gem5_pysources as STATIC libraries
+if(TARGET gem5_generated)
+    target_link_libraries(gem5_all PUBLIC gem5_generated)
+endif()
 if(NOT GEM5_WITHOUT_PYTHON)
-    target_sources(gem5_all PRIVATE $<TARGET_OBJECTS:gem5_pysources>)
+    target_link_libraries(gem5_all PUBLIC gem5_pysources)
 endif()
 
 # ---------------------------------------------------------------------------
-# gem5 executable
+# gem5 executable (per-subsystem whole-archive linking)
 # ---------------------------------------------------------------------------
-add_executable(gem5 "${CMAKE_SOURCE_DIR}/src/sim/main.cc")
-gem5_target_link_whole_archive(gem5 PRIVATE gem5_all)
+# Each subsystem STATIC library is individually whole-archive-linked to
+# preserve SimObject factory registrations and EmbeddedPython global
+# constructors. Simply whole-archiving gem5_all would NOT force-include
+# objects from nested STATIC libraries (gem5_base, gem5_sim, etc.).
+#
+# NOTE: We do NOT link gem5_all here -- it would duplicate every object
+# already present in the subsystem STATIC libraries.
+add_executable(gem5
+    "${CMAKE_SOURCE_DIR}/src/sim/main.cc"
+    "${CMAKE_SOURCE_DIR}/src/base/date.cc"
+)
+
+# Whole-archive-link each subsystem
+gem5_get_subsystem_libs(_subsystem_libs)
+foreach(_subsys ${_subsystem_libs})
+    gem5_target_link_whole_archive(gem5 PRIVATE ${_subsys})
+endforeach()
+
+# Whole-archive-link gem5_generated and gem5_pysources
+if(TARGET gem5_generated)
+    gem5_target_link_whole_archive(gem5 PRIVATE gem5_generated)
+endif()
+if(NOT GEM5_WITHOUT_PYTHON)
+    gem5_target_link_whole_archive(gem5 PRIVATE gem5_pysources)
+endif()
+
+# Link gem5_deps for global libs (fputils, iostream3, etc.) and system libs
+target_link_libraries(gem5 PRIVATE gem5_deps)
 
 # Stripped binary
 add_custom_command(TARGET gem5 POST_BUILD
@@ -191,12 +239,20 @@ add_custom_command(TARGET gem5 POST_BUILD
 # ---------------------------------------------------------------------------
 # Shared library: libgem5_shared
 # ---------------------------------------------------------------------------
-# Uses the same OBJECT targets as gem5_all (all compiled with -fPIC).
-add_library(gem5_shared SHARED ${_gem5_lib_sources})
+# Links subsystem STATIC libraries + gem5_generated + gem5_pysources.
+# Uses whole-archive to preserve global constructors (SimObject factories,
+# EmbeddedPython registrations).
+add_library(gem5_shared SHARED "${CMAKE_SOURCE_DIR}/src/base/date.cc")
 target_link_libraries(gem5_shared PUBLIC gem5_deps)
 target_compile_options(gem5_shared PRIVATE ${GEM5_WERROR_FLAGS})
+foreach(_subsys ${_subsystem_libs})
+    gem5_target_link_whole_archive(gem5_shared PUBLIC ${_subsys})
+endforeach()
+if(TARGET gem5_generated)
+    gem5_target_link_whole_archive(gem5_shared PUBLIC gem5_generated)
+endif()
 if(NOT GEM5_WITHOUT_PYTHON)
-    target_sources(gem5_shared PRIVATE $<TARGET_OBJECTS:gem5_pysources>)
+    gem5_target_link_whole_archive(gem5_shared PUBLIC gem5_pysources)
 endif()
 
 # ---------------------------------------------------------------------------
@@ -289,6 +345,26 @@ endforeach()
 add_custom_target(gem5_tests)
 if(_all_test_names)
     add_dependencies(gem5_tests ${_all_test_names})
+endif()
+
+# ---------------------------------------------------------------------------
+# Constructor-registration retention test
+# ---------------------------------------------------------------------------
+# Verify that SimObject factory and EmbeddedPython global constructors
+# survive the per-subsystem whole-archive linking. Checks for known symbols
+# in the gem5 binary using nm.
+find_program(NM_EXECUTABLE nm)
+if(NM_EXECUTABLE)
+    add_test(
+        NAME check_constructor_retention
+        COMMAND ${CMAKE_COMMAND}
+            -DNM=${NM_EXECUTABLE}
+            -DGEM5_BINARY=$<TARGET_FILE:gem5>
+            -P "${CMAKE_SOURCE_DIR}/cmake/CheckConstructorRetention.cmake"
+    )
+    set_tests_properties(check_constructor_retention PROPERTIES
+        LABELS "link;smoke"
+    )
 endif()
 
 # ---------------------------------------------------------------------------

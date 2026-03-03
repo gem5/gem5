@@ -95,8 +95,18 @@ function(gem5_add_debug_flag name description)
         VERBATIM
     )
 
-    # Register generated files
-    gem5_add_generated_source("${_cc}")
+    # Register generated .cc with the calling directory's OBJECT target if one
+    # exists, otherwise fall back to the centralized gem5_generated STATIC lib.
+    # This transfers debug flag compilation ownership to the subsystem that
+    # defines the flag (e.g., Activity debug flag compiled by gem5_obj_base).
+    _gem5_object_target_name(_tgt)
+    if(TARGET "${_tgt}")
+        target_sources("${_tgt}" PRIVATE "${_cc}")
+    else()
+        # No OBJECT target in this directory (e.g., src/arch/ and src/mem/ruby/
+        # define debug flags but have no gem5_add_source() calls).
+        gem5_add_generated_source("${_cc}")
+    endif()
     set_property(GLOBAL APPEND PROPERTY GEM5_DEBUG_FLAG_HEADERS "${_hh}")
 
     # Create a custom target in this directory scope so Ninja can resolve
@@ -397,9 +407,17 @@ function(gem5_isa_parser isa isa_file output_dir)
         VERBATIM
     )
 
+    # Register generated .cc files with the calling arch directory's OBJECT
+    # target. The ISA parser is called from each arch's CMakeLists.txt, so
+    # the OBJECT target (e.g., gem5_obj_arch_x86) should already exist.
+    _gem5_object_target_name(_tgt)
     foreach(_out ${_outputs})
         if(_out MATCHES "\\.cc$")
-            gem5_add_generated_source("${_out}")
+            if(TARGET "${_tgt}")
+                target_sources("${_tgt}" PRIVATE "${_out}")
+            else()
+                gem5_add_generated_source("${_out}")
+            endif()
         endif()
     endforeach()
 

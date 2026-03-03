@@ -1,9 +1,17 @@
 # src/arch/arm/CMakeLists.txt
 # ARM ISA
 
-# fplib.cc is compiled unconditionally (used by amdgpu too).
-# See comment in original SConscript about amdgpu dependencies.
-gem5_add_source(insts/fplib.cc)
+# fplib.cc is used by both ARM ISA and amdgpu. When ARM ISA is enabled,
+# it compiles into gem5_obj_arch_arm (this directory's OBJECT target).
+# When ARM ISA is disabled but GPU is enabled, it compiles into
+# gem5_obj_arch_generic: the generic subsystem is always built, ensuring
+# fplib.cc survives even without ARM ISA.
+if(CONF_USE_ARM_ISA)
+    gem5_add_source(insts/fplib.cc)
+elseif(CONF_BUILD_GPU)
+    target_sources(gem5_obj_arch_generic PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/insts/fplib.cc")
+endif()
 
 # Register tests before the early return so the safety check in
 # Gem5Targets.cmake sees them even when ARM ISA is disabled.
