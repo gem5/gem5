@@ -166,6 +166,7 @@ gem5_gen_defines(
             "Garnet_standalone",
             "GPU_VIPER",
             "CHI",
+            "MSI",
         ],
         "//conditions:default": [],
     }),

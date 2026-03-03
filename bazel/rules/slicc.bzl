@@ -122,6 +122,15 @@ def _slicc_gen_impl(ctx):
             grammar_file = f
             break
 
+    # Resolve the protocol base directory for SLICC.
+    # For most protocols, this is the .slicc file's directory.
+    # For cross-directory protocols (e.g., MSI in learning_gem5/part3/),
+    # _interfaces_slicc provides the interfaces file and its directory
+    # is used as the protocol base so SLICC finds shared types.
+    interfaces_file = None
+    if ctx.file._interfaces_slicc:
+        interfaces_file = ctx.file._interfaces_slicc
+
     script = ctx.actions.declare_file("_run_slicc_{}.py".format(ctx.label.name))
     ctx.actions.write(
         output = script,
@@ -134,6 +143,7 @@ code_output_dir = sys.argv[2]
 slicc_init = sys.argv[3]
 ply_init = sys.argv[4]
 grammar_file = sys.argv[5]
+interfaces_override = sys.argv[6] if len(sys.argv) > 6 else ""
 
 # Set up import paths
 slicc_parent = os.path.dirname(os.path.dirname(slicc_init))
@@ -149,14 +159,19 @@ from slicc.parser import SLICC
 
 os.makedirs(code_output_dir, exist_ok=True)
 
-protocol_base = os.path.dirname(slicc_file)
-
-# Find interfaces slicc file (may be in protocol_base or parent for
-# subdirectory protocols like CHI)
-interfaces_slicc = os.path.join(protocol_base, "RubySlicc_interfaces.slicc")
-if not os.path.exists(interfaces_slicc):
-    interfaces_slicc = os.path.join(os.path.dirname(protocol_base), "RubySlicc_interfaces.slicc")
-interfaces_list = [interfaces_slicc] if os.path.exists(interfaces_slicc) else []
+# Use interfaces override directory as protocol_base when provided,
+# so SLICC finds shared types regardless of the .slicc file's location.
+if interfaces_override:
+    protocol_base = os.path.dirname(interfaces_override)
+    interfaces_list = [interfaces_override]
+else:
+    protocol_base = os.path.dirname(slicc_file)
+    # Find interfaces slicc file (may be in protocol_base or parent for
+    # subdirectory protocols like CHI)
+    interfaces_slicc = os.path.join(protocol_base, "RubySlicc_interfaces.slicc")
+    if not os.path.exists(interfaces_slicc):
+        interfaces_slicc = os.path.join(os.path.dirname(protocol_base), "RubySlicc_interfaces.slicc")
+    interfaces_list = [interfaces_slicc] if os.path.exists(interfaces_slicc) else []
 
 slicc = SLICC(slicc_file, interfaces_list, protocol_base)
 slicc.process()
@@ -167,6 +182,9 @@ slicc.writeCodeFiles(code_output_dir, ["mem/ruby/slicc_interface/RubySlicc_inclu
     all_inputs = [src, script] + ctx.files.sm_sources + \
                  ctx.files._slicc_files + ctx.files._ply_files + \
                  ctx.files._grammar_files
+    if interfaces_file:
+        all_inputs.append(interfaces_file)
+    interfaces_arg = interfaces_file.path if interfaces_file else ""
 
     if cc_manifest:
         # Manifest-based: declare individual output files.
@@ -206,7 +224,7 @@ slicc.writeCodeFiles(code_output_dir, ["mem/ruby/slicc_interface/RubySlicc_inclu
         ctx.actions.run_shell(
             outputs = all_outputs,
             inputs = all_inputs,
-            command = "{fwd_cmds} && python3 {script} {src} {outdir} {slicc} {ply} {grammar}".format(
+            command = "{fwd_cmds} && python3 {script} {src} {outdir} {slicc} {ply} {grammar} {iface}".format(
                 fwd_cmds = _forwarding_header_cmds(proto_root_dir),
                 script = script.path,
                 src = src.path,
@@ -214,6 +232,7 @@ slicc.writeCodeFiles(code_output_dir, ["mem/ruby/slicc_interface/RubySlicc_inclu
                 slicc = slicc_init.path if slicc_init else "",
                 ply = ply_init.path if ply_init else "",
                 grammar = grammar_file.path if grammar_file else "",
+                iface = interfaces_arg,
             ),
             mnemonic = "SLICC",
             progress_message = "Compiling SLICC protocol {} (manifest)".format(protocol),
@@ -239,7 +258,7 @@ slicc.writeCodeFiles(code_output_dir, ["mem/ruby/slicc_interface/RubySlicc_inclu
         ctx.actions.run_shell(
             outputs = [out_dir],
             inputs = all_inputs,
-            command = "mkdir -p {nested} && {fwd_cmds} && python3 {script} {src} {nested} {slicc} {ply} {grammar}".format(
+            command = "mkdir -p {nested} && {fwd_cmds} && python3 {script} {src} {nested} {slicc} {ply} {grammar} {iface}".format(
                 nested = nested_path,
                 fwd_cmds = _forwarding_header_cmds("{nested}".format(nested = nested_path)),
                 script = script.path,
@@ -247,6 +266,7 @@ slicc.writeCodeFiles(code_output_dir, ["mem/ruby/slicc_interface/RubySlicc_inclu
                 slicc = slicc_init.path if slicc_init else "",
                 ply = ply_init.path if ply_init else "",
                 grammar = grammar_file.path if grammar_file else "",
+                iface = interfaces_arg,
             ),
             mnemonic = "SLICC",
             progress_message = "Compiling SLICC protocol {} (tree)".format(protocol),
@@ -283,6 +303,11 @@ _slicc_gen = rule(
         "_grammar_files": attr.label(
             default = "//build_tools:grammar_files",
             allow_files = True,
+        ),
+        "_interfaces_slicc": attr.label(
+            default = "//src/mem/ruby/protocol:RubySlicc_interfaces.slicc",
+            allow_single_file = [".slicc"],
+            doc = "RubySlicc_interfaces.slicc for cross-directory protocols.",
         ),
     },
 )

@@ -105,9 +105,11 @@ _ALL_PROTOCOL_NAMES = [
 # Each _unique depends on its own _shared (no alwayslink), so the linker
 # links shared interface types from whichever protocol it encounters first
 # and ignores duplicates from subsequent protocols.
+# MSI (from learning_gem5/part3) is included via an external target reference.
 cc_library(
     name = "all_protocols",
-    deps = [":{}_unique".format(p) for p in _ALL_PROTOCOL_NAMES],
+    deps = [":{}_unique".format(p) for p in _ALL_PROTOCOL_NAMES] +
+           ["//src/learning_gem5/part3:MSI_unique"],
 )
 
 # Active protocol alias: resolves to selected protocol via config.

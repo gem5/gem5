@@ -524,6 +524,7 @@ _SLICC_PY_SRCS = select({
         "//src/mem/ruby/protocol:CHI_py",
         "//src/mem/ruby/protocol:GPU_VIPER_py",
         "//src/mem/ruby/protocol:Garnet_standalone_py",
+        "//src/learning_gem5/part3:MSI_py",
     ],
     "//conditions:default": [],
 })

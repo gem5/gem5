@@ -12,11 +12,16 @@ import os
 import sys
 
 
-def discover_protocol_files(src_root, protocol_name, slicc_file):
+def discover_protocol_files(
+    src_root, protocol_name, slicc_file, custom_dir=None
+):
     """Run SLICC parser for a protocol and return (cc_files, py_files)."""
     protocol_dir = os.path.join(src_root, "src", "mem", "ruby", "protocol")
     interfaces = os.path.join(protocol_dir, "RubySlicc_interfaces.slicc")
-    slicc_path = os.path.join(protocol_dir, slicc_file)
+    if custom_dir:
+        slicc_path = os.path.join(src_root, custom_dir, slicc_file)
+    else:
+        slicc_path = os.path.join(protocol_dir, slicc_file)
 
     if not os.path.exists(slicc_path):
         return [], []
@@ -59,6 +64,12 @@ PROTOCOLS = {
     "Garnet_standalone": "Garnet_standalone.slicc",
     "GPU_VIPER": "GPU_VIPER.slicc",
     "CHI": "chi/CHI.slicc",
+    "MSI": "MSI.slicc",
+}
+
+# Protocols whose .slicc files are not in src/mem/ruby/protocol/.
+_CUSTOM_DIRS = {
+    "MSI": "src/learning_gem5/part3",
 }
 
 
@@ -78,7 +89,10 @@ def main():
     for name in sorted(PROTOCOLS.keys()):
         slicc_file = PROTOCOLS[name]
         cc_files, py_files = discover_protocol_files(
-            src_root, name, slicc_file
+            src_root,
+            name,
+            slicc_file,
+            custom_dir=_CUSTOM_DIRS.get(name),
         )
         all_cc[name] = cc_files
         all_py[name] = py_files
