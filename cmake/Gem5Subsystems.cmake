@@ -8,15 +8,23 @@
 #
 # Each subsystem STATIC library:
 #   - Composes related OBJECT libraries via $<TARGET_OBJECTS:...>
-#   - Declares ext/ link dependencies (for documentation and layering)
-#   - Declares inter-subsystem dependencies (for documentation and
-#     link-library transitivity; header visibility is flat via gem5_deps)
+#   - Declares scoped ext/ link dependencies (actual link-time ownership)
+#   - Declares inter-subsystem dependencies (for link-library transitivity;
+#     header visibility is flat via gem5_deps)
 #
-# Global libs contract: ALL ext/ libraries remain on gem5_deps (in
-# Gem5Targets.cmake) because they provide SYSTEM PUBLIC include directories
-# that OBJECT targets need at compile time. The LINK_DEPS on subsystems
-# are for documentation and future link-time scoping only.
-# See Gem5Targets.cmake for the authoritative gem5_deps definition.
+# Ext/ library scoping contract:
+#   Scoped ext/ libraries (gem5_ext_elf, gem5_ext_drampower, gem5_ext_libfdt,
+#   gem5_ext_nomali, gem5_ext_dramsim*, gem5_ext_dramsys, gem5_ext_systemc)
+#   are linked ONLY by their owning subsystem LINK_DEPS. Their include
+#   directories are propagated globally via _gem5_propagate_ext_includes()
+#   in Gem5Targets.cmake so OBJECT targets can compile, but the link
+#   dependency flows only through the owning subsystem.
+#
+#   Global ext/ libraries (gem5_ext_fputils, gem5_ext_iostream3,
+#   gem5_ext_magic_enum, gem5_ext_softfloat) remain on gem5_deps because
+#   they are used pervasively across multiple subsystems.
+#
+# See Gem5Targets.cmake for the gem5_deps definition and scoping details.
 
 # ---------------------------------------------------------------------------
 # Subsystem Dependency Diagram (Simplified)
@@ -127,6 +135,22 @@ function(gem5_get_subsystem_libs out_var)
     set(${out_var} ${_libs} PARENT_SCOPE)
 endfunction()
 
+# ---------------------------------------------------------------------------
+# gem5_add_subsystem_link_dep(<subsystem_name> <library>)
+#
+# Declare an additional link dependency for a subsystem STATIC library.
+# The subsystem target must already exist (created by gem5_define_subsystem).
+# This is used for conditional ext/ library additions (e.g., DRAMSim/DRAMSys)
+# that are determined after the subsystem is initially defined.
+# ---------------------------------------------------------------------------
+function(gem5_add_subsystem_link_dep subsystem_name library)
+    set(_target "gem5_${subsystem_name}")
+    if(NOT TARGET "${_target}")
+        return()
+    endif()
+    target_link_libraries(${_target} PUBLIC ${library})
+endfunction()
+
 # ===================================================================
 # Subsystem Definitions (Explicit Manifest)
 # ===================================================================
@@ -176,16 +200,14 @@ gem5_define_subsystem(mem
         gem5_sim
 )
 # Conditional DRAMSim/DRAMSys ext/ libraries scoped to gem5_mem
-if(TARGET gem5_mem)
-    if(HAVE_DRAMSIM)
-        target_link_libraries(gem5_mem PUBLIC gem5_ext_dramsim2)
-    endif()
-    if(HAVE_DRAMSIM3)
-        target_link_libraries(gem5_mem PUBLIC gem5_ext_dramsim3)
-    endif()
-    if(HAVE_DRAMSYS)
-        target_link_libraries(gem5_mem PUBLIC gem5_ext_dramsys)
-    endif()
+if(HAVE_DRAMSIM)
+    gem5_add_subsystem_link_dep(mem gem5_ext_dramsim2)
+endif()
+if(HAVE_DRAMSIM3)
+    gem5_add_subsystem_link_dep(mem gem5_ext_dramsim3)
+endif()
+if(HAVE_DRAMSYS)
+    gem5_add_subsystem_link_dep(mem gem5_ext_dramsys)
 endif()
 
 gem5_define_subsystem(mem_ruby

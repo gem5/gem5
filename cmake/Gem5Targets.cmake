@@ -6,13 +6,6 @@
 
 include(CTest)
 
-# ---------------------------------------------------------------------------
-# Collect OBJECT library sources
-# ---------------------------------------------------------------------------
-# Each src/ subdirectory creates its own OBJECT library via gem5_add_source().
-# Collect all their compiled objects for composing the final link targets.
-gem5_get_all_object_sources(_all_obj_sources)
-
 # Generated sources (debug flags, SimObject params, etc.) are compiled
 # centrally in a STATIC library. Using STATIC (not OBJECT) allows
 # individual whole-archive linking into the gem5 executable.
@@ -53,21 +46,37 @@ endif()
 # (with include directories and warning flags). Here we add link libraries
 # that depend on ext/ targets created by add_subdirectory(ext).
 
-# All ext/ libraries stay on gem5_deps for compile-time include paths.
-# Each ext/ library provides SYSTEM PUBLIC include directories (e.g.,
-# ext/libelf/, ext/nomali/include/, ext/drampower/src/) that OBJECT targets
-# need at compile time. Moving them to subsystems would break compilation
-# of any source that transitively includes their headers.
+# ---------------------------------------------------------------------------
+# ext/ library include-path propagation (scoped link deps)
+# ---------------------------------------------------------------------------
+# Scoped ext/ libraries are linked ONLY by their owning subsystem (defined
+# in Gem5Subsystems.cmake), NOT globally via gem5_deps. However, OBJECT
+# targets still need their SYSTEM include directories at compile time.
 #
-# Subsystem STATIC libraries in Gem5Subsystems.cmake also declare these as
-# LINK_DEPS for documentation and link-time scoping, but the compile-time
-# visibility must remain global via gem5_deps.
+# _gem5_propagate_ext_includes() extracts INTERFACE_INCLUDE_DIRECTORIES
+# from an ext/ library target and adds them to gem5_deps as SYSTEM INTERFACE
+# includes -- without adding the link dependency itself.
+function(_gem5_propagate_ext_includes lib)
+    if(NOT TARGET "${lib}")
+        return()
+    endif()
+    get_target_property(_inc_dirs "${lib}" INTERFACE_INCLUDE_DIRECTORIES)
+    if(_inc_dirs)
+        target_include_directories(gem5_deps SYSTEM INTERFACE ${_inc_dirs})
+    endif()
+endfunction()
+
+# Scoped ext/ libraries: include dirs propagated globally, link deps scoped
+# to owning subsystems (see Gem5Subsystems.cmake LINK_DEPS).
+_gem5_propagate_ext_includes(gem5_ext_elf)        # -> gem5_base
+_gem5_propagate_ext_includes(gem5_ext_drampower)   # -> gem5_mem
+_gem5_propagate_ext_includes(gem5_ext_libfdt)      # -> gem5_dev
+_gem5_propagate_ext_includes(gem5_ext_nomali)      # -> gem5_dev
+
+# Global ext/ libraries: linked by gem5_deps because they are used
+# pervasively across subsystems or carry critical INTERFACE include dirs.
 target_link_libraries(gem5_deps INTERFACE
-    gem5_ext_elf
     gem5_ext_fputils
-    gem5_ext_libfdt
-    gem5_ext_nomali
-    gem5_ext_drampower
     gem5_ext_iostream3
     gem5_ext_magic_enum
     gem5_ext_softfloat
@@ -77,18 +86,18 @@ target_link_libraries(gem5_deps INTERFACE
 # gem5_within_systemc and util/tlm link an external libsystemc
 # and require the internal one to be absent.
 if(CONF_USE_SYSTEMC)
-    target_link_libraries(gem5_deps INTERFACE gem5_ext_systemc)
+    _gem5_propagate_ext_includes(gem5_ext_systemc) # -> gem5_systemc
 endif()
 
-# Optional ext libraries
+# Conditional ext/ libraries: include dirs propagated, link scoped to gem5_mem
 if(HAVE_DRAMSIM)
-    target_link_libraries(gem5_deps INTERFACE gem5_ext_dramsim2)
+    _gem5_propagate_ext_includes(gem5_ext_dramsim2)  # -> gem5_mem
 endif()
 if(HAVE_DRAMSIM3)
-    target_link_libraries(gem5_deps INTERFACE gem5_ext_dramsim3)
+    _gem5_propagate_ext_includes(gem5_ext_dramsim3)  # -> gem5_mem
 endif()
 if(HAVE_DRAMSYS)
-    target_link_libraries(gem5_deps INTERFACE gem5_ext_dramsys)
+    _gem5_propagate_ext_includes(gem5_ext_dramsys)   # -> gem5_mem
 endif()
 
 # System / found libraries
@@ -171,31 +180,37 @@ endif()
 include(Gem5Subsystems)
 
 # ---------------------------------------------------------------------------
-# Static library: libgem5_all (thin aggregation for unit tests)
+# Static library: libgem5_all (thin subsystem aggregation)
 # ---------------------------------------------------------------------------
-# gem5_all aggregates all subsystem STATIC libraries, gem5_generated,
-# gem5_pysources, and gem5_deps. Unit tests and downstream consumers
-# link gem5_all for convenience (no need for per-subsystem linking).
+# gem5_all is a thin aggregation target that links all subsystem STATIC
+# libraries, gem5_generated, gem5_pysources, and gem5_deps. Unit tests
+# and downstream consumers link gem5_all for convenience (no need for
+# per-subsystem linking). Normal linking (not whole-archive) is sufficient
+# for unit tests because tests explicitly reference the symbols they need.
 #
-# gem5_all contains date.cc directly and links (not whole-archives)
-# the subsystem STATIC libraries and gem5_generated/gem5_pysources.
-# For unit tests, normal linking (not whole-archive) is sufficient
-# because tests explicitly reference the symbols they need.
+# gem5_all compiles only date.cc (compile timestamp). All other code
+# comes transitively from subsystem STATIC libraries.
+gem5_get_subsystem_libs(_subsystem_libs)
 add_library(gem5_all STATIC
-    ${_all_obj_sources}
     "${CMAKE_SOURCE_DIR}/src/base/date.cc"
 )
 target_link_libraries(gem5_all PUBLIC gem5_deps)
 target_compile_options(gem5_all PRIVATE ${GEM5_WERROR_FLAGS})
 set_target_properties(gem5_all PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-# Link gem5_generated and gem5_pysources as STATIC libraries
+# Link all subsystem STATIC libraries using RESCAN (--start-group /
+# --end-group) to resolve circular dependencies between subsystems
+# (e.g., gem5_base references gem5_sim::print_backtrace and vice versa).
+set(_gem5_all_link_libs ${_subsystem_libs})
 if(TARGET gem5_generated)
-    target_link_libraries(gem5_all PUBLIC gem5_generated)
+    list(APPEND _gem5_all_link_libs gem5_generated)
 endif()
 if(NOT GEM5_WITHOUT_PYTHON)
-    target_link_libraries(gem5_all PUBLIC gem5_pysources)
+    list(APPEND _gem5_all_link_libs gem5_pysources)
 endif()
+target_link_libraries(gem5_all PUBLIC
+    "$<LINK_GROUP:RESCAN,${_gem5_all_link_libs}>"
+)
 
 # ---------------------------------------------------------------------------
 # gem5 executable (per-subsystem whole-archive linking)
@@ -212,8 +227,7 @@ add_executable(gem5
     "${CMAKE_SOURCE_DIR}/src/base/date.cc"
 )
 
-# Whole-archive-link each subsystem
-gem5_get_subsystem_libs(_subsystem_libs)
+# Whole-archive-link each subsystem (reuses _subsystem_libs from gem5_all above)
 foreach(_subsys ${_subsystem_libs})
     gem5_target_link_whole_archive(gem5 PRIVATE ${_subsys})
 endforeach()
