@@ -132,8 +132,11 @@ os.makedirs(code_output_dir, exist_ok=True)
 
 protocol_base = os.path.dirname(slicc_file)
 
-# Find interfaces slicc file
+# Find interfaces slicc file (may be in protocol_base or parent for
+# subdirectory protocols like CHI)
 interfaces_slicc = os.path.join(protocol_base, "RubySlicc_interfaces.slicc")
+if not os.path.exists(interfaces_slicc):
+    interfaces_slicc = os.path.join(os.path.dirname(protocol_base), "RubySlicc_interfaces.slicc")
 interfaces_list = [interfaces_slicc] if os.path.exists(interfaces_slicc) else []
 
 slicc = SLICC(slicc_file, interfaces_list, protocol_base)

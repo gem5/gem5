@@ -238,10 +238,19 @@ _SIM_TEST_DEPS = [
 ) for src in [
     "bufval.test.cc",
     "byteswap.test.cc",
-    "globals.test.cc",
     "guest_abi.test.cc",
     "port.test.cc",
     "proxy_ptr.test.cc",
     "serialize.test.cc",
     "serialize_handlers.test.cc",
 ]]
+
+# test_globals defines its own version_tags symbol which conflicts with
+# the generated tags.cc in sim. --allow-multiple-definition lets the
+# test's definition take precedence.
+cc_test(
+    name = "test_globals",
+    srcs = ["globals.test.cc"],
+    linkopts = ["-Wl,--allow-multiple-definition"],
+    deps = _SIM_TEST_DEPS,
+)

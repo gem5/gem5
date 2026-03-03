@@ -26,7 +26,7 @@ gem5_debug_flag(name = "RegisterWindows", desc = "Register window manipulation")
 
 cc_library(
     name = "sparc",
-    srcs = glob(["*.cc", "insts/*.cc", "linux/*.cc", "regs/*.cc"], exclude = ["**/*.test.cc"]),
+    srcs = glob(["*.cc", "insts/*.cc", "linux/*.cc", "regs/*.cc"], exclude = ["**/*.test.cc", "insts/nop.cc"]),
     hdrs = glob(["*.hh", "insts/*.hh", "linux/*.hh", "regs/*.hh"]),
     includes = ["."],
     deps = [

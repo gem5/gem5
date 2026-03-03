@@ -89,7 +89,6 @@ cc_library(
         "imgwriter.cc",
         "inet.cc",
         "inifile.cc",
-        "logging.cc",
         "match.cc",
         "output.cc",
         "pixel.cc",
@@ -188,9 +187,18 @@ cc_library(
     alwayslink = True,
 )
 
-# GTest support library (linked into test executables, not main gem5)
+# Real Logger factory implementations (panic/fatal/warn/info/hack).
+# Separated from base so that tests can override with mock loggers.
 cc_library(
-    name = "gtest_logging",
+    name = "logging_impl",
+    srcs = ["logging.cc"],
+    deps = ["//src:gem5_hdrs"],
+)
+
+# GTest utilities (gtestLogOutput, cur_tick_fake, etc.) without mock
+# logger overrides. Used by test_logging which tests real logger behavior.
+cc_library(
+    name = "gtest_logging_base",
     srcs = ["gtest/logging.cc"],
     hdrs = [
         "gtest/cur_tick_fake.hh",
@@ -202,6 +210,27 @@ cc_library(
         "@gem5_ext_googletest//:googletest",
     ],
     testonly = True,
+)
+
+# GTest support library (linked into test executables, not main gem5).
+# alwayslink ensures logging_mock.cc overrides logging_impl's factories.
+cc_library(
+    name = "gtest_logging",
+    srcs = [
+        "gtest/logging.cc",
+        "gtest/logging_mock.cc",
+    ],
+    hdrs = [
+        "gtest/cur_tick_fake.hh",
+        "gtest/logging.hh",
+        "gtest/serialization_fixture.hh",
+    ],
+    deps = [
+        "//src:gem5_hdrs",
+        "@gem5_ext_googletest//:googletest",
+    ],
+    testonly = True,
+    alwayslink = True,
 )
 
 # -- Unit tests --
@@ -244,12 +273,10 @@ _BASE_TEST_DEPS = [
     "intmath.test.cc",
     "loader/image_file_data.test.cc",
     "loader/symtab.test.cc",
-    "logging.test.cc",
     "match.test.cc",
     "memoizer.test.cc",
     "named.test.cc",
     "pixel.test.cc",
-    "random.test.cc",
     "refcnt.test.cc",
     "sat_counter.test.cc",
     "socket.test.cc",
@@ -266,3 +293,26 @@ _BASE_TEST_DEPS = [
     "types.test.cc",
     "uncontended_mutex.test.cc",
 ]]
+
+# test_logging tests real Logger behavior (death via exit/abort, output
+# format with file:line). Uses gtest_logging_base (no mock) + logging_impl.
+cc_test(
+    name = "test_logging",
+    srcs = ["logging.test.cc"],
+    deps = [
+        "//:gem5_all",
+        ":gtest_logging_base",
+        ":logging_impl",
+        "@gem5_ext_googletest//:gtest_main",
+        "@gem5_ext_googletest//:googlemock",
+    ],
+)
+
+# test_random: instance counting tests conflict with gem5_all's static-init
+# Random. Filter out those 2 sub-tests; the other 11 pass fine.
+cc_test(
+    name = "test_random",
+    srcs = ["random.test.cc"],
+    args = ["--gtest_filter=-RandomConstruct.*"],
+    deps = _BASE_TEST_DEPS,
+)

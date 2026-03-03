@@ -13,7 +13,7 @@ exports_files(glob(["**/*.py"]))
 
 filegroup(
     name = "hdrs_files",
-    srcs = glob(["*.hh"]),
+    srcs = glob(["*.hh", "freebsd/*.hh", "linux/*.hh"]),
 )
 
 gem5_debug_flag(name = "PageTableWalker", desc = "Page table walker debugging")
@@ -36,7 +36,7 @@ cc_library(
         "//configs:gpu_enabled_arm_disabled": ["//src/arch/arm:fplib_cc"],
         "//conditions:default": [],
     }),
-    hdrs = glob(["*.hh"]),
+    hdrs = glob(["*.hh", "freebsd/*.hh", "linux/*.hh"]),
     includes = ["."],
     deps = [
         "//src:gem5_hdrs",

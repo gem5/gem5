@@ -41,6 +41,8 @@ cc_library(
     deps = [
         "//src:gem5_hdrs",
         "//src/arch/generic:generic",
+        "//src/mem/ruby:ruby",
+        "//src/mem/ruby/protocol:active_protocol",
         ":GPUPTWalker",
         ":VEGA",
     ],

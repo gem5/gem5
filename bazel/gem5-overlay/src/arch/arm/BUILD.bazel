@@ -5,7 +5,7 @@ ISA parser: decoder_splits=3, exec_splits=6.
 """
 
 load("@rules_cc//cc:defs.bzl", "cc_library")
-load("//rules:defs.bzl", "gem5_debug_flag", "gem5_isa_desc")
+load("//rules:defs.bzl", "gem5_blob", "gem5_debug_flag", "gem5_isa_desc")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -41,6 +41,13 @@ gem5_debug_flag(name = "ArmTme", desc = "ARM Transactional Memory Extension")
 gem5_debug_flag(name = "MPAM", desc = "MPAM debugging")
 gem5_debug_flag(name = "PMUVerbose", desc = "Performance monitor verbose debugging")
 
+gem5_blob(name = "gdb_xml_arm_target", src = "gdb-xml/arm-with-neon.xml", include_prefix = "arch/arm/gdb-xml")
+gem5_blob(name = "gdb_xml_arm_core", src = "gdb-xml/arm-core.xml", include_prefix = "arch/arm/gdb-xml")
+gem5_blob(name = "gdb_xml_arm_vfpv3", src = "gdb-xml/arm-vfpv3.xml", include_prefix = "arch/arm/gdb-xml")
+gem5_blob(name = "gdb_xml_aarch64_target", src = "gdb-xml/aarch64.xml", include_prefix = "arch/arm/gdb-xml")
+gem5_blob(name = "gdb_xml_aarch64_core", src = "gdb-xml/aarch64-core.xml", include_prefix = "arch/arm/gdb-xml")
+gem5_blob(name = "gdb_xml_aarch64_fpu", src = "gdb-xml/aarch64-fpu.xml", include_prefix = "arch/arm/gdb-xml")
+
 # Export fplib.cc for conditional inclusion in //src/arch/generic
 # when GPU is enabled but ARM ISA is disabled.
 filegroup(
@@ -65,10 +72,16 @@ cc_library(
             # KVM and FastModel are separate targets
             "kvm/*.cc",
             "fastmodel/**/*.cc",
+            # TME: ruby vs classic selected below
+            "insts/tme64ruby.cc",
+            "insts/tme64classic.cc",
         ],
     ) + select({
         "//configs:capstone_enabled": ["tracers/capstone.cc"],
         "//conditions:default": [],
+    }) + select({
+        "//configs:protocol_mesi_three_level_htm": ["insts/tme64ruby.cc"],
+        "//conditions:default": ["insts/tme64classic.cc"],
     }),
     hdrs = glob([
         "*.hh",
@@ -89,6 +102,12 @@ cc_library(
         ":ArmTme",
         ":MPAM",
         ":PMUVerbose",
+        ":gdb_xml_arm_target",
+        ":gdb_xml_arm_core",
+        ":gdb_xml_arm_vfpv3",
+        ":gdb_xml_aarch64_target",
+        ":gdb_xml_aarch64_core",
+        ":gdb_xml_aarch64_fpu",
     ],
     alwayslink = True,
 )

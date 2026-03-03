@@ -1,7 +1,7 @@
 """BUILD file for src/arch/mips/ -- MIPS ISA implementation."""
 
 load("@rules_cc//cc:defs.bzl", "cc_library")
-load("//rules:defs.bzl", "gem5_debug_flag", "gem5_isa_desc")
+load("//rules:defs.bzl", "gem5_blob", "gem5_debug_flag", "gem5_isa_desc")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -23,6 +23,12 @@ gem5_isa_desc(
 
 gem5_debug_flag(name = "MipsPRA", desc = "MIPS PRA debugging")
 
+gem5_blob(
+    name = "gdb_xml_mips",
+    src = "gdb-xml/mips.xml",
+    include_prefix = "arch/mips/gdb-xml",
+)
+
 cc_library(
     name = "mips",
     srcs = glob(["*.cc", "linux/*.cc"], exclude = ["**/*.test.cc"]),
@@ -35,6 +41,7 @@ cc_library(
         "//src/arch/generic:generic",
         ":mips_isa_desc",
         ":MipsPRA",
+        ":gdb_xml_mips",
     ],
     alwayslink = True,
 )

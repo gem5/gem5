@@ -22,6 +22,7 @@ build:dbg --host_copt=-DGEM5_DEBUG --host_copt=-DTRACING_ON=1
 
 build:opt --compilation_mode=opt
 build:opt --copt=-O3 --copt=-g
+build:opt --copt=-UNDEBUG
 build:opt --copt=-DTRACING_ON=1
 build:opt --host_copt=-DTRACING_ON=1
 
@@ -67,6 +68,7 @@ build:all --@gem5_sources//configs:use_mips_isa=True
 build:all --@gem5_sources//configs:use_power_isa=True
 build:all --@gem5_sources//configs:use_sparc_isa=True
 build:all --@gem5_sources//configs:primary_isa=x86
+build:all --@gem5_sources//configs:build_gpu=True
 build:all --@gem5_sources//configs:ruby_protocol=MULTIPLE
 
 build:vega_x86 --@gem5_sources//configs:use_x86_isa=True

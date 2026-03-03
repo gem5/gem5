@@ -448,6 +448,19 @@ _SLICC_PY_SRCS = select({
     "//configs:protocol_gpu_viper": ["//src/mem/ruby/protocol:GPU_VIPER_py"],
     "//configs:protocol_gpu_viper_region": ["//src/mem/ruby/protocol:GPU_VIPER_py"],
     "//configs:protocol_garnet_standalone": ["//src/mem/ruby/protocol:Garnet_standalone_py"],
+    "//configs:protocol_multiple": [
+        "//src/mem/ruby/protocol:MESI_Two_Level_py",
+        "//src/mem/ruby/protocol:MESI_Three_Level_py",
+        "//src/mem/ruby/protocol:MESI_Three_Level_HTM_py",
+        "//src/mem/ruby/protocol:MI_example_py",
+        "//src/mem/ruby/protocol:MOESI_AMD_Base_py",
+        "//src/mem/ruby/protocol:MOESI_CMP_directory_py",
+        "//src/mem/ruby/protocol:MOESI_CMP_token_py",
+        "//src/mem/ruby/protocol:MOESI_hammer_py",
+        "//src/mem/ruby/protocol:CHI_py",
+        "//src/mem/ruby/protocol:GPU_VIPER_py",
+        "//src/mem/ruby/protocol:Garnet_standalone_py",
+    ],
     "//conditions:default": [],
 })
 
@@ -720,9 +733,18 @@ cc_library(
 cc_binary(
     name = "gem5",
     srcs = ["//src/sim:main_cc"],
-    deps = [":gem5_all"],
+    deps = [
+        ":gem5_all",
+        "//src/base:logging_impl",
+    ],
     linkopts = select({
         "//configs:python_enabled": ["-ldl", "-lutil"],
+        "//conditions:default": [],
+    }) + select({
+        # Multi-protocol builds link all SLICC protocols and ISAs together,
+        # producing duplicate definitions for shared enum types and cross-ISA
+        # code (e.g. IdleStartEvent). The linker must tolerate these.
+        "//configs:protocol_multiple": ["-Wl,--allow-multiple-definition"],
         "//conditions:default": [],
     }),
 )

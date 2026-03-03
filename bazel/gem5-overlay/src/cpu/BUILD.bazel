@@ -371,6 +371,7 @@ cc_library(
         "//conditions:default": [],
     }) + select({
         "//configs:ruby_enabled": [
+            "//src/mem/ruby:ruby",
             "//src/mem/ruby/protocol:active_protocol",
         ],
         "//conditions:default": [],
