@@ -235,6 +235,24 @@ target_compile_options(gem5_all PRIVATE ${GEM5_WERROR_FLAGS})
 set_target_properties(gem5_all PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # ---------------------------------------------------------------------------
+# Helper: whole-archive-link all subsystems + codegen to a target
+# ---------------------------------------------------------------------------
+# Reusable helper that links every subsystem STATIC library, gem5_generated,
+# and gem5_pysources into a target using --whole-archive so that SimObject
+# factory and EmbeddedPython global constructors survive linking.
+function(_gem5_link_all_whole_archive target visibility)
+    foreach(_subsys ${_subsystem_libs})
+        gem5_target_link_whole_archive(${target} ${visibility} ${_subsys})
+    endforeach()
+    if(TARGET gem5_generated)
+        gem5_target_link_whole_archive(${target} ${visibility} gem5_generated)
+    endif()
+    if(NOT GEM5_WITHOUT_PYTHON)
+        gem5_target_link_whole_archive(${target} ${visibility} gem5_pysources)
+    endif()
+endfunction()
+
+# ---------------------------------------------------------------------------
 # gem5 executable (per-subsystem whole-archive linking)
 # ---------------------------------------------------------------------------
 # Each subsystem STATIC library is individually whole-archive-linked to
@@ -248,21 +266,7 @@ add_executable(gem5
     "${CMAKE_SOURCE_DIR}/src/sim/main.cc"
     "${CMAKE_SOURCE_DIR}/src/base/date.cc"
 )
-
-# Whole-archive-link each subsystem (reuses _subsystem_libs from gem5_all above)
-foreach(_subsys ${_subsystem_libs})
-    gem5_target_link_whole_archive(gem5 PRIVATE ${_subsys})
-endforeach()
-
-# Whole-archive-link gem5_generated and gem5_pysources
-if(TARGET gem5_generated)
-    gem5_target_link_whole_archive(gem5 PRIVATE gem5_generated)
-endif()
-if(NOT GEM5_WITHOUT_PYTHON)
-    gem5_target_link_whole_archive(gem5 PRIVATE gem5_pysources)
-endif()
-
-# Link gem5_deps for global libs (fputils, iostream3, etc.) and system libs
+_gem5_link_all_whole_archive(gem5 PRIVATE)
 target_link_libraries(gem5 PRIVATE gem5_deps)
 
 # Stripped binary
@@ -281,15 +285,7 @@ add_custom_command(TARGET gem5 POST_BUILD
 add_library(gem5_shared SHARED "${CMAKE_SOURCE_DIR}/src/base/date.cc")
 target_link_libraries(gem5_shared PUBLIC gem5_deps)
 target_compile_options(gem5_shared PRIVATE ${GEM5_WERROR_FLAGS})
-foreach(_subsys ${_subsystem_libs})
-    gem5_target_link_whole_archive(gem5_shared PUBLIC ${_subsys})
-endforeach()
-if(TARGET gem5_generated)
-    gem5_target_link_whole_archive(gem5_shared PUBLIC gem5_generated)
-endif()
-if(NOT GEM5_WITHOUT_PYTHON)
-    gem5_target_link_whole_archive(gem5_shared PUBLIC gem5_pysources)
-endif()
+_gem5_link_all_whole_archive(gem5_shared PUBLIC)
 
 # ---------------------------------------------------------------------------
 # Unit tests (GTest)

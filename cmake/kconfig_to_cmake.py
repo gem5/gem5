@@ -113,10 +113,7 @@ def main():
             val = sym.str_value
             cmake_name = f"CONF_{name}"
 
-            if sym.type == kconfiglib.BOOL:
-                cmake_val = "TRUE" if val == "y" else "FALSE"
-                f.write(f"set({cmake_name} {cmake_val})\n")
-            elif sym.type == kconfiglib.TRISTATE:
+            if sym.type in (kconfiglib.BOOL, kconfiglib.TRISTATE):
                 cmake_val = "TRUE" if val == "y" else "FALSE"
                 f.write(f"set({cmake_name} {cmake_val})\n")
             elif sym.type == kconfiglib.INT:

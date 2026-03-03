@@ -43,10 +43,6 @@ function(gem5_build_gem5py)
         target_link_options(gem5py PRIVATE -rdynamic)
     endif()
 
-    # Set PYTHONPATH so gem5py can find build_tools modules
-    set_property(TARGET gem5py PROPERTY
-        VS_DEBUGGER_ENVIRONMENT "PYTHONPATH=${GEM5_BUILD_TOOLS_DIR}")
-
     # Export path for use in add_custom_command
     set(GEM5PY "$<TARGET_FILE:gem5py>" CACHE INTERNAL
         "Path to gem5py executable")

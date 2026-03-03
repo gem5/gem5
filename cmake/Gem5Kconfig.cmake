@@ -69,15 +69,10 @@ endmacro()
 set(_kconfig_defines "")
 
 # -- Dependency detection results from FindGem5Dependencies.cmake --
-_kconfig_bool_arg(HAVE_FENV       HAVE_FENV)
-_kconfig_bool_arg(HAVE_PNG        HAVE_PNG)
-_kconfig_bool_arg(HAVE_VALGRIND   HAVE_VALGRIND)
-_kconfig_bool_arg(HAVE_POSIX_CLOCK HAVE_POSIX_CLOCK)
-_kconfig_bool_arg(HAVE_HDF5       HAVE_HDF5)
-_kconfig_bool_arg(HAVE_PROTOBUF   HAVE_PROTOBUF)
-_kconfig_bool_arg(HAVE_TUNTAP     HAVE_TUNTAP)
-_kconfig_bool_arg(HAVE_CAPSTONE   HAVE_CAPSTONE)
-_kconfig_bool_arg(HAVE_KVM        HAVE_KVM)
+foreach(_dep HAVE_FENV HAVE_PNG HAVE_VALGRIND HAVE_POSIX_CLOCK
+             HAVE_HDF5 HAVE_PROTOBUF HAVE_TUNTAP HAVE_CAPSTONE HAVE_KVM)
+    _kconfig_bool_arg(${_dep} ${_dep})
+endforeach()
 
 # HAVE_DEPRECATED_NAMESPACE: check if compiler supports [[gnu::deprecated]] on namespaces
 include(CheckCXXSourceCompiles)
@@ -104,18 +99,17 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/ext/systemc/src")
 endif()
 _kconfig_bool_arg(HAVE_SYSTEMC HAVE_SYSTEMC)
 
-# KVM_ISA: determine from host architecture
+# KVM_ISA: determine from host architecture (empty string if KVM is off
+# or the architecture is not recognized)
+set(_kvm_isa "")
 if(HAVE_KVM)
     if(GEM5_BIN_TARGET_ARCH STREQUAL "x86_64")
-        list(APPEND _kconfig_defines "-D" "KVM_ISA=x86")
+        set(_kvm_isa "x86")
     elseif(GEM5_BIN_TARGET_ARCH STREQUAL "aarch64")
-        list(APPEND _kconfig_defines "-D" "KVM_ISA=arm")
-    else()
-        list(APPEND _kconfig_defines "-D" "KVM_ISA=")
+        set(_kvm_isa "arm")
     endif()
-else()
-    list(APPEND _kconfig_defines "-D" "KVM_ISA=")
 endif()
+list(APPEND _kconfig_defines "-D" "KVM_ISA=${_kvm_isa}")
 
 # MAIN_MENU_TEXT: used by the top-level mainmenu directive
 list(APPEND _kconfig_defines "-D" "MAIN_MENU_TEXT=gem5 ${GEM5_BUILD_VARIANT}")
@@ -235,16 +229,10 @@ if(DEFINED GEM5_KCONFIG_OVERRIDE)
 endif()
 
 # Print a summary of key Kconfig-derived variables
-message(STATUS "Kconfig: CONF_BUILD_ISA = ${CONF_BUILD_ISA}")
-message(STATUS "Kconfig: CONF_USE_X86_ISA = ${CONF_USE_X86_ISA}")
-message(STATUS "Kconfig: CONF_USE_ARM_ISA = ${CONF_USE_ARM_ISA}")
-message(STATUS "Kconfig: CONF_USE_RISCV_ISA = ${CONF_USE_RISCV_ISA}")
-message(STATUS "Kconfig: CONF_USE_SPARC_ISA = ${CONF_USE_SPARC_ISA}")
-message(STATUS "Kconfig: CONF_USE_MIPS_ISA = ${CONF_USE_MIPS_ISA}")
-message(STATUS "Kconfig: CONF_USE_POWER_ISA = ${CONF_USE_POWER_ISA}")
-message(STATUS "Kconfig: CONF_RUBY = ${CONF_RUBY}")
-message(STATUS "Kconfig: CONF_PROTOCOL = ${CONF_PROTOCOL}")
-message(STATUS "Kconfig: CONF_BUILD_GPU = ${CONF_BUILD_GPU}")
+foreach(_kvar BUILD_ISA USE_X86_ISA USE_ARM_ISA USE_RISCV_ISA
+             USE_SPARC_ISA USE_MIPS_ISA USE_POWER_ISA RUBY PROTOCOL BUILD_GPU)
+    message(STATUS "Kconfig: CONF_${_kvar} = ${CONF_${_kvar}}")
+endforeach()
 
 # ---------------------------------------------------------------------------
 # Kconfig interactive tool targets
