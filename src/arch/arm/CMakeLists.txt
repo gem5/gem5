@@ -13,10 +13,7 @@ elseif(CONF_BUILD_GPU)
         "${CMAKE_CURRENT_SOURCE_DIR}/insts/fplib.cc")
 endif()
 
-# Register tests before the early return so the safety check in
-# Gem5Targets.cmake sees them even when ARM ISA is disabled.
-gem5_add_test_source(aapcs64.test.cc CONDITION CONF_USE_ARM_ISA)
-gem5_add_test_source(matrix.test.cc CONDITION CONF_USE_ARM_ISA)
+# Test sources are registered in src/arch/CMakeLists.txt (always parsed).
 
 if(NOT CONF_USE_ARM_ISA)
     return()

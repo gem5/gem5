@@ -1,11 +1,22 @@
 cmake_minimum_required(VERSION 3.20)
 
-# Use ccache if available to speed up rebuilds.
+# Use ccache if available and functional to speed up rebuilds.
+# Skipped when ccache is installed but misconfigured (e.g., unwritable
+# cache/temp directory in containers), so builds degrade gracefully.
 if(NOT DEFINED CMAKE_C_COMPILER_LAUNCHER AND NOT DEFINED CMAKE_CXX_COMPILER_LAUNCHER)
     find_program(_GEM5_CCACHE ccache)
     if(_GEM5_CCACHE)
-        set(CMAKE_C_COMPILER_LAUNCHER "${_GEM5_CCACHE}")
-        set(CMAKE_CXX_COMPILER_LAUNCHER "${_GEM5_CCACHE}")
+        execute_process(
+            COMMAND "${_GEM5_CCACHE}" --version
+            RESULT_VARIABLE _ccache_result
+            OUTPUT_QUIET ERROR_QUIET
+        )
+        if(_ccache_result EQUAL 0)
+            set(CMAKE_C_COMPILER_LAUNCHER "${_GEM5_CCACHE}")
+            set(CMAKE_CXX_COMPILER_LAUNCHER "${_GEM5_CCACHE}")
+        else()
+            message(STATUS "ccache found but not functional; building without it")
+        endif()
     endif()
     unset(_GEM5_CCACHE CACHE)
 endif()
