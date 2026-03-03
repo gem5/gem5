@@ -257,7 +257,8 @@ exitImpl(SyscallDesc *desc, ThreadContext *tc, bool group, int status,
             return status;
         }
 
-        exitSimLoop("exiting with last active thread context", status & 0xff);
+        exitSimulationLoopClassic("exiting with last active thread context",
+                                  status & 0xff);
         return status;
     }
 

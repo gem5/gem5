@@ -136,7 +136,7 @@ RubyDirectedTester::wakeup()
             schedule(directedStartEvent, curTick() + 1);
         }
     } else {
-        exitSimLoop("Ruby DirectedTester completed");
+        exitSimulationLoopClassic("Ruby DirectedTester completed");
     }
 }
 

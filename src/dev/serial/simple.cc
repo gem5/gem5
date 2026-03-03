@@ -74,7 +74,7 @@ SimpleUart::write(PacketPtr pkt)
 
     uint8_t data = (uint8_t)pkt->getUintX(byteOrder);
     if (data == 0x04 && endOnEOT)
-        exitSimLoop("UART received EOT", 0);
+        exitSimulationLoopClassic("UART received EOT");
 
     device->writeData(data);
 

@@ -397,6 +397,10 @@ def scheduleTickExitAbsolute(
     The default ``exit_string`` value is used by the stdlib Simulator module to
     declare this exit event as ``ExitEvent.SCHEDULED_TICK``.
 
+    Note: when a non-default ``exit_string`` is provided, this function uses
+    the newer ExitHypercall mechanism via ``_m5_event.exitSimulationLoop`` to
+    convey structured exit metadata to the simulator core.
+
     :param tick: The absolute simulation tick to schedule the exit event.
     :param exit_string: The exit string to return when the exit event is
                         triggered.
@@ -408,10 +412,16 @@ def scheduleTickExitAbsolute(
     # the exit string is used (as it maps the an ExitEvent enum value). For
     # other string values we use the newer approach.
     if exit_string == "Tick exit reached":
-        _m5_event.exitSimLoop(exit_string, 0, tick, 0, False)
+        _m5_event.exitSimulationLoopClassic(
+            exit_string,
+            0,
+            tick,
+            0,
+            False,
+        )
     else:
         _m5_event.exitSimulationLoop(
-            6,
+            _m5_event.ExitHypercall.SCHEDULED_EXIT,
             {
                 "scheduled_at_tick": str(curTick()),
                 "justification": exit_string,

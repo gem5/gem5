@@ -397,7 +397,8 @@ AMDGPUDevice::readConfig(PacketPtr pkt)
         if (offset == PCI_INTERRUPT_PIN) {
             if (++init_interrupt_count == 3) {
                 DPRINTF(AMDGPUDevice, "Checkpointing before first MMIO\n");
-                exitSimLoop("checkpoint", 0, curTick() + configDelay + 1);
+                exitSimulationLoopClassic("checkpoint", 0,
+                                          curTick() + configDelay + 1);
             }
         } else {
             init_interrupt_count = 0;

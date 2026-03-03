@@ -258,8 +258,9 @@ void set_max_tick(Tick tick)
 {
     if (!simulate_limit_event) {
         simulate_limit_event = new GlobalSimLoopExitEvent(
-            mainEventQueue[0]->getCurTick(),
-            "simulate() limit reached", 0);
+            mainEventQueue[0]->getCurTick(), "simulate() limit reached", 0, 0,
+            static_cast<uint64_t>(ExitHypercall::CLASSIC_GENERATOR),
+            classicGeneratorPayload("simulate() limit reached"));
     }
     simulate_limit_event->reschedule(tick);
 }
@@ -323,7 +324,7 @@ doSimLoop(EventQueue *eventq)
 
             if (async_exit) {
                 async_exit = false;
-                exitSimLoop("user interrupt received");
+                exitSimulationLoopClassic("user interrupt received");
             }
 
             if (async_exception) {

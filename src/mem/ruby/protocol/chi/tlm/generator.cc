@@ -309,7 +309,7 @@ TlmGenerator::terminate(Transaction *transaction)
         suiteFailure = suiteFailure || transaction->failed();
 
         if (!isActive()) {
-            exitSimLoop("TlmGenerator done");
+            exitSimulationLoopClassic("TlmGenerator done");
         }
     } else {
         panic("%u: Can't find transaction id.\n", phase.txn_id);

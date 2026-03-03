@@ -53,6 +53,7 @@ from gem5.resources.resource import obtain_resource
 from gem5.simulate.exit_handler import (
     AfterBootExitHandler,
     ExitHandler,
+    ExitHypercall,
 )
 from gem5.simulate.simulator import Simulator
 from gem5.utils.override import overrides
@@ -120,12 +121,14 @@ board.set_workload(workload)
 # default after-boot exit handler to switch processors.
 
 # You can inherit from either the class that handles a certain hypercall by
-# default, or inherit directly from ExitHandler and specify a hypercall number.
+# default, or inherit directly from ExitHandler and specify an ExitHypercall.
 # See src/python/gem5/simulate/exit_handler.py for more information on which
 # behaviors map to which hypercalls, and what the default behaviors are.
 
 
-class CustomKernelBootedExitHandler(ExitHandler, hypercall_num=1):
+class CustomKernelBootedExitHandler(
+    ExitHandler, hypercall=ExitHypercall.KERNEL_BOOTED
+):
     @overrides(ExitHandler)
     def _process(self, simulator: "Simulator") -> None:
         print("First exit: kernel booted")
@@ -147,7 +150,9 @@ class SwitchProcessorAfterBootExitHandler(AfterBootExitHandler):
         return False
 
 
-class AfterBootScriptExitHandler(ExitHandler, hypercall_num=3):
+class AfterBootScriptExitHandler(
+    ExitHandler, hypercall=ExitHypercall.AFTER_BOOT_SCRIPT
+):
     @overrides(ExitHandler)
     def _process(self, simulator: "Simulator") -> None:
         print(f"Third exit: {self.get_handler_description()}")

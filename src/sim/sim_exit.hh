@@ -32,44 +32,159 @@
 #include <functional>
 #include <map>
 #include <string>
+#include <utility>
 
 #include "base/types.hh"
+#include "gem5/hypercall_ids.h"
 
 namespace gem5
 {
 
 Tick curTick();
 
+/// Built-in hypercall identifiers used when scheduling exits with
+/// exitSimulationLoop(). A hypercall is the broader guest/simulator request
+/// mechanism; ``ExitHypercall`` is gem5's finite set of hypercalls that route
+/// through the simulation-exit/stdlib ``ExitHandler`` path. Users may still
+/// use custom integer hypercall IDs with custom handlers. ID 0 is reserved for
+/// the legacy generator-based exit handling path.
+enum class ExitHypercall : uint64_t
+{
+#define GEM5_DEFINE_EXIT_ENUM(name, value, desc) name = value,
+    GEM5_FOREACH_EXIT_HYPERCALL(GEM5_DEFINE_EXIT_ENUM)
+#undef GEM5_DEFINE_EXIT_ENUM
+};
+
+struct ExitHypercallDescriptor
+{
+    ExitHypercall id;
+    const char *name;
+    const char *description;
+};
+
+#define GEM5_DEFINE_EXIT_DESCRIPTOR(name, value, desc)                        \
+    {ExitHypercall::name, #name, desc},
+inline constexpr ExitHypercallDescriptor kExitHypercallDescriptors[] = {
+    GEM5_FOREACH_EXIT_HYPERCALL(GEM5_DEFINE_EXIT_DESCRIPTOR)};
+#undef GEM5_DEFINE_EXIT_DESCRIPTOR
+
+using ExitHypercallId = uint64_t;
+using ExitPayload = std::map<std::string, std::string>;
+
+inline ExitPayload
+classicGeneratorPayload(const std::string &cause, int code = 0)
+{ return {{"cause", cause}, {"code", std::to_string(code)}}; }
+
 /// Register a callback to be called when Python exits.  Defined in
 /// sim/main.cc.
 void registerExitCallback(const std::function<void()> &);
 
-/// Schedule an event to exit the simulation loop (returning to
-/// Python) at the end of the current cycle (curTick()).  The message
-/// and exit_code parameters are saved in the SimLoopExitEvent to
-/// indicate why the exit occurred.
+/**
+ * Legacy "classic" exit path that predates hypercalls. This schedules a
+ * generator-based exit event that reports only a human-readable message and an
+ * optional integer code. Modern stdlib simulations should prefer the
+ * hypercall-based APIs below so Python ExitHandlers can dispatch on an ID and
+ * structured payload.
+ *
+ * Use ``exitSimulationLoopClassic`` for legacy generator exits that must
+ * still preserve ``getCause()``/``getCode()``.
+ */
+[[deprecated("exitSimLoop is deprecated. Use exitSimulationLoop for "
+             "hypercall-based exits, or exitSimulationLoopClassic only "
+             "when legacy cause/code compatibility is required.")]]
 void exitSimLoop(const std::string &message, int exit_code = 0,
                  Tick when = curTick(), Tick repeat = 0,
                  bool serialize = false);
-/// Schedule an event as above, but make it high priority so it runs before
-/// any normal events which are schedule at the current time.
+
+/// Legacy high-priority variant of ``exitSimLoop`` (see note above).
+[[deprecated("exitSimLoopNow is deprecated. Use exitSimulationLoopNow for "
+             "hypercall-based exits, or exitSimulationLoopClassicNow only "
+             "when legacy cause/code compatibility is required.")]]
 void exitSimLoopNow(const std::string &message, int exit_code = 0,
                     Tick repeat = 0, bool serialize = false);
 
-void exitSimLoopWithHypercall(const std::string &message, int exit_code,
-                              Tick when, Tick repeat,
-                              std::map<std::string, std::string> payload,
-                              uint64_t hypercall_id, bool serialize);
+/**
+ * Compatibility helper for legacy "classic" simulation exits.
+ *
+ * "Classic" means the exit is still identified by the legacy string message
+ * instead of by a dedicated hypercall ID. This helper sends that string and
+ * code through the ``CLASSIC_GENERATOR`` hypercall payload. The Python
+ * classic-generator handler then maps the string into the legacy
+ * ``ExitEvent`` path, for example ``"checkpoint"`` maps to
+ * ``ExitEvent.CHECKPOINT``.
+ *
+ * This preserves ``GlobalSimLoopExitEvent::getCause()/getCode()`` and supplies
+ * the matching ``{"cause": message, "code": exit_code}`` payload expected by
+ * the Python classic-generator handler. Use this only when legacy cause/code
+ * or ``ExitEvent`` string-dispatch compatibility is required.
+ */
+void exitSimulationLoopClassic(const std::string &message, int exit_code = 0,
+                               Tick when = curTick(), Tick repeat = 0,
+                               bool serialize = false);
 
-void exitSimulationLoop(uint64_t type_id,
-    std::map<std::string, std::string> payload=
-        std::map<std::string, std::string>(),
-    Tick when=curTick());
+/**
+ * Immediate variant of ``exitSimulationLoopClassic`` that preserves the
+ * minimum-priority scheduling behavior of the legacy ``exitSimLoopNow`` API.
+ *
+ * The ``serialize`` parameter is accepted for compatibility with
+ * ``exitSimLoopNow``. That API has ignored the parameter since it was added.
+ */
+void exitSimulationLoopClassicNow(const std::string &message,
+                                  int exit_code = 0, Tick repeat = 0,
+                                  bool serialize = false);
 
-void
-exitSimulationLoopNow(uint64_t type_id,
-    std::map<std::string, std::string> payload=
-        std::map<std::string, std::string>());
+/**
+ * Preferred hypercall-based exit API. ``hypercall_id`` should be one of
+ * ``ExitHypercall``'s values, or a custom ID if you have registered a matching
+ * ExitHandler.
+ *
+ * This API does not normally populate legacy ``getCause()``/``getCode()``.
+ * ``ExitHypercall::CLASSIC_GENERATOR`` is the compatibility exception: callers
+ * must provide ``cause`` and ``code`` payload entries, which are mirrored into
+ * the legacy fields.
+ *
+ * Examples:
+ *
+ * ```
+ * exitSimulationLoop(ExitHypercall::SCHEDULED_EXIT,
+ *     { {"justification", "Stop after ROI"} },
+ *     curTick() + 1000);
+ * exitSimulationLoop(static_cast<uint64_t>(myCustomId), {{"foo", "bar"}});
+ * ```
+ *
+ * @param hypercall_id Identifier for the ExitHandler to run.
+ * @param payload   Optional metadata consumed by the ExitHandler.
+ * @param when      Tick at which the exit event should fire.
+ * @param repeat    Interval to reschedule the event; 0 disables repetition.
+ */
+void exitSimulationLoop(ExitHypercallId hypercall_id,
+                        ExitPayload payload = ExitPayload(),
+                        Tick when = curTick(), Tick repeat = 0);
+
+/**
+ * Immediate variant of ``exitSimulationLoop`` that schedules the event for
+ * the current tick and does not repeat.
+ */
+void exitSimulationLoopNow(ExitHypercallId hypercall_id,
+                           ExitPayload payload = ExitPayload());
+
+/// Convenience overloads so callers can pass ``ExitHypercall`` directly.
+inline void
+exitSimulationLoop(ExitHypercall hypercall,
+                   ExitPayload payload = ExitPayload(), Tick when = curTick(),
+                   Tick repeat = 0)
+{
+    exitSimulationLoop(static_cast<uint64_t>(hypercall), std::move(payload),
+                       when, repeat);
+}
+
+inline void
+exitSimulationLoopNow(ExitHypercall hypercall,
+                      ExitPayload payload = ExitPayload())
+{
+    exitSimulationLoopNow(static_cast<uint64_t>(hypercall),
+                          std::move(payload));
+}
 
 } // namespace gem5
 

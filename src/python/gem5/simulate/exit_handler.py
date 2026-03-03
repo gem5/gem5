@@ -24,10 +24,62 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+"""Exit handler helpers for the gem5 Python stdlib.
+
+This module is the stdlib side of gem5's hypercall-driven simulation-exit
+infrastructure. A hypercall exit may originate inside the simulator, when a
+model calls an ``exitSimulationLoop`` API with a hypercall ID, or in the guest
+application, when code linked with the m5 library calls ``m5_hypercall``. The
+``Simulator`` run loop reads that ID from the resulting exit event, looks it up
+in ``ExitHandler.get_handler_map()``, constructs the matching ``ExitHandler``
+with the event payload, and calls ``handle()``.
+
+Terminology
+-----------
+
+``hypercall``
+    The broad guest/simulator request mechanism. In this file, hypercalls are
+    used to route simulation exits to Python handlers.
+
+``hypercall ID``
+    The integer value carried by the exit event. This is the runtime dispatch
+    key. All handler registration eventually resolves to this integer.
+
+``ExitHypercall``
+    The pybind11 enum exposing gem5's built-in exit-handler hypercall IDs,
+    generated from the C++ ``gem5::ExitHypercall`` enum. Use enum members such
+    as ``ExitHypercall.WORK_BEGIN`` for built-in handlers.
+
+``HypercallId``
+    The Python type accepted by registration helpers: either an
+    ``ExitHypercall`` enum member for a built-in hypercall or a raw ``int`` for
+    a custom/user-defined hypercall ID. Strings are intentionally not accepted
+    as selectors so call sites do not rely on loose name parsing.
+
+Typical usage
+-------------
+
+Subclass ``ExitHandler`` for full control::
+
+    class MyWorkBeginHandler(ExitHandler, hypercall=ExitHypercall.WORK_BEGIN):
+        def _process(self, simulator: "Simulator") -> None:
+            ...
+
+        def _exit_simulation(self) -> bool:
+            return False
+
+Use ``register_exit_handler`` for simple function-based handlers::
+
+    def handle_custom(simulator: "Simulator", payload: HypercallPayload) -> bool:
+        return False
+
+    register_exit_handler(None, handle_custom, "custom", hypercall_id=4096)
+"""
+
 import json
 import socket
 from abc import (
-    ABCMeta,
+    ABC,
     abstractmethod,
 )
 from pathlib import Path
@@ -46,6 +98,13 @@ import m5
 from m5 import options
 from m5.util import warn
 
+from _m5 import event as _m5_event
+
+# Public finite-set selector for the hypercalls built into gem5. This pybind11
+# enum is generated from the same C++ ExitHypercall enum that is backed by
+# include/gem5/hypercall_ids.h.
+ExitHypercall = _m5_event.ExitHypercall
+
 from ..utils.override import overrides
 from .exit_event import ExitEvent
 from .exit_event_generators import (
@@ -59,86 +118,232 @@ from .exit_event_generators import (
     warn_default_decorator,
 )
 
+"""Structured key/value metadata attached to a hypercall exit event.
 
-class ExitHandlerMeta(ABCMeta):
-    """Metaclass for ExitHandler that automatically registers subclasses"""
+The C++/pybind interface currently transports payload values as strings, so
+handlers should parse values explicitly when they need integers, booleans, or
+other richer types.
+"""
+HypercallPayload = Dict[str, str]
 
-    def __new__(mcs, name, bases, attrs, hypercall_num: int = None) -> Any:
-        cls = super().__new__(mcs, name, bases, attrs)
-        # Don't register the base ExitHandler class itself
-        if name != "ExitHandler":
-            # If hypercall_num is not provided, and the class is a subclass
-            # of another ExitHandler, use the hypercall_num of the base class
-            for base in bases:
-                if base in ExitHandler.get_handler_map().values():
-                    hypercall_num = base.get_handler_id()
-                    break
-            assert hypercall_num is not None, (
-                f"Hypercall number must be provided for {name}. Use "
-                "`class {name}(ExitHandler, hypercall_num={hypercall_num}):`"
+"""A hypercall identifier accepted by the Python ExitHandler registry.
+
+Use ``ExitHypercall`` enum members for gem5-defined exit-handler hypercalls.
+Use a raw ``int`` only for custom/user-defined hypercall IDs that are not part
+of gem5's built-in ``ExitHypercall`` enum.
+"""
+HypercallId = Union[int, ExitHypercall]
+
+"""Callable used by ``register_exit_handler``.
+
+The function receives the active ``Simulator`` and the hypercall payload. It
+returns ``True`` when the simulator should leave the run loop after handling the
+event, or ``False`` to continue.
+"""
+ExitHandlerFunction = Callable[["Simulator", HypercallPayload], bool]
+
+
+def _resolve_hypercall_id(hypercall: HypercallId) -> int:
+    """Return the integer dispatch key for a hypercall selector.
+
+    Args:
+        hypercall: Either an ``ExitHypercall`` enum member for a gem5-defined
+            hypercall or an integer custom/user-defined hypercall ID.
+
+    Returns:
+        The integer hypercall ID used as the key in ``ExitHandler``'s registry.
+
+    Raises:
+        TypeError: If ``hypercall`` is not an ``ExitHypercall`` or ``int``.
+    """
+    if isinstance(hypercall, ExitHypercall):
+        return int(hypercall.value)
+    if isinstance(hypercall, int):
+        return hypercall
+    raise TypeError(
+        "hypercall must be an ExitHypercall enum member or an integer "
+        f"hypercall ID, not {type(hypercall).__name__}"
+    )
+
+
+def _select_hypercall(
+    hypercall: Optional[HypercallId],
+    hypercall_id: Optional[int],
+) -> Optional[HypercallId]:
+    """Choose one of the public selector arguments.
+
+    Args:
+        hypercall: Preferred selector argument. Use an ``ExitHypercall`` enum
+            member for gem5-defined hypercalls or an integer for custom IDs.
+        hypercall_id: Explicit integer-only alias for custom/raw IDs. This
+            exists to make custom ID registration self-documenting at call sites.
+
+    Returns:
+        The selected hypercall identifier, or ``None`` if neither was supplied.
+
+    Raises:
+        TypeError: If both selector arguments are supplied.
+    """
+    if hypercall is not None and hypercall_id is not None:
+        raise TypeError("Specify only one of 'hypercall' or 'hypercall_id'.")
+    return hypercall if hypercall is not None else hypercall_id
+
+
+class ExitHandler(ABC):
+    """Base class for all stdlib hypercall exit handlers.
+
+    Subclasses register themselves when the class is created. The class-level
+    registry maps an integer hypercall ID to the handler class responsible for
+    that ID. The ``Simulator`` run loop uses this map after each hypercall exit
+    event to choose which handler to instantiate.
+
+    A subclass normally specifies ``hypercall=ExitHypercall.SOME_VALUE``. For
+    custom hypercall IDs outside gem5's enum, use ``hypercall_id=<int>``.
+    Subclasses of an existing registered handler inherit the base handler's ID
+    unless they explicitly provide a different one.
+    """
+
+    # Shared registry used by the Simulator to map a hypercall ID to the
+    # ExitHandler subclass that should be instantiated for that exit event.
+    _handler_map: Dict[int, Type["ExitHandler"]] = {}
+
+    # Hypercall ID handled by this class. Each registered subclass gets its own
+    # value, while the base ExitHandler class keeps None.
+    _handler_id: Optional[int] = None
+
+    def __init_subclass__(
+        cls,
+        *,
+        hypercall: Optional[HypercallId] = None,
+        hypercall_id: Optional[int] = None,
+        hypercall_num: Optional[int] = None,
+        **kwargs: Any,
+    ) -> None:
+        """Register subclasses by the hypercall ID they handle.
+
+        Args:
+            hypercall: Preferred selector. Use an ``ExitHypercall`` enum member
+                for a gem5-defined hypercall or an integer custom ID.
+            hypercall_id: Explicit integer-only selector for raw/custom IDs.
+            hypercall_num: Deprecated compatibility alias for ``hypercall_id``.
+            **kwargs: Additional subclass keyword arguments for other base
+                classes.
+
+        Raises:
+            TypeError: If both selector arguments are supplied, or if no
+                selector can be determined from this class or its bases.
+
+        ``hypercall_id`` is accepted when callers want to pass a raw/custom
+        integer ID explicitly. New handlers for gem5-defined hypercalls should
+        usually use ``hypercall`` with an ``ExitHypercall`` enum member.
+        Subclasses of existing handlers inherit the base handler's hypercall
+        unless they explicitly specify a different one.
+        """
+        super().__init_subclass__(**kwargs)
+
+        selector = _select_hypercall(hypercall, hypercall_id)
+        if hypercall_num is not None:
+            if selector is not None:
+                raise TypeError(
+                    "Specify only one of 'hypercall', 'hypercall_id', or "
+                    "'hypercall_num'."
+                )
+            selector = hypercall_num
+
+        if selector is None:
+            hypercall_id = cls._handler_id
+        else:
+            hypercall_id = _resolve_hypercall_id(selector)
+
+        if hypercall_id is None:
+            raise TypeError(
+                f"Hypercall identifier must be provided for {cls.__name__}. "
+                f"Use `class {cls.__name__}(ExitHandler, hypercall=<hypercall>):`"
             )
-            ExitHandler._handler_map[hypercall_num] = cls
-            cls._handler_id = hypercall_num
 
-        return cls
-
-
-class ExitHandler(metaclass=ExitHandlerMeta):
-
-    _handler_map: Dict[str, Type["ExitHandler"]] = {}
-    _handler_id: int = None
+        cls._handler_id = hypercall_id
+        ExitHandler._handler_map[hypercall_id] = cls
 
     @classmethod
-    def get_handler_id(cls) -> int:
-        """Returns the ID of the exit handler"""
+    def get_handler_id(cls) -> Optional[int]:
+        """Returns the hypercall ID handled by this class.
+
+        Returns ``None`` for the base ``ExitHandler`` class.
+        """
         return cls._handler_id
 
     @classmethod
-    def get_handler_map(cls) -> Dict[str, Type["ExitHandler"]]:
-        """Returns the mapping of exit handler IDs to handler classes"""
+    def get_handler_map(cls) -> Dict[int, Type["ExitHandler"]]:
+        """Returns the mapping of hypercall IDs to handler classes."""
         return cls._handler_map
 
-    def __init__(self, payload: Dict[str, str]) -> None:
+    def __init__(self, payload: HypercallPayload) -> None:
+        """Create a handler for a single hypercall exit event.
+
+        Args:
+            payload: String key/value metadata attached to the exit event.
+        """
         self._payload = payload
 
     def handle(self, simulator: "Simulator") -> bool:
+        """Run this handler and report whether simulation should stop.
+
+        Args:
+            simulator: The active ``Simulator`` instance.
+
+        Returns:
+            ``True`` if ``Simulator.run()`` should return after this handler;
+            ``False`` if the simulator should re-enter the event loop.
+        """
         self._process(simulator)
         return self._exit_simulation()
 
     def get_handler_description(self) -> str:
+        """Return a human-readable description for logs/status output."""
         return f"Exit Handler {self.__class__.__name__} called."
 
     @abstractmethod
     def _process(self, simulator: "Simulator") -> None:
+        """Perform the handler's side effects.
+
+        Args:
+            simulator: The active ``Simulator`` instance.
+        """
         raise NotImplementedError(
             "Method '_process' must be implemented by a subclass"
         )
 
     @abstractmethod
     def _exit_simulation(self) -> bool:
+        """Return whether simulation should stop after ``_process``.
+
+        Returns:
+            ``True`` to leave ``Simulator.run()``; ``False`` to continue.
+        """
         raise NotImplementedError(
             "Method '_exit_simulation' must be implemented by a subclass"
         )
 
 
 def _ExitHandlerFactory(
-    hypercall_num: int, func: Callable[["Simulator"], bool], description: str
+    hypercall: HypercallId,
+    func: ExitHandlerFunction,
+    description: str,
 ) -> Type[ExitHandler]:
-    """
-    Factory function to create a new ExitHandler class with a specific hypercall number,
-    processing function, and description.
+    """Create an ``ExitHandler`` subclass around a plain Python callable.
+
     Args:
-        hypercall_num (int): The hypercall number associated with the exit handler.
-        func (Callable[["Simulator"], bool]): A callable that takes a Simulator instance
-            and returns a boolean indicating whether the simulation should exit.
-        description (str): A description of the exit handler.
+        hypercall: Built-in ``ExitHypercall`` enum member or custom integer ID
+            to bind to the generated handler class.
+        func: Function to call when the hypercall is handled.
+        description: Human-readable description stored on the handler instance.
+
     Returns:
-        Type[ExitHandler]: A new ExitHandler class with the specified hypercall number,
-        processing function, and description.
+        A newly defined ``ExitHandler`` subclass registered for ``hypercall``.
     """
 
-    class NewExitHandler(ExitHandler, hypercall_num=hypercall_num):
-        def __init__(self, payload):
+    class NewExitHandler(ExitHandler, hypercall=hypercall):
+        def __init__(self, payload: HypercallPayload) -> None:
             super().__init__(payload)
             self.should_exit = False
             self.description = description
@@ -151,44 +356,69 @@ def _ExitHandlerFactory(
         def _exit_simulation(self) -> bool:
             return self.should_exit
 
+        @overrides(ExitHandler)
+        def get_handler_description(self) -> str:
+            return self.description
+
     return NewExitHandler
 
 
 def register_exit_handler(
-    hypercall_num: int,
-    func: Callable[["Simulator", dict], bool],
+    hypercall: Optional[HypercallId],
+    func: ExitHandlerFunction,
     description: str,
+    *,
+    hypercall_id: Optional[int] = None,
 ) -> Type[ExitHandler]:
-    """This function registers a new exit handler with a specific hypercall
-    number. Whenever this hypercall is encountered, the provided function will
-    be called with the simulator instance and the payload of the hypercall. The
-    function should return a boolean indicating whether the simulation should
-    exit.
+    """Register a new exit handler for the provided hypercall.
+
+    ``hypercall`` may be an ``ExitHypercall`` enum value for gem5-defined
+    hypercalls or an ``int`` for custom/user-defined hypercalls. Use the
+    ``hypercall_id`` keyword only when passing a raw/custom integer ID.
 
     Args:
-        hypercall_num (int): The hypercall number associated with the exit handler.
-        func (Callable[["Simulator", dict], bool]): A callable that takes a Simulator
-            instance and a dictionary containing the payload of the hypercall, and
-            returns a boolean indicating whether the simulation should exit.
-        description (str): A description of the exit handler.
+        hypercall: Preferred selector. Use an ``ExitHypercall`` enum member for
+            gem5-defined hypercalls or an integer for a custom ID. Pass ``None``
+            only when using the keyword-only ``hypercall_id`` argument.
+        func: Function called with ``(simulator, payload)`` when the hypercall
+            is handled. It returns whether simulation should stop.
+        description: Human-readable summary for logging/status output.
+        hypercall_id: Explicit raw/custom integer hypercall ID.
 
     Returns:
-        Type[ExitHandler]: A new ExitHandler class with the specified hypercall number,
-        processing function, and description.
+        A new ``ExitHandler`` subclass bound to the requested hypercall.
+
+    Raises:
+        ValueError: If neither selector is provided or both are provided.
+
+    Note:
+        Use ``hypercall`` with an ``ExitHypercall`` enum member for gem5-defined
+        hypercalls; use ``hypercall_id`` when registering a raw/custom integer
+        ID that is not part of the built-in enum.
     """
-    return _ExitHandlerFactory(hypercall_num, func, description)
+    try:
+        selector = _select_hypercall(hypercall, hypercall_id)
+    except TypeError as exc:
+        raise ValueError(str(exc)) from exc
+    if selector is None:
+        raise ValueError("A hypercall identifier must be provided.")
+    return _ExitHandlerFactory(selector, func, description)
 
 
-class ScheduledExitEventHandler(ExitHandler, hypercall_num=6):
-    """A handler designed to be the default for  an Exit scheduled to occur
-    at a specified tick. For example, these Exit exits can be triggered through be
-    src/python/m5/simulate.py's `scheduleTickExitFromCurrent` and
-    `scheduleTickExitAbsolute` functions.
+class ScheduledExitEventHandler(
+    ExitHandler, hypercall=ExitHypercall.SCHEDULED_EXIT
+):
+    """Default handler for simulator-scheduled tick exits.
 
-    It will exit the simulation loop by default.
+    ``SCHEDULED_EXIT`` is used when gem5 itself schedules a future exit, for
+    example via ``m5.scheduleTickExitFromCurrent`` or the stdlib
+    ``Simulator.set_hypercall_*_max_ticks`` helpers. This handler exits the
+    simulator run loop by default. The payload may include:
 
-    The `justification` and `scheduled_at_tick` methods are provided to give
-    richer information about this schedule exit.
+    ``justification``
+        Human-readable reason for scheduling the exit.
+    ``scheduled_at_tick``
+        Tick at which the scheduled exit was created.
     """
 
     @overrides(ExitHandler)
@@ -196,42 +426,29 @@ class ScheduledExitEventHandler(ExitHandler, hypercall_num=6):
         pass
 
     def justification(self) -> Optional[str]:
-        """Returns the justification for the scheduled exit event.
-
-        This information may be passed to when scheduling the event event to
-        remind the user why the event was scheduled, or used in cases where
-        lots of scheduled events are used and there is a need to differentiate
-        them.
-
-        Returns "None" if this information was not set.
-        """
-        return (
-            None
-            if "justification" not in self._payload
-            else self._payload["justification"]
-        )
+        """Returns why this scheduled exit event was created, if available."""
+        return self._payload.get("justification")
 
     def scheduled_at_tick(self) -> Optional[int]:
-        """Returns the tick in which the event was scheduled on (not scheduled
-        to occur, but the tick the event was created).
-
-        Returns "None" if this information is not available.
-        """
-        return (
-            None
-            if "scheduled_at_tick" not in self._payload
-            else int(self._payload["scheduled_at_tick"])
-        )
+        """Returns the tick at which this exit was scheduled, if available."""
+        tick = self._payload.get("scheduled_at_tick")
+        return None if tick is None else int(tick)
 
     @overrides(ExitHandler)
     def _exit_simulation(self) -> bool:
         return True
 
 
-class KernelBootedExitHandler(ExitHandler, hypercall_num=1):
+class KernelBootedExitHandler(
+    ExitHandler, hypercall=ExitHypercall.KERNEL_BOOTED
+):
+    """Handle the guest reporting that the kernel has booted.
+
+    The default behavior is to continue simulation.
+    """
 
     @overrides(ExitHandler)
-    def get_handler_description(self):
+    def get_handler_description(self) -> str:
         return "Kernel booted."
 
     @overrides(ExitHandler)
@@ -243,10 +460,14 @@ class KernelBootedExitHandler(ExitHandler, hypercall_num=1):
         return False
 
 
-class AfterBootExitHandler(ExitHandler, hypercall_num=2):
+class AfterBootExitHandler(ExitHandler, hypercall=ExitHypercall.AFTER_BOOT):
+    """Handle the guest entering the ``after_boot`` hook.
+
+    The default behavior is to continue simulation.
+    """
 
     @overrides(ExitHandler)
-    def get_handler_description(self):
+    def get_handler_description(self) -> str:
         return "Started `after_boot.sh` script."
 
     @overrides(ExitHandler)
@@ -258,10 +479,16 @@ class AfterBootExitHandler(ExitHandler, hypercall_num=2):
         return False
 
 
-class AfterBootScriptExitHandler(ExitHandler, hypercall_num=3):
+class AfterBootScriptExitHandler(
+    ExitHandler, hypercall=ExitHypercall.AFTER_BOOT_SCRIPT
+):
+    """Handle the guest completing ``after_boot.sh``.
+
+    The default behavior is to exit the simulator run loop.
+    """
 
     @overrides(ExitHandler)
-    def get_handler_description(self):
+    def get_handler_description(self) -> str:
         return "Finished `after_boot.sh` script."
 
     @overrides(ExitHandler)
@@ -273,7 +500,13 @@ class AfterBootScriptExitHandler(ExitHandler, hypercall_num=3):
         return True
 
 
-class CheckpointExitHandler(ExitHandler, hypercall_num=7):
+class CheckpointExitHandler(ExitHandler, hypercall=ExitHypercall.CHECKPOINT):
+    """Take a gem5 checkpoint and continue simulation.
+
+    The checkpoint is written below ``simulator._checkpoint_path`` when set,
+    otherwise below the current gem5 output directory.
+    """
+
     @overrides(ExitHandler)
     def _process(self, simulator: "Simulator") -> None:
         checkpoint_dir = simulator._checkpoint_path
@@ -288,10 +521,14 @@ class CheckpointExitHandler(ExitHandler, hypercall_num=7):
         return False
 
 
-class WorkBeginExitHandler(ExitHandler, hypercall_num=4):
+class WorkBeginExitHandler(ExitHandler, hypercall=ExitHypercall.WORK_BEGIN):
+    """Handle the start of a region of interest.
+
+    The default behavior resets gem5 statistics and continues simulation.
+    """
 
     @overrides(ExitHandler)
-    def get_handler_description(self):
+    def get_handler_description(self) -> str:
         return "Started executing Region of Interest (ROI)."
 
     @overrides(ExitHandler)
@@ -303,10 +540,14 @@ class WorkBeginExitHandler(ExitHandler, hypercall_num=4):
         return False
 
 
-class WorkEndExitHandler(ExitHandler, hypercall_num=5):
+class WorkEndExitHandler(ExitHandler, hypercall=ExitHypercall.WORK_END):
+    """Handle the end of a region of interest.
+
+    The default behavior dumps gem5 statistics and continues simulation.
+    """
 
     @overrides(ExitHandler)
-    def get_handler_description(self):
+    def get_handler_description(self) -> str:
         return "Finished executing Region of Interest (ROI)."
 
     @overrides(ExitHandler)
@@ -318,9 +559,27 @@ class WorkEndExitHandler(ExitHandler, hypercall_num=5):
         return False
 
 
-class OrchestratorExitHandler(ExitHandler, hypercall_num=1000):
+class OrchestratorExitHandler(
+    ExitHandler, hypercall=ExitHypercall.ORCHESTRATOR
+):
+    """Handle out-of-band orchestration/status requests.
 
-    def _get_status(self, simulator: "Simulator") -> Dict[str, str]:
+    The orchestrator hypercall is used by tooling that wants to query or adjust
+    a running simulation. The payload selects a function and may include a Unix
+    domain socket path for the JSON response. Supported functions include
+    ``status``, ``get_stats``, and ``update_debug_flags``.
+    """
+
+    def _get_status(self, simulator: "Simulator") -> Dict[str, Any]:
+        """Collect basic simulator status for an orchestrator response.
+
+        Args:
+            simulator: The active ``Simulator`` instance.
+
+        Returns:
+            A JSON-serializable dictionary of workload, tick, simulator ID, and
+            instruction-count metadata.
+        """
         import _m5.core
 
         if not simulator.get_workload():
@@ -336,6 +595,17 @@ class OrchestratorExitHandler(ExitHandler, hypercall_num=1000):
         }
 
     def _add_debug_flags(self, debug_flags: List[str]) -> Dict[str, str]:
+        """Enable or disable gem5 debug flags.
+
+        Args:
+            debug_flags: Flag names to enable. Prefix a name with ``-`` to
+                disable it instead.
+
+        Returns:
+            A dictionary listing enabled, disabled, and invalid flags. Values
+            are strings so the response is compatible with the current payload
+            conventions.
+        """
         from m5 import debug
 
         flags_disabled = []
@@ -398,7 +668,9 @@ class OrchestratorExitHandler(ExitHandler, hypercall_num=1000):
         return False
 
 
-class ClassicGeneratorExitHandler(ExitHandler, hypercall_num=0):
+class ClassicGeneratorExitHandler(
+    ExitHandler, hypercall=ExitHypercall.CLASSIC_GENERATOR
+):
     """A handler designed to be the default for the classic exit event.
 
     ``on_exit_event`` usage notes
@@ -482,8 +754,8 @@ class ClassicGeneratorExitHandler(ExitHandler, hypercall_num=0):
     this example, the first ``EXIT`` type exit event will cause ``print_hello``
     to be executed, and the second ``EXIT`` type exit event will cause the
     ``switch_cpus`` function to run. The third will execute ``print_hello``
-    again before finally, on the forth exit event will call
-    ``stop_simulation`` which will stop the simulation as it returns ``False``.
+    again before finally, on the fourth exit event, ``stop_simulation`` will
+    stop the simulation by returning ``True``.
 
     With a function
     ===============
@@ -531,9 +803,15 @@ class ClassicGeneratorExitHandler(ExitHandler, hypercall_num=0):
     These generators can be found in the ``exit_event_generator.py`` module.
     """
 
-    def __init__(self, payload: Dict[str, str]) -> None:
+    def __init__(self, payload: HypercallPayload) -> None:
+        """Create a classic-generator compatibility handler instance.
+
+        Args:
+            payload: Payload containing at least the legacy ``cause`` when the
+                event came through the new structured hypercall path.
+        """
         super().__init__(payload)
-        self._exit_on_completion = None
+        self._exit_on_completion: Optional[bool] = None
 
     @classmethod
     def set_exit_event_map(
@@ -543,14 +821,31 @@ class ClassicGeneratorExitHandler(ExitHandler, hypercall_num=0):
                 ExitEvent,
                 Union[
                     Generator[Optional[bool], None, None],
-                    List[Callable],
-                    Callable,
+                    List[Callable[[], Optional[bool]]],
+                    Callable[[], Optional[bool]],
                 ],
             ]
         ],
         expected_execution_order: Optional[List[ExitEvent]],
         board: Optional["Board"],
     ) -> None:
+        """Configure legacy ``ExitEvent`` handling for classic exits.
+
+        This bridges the older message/cause based exit mechanism to the newer
+        hypercall-dispatch mechanism. ``ClassicGeneratorExitHandler`` receives
+        the classic exit cause, translates it to an ``ExitEvent``, then advances
+        the matching user-supplied or default generator.
+
+        Args:
+            on_exit_event: Optional mapping from ``ExitEvent`` to a generator,
+                list of zero-argument callables, or a single zero-argument
+                callable. Generators/callables yield or return ``True`` to exit
+                the simulator run loop and ``False``/``None`` to continue.
+            expected_execution_order: Optional sequence of ``ExitEvent`` values
+                used to validate that exits occur in the expected order.
+            board: Board whose processor is used by default handlers such as
+                CPU switching and spatter synchronization.
+        """
         # We specify a dictionary here outlining the default behavior for each
         # exit event. Each exit event is mapped to a generator.
         cls._default_on_exit_dict = {
@@ -626,7 +921,9 @@ class ClassicGeneratorExitHandler(ExitHandler, hypercall_num=0):
                             "of `ExitEvent.EVENT : gen`)"
                         )
 
-                    def function_generator(func: Callable):
+                    def function_generator(
+                        func: Callable[[], Optional[bool]],
+                    ) -> Generator[Optional[bool], None, None]:
                         while True:
                             yield func()
 
@@ -643,10 +940,13 @@ class ClassicGeneratorExitHandler(ExitHandler, hypercall_num=0):
 
     @overrides(ExitHandler)
     def _process(self, simulator: "Simulator") -> None:
-        #  # Translate the exit event cause to the exit event enum.
-        exit_enum = ExitEvent.translate_exit_status(
-            simulator.get_last_exit_event_cause()
-        )
+        # Translate the exit event cause to the exit event enum. New-style
+        # ClassicGenerator exits store the legacy cause in the structured
+        # payload rather than the GlobalSimLoopExitEvent cause field.
+        cause = self._payload.get("cause")
+        if cause is None:
+            cause = simulator.get_last_exit_event_cause()
+        exit_enum = ExitEvent.translate_exit_status(cause)
 
         # Check to see the run is corresponding to the expected execution
         # order (assuming this check is demanded by the user).
