@@ -1,7 +1,7 @@
 """BUILD file for src/arch/mips/ -- MIPS ISA implementation."""
 
 load("@rules_cc//cc:defs.bzl", "cc_library")
-load("//rules:defs.bzl", "gem5_debug_flag")
+load("//rules:defs.bzl", "gem5_debug_flag", "gem5_isa_desc")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -9,6 +9,13 @@ package(default_visibility = ["//visibility:public"])
 filegroup(
     name = "hdrs_files",
     srcs = glob(["*.hh", "linux/*.hh"]),
+)
+
+gem5_isa_desc(
+    name = "mips_isa_desc",
+    desc = "isa/main.isa",
+    isa_sources = glob(["isa/**/*.isa"]),
+    deps = ["//src:gem5_hdrs"],
 )
 
 gem5_debug_flag(name = "MipsPRA", desc = "MIPS PRA debugging")
@@ -23,6 +30,7 @@ cc_library(
         "//src/arch:Decoder",
         "//src/arch:Faults",
         "//src/arch/generic:generic",
+        ":mips_isa_desc",
         ":MipsPRA",
     ],
     alwayslink = True,

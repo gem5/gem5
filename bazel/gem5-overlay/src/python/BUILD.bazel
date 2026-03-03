@@ -1,14 +1,23 @@
 """BUILD file for src/python/ -- gem5 Python embedding infrastructure.
 
 Provides the Python embedding layer: gem5py/gem5py_m5 interpreters,
-pybind11 C++ bindings, and EmbeddedPython bytecode infrastructure.
+pybind11 C++ bindings, EmbeddedPython bytecode infrastructure, and
+embedded Python source library (pysources).
 """
 
-load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
+load(
+    "//rules:defs.bzl",
+    "gem5_embedded_python_library",
+    "gem5_gen_defines",
+    "gem5_py_source",
+)
 
 package(default_visibility = ["//visibility:public"])
 
+# ---------------------------------------------------------------------------
 # Python embedding C++ sources (pybind11 bindings)
+# ---------------------------------------------------------------------------
 cc_library(
     name = "python",
     srcs = [
@@ -34,9 +43,133 @@ cc_library(
     alwayslink = True,
 )
 
-# Python source files to be marshalled into the gem5 binary.
-# The actual marshalling is done by the gem5_py_source/gem5_embedded_python_library
-# rules at build time. This filegroup exports the raw .py files.
+# Export gem5py/gem5py_m5 main source files
+exports_files([
+    "gem5py.cc",
+    "gem5py_m5.cc",
+])
+
+# ---------------------------------------------------------------------------
+# gem5py: Simple embedded Python interpreter (no m5 modules)
+# Used for standalone Python execution during code generation.
+# ---------------------------------------------------------------------------
+cc_binary(
+    name = "gem5py",
+    srcs = ["gem5py.cc"],
+    deps = [
+        ":python",
+        "@gem5_ext_pybind11//:pybind11",
+        "@system_python//:python",
+    ],
+    linkopts = ["-rdynamic", "-ldl", "-lutil", "-lz"],
+)
+
+# ---------------------------------------------------------------------------
+# Embedded importer.py blob (compressed bytecode for the custom import hook)
+# ---------------------------------------------------------------------------
+gem5_py_source(
+    name = "importer_code",
+    src = "importer.py",
+    module_path = "importer",
+)
+
+# ---------------------------------------------------------------------------
+# Generate m5/defines.py with build configuration flags.
+# All values are strings to support select() for flag-dependent generation.
+# ---------------------------------------------------------------------------
+gem5_gen_defines(
+    name = "_gen_defines",
+    build_isa = select({
+        "//configs:primary_isa_x86": "x86",
+        "//configs:primary_isa_arm": "arm",
+        "//configs:primary_isa_riscv": "riscv",
+        "//configs:primary_isa_mips": "mips",
+        "//configs:primary_isa_power": "power",
+        "//configs:primary_isa_sparc": "sparc",
+    }),
+    use_x86_isa = select({"//configs:x86_isa_enabled": "True", "//conditions:default": "False"}),
+    use_arm_isa = select({"//configs:arm_isa_enabled": "True", "//conditions:default": "False"}),
+    use_riscv_isa = select({"//configs:riscv_isa_enabled": "True", "//conditions:default": "False"}),
+    use_mips_isa = select({"//configs:mips_isa_enabled": "True", "//conditions:default": "False"}),
+    use_power_isa = select({"//configs:power_isa_enabled": "True", "//conditions:default": "False"}),
+    use_sparc_isa = select({"//configs:sparc_isa_enabled": "True", "//conditions:default": "False"}),
+    build_gpu = select({"//configs:gpu_enabled": "True", "//conditions:default": "False"}),
+    use_ruby = select({"//configs:ruby_enabled": "True", "//conditions:default": "False"}),
+    ruby_protocol = select({
+        "//configs:protocol_mesi_two_level": "MESI_Two_Level",
+        "//configs:protocol_mesi_three_level": "MESI_Three_Level",
+        "//configs:protocol_mi_example": "MI_example",
+        "//configs:protocol_moesi_amd_base": "MOESI_AMD_Base",
+        "//configs:protocol_moesi_cmp_directory": "MOESI_CMP_directory",
+        "//configs:protocol_moesi_cmp_token": "MOESI_CMP_token",
+        "//configs:protocol_moesi_hammer": "MOESI_hammer",
+        "//configs:protocol_chi": "CHI",
+        "//configs:protocol_gpu_viper": "GPU_VIPER",
+        "//configs:protocol_garnet_standalone": "Garnet_standalone",
+        "//configs:protocol_multiple": "MULTIPLE",
+    }),
+    use_systemc = select({"//configs:systemc_enabled": "True", "//conditions:default": "False"}),
+    use_kvm = select({"//configs:kvm_enabled": "True", "//conditions:default": "False"}),
+    have_protobuf = select({"//configs:protobuf_enabled": "True", "//conditions:default": "False"}),
+    have_png = select({"//configs:png_enabled": "True", "//conditions:default": "False"}),
+    have_hdf5 = select({"//configs:hdf5_enabled": "True", "//conditions:default": "False"}),
+)
+
+# Marshal the generated defines.py into C++ for embedding
+gem5_py_source(
+    name = "defines_pysource",
+    src = ":_gen_defines",
+    module_path = "m5.defines",
+)
+
+# ---------------------------------------------------------------------------
+# Embedded Python source library: marshals all m5.* and gem5.* Python
+# modules into C++ bytecode registrations. This library is linked into
+# both gem5py_m5 (for param generation) and the final gem5 binary
+# (for runtime Python support).
+#
+# Module paths are computed automatically from file paths:
+#   m5/__init__.py -> m5
+#   m5/SimObject.py -> m5.SimObject
+#   gem5/components/boards/simple_board.py -> gem5.components.boards.simple_board
+# ---------------------------------------------------------------------------
+_ALL_PY = glob(
+    ["m5/**/*.py", "gem5/**/*.py"],
+    exclude = ["**/*_test.py", "**/test_*.py"],
+)
+
+gem5_embedded_python_library(
+    name = "pysources",
+    modules = {
+        f: (f[:-12].replace("/", ".") if f.endswith("/__init__.py") else f[:-3].replace("/", "."))
+        for f in _ALL_PY
+    },
+    deps = [
+        "//src:gem5_hdrs",
+    ],
+)
+
+# ---------------------------------------------------------------------------
+# gem5py_m5: Full embedded Python interpreter with all m5 modules.
+# Used by SimObject param generators to import m5.objects.
+# ---------------------------------------------------------------------------
+cc_binary(
+    name = "gem5py_m5",
+    srcs = ["gem5py_m5.cc"],
+    deps = [
+        ":python",
+        ":pysources",
+        ":importer_code",
+        ":defines_pysource",
+        "@gem5_ext_pybind11//:pybind11",
+        "@system_python//:python",
+    ],
+    linkopts = ["-rdynamic", "-ldl", "-lutil", "-lz"],
+)
+
+# ---------------------------------------------------------------------------
+# Raw Python source filegroups (for non-embedded access)
+# ---------------------------------------------------------------------------
 filegroup(
     name = "m5_py_sources",
     srcs = glob(["m5/**/*.py"]),

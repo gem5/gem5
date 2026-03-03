@@ -1,5 +1,7 @@
 """BUILD file for src/proto/ -- gem5 protobuf definitions.
 
+Provides pre-compiled protobuf message wrappers (packet_msg.cc, etc.)
+and the trace reader/writer infrastructure.
 Conditionally included when //configs:protobuf_enabled is True.
 """
 
@@ -12,8 +14,6 @@ filegroup(
     srcs = glob(["*.hh"]),
 )
 
-# Protobuf source compilation will be added when protobuf is enabled.
-# For now, this provides the header filegroup for gem5_hdrs.
 cc_library(
     name = "proto",
     srcs = glob(["*.cc"], exclude = ["**/*.test.cc"]),

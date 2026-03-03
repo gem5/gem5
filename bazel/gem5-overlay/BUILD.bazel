@@ -3,13 +3,319 @@
 Provides the final link targets:
 - gem5_all: cc_library aggregating all subsystem libraries (with alwayslink)
 - gem5: cc_binary linking gem5_all with main.cc
+- gem5_config_headers: generated config/*.hh headers
+- gem5_switching_headers: generated arch/*.hh switching headers
 """
 
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
+load(
+    "//rules:defs.bzl",
+    "gem5_config_header",
+    "gem5_config_header_namespace",
+    "gem5_config_header_string",
+    "gem5_switching_headers",
+)
 
 package(default_visibility = ["//visibility:public"])
 
 exports_files(["LICENSE"])
+
+# ---------------------------------------------------------------------------
+# Config headers: generated config/*.hh files matching CMake's Kconfig output.
+# Source code includes these as #include "config/have_png.hh" etc.
+# ---------------------------------------------------------------------------
+
+# Boolean config headers (flag-dependent via select())
+gem5_config_header(
+    name = "_config_have_png",
+    key = "HAVE_PNG",
+    value = select({
+        "//configs:png_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+gem5_config_header(
+    name = "_config_have_protobuf",
+    key = "HAVE_PROTOBUF",
+    value = select({
+        "//configs:protobuf_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+gem5_config_header(
+    name = "_config_have_hdf5",
+    key = "HAVE_HDF5",
+    value = select({
+        "//configs:hdf5_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+gem5_config_header(
+    name = "_config_have_tuntap",
+    key = "HAVE_TUNTAP",
+    value = select({
+        "//configs:tuntap_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+gem5_config_header(
+    name = "_config_have_fenv",
+    key = "HAVE_FENV",
+    value = select({
+        "//configs:fenv_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+gem5_config_header(
+    name = "_config_have_valgrind",
+    key = "HAVE_VALGRIND",
+    value = select({
+        "//configs:valgrind_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+gem5_config_header(
+    name = "_config_build_gpu",
+    key = "BUILD_GPU",
+    value = select({
+        "//configs:gpu_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+gem5_config_header(
+    name = "_config_use_kvm",
+    key = "USE_KVM",
+    value = select({
+        "//configs:kvm_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+# use_posix_clock: always true on Linux
+gem5_config_header(
+    name = "_config_use_posix_clock",
+    key = "USE_POSIX_CLOCK",
+    value = "1",
+)
+
+# have_deprecated_namespace: always true for C++17 compilers
+gem5_config_header(
+    name = "_config_have_deprecated_namespace",
+    key = "HAVE_DEPRECATED_NAMESPACE",
+    value = "1",
+)
+
+# have_perf_attr_exclude_host: available on modern Linux kernels
+gem5_config_header(
+    name = "_config_have_perf_attr_exclude_host",
+    key = "HAVE_PERF_ATTR_EXCLUDE_HOST",
+    value = select({
+        "//configs:kvm_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+# kvm_isa: string defining the KVM ISA (x86 or arm)
+gem5_config_header_string(
+    name = "_config_kvm_isa",
+    key = "KVM_ISA",
+    value = select({
+        "//configs:kvm_x86": "x86",
+        "//configs:kvm_arm": "arm",
+        "//conditions:default": "",
+    }),
+)
+
+# the_gpu_isa: namespace alias for GPU ISA
+gem5_config_header_namespace(
+    name = "_config_the_gpu_isa",
+    key = "TheGpuISA",
+    value = select({
+        "//configs:gpu_enabled": "VegaISA",
+        "//conditions:default": "VegaISA",
+    }),
+)
+
+# ISA enablement config headers (used by some source files)
+gem5_config_header(
+    name = "_config_use_x86_isa",
+    key = "USE_X86_ISA",
+    value = select({
+        "//configs:x86_isa_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+gem5_config_header(
+    name = "_config_use_arm_isa",
+    key = "USE_ARM_ISA",
+    value = select({
+        "//configs:arm_isa_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+gem5_config_header(
+    name = "_config_use_riscv_isa",
+    key = "USE_RISCV_ISA",
+    value = select({
+        "//configs:riscv_isa_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+gem5_config_header(
+    name = "_config_use_sparc_isa",
+    key = "USE_SPARC_ISA",
+    value = select({
+        "//configs:sparc_isa_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+gem5_config_header(
+    name = "_config_use_mips_isa",
+    key = "USE_MIPS_ISA",
+    value = select({
+        "//configs:mips_isa_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+gem5_config_header(
+    name = "_config_use_power_isa",
+    key = "USE_POWER_ISA",
+    value = select({
+        "//configs:power_isa_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+# Ruby config headers
+gem5_config_header(
+    name = "_config_ruby",
+    key = "RUBY",
+    value = select({
+        "//configs:ruby_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+gem5_config_header_string(
+    name = "_config_protocol",
+    key = "PROTOCOL",
+    value = select({
+        "//configs:protocol_mesi_two_level": "MESI_Two_Level",
+        "//configs:protocol_mesi_three_level": "MESI_Three_Level",
+        "//configs:protocol_mi_example": "MI_example",
+        "//configs:protocol_moesi_amd_base": "MOESI_AMD_Base",
+        "//configs:protocol_moesi_cmp_directory": "MOESI_CMP_directory",
+        "//configs:protocol_moesi_cmp_token": "MOESI_CMP_token",
+        "//configs:protocol_moesi_hammer": "MOESI_hammer",
+        "//configs:protocol_chi": "CHI",
+        "//configs:protocol_gpu_viper": "GPU_VIPER",
+        "//configs:protocol_gpu_viper_region": "GPU_VIPER_Region",
+        "//configs:protocol_garnet_standalone": "Garnet_standalone",
+        "//configs:protocol_multiple": "MULTIPLE",
+    }),
+)
+
+# Aggregation library providing all config headers with proper include path.
+# This is depended on by gem5_hdrs to make config/ headers available globally.
+cc_library(
+    name = "gem5_config_headers",
+    hdrs = [
+        ":_config_have_png",
+        ":_config_have_protobuf",
+        ":_config_have_hdf5",
+        ":_config_have_tuntap",
+        ":_config_have_fenv",
+        ":_config_have_valgrind",
+        ":_config_build_gpu",
+        ":_config_use_kvm",
+        ":_config_use_posix_clock",
+        ":_config_have_deprecated_namespace",
+        ":_config_have_perf_attr_exclude_host",
+        ":_config_kvm_isa",
+        ":_config_the_gpu_isa",
+        ":_config_use_x86_isa",
+        ":_config_use_arm_isa",
+        ":_config_use_riscv_isa",
+        ":_config_use_sparc_isa",
+        ":_config_use_mips_isa",
+        ":_config_use_power_isa",
+        ":_config_ruby",
+        ":_config_protocol",
+    ],
+    includes = ["."],
+)
+
+# ---------------------------------------------------------------------------
+# Switching headers: arch/*.hh redirects to ISA-specific headers.
+# Generated based on primary_isa flag value.
+# ---------------------------------------------------------------------------
+gem5_switching_headers(
+    name = "arch_switching_headers",
+    headers = [
+        "decoder.hh",
+        "generic/tlbi_op.hh",
+        "interrupts.hh",
+        "isa.hh",
+        "locked_mem.hh",
+        "mmu.hh",
+        "page_size.hh",
+        "pcstate.hh",
+        "regs/float.hh",
+        "regs/int.hh",
+        "regs/misc.hh",
+        "regs/vec.hh",
+        "regs/vecpred.hh",
+        "regs/matrix.hh",
+        "remote_gdb.hh",
+        "tlb.hh",
+        "types.hh",
+        "utility.hh",
+        "vecregs.hh",
+    ],
+    isa_dir = select({
+        "//configs:primary_isa_x86": "x86",
+        "//configs:primary_isa_arm": "arm",
+        "//configs:primary_isa_riscv": "riscv",
+        "//configs:primary_isa_mips": "mips",
+        "//configs:primary_isa_power": "power",
+        "//configs:primary_isa_sparc": "sparc",
+    }),
+)
+
+# GPU switching headers (only meaningful when GPU is enabled)
+gem5_switching_headers(
+    name = "gpu_switching_headers",
+    headers = [
+        "gpu_decoder.hh",
+        "gpu_isa.hh",
+        "gpu_registers.hh",
+        "gpu_types.hh",
+    ],
+    isa_dir = "amdgpu/vega",
+    output_prefix = "arch",
+)
+
+# Switching headers aggregated as a cc_library for include path propagation
+cc_library(
+    name = "gem5_switching_hdrs",
+    hdrs = [
+        ":arch_switching_headers",
+        ":gpu_switching_headers",
+    ],
+    includes = ["."],
+)
 
 # ---------------------------------------------------------------------------
 # gem5_all: Aggregation library that links all subsystem libraries.
@@ -94,7 +400,12 @@ cc_library(
         "//configs:test_objects_enabled": ["//src/test_objects:test_objects"],
         "//conditions:default": [],
     }) + select({
-        "//configs:python_enabled": ["//src/python:python"],
+        "//configs:python_enabled": [
+            "//src/python:python",
+            "//src/python:pysources",
+            "//src/python:importer_code",
+            "//src/python:defines_pysource",
+        ],
         "//conditions:default": [],
     }),
     linkopts = [

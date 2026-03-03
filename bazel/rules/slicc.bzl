@@ -1,7 +1,8 @@
 """Rule for SLICC protocol compilation.
 
 Compiles .slicc protocol definitions into C++ controller code.
-Uses a pre-declared output file list (generated_files attr).
+Uses tree artifacts (declare_directory) since SLICC output files
+are dynamic and depend on protocol content.
 """
 
 load("@rules_cc//cc:defs.bzl", "cc_library")
@@ -11,32 +12,22 @@ def _slicc_gen_impl(ctx):
     src = ctx.file.src
     protocol = ctx.attr.protocol
 
-    # Declare output files from the pre-declared list
-    outputs = []
-    gen_dir = "protocol_{}".format(protocol)
-    for f in ctx.attr.generated_files:
-        outputs.append(ctx.actions.declare_file("{}/{}".format(gen_dir, f)))
+    # Use tree artifact for output (SLICC generates dynamic file sets)
+    out_dir = ctx.actions.declare_directory("slicc_{}".format(protocol))
 
-    if not outputs:
-        fail("No generated_files specified for SLICC protocol {}".format(protocol))
-
-    output_dir = outputs[0].dirname
-
-    # Find SLICC init
+    # Find SLICC init for path setup
     slicc_init = None
     for f in ctx.files._slicc_files:
         if f.path.endswith("slicc/__init__.py"):
             slicc_init = f
             break
 
-    # Find PLY init
     ply_init = None
     for f in ctx.files._ply_files:
         if f.path.endswith("ply/__init__.py"):
             ply_init = f
             break
 
-    # Find grammar.py
     grammar_file = None
     for f in ctx.files._grammar_files:
         if f.path.endswith("grammar.py"):
@@ -55,17 +46,14 @@ output_dir = sys.argv[2]
 slicc_init = sys.argv[3]
 ply_init = sys.argv[4]
 grammar_file = sys.argv[5]
-protocol_dirs = sys.argv[6:]
 
-# Add parent of slicc/ to path
+# Set up import paths
 slicc_parent = os.path.dirname(os.path.dirname(slicc_init))
 sys.path.insert(0, slicc_parent)
 
-# Add parent of ply/ to path
 ply_parent = os.path.dirname(os.path.dirname(ply_init))
 sys.path.insert(0, ply_parent)
 
-# Add build_tools/ to path
 grammar_dir = os.path.dirname(grammar_file)
 sys.path.insert(0, grammar_dir)
 
@@ -73,21 +61,16 @@ from slicc.main import main as slicc_main
 
 os.makedirs(output_dir, exist_ok=True)
 
-# Find RubySlicc_interfaces.slicc
 protocol_dir = os.path.dirname(slicc_file)
-interfaces_file = os.path.join(protocol_dir, "RubySlicc_interfaces.slicc")
-if not os.path.exists(interfaces_file):
-    parent_dir = os.path.dirname(protocol_dir)
-    interfaces_file = os.path.join(parent_dir, "RubySlicc_interfaces.slicc")
 
+# Build SLICC command. SLICC expects:
+# slicc --protocol-dir DIR --output-dir DIR file.slicc
 argv = [
     "slicc",
     "--protocol-dir", protocol_dir,
     "--output-dir", output_dir,
     slicc_file,
 ]
-if os.path.exists(interfaces_file):
-    argv.extend(["--interfaces", interfaces_file])
 
 slicc_main(argv)
 """,
@@ -97,24 +80,22 @@ slicc_main(argv)
                  ctx.files._slicc_files + ctx.files._ply_files + \
                  ctx.files._grammar_files
 
-    protocol_dir = src.dirname
     ctx.actions.run_shell(
-        outputs = outputs,
+        outputs = [out_dir],
         inputs = all_inputs,
-        command = "python3 {} {} {} {} {} {} {}".format(
+        command = "python3 {} {} {} {} {} {}".format(
             script.path,
             src.path,
-            output_dir,
+            out_dir.path,
             slicc_init.path if slicc_init else "",
             ply_init.path if ply_init else "",
             grammar_file.path if grammar_file else "",
-            protocol_dir,
         ),
         mnemonic = "SLICC",
         progress_message = "Compiling SLICC protocol {}".format(protocol),
     )
 
-    return [DefaultInfo(files = depset(outputs))]
+    return [DefaultInfo(files = depset([out_dir]))]
 
 _slicc_gen = rule(
     implementation = _slicc_gen_impl,
@@ -124,10 +105,6 @@ _slicc_gen = rule(
         "sm_sources": attr.label_list(
             allow_files = [".sm", ".slicc"],
             doc = "State machine and protocol files.",
-        ),
-        "generated_files": attr.string_list(
-            mandatory = True,
-            doc = "List of expected output file names.",
         ),
         "_slicc_files": attr.label(
             default = "//src/mem/slicc:slicc_files",
@@ -145,16 +122,17 @@ _slicc_gen = rule(
 )
 
 def gem5_slicc_protocol(name, src, protocol = None, sm_sources = [],
-                        generated_files = [], visibility = None,
-                        deps = [], copts = []):
+                        visibility = None, deps = [], copts = []):
     """Compile a SLICC protocol into C++ sources.
+
+    Uses tree artifacts for output since SLICC generates a dynamic set
+    of files depending on protocol content.
 
     Args:
         name: Target name (typically the protocol name).
         src: The main .slicc file.
         protocol: Protocol name. Defaults to name.
-        sm_sources: State machine .sm files.
-        generated_files: Expected output file names.
+        sm_sources: State machine .sm files and included .slicc files.
         visibility: Visibility.
         deps: Dependencies for the generated cc_library.
         copts: Additional compiler flags.
@@ -169,15 +147,15 @@ def gem5_slicc_protocol(name, src, protocol = None, sm_sources = [],
         src = src,
         protocol = protocol,
         sm_sources = sm_sources,
-        generated_files = generated_files,
     )
 
     cc_library(
         name = name,
         srcs = [":{}".format(gen_name)],
         hdrs = [":{}".format(gen_name)],
-        deps = deps,
+        deps = deps + ["//src:gem5_hdrs"],
         copts = copts + ["-Wno-unused-variable"],
+        includes = ["."],
         visibility = visibility,
         alwayslink = True,
     )

@@ -85,6 +85,7 @@ def _create_ext_libraries(module_ctx, source_root):
     _ext_local_repo("gem5_ext_pybind11", ext_path + "/pybind11", "pybind11.BUILD")
     _ext_local_repo("gem5_ext_ply", ext_path + "/ply", "ply.BUILD")
     _ext_local_repo("gem5_ext_dnet", ext_path + "/dnet", "dnet.BUILD")
+    _ext_local_repo("gem5_ext_googletest", ext_path + "/googletest", "googletest.BUILD")
 
 def _ext_local_repo(name, path, build_file):
     """Create a new_local_repository for an ext/ library."""

@@ -1,7 +1,8 @@
 """Rule for SimObject parameter struct and enum generation.
 
 Generates C++ parameter structs and enum definitions from SimObject .py files.
-Uses the gem5py_m5 helper executable as interpreter.
+Uses the gem5py_m5 helper executable as interpreter. Outputs are collected
+in a tree artifact since the exact file set depends on the SimObject/enum lists.
 """
 
 load("@rules_cc//cc:defs.bzl", "cc_library")
@@ -11,28 +12,10 @@ def _sim_object_gen_impl(ctx):
     py_file = ctx.file.py_file
     gem5py_m5 = ctx.executable.gem5py_m5
 
-    outputs = []
-
-    # Generate params headers
-    for obj in ctx.attr.sim_objects:
-        hh = ctx.actions.declare_file("params/{}.hh".format(obj))
-        outputs.append(hh)
-
-    # Generate params sources
-    for obj in ctx.attr.sim_objects:
-        cc = ctx.actions.declare_file("python/_m5/param_{}.cc".format(obj))
-        outputs.append(cc)
-
-    # Generate enum headers and sources
-    for enum in ctx.attr.enums:
-        hh = ctx.actions.declare_file("enums/{}.hh".format(enum))
-        cc = ctx.actions.declare_file("enums/{}.cc".format(enum))
-        outputs.append(hh)
-        outputs.append(cc)
-
-    if not outputs:
+    if not ctx.attr.sim_objects and not ctx.attr.enums:
         fail("No sim_objects or enums specified for {}".format(ctx.label.name))
 
+    # Use tree artifact for output (file set depends on SimObject/enum lists)
     output_dir = ctx.actions.declare_directory("simobj_gen_{}".format(ctx.label.name))
 
     script = ctx.actions.declare_file("_run_simobj_gen_{}.py".format(ctx.label.name))
@@ -55,12 +38,10 @@ os.makedirs(os.path.join(output_dir, "enums"), exist_ok=True)
 os.makedirs(os.path.join(output_dir, "python", "_m5"), exist_ok=True)
 
 for obj in sim_objects:
-    # Generate params header
     hh_script = os.path.join(gen_scripts_dir, "sim_object_param_struct_hh.py")
     hh_out = os.path.join(output_dir, "params", obj + ".hh")
     subprocess.check_call([gem5py_m5, hh_script, obj, hh_out])
 
-    # Generate params source
     cc_script = os.path.join(gen_scripts_dir, "sim_object_param_struct_cc.py")
     cc_out = os.path.join(output_dir, "python", "_m5", "param_" + obj + ".cc")
     subprocess.check_call([gem5py_m5, cc_script, obj, cc_out])
@@ -76,10 +57,12 @@ for enum in enums:
     )
 
     ctx.actions.run_shell(
-        outputs = [output_dir] + outputs,
-        inputs = [py_file, script, gem5py_m5] + ctx.files._gen_scripts,
+        outputs = [output_dir],
+        inputs = [py_file, script] + ctx.files._gen_scripts,
+        tools = [gem5py_m5],
         command = "python3 {} {} {} {} {} {} {}".format(
             script.path,
+            gem5py_m5.path,
             output_dir.path,
             py_file.path,
             ",".join(ctx.attr.sim_objects),
@@ -90,7 +73,7 @@ for enum in enums:
         progress_message = "Generating SimObject params for {}".format(ctx.label.name),
     )
 
-    return [DefaultInfo(files = depset(outputs))]
+    return [DefaultInfo(files = depset([output_dir]))]
 
 _sim_object_gen = rule(
     implementation = _sim_object_gen_impl,

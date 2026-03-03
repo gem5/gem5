@@ -105,6 +105,8 @@ cc_library(
         "//src/base:base",
         "//src/mem:mem",
         "//src/sim:sim",
+        # Active SLICC protocol (selected via //configs:ruby_protocol)
+        "//src/mem/ruby/protocol:active_protocol",
         # Debug flags
         ":ProtocolTrace",
         ":Ruby",

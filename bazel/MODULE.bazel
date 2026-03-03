@@ -40,4 +40,5 @@ use_repo(
     "gem5_ext_pybind11",
     "gem5_ext_ply",
     "gem5_ext_dnet",
+    "gem5_ext_googletest",
 )

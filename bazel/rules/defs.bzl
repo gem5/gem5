@@ -10,7 +10,10 @@ load("//rules:debug_flag.bzl",
      _gem5_debug_format_flag = "gem5_debug_format_flag")
 load("//rules:blob.bzl", _gem5_blob = "gem5_blob")
 load("//rules:switching_header.bzl", _gem5_switching_headers = "gem5_switching_headers")
-load("//rules:config_header.bzl", _gem5_config_header = "gem5_config_header")
+load("//rules:config_header.bzl",
+     _gem5_config_header = "gem5_config_header",
+     _gem5_config_header_string = "gem5_config_header_string",
+     _gem5_config_header_namespace = "gem5_config_header_namespace")
 load("//rules:isa_desc.bzl", _gem5_isa_desc = "gem5_isa_desc")
 load("//rules:slicc.bzl", _gem5_slicc_protocol = "gem5_slicc_protocol")
 load("//rules:py_source.bzl",
@@ -26,6 +29,8 @@ gem5_debug_format_flag = _gem5_debug_format_flag
 gem5_blob = _gem5_blob
 gem5_switching_headers = _gem5_switching_headers
 gem5_config_header = _gem5_config_header
+gem5_config_header_string = _gem5_config_header_string
+gem5_config_header_namespace = _gem5_config_header_namespace
 gem5_isa_desc = _gem5_isa_desc
 gem5_slicc_protocol = _gem5_slicc_protocol
 gem5_py_source = _gem5_py_source

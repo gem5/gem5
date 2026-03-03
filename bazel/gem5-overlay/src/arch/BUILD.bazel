@@ -28,6 +28,9 @@ filegroup(
     ],
 )
 
+# Export micro_asm.py for ISA parser dependencies
+exports_files(["micro_asm.py"])
+
 # -- Global architecture debug flags --
 gem5_debug_flag(name = "IntRegs", desc = "Integer register debugging")
 gem5_debug_flag(name = "FloatRegs", desc = "Floating-point register debugging")

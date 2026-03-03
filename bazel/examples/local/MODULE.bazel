@@ -1,0 +1,22 @@
+"""Example: Using gem5 as a local Bazel dependency.
+
+This MODULE.bazel shows how a downstream project can depend on gem5
+when both repositories are available on the local filesystem.
+Adjust the 'path' in local_path_override() to point to your gem5 checkout.
+
+Usage:
+    cd /path/to/your/project
+    bazel build //:your_target
+"""
+
+module(
+    name = "my_gem5_project",
+    version = "0.0.0",
+)
+
+bazel_dep(name = "gem5", version = "0.0.0")
+
+local_path_override(
+    module_name = "gem5",
+    path = "../../../",  # adjust to your gem5 repo location
+)

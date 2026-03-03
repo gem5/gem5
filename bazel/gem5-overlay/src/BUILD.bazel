@@ -28,7 +28,11 @@ cc_library(
         "//src/gpu-compute:hdrs_files",
         "//src/proto:hdrs_files",
     ],
-    deps = [":gem5_ext_hdrs"],
+    deps = [
+        ":gem5_ext_hdrs",
+        "//:gem5_config_headers",
+        "//:gem5_switching_hdrs",
+    ],
     includes = ["."],
 )
 

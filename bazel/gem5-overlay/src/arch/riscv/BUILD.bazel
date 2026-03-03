@@ -5,7 +5,7 @@ ISA parser: decoder_splits=1, exec_splits=1.
 """
 
 load("@rules_cc//cc:defs.bzl", "cc_library")
-load("//rules:defs.bzl", "gem5_debug_flag")
+load("//rules:defs.bzl", "gem5_debug_flag", "gem5_isa_desc")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -18,6 +18,14 @@ filegroup(
         "insts/*.hh",
         "linux/*.hh",
     ]),
+)
+
+# ISA parser: generate decoder/executor C++ from .isa description
+gem5_isa_desc(
+    name = "riscv_isa_desc",
+    desc = "isa/main.isa",
+    isa_sources = glob(["isa/**/*.isa"]),
+    deps = ["//src:gem5_hdrs"],
 )
 
 gem5_debug_flag(name = "RiscvMisc", desc = "RISC-V miscellaneous debugging")
@@ -46,6 +54,7 @@ cc_library(
         "//src/arch:Decoder",
         "//src/arch:Faults",
         "//src/arch/generic:generic",
+        ":riscv_isa_desc",
         ":PMP",
         ":RiscvMisc",
     ],

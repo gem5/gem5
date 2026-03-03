@@ -80,6 +80,17 @@ config_setting(
     flag_values = {":build_gpu": "True", ":use_arm_isa": "False"},
 )
 
+# Compound: KVM enabled with specific ISA (for kvm_isa.hh)
+config_setting(
+    name = "kvm_x86",
+    flag_values = {":use_kvm": "True", ":use_x86_isa": "True"},
+)
+
+config_setting(
+    name = "kvm_arm",
+    flag_values = {":use_kvm": "True", ":use_arm_isa": "True"},
+)
+
 # ---- Optional dependency config_settings ----
 config_setting(name = "protobuf_enabled", flag_values = {":have_protobuf": "True"})
 config_setting(name = "png_enabled", flag_values = {":have_png": "True"})
@@ -106,6 +117,7 @@ config_setting(name = "tcmalloc_enabled", flag_values = {":have_tcmalloc": "True
 ) for proto in [
     "MESI_Two_Level",
     "MESI_Three_Level",
+    "MESI_Three_Level_HTM",
     "MI_example",
     "MOESI_AMD_Base",
     "MOESI_CMP_directory",

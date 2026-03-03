@@ -1,0 +1,23 @@
+"""Example: Using gem5 as a remote git dependency.
+
+This MODULE.bazel shows how a downstream project can depend on gem5
+from a remote git repository using git_override.
+
+Usage:
+    cd /path/to/your/project
+    bazel build //:your_target
+"""
+
+module(
+    name = "my_gem5_project",
+    version = "0.0.0",
+)
+
+bazel_dep(name = "gem5", version = "0.0.0")
+
+git_override(
+    module_name = "gem5",
+    remote = "https://github.com/gem5/gem5.git",
+    # Replace with the desired commit SHA:
+    commit = "0000000000000000000000000000000000000000",
+)
