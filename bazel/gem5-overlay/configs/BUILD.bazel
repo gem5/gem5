@@ -85,15 +85,16 @@ config_setting(
     flag_values = {":build_gpu": "True", ":use_arm_isa": "False"},
 )
 
-# Compound: KVM enabled with specific ISA (for kvm_isa.hh)
+# Compound: KVM enabled with specific primary ISA (for kvm_isa.hh).
+# Uses primary_isa to avoid ambiguity when multiple ISAs are enabled.
 config_setting(
     name = "kvm_x86",
-    flag_values = {":use_kvm": "True", ":use_x86_isa": "True"},
+    flag_values = {":use_kvm": "True", ":primary_isa": "x86"},
 )
 
 config_setting(
     name = "kvm_arm",
-    flag_values = {":use_kvm": "True", ":use_arm_isa": "True"},
+    flag_values = {":use_kvm": "True", ":primary_isa": "arm"},
 )
 
 # Compound: TLM enabled with Python (for TLM Python package embedding)

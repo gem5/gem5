@@ -70,6 +70,13 @@ build:all --@gem5_sources//configs:use_sparc_isa=True
 build:all --@gem5_sources//configs:primary_isa=x86
 build:all --@gem5_sources//configs:build_gpu=True
 build:all --@gem5_sources//configs:ruby_protocol=MULTIPLE
+build:all --@gem5_sources//configs:use_kvm=True
+build:all --@gem5_sources//configs:have_protobuf=True
+build:all --@gem5_sources//configs:use_test_objects=True
+build:all --@gem5_sources//configs:have_capstone=True
+build:all --@gem5_sources//configs:have_hdf5=True
+build:all --@gem5_sources//configs:have_png=True
+build:all --@gem5_sources//configs:have_valgrind=True
 
 build:vega_x86 --@gem5_sources//configs:use_x86_isa=True
 build:vega_x86 --@gem5_sources//configs:primary_isa=x86

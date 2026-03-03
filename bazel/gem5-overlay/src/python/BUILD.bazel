@@ -175,6 +175,17 @@ gem5_gen_defines(
     have_png = select({"//configs:png_enabled": "True", "//conditions:default": "False"}),
     have_hdf5 = select({"//configs:hdf5_enabled": "True", "//conditions:default": "False"}),
     have_tuntap = select({"//configs:tuntap_enabled": "True", "//conditions:default": "False"}),
+    have_capstone = select({"//configs:capstone_enabled": "True", "//conditions:default": "False"}),
+    have_fenv = select({"//configs:fenv_enabled": "True", "//conditions:default": "False"}),
+    use_posix_clock = select({"//configs:posix_clock_enabled": "True", "//conditions:default": "False"}),
+    have_valgrind = select({"//configs:valgrind_enabled": "True", "//conditions:default": "False"}),
+    use_test_objects = select({"//configs:test_objects_enabled": "True", "//conditions:default": "False"}),
+    build_tlm = select({"//configs:tlm_enabled": "True", "//conditions:default": "False"}),
+    kvm_isa = select({
+        "//configs:kvm_x86": "x86",
+        "//configs:kvm_arm": "arm",
+        "//conditions:default": "x86",
+    }),
 )
 
 # Marshal the generated defines.py into C++ for embedding

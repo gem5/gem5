@@ -26,9 +26,14 @@ def _find_gem5_module_root(module_ctx):
     Uses module_ctx.path() to resolve a label in the gem5 module, which
     gives us an absolute filesystem path. The gem5 module IS the module
     that defines this extension, so //:MODULE.bazel resolves to it.
+
+    When used via local_path_override, the external cache entry is a
+    symlink to the real filesystem path. We follow symlinks via
+    .realpath so that the auto-detected parent directory points to
+    the actual gem5 source tree, not the Bazel cache.
     """
     module_bzl = module_ctx.path(Label("//:MODULE.bazel"))
-    return str(module_bzl.dirname)
+    return str(module_bzl.realpath.dirname)
 
 def _resolve_effective_configure(module_ctx):
     """Merge all configure tags into one effective configuration.

@@ -32,7 +32,10 @@ cc_library(
         "//src/sst:hdrs_files",
         "//src/learning_gem5/part2:hdrs_files",
         "//src/python:hdrs_files",
-    ],
+    ] + select({
+        "//configs:test_objects_enabled": ["//src/test_objects:hdrs_files"],
+        "//conditions:default": [],
+    }),
     deps = [
         ":gem5_ext_hdrs",
         "//:gem5_config_headers",

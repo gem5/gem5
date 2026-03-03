@@ -397,6 +397,29 @@ _SIMOBJ_PY_FILES = SIMOBJECT_PY_FILES_BASE + select({
     ],
     "//conditions:default": [],
 }) + select({
+    "//configs:capstone_enabled": [
+        "src/cpu/Capstone.py",
+        "src/arch/arm/tracers/ArmCapstone.py",
+    ],
+    "//conditions:default": [],
+}) + select({
+    "//configs:kvm_enabled": [
+        "src/cpu/kvm/BaseKvmCPU.py",
+        "src/cpu/kvm/KvmVM.py",
+    ],
+    "//conditions:default": [],
+}) + select({
+    "//configs:kvm_x86": ["src/arch/x86/kvm/X86KvmCPU.py"],
+    "//conditions:default": [],
+}) + select({
+    "//configs:kvm_arm": [
+        "src/arch/arm/kvm/ArmKvmCPU.py",
+        "src/arch/arm/kvm/ArmV8KvmCPU.py",
+        "src/arch/arm/kvm/BaseArmKvmCPU.py",
+        "src/arch/arm/kvm/KvmGic.py",
+    ],
+    "//conditions:default": [],
+}) + select({
     "//configs:test_objects_enabled": ["src/test_objects/StatTester.py"],
     "//conditions:default": [],
 })
@@ -441,6 +464,29 @@ _SIMOBJ_PY_SRCS = simobject_paths_to_labels(SIMOBJECT_PY_FILES_BASE) + select({
         "//src/cpu:trace/TraceCPU.py",
         "//src/cpu:InstPBTrace.py",
         "//src/mem:probes/MemTraceProbe.py",
+    ],
+    "//conditions:default": [],
+}) + select({
+    "//configs:capstone_enabled": [
+        "//src/cpu:Capstone.py",
+        "//src/arch/arm:tracers/ArmCapstone.py",
+    ],
+    "//conditions:default": [],
+}) + select({
+    "//configs:kvm_enabled": [
+        "//src/cpu:kvm/BaseKvmCPU.py",
+        "//src/cpu:kvm/KvmVM.py",
+    ],
+    "//conditions:default": [],
+}) + select({
+    "//configs:kvm_x86": ["//src/arch/x86:kvm/X86KvmCPU.py"],
+    "//conditions:default": [],
+}) + select({
+    "//configs:kvm_arm": [
+        "//src/arch/arm:kvm/ArmKvmCPU.py",
+        "//src/arch/arm:kvm/ArmV8KvmCPU.py",
+        "//src/arch/arm:kvm/BaseArmKvmCPU.py",
+        "//src/arch/arm:kvm/KvmGic.py",
     ],
     "//conditions:default": [],
 }) + select({
@@ -638,6 +684,60 @@ gem5_simobject_pysources(
     deps = _SIMOBJ_PY_DEPS,
 )
 
+# Capstone disassembler SimObjects (conditional on have_capstone).
+gem5_simobject_pysources(
+    name = "simobject_pysources_capstone",
+    simobject_py_files = [
+        "src/cpu/Capstone.py",
+        "src/arch/arm/tracers/ArmCapstone.py",
+    ],
+    simobject_py_srcs = [
+        "//src/cpu:Capstone.py",
+        "//src/arch/arm:tracers/ArmCapstone.py",
+    ],
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+# KVM SimObjects (conditional on use_kvm).
+gem5_simobject_pysources(
+    name = "simobject_pysources_kvm_base",
+    simobject_py_files = [
+        "src/cpu/kvm/BaseKvmCPU.py",
+        "src/cpu/kvm/KvmVM.py",
+    ],
+    simobject_py_srcs = [
+        "//src/cpu:kvm/BaseKvmCPU.py",
+        "//src/cpu:kvm/KvmVM.py",
+    ],
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+# KVM x86-specific SimObjects.
+gem5_simobject_pysources(
+    name = "simobject_pysources_kvm_x86",
+    simobject_py_files = ["src/arch/x86/kvm/X86KvmCPU.py"],
+    simobject_py_srcs = ["//src/arch/x86:kvm/X86KvmCPU.py"],
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+# KVM ARM-specific SimObjects.
+gem5_simobject_pysources(
+    name = "simobject_pysources_kvm_arm",
+    simobject_py_files = [
+        "src/arch/arm/kvm/ArmKvmCPU.py",
+        "src/arch/arm/kvm/ArmV8KvmCPU.py",
+        "src/arch/arm/kvm/BaseArmKvmCPU.py",
+        "src/arch/arm/kvm/KvmGic.py",
+    ],
+    simobject_py_srcs = [
+        "//src/arch/arm:kvm/ArmKvmCPU.py",
+        "//src/arch/arm:kvm/ArmV8KvmCPU.py",
+        "//src/arch/arm:kvm/BaseArmKvmCPU.py",
+        "//src/arch/arm:kvm/KvmGic.py",
+    ],
+    deps = _SIMOBJ_PY_DEPS,
+)
+
 # ---------------------------------------------------------------------------
 # gem5_all: Aggregation library that links all subsystem libraries.
 #
@@ -745,7 +845,21 @@ cc_library(
         ],
         "//conditions:default": [],
     }) + select({
-        "//configs:test_objects_enabled": ["//:simobject_pysources_test_objects"],
+        "//configs:test_objects_enabled": [
+            "//:simobject_pysources_test_objects",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:capstone_enabled": ["//:simobject_pysources_capstone"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:kvm_enabled": ["//:simobject_pysources_kvm_base"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:kvm_x86": ["//:simobject_pysources_kvm_x86"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:kvm_arm": ["//:simobject_pysources_kvm_arm"],
         "//conditions:default": [],
     }) + select({
         "//configs:gpu_enabled": [

@@ -361,7 +361,7 @@ cc_library(
         ":TrafficGen",
         ":Writeback",
     ] + select({
-        "//configs:protobuf_enabled": ["@protobuf//:protobuf"],
+        "//configs:protobuf_enabled": ["//src/proto:proto_gen"],
         "//conditions:default": [],
     }) + select({
         "//configs:python_enabled": [
@@ -374,6 +374,10 @@ cc_library(
             "//src/mem/ruby:ruby",
             "//src/mem/ruby/protocol:active_protocol",
         ],
+        "//conditions:default": [],
+    }),
+    linkopts = select({
+        "//configs:capstone_enabled": ["-lcapstone"],
         "//conditions:default": [],
     }),
     alwayslink = True,

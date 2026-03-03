@@ -149,7 +149,13 @@ cc_library(
         "//conditions:default": [],
     }),
     includes = ["."],
-    linkopts = ["-lrt"],
+    linkopts = ["-lrt"] + select({
+        "//configs:png_enabled": ["-lpng"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:hdf5_enabled": ["-lhdf5_cpp", "-lhdf5"],
+        "//conditions:default": [],
+    }),
     deps = [
         "//src:gem5_hdrs",
         # Debug flags
@@ -177,13 +183,7 @@ cc_library(
         "@gem5_ext_iostream3//:iostream3",
         "@gem5_ext_libelf//:libelf",
         "@gem5_ext_libfdt//:libfdt",
-    ] + select({
-        "//configs:png_enabled": ["-lpng"],
-        "//conditions:default": [],
-    }) + select({
-        "//configs:hdf5_enabled": ["-lhdf5_cpp", "-lhdf5"],
-        "//conditions:default": [],
-    }),
+    ],
     alwayslink = True,
 )
 

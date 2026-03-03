@@ -20,6 +20,7 @@ filegroup(
         "fastmodel/*.hh",
         "freebsd/*.hh",
         "insts/*.hh",
+        "kvm/*.hh",
         "linux/*.hh",
         "regs/*.hh",
         "tracers/*.hh",
@@ -80,6 +81,9 @@ cc_library(
         "//configs:capstone_enabled": ["tracers/capstone.cc"],
         "//conditions:default": [],
     }) + select({
+        "//configs:kvm_arm": glob(["kvm/*.cc"]),
+        "//conditions:default": [],
+    }) + select({
         "//configs:protocol_mesi_three_level_htm": ["insts/tme64ruby.cc"],
         "//conditions:default": ["insts/tme64classic.cc"],
     }),
@@ -87,6 +91,7 @@ cc_library(
         "*.hh",
         "freebsd/*.hh",
         "insts/*.hh",
+        "kvm/*.hh",
         "linux/*.hh",
         "regs/*.hh",
         "tracers/*.hh",
@@ -109,6 +114,10 @@ cc_library(
         ":gdb_xml_aarch64_core",
         ":gdb_xml_aarch64_fpu",
     ],
+    linkopts = select({
+        "//configs:capstone_enabled": ["-lcapstone"],
+        "//conditions:default": [],
+    }),
     alwayslink = True,
 )
 

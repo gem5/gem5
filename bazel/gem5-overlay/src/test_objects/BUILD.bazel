@@ -9,6 +9,11 @@ package(default_visibility = ["//visibility:public"])
 
 exports_files(glob(["*.py"]))
 
+filegroup(
+    name = "hdrs_files",
+    srcs = glob(["*.hh"]),
+)
+
 cc_library(
     name = "test_objects",
     srcs = glob(["*.cc"]),

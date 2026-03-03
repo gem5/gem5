@@ -209,7 +209,7 @@ cc_library(
         "//configs:dramsys_enabled": ["@gem5_ext_dramsys//:dramsys"],
         "//conditions:default": [],
     }) + select({
-        "//configs:protobuf_enabled": ["@protobuf//:protobuf"],
+        "//configs:protobuf_enabled": ["//src/proto:proto_gen"],
         "//conditions:default": [],
     }),
     alwayslink = True,
