@@ -124,6 +124,56 @@ def _generate_slicc_manifests(repository_ctx, src_root, module_root):
                       "SLICC_MANIFESTS = {}\n",
         )
 
+def _setup_tlm_library(repository_ctx):
+    """Detect and set up the external TLM library (libarmtlmchi).
+
+    Reads GEM5_TLM_PATH from the environment. When set, symlinks the
+    shared library and headers into ext/tlm/ and creates a BUILD file
+    with a cc_import target. When unset, creates a stub BUILD with a
+    placeholder target gated by target_compatible_with.
+    """
+    tlm_path = repository_ctx.os.environ.get("GEM5_TLM_PATH", "")
+
+    if tlm_path:
+        # Resolve the library and header paths.
+        tlm_lib = repository_ctx.path(tlm_path + "/lib/libarmtlmchi.so")
+        tlm_include = repository_ctx.path(tlm_path + "/include")
+
+        if tlm_lib.exists:
+            repository_ctx.symlink(tlm_lib, "ext/tlm/libarmtlmchi.so")
+
+        if tlm_include.exists:
+            repository_ctx.symlink(tlm_include, "ext/tlm/include")
+
+        repository_ctx.file(
+            "ext/tlm/BUILD.bazel",
+            content = """\
+load("@rules_cc//cc:defs.bzl", "cc_import")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_import(
+    name = "armtlmchi",
+    shared_library = "libarmtlmchi.so",
+    hdrs = glob(["include/**/*.hh"]),
+)
+""",
+        )
+    else:
+        # No TLM path: create a stub target that is always incompatible.
+        repository_ctx.file(
+            "ext/tlm/BUILD.bazel",
+            content = """\
+package(default_visibility = ["//visibility:public"])
+
+# TLM library unavailable (GEM5_TLM_PATH not set).
+cc_library(
+    name = "armtlmchi",
+    target_compatible_with = ["@platforms//:incompatible"],
+)
+""",
+        )
+
 def _gem5_configure_impl(repository_ctx):
     """Implementation of the gem5_configure repository rule.
 
@@ -132,6 +182,7 @@ def _gem5_configure_impl(repository_ctx):
     2. Extracting version info from source
     3. Running SLICC discovery to generate output manifests
     4. Writing static configuration to configs/vars.bzl
+    5. Setting up external TLM library (when GEM5_TLM_PATH is set)
     """
     # Resolve paths. @gem5-raw points to the gem5 source root.
     src_root = repository_ctx.path(
@@ -162,10 +213,14 @@ def _gem5_configure_impl(repository_ctx):
     # Generate SLICC output manifests for each protocol.
     _generate_slicc_manifests(repository_ctx, src_root, module_root)
 
+    # Set up TLM library if GEM5_TLM_PATH is provided.
+    _setup_tlm_library(repository_ctx)
+
 gem5_configure = repository_rule(
     implementation = _gem5_configure_impl,
     local = True,
     configure = True,
+    environ = ["GEM5_TLM_PATH"],
     attrs = {
         "gem5_raw": attr.label(
             doc = "Label pointing to a file in @gem5-raw (used to resolve source root).",

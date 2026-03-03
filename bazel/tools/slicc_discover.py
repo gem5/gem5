@@ -25,7 +25,9 @@ def discover_protocol_files(src_root, protocol_name, slicc_file):
 
     try:
         slicc = SLICC(slicc_path, [interfaces], protocol_dir)
-        return sorted(slicc.files())
+        # Filter to C++ files only; SLICC also emits .py files that
+        # cannot be fed into cc_library.
+        return sorted(f for f in slicc.files() if f.endswith((".cc", ".hh")))
     except Exception as e:
         print(
             "WARNING: SLICC discovery failed for {}: {}".format(

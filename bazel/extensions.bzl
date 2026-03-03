@@ -1,51 +1,91 @@
 """Module extensions for the gem5 Bazel build.
 
 Provides three tag classes:
-- configure: Creates the @gem5 overlay repository
+- configure: Creates the @gem5_sources overlay repository and @gem5-raw source repo
 - system_python: Detects system Python headers
 - ext_libraries: Sets up ext/ library repositories
+
+Source root detection (in priority order):
+1. Explicit source_root on the configure tag (for archive or custom layouts)
+2. Auto-detect: parent of the gem5 module's workspace root (for standalone
+   and local_path_override modes where bazel/ is inside a gem5 source tree)
 """
 
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:local.bzl", "new_local_repository")
 load("//:configure.bzl", "gem5_configure")
 load("//:python_detect.bzl", "system_python")
 
-def _find_gem5_source_root(module_ctx):
-    """Detect the gem5 source root.
+def _find_gem5_module_root(module_ctx):
+    """Find the gem5 Bazel module's workspace directory.
 
-    In standalone mode (bazel/ is inside a gem5 source tree), the source root
-    is the parent directory of bazel/. This is detected by checking if the
-    module workspace root's parent contains src/base/version.cc.
+    Uses module_ctx.path() to resolve a label in the gem5 module, which
+    gives us an absolute filesystem path. The gem5 module IS the module
+    that defines this extension, so //:MODULE.bazel resolves to it.
 
-    For downstream consumers the source root is determined by the configure
-    tag's source_root attribute.
+    In standalone mode, this is the bazel/ directory inside the gem5 tree.
+    In downstream local_path_override mode, this is wherever the override
+    points (e.g., third_party/gem5/bazel).
     """
-    # The module root is the bazel/ directory. The gem5 source root is its
-    # parent directory. We use workspace_root to get the absolute path
-    # rather than hardcoding a relative path.
-    for mod in module_ctx.modules:
-        if mod.is_root:
-            # For the root module, source is the parent of the module dir.
-            return str(mod.workspace_root) + "/.."
-    return "../"
+    module_bzl = module_ctx.path(Label("//:MODULE.bazel"))
+    return str(module_bzl.dirname)
+
+def _resolve_source_root(module_ctx, configure_tags):
+    """Determine the gem5 source root from configure tags and module graph.
+
+    Returns: (source_root_path, is_remote) tuple.
+      - source_root_path: filesystem path to the gem5 source root, or None
+        if remote fetch is needed.
+      - is_remote: True when the source must be fetched via http_archive.
+    """
+    # Check if any configure tag provides an explicit source_root
+    for tag in configure_tags:
+        if tag.source_root:
+            return (tag.source_root, False)
+
+    # Check if any configure tag requests a remote source fetch
+    for tag in configure_tags:
+        if tag.source_urls:
+            return (None, True)
+
+    # Auto-detect: parent of the gem5 module's workspace root.
+    # This works for standalone mode (bazel/ inside gem5 tree) and
+    # local_path_override mode (points to third_party/gem5/bazel).
+    gem5_root = _find_gem5_module_root(module_ctx)
+    return (gem5_root + "/..", False)
 
 def _gem5_repos_extension_impl(module_ctx):
     """Module extension that creates gem5 repositories."""
-    source_root = _find_gem5_source_root(module_ctx)
+
+    # Collect all configure tags across modules (gem5's own + downstream)
+    all_configure_tags = []
+    for mod in module_ctx.modules:
+        all_configure_tags.extend(mod.tags.configure)
+
+    source_root, is_remote = _resolve_source_root(module_ctx, all_configure_tags)
 
     for mod in module_ctx.modules:
         for tag in mod.tags.configure:
-            # Use tag's source_root if provided, otherwise auto-detect.
-            effective_root = tag.source_root if tag.source_root else source_root
+            if is_remote:
+                # Remote mode: fetch the full gem5 source as @gem5-raw
+                # via http_archive. The URLs should point to the full
+                # gem5 archive (not the bazel/-stripped version).
+                http_archive(
+                    name = "gem5-raw",
+                    urls = tag.source_urls,
+                    strip_prefix = tag.source_strip_prefix,
+                    integrity = tag.source_integrity if tag.source_integrity else "",
+                    build_file_content = "# Raw gem5 source tree.\n",
+                )
+            else:
+                # Local mode: symlink to the source root on disk.
+                new_local_repository(
+                    name = "gem5-raw",
+                    path = source_root,
+                    build_file_content = "# Raw gem5 source tree.\n",
+                )
 
-            # Create @gem5-raw pointing to the gem5 source root.
-            new_local_repository(
-                name = "gem5-raw",
-                path = effective_root,
-                build_file_content = "# Raw gem5 source tree. BUILD files come from the overlay.\n",
-            )
-
-            # Create @gem5 via the overlay repository rule.
+            # Create @gem5_sources via the overlay repository rule.
             gem5_configure(
                 name = tag.name,
                 gem5_raw = "@gem5-raw//:CMakeLists.txt",
@@ -56,14 +96,28 @@ def _gem5_repos_extension_impl(module_ctx):
             system_python(name = tag.name)
 
         for tag in mod.tags.ext_libraries:
-            _create_ext_libraries(module_ctx, source_root)
+            _create_ext_libraries(source_root)
 
 _configure_tag = tag_class(
     attrs = {
         "name": attr.string(mandatory = True),
         "source_root": attr.string(
             default = "",
-            doc = "Explicit gem5 source root path. If empty, auto-detects as parent of bazel/.",
+            doc = "Explicit gem5 source root path (filesystem). " +
+                  "Use for archive_override when auto-detection fails.",
+        ),
+        "source_urls": attr.string_list(
+            default = [],
+            doc = "URLs to fetch the full gem5 source archive. " +
+                  "Used in archive/remote mode to create @gem5-raw.",
+        ),
+        "source_strip_prefix": attr.string(
+            default = "",
+            doc = "strip_prefix for the source archive (e.g. 'gem5-{commit}').",
+        ),
+        "source_integrity": attr.string(
+            default = "",
+            doc = "SRI hash for the source archive.",
         ),
     },
 )
@@ -80,7 +134,7 @@ _ext_libraries_tag = tag_class(
     },
 )
 
-def _create_ext_libraries(module_ctx, source_root):
+def _create_ext_libraries(source_root):
     """Create repositories for each ext/ library."""
     ext_path = source_root + "/ext"
 

@@ -36,7 +36,7 @@ cc_library(
     ],
     includes = ["."],
     deps = [
-        "//src:gem5_hdrs",
+        "//src:_gem5_base_hdrs",
         "@gem5_ext_pybind11//:pybind11",
         "@system_python//:python",
     ],
@@ -147,7 +147,7 @@ gem5_embedded_python_library(
         for f in _ALL_PY
     },
     deps = [
-        "//src:gem5_hdrs",
+        "//src:_gem5_base_hdrs",
     ],
 )
 

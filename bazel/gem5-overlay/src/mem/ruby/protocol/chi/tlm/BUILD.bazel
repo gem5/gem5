@@ -1,0 +1,61 @@
+"""BUILD file for src/mem/ruby/protocol/chi/tlm/ -- CHI TLM bridge.
+
+Provides the TLM integration layer that bridges gem5's CHI protocol
+implementation to the ARM TLM library (libarmtlmchi). Requires the
+external library to be available via GEM5_TLM_PATH environment variable.
+
+Gated by the //configs:tlm_enabled config_setting. When TLM is not
+enabled, this target is marked incompatible.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:defs.bzl", "gem5_debug_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+_TLM_CORE_SRCS = [
+    "controller.cc",
+    "generator.cc",
+    "utils.cc",
+]
+
+_TLM_PYTHON_SRCS = [
+    "tlm_chi.cc",
+    "tlm_chi_gen.cc",
+]
+
+_TLM_HDRS = [
+    "controller.hh",
+    "generator.hh",
+    "port.hh",
+    "utils.hh",
+]
+
+cc_library(
+    name = "chi_tlm",
+    srcs = _TLM_CORE_SRCS + select({
+        "//configs:python_enabled": _TLM_PYTHON_SRCS,
+        "//conditions:default": [],
+    }),
+    hdrs = _TLM_HDRS,
+    deps = [
+        "//src:gem5_hdrs",
+        "//src/mem/ruby:ruby",
+        "//ext/tlm:armtlmchi",
+    ],
+    target_compatible_with = select({
+        "//configs:tlm_enabled": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
+    alwayslink = True,
+)
+
+gem5_debug_flag(
+    name = "TLM",
+    desc = "TLM debugging",
+)
+
+gem5_debug_flag(
+    name = "TLMPort",
+    desc = "TLMPort debugging",
+)

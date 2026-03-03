@@ -337,7 +337,7 @@ gem5_sim_object_aggregate(
     }),
     deps = [
         ":gem5_config_headers",
-        "//src:gem5_hdrs",
+        "//src:_gem5_base_hdrs",
         "@gem5_ext_pybind11//:pybind11",
         "@system_python//:python",
     ],
@@ -421,6 +421,9 @@ cc_library(
             "//src/dev/hsa:dev_hsa",
             "//src/dev/amdgpu:dev_amdgpu",
         ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:tlm_enabled": ["//src/mem/ruby/protocol/chi/tlm:chi_tlm"],
         "//conditions:default": [],
     }) + select({
         "//configs:systemc_enabled": ["//src/systemc:systemc"],

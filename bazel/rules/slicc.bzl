@@ -79,10 +79,14 @@ slicc_main(argv)
                  ctx.files._slicc_files + ctx.files._ply_files + \
                  ctx.files._grammar_files
 
-    if manifest:
+    # Filter manifest to C++ files only (slicc_discover.py should already
+    # do this, but guard against stale manifests containing .py files).
+    cc_manifest = [f for f in manifest if f.endswith(".cc") or f.endswith(".hh")]
+
+    if cc_manifest:
         # Manifest-based: declare individual output files.
         prefix = "slicc_{}".format(protocol)
-        outputs = [ctx.actions.declare_file("{}/{}".format(prefix, f)) for f in manifest]
+        outputs = [ctx.actions.declare_file("{}/{}".format(prefix, f)) for f in cc_manifest]
         out_dir_path = outputs[0].dirname
 
         ctx.actions.run_shell(

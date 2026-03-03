@@ -11,11 +11,12 @@ load("@rules_cc//cc:defs.bzl", "cc_library")
 
 package(default_visibility = ["//visibility:public"])
 
-# Aggregate gem5 headers for breaking circular deps.
-# Each subsystem's BUILD.bazel exports a filegroup named "hdrs_files".
-# This avoids a single top-level recursive glob that slows analysis.
+# Base header aggregation: subsystem headers + config + ext, but NOT
+# generated SimObject params. Used by src/python (which feeds gem5py_m5)
+# to avoid a dependency cycle:
+#   gem5_hdrs -> sim_object_params -> gem5py_m5 -> python -> gem5_hdrs
 cc_library(
-    name = "gem5_hdrs",
+    name = "_gem5_base_hdrs",
     hdrs = [
         "//src/base:hdrs_files",
         "//src/sim:hdrs_files",
@@ -34,6 +35,17 @@ cc_library(
         "//:gem5_switching_hdrs",
     ],
     includes = ["."],
+)
+
+# Full header aggregation: base headers + generated SimObject params/enums.
+# Most subsystem libraries depend on this target so that #include "params/..."
+# and #include "enums/..." resolve at compile time.
+cc_library(
+    name = "gem5_hdrs",
+    deps = [
+        ":_gem5_base_hdrs",
+        "//:sim_object_params",
+    ],
 )
 
 # Ext/ library include-path-only aggregation target.

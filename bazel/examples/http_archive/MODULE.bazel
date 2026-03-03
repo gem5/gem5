@@ -1,8 +1,13 @@
 """Example: Using gem5 as a remote archive dependency.
 
 This MODULE.bazel shows how a downstream project can depend on gem5
-from a remote archive using archive_override. The strip_prefix isolates
-the bazel/ subdirectory as the Bazel module root.
+from a remote archive. Two archives are involved:
+
+1. The Bazel module archive (strip_prefix isolates bazel/ as module root)
+2. The full source archive (for src/, ext/, build_tools/)
+
+The gem5 module extension's configure tag accepts source_urls to fetch
+the full source tree as @gem5-raw.
 
 Usage:
     cd /path/to/your/project
@@ -16,13 +21,21 @@ module(
 
 bazel_dep(name = "gem5", version = "0.0.0")
 
-# Use archive_override to fetch a gem5 release. The strip_prefix points
-# to the bazel/ subdirectory which contains the MODULE.bazel for the
-# gem5 Bazel module. The gem5 module extension will use the configure
-# tag's source_root attribute to locate the full source tree.
+# Override 1: Fetch the Bazel module from the bazel/ subdirectory.
 archive_override(
     module_name = "gem5",
     urls = ["https://github.com/gem5/gem5/archive/{commit}.tar.gz"],
     strip_prefix = "gem5-{commit}/bazel",
     integrity = "sha256-...",
 )
+
+# Override 2: Tell the gem5 extension where to fetch the full source.
+# The extension creates @gem5-raw from these URLs (no strip to bazel/).
+gem5_ext = use_extension("@gem5//:extensions.bzl", "gem5_repos_extension")
+gem5_ext.configure(
+    name = "gem5_sources",
+    source_urls = ["https://github.com/gem5/gem5/archive/{commit}.tar.gz"],
+    source_strip_prefix = "gem5-{commit}",
+    source_integrity = "sha256-...",
+)
+use_repo(gem5_ext, "gem5_sources", "gem5-raw")
