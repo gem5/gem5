@@ -97,9 +97,10 @@ function(gem5_define_subsystem name)
     add_library(${_target} STATIC ${_obj_sources})
     set_target_properties(${_target} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-    # OBJECT targets already compile with gem5_deps; the STATIC library
-    # itself has no sources to compile, but we link gem5_deps PRIVATE
-    # so that downstream consumers get transitive link deps if needed.
+    # OBJECT targets already compile with gem5_deps. The STATIC library
+    # links gem5_deps PRIVATE so CMake records the dependency for
+    # archiving; PRIVATE means this is NOT propagated to consumers
+    # (final targets get gem5_deps through their own link lines).
     target_link_libraries(${_target} PRIVATE gem5_deps)
 
     # Scoped ext/ library dependencies
