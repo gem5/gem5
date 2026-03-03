@@ -188,29 +188,51 @@ include(Gem5Subsystems)
 # per-subsystem linking). Normal linking (not whole-archive) is sufficient
 # for unit tests because tests explicitly reference the symbols they need.
 #
-# gem5_all compiles only date.cc (compile timestamp). All other code
-# comes transitively from subsystem STATIC libraries.
+# CMake 3.24+ path: gem5_all compiles only date.cc and links subsystem
+# STATIC libraries using $<LINK_GROUP:RESCAN,...> (--start-group /
+# --end-group) to resolve circular inter-subsystem dependencies.
+#
+# CMake < 3.24 fallback: gem5_all includes all OBJECT sources directly
+# (no circular dependency issue since all objects are in one archive).
 gem5_get_subsystem_libs(_subsystem_libs)
-add_library(gem5_all STATIC
-    "${CMAKE_SOURCE_DIR}/src/base/date.cc"
-)
+
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.24")
+    # CMake 3.24+: thin archive with subsystem STATICs linked via RESCAN
+    # (--start-group / --end-group) to resolve circular dependencies
+    # (e.g., gem5_base references gem5_sim::print_backtrace and vice versa).
+    add_library(gem5_all STATIC
+        "${CMAKE_SOURCE_DIR}/src/base/date.cc"
+    )
+    set(_gem5_all_link_libs ${_subsystem_libs})
+    if(TARGET gem5_generated)
+        list(APPEND _gem5_all_link_libs gem5_generated)
+    endif()
+    if(NOT GEM5_WITHOUT_PYTHON)
+        list(APPEND _gem5_all_link_libs gem5_pysources)
+    endif()
+    target_link_libraries(gem5_all PUBLIC
+        "$<LINK_GROUP:RESCAN,${_gem5_all_link_libs}>"
+    )
+else()
+    # CMake < 3.24 fallback: compose from raw OBJECT sources (no circular
+    # dependency issue since all objects are in one archive) and link
+    # subsystem STATICs for their scoped ext/ library dependencies.
+    gem5_get_all_object_sources(_all_obj_sources)
+    add_library(gem5_all STATIC
+        ${_all_obj_sources}
+        "${CMAKE_SOURCE_DIR}/src/base/date.cc"
+    )
+    target_link_libraries(gem5_all PUBLIC ${_subsystem_libs})
+    if(TARGET gem5_generated)
+        target_link_libraries(gem5_all PUBLIC gem5_generated)
+    endif()
+    if(NOT GEM5_WITHOUT_PYTHON)
+        target_link_libraries(gem5_all PUBLIC gem5_pysources)
+    endif()
+endif()
 target_link_libraries(gem5_all PUBLIC gem5_deps)
 target_compile_options(gem5_all PRIVATE ${GEM5_WERROR_FLAGS})
 set_target_properties(gem5_all PROPERTIES POSITION_INDEPENDENT_CODE ON)
-
-# Link all subsystem STATIC libraries using RESCAN (--start-group /
-# --end-group) to resolve circular dependencies between subsystems
-# (e.g., gem5_base references gem5_sim::print_backtrace and vice versa).
-set(_gem5_all_link_libs ${_subsystem_libs})
-if(TARGET gem5_generated)
-    list(APPEND _gem5_all_link_libs gem5_generated)
-endif()
-if(NOT GEM5_WITHOUT_PYTHON)
-    list(APPEND _gem5_all_link_libs gem5_pysources)
-endif()
-target_link_libraries(gem5_all PUBLIC
-    "$<LINK_GROUP:RESCAN,${_gem5_all_link_libs}>"
-)
 
 # ---------------------------------------------------------------------------
 # gem5 executable (per-subsystem whole-archive linking)

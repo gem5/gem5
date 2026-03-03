@@ -155,7 +155,8 @@ endfunction()
 # Subsystem Definitions (Explicit Manifest)
 # ===================================================================
 # Each subsystem lists its OBJECT libraries explicitly (no prefix matching)
-# to avoid misclassification (e.g., gem5_obj_dev_arm -> gem5_dev, not gem5_dev_arm).
+# to avoid misclassification (e.g., prefix matching would put gem5_obj_dev_arm
+# into gem5_dev instead of gem5_dev_arm, since both start with "dev").
 # The manifest must be updated when a new src/ subdirectory is added.
 
 # --- Core subsystems (always built) ---
