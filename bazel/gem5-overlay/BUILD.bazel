@@ -13,6 +13,7 @@ load(
     "gem5_config_header",
     "gem5_config_header_namespace",
     "gem5_config_header_string",
+    "gem5_sim_object_aggregate",
     "gem5_switching_headers",
 )
 
@@ -98,11 +99,14 @@ gem5_config_header(
     }),
 )
 
-# use_posix_clock: always true on Linux
+# use_posix_clock: feature-detected at configure time (default off for CMake parity)
 gem5_config_header(
     name = "_config_use_posix_clock",
     key = "USE_POSIX_CLOCK",
-    value = "1",
+    value = select({
+        "//configs:posix_clock_enabled": "1",
+        "//conditions:default": "0",
+    }),
 )
 
 # have_deprecated_namespace: always true for C++17 compilers
@@ -112,12 +116,12 @@ gem5_config_header(
     value = "1",
 )
 
-# have_perf_attr_exclude_host: available on modern Linux kernels
+# have_perf_attr_exclude_host: feature-detected (perf_event.h attribute check)
 gem5_config_header(
     name = "_config_have_perf_attr_exclude_host",
     key = "HAVE_PERF_ATTR_EXCLUDE_HOST",
     value = select({
-        "//configs:kvm_enabled": "1",
+        "//configs:perf_attr_exclude_host_enabled": "1",
         "//conditions:default": "0",
     }),
 )
@@ -137,6 +141,7 @@ gem5_config_header_string(
 gem5_config_header_namespace(
     name = "_config_the_gpu_isa",
     key = "TheGpuISA",
+    filename = "the_gpu_isa",
     value = select({
         "//configs:gpu_enabled": "VegaISA",
         "//conditions:default": "VegaISA",
@@ -214,6 +219,7 @@ gem5_config_header_string(
     value = select({
         "//configs:protocol_mesi_two_level": "MESI_Two_Level",
         "//configs:protocol_mesi_three_level": "MESI_Three_Level",
+        "//configs:protocol_mesi_three_level_htm": "MESI_Three_Level_HTM",
         "//configs:protocol_mi_example": "MI_example",
         "//configs:protocol_moesi_amd_base": "MOESI_AMD_Base",
         "//configs:protocol_moesi_cmp_directory": "MOESI_CMP_directory",
@@ -318,6 +324,26 @@ cc_library(
 )
 
 # ---------------------------------------------------------------------------
+# SimObject param/enum generation: aggregate target that discovers all
+# SimObject classes by importing m5.objects via gem5py_m5 and generates
+# params/*.hh, enums/*.hh, enums/*.cc, python/_m5/param_*.cc.
+# ---------------------------------------------------------------------------
+gem5_sim_object_aggregate(
+    name = "sim_object_params",
+    gem5py_m5 = "//src/python:gem5py_m5",
+    use_python = select({
+        "//configs:python_enabled": True,
+        "//conditions:default": False,
+    }),
+    deps = [
+        ":gem5_config_headers",
+        "//src:gem5_hdrs",
+        "@gem5_ext_pybind11//:pybind11",
+        "@system_python//:python",
+    ],
+)
+
+# ---------------------------------------------------------------------------
 # gem5_all: Aggregation library that links all subsystem libraries.
 #
 # This mirrors CMake's gem5_all STATIC library. All subsystem cc_libraries
@@ -337,6 +363,9 @@ cc_library(
         "//src/arch/generic:generic",
         "//src/sst:sst",
         "//src/learning_gem5/part2:learning",
+
+        # ---- Generated SimObject params and enums ----
+        "//:sim_object_params",
 
         # ---- Global ext/ libs (pervasively used) ----
         "@gem5_ext_fputils//:fputils",

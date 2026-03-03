@@ -111,6 +111,7 @@ alias(
     actual = select({
         "//configs:protocol_mesi_two_level": ":MESI_Two_Level",
         "//configs:protocol_mesi_three_level": ":MESI_Three_Level",
+        "//configs:protocol_mesi_three_level_htm": ":MESI_Three_Level_HTM",
         "//configs:protocol_mi_example": ":MI_example",
         "//configs:protocol_moesi_amd_base": ":MOESI_AMD_Base",
         "//configs:protocol_moesi_cmp_directory": ":MOESI_CMP_directory",
@@ -118,6 +119,7 @@ alias(
         "//configs:protocol_moesi_hammer": ":MOESI_hammer",
         "//configs:protocol_chi": ":CHI",
         "//configs:protocol_gpu_viper": ":GPU_VIPER",
+        "//configs:protocol_gpu_viper_region": ":GPU_VIPER",
         "//configs:protocol_garnet_standalone": ":Garnet_standalone",
         "//configs:protocol_multiple": ":all_protocols",
     }),

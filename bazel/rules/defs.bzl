@@ -19,7 +19,9 @@ load("//rules:slicc.bzl", _gem5_slicc_protocol = "gem5_slicc_protocol")
 load("//rules:py_source.bzl",
      _gem5_py_source = "gem5_py_source",
      _gem5_embedded_python_library = "gem5_embedded_python_library")
-load("//rules:sim_object.bzl", _gem5_sim_object = "gem5_sim_object")
+load("//rules:sim_object.bzl",
+     _gem5_sim_object = "gem5_sim_object",
+     _gem5_sim_object_aggregate = "gem5_sim_object_aggregate")
 load("//rules:gen_defines.bzl", _gem5_gen_defines = "gem5_gen_defines")
 load("//rules:gem5_binary.bzl", _gem5_binary = "gem5_binary")
 
@@ -36,5 +38,6 @@ gem5_slicc_protocol = _gem5_slicc_protocol
 gem5_py_source = _gem5_py_source
 gem5_embedded_python_library = _gem5_embedded_python_library
 gem5_sim_object = _gem5_sim_object
+gem5_sim_object_aggregate = _gem5_sim_object_aggregate
 gem5_gen_defines = _gem5_gen_defines
 gem5_binary = _gem5_binary

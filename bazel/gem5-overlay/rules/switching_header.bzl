@@ -2,19 +2,26 @@
 
 Switching headers are simple #include redirects that point to the
 ISA-specific version of a header based on the primary_isa flag.
+
+The isa_dir attribute is a string that accepts select(), ensuring
+configurable ISA selection is preserved through analysis time.
 """
 
 def _switching_header_impl(ctx):
-    out = ctx.actions.declare_file(ctx.attr.output_path)
-    content = '#include "{}"\n'.format(ctx.attr.target_header)
+    prefix = ctx.attr.output_prefix
+    header = ctx.attr.header_name
+    isa = ctx.attr.isa_dir
+    out = ctx.actions.declare_file("{}/{}".format(prefix, header))
+    content = '#include "{}/{}/{}"\n'.format(prefix, isa, header)
     ctx.actions.write(out, content)
     return [DefaultInfo(files = depset([out]))]
 
 _switching_header = rule(
     implementation = _switching_header_impl,
     attrs = {
-        "output_path": attr.string(mandatory = True),
-        "target_header": attr.string(mandatory = True),
+        "header_name": attr.string(mandatory = True),
+        "isa_dir": attr.string(mandatory = True),
+        "output_prefix": attr.string(default = "arch"),
     },
 )
 
@@ -27,7 +34,7 @@ def gem5_switching_headers(name, headers, isa_dir, output_prefix = "arch", visib
     Args:
         name: Target name.
         headers: List of header filenames to generate redirects for.
-        isa_dir: ISA directory name (from select() on primary_isa).
+        isa_dir: ISA directory name. Accepts select() for configurable ISA.
         output_prefix: Output path prefix (default: "arch").
         visibility: Visibility.
     """
@@ -36,8 +43,9 @@ def gem5_switching_headers(name, headers, isa_dir, output_prefix = "arch", visib
         hdr_name = "_switching_{}_{}".format(name, header.replace("/", "_").replace(".", "_"))
         _switching_header(
             name = hdr_name,
-            output_path = "{}/{}".format(output_prefix, header),
-            target_header = "{}/{}/{}".format(output_prefix, isa_dir, header),
+            header_name = header,
+            isa_dir = isa_dir,
+            output_prefix = output_prefix,
         )
         all_hdrs.append(hdr_name)
 

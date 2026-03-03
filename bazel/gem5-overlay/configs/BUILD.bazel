@@ -43,6 +43,10 @@ bool_flag(name = "with_cxx_config", build_setting_default = False)
 bool_flag(name = "use_systemc", build_setting_default = False)
 bool_flag(name = "use_test_objects", build_setting_default = False)
 
+# ---- Feature detection flags (match CMake feature checks) ----
+bool_flag(name = "use_posix_clock", build_setting_default = False)
+bool_flag(name = "have_perf_attr_exclude_host", build_setting_default = False)
+
 # ---- Optional dependency gates (match CMake HAVE_* variables) ----
 bool_flag(name = "have_protobuf", build_setting_default = False)
 bool_flag(name = "have_png", build_setting_default = False)
@@ -90,6 +94,10 @@ config_setting(
     name = "kvm_arm",
     flag_values = {":use_kvm": "True", ":use_arm_isa": "True"},
 )
+
+# ---- Feature detection config_settings ----
+config_setting(name = "posix_clock_enabled", flag_values = {":use_posix_clock": "True"})
+config_setting(name = "perf_attr_exclude_host_enabled", flag_values = {":have_perf_attr_exclude_host": "True"})
 
 # ---- Optional dependency config_settings ----
 config_setting(name = "protobuf_enabled", flag_values = {":have_protobuf": "True"})

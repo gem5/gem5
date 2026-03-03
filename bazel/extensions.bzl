@@ -15,10 +15,18 @@ def _find_gem5_source_root(module_ctx):
 
     In standalone mode (bazel/ is inside a gem5 source tree), the source root
     is the parent directory of bazel/. This is detected by checking if the
-    current module is root and its parent contains src/base/version.cc.
+    module workspace root's parent contains src/base/version.cc.
+
+    For downstream consumers the source root is determined by the configure
+    tag's source_root attribute.
     """
-    # The module root is the bazel/ directory. Parent is gem5 source root.
-    # We use the module's path to find the parent.
+    # The module root is the bazel/ directory. The gem5 source root is its
+    # parent directory. We use workspace_root to get the absolute path
+    # rather than hardcoding a relative path.
+    for mod in module_ctx.modules:
+        if mod.is_root:
+            # For the root module, source is the parent of the module dir.
+            return str(mod.workspace_root) + "/.."
     return "../"
 
 def _gem5_repos_extension_impl(module_ctx):
@@ -27,10 +35,13 @@ def _gem5_repos_extension_impl(module_ctx):
 
     for mod in module_ctx.modules:
         for tag in mod.tags.configure:
+            # Use tag's source_root if provided, otherwise auto-detect.
+            effective_root = tag.source_root if tag.source_root else source_root
+
             # Create @gem5-raw pointing to the gem5 source root.
             new_local_repository(
                 name = "gem5-raw",
-                path = source_root,
+                path = effective_root,
                 build_file_content = "# Raw gem5 source tree. BUILD files come from the overlay.\n",
             )
 
@@ -50,6 +61,10 @@ def _gem5_repos_extension_impl(module_ctx):
 _configure_tag = tag_class(
     attrs = {
         "name": attr.string(mandatory = True),
+        "source_root": attr.string(
+            default = "",
+            doc = "Explicit gem5 source root path. If empty, auto-detects as parent of bazel/.",
+        ),
     },
 )
 

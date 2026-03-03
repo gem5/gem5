@@ -1,11 +1,18 @@
-"""Rule for SimObject parameter struct and enum generation.
+"""Rules for SimObject parameter struct and enum generation.
 
-Generates C++ parameter structs and enum definitions from SimObject .py files.
-Uses the gem5py_m5 helper executable as interpreter. Outputs are collected
-in a tree artifact since the exact file set depends on the SimObject/enum lists.
+Provides two approaches:
+1. gem5_sim_object(): Per-file generation for individual SimObject .py files.
+2. gem5_sim_object_aggregate(): Aggregate generation that discovers all SimObject
+   classes via m5.objects and generates all params/enums in one pass. This is
+   the recommended approach for the top-level build as it mirrors CMake's
+   deferred gem5_create_simobject_commands() pattern.
 """
 
 load("@rules_cc//cc:defs.bzl", "cc_library")
+
+# ---------------------------------------------------------------------------
+# Per-file SimObject generation (kept for fine-grained control if needed)
+# ---------------------------------------------------------------------------
 
 def _sim_object_gen_impl(ctx):
     """Generate SimObject parameter structs and enums."""
@@ -120,6 +127,147 @@ def gem5_sim_object(name, py_file, sim_objects = [], enums = [],
         srcs = [gen_name],
         hdrs = [gen_name],
         deps = deps,
+        includes = ["."],
+        visibility = visibility,
+        alwayslink = True,
+    )
+
+# ---------------------------------------------------------------------------
+# Aggregate SimObject generation (discovers all SimObjects via m5.objects)
+# ---------------------------------------------------------------------------
+
+def _sim_object_aggregate_gen_impl(ctx):
+    """Discover all SimObject classes and generate all params/enums."""
+    gem5py_m5 = ctx.executable.gem5py_m5
+    use_python = "True" if ctx.attr.use_python else "False"
+
+    output_dir = ctx.actions.declare_directory("simobj_aggregate")
+
+    # The generation script runs inside gem5py_m5 which has all m5.* embedded.
+    # It discovers all SimObject classes, generates param headers/sources,
+    # and generates enum headers/sources.
+    script = ctx.actions.declare_file("_gen_all_simobjects.py")
+    ctx.actions.write(
+        output = script,
+        content = """\
+import sys
+import os
+
+output_dir = sys.argv[1]
+build_tools_dir = sys.argv[2]
+use_python = sys.argv[3] == "True"
+
+# Add build_tools to path for generation functions
+sys.path.insert(0, build_tools_dir)
+
+from sim_object_param_struct_hh import write_header_file as write_param_hh
+from sim_object_param_struct_cc import write_cc_file as write_param_cc
+from enum_hh import write_header_file as write_enum_hh
+from enum_cc import write_cc_file as write_enum_cc
+
+# Import m5 to register all SimObject classes
+import m5
+import m5.objects
+from m5.SimObject import SimObject
+from m5.params import Enum
+
+os.makedirs(os.path.join(output_dir, "params"), exist_ok=True)
+os.makedirs(os.path.join(output_dir, "enums"), exist_ok=True)
+os.makedirs(os.path.join(output_dir, "python", "_m5"), exist_ok=True)
+
+# Track generated enums to avoid duplicates
+generated_enums = set()
+
+# Generate param structs and pybind bindings for all SimObjects
+for name in sorted(SimObject.allClasses.keys()):
+    cls = SimObject.allClasses[name]
+    hh_path = os.path.join(output_dir, "params", name + ".hh")
+    cc_path = os.path.join(output_dir, "python", "_m5", "param_" + name + ".cc")
+    write_param_hh(cls, hh_path)
+    write_param_cc(cls, use_python, cc_path)
+
+    # Discover enums from this SimObject's local params
+    for param_name, param in sorted(cls._params.local.items()):
+        for ptype in getattr(param, "ptypes", []):
+            if issubclass(ptype, Enum) and ptype.__name__ not in generated_enums:
+                enum_name = ptype.__name__
+                generated_enums.add(enum_name)
+                enum_hh_path = os.path.join(output_dir, "enums", enum_name + ".hh")
+                enum_cc_path = os.path.join(output_dir, "enums", enum_name + ".cc")
+                write_enum_hh(ptype, enum_hh_path)
+                write_enum_cc(ptype, use_python, enum_cc_path)
+
+print("Generated params for", len(SimObject.allClasses), "SimObjects")
+print("Generated", len(generated_enums), "enum types")
+""",
+    )
+
+    gen_scripts = ctx.files._gen_scripts
+    build_tools_dir = gen_scripts[0].dirname if gen_scripts else ""
+
+    ctx.actions.run_shell(
+        outputs = [output_dir],
+        inputs = [script] + gen_scripts,
+        tools = [gem5py_m5],
+        command = "{} {} {} {} {}".format(
+            gem5py_m5.path,
+            script.path,
+            output_dir.path,
+            build_tools_dir,
+            use_python,
+        ),
+        mnemonic = "SimObjectAggregate",
+        progress_message = "Generating all SimObject params and enums",
+    )
+
+    return [DefaultInfo(files = depset([output_dir]))]
+
+_sim_object_aggregate_gen = rule(
+    implementation = _sim_object_aggregate_gen_impl,
+    attrs = {
+        "gem5py_m5": attr.label(
+            mandatory = True,
+            executable = True,
+            cfg = "exec",
+        ),
+        "use_python": attr.bool(default = True),
+        "_gen_scripts": attr.label(
+            default = "//build_tools:simobj_gen_scripts",
+            allow_files = True,
+        ),
+    },
+)
+
+def gem5_sim_object_aggregate(name, gem5py_m5 = "//src/python:gem5py_m5",
+                               use_python = True, visibility = None, deps = []):
+    """Generate all SimObject params and enums in one pass.
+
+    Discovers all SimObject subclasses by importing m5.objects via gem5py_m5,
+    then generates parameter struct headers/sources and enum headers/sources
+    for all discovered classes. Output is a tree artifact containing:
+      params/{ClassName}.hh
+      python/_m5/param_{ClassName}.cc
+      enums/{EnumName}.hh
+      enums/{EnumName}.cc
+
+    Args:
+        name: Target name.
+        gem5py_m5: Label of the gem5py_m5 executable.
+        use_python: Whether to generate pybind11 bindings.
+        visibility: Visibility.
+        deps: Additional dependencies for the generated cc_library.
+    """
+    gen_name = name + "_gen"
+    _sim_object_aggregate_gen(
+        name = gen_name,
+        gem5py_m5 = gem5py_m5,
+        use_python = use_python,
+    )
+    cc_library(
+        name = name,
+        srcs = [gen_name],
+        hdrs = [gen_name],
+        deps = deps + ["//src:gem5_hdrs"],
         includes = ["."],
         visibility = visibility,
         alwayslink = True,

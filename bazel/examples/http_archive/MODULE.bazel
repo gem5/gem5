@@ -1,11 +1,12 @@
-"""Example: Using gem5 as a remote git dependency.
+"""Example: Using gem5 as a remote archive dependency.
 
 This MODULE.bazel shows how a downstream project can depend on gem5
-from a remote git repository using git_override.
+from a remote archive using archive_override. The strip_prefix isolates
+the bazel/ subdirectory as the Bazel module root.
 
 Usage:
     cd /path/to/your/project
-    bazel build //:your_target
+    bazel build @gem5_sources//:gem5 --config=opt --config=x86
 """
 
 module(
@@ -15,9 +16,13 @@ module(
 
 bazel_dep(name = "gem5", version = "0.0.0")
 
-git_override(
+# Use archive_override to fetch a gem5 release. The strip_prefix points
+# to the bazel/ subdirectory which contains the MODULE.bazel for the
+# gem5 Bazel module. The gem5 module extension will use the configure
+# tag's source_root attribute to locate the full source tree.
+archive_override(
     module_name = "gem5",
-    remote = "https://github.com/gem5/gem5.git",
-    # Replace with the desired commit SHA:
-    commit = "0000000000000000000000000000000000000000",
+    urls = ["https://github.com/gem5/gem5/archive/{commit}.tar.gz"],
+    strip_prefix = "gem5-{commit}/bazel",
+    integrity = "sha256-...",
 )
