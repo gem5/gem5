@@ -225,10 +225,10 @@ cc_library(
 load("@rules_cc//cc:defs.bzl", "cc_test")
 
 _SIM_TEST_DEPS = [
-    ":sim",
+    "//:gem5_all",
     "//src/base:gtest_logging",
     "@gem5_ext_googletest//:gtest_main",
-    "//src:gem5_hdrs",
+    "@gem5_ext_googletest//:googlemock",
 ]
 
 [cc_test(

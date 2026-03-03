@@ -54,10 +54,9 @@ cc_test(
     name = "test_vec_pred_reg",
     srcs = ["vec_pred_reg.test.cc"],
     deps = [
-        ":generic",
+        "//:gem5_all",
         "//src/base:gtest_logging",
         "@gem5_ext_googletest//:gtest_main",
-        "//src:gem5_hdrs",
     ],
 )
 
@@ -65,9 +64,8 @@ cc_test(
     name = "test_vec_reg",
     srcs = ["vec_reg.test.cc"],
     deps = [
-        ":generic",
+        "//:gem5_all",
         "//src/base:gtest_logging",
         "@gem5_ext_googletest//:gtest_main",
-        "//src:gem5_hdrs",
     ],
 )

@@ -228,9 +228,9 @@ cc_test(
     name = "test_reg_bank",
     srcs = ["reg_bank.test.cc"],
     deps = [
-        ":dev",
+        "//:gem5_all",
         "//src/base:gtest_logging",
         "@gem5_ext_googletest//:gtest_main",
-        "//src:gem5_hdrs",
+        "@gem5_ext_googletest//:googlemock",
     ],
 )
