@@ -2,12 +2,20 @@
 
 Compiles .py files to bytecode, marshals, compresses with zlib, and generates
 C++ source files that register as EmbeddedPython modules.
+
+IMPORTANT: The marshal tool MUST run with the SAME Python version that gem5py_m5
+links against (system Python). Using a different version (e.g., hermetic Python
+from rules_python) produces incompatible bytecode that crashes at runtime.
 """
 
 load("@rules_cc//cc:defs.bzl", "cc_library")
 
 def _py_source_gen_impl(ctx):
-    """Marshal a Python source file into a C++ embedding."""
+    """Marshal a Python source file into a C++ embedding.
+
+    Uses system python3 (not the hermetic rules_python interpreter) to ensure
+    bytecode compatibility with gem5py_m5 which links against system Python.
+    """
     py_file = ctx.file.src
     modpath = ctx.attr.module_path
     abspath = ctx.attr.abspath
@@ -16,16 +24,27 @@ def _py_source_gen_impl(ctx):
     safe_name = modpath.replace(".", "_").replace("/", "_")
     cc_file = ctx.actions.declare_file("python/{}.py.cc".format(safe_name))
 
-    ctx.actions.run(
+    marshal_scripts = ctx.files._marshal_scripts
+    marshal_py = None
+    for f in marshal_scripts:
+        if f.basename == "marshal.py":
+            marshal_py = f
+            break
+    if not marshal_py:
+        fail("marshal.py not found in _marshal_scripts")
+
+    abs_arg = abspath if abspath else py_file.path
+
+    ctx.actions.run_shell(
         outputs = [cc_file],
-        inputs = [py_file],
-        executable = ctx.executable._marshal_tool,
-        arguments = [
+        inputs = [py_file] + marshal_scripts,
+        command = "python3 {} {} {} {} {}".format(
+            marshal_py.path,
             cc_file.path,
             py_file.path,
             modpath,
-            abspath if abspath else py_file.path,
-        ],
+            abs_arg,
+        ),
         mnemonic = "PyMarshal",
         progress_message = "Marshaling Python source {}".format(modpath),
     )
@@ -38,10 +57,9 @@ _py_source_gen = rule(
         "src": attr.label(mandatory = True, allow_single_file = [".py"]),
         "module_path": attr.string(mandatory = True),
         "abspath": attr.string(default = ""),
-        "_marshal_tool": attr.label(
-            default = "//build_tools:marshal",
-            executable = True,
-            cfg = "exec",
+        "_marshal_scripts": attr.label(
+            default = "//build_tools:build_tools_files",
+            allow_files = True,
         ),
     },
 )

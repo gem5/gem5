@@ -182,6 +182,9 @@ gem5_debug_flag(name = "LooppointAnalysis", desc = "Looppoint analysis debugging
 gem5_debug_flag(name = "TraceCPUData", desc = "Trace CPU data debugging")
 gem5_debug_flag(name = "TraceCPUInst", desc = "Trace CPU instruction debugging")
 
+# -- O3 probe debug flags --
+gem5_debug_flag(name = "ElasticTrace", desc = "ElasticTrace debugging")
+
 # -- GPU tester debug flags --
 gem5_debug_flag(name = "ProtocolTest", desc = "Protocol test debugging")
 gem5_debug_flag(name = "EpisodeCount", desc = "Episode count debugging")

@@ -41,4 +41,5 @@ use_repo(
     "gem5_ext_ply",
     "gem5_ext_dnet",
     "gem5_ext_googletest",
+    "gem5_ext_gdbremote",
 )

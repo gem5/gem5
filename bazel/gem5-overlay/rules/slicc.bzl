@@ -56,22 +56,19 @@ sys.path.insert(0, ply_parent)
 grammar_dir = os.path.dirname(grammar_file)
 sys.path.insert(0, grammar_dir)
 
-from slicc.main import main as slicc_main
+from slicc.parser import SLICC
 
 os.makedirs(output_dir, exist_ok=True)
 
-protocol_dir = os.path.dirname(slicc_file)
+protocol_base = os.path.dirname(slicc_file)
 
-# Build SLICC command. SLICC expects:
-# slicc --protocol-dir DIR --output-dir DIR file.slicc
-argv = [
-    "slicc",
-    "--protocol-dir", protocol_dir,
-    "--output-dir", output_dir,
-    slicc_file,
-]
+# Find interfaces slicc file
+interfaces_slicc = os.path.join(protocol_base, "RubySlicc_interfaces.slicc")
+interfaces_list = [interfaces_slicc] if os.path.exists(interfaces_slicc) else []
 
-slicc_main(argv)
+slicc = SLICC(slicc_file, interfaces_list, protocol_base)
+slicc.process()
+slicc.writeCodeFiles(output_dir, [])
 """,
     )
 

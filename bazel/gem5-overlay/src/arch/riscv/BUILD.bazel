@@ -17,6 +17,7 @@ filegroup(
         "bare_metal/*.hh",
         "insts/*.hh",
         "linux/*.hh",
+        "regs/*.hh",
     ]),
 )
 

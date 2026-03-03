@@ -17,6 +17,7 @@ cc_library(
         "libfdt_env.h",
         "libfdt_internal.h",
     ],
+    includes = ["."],
     visibility = ["//visibility:public"],
 )
 
@@ -27,5 +28,6 @@ cc_library(
         "libfdt.h",
         "libfdt_env.h",
     ],
+    includes = ["."],
     visibility = ["//visibility:public"],
 )

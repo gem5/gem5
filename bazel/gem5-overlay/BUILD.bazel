@@ -16,10 +16,22 @@ load(
     "gem5_sim_object_aggregate",
     "gem5_switching_headers",
 )
+load("//rules:debug_flags_all.bzl", "ALL_DEBUG_FLAGS")
+load("//rules:simobject_py_files.bzl", "SIMOBJECT_PY_FILES")
 
 package(default_visibility = ["//visibility:public"])
 
 exports_files(["LICENSE"])
+
+# ---------------------------------------------------------------------------
+# Public API headers from include/ directory.
+# Source code includes these as <gem5/asm/generic/m5ops.h> etc.
+# ---------------------------------------------------------------------------
+cc_library(
+    name = "gem5_include_hdrs",
+    hdrs = glob(["include/**/*.h"]),
+    includes = ["include"],
+)
 
 # ---------------------------------------------------------------------------
 # Config headers: generated config/*.hh files matching CMake's Kconfig output.
@@ -335,12 +347,21 @@ gem5_sim_object_aggregate(
         "//configs:python_enabled": True,
         "//conditions:default": False,
     }),
+    simobject_py_files = SIMOBJECT_PY_FILES,
+    # Header-only deps: enough for #include "params/*.hh" and "enums/*.hh"
     deps = [
         ":gem5_config_headers",
         "//src:_gem5_base_hdrs",
+    ],
+    # Compiled deps: the generated .cc files include sim/sim_object.hh and
+    # other deep headers that transitively pull in debug/*.hh. Provide
+    # _gem5_base_hdrs (source headers), all debug flags, pybind11, and Python.
+    compiled_deps = [
+        "//src:_gem5_base_hdrs",
+        ":gem5_config_headers",
         "@gem5_ext_pybind11//:pybind11",
         "@system_python//:python",
-    ],
+    ] + ALL_DEBUG_FLAGS,
 )
 
 # ---------------------------------------------------------------------------
@@ -366,6 +387,7 @@ cc_library(
 
         # ---- Generated SimObject params and enums ----
         "//:sim_object_params",
+        "//:sim_object_params_srcs",
 
         # ---- Global ext/ libs (pervasively used) ----
         "@gem5_ext_fputils//:fputils",
@@ -426,7 +448,6 @@ cc_library(
         "//configs:tlm_enabled": [
             "//src/mem/ruby/protocol/chi/tlm:chi_tlm",
             "//src/mem/ruby/protocol/chi/tlm:chi_tlm_simobjects",
-            "//src/mem/ruby/protocol/chi/tlm:chi_tlm_pysources",
         ],
         "//conditions:default": [],
     }) + select({
@@ -441,6 +462,11 @@ cc_library(
             "//src/python:pysources",
             "//src/python:importer_code",
             "//src/python:defines_pysource",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:tlm_python_enabled": [
+            "//src/mem/ruby/protocol/chi/tlm:chi_tlm_pysources",
         ],
         "//conditions:default": [],
     }),

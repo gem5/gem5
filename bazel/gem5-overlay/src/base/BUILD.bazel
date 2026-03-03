@@ -34,6 +34,7 @@ cc_library(
     ],
     include_prefix = "base",
     strip_include_prefix = "",
+    deps = ["//:gem5_config_headers"],
 )
 
 # -- Debug flags --

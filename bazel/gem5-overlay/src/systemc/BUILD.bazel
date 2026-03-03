@@ -4,8 +4,11 @@ Conditionally included when //configs:systemc_enabled is True.
 """
 
 load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:defs.bzl", "gem5_debug_flag")
 
 package(default_visibility = ["//visibility:public"])
+
+gem5_debug_flag(name = "TlmBridge", desc = "TLM bridge debugging")
 
 cc_library(
     name = "systemc",

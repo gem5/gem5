@@ -95,6 +95,12 @@ config_setting(
     flag_values = {":use_kvm": "True", ":use_arm_isa": "True"},
 )
 
+# Compound: TLM enabled with Python (for TLM Python package embedding)
+config_setting(
+    name = "tlm_python_enabled",
+    flag_values = {":build_tlm": "True", ":use_python": "True"},
+)
+
 # ---- Feature detection config_settings ----
 config_setting(name = "posix_clock_enabled", flag_values = {":use_posix_clock": "True"})
 config_setting(name = "perf_attr_exclude_host_enabled", flag_values = {":have_perf_attr_exclude_host": "True"})

@@ -21,6 +21,7 @@ filegroup(
         "network/fault_model/*.hh",
         "network/garnet/*.hh",
         "network/simple/*.hh",
+        "network/simple/routing/*.hh",
         "profiler/*.hh",
         "slicc_interface/*.hh",
         "structures/*.hh",

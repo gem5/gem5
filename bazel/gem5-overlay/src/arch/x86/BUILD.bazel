@@ -26,7 +26,7 @@ filegroup(
 gem5_isa_desc(
     name = "x86_isa_desc",
     desc = "isa/main.isa",
-    isa_sources = glob(["isa/**/*.isa"]),
+    isa_sources = glob(["isa/**/*.isa", "isa/**/*.py"]),
     decoder_splits = 1,
     exec_splits = 1,
     deps = ["//src:gem5_hdrs"],

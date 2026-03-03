@@ -64,6 +64,7 @@ filegroup(
     name = "grammar_files",
     srcs = [
         "code_formatter.py",
+        "file_utils.py",
         "grammar.py",
     ],
 )
@@ -117,5 +118,6 @@ filegroup(
         "enum_hh.py",
         "enum_cc.py",
         "code_formatter.py",
+        "file_utils.py",
     ],
 )

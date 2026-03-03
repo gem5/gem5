@@ -11,7 +11,7 @@ package(default_visibility = ["//visibility:public"])
 # -- Header filegroup for dev hdrs_files aggregation --
 filegroup(
     name = "hdrs_files",
-    srcs = glob(["*.hh"]),
+    srcs = glob(["*.hh", "*.h"]),
 )
 
 gem5_debug_flag(name = "HSAPacketProcessor", desc = "HSA packet processor debugging")

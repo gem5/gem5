@@ -4,11 +4,13 @@ cc_library(
     name = "dramsim2",
     srcs = glob(["*.cpp"]),
     hdrs = glob(["*.h"]),
+    includes = ["."],
     visibility = ["//visibility:public"],
 )
 
 cc_library(
     name = "hdrs",
     hdrs = glob(["*.h"]),
+    includes = ["."],
     visibility = ["//visibility:public"],
 )

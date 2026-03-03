@@ -8,6 +8,7 @@ embedded Python source library (pysources).
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
 load(
     "//rules:defs.bzl",
+    "gem5_blob",
     "gem5_embedded_python_library",
     "gem5_gen_defines",
     "gem5_py_source",
@@ -16,13 +17,49 @@ load(
 package(default_visibility = ["//visibility:public"])
 
 # ---------------------------------------------------------------------------
-# Python embedding C++ sources (pybind11 bindings)
+# m5ImporterCode blob: compressed importer.py bytecode embedded as C++ array.
+# importer.cc includes "python/m5ImporterCode.hh" to access the blob.
+# ---------------------------------------------------------------------------
+gem5_blob(
+    name = "m5ImporterCode",
+    src = "importer.py",
+    symbol = "m5ImporterCode",
+    include_prefix = "python",
+)
+
+# ---------------------------------------------------------------------------
+# Python embedding core: EmbeddedPython infrastructure needed by gem5py_m5.
+# Only depends on _gem5_base_hdrs (no SimObject params) to break the cycle:
+#   sim_object_params -> gem5py_m5 -> python_core -> _gem5_base_hdrs
+# ---------------------------------------------------------------------------
+cc_library(
+    name = "python_core",
+    srcs = [
+        "embedded.cc",
+        "importer.cc",
+    ],
+    hdrs = [
+        "embedded.hh",
+        "pybind11/pybind.hh",
+        "pybind_init.hh",
+    ],
+    includes = ["."],
+    deps = [
+        ":m5ImporterCode",
+        "//src:_gem5_base_hdrs",
+        "@gem5_ext_pybind11//:pybind11",
+        "@system_python//:python",
+    ],
+    alwayslink = True,
+)
+
+# ---------------------------------------------------------------------------
+# Python pybind11 bindings: SimObject-dependent wrappers compiled only for
+# the final gem5 binary (not gem5py_m5). Depends on full gem5_hdrs.
 # ---------------------------------------------------------------------------
 cc_library(
     name = "python",
     srcs = [
-        "embedded.cc",
-        "importer.cc",
         "pybind11/core.cc",
         "pybind11/debug.cc",
         "pybind11/event.cc",
@@ -30,13 +67,10 @@ cc_library(
         "pybind11/port.cc",
         "pybind11/stats.cc",
     ],
-    hdrs = [
-        "embedded.hh",
-        "pybind11/core.hh",
-    ],
     includes = ["."],
     deps = [
-        "//src:_gem5_base_hdrs",
+        ":python_core",
+        "//src:gem5_hdrs",
         "@gem5_ext_pybind11//:pybind11",
         "@system_python//:python",
     ],
@@ -57,7 +91,7 @@ cc_binary(
     name = "gem5py",
     srcs = ["gem5py.cc"],
     deps = [
-        ":python",
+        ":python_core",
         "@gem5_ext_pybind11//:pybind11",
         "@system_python//:python",
     ],
@@ -71,6 +105,7 @@ gem5_py_source(
     name = "importer_code",
     src = "importer.py",
     module_path = "importer",
+    deps = [":embedded_hdr"],
 )
 
 # ---------------------------------------------------------------------------
@@ -115,6 +150,7 @@ gem5_gen_defines(
     have_protobuf = select({"//configs:protobuf_enabled": "True", "//conditions:default": "False"}),
     have_png = select({"//configs:png_enabled": "True", "//conditions:default": "False"}),
     have_hdf5 = select({"//configs:hdf5_enabled": "True", "//conditions:default": "False"}),
+    have_tuntap = select({"//configs:tuntap_enabled": "True", "//conditions:default": "False"}),
 )
 
 # Marshal the generated defines.py into C++ for embedding
@@ -122,6 +158,7 @@ gem5_py_source(
     name = "defines_pysource",
     src = ":_gen_defines",
     module_path = "m5.defines",
+    deps = [":embedded_hdr"],
 )
 
 # ---------------------------------------------------------------------------
@@ -140,6 +177,21 @@ _ALL_PY = glob(
     exclude = ["**/*_test.py", "**/test_*.py"],
 )
 
+# Header-only target for python/embedded.hh. Used by pysources and other
+# embedded Python cc_libraries that #include "python/embedded.hh" and need
+# the include root at src/ level (not src/python/).
+cc_library(
+    name = "embedded_hdr",
+    hdrs = ["embedded.hh"],
+    include_prefix = "python",
+    strip_include_prefix = "",
+    deps = [
+        "//:gem5_config_headers",
+        "@gem5_ext_pybind11//:pybind11",
+        "@system_python//:python",
+    ],
+)
+
 gem5_embedded_python_library(
     name = "pysources",
     modules = {
@@ -147,6 +199,7 @@ gem5_embedded_python_library(
         for f in _ALL_PY
     },
     deps = [
+        ":embedded_hdr",
         "//src:_gem5_base_hdrs",
     ],
 )
@@ -159,7 +212,7 @@ cc_binary(
     name = "gem5py_m5",
     srcs = ["gem5py_m5.cc"],
     deps = [
-        ":python",
+        ":python_core",
         ":pysources",
         ":importer_code",
         ":defines_pysource",

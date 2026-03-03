@@ -12,6 +12,7 @@ def _gen_defines_py_impl(ctx):
     lines = [
         "buildEnv = {",
         "    'BUILD_ISA': '{}',".format(ctx.attr.build_isa),
+        "    'TARGET_ISA': '{}',".format(ctx.attr.build_isa),
         "    'USE_X86_ISA': {},".format(ctx.attr.use_x86_isa),
         "    'USE_ARM_ISA': {},".format(ctx.attr.use_arm_isa),
         "    'USE_RISCV_ISA': {},".format(ctx.attr.use_riscv_isa),
@@ -27,6 +28,7 @@ def _gen_defines_py_impl(ctx):
         "    'HAVE_PROTOBUF': {},".format(ctx.attr.have_protobuf),
         "    'HAVE_PNG': {},".format(ctx.attr.have_png),
         "    'HAVE_HDF5': {},".format(ctx.attr.have_hdf5),
+        "    'HAVE_TUNTAP': {},".format(ctx.attr.have_tuntap),
         "}",
     ]
 
@@ -52,6 +54,7 @@ _gen_defines_py = rule(
         "have_protobuf": attr.string(default = "False"),
         "have_png": attr.string(default = "False"),
         "have_hdf5": attr.string(default = "False"),
+        "have_tuntap": attr.string(default = "False"),
     },
 )
 

@@ -28,11 +28,14 @@ cc_library(
         "//src/arch:hdrs_files",
         "//src/gpu-compute:hdrs_files",
         "//src/proto:hdrs_files",
+        "//src/sst:hdrs_files",
+        "//src/learning_gem5/part2:hdrs_files",
     ],
     deps = [
         ":gem5_ext_hdrs",
         "//:gem5_config_headers",
         "//:gem5_switching_hdrs",
+        "//:gem5_include_hdrs",
     ],
     includes = ["."],
 )
@@ -65,6 +68,8 @@ cc_library(
         "@gem5_ext_iostream3//:iostream3",
         "@gem5_ext_magic_enum//:magic_enum",
         "@gem5_ext_dnet//:dnet",
+        "@gem5_ext_gdbremote//:gdbremote",
+        "@gem5_ext_softfloat//:softfloat",
     ] + select({
         "//configs:systemc_enabled": ["@gem5_ext_systemc//:hdrs"],
         "//conditions:default": [],

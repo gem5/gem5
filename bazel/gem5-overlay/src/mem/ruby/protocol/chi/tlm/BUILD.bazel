@@ -61,7 +61,10 @@ gem5_embedded_python_library(
         "TlmController.py": "m5.objects.TlmController",
         "TlmGenerator.py": "m5.objects.TlmGenerator",
     },
-    deps = ["//src:_gem5_base_hdrs"],
+    deps = [
+        "//src/python:embedded_hdr",
+        "//src:_gem5_base_hdrs",
+    ],
     target_compatible_with = select({
         "//configs:tlm_enabled": [],
         "//conditions:default": ["@platforms//:incompatible"],
@@ -76,7 +79,10 @@ gem5_embedded_python_library(
         "python/port.py": "m5.tlm_chi.port",
         "python/utils.py": "m5.tlm_chi.utils",
     },
-    deps = ["//src:_gem5_base_hdrs"],
+    deps = [
+        "//src/python:embedded_hdr",
+        "//src:_gem5_base_hdrs",
+    ],
     target_compatible_with = select({
         "//configs:tlm_enabled": [],
         "//conditions:default": ["@platforms//:incompatible"],

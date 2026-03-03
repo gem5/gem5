@@ -5,7 +5,15 @@ load("//rules:defs.bzl", "gem5_debug_flag")
 
 package(default_visibility = ["//visibility:public"])
 
+# -- Header filegroup for gem5_hdrs aggregation --
+filegroup(
+    name = "hdrs_files",
+    srcs = glob(["*.hh"]),
+)
+
 gem5_debug_flag(name = "HelloExample", desc = "For Learning gem5 Part 2. Simple example debug flag")
+gem5_debug_flag(name = "SimpleMemobj", desc = "For Learning gem5 Part 2.")
+gem5_debug_flag(name = "SimpleCache", desc = "For Learning gem5 Part 2.")
 
 cc_library(
     name = "learning",

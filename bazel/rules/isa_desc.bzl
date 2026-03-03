@@ -82,11 +82,12 @@ def _isa_desc_gen_impl(ctx):
 import sys
 import os
 
-input_file = sys.argv[1]
-output_dir = sys.argv[2]
-parser_init = sys.argv[3]
-ply_init = sys.argv[4]
-grammar_file = sys.argv[5]
+input_file = os.path.abspath(sys.argv[1])
+output_dir = os.path.abspath(sys.argv[2])
+parser_init = os.path.abspath(sys.argv[3])
+ply_init = os.path.abspath(sys.argv[4])
+grammar_file = os.path.abspath(sys.argv[5])
+source_root = os.path.abspath(sys.argv[6])
 
 arch_dir = os.path.dirname(os.path.dirname(parser_init))
 sys.path.insert(0, arch_dir)
@@ -97,6 +98,10 @@ sys.path.insert(0, ply_parent)
 grammar_dir = os.path.dirname(grammar_file)
 sys.path.insert(0, grammar_dir)
 
+# Change to source root so ISA files' relative sys.path entries
+# (e.g. "src/arch/x86/isa/") resolve correctly.
+os.chdir(source_root)
+
 from isa_parser import ISAParser
 
 os.makedirs(output_dir, exist_ok=True)
@@ -105,16 +110,24 @@ parser.parse_isa_desc(input_file)
 """,
     )
 
+    # Compute source root from the desc file path at analysis time.
+    # desc_file is e.g. "external/.../src/arch/x86/isa/main.isa";
+    # strip everything from "src/arch/" onwards to get the repo root.
+    desc_path = desc_file.path
+    src_arch_idx = desc_path.find("src/arch/")
+    source_root = desc_path[:src_arch_idx] if src_arch_idx >= 0 else "."
+
     ctx.actions.run_shell(
         outputs = outputs,
         inputs = [desc_file, script] + ctx.files.isa_sources + parser_inputs,
-        command = "python3 {} {} {} {} {} {}".format(
+        command = "python3 {} {} {} {} {} {} {}".format(
             script.path,
             desc_file.path,
             output_dir,
             parser_init.path if parser_init else "",
             ply_init.path if ply_init else "",
             grammar_file.path if grammar_file else "",
+            source_root,
         ),
         mnemonic = "ISADesc",
         progress_message = "Compiling ISA description {}".format(desc_file.short_path),

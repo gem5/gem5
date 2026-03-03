@@ -14,6 +14,7 @@ filegroup(
     name = "hdrs_files",
     srcs = glob([
         "*.hh",
+        "fastmodel/*.hh",
         "freebsd/*.hh",
         "insts/*.hh",
         "linux/*.hh",

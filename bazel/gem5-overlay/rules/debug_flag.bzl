@@ -2,18 +2,30 @@
 
 Debug flags are generated entirely in Starlark (no external scripts).
 Each flag produces debug/{name}.hh and debug/{name}.cc as a cc_library.
+
+The generated code uses the inline-union pattern from the official gem5
+debugflaghh.py / debugflagcc.py scripts: each flag is wrapped in an
+inline union that prevents destruction, and an inline constexpr reference
+aliases the union member for global access.
 """
 
 load("@rules_cc//cc:defs.bzl", "cc_library")
 
 def _debug_flag_hh(name, desc, fmt, components):
-    """Generate the content of debug/{name}.hh."""
-    guard = "DEBUG_{}_HH".format(name.upper())
+    """Generate the content of debug/{name}.hh matching official pattern."""
+    guard = "__DEBUG_{}_HH__".format(name.upper())
     lines = [
         "#ifndef {}".format(guard),
         "#define {}".format(guard),
         "",
+        '#include "base/compiler.hh"',
         '#include "base/debug.hh"',
+    ]
+
+    for comp in components:
+        lines.append('#include "debug/{}.hh"'.format(comp))
+
+    lines += [
         "",
         "namespace gem5",
         "{",
@@ -21,31 +33,50 @@ def _debug_flag_hh(name, desc, fmt, components):
         "namespace debug",
         "{",
         "",
+        "namespace unions",
+        "{",
+        "",
     ]
 
     if components:
-        lines.append("class {} : public CompoundFlag".format(name))
-        lines.append("{")
-        lines.append("  public:")
-        lines.append("    {}();".format(name))
-        lines.append("};")
-    elif fmt:
-        lines.append("class {} : public SimpleFlag".format(name))
-        lines.append("{")
-        lines.append("  public:")
-        lines.append("    {}();".format(name))
-        lines.append("};")
+        comp_refs = ",\n            ".join(
+            ["(Flag *)&::gem5::debug::{}".format(c) for c in components],
+        )
+        lines += [
+            "inline union {}".format(name),
+            "{",
+            "    ~{}() {{}}".format(name),
+            "",
+            "    CompoundFlag flag{};".format(name),
+            "",
+            '    {}() : flag{}("{}", "{}",'.format(name, name, name, desc),
+            "        {",
+            "            {}".format(comp_refs),
+            "        }) {}",
+            "",
+            "}} instance{};".format(name),
+        ]
     else:
-        lines.append("class {} : public SimpleFlag".format(name))
-        lines.append("{")
-        lines.append("  public:")
-        lines.append("    {}();".format(name))
-        lines.append("};")
+        fmt_str = "true" if fmt else "false"
+        lines += [
+            "inline union {}".format(name),
+            "{",
+            "    ~{}() {{}}".format(name),
+            "    SimpleFlag flag{};".format(name),
+            "",
+            '    {}() : flag{}("{}", "{}", {}) {{}}'.format(name, name, name, desc, fmt_str),
+            "",
+            "}} instance{};".format(name),
+        ]
 
     lines += [
         "",
-        "} // namespace debug",
+        "} // namespace unions",
         "",
+        "inline constexpr const auto& {} =".format(name),
+        "    ::gem5::debug::unions::instance{}.flag{};".format(name, name),
+        "",
+        "} // namespace debug",
         "} // namespace gem5",
         "",
         "#endif // {}".format(guard),
@@ -53,51 +84,9 @@ def _debug_flag_hh(name, desc, fmt, components):
     ]
     return "\n".join(lines)
 
-def _debug_flag_cc(name, desc, fmt, components):
-    """Generate the content of debug/{name}.cc."""
-    lines = [
-        '#include "debug/{}.hh"'.format(name),
-        "",
-    ]
-
-    if components:
-        for comp in components:
-            lines.append('#include "debug/{}.hh"'.format(comp))
-        lines.append("")
-
-    lines += [
-        "namespace gem5",
-        "{",
-        "",
-        "namespace debug",
-        "{",
-        "",
-    ]
-
-    if components:
-        lines.append("{}::{}()".format(name, name))
-        lines.append('    : CompoundFlag("{}", "{}", {{'.format(name, desc))
-        for comp in components:
-            lines.append("        &{},".format(comp))
-        lines.append("    })")
-        lines.append("{}")
-    elif fmt:
-        lines.append("{}::{}()".format(name, name))
-        lines.append('    : SimpleFlag("{}", "{}", true)'.format(name, desc))
-        lines.append("{}")
-    else:
-        lines.append("{}::{}()".format(name, name))
-        lines.append('    : SimpleFlag("{}", "{}", false)'.format(name, desc))
-        lines.append("{}")
-
-    lines += [
-        "",
-        "} // namespace debug",
-        "",
-        "} // namespace gem5",
-        "",
-    ]
-    return "\n".join(lines)
+def _debug_flag_cc(name):
+    """Generate the content of debug/{name}.cc (just includes the header)."""
+    return '#include "debug/{}.hh"\n'.format(name)
 
 def _debug_flag_gen_impl(ctx):
     hh_file = ctx.actions.declare_file("debug/{}.hh".format(ctx.attr.flag_name))
@@ -109,12 +98,7 @@ def _debug_flag_gen_impl(ctx):
         ctx.attr.fmt,
         ctx.attr.components,
     )
-    cc_content = _debug_flag_cc(
-        ctx.attr.flag_name,
-        ctx.attr.desc,
-        ctx.attr.fmt,
-        ctx.attr.components,
-    )
+    cc_content = _debug_flag_cc(ctx.attr.flag_name)
 
     ctx.actions.write(hh_file, hh_content)
     ctx.actions.write(cc_file, cc_content)
