@@ -90,7 +90,7 @@ jobs:
               run: |
                   BUILD_TYPE="GEM5_$(echo '${{ matrix.type }}' | tr '[:lower:]' '[:upper:]')"
                   cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DGEM5_BUILD_VARIANT=ALL -DGEM5_NO_COMPRESS_DEBUG=ON -B build/ALL
-                  ninja -C build/ALL gem5_tests -j$(nproc)
+                  ninja -C build/ALL gem5_tests gem5 -j$(nproc)
                   cd build/ALL && ctest --output-on-failure
             - run: echo "This job's status is ${{ job.status }}."
 
