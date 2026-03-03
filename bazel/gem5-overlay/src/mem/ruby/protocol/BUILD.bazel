@@ -79,7 +79,7 @@ gem5_slicc_protocol(
 gem5_slicc_protocol(
     name = "CHI",
     src = "chi/CHI.slicc",
-    sm_sources = _SHARED_SM + glob(["chi/*.sm", "chi/generic/*.sm"]) +
+    sm_sources = _SHARED_SM + glob(["chi/*.sm"]) +
                  ["RubySlicc_interfaces.slicc"],
 )
 

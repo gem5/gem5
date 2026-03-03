@@ -423,7 +423,11 @@ cc_library(
         ],
         "//conditions:default": [],
     }) + select({
-        "//configs:tlm_enabled": ["//src/mem/ruby/protocol/chi/tlm:chi_tlm"],
+        "//configs:tlm_enabled": [
+            "//src/mem/ruby/protocol/chi/tlm:chi_tlm",
+            "//src/mem/ruby/protocol/chi/tlm:chi_tlm_simobjects",
+            "//src/mem/ruby/protocol/chi/tlm:chi_tlm_pysources",
+        ],
         "//conditions:default": [],
     }) + select({
         "//configs:systemc_enabled": ["//src/systemc:systemc"],

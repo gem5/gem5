@@ -155,7 +155,7 @@ package(default_visibility = ["//visibility:public"])
 cc_import(
     name = "armtlmchi",
     shared_library = "libarmtlmchi.so",
-    hdrs = glob(["include/**/*.hh"]),
+    hdrs = glob(["include/**/*.hh", "include/**/*.h"]),
 )
 """,
         )

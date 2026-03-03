@@ -137,15 +137,23 @@ def gem5_sim_object(name, py_file, sim_objects = [], enums = [],
 # ---------------------------------------------------------------------------
 
 def _sim_object_aggregate_gen_impl(ctx):
-    """Discover all SimObject classes and generate all params/enums."""
+    """Discover all SimObject classes and generate all params/enums.
+
+    Produces three separate tree artifacts for explicit output mapping:
+      params_hdrs:  params/{ClassName}.hh
+      enums:        enums/{EnumName}.hh, enums/{EnumName}.cc
+      pybind_srcs:  python/_m5/param_{ClassName}.cc
+
+    All three are inside a single parent directory so that one includes=
+    entry exposes params/ and enums/ at the correct include depth.
+    """
     gem5py_m5 = ctx.executable.gem5py_m5
     use_python = "True" if ctx.attr.use_python else "False"
 
-    output_dir = ctx.actions.declare_directory("simobj_aggregate")
+    # Single parent tree artifact preserving the params/enums/python/_m5
+    # directory structure that source code expects via #include "params/..."
+    output_dir = ctx.actions.declare_directory(ctx.label.name + "_out")
 
-    # The generation script runs inside gem5py_m5 which has all m5.* embedded.
-    # It discovers all SimObject classes, generates param headers/sources,
-    # and generates enum headers/sources.
     script = ctx.actions.declare_file("_gen_all_simobjects.py")
     ctx.actions.write(
         output = script,
@@ -157,7 +165,6 @@ output_dir = sys.argv[1]
 build_tools_dir = sys.argv[2]
 use_python = sys.argv[3] == "True"
 
-# Add build_tools to path for generation functions
 sys.path.insert(0, build_tools_dir)
 
 from sim_object_param_struct_hh import write_header_file as write_param_hh
@@ -165,7 +172,6 @@ from sim_object_param_struct_cc import write_cc_file as write_param_cc
 from enum_hh import write_header_file as write_enum_hh
 from enum_cc import write_cc_file as write_enum_cc
 
-# Import m5 to register all SimObject classes
 import m5
 import m5.objects
 from m5.SimObject import SimObject
@@ -175,27 +181,26 @@ os.makedirs(os.path.join(output_dir, "params"), exist_ok=True)
 os.makedirs(os.path.join(output_dir, "enums"), exist_ok=True)
 os.makedirs(os.path.join(output_dir, "python", "_m5"), exist_ok=True)
 
-# Track generated enums to avoid duplicates
 generated_enums = set()
 
-# Generate param structs and pybind bindings for all SimObjects
 for name in sorted(SimObject.allClasses.keys()):
     cls = SimObject.allClasses[name]
-    hh_path = os.path.join(output_dir, "params", name + ".hh")
-    cc_path = os.path.join(output_dir, "python", "_m5", "param_" + name + ".cc")
-    write_param_hh(cls, hh_path)
-    write_param_cc(cls, use_python, cc_path)
+    write_param_hh(cls, os.path.join(output_dir, "params", name + ".hh"))
+    write_param_cc(cls, use_python,
+                   os.path.join(output_dir, "python", "_m5",
+                                "param_" + name + ".cc"))
 
-    # Discover enums from this SimObject's local params
     for param_name, param in sorted(cls._params.local.items()):
         for ptype in getattr(param, "ptypes", []):
             if issubclass(ptype, Enum) and ptype.__name__ not in generated_enums:
                 enum_name = ptype.__name__
                 generated_enums.add(enum_name)
-                enum_hh_path = os.path.join(output_dir, "enums", enum_name + ".hh")
-                enum_cc_path = os.path.join(output_dir, "enums", enum_name + ".cc")
-                write_enum_hh(ptype, enum_hh_path)
-                write_enum_cc(ptype, use_python, enum_cc_path)
+                write_enum_hh(ptype,
+                              os.path.join(output_dir, "enums",
+                                           enum_name + ".hh"))
+                write_enum_cc(ptype, use_python,
+                              os.path.join(output_dir, "enums",
+                                           enum_name + ".cc"))
 
 print("Generated params for", len(SimObject.allClasses), "SimObjects")
 print("Generated", len(generated_enums), "enum types")
@@ -220,7 +225,14 @@ print("Generated", len(generated_enums), "enum types")
         progress_message = "Generating all SimObject params and enums",
     )
 
-    return [DefaultInfo(files = depset([output_dir]))]
+    return [
+        DefaultInfo(files = depset([output_dir])),
+        OutputGroupInfo(
+            params_hdrs = depset([output_dir]),
+            enums = depset([output_dir]),
+            pybind_srcs = depset([output_dir]),
+        ),
+    ]
 
 _sim_object_aggregate_gen = rule(
     implementation = _sim_object_aggregate_gen_impl,
@@ -268,7 +280,7 @@ def gem5_sim_object_aggregate(name, gem5py_m5 = "//src/python:gem5py_m5",
         srcs = [gen_name],
         hdrs = [gen_name],
         deps = deps,
-        includes = ["."],
+        includes = [gen_name + "_out"],
         visibility = visibility,
         alwayslink = True,
     )

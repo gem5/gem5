@@ -71,7 +71,8 @@ def gem5_py_source(name, src, module_path, visibility = None, deps = [], **kwarg
         alwayslink = True,
     )
 
-def gem5_embedded_python_library(name, modules, visibility = None, deps = [], copts = []):
+def gem5_embedded_python_library(name, modules, visibility = None, deps = [],
+                                  copts = [], target_compatible_with = None):
     """Batch-embed multiple Python source files.
 
     Args:
@@ -80,6 +81,7 @@ def gem5_embedded_python_library(name, modules, visibility = None, deps = [], co
         visibility: Visibility.
         deps: Additional dependencies.
         copts: Compiler flags.
+        target_compatible_with: Platform constraints (forwarded to cc_library).
     """
     gen_targets = []
     for src, modpath in modules.items():
@@ -92,6 +94,10 @@ def gem5_embedded_python_library(name, modules, visibility = None, deps = [], co
         )
         gen_targets.append(gen_name)
 
+    kwargs = {}
+    if target_compatible_with != None:
+        kwargs["target_compatible_with"] = target_compatible_with
+
     cc_library(
         name = name,
         srcs = [":{}".format(t) for t in gen_targets],
@@ -99,4 +105,5 @@ def gem5_embedded_python_library(name, modules, visibility = None, deps = [], co
         deps = deps,
         copts = copts,
         alwayslink = True,
+        **kwargs
     )
