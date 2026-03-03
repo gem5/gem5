@@ -18,14 +18,17 @@ build --dynamic_mode=off
 build:dbg --compilation_mode=dbg
 build:dbg --copt=-O0 --copt=-ggdb3
 build:dbg --copt=-DGEM5_DEBUG --copt=-DTRACING_ON=1
+build:dbg --host_copt=-DGEM5_DEBUG --host_copt=-DTRACING_ON=1
 
 build:opt --compilation_mode=opt
 build:opt --copt=-O3 --copt=-g
 build:opt --copt=-DTRACING_ON=1
+build:opt --host_copt=-DTRACING_ON=1
 
 build:fast --compilation_mode=opt
 build:fast --copt=-O3
 build:fast --copt=-DNDEBUG --copt=-DTRACING_ON=0
+build:fast --host_copt=-DNDEBUG --host_copt=-DTRACING_ON=0
 
 # ---- ISA preset configs (directly set bool_flags) ----
 build:x86 --@gem5_sources//configs:use_x86_isa=True

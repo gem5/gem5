@@ -8,101 +8,42 @@ auto-discovery finds all SimObject classes.
 The module path for each file is m5.objects.<stem> where <stem> is the
 filename without the .py extension.
 
+Files are split by ISA/feature to avoid generating param structs whose
+Params::create() methods reference constructors from disabled subsystem
+libraries. The cc_import(alwayslink=True) whole-archive approach forces
+ALL param objects to be linked, so any param referencing an uncompiled
+SimObject constructor would cause an undefined symbol error.
+
 Optional subsystem SimObjects (FastModel, KVM, SystemC, SST, DRAMSim2,
-DRAMSys, capstone, protobuf-dependent) are excluded here because their
-class headers transitively include external library headers that may not
-be available. They should be added back via select() when those features
-are properly gated.
+DRAMSim3, DRAMSys, capstone, protobuf-dependent, Ruby) are excluded from
+BASE because their class headers transitively include external library
+headers that may not be available. Feature-gated in BUILD.bazel:
+  DRAMSim3 -> dramsim3_enabled, TrafficGen -> protobuf_enabled.
+BaseSemihosting is in ARM and RISC-V lists (its C++ is only compiled for
+those ISAs). Others should be added back via select() when properly gated.
 """
 
-# Always-available SimObject .py files (excluding optional subsystems)
-SIMOBJECT_PY_FILES = [
-    "src/arch/amdgpu/common/X86GPUTLB.py",
-    "src/arch/amdgpu/vega/VegaGPUTLB.py",
-    "src/arch/arm/ArmCPU.py",
-    "src/arch/arm/ArmDecoder.py",
-    "src/arch/arm/ArmFsWorkload.py",
-    "src/arch/arm/ArmISA.py",
-    "src/arch/arm/ArmInterrupts.py",
-    "src/arch/arm/ArmMMU.py",
-    "src/arch/arm/ArmNativeTrace.py",
-    "src/arch/arm/ArmPMU.py",
-    "src/arch/arm/ArmSeWorkload.py",
-    "src/arch/arm/ArmSemihosting.py",
-    "src/arch/arm/ArmSystem.py",
-    "src/arch/arm/ArmTLB.py",
-    # fastmodel/ excluded: proprietary ARM FastModel SDK headers
-    # kvm/ excluded: optional KVM host support
-    "src/arch/arm/tracers/TarmacTrace.py",
+# ISA-independent SimObject .py files (always compiled)
+SIMOBJECT_PY_FILES_BASE = [
+    # arch/generic
     "src/arch/generic/BaseISA.py",
     "src/arch/generic/BaseInterrupts.py",
     "src/arch/generic/BaseMMU.py",
-    "src/arch/generic/BaseSemihosting.py",
     "src/arch/generic/BaseTLB.py",
     "src/arch/generic/InstDecoder.py",
-    "src/arch/mips/MipsCPU.py",
-    "src/arch/mips/MipsDecoder.py",
-    "src/arch/mips/MipsISA.py",
-    "src/arch/mips/MipsInterrupts.py",
-    "src/arch/mips/MipsMMU.py",
-    "src/arch/mips/MipsSeWorkload.py",
-    "src/arch/mips/MipsTLB.py",
-    "src/arch/power/PowerCPU.py",
-    "src/arch/power/PowerDecoder.py",
-    "src/arch/power/PowerISA.py",
-    "src/arch/power/PowerInterrupts.py",
-    "src/arch/power/PowerMMU.py",
-    "src/arch/power/PowerSeWorkload.py",
-    "src/arch/power/PowerTLB.py",
-    "src/arch/riscv/PMAChecker.py",
-    "src/arch/riscv/PMP.py",
-    "src/arch/riscv/RiscvCPU.py",
-    "src/arch/riscv/RiscvDecoder.py",
-    "src/arch/riscv/RiscvFsWorkload.py",
-    "src/arch/riscv/RiscvISA.py",
-    "src/arch/riscv/RiscvInterrupts.py",
-    "src/arch/riscv/RiscvMMU.py",
-    "src/arch/riscv/RiscvSeWorkload.py",
-    "src/arch/riscv/RiscvSemihosting.py",
-    "src/arch/riscv/RiscvSystem.py",
-    "src/arch/riscv/RiscvTLB.py",
-    "src/arch/sparc/SparcCPU.py",
-    "src/arch/sparc/SparcDecoder.py",
-    "src/arch/sparc/SparcFsWorkload.py",
-    "src/arch/sparc/SparcISA.py",
-    "src/arch/sparc/SparcInterrupts.py",
-    "src/arch/sparc/SparcMMU.py",
-    "src/arch/sparc/SparcNativeTrace.py",
-    "src/arch/sparc/SparcSeWorkload.py",
-    "src/arch/sparc/SparcTLB.py",
-    "src/arch/x86/X86CPU.py",
-    "src/arch/x86/X86Decoder.py",
-    "src/arch/x86/X86FsWorkload.py",
-    "src/arch/x86/X86ISA.py",
-    "src/arch/x86/X86LocalApic.py",
-    "src/arch/x86/X86MMU.py",
-    "src/arch/x86/X86NativeTrace.py",
-    "src/arch/x86/X86SeWorkload.py",
-    "src/arch/x86/X86TLB.py",
-    "src/arch/x86/bios/ACPI.py",
-    "src/arch/x86/bios/E820.py",
-    "src/arch/x86/bios/IntelMP.py",
-    "src/arch/x86/bios/SMBios.py",
-    # x86 kvm/ excluded: optional KVM host support
+    # base
     "src/base/Graphics.py",
     "src/base/filters/BloomFilters.py",
     "src/base/vnc/Vnc.py",
+    # cpu (ISA-independent)
     "src/cpu/BaseCPU.py",
     "src/cpu/CPUTracers.py",
-    # Capstone excluded: requires external capstone library
     "src/cpu/CpuCluster.py",
     "src/cpu/DummyChecker.py",
     "src/cpu/FuncUnit.py",
-    # InstPBTrace excluded: header includes proto/protoio.hh (protobuf)
     "src/cpu/StaticInstFlags.py",
     "src/cpu/TimingExpr.py",
     "src/cpu/checker/CheckerCPU.py",
-    # cpu kvm/ excluded: optional KVM host support
     "src/cpu/minor/BaseMinorCPU.py",
     "src/cpu/minor/MinorCPU.py",
     "src/cpu/o3/BaseO3CPU.py",
@@ -113,7 +54,6 @@ SIMOBJECT_PY_FILES = [
     "src/cpu/o3/O3CPU.py",
     "src/cpu/o3/O3Checker.py",
     "src/cpu/o3/SMT.py",
-    # ElasticTrace excluded: header includes proto/*.pb.h (protobuf)
     "src/cpu/o3/probe/SimpleTrace.py",
     "src/cpu/pred/BranchPredictor.py",
     "src/cpu/probes/InstTracker.py",
@@ -127,48 +67,16 @@ SIMOBJECT_PY_FILES = [
     "src/cpu/simple/TimingSimpleCPU.py",
     "src/cpu/simple/probes/LooppointAnalysis.py",
     "src/cpu/simple/probes/SimPoint.py",
-    # directedtest/ excluded: headers include SLICC-generated protocol headers
-    # garnet_synthetic_traffic/ excluded: Ruby-dependent
-    # gpu_ruby_test/ excluded: Ruby+GPU dependent
     "src/cpu/testers/memtest/MemTest.py",
-    # rubytest/ excluded: Ruby-dependent
     "src/cpu/testers/spatter_gen/SpatterGen.py",
     "src/cpu/testers/traffic_gen/BaseTrafficGen.py",
     "src/cpu/testers/traffic_gen/GUPSGen.py",
     "src/cpu/testers/traffic_gen/PyTrafficGen.py",
-    "src/cpu/testers/traffic_gen/TrafficGen.py",
-    # TraceCPU excluded: header includes proto/*.pb.h (protobuf)
+    # dev (ISA-independent)
     "src/dev/BadDevice.py",
     "src/dev/Device.py",
     "src/dev/Platform.py",
-    "src/dev/amdgpu/AMDGPU.py",
-    "src/dev/arm/AbstractNVM.py",
-    "src/dev/arm/Display.py",
-    "src/dev/arm/Doorbell.py",
-    "src/dev/arm/EnergyCtrl.py",
-    "src/dev/arm/FlashDevice.py",
-    "src/dev/arm/GenericTimer.py",
-    "src/dev/arm/Gic.py",
-    "src/dev/arm/Mpam.py",
-    "src/dev/arm/NoMali.py",
-    "src/dev/arm/RealView.py",
-    "src/dev/arm/SMMUv3.py",
-    "src/dev/arm/UFSHostDevice.py",
-    "src/dev/arm/VirtIOMMIO.py",
-    "src/dev/arm/css/MHU.py",
-    "src/dev/arm/css/Scmi.py",
-    "src/dev/arm/css/Scp.py",
-    "src/dev/hsa/HSADevice.py",
     "src/dev/i2c/I2C.py",
-    "src/dev/lupio/LupioBLK.py",
-    "src/dev/lupio/LupioIPI.py",
-    "src/dev/lupio/LupioPIC.py",
-    "src/dev/lupio/LupioRNG.py",
-    "src/dev/lupio/LupioRTC.py",
-    "src/dev/lupio/LupioSYS.py",
-    "src/dev/lupio/LupioTMR.py",
-    "src/dev/lupio/LupioTTY.py",
-    "src/dev/mips/Malta.py",
     "src/dev/net/Ethernet.py",
     "src/dev/pci/CopyEngine.py",
     "src/dev/pci/PciDevice.py",
@@ -176,17 +84,9 @@ SIMOBJECT_PY_FILES = [
     "src/dev/pci/PciUpstream.py",
     "src/dev/ps2/PS2.py",
     "src/dev/qemu/QemuFwCfg.py",
-    "src/dev/riscv/Clint.py",
-    "src/dev/riscv/HiFive.py",
-    "src/dev/riscv/LupV.py",
-    "src/dev/riscv/Plic.py",
-    "src/dev/riscv/PlicDevice.py",
-    "src/dev/riscv/RTC.py",
-    "src/dev/riscv/RiscvVirtIOMMIO.py",
     "src/dev/serial/Serial.py",
     "src/dev/serial/Terminal.py",
     "src/dev/serial/Uart.py",
-    "src/dev/sparc/T1000.py",
     "src/dev/storage/DiskImage.py",
     "src/dev/storage/Ide.py",
     "src/dev/storage/SimpleDisk.py",
@@ -195,33 +95,18 @@ SIMOBJECT_PY_FILES = [
     "src/dev/virtio/VirtIOBlock.py",
     "src/dev/virtio/VirtIOConsole.py",
     "src/dev/virtio/VirtIORng.py",
-    "src/dev/x86/Cmos.py",
-    "src/dev/x86/I8042.py",
-    "src/dev/x86/I82094AA.py",
-    "src/dev/x86/I8237.py",
-    "src/dev/x86/I8254.py",
-    "src/dev/x86/I8259.py",
-    "src/dev/x86/Pc.py",
-    "src/dev/x86/PcSpeaker.py",
-    "src/dev/x86/SouthBridge.py",
-    "src/dev/x86/X86Ide.py",
-    "src/dev/x86/X86QemuFwCfg.py",
-    "src/gpu-compute/GPU.py",
-    "src/gpu-compute/GPUStaticInstFlags.py",
-    "src/gpu-compute/LdsState.py",
+    # learning_gem5
     "src/learning_gem5/part2/HelloObject.py",
     "src/learning_gem5/part2/SimpleCache.py",
     "src/learning_gem5/part2/SimpleMemobj.py",
     "src/learning_gem5/part2/SimpleObject.py",
+    # mem
     "src/mem/AbstractMemory.py",
     "src/mem/AddrMapper.py",
     "src/mem/Bridge.py",
     "src/mem/CfiMemory.py",
     "src/mem/CommMonitor.py",
     "src/mem/DRAMInterface.py",
-    # DRAMSim2 excluded: header includes DRAMSim2/Callback.h (external)
-    # DRAMSys excluded: header includes DRAMSys/ headers (external)
-    "src/mem/DRAMsim3.py",
     "src/mem/ExternalMaster.py",
     "src/mem/ExternalSlave.py",
     "src/mem/HBMCtrl.py",
@@ -248,16 +133,13 @@ SIMOBJECT_PY_FILES = [
     "src/mem/cache/tags/partitioning_policies/PartitioningPolicies.py",
     "src/mem/probes/BaseMemProbe.py",
     "src/mem/probes/MemFootprintProbe.py",
-    # MemTraceProbe excluded: header includes proto/protoio.hh (protobuf)
     "src/mem/probes/StackDistProbe.py",
     "src/mem/qos/QoSMemCtrl.py",
     "src/mem/qos/QoSMemSinkCtrl.py",
     "src/mem/qos/QoSMemSinkInterface.py",
     "src/mem/qos/QoSPolicy.py",
     "src/mem/qos/QoSTurnaround.py",
-    # mem/ruby/ excluded: headers transitively include SLICC-generated
-    # protocol headers (AccessPermission.hh, MachineType.hh, etc.) which
-    # are only available after SLICC protocol compilation.
+    # sim
     "src/sim/ClockDomain.py",
     "src/sim/ClockedObject.py",
     "src/sim/DVFSHandler.py",
@@ -279,7 +161,148 @@ SIMOBJECT_PY_FILES = [
     "src/sim/power/ThermalDomain.py",
     "src/sim/power/ThermalModel.py",
     "src/sim/probe/Probe.py",
+    # sst
     "src/sst/OutgoingRequestBridge.py",
-    # systemc/ excluded: depends on ext SystemC library
-    # test_objects/ excluded: conditional build
+]
+
+# X86 ISA-specific SimObject .py files
+SIMOBJECT_PY_FILES_X86 = [
+    "src/arch/x86/X86CPU.py",
+    "src/arch/x86/X86Decoder.py",
+    "src/arch/x86/X86FsWorkload.py",
+    "src/arch/x86/X86ISA.py",
+    "src/arch/x86/X86LocalApic.py",
+    "src/arch/x86/X86MMU.py",
+    "src/arch/x86/X86NativeTrace.py",
+    "src/arch/x86/X86SeWorkload.py",
+    "src/arch/x86/X86TLB.py",
+    "src/arch/x86/bios/ACPI.py",
+    "src/arch/x86/bios/E820.py",
+    "src/arch/x86/bios/IntelMP.py",
+    "src/arch/x86/bios/SMBios.py",
+    "src/dev/x86/Cmos.py",
+    "src/dev/x86/I8042.py",
+    "src/dev/x86/I82094AA.py",
+    "src/dev/x86/I8237.py",
+    "src/dev/x86/I8254.py",
+    "src/dev/x86/I8259.py",
+    "src/dev/x86/Pc.py",
+    "src/dev/x86/PcSpeaker.py",
+    "src/dev/x86/SouthBridge.py",
+    "src/dev/x86/X86Ide.py",
+    "src/dev/x86/X86QemuFwCfg.py",
+]
+
+# ARM ISA-specific SimObject .py files
+SIMOBJECT_PY_FILES_ARM = [
+    "src/arch/generic/BaseSemihosting.py",
+    "src/arch/arm/ArmCPU.py",
+    "src/arch/arm/ArmDecoder.py",
+    "src/arch/arm/ArmFsWorkload.py",
+    "src/arch/arm/ArmISA.py",
+    "src/arch/arm/ArmInterrupts.py",
+    "src/arch/arm/ArmMMU.py",
+    "src/arch/arm/ArmNativeTrace.py",
+    "src/arch/arm/ArmPMU.py",
+    "src/arch/arm/ArmSeWorkload.py",
+    "src/arch/arm/ArmSemihosting.py",
+    "src/arch/arm/ArmSystem.py",
+    "src/arch/arm/ArmTLB.py",
+    "src/arch/arm/tracers/TarmacTrace.py",
+    "src/dev/arm/AbstractNVM.py",
+    "src/dev/arm/Display.py",
+    "src/dev/arm/Doorbell.py",
+    "src/dev/arm/EnergyCtrl.py",
+    "src/dev/arm/FlashDevice.py",
+    "src/dev/arm/GenericTimer.py",
+    "src/dev/arm/Gic.py",
+    "src/dev/arm/Mpam.py",
+    "src/dev/arm/NoMali.py",
+    "src/dev/arm/RealView.py",
+    "src/dev/arm/SMMUv3.py",
+    "src/dev/arm/UFSHostDevice.py",
+    "src/dev/arm/VirtIOMMIO.py",
+    "src/dev/arm/css/MHU.py",
+    "src/dev/arm/css/Scmi.py",
+    "src/dev/arm/css/Scp.py",
+]
+
+# MIPS ISA-specific SimObject .py files
+SIMOBJECT_PY_FILES_MIPS = [
+    "src/arch/mips/MipsCPU.py",
+    "src/arch/mips/MipsDecoder.py",
+    "src/arch/mips/MipsISA.py",
+    "src/arch/mips/MipsInterrupts.py",
+    "src/arch/mips/MipsMMU.py",
+    "src/arch/mips/MipsSeWorkload.py",
+    "src/arch/mips/MipsTLB.py",
+    "src/dev/mips/Malta.py",
+]
+
+# Power ISA-specific SimObject .py files
+SIMOBJECT_PY_FILES_POWER = [
+    "src/arch/power/PowerCPU.py",
+    "src/arch/power/PowerDecoder.py",
+    "src/arch/power/PowerISA.py",
+    "src/arch/power/PowerInterrupts.py",
+    "src/arch/power/PowerMMU.py",
+    "src/arch/power/PowerSeWorkload.py",
+    "src/arch/power/PowerTLB.py",
+]
+
+# RISC-V ISA-specific SimObject .py files
+SIMOBJECT_PY_FILES_RISCV = [
+    "src/arch/generic/BaseSemihosting.py",
+    "src/arch/riscv/PMAChecker.py",
+    "src/arch/riscv/PMP.py",
+    "src/arch/riscv/RiscvCPU.py",
+    "src/arch/riscv/RiscvDecoder.py",
+    "src/arch/riscv/RiscvFsWorkload.py",
+    "src/arch/riscv/RiscvISA.py",
+    "src/arch/riscv/RiscvInterrupts.py",
+    "src/arch/riscv/RiscvMMU.py",
+    "src/arch/riscv/RiscvSeWorkload.py",
+    "src/arch/riscv/RiscvSemihosting.py",
+    "src/arch/riscv/RiscvSystem.py",
+    "src/arch/riscv/RiscvTLB.py",
+    "src/dev/lupio/LupioBLK.py",
+    "src/dev/lupio/LupioIPI.py",
+    "src/dev/lupio/LupioPIC.py",
+    "src/dev/lupio/LupioRNG.py",
+    "src/dev/lupio/LupioRTC.py",
+    "src/dev/lupio/LupioSYS.py",
+    "src/dev/lupio/LupioTMR.py",
+    "src/dev/lupio/LupioTTY.py",
+    "src/dev/riscv/Clint.py",
+    "src/dev/riscv/HiFive.py",
+    "src/dev/riscv/LupV.py",
+    "src/dev/riscv/Plic.py",
+    "src/dev/riscv/PlicDevice.py",
+    "src/dev/riscv/RTC.py",
+    "src/dev/riscv/RiscvVirtIOMMIO.py",
+]
+
+# SPARC ISA-specific SimObject .py files
+SIMOBJECT_PY_FILES_SPARC = [
+    "src/arch/sparc/SparcCPU.py",
+    "src/arch/sparc/SparcDecoder.py",
+    "src/arch/sparc/SparcFsWorkload.py",
+    "src/arch/sparc/SparcISA.py",
+    "src/arch/sparc/SparcInterrupts.py",
+    "src/arch/sparc/SparcMMU.py",
+    "src/arch/sparc/SparcNativeTrace.py",
+    "src/arch/sparc/SparcSeWorkload.py",
+    "src/arch/sparc/SparcTLB.py",
+    "src/dev/sparc/T1000.py",
+]
+
+# GPU-specific SimObject .py files
+SIMOBJECT_PY_FILES_GPU = [
+    "src/arch/amdgpu/common/X86GPUTLB.py",
+    "src/arch/amdgpu/vega/VegaGPUTLB.py",
+    "src/dev/amdgpu/AMDGPU.py",
+    "src/dev/hsa/HSADevice.py",
+    "src/gpu-compute/GPU.py",
+    "src/gpu-compute/GPUStaticInstFlags.py",
+    "src/gpu-compute/LdsState.py",
 ]

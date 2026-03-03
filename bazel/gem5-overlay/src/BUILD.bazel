@@ -8,6 +8,7 @@ circular pairs (base<->sim, cpu<->arch, mem<->cpu).
 """
 
 load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:debug_flags_all.bzl", "ALL_DEBUG_FLAGS")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -30,13 +31,14 @@ cc_library(
         "//src/proto:hdrs_files",
         "//src/sst:hdrs_files",
         "//src/learning_gem5/part2:hdrs_files",
+        "//src/python:hdrs_files",
     ],
     deps = [
         ":gem5_ext_hdrs",
         "//:gem5_config_headers",
         "//:gem5_switching_hdrs",
         "//:gem5_include_hdrs",
-    ],
+    ] + ALL_DEBUG_FLAGS,
     includes = ["."],
 )
 
@@ -70,6 +72,7 @@ cc_library(
         "@gem5_ext_dnet//:dnet",
         "@gem5_ext_gdbremote//:gdbremote",
         "@gem5_ext_softfloat//:softfloat",
+        "@gem5_ext_x11keysym//:x11keysym",
     ] + select({
         "//configs:systemc_enabled": ["@gem5_ext_systemc//:hdrs"],
         "//conditions:default": [],

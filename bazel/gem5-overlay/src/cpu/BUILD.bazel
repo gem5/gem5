@@ -361,7 +361,10 @@ cc_library(
         "//configs:protobuf_enabled": ["@protobuf//:protobuf"],
         "//conditions:default": [],
     }) + select({
-        "//configs:python_enabled": ["@system_python//:python"],
+        "//configs:python_enabled": [
+            "@system_python//:python",
+            "@gem5_ext_pybind11//:pybind11",
+        ],
         "//conditions:default": [],
     }),
     alwayslink = True,

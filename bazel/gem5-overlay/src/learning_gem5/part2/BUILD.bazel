@@ -23,6 +23,8 @@ cc_library(
     deps = [
         "//src:gem5_hdrs",
         ":HelloExample",
+        ":SimpleMemobj",
+        ":SimpleCache",
     ],
     alwayslink = True,
 )

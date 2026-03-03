@@ -14,14 +14,25 @@ load(
     "gem5_config_header_namespace",
     "gem5_config_header_string",
     "gem5_sim_object_aggregate",
+    "gem5_simobject_pysources",
     "gem5_switching_headers",
 )
 load("//rules:debug_flags_all.bzl", "ALL_DEBUG_FLAGS")
-load("//rules:simobject_py_files.bzl", "SIMOBJECT_PY_FILES")
+load(
+    "//rules:simobject_py_files.bzl",
+    "SIMOBJECT_PY_FILES_ARM",
+    "SIMOBJECT_PY_FILES_BASE",
+    "SIMOBJECT_PY_FILES_GPU",
+    "SIMOBJECT_PY_FILES_MIPS",
+    "SIMOBJECT_PY_FILES_POWER",
+    "SIMOBJECT_PY_FILES_RISCV",
+    "SIMOBJECT_PY_FILES_SPARC",
+    "SIMOBJECT_PY_FILES_X86",
+)
 
 package(default_visibility = ["//visibility:public"])
 
-exports_files(["LICENSE"])
+exports_files(["LICENSE", "COPYING", "README.md"])
 
 # ---------------------------------------------------------------------------
 # Public API headers from include/ directory.
@@ -347,7 +358,34 @@ gem5_sim_object_aggregate(
         "//configs:python_enabled": True,
         "//conditions:default": False,
     }),
-    simobject_py_files = SIMOBJECT_PY_FILES,
+    simobject_py_files = SIMOBJECT_PY_FILES_BASE + select({
+        "//configs:x86_isa_enabled": SIMOBJECT_PY_FILES_X86,
+        "//conditions:default": [],
+    }) + select({
+        "//configs:arm_isa_enabled": SIMOBJECT_PY_FILES_ARM,
+        "//conditions:default": [],
+    }) + select({
+        "//configs:mips_isa_enabled": SIMOBJECT_PY_FILES_MIPS,
+        "//conditions:default": [],
+    }) + select({
+        "//configs:power_isa_enabled": SIMOBJECT_PY_FILES_POWER,
+        "//conditions:default": [],
+    }) + select({
+        "//configs:riscv_isa_enabled": SIMOBJECT_PY_FILES_RISCV,
+        "//conditions:default": [],
+    }) + select({
+        "//configs:sparc_isa_enabled": SIMOBJECT_PY_FILES_SPARC,
+        "//conditions:default": [],
+    }) + select({
+        "//configs:gpu_enabled": SIMOBJECT_PY_FILES_GPU,
+        "//conditions:default": [],
+    }) + select({
+        "//configs:dramsim3_enabled": ["src/mem/DRAMsim3.py"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:protobuf_enabled": ["src/cpu/testers/traffic_gen/TrafficGen.py"],
+        "//conditions:default": [],
+    }),
     # Header-only deps: enough for #include "params/*.hh" and "enums/*.hh"
     deps = [
         ":gem5_config_headers",
@@ -362,6 +400,62 @@ gem5_sim_object_aggregate(
         "@gem5_ext_pybind11//:pybind11",
         "@system_python//:python",
     ] + ALL_DEBUG_FLAGS,
+)
+
+# ---------------------------------------------------------------------------
+# SimObject Python module embedding: marshals SimObject .py files into
+# C++ EmbeddedPython registrations so they are importable at runtime as
+# m5.objects.<ClassName>. Each ISA/feature group gets a separate target
+# to allow conditional linking via select().
+# ---------------------------------------------------------------------------
+_SIMOBJ_PY_DEPS = ["//src/python:embedded_hdr"]
+
+gem5_simobject_pysources(
+    name = "simobject_pysources_base",
+    simobject_py_files = SIMOBJECT_PY_FILES_BASE,
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+gem5_simobject_pysources(
+    name = "simobject_pysources_x86",
+    simobject_py_files = SIMOBJECT_PY_FILES_X86,
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+gem5_simobject_pysources(
+    name = "simobject_pysources_arm",
+    simobject_py_files = SIMOBJECT_PY_FILES_ARM,
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+gem5_simobject_pysources(
+    name = "simobject_pysources_mips",
+    simobject_py_files = SIMOBJECT_PY_FILES_MIPS,
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+gem5_simobject_pysources(
+    name = "simobject_pysources_power",
+    simobject_py_files = SIMOBJECT_PY_FILES_POWER,
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+gem5_simobject_pysources(
+    name = "simobject_pysources_riscv",
+    simobject_py_files = SIMOBJECT_PY_FILES_RISCV,
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+gem5_simobject_pysources(
+    name = "simobject_pysources_sparc",
+    simobject_py_files = SIMOBJECT_PY_FILES_SPARC,
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+gem5_simobject_pysources(
+    name = "simobject_pysources_gpu",
+    simobject_py_files = SIMOBJECT_PY_FILES_GPU,
+    deps = _SIMOBJ_PY_DEPS,
 )
 
 # ---------------------------------------------------------------------------
@@ -389,29 +483,50 @@ cc_library(
         "//:sim_object_params",
         "//:sim_object_params_srcs",
 
+        # ---- Embedded SimObject Python modules (ISA-independent) ----
+        "//:simobject_pysources_base",
+
         # ---- Global ext/ libs (pervasively used) ----
         "@gem5_ext_fputils//:fputils",
         "@gem5_ext_iostream3//:iostream3",
         "@gem5_ext_magic_enum//:magic_enum",
         "@gem5_ext_softfloat//:softfloat",
     ] + select({
-        # ---- ISA-conditional architecture libraries ----
-        "//configs:x86_isa_enabled": ["//src/arch/x86:x86"],
+        # ---- ISA-conditional architecture + SimObject pysource libraries ----
+        "//configs:x86_isa_enabled": [
+            "//src/arch/x86:x86",
+            "//:simobject_pysources_x86",
+        ],
         "//conditions:default": [],
     }) + select({
-        "//configs:arm_isa_enabled": ["//src/arch/arm:arm"],
+        "//configs:arm_isa_enabled": [
+            "//src/arch/arm:arm",
+            "//:simobject_pysources_arm",
+        ],
         "//conditions:default": [],
     }) + select({
-        "//configs:riscv_isa_enabled": ["//src/arch/riscv:riscv"],
+        "//configs:riscv_isa_enabled": [
+            "//src/arch/riscv:riscv",
+            "//:simobject_pysources_riscv",
+        ],
         "//conditions:default": [],
     }) + select({
-        "//configs:mips_isa_enabled": ["//src/arch/mips:mips"],
+        "//configs:mips_isa_enabled": [
+            "//src/arch/mips:mips",
+            "//:simobject_pysources_mips",
+        ],
         "//conditions:default": [],
     }) + select({
-        "//configs:power_isa_enabled": ["//src/arch/power:power"],
+        "//configs:power_isa_enabled": [
+            "//src/arch/power:power",
+            "//:simobject_pysources_power",
+        ],
         "//conditions:default": [],
     }) + select({
-        "//configs:sparc_isa_enabled": ["//src/arch/sparc:sparc"],
+        "//configs:sparc_isa_enabled": [
+            "//src/arch/sparc:sparc",
+            "//:simobject_pysources_sparc",
+        ],
         "//conditions:default": [],
     }) + select({
         # ---- ISA-conditional device libraries ----
@@ -442,6 +557,7 @@ cc_library(
             "//src/arch/amdgpu:amdgpu",
             "//src/dev/hsa:dev_hsa",
             "//src/dev/amdgpu:dev_amdgpu",
+            "//:simobject_pysources_gpu",
         ],
         "//conditions:default": [],
     }) + select({
@@ -461,6 +577,7 @@ cc_library(
             "//src/python:python",
             "//src/python:pysources",
             "//src/python:importer_code",
+            "//src/python:info_pysource",
             "//src/python:defines_pysource",
         ],
         "//conditions:default": [],

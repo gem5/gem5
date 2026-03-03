@@ -16,6 +16,14 @@ load(
 
 package(default_visibility = ["//visibility:public"])
 
+# -- Header filegroup for gem5_hdrs aggregation --
+# These headers are included by sim/init.cc, sim/python.cc as
+# "python/pybind11/pybind.hh" (relative to src/).
+filegroup(
+    name = "hdrs_files",
+    srcs = glob(["*.hh", "pybind11/*.hh"]),
+)
+
 # ---------------------------------------------------------------------------
 # m5ImporterCode blob: compressed importer.py bytecode embedded as C++ array.
 # importer.cc includes "python/m5ImporterCode.hh" to access the blob.
@@ -158,6 +166,29 @@ gem5_py_source(
     name = "defines_pysource",
     src = ":_gen_defines",
     module_path = "m5.defines",
+    deps = [":embedded_hdr"],
+)
+
+# ---------------------------------------------------------------------------
+# Generate m5/info.py containing COPYING, LICENSE, README.md text.
+# ---------------------------------------------------------------------------
+genrule(
+    name = "_gen_info",
+    srcs = [
+        "//:COPYING",
+        "//:LICENSE",
+        "//:README.md",
+    ],
+    outs = ["info.py"],
+    cmd = "$(location //build_tools:infopy_gen) $@ $(SRCS)",
+    tools = ["//build_tools:infopy_gen"],
+)
+
+# Marshal the generated info.py into C++ for embedding
+gem5_py_source(
+    name = "info_pysource",
+    src = ":_gen_info",
+    module_path = "m5.info",
     deps = [":embedded_hdr"],
 )
 

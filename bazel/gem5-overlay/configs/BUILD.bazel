@@ -26,7 +26,7 @@ string_flag(name = "primary_isa", build_setting_default = "x86")
 
 # ---- Ruby protocol ----
 string_flag(name = "ruby_protocol", build_setting_default = "MESI_Two_Level")
-bool_flag(name = "use_ruby", build_setting_default = True)
+bool_flag(name = "use_ruby", build_setting_default = False)
 
 # ---- GPU ----
 bool_flag(name = "build_gpu", build_setting_default = False)

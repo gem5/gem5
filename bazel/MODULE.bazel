@@ -42,4 +42,5 @@ use_repo(
     "gem5_ext_dnet",
     "gem5_ext_googletest",
     "gem5_ext_gdbremote",
+    "gem5_ext_x11keysym",
 )

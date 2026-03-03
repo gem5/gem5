@@ -8,7 +8,7 @@ Provides two approaches:
    deferred gem5_create_simobject_commands() pattern.
 """
 
-load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_cc//cc:defs.bzl", "cc_import", "cc_library")
 
 # ---------------------------------------------------------------------------
 # Per-file SimObject generation (kept for fine-grained control if needed)
@@ -429,10 +429,34 @@ def gem5_sim_object_aggregate(name, gem5py_m5 = "//src/python:gem5py_m5",
     # python/_m5/param_*.cc (pybind11 bindings). These include
     # sim/sim_object.hh and other headers that transitively pull in
     # debug/*.hh, so compiled_deps must include all debug flag targets.
+    #
+    # We compile the tree artifact sources via a normal cc_library (no
+    # alwayslink), then copy the resulting .a archive and re-import it
+    # with cc_import(alwayslink=True). This works around a Bazel bug
+    # where cc_library(alwayslink=True) with tree-artifact sources wraps
+    # individual .o files in --start-lib/--end-lib instead of linking
+    # them directly, causing the linker to drop objects whose symbols
+    # have no external references (such as pybind11 static constructors).
+    # cc_import with alwayslink uses --whole-archive, which correctly
+    # overrides --start-lib lazy loading.
     cc_library(
-        name = name + "_srcs",
+        name = name + "_compile",
         srcs = [gen_name],
         deps = compiled_deps + [":" + name],
-        visibility = visibility,
         alwayslink = True,
+        features = ["-supports_dynamic_linker"],
+    )
+
+    native.genrule(
+        name = name + "_archive",
+        srcs = [":" + name + "_compile"],
+        outs = ["lib" + name + "_alwayslink.a"],
+        cmd = "for f in $(SRCS); do case \"$$f\" in *.pic.lo) ;; *.lo) cp \"$$f\" \"$@\";; esac; done",
+    )
+
+    cc_import(
+        name = name + "_srcs",
+        static_library = ":" + name + "_archive",
+        alwayslink = True,
+        visibility = visibility,
     )

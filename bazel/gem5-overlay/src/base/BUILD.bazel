@@ -78,6 +78,7 @@ cc_library(
         "bmpwriter.cc",
         "channel_addr.cc",
         "cprintf.cc",
+        "date.cc",
         "debug.cc",
         "fiber.cc",
         "framebuffer.cc",

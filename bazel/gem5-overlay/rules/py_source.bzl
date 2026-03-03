@@ -8,7 +8,7 @@ links against (system Python). Using a different version (e.g., hermetic Python
 from rules_python) produces incompatible bytecode that crashes at runtime.
 """
 
-load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_cc//cc:defs.bzl", "cc_import", "cc_library")
 
 def _py_source_gen_impl(ctx):
     """Marshal a Python source file into a C++ embedding.
@@ -124,4 +124,168 @@ def gem5_embedded_python_library(name, modules, visibility = None, deps = [],
         copts = copts,
         alwayslink = True,
         **kwargs
+    )
+
+def _simobject_embed_gen_impl(ctx):
+    """Aggregate-marshal SimObject .py files into C++ embeddings.
+
+    Reads .py files from the source tree by filesystem path (no Bazel
+    labels needed), runs marshal on each, and outputs all .cc files
+    into a single tree artifact.
+    """
+    output_dir = ctx.actions.declare_directory(ctx.label.name + "_gen")
+
+    marshal_scripts = ctx.files._marshal_scripts
+    marshal_py = None
+    for f in marshal_scripts:
+        if f.basename == "marshal.py":
+            marshal_py = f
+            break
+    if not marshal_py:
+        fail("marshal.py not found in _marshal_scripts")
+
+    files_str = "\\n".join(ctx.attr.simobject_py_files)
+
+    script = ctx.actions.declare_file("_embed_simobjects_{}.py".format(ctx.label.name))
+    ctx.actions.write(
+        output = script,
+        content = """\
+import sys
+import os
+
+output_dir = sys.argv[1]
+build_tools_dir = sys.argv[2]
+src_root = sys.argv[3]
+
+sys.path.insert(0, build_tools_dir)
+from marshal import *
+from blob import bytesToCppArray
+from code_formatter import code_formatter
+import marshal as marshal_mod
+import zlib
+
+_FILES = \"\"\"{}\"\"\"
+
+os.makedirs(output_dir, exist_ok=True)
+count = 0
+for line in _FILES.strip().split("\\n"):
+    relpath = line.strip()
+    if not relpath:
+        continue
+    filepath = os.path.join(src_root, relpath)
+    if not os.path.exists(filepath):
+        print(f"Warning: {{filepath}} not found, skipping", file=sys.stderr)
+        continue
+    stem = os.path.splitext(os.path.basename(relpath))[0]
+    modpath = f"m5.objects.{{stem}}"
+    safe_name = modpath.replace(".", "_")
+    cc_path = os.path.join(output_dir, safe_name + ".py.cc")
+
+    with open(filepath) as f:
+        src = f.read()
+    compiled = compile(src, filepath, "exec")
+    marshalled = marshal_mod.dumps(compiled)
+    compressed = zlib.compress(marshalled)
+
+    code = code_formatter()
+    code('#include "python/embedded.hh"')
+    code('')
+    code('namespace gem5')
+    code('{{')
+    code('namespace')
+    code('{{')
+    code('')
+    bytesToCppArray(code, "embedded_module_data", compressed)
+    code('')
+    code('EmbeddedPython embedded_module_info(')
+    code(f'    "{{filepath}}",')
+    code(f'    "{{modpath}}",')
+    code('    embedded_module_data,')
+    code(f'    {{len(compressed)}},')
+    code(f'    {{len(marshalled)}});')
+    code('')
+    code('}} // anonymous namespace')
+    code('}} // namespace gem5')
+    code.write(cc_path)
+    count += 1
+
+print(f"Embedded {{count}} SimObject .py files as m5.objects modules")
+""".format(files_str),
+    )
+
+    build_tools_dir = marshal_py.dirname
+    src_root = "/".join(build_tools_dir.split("/")[:-1]) if build_tools_dir else "."
+
+    ctx.actions.run_shell(
+        outputs = [output_dir],
+        inputs = [script] + marshal_scripts,
+        command = "python3 {} {} {} {}".format(
+            script.path,
+            output_dir.path,
+            build_tools_dir,
+            src_root,
+        ),
+        mnemonic = "SimObjectEmbed",
+        progress_message = "Embedding SimObject .py files as m5.objects modules",
+        execution_requirements = {"no-sandbox": "1"},
+    )
+
+    return [DefaultInfo(files = depset([output_dir]))]
+
+_simobject_embed_gen = rule(
+    implementation = _simobject_embed_gen_impl,
+    attrs = {
+        "simobject_py_files": attr.string_list(default = []),
+        "_marshal_scripts": attr.label(
+            default = "//build_tools:build_tools_files",
+            allow_files = True,
+        ),
+    },
+)
+
+def gem5_simobject_pysources(name, simobject_py_files, visibility = None, deps = []):
+    """Embed SimObject .py files as m5.objects.* Python modules.
+
+    Takes a list of .py file paths relative to the source root and
+    generates C++ embedding registrations in a single aggregate action.
+    Uses the same cc_library -> cc_import(alwayslink) pipeline as
+    SimObject params to ensure EmbeddedPython static constructors
+    survive linker garbage collection.
+
+    Args:
+        name: Target name (creates {name} cc_import with alwayslink).
+        simobject_py_files: List of .py file paths relative to the source
+            root (e.g., ["src/sim/Root.py", "src/cpu/BaseCPU.py"]).
+        visibility: Visibility.
+        deps: Additional dependencies (should include embedded_hdr).
+    """
+    gen_name = name + "_embed_gen"
+    _simobject_embed_gen(
+        name = gen_name,
+        simobject_py_files = simobject_py_files,
+    )
+
+    # Compile the tree artifact. Use alwayslink + disable dynamic linker
+    # to get a .lo archive without attempting .so creation.
+    cc_library(
+        name = name + "_compile",
+        srcs = [gen_name],
+        deps = deps,
+        alwayslink = True,
+        features = ["-supports_dynamic_linker"],
+    )
+
+    # Copy .lo to .a for cc_import. Same pipeline as sim_object.bzl.
+    native.genrule(
+        name = name + "_archive",
+        srcs = [":" + name + "_compile"],
+        outs = ["lib" + name + "_alwayslink.a"],
+        cmd = "for f in $(SRCS); do case \"$$f\" in *.pic.lo) ;; *.lo) cp \"$$f\" \"$@\";; esac; done",
+    )
+
+    cc_import(
+        name = name,
+        static_library = ":" + name + "_archive",
+        alwayslink = True,
+        visibility = visibility,
     )
