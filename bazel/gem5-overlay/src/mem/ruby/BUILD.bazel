@@ -1,0 +1,129 @@
+"""BUILD file for src/mem/ruby/ -- Ruby memory system.
+
+Provides the Ruby coherence protocol memory system: SLICC-based
+protocol controllers, interconnection networks (Garnet, Simple),
+cache structures, and sequencers.
+
+Conditionally included when //configs:ruby_enabled is True.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:defs.bzl", "gem5_debug_flag", "gem5_compound_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+# -- Header filegroup for mem hdrs_files aggregation --
+filegroup(
+    name = "hdrs_files",
+    srcs = glob([
+        "common/*.hh",
+        "network/*.hh",
+        "network/fault_model/*.hh",
+        "network/garnet/*.hh",
+        "network/simple/*.hh",
+        "profiler/*.hh",
+        "slicc_interface/*.hh",
+        "structures/*.hh",
+        "system/*.hh",
+    ]),
+)
+
+# -- Debug flags --
+gem5_debug_flag(name = "ProtocolTrace", desc = "Protocol trace debugging")
+gem5_debug_flag(name = "RubyCache", desc = "Ruby cache debugging")
+gem5_debug_flag(name = "RubyCacheTrace", desc = "Ruby cache trace debugging")
+gem5_debug_flag(name = "RubyDma", desc = "Ruby DMA debugging")
+gem5_debug_flag(name = "RubyGenerated", desc = "Ruby generated code debugging")
+gem5_debug_flag(name = "RubyHitMiss", desc = "Ruby hit/miss debugging")
+gem5_debug_flag(name = "RubyNetwork", desc = "Ruby network debugging")
+gem5_debug_flag(name = "RubyPort", desc = "Ruby port debugging")
+gem5_debug_flag(name = "RubyPrefetcher", desc = "Ruby prefetcher debugging")
+gem5_debug_flag(name = "RubyProtocol", desc = "Ruby protocol debugging")
+gem5_debug_flag(name = "RubyQueue", desc = "Ruby queue debugging")
+gem5_debug_flag(name = "RubyResourceStalls", desc = "Ruby resource stall debugging")
+gem5_debug_flag(name = "RubySequencer", desc = "Ruby sequencer debugging")
+gem5_debug_flag(name = "RubySlicc", desc = "Ruby SLICC debugging")
+gem5_debug_flag(name = "RubyStats", desc = "Ruby statistics debugging")
+gem5_debug_flag(name = "RubySystem", desc = "Ruby system debugging")
+gem5_debug_flag(name = "RubyTester", desc = "Ruby tester debugging")
+
+gem5_compound_flag(
+    name = "Ruby",
+    desc = "All Ruby debugging",
+    components = [
+        "RubyQueue", "RubyNetwork", "RubyTester", "RubyGenerated",
+        "RubySlicc", "RubySystem", "RubyCache", "RubyDma",
+        "RubyPort", "RubySequencer", "RubyCacheTrace", "RubyPrefetcher",
+        "RubyProtocol", "RubyHitMiss",
+    ],
+)
+
+# -- Ruby library --
+cc_library(
+    name = "ruby",
+    srcs = glob(
+        [
+            "common/*.cc",
+            "network/*.cc",
+            "network/garnet/*.cc",
+            "network/simple/*.cc",
+            "network/simple/routing/*.cc",
+            "network/fault_model/*.cc",
+            "profiler/*.cc",
+            "slicc_interface/*.cc",
+            "structures/*.cc",
+            "system/*.cc",
+        ],
+        exclude = [
+            "**/*.test.cc",
+            # GPU-conditional sources
+            "system/GPUCoalescer.cc",
+            "system/VIPERCoalescer.cc",
+            "system/VIPERSequencer.cc",
+            # CHI-conditional structure
+            "structures/MN_TBETable.cc",
+        ],
+    ) + select({
+        "//configs:gpu_enabled": [
+            "system/GPUCoalescer.cc",
+            "system/VIPERCoalescer.cc",
+            "system/VIPERSequencer.cc",
+        ],
+        "//conditions:default": [],
+    }),
+    hdrs = glob([
+        "common/*.hh",
+        "network/**/*.hh",
+        "profiler/*.hh",
+        "slicc_interface/*.hh",
+        "structures/*.hh",
+        "system/*.hh",
+    ]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        "//src/base:base",
+        "//src/mem:mem",
+        "//src/sim:sim",
+        # Debug flags
+        ":ProtocolTrace",
+        ":Ruby",
+        ":RubyCache",
+        ":RubyCacheTrace",
+        ":RubyDma",
+        ":RubyGenerated",
+        ":RubyHitMiss",
+        ":RubyNetwork",
+        ":RubyPort",
+        ":RubyPrefetcher",
+        ":RubyProtocol",
+        ":RubyQueue",
+        ":RubyResourceStalls",
+        ":RubySequencer",
+        ":RubySlicc",
+        ":RubyStats",
+        ":RubySystem",
+        ":RubyTester",
+    ],
+    alwayslink = True,
+)

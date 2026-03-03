@@ -1,0 +1,15 @@
+# Directories in the source tree that Bazel should ignore.
+# These are not needed for the Bazel build and may contain
+# files that confuse Bazel's analysis.
+bazel
+ext
+cmake
+build
+build_cmake
+build_opts
+site_scons
+m5out
+docs
+system
+temp
+.git

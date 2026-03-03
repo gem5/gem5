@@ -1,0 +1,27 @@
+"""BUILD file for src/proto/ -- gem5 protobuf definitions.
+
+Conditionally included when //configs:protobuf_enabled is True.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "hdrs_files",
+    srcs = glob(["*.hh"]),
+)
+
+# Protobuf source compilation will be added when protobuf is enabled.
+# For now, this provides the header filegroup for gem5_hdrs.
+cc_library(
+    name = "proto",
+    srcs = glob(["*.cc"], exclude = ["**/*.test.cc"]),
+    hdrs = glob(["*.hh"]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        "@protobuf//:protobuf",
+    ],
+    alwayslink = True,
+)

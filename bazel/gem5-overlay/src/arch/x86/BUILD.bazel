@@ -1,0 +1,64 @@
+"""BUILD file for src/arch/x86/ -- x86 ISA implementation.
+
+Conditionally included when //configs:x86_isa_enabled is True.
+ISA parser: decoder_splits=1, exec_splits=1.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:defs.bzl", "gem5_debug_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+# -- Header filegroup for gem5_hdrs aggregation --
+filegroup(
+    name = "hdrs_files",
+    srcs = glob([
+        "*.hh",
+        "bare_metal/*.hh",
+        "bios/*.hh",
+        "insts/*.hh",
+        "linux/*.hh",
+        "regs/*.hh",
+    ]),
+)
+
+gem5_debug_flag(name = "LocalApic", desc = "Local APIC debugging")
+gem5_debug_flag(name = "X86", desc = "Generic X86 ISA debugging")
+gem5_debug_flag(name = "ACPI", desc = "ACPI debugging")
+
+cc_library(
+    name = "x86",
+    srcs = glob(
+        [
+            "*.cc",
+            "bare_metal/*.cc",
+            "bios/*.cc",
+            "insts/*.cc",
+            "linux/*.cc",
+            "regs/*.cc",
+        ],
+        exclude = [
+            "**/*.test.cc",
+            "kvm/*.cc",
+        ],
+    ),
+    hdrs = glob([
+        "*.hh",
+        "bare_metal/*.hh",
+        "bios/*.hh",
+        "insts/*.hh",
+        "linux/*.hh",
+        "regs/*.hh",
+    ]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        "//src/arch:Decoder",
+        "//src/arch:Faults",
+        "//src/arch/generic:generic",
+        ":ACPI",
+        ":LocalApic",
+        ":X86",
+    ],
+    alwayslink = True,
+)

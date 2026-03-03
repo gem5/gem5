@@ -1,0 +1,42 @@
+"""BUILD file for src/dev/x86/ -- x86 device models.
+
+Conditionally included when //configs:x86_isa_enabled is True.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:defs.bzl", "gem5_debug_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+# -- Header filegroup for dev hdrs_files aggregation --
+filegroup(
+    name = "hdrs_files",
+    srcs = glob(["*.hh"]),
+)
+
+gem5_debug_flag(name = "CMOS", desc = "CMOS debugging")
+gem5_debug_flag(name = "I8259", desc = "I8259 PIC debugging")
+gem5_debug_flag(name = "I8254", desc = "I8254 PIT debugging")
+gem5_debug_flag(name = "I8237", desc = "I8237 DMA debugging")
+gem5_debug_flag(name = "I8042", desc = "I8042 keyboard controller debugging")
+gem5_debug_flag(name = "PcSpeaker", desc = "PC speaker debugging")
+gem5_debug_flag(name = "I82094AA", desc = "I/O APIC debugging")
+
+cc_library(
+    name = "dev_x86",
+    srcs = glob(["*.cc"], exclude = ["**/*.test.cc"]),
+    hdrs = glob(["*.hh"]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        "//src/dev:dev",
+        ":CMOS",
+        ":I8042",
+        ":I8237",
+        ":I8254",
+        ":I8259",
+        ":I82094AA",
+        ":PcSpeaker",
+    ],
+    alwayslink = True,
+)

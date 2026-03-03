@@ -1,0 +1,197 @@
+"""Top-level BUILD file for the @gem5_sources overlay repository.
+
+Provides the final link targets:
+- gem5_all: cc_library aggregating all subsystem libraries (with alwayslink)
+- gem5: cc_binary linking gem5_all with main.cc
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files(["LICENSE"])
+
+# ---------------------------------------------------------------------------
+# gem5_all: Aggregation library that links all subsystem libraries.
+#
+# This mirrors CMake's gem5_all STATIC library. All subsystem cc_libraries
+# use alwayslink=True to ensure SimObject factories, EmbeddedPython
+# registrations, and static initializers are retained during linking.
+# ---------------------------------------------------------------------------
+cc_library(
+    name = "gem5_all",
+    deps = [
+        # ---- Core subsystems (always built) ----
+        "//src/base:base",
+        "//src/sim:sim",
+        "//src/mem:mem",
+        "//src/cpu:cpu",
+        "//src/dev:dev",
+        "//src/kern:kern",
+        "//src/arch/generic:generic",
+        "//src/sst:sst",
+        "//src/learning_gem5/part2:learning",
+
+        # ---- Global ext/ libs (pervasively used) ----
+        "@gem5_ext_fputils//:fputils",
+        "@gem5_ext_iostream3//:iostream3",
+        "@gem5_ext_magic_enum//:magic_enum",
+        "@gem5_ext_softfloat//:softfloat",
+    ] + select({
+        # ---- ISA-conditional architecture libraries ----
+        "//configs:x86_isa_enabled": ["//src/arch/x86:x86"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:arm_isa_enabled": ["//src/arch/arm:arm"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:riscv_isa_enabled": ["//src/arch/riscv:riscv"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:mips_isa_enabled": ["//src/arch/mips:mips"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:power_isa_enabled": ["//src/arch/power:power"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:sparc_isa_enabled": ["//src/arch/sparc:sparc"],
+        "//conditions:default": [],
+    }) + select({
+        # ---- ISA-conditional device libraries ----
+        "//configs:arm_isa_enabled": ["//src/dev/arm:dev_arm"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:x86_isa_enabled": ["//src/dev/x86:dev_x86"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:riscv_isa_enabled": ["//src/dev/riscv:dev_riscv"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:mips_isa_enabled": ["//src/dev/mips:dev_mips"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:sparc_isa_enabled": ["//src/dev/sparc:dev_sparc"],
+        "//conditions:default": [],
+    }) + select({
+        # ---- Feature-conditional subsystems ----
+        "//configs:ruby_enabled": ["//src/mem/ruby:ruby"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:protobuf_enabled": ["//src/proto:proto"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:gpu_enabled": [
+            "//src/gpu-compute:gpu_compute",
+            "//src/arch/amdgpu:amdgpu",
+            "//src/dev/hsa:dev_hsa",
+            "//src/dev/amdgpu:dev_amdgpu",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:systemc_enabled": ["//src/systemc:systemc"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:test_objects_enabled": ["//src/test_objects:test_objects"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:python_enabled": ["//src/python:python"],
+        "//conditions:default": [],
+    }),
+    linkopts = [
+        "-lz",
+        "-lpthread",
+        "-lrt",
+    ],
+    alwayslink = True,
+)
+
+# ---------------------------------------------------------------------------
+# gem5: The gem5 simulator binary.
+# ---------------------------------------------------------------------------
+cc_binary(
+    name = "gem5",
+    srcs = ["//src/sim:main_cc"],
+    deps = [":gem5_all"],
+    linkopts = select({
+        "//configs:python_enabled": ["-ldl", "-lutil"],
+        "//conditions:default": [],
+    }),
+)
+
+# ---------------------------------------------------------------------------
+# gem5_tests: Aggregated test suite for all unit tests.
+# ---------------------------------------------------------------------------
+test_suite(
+    name = "gem5_tests",
+    tests = [
+        # src/base tests
+        "//src/base:test_addr_range",
+        "//src/base:test_addr_range_map",
+        "//src/base:test_amo",
+        "//src/base:test_atomicio",
+        "//src/base:test_bitfield",
+        "//src/base:test_bitunion",
+        "//src/base:test_channel_addr",
+        "//src/base:test_chunk_generator",
+        "//src/base:test_circlebuf",
+        "//src/base:test_circular_queue",
+        "//src/base:test_condcodes",
+        "//src/base:test_coroutine",
+        "//src/base:test_cprintf",
+        "//src/base:test_debug",
+        "//src/base:test_extensible",
+        "//src/base:test_fiber",
+        "//src/base:test_filters_base",
+        "//src/base:test_flags",
+        "//src/base:test_free_list",
+        "//src/base:test_inifile",
+        "//src/base:test_intmath",
+        "//src/base:test_loader_image_file_data",
+        "//src/base:test_loader_symtab",
+        "//src/base:test_logging",
+        "//src/base:test_match",
+        "//src/base:test_memoizer",
+        "//src/base:test_named",
+        "//src/base:test_pixel",
+        "//src/base:test_random",
+        "//src/base:test_refcnt",
+        "//src/base:test_sat_counter",
+        "//src/base:test_socket",
+        "//src/base:test_stats_group",
+        "//src/base:test_stats_info",
+        "//src/base:test_stats_storage",
+        "//src/base:test_stats_units",
+        "//src/base:test_stl_helpers_hash_helpers",
+        "//src/base:test_stl_helpers_ostream_helpers",
+        "//src/base:test_str",
+        "//src/base:test_temperature",
+        "//src/base:test_trace",
+        "//src/base:test_trie",
+        "//src/base:test_types",
+        "//src/base:test_uncontended_mutex",
+        # src/sim tests
+        "//src/sim:test_bufval",
+        "//src/sim:test_byteswap",
+        "//src/sim:test_globals",
+        "//src/sim:test_guest_abi",
+        "//src/sim:test_port",
+        "//src/sim:test_proxy_ptr",
+        "//src/sim:test_serialize",
+        "//src/sim:test_serialize_handlers",
+        # src/mem tests
+        "//src/mem:test_backdoor_manager",
+        "//src/mem:test_translation_gen",
+        "//src/mem:test_fifo_rp",
+        "//src/mem:test_lfu_rp",
+        "//src/mem:test_lru_rp",
+        "//src/mem:test_mru_rp",
+        "//src/mem:test_replaceable_entry",
+        "//src/mem:test_tree_plru_rp",
+        "//src/mem:test_dueling",
+        # src/dev tests
+        "//src/dev:test_reg_bank",
+        # src/arch tests
+        "//src/arch/generic:test_vec_pred_reg",
+        "//src/arch/generic:test_vec_reg",
+    ],
+)

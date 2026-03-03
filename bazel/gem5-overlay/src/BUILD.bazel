@@ -1,0 +1,65 @@
+"""Source-level BUILD file for the @gem5_sources repository.
+
+Provides the gem5_hdrs header aggregation target used to break circular
+header dependencies between subsystems. This corresponds to CMake's
+gem5_src_hdrs INTERFACE library. Both are permanent architectural
+necessities due to gem5's ~9,400 cross-directory header includes with
+circular pairs (base<->sim, cpu<->arch, mem<->cpu).
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# Aggregate gem5 headers for breaking circular deps.
+# Each subsystem's BUILD.bazel exports a filegroup named "hdrs_files".
+# This avoids a single top-level recursive glob that slows analysis.
+cc_library(
+    name = "gem5_hdrs",
+    hdrs = [
+        "//src/base:hdrs_files",
+        "//src/sim:hdrs_files",
+        "//src/kern:hdrs_files",
+        "//src/mem:hdrs_files",
+        "//src/mem/ruby:hdrs_files",
+        "//src/cpu:hdrs_files",
+        "//src/dev:hdrs_files",
+        "//src/arch:hdrs_files",
+        "//src/gpu-compute:hdrs_files",
+        "//src/proto:hdrs_files",
+    ],
+    deps = [":gem5_ext_hdrs"],
+    includes = ["."],
+)
+
+# Ext/ library include-path-only aggregation target.
+# Mirrors CMake's _gem5_propagate_ext_includes() pattern: scoped ext/ libs
+# have their include directories propagated globally so OBJECT targets can
+# compile, but their link deps are scoped to owning subsystems. In Bazel,
+# this is an include-path-only cc_library that depends on the scoped ext/
+# libs' header targets without linking them.
+cc_library(
+    name = "gem5_ext_hdrs",
+    deps = [
+        "@gem5_ext_libelf//:hdrs",
+        "@gem5_ext_drampower//:hdrs",
+        "@gem5_ext_libfdt//:hdrs",
+        "@gem5_ext_nomali//:hdrs",
+        "@gem5_ext_fputils//:fputils",
+        "@gem5_ext_iostream3//:iostream3",
+        "@gem5_ext_magic_enum//:magic_enum",
+        "@gem5_ext_dnet//:dnet",
+    ] + select({
+        "//configs:systemc_enabled": ["@gem5_ext_systemc//:hdrs"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:dramsim_enabled": ["@gem5_ext_dramsim2//:hdrs"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:dramsim3_enabled": ["@gem5_ext_dramsim3//:hdrs"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:dramsys_enabled": ["@gem5_ext_dramsys//:hdrs"],
+        "//conditions:default": [],
+    }),
+)

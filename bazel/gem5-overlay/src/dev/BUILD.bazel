@@ -1,0 +1,228 @@
+"""BUILD file for src/dev/ -- gem5 base device infrastructure.
+
+Provides core device classes (PIO, DMA, platform) and unconditional device
+models: PCI, network, storage, serial, VirtIO, I2C, PS/2, and QEMU firmware
+config. ISA-specific devices are in separate BUILD files (dev/arm, dev/x86, etc.).
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:defs.bzl", "gem5_debug_flag", "gem5_compound_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+# -- Header filegroup for gem5_hdrs aggregation --
+# Includes base device headers and all ISA-specific device headers
+# (unconditionally, matching CMake's global gem5_src_hdrs behavior).
+filegroup(
+    name = "hdrs_files",
+    srcs = glob([
+        "*.hh",
+        "i2c/*.hh",
+        "net/*.hh",
+        "pci/*.hh",
+        "ps2/*.hh",
+        "qemu/*.hh",
+        "serial/*.hh",
+        "storage/*.hh",
+        "virtio/*.hh",
+    ]) + [
+        "//src/dev/arm:hdrs_files",
+        "//src/dev/x86:hdrs_files",
+        "//src/dev/riscv:hdrs_files",
+        "//src/dev/mips:hdrs_files",
+        "//src/dev/sparc:hdrs_files",
+        "//src/dev/hsa:hdrs_files",
+        "//src/dev/amdgpu:hdrs_files",
+        "//src/dev/lupio:hdrs_files",
+    ],
+)
+
+# -- Debug flags (base devices) --
+gem5_debug_flag(name = "DMA", desc = "DMA debugging")
+gem5_debug_flag(name = "IntPin", desc = "Interrupt pin debugging")
+gem5_debug_flag(name = "Intel8254Timer", desc = "Intel 8254 timer debugging")
+gem5_debug_flag(name = "IsaFake", desc = "ISA fake device debugging")
+gem5_debug_flag(name = "MC146818", desc = "MC146818 RTC debugging")
+
+# PCI debug flags
+gem5_debug_flag(name = "PciDevice", desc = "PCI device debugging")
+gem5_debug_flag(name = "PciUpstream", desc = "PCI upstream debugging")
+gem5_debug_flag(name = "PciHost", desc = "PCI host debugging")
+gem5_debug_flag(name = "DMACopyEngine", desc = "DMA copy engine debugging")
+
+# Network debug flags
+gem5_debug_flag(name = "Ethernet", desc = "Ethernet debugging")
+gem5_debug_flag(name = "EthernetCksum", desc = "Ethernet checksum debugging")
+gem5_debug_flag(name = "EthernetDMA", desc = "Ethernet DMA debugging")
+gem5_debug_flag(name = "EthernetData", desc = "Ethernet data debugging")
+gem5_debug_flag(name = "EthernetDesc", desc = "Ethernet descriptor debugging")
+gem5_debug_flag(name = "EthernetEEPROM", desc = "Ethernet EEPROM debugging")
+gem5_debug_flag(name = "EthernetIntr", desc = "Ethernet interrupt debugging")
+gem5_debug_flag(name = "EthernetPIO", desc = "Ethernet PIO debugging")
+gem5_debug_flag(name = "EthernetSM", desc = "Ethernet state machine debugging")
+gem5_debug_flag(name = "DistEthernet", desc = "Distributed Ethernet debugging")
+gem5_debug_flag(name = "DistEthernetPkt", desc = "Distributed Ethernet packet debugging")
+gem5_debug_flag(name = "DistEthernetCmd", desc = "Distributed Ethernet command debugging")
+
+gem5_compound_flag(
+    name = "EthernetAll",
+    desc = "All Ethernet debugging",
+    components = [
+        "Ethernet", "EthernetPIO", "EthernetDMA", "EthernetData",
+        "EthernetDesc", "EthernetIntr", "EthernetSM", "EthernetCksum",
+        "EthernetEEPROM",
+    ],
+)
+
+gem5_compound_flag(
+    name = "EthernetNoData",
+    desc = "Ethernet debugging without data",
+    components = [
+        "Ethernet", "EthernetPIO", "EthernetDesc", "EthernetIntr",
+        "EthernetSM", "EthernetCksum",
+    ],
+)
+
+# Storage debug flags
+gem5_debug_flag(name = "IdeCtrl", desc = "IDE controller debugging")
+gem5_debug_flag(name = "IdeDisk", desc = "IDE disk debugging")
+gem5_debug_flag(name = "DiskImageRead", desc = "Disk image read debugging")
+gem5_debug_flag(name = "DiskImageWrite", desc = "Disk image write debugging")
+gem5_debug_flag(name = "SimpleDisk", desc = "Simple disk debugging")
+gem5_debug_flag(name = "SimpleDiskData", desc = "Simple disk data debugging")
+
+gem5_compound_flag(
+    name = "DiskImageAll",
+    desc = "All disk image debugging",
+    components = ["DiskImageRead", "DiskImageWrite"],
+)
+
+gem5_compound_flag(
+    name = "IdeAll",
+    desc = "All IDE debugging",
+    components = ["IdeCtrl", "IdeDisk"],
+)
+
+# Serial debug flags
+gem5_debug_flag(name = "Terminal", desc = "Terminal debugging")
+gem5_debug_flag(name = "TerminalVerbose", desc = "Terminal verbose debugging")
+gem5_debug_flag(name = "Uart", desc = "UART debugging")
+
+# VirtIO debug flags
+gem5_debug_flag(name = "VIO", desc = "VirtIO base debugging")
+gem5_debug_flag(name = "VIORng", desc = "VirtIO RNG debugging")
+gem5_debug_flag(name = "VIOIface", desc = "VirtIO interface debugging")
+gem5_debug_flag(name = "VIOConsole", desc = "VirtIO console debugging")
+gem5_debug_flag(name = "VIOBlock", desc = "VirtIO block debugging")
+gem5_debug_flag(name = "VIO9P", desc = "VirtIO 9p debugging")
+gem5_debug_flag(name = "VIO9PData", desc = "VirtIO 9p data debugging")
+
+# PS/2 debug flags
+gem5_debug_flag(name = "PS2", desc = "PS/2 debugging")
+
+# QEMU debug flags
+gem5_debug_flag(name = "QemuFwCfg", desc = "QEMU firmware config debugging")
+gem5_debug_flag(name = "QemuFwCfgVerbose", desc = "QEMU firmware config verbose debugging")
+
+# -- Main device library (unconditional devices) --
+cc_library(
+    name = "dev",
+    srcs = glob(
+        [
+            "*.cc",
+            "i2c/*.cc",
+            "net/*.cc",
+            "pci/*.cc",
+            "ps2/*.cc",
+            "qemu/*.cc",
+            "serial/*.cc",
+            "storage/*.cc",
+            "virtio/*.cc",
+        ],
+        exclude = [
+            "**/*.test.cc",
+            "net/ethertap.cc",
+        ],
+    ) + select({
+        "//configs:tuntap_enabled": ["net/ethertap.cc"],
+        "//conditions:default": [],
+    }),
+    hdrs = glob([
+        "*.hh",
+        "i2c/*.hh",
+        "net/*.hh",
+        "pci/*.hh",
+        "ps2/*.hh",
+        "qemu/*.hh",
+        "serial/*.hh",
+        "storage/*.hh",
+        "virtio/*.hh",
+    ]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        "//src/base:base",
+        "//src/mem:mem",
+        "//src/sim:sim",
+        # All base device debug flags
+        ":DMA",
+        ":DMACopyEngine",
+        ":DiskImageAll",
+        ":DiskImageRead",
+        ":DiskImageWrite",
+        ":DistEthernet",
+        ":DistEthernetCmd",
+        ":DistEthernetPkt",
+        ":Ethernet",
+        ":EthernetAll",
+        ":EthernetCksum",
+        ":EthernetDMA",
+        ":EthernetData",
+        ":EthernetDesc",
+        ":EthernetEEPROM",
+        ":EthernetIntr",
+        ":EthernetNoData",
+        ":EthernetPIO",
+        ":EthernetSM",
+        ":IdeAll",
+        ":IdeCtrl",
+        ":IdeDisk",
+        ":IntPin",
+        ":Intel8254Timer",
+        ":IsaFake",
+        ":MC146818",
+        ":PS2",
+        ":PciDevice",
+        ":PciHost",
+        ":PciUpstream",
+        ":QemuFwCfg",
+        ":QemuFwCfgVerbose",
+        ":SimpleDisk",
+        ":SimpleDiskData",
+        ":Terminal",
+        ":TerminalVerbose",
+        ":Uart",
+        ":VIO",
+        ":VIO9P",
+        ":VIO9PData",
+        ":VIOBlock",
+        ":VIOConsole",
+        ":VIOIface",
+        ":VIORng",
+    ],
+    alwayslink = True,
+)
+
+# -- Unit tests --
+load("@rules_cc//cc:defs.bzl", "cc_test")
+
+cc_test(
+    name = "test_reg_bank",
+    srcs = ["reg_bank.test.cc"],
+    deps = [
+        ":dev",
+        "//src/base:gtest_logging",
+        "@gem5_ext_googletest//:gtest_main",
+        "//src:gem5_hdrs",
+    ],
+)

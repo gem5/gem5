@@ -1,0 +1,254 @@
+"""BUILD file for src/mem/ -- gem5 memory subsystem.
+
+Provides memory infrastructure: abstract memory, caches, prefetchers,
+replacement policies, crossbars, memory controllers, DRAMSim/DRAMSys
+integration, probes, QoS, and protocol implementations.
+
+Ruby memory system is in a separate BUILD at //src/mem/ruby.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:defs.bzl", "gem5_debug_flag", "gem5_compound_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+# -- Header filegroup for gem5_hdrs aggregation --
+filegroup(
+    name = "hdrs_files",
+    srcs = glob([
+        "*.hh",
+        "cache/*.hh",
+        "cache/compressors/*.hh",
+        "cache/compressors/encoders/*.hh",
+        "cache/prefetch/*.hh",
+        "cache/replacement_policies/*.hh",
+        "cache/tags/*.hh",
+        "cache/tags/indexing_policies/*.hh",
+        "cache/tags/partitioning_policies/*.hh",
+        "probes/*.hh",
+        "protocol/*.hh",
+        "qos/*.hh",
+    ]),
+)
+
+# -- Debug flags --
+gem5_debug_flag(name = "AddrRanges", desc = "Address ranges debugging")
+gem5_debug_flag(name = "BaseXBar", desc = "BaseXBar debugging")
+gem5_debug_flag(name = "Bridge", desc = "Bridge debugging")
+gem5_debug_flag(name = "CFI", desc = "CFI debugging")
+gem5_debug_flag(name = "Cache", desc = "Cache debugging")
+gem5_debug_flag(name = "CacheComp", desc = "Cache compression debugging")
+gem5_debug_flag(name = "CachePort", desc = "Cache port debugging")
+gem5_debug_flag(name = "CacheRepl", desc = "Cache replacement debugging")
+gem5_debug_flag(name = "CacheTags", desc = "Cache tags debugging")
+gem5_debug_flag(name = "CacheVerbose", desc = "Cache verbose debugging")
+gem5_debug_flag(name = "CoherentXBar", desc = "CoherentXBar debugging")
+gem5_debug_flag(name = "CommMonitor", desc = "CommMonitor debugging")
+gem5_debug_flag(name = "DRAM", desc = "DRAM debugging")
+gem5_debug_flag(name = "DRAMPower", desc = "DRAMPower debugging")
+gem5_debug_flag(name = "DRAMSim2", desc = "DRAMSim2 debugging")
+gem5_debug_flag(name = "DRAMState", desc = "DRAM state debugging")
+gem5_debug_flag(name = "DRAMsim3", desc = "DRAMsim3 debugging")
+gem5_debug_flag(name = "ExternalPort", desc = "External port debugging")
+gem5_debug_flag(name = "HMCController", desc = "HMC controller debugging")
+gem5_debug_flag(name = "HWPrefetch", desc = "Hardware prefetch debugging")
+gem5_debug_flag(name = "HWPrefetchQueue", desc = "Hardware prefetch queue debugging")
+gem5_debug_flag(name = "HtmMem", desc = "HTM memory debugging")
+gem5_debug_flag(name = "LLSC", desc = "LL/SC debugging")
+gem5_debug_flag(name = "MMU", desc = "MMU debugging")
+gem5_debug_flag(name = "MSHR", desc = "MSHR debugging")
+gem5_debug_flag(name = "MemChecker", desc = "Memory checker debugging")
+gem5_debug_flag(name = "MemCheckerMonitor", desc = "Memory checker monitor debugging")
+gem5_debug_flag(name = "MemCtrl", desc = "Memory controller debugging")
+gem5_debug_flag(name = "MemoryAccess", desc = "Memory access debugging")
+gem5_debug_flag(name = "NVM", desc = "NVM debugging")
+gem5_debug_flag(name = "NoncoherentXBar", desc = "NoncoherentXBar debugging")
+gem5_debug_flag(name = "PacketQueue", desc = "Packet queue debugging")
+gem5_debug_flag(name = "PartitionPolicy", desc = "Partition policy debugging")
+gem5_debug_flag(name = "PortTrace", desc = "Port trace debugging")
+gem5_debug_flag(name = "QOS", desc = "QoS debugging")
+gem5_debug_flag(name = "ResponsePort", desc = "Response port debugging")
+gem5_debug_flag(name = "SerialLink", desc = "Serial link debugging")
+gem5_debug_flag(name = "SnoopFilter", desc = "Snoop filter debugging")
+gem5_debug_flag(name = "StackDist", desc = "Stack distance debugging")
+gem5_debug_flag(name = "SysBridge", desc = "System bridge debugging")
+gem5_debug_flag(name = "TokenPort", desc = "Token port debugging")
+
+gem5_compound_flag(
+    name = "XBar",
+    desc = "All crossbar debugging",
+    components = ["BaseXBar", "CoherentXBar", "NoncoherentXBar", "SnoopFilter"],
+)
+
+gem5_compound_flag(
+    name = "CacheAll",
+    desc = "All cache debugging",
+    components = ["Cache", "CacheComp", "CachePort", "CacheRepl", "CacheVerbose", "HWPrefetch", "MSHR", "PartitionPolicy"],
+)
+
+# -- Main memory library --
+cc_library(
+    name = "mem",
+    srcs = glob(
+        [
+            "*.cc",
+            "cache/*.cc",
+            "cache/compressors/*.cc",
+            "cache/compressors/encoders/*.cc",
+            "cache/prefetch/*.cc",
+            "cache/replacement_policies/*.cc",
+            "cache/tags/*.cc",
+            "cache/tags/indexing_policies/*.cc",
+            "cache/tags/partitioning_policies/*.cc",
+            "probes/*.cc",
+            "protocol/*.cc",
+            "qos/*.cc",
+        ],
+        exclude = [
+            "**/*.test.cc",
+            # Conditional DRAMSim/DRAMSys sources
+            "dramsim2.cc",
+            "dramsim2_wrapper.cc",
+            "dramsim3.cc",
+            "dramsim3_wrapper.cc",
+            "dramsys.cc",
+            "dramsys_wrapper.cc",
+            # Conditional protobuf probe
+            "probes/mem_trace.cc",
+        ],
+    ) + select({
+        "//configs:dramsim_enabled": [
+            "dramsim2.cc",
+            "dramsim2_wrapper.cc",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:dramsim3_enabled": [
+            "dramsim3.cc",
+            "dramsim3_wrapper.cc",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:dramsys_enabled": [
+            "dramsys.cc",
+            "dramsys_wrapper.cc",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:protobuf_enabled": ["probes/mem_trace.cc"],
+        "//conditions:default": [],
+    }),
+    hdrs = glob([
+        "*.hh",
+        "cache/**/*.hh",
+        "probes/*.hh",
+        "protocol/*.hh",
+        "qos/*.hh",
+    ]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        "//src/base:base",
+        "//src/sim:sim",
+        # Debug flags
+        ":AddrRanges",
+        ":BaseXBar",
+        ":Bridge",
+        ":CFI",
+        ":Cache",
+        ":CacheAll",
+        ":CacheComp",
+        ":CachePort",
+        ":CacheRepl",
+        ":CacheTags",
+        ":CacheVerbose",
+        ":CoherentXBar",
+        ":CommMonitor",
+        ":DRAM",
+        ":DRAMPower",
+        ":DRAMSim2",
+        ":DRAMState",
+        ":DRAMsim3",
+        ":ExternalPort",
+        ":HMCController",
+        ":HWPrefetch",
+        ":HWPrefetchQueue",
+        ":HtmMem",
+        ":LLSC",
+        ":MMU",
+        ":MSHR",
+        ":MemChecker",
+        ":MemCheckerMonitor",
+        ":MemCtrl",
+        ":MemoryAccess",
+        ":NVM",
+        ":NoncoherentXBar",
+        ":PacketQueue",
+        ":PartitionPolicy",
+        ":PortTrace",
+        ":QOS",
+        ":ResponsePort",
+        ":SerialLink",
+        ":SnoopFilter",
+        ":StackDist",
+        ":SysBridge",
+        ":TokenPort",
+        ":XBar",
+        # External deps
+        "@gem5_ext_drampower//:drampower",
+    ] + select({
+        "//configs:dramsim_enabled": ["@gem5_ext_dramsim2//:dramsim2"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:dramsim3_enabled": ["@gem5_ext_dramsim3//:dramsim3"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:dramsys_enabled": ["@gem5_ext_dramsys//:dramsys"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:protobuf_enabled": ["@protobuf//:protobuf"],
+        "//conditions:default": [],
+    }),
+    alwayslink = True,
+)
+
+# -- Unit tests --
+load("@rules_cc//cc:defs.bzl", "cc_test")
+
+_MEM_TEST_DEPS = [
+    ":mem",
+    "//src/base:gtest_logging",
+    "@gem5_ext_googletest//:gtest_main",
+    "//src:gem5_hdrs",
+]
+
+cc_test(
+    name = "test_backdoor_manager",
+    srcs = ["backdoor_manager.test.cc"],
+    deps = _MEM_TEST_DEPS,
+)
+
+cc_test(
+    name = "test_translation_gen",
+    srcs = ["translation_gen.test.cc"],
+    deps = _MEM_TEST_DEPS,
+)
+
+[cc_test(
+    name = "test_" + src.split("/")[-1].replace(".test.cc", ""),
+    srcs = ["cache/replacement_policies/" + src.split("/")[-1]],
+    deps = _MEM_TEST_DEPS,
+) for src in [
+    "cache/replacement_policies/fifo_rp.test.cc",
+    "cache/replacement_policies/lfu_rp.test.cc",
+    "cache/replacement_policies/lru_rp.test.cc",
+    "cache/replacement_policies/mru_rp.test.cc",
+    "cache/replacement_policies/replaceable_entry.test.cc",
+    "cache/replacement_policies/tree_plru_rp.test.cc",
+]]
+
+cc_test(
+    name = "test_dueling",
+    srcs = ["cache/tags/dueling.test.cc"],
+    deps = _MEM_TEST_DEPS,
+)

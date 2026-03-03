@@ -1,0 +1,263 @@
+"""BUILD file for src/base/ -- gem5 base library.
+
+Provides core utility classes: debugging, logging, serialization, statistics,
+networking, VNC framebuffer, binary loaders, and bloom filters.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:defs.bzl", "gem5_debug_flag", "gem5_compound_flag", "gem5_debug_format_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+# -- Header filegroup for gem5_hdrs aggregation --
+filegroup(
+    name = "hdrs_files",
+    srcs = glob([
+        "*.hh",
+        "cache/*.hh",
+        "filters/*.hh",
+        "loader/*.hh",
+        "stats/*.hh",
+        "stl_helpers/*.hh",
+        "vnc/*.hh",
+        "gtest/*.hh",
+    ]),
+)
+
+# Minimal header target for breaking debug_flag -> base -> debug_flag circular dep.
+# Debug flag cc_libraries depend only on this, not the full :base library.
+cc_library(
+    name = "debug_hdrs",
+    hdrs = [
+        "compiler.hh",
+        "debug.hh",
+    ],
+    include_prefix = "base",
+    strip_include_prefix = "",
+)
+
+# -- Debug flags --
+gem5_debug_flag(name = "Annotate", desc = "State machine annotation debugging")
+gem5_debug_flag(name = "AnnotateQ", desc = "State machine annotation queue debugging")
+gem5_debug_flag(name = "AnnotateVerbose", desc = "Dump all state machine annotation details")
+gem5_debug_flag(name = "GDBAcc", desc = "Remote debugger accesses")
+gem5_debug_flag(name = "GDBExtra", desc = "Dump extra information on reads and writes")
+gem5_debug_flag(name = "GDBMisc", desc = "Breakpoints, traps, watchpoints, etc.")
+gem5_debug_flag(name = "GDBRead", desc = "Reads to the remote address space")
+gem5_debug_flag(name = "GDBRecv", desc = "Messages received from the remote application")
+gem5_debug_flag(name = "GDBSend", desc = "Messages sent to the remote application")
+gem5_debug_flag(name = "GDBWrite", desc = "Writes to the remote address space")
+gem5_debug_flag(name = "SQL", desc = "SQL queries sent to the server")
+gem5_debug_flag(name = "Stats", desc = "Statistics management")
+gem5_debug_flag(name = "StatEvents", desc = "Statistics event tracking")
+gem5_debug_flag(name = "VNC", desc = "VNC server debugging")
+
+gem5_compound_flag(
+    name = "GDBAll",
+    desc = "All Remote debugging flags",
+    components = ["GDBMisc", "GDBAcc", "GDBRead", "GDBWrite", "GDBSend", "GDBRecv", "GDBExtra"],
+)
+gem5_compound_flag(
+    name = "AnnotateAll",
+    desc = "All Annotation flags",
+    components = ["Annotate", "AnnotateQ", "AnnotateVerbose"],
+)
+
+gem5_debug_format_flag(name = "FmtFlag", desc = "Show the --debug-flag that enabled each debug message")
+gem5_debug_format_flag(name = "FmtStackTrace", desc = "Print a stack trace after every debug message")
+gem5_debug_format_flag(name = "FmtTicksOff", desc = "Don't show tick count on debug messages")
+
+# -- Main base library --
+cc_library(
+    name = "base",
+    srcs = [
+        # Core sources
+        "atomicio.cc",
+        "bitfield.cc",
+        "bmpwriter.cc",
+        "channel_addr.cc",
+        "cprintf.cc",
+        "debug.cc",
+        "fiber.cc",
+        "framebuffer.cc",
+        "hostinfo.cc",
+        "imgwriter.cc",
+        "inet.cc",
+        "inifile.cc",
+        "logging.cc",
+        "match.cc",
+        "output.cc",
+        "pixel.cc",
+        "pollevent.cc",
+        "random.cc",
+        "remote_gdb.cc",
+        "socket.cc",
+        "statistics.cc",
+        "str.cc",
+        "temperature.cc",
+        "time.cc",
+        "trace.cc",
+        "types.cc",
+        "version.cc",
+        # filters/
+        "filters/block_bloom_filter.cc",
+        "filters/bulk_bloom_filter.cc",
+        "filters/h3_bloom_filter.cc",
+        "filters/multi_bit_sel_bloom_filter.cc",
+        "filters/multi_bloom_filter.cc",
+        "filters/perfect_bloom_filter.cc",
+        # loader/
+        "loader/dtb_file.cc",
+        "loader/elf_object.cc",
+        "loader/image_file_data.cc",
+        "loader/memory_image.cc",
+        "loader/object_file.cc",
+        "loader/symtab.cc",
+        # stats/
+        "stats/group.cc",
+        "stats/info.cc",
+        "stats/storage.cc",
+        "stats/text.cc",
+        # vnc/
+        "vnc/vncinput.cc",
+        "vnc/vncserver.cc",
+    ] + select({
+        "//configs:fenv_enabled": ["fenv.cc"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:png_enabled": ["pngwriter.cc"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:hdf5_enabled": ["stats/hdf5.cc"],
+        "//conditions:default": [],
+    }),
+    hdrs = glob([
+        "*.hh",
+        "cache/*.hh",
+        "filters/*.hh",
+        "loader/*.hh",
+        "stats/*.hh",
+        "stl_helpers/*.hh",
+        "vnc/*.hh",
+    ]),
+    copts = select({
+        "//configs:hdf5_enabled": ["-Wno-deprecated-copy"],
+        "//conditions:default": [],
+    }),
+    includes = ["."],
+    linkopts = ["-lrt"],
+    deps = [
+        "//src:gem5_hdrs",
+        # Debug flags
+        ":Annotate",
+        ":AnnotateAll",
+        ":AnnotateQ",
+        ":AnnotateVerbose",
+        ":FmtFlag",
+        ":FmtStackTrace",
+        ":FmtTicksOff",
+        ":GDBAcc",
+        ":GDBAll",
+        ":GDBExtra",
+        ":GDBMisc",
+        ":GDBRead",
+        ":GDBRecv",
+        ":GDBSend",
+        ":GDBWrite",
+        ":SQL",
+        ":StatEvents",
+        ":Stats",
+        ":VNC",
+        # External libraries
+        "@gem5_ext_dnet//:dnet",
+        "@gem5_ext_iostream3//:iostream3",
+        "@gem5_ext_libelf//:libelf",
+        "@gem5_ext_libfdt//:libfdt",
+    ] + select({
+        "//configs:png_enabled": ["-lpng"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:hdf5_enabled": ["-lhdf5_cpp", "-lhdf5"],
+        "//conditions:default": [],
+    }),
+    alwayslink = True,
+)
+
+# GTest support library (linked into test executables, not main gem5)
+cc_library(
+    name = "gtest_logging",
+    srcs = ["gtest/logging.cc"],
+    hdrs = [
+        "gtest/cur_tick_fake.hh",
+        "gtest/logging.hh",
+        "gtest/serialization_fixture.hh",
+    ],
+    deps = [
+        "//src:gem5_hdrs",
+        "@gem5_ext_googletest//:googletest",
+    ],
+    testonly = True,
+)
+
+# -- Unit tests --
+# Each test links against :gtest_logging (gem5 test infrastructure),
+# gtest_main (provides main()), and the subsystem library under test.
+load("@rules_cc//cc:defs.bzl", "cc_test")
+
+_BASE_TEST_DEPS = [
+    ":base",
+    ":gtest_logging",
+    "@gem5_ext_googletest//:gtest_main",
+    "//src:gem5_hdrs",
+]
+
+[cc_test(
+    name = "test_" + src.replace("/", "_").replace(".test.cc", ""),
+    srcs = [src],
+    deps = _BASE_TEST_DEPS,
+) for src in [
+    "addr_range.test.cc",
+    "addr_range_map.test.cc",
+    "amo.test.cc",
+    "atomicio.test.cc",
+    "bitfield.test.cc",
+    "bitunion.test.cc",
+    "channel_addr.test.cc",
+    "chunk_generator.test.cc",
+    "circlebuf.test.cc",
+    "circular_queue.test.cc",
+    "condcodes.test.cc",
+    "coroutine.test.cc",
+    "cprintf.test.cc",
+    "debug.test.cc",
+    "extensible.test.cc",
+    "fiber.test.cc",
+    "filters/base.test.cc",
+    "flags.test.cc",
+    "free_list.test.cc",
+    "inifile.test.cc",
+    "intmath.test.cc",
+    "loader/image_file_data.test.cc",
+    "loader/symtab.test.cc",
+    "logging.test.cc",
+    "match.test.cc",
+    "memoizer.test.cc",
+    "named.test.cc",
+    "pixel.test.cc",
+    "random.test.cc",
+    "refcnt.test.cc",
+    "sat_counter.test.cc",
+    "socket.test.cc",
+    "stats/group.test.cc",
+    "stats/info.test.cc",
+    "stats/storage.test.cc",
+    "stats/units.test.cc",
+    "stl_helpers/hash_helpers.test.cc",
+    "stl_helpers/ostream_helpers.test.cc",
+    "str.test.cc",
+    "temperature.test.cc",
+    "trace.test.cc",
+    "trie.test.cc",
+    "types.test.cc",
+    "uncontended_mutex.test.cc",
+]]

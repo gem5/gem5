@@ -1,0 +1,48 @@
+"""BUILD file for src/python/ -- gem5 Python embedding infrastructure.
+
+Provides the Python embedding layer: gem5py/gem5py_m5 interpreters,
+pybind11 C++ bindings, and EmbeddedPython bytecode infrastructure.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# Python embedding C++ sources (pybind11 bindings)
+cc_library(
+    name = "python",
+    srcs = [
+        "embedded.cc",
+        "importer.cc",
+        "pybind11/core.cc",
+        "pybind11/debug.cc",
+        "pybind11/event.cc",
+        "pybind11/object_file.cc",
+        "pybind11/port.cc",
+        "pybind11/stats.cc",
+    ],
+    hdrs = [
+        "embedded.hh",
+        "pybind11/core.hh",
+    ],
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        "@gem5_ext_pybind11//:pybind11",
+        "@system_python//:python",
+    ],
+    alwayslink = True,
+)
+
+# Python source files to be marshalled into the gem5 binary.
+# The actual marshalling is done by the gem5_py_source/gem5_embedded_python_library
+# rules at build time. This filegroup exports the raw .py files.
+filegroup(
+    name = "m5_py_sources",
+    srcs = glob(["m5/**/*.py"]),
+)
+
+filegroup(
+    name = "gem5_py_sources",
+    srcs = glob(["gem5/**/*.py"]),
+)

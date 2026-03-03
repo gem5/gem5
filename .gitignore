@@ -1,5 +1,6 @@
 MODULE.bazel.lock
 bazel-*
+configs/vars.bzl
 build
 build_cmake
 gem5_build

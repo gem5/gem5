@@ -1,0 +1,47 @@
+"""BUILD file for src/arch/ -- gem5 architecture module.
+
+Defines global architecture debug flags. Individual ISA implementations
+are in subdirectories (arm/, x86/, riscv/, etc.).
+"""
+
+load("//rules:defs.bzl", "gem5_debug_flag", "gem5_compound_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+# -- Header filegroup for gem5_hdrs aggregation --
+# All ISA headers are included unconditionally (matching CMake's global
+# gem5_src_hdrs INTERFACE library which globs all headers under src/).
+# Header visibility does not imply compilation -- ISA source compilation
+# is conditional via select() in each ISA's cc_library.
+filegroup(
+    name = "hdrs_files",
+    srcs = [
+        "//src/arch/generic:hdrs_files",
+        "//src/arch/null:hdrs_files",
+        "//src/arch/arm:hdrs_files",
+        "//src/arch/x86:hdrs_files",
+        "//src/arch/riscv:hdrs_files",
+        "//src/arch/mips:hdrs_files",
+        "//src/arch/power:hdrs_files",
+        "//src/arch/sparc:hdrs_files",
+        "//src/arch/amdgpu:hdrs_files",
+    ],
+)
+
+# -- Global architecture debug flags --
+gem5_debug_flag(name = "IntRegs", desc = "Integer register debugging")
+gem5_debug_flag(name = "FloatRegs", desc = "Floating-point register debugging")
+gem5_debug_flag(name = "VecRegs", desc = "Vector register debugging")
+gem5_debug_flag(name = "VecPredRegs", desc = "Vector predicate register debugging")
+gem5_debug_flag(name = "MatRegs", desc = "Matrix register debugging")
+gem5_debug_flag(name = "CCRegs", desc = "Condition code register debugging")
+gem5_debug_flag(name = "MiscRegs", desc = "Miscellaneous register debugging")
+gem5_debug_flag(name = "Decoder", desc = "Decoder debug output")
+gem5_debug_flag(name = "Faults", desc = "Information about faults, exceptions, interrupts")
+gem5_debug_flag(name = "TLBVerbose", desc = "TLB verbose debugging")
+
+gem5_compound_flag(
+    name = "Registers",
+    desc = "All register debugging",
+    components = ["IntRegs", "FloatRegs", "VecRegs", "VecPredRegs", "MatRegs", "CCRegs", "MiscRegs"],
+)

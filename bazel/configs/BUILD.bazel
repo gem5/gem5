@@ -1,0 +1,119 @@
+"""Configuration flags and config_settings for gem5 Bazel build.
+
+This replaces CMake's Kconfig-based configuration with Bazel-native
+bool_flag, string_flag, and config_setting rules.
+
+ISA selection uses .bazelrc presets that directly set individual bool_flag
+values. No Starlark transitions are used.
+"""
+
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+# ---- ISA enablement flags ----
+bool_flag(name = "use_x86_isa", build_setting_default = True)
+bool_flag(name = "use_arm_isa", build_setting_default = False)
+bool_flag(name = "use_riscv_isa", build_setting_default = False)
+bool_flag(name = "use_mips_isa", build_setting_default = False)
+bool_flag(name = "use_power_isa", build_setting_default = False)
+bool_flag(name = "use_sparc_isa", build_setting_default = False)
+
+# Primary ISA for switching headers. In single-ISA configs this equals the
+# enabled ISA. In multi-ISA builds (--config=all), determines which ISA
+# switching headers redirect to (matches CMake's CONF_BUILD_ISA).
+string_flag(name = "primary_isa", build_setting_default = "x86")
+
+# ---- Ruby protocol ----
+string_flag(name = "ruby_protocol", build_setting_default = "MESI_Two_Level")
+bool_flag(name = "use_ruby", build_setting_default = True)
+
+# ---- GPU ----
+bool_flag(name = "build_gpu", build_setting_default = False)
+string_flag(name = "gpu_isa", build_setting_default = "vega")
+
+# ---- TLM (CHI TLM bridge) ----
+bool_flag(name = "build_tlm", build_setting_default = False)
+string_flag(name = "tlm_path", build_setting_default = "")
+
+# ---- Core features ----
+bool_flag(name = "use_python", build_setting_default = True)
+bool_flag(name = "use_kvm", build_setting_default = False)
+bool_flag(name = "with_cxx_config", build_setting_default = False)
+bool_flag(name = "use_systemc", build_setting_default = False)
+bool_flag(name = "use_test_objects", build_setting_default = False)
+
+# ---- Optional dependency gates (match CMake HAVE_* variables) ----
+bool_flag(name = "have_protobuf", build_setting_default = False)
+bool_flag(name = "have_png", build_setting_default = False)
+bool_flag(name = "have_hdf5", build_setting_default = False)
+bool_flag(name = "have_capstone", build_setting_default = False)
+bool_flag(name = "have_tuntap", build_setting_default = True)
+bool_flag(name = "have_fenv", build_setting_default = True)
+bool_flag(name = "have_valgrind", build_setting_default = False)
+bool_flag(name = "have_dramsim", build_setting_default = False)
+bool_flag(name = "have_dramsim3", build_setting_default = False)
+bool_flag(name = "have_dramsys", build_setting_default = False)
+bool_flag(name = "have_tcmalloc", build_setting_default = False)
+
+# ---- ISA config_settings for select() ----
+config_setting(name = "x86_isa_enabled", flag_values = {":use_x86_isa": "True"})
+config_setting(name = "arm_isa_enabled", flag_values = {":use_arm_isa": "True"})
+config_setting(name = "riscv_isa_enabled", flag_values = {":use_riscv_isa": "True"})
+config_setting(name = "mips_isa_enabled", flag_values = {":use_mips_isa": "True"})
+config_setting(name = "power_isa_enabled", flag_values = {":use_power_isa": "True"})
+config_setting(name = "sparc_isa_enabled", flag_values = {":use_sparc_isa": "True"})
+
+# ---- Feature config_settings ----
+config_setting(name = "gpu_enabled", flag_values = {":build_gpu": "True"})
+config_setting(name = "python_enabled", flag_values = {":use_python": "True"})
+config_setting(name = "kvm_enabled", flag_values = {":use_kvm": "True"})
+config_setting(name = "ruby_enabled", flag_values = {":use_ruby": "True"})
+config_setting(name = "systemc_enabled", flag_values = {":use_systemc": "True"})
+config_setting(name = "test_objects_enabled", flag_values = {":use_test_objects": "True"})
+config_setting(name = "tlm_enabled", flag_values = {":build_tlm": "True"})
+config_setting(name = "cxx_config_enabled", flag_values = {":with_cxx_config": "True"})
+
+# Compound: GPU enabled but ARM ISA disabled (for fplib.cc conditional)
+config_setting(
+    name = "gpu_enabled_arm_disabled",
+    flag_values = {":build_gpu": "True", ":use_arm_isa": "False"},
+)
+
+# ---- Optional dependency config_settings ----
+config_setting(name = "protobuf_enabled", flag_values = {":have_protobuf": "True"})
+config_setting(name = "png_enabled", flag_values = {":have_png": "True"})
+config_setting(name = "hdf5_enabled", flag_values = {":have_hdf5": "True"})
+config_setting(name = "tuntap_enabled", flag_values = {":have_tuntap": "True"})
+config_setting(name = "capstone_enabled", flag_values = {":have_capstone": "True"})
+config_setting(name = "dramsim_enabled", flag_values = {":have_dramsim": "True"})
+config_setting(name = "dramsim3_enabled", flag_values = {":have_dramsim3": "True"})
+config_setting(name = "dramsys_enabled", flag_values = {":have_dramsys": "True"})
+config_setting(name = "fenv_enabled", flag_values = {":have_fenv": "True"})
+config_setting(name = "valgrind_enabled", flag_values = {":have_valgrind": "True"})
+config_setting(name = "tcmalloc_enabled", flag_values = {":have_tcmalloc": "True"})
+
+# ---- Primary ISA config_settings (for switching headers) ----
+[config_setting(
+    name = "primary_isa_" + isa,
+    flag_values = {":primary_isa": isa},
+) for isa in ["x86", "arm", "riscv", "mips", "power", "sparc"]]
+
+# ---- Ruby protocol config_settings ----
+[config_setting(
+    name = "protocol_" + proto.lower().replace("-", "_"),
+    flag_values = {":ruby_protocol": proto},
+) for proto in [
+    "MESI_Two_Level",
+    "MESI_Three_Level",
+    "MI_example",
+    "MOESI_AMD_Base",
+    "MOESI_CMP_directory",
+    "MOESI_CMP_token",
+    "MOESI_hammer",
+    "CHI",
+    "GPU_VIPER",
+    "GPU_VIPER_Region",
+    "Garnet_standalone",
+    "MULTIPLE",
+]]

@@ -1,0 +1,104 @@
+"""BUILD file for src/arch/arm/ -- ARM ISA implementation.
+
+Conditionally included when //configs:arm_isa_enabled is True.
+ISA parser: decoder_splits=3, exec_splits=6.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:defs.bzl", "gem5_debug_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+# -- Header filegroup for gem5_hdrs aggregation --
+filegroup(
+    name = "hdrs_files",
+    srcs = glob([
+        "*.hh",
+        "freebsd/*.hh",
+        "insts/*.hh",
+        "linux/*.hh",
+        "regs/*.hh",
+        "tracers/*.hh",
+    ]),
+)
+
+gem5_debug_flag(name = "Arm", desc = "ARM ISA debugging")
+gem5_debug_flag(name = "ArmTme", desc = "ARM Transactional Memory Extension")
+gem5_debug_flag(name = "MPAM", desc = "MPAM debugging")
+gem5_debug_flag(name = "PMUVerbose", desc = "Performance monitor verbose debugging")
+
+# Export fplib.cc for conditional inclusion in //src/arch/generic
+# when GPU is enabled but ARM ISA is disabled.
+filegroup(
+    name = "fplib_cc",
+    srcs = ["insts/fplib.cc"],
+)
+
+cc_library(
+    name = "arm",
+    srcs = glob(
+        [
+            "*.cc",
+            "freebsd/*.cc",
+            "insts/*.cc",
+            "linux/*.cc",
+            "regs/*.cc",
+            "tracers/*.cc",
+        ],
+        exclude = [
+            "**/*.test.cc",
+            "tracers/capstone.cc",
+            # KVM and FastModel are separate targets
+            "kvm/*.cc",
+            "fastmodel/**/*.cc",
+        ],
+    ) + select({
+        "//configs:capstone_enabled": ["tracers/capstone.cc"],
+        "//conditions:default": [],
+    }),
+    hdrs = glob([
+        "*.hh",
+        "freebsd/*.hh",
+        "insts/*.hh",
+        "linux/*.hh",
+        "regs/*.hh",
+        "tracers/*.hh",
+    ]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        "//src/arch:Decoder",
+        "//src/arch:Faults",
+        "//src/arch/generic:generic",
+        ":Arm",
+        ":ArmTme",
+        ":MPAM",
+        ":PMUVerbose",
+    ],
+    alwayslink = True,
+)
+
+# -- Unit tests --
+load("@rules_cc//cc:defs.bzl", "cc_test")
+
+cc_test(
+    name = "test_aapcs64",
+    srcs = ["aapcs64.test.cc"],
+    deps = [
+        ":arm",
+        "//src/base:gtest_logging",
+        "@gem5_ext_googletest//:gtest_main",
+        "//src:gem5_hdrs",
+    ],
+)
+
+cc_test(
+    name = "test_matrix",
+    srcs = ["matrix.test.cc"],
+    deps = [
+        ":arm",
+        "//src/base:gtest_logging",
+        "@gem5_ext_googletest//:gtest_main",
+        "//src:gem5_hdrs",
+    ],
+)

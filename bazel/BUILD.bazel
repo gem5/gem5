@@ -1,0 +1,5 @@
+# Root BUILD file for the gem5 Bazel module.
+# The actual build targets are in the @gem5 repository created by
+# the gem5_configure() repository rule (see configure.bzl).
+
+exports_files(["configure.bzl", "extensions.bzl"])

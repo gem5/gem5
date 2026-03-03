@@ -1,0 +1,26 @@
+"""BUILD file for src/systemc/ -- SystemC integration.
+
+Conditionally included when //configs:systemc_enabled is True.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "systemc",
+    srcs = glob(
+        ["**/*.cc"],
+        exclude = [
+            "**/*.test.cc",
+            "**/tests/**",
+        ],
+    ),
+    hdrs = glob(["**/*.hh"]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        "@gem5_ext_systemc//:systemc",
+    ],
+    alwayslink = True,
+)

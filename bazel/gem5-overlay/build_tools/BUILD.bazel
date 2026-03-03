@@ -1,0 +1,109 @@
+"""BUILD file for gem5 build_tools/ directory.
+
+Provides Python tool targets used by custom Starlark rules for code generation.
+Tools are split into two categories:
+  - Standalone (Phase 1): Can be run with standard Python3
+  - gem5py_m5-dependent (Phase 2): Require the gem5py_m5 interpreter
+"""
+
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# -- Shared Python library used by multiple tools --
+py_library(
+    name = "build_tools_lib",
+    srcs = [
+        "blob.py",
+        "code_formatter.py",
+        "file_utils.py",
+    ],
+    imports = ["."],
+)
+
+# -- Phase 1 tools (standalone Python3) --
+
+py_binary(
+    name = "marshal",
+    srcs = ["marshal.py"],
+    deps = [":build_tools_lib"],
+)
+
+py_binary(
+    name = "blob_gen",
+    srcs = ["generate_blob.py"],
+    main = "generate_blob.py",
+    deps = [":build_tools_lib"],
+)
+
+py_binary(
+    name = "infopy_gen",
+    srcs = ["infopy.py"],
+    main = "infopy.py",
+    deps = [":build_tools_lib"],
+)
+
+py_binary(
+    name = "debugflag_hh",
+    srcs = ["debugflaghh.py"],
+    main = "debugflaghh.py",
+    deps = [":build_tools_lib"],
+)
+
+py_binary(
+    name = "debugflag_cc",
+    srcs = ["debugflagcc.py"],
+    main = "debugflagcc.py",
+    deps = [":build_tools_lib"],
+)
+
+# -- Filegroup exports for use as data dependencies --
+
+# Grammar + code_formatter for SLICC and ISA parser
+filegroup(
+    name = "grammar_files",
+    srcs = [
+        "code_formatter.py",
+        "grammar.py",
+    ],
+)
+
+# All build_tools Python files (for tools that need the full set)
+filegroup(
+    name = "build_tools_files",
+    srcs = glob(["*.py"]),
+)
+
+# -- Phase 2 tools (require gem5py_m5 as interpreter) --
+# These are exported as filegroups since they are executed via
+# gem5py_m5 rather than as standalone py_binary targets.
+
+filegroup(
+    name = "sim_object_param_struct_hh",
+    srcs = ["sim_object_param_struct_hh.py"],
+)
+
+filegroup(
+    name = "sim_object_param_struct_cc",
+    srcs = ["sim_object_param_struct_cc.py"],
+)
+
+filegroup(
+    name = "enum_hh",
+    srcs = ["enum_hh.py"],
+)
+
+filegroup(
+    name = "enum_cc",
+    srcs = ["enum_cc.py"],
+)
+
+filegroup(
+    name = "cxx_config_hh",
+    srcs = ["cxx_config_hh.py"],
+)
+
+filegroup(
+    name = "cxx_config_cc",
+    srcs = ["cxx_config_cc.py"],
+)

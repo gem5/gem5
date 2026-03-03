@@ -1,0 +1,20 @@
+"""BUILD file for src/learning_gem5/part2/ -- Learning gem5 tutorial objects."""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:defs.bzl", "gem5_debug_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+gem5_debug_flag(name = "HelloExample", desc = "For Learning gem5 Part 2. Simple example debug flag")
+
+cc_library(
+    name = "learning",
+    srcs = glob(["*.cc"]),
+    hdrs = glob(["*.hh"]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        ":HelloExample",
+    ],
+    alwayslink = True,
+)

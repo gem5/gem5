@@ -1,0 +1,29 @@
+"""BUILD file for src/arch/power/ -- POWER ISA implementation."""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:defs.bzl", "gem5_debug_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+# -- Header filegroup for gem5_hdrs aggregation --
+filegroup(
+    name = "hdrs_files",
+    srcs = glob(["*.hh", "insts/*.hh", "linux/*.hh"]),
+)
+
+gem5_debug_flag(name = "Power", desc = "POWER ISA debugging")
+
+cc_library(
+    name = "power",
+    srcs = glob(["*.cc", "insts/*.cc", "linux/*.cc"], exclude = ["**/*.test.cc"]),
+    hdrs = glob(["*.hh", "insts/*.hh", "linux/*.hh"]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        "//src/arch:Decoder",
+        "//src/arch:Faults",
+        "//src/arch/generic:generic",
+        ":Power",
+    ],
+    alwayslink = True,
+)

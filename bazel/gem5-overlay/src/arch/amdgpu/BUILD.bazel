@@ -1,0 +1,59 @@
+"""BUILD file for src/arch/amdgpu/ -- AMD GPU ISA implementation.
+
+Conditionally included when //configs:gpu_enabled is True.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:defs.bzl", "gem5_debug_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+# -- Header filegroup for gem5_hdrs aggregation --
+filegroup(
+    name = "hdrs_files",
+    srcs = glob([
+        "common/**/*.hh",
+        "vega/**/*.hh",
+    ]),
+)
+
+gem5_debug_flag(name = "GPUPTWalker", desc = "GPU page table walker debugging")
+gem5_debug_flag(name = "VEGA", desc = "Vega GPU ISA debugging")
+
+cc_library(
+    name = "amdgpu",
+    srcs = glob(
+        [
+            "common/*.cc",
+            "vega/*.cc",
+            "vega/insts/*.cc",
+        ],
+        exclude = ["**/*.test.cc"],
+    ),
+    hdrs = glob([
+        "common/**/*.hh",
+        "vega/**/*.hh",
+    ]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        "//src/arch/generic:generic",
+        ":GPUPTWalker",
+        ":VEGA",
+    ],
+    alwayslink = True,
+)
+
+# -- Unit tests --
+load("@rules_cc//cc:defs.bzl", "cc_test")
+
+cc_test(
+    name = "test_mxfp",
+    srcs = ["common/dtype/mxfp.test.cc"],
+    deps = [
+        ":amdgpu",
+        "//src/base:gtest_logging",
+        "@gem5_ext_googletest//:gtest_main",
+        "//src:gem5_hdrs",
+    ],
+)

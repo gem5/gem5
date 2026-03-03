@@ -1,0 +1,87 @@
+# Common flags
+common --enable_bzlmod
+common --incompatible_enable_cc_toolchain_resolution
+
+# C++ standard
+build --cxxopt=-std=c++17
+build --host_cxxopt=-std=c++17
+build --copt=-fno-strict-aliasing
+build --copt=-pipe
+
+# Position-independent code (Linux)
+build:linux --force_pic
+
+# Dynamic linking off (static preferred for gem5)
+build --dynamic_mode=off
+
+# ---- Build type configs ----
+build:dbg --compilation_mode=dbg
+build:dbg --copt=-O0 --copt=-ggdb3
+build:dbg --copt=-DGEM5_DEBUG --copt=-DTRACING_ON=1
+
+build:opt --compilation_mode=opt
+build:opt --copt=-O3 --copt=-g
+build:opt --copt=-DTRACING_ON=1
+
+build:fast --compilation_mode=opt
+build:fast --copt=-O3
+build:fast --copt=-DNDEBUG --copt=-DTRACING_ON=0
+
+# ---- ISA preset configs (directly set bool_flags) ----
+build:x86 --@gem5_sources//configs:use_x86_isa=True
+build:x86 --@gem5_sources//configs:primary_isa=x86
+build:x86 --@gem5_sources//configs:ruby_protocol=MESI_Two_Level
+
+build:arm --@gem5_sources//configs:use_x86_isa=False
+build:arm --@gem5_sources//configs:use_arm_isa=True
+build:arm --@gem5_sources//configs:primary_isa=arm
+build:arm --@gem5_sources//configs:ruby_protocol=CHI
+
+build:riscv --@gem5_sources//configs:use_x86_isa=False
+build:riscv --@gem5_sources//configs:use_riscv_isa=True
+build:riscv --@gem5_sources//configs:primary_isa=riscv
+build:riscv --@gem5_sources//configs:ruby_protocol=MESI_Two_Level
+
+build:mips --@gem5_sources//configs:use_x86_isa=False
+build:mips --@gem5_sources//configs:use_mips_isa=True
+build:mips --@gem5_sources//configs:primary_isa=mips
+build:mips --@gem5_sources//configs:ruby_protocol=MESI_Two_Level
+
+build:power --@gem5_sources//configs:use_x86_isa=False
+build:power --@gem5_sources//configs:use_power_isa=True
+build:power --@gem5_sources//configs:primary_isa=power
+build:power --@gem5_sources//configs:ruby_protocol=MESI_Two_Level
+
+build:sparc --@gem5_sources//configs:use_x86_isa=False
+build:sparc --@gem5_sources//configs:use_sparc_isa=True
+build:sparc --@gem5_sources//configs:primary_isa=sparc
+build:sparc --@gem5_sources//configs:ruby_protocol=MESI_Two_Level
+
+build:all --@gem5_sources//configs:use_x86_isa=True
+build:all --@gem5_sources//configs:use_arm_isa=True
+build:all --@gem5_sources//configs:use_riscv_isa=True
+build:all --@gem5_sources//configs:use_mips_isa=True
+build:all --@gem5_sources//configs:use_power_isa=True
+build:all --@gem5_sources//configs:use_sparc_isa=True
+build:all --@gem5_sources//configs:primary_isa=x86
+build:all --@gem5_sources//configs:ruby_protocol=MULTIPLE
+
+build:vega_x86 --@gem5_sources//configs:use_x86_isa=True
+build:vega_x86 --@gem5_sources//configs:primary_isa=x86
+build:vega_x86 --@gem5_sources//configs:build_gpu=True
+build:vega_x86 --@gem5_sources//configs:ruby_protocol=GPU_VIPER
+
+# ---- Compiler configs ----
+build:clang --action_env=CC=clang --action_env=CXX=clang++
+build:clang --linkopt=-fuse-ld=lld
+
+build:gcc --action_env=CC=gcc --action_env=CXX=g++
+
+# ---- Feature configs ----
+build:asan --copt=-fsanitize=address --linkopt=-fsanitize=address
+build:ubsan --copt=-fsanitize=undefined --linkopt=-fsanitize=undefined
+build:lto --copt=-flto --linkopt=-flto
+
+# ---- Usage ----
+# Configs are composable: bazel build @gem5_sources//:gem5 --config=opt --config=x86
+# Build type (dbg/opt/fast) and ISA (x86/arm/riscv/...) are orthogonal.

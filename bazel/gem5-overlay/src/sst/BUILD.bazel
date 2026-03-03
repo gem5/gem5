@@ -1,0 +1,14 @@
+"""BUILD file for src/sst/ -- SST integration."""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "sst",
+    srcs = glob(["*.cc"]),
+    hdrs = glob(["*.hh"]),
+    includes = ["."],
+    deps = ["//src:gem5_hdrs"],
+    alwayslink = True,
+)

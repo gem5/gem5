@@ -1,0 +1,54 @@
+"""BUILD file for src/dev/riscv/ -- RISC-V device models.
+
+Includes both core RISC-V devices and Lupio peripheral devices.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:defs.bzl", "gem5_debug_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+# -- Header filegroup for dev hdrs_files aggregation --
+filegroup(
+    name = "hdrs_files",
+    srcs = glob(["*.hh"]),
+)
+
+# Core RISC-V device debug flags
+gem5_debug_flag(name = "Clint", desc = "CLINT debugging")
+gem5_debug_flag(name = "Plic", desc = "PLIC debugging")
+gem5_debug_flag(name = "VirtIOMMIO", desc = "VirtIO MMIO debugging")
+
+# Lupio device debug flags
+gem5_debug_flag(name = "LupioBLK", desc = "Lupio block device debugging")
+gem5_debug_flag(name = "LupioIPI", desc = "Lupio IPI debugging")
+gem5_debug_flag(name = "LupioPIC", desc = "Lupio PIC debugging")
+gem5_debug_flag(name = "LupioRNG", desc = "Lupio RNG debugging")
+gem5_debug_flag(name = "LupioRTC", desc = "Lupio RTC debugging")
+gem5_debug_flag(name = "LupioTMR", desc = "Lupio timer debugging")
+gem5_debug_flag(name = "LupioTTY", desc = "Lupio TTY debugging")
+gem5_debug_flag(name = "LupioSYS", desc = "Lupio system debugging")
+
+cc_library(
+    name = "dev_riscv",
+    srcs = glob(["*.cc"]),
+    hdrs = glob(["*.hh"]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        "//src/dev:dev",
+        "//src/dev/lupio:lupio",
+        ":Clint",
+        ":LupioBLK",
+        ":LupioIPI",
+        ":LupioPIC",
+        ":LupioRNG",
+        ":LupioRTC",
+        ":LupioSYS",
+        ":LupioTMR",
+        ":LupioTTY",
+        ":Plic",
+        ":VirtIOMMIO",
+    ],
+    alwayslink = True,
+)
