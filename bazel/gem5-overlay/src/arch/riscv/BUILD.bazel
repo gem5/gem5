@@ -53,7 +53,13 @@ cc_library(
             "insts/*.cc",
             "linux/*.cc",
         ],
-        exclude = ["**/*.test.cc"],
+        exclude = [
+            "**/*.test.cc",
+            # idle_event.cc defines gem5::IdleStartEvent::process() in bare
+            # namespace -- same symbol as mips/idle_event.cc. CMake explicitly
+            # excludes this file from RISC-V source list.
+            "idle_event.cc",
+        ],
     ),
     hdrs = glob([
         "*.hh",

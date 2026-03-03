@@ -29,8 +29,15 @@ def _gen_defines_py_impl(ctx):
         "    'HAVE_PNG': {},".format(ctx.attr.have_png),
         "    'HAVE_HDF5': {},".format(ctx.attr.have_hdf5),
         "    'HAVE_TUNTAP': {},".format(ctx.attr.have_tuntap),
-        "}",
     ]
+
+    # Per-protocol flags for gem5.runtime.get_supported_protocols()
+    if ctx.attr.ruby_protocols:
+        lines.append("    'USE_MULTIPLE_PROTOCOLS': True,")
+        for proto in ctx.attr.ruby_protocols:
+            lines.append("    'RUBY_PROTOCOL_{}': True,".format(proto))
+
+    lines.append("}")
 
     ctx.actions.write(out, "\n".join(lines) + "\n")
     return [DefaultInfo(files = depset([out]))]
@@ -49,6 +56,7 @@ _gen_defines_py = rule(
         "gpu_isa": attr.string(default = "vega"),
         "use_ruby": attr.string(default = "True"),
         "ruby_protocol": attr.string(default = "MESI_Two_Level"),
+        "ruby_protocols": attr.string_list(default = []),
         "use_systemc": attr.string(default = "False"),
         "use_kvm": attr.string(default = "False"),
         "have_protobuf": attr.string(default = "False"),

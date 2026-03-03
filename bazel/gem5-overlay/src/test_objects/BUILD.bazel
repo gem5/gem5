@@ -7,6 +7,8 @@ load("@rules_cc//cc:defs.bzl", "cc_library")
 
 package(default_visibility = ["//visibility:public"])
 
+exports_files(glob(["*.py"]))
+
 cc_library(
     name = "test_objects",
     srcs = glob(["*.cc"]),

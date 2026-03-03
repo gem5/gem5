@@ -132,6 +132,10 @@ def _simobject_embed_gen_impl(ctx):
     Reads .py files from the source tree by filesystem path (no Bazel
     labels needed), runs marshal on each, and outputs all .cc files
     into a single tree artifact.
+
+    Also supports generated .py files (e.g. from SLICC) passed via
+    generated_simobject_py_srcs.  These are resolved by their actual
+    sandbox paths rather than relative to the source root.
     """
     output_dir = ctx.actions.declare_directory(ctx.label.name + "_gen")
 
@@ -145,6 +149,10 @@ def _simobject_embed_gen_impl(ctx):
         fail("marshal.py not found in _marshal_scripts")
 
     files_str = "\\n".join(ctx.attr.simobject_py_files)
+
+    # Collect generated .py file sandbox paths.
+    gen_py_files = ctx.files.generated_simobject_py_srcs
+    gen_files_str = "\\n".join([f.path for f in gen_py_files]) if gen_py_files else ""
 
     script = ctx.actions.declare_file("_embed_simobjects_{}.py".format(ctx.label.name))
     ctx.actions.write(
@@ -165,28 +173,16 @@ import marshal as marshal_mod
 import zlib
 
 _FILES = \"\"\"{}\"\"\"
+_GEN_FILES = \"\"\"{}\"\"\"
 
-os.makedirs(output_dir, exist_ok=True)
-count = 0
-for line in _FILES.strip().split("\\n"):
-    relpath = line.strip()
-    if not relpath:
-        continue
-    filepath = os.path.join(src_root, relpath)
-    if not os.path.exists(filepath):
-        print(f"Warning: {{filepath}} not found, skipping", file=sys.stderr)
-        continue
-    stem = os.path.splitext(os.path.basename(relpath))[0]
-    modpath = f"m5.objects.{{stem}}"
+def embed_py(filepath, modpath, output_dir):
     safe_name = modpath.replace(".", "_")
     cc_path = os.path.join(output_dir, safe_name + ".py.cc")
-
     with open(filepath) as f:
         src = f.read()
     compiled = compile(src, filepath, "exec")
     marshalled = marshal_mod.dumps(compiled)
     compressed = zlib.compress(marshalled)
-
     code = code_formatter()
     code('#include "python/embedded.hh"')
     code('')
@@ -207,10 +203,39 @@ for line in _FILES.strip().split("\\n"):
     code('}} // anonymous namespace')
     code('}} // namespace gem5')
     code.write(cc_path)
+
+os.makedirs(output_dir, exist_ok=True)
+count = 0
+
+# Source-tree .py files (resolved relative to src_root).
+for line in _FILES.strip().split("\\n"):
+    relpath = line.strip()
+    if not relpath:
+        continue
+    filepath = os.path.join(src_root, relpath)
+    if not os.path.exists(filepath):
+        print(f"Warning: {{filepath}} not found, skipping", file=sys.stderr)
+        continue
+    stem = os.path.splitext(os.path.basename(relpath))[0]
+    modpath = f"m5.objects.{{stem}}"
+    embed_py(filepath, modpath, output_dir)
+    count += 1
+
+# Generated .py files (resolved by absolute sandbox path).
+for line in _GEN_FILES.strip().split("\\n"):
+    genpath = line.strip()
+    if not genpath:
+        continue
+    if not os.path.exists(genpath):
+        print(f"Warning: generated {{genpath}} not found, skipping", file=sys.stderr)
+        continue
+    stem = os.path.splitext(os.path.basename(genpath))[0]
+    modpath = f"m5.objects.{{stem}}"
+    embed_py(genpath, modpath, output_dir)
     count += 1
 
 print(f"Embedded {{count}} SimObject .py files as m5.objects modules")
-""".format(files_str),
+""".format(files_str, gen_files_str),
     )
 
     build_tools_dir = marshal_py.dirname
@@ -218,7 +243,7 @@ print(f"Embedded {{count}} SimObject .py files as m5.objects modules")
 
     ctx.actions.run_shell(
         outputs = [output_dir],
-        inputs = [script] + marshal_scripts + ctx.files.simobject_py_srcs,
+        inputs = [script] + marshal_scripts + ctx.files.simobject_py_srcs + gen_py_files,
         command = "python3 {} {} {} {}".format(
             script.path,
             output_dir.path,
@@ -240,6 +265,11 @@ _simobject_embed_gen = rule(
             allow_files = [".py"],
             doc = "Declared .py file inputs for hermetic sandboxed builds.",
         ),
+        "generated_simobject_py_srcs": attr.label_list(
+            default = [],
+            allow_files = [".py"],
+            doc = "Generated SimObject .py files (e.g. from SLICC).",
+        ),
         "_marshal_scripts": attr.label(
             default = "//build_tools:build_tools_files",
             allow_files = True,
@@ -247,7 +277,8 @@ _simobject_embed_gen = rule(
     },
 )
 
-def gem5_simobject_pysources(name, simobject_py_files, simobject_py_srcs = [],
+def gem5_simobject_pysources(name, simobject_py_files = [], simobject_py_srcs = [],
+                              generated_simobject_py_srcs = [],
                               visibility = None, deps = []):
     """Embed SimObject .py files as m5.objects.* Python modules.
 
@@ -257,12 +288,18 @@ def gem5_simobject_pysources(name, simobject_py_files, simobject_py_srcs = [],
     SimObject params to ensure EmbeddedPython static constructors
     survive linker garbage collection.
 
+    Also supports generated SimObject .py files (e.g. from SLICC) via
+    generated_simobject_py_srcs.  These are resolved by their sandbox
+    paths rather than relative to the source root.
+
     Args:
         name: Target name (creates {name} cc_import with alwayslink).
         simobject_py_files: List of .py file paths relative to the source
             root (e.g., ["src/sim/Root.py", "src/cpu/BaseCPU.py"]).
         simobject_py_srcs: Bazel labels for the .py files (declared inputs
             for hermetic sandboxed builds and incremental correctness).
+        generated_simobject_py_srcs: Bazel labels for generated .py files
+            (e.g. from SLICC protocol compilation).
         visibility: Visibility.
         deps: Additional dependencies (should include embedded_hdr).
     """
@@ -271,6 +308,7 @@ def gem5_simobject_pysources(name, simobject_py_files, simobject_py_srcs = [],
         name = gen_name,
         simobject_py_files = simobject_py_files,
         simobject_py_srcs = simobject_py_srcs,
+        generated_simobject_py_srcs = generated_simobject_py_srcs,
     )
 
     # Compile the tree artifact. Use alwayslink + disable dynamic linker

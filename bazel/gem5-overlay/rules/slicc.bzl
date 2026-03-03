@@ -13,6 +13,14 @@ includes, matching CMake's _ruby_make_include() mechanism.
 SLICC also generates controller SimObject .py files that must be fed
 into the SimObject aggregate param generator. These are exposed via the
 SliccInfo provider and extracted by _slicc_py_extract for downstream use.
+
+For MULTIPLE-protocol builds, SLICC generates identical "shared" interface
+types (enums, message types from RubySlicc_interfaces.slicc) for every
+protocol. CMake deduplicates by tracking seen .cc files across protocols;
+Bazel deduplicates by splitting each protocol's output into _shared (no
+alwayslink, so linker picks one copy) and _unique (alwayslink, for
+constructor retention). Shared files have no "/" in their manifest path;
+protocol-specific files have a "Protocol/" prefix.
 """
 
 load("@rules_cc//cc:defs.bzl", "cc_library")
@@ -23,6 +31,17 @@ SliccInfo = provider(
     doc = "SLICC compilation outputs split by type.",
     fields = {
         "py_files": "depset of generated SimObject .py files",
+    },
+)
+
+# Provider for shared/unique file split (used by MULTIPLE mode).
+SliccSplitInfo = provider(
+    doc = "SLICC outputs split into shared interface types and unique controllers.",
+    fields = {
+        "shared_srcs": "depset of shared .cc files (interface types)",
+        "shared_hdrs": "depset of shared .hh files + forwarding headers",
+        "unique_srcs": "depset of protocol-specific .cc files",
+        "unique_hdrs": "depset of protocol-specific .hh files",
     },
 )
 
@@ -154,7 +173,20 @@ slicc.writeCodeFiles(code_output_dir, ["mem/ruby/slicc_interface/RubySlicc_inclu
         # Files go under mem/ruby/protocol/ within the slicc_ prefix
         # so #include "mem/ruby/protocol/X.hh" resolves correctly.
         prefix = "slicc_{}/mem/ruby/protocol".format(protocol)
-        cc_outputs = [ctx.actions.declare_file("{}/{}".format(prefix, f)) for f in cc_manifest]
+
+        # Split manifest into shared (no "/" in path, from
+        # RubySlicc_interfaces.slicc) and unique (Protocol/ prefixed).
+        shared_cc_manifest = [f for f in cc_manifest if "/" not in f and f.endswith(".cc")]
+        shared_hh_manifest = [f for f in cc_manifest if "/" not in f and f.endswith(".hh")]
+        unique_cc_manifest = [f for f in cc_manifest if "/" in f and f.endswith(".cc")]
+        unique_hh_manifest = [f for f in cc_manifest if "/" in f and f.endswith(".hh")]
+
+        shared_cc_outputs = [ctx.actions.declare_file("{}/{}".format(prefix, f)) for f in shared_cc_manifest]
+        shared_hh_outputs = [ctx.actions.declare_file("{}/{}".format(prefix, f)) for f in shared_hh_manifest]
+        unique_cc_outputs = [ctx.actions.declare_file("{}/{}".format(prefix, f)) for f in unique_cc_manifest]
+        unique_hh_outputs = [ctx.actions.declare_file("{}/{}".format(prefix, f)) for f in unique_hh_manifest]
+
+        cc_outputs = shared_cc_outputs + shared_hh_outputs + unique_cc_outputs + unique_hh_outputs
 
         # Also declare forwarding headers for external types.
         fwd_outputs = [
@@ -190,6 +222,12 @@ slicc.writeCodeFiles(code_output_dir, ["mem/ruby/slicc_interface/RubySlicc_inclu
         return [
             DefaultInfo(files = depset(cc_outputs + fwd_outputs)),
             SliccInfo(py_files = depset(py_outputs)),
+            SliccSplitInfo(
+                shared_srcs = depset(shared_cc_outputs),
+                shared_hdrs = depset(shared_hh_outputs + fwd_outputs),
+                unique_srcs = depset(unique_cc_outputs),
+                unique_hdrs = depset(unique_hh_outputs),
+            ),
         ]
     else:
         # Fallback: tree artifact for dynamic output.
@@ -217,6 +255,12 @@ slicc.writeCodeFiles(code_output_dir, ["mem/ruby/slicc_interface/RubySlicc_inclu
         return [
             DefaultInfo(files = depset([out_dir])),
             SliccInfo(py_files = depset()),
+            SliccSplitInfo(
+                shared_srcs = depset(),
+                shared_hdrs = depset(),
+                unique_srcs = depset(),
+                unique_hdrs = depset(),
+            ),
         ]
 
 _slicc_gen = rule(
@@ -258,6 +302,26 @@ _slicc_py_extract = rule(
     },
 )
 
+def _slicc_split_extract_impl(ctx):
+    """Extract a specific file set from SliccSplitInfo provider."""
+    split_info = ctx.attr.slicc_gen[SliccSplitInfo]
+    files = getattr(split_info, ctx.attr.field)
+    return [DefaultInfo(files = files)]
+
+_slicc_split_extract = rule(
+    implementation = _slicc_split_extract_impl,
+    attrs = {
+        "slicc_gen": attr.label(
+            mandatory = True,
+            providers = [SliccSplitInfo],
+        ),
+        "field": attr.string(
+            mandatory = True,
+            values = ["shared_srcs", "shared_hdrs", "unique_srcs", "unique_hdrs"],
+        ),
+    },
+)
+
 def gem5_slicc_protocol(name, src, protocol = None, sm_sources = [],
                         visibility = None, deps = [], copts = []):
     """Compile a SLICC protocol into C++ sources and SimObject .py files.
@@ -265,9 +329,15 @@ def gem5_slicc_protocol(name, src, protocol = None, sm_sources = [],
     Uses manifest-declared outputs when available (from configs/slicc_manifests.bzl),
     falling back to tree artifacts for protocols with empty or missing manifests.
 
-    Creates two targets:
-      {name}:     cc_library with compiled SLICC C++ code.
-      {name}_py:  Filegroup of generated SimObject .py files.
+    Creates these targets:
+      {name}:         cc_library with ALL compiled SLICC C++ code (backward
+                      compatible, used by single-protocol mode).
+      {name}_shared:  cc_library with shared interface types only (no
+                      alwayslink). In MULTIPLE mode, the linker picks one
+                      copy and ignores duplicates from other protocols.
+      {name}_unique:  cc_library with protocol-specific controllers only
+                      (alwayslink for constructor retention).
+      {name}_py:      Filegroup of generated SimObject .py files.
 
     Args:
         name: Target name (typically the protocol name).
@@ -282,6 +352,8 @@ def gem5_slicc_protocol(name, src, protocol = None, sm_sources = [],
         protocol = name
 
     gen_name = "_gen_slicc_{}".format(name)
+    slicc_copts = copts + ["-Wno-unused-variable", "-DNUMBER_BITS_PER_SET=64"]
+    slicc_includes = [".", "slicc_{}".format(name)]
 
     _slicc_gen(
         name = gen_name,
@@ -290,15 +362,64 @@ def gem5_slicc_protocol(name, src, protocol = None, sm_sources = [],
         sm_sources = sm_sources,
     )
 
+    # Full protocol library (backward compatible, all files with alwayslink).
+    # Used in single-protocol mode (via active_protocol alias).
     cc_library(
         name = name,
         srcs = [":{}".format(gen_name)],
         hdrs = [":{}".format(gen_name)],
         deps = deps + ["//src:gem5_hdrs"],
-        copts = copts + ["-Wno-unused-variable", "-DNUMBER_BITS_PER_SET=64"],
-        # Include SLICC output root so #include "mem/ruby/protocol/X.hh"
-        # resolves for both generated .cc and downstream consumers.
-        includes = [".", "slicc_{}".format(name)],
+        copts = slicc_copts,
+        includes = slicc_includes,
+        visibility = visibility,
+        alwayslink = True,
+    )
+
+    # Split targets for MULTIPLE mode deduplication.
+    # Shared types are identical across all protocols (from
+    # RubySlicc_interfaces.slicc). Without alwayslink, the linker links
+    # only one copy when multiple protocols are combined.
+    _slicc_split_extract(
+        name = name + "_shared_srcs",
+        slicc_gen = ":{}".format(gen_name),
+        field = "shared_srcs",
+    )
+
+    _slicc_split_extract(
+        name = name + "_shared_hdrs",
+        slicc_gen = ":{}".format(gen_name),
+        field = "shared_hdrs",
+    )
+
+    cc_library(
+        name = name + "_shared",
+        srcs = [":{}".format(name + "_shared_srcs")],
+        hdrs = [":{}".format(name + "_shared_hdrs")],
+        deps = deps + ["//src:gem5_hdrs"],
+        copts = slicc_copts,
+        includes = slicc_includes,
+        visibility = visibility,
+    )
+
+    _slicc_split_extract(
+        name = name + "_unique_srcs",
+        slicc_gen = ":{}".format(gen_name),
+        field = "unique_srcs",
+    )
+
+    _slicc_split_extract(
+        name = name + "_unique_hdrs",
+        slicc_gen = ":{}".format(gen_name),
+        field = "unique_hdrs",
+    )
+
+    cc_library(
+        name = name + "_unique",
+        srcs = [":{}".format(name + "_unique_srcs")],
+        hdrs = [":{}".format(name + "_unique_hdrs")],
+        deps = deps + ["//src:gem5_hdrs", ":{}".format(name + "_shared")],
+        copts = slicc_copts,
+        includes = slicc_includes,
         visibility = visibility,
         alwayslink = True,
     )

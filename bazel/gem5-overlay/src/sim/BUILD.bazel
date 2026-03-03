@@ -43,6 +43,17 @@ genrule(
     cmd = "python3 $(location //util:cpt_upgrader) --get-cc-file > $@",
 )
 
+# version_tags is a separate target so that test_globals can provide
+# its own definition without conflicting with the generated tags.cc.
+# In CMake, gem5_all is linked without --whole-archive for tests, so
+# the test's definition naturally takes precedence. In Bazel, alwayslink
+# on sim would force-link tags.cc, causing a duplicate symbol error.
+cc_library(
+    name = "version_tags",
+    srcs = [":gen_tags_cc"],
+    deps = ["//src:gem5_hdrs"],
+)
+
 # -- Debug flags --
 gem5_debug_flag(name = "Checkpoint", desc = "Checkpoint debugging")
 gem5_debug_flag(name = "Config", desc = "Config debugging")
@@ -138,8 +149,6 @@ cc_library(
         # probe/ subdirectory
         "probe/probe.cc",
         "probe/probe_listener_object.cc",
-        # Generated source
-        ":gen_tags_cc",
     ] + select({
         # Python bridge files (excluded from no-Python builds)
         "//configs:python_enabled": [
@@ -167,6 +176,7 @@ cc_library(
     includes = ["."],
     deps = [
         "//src:gem5_hdrs",
+        ":version_tags",
         # Debug flags
         ":Checkpoint",
         ":ClockDomain",
@@ -245,12 +255,8 @@ _SIM_TEST_DEPS = [
     "serialize_handlers.test.cc",
 ]]
 
-# test_globals defines its own version_tags symbol which conflicts with
-# the generated tags.cc in sim. --allow-multiple-definition lets the
-# test's definition take precedence.
 cc_test(
     name = "test_globals",
     srcs = ["globals.test.cc"],
-    linkopts = ["-Wl,--allow-multiple-definition"],
     deps = _SIM_TEST_DEPS,
 )

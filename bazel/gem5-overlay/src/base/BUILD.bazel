@@ -308,11 +308,8 @@ cc_test(
     ],
 )
 
-# test_random: instance counting tests conflict with gem5_all's static-init
-# Random. Filter out those 2 sub-tests; the other 11 pass fine.
 cc_test(
     name = "test_random",
     srcs = ["random.test.cc"],
-    args = ["--gtest_filter=-RandomConstruct.*"],
     deps = _BASE_TEST_DEPS,
 )

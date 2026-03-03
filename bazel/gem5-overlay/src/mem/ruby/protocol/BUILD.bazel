@@ -2,7 +2,9 @@
 
 Defines one gem5_slicc_protocol() target per Ruby protocol, plus an
 active_protocol alias that resolves to the selected protocol via config.
-In MULTIPLE mode, all protocols are built simultaneously.
+In MULTIPLE mode, all protocols are built simultaneously with shared
+interface types deduplicated (each protocol's _shared has no alwayslink,
+so the linker picks one copy; _unique has alwayslink for controllers).
 """
 
 load("@rules_cc//cc:defs.bzl", "cc_library")
@@ -83,25 +85,29 @@ gem5_slicc_protocol(
                  ["RubySlicc_interfaces.slicc"],
 )
 
-# All protocols combined for MULTIPLE mode
-_ALL_PROTOCOLS = [
-    ":MESI_Two_Level",
-    ":MESI_Three_Level",
-    ":MESI_Three_Level_HTM",
-    ":MI_example",
-    ":MOESI_AMD_Base",
-    ":MOESI_CMP_directory",
-    ":MOESI_CMP_token",
-    ":MOESI_hammer",
-    ":Garnet_standalone",
-    ":GPU_VIPER",
-    ":CHI",
+# Protocol names for MULTIPLE mode
+_ALL_PROTOCOL_NAMES = [
+    "MESI_Two_Level",
+    "MESI_Three_Level",
+    "MESI_Three_Level_HTM",
+    "MI_example",
+    "MOESI_AMD_Base",
+    "MOESI_CMP_directory",
+    "MOESI_CMP_token",
+    "MOESI_hammer",
+    "Garnet_standalone",
+    "GPU_VIPER",
+    "CHI",
 ]
 
+# All protocols combined for MULTIPLE mode (deduplicated).
+# Uses _unique targets (alwayslink) for protocol-specific controllers.
+# Each _unique depends on its own _shared (no alwayslink), so the linker
+# links shared interface types from whichever protocol it encounters first
+# and ignores duplicates from subsequent protocols.
 cc_library(
     name = "all_protocols",
-    deps = _ALL_PROTOCOLS,
-    alwayslink = True,
+    deps = [":{}_unique".format(p) for p in _ALL_PROTOCOL_NAMES],
 )
 
 # Active protocol alias: resolves to selected protocol via config.

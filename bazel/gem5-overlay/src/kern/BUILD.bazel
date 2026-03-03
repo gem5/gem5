@@ -24,6 +24,27 @@ filegroup(
 gem5_debug_flag(name = "DebugPrintf", desc = "DebugPrintf debugging")
 gem5_debug_flag(name = "Printf", desc = "Printf debugging")
 
+# linux.cc creates a file-scope static Random instance for /dev/urandom
+# emulation. Kept in a separate target (no alwayslink) so tests that
+# link against gem5_all don't get an unwanted Random created at static
+# init. CMake avoids this because gem5_all is linked without
+# --whole-archive for tests; linux.cc is only pulled in when Linux
+# class symbols are actually referenced.
+cc_library(
+    name = "kern_linux_random",
+    srcs = ["linux/linux.cc"],
+    hdrs = glob([
+        "*.hh",
+        "linux/*.hh",
+    ]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        "//src/base:base",
+        "//src/sim:sim",
+    ],
+)
+
 # -- Main kern library --
 cc_library(
     name = "kern",
@@ -31,7 +52,6 @@ cc_library(
         "freebsd/events.cc",
         "linux/events.cc",
         "linux/helpers.cc",
-        "linux/linux.cc",
         "linux/printk.cc",
         "operatingsystem.cc",
         "system_events.cc",
@@ -47,6 +67,7 @@ cc_library(
         "//src:gem5_hdrs",
         "//src/base:base",
         "//src/sim:sim",
+        ":kern_linux_random",
         ":DebugPrintf",
         ":Printf",
     ],

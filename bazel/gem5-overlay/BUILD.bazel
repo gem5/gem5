@@ -388,7 +388,16 @@ _SIMOBJ_PY_FILES = SIMOBJECT_PY_FILES_BASE + select({
     "//configs:dramsim3_enabled": ["src/mem/DRAMsim3.py"],
     "//conditions:default": [],
 }) + select({
-    "//configs:protobuf_enabled": ["src/cpu/testers/traffic_gen/TrafficGen.py"],
+    "//configs:protobuf_enabled": [
+        "src/cpu/testers/traffic_gen/TrafficGen.py",
+        "src/cpu/o3/probe/ElasticTrace.py",
+        "src/cpu/trace/TraceCPU.py",
+        "src/cpu/InstPBTrace.py",
+        "src/mem/probes/MemTraceProbe.py",
+    ],
+    "//conditions:default": [],
+}) + select({
+    "//configs:test_objects_enabled": ["src/test_objects/StatTester.py"],
     "//conditions:default": [],
 })
 
@@ -426,7 +435,16 @@ _SIMOBJ_PY_SRCS = simobject_paths_to_labels(SIMOBJECT_PY_FILES_BASE) + select({
     "//configs:dramsim3_enabled": ["//src/mem:DRAMsim3.py"],
     "//conditions:default": [],
 }) + select({
-    "//configs:protobuf_enabled": ["//src/cpu:testers/traffic_gen/TrafficGen.py"],
+    "//configs:protobuf_enabled": [
+        "//src/cpu:testers/traffic_gen/TrafficGen.py",
+        "//src/cpu:o3/probe/ElasticTrace.py",
+        "//src/cpu:trace/TraceCPU.py",
+        "//src/cpu:InstPBTrace.py",
+        "//src/mem:probes/MemTraceProbe.py",
+    ],
+    "//conditions:default": [],
+}) + select({
+    "//configs:test_objects_enabled": ["//src/test_objects:StatTester.py"],
     "//conditions:default": [],
 })
 
@@ -581,6 +599,45 @@ gem5_simobject_pysources(
     deps = _SIMOBJ_PY_DEPS,
 )
 
+# SLICC-generated controller SimObject .py files embedded as m5.objects.*
+# Python modules.  These are produced by the SLICC compiler and need to
+# be importable at runtime (e.g. m5.objects.L1Cache_Controller).
+gem5_simobject_pysources(
+    name = "simobject_pysources_slicc",
+    generated_simobject_py_srcs = _SLICC_PY_SRCS,
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+# Protobuf-gated SimObjects embedded as m5.objects.* Python modules.
+_SIMOBJ_PY_FILES_PROTOBUF = [
+    "src/cpu/testers/traffic_gen/TrafficGen.py",
+    "src/cpu/o3/probe/ElasticTrace.py",
+    "src/cpu/trace/TraceCPU.py",
+    "src/cpu/InstPBTrace.py",
+    "src/mem/probes/MemTraceProbe.py",
+]
+
+gem5_simobject_pysources(
+    name = "simobject_pysources_protobuf",
+    simobject_py_files = _SIMOBJ_PY_FILES_PROTOBUF,
+    simobject_py_srcs = [
+        "//src/cpu:testers/traffic_gen/TrafficGen.py",
+        "//src/cpu:o3/probe/ElasticTrace.py",
+        "//src/cpu:trace/TraceCPU.py",
+        "//src/cpu:InstPBTrace.py",
+        "//src/mem:probes/MemTraceProbe.py",
+    ],
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+# Test-object SimObjects embedded as m5.objects.* Python modules.
+gem5_simobject_pysources(
+    name = "simobject_pysources_test_objects",
+    simobject_py_files = ["src/test_objects/StatTester.py"],
+    simobject_py_srcs = ["//src/test_objects:StatTester.py"],
+    deps = _SIMOBJ_PY_DEPS,
+)
+
 # ---------------------------------------------------------------------------
 # gem5_all: Aggregation library that links all subsystem libraries.
 #
@@ -675,13 +732,20 @@ cc_library(
         "//configs:ruby_enabled": [
             "//src/mem/ruby:ruby",
             "//:simobject_pysources_ruby",
+            "//:simobject_pysources_slicc",
         ],
         "//conditions:default": [],
     }) + select({
         "//configs:ruby_gpu_enabled": ["//:simobject_pysources_ruby_gpu"],
         "//conditions:default": [],
     }) + select({
-        "//configs:protobuf_enabled": ["//src/proto:proto"],
+        "//configs:protobuf_enabled": [
+            "//src/proto:proto",
+            "//:simobject_pysources_protobuf",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:test_objects_enabled": ["//:simobject_pysources_test_objects"],
         "//conditions:default": [],
     }) + select({
         "//configs:gpu_enabled": [
@@ -739,12 +803,6 @@ cc_binary(
     ],
     linkopts = select({
         "//configs:python_enabled": ["-ldl", "-lutil"],
-        "//conditions:default": [],
-    }) + select({
-        # Multi-protocol builds link all SLICC protocols and ISAs together,
-        # producing duplicate definitions for shared enum types and cross-ISA
-        # code (e.g. IdleStartEvent). The linker must tolerate these.
-        "//configs:protocol_multiple": ["-Wl,--allow-multiple-definition"],
         "//conditions:default": [],
     }),
 )

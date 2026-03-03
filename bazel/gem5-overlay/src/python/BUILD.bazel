@@ -153,6 +153,22 @@ gem5_gen_defines(
         "//configs:protocol_garnet_standalone": "Garnet_standalone",
         "//configs:protocol_multiple": "MULTIPLE",
     }),
+    ruby_protocols = select({
+        "//configs:protocol_multiple": [
+            "MESI_Two_Level",
+            "MESI_Three_Level",
+            "MESI_Three_Level_HTM",
+            "MI_example",
+            "MOESI_AMD_Base",
+            "MOESI_CMP_directory",
+            "MOESI_CMP_token",
+            "MOESI_hammer",
+            "Garnet_standalone",
+            "GPU_VIPER",
+            "CHI",
+        ],
+        "//conditions:default": [],
+    }),
     use_systemc = select({"//configs:systemc_enabled": "True", "//conditions:default": "False"}),
     use_kvm = select({"//configs:kvm_enabled": "True", "//conditions:default": "False"}),
     have_protobuf = select({"//configs:protobuf_enabled": "True", "//conditions:default": "False"}),
@@ -206,7 +222,11 @@ gem5_py_source(
 _ALL_PY = glob(
     ["m5/**/*.py", "gem5/**/*.py"],
     exclude = ["**/*_test.py", "**/test_*.py"],
-)
+) + [
+    # test_board.py is a production stdlib module (defines TestBoard), not a
+    # test file. Re-add it after the glob exclude removes it.
+    "gem5/components/boards/test_board.py",
+]
 
 # Header-only target for python/embedded.hh. Used by pysources and other
 # embedded Python cc_libraries that #include "python/embedded.hh" and need
