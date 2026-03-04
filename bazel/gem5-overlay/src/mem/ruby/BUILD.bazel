@@ -94,6 +94,10 @@ cc_library(
             "system/VIPERSequencer.cc",
         ],
         "//conditions:default": [],
+    }) + select({
+        "//configs:protocol_chi": ["structures/MN_TBETable.cc"],
+        "//configs:protocol_multiple": ["structures/MN_TBETable.cc"],
+        "//conditions:default": [],
     }),
     hdrs = glob([
         "common/*.hh",
