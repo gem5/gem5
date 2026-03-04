@@ -68,7 +68,16 @@ def _resolve_effective_configure(module_ctx):
 
     if not is_remote and not source_root:
         gem5_root = _find_gem5_module_root(module_ctx)
-        source_root = gem5_root + "/.."
+        # Check parent directory first (local_path_override: bazel/ is a
+        # subdirectory of the gem5 source tree), then the module root itself
+        # (archive_override: source is co-located with MODULE.bazel).
+        parent = gem5_root + "/.."
+        if module_ctx.path(parent + "/src").exists:
+            source_root = parent
+        elif module_ctx.path(gem5_root + "/src").exists:
+            source_root = gem5_root
+        else:
+            source_root = parent
 
     return struct(
         name = name if name else "gem5_sources",

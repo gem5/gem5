@@ -4,11 +4,22 @@ Conditionally included when //configs:systemc_enabled is True.
 """
 
 load("@rules_cc//cc:defs.bzl", "cc_library")
-load("//rules:defs.bzl", "gem5_debug_flag")
+load(
+    "//rules:defs.bzl",
+    "gem5_debug_flag",
+    "gem5_embedded_python_library",
+)
 
 package(default_visibility = ["//visibility:public"])
 
 gem5_debug_flag(name = "TlmBridge", desc = "TLM bridge debugging")
+
+# Export SimObject .py files for param generation and pysource embedding.
+exports_files([
+    "Tlm.py",
+    "core/SystemC.py",
+    "tlm_bridge/TlmBridge.py",
+])
 
 cc_library(
     name = "systemc",
@@ -19,11 +30,32 @@ cc_library(
             "**/tests/**",
         ],
     ),
-    hdrs = glob(["**/*.hh"]),
-    includes = ["."],
+    hdrs = glob(["**/*.hh", "**/*.inc", "ext/**/*.h", "ext/**/*.hh"]),
+    includes = [
+        ".",
+        "ext",
+        "ext/systemc_home/include",
+    ],
     deps = [
         "//src:gem5_hdrs",
+        "//src/python:python_core",
+        "@gem5_ext_pybind11//:pybind11",
         "@gem5_ext_systemc//:systemc",
+        "@system_python//:python",
     ],
     alwayslink = True,
+)
+
+# Runtime Python modules embedded as m5.systemc and m5.tlm.
+# These are utility wrappers, not SimObject definitions.
+gem5_embedded_python_library(
+    name = "systemc_pysources",
+    modules = {
+        "python/systemc.py": "m5.systemc",
+        "python/tlm.py": "m5.tlm",
+    },
+    deps = [
+        "//src/python:embedded_hdr",
+        "//src:_gem5_base_hdrs",
+    ],
 )

@@ -77,6 +77,7 @@ build:all --@gem5_sources//configs:have_capstone=True
 build:all --@gem5_sources//configs:have_hdf5=True
 build:all --@gem5_sources//configs:have_png=True
 build:all --@gem5_sources//configs:have_valgrind=True
+build:all --@gem5_sources//configs:use_systemc=True
 
 build:vega_x86 --@gem5_sources//configs:use_x86_isa=True
 build:vega_x86 --@gem5_sources//configs:primary_isa=x86

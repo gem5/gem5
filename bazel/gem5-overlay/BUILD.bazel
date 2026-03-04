@@ -27,8 +27,10 @@ load(
     "SIMOBJECT_PY_FILES_POWER",
     "SIMOBJECT_PY_FILES_RISCV",
     "SIMOBJECT_PY_FILES_RUBY",
+    "SIMOBJECT_PY_FILES_CHI",
     "SIMOBJECT_PY_FILES_RUBY_GPU",
     "SIMOBJECT_PY_FILES_SPARC",
+    "SIMOBJECT_PY_FILES_SYSTEMC",
     "SIMOBJECT_PY_FILES_X86",
     "simobject_paths_to_labels",
 )
@@ -422,6 +424,13 @@ _SIMOBJ_PY_FILES = SIMOBJECT_PY_FILES_BASE + select({
 }) + select({
     "//configs:test_objects_enabled": ["src/test_objects/StatTester.py"],
     "//conditions:default": [],
+}) + select({
+    "//configs:systemc_enabled": SIMOBJECT_PY_FILES_SYSTEMC,
+    "//conditions:default": [],
+}) + select({
+    "//configs:protocol_chi": SIMOBJECT_PY_FILES_CHI,
+    "//configs:protocol_multiple": SIMOBJECT_PY_FILES_CHI,
+    "//conditions:default": [],
 })
 
 _SIMOBJ_PY_SRCS = simobject_paths_to_labels(SIMOBJECT_PY_FILES_BASE) + select({
@@ -492,6 +501,13 @@ _SIMOBJ_PY_SRCS = simobject_paths_to_labels(SIMOBJECT_PY_FILES_BASE) + select({
 }) + select({
     "//configs:test_objects_enabled": ["//src/test_objects:StatTester.py"],
     "//conditions:default": [],
+}) + select({
+    "//configs:systemc_enabled": simobject_paths_to_labels(SIMOBJECT_PY_FILES_SYSTEMC),
+    "//conditions:default": [],
+}) + select({
+    "//configs:protocol_chi": simobject_paths_to_labels(SIMOBJECT_PY_FILES_CHI),
+    "//configs:protocol_multiple": simobject_paths_to_labels(SIMOBJECT_PY_FILES_CHI),
+    "//conditions:default": [],
 })
 
 # SLICC-generated SimObject .py files for the active protocol.
@@ -556,6 +572,11 @@ gem5_sim_object_aggregate(
         "//configs:ruby_enabled": [
             "//src/mem/ruby:ruby",
             "//src/mem/ruby/protocol:active_protocol",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:systemc_enabled": [
+            "//src/systemc:systemc",
         ],
         "//conditions:default": [],
     }),
@@ -739,6 +760,22 @@ gem5_simobject_pysources(
     deps = _SIMOBJ_PY_DEPS,
 )
 
+# SystemC SimObjects (conditional on systemc_enabled).
+gem5_simobject_pysources(
+    name = "simobject_pysources_systemc",
+    simobject_py_files = SIMOBJECT_PY_FILES_SYSTEMC,
+    simobject_py_srcs = simobject_paths_to_labels(SIMOBJECT_PY_FILES_SYSTEMC),
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+# CHI non-SLICC SimObjects (conditional on protocol_chi/protocol_multiple).
+gem5_simobject_pysources(
+    name = "simobject_pysources_chi",
+    simobject_py_files = SIMOBJECT_PY_FILES_CHI,
+    simobject_py_srcs = simobject_paths_to_labels(SIMOBJECT_PY_FILES_CHI),
+    deps = _SIMOBJ_PY_DEPS,
+)
+
 # ---------------------------------------------------------------------------
 # gem5_all: Aggregation library that links all subsystem libraries.
 #
@@ -878,7 +915,15 @@ cc_library(
         ],
         "//conditions:default": [],
     }) + select({
-        "//configs:systemc_enabled": ["//src/systemc:systemc"],
+        "//configs:systemc_enabled": [
+            "//src/systemc:systemc",
+            "//src/systemc:systemc_pysources",
+            "//:simobject_pysources_systemc",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:protocol_chi": ["//:simobject_pysources_chi"],
+        "//configs:protocol_multiple": ["//:simobject_pysources_chi"],
         "//conditions:default": [],
     }) + select({
         "//configs:test_objects_enabled": ["//src/test_objects:test_objects"],

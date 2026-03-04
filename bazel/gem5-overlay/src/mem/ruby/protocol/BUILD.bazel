@@ -8,9 +8,12 @@ so the linker picks one copy; _unique has alwayslink for controllers).
 """
 
 load("@rules_cc//cc:defs.bzl", "cc_library")
-load("//rules:defs.bzl", "gem5_slicc_protocol")
+load("//rules:defs.bzl", "gem5_debug_flag", "gem5_slicc_protocol")
 
 package(default_visibility = ["//visibility:public"])
+
+# Export non-SLICC SimObject .py files from CHI subdirectories
+exports_files(["chi/generic/CHIGeneric.py"])
 
 # Shared .sm files used by multiple protocols
 _SHARED_SM = glob(["*.sm"])
@@ -85,6 +88,34 @@ gem5_slicc_protocol(
                  ["RubySlicc_interfaces.slicc"],
 )
 
+# CHI non-SLICC components: generic controller and debug flags
+gem5_debug_flag(name = "RubyCHIGeneric", desc = "RubyCHIGeneric debugging")
+gem5_debug_flag(name = "RubyCHIGenericVerbose", desc = "RubyCHIGenericVerbose debugging")
+
+cc_library(
+    name = "chi_generic",
+    srcs = ["chi/generic/CHIGenericController.cc"],
+    hdrs = ["chi/generic/CHIGenericController.hh"],
+    copts = ["-Wno-unused-variable", "-DNUMBER_BITS_PER_SET=64"],
+    includes = [".", "slicc_CHI"],
+    deps = [
+        "//src:_gem5_base_hdrs",
+        ":CHI_shared",
+        ":CHI_unique_hdrs_lib",
+        ":RubyCHIGeneric",
+        ":RubyCHIGenericVerbose",
+    ],
+    alwayslink = True,
+)
+
+# Header-only wrapper for CHI unique headers (avoids linking CHI_unique
+# which has alwayslink and would cause duplicate symbols in MULTIPLE mode).
+cc_library(
+    name = "CHI_unique_hdrs_lib",
+    hdrs = [":CHI_unique_hdrs"],
+    includes = [".", "slicc_CHI"],
+)
+
 # Protocol names for MULTIPLE mode
 _ALL_PROTOCOL_NAMES = [
     "MESI_Two_Level",
@@ -100,6 +131,12 @@ _ALL_PROTOCOL_NAMES = [
     "CHI",
 ]
 
+# CHI with non-SLICC generic controller for single-protocol CHI mode
+cc_library(
+    name = "CHI_full",
+    deps = [":CHI_unique", ":CHI_shared", ":chi_generic"],
+)
+
 # All protocols combined for MULTIPLE mode (deduplicated).
 # Uses _unique targets (alwayslink) for protocol-specific controllers.
 # Each _unique depends on its own _shared (no alwayslink), so the linker
@@ -109,7 +146,8 @@ _ALL_PROTOCOL_NAMES = [
 cc_library(
     name = "all_protocols",
     deps = [":{}_unique".format(p) for p in _ALL_PROTOCOL_NAMES] +
-           ["//src/learning_gem5/part3:MSI_unique"],
+           ["//src/learning_gem5/part3:MSI_unique"] +
+           [":chi_generic"],
 )
 
 # Active protocol alias: resolves to selected protocol via config.
@@ -125,7 +163,7 @@ alias(
         "//configs:protocol_moesi_cmp_directory": ":MOESI_CMP_directory",
         "//configs:protocol_moesi_cmp_token": ":MOESI_CMP_token",
         "//configs:protocol_moesi_hammer": ":MOESI_hammer",
-        "//configs:protocol_chi": ":CHI",
+        "//configs:protocol_chi": ":CHI_full",
         "//configs:protocol_gpu_viper": ":GPU_VIPER",
         "//configs:protocol_gpu_viper_region": ":GPU_VIPER",
         "//configs:protocol_garnet_standalone": ":Garnet_standalone",

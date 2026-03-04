@@ -344,6 +344,18 @@ SIMOBJECT_PY_FILES_GPU = [
     "src/gpu-compute/LdsState.py",
 ]
 
+# SystemC SimObject .py files (gated on systemc_enabled)
+SIMOBJECT_PY_FILES_SYSTEMC = [
+    "src/systemc/Tlm.py",
+    "src/systemc/core/SystemC.py",
+    "src/systemc/tlm_bridge/TlmBridge.py",
+]
+
+# CHI protocol non-SLICC SimObject .py files (gated on protocol_chi/protocol_multiple)
+SIMOBJECT_PY_FILES_CHI = [
+    "src/mem/ruby/protocol/chi/generic/CHIGeneric.py",
+]
+
 # -- Path-to-label conversion for declaring .py files as Bazel inputs --
 # Sorted by depth (deepest first) for longest-prefix matching.
 _OVERLAY_PACKAGES = [
