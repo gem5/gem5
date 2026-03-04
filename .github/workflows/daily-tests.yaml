@@ -73,6 +73,10 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
+            - name: Ensure build tools are available
+              run: |
+                  command -v ninja || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends ninja-build; }
+                  ninja --version
 
             - name: Cache build/ALL_opt
               uses: actions/cache@v4
@@ -97,6 +101,10 @@ jobs:
         timeout-minutes: 60
         steps:
             - uses: actions/checkout@v4
+            - name: Ensure build tools are available
+              run: |
+                  command -v ninja || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends ninja-build; }
+                  ninja --version
 
             - name: Run ALL/unittests.${{ matrix.type }} UnitTests
               run: |
@@ -153,6 +161,10 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
+            - name: Ensure build tools are available
+              run: |
+                  command -v ninja || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends ninja-build; }
+                  ninja --version
             - name: Restore build/ALL_opt cache
               uses: actions/cache/restore@v4
               with:
@@ -192,6 +204,11 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
+            - name: Install newer cmake and ninja
+              run: |
+                  python3 -m pip install cmake ninja
+                  cmake --version
+                  ninja --version
             - name: Cache build/VEGA_X86_opt
               uses: actions/cache@v4
               with:
@@ -223,6 +240,10 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
+            - name: Ensure build tools are available
+              run: |
+                  command -v ninja || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends ninja-build; }
+                  ninja --version
             - name: Build RISCV/libgem5_shared.so with SST
               run: |
                   cmake -G Ninja -DCMAKE_BUILD_TYPE=GEM5_OPT -DGEM5_BUILD_VARIANT=RISCV -DGEM5_WITH_TCMALLOC=OFF -B build/RISCV
@@ -246,6 +267,10 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
+            - name: Ensure build tools are available
+              run: |
+                  command -v ninja || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends ninja-build; }
+                  ninja --version
             - name: Build ARM/gem5
               run: |
                   cmake -G Ninja -DCMAKE_BUILD_TYPE=GEM5_OPT -DGEM5_BUILD_VARIANT=ARM -B build/ARM
@@ -274,6 +299,10 @@ jobs:
         timeout-minutes: 360 # 6 hours
         steps:
             - uses: actions/checkout@v4
+            - name: Ensure build tools are available
+              run: |
+                  command -v ninja || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends ninja-build; }
+                  ninja --version
             - name: Checkout DRAMSys
               working-directory: ${{ github.workspace }}/ext/dramsys
               run: git clone https://github.com/tukl-msd/DRAMSys --branch v5.3.1 --depth 1 DRAMSys

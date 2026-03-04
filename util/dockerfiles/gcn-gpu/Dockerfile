@@ -48,6 +48,15 @@ RUN apt -y update && \
     # Upgrade to gcc 10: gem5 supports gcc 10+.
     gcc-10 g++-10 cpp-10
 
+# Install cmake >= 3.20 from the Kitware APT repository (system cmake on
+# Ubuntu 20.04 is 3.16.3, which is too old for our CMakeLists.txt).
+RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | \
+    gpg --dearmor - | tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null && \
+    echo 'deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ focal main' | \
+    tee /etc/apt/sources.list.d/kitware.list >/dev/null && \
+    apt-get update && apt-get install -y cmake && \
+    cmake --version
+
 # Update the default compiler to gcc 10
 RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100 && \
     update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 && \

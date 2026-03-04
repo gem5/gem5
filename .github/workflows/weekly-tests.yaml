@@ -62,6 +62,10 @@ jobs:
         needs: [get-date, get-testlib-very-long-dirs]
         steps:
             - uses: actions/checkout@v4
+            - name: Ensure build tools are available
+              run: |
+                  command -v ninja || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends ninja-build; }
+                  ninja --version
 
             - name: Cache build/ALL_opt
               uses: actions/cache@v4
@@ -98,6 +102,11 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
+            - name: Install newer cmake and ninja
+              run: |
+                  python3 -m pip install cmake ninja
+                  cmake --version
+                  ninja --version
 
             - name: Cache build/VEGA_X86_opt
               uses: actions/cache@v4

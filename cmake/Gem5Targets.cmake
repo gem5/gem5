@@ -196,10 +196,12 @@ include(Gem5Subsystems)
 # (no circular dependency issue since all objects are in one archive).
 gem5_get_subsystem_libs(_subsystem_libs)
 
-if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.24")
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.24" AND NOT APPLE)
     # CMake 3.24+: thin archive with subsystem STATICs linked via RESCAN
     # (--start-group / --end-group) to resolve circular dependencies
     # (e.g., gem5_base references gem5_sim::print_backtrace and vice versa).
+    # Apple's linker does not support --start-group/--end-group, so macOS
+    # always uses the OBJECT-sources fallback path below.
     add_library(gem5_all STATIC
         "${CMAKE_SOURCE_DIR}/src/base/date.cc"
     )

@@ -85,6 +85,10 @@ jobs:
         timeout-minutes: 60
         steps:
             - uses: actions/checkout@v4
+            - name: Ensure build tools are available
+              run: |
+                  command -v ninja || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends ninja-build; }
+                  ninja --version
             - name: CI Unittests (${{ matrix.type }})
               working-directory: ${{ github.workspace }}
               run: |
@@ -147,6 +151,10 @@ jobs:
         timeout-minutes: 90
         steps:
             - uses: actions/checkout@v4
+            - name: Ensure build tools are available
+              run: |
+                  command -v ninja || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends ninja-build; }
+                  ninja --version
             - name: Clang Compilation
               working-directory: ${{ github.workspace }}
               run: |
@@ -206,6 +214,10 @@ jobs:
                 build-target: ${{ fromJson(needs.testlib-quick-matrix.outputs.build-matrix) }}
         steps:
             - uses: actions/checkout@v4
+            - name: Ensure build tools are available
+              run: |
+                  command -v ninja || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends ninja-build; }
+                  ninja --version
 
             - name: Cache build/ALL_opt
               uses: actions/cache/restore@v4
@@ -306,6 +318,11 @@ jobs:
         needs: [pre-commit, get-date]
         steps:
             - uses: actions/checkout@v4
+            - name: Install newer cmake and ninja
+              run: |
+                  python3 -m pip install cmake ninja
+                  cmake --version
+                  ninja --version
 
             # Obtain the cache if available.
             - name: Cache build/VEGA_X86_opt

@@ -21,6 +21,10 @@ jobs:
         container: ghcr.io/gem5/${{ matrix.image }}:latest
         steps:
             - uses: actions/checkout@v4
+            - name: Ensure build tools are available
+              run: |
+                  command -v ninja || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends ninja-build; }
+                  ninja --version
             - name: Compile build/ALL/gem5 (GEM5_${{ matrix.build-type }}) with ${{ matrix.image }}
               run: |
                   BUILD_TYPE="GEM5_$(echo '${{ matrix.build-type }}' | tr '[:lower:]' '[:upper:]')"
@@ -42,6 +46,10 @@ jobs:
         container: ghcr.io/gem5/${{ matrix.image }}:latest
         steps:
             - uses: actions/checkout@v4
+            - name: Ensure build tools are available
+              run: |
+                  command -v ninja || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends ninja-build; }
+                  ninja --version
             - name: Compile build/${{ matrix.gem5-compilation }}/gem5 (GEM5_${{ matrix.build-type }}) with ${{ matrix.image }}
               run: |
                   BUILD_TYPE="GEM5_$(echo '${{ matrix.build-type }}' | tr '[:lower:]' '[:upper:]')"
@@ -66,6 +74,10 @@ jobs:
         container: ghcr.io/gem5/${{ matrix.image }}:latest
         steps:
             - uses: actions/checkout@v4
+            - name: Ensure build tools are available
+              run: |
+                  command -v ninja || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends ninja-build; }
+                  ninja --version
             - name: Compile build/ALL/gem5 (GEM5_${{ matrix.build-type }}) with ${{ matrix.sanitizer }} in ${{ matrix.image }}
               # The address sanitizer is quite memory intensive; triggering OOM errors on smaller runners.
               # To mitigate this, we limit ninja to a single thread (`-j1`)
