@@ -249,39 +249,19 @@ slicc.writeCodeFiles(code_output_dir, ["mem/ruby/slicc_interface/RubySlicc_inclu
             ),
         ]
     else:
-        # Fallback: tree artifact for dynamic output.
-        # SLICC writes into mem/ruby/protocol/ subdirectory within the
-        # tree artifact so #include "mem/ruby/protocol/X.hh" resolves.
-        out_dir = ctx.actions.declare_directory("slicc_{}".format(protocol))
-        nested_path = "{}/mem/ruby/protocol".format(out_dir.path)
-
-        ctx.actions.run_shell(
-            outputs = [out_dir],
-            inputs = all_inputs,
-            command = "mkdir -p {nested} && {fwd_cmds} && python3 {script} {src} {nested} {slicc} {ply} {grammar} {iface}".format(
-                nested = nested_path,
-                fwd_cmds = _forwarding_header_cmds("{nested}".format(nested = nested_path)),
-                script = script.path,
-                src = src.path,
-                slicc = slicc_init.path if slicc_init else "",
-                ply = ply_init.path if ply_init else "",
-                grammar = grammar_file.path if grammar_file else "",
-                iface = interfaces_arg,
-            ),
-            mnemonic = "SLICC",
-            progress_message = "Compiling SLICC protocol {} (tree)".format(protocol),
+        # No manifest found for this protocol. The manifest is required
+        # because downstream SimObject aggregate generation needs the
+        # individual .py files (controller definitions) that SLICC
+        # produces. Without a manifest, those .py files would be trapped
+        # inside a tree artifact and invisible to the param generator,
+        # causing missing params/*_Controller.hh link failures.
+        #
+        # To add a new protocol, run: bazel run //tools:slicc_discover
+        # and commit the updated configs/slicc_manifests.bzl.
+        fail(
+            "SLICC protocol '{}' has no manifest in configs/slicc_manifests.bzl. ".format(protocol) +
+            "Run 'bazel run //tools:slicc_discover' to generate it.",
         )
-
-        return [
-            DefaultInfo(files = depset([out_dir])),
-            SliccInfo(py_files = depset()),
-            SliccSplitInfo(
-                shared_srcs = depset(),
-                shared_hdrs = depset(),
-                unique_srcs = depset(),
-                unique_hdrs = depset(),
-            ),
-        ]
 
 _slicc_gen = rule(
     implementation = _slicc_gen_impl,
