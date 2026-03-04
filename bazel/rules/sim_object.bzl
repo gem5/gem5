@@ -150,7 +150,7 @@ def _sim_object_aggregate_gen_impl(ctx):
     all 300+ .py files into the gem5py_m5 binary.
     """
     gem5py_m5 = ctx.executable.gem5py_m5
-    use_python = "True" if ctx.attr.use_python else "False"
+    use_python = str(ctx.attr.use_python)
 
     # Three separate tree artifacts for explicit output separation.
     params_dir = ctx.actions.declare_directory(ctx.label.name + "_params")
@@ -344,7 +344,7 @@ print("Generated", len(generated_enums), "enum types")
 
     # Collect generated .py file paths (from SLICC, etc.) for argv[7:].
     gen_py_files = ctx.files.generated_simobject_py_srcs
-    gen_py_args = " ".join([f.path for f in gen_py_files]) if gen_py_files else ""
+    gen_py_args = " ".join([f.path for f in gen_py_files])
 
     ctx.actions.run_shell(
         outputs = [params_dir, enums_dir, pybind_dir],

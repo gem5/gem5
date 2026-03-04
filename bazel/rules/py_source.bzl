@@ -10,6 +10,13 @@ from rules_python) produces incompatible bytecode that crashes at runtime.
 
 load("@rules_cc//cc:defs.bzl", "cc_import", "cc_library")
 
+def _find_marshal_py(marshal_scripts):
+    """Find marshal.py in the build tools file list."""
+    for f in marshal_scripts:
+        if f.basename == "marshal.py":
+            return f
+    fail("marshal.py not found in _marshal_scripts")
+
 def _py_source_gen_impl(ctx):
     """Marshal a Python source file into a C++ embedding.
 
@@ -25,13 +32,7 @@ def _py_source_gen_impl(ctx):
     cc_file = ctx.actions.declare_file("python/{}.py.cc".format(safe_name))
 
     marshal_scripts = ctx.files._marshal_scripts
-    marshal_py = None
-    for f in marshal_scripts:
-        if f.basename == "marshal.py":
-            marshal_py = f
-            break
-    if not marshal_py:
-        fail("marshal.py not found in _marshal_scripts")
+    marshal_py = _find_marshal_py(marshal_scripts)
 
     abs_arg = abspath if abspath else py_file.path
 
@@ -140,19 +141,13 @@ def _simobject_embed_gen_impl(ctx):
     output_dir = ctx.actions.declare_directory(ctx.label.name + "_gen")
 
     marshal_scripts = ctx.files._marshal_scripts
-    marshal_py = None
-    for f in marshal_scripts:
-        if f.basename == "marshal.py":
-            marshal_py = f
-            break
-    if not marshal_py:
-        fail("marshal.py not found in _marshal_scripts")
+    marshal_py = _find_marshal_py(marshal_scripts)
 
     files_str = "\\n".join(ctx.attr.simobject_py_files)
 
     # Collect generated .py file sandbox paths.
     gen_py_files = ctx.files.generated_simobject_py_srcs
-    gen_files_str = "\\n".join([f.path for f in gen_py_files]) if gen_py_files else ""
+    gen_files_str = "\\n".join([f.path for f in gen_py_files])
 
     script = ctx.actions.declare_file("_embed_simobjects_{}.py".format(ctx.label.name))
     ctx.actions.write(

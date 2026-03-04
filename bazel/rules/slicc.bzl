@@ -96,6 +96,13 @@ def _forwarding_header_cmds(output_dir):
         )
     return " && ".join(cmds)
 
+def _find_file_by_suffix(files, suffix):
+    """Find the first file in a list whose path ends with the given suffix."""
+    for f in files:
+        if f.path.endswith(suffix):
+            return f
+    return None
+
 def _slicc_gen_impl(ctx):
     """Run SLICC to generate C++ and Python from protocol definitions."""
     src = ctx.file.src
@@ -103,24 +110,9 @@ def _slicc_gen_impl(ctx):
     cc_manifest = SLICC_MANIFESTS.get(protocol, [])
     py_manifest = SLICC_PY_MANIFESTS.get(protocol, [])
 
-    # Find SLICC init for path setup
-    slicc_init = None
-    for f in ctx.files._slicc_files:
-        if f.path.endswith("slicc/__init__.py"):
-            slicc_init = f
-            break
-
-    ply_init = None
-    for f in ctx.files._ply_files:
-        if f.path.endswith("ply/__init__.py"):
-            ply_init = f
-            break
-
-    grammar_file = None
-    for f in ctx.files._grammar_files:
-        if f.path.endswith("grammar.py"):
-            grammar_file = f
-            break
+    slicc_init = _find_file_by_suffix(ctx.files._slicc_files, "slicc/__init__.py")
+    ply_init = _find_file_by_suffix(ctx.files._ply_files, "ply/__init__.py")
+    grammar_file = _find_file_by_suffix(ctx.files._grammar_files, "grammar.py")
 
     # Resolve the protocol base directory for SLICC.
     # For most protocols, this is the .slicc file's directory.
@@ -204,7 +196,7 @@ slicc.writeCodeFiles(code_output_dir, ["mem/ruby/slicc_interface/RubySlicc_inclu
         unique_cc_outputs = [ctx.actions.declare_file("{}/{}".format(prefix, f)) for f in unique_cc_manifest]
         unique_hh_outputs = [ctx.actions.declare_file("{}/{}".format(prefix, f)) for f in unique_hh_manifest]
 
-        cc_outputs = shared_cc_outputs + shared_hh_outputs + unique_cc_outputs + unique_hh_outputs
+        slicc_outputs = shared_cc_outputs + shared_hh_outputs + unique_cc_outputs + unique_hh_outputs
 
         # Also declare forwarding headers for external types.
         fwd_outputs = [
@@ -215,7 +207,7 @@ slicc.writeCodeFiles(code_output_dir, ["mem/ruby/slicc_interface/RubySlicc_inclu
         # Declare .py outputs for SimObject controller definitions.
         py_outputs = [ctx.actions.declare_file("{}/{}".format(prefix, f)) for f in py_manifest]
 
-        all_outputs = cc_outputs + fwd_outputs + py_outputs
+        all_outputs = slicc_outputs + fwd_outputs + py_outputs
         # Use forwarding header dirname for the protocol root directory.
         # Manifest entries may have protocol subdirectories (MESI_Two_Level/...)
         # but forwarding headers always go at the protocol root level.
@@ -239,7 +231,7 @@ slicc.writeCodeFiles(code_output_dir, ["mem/ruby/slicc_interface/RubySlicc_inclu
         )
 
         return [
-            DefaultInfo(files = depset(cc_outputs + fwd_outputs)),
+            DefaultInfo(files = depset(slicc_outputs + fwd_outputs)),
             SliccInfo(py_files = depset(py_outputs)),
             SliccSplitInfo(
                 shared_srcs = depset(shared_cc_outputs),
@@ -269,7 +261,7 @@ slicc.writeCodeFiles(code_output_dir, ["mem/ruby/slicc_interface/RubySlicc_inclu
             inputs = all_inputs,
             command = "mkdir -p {nested} && {fwd_cmds} && python3 {script} {src} {nested} {slicc} {ply} {grammar} {iface}".format(
                 nested = nested_path,
-                fwd_cmds = _forwarding_header_cmds("{nested}".format(nested = nested_path)),
+                fwd_cmds = _forwarding_header_cmds(nested_path),
                 script = script.path,
                 src = src.path,
                 slicc = slicc_init.path if slicc_init else "",

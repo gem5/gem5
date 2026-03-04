@@ -102,7 +102,7 @@ def _gem5_repos_extension_impl(module_ctx):
             name = "gem5-raw",
             urls = effective.source_urls,
             strip_prefix = effective.source_strip_prefix,
-            integrity = effective.source_integrity if effective.source_integrity else "",
+            integrity = effective.source_integrity,
             build_file_content = "# Raw gem5 source tree.\n",
         )
     else:
