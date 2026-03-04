@@ -27,6 +27,7 @@
  */
 
 #include <cstdio>
+#include <mutex>
 #include <string>
 
 #include "base/compiler.hh"
@@ -125,9 +126,8 @@ Linux::devRandom(Process *process, ThreadContext *tc)
     DPRINTFR(SyscallVerbose, "%d: %s: open: generating urandom\n", curTick(),
              tc->getCpuPtr()->name());
 
-    if (!random) {
-        random = Random::genRandom();
-    }
+    static std::once_flag randomInitFlag;
+    std::call_once(randomInitFlag, []() { random = Random::genRandom(); });
 
     std::stringstream line;
     int max = 1E5;

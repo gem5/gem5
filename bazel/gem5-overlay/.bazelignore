@@ -2,7 +2,7 @@
 # These are not needed for the Bazel build and may contain
 # files that confuse Bazel's analysis.
 bazel
-ext
+ext/googletest
 cmake
 build
 build_cmake
