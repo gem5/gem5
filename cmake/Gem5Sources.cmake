@@ -63,8 +63,13 @@ _gem5_define_global_property(GEM5_SIMOBJ_ENUM_PYFILES
     ".py source files for enum generation")
 
 # Phase 2 codegen (SimObject params/enums) depends on gem5py_m5.
-# Dependency is tracked implicitly: each add_custom_command for param/enum
-# .cc files lists gem5py_m5 in DEPENDS, so CMake resolves the ordering.
+# The umbrella target gen_simobj_codegen is created by
+# gem5_create_simobject_commands() and stored in this property so
+# Gem5Targets.cmake can add it as a dependency of every OBJECT library.
+_gem5_define_global_property(GEM5_SIMOBJ_CODEGEN_TARGET
+    "Umbrella target for SimObject enum/param header generation")
+_gem5_define_global_property(GEM5_PROTO_CODEGEN_TARGET
+    "Umbrella target for protobuf header generation")
 
 # Deferred protobuf custom command data (same cross-directory stub workaround).
 _gem5_define_global_property(GEM5_PROTO_FILES

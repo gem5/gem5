@@ -783,6 +783,31 @@ function(gem5_create_simobject_commands)
     endif()
 
     message(STATUS "Created ${_ecount} SimObject enum custom commands")
+
+    # --- Umbrella target for all SimObject codegen headers ---
+    # OBJECT libraries include generated enums/*.hh and params/*.hh headers
+    # but have no direct dependency on the custom commands that produce them.
+    # Create a single umbrella target so Gem5Targets.cmake can add it as a
+    # dependency of every OBJECT library (same pattern as Phase 1 targets).
+    set(_all_simobj_headers "")
+    if(_count GREATER 0)
+        math(EXPR _last2 "${_count} - 1")
+        foreach(_i RANGE 0 ${_last2})
+            list(GET _names ${_i} _obj)
+            list(APPEND _all_simobj_headers "${GEM5_GEN_DIR}/params/${_obj}.hh")
+        endforeach()
+    endif()
+    if(_ecount GREATER 0)
+        math(EXPR _elast2 "${_ecount} - 1")
+        foreach(_i RANGE 0 ${_elast2})
+            list(GET _enames ${_i} _enum)
+            list(APPEND _all_simobj_headers "${GEM5_GEN_DIR}/enums/${_enum}.hh")
+        endforeach()
+    endif()
+    if(_all_simobj_headers)
+        add_custom_target(gen_simobj_codegen DEPENDS ${_all_simobj_headers})
+        set_property(GLOBAL PROPERTY GEM5_SIMOBJ_CODEGEN_TARGET "gen_simobj_codegen")
+    endif()
 endfunction()
 
 # ---------------------------------------------------------------------------
@@ -842,4 +867,17 @@ function(gem5_create_proto_commands)
     endforeach()
 
     message(STATUS "Created ${_count} protobuf custom commands")
+
+    # Umbrella target for protobuf generated headers (same pattern as
+    # gen_simobj_codegen) so OBJECT libraries that #include .pb.h files
+    # wait for protoc to finish.
+    set(_all_proto_headers "")
+    foreach(_proto_file ${_proto_files})
+        get_filename_component(_name "${_proto_file}" NAME_WE)
+        list(APPEND _all_proto_headers "${_proto_out}/${_name}.pb.h")
+    endforeach()
+    if(_all_proto_headers)
+        add_custom_target(gen_proto_codegen DEPENDS ${_all_proto_headers})
+        set_property(GLOBAL PROPERTY GEM5_PROTO_CODEGEN_TARGET "gen_proto_codegen")
+    endif()
 endfunction()

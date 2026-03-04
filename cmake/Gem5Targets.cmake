@@ -160,8 +160,20 @@ get_property(_codegen_phase1 GLOBAL PROPERTY GEM5_CODEGEN_TARGETS_PHASE1)
 get_property(_obj_libs GLOBAL PROPERTY GEM5_OBJECT_LIBS)
 get_property(_slicc_targets GLOBAL PROPERTY GEM5_SLICC_TARGETS)
 
+# Phase 2 targets: SimObject enum/param headers and protobuf headers.
+# Created by gem5_create_simobject_commands() and gem5_create_proto_commands()
+# in Gem5CodeGen.cmake. OBJECT libraries #include these generated headers,
+# so they must be generated before compilation starts.
+get_property(_simobj_codegen_target GLOBAL PROPERTY GEM5_SIMOBJ_CODEGEN_TARGET)
+get_property(_proto_codegen_target GLOBAL PROPERTY GEM5_PROTO_CODEGEN_TARGET)
+
 # Combine all codegen deps into a single list for cleaner propagation.
-set(_codegen_deps ${_codegen_phase1} ${_slicc_targets})
+set(_codegen_deps
+    ${_codegen_phase1}
+    ${_slicc_targets}
+    ${_simobj_codegen_target}
+    ${_proto_codegen_target}
+)
 if(_codegen_deps)
     foreach(_obj ${_obj_libs})
         add_dependencies(${_obj} ${_codegen_deps})
