@@ -24,12 +24,13 @@ filegroup(
 gem5_debug_flag(name = "DebugPrintf", desc = "DebugPrintf debugging")
 gem5_debug_flag(name = "Printf", desc = "Printf debugging")
 
-# linux.cc creates a file-scope static Random instance for /dev/urandom
-# emulation. Kept in a separate target (no alwayslink) so tests that
-# link against gem5_all don't get an unwanted Random created at static
-# init. CMake avoids this because gem5_all is linked without
-# --whole-archive for tests; linux.cc is only pulled in when Linux
-# class symbols are actually referenced.
+# linux.cc defines Linux::openSpecialFile (referenced by the
+# openatFunc<Linux> template in syscall_emul.hh) and the /dev/urandom
+# emulation helper.  alwayslink is required because the template is
+# instantiated in arch-specific code that the linker processes after
+# this archive; without it the linker discards linux.o too early.
+# The overlay linux.cc uses std::call_once for lazy Random init, so
+# force-linking does not create a Random instance during static init.
 cc_library(
     name = "kern_linux_random",
     srcs = ["linux/linux.cc"],
@@ -43,6 +44,7 @@ cc_library(
         "//src/base:base",
         "//src/sim:sim",
     ],
+    alwayslink = True,
 )
 
 # -- Main kern library --
