@@ -13,6 +13,7 @@ on:
             - bazel/**
             - src/**
             - ext/**
+            - include/**
             - build_tools/**
             - .github/workflows/bazel.yaml
     pull_request:
@@ -21,6 +22,7 @@ on:
             - bazel/**
             - src/**
             - ext/**
+            - include/**
             - build_tools/**
             - .github/workflows/bazel.yaml
 

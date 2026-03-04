@@ -292,7 +292,7 @@ generated_enums = set()
 
 if not _allClasses:
     print("ERROR: No SimObject classes discovered!", file=sys.stderr)
-    print("Registered modules:", sorted(_obj_modules), file=sys.stderr)
+    print(f"Loaded {{_loaded}} .py files, {{_gen_loaded}} generated .py files", file=sys.stderr)
     sys.exit(1)
 
 for name in sorted(_allClasses.keys()):

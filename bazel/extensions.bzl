@@ -226,6 +226,9 @@ def _gem5_ext_repo_impl(repository_ctx):
     raw_root = repository_ctx.path(repository_ctx.attr.raw_root_marker).dirname
     ext_dir = raw_root.get_child("ext").get_child(repository_ctx.attr.subdir)
     for entry in ext_dir.readdir():
+        # Skip source BUILD files so the custom build_file overlay wins.
+        if entry.basename in ("BUILD", "BUILD.bazel"):
+            continue
         repository_ctx.symlink(entry, entry.basename)
     repository_ctx.symlink(
         repository_ctx.path(repository_ctx.attr.build_file),
