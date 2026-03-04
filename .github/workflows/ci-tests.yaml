@@ -107,6 +107,10 @@ jobs:
         needs: [pre-commit]
         steps:
             - uses: actions/checkout@v4
+            - name: Ensure build tools are available
+              run: |
+                  command -v ninja || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends ninja-build; }
+                  ninja --version
             - name: Get directories for testlib-quick
               working-directory: ${{ github.workspace }}/tests
               id: dir-matrix
@@ -278,6 +282,10 @@ jobs:
         steps:
         # Checkout the repository then download the gem5 build artifacts.
             - uses: actions/checkout@v4
+            - name: Ensure build tools are available
+              run: |
+                  command -v ninja || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends ninja-build; }
+                  ninja --version
             - uses: actions/download-artifact@v4
               name: Download gem5 artifacts
               with:
@@ -320,6 +328,7 @@ jobs:
             - uses: actions/checkout@v4
             - name: Install newer cmake and ninja
               run: |
+                  python3 -m pip --version || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends python3-pip; }
                   python3 -m pip install cmake ninja
                   cmake --version
                   ninja --version

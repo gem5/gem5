@@ -104,6 +104,7 @@ jobs:
             - uses: actions/checkout@v4
             - name: Install newer cmake and ninja
               run: |
+                  python3 -m pip --version || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends python3-pip; }
                   python3 -m pip install cmake ninja
                   cmake --version
                   ninja --version
