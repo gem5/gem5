@@ -105,17 +105,12 @@ def _gem5_repos_extension_impl(module_ctx):
             integrity = effective.source_integrity if effective.source_integrity else "",
             build_file_content = "# Raw gem5 source tree.\n",
         )
-
-        # Resolve the fetched archive path for ext repo creation.
-        # module_ctx.path() triggers the fetch and returns the local path.
-        source_root = str(module_ctx.path(Label("@gem5-raw//:BUILD.bazel")).dirname)
     else:
         new_local_repository(
             name = "gem5-raw",
             path = effective.source_root,
             build_file_content = "# Raw gem5 source tree.\n",
         )
-        source_root = effective.source_root
 
     # Create @gem5_sources via the overlay repository rule.
     gem5_configure(
@@ -124,12 +119,16 @@ def _gem5_repos_extension_impl(module_ctx):
         overlay_path = "//:gem5-overlay/.bazelignore",
     )
 
-    # Create ext/ library repositories using the resolved source root.
-    # This works in both local mode (filesystem path) and remote mode
-    # (path resolved from the fetched @gem5-raw archive).
+    # Create ext/ library repositories.
+    # In remote mode, use repository rules that resolve @gem5-raw at
+    # repository-rule time (avoids module_ctx.path() circular dependency).
+    # In local mode, use new_local_repository with direct filesystem paths.
     for mod in module_ctx.modules:
         for _tag in mod.tags.ext_libraries:
-            _create_ext_libraries(source_root)
+            if effective.is_remote:
+                _create_ext_libraries_remote()
+            else:
+                _create_ext_libraries_local(effective.source_root)
 
     # System Python detection.
     for mod in module_ctx.modules:
@@ -172,37 +171,75 @@ _ext_libraries_tag = tag_class(
     },
 )
 
-def _create_ext_libraries(source_root):
-    """Create repositories for each ext/ library."""
+# Ext library definitions: (repo_name, ext_subdir, build_file)
+_EXT_LIBRARIES = [
+    ("gem5_ext_libelf", "libelf", "libelf.BUILD"),
+    ("gem5_ext_libfdt", "libfdt", "libfdt.BUILD"),
+    ("gem5_ext_fputils", "fputils", "fputils.BUILD"),
+    ("gem5_ext_softfloat", "softfloat", "softfloat.BUILD"),
+    ("gem5_ext_dsent", "dsent", "dsent.BUILD"),
+    ("gem5_ext_drampower", "drampower", "drampower.BUILD"),
+    ("gem5_ext_dramsim2", "dramsim2", "dramsim2.BUILD"),
+    ("gem5_ext_dramsim3", "dramsim3", "dramsim3.BUILD"),
+    ("gem5_ext_dramsys", "dramsys", "dramsys.BUILD"),
+    ("gem5_ext_nomali", "nomali", "nomali.BUILD"),
+    ("gem5_ext_iostream3", "iostream3", "iostream3.BUILD"),
+    ("gem5_ext_magic_enum", "magic_enum", "magic_enum.BUILD"),
+    ("gem5_ext_systemc", "systemc", "systemc.BUILD"),
+    ("gem5_ext_pybind11", "pybind11", "pybind11.BUILD"),
+    ("gem5_ext_ply", "ply", "ply.BUILD"),
+    ("gem5_ext_dnet", "dnet", "dnet.BUILD"),
+    ("gem5_ext_googletest", "googletest", "googletest.BUILD"),
+    ("gem5_ext_gdbremote", "gdbremote", "gdbremote.BUILD"),
+    ("gem5_ext_x11keysym", "x11keysym", "x11keysym.BUILD"),
+]
+
+def _create_ext_libraries_local(source_root):
+    """Create ext/ library repos using local filesystem paths."""
     ext_path = source_root + "/ext"
+    for repo_name, subdir, build_file in _EXT_LIBRARIES:
+        new_local_repository(
+            name = repo_name,
+            path = ext_path + "/" + subdir,
+            build_file = "//third_party_build:" + build_file,
+        )
 
-    _ext_local_repo("gem5_ext_libelf", ext_path + "/libelf", "libelf.BUILD")
-    _ext_local_repo("gem5_ext_libfdt", ext_path + "/libfdt", "libfdt.BUILD")
-    _ext_local_repo("gem5_ext_fputils", ext_path + "/fputils", "fputils.BUILD")
-    _ext_local_repo("gem5_ext_softfloat", ext_path + "/softfloat", "softfloat.BUILD")
-    _ext_local_repo("gem5_ext_dsent", ext_path + "/dsent", "dsent.BUILD")
-    _ext_local_repo("gem5_ext_drampower", ext_path + "/drampower", "drampower.BUILD")
-    _ext_local_repo("gem5_ext_dramsim2", ext_path + "/dramsim2", "dramsim2.BUILD")
-    _ext_local_repo("gem5_ext_dramsim3", ext_path + "/dramsim3", "dramsim3.BUILD")
-    _ext_local_repo("gem5_ext_dramsys", ext_path + "/dramsys", "dramsys.BUILD")
-    _ext_local_repo("gem5_ext_nomali", ext_path + "/nomali", "nomali.BUILD")
-    _ext_local_repo("gem5_ext_iostream3", ext_path + "/iostream3", "iostream3.BUILD")
-    _ext_local_repo("gem5_ext_magic_enum", ext_path + "/magic_enum", "magic_enum.BUILD")
-    _ext_local_repo("gem5_ext_systemc", ext_path + "/systemc", "systemc.BUILD")
-    _ext_local_repo("gem5_ext_pybind11", ext_path + "/pybind11", "pybind11.BUILD")
-    _ext_local_repo("gem5_ext_ply", ext_path + "/ply", "ply.BUILD")
-    _ext_local_repo("gem5_ext_dnet", ext_path + "/dnet", "dnet.BUILD")
-    _ext_local_repo("gem5_ext_googletest", ext_path + "/googletest", "googletest.BUILD")
-    _ext_local_repo("gem5_ext_gdbremote", ext_path + "/gdbremote", "gdbremote.BUILD")
-    _ext_local_repo("gem5_ext_x11keysym", ext_path + "/x11keysym", "x11keysym.BUILD")
+def _create_ext_libraries_remote():
+    """Create ext/ library repos that resolve @gem5-raw at repository-rule time.
 
-def _ext_local_repo(name, path, build_file):
-    """Create a new_local_repository for an ext/ library."""
-    new_local_repository(
-        name = name,
-        path = path,
-        build_file = "//third_party_build:" + build_file,
+    In remote mode, module_ctx.path() on @gem5-raw causes a circular
+    dependency (the extension creates gem5-raw and then tries to read
+    from it). Instead, each ext repo uses a repository rule that
+    resolves @gem5-raw via repository_ctx.path(), which works because
+    repository rules can access other repos without cycles.
+    """
+    for repo_name, subdir, build_file in _EXT_LIBRARIES:
+        _gem5_ext_repo(
+            name = repo_name,
+            raw_root_marker = "@gem5-raw//:BUILD.bazel",
+            subdir = subdir,
+            build_file = "//third_party_build:" + build_file,
+        )
+
+def _gem5_ext_repo_impl(repository_ctx):
+    """Repository rule that creates an ext library from @gem5-raw."""
+    raw_root = repository_ctx.path(repository_ctx.attr.raw_root_marker).dirname
+    ext_dir = raw_root.get_child("ext").get_child(repository_ctx.attr.subdir)
+    for entry in ext_dir.readdir():
+        repository_ctx.symlink(entry, entry.basename)
+    repository_ctx.symlink(
+        repository_ctx.path(repository_ctx.attr.build_file),
+        "BUILD.bazel",
     )
+
+_gem5_ext_repo = repository_rule(
+    implementation = _gem5_ext_repo_impl,
+    attrs = {
+        "raw_root_marker": attr.label(mandatory = True),
+        "subdir": attr.string(mandatory = True),
+        "build_file": attr.label(mandatory = True),
+    },
+)
 
 gem5_repos_extension = module_extension(
     implementation = _gem5_repos_extension_impl,
