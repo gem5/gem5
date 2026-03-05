@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013,2016-2018, 2022, 2025 Arm Limited
+ * Copyright (c) 2010-2013,2016-2018, 2022, 2025-2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -652,6 +652,70 @@ ArmStaticInst::cSwap<__uint128_t>(__uint128_t val, bool big)
         return val;
     }
 }
+
+class ArmSmeStaticInst : public ArmStaticInst
+{
+  public:
+    enum class TouchType
+    {
+        // Instruction does not access ZA storage.
+        MatNoTouch,
+        // ZA tile access.
+        MatTouchTile,
+        // ZA tile horizontal slice access.
+        MatTouchTileHSlice,
+        // ZA tile vertical slice access.
+        MatTouchTileVSlice,
+        // ZA array vector access.
+        MatTouchHSlice
+    };
+
+    class TouchRecord
+    {
+      public:
+        TouchType type;
+        uint8_t elemSize;
+        uint8_t tileIdx;
+        std::vector<uint16_t> vecIdx;
+
+        TouchRecord()
+            : type(TouchType::MatNoTouch), elemSize(0), tileIdx(0), vecIdx()
+        {}
+    };
+
+  protected:
+    mutable TouchRecord touchRecord;
+
+    ArmSmeStaticInst(const char *mnem, ExtMachInst _machInst,
+                     OpClass __opClass)
+        : ArmStaticInst(mnem, _machInst, __opClass), touchRecord()
+    {}
+
+  public:
+    const TouchRecord &
+    getTouchRecord() const
+    {
+        return touchRecord;
+    }
+
+  protected:
+    void
+    clearTouch() const
+    {
+        touchRecord.type = TouchType::MatNoTouch;
+        touchRecord.vecIdx.clear();
+    }
+
+    template <typename ElemType>
+    void
+    setTouch(TouchType type, uint8_t tile_idx, uint16_t vec_idx) const
+    {
+        touchRecord.type = type;
+        touchRecord.elemSize = sizeof(ElemType);
+        touchRecord.tileIdx = tile_idx;
+        touchRecord.vecIdx.push_back(vec_idx);
+    }
+};
 
 } // namespace ArmISA
 } // namespace gem5

@@ -47,7 +47,7 @@ namespace ArmISA
 {
 
 // Used for SME ADDHA/ADDVA
-class SmeAddOp : public ArmStaticInst
+class SmeAddOp : public ArmSmeStaticInst
 {
   protected:
     uint64_t imm;
@@ -55,11 +55,13 @@ class SmeAddOp : public ArmStaticInst
     RegIndex gp1;
     RegIndex gp2;
 
-    SmeAddOp(const char *mnem, ExtMachInst _machInst,
-             OpClass __opClass, uint64_t _imm, RegIndex _op1,
-             RegIndex _gp1, RegIndex _gp2) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        imm(_imm), op1(_op1), gp1(_gp1), gp2(_gp2)
+    SmeAddOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+             uint64_t _imm, RegIndex _op1, RegIndex _gp1, RegIndex _gp2)
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
+          imm(_imm),
+          op1(_op1),
+          gp1(_gp1),
+          gp2(_gp2)
     {}
 
     std::string generateDisassembly(
@@ -67,7 +69,7 @@ class SmeAddOp : public ArmStaticInst
 };
 
 // Used for the SME ADDSPL/ADDSVL instructions
-class SmeAddVlOp : public ArmStaticInst
+class SmeAddVlOp : public ArmSmeStaticInst
 {
   protected:
     RegIndex dest;
@@ -76,7 +78,7 @@ class SmeAddVlOp : public ArmStaticInst
 
     SmeAddVlOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                RegIndex _dest, RegIndex _op1, uint64_t _imm)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           dest(_dest),
           op1(_op1),
           imm(_imm)
@@ -87,7 +89,7 @@ class SmeAddVlOp : public ArmStaticInst
 };
 
 // Used for SME LD1x/ST1x instrucions
-class SmeLd1xSt1xOp : public ArmStaticInst
+class SmeLd1xSt1xOp : public ArmSmeStaticInst
 {
   protected:
     uint64_t zad;
@@ -101,7 +103,7 @@ class SmeLd1xSt1xOp : public ArmStaticInst
     SmeLd1xSt1xOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                   uint64_t _zad, uint64_t _imm, RegIndex _op1, RegIndex _gp,
                   RegIndex _op2, RegIndex _op3, bool _V)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           zad(_zad),
           imm(_imm),
           op1(_op1),
@@ -116,18 +118,19 @@ class SmeLd1xSt1xOp : public ArmStaticInst
 };
 
 // Used for SME LDR/STR instructions
-class SmeLdrStrOp : public ArmStaticInst
+class SmeLdrStrOp : public ArmSmeStaticInst
 {
   protected:
     uint64_t imm;
     RegIndex op1;
     RegIndex op2;
 
-    SmeLdrStrOp(const char *mnem, ExtMachInst _machInst,
-                OpClass __opClass, uint64_t _imm, RegIndex _op1,
-                RegIndex _op2) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        imm(_imm), op1(_op1), op2(_op2)
+    SmeLdrStrOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+                uint64_t _imm, RegIndex _op1, RegIndex _op2)
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
+          imm(_imm),
+          op1(_op1),
+          op2(_op2)
     {}
 
     std::string generateDisassembly(
@@ -135,14 +138,14 @@ class SmeLdrStrOp : public ArmStaticInst
 };
 
 // Used for SME LDR ZT0 instructions
-class SmeLdrStrTableOp : public ArmStaticInst
+class SmeLdrStrTableOp : public ArmSmeStaticInst
 {
   protected:
     RegIndex op1;
 
     SmeLdrStrTableOp(const char *mnem, ExtMachInst _machInst,
                      OpClass __opClass, RegIndex _op1)
-        : ArmStaticInst(mnem, _machInst, __opClass), op1(_op1)
+        : ArmSmeStaticInst(mnem, _machInst, __opClass), op1(_op1)
     {}
 
     std::string
@@ -151,7 +154,7 @@ class SmeLdrStrTableOp : public ArmStaticInst
 };
 
 // Used for SME ZERO instructions
-class SmeZeroArrayOp : public ArmStaticInst
+class SmeZeroArrayOp : public ArmSmeStaticInst
 {
   protected:
     RegIndex index;
@@ -159,7 +162,9 @@ class SmeZeroArrayOp : public ArmStaticInst
 
     SmeZeroArrayOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                    RegIndex _index, uint8_t _imm)
-        : ArmStaticInst(mnem, _machInst, __opClass), index(_index), imm(_imm)
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
+          index(_index),
+          imm(_imm)
     {}
 
     std::string
@@ -168,7 +173,7 @@ class SmeZeroArrayOp : public ArmStaticInst
 };
 
 // Used for SME MOVA (Tile to Vector)
-class SmeMovExtractOp : public ArmStaticInst
+class SmeMovExtractOp : public ArmSmeStaticInst
 {
   protected:
     RegIndex op1;
@@ -181,7 +186,7 @@ class SmeMovExtractOp : public ArmStaticInst
     SmeMovExtractOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                     RegIndex _op1, uint8_t _zan, uint8_t _imm, RegIndex _gp,
                     RegIndex _op2, bool _v)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           op1(_op1),
           zan(_zan),
           imm(_imm),
@@ -195,7 +200,7 @@ class SmeMovExtractOp : public ArmStaticInst
 };
 
 // Used for SME MOVA (Vector to Tile)
-class SmeMovInsertOp : public ArmStaticInst
+class SmeMovInsertOp : public ArmSmeStaticInst
 {
   protected:
     uint8_t zad;
@@ -208,7 +213,7 @@ class SmeMovInsertOp : public ArmStaticInst
     SmeMovInsertOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                    uint8_t _zad, uint8_t _imm, RegIndex _op1, RegIndex _gp,
                    RegIndex _op2, bool _v)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           zad(_zad),
           imm(_imm),
           op1(_op1),
@@ -223,7 +228,7 @@ class SmeMovInsertOp : public ArmStaticInst
 };
 
 // Used for SME MOVA (Tile to Vector)
-class SmeMovExtract1RegOp : public ArmStaticInst
+class SmeMovExtract1RegOp : public ArmSmeStaticInst
 {
   protected:
     uint8_t zan;
@@ -235,7 +240,7 @@ class SmeMovExtract1RegOp : public ArmStaticInst
     SmeMovExtract1RegOp(const char *mnem, ExtMachInst _machInst,
                         OpClass __opClass, uint8_t _zan, RegIndex _index,
                         uint8_t _imm, RegIndex _dest1, bool _v)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           zan(_zan),
           index(_index),
           imm(_imm),
@@ -249,7 +254,7 @@ class SmeMovExtract1RegOp : public ArmStaticInst
 };
 
 // Used for SME MOVA (Tile to Vector)
-class SmeMovExtract2RegOp : public ArmStaticInst
+class SmeMovExtract2RegOp : public ArmSmeStaticInst
 {
   protected:
     uint8_t zan;
@@ -263,7 +268,7 @@ class SmeMovExtract2RegOp : public ArmStaticInst
                         OpClass __opClass, uint8_t _zan, RegIndex _index,
                         uint8_t _imm, RegIndex _dest1, RegIndex _dest2,
                         bool _v)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           zan(_zan),
           index(_index),
           imm(_imm),
@@ -278,7 +283,7 @@ class SmeMovExtract2RegOp : public ArmStaticInst
 };
 
 // Used for SME MOVA (Vector to Tile)
-class SmeMovInsert2RegOp : public ArmStaticInst
+class SmeMovInsert2RegOp : public ArmSmeStaticInst
 {
   protected:
     uint8_t zad;
@@ -291,7 +296,7 @@ class SmeMovInsert2RegOp : public ArmStaticInst
     SmeMovInsert2RegOp(const char *mnem, ExtMachInst _machInst,
                        OpClass __opClass, uint8_t _zad, RegIndex _index,
                        uint8_t _imm, RegIndex _op1, RegIndex _op2, bool _v)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           zad(_zad),
           index(_index),
           imm(_imm),
@@ -306,7 +311,7 @@ class SmeMovInsert2RegOp : public ArmStaticInst
 };
 
 // Used for SME MOVA (Tile to Vector)
-class SmeMovExtract4RegOp : public ArmStaticInst
+class SmeMovExtract4RegOp : public ArmSmeStaticInst
 {
   protected:
     uint8_t zan;
@@ -322,7 +327,7 @@ class SmeMovExtract4RegOp : public ArmStaticInst
                         OpClass __opClass, uint8_t _zan, RegIndex _index,
                         uint8_t _imm, RegIndex _dest1, RegIndex _dest2,
                         RegIndex _dest3, RegIndex _dest4, bool _v)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           zan(_zan),
           index(_index),
           imm(_imm),
@@ -339,7 +344,7 @@ class SmeMovExtract4RegOp : public ArmStaticInst
 };
 
 // Used for SME MOVA (Vector to Tile)
-class SmeMovInsert4RegOp : public ArmStaticInst
+class SmeMovInsert4RegOp : public ArmSmeStaticInst
 {
   protected:
     uint8_t zad;
@@ -355,7 +360,7 @@ class SmeMovInsert4RegOp : public ArmStaticInst
                        OpClass __opClass, uint8_t _zad, RegIndex _index,
                        uint8_t _imm, RegIndex _op1, RegIndex _op2,
                        RegIndex _op3, RegIndex _op4, bool _v)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           zad(_zad),
           index(_index),
           imm(_imm),
@@ -372,7 +377,7 @@ class SmeMovInsert4RegOp : public ArmStaticInst
 };
 
 // Used for SME MOVA (Array to Vector)
-class SmeMovArrayExtract2RegOp : public ArmStaticInst
+class SmeMovArrayExtract2RegOp : public ArmSmeStaticInst
 {
   protected:
     RegIndex index;
@@ -383,7 +388,7 @@ class SmeMovArrayExtract2RegOp : public ArmStaticInst
     SmeMovArrayExtract2RegOp(const char *mnem, ExtMachInst _machInst,
                              OpClass __opClass, RegIndex _index, uint8_t _imm,
                              RegIndex _dest1, RegIndex _dest2)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           index(_index),
           imm(_imm),
           dest1(_dest1),
@@ -396,7 +401,7 @@ class SmeMovArrayExtract2RegOp : public ArmStaticInst
 };
 
 // Used for SME MOVA (Array to Vector)
-class SmeMovArrayExtract4RegOp : public ArmStaticInst
+class SmeMovArrayExtract4RegOp : public ArmSmeStaticInst
 {
   protected:
     RegIndex index;
@@ -410,7 +415,7 @@ class SmeMovArrayExtract4RegOp : public ArmStaticInst
                              OpClass __opClass, RegIndex _index, uint8_t _imm,
                              RegIndex _dest1, RegIndex _dest2, RegIndex _dest3,
                              RegIndex _dest4)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           index(_index),
           imm(_imm),
           dest1(_dest1),
@@ -425,7 +430,7 @@ class SmeMovArrayExtract4RegOp : public ArmStaticInst
 };
 
 // Used for SME MOVA (Vector to Array)
-class SmeMovArrayInsert2RegOp : public ArmStaticInst
+class SmeMovArrayInsert2RegOp : public ArmSmeStaticInst
 {
   protected:
     RegIndex index;
@@ -436,7 +441,7 @@ class SmeMovArrayInsert2RegOp : public ArmStaticInst
     SmeMovArrayInsert2RegOp(const char *mnem, ExtMachInst _machInst,
                             OpClass __opClass, RegIndex _index, uint8_t _imm,
                             RegIndex _op1, RegIndex _op2)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           index(_index),
           imm(_imm),
           op1(_op1),
@@ -449,7 +454,7 @@ class SmeMovArrayInsert2RegOp : public ArmStaticInst
 };
 
 // Used for SME MOVA (Vector to Array)
-class SmeMovArrayInsert4RegOp : public ArmStaticInst
+class SmeMovArrayInsert4RegOp : public ArmSmeStaticInst
 {
   protected:
     RegIndex index;
@@ -463,7 +468,7 @@ class SmeMovArrayInsert4RegOp : public ArmStaticInst
                             OpClass __opClass, RegIndex _index, uint8_t _imm,
                             RegIndex _op1, RegIndex _op2, RegIndex _op3,
                             RegIndex _op4)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           index(_index),
           imm(_imm),
           op1(_op1),
@@ -477,7 +482,7 @@ class SmeMovArrayInsert4RegOp : public ArmStaticInst
 };
 
 // Used for SME output product instructions
-class SmeOPOp : public ArmStaticInst
+class SmeOPOp : public ArmSmeStaticInst
 {
   protected:
     uint64_t imm;
@@ -487,10 +492,14 @@ class SmeOPOp : public ArmStaticInst
     RegIndex op2;
 
     SmeOPOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
-            uint64_t _imm, RegIndex _op1, RegIndex _gp1,
-            RegIndex _gp2, RegIndex _op2) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        imm(_imm), op1(_op1), gp1(_gp1), gp2(_gp2), op2(_op2)
+            uint64_t _imm, RegIndex _op1, RegIndex _gp1, RegIndex _gp2,
+            RegIndex _op2)
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
+          imm(_imm),
+          op1(_op1),
+          gp1(_gp1),
+          gp2(_gp2),
+          op2(_op2)
     {}
 
     std::string generateDisassembly(
@@ -498,7 +507,7 @@ class SmeOPOp : public ArmStaticInst
 };
 
 // Used for the SME RDSVL instruction
-class SmeRdsvlOp : public ArmStaticInst
+class SmeRdsvlOp : public ArmSmeStaticInst
 {
   protected:
     RegIndex dest;
@@ -506,7 +515,7 @@ class SmeRdsvlOp : public ArmStaticInst
 
     SmeRdsvlOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                RegIndex _dest, uint64_t _imm)
-        : ArmStaticInst(mnem, _machInst, __opClass), dest(_dest), imm(_imm)
+        : ArmSmeStaticInst(mnem, _machInst, __opClass), dest(_dest), imm(_imm)
     {}
 
     std::string generateDisassembly(
@@ -514,22 +523,21 @@ class SmeRdsvlOp : public ArmStaticInst
 };
 
 // Used for SME ZERO
-class SmeZeroOp : public ArmStaticInst
+class SmeZeroOp : public ArmSmeStaticInst
 {
   protected:
     uint8_t imm;
 
-    SmeZeroOp(const char *mnem, ExtMachInst _machInst,
-                OpClass __opClass, uint8_t _imm) :
-        ArmStaticInst(mnem, _machInst, __opClass),
-        imm(_imm)
+    SmeZeroOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
+              uint8_t _imm)
+        : ArmSmeStaticInst(mnem, _machInst, __opClass), imm(_imm)
     {}
 
     std::string generateDisassembly(
             Addr pc, const loader::SymbolTable *symtab) const override;
 };
 
-class Sme2Vector1x2Op : public ArmStaticInst
+class Sme2Vector1x2Op : public ArmSmeStaticInst
 {
   protected:
     RegIndex dest;
@@ -539,7 +547,7 @@ class Sme2Vector1x2Op : public ArmStaticInst
 
     Sme2Vector1x2Op(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                     RegIndex _dest, RegIndex _op1, RegIndex _op2, bool _destr)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           dest(_dest),
           op1(_op1),
           op2(_op2),
@@ -551,7 +559,7 @@ class Sme2Vector1x2Op : public ArmStaticInst
                         const loader::SymbolTable *symtab) const override;
 };
 
-class Sme2Vector1x4Op : public ArmStaticInst
+class Sme2Vector1x4Op : public ArmSmeStaticInst
 {
   protected:
     RegIndex dest;
@@ -564,7 +572,7 @@ class Sme2Vector1x4Op : public ArmStaticInst
     Sme2Vector1x4Op(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                     RegIndex _dest, RegIndex _op1, RegIndex _op2,
                     RegIndex _op3, RegIndex _op4, bool _destr)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           dest(_dest),
           op1(_op1),
           op2(_op2),
@@ -578,7 +586,7 @@ class Sme2Vector1x4Op : public ArmStaticInst
                         const loader::SymbolTable *symtab) const override;
 };
 
-class Sme2Vector2x1Op : public ArmStaticInst
+class Sme2Vector2x1Op : public ArmSmeStaticInst
 {
   protected:
     RegIndex dest1;
@@ -589,7 +597,7 @@ class Sme2Vector2x1Op : public ArmStaticInst
     Sme2Vector2x1Op(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                     RegIndex _dest1, RegIndex _dest2, RegIndex _op1,
                     bool _destr)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           dest1(_dest1),
           dest2(_dest2),
           op1(_op1),
@@ -601,7 +609,7 @@ class Sme2Vector2x1Op : public ArmStaticInst
                         const loader::SymbolTable *symtab) const override;
 };
 
-class Sme2Vector4x1Op : public ArmStaticInst
+class Sme2Vector4x1Op : public ArmSmeStaticInst
 {
   protected:
     RegIndex dest1;
@@ -614,7 +622,7 @@ class Sme2Vector4x1Op : public ArmStaticInst
     Sme2Vector4x1Op(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                     RegIndex _dest1, RegIndex _dest2, RegIndex _dest3,
                     RegIndex _dest4, RegIndex _op1, bool _destr)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           dest1(_dest1),
           dest2(_dest2),
           dest3(_dest3),
@@ -629,7 +637,7 @@ class Sme2Vector4x1Op : public ArmStaticInst
 };
 
 // Used for SME2 ZIP, UZP, SCVFT, UCVTF instructions with 2 registers
-class Sme2Vector2x2Op : public ArmStaticInst
+class Sme2Vector2x2Op : public ArmSmeStaticInst
 {
   protected:
     RegIndex dest1;
@@ -641,7 +649,7 @@ class Sme2Vector2x2Op : public ArmStaticInst
     Sme2Vector2x2Op(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                     RegIndex _dest1, RegIndex _dest2, RegIndex _op1,
                     RegIndex _op2, bool _destr)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           dest1(_dest1),
           dest2(_dest2),
           op1(_op1),
@@ -655,7 +663,7 @@ class Sme2Vector2x2Op : public ArmStaticInst
 };
 
 // Used for SME2 SUNPK/UUNPK with 4 registers.
-class Sme2Vector4x2Op : public ArmStaticInst
+class Sme2Vector4x2Op : public ArmSmeStaticInst
 {
   protected:
     RegIndex dest1;
@@ -669,7 +677,7 @@ class Sme2Vector4x2Op : public ArmStaticInst
     Sme2Vector4x2Op(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                     RegIndex _dest1, RegIndex _dest2, RegIndex _dest3,
                     RegIndex _dest4, RegIndex _op1, RegIndex _op2, bool _destr)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           dest1(_dest1),
           dest2(_dest2),
           dest3(_dest3),
@@ -685,7 +693,7 @@ class Sme2Vector4x2Op : public ArmStaticInst
 };
 
 // Used for SME2 ZIP, UZP, SCVFT, UCVTF instructions with 4 registers
-class Sme2Vector4x4Op : public ArmStaticInst
+class Sme2Vector4x4Op : public ArmSmeStaticInst
 {
   protected:
     RegIndex dest1;
@@ -702,7 +710,7 @@ class Sme2Vector4x4Op : public ArmStaticInst
                     RegIndex _dest1, RegIndex _dest2, RegIndex _dest3,
                     RegIndex _dest4, RegIndex _op1, RegIndex _op2,
                     RegIndex _op3, RegIndex _op4, bool _destr)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           dest1(_dest1),
           dest2(_dest2),
           dest3(_dest3),
@@ -720,7 +728,7 @@ class Sme2Vector4x4Op : public ArmStaticInst
 };
 
 // Used for the SME2 1 reg instructions
-class Sme2MultiSgl1RegOp : public ArmStaticInst
+class Sme2MultiSgl1RegOp : public ArmSmeStaticInst
 {
   protected:
     RegIndex index;
@@ -733,7 +741,7 @@ class Sme2MultiSgl1RegOp : public ArmStaticInst
     Sme2MultiSgl1RegOp(const char *mnem, ExtMachInst _machInst,
                        OpClass __opClass, RegIndex _index, uint8_t _imm,
                        RegIndex _op1, RegIndex _op5)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           index(_index),
           imm(_imm),
           op1(_op1),
@@ -895,11 +903,11 @@ class Sme2MultiIdx4RegOp : public Sme2MultiIdx2RegOp
 };
 
 // Used for the SME2 ZLUT instruction
-class Sme2ZlutOp : public ArmStaticInst
+class Sme2ZlutOp : public ArmSmeStaticInst
 {
   protected:
     Sme2ZlutOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass)
-        : ArmStaticInst(mnem, _machInst, __opClass)
+        : ArmSmeStaticInst(mnem, _machInst, __opClass)
     {}
 
     std::string
@@ -908,7 +916,7 @@ class Sme2ZlutOp : public ArmStaticInst
 };
 
 // TODO
-class Sme2ZaZ2RegOp : public ArmStaticInst
+class Sme2ZaZ2RegOp : public ArmSmeStaticInst
 {
   protected:
     RegIndex index;
@@ -918,7 +926,7 @@ class Sme2ZaZ2RegOp : public ArmStaticInst
 
     Sme2ZaZ2RegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                   RegIndex _index, uint8_t _imm, RegIndex _op1, RegIndex _op2)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           index(_index),
           imm(_imm),
           op1(_op1),
@@ -931,7 +939,7 @@ class Sme2ZaZ2RegOp : public ArmStaticInst
 };
 
 // TODO
-class Sme2ZaZ4RegOp : public ArmStaticInst
+class Sme2ZaZ4RegOp : public ArmSmeStaticInst
 {
   protected:
     RegIndex index;
@@ -944,7 +952,7 @@ class Sme2ZaZ4RegOp : public ArmStaticInst
     Sme2ZaZ4RegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                   RegIndex _index, uint8_t _imm, RegIndex _op1, RegIndex _op2,
                   RegIndex _op3, RegIndex _op4)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           index(_index),
           imm(_imm),
           op1(_op1),
@@ -991,7 +999,7 @@ class Sme2Clamp4RegOp : public Sme2Vector4x2Op
 };
 
 // Used for SME2 2 reg saturating right shift
-class Sme2Rshr2RegOp : public ArmStaticInst
+class Sme2Rshr2RegOp : public ArmSmeStaticInst
 {
   protected:
     RegIndex dest;
@@ -1001,7 +1009,7 @@ class Sme2Rshr2RegOp : public ArmStaticInst
 
     Sme2Rshr2RegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                    RegIndex _dest, RegIndex _op1, RegIndex _op2, uint8_t _imm)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           dest(_dest),
           op1(_op1),
           op2(_op2),
@@ -1014,7 +1022,7 @@ class Sme2Rshr2RegOp : public ArmStaticInst
 };
 
 // Used for SME2 4 reg saturating right shift
-class Sme2Rshr4RegOp : public ArmStaticInst
+class Sme2Rshr4RegOp : public ArmSmeStaticInst
 {
   protected:
     RegIndex dest;
@@ -1027,7 +1035,7 @@ class Sme2Rshr4RegOp : public ArmStaticInst
     Sme2Rshr4RegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                    RegIndex _dest, RegIndex _op1, RegIndex _op2, RegIndex _op3,
                    RegIndex _op4, uint8_t _imm)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           dest(_dest),
           op1(_op1),
           op2(_op2),
@@ -1042,7 +1050,7 @@ class Sme2Rshr4RegOp : public ArmStaticInst
 };
 
 // Used for SME2 SEL 2 register
-class Sme2SSel2RegOp : public ArmStaticInst
+class Sme2SSel2RegOp : public ArmSmeStaticInst
 {
   protected:
     RegIndex dest1;
@@ -1056,7 +1064,7 @@ class Sme2SSel2RegOp : public ArmStaticInst
     Sme2SSel2RegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                    RegIndex _dest1, RegIndex _dest2, RegIndex _gp,
                    RegIndex _op1, RegIndex _op2, RegIndex _op5, RegIndex _op6)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           dest1(_dest1),
           dest2(_dest2),
           gp(_gp),
@@ -1103,7 +1111,7 @@ class Sme2SSel4RegOp : public Sme2SSel2RegOp
 };
 
 // Used for SME2 LUTI 1 register
-class Sme2Luti1RegOp : public ArmStaticInst
+class Sme2Luti1RegOp : public ArmSmeStaticInst
 {
   protected:
     RegIndex dest1;
@@ -1112,7 +1120,7 @@ class Sme2Luti1RegOp : public ArmStaticInst
 
     Sme2Luti1RegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                    RegIndex _dest1, RegIndex _op1, uint64_t _imm)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           dest1(_dest1),
           op1(_op1),
           imm(_imm)
@@ -1124,7 +1132,7 @@ class Sme2Luti1RegOp : public ArmStaticInst
 };
 
 // Used for SME2 LUTI 2 register
-class Sme2Luti2RegOp : public ArmStaticInst
+class Sme2Luti2RegOp : public ArmSmeStaticInst
 {
   protected:
     RegIndex dest1;
@@ -1135,7 +1143,7 @@ class Sme2Luti2RegOp : public ArmStaticInst
     Sme2Luti2RegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                    RegIndex _dest1, RegIndex _dest2, RegIndex _op1,
                    uint64_t _imm)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           dest1(_dest1),
           dest2(_dest2),
           op1(_op1),
@@ -1148,7 +1156,7 @@ class Sme2Luti2RegOp : public ArmStaticInst
 };
 
 // Used for SME2 LUTI 4 register
-class Sme2Luti4RegOp : public ArmStaticInst
+class Sme2Luti4RegOp : public ArmSmeStaticInst
 {
   protected:
     RegIndex dest1;
@@ -1161,7 +1169,7 @@ class Sme2Luti4RegOp : public ArmStaticInst
     Sme2Luti4RegOp(const char *mnem, ExtMachInst _machInst, OpClass __opClass,
                    RegIndex _dest1, RegIndex _dest2, RegIndex _dest3,
                    RegIndex _dest4, RegIndex _op1, uint64_t _imm)
-        : ArmStaticInst(mnem, _machInst, __opClass),
+        : ArmSmeStaticInst(mnem, _machInst, __opClass),
           dest1(_dest1),
           dest2(_dest2),
           dest3(_dest3),
