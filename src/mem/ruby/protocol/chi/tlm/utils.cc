@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 ARM Limited
+ * Copyright (c) 2023, 2026 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -234,11 +234,11 @@ std::string
 transactionToString(const Payload &payload,
                     const Phase &phase)
 {
-    return csprintf("%s %s addr=0x%08lx ns=%d size=%d attrs=0x%x",
-        phaseToChannelName(phase),
-        phaseToOpcodeName(phase).c_str(),
-        payload.address, payload.ns,
-        (int)payload.size, (int)payload.mem_attr);
+    return csprintf("%s %s addr=0x%08lx ns=%d size=%d attrs=0x%x txnid=%u",
+                    phaseToChannelName(phase),
+                    phaseToOpcodeName(phase).c_str(), payload.address,
+                    payload.ns, (int)payload.size, (int)payload.mem_attr,
+                    phase.txn_id);
 }
 
 namespace tlm_to_ruby {

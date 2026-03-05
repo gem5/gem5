@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2025 Arm Limited
+ * Copyright (c) 2010-2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1645,8 +1645,7 @@ ISA::getCurSveVecLenInBits() const
 
     if (el == EL2 || (el == EL0 && ELIsInHost(tc, el))) {
         len = static_cast<ZCR>(miscRegs[MISCREG_ZCR_EL2]).len;
-    } else if (release->has(ArmExtension::VIRTUALIZATION) && !isSecure(tc) &&
-               (el == EL0 || el == EL1)) {
+    } else if ((el == EL0 || el == EL1) && EL2Enabled(tc)) {
         len = std::min(
             len,
             static_cast<unsigned>(
