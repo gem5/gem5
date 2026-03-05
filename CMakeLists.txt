@@ -123,16 +123,9 @@ set(GEM5_WERROR_FLAGS
     -Wno-error=deprecated
     CACHE INTERNAL "Warning-as-error flags for gem5 targets"
 )
-# ISA-parser-generated code contains self-assignments (e.g. resTemp = resTemp)
-# that Clang warns about. Whitelist these since the generated code cannot be
-# changed.
-if(GEM5_CLANG)
-    list(APPEND GEM5_WERROR_FLAGS
-        -Wno-self-assign
-        -Wno-self-assign-overloaded
-        -Wno-parentheses-equality
-    )
-endif()
+# (Clang/GCC warning suppressions for generated code are appended to
+# GEM5_WARNING_FLAGS below, after -Wall/-Wextra, so they are not
+# re-enabled by those umbrella flags.)
 
 # Include compiler/linker check modules once (used for flag detection below)
 include(CheckCXXCompilerFlag)
@@ -144,7 +137,9 @@ if(_has_as_needed)
     add_link_options(-Wl,--as-needed)
 endif()
 
-# Clang-specific warning suppressions (gem5 code only, via gem5_deps)
+# Clang-specific warning suppressions (gem5 code only, via gem5_deps).
+# These must appear AFTER -Wall/-Wextra in GEM5_WARNING_FLAGS so that the
+# umbrella flags do not re-enable the suppressed diagnostics.
 if(GEM5_CLANG)
     check_cxx_compiler_flag(-Wno-c99-designator _has_c99_designator)
     if(_has_c99_designator)
@@ -154,6 +149,22 @@ if(GEM5_CLANG)
     if(_has_defaulted_func_deleted)
         list(APPEND GEM5_WARNING_FLAGS -Wno-defaulted-function-deleted)
     endif()
+    # ISA-parser-generated code contains self-assignments (e.g. resTemp =
+    # resTemp) and SLICC-generated code contains extraneous parentheses in
+    # equality comparisons.  Suppress these since the generated code cannot
+    # be changed.
+    list(APPEND GEM5_WARNING_FLAGS
+        -Wno-self-assign
+        -Wno-self-assign-overloaded
+        -Wno-parentheses-equality
+    )
+endif()
+
+# GCC-specific warning suppressions (gem5 code only, via gem5_deps).
+if(GEM5_GCC)
+    # HDF5 C++ headers use deprecated implicit copy operators; suppress the
+    # warning globally since it originates in third-party headers.
+    list(APPEND GEM5_WARNING_FLAGS -Wno-deprecated-copy)
 endif()
 
 # FreeBSD needs extra include paths and libthr

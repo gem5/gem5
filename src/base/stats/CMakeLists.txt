@@ -6,13 +6,10 @@ gem5_add_source(info.cc)
 gem5_add_source(storage.cc)
 gem5_add_source(text.cc)
 
-# HDF5 stats output (conditional)
+# HDF5 stats output (conditional).
+# -Wno-deprecated-copy for GCC is applied globally in GEM5_WARNING_FLAGS.
 if(CONF_HAVE_HDF5)
-    if(GEM5_GCC)
-        gem5_add_source(hdf5.cc APPEND_FLAGS -Wno-deprecated-copy)
-    else()
-        gem5_add_source(hdf5.cc)
-    endif()
+    gem5_add_source(hdf5.cc)
 endif()
 
 # --- Unit tests ---

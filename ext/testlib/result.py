@@ -234,6 +234,7 @@ class JUnitTestSuites(XMLElement):
         state.Result.Errored: "errors",
         state.Result.Failed: "failures",
         state.Result.Passed: "tests",
+        state.Result.NotRun: "skipped",
     }
 
     def __init__(self, internal_results):
@@ -260,6 +261,7 @@ class JUnitTestSuite(JUnitTestSuites):
         state.Result.Failed: "failures",
         state.Result.Passed: "tests",
         state.Result.Skipped: "skipped",
+        state.Result.NotRun: "skipped",
     }
 
     def __init__(self, suite_result):
