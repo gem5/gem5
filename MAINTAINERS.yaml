@@ -234,6 +234,11 @@ cmake:
         CMake build system
     status: maintained
 
+bazel:
+    desc: >-
+        Bazel build system
+    status: maintained
+
 sim:
     desc: >-
         General simulation components
