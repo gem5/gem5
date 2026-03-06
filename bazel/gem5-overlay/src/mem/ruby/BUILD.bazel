@@ -107,7 +107,11 @@ cc_library(
         "structures/*.hh",
         "system/*.hh",
     ]),
-    defines = ["NUMBER_BITS_PER_SET=64"],
+    defines = select({
+        "//configs:primary_isa_x86": ["NUMBER_BITS_PER_SET=128"],
+        "//configs:primary_isa_arm": ["NUMBER_BITS_PER_SET=128"],
+        "//conditions:default": ["NUMBER_BITS_PER_SET=64"],
+    }),
     includes = ["."],
     deps = [
         "//src:gem5_hdrs",

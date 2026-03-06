@@ -187,6 +187,11 @@ gem5_gen_defines(
         "//configs:kvm_arm": "arm",
         "//conditions:default": "x86",
     }),
+    number_bits_per_set = select({
+        "//configs:primary_isa_x86": "128",
+        "//configs:primary_isa_arm": "128",
+        "//conditions:default": "64",
+    }),
 )
 
 # Marshal the generated defines.py into C++ for embedding

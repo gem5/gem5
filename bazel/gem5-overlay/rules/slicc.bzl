@@ -378,7 +378,12 @@ def gem5_slicc_protocol(name, src, protocol = None, sm_sources = [],
         protocol = name
 
     gen_name = "_gen_slicc_{}".format(name)
-    slicc_copts = copts + ["-Wno-unused-variable", "-DNUMBER_BITS_PER_SET=64"]
+    _bits_per_set = select({
+        "//configs:primary_isa_x86": ["-DNUMBER_BITS_PER_SET=128"],
+        "//configs:primary_isa_arm": ["-DNUMBER_BITS_PER_SET=128"],
+        "//conditions:default": ["-DNUMBER_BITS_PER_SET=64"],
+    })
+    slicc_copts = copts + ["-Wno-unused-variable"] + _bits_per_set
     slicc_includes = [".", "slicc_{}".format(name)]
 
     _slicc_gen(

@@ -42,7 +42,7 @@ def _gen_defines_py_impl(ctx):
         "    'BUILD_TLM': {},".format(ctx.attr.build_tlm),
         "    'KVM_ISA': '{}',".format(ctx.attr.kvm_isa),
         "    'VEGA_GPU_ISA': {},".format(ctx.attr.build_gpu),
-        "    'NUMBER_BITS_PER_SET': 64,",
+        "    'NUMBER_BITS_PER_SET': {},".format(ctx.attr.number_bits_per_set),
         "    'SLICC_HTML': False,",
     ]
 
@@ -85,6 +85,7 @@ _gen_defines_py = rule(
         "use_test_objects": attr.string(default = "False"),
         "build_tlm": attr.string(default = "False"),
         "kvm_isa": attr.string(default = "x86"),
+        "number_bits_per_set": attr.string(default = "64"),
     },
 )
 

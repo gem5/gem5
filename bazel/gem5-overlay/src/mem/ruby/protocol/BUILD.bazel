@@ -96,7 +96,11 @@ cc_library(
     name = "chi_generic",
     srcs = ["chi/generic/CHIGenericController.cc"],
     hdrs = ["chi/generic/CHIGenericController.hh"],
-    copts = ["-Wno-unused-variable", "-DNUMBER_BITS_PER_SET=64"],
+    copts = ["-Wno-unused-variable"] + select({
+        "//configs:primary_isa_x86": ["-DNUMBER_BITS_PER_SET=128"],
+        "//configs:primary_isa_arm": ["-DNUMBER_BITS_PER_SET=128"],
+        "//conditions:default": ["-DNUMBER_BITS_PER_SET=64"],
+    }),
     includes = [".", "slicc_CHI"],
     deps = [
         "//src:_gem5_base_hdrs",
