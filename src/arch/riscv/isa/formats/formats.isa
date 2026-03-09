@@ -49,5 +49,8 @@
 // Pseudo operations
 ##include "m5ops.isa"
 
+// Include our custom manual instructions
+##include "custom.isa"
+
 // Include the unknown
 ##include "unknown.isa"

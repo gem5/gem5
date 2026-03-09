@@ -1,0 +1,15 @@
+def format MAC_R() {{
+    decode_block = 'return new MAC_R(machInst);\n'
+}};
+
+def format DOT4_ACC_R() {{
+    decode_block = 'return new DOT4_ACC_R(machInst);\n'
+}};
+
+def format RELU_R() {{
+    decode_block = 'return new RELU_R(machInst);\n'
+}};
+
+def format CLAMP_I() {{
+    decode_block = 'return new CLAMP_I(machInst);\n'
+}};
