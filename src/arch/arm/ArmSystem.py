@@ -246,9 +246,16 @@ class ArmDefaultRelease(Armv8):
         "FEAT_SVE2",
         # Armv9.2
         "FEAT_SME",  # Optional in Armv9.2
+        "FEAT_SME_F64F64",
+        "FEAT_SME_I16I64",
+        # Armv9.3
+        "FEAT_SME2",
         # Armv9.4
         "FEAT_SVE2p1",
         "FEAT_SME2p1",
+        "FEAT_SVE_B16B16",
+        "FEAT_SME_B16B16",
+        "FEAT_SME_F16F16",
     ]
 
 
