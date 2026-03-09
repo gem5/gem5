@@ -1283,10 +1283,11 @@ chmodFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname, mode_t mode)
     return fchmodatFunc<OS>(desc, tc, OS::TGT_AT_FDCWD, pathname, mode);
 }
 
+/// Common implementation for poll and ppoll.
 template <class OS>
 SyscallReturn
-pollFunc(SyscallDesc *desc, ThreadContext *tc,
-         VPtr<> fdsPtr, int nfds, int tmout)
+pollImpl(SyscallDesc *desc, ThreadContext *tc, VPtr<> fdsPtr, int nfds,
+         int tmout)
 {
     auto p = tc->getProcessPtr();
 
@@ -1304,8 +1305,9 @@ pollFunc(SyscallDesc *desc, ThreadContext *tc,
         temp_tgt_fds[index] = ((struct pollfd *)fdsBuf.bufferPtr())[index].fd;
         int tgt_fd = temp_tgt_fds[index];
         auto hbfdp = std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[tgt_fd]);
-        if (!hbfdp)
+        if (!hbfdp) {
             return -EBADF;
+        }
         auto host_fd = hbfdp->getSimFD();
         ((struct pollfd *)fdsBuf.bufferPtr())[index].fd = host_fd;
     }
@@ -1327,16 +1329,21 @@ pollFunc(SyscallDesc *desc, ThreadContext *tc,
              */
             System *sysh = tc->getSystemPtr();
             std::list<BasicSignal>::iterator it;
-            for (it=sysh->signalList.begin(); it!=sysh->signalList.end(); it++)
-                if (it->receiver == p)
+            for (it = sysh->signalList.begin(); it != sysh->signalList.end();
+                 it++) {
+                if (it->receiver == p) {
                     return -EINTR;
+                }
+            }
             return SyscallReturn::retry();
         }
-    } else
+    } else {
         status = poll((struct pollfd *)fdsBuf.bufferPtr(), nfds, 0);
+    }
 
-    if (status == -1)
+    if (status == -1) {
         return -errno;
+    }
 
     /**
      * Replace each host_fd in the returned poll_fd array with its original
@@ -1354,6 +1361,32 @@ pollFunc(SyscallDesc *desc, ThreadContext *tc,
     fdsBuf.copyOut(SETranslatingPortProxy(tc));
 
     return status;
+}
+
+/// Target poll() handler.
+template <class OS>
+SyscallReturn
+pollFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> fdsPtr, int nfds,
+         int tmout)
+{
+    return pollImpl<OS>(desc, tc, fdsPtr, nfds, tmout);
+}
+
+/// Target ppoll() handler.
+/// Note: Signal mask handling is intentionally omitted as it is
+/// not currently required for gem5's SE mode.
+template <class OS>
+SyscallReturn
+ppollFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> fdsPtr, int nfds,
+          VPtr<typename OS::timespec> tsPtr, VPtr<> sigmaskPtr)
+{
+    int tmout = -1;
+    if (tsPtr) {
+        tmout = gtoh(tsPtr->tv_sec, OS::byteOrder) * 1000 +
+                gtoh(tsPtr->tv_nsec, OS::byteOrder) / 1000000;
+    }
+
+    return pollImpl<OS>(desc, tc, fdsPtr, nfds, tmout);
 }
 
 /// Target fchmod() handler.
