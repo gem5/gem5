@@ -12,6 +12,30 @@ namespace RiscvISA
 {
 
 /**
+ * mac (Multiply-Accumulate)
+ * Semantics: rd = rd + (rs1 * rs2)
+ */
+class MAC_R : public RiscvStaticInst
+{
+  private:
+    RegId srcRegIdxArr[3];
+    RegId destRegIdxArr[1];
+
+    const RegId rd;
+    const RegId rs1;
+    const RegId rs2;
+
+  public:
+    MAC_R(ExtMachInst machInst);
+
+    std::string generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const override;
+
+    Fault execute(ExecContext *xc,
+        trace::InstRecord *traceData) const override;
+};
+
+/**
  * dot4_acc (Packed Dot Product Accumulate)
  * Semantics: rd = rd + sum_{i=0..3}( (int8)rs1.byte[i] * (int8)rs2.byte[i] )
  * Packing: a0/b0 are bits [7:0] (LSB byte), then [15:8], [23:16], [31:24].
