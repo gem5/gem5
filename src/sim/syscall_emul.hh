@@ -3296,6 +3296,28 @@ ftruncateFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd,
     return (result == -1) ? -errno : result;
 }
 
+template <class OS>
+SyscallReturn
+rseqFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> rseq_ptr,
+         uint32_t rseq_len, int flags, uint32_t sig)
+{
+    // 1 is RSEQ_FLAG_UNREGISTER
+    if (flags & 1) {
+        return 0;
+    }
+
+    // Register
+    // Write current CPU ID to cpu_id_start (offset 0) and cpu_id (offset 4)
+    uint32_t cpu_id = tc->cpuId();
+    cpu_id = htog(cpu_id, OS::byteOrder);
+
+    SETranslatingPortProxy(tc).writeBlob(rseq_ptr, &cpu_id, sizeof(cpu_id));
+    SETranslatingPortProxy(tc).writeBlob(rseq_ptr + 4, &cpu_id,
+                                         sizeof(cpu_id));
+
+    return 0;
+}
+
 template <typename OS>
 SyscallReturn
 getrandomFunc(SyscallDesc *desc, ThreadContext *tc,

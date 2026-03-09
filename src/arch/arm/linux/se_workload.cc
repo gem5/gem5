@@ -786,7 +786,7 @@ class SyscallTable64 : public SyscallDescTable<EmuLinux::SyscallABI64>
                {base + 290, "pkey_free"},
                {base + 291, "statx"},
                {base + 292, "io_pgetevents"},
-               {base + 293, "rseq", ignoreWarnOnceFunc},
+               {base + 293, "rseq", rseqFunc<ArmLinux64>},
                {base + 294, "kexec_file_load"},
                {base + 435, "clone3", clone3Func<ArmLinux64>},
                {base + 1024, "open", openFunc<ArmLinux64>},
