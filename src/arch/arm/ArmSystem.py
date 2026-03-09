@@ -343,13 +343,26 @@ class Armv90(Armv89):
 
 
 class Armv92(Armv90):
-    extensions = Armv90.extensions + ["FEAT_SME"]
+    extensions = Armv90.extensions + [
+        "FEAT_SME",
+        "FEAT_SME_F64F64",
+        "FEAT_SME_I16I64",
+    ]
 
 
-class Armv94(Armv92):
+class Armv93(Armv92):
+    extensions = Armv92.extensions + [
+        "FEAT_SME2",
+    ]
+
+
+class Armv94(Armv93):
     extensions = Armv92.extensions + [
         "FEAT_SVE2p1",
+        "FEAT_SME2p1",
         "FEAT_SVE_B16B16",
+        "FEAT_SME_B16B16",
+        "FEAT_SME_F16F16",
     ]
 
 
