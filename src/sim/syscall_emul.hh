@@ -189,10 +189,6 @@ SyscallReturn unlinkImpl(SyscallDesc *desc, ThreadContext *tc,
 SyscallReturn linkFunc(SyscallDesc *desc, ThreadContext *tc,
                        VPtr<> pathname, VPtr<> new_pathname);
 
-/// Target symlink() handler.
-SyscallReturn symlinkFunc(SyscallDesc *desc, ThreadContext *tc,
-                          VPtr<> pathname, VPtr<> new_pathname);
-
 /// Target mkdir() handler.
 SyscallReturn mkdirFunc(SyscallDesc *desc, ThreadContext *tc,
                         VPtr<> pathname, mode_t mode);
@@ -1143,6 +1139,55 @@ readlinkFunc(SyscallDesc *desc, ThreadContext *tc,
 {
     return readlinkatFunc<OS>(desc, tc, OS::TGT_AT_FDCWD,
         pathname, buf_ptr, bufsiz);
+}
+
+/// Target symlinkat() handler.
+template <class OS>
+SyscallReturn
+symlinkatFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> target_ptr,
+              int newdirfd, VPtr<> linkpath_ptr)
+{
+    std::string target;
+    if (!SETranslatingPortProxy(tc).tryReadString(target, target_ptr)) {
+        return -EFAULT;
+    }
+
+    std::string linkpath;
+    if (!SETranslatingPortProxy(tc).tryReadString(linkpath, linkpath_ptr)) {
+        return -EFAULT;
+    }
+
+    auto p = tc->getProcessPtr();
+
+    std::string processed_linkpath;
+    if (newdirfd == OS::TGT_AT_FDCWD) {
+        processed_linkpath = p->checkPathRedirect(linkpath);
+    } else if (!startswith(linkpath, "/")) {
+        std::shared_ptr<FDEntry> fdep = ((*p->fds)[newdirfd]);
+        auto ffdp = std::dynamic_pointer_cast<FileFDEntry>(fdep);
+        if (!ffdp) {
+            return -EBADF;
+        }
+        processed_linkpath =
+            p->checkPathRedirect(ffdp->getFileName() + "/" + linkpath);
+    } else {
+        // absolute path
+        processed_linkpath = p->checkPathRedirect(linkpath);
+    }
+
+    int result = symlink(p->checkPathRedirect(target).c_str(),
+                         processed_linkpath.c_str());
+    return (result == -1) ? -errno : result;
+}
+
+/// Target symlink() handler.
+template <class OS>
+SyscallReturn
+symlinkFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname,
+            VPtr<> new_pathname)
+{
+    return symlinkatFunc<OS>(desc, tc, pathname, OS::TGT_AT_FDCWD,
+                             new_pathname);
 }
 
 /// Target renameat() handler.
