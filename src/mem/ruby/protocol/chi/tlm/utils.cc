@@ -378,9 +378,12 @@ rspOpcode(CHIResponseType rsp)
       case CHIResponseType_Comp_UD_PD:
       case CHIResponseType_Comp_UC:
       case CHIResponseType_Comp_I:
-        return RSP_OPCODE_COMP;
+      case CHIResponseType_Comp:
+          return RSP_OPCODE_COMP;
       case CHIResponseType_CompDBIDResp:
         return RSP_OPCODE_COMP_DBID_RESP;
+      case CHIResponseType_DBIDResp:
+          return RSP_OPCODE_DBID_RESP;
       case CHIResponseType_RetryAck:
         return RSP_OPCODE_RETRY_ACK;
       default:
@@ -455,19 +458,22 @@ Resp
 rspResp(CHIResponseType rsp)
 {
     switch (rsp) {
-      case CHIResponseType_Comp_I:
-        return RESP_I;
-      case CHIResponseType_Comp_UC:
-        return RESP_UC;
-      case CHIResponseType_Comp_UD_PD:
-        return RESP_UD_PD;
-      case CHIResponseType_CompDBIDResp:
-        return RESP_I;
-      case CHIResponseType_RetryAck:
-        // Just setup to zero
-        return RESP_I;
-      default:
-        panic("Unrecognised rsp opcode: %d\n", rsp);
+        case CHIResponseType_Comp:
+        case CHIResponseType_Comp_I:
+            return RESP_I;
+        case CHIResponseType_Comp_UC:
+            return RESP_UC;
+        case CHIResponseType_Comp_UD_PD:
+            return RESP_UD_PD;
+        case CHIResponseType_CompDBIDResp:
+            return RESP_I;
+        case CHIResponseType_DBIDResp:
+            return RESP_I;
+        case CHIResponseType_RetryAck:
+            // Just setup to zero
+            return RESP_I;
+        default:
+            panic("Unrecognised rsp opcode: %d\n", rsp);
     }
 }
 
