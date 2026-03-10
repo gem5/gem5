@@ -41,6 +41,15 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
+            - name: Free disk space
+              run: |
+                  sudo rm -rf /usr/share/dotnet
+                  sudo rm -rf /opt/ghc
+                  sudo rm -rf /usr/local/lib/android
+                  sudo rm -rf /usr/share/swift
+                  docker system prune -af || true
+                  df -h /
+
             - name: Install dependencies
               run: |
                   sudo apt-get update
@@ -68,6 +77,15 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
+            - name: Free disk space
+              run: |
+                  sudo rm -rf /usr/share/dotnet
+                  sudo rm -rf /opt/ghc
+                  sudo rm -rf /usr/local/lib/android
+                  sudo rm -rf /usr/share/swift
+                  docker system prune -af || true
+                  df -h /
+
             - name: Install dependencies
               run: |
                   sudo apt-get update
@@ -80,7 +98,6 @@ jobs:
               uses: bazel-contrib/setup-bazel@0.14.0
               with:
                   bazelisk-version: 1.x
-                  disk-cache: ${{ github.workflow }}-test
 
             - name: Run unit tests
               working-directory: bazel
