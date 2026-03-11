@@ -343,15 +343,9 @@ def run_schedule(test_schedule, log_handler):
     log_handler.finish_testing()
 
     if configuration.config.gcov == "all-test-and-gcov":
-        # log.test_log.message(configuration.config.base_dir)
-        # log.test_log.message(configuration.config.build_dir)
         cfg = configuration.config
-        # log.test_log.message(cfg.result_path)
-        # log.test_log.message(cfg.isa)
         # Run gcovr on each ISA in the build directory
-        # built_isas = [dir for dir in os.listdir(cfg.build_dir) if os.path.isdir(os.path.join(cfg.build_dir, dir))]
         built_isas = isas_in_build_dir(cfg.build_dir)
-        # log.test_log.message(f"List of build ISAs is {built_isas}")
 
         for isa_dir in built_isas:
             run_gcovr(
