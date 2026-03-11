@@ -309,8 +309,9 @@ PMP::unserialize(CheckpointIn &cp)
     int cptPmpEntries;
     UNSERIALIZE_SCALAR(cptPmpEntries);
     if (cptPmpEntries != pmpEntries) {
-        fatal("Current PMP table size is different from the one stored in the "
-              "checkpoint!");
+        fatal("Current PMP table size (%d) differs from checkpoint PMP table "
+              "size (%d).",
+              pmpEntries, cptPmpEntries);
     }
 
     for (int i = 0; i < pmpEntries; i++) {
