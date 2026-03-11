@@ -152,10 +152,12 @@ Decoder::doPrefixState(uint8_t nextByte)
       case OperandSizeOverride:
         DPRINTF(Decoder, "Found operand size override prefix.\n");
         emi.legacy.op = true;
+        emi.rex = 0;
         break;
       case AddressSizeOverride:
         DPRINTF(Decoder, "Found address size override prefix.\n");
         emi.legacy.addr = true;
+        emi.rex = 0;
         break;
         // Segment override prefixes
       case CSOverride:
@@ -163,6 +165,10 @@ Decoder::doPrefixState(uint8_t nextByte)
       case ESOverride:
       case SSOverride:
           if (emi.mode.submode == SixtyFourBitMode) {
+              // Even though these are ignored in 64-bit mode,
+              // placing these after a REX prefix still renders
+              // the REX invalid.
+              emi.rex = 0;
               break;
           }
           [[fallthrough]];
@@ -170,18 +176,22 @@ Decoder::doPrefixState(uint8_t nextByte)
       case GSOverride:
           DPRINTF(Decoder, "Found segment override.\n");
           emi.legacy.seg = prefix;
+          emi.rex = 0;
           break;
       case Lock:
         DPRINTF(Decoder, "Found lock prefix.\n");
         emi.legacy.lock = true;
+        emi.rex = 0;
         break;
       case Rep:
         DPRINTF(Decoder, "Found rep prefix.\n");
         emi.legacy.rep = true;
+        emi.rex = 0;
         break;
       case Repne:
         DPRINTF(Decoder, "Found repne prefix.\n");
         emi.legacy.repne = true;
+        emi.rex = 0;
         break;
       case RexPrefix:
         DPRINTF(Decoder, "Found Rex prefix %#x.\n", nextByte);
