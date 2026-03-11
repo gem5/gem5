@@ -244,15 +244,15 @@ class SConsFixture(UniqueFixture):
         command.extend(self.targets)
         log_call(log.test_log, command, time=None, stderr=sys.stderr)
 
-        # Remove gcda files that are created during the build process, as they
-        # cause problems when running gcov after the tests finish.
-        # Similarly, remove gcno files for Python files as they also cause
-        # problems when running gcov.
-        log.test_log.message(
-            "Now removing gcda and .py.gcno files generated during the build "
-            f"process. In the directory {self.target_dir}."
-        )
         if config.gcov:
+            # Remove gcda files that are created during the build process, as
+            # they cause problems when running gcov after the tests finish.
+            # Similarly, remove gcno files for Python files as they also cause
+            # problems when running gcov.
+            log.test_log.message(
+                "Now removing gcda and .py.gcno files generated during the "
+                f"build process. In the directory {self.target_dir}."
+            )
             gcov_delete_files(self.target_dir, "all")
 
 
