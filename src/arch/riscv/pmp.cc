@@ -298,7 +298,7 @@ PMP::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(numRules);
     int cptPmpEntries = pmpEntries;
     SERIALIZE_SCALAR(cptPmpEntries);
-    for (int i = 0; i < numRules; i++) {
+    for (int i = 0; i < pmpEntries; i++) {
         pmpTable[i].serializeSection(cp, csprintf("Entry%d", i));
     }
 }
@@ -313,7 +313,7 @@ PMP::unserialize(CheckpointIn &cp)
               "checkpoint!");
     }
 
-    for (int i = 0; i < numRules; i++) {
+    for (int i = 0; i < pmpEntries; i++) {
         PmpEntry *tmp = &pmpTable[i];
         tmp->unserializeSection(cp, csprintf("Entry%d", i));
     }
