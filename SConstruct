@@ -741,6 +741,11 @@ for variant_path in variant_paths:
         if not want_libcxx and sys.platform == "darwin":
             env.Append(CXXFLAGS=['-stdlib=libc++'])
             env.Append(LIBS=['c++'])
+        if GetOption('gcov'):
+            warning("Detected use of the Clang compiler with the --gcov "
+                    "option. Gcov can't be used with Clang, so the --gcov "
+                    "option will be ignored."
+                    )
 
     if sys.platform == 'cygwin':
         # cygwin has some header file issues...
