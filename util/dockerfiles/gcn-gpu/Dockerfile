@@ -215,3 +215,7 @@ ENV HACC_MPI_CXX="${HIPCC_BIN}/hipcc -Xclang -pthread"
 ENV HACC_MPI_LD="${HIPCC_BIN}/hipcc -Xclang -pthread"
 
 ENV HACC_MPI_LDFLAGS="-lm -lrt"
+
+# Dependencies needed for codecov/codecov-action in GitHub Actions
+RUN apt -y update && \
+    apt -y install bash curl gpg
