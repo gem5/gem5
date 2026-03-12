@@ -1299,4 +1299,3 @@ gem5_cc_library(
 
 
 # VNC targets moved to src/base/vnc/BUILD
-

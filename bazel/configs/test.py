@@ -4,11 +4,19 @@ import os
 import sys
 
 import m5
-from m5 import options
-from m5 import event
-from m5 import core
-from m5 import stats
-from m5.objects import HelloObject, GoodbyeObject, SimpleObject, Root
+from m5 import (
+    core,
+    event,
+    options,
+    stats,
+)
+from m5.objects import (
+    GoodbyeObject,
+    HelloObject,
+    Root,
+    SimpleObject,
+)
+
 
 def main():
     outdir = "/tmp/gem5_out"
@@ -24,11 +32,11 @@ def main():
     event.mainq = event.getEventQueue(0)
     event.setEventQueue(event.mainq)
 
-    m5.options['outdir'] = outdir
-    m5.options['dump_config'] = "config.ini"
-    m5.options['json_config'] = ""
-    m5.options['dot_config'] = ""
-    m5.options['dot_dvfs_config'] = ""
+    m5.options["outdir"] = outdir
+    m5.options["dump_config"] = "config.ini"
+    m5.options["json_config"] = ""
+    m5.options["dot_config"] = ""
+    m5.options["dot_dvfs_config"] = ""
 
     os.makedirs(outdir, exist_ok=True)
     core.setOutputDir(outdir)

@@ -36,7 +36,10 @@ system. Since there are no events, this "simulation" should finish immediately
 import m5
 
 # import the m5.objects
-from m5.objects import Root, SimpleObject
+from m5.objects import (
+    Root,
+    SimpleObject,
+)
 
 # set up the root SimObject and start the simulation
 root = Root(full_system=False)

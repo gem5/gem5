@@ -6,16 +6,20 @@ It imports components from the stdlib and calls the simulation loop.
 This test only depends on the generators and the simple memory.
 """
 
+import faulthandler
 import os
 import sys
 
 import m5
-import faulthandler
+
 faulthandler.enable()
 from src.python.gem5.components.boards.test_board import TestBoard
 from src.python.gem5.components.memory.simple import SingleChannelSimpleMemory
-from src.python.gem5.components.processors.linear_generator import LinearGenerator
+from src.python.gem5.components.processors.linear_generator import (
+    LinearGenerator,
+)
 from src.python.gem5.simulate.simulator import Simulator
+
 
 def m5_setup(outdir):
     m5.event.mainq = m5.event.getEventQueue(0)
@@ -38,7 +42,7 @@ def main():
     m5_setup(outdir)
 
     generator = LinearGenerator(
-        rate="32GiB/s", max_addr=1024*1024*1024, rd_perc=100
+        rate="32GiB/s", max_addr=1024 * 1024 * 1024, rd_perc=100
     )
     memory = SingleChannelSimpleMemory(
         latency="10ns",
@@ -56,11 +60,13 @@ def main():
     )
 
     import os
+
     sys.setdlopenflags(os.RTLD_NOW | os.RTLD_GLOBAL)
 
     import _m5
+
     print("DIR _M5 BEFORE SYSTEM:")
-    print([x for x in dir(_m5) if 'enum_' in x])
+    print([x for x in dir(_m5) if "enum_" in x])
     print("Importing _m5_param_System...")
     import _m5_param_System
 
@@ -72,6 +78,7 @@ def main():
             simulator.get_current_tick(), simulator.get_last_exit_event_cause()
         )
     )
+
 
 if __name__ == "__main__":
     main()

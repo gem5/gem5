@@ -9,12 +9,18 @@ This test only depends on the generators and the simple memory.
 import os
 import sys
 
-import m5
 from src.python.gem5.components.boards.test_board import TestBoard
-from src.python.gem5.components.cachehierarchies.classic.no_cache import NoCache
+from src.python.gem5.components.cachehierarchies.classic.no_cache import (
+    NoCache,
+)
 from src.python.gem5.components.memory.simple import SingleChannelSimpleMemory
-from src.python.gem5.components.processors.linear_generator import LinearGenerator
+from src.python.gem5.components.processors.linear_generator import (
+    LinearGenerator,
+)
 from src.python.gem5.simulate.simulator import Simulator
+
+import m5
+
 
 def m5_setup(outdir):
     m5.event.mainq = m5.event.getEventQueue(0)
@@ -35,7 +41,7 @@ def main():
         outdir = sys.argv[1]
 
     generator = LinearGenerator(
-        rate="32GiB/s", max_addr=1024*1024*1024, rd_perc=100
+        rate="32GiB/s", max_addr=1024 * 1024 * 1024, rd_perc=100
     )
     memory = SingleChannelSimpleMemory(
         latency="10ns",
@@ -62,6 +68,7 @@ def main():
             simulator.get_current_tick(), simulator.get_last_exit_event_cause()
         )
     )
+
 
 if __name__ == "__main__":
     main()

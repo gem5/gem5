@@ -84,7 +84,9 @@ namespace gem5
 
     code("#ifndef GEM5_ENUM_PYBIND")
     if enum.wrapper_is_struct:
-        code("GEM5_PUBLIC __attribute__((used)) const char *${wrapper_name}::${name}Strings[Num_${name}] =")
+        code(
+            "GEM5_PUBLIC __attribute__((used)) const char *${wrapper_name}::${name}Strings[Num_${name}] ="
+        )
     else:
         if enum.is_class:
             code("""\
@@ -94,7 +96,9 @@ GEM5_PUBLIC __attribute__((used)) const char *${name}Strings[static_cast<int>(${
             code("""namespace ${wrapper_name}
 {""")
             code.indent(1)
-            code("GEM5_PUBLIC __attribute__((used)) const char *${name}Strings[Num_${name}] =")
+            code(
+                "GEM5_PUBLIC __attribute__((used)) const char *${name}Strings[Num_${name}] ="
+            )
 
     code("{")
     code.indent(1)

@@ -249,8 +249,10 @@ class SingleTypeParamDesc(ParamDesc):
         if isinstance(value, self.ptype):
             return value
         if isSimObject(value) and isSimObjectClass(self.ptype):
-            if any(c.__name__ == self.ptype.__name__
-                   for c in value.__class__.mro()):
+            if any(
+                c.__name__ == self.ptype.__name__
+                for c in value.__class__.mro()
+            ):
                 return value
                 return value
         if isNullPointer(value) and isSimObjectClass(self.ptype):
@@ -334,6 +336,7 @@ class DictParamValue(dict, metaclass=MetaParamValue):
 
 class SimObjectVector(VectorParamValue):
     _is_simobject_vector = True
+
     # support clone operation
     def __call__(self, **kwargs):
         return SimObjectVector([v(**kwargs) for v in self])

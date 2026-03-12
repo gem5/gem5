@@ -1,5 +1,7 @@
 import sys
+
 import _m5
+
 print("Loaded _m5 successfully!", file=sys.stderr)
 try:
     print(dir(_m5))

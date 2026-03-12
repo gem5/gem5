@@ -45,7 +45,9 @@ from typing import Type
 from code_formatter import code_formatter
 
 
-def write_cc_file(sim_object: Type, use_python: bool, param_cc: str, extension: bool = False):
+def write_cc_file(
+    sim_object: Type, use_python: bool, param_cc: str, extension: bool = False
+):
     """Write the parameter C++ source file for a SimObject.
 
     This function generates a C++ source file that defines the
@@ -210,7 +212,8 @@ internal_module_init(py::module_ &m_internal)
 }}
 """)
             code(
-                "static EmbeddedPyBind " 'embed_obj("${0}", internal_module_init, "${1}");',
+                "static EmbeddedPyBind "
+                'embed_obj("${0}", internal_module_init, "${1}");',
                 sim_object,
                 sim_object._base.type if sim_object._base else "",
             )
@@ -339,7 +342,9 @@ def parse_args():
         "use_python", help="whether python is enabled in gem5 (True or False)"
     )
     parser.add_argument(
-        "--extension", action="store_true", help="generate a standalone extension"
+        "--extension",
+        action="store_true",
+        help="generate a standalone extension",
     )
     parser.add_argument("--name", help="explicit SimObject name")
     args = parser.parse_args()

@@ -250,6 +250,8 @@ if __name__ == "__main__":
     sim_object = getattr(module, sim_object_name)
     if not hasattr(sim_object, "_params"):
         with open("/tmp/gem5_debug.txt", "a") as f:
-            f.write(f"DEBUG: modpath={args.modpath} sim_object_name={sim_object_name} type={type(sim_object)}\n")
+            f.write(
+                f"DEBUG: modpath={args.modpath} sim_object_name={sim_object_name} type={type(sim_object)}\n"
+            )
             f.write(f"DEBUG: module_dir={dir(module)}\n")
     write_header_file(sim_object, args.param_hh)

@@ -430,9 +430,7 @@ class MetaSimObject(type):
 
     def __getattr__(cls, attr):
         if attr.startswith("_"):
-            raise AttributeError(
-                f"Metaclass has no attribute '{attr}'"
-            )
+            raise AttributeError(f"Metaclass has no attribute '{attr}'")
 
         if attr == "cxx_class_path":
             return cls.cxx_class.split("::")
@@ -937,10 +935,7 @@ class SimObject(metaclass=MetaSimObject):
             # set the human-readable value dict if this is a param
             # with a literal value and is not being set as an object
             # or proxy.
-            if not (
-                isSimObjectOrVector(value)
-                or hasattr(value, "_is_proxy")
-            ):
+            if not (isSimObjectOrVector(value) or hasattr(value, "_is_proxy")):
                 self._hr_values[attr] = hr_value
 
             return

@@ -59,7 +59,7 @@ class CodeImporter:
 
     def find_spec(self, fullname, path, target=None):
         if fullname.startswith("m5.objects."):
-            name = fullname[len("m5.objects."):]
+            name = fullname[len("m5.objects.") :]
             # List of common prefixes where SimObjects are located
             prefixes = [
                 "src.sim",

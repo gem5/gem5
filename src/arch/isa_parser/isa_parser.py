@@ -41,15 +41,16 @@ import os
 import re
 import sys
 import traceback
+
 sys.path.insert(0, os.path.dirname(__file__))
 
 # get type names
 from types import *
 
 from grammar import Grammar
-
 from operand_list import *
 from operand_types import *
+
 from util import *
 
 debug = False
