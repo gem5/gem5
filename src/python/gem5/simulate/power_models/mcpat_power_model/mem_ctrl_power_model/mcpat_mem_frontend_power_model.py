@@ -60,6 +60,8 @@ class McPATMemFrontendPowerModel(BaseMcPATPowerModel):
             self._simobj.dram.device_bus_width / 8.0
         ) + int(self._simobj.dram.device_bus_width)
         self._num_rws_ports = self._simobj._parent._num_channels
+        # The clock rate below is converted to MHz and then
+        # multiplied by 2 because it is double-pumped.
         clk = 10**6 / self._simobj.clk_domain.clock.getValue()[0]
         self._clock_rate = clk * 2 * 1e6
 

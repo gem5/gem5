@@ -57,6 +57,8 @@ class McPATMemBackendPowerModel(BaseMcPATPowerModel):
         self._data_bus_width = ceil(
             self._simobj.dram.device_bus_width / 8.0
         ) + int(self._simobj.dram.device_bus_width)
+        # The clock rate below is converted to MHz and then
+        # multiplied by 2 because it is double-pumped.
         clk = 10**6 / self._simobj.clk_domain.clock.getValue()[0]
         self._clock_rate = clk * 2 * 1e6
 
@@ -75,22 +77,24 @@ class McPATMemBackendPowerModel(BaseMcPATPowerModel):
             peakBW = self.get_stat("dram.peakBW").total
             Vdd = 0.661538
             tech_node = 40
-            # Some of the constants below (e.g., 0.9e-9, 12800)
-            # I'm not actually sure how McPAT obtains them? Seems
-            # to be modeled based on w/e Cadence ChipEstimate says.
+            # For below, the justification for constants comes from
+            # McPAT's memoryctrl.cc, L839:
+            # "Average on DDR2/3 protocol controller and DDRC 1600/800A
+            # in Cadence ChipEstimate. Scaling to technology and DIMM
+            # feature. The base IP support DDR3-1600(PC3 12800)"
             backend_dyn = (
-                0.9e-9
+                0.9e-9  # Empirical estimates from Cadence ChipEstimate?
                 / 800e6
                 * self._clock_rate
-                / 12800
+                / 12800  # Refers to peak bandwidth
                 * peakBW
                 * self._data_bus_width
                 / self._dimm_data_width
-                * Vdd
+                * Vdd  # Vdd / 1.1 refers to voltage scaling
                 / 1.1
                 * Vdd
                 / 1.1
-                * (tech_node / 65)
+                * (tech_node / 65)  # scale w.r.t technology node
             )
         self._backend_dyn = backend_dyn
 

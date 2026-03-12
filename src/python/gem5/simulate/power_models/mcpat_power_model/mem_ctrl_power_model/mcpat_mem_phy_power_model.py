@@ -55,6 +55,8 @@ class McPATMemPhyPowerModel(BaseMcPATPowerModel):
         self._data_bus_width = ceil(
             self._simobj.dram.device_bus_width / 8.0
         ) + int(self._simobj.dram.device_bus_width)
+        # The clock rate below is converted to MHz and then
+        # multiplied by 2 because it is double-pumped.
         clk = 10**6 / self._simobj.clk_domain.clock.getValue()[0]
         self._clock_rate = clk * 2 * 1e6
 
@@ -80,11 +82,10 @@ class McPATMemPhyPowerModel(BaseMcPATPowerModel):
         return self.convert_to_watts(energy)
 
     def calc_tdp(self):
-        # obj's path: board.memory.mem_ctrl
         peakBW = self.get_stat("dram.peakBW").total
         energy = (
             self._curve_fitted_constant
-            * (peakBW * 8 * 1e6 / 1e9)
+            * (peakBW * 8 * 1e6 / 1e9)  # convert peak bandwidth into Gb/s
             * self._data_bus_width
             / self._dimm_data_width
             * self._simobj._parent._num_channels
@@ -92,8 +93,8 @@ class McPATMemPhyPowerModel(BaseMcPATPowerModel):
         return energy
 
     def mem_refresh_overhead(self) -> float:
-        # The constant 1 below is the number of memory controllers. Should be
-        # fine to assume 1?
+        # 1 below refers to the number of memory controllers, which should
+        # be 1.
         return (
             self.calc_tdp()
             * 0.1
