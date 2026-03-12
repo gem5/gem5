@@ -46,6 +46,8 @@ import copy
 
 
 class BaseProxy:
+    _is_proxy = True
+
     def __init__(self, search_self, search_up):
         self._search_self = search_self
         self._search_up = search_up
@@ -261,9 +263,7 @@ class AllProxy(BaseProxy):
 
 
 def isproxy(obj):
-    from . import params
-
-    if isinstance(obj, (BaseProxy, params.EthernetAddr)):
+    if hasattr(obj, "_is_proxy"):
         return True
     elif isinstance(obj, (list, tuple)):
         for v in obj:

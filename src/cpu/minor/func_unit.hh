@@ -44,6 +44,7 @@
 #ifndef __CPU_MINOR_FUNC_UNIT_HH__
 #define __CPU_MINOR_FUNC_UNIT_HH__
 
+#include <bitset>
 #include <cstdint>
 #include <ostream>
 #include <string>
@@ -53,150 +54,16 @@
 #include "cpu/func_unit.hh"
 #include "cpu/minor/buffers.hh"
 #include "cpu/minor/dyn_inst.hh"
-#include "cpu/timing_expr.hh"
-#include "params/MinorFU.hh"
-#include "params/MinorFUPool.hh"
-#include "params/MinorOpClass.hh"
-#include "params/MinorOpClassSet.hh"
+#include "cpu/minor/func_unit_op_class.hh"
+#include "cpu/minor/func_unit_op_class_set.hh"
+#include "cpu/minor/func_unit_timing.hh"
+#include "cpu/minor/func_unit_fu.hh"
+#include "cpu/minor/func_unit_pool.hh"
 #include "sim/clocked_object.hh"
 #include "sim/sim_object.hh"
 
 namespace gem5
 {
-
-/** Boxing for MinorOpClass to get around a build problem with C++11 but
- *  also allow for future additions to op class checking */
-class MinorOpClass : public SimObject
-{
-  public:
-    OpClass opClass;
-
-  public:
-    MinorOpClass(const MinorOpClassParams &params) :
-        SimObject(params),
-        opClass(params.opClass)
-    { }
-};
-
-/** Wrapper for a matchable set of op classes */
-class MinorOpClassSet : public SimObject
-{
-  public:
-    std::vector<MinorOpClass *> opClasses;
-
-    /** Convenience packing of opClasses into a bit vector for easier
-     *  testing */
-    std::vector<bool> capabilityList;
-
-  public:
-    MinorOpClassSet(const MinorOpClassSetParams &params);
-
-  public:
-    /** Does this set support the given op class */
-    bool provides(OpClass op_class) { return capabilityList[op_class]; }
-};
-
-/** Extra timing capability to allow individual ops to have their source
- *  register dependency latencies tweaked based on the ExtMachInst of the
- *  source instruction.
- */
-class MinorFUTiming: public SimObject
-{
-  public:
-    /** Mask off the ExtMachInst of an instruction before comparing with
-     *  match */
-    uint64_t mask;
-    uint64_t match;
-
-    /** Textual description of the decode's purpose */
-    std::string description;
-
-    /** If true, instructions matching this mask/match should *not* be
-     *  issued in this FU */
-    bool suppress;
-
-    /** Extra latency that the instruction should spend at the end of
-     *  the pipeline */
-    Cycles extraCommitLat;
-    TimingExpr *extraCommitLatExpr;
-
-    /** Extra delay that results should show in the scoreboard after
-     *  leaving the pipeline.  If set to Cycles(0) for memory references,
-     *  an 'unpredictable' return time will be set in the scoreboard
-     *  blocking following dependent instructions from issuing */
-    Cycles extraAssumedLat;
-
-    /** Cycle offsets from the scoreboard delivery times of register values
-     *  for each of this instruction's source registers (in srcRegs order).
-     *  The offsets are subtracted from the scoreboard returnCycle times.
-     *  For example, for an instruction type with 3 source registers,
-     *  [2, 1, 2] will allow the instruction to issue upto 2 cycles early
-     *  for dependencies on the 1st and 3rd register and upto 1 cycle early
-     *  on the 2nd. */
-    std::vector<Cycles> srcRegsRelativeLats;
-
-    /** Extra opClasses check (after the FU one) */
-    MinorOpClassSet *opClasses;
-
-  public:
-    MinorFUTiming(const MinorFUTimingParams &params);
-
-  public:
-    /** Does the extra decode in this object support the given op class */
-    bool provides(OpClass op_class) { return opClasses->provides(op_class); }
-};
-
-/** A functional unit that can execute any of opClasses operations with a
- *  single op(eration)Lat(ency) and issueLat(ency) associated with the unit
- *  rather than each operation (as in src/FuncUnit).
- *
- *  This is very similar to cpu/func_unit but replicated here to allow
- *  the Minor functional units to change without having to disturb the common
- *  definition.
- */
-class MinorFU : public SimObject
-{
-  public:
-    MinorOpClassSet *opClasses;
-
-    /** Delay from issuing the operation, to it reaching the
-     *  end of the associated pipeline */
-    Cycles opLat;
-
-    /** Delay after issuing an operation before the next
-     *  operation can be issued */
-    Cycles issueLat;
-
-    /** FUs which this pipeline can't receive a forwarded (i.e. relative
-     *  latency != 0) result from */
-    std::vector<unsigned int> cantForwardFromFUIndices;
-
-    /** Extra timing info to give timings to individual ops */
-    std::vector<MinorFUTiming *> timings;
-
-  public:
-    MinorFU(const MinorFUParams &params) :
-        SimObject(params),
-        opClasses(params.opClasses),
-        opLat(params.opLat),
-        issueLat(params.issueLat),
-        cantForwardFromFUIndices(params.cantForwardFromFUIndices),
-        timings(params.timings)
-    { }
-};
-
-/** A collection of MinorFUs */
-class MinorFUPool : public SimObject
-{
-  public:
-    std::vector<MinorFU *> funcUnits;
-
-  public:
-    MinorFUPool(const MinorFUPoolParams &params) :
-        SimObject(params),
-        funcUnits(params.funcUnits)
-    { }
-};
 
 namespace minor
 {

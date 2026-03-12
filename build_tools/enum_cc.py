@@ -82,18 +82,19 @@ namespace gem5
 
 """)
 
+    code("#ifndef GEM5_ENUM_PYBIND")
     if enum.wrapper_is_struct:
-        code("const char *${wrapper_name}::${name}Strings[Num_${name}] =")
+        code("GEM5_PUBLIC __attribute__((used)) const char *${wrapper_name}::${name}Strings[Num_${name}] =")
     else:
         if enum.is_class:
             code("""\
-const char *${name}Strings[static_cast<int>(${name}::Num_${name})] =
+GEM5_PUBLIC __attribute__((used)) const char *${name}Strings[static_cast<int>(${name}::Num_${name})] =
 """)
         else:
             code("""namespace ${wrapper_name}
 {""")
             code.indent(1)
-            code("const char *${name}Strings[Num_${name}] =")
+            code("GEM5_PUBLIC __attribute__((used)) const char *${name}Strings[Num_${name}] =")
 
     code("{")
     code.indent(1)
@@ -105,7 +106,7 @@ const char *${name}Strings[static_cast<int>(${name}::Num_${name})] =
     if not enum.wrapper_is_struct and not enum.is_class:
         code.dedent(1)
         code("} // namespace ${wrapper_name}")
-
+    code("#endif")
     code("} // namespace gem5")
 
     if use_python:
@@ -113,7 +114,9 @@ const char *${name}Strings[static_cast<int>(${name}::Num_${name})] =
         enum_name = enum.__name__ if enum.enum_name is None else enum.enum_name
         wrapper_name = enum_name if enum.is_class else enum.wrapper_name
 
-        code("""#include "pybind11/pybind11.h"
+        code("""
+#ifdef GEM5_ENUM_PYBIND
+#include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
 #include <sim/init.hh>
@@ -147,9 +150,17 @@ module_init(py::module_ &m_internal)
         code("}")
         code.dedent()
         code("""
-static EmbeddedPyBind embed_enum("enum_${name}", module_init);
+static __attribute__((used)) EmbeddedPyBind embed_enum("enum_${name}", module_init);
+
+// TEST IF IT RUNS
+struct DummyTrigger_${name} {
+    DummyTrigger_${name}() {
+        fprintf(stderr, "STATIC INIT FOR ENUM %s RAN!\\n", "enum_${name}");
+    }
+} __attribute__((used)) trigger_${name};
 
 } // namespace gem5
+#endif
     """)
 
     code.write(enum_cc)
@@ -175,6 +186,8 @@ if __name__ == "__main__":
 
     importer.install()
     module = importlib.import_module(args.modpath)
-    enum = getattr(module, enum_name)
+    enum = getattr(module, enum_name, None)
+    if enum is None and enum_name.startswith("enum_"):
+        enum = getattr(module, enum_name[5:])
 
     write_cc_file(enum, use_python, args.enum_cc)

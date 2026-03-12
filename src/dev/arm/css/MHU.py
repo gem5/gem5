@@ -35,6 +35,7 @@
 
 from m5.objects.Device import BasicPioDevice
 from m5.objects.Doorbell import Doorbell
+from m5.objects.Gic import ArmInterruptPin
 from m5.params import *
 from m5.proxy import *
 from m5.util.fdthelper import *

@@ -103,6 +103,7 @@ class MetaParamValue(type):
 # Dummy base class to identify types that are legitimate for SimObject
 # parameters.
 class ParamValue(metaclass=MetaParamValue):
+    _is_param_value = True
     cmd_line_settable = False
 
     # Generate the code needed as a prerequisite for declaring a C++
@@ -151,6 +152,8 @@ class ParamValue(metaclass=MetaParamValue):
 
 # Regular parameter description.
 class ParamDesc:
+    _is_param_desc = True
+
     def __init__(self, *args, **kwargs):
         if args:
             if len(args) == 1:
@@ -198,10 +201,21 @@ class SingleTypeParamDesc(ParamDesc):
         if attr == "ptype":
             from .. import SimObject
 
-            ptype = SimObject.allClasses[self.ptype_str]
-            assert isSimObjectClass(ptype)
-            self.ptype = ptype
-            return ptype
+            if self.ptype_str not in SimObject.allClasses:
+                import importlib
+
+                try:
+                    importlib.import_module("m5.objects.%s" % self.ptype_str)
+                except ImportError:
+                    pass
+
+            if self.ptype_str in SimObject.allClasses:
+                ptype = SimObject.allClasses[self.ptype_str]
+                assert isSimObjectClass(ptype)
+                self.ptype = ptype
+                return ptype
+            else:
+                raise KeyError(f"SimObject {self.ptype_str} not found")
 
         raise AttributeError(
             f"'{type(self).__name__}' object has no attribute '{attr}'"
@@ -234,6 +248,11 @@ class SingleTypeParamDesc(ParamDesc):
             return value
         if isinstance(value, self.ptype):
             return value
+        if isSimObject(value) and isSimObjectClass(self.ptype):
+            if any(c.__name__ == self.ptype.__name__
+                   for c in value.__class__.mro()):
+                return value
+                return value
         if isNullPointer(value) and isSimObjectClass(self.ptype):
             return value
         return self.ptype(value)
@@ -314,6 +333,7 @@ class DictParamValue(dict, metaclass=MetaParamValue):
 
 
 class SimObjectVector(VectorParamValue):
+    _is_simobject_vector = True
     # support clone operation
     def __call__(self, **kwargs):
         return SimObjectVector([v(**kwargs) for v in self])

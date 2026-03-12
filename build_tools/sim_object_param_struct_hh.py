@@ -172,7 +172,7 @@ def write_header_file(sim_object: Type, param_hh: str):
     # automatically set from Python without being declared through
     # the normal Param mechanism; we slip them in here (needed
     # predecls now, actual declarations below)
-    if sim_object == SimObject:
+    if sim_object.type == "SimObject" and not sim_object._base:
         code("""#include <string>""", add_once=True)
 
     cxx_class = CxxClass(
@@ -213,7 +213,7 @@ def write_header_file(sim_object: Type, param_hh: str):
             code("    ${{sim_object.cxx_type}} create() const;")
 
     code.indent()
-    if sim_object == SimObject:
+    if sim_object.type == "SimObject" and not sim_object._base:
         code("""
     virtual ~SimObjectParams() = default;
 
@@ -248,4 +248,8 @@ if __name__ == "__main__":
     importer.install()
     module = importlib.import_module(args.modpath)
     sim_object = getattr(module, sim_object_name)
+    if not hasattr(sim_object, "_params"):
+        with open("/tmp/gem5_debug.txt", "a") as f:
+            f.write(f"DEBUG: modpath={args.modpath} sim_object_name={sim_object_name} type={type(sim_object)}\n")
+            f.write(f"DEBUG: module_dir={dir(module)}\n")
     write_header_file(sim_object, args.param_hh)

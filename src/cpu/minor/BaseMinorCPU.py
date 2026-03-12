@@ -52,7 +52,7 @@ class MinorOpClass(SimObject):
     future additions to OpClass checks"""
 
     type = "MinorOpClass"
-    cxx_header = "cpu/minor/func_unit.hh"
+    cxx_header = "cpu/minor/func_unit_op_class.hh"
     cxx_class = "gem5::MinorOpClass"
 
     opClass = Param.OpClass("op class to match")
@@ -62,7 +62,7 @@ class MinorOpClassSet(SimObject):
     """A set of matchable op classes"""
 
     type = "MinorOpClassSet"
-    cxx_header = "cpu/minor/func_unit.hh"
+    cxx_header = "cpu/minor/func_unit_op_class_set.hh"
     cxx_class = "gem5::MinorOpClassSet"
 
     opClasses = VectorParam.MinorOpClass(
@@ -72,7 +72,7 @@ class MinorOpClassSet(SimObject):
 
 class MinorFUTiming(SimObject):
     type = "MinorFUTiming"
-    cxx_header = "cpu/minor/func_unit.hh"
+    cxx_header = "cpu/minor/func_unit_timing.hh"
     cxx_class = "gem5::MinorFUTiming"
 
     mask = Param.UInt64(0, "mask for testing ExtMachInst")
@@ -123,7 +123,7 @@ def minorMakeOpClassSet(op_classes):
 
 class MinorFU(SimObject):
     type = "MinorFU"
-    cxx_header = "cpu/minor/func_unit.hh"
+    cxx_header = "cpu/minor/func_unit_fu.hh"
     cxx_class = "gem5::MinorFU"
 
     opClasses = Param.MinorOpClassSet(
@@ -145,7 +145,7 @@ class MinorFU(SimObject):
 
 class MinorFUPool(SimObject):
     type = "MinorFUPool"
-    cxx_header = "cpu/minor/func_unit.hh"
+    cxx_header = "cpu/minor/func_unit_pool.hh"
     cxx_class = "gem5::MinorFUPool"
 
     funcUnits = VectorParam.MinorFU("functional units")

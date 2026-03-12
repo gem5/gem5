@@ -274,6 +274,12 @@ class StateMachine(Symbol):
 from m5.params import *
 from m5.SimObject import SimObject
 from m5.objects.Controller import RubyController
+from m5.objects.MessageBuffer import *
+from m5.objects.Sequencer import *
+from m5.objects.RubyCache import *
+from m5.objects.RubyPrefetcher import *
+from m5.objects.DirectoryMemory import *
+from m5.objects.WireBuffer import *
 """)
 
         if "BasePrefetcher" in python_class_map.values():

@@ -42,7 +42,7 @@
 
 #include "base/trace.hh"
 #include "debug/TLMPort.hh"
-#include "mem/ruby/protocol/chi/tlm/utils.hh"
+#include "mem/ruby/protocol/CHI/tlm/utils.hh"
 #include "sim/signal.hh"
 
 namespace gem5

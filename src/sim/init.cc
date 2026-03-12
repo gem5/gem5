@@ -39,7 +39,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "pybind11/embed.h"
+#include <pybind11/pybind11.h>
 
 #include "sim/init.hh"
 
@@ -62,6 +62,11 @@ EmbeddedPyBind::EmbeddedPyBind(const char *_name,
                                const char *_base) :
     initFunc(init_func), name(_name), base(_base)
 {
+    FILE* f = fopen("/tmp/gem5_embed_debug.txt", "a");
+    if (f) {
+        fprintf(f, "EmbeddedPyBind Constructor called for: %s (base: %s)\n", name.c_str(), base.c_str());
+        fclose(f);
+    }
     init();
 }
 
@@ -89,7 +94,11 @@ EmbeddedPyBind::init()
     }
 
     // We must be ready, so set this module up.
-    initFunc(*mod);
+    try {
+        initFunc(*mod);
+    } catch (std::exception &e) {
+        fprintf(stderr, "Exception while initializing pybind module %s: %s\n", name.c_str(), e.what());
+    }
     ready[name] = this;
     registered = true;
 
@@ -128,6 +137,18 @@ EmbeddedPyBind::getPending()
 void
 EmbeddedPyBind::initAll(py::module_ &_m5)
 {
+    auto sys = py::module_::import("sys");
+    auto modules = sys.attr("modules");
+    modules["_m5"] = _m5;
+
+    // Export module pointer for dynamic extensions
+    _m5.attr("_mod_ptr") = py::capsule(&_m5, "gem5._m5");
+
+    _m5.attr("__path__") = py::list();
+    _m5.attr("__package__") = "_m5";
+
+    _m5.def_submodule("param");
+
     pybind_init_core(_m5);
     pybind_init_debug(_m5);
 
@@ -142,6 +163,17 @@ EmbeddedPyBind::initAll(py::module_ &_m5)
     initPending("");
 }
 
-GEM5_PYBIND_MODULE_INIT(_m5, EmbeddedPyBind::initAll)
+void
+EmbeddedPyBind::setMod(py::module_ &_m5)
+{
+    fprintf(stderr, "Inside setMod\n");
+    mod = &_m5;
+    // When mod is set, try to init anything with base ""
+    fprintf(stderr, "Calling initPending\n");
+    initPending("");
+    fprintf(stderr, "Finished initPending\n");
+}
+
+// GEM5_PYBIND_MODULE_INIT(_m5, EmbeddedPyBind::initAll)
 
 } // namespace gem5

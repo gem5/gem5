@@ -37,7 +37,7 @@
 
 #include <ARM/TLM/arm_chi.h>
 
-#include "mem/ruby/protocol/chi/tlm/generator.hh"
+#include "mem/ruby/protocol/CHI/tlm/generator.hh"
 // This is required by Transaction::expect
 #include "pybind11/functional.h"
 #include "python/pybind11/pybind.hh"

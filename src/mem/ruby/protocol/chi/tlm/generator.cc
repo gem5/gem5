@@ -35,10 +35,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/ruby/protocol/chi/tlm/generator.hh"
+#include "mem/ruby/protocol/CHI/tlm/generator.hh"
 
 #include "debug/TLM.hh"
-#include "mem/ruby/protocol/chi/tlm/controller.hh"
+#include "mem/ruby/protocol/CHI/tlm/controller.hh"
 #include "sim/sim_exit.hh"
 
 namespace gem5 {

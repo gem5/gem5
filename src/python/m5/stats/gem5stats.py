@@ -54,6 +54,8 @@ from m5.ext.pystats.simstat import *
 from m5.ext.pystats.statistic import *
 from m5.ext.pystats.storagetype import *
 from m5.objects import *
+from m5.SimObject import SimObject
+from m5.objects.Root import Root
 from m5.params import SimObjectVector
 
 from _m5 import stats as _m5_stats

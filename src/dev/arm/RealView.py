@@ -85,6 +85,7 @@ from m5.objects.SubSystem import SubSystem
 from m5.objects.Terminal import Terminal
 from m5.objects.Uart import Uart
 from m5.objects.VirtIOMMIO import MmioVirtIO
+from m5.objects.Vnc import *
 from m5.objects.VoltageDomain import VoltageDomain
 from m5.params import *
 from m5.proxy import *

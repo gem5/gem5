@@ -55,7 +55,7 @@ class TimingExprLiteral(TimingExpr):
     """Literal 64 bit unsigned value"""
 
     type = "TimingExprLiteral"
-    cxx_header = "cpu/timing_expr.hh"
+    cxx_header = "cpu/timing_expr_literal.hh"
     cxx_class = "gem5::TimingExprLiteral"
 
     value = Param.UInt64("literal value")
@@ -75,7 +75,7 @@ class TimingExprSrcReg(TimingExpr):
     """Read a source register from the current inst"""
 
     type = "TimingExprSrcReg"
-    cxx_header = "cpu/timing_expr.hh"
+    cxx_header = "cpu/timing_expr_src_reg.hh"
     cxx_class = "gem5::TimingExprSrcReg"
 
     index = Param.Unsigned("index into inst src regs of the reg to read")
@@ -89,7 +89,7 @@ class TimingExprLet(TimingExpr):
     """Block of declarations"""
 
     type = "TimingExprLet"
-    cxx_header = "cpu/timing_expr.hh"
+    cxx_header = "cpu/timing_expr_let.hh"
     cxx_class = "gem5::TimingExprLet"
 
     defns = VectorParam.TimingExpr("expressions for bindings")
@@ -105,7 +105,7 @@ class TimingExprRef(TimingExpr):
     """Value of a bound sub-expression"""
 
     type = "TimingExprRef"
-    cxx_header = "cpu/timing_expr.hh"
+    cxx_header = "cpu/timing_expr_ref.hh"
     cxx_class = "gem5::TimingExprRef"
 
     index = Param.Unsigned("expression index")
@@ -144,7 +144,7 @@ class TimingExprUn(TimingExpr):
     """Unary operator"""
 
     type = "TimingExprUn"
-    cxx_header = "cpu/timing_expr.hh"
+    cxx_header = "cpu/timing_expr_un.hh"
     cxx_class = "gem5::TimingExprUn"
 
     op = Param.TimingExprOp("operator")
@@ -160,7 +160,7 @@ class TimingExprBin(TimingExpr):
     """Binary operator"""
 
     type = "TimingExprBin"
-    cxx_header = "cpu/timing_expr.hh"
+    cxx_header = "cpu/timing_expr_bin.hh"
     cxx_class = "gem5::TimingExprBin"
 
     op = Param.TimingExprOp("operator")
@@ -178,7 +178,7 @@ class TimingExprIf(TimingExpr):
     """If-then-else operator"""
 
     type = "TimingExprIf"
-    cxx_header = "cpu/timing_expr.hh"
+    cxx_header = "cpu/timing_expr_if.hh"
     cxx_class = "gem5::TimingExprIf"
 
     cond = Param.TimingExpr("condition expression")

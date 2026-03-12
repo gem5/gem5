@@ -45,7 +45,7 @@ from typing import Type
 from code_formatter import code_formatter
 
 
-def write_cc_file(sim_object: Type, use_python: bool, param_cc: str):
+def write_cc_file(sim_object: Type, use_python: bool, param_cc: str, extension: bool = False):
     """Write the parameter C++ source file for a SimObject.
 
     This function generates a C++ source file that defines the
@@ -55,6 +55,7 @@ def write_cc_file(sim_object: Type, use_python: bool, param_cc: str):
         sim_object: The SimObject class for which to generate the header.
         use_python: A boolean indicating whether Python support is enabled.
         param_cc: The path to the C++ source file to write.
+        extension: Whether to generate a standalone pybind extension.
     """
 
     # Need to import after the importer is installed
@@ -109,9 +110,8 @@ namespace gem5
 {
 
 static void
-module_init(py::module_ &m_internal)
+module_init(py::module_ &m)
 {
-py::module_ m = m_internal.def_submodule("param_${sim_object}");
 """)
         code.indent()
         if sim_object._base:
@@ -153,7 +153,7 @@ py::module_ m = m_internal.def_submodule("param_${sim_object}");
 
         bases = []
         if "cxx_base" in sim_object._value_dict:
-            # If the c++ base class implied by python inheritance was
+            # If the c+ base class implied by python inheritance was
             # overridden, use that value.
             if sim_object.cxx_base:
                 bases.append(sim_object.cxx_base)
@@ -186,12 +186,35 @@ py::module_ m = m_internal.def_submodule("param_${sim_object}");
         code.dedent()
         code("}")
         code()
-        code(
-            "static EmbeddedPyBind " 'embed_obj("${0}", module_init, "${1}");',
-            sim_object,
-            sim_object._base.type if sim_object._base else "",
-        )
-        code()
+        if extension:
+            code(f"""
+PYBIND11_MODULE(_m5_param_{sim_object_name}, m)
+{{
+    // Initialize this SimObject's parameters in our own module
+    try {{
+        module_init(m);
+    }} catch (std::exception &e) {{
+        std::cerr << "Exception in module_init for _m5_param_{sim_object_name}: " << e.what() << std::endl;
+    }} catch (...) {{
+        std::cerr << "Unknown exception in module_init" << std::endl;
+    }}
+}}
+""")
+        else:
+            code(f"""
+static void
+internal_module_init(py::module_ &m_internal)
+{{
+    py::module_ m = m_internal.def_submodule("param_{sim_object_name}");
+    module_init(m);
+}}
+""")
+            code(
+                "static EmbeddedPyBind " 'embed_obj("${0}", internal_module_init, "${1}");',
+                sim_object,
+                sim_object._base.type if sim_object._base else "",
+            )
+
         code("} // namespace gem5")
 
     # include the create() methods whether or not python is enabled.
@@ -315,6 +338,10 @@ def parse_args():
     parser.add_argument(
         "use_python", help="whether python is enabled in gem5 (True or False)"
     )
+    parser.add_argument(
+        "--extension", action="store_true", help="generate a standalone extension"
+    )
+    parser.add_argument("--name", help="explicit SimObject name")
     args = parser.parse_args()
     return args
 
@@ -331,9 +358,12 @@ if __name__ == "__main__":
         print(f'Unrecognized "use_python" value {use_python}', file=sys.stderr)
         sys.exit(1)
 
-    basename = os.path.basename(args.param_cc)
-    no_ext = os.path.splitext(basename)[0]
-    sim_object_name = "_".join(no_ext.split("_")[1:])
+    if args.name:
+        sim_object_name = args.name
+    else:
+        basename = os.path.basename(args.param_cc)
+        no_ext = os.path.splitext(basename)[0]
+        sim_object_name = "_".join(no_ext.split("_")[1:])
 
     # Note: Import here to remove dependence if importing from this file
     import importer
@@ -341,4 +371,4 @@ if __name__ == "__main__":
     importer.install()
     module = importlib.import_module(args.modpath)
     sim_object = getattr(module, sim_object_name)
-    write_cc_file(sim_object, use_python, args.param_cc)
+    write_cc_file(sim_object, use_python, args.param_cc, args.extension)

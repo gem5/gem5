@@ -35,13 +35,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/ruby/protocol/chi/tlm/controller.hh"
+#include "mem/ruby/protocol/CHI/tlm/controller.hh"
 
 #include "debug/TLM.hh"
 #include "mem/ruby/protocol/CHI/CHIDataMsg.hh"
 #include "mem/ruby/protocol/CHI/CHIRequestMsg.hh"
 #include "mem/ruby/protocol/CHI/CHIResponseMsg.hh"
-#include "mem/ruby/protocol/chi/tlm/utils.hh"
+#include "mem/ruby/protocol/CHI/tlm/utils.hh"
 
 namespace gem5 {
 

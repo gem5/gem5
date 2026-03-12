@@ -130,6 +130,7 @@ def public_value(key, value):
 # class behavior (just like a class controls how instances of that
 # class are instantiated, and provides inherited instance behavior).
 class MetaSimObject(type):
+    _is_simobject = True
     # Attributes that can be set only at initialization time
     init_keywords = {
         "abstract": bool,
@@ -153,7 +154,8 @@ class MetaSimObject(type):
     # and only allow "private" attributes to be passed to the base
     # __new__ (starting with underscore).
     def __new__(mcls, name, bases, dict):
-        assert name not in allClasses, f"SimObject {name} already present"
+        # if name in allClasses:
+        #     return allClasses[name]
 
         # Copy "private" attributes, functions, and classes to the
         # official dict.  Everything else goes in _init_dict to be
@@ -194,6 +196,9 @@ class MetaSimObject(type):
 
     # subclass initialization
     def __init__(cls, name, bases, dict):
+        if "_init_called" in cls.__dict__ and cls._init_called:
+            return
+
         # calls type.__init__()... I think that's a no-op, but leave
         # it here just in case it's not.
         super().__init__(name, bases, dict)
@@ -225,7 +230,7 @@ class MetaSimObject(type):
         # are ok, though
         bTotal = 0
         for c in bases:
-            if isinstance(c, MetaSimObject):
+            if getattr(c, "_is_simobject", False):
                 bTotal += 1
             if bTotal > 1:
                 raise TypeError(
@@ -241,7 +246,7 @@ class MetaSimObject(type):
         # inherit all its settings from the base class.  The only time
         # the following is not true is when we define the SimObject
         # class itself (in which case the multidicts have no parent).
-        if isinstance(base, MetaSimObject):
+        if getattr(base, "_is_simobject", False):
             cls._base = base
             cls._params.parent = base._params
             cls._ports.parent = base._ports
@@ -276,11 +281,11 @@ class MetaSimObject(type):
         # setattr().
         for key, val in cls._value_dict.items():
             # param descriptions
-            if isinstance(val, ParamDesc):
+            if hasattr(val, "_is_param_desc"):
                 cls._new_param(key, val)
 
             # port objects
-            elif isinstance(val, Port):
+            elif hasattr(val, "_is_port"):
                 cls._new_port(key, val)
 
             # Deprecated variable names
@@ -300,6 +305,8 @@ class MetaSimObject(type):
             else:
                 setattr(cls, key, val)
 
+        cls._init_called = True
+
     def _set_keyword(cls, keyword, val, kwtype):
         if not isinstance(val, kwtype):
             raise TypeError(
@@ -311,8 +318,10 @@ class MetaSimObject(type):
 
     def _new_param(cls, name, pdesc):
         # each param desc should be uniquely assigned to one variable
-        assert not hasattr(pdesc, "name")
-        pdesc.name = name
+        if hasattr(pdesc, "name"):
+            assert pdesc.name == name
+        else:
+            pdesc.name = name
         cls._params[name] = pdesc
         if hasattr(pdesc, "default"):
             cls._set_param(name, pdesc.default, pdesc)
@@ -352,8 +361,10 @@ class MetaSimObject(type):
 
     def _new_port(cls, name, port):
         # each port should be uniquely assigned to one variable
-        assert not hasattr(port, "name")
-        port.name = name
+        if hasattr(port, "name"):
+            assert port.name == name
+        else:
+            port.name = name
         cls._ports[name] = port
 
     # same as _get_port_ref, effectively, but for classes
@@ -418,6 +429,11 @@ class MetaSimObject(type):
         )
 
     def __getattr__(cls, attr):
+        if attr.startswith("_"):
+            raise AttributeError(
+                f"Metaclass has no attribute '{attr}'"
+            )
+
         if attr == "cxx_class_path":
             return cls.cxx_class.split("::")
 
@@ -430,11 +446,14 @@ class MetaSimObject(type):
         if attr == "pybind_class":
             return "_COLONS_".join(cls.cxx_class_path)
 
-        if attr in cls._values:
-            return cls._values[attr]
+        # Use __dict__.get to avoid recursion if _values or _children is missing
+        _values = cls.__dict__.get("_values")
+        if _values and attr in _values:
+            return _values[attr]
 
-        if attr in cls._children:
-            return cls._children[attr]
+        _children = cls.__dict__.get("_children")
+        if _children and attr in _children:
+            return _children[attr]
 
         try:
             return getattr(cls.getCCClass(), attr)
@@ -626,6 +645,7 @@ class SimObjectCliWrapper:
 # the code in this class deals with the configuration hierarchy itself
 # (parent/child node relationships).
 class SimObject(metaclass=MetaSimObject):
+    _is_simobject = True
     # Specify metaclass.  Any class inheriting from SimObject will
     # get this metaclass.
     type = "SimObject"
@@ -919,7 +939,7 @@ class SimObject(metaclass=MetaSimObject):
             # or proxy.
             if not (
                 isSimObjectOrVector(value)
-                or isinstance(value, m5.proxy.BaseProxy)
+                or hasattr(value, "_is_proxy")
             ):
                 self._hr_values[attr] = hr_value
 
@@ -1211,7 +1231,10 @@ class SimObject(metaclass=MetaSimObject):
         try:
             mod = importlib.import_module(f"_m5.param_{self.type}")
         except ImportError:
-            raise AttributeError("No C++ class exists, not linked to gem5")
+            try:
+                mod = importlib.import_module(f"_m5_param_{self.type}")
+            except ImportError:
+                raise AttributeError("No C++ class exists, not linked to gem5")
 
         cc_params_struct = getattr(mod, f"{self.type}Params")
         cc_params = cc_params_struct()
@@ -1392,15 +1415,15 @@ def resolveSimObject(name):
 
 
 def isSimObject(value):
-    return isinstance(value, SimObject)
+    return hasattr(value, "_is_simobject") and not isinstance(value, type)
 
 
 def isSimObjectClass(value):
-    return issubclass(value, SimObject)
+    return hasattr(value, "_is_simobject") and isinstance(value, type)
 
 
 def isSimObjectVector(value):
-    return isinstance(value, SimObjectVector)
+    return hasattr(value, "_is_simobject_vector")
 
 
 def isSimObjectSequence(value):

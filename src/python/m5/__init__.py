@@ -48,6 +48,9 @@ if in_gem5:
         params,
         stats,
     )
+    from .options import OptionParser
+
+    options = OptionParser()
 
     if defines.buildEnv["USE_SYSTEMC"]:
         from . import systemc

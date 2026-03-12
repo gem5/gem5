@@ -35,7 +35,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/ruby/protocol/chi/generic/CHIGenericController.hh"
+#include "mem/ruby/protocol/CHI/generic/CHIGenericController.hh"
 
 #include <sys/types.h>
 #include <unistd.h>

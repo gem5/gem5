@@ -50,7 +50,7 @@ class OperandDesc:
     def __init__(
         self, base_cls, dflt_ext, reg_spec, flags=None, sort_pri=None
     ):
-        from .isa_parser import makeList
+        from isa_parser import makeList
 
         # Canonical flag structure is a triple of lists, where each list
         # indicates the set of flags implied by this operand always, when

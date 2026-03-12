@@ -1,0 +1,6 @@
+# Use C++17
+build --cxxopt="-std=c++17"
+
+# macOS compatibility for std::filesystem
+build --copt="-mmacosx-version-min=10.15"
+build --linkopt="-mmacosx-version-min=10.15"

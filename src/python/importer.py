@@ -58,6 +58,50 @@ class CodeImporter:
         self.modules[modpath] = (abspath, code)
 
     def find_spec(self, fullname, path, target=None):
+        if fullname.startswith("m5.objects."):
+            name = fullname[len("m5.objects."):]
+            # List of common prefixes where SimObjects are located
+            prefixes = [
+                "src.sim",
+                "src.base",
+                "src.cpu",
+                "src.cpu.simple",
+                "src.cpu.minor",
+                "src.cpu.o3",
+                "src.cpu.kvm",
+                "src.cpu.testers.traffic_gen",
+                "src.mem",
+                "src.mem.ruby.network",
+                "src.mem.ruby.system",
+                "src.mem.ruby.structures",
+                "src.mem.ruby.profiler",
+                "src.mem.ruby.protocol",
+                "src.mem.ruby.protocol.CHI.generic",
+                "src.mem.ruby.slicc_interface",
+                "src.dev",
+                "src.dev.arm",
+                "src.arch.generic",
+                "src.arch.arm",
+                "src.arch.x86",
+                "src.arch.riscv",
+            ]
+            for prefix in prefixes:
+                target_name = f"{prefix}.{name}"
+                try:
+                    # If the target module is already imported, alias it.
+                    # Otherwise, try to import it using its real name first.
+                    import sys as python_sys
+
+                    if target_name not in python_sys.modules:
+                        importlib.import_module(target_name)
+
+                    if target_name in python_sys.modules:
+                        mod = python_sys.modules[target_name]
+                        python_sys.modules[fullname] = mod
+                        return mod.__spec__
+                except (ImportError, ModuleNotFoundError):
+                    continue
+
         if fullname not in self.modules:
             return None
 
@@ -89,4 +133,5 @@ def install():
     sys.meta_path.insert(0, importer)
 
     # Injected into this module's namespace by the c++ code that loads it.
-    _init_all_embedded()
+    if "_init_all_embedded" in globals():
+        _init_all_embedded()

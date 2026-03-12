@@ -1,0 +1,93 @@
+/*
+ * Copyright (c) 2013-2014 ARM Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#ifndef __CPU_MINOR_FUNC_UNIT_FU_HH__
+#define __CPU_MINOR_FUNC_UNIT_FU_HH__
+
+#include <vector>
+
+#include "base/types.hh"
+#include "cpu/minor/func_unit_op_class_set.hh"
+#include "cpu/minor/func_unit_timing.hh"
+#include "params/MinorFU.hh"
+#include "sim/sim_object.hh"
+
+namespace gem5
+{
+
+/** A functional unit that can execute any of opClasses operations with a
+ *  single op(eration)Lat(ency) and issueLat(ency) associated with the unit
+ *  rather than each operation (as in src/FuncUnit).
+ *
+ *  This is very similar to cpu/func_unit but replicated here to allow
+ *  the Minor functional units to change without having to disturb the common
+ *  definition.
+ */
+class MinorFU : public SimObject
+{
+  public:
+    MinorOpClassSet *opClasses;
+
+    /** Delay from issuing the operation, to it reaching the
+     *  end of the associated pipeline */
+    Cycles opLat;
+
+    /** Delay after issuing an operation before the next
+     *  operation can be issued */
+    Cycles issueLat;
+
+    /** FUs which this pipeline can't receive a forwarded (i.e. relative
+     *  latency != 0) result from */
+    std::vector<unsigned int> cantForwardFromFUIndices;
+
+    /** Extra timing info to give timings to individual ops */
+    std::vector<MinorFUTiming *> timings;
+
+  public:
+    MinorFU(const MinorFUParams &params) :
+        SimObject(params),
+        opClasses(params.opClasses),
+        opLat(params.opLat),
+        issueLat(params.issueLat),
+        cantForwardFromFUIndices(params.cantForwardFromFUIndices),
+        timings(params.timings)
+    { }
+};
+
+} // namespace gem5
+
+#endif /* __CPU_MINOR_FUNC_UNIT_FU_HH__ */

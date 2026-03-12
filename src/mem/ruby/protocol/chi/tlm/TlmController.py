@@ -42,7 +42,7 @@ from m5.tlm_chi.port import (
 
 class TlmController(CHIGenericController):
     type = "TlmController"
-    cxx_header = "mem/ruby/protocol/chi/tlm/controller.hh"
+    cxx_header = "mem/ruby/protocol/CHI/tlm/controller.hh"
     cxx_class = "gem5::tlm::chi::CacheController"
 
     in_port = TlmSinkPort("CHI TLM input port")

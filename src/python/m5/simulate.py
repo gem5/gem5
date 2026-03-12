@@ -42,7 +42,7 @@ import os
 import sys
 from typing import Optional
 
-from m5.objects import Root
+from src.sim.Root import Root
 from m5.util.dot_writer import (
     do_dot,
     do_dvfs_dot,

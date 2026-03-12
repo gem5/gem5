@@ -314,6 +314,7 @@ class VectorPortRef:
 # SimObject instance.  The latter are represented by PortRef objects.
 class Port:
     # Port("role", "description")
+    _is_port = True
 
     _compat_dict = {}
 

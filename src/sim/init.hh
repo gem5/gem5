@@ -61,6 +61,7 @@ class EmbeddedPyBind
                    void (*init_func)(pybind11::module_ &));
 
     static void initAll(pybind11::module_ &_m5);
+    static void setMod(pybind11::module_ &_m5);
 
   private:
     void (*initFunc)(pybind11::module_ &);
