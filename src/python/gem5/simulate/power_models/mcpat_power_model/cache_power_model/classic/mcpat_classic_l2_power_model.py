@@ -39,29 +39,12 @@ from ...base_mcpat_power_model import (
 )
 
 
-class L2PowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
-    """
-    This class implements McPAT's power model for an L2$.
-    Even though McPAT has options for a private L2 cache, and
-    a cache which uses Ruby, this assumes that the cache is
-    a classic cache and is shared.
-    """
-
+class L2CachePowerModel(BaseMcPATPowerModel):
     def __init__(
-        self, l1dcache: Cache, writeback: bool, act_energies: ActEnergyType
+        self, l2cache: Cache, writeback: bool, act_energies: ActEnergyType
     ):
-        super().__init__()
-        # The SimObject that contains the stats we need.
-        self._simobj = l1dcache
-        self._act_energies = act_energies
+        super().__init__(simobj=l2cache, act_energies=act_energies)
         self._writeback = writeback
-
-        self.dyn = lambda: self.dynamic_power()
-        self.st = lambda: self.static_power()
-
-    def static_power(self):
-        # Placeholder value for static power.
-        return 1.0
 
     def dynamic_power(self):
         total_energy = self.l2cache_energy()
@@ -70,6 +53,10 @@ class L2PowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
         total_energy += self.prefetch_buffer_energy()
         total_energy += self.writeback_buffer_energy()
         return self.convert_to_watts(total_energy)
+
+    def static_power(self):
+        # Placeholder value for static power.
+        return 1.0
 
     def l2cache_energy(self):
         # Writeback is ALWAYS assumed in shared caches, according to McPAT
@@ -132,6 +119,30 @@ class L2PowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
             read_accesses * self._act_energies["L2CacheWritebackb"]["Search"]
             + write_accesses * self._act_energies["L2CacheWritebackb"]["Write"]
         )
+
+
+class L2PowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
+    """
+    This class implements McPAT's power model for an L2$.
+    Even though McPAT has options for a private L2 cache, and
+    a cache which uses Ruby, this assumes that the cache is
+    a classic cache and is shared.
+    """
+
+    def __init__(
+        self, l2cache: Cache, writeback: bool, act_energies: ActEnergyType
+    ):
+        super().__init__()
+
+        self.dyn = lambda: self.dynamic_power()
+        self.st = lambda: self.static_power()
+        self._cache_pm = L2CachePowerModel(l2cache, writeback, act_energies)
+
+    def dynamic_power(self):
+        return self._cache_pm.dynamic_power()
+
+    def static_power(self):
+        return self._cache_pm.static_power()
 
 
 class L2PowerOff(PowerModelPyFunc):

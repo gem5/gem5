@@ -39,7 +39,7 @@ from ...base_mcpat_power_model import (
 )
 
 
-class L1IPowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
+class L1ICachePowerModel(BaseMcPATPowerModel):
     """
     This class implements McPAT's power model for an L1I$
     This is not a part of the IF stage in gem5 (it is in McPAT)
@@ -47,20 +47,10 @@ class L1IPowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
     """
 
     def __init__(
-        self, l1icache: Cache, writeback: bool, act_energies: ActEnergyType
+        self, l1dcache: Cache, writeback: bool, act_energies: ActEnergyType
     ):
-        super().__init__()
-        # The SimObject that contains the stats we need.
-        self._simobj = l1icache
-        self._act_energies = act_energies
+        super().__init__(simobj=l1dcache, act_energies=act_energies)
         self._writeback = writeback
-
-        self.dyn = lambda: self.dynamic_power()
-        self.st = lambda: self.static_power()
-
-    def static_power(self):
-        # Placeholder value for static power.
-        return 1.0
 
     def dynamic_power(self):
         energy = self.icache_energy()
@@ -68,6 +58,10 @@ class L1IPowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
         energy += self.inst_fill_buffer_energy()
         energy += self.prefetch_buffer_energy()
         return self.convert_to_watts(energy)
+
+    def static_power(self):
+        # Placeholder value for static power.
+        return 1.0
 
     def icache_energy(self):
         read_accesses = self.get_stat("ReadReq.accesses").total
@@ -104,6 +98,23 @@ class L1IPowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
             + write_accesses
             * self._act_energies["InstCachePrefetchb"]["Write"]
         )
+
+
+class L1IPowerOn(PowerModelPyFunc):
+    def __init__(
+        self, l1icache: Cache, writeback: bool, act_energies: ActEnergyType
+    ):
+        super().__init__()
+
+        self._cache_pm = L1ICachePowerModel(l1icache, writeback, act_energies)
+        self.dyn = lambda: self.dynamic_power()
+        self.st = lambda: self.static_power()
+
+    def dynamic_power(self):
+        return self._cache_pm.dynamic_power()
+
+    def static_power(self):
+        return self._cache_pm.static_power()
 
 
 class L1IPowerOff(PowerModelPyFunc):

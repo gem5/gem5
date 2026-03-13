@@ -39,7 +39,7 @@ from ...base_mcpat_power_model import (
 )
 
 
-class L1DPowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
+class L1DCachePowerModel(BaseMcPATPowerModel):
     """
     This class implements McPAT's power model for an L1D$.
     This is not a part of the LSU stage in gem5 (it is in McPAT)
@@ -49,17 +49,8 @@ class L1DPowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
     def __init__(
         self, l1dcache: Cache, writeback: bool, act_energies: ActEnergyType
     ):
-        super().__init__()
-        self._simobj = l1dcache
-        self._act_energies = act_energies
+        super().__init__(simobj=l1dcache, act_energies=act_energies)
         self._writeback = writeback
-
-        self.dyn = lambda: self.dynamic_power()
-        self.st = lambda: self.static_power()
-
-    def static_power(self):
-        # Placeholder for static power.
-        return 1.0
 
     def dynamic_power(self):
         # Dynamic power returned in Watts.
@@ -69,6 +60,10 @@ class L1DPowerOn(PowerModelPyFunc, BaseMcPATPowerModel):
         total_energy += self.prefetch_buffer_energy()
         total_energy += self.writeback_buffer_energy()
         return self.convert_to_watts(total_energy)
+
+    def static_power(self):
+        # Placeholder for static power.
+        return 1.0
 
     def dcache_energy(self):
         read_accesses = self.get_stat("ReadReq.accesses").total
@@ -153,6 +148,28 @@ class L1DPowerOff(PowerModelPyFunc):
         super().__init__()
         self.dyn = lambda: 0.0
         self.st = lambda: 0.0
+
+
+class L1DPowerOn(PowerModelPyFunc):
+    """
+    This class is a wrapper for L1D$ power model defined in L41.
+    """
+
+    def __init__(
+        self, l1dcache: Cache, writeback: bool, act_energies: ActEnergyType
+    ):
+        super().__init__()
+
+        self._cache_pm = L1DCachePowerModel(l1dcache, writeback, act_energies)
+
+        self.dyn = lambda: self.dynamic_power()
+        self.st = lambda: self.static_power()
+
+    def dynamic_power(self):
+        return self._cache_pm.dynamic_power()
+
+    def static_power(self):
+        return self._cache_pm.static_power()
 
 
 class McPATClassicL1DPowerModel(PowerModel):
