@@ -175,3 +175,15 @@ class WeightedLRURP(LRURP):
     type = "WeightedLRURP"
     cxx_class = "gem5::replacement_policy::WeightedLRU"
     cxx_header = "mem/cache/replacement_policies/weighted_lru_rp.hh"
+
+
+class SPAIBRP(LRURP):
+    type = "SPAIBRP"
+    cxx_class = "gem5::replacement_policy::SPAIB"
+    cxx_header = "mem/cache/replacement_policies/spaib_rp.hh"
+    history_length = Param.Unsigned(
+        32, "Number of resolved line outcomes used for phase detection"
+    )
+    dead_threshold = Param.Percent(
+        75, "Dead-line rate that triggers near-LRU insertion"
+    )
