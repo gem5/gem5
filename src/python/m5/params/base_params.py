@@ -697,7 +697,7 @@ class PyFunc(ParamValue):
 
     @classmethod
     def cxx_predecls(cls, code):
-        code('#include "python/pybind11/pybind.hh"')
+        code('#include "python/pybind11/pybind.hh"', add_once=True)
 
 
 Param = ParamFactory(SingleTypeParamDesc)

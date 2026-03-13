@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __SIM_POWERMODEL_FUNC_PM_HH__
-#define __SIM_POWERMODEL_FUNC_PM_HH__
+#ifndef __SIM_POWERMODEL_PYFUNC_PM_HH__
+#define __SIM_POWERMODEL_PYFUNC_PM_HH__
 
 #include "params/PowerModelPyFunc.hh"
 #include "python/pybind11/pybind.hh"
