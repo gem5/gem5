@@ -454,10 +454,6 @@ VMaskMergeMicroInst::execute(ExecContext* xc,
     auto Vd = tmp_d0.as<uint8_t>();
     uint32_t vlenb = vlen >> 3;
     const uint32_t elems_per_vreg = vlenb / elemSize;
-    size_t bit_cnt = 0;
-
-    // mask tails are always treated as agnostic: writting 1s
-    tmp_d0.set(0xff);
 
     vreg_t tmp_s;
     for (uint8_t i = 0; i < this->_numSrcRegs; i++) {
@@ -467,14 +463,21 @@ VMaskMergeMicroInst::execute(ExecContext* xc,
             const uint32_t m = (1 << elems_per_vreg) - 1;
             const uint32_t mask = m << (i * elems_per_vreg % 8);
             // clr & ext bits
-            Vd[bit_cnt/8] ^= Vd[bit_cnt/8] & mask;
-            Vd[bit_cnt/8] |= s[bit_cnt/8] & mask;
-            bit_cnt += elems_per_vreg;
+            Vd[(i * elems_per_vreg) / 8] &= ~mask;
+            Vd[(i * elems_per_vreg) / 8] |= s[(i * elems_per_vreg) / 8] & mask;
         } else {
             const uint32_t byte_offset = elems_per_vreg / 8;
             memcpy(Vd + i * byte_offset, s + i * byte_offset, byte_offset);
         }
     }
+
+    // Handle tail: mask-producing instructions are always tail-agnostic.
+    // We treat agnostic as 1s.
+    uint32_t vl = machInst.vl;
+    for (uint32_t i = vl; i < vlen; ++i) {
+        Vd[i / 8] |= (1 << (i % 8));
+    }
+
     if (traceData) {
         traceData->setData(vecRegClass, &tmp_d0);
     }

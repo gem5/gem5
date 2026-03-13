@@ -591,11 +591,16 @@ def format VectorIntMaskFormat(code, category, *flags) {{
     else:
         error("not supported category for VectorIntFormat: %s" % category)
     src2_reg_id = "vecRegClass[_machInst.vs2 + _microIdx]"
+    old_vd_idx = 2 if category != "OPIVI" else 1
     set_dest_reg_idx = setDestWrapper(dest_reg_id)
     set_src_reg_idx = ""
     if category != "OPIVI":
         set_src_reg_idx += setSrcWrapper(src1_reg_id)
     set_src_reg_idx += setSrcWrapper(src2_reg_id)
+
+    dest_set_src_reg_idx = setSrcWrapper("vecRegClass[_machInst.vd]")
+    set_src_reg_idx += tailMaskCondSetSrcWrapper(dest_set_src_reg_idx)
+
     if v0_required:
         set_src_reg_idx += setSrcVm()
 
@@ -620,6 +625,7 @@ def format VectorIntMaskFormat(code, category, *flags) {{
          'set_src_reg_idx': set_src_reg_idx,
          'set_vlenb': set_vlenb,
          'vm_decl_rd': vm_decl_rd,
+         'copy_old_vd': copyOldVd(old_vd_idx),
          'declare_varith_template': declareVArithTemplate(Name + "Micro")},
         flags)
 
@@ -1040,11 +1046,15 @@ def format VectorFloatMaskFormat(code, category, *flags) {{
     else:
         error("not supported category for VectorFloatFormat: %s" % category)
     src2_reg_id = "vecRegClass[_machInst.vs2 + _microIdx]"
-    old_dest_reg_id = "vecRegClass[_machInst.vd]"
+    old_vd_idx = 2
     set_dest_reg_idx = setDestWrapper(dest_reg_id)
     set_src_reg_idx = ""
     set_src_reg_idx += setSrcWrapper(src1_reg_id)
     set_src_reg_idx += setSrcWrapper(src2_reg_id)
+
+    dest_set_src_reg_idx = setSrcWrapper("vecRegClass[_machInst.vd]")
+    set_src_reg_idx += tailMaskCondSetSrcWrapper(dest_set_src_reg_idx)
+
     set_src_reg_idx += setSrcVm()
     vm_decl_rd = vmDeclAndReadData()
     set_vlenb = setVlenb()
@@ -1063,6 +1073,7 @@ def format VectorFloatMaskFormat(code, category, *flags) {{
          'set_src_reg_idx': set_src_reg_idx,
          'set_vlenb': set_vlenb,
          'vm_decl_rd': vm_decl_rd,
+         'copy_old_vd': copyOldVd(old_vd_idx),
          'declare_varith_template': varith_micro_declare},
         flags)
 
