@@ -51,10 +51,10 @@ from m5.params import (
     AddrRange,
 )
 
-from .abstract_node import AbstractNode
+from .abstract_node import CacheController
 
 
-class BaseDirectory(AbstractNode):
+class BaseDirectory(CacheController):
     """
     BaseDirectory. Mainly providing address range generation
     capabilities (see create_addr_ranges method)

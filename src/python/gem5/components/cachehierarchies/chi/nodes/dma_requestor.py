@@ -35,10 +35,10 @@ from m5.params import (
 
 from .....isas import ISA
 from ....processors.abstract_core import AbstractCore
-from .abstract_node import AbstractNode
+from .abstract_node import CacheController
 
 
-class DMARequestor(AbstractNode):
+class DMARequestor(CacheController):
     def __init__(self, network, cache_line_size, clk_domain: ClockDomain):
         super().__init__(network, cache_line_size)
 
