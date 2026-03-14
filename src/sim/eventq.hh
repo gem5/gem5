@@ -906,7 +906,7 @@ schedule(Event *event, Tick when, bool global=false)
     } else {
         asyncInsert(event);
     }
-    
+
     event->flags.set(Event::Scheduled);
     event->acquire();
 
@@ -959,7 +959,7 @@ reschedule(Event *event, Tick when, bool always=false)
 
     event->setWhen(when, this);
     insert(event);
-    
+
     event->flags.clear(Event::Squashed);
     event->flags.set(Event::Scheduled);
 
