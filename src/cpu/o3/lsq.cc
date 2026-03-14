@@ -930,6 +930,7 @@ LSQ::SingleDataRequest::initiateTranslation()
     if (_reqs.size() > 0) {
         _reqs.back()->setReqInstSeqNum(_inst->seqNum);
         _reqs.back()->taskId(_taskId);
+        _reqs.back()->setInstCount(_inst->getCpuPtr()->totalInsts());
         _inst->translationStarted(true);
         setState(State::Translation);
         flags.set(Flag::TranslationStarted);
@@ -966,6 +967,7 @@ LSQ::SplitDataRequest::initiateTranslation()
                 _size, _flags, _inst->requestorId(),
                 _inst->pcState().instAddr(), _inst->contextId());
     _mainReq->setByteEnable(_byteEnable);
+    _mainReq->setInstCount(_inst->getCpuPtr()->totalInsts());
 
     // Paddr is not used in _mainReq. However, we will accumulate the flags
     // from the sub requests into _mainReq by calling setFlags() in finish().
@@ -1004,6 +1006,7 @@ LSQ::SplitDataRequest::initiateTranslation()
         for (auto& r: _reqs) {
             r->setReqInstSeqNum(_inst->seqNum);
             r->taskId(_taskId);
+            r->setInstCount(_inst->getCpuPtr()->totalInsts());
         }
 
         _inst->translationStarted(true);

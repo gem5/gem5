@@ -95,6 +95,19 @@ class Base : public SimObject
         replacement_data) const = 0;
 
     /**
+     * Decide whether this fill should bypass cache allocation.
+     *
+     * Policies that do not support bypass should return false.
+     *
+     * pkt: Packet that triggered the potential fill.
+     * return: True when allocation should be skipped.
+     */
+    virtual bool shouldBypass(const PacketPtr) const
+    {
+        return false;
+    }
+
+    /**
      * Find replacement victim among candidates.
      *
      * @param candidates Replacement candidates, selected by indexing policy.

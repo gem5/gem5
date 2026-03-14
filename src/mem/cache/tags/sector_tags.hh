@@ -50,6 +50,7 @@
 #include <vector>
 
 #include "base/statistics.hh"
+#include "mem/cache/replacement_policies/base.hh"
 #include "mem/cache/tags/base.hh"
 #include "mem/cache/tags/sector_blk.hh"
 #include "mem/packet.hh"
@@ -164,6 +165,11 @@ class SectorTags : public BaseTags
     void insertBlock(const PacketPtr pkt, CacheBlk *blk) override;
 
     void moveBlock(CacheBlk *src_blk, CacheBlk *dest_blk) override;
+
+    bool shouldBypass(const PacketPtr pkt) const override
+    {
+        return replacementPolicy->shouldBypass(pkt);
+    }
 
     /**
      * Finds the given address in the cache, do not update replacement data.

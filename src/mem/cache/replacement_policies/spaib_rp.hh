@@ -26,12 +26,16 @@ class SPAIB : public LRU
 
     const unsigned historyLength;
     const double deadThreshold;
+    const bool enableBypass;
+    const double bypassThreshold;
     mutable std::deque<bool> recentOutcomes;
     mutable unsigned deadCount;
+    mutable double deadRate;
     mutable bool streamingPhase;
 
     void recordOutcome(bool dead) const;
     bool shouldInsertNearLRU() const;
+    bool shouldBypassFill() const;
 
   public:
     typedef SPAIBRPParams Params;
@@ -52,6 +56,8 @@ class SPAIB : public LRU
         override;
 
     std::shared_ptr<ReplacementData> instantiateEntry() override;
+
+    bool shouldBypass(const PacketPtr pkt) const override;
 };
 
 } // namespace replacement_policy

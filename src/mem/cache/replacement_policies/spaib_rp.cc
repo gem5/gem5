@@ -14,8 +14,10 @@ namespace replacement_policy
 
 SPAIB::SPAIB(const Params &p)
   : LRU(p), historyLength(p.history_length),
-    deadThreshold(p.dead_threshold / 100.0), recentOutcomes(),
-    deadCount(0), streamingPhase(false)
+    deadThreshold(p.dead_threshold / 100.0),
+    enableBypass(p.enable_bypass),
+    bypassThreshold(p.bypass_threshold / 100.0),
+    recentOutcomes(), deadCount(0), deadRate(0.0), streamingPhase(false)
 {
     fatal_if(historyLength == 0,
         "SPAIB requires history_length to be greater than zero.");
@@ -33,16 +35,33 @@ SPAIB::recordOutcome(bool dead) const
     }
 
     if (recentOutcomes.size() == historyLength) {
-        const double deadRate =
-            static_cast<double>(deadCount) / recentOutcomes.size();
+        deadRate = static_cast<double>(deadCount) / recentOutcomes.size();
         streamingPhase = deadRate >= deadThreshold;
+    } else {
+        deadRate = 0.0;
+        streamingPhase = false;
     }
+}
+
+bool
+SPAIB::shouldBypassFill() const
+{
+    return enableBypass && recentOutcomes.size() == historyLength &&
+        deadRate >= bypassThreshold;
 }
 
 bool
 SPAIB::shouldInsertNearLRU() const
 {
-    return streamingPhase && recentOutcomes.size() == historyLength;
+    return streamingPhase && recentOutcomes.size() == historyLength &&
+        !shouldBypassFill();
+}
+
+bool
+SPAIB::shouldBypass(const PacketPtr pkt) const
+{
+    (void)pkt;
+    return shouldBypassFill();
 }
 
 void

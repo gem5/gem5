@@ -316,6 +316,14 @@ class BaseTags : public ClockedObject
     virtual void insertBlock(const PacketPtr pkt, CacheBlk *blk);
 
     /**
+     * Decide whether a miss fill should bypass allocation in this tag store.
+     *
+     * pkt: Packet corresponding to the fill.
+     * return: True when allocation should be skipped.
+     */
+    virtual bool shouldBypass(const PacketPtr pkt) const;
+
+    /**
      * Move a block's metadata to another location decided by the replacement
      * policy. It behaves as a swap, however, since the destination block
      * should be invalid, the result is a move.

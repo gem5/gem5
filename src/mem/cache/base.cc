@@ -1666,6 +1666,12 @@ BaseCache::handleFill(PacketPtr pkt, CacheBlk *blk, PacketList &writebacks,
 CacheBlk*
 BaseCache::allocateBlock(const PacketPtr pkt, PacketList &writebacks)
 {
+    if (tags->shouldBypass(pkt)) {
+        DPRINTF(CacheRepl, "Bypassing allocation for %#llx (%s)\n",
+                pkt->getAddr(), pkt->isSecure() ? "s" : "ns");
+        return nullptr;
+    }
+
     // Get address
     const Addr addr = pkt->getAddr();
 

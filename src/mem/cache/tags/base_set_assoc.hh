@@ -215,6 +215,11 @@ class BaseSetAssoc : public BaseTags
 
     void moveBlock(CacheBlk *src_blk, CacheBlk *dest_blk) override;
 
+    bool shouldBypass(const PacketPtr pkt) const override
+    {
+        return replacementPolicy->shouldBypass(pkt);
+    }
+
     /**
      * Limit the allocation for the cache ways.
      * @param ways The maximum number of ways available for replacement.

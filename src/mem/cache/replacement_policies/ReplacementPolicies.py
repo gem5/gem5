@@ -187,3 +187,24 @@ class SPAIBRP(LRURP):
     dead_threshold = Param.Percent(
         75, "Dead-line rate that triggers near-LRU insertion"
     )
+    enable_bypass = Param.Bool(
+        False, "Enable bypassing fills during strong streaming phases"
+    )
+    bypass_threshold = Param.Percent(
+        90, "Dead-line rate threshold that triggers fill bypass"
+    )
+
+
+class SPAIBMPKIRP(LRURP):
+    type = "SPAIBMPKIRP"
+    cxx_class = "gem5::replacement_policy::SPAIBMPKI"
+    cxx_header = "mem/cache/replacement_policies/spaib_mpki_rp.hh"
+    instruction_window = Param.Unsigned(
+        100000, "Instruction window used to compute MPKI"
+    )
+    mpki_threshold = Param.Float(
+        10.0, "MPKI threshold that triggers streaming mode"
+    )
+    enable_bypass = Param.Bool(
+        False, "Enable bypassing fills during high-MPKI phases"
+    )

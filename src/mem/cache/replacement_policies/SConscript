@@ -31,7 +31,7 @@ Import('*')
 SimObject('ReplacementPolicies.py', sim_objects=[
     'BaseReplacementPolicy', 'DuelingRP', 'FIFORP', 'SecondChanceRP',
     'LFURP', 'LRURP', 'BIPRP', 'MRURP', 'RandomRP', 'BRRIPRP', 'SHiPRP',
-    'SHiPMemRP', 'SHiPPCRP', 'TreePLRURP', 'WeightedLRURP', 'SPAIBRP'])
+    'SHiPMemRP', 'SHiPPCRP', 'TreePLRURP', 'WeightedLRURP', 'SPAIBRP', 'SPAIBMPKIRP'])
 
 Source('bip_rp.cc')
 Source('brrip_rp.cc')
@@ -44,6 +44,7 @@ Source('random_rp.cc')
 Source('second_chance_rp.cc')
 Source('ship_rp.cc')
 Source('spaib_rp.cc')
+Source('spaib_mpki_rp.cc')
 Source('tree_plru_rp.cc')
 Source('weighted_lru_rp.cc')
 
@@ -54,3 +55,7 @@ GTest('fifo_rp.test', 'fifo_rp.cc', 'fifo_rp.test.cc',
     with_tag('gem5 simobject'))
 GTest('lfu_rp.test', 'lfu_rp.cc', 'lfu_rp.test.cc', with_tag('gem5 simobject'))
 GTest('mru_rp.test', 'mru_rp.cc', 'mru_rp.test.cc', with_tag('gem5 simobject'))
+GTest('spaib_rp.test', 'spaib_rp.cc', 'lru_rp.cc', 'spaib_rp.test.cc',
+    with_tag('gem5 simobject'))
+GTest('spaib_mpki_rp.test', 'spaib_mpki_rp.cc', 'lru_rp.cc',
+    '../../packet.cc', '../../../sim/bufval.cc', 'spaib_mpki_rp.test.cc', with_tag('gem5 simobject'))

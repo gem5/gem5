@@ -127,6 +127,13 @@ BaseTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
     stats.dataAccesses += 1;
 }
 
+bool
+BaseTags::shouldBypass(const PacketPtr pkt) const
+{
+    (void)pkt;
+    return false;
+}
+
 void
 BaseTags::moveBlock(CacheBlk *src_blk, CacheBlk *dest_blk)
 {
