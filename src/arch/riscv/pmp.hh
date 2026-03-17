@@ -112,22 +112,12 @@ class PMP : public SimObject
         void
         serialize(CheckpointOut &cp) const
         {
-            Addr pmpAddrStart = pmpAddr.start();
-            Addr pmpAddrEnd = pmpAddr.end();
-            SERIALIZE_SCALAR(pmpAddrStart);
-            SERIALIZE_SCALAR(pmpAddrEnd);
             SERIALIZE_SCALAR(rawAddr);
             SERIALIZE_SCALAR(pmpCfg);
         }
         void
         unserialize(CheckpointIn &cp)
         {
-            Addr pmpAddrStart;
-            Addr pmpAddrEnd;
-
-            UNSERIALIZE_SCALAR(pmpAddrStart);
-            UNSERIALIZE_SCALAR(pmpAddrEnd);
-            pmpAddr = AddrRange(pmpAddrStart, pmpAddrEnd);
             UNSERIALIZE_SCALAR(rawAddr);
             UNSERIALIZE_SCALAR(pmpCfg);
         }

@@ -295,7 +295,6 @@ PMP::pmpDecodeNapot(Addr pmpaddr)
 void
 PMP::serialize(CheckpointOut &cp) const
 {
-    SERIALIZE_SCALAR(numRules);
     int cptPmpEntries = pmpEntries;
     SERIALIZE_SCALAR(cptPmpEntries);
     for (int i = 0; i < pmpEntries; i++) {
@@ -305,7 +304,6 @@ PMP::serialize(CheckpointOut &cp) const
 void
 PMP::unserialize(CheckpointIn &cp)
 {
-    UNSERIALIZE_SCALAR(numRules);
     int cptPmpEntries;
     UNSERIALIZE_SCALAR(cptPmpEntries);
     if (cptPmpEntries != pmpEntries) {
@@ -317,6 +315,7 @@ PMP::unserialize(CheckpointIn &cp)
     for (int i = 0; i < pmpEntries; i++) {
         PmpEntry *tmp = &pmpTable[i];
         tmp->unserializeSection(cp, csprintf("Entry%d", i));
+        pmpUpdateRule(i);
     }
 }
 
