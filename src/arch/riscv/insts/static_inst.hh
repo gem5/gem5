@@ -80,11 +80,7 @@ class RiscvStaticInst : public StaticInst
 
     void
     advancePC(ThreadContext *tc) const override
-    {
-        PCState pc = tc->pcState().as<PCState>();
-        pc.advance();
-        tc->pcState(pc);
-    }
+    ;
 
     uint64_t getEMI() const override { return machInst; }
 

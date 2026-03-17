@@ -291,6 +291,10 @@ enum MiscRegIndex
     MISCREG_HPMCOUNTER30H,
     MISCREG_HPMCOUNTER31H,
     MISCREG_JVT,
+    MISCREG_LPSTART,
+    MISCREG_LPEND,
+    MISCREG_LPCOUNT,
+    MISCREG_LPACTIVE,
 
     NUM_PHYS_MISCREGS,
     MISCREG_FFLAGS_EXE = NUM_PHYS_MISCREGS,
@@ -541,6 +545,10 @@ enum CSRIndex
     CSR_MNSTATUS     = 0x744,
 
     CSR_JVT          = 0x017,
+    CSR_LPSTART      = 0x7C0,
+    CSR_LPEND        = 0x7C1,
+    CSR_LPCOUNT      = 0x7C2,
+    CSR_LPACTIVE     = 0x7C3,
 
     // H-extension (RV64) CSRs
 
@@ -1239,6 +1247,17 @@ const std::unordered_map<int, CSRMetadata> CSRData = {
 
     {CSR_JVT,
         {"jvt", MISCREG_JVT, rvTypeFlags(RV64, RV32), isaExtsFlags()}},
+    {CSR_LPSTART,
+        {"lpstart", MISCREG_LPSTART, rvTypeFlags(RV64, RV32),
+         isaExtsFlags()}},
+    {CSR_LPEND,
+        {"lpend", MISCREG_LPEND, rvTypeFlags(RV64, RV32), isaExtsFlags()}},
+    {CSR_LPCOUNT,
+        {"lpcount", MISCREG_LPCOUNT, rvTypeFlags(RV64, RV32),
+         isaExtsFlags()}},
+    {CSR_LPACTIVE,
+        {"lpactive", MISCREG_LPACTIVE, rvTypeFlags(RV64, RV32),
+         isaExtsFlags()}},
 
     // H-extension CSR -> MISCREG mappings
     {CSR_MTINST,

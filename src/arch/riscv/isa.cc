@@ -283,6 +283,10 @@ const std::array<const char *, NUM_MISCREGS> MiscRegNames = {{
     [MISCREG_HPMCOUNTER31H]  = "HPMCOUNTER31H",
 
     [MISCREG_JVT] = "JVT",
+    [MISCREG_LPSTART] = "LPSTART",
+    [MISCREG_LPEND] = "LPEND",
+    [MISCREG_LPCOUNT] = "LPCOUNT",
+    [MISCREG_LPACTIVE] = "LPACTIVE",
 
     [MISCREG_FFLAGS_EXE]    = "FFLAGS_EXE",
 }};
@@ -1082,6 +1086,37 @@ void
 ISA::resetThread()
 {
     Reset().invoke(tc);
+}
+
+void
+ISA::advanceHardwareLoop(
+    ThreadContext *tc, const PCState &cur_pc, PCState &next_pc) const
+{
+    if (cur_pc.branching() || !tc->readMiscRegNoEffect(MISCREG_LPACTIVE)) {
+        return;
+    }
+
+    const Addr loop_end = rvSext(tc->readMiscRegNoEffect(MISCREG_LPEND));
+    if (cur_pc.pc() != loop_end) {
+        return;
+    }
+
+    RegVal remaining = tc->readMiscRegNoEffect(MISCREG_LPCOUNT);
+    if (remaining == 0) {
+        tc->setMiscReg(MISCREG_LPACTIVE, 0);
+        return;
+    }
+
+    --remaining;
+    tc->setMiscReg(MISCREG_LPCOUNT, remaining);
+
+    if (remaining != 0) {
+        const Addr loop_start = rvSext(tc->readMiscRegNoEffect(MISCREG_LPSTART));
+        next_pc.set(loop_start);
+        next_pc.compressed(false);
+    } else {
+        tc->setMiscReg(MISCREG_LPACTIVE, 0);
+    }
 }
 
 bool

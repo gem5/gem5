@@ -182,6 +182,9 @@ class ISA : public BaseISA
 
     void resetThread() override;
 
+    void advanceHardwareLoop(
+        ThreadContext *tc, const PCState &cur_pc, PCState &next_pc) const;
+
     RiscvType rvType() const { return _rvType; }
 
     bool getEnableRvv() const { return enableRvv; }

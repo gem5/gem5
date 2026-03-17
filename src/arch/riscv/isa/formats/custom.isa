@@ -13,3 +13,7 @@ def format RELU_R() {{
 def format CLAMP_I() {{
     decode_block = 'return new CLAMP_I(machInst);\n'
 }};
+
+def format LP_SETUP_I() {{
+    decode_block = 'return new LP_SETUP_I(machInst);\n'
+}};

@@ -2613,16 +2613,17 @@ decode QUADRANT default Unknown::unknown() {
             }
         }
 
-        // Using custom-0 opcode space (0x02)
-        // Encoding group (custom-0, opcode=0x0B):
+        // Using custom-0 opcode space (opcode[6:2] = 0x02, full opcode = 0x0B)
         // - R-type (funct3=0x0):
         //   funct7=0x00: mac        rd, rs1, rs2
         //   funct7=0x01: dot4_acc   rd, rs1, rs2
         //   funct7=0x02: relu       rd, rs1 (rs2 ignored)
-        // - I-type (funct3=0x1):
+        // - I-type:
         //   clamp rd, rs1, imm12 (imm12 treated as unsigned upper bound)
+        //   lp.setup rs1, imm12  (count=rs1, start=next PC, end=PC+imm12)
+        //   p.lw rd, imm12(rs1!) (load word and post-increment rs1 by 4)
         0x02: decode FUNCT3 {
-                0x0: decode FUNCT7 {
+            0x0: decode FUNCT7 {
                 format MAC_R {
                     0x00: mac();
                 }
@@ -2635,6 +2636,15 @@ decode QUADRANT default Unknown::unknown() {
             }
             format CLAMP_I {
                 0x1: clamp();
+            }
+            format LP_SETUP_I {
+                0x2: lp_setup();
+            }
+            format PostIncLoad {
+                0x3: p_lw({{
+                    Rd_sd = Mem_sw;
+                    Rpw = rvSext(Rs1 + 4);
+                }});
             }
         }
 

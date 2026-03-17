@@ -41,6 +41,21 @@ namespace RiscvISA
 {
 
 void
+RiscvStaticInst::advancePC(ThreadContext *tc) const
+{
+    auto *isa = dynamic_cast<ISA *>(tc->getIsaPtr());
+    auto cur_pc = tc->pcState().as<PCState>();
+    auto next_pc = cur_pc;
+
+    next_pc.advance();
+    if (isa) {
+        isa->advanceHardwareLoop(tc, cur_pc, next_pc);
+    }
+
+    tc->pcState(next_pc);
+}
+
+void
 RiscvMicroInst::advancePC(PCStateBase &pcState) const
 {
     auto &rpc = pcState.as<PCState>();
@@ -54,13 +69,19 @@ RiscvMicroInst::advancePC(PCStateBase &pcState) const
 void
 RiscvMicroInst::advancePC(ThreadContext *tc) const
 {
-    PCState pc = tc->pcState().as<PCState>();
+    auto *isa = dynamic_cast<ISA *>(tc->getIsaPtr());
+    auto cur_pc = tc->pcState().as<PCState>();
+    auto next_pc = cur_pc;
+
     if (flags[IsLastMicroop]) {
-        pc.uEnd();
+        next_pc.uEnd();
+        if (isa) {
+            isa->advanceHardwareLoop(tc, cur_pc, next_pc);
+        }
     } else {
-        pc.uAdvance();
+        next_pc.uAdvance();
     }
-    tc->pcState(pc);
+    tc->pcState(next_pc);
 }
 
 } // namespace RiscvISA

@@ -109,6 +109,32 @@ class CLAMP_I : public RiscvStaticInst
         trace::InstRecord *traceData) const override;
 };
 
+/**
+ * lp.setup (I-type)
+ * Semantics:
+ *   lpcount = rs1
+ *   lpstart = next PC
+ *   lpend   = PC + imm
+ *   lpactive = (lpcount > 0)
+ */
+class LP_SETUP_I : public RiscvStaticInst
+{
+  private:
+    RegId srcRegIdxArr[1];
+
+    const RegId rs1;
+    const int16_t simm12;
+
+  public:
+    LP_SETUP_I(ExtMachInst machInst);
+
+    std::string generateDisassembly(
+        Addr pc, const loader::SymbolTable *symtab) const override;
+
+    Fault execute(ExecContext *xc,
+        trace::InstRecord *traceData) const override;
+};
+
 } // namespace RiscvISA
 } // namespace gem5
 

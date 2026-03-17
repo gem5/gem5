@@ -72,6 +72,7 @@ def operands {{
     'ra': IntReg('ud', 'ReturnAddrReg', 'IsInteger', 1),
     'sp': IntReg('ud', 'StackPointerReg', 'IsInteger', 2),
     'spd': IntReg('ud', 'StackPointerReg', 'IsInteger', 1),
+    'Rpw': IntReg('ud', 'RS1', 'IsInteger', 4),
 
     'a0': IntReg('ud', '10', 'IsInteger', 1),
     'a1': IntReg('ud', '11', 'IsInteger', 2),

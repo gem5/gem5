@@ -178,6 +178,79 @@ def template LoadCompleteAcc {{
     }
 }};
 
+def template PostIncLoadExecute {{
+    Fault
+    %(class_name)s::execute(
+        ExecContext *xc, trace::InstRecord *traceData) const
+    {
+        if (machInst.rd == machInst.rs1) {
+            return std::make_shared<IllegalInstFault>(
+                "%(mnemonic)s requires rd != rs1", machInst);
+        }
+
+        Addr EA;
+
+        %(op_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        {
+            Fault fault =
+                readMemAtomicLE(xc, traceData, EA, Mem, memAccessFlags);
+            if (fault != NoFault)
+                return fault;
+        }
+
+        %(memacc_code)s;
+
+        %(op_wb)s;
+
+        return NoFault;
+    }
+}};
+
+def template PostIncLoadInitiateAcc {{
+    Fault
+    %(class_name)s::initiateAcc(ExecContext *xc,
+        trace::InstRecord *traceData) const
+    {
+        if (machInst.rd == machInst.rs1) {
+            return std::make_shared<IllegalInstFault>(
+                "%(mnemonic)s requires rd != rs1", machInst);
+        }
+
+        Addr EA;
+
+        %(op_src_decl)s;
+        %(op_rd)s;
+        %(ea_code)s;
+
+        return initiateMemRead(xc, traceData, EA, Mem, memAccessFlags);
+    }
+}};
+
+def template PostIncLoadCompleteAcc {{
+    Fault
+    %(class_name)s::completeAcc(PacketPtr pkt, ExecContext *xc,
+        trace::InstRecord *traceData) const
+    {
+        if (machInst.rd == machInst.rs1) {
+            return std::make_shared<IllegalInstFault>(
+                "%(mnemonic)s requires rd != rs1", machInst);
+        }
+
+        %(op_decl)s;
+        %(op_rd)s;
+
+        getMemLE(pkt, Mem, traceData);
+
+        %(memacc_code)s;
+        %(op_wb)s;
+
+        return NoFault;
+    }
+}};
+
 def template StoreExecute {{
     Fault
     %(class_name)s::execute(ExecContext *xc,
@@ -550,6 +623,14 @@ def format Load(memacc_code, ea_code = {{EA = rvSext(Rs1 + offset);}},
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, offset_code, ea_code, memacc_code, mem_flags,
         inst_flags, 'Load', exec_template_base='Load')
+}};
+
+def format PostIncLoad(memacc_code, ea_code = {{EA = rvSext(Rs1 + offset);}},
+        offset_code={{offset = sext<12>(IMM12);}},
+        mem_flags=[], inst_flags=[]) {{
+    (header_output, decoder_output, decode_block, exec_output) = \
+        LoadStoreBase(name, Name, offset_code, ea_code, memacc_code, mem_flags,
+        inst_flags, 'PostIncLoad', exec_template_base='PostIncLoad')
 }};
 
 def format Store(memacc_code, ea_code={{EA = rvSext(Rs1 + offset);}},

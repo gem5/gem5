@@ -4,6 +4,7 @@
 #include <sstream>
 #include <string>
 
+#include "arch/riscv/faults.hh"
 #include "arch/riscv/regs/int.hh"
 #include "arch/riscv/utility.hh"
 #include "cpu/exec_context.hh"
@@ -248,6 +249,55 @@ CLAMP_I::execute(ExecContext *xc, trace::InstRecord *traceData) const
     }
 
     xc->setRegOperand(this, 0, out);
+    return NoFault;
+}
+
+LP_SETUP_I::LP_SETUP_I(ExtMachInst machInst)
+    : RiscvStaticInst("lp.setup", machInst, IntAluOp),
+      rs1(intRegClass[machInst.rs1]),
+      simm12(sext<12>(machInst.imm12))
+{
+    setRegIdxArrays(
+        reinterpret_cast<RegIdArrayPtr>(
+            &std::remove_pointer_t<decltype(this)>::srcRegIdxArr),
+        nullptr);
+
+    _numSrcRegs = 0;
+    _numDestRegs = 0;
+    setSrcRegIdx(_numSrcRegs++, rs1);
+
+    flags[IsInteger] = true;
+}
+
+std::string
+LP_SETUP_I::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << " "
+       << registerName(rs1) << ", "
+       << simm12;
+    return ss.str();
+}
+
+Fault
+LP_SETUP_I::execute(ExecContext *xc, trace::InstRecord *traceData) const
+{
+    if (simm12 <= 0 || (simm12 & 0x1) != 0) {
+        return std::make_shared<IllegalInstFault>(
+            "lp.setup requires a positive, 2-byte aligned immediate", machInst);
+    }
+
+    const RegVal count = rvZext(xc->getRegOperand(this, 0));
+    const auto &pc = xc->pcState().as<PCState>();
+    const Addr loop_start = pc.npc();
+    const Addr loop_end = rvSext(pc.pc() + simm12);
+
+    xc->setMiscReg(MISCREG_LPSTART, loop_start);
+    xc->setMiscReg(MISCREG_LPEND, loop_end);
+    xc->setMiscReg(MISCREG_LPCOUNT, count);
+    xc->setMiscReg(MISCREG_LPACTIVE, count != 0);
+
     return NoFault;
 }
 
