@@ -1,5 +1,5 @@
-# Copyright (c) 2013 ARM Limited
-# All rights reserved.
+# Copyright (c) 2026 Arm Limited
+# All rights reserved
 #
 # The license below extends only to copyright in the software and shall
 # not be construed as granting a license to any other intellectual
@@ -20,7 +20,7 @@
 # neither the name of the copyright holders nor the names of its
 # contributors may be used to endorse or promote products derived from
 # this software without specific prior written permission.
-#
+
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 # LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -33,47 +33,24 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.citations import add_citation
-from m5.objects.AbstractMemory import *
-from m5.params import *
+
+def upgrader(cpt):
+    """
+    Update the checkpoint to support SME2 implemtation.
+    The updater is extending the isa vector length to reflect the LUT addition
+    """
+    for sec in cpt.sections():
+        import re
+
+        # Search for all ISA sections
+        res = re.search(r"(.*processor.*\.core.*)\.xc.*", sec)
+        if res and cpt.get(res.groups()[0] + ".isa", "isaName") == "arm":
+            # Updating vector registers to add the LUT
+            vec_list = cpt.get(sec, "regs.vector").split()
+            vec_list_len = len(vec_list)
+            if vec_list_len < 11520:
+                extension = ["0"] * (11520 - vec_list_len)
+                cpt.set(sec, "regs.vector", " ".join(vec_list + extension))
 
 
-# A wrapper for DRAMSim2 multi-channel memory controller
-class DRAMSim2(AbstractMemory):
-    type = "DRAMSim2"
-    cxx_header = "mem/dramsim2.hh"
-    cxx_class = "gem5::memory::DRAMSim2"
-
-    # A single port for now
-    port = ResponsePort("This port sends responses and receives requests")
-
-    deviceConfigFile = Param.String(
-        "ini/DDR3_micron_32M_8B_x8_sg15.ini", "Device configuration file"
-    )
-    systemConfigFile = Param.String(
-        "system.ini.example", "Memory organisation configuration file"
-    )
-    filePath = Param.String(
-        "ext/dramsim2/DRAMSim2/", "Directory to prepend to file names"
-    )
-    traceFile = Param.String("", "Output file for trace generation")
-    enableDebug = Param.Bool(False, "Enable DRAMSim2 debug output")
-
-
-add_citation(
-    DRAMSim2,
-    """@article{Rosenfeld:2011:dramsim2,
-  author       = {Paul Rosenfeld and
-                  Elliott Cooper{-}Balis and
-                  Bruce L. Jacob},
-  title        = {DRAMSim2: {A} Cycle Accurate Memory System Simulator},
-  journal      = {{IEEE} Compututer Architecture Letters},
-  volume       = {10},
-  number       = {1},
-  pages        = {16--19},
-  year         = {2011},
-  url          = {https://doi.org/10.1109/L-CA.2011.4},
-  doi          = {10.1109/L-CA.2011.4}
-}
-""",
-)
+legacy_version = 20

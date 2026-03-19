@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2025 Arm Limited
+ * Copyright (c) 2010-2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -249,13 +249,28 @@ namespace ArmISA
 
     BitUnion64(AA64SMFR0)
         Bitfield<63> fa64;
-        Bitfield<59, 56> smEver;
+        Bitfield<60> lutv2;
+        Bitfield<59, 56> smeVer;
         Bitfield<55, 52> i16i64;
         Bitfield<48> f64f64;
+        Bitfield<47, 44> i16i32;
+        Bitfield<43> b16b16;
+        Bitfield<42> f16f16;
+        Bitfield<41> f8f16;
+        Bitfield<40> f8f32;
         Bitfield<39, 36> i8i32;
         Bitfield<35> f16f32;
         Bitfield<34> b16f32;
+        Bitfield<33> bi32i32;
         Bitfield<32> f32f32;
+        Bitfield<30> sf8Fma;
+        Bitfield<29> sf8Dp4;
+        Bitfield<28> sf8Dp2;
+        Bitfield<25> sbitPerm;
+        Bitfield<24> aes;
+        Bitfield<23> sfexpa;
+        Bitfield<16> stmop;
+        Bitfield<0> smop4;
     EndBitUnion(AA64SMFR0)
 
     BitUnion32(HDCR)

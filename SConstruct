@@ -159,6 +159,9 @@ AddOption('--no-duplicate-sources', action='store_false',
           help='Do not create symlinks to sources in the build directory')
 AddOption('--with-salam', action='store_true',
           help='Build with SALAM accelerator-model support (requires LLVM)')
+AddOption('--gcov', action='store_true', default=False,
+          help="Build gem5 with symbols used by gcov to enable obtaining code "
+          "coverage metrics. This option does not work on Arm hosts.")
 
 # Inject the built_tools directory into the python path.
 sys.path[1:1] = [ Dir('#build_tools').abspath ]
@@ -794,6 +797,15 @@ for variant_path in variant_paths:
             '-fno-builtin-malloc', '-fno-builtin-calloc',
             '-fno-builtin-realloc', '-fno-builtin-free'])
 
+        if GetOption('gcov'):
+            env.Append(CCFLAGS=['-fprofile-arcs', '-ftest-coverage'],
+                       LINKFLAGS=['-lgcov', '--coverage'])
+            if main["BIN_TARGET_ARCH"] == "aarch64":
+                warning('The --gcov option only works on X86 host systems. If '
+                        'using an Arm system, the build will most likely fail '
+                        'due to the code model being too small.'
+                        )
+
     elif env['CLANG']:
         clang_min_version = "14"
         clang_max_version = "19"
@@ -822,6 +834,11 @@ for variant_path in variant_paths:
         if not want_libcxx and sys.platform == "darwin":
             env.Append(CXXFLAGS=['-stdlib=libc++'])
             env.Append(LIBS=['c++'])
+        if GetOption('gcov'):
+            warning("Detected use of the Clang compiler with the --gcov "
+                    "option. Gcov can't be used with Clang, so the --gcov "
+                    "option will be ignored."
+                    )
 
     if sys.platform == 'cygwin':
         # cygwin has some header file issues...

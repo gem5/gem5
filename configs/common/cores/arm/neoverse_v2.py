@@ -47,10 +47,11 @@ class Neoverse_V2_SI_FUP(FUPool):
 # Complex ALU instructions have a variable latencies
 class NeoverseV2_Complex_Int(FUDesc):
     opList = [
-        OpDesc(opClass="IntMult", opLat=4, pipelined=True),
+        OpDesc(opClass="IntMult", opLat=2, pipelined=True),
         OpDesc(opClass="IntDiv", opLat=11, pipelined=False),
         # Treat system register (IPR) accesses as regular integer ops.
-        OpDesc(opClass="IntAlu", opLat=3, pipelined=True),
+        OpDesc(opClass="IntAlu", opLat=1, pipelined=True),
+        OpDesc(opClass="InstPrefetch", opLat=4, pipelined=True),
         OpDesc(opClass="System", opLat=3, pipelined=True),
     ]
 
@@ -62,35 +63,64 @@ class Neoverse_V2_CI_FUP(FUPool):
 # Floating point and SIMD instructions
 class NeoverseV2_FP(FUDesc):
     opList = [
-        OpDesc(opClass="SimdAdd", opLat=3),
+        OpDesc(opClass="SimdAdd", opLat=2),
         OpDesc(opClass="SimdAddAcc", opLat=4),
-        OpDesc(opClass="SimdAlu", opLat=4),
-        OpDesc(opClass="SimdCmp", opLat=4),
+        OpDesc(opClass="SimdAlu", opLat=2),
+        OpDesc(opClass="SimdCmp", opLat=2),
         OpDesc(opClass="SimdCvt", opLat=3),
         OpDesc(opClass="SimdMisc", opLat=3),
-        OpDesc(opClass="SimdMult", opLat=6),
-        OpDesc(opClass="SimdMultAcc", opLat=5),
-        OpDesc(opClass="SimdMatMultAcc", opLat=5),
+        OpDesc(opClass="SimdMult", opLat=4),
+        OpDesc(opClass="SimdMultAcc", opLat=4),
+        OpDesc(opClass="SimdMatMultAcc", opLat=3),
         OpDesc(opClass="SimdShift", opLat=3),
-        OpDesc(opClass="SimdShiftAcc", opLat=3),
-        OpDesc(opClass="SimdSqrt", opLat=9),
-        OpDesc(opClass="SimdFloatAdd", opLat=6),
-        OpDesc(opClass="SimdFloatAlu", opLat=5),
-        OpDesc(opClass="SimdFloatCmp", opLat=3),
-        OpDesc(opClass="SimdFloatCvt", opLat=3),
-        OpDesc(opClass="SimdFloatDiv", opLat=21),
+        OpDesc(opClass="SimdShiftAcc", opLat=4),
+        OpDesc(opClass="SimdDiv", opLat=11),
+        OpDesc(opClass="SimdSqrt", opLat=5),
+        OpDesc(opClass="SimdFloatAdd", opLat=2),
+        OpDesc(opClass="SimdFloatAlu", opLat=3),
+        OpDesc(opClass="SimdFloatCmp", opLat=2),
+        OpDesc(opClass="SimdFloatCvt", opLat=4),
+        OpDesc(opClass="SimdFloatDiv", opLat=11),
         OpDesc(opClass="SimdFloatMisc", opLat=3),
-        OpDesc(opClass="SimdFloatMult", opLat=6),
-        OpDesc(opClass="SimdFloatMultAcc", opLat=1),
-        OpDesc(opClass="SimdFloatMatMultAcc", opLat=1),
+        OpDesc(opClass="SimdFloatMult", opLat=3),
+        OpDesc(opClass="SimdFloatMultAcc", opLat=4),
+        OpDesc(opClass="SimdFloatMatMultAcc", opLat=6),
         OpDesc(opClass="SimdFloatSqrt", opLat=9),
+        OpDesc(opClass="SimdReduceAdd", opLat=4),
+        OpDesc(opClass="SimdReduceAlu", opLat=4),
+        OpDesc(opClass="SimdReduceCmp", opLat=4),
+        OpDesc(opClass="SimdFloatReduceAdd", opLat=6),
+        OpDesc(opClass="SimdFloatReduceCmp", opLat=6),
+        OpDesc(opClass="SimdExt", opLat=2),
+        OpDesc(opClass="SimdFloatExt", opLat=2),
+        OpDesc(opClass="SimdConfig", opLat=2),
+        OpDesc(opClass="SimdDotProd", opLat=3),
+        OpDesc(opClass="SimdAes", opLat=2),
+        OpDesc(opClass="SimdAesMix", opLat=2),
+        OpDesc(opClass="SimdSha1Hash", opLat=2),
+        OpDesc(opClass="SimdSha1Hash2", opLat=4),
+        OpDesc(opClass="SimdSha256Hash", opLat=4),
+        OpDesc(opClass="SimdSha256Hash2", opLat=4),
+        OpDesc(opClass="SimdShaSigma2", opLat=2),
+        OpDesc(opClass="SimdShaSigma3", opLat=2),
+        OpDesc(opClass="SimdSha3", opLat=2),
+        OpDesc(opClass="SimdSm4e", opLat=4),
+        OpDesc(opClass="SimdCrc", opLat=2),
+        OpDesc(opClass="SimdBf16Add", opLat=2),
+        OpDesc(opClass="SimdBf16Cmp", opLat=2),
+        OpDesc(opClass="SimdBf16Cvt", opLat=4),
+        OpDesc(opClass="SimdBf16DotProd", opLat=5),
+        OpDesc(opClass="SimdBf16MatMultAcc", opLat=6),
+        OpDesc(opClass="SimdBf16Mult", opLat=3),
+        OpDesc(opClass="SimdBf16MultAcc", opLat=5),
         OpDesc(opClass="FloatAdd", opLat=2),
         OpDesc(opClass="FloatCmp", opLat=2),
-        OpDesc(opClass="FloatCvt", opLat=2),
-        OpDesc(opClass="FloatDiv", opLat=12, pipelined=False),
-        OpDesc(opClass="FloatSqrt", opLat=33, pipelined=False),
+        OpDesc(opClass="FloatCvt", opLat=3),
+        OpDesc(opClass="FloatDiv", opLat=11, pipelined=False),
+        OpDesc(opClass="FloatSqrt", opLat=12, pipelined=False),
         OpDesc(opClass="FloatMult", opLat=3),
         OpDesc(opClass="FloatMisc", opLat=4),
+        OpDesc(opClass="FloatMultAcc", opLat=4),
     ]
 
 
@@ -100,11 +130,17 @@ class Neoverse_V2_FP_FUP(FUPool):
 
 # Load/Store Unit
 class NeoverseV2_Load(FUDesc):
-    opList = [OpDesc(opClass="MemRead", opLat=2)]
+    opList = [
+        OpDesc(opClass="MemRead", opLat=4),
+        OpDesc(opClass="FloatMemRead", opLat=6),
+    ]
 
 
 class NeoverseV2_Store(FUDesc):
-    opList = [OpDesc(opClass="MemWrite", opLat=2)]
+    opList = [
+        OpDesc(opClass="MemWrite", opLat=1),
+        OpDesc(opClass="FloatMemWrite", opLat=2),
+    ]
 
 
 # Load only pool

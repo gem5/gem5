@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013,2017-2019, 2021-2022, 2024 Arm Limited
+ * Copyright (c) 2011-2013,2017-2019, 2021-2022, 2024-2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -58,6 +58,21 @@ class ImmOp64 : public ArmISA::ArmStaticInst
 
     std::string generateDisassembly(
             Addr pc, const loader::SymbolTable *symtab) const override;
+};
+
+class SmeImmOp64 : public ArmISA::ArmSmeStaticInst
+{
+  protected:
+    uint64_t imm;
+
+    SmeImmOp64(const char *mnem, ArmISA::ExtMachInst _machInst,
+               OpClass __opClass, uint64_t _imm)
+        : ArmISA::ArmSmeStaticInst(mnem, _machInst, __opClass), imm(_imm)
+    {}
+
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
 };
 
 class RegOp64 : public ArmISA::ArmStaticInst

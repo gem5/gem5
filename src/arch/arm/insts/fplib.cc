@@ -1,40 +1,40 @@
 /*
-* Copyright (c) 2012-2013, 2017-2018, 2020, 2025 Arm Limited
-* Copyright (c) 2020 Metempsy Technology Consulting
-* All rights reserved
-*
-* The license below extends only to copyright in the software and shall
-* not be construed as granting a license to any other intellectual
-* property including but not limited to intellectual property relating
-* to a hardware implementation of the functionality of the software
-* licensed hereunder.  You may use the software subject to the license
-* terms below provided that you ensure that this notice is replicated
-* unmodified and in its entirety in all distributions of the software,
-* modified or unmodified, in source code or in binary form.
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions are
-* met: redistributions of source code must retain the above copyright
-* notice, this list of conditions and the following disclaimer;
-* redistributions in binary form must reproduce the above copyright
-* notice, this list of conditions and the following disclaimer in the
-* documentation and/or other materials provided with the distribution;
-* neither the name of the copyright holders nor the names of its
-* contributors may be used to endorse or promote products derived from
-* this software without specific prior written permission.
-*
-* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-* A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-* LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-* DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-* THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-* OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ * Copyright (c) 2012-2013, 2017-2018, 2020, 2025-2026 Arm Limited
+ * Copyright (c) 2020 Metempsy Technology Consulting
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 #include <stdint.h>
 
@@ -62,6 +62,7 @@ namespace ArmISA
 #define FPLIB_AH  128   // 0x80
 #define FPLIB_NEP 256   // 0x100
 #define FPLIB_FPEXEC 512    // 0x200, Raise exception.
+#define FPLIB_TRAPUF 1024   // 0x400
 
 #define FPLIB_IDC 128 // Input Denormal
 #define FPLIB_IXC 16  // Inexact
@@ -1074,7 +1075,8 @@ fp16_round_(int sgn, int exp, uint16_t mnt, int rm, int mode, int *flags)
     }
 
     // xx should also check fpscr_val<11>
-    if (!(mode & FPLIB_AH) && !biased_exp && error) {
+    if (!(mode & FPLIB_AH) && !biased_exp &&
+        (error || (mode & FPLIB_TRAPUF))) {
         if (mode & FPLIB_FPEXEC)
             *flags |= FPLIB_UFC;
     }
@@ -1122,7 +1124,7 @@ fp16_round_(int sgn, int exp, uint16_t mnt, int rm, int mode, int *flags)
             if (mode & FPLIB_FPEXEC)
                 *flags |= FPLIB_UFC | FPLIB_IXC;
             return fp16_zero(sgn);
-        } else if (error) {
+        } else if (error || (mode & FPLIB_TRAPUF)) {
             if (mode & FPLIB_FPEXEC)
                 *flags |= FPLIB_UFC;
         }
@@ -1204,7 +1206,8 @@ fp32_round_(int sgn, int exp, uint32_t mnt, int rm, int mode, int *flags,
     // inexact or the Underflow exception is trapped. This applies before
     // rounding if FPCR.AH != '1'.
     // xx should also check fpscr_val<11>
-    if (!(mode & FPLIB_AH) && !biased_exp && error) {
+    if (!(mode & FPLIB_AH) && !biased_exp &&
+        (error || (mode & FPLIB_TRAPUF))) {
         if (mode & FPLIB_FPEXEC)
             *flags |= FPLIB_UFC;
     }
@@ -1252,7 +1255,7 @@ fp32_round_(int sgn, int exp, uint32_t mnt, int rm, int mode, int *flags,
             if (mode & FPLIB_FPEXEC)
                 *flags |= FPLIB_UFC | FPLIB_IXC;
             return fp32_zero(sgn);
-        } else if (error) {
+        } else if (error || (mode & FPLIB_TRAPUF)) {
             if (mode & FPLIB_FPEXEC)
                 *flags |= FPLIB_UFC;
         }
@@ -1320,7 +1323,8 @@ fp64_round_(int sgn, int exp, uint64_t mnt, int rm, int mode, int *flags)
     }
 
     // xx should also check fpscr_val<11>
-    if (!(mode & FPLIB_AH) && !biased_exp && error) {
+    if (!(mode & FPLIB_AH) && !biased_exp &&
+        (error || (mode & FPLIB_TRAPUF))) {
         if (mode & FPLIB_FPEXEC)
             *flags |= FPLIB_UFC;
     }
@@ -1368,7 +1372,7 @@ fp64_round_(int sgn, int exp, uint64_t mnt, int rm, int mode, int *flags)
             if (mode & FPLIB_FPEXEC)
                 *flags |= FPLIB_UFC | FPLIB_IXC;
             return fp64_zero(sgn);
-        } else if (error) {
+        } else if (error || (mode & FPLIB_TRAPUF)) {
             if (mode & FPLIB_FPEXEC)
                 *flags |= FPLIB_UFC;
         }
@@ -3146,6 +3150,9 @@ modeConv(FPSCR fpscr)
     if (fpscr.fz16)
         mode |= FPLIB_FZ16;
     mode |= FPLIB_FPEXEC;
+    if (fpscr.ufe) {
+        mode = mode | FPLIB_TRAPUF;
+    }
     return mode;
     // AHP bit is ignored. Only fplibConvert uses AHP.
 }
@@ -7158,7 +7165,8 @@ bf16_round_(int sgn, int exp, uint16_t mnt, int rm, int mode, int *flags)
     // inexact or the Underflow exception is trapped. This applies before
     // rounding if FPCR.AH != '1'.
     // xx should also check fpscr_val<11>
-    if (!(mode & FPLIB_AH) && !biased_exp && error) {
+    if (!(mode & FPLIB_AH) && !biased_exp &&
+        (error || (mode & FPLIB_TRAPUF))) {
         if (mode & FPLIB_FPEXEC)
             *flags |= FPLIB_UFC;
     }
@@ -7206,7 +7214,7 @@ bf16_round_(int sgn, int exp, uint16_t mnt, int rm, int mode, int *flags)
             if (mode & FPLIB_FPEXEC)
                 *flags |= FPLIB_UFC | FPLIB_IXC;
             return bf16_zero(sgn);
-        } else if (error) {
+        } else if (error || (mode & FPLIB_TRAPUF)) {
             if (mode & FPLIB_FPEXEC)
                 *flags |= FPLIB_UFC;
         }
@@ -7719,26 +7727,33 @@ fplibBfMulH(uint16_t op1, uint16_t op2, FPSCR &fpscr)
 }
 
 uint16_t
-fplibBfMulAdd(uint16_t addend, uint16_t op1, uint16_t op2,
-              FPSCR &fpscr, FPCR fpcr)
+fplibBfMulAdd(uint16_t addend, uint16_t op1, uint16_t op2, FPSCR &fpscr,
+              FPCR fpcr, bool target_za)
 {
     int flags = 0;
-    uint16_t result = bf16_muladd(addend, op1, op2, 0, modeConv(fpscr, fpcr),
-                                  &flags);
+    int mode = modeConv(fpscr, fpcr);
+    if (target_za) {            // SME
+        mode = mode | FPLIB_DN; // fpcr.dn = '1'
+    }
+    uint16_t result = bf16_muladd(addend, op1, op2, 0, mode, &flags);
     set_fpscr0(fpscr, flags);
     return result;
 }
 
 uint32_t
-fplibBfMulAddH(uint32_t addend, uint16_t op1, uint16_t op2,
-               FPSCR &fpscr, FPCR fpcr)
+fplibBfMulAddH(uint32_t addend, uint16_t op1, uint16_t op2, FPSCR &fpscr,
+               FPCR fpcr, bool target_za)
 {
     int flags = 0;
     int mode = modeConv(fpscr, fpcr);
-    if (mode & FPLIB_AH) {  // altfp
-        mode = mode & (~(int)FPLIB_FPEXEC); // fpexc = !altfp
-        mode = mode | FPLIB_FIZ | FPLIB_FZ; // fpcr.<FIZ.FZ> = '11'
-        mode = mode & (~(int)0x3);          // fpcr.RMode = '00'
+    if (target_za) {                            // SME
+        mode = mode | FPLIB_DN;                 // fpcr.dn = '1'
+    } else {                                    // SVE
+        if (mode & FPLIB_AH) {                  // altfp
+            mode = mode & (~(int)FPLIB_FPEXEC); // fpexc = !altfp
+            mode = mode | FPLIB_FIZ | FPLIB_FZ; // fpcr.<FIZ.FZ> = '11'
+            mode = mode & (~(int)0x3);          // fpcr.RMode = '00'
+        }
     }
     uint32_t result = fp32_muladd(
         addend, (uint32_t)op1 << 16, (uint32_t)op2 << 16, 0, mode, &flags);
