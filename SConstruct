@@ -157,6 +157,8 @@ AddOption('--duplicate-sources', action='store_true', default=False,
 AddOption('--no-duplicate-sources', action='store_false',
           dest='duplicate_sources',
           help='Do not create symlinks to sources in the build directory')
+AddOption('--with-salam', action='store_true',
+          help='Build with SALAM accelerator-model support (requires LLVM)')
 
 # Inject the built_tools directory into the python path.
 sys.path[1:1] = [ Dir('#build_tools').abspath ]
@@ -441,79 +443,89 @@ if not GetOption('duplicate_sources'):
 
 
 ########################################################################
-# LLVM Configuration
 #
-# Find a supported LLVM version and configure compilation and linking
-# flags using llvm-config.
+# LLVM Configuration for optional SALAM builds
+#
 ########################################################################
 
-# This function uses only tools available in the SConstruct context
 def _llvm_out(llvm_config_path, *args):
     """Executes llvm-config and returns the output as a list of strings."""
     try:
-        # Use the existing readCommand utility for robustness
         command = [llvm_config_path] + list(args)
-        # readCommand returns a string, Split turns it into a list for SCons
         return Split(readCommand(command))
     except (subprocess.CalledProcessError, SCons.Errors.UserError) as e:
         error(f"Command '{' '.join(command)}' failed:\n{e}")
 
-# Find llvm-config executable
-# Define which LLVM versions are supported by your project.
+
 SUPPORTED_LLVM_VERSIONS = {11, 12, 13, 14, 15, 16, 17, 18, 19, 20}
-llvm_config = None
 
-# Check for an explicit override from the LLVM_CONFIG environment variable.
-if candidate := environ.get("LLVM_CONFIG"):
-    if isfile(candidate):
-        llvm_config = candidate
-    else:
-        warning(f"LLVM_CONFIG is set to '{candidate}' but it's not a file.")
 
-# If no override, check for a plain 'llvm-config' on the PATH.
-if not llvm_config:
-    llvm_config = main.WhereIs("llvm-config")
+def _find_llvm_config(env):
+    llvm_config = None
 
-# If still not found, search for versioned binaries (e.g., 'llvm-config-18').
-if not llvm_config:
-    search_paths = set(environ.get("PATH", "").split(os.pathsep))
-    search_paths.update(["/usr/bin", "/usr/local/bin",
-                         "/opt/homebrew/opt/llvm/bin"])
+    candidate = environ.get("LLVM_CONFIG")
+    if candidate:
+        if isfile(candidate):
+            llvm_config = candidate
+        else:
+            warning(
+                f"LLVM_CONFIG is set to '{candidate}' but it's not a file."
+            )
 
-    candidates = []
-    for path in filter(isdir, search_paths):
-        for f in listdir(path):
-            if not f.startswith("llvm-config-"):
-                continue
-            try:
-                # Extract version from filename like 'llvm-config-18'
-                version = int(f.split('-')[-1].split('.')[0])
-                if version in SUPPORTED_LLVM_VERSIONS:
-                    candidates.append((version, join(path, f)))
-            except (ValueError, IndexError):
-                continue # Ignore files that don't match the expected format
+    if not llvm_config:
+        llvm_config = env.WhereIs("llvm-config")
 
-    if candidates:
-        # Use the one with the highest version number
-        llvm_config = sorted(candidates, reverse=True)[0][1]
+    if not llvm_config:
+        search_paths = set(environ.get("PATH", "").split(os.pathsep))
+        search_paths.update([
+            "/usr/bin",
+            "/usr/local/bin",
+            "/opt/homebrew/opt/llvm/bin",
+        ])
 
-# If no suitable llvm-config was found after all checks, exit with an error.
-if not llvm_config:
-    error(f"Could not locate a supported 'llvm-config' executable.\n"
-          f"Supported versions: {sorted(list(SUPPORTED_LLVM_VERSIONS))}\n"
-          f"Fix: Install a supported LLVM, ensure it's on PATH, "
-          f"or set the LLVM_CONFIG environment variable.")
+        candidates = []
+        for path in filter(isdir, search_paths):
+            for f in listdir(path):
+                if not f.startswith("llvm-config-"):
+                    continue
+                try:
+                    version = int(f.split('-')[-1].split('.')[0])
+                    if version in SUPPORTED_LLVM_VERSIONS:
+                        candidates.append((version, join(path, f)))
+                except (ValueError, IndexError):
+                    continue
 
-# Configure the Environment
-print(f"scons: Using LLVM config at '{llvm_config}'")
+        if candidates:
+            llvm_config = sorted(candidates, reverse=True)[0][1]
 
-main.Append(CPPFLAGS=_llvm_out(llvm_config, "--cppflags"))
-libdir = _llvm_out(llvm_config, "--libdir")
-main.Append(LIBPATH=libdir)
-main.Append(RPATH=libdir)
-main.Append(LIBS=_llvm_out(llvm_config, "--libs", "all"))
-main.Append(CPPPATH=_llvm_out(llvm_config, "--includedir"))
-main.Append(CPPDEFINES=['LLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1'])
+    return llvm_config
+
+
+def configure_llvm_for_salam(env):
+    llvm_config = _find_llvm_config(env)
+
+    if not llvm_config:
+        error(
+            "SALAM build requested (--with-salam), but no supported "
+            "'llvm-config' executable was found.\n"
+            f"Supported versions: {sorted(list(SUPPORTED_LLVM_VERSIONS))}\n"
+            "Fix: Install a supported LLVM, ensure it's on PATH, "
+            "or set the LLVM_CONFIG environment variable."
+        )
+
+    print(f"scons: Using LLVM config at '{llvm_config}' for SALAM")
+
+    env.Append(CPPFLAGS=_llvm_out(llvm_config, "--cppflags"))
+
+    libdir = _llvm_out(llvm_config, "--libdir")
+    env.Append(LIBPATH=libdir)
+    env.Append(RPATH=libdir)
+
+    env.Append(LIBS=_llvm_out(llvm_config, "--libs", "all"))
+    env.Append(CPPPATH=_llvm_out(llvm_config, "--includedir"))
+    env.Append(
+        CPPDEFINES=['LLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1']
+    )
 
 ########################################################################
 #
@@ -1050,6 +1062,13 @@ for variant_path in variant_paths:
                 config_file.abspath)
 
     kconfig.update_env(env, kconfig_file.abspath, config_file.abspath)
+
+    env['CONF']['WITH_SALAM'] = GetOption('with_salam')
+
+    if env['CONF']['WITH_SALAM']:
+        if not env['CONF']['USE_ARM_ISA']:
+            error("--with-salam currently requires an ARM build target.")
+        configure_llvm_for_salam(env)
 
     # Do this after we save setting back, or else we'll tack on an
     # extra 'qdo' every time we run scons.

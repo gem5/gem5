@@ -32,7 +32,7 @@
 
 Import("*")
 
-if env["CONF"]["USE_ARM_ISA"]:
+if env["CONF"]["USE_ARM_ISA"] and env["CONF"].get("WITH_SALAM", False):
 
     SimObject("CommInterface.py", sim_objects=["CommInterface"])
     SimObject("ScratchpadMemory.py", sim_objects=["ScratchpadMemory"])
