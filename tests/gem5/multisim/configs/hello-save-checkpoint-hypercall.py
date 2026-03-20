@@ -42,7 +42,6 @@ scons build/RISCV/gem5.opt
     configs/example/gem5_library/checkpoint/riscv-hello-save-checkpoint.py
 ```
 """
-from pathlib import Path
 
 import m5
 import m5.options
