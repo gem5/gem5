@@ -1,4 +1,4 @@
-# Copyright (c) 2025 The Regents of the University of California
+# Copyright (c) 2025-2026 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,8 +24,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import argparse
-
 import gem5.utils.multisim as multisim
 from gem5.components.boards.x86_board import X86Board
 from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
@@ -35,17 +33,34 @@ from gem5.components.memory import SingleChannelDDR3_1600
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.isas import ISA
-from gem5.resources.resource import (
-    DiskImageResource,
-    KernelResource,
-    obtain_resource,
-)
+from gem5.resources.resource import obtain_resource
 from gem5.simulate.simulator import Simulator
 
 multisim.set_num_processes(22)
 
+cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
+    l1d_size="16KiB", l1i_size="16KiB", l2_size="256KiB"
+)
+memory = SingleChannelDDR3_1600(size="3GiB")
+processor = SimpleProcessor(cpu_type=CPUTypes.ATOMIC, isa=ISA.X86, num_cores=1)
+board = X86Board(
+    clk_freq="1GHz",
+    processor=processor,
+    memory=memory,
+    cache_hierarchy=cache_hierarchy,
+)
+board.set_workload(
+    obtain_resource(
+        "x86-ubuntu-24.04-boot-with-systemd", resource_version="5.0.0"
+    )
+)
 
-for core_type in [CPUTypes.ATOMIC]:
+multisim.add_simulator(
+    Simulator(board=board, id=f"process_x86-atomic-24-04-boot")
+)
+
+
+for npb_workload in ["bt", "cg", "ep", "ft", "is", "lu", "mg", "sp", "ua"]:
     cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
         l1d_size="16KiB",
         l1i_size="16KiB",
@@ -63,45 +78,10 @@ for core_type in [CPUTypes.ATOMIC]:
     )
     board.set_workload(
         obtain_resource(
-            "x86-ubuntu-24.04-boot-with-systemd", resource_version="5.0.0"
+            f"x86-ubuntu-24.04-npb-{npb_workload}-s", resource_version="3.0.0"
         )
     )
 
     multisim.add_simulator(
-        Simulator(
-            board=board,
-            id=f"process_x86-{core_type.name.lower()}-24-04-boot",
-        )
+        Simulator(board=board, id=f"process_x86-atomic-{npb_workload}-s")
     )
-
-
-for npb_workload in ["bt", "cg", "ep", "ft", "is", "lu", "mg", "sp", "ua"]:
-    for core_type in [CPUTypes.ATOMIC]:
-        cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
-            l1d_size="16KiB",
-            l1i_size="16KiB",
-            l2_size="256KiB",
-        )
-        memory = SingleChannelDDR3_1600(size="3GiB")
-        processor = SimpleProcessor(
-            cpu_type=core_type, isa=ISA.X86, num_cores=1
-        )
-        board = X86Board(
-            clk_freq="1GHz",
-            processor=processor,
-            memory=memory,
-            cache_hierarchy=cache_hierarchy,
-        )
-        board.set_workload(
-            obtain_resource(
-                f"x86-ubuntu-24.04-npb-{npb_workload}-s",
-                resource_version="3.0.0",
-            )
-        )
-
-        multisim.add_simulator(
-            Simulator(
-                board=board,
-                id=f"process_x86-{core_type.name.lower()}-{npb_workload}-s",
-            )
-        )

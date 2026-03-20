@@ -1,4 +1,4 @@
-# Copyright (c) 2025 The Regents of the University of California
+# Copyright (c) 2025-2026 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,9 +24,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
-import os
-import re
 
 from testlib import *
 from testlib.log import *
@@ -55,7 +52,7 @@ gem5_verify_config(
 )
 
 gem5_verify_config(
-    name="test-multisim-longer-workloads-22-proc",
+    name="test-multisim-longer-workloads",
     fixtures=(),
     verifiers=(),
     gem5_args=[
