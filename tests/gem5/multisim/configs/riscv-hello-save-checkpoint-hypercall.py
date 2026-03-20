@@ -95,5 +95,5 @@ for ticks in [500_000, 1_000_000, 1_500_000]:
     board.set_se_binary_workload(obtain_resource("riscv-hello"))
     # Lastly we run the simulation.
     simulator = Simulator(board=board, id=f"riscv-hello-{ticks}-tick")
-    m5.scheduleTickExitAbsolute(ticks, "Taking checkpoint now!")
+    simulator.set_hypercall_absolute_max_ticks(ticks, "Taking checkpoint now!")
     multisim.add_simulator(simulator=simulator)

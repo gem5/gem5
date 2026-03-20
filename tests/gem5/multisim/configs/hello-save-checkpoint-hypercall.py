@@ -88,7 +88,9 @@ for isa in [ISA.RISCV, ISA.ARM, ISA.X86]:
 
     max_ticks = 10**6
     simulator = Simulator(board=board, id=f"process_{isa.name}")
-    m5.scheduleTickExitAbsolute(max_ticks, "Taking checkpoint now!")
+    simulator.set_hypercall_absolute_max_ticks(
+        max_ticks, "Taking checkpoint now!"
+    )
     multisim.add_simulator(simulator=simulator)
 
 
