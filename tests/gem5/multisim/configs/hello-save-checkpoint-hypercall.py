@@ -25,21 +25,24 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-This gem5 configuation script creates a simple board to run the first
-10^6 ticks of "riscv-hello" binary simulation and saves a checkpoint.
-This configuration serves as an example of taking a checkpoint.
-
-This is setup is the close to the simplest setup possible using the gem5
-library. It does not contain any kind of caching, IO, or any non-essential
-components.
+This gem5 configuation script is used to test taking checkpoints while using
+MultiSim. It runs three simulations using the Arm, X86, and RISCV "hello world"
+binaries and takes a checkpoint for each simulation after 10^6 ticks.
 
 Usage
 -----
 
 ```
-scons build/RISCV/gem5.opt
-./build/RISCV/gem5.opt \
-    configs/example/gem5_library/checkpoint/riscv-hello-save-checkpoint.py
+scons build/ALL/gem5.opt
+./build/ALL/gem5.opt \
+    tests/gem5/multisim/configs/hello-save-checkpoint-hypercall.py
+```
+
+or
+
+```
+cd tests
+./main.py run gem5/multisim
 ```
 """
 
@@ -97,13 +100,11 @@ for isa in [ISA.RISCV, ISA.ARM, ISA.X86]:
 class ScheduledCheckpointTakingHandler(ScheduledExitEventHandler):
     @overrides(ScheduledExitEventHandler)
     def _process(self, simulator: "Simulator") -> None:
-        print(
-            "Taking a checkpoint at",
-            f"{m5.options.outdir}/{simulator.get_id()}-hello-checkpoint/",
-        )
-        simulator.save_checkpoint(
+        checkpoint_path = (
             f"{m5.options.outdir}/{simulator.get_id()}-hello-checkpoint/"
         )
+        print(f"Taking a checkpoint at {checkpoint_path}")
+        simulator.save_checkpoint(checkpoint_path)
         print("Done taking a checkpoint")
 
     @overrides(ExitHandler)

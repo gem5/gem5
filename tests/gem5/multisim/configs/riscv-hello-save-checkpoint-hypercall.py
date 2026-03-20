@@ -26,8 +26,8 @@
 
 """
 This gem5 configuation script is used to test taking checkpoints while using
-multisim. It runs three jobs which use the "riscv-hello" binary and take
-checkpoints at 500,000, 1 million, and 1.5 million ticks.
+MultiSim. It runs three simulations which use the "riscv-hello" binary and
+takes checkpoints at 500,000, 1 million, and 1.5 million ticks.
 
 Usage
 -----
@@ -36,6 +36,13 @@ Usage
 scons build/ALL/gem5.opt
 ./build/ALL/gem5.opt \
     tests/gem5/multisim/configs/riscv-hello-save-checkpoint-hypercall.py
+```
+
+or
+
+```
+cd tests
+./main.py run gem5/multisim
 ```
 """
 
@@ -61,21 +68,6 @@ requires(isa_required=ISA.RISCV)
 multisim.set_num_processes(5)
 
 
-class ScheduledCheckpointTakingHandler(ScheduledExitEventHandler):
-    @overrides(ScheduledExitEventHandler)
-    def _process(self, simulator: "Simulator") -> None:
-        checkpoint_path = (
-            f"{m5.options.outdir}/{simulator.get_id()}-checkpoint/"
-        )
-        print(f"Taking a checkpoint at {checkpoint_path}")
-        simulator.save_checkpoint(checkpoint_path)
-        print("Done taking a checkpoint")
-
-    @overrides(ExitHandler)
-    def _exit_simulation(self) -> bool:
-        return True
-
-
 for ticks in [500_000, 1_000_000, 1_500_000]:
     cache_hierarchy = NoCache()
 
@@ -97,3 +89,18 @@ for ticks in [500_000, 1_000_000, 1_500_000]:
     simulator = Simulator(board=board, id=f"riscv-hello-{ticks}-tick")
     simulator.set_hypercall_absolute_max_ticks(ticks, "Taking checkpoint now!")
     multisim.add_simulator(simulator=simulator)
+
+
+class ScheduledCheckpointTakingHandler(ScheduledExitEventHandler):
+    @overrides(ScheduledExitEventHandler)
+    def _process(self, simulator: "Simulator") -> None:
+        checkpoint_path = (
+            f"{m5.options.outdir}/{simulator.get_id()}-checkpoint/"
+        )
+        print(f"Taking a checkpoint at {checkpoint_path}")
+        simulator.save_checkpoint(checkpoint_path)
+        print("Done taking a checkpoint")
+
+    @overrides(ExitHandler)
+    def _exit_simulation(self) -> bool:
+        return True
