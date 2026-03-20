@@ -39,8 +39,6 @@ scons build/ALL/gem5.opt
 ```
 """
 
-import argparse
-
 import m5
 
 import gem5.utils.multisim as multisim
