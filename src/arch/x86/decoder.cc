@@ -199,13 +199,35 @@ Decoder::doPrefixState(uint8_t nextByte)
         break;
       case Vex2Prefix:
         DPRINTF(Decoder, "Found VEX two-byte prefix %#x.\n", nextByte);
-        emi.vex.present = 1;
-        nextState = Vex2Of2State;
+        if (emi.rex != 0) {
+            // This is an invalid combination that should cause an undefined
+            // instruction exception.
+            // Pretend this was an undefined instruction so the main decoder
+            // will behave correctly, and stop trying to interpret bytes.
+            instDone = true;
+            nextState = ResetState;
+            emi.opcode.type = TwoByteOpcode;
+            emi.opcode.op = 0x0B;
+        } else {
+            emi.vex.present = 1;
+            nextState = Vex2Of2State;
+        }
         break;
       case Vex3Prefix:
         DPRINTF(Decoder, "Found VEX three-byte prefix %#x.\n", nextByte);
-        emi.vex.present = 1;
-        nextState = Vex2Of3State;
+        if (emi.rex != 0) {
+            // This is an invalid combination that should cause an undefined
+            // instruction exception.
+            // Pretend this was an undefined instruction so the main decoder
+            // will behave correctly, and stop trying to interpret bytes.
+            instDone = true;
+            nextState = ResetState;
+            emi.opcode.type = TwoByteOpcode;
+            emi.opcode.op = 0x0B;
+        } else {
+            emi.vex.present = 1;
+            nextState = Vex2Of3State;
+        }
         break;
       case 0:
         nextState = OneByteOpcodeState;
