@@ -639,6 +639,17 @@ LSQUnit::executeLoad(const DynInstPtr &inst)
         inst->completeAcc(nullptr);
         iewStage->instToCommit(inst);
         iewStage->activityThisCycle();
+        if (inst->lqIdx >= 0) {
+            LSQRequest *request = loadQueue[inst->lqIdx].request();
+            if (request) {
+                // No packet or translation response will arrive for this
+                // short-circuited access.  Drop the LSQ's request pointer here
+                // after the instruction has completed its execute-stage work,
+                // so the request no longer keeps the DynInst alive.
+                loadQueue[inst->lqIdx].setRequest(nullptr);
+                request->discard();
+            }
+        }
         return NoFault;
     }
 
