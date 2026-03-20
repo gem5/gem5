@@ -28,6 +28,7 @@
 Tests which test SE mode's functionality when running workloads on multiple
 core setups.
 """
+
 from testlib import *
 
 if config.bin_path:

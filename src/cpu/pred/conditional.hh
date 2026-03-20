@@ -46,7 +46,7 @@
 #include "cpu/inst_seq.hh"
 #include "cpu/pred/branch_type.hh"
 #include "params/ConditionalPredictor.hh"
-#include "sim/sim_object.hh"
+#include "sim/clocked_object.hh"
 
 namespace gem5
 {
@@ -54,14 +54,22 @@ namespace gem5
 namespace branch_prediction
 {
 
-class ConditionalPredictor : public SimObject
+class ConditionalPredictor : public ClockedObject
 {
   public:
-
     typedef ConditionalPredictorParams Params;
 
     ConditionalPredictor(const Params &params);
 
+    /**
+     * Returns the default prediction latency in cycles
+     * @return The prediction latency in cycles
+     */
+    Cycles
+    getDefaultLatency() const
+    {
+        return defaultLatency;
+    }
 
     /**
      * Looks up a given conditional branch PC of in the BP to see if it
@@ -72,7 +80,7 @@ class ConditionalPredictor : public SimObject
      * has the branch predictor state associated with the lookup.
      * @return Whether the branch is taken or not taken.
      */
-    virtual bool lookup(ThreadID tid, Addr pc, void * &bp_history) = 0;
+    virtual Prediction lookup(ThreadID tid, Addr pc, void *&bp_history) = 0;
 
     /**
      * Ones done with the prediction this function updates the
@@ -141,6 +149,16 @@ class ConditionalPredictor : public SimObject
 
     /** Number of bits to shift instructions by for predictor addresses. */
     const unsigned instShiftAmt;
+
+    /** Default latency of the predictor in cycles */
+    const Cycles defaultLatency;
+
+    /** Return a prediction with the default latency */
+    Prediction
+    predictWithDefaultLatency(bool taken) const
+    {
+        return Prediction{taken, defaultLatency};
+    }
 };
 
 } // namespace branch_prediction

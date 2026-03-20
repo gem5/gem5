@@ -49,6 +49,7 @@
 #include "debug/RubyResourceStalls.hh"
 #include "debug/RubyStats.hh"
 #include "mem/cache/replacement_policies/weighted_lru_rp.hh"
+#include "mem/ruby/common/Address.hh"
 #include "mem/ruby/protocol/AccessPermission.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
@@ -106,7 +107,19 @@ CacheMemory::init()
     m_cache_num_sets = (m_cache_size / m_cache_assoc) / m_block_size;
     assert(m_cache_num_sets > 1);
     m_cache_num_set_bits = floorLog2(m_cache_num_sets);
-    assert(m_cache_num_set_bits > 0);
+
+    if (m_cache_num_sets * m_cache_assoc * m_block_size != m_cache_size) {
+        fatal("Cache size %s is not a multiple of associativity %d * "
+              "block size %d\n",
+              m_cache_size, m_cache_assoc, m_block_size);
+    }
+
+    if ((1 << m_cache_num_set_bits) == m_cache_num_sets) {
+        m_is_power_of_2_sets = true;
+        assert(m_cache_num_set_bits > 0);
+    } else {
+        m_is_power_of_2_sets = false;
+    }
 
     m_cache.resize(m_cache_num_sets,
                     std::vector<AbstractCacheEntry*>(m_cache_assoc, nullptr));
@@ -137,8 +150,12 @@ int64_t
 CacheMemory::addressToCacheSet(Addr address) const
 {
     assert(address == makeLineAddress(address));
-    return bitSelect(address, m_start_index_bit,
-                     m_start_index_bit + m_cache_num_set_bits - 1);
+    if (m_is_power_of_2_sets) {
+        return bitSelect(address, m_start_index_bit,
+                         m_start_index_bit + m_cache_num_set_bits - 1);
+    } else {
+        return (address >> m_start_index_bit) % m_cache_num_sets;
+    }
 }
 
 // Given a cache index: returns the index of the tag in a set.

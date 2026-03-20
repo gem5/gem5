@@ -174,7 +174,7 @@ if not args.kernel:
     parser.error("--kernel argument is required")
 
 # CPU and Memory
-(CPUClass, mem_mode, FutureClass) = Simulation.setCPUClass(args)
+CPUClass, mem_mode, FutureClass = Simulation.setCPUClass(args)
 assert issubclass(CPUClass, RiscvCPU)
 MemClass = Simulation.setMemClass(args)
 

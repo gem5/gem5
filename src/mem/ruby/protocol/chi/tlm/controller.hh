@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023,2025 Arm Limited
+ * Copyright (c) 2023,2025-2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -111,6 +111,10 @@ class CacheController : public ruby::CHIGenericController
     bool recvResponseMsg(const CHIResponseMsg *msg) override;
     bool recvDataMsg(const CHIDataMsg *msg) override;
 
+    void functionalRead(const Addr &param_addr, Packet *param_pkt,
+                        ruby::WriteMask &param_mask) override;
+    int functionalWrite(const Addr &param_addr, Packet *param_pkt) override;
+
     void sendMsg(ARM::CHI::Payload &payload, ARM::CHI::Phase &phase);
     using CHIGenericController::sendRequestMsg;
     void sendRequestMsg(ARM::CHI::Payload &payload, ARM::CHI::Phase &phase);
@@ -137,7 +141,7 @@ class CacheController : public ruby::CHIGenericController
         Transaction(CacheController *parent,
             ARM::CHI::Payload &_payload,
             ARM::CHI::Phase &_phase);
-        ~Transaction();
+        virtual ~Transaction();
 
         static std::unique_ptr<Transaction> gen(CacheController *parent,
             ARM::CHI::Payload &_payload,
