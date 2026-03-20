@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2025 The Regents of the University of California
+# Copyright (c) 2022-2026 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
