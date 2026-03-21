@@ -39,6 +39,9 @@
 from m5.objects.ClockedObject import ClockedObject
 from m5.params import *
 from m5.proxy import *
+from m5.SimObject import (
+    PyBindMethod,
+)
 
 
 class MemTest(ClockedObject):
@@ -63,7 +66,10 @@ class MemTest(ClockedObject):
     percent_functional = Param.Percent(50, "Percentage functional accesses")
     percent_uncacheable = Param.Percent(10, "Percentage uncacheable")
     percent_atomic = Param.Percent(0, "Percentage atomics")
-
+    percent_stash_once = Param.Percent(0, "Percentage stashOnce requests")
+    percent_stash_once_unique = Param.Percent(
+        50, "Percentage of stashOnce requests that are unique"
+    )
     # Determine how often to print progress messages and what timeout
     # to use for checking progress of both requests and responses
     progress_interval = Param.Counter(
@@ -81,3 +87,8 @@ class MemTest(ClockedObject):
     suppress_func_errors = Param.Bool(
         False, "Suppress panic when functional accesses fail."
     )
+
+    cxx_exports = [
+        PyBindMethod("set_stash_node_ids"),
+        PyBindMethod("set_stash_lp_ids"),
+    ]

@@ -77,6 +77,13 @@ parser.add_argument(
     help="suppress panic when functional accesses fail",
 )
 
+parser.add_argument(
+    "--stash",
+    type=int,
+    default=0,
+    help="percentage of accesses that should be stash once accesses",
+)
+
 #
 # Add the ruby specific and protocol specific options
 #
@@ -117,6 +124,8 @@ cpus = [
         percent_atomic=args.atomic,
         progress_interval=args.progress,
         suppress_func_errors=args.suppress_func_errors,
+        percent_stash_once=args.stash,
+        percent_stash_once_unique=50,
     )
     for i in range(args.num_cpus)
 ]
@@ -189,6 +198,11 @@ m5.ticks.setGlobalFrequency("1ns")
 
 # instantiate configuration
 m5.instantiate()
+
+# Set the stash node IDs for each CPU after C++ objects are constructed
+for cpu in cpus:
+    cpu.set_stash_node_ids([_.l2.version for _ in cpus if _ != cpu])
+    cpu.set_stash_lp_ids([_.l1d.version for _ in cpus if _ != cpu])
 
 # simulate until program terminates
 exit_event = m5.simulate(args.abs_max_tick)
