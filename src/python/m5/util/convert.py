@@ -324,7 +324,7 @@ def toIpNetmask(value):
     if not isinstance(value, str):
         raise TypeError(f"wrong type '{type(value)}' should be str")
 
-    (ip, netmask) = value.split("/")
+    ip, netmask = value.split("/")
     ip = toIpAddress(ip)
     netmaskParts = netmask.split(".")
     if len(netmaskParts) == 1:
@@ -349,7 +349,7 @@ def toIpWithPort(value):
     if not isinstance(value, str):
         raise TypeError(f"wrong type '{type(value)}' should be str")
 
-    (ip, port) = value.split(":")
+    ip, port = value.split(":")
     ip = toIpAddress(ip)
     if not 0 <= int(port) <= 0xFFFF:
         raise ValueError(f"invalid port {port}")

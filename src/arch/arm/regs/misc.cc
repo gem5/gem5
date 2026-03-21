@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2015-2025 Arm Limited
+ * Copyright (c) 2010-2013, 2015-2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -5704,7 +5704,9 @@ ISA::initializeMiscRegMetadata()
     InitReg(MISCREG_ID_AA64PFR1_EL1)
       .reset([release=release](){
           AA64PFR1 pfr1_el1 = 0;
-          pfr1_el1.sme = release->has(ArmExtension::FEAT_SME) ? 0x1 : 0x0;
+          pfr1_el1.sme = release->has(ArmExtension::FEAT_SME2p1) ? 0x2:
+                        release->has(ArmExtension::FEAT_SME2) ? 0x2:
+                        release->has(ArmExtension::FEAT_SME) ? 0x1 : 0x0;
           pfr1_el1.mpamFrac = release->has(ArmExtension::FEAT_MPAM) ?
               0x1 : 0x0;
           return pfr1_el1;
@@ -7573,19 +7575,36 @@ ISA::initializeMiscRegMetadata()
 
     // SME
     InitReg(MISCREG_ID_AA64SMFR0_EL1)
-        .reset([](){
+        .reset([this](){
             AA64SMFR0 smfr0_el1 = 0;
-            smfr0_el1.f32f32 = 0x1;
-            // The following BF16F32 is actually not implemented due to a
-            // lack of BF16 support in gem5's fplib. However, as per the
-            // SME spec the _only_ allowed value is 0x1.
-            smfr0_el1.b16f32 = 0x1;
-            smfr0_el1.f16f32 = 0x1;
-            smfr0_el1.i8i32 = 0xF;
-            smfr0_el1.f64f64 = 0x1;
-            smfr0_el1.i16i64 = 0xF;
-            smfr0_el1.smEver = 0;
-            smfr0_el1.fa64 = 0x1;
+            smfr0_el1.fa64 = 0;
+            smfr0_el1.lutv2 = 0;
+            smfr0_el1.smeVer = release->has(ArmExtension::FEAT_SME2p1) ? 0x2 :
+                          (release->has(ArmExtension::FEAT_SME2) ? 0x1 : 0x0);
+            smfr0_el1.i16i64 = release->has(ArmExtension::FEAT_SME_I16I64) ?
+                               0xf : 0x0;
+            smfr0_el1.f64f64 = release->has(ArmExtension::FEAT_SME_F64F64) ?
+                               0x1 : 0x0;
+            smfr0_el1.i16i32 = release->has(ArmExtension::FEAT_SME2) ? 0x5: 0;
+            smfr0_el1.b16b16 = release->has(ArmExtension::FEAT_SME_B16B16) ?
+                               0x1 : 0x0;
+            smfr0_el1.f16f16 = release->has(ArmExtension::FEAT_SME_F16F16) ?
+                               0x1 : 0x0;
+            smfr0_el1.f8f16 = 0;
+            smfr0_el1.f8f32 = 0;
+            smfr0_el1.i8i32 = release->has(ArmExtension::FEAT_SME) ? 0xf: 0x0;
+            smfr0_el1.f16f32 = release->has(ArmExtension::FEAT_SME) ? 0x1: 0x0;
+            smfr0_el1.b16f32 = release->has(ArmExtension::FEAT_SME) ? 0x1: 0x0;
+            smfr0_el1.bi32i32 = release->has(ArmExtension::FEAT_SME2) ? 0x1: 0;
+            smfr0_el1.f32f32 = release->has(ArmExtension::FEAT_SME) ? 0x1: 0x0;
+            smfr0_el1.sf8Fma = 0;
+            smfr0_el1.sf8Dp4 = 0;
+            smfr0_el1.sf8Dp2 = 0;
+            smfr0_el1.sbitPerm = 0;
+            smfr0_el1.aes = 0;
+            smfr0_el1.sfexpa = 0;
+            smfr0_el1.stmop = 0;
+            smfr0_el1.smop4 = 0;
             return smfr0_el1;
         }())
         .faultRead(EL0, faultIdst)

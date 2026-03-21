@@ -1,4 +1,4 @@
-# Copyright (c) 2023, 2025 Arm Limited
+# Copyright (c) 2023, 2025-2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -47,3 +47,5 @@ class TlmController(CHIGenericController):
 
     in_port = TlmSinkPort("CHI TLM input port")
     out_port = TlmSourcePort("CHI TLM output port")
+
+    ignore_functional = Param.Bool(False, "Don't panic on functional accesses")

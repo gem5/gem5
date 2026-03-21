@@ -525,11 +525,9 @@ class AbstractBoard:
         does not inherit form System.
         """
         if not self._connect_things_called:
-            raise Exception(
-                """
+            raise Exception("""
 AbstractBoard's ``_connect_things`` function has not been called. This is likely
 due to not running a board outside of the gem5 Standard Library Simulator
 module. If this is the case, this can be resolved by calling
 ``<AbstractBoard>._pre_instantiate()`` prior to ``m5.instantiate()``.
-"""
-            )
+""")

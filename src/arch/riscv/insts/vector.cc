@@ -454,10 +454,6 @@ VMaskMergeMicroInst::execute(ExecContext* xc,
     auto Vd = tmp_d0.as<uint8_t>();
     uint32_t vlenb = vlen >> 3;
     const uint32_t elems_per_vreg = vlenb / elemSize;
-    size_t bit_cnt = 0;
-
-    // mask tails are always treated as agnostic: writting 1s
-    tmp_d0.set(0xff);
 
     vreg_t tmp_s;
     for (uint8_t i = 0; i < this->_numSrcRegs; i++) {
@@ -467,14 +463,21 @@ VMaskMergeMicroInst::execute(ExecContext* xc,
             const uint32_t m = (1 << elems_per_vreg) - 1;
             const uint32_t mask = m << (i * elems_per_vreg % 8);
             // clr & ext bits
-            Vd[bit_cnt/8] ^= Vd[bit_cnt/8] & mask;
-            Vd[bit_cnt/8] |= s[bit_cnt/8] & mask;
-            bit_cnt += elems_per_vreg;
+            Vd[(i * elems_per_vreg) / 8] &= ~mask;
+            Vd[(i * elems_per_vreg) / 8] |= s[(i * elems_per_vreg) / 8] & mask;
         } else {
             const uint32_t byte_offset = elems_per_vreg / 8;
             memcpy(Vd + i * byte_offset, s + i * byte_offset, byte_offset);
         }
     }
+
+    // Handle tail: mask-producing instructions are always tail-agnostic.
+    // We treat agnostic as 1s.
+    uint32_t vl = machInst.vl;
+    for (uint32_t i = vl; i < vlen; ++i) {
+        Vd[i / 8] |= (1 << (i % 8));
+    }
+
     if (traceData) {
         traceData->setData(vecRegClass, &tmp_d0);
     }
@@ -890,10 +893,11 @@ VCpyVsMicroInst::generateDisassembly(Addr pc,
 
 VPinVdMicroInst::VPinVdMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
                                  uint32_t _numVdPins, uint32_t _elen,
-                                 uint32_t _vlen, bool _hasVdOffset)
+                                 uint32_t _vlen, bool _isSlideupVx,
+                                 bool _isReduction)
     : VectorArithMicroInst("vpinvd_v_micro", _machInst, SimdMiscOp, 0,
                            _microIdx, _elen, _vlen),
-      hasVdOffset(_hasVdOffset)
+      isSlideupVx(_isSlideupVx), isReduction(_isReduction)
 {
     setRegIdxArrays(
         reinterpret_cast<RegIdArrayPtr>(
@@ -905,10 +909,20 @@ VPinVdMicroInst::VPinVdMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
     _numDestRegs = 0;
     setDestRegIdx(_numDestRegs++, vecRegClass[_machInst.vd + _microIdx]);
     _numTypedDestRegs[VecRegClass]++;
+
     if (!_machInst.vtype8.vta || (!_machInst.vm && !_machInst.vtype8.vma)
-                              || hasVdOffset) {
+                              || isSlideupVx) {
         setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vd + _microIdx]);
     }
+
+    if (isSlideupVx) {
+        setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
+    }
+
+    if (!_machInst.vm) {
+        setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
+    }
+
     RegId Vd = destRegIdx(0);
     Vd.setNumPinnedWrites(_numVdPins);
     setDestRegIdx(0, Vd);
@@ -922,19 +936,62 @@ VPinVdMicroInst::execute(ExecContext* xc, trace::InstRecord* traceData) const
     Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
     if (update_fault != NoFault) { return update_fault; }
 
+    const uint32_t vl = machInst.vl;
+    const uint32_t sewb = getSew(machInst.vtype8.vsew) >> 3;
+    const uint32_t micro_vlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
+    const uint32_t micro_vl = std::min(vl - micro_vlmax*microIdx, micro_vlmax);
+    const uint32_t active_bytes = isReduction ? sewb:micro_vl*sewb;
+    const uint32_t total_bytes  = micro_vlmax*sewb;
+
+    vreg_t& vd_container = *(vreg_t *)xc->getWritableRegOperand(this, 0);
+    uint8_t* vd = vd_container.as<uint8_t>();
+
     // tail/mask policy: both undisturbed if one is, 1s if none
-    vreg_t& vd = *(vreg_t *)xc->getWritableRegOperand(this, 0);
+    uint8_t* old_vd;
     if (!machInst.vtype8.vta || (!machInst.vm && !machInst.vtype8.vma)
-                            || hasVdOffset) {
-        vreg_t old_vd;
-        xc->getRegOperand(this, 0, &old_vd);
-        vd = old_vd;
+                             || isSlideupVx) {
+        vreg_t old_vd_container;
+        xc->getRegOperand(this, 0, &old_vd_container);
+        old_vd = old_vd_container.as<uint8_t>();
+    }
+
+    // pin on vslideup.vx: vd has a start offset that needs to be undisturbed
+    if (isSlideupVx) {
+        uint32_t offset = xc->getRegOperand(this, 1);
+        if (offset > micro_vlmax*microIdx) {
+            uint32_t micro_offset = std::min(offset - micro_vlmax*microIdx,
+                                             micro_vlmax);
+            uint32_t micro_offset_bytes = sewb*micro_offset;
+            memcpy(vd, old_vd, micro_offset_bytes);
+        }
+    }
+
+    // apply tail policy
+    if (machInst.vtype8.vta && (machInst.vm || machInst.vtype8.vma)) {
+        memset(vd+active_bytes, 0xff, total_bytes-active_bytes);
     } else {
-        vd.set(0xff);
+        memcpy(vd+active_bytes, old_vd+active_bytes, total_bytes-active_bytes);
+    }
+
+    // apply mask policy
+    if (!machInst.vm) {
+        vreg_t v0_container;
+        xc->getRegOperand(this, _numSrcRegs-1, &v0_container);
+        uint8_t* v0 = v0_container.as<uint8_t>();
+
+        for (uint32_t i=0; i<micro_vl; i++) {
+            if (!machInst.vm && !elem_mask(v0, i + microIdx*micro_vlmax)) {
+                if (machInst.vtype8.vma && machInst.vtype8.vta) {
+                    memset(vd + i*sewb, 0xff, sewb);
+                } else {
+                    memcpy(vd + i*sewb, old_vd + i*sewb, sewb);
+                }
+            }
+        }
     }
 
     if (traceData) {
-        traceData->setData(vecRegClass, &vd);
+        traceData->setData(vecRegClass, &vd_container);
     }
 
     return NoFault;
@@ -948,8 +1005,11 @@ VPinVdMicroInst::generateDisassembly(Addr pc,
     ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", ";
 
     if (!machInst.vtype8.vta || (!machInst.vm && !machInst.vtype8.vma)
-                             || hasVdOffset) {
+                             || isSlideupVx) {
         ss << registerName(srcRegIdx(0));
+        if (isSlideupVx) {
+            ss << ", " << registerName(srcRegIdx(1));
+        }
     } else {
         ss << "~0";
     }

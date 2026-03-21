@@ -342,7 +342,7 @@ if "--ruby" in sys.argv:
 args = parser.parse_args()
 
 # system under test can be any CPU
-(TestCPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(args)
+TestCPUClass, test_mem_mode, FutureClass = Simulation.setCPUClass(args)
 
 # Match the memories with the CPUs, based on the options for the test system
 TestMemClass = Simulation.setMemClass(args)

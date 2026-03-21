@@ -37,7 +37,6 @@ scons build/ALL/gem5.opt -j `nproc`
 ```
 """
 
-
 from m5.objects import (
     ArmDefaultRelease,
     VExpress_GEM5_Foundation,

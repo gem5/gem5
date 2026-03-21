@@ -126,7 +126,7 @@ def create_system(options, system):
 
     bootmem = None
     dma_ports = []
-    (cpu_sequencers, dir_cntrls, topology) = CHI.create_system(
+    cpu_sequencers, dir_cntrls, topology = CHI.create_system(
         options, False, system, dma_ports, bootmem, system.ruby, system.cpu
     )
 

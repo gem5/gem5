@@ -38,18 +38,14 @@ args = parser.parse_args()
 
 code = code_formatter()
 
-code(
-    f"""# Automatically generated base Kconfig file, DO NOT EDIT!
+code(f"""# Automatically generated base Kconfig file, DO NOT EDIT!
 
 source "{args.main}"
-"""
-)
+""")
 
 for extras_dir in args.extras_dirs:
-    code(
-        f"""
+    code(f"""
 osource "{extras_dir}/Kconfig"
-"""
-    )
+""")
 
 code.write(args.output)

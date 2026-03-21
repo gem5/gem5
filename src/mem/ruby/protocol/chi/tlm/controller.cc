@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023,2025 Arm Limited
+ * Copyright (c) 2023, 2025-2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -153,6 +153,30 @@ CacheController::recvDataMsg(const CHIDataMsg *msg)
         panic("Not able to find transaction");
     }
     return true;
+}
+
+void
+CacheController::functionalRead(const Addr &param_addr, Packet *param_pkt,
+                                ruby::WriteMask &param_mask)
+{
+    if (!params().ignore_functional) {
+        panic("TlmController doesn't implement functionalRead.");
+    }
+
+    // Assume there are no caches behind this controller, so no need
+    // to read.
+}
+
+int
+CacheController::functionalWrite(const Addr &param_addr, Packet *param_pkt)
+{
+    if (!params().ignore_functional) {
+        panic("TlmController doesn't implement functionalWrite.");
+    }
+
+    // Assume that there are no caches behind this controller, so no
+    // need to perform a write.
+    return 0;
 }
 
 bool

@@ -270,7 +270,7 @@ class IpNetmask(IpAddress):
                 self.ip = args[0].ip
                 self.netmask = args[0].netmask
             else:
-                (self.ip, self.netmask) = convert.toIpNetmask(args[0])
+                self.ip, self.netmask = convert.toIpNetmask(args[0])
 
         elif len(args) == 2:
             self.ip = args[0]
@@ -346,7 +346,7 @@ class IpWithPort(IpAddress):
                 self.ip = args[0].ip
                 self.port = args[0].port
             else:
-                (self.ip, self.port) = convert.toIpWithPort(args[0])
+                self.ip, self.port = convert.toIpWithPort(args[0])
 
         elif len(args) == 2:
             self.ip = args[0]
