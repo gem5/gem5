@@ -67,6 +67,11 @@ class RubyRequest : public Message
     Addr m_ProgramCounter;
     RubyAccessMode m_AccessMode;
     int m_Size;
+    // Stash Target ID
+    uint16_t m_StashNID;
+    bool m_StashNIDValid;
+    uint16_t m_StashLPID;
+    bool m_StashLPIDValid;
     PrefetchBit m_Prefetch;
     PacketPtr m_pkt;
     ContextID m_contextId;
@@ -86,17 +91,21 @@ class RubyRequest : public Message
     bool m_isSLCSet;
     bool m_isSecure;
 
-    RubyRequest(Tick curTime, int block_size, RubySystem *rs,
-        uint64_t _paddr, int _len,
-        uint64_t _pc, RubyRequestType _type, RubyAccessMode _access_mode,
-        PacketPtr _pkt, PrefetchBit _pb = PrefetchBit_No,
-        ContextID _proc_id = 100, ContextID _core_id = 99)
+    RubyRequest(Tick curTime, int block_size, RubySystem *rs, uint64_t _paddr,
+                int _len, uint64_t _pc, RubyRequestType _type,
+                RubyAccessMode _access_mode, PacketPtr _pkt,
+                PrefetchBit _pb = PrefetchBit_No, ContextID _proc_id = 100,
+                ContextID _core_id = 99)
         : Message(curTime, block_size, rs),
           m_PhysicalAddress(_paddr),
           m_Type(_type),
           m_ProgramCounter(_pc),
           m_AccessMode(_access_mode),
           m_Size(_len),
+          m_StashNID(0),
+          m_StashNIDValid(false),
+          m_StashLPID(0),
+          m_StashLPIDValid(false),
           m_Prefetch(_pb),
           m_pkt(_pkt),
           m_contextId(_core_id),
@@ -120,15 +129,19 @@ class RubyRequest : public Message
     }
 
     /** RubyRequest for memory management commands */
-    RubyRequest(Tick curTime, int block_size, RubySystem *rs,
-        uint64_t _pc, RubyRequestType _type, RubyAccessMode _access_mode,
-        PacketPtr _pkt, ContextID _proc_id, ContextID _core_id)
+    RubyRequest(Tick curTime, int block_size, RubySystem *rs, uint64_t _pc,
+                RubyRequestType _type, RubyAccessMode _access_mode,
+                PacketPtr _pkt, ContextID _proc_id, ContextID _core_id)
         : Message(curTime, block_size, rs),
           m_PhysicalAddress(0),
           m_Type(_type),
           m_ProgramCounter(_pc),
           m_AccessMode(_access_mode),
           m_Size(0),
+          m_StashNID(0),
+          m_StashNIDValid(false),
+          m_StashLPID(0),
+          m_StashLPIDValid(false),
           m_Prefetch(PrefetchBit_No),
           m_pkt(_pkt),
           m_contextId(_core_id),
@@ -150,23 +163,26 @@ class RubyRequest : public Message
         }
     }
 
-    RubyRequest(Tick curTime, int block_size, RubySystem *rs,
-        uint64_t _paddr, int _len, uint64_t _pc, RubyRequestType _type,
-        RubyAccessMode _access_mode, PacketPtr _pkt, PrefetchBit _pb,
-        unsigned _proc_id, unsigned _core_id,
-        int _wm_size, std::vector<bool> & _wm_mask,
-        DataBlock & _Data,
-        uint64_t _instSeqNum = 0)
+    RubyRequest(Tick curTime, int block_size, RubySystem *rs, uint64_t _paddr,
+                int _len, uint64_t _pc, RubyRequestType _type,
+                RubyAccessMode _access_mode, PacketPtr _pkt, PrefetchBit _pb,
+                unsigned _proc_id, unsigned _core_id, int _wm_size,
+                std::vector<bool> &_wm_mask, DataBlock &_Data,
+                uint64_t _instSeqNum = 0)
         : Message(curTime, block_size, rs),
           m_PhysicalAddress(_paddr),
           m_Type(_type),
           m_ProgramCounter(_pc),
           m_AccessMode(_access_mode),
           m_Size(_len),
+          m_StashNID(0),
+          m_StashNIDValid(false),
+          m_StashLPID(0),
+          m_StashLPIDValid(false),
           m_Prefetch(_pb),
           m_pkt(_pkt),
           m_contextId(_core_id),
-          m_writeMask(_wm_size,_wm_mask),
+          m_writeMask(_wm_size, _wm_mask),
           m_WTData(_Data),
           m_wfid(_proc_id),
           m_instSeqNum(_instSeqNum),
@@ -187,24 +203,27 @@ class RubyRequest : public Message
         }
     }
 
-    RubyRequest(Tick curTime, int block_size, RubySystem *rs,
-        uint64_t _paddr, int _len, uint64_t _pc, RubyRequestType _type,
-        RubyAccessMode _access_mode, PacketPtr _pkt, PrefetchBit _pb,
-        unsigned _proc_id, unsigned _core_id,
-        int _wm_size, std::vector<bool> & _wm_mask,
-        DataBlock & _Data,
-        std::vector< std::pair<int,AtomicOpFunctor*> > _atomicOps,
-        uint64_t _instSeqNum = 0)
+    RubyRequest(Tick curTime, int block_size, RubySystem *rs, uint64_t _paddr,
+                int _len, uint64_t _pc, RubyRequestType _type,
+                RubyAccessMode _access_mode, PacketPtr _pkt, PrefetchBit _pb,
+                unsigned _proc_id, unsigned _core_id, int _wm_size,
+                std::vector<bool> &_wm_mask, DataBlock &_Data,
+                std::vector<std::pair<int, AtomicOpFunctor *>> _atomicOps,
+                uint64_t _instSeqNum = 0)
         : Message(curTime, block_size, rs),
           m_PhysicalAddress(_paddr),
           m_Type(_type),
           m_ProgramCounter(_pc),
           m_AccessMode(_access_mode),
           m_Size(_len),
+          m_StashNID(0),
+          m_StashNIDValid(false),
+          m_StashLPID(0),
+          m_StashLPIDValid(false),
           m_Prefetch(_pb),
           m_pkt(_pkt),
           m_contextId(_core_id),
-          m_writeMask(_wm_size,_wm_mask,_atomicOps),
+          m_writeMask(_wm_size, _wm_mask, _atomicOps),
           m_WTData(_Data),
           m_wfid(_proc_id),
           m_instSeqNum(_instSeqNum),
@@ -243,6 +262,49 @@ class RubyRequest : public Message
     const int& getSize() const { return m_Size; }
     const PrefetchBit& getPrefetch() const { return m_Prefetch; }
     RequestPtr getRequestPtr() const { return m_pkt->req; }
+    uint16_t
+    getStashNID() const
+    {
+        return m_StashNID;
+    }
+    bool
+    getStashNIDValid() const
+    {
+        return m_StashNIDValid;
+    }
+    uint16_t
+    getStashLPID() const
+    {
+        return m_StashLPID;
+    }
+    bool
+    getStashLPIDValid() const
+    {
+        return m_StashLPIDValid;
+    }
+
+    void
+    setStashNID(uint16_t nid)
+    {
+        m_StashNID = nid;
+        m_StashNIDValid = true;
+    }
+    void
+    setStashLPID(uint16_t lpid)
+    {
+        m_StashLPID = lpid;
+        m_StashLPIDValid = true;
+    }
+    void
+    clearStashNID()
+    {
+        m_StashNIDValid = false;
+    }
+    void
+    clearStashLPID()
+    {
+        m_StashLPIDValid = false;
+    }
 
     void setWriteMask(uint32_t offset, uint32_t len,
         std::vector< std::pair<int,AtomicOpFunctor*>> atomicOps);

@@ -184,8 +184,12 @@ in_port(snpInPort, CHIRequestMsg, snpIn, rank=7) {
                   nullCacheEntry(), nullTBE());
         }
       } else {
-        trigger(Event:AllocSnoop, in_msg.addr,
-                getCacheEntry(in_msg.addr), getCurrentActiveTBE(in_msg.addr));
+        // For SnpStash outstanding snoops.
+        bool existing_snp_tbe := snpTBEs.isPresent(in_msg.addr);
+        if (!existing_snp_tbe) {
+          trigger(Event:AllocSnoop, in_msg.addr,
+                  getCacheEntry(in_msg.addr), getCurrentActiveTBE(in_msg.addr));
+        }
       }
     }
   }

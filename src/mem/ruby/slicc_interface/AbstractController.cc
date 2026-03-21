@@ -454,6 +454,11 @@ const
         name(), addr, mtype);
 }
 
+MachineID
+AbstractController::mapIntToMachineID(uint16_t requestor_id) const
+{
+    return m_ruby_system->getMachineIDFromInt(requestor_id);
+}
 
 void
 AbstractController::memRespQueueDequeued() {

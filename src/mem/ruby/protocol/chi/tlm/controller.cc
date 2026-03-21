@@ -413,6 +413,11 @@ CacheController::sendRequestMsg(ARM::CHI::Payload &payload,
     req_msg->m_accSize = reqSize(payload, phase);
     req_msg->m_requestor = getMachineID();
     req_msg->m_fwdRequestor = getMachineID();
+    req_msg->m_stashNID = m_ruby_system->getMachineIDFromInt(phase.stash_nid);
+    req_msg->m_stashNIDValid = payload.stash_nid_valid;
+    req_msg->m_stashLPID =
+        m_ruby_system->getMachineIDFromInt(phase.stash_lpid.value);
+    req_msg->m_stashLPIDValid = phase.stash_lpid.valid;
     req_msg->m_dataToFwdRequestor = false;
     req_msg->m_type = tlm_to_ruby::reqOpcode(phase.req_opcode);
     req_msg->m_isSeqReqValid = false;
@@ -523,6 +528,8 @@ CacheController::Transaction::gen(CacheController *controller,
       case ARM::CHI::REQ_OPCODE_CLEAN_UNIQUE:
       case ARM::CHI::REQ_OPCODE_MAKE_UNIQUE:
       case ARM::CHI::REQ_OPCODE_EVICT:
+      case ARM::CHI::REQ_OPCODE_STASH_ONCE_SHARED:
+      case ARM::CHI::REQ_OPCODE_STASH_ONCE_UNIQUE:
       case ARM::CHI::REQ_OPCODE_STASH_ONCE_SEP_SHARED:
       case ARM::CHI::REQ_OPCODE_STASH_ONCE_SEP_UNIQUE:
         return std::make_unique<DatalessTransaction>(
