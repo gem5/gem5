@@ -35,11 +35,7 @@ from gem5.components.memory import SingleChannelDDR3_1600
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.isas import ISA
-from gem5.resources.resource import (
-    DiskImageResource,
-    KernelResource,
-    obtain_resource,
-)
+from gem5.resources.resource import obtain_resource
 from gem5.simulate.simulator import Simulator
 
 NUM_PROCESSES = 10
@@ -85,26 +81,27 @@ for no_systemd in [True, False]:
 
 # Run X86 and Arm hello world binaries. The shortest workloads.
 for isa in [ISA.X86, ISA.ARM]:
-    cache_hierarchy = NoCache()
+    for i in range(0, 6):
+        cache_hierarchy = NoCache()
 
-    memory = SingleChannelDDR3_1600(size="32MiB")
+        memory = SingleChannelDDR3_1600(size="32MiB")
 
-    processor = SimpleProcessor(cpu_type=CPUTypes.TIMING, isa=isa, num_cores=1)
-
-    board = SimpleBoard(
-        clk_freq="3GHz",
-        processor=processor,
-        memory=memory,
-        cache_hierarchy=cache_hierarchy,
-    )
-
-    if isa == ISA.X86:
-        board.set_se_binary_workload(
-            obtain_resource("x86-hello64-static", resource_version="1.0.0")
+        processor = SimpleProcessor(
+            cpu_type=CPUTypes.TIMING, isa=isa, num_cores=1
         )
-        multisim.add_simulator(Simulator(board=board, id=f"process_x86-hello"))
-    else:
-        board.set_se_binary_workload(
-            obtain_resource("arm-hello64-static", resource_version="1.0.0")
+
+        board = SimpleBoard(
+            clk_freq="3GHz",
+            processor=processor,
+            memory=memory,
+            cache_hierarchy=cache_hierarchy,
         )
-        multisim.add_simulator(Simulator(board=board, id=f"process_arm-hello"))
+
+        board.set_se_binary_workload(
+            obtain_resource(
+                f"{isa.value}-hello64-static", resource_version="1.0.0"
+            )
+        )
+        multisim.add_simulator(
+            Simulator(board=board, id=f"process_{isa.value}-hello-{i}")
+        )
