@@ -1,4 +1,5 @@
 # Copyright (c) 2021 Kyle Roarty
+# Copyright (c) 2022-2026 The Regents of the University of California
 # All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -215,3 +216,7 @@ ENV HACC_MPI_CXX="${HIPCC_BIN}/hipcc -Xclang -pthread"
 ENV HACC_MPI_LD="${HIPCC_BIN}/hipcc -Xclang -pthread"
 
 ENV HACC_MPI_LDFLAGS="-lm -lrt"
+
+# Dependencies needed for codecov/codecov-action in GitHub Actions
+RUN apt -y update && \
+    apt -y install bash curl gpg

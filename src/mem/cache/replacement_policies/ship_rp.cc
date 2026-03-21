@@ -110,7 +110,13 @@ void
 SHiP::touch(const std::shared_ptr<ReplacementData>& replacement_data)
     const
 {
-    panic("Cant train SHiP's predictor without access information.");
+    panic("SHiP replacement policy requires packet access information "
+          "to train its predictor, but was called without it. "
+          "SHiP is not fully compatible with Ruby caches because "
+          "Ruby do not pass packet information to "
+          "replacement policy touch() calls. "
+          "Please use a replacement policy that does "
+          "not require packet information, such as LRURP");
 }
 
 void
@@ -138,7 +144,13 @@ void
 SHiP::reset(const std::shared_ptr<ReplacementData>& replacement_data)
     const
 {
-    panic("Cant train SHiP's predictor without access information.");
+    panic("SHiP replacement policy requires packet access information "
+          "to train its predictor, but was called without it. "
+          "SHiP is not fully compatible with Ruby caches because "
+          "Ruby do not pass packet information to "
+          "replacement policy touch() calls. "
+          "Please use a replacement policy that does "
+          "not require packet information, such as LRURP");
 }
 
 std::shared_ptr<ReplacementData>

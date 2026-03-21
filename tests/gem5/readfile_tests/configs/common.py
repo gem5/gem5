@@ -27,6 +27,7 @@
 """
 This runs simple tests to ensure that running binaries via readfile works.
 """
+
 import os
 import re
 

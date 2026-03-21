@@ -28,8 +28,10 @@
 
 #include "mem/ruby/common/NetDest.hh"
 
-#include <algorithm>
+#include <map>
+#include <vector>
 
+#include "mem/ruby/common/Set.hh"
 #include "mem/ruby/system/RubySystem.hh"
 
 namespace gem5
@@ -287,12 +289,26 @@ NetDest::resize()
 {
     assert(m_ruby_system != nullptr);
 
+    // This cache uses RubySystem * as a key. This is safe because in gem5,
+    // RubySystem objects are created at the beginning of the simulation and
+    // persist until the end. They are not destroyed and reallocated during
+    // the simulation run, preventing use-after-free issues with address reuse.
+    static std::map<RubySystem *, std::vector<Set>> resize_cache;
+    auto it = resize_cache.find(m_ruby_system);
+
+    if (it != resize_cache.end()) {
+        m_bits = it->second;
+        return;
+    }
+
     m_bits.resize(MachineType_base_level(MachineType_NUM));
     assert(m_bits.size() == MachineType_NUM);
 
     for (int i = 0; i < m_bits.size(); i++) {
         m_bits[i].setSize(MachineType_base_count((MachineType)i));
     }
+
+    resize_cache[m_ruby_system] = m_bits;
 }
 
 void

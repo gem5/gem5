@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2011, 2014, 2016-2019 ARM Limited
+ * Copyright (c) 2010-2011, 2014, 2016-2019, 2025-2026 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -80,7 +80,9 @@ const int NumVecV7ArchRegs  = 16; // Q0-Q15
 const int NumVecV8ArchRegs  = 32; // V0-V31
 const int NumVecSpecialRegs = 8;
 const int NumVecIntrlvRegs = 4;
-const int NumVecRegs = NumVecV8ArchRegs + NumVecSpecialRegs + NumVecIntrlvRegs;
+const int NumLutRegs = 1;
+const int NumVecRegs =
+    NumVecV8ArchRegs + NumVecSpecialRegs + NumVecIntrlvRegs + NumLutRegs;
 const int NumVecPredRegs = 18;  // P0-P15, FFR, UREG0
 
 // Vec, PredVec indices
@@ -92,6 +94,8 @@ const int INTRLVREG3 = INTRLVREG0 + 3;
 const int VECREG_UREG0 = 32;
 const int PREDREG_FFR = 16;
 const int PREDREG_UREG0 = 17;
+// SME LUT register. We place this at the end.
+const int LUT_ZT0 = NumVecV8ArchRegs + NumVecSpecialRegs + NumVecIntrlvRegs;
 
 inline VecElemRegClassOps<RegVal> vecRegElemClassOps(NumVecElemPerVecReg);
 inline TypedRegClassOps<ArmISA::VecRegContainer> vecRegClassOps;

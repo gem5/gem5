@@ -144,12 +144,14 @@ class ViperBoard(X86Board):
         avx_cpu_features = [0x00020F51, 0x00000805, 0xEFDBFBFF, 0x1C803209]
         for core_wrapper in self.get_processor().get_cores():
             if not core_wrapper.is_kvm_core():
+                self.workload.enable_osxsave = 0
                 warn("AVX is only supported with KVM cores")
             core = core_wrapper.get_simobject()
             for isa in core.isa:
                 isa.vendor_string = "AuthenticAMD"
-                isa.ExtendedState = avx_extended_state
-                isa.FamilyModelStepping = avx_cpu_features
+                if self.workload.enable_osxsave:
+                    isa.ExtendedState = avx_extended_state
+                    isa.FamilyModelStepping = avx_cpu_features
 
         # By default stdlib creates multiple event queues whenever KVM CPU is
         # used. Multiple event queues break many things in the GPU model

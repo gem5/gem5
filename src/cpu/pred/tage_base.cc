@@ -481,9 +481,11 @@ TAGEBase::handleAllocAndUReset(bool alloc, bool taken, BranchInfo* bi,
         //Allocate entries
         unsigned numAllocated = 0;
         for (int i = X; i <= nHistoryTables; i++) {
-            if (gtable[i][bi->tableIndices[i]].u == 0) {
-                gtable[i][bi->tableIndices[i]].tag = bi->tableTags[i];
-                gtable[i][bi->tableIndices[i]].ctr = (taken) ? 0 : -1;
+            if (allocateEntry(i, bi, taken)) {
+                DPRINTF(Tage, "Allocate for %llx: i:%i Tidx:%i, Ttag:%x\n",
+                        bi->branchPC, i, bi->tableIndices[i],
+                        bi->tableTags[i]);
+
                 ++numAllocated;
                 if (numAllocated == maxNumAlloc) {
                     break;
@@ -495,6 +497,18 @@ TAGEBase::handleAllocAndUReset(bool alloc, bool taken, BranchInfo* bi,
     tCounter++;
 
     handleUReset();
+}
+
+bool
+TAGEBase::allocateEntry(int idx, BranchInfo *bi, bool taken)
+{
+    if (gtable[idx][bi->tableIndices[idx]].u != 0) {
+        return false;
+    }
+
+    gtable[idx][bi->tableIndices[idx]].tag = bi->tableTags[idx];
+    gtable[idx][bi->tableIndices[idx]].ctr = (taken) ? 0 : -1;
+    return true;
 }
 
 void
@@ -862,8 +876,8 @@ TAGEBase::TAGEBaseStats::TAGEBaseStats(
       ADD_STAT(altMatchProvider, statistics::units::Count::get(),
                "TAGE provider for alt match")
 {
-    longestMatchProvider.init(nHistoryTables + 1);
-    altMatchProvider.init(nHistoryTables + 1);
+    longestMatchProvider.init(nHistoryTables + 1).flags(statistics::total);
+    altMatchProvider.init(nHistoryTables + 1).flags(statistics::total);
 }
 
 int8_t

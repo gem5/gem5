@@ -58,6 +58,7 @@
 #include "debug/ExecEffAddr.hh"
 #include "debug/ExecEnable.hh"
 #include "debug/ExecFetchSeq.hh"
+#include "debug/ExecFaulting.hh"
 #include "debug/ExecFlags.hh"
 #include "debug/ExecKernel.hh"
 #include "debug/ExecMacro.hh"
@@ -173,6 +174,10 @@ ExeTracerRecord::traceInst(const StaticInstPtr &inst, bool ran)
             outs << "  flags=(";
             inst->printFlags(outs, "|");
             outs << ")";
+        }
+
+        if (debug::ExecFaulting && faulting) {
+            outs << "  FAULTING";
         }
     }
 

@@ -28,6 +28,7 @@
 #include "sim/bufval.hh"
 
 #include <cassert>
+#include <cstdint>
 #include <sstream>
 
 #include "base/intmath.hh"
@@ -41,15 +42,28 @@ std::pair<std::uint64_t, bool>
 getUintX(const void *buf, std::size_t bytes, ByteOrder endian)
 {
     assert(buf);
+
     switch (bytes) {
-      case sizeof(std::uint64_t):
-        return {gtoh(*(const std::uint64_t *)buf, endian), true};
-      case sizeof(std::uint32_t):
-        return {gtoh(*(const std::uint32_t *)buf, endian), true};
-      case sizeof(std::uint16_t):
-        return {gtoh(*(const std::uint16_t *)buf, endian), true};
-      case sizeof(std::uint8_t):
-        return {gtoh(*(const std::uint8_t *)buf, endian), true};
+        case sizeof(std::uint64_t): {
+            uint64_t val;
+            std::memcpy(&val, buf, sizeof(std::uint64_t));
+            return {gtoh(val, endian), true};
+        }
+        case sizeof(std::uint32_t): {
+            uint32_t val;
+            std::memcpy(&val, buf, sizeof(std::uint32_t));
+            return {gtoh(val, endian), true};
+        }
+        case sizeof(std::uint16_t): {
+            uint16_t val;
+            std::memcpy(&val, buf, sizeof(std::uint16_t));
+            return {gtoh(val, endian), true};
+        }
+        case sizeof(std::uint8_t): {
+            uint8_t val;
+            std::memcpy(&val, buf, sizeof(std::uint8_t));
+            return {gtoh(val, endian), true};
+        }
       default:
         return {0, false};
     }
@@ -61,20 +75,28 @@ setUintX(std::uint64_t val, void *buf, std::size_t bytes, ByteOrder endian)
     assert(buf);
 
     switch (bytes) {
-      case sizeof(std::uint64_t):
-        *(std::uint64_t *)buf = htog<std::uint64_t>(val, endian);
-        return true;
-      case sizeof(std::uint32_t):
-        *(std::uint32_t *)buf = htog<std::uint32_t>(val, endian);
-        return true;
-      case sizeof(std::uint16_t):
-        *(std::uint16_t *)buf = htog<std::uint16_t>(val, endian);
-        return true;
-      case sizeof(std::uint8_t):
-        *(std::uint8_t *)buf = htog<std::uint8_t>(val, endian);
-        return true;
-      default:
-        return false;
+        case sizeof(std::uint64_t): {
+            uint64_t v = htog<std::uint64_t>(val, endian);
+            std::memcpy(buf, &v, bytes);
+        }
+            return true;
+        case sizeof(std::uint32_t): {
+            uint32_t v = htog<std::uint32_t>(val, endian);
+            std::memcpy(buf, &v, bytes);
+        }
+            return true;
+        case sizeof(std::uint16_t): {
+            uint16_t v = htog<std::uint16_t>(val, endian);
+            std::memcpy(buf, &v, bytes);
+        }
+            return true;
+        case sizeof(std::uint8_t): {
+            uint8_t v = htog<std::uint8_t>(val, endian);
+            std::memcpy(buf, &v, bytes);
+        }
+            return true;
+        default:
+            return false;
     }
 }
 

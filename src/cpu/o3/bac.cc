@@ -113,6 +113,7 @@ BAC::BAC(CPU *_cpu, const BaseO3CPUParams &params)
     for (int i = 0; i < MaxThreads; i++) {
         bacPC[i].reset(params.isa[0]->newPCState());
         stalls[i] = {false, false, false};
+        branchPredictRemaining[i] = Cycles(0);
     }
 }
 
@@ -227,6 +228,9 @@ BAC::drainStall(ThreadID tid)
     assert(cpu->isDraining());
     assert(!stalls[tid].drain);
     DPRINTF(Drain, "%i: Thread drained.\n", tid);
+    DPRINTF(BAC, "%i: Clearing remaining %i cycles of predictor latency.\n",
+            tid, branchPredictRemaining[tid]);
+    branchPredictRemaining[tid] = Cycles(0);
     stalls[tid].drain = true;
 }
 
@@ -403,6 +407,16 @@ BAC::checkSignalsAndUpdate(ThreadID tid)
         return true;
     }
 
+    if (branchPredictRemaining[tid] > Cycles(0)) {
+        DPRINTF(BAC,
+                "[tid:%i] Stalling for Branch Predictor for %i more cycles.\n",
+                tid, branchPredictRemaining[tid]);
+        --branchPredictRemaining[tid];
+        stalls[tid].bpu = true;
+    } else {
+        stalls[tid].bpu = false;
+    }
+
     if (checkStall(tid)) {
         bacStatus[tid] = Blocked;
         return true;
@@ -572,7 +586,7 @@ BAC::newFetchTarget(ThreadID tid, const PCStateBase &start_pc)
     return ft;
 }
 
-bool
+Prediction
 BAC::predict(ThreadID tid, const StaticInstPtr &inst, const FetchTargetPtr &ft,
              PCStateBase &pc)
 {
@@ -586,10 +600,11 @@ BAC::predict(ThreadID tid, const StaticInstPtr &inst, const FetchTargetPtr &ft,
      * main history of the BPU and insert these missing histories.
      */
     assert(ft->bpuHistory == nullptr);
-    bool taken = bpu->predict(inst, ft->ftNum(), pc, tid, ft->bpuHistory);
+
+    Prediction pred = bpu->predict(inst, ft->ftNum(), pc, tid, ft->bpuHistory);
 
     DPRINTF(Branch, "[tid:%i, ftn:%llu] History added.\n", tid, ft->ftNum());
-    return taken;
+    return pred;
 }
 
 void
@@ -686,7 +701,9 @@ BAC::generateFetchTargets(ThreadID tid, bool &status_change)
 
             // Now make the actual prediction. Note the BPU will advance
             // the PC to the next instruction.
-            predict_taken = predict(tid, staticInst, curFT, *next_pc);
+            Prediction pred = predict(tid, staticInst, curFT, *next_pc);
+            predict_taken = pred.taken;
+            branchPredictRemaining[tid] = Cycles(pred.latency);
 
             DPRINTF(BAC,
                     "[tid:%i, ftn:%llu] Branch found at PC %#x "
@@ -881,8 +898,7 @@ BAC::updatePreDecode(ThreadID tid, const InstSeqNum seqNum,
 
         hist =
             new BPredUnit::PredictorHistory(tid, seqNum, pc.instAddr(), inst);
-        bpu->branchPlaceholder(tid, pc.instAddr(), inst->isUncondCtrl(),
-                               hist->bpHistory);
+        bpu->branchPlaceholder(tid, pc.instAddr(), inst->isUncondCtrl(), hist);
 
         set(hist->target, std::unique_ptr<PCStateBase>(pc.clone()));
         inst->advancePC(*hist->target);
@@ -933,8 +949,11 @@ BAC::updatePC(const DynInstPtr &inst, PCStateBase &fetch_pc,
         } else {
             // With a coupled front-end we need to make the branch prediction
             // here.
-            predict_taken =
+            //
+            // Latency is ignored in coupled mode
+            Prediction pred =
                 bpu->predict(inst->staticInst, inst->seqNum, fetch_pc, tid);
+            predict_taken = pred.taken;
         }
 
         DPRINTF(BAC,

@@ -44,6 +44,7 @@ scons build/X86/gem5.opt
     --size <simulation_size>
 ```
 """
+
 import argparse
 import time
 

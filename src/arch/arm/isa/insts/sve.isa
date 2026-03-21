@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2020, 2025 ARM Limited
+// Copyright (c) 2017-2020, 2025-2026 ARM Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -2070,6 +2070,7 @@ let {{
         code = sveEnabledCheckCode + '''
         unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
                 xc->tcBase());
+
         for (unsigned i = 0; i < eCount; i++) {
             Element srcElem1 = %s;
             Element destElem = 0;''' % op1
@@ -2211,6 +2212,7 @@ let {{
         code = sveEnabledCheckCode + '''
         unsigned eCount = ArmStaticInst::getCurSveVecLen<%(bigElemType)s>(
                 xc->tcBase());
+
         %(mask)s
         for (unsigned i = 0; i < eCount; i++) {
             %(source)s;
@@ -2406,6 +2408,7 @@ let {{
         code = sveEnabledCheckCode + '''
         unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
                 xc->tcBase());
+
         for (unsigned i = 0; i < eCount; i++) {'''
         if predType != PredType.NONE:
             code += '''
@@ -2595,7 +2598,8 @@ let {{
         global header_output, exec_output, decoders
         code = sveEnabledCheckCode + '''
         unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
-                xc->tcBase());'''
+                xc->tcBase());
+        '''
         if customIterCode is None:
             code += '''
         for (unsigned i = 0; i < eCount; i++) {'''
@@ -3015,6 +3019,7 @@ let {{
         code = sveEnabledCheckCode + '''
         unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
                 xc->tcBase());
+
         ArmISA::VecPredRegContainer tmpPredC;
         auto tmpPred = tmpPredC.as<Element>();
         for (unsigned i = 0; i < eCount; ++i)
@@ -3111,6 +3116,7 @@ let {{
         code = sveEnabledCheckCode + '''
         unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
                 xc->tcBase());
+
         for (unsigned i = 0; i < eCount; i++) {
             const Element& srcElem1 = AA64FpOp1_x[i];
             const Element& srcElem2 = AA64FpOp2_x[i];
@@ -3216,6 +3222,7 @@ let {{
         code = sveEnabledCheckCode + '''
         unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
                 xc->tcBase());
+
         for (unsigned i = 0; i < eCount; i++) {
             const Element& srcElem2 = AA64FpOp2_x[i];
             Element srcElem3 = imm;
@@ -4313,6 +4320,7 @@ let {{
 
         unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
                 xc->tcBase());
+
         for (int i = 0; i < eCount; ++i) {'''
         if isIndexed:
             code += '''
@@ -4363,6 +4371,7 @@ let {{
 
         unsigned eCount = ArmStaticInst::getCurSveVecLen<Element>(
                 xc->tcBase());
+
         for (int i = 0; i < eCount; ++i) {'''
         if isIndexed:
             code += '''
@@ -4427,17 +4436,18 @@ let {{
             DElement res = AA64FpDest_xd[i];
             ExtendedElementA srcElemA;
             ExtendedElementB srcElemB;
-            for (int j = 0; j <= 3; ++j) {
+            constexpr int K = sizeof(DElement) / sizeof(SElementA);
+            for (int j = 0; j < K; ++j) {
                 srcElemA = static_cast<ExtendedElementA>
-                                          (AA64FpOp1_srcA[4 * i + j]);'''
+                                          (AA64FpOp1_srcA[K * i + j]);'''
         if isIndexed:
             code += '''
                 srcElemB = static_cast<ExtendedElementB>
-                                          (AA64FpOp2_srcB[4 * s + j]);'''
+                                          (AA64FpOp2_srcB[K * s + j]);'''
         else:
             code += '''
                 srcElemB = static_cast<ExtendedElementB>
-                                          (AA64FpOp2_srcB[4 * i + j]);'''
+                                          (AA64FpOp2_srcB[K * i + j]);'''
         code += '''
                 res += srcElemA * srcElemB;
             }
@@ -4820,6 +4830,7 @@ let {{
             code += '''
             FPSCR fpscr = FpscrExc & ~FpscrAhpMask;
             FPCR fpcr = (FPCR)Fpcr;
+
             AA64FpDest_x[i] = fplibMinNum(fplibMaxNum(
                 AA64FpOp1_x[i], AA64FpDestMerge_x[i], fpscr, fpcr),
                 AA64FpOp2_x[i], fpscr, fpcr);
@@ -5217,7 +5228,8 @@ let {{
     # BFADD (predicated)
     bfOp = '''
             FPSCR fpscr = FpscrExc & ~FpscrAhpMask;
-            [[maybe_unused]] FPCR fpcr = (FPCR)Fpcr;
+            FPCR fpcr = (FPCR)Fpcr;
+
             destElem = %s;
             FpscrExc = fpscr;
     '''
@@ -5688,7 +5700,8 @@ let {{
     # FABD
     fpOp = '''
             FPSCR fpscr = FpscrExc & ~FpscrAhpMask;
-            [[maybe_unused]] FPCR fpcr = (FPCR)Fpcr;
+            FPCR fpcr = (FPCR)Fpcr;
+
             destElem = %s;
             FpscrExc = fpscr;
     '''
@@ -6237,10 +6250,10 @@ let {{
     # INCB, INCH, INCW, INCD (scalar)
     incxCode = 'destElem = srcElem1 + (count * imm);'
     sveElemCountInst('inc', 'Inc', 'SimdAluOp', unsignedTypes, incxCode,
-            destType = DestType.Scalar, dstIs32b = False)
+                     destType = DestType.Scalar, dstIs32b = False)
     # INCH, INCW, INCD (vector)
     sveElemCountInst('inc', 'Incv', 'SimdAluOp', bigUnsignedTypes, incxCode,
-            destType = DestType.Vector, dstIs32b = False)
+                     destType = DestType.Vector, dstIs32b = False)
     # INCP (scalar)
     incpCode = 'XDest = XDest + count;'
     svePredCountInst('incp', 'Incp', 'SimdAluOp', unsignedTypes, incpCode,
@@ -6393,10 +6406,11 @@ let {{
                PredType.MERGE, True)
     # MUL (vectors, unpredicated)
     sveBinInst('mul', 'MulUnpred', 'SimdMultOp', unsignedTypes, mulCode)
-    # NAND, NANDS
+    # NAND
     nandCode = 'destElem = !(srcElem1 & srcElem2);';
     svePredLogicalInst('nand', 'PredNand', 'SimdPredAluOp', ('uint8_t',),
                        nandCode)
+    # NANDS
     svePredLogicalInst('nands', 'PredNands', 'SimdPredAluOp', ('uint8_t',),
                        nandCode, isFlagSetting=True)
     # NBSL
@@ -8049,7 +8063,6 @@ let {{
             sxtCode, PredType.MERGE)
     # TBL
     sveTblInst('tbl', 'Tbl', 'SimdAluOp')
-    # TBL
     sveTblInst('tbl', 'TblDouble', 'SimdAluOp', doubleTable=True)
     # TBLQ
     sveTblInst('tblq', 'Tblq', 'SimdAluOp', isSeg=True)

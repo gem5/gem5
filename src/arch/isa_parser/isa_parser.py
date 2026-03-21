@@ -122,9 +122,7 @@ class Template:
             # The reinterpret casts are largely because an array with a known
             # size cannot be passed as an argument which is an array with an
             # unknown size in C++.
-            myDict[
-                "set_reg_idx_arr"
-            ] = """
+            myDict["set_reg_idx_arr"] = """
     setRegIdxArrays(
         reinterpret_cast<RegIdArrayPtr>(
             &std::remove_pointer_t<decltype(this)>::srcRegIdxArr),
@@ -1180,7 +1178,7 @@ del wrap
     # "def format <fmt>(<params>) {{...}};"
     def p_def_format(self, t):
         "def_format : DEF FORMAT ID LPAREN param_list RPAREN CODELIT SEMI"
-        (id, params, code) = (t[3], t[5], t[7])
+        id, params, code = (t[3], t[5], t[7])
         self.defFormat(id, params, code, t.lexer.lineno)
 
     # The formal parameter list for an instruction format is a
@@ -1262,8 +1260,7 @@ StaticInstPtr
 %(isa_name)s::%(decoder_name)s::decodeInst(%(isa_name)s::ExtMachInst machInst)
 {
     using namespace %(namespace)s;
-"""
-            % self,
+""" % self,
             "}",
         )
 

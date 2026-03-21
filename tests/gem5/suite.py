@@ -41,11 +41,12 @@ import os
 import subprocess
 import sys
 
-from testlib.configuration import (
-    config,
-    constants,
+from testlib.configuration import constants
+from testlib.helper import (
+    gcov_delete_files,
+    log_call,
+    run_gcovr,
 )
-from testlib.helper import log_call
 from testlib.suite import TestSuite
 from testlib.test_util import TestFunction
 
@@ -180,7 +181,23 @@ def _create_test_run_gem5(config, config_args, gem5_args):
         # fixture, but we always require it even if that verifier isn't being
         # ran.
         tempdir = fixtures[constants.tempdir_fixture_name].path
-        gem5 = fixtures[constants.gem5_binary_fixture_name].path
+
+        gem5_fixture = fixtures[constants.gem5_binary_fixture_name]
+
+        gem5 = gem5_fixture.path
+        gcov = gem5_fixture.gcov
+        gem5_build_target_dir = gem5_fixture.target_dir
+        gem5_base_dir = gem5_fixture.directory
+        test_threads = gem5_fixture.test_threads
+
+        if gcov == "ind-test-and-gcov":
+            params.log.message(
+                "Now cleaning up gcda and .py.gcno files from previous runs "
+                "or the build process. In the directory "
+                f"{gem5_build_target_dir}."
+            )
+            gcov_delete_files(gem5_build_target_dir, "all")
+
         command = [
             gem5,
             "-d",  # Set redirect dir to tempdir.
@@ -199,5 +216,17 @@ def _create_test_run_gem5(config, config_args, gem5_args):
             stdout=sys.stdout,
             stderr=sys.stderr,
         )
+        if gcov == "ind-test-and-gcov":
+            # run gcovr to get coverage metrics for each individual test
+            run_gcovr(
+                gem5_base_dir,
+                gem5_build_target_dir,
+                tempdir,
+                test_threads,
+                gem5_fixture.isa,
+                params.log,
+                params.time,
+                gcov,
+            )
 
     return test_run_gem5
