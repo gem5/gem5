@@ -1,4 +1,4 @@
-# Copyright (c) 2025 The Regents of the University of California
+# Copyright (c) 2025-2026 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,6 @@ import m5
 
 import gem5.utils.multisim as multisim
 from gem5.components.boards.x86_board import X86Board
-from gem5.components.cachehierarchies.classic.no_cache import NoCache
 from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
     PrivateL1PrivateL2CacheHierarchy,
 )
@@ -38,11 +37,7 @@ from gem5.components.processors.simple_switchable_processor import (
     SimpleSwitchableProcessor,
 )
 from gem5.isas import ISA
-from gem5.resources.resource import (
-    DiskImageResource,
-    KernelResource,
-    obtain_resource,
-)
+from gem5.resources.resource import obtain_resource
 from gem5.simulate.exit_handler import KernelBootedExitHandler
 from gem5.simulate.simulator import Simulator
 
@@ -51,7 +46,7 @@ NUM_PROCESSES = 10
 multisim.set_num_processes(NUM_PROCESSES)
 
 
-for npb_workload in ["bt", "cg", "ep"]:  # , "ft", "is", "lu", "mg", "sp", "ua"
+for npb_workload in ["bt", "cg", "ep"]:
 
     cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
         l1d_size="16KiB",
@@ -60,7 +55,7 @@ for npb_workload in ["bt", "cg", "ep"]:  # , "ft", "is", "lu", "mg", "sp", "ua"
     )
     memory = SingleChannelDDR3_1600(size="3GiB")
     processor = SimpleSwitchableProcessor(
-        starting_core_type=CPUTypes.KVM,
+        starting_core_type=CPUTypes.ATOMIC,
         switch_core_type=CPUTypes.TIMING,
         isa=ISA.X86,
         num_cores=1,
@@ -92,7 +87,7 @@ class KernelBootProcessorSwitch(KernelBootedExitHandler):
         print("Dumping and resetting stats at kernel boot! Hypercall 1")
         print("Switching processors at kernel boot! Hypercall 1")
         simulator.switch_processor()
-        m5.scheduleTickExitFromCurrent(1_000_000)
+        simulator.set_hypercall_absolute_max_ticks(1_000_000)
 
     def _exit_simulation(self) -> bool:
         return False
