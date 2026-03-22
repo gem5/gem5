@@ -1,4 +1,4 @@
-# Copyright (c) 2024 The Regents of the University of California
+# Copyright (c) 2024-2026 The Regents of the University of California
 # All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -57,7 +57,11 @@ RUN apt -y update && apt -y upgrade && apt -y install \
     doxygen \
     vim \
     sudo \
-    jq
+    jq \
+    # The next three are required for codecov/codecov-action in GitHub Actions
+    bash \
+    curl \
+    gpg
 
 # pre-commit, as installed via apt in 24.04, attempts to create a cache
 # directory at "${HOME}/.cache/pre-commit". If running docker with non-root,

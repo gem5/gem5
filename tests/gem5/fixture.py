@@ -59,6 +59,7 @@ from testlib.fixture import Fixture
 from testlib.helper import (
     absdirpath,
     cacheresult,
+    gcov_delete_files,
     joinpath,
     log_call,
 )
@@ -97,7 +98,7 @@ class TempdirFixture(Fixture):
         shutil.copytree(self.path, testing_result_folder)
 
     def teardown(self, testitem):
-        if testitem.result == Result.Passed:
+        if testitem.result.value == Result.Passed:
             shutil.rmtree(self.path)
 
 
@@ -162,6 +163,12 @@ class CMakeFixture(UniqueFixture):
 
     def _setup(self, testitem):
         if config.skip_build:
+            if config.gcov:
+                log.test_log.message(
+                    "Now removing gcda and .py.gcno files in the directory "
+                    f"{self.target_dir}"
+                )
+                gcov_delete_files(self.target_dir, "all")
             return
 
         log.test_log.message(
@@ -224,6 +231,17 @@ class CMakeFixture(UniqueFixture):
         ]
         log_call(log.test_log, ninja_command, time=None, stderr=sys.stderr)
 
+        if config.gcov:
+            # Remove gcda files that are created during the build process, as
+            # they cause problems when running gcov after the tests finish.
+            # Similarly, remove gcno files for Python files as they also cause
+            # problems when running gcov.
+            log.test_log.message(
+                "Now removing gcda and .py.gcno files generated during the "
+                f"build process. In the directory {self.target_dir}."
+            )
+            gcov_delete_files(self.target_dir, "all")
+
 
 # Keep SConsFixture as an alias for backward compatibility with any
 # out-of-tree test scripts that may reference it directly.
@@ -253,6 +271,9 @@ class Gem5Fixture(CMakeFixture):
         # CMake produces the binary as 'gem5' (no variant suffix)
         self.path = joinpath(self.target_dir, "gem5")
         self.directory = config.base_dir
+
+        self.gcov = config.gcov
+        self.test_threads = config.test_threads
 
         self.isa = isa
         self.variant = variant
