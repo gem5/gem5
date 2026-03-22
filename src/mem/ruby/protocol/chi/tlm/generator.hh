@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Arm Limited
+ * Copyright (c) 2024-2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -278,6 +278,12 @@ class TlmGenerator : public ClockedObject
     void scheduleTransaction(Tick when, Transaction *tr);
     void enqueueFront(Transaction *tr);
     void enqueueBack(Transaction *tr);
+    bool
+    isActive() const
+    {
+        return !pendingTransactions.empty() ||
+               !unscheduledTransactions.empty() || !waitingForPCrd.empty();
+    }
 
     Port &getPort(const std::string &if_name, PortID idx) override;
 
@@ -362,13 +368,6 @@ class TlmGenerator : public ClockedObject
 
     /** tick event used to schedule unscheduled transactions */
     EventFunctionWrapper tickEvent;
-
-    using SchedulingQueue = std::priority_queue<TransactionEvent*,
-        std::vector<TransactionEvent*>,
-        TransactionEvent::Compare>;
-
-    /** PQ of transactions whose injection has been scheduled */
-    SchedulingQueue scheduledTransactions;
 
     /** List of transactions whose injection needs to be scheduled */
     std::list<Transaction *> unscheduledTransactions;

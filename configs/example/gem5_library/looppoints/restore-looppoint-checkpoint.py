@@ -41,6 +41,7 @@ Usage
     configs/example/gem5_library/looppoints/restore-looppoint-checkpoint.py
 ```
 """
+
 import argparse
 
 from m5.stats import (

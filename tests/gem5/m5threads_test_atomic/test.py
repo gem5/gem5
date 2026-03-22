@@ -27,6 +27,7 @@
 """
 Test file for the m5threads atomic test
 """
+
 from testlib import *
 
 cpu_types = (

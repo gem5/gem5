@@ -39,6 +39,7 @@
 """
 Test file for the util m5 exit assembly instruction.
 """
+
 import re
 
 from testlib import *

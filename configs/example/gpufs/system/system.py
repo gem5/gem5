@@ -61,7 +61,7 @@ def makeGpuFSSystem(args):
         panic("Need at least 2GiB of system memory to load amdgpu module")
 
     # Use the common FSConfig to setup a Linux X86 System
-    (TestCPUClass, test_mem_mode) = Simulation.getCPUClass(args.cpu_type)
+    TestCPUClass, test_mem_mode = Simulation.getCPUClass(args.cpu_type)
     if test_mem_mode == "atomic":
         test_mem_mode = "atomic_noncaching"
     disks = [args.disk_image]

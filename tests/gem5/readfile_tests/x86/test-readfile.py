@@ -28,6 +28,7 @@
 This runs simple tests to ensure that running binaries via readfile works for
 X86.
 """
+
 from testlib import constants
 
 from gem5.readfile_tests.configs.common import test_readfile

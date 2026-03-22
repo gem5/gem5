@@ -74,30 +74,24 @@ def write_header_file(enum: Type, enum_hh: str):
     name = enum.__name__ if enum.enum_name is None else enum.enum_name
     idem_macro = f"__ENUM__{wrapper_name}__{name}__"
 
-    code(
-        """\
+    code("""\
 #ifndef $idem_macro
 #define $idem_macro
 
 namespace gem5
 {
-"""
-    )
+""")
     if enum.is_class:
-        code(
-            """\
+        code("""\
 enum class $name
 {
-"""
-        )
+""")
     else:
-        code(
-            """\
+        code("""\
 $wrapper $wrapper_name {
 enum $name
 {
-"""
-        )
+""")
         code.indent(1)
     code.indent(1)
     for val in enum.vals:
@@ -107,11 +101,9 @@ enum $name
     code("};")
 
     if enum.is_class:
-        code(
-            """\
+        code("""\
 extern const char *${name}Strings[static_cast<int>(${name}::Num_${name})];
-"""
-        )
+""")
     elif enum.wrapper_is_struct:
         code("static const char *${name}Strings[Num_${name}];")
     else:

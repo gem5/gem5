@@ -41,6 +41,7 @@ This serves as the bridge between the gem5 statistics exposed via PyBind11 and
 the Python Stats model.
 """
 
+import re
 from datetime import datetime
 from typing import (
     IO,

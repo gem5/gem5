@@ -42,8 +42,7 @@ def macroop JMP_I
     .control_direct
 
     rdip t1
-    limm t2, imm
-    wrip t1, t2
+    wripi t1, imm
 };
 
 def macroop JMP_R

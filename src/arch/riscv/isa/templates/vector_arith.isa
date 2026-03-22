@@ -1200,9 +1200,9 @@ template<typename ElemType>
 class %(class_name)s : public %(base_class)s
 {
 private:
-    // vs1(rs1), vs2, v0 for *.vv[m] or *.vx[m]
-    // vs2, v0 for *.vi[m]
-    RegId srcRegIdxArr[3];
+    // vs1(rs1), vs2, old_vd, v0 for *.vv[m] or *.vx[m]
+    // vs2, old_vd, v0 for *.vi[m]
+    RegId srcRegIdxArr[4];
     RegId destRegIdxArr[1];
     bool vm;
 public:
@@ -1255,6 +1255,7 @@ Fault
     %(op_rd)s;
     %(set_vlenb)s;
     %(vm_decl_rd)s;
+    %(copy_old_vd)s;
 
     const uint32_t bit_offset = vlenb / sizeof(ElemType);
     const uint32_t offset = bit_offset * microIdx;
@@ -1321,8 +1322,8 @@ template<typename ElemType>
 class %(class_name)s : public %(base_class)s
 {
 private:
-    // vs1(rs1), vs2, v0 for *.vv or *.vf
-    RegId srcRegIdxArr[3];
+    // vs1(rs1), vs2, old_vd, v0 for *.vv or *.vf
+    RegId srcRegIdxArr[4];
     RegId destRegIdxArr[1];
     bool vm;
 public:
@@ -1375,6 +1376,7 @@ Fault
     %(op_rd)s;
     %(set_vlenb)s;
     %(vm_decl_rd)s;
+    %(copy_old_vd)s;
 
     const uint32_t bit_offset = vlenb / sizeof(ElemType);
     const uint32_t offset = bit_offset * microIdx;
@@ -1728,7 +1730,8 @@ template<typename ElemType>
         micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
     }
 
-    microop = new VPinVdMicroInst(machInst, 0, k, elen, vlen);
+    microop = new VPinVdMicroInst(machInst, 0, k, elen, vlen,
+                                  /*isSlideUpVx=*/false, /*isReduction=*/true);
     microop->setFlag(IsDelayedCommit);
     this->microops.push_back(microop);
 
@@ -1737,7 +1740,10 @@ template<typename ElemType>
     for (int i = 0; i < num_microops && micro_vl > 0; ++i) {
         microop = new %(class_name)sMicro<ElemType>(_machInst, micro_vl, i,
                                                     _elen, _vlen);
-        if (flags[IsSerializeAfter] && i < num_microops-1) { // ordered
+        // serialize all ordered and initial unordered µop(s) (unless last) to
+        // guarantee architectural correcness with OoO execution
+        if ((flags[IsSerializeAfter] && i < num_microops-1)
+                || (i == 0 && num_microops > 1)) {
             microop->setFlag(StaticInst::IsSerializeAfter);
         }
         microop->setDelayedCommit();
@@ -2346,7 +2352,7 @@ template<typename ElemType>
 
     for (int i = 0; need_pin && i < ceil((float) this->vl/micro_vlmax); i++) {
         microop = new VPinVdMicroInst(machInst, i, std::max(i, 1), elen, vlen,
-                                      true);
+                                      /*isSlideUpVx=*/true);
         microop->setFlag(IsDelayedCommit);
         this->microops.push_back(microop);
     }
@@ -2469,8 +2475,8 @@ template<typename ElemType>
             this->microops.push_back(microop);
         }
         if (need_pin) {
-            microop = new VPinVdMicroInst(machInst, i,
-                std::max(num_microops-i-1, 1), elen, vlen, false);
+            uint32_t num_pins = std::max(num_microops-i-1, 1);
+            microop = new VPinVdMicroInst(machInst, i, num_pins, elen, vlen);
             microop->setFlag(IsDelayedCommit);
             this->microops.push_back(microop);
         }

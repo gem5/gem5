@@ -533,7 +533,7 @@ SDMAEngine::decodeHeader(SDMAQueue *q, uint32_t header)
         } break;
       case SDMA_OP_COND_EXE: {
         q->incRptr(sizeof(sdmaCondExec));
-        warn("SDMA_OP_SEM not implemented");
+        warn("SDMA_OP_COND_EXE not implemented");
         decodeNext(q);
         } break;
       case SDMA_OP_ATOMIC: {
@@ -570,7 +570,7 @@ SDMAEngine::decodeHeader(SDMAQueue *q, uint32_t header)
             panic("SDMA_SUBOP_PTEPDE_COPY not implemented");
             break;
           case SDMA_SUBOP_PTEPDE_COPY_BACKWARDS:
-            panic("SDMA_SUBOP_PTEPDE_COPY not implemented");
+            panic("SDMA_SUBOP_PTEPDE_COPY_BACKWARDS not implemented");
             break;
           case SDMA_SUBOP_PTEPDE_RMW: {
             panic("SDMA_SUBOP_PTEPDE_RMW not implemented");

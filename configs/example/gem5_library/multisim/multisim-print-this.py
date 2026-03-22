@@ -61,7 +61,6 @@ into beforehand.
 ```
 """
 
-
 import gem5.utils.multisim as multisim
 from gem5.components.boards.simple_board import SimpleBoard
 from gem5.components.cachehierarchies.classic.no_cache import NoCache

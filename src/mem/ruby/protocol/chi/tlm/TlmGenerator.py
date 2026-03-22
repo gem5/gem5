@@ -1,5 +1,5 @@
 # -*- mode:python -*-
-# Copyright (c) 2024-2025 Arm Limited
+# Copyright (c) 2024-2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -55,9 +55,12 @@ class TlmGenerator(ClockedObject):
     cxx_exports = [
         PyBindMethod("scheduleTransaction"),
         PyBindMethod("enqueueBack"),
+        PyBindMethod("isActive"),
     ]
 
-    _transactions = []
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._transactions = []
 
     def inject(self, payload, phase, when=None):
         from m5.tlm_chi.utils import Transaction

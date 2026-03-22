@@ -190,12 +190,10 @@ motherboard.set_kernel_disk_workload(
         resource_directory=args.resource_directory,
         resource_version="1.0.0",
     ),
-    readfile_contents=dedent(
-        """
+    readfile_contents=dedent("""
         m5 exit # signal end of boot
         m5 exit # exit in children and parent
-        """
-    ),
+        """),
     kernel_args=kernel_args,
 )
 

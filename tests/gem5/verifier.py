@@ -40,6 +40,7 @@
 """
 Built in test cases that verify particular details about a gem5 run.
 """
+
 import json
 import os
 import re

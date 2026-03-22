@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017-2019, 2023 Arm Limited
+ * Copyright (c) 2017-2019, 2023, 2025-2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -159,12 +159,9 @@ TarmacTracerRecord::TraceMemEntry::TraceMemEntry(
 {
 }
 
-TarmacTracerRecord::TraceRegEntry::TraceRegEntry(
-    const TarmacContext& tarmCtx,
-    const RegId& reg)
-      : RegEntry(*tarmCtx.pc),
-        regValid(false),
-        regId(reg)
+TarmacTracerRecord::TraceRegEntry::TraceRegEntry(const TarmacContext &tarmCtx,
+                                                 const RegId &reg)
+    : RegEntry(*tarmCtx.pc), regValid(false), regId(reg), matRegValid(false)
 {
 }
 
@@ -192,6 +189,8 @@ TarmacTracerRecord::TraceRegEntry::update(const TarmacContext& tarmCtx)
       case VecPredRegClass:
         updatePred(tarmCtx);
         break;
+      case MatRegClass:
+          updateMatrix(tarmCtx);
       default:
         // If unsupported format, do nothing: non updating
         // the register will prevent it to be printed.

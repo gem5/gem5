@@ -85,7 +85,7 @@ sphinxcontrib-serializinghtml==1.1.10
     # via sphinx
 sphinxcontrib-svg2pdfconverter==1.2.2
     # via -r requirements.in
-urllib3==2.5.0
+urllib3==2.6.3
     # via requests
 zipp==3.23.0
     # via importlib-metadata
