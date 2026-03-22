@@ -84,6 +84,17 @@ axes so disabled ISAs/features are never compiled or linked.
 | `kvm` | `CONF_USE_KVM` | `//configs:kvm_enabled` |
 | `test_objects` | `CONF_USE_TEST_OBJECTS` | `//configs:test_objects_enabled` |
 
+The original plan included a `ruby_gpu` bucket, but in the final
+implementation `gpu_ruby_test` SimObjects are folded into the `ruby`
+bucket because their defining `.py` files are under `src/cpu/testers/`
+directories that map to `ruby` via path-based derivation. Their Bazel
+inventory remains gated on `ruby_gpu_enabled` so they're only compiled
+when both Ruby and GPU are enabled.
+
+The `ruby` bucket also includes Ruby-specific tester directories:
+`src/cpu/testers/directedtest`, `src/cpu/testers/garnet_synthetic_traffic`,
+`src/cpu/testers/rubytest`, and `src/cpu/testers/gpu_ruby_test`.
+
 ### Enum ownership rule
 
 Each enum is assigned to the same bucket as the SimObject `.py` file
