@@ -82,7 +82,6 @@ for start_type in core_types:
             board=board,
             id=f"process_{start_type.value}-to-{switch_type.value}-switch-test",
         )
-        print(f"In config script. simulator: {simulator}")
 
         multisim.add_simulator(simulator)
 
