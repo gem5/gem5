@@ -357,6 +357,48 @@ SIMOBJECT_PY_FILES_CHI = [
     "src/mem/ruby/protocol/chi/generic/CHIGeneric.py",
 ]
 
+# KVM SimObject .py files (gated on kvm_enabled / kvm_x86 / kvm_arm)
+SIMOBJECT_PY_FILES_KVM = [
+    "src/cpu/kvm/BaseKvmCPU.py",
+    "src/cpu/kvm/KvmVM.py",
+]
+
+SIMOBJECT_PY_FILES_KVM_X86 = [
+    "src/arch/x86/kvm/X86KvmCPU.py",
+]
+
+SIMOBJECT_PY_FILES_KVM_ARM = [
+    "src/arch/arm/kvm/ArmKvmCPU.py",
+    "src/arch/arm/kvm/ArmV8KvmCPU.py",
+    "src/arch/arm/kvm/BaseArmKvmCPU.py",
+    "src/arch/arm/kvm/KvmGic.py",
+]
+
+# Test objects SimObject .py files (gated on test_objects_enabled)
+SIMOBJECT_PY_FILES_TEST_OBJECTS = [
+    "src/test_objects/StatTester.py",
+]
+
+# Protobuf-dependent SimObject .py files (gated on protobuf_enabled)
+SIMOBJECT_PY_FILES_PROTOBUF = [
+    "src/cpu/testers/traffic_gen/TrafficGen.py",
+    "src/cpu/o3/probe/ElasticTrace.py",
+    "src/cpu/trace/TraceCPU.py",
+    "src/cpu/InstPBTrace.py",
+    "src/mem/probes/MemTraceProbe.py",
+]
+
+# Capstone-dependent SimObject .py files (gated on capstone_enabled)
+SIMOBJECT_PY_FILES_CAPSTONE = [
+    "src/cpu/Capstone.py",
+    "src/arch/arm/tracers/ArmCapstone.py",
+]
+
+# DRAMSim3 SimObject .py file (gated on dramsim3_enabled)
+SIMOBJECT_PY_FILES_DRAMSIM3 = [
+    "src/mem/DRAMsim3.py",
+]
+
 # -- Path-to-label conversion for declaring .py files as Bazel inputs --
 # Sorted by depth (deepest first) for longest-prefix matching.
 _OVERLAY_PACKAGES = [

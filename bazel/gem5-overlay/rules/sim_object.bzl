@@ -165,6 +165,8 @@ def _gen_params_impl(ctx):
         "--output-type", ctx.attr.output_type,
         "--use-python", "true" if ctx.attr.use_python else "false",
     ]
+    if ctx.attr.source_bucket:
+        cmd_args.extend(["--source-bucket", ctx.attr.source_bucket])
     if ctx.attr.file_filter:
         cmd_args.extend(["--file-filter", ctx.attr.file_filter])
     if ctx.attr.file_exclude:
@@ -214,13 +216,17 @@ _gen_params = rule(
                       "enums_hdrs", "enums_srcs"],
             doc = "Type of output to generate.",
         ),
+        "source_bucket": attr.string(
+            default = "",
+            doc = "Config-aligned bucket to filter .cc sources by class origin.",
+        ),
         "file_filter": attr.string(
             default = "",
-            doc = "Comma-separated fnmatch patterns for .cc source filtering.",
+            doc = "(Deprecated) Comma-separated fnmatch patterns.",
         ),
         "file_exclude": attr.string(
             default = "",
-            doc = "Comma-separated fnmatch patterns to exclude from .cc output.",
+            doc = "(Deprecated) Comma-separated fnmatch patterns to exclude.",
         ),
         "use_python": attr.bool(default = True),
         "simobj_files": attr.label_list(
@@ -263,12 +269,13 @@ def gem5_gen_enums_hdrs(name, simobj_files, **kwargs):
         **kwargs
     )
 
-def gem5_gen_params_srcs(name, simobj_files, file_filter = "", file_exclude = "", **kwargs):
+def gem5_gen_params_srcs(name, simobj_files, source_bucket = "", file_filter = "", file_exclude = "", **kwargs):
     """Generate filtered param_*.cc sources for a specific bucket."""
     _gen_params(
         name = name,
         output_type = "params_srcs",
         simobj_files = simobj_files,
+        source_bucket = source_bucket,
         file_filter = file_filter,
         file_exclude = file_exclude,
         **kwargs

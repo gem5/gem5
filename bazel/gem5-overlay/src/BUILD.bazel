@@ -52,7 +52,7 @@ cc_library(
     name = "gem5_hdrs",
     deps = [
         ":_gem5_base_hdrs",
-        "//:sim_object_params",
+        "//:sim_object_params_bucket",
     ],
 )
 

@@ -431,6 +431,70 @@ def generate_cxx_config_cc(sim_object, output_path):
 
 
 # ---------------------------------------------------------------------------
+# Class-based bucket assignment
+# ---------------------------------------------------------------------------
+
+# Bucket derivation from source file path (mirrors CMake _gem5_derive_bucket)
+_BUCKET_PATTERNS = [
+    ("src/arch/x86", "x86"),
+    ("src/dev/x86", "x86"),
+    ("src/arch/arm", "arm"),
+    ("src/dev/arm", "arm"),
+    ("src/arch/riscv", "riscv"),
+    ("src/dev/riscv", "riscv"),
+    ("src/dev/lupio", "riscv"),
+    ("src/arch/mips", "mips"),
+    ("src/dev/mips", "mips"),
+    ("src/arch/power", "power"),
+    ("src/arch/sparc", "sparc"),
+    ("src/dev/sparc", "sparc"),
+    ("src/arch/amdgpu", "gpu"),
+    ("src/gpu-compute", "gpu"),
+    ("src/dev/hsa", "gpu"),
+    ("src/dev/amdgpu", "gpu"),
+    ("src/mem/ruby", "ruby"),
+    ("src/systemc", "systemc"),
+    ("src/cpu/kvm", "kvm"),
+    ("src/test_objects", "test_objects"),
+]
+
+
+def _derive_bucket_from_path(filepath, src_root):
+    """Derive config-aligned bucket from a SimObject .py file path."""
+    try:
+        rel = os.path.relpath(filepath, src_root)
+    except ValueError:
+        rel = filepath
+    # Normalize to forward slashes
+    rel = rel.replace(os.sep, "/")
+    for prefix, bucket in _BUCKET_PATTERNS:
+        if rel.startswith(prefix + "/") or rel == prefix:
+            return bucket
+    return "common"
+
+
+def build_class_bucket_map(classes, src_root):
+    """Build a mapping of SimObject class name -> bucket.
+
+    For each class, finds the defining .py module's __file__ and derives
+    the bucket from that path. This handles multi-class-per-file correctly:
+    all classes defined in src/mem/ruby/.../SimpleNetwork.py get bucket 'ruby',
+    regardless of whether their class name matches the filename.
+    """
+    class_buckets = {}
+    for cls in classes:
+        modname = getattr(cls, "__module__", None)
+        mod = sys.modules.get(modname) if modname else None
+        filepath = getattr(mod, "__file__", None) if mod else None
+        if filepath:
+            bucket = _derive_bucket_from_path(filepath, src_root)
+        else:
+            bucket = "common"
+        class_buckets[cls.__name__] = bucket
+    return class_buckets
+
+
+# ---------------------------------------------------------------------------
 # main
 # ---------------------------------------------------------------------------
 
@@ -497,14 +561,29 @@ def main():
     parser.add_argument(
         "--file-filter",
         default=None,
-        help="Comma-separated filename patterns to include for .cc source "
-        "generation. Supports fnmatch wildcards.",
+        help="(DEPRECATED) Comma-separated filename patterns. "
+        "Use --source-bucket instead for correct multi-class handling.",
     )
     parser.add_argument(
         "--file-exclude",
         default=None,
-        help="Comma-separated filename patterns to exclude from .cc source "
-        "generation. Supports fnmatch wildcards.",
+        help="(DEPRECATED) Comma-separated filename patterns to exclude. "
+        "Use --source-bucket instead.",
+    )
+    parser.add_argument(
+        "--source-bucket",
+        default=None,
+        help="Only generate .cc sources for classes whose defining .py file "
+        "maps to this config-aligned bucket. Bucket is derived from the "
+        "file's path (same logic as CMake _gem5_derive_bucket). "
+        "Valid buckets: common, x86, arm, riscv, mips, power, sparc, "
+        "ruby, gpu, systemc, kvm, test_objects.",
+    )
+    parser.add_argument(
+        "--emit-bucket-map",
+        default=None,
+        help="Write a JSON file mapping class names to buckets. "
+        "Useful for debugging and for Bazel to query bucket assignments.",
     )
     args = parser.parse_args()
 
@@ -570,6 +649,26 @@ def main():
             sys.exit(1)
         return
 
+    # Build class->bucket mapping for class-based filtering.
+    class_buckets = build_class_bucket_map(
+        [SimObject] + list(classes), src_root
+    )
+
+    # Emit bucket map if requested (for debugging / Bazel consumption).
+    if args.emit_bucket_map:
+        import json
+
+        os.makedirs(
+            os.path.dirname(args.emit_bucket_map) or ".", exist_ok=True
+        )
+        with open(args.emit_bucket_map, "w") as f:
+            json.dump(class_buckets, f, indent=2, sort_keys=True)
+        print(
+            f"Wrote bucket map ({len(class_buckets)} classes) to "
+            f"{args.emit_bucket_map}",
+            file=sys.stderr,
+        )
+
     # Determine what to generate.
     output_type = args.output_type
     do_params_hh = output_type in ("all", "params_hdrs")
@@ -581,19 +680,30 @@ def main():
         output_type in ("all", "enums_srcs") and not args.headers_only
     )
 
-    # File filtering for per-bucket .cc source generation.
+    # Class-based bucket filtering (preferred over deprecated file patterns).
+    source_bucket = args.source_bucket
+
+    # Legacy file-pattern filtering (deprecated, kept for backward compat).
     filter_patterns = args.file_filter.split(",") if args.file_filter else None
     exclude_patterns = (
         args.file_exclude.split(",") if args.file_exclude else None
     )
 
-    def should_generate_file(filename):
-        """Check if a .cc file passes filter/exclude criteria."""
+    def should_generate_source(class_name, cc_filename):
+        """Check if a .cc source should be generated.
+
+        Uses --source-bucket (class-based, preferred) or legacy
+        --file-filter/--file-exclude (filename-based, deprecated).
+        """
+        if source_bucket is not None:
+            return class_buckets.get(class_name, "common") == source_bucket
         if exclude_patterns:
-            if any(fnmatch.fnmatch(filename, p) for p in exclude_patterns):
+            if any(fnmatch.fnmatch(cc_filename, p) for p in exclude_patterns):
                 return False
         if filter_patterns:
-            if not any(fnmatch.fnmatch(filename, p) for p in filter_patterns):
+            if not any(
+                fnmatch.fnmatch(cc_filename, p) for p in filter_patterns
+            ):
                 return False
         return True
 
@@ -616,7 +726,7 @@ def main():
                     hh_fail += 1
             if do_params_cc:
                 cc_file = f"param_{name}.cc"
-                if should_generate_file(cc_file):
+                if should_generate_source(name, cc_file):
                     out_cc = os.path.join(output_dir, "python", "_m5", cc_file)
                     if generate_params_cc(cls, use_python, out_cc):
                         cc_ok += 1
@@ -654,7 +764,7 @@ def main():
                     ehh_fail += 1
             if do_enums_cc:
                 cc_file = f"{enum_name}.cc"
-                if should_generate_file(cc_file):
+                if should_generate_source(enum_name, cc_file):
                     out_cc = os.path.join(output_dir, "enums", cc_file)
                     if generate_enum_cc(enum_cls, use_python, out_cc):
                         ecc_ok += 1
@@ -698,7 +808,7 @@ def main():
                     chh_fail += 1
             if do_cxx_cc:
                 cc_file = f"{name}.cc"
-                if should_generate_file(cc_file):
+                if should_generate_source(name, cc_file):
                     out = os.path.join(output_dir, "cxx_config", cc_file)
                     if generate_cxx_config_cc(cls, out):
                         ccc_ok += 1
