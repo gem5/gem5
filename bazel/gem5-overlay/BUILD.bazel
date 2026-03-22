@@ -885,7 +885,7 @@ _BUCKET_LIB_DEPS = [
 cc_library(
     name = "sim_object_kvm_lib",
     srcs = [":_gen_kvm_param_srcs"],
-    deps = _BUCKET_LIB_DEPS + ["//src/cpu/kvm:kvm"],
+    deps = _BUCKET_LIB_DEPS,
     alwayslink = True,
 )
 
