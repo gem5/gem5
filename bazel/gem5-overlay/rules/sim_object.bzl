@@ -133,7 +133,130 @@ def gem5_sim_object(name, py_file, sim_objects = [], enums = [],
     )
 
 # ---------------------------------------------------------------------------
+# Per-bucket SimObject generation via gen_all_params.py (system Python)
+# ---------------------------------------------------------------------------
+
+def _gen_params_impl(ctx):
+    """Generate SimObject params/enums using gen_all_params.py.
+
+    Uses system Python (no gem5py_m5 dependency). Produces a tree artifact
+    directory containing the generated files. The --output-type, --file-filter,
+    and --file-exclude flags control what is generated per invocation.
+    """
+    output_dir = ctx.actions.declare_directory(ctx.label.name)
+
+    args = ctx.actions.args()
+    args.add("--src-root", ctx.file._src_root.dirname)
+    args.add("--output-dir", output_dir.path)
+    args.add("--output-type", ctx.attr.output_type)
+    if ctx.attr.use_python:
+        args.add("--use-python", "true")
+    else:
+        args.add("--use-python", "false")
+    if ctx.attr.file_filter:
+        args.add("--file-filter", ctx.attr.file_filter)
+    if ctx.attr.file_exclude:
+        args.add("--file-exclude", ctx.attr.file_exclude)
+
+    # Pass explicit SimObject file list if provided
+    if ctx.attr.simobj_files:
+        args.add_all("--simobj-files", ctx.files.simobj_files)
+
+    ctx.actions.run(
+        executable = ctx.executable._gen_all_params,
+        arguments = [args],
+        outputs = [output_dir],
+        inputs = ctx.files.simobj_files + ctx.files._m5_python + [ctx.file._src_root],
+        mnemonic = "Gem5GenParams",
+        progress_message = "Generating SimObject params (%s, %s)" % (
+            ctx.attr.output_type,
+            ctx.attr.file_filter or "all",
+        ),
+    )
+
+    return [DefaultInfo(files = depset([output_dir]))]
+
+_gen_params = rule(
+    implementation = _gen_params_impl,
+    attrs = {
+        "output_type": attr.string(
+            default = "all",
+            values = ["all", "params_hdrs", "params_srcs",
+                      "enums_hdrs", "enums_srcs"],
+            doc = "Type of output to generate.",
+        ),
+        "file_filter": attr.string(
+            default = "",
+            doc = "Comma-separated fnmatch patterns for .cc source filtering.",
+        ),
+        "file_exclude": attr.string(
+            default = "",
+            doc = "Comma-separated fnmatch patterns to exclude from .cc output.",
+        ),
+        "use_python": attr.bool(default = True),
+        "simobj_files": attr.label_list(
+            allow_files = [".py"],
+            doc = "SimObject .py files to process.",
+        ),
+        "_m5_python": attr.label(
+            default = "//src/python:m5_python_files",
+            allow_files = True,
+            doc = "m5 Python package files (for PYTHONPATH).",
+        ),
+        "_gen_all_params": attr.label(
+            default = "//build_tools:gen_all_params",
+            executable = True,
+            cfg = "exec",
+        ),
+        "_src_root": attr.label(
+            default = "//:MODULE.bazel",
+            allow_single_file = True,
+            doc = "Anchor for determining source root path.",
+        ),
+    },
+)
+
+def gem5_gen_params_hdrs(name, simobj_files, **kwargs):
+    """Generate all params/*.hh headers (one pass for all SimObjects)."""
+    _gen_params(
+        name = name,
+        output_type = "params_hdrs",
+        simobj_files = simobj_files,
+        **kwargs
+    )
+
+def gem5_gen_enums_hdrs(name, simobj_files, **kwargs):
+    """Generate all enums/*.hh headers (one pass for all enums)."""
+    _gen_params(
+        name = name,
+        output_type = "enums_hdrs",
+        simobj_files = simobj_files,
+        **kwargs
+    )
+
+def gem5_gen_params_srcs(name, simobj_files, file_filter = "", file_exclude = "", **kwargs):
+    """Generate filtered param_*.cc sources for a specific bucket."""
+    _gen_params(
+        name = name,
+        output_type = "params_srcs",
+        simobj_files = simobj_files,
+        file_filter = file_filter,
+        file_exclude = file_exclude,
+        **kwargs
+    )
+
+def gem5_gen_enums_srcs(name, simobj_files, **kwargs):
+    """Generate all enums/*.cc sources."""
+    _gen_params(
+        name = name,
+        output_type = "enums_srcs",
+        simobj_files = simobj_files,
+        **kwargs
+    )
+
+# ---------------------------------------------------------------------------
 # Aggregate SimObject generation (discovers all SimObjects via m5.objects)
+# DEPRECATED: Use gem5_gen_params_hdrs/gem5_gen_params_srcs instead.
 # ---------------------------------------------------------------------------
 
 def _sim_object_aggregate_gen_impl(ctx):

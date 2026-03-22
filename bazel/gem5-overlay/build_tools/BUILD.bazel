@@ -75,6 +75,23 @@ filegroup(
     srcs = glob(["*.py"]),
 )
 
+# -- Standalone param generation tool --
+# Uses system Python (no gem5py_m5) for SimObject param/enum generation.
+# Supports per-bucket filtered output via --file-filter/--file-exclude.
+py_binary(
+    name = "gen_all_params",
+    srcs = ["gen_all_params.py"],
+    deps = [":build_tools_lib"],
+    data = [
+        "sim_object_param_struct_hh.py",
+        "sim_object_param_struct_cc.py",
+        "enum_hh.py",
+        "enum_cc.py",
+        "cxx_config_hh.py",
+        "cxx_config_cc.py",
+    ],
+)
+
 # -- Phase 2 tools (require gem5py_m5 as interpreter) --
 # These are exported as filegroups since they are executed via
 # gem5py_m5 rather than as standalone py_binary targets.

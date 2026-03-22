@@ -413,3 +413,58 @@ def simobject_path_to_label(path):
 def simobject_paths_to_labels(paths):
     """Convert a list of SimObject .py file paths to Bazel labels."""
     return [simobject_path_to_label(p) for p in paths]
+
+# ---------------------------------------------------------------------------
+# Per-bucket param filename patterns for gen_all_params.py --file-filter
+# ---------------------------------------------------------------------------
+# These patterns are derived from the ISA/feature-specific SimObject file
+# lists above. For each .py file "src/.../FooBar.py", the generated param
+# source is "param_FooBar.cc". The patterns use fnmatch wildcards.
+
+def _py_to_param_pattern(py_path):
+    """Convert 'src/.../FooBar.py' to 'param_FooBar.cc'."""
+    basename = py_path.rsplit("/", 1)[-1]
+    stem = basename.rsplit(".", 1)[0]
+    return "param_{}.cc".format(stem)
+
+def _py_list_to_param_patterns(py_list):
+    """Convert list of .py paths to comma-separated param_*.cc patterns."""
+    return ",".join([_py_to_param_pattern(p) for p in py_list])
+
+def _py_to_enum_pattern(py_path):
+    """Convert 'src/.../FooBar.py' to basename for enum matching."""
+    basename = py_path.rsplit("/", 1)[-1]
+    return basename.rsplit(".", 1)[0]
+
+# Per-bucket filter pattern strings (comma-separated, for --file-filter)
+PARAM_FILTER_X86 = _py_list_to_param_patterns(SIMOBJECT_PY_FILES_X86)
+PARAM_FILTER_ARM = _py_list_to_param_patterns(SIMOBJECT_PY_FILES_ARM)
+PARAM_FILTER_RISCV = _py_list_to_param_patterns(SIMOBJECT_PY_FILES_RISCV)
+PARAM_FILTER_MIPS = _py_list_to_param_patterns(SIMOBJECT_PY_FILES_MIPS)
+PARAM_FILTER_POWER = _py_list_to_param_patterns(SIMOBJECT_PY_FILES_POWER)
+PARAM_FILTER_SPARC = _py_list_to_param_patterns(SIMOBJECT_PY_FILES_SPARC)
+PARAM_FILTER_RUBY = _py_list_to_param_patterns(SIMOBJECT_PY_FILES_RUBY)
+PARAM_FILTER_RUBY_GPU = _py_list_to_param_patterns(SIMOBJECT_PY_FILES_RUBY_GPU)
+PARAM_FILTER_GPU = _py_list_to_param_patterns(SIMOBJECT_PY_FILES_GPU)
+PARAM_FILTER_SYSTEMC = _py_list_to_param_patterns(SIMOBJECT_PY_FILES_SYSTEMC)
+PARAM_FILTER_CHI = _py_list_to_param_patterns(SIMOBJECT_PY_FILES_CHI)
+
+# Union of all non-common patterns (for --file-exclude on common bucket)
+PARAM_EXCLUDE_ALL_ISA_FEATURES = ",".join([
+    p
+    for lst in [
+        PARAM_FILTER_X86,
+        PARAM_FILTER_ARM,
+        PARAM_FILTER_RISCV,
+        PARAM_FILTER_MIPS,
+        PARAM_FILTER_POWER,
+        PARAM_FILTER_SPARC,
+        PARAM_FILTER_RUBY,
+        PARAM_FILTER_RUBY_GPU,
+        PARAM_FILTER_GPU,
+        PARAM_FILTER_SYSTEMC,
+        PARAM_FILTER_CHI,
+    ]
+    for p in [lst]
+    if p
+])
