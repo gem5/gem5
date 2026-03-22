@@ -141,17 +141,30 @@ Source .cc files
     v
 Per-subsystem cc_library (//src/sim:sim, //src/cpu:cpu, ...)
     |
-    v                                    SimObject .py files
-gem5_all cc_library  <---  Aggregate generation (current active path):
-    |                      sim_object_params (headers via gem5py_m5)
-    v                      sim_object_params_srcs (compiled .cc)
+    v                                SimObject .py files
+gem5_all cc_library  <---  Per-bucket generation (active path):
+    |                      sim_object_params_bucket (headers)
+    v                      sim_object_params_bucket_srcs (per-bucket .cc)
 gem5 binary                + gem5_simobject_pysources (embedded Python)
+                           + slicc_sim_object_params (SLICC bridge, gem5py_m5)
 ```
 
-**Current state:** Bazel uses `gem5_sim_object_aggregate()` with `gem5py_m5` for
-SimObject param generation. Per-bucket targets (`sim_object_x86_lib`, etc.) exist
-alongside but are not yet wired into `gem5_all` due to a known limitation with
-filename-based bucket filtering (see Design Rationale below).
+**Current state:** Bazel uses per-bucket generation via `gen_all_params.py`
+with system Python and `--source-bucket` class-based filtering. Each class's
+bucket is derived from the defining `.py` file's path. `gem5_all` depends on
+`sim_object_params_bucket` (headers) and `sim_object_params_bucket_srcs`
+(per-bucket compiled sources with `select()` gating).
+
+**SLICC bridge:** SLICC-generated SimObjects (protocol controllers like
+`L1Cache_Controller`) are handled by a separate `slicc_sim_object_params`
+target that uses `gem5py_m5`, because SLICC `.py` files are build-time
+generated and not available to `gen_all_params.py`. The per-bucket header
+target depends on this bridge for protocol controller param headers.
+
+**Feature-gated files:** CHI, KVM, protobuf, capstone, and DRAMsim3
+SimObject files are included in `_ALL_SIMOBJ_PY_SRCS` via `select()`
+expressions, so they're only processed when their corresponding config
+flag is enabled.
 
 ### Overlay pattern
 
@@ -238,29 +251,30 @@ Configuration uses native Bazel flags:
   configuration flags. Disabled ISAs are never compiled. Each bucket
   is small enough for fast incremental rebuilds.
 
-### Why system Python for Bazel param generation (future)
+### Why system Python for Bazel param generation
 
 The C++ `gem5py_m5` embedded interpreter is heavyweight (~30s build)
-and unnecessary for param generation. The generation scripts only use
-pure Python m5 modules. `build_tools/gen_all_params.py` demonstrates
-system-Python-based generation that works standalone. Full Bazel
-integration is blocked by a filename-based filtering limitation (see below).
+and unnecessary for non-SLICC param generation. `gen_all_params.py`
+uses system Python with `--source-bucket` class-based filtering: each
+SimObject class's bucket is derived from the defining `.py` file's path
+(same logic as CMake's `_gem5_derive_bucket()`). This correctly handles
+multi-class-per-file SimObjects (e.g., `BaseRoutingUnit` defined in
+`SimpleNetwork.py` under `src/mem/ruby/` gets bucket `ruby`).
 
-### Filename-based bucket filtering limitation
+SLICC-generated SimObjects still require `gem5py_m5` because SLICC `.py`
+files are build-time generated. This is handled by the `slicc_sim_object_params`
+bridge target.
 
-The per-bucket `--file-filter`/`--file-exclude` approach maps `.py`
-filenames to expected `param_*.cc` filenames. This breaks when a single
-`.py` file defines multiple SimObject classes with different names (e.g.,
-`SimpleNetwork.py` defines both `SimpleNetwork` and `BaseRoutingUnit`).
-The generated `param_BaseRoutingUnit.cc` doesn't match any pattern derived
-from `.py` filenames, causing it to leak into the `common` bucket where
-its Ruby protocol header deps are missing.
+### CMake design note: central vs subsystem linking
 
-**CMake is unaffected** because bucket classification is done at
-`gem5_add_simobject()` call time based on the calling directory, not
-the generated filename. **Bazel needs class-based filtering** (matching
-generated filenames to their defining `.py` file's bucket) which requires
-build-time class discovery. This is a future enhancement.
+The original plan called for per-bucket OBJECT libraries to be linked
+by their owning subsystem STATIC libraries (e.g., `gem5_arch_x86`
+links `gem5_gen_x86`). The actual implementation injects all per-bucket
+OBJECT library objects directly into `gem5_all` and the gem5 executable
+via `$<TARGET_OBJECTS:...>` in `Gem5Targets.cmake`. This is functionally
+equivalent and simpler: bucket OBJECT libraries don't need subsystem
+ownership metadata, and the whole-archive link ensures all factory
+constructors are preserved regardless of which target includes them.
 
 ### Comparison with bazel branch (PR #3004)
 
