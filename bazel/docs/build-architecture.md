@@ -142,11 +142,16 @@ Source .cc files
 Per-subsystem cc_library (//src/sim:sim, //src/cpu:cpu, ...)
     |
     v                                    SimObject .py files
-gem5_all cc_library  <---  Per-bucket generation:
-    |                      sim_object_params (headers)
-    v                      sim_object_<bucket>_lib (compiled per-bucket .cc)
+gem5_all cc_library  <---  Aggregate generation (current active path):
+    |                      sim_object_params (headers via gem5py_m5)
+    v                      sim_object_params_srcs (compiled .cc)
 gem5 binary                + gem5_simobject_pysources (embedded Python)
 ```
+
+**Current state:** Bazel uses `gem5_sim_object_aggregate()` with `gem5py_m5` for
+SimObject param generation. Per-bucket targets (`sim_object_x86_lib`, etc.) exist
+alongside but are not yet wired into `gem5_all` due to a known limitation with
+filename-based bucket filtering (see Design Rationale below).
 
 ### Overlay pattern
 
@@ -233,15 +238,29 @@ Configuration uses native Bazel flags:
   configuration flags. Disabled ISAs are never compiled. Each bucket
   is small enough for fast incremental rebuilds.
 
-### Why system Python for Bazel param generation
+### Why system Python for Bazel param generation (future)
 
 The C++ `gem5py_m5` embedded interpreter is heavyweight (~30s build)
 and unnecessary for param generation. The generation scripts only use
-pure Python m5 modules. Using system Python with a custom import hook
-enables:
-- Faster builds (no gem5py_m5 compilation for param gen)
-- Hermetic sandbox builds (each bucket generates independently)
-- Parallel generation (Bazel actions run in parallel)
+pure Python m5 modules. `build_tools/gen_all_params.py` demonstrates
+system-Python-based generation that works standalone. Full Bazel
+integration is blocked by a filename-based filtering limitation (see below).
+
+### Filename-based bucket filtering limitation
+
+The per-bucket `--file-filter`/`--file-exclude` approach maps `.py`
+filenames to expected `param_*.cc` filenames. This breaks when a single
+`.py` file defines multiple SimObject classes with different names (e.g.,
+`SimpleNetwork.py` defines both `SimpleNetwork` and `BaseRoutingUnit`).
+The generated `param_BaseRoutingUnit.cc` doesn't match any pattern derived
+from `.py` filenames, causing it to leak into the `common` bucket where
+its Ruby protocol header deps are missing.
+
+**CMake is unaffected** because bucket classification is done at
+`gem5_add_simobject()` call time based on the calling directory, not
+the generated filename. **Bazel needs class-based filtering** (matching
+generated filenames to their defining `.py` file's bucket) which requires
+build-time class discovery. This is a future enhancement.
 
 ### Comparison with bazel branch (PR #3004)
 
