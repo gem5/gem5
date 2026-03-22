@@ -394,9 +394,7 @@ _SIMOBJ_PY_FILES = SIMOBJECT_PY_FILES_BASE + select({
 }) + select({
     "//configs:ruby_gpu_enabled": SIMOBJECT_PY_FILES_RUBY_GPU,
     "//conditions:default": [],
-}) + select({
-    "//configs:semihosting_isa_enabled": ["src/arch/generic/BaseSemihosting.py"],
-    "//conditions:default": [],
+# BaseSemihosting.py moved to SIMOBJECT_PY_FILES_BASE (always included)
 }) + select({
     "//configs:dramsim3_enabled": ["src/mem/DRAMsim3.py"],
     "//conditions:default": [],
@@ -470,9 +468,6 @@ _SIMOBJ_PY_SRCS = simobject_paths_to_labels(SIMOBJECT_PY_FILES_BASE) + select({
     "//conditions:default": [],
 }) + select({
     "//configs:ruby_gpu_enabled": simobject_paths_to_labels(SIMOBJECT_PY_FILES_RUBY_GPU),
-    "//conditions:default": [],
-}) + select({
-    "//configs:semihosting_isa_enabled": ["//src/arch/generic:BaseSemihosting.py"],
     "//conditions:default": [],
 }) + select({
     "//configs:dramsim3_enabled": ["//src/mem:DRAMsim3.py"],
@@ -998,12 +993,8 @@ gem5_simobject_pysources(
     deps = _SIMOBJ_PY_DEPS,
 )
 
-gem5_simobject_pysources(
-    name = "simobject_pysources_semihosting",
-    simobject_py_files = ["src/arch/generic/BaseSemihosting.py"],
-    simobject_py_srcs = ["//src/arch/generic:BaseSemihosting.py"],
-    deps = _SIMOBJ_PY_DEPS,
-)
+# simobject_pysources_semihosting removed: BaseSemihosting.py is now in
+# SIMOBJECT_PY_FILES_BASE, embedded via simobject_pysources_base.
 
 gem5_simobject_pysources(
     name = "simobject_pysources_ruby",
@@ -1200,9 +1191,7 @@ cc_library(
             "//:simobject_pysources_sparc",
         ],
         "//conditions:default": [],
-    }) + select({
-        "//configs:semihosting_isa_enabled": ["//:simobject_pysources_semihosting"],
-        "//conditions:default": [],
+    # BaseSemihosting pysource now in simobject_pysources_base
     }) + select({
         # ---- ISA-conditional device libraries ----
         "//configs:arm_isa_enabled": ["//src/dev/arm:dev_arm"],
