@@ -45,39 +45,46 @@ NUM_PROCESSES = 10
 
 multisim.set_num_processes(NUM_PROCESSES)
 
+core_types = [CPUTypes.ATOMIC, CPUTypes.TIMING, CPUTypes.O3]
+for start_type in core_types:
+    for switch_type in core_types:
 
-for npb_workload in ["bt", "cg", "ep"]:
+        if start_type == switch_type:
+            continue
 
-    cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
-        l1d_size="16KiB",
-        l1i_size="16KiB",
-        l2_size="256KiB",
-    )
-    memory = SingleChannelDDR3_1600(size="3GiB")
-    processor = SimpleSwitchableProcessor(
-        starting_core_type=CPUTypes.ATOMIC,
-        switch_core_type=CPUTypes.TIMING,
-        isa=ISA.X86,
-        num_cores=1,
-    )
-
-    board = X86Board(
-        clk_freq="3GHz",
-        processor=processor,
-        memory=memory,
-        cache_hierarchy=cache_hierarchy,
-    )
-
-    board.set_workload(
-        obtain_resource(
-            f"x86-ubuntu-24.04-npb-{npb_workload}-s", resource_version="3.0.0"
+        cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
+            l1d_size="16KiB",
+            l1i_size="16KiB",
+            l2_size="256KiB",
         )
-    )
+        memory = SingleChannelDDR3_1600(size="3GiB")
+        processor = SimpleSwitchableProcessor(
+            starting_core_type=start_type,
+            switch_core_type=switch_type,
+            isa=ISA.X86,
+            num_cores=1,
+        )
 
-    simulator = Simulator(board=board, id=f"process_x86_npb_{npb_workload}_s")
-    print(f"In config script. simulator: {simulator}")
+        board = X86Board(
+            clk_freq="3GHz",
+            processor=processor,
+            memory=memory,
+            cache_hierarchy=cache_hierarchy,
+        )
 
-    multisim.add_simulator(simulator)
+        board.set_workload(
+            obtain_resource(
+                f"x86-ubuntu-24.04-boot-no-systemd", resource_version="4.0.0"
+            )
+        )
+
+        simulator = Simulator(
+            board=board,
+            id=f"process_{start_type.value}-to-{switch_type.value}-switch-test",
+        )
+        print(f"In config script. simulator: {simulator}")
+
+        multisim.add_simulator(simulator)
 
 
 class KernelBootProcessorSwitch(KernelBootedExitHandler):
