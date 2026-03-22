@@ -242,9 +242,49 @@ function(gem5_add_pysource package pyfile)
 endfunction()
 
 # ---------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# _gem5_derive_bucket(<dir> <out_var>)
+#
+# Derive the config-aligned bucket name from a source directory path.
+# Used by gem5_add_simobject() to auto-classify generated code.
+# ---------------------------------------------------------------------------
+function(_gem5_derive_bucket dir out_var)
+    # Convert to relative path from source root for matching
+    file(RELATIVE_PATH _rel "${CMAKE_SOURCE_DIR}" "${dir}")
+
+    if(_rel MATCHES "^src/arch/x86/" OR _rel MATCHES "^src/dev/x86/")
+        set(${out_var} "x86" PARENT_SCOPE)
+    elseif(_rel MATCHES "^src/arch/arm/" OR _rel MATCHES "^src/dev/arm/")
+        set(${out_var} "arm" PARENT_SCOPE)
+    elseif(_rel MATCHES "^src/arch/riscv/" OR _rel MATCHES "^src/dev/riscv/"
+           OR _rel MATCHES "^src/dev/lupio/")
+        set(${out_var} "riscv" PARENT_SCOPE)
+    elseif(_rel MATCHES "^src/arch/mips/" OR _rel MATCHES "^src/dev/mips/")
+        set(${out_var} "mips" PARENT_SCOPE)
+    elseif(_rel MATCHES "^src/arch/power/")
+        set(${out_var} "power" PARENT_SCOPE)
+    elseif(_rel MATCHES "^src/arch/sparc/" OR _rel MATCHES "^src/dev/sparc/")
+        set(${out_var} "sparc" PARENT_SCOPE)
+    elseif(_rel MATCHES "^src/arch/amdgpu/" OR _rel MATCHES "^src/gpu-compute/"
+           OR _rel MATCHES "^src/dev/hsa/" OR _rel MATCHES "^src/dev/amdgpu/")
+        set(${out_var} "gpu" PARENT_SCOPE)
+    elseif(_rel MATCHES "^src/mem/ruby/")
+        set(${out_var} "ruby" PARENT_SCOPE)
+    elseif(_rel MATCHES "^src/systemc/")
+        set(${out_var} "systemc" PARENT_SCOPE)
+    elseif(_rel MATCHES "^src/cpu/kvm/")
+        set(${out_var} "kvm" PARENT_SCOPE)
+    elseif(_rel MATCHES "^src/test_objects/")
+        set(${out_var} "test_objects" PARENT_SCOPE)
+    else()
+        set(${out_var} "common" PARENT_SCOPE)
+    endif()
+endfunction()
+
 # gem5_add_simobject(<pyfile>
 #     [SIM_OBJECTS obj1 obj2 ...]
-#     [ENUMS enum1 enum2 ...])
+#     [ENUMS enum1 enum2 ...]
+#     [BUCKET <bucket>])
 #
 # Generate SimObject param structures, pybind11 bindings, and enums.
 #
@@ -259,42 +299,52 @@ endfunction()
 # For each ENUM, generates:
 #   - ${GEM5_GEN_DIR}/enums/${enum}.hh
 #   - ${GEM5_GEN_DIR}/enums/${enum}.cc
+#
+# BUCKET: config-aligned bucket for per-bucket compilation.
+#   Auto-derived from directory if not specified.
+#   Possible values: common, x86, arm, riscv, mips, power, sparc,
+#                    ruby, gpu, systemc, kvm, test_objects
 # ---------------------------------------------------------------------------
 function(gem5_add_simobject pyfile)
-    cmake_parse_arguments(ARG "" "" "SIM_OBJECTS;ENUMS" ${ARGN})
+    cmake_parse_arguments(ARG "" "BUCKET" "SIM_OBJECTS;ENUMS" ${ARGN})
 
     if(NOT IS_ABSOLUTE "${pyfile}")
         set(pyfile "${CMAKE_CURRENT_SOURCE_DIR}/${pyfile}")
     endif()
 
     # SimObject .py files are always in the m5.objects package (matching SCons).
-    # In SCons, SimObject extends PySource and calls PySource.__init__('m5.objects', source).
-    # We must also register as a PySource so gem5py_m5 can import the module.
     get_filename_component(_basename "${pyfile}" NAME_WE)
     set(_modpath "m5.objects.${_basename}")
 
-    # Register as PySource in m5.objects package (SimObject extends PySource in SCons)
+    # Register as PySource in m5.objects package
     gem5_add_pysource("m5.objects" "${pyfile}")
+
+    # Determine bucket: explicit or auto-derived from calling directory.
+    if(ARG_BUCKET)
+        set(_bucket "${ARG_BUCKET}")
+    else()
+        _gem5_derive_bucket("${CMAKE_CURRENT_SOURCE_DIR}" _bucket)
+    endif()
 
     # Store metadata for deferred custom command creation.
     # Custom commands are created centrally via gem5_create_simobject_commands()
     # at the top level to avoid CMake/Ninja cross-directory stub issues.
+    #
+    # NOTE: generated .cc files are NOT registered in GEM5_GENERATED_SOURCES.
+    # Instead, they go into per-bucket OBJECT libraries created by
+    # gem5_create_simobject_commands().
     foreach(_obj ${ARG_SIM_OBJECTS})
         set_property(GLOBAL APPEND PROPERTY GEM5_SIMOBJ_PARAM_NAMES "${_obj}")
         set_property(GLOBAL APPEND PROPERTY GEM5_SIMOBJ_PARAM_MODPATHS "${_modpath}")
         set_property(GLOBAL APPEND PROPERTY GEM5_SIMOBJ_PARAM_PYFILES "${pyfile}")
-
-        # Register generated .cc as source (will be created by deferred commands)
-        gem5_add_generated_source("${GEM5_GEN_DIR}/python/_m5/param_${_obj}.cc")
+        set_property(GLOBAL APPEND PROPERTY GEM5_SIMOBJ_PARAM_BUCKETS "${_bucket}")
     endforeach()
 
     foreach(_enum ${ARG_ENUMS})
         set_property(GLOBAL APPEND PROPERTY GEM5_SIMOBJ_ENUM_NAMES "${_enum}")
         set_property(GLOBAL APPEND PROPERTY GEM5_SIMOBJ_ENUM_MODPATHS "${_modpath}")
         set_property(GLOBAL APPEND PROPERTY GEM5_SIMOBJ_ENUM_PYFILES "${pyfile}")
-
-        # Register generated .cc as source
-        gem5_add_generated_source("${GEM5_GEN_DIR}/enums/${_enum}.cc")
+        set_property(GLOBAL APPEND PROPERTY GEM5_SIMOBJ_ENUM_BUCKETS "${_bucket}")
     endforeach()
 endfunction()
 
@@ -689,6 +739,7 @@ function(gem5_create_simobject_commands)
     get_property(_names GLOBAL PROPERTY GEM5_SIMOBJ_PARAM_NAMES)
     get_property(_modpaths GLOBAL PROPERTY GEM5_SIMOBJ_PARAM_MODPATHS)
     get_property(_pyfiles GLOBAL PROPERTY GEM5_SIMOBJ_PARAM_PYFILES)
+    get_property(_buckets GLOBAL PROPERTY GEM5_SIMOBJ_PARAM_BUCKETS)
 
     list(LENGTH _names _count)
     if(_count GREATER 0)
@@ -697,6 +748,7 @@ function(gem5_create_simobject_commands)
             list(GET _names ${_i} _obj)
             list(GET _modpaths ${_i} _modpath)
             list(GET _pyfiles ${_i} _pyfile)
+            list(GET _buckets ${_i} _bucket)
 
             set(_param_hh "${GEM5_GEN_DIR}/params/${_obj}.hh")
             set(_param_cc "${GEM5_GEN_DIR}/python/_m5/param_${_obj}.cc")
@@ -725,10 +777,16 @@ function(gem5_create_simobject_commands)
                 VERBATIM
             )
 
-            # Generate cxx_config header/source when C++ config is enabled.
-            # In SCons, cxx_config .hh/.cc are always generated but the .cc
-            # is only compiled when --with-cxx-config is set. Here we only
-            # generate them when the option is ON.
+            # Track param .cc for per-bucket grouping
+            set_property(GLOBAL APPEND PROPERTY
+                "GEM5_GENBUCKET_${_bucket}" "${_param_cc}")
+            # Track unique bucket names
+            get_property(_known_buckets GLOBAL PROPERTY GEM5_GENBUCKET_NAMES)
+            if(NOT "${_bucket}" IN_LIST _known_buckets)
+                set_property(GLOBAL APPEND PROPERTY
+                    GEM5_GENBUCKET_NAMES "${_bucket}")
+            endif()
+
             if(GEM5_WITH_CXX_CONFIG)
                 gem5_add_cxx_config("${_obj}" "${_modpath}")
             endif()
@@ -744,6 +802,7 @@ function(gem5_create_simobject_commands)
     get_property(_enames GLOBAL PROPERTY GEM5_SIMOBJ_ENUM_NAMES)
     get_property(_emodpaths GLOBAL PROPERTY GEM5_SIMOBJ_ENUM_MODPATHS)
     get_property(_epyfiles GLOBAL PROPERTY GEM5_SIMOBJ_ENUM_PYFILES)
+    get_property(_ebuckets GLOBAL PROPERTY GEM5_SIMOBJ_ENUM_BUCKETS)
 
     list(LENGTH _enames _ecount)
     if(_ecount GREATER 0)
@@ -752,6 +811,7 @@ function(gem5_create_simobject_commands)
             list(GET _enames ${_i} _enum)
             list(GET _emodpaths ${_i} _modpath)
             list(GET _epyfiles ${_i} _pyfile)
+            list(GET _ebuckets ${_i} _bucket)
 
             set(_enum_hh "${GEM5_GEN_DIR}/enums/${_enum}.hh")
             set(_enum_cc "${GEM5_GEN_DIR}/enums/${_enum}.cc")
@@ -779,16 +839,21 @@ function(gem5_create_simobject_commands)
                 COMMENT "Generating enum source: enums/${_enum}.cc"
                 VERBATIM
             )
+
+            # Track enum .cc for per-bucket grouping
+            set_property(GLOBAL APPEND PROPERTY
+                "GEM5_GENBUCKET_${_bucket}" "${_enum_cc}")
+            get_property(_known_buckets GLOBAL PROPERTY GEM5_GENBUCKET_NAMES)
+            if(NOT "${_bucket}" IN_LIST _known_buckets)
+                set_property(GLOBAL APPEND PROPERTY
+                    GEM5_GENBUCKET_NAMES "${_bucket}")
+            endif()
         endforeach()
     endif()
 
     message(STATUS "Created ${_ecount} SimObject enum custom commands")
 
     # --- Umbrella target for all SimObject codegen headers ---
-    # OBJECT libraries include generated enums/*.hh and params/*.hh headers
-    # but have no direct dependency on the custom commands that produce them.
-    # Create a single umbrella target so Gem5Targets.cmake can add it as a
-    # dependency of every OBJECT library (same pattern as Phase 1 targets).
     set(_all_simobj_headers "")
     if(_count GREATER 0)
         math(EXPR _last2 "${_count} - 1")
@@ -808,6 +873,41 @@ function(gem5_create_simobject_commands)
         add_custom_target(gen_simobj_codegen DEPENDS ${_all_simobj_headers})
         set_property(GLOBAL PROPERTY GEM5_SIMOBJ_CODEGEN_TARGET "gen_simobj_codegen")
     endif()
+
+    # --- Per-bucket OBJECT libraries for generated param/enum .cc ---
+    # Each bucket gets its own OBJECT library so that disabled ISA/feature
+    # params are never compiled.
+    get_property(_all_bucket_names GLOBAL PROPERTY GEM5_GENBUCKET_NAMES)
+    foreach(_bucket ${_all_bucket_names})
+        get_property(_bucket_srcs GLOBAL PROPERTY "GEM5_GENBUCKET_${_bucket}")
+        if(_bucket_srcs)
+            set(_target "gem5_gen_${_bucket}")
+            add_library(${_target} OBJECT ${_bucket_srcs})
+            target_link_libraries(${_target} PRIVATE gem5_deps)
+            if(NOT GEM5_WITHOUT_PYTHON)
+                target_link_libraries(${_target} PRIVATE pybind11::pybind11)
+            endif()
+            target_compile_options(${_target} PRIVATE ${GEM5_WERROR_FLAGS})
+            set_target_properties(${_target} PROPERTIES
+                POSITION_INDEPENDENT_CODE ON)
+            if(TARGET gen_simobj_codegen)
+                add_dependencies(${_target} gen_simobj_codegen)
+            endif()
+            # Also propagate Phase 1 codegen deps (debug flags, ISA parser)
+            get_property(_phase1 GLOBAL PROPERTY GEM5_CODEGEN_TARGETS_PHASE1)
+            if(_phase1)
+                add_dependencies(${_target} ${_phase1})
+            endif()
+            get_property(_slicc GLOBAL PROPERTY GEM5_SLICC_TARGETS)
+            if(_slicc)
+                add_dependencies(${_target} ${_slicc})
+            endif()
+
+            set_property(GLOBAL APPEND PROPERTY GEM5_GEN_BUCKET_LIBS "${_target}")
+            list(LENGTH _bucket_srcs _nsrcs)
+            message(STATUS "  Bucket ${_bucket}: ${_target} (${_nsrcs} sources)")
+        endif()
+    endforeach()
 endfunction()
 
 # ---------------------------------------------------------------------------

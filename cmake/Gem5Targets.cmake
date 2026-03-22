@@ -6,9 +6,10 @@
 
 include(CTest)
 
-# Generated sources (debug flags, SimObject params, etc.) are compiled
-# centrally in a STATIC library. Using STATIC (not OBJECT) allows
-# individual whole-archive linking into the gem5 executable.
+# Non-SimObject generated sources (debug flags, blobs, protobuf) are compiled
+# in a STATIC library. SimObject param/enum .cc files are now in per-bucket
+# OBJECT libraries (gem5_gen_<bucket>) created by gem5_create_simobject_commands()
+# in Gem5CodeGen.cmake.
 get_property(_gen_srcs GLOBAL PROPERTY GEM5_GENERATED_SOURCES)
 if(_gen_srcs)
     add_library(gem5_generated STATIC ${_gen_srcs})
@@ -181,6 +182,14 @@ if(_codegen_deps)
     if(TARGET gem5_generated)
         add_dependencies(gem5_generated ${_codegen_deps})
     endif()
+    # Per-bucket generated OBJECT libs already have codegen deps set
+    # in gem5_create_simobject_commands(), but propagate here too for safety.
+    get_property(_gen_bucket_libs GLOBAL PROPERTY GEM5_GEN_BUCKET_LIBS)
+    foreach(_genlib ${_gen_bucket_libs})
+        if(TARGET ${_genlib})
+            add_dependencies(${_genlib} ${_codegen_deps})
+        endif()
+    endforeach()
 endif()
 
 # ---------------------------------------------------------------------------
@@ -208,14 +217,21 @@ include(Gem5Subsystems)
 # (no circular dependency issue since all objects are in one archive).
 gem5_get_subsystem_libs(_subsystem_libs)
 
+# Collect per-bucket generated OBJECT library objects for linking.
+get_property(_gen_bucket_libs GLOBAL PROPERTY GEM5_GEN_BUCKET_LIBS)
+set(_gen_bucket_objects "")
+foreach(_genlib ${_gen_bucket_libs})
+    if(TARGET ${_genlib})
+        list(APPEND _gen_bucket_objects "$<TARGET_OBJECTS:${_genlib}>")
+    endif()
+endforeach()
+
 if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.24" AND NOT APPLE)
     # CMake 3.24+: thin archive with subsystem STATICs linked via RESCAN
-    # (--start-group / --end-group) to resolve circular dependencies
-    # (e.g., gem5_base references gem5_sim::print_backtrace and vice versa).
-    # Apple's linker does not support --start-group/--end-group, so macOS
-    # always uses the OBJECT-sources fallback path below.
+    # (--start-group / --end-group) to resolve circular dependencies.
     add_library(gem5_all STATIC
         "${CMAKE_SOURCE_DIR}/src/base/date.cc"
+        ${_gen_bucket_objects}
     )
     set(_gem5_all_link_libs ${_subsystem_libs})
     if(TARGET gem5_generated)
@@ -228,12 +244,11 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.24" AND NOT APPLE)
         "$<LINK_GROUP:RESCAN,${_gem5_all_link_libs}>"
     )
 else()
-    # CMake < 3.24 fallback: compose from raw OBJECT sources (no circular
-    # dependency issue since all objects are in one archive) and link
-    # subsystem STATICs for their scoped ext/ library dependencies.
+    # CMake < 3.24 fallback: compose from raw OBJECT sources.
     gem5_get_all_object_sources(_all_obj_sources)
     add_library(gem5_all STATIC
         ${_all_obj_sources}
+        ${_gen_bucket_objects}
         "${CMAKE_SOURCE_DIR}/src/base/date.cc"
     )
     target_link_libraries(gem5_all PUBLIC ${_subsystem_libs})
@@ -264,6 +279,17 @@ function(_gem5_link_all_whole_archive target visibility)
     if(NOT GEM5_WITHOUT_PYTHON)
         gem5_target_link_whole_archive(${target} ${visibility} gem5_pysources)
     endif()
+    # Per-bucket generated OBJECT libs: link their objects directly.
+    # OBJECT libraries cannot be whole-archive linked (they're not archives),
+    # but their objects are already included in gem5_all/gem5 via
+    # $<TARGET_OBJECTS:...> above. For the gem5 executable (which does
+    # per-subsystem whole-archive), we link them as plain objects.
+    foreach(_genlib ${_gen_bucket_libs})
+        if(TARGET ${_genlib})
+            target_sources(${target} ${visibility}
+                "$<TARGET_OBJECTS:${_genlib}>")
+        endif()
+    endforeach()
 endfunction()
 
 # ---------------------------------------------------------------------------
