@@ -145,8 +145,17 @@ def _gen_params_impl(ctx):
     """
     output_dir = ctx.actions.declare_directory(ctx.label.name)
 
+    # Determine the source root from the workspace layout.
+    # In the overlay repository, src/python/m5/ and build_tools/ are at
+    # the repo root. ctx.label.workspace_root gives the execution-root-
+    # relative path to this repo (e.g., "external/gem5_sources" or ".").
+    ws_root = ctx.label.workspace_root
+    if not ws_root:
+        ws_root = "."
+
     args = ctx.actions.args()
-    args.add("--src-root", ctx.file._src_root.dirname)
+    args.add("--src-root", ws_root)
+    args.add("--build-tools-dir", ws_root + "/build_tools")
     args.add("--output-dir", output_dir.path)
     args.add("--output-type", ctx.attr.output_type)
     if ctx.attr.use_python:
@@ -158,15 +167,27 @@ def _gen_params_impl(ctx):
     if ctx.attr.file_exclude:
         args.add("--file-exclude", ctx.attr.file_exclude)
 
-    # Pass explicit SimObject file list if provided
+    # Pass explicit SimObject file list (repo-relative paths).
     if ctx.attr.simobj_files:
-        args.add_all("--simobj-files", ctx.files.simobj_files)
+        args.add_all(
+            "--simobj-files",
+            ctx.files.simobj_files,
+            map_each = lambda f: f.path,
+        )
+
+    # Collect all inputs: SimObject .py files, m5 Python package,
+    # and build_tools scripts.
+    inputs = (
+        ctx.files.simobj_files +
+        ctx.files._m5_python +
+        ctx.files._build_tools
+    )
 
     ctx.actions.run(
         executable = ctx.executable._gen_all_params,
         arguments = [args],
         outputs = [output_dir],
-        inputs = ctx.files.simobj_files + ctx.files._m5_python + [ctx.file._src_root],
+        inputs = inputs,
         mnemonic = "Gem5GenParams",
         progress_message = "Generating SimObject params (%s, %s)" % (
             ctx.attr.output_type,
@@ -201,17 +222,17 @@ _gen_params = rule(
         "_m5_python": attr.label(
             default = "//src/python:m5_python_files",
             allow_files = True,
-            doc = "m5 Python package files (for PYTHONPATH).",
+            doc = "m5 Python package files.",
+        ),
+        "_build_tools": attr.label(
+            default = "//build_tools:build_tools_files",
+            allow_files = True,
+            doc = "build_tools Python scripts.",
         ),
         "_gen_all_params": attr.label(
             default = "//build_tools:gen_all_params",
             executable = True,
             cfg = "exec",
-        ),
-        "_src_root": attr.label(
-            default = "//:MODULE.bazel",
-            allow_single_file = True,
-            doc = "Anchor for determining source root path.",
         ),
     },
 )

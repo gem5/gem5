@@ -13,6 +13,10 @@ load(
     "gem5_config_header",
     "gem5_config_header_namespace",
     "gem5_config_header_string",
+    "gem5_gen_enums_hdrs",
+    "gem5_gen_enums_srcs",
+    "gem5_gen_params_hdrs",
+    "gem5_gen_params_srcs",
     "gem5_sim_object_aggregate",
     "gem5_simobject_pysources",
     "gem5_switching_headers",
@@ -20,6 +24,17 @@ load(
 load("//rules:debug_flags_all.bzl", "ALL_DEBUG_FLAGS")
 load(
     "//rules:simobject_py_files.bzl",
+    "PARAM_EXCLUDE_ALL_ISA_FEATURES",
+    "PARAM_FILTER_ARM",
+    "PARAM_FILTER_GPU",
+    "PARAM_FILTER_MIPS",
+    "PARAM_FILTER_POWER",
+    "PARAM_FILTER_RISCV",
+    "PARAM_FILTER_RUBY",
+    "PARAM_FILTER_RUBY_GPU",
+    "PARAM_FILTER_SPARC",
+    "PARAM_FILTER_SYSTEMC",
+    "PARAM_FILTER_X86",
     "SIMOBJECT_PY_FILES_ARM",
     "SIMOBJECT_PY_FILES_BASE",
     "SIMOBJECT_PY_FILES_GPU",
@@ -580,6 +595,240 @@ gem5_sim_object_aggregate(
         ],
         "//conditions:default": [],
     }),
+)
+
+# ---------------------------------------------------------------------------
+# Per-bucket SimObject param generation (via gen_all_params.py / system Python)
+#
+# These targets replace gem5_sim_object_aggregate with per-bucket generation.
+# Each bucket generates only the param_*.cc files for its ISA/feature set.
+# Headers are generated in one shared pass (all SimObjects need all headers).
+# ---------------------------------------------------------------------------
+
+# Shared header generation (ONE pass for all params/*.hh and enums/*.hh)
+gem5_gen_params_hdrs(
+    name = "_gen_params_hdrs",
+    simobj_files = _SIMOBJ_PY_SRCS,
+)
+
+gem5_gen_enums_hdrs(
+    name = "_gen_enums_hdrs",
+    simobj_files = _SIMOBJ_PY_SRCS,
+)
+
+# Header-only cc_library for param and enum headers
+cc_library(
+    name = "sim_object_params_bucket",
+    hdrs = [":_gen_params_hdrs", ":_gen_enums_hdrs"],
+    includes = [
+        "_gen_params_hdrs",
+        "_gen_enums_hdrs",
+    ],
+)
+
+# Shared enum .cc sources (small, single bucket)
+gem5_gen_enums_srcs(
+    name = "_gen_enums_srcs",
+    simobj_files = _SIMOBJ_PY_SRCS,
+)
+
+# Per-bucket param .cc source generation
+gem5_gen_params_srcs(
+    name = "_gen_common_param_srcs",
+    simobj_files = _SIMOBJ_PY_SRCS,
+    file_exclude = PARAM_EXCLUDE_ALL_ISA_FEATURES,
+)
+
+gem5_gen_params_srcs(
+    name = "_gen_x86_param_srcs",
+    simobj_files = _SIMOBJ_PY_SRCS,
+    file_filter = PARAM_FILTER_X86,
+)
+
+gem5_gen_params_srcs(
+    name = "_gen_arm_param_srcs",
+    simobj_files = _SIMOBJ_PY_SRCS,
+    file_filter = PARAM_FILTER_ARM,
+)
+
+gem5_gen_params_srcs(
+    name = "_gen_riscv_param_srcs",
+    simobj_files = _SIMOBJ_PY_SRCS,
+    file_filter = PARAM_FILTER_RISCV,
+)
+
+gem5_gen_params_srcs(
+    name = "_gen_mips_param_srcs",
+    simobj_files = _SIMOBJ_PY_SRCS,
+    file_filter = PARAM_FILTER_MIPS,
+)
+
+gem5_gen_params_srcs(
+    name = "_gen_power_param_srcs",
+    simobj_files = _SIMOBJ_PY_SRCS,
+    file_filter = PARAM_FILTER_POWER,
+)
+
+gem5_gen_params_srcs(
+    name = "_gen_sparc_param_srcs",
+    simobj_files = _SIMOBJ_PY_SRCS,
+    file_filter = PARAM_FILTER_SPARC,
+)
+
+gem5_gen_params_srcs(
+    name = "_gen_ruby_param_srcs",
+    simobj_files = _SIMOBJ_PY_SRCS,
+    file_filter = PARAM_FILTER_RUBY,
+)
+
+gem5_gen_params_srcs(
+    name = "_gen_gpu_param_srcs",
+    simobj_files = _SIMOBJ_PY_SRCS,
+    file_filter = PARAM_FILTER_GPU,
+)
+
+gem5_gen_params_srcs(
+    name = "_gen_systemc_param_srcs",
+    simobj_files = _SIMOBJ_PY_SRCS,
+    file_filter = PARAM_FILTER_SYSTEMC,
+)
+
+# Per-bucket compiled libraries
+cc_library(
+    name = "sim_object_common_lib",
+    srcs = [":_gen_common_param_srcs", ":_gen_enums_srcs"],
+    deps = [
+        ":sim_object_params_bucket",
+        ":gem5_config_headers",
+        "//src:_gem5_base_hdrs",
+        "@gem5_ext_pybind11//:pybind11",
+        "@system_python//:python",
+    ] + ALL_DEBUG_FLAGS,
+    alwayslink = True,
+)
+
+cc_library(
+    name = "sim_object_x86_lib",
+    srcs = [":_gen_x86_param_srcs"],
+    deps = [":sim_object_params_bucket", ":gem5_config_headers",
+            "//src:_gem5_base_hdrs", "@gem5_ext_pybind11//:pybind11",
+            "@system_python//:python"] + ALL_DEBUG_FLAGS,
+    alwayslink = True,
+)
+
+cc_library(
+    name = "sim_object_arm_lib",
+    srcs = [":_gen_arm_param_srcs"],
+    deps = [":sim_object_params_bucket", ":gem5_config_headers",
+            "//src:_gem5_base_hdrs", "@gem5_ext_pybind11//:pybind11",
+            "@system_python//:python"] + ALL_DEBUG_FLAGS,
+    alwayslink = True,
+)
+
+cc_library(
+    name = "sim_object_riscv_lib",
+    srcs = [":_gen_riscv_param_srcs"],
+    deps = [":sim_object_params_bucket", ":gem5_config_headers",
+            "//src:_gem5_base_hdrs", "@gem5_ext_pybind11//:pybind11",
+            "@system_python//:python"] + ALL_DEBUG_FLAGS,
+    alwayslink = True,
+)
+
+cc_library(
+    name = "sim_object_mips_lib",
+    srcs = [":_gen_mips_param_srcs"],
+    deps = [":sim_object_params_bucket", ":gem5_config_headers",
+            "//src:_gem5_base_hdrs", "@gem5_ext_pybind11//:pybind11",
+            "@system_python//:python"] + ALL_DEBUG_FLAGS,
+    alwayslink = True,
+)
+
+cc_library(
+    name = "sim_object_power_lib",
+    srcs = [":_gen_power_param_srcs"],
+    deps = [":sim_object_params_bucket", ":gem5_config_headers",
+            "//src:_gem5_base_hdrs", "@gem5_ext_pybind11//:pybind11",
+            "@system_python//:python"] + ALL_DEBUG_FLAGS,
+    alwayslink = True,
+)
+
+cc_library(
+    name = "sim_object_sparc_lib",
+    srcs = [":_gen_sparc_param_srcs"],
+    deps = [":sim_object_params_bucket", ":gem5_config_headers",
+            "//src:_gem5_base_hdrs", "@gem5_ext_pybind11//:pybind11",
+            "@system_python//:python"] + ALL_DEBUG_FLAGS,
+    alwayslink = True,
+)
+
+cc_library(
+    name = "sim_object_ruby_lib",
+    srcs = [":_gen_ruby_param_srcs"],
+    deps = [":sim_object_params_bucket", ":gem5_config_headers",
+            "//src:_gem5_base_hdrs", "@gem5_ext_pybind11//:pybind11",
+            "@system_python//:python"] + ALL_DEBUG_FLAGS + select({
+        "//configs:ruby_enabled": [
+            "//src/mem/ruby:ruby",
+            "//src/mem/ruby/protocol:active_protocol",
+        ],
+        "//conditions:default": [],
+    }),
+    alwayslink = True,
+)
+
+cc_library(
+    name = "sim_object_gpu_lib",
+    srcs = [":_gen_gpu_param_srcs"],
+    deps = [":sim_object_params_bucket", ":gem5_config_headers",
+            "//src:_gem5_base_hdrs", "@gem5_ext_pybind11//:pybind11",
+            "@system_python//:python"] + ALL_DEBUG_FLAGS,
+    alwayslink = True,
+)
+
+cc_library(
+    name = "sim_object_systemc_lib",
+    srcs = [":_gen_systemc_param_srcs"],
+    deps = [":sim_object_params_bucket", ":gem5_config_headers",
+            "//src:_gem5_base_hdrs", "@gem5_ext_pybind11//:pybind11",
+            "@system_python//:python"] + ALL_DEBUG_FLAGS + select({
+        "//configs:systemc_enabled": ["//src/systemc:systemc"],
+        "//conditions:default": [],
+    }),
+    alwayslink = True,
+)
+
+# Aggregation target with per-ISA/feature select()
+cc_library(
+    name = "sim_object_params_bucket_srcs",
+    deps = [":sim_object_common_lib"] + select({
+        "//configs:x86_isa_enabled": [":sim_object_x86_lib"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:arm_isa_enabled": [":sim_object_arm_lib"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:riscv_isa_enabled": [":sim_object_riscv_lib"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:mips_isa_enabled": [":sim_object_mips_lib"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:power_isa_enabled": [":sim_object_power_lib"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:sparc_isa_enabled": [":sim_object_sparc_lib"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:ruby_enabled": [":sim_object_ruby_lib"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:gpu_enabled": [":sim_object_gpu_lib"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:systemc_enabled": [":sim_object_systemc_lib"],
+        "//conditions:default": [],
+    }),
+    alwayslink = True,
 )
 
 # ---------------------------------------------------------------------------

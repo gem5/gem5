@@ -22,7 +22,11 @@ load("//rules:py_source.bzl",
      _gem5_simobject_pysources = "gem5_simobject_pysources")
 load("//rules:sim_object.bzl",
      _gem5_sim_object = "gem5_sim_object",
-     _gem5_sim_object_aggregate = "gem5_sim_object_aggregate")
+     _gem5_sim_object_aggregate = "gem5_sim_object_aggregate",
+     _gem5_gen_params_hdrs = "gem5_gen_params_hdrs",
+     _gem5_gen_params_srcs = "gem5_gen_params_srcs",
+     _gem5_gen_enums_hdrs = "gem5_gen_enums_hdrs",
+     _gem5_gen_enums_srcs = "gem5_gen_enums_srcs")
 load("//rules:gen_defines.bzl", _gem5_gen_defines = "gem5_gen_defines")
 load("//rules:gem5_binary.bzl", _gem5_binary = "gem5_binary")
 
@@ -41,5 +45,9 @@ gem5_embedded_python_library = _gem5_embedded_python_library
 gem5_simobject_pysources = _gem5_simobject_pysources
 gem5_sim_object = _gem5_sim_object
 gem5_sim_object_aggregate = _gem5_sim_object_aggregate
+gem5_gen_params_hdrs = _gem5_gen_params_hdrs
+gem5_gen_params_srcs = _gem5_gen_params_srcs
+gem5_gen_enums_hdrs = _gem5_gen_enums_hdrs
+gem5_gen_enums_srcs = _gem5_gen_enums_srcs
 gem5_gen_defines = _gem5_gen_defines
 gem5_binary = _gem5_binary
