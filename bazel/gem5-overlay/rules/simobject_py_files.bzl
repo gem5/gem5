@@ -30,6 +30,7 @@ SIMOBJECT_PY_FILES_BASE = [
     "src/arch/generic/BaseISA.py",
     "src/arch/generic/BaseInterrupts.py",
     "src/arch/generic/BaseMMU.py",
+    "src/arch/generic/BaseSemihosting.py",
     "src/arch/generic/BaseTLB.py",
     "src/arch/generic/InstDecoder.py",
     # base

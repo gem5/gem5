@@ -249,32 +249,33 @@ endfunction()
 # Used by gem5_add_simobject() to auto-classify generated code.
 # ---------------------------------------------------------------------------
 function(_gem5_derive_bucket dir out_var)
-    # Convert to relative path from source root for matching
+    # Convert to relative path from source root for matching.
+    # Patterns use (/|$) to match both the exact directory and descendants.
     file(RELATIVE_PATH _rel "${CMAKE_SOURCE_DIR}" "${dir}")
 
-    if(_rel MATCHES "^src/arch/x86/" OR _rel MATCHES "^src/dev/x86/")
+    if(_rel MATCHES "^src/arch/x86(/|$)" OR _rel MATCHES "^src/dev/x86(/|$)")
         set(${out_var} "x86" PARENT_SCOPE)
-    elseif(_rel MATCHES "^src/arch/arm/" OR _rel MATCHES "^src/dev/arm/")
+    elseif(_rel MATCHES "^src/arch/arm(/|$)" OR _rel MATCHES "^src/dev/arm(/|$)")
         set(${out_var} "arm" PARENT_SCOPE)
-    elseif(_rel MATCHES "^src/arch/riscv/" OR _rel MATCHES "^src/dev/riscv/"
-           OR _rel MATCHES "^src/dev/lupio/")
+    elseif(_rel MATCHES "^src/arch/riscv(/|$)" OR _rel MATCHES "^src/dev/riscv(/|$)"
+           OR _rel MATCHES "^src/dev/lupio(/|$)")
         set(${out_var} "riscv" PARENT_SCOPE)
-    elseif(_rel MATCHES "^src/arch/mips/" OR _rel MATCHES "^src/dev/mips/")
+    elseif(_rel MATCHES "^src/arch/mips(/|$)" OR _rel MATCHES "^src/dev/mips(/|$)")
         set(${out_var} "mips" PARENT_SCOPE)
-    elseif(_rel MATCHES "^src/arch/power/")
+    elseif(_rel MATCHES "^src/arch/power(/|$)")
         set(${out_var} "power" PARENT_SCOPE)
-    elseif(_rel MATCHES "^src/arch/sparc/" OR _rel MATCHES "^src/dev/sparc/")
+    elseif(_rel MATCHES "^src/arch/sparc(/|$)" OR _rel MATCHES "^src/dev/sparc(/|$)")
         set(${out_var} "sparc" PARENT_SCOPE)
-    elseif(_rel MATCHES "^src/arch/amdgpu/" OR _rel MATCHES "^src/gpu-compute/"
-           OR _rel MATCHES "^src/dev/hsa/" OR _rel MATCHES "^src/dev/amdgpu/")
+    elseif(_rel MATCHES "^src/arch/amdgpu(/|$)" OR _rel MATCHES "^src/gpu-compute(/|$)"
+           OR _rel MATCHES "^src/dev/hsa(/|$)" OR _rel MATCHES "^src/dev/amdgpu(/|$)")
         set(${out_var} "gpu" PARENT_SCOPE)
-    elseif(_rel MATCHES "^src/mem/ruby/")
+    elseif(_rel MATCHES "^src/mem/ruby(/|$)")
         set(${out_var} "ruby" PARENT_SCOPE)
-    elseif(_rel MATCHES "^src/systemc/")
+    elseif(_rel MATCHES "^src/systemc(/|$)")
         set(${out_var} "systemc" PARENT_SCOPE)
-    elseif(_rel MATCHES "^src/cpu/kvm/")
+    elseif(_rel MATCHES "^src/cpu/kvm(/|$)")
         set(${out_var} "kvm" PARENT_SCOPE)
-    elseif(_rel MATCHES "^src/test_objects/")
+    elseif(_rel MATCHES "^src/test_objects(/|$)")
         set(${out_var} "test_objects" PARENT_SCOPE)
     else()
         set(${out_var} "common" PARENT_SCOPE)

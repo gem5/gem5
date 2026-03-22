@@ -624,14 +624,9 @@ _ALL_SIMOBJ_PY_SRCS = (
     simobject_paths_to_labels(SIMOBJECT_PY_FILES_GPU) +
     simobject_paths_to_labels(SIMOBJECT_PY_FILES_SYSTEMC) +
     simobject_paths_to_labels(SIMOBJECT_PY_FILES_CHI) +
-    # Feature-gated files not in the exported lists above but needed
-    # for inheritance resolution during param generation.
-    # Only include files that are PARENT classes of other SimObjects.
-    # Leaf dependencies (KVM, test_objects) can't load without their
-    # external deps and aren't needed for inheritance resolution.
-    [
-        "//src/arch/generic:BaseSemihosting.py",
-    ]
+    # BaseSemihosting.py was moved into SIMOBJECT_PY_FILES_BASE.
+    # No additional feature-gated parent-class files are needed here.
+    []
 )
 
 # Shared header generation (ONE pass for all params/*.hh and enums/*.hh)
@@ -732,7 +727,19 @@ cc_library(
         "//src:_gem5_base_hdrs",
         "@gem5_ext_pybind11//:pybind11",
         "@system_python//:python",
-    ] + ALL_DEBUG_FLAGS,
+    ] + ALL_DEBUG_FLAGS + select({
+        # Some multi-class-per-file SimObjects from Ruby/SystemC end up in
+        # common bucket because the filename-based filter doesn't match their
+        # class names. These deps provide the needed protocol headers.
+        "//configs:ruby_enabled": [
+            "//src/mem/ruby:ruby",
+            "//src/mem/ruby/protocol:active_protocol",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:systemc_enabled": ["//src/systemc:systemc"],
+        "//conditions:default": [],
+    }),
     alwayslink = True,
 )
 
@@ -826,6 +833,62 @@ cc_library(
     alwayslink = True,
 )
 
+# Per-bucket filter patterns for KVM, ruby_gpu, test_objects
+# (These files are inline-gated in the BUILD, not in exported lists.)
+_KVM_PARAM_FILTER = "param_BaseKvmCPU.cc,param_KvmVM.cc,param_X86KvmCPU.cc,param_ArmKvmCPU.cc,param_ArmV8KvmCPU.cc,param_BaseArmKvmCPU.cc,param_KvmGic.cc"
+_RUBY_GPU_PARAM_FILTER = ",".join([
+    "param_%s.cc" % f.rsplit("/", 1)[-1].rsplit(".", 1)[0]
+    for f in SIMOBJECT_PY_FILES_RUBY_GPU
+])
+_TEST_OBJECTS_PARAM_FILTER = "param_StatTester.cc"
+
+gem5_gen_params_srcs(
+    name = "_gen_kvm_param_srcs",
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
+    file_filter = _KVM_PARAM_FILTER,
+)
+
+gem5_gen_params_srcs(
+    name = "_gen_ruby_gpu_param_srcs",
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
+    file_filter = _RUBY_GPU_PARAM_FILTER,
+)
+
+gem5_gen_params_srcs(
+    name = "_gen_test_objects_param_srcs",
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
+    file_filter = _TEST_OBJECTS_PARAM_FILTER,
+)
+
+_BUCKET_LIB_DEPS = [
+    ":sim_object_params_bucket",
+    ":gem5_config_headers",
+    "//src:_gem5_base_hdrs",
+    "@gem5_ext_pybind11//:pybind11",
+    "@system_python//:python",
+] + ALL_DEBUG_FLAGS
+
+cc_library(
+    name = "sim_object_kvm_lib",
+    srcs = [":_gen_kvm_param_srcs"],
+    deps = _BUCKET_LIB_DEPS,
+    alwayslink = True,
+)
+
+cc_library(
+    name = "sim_object_ruby_gpu_lib",
+    srcs = [":_gen_ruby_gpu_param_srcs"],
+    deps = _BUCKET_LIB_DEPS,
+    alwayslink = True,
+)
+
+cc_library(
+    name = "sim_object_test_objects_lib",
+    srcs = [":_gen_test_objects_param_srcs"],
+    deps = _BUCKET_LIB_DEPS,
+    alwayslink = True,
+)
+
 # Aggregation target with per-ISA/feature select()
 cc_library(
     name = "sim_object_params_bucket_srcs",
@@ -851,10 +914,19 @@ cc_library(
         "//configs:ruby_enabled": [":sim_object_ruby_lib"],
         "//conditions:default": [],
     }) + select({
+        "//configs:ruby_gpu_enabled": [":sim_object_ruby_gpu_lib"],
+        "//conditions:default": [],
+    }) + select({
         "//configs:gpu_enabled": [":sim_object_gpu_lib"],
         "//conditions:default": [],
     }) + select({
         "//configs:systemc_enabled": [":sim_object_systemc_lib"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:kvm_enabled": [":sim_object_kvm_lib"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:test_objects_enabled": [":sim_object_test_objects_lib"],
         "//conditions:default": [],
     }),
     alwayslink = True,
@@ -1076,6 +1148,12 @@ cc_library(
         "//src/learning_gem5/part2:learning",
 
         # ---- Generated SimObject params and enums ----
+        # Uses aggregate generation (reliable) with per-bucket compilation
+        # targets available alongside for future migration. The filename-based
+        # bucket filtering has known gaps with multi-class-per-file SimObjects
+        # (e.g., CHIGenericController, BaseRoutingUnit) that leak across
+        # bucket boundaries. Full class-based filtering requires build-time
+        # class discovery which is a future enhancement.
         "//:sim_object_params",
         "//:sim_object_params_srcs",
 

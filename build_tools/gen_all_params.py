@@ -33,7 +33,7 @@ import types
 # ---------------------------------------------------------------------------
 # Maps m5.objects.<Name> -> filesystem path for on-demand loading.
 _simobj_file_map: dict[str, str] = {}
-_first_load_error_printed = False
+_load_error_count = 0
 
 
 class _SimObjectFinder(importlib.abc.MetaPathFinder):
@@ -144,7 +144,7 @@ def load_simobject_file(filepath, module_name=None):
     Returns the loaded module, or None on failure (with rollback of any
     partially-defined SimObject classes).
     """
-    global _first_load_error_printed
+    global _load_error_count
     basename = os.path.splitext(os.path.basename(filepath))[0]
     if module_name is None:
         module_name = f"m5.objects.{basename}"
@@ -160,20 +160,17 @@ def load_simobject_file(filepath, module_name=None):
     classes_before = set(allClasses.keys())
 
     if not os.path.exists(filepath):
-        if not _first_load_error_printed:
-            _first_load_error_printed = True
-            print(
-                f"  FILE_NOT_FOUND: {filepath}",
-                file=sys.stderr,
-            )
+        _load_error_count += 1
+        if _load_error_count <= 3:
+            print(f"  file not found: {filepath}", file=sys.stderr)
         return None
 
     spec = importlib.util.spec_from_file_location(module_name, filepath)
     if spec is None:
-        if not _first_load_error_printed:
-            _first_load_error_printed = True
+        _load_error_count += 1
+        if _load_error_count <= 3:
             print(
-                f"  SPEC_NONE: {filepath}",
+                f"  spec_from_file_location returned None: {filepath}",
                 file=sys.stderr,
             )
         return None
@@ -188,11 +185,10 @@ def load_simobject_file(filepath, module_name=None):
         new_classes = set(allClasses.keys()) - classes_before
         for cls_name in new_classes:
             del allClasses[cls_name]
-        # Print first failure for debugging
-        if not _first_load_error_printed:
-            _first_load_error_printed = True
+        _load_error_count += 1
+        if _load_error_count <= 3:
             print(
-                f"  FIRST LOAD ERROR ({os.path.basename(filepath)}): "
+                f"  load error ({os.path.basename(filepath)}): "
                 f"{type(e).__name__}: {e}",
                 file=sys.stderr,
             )
@@ -279,25 +275,20 @@ def find_simobject_files_fallback(src_root):
 def find_simobject_files(src_root):
     """Discover SimObject .py files.
 
-    Uses the canonical list from simobject_py_files.bzl as the primary source,
-    then supplements with a regex-based scan to catch files that are missing
-    from the bzl inventory (e.g., gated behind feature flags not yet added).
+    Uses the canonical list from simobject_py_files.bzl as the authoritative
+    source. Falls back to regex-based scan ONLY if the bzl file is absent.
+    No supplemental scanning is done when the bzl list is available — this
+    avoids pulling in files whose dependencies aren't in the canonical set.
     """
     bzl_files = find_simobject_files_from_bzl(src_root)
-    scan_files = find_simobject_files_fallback(src_root)
-
     if bzl_files:
-        # Merge: use bzl as base, add scan-only files that aren't duplicates
-        bzl_set = {os.path.abspath(f) for f in bzl_files}
-        extras = [f for f in scan_files if os.path.abspath(f) not in bzl_set]
-        merged = bzl_files + extras
         print(
-            f"  Discovery: {len(bzl_files)} from bzl + "
-            f"{len(extras)} supplemental from src/ scan",
+            f"  Discovery: {len(bzl_files)} files from simobject_py_files.bzl",
             file=sys.stderr,
         )
-        return merged
+        return bzl_files
 
+    scan_files = find_simobject_files_fallback(src_root)
     print(
         f"  Discovery: {len(scan_files)} files from src/ scan (fallback)",
         file=sys.stderr,
@@ -325,10 +316,9 @@ def load_files_with_retry(files, max_rounds=10):
             else:
                 still_pending.append(filepath)
 
-        if not still_pending:
-            break
-
         pending = still_pending
+        if not pending:
+            break
         if round_num < max_rounds - 1:
             print(
                 f"  load pass {round_num + 1}: {len(still_pending)} files "
