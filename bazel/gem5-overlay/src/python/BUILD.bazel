@@ -24,6 +24,14 @@ filegroup(
     srcs = glob(["*.hh", "pybind11/*.hh"]),
 )
 
+# -- m5 Python package files for standalone param generation --
+# Used by gen_all_params.py which needs the m5.SimObject, m5.params,
+# and m5.util Python modules on PYTHONPATH.
+filegroup(
+    name = "m5_python_files",
+    srcs = glob(["m5/**/*.py"]) + ["importer.py"],
+)
+
 # ---------------------------------------------------------------------------
 # m5ImporterCode blob: compressed importer.py bytecode embedded as C++ array.
 # importer.cc includes "python/m5ImporterCode.hh" to access the blob.

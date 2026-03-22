@@ -603,17 +603,46 @@ gem5_sim_object_aggregate(
 # These targets replace gem5_sim_object_aggregate with per-bucket generation.
 # Each bucket generates only the param_*.cc files for its ISA/feature set.
 # Headers are generated in one shared pass (all SimObjects need all headers).
+#
+# IMPORTANT: gen_all_params.py needs ALL SimObject .py files available for
+# inheritance resolution, regardless of which ISA/features are enabled.
+# The --file-filter/--file-exclude flags control what gets GENERATED.
 # ---------------------------------------------------------------------------
+
+# All-inclusive SimObject .py file list (no select() gating).
+# Every gen_all_params invocation needs the full set for class loading.
+_ALL_SIMOBJ_PY_SRCS = (
+    simobject_paths_to_labels(SIMOBJECT_PY_FILES_BASE) +
+    simobject_paths_to_labels(SIMOBJECT_PY_FILES_X86) +
+    simobject_paths_to_labels(SIMOBJECT_PY_FILES_ARM) +
+    simobject_paths_to_labels(SIMOBJECT_PY_FILES_RISCV) +
+    simobject_paths_to_labels(SIMOBJECT_PY_FILES_MIPS) +
+    simobject_paths_to_labels(SIMOBJECT_PY_FILES_POWER) +
+    simobject_paths_to_labels(SIMOBJECT_PY_FILES_SPARC) +
+    simobject_paths_to_labels(SIMOBJECT_PY_FILES_RUBY) +
+    simobject_paths_to_labels(SIMOBJECT_PY_FILES_RUBY_GPU) +
+    simobject_paths_to_labels(SIMOBJECT_PY_FILES_GPU) +
+    simobject_paths_to_labels(SIMOBJECT_PY_FILES_SYSTEMC) +
+    simobject_paths_to_labels(SIMOBJECT_PY_FILES_CHI) +
+    # Feature-gated files not in the exported lists above but needed
+    # for inheritance resolution during param generation.
+    # Only include files that are PARENT classes of other SimObjects.
+    # Leaf dependencies (KVM, test_objects) can't load without their
+    # external deps and aren't needed for inheritance resolution.
+    [
+        "//src/arch/generic:BaseSemihosting.py",
+    ]
+)
 
 # Shared header generation (ONE pass for all params/*.hh and enums/*.hh)
 gem5_gen_params_hdrs(
     name = "_gen_params_hdrs",
-    simobj_files = _SIMOBJ_PY_SRCS,
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
 )
 
 gem5_gen_enums_hdrs(
     name = "_gen_enums_hdrs",
-    simobj_files = _SIMOBJ_PY_SRCS,
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
 )
 
 # Header-only cc_library for param and enum headers
@@ -629,67 +658,67 @@ cc_library(
 # Shared enum .cc sources (small, single bucket)
 gem5_gen_enums_srcs(
     name = "_gen_enums_srcs",
-    simobj_files = _SIMOBJ_PY_SRCS,
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
 )
 
 # Per-bucket param .cc source generation
 gem5_gen_params_srcs(
     name = "_gen_common_param_srcs",
-    simobj_files = _SIMOBJ_PY_SRCS,
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
     file_exclude = PARAM_EXCLUDE_ALL_ISA_FEATURES,
 )
 
 gem5_gen_params_srcs(
     name = "_gen_x86_param_srcs",
-    simobj_files = _SIMOBJ_PY_SRCS,
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
     file_filter = PARAM_FILTER_X86,
 )
 
 gem5_gen_params_srcs(
     name = "_gen_arm_param_srcs",
-    simobj_files = _SIMOBJ_PY_SRCS,
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
     file_filter = PARAM_FILTER_ARM,
 )
 
 gem5_gen_params_srcs(
     name = "_gen_riscv_param_srcs",
-    simobj_files = _SIMOBJ_PY_SRCS,
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
     file_filter = PARAM_FILTER_RISCV,
 )
 
 gem5_gen_params_srcs(
     name = "_gen_mips_param_srcs",
-    simobj_files = _SIMOBJ_PY_SRCS,
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
     file_filter = PARAM_FILTER_MIPS,
 )
 
 gem5_gen_params_srcs(
     name = "_gen_power_param_srcs",
-    simobj_files = _SIMOBJ_PY_SRCS,
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
     file_filter = PARAM_FILTER_POWER,
 )
 
 gem5_gen_params_srcs(
     name = "_gen_sparc_param_srcs",
-    simobj_files = _SIMOBJ_PY_SRCS,
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
     file_filter = PARAM_FILTER_SPARC,
 )
 
 gem5_gen_params_srcs(
     name = "_gen_ruby_param_srcs",
-    simobj_files = _SIMOBJ_PY_SRCS,
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
     file_filter = PARAM_FILTER_RUBY,
 )
 
 gem5_gen_params_srcs(
     name = "_gen_gpu_param_srcs",
-    simobj_files = _SIMOBJ_PY_SRCS,
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
     file_filter = PARAM_FILTER_GPU,
 )
 
 gem5_gen_params_srcs(
     name = "_gen_systemc_param_srcs",
-    simobj_files = _SIMOBJ_PY_SRCS,
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
     file_filter = PARAM_FILTER_SYSTEMC,
 )
 

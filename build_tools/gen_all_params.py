@@ -33,6 +33,7 @@ import types
 # ---------------------------------------------------------------------------
 # Maps m5.objects.<Name> -> filesystem path for on-demand loading.
 _simobj_file_map: dict[str, str] = {}
+_first_load_error_printed = False
 
 
 class _SimObjectFinder(importlib.abc.MetaPathFinder):
@@ -143,6 +144,7 @@ def load_simobject_file(filepath, module_name=None):
     Returns the loaded module, or None on failure (with rollback of any
     partially-defined SimObject classes).
     """
+    global _first_load_error_printed
     basename = os.path.splitext(os.path.basename(filepath))[0]
     if module_name is None:
         module_name = f"m5.objects.{basename}"
@@ -157,20 +159,43 @@ def load_simobject_file(filepath, module_name=None):
 
     classes_before = set(allClasses.keys())
 
+    if not os.path.exists(filepath):
+        if not _first_load_error_printed:
+            _first_load_error_printed = True
+            print(
+                f"  FILE_NOT_FOUND: {filepath}",
+                file=sys.stderr,
+            )
+        return None
+
     spec = importlib.util.spec_from_file_location(module_name, filepath)
     if spec is None:
+        if not _first_load_error_printed:
+            _first_load_error_printed = True
+            print(
+                f"  SPEC_NONE: {filepath}",
+                file=sys.stderr,
+            )
         return None
     module = importlib.util.module_from_spec(spec)
     sys.modules[module_name] = module
     try:
         spec.loader.exec_module(module)
-    except (Exception, SystemExit):
+    except (Exception, SystemExit) as e:
         # Remove failed module and roll back any partially-defined classes.
         if module_name in sys.modules:
             del sys.modules[module_name]
         new_classes = set(allClasses.keys()) - classes_before
         for cls_name in new_classes:
             del allClasses[cls_name]
+        # Print first failure for debugging
+        if not _first_load_error_printed:
+            _first_load_error_printed = True
+            print(
+                f"  FIRST LOAD ERROR ({os.path.basename(filepath)}): "
+                f"{type(e).__name__}: {e}",
+                file=sys.stderr,
+            )
         return None
 
     # Copy public names onto m5.objects namespace.

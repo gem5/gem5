@@ -136,6 +136,10 @@ def gem5_sim_object(name, py_file, sim_objects = [], enums = [],
 # Per-bucket SimObject generation via gen_all_params.py (system Python)
 # ---------------------------------------------------------------------------
 
+def _file_to_path(f):
+    """Top-level map_each function: extract path from a File object."""
+    return f.path
+
 def _gen_params_impl(ctx):
     """Generate SimObject params/enums using gen_all_params.py.
 
@@ -153,39 +157,43 @@ def _gen_params_impl(ctx):
     if not ws_root:
         ws_root = "."
 
-    args = ctx.actions.args()
-    args.add("--src-root", ws_root)
-    args.add("--build-tools-dir", ws_root + "/build_tools")
-    args.add("--output-dir", output_dir.path)
-    args.add("--output-type", ctx.attr.output_type)
-    if ctx.attr.use_python:
-        args.add("--use-python", "true")
-    else:
-        args.add("--use-python", "false")
+    # Build command arguments as a list of strings.
+    cmd_args = [
+        "--src-root", ws_root,
+        "--build-tools-dir", ws_root + "/build_tools",
+        "--output-dir", output_dir.path,
+        "--output-type", ctx.attr.output_type,
+        "--use-python", "true" if ctx.attr.use_python else "false",
+    ]
     if ctx.attr.file_filter:
-        args.add("--file-filter", ctx.attr.file_filter)
+        cmd_args.extend(["--file-filter", ctx.attr.file_filter])
     if ctx.attr.file_exclude:
-        args.add("--file-exclude", ctx.attr.file_exclude)
+        cmd_args.extend(["--file-exclude", ctx.attr.file_exclude])
 
-    # Pass explicit SimObject file list (repo-relative paths).
+    # Pass explicit SimObject file list.
     if ctx.attr.simobj_files:
-        args.add_all(
-            "--simobj-files",
-            ctx.files.simobj_files,
-            map_each = lambda f: f.path,
-        )
+        cmd_args.append("--simobj-files")
+        for f in ctx.files.simobj_files:
+            cmd_args.append(f.path)
 
     # Collect all inputs: SimObject .py files, m5 Python package,
     # and build_tools scripts.
     inputs = (
         ctx.files.simobj_files +
         ctx.files._m5_python +
-        ctx.files._build_tools
+        ctx.files._build_tools +
+        [ctx.file._gen_all_params_script]
     )
 
-    ctx.actions.run(
-        executable = ctx.executable._gen_all_params,
-        arguments = [args],
+    # Use run_shell with system Python to ensure correct working directory
+    # (exec root) and PYTHONPATH resolution. py_binary resolves imports
+    # from runfiles which breaks path resolution.
+    quoted_args = " ".join(["'%s'" % a for a in cmd_args])
+    ctx.actions.run_shell(
+        command = "python3 '%s' %s" % (
+            ctx.file._gen_all_params_script.path,
+            quoted_args,
+        ),
         outputs = [output_dir],
         inputs = inputs,
         mnemonic = "Gem5GenParams",
@@ -222,17 +230,17 @@ _gen_params = rule(
         "_m5_python": attr.label(
             default = "//src/python:m5_python_files",
             allow_files = True,
-            doc = "m5 Python package files.",
+            doc = "m5 Python package files (for PYTHONPATH).",
         ),
         "_build_tools": attr.label(
             default = "//build_tools:build_tools_files",
             allow_files = True,
             doc = "build_tools Python scripts.",
         ),
-        "_gen_all_params": attr.label(
-            default = "//build_tools:gen_all_params",
-            executable = True,
-            cfg = "exec",
+        "_gen_all_params_script": attr.label(
+            default = "//build_tools:gen_all_params.py",
+            allow_single_file = True,
+            doc = "gen_all_params.py script (run with system Python).",
         ),
     },
 )
