@@ -269,7 +269,11 @@ function(_gem5_derive_bucket dir out_var)
     elseif(_rel MATCHES "^src/arch/amdgpu(/|$)" OR _rel MATCHES "^src/gpu-compute(/|$)"
            OR _rel MATCHES "^src/dev/hsa(/|$)" OR _rel MATCHES "^src/dev/amdgpu(/|$)")
         set(${out_var} "gpu" PARENT_SCOPE)
-    elseif(_rel MATCHES "^src/mem/ruby(/|$)")
+    elseif(_rel MATCHES "^src/mem/ruby(/|$)"
+           OR _rel MATCHES "^src/cpu/testers/directedtest(/|$)"
+           OR _rel MATCHES "^src/cpu/testers/garnet_synthetic_traffic(/|$)"
+           OR _rel MATCHES "^src/cpu/testers/rubytest(/|$)"
+           OR _rel MATCHES "^src/cpu/testers/gpu_ruby_test(/|$)")
         set(${out_var} "ruby" PARENT_SCOPE)
     elseif(_rel MATCHES "^src/systemc(/|$)")
         set(${out_var} "systemc" PARENT_SCOPE)
