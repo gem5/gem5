@@ -30,6 +30,7 @@
 #define __BASE_TIMEBUF_HH__
 
 #include <cassert>
+#include <type_traits>
 #include <vector>
 
 namespace gem5
@@ -140,6 +141,8 @@ class TimeBuffer
         : past(p), future(f), size(past + future + 1),
           data(new char[size * sizeof(T)]), index(size), base(0)
     {
+        static_assert(std::is_default_constructible_v<T>,
+                      "T must be default constructible.");
         assert(past >= 0 && future >= 0);
         char *ptr = data;
         for (unsigned i = 0; i < size; i++) {
