@@ -93,7 +93,7 @@ class KernelBootProcessorSwitch(KernelBootedExitHandler):
         print("Dumping and resetting stats at kernel boot! Hypercall 1")
         print("Switching processors at kernel boot! Hypercall 1")
         simulator.switch_processor()
-        simulator.set_hypercall_absolute_max_ticks(1_000_000)
+        simulator.set_hypercall_absolute_max_ticks(1_000_000_000)
 
     def _exit_simulation(self) -> bool:
         return False
