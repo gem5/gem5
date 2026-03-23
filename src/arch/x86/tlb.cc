@@ -500,15 +500,15 @@ TLB::translate(const RequestPtr &req,
                 bool writeDisable = bits(permission, 1);
                 if (accessDisable) {
 
-                    DPRINTF(TLB, "MPK Illegal access to
-                        address %#x.\n", vaddr);
+                    DPRINTF(TLB, "MPK Illegal access to "
+                                 "address %#x.\n", vaddr);
 
                     return std::make_shared<PageFault>(vaddr, true,
                                                        mode, inUser,
                                                        false);
                 } else if (writeDisable && mode == BaseMMU::Write) {
-                    DPRINTF(TLB, "MPK Illegal write to
-                        address %#x.\n", vaddr);
+                    DPRINTF(TLB, "MPK Illegal write to"
+                                 " address %#x.\n", vaddr);
                     return std::make_shared<PageFault>(vaddr, true,
                                                        mode, inUser,
                                                        false);
