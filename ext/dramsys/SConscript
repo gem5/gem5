@@ -65,7 +65,7 @@ subprocess.run(
         f"-DSCONS_SOURCE_DIR:STRING={scons_root}",
         "-DDRAMSYS_BUILD_CLI=OFF",
         "-DDRAMSYS_USE_FETCH_CONTENT=ON",
-        "-DDRAMSYS_USE_FETCH_CONTENT_INTERNAL=OFF",
+        "-DDRAMSYS_USE_FETCH_CONTENT_INTERNAL=ON",
         "-DDRAMSYS_USE_FETCH_CONTENT_SYSTEMC=OFF",
     ],
     check=True
@@ -76,21 +76,18 @@ subprocess.run(
     check=True
 )
 
-env.Append(LIBS="liblibdramsys")
-env.Append(LIBPATH=Dir("./DRAMSys/src/libdramsys").abspath)
+env.Append(LIBS="dramsys")
+env.Append(LIBPATH=Dir("./DRAMSys/src").abspath)
 
-env.Append(LIBS="libconfiguration")
-env.Append(LIBPATH=Dir("./DRAMSys/src/configuration").abspath)
+env.Append(LIBS="DRAMPower")
+env.Append(LIBPATH=Dir("./_deps/drampower-build/src/DRAMPower").abspath)
 
 env.Append(LIBS="sqlite3")
 env.Append(LIBPATH=Dir("./DRAMSys/lib/sqlite3").abspath)
 
-env.Append(CPPPATH=src_root + "/DRAMSys/src/libdramsys")
-env.Append(CPPPATH=src_root + "/DRAMSys/src/configuration")
-env.Append(CPPPATH=src_root + "/DRAMSys/src/util")
-
+env.Append(CPPPATH=src_root + "/DRAMSys/src")
 env.Append(CPPPATH=build_current + "/_deps/nlohmann_json-src/include/")
+env.Append(CPPPATH=build_current + "/_deps/dramutils-src/include/")
+env.Append(CPPPATH=build_current + "/_deps/drampower-src/src/DRAMPower")
 
 env.Prepend(CPPDEFINES=[("SYSTEMC_VERSION", 20191203)])
-env.Prepend(CPPDEFINES=[("DRAMSYS_RESOURCE_DIR",
-                         '\\"' + os.getcwd() + '/DRAMSys/configs' + '\\"')])

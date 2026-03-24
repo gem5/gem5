@@ -41,18 +41,35 @@
 
 #include "cpu/o3/inst_queue.hh"
 
-#include <limits>
 #include <vector>
 
+#include "arch/generic/isa.hh"
+#include "base/cprintf.hh"
 #include "base/logging.hh"
+#include "base/stats/group.hh"
+#include "base/stats/info.hh"
+#include "base/stats/units.hh"
+#include "base/trace.hh"
+#include "base/types.hh"
+#include "cpu/inst_seq.hh"
+#include "cpu/o3/comm.hh"
+#include "cpu/o3/cpu.hh"
 #include "cpu/o3/dyn_inst.hh"
+#include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/fu_pool.hh"
+#include "cpu/o3/iew.hh"
 #include "cpu/o3/limits.hh"
+#include "cpu/op_class.hh"
+#include "cpu/reg_class.hh"
+#include "cpu/timebuf.hh"
 #include "debug/IQ.hh"
 #include "enums/OpClass.hh"
+#include "enums/SMTQueuePolicy.hh"
 #include "params/BaseO3CPU.hh"
 #include "params/IQUnit.hh"
 #include "sim/core.hh"
+#include "sim/cur_tick.hh"
+#include "sim/eventq.hh"
 
 // clang complains about std::set being overloaded with Packet::set if
 // we open up the entire namespace std

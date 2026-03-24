@@ -136,7 +136,7 @@ def separator(char=default_separator, color=None):
     Return a separator of the given character that is the length of the full
     width of the terminal screen.
     """
-    (w, h) = terminal_size()
+    w, h = terminal_size()
     if color:
         return color + char * w + termcap.Normal
     else:

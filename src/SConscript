@@ -644,7 +644,6 @@ gem5py_env.Command('python/m5/info.py',
             INFOPY_PY=build_tools.File('infopy.py'))
 PySource('m5', 'python/m5/info.py')
 
-gem5py_m5_env = gem5py_env.Clone()
 gem5py_env.Append(CPPPATH=env['CPPPATH'])
 gem5py_env.Append(LIBS='z')
 gem5py_env.Append(LINKFLAGS='-rdynamic')

@@ -1369,7 +1369,7 @@ if not os.path.exists(input_path):
 ####
 # Parse gem5 configuration file to find # of CPUs and L2s
 ####
-(num_cpus, num_l2) = parseConfig(input_path + "/config.ini")
+num_cpus, num_l2 = parseConfig(input_path + "/config.ini")
 
 ####
 # Parse task file to find process/thread info
@@ -1389,10 +1389,8 @@ stats = registerStats(stat_config_file)
 if os.path.exists(input_path + "/stats.txt") and os.path.exists(
     input_path + "/stats.txt.gz"
 ):
-    print(
-        "WARNING: Both stats.txt.gz and stats.txt exist. \
-            Using stats.txt.gz by default."
-    )
+    print("WARNING: Both stats.txt.gz and stats.txt exist. \
+            Using stats.txt.gz by default.")
 
 gem5_stats_file = input_path + "/stats.txt.gz"
 if not os.path.exists(gem5_stats_file):

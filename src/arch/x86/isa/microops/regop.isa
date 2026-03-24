@@ -229,7 +229,7 @@ let {{
                         matcher.sub(src2_name, cond_control_flag_init),
                         matcher.sub(src2_name, invalidate_srcs),
                         op_class, operand_types)
-                imm_name = '(int8_t)imm8' if match.group("prefix") else 'imm8'
+                imm_name = '(int64_t)imm64' if match.group("prefix") else 'imm64'
                 self.buildCppClasses(name + "i", Name, suffix + "Imm",
                         matcher.sub(imm_name, code),
                         matcher.sub(imm_name, big_code),
@@ -1413,8 +1413,10 @@ let {{
                   case 4:
                     {
                         CR4 cr4 = newVal;
+                        // Fault if any unknown bits are set. Also,
                         // PAE can't be disabled in long mode.
-                        if (bits(newVal, 63, 11) ||
+                        if (bits(newVal, 63, 17) ||
+                            bits(newVal, 15, 11) ||
                                 (machInst.mode.mode == LongMode && !cr4.pae))
                             fault = std::make_shared<GeneralProtection>(0);
                     }

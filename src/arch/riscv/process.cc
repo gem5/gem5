@@ -104,7 +104,9 @@ RiscvProcess64::initState()
         auto *tc = system->threads[ctx];
         tc->setMiscRegNoEffect(MISCREG_PRV, PRV_U);
         auto *isa = dynamic_cast<ISA*>(tc->getIsaPtr());
-        fatal_if(isa->rvType() != RV64, "RISC V CPU should run in 64 bits mode");
+        fatal_if(!isa, "Incompatible ISA for RISC-V");
+        fatal_if(isa->rvType() != RV64,
+                 "RISC-V CPU should run in 64 bit mode");
         MISA misa = tc->readMiscRegNoEffect(MISCREG_ISA);
         fatal_if(!(misa.rvu && misa.rvs),
             "RISC V SE mode can't run without supervisor and user "

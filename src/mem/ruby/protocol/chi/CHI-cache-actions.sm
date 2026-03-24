@@ -3077,6 +3077,7 @@ action(Send_FwdSnpResp, desc="") {
     out_msg.addr := address;
     out_msg.responder := machineID;
     out_msg.Destination.add(tbe.requestor);
+    out_msg.txnId := tbe.txnId;
 
     // We have the data (locally or upstream) or are dropping it
     bool keepData := (tbe.dir_sharers.count() > 0) ||
@@ -3162,6 +3163,8 @@ action(Send_RespSepData, desc="") {
     out_msg.type := CHIResponseType:RespSepData;
     out_msg.responder := machineID;
     out_msg.Destination.add(tbe.requestor);
+    out_msg.txnId := tbe.txnId;
+    out_msg.dbid := tbe.txnId;
   }
 }
 
@@ -3286,6 +3289,7 @@ action(Send_DBIDResp, desc="") {
     out_msg.responder := machineID;
     out_msg.Destination.add(tbe.requestor);
     out_msg.dbid := tbe.txnId;
+    out_msg.txnId := tbe.txnId;
   }
 }
 
@@ -3296,6 +3300,8 @@ action(Send_Comp_WU, desc="") {
     out_msg.type := CHIResponseType:Comp;
     out_msg.responder := machineID;
     out_msg.Destination.add(tbe.requestor);
+    out_msg.txnId := tbe.txnId;
+    out_msg.dbid := tbe.txnId;
   }
 }
 
@@ -3321,6 +3327,8 @@ action(Send_Comp_ANR, desc="") {
     out_msg.type := CHIResponseType:Comp;
     out_msg.responder := machineID;
     out_msg.Destination.add(tbe.requestor);
+    out_msg.txnId := tbe.txnId;
+    out_msg.dbid := tbe.txnId;
   }
 }
 
@@ -3331,6 +3339,8 @@ action(Send_SnpRespI, desc="") {
     if (tbe.is_dvm_tbe || tbe.is_dvm_snp_tbe) {
       out_msg.usesTxnId := true;
       out_msg.txnId := tbe.addr;
+    } else {
+      out_msg.txnId := tbe.txnId;
     }
     out_msg.type := CHIResponseType:SnpResp_I;
     out_msg.responder := machineID;
