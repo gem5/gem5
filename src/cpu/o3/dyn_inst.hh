@@ -534,8 +534,10 @@ class DynInst : public ExecContext, public RefCounted
     bool
     mispredicted() const
     {
+        gem5::ThreadContext *tc = tcBase();
         std::unique_ptr<PCStateBase> next_pc(pc->clone());
         staticInst->advancePC(*next_pc);
+        tc->getIsaPtr()->postAdvancePC(tc, *staticInst, *pc, *next_pc);
         return *next_pc != *predPC;
     }
 

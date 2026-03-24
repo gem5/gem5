@@ -232,21 +232,29 @@ Execute::tryToBranch(MinorDynInstPtr inst, Fault fault, BranchData &branch)
     DPRINTF(Branch, "tryToBranch before: %s after: %s%s\n",
         *pc_before, *target, (force_branch ? " (forcing)" : ""));
 
-    /* Will we change the PC to something other than the next instruction? */
-    bool must_branch = *pc_before != *target ||
-        fault != NoFault ||
-        force_branch;
-
     /* The reason for the branch data we're about to generate, set below */
     BranchData::Reason reason = BranchData::NoBranch;
+    bool isa_redirected = false;
 
     if (fault == NoFault) {
         inst->staticInst->advancePC(*target);
+        std::unique_ptr<PCStateBase> advanced_target(target->clone());
+        thread->getIsaPtr()->postAdvancePC(
+            thread, *inst->staticInst, *pc_before, *target);
+        isa_redirected = *advanced_target != *target;
+        thread->getIsaPtr()->commitAdvancePC(
+            thread, *inst->staticInst, *pc_before, *target);
         thread->pcState(*target);
 
         DPRINTF(Branch, "Advancing current PC from: %s to: %s\n",
             *pc_before, *target);
     }
+
+    /* Will we change the PC to something other than the next instruction? */
+    bool must_branch = *pc_before != *target ||
+        isa_redirected ||
+        fault != NoFault ||
+        force_branch;
 
     if (inst->predictedTaken && !force_branch) {
         /* Predicted to branch */

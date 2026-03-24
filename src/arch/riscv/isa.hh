@@ -182,8 +182,19 @@ class ISA : public BaseISA
 
     void resetThread() override;
 
-    void advanceHardwareLoop(
+    void
+    postAdvancePC(ThreadContext *tc, const StaticInst &inst,
+        const PCStateBase &cur_pc, PCStateBase &next_pc) const override;
+
+    void
+    commitAdvancePC(ThreadContext *tc, const StaticInst &inst,
+        const PCStateBase &cur_pc, const PCStateBase &next_pc) const override;
+
+    void redirectHardwareLoop(
         ThreadContext *tc, const PCState &cur_pc, PCState &next_pc) const;
+
+    void updateHardwareLoopState(
+        ThreadContext *tc, const PCState &cur_pc) const;
 
     RiscvType rvType() const { return _rvType; }
 

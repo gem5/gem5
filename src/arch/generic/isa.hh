@@ -54,6 +54,7 @@ namespace gem5
 
 class ThreadContext;
 class ExecContext;
+class StaticInst;
 
 class BaseISA : public SimObject
 {
@@ -89,6 +90,16 @@ class BaseISA : public SimObject
     virtual void copyRegsFrom(ThreadContext *src) = 0;
 
     virtual void resetThread() { panic("Thread reset not implemented."); }
+
+    virtual void
+    postAdvancePC(ThreadContext *tc, const StaticInst &inst,
+        const PCStateBase &cur_pc, PCStateBase &next_pc) const
+    {}
+
+    virtual void
+    commitAdvancePC(ThreadContext *tc, const StaticInst &inst,
+        const PCStateBase &cur_pc, const PCStateBase &next_pc) const
+    {}
 
     const RegClasses &regClasses() const { return _regClasses; }
     const std::string &getIsaName() const { return isaName; }

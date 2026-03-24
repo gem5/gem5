@@ -1089,8 +1089,52 @@ ISA::resetThread()
 }
 
 void
-ISA::advanceHardwareLoop(
+ISA::postAdvancePC(ThreadContext *tc, const StaticInst &inst,
+    const PCStateBase &cur_pc, PCStateBase &next_pc) const
+{
+    if (inst.isMicroop() && !inst.isLastMicroop()) {
+        return;
+    }
+
+    redirectHardwareLoop(
+        tc, cur_pc.as<PCState>(), next_pc.as<PCState>());
+}
+
+void
+ISA::commitAdvancePC(ThreadContext *tc, const StaticInst &inst,
+    const PCStateBase &cur_pc, const PCStateBase &next_pc) const
+{
+    if (inst.isMicroop() && !inst.isLastMicroop()) {
+        return;
+    }
+
+    updateHardwareLoopState(tc, cur_pc.as<PCState>());
+}
+
+void
+ISA::redirectHardwareLoop(
     ThreadContext *tc, const PCState &cur_pc, PCState &next_pc) const
+{
+    if (cur_pc.branching() || !tc->readMiscRegNoEffect(MISCREG_LPACTIVE)) {
+        return;
+    }
+
+    const Addr loop_end = rvSext(tc->readMiscRegNoEffect(MISCREG_LPEND));
+    if (cur_pc.pc() != loop_end) {
+        return;
+    }
+
+    const RegVal remaining = tc->readMiscRegNoEffect(MISCREG_LPCOUNT);
+    if (remaining > 1) {
+        const Addr loop_start = rvSext(tc->readMiscRegNoEffect(MISCREG_LPSTART));
+        next_pc.set(loop_start);
+        next_pc.compressed(false);
+    }
+}
+
+void
+ISA::updateHardwareLoopState(
+    ThreadContext *tc, const PCState &cur_pc) const
 {
     if (cur_pc.branching() || !tc->readMiscRegNoEffect(MISCREG_LPACTIVE)) {
         return;
@@ -1110,11 +1154,7 @@ ISA::advanceHardwareLoop(
     --remaining;
     tc->setMiscReg(MISCREG_LPCOUNT, remaining);
 
-    if (remaining != 0) {
-        const Addr loop_start = rvSext(tc->readMiscRegNoEffect(MISCREG_LPSTART));
-        next_pc.set(loop_start);
-        next_pc.compressed(false);
-    } else {
+    if (remaining == 0) {
         tc->setMiscReg(MISCREG_LPACTIVE, 0);
     }
 }

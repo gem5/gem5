@@ -16,11 +16,22 @@ namespace gem5
 namespace RiscvISA
 {
 
+namespace
+{
+
+RegId
+intRegOrZero(RegIndex idx)
+{
+    return idx == 0 ? RegId() : intRegClass[idx];
+}
+
+} // namespace
+
 MAC_R::MAC_R(ExtMachInst machInst)
     : RiscvStaticInst("mac", machInst, IntMultOp),
-      rd(intRegClass[machInst.rd]),
-      rs1(intRegClass[machInst.rs1]),
-      rs2(intRegClass[machInst.rs2])
+      rd(intRegOrZero(machInst.rd)),
+      rs1(intRegOrZero(machInst.rs1)),
+      rs2(intRegOrZero(machInst.rs2))
 {
     setRegIdxArrays(
         reinterpret_cast<RegIdArrayPtr>(
@@ -35,6 +46,7 @@ MAC_R::MAC_R(ExtMachInst machInst)
     setSrcRegIdx(_numSrcRegs++, rs2);
     setSrcRegIdx(_numSrcRegs++, rd);
     setDestRegIdx(_numDestRegs++, rd);
+    _numTypedDestRegs[IntRegClass]++;
 
     flags[IsInteger] = true;
 }
@@ -80,9 +92,9 @@ MAC_R::execute(ExecContext *xc, trace::InstRecord *traceData) const
 
 DOT4_ACC_R::DOT4_ACC_R(ExtMachInst machInst)
     : RiscvStaticInst("dot4_acc", machInst, IntMultOp),
-      rd(intRegClass[machInst.rd]),
-      rs1(intRegClass[machInst.rs1]),
-      rs2(intRegClass[machInst.rs2])
+      rd(intRegOrZero(machInst.rd)),
+      rs1(intRegOrZero(machInst.rs1)),
+      rs2(intRegOrZero(machInst.rs2))
 {
     setRegIdxArrays(
         reinterpret_cast<RegIdArrayPtr>(
@@ -97,6 +109,7 @@ DOT4_ACC_R::DOT4_ACC_R(ExtMachInst machInst)
     setSrcRegIdx(_numSrcRegs++, rs2);
     setSrcRegIdx(_numSrcRegs++, rd);
     setDestRegIdx(_numDestRegs++, rd);
+    _numTypedDestRegs[IntRegClass]++;
 
     flags[IsInteger] = true;
 }
@@ -144,8 +157,8 @@ DOT4_ACC_R::execute(ExecContext *xc, trace::InstRecord *traceData) const
 
 RELU_R::RELU_R(ExtMachInst machInst)
     : RiscvStaticInst("relu", machInst, IntAluOp),
-      rd(intRegClass[machInst.rd]),
-      rs1(intRegClass[machInst.rs1])
+      rd(intRegOrZero(machInst.rd)),
+      rs1(intRegOrZero(machInst.rs1))
 {
     setRegIdxArrays(
         reinterpret_cast<RegIdArrayPtr>(
@@ -157,6 +170,7 @@ RELU_R::RELU_R(ExtMachInst machInst)
     _numDestRegs = 0;
     setSrcRegIdx(_numSrcRegs++, rs1);
     setDestRegIdx(_numDestRegs++, rd);
+    _numTypedDestRegs[IntRegClass]++;
 
     flags[IsInteger] = true;
 }
@@ -191,8 +205,8 @@ RELU_R::execute(ExecContext *xc, trace::InstRecord *traceData) const
 
 CLAMP_I::CLAMP_I(ExtMachInst machInst)
     : RiscvStaticInst("clamp", machInst, IntAluOp),
-      rd(intRegClass[machInst.rd]),
-      rs1(intRegClass[machInst.rs1]),
+      rd(intRegOrZero(machInst.rd)),
+      rs1(intRegOrZero(machInst.rs1)),
       uimm12((uint16_t)machInst.imm12)
 {
     setRegIdxArrays(
@@ -205,6 +219,7 @@ CLAMP_I::CLAMP_I(ExtMachInst machInst)
     _numDestRegs = 0;
     setSrcRegIdx(_numSrcRegs++, rs1);
     setDestRegIdx(_numDestRegs++, rd);
+    _numTypedDestRegs[IntRegClass]++;
 
     flags[IsInteger] = true;
 }
@@ -254,7 +269,7 @@ CLAMP_I::execute(ExecContext *xc, trace::InstRecord *traceData) const
 
 LP_SETUP_I::LP_SETUP_I(ExtMachInst machInst)
     : RiscvStaticInst("lp.setup", machInst, IntAluOp),
-      rs1(intRegClass[machInst.rs1]),
+      rs1(intRegOrZero(machInst.rs1)),
       simm12(sext<12>(machInst.imm12))
 {
     setRegIdxArrays(
@@ -267,6 +282,8 @@ LP_SETUP_I::LP_SETUP_I(ExtMachInst machInst)
     setSrcRegIdx(_numSrcRegs++, rs1);
 
     flags[IsInteger] = true;
+    flags[IsNonSpeculative] = true;
+    flags[IsSerializeAfter] = true;
 }
 
 std::string
@@ -283,9 +300,10 @@ LP_SETUP_I::generateDisassembly(
 Fault
 LP_SETUP_I::execute(ExecContext *xc, trace::InstRecord *traceData) const
 {
-    if (simm12 <= 0 || (simm12 & 0x1) != 0) {
+    if (simm12 < 4 || (simm12 & 0x1) != 0) {
         return std::make_shared<IllegalInstFault>(
-            "lp.setup requires a positive, 2-byte aligned immediate", machInst);
+            "lp.setup requires an immediate >= 4 and 2-byte aligned",
+            machInst);
     }
 
     const RegVal count = rvZext(xc->getRegOperand(this, 0));

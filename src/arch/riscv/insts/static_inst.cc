@@ -29,7 +29,6 @@
 
 #include "arch/riscv/insts/static_inst.hh"
 
-#include "arch/riscv/isa.hh"
 #include "arch/riscv/pcstate.hh"
 #include "arch/riscv/types.hh"
 #include "cpu/static_inst.hh"
@@ -43,16 +42,7 @@ namespace RiscvISA
 void
 RiscvStaticInst::advancePC(ThreadContext *tc) const
 {
-    auto *isa = dynamic_cast<ISA *>(tc->getIsaPtr());
-    auto cur_pc = tc->pcState().as<PCState>();
-    auto next_pc = cur_pc;
-
-    next_pc.advance();
-    if (isa) {
-        isa->advanceHardwareLoop(tc, cur_pc, next_pc);
-    }
-
-    tc->pcState(next_pc);
+    StaticInst::advancePC(tc);
 }
 
 void
@@ -69,19 +59,7 @@ RiscvMicroInst::advancePC(PCStateBase &pcState) const
 void
 RiscvMicroInst::advancePC(ThreadContext *tc) const
 {
-    auto *isa = dynamic_cast<ISA *>(tc->getIsaPtr());
-    auto cur_pc = tc->pcState().as<PCState>();
-    auto next_pc = cur_pc;
-
-    if (flags[IsLastMicroop]) {
-        next_pc.uEnd();
-        if (isa) {
-            isa->advanceHardwareLoop(tc, cur_pc, next_pc);
-        }
-    } else {
-        next_pc.uAdvance();
-    }
-    tc->pcState(next_pc);
+    StaticInst::advancePC(tc);
 }
 
 } // namespace RiscvISA

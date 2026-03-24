@@ -1032,7 +1032,19 @@ Commit::commitInsts()
 
                 cpu->traceFunctions(pc[tid]->instAddr());
 
+                std::unique_ptr<PCStateBase> cur_pc(pc[tid]->clone());
                 head_inst->staticInst->advancePC(*pc[tid]);
+                head_inst->tcBase()->getIsaPtr()->postAdvancePC(
+                    head_inst->tcBase(), *head_inst->staticInst, *cur_pc,
+                    *pc[tid]);
+                {
+                    bool no_squash_from_tc = thread[tid]->noSquashFromTC;
+                    thread[tid]->noSquashFromTC = true;
+                    head_inst->tcBase()->getIsaPtr()->commitAdvancePC(
+                        head_inst->tcBase(), *head_inst->staticInst, *cur_pc,
+                        *pc[tid]);
+                    thread[tid]->noSquashFromTC = no_squash_from_tc;
+                }
 
                 // Keep track of the last sequence number commited
                 lastCommitedSeqNum[tid] = head_inst->seqNum;

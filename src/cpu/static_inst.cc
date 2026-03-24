@@ -87,9 +87,12 @@ StaticInst::printFlags(std::ostream &outs,
 void
 StaticInst::advancePC(ThreadContext *tc) const
 {
-    std::unique_ptr<PCStateBase> pc(tc->pcState().clone());
-    advancePC(*pc);
-    tc->pcState(*pc);
+    const auto &cur_pc = tc->pcState();
+    std::unique_ptr<PCStateBase> next_pc(cur_pc.clone());
+    advancePC(*next_pc);
+    tc->getIsaPtr()->postAdvancePC(tc, *this, cur_pc, *next_pc);
+    tc->getIsaPtr()->commitAdvancePC(tc, *this, cur_pc, *next_pc);
+    tc->pcState(*next_pc);
 }
 
 } // namespace gem5
