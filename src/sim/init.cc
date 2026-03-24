@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2017 ARM Limited
+ * Copyright (c) 2012, 2017, 2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -133,6 +133,8 @@ EmbeddedPyBind::initAll(py::module_ &_m5)
 
     pybind_init_event(_m5);
     pybind_init_stats(_m5);
+
+    pybind_init_port(_m5);
 
     mod = &_m5;
 

@@ -2885,5 +2885,128 @@ namespace VegaISA
 
         vdst.write();
     } // execute
+    // --- Inst_VOP1__V_PRNG_B32 class methods ---
+
+    Inst_VOP1__V_PRNG_B32::Inst_VOP1__V_PRNG_B32(InFmt_VOP1 *iFmt)
+        : Inst_VOP1(iFmt, "v_prng_b32")
+    {
+        setFlag(ALU);
+    } // Inst_VOP1__V_PRNG_B32
+
+    Inst_VOP1__V_PRNG_B32::~Inst_VOP1__V_PRNG_B32()
+    {} // ~Inst_VOP1__V_PRNG_B32
+
+    // Generate a pseudorandom number using an LFSR (linear feedback shift
+    // register) seeded with the vector input, then store the result into a
+    // vector register.
+    //
+    // in = S0.u32;
+    // D0.u32 = ((in << 1U) ^ (in[31] ? 197U : 0U))
+    //
+    // Notes: This function produces a sequence of pseudorandom numbers with
+    // period 2**32 - 1 unless the input is zero, in which case the period is
+    // 1.
+    void
+    Inst_VOP1__V_PRNG_B32::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandU32 src(gpuDynInst, instData.SRC0);
+        VecOperandU32 vdst(gpuDynInst, instData.VDST);
+
+        src.readSrc();
+
+        panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
+
+        auto randFunc = [](VecElemU32 in) {
+            return ((in << 1) ^ (((in >> 31) & 1) ? 0xc5 : 0x00));
+        };
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                vdst[lane] = randFunc(src[lane]);
+            }
+        }
+
+        vdst.write();
+    } // execute
+    // --- Inst_VOP1__V_PERMLANE16_SWAP_B32 class methods ---
+
+    Inst_VOP1__V_PERMLANE16_SWAP_B32::Inst_VOP1__V_PERMLANE16_SWAP_B32(
+        InFmt_VOP1 *iFmt)
+        : Inst_VOP1(iFmt, "v_permlane16_swap_b32")
+    {
+        setFlag(ALU);
+    } // Inst_VOP1__V_PERMLANE16_SWAP_B32
+
+    Inst_VOP1__V_PERMLANE16_SWAP_B32::~Inst_VOP1__V_PERMLANE16_SWAP_B32()
+    {} // ~Inst_VOP1__V_PERMLANE16_SWAP_B32
+
+    // Swap data between two vector registers. Odd rows of the first operand
+    // are swapped with even rows of the second operand (one row is 16 lanes).
+    //
+    // Notes: ABS, NEG and OMOD modifiers should all be zeroed for this
+    // instruction. This instruction is useful for BFP data conversions.
+    void
+    Inst_VOP1__V_PERMLANE16_SWAP_B32::execute(GPUDynInstPtr gpuDynInst)
+    {
+        VecOperandU32 src(gpuDynInst, instData.SRC0);
+        VecOperandU32 vdst(gpuDynInst, instData.VDST);
+
+        src.read();
+        vdst.read();
+
+        // Ignores EXEC MASK
+        for (int pass = 0; pass < 2; ++pass) {
+            for (int lane = 0; lane < 16; ++lane) {
+                int dlane = pass * 32 + lane + 16;
+                int slane = pass * 32 + lane;
+
+                VecElemU32 tmp = src[slane];
+                src[slane] = vdst[dlane];
+                vdst[dlane] = tmp;
+            }
+        }
+
+        src.write();
+        vdst.write();
+    } // execute
+    // --- Inst_VOP1__V_PERMLANE32_SWAP_B32 class methods ---
+
+    Inst_VOP1__V_PERMLANE32_SWAP_B32::Inst_VOP1__V_PERMLANE32_SWAP_B32(
+        InFmt_VOP1 *iFmt)
+        : Inst_VOP1(iFmt, "v_permlane32_swap_b32")
+    {
+        setFlag(ALU);
+    } // Inst_VOP1__V_PERMLANE32_SWAP_B32
+
+    Inst_VOP1__V_PERMLANE32_SWAP_B32::~Inst_VOP1__V_PERMLANE32_SWAP_B32()
+    {} // ~Inst_VOP1__V_PERMLANE32_SWAP_B32
+
+    // Swap data between two vector registers. Rows 2 and 3 of the first
+    // operand are swapped with rows 0 and 1 of the second operand (one row
+    // is 16 lanes).
+    //
+    // Notes: ABS, NEG and OMOD modifiers should all be zeroed for this
+    // instruction. This instruction is useful for BFP data conversions.
+    void
+    Inst_VOP1__V_PERMLANE32_SWAP_B32::execute(GPUDynInstPtr gpuDynInst)
+    {
+        VecOperandU32 src(gpuDynInst, instData.SRC0);
+        VecOperandU32 vdst(gpuDynInst, instData.VDST);
+
+        src.read();
+        vdst.read();
+
+        // Ignores EXEC MASK
+        for (int lane = 0; lane < 32; ++lane) {
+            VecElemU32 tmp = src[lane];
+            src[lane] = vdst[lane + 32];
+            vdst[lane + 32] = tmp;
+        }
+
+        src.write();
+        vdst.write();
+    } // execute
 } // namespace VegaISA
 } // namespace gem5

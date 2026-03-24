@@ -38,6 +38,8 @@
 #ifndef __CPU_UTILS_HH__
 #define __CPU_UTILS_HH__
 
+#include <vector>
+
 #include "base/types.hh"
 
 namespace gem5

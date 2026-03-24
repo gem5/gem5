@@ -312,6 +312,10 @@ namespace Aarch64
         } else {
             if (read) {
                 switch (miscReg) {
+                  case MISCREG_SP_EL0:
+                  case MISCREG_SP_EL1:
+                  case MISCREG_SP_EL2:
+                        return new MrsSp64(machInst, rt, miscReg);
                   case MISCREG_NZCV:
                     return new MrsNZCV64(machInst, rt, miscReg);
                   case MISCREG_DC_CIVAC_Xt:
@@ -320,7 +324,12 @@ namespace Aarch64
                   case MISCREG_DC_ZVA_Xt:
                     return new Unknown64(machInst);
                   default: {
-                    StaticInstPtr si = new Mrs64(machInst, rt, miscReg);
+                    StaticInstPtr si = nullptr;
+                    if (miscRegClass.isSerializing(miscRegClass[miscReg])) {
+                        si = new Mrs64(machInst, rt, miscReg);
+                    } else {
+                        si = new MrsNonSer64(machInst, rt, miscReg);
+                    }
                     if (lookUpMiscReg[miscReg].info[MISCREG_UNVERIFIABLE])
                         si->setFlag(StaticInst::IsUnverifiable);
                     return si;
@@ -328,6 +337,10 @@ namespace Aarch64
                 }
             } else {
                 switch (miscReg) {
+                  case MISCREG_SP_EL0:
+                  case MISCREG_SP_EL1:
+                  case MISCREG_SP_EL2:
+                    return new MsrSp64(machInst, miscReg, rt);
                   case MISCREG_NZCV:
                     return new MsrNZCV64(machInst, miscReg, rt);
                   case MISCREG_DC_ZVA_Xt:
@@ -440,7 +453,11 @@ namespace Aarch64
                     return new At64Hub(machInst, miscReg,
                       MiscRegIndex::MISCREG_PAR_EL1, rt);
                   default:
-                    return new Msr64(machInst, miscReg, rt);
+                    if (miscRegClass.isSerializing(miscRegClass[miscReg])) {
+                        return new Msr64(machInst, miscReg, rt);
+                    } else {
+                        return new MsrNonSer64(machInst, miscReg, rt);
+                    }
                 }
             }
         }
@@ -1358,6 +1375,7 @@ namespace Aarch64
         // bit 27,25=10
         switch (bits(machInst, 29, 28)) {
           case 0x0:
+          {
             if (bits(machInst, 26) == 0) {
                 if (bits(machInst, 24) != 0)
                     return new Unknown64(machInst);
@@ -1562,14 +1580,50 @@ namespace Aarch64
             } else {
                 return decodeNeonMem(machInst);
             }
+          }
           case 0x1:
           {
-            if (bits(machInst, 24) != 0)
-                return new Unknown64(machInst);
-            uint8_t switchVal = (bits(machInst, 26) << 0) |
-                                (bits(machInst, 31, 30) << 1);
             int64_t imm = sext<19>(bits(machInst, 23, 5)) << 2;
             RegIndex rt = (RegIndex)(uint32_t)bits(machInst, 4, 0);
+
+            if (bits(machInst, 24) != 0) {
+               if (bits(machInst, 21) != 0) {
+                  return new Unknown64(machInst);
+               }
+
+               warn_once("LoadAcquirePC implemented with SC\n");
+
+               uint8_t switchVal = (bits(machInst, 23, 22) << 0) |
+                                   (bits(machInst, 31, 30) << 2);
+               RegIndex rn = (RegIndex)(uint32_t)bits(machInst, 9, 5);
+               RegIndex rnsp = makeSP(rn);
+               uint64_t imm = sext<9>(bits(machInst, 20, 12));
+               switch (switchVal) {
+                 case 0x1:
+                   return new LDAPURB64_IMM(machInst, rt, rnsp, imm);
+                 case 0x2:
+                   return new LDAPURSBX64_IMM(machInst, rt, rnsp, imm);
+                 case 0x3:
+                   return new LDAPURSBW64_IMM(machInst, rt, rnsp, imm);
+                 case 0x5:
+                   return new LDAPURH64_IMM(machInst, rt, rnsp, imm);
+                 case 0x6:
+                   return new LDAPURSHX64_IMM(machInst, rt, rnsp, imm);
+                 case 0x7:
+                   return new LDAPURSHW64_IMM(machInst, rt, rnsp, imm);
+                 case 0x9:
+                   return new LDAPURX64_IMM(machInst, rt, rnsp, imm);
+                 case 0xd:
+                   return new LDAPURW64_IMM(machInst, rt, rnsp, imm);
+                 case 0xa:
+                   return new LDAPURSW64_IMM(machInst, rt, rnsp, imm);
+                 default:
+                   return new Unknown64(machInst);
+               }
+            }
+            uint8_t switchVal = (bits(machInst, 26) << 0) |
+                                (bits(machInst, 31, 30) << 1);
+
             switch (switchVal) {
               case 0x0:
                 return new LDRWL64_LIT(machInst, rt, imm);
@@ -1636,15 +1690,18 @@ namespace Aarch64
                     mnemonic = "ldpsw";
                 else
                     mnemonic = "ldp";
+
+                return new Ldp(mnemonic, machInst, size, fp, noAlloc,
+                        signExt, false, false, imm, mode, rn, rt, rt2);
             } else {
                 if (noAlloc)
                     mnemonic = "stnp";
                 else
                     mnemonic = "stp";
-            }
 
-            return new LdpStp(mnemonic, machInst, size, fp, load, noAlloc,
-                    signExt, false, false, imm, mode, rn, rt, rt2);
+                return new Stp(mnemonic, machInst, size, fp, noAlloc,
+                        signExt, false, false, imm, mode, rn, rt, rt2);
+            }
           }
           // bit 29:27=111, 25=0
           case 0x3:

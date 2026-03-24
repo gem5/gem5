@@ -340,4 +340,55 @@ def macroop SWAPGS
     wrbase gs, t1, dataSize=8
     wrval kernel_gs_base, t2, dataSize=8
 };
+
+def macroop RDFSBASE_R
+{
+    # if (CR4.FSGSBASE == 0)
+    #     raise #UD;
+    limm t2, 0x10000, dataSize=8
+    rdcr t1, cr4, dataSize=8
+    and t0, t1, t2, flags=(EZF,), dataSize=8
+    fault "std::make_shared<InvalidOpcode>()", flags=(CEZF,)
+
+    rdbase reg, fs
+};
+
+def macroop RDGSBASE_R
+{
+    # if (CR4.FSGSBASE == 0)
+    #     raise #UD;
+    limm t2, 0x10000, dataSize=8
+    rdcr t1, cr4, dataSize=8
+    and t0, t1, t2, flags=(EZF,), dataSize=8
+    fault "std::make_shared<InvalidOpcode>()", flags=(CEZF,)
+
+    rdbase reg, gs
+};
+
+def macroop WRFSBASE_R
+{
+    # if (CR4.FSGSBASE == 0)
+    #     raise #UD;
+    limm t2, 0x10000, dataSize=8
+    rdcr t1, cr4, dataSize=8
+    and t0, t1, t2, flags=(EZF,), dataSize=8
+    fault "std::make_shared<InvalidOpcode>()", flags=(CEZF,)
+
+    wrbase fs, reg
+    wrval fs_eff_base, reg
+};
+
+def macroop WRGSBASE_R
+{
+    # if (CR4.FSGSBASE == 0)
+    #     raise #UD;
+    limm t2, 0x10000, dataSize=8
+    rdcr t1, cr4, dataSize=8
+    and t0, t1, t2, flags=(EZF,), dataSize=8
+    fault "std::make_shared<InvalidOpcode>()", flags=(CEZF,)
+
+    wrbase gs, reg
+    wrval gs_eff_base, reg
+};
+
 """

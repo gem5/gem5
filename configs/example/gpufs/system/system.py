@@ -61,7 +61,7 @@ def makeGpuFSSystem(args):
         panic("Need at least 2GiB of system memory to load amdgpu module")
 
     # Use the common FSConfig to setup a Linux X86 System
-    (TestCPUClass, test_mem_mode) = Simulation.getCPUClass(args.cpu_type)
+    TestCPUClass, test_mem_mode = Simulation.getCPUClass(args.cpu_type)
     if test_mem_mode == "atomic":
         test_mem_mode = "atomic_noncaching"
     disks = [args.disk_image]
@@ -171,10 +171,12 @@ def makeGpuFSSystem(args):
             0x7A000,
         ]
         sdma_sizes = [0x1000] * 5
-    elif args.gpu_device == "MI300X":
+    elif args.gpu_device == "MI300X" or args.gpu_device == "MI355X":
         # These MMIO addresses are based on the IP discovery file associated
         # with the disk image. Changes to these values require changes to the
         # discovery file base addresses.
+        #
+        # These are the same for MI300X and MI355X.
         num_sdmas = 16
         sdma_bases = [
             0x4980,
@@ -214,7 +216,7 @@ def makeGpuFSSystem(args):
 
     # Setup PM4 packet processors
     pm4_procs = []
-    if args.gpu_device == "MI300X":
+    if args.gpu_device == "MI300X" or args.gpu_device == "MI355X":
         # These MMIO addresses are based on the IP discovery file associated
         # with the disk image. Changes to these values require changes to the
         # discovery file base addresses.

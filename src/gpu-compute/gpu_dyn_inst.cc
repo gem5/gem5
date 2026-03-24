@@ -931,7 +931,8 @@ GPUDynInst::resolveFlatSegment(const VectorMask &mask)
 
         ComputeUnit *cu = wavefront()->computeUnit;
 
-        if (wavefront()->gfxVersion == GfxVersion::gfx942) {
+        if (wavefront()->gfxVersion == GfxVersion::gfx942 ||
+            wavefront()->gfxVersion == GfxVersion::gfx950) {
             // Architected flat scratch base address is in a dedicated hardware
             // register.
             for (int lane = 0; lane < cu->wfSize(); ++lane) {

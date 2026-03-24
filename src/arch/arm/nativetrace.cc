@@ -67,6 +67,10 @@ namespace trace {
     "f31", "fpscr"
 };
 
+ArmNativeTrace::ArmNativeTrace(const Params &p)
+    : NativeTrace(p), stopOnPCError(p.stop_on_pc_error)
+{}
+
 void
 ArmNativeTrace::ThreadState::update(NativeTrace *parent)
 {

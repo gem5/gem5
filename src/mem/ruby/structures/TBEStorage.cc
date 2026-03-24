@@ -35,7 +35,11 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <mem/ruby/structures/TBEStorage.hh>
+#include "mem/ruby/structures/TBEStorage.hh"
+
+#include <string>
+
+#include "base/stats/group.hh"
 
 namespace gem5
 {
@@ -43,15 +47,17 @@ namespace gem5
 namespace ruby
 {
 
-TBEStorage::TBEStorage(statistics::Group *parent, int number_of_TBEs)
-    : m_reserved(0), m_stats(parent)
+TBEStorage::TBEStorage(statistics::Group *parent, int number_of_TBEs,
+                       std::string_view name)
+    : m_reserved(0), m_stats(parent, name)
 {
     for (int i = 0; i < number_of_TBEs; ++i)
         m_slots_avail.push(i);
 }
 
-TBEStorage::TBEStorageStats::TBEStorageStats(statistics::Group *parent)
-    : statistics::Group(parent),
+TBEStorage::TBEStorageStats::TBEStorageStats(statistics::Group *parent,
+                                             std::string_view name)
+    : statistics::Group(parent, std::string(name).c_str()),
       ADD_STAT(avg_size, "Avg. number of slots allocated"),
       ADD_STAT(avg_util, "Avg. utilization"),
       ADD_STAT(avg_reserved, "Avg. number of slots reserved")

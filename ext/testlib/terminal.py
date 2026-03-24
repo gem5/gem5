@@ -11,6 +11,8 @@
 # neither the name of the copyright holders nor the names of its
 # contributors may be used to endorse or promote products derived from
 # this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 # LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
 # A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
@@ -134,7 +136,7 @@ def separator(char=default_separator, color=None):
     Return a separator of the given character that is the length of the full
     width of the terminal screen.
     """
-    (w, h) = terminal_size()
+    w, h = terminal_size()
     if color:
         return color + char * w + termcap.Normal
     else:

@@ -229,7 +229,7 @@ let {{
                         matcher.sub(src2_name, cond_control_flag_init),
                         matcher.sub(src2_name, invalidate_srcs),
                         op_class, operand_types)
-                imm_name = '(int8_t)imm8' if match.group("prefix") else 'imm8'
+                imm_name = '(int64_t)imm64' if match.group("prefix") else 'imm64'
                 self.buildCppClasses(name + "i", Name, suffix + "Imm",
                         matcher.sub(imm_name, code),
                         matcher.sub(imm_name, big_code),
@@ -633,7 +633,7 @@ let {{
             if (divisor == 0) {
                 fault = std::make_shared<DivideError>();
             } else {
-                divideStep(dividend, divisor, quotient, remainder);
+                divideStep(dividend, divisor, quotient, remainder, fault);
                 //Record the final results.
                 Remainder = remainder;
                 Quotient = quotient;
@@ -660,7 +660,7 @@ let {{
                     while (remaining && !(dividend & (1ULL << 63))) {
                         dividend = (dividend << 1) |
                             bits(SrcReg1, remaining - 1);
-                        quotient <<= 1;
+                        addCheckUnsignedOverflow(quotient, quotient, fault);
                         remaining--;
                     }
                     if (dividend & (1ULL << 63)) {
@@ -669,11 +669,12 @@ let {{
                             highBit = true;
                             dividend = (dividend << 1) |
                                 bits(SrcReg1, remaining - 1);
-                            quotient <<= 1;
+                            addCheckUnsignedOverflow(quotient, quotient,
+                                                     fault);
                             remaining--;
                         }
                         if (highBit || divisor <= dividend) {
-                            quotient++;
+                            addCheckUnsignedOverflow(quotient, 1, fault);
                             dividend -= divisor;
                         }
                     }
@@ -683,12 +684,12 @@ let {{
                     while (dividend < divisor && remaining) {
                         dividend = (dividend << 1) |
                             bits(SrcReg1, remaining - 1);
-                        quotient <<= 1;
+                        addCheckUnsignedOverflow(quotient, quotient, fault);
                         remaining--;
                     }
                     remainder = dividend;
                     //Do the division.
-                    divideStep(dividend, divisor, quotient, remainder);
+                    divideStep(dividend, divisor, quotient, remainder, fault);
                 }
             }
             //Keep track of how many bits there are still to pull in.
@@ -707,7 +708,13 @@ let {{
         '''
 
     class Divq(RdRegOp):
-        code = 'DestReg = merge(SrcReg1, dest, Quotient, dataSize);'
+        code = '''
+            if (Quotient != signedPick(Quotient, 0, dataSize)) {
+                fault = std::make_shared<DivideError>();
+            } else {
+                DestReg = merge(SrcReg1, dest, Quotient, dataSize);
+            }
+        '''
         big_code = 'DestReg = Quotient & mask(dataSize * 8);'
 
     class Divr(RdRegOp):
@@ -1406,8 +1413,10 @@ let {{
                   case 4:
                     {
                         CR4 cr4 = newVal;
+                        // Fault if any unknown bits are set. Also,
                         // PAE can't be disabled in long mode.
-                        if (bits(newVal, 63, 11) ||
+                        if (bits(newVal, 63, 17) ||
+                            bits(newVal, 15, 11) ||
                                 (machInst.mode.mode == LongMode && !cr4.pae))
                             fault = std::make_shared<GeneralProtection>(0);
                     }

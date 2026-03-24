@@ -1,4 +1,4 @@
-# Copyright (c) 2025 The Regents of the University of California
+# Copyright (c) 2025-2026 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,10 +24,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
-import os
-import re
-
 from testlib import *
 from testlib.log import *
 
@@ -46,6 +42,52 @@ gem5_verify_config(
         "multisim",
         "configs",
         "hello-restore-checkpoint.py",
+    ),
+    config_args=[],
+    valid_isas=(constants.all_compiled_tag,),
+    valid_hosts=constants.supported_hosts,
+    length=constants.quick_tag,
+    uses_kvm=False,
+)
+
+gem5_verify_config(
+    name="test-multisim-hello-save-checkpoint",
+    fixtures=(),
+    verifiers=(),
+    gem5_args=[
+        "-m",
+        "gem5.utils.multisim",
+    ],
+    config=joinpath(
+        config.base_dir,
+        "tests",
+        "gem5",
+        "multisim",
+        "configs",
+        "hello-save-checkpoint-hypercall.py",
+    ),
+    config_args=[],
+    valid_isas=(constants.all_compiled_tag,),
+    valid_hosts=constants.supported_hosts,
+    length=constants.quick_tag,
+    uses_kvm=False,
+)
+
+gem5_verify_config(
+    name="test-multisim-riscv-hello-save-checkpoint",
+    fixtures=(),
+    verifiers=(),
+    gem5_args=[
+        "-m",
+        "gem5.utils.multisim",
+    ],
+    config=joinpath(
+        config.base_dir,
+        "tests",
+        "gem5",
+        "multisim",
+        "configs",
+        "riscv-hello-save-checkpoint-hypercall.py",
     ),
     config_args=[],
     valid_isas=(constants.all_compiled_tag,),

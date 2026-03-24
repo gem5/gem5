@@ -559,31 +559,31 @@ let {{
                          "fplibAbs<uint16_t>(cOp1)",
                          "fplibAbs<uint32_t>(cOp1)",
                          "fplibAbs<uint64_t>(cOp1)")
-    buildSimpleUnaryFpOp("frintn", "FRIntN", "FpRegRegOp", "FloatMiscOp",
+    buildSimpleUnaryFpOp("frintn", "FRIntN", "FpRegRegOp", "FloatCvtOp",
         "fplibRoundInt<uint16_t>(cOp1, FPRounding_TIEEVEN, false, fpscr)",
         "fplibRoundInt<uint32_t>(cOp1, FPRounding_TIEEVEN, false, fpscr)",
         "fplibRoundInt<uint64_t>(cOp1, FPRounding_TIEEVEN, false, fpscr)")
-    buildSimpleUnaryFpOp("frintp", "FRIntP", "FpRegRegOp", "FloatMiscOp",
+    buildSimpleUnaryFpOp("frintp", "FRIntP", "FpRegRegOp", "FloatCvtOp",
         "fplibRoundInt<uint16_t>(cOp1, FPRounding_POSINF, false, fpscr)",
         "fplibRoundInt<uint32_t>(cOp1, FPRounding_POSINF, false, fpscr)",
         "fplibRoundInt<uint64_t>(cOp1, FPRounding_POSINF, false, fpscr)")
-    buildSimpleUnaryFpOp("frintm", "FRIntM", "FpRegRegOp", "FloatMiscOp",
+    buildSimpleUnaryFpOp("frintm", "FRIntM", "FpRegRegOp", "FloatCvtOp",
         "fplibRoundInt<uint16_t>(cOp1, FPRounding_NEGINF, false, fpscr)",
         "fplibRoundInt<uint32_t>(cOp1, FPRounding_NEGINF, false, fpscr)",
         "fplibRoundInt<uint64_t>(cOp1, FPRounding_NEGINF, false, fpscr)")
-    buildSimpleUnaryFpOp("frintz", "FRIntZ", "FpRegRegOp", "FloatMiscOp",
+    buildSimpleUnaryFpOp("frintz", "FRIntZ", "FpRegRegOp", "FloatCvtOp",
         "fplibRoundInt<uint16_t>(cOp1, FPRounding_ZERO, false, fpscr)",
         "fplibRoundInt<uint32_t>(cOp1, FPRounding_ZERO, false, fpscr)",
         "fplibRoundInt<uint64_t>(cOp1, FPRounding_ZERO, false, fpscr)")
-    buildSimpleUnaryFpOp("frinta", "FRIntA", "FpRegRegOp", "FloatMiscOp",
+    buildSimpleUnaryFpOp("frinta", "FRIntA", "FpRegRegOp", "FloatCvtOp",
         "fplibRoundInt<uint16_t>(cOp1, FPRounding_TIEAWAY, false, fpscr)",
         "fplibRoundInt<uint32_t>(cOp1, FPRounding_TIEAWAY, false, fpscr)",
         "fplibRoundInt<uint64_t>(cOp1, FPRounding_TIEAWAY, false, fpscr)")
-    buildSimpleUnaryFpOp("frinti", "FRIntI", "FpRegRegOp", "FloatMiscOp",
+    buildSimpleUnaryFpOp("frinti", "FRIntI", "FpRegRegOp", "FloatCvtOp",
         "fplibRoundInt<uint16_t>(cOp1, FPCRRounding(fpscr), false, fpscr)",
         "fplibRoundInt<uint32_t>(cOp1, FPCRRounding(fpscr), false, fpscr)",
         "fplibRoundInt<uint64_t>(cOp1, FPCRRounding(fpscr), false, fpscr)")
-    buildSimpleUnaryFpOp("frintx", "FRIntX", "FpRegRegOp", "FloatMiscOp",
+    buildSimpleUnaryFpOp("frintx", "FRIntX", "FpRegRegOp", "FloatCvtOp",
         "fplibRoundInt<uint16_t>(cOp1, FPCRRounding(fpscr), true, fpscr)",
         "fplibRoundInt<uint32_t>(cOp1, FPCRRounding(fpscr), true, fpscr)",
         "fplibRoundInt<uint64_t>(cOp1, FPCRRounding(fpscr), true, fpscr)")
@@ -621,20 +621,20 @@ let {{
             exec_output    += BasicExecute.subst(iop)
 
     buildSimpleUnaryFpOpFrintts("frint32z", "FRInt32Z", "FpRegRegOp",
-        "FloatMiscOp",
+        "FloatCvtOp",
         "fplibRoundIntN<uint32_t>(cOp1, FPRounding_ZERO, true, 32, fpscr)",
         "fplibRoundIntN<uint64_t>(cOp1, FPRounding_ZERO, true, 32, fpscr)")
     buildSimpleUnaryFpOpFrintts("frint32x", "FRInt32X", "FpRegRegOp",
-        "FloatMiscOp",
+        "FloatCvtOp",
         "fplibRoundIntN<uint32_t>(cOp1, FPCRRounding(fpscr), true, 32, fpscr)",
         "fplibRoundIntN<uint64_t>(cOp1, FPCRRounding(fpscr), true, 32, fpscr)")
 
     buildSimpleUnaryFpOpFrintts("frint64z", "FRInt64Z", "FpRegRegOp",
-        "FloatMiscOp",
+        "FloatCvtOp",
         "fplibRoundIntN<uint32_t>(cOp1, FPRounding_ZERO, true, 64, fpscr)",
         "fplibRoundIntN<uint64_t>(cOp1, FPRounding_ZERO, true, 64, fpscr)")
     buildSimpleUnaryFpOpFrintts("frint64x", "FRInt64X", "FpRegRegOp",
-        "FloatMiscOp",
+        "FloatCvtOp",
         "fplibRoundIntN<uint32_t>(cOp1, FPCRRounding(fpscr), true, 64, fpscr)",
         "fplibRoundIntN<uint64_t>(cOp1, FPCRRounding(fpscr), true, 64, fpscr)")
 }};
@@ -1129,7 +1129,7 @@ let {{
 
         iop = ArmInstObjParams("fcsel", "FCSel%s" % (bitsToSuffix(bits)),
                                "FpCondSelOp", { "code":     code,
-                                                "op_class": "FloatCvtOp" })
+                                                "op_class": "FloatMiscOp" })
         iop.snippets["code"] += zeroSveVecRegUpperPartCode % "AA64FpDest"
         header_output  += DataXCondSelDeclare.subst(iop)
         decoder_output += DataXCondSelConstructor.subst(iop)

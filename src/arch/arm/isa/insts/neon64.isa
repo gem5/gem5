@@ -1,6 +1,6 @@
 // -*- mode: c++ -*-
 
-// Copyright (c) 2012-2013, 2015-2018, 2020, 2024-2025 Arm Limited
+// Copyright (c) 2012-2013, 2015-2018, 2020, 2024-2026 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -1255,26 +1255,40 @@ let {{
                            complex=True)
 
     # SDOT (vector)
-    intDotInst('sdot', 'SdotDX', 'SimdAluOp', True, True, True, 2, False)
-    intDotInst('sdot', 'SdotQX', 'SimdAluOp', True, True, True, 4, False)
+    intDotInst('sdot', 'SdotDX', 'SimdDotProdOp',
+               True, True, True, 2, False)
+    intDotInst('sdot', 'SdotQX', 'SimdDotProdOp',
+               True, True, True, 4, False)
     # SDOT (element)
-    intDotInst('sdot', 'SdotElemDX', 'SimdAluOp', True, True, True, 2, True)
-    intDotInst('sdot', 'SdotElemQX', 'SimdAluOp', True, True, True, 4, True)
+    intDotInst('sdot', 'SdotElemDX', 'SimdDotProdOp',
+               True, True, True, 2, True)
+    intDotInst('sdot', 'SdotElemQX', 'SimdDotProdOp',
+               True, True, True, 4, True)
     # UDOT (vector)
-    intDotInst('udot', 'UdotDX', 'SimdAluOp', False, False, False, 2, False)
-    intDotInst('udot', 'UdotQX', 'SimdAluOp', False, False, False, 4, False)
+    intDotInst('udot', 'UdotDX', 'SimdDotProdOp',
+               False, False, False, 2, False)
+    intDotInst('udot', 'UdotQX', 'SimdDotProdOp',
+               False, False, False, 4, False)
     # UDOT (element)
-    intDotInst('udot', 'UdotElemDX', 'SimdAluOp', False, False, False, 2, True)
-    intDotInst('udot', 'UdotElemQX', 'SimdAluOp', False, False, False, 4, True)
+    intDotInst('udot', 'UdotElemDX', 'SimdDotProdOp',
+               False, False, False, 2, True)
+    intDotInst('udot', 'UdotElemQX', 'SimdDotProdOp',
+               False, False, False, 4, True)
     # SUDOT (element)
-    intDotInst('sudot', 'SudotElemDX', 'SimdAluOp', True, True, False, 2, True)
-    intDotInst('sudot', 'SudotElemQX', 'SimdAluOp', True, True, False, 4, True)
+    intDotInst('sudot', 'SudotElemDX', 'SimdDotProdOp',
+               True, True, False, 2, True)
+    intDotInst('sudot', 'SudotElemQX', 'SimdDotProdOp',
+               True, True, False, 4, True)
     # USDOT (vector)
-    intDotInst('usdot', 'UsdotDX', 'SimdAluOp', True, False, True, 2, False)
-    intDotInst('usdot', 'UsdotQX', 'SimdAluOp', True, False, True, 4, False)
+    intDotInst('usdot', 'UsdotDX', 'SimdDotProdOp',
+               True, False, True, 2, False)
+    intDotInst('usdot', 'UsdotQX', 'SimdDotProdOp',
+               True, False, True, 4, False)
     # USDOT (element)
-    intDotInst('usdot', 'UsdotElemDX', 'SimdAluOp', True, False, True, 2, True)
-    intDotInst('usdot', 'UsdotElemQX', 'SimdAluOp', True, False, True, 4, True)
+    intDotInst('usdot', 'UsdotElemDX', 'SimdDotProdOp',
+               True, False, True, 2, True)
+    intDotInst('usdot', 'UsdotElemQX', 'SimdDotProdOp',
+               True, False, True, 4, True)
 
     def intMatMulInst(name, Name, opClass,
                       destIsSigned, src1IsSigned, src2IsSigned):
@@ -2093,19 +2107,21 @@ let {{
                      frint64zCode, extra_check=frintts_check)
     # FRSQRTE
     frsqrteCode = fpOp % "fplibRSqrtEstimate<Element>(srcElem1, fpscr, fpcr)"
-    twoEqualRegInstX("frsqrte", "FrsqrteDX", "SimdFloatSqrtOp",
+    twoEqualRegInstX("frsqrte", "FrsqrteDX", "SimdCvtOp",
                      smallFloatTypes, 2, frsqrteCode)
-    twoEqualRegInstX("frsqrte", "FrsqrteQX", "SimdFloatSqrtOp", floatTypes, 4,
+    twoEqualRegInstX("frsqrte", "FrsqrteQX", "SimdCvtOp", floatTypes, 4,
                      frsqrteCode)
-    twoEqualRegInstX("frsqrte", "FrsqrteScX", "SimdFloatSqrtOp", floatTypes, 4,
+    twoEqualRegInstX("frsqrte", "FrsqrteScX", "SimdCvtOp", floatTypes, 4,
                      frsqrteCode, scalar=True, nepSrc="vd")
     # FRSQRTS
     frsqrtsCode = fpBinOp % "RSqrtStepFused"
-    threeEqualRegInstX("frsqrts", "FrsqrtsDX", "SimdFloatMiscOp",
+    threeEqualRegInstX("frsqrts", "FrsqrtsDX", "SimdFloatMultAccOp",
                        smallFloatTypes, 2, frsqrtsCode)
-    threeEqualRegInstX("frsqrts", "FrsqrtsQX", "SimdFloatMiscOp", floatTypes,
+    threeEqualRegInstX("frsqrts", "FrsqrtsQX", "SimdFloatMultAccOp",
+                       floatTypes,
                        4, frsqrtsCode)
-    threeEqualRegInstX("frsqrts", "FrsqrtsScX", "SimdFloatMiscOp", floatTypes,
+    threeEqualRegInstX("frsqrts", "FrsqrtsScX", "SimdFloatMultAccOp",
+                       floatTypes,
                        4, frsqrtsCode, scalar=True, nepSrc="vn")
     # FSQRT
     fsqrtCode = fpOp % "fplibSqrt<Element>(srcElem1, fpscr, fpcr)"
@@ -2209,7 +2225,6 @@ let {{
     threeEqualRegInstX("pmul", "PmulQX", "SimdMultOp", ("uint8_t",), 4,
                        pmulCode)
     # PMULL, PMULL2
-    # Note: 64-bit PMULL is not available (Crypto. Extension)
     pmullCode = '''
             destElem = 0;
             for (unsigned j = 0; j < sizeof(Element) * 8; j++) {
@@ -2217,9 +2232,10 @@ let {{
                     destElem ^= (BigElement)srcElem1 << j;
             }
     '''
-    threeRegLongInstX("pmull", "PmullX", "SimdMultOp", ("uint8_t",), pmullCode)
-    threeRegLongInstX("pmull", "Pmull2X", "SimdMultOp", ("uint8_t",),
-                      pmullCode, hi=True)
+    threeRegLongInstX("pmull", "PmullX", "SimdMultOp",
+                      ("uint8_t","uint64_t",), pmullCode)
+    threeRegLongInstX("pmull", "Pmull2X", "SimdMultOp",
+                      ("uint8_t","uint64_t",), pmullCode, hi=True)
     # RADDHN, RADDHN2
     raddhnCode = '''
             destElem = ((BigElement)srcElem1 + (BigElement)srcElem2 +
@@ -2340,9 +2356,9 @@ let {{
                       abdlCode, True, hi=True)
     # SADALP
     adalpCode = "destElem += (BigElement)srcElem1 + (BigElement)srcElem2;"
-    twoRegCondenseInstX("sadalp", "SadalpDX", "SimdAddOp", smallSignedTypes, 2,
+    twoRegCondenseInstX("sadalp", "SadalpDX", "SimdAddAccOp", smallSignedTypes, 2,
                         adalpCode, True)
-    twoRegCondenseInstX("sadalp", "SadalpQX", "SimdAddOp", smallSignedTypes, 4,
+    twoRegCondenseInstX("sadalp", "SadalpQX", "SimdAddAccOp", smallSignedTypes, 4,
                         adalpCode, True)
     # SADDL, SADDL2
     addlwCode = "destElem = (BigElement)srcElem1 + (BigElement)srcElem2;"
@@ -3013,11 +3029,11 @@ let {{
             }
             FpscrQc = fpscr;
     '''
-    twoEqualRegInstX("sqshl", "SqshlImmDX", "SimdAluOp", smallSignedTypes, 2,
+    twoEqualRegInstX("sqshl", "SqshlImmDX", "SimdShiftOp", smallSignedTypes, 2,
                      sqshlImmCode, hasImm=True)
-    twoEqualRegInstX("sqshl", "SqshlImmQX", "SimdAluOp", signedTypes, 4,
+    twoEqualRegInstX("sqshl", "SqshlImmQX", "SimdShiftOp", signedTypes, 4,
                      sqshlImmCode, hasImm=True)
-    twoEqualRegInstX("sqshl", "SqshlImmScX", "SimdAluOp", signedTypes, 4,
+    twoEqualRegInstX("sqshl", "SqshlImmScX", "SimdShiftOp", signedTypes, 4,
                      sqshlImmCode, hasImm=True, scalar=True)
     # SQSHL (register)
     sqshlCode = '''
@@ -3514,9 +3530,9 @@ let {{
     threeRegLongInstX("uabdl2", "Uabdl2X", "SimdAddAccOp", smallUnsignedTypes,
                       abdlCode, True, hi=True)
     # UADALP
-    twoRegCondenseInstX("uadalp", "UadalpDX", "SimdAddOp", smallUnsignedTypes,
+    twoRegCondenseInstX("uadalp", "UadalpDX", "SimdAddAccOp", smallUnsignedTypes,
                         2, adalpCode, True)
-    twoRegCondenseInstX("uadalp", "UadalpQX", "SimdAddOp", smallUnsignedTypes,
+    twoRegCondenseInstX("uadalp", "UadalpQX", "SimdAddAccOp", smallUnsignedTypes,
                         4, adalpCode, True)
     # UADDL, UADDL2
     threeRegLongInstX("uaddl", "UaddlX", "SimdAddAccOp", smallUnsignedTypes,
@@ -3878,9 +3894,9 @@ let {{
                      rshrCode, hasImm=True)
     # URSQRTE
     ursqrteCode = "destElem = unsignedRSqrtEstimate(srcElem1);"
-    twoEqualRegInstX("ursqrte", "UrsqrteDX", "SimdSqrtOp", ("uint32_t",), 2,
+    twoEqualRegInstX("ursqrte", "UrsqrteDX", "SimdCvtOp", ("uint32_t",), 2,
                      ursqrteCode)
-    twoEqualRegInstX("ursqrte", "UrsqrteQX", "SimdSqrtOp", ("uint32_t",), 4,
+    twoEqualRegInstX("ursqrte", "UrsqrteQX", "SimdCvtOp", ("uint32_t",), 4,
                      ursqrteCode)
     # URSRA
     twoEqualRegInstX("ursra", "UrsraDX", "SimdShiftOp", unsignedTypes, 2,

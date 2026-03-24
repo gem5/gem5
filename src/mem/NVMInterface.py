@@ -33,7 +33,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects.DRAMInterface import AddrMap
 from m5.objects.MemCtrl import MemCtrl
 from m5.objects.MemInterface import MemInterface
 from m5.params import *

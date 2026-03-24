@@ -1,3 +1,15 @@
+# Copyright (c) 2025 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2022 The Regents of the University of California
 # All rights reserved.
 #
@@ -142,13 +154,17 @@ elif args.mem_system == "classic":
 
 elif args.mem_system == "chi":
     requires(coherence_protocol_required=CoherenceProtocol.CHI)
-    from gem5.components.cachehierarchies.chi.private_l1_cache_hierarchy import (
-        PrivateL1CacheHierarchy,
+    from gem5.components.cachehierarchies.chi.private_l1_private_l2_cache_hierarchy import (
+        PrivateL1PrivateL2CacheHierarchy,
     )
 
-    cache_hierarchy = PrivateL1CacheHierarchy(
-        size="16KiB",
-        assoc=4,
+    cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
+        l1d_size="32KiB",
+        l1d_assoc=4,
+        l1i_size="32KiB",
+        l1i_assoc=4,
+        l2_size="512KiB",
+        l2_assoc=8,
     )
 
 elif args.mem_system == "mesi_two_level":

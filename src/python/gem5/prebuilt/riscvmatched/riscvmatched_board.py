@@ -49,6 +49,9 @@ from m5.objects import (
     RiscvBootloaderKernelWorkload,
     RiscvMmioVirtIO,
     RiscvRTC,
+    RiscvSystem,
+    Root,
+    SimObject,
     VirtIOBlock,
     VirtIORng,
 )
@@ -61,7 +64,7 @@ from m5.util.fdthelper import (
     FdtState,
 )
 
-from gem5.components.boards.abstract_system_board import AbstractSystemBoard
+from gem5.components.boards.abstract_board import AbstractBoard
 from gem5.components.boards.kernel_disk_workload import KernelDiskWorkload
 from gem5.components.boards.se_binary_workload import SEBinaryWorkload
 from gem5.components.memory import SingleChannelDDR4_2400
@@ -94,7 +97,7 @@ def U74Memory():
 
 
 class RISCVMatchedBoard(
-    AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload
+    RiscvSystem, AbstractBoard, KernelDiskWorkload, SEBinaryWorkload
 ):
     """
     A board capable of full system simulation for RISC-V
@@ -135,14 +138,16 @@ class RISCVMatchedBoard(
         memory = U74Memory()
 
         processor = U74Processor(is_fs=is_fs)
-        super().__init__(
+        super().__init__()
+        AbstractBoard.__init__(
+            self,
             clk_freq=clk_freq,  # real system is 1.0 to 1.5 GHz
             processor=processor,
             memory=memory,
             cache_hierarchy=cache_hierarchy,
         )
 
-    @overrides(AbstractSystemBoard)
+    @overrides(AbstractBoard)
     def _setup_board(self) -> None:
         if self._fs:
             self.workload = RiscvBootloaderKernelWorkload()
@@ -201,11 +206,14 @@ class RISCVMatchedBoard(
             self.iobus.cpu_side_ports = (
                 self.platform.pci_host.up_request_port()
             )
-            self.pci_bus.mem_side_ports = (
+            self.platform.pci_bus.default = (
                 self.platform.pci_host.down_response_port()
             )
-            self.pci_bus.cpu_side_ports = (
+            self.platform.pci_bus.cpu_side_ports = (
                 self.platform.pci_host.down_request_port()
+            )
+            self.platform.pci_bus.config_error_port = (
+                self.platform.pci_host.config_error.pio
             )
 
             # Add Ethernet card
@@ -217,8 +225,8 @@ class RISCVMatchedBoard(
             )
 
             self.ethernet.upstream = self.platform.pci_host
-            self.ethernet.pio = self.pci_bus.mem_side_ports
-            self.ethernet.dma = self.pci_bus.cpu_side_ports
+            self.ethernet.pio = self.platform.pci_bus.mem_side_ports
+            self.ethernet.dma = self.platform.pci_bus.cpu_side_ports
 
             if self.get_cache_hierarchy().is_ruby():
                 for device in self._off_chip_devices + self._on_chip_devices:
@@ -264,22 +272,22 @@ class RISCVMatchedBoard(
                 uncacheable=uncacheable_range
             )
 
-    @overrides(AbstractSystemBoard)
+    @overrides(AbstractBoard)
     def has_dma_ports(self) -> bool:
         return False
 
-    @overrides(AbstractSystemBoard)
+    @overrides(AbstractBoard)
     def get_dma_ports(self) -> List[Port]:
         raise NotImplementedError(
             "RISCVBoard does not have DMA Ports. "
             "Use `has_dma_ports()` to check this."
         )
 
-    @overrides(AbstractSystemBoard)
+    @overrides(AbstractBoard)
     def has_io_bus(self) -> bool:
         return self._fs
 
-    @overrides(AbstractSystemBoard)
+    @overrides(AbstractBoard)
     def get_io_bus(self) -> IOXBar:
         if self._fs:
             return self.iobus
@@ -289,11 +297,11 @@ class RISCVMatchedBoard(
                 "Use `has_io_bus()` to check this."
             )
 
-    @overrides(AbstractSystemBoard)
+    @overrides(AbstractBoard)
     def has_pci_bus(self) -> bool:
         return self.is_fullsystem()
 
-    @overrides(AbstractSystemBoard)
+    @overrides(AbstractBoard)
     def get_pci_bus(self) -> PciBus:
         if self.has_pci_bus():
             return self.platform.pci_bus
@@ -303,11 +311,11 @@ class RISCVMatchedBoard(
                 "bus to return. Use `has_pci_bus()` to check this."
             )
 
-    @overrides(AbstractSystemBoard)
+    @overrides(AbstractBoard)
     def has_coherent_io(self) -> bool:
         return self._fs
 
-    @overrides(AbstractSystemBoard)
+    @overrides(AbstractBoard)
     def get_mem_side_coherent_io_port(self) -> Port:
         if self._fs:
             return self.iobus.mem_side_ports
@@ -317,7 +325,7 @@ class RISCVMatchedBoard(
                 "check this."
             )
 
-    @overrides(AbstractSystemBoard)
+    @overrides(AbstractBoard)
     def _setup_memory_ranges(self):
         """
         Starting range for the DDR memory is 0x80000000.
@@ -337,8 +345,8 @@ class RISCVMatchedBoard(
             self.mem_ranges = [AddrRange(memory.get_size())]
             memory.set_memory_range(self.mem_ranges)
 
-    @overrides(AbstractSystemBoard)
-    def _pre_instantiate(self, full_system: Optional[bool] = None) -> None:
+    @overrides(AbstractBoard)
+    def _pre_instantiate(self, full_system: Optional[bool] = None) -> Root:
         if self._fs:
             if len(self._bootloader) > 0:
                 self.workload.bootloader_addr = 0x80000000
@@ -351,7 +359,7 @@ class RISCVMatchedBoard(
                 self.workload.kernel_addr = 0x80000000
                 self.workload.entry_point = 0x80000000
 
-        super()._pre_instantiate(full_system=full_system)
+        return super()._pre_instantiate(full_system=full_system)
 
     def generate_device_tree(self, outdir: str) -> None:
         """Creates the ``dtb`` and ``dts`` files.
@@ -655,3 +663,12 @@ class RISCVMatchedBoard(
             kernel_args=kernel_args,
             exit_on_work_items=exit_on_work_items,
         )
+
+    @overrides(SimObject)
+    def createCCObject(self):
+        """We override this function as it is called in ``m5.instantiate``. This
+        means we can insert a check to ensure the ``_connect_things`` function
+        has been run.
+        """
+        super()._connect_things_check()
+        super().createCCObject()

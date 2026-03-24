@@ -110,6 +110,7 @@ class SIMD_Unit(FUDesc):
         OpDesc(opClass="SimdExt"),
         OpDesc(opClass="SimdFloatExt"),
         OpDesc(opClass="SimdConfig"),
+        OpDesc(opClass="SimdDotProd"),
         OpDesc(opClass="SimdAes"),
         OpDesc(opClass="SimdAesMix"),
         OpDesc(opClass="SimdSha1Hash"),
@@ -118,9 +119,15 @@ class SIMD_Unit(FUDesc):
         OpDesc(opClass="SimdSha256Hash2"),
         OpDesc(opClass="SimdShaSigma2"),
         OpDesc(opClass="SimdShaSigma3"),
+        OpDesc(opClass="SimdSha3"),
+        OpDesc(opClass="SimdSm4e"),
+        OpDesc(opClass="SimdCrc"),
+        OpDesc(opClass="SimdBf16Add"),
+        OpDesc(opClass="SimdBf16Cmp"),
         OpDesc(opClass="SimdBf16Cvt"),
         OpDesc(opClass="SimdBf16DotProd"),
         OpDesc(opClass="SimdBf16MatMultAcc"),
+        OpDesc(opClass="SimdBf16Mult"),
         OpDesc(opClass="SimdBf16MultAcc"),
     ]
     count = 4
@@ -132,6 +139,11 @@ class Matrix_Unit(FUDesc):
         OpDesc(opClass="MatrixMov"),
         OpDesc(opClass="MatrixOP"),
     ]
+    count = 1
+
+
+class System_Unit(FUDesc):
+    opList = [OpDesc(opClass="System")]
     count = 1
 
 
@@ -196,8 +208,3 @@ class RdWrPort(FUDesc):
         OpDesc(opClass="SimdStrideSegmentedStore"),
     ]
     count = 4
-
-
-class IprPort(FUDesc):
-    opList = [OpDesc(opClass="IprAccess", opLat=3, pipelined=False)]
-    count = 1

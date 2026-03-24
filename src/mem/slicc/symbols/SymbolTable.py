@@ -135,34 +135,36 @@ class SymbolTable:
 
     def writeCodeFiles(self, path, includes):
         makeDir(path)
-        makeDir(os.path.join(path, self.slicc.protocol))
 
-        code = self.codeFormatter()
+        # Note: This will be None if generated only the shared code.
+        if self.slicc.protocol:
+            makeDir(os.path.join(path, self.slicc.protocol))
 
-        for include_path in includes:
-            code('#include "${{include_path}}"')
+            code = self.codeFormatter()
 
-        for symbol in self.sym_vec:
-            if isinstance(symbol, Type) and not symbol.isPrimitive:
-                ident = symbol.c_ident
-                if not symbol.shared and not symbol.isExternal:
-                    ident = f"{self.slicc.protocol}/{ident}"
-                code('#include "mem/ruby/protocol/${{ident}}.hh"')
+            for include_path in includes:
+                code('#include "${{include_path}}"')
 
-        code(
-            f'#include "mem/ruby/protocol/{self.slicc.protocol}/{self.slicc.protocol}ProtocolInfo.hh"'
-        )
-        code.write(path, f"{self.slicc.protocol}/Types.hh")
+            for symbol in self.sym_vec:
+                if isinstance(symbol, Type) and not symbol.isPrimitive:
+                    ident = symbol.c_ident
+                    if not symbol.shared and not symbol.isExternal:
+                        ident = f"{self.slicc.protocol}/{ident}"
+                    code('#include "mem/ruby/protocol/${{ident}}.hh"')
 
-        self.writeProtocolInfo(path)
+            code(
+                f'#include "mem/ruby/protocol/{self.slicc.protocol}/{self.slicc.protocol}ProtocolInfo.hh"'
+            )
+            code.write(path, f"{self.slicc.protocol}/Types.hh")
+
+            self.writeProtocolInfo(path)
 
         for symbol in self.sym_vec:
             symbol.writeCodeFiles(path, includes)
 
     def writeProtocolInfo(self, path):
         code = self.codeFormatter()
-        code(
-            f"""
+        code(f"""
 #ifndef __MEM_RUBY_PROTOCOL_{self.slicc.protocol}_{self.slicc.protocol}PROTOCOL_INFO_HH__
 #define __MEM_RUBY_PROTOCOL_{self.slicc.protocol}_{self.slicc.protocol}PROTOCOL_INFO_HH__
 
@@ -182,8 +184,7 @@ class {self.slicc.protocol}ProtocolInfo : public ProtocolInfo
   public:
       {self.slicc.protocol}ProtocolInfo() :
           ProtocolInfo("{self.slicc.protocol}",
-"""
-        )
+""")
         options = ",\n".join(
             [
                 f"                       {'true' if value else 'false'}"
@@ -191,8 +192,7 @@ class {self.slicc.protocol}ProtocolInfo : public ProtocolInfo
             ]
         )
         code(options)
-        code(
-            f"""          )
+        code(f"""          )
       {{
       }}
 }};
@@ -202,8 +202,7 @@ class {self.slicc.protocol}ProtocolInfo : public ProtocolInfo
 }}
 
 #endif // __MEM_RUBY_PROTOCOL_{self.slicc.protocol}_{self.slicc.protocol}PROTOCOL_INFO_HH__
-"""
-        )
+""")
         code.write(
             path, f"{self.slicc.protocol}/{self.slicc.protocol}ProtocolInfo.hh"
         )
@@ -222,8 +221,7 @@ class {self.slicc.protocol}ProtocolInfo : public ProtocolInfo
             name = "empty.html"
 
         code = self.codeFormatter()
-        code(
-            """
+        code("""
 <html>
 <head>
 <title>$path</title>
@@ -233,8 +231,7 @@ class {self.slicc.protocol}ProtocolInfo : public ProtocolInfo
     <frame name="Status" src="empty.html">
 </frameset>
 </html>
-"""
-        )
+""")
         code.write(path, "index.html")
 
         code = self.codeFormatter()

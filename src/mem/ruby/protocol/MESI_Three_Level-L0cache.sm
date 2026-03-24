@@ -109,6 +109,10 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     // LL/SC states
     LLSC_E, AccessPermission:Read_Only, desc="a L1 cache entry Exclusive (LL/SC locked)";
     LLSC_M, AccessPermission:Read_Write, desc="a L1 cache entry Modified (LL/SC locked)";
+
+    // Flush states
+    I_F, AccessPermission:Busy, desc="Sent flush to L1, was in invalid";
+    V_F, AccessPermission:Busy, desc="Sent flush to L1, was valid";
   }
 
   // EVENTS
@@ -152,6 +156,11 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     Load_Linked,         desc="Load-Linked request from the home processor";
     LLSC_Data_Exclusive, desc="Data for processor (start LL/SC  lock timer)";
     LLSC_Timeout,        desc="LL/SC lock timeout";
+
+    // Flush transitions
+    Flush, desc="Receive flush from processor";
+    Flush_Ack, desc="Flush ack from L1";
+    External_Flush_Data, desc="Send data to L1 during flush";
   }
 
   // TYPES
@@ -303,6 +312,8 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     } else if ((type == RubyRequestType:ST) || (type == RubyRequestType:ATOMIC)
                || (type == RubyRequestType:Store_Conditional)) {
       return Event:Store;
+    } else if (type == RubyRequestType:FLUSH) {
+      return Event:Flush;
     } else {
       error("Invalid RubyRequestType");
     }
@@ -481,6 +492,10 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
           trigger(Event:Fwd_GETS, in_msg.addr, cache_entry, tbe);
         } else if (in_msg.Class == CoherenceClass:GET_INSTR) {
           trigger(Event:Fwd_GET_INSTR, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Class == CoherenceClass:FLUSH_ACK) {
+          trigger(Event:Flush_Ack, in_msg.addr, cache_entry, tbe);
+        } else if (in_msg.Class == CoherenceClass:FLUSH_DATA) {
+          trigger(Event:External_Flush_Data, in_msg.addr, cache_entry, tbe);
         } else {
           error("Invalid forwarded request type");
         }
@@ -550,6 +565,9 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
             if (in_msg.Type == RubyRequestType:Store_Conditional) {
                 // if the line is not valid, it can't be locked
                 trigger(Event:Failed_SC, in_msg.LineAddress,
+                        Dcache_entry, TBEs[in_msg.LineAddress]);
+            } else if (in_msg.Type == RubyRequestType:FLUSH) {
+                trigger(Event:Flush, in_msg.LineAddress,
                         Dcache_entry, TBEs[in_msg.LineAddress]);
             } else {
               // Check to see if it is in the OTHER L0
@@ -627,6 +645,48 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
         out_msg.MessageSize := MessageSizeType:Control;
         out_msg.AccessMode := in_msg.AccessMode;
       }
+    }
+  }
+
+  action(f_sendFlushToL1, "fs", desc="Send flush request to the L1 cache") {
+    enqueue(requestNetwork_out, CoherenceMsg, response_latency) {
+      assert(is_valid(cache_entry));
+      out_msg.addr := address;
+      out_msg.Class := CoherenceClass:FLUSH;
+      out_msg.Sender := machineID;
+      out_msg.Dest := createMachineID(MachineType:L1Cache, version);
+      if (cache_entry.Dirty) {
+        out_msg.MessageSize := MessageSizeType:Data;
+        out_msg.DataBlk := cache_entry.DataBlk;
+        out_msg.Dirty := true;
+      } else {
+        out_msg.MessageSize := MessageSizeType:Control;
+        out_msg.Dirty := false;
+      }
+    }
+  }
+
+  action(f_sendFlushNPToL1, "fnp", desc="Send flush request to the L1 cache, not present in L0") {
+    enqueue(requestNetwork_out, CoherenceMsg, response_latency) {
+      out_msg.addr := address;
+      out_msg.Class := CoherenceClass:FLUSH_NP;
+      out_msg.Sender := machineID;
+      out_msg.Dest := createMachineID(MachineType:L1Cache, version);
+      out_msg.MessageSize := MessageSizeType:Control;
+      out_msg.Dirty := false;
+    }
+  }
+
+  action(f_sendFlushDatatoL1, "fsfd", desc="Send flush data to the L1 cache") {
+    enqueue(requestNetwork_out, CoherenceMsg, response_latency) {
+      assert(is_valid(cache_entry));
+      out_msg.addr := address;
+      out_msg.Class := CoherenceClass:FLUSH_DATA;
+      out_msg.DataBlk := cache_entry.DataBlk;
+      out_msg.Dirty := cache_entry.Dirty;
+      out_msg.Sender := machineID;
+      out_msg.Dest := createMachineID(MachineType:L1Cache, version);
+      out_msg.MessageSize := MessageSizeType:Data;
     }
   }
 
@@ -734,6 +794,10 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     cache_entry.Dirty := true;
   }
 
+  action(f_flush_complete, "fcm", desc="Notify sequencer that flush completed") {
+    sequencer.writeCallback(address, cache_entry.DataBlk);
+  }
+
   action(i_allocateTBE, "i", desc="Allocate TBE (number of invalidates=0)") {
     check_allocate(TBEs);
     assert(is_valid(cache_entry));
@@ -741,6 +805,12 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     set_tbe(TBEs[address]);
     tbe.Dirty := cache_entry.Dirty;
     tbe.DataBlk := cache_entry.DataBlk;
+  }
+
+  action(i_allocateTBE_flush, "if", desc="Allocate TBE for flush (block not present, will not be present)") {
+    check_allocate(TBEs);
+    TBEs.allocate(address);
+    set_tbe(TBEs[address]);
   }
 
   action(k_popMandatoryQueue, "k", desc="Pop mandatory queue") {
@@ -929,7 +999,7 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
   //*****************************************************
 
   // Transitions for Load/Store/Replacement/WriteBack from transient states
-  transition({Inst_IS, IS, IM, SM}, {Load, Ifetch, Store, L0_Replacement, Load_Linked}) {
+  transition({Inst_IS, IS, IM, SM, I_F, V_F}, {Load, Ifetch, Store, L0_Replacement, Load_Linked}) {
     z_stallAndWaitMandatoryQueue;
   }
 
@@ -937,7 +1007,7 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
     z_stallAndWaitMandatoryQueue;
   }
 
-  transition({LLSC_E, LLSC_M}, {Fwd_GETS, Fwd_GETX, Fwd_GET_INSTR, InvOwn, InvElse}) {
+  transition({LLSC_E, LLSC_M, I_F, V_F}, {Fwd_GETS, Fwd_GETX, Fwd_GET_INSTR, InvOwn, InvElse}) {
     z_stallAndWaitMessageBufferQueue;
   }
 
@@ -1326,6 +1396,44 @@ machine(MachineType:L0Cache, "MESI Directory L0 Cache")
 
   transition(LLSC_M, LLSC_Timeout, M) {
     ll_unsetLoadLinkedLockTimer;
+    kd_wakeUpDependents;
+  }
+
+  // Flush transitions
+  transition(I, Flush, I_F) {
+    i_allocateTBE_flush;
+    f_sendFlushNPToL1;
+    k_popMandatoryQueue;
+  }
+
+  transition({S, E, M}, Flush, V_F) {
+    i_allocateTBE;
+    f_sendFlushToL1;
+    k_popMandatoryQueue;
+  }
+
+  transition(V_F, Flush_Ack, I) {
+    forward_eviction_to_cpu;
+    f_flush_complete;
+    s_deallocateTBE;
+    ff_deallocateCacheBlock;
+    o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition(I_F, Flush_Ack, I) {
+    forward_eviction_to_cpu;
+    f_flush_complete;
+    s_deallocateTBE;
+    o_popIncomingResponseQueue;
+    kd_wakeUpDependents;
+  }
+
+  transition({E, M}, External_Flush_Data, I) {
+    forward_eviction_to_cpu;
+    f_sendFlushDatatoL1;
+    ff_deallocateCacheBlock;
+    o_popIncomingResponseQueue;
     kd_wakeUpDependents;
   }
 }

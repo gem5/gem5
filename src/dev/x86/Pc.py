@@ -99,8 +99,10 @@ class Pc(Platform):
         self.fake_com_4.pio = bus.mem_side_ports
         self.fake_floppy.pio = bus.mem_side_ports
 
-        self.pci_bus.mem_side_ports = self.pci_host.down_response_port()
+        self.pci_bus.default = self.pci_host.down_response_port()
         self.pci_bus.cpu_side_ports = self.pci_host.down_request_port()
+        self.pci_bus.config_error_port = self.pci_host.config_error.pio
+
         bus.mem_side_ports = self.pci_host.up_response_port()
 
         if dma_ports.count(self.pci_host.up_request_port()) == 0:

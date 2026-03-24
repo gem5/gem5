@@ -139,7 +139,7 @@ I386Process::I386Process(const ProcessParams &params,
 
     Addr brk_point = roundUp(image.maxAddr(), PageBytes);
     Addr stack_base = _gdtStart;
-    Addr max_stack_size = 8 * 1024 * 1024;
+    Addr max_stack_size = params.maxStackSize;
     Addr next_thread_stack_base = stack_base - max_stack_size;
     Addr mmap_end = 0xB7FFF000ULL;
 
@@ -390,6 +390,7 @@ X86_64Process::initState()
             cr4.tsd = 0; // Time Stamp Disable
             cr4.pvi = 0; // Protected-Mode Virtual Interrupts
             cr4.vme = 0; // Virtual-8086 Mode Extensions
+            cr4.fsgsbase = 1; // Enable FSGSBASE instructions
 
             tc->setMiscReg(misc_reg::Cr4, cr4);
 
@@ -629,6 +630,7 @@ X86_64Process::initState()
             // Setting pcide bit in CR4
             CR4 cr4 = tc->readMiscRegNoEffect(misc_reg::Cr4);
             cr4.pcide = 1;
+            cr4.fsgsbase = 1; // Enable FSGSBASE instructions
             tc->setMiscReg(misc_reg::Cr4, cr4);
         }
     }

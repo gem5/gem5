@@ -44,9 +44,9 @@ from m5.objects import (
     BaseXBar,
     Cache,
     L2XBar,
-    Port,
     SystemXBar,
 )
+from m5.params import Port
 
 from ....isas import ISA
 from ....utils.override import *
@@ -167,7 +167,8 @@ class PrivateL1PrivateL2CacheHierarchy(
 
     def _connect_table_walker(self, cpu_id: int, cpu: BaseCPU) -> None:
         cpu.connect_walker_ports(
-            self.membus.cpu_side_ports, self.membus.cpu_side_ports
+            self.l2buses[cpu_id].cpu_side_ports,
+            self.l2buses[cpu_id].cpu_side_ports,
         )
 
     def _setup_io_cache(self, board: AbstractBoard) -> None:

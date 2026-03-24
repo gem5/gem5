@@ -392,8 +392,17 @@ TAGE_SC_L_TAGE::extraAltCalc(TAGEBase::BranchInfo* bi)
     tage_scl_bi->altConf = (abs(2*ctr + 1) > 1);
 }
 
-bool
-TAGE_SC_L::predict(ThreadID tid, Addr pc, bool cond_branch, void* &b)
+void
+TAGE_SC_L::branchPlaceholder(ThreadID tid, Addr pc, bool uncond,
+                             void *&bp_history)
+{
+    TageSCLBranchInfo *bi = new TageSCLBranchInfo(*tage, *statisticalCorrector,
+                                                  *loopPredictor, pc, !uncond);
+    bp_history = (void *)(bi);
+}
+
+Prediction
+TAGE_SC_L::predict(ThreadID tid, Addr pc, bool cond_branch, void *&b)
 {
     TageSCLBranchInfo *bi = new TageSCLBranchInfo(*tage,
                                                   *statisticalCorrector,
@@ -445,7 +454,7 @@ TAGE_SC_L::predict(ThreadID tid, Addr pc, bool cond_branch, void* &b)
     // record final prediction
     bi->lpBranchInfo->predTaken = pred_taken;
 
-    return pred_taken;
+    return predictWithDefaultLatency(pred_taken);
 }
 
 void

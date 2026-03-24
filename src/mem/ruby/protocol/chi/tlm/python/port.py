@@ -1,4 +1,15 @@
-# Copyright 2019 Google, Inc.
+# -*- mode:python -*-
+# Copyright (c) 2025 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -25,43 +36,18 @@
 
 from m5.params import (
     Port,
-    VectorPort,
 )
 
-INT_SOURCE_ROLE = "Int Source Pin"
-INT_SINK_ROLE = "Int Sink Pin"
-Port.compat(INT_SOURCE_ROLE, INT_SINK_ROLE)
+CHI_TLM_SOURCE_ROLE = "Chi Tlm Source Port"
+CHI_TLM_SINK_ROLE = "Chi Tlm Sink Port"
+Port.compat(CHI_TLM_SOURCE_ROLE, CHI_TLM_SINK_ROLE)
 
 
-# A source pin generally represents a single pin which might connect to
-# multiple sinks.
-class IntSourcePin(VectorPort):
+class TlmSourcePort(Port):
     def __init__(self, desc):
-        super().__init__(INT_SOURCE_ROLE, desc, is_source=True)
+        super().__init__(CHI_TLM_SOURCE_ROLE, desc, is_source=True)
 
 
-# A vector of source pins which might represent a bank of physical pins. Unlike
-# IntSourcePin, each source pin in VectorIntSourcePin can only connect to a
-# single sink pin. VectorIntSourcePin has the same definition as IntSourcePin
-# right now, but will likely be implemented differently in the future.
-# VectorIntSourcePin is defined as its own separate type to differentiate it
-# from IntSourcePin and make it clear to the user how it should be interpreted
-# and used.
-class VectorIntSourcePin(VectorPort):
+class TlmSinkPort(Port):
     def __init__(self, desc):
-        super().__init__(INT_SOURCE_ROLE, desc, is_source=True)
-
-
-# Each "physical" pin can be driven by a single source pin since there are no
-# provisions for resolving competing signals running to the same pin.
-class IntSinkPin(Port):
-    def __init__(self, desc):
-        super().__init__(INT_SINK_ROLE, desc)
-
-
-# A vector of sink pins represents a bank of physical pins. For instance, an
-# interrupt controller with many numbered input interrupts could represent them
-# as a VectorIntSinkPin.
-class VectorIntSinkPin(VectorPort):
-    def __init__(self, desc):
-        super().__init__(INT_SINK_ROLE, desc)
+        super().__init__(CHI_TLM_SINK_ROLE, desc)

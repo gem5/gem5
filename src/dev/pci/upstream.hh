@@ -44,8 +44,10 @@
 #include <map>
 
 #include "base/addr_range.hh"
-#include "dev/pci/one_way_bridge.hh"
+#include "dev/isa_fake.hh"
 #include "dev/pci/types.hh"
+#include "dev/pci/up_down_bridge.hh"
+#include "params/PciConfigError.hh"
 #include "params/PciUpstream.hh"
 #include "sim/clocked_object.hh"
 
@@ -53,6 +55,16 @@ namespace gem5
 {
 
 class PciDevice;
+
+class PciConfigError : public IsaFake
+{
+  public:
+    PARAMS(PciConfigError);
+
+    PciConfigError(const Params &p);
+
+    void setAddrRange(AddrRange range);
+};
 
 /**
  * The PCI upstream describes any device (PCI host bridge, PCI-PCI bridge)
@@ -308,8 +320,9 @@ class PciUpstream : public ClockedObject
     std::map<PciDevAddr, PciDevice *> devices;
 
     /** The two one way bridges to connect both side buses */
-    PciOneWayBridge *upToDown;
-    PciOneWayBridge *downToUp;
+    PciUpDownBridge *upToDown;
+
+    PciConfigError *configErrorDevice;
 };
 
 } // namespace gem5

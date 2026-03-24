@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2014 ARM Limited
+// Copyright (c) 2010-2014, 2025 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -565,7 +565,7 @@ class %(class_name)s : public %(base_class)s
   public:
     // Constructor
     %(class_name)s(const char *mnemonic, ExtMachInst machInst,
-            uint32_t size, bool fp, bool load, bool noAlloc, bool signExt,
+            uint32_t size, bool fp, bool noAlloc, bool signExt,
             bool exclusive, bool acrel, uint32_t imm,
             AddrMode mode, RegIndex rn, RegIndex rt,
             RegIndex rt2);
@@ -574,11 +574,11 @@ class %(class_name)s : public %(base_class)s
 
 def template PairMemConstructor {{
 %(class_name)s::%(class_name)s(const char *mnemonic, ExtMachInst machInst,
-        uint32_t size, bool fp, bool load, bool noAlloc, bool signExt,
+        uint32_t size, bool fp, bool noAlloc, bool signExt,
         bool exclusive, bool acrel, uint32_t imm, AddrMode mode,
         RegIndex rn, RegIndex rt, RegIndex rt2) :
     %(base_class)s(mnemonic, machInst, %(op_class)s, size,
-                   fp, load, noAlloc, signExt, exclusive, acrel,
+                   fp, noAlloc, signExt, exclusive, acrel,
                    imm, mode, rn, rt, rt2)
 {
     %(set_reg_idx_arr)s;

@@ -77,6 +77,7 @@ found an AttributeError will be raised.
     :code:`_defaults.build_dir = None` Once this module has been imported
     constants should not be modified and their base attributes are frozen.
 """
+
 import abc
 import argparse
 import copy
@@ -226,10 +227,11 @@ def define_defaults(defaults):
         os.path.join(absdirpath(__file__), os.pardir, os.pardir)
     )
     defaults.result_path = os.path.join(os.getcwd(), "testing-results")
-    defaults.resource_url = "http://dist.gem5.org/dist/develop"
+    defaults.resource_url = "https://dist.gem5.org/dist/develop"
     defaults.resource_path = os.path.abspath(
         os.path.join(defaults.base_dir, "tests", "gem5", "resources")
     )
+    defaults.gcov = ""
 
 
 def define_constants(constants):
@@ -286,6 +288,8 @@ def define_constants(constants):
             constants.power_tag,
             constants.null_tag,
             constants.all_compiled_tag,
+            constants.null_all_ruby,
+            constants.arm_x86_tag,
         ),
         constants.variant_tag_type: (
             constants.opt_tag,
@@ -647,6 +651,18 @@ def define_common_args(config):
             default=config._defaults.resource_url,
             help="The URL where the resources reside.",
         ),
+        Argument(
+            "--gcov",
+            action="store",
+            choices=["test-only", "ind-test-and-gcov", "all-test-and-gcov"],
+            default=config._defaults.gcov,
+            help="Build gem5 for running with gcov. If test-only is passed, "
+            "TestLib will only run the tests. If ind-test-and-gcov is passed, "
+            "TestLib will run gcovr, a tool for running gcov, after each "
+            "individual test. If all-test-and-gcov is passed, TestLib will "
+            "run all of the specified tests, then run gcovr after all of them "
+            "finish.",
+        ),
     ]
 
     # NOTE: There is a limitation which arises due to this format. If you have
@@ -715,6 +731,7 @@ class RunParser(ArgParser):
         common_args.host.add_to(parser)
         common_args.include_tags.add_to(parser)
         common_args.exclude_tags.add_to(parser)
+        common_args.gcov.add_to(parser)
 
 
 class ListParser(ArgParser):
@@ -780,6 +797,7 @@ class ListParser(ArgParser):
         common_args.host.add_to(parser)
         common_args.include_tags.add_to(parser)
         common_args.exclude_tags.add_to(parser)
+        common_args.gcov.add_to(parser)
 
 
 class RerunParser(ArgParser):
@@ -798,6 +816,7 @@ class RerunParser(ArgParser):
         common_args.variant.add_to(parser)
         common_args.length.add_to(parser)
         common_args.host.add_to(parser)
+        common_args.gcov.add_to(parser)
 
 
 config = _Config()

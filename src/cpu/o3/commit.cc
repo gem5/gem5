@@ -1,6 +1,6 @@
 /*
  * Copyright 2014 Google, Inc.
- * Copyright (c) 2010-2014, 2017, 2020 ARM Limited
+ * Copyright (c) 2010-2014, 2017, 2020, 2025 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -62,7 +62,6 @@
 #include "debug/Drain.hh"
 #include "debug/ExecFaulting.hh"
 #include "debug/HtmCpu.hh"
-#include "debug/O3PipeView.hh"
 #include "params/BaseO3CPU.hh"
 #include "sim/faults.hh"
 #include "sim/full_system.hh"
@@ -72,6 +71,27 @@ namespace gem5
 
 namespace o3
 {
+
+// clang-format off
+std::string Commit::CommitStats::statusStrings[ThreadStatusMax] = {
+    "running",
+    "idle",
+    "robSquashing",
+    "trapPending",
+    "fetchTrapPending",
+    "squashAfterPending",
+};
+
+std::string Commit::CommitStats::statusDefinitions[ThreadStatusMax] = {
+    "Number of cycles commit is running",
+    "Number of cycles commit is idle",
+    "Number of cycles commit is squashing the ROB",
+    "Number of cycles commit is processing a trap",
+    "Number of cycles commit is processing a fetch trap",
+    "Number of cycles commit is squashing instructions after a pending "
+    "squash",
+};
+// clang-format on
 
 void
 Commit::processTrapEvent(ThreadID tid)
@@ -147,6 +167,8 @@ Commit::regProbePoints()
 
 Commit::CommitStats::CommitStats(CPU *cpu, Commit *commit)
     : statistics::Group(cpu, "commit"),
+      ADD_STAT(status, statistics::units::Cycle::get(),
+               "Commit status cycles"),
       ADD_STAT(commitSquashedInsts, statistics::units::Count::get(),
                "The number of squashed insts skipped by commit"),
       ADD_STAT(commitNonSpecStalls, statistics::units::Count::get(),
@@ -160,8 +182,6 @@ Commit::CommitStats::CommitStats(CPU *cpu, Commit *commit)
                "Number of atomic instructions committed"),
       ADD_STAT(membars, statistics::units::Count::get(),
                "Number of memory barriers committed"),
-      ADD_STAT(functionCalls, statistics::units::Count::get(),
-               "Number of function calls committed."),
       ADD_STAT(committedInstType, statistics::units::Count::get(),
                "Class of committed instruction"),
       ADD_STAT(commitEligibleSamples, statistics::units::Cycle::get(),
@@ -169,6 +189,11 @@ Commit::CommitStats::CommitStats(CPU *cpu, Commit *commit)
 {
     using namespace statistics;
 
+    status.init(ThreadStatusMax).flags(statistics::pdf | statistics::nozero);
+    for (int i = 0; i < ThreadStatusMax; ++i) {
+        status.subname(i, statusStrings[i]);
+        status.subdesc(i, statusDefinitions[i]);
+    }
     commitSquashedInsts.prereq(commitSquashedInsts);
     commitNonSpecStalls.prereq(commitNonSpecStalls);
     branchMispredicts.prereq(branchMispredicts);
@@ -183,10 +208,6 @@ Commit::CommitStats::CommitStats(CPU *cpu, Commit *commit)
 
     membars
         .init(cpu->numThreads)
-        .flags(total);
-
-    functionCalls
-        .init(commit->numThreads)
         .flags(total);
 
     committedInstType
@@ -736,6 +757,7 @@ Commit::commit()
 
     int num_squashing_threads = 0;
     for (ThreadID tid : *activeThreads) {
+        stats.status[commitStatus[tid]]++;
         // Not sure which one takes priority.  I think if we have
         // both, that's a bad sign.
         if (trapSquash[tid]) {
@@ -1230,13 +1252,7 @@ Commit::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
     DPRINTF(Commit,
             "[tid:%i] [sn:%llu] Committing instruction with PC %s\n",
             tid, head_inst->seqNum, head_inst->pcState());
-    if (head_inst->traceData) {
-        head_inst->traceData->setFetchSeq(head_inst->seqNum);
-        head_inst->traceData->setCPSeq(thread[tid]->numOp);
-        head_inst->traceData->dump();
-        delete head_inst->traceData;
-        head_inst->traceData = NULL;
-    }
+
     if (head_inst->isReturn()) {
         DPRINTF(Commit,
                 "[tid:%i] [sn:%llu] Return Instruction Committed PC %s \n",
@@ -1257,11 +1273,15 @@ Commit::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
     // Finally clear the head ROB entry.
     rob->retireHead(tid);
 
-#if TRACING_ON
-    if (debug::O3PipeView) {
-        head_inst->commitTick = curTick() - head_inst->fetchTick;
+    head_inst->commitTick = curTick() - head_inst->fetchTick;
+
+    if (head_inst->traceData) {
+        head_inst->traceData->setFetchSeq(head_inst->seqNum);
+        head_inst->traceData->setCPSeq(thread[tid]->numOp);
+        head_inst->traceData->dump();
+        delete head_inst->traceData;
+        head_inst->traceData = NULL;
     }
-#endif
 
     // If this was a store, record it for this cycle.
     if (head_inst->isStore() || head_inst->isAtomic())
@@ -1330,6 +1350,8 @@ Commit::updateComInstStats(const DynInstPtr &inst)
     const ThreadID tid = inst->threadNumber;
     const bool in_user_mode = cpu->inUserMode(tid);
 
+    // Count number of instructions, ensure we don't
+    // double count Microops as insts.
     if (!inst->isMicroop() || inst->isLastMicroop()) {
         cpu->commitStats[tid]->numInsts++;
         cpu->baseStats.numInsts++;
@@ -1364,7 +1386,7 @@ Commit::updateComInstStats(const DynInstPtr &inst)
             cpu->commitStats[tid]->numLoadInsts++;
         }
 
-        if (inst->isStore()) {
+        if (inst->isStore() || inst->isAtomic()) {
             cpu->commitStats[tid]->numStoreInsts++;
         }
     }
@@ -1388,9 +1410,13 @@ Commit::updateComInstStats(const DynInstPtr &inst)
     }
 
     // Function Calls
-    if (inst->isCall())
-        stats.functionCalls[tid]++;
+    if (inst->isCall()) {
+        cpu->commitStats[tid]->functionCalls++;
+    }
 
+    if (inst->isCall() || inst->isReturn()) {
+        cpu->commitStats[tid]->numCallsReturns++;
+    }
 }
 
 ////////////////////////////////////////

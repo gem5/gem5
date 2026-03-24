@@ -50,7 +50,7 @@ jobs:
 
             - name: Run clang-format check
               run: |
-                  python util/run-git-clang-format.py --ci-pr-base-commit ${{ steps.get-base-commit.outputs.base_commit }}
+                  python util/run-git-clang-format.py --verbose --ci-pr-base-commit ${{ steps.get-base-commit.outputs.base_commit }}
                   if [ $? -ne 0 ]; then
                     echo "::error::Code formatting issues detected! Please run clang-format on your changes."
                     exit 1
@@ -74,30 +74,20 @@ jobs:
               id: date
               run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
-    unittests-all-opt:
+    unittests-all-fast-opt:
+        strategy:
+            matrix:
+                type: [fast, opt]
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-        needs: [pre-commit, get-date] # only runs if pre-commit passes.
+        needs: [pre-commit] # only runs if pre-commit passes.
         timeout-minutes: 60
         steps:
             - uses: actions/checkout@v4
-
-
-            # Restore the cache if available. As this just builds the unittests
-            # we only obtain the cache and do not provide if if is not
-            # available.
-            - name: Cache build/ALL
-              uses: actions/cache/restore@v4
-              with:
-                  path: build/ALL
-                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
-                  restore-keys: |
-                      testlib-build-all
-
-            - name: CI Unittests
+            - name: CI Unittests (${{ matrix.type }})
               working-directory: ${{ github.workspace }}
-              run: scons --no-compress-debug build/ALL/unittests.opt -j $(nproc)
+              run: scons --no-compress-debug build/ALL/unittests.${{ matrix.type }} -j $(nproc)
             - run: echo "This job's status is ${{ job.status }}."
 
     testlib-quick-matrix:
@@ -156,6 +146,45 @@ jobs:
             - name: Clang Compilation
               working-directory: ${{ github.workspace }}
               run: scons build/ALL/gem5.fast -j $(nproc)
+
+    macos-compilation:
+        runs-on: macos-26
+        if: github.event.pull_request.draft == false
+        needs: [pre-commit, get-date]
+
+        strategy:
+            fail-fast: false
+            matrix:
+                type: [fast, opt]
+
+        steps:
+            - name: Checkout the gem5 repository
+              uses: actions/checkout@v4
+
+            - name: Install the gem5 dependencies
+              run: |
+                  brew update
+                  brew install \
+                    scons \
+                    python \
+                    pkg-config \
+                    protobuf \
+                    grpc \
+                    boost
+
+
+            - name: Restore macOS build/ALL cache
+              uses: actions/cache/restore@v4
+              with:
+                  path: build/ALL
+                  key: macos-all-gem5-${{ matrix.type }}-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      macos-all-gem5-${{ matrix.type }}
+
+            - name: Compile gem5.${{ matrix.type }}
+              working-directory: ${{ github.workspace }}
+              run: scons build/ALL/gem5.${{ matrix.type }} -j $(sysctl -n hw.ncpu)
+              timeout-minutes: 90
 
     testlib-quick-gem5-builds:
         runs-on: [self-hosted, linux, x64]
@@ -288,7 +317,8 @@ jobs:
         needs:
             - testlib-quick-execution
             - clang-fast-compilation
-            - unittests-all-opt
+            - unittests-all-fast-opt
+            - macos-compilation
             - pre-commit
             - gpu-tests
         steps:

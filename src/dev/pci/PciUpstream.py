@@ -33,23 +33,45 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects.Bridge import BridgeBase
+from m5.objects.Bridge import (
+    Bridge,
+    BridgeBase,
+)
 from m5.objects.ClockedObject import ClockedObject
 from m5.objects.Device import IsaFake
-from m5.objects.XBar import IOXBar
+from m5.objects.XBar import NoncoherentXBar
 from m5.params import *
 from m5.proxy import *
 
 
-class PciBus(IOXBar):
-    badaddr_responder = IsaFake(pio_addr=0, pio_size=MaxAddr)
-    default = Self.badaddr_responder.pio
+class PciBus(NoncoherentXBar):
+    type = "PciBus"
+    cxx_class = "gem5::PciBus"
+    cxx_header = "dev/pci/bus.hh"
+
+    config_error_port = RequestPort("Port to send config errors to")
+
+    # Set some default values bases on IOXBar
+    width = 16
+    frontend_latency = 2
+    forward_latency = 1
+    response_latency = 2
 
 
-class PciOneWayBridge(BridgeBase):
-    type = "PciOneWayBridge"
-    cxx_class = "gem5::PciOneWayBridge"
-    cxx_header = "dev/pci/one_way_bridge.hh"
+class PciConfigError(IsaFake):
+    type = "PciConfigError"
+    cxx_class = "gem5::PciConfigError"
+    cxx_header = "dev/pci/upstream.hh"
+
+    # Those will be set by the PciUpstream
+    pio_addr = Param.Addr(0x0, "Size of address range")
+    pio_size = Param.Addr(0x0, "Size of address range")
+
+
+class PciUpDownBridge(BridgeBase):
+    type = "PciUpDownBridge"
+    cxx_class = "gem5::PciUpDownBridge"
+    cxx_header = "dev/pci/up_down_bridge.hh"
 
 
 class PciUpstream(ClockedObject):
@@ -58,11 +80,13 @@ class PciUpstream(ClockedObject):
     cxx_header = "dev/pci/upstream.hh"
     abstract = True
 
-    up_to_down = Param.PciOneWayBridge(
-        PciOneWayBridge(), "Bridge upstream -> downstream"
+    up_to_down = Param.PciUpDownBridge(
+        PciUpDownBridge(), "Bridge upstream -> downstream"
     )
-    down_to_up = Param.PciOneWayBridge(
-        PciOneWayBridge(), "Bridge downstream -> upstream"
+    down_to_up = Param.BridgeBase(Bridge(), "Bridge downstream -> upstream")
+
+    config_error = Param.PciConfigError(
+        PciConfigError(), "Device to handle config errors"
     )
 
     def down_response_port(self):

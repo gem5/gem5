@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Arm Limited
+ * Copyright (c) 2024-2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -43,10 +43,11 @@
 
 #include <ARM/TLM/arm_chi.h>
 
+#include "mem/ruby/protocol/chi/tlm/port.hh"
 #include "mem/ruby/protocol/chi/tlm/utils.hh"
 #include "params/TlmGenerator.hh"
+#include "sim/clocked_object.hh"
 #include "sim/eventq.hh"
-#include "sim/sim_object.hh"
 
 namespace gem5 {
 
@@ -78,14 +79,22 @@ class CacheController;
  * simulation, the following TlmGenerator method should be
  * used:
  *
- * def injectAt(self, when, payload, phase):
+ * def inject(self, payload, phase, when=None):
  *
  * This will return a Transaction object and from that point that will be the
  * handle for managing the transaction: either adding transaction expectations
  * upon response (e.g, what will be the cacheline state), or by adding action
  * callbacks (execute some logic)
+ *
+ * By default the last kw argument (when) is set to None.
+ * This means the new transaction will be added to a pending queue and will
+ * only be scheduled in a FCFS policy. The generator will try to schedule
+ * a configurable number of new transactions every clock cycle.
+ *
+ * If the when argument is instead provided, the transaction will be scheduled
+ * to happen at a specific point in time, regardless of the existing backlog
  */
-class TlmGenerator : public SimObject
+class TlmGenerator : public ClockedObject
 {
   public:
     PARAMS(TlmGenerator);
@@ -204,7 +213,18 @@ class TlmGenerator : public SimObject
 
         std::string str() const;
 
+        /**
+         * Inject a transaction by registering it the TlmGenerator
+         * and by sending it downstream.
+         */
         void inject();
+
+        /**
+         * Send a transaction. It assumes the transaction is already
+         * registered in the TlmGenerator. This is the case for a
+         * completion acknowledgement as an example
+         */
+        void send();
 
         /**
          * Returns true if the transaction has failed, false
@@ -232,6 +252,16 @@ class TlmGenerator : public SimObject
 
         ARM::CHI::Payload* payload() const { return _payload; }
         ARM::CHI::Phase& phase() { return _phase; }
+        Tick
+        start() const
+        {
+            return _start;
+        }
+        void
+        setStart(Tick when)
+        {
+            _start = when;
+        }
 
       private:
         Actions actions;
@@ -240,9 +270,22 @@ class TlmGenerator : public SimObject
         TlmGenerator *parent;
         ARM::CHI::Payload *_payload;
         ARM::CHI::Phase _phase;
+        Tick _start;
     };
 
+    void tick();
+
     void scheduleTransaction(Tick when, Transaction *tr);
+    void enqueueFront(Transaction *tr);
+    void enqueueBack(Transaction *tr);
+    bool
+    isActive() const
+    {
+        return !pendingTransactions.empty() ||
+               !unscheduledTransactions.empty() || !waitingForPCrd.empty();
+    }
+
+    Port &getPort(const std::string &if_name, PortID idx) override;
 
   protected:
     struct TransactionEvent : public Event
@@ -276,25 +319,73 @@ class TlmGenerator : public SimObject
     };
 
     void inject(Transaction *transaction);
+    void send(Transaction *transaction);
+    void terminate(Transaction *transaction);
     void recv(ARM::CHI::Payload *payload, ARM::CHI::Phase *phase);
     void passFailCheck();
+
+    /**
+     * Check if incoming request is a RetryAck
+     */
+    bool isRetryAck(ARM::CHI::Phase *phase) const;
+
+    /**
+     * Check if incoming request is a PCrdGrant
+     */
+    bool isPCrdGrant(ARM::CHI::Phase *phase) const;
+
+    /**
+     * Require a P-credit from the generator
+     * Returns true if a p-credit is available
+     */
+    bool getPCrd();
+
+    /**
+     * Return a list of transactions waiting for
+     * a p-credit
+     */
+    Transaction *getPCrdWaiting();
+
+    /**
+     * Potentially handle a P-credit related
+     * response. Return true if the response was
+     * a RetryAck or a PCrdGrant, false otherwise
+     */
+    bool handlePCredit(ARM::CHI::Phase *phase);
 
   protected:
     /** cpuId to mimic the behaviour of a CPU */
     uint8_t cpuId;
 
-    using SchedulingQueue = std::priority_queue<TransactionEvent*,
-        std::vector<TransactionEvent*>,
-        TransactionEvent::Compare>;
+    /** Max number of transactions to be issued every cycle */
+    const unsigned transPerCycle;
 
-    /** PQ of transactions whose injection needs to be scheduled */
-    SchedulingQueue scheduledTransactions;
+    /** Max number of pending transactions allowed */
+    const uint16_t maxPendingTrans;
+
+    /** Numbers of p-credit available to the generator */
+    unsigned pCredit;
+
+    /** tick event used to schedule unscheduled transactions */
+    EventFunctionWrapper tickEvent;
+
+    /** List of transactions whose injection needs to be scheduled */
+    std::list<Transaction *> unscheduledTransactions;
+
+    /** List of processes waiting for a P-credit grant */
+    std::list<Transaction *> waitingForPCrd;
 
     /** Map of pending (injected) transactions indexed by the txn_id */
     std::unordered_map<uint16_t, Transaction*> pendingTransactions;
 
-    /** Pointer to the CHI-tlm controller */
-    CacheController *controller;
+    /** request output port */
+    SourcePort<TlmGenerator> outPort;
+
+    /** response input port */
+    SinkPort<TlmGenerator> inPort;
+
+    /** Has any transaction of the suite failed? */
+    bool suiteFailure;
 };
 
 } // namespace tlm::chi

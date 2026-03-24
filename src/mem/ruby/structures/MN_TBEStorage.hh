@@ -39,12 +39,10 @@
 #define __MEM_RUBY_STRUCTURES_MN_TBESTORAGE_HH__
 
 #include <cassert>
-#include <unordered_map>
+#include <string>
 #include <vector>
 
-#include <base/statistics.hh>
-
-#include "mem/ruby/common/MachineID.hh"
+#include "base/statistics.hh"
 #include "mem/ruby/structures/TBEStorage.hh"
 
 namespace gem5
@@ -68,9 +66,9 @@ class MN_TBEStorage
 {
   public:
     MN_TBEStorage(statistics::Group *parent,
-                  std::initializer_list<TBEStorage *> _partitions)
-      : m_stats(parent),
-        partitions(_partitions)
+                  std::initializer_list<TBEStorage *> _partitions,
+                  std::string_view name)
+        : m_stats(parent, name), partitions(_partitions)
     {}
 
     // Returns the current number of slots allocated
@@ -234,11 +232,11 @@ class MN_TBEStorage
   private:
     struct MN_TBEStorageStats : public statistics::Group
     {
-        MN_TBEStorageStats(statistics::Group *parent)
-          : statistics::Group(parent),
-            ADD_STAT(avg_size, "Avg. number of slots allocated"),
-            ADD_STAT(avg_util, "Avg. utilization"),
-            ADD_STAT(avg_reserved, "Avg. number of slots reserved")
+        MN_TBEStorageStats(statistics::Group *parent, std::string_view name)
+            : statistics::Group(parent, std::string(name).c_str()),
+              ADD_STAT(avg_size, "Avg. number of slots allocated"),
+              ADD_STAT(avg_util, "Avg. utilization"),
+              ADD_STAT(avg_reserved, "Avg. number of slots reserved")
         {}
 
         // Statistical variables

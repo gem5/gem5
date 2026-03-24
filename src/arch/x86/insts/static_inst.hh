@@ -127,7 +127,11 @@ class X86StaticInst : public StaticInst
             Addr pc, const loader::SymbolTable *symtab) const override;
 
     static void divideStep(uint64_t divident, uint64_t divisor,
-            uint64_t &quotient, uint64_t &remainder);
+                           uint64_t &quotient, uint64_t &remainder,
+                           Fault &fault);
+
+    static void addCheckUnsignedOverflow(uint64_t &value, uint64_t addend,
+                                         Fault &fault);
 
     static inline uint64_t
     merge(uint64_t into, RegIndex index, uint64_t val, int size)
@@ -220,6 +224,7 @@ class X86StaticInst : public StaticInst
     {
         PCStateBase *ret_pc_ptr = call_pc.clone();
         ret_pc_ptr->as<PCState>().uEnd();
+        ret_pc_ptr->set(call_pc.instAddr() + size());
         return std::unique_ptr<PCStateBase>{ret_pc_ptr};
     }
 };

@@ -1,5 +1,6 @@
 # Copyright (c) 2022-2023 The University of Edinburgh
 # Copyright (c) 2024 Technical University of Munich
+# Copyright (c) 2025 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -137,13 +138,14 @@ class SimpleBTB(BranchTargetBuffer):
             assoc=Parent.associativity,
             num_entries=Parent.numEntries,
             set_shift=Parent.instShiftAmt,
+            tag_bits=Parent.tagBits,
             numThreads=1,
         ),
         "BTB indexing policy",
     )
 
 
-class ConditionalPredictor(SimObject):
+class ConditionalPredictor(ClockedObject):
     type = "ConditionalPredictor"
     cxx_class = "gem5::branch_prediction::ConditionalPredictor"
     cxx_header = "cpu/pred/conditional.hh"
@@ -152,6 +154,9 @@ class ConditionalPredictor(SimObject):
     numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
     instShiftAmt = Param.Unsigned(
         Parent.instShiftAmt, "Number of bits to shift instructions by"
+    )
+    defaultLatency = Param.Cycles(
+        0, "Default latency of the predictor (in cycles)"
     )
     speculativeHistUpdate = Param.Bool(
         Parent.speculativeHistUpdate,
@@ -237,6 +242,10 @@ class BranchPredictor(SimObject):
     )
     conditionalBranchPred = Param.ConditionalPredictor(
         "Conditional branch predictor"
+    )
+    overridingBranchPred = Param.ConditionalPredictor(
+        NULL,
+        "Secondary, overriding predictor which corrects the primary predictor",
     )
     indirectBranchPred = Param.IndirectPredictor(
         SimpleIndirectPredictor(),
@@ -1155,3 +1164,69 @@ class MultiperspectivePerceptronTAGE8KB(MultiperspectivePerceptronTAGE):
     tage = MPP_TAGE_8KB()
     loop_predictor = MPP_LoopPredictor_8KB()
     statistical_corrector = MPP_StatisticalCorrector_8KB()
+
+
+class GshareBP(BranchPredictor):
+    type = "GshareBP"
+    cxx_class = "gem5::branch_prediction::GshareBP"
+    cxx_header = "cpu/pred/gshare.hh"
+
+    global_predictor_size = Param.Unsigned(512, "Size of global predictor")
+    global_counter_bits = Param.Unsigned(2, "Bits per counter")
+
+
+# 64KB ITTAGE indirect branch predictor as described in
+# https://jilp.org/jwac-2/program/cbp3_07_seznec.pdf
+class ITTAGE_TAGE(TAGEBase):
+    type = "ITTAGE_TAGE"
+    cxx_class = "gem5::branch_prediction::ITTAGE_TAGE"
+    cxx_header = "cpu/pred/it_tage.hh"
+
+    nHistoryTables = 15
+    minHist = 10
+    maxHist = 3881
+    tagTableTagWidths = [
+        0,
+        9,
+        9,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        13,
+        15,
+        15,
+        15,
+        15,
+        15,
+    ]
+    logTagTableSizes = [12, 11, 11, 9, 9, 9, 9, 9, 9, 9, 9, 8, 8, 8, 8, 8]
+
+
+class ITTAGE(IndirectPredictor):
+    type = "ITTAGE"
+    cxx_class = "gem5::branch_prediction::ITTAGE"
+    cxx_header = "cpu/pred/it_tage.hh"
+
+    itage = Param.ITTAGE_TAGE(ITTAGE_TAGE(), "Tage object")
+
+    histBitsConditional = Param.Unsigned(
+        0,
+        "Number of history bits per "
+        "conditional branch. Original ITTAGE does not use conditional",
+    )
+    histBitsIndBranch = Param.Unsigned(
+        10, "Number of history bits per indirect branch"
+    )
+    histBitsIndCall = Param.Unsigned(
+        5, "Number of history bits per indirect call"
+    )
+    histBitsCall = Param.Unsigned(
+        5, "Number of history bits for other calls than indirect"
+    )
+    instShiftAmt = Param.Unsigned(
+        Parent.instShiftAmt, "Number of bits to shift instructions by"
+    )

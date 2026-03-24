@@ -31,6 +31,7 @@ Characteristics
 ---------------
 * User needs to specify the isa in lower case.
 """
+
 import argparse
 
 from m5.util import panic

@@ -41,12 +41,9 @@
 
 #include "mem/ruby/system/RubyPort.hh"
 
-#include "base/compiler.hh"
-#include "cpu/testers/rubytest/RubyTester.hh"
 #include "debug/Config.hh"
 #include "debug/Drain.hh"
-#include "debug/Ruby.hh"
-#include "mem/ruby/protocol/AccessPermission.hh"
+#include "debug/RubyPort.hh"
 #include "mem/ruby/slicc_interface/AbstractController.hh"
 #include "mem/simple_mem.hh"
 #include "sim/full_system.hh"
@@ -276,7 +273,8 @@ RubyPort::MemResponsePort::recvTimingReq(PacketPtr pkt)
 
     // ruby doesn't support cache maintenance operations at the
     // moment, as a workaround, we respond right away
-    if (pkt->req->isCacheMaintenance()) {
+    if (pkt->req->isCacheMaintenance() &&
+        !owner.m_ruby_system->getProtocolInfo().getSupportsFlushes()) {
         warn_once("Cache maintenance operations are not supported in Ruby.\n");
         pkt->makeResponse();
         schedTimingResp(pkt, curTick());

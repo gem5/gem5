@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 REDS institute of the HEIG-VD
+ * Copyright (c) 2010-2013, 2015-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -35,67 +35,57 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "dev/pci/one_way_bridge.hh"
+#include "arch/arm/regs/misc_info.hh"
 
-#include "base/addr_range.hh"
-#include "base/logging.hh"
-#include "debug/PciBridge.hh"
+#include "arch/arm/insts/misc64.hh"
+#include "arch/arm/regs/misc.hh"
 
 namespace gem5
 {
 
-PciOneWayBridge::PciOneWayBridge(const Params &p)
-    : BridgeBase(p), reverseBridge(nullptr), memSideRanges(), configRange()
-{}
-
-void
-PciOneWayBridge::init()
+namespace ArmISA
 {
-    fatal_if(!reverseBridge, "No reverse bridge given for this bridge.\n");
 
-    BridgeBase::init();
-}
+std::vector<struct MiscRegLUTEntry> lookUpMiscReg(NUM_MISCREGS);
 
-void
-PciOneWayBridge::setConfigRange(AddrRange config_range)
+MiscRegLUTEntryInitializer::chain
+MiscRegLUTEntryInitializer::highest(ArmSystem *const sys) const
 {
-    this->configRange = config_range;
-    cpuSidePort.sendRangeChange();
-}
-
-AddrRangeList
-PciOneWayBridge::getAddrRanges() const
-{
-    AddrRangeList ranges = memSideRanges;
-
-    if (configRange.valid()) {
-        // Add whole configuration range, but avoid range duplication for
-        // existing PCI devices.
-        ranges -= configRange;
-        ranges.push_back(configRange);
+    switch (FullSystem ? sys->highestEL() : EL1) {
+        case EL0:
+        case EL1:
+            priv();
+            break;
+        case EL2:
+            hyp();
+            break;
+        case EL3:
+            mon();
+            break;
     }
-
-    return ranges;
+    return *this;
 }
 
-void
-PciOneWayBridge::recvRangeChange()
+Fault
+MiscRegLUTEntry::checkFault(ThreadContext *tc, const MiscRegOp64 &inst,
+                            ExceptionLevel el)
 {
-    AddrRangeList new_ranges = memSidePort.getAddrRanges();
+    return !inst.miscRead() ? faultWrite[el](*this, tc, inst)
+                            : faultRead[el](*this, tc, inst);
+}
 
-    // Exclude ranges from other way bridge
-    new_ranges -= reverseBridge->getAddrRanges();
-
-    // Avoid potential loop of range change.
-    if (new_ranges != memSideRanges) {
-        DPRINTF(PciBridge, "Received range change\n");
-        for (const auto &r : new_ranges) {
-            DPRINTF(PciBridge, "-- %s\n", r.to_string());
-        }
-
-        memSideRanges = new_ranges;
-        cpuSidePort.sendRangeChange();
+template <MiscRegInfo Sec, MiscRegInfo NonSec>
+Fault
+MiscRegLUTEntry::defaultFault(const MiscRegLUTEntry &entry, ThreadContext *tc,
+                              const MiscRegOp64 &inst)
+{
+    if (isSecureBelowEL3(tc) ? entry.info[Sec] : entry.info[NonSec]) {
+        return NoFault;
+    } else {
+        return inst.undefined();
     }
 }
+
+} // namespace ArmISA
 
 } // namespace gem5

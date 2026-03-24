@@ -533,7 +533,7 @@ SDMAEngine::decodeHeader(SDMAQueue *q, uint32_t header)
         } break;
       case SDMA_OP_COND_EXE: {
         q->incRptr(sizeof(sdmaCondExec));
-        warn("SDMA_OP_SEM not implemented");
+        warn("SDMA_OP_COND_EXE not implemented");
         decodeNext(q);
         } break;
       case SDMA_OP_ATOMIC: {
@@ -570,7 +570,7 @@ SDMAEngine::decodeHeader(SDMAQueue *q, uint32_t header)
             panic("SDMA_SUBOP_PTEPDE_COPY not implemented");
             break;
           case SDMA_SUBOP_PTEPDE_COPY_BACKWARDS:
-            panic("SDMA_SUBOP_PTEPDE_COPY not implemented");
+            panic("SDMA_SUBOP_PTEPDE_COPY_BACKWARDS not implemented");
             break;
           case SDMA_SUBOP_PTEPDE_RMW: {
             panic("SDMA_SUBOP_PTEPDE_RMW not implemented");
@@ -709,11 +709,7 @@ SDMAEngine::copy(SDMAQueue *q, sdmaCopy *pkt)
             pkt->source, pkt->dest, pkt->count);
     q->incRptr(sizeof(sdmaCopy));
     // count represents the number of bytes - 1 to be copied
-    // However, when vmid != 0, the sdma copies count number
-    // of bytes
-    if (cur_vmid == 0) {
-        pkt->count++;
-    }
+    pkt->count++;
 
     if (q->priv() && cur_vmid == 0) {
         if (!gpuDevice->getVM().inMMHUB(pkt->source)) {
@@ -904,7 +900,8 @@ SDMAEngine::trap(SDMAQueue *q, sdmaTrap *pkt)
     int node_id = 0;
     int local_id = getId();
 
-    if (gpuDevice->getGfxVersion() == GfxVersion::gfx942) {
+    if (gpuDevice->getGfxVersion() == GfxVersion::gfx942 ||
+        gpuDevice->getGfxVersion() == GfxVersion::gfx950) {
         node_id = getId() >> 2;
 
         // For most SDMAs the "node_id" for the interrupt handler is the SDMA

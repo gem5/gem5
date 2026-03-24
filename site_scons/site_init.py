@@ -43,12 +43,10 @@
 try:
     EnsureSConsVersion(3, 0, 0)
 except SystemExit as e:
-    print(
-        """
+    print("""
 For more details, see:
     http://gem5.org/documentation/general_docs/building
-"""
-    )
+""")
     raise
 
 
@@ -56,8 +54,7 @@ For more details, see:
 try:
     EnsurePythonVersion(3, 6)
 except SystemExit as e:
-    print(
-        """\033[93m
+    print("""\033[93m
 Python 3 is now required.
 
 The following are steps to compile gem5 in Python 3 environment,
@@ -83,8 +80,7 @@ Python 3 environment,
 
 (Optional) For convenience reasons, you can set up an alias for the Python3 \
 scons phrase in your environment. \033[0m
-"""
-    )
+""")
     raise
 
 from gem5_python_paths import extra_python_paths

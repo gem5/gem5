@@ -95,7 +95,8 @@ message Inst {
     SIMDFloatSqrt = 29;
     MemRead = 30;
     MemWrite = 31;
-    IprAccess = 32;
+    reserved 32;
+    reserved "IprAccess";
     InstPrefetch = 33;
   }
 

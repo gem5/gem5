@@ -1115,7 +1115,7 @@ namespace VegaISA
         void
         ldsComplete(GPUDynInstPtr gpuDynInst)
         {
-            assert(isFlatGlobal() || isFlatScratch());
+            assert(gpuDynInst->executedAs() == enums::SC_GLOBAL);
 
             Wavefront *wf = gpuDynInst->wavefront();
             ScalarRegU32 inst_offset = instData.OFFSET;
@@ -1124,8 +1124,10 @@ namespace VegaISA
             lds_offset.read();
 
             // LDS base should be implied by the ldsChunk for the wave.
-            uint32_t m0_offset = bits(lds_offset.rawData(), 17, 2);
-            uint32_t lds_addr = m0_offset * 4 + inst_offset;
+            // m0[17:0] for CDNA4; m0[15:0] for others, but upper bits
+            // should be zero.
+            uint32_t m0_offset = bits(lds_offset.rawData(), 17, 0);
+            uint32_t lds_addr = m0_offset + inst_offset;
 
             for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
                 if (gpuDynInst->exec_mask[lane]) {

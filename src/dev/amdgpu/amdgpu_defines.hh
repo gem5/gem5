@@ -75,6 +75,7 @@ constexpr uint32_t ROM_SIZE = 0x20000;        // 128kB
 static constexpr uint32_t IH_OFFSET_SHIFT = 2;
 static constexpr uint32_t GRBM_OFFSET_SHIFT  = 2;
 static constexpr uint32_t MMHUB_OFFSET_SHIFT = 2;
+static constexpr uint32_t SMU_OFFSET_SHIFT = 2;
 
 } // namespace gem5
 

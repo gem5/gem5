@@ -38,6 +38,7 @@
 
 #include "arch/x86/insts/static_inst.hh"
 
+#include "arch/x86/faults.hh"
 #include "arch/x86/regs/segment.hh"
 #include "cpu/reg_class.hh"
 
@@ -110,7 +111,8 @@ void X86StaticInst::printSegment(std::ostream &os, int segment)
 
 void
 X86StaticInst::divideStep(uint64_t dividend, uint64_t divisor,
-        uint64_t &quotient, uint64_t &remainder)
+                          uint64_t &quotient, uint64_t &remainder,
+                          Fault &fault)
 {
     // Check for divide by zero.
     assert(divisor != 0);
@@ -133,9 +135,20 @@ X86StaticInst::divideStep(uint64_t dividend, uint64_t divisor,
             divisor >>= 1;
         }
         // Decrement the remainder and increment the quotient.
-        quotient += quotientBit;
+        addCheckUnsignedOverflow(quotient, quotientBit, fault);
         remainder -= divisor;
     }
+}
+
+void
+X86StaticInst::addCheckUnsignedOverflow(uint64_t &value, uint64_t addend,
+                                        Fault &fault)
+{
+    const uint64_t new_value = value + addend;
+    if (new_value < value) {
+        fault = std::make_shared<DivideError>();
+    }
+    value = new_value;
 }
 
 void

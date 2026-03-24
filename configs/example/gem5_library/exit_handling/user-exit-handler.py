@@ -104,12 +104,13 @@ class MyExitHandler(ScheduledExitEventHandler):
 
         # Take the checkpoint.
         print("Taking checkpoint via scheduled exit event...")
-        simulator.save_checkpoint(
-            (
+        checkpoint_dir = simulator.get_checkpoint_dir()
+        if not checkpoint_dir:
+            checkpoint_dir = (
                 Path(args.checkpoint_path)
                 / f"cpt.{str(simulator.get_current_tick())}"
-            ).as_posix()
-        )
+            )
+        simulator.save_checkpoint(checkpoint_dir)
         print(f"Checkpoint taken!")
 
         # Finally we always schedule another exit 10 billion ticks from now.

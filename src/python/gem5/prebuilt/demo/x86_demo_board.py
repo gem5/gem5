@@ -1,4 +1,4 @@
-# Copyright (c) 2021 The Regents of the University of California
+# Copyright (c) 2021, 2025 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -27,8 +27,8 @@
 from m5.util import warn
 
 from ...components.boards.x86_board import X86Board
-from ...components.cachehierarchies.classic.private_l1_shared_l2_cache_hierarchy import (
-    PrivateL1SharedL2CacheHierarchy,
+from ...components.cachehierarchies.classic.private_l1_shared_l2_walk_cache_hierarchy import (
+    PrivateL1SharedL2WalkCacheHierarchy,
 )
 from ...components.memory.multi_channel import DualChannelDDR4_2400
 from ...components.processors.cpu_types import CPUTypes
@@ -81,7 +81,7 @@ class X86DemoBoard(X86Board):
             cpu_type=CPUTypes.TIMING, isa=ISA.X86, num_cores=2
         )
 
-        cache_hierarchy = PrivateL1SharedL2CacheHierarchy(
+        cache_hierarchy = PrivateL1SharedL2WalkCacheHierarchy(
             l1d_size="64KiB", l1i_size="64KiB", l2_size="8MiB"
         )
 

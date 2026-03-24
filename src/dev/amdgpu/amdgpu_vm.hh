@@ -127,6 +127,7 @@ typedef enum : int
     GFX_MMIO_RANGE,
     GRBM_MMIO_RANGE,
     IH_MMIO_RANGE,
+    SMU_MMIO_RANGE,
     NUM_MMIO_RANGES
 } mmio_range_t;
 

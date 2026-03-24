@@ -48,6 +48,7 @@ SimObject('BranchPredictor.py',
     'IndirectPredictor', 'SimpleIndirectPredictor',
     'BranchTargetBuffer', 'SimpleBTB', 'BTBIndexingPolicy', 'BTBSetAssociative',
     'ReturnAddrStack',
+    'ITTAGE', 'ITTAGE_TAGE',
     'LocalBP', 'TournamentBP', 'BiModeBP', 'TAGEBase', 'TAGE', 'LoopPredictor',
     'TAGE_SC_L_TAGE', 'TAGE_SC_L_TAGE_64KB', 'TAGE_SC_L_TAGE_8KB',
     'LTAGE', 'TAGE_SC_L_LoopPredictor', 'StatisticalCorrector', 'TAGE_SC_L',
@@ -59,13 +60,14 @@ SimObject('BranchPredictor.py',
     'MultiperspectivePerceptronTAGE', 'MPP_StatisticalCorrector_64KB',
     'MultiperspectivePerceptronTAGE64KB', 'MPP_TAGE_8KB',
     'MPP_LoopPredictor_8KB', 'MPP_StatisticalCorrector_8KB',
-    'MultiperspectivePerceptronTAGE8KB'],
+    'MultiperspectivePerceptronTAGE8KB', 'GshareBP'],
     enums=['BranchType', 'TargetProvider'])
 
 Source('bpred_unit.cc')
 Source('2bit_local.cc')
 Source('simple_indirect.cc')
 Source('conditional.cc')
+Source('it_tage.cc')
 Source('indirect.cc')
 Source('ras.cc')
 Source('tournament.cc')
@@ -84,6 +86,7 @@ Source('statistical_corrector.cc')
 Source('tage_sc_l.cc')
 Source('tage_sc_l_8KB.cc')
 Source('tage_sc_l_64KB.cc')
+Source('gshare.cc')
 Source('btb.cc')
 Source('simple_btb.cc')
 DebugFlag('Indirect')

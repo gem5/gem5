@@ -329,6 +329,14 @@ class Wavefront : public SimObject
     std::string lastInstRdyStatus;
     bool lastVrfStatus, lastSrfStatus;
 
+    // For MI355X MFMA instructions using scale the value must be reprogrammed
+    // before each scaling MFMA instruction. To enforce this, use getters /
+    // setters and clear the value when the MFMA instruction gets the value.
+    void setMfmaAScale(int idx, uint8_t value);
+    void setMfmaBScale(int idx, uint8_t value);
+    uint8_t getMfmaAScale(int idx);
+    uint8_t getMfmaBScale(int idx);
+
   private:
     TheGpuISA::GPUISA _gpuISA;
 
@@ -362,6 +370,12 @@ class Wavefront : public SimObject
     Addr _pc;
     VectorMask _execMask;
     int barId;
+
+    // For MI355X MFMAs, some instructions take a scale value set by a
+    // previous instruction. Store these in the wavefront since that is
+    // accessible from the instruction execute method.
+    std::array<uint8_t, VegaISA::NumVecElemPerVecReg> mfmaAScale;
+    std::array<uint8_t, VegaISA::NumVecElemPerVecReg> mfmaBScale;
 
   public:
     struct WavefrontStats : public statistics::Group

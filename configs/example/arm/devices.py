@@ -521,11 +521,5 @@ class ArmRubySystem(BaseSimpleSystem):
 
         self.realview.attachIO(self.iobus, dma_ports=self._dma_ports)
 
-        for cluster in self._clusters:
-            for i, cpu in enumerate(cluster.cpus):
-                self.ruby._cpu_ports[i].connectCpuPorts(cpu)
-
     def attach_pci(self, dev):
-        self.realview.attachPciDevice(
-            dev, self.iobus, dma_ports=self._dma_ports
-        )
+        self.realview.attachPciDevice(dev)

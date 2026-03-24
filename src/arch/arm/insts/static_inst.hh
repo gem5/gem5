@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013,2016-2018, 2022 Arm Limited
+ * Copyright (c) 2010-2013,2016-2018, 2022, 2025-2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -169,7 +169,8 @@ class ArmStaticInst : public StaticInst
     void printFloatReg(std::ostream &os, RegIndex reg_idx) const;
     void printVecReg(std::ostream &os, RegIndex reg_idx,
                      bool isSveVecReg = false) const;
-    void printVecPredReg(std::ostream &os, RegIndex reg_idx) const;
+    void printVecPredReg(std::ostream &os, RegIndex reg_idx,
+                         bool is_png = false) const;
     void printCCReg(std::ostream &os, RegIndex reg_idx) const;
     void printMiscReg(std::ostream &os, RegIndex reg_idx) const;
     void printMnemonic(std::ostream &os,
@@ -637,6 +638,83 @@ class ArmStaticInst : public StaticInst
     Fault
     generateTrap(ArmISA::ExceptionLevel el,
                  ArmISA::ExceptionClass ec, uint32_t iss) const;
+};
+
+template <>
+inline __uint128_t
+ArmStaticInst::cSwap<__uint128_t>(__uint128_t val, bool big)
+{
+    if (big) {
+        uint64_t high64 = letobe(static_cast<uint64_t>(val));
+        uint64_t low64 = letobe(static_cast<uint64_t>(val >> 64));
+        return ((__uint128_t)high64 << 64) | (__uint128_t)low64;
+    } else {
+        return val;
+    }
+}
+
+class ArmSmeStaticInst : public ArmStaticInst
+{
+  public:
+    enum class TouchType
+    {
+        // Instruction does not access ZA storage.
+        MatNoTouch,
+        // ZA tile access.
+        MatTouchTile,
+        // ZA tile horizontal slice access.
+        MatTouchTileHSlice,
+        // ZA tile vertical slice access.
+        MatTouchTileVSlice,
+        // ZA array vector access.
+        MatTouchHSlice
+    };
+
+    class TouchRecord
+    {
+      public:
+        TouchType type;
+        uint8_t elemSize;
+        uint8_t tileIdx;
+        std::vector<uint16_t> vecIdx;
+
+        TouchRecord()
+            : type(TouchType::MatNoTouch), elemSize(0), tileIdx(0), vecIdx()
+        {}
+    };
+
+  protected:
+    mutable TouchRecord touchRecord;
+
+    ArmSmeStaticInst(const char *mnem, ExtMachInst _machInst,
+                     OpClass __opClass)
+        : ArmStaticInst(mnem, _machInst, __opClass), touchRecord()
+    {}
+
+  public:
+    const TouchRecord &
+    getTouchRecord() const
+    {
+        return touchRecord;
+    }
+
+  protected:
+    void
+    clearTouch() const
+    {
+        touchRecord.type = TouchType::MatNoTouch;
+        touchRecord.vecIdx.clear();
+    }
+
+    template <typename ElemType>
+    void
+    setTouch(TouchType type, uint8_t tile_idx, uint16_t vec_idx) const
+    {
+        touchRecord.type = type;
+        touchRecord.elemSize = sizeof(ElemType);
+        touchRecord.tileIdx = tile_idx;
+        touchRecord.vecIdx.push_back(vec_idx);
+    }
 };
 
 } // namespace ArmISA

@@ -204,6 +204,11 @@ def connectGPU(system, args):
         system.pc.south_bridge.gpu.SubsystemVendorID = 0x1002
         system.pc.south_bridge.gpu.SubsystemID = 0x0C34
         system.pc.south_bridge.gpu.BAR5 = PciMemBar(size="2MiB")
+    elif args.gpu_device == "MI355X":
+        system.pc.south_bridge.gpu.DeviceID = 0x75A0
+        system.pc.south_bridge.gpu.SubsystemVendorID = 0x1002
+        system.pc.south_bridge.gpu.SubsystemID = 0x0C34
+        system.pc.south_bridge.gpu.BAR5 = PciMemBar(size="2MiB")
     elif args.gpu_device == "Vega10":
         system.pc.south_bridge.gpu.DeviceID = 0x6863
     else:

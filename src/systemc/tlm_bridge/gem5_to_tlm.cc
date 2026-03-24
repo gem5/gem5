@@ -140,7 +140,9 @@ packet2payload(PacketPtr packet)
         // Sync the address which could have changed.
         trans = &tlmSenderState->trans;
         trans->set_address(packet->getAddr());
-        trans->acquire();
+        if (trans->has_mm()) {
+            trans->acquire();
+        }
         // Apply all conversion steps necessary in this specific setup.
         for (auto &step : extraPacketToPayloadSteps) {
             step(packet, *trans);
@@ -259,7 +261,9 @@ Gem5ToTlmBridge<BITWIDTH>::pec(
             socket->nb_transport_fw(trans, fw_phase, delay);
             // Release the transaction with all the extensions.
             packetMap.erase(&trans);
-            trans.release();
+            if (trans.has_mm()) {
+                trans.release();
+            }
         }
     }
 }
@@ -319,7 +323,9 @@ Gem5ToTlmBridge<BITWIDTH>::recvAtomic(PacketPtr packet)
     if (packet->needsResponse())
         setPacketResponse(packet, *trans);
 
-    trans->release();
+    if (trans->has_mm()) {
+        trans->release();
+    }
 
     return delay.value();
 }
@@ -353,7 +359,9 @@ Gem5ToTlmBridge<BITWIDTH>::recvAtomicBackdoor(
     if (packet->needsResponse())
         packet->makeResponse();
 
-    trans->release();
+    if (trans->has_mm()) {
+        trans->release();
+    }
 
     return delay.value();
 }
@@ -450,7 +458,9 @@ Gem5ToTlmBridge<BITWIDTH>::recvTimingReq(PacketPtr packet)
     } else if (status == tlm::TLM_COMPLETED) {
         // Transaction is over nothing has do be done.
         sc_assert(phase == tlm::END_RESP);
-        trans->release();
+        if (trans->has_mm()) {
+            trans->release();
+        }
     }
 
     return true;
@@ -495,7 +505,9 @@ Gem5ToTlmBridge<BITWIDTH>::recvRespRetry()
     socket->nb_transport_fw(*trans, phase, delay);
     // Release transaction with all the extensions
     packetMap.erase(trans);
-    trans->release();
+    if (trans->has_mm()) {
+        trans->release();
+    }
 }
 
 // Similar to TLM's debug transport.
@@ -513,7 +525,9 @@ Gem5ToTlmBridge<BITWIDTH>::recvFunctional(PacketPtr packet)
                 "debug transport was not completed");
     }
 
-    trans->release();
+    if (trans->has_mm()) {
+        trans->release();
+    }
 }
 
 template <unsigned int BITWIDTH>

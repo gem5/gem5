@@ -38,6 +38,7 @@
 #include "dev/amdgpu/amdgpu_defines.hh"
 #include "dev/amdgpu/amdgpu_gfx.hh"
 #include "dev/amdgpu/amdgpu_nbio.hh"
+#include "dev/amdgpu/amdgpu_smu.hh"
 #include "dev/amdgpu/amdgpu_vm.hh"
 #include "dev/amdgpu/memory_manager.hh"
 #include "dev/amdgpu/mmio_reader.hh"
@@ -51,6 +52,7 @@ namespace gem5
 
 class AMDGPUInterruptHandler;
 class SDMAEngine;
+class System;
 
 /**
  * Device model for an AMD GPU. This models the interface between the PCI bus
@@ -98,8 +100,6 @@ class AMDGPUDevice : public PciEndpoint
     void readROM(PacketPtr pkt);
     void writeROM(PacketPtr pkt);
 
-    std::array<uint8_t, ROM_SIZE> rom;
-
     /**
      * MMIO reader to populate device registers map.
      */
@@ -113,6 +113,7 @@ class AMDGPUDevice : public PciEndpoint
     AMDGPUMemoryManager *gpuMemMgr;
     AMDGPUInterruptHandler *deviceIH;
     AMDGPUVM gpuvm;
+    AMDGPUSmu smu;
     GPUCommandProcessor *cp;
 
     struct AddrRangeHasher
@@ -157,8 +158,15 @@ class AMDGPUDevice : public PciEndpoint
      */
     memory::PhysicalMemory deviceMem;
 
+    /*
+     * For multiple GPUs, use system memory to read ROM.
+     */
+    System *system;
+
     /* Device information */
     GfxVersion gfx_version = GfxVersion::gfx900;
+    const int gpuId;
+    Addr vramSize;
 
   protected:
     /**
@@ -229,6 +237,16 @@ class AMDGPUDevice : public PciEndpoint
 
     /* Device information */
     GfxVersion getGfxVersion() const { return gfx_version; }
+    int
+    getGpuId() const
+    {
+        return gpuId;
+    }
+    Addr
+    getVRAMSize() const
+    {
+        return vramSize;
+    }
 };
 
 } // namespace gem5

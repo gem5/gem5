@@ -83,8 +83,7 @@ marshalled = marshal.dumps(compiled)
 compressed = zlib.compress(marshalled)
 
 code = code_formatter()
-code(
-    """\
+code("""\
 #include "python/embedded.hh"
 
 namespace gem5
@@ -92,16 +91,14 @@ namespace gem5
 namespace
 {
 
-"""
-)
+""")
 
 bytesToCppArray(code, "embedded_module_data", compressed)
 
 # The name of the EmbeddedPython object doesn't matter since it's in an
 # anonymous namespace, and it's constructor takes care of installing it into a
 # global list.
-code(
-    """
+code("""
 EmbeddedPython embedded_module_info(
     "${abspath}",
     "${modpath}",
@@ -111,7 +108,6 @@ EmbeddedPython embedded_module_info(
 
 } // anonymous namespace
 } // namespace gem5
-"""
-)
+""")
 
 code.write(cpp)

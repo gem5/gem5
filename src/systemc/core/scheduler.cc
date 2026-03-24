@@ -491,8 +491,18 @@ Scheduler::trace(bool delta)
         tf->trace(delta);
 }
 
-Scheduler scheduler;
-Process *getCurrentProcess() { return scheduler.current(); }
+Scheduler &
+scheduler()
+{
+    static Scheduler s;
+    return s;
+}
+
+Process *
+getCurrentProcess()
+{
+    return scheduler().current();
+}
 
 namespace {
 

@@ -117,15 +117,13 @@ class Func(Symbol):
 
         params = ", ".join(self.param_strings)
 
-        code(
-            """
+        code("""
 $return_type
 ${{self.class_name}}::${{self.c_name}}($params)
 {
 ${{self.body}}
 }
-"""
-        )
+""")
         return str(code)
 
 

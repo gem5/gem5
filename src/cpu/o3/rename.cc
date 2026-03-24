@@ -48,7 +48,6 @@
 #include "cpu/o3/limits.hh"
 #include "cpu/reg_class.hh"
 #include "debug/Activity.hh"
-#include "debug/O3PipeView.hh"
 #include "debug/Rename.hh"
 #include "params/BaseO3CPU.hh"
 
@@ -696,6 +695,12 @@ Rename::renameInsts(ThreadID tid)
             break;
         }
 
+        // If we detect a WaW conflict for MiscRegs, we tag
+        // the instruction as SerializeBefore to avoid the conflict
+        if (!inst->isSerializeAfter() && inst->numDestRegs(MiscRegClass)) {
+            handleMiscRegWaW(inst, tid);
+        }
+
         // Handle serializeAfter/serializeBefore instructions.
         // serializeAfter marks the next instruction as serializeBefore.
         // serializeBefore makes the instruction wait in rename until the ROB
@@ -750,6 +755,8 @@ Rename::renameInsts(ThreadID tid)
         // Notify potential listeners that source and destination registers for
         // this instruction have been renamed.
         ppRename->notify(inst);
+
+        inst->renameEndTick = curTick() - inst->fetchTick;
 
         // Put instruction in rename queue.
         toIEW->insts[toIEWIndex] = inst;
@@ -822,11 +829,7 @@ Rename::sortInsts()
     for (int i = 0; i < insts_from_decode; ++i) {
         const DynInstPtr &inst = fromDecode->insts[i];
         insts[inst->threadNumber].push_back(inst);
-#if TRACING_ON
-        if (debug::O3PipeView) {
-            inst->renameTick = curTick() - inst->fetchTick;
-        }
-#endif
+        inst->renameTick = curTick() - inst->fetchTick;
     }
 }
 
@@ -962,6 +965,15 @@ Rename::doSquash(const InstSeqNum &squashed_seq_num, ThreadID tid)
             // until they are indeed squashed in the commit stage.
             freeingInProgress[tid].push_back(hb_it->newPhysReg);
         }
+
+        // mark the speculative register as ready in the scoreboard as
+        // the producing instruction is being squashed.
+        // This is not necessary for renameable register as the physical
+        // register is unreachable until it gets recycled as a new destination
+        // register (it will be marked as busy anyway next time it gets used).
+        // This is instead required for fixed mapping registers which could
+        // be rereferenced as a source registers after the squash
+        scoreboard->setReg(hb_it->newPhysReg);
 
         // Notify potential listeners that the register mapping needs to be
         // removed because the instruction it was mapped to got squashed. Note
@@ -1155,6 +1167,38 @@ Rename::renameDestRegs(const DynInstPtr &inst, ThreadID tid)
                             rename_result.second);
 
         ++stats.renamedOperands;
+    }
+}
+
+void
+Rename::handleMiscRegWaW(DynInstPtr &inst, ThreadID tid)
+{
+    // If the destination register is already being produced, we mark the
+    // instruction as serialize before, stalling it at rename until
+    // the ROB is empty. This is an expensive way to deal with a WAW
+    // conflict. Even if the instruction is marked as non speculative
+    // and will only execute at commit time, the dependency logic
+    // (called at dispatch time)
+    // is not capable of handling two producers of the same register
+    // at the same time.
+    unsigned num_dest_regs = inst->numDestRegs();
+    for (int dest_idx = 0; dest_idx < num_dest_regs; dest_idx++) {
+
+        gem5::ThreadContext *tc = inst->tcBase();
+        UnifiedRenameMap *map = renameMap[tid];
+        auto *isa = tc->getIsaPtr();
+
+        const RegId &dest_reg = inst->destRegIdx(dest_idx);
+        const RegId flat_reg = dest_reg.flatten(*isa);
+        PhysRegIdPtr phys_reg = map->lookup(flat_reg);
+
+        if (phys_reg->classValue() == MiscRegClass &&
+            !phys_reg->isAlwaysReady() &&
+            !scoreboard->getReg(map->lookup(flat_reg))) {
+
+            inst->setSerializeBefore();
+            return;
+        }
     }
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Arm Limited
+ * Copyright (c) 2021-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -58,13 +58,21 @@ action(AllocateTBE_Request, desc="") {
     // we don't have resources to track this request; enqueue a retry
     peek(reqInPort, CHIRequestMsg) {
       assert(in_msg.allowRetry);
+
+      RetryQueueEntry e;
+      e.addr := in_msg.addr;
+      e.usesTxnId := false;
+      e.retryDest := in_msg.requestor;
+      e.lpid := in_msg.lpid;
+
       enqueue(retryTriggerOutPort, RetryTriggerMsg, 0) {
         out_msg.addr := in_msg.addr;
         out_msg.usesTxnId := false;
         out_msg.event := Event:SendRetryAck;
         out_msg.retryDest := in_msg.requestor;
         out_msg.txnId := in_msg.txnId;
-        retryQueue.emplace(in_msg.addr,false,in_msg.requestor);
+        out_msg.lpid := in_msg.lpid;
+        retryQueue.push(e);
       }
     }
   }
@@ -3069,6 +3077,7 @@ action(Send_FwdSnpResp, desc="") {
     out_msg.addr := address;
     out_msg.responder := machineID;
     out_msg.Destination.add(tbe.requestor);
+    out_msg.txnId := tbe.txnId;
 
     // We have the data (locally or upstream) or are dropping it
     bool keepData := (tbe.dir_sharers.count() > 0) ||
@@ -3154,6 +3163,8 @@ action(Send_RespSepData, desc="") {
     out_msg.type := CHIResponseType:RespSepData;
     out_msg.responder := machineID;
     out_msg.Destination.add(tbe.requestor);
+    out_msg.txnId := tbe.txnId;
+    out_msg.dbid := tbe.txnId;
   }
 }
 
@@ -3278,6 +3289,7 @@ action(Send_DBIDResp, desc="") {
     out_msg.responder := machineID;
     out_msg.Destination.add(tbe.requestor);
     out_msg.dbid := tbe.txnId;
+    out_msg.txnId := tbe.txnId;
   }
 }
 
@@ -3288,6 +3300,8 @@ action(Send_Comp_WU, desc="") {
     out_msg.type := CHIResponseType:Comp;
     out_msg.responder := machineID;
     out_msg.Destination.add(tbe.requestor);
+    out_msg.txnId := tbe.txnId;
+    out_msg.dbid := tbe.txnId;
   }
 }
 
@@ -3313,6 +3327,8 @@ action(Send_Comp_ANR, desc="") {
     out_msg.type := CHIResponseType:Comp;
     out_msg.responder := machineID;
     out_msg.Destination.add(tbe.requestor);
+    out_msg.txnId := tbe.txnId;
+    out_msg.dbid := tbe.txnId;
   }
 }
 
@@ -3323,6 +3339,8 @@ action(Send_SnpRespI, desc="") {
     if (tbe.is_dvm_tbe || tbe.is_dvm_snp_tbe) {
       out_msg.usesTxnId := true;
       out_msg.txnId := tbe.addr;
+    } else {
+      out_msg.txnId := tbe.txnId;
     }
     out_msg.type := CHIResponseType:SnpResp_I;
     out_msg.responder := machineID;
@@ -3339,6 +3357,7 @@ action(Send_RetryAck, desc="") {
       out_msg.responder := machineID;
       out_msg.Destination.add(in_msg.retryDest);
       out_msg.txnId := in_msg.txnId;
+      out_msg.lpid := in_msg.lpid;
     }
   }
 }
@@ -3351,6 +3370,7 @@ action(Send_PCrdGrant, desc="") {
       out_msg.type := CHIResponseType:PCrdGrant;
       out_msg.responder := machineID;
       out_msg.Destination.add(in_msg.retryDest);
+      out_msg.lpid := in_msg.lpid;
     }
   }
 }

@@ -147,10 +147,10 @@ struct hash<T, std::enable_if_t<
         if (b == e) return 0;
         // Equivalent to hypothetical functional style
         // return t.map(hash_value).reduce(hash_combine)
-        auto h = std::accumulate(next(b), e, hash_value(*b),
-            [](const auto& acc, const auto& val) {
-                return hash_combine(acc, hash_value(val));
-            });
+        auto h = std::accumulate(std::next(b), e, hash_value(*b),
+                                 [](const auto &acc, const auto &val) {
+                                     return hash_combine(acc, hash_value(val));
+                                 });
         return hash_refine(h);
     }
 };

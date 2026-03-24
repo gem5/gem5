@@ -153,7 +153,11 @@ class MI210(BaseViperGPU):
 
         # Setup device-specific address ranges for various SoC components.
         shader = ViperShader(
-            self._my_id, num_cus, cache_line_size, self.device
+            self._my_id,
+            num_cus,
+            cache_line_size,
+            self.device,
+            gpu_memory.get_size(),
         )
         self.set_shader(shader)
 
@@ -235,7 +239,11 @@ class MI300X(BaseViperGPU):
 
         # Setup device-specific address ranges for various SoC components.
         shader = ViperShader(
-            self._my_id, num_cus, cache_line_size, self.device
+            self._my_id,
+            num_cus,
+            cache_line_size,
+            self.device,
+            gpu_memory.get_size(),
         )
         self.set_shader(shader)
 
@@ -295,6 +303,76 @@ class MI300X(BaseViperGPU):
             "export HCC_AMDGPU_TARGET=gfx942\n"
             f"{debug_commands}\n"
             "dd if=/root/roms/mi300.rom of=/dev/mem bs=1k seek=768 count=128\n"
+            # Check if exists (backwards compat with ROCm <7.0)
+            "if [ -e /usr/lib/firmware/amdgpu/mi300_discovery ]; then\n"
+            "    rm -f /usr/lib/firmware/amdgpu/ip_discovery.bin\n"
+            "    ln -s /usr/lib/firmware/amdgpu/mi300_discovery /usr/lib/firmware/amdgpu/ip_discovery.bin\n"
+            "fi\n"
+            "if [ -f /home/gem5/load_amdgpu.sh ]; then\n"
+            "    sh /home/gem5/load_amdgpu.sh\n"
+            "elif [ ! -f /lib/modules/`uname -r`/updates/dkms/amdgpu.ko ]; then\n"
+            '    echo "ERROR: Missing DKMS package for kernel `uname -r`. Exiting gem5."\n'
+            "    /sbin/m5 exit\n"
+            "else\n"
+            "    modprobe -v amdgpu ip_block_mask=0x6f ppfeaturemask=0 dpm=0 audio=0 ras_enable=0 discovery=2\n"
+            "fi\n"
+        )
+
+        return driver_load_command
+
+
+# Defaults to a single "XCD" (i.e., 1/8th of a full MI355X).
+class MI355X(MI300X):
+    def __init__(
+        self,
+        gpu_memory: AbstractMemorySystem,
+        num_cus: int = 40,
+        cu_per_sqc: int = 4,
+        tcp_size: str = "16KiB",
+        tcp_assoc: int = 16,
+        sqc_size: str = "32KiB",
+        sqc_assoc: int = 8,
+        scalar_size: str = "32KiB",
+        scalar_assoc: int = 8,
+        tcc_size: str = "256KiB",
+        tcc_assoc: int = 16,
+        tcc_count: int = 16,
+        cache_line_size: int = 64,
+    ):
+        super().__init__(
+            gpu_memory=gpu_memory,
+            num_cus=num_cus,
+            cu_per_sqc=cu_per_sqc,
+            tcp_size=tcp_size,
+            tcp_assoc=tcp_assoc,
+            sqc_size=sqc_size,
+            sqc_assoc=sqc_assoc,
+            scalar_size=scalar_size,
+            scalar_assoc=scalar_assoc,
+            tcc_size=tcc_size,
+            tcc_assoc=tcc_assoc,
+            tcc_count=tcc_count,
+            cache_line_size=cache_line_size,
+        )
+
+        self.device.DeviceID = 0x75A0
+
+    def get_driver_command(self, debug: bool = False):
+        debug_commands = "dmesg -n8\nuname -r\nlspci -v\n" if debug else ""
+
+        driver_load_command = (
+            "export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH\n"
+            "export HSA_ENABLE_INTERRUPT=0\n"
+            "export HCC_AMDGPU_TARGET=gfx950\n"
+            f"{debug_commands}\n"
+            "dd if=/root/roms/mi300.rom of=/dev/mem bs=1k seek=768 count=128\n"
+            "if [ -e /usr/lib/firmware/amdgpu/mi350_discovery ]; then\n"
+            "    rm -f /usr/lib/firmware/amdgpu/ip_discovery.bin\n"
+            "    ln -s /usr/lib/firmware/amdgpu/mi350_discovery /usr/lib/firmware/amdgpu/ip_discovery.bin\n"
+            "else\n"
+            '    echo "ERROR: ROCm 7.0+ disk image required for MI355X. Exiting gem5."\n'
+            "    /sbin/m5 exit\n"
+            "fi\n"
             "if [ -f /home/gem5/load_amdgpu.sh ]; then\n"
             "    sh /home/gem5/load_amdgpu.sh\n"
             "elif [ ! -f /lib/modules/`uname -r`/updates/dkms/amdgpu.ko ]; then\n"

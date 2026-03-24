@@ -40,7 +40,6 @@
 
 import importlib
 import inspect
-import sys
 from functools import wraps
 from types import (
     FunctionType,
@@ -50,10 +49,6 @@ from types import (
 
 import m5
 from m5.citations import gem5_citations
-
-# Use the pyfdt and not the helper class, because the fdthelper
-# relies on the SimObject definition
-from m5.ext.pyfdt import pyfdt
 
 # There are a few things we need that aren't in params.__all__ since
 # normal users don't need them
@@ -418,7 +413,9 @@ class MetaSimObject(type):
             return
 
         # no valid assignment... raise exception
-        raise AttributeError(f"Class {cls.__name__} has no parameter '{attr}'")
+        raise AttributeError(
+            f"Invalid assignment for Class {cls.__name__} with parameter {attr}"
+        )
 
     def __getattr__(cls, attr):
         if attr == "cxx_class_path":
@@ -935,7 +932,8 @@ class SimObject(metaclass=MetaSimObject):
 
         # no valid assignment... raise exception
         raise AttributeError(
-            f"Class {self.__class__.__name__} has no parameter {attr}"
+            f"Invalid assignment for Class {self.__class__.__name__} with"
+            f" parameter {attr}"
         )
 
     # this hack allows tacking a '[0]' onto parameters that may or may
@@ -1421,7 +1419,7 @@ def isSimObjectOrSequence(value):
 
 
 def isRoot(obj):
-    from m5.objects import Root
+    from m5.objects.Root import Root
 
     return obj and obj is Root.getInstance()
 

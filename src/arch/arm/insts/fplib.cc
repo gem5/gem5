@@ -1,40 +1,40 @@
 /*
-* Copyright (c) 2012-2013, 2017-2018, 2020, 2025 Arm Limited
-* Copyright (c) 2020 Metempsy Technology Consulting
-* All rights reserved
-*
-* The license below extends only to copyright in the software and shall
-* not be construed as granting a license to any other intellectual
-* property including but not limited to intellectual property relating
-* to a hardware implementation of the functionality of the software
-* licensed hereunder.  You may use the software subject to the license
-* terms below provided that you ensure that this notice is replicated
-* unmodified and in its entirety in all distributions of the software,
-* modified or unmodified, in source code or in binary form.
-*
-* Redistribution and use in source and binary forms, with or without
-* modification, are permitted provided that the following conditions are
-* met: redistributions of source code must retain the above copyright
-* notice, this list of conditions and the following disclaimer;
-* redistributions in binary form must reproduce the above copyright
-* notice, this list of conditions and the following disclaimer in the
-* documentation and/or other materials provided with the distribution;
-* neither the name of the copyright holders nor the names of its
-* contributors may be used to endorse or promote products derived from
-* this software without specific prior written permission.
-*
-* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-* A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-* LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-* DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-* THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-* (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-* OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ * Copyright (c) 2012-2013, 2017-2018, 2020, 2025-2026 Arm Limited
+ * Copyright (c) 2020 Metempsy Technology Consulting
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 #include <stdint.h>
 
@@ -62,6 +62,7 @@ namespace ArmISA
 #define FPLIB_AH  128   // 0x80
 #define FPLIB_NEP 256   // 0x100
 #define FPLIB_FPEXEC 512    // 0x200, Raise exception.
+#define FPLIB_TRAPUF 1024   // 0x400
 
 #define FPLIB_IDC 128 // Input Denormal
 #define FPLIB_IXC 16  // Inexact
@@ -886,6 +887,61 @@ fp64_process_NaNs3(uint64_t a, uint64_t b, uint64_t c, int mode, int *flags)
 }
 
 static uint32_t
+fp32_convert_default_nan(uint16_t op)
+{
+    uint32_t sgn = op >> (FP16_BITS - 1);
+    uint32_t mnt = FP16_MANT(op);
+
+    mnt = mnt << (FP32_MANT_BITS - FP16_MANT_BITS);
+
+    return fp32_pack(sgn, FP32_EXP_INF, mnt);
+}
+
+static uint32_t
+fp16_process_NaNs4(uint16_t a, uint16_t b, uint16_t c, uint16_t d, int mode,
+                   int *flags)
+{
+    int a_exp = FP16_EXP(a);
+    uint16_t a_mnt = FP16_MANT(a);
+    int b_exp = FP16_EXP(b);
+    uint16_t b_mnt = FP16_MANT(b);
+    int c_exp = FP16_EXP(c);
+    uint16_t c_mnt = FP16_MANT(c);
+    int d_exp = FP16_EXP(d);
+    uint16_t d_mnt = FP16_MANT(d);
+
+    // Handle signalling NaNs:
+    if (fp16_is_signalling_NaN(a_exp, a_mnt)) {
+        return fp32_convert_default_nan(fp16_process_NaN(a, mode, flags));
+    }
+    if (fp16_is_signalling_NaN(b_exp, b_mnt)) {
+        return fp32_convert_default_nan(fp16_process_NaN(b, mode, flags));
+    }
+    if (fp16_is_signalling_NaN(c_exp, c_mnt)) {
+        return fp32_convert_default_nan(fp16_process_NaN(c, mode, flags));
+    }
+    if (fp16_is_signalling_NaN(d_exp, d_mnt)) {
+        return fp32_convert_default_nan(fp16_process_NaN(d, mode, flags));
+    }
+
+    // Handle quiet NaNs:
+    if (fp16_is_NaN(a_exp, a_mnt)) {
+        return fp32_convert_default_nan(fp16_process_NaN(a, mode, flags));
+    }
+    if (fp16_is_NaN(b_exp, b_mnt)) {
+        return fp32_convert_default_nan(fp16_process_NaN(b, mode, flags));
+    }
+    if (fp16_is_NaN(c_exp, c_mnt)) {
+        return fp32_convert_default_nan(fp16_process_NaN(c, mode, flags));
+    }
+    if (fp16_is_NaN(d_exp, d_mnt)) {
+        return fp32_convert_default_nan(fp16_process_NaN(d, mode, flags));
+    }
+
+    return 0;
+}
+
+static uint32_t
 fp32_process_NaNs4(uint32_t a, uint32_t b, uint32_t c, uint32_t d,
                    int mode, int *flags)
 {
@@ -919,17 +975,6 @@ fp32_process_NaNs4(uint32_t a, uint32_t b, uint32_t c, uint32_t d,
         return fp32_process_NaN(d, mode, flags);
 
     return 0;
-}
-
-static uint32_t
-fp32_convert_default_nan(uint16_t op)
-{
-    uint32_t sgn = op >> (FP16_BITS - 1);
-    uint32_t mnt = FP16_MANT(op);
-
-    mnt = mnt << (FP32_MANT_BITS - FP16_MANT_BITS);
-
-    return fp32_pack(sgn, FP32_EXP_INF, mnt);
 }
 
 static uint32_t
@@ -1030,7 +1075,8 @@ fp16_round_(int sgn, int exp, uint16_t mnt, int rm, int mode, int *flags)
     }
 
     // xx should also check fpscr_val<11>
-    if (!(mode & FPLIB_AH) && !biased_exp && error) {
+    if (!(mode & FPLIB_AH) && !biased_exp &&
+        (error || (mode & FPLIB_TRAPUF))) {
         if (mode & FPLIB_FPEXEC)
             *flags |= FPLIB_UFC;
     }
@@ -1078,7 +1124,7 @@ fp16_round_(int sgn, int exp, uint16_t mnt, int rm, int mode, int *flags)
             if (mode & FPLIB_FPEXEC)
                 *flags |= FPLIB_UFC | FPLIB_IXC;
             return fp16_zero(sgn);
-        } else if (error) {
+        } else if (error || (mode & FPLIB_TRAPUF)) {
             if (mode & FPLIB_FPEXEC)
                 *flags |= FPLIB_UFC;
         }
@@ -1160,7 +1206,8 @@ fp32_round_(int sgn, int exp, uint32_t mnt, int rm, int mode, int *flags,
     // inexact or the Underflow exception is trapped. This applies before
     // rounding if FPCR.AH != '1'.
     // xx should also check fpscr_val<11>
-    if (!(mode & FPLIB_AH) && !biased_exp && error) {
+    if (!(mode & FPLIB_AH) && !biased_exp &&
+        (error || (mode & FPLIB_TRAPUF))) {
         if (mode & FPLIB_FPEXEC)
             *flags |= FPLIB_UFC;
     }
@@ -1208,7 +1255,7 @@ fp32_round_(int sgn, int exp, uint32_t mnt, int rm, int mode, int *flags,
             if (mode & FPLIB_FPEXEC)
                 *flags |= FPLIB_UFC | FPLIB_IXC;
             return fp32_zero(sgn);
-        } else if (error) {
+        } else if (error || (mode & FPLIB_TRAPUF)) {
             if (mode & FPLIB_FPEXEC)
                 *flags |= FPLIB_UFC;
         }
@@ -1276,7 +1323,8 @@ fp64_round_(int sgn, int exp, uint64_t mnt, int rm, int mode, int *flags)
     }
 
     // xx should also check fpscr_val<11>
-    if (!(mode & FPLIB_AH) && !biased_exp && error) {
+    if (!(mode & FPLIB_AH) && !biased_exp &&
+        (error || (mode & FPLIB_TRAPUF))) {
         if (mode & FPLIB_FPEXEC)
             *flags |= FPLIB_UFC;
     }
@@ -1324,7 +1372,7 @@ fp64_round_(int sgn, int exp, uint64_t mnt, int rm, int mode, int *flags)
             if (mode & FPLIB_FPEXEC)
                 *flags |= FPLIB_UFC | FPLIB_IXC;
             return fp64_zero(sgn);
-        } else if (error) {
+        } else if (error || (mode & FPLIB_TRAPUF)) {
             if (mode & FPLIB_FPEXEC)
                 *flags |= FPLIB_UFC;
         }
@@ -2484,6 +2532,124 @@ fp32_muladdh(uint32_t a, uint16_t b, uint16_t c, int scale,
     }
 }
 
+uint32_t
+fp32_dot(uint16_t op1_a, uint16_t op1_b, uint16_t op2_a, uint16_t op2_b,
+         int mode, int *flags)
+{
+    int a1_sgn, b1_sgn, a2_sgn, b2_sgn, a1_exp, b1_exp, a2_exp, b2_exp;
+    int pa_sgn, pb_sgn, pa_exp, pb_exp, x_sgn, x_exp;
+    uint16_t a1_mnt, b1_mnt, a2_mnt, b2_mnt;
+    uint32_t x;
+    uint64_t pa_mnt, pb_mnt, x_mnt;
+
+    // data format of a1_mnt, b1_mnt, a2_mnt, b2_mnt: Q1.10
+    fp16_unpack(&a1_sgn, &a1_exp, &a1_mnt, op1_a, mode, flags);
+    fp16_unpack(&b1_sgn, &b1_exp, &b1_mnt, op1_b, mode, flags);
+    fp16_unpack(&a2_sgn, &a2_exp, &a2_mnt, op2_a, mode, flags);
+    fp16_unpack(&b2_sgn, &b2_exp, &b2_mnt, op2_b, mode, flags);
+
+    x = fp16_process_NaNs4(op1_a, op1_b, op2_a, op2_b, mode, flags);
+    if (x) {
+        return x;
+    }
+
+    bool a1_inf = fp16_is_infinity(a1_exp, a1_mnt);
+    bool a2_inf = fp16_is_infinity(a2_exp, a2_mnt);
+    bool b1_inf = fp16_is_infinity(b1_exp, b1_mnt);
+    bool b2_inf = fp16_is_infinity(b2_exp, b2_mnt);
+
+    bool a1_zero = !a1_exp && !a1_mnt;
+    bool a2_zero = !a2_exp && !a2_mnt;
+    bool b1_zero = !b1_exp && !b1_mnt;
+    bool b2_zero = !b2_exp && !b2_mnt;
+
+    // Determine sign and type products will have if it does not cause an
+    // Invalid Operation.
+    pa_sgn = a1_sgn ^ a2_sgn;
+    pb_sgn = b1_sgn ^ b2_sgn;
+    bool pa_inf = a1_inf || a2_inf;
+    bool pb_inf = b1_inf || b2_inf;
+    bool pa_zero = a1_zero || a2_zero;
+    bool pb_zero = b1_zero || b2_zero;
+
+    // Non SNaN-generated Invalid Operation cases are multiplies of zero
+    // by infinity and additions of opposite-signed infinities.
+    bool invalidop =
+        ((a1_inf && a2_zero) || (a1_zero && a2_inf) || (b1_inf && b2_zero) ||
+         (b1_zero && b2_inf) || (pa_inf && pb_inf && pa_sgn != pb_sgn));
+
+    if (invalidop) {
+        x = fp32_defaultNaN(mode);
+        *flags |= FPLIB_IOC;
+        return x;
+    }
+
+    // Other cases involving infinities produce an infinity of the same sign.
+    if ((pa_inf && !pa_sgn) || (pb_inf && !pb_sgn)) {
+        return fp32_infinity(0);
+    } else if ((pa_inf && pa_sgn) || (pb_inf && pb_sgn)) {
+        return fp32_infinity(1);
+    }
+
+    // Cases where the result is exactly zero and its sign is not determined by
+    // the rounding mode are additions of same-signed zeros.
+    if (pa_zero && pb_zero && (pa_sgn == pb_sgn)) {
+        return fp32_zero(pa_sgn);
+    }
+
+    // Otherwise calculate fused sum of products and round it.
+    // format of pa_mnt, pb_mnt, x_mnt: Q9.23
+    // Multiply:
+    pa_exp = a1_exp + a2_exp - 2 * FP16_EXP_BIAS + 2 * FP32_EXP_BIAS -
+             FP32_EXP_BIAS + 2 * FP32_EXP_BITS + 1 - 3;
+    pa_mnt = (uint64_t)a1_mnt * a2_mnt
+             << (3 + (FP32_MANT_BITS - FP16_MANT_BITS) * 2);
+
+    pb_exp = b1_exp + b2_exp - 2 * FP16_EXP_BIAS + 2 * FP32_EXP_BIAS -
+             FP32_EXP_BIAS + 2 * FP32_EXP_BITS + 1 - 3;
+    pb_mnt = (uint64_t)b1_mnt * b2_mnt
+             << (3 + (FP32_MANT_BITS - FP16_MANT_BITS) * 2);
+    if (!pb_mnt && pa_mnt) {
+        pb_exp = pa_exp;
+    }
+    if (pb_mnt && !pa_mnt) {
+        pa_exp = pb_exp;
+    }
+
+    // Add:
+    if (pa_exp >= pb_exp) {
+        pb_mnt = (lsr64(pb_mnt, pa_exp - pb_exp) |
+                  !!(pb_mnt & (lsl64(1, pa_exp - pb_exp) - 1)));
+        pb_exp = pa_exp;
+    } else {
+        pa_mnt = (lsr64(pa_mnt, pb_exp - pa_exp) |
+                  !!(pa_mnt & (lsl64(1, pb_exp - pa_exp) - 1)));
+        pa_exp = pb_exp;
+    }
+    x_sgn = pa_sgn;
+    x_exp = pa_exp;
+    if (pa_sgn == pb_sgn) {
+        x_mnt = pa_mnt + pb_mnt;
+    } else if (pa_mnt >= pb_mnt) {
+        x_mnt = pa_mnt - pb_mnt;
+    } else {
+        x_sgn ^= 1;
+        x_mnt = pb_mnt - pa_mnt;
+    }
+
+    if (!x_mnt) {
+        // Sign of exact zero result depends on rounding mode
+        return fp32_zero((mode & 3) == 2);
+    }
+
+    // format of x_mnt: Q1.63
+    x_mnt = fp64_normalise(x_mnt, &x_exp);
+    // format of x_mnt: Q1.32
+    x_mnt = x_mnt >> (FP32_BITS - 1) | !!(uint32_t)(x_mnt << 1);
+
+    return fp32_round(x_sgn, x_exp, x_mnt, mode, flags);
+}
+
 static uint16_t
 fp16_div(uint16_t a, uint16_t b, int mode, int *flags)
 {
@@ -2984,6 +3150,9 @@ modeConv(FPSCR fpscr)
     if (fpscr.fz16)
         mode |= FPLIB_FZ16;
     mode |= FPLIB_FPEXEC;
+    if (fpscr.ufe) {
+        mode = mode | FPLIB_TRAPUF;
+    }
     return mode;
     // AHP bit is ignored. Only fplibConvert uses AHP.
 }
@@ -3788,6 +3957,18 @@ fplibDiv(uint64_t op1, uint64_t op2, FPSCR &fpscr, FPCR fpcr)
 }
 
 template <>
+uint32_t
+fplibDot(uint16_t op1_a, uint16_t op1_b, uint16_t op2_a, uint16_t op2_b,
+         FPSCR &fpscr, FPCR fpcr)
+{
+    int flags = 0;
+    uint64_t result =
+        fp32_dot(op1_a, op1_b, op2_a, op2_b, modeConv(fpscr, fpcr), &flags);
+    set_fpscr0(fpscr, flags);
+    return result;
+}
+
+template <>
 uint16_t
 fplibExpA(uint16_t op)
 {
@@ -3975,6 +4156,114 @@ fplibExpA(uint64_t op)
     };
     return ((((op >> 6) & ((1 << FP64_EXP_BITS) - 1)) << FP64_MANT_BITS) |
             coeff[op & ((1 << 6) - 1)]);
+}
+
+template <>
+uint16_t
+fplibLogB(uint16_t op, FPSCR &fpscr, FPCR fpcr)
+{
+    int mode = modeConv(fpscr, fpcr);
+    int flags = 0;
+    int sgn, exp;
+    uint16_t mnt, result;
+
+    // Unpack floating-point operand optionally with flush-to-zero:
+    fp16_unpack(&sgn, &exp, &mnt, op, mode, &flags);
+
+    if (fp16_is_NaN(exp, mnt)) {
+        flags |= FPLIB_IOC;
+        result = (uint16_t)1 << 15;
+    } else if (exp == 0 && mnt == 0) {
+        flags |= FPLIB_IOC;
+        result = (uint16_t)1 << 15;
+    } else if (fp16_is_infinity(exp, mnt)) {
+        result = ((uint16_t)1 << 15) - 1;
+    } else {
+        mnt = mnt << (FP16_BITS - FP16_MANT_BITS - 1);
+        fp16_normalise(mnt, &exp);
+        int unbias_exp = exp - FP16_EXP_BIAS;
+        result = static_cast<uint16_t>((int16_t)unbias_exp);
+    }
+
+    set_fpscr0(fpscr, flags);
+
+    return result;
+}
+
+template <>
+uint32_t
+fplibLogB(uint32_t op, FPSCR &fpscr, FPCR fpcr)
+{
+    int mode = modeConv(fpscr, fpcr);
+    int flags = 0;
+    int sgn, exp;
+    uint32_t mnt, result;
+
+    // Unpack floating-point operand optionally with flush-to-zero:
+    fp32_unpack(&sgn, &exp, &mnt, op, mode, &flags);
+
+    if (fp32_is_NaN(exp, mnt)) {
+        flags |= FPLIB_IOC;
+        result = (uint32_t)1 << 31;
+    } else if (exp == 0 && mnt == 0) {
+        flags |= FPLIB_IOC;
+        result = (uint32_t)1 << 31;
+    } else if (fp32_is_infinity(exp, mnt)) {
+        result = ((uint32_t)1 << 31) - 1;
+    } else {
+        if (mode & FPLIB_AH) {
+            if (fp32_is_denormal(exp, mnt)) {
+                flags |= FPLIB_IDC;
+            }
+        }
+
+        mnt = mnt << (FP32_BITS - FP32_MANT_BITS - 1);
+        fp32_normalise(mnt, &exp);
+        int unbias_exp = exp - FP32_EXP_BIAS;
+        result = static_cast<uint32_t>((int32_t)unbias_exp);
+    }
+
+    set_fpscr0(fpscr, flags);
+
+    return result;
+}
+
+template <>
+uint64_t
+fplibLogB(uint64_t op, FPSCR &fpscr, FPCR fpcr)
+{
+    int mode = modeConv(fpscr, fpcr);
+    int flags = 0;
+    int sgn, exp;
+    uint64_t mnt, result;
+
+    // Unpack floating-point operand optionally with flush-to-zero:
+    fp64_unpack(&sgn, &exp, &mnt, op, mode, &flags);
+
+    if (fp64_is_NaN(exp, mnt)) {
+        flags |= FPLIB_IOC;
+        result = (uint64_t)1 << 63;
+    } else if (exp == 0 && mnt == 0) {
+        flags |= FPLIB_IOC;
+        result = (uint64_t)1 << 63;
+    } else if (fp64_is_infinity(exp, mnt)) {
+        result = ((uint64_t)1 << 63) - 1;
+    } else {
+        if (mode & FPLIB_AH) {
+            if (fp64_is_denormal(exp, mnt)) {
+                flags |= FPLIB_IDC;
+            }
+        }
+
+        mnt = mnt << (FP64_BITS - FP64_MANT_BITS - 1);
+        fp64_normalise(mnt, &exp);
+        int unbias_exp = exp - FP64_EXP_BIAS;
+        result = static_cast<uint64_t>((int64_t)unbias_exp);
+    }
+
+    set_fpscr0(fpscr, flags);
+
+    return result;
 }
 
 static uint16_t
@@ -6876,7 +7165,8 @@ bf16_round_(int sgn, int exp, uint16_t mnt, int rm, int mode, int *flags)
     // inexact or the Underflow exception is trapped. This applies before
     // rounding if FPCR.AH != '1'.
     // xx should also check fpscr_val<11>
-    if (!(mode & FPLIB_AH) && !biased_exp && error) {
+    if (!(mode & FPLIB_AH) && !biased_exp &&
+        (error || (mode & FPLIB_TRAPUF))) {
         if (mode & FPLIB_FPEXEC)
             *flags |= FPLIB_UFC;
     }
@@ -6924,7 +7214,7 @@ bf16_round_(int sgn, int exp, uint16_t mnt, int rm, int mode, int *flags)
             if (mode & FPLIB_FPEXEC)
                 *flags |= FPLIB_UFC | FPLIB_IXC;
             return bf16_zero(sgn);
-        } else if (error) {
+        } else if (error || (mode & FPLIB_TRAPUF)) {
             if (mode & FPLIB_FPEXEC)
                 *flags |= FPLIB_UFC;
         }
@@ -7244,8 +7534,11 @@ bf16_dot(uint32_t op1_a, uint32_t op1_b, uint32_t op2_a, uint32_t op2_b,
 
     pb_exp = b1_exp + b2_exp - FP32_EXP_BIAS + 2 * FP32_EXP_BITS + 1 - 3;
     pb_mnt = (uint64_t)b1_mnt * b2_mnt << 3;
-    if (!pb_mnt) {
+    if (!pb_mnt && pa_mnt) {
         pb_exp = pa_exp;
+    }
+    if (pb_mnt && !pa_mnt) {
+        pa_exp = pb_exp;
     }
 
     // Add:
@@ -7434,26 +7727,33 @@ fplibBfMulH(uint16_t op1, uint16_t op2, FPSCR &fpscr)
 }
 
 uint16_t
-fplibBfMulAdd(uint16_t addend, uint16_t op1, uint16_t op2,
-              FPSCR &fpscr, FPCR fpcr)
+fplibBfMulAdd(uint16_t addend, uint16_t op1, uint16_t op2, FPSCR &fpscr,
+              FPCR fpcr, bool target_za)
 {
     int flags = 0;
-    uint16_t result = bf16_muladd(addend, op1, op2, 0, modeConv(fpscr, fpcr),
-                                  &flags);
+    int mode = modeConv(fpscr, fpcr);
+    if (target_za) {            // SME
+        mode = mode | FPLIB_DN; // fpcr.dn = '1'
+    }
+    uint16_t result = bf16_muladd(addend, op1, op2, 0, mode, &flags);
     set_fpscr0(fpscr, flags);
     return result;
 }
 
 uint32_t
-fplibBfMulAddH(uint32_t addend, uint16_t op1, uint16_t op2,
-               FPSCR &fpscr, FPCR fpcr)
+fplibBfMulAddH(uint32_t addend, uint16_t op1, uint16_t op2, FPSCR &fpscr,
+               FPCR fpcr, bool target_za)
 {
     int flags = 0;
     int mode = modeConv(fpscr, fpcr);
-    if (mode & FPLIB_AH) {  // altfp
-        mode = mode & (~(int)FPLIB_FPEXEC); // fpexc = !altfp
-        mode = mode | FPLIB_FIZ | FPLIB_FZ; // fpcr.<FIZ.FZ> = '11'
-        mode = mode & (~(int)0x3);          // fpcr.RMode = '00'
+    if (target_za) {                            // SME
+        mode = mode | FPLIB_DN;                 // fpcr.dn = '1'
+    } else {                                    // SVE
+        if (mode & FPLIB_AH) {                  // altfp
+            mode = mode & (~(int)FPLIB_FPEXEC); // fpexc = !altfp
+            mode = mode | FPLIB_FIZ | FPLIB_FZ; // fpcr.<FIZ.FZ> = '11'
+            mode = mode & (~(int)0x3);          // fpcr.RMode = '00'
+        }
     }
     uint32_t result = fp32_muladd(
         addend, (uint32_t)op1 << 16, (uint32_t)op2 << 16, 0, mode, &flags);

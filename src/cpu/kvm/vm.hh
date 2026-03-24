@@ -39,6 +39,7 @@
 #ifndef __CPU_KVM_KVMVM_HH__
 #define __CPU_KVM_KVMVM_HH__
 
+#include <unordered_map>
 #include <vector>
 
 #include "base/addr_range.hh"
@@ -557,6 +558,16 @@ class KvmVM : public SimObject
     };
     std::vector<MemorySlot> memorySlots;
     uint32_t maxMemorySlot;
+
+    struct Deleter
+    {
+        void
+        operator()(void *ptr) const
+        {
+            free(ptr);
+        }
+    };
+    std::unordered_map<uint32_t, std::unique_ptr<void, Deleter>> _slotPad;
 };
 
 } // namespace gem5

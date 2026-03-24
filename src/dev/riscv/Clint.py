@@ -34,8 +34,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects.Device import BasicPioDevice
-from m5.objects.IntPin import IntSinkPin
-from m5.objects.ResetPort import ResetResponsePort
 from m5.params import *
 from m5.proxy import *
 from m5.util.fdthelper import *

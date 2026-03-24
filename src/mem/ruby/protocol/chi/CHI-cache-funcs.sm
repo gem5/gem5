@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Arm Limited
+ * Copyright (c) 2021-2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -762,6 +762,7 @@ void processRetryQueue() {
       out_msg.usesTxnId := e.usesTxnId;
       out_msg.retryDest := e.retryDest;
       out_msg.event := Event:SendPCrdGrant;
+      out_msg.lpid := e.lpid;
     }
   }
 }

@@ -63,6 +63,7 @@
 #include "mem/port.hh"
 #include "mem/ruby/common/MachineID.hh"
 #include "mem/ruby/common/TypeDefines.hh"
+#include "mem/ruby/common/WriteMask.hh"
 #include "mem/ruby/network/Topology.hh"
 #include "mem/ruby/network/dummy_port.hh"
 #include "mem/ruby/protocol/LinkDirection.hh"

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2014, 2016-2020,2022 Arm Limited
+ * Copyright (c) 2010-2014, 2016-2020,2022,2025 Arm Limited
  * Copyright (c) 2013 Advanced Micro Devices, Inc.
  * All rights reserved
  *
@@ -355,9 +355,10 @@ ArmStaticInst::printVecReg(std::ostream &os, RegIndex reg_idx,
 }
 
 void
-ArmStaticInst::printVecPredReg(std::ostream &os, RegIndex reg_idx) const
+ArmStaticInst::printVecPredReg(std::ostream &os, RegIndex reg_idx,
+                               bool is_png) const
 {
-    ccprintf(os, "p%d", reg_idx);
+    ccprintf(os, "%s%d", is_png ? "pn" : "p", reg_idx);
 }
 
 void

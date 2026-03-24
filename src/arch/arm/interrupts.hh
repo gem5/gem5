@@ -48,10 +48,11 @@
 #include "cpu/thread_context.hh"
 #include "debug/Interrupt.hh"
 #include "enums/ArmExtension.hh"
-#include "params/ArmInterrupts.hh"
 
 namespace gem5
 {
+
+struct ArmInterruptsParams;
 
 namespace ArmISA
 {
@@ -81,11 +82,7 @@ class Interrupts : public BaseInterrupts
   public:
     using Params = ArmInterruptsParams;
 
-    Interrupts(const Params &p) : BaseInterrupts(p)
-    {
-        clearAll();
-    }
-
+    Interrupts(const Params &p);
 
     void
     post(int int_num, int index) override

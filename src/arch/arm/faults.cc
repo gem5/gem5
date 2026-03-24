@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2014, 2016-2019, 2022, 2024 Arm Limited
+ * Copyright (c) 2010,2012-2014,2016-2019,2022,2024,2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1292,16 +1292,15 @@ PrefetchAbort::routeToMonitor(ThreadContext *tc) const
 bool
 PrefetchAbort::routeToHyp(ThreadContext *tc) const
 {
-    bool toHyp;
+    bool to_hyp;
 
     HCR  hcr  = tc->readMiscRegNoEffect(MISCREG_HCR_EL2);
     HDCR hdcr = tc->readMiscRegNoEffect(MISCREG_HDCR);
 
-    toHyp = fromEL == EL2;
-    toHyp |=  ArmSystem::haveEL(tc, EL2) && !isSecure(tc) &&
-        currEL(tc) <= EL1 && (hcr.tge || stage2 ||
-                              (source == DebugEvent && hdcr.tde));
-     return toHyp;
+    to_hyp = fromEL == EL2;
+    to_hyp |= EL2Enabled(tc) && currEL(tc) <= EL1 &&
+              (hcr.tge || stage2 || (source == DebugEvent && hdcr.tde));
+    return to_hyp;
 }
 
 ExceptionClass

@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2009, 2012-2013, 2017-2018, 2020, 2024 Arm Limited
+# Copyright (c) 2009, 2012-2013, 2017-2018, 2020, 2024-2025 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -84,6 +84,7 @@ Source("insts/sme.cc", tags=['arm isa'])
 Source("insts/static_inst.cc", tags=['arm isa'])
 Source("insts/sve.cc", tags=['arm isa'])
 Source("insts/sve_mem.cc", tags=['arm isa'])
+Source("insts/sve_macromem.cc", tags=['arm isa'])
 Source("insts/vfp.cc", tags=['arm isa'])
 Source("insts/crypto.cc", tags=['arm isa'])
 Source("insts/tme64.cc", tags=['arm isa'])
@@ -94,6 +95,7 @@ else:
 Source("interrupts.cc", tags=['arm isa'])
 Source("isa.cc", tags=['arm isa'])
 Source("isa_device.cc", tags=['arm isa'])
+Source("linux/linux.cc", tags=['arm isa'])
 Source("linux/process.cc", tags=['arm isa'])
 Source("linux/se_workload.cc", tags=['arm isa'])
 Source("linux/fs_workload.cc", tags=['arm isa'])
@@ -102,6 +104,7 @@ Source("freebsd/se_workload.cc", tags=['arm isa'])
 Source("fs_workload.cc", tags=['arm isa'])
 Source("regs/int.cc", tags=['arm isa'])
 Source("regs/misc.cc", tags=['arm isa'])
+Source("regs/misc_info.cc", tags=['arm isa'])
 Source("mmu.cc", tags=['arm isa'])
 Source("mpam.cc", tags=['arm isa'])
 Source("nativetrace.cc", tags=['arm isa'])
@@ -143,10 +146,9 @@ SimObject(
     tags=['arm isa'],
 )
 SimObject(
-    "ArmMMU.py",
-    sim_objects=["ArmTableWalker", "ArmMMU"],
-    tags=['arm isa']
-)
+    'ArmMMU.py',
+    sim_objects=['ArmTableWalker', 'ArmWalkUnit', 'ArmMMU'],
+    tags='arm isa')
 SimObject(
     "ArmNativeTrace.py",
     sim_objects=["ArmNativeTrace"],

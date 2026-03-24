@@ -5211,6 +5211,56 @@ namespace VegaISA
 
         vdst.write();
     } // execute
+    // --- Inst_VOP3__V_PRNG_B32 class methods ---
+
+    Inst_VOP3__V_PRNG_B32::Inst_VOP3__V_PRNG_B32(InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_prng_b32", false)
+    {
+        setFlag(ALU);
+    } // Inst_VOP3__V_PRNG_B32
+
+    Inst_VOP3__V_PRNG_B32::~Inst_VOP3__V_PRNG_B32()
+    {} // ~Inst_VOP3__V_PRNG_B32
+
+    // Generate a pseudorandom number using an LFSR (linear feedback shift
+    // register) seeded with the vector input, then store the result into a
+    // vector register.
+    //
+    // in = S0.u32;
+    // D0.u32 = ((in << 1U) ^ (in[31] ? 197U : 0U))
+    //
+    // Notes: This function produces a sequence of pseudorandom numbers with
+    // period 2**32 - 1 unless the input is zero, in which case the period is
+    // 1.
+    void
+    Inst_VOP3__V_PRNG_B32::execute(GPUDynInstPtr gpuDynInst)
+    {
+        Wavefront *wf = gpuDynInst->wavefront();
+        ConstVecOperandU32 src(gpuDynInst, extData.SRC0);
+        VecOperandU32 vdst(gpuDynInst, instData.VDST);
+
+        src.readSrc();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+        panic_if(instData.ABS, "ABS not supported for %s", _opcode);
+        panic_if(instData.CLAMP, "CLAMP not supported for %s", _opcode);
+        panic_if(extData.OMOD, "OMOD not supported for %s", _opcode);
+        panic_if(extData.NEG, "NEG not supported for %s", _opcode);
+        panic_if(instData.OPSEL, "OPSEL not supported for %s", _opcode);
+
+        auto randFunc = [](VecElemU32 in) {
+            return ((in << 1) ^ (((in >> 31) & 1) ? 0xc5 : 0x00));
+        };
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                vdst[lane] = randFunc(src[lane]);
+            }
+        }
+
+        vdst.write();
+    } // execute
     // --- Inst_VOP3__V_CVT_F32_BF16 class methods ---
 
     Inst_VOP3__V_CVT_F32_BF16::Inst_VOP3__V_CVT_F32_BF16(InFmt_VOP3A *iFmt)
@@ -9865,6 +9915,92 @@ namespace VegaISA
             }
         }
 
+        vdst.write();
+    } // execute
+    // --- Inst_VOP3__V_PERMLANE16_SWAP_B32 class methods ---
+
+    Inst_VOP3__V_PERMLANE16_SWAP_B32::Inst_VOP3__V_PERMLANE16_SWAP_B32(
+        InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_permlane16_swap_b32", false)
+    {
+        setFlag(ALU);
+    } // Inst_VOP3__V_PERMLANE16_SWAP_B32
+
+    Inst_VOP3__V_PERMLANE16_SWAP_B32::~Inst_VOP3__V_PERMLANE16_SWAP_B32()
+    {} // ~Inst_VOP3__V_PERMLANE16_SWAP_B32
+
+    // Swap data between two vector registers. Odd rows of the first operand
+    // are swapped with even rows of the second operand (one row is 16 lanes).
+    //
+    // Notes: ABS, NEG and OMOD modifiers should all be zeroed for this
+    // instruction. This instruction is useful for BFP data conversions.
+    void
+    Inst_VOP3__V_PERMLANE16_SWAP_B32::execute(GPUDynInstPtr gpuDynInst)
+    {
+        VecOperandU32 src0(gpuDynInst, extData.SRC0);
+        VecOperandU32 vdst(gpuDynInst, instData.VDST);
+
+        src0.read();
+        vdst.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+        panic_if(instData.CLAMP, "CLAMP not supported for %s", _opcode);
+        panic_if(extData.OMOD, "OMOD not supported for %s", _opcode);
+        panic_if(instData.ABS, "ABS not supported for %s", _opcode);
+        panic_if(extData.NEG, "NEG not supported for %s", _opcode);
+
+        // Ignores EXEC MASK
+        for (int pass = 0; pass < 2; ++pass) {
+            for (int lane = 0; lane < 16; ++lane) {
+                int dlane = pass * 32 + lane + 16;
+                int slane = pass * 32 + lane;
+
+                VecElemU32 tmp = src0[slane];
+                src0[slane] = vdst[dlane];
+                vdst[dlane] = tmp;
+            }
+        }
+
+        src0.write();
+        vdst.write();
+    } // execute
+    // --- Inst_VOP3__V_PERMLANE32_SWAP_B32 class methods ---
+
+    Inst_VOP3__V_PERMLANE32_SWAP_B32::Inst_VOP3__V_PERMLANE32_SWAP_B32(
+        InFmt_VOP3A *iFmt)
+        : Inst_VOP3A(iFmt, "v_permlane32_swap_b32", false)
+    {
+        setFlag(ALU);
+    } // Inst_VOP3__V_PERMLANE32_SWAP_B32
+
+    Inst_VOP3__V_PERMLANE32_SWAP_B32::~Inst_VOP3__V_PERMLANE32_SWAP_B32()
+    {} // ~Inst_VOP3__V_PERMLANE32_SWAP_B32
+
+    void
+    Inst_VOP3__V_PERMLANE32_SWAP_B32::execute(GPUDynInstPtr gpuDynInst)
+    {
+        VecOperandU32 src0(gpuDynInst, extData.SRC0);
+        VecOperandU32 vdst(gpuDynInst, instData.VDST);
+
+        src0.read();
+        vdst.read();
+
+        panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+        panic_if(instData.CLAMP, "CLAMP not supported for %s", _opcode);
+        panic_if(extData.OMOD, "OMOD not supported for %s", _opcode);
+        panic_if(instData.ABS, "ABS not supported for %s", _opcode);
+        panic_if(extData.NEG, "NEG not supported for %s", _opcode);
+
+        // Ignores EXEC MASK
+        for (int lane = 0; lane < 32; ++lane) {
+            VecElemU32 tmp = src0[lane];
+            src0[lane] = vdst[lane + 32];
+            vdst[lane + 32] = tmp;
+        }
+
+        src0.write();
         vdst.write();
     } // execute
 } // namespace VegaISA

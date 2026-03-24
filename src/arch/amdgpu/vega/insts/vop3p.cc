@@ -946,6 +946,62 @@ Inst_VOP3P__V_PK_MOV_B32::execute(GPUDynInstPtr gpuDynInst)
 
     vdst.write();
 } // execute
+// --- Inst_VOP3P__V_MFMA_LOAD_SCALE class methods ---
+
+Inst_VOP3P__V_MFMA_LOAD_SCALE::Inst_VOP3P__V_MFMA_LOAD_SCALE(InFmt_VOP3P *iFmt)
+    : Inst_VOP3P(iFmt, "v_mfma_load_scale")
+{
+    setFlag(ALU);
+} // Inst_VOP3P__V_MFMA_LOAD_SCALE
+
+Inst_VOP3P__V_MFMA_LOAD_SCALE::~Inst_VOP3P__V_MFMA_LOAD_SCALE()
+{} // ~Inst_VOP3P__V_MFMA_LOAD_SCALE
+
+void
+Inst_VOP3P__V_MFMA_LOAD_SCALE::execute(GPUDynInstPtr gpuDynInst)
+{
+    // This is implemented differently in gem5 to avoid needing to change a
+    // large amount of code to handle a 4-dword instruction. Instead, we
+    // implement a fake VOP3P instruction which is assumed to come before an
+    // MFMA instruction.
+    //
+    // See https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/
+    //              instruction-set-architectures/
+    //              amd-instinct-cdna4-instruction-set-architecture.pdf
+    // section 7.2.1 for details.
+    Wavefront *wf = gpuDynInst->wavefront();
+    ConstVecOperandU32 src0(gpuDynInst, extData.SRC0);
+    ConstVecOperandU32 src1(gpuDynInst, extData.SRC1);
+
+    src0.readSrc();
+    src1.readSrc();
+
+    if (isVectorReg(extData.SRC0)) {
+        int opsel = ((extData.OPSEL_HI & 1) << 1) | (instData.OPSEL & 1);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            wf->setMfmaAScale(lane,
+                              bits(src0[lane], opsel * 8 + 7, opsel * 8));
+        }
+    } else {
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            wf->setMfmaAScale(lane, bits(src0[lane], 30, 23));
+        }
+    }
+
+    if (isVectorReg(extData.SRC1)) {
+        int opsel = ((extData.OPSEL_HI & 2) << 1) | (instData.OPSEL & 2);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            wf->setMfmaBScale(lane,
+                              bits(src1[lane], opsel * 8 + 7, opsel * 8));
+        }
+    } else {
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            wf->setMfmaBScale(lane, bits(src1[lane], 30, 23));
+        }
+    }
+}
 
 } // namespace VegaISA
 } // namespace gem5

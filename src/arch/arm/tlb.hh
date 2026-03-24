@@ -50,11 +50,12 @@
 #include "base/statistics.hh"
 #include "enums/TypeTLB.hh"
 #include "mem/request.hh"
-#include "params/ArmTLB.hh"
 #include "sim/probe/pmu.hh"
 
 namespace gem5
 {
+
+struct ArmTLBParams;
 
 class ThreadContext;
 
@@ -215,9 +216,7 @@ class TLB : public BaseTLB
 
     void takeOverFrom(BaseTLB *otlb) override;
 
-    void setTableWalker(TableWalker *table_walker);
-
-    TableWalker *getTableWalker() { return tableWalker; }
+    void setTableWalker(TableWalker *table_walker, bool functional = false);
 
     int getsize() const { return size; }
 

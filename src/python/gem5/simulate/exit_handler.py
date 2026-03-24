@@ -46,9 +46,8 @@ import m5
 from m5 import options
 from m5.util import warn
 
-from gem5.simulate.exit_event import ExitEvent
-from gem5.utils.override import overrides
-
+from ..utils.override import overrides
+from .exit_event import ExitEvent
 from .exit_event_generators import (
     dump_stats_generator,
     exit_generator,

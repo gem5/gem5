@@ -41,13 +41,10 @@
 
 #include "mem/ruby/system/Sequencer.hh"
 
-#include "arch/x86/ldstflags.hh"
-#include "base/compiler.hh"
 #include "base/logging.hh"
 #include "base/str.hh"
 #include "cpu/testers/rubytest/RubyTester.hh"
 #include "debug/LLSC.hh"
-#include "debug/MemoryAccess.hh"
 #include "debug/ProtocolTrace.hh"
 #include "debug/RubyHitMiss.hh"
 #include "debug/RubySequencer.hh"
@@ -59,7 +56,6 @@
 #include "mem/ruby/slicc_interface/RubyRequest.hh"
 #include "mem/ruby/slicc_interface/RubySlicc_Util.hh"
 #include "mem/ruby/system/RubySystem.hh"
-#include "sim/system.hh"
 
 namespace gem5
 {
@@ -72,8 +68,6 @@ Sequencer::Sequencer(const Params &p)
       deadlockCheckEvent([this]{ wakeup(); }, "Sequencer deadlock check")
 {
     m_outstanding_count = 0;
-
-    m_ruby_system = p.ruby_system;
 
     m_dataCache_ptr = p.dcache;
     m_max_outstanding_requests = p.max_outstanding_requests;
@@ -738,7 +732,7 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
     // update the data unless it is a non-data-carrying flush
     if (m_ruby_system->getWarmupEnabled()) {
         data.setData(pkt);
-    } else if (!pkt->isFlush()) {
+    } else if (!pkt->isFlush() && !pkt->isCleanInvalidateRequest()) {
         if ((type == RubyRequestType_LD) ||
             (type == RubyRequestType_IFETCH) ||
             (type == RubyRequestType_RMW_Read) ||
@@ -1014,19 +1008,16 @@ Sequencer::makeRequest(PacketPtr pkt)
     } else if (pkt->req->isTlbiCmd()) {
         primary_type = secondary_type = tlbiCmdToRubyRequestType(pkt);
         DPRINTF(RubySequencer, "Issuing TLBI\n");
-#if defined (PROTOCOL_CHI)
-    } else if (pkt->isAtomicOp()) {
+    } else if (pkt->isAtomicOp() &&
+               (m_ruby_system->getProtocolInfo().getName() == "CHI")) {
         if (pkt->req->isAtomicReturn()){
             DPRINTF(RubySequencer, "Issuing ATOMIC RETURN \n");
             primary_type = secondary_type =
                            RubyRequestType_ATOMIC_RETURN;
         } else {
             DPRINTF(RubySequencer, "Issuing ATOMIC NO RETURN\n");
-            primary_type = secondary_type =
-                           RubyRequestType_ATOMIC_NO_RETURN;
-
+            primary_type = secondary_type = RubyRequestType_ATOMIC_NO_RETURN;
         }
-#endif
     } else if (pkt->req->hasNoAddr()) {
         primary_type = secondary_type = RubyRequestType_hasNoAddr;
     } else {
@@ -1054,8 +1045,8 @@ Sequencer::makeRequest(PacketPtr pkt)
                     primary_type = secondary_type = RubyRequestType_LD;
                 }
             }
-        } else if (pkt->isFlush()) {
-          primary_type = secondary_type = RubyRequestType_FLUSH;
+        } else if (pkt->isFlush() || pkt->isCleanInvalidateRequest()) {
+            primary_type = secondary_type = RubyRequestType_FLUSH;
         } else if (pkt->cmd == MemCmd::MemSyncReq) {
             primary_type = secondary_type = RubyRequestType_REPLACEMENT;
             assert(!m_cache_inv_pkt);

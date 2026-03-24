@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2013, 2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -161,6 +161,9 @@ class FUPool : public SimObject
      * other instructions this cycle
      */
     static constexpr auto NoFreeFU = -1;
+
+    /** Returns true if the FU has the required capability */
+    bool isCapable(OpClass capability);
 
     /**
      * Gets a FU providing the requested capability. Will mark the

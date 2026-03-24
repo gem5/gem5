@@ -216,9 +216,9 @@ class PciEndpoint(PciDevice):
     MinimumGrant = Param.UInt8(0x00, "Minimum Grant")
 
 
-class PciBridge(PciDevice):
-    type = "PciBridge"
-    cxx_class = "gem5::PciBridge"
+class PciType1Device(PciDevice):
+    type = "PciType1Device"
+    cxx_class = "gem5::PciType1Device"
     cxx_header = "dev/pci/device.hh"
     abstract = True
 

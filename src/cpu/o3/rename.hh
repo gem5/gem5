@@ -255,6 +255,9 @@ class Rename
     /** Renames the destination registers of an instruction. */
     void renameDestRegs(const DynInstPtr &inst, ThreadID tid);
 
+    /** Should we SerializeBefore the current instruction */
+    void handleMiscRegWaW(DynInstPtr &inst, ThreadID tid);
+
     /** Calculates the number of free ROB entries for a specific thread. */
     int calcFreeROBEntries(ThreadID tid);
 

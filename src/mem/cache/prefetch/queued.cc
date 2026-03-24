@@ -44,9 +44,9 @@
 #include "base/trace.hh"
 #include "debug/HWPrefetch.hh"
 #include "debug/HWPrefetchQueue.hh"
-#include "mem/cache/base.hh"
 #include "mem/request.hh"
 #include "params/QueuedPrefetcher.hh"
+#include "sim/system.hh"
 
 namespace gem5
 {

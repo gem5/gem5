@@ -1,0 +1,152 @@
+# Copyright (c) 2021-2025 The Regents of the University of California
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+"""
+This gem5 configuation script creates a simple board to run an ARM
+"hello world" binary.
+
+This setup is close to the simplest setup possible using the gem5
+library. It does not contain any kind of caching, IO, or any non-essential
+components.
+
+Usage
+-----
+
+```
+scons build/ALL/gem5.opt
+./build/ALL/gem5.opt configs/example/gem5_library/arm-hello.py
+```
+"""
+
+import argparse
+import os
+
+import m5
+
+from gem5.components.boards.simple_board import SimpleBoard
+from gem5.components.cachehierarchies.classic.no_cache import NoCache
+from gem5.components.memory import SingleChannelDDR3_1600
+from gem5.components.processors.cpu_types import CPUTypes
+from gem5.components.processors.simple_processor import SimpleProcessor
+from gem5.isas import ISA
+from gem5.resources.resource import obtain_resource
+from gem5.simulate.simulator import Simulator
+from gem5.utils.requires import requires
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument("--dump-config", action="store_true")
+
+parser.add_argument("--json-config", action="store_true")
+
+parser.add_argument("--dot-config", action="store_true")
+
+args = parser.parse_args()
+
+# This check ensures the gem5 binary contains the ARM ISA target. If not, an
+# exception will be thrown.
+requires(isa_required=ISA.ARM)
+
+# In this setup we don't have a cache. `NoCache` can be used for such setups.
+cache_hierarchy = NoCache()
+
+# We use a single channel DDR3_1600 memory system
+memory = SingleChannelDDR3_1600(size="32MiB")
+
+# We use a simple Timing processor with one core.
+processor = SimpleProcessor(cpu_type=CPUTypes.TIMING, isa=ISA.ARM, num_cores=1)
+
+# The gem5 library simple board which can be used to run SE-mode simulations.
+board = SimpleBoard(
+    clk_freq="3GHz",
+    processor=processor,
+    memory=memory,
+    cache_hierarchy=cache_hierarchy,
+)
+
+# Here we set the workload. In this case we want to run a simple "Hello World!"
+# program compiled to the ARM ISA. The `obtain_resource` function will
+# automatically download the binary from the gem5 Resources cloud bucket if
+# it's not already present.
+board.set_se_binary_workload(
+    obtain_resource("arm-hello64-static", resource_version="1.0.0")
+)
+
+# Lastly we run the simulation.
+simulator = Simulator(board=board)
+simulator.run()
+
+
+def check_file_exists(file_name: str):
+    return os.path.isfile(f"{m5.options.outdir}/{file_name}")
+
+
+if args.dump_config and args.json_config and args.dot_config:
+    if (
+        not check_file_exists("combined_config.ini")
+        or not check_file_exists("combined_config.json")
+        or not check_file_exists("combined_config.dot")
+    ):
+        print(
+            "At least one of combined_config.ini, combined_config.json or "
+            "combined_config.dot isn't in m5out!"
+        )
+        exit(1)
+
+elif args.dump_config:
+    if not check_file_exists("custom_config.ini"):
+        print("custom_config.ini isn't in m5out!")
+        exit(1)
+
+elif args.json_config:
+    if not check_file_exists("custom_config.json"):
+        print("custom_config.json isn't in m5out!")
+        exit(1)
+elif args.dot_config:
+    if (
+        not check_file_exists("custom_config.dot")
+        or not check_file_exists("custom_config.dot.pdf")
+        or not check_file_exists("custom_config.dot.svg")
+    ):
+        print(
+            "At least one of custom_config.dot, custom_config.dot.pdf or "
+            "custom_config.dot.svg isn't in m5out!"
+        )
+        exit(1)
+
+else:
+    if (
+        not check_file_exists("config.ini")
+        or not check_file_exists("config.json")
+        or not check_file_exists("config.dot")
+        or not check_file_exists("config.dot.pdf")
+        or not check_file_exists("config.dot.svg")
+    ):
+        print(
+            "At least one of config.ini, config.json, config.dot, "
+            "config.dot.pdf, or config.dot.svg is missing!"
+        )
+        exit(1)

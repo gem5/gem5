@@ -1,4 +1,5 @@
-# Copyright 2022 Google, Inc.
+# Copyright (c) 2025 The Regents of the University of California
+# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -23,38 +24,43 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.params import (
-    Port,
-    VectorPort,
-)
+"""
+This runs simple tests to ensure that running binaries via readfile works.
+"""
 
-RESET_REQUEST_ROLE = "Reset Request"
-RESET_RESPONSE_ROLE = "Reset Response"
-Port.compat(RESET_REQUEST_ROLE, RESET_RESPONSE_ROLE)
+import os
+import re
 
+from testlib import *
 
-# ResetRequestPort is an artifact request port for reset purpose.
-class ResetRequestPort(Port):
-    def __init__(self, desc):
-        super().__init__(RESET_REQUEST_ROLE, desc, is_source=True)
+if config.bin_path:
+    resource_path = config.bin_path
+else:
+    resource_path = joinpath(absdirpath(__file__), "..", "resources")
 
-
-# ResetResponsePort is an artifact response port for reset purpose.
-# The owner should perform whole reset when receiving a request.
-class ResetResponsePort(Port):
-    def __init__(self, desc):
-        super().__init__(RESET_RESPONSE_ROLE, desc)
+readfile_verifier = verifier.MatchRegex(re.compile(r"Readfile test passed!"))
 
 
-# VectorResetRequestPort represents a bank of artifact reset request
-# ports.
-class VectorResetRequestPort(VectorPort):
-    def __init__(self, desc):
-        super().__init__(RESET_REQUEST_ROLE, desc, is_source=True)
-
-
-# VectorResetResponsePort represents a bank of artifact reset request
-# ports.
-class VectorResetResponsePort(VectorPort):
-    def __init__(self, desc):
-        super().__init__(RESET_RESPONSE_ROLE, desc)
+def test_readfile(isa: str, length: str):
+    gem5_verify_config(
+        name=f"test_readfile_{isa}",
+        fixtures=(),
+        verifiers=(readfile_verifier,),
+        config=joinpath(
+            config.base_dir,
+            "tests",
+            "gem5",
+            "readfile_tests",
+            "configs",
+            "ubuntu-run-with-readfile.py",
+        ),
+        config_args=[
+            "--isa",
+            isa,
+            "--resource-directory",
+            resource_path,
+        ],
+        valid_isas=(constants.all_compiled_tag,),
+        valid_hosts=constants.supported_hosts,
+        length=length,
+    )

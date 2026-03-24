@@ -27,9 +27,11 @@
 from typing import List
 
 from m5.objects import (
-    AddrRange,
     IOXBar,
     PciBus,
+)
+from m5.params import (
+    AddrRange,
     Port,
 )
 

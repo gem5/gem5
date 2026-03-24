@@ -35,79 +35,57 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __DEV_PCI_ONE_WAY_BRIDGE_HH__
-#define __DEV_PCI_ONE_WAY_BRIDGE_HH__
+#include "dev/pci/up_down_bridge.hh"
 
-#include "mem/bridge.hh"
-#include "params/PciOneWayBridge.hh"
+#include "base/addr_range.hh"
+#include "base/logging.hh"
+#include "debug/PciUpstream.hh"
+#include "params/PciUpDownBridge.hh"
 
 namespace gem5
 {
 
-/**
- * PCI one way bridge is used to connect upstream bus and downstream bus
- * together and let packet passing through. To fully connect up and down buses,
- * two of this bridge must be used, one letting packet pass from up to down and
- * the other from down to up.
- *
- * All the address ranges are dynamically determined based on the connected
- * bus. A PCI configuration range can be set, the bridge will be able to
- * respond to any of the address in that range. It will either let the packet
- * pass through if a PCI device is able to answer to it, or respond with the
- * error code (all bits set to one).
- */
-class PciOneWayBridge : public BridgeBase
+PciUpDownBridge::PciUpDownBridge(const Params &p)
+    : BridgeBase(p), memSideRanges(), configRange()
+{}
+
+void
+PciUpDownBridge::setConfigRange(AddrRange config_range)
 {
-  private:
-    /** Bridge handling packets for the reverse way, used to avoid creating
-     * loop of ranges between the two bridges. */
-    PciOneWayBridge *reverseBridge;
+    this->configRange = config_range;
+    cpuSidePort.sendRangeChange();
+}
 
-    /** Addresses ranges that the memory side buses can respond to. */
-    AddrRangeList memSideRanges;
+AddrRangeList
+PciUpDownBridge::getAddrRanges() const
+{
+    AddrRangeList ranges = memSideRanges;
 
-    /** PCI configuration range that is behind the bridge. */
-    AddrRange configRange;
-
-  protected:
-    /**
-     * Get a list of the non-overlapping address ranges the bridge is
-     * responsible for.
-     *
-     * @return a list of ranges responded to
-     */
-    AddrRangeList getAddrRanges() const override;
-
-    /**
-     * Called when the memory side port receives an address range change from
-     * the peer response port. This allows the bridge to dynamically update
-     * address ranges that can pass through with the new ones.
-     */
-    void recvRangeChange() override;
-
-  public:
-    void init() override;
-
-    /**
-     * Set the bridge handlig packet for the reverse way.
-     * This shoudl be called before the init phase.
-     */
-    void
-    setReverseBridge(PciOneWayBridge *reverse_bridge)
-    {
-        reverseBridge = reverse_bridge;
+    if (configRange.valid()) {
+        // Add whole configuration range, but avoid range duplication for
+        // existing PCI devices.
+        ranges -= configRange;
+        ranges.push_back(configRange);
     }
 
-    /**
-     * Set the PCI configuration range that is behind the bridge.
-     */
-    void setConfigRange(AddrRange config_range);
+    return ranges;
+}
 
-    PARAMS(PciOneWayBridge);
+void
+PciUpDownBridge::recvRangeChange()
+{
+    AddrRangeList new_ranges = memSidePort.getAddrRanges();
 
-    PciOneWayBridge(const Params &p);
-};
+    // Avoid potential loop of range change.
+    if (new_ranges != memSideRanges) {
+        DPRINTF(PciUpstream, "Received range change\n");
+        for (const auto &r : new_ranges) {
+            DPRINTF(PciUpstream, "-- %s\n", r.to_string());
+        }
+
+        memSideRanges = new_ranges;
+        cpuSidePort.sendRangeChange();
+    }
+}
 
 } // namespace gem5
-
-#endif //__DEV_PCI_ONE_WAY_BRIDGE_HH__

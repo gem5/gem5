@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2012, 2014, 2019 ARM Limited
+ * Copyright (c) 2010-2012, 2014, 2019, 2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -104,7 +104,8 @@ class IEW
         Idle,
         StartSquash,
         Squashing,
-        Unblocking
+        Unblocking,
+        ThreadStatusMax
     };
 
   private:
@@ -360,8 +361,8 @@ class IEW
     /** Load / store queue. */
     LSQ ldstQueue;
 
-    /** Pointer to the functional unit pool. */
-    FUPool *fuPool;
+    /** Vector of pointers to the functional unit pools. */
+    std::vector<FUPool *> fuPools;
     /** Records if the LSQ needs to be updated on the next cycle, so that
      * IEW knows if there will be activity on the next cycle.
      */
@@ -420,16 +421,13 @@ class IEW
 
     struct IEWStats : public statistics::Group
     {
+        static std::string statusStrings[ThreadStatusMax];
+
         IEWStats(CPU *cpu);
 
-        /** Stat for total number of idle cycles. */
-        statistics::Scalar idleCycles;
-        /** Stat for total number of squashing cycles. */
-        statistics::Scalar squashCycles;
-        /** Stat for total number of blocking cycles. */
-        statistics::Scalar blockCycles;
-        /** Stat for total number of unblocking cycles. */
-        statistics::Scalar unblockCycles;
+        /** Stat for total number of cycles spent in each IEW state */
+        statistics::Vector dispatchStatus;
+        statistics::Vector execStatus;
         /** Stat for total number of instructions dispatched. */
         statistics::Scalar dispatchedInsts;
         /** Stat for total number of squashed instructions dispatch skips. */

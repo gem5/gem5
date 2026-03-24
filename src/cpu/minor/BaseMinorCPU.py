@@ -217,6 +217,9 @@ class MinorDefaultFloatSimdFU(MinorFU):
             "SimdSha256Hash2",
             "SimdShaSigma2",
             "SimdShaSigma3",
+            "SimdSha3",
+            "SimdSm4e",
+            "SimdCrc",
             "Matrix",
             "MatrixMov",
             "MatrixOP",
@@ -224,9 +227,13 @@ class MinorDefaultFloatSimdFU(MinorFU):
             "SimdFloatExt",
             "SimdFloatCvt",
             "SimdConfig",
+            "SimdDotProd",
+            "SimdBf16Add",
+            "SimdBf16Cmp",
             "SimdBf16Cvt",
             "SimdBf16DotProd",
             "SimdBf16MatMultAcc",
+            "SimdBf16Mult",
             "SimdBf16MultAcc",
         ]
     )
@@ -270,7 +277,7 @@ class MinorDefaultMemFU(MinorFU):
 
 
 class MinorDefaultMiscFU(MinorFU):
-    opClasses = minorMakeOpClassSet(["IprAccess", "InstPrefetch"])
+    opClasses = minorMakeOpClassSet(["InstPrefetch", "System"])
     opLat = 1
 
 

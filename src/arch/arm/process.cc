@@ -78,7 +78,7 @@ ArmProcess32::ArmProcess32(const ProcessParams &params,
 {
     Addr brk_point = roundUp(image.maxAddr(), PageBytes);
     Addr stack_base = 0xbf000000L;
-    Addr max_stack_size = 8 * 1024 * 1024;
+    Addr max_stack_size = params.maxStackSize;
     Addr next_thread_stack_base = stack_base - max_stack_size;
     Addr mmap_end = 0x40000000L;
 
@@ -94,7 +94,7 @@ ArmProcess64::ArmProcess64(
 {
     Addr brk_point = roundUp(image.maxAddr(), PageBytes);
     Addr stack_base = 0x7fffff0000L;
-    Addr max_stack_size = 8 * 1024 * 1024;
+    Addr max_stack_size = params.maxStackSize;
     Addr next_thread_stack_base = stack_base - max_stack_size;
     Addr mmap_end = 0x4000000000L;
 

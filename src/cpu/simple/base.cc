@@ -175,6 +175,7 @@ void
 BaseSimpleCPU::countCommitInst()
 {
     SimpleExecContext& t_info = *threadInfo[curThread];
+    bool is_nop = curStaticInst->isNop();
     const ThreadID tid = t_info.thread->threadId();
     const bool in_user_mode = t_info.thread->getIsaPtr()->inUserMode();
 
@@ -182,12 +183,21 @@ BaseSimpleCPU::countCommitInst()
         // increment thread level and core level numInsts count
         commitStats[tid]->numInsts++;
         baseStats.numInsts++;
+        t_info.thread->threadStats.numInsts++;
+        executeStats[tid]->numInsts++;
+        if (!is_nop) {
+            commitStats[tid]->numInstsNotNOP++;
+        }
         if (in_user_mode) {
             commitStats[tid]->numUserInsts++;
         }
     }
 
     // increment thread level numOps count
+    t_info.thread->threadStats.numOps++;
+    if (!is_nop) {
+        commitStats[t_info.thread->threadId()]->numOpsNotNOP++;
+    }
     commitStats[tid]->numOps++;
     if (in_user_mode) {
         commitStats[tid]->numUserOps++;
@@ -404,8 +414,9 @@ BaseSimpleCPU::preExecute()
         const InstSeqNum cur_sn(0);
         set(t_info.predPC, thread->pcState());
         const bool predict_taken(
-            branchPred->predict(curStaticInst, cur_sn, *t_info.predPC,
-                curThread));
+            branchPred
+                ->predict(curStaticInst, cur_sn, *t_info.predPC, curThread)
+                .taken);
 
         if (predict_taken)
             ++t_info.execContextStats.numPredictedBranches;
@@ -425,9 +436,13 @@ BaseSimpleCPU::postExecute()
     assert(curStaticInst);
 
     Addr instAddr = threadContexts[curThread]->pcState().instAddr();
+    auto op_class = curStaticInst->opClass();
+    t_info.issueStats.issuedInstType[curThread][op_class]++;
 
     if (curStaticInst->isMemRef()) {
         executeStats[t_info.thread->threadId()]->numMemRefs++;
+        commitStats[t_info.thread->threadId()]->numMemRefs++;
+        t_info.thread->threadStats.numMemRefs++;
     }
 
     if (curStaticInst->isLoad()) {
@@ -465,12 +480,21 @@ BaseSimpleCPU::postExecute()
 
     //number of function calls/returns to get window accesses
     if (curStaticInst->isCall() || curStaticInst->isReturn()){
-        t_info.execContextStats.numCallsReturns++;
+        commitStats[t_info.thread->threadId()]->numCallsReturns++;
+    }
+
+    // same as above, but *just* calls
+    if (curStaticInst->isCall()) {
+        commitStats[t_info.thread->threadId()]->functionCalls++;
+    }
+    if (curStaticInst->isControl()) {
+        executeStats[t_info.thread->threadId()]->numBranches++;
     }
 
     //result bus acceses
     if (curStaticInst->isLoad()){
         commitStats[t_info.thread->threadId()]->numLoadInsts++;
+        executeStats[t_info.thread->threadId()]->numLoadInsts++;
     }
 
     if (curStaticInst->isStore() || curStaticInst->isAtomic()){
@@ -478,8 +502,7 @@ BaseSimpleCPU::postExecute()
     }
     /* End power model statistics */
 
-    commitStats[t_info.thread->threadId()]
-        ->committedInstType[curStaticInst->opClass()]++;
+    commitStats[t_info.thread->threadId()]->committedInstType[op_class]++;
     commitStats[t_info.thread->threadId()]->updateComCtrlStats(curStaticInst);
 
     /* increment the committed numInsts and numOps stats */

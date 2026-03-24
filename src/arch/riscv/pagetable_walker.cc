@@ -837,17 +837,23 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
 
     if (stepWalkFlags.doEndWalk) {
         // If we need to write, adjust the read packet to write the modified
-        // value back to memory.
+        // value back to memory. Use a fresh packet so any responder flags set
+        // during the read do not leak into the write request.
+        PacketPtr new_write = nullptr;
         if (!functional && stepWalkFlags.doWrite &&
             !(walkType == TwoStage && curstage == FIRST_STAGE))
         {
-            write = oldRead;
-            write->setLE<uint64_t>(pte);
-            write->cmd = MemCmd::WriteReq;
+            new_write = new Packet(oldRead, true, true);
+            if (oldRead->hasSharers()) {
+                new_write->setHasSharers();
+            }
+            new_write->setLE<uint64_t>(pte);
+            new_write->cmd = MemCmd::WriteReq;
             read = NULL;
-        } else {
-            write = NULL;
+            delete oldRead;
+            oldRead = nullptr;
         }
+        write = new_write;
 
         if (stepWalkFlags.doTLBInsert) {
             if (!functional && !memaccess.bypassTLB()) {
@@ -1001,17 +1007,22 @@ Walker::WalkerState::stepWalkGStage(PacketPtr &write)
 
     if (stepWalkFlags.doEndWalk) {
         // If we need to write, adjust the read packet to write the modified
-        // value back to memory.
+        // value back to memory. Use a fresh packet so responder state from
+        // the read does not carry into the write request.
+        PacketPtr new_write = nullptr;
         if (!functional && stepWalkFlags.doWrite)
         {
-            write = oldRead;
-            write->setLE<uint64_t>(pte);
-            write->cmd = MemCmd::WriteReq;
+            new_write = new Packet(oldRead, true, true);
+            if (oldRead->hasSharers()) {
+                new_write->setHasSharers();
+            }
+            new_write->setLE<uint64_t>(pte);
+            new_write->cmd = MemCmd::WriteReq;
             read = NULL;
+            delete oldRead;
+            oldRead = nullptr;
         }
-        else {
-            write = NULL;
-        }
+        write = new_write;
 
         if (stepWalkFlags.doTLBInsert) {
             if (!functional && !memaccess.bypassTLB()) {

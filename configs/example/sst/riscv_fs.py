@@ -114,6 +114,16 @@ def createHiFivePlatform(system):
     system.iobus.cpu_side_ports = system.platform.pci_host.up_request_port()
     system.iobus.mem_side_ports = system.platform.pci_host.up_response_port()
 
+    system.platform.pci_bus.cpu_side_ports = (
+        system.platform.pci_host.down_request_port()
+    )
+    system.platform.pci_bus.default = (
+        system.platform.pci_host.down_response_port()
+    )
+    system.platform.pci_bus.config_error_port = (
+        system.platform.pci_host.config_error.pio
+    )
+
     system.platform.setNumCores(1)
 
     for cpu in system.cpu:

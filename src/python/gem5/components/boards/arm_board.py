@@ -1,3 +1,15 @@
+# Copyright (c) 2025 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2022 The Regents of the University of California
 # All rights reserved.
 #
@@ -35,7 +47,6 @@ from typing import (
 
 import m5
 from m5.objects import (
-    AddrRange,
     ArmDefaultRelease,
     ArmFsLinux,
     ArmRelease,
@@ -47,8 +58,8 @@ from m5.objects import (
     IOXBar,
     PciBus,
     PciVirtIO,
-    Port,
     RawDiskImage,
+    Root,
     SimObject,
     SrcClockDomain,
     Terminal,
@@ -58,6 +69,10 @@ from m5.objects import (
     VirtIOBlock,
     VncServer,
     VoltageDomain,
+)
+from m5.params import (
+    AddrRange,
+    Port,
 )
 
 from ...isas import ISA
@@ -275,6 +290,10 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
             self.realview.attachIO(self.iobus)
 
     @overrides(AbstractBoard)
+    def get_mem_ranges(self) -> Sequence[AddrRange]:
+        return super().get_mem_ranges() + [self.realview.bootmem.range]
+
+    @overrides(AbstractBoard)
     def get_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
         # Note: Ruby needs to create a directory for the realview bootmem
         if self.get_cache_hierarchy().is_ruby():
@@ -341,8 +360,8 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         self.system_port = port
 
     @overrides(AbstractBoard)
-    def _pre_instantiate(self, full_system: Optional[bool] = None) -> None:
-        super()._pre_instantiate(full_system=full_system)
+    def _pre_instantiate(self, full_system: Optional[bool] = None) -> Root:
+        root = super()._pre_instantiate(full_system=full_system)
 
         # Add the PCI devices.
         self.pci_devices = self._pci_devices
@@ -360,6 +379,8 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         # Calling generateDtb from class ArmSystem to add memory information to
         # the dtb file.
         self.generateDtb(self._get_dtb_filename())
+
+        return root
 
     def _get_dtb_filename(self) -> str:
         """Returns the ``dtb`` file location.

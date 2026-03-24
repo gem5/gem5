@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2017-2018, 2024-2025 ARM Limited
+ * Copyright (c) 2012-2013, 2017-2018, 2024-2026 ARM Limited
  * Copyright (c) 2020 Metempsy Technology Consulting
  * All rights reserved
  *
@@ -100,9 +100,15 @@ T2 fplibConvert(T1 op, FPRounding rounding, FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point division. */
 template <class T>
 T fplibDiv(T op1, T op2, FPSCR &fpscr, FPCR fpcr = 0);
+/** Floating-point 2-way dot-product. */
+template <class T1, class T2>
+T2 fplibDot(T1 op1_a, T1 op1_b, T1 op2_a, T1 op2_b, FPSCR &fpscr,
+            FPCR fpcr = 0);
 /** Floating-point exponential accelerator. */
 template <class T>
 T fplibExpA(T op);
+/** Floating-point base 2 logarithm. */
+template <class T> T fplibLogB(T op, FPSCR &fpscr, FPCR fpcr = 0);
 /** Floating-point maximum. */
 template <class T>
 T fplibMax(T op1, T op2, FPSCR &fpscr, FPCR fpcr = 0);
@@ -264,11 +270,16 @@ uint32_t fplibDiv(uint32_t op1, uint32_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
 uint64_t fplibDiv(uint64_t op1, uint64_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
-uint16_t fplibExpA(uint16_t op);
+uint32_t fplibDot(uint16_t op1_a, uint16_t op1_b, uint16_t op2_a,
+                  uint16_t op2_b, FPSCR &fpscr, FPCR fpcr);
+template <> uint16_t fplibExpA(uint16_t op);
 template <>
 uint32_t fplibExpA(uint32_t op);
 template <>
 uint64_t fplibExpA(uint64_t op);
+template <> uint16_t fplibLogB(uint16_t op, FPSCR &fpscr, FPCR fpcr);
+template <> uint32_t fplibLogB(uint32_t op, FPSCR &fpscr, FPCR fpcr);
+template <> uint64_t fplibLogB(uint64_t op, FPSCR &fpscr, FPCR fpcr);
 template <>
 uint16_t fplibMax(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
 template <>
@@ -471,9 +482,9 @@ uint16_t fplibBfMinNum(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
 uint16_t fplibBfMul(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
 uint32_t fplibBfMulH(uint16_t op1, uint16_t op2, FPSCR &fpscr);
 uint16_t fplibBfMulAdd(uint16_t addend, uint16_t op1, uint16_t op2,
-                       FPSCR &fpscr, FPCR fpcr);
+                       FPSCR &fpscr, FPCR fpcr, bool target_za = false);
 uint32_t fplibBfMulAddH(uint32_t addend, uint16_t op1, uint16_t op2,
-                        FPSCR &fpscr, FPCR fpcr);
+                        FPSCR &fpscr, FPCR fpcr, bool target_za = false);
 uint16_t fplibBfNeg(uint16_t op, FPCR fpcr);
 uint16_t fplibBfSub(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
 uint32_t fplibAdd_Bf16(uint32_t op1, uint32_t op2, FPSCR &fpscr);

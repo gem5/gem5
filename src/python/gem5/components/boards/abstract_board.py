@@ -1,3 +1,15 @@
+# Copyright (c) 2025 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2022 The Regents of the University of California
 # All rights reserved.
 #
@@ -29,6 +41,7 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
+from pathlib import Path
 from typing import (
     List,
     Optional,
@@ -37,15 +50,17 @@ from typing import (
 )
 
 from m5.objects import (
-    AddrRange,
     ClockDomain,
     IOXBar,
     PciBus,
-    Port,
     Root,
     SrcClockDomain,
     System,
     VoltageDomain,
+)
+from m5.params import (
+    AddrRange,
+    Port,
 )
 
 from ...resources.resource import WorkloadResource
@@ -137,6 +152,18 @@ class AbstractBoard:
         :returns: The memory system.
         """
         return self.memory
+
+    def get_mem_ranges(self) -> Sequence[AddrRange]:
+        """Get all the mem ranges in the board, This
+        tries to account for boards instantiating memories other
+        than main DRAM.
+        Using get_mem_ports might return some duplicate ranges
+        (when not considering interleaving) when the board
+        memory has multiple ports
+
+        :returns: All the memory ranges
+        """
+        return self.get_memory().get_uninterleaved_range()
 
     def get_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
         """Get the memory ports exposed on this board
@@ -363,6 +390,9 @@ class AbstractBoard:
         """
         raise NotImplementedError
 
+    def get_checkpoint_dir(self) -> Optional[Path]:
+        return self._checkpoint
+
     @abstractmethod
     def _setup_memory_ranges(self) -> None:
         """
@@ -495,11 +525,9 @@ class AbstractBoard:
         does not inherit form System.
         """
         if not self._connect_things_called:
-            raise Exception(
-                """
+            raise Exception("""
 AbstractBoard's ``_connect_things`` function has not been called. This is likely
 due to not running a board outside of the gem5 Standard Library Simulator
 module. If this is the case, this can be resolved by calling
 ``<AbstractBoard>._pre_instantiate()`` prior to ``m5.instantiate()``.
-"""
-            )
+""")
