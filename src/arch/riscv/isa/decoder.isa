@@ -3829,7 +3829,7 @@ decode QUADRANT default Unknown::unknown() {
                         result = result >> (sew - 1);
                         if (overflow) {
                             result = max;
-                            xc->setMiscReg(MISCREG_VXSAT, 1);
+                            *vxsatptr = true;
                         }
 
                         Vd_vi[i] = (vi)result;
@@ -3945,7 +3945,7 @@ decode QUADRANT default Unknown::unknown() {
 
                         if (res & sign_mask) {
                             res = max;
-                            xc->setMiscReg(MISCREG_VXSAT, 1);
+                            *vxsatptr = true;
                         }
 
                         Vd_vu[i + offset] = (vu)res;
@@ -3965,10 +3965,10 @@ decode QUADRANT default Unknown::unknown() {
 
                         if (res < min) {
                             res = min;
-                            xc->setMiscReg(MISCREG_VXSAT, 1);
+                            *vxsatptr = true;
                         } else if (res > max) {
                             res = max;
-                            xc->setMiscReg(MISCREG_VXSAT, 1);
+                            *vxsatptr = true;
                         }
 
                         Vd_vi[i + offset] = (vi)res;
@@ -5005,7 +5005,7 @@ decode QUADRANT default Unknown::unknown() {
 
                         if (res & sign_mask) {
                             res = max;
-                            xc->setMiscReg(MISCREG_VXSAT, 1);
+                            *vxsatptr = true;
                         }
 
                         Vd_vu[i + offset] = (vu)res;
@@ -5025,10 +5025,10 @@ decode QUADRANT default Unknown::unknown() {
 
                         if (res < min) {
                             res = min;
-                            xc->setMiscReg(MISCREG_VXSAT, 1);
+                            *vxsatptr = true;
                         } else if (res > max) {
                             res = max;
-                            xc->setMiscReg(MISCREG_VXSAT, 1);
+                            *vxsatptr = true;
                         }
 
                         Vd_vi[i + offset] = (vi)res;
@@ -5255,7 +5255,7 @@ decode QUADRANT default Unknown::unknown() {
                         result = result >> (sew - 1);
                         if (overflow) {
                             result = max;
-                            xc->setMiscReg(MISCREG_VXSAT, 1);
+                            *vxsatptr = true;
                         }
 
                         Vd_vi[i] = (vi)result;
@@ -5313,7 +5313,7 @@ decode QUADRANT default Unknown::unknown() {
 
                         if (res & sign_mask) {
                             res = max;
-                            xc->setMiscReg(MISCREG_VXSAT, 1);
+                            *vxsatptr = true;
                         }
 
                         Vd_vu[i + offset] = (vu)res;
@@ -5333,10 +5333,10 @@ decode QUADRANT default Unknown::unknown() {
 
                         if (res < min) {
                             res = min;
-                            xc->setMiscReg(MISCREG_VXSAT, 1);
+                            *vxsatptr = true;
                         } else if (res > max) {
                             res = max;
-                            xc->setMiscReg(MISCREG_VXSAT, 1);
+                            *vxsatptr = true;
                         }
 
                         Vd_vi[i + offset] = (vi)res;
