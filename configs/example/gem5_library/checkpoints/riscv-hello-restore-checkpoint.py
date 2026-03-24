@@ -40,8 +40,9 @@ Usage
 -----
 
 ```
-scons build/ALL/gem5.opt
-./build/ALL/gem5.opt \
+cmake -B build/ALL -DGEM5_BUILD_VARIANT=ALL
+ninja -C build/ALL
+./build/ALL/gem5 \
     configs/example/gem5_library/checkpoints/riscv-hello-restore-checkpoint.py
 ```
 """

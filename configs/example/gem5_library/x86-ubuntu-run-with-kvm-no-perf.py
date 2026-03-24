@@ -33,8 +33,9 @@ Usage
 -----
 
 ```
-scons build/ALL/gem5.opt -j`nproc`
-./build/ALL/gem5.opt configs/example/gem5_library/x86-ubuntu-run-with-kvm-no-perf.py
+cmake -B build/ALL -DGEM5_BUILD_VARIANT=ALL
+ninja -C build/ALL
+./build/ALL/gem5 configs/example/gem5_library/x86-ubuntu-run-with-kvm-no-perf.py
 ```
 """
 

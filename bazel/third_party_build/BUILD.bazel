@@ -1,0 +1,5 @@
+# BUILD files for ext/ libraries are stored here.
+# Each file (e.g., libelf.BUILD) is used as the build_file
+# for a new_local_repository in extensions.bzl.
+
+exports_files(glob(["*.BUILD"]))

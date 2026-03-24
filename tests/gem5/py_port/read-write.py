@@ -34,6 +34,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import argparse
+import sys
 
 import m5
 from m5.objects import *
@@ -95,8 +96,10 @@ check_value("byte literal test", result, bl)
 # Test a integer converted in byte format
 address = 64
 value = 35
-port.write(address, value.to_bytes())
+port.write(address, value.to_bytes(1, byteorder="little"))
 result = port.read(address, 1)
-check_value("byte from integer test", int.from_bytes(result), value)
+check_value(
+    "byte from integer test", int.from_bytes(result, byteorder="little"), value
+)
 
 sys.exit(0)

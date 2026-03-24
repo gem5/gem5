@@ -1,0 +1,51 @@
+"""BUILD file for src/arch/power/ -- POWER ISA implementation."""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:defs.bzl", "gem5_blob", "gem5_debug_flag", "gem5_isa_desc")
+
+package(default_visibility = ["//visibility:public"])
+
+
+exports_files(glob(["**/*.py"]))
+
+# -- Header filegroup for gem5_hdrs aggregation --
+filegroup(
+    name = "hdrs_files",
+    srcs = glob(["*.hh", "insts/*.hh", "linux/*.hh", "regs/*.hh"]),
+)
+
+gem5_isa_desc(
+    name = "power_isa_desc",
+    desc = "isa/main.isa",
+    isa_sources = glob(["isa/**/*.isa"]),
+    deps = ["//src:gem5_hdrs"],
+)
+
+gem5_debug_flag(name = "Power", desc = "POWER ISA debugging")
+
+gem5_blob(name = "gdb_xml_power_core", src = "gdb-xml/power-core.xml", include_prefix = "arch/power/gdb-xml")
+gem5_blob(name = "gdb_xml_power64_core", src = "gdb-xml/power64-core.xml", include_prefix = "arch/power/gdb-xml")
+gem5_blob(name = "gdb_xml_power_fpu", src = "gdb-xml/power-fpu.xml", include_prefix = "arch/power/gdb-xml")
+gem5_blob(name = "gdb_xml_powerpc_32", src = "gdb-xml/powerpc-32.xml", include_prefix = "arch/power/gdb-xml")
+gem5_blob(name = "gdb_xml_powerpc_64", src = "gdb-xml/powerpc-64.xml", include_prefix = "arch/power/gdb-xml")
+
+cc_library(
+    name = "power",
+    srcs = glob(["*.cc", "insts/*.cc", "linux/*.cc"], exclude = ["**/*.test.cc"]),
+    hdrs = glob(["*.hh", "insts/*.hh", "linux/*.hh"]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        "//src/arch:Decoder",
+        "//src/arch:Faults",
+        "//src/arch/generic:generic",
+        ":power_isa_desc",
+        ":Power",
+        ":gdb_xml_power_core",
+        ":gdb_xml_power64_core",
+        ":gdb_xml_power_fpu",
+        ":gdb_xml_powerpc_32",
+        ":gdb_xml_powerpc_64",
+    ],
+    alwayslink = True,
+)

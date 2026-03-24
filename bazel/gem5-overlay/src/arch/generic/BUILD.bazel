@@ -1,0 +1,71 @@
+"""BUILD file for src/arch/generic/ -- base architecture classes.
+
+Always built. Provides base MMU, TLB, decoder, and semihosting classes.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:defs.bzl", "gem5_debug_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+
+exports_files(glob(["**/*.py"]))
+
+filegroup(
+    name = "hdrs_files",
+    srcs = glob(["*.hh", "freebsd/*.hh", "linux/*.hh"]),
+)
+
+gem5_debug_flag(name = "PageTableWalker", desc = "Page table walker debugging")
+gem5_debug_flag(name = "TLB", desc = "TLB debugging")
+gem5_debug_flag(name = "Semihosting", desc = "Semihosting debugging")
+
+cc_library(
+    name = "generic",
+    srcs = [
+        "decoder.cc",
+        "htm.cc",
+        "mmu.cc",
+    ] + select({
+        # Semihosting is included when ARM or RISC-V is enabled
+        "//configs:arm_isa_enabled": ["semihosting.cc"],
+        "//configs:riscv_isa_enabled": ["semihosting.cc"],
+        "//conditions:default": [],
+    }) + select({
+        # fplib.cc belongs to generic when GPU is enabled but ARM is disabled
+        "//configs:gpu_enabled_arm_disabled": ["//src/arch/arm:fplib_cc"],
+        "//conditions:default": [],
+    }),
+    hdrs = glob(["*.hh", "freebsd/*.hh", "linux/*.hh"]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        ":PageTableWalker",
+        ":Semihosting",
+        ":TLB",
+    ],
+    alwayslink = True,
+)
+
+# -- Unit tests --
+load("@rules_cc//cc:defs.bzl", "cc_test")
+
+cc_test(
+    name = "test_vec_pred_reg",
+    srcs = ["vec_pred_reg.test.cc"],
+    deps = [
+        "//:gem5_all",
+        "//src/base:gtest_logging",
+        "@gem5_ext_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "test_vec_reg",
+    srcs = ["vec_reg.test.cc"],
+    deps = [
+        "//:gem5_all",
+        "//src/base:gtest_logging",
+        "@gem5_ext_googletest//:gtest_main",
+    ],
+)

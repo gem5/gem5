@@ -13,7 +13,7 @@ This file does *not*:
    text within the kconfig files, and in the code where these options are
    consumed.
  * The various tools which can manipulate a given configuration. These are
-   documented in gem5's SCons help text.
+   documented in gem5's build system help text.
 
 # kconfiglib
 
@@ -38,14 +38,12 @@ Having to choose between mutually exclusive options should be avoided in
 general, but is unavoidable in a few key places in gem5 at the moment. Once
 those areas have been addressed, this keyword may be removed in the future.
 
-# The 'CONF' dict in the SCons environment
+# The 'CONF' configuration variables
 
-In "env" SCons environment in SConscript files, or the "main" environment in
-SConsopts files, can hold many variables which help SCons operate generally,
-like setting what include paths to use, what the compiler command line is, etc.
-These environments each have a 'CONF' sub-dict which holds all the variables
-which are actually used to configure gem5, and not to configure SCons and the
-build process itself.
+The gem5 build system maintains a set of configuration variables (previously
+held in the SCons `env['CONF']` dict, now managed through CMake cache
+variables). These variables are used to configure gem5 itself, not the build
+process.
 
 All variables in this dict are automatically available to include in c++. To
 access the value of env['CONF']['FOO'], you would #include "config/foo.hh".
@@ -62,8 +60,8 @@ host environment. These could reflect the availability of a header file,
 library or tool, whether the compiler supports a particular option or language
 feature, etc.
 
-These values should be measured in SConsopts files, and stored in the 'CONF'
-dict described above. Like any other variable in 'CONF', they are then
+These values should be measured during the CMake configure step and stored as
+configuration variables. Like any other configuration variable, they are then
 available to C++ through generated header files, to config scripts through
 buildEnv, etc. They are also available in the kconfig files themselves through
 a mechanism discussed below.
@@ -71,23 +69,23 @@ a mechanism discussed below.
 # Accessing 'CONF' values in Kconfig files.
 
 When the gem5 Kconfig files are processed to either manipulate a configuration
-through a tool, or to apply a configuration to the gem5 build, all the values
-in 'CONF' are temporarily put into environment variables. In the Kconfig files
-themselves, these environment variables can be accessed using $(FOO) syntax,
-which is described in kconfiglib's documentation.
+through a tool, or to apply a configuration to the gem5 build, all the
+configuration values are temporarily put into environment variables. In the
+Kconfig files themselves, these environment variables can be accessed using
+$(FOO) syntax, which is described in kconfiglib's documentation.
 
 Note that this is slightly different from the kernel's Kconfig syntax, where
 the environment variables would have to be imported in using other keywords
 first.
 
 This is generally used to make automatic/measured settings which were
-determined in SConsopts files available in Kconfig files. They can then be used
-to compute dependencies, or to set default values, etc.
+determined during the CMake configure step available in Kconfig files. They
+can then be used to compute dependencies, or to set default values, etc.
 
 # Structure of the Kconfig hierarchy
 
-Unlike SConscript files, gem5 does not find Kconfig files automatically, and
-they are only used if they are included explicitly in other Kconfig files.
+gem5 does not find Kconfig files automatically; they are only used if they
+are included explicitly in other Kconfig files.
 
 Kconfig options should be defined as close as possible to where they are used.
 This makes them easier to find, keeps related functionality grouped

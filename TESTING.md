@@ -10,35 +10,29 @@ gem5's testing infrastructure has the following goals:
 ## Running the CPP unit tests
 
 gem5 comes with unit tests for CPP, created using the Google Test framework. These can
-be built through SCons.
+be built through CMake and run with CTest.
 
 To build and run all the unit tests:
 
 ```shell
-scons build/ALL/unittests.opt
+cmake -G Ninja --preset opt-all -B build/ALL
+ninja -C build/ALL gem5_unittests
+ctest --test-dir build/ALL
 ```
 
 All unit tests should be run prior to creating a pull request at
 https://github.com/gem5/gem5/pulls/
 
-To compile and run just one set of tests (e.g. those declared within
-`src/base/bitunion.test.cc`):
+To list the available test targets:
 
 ```shell
-scons build/ALL/base/bitunion.test.opt
-./build/ALL/base/bitunion.test.opt
+ctest --test-dir build/ALL -N
 ```
 
-To list the available test functions from a test file:
+To run a specific test (e.g., bitunion tests):
 
 ```shell
-./build/ALL/base/bitunion.test.opt --gtest_list_tests
-```
-
-To run a specific test function (e.g., BitUnionData.NormalBitfield):
-
-```shell
-./build/ALL/base/bitunion.test.opt --gtest_filter=BitUnionData.NormalBitfield
+ctest --test-dir build/ALL -R bitunion
 ```
 
 ## Running the Python unit tests
@@ -48,16 +42,17 @@ These are built using the [Python unit testing framework](https://docs.python.or
 These tests can be found in "tests/gem5/pyunit".
 
 To run these tests a gem5 binary must first be compiled.
-We recommend, `build/ALL/gem5.opt`:
+We recommend building with the `opt-all` preset:
 
 ```sh
-scons build/ALL/gem5.opt -j {number of compilation threads}
+cmake -G Ninja --preset opt-all -B build/ALL
+ninja -C build/ALL
 ```
 
 Then the Pyunit tests may be executed using:
 
 ```sh
-./build/ALL/gem5.opt tests/run_pyunit.py
+./build/ALL/gem5 tests/run_pyunit.py
 ```
 
 **Note**: These tests are also run via the 'quick' system-level tests, explained below.
@@ -104,7 +99,7 @@ There are three categoties of tests which may be run from the "tests" directory:
 
 1. **'quick' tests**. This suite of tests are designed to finish execution in a few hours, inclusive of compilation of gem5.
 We run these as part of our continuous integration tests on pull requests made to our repository.
-These tests all utilize a binary build `scons build/ALL/gem5.opt`, and thus only rely on a single compilation for the tests to run.
+These tests all utilize a single gem5 binary built with the `opt-all` preset, and thus only rely on a single compilation for the tests to run.
 2. **'long' tests**. This suite of tests are designed to finish execution in around 12 hours.
 They incorporate longer running tests which are unsuitable to run as part of the 'quick' tests.
 We run these daily via a scheduled job.

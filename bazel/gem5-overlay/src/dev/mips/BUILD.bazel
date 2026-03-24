@@ -1,0 +1,30 @@
+"""BUILD file for src/dev/mips/ -- MIPS device models."""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:defs.bzl", "gem5_debug_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+
+exports_files(glob(["**/*.py"]))
+
+# -- Header filegroup for dev hdrs_files aggregation --
+filegroup(
+    name = "hdrs_files",
+    srcs = glob(["*.hh", "*.h"]),
+)
+
+gem5_debug_flag(name = "Malta", desc = "Malta debugging")
+
+cc_library(
+    name = "dev_mips",
+    srcs = glob(["*.cc"]),
+    hdrs = glob(["*.hh"]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        "//src/dev:dev",
+        ":Malta",
+    ],
+    alwayslink = True,
+)

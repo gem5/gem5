@@ -1,0 +1,46 @@
+module(
+    name = "gem5",
+    version = "24.1.0",
+)
+
+# Core Bazel dependencies
+bazel_dep(name = "bazel_skylib", version = "1.8.2")
+bazel_dep(name = "rules_cc", version = "0.2.14")
+bazel_dep(name = "rules_python", version = "1.7.0")
+bazel_dep(name = "rules_proto", version = "7.1.0")
+bazel_dep(name = "protobuf", version = "33.4")
+bazel_dep(name = "platforms", version = "1.0.0")
+
+# gem5 module extension for overlay and external deps
+gem5_ext = use_extension("//:extensions.bzl", "gem5_repos_extension")
+gem5_ext.configure(name = "gem5_sources")
+use_repo(gem5_ext, "gem5_sources", "gem5-raw")
+
+# System Python detection
+gem5_ext.system_python(name = "system_python")
+use_repo(gem5_ext, "system_python")
+
+# Third-party libraries from ext/
+gem5_ext.ext_libraries(name = "gem5_ext")
+use_repo(
+    gem5_ext,
+    "gem5_ext_libelf",
+    "gem5_ext_libfdt",
+    "gem5_ext_fputils",
+    "gem5_ext_softfloat",
+    "gem5_ext_dsent",
+    "gem5_ext_drampower",
+    "gem5_ext_dramsim2",
+    "gem5_ext_dramsim3",
+    "gem5_ext_dramsys",
+    "gem5_ext_nomali",
+    "gem5_ext_iostream3",
+    "gem5_ext_magic_enum",
+    "gem5_ext_systemc",
+    "gem5_ext_pybind11",
+    "gem5_ext_ply",
+    "gem5_ext_dnet",
+    "gem5_ext_googletest",
+    "gem5_ext_gdbremote",
+    "gem5_ext_x11keysym",
+)

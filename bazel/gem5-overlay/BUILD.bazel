@@ -1,0 +1,1402 @@
+"""Top-level BUILD file for the @gem5_sources overlay repository.
+
+Provides the final link targets:
+- gem5_all: cc_library aggregating all subsystem libraries (with alwayslink)
+- gem5: cc_binary linking gem5_all with main.cc
+- gem5_config_headers: generated config/*.hh headers
+- gem5_switching_headers: generated arch/*.hh switching headers
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
+load(
+    "//rules:defs.bzl",
+    "gem5_config_header",
+    "gem5_config_header_namespace",
+    "gem5_config_header_string",
+    "gem5_gen_enums_hdrs",
+    "gem5_gen_enums_srcs",
+    "gem5_gen_params_hdrs",
+    "gem5_gen_params_srcs",
+    "gem5_sim_object_aggregate",
+    "gem5_simobject_pysources",
+    "gem5_switching_headers",
+)
+load("//rules:debug_flags_all.bzl", "ALL_DEBUG_FLAGS")
+load(
+    "//rules:simobject_py_files.bzl",
+    "SIMOBJECT_PY_FILES_ARM",
+    "SIMOBJECT_PY_FILES_BASE",
+    "SIMOBJECT_PY_FILES_CAPSTONE",
+    "SIMOBJECT_PY_FILES_CHI",
+    "SIMOBJECT_PY_FILES_DRAMSIM3",
+    "SIMOBJECT_PY_FILES_GPU",
+    "SIMOBJECT_PY_FILES_KVM",
+    "SIMOBJECT_PY_FILES_KVM_ARM",
+    "SIMOBJECT_PY_FILES_KVM_X86",
+    "SIMOBJECT_PY_FILES_MIPS",
+    "SIMOBJECT_PY_FILES_POWER",
+    "SIMOBJECT_PY_FILES_PROTOBUF",
+    "SIMOBJECT_PY_FILES_RISCV",
+    "SIMOBJECT_PY_FILES_RUBY",
+    "SIMOBJECT_PY_FILES_RUBY_GPU",
+    "SIMOBJECT_PY_FILES_SPARC",
+    "SIMOBJECT_PY_FILES_SYSTEMC",
+    "SIMOBJECT_PY_FILES_TEST_OBJECTS",
+    "SIMOBJECT_PY_FILES_X86",
+    "simobject_paths_to_labels",
+)
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files(["LICENSE", "COPYING", "README.md"])
+
+# ---------------------------------------------------------------------------
+# Public API headers from include/ directory.
+# Source code includes these as <gem5/asm/generic/m5ops.h> etc.
+# ---------------------------------------------------------------------------
+cc_library(
+    name = "gem5_include_hdrs",
+    hdrs = glob(["include/**/*.h"]),
+    includes = ["include"],
+)
+
+# ---------------------------------------------------------------------------
+# Config headers: generated config/*.hh files matching CMake's Kconfig output.
+# Source code includes these as #include "config/have_png.hh" etc.
+# ---------------------------------------------------------------------------
+
+# Boolean config headers (flag-dependent via select())
+gem5_config_header(
+    name = "_config_have_png",
+    key = "HAVE_PNG",
+    value = select({
+        "//configs:png_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+gem5_config_header(
+    name = "_config_have_protobuf",
+    key = "HAVE_PROTOBUF",
+    value = select({
+        "//configs:protobuf_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+gem5_config_header(
+    name = "_config_have_hdf5",
+    key = "HAVE_HDF5",
+    value = select({
+        "//configs:hdf5_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+gem5_config_header(
+    name = "_config_have_tuntap",
+    key = "HAVE_TUNTAP",
+    value = select({
+        "//configs:tuntap_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+gem5_config_header(
+    name = "_config_have_fenv",
+    key = "HAVE_FENV",
+    value = select({
+        "//configs:fenv_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+gem5_config_header(
+    name = "_config_have_valgrind",
+    key = "HAVE_VALGRIND",
+    value = select({
+        "//configs:valgrind_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+gem5_config_header(
+    name = "_config_build_gpu",
+    key = "BUILD_GPU",
+    value = select({
+        "//configs:gpu_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+gem5_config_header(
+    name = "_config_use_kvm",
+    key = "USE_KVM",
+    value = select({
+        "//configs:kvm_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+# use_posix_clock: feature-detected at configure time (default off for CMake parity)
+gem5_config_header(
+    name = "_config_use_posix_clock",
+    key = "USE_POSIX_CLOCK",
+    value = select({
+        "//configs:posix_clock_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+# have_deprecated_namespace: always true for C++17 compilers
+gem5_config_header(
+    name = "_config_have_deprecated_namespace",
+    key = "HAVE_DEPRECATED_NAMESPACE",
+    value = "1",
+)
+
+# have_perf_attr_exclude_host: feature-detected (perf_event.h attribute check)
+gem5_config_header(
+    name = "_config_have_perf_attr_exclude_host",
+    key = "HAVE_PERF_ATTR_EXCLUDE_HOST",
+    value = select({
+        "//configs:perf_attr_exclude_host_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+# kvm_isa: string defining the KVM ISA (x86 or arm)
+gem5_config_header_string(
+    name = "_config_kvm_isa",
+    key = "KVM_ISA",
+    value = select({
+        "//configs:kvm_x86": "x86",
+        "//configs:kvm_arm": "arm",
+        "//conditions:default": "",
+    }),
+)
+
+# the_gpu_isa: namespace alias for GPU ISA
+gem5_config_header_namespace(
+    name = "_config_the_gpu_isa",
+    key = "TheGpuISA",
+    filename = "the_gpu_isa",
+    value = select({
+        "//configs:gpu_enabled": "VegaISA",
+        "//conditions:default": "VegaISA",
+    }),
+)
+
+# ISA enablement config headers (used by some source files)
+gem5_config_header(
+    name = "_config_use_x86_isa",
+    key = "USE_X86_ISA",
+    value = select({
+        "//configs:x86_isa_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+gem5_config_header(
+    name = "_config_use_arm_isa",
+    key = "USE_ARM_ISA",
+    value = select({
+        "//configs:arm_isa_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+gem5_config_header(
+    name = "_config_use_riscv_isa",
+    key = "USE_RISCV_ISA",
+    value = select({
+        "//configs:riscv_isa_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+gem5_config_header(
+    name = "_config_use_sparc_isa",
+    key = "USE_SPARC_ISA",
+    value = select({
+        "//configs:sparc_isa_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+gem5_config_header(
+    name = "_config_use_mips_isa",
+    key = "USE_MIPS_ISA",
+    value = select({
+        "//configs:mips_isa_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+gem5_config_header(
+    name = "_config_use_power_isa",
+    key = "USE_POWER_ISA",
+    value = select({
+        "//configs:power_isa_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+# Ruby config headers
+gem5_config_header(
+    name = "_config_ruby",
+    key = "RUBY",
+    value = select({
+        "//configs:ruby_enabled": "1",
+        "//conditions:default": "0",
+    }),
+)
+
+gem5_config_header_string(
+    name = "_config_protocol",
+    key = "PROTOCOL",
+    value = select({
+        "//configs:protocol_mesi_two_level": "MESI_Two_Level",
+        "//configs:protocol_mesi_three_level": "MESI_Three_Level",
+        "//configs:protocol_mesi_three_level_htm": "MESI_Three_Level_HTM",
+        "//configs:protocol_mi_example": "MI_example",
+        "//configs:protocol_moesi_amd_base": "MOESI_AMD_Base",
+        "//configs:protocol_moesi_cmp_directory": "MOESI_CMP_directory",
+        "//configs:protocol_moesi_cmp_token": "MOESI_CMP_token",
+        "//configs:protocol_moesi_hammer": "MOESI_hammer",
+        "//configs:protocol_chi": "CHI",
+        "//configs:protocol_gpu_viper": "GPU_VIPER",
+        "//configs:protocol_gpu_viper_region": "GPU_VIPER_Region",
+        "//configs:protocol_garnet_standalone": "Garnet_standalone",
+        "//configs:protocol_multiple": "MULTIPLE",
+    }),
+)
+
+# Aggregation library providing all config headers with proper include path.
+# This is depended on by gem5_hdrs to make config/ headers available globally.
+cc_library(
+    name = "gem5_config_headers",
+    hdrs = [
+        ":_config_have_png",
+        ":_config_have_protobuf",
+        ":_config_have_hdf5",
+        ":_config_have_tuntap",
+        ":_config_have_fenv",
+        ":_config_have_valgrind",
+        ":_config_build_gpu",
+        ":_config_use_kvm",
+        ":_config_use_posix_clock",
+        ":_config_have_deprecated_namespace",
+        ":_config_have_perf_attr_exclude_host",
+        ":_config_kvm_isa",
+        ":_config_the_gpu_isa",
+        ":_config_use_x86_isa",
+        ":_config_use_arm_isa",
+        ":_config_use_riscv_isa",
+        ":_config_use_sparc_isa",
+        ":_config_use_mips_isa",
+        ":_config_use_power_isa",
+        ":_config_ruby",
+        ":_config_protocol",
+    ],
+    includes = ["."],
+)
+
+# ---------------------------------------------------------------------------
+# Switching headers: arch/*.hh redirects to ISA-specific headers.
+# Generated based on primary_isa flag value.
+# ---------------------------------------------------------------------------
+gem5_switching_headers(
+    name = "arch_switching_headers",
+    headers = [
+        "decoder.hh",
+        "generic/tlbi_op.hh",
+        "interrupts.hh",
+        "isa.hh",
+        "locked_mem.hh",
+        "mmu.hh",
+        "page_size.hh",
+        "pcstate.hh",
+        "regs/float.hh",
+        "regs/int.hh",
+        "regs/misc.hh",
+        "regs/vec.hh",
+        "regs/vecpred.hh",
+        "regs/matrix.hh",
+        "remote_gdb.hh",
+        "tlb.hh",
+        "types.hh",
+        "utility.hh",
+        "vecregs.hh",
+    ],
+    isa_dir = select({
+        "//configs:primary_isa_x86": "x86",
+        "//configs:primary_isa_arm": "arm",
+        "//configs:primary_isa_riscv": "riscv",
+        "//configs:primary_isa_mips": "mips",
+        "//configs:primary_isa_power": "power",
+        "//configs:primary_isa_sparc": "sparc",
+    }),
+)
+
+# GPU switching headers (only meaningful when GPU is enabled)
+gem5_switching_headers(
+    name = "gpu_switching_headers",
+    headers = [
+        "gpu_decoder.hh",
+        "gpu_isa.hh",
+        "gpu_registers.hh",
+        "gpu_types.hh",
+    ],
+    isa_dir = "amdgpu/vega",
+    output_prefix = "arch",
+)
+
+# Switching headers aggregated as a cc_library for include path propagation
+cc_library(
+    name = "gem5_switching_hdrs",
+    hdrs = [
+        ":arch_switching_headers",
+        ":gpu_switching_headers",
+    ],
+    includes = ["."],
+)
+
+# ---------------------------------------------------------------------------
+# SimObject param/enum generation: aggregate target that discovers all
+# SimObject classes by importing m5.objects via gem5py_m5 and generates
+# params/*.hh, enums/*.hh, enums/*.cc, python/_m5/param_*.cc.
+# ---------------------------------------------------------------------------
+_SIMOBJ_PY_FILES = SIMOBJECT_PY_FILES_BASE + select({
+    "//configs:x86_isa_enabled": SIMOBJECT_PY_FILES_X86,
+    "//conditions:default": [],
+}) + select({
+    "//configs:arm_isa_enabled": SIMOBJECT_PY_FILES_ARM,
+    "//conditions:default": [],
+}) + select({
+    "//configs:mips_isa_enabled": SIMOBJECT_PY_FILES_MIPS,
+    "//conditions:default": [],
+}) + select({
+    "//configs:power_isa_enabled": SIMOBJECT_PY_FILES_POWER,
+    "//conditions:default": [],
+}) + select({
+    "//configs:riscv_isa_enabled": SIMOBJECT_PY_FILES_RISCV,
+    "//conditions:default": [],
+}) + select({
+    "//configs:sparc_isa_enabled": SIMOBJECT_PY_FILES_SPARC,
+    "//conditions:default": [],
+}) + select({
+    "//configs:gpu_enabled": SIMOBJECT_PY_FILES_GPU,
+    "//conditions:default": [],
+}) + select({
+    "//configs:ruby_enabled": SIMOBJECT_PY_FILES_RUBY,
+    "//conditions:default": [],
+}) + select({
+    "//configs:ruby_gpu_enabled": SIMOBJECT_PY_FILES_RUBY_GPU,
+    "//conditions:default": [],
+# BaseSemihosting.py moved to SIMOBJECT_PY_FILES_BASE (always included)
+}) + select({
+    "//configs:dramsim3_enabled": ["src/mem/DRAMsim3.py"],
+    "//conditions:default": [],
+}) + select({
+    "//configs:protobuf_enabled": [
+        "src/cpu/testers/traffic_gen/TrafficGen.py",
+        "src/cpu/o3/probe/ElasticTrace.py",
+        "src/cpu/trace/TraceCPU.py",
+        "src/cpu/InstPBTrace.py",
+        "src/mem/probes/MemTraceProbe.py",
+    ],
+    "//conditions:default": [],
+}) + select({
+    "//configs:capstone_enabled": [
+        "src/cpu/Capstone.py",
+        "src/arch/arm/tracers/ArmCapstone.py",
+    ],
+    "//conditions:default": [],
+}) + select({
+    "//configs:kvm_enabled": [
+        "src/cpu/kvm/BaseKvmCPU.py",
+        "src/cpu/kvm/KvmVM.py",
+    ],
+    "//conditions:default": [],
+}) + select({
+    "//configs:kvm_x86": ["src/arch/x86/kvm/X86KvmCPU.py"],
+    "//conditions:default": [],
+}) + select({
+    "//configs:kvm_arm": [
+        "src/arch/arm/kvm/ArmKvmCPU.py",
+        "src/arch/arm/kvm/ArmV8KvmCPU.py",
+        "src/arch/arm/kvm/BaseArmKvmCPU.py",
+        "src/arch/arm/kvm/KvmGic.py",
+    ],
+    "//conditions:default": [],
+}) + select({
+    "//configs:test_objects_enabled": ["src/test_objects/StatTester.py"],
+    "//conditions:default": [],
+}) + select({
+    "//configs:systemc_enabled": SIMOBJECT_PY_FILES_SYSTEMC,
+    "//conditions:default": [],
+}) + select({
+    "//configs:protocol_chi": SIMOBJECT_PY_FILES_CHI,
+    "//configs:protocol_multiple": SIMOBJECT_PY_FILES_CHI,
+    "//conditions:default": [],
+})
+
+_SIMOBJ_PY_SRCS = simobject_paths_to_labels(SIMOBJECT_PY_FILES_BASE) + select({
+    "//configs:x86_isa_enabled": simobject_paths_to_labels(SIMOBJECT_PY_FILES_X86),
+    "//conditions:default": [],
+}) + select({
+    "//configs:arm_isa_enabled": simobject_paths_to_labels(SIMOBJECT_PY_FILES_ARM),
+    "//conditions:default": [],
+}) + select({
+    "//configs:mips_isa_enabled": simobject_paths_to_labels(SIMOBJECT_PY_FILES_MIPS),
+    "//conditions:default": [],
+}) + select({
+    "//configs:power_isa_enabled": simobject_paths_to_labels(SIMOBJECT_PY_FILES_POWER),
+    "//conditions:default": [],
+}) + select({
+    "//configs:riscv_isa_enabled": simobject_paths_to_labels(SIMOBJECT_PY_FILES_RISCV),
+    "//conditions:default": [],
+}) + select({
+    "//configs:sparc_isa_enabled": simobject_paths_to_labels(SIMOBJECT_PY_FILES_SPARC),
+    "//conditions:default": [],
+}) + select({
+    "//configs:gpu_enabled": simobject_paths_to_labels(SIMOBJECT_PY_FILES_GPU),
+    "//conditions:default": [],
+}) + select({
+    "//configs:ruby_enabled": simobject_paths_to_labels(SIMOBJECT_PY_FILES_RUBY),
+    "//conditions:default": [],
+}) + select({
+    "//configs:ruby_gpu_enabled": simobject_paths_to_labels(SIMOBJECT_PY_FILES_RUBY_GPU),
+    "//conditions:default": [],
+}) + select({
+    "//configs:dramsim3_enabled": ["//src/mem:DRAMsim3.py"],
+    "//conditions:default": [],
+}) + select({
+    "//configs:protobuf_enabled": [
+        "//src/cpu:testers/traffic_gen/TrafficGen.py",
+        "//src/cpu:o3/probe/ElasticTrace.py",
+        "//src/cpu:trace/TraceCPU.py",
+        "//src/cpu:InstPBTrace.py",
+        "//src/mem:probes/MemTraceProbe.py",
+    ],
+    "//conditions:default": [],
+}) + select({
+    "//configs:capstone_enabled": [
+        "//src/cpu:Capstone.py",
+        "//src/arch/arm:tracers/ArmCapstone.py",
+    ],
+    "//conditions:default": [],
+}) + select({
+    "//configs:kvm_enabled": [
+        "//src/cpu:kvm/BaseKvmCPU.py",
+        "//src/cpu:kvm/KvmVM.py",
+    ],
+    "//conditions:default": [],
+}) + select({
+    "//configs:kvm_x86": ["//src/arch/x86:kvm/X86KvmCPU.py"],
+    "//conditions:default": [],
+}) + select({
+    "//configs:kvm_arm": [
+        "//src/arch/arm:kvm/ArmKvmCPU.py",
+        "//src/arch/arm:kvm/ArmV8KvmCPU.py",
+        "//src/arch/arm:kvm/BaseArmKvmCPU.py",
+        "//src/arch/arm:kvm/KvmGic.py",
+    ],
+    "//conditions:default": [],
+}) + select({
+    "//configs:test_objects_enabled": ["//src/test_objects:StatTester.py"],
+    "//conditions:default": [],
+}) + select({
+    "//configs:systemc_enabled": simobject_paths_to_labels(SIMOBJECT_PY_FILES_SYSTEMC),
+    "//conditions:default": [],
+}) + select({
+    "//configs:protocol_chi": simobject_paths_to_labels(SIMOBJECT_PY_FILES_CHI),
+    "//configs:protocol_multiple": simobject_paths_to_labels(SIMOBJECT_PY_FILES_CHI),
+    "//conditions:default": [],
+})
+
+# SLICC-generated SimObject .py files for the active protocol.
+# These are fed into the aggregate param generator so that SLICC controller
+# SimObjects (L1Cache_Controller, Directory_Controller, etc.) get params headers.
+# Uses protocol select directly (ruby_protocol always has a value; when Ruby
+# is disabled, the SLICC .py files are harmless extra params).
+_SLICC_PY_SRCS = select({
+    "//configs:protocol_mesi_two_level": ["//src/mem/ruby/protocol:MESI_Two_Level_py"],
+    "//configs:protocol_mesi_three_level": ["//src/mem/ruby/protocol:MESI_Three_Level_py"],
+    "//configs:protocol_mesi_three_level_htm": ["//src/mem/ruby/protocol:MESI_Three_Level_HTM_py"],
+    "//configs:protocol_mi_example": ["//src/mem/ruby/protocol:MI_example_py"],
+    "//configs:protocol_moesi_amd_base": ["//src/mem/ruby/protocol:MOESI_AMD_Base_py"],
+    "//configs:protocol_moesi_cmp_directory": ["//src/mem/ruby/protocol:MOESI_CMP_directory_py"],
+    "//configs:protocol_moesi_cmp_token": ["//src/mem/ruby/protocol:MOESI_CMP_token_py"],
+    "//configs:protocol_moesi_hammer": ["//src/mem/ruby/protocol:MOESI_hammer_py"],
+    "//configs:protocol_chi": ["//src/mem/ruby/protocol:CHI_py"],
+    "//configs:protocol_gpu_viper": ["//src/mem/ruby/protocol:GPU_VIPER_py"],
+    "//configs:protocol_gpu_viper_region": ["//src/mem/ruby/protocol:GPU_VIPER_py"],
+    "//configs:protocol_garnet_standalone": ["//src/mem/ruby/protocol:Garnet_standalone_py"],
+    "//configs:protocol_multiple": [
+        "//src/mem/ruby/protocol:MESI_Two_Level_py",
+        "//src/mem/ruby/protocol:MESI_Three_Level_py",
+        "//src/mem/ruby/protocol:MESI_Three_Level_HTM_py",
+        "//src/mem/ruby/protocol:MI_example_py",
+        "//src/mem/ruby/protocol:MOESI_AMD_Base_py",
+        "//src/mem/ruby/protocol:MOESI_CMP_directory_py",
+        "//src/mem/ruby/protocol:MOESI_CMP_token_py",
+        "//src/mem/ruby/protocol:MOESI_hammer_py",
+        "//src/mem/ruby/protocol:CHI_py",
+        "//src/mem/ruby/protocol:GPU_VIPER_py",
+        "//src/mem/ruby/protocol:Garnet_standalone_py",
+        "//src/learning_gem5/part3:MSI_py",
+    ],
+    "//conditions:default": [],
+})
+
+# SLICC param bridge: generates params/enums ONLY for SLICC-generated
+# SimObjects (protocol controllers like L1Cache_Controller, etc.).
+# SLICC .py files are build-time generated by the SLICC compiler and
+# are not available in the source tree, so gen_all_params.py cannot
+# process them. This aggregate target uses gem5py_m5 to handle them.
+# The per-bucket targets (below) handle ALL non-SLICC SimObject params
+# via system Python and gen_all_params.py --source-bucket.
+gem5_sim_object_aggregate(
+    name = "slicc_sim_object_params",
+    gem5py_m5 = "//src/python:gem5py_m5",
+    use_python = select({
+        "//configs:python_enabled": True,
+        "//conditions:default": False,
+    }),
+    simobject_py_files = _SIMOBJ_PY_FILES,
+    simobject_py_srcs = _SIMOBJ_PY_SRCS,
+    generated_simobject_py_srcs = _SLICC_PY_SRCS,
+    # Header-only deps: enough for #include "params/*.hh" and "enums/*.hh"
+    deps = [
+        ":gem5_config_headers",
+        "//src:_gem5_base_hdrs",
+    ],
+    # Compiled deps: the generated .cc files include sim/sim_object.hh and
+    # other deep headers that transitively pull in debug/*.hh. Provide
+    # _gem5_base_hdrs (source headers), all debug flags, pybind11, and Python.
+    compiled_deps = [
+        "//src:_gem5_base_hdrs",
+        ":gem5_config_headers",
+        "@gem5_ext_pybind11//:pybind11",
+        "@system_python//:python",
+    ] + ALL_DEBUG_FLAGS + select({
+        "//configs:ruby_enabled": [
+            "//src/mem/ruby:ruby",
+            "//src/mem/ruby/protocol:active_protocol",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:systemc_enabled": [
+            "//src/systemc:systemc",
+        ],
+        "//conditions:default": [],
+    }),
+)
+
+# ---------------------------------------------------------------------------
+# Per-bucket SimObject param generation (via gen_all_params.py / system Python)
+#
+# These targets replace gem5_sim_object_aggregate with per-bucket generation.
+# Each bucket generates only the param_*.cc files for its ISA/feature set.
+# Headers are generated in one shared pass (all SimObjects need all headers).
+#
+# IMPORTANT: gen_all_params.py needs ALL SimObject .py files available for
+# inheritance resolution, regardless of which ISA/features are enabled.
+# The --file-filter/--file-exclude flags control what gets GENERATED.
+# ---------------------------------------------------------------------------
+
+# All-inclusive SimObject .py file list (no select() gating).
+# Every gen_all_params invocation needs the full set for class loading.
+_ALL_SIMOBJ_PY_SRCS = (
+    simobject_paths_to_labels(SIMOBJECT_PY_FILES_BASE) +
+    simobject_paths_to_labels(SIMOBJECT_PY_FILES_X86) +
+    simobject_paths_to_labels(SIMOBJECT_PY_FILES_ARM) +
+    simobject_paths_to_labels(SIMOBJECT_PY_FILES_RISCV) +
+    simobject_paths_to_labels(SIMOBJECT_PY_FILES_MIPS) +
+    simobject_paths_to_labels(SIMOBJECT_PY_FILES_POWER) +
+    simobject_paths_to_labels(SIMOBJECT_PY_FILES_SPARC) +
+    simobject_paths_to_labels(SIMOBJECT_PY_FILES_RUBY) +
+    simobject_paths_to_labels(SIMOBJECT_PY_FILES_RUBY_GPU) +
+    simobject_paths_to_labels(SIMOBJECT_PY_FILES_GPU) +
+    simobject_paths_to_labels(SIMOBJECT_PY_FILES_SYSTEMC) +
+    simobject_paths_to_labels(SIMOBJECT_PY_FILES_TEST_OBJECTS)
+) + select({
+    "//configs:protocol_chi": simobject_paths_to_labels(SIMOBJECT_PY_FILES_CHI),
+    "//configs:protocol_multiple": simobject_paths_to_labels(SIMOBJECT_PY_FILES_CHI),
+    "//conditions:default": [],
+}) + select({
+    "//configs:kvm_enabled": simobject_paths_to_labels(SIMOBJECT_PY_FILES_KVM),
+    "//conditions:default": [],
+}) + select({
+    "//configs:kvm_x86": simobject_paths_to_labels(SIMOBJECT_PY_FILES_KVM_X86),
+    "//conditions:default": [],
+}) + select({
+    "//configs:kvm_arm": simobject_paths_to_labels(SIMOBJECT_PY_FILES_KVM_ARM),
+    "//conditions:default": [],
+}) + select({
+    "//configs:protobuf_enabled": simobject_paths_to_labels(SIMOBJECT_PY_FILES_PROTOBUF),
+    "//conditions:default": [],
+}) + select({
+    "//configs:capstone_enabled": simobject_paths_to_labels(SIMOBJECT_PY_FILES_CAPSTONE),
+    "//conditions:default": [],
+}) + select({
+    "//configs:dramsim3_enabled": simobject_paths_to_labels(SIMOBJECT_PY_FILES_DRAMSIM3),
+    "//conditions:default": [],
+})
+
+# Shared header generation (ONE pass for all params/*.hh and enums/*.hh)
+gem5_gen_params_hdrs(
+    name = "_gen_params_hdrs",
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
+)
+
+gem5_gen_enums_hdrs(
+    name = "_gen_enums_hdrs",
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
+)
+
+# Header-only cc_library for param and enum headers.
+# Depends on the SLICC bridge for protocol controller param headers
+# (SLICC .py files are build-time generated, not in source tree).
+cc_library(
+    name = "sim_object_params_bucket",
+    hdrs = [":_gen_params_hdrs", ":_gen_enums_hdrs"],
+    includes = [
+        "_gen_params_hdrs",
+        "_gen_enums_hdrs",
+    ],
+    deps = [
+        "//:slicc_sim_object_params",  # SLICC-generated param headers only
+    ],
+)
+
+# Shared enum .cc sources (small, single bucket)
+gem5_gen_enums_srcs(
+    name = "_gen_enums_srcs",
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
+)
+
+# Per-bucket param .cc source generation
+gem5_gen_params_srcs(
+    name = "_gen_common_param_srcs",
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
+    source_bucket = "common",
+)
+
+gem5_gen_params_srcs(
+    name = "_gen_x86_param_srcs",
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
+    source_bucket = "x86",
+)
+
+gem5_gen_params_srcs(
+    name = "_gen_arm_param_srcs",
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
+    source_bucket = "arm",
+)
+
+gem5_gen_params_srcs(
+    name = "_gen_riscv_param_srcs",
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
+    source_bucket = "riscv",
+)
+
+gem5_gen_params_srcs(
+    name = "_gen_mips_param_srcs",
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
+    source_bucket = "mips",
+)
+
+gem5_gen_params_srcs(
+    name = "_gen_power_param_srcs",
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
+    source_bucket = "power",
+)
+
+gem5_gen_params_srcs(
+    name = "_gen_sparc_param_srcs",
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
+    source_bucket = "sparc",
+)
+
+gem5_gen_params_srcs(
+    name = "_gen_ruby_param_srcs",
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
+    source_bucket = "ruby",
+)
+
+gem5_gen_params_srcs(
+    name = "_gen_gpu_param_srcs",
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
+    source_bucket = "gpu",
+)
+
+gem5_gen_params_srcs(
+    name = "_gen_systemc_param_srcs",
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
+    source_bucket = "systemc",
+)
+
+# Per-bucket compiled libraries
+cc_library(
+    name = "sim_object_common_lib",
+    srcs = [":_gen_common_param_srcs", ":_gen_enums_srcs"],
+    deps = [
+        ":sim_object_params_bucket",
+        ":gem5_config_headers",
+        "//src:_gem5_base_hdrs",
+        "@gem5_ext_pybind11//:pybind11",
+        "@system_python//:python",
+    ] + ALL_DEBUG_FLAGS + select({
+        # Some multi-class-per-file SimObjects from Ruby/SystemC end up in
+        # common bucket because the filename-based filter doesn't match their
+        # class names. These deps provide the needed protocol headers.
+        "//configs:ruby_enabled": [
+            "//src/mem/ruby:ruby",
+            "//src/mem/ruby/protocol:active_protocol",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:systemc_enabled": ["//src/systemc:systemc"],
+        "//conditions:default": [],
+    }),
+    alwayslink = True,
+)
+
+cc_library(
+    name = "sim_object_x86_lib",
+    srcs = [":_gen_x86_param_srcs"],
+    deps = [":sim_object_params_bucket", ":gem5_config_headers",
+            "//src:_gem5_base_hdrs", "@gem5_ext_pybind11//:pybind11",
+            "@system_python//:python"] + ALL_DEBUG_FLAGS,
+    alwayslink = True,
+)
+
+cc_library(
+    name = "sim_object_arm_lib",
+    srcs = [":_gen_arm_param_srcs"],
+    deps = [":sim_object_params_bucket", ":gem5_config_headers",
+            "//src:_gem5_base_hdrs", "@gem5_ext_pybind11//:pybind11",
+            "@system_python//:python"] + ALL_DEBUG_FLAGS,
+    alwayslink = True,
+)
+
+cc_library(
+    name = "sim_object_riscv_lib",
+    srcs = [":_gen_riscv_param_srcs"],
+    deps = [":sim_object_params_bucket", ":gem5_config_headers",
+            "//src:_gem5_base_hdrs", "@gem5_ext_pybind11//:pybind11",
+            "@system_python//:python"] + ALL_DEBUG_FLAGS,
+    alwayslink = True,
+)
+
+cc_library(
+    name = "sim_object_mips_lib",
+    srcs = [":_gen_mips_param_srcs"],
+    deps = [":sim_object_params_bucket", ":gem5_config_headers",
+            "//src:_gem5_base_hdrs", "@gem5_ext_pybind11//:pybind11",
+            "@system_python//:python"] + ALL_DEBUG_FLAGS,
+    alwayslink = True,
+)
+
+cc_library(
+    name = "sim_object_power_lib",
+    srcs = [":_gen_power_param_srcs"],
+    deps = [":sim_object_params_bucket", ":gem5_config_headers",
+            "//src:_gem5_base_hdrs", "@gem5_ext_pybind11//:pybind11",
+            "@system_python//:python"] + ALL_DEBUG_FLAGS,
+    alwayslink = True,
+)
+
+cc_library(
+    name = "sim_object_sparc_lib",
+    srcs = [":_gen_sparc_param_srcs"],
+    deps = [":sim_object_params_bucket", ":gem5_config_headers",
+            "//src:_gem5_base_hdrs", "@gem5_ext_pybind11//:pybind11",
+            "@system_python//:python"] + ALL_DEBUG_FLAGS,
+    alwayslink = True,
+)
+
+cc_library(
+    name = "sim_object_ruby_lib",
+    srcs = [":_gen_ruby_param_srcs"],
+    deps = [":sim_object_params_bucket", ":gem5_config_headers",
+            "//src:_gem5_base_hdrs", "@gem5_ext_pybind11//:pybind11",
+            "@system_python//:python"] + ALL_DEBUG_FLAGS + select({
+        "//configs:ruby_enabled": [
+            "//src/mem/ruby:ruby",
+            "//src/mem/ruby/protocol:active_protocol",
+        ],
+        "//conditions:default": [],
+    }),
+    alwayslink = True,
+)
+
+cc_library(
+    name = "sim_object_gpu_lib",
+    srcs = [":_gen_gpu_param_srcs"],
+    deps = [":sim_object_params_bucket", ":gem5_config_headers",
+            "//src:_gem5_base_hdrs", "@gem5_ext_pybind11//:pybind11",
+            "@system_python//:python"] + ALL_DEBUG_FLAGS,
+    alwayslink = True,
+)
+
+cc_library(
+    name = "sim_object_systemc_lib",
+    srcs = [":_gen_systemc_param_srcs"],
+    deps = [":sim_object_params_bucket", ":gem5_config_headers",
+            "//src:_gem5_base_hdrs", "@gem5_ext_pybind11//:pybind11",
+            "@system_python//:python"] + ALL_DEBUG_FLAGS + select({
+        "//configs:systemc_enabled": ["//src/systemc:systemc"],
+        "//conditions:default": [],
+    }),
+    alwayslink = True,
+)
+
+# Per-bucket generation now uses --source-bucket (class-based filtering)
+# instead of filename-based --file-filter patterns.
+
+gem5_gen_params_srcs(
+    name = "_gen_kvm_param_srcs",
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
+    source_bucket = "kvm",
+)
+
+# ruby_gpu uses the same "ruby" bucket derivation (files under src/mem/ruby/)
+# but is a subset gated on both ruby_enabled AND gpu_enabled.
+# For now, ruby_gpu classes are included in the ruby bucket.
+
+gem5_gen_params_srcs(
+    name = "_gen_test_objects_param_srcs",
+    simobj_files = _ALL_SIMOBJ_PY_SRCS,
+    source_bucket = "test_objects",
+)
+
+_BUCKET_LIB_DEPS = [
+    ":sim_object_params_bucket",
+    ":gem5_config_headers",
+    "//src:_gem5_base_hdrs",
+    "@gem5_ext_pybind11//:pybind11",
+    "@system_python//:python",
+] + ALL_DEBUG_FLAGS
+
+cc_library(
+    name = "sim_object_kvm_lib",
+    srcs = [":_gen_kvm_param_srcs"],
+    deps = _BUCKET_LIB_DEPS,
+    alwayslink = True,
+)
+
+# ruby_gpu classes (src/mem/ruby/system/GPUCoalescer etc.) are in the
+# ruby bucket (path-based derivation). No separate ruby_gpu bucket needed.
+
+cc_library(
+    name = "sim_object_test_objects_lib",
+    srcs = [":_gen_test_objects_param_srcs"],
+    deps = _BUCKET_LIB_DEPS,
+    alwayslink = True,
+)
+
+# Aggregation target with per-ISA/feature select()
+cc_library(
+    name = "sim_object_params_bucket_srcs",
+    deps = [":sim_object_common_lib"] + select({
+        "//configs:x86_isa_enabled": [":sim_object_x86_lib"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:arm_isa_enabled": [":sim_object_arm_lib"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:riscv_isa_enabled": [":sim_object_riscv_lib"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:mips_isa_enabled": [":sim_object_mips_lib"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:power_isa_enabled": [":sim_object_power_lib"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:sparc_isa_enabled": [":sim_object_sparc_lib"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:ruby_enabled": [":sim_object_ruby_lib"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:gpu_enabled": [":sim_object_gpu_lib"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:systemc_enabled": [":sim_object_systemc_lib"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:kvm_enabled": [":sim_object_kvm_lib"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:test_objects_enabled": [":sim_object_test_objects_lib"],
+        "//conditions:default": [],
+    }),
+    # Note: SLICC-generated SimObject param sources (protocol controllers)
+    # are compiled as part of the SLICC protocol libraries, which gem5_all
+    # links via //src/mem/ruby/protocol:active_protocol.
+    alwayslink = True,
+)
+
+# ---------------------------------------------------------------------------
+# SimObject Python module embedding: marshals SimObject .py files into
+# C++ EmbeddedPython registrations so they are importable at runtime as
+# m5.objects.<ClassName>. Each ISA/feature group gets a separate target
+# to allow conditional linking via select().
+# ---------------------------------------------------------------------------
+_SIMOBJ_PY_DEPS = ["//src/python:embedded_hdr"]
+
+gem5_simobject_pysources(
+    name = "simobject_pysources_base",
+    simobject_py_files = SIMOBJECT_PY_FILES_BASE,
+    simobject_py_srcs = simobject_paths_to_labels(SIMOBJECT_PY_FILES_BASE),
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+gem5_simobject_pysources(
+    name = "simobject_pysources_x86",
+    simobject_py_files = SIMOBJECT_PY_FILES_X86,
+    simobject_py_srcs = simobject_paths_to_labels(SIMOBJECT_PY_FILES_X86),
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+gem5_simobject_pysources(
+    name = "simobject_pysources_arm",
+    simobject_py_files = SIMOBJECT_PY_FILES_ARM,
+    simobject_py_srcs = simobject_paths_to_labels(SIMOBJECT_PY_FILES_ARM),
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+gem5_simobject_pysources(
+    name = "simobject_pysources_mips",
+    simobject_py_files = SIMOBJECT_PY_FILES_MIPS,
+    simobject_py_srcs = simobject_paths_to_labels(SIMOBJECT_PY_FILES_MIPS),
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+gem5_simobject_pysources(
+    name = "simobject_pysources_power",
+    simobject_py_files = SIMOBJECT_PY_FILES_POWER,
+    simobject_py_srcs = simobject_paths_to_labels(SIMOBJECT_PY_FILES_POWER),
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+gem5_simobject_pysources(
+    name = "simobject_pysources_riscv",
+    simobject_py_files = SIMOBJECT_PY_FILES_RISCV,
+    simobject_py_srcs = simobject_paths_to_labels(SIMOBJECT_PY_FILES_RISCV),
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+gem5_simobject_pysources(
+    name = "simobject_pysources_sparc",
+    simobject_py_files = SIMOBJECT_PY_FILES_SPARC,
+    simobject_py_srcs = simobject_paths_to_labels(SIMOBJECT_PY_FILES_SPARC),
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+gem5_simobject_pysources(
+    name = "simobject_pysources_gpu",
+    simobject_py_files = SIMOBJECT_PY_FILES_GPU,
+    simobject_py_srcs = simobject_paths_to_labels(SIMOBJECT_PY_FILES_GPU),
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+# simobject_pysources_semihosting removed: BaseSemihosting.py is now in
+# SIMOBJECT_PY_FILES_BASE, embedded via simobject_pysources_base.
+
+gem5_simobject_pysources(
+    name = "simobject_pysources_ruby",
+    simobject_py_files = SIMOBJECT_PY_FILES_RUBY,
+    simobject_py_srcs = simobject_paths_to_labels(SIMOBJECT_PY_FILES_RUBY),
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+gem5_simobject_pysources(
+    name = "simobject_pysources_ruby_gpu",
+    simobject_py_files = SIMOBJECT_PY_FILES_RUBY_GPU,
+    simobject_py_srcs = simobject_paths_to_labels(SIMOBJECT_PY_FILES_RUBY_GPU),
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+# SLICC-generated controller SimObject .py files embedded as m5.objects.*
+# Python modules.  These are produced by the SLICC compiler and need to
+# be importable at runtime (e.g. m5.objects.L1Cache_Controller).
+gem5_simobject_pysources(
+    name = "simobject_pysources_slicc",
+    generated_simobject_py_srcs = _SLICC_PY_SRCS,
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+# Protobuf-gated SimObjects embedded as m5.objects.* Python modules.
+_SIMOBJ_PY_FILES_PROTOBUF = [
+    "src/cpu/testers/traffic_gen/TrafficGen.py",
+    "src/cpu/o3/probe/ElasticTrace.py",
+    "src/cpu/trace/TraceCPU.py",
+    "src/cpu/InstPBTrace.py",
+    "src/mem/probes/MemTraceProbe.py",
+]
+
+gem5_simobject_pysources(
+    name = "simobject_pysources_protobuf",
+    simobject_py_files = _SIMOBJ_PY_FILES_PROTOBUF,
+    simobject_py_srcs = [
+        "//src/cpu:testers/traffic_gen/TrafficGen.py",
+        "//src/cpu:o3/probe/ElasticTrace.py",
+        "//src/cpu:trace/TraceCPU.py",
+        "//src/cpu:InstPBTrace.py",
+        "//src/mem:probes/MemTraceProbe.py",
+    ],
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+# Test-object SimObjects embedded as m5.objects.* Python modules.
+gem5_simobject_pysources(
+    name = "simobject_pysources_test_objects",
+    simobject_py_files = ["src/test_objects/StatTester.py"],
+    simobject_py_srcs = ["//src/test_objects:StatTester.py"],
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+# Capstone disassembler SimObjects (conditional on have_capstone).
+gem5_simobject_pysources(
+    name = "simobject_pysources_capstone",
+    simobject_py_files = [
+        "src/cpu/Capstone.py",
+        "src/arch/arm/tracers/ArmCapstone.py",
+    ],
+    simobject_py_srcs = [
+        "//src/cpu:Capstone.py",
+        "//src/arch/arm:tracers/ArmCapstone.py",
+    ],
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+# KVM SimObjects (conditional on use_kvm).
+gem5_simobject_pysources(
+    name = "simobject_pysources_kvm_base",
+    simobject_py_files = [
+        "src/cpu/kvm/BaseKvmCPU.py",
+        "src/cpu/kvm/KvmVM.py",
+    ],
+    simobject_py_srcs = [
+        "//src/cpu:kvm/BaseKvmCPU.py",
+        "//src/cpu:kvm/KvmVM.py",
+    ],
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+# KVM x86-specific SimObjects.
+gem5_simobject_pysources(
+    name = "simobject_pysources_kvm_x86",
+    simobject_py_files = ["src/arch/x86/kvm/X86KvmCPU.py"],
+    simobject_py_srcs = ["//src/arch/x86:kvm/X86KvmCPU.py"],
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+# KVM ARM-specific SimObjects.
+gem5_simobject_pysources(
+    name = "simobject_pysources_kvm_arm",
+    simobject_py_files = [
+        "src/arch/arm/kvm/ArmKvmCPU.py",
+        "src/arch/arm/kvm/ArmV8KvmCPU.py",
+        "src/arch/arm/kvm/BaseArmKvmCPU.py",
+        "src/arch/arm/kvm/KvmGic.py",
+    ],
+    simobject_py_srcs = [
+        "//src/arch/arm:kvm/ArmKvmCPU.py",
+        "//src/arch/arm:kvm/ArmV8KvmCPU.py",
+        "//src/arch/arm:kvm/BaseArmKvmCPU.py",
+        "//src/arch/arm:kvm/KvmGic.py",
+    ],
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+# SystemC SimObjects (conditional on systemc_enabled).
+gem5_simobject_pysources(
+    name = "simobject_pysources_systemc",
+    simobject_py_files = SIMOBJECT_PY_FILES_SYSTEMC,
+    simobject_py_srcs = simobject_paths_to_labels(SIMOBJECT_PY_FILES_SYSTEMC),
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+# CHI non-SLICC SimObjects (conditional on protocol_chi/protocol_multiple).
+gem5_simobject_pysources(
+    name = "simobject_pysources_chi",
+    simobject_py_files = SIMOBJECT_PY_FILES_CHI,
+    simobject_py_srcs = simobject_paths_to_labels(SIMOBJECT_PY_FILES_CHI),
+    deps = _SIMOBJ_PY_DEPS,
+)
+
+# ---------------------------------------------------------------------------
+# gem5_all: Aggregation library that links all subsystem libraries.
+#
+# This mirrors CMake's gem5_all STATIC library. All subsystem cc_libraries
+# use alwayslink=True to ensure SimObject factories, EmbeddedPython
+# registrations, and static initializers are retained during linking.
+# ---------------------------------------------------------------------------
+cc_library(
+    name = "gem5_all",
+    deps = [
+        # ---- Core subsystems (always built) ----
+        "//src/base:base",
+        "//src/sim:sim",
+        "//src/mem:mem",
+        "//src/cpu:cpu",
+        "//src/dev:dev",
+        "//src/kern:kern",
+        "//src/arch/generic:generic",
+        "//src/sst:sst",
+        "//src/learning_gem5/part2:learning",
+
+        # ---- Generated SimObject params and enums (per-bucket) ----
+        # Uses class-based bucket filtering via gen_all_params.py --source-bucket.
+        # Each class's bucket is derived from the defining .py file's path.
+        "//:sim_object_params_bucket",
+        "//:sim_object_params_bucket_srcs",
+
+        # ---- Embedded SimObject Python modules (ISA-independent) ----
+        "//:simobject_pysources_base",
+
+        # ---- Global ext/ libs (pervasively used) ----
+        "@gem5_ext_fputils//:fputils",
+        "@gem5_ext_iostream3//:iostream3",
+        "@gem5_ext_magic_enum//:magic_enum",
+        "@gem5_ext_softfloat//:softfloat",
+    ] + select({
+        # ---- ISA-conditional architecture + SimObject pysource libraries ----
+        "//configs:x86_isa_enabled": [
+            "//src/arch/x86:x86",
+            "//:simobject_pysources_x86",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:arm_isa_enabled": [
+            "//src/arch/arm:arm",
+            "//:simobject_pysources_arm",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:riscv_isa_enabled": [
+            "//src/arch/riscv:riscv",
+            "//:simobject_pysources_riscv",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:mips_isa_enabled": [
+            "//src/arch/mips:mips",
+            "//:simobject_pysources_mips",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:power_isa_enabled": [
+            "//src/arch/power:power",
+            "//:simobject_pysources_power",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:sparc_isa_enabled": [
+            "//src/arch/sparc:sparc",
+            "//:simobject_pysources_sparc",
+        ],
+        "//conditions:default": [],
+    # BaseSemihosting pysource now in simobject_pysources_base
+    }) + select({
+        # ---- ISA-conditional device libraries ----
+        "//configs:arm_isa_enabled": ["//src/dev/arm:dev_arm"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:x86_isa_enabled": ["//src/dev/x86:dev_x86"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:riscv_isa_enabled": ["//src/dev/riscv:dev_riscv"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:mips_isa_enabled": ["//src/dev/mips:dev_mips"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:sparc_isa_enabled": ["//src/dev/sparc:dev_sparc"],
+        "//conditions:default": [],
+    }) + select({
+        # ---- Feature-conditional subsystems ----
+        "//configs:ruby_enabled": [
+            "//src/mem/ruby:ruby",
+            "//:simobject_pysources_ruby",
+            "//:simobject_pysources_slicc",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:ruby_gpu_enabled": ["//:simobject_pysources_ruby_gpu"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:protobuf_enabled": [
+            "//src/proto:proto",
+            "//:simobject_pysources_protobuf",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:test_objects_enabled": [
+            "//:simobject_pysources_test_objects",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:capstone_enabled": ["//:simobject_pysources_capstone"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:kvm_enabled": ["//:simobject_pysources_kvm_base"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:kvm_x86": ["//:simobject_pysources_kvm_x86"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:kvm_arm": ["//:simobject_pysources_kvm_arm"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:gpu_enabled": [
+            "//src/gpu-compute:gpu_compute",
+            "//src/arch/amdgpu:amdgpu",
+            "//src/dev/hsa:dev_hsa",
+            "//src/dev/amdgpu:dev_amdgpu",
+            "//:simobject_pysources_gpu",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:tlm_enabled": [
+            "//src/mem/ruby/protocol/chi/tlm:chi_tlm",
+            "//src/mem/ruby/protocol/chi/tlm:chi_tlm_simobjects",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:systemc_enabled": [
+            "//src/systemc:systemc",
+            "//src/systemc:systemc_pysources",
+            "//:simobject_pysources_systemc",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:protocol_chi": ["//:simobject_pysources_chi"],
+        "//configs:protocol_multiple": ["//:simobject_pysources_chi"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:test_objects_enabled": ["//src/test_objects:test_objects"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:python_enabled": [
+            "//src/python:python",
+            "//src/python:pysources",
+            "//src/python:importer_code",
+            "//src/python:info_pysource",
+            "//src/python:defines_pysource",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:tlm_python_enabled": [
+            "//src/mem/ruby/protocol/chi/tlm:chi_tlm_pysources",
+        ],
+        "//conditions:default": [],
+    }),
+    linkopts = [
+        "-lz",
+        "-lpthread",
+        "-lrt",
+    ],
+    alwayslink = True,
+)
+
+# ---------------------------------------------------------------------------
+# gem5: The gem5 simulator binary.
+# ---------------------------------------------------------------------------
+cc_binary(
+    name = "gem5",
+    srcs = ["//src/sim:main_cc"],
+    deps = [
+        ":gem5_all",
+        "//src/base:logging_impl",
+    ],
+    linkopts = select({
+        "//configs:python_enabled": ["-ldl", "-lutil"],
+        "//conditions:default": [],
+    }),
+)
+
+# ---------------------------------------------------------------------------
+# gem5_tests: Aggregated test suite for all unit tests.
+# ---------------------------------------------------------------------------
+test_suite(
+    name = "gem5_tests",
+    tests = [
+        # src/base tests
+        "//src/base:test_addr_range",
+        "//src/base:test_addr_range_map",
+        "//src/base:test_amo",
+        "//src/base:test_atomicio",
+        "//src/base:test_bitfield",
+        "//src/base:test_bitunion",
+        "//src/base:test_channel_addr",
+        "//src/base:test_chunk_generator",
+        "//src/base:test_circlebuf",
+        "//src/base:test_circular_queue",
+        "//src/base:test_condcodes",
+        "//src/base:test_coroutine",
+        "//src/base:test_cprintf",
+        "//src/base:test_debug",
+        "//src/base:test_extensible",
+        "//src/base:test_fiber",
+        "//src/base:test_filters_base",
+        "//src/base:test_flags",
+        "//src/base:test_free_list",
+        "//src/base:test_inifile",
+        "//src/base:test_intmath",
+        "//src/base:test_loader_image_file_data",
+        "//src/base:test_loader_symtab",
+        "//src/base:test_logging",
+        "//src/base:test_match",
+        "//src/base:test_memoizer",
+        "//src/base:test_named",
+        "//src/base:test_pixel",
+        "//src/base:test_random",
+        "//src/base:test_refcnt",
+        "//src/base:test_sat_counter",
+        "//src/base:test_socket",
+        "//src/base:test_stats_group",
+        "//src/base:test_stats_info",
+        "//src/base:test_stats_storage",
+        "//src/base:test_stats_units",
+        "//src/base:test_stl_helpers_hash_helpers",
+        "//src/base:test_stl_helpers_ostream_helpers",
+        "//src/base:test_str",
+        "//src/base:test_temperature",
+        "//src/base:test_trace",
+        "//src/base:test_trie",
+        "//src/base:test_types",
+        "//src/base:test_uncontended_mutex",
+        # src/sim tests
+        "//src/sim:test_bufval",
+        "//src/sim:test_byteswap",
+        "//src/sim:test_globals",
+        "//src/sim:test_guest_abi",
+        "//src/sim:test_port",
+        "//src/sim:test_proxy_ptr",
+        "//src/sim:test_serialize",
+        "//src/sim:test_serialize_handlers",
+        # src/mem tests
+        "//src/mem:test_backdoor_manager",
+        "//src/mem:test_translation_gen",
+        "//src/mem:test_fifo_rp",
+        "//src/mem:test_lfu_rp",
+        "//src/mem:test_lru_rp",
+        "//src/mem:test_mru_rp",
+        "//src/mem:test_replaceable_entry",
+        "//src/mem:test_tree_plru_rp",
+        "//src/mem:test_dueling",
+        # src/dev tests
+        "//src/dev:test_reg_bank",
+        # src/arch tests
+        "//src/arch/generic:test_vec_pred_reg",
+        "//src/arch/generic:test_vec_reg",
+    ],
+)

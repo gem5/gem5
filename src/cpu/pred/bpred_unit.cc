@@ -421,8 +421,11 @@ BPredUnit::commitBranch(ThreadID tid, PredictorHistory* &hist)
     }
 
     // If the overriding predictor was used,
-    // also update it with the correct result
-    if (overridingCPred) {
+    // also update it with the correct result.
+    // Only update when history exists (conditional branches); unconditional
+    // branches never call overridingCPred->lookup() so no history is
+    // allocated.
+    if (overridingCPred && hist->overridingBpHistory) {
 
         overridingCPred->update(tid, hist->pc, hist->actuallyTaken,
                                 hist->overridingBpHistory, false, hist->inst,
@@ -501,9 +504,10 @@ BPredUnit::squashHistory(ThreadID tid, PredictorHistory* &history)
     // This call will  delete the bpHistory.
     cPred->squash(tid, history->bpHistory);
 
-    // If the overriding predictor was used, also squash it
-    // This call will delete the overridingBpHistory.
-    if (overridingCPred) {
+    // If the overriding predictor was used, also squash it.
+    // This call will delete the overridingBpHistory.  Only squash when
+    // history exists; unconditional branches skip the overriding lookup.
+    if (overridingCPred && history->overridingBpHistory) {
         overridingCPred->squash(tid, history->overridingBpHistory);
         assert(history->overridingBpHistory == nullptr);
     }
@@ -582,8 +586,9 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
         cPred->update(tid, hist->pc, actually_taken, hist->bpHistory, true,
                       hist->inst, corr_target.instAddr());
 
-        // If the overriding predictor was used, also update it
-        if (overridingCPred) {
+        // If the overriding predictor was used, also update it.
+        // Guard on history existence (unconditional branches have none).
+        if (overridingCPred && hist->overridingBpHistory) {
             overridingCPred->update(tid, hist->pc, actually_taken,
                                     hist->overridingBpHistory, true,
                                     hist->inst, corr_target.instAddr());

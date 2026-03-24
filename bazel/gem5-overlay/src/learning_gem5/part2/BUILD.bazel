@@ -1,0 +1,33 @@
+"""BUILD file for src/learning_gem5/part2/ -- Learning gem5 tutorial objects."""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:defs.bzl", "gem5_debug_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+
+exports_files(glob(["**/*.py"]))
+
+# -- Header filegroup for gem5_hdrs aggregation --
+filegroup(
+    name = "hdrs_files",
+    srcs = glob(["*.hh"]),
+)
+
+gem5_debug_flag(name = "HelloExample", desc = "For Learning gem5 Part 2. Simple example debug flag")
+gem5_debug_flag(name = "SimpleMemobj", desc = "For Learning gem5 Part 2.")
+gem5_debug_flag(name = "SimpleCache", desc = "For Learning gem5 Part 2.")
+
+cc_library(
+    name = "learning",
+    srcs = glob(["*.cc"]),
+    hdrs = glob(["*.hh"]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        ":HelloExample",
+        ":SimpleMemobj",
+        ":SimpleCache",
+    ],
+    alwayslink = True,
+)

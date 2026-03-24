@@ -1,6 +1,0 @@
-Import('*')
-
-# NOTE: All SLICC setup code found in src/mem/ruby/protocol/SConscript
-
-# Add this directory to the search path for SLICC
-main.Append(PROTOCOL_DIRS=[Dir('.')])

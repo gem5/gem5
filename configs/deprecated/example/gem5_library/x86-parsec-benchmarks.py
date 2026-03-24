@@ -25,6 +25,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
+Note: This configuration script is deprecated. See
+configs/example/gem5_library/ for current versions.
+
 Script to run PARSEC benchmarks with gem5.
 The script expects a benchmark program name and the simulation
 size. The system is fixed with 2 CPU cores, MESI Two Level system
@@ -37,9 +40,9 @@ Usage:
 ------
 
 ```
-scons build/X86/gem5.opt
-./build/X86/gem5.opt \
-    configs/example/gem5_library/x86-parsec-benchmarks.py \
+cmake -G Ninja -B build/X86 -DGEM5_BUILD_VARIANT=X86 && ninja -C build/X86
+./build/X86/gem5 \
+    configs/deprecated/example/gem5_library/x86-parsec-benchmarks.py \
     --benchmark <benchmark_name> \
     --size <simulation_size>
 ```

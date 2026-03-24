@@ -1,0 +1,10 @@
+"""BUILD file for src/arch/null/ -- null ISA (header-only)."""
+
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "hdrs_files",
+    srcs = glob(["*.hh"]),
+)
+
+# No cc_library needed -- header-only ISA.

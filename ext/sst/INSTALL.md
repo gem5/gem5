@@ -58,20 +58,17 @@ echo "export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$SST_CORE_HOME/lib/pkgconfig/" >> 
 
 ### Building gem5 library
 
-At the root of the gem5 folder, you need to compile gem5 as a library. This
-varies  dependent on which OS you are using. If you're using Linux, then
-execute the following:
+At the root of the gem5 folder, you need to compile gem5 as a shared library:
+
 ```sh
-scons build/RISCV/libgem5_opt.so -j $(nproc) --without-tcmalloc --duplicate-sources
-```
-In case you're using Mac, then type the following:
-```sh
-scons build/RISCV/libgem5_opt.dylib -j $(nproc) --without-tcmalloc --duplicate-sources
+cmake -G Ninja --preset opt -DGEM5_BUILD_VARIANT=RISCV -B build/RISCV
+ninja -C build/RISCV gem5_shared
 ```
 
+The shared library will be located at `build/RISCV/libgem5_shared.so` (Linux) or
+`build/RISCV/libgem5_shared.dylib` (macOS).
+
 **Note:**
-* `--without-tcmalloc` is required to avoid a conflict with SST's malloc.
-* `--duplicate-sources` is required as the compilation of SST depends on sources to be present in the "build" directory.
 * The Mac version was tested on a Macbook Air with M2 processor.
 
 ### Compiling the SST integration

@@ -1,0 +1,11 @@
+"""Example BUILD file for a project using gem5 as a local dependency.
+
+This demonstrates linking against the gem5 library from a downstream project.
+"""
+
+# Example: a downstream binary linking against gem5
+# cc_binary(
+#     name = "my_sim",
+#     srcs = ["main.cc"],
+#     deps = ["@gem5//:gem5_all"],
+# )

@@ -1,0 +1,12 @@
+"""BUILD file for src/mem/slicc/ -- SLICC protocol compiler.
+
+Exports the SLICC compiler Python files as a filegroup for use by
+the gem5_slicc_protocol rule.
+"""
+
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "slicc_files",
+    srcs = glob(["**/*.py"]),
+)

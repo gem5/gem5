@@ -43,11 +43,11 @@ The documentation attribute should be used to completely describe the artifact t
 
 ```python
 gem5_binary = Artifact.registerArtifact(
-    command = 'scons build/X86/gem5.opt',
+    command = 'cmake -G Ninja --preset opt -DGEM5_BUILD_VARIANT=X86 -B build/X86 && ninja -C build/X86',
     typ = 'gem5 binary',
     name = 'gem5',
     cwd = 'gem5/',
-    path =  'gem5/build/X86/gem5.opt',
+    path =  'gem5/build/X86/gem5',
     inputs = [gem5_repo,],
     documentation = '''
       Default gem5 binary compiled for the X86 ISA.

@@ -1,0 +1,77 @@
+"""BUILD file for src/kern/ -- gem5 kernel interface library.
+
+Provides OS-specific kernel event handlers and syscall interface implementations
+for Linux, FreeBSD, and Solaris guest operating systems.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:defs.bzl", "gem5_debug_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+# -- Header filegroup for gem5_hdrs aggregation --
+filegroup(
+    name = "hdrs_files",
+    srcs = glob([
+        "*.hh",
+        "freebsd/*.hh",
+        "linux/*.hh",
+        "solaris/*.hh",
+    ]),
+)
+
+# -- Debug flags --
+gem5_debug_flag(name = "DebugPrintf", desc = "DebugPrintf debugging")
+gem5_debug_flag(name = "Printf", desc = "Printf debugging")
+
+# linux.cc defines Linux::openSpecialFile (referenced by the
+# openatFunc<Linux> template in syscall_emul.hh) and the /dev/urandom
+# emulation helper.  alwayslink is required because the template is
+# instantiated in arch-specific code that the linker processes after
+# this archive; without it the linker discards linux.o too early.
+# The overlay linux.cc uses std::call_once for lazy Random init, so
+# force-linking does not create a Random instance during static init.
+cc_library(
+    name = "kern_linux_random",
+    srcs = ["linux/linux.cc"],
+    hdrs = glob([
+        "*.hh",
+        "linux/*.hh",
+    ]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        "//src/base:base",
+        "//src/sim:sim",
+    ],
+    alwayslink = True,
+)
+
+# -- Main kern library --
+cc_library(
+    name = "kern",
+    srcs = [
+        "freebsd/events.cc",
+        "linux/events.cc",
+        "linux/helpers.cc",
+        "linux/printk.cc",
+        "operatingsystem.cc",
+        "system_events.cc",
+    ],
+    hdrs = glob([
+        "*.hh",
+        "freebsd/*.hh",
+        "linux/*.hh",
+        "solaris/*.hh",
+    ]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        "//src/base:base",
+        "//src/sim:sim",
+        ":kern_linux_random",
+        ":DebugPrintf",
+        ":Printf",
+    ],
+    alwayslink = True,
+)

@@ -40,7 +40,8 @@ jobs:
               run: |
                   brew update
                   brew install \
-                    scons \
+                    cmake \
+                    ninja \
                     python \
                     pkg-config \
                     protobuf \
@@ -59,19 +60,10 @@ jobs:
             - name: Compile gem5.${{ matrix.type }}
               working-directory: ${{ github.workspace }}
               run: |
-                  CMD="scons build/ALL/gem5.${{ matrix.type }} -j $(sysctl -n hw.ncpu)"
-                  ${CMD}
-                  status=$?
-                  if [ $status -ne 0 ]; then
-                      echo "Failed to build on top of cached build." 1>&2
-                      echo "This may be due to env changes since the cache build." 1>&2
-                      echo "Clearing cache and attempting another build..." 1>&2
-                      rm -rf build
-                      ${CMD}
-                      status=$?
-                  fi
-                  exit $status
-              timeout-minutes: 120
+                  BUILD_TYPE="GEM5_$(echo '${{ matrix.type }}' | tr '[:lower:]' '[:upper:]')"
+                  cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DGEM5_BUILD_VARIANT=ALL -B build/ALL
+                  ninja -C build/ALL -j$(sysctl -n hw.ncpu)
+              timeout-minutes: 90
 
     build-all-gem5:
         runs-on: [self-hosted, linux, x64]
@@ -81,19 +73,25 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
+            - name: Ensure build tools are available
+              run: |
+                  command -v ninja || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends ninja-build; }
+                  ninja --version
 
-            - name: Cache build/ALL
+            - name: Cache build/ALL_opt
               uses: actions/cache@v4
               with:
-                  path: build/ALL
-                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
+                  path: build/ALL_opt
+                  key: testlib-build-all-opt-${{ needs.get-date.outputs.date }}
                   restore-keys: |
-                      testlib-build-all
+                      testlib-build-all-opt
 
-            - name: Build ALL/gem5.opt
-              run: scons --no-compress-debug build/ALL/gem5.opt -j $(nproc)
+            - name: Build ALL_opt/gem5
+              run: |
+                  cmake -G Ninja -DCMAKE_BUILD_TYPE=GEM5_OPT -DGEM5_BUILD_VARIANT=ALL -DGEM5_NO_COMPRESS_DEBUG=ON -B build/ALL_opt
+                  ninja -C build/ALL_opt -j$(nproc)
 
-  # this builds and runs unittests.debug
+  # this builds both unittests.fast and unittests.debug
     unittests-debug:
         strategy:
             matrix:
@@ -103,9 +101,17 @@ jobs:
         timeout-minutes: 60
         steps:
             - uses: actions/checkout@v4
+            - name: Ensure build tools are available
+              run: |
+                  command -v ninja || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends ninja-build; }
+                  ninja --version
 
             - name: Run ALL/unittests.${{ matrix.type }} UnitTests
-              run: scons build/ALL/unittests.${{ matrix.type }} -j $(nproc)
+              run: |
+                  BUILD_TYPE="GEM5_$(echo '${{ matrix.type }}' | tr '[:lower:]' '[:upper:]')"
+                  cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DGEM5_BUILD_VARIANT=ALL -B build/ALL
+                  ninja -C build/ALL gem5_tests gem5 -j$(nproc)
+                  cd build/ALL && ctest --output-on-failure
 
     get-testlib-long-dirs:
         runs-on: ubuntu-24.04
@@ -155,13 +161,17 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
-            - name: Restore build/ALL cache
+            - name: Ensure build tools are available
+              run: |
+                  command -v ninja || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends ninja-build; }
+                  ninja --version
+            - name: Restore build/ALL_opt cache
               uses: actions/cache/restore@v4
               with:
-                  path: build/ALL
-                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
+                  path: build/ALL_opt
+                  key: testlib-build-all-opt-${{ needs.get-date.outputs.date }}
                   restore-keys: |
-                      testlib-build-all
+                      testlib-build-all-opt
 
             - name: Run long ${{ matrix.test-type }} tests
               id: run-tests
@@ -171,11 +181,11 @@ jobs:
 
             - name: Sanitize test-dir for artifact name
               id: sanitize-test-dir
-              if: always()
+              if: success() || failure()
               run: echo "sanitized-test-dir=$(echo '${{ matrix.test-type }}' | sed 's/\//-/g')" >> $GITHUB_OUTPUT
 
             - name: Upload results
-              if: always()
+              if: success() || failure()
               uses: actions/upload-artifact@v4
               env:
                   MY_STEP_VAR: ${{ steps.sanitize-test-dir.outputs.sanitized-test-dir }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
@@ -194,13 +204,19 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
-            - name: Cache build/VEGA_X86
+            - name: Install newer cmake and ninja
+              run: |
+                  python3 -m pip --version || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends python3-pip; }
+                  python3 -m pip install cmake ninja
+                  cmake --version
+                  ninja --version
+            - name: Cache build/VEGA_X86_opt
               uses: actions/cache@v4
               with:
-                  path: build/VEGA_X86
-                  key: testlib-build-vega-${{ needs.get-date.outputs.date }}
+                  path: build/VEGA_X86_opt
+                  key: testlib-build-vega-opt-${{ needs.get-date.outputs.date }}
                   restore-keys: |
-                      testlib-build-vega
+                      testlib-build-vega-opt
 
 
             - name: Run Testlib GPU Tests
@@ -210,7 +226,7 @@ jobs:
               run: ./main.py run --length=long -vvv -j $(nproc) --host gcn_gpu
 
             - name: Upload results
-              if: always()
+              if: success() || failure()
               uses: actions/upload-artifact@v4
               with:
                   name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gpu-status-${{ steps.run-tests.outcome }}-output
@@ -225,8 +241,14 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
-            - name: Build RISCV/libgem5_opt.so with SST
-              run: scons build/RISCV/libgem5_opt.so --without-tcmalloc --duplicate-sources --ignore-style -j $(nproc)
+            - name: Ensure build tools are available
+              run: |
+                  command -v ninja || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends ninja-build; }
+                  ninja --version
+            - name: Build RISCV/libgem5_shared.so with SST
+              run: |
+                  cmake -G Ninja -DCMAKE_BUILD_TYPE=GEM5_OPT -DGEM5_BUILD_VARIANT=RISCV -DGEM5_WITH_TCMALLOC=OFF -B build/RISCV
+                  ninja -C build/RISCV gem5_shared -j$(nproc)
             - name: Makefile ext/sst
               working-directory: ${{ github.workspace }}/ext/sst
               run: mv Makefile.linux Makefile
@@ -246,19 +268,31 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
-            - name: Build ARM/gem5.opt
-              run: scons build/ARM/gem5.opt --ignore-style --duplicate-sources -j$(nproc)
-            - name: disable systemc
-              run: scons setconfig build/ARM --ignore-style USE_SYSTEMC=n
-            - name: Build ARM/libgem5_opt.so
-              run: scons build/ARM/libgem5_opt.so --with-cxx-config --without-python --without-tcmalloc -j$(nproc) --duplicate-sources
-            - name: Compile gem5 withing SystemC
+            - name: Ensure build tools are available
+              run: |
+                  command -v ninja || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends ninja-build; }
+                  ninja --version
+            - name: Build ARM/gem5
+              run: |
+                  cmake -G Ninja -DCMAKE_BUILD_TYPE=GEM5_OPT -DGEM5_BUILD_VARIANT=ARM -B build/ARM
+                  ninja -C build/ARM -j$(nproc)
+            - name: Build ARM/libgem5_shared.so (without SystemC, with C++ config)
+              run: |
+                  cmake -G Ninja -DCMAKE_BUILD_TYPE=GEM5_OPT -DGEM5_BUILD_VARIANT=ARM \
+                    -DGEM5_WITH_CXX_CONFIG=ON -DGEM5_WITHOUT_PYTHON=ON -DGEM5_WITH_TCMALLOC=OFF \
+                    -DGEM5_KCONFIG_OVERRIDE="USE_SYSTEMC=n" \
+                    -B build/ARM-shared
+                  ninja -C build/ARM-shared gem5_shared -j$(nproc)
+            - name: Compile gem5 within SystemC
               working-directory: ${{ github.workspace }}/util/systemc/gem5_within_systemc
-              run: make
+              run: make GEM5_BUILD_DIR=../../../build/ARM-shared
             - name: Run gem5 within SystemC test
-              run: ./build/ARM/gem5.opt configs/deprecated/example/se.py -c tests/test-progs/hello/bin/arm/linux/hello
+              # Note: Uses deprecated/example/se.py intentionally because
+              # CxxConfigManager requires the traditional config.ini format
+              # that the old-style configs produce.
+              run: ./build/ARM/gem5 configs/deprecated/example/se.py -c tests/test-progs/hello/bin/arm/linux/hello
             - name: Continue gem5 within SystemC test
-              run: LD_LIBRARY_PATH=build/ARM/:/opt/systemc/lib-linux64/ ./util/systemc/gem5_within_systemc/gem5.opt.sc m5out/config.ini
+              run: LD_LIBRARY_PATH=build/ARM-shared/:/opt/systemc/lib-linux64/ ./util/systemc/gem5_within_systemc/gem5.sc m5out/config.ini
 
     dramsys-tests:
         runs-on: [self-hosted, linux, x64]
@@ -266,6 +300,10 @@ jobs:
         timeout-minutes: 360 # 6 hours
         steps:
             - uses: actions/checkout@v4
+            - name: Ensure build tools are available
+              run: |
+                  command -v ninja || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends ninja-build; }
+                  ninja --version
             - name: Checkout DRAMSys
               working-directory: ${{ github.workspace }}/ext/dramsys
               run: git clone https://github.com/tukl-msd/DRAMSys --branch v5.3.1 --depth 1 DRAMSys
@@ -273,11 +311,13 @@ jobs:
               # gem5 is built separately because it depends on the DRAMSys library
             - name: Build gem5
               working-directory: ${{ github.workspace }}
-              run: scons build/ALL/gem5.opt -j $(nproc)
+              run: |
+                  cmake -G Ninja -DCMAKE_BUILD_TYPE=GEM5_OPT -DGEM5_BUILD_VARIANT=ALL -B build/ALL
+                  ninja -C build/ALL -j$(nproc)
 
             - name: Run DRAMSys Checks
               working-directory: ${{ github.workspace }}
               run: |
-                  ./build/ALL/gem5.opt configs/example/gem5_library/dramsys/arm-hello-dramsys.py
-                  ./build/ALL/gem5.opt configs/example/gem5_library/dramsys/dramsys-traffic.py
-                  ./build/ALL/gem5.opt configs/example/dramsys.py
+                  ./build/ALL/gem5 configs/example/gem5_library/dramsys/arm-hello-dramsys.py
+                  ./build/ALL/gem5 configs/example/gem5_library/dramsys/dramsys-traffic.py
+                  ./build/ALL/gem5 configs/example/dramsys.py

@@ -1,0 +1,8 @@
+# External libraries BUILD file for the @gem5 repository.
+# Individual ext/ libraries are managed as separate repositories
+# (e.g., @gem5_ext_libelf, @gem5_ext_softfloat) via extensions.bzl.
+#
+# This BUILD file exists to prevent Bazel from descending into ext/
+# subdirectories looking for BUILD files that don't exist.
+
+package(default_visibility = ["//visibility:public"])

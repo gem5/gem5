@@ -1,0 +1,89 @@
+"""BUILD file for src/gpu-compute/ -- GPU compute subsystem.
+
+Conditionally included when //configs:gpu_enabled is True.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:defs.bzl", "gem5_debug_flag", "gem5_compound_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+
+exports_files(glob(["**/*.py"]))
+
+# -- Header filegroup for gem5_hdrs aggregation --
+filegroup(
+    name = "hdrs_files",
+    srcs = glob(["*.hh"]),
+)
+
+gem5_debug_flag(name = "GPUAgentDisp", desc = "GPU agent dispatch debugging")
+gem5_debug_flag(name = "GPUCoalescer", desc = "GPU coalescer debugging")
+gem5_debug_flag(name = "GPUCommandProc", desc = "GPU command processor debugging")
+gem5_debug_flag(name = "GPUDisp", desc = "GPU dispatcher debugging")
+gem5_debug_flag(name = "GPUDriver", desc = "GPU driver debugging")
+gem5_debug_flag(name = "GPUExec", desc = "GPU execution debugging")
+gem5_debug_flag(name = "GPUFetch", desc = "GPU fetch debugging")
+gem5_debug_flag(name = "GPUInitAbi", desc = "GPU init ABI debugging")
+gem5_debug_flag(name = "GPUInst", desc = "GPU instruction debugging")
+gem5_debug_flag(name = "GPUKernelInfo", desc = "GPU kernel info debugging")
+gem5_debug_flag(name = "GPULDS", desc = "GPU LDS debugging")
+gem5_debug_flag(name = "GPUMem", desc = "GPU memory debugging")
+gem5_debug_flag(name = "GPUPort", desc = "GPU port debugging")
+gem5_debug_flag(name = "GPUPrefetch", desc = "GPU prefetch debugging")
+gem5_debug_flag(name = "GPUReg", desc = "GPU register debugging")
+gem5_debug_flag(name = "GPURename", desc = "GPU rename debugging")
+gem5_debug_flag(name = "GPURF", desc = "GPU register file debugging")
+gem5_debug_flag(name = "GPURFC", desc = "GPU register file cache debugging")
+gem5_debug_flag(name = "GPURfState", desc = "GPU register file state debugging")
+gem5_debug_flag(name = "GPUSched", desc = "GPU scheduler debugging")
+gem5_debug_flag(name = "GPUShader", desc = "GPU shader debugging")
+gem5_debug_flag(name = "GPUSRF", desc = "GPU scalar register file debugging")
+gem5_debug_flag(name = "GPUSync", desc = "GPU sync debugging")
+gem5_debug_flag(name = "GPUTLB", desc = "GPU TLB debugging")
+gem5_debug_flag(name = "GPUTrace", desc = "GPU trace debugging")
+gem5_debug_flag(name = "GPUVRF", desc = "GPU vector register file debugging")
+gem5_debug_flag(name = "GPUVRFSched", desc = "GPU VRF scheduler debugging")
+gem5_debug_flag(name = "GPUWgLatency", desc = "GPU work group latency debugging")
+gem5_debug_flag(name = "Predictor", desc = "GPU predictor debugging")
+gem5_debug_flag(name = "WavefrontStack", desc = "Wavefront stack debugging")
+
+gem5_compound_flag(
+    name = "GPUALL",
+    desc = "All GPU debug flags",
+    components = [
+        "GPUCoalescer", "GPUDisp", "GPUExec", "GPUFetch",
+        "GPUMem", "GPUPort", "GPUSched", "GPUSRF", "GPUSync",
+        "GPUTLB", "GPUVRF", "GPURFC", "GPUWgLatency",
+        "GPUKernelInfo", "GPUInitAbi", "GPULDS",
+    ],
+)
+
+cc_library(
+    name = "gpu_compute",
+    srcs = glob(["*.cc"], exclude = ["**/*.test.cc"]),
+    hdrs = glob(["*.hh"]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        "//src/arch/amdgpu:amdgpu",
+        ":GPUALL",
+        ":GPUCoalescer",
+        ":GPUDisp",
+        ":GPUExec",
+        ":GPUFetch",
+        ":GPUInitAbi",
+        ":GPUKernelInfo",
+        ":GPULDS",
+        ":GPUMem",
+        ":GPUPort",
+        ":GPURFC",
+        ":GPUSched",
+        ":GPUSRF",
+        ":GPUSync",
+        ":GPUTLB",
+        ":GPUVRF",
+        ":GPUWgLatency",
+    ],
+    alwayslink = True,
+)

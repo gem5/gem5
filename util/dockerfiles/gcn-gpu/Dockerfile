@@ -38,7 +38,7 @@ RUN apt -y update && \
     # General gem5 requirements when building/running in Ubuntu 20.04, also
     # some utilities needed to compile and obtain the right packages that
     # make up this Docker image.
-    build-essential git m4 scons zlib1g zlib1g-dev \
+    build-essential git m4 ninja-build zlib1g zlib1g-dev \
     libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
     python3-dev python-is-python3 doxygen libboost-all-dev \
     libhdf5-serial-dev python3-pydot libpng-dev libelf-dev pkg-config gdb \
@@ -48,6 +48,15 @@ RUN apt -y update && \
     # ROCm dependencies and requirements to get ROCm repo and build packages.
     # Upgrade to gcc 10: gem5 supports gcc 10+.
     gcc-10 g++-10 cpp-10
+
+# Install cmake >= 3.20 from the Kitware APT repository (system cmake on
+# Ubuntu 20.04 is 3.16.3, which is too old for our CMakeLists.txt).
+RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | \
+    gpg --dearmor - | tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null && \
+    echo 'deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ focal main' | \
+    tee /etc/apt/sources.list.d/kitware.list >/dev/null && \
+    apt-get update && apt-get install -y cmake && \
+    cmake --version
 
 # Update the default compiler to gcc 10
 RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100 && \

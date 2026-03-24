@@ -304,6 +304,7 @@ def define_constants(constants):
         constants.host_isa_tag_type: (
             constants.host_x86_64_tag,
             constants.host_arm_tag,
+            constants.host_gcn_gpu_tag,
         ),
     }
 
@@ -593,20 +594,20 @@ def define_common_args(config):
             help="UID of a specific test item to run.",
         ),
         Argument(
-            "--build-dir", action="store", help="Build directory for SCons"
+            "--build-dir", action="store", help="Build directory for gem5"
         ),
         Argument(
             "--base-dir",
             action="store",
             default=config._defaults.base_dir,
-            help="Directory to change to in order to exec scons.",
+            help="Directory to change to in order to exec the build.",
         ),
         Argument(
             "-j",
             "--threads",
             action="store",
             default=1,
-            help="Number of threads to run SCons with.",
+            help="Number of threads to run the build with.",
         ),
         Argument(
             "-t",
@@ -632,7 +633,7 @@ def define_common_args(config):
             "--skip-build",
             action="store_true",
             default=False,
-            help="Skip the building component of SCons targets.",
+            help="Skip the building component of build targets.",
         ),
         Argument(
             "--result-path",

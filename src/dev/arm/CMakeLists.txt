@@ -1,0 +1,92 @@
+# src/dev/arm/CMakeLists.txt
+# Converted from src/dev/arm/SConscript
+# Conditional on CONF_USE_ARM_ISA (guarded by parent CMakeLists.txt)
+
+gem5_add_source(a9scu.cc)
+gem5_add_source(amba_device.cc)
+gem5_add_source(amba_fake.cc)
+gem5_add_source(base_gic.cc)
+gem5_add_source(display.cc)
+gem5_add_source(flash_device.cc)
+gem5_add_source(generic_timer.cc)
+gem5_add_source(gic_v2.cc)
+gem5_add_source(gic_v2m.cc)
+gem5_add_source(gic_v3.cc)
+gem5_add_source(gic_v3_cpu_interface.cc)
+gem5_add_source(gic_v3_distributor.cc)
+gem5_add_source(gic_v3_redistributor.cc)
+gem5_add_source(gic_v3_its.cc)
+gem5_add_source(mpam.cc)
+gem5_add_source(pl011.cc)
+gem5_add_source(pl111.cc)
+gem5_add_source(hdlcd.cc)
+gem5_add_source(kmi.cc)
+gem5_add_source(smmu_v3.cc)
+gem5_add_source(smmu_v3_caches.cc)
+gem5_add_source(smmu_v3_cmdexec.cc)
+gem5_add_source(smmu_v3_defs.cc)
+gem5_add_source(smmu_v3_events.cc)
+gem5_add_source(smmu_v3_ports.cc)
+gem5_add_source(smmu_v3_proc.cc)
+gem5_add_source(smmu_v3_deviceifc.cc)
+gem5_add_source(smmu_v3_transl.cc)
+gem5_add_source(ssc.cc)
+gem5_add_source(timer_sp804.cc)
+gem5_add_source(watchdog_generic.cc)
+gem5_add_source(watchdog_sp805.cc)
+gem5_add_source(gpu_nomali.cc)
+gem5_add_source(pci_host.cc)
+gem5_add_source(rv_ctrl.cc)
+gem5_add_source(realview.cc)
+gem5_add_source(rtc_pl031.cc)
+gem5_add_source(timer_cpulocal.cc)
+gem5_add_source(vgic.cc)
+gem5_add_source(vio_mmio.cc)
+gem5_add_source(ufs_device.cc)
+gem5_add_source(energy_ctrl.cc)
+gem5_add_source(fvp_base_pwr_ctrl.cc)
+
+gem5_add_debug_flag(AMBA "AMBA debugging")
+gem5_add_debug_flag(FlashDevice "FlashDevice debugging")
+gem5_add_debug_flag(HDLcd "HDLcd debugging")
+gem5_add_debug_flag(PL111 "PL111 debugging")
+gem5_add_debug_flag(GICV2M "GICV2M debugging")
+gem5_add_debug_flag(Pl050 "Pl050 debugging")
+gem5_add_debug_flag(GIC "GIC debugging")
+gem5_add_debug_flag(ITS "ITS debugging")
+gem5_add_debug_flag(RVCTRL "RVCTRL debugging")
+gem5_add_debug_flag(SMMUv3 "SMMUv3 debugging")
+gem5_add_debug_flag(SMMUv3Hazard "SMMUv3Hazard debugging")
+gem5_add_debug_flag(Sp805 "Sp805 debugging")
+gem5_add_debug_flag(EnergyCtrl "EnergyCtrl debugging")
+gem5_add_debug_flag(FVPBasePwrCtrl "FVPBasePwrCtrl debugging")
+gem5_add_debug_flag(UFSHostDevice "UFSHostDevice debugging")
+gem5_add_debug_flag(VGIC "VGIC debugging")
+gem5_add_debug_flag(NoMali "NoMali debugging")
+
+gem5_add_simobject(AbstractNVM.py SIM_OBJECTS AbstractNVM)
+gem5_add_simobject(Display.py SIM_OBJECTS Display)
+gem5_add_simobject(Doorbell.py SIM_OBJECTS Doorbell)
+gem5_add_simobject(FlashDevice.py SIM_OBJECTS FlashDevice ENUMS DataDistribution)
+gem5_add_simobject(GenericTimer.py SIM_OBJECTS
+    SystemCounter GenericTimer GenericTimerFrame GenericTimerMem)
+gem5_add_simobject(Gic.py SIM_OBJECTS
+    BaseGic ArmInterruptPin ArmSPI ArmPPI ArmSigInterruptPin
+    GicV2 Gicv2mFrame Gicv2m VGic Gicv3Its Gicv3
+    ENUMS ArmInterruptType)
+gem5_add_simobject(Mpam.py SIM_OBJECTS MpamMSC)
+gem5_add_simobject(RealView.py SIM_OBJECTS
+    AmbaPioDevice AmbaIntDevice AmbaDmaDevice A9SCU
+    GenericArmPciHost RealViewCtrl RealViewOsc
+    RealViewTemperatureSensor AmbaFake Pl011 Sp804
+    Sp805 GenericWatchdog CpuLocalTimer PL031 Pl050
+    Pl111 HDLcd FVPBasePwrCtrl RealView SysSecCtrl
+    ENUMS ArmPciIntRouting)
+gem5_add_simobject(SMMUv3.py SIM_OBJECTS SMMUv3DeviceInterface SMMUv3)
+gem5_add_simobject(UFSHostDevice.py SIM_OBJECTS UFSHostDevice)
+gem5_add_simobject(EnergyCtrl.py SIM_OBJECTS EnergyCtrl)
+gem5_add_simobject(NoMali.py SIM_OBJECTS NoMaliGpu CustomNoMaliGpu
+    ENUMS NoMaliGpuType)
+gem5_add_simobject(VirtIOMMIO.py SIM_OBJECTS MmioVirtIO)
+
+add_subdirectory(css)

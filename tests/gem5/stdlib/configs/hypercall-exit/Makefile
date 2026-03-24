@@ -48,14 +48,15 @@ all: $(TARGET)
 %.o: %.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(TARGET): $(OBJ) $(GEM5_ROOT)/util/m5/build/x86/out
+$(TARGET): $(OBJ) $(GEM5_ROOT)/util/m5/build/x86/libm5.a
 
-	$(CC) $(CFLAGS) -o $@ $(OBJ) -lm5 -L $(GEM5_ROOT)/util/m5/build/x86/out
+	$(CC) $(CFLAGS) -o $@ $(OBJ) -lm5 -L $(GEM5_ROOT)/util/m5/build/x86
 
-$(GEM5_ROOT)/util/m5/build/x86/out:
-	cd $(GEM5_ROOT)/util/m5 && scons build/x86/out/m5 -j `nproc`
+$(GEM5_ROOT)/util/m5/build/x86/libm5.a:
+	cmake -S $(GEM5_ROOT)/util/m5 -B $(GEM5_ROOT)/util/m5/build/x86 -DM5_ABI=x86
+	cmake --build $(GEM5_ROOT)/util/m5/build/x86 --target m5_lib -j `nproc`
 
 clean:
-	- rm -r $(OBJ) $(TARGET)  $(GEM5_ROOT)/util/m5/build/x86/out
+	- rm -r $(OBJ) $(TARGET) $(GEM5_ROOT)/util/m5/build/x86
 
 .PHONY: all clean

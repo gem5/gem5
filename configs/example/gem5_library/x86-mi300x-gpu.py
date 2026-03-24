@@ -33,8 +33,9 @@ Script to run a full system GPU simulation.
 Usage:
 ------
 ```
-scons build/VEGA_X86/gem5.opt
-./build/VEGA_X86/gem5.opt
+cmake -B build/VEGA_X86 -DGEM5_BUILD_VARIANT=VEGA_X86
+ninja -C build/VEGA_X86
+./build/VEGA_X86/gem5
     configs/example/gem5_library/x86-mi300x-gpu.py
     --image <disk image>
     --kernel <kernel>
@@ -44,7 +45,7 @@ scons build/VEGA_X86/gem5.opt
 Example:
 --------
 ```
-./build/VEGA_X86/gem5.opt
+./build/VEGA_X86/gem5
     configs/example/gem5_library/x86-mix300x-gpu.py
     --image ./gem5-resources/src/x86-ubuntu-gpu-ml/disk-image/x86-ubuntu-gpu-ml
     --kernel ./gem5-resources/src/x86-ubuntu-gpu-ml/vmlinux-gpu-ml

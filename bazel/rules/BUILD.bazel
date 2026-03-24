@@ -1,0 +1,2 @@
+# Custom Starlark rules for gem5 code generation.
+# See defs.bzl for the public API.

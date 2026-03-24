@@ -1,0 +1,168 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 20,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "default",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build_cmake/${presetName}",
+            "cacheVariables": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            }
+        },
+        {
+            "name": "debug",
+            "displayName": "gem5 Debug (X86)",
+            "description": "Debug: -O0, full debug, tracing",
+            "inherits": "default",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "GEM5_DEBUG"
+            }
+        },
+        {
+            "name": "opt",
+            "displayName": "gem5 Opt (X86)",
+            "description": "Optimized build: -O3, debug info, tracing enabled",
+            "inherits": "default",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "GEM5_OPT"
+            }
+        },
+        {
+            "name": "fast",
+            "displayName": "gem5 Fast (X86)",
+            "description": "Fast build: -O3, no debug/tracing, NDEBUG",
+            "inherits": "default",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "GEM5_FAST"
+            }
+        },
+        {
+            "name": "debug-all",
+            "displayName": "gem5 Debug (ALL)",
+            "inherits": "debug",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "ALL"
+            }
+        },
+        {
+            "name": "opt-all",
+            "displayName": "gem5 Opt (ALL)",
+            "inherits": "opt",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "ALL"
+            }
+        },
+        {
+            "name": "fast-all",
+            "displayName": "gem5 Fast (ALL)",
+            "inherits": "fast",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "ALL"
+            }
+        },
+        {
+            "name": "debug-arm",
+            "displayName": "gem5 Debug (ARM)",
+            "inherits": "debug",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "ARM"
+            }
+        },
+        {
+            "name": "opt-arm",
+            "displayName": "gem5 Opt (ARM)",
+            "inherits": "opt",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "ARM"
+            }
+        },
+        {
+            "name": "fast-arm",
+            "displayName": "gem5 Fast (ARM)",
+            "inherits": "fast",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "ARM"
+            }
+        },
+        {
+            "name": "debug-riscv",
+            "displayName": "gem5 Debug (RISCV)",
+            "inherits": "debug",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "RISCV"
+            }
+        },
+        {
+            "name": "opt-riscv",
+            "displayName": "gem5 Opt (RISCV)",
+            "inherits": "opt",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "RISCV"
+            }
+        },
+        {
+            "name": "fast-riscv",
+            "displayName": "gem5 Fast (RISCV)",
+            "inherits": "fast",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "RISCV"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "debug",
+            "configurePreset": "debug"
+        },
+        {
+            "name": "opt",
+            "configurePreset": "opt"
+        },
+        {
+            "name": "fast",
+            "configurePreset": "fast"
+        },
+        {
+            "name": "debug-all",
+            "configurePreset": "debug-all"
+        },
+        {
+            "name": "opt-all",
+            "configurePreset": "opt-all"
+        },
+        {
+            "name": "fast-all",
+            "configurePreset": "fast-all"
+        },
+        {
+            "name": "debug-arm",
+            "configurePreset": "debug-arm"
+        },
+        {
+            "name": "opt-arm",
+            "configurePreset": "opt-arm"
+        },
+        {
+            "name": "fast-arm",
+            "configurePreset": "fast-arm"
+        },
+        {
+            "name": "debug-riscv",
+            "configurePreset": "debug-riscv"
+        },
+        {
+            "name": "opt-riscv",
+            "configurePreset": "opt-riscv"
+        },
+        {
+            "name": "fast-riscv",
+            "configurePreset": "fast-riscv"
+        }
+    ]
+}

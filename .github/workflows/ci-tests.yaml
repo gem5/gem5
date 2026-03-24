@@ -85,9 +85,17 @@ jobs:
         timeout-minutes: 60
         steps:
             - uses: actions/checkout@v4
+            - name: Ensure build tools are available
+              run: |
+                  command -v ninja || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends ninja-build; }
+                  ninja --version
             - name: CI Unittests (${{ matrix.type }})
               working-directory: ${{ github.workspace }}
-              run: scons --no-compress-debug build/ALL/unittests.${{ matrix.type }} -j $(nproc)
+              run: |
+                  BUILD_TYPE="GEM5_$(echo '${{ matrix.type }}' | tr '[:lower:]' '[:upper:]')"
+                  cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DGEM5_BUILD_VARIANT=ALL -DGEM5_NO_COMPRESS_DEBUG=ON -B build/ALL
+                  ninja -C build/ALL gem5_tests gem5 -j$(nproc)
+                  cd build/ALL && ctest --output-on-failure
             - run: echo "This job's status is ${{ job.status }}."
 
     testlib-quick-matrix:
@@ -99,6 +107,10 @@ jobs:
         needs: [pre-commit]
         steps:
             - uses: actions/checkout@v4
+            - name: Ensure build tools are available
+              run: |
+                  command -v ninja || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends ninja-build; }
+                  ninja --version
             - name: Get directories for testlib-quick
               working-directory: ${{ github.workspace }}/tests
               id: dir-matrix
@@ -134,8 +146,8 @@ jobs:
     clang-fast-compilation:
         # gem5 binaries built in `quick-gem5-builds` always use GCC.
         # Clang is more strict than GCC. This job checks that gem5 compiles
-        # with Clang. It compiles build/ALL/gem5.fast to maximize the change
-        # for compilation error to be exposed.
+        # with Clang. It compiles build/ALL/gem5 with GEM5_FAST to maximize the
+        # chance for compilation errors to be exposed.
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
         container: ghcr.io/gem5/clang-version-19:latest
@@ -143,9 +155,15 @@ jobs:
         timeout-minutes: 90
         steps:
             - uses: actions/checkout@v4
+            - name: Ensure build tools are available
+              run: |
+                  command -v ninja || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends ninja-build; }
+                  ninja --version
             - name: Clang Compilation
               working-directory: ${{ github.workspace }}
-              run: scons build/ALL/gem5.fast -j $(nproc)
+              run: |
+                  cmake -G Ninja -DCMAKE_BUILD_TYPE=GEM5_FAST -DGEM5_BUILD_VARIANT=ALL -B build/ALL
+                  ninja -C build/ALL -j$(nproc)
 
     macos-compilation:
         runs-on: macos-26
@@ -165,7 +183,8 @@ jobs:
               run: |
                   brew update
                   brew install \
-                    scons \
+                    cmake \
+                    ninja \
                     python \
                     pkg-config \
                     protobuf \
@@ -183,7 +202,10 @@ jobs:
 
             - name: Compile gem5.${{ matrix.type }}
               working-directory: ${{ github.workspace }}
-              run: scons build/ALL/gem5.${{ matrix.type }} -j $(sysctl -n hw.ncpu)
+              run: |
+                  BUILD_TYPE="GEM5_$(echo '${{ matrix.type }}' | tr '[:lower:]' '[:upper:]')"
+                  cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DGEM5_BUILD_VARIANT=ALL -B build/ALL
+                  ninja -C build/ALL -j$(sysctl -n hw.ncpu)
               timeout-minutes: 90
 
     testlib-quick-gem5-builds:
@@ -196,18 +218,34 @@ jobs:
                 build-target: ${{ fromJson(needs.testlib-quick-matrix.outputs.build-matrix) }}
         steps:
             - uses: actions/checkout@v4
+            - name: Ensure build tools are available
+              run: |
+                  command -v ninja || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends ninja-build; }
+                  ninja --version
 
-            - name: Cache build/ALL
+            - name: Cache build/ALL_opt
               uses: actions/cache/restore@v4
-              if: ${{ endsWith(matrix.build-target, 'build/ALL/gem5.opt') }}
+              if: ${{ contains(matrix.build-target, 'build/ALL_opt/') }}
               with:
-                  path: build/ALL
-                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
+                  path: build/ALL_opt
+                  key: testlib-build-all-opt-${{ needs.get-date.outputs.date }}
                   restore-keys: |
-                      testlib-build-all
+                      testlib-build-all-opt
 
             - name: Build gem5
-              run: scons --no-compress-debug ${{ matrix.build-target }} -j $(nproc)
+              run: |
+                  # Parse build target: build/<ISA>_<variant>/gem5
+                  # The directory name encodes both ISA and variant, split
+                  # on the last underscore.
+                  TARGET="${{ matrix.build-target }}"
+                  DIR_NAME=$(echo "$TARGET" | sed 's|.*/build/||;s|/.*||')
+                  # Split on last underscore: ISA_variant -> ISA + variant
+                  VARIANT="${DIR_NAME%_*}"
+                  TYPE="${DIR_NAME##*_}"
+                  BUILD_TYPE="GEM5_$(echo $TYPE | tr '[:lower:]' '[:upper:]')"
+                  BUILD_DIR="build/${DIR_NAME}"
+                  cmake -G Ninja -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DGEM5_BUILD_VARIANT=$VARIANT -DGEM5_NO_COMPRESS_DEBUG=ON -B $BUILD_DIR
+                  ninja -C $BUILD_DIR -j$(nproc)
 
             - name: Sanitize build-target for artifact name
               id: sanitize-build-target
@@ -215,11 +253,11 @@ jobs:
               run: echo "sanitized-build-target=$(echo '${{ matrix.build-target }}' | sed 's/[\\|\.]/-/g' | sed 's/[\/|__w|gem5|build]//g')" >> $GITHUB_OUTPUT
 
         # Upload the gem5 binary as an artifact.
-        # Note: the "achor.txt" file is a hack to make sure the paths are
-        # preserverd in the artifact. The upload-artifact action finds the
+        # Note: the "anchor.txt" file is a hack to make sure the paths are
+        # preserved in the artifact. The upload-artifact action finds the
         # closest common directory and uploads everything relative to that.
-        # E.g., if we upload "build/ARM/gem5.opt" and "build/RISCV/gem5.opt"
-        # Then upload-artifact will upload "ARM/gem5.opt" and "RISCV/gem5.opt",
+        # E.g., if we upload "build/ARM/gem5" and "build/RISCV/gem5"
+        # Then upload-artifact will upload "ARM/gem5" and "RISCV/gem5",
         # stripping the "build" directory. By adding the "anchor.txt" file, we
         # ensure the "build" directory is preserved.
             - run: echo "anchor" > anchor.txt
@@ -227,7 +265,7 @@ jobs:
               with:
                   name: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds-${{ steps.sanitize-build-target.outputs.sanitized-build-target }}
                   path: |
-                      build/*/gem5.*
+                      build/*/gem5
                       anchor.txt
 
     testlib-quick-execution:
@@ -242,20 +280,22 @@ jobs:
             matrix:
                 test-dir: ${{ fromJson(needs.testlib-quick-matrix.outputs.test-dirs-matrix) }}
         steps:
-        # Checkout the repository then download the gem5.opt artifact.
+        # Checkout the repository then download the gem5 build artifacts.
             - uses: actions/checkout@v4
+            - name: Ensure build tools are available
+              run: |
+                  command -v ninja || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends ninja-build; }
+                  ninja --version
             - uses: actions/download-artifact@v4
               name: Download gem5 artifacts
               with:
                   pattern: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds*
                   merge-multiple: true
 
-        # Check that the gem5.opt artifact exists and is executable.
-            - name: Chmod gem5.{opt,debug,fast} to be executable
+        # Check that the gem5 artifact exists and is executable.
+            - name: Chmod gem5 binaries to be executable
               run: |
-                  find . -name "gem5.opt" -exec chmod u+x {} \;
-                  find . -name "gem5.debug" -exec chmod u+x {} \;
-                  find . -name "gem5.fast" -exec chmod u+x {} \;
+                  find . -name "gem5" -exec chmod u+x {} \;
 
         # Run the testlib quick tests in the given directory.
             - name: Run quick ${{ matrix.test-dir }} tests
@@ -286,15 +326,21 @@ jobs:
         needs: [pre-commit, get-date]
         steps:
             - uses: actions/checkout@v4
+            - name: Install newer cmake and ninja
+              run: |
+                  python3 -m pip --version || { DEBIAN_FRONTEND=noninteractive apt-get update && apt-get install -y --no-install-recommends python3-pip; }
+                  python3 -m pip install cmake ninja
+                  cmake --version
+                  ninja --version
 
             # Obtain the cache if available.
-            - name: Cache build/VEGA_X86
+            - name: Cache build/VEGA_X86_opt
               uses: actions/cache/restore@v4
               with:
-                  path: build/VEGA_X86
-                  key: testlib-build-vega-${{ needs.get-date.outputs.date }}
+                  path: build/VEGA_X86_opt
+                  key: testlib-build-vega-opt-${{ needs.get-date.outputs.date }}
                   restore-keys: |
-                      testlib-build-vega
+                      testlib-build-vega-opt
 
             # Run the GPU tests.
             - name: Run Testlib GPU Tests

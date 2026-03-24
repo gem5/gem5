@@ -29,17 +29,26 @@ please see <http://www.gem5.org/documentation> and
 ## Building gem5
 
 To build gem5, you will need the following software: g++ or clang,
-Python (gem5 links in the Python interpreter), SCons, zlib, m4, and lastly
-protobuf if you want trace capture and playback support. Please see
-<http://www.gem5.org/documentation/general_docs/building> for more details
-concerning the minimum versions of these tools.
+Python (gem5 links in the Python interpreter), CMake (3.18+), Ninja,
+zlib, m4, and lastly protobuf if you want trace capture and playback
+support. Please see <http://www.gem5.org/documentation/general_docs/building>
+for more details concerning the minimum versions of these tools.
 
-Once you have all dependencies resolved, execute
-`scons build/ALL/gem5.opt` to build an optimized version of the gem5 binary
-(`gem5.opt`) containing all gem5 ISAs. If you only wish to compile gem5 to
-include a single ISA, you can replace `ALL` with the name of the ISA. Valid
-options include `ARM`, `NULL`, `MIPS`, `POWER`, `RISCV`, `SPARC`, and `X86`
-The complete list of options can be found in the build_opts directory.
+Once you have all dependencies resolved, execute the following to build an
+optimized version of the gem5 binary (`gem5`) containing all gem5 ISAs:
+
+```sh
+cmake -G Ninja --preset opt-all -B build/ALL && ninja -C build/ALL
+```
+
+If you only wish to compile gem5 for a single ISA, use the
+`-DGEM5_BUILD_VARIANT=<ISA>` option. Valid options include `ARM`, `NULL`,
+`MIPS`, `POWER`, `RISCV`, `SPARC`, and `X86`. The complete list of options
+can be found in the build_opts directory. For example, to build for X86:
+
+```sh
+cmake -G Ninja --preset opt -DGEM5_BUILD_VARIANT=X86 -B build/X86 && ninja -C build/X86
+```
 
 See https://www.gem5.org/documentation/general_docs/building for more
 information on building gem5.
@@ -50,10 +59,10 @@ The main source tree includes these subdirectories:
 
 * build_opts: pre-made default configurations for gem5
 * build_tools: tools used internally by gem5's build process.
+* cmake: CMake build system modules and utilities
 * configs: example simulation configuration scripts
 * ext: less-common external packages needed to build gem5
 * include: include files for use in other programs
-* site_scons: modular components of the build system
 * src: source code of the gem5 simulator. The C++ source, Python wrappers, and Python standard library are found in this directory.
 * system: source for some optional system software for simulated systems
 * tests: regression tests

@@ -43,8 +43,9 @@ Usage
 
 ```sh
 pip3 install -r requirements.txt
-scons build/ALL/gem5.opt -j$(nproc)
-./build/ALL/gem5.opt util/gem5-stubgen.py
+cmake -B build/ALL -DGEM5_BUILD_VARIANT=ALL
+ninja -C build/ALL -j$(nproc)
+./build/ALL/gem5 util/gem5-stubgen.py
 ```
 
 """

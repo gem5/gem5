@@ -226,8 +226,18 @@ resources:
 
 scons:
     desc: >-
-        Build system
+        SCons build system
     status: orphaned
+
+cmake:
+    desc: >-
+        CMake build system
+    status: maintained
+
+bazel:
+    desc: >-
+        Bazel build system
+    status: maintained
 
 sim:
     desc: >-

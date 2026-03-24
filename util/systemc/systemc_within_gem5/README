@@ -1,22 +1,24 @@
 This directory holds several examples which show how to build and run systemc
 code and models within gem5. To build a particular example, set the EXTRAS
-variable when running scons so that it gets picked up as part of gem5's build.
+variable when running cmake so that it gets picked up as part of gem5's build.
 For example:
 
-scons build/ARM/gem5.opt \
-          EXTRAS=util/systemc/systemc_within_gem5/systemc_sc_main
+cmake -B build/ARM -DGEM5_BUILD_VARIANT=ARM \
+          -DGEM5_EXTRAS=util/systemc/systemc_within_gem5/systemc_sc_main
+ninja -C build/ARM gem5
 
 Then when running gem5, you can use the config.py in the corresponding
 directory.
 
-build/ARM/gem5.opt util/systemc/systemc_within_gem5/systemc_sc_main/config.py \
+build/ARM/gem5 util/systemc/systemc_within_gem5/systemc_sc_main/config.py \
         --word Hello --word World
 
 
-To rebuild gem5 excluding the example code, be sure to clear the EXTRAS
-variable:
+To rebuild gem5 excluding the example code, simply reconfigure without the
+EXTRAS variable:
 
-scons build/ARM/gem5.opt EXTRAS=
+cmake -B build/ARM -DGEM5_BUILD_VARIANT=ARM
+ninja -C build/ARM gem5
 
 When building your own models, you don't have to use the EXTRAS mechanism and
 can instead put your source files alongside regular gem5 sources.

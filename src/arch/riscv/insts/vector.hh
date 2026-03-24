@@ -808,18 +808,19 @@ class VCpyVsMicroInst : public VectorArithMicroInst
 class VPinVdMicroInst : public VectorArithMicroInst
 {
     private:
-        RegId srcRegIdxArr[2];
-        RegId destRegIdxArr[1];
-        const bool isSlideupVx;
-        const bool isReduction;
+      RegId srcRegIdxArr[3];
+      RegId destRegIdxArr[1];
+      const bool isSlideupVx;
+      const bool isReduction;
 
-      public:
-        VPinVdMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
-                        uint32_t _numVdPins, uint32_t _elen, uint32_t _vlen,
-                        bool _isSlideupVx = false, bool _isReduction = false);
-        Fault execute(ExecContext *, trace::InstRecord *) const override;
-        std::string generateDisassembly(
-                Addr pc, const loader::SymbolTable *symtab) const override;
+    public:
+      VPinVdMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
+                      uint32_t _numVdPins, uint32_t _elen, uint32_t _vlen,
+                      bool _isSlideupVx = false, bool _isReduction = false);
+      Fault execute(ExecContext *, trace::InstRecord *) const override;
+      std::string
+      generateDisassembly(Addr pc,
+                          const loader::SymbolTable *symtab) const override;
 };
 
 } // namespace RiscvISA

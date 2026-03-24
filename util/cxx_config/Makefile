@@ -33,18 +33,33 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-ARCH ?= ARM
-VARIANT = opt
+# Path to the gem5 CMake build directory (built with -DGEM5_WITH_CXX_CONFIG=ON)
+BUILD_DIR ?= ../../build_cxx
 
-CXXFLAGS = -I../../build/$(ARCH) -L../../build/$(ARCH) -DTRACING_ON=1
+CXXFLAGS = -I$(BUILD_DIR) -I$(BUILD_DIR)/generated -I../../src -I../../ext -L$(BUILD_DIR) -DTRACING_ON=1
 CXXFLAGS += -std=c++17
-LIBS = -lgem5_$(VARIANT)
+LIBS = -lgem5_shared
 
 ## You may also need protobuf flags
 # CXXFLAGS += $(shell pkg-config --cflags --libs-only-L protobuf)
 # LIBS += $(shell pkg-config --libs protobuf)
 
-ALL = gem5.$(VARIANT).cxx
+# Preflight: verify gem5 build directory exists
+ifeq (,$(wildcard $(BUILD_DIR)))
+$(error gem5 build directory not found at $(BUILD_DIR). Build it first: cmake -B ../../build_cxx -S ../.. -DGEM5_BUILD_VARIANT=ARM -DGEM5_WITH_CXX_CONFIG=ON -DGEM5_WITHOUT_PYTHON=ON && ninja -C ../../build_cxx gem5_shared)
+endif
+
+# Preflight: verify generated headers exist
+ifeq (,$(wildcard $(BUILD_DIR)/generated/config/build_isa.hh))
+$(error Generated headers not found at $(BUILD_DIR)/generated/config/. Build gem5 first: cmake -B ../../build_cxx -S ../.. -DGEM5_BUILD_VARIANT=ARM -DGEM5_WITH_CXX_CONFIG=ON -DGEM5_WITHOUT_PYTHON=ON && ninja -C ../../build_cxx gem5_shared)
+endif
+
+# Preflight: verify gem5 shared library exists (.so on Linux, .dylib on macOS)
+ifeq (,$(wildcard $(BUILD_DIR)/libgem5_shared.*))
+$(error gem5 shared library not found at $(BUILD_DIR)/libgem5_shared.{so,dylib}. Build it first: cmake -B ../../build_cxx -S ../.. -DGEM5_BUILD_VARIANT=ARM -DGEM5_WITH_CXX_CONFIG=ON -DGEM5_WITHOUT_PYTHON=ON && ninja -C ../../build_cxx gem5_shared)
+endif
+
+ALL = gem5.cxx
 
 all: $(ALL)
 
@@ -54,7 +69,7 @@ all: $(ALL)
 stats.o: stats.cc stats.hh
 main.o: main.cc stats.hh
 
-gem5.$(VARIANT).cxx: main.o stats.o
+gem5.cxx: main.o stats.o
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS)
 
 clean:

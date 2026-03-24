@@ -1,0 +1,89 @@
+"""BUILD file for src/arch/riscv/ -- RISC-V ISA implementation.
+
+Conditionally included when //configs:riscv_isa_enabled is True.
+ISA parser: decoder_splits=1, exec_splits=1.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:defs.bzl", "gem5_blob", "gem5_debug_flag", "gem5_isa_desc")
+
+package(default_visibility = ["//visibility:public"])
+
+
+exports_files(glob(["**/*.py"]))
+
+# -- Header filegroup for gem5_hdrs aggregation --
+filegroup(
+    name = "hdrs_files",
+    srcs = glob([
+        "*.hh",
+        "bare_metal/*.hh",
+        "insts/*.hh",
+        "linux/*.hh",
+        "regs/*.hh",
+    ]),
+)
+
+# ISA parser: generate decoder/executor C++ from .isa description
+gem5_isa_desc(
+    name = "riscv_isa_desc",
+    desc = "isa/main.isa",
+    isa_sources = glob(["isa/**/*.isa"]),
+    deps = ["//src:gem5_hdrs"],
+)
+
+gem5_debug_flag(name = "RiscvMisc", desc = "RISC-V miscellaneous debugging")
+gem5_debug_flag(name = "PMP", desc = "PMP debugging")
+
+gem5_blob(name = "gdb_xml_riscv_32bit_target", src = "gdb-xml/riscv-32bit.xml", include_prefix = "arch/riscv/gdb-xml")
+gem5_blob(name = "gdb_xml_riscv_32bit_cpu", src = "gdb-xml/riscv-32bit-cpu.xml", include_prefix = "arch/riscv/gdb-xml")
+gem5_blob(name = "gdb_xml_riscv_32bit_fpu", src = "gdb-xml/riscv-32bit-fpu.xml", include_prefix = "arch/riscv/gdb-xml")
+gem5_blob(name = "gdb_xml_riscv_32bit_csr", src = "gdb-xml/riscv-32bit-csr.xml", include_prefix = "arch/riscv/gdb-xml")
+gem5_blob(name = "gdb_xml_riscv_64bit_target", src = "gdb-xml/riscv-64bit.xml", include_prefix = "arch/riscv/gdb-xml")
+gem5_blob(name = "gdb_xml_riscv_64bit_cpu", src = "gdb-xml/riscv-64bit-cpu.xml", include_prefix = "arch/riscv/gdb-xml")
+gem5_blob(name = "gdb_xml_riscv_64bit_fpu", src = "gdb-xml/riscv-64bit-fpu.xml", include_prefix = "arch/riscv/gdb-xml")
+gem5_blob(name = "gdb_xml_riscv_64bit_csr", src = "gdb-xml/riscv-64bit-csr.xml", include_prefix = "arch/riscv/gdb-xml")
+
+cc_library(
+    name = "riscv",
+    srcs = glob(
+        [
+            "*.cc",
+            "bare_metal/*.cc",
+            "insts/*.cc",
+            "linux/*.cc",
+        ],
+        exclude = [
+            "**/*.test.cc",
+            # idle_event.cc defines gem5::IdleStartEvent::process() in bare
+            # namespace -- same symbol as mips/idle_event.cc. CMake explicitly
+            # excludes this file from RISC-V source list.
+            "idle_event.cc",
+        ],
+    ),
+    hdrs = glob([
+        "*.hh",
+        "bare_metal/*.hh",
+        "insts/*.hh",
+        "linux/*.hh",
+    ]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        "//src/arch:Decoder",
+        "//src/arch:Faults",
+        "//src/arch/generic:generic",
+        ":riscv_isa_desc",
+        ":PMP",
+        ":RiscvMisc",
+        ":gdb_xml_riscv_32bit_target",
+        ":gdb_xml_riscv_32bit_cpu",
+        ":gdb_xml_riscv_32bit_fpu",
+        ":gdb_xml_riscv_32bit_csr",
+        ":gdb_xml_riscv_64bit_target",
+        ":gdb_xml_riscv_64bit_cpu",
+        ":gdb_xml_riscv_64bit_fpu",
+        ":gdb_xml_riscv_64bit_csr",
+    ],
+    alwayslink = True,
+)

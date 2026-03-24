@@ -1,0 +1,24 @@
+"""BUILD file for src/test_objects/ -- gem5 test SimObjects.
+
+Conditionally included when //configs:test_objects_enabled is True.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files(glob(["*.py"]))
+
+filegroup(
+    name = "hdrs_files",
+    srcs = glob(["*.hh"]),
+)
+
+cc_library(
+    name = "test_objects",
+    srcs = glob(["*.cc"]),
+    hdrs = glob(["*.hh"]),
+    includes = ["."],
+    deps = ["//src:gem5_hdrs"],
+    alwayslink = True,
+)

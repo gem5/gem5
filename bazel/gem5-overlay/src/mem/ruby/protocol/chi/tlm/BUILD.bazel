@@ -1,0 +1,101 @@
+"""BUILD file for src/mem/ruby/protocol/chi/tlm/ -- CHI TLM bridge.
+
+Provides the TLM integration layer that bridges gem5's CHI protocol
+implementation to the ARM TLM library (libarmtlmchi). Requires the
+external library to be available via GEM5_TLM_PATH environment variable.
+
+Gated by the //configs:tlm_enabled config_setting. When TLM is not
+enabled, this target is marked incompatible.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load(
+    "//rules:defs.bzl",
+    "gem5_debug_flag",
+    "gem5_embedded_python_library",
+)
+
+package(default_visibility = ["//visibility:public"])
+
+_TLM_CORE_SRCS = [
+    "controller.cc",
+    "generator.cc",
+    "utils.cc",
+]
+
+_TLM_PYTHON_SRCS = [
+    "tlm_chi.cc",
+    "tlm_chi_gen.cc",
+]
+
+_TLM_HDRS = [
+    "controller.hh",
+    "generator.hh",
+    "port.hh",
+    "utils.hh",
+]
+
+cc_library(
+    name = "chi_tlm",
+    srcs = _TLM_CORE_SRCS + select({
+        "//configs:python_enabled": _TLM_PYTHON_SRCS,
+        "//conditions:default": [],
+    }),
+    hdrs = _TLM_HDRS,
+    deps = [
+        "//src:gem5_hdrs",
+        "//src/mem/ruby:ruby",
+        "//ext/tlm:armtlmchi",
+    ],
+    target_compatible_with = select({
+        "//configs:tlm_enabled": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
+    alwayslink = True,
+)
+
+# SimObject Python definitions (registered as m5.objects.* for discovery)
+gem5_embedded_python_library(
+    name = "chi_tlm_simobjects",
+    modules = {
+        "TlmController.py": "m5.objects.TlmController",
+        "TlmGenerator.py": "m5.objects.TlmGenerator",
+    },
+    deps = [
+        "//src/python:embedded_hdr",
+        "//src:_gem5_base_hdrs",
+    ],
+    target_compatible_with = select({
+        "//configs:tlm_enabled": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
+)
+
+# Python package: m5.tlm_chi (port definitions and utilities)
+# Gated on both TLM and Python (matching CMake's conditional inclusion).
+gem5_embedded_python_library(
+    name = "chi_tlm_pysources",
+    modules = {
+        "python/__init__.py": "m5.tlm_chi",
+        "python/port.py": "m5.tlm_chi.port",
+        "python/utils.py": "m5.tlm_chi.utils",
+    },
+    deps = [
+        "//src/python:embedded_hdr",
+        "//src:_gem5_base_hdrs",
+    ],
+    target_compatible_with = select({
+        "//configs:tlm_python_enabled": [],
+        "//conditions:default": ["@platforms//:incompatible"],
+    }),
+)
+
+gem5_debug_flag(
+    name = "TLM",
+    desc = "TLM debugging",
+)
+
+gem5_debug_flag(
+    name = "TLMPort",
+    desc = "TLMPort debugging",
+)

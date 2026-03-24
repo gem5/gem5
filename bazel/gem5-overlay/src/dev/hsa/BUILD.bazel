@@ -1,0 +1,33 @@
+"""BUILD file for src/dev/hsa/ -- HSA device models.
+
+Conditionally included when //configs:gpu_enabled is True.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:defs.bzl", "gem5_debug_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+
+exports_files(glob(["**/*.py"]))
+
+# -- Header filegroup for dev hdrs_files aggregation --
+filegroup(
+    name = "hdrs_files",
+    srcs = glob(["*.hh", "*.h"]),
+)
+
+gem5_debug_flag(name = "HSAPacketProcessor", desc = "HSA packet processor debugging")
+
+cc_library(
+    name = "dev_hsa",
+    srcs = glob(["*.cc"]),
+    hdrs = glob(["*.hh"]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        "//src/dev:dev",
+        ":HSAPacketProcessor",
+    ],
+    alwayslink = True,
+)

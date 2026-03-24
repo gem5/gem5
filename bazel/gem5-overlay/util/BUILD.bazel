@@ -1,0 +1,17 @@
+"""BUILD file for util/ -- gem5 utility scripts.
+
+Exports scripts needed by build-time code generation.
+"""
+
+package(default_visibility = ["//visibility:public"])
+
+# Checkpoint upgrader script and version tag data files
+filegroup(
+    name = "cpt_upgrader",
+    srcs = ["cpt_upgrader.py"],
+)
+
+filegroup(
+    name = "cpt_upgraders",
+    srcs = glob(["cpt_upgraders/*.py"]),
+)

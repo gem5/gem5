@@ -1,0 +1,60 @@
+"""BUILD file for src/proto/ -- gem5 protobuf definitions.
+
+Provides protobuf message wrappers (packet, inst, inst_dep_record)
+and the trace reader/writer infrastructure.
+Conditionally included when //configs:protobuf_enabled is True.
+
+We use genrule + protoc instead of cc_proto_library because gem5 source
+files include generated headers as "proto/packet.pb.h" (relative to src/).
+cc_proto_library places headers in a different include tree.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "hdrs_files",
+    srcs = glob(["*.hh"]),
+)
+
+# Generate .pb.h and .pb.cc from .proto files using protoc.
+# Output is placed under proto/ so that #include "proto/packet.pb.h" works.
+[genrule(
+    name = proto_name + "_pb_gen",
+    srcs = [proto_name + ".proto"],
+    outs = [proto_name + ".pb.cc", proto_name + ".pb.h"],
+    cmd = "$(location @protobuf//:protoc) --cpp_out=$(RULEDIR) -I$$(dirname $(location " + proto_name + ".proto)) $(location " + proto_name + ".proto)",
+    tools = ["@protobuf//:protoc"],
+) for proto_name in ["packet", "inst", "inst_dep_record"]]
+
+cc_library(
+    name = "proto_gen",
+    srcs = [
+        "packet.pb.cc",
+        "inst.pb.cc",
+        "inst_dep_record.pb.cc",
+    ],
+    hdrs = [
+        "packet.pb.h",
+        "inst.pb.h",
+        "inst_dep_record.pb.h",
+    ],
+    include_prefix = "proto",
+    strip_include_prefix = "",
+    deps = [
+        "@protobuf//:protobuf",
+    ],
+)
+
+cc_library(
+    name = "proto",
+    srcs = glob(["*.cc"], exclude = ["**/*.test.cc"]),
+    hdrs = glob(["*.hh"]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        ":proto_gen",
+    ],
+    alwayslink = True,
+)

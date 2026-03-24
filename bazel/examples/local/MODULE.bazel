@@ -1,0 +1,32 @@
+"""Example: Using gem5 as a local Bazel dependency.
+
+This MODULE.bazel shows how a downstream project can depend on gem5
+when both repositories are available on the local filesystem.
+Adjust the 'path' in local_path_override() to point to your gem5 checkout's
+bazel/ subdirectory (which contains MODULE.bazel).
+
+Usage:
+    cd /path/to/your/project
+    bazel build @gem5_sources//:gem5 --config=opt --config=x86
+"""
+
+module(
+    name = "my_gem5_project",
+    version = "0.0.0",
+)
+
+bazel_dep(name = "gem5", version = "0.0.0")
+
+# Point to the bazel/ subdirectory of your gem5 checkout.
+# The gem5 module extension auto-detects the source root as the
+# parent directory of bazel/.
+local_path_override(
+    module_name = "gem5",
+    path = "third_party/gem5/bazel",  # adjust to your gem5/bazel location
+)
+
+# Access gem5 repositories via the module extension.
+# The extension creates @gem5_sources (overlay repo) and @gem5-raw (source tree).
+gem5_ext = use_extension("@gem5//:extensions.bzl", "gem5_repos_extension")
+gem5_ext.configure(name = "gem5_sources")
+use_repo(gem5_ext, "gem5_sources", "gem5-raw")

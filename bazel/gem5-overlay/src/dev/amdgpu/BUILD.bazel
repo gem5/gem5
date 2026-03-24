@@ -1,0 +1,44 @@
+"""BUILD file for src/dev/amdgpu/ -- AMD GPU device models.
+
+Conditionally included when //configs:gpu_enabled is True.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:defs.bzl", "gem5_debug_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+
+exports_files(glob(["**/*.py"]))
+
+# -- Header filegroup for dev hdrs_files aggregation --
+filegroup(
+    name = "hdrs_files",
+    srcs = glob(["*.hh"]),
+)
+
+gem5_debug_flag(name = "AMDGPUDevice", desc = "AMD GPU device debugging")
+gem5_debug_flag(name = "AMDGPUMem", desc = "AMD GPU memory debugging")
+gem5_debug_flag(name = "AMDGPUSystemHub", desc = "AMD GPU system hub debugging")
+gem5_debug_flag(name = "PM4PacketProcessor", desc = "PM4 packet processor debugging")
+gem5_debug_flag(name = "SDMAEngine", desc = "SDMA engine debugging")
+gem5_debug_flag(name = "SDMAData", desc = "SDMA data debugging")
+
+cc_library(
+    name = "dev_amdgpu",
+    srcs = glob(["*.cc"]),
+    hdrs = glob(["*.hh"]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        "//src/dev:dev",
+        "//src/dev/hsa:dev_hsa",
+        ":AMDGPUDevice",
+        ":AMDGPUMem",
+        ":AMDGPUSystemHub",
+        ":PM4PacketProcessor",
+        ":SDMAData",
+        ":SDMAEngine",
+    ],
+    alwayslink = True,
+)

@@ -1,0 +1,27 @@
+"""BUILD file for src/learning_gem5/part3/ -- MSI protocol (learning tutorial).
+
+Provides the MSI SLICC protocol used by the learning_gem5 part3 tutorial.
+"""
+
+load("//rules:defs.bzl", "gem5_slicc_protocol")
+
+package(default_visibility = ["//visibility:public"])
+
+# MSI protocol SLICC compilation.
+# MSI is a simple learning protocol with its own .slicc/.sm files in this
+# directory, but it still uses the shared RubySlicc_interfaces from
+# src/mem/ruby/protocol/.
+gem5_slicc_protocol(
+    name = "MSI",
+    src = "MSI.slicc",
+    sm_sources = glob(["*.sm"]) + [
+        "//src/mem/ruby/protocol:RubySlicc_interfaces.slicc",
+    ] + ["//src/mem/ruby/protocol:" + f for f in [
+        "RubySlicc_ComponentMapping.sm",
+        "RubySlicc_Defines.sm",
+        "RubySlicc_Exports.sm",
+        "RubySlicc_MemControl.sm",
+        "RubySlicc_Types.sm",
+        "RubySlicc_Util.sm",
+    ]],
+)

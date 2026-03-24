@@ -1,0 +1,384 @@
+"""BUILD file for src/cpu/ -- gem5 CPU subsystem.
+
+Provides CPU models: base CPU infrastructure, branch predictors, checker,
+and testers. ISA-dependent CPU models (o3, minor, simple) are conditionally
+included. KVM and trace CPU models are feature-gated.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:defs.bzl", "gem5_debug_flag", "gem5_compound_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+
+exports_files(glob(["**/*.py"]))
+
+# -- Header filegroup for gem5_hdrs aggregation --
+filegroup(
+    name = "hdrs_files",
+    srcs = glob([
+        "*.hh",
+        "checker/*.hh",
+        "kvm/*.hh",
+        "minor/*.hh",
+        "o3/*.hh",
+        "o3/probe/*.hh",
+        "pred/*.hh",
+        "probes/*.hh",
+        "simple/*.hh",
+        "simple/probes/*.hh",
+        "testers/**/*.hh",
+        "trace/*.hh",
+    ]),
+)
+
+# -- Debug flags (base CPU) --
+gem5_debug_flag(name = "Activity", desc = "Pipeline activity")
+gem5_debug_flag(name = "Commit", desc = "Commit stage debugging")
+gem5_debug_flag(name = "Context", desc = "Context switching debugging")
+gem5_debug_flag(name = "Decode", desc = "Decode stage debugging")
+gem5_debug_flag(name = "DynInst", desc = "Dynamic instruction debugging")
+gem5_debug_flag(name = "ExecEnable", desc = "Enable execution tracing")
+gem5_debug_flag(name = "ExecCPSeq", desc = "Committed PC sequence numbers")
+gem5_debug_flag(name = "ExecEffAddr", desc = "Execution effective address")
+gem5_debug_flag(name = "ExecFaulting", desc = "Faulting execution debugging")
+gem5_debug_flag(name = "ExecFetchSeq", desc = "Fetch sequence numbers")
+gem5_debug_flag(name = "ExecOpClass", desc = "Op class debugging")
+gem5_debug_flag(name = "ExecRegDelta", desc = "Register delta debugging")
+gem5_debug_flag(name = "ExecResult", desc = "Execution result debugging")
+gem5_debug_flag(name = "ExecSymbol", desc = "Execution symbol debugging")
+gem5_debug_flag(name = "ExecThread", desc = "Execution thread debugging")
+gem5_debug_flag(name = "ExecMicro", desc = "Micro execution debugging")
+gem5_debug_flag(name = "ExecMacro", desc = "Macro execution debugging")
+gem5_debug_flag(name = "ExecUser", desc = "User-level execution debugging")
+gem5_debug_flag(name = "ExecKernel", desc = "Kernel execution debugging")
+gem5_debug_flag(name = "ExecAsid", desc = "ASID execution debugging")
+gem5_debug_flag(name = "ExecFlags", desc = "Execution flags debugging")
+gem5_debug_flag(name = "Fetch", desc = "Fetch stage debugging")
+gem5_debug_flag(name = "HtmCpu", desc = "HTM CPU debugging")
+gem5_debug_flag(name = "InvalidReg", desc = "Invalid register debugging")
+gem5_debug_flag(name = "O3PipeView", desc = "O3 pipeline view debugging")
+gem5_debug_flag(name = "PCEvent", desc = "PC event debugging")
+gem5_debug_flag(name = "Quiesce", desc = "Quiesce debugging")
+gem5_debug_flag(name = "Mwait", desc = "Mwait debugging")
+gem5_debug_flag(name = "Checker", desc = "Checker CPU debugging")
+
+gem5_compound_flag(
+    name = "ExecAll",
+    desc = "All execution tracing",
+    components = [
+        "ExecEnable", "ExecCPSeq", "ExecEffAddr", "ExecFaulting",
+        "ExecFetchSeq", "ExecOpClass", "ExecRegDelta", "ExecResult",
+        "ExecSymbol", "ExecThread", "ExecMicro", "ExecMacro",
+        "ExecUser", "ExecKernel", "ExecAsid", "ExecFlags",
+    ],
+)
+
+gem5_compound_flag(
+    name = "Exec",
+    desc = "Default execution tracing (no micro/kernel)",
+    components = [
+        "ExecEnable", "ExecCPSeq", "ExecEffAddr", "ExecFaulting",
+        "ExecFetchSeq", "ExecOpClass", "ExecResult", "ExecSymbol",
+        "ExecThread",
+    ],
+)
+
+gem5_compound_flag(
+    name = "ExecNoTicks",
+    desc = "Execution tracing without ticks",
+    components = [
+        "ExecEnable", "ExecCPSeq", "ExecEffAddr", "ExecFaulting",
+        "ExecFetchSeq", "ExecOpClass", "ExecResult", "ExecSymbol",
+        "ExecThread",
+    ],
+)
+
+# -- Branch predictor debug flags --
+gem5_debug_flag(name = "Indirect", desc = "Indirect branch predictor debugging")
+gem5_debug_flag(name = "BTB", desc = "Branch target buffer debugging")
+gem5_debug_flag(name = "RAS", desc = "Return address stack debugging")
+gem5_debug_flag(name = "FreeList", desc = "Free list debugging")
+gem5_debug_flag(name = "Branch", desc = "Branch debugging")
+gem5_debug_flag(name = "Tage", desc = "TAGE predictor debugging")
+gem5_debug_flag(name = "LTage", desc = "LTAGE predictor debugging")
+gem5_debug_flag(name = "TageSCL", desc = "TAGE-SC-L predictor debugging")
+
+# -- O3 debug flags --
+gem5_debug_flag(name = "BAC", desc = "BAC debugging")
+gem5_debug_flag(name = "CommitRate", desc = "Commit rate debugging")
+gem5_debug_flag(name = "FTQ", desc = "FTQ debugging")
+gem5_debug_flag(name = "IEW", desc = "Issue/execute/writeback debugging")
+gem5_debug_flag(name = "IQ", desc = "Instruction queue debugging")
+gem5_debug_flag(name = "LSQ", desc = "Load store queue debugging")
+gem5_debug_flag(name = "LSQUnit", desc = "LSQ unit debugging")
+gem5_debug_flag(name = "MemDepUnit", desc = "Memory dependency unit debugging")
+gem5_debug_flag(name = "O3CPU", desc = "O3 CPU debugging")
+gem5_debug_flag(name = "ROB", desc = "Reorder buffer debugging")
+gem5_debug_flag(name = "Rename", desc = "Rename stage debugging")
+gem5_debug_flag(name = "Scoreboard", desc = "Scoreboard debugging")
+gem5_debug_flag(name = "StoreSet", desc = "Store set debugging")
+gem5_debug_flag(name = "Writeback", desc = "Writeback debugging")
+
+gem5_compound_flag(
+    name = "O3CPUAll",
+    desc = "All O3 CPU debugging",
+    components = [
+        "BAC", "FTQ", "Fetch", "Decode", "Rename", "IEW", "Commit",
+        "IQ", "ROB", "FreeList", "LSQ", "LSQUnit", "StoreSet",
+        "MemDepUnit", "DynInst", "O3CPU", "Activity", "Scoreboard",
+        "Writeback",
+    ],
+)
+
+# -- Minor CPU debug flags --
+gem5_debug_flag(name = "MinorCPU", desc = "Minor CPU debugging")
+gem5_debug_flag(name = "MinorExecute", desc = "Minor execute debugging")
+gem5_debug_flag(name = "MinorInterrupt", desc = "Minor interrupt debugging")
+gem5_debug_flag(name = "MinorMem", desc = "Minor memory debugging")
+gem5_debug_flag(name = "MinorScoreboard", desc = "Minor scoreboard debugging")
+gem5_debug_flag(name = "MinorTrace", desc = "Minor trace debugging")
+gem5_debug_flag(name = "MinorTiming", desc = "Minor timing debugging")
+
+gem5_compound_flag(
+    name = "Minor",
+    desc = "All Minor CPU debugging",
+    components = ["MinorCPU", "MinorExecute", "MinorInterrupt", "MinorMem", "MinorScoreboard"],
+)
+
+# -- Simple CPU debug flags --
+gem5_debug_flag(name = "SimpleCPU", desc = "Simple CPU debugging")
+
+# -- O3 probe debug flags --
+gem5_debug_flag(name = "SimpleTrace", desc = "Simple trace debugging")
+
+# -- Probe debug flags --
+gem5_debug_flag(name = "PcCountTracker", desc = "PC count tracker debugging")
+gem5_debug_flag(name = "InstTracker", desc = "Instruction tracker debugging")
+
+# -- KVM debug flags --
+gem5_debug_flag(name = "Kvm", desc = "KVM debugging")
+gem5_debug_flag(name = "KvmContext", desc = "KVM context debugging")
+gem5_debug_flag(name = "KvmIO", desc = "KVM I/O debugging")
+gem5_debug_flag(name = "KvmInt", desc = "KVM interrupt debugging")
+gem5_debug_flag(name = "KvmRun", desc = "KVM run debugging")
+gem5_debug_flag(name = "KvmTimer", desc = "KVM timer debugging")
+
+gem5_compound_flag(
+    name = "KvmAll",
+    desc = "All KVM debugging",
+    components = ["Kvm", "KvmContext", "KvmRun", "KvmIO", "KvmInt", "KvmTimer"],
+)
+
+# -- Tester debug flags --
+gem5_debug_flag(name = "MemTest", desc = "Memory test debugging")
+gem5_debug_flag(name = "SpatterGen", desc = "Spatter generator debugging")
+gem5_debug_flag(name = "SpatterKernel", desc = "Spatter kernel debugging")
+gem5_debug_flag(name = "TrafficGen", desc = "Traffic generator debugging")
+gem5_debug_flag(name = "GUPSGen", desc = "GUPS generator debugging")
+gem5_debug_flag(name = "DirectedTest", desc = "Directed test debugging")
+gem5_debug_flag(name = "GarnetSyntheticTraffic", desc = "Garnet synthetic traffic debugging")
+gem5_debug_flag(name = "RubyTest", desc = "Ruby test debugging")
+gem5_debug_flag(name = "LooppointAnalysis", desc = "Looppoint analysis debugging")
+
+# -- Trace CPU debug flags --
+gem5_debug_flag(name = "TraceCPUData", desc = "Trace CPU data debugging")
+gem5_debug_flag(name = "TraceCPUInst", desc = "Trace CPU instruction debugging")
+
+# -- O3 probe debug flags --
+gem5_debug_flag(name = "ElasticTrace", desc = "ElasticTrace debugging")
+
+# -- GPU tester debug flags --
+gem5_debug_flag(name = "ProtocolTest", desc = "Protocol test debugging")
+gem5_debug_flag(name = "EpisodeCount", desc = "Episode count debugging")
+
+# -- Main CPU library (base infrastructure, always built) --
+cc_library(
+    name = "cpu",
+    srcs = glob(
+        [
+            "*.cc",
+            "pred/*.cc",
+            "probes/*.cc",
+            "checker/*.cc",
+            "testers/memtest/*.cc",
+            "testers/spatter_gen/*.cc",
+            "testers/traffic_gen/*.cc",
+        ],
+        exclude = [
+            "**/*.test.cc",
+            # Conditional base files
+            "capstone.cc",
+            "inst_pb_trace.cc",
+            # Conditional traffic gen files
+            "testers/traffic_gen/pygen.cc",
+            "testers/traffic_gen/trace_gen.cc",
+            "testers/traffic_gen/traffic_gen.cc",
+        ],
+    ) + select({
+        "//configs:capstone_enabled": ["capstone.cc"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:protobuf_enabled": [
+            "inst_pb_trace.cc",
+            "testers/traffic_gen/trace_gen.cc",
+            "testers/traffic_gen/traffic_gen.cc",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:python_enabled": ["testers/traffic_gen/pygen.cc"],
+        "//conditions:default": [],
+    }) + glob(
+        # ISA-dependent CPU models (included when any ISA is enabled)
+        [
+            "minor/*.cc",
+            "o3/*.cc",
+            "o3/probe/simple_trace.cc",
+            "simple/*.cc",
+            "simple/probes/*.cc",
+        ],
+        exclude = [
+            "o3/probe/elastic_trace.cc",
+        ],
+    ) + select({
+        "//configs:protobuf_enabled": ["o3/probe/elastic_trace.cc"],
+        "//conditions:default": [],
+    }) + select({
+        # KVM CPU model
+        "//configs:kvm_enabled": glob(["kvm/*.cc"]),
+        "//conditions:default": [],
+    }) + select({
+        # Trace CPU model
+        "//configs:protobuf_enabled": ["trace/trace_cpu.cc"],
+        "//conditions:default": [],
+    }) + select({
+        # Ruby-dependent testers
+        "//configs:ruby_enabled": glob([
+            "testers/directedtest/*.cc",
+            "testers/garnet_synthetic_traffic/*.cc",
+            "testers/rubytest/*.cc",
+        ]),
+        "//conditions:default": [],
+    }) + select({
+        # GPU + Ruby testers
+        "//configs:gpu_enabled": glob(["testers/gpu_ruby_test/*.cc"]),
+        "//conditions:default": [],
+    }),
+    hdrs = glob([
+        "**/*.hh",
+    ]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        "//src/base:base",
+        "//src/sim:sim",
+        # All debug flags (from all CPU models)
+        ":Activity",
+        ":BAC",
+        ":BTB",
+        ":Branch",
+        ":Checker",
+        ":Commit",
+        ":CommitRate",
+        ":Context",
+        ":Decode",
+        ":DirectedTest",
+        ":DynInst",
+        ":EpisodeCount",
+        ":Exec",
+        ":ExecAll",
+        ":ExecAsid",
+        ":ExecCPSeq",
+        ":ExecEffAddr",
+        ":ExecEnable",
+        ":ExecFaulting",
+        ":ExecFetchSeq",
+        ":ExecFlags",
+        ":ExecKernel",
+        ":ExecMacro",
+        ":ExecMicro",
+        ":ExecNoTicks",
+        ":ExecOpClass",
+        ":ExecRegDelta",
+        ":ExecResult",
+        ":ExecSymbol",
+        ":ExecThread",
+        ":ExecUser",
+        ":FTQ",
+        ":Fetch",
+        ":FreeList",
+        ":GUPSGen",
+        ":GarnetSyntheticTraffic",
+        ":HtmCpu",
+        ":IEW",
+        ":IQ",
+        ":Indirect",
+        ":InstTracker",
+        ":InvalidReg",
+        ":Kvm",
+        ":KvmAll",
+        ":KvmContext",
+        ":KvmIO",
+        ":KvmInt",
+        ":KvmRun",
+        ":KvmTimer",
+        ":LSQ",
+        ":LSQUnit",
+        ":LTage",
+        ":LooppointAnalysis",
+        ":MemDepUnit",
+        ":MemTest",
+        ":Minor",
+        ":MinorCPU",
+        ":MinorExecute",
+        ":MinorInterrupt",
+        ":MinorMem",
+        ":MinorScoreboard",
+        ":MinorTrace",
+        ":MinorTiming",
+        ":Mwait",
+        ":O3CPU",
+        ":O3CPUAll",
+        ":O3PipeView",
+        ":PCEvent",
+        ":PcCountTracker",
+        ":ProtocolTest",
+        ":Quiesce",
+        ":RAS",
+        ":ROB",
+        ":Rename",
+        ":RubyTest",
+        ":Scoreboard",
+        ":SimpleCPU",
+        ":SimpleTrace",
+        ":SpatterGen",
+        ":SpatterKernel",
+        ":StoreSet",
+        ":Tage",
+        ":TageSCL",
+        ":TraceCPUData",
+        ":TraceCPUInst",
+        ":TrafficGen",
+        ":Writeback",
+    ] + select({
+        "//configs:protobuf_enabled": ["//src/proto:proto_gen"],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:python_enabled": [
+            "@system_python//:python",
+            "@gem5_ext_pybind11//:pybind11",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        "//configs:ruby_enabled": [
+            "//src/mem/ruby:ruby",
+            "//src/mem/ruby/protocol:active_protocol",
+        ],
+        "//conditions:default": [],
+    }),
+    linkopts = select({
+        "//configs:capstone_enabled": ["-lcapstone"],
+        "//conditions:default": [],
+    }),
+    alwayslink = True,
+)

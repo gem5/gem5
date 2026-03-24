@@ -1,4 +1,8 @@
 #!/bin/bash
+# DEPRECATED: This script uses legacy SCons build commands (scons, gem5.opt)
+# and is not maintained for the CMake build system. It is retained as a
+# historical reference only. For current build and test procedures, see
+# the project README.md and .github/workflows/ CI configurations.
 
 # This script will run all our supported compilers (see the "images" set)
 # against gem5. The images for the latests supported gcc and clang compiler

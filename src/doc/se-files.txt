@@ -132,7 +132,7 @@ user. These files are all stuffed into the simout directory under a 'fs'
 folder. By default, the path is $gem5_dir/m5out/fs. These files are all
 hardcoded in the configuration since it is unlikely that an application wants
 to see the host version of the files. At the time of writing, the list can be
-viewed in configs/example/se.py by searching for RedirectPath. Most of
+viewed in configs/deprecated/example/se.py by searching for RedirectPath. Most of
 the faux-fs Python generated files depend on simulator configuration (i.e.
 number of cores, caches, nodes, etc..). Sophisiticated runtimes might query
 these files for hardware information in certain applications (i.e.

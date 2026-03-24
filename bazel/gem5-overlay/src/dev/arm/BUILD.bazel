@@ -1,0 +1,76 @@
+"""BUILD file for src/dev/arm/ -- ARM device models.
+
+Conditionally included when //configs:arm_isa_enabled is True.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:defs.bzl", "gem5_debug_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+
+exports_files(glob(["**/*.py"]))
+
+# -- Header filegroup for dev hdrs_files aggregation --
+filegroup(
+    name = "hdrs_files",
+    srcs = glob(["*.hh", "css/*.hh"]),
+)
+
+# -- Debug flags --
+gem5_debug_flag(name = "AMBA", desc = "AMBA debugging")
+gem5_debug_flag(name = "FlashDevice", desc = "Flash device debugging")
+gem5_debug_flag(name = "HDLcd", desc = "HDLcd debugging")
+gem5_debug_flag(name = "PL111", desc = "PL111 debugging")
+gem5_debug_flag(name = "GICV2M", desc = "GICv2m debugging")
+gem5_debug_flag(name = "Pl050", desc = "PL050 debugging")
+gem5_debug_flag(name = "GIC", desc = "GIC debugging")
+gem5_debug_flag(name = "ITS", desc = "GICv3 ITS debugging")
+gem5_debug_flag(name = "RVCTRL", desc = "RealView controller debugging")
+gem5_debug_flag(name = "SMMUv3", desc = "SMMUv3 debugging")
+gem5_debug_flag(name = "SMMUv3Hazard", desc = "SMMUv3 hazard debugging")
+gem5_debug_flag(name = "Sp805", desc = "SP805 watchdog debugging")
+gem5_debug_flag(name = "EnergyCtrl", desc = "Energy controller debugging")
+gem5_debug_flag(name = "FVPBasePwrCtrl", desc = "FVP base power controller debugging")
+gem5_debug_flag(name = "UFSHostDevice", desc = "UFS host device debugging")
+gem5_debug_flag(name = "VGIC", desc = "Virtual GIC debugging")
+gem5_debug_flag(name = "NoMali", desc = "NoMali GPU debugging")
+gem5_debug_flag(name = "MHU", desc = "MHU debugging")
+gem5_debug_flag(name = "SCMI", desc = "SCMI debugging")
+
+cc_library(
+    name = "dev_arm",
+    srcs = glob(
+        ["*.cc", "css/*.cc"],
+        exclude = ["**/*.test.cc"],
+    ),
+    hdrs = glob(["*.hh", "css/*.hh"]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        "//src/dev:dev",
+        "//src/mem:mem",
+        "@gem5_ext_nomali//:nomali",
+        # Debug flags
+        ":AMBA",
+        ":EnergyCtrl",
+        ":FVPBasePwrCtrl",
+        ":FlashDevice",
+        ":GIC",
+        ":GICV2M",
+        ":HDLcd",
+        ":ITS",
+        ":MHU",
+        ":NoMali",
+        ":PL111",
+        ":Pl050",
+        ":RVCTRL",
+        ":SCMI",
+        ":SMMUv3",
+        ":SMMUv3Hazard",
+        ":Sp805",
+        ":UFSHostDevice",
+        ":VGIC",
+    ],
+    alwayslink = True,
+)

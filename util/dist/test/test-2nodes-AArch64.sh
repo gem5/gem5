@@ -49,7 +49,7 @@ VMLINUX=$M5_PATH/binaries/vmlinux.arm64
 
 FS_CONFIG=$GEM5_DIR/configs/example/arm/dist_bigLITTLE.py
 SW_CONFIG=$GEM5_DIR/configs/dist/sw.py
-GEM5_EXE=$GEM5_DIR/build/ARM/gem5.opt
+GEM5_EXE=$GEM5_DIR/build/ARM/gem5
 
 BOOT_SCRIPT=$GEM5_DIR/util/dist/test/simple_bootscript.rcS
 GEM5_DIST_SH=$GEM5_DIR/util/dist/gem5-dist.sh

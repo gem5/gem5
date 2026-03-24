@@ -3,7 +3,7 @@ Overview
 
 This subfolder (/ext/systemc)  is a custom redistribution of the Accellera
 SystemC 2.3.1 library [[1]][sysc]. This distribution replaces Accellera's
-Autoconf build system with a SCons build system, which is used by gem5.
+Autoconf build system with the CMake build system used by gem5.
 
 In the past it happened several times that some changes in gem5 broke the
 SystemC coupling. Recently Accelera has changed the licence for SystemC from
@@ -13,6 +13,15 @@ files from the Accellera distribution, but strips down the boost dependencies,
 shown here:[[3]][strip]. All references to the boost library are replaced by
 calls to the C++11 STL. This repository also contains the TLM 2.0
 protocol-checker from Doulos [[4]][doulos].
+
+
+Build System Note
+=================
+
+The `SConscript.sc` files found throughout `ext/systemc/src/` are historical
+artifacts from the upstream Accellera distribution. They are **not used** by
+the gem5 CMake build system. The SystemC library is built entirely via the
+CMake targets defined in `cmake/gem5_systemc.cmake`.
 
 
 [sysc]: http://accellera.org/downloads/standards/systemc

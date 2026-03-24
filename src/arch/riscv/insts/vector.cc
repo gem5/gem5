@@ -947,10 +947,10 @@ VPinVdMicroInst::execute(ExecContext* xc, trace::InstRecord* traceData) const
     uint8_t* vd = vd_container.as<uint8_t>();
 
     // tail/mask policy: both undisturbed if one is, 1s if none
-    uint8_t* old_vd;
-    if (!machInst.vtype8.vta || (!machInst.vm && !machInst.vtype8.vma)
-                             || isSlideupVx) {
-        vreg_t old_vd_container;
+    uint8_t *old_vd = nullptr;
+    vreg_t old_vd_container;
+    if (!machInst.vtype8.vta || (!machInst.vm && !machInst.vtype8.vma) ||
+        isSlideupVx) {
         xc->getRegOperand(this, 0, &old_vd_container);
         old_vd = old_vd_container.as<uint8_t>();
     }

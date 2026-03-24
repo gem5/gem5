@@ -31,10 +31,11 @@ Usage
 -----
 
 ```sh
-scons build/ALL/gem5.opt -j$(nproc)
-build/ALL/gem5.opt util/obtain-resource.py <resource_id> [-p <path>] [-q]
+cmake -B build/ALL -DGEM5_BUILD_VARIANT=ALL
+ninja -C build/ALL -j$(nproc)
+./build/ALL/gem5 util/obtain-resource.py <resource_id> [-p <path>] [-q]
 # Example:
-# `build/ALL/gem5.opt util/obtain-resource.py arm-hello64-static -p arm-hello`
+# `./build/ALL/gem5 util/obtain-resource.py arm-hello64-static -p arm-hello`
 # This will download the resource with id `arm-hello64-static` to the
 # "arm-hello" in the CWD.
 ```

@@ -1,0 +1,11 @@
+"""BUILD file for src/arch/isa_parser/ -- ISA parser Python module.
+
+Exports the ISA parser files as a filegroup for use by the gem5_isa_desc rule.
+"""
+
+package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name = "isa_parser_files",
+    srcs = glob(["*.py"]),
+)

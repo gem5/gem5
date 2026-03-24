@@ -1,0 +1,176 @@
+"""BUILD file for src/mem/ruby/protocol/ -- SLICC protocol compilation.
+
+Defines one gem5_slicc_protocol() target per Ruby protocol, plus an
+active_protocol alias that resolves to the selected protocol via config.
+In MULTIPLE mode, all protocols are built simultaneously with shared
+interface types deduplicated (each protocol's _shared has no alwayslink,
+so the linker picks one copy; _unique has alwayslink for controllers).
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:defs.bzl", "gem5_debug_flag", "gem5_slicc_protocol")
+
+package(default_visibility = ["//visibility:public"])
+
+# Export non-SLICC SimObject .py files from CHI subdirectories
+exports_files(["chi/generic/CHIGeneric.py"])
+
+# Shared .sm files used by multiple protocols
+_SHARED_SM = glob(["*.sm"])
+
+# Per-protocol targets (always defined, only built when selected)
+
+gem5_slicc_protocol(
+    name = "MESI_Two_Level",
+    src = "MESI_Two_Level.slicc",
+    sm_sources = _SHARED_SM + ["RubySlicc_interfaces.slicc"],
+)
+
+gem5_slicc_protocol(
+    name = "MESI_Three_Level",
+    src = "MESI_Three_Level.slicc",
+    sm_sources = _SHARED_SM + ["RubySlicc_interfaces.slicc"],
+)
+
+gem5_slicc_protocol(
+    name = "MESI_Three_Level_HTM",
+    src = "MESI_Three_Level_HTM.slicc",
+    sm_sources = _SHARED_SM + ["RubySlicc_interfaces.slicc"],
+)
+
+gem5_slicc_protocol(
+    name = "MI_example",
+    src = "MI_example.slicc",
+    sm_sources = _SHARED_SM + ["RubySlicc_interfaces.slicc"],
+)
+
+gem5_slicc_protocol(
+    name = "MOESI_AMD_Base",
+    src = "MOESI_AMD_Base.slicc",
+    sm_sources = _SHARED_SM + ["RubySlicc_interfaces.slicc"],
+)
+
+gem5_slicc_protocol(
+    name = "MOESI_CMP_directory",
+    src = "MOESI_CMP_directory.slicc",
+    sm_sources = _SHARED_SM + ["RubySlicc_interfaces.slicc"],
+)
+
+gem5_slicc_protocol(
+    name = "MOESI_CMP_token",
+    src = "MOESI_CMP_token.slicc",
+    sm_sources = _SHARED_SM + ["RubySlicc_interfaces.slicc"],
+)
+
+gem5_slicc_protocol(
+    name = "MOESI_hammer",
+    src = "MOESI_hammer.slicc",
+    sm_sources = _SHARED_SM + ["RubySlicc_interfaces.slicc"],
+)
+
+gem5_slicc_protocol(
+    name = "Garnet_standalone",
+    src = "Garnet_standalone.slicc",
+    sm_sources = _SHARED_SM + ["RubySlicc_interfaces.slicc"],
+)
+
+gem5_slicc_protocol(
+    name = "GPU_VIPER",
+    src = "GPU_VIPER.slicc",
+    sm_sources = _SHARED_SM + ["RubySlicc_interfaces.slicc"],
+)
+
+# CHI protocol has its own subdirectory with .sm files
+gem5_slicc_protocol(
+    name = "CHI",
+    src = "chi/CHI.slicc",
+    sm_sources = _SHARED_SM + glob(["chi/*.sm"]) +
+                 ["RubySlicc_interfaces.slicc"],
+)
+
+# CHI non-SLICC components: generic controller and debug flags
+gem5_debug_flag(name = "RubyCHIGeneric", desc = "RubyCHIGeneric debugging")
+gem5_debug_flag(name = "RubyCHIGenericVerbose", desc = "RubyCHIGenericVerbose debugging")
+
+cc_library(
+    name = "chi_generic",
+    srcs = ["chi/generic/CHIGenericController.cc"],
+    hdrs = ["chi/generic/CHIGenericController.hh"],
+    copts = ["-Wno-unused-variable"] + select({
+        "//configs:primary_isa_x86": ["-DNUMBER_BITS_PER_SET=128"],
+        "//configs:primary_isa_arm": ["-DNUMBER_BITS_PER_SET=128"],
+        "//conditions:default": ["-DNUMBER_BITS_PER_SET=64"],
+    }),
+    includes = [".", "slicc_CHI"],
+    deps = [
+        "//src:_gem5_base_hdrs",
+        ":CHI_shared",
+        ":CHI_unique_hdrs_lib",
+        ":RubyCHIGeneric",
+        ":RubyCHIGenericVerbose",
+    ],
+    alwayslink = True,
+)
+
+# Header-only wrapper for CHI unique headers (avoids linking CHI_unique
+# which has alwayslink and would cause duplicate symbols in MULTIPLE mode).
+cc_library(
+    name = "CHI_unique_hdrs_lib",
+    hdrs = [":CHI_unique_hdrs"],
+    includes = [".", "slicc_CHI"],
+)
+
+# Protocol names for MULTIPLE mode
+_ALL_PROTOCOL_NAMES = [
+    "MESI_Two_Level",
+    "MESI_Three_Level",
+    "MESI_Three_Level_HTM",
+    "MI_example",
+    "MOESI_AMD_Base",
+    "MOESI_CMP_directory",
+    "MOESI_CMP_token",
+    "MOESI_hammer",
+    "Garnet_standalone",
+    "GPU_VIPER",
+    "CHI",
+]
+
+# CHI with non-SLICC generic controller for single-protocol CHI mode
+cc_library(
+    name = "CHI_full",
+    deps = [":CHI_unique", ":CHI_shared", ":chi_generic"],
+)
+
+# All protocols combined for MULTIPLE mode (deduplicated).
+# Uses _unique targets (alwayslink) for protocol-specific controllers.
+# Each _unique depends on its own _shared (no alwayslink), so the linker
+# links shared interface types from whichever protocol it encounters first
+# and ignores duplicates from subsequent protocols.
+# MSI (from learning_gem5/part3) is included via an external target reference.
+cc_library(
+    name = "all_protocols",
+    deps = [":{}_unique".format(p) for p in _ALL_PROTOCOL_NAMES] +
+           ["//src/learning_gem5/part3:MSI_unique"] +
+           [":chi_generic"],
+)
+
+# Active protocol alias: resolves to selected protocol via config.
+# Ruby library depends on this target.
+alias(
+    name = "active_protocol",
+    actual = select({
+        "//configs:protocol_mesi_two_level": ":MESI_Two_Level",
+        "//configs:protocol_mesi_three_level": ":MESI_Three_Level",
+        "//configs:protocol_mesi_three_level_htm": ":MESI_Three_Level_HTM",
+        "//configs:protocol_mi_example": ":MI_example",
+        "//configs:protocol_moesi_amd_base": ":MOESI_AMD_Base",
+        "//configs:protocol_moesi_cmp_directory": ":MOESI_CMP_directory",
+        "//configs:protocol_moesi_cmp_token": ":MOESI_CMP_token",
+        "//configs:protocol_moesi_hammer": ":MOESI_hammer",
+        "//configs:protocol_chi": ":CHI_full",
+        "//configs:protocol_gpu_viper": ":GPU_VIPER",
+        "//configs:protocol_gpu_viper_region": ":GPU_VIPER",
+        "//configs:protocol_garnet_standalone": ":Garnet_standalone",
+        "//configs:protocol_multiple": ":all_protocols",
+    }),
+)

@@ -1,0 +1,108 @@
+---
+# Bazel build CI for gem5
+#
+# Builds the gem5 binary and runs unit tests using the Bazel build system.
+# This runs in parallel with the existing CMake-based CI workflows.
+
+name: Bazel Build
+
+on:
+    push:
+        branches: [develop, main]
+        paths:
+            - bazel/**
+            - src/**
+            - ext/**
+            - include/**
+            - build_tools/**
+            - .github/workflows/bazel.yaml
+    pull_request:
+        branches: [develop, main]
+        paths:
+            - bazel/**
+            - src/**
+            - ext/**
+            - include/**
+            - build_tools/**
+            - .github/workflows/bazel.yaml
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    build:
+        name: Build gem5 (${{ matrix.config }})
+        runs-on: ubuntu-24.04
+        strategy:
+            fail-fast: false
+            matrix:
+                config: [x86, arm]
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Free disk space
+              run: |
+                  sudo rm -rf /usr/share/dotnet
+                  sudo rm -rf /opt/ghc
+                  sudo rm -rf /usr/local/lib/android
+                  sudo rm -rf /usr/share/swift
+                  docker system prune -af || true
+                  df -h /
+
+            - name: Install dependencies
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y \
+                    python3-dev python3-pybind11 \
+                    libpython3-dev \
+                    zlib1g-dev
+
+            - name: Set up Bazel
+              uses: bazel-contrib/setup-bazel@0.14.0
+              with:
+                  bazelisk-version: 1.x
+                  disk-cache: ${{ github.workflow }}-${{ matrix.config }}
+
+            - name: Build gem5
+              working-directory: bazel
+              run: |
+                  bazel build @gem5_sources//:gem5 \
+                    --config=opt \
+                    --config=${{ matrix.config }}
+
+    test:
+        name: Unit tests (x86)
+        runs-on: ubuntu-24.04
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Free disk space
+              run: |
+                  sudo rm -rf /usr/share/dotnet
+                  sudo rm -rf /opt/ghc
+                  sudo rm -rf /usr/local/lib/android
+                  sudo rm -rf /usr/share/swift
+                  docker system prune -af || true
+                  df -h /
+
+            - name: Install dependencies
+              run: |
+                  sudo apt-get update
+                  sudo apt-get install -y \
+                    python3-dev python3-pybind11 \
+                    libpython3-dev \
+                    zlib1g-dev
+
+            - name: Set up Bazel
+              uses: bazel-contrib/setup-bazel@0.14.0
+              with:
+                  bazelisk-version: 1.x
+
+            - name: Run unit tests
+              working-directory: bazel
+              run: |
+                  bazel test @gem5_sources//:gem5_tests \
+                    --config=opt \
+                    --config=x86 \
+                    --test_output=errors

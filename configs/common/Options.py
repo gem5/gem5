@@ -757,7 +757,7 @@ def addSEOptions(parser):
         default=[],
         help="A collection of one or more redirect paths "
         "to be used in syscall emulation."
-        "Usage: gem5.opt [...] --redirects /dir1=/path/"
+        "Usage: gem5 [...] --redirects /dir1=/path/"
         "to/host/dir1 --redirects /dir2=/path/to/host/dir2",
     )
     parser.add_argument(

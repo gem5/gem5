@@ -19,7 +19,7 @@ To generate the checkpoints used in these tests, `cd` into `configs/checkpoint`
 and run the following command:
 
 ```bash
-path/to/gem5/build/ALL/gem5.fast cross-product-switch-afterboot-take-cpt-{isa}.py --num-cores={number_of_cores}
+path/to/gem5/build/ALL/gem5 cross-product-switch-afterboot-take-cpt-{isa}.py --num-cores={number_of_cores}
 ```
 
 where `isa` is `arm`, `riscv`, or `x86`, and `number_of_cores` is 4, 8, or 16.

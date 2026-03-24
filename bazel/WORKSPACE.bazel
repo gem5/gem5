@@ -1,0 +1,2 @@
+# This file intentionally left empty.
+# gem5 uses bzlmod (MODULE.bazel) for dependency management.

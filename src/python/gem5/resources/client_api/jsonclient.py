@@ -184,14 +184,13 @@ class JSONClient(AbstractClient):
         """
         Get all resources compatible with the specified gem5 version.
 
-        :param gem5_version: The gem5 version to match against.
+        :param gem5_version: The gem5 version to match against.  When
+            ``None`` or a ``DEVELOP`` version string, all resources are
+            returned without filtering.
         :returns: A list of resources compatible with the given gem5 version.
         """
-        if gem5_version.startswith("DEVELOP"):
-            raise ValueError(
-                "All resources are compatible with DEVELOP version. "
-                "Please pass a specific gem5 version from gem5 releases."
-            )
+        if gem5_version is None or gem5_version.startswith("DEVELOP"):
+            return copy.deepcopy(self.resources)
 
         # Build a list of all possible prefixes from the version
         # e.g., "25.0.0.1" -> ["25.0", "25.0.0", "25.0.0.1"]

@@ -1,0 +1,26 @@
+"""BUILD file for src/dev/lupio/ -- Lupio peripheral devices for RISC-V."""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+
+exports_files(glob(["**/*.py"]))
+
+# -- Header filegroup for dev hdrs_files aggregation --
+filegroup(
+    name = "hdrs_files",
+    srcs = glob(["*.hh"]),
+)
+
+cc_library(
+    name = "lupio",
+    srcs = glob(["*.cc"]),
+    hdrs = glob(["*.hh"]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        "//src/dev:dev",
+    ],
+    alwayslink = True,
+)

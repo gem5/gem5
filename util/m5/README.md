@@ -100,65 +100,51 @@ first identify what ABI(s) you're targetting.
  x86     | amd64/x86_64 | instruction, address
  riscv   | 64 bit RISCV | instruction
 
-## SCons
+## CMake
 
-The m5 utility uses a scons based build system. gem5 itself also uses SCons,
-but these builds are (mostly) not related and separate.
+The m5 utility is built as part of the gem5 CMake build system. It can also
+be built standalone using its own CMakeLists.txt.
 
-The SConscript for this utility is set up to use a build directory called
-"build", similar to gem5 itself. The build directory is structured so that you
-can ask scons to build a portion of it to help narrow down what you want to
-build.
+### Standalone build
 
-### native
+To build standalone, configure and build with CMake:
 
-There is a **build/native** directory which is for some test binaries which
-test generic functionality and are compiled for the host, whatever that happens
-to be. These can be run directly, unlike ABI specific tests which may be
-possible to run directly depending on the host's architecture, but may not.
+```shell
+cmake -S util/m5 -B build/m5
+cmake --build build/m5
+```
 
-### ABI
+### Build output
 
-The first level subdirectories of the build directory (other than "native",
-described above) is named after the ABI you're targetting. For instance, build
-products for x86 would be in the **build/x86** subdirectory.
+All build products are placed in the build directory specified by the `-B`
+flag. The main outputs are:
 
-Within an ABI subdirectory will be linked copies of all the source files needed
-for the build, and also "test" and "out" subdirectories.
-
-#### test
-
-The "test" subdirectory, for instance **build/x86/test**, holds the test
-binaries for that ABI in a bin subdirectory, and the results of running those
-tests (if requested and possible) in a "result" subdirectory.
-
-#### out
-
-The "out" subdirectory, for instance **build/x86/out**, holds the various final
-build products. This includes:
-
-- m5: The command line utility.
-- libm5.a: C library.
-- gem5OpJni.jar, libgem5OpJni.so, jni/gem5Op.class: Java support files.
-- libgem5OpLua.so: Lua module/library.
+- **m5**: The command line utility.
+- **libm5.a**: C static library.
+- **gem5Ops.jar**, **libgem5Ops.so**: Java support files (if JDK is found).
+- **libgem5OpLua.so**: Lua module/library (if Lua 5.1 is found).
 
 ## Build options
 
-### SCons variables
+### CMake cache variables
 
-There are some variables which set build options which need to be controlled on
-a per ABI level. Currently, these are:
+- **M5_ABI**: Target ABI for the m5 utility. Default: `x86`. Valid values:
+  `x86`, `arm`, `arm64`, `riscv`, `sparc`, `thumb`.
+- **M5_DEBUG_BUILD**: Build with debug info (`-g`) and no optimizations
+  (`-O0`). Default: `OFF`.
+- **M5_BUILD_TESTS**: Build unit tests. Default: `ON`.
 
-- CROSS_COMPILE: The cross compiler prefix.
-- QEMU_ARCH: The QEMU architecture suffix.
-
-To set these for a particular ABI, prefix the variable name with the ABI's name
-and then a dot. For instance, to set the cross compiler prefix to
-"x86_64-linux-gnu-" for x86, you would run scons like this:
+Example:
 
 ```shell
-scons x86.CROSS_COMPILE=x86_64-linux-gnu- build/x86/out/m5
+cmake -S util/m5 -B build/m5 -DM5_ABI=arm64 -DM5_DEBUG_BUILD=ON
 ```
+
+### Cross-compilation variables
+
+For cross-compilation, set `CMAKE_C_COMPILER`, `CMAKE_CXX_COMPILER`, or
+`CMAKE_ASM_COMPILER` as needed. The table below lists common QEMU architecture
+suffixes and cross compiler prefixes for each ABI:
 
    ABI   | QEMU_ARCH |     CROSS_COMPILE
 ---------|-----------|---------------------
@@ -174,12 +160,6 @@ meaning that the native/host compiler will be used. If building on a non-x86
 host, then you'll need to set an appopriate prefix and may be able to clear
 some other prefix corresponding to that host.
 
-### SCons command line flags
-
---debug-build: Compile with the -g option, and -O0.
---run-tests:   Allow the test result XML files to be build targets.
---verbose:     Show build command lines and full command output.
-
 ## External dependency detection
 
 In some cases, if an external dependency isn't detected, the build will
@@ -187,17 +167,17 @@ gracefully exclude some targets which depend on it. These include:
 
 ### Java support
 
-The SConscript will attempt to find the javac and jar programs. If it can't, it
-will disable building the Java support files.
+The build system will attempt to find the javac and jar programs. If it can't,
+it will disable building the Java support files.
 
 ### Lua support
 
-The SConscript will attempt to find lua51 support using pkg-config. If it
+The build system will attempt to find lua51 support using pkg-config. If it
 can't, it will disable building the lua module/library.
 
 ### Non-native tests
 
-The SConscript will attempt to find various QEMU binaries so that it can run
+The build system will attempt to find various QEMU binaries so that it can run
 non-native tests using QEMU's application level emulation. The name of the
 binary it looks for depends on the ABI and is set to qemu-${QEMU_ARCH}. See
 above for a description of per ABI build variables, including QEMU_ARCH.
@@ -397,6 +377,13 @@ integer without having to rebuild the lua interpreter configured for one or the
 other. If the module was ported to lua 5.3 then integer values could be passed
 safely.
 
+
+
+# Build system note
+
+The `SConscript.native` files in `src/` are historical artifacts from the
+previous SCons-based build system. They are **not used** by the CMake build.
+The m5 utility is built entirely via the CMakeLists.txt in this directory.
 
 
 # Known problems

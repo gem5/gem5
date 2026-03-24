@@ -1,6 +1,8 @@
 MODULE.bazel.lock
 bazel-*
+configs/vars.bzl
 build
+build_cmake
 gem5_build
 parser.out
 parsetab.py
@@ -38,3 +40,5 @@ configs/dram/lowp_sweep.cfg
 .vscode
 typings
 .DS_Store
+/tests/cpt.*
+/tests/testing-results

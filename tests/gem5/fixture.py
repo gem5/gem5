@@ -143,19 +143,23 @@ class UniqueFixture(Fixture):
             self._setup(testitem)
 
 
-class SConsFixture(UniqueFixture):
+class CMakeFixture(UniqueFixture):
     """
-    Fixture will wait until all SCons targets are collected and tests are
-    about to be ran, then will invocate a single instance of SCons for all
-    targets.
+    Fixture that builds gem5 using CMake + Ninja.
 
-    :param directory: The directory which scons will -C (cd) into before
-        executing. If None is provided, will choose the config base_dir.
+    Runs cmake configure and ninja build once for each unique build
+    directory. Replaces the former SConsFixture.
+
+    :param directory: The source directory (repo root). If None is
+        provided, will choose the config base_dir.
     """
 
-    def __new__(cls, target):
-        obj = super().__new__(cls, target)
-        return obj
+    # Map gem5 variant names to CMake build types
+    _variant_to_build_type = {
+        "opt": "GEM5_OPT",
+        "debug": "GEM5_DEBUG",
+        "fast": "GEM5_FAST",
+    }
 
     def _setup(self, testitem):
         if config.skip_build:
@@ -167,82 +171,65 @@ class SConsFixture(UniqueFixture):
                 gcov_delete_files(self.target_dir, "all")
             return
 
-        if not self.targets:
-            log.test_log.error("No SCons targets specified.")
-        else:
-            log.test_log.message(
-                "Building the following targets. This may take a while."
-            )
-            log.test_log.message(f"{', '.join(self.targets)}")
-            log.test_log.message(
-                "You may want to use --skip-build, or use 'rerun'."
-            )
-
-        # Create the KConfig configuration based on the ISA
-        defconfig_command = [
-            "scons",
-            "-C",
-            self.directory,
-            "--ignore-style",
-            "--no-compress-debug",
-            "defconfig",
-            self.target_dir,
-            joinpath(self.directory, "build_opts", self.isa.upper()),
-        ]
-        log_call(log.test_log, defconfig_command, time=None, stderr=sys.stderr)
-
-        # If there is a cache coherence protocol specified,
-        # set it to the config.
-        if self.protocol:
-            setconfig_command = [
-                "scons",
-                "-C",
-                self.directory,
-                "--ignore-style",
-                "--no-compress-debug",
-                "setconfig",
-                self.target_dir,
-                f"RUBY_PROTOCOL_{self.protocol.upper()}=y",
-            ]
-            log_call(
-                log.test_log, setconfig_command, time=None, stderr=sys.stderr
-            )
-
-        # Ensure the test objects are compiled into the binary by
-        # setting it in the config.
-        setconfig_add_test_obj_command = [
-            "scons",
-            "-C",
-            self.directory,
-            "--ignore-style",
-            "--no-compress-debug",
-            "setconfig",
-            self.target_dir,
-            "USE_TEST_OBJECTS=y",
-        ]
-
-        log_call(
-            log.test_log,
-            setconfig_add_test_obj_command,
-            time=None,
-            stderr=sys.stderr,
+        log.test_log.message(
+            "Building gem5 with CMake + Ninja. This may take a while."
+        )
+        log.test_log.message(f"  Build directory: {self.target_dir}")
+        log.test_log.message(
+            "You may want to use --skip-build, or use 'rerun'."
         )
 
-        command = [
-            "scons",
-            "-C",
-            self.directory,
-            "-j",
-            str(config.threads),
-            "--ignore-style",
-            "--no-compress-debug",
+        build_type = self._variant_to_build_type.get(
+            self.variant, f"GEM5_{self.variant.upper()}"
+        )
+
+        # Build variant corresponds to a file in build_opts/.  When a
+        # protocol is specified the combined name (e.g. X86_MOESI_AMD_Base)
+        # is used so that protocol-specific defaults are picked up.
+        build_variant = self.isa.upper()
+        if self.protocol:
+            build_variant += "_" + self.protocol
+
+        # CMake configure
+        cmake_command = [
+            "cmake",
+            "-G",
+            "Ninja",
+            f"-DCMAKE_BUILD_TYPE={build_type}",
+            f"-DGEM5_BUILD_VARIANT={build_variant}",
+            "-DGEM5_NO_COMPRESS_DEBUG=ON",
         ]
 
-        if config.gcov:
-            command.append("--gcov")
+        # Kconfig overrides: enable test SimObjects (default n in
+        # Kconfig) and, if specified, the cache coherence protocol.
+        kconfig_overrides = ["USE_TEST_OBJECTS=y"]
+        if self.protocol:
+            kconfig_overrides.append(f"RUBY_PROTOCOL_{self.protocol}=y")
+        cmake_command.append(
+            "-DGEM5_KCONFIG_OVERRIDE=" + ";".join(kconfig_overrides)
+        )
 
-        command.extend(self.targets)
-        log_call(log.test_log, command, time=None, stderr=sys.stderr)
+        cmake_command.extend(
+            [
+                "-S",
+                self.directory,
+                "-B",
+                self.target_dir,
+            ]
+        )
+        log_call(log.test_log, cmake_command, time=None, stderr=sys.stderr)
+
+        # Ninja build (only the gem5 executable, not the full default target
+        # which also builds gem5_shared and other targets)
+        ninja_command = [
+            "ninja",
+            "-C",
+            self.target_dir,
+            "gem5",
+            "-j",
+            str(config.threads),
+        ]
+        log_call(log.test_log, ninja_command, time=None, stderr=sys.stderr)
 
         if config.gcov:
             # Remove gcda files that are created during the build process, as
@@ -256,33 +243,45 @@ class SConsFixture(UniqueFixture):
             gcov_delete_files(self.target_dir, "all")
 
 
-class Gem5Fixture(SConsFixture):
+# Keep SConsFixture as an alias for backward compatibility with any
+# out-of-tree test scripts that may reference it directly.
+SConsFixture = CMakeFixture
+
+
+class Gem5Fixture(CMakeFixture):
     def __new__(cls, isa, variant, protocol=None):
-        target_dir = joinpath(config.build_dir, isa.upper())
+        # Build the ISA component (e.g., "ALL", "ALL_MESI_Two_Level")
+        isa_component = isa.upper()
         if protocol:
-            target_dir += "_" + protocol
-        target = joinpath(target_dir, f"gem5.{variant}")
+            isa_component += "_" + protocol
+        # Append variant so each CMAKE_BUILD_TYPE gets a separate build
+        # directory (CMake does not support multiple build types in a
+        # single build tree).
+        dir_name = f"{isa_component}_{variant}"
+        target_dir = joinpath(config.build_dir, dir_name)
+        target = joinpath(target_dir, "gem5")
         obj = super().__new__(cls, target)
         obj.target_dir = target_dir
+        obj._isa_component = isa_component
         return obj
 
     def _init(self, isa, variant, protocol=None):
         self.name = constants.gem5_binary_fixture_name
 
-        self.targets = [self.target]
-        self.path = self.target
+        # CMake produces the binary as 'gem5' (no variant suffix)
+        self.path = joinpath(self.target_dir, "gem5")
         self.directory = config.base_dir
 
         self.gcov = config.gcov
         self.test_threads = config.test_threads
 
         self.isa = isa
+        self.variant = variant
         self.protocol = protocol
         self.set_global()
 
     def get_get_build_info(self) -> Optional[str]:
-        build_target = self.target
-        return build_target
+        return self.path
 
 
 class MakeFixture(Fixture):
@@ -306,9 +305,9 @@ class MakeTarget(Fixture):
     def __init__(self, target, make_fixture=None, *args, **kwargs):
         """
         :param make_fixture: The make invocation we will be attached to.
-        Since we don't have a single global instance of make in gem5 like we do
-        scons we need to know what invocation to attach to. If none given,
-        creates its own.
+        Since we don't have a single global instance of make in gem5 we
+        need to know what invocation to attach to. If none given, creates
+        its own.
         """
         super().__init__(name=target, *args, **kwargs)
         self.target = self.name

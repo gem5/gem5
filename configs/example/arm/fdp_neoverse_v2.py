@@ -49,8 +49,9 @@ Usage
 -----
 
 ```
-scons build/ALL/gem5.opt
-./build/ALL/gem5.opt \
+cmake -B build/ALL -DGEM5_BUILD_VARIANT=ALL
+ninja -C build/ALL
+./build/ALL/gem5 \
     configs/example/arm/fdp_neoverse_v2.py \
     --isa <isa> \
     [--disable-fdp]

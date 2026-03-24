@@ -50,10 +50,34 @@ systemc_rel_path = "systemc"
 tests_rel_path = os.path.join(systemc_rel_path, "tests")
 json_rel_path = os.path.join(tests_rel_path, "tests.json")
 
+# Mapping from gem5 flavor names to CMake build types.
+# Used by CompilePhase and the --update-json code path.
+FLAVOR_TO_BUILD_TYPE = {
+    "opt": "GEM5_OPT",
+    "debug": "GEM5_DEBUG",
+    "fast": "GEM5_FAST",
+}
 
-def scons(*args):
-    args = ["scons", "--with-systemc-tests"] + list(args)
-    subprocess.check_call(args)
+
+def flavor_to_cmake_build_type(flavor):
+    """Convert a gem5 flavor name to its CMake build type string."""
+    return FLAVOR_TO_BUILD_TYPE.get(flavor, f"GEM5_{flavor.upper()}")
+
+
+def ninja_build(build_dir, targets=None, j=0, extra_args=None):
+    """Build targets using ninja in the given build directory.
+
+    This replaces the old scons() helper. The build directory should already
+    be configured with cmake -DGEM5_WITH_SYSTEMC_TESTS=ON.
+    """
+    cmd = ["ninja", "-C", build_dir]
+    if j > 0:
+        cmd.extend(["-j", str(j)])
+    if extra_args:
+        cmd.extend(extra_args)
+    if targets:
+        cmd.extend(targets)
+    subprocess.check_call(cmd)
 
 
 class Test:
@@ -122,20 +146,35 @@ class CompilePhase(TestPhaseBase):
     number = 1
 
     def run(self, tests):
-        targets = list([test.full_path() for test in tests])
-
         parser = argparse.ArgumentParser()
         parser.add_argument("-j", type=int, default=0)
         args, leftovers = parser.parse_known_args(self.args)
-        if args.j == 0:
-            self.args = ("-j", str(self.main_args.j)) + self.args
 
-        scons_args = (
-            ["--directory", self.main_args.scons_dir, "USE_SYSTEMC=1"]
-            + list(self.args)
-            + targets
+        j = args.j if args.j != 0 else self.main_args.j
+
+        # Reconfigure the build directory to match the requested flavor
+        # so that the compiled test binaries have the correct suffix.
+        build_type = flavor_to_cmake_build_type(self.main_args.flavor)
+        variant = os.path.basename(os.path.normpath(self.main_args.build_dir))
+        subprocess.check_call(
+            [
+                "cmake",
+                f"-DCMAKE_BUILD_TYPE={build_type}",
+                f"-DGEM5_BUILD_VARIANT={variant}",
+                "-B",
+                self.main_args.build_dir,
+            ]
         )
-        scons(*scons_args)
+
+        # Map filtered tests to their CMake target names
+        targets = ["sc_test_" + test.path.replace("/", "_") for test in tests]
+
+        ninja_build(
+            self.main_args.build_dir,
+            targets=targets,
+            j=j,
+            extra_args=leftovers if leftovers else None,
+        )
 
 
 class RunPhase(TestPhaseBase):
@@ -590,10 +629,10 @@ parser.add_argument(
 
 parser.add_argument(
     "-C",
-    "--scons-dir",
-    metavar="SCONS_DIR",
+    "--source-dir",
+    metavar="SOURCE_DIR",
     default=checkout_dir,
-    help="Directory to run scons from",
+    help="Top-level source directory (used for cmake configure)",
 )
 
 filter_opts = parser.add_mutually_exclusive_group()
@@ -642,7 +681,21 @@ if len(phases) == 0:
 json_path = os.path.join(main_args.build_dir, json_rel_path)
 
 if main_args.update_json:
-    scons("--directory", main_args.scons_dir, os.path.join(json_path))
+    _build_type = flavor_to_cmake_build_type(main_args.flavor)
+
+    # With CMake, tests.json is generated at configure time.
+    _variant = os.path.basename(os.path.normpath(main_args.build_dir))
+    _cmake_cmd = [
+        "cmake",
+        "-DGEM5_WITH_SYSTEMC_TESTS=ON",
+        f"-DCMAKE_BUILD_TYPE={_build_type}",
+        f"-DGEM5_BUILD_VARIANT={_variant}",
+    ]
+    # Fresh configure needs generator and source dir; reconfigure does not.
+    if not os.path.exists(os.path.join(main_args.build_dir, "CMakeCache.txt")):
+        _cmake_cmd.extend(["-G", "Ninja", "-S", main_args.source_dir])
+    _cmake_cmd.extend(["-B", main_args.build_dir])
+    subprocess.check_call(_cmake_cmd)
 
 with open(json_path) as f:
     test_data = json.load(f)

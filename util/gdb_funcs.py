@@ -35,7 +35,7 @@ This is assuming that you've run your gdb from the parent directory of gem5.
 
 Example usage:
 
-gdb --args gem5/build/ARM/gem5.opt gem5/configs/example/gem5_library/arm-ubuntu-run.py
+gdb --args gem5/build/ARM/gem5 gem5/configs/example/gem5_library/arm-ubuntu-run.py
 
 (gdb) source gem5/util/gdb_funcs.py
 (gdb) python test = TargetNamedBreakpoint("gem5::ArmISA::MMU::translateTiming")

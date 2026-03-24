@@ -1,0 +1,262 @@
+"""BUILD file for src/sim/ -- gem5 simulation core.
+
+Provides the core simulation infrastructure: event queue, SimObject base,
+system, workload, process, clock/voltage domains, power modeling,
+serialization, and SE syscall emulation.
+"""
+
+load("@rules_cc//cc:defs.bzl", "cc_library")
+load("//rules:defs.bzl", "gem5_debug_flag", "gem5_compound_flag")
+
+package(default_visibility = ["//visibility:public"])
+
+
+exports_files(glob(["**/*.py"]))
+
+# -- Header filegroup for gem5_hdrs aggregation --
+filegroup(
+    name = "hdrs_files",
+    srcs = glob([
+        "*.hh",
+        "guest_abi/*.hh",
+        "power/*.hh",
+        "probe/*.hh",
+    ]),
+)
+
+# main.cc filegroup (used by the gem5 binary target, not the library)
+filegroup(
+    name = "main_cc",
+    srcs = ["main.cc"],
+)
+
+# -- Generate tags.cc from checkpoint upgrader --
+# tags.cc contains the set of checkpoint version tags derived from
+# util/cpt_upgraders/*.py filenames. Flag-independent.
+genrule(
+    name = "gen_tags_cc",
+    srcs = [
+        "//util:cpt_upgrader",
+        "//util:cpt_upgraders",
+    ],
+    outs = ["tags.cc"],
+    cmd = "python3 $(location //util:cpt_upgrader) --get-cc-file > $@",
+)
+
+# version_tags is a separate target so that test_globals can provide
+# its own definition without conflicting with the generated tags.cc.
+# In CMake, gem5_all is linked without --whole-archive for tests, so
+# the test's definition naturally takes precedence. In Bazel, alwayslink
+# on sim would force-link tags.cc, causing a duplicate symbol error.
+cc_library(
+    name = "version_tags",
+    srcs = [":gen_tags_cc"],
+    deps = ["//src:gem5_hdrs"],
+)
+
+# -- Debug flags --
+gem5_debug_flag(name = "Checkpoint", desc = "Checkpoint debugging")
+gem5_debug_flag(name = "Config", desc = "Config debugging")
+gem5_debug_flag(name = "CxxConfig", desc = "CxxConfig debugging")
+gem5_debug_flag(name = "Drain", desc = "Drain debugging")
+gem5_debug_flag(name = "Event", desc = "Event debugging")
+gem5_debug_flag(name = "ExternalSignal", desc = "External signal debugging")
+gem5_debug_flag(name = "Flow", desc = "Flow debugging")
+gem5_debug_flag(name = "IPI", desc = "IPI debugging")
+gem5_debug_flag(name = "IPR", desc = "IPR debugging")
+gem5_debug_flag(name = "Interrupt", desc = "Interrupt debugging")
+gem5_debug_flag(name = "Loader", desc = "Loader debugging")
+gem5_debug_flag(name = "PseudoInst", desc = "PseudoInst debugging")
+gem5_debug_flag(name = "Stack", desc = "Stack debugging")
+gem5_debug_flag(name = "SyscallBase", desc = "Syscall base debugging")
+gem5_debug_flag(name = "SyscallVerbose", desc = "Syscall verbose debugging")
+gem5_debug_flag(name = "TimeSync", desc = "TimeSync debugging")
+gem5_debug_flag(name = "Thread", desc = "Thread debugging")
+gem5_debug_flag(name = "Timer", desc = "Timer debugging")
+gem5_debug_flag(name = "VtoPhys", desc = "VtoPhys debugging")
+gem5_debug_flag(name = "WorkItems", desc = "WorkItems debugging")
+gem5_debug_flag(name = "ClockDomain", desc = "ClockDomain debugging")
+gem5_debug_flag(name = "VoltageDomain", desc = "VoltageDomain debugging")
+gem5_debug_flag(name = "DVFS", desc = "DVFS debugging")
+gem5_debug_flag(name = "Vma", desc = "Vma debugging")
+gem5_debug_flag(name = "PowerDomain", desc = "PowerDomain debugging")
+gem5_debug_flag(name = "EnteringEventQueue", desc = "EnteringEventQueue debugging")
+gem5_debug_flag(name = "ThermalDomain", desc = "ThermalDomain debugging")
+gem5_debug_flag(name = "ProbeVerbose", desc = "ProbeVerbose debugging")
+
+gem5_compound_flag(
+    name = "SyscallAll",
+    desc = "All syscall debugging",
+    components = ["SyscallBase", "SyscallVerbose"],
+)
+
+# -- Main sim library --
+cc_library(
+    name = "sim",
+    srcs = [
+        "async.cc",
+        "backtrace_glibc.cc",  # glibc backtrace; swap for backtrace_none.cc on non-glibc
+        "bufval.cc",
+        "clocked_object.cc",
+        "clock_domain.cc",
+        "core.cc",
+        "cur_tick.cc",
+        "debug.cc",
+        "drain.cc",
+        "dvfs_handler.cc",
+        "eventq.cc",
+        "faults.cc",
+        "fd_array.cc",
+        "fd_entry.cc",
+        "futex_map.cc",
+        "global_event.cc",
+        "globals.cc",
+        "init_signals.cc",
+        "kernel_workload.cc",
+        "linear_solver.cc",
+        "mathexpr.cc",
+        "mem_pool.cc",
+        "mem_state.cc",
+        "port.cc",
+        "power_domain.cc",
+        "power_state.cc",
+        "process.cc",
+        "pseudo_inst.cc",
+        "redirect_path.cc",
+        "root.cc",
+        "se_signal.cc",
+        "se_workload.cc",
+        "serialize.cc",
+        "sim_events.cc",
+        "sim_object.cc",
+        "simulate.cc",
+        "stat_control.cc",
+        "stats.cc",
+        "sub_system.cc",
+        "syscall_desc.cc",
+        "syscall_emul.cc",
+        "system.cc",
+        "ticked_object.cc",
+        "vma.cc",
+        "voltage_domain.cc",
+        "workload.cc",
+        # power/ subdirectory
+        "power/mathexpr_powermodel.cc",
+        "power/power_model.cc",
+        "power/thermal_domain.cc",
+        "power/thermal_model.cc",
+        "power/thermal_node.cc",
+        # probe/ subdirectory
+        "probe/probe.cc",
+        "probe/probe_listener_object.cc",
+    ] + select({
+        # Python bridge files (excluded from no-Python builds)
+        "//configs:python_enabled": [
+            "init.cc",
+            "py_interact.cc",
+            "python.cc",
+            "stat_register.cc",
+        ],
+        "//conditions:default": [],
+    }) + select({
+        # C++ config files (for --without-python builds)
+        "//configs:cxx_config_enabled": [
+            "cxx_config.cc",
+            "cxx_config_ini.cc",
+            "cxx_manager.cc",
+        ],
+        "//conditions:default": [],
+    }),
+    hdrs = glob([
+        "*.hh",
+        "guest_abi/*.hh",
+        "power/*.hh",
+        "probe/*.hh",
+    ]),
+    includes = ["."],
+    deps = [
+        "//src:gem5_hdrs",
+        ":version_tags",
+        # Debug flags
+        ":Checkpoint",
+        ":ClockDomain",
+        ":Config",
+        ":CxxConfig",
+        ":DVFS",
+        ":Drain",
+        ":EnteringEventQueue",
+        ":Event",
+        ":ExternalSignal",
+        ":Flow",
+        ":IPI",
+        ":IPR",
+        ":Interrupt",
+        ":Loader",
+        ":PowerDomain",
+        ":ProbeVerbose",
+        ":PseudoInst",
+        ":Stack",
+        ":SyscallAll",
+        ":SyscallBase",
+        ":SyscallVerbose",
+        ":ThermalDomain",
+        ":Thread",
+        ":TimeSync",
+        ":Timer",
+        ":Vma",
+        ":VoltageDomain",
+        ":VtoPhys",
+        ":WorkItems",
+    ] + select({
+        "//configs:python_enabled": [
+            "@system_python//:python",
+            "@gem5_ext_pybind11//:pybind11",
+        ],
+        "//conditions:default": [],
+    }),
+    alwayslink = True,
+)
+
+# Header-only variant for test targets (without alwayslink)
+cc_library(
+    name = "sim_test_hdrs",
+    hdrs = glob([
+        "*.hh",
+        "guest_abi/*.hh",
+        "power/*.hh",
+        "probe/*.hh",
+    ]),
+    includes = ["."],
+    deps = ["//src:gem5_hdrs"],
+    testonly = True,
+)
+
+# -- Unit tests --
+load("@rules_cc//cc:defs.bzl", "cc_test")
+
+_SIM_TEST_DEPS = [
+    "//:gem5_all",
+    "//src/base:gtest_logging",
+    "@gem5_ext_googletest//:gtest_main",
+    "@gem5_ext_googletest//:googlemock",
+]
+
+[cc_test(
+    name = "test_" + src.replace(".test.cc", ""),
+    srcs = [src],
+    deps = _SIM_TEST_DEPS,
+) for src in [
+    "bufval.test.cc",
+    "byteswap.test.cc",
+    "guest_abi.test.cc",
+    "port.test.cc",
+    "proxy_ptr.test.cc",
+    "serialize.test.cc",
+    "serialize_handlers.test.cc",
+]]
+
+cc_test(
+    name = "test_globals",
+    srcs = ["globals.test.cc"],
+    deps = _SIM_TEST_DEPS,
+)
