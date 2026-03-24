@@ -42,7 +42,7 @@ NUM_PROCESSES = 10
 
 multisim.set_num_processes(NUM_PROCESSES)
 
-# RISCV boot using Atomic cores, with and without systemd. Medium length
+# RISCV boot using Atomic cores, with and without systemd. Longer
 # workloads.
 for no_systemd in [True, False]:
     cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
@@ -79,7 +79,11 @@ for no_systemd in [True, False]:
 
     multisim.add_simulator(Simulator(board=board, id=name))
 
-# Run X86 and Arm hello world binaries. The shortest workloads.
+# Run X86 and Arm hello world binaries. Shorter workloads.
+# Run these 6 times each so we test having more jobs
+# (2 RISCV boots + 12 hello world binaries = 14) than the
+# number of processes (10).
+
 for isa in [ISA.X86, ISA.ARM]:
     for i in range(0, 6):
         cache_hierarchy = NoCache()
