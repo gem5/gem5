@@ -256,7 +256,7 @@ Walker::startWalkWrapper()
       default:
         panic("Unsupported VS-stage translation mode %d", mode);
     }
-      
+
     // check if we get a tlb hit to skip the walk
     Addr vpn = getVPNFromVAddr(vaddr, currState->satp.mode);
     TlbEntry *e = tlb->lookup(vpn, currState->satp.asid, currState->mode,
@@ -311,7 +311,7 @@ Walker::startWalkWrapper()
               default:
                 panic("Unsupported VS-stage translation mode %d", mode);
             }
-      
+
 
             Addr vpn = getVPNFromVAddr(vaddr, currState->satp.mode);
             e = tlb->lookup(vpn, currState->satp.asid, currState->mode,
@@ -474,7 +474,7 @@ Walker::WalkerState::walkOneStage(Addr vaddr)
     // riscv-privileged-20211203 page 84
     Addr vaddr_bits = getVADDR_BITS(satp.mode);
     size_t PTESize = (satp.mode == SV48) ? sizeof(PTESv48) : sizeof(PTESv39); // ПЕРЕДЕЛАТЬ
-    
+
     auto mask_for_msbs = mask(64 - vaddr_bits);
     auto msbs = bits(vaddr, 63, vaddr_bits);
     if (msbs != 0 && msbs != mask_for_msbs) {

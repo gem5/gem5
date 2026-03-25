@@ -170,11 +170,11 @@ namespace RiscvISA
 
           private:
             Fault checkPTEPermissions(
-              PTES pte, WalkFlags& stepWalkFlags, int level); //////////////////// ИЗМЕНИЛ PTESV39 на 
+              PTES pte, WalkFlags& stepWalkFlags, int level); //////////////////// ИЗМЕНИЛ PTESV39 на
             Fault checkPTEPermissionsSV39(
-              PTESv39 pte, WalkFlags& stepWalkFlags, int level); 
+              PTESv39 pte, WalkFlags& stepWalkFlags, int level);
             Fault checkPTEPermissionsSV48(
-              PTESv48 pte, WalkFlags& stepWalkFlags, int level); 
+              PTESv48 pte, WalkFlags& stepWalkFlags, int level);
             Addr setupWalk(Addr vaddr);
             Fault stepWalk(PacketPtr &write);
             Fault stepWalkGStage(PacketPtr &write);
