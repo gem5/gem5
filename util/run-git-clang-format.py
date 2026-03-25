@@ -399,6 +399,9 @@ if __name__ == "__main__":
     )
 
     if res is not None:
+        if args.verbose:
+            print(f"return code: {res.returncode}")
+            print(res.stdout.strip())
         if args.dry_run and res.returncode == 1:
             print(res.stdout.strip())
         if (not args.pre_commit) and res.returncode != 0:

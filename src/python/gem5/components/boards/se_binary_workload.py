@@ -27,12 +27,14 @@
 from pathlib import Path
 from typing import (
     List,
+    Mapping,
     Optional,
     Union,
 )
 
 from m5.objects import (
     Process,
+    RedirectPath,
     SEWorkload,
 )
 from m5.util import warn
@@ -232,6 +234,8 @@ class SEBinaryWorkload:
         env_list: Optional[List[str]] = None,
         arguments: List[str] = [],
         checkpoint: Optional[Union[Path, CheckpointResource]] = None,
+        redirect_paths: Optional[Mapping[str, List[str]]] = None,
+        loader_path: Optional[str] = None,
     ) -> None:
         """Set up the system to run a specific binary.
 
@@ -262,6 +266,19 @@ class SEBinaryWorkload:
         # If we are setting a workload of this type, we need to run as a
         # SE-mode simulation.
         self._set_fullsystem(False)
+
+        if loader_path:
+            from _m5.loader import setInterpDir
+
+            setInterpDir(loader_path)
+
+        if redirect_paths:
+            _redirect_paths = []
+            for src, dsts in redirect_paths.items():
+                _redirect_paths.append(
+                    RedirectPath(app_path=src, host_paths=dsts)
+                )
+            self.redirect_paths = _redirect_paths
 
         process = self._create_process(
             binary=binary,
