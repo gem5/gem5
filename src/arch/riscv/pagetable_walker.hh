@@ -61,8 +61,11 @@ class ThreadContext;
 
 namespace RiscvISA
 {
+
     class Walker : public ClockedObject
     {
+      private:
+      Fault WalkerState::checkPTEPermissions(PTES ptes, WalkFlags& stepWalkFlags, int level)
       protected:
         // Port for accessing memory
         class WalkerPort : public RequestPort
@@ -97,6 +100,7 @@ namespace RiscvISA
             };
 
             enum WalkType
+
             {
                 OneStage,
                 TwoStage,
@@ -166,7 +170,11 @@ namespace RiscvISA
 
           private:
             Fault checkPTEPermissions(
-              PTESv39 pte, WalkFlags& stepWalkFlags, int level);
+              PTES pte, WalkFlags& stepWalkFlags, int level); //////////////////// ИЗМЕНИЛ PTESV39 на 
+            Fault checkPTEPermissionsSV39(
+              PTESv39 pte, WalkFlags& stepWalkFlags, int level); 
+            Fault checkPTEPermissionsSV48(
+              PTESv48 pte, WalkFlags& stepWalkFlags, int level); 
             Addr setupWalk(Addr vaddr);
             Fault stepWalk(PacketPtr &write);
             Fault stepWalkGStage(PacketPtr &write);
@@ -235,6 +243,8 @@ namespace RiscvISA
             statistics::Scalar num_4kb_walks;
             statistics::Scalar num_64kb_walks;
             statistics::Scalar num_2mb_walks;
+            statistics::Scalar num_1gb_walks;
+            statistics::Scalar num_512gb_walks;
 
         } pagewalkerstats;
 

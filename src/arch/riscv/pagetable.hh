@@ -63,7 +63,13 @@ const Addr SV39_LEVELS = 3;
 const Addr SV39_LEVEL_BITS  = 9;
 const Addr SV39X4_WIDENED_BITS = 2;
 
-BitUnion64(PTESv39)
+const Addr SV48_XLEN = 64;
+const Addr SV48_VADDR_BITS = 48;
+const Addr SV48_LEVELS = 4;
+const Addr SV48_LEVEL_BITS = 9;
+const Addr SV48X4_WIDENED_BITS = 2;
+
+BitUnion64(PTESv39) // совпадает с sv48
     Bitfield<63> n;
     Bitfield<62, 54> reserved;
     Bitfield<53, 10> ppn;
@@ -80,6 +86,98 @@ BitUnion64(PTESv39)
     Bitfield<1> r;
     Bitfield<0> v;
 EndBitUnion(PTESv39)
+
+BitUnion64(PTESv48)
+    Bitfield<63> n;                 // бит 63: зарезервирован (аналогично Sv39)
+    Bitfield<62, 54> reserved;      // биты 62–54: зарезервированы (должны быть 0)
+    Bitfield<53, 10> ppn;            // биты 53–10: 44-битный PPN
+    Bitfield<53, 37> ppn3;           // биты 53–37 (17 бит) – уровень 3 (самый старший)
+    Bitfield<36, 28> ppn2;           // биты 36–28 (9 бит)  – уровень 2
+    Bitfield<27, 19> ppn1;           // биты 27–19 (9 бит)  – уровень 1
+    Bitfield<18, 10> ppn0;           // биты 18–10 (9 бит)  – уровень 0 (младший)
+
+    Bitfield<7> d;                   // Dirty
+    Bitfield<6> a;                   // Accessed
+    Bitfield<5> g;                   // Global
+    Bitfield<4> u;                   // User
+
+    Bitfield<3, 1> perm;             // биты 3–1: объединённое поле r/w/x
+    Bitfield<3> x;                   // Execute
+    Bitfield<2> w;                   // Write
+    Bitfield<1> r;                   // Read
+    Bitfield<0> v;                   // Valid
+EndBitUnion(PTESv48)
+
+
+  Addr getXLEN(Addr mode) {
+    switch (mode) {
+        case 8:  // Sv39
+            return SV39_XLEN;
+        case 9:  // Sv48
+            return SV48_XLEN;
+        default:
+            return 0; // недопустимый режим
+    }
+}
+
+Addr getVADDR_BITS(Addr mode) {
+    switch (mode) {
+        case 8:
+            return SV39_VADDR_BITS;
+        case 9:
+            return SV48_VADDR_BITS;
+        default:
+            return 0;
+    }
+}
+
+Addr getLEVELS(Addr mode) {
+    switch (mode) {
+        case 8:
+            return SV39_LEVELS;
+        case 9:
+            return SV48_LEVELS;
+        default:
+            return 0;
+    }
+}
+
+Addr getLEVEL_BITS(Addr mode) {
+    switch (mode) {
+        case 8:
+            return SV39_LEVEL_BITS;
+        case 9:
+            return SV48_LEVEL_BITS;
+        default:
+            return 0;
+    }
+}
+
+Addr getWIDENED_BITS(Addr mode) {
+    switch (mode) {
+        case 8:
+            return SV39X4_WIDENED_BITS;
+        case 9:
+            return SV48X4_WIDENED_BITS;
+        default:
+            return 0;
+    }
+}
+
+struct PTES {
+    uint64_t raw;
+    PTES(uint64_t val = 0) : raw(val) {}
+
+    PTESv39 getSV39() const {
+        return PTESv39(raw);
+    }
+
+    PTESv48 getSV48() const {
+        return PTESv48(raw);
+    }
+
+    operator uint64_t() const { return raw; }
+};
 
 /**
  * Remove the page offset and the upper bits that are
@@ -103,9 +201,9 @@ struct TlbEntry : public Serializable
 
     uint16_t asid;
 
-    PTESv39 pte;
+    PTES pte;
 
-    PTESv39 gpte;
+    PTES gpte;
 
     TlbEntryTrie::Handle trieHandle;
 
@@ -124,7 +222,7 @@ struct TlbEntry : public Serializable
 
     void reset()
     {
-        paddr = vaddr = logBytes = pte = gpte = lruSeq = 0;
+        paddr = vaddr = logBytes = pte.raw = gpte.raw = lruSeq = 0;
     }
 
     void serialize(CheckpointOut &cp) const override;
