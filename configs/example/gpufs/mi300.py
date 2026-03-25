@@ -56,6 +56,7 @@ demo_runscript_without_checkpoint = """\
 export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
 export HSA_ENABLE_INTERRUPT=0
 export HCC_AMDGPU_TARGET=gfx942
+echo 0 > /proc/sys/kernel/randomize_va_space
 dmesg -n8
 cat /proc/cpuinfo
 dd if=/root/roms/mi300.rom of=/dev/mem bs=1k seek=768 count=128
@@ -88,6 +89,7 @@ export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
 export HSA_ENABLE_INTERRUPT=0
 export HCC_AMDGPU_TARGET=gfx942
 export HSA_OVERRIDE_GFX_VERSION="9.4.2"
+echo 0 > /proc/sys/kernel/randomize_va_space
 dmesg -n8
 dd if=/root/roms/mi300.rom of=/dev/mem bs=1k seek=768 count=128
 if [ ! -f /lib/modules/`uname -r`/updates/dkms/amdgpu.ko ]; then
