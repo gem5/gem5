@@ -2687,4 +2687,13 @@ DsbOp64::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
     return ss.str();
 }
 
+std::string
+WFxTOp64::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    printIntReg(ss, op1);
+    return ss.str();
+}
+
 } // namespace gem5

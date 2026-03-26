@@ -116,6 +116,7 @@ class ArmExtension(ScopedEnum):
         # Armv8.7
         "FEAT_HCX",
         "FEAT_XS",
+        "FEAT_WFxT",
         # Armv8.9
         "FEAT_SCTLR2",
         "FEAT_TCR2",
@@ -242,6 +243,7 @@ class ArmDefaultRelease(Armv8):
         # Armv8.7
         "FEAT_HCX",
         "FEAT_XS",
+        "FEAT_WFxT",
         # Armv9.0
         "FEAT_SVE2",
         # Armv9.2
@@ -324,6 +326,7 @@ class Armv87(Armv86):
     extensions = Armv86.extensions + [
         "FEAT_HCX",
         "FEAT_XS",
+        "FEAT_WFxT",
     ]
 
 
