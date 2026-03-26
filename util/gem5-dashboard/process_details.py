@@ -26,7 +26,7 @@
 
 from typing import List
 
-from dashboard_action import DashboardAction
+from actions.dashboard_action import DashboardAction
 from textual import work
 from textual.app import ComposeResult
 from textual.containers import Vertical

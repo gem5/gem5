@@ -28,7 +28,7 @@ import asyncio
 import os
 import signal
 
-from dashboard_action import DashboardAction
+from actions.dashboard_action import DashboardAction
 from textual.widgets import Static
 
 

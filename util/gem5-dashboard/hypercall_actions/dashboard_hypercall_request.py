@@ -28,13 +28,16 @@ socket_path = None
 sock = None
 
 
-def get_gem5_data(pid: int) -> dict:
+def _make_hypercall(pid: int, signal_num: int, extra_payload: dict) -> dict:
     """
-    Fetch data from gem5 used by the dashboard via hypercall.
-    :param pid: Process ID of the target gem5 process
-    :return: Dictionary containing gem5 data
-    :rtype: dict
+    Core hypercall helper: opens a Unix socket, sends signal_num to pid
+    with extra_payload merged into the payload, and waits for gem5's response.
 
+    :param pid: Process ID of the target gem5 process
+    :param signal_num: Signal number to send to gem5
+    :param extra_payload: Additional fields to include in the JSON payload
+    :return: Dictionary containing gem5's response
+    :rtype: dict
     """
     global sock, socket_path
 
@@ -53,9 +56,10 @@ def get_gem5_data(pid: int) -> dict:
         payload = json.dumps(
             {
                 "response_socket": socket_path,
+                **extra_payload,
             }
         )
-        send_signal(pid, 999, payload)
+        send_signal(pid, signal_num, payload)
 
         ready, _, _ = select.select([sock], [], [], 30.0)
         if not ready:
@@ -68,6 +72,32 @@ def get_gem5_data(pid: int) -> dict:
             conn.close()
     finally:
         cleanup()
+
+
+def get_gem5_data(pid: int) -> dict:
+    """
+    Fetch data from gem5 used by the dashboard via hypercall (signal 999).
+
+    :param pid: Process ID of the target gem5 process
+    :return: Dictionary containing gem5 data
+    :rtype: dict
+    """
+    return _make_hypercall(pid, 999, {})
+
+
+def send_gem5_action(pid: int, action: str, arguments: dict = None) -> dict:
+    """
+    Send an action hypercall to gem5 (signal 998).
+
+    :param pid: Process ID of the target gem5 process
+    :param action: Action identifier for gem5 to dispatch (e.g. 'checkpoint')
+    :param arguments: Optional key-value arguments passed alongside the action
+    :return: Dictionary containing gem5's response
+    :rtype: dict
+    """
+    return _make_hypercall(
+        pid, 998, {"action": action, "arguments": arguments or {}}
+    )
 
 
 def main():

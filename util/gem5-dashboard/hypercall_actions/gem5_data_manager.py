@@ -122,8 +122,7 @@ class Gem5DataManager:
         """
         try:
             script_path = (
-                Path(__file__).parent
-                / "helpers/dashboard_hypercall_request.py"
+                Path(__file__).parent / "dashboard_hypercall_request.py"
             )
             log(f"Fetching gem5 data for PID {pid}")
 

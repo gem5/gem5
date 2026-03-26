@@ -49,94 +49,151 @@ The dashboard uses a modular design with clean separation between data sources:
 - **`gem5_data_manager.py`**: Centralized gem5 data fetching and caching
 - **`table_columns/`**: Column implementations (receive both psutil and gem5 data)
 - **`actions/`**: User actions (Kill, etc.)
-- Communicates with gem5 using utilities from `helpers/dashboard_hypercall_request.py`
+- Communicates with gem5 using utilities from `hypercall_actions/dashboard_hypercall_request.py`
 
 ---
 
 ## Extending the Dashboard
 
-The dashboard uses a plugin-based architecture. You can add new features without touching the core UI code.
+The dashboard uses a plugin-based architecture. You can add new columns or actions without touching the core UI code.
+
+---
 
 ### Adding a New Column
 
-To add a new column (e.g., "Simulation Ticks"):
+Columns receive two data sources: fast OS-level data from `psutil` and gem5-specific data fetched once per refresh via hypercall. Your function picks what it needs from either source.
 
-1. **Create column file** in `table_columns/`:
+**Step 1: Create a column file in `table_columns/`**
+
+Name the file after the value it displays (e.g., `ticks_column.py`). The function signature must be `(proc, gem5_data=None) -> str`.
 
 ```python
 # table_columns/ticks_column.py
 def get_ticks(proc, gem5_data=None):
-    """Get current simulation tick count."""
     if gem5_data is None:
         gem5_data = {}
-
     ticks = gem5_data.get("tick", None)
     return f"{ticks:,}" if ticks else "N/A"
 ```
 
-2. **Register in `table_column_map.py`**:
+- Use `proc` (a `psutil.Process` info dict) for OS-level fields like PID, status, or CPU usage.
+- Use `gem5_data` for simulation-specific fields. These come from the gem5 hypercall response; if gem5 is unreachable, this will be an empty dict — always guard with a default.
+
+**Step 2: Register in `table_column_map.py`**
 
 ```python
 from table_columns.ticks_column import get_ticks
 
 COLUMNS = [
-    {"name": "PID", "key": "PID", "width": 10, "func": get_pid},
-    {"name": "Ticks", "key": "Ticks", "width": 15, "func": get_ticks},  # Add here
-    # ... other columns
+    {"name": "PID",   "key": "PID",   "width": 10, "func": get_pid},
+    {"name": "Ticks", "key": "Ticks", "width": 15, "func": get_ticks},  # new
+    # ...
 ]
 ```
 
-3. **Ensure gem5 returns the data**: The hypercall response must include the field (e.g., `"tick": 123456`).
+The `"width"` key is optional. Omit it to let the column stretch to fill remaining space.
 
-The `Gem5DataManager` handles fetching, and your column just extracts the value.
+**Step 3 (if needed): Ensure `gem5DashboardExitHandler` returns the field**
 
-### Adding a New Action
+If your column reads from `gem5_data`, make sure the gem5-side hypercall handler `gem5DashboardExitHandler` includes that key in its JSON response (e.g., `"tick": 123456`). The `Gem5DataManager` handles caching and fetching automatically.
 
-To add new actions (like "Dump Stats" or "Pause Simulation"):
+---
 
-### Step 1: Create the Action Class
+### Adding a New Action (OS-level)
 
-Create a new file in the `actions/` folder (e.g., `actions/my_action.py`). Your class must inherit from `DashboardAction` and implement the required properties.
+Use this path for actions that do not need to communicate with gem5
+
+**Step 1: Create the action file in `actions/`**
+
+Name the file after the action (e.g., `dump_stats_action.py`). Inherit from `DashboardAction` and implement `label`, `id`, `variant`, and `execute`.
 
 ```python
+# actions/dump_stats_action.py
+from actions.dashboard_action import DashboardAction
 from textual.widgets import Static
-from dashboard_action import DashboardAction
 
-class MyAction(DashboardAction):
-    # 1. Label: Text shown on the button
-    label = "my action"
-
-    # 2. ID: Unique identifier for the button
-    id = "act_my_action"
-
-    # 3. Variant: Button color ('primary', 'default', 'success', 'warning', 'error')
-    variant = "primary"
+class DumpStatsAction(DashboardAction):
+    label = "Dump Stats"
+    id = "act_dump_stats"
+    variant = "primary"  # 'primary', 'default', 'success', 'warning', 'error'
 
     async def execute(self, pid: str, console: Static) -> None:
-        """
-        Define what happens when the button is clicked.
-
-        Args:
-            pid: The process ID of the selected simulation.
-            console: The UI widget to print status messages to.
-        """
-        console.update(f"Checking config for PID {pid}...")
-
-        console.update("My action complete!")
+        console.update(f"Dumping stats for PID {pid}...")
+        # ... your logic here ...
+        console.update("[bold green]Done![/bold green]")
 ```
 
-### Step 2: Register the Action
+- `id` must be unique across all actions
+- `console.update(...)` accepts Rich markup for coloured output.
 
-Open `action_registry.py`, import your new class, and add it to the list.
+**Step 2: Register in `action_registry.py`**
 
 ```python
 from actions.kill_process_action import KillAction
-from actions.my_new_action import MyAction  # <--- 1. Import
+from actions.dump_stats_action import DumpStatsAction  # 1. import
 
 ENABLED_ACTIONS = [
     KillAction(),
-    MyAction(),  # <--- 2. Add to list
+    DumpStatsAction(),  # 2. add to list
 ]
 ```
 
-The dashboard will automatically render the button in the sidebar and wire up the click event.
+The dashboard automatically renders a button for each entry and wires up the click event.
+
+---
+
+### Adding a New Action (gem5-communicating)
+
+Use this path when an action needs to send a command to a running gem5 process.
+
+The hypercall sends a JSON payload of the form:
+
+```json
+{ "action": "checkpoint", "arguments": { "path": "/tmp/cpt" } }
+```
+
+gem5 receives signal 998, reads `action` field to handle logic for that action.
+
+**Step 1: Create the action file in `actions/`**
+
+Inherit from `Gem5HypercallAction` instead of `DashboardAction`. Implement `action_code` and optionally `get_arguments`.
+
+```python
+# actions/checkpoint_action.py
+from hypercall_actions.gem5_hypercall_action import Gem5HypercallAction
+
+class CheckpointAction(Gem5HypercallAction):
+    label = "Checkpoint"
+    id = "act_checkpoint"
+    variant = "success"
+
+    @property
+    def action_code(self) -> str:
+        return "checkpoint"
+
+    def get_arguments(self, pid: str) -> dict:
+        # Optional: return extra fields included in the hypercall payload.
+        return {"path": f"/tmp/gem5_cpt_{pid}"}
+```
+
+`Gem5HypercallAction` provides a default `execute` that:
+1. Sends the hypercall via `send_gem5_action(pid, action_code, arguments)`
+2. Displays the response or error in the console
+
+Override `execute` if you need custom pre/post-processing around the hypercall.
+
+**Step 2: Register in `action_registry.py`**
+
+```python
+from actions.kill_process_action import KillAction
+from actions.checkpoint_action import CheckpointAction  # 1. import
+
+ENABLED_ACTIONS = [
+    KillAction(),
+    CheckpointAction(),  # 2. add to list
+]
+```
+
+**Step 3: Update `gem5DashboardActionExitHandler` in gem5**
+
+On the gem5 side, update the `gem5DashboardActionExitHandler` with the new `action` field from the payload to return the required data. The dashboard expects a JSON response dict back.

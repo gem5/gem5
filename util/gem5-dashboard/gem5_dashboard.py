@@ -28,7 +28,7 @@ import os
 
 import psutil
 from action_registry import ENABLED_ACTIONS
-from gem5_data_manager import Gem5DataManager
+from hypercall_actions.gem5_data_manager import Gem5DataManager
 from process_details import ProcessDetails
 from table_column_map import COLUMNS
 from textual.app import (
