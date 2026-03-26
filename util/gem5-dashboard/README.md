@@ -48,8 +48,8 @@ The dashboard uses a modular design with clean separation between data sources:
 - **`gem5_dashboard.py`**: Main TUI application
 - **`gem5_data_manager.py`**: Centralized gem5 data fetching and caching
 - **`table_columns/`**: Column implementations (receive both psutil and gem5 data)
-- **`actions/`**: User actions (Kill, Checkpoint, etc.)
-- Communicates with gem5 using utilities from `../hypercall_external_signal/`
+- **`actions/`**: User actions (Kill, etc.)
+- Communicates with gem5 using utilities from `helpers/dashboard_hypercall_request.py`
 
 ---
 
@@ -88,7 +88,7 @@ COLUMNS = [
 
 3. **Ensure gem5 returns the data**: The hypercall response must include the field (e.g., `"tick": 123456`).
 
-That's it! The `Gem5DataManager` handles fetching, and your column just extracts the value.
+The `Gem5DataManager` handles fetching, and your column just extracts the value.
 
 ### Adding a New Action
 

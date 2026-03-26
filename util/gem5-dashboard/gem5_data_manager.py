@@ -122,14 +122,14 @@ class Gem5DataManager:
         """
         try:
             script_path = (
-                Path(__file__).parent.parent
-                / "hypercall_external_signal/orchestrator_request.py"
+                Path(__file__).parent
+                / "helpers/dashboard_hypercall_request.py"
             )
             log(f"Fetching gem5 data for PID {pid}")
 
-            # Call orchestrator-request.py as a subprocess
+            # Call dashboard_hypercall_request.py as a subprocess
             result = subprocess.run(
-                ["python3", str(script_path), "--pid", pid, "status"],
+                ["python3", str(script_path), "--pid", pid],
                 capture_output=True,
                 text=True,
                 timeout=5,
