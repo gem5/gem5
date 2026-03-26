@@ -118,6 +118,30 @@ gem5_verify_config(
     length=constants.very_long_tag,
     uses_kvm=False,
 )
+
+gem5_verify_config(
+    name="test-multisim-x86-processor-switch",
+    fixtures=(),
+    verifiers=(),
+    gem5_args=[
+        "-m",
+        "gem5.utils.multisim",
+    ],
+    config=joinpath(
+        config.base_dir,
+        "tests",
+        "gem5",
+        "multisim",
+        "configs",
+        "x86-processor-switch.py",
+    ),
+    config_args=[],
+    valid_isas=(constants.all_compiled_tag,),
+    valid_hosts=constants.supported_hosts,
+    length=constants.very_long_tag,
+    uses_kvm=False,
+)
+
 # For now, skip this test because there are issues with obtaining one of the
 # checkpoints with obtain_resource
 # gem5_verify_config(
