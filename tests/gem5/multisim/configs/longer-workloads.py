@@ -36,31 +36,9 @@ from gem5.isas import ISA
 from gem5.resources.resource import obtain_resource
 from gem5.simulate.simulator import Simulator
 
-multisim.set_num_processes(22)
+multisim.set_num_processes(4)
 
-cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
-    l1d_size="16KiB", l1i_size="16KiB", l2_size="256KiB"
-)
-memory = SingleChannelDDR3_1600(size="3GiB")
-processor = SimpleProcessor(cpu_type=CPUTypes.ATOMIC, isa=ISA.X86, num_cores=1)
-board = X86Board(
-    clk_freq="1GHz",
-    processor=processor,
-    memory=memory,
-    cache_hierarchy=cache_hierarchy,
-)
-board.set_workload(
-    obtain_resource(
-        "x86-ubuntu-24.04-boot-with-systemd", resource_version="5.0.0"
-    )
-)
-
-multisim.add_simulator(
-    Simulator(board=board, id=f"process_x86-atomic-24-04-boot")
-)
-
-
-for npb_workload in ["bt", "cg", "ep", "ft", "is", "lu", "mg", "sp", "ua"]:
+for npb_workload in ["bt", "cg", "ep", "ft"]:
     cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
         l1d_size="16KiB",
         l1i_size="16KiB",
