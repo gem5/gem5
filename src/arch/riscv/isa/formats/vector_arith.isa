@@ -558,10 +558,10 @@ def format VectorIntNarrowingFormat(code, category, *flags) {{
         flags)
 
     header_output = \
-        VectorIntWideningMicroDeclare.subst(microiop) + \
-        VectorIntWideningMacroDeclare.subst(iop)
+        VectorIntNarrowingMicroDeclare.subst(microiop) + \
+        VectorIntNarrowingMacroDeclare.subst(iop)
     decoder_output = \
-        VectorIntWideningMicroConstructor.subst(microiop) + \
+        VectorIntNarrowingMicroConstructor.subst(microiop) + \
         VectorIntNarrowingMacroConstructor.subst(iop)
     exec_output = VectorIntNarrowingMicroExecute.subst(microiop)
     decode_block = VectorIntWideningDecodeBlock.subst(iop)
@@ -1020,10 +1020,10 @@ def format VectorFloatNarrowingCvtFormat(code, category, *flags) {{
         flags)
 
     header_output = \
-        VectorFloatCvtMicroDeclare.subst(microiop) + \
-        VectorFloatCvtMacroDeclare.subst(iop)
+        VectorIntNarrowingMicroDeclare.subst(microiop) + \
+        VectorIntNarrowingMacroDeclare.subst(iop)
     decoder_output = \
-        VectorIntWideningMicroConstructor.subst(microiop) + \
+        VectorIntNarrowingMicroConstructor.subst(microiop) + \
         VectorIntNarrowingMacroConstructor.subst(iop)
     exec_output = VectorFloatNarrowingMicroExecute.subst(microiop)
     decode_block = VectorFloatWideningAndNarrowingCvtDecodeBlock.subst(iop)

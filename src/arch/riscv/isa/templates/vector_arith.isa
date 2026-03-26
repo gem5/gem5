@@ -489,6 +489,20 @@ Fault
 
 }};
 
+def template VectorIntNarrowingMacroDeclare {{
+
+template<typename ElemType>
+class %(class_name)s : public %(base_class)s {
+private:
+    %(reg_idx_arr_decl)s;
+    bool vxsat = false;
+public:
+    %(class_name)s(ExtMachInst _machInst, uint32_t _elen, uint32_t _vlen);
+    using %(base_class)s::generateDisassembly;
+};
+
+}};
+
 def template VectorIntNarrowingMacroConstructor {{
 
 template<typename ElemType>
@@ -537,7 +551,7 @@ template<typename ElemType>
 
         microop = new %(class_name)sMicro<ElemType>(_machInst, micro_vl, i,
                                                     _elen, _vlen, copy_vs1,
-                                                    copy_vs2);
+                                                    copy_vs2, &vxsat);
         microop->setDelayedCommit();
         this->microops.push_back(microop);
         micro_vl = std::min(tmp_vl -= micro_vlmax, micro_vlmax);
@@ -545,8 +559,59 @@ template<typename ElemType>
         copy_vs2 = false;
     }
 
+    if (_opClass == SimdCvtOp){
+        microop = new VxsatMicroInst(&vxsat, _machInst, _elen, _vlen);
+        microop->setFlag(StaticInst::IsSerializeAfter);
+        microop->setFlag(StaticInst::IsNonSpeculative);
+        this->microops.push_back(microop);
+    }
+
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+}
+
+%(declare_varith_template)s;
+
+}};
+
+def template VectorIntNarrowingMicroDeclare {{
+
+template<typename ElemType>
+class %(class_name)s : public %(base_class)s
+{
+private:
+    // vs1, vs2, vs3(old_vd), vm for *.vv, *.vx
+    RegId srcRegIdxArr[4];
+    RegId destRegIdxArr[1];
+    bool vm;
+    bool *vxsatptr;
+public:
+    %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
+                   uint32_t _microIdx, uint32_t _elen, uint32_t _vlen,
+                   bool _copyVs1=false, bool _copyVs2=false, bool* vxsatptr=nullptr);
+    Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
+    using %(base_class)s::generateDisassembly;
+};
+
+}};
+
+
+def template VectorIntNarrowingMicroConstructor {{
+
+template<typename ElemType>
+%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
+        uint32_t _microVl, uint32_t _microIdx, uint32_t _elen, uint32_t _vlen,
+        bool _copyVs1, bool _copyVs2, bool* vxsatptr)
+    : %(base_class)s("%(mnemonic)s", _machInst,
+                     %(op_class)s, _microVl, _microIdx, _elen, _vlen)
+{
+    this->vm = _machInst.vm;
+    this->vxsatptr = vxsatptr;
+    %(set_reg_idx_arr)s;
+    _numSrcRegs = 0;
+    _numDestRegs = 0;
+    %(set_dest_reg_idx)s;
+    %(set_src_reg_idx)s;
 }
 
 %(declare_varith_template)s;
