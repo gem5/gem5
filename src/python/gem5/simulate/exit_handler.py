@@ -318,6 +318,37 @@ class WorkEndExitHandler(ExitHandler, hypercall_num=5):
         return False
 
 
+class gem5DashboardActionExitHandler(ExitHandler, hypercall_num=998):
+    """A handler designed to be the default for the gem5 dashboard action
+    hypercall exit event. This exit event is triggered by the dashboard's
+    hypercalls to send actions to gem5.
+
+    It will not exit the simulation loop by default.
+    """
+
+    @overrides(ExitHandler)
+    def _process(self, simulator: "Simulator") -> None:
+        try:
+            socket_path = self._payload.get("response_socket")
+            action = self._payload.get("action", "")
+            arguments = self._payload.get("arguments")
+            if socket_path:
+                sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                sock.connect(socket_path)
+
+                response = json.dumps({"error": f"Unknown action: {action}"})
+
+                sock.send(response.encode())
+                sock.close()
+
+        except Exception as e:
+            print(f"Error in gem5DashboardActionExitHandler: {e}")
+
+    @overrides(ExitHandler)
+    def _exit_simulation(self) -> bool:
+        return False
+
+
 class gem5DashboardExitHandler(ExitHandler, hypercall_num=999):
     """A handler designed to be the default for the gem5 dashboard hypercall
     exit event. This exit event is triggered by the dashboard's periodic
