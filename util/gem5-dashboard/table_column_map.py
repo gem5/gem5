@@ -20,6 +20,7 @@ COLUMNS = [
     {
         "name": "Workload ID",
         "key": "Workload ID",
+        "width": 40,
         "func": get_workload_id,
     },
     {"name": "Command", "key": "Command", "func": get_command},
