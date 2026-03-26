@@ -318,6 +318,50 @@ class WorkEndExitHandler(ExitHandler, hypercall_num=5):
         return False
 
 
+class gem5DashboardExitHandler(ExitHandler, hypercall_num=999):
+    """A handler designed to be the default for the gem5 dashboard hypercall
+    exit event. This exit event is triggered by the dashboard's periodic
+    hypercalls to fetch data from gem5.
+
+    It will not exit the simulation loop by default.
+    """
+
+    def _get_current_stats(self, simulator: "Simulator") -> Dict[str, Any]:
+        import _m5.core
+
+        if not simulator.get_workload():
+            workload_id = "N/A"
+        else:
+            workload_id = simulator.get_workload().get_id()
+        return {
+            "workload": workload_id,
+            "curr_instructions_executed": simulator.get_instruction_count(),
+        }
+
+    @overrides(ExitHandler)
+    def _process(self, simulator: "Simulator") -> None:
+        try:
+            socket_path = self._payload.get("response_socket")
+            if socket_path:
+                sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                sock.connect(socket_path)
+
+                response = json.dumps(self._get_current_stats(simulator))
+
+                if not response:
+                    response = json.dumps({"error": "Failed to fetch stats"})
+
+                sock.send(response.encode())
+                sock.close()
+
+        except Exception as e:
+            print(f"Error in gem5DashboardExitHandler: {e}")
+
+    @overrides(ExitHandler)
+    def _exit_simulation(self) -> bool:
+        return False
+
+
 class OrchestratorExitHandler(ExitHandler, hypercall_num=1000):
 
     def _get_status(self, simulator: "Simulator") -> Dict[str, str]:
