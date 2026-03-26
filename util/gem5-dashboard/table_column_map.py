@@ -3,6 +3,7 @@ from table_columns.instructions_column import get_current_instructions
 from table_columns.pid_column import get_pid
 from table_columns.status_column import get_status
 from table_columns.user_column import get_user
+from table_columns.workload_id_column import get_workload_id
 
 # To be used in gem5-dashboard to define table columns for displaying gem5 processes
 # Each column is defined with its display name, key, width(optional), and a function to extract the relevant data.
@@ -15,6 +16,11 @@ COLUMNS = [
         "key": "Instructions",
         "width": 20,
         "func": get_current_instructions,
+    },
+    {
+        "name": "Workload ID",
+        "key": "Workload ID",
+        "func": get_workload_id,
     },
     {"name": "Command", "key": "Command", "func": get_command},
 ]
