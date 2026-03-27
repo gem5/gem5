@@ -1061,7 +1061,14 @@ Rename::renameSrcRegs(const DynInstPtr &inst, ThreadID tid)
         renamed_reg = map->lookup(flat_reg);
         switch (flat_reg.classValue()) {
           case InvalidRegClass:
-            break;
+              // break exits the switch but not the for loop, so control
+              // would fall through to scoreboard->getReg(renamed_reg),
+              // calling it on invalidPhysRegId and causing a crash.
+              // Map to invalidPhysRegId and mark ready directly,
+              // bypassing the scoreboard.
+              inst->renameSrcReg(src_idx, renamed_reg);
+              inst->markSrcRegReady(src_idx);
+              continue;
           case IntRegClass:
             stats.intLookups++;
             break;
