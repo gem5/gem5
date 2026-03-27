@@ -316,6 +316,8 @@ rspOpcode(RspOpcode opc, Resp resp)
 {
     switch(opc) {
       case RSP_OPCODE_COMP_ACK: return CHIResponseType_CompAck;
+      case RSP_OPCODE_RESP_SEP_DATA:
+          return CHIResponseType_RespSepData;
       case RSP_OPCODE_SNP_RESP:
         switch (resp) {
           case RESP_I: return CHIResponseType_SnpResp_I;
@@ -384,6 +386,8 @@ rspOpcode(CHIResponseType rsp)
         return RSP_OPCODE_COMP_DBID_RESP;
       case CHIResponseType_DBIDResp:
           return RSP_OPCODE_DBID_RESP;
+      case CHIResponseType_RespSepData:
+          return RSP_OPCODE_RESP_SEP_DATA;
       case CHIResponseType_RetryAck:
         return RSP_OPCODE_RETRY_ACK;
       default:
@@ -468,6 +472,8 @@ rspResp(CHIResponseType rsp)
         case CHIResponseType_CompDBIDResp:
             return RESP_I;
         case CHIResponseType_DBIDResp:
+            return RESP_I;
+        case CHIResponseType_RespSepData:
             return RESP_I;
         case CHIResponseType_RetryAck:
             // Just setup to zero

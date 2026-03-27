@@ -231,7 +231,15 @@ CacheController::ReadTransaction::handle(const CHIResponseMsg *msg)
 {
     /// TODO: remove this, DBID is not sent
     phase.dbid = msg->m_dbid;
-    return Transaction::handle(msg);
+    const bool finished = Transaction::handle(msg);
+
+    // Read transactions complete on DAT beats, not on RespSepData.
+    // If we terminate here, the following DAT can no longer be matched.
+    if (phase.rsp_opcode == ARM::CHI::RSP_OPCODE_RESP_SEP_DATA) {
+        return false;
+    }
+
+    return finished;
 }
 
 bool
