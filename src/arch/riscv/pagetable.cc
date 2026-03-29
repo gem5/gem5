@@ -64,16 +64,16 @@ Addr
 getVPNFromVAddr(Addr vaddr, Addr mode)
 {
     switch (mode) {
-    case BARE:
-        return vaddr >> 12;
-    case SV39:
-        return bits(vaddr, 38, 12);
-    case SV48:
-        return bits(vaddr, 47, 12);
-    case SV57:
-        return bits(vaddr, 56, 12);
-    default:
-        panic("Unknown address translation mode %d\n", mode);
+        case BARE:
+            return vaddr >> 12;
+        case SV39:
+            return bits(vaddr, 38, 12);
+        case SV48:
+            return bits(vaddr, 47, 12);
+        case SV57:
+            return bits(vaddr, 56, 12);
+        default:
+            panic("Unknown address translation mode %d\n", mode);
     }
 }
 

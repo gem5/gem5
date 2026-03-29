@@ -45,6 +45,9 @@
 #include "params/RiscvTLB.hh"
 #include "sim/sim_object.hh"
 
+#include "debug/TLB.hh"
+#include "debug/TLBVerbose.hh"
+
 namespace gem5
 {
 
@@ -52,7 +55,8 @@ class ThreadContext;
 
 /* To maintain compatibility with other architectures, we'll
    simply create an ITLB and DTLB that will point to the real TLB */
-namespace RiscvISA {
+namespace RiscvISA
+{
 
 class MemAccessInfo
 {
@@ -64,9 +68,10 @@ class MemAccessInfo
     bool lr;
 
     MemAccessInfo() = default;
-    MemAccessInfo(
-      PrivilegeMode priv, bool virt, bool force_virt, bool hlvx, bool lr) :
-      priv(priv), virt(virt), force_virt(force_virt), hlvx(hlvx), lr(lr) {}
+    MemAccessInfo(PrivilegeMode priv, bool virt, bool force_virt, bool hlvx,
+                  bool lr)
+        : priv(priv), virt(virt), force_virt(force_virt), hlvx(hlvx), lr(lr)
+    {}
 
     bool
     bypassTLB() const
@@ -77,8 +82,8 @@ class MemAccessInfo
 
 enum XlateStage
 {
-  FIRST_STAGE,
-  GSTAGE
+    FIRST_STAGE,
+    GSTAGE
 };
 
 class Walker;
@@ -89,9 +94,9 @@ class TLB : public BaseTLB
 
   protected:
     size_t size;
-    std::vector<TlbEntry> tlb;  // our TLB
-    TlbEntryTrie trie;          // for quick access
-    EntryList freeList;         // free entries
+    std::vector<TlbEntry> tlb; // our TLB
+    TlbEntryTrie trie;         // for quick access
+    EntryList freeList;        // free entries
     uint64_t lruSeq;
 
     Walker *walker;
@@ -116,13 +121,33 @@ class TLB : public BaseTLB
     BasePMAChecker *pma;
     PMP *pmp;
 
+  private:
+    AddrXlateMode
+    getAddrXlateMode(Addr mode)
+    {
+        AddrXlateMode axm;
+        switch (mode) {
+            case SV39:
+                axm = AddrXlateMode::SV39;
+                break;
+            case SV48:
+                axm = AddrXlateMode::SV48;
+                break;
+            default:
+                panic("Unsupported SATP mode in getAddrXlateMode");
+        }
+        return axm;
+    }
+
   public:
     typedef RiscvTLBParams Params;
     TLB(const Params &p);
 
     Walker *getWalker();
 
-    void takeOverFrom(BaseTLB *old) override {}
+    void
+    takeOverFrom(BaseTLB *old) override
+    {}
 
     /**
      * Insert an entry into the TLB.
@@ -136,16 +161,78 @@ class TLB : public BaseTLB
     void flushAll() override;
     void demapPage(Addr vaddr, uint64_t asn) override;
 
-    Fault checkPermissions(ThreadContext* tc, MemAccessInfo mem_access,
-                            Addr vaddr, BaseMMU::Mode mode, PTESv39 pte,
-                            Addr gvaddr = 0x0,
-                            XlateStage stage = XlateStage::FIRST_STAGE);
+  private:
+    template <class T>
+    Fault
+    templateCheckPermissions(ThreadContext *tc, MemAccessInfo mem_access,
+                             Addr vaddr, BaseMMU::Mode mode, T pte,
+                             Addr gvaddr, XlateStage stage)
+    {
+        MISA misa = tc->readMiscReg(MISCREG_ISA);
+        STATUS status = tc->readMiscReg(MISCREG_STATUS);
+        PrivilegeMode priv =
+            stage == XlateStage::GSTAGE ? PRV_U : mem_access.priv;
+
+        bool sum = status.sum;
+        bool mxr = status.mxr;
+        bool gpf = stage == GSTAGE;
+        bool virt = mem_access.virt;
+
+        bool pf = false;
+
+        if (misa.rvh && mem_access.virt && stage == FIRST_STAGE) {
+            STATUS vsstatus = tc->readMiscReg(MISCREG_VSSTATUS);
+            sum = vsstatus.sum;
+            mxr |= vsstatus.mxr;
+        }
+
+        if (mem_access.hlvx) {
+            if (!pte.x) {
+                pf = true;
+                DPRINTF(TLB, "HLVX with no exec perm, raising PF\n");
+            }
+        } else if (mode == BaseMMU::Read && !pte.r) {
+            if (mxr && pte.x) {
+                DPRINTF(TLBVerbose,
+                        "MXR bit on, load from exec page success\n");
+            } else {
+                pf = true;
+                DPRINTF(TLB, "PTE has no read perm, raising PF\n");
+            }
+        } else if (mode == BaseMMU::Write && !pte.w) {
+            pf = true;
+            DPRINTF(TLB, "PTE has no write perm, raising PF\n");
+        } else if (mode == BaseMMU::Execute && !pte.x) {
+            pf = true;
+            DPRINTF(TLB, "PTE has no exec perm, raising PF\n");
+        }
+
+        if (!pf) {
+            // check pte.u
+            if (priv == PRV_U && !pte.u) {
+                pf = true;
+                DPRINTF(TLB, "PTE not user accessible, raising PF\n");
+            } else if (priv == PRV_S && pte.u &&
+                       (mode == BaseMMU::Execute || sum == 0)) {
+                pf = true;
+                DPRINTF(TLB, "PTE only user accessible, raising PF\n");
+            }
+        }
+
+        return pf ? createPagefault(vaddr, mode, gvaddr, gpf, virt) : NoFault;
+    }
+
+  public:
+    Fault checkPermissions(ThreadContext *tc, MemAccessInfo mem_access,
+                           Addr vaddr, BaseMMU::Mode mode, PTES pte,
+                           Addr gvaddr = 0x0,
+                           XlateStage stage = XlateStage::FIRST_STAGE);
 
     Fault createPagefault(Addr vaddr, BaseMMU::Mode mode, Addr gvaddr = 0x0,
                           bool gpf = false, bool virt = false);
 
     MemAccessInfo getMemAccessInfo(ThreadContext *tc, BaseMMU::Mode mode,
-                                  const Request::ArchFlagsType arch_flags);
+                                   const Request::ArchFlagsType arch_flags);
 
     // Checkpointing
     void serialize(CheckpointOut &cp) const override;
@@ -166,8 +253,8 @@ class TLB : public BaseTLB
     Addr hiddenTranslateWithTLB(Addr vaddr, uint16_t asid, Addr xmode,
                                 BaseMMU::Mode mode);
 
-    Fault translateAtomic(const RequestPtr &req,
-                          ThreadContext *tc, BaseMMU::Mode mode) override;
+    Fault translateAtomic(const RequestPtr &req, ThreadContext *tc,
+                          BaseMMU::Mode mode) override;
     void translateTiming(const RequestPtr &req, ThreadContext *tc,
                          BaseMMU::Translation *translation,
                          BaseMMU::Mode mode) override;
@@ -179,13 +266,13 @@ class TLB : public BaseTLB
     Addr
     getValidAddr(Addr vaddr, ThreadContext *tc, BaseMMU::Mode mode)
     {
-      /**
-        * For RV32, we follow what the specification said:
-        * When mapping between narrower and wider addresses,
-        * RISC-V zero-extends a narrower physical address to a
-        * wider size.
-        */
-        ISA* isa = static_cast<ISA*>(tc->getIsaPtr());
+        /**
+         * For RV32, we follow what the specification said:
+         * When mapping between narrower and wider addresses,
+         * RISC-V zero-extends a narrower physical address to a
+         * wider size.
+         */
+        ISA *isa = static_cast<ISA *>(tc->getIsaPtr());
         if (isa->rvType() == RV32) {
             return bits(vaddr, 31, 0);
         }
@@ -204,7 +291,11 @@ class TLB : public BaseTLB
     TlbEntry *lookup(Addr vpn, uint16_t asid, BaseMMU::Mode mode, bool hidden);
 
   private:
-    uint64_t nextSeq() { return ++lruSeq; }
+    uint64_t
+    nextSeq()
+    {
+        return ++lruSeq;
+    }
 
     void evictLRU();
     void remove(size_t idx);
