@@ -5048,6 +5048,8 @@ decode QUADRANT default Unknown::unknown() {
                     bool copyAll = vs3WindowLeft >= vdWindowLeft
                         && vs3WindowLeft < vdWindowRight;
 
+                    COPY_OLD_VD(oldDstIdx);
+
                     if (copyAll) {
                         int backLen = vdWindowRight - vs3WindowLeft;
                         int frontLen = microVlmax - backLen;
