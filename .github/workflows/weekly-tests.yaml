@@ -155,7 +155,10 @@ jobs:
     gpu-tests:
         strategy:
             matrix:
-                test-length: [quick, long, very-long]
+                # The runners will run out of memory when trying to build
+                # ALL/gem5.opt for the long gpu-tests, so only run the quick
+                # and very-long gpu tests, which only use VEGA_X86/gem5.opt
+                test-length: [quick, very-long]
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/gcn-gpu:latest
         timeout-minutes: 1440 # 24 hours
