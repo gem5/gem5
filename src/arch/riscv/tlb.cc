@@ -196,6 +196,23 @@ TLB::insert(Addr vpn, const TlbEntry &entry)
 void
 TLB::demapPage(Addr vaddr, uint64_t asid)
 {
+    /*
+    auto isa = tc->getIsaPtr();
+    SATP satp_reg = SATP(isa->readMiscRegNoEffect(MISCREG_SATP));
+    Addr satp_mode = satp_reg.mode;
+    AddrXlateMode axm;
+    switch(satp_mode) {
+        case SV39:
+            axm = getAddrXlateMode(SV39);
+            break;
+        case SV48:
+            axm = getAddrXlateMode(SV48);
+            break;
+        default:
+            panic("Нормальный паник");
+    }
+    */
+
     // Note: vaddr is Reg[rs1] and asid is Reg[rs2]
     // The definition of this instruction is
     // if vaddr=x0 and asid=x0, then flush all
@@ -207,13 +224,7 @@ TLB::demapPage(Addr vaddr, uint64_t asid)
     // Currently, we assume if the values of the registers are 0 then it was
     // referencing x0.
 
-    auto &isa = tc->getIsaPtr<RiscvISA::ISA>();
-    SATP satp_reg = SATP(isa->readMiscRegNoEffect(MISCREG_SATP));
-    Addr satp_mode = satp_reg.mode;
-
-    AddrXlateMode axm = getAddrXlateMode(satp_mode)
-
-        asid &= 0xFFFF;
+    asid &= 0xFFFF;
 
     DPRINTF(TLB, "flush(vaddr=%#x, asid=%#x)\n", vaddr, asid);
     if (vaddr == 0 && asid == 0) {
@@ -222,19 +233,19 @@ TLB::demapPage(Addr vaddr, uint64_t asid)
     } else {
         if (vaddr != 0 && asid != 0) {
             // TODO: When supporting other address translation modes, fix this
-            Addr vpn = getVPNFromVAddr(vaddr, axm);
+            Addr vpn = getVPNFromVAddr(vaddr, AddrXlateMode::SV39);
             TlbEntry *entry = lookup(vpn, asid, BaseMMU::Read, true);
             if (entry) {
                 remove(entry - tlb.data());
             }
-        } else {
+        }
+        else {
             for (size_t i = 0; i < size; i++) {
                 if (tlb[i].trieHandle) {
                     Addr mask = ~(tlb[i].size() - 1);
                     if ((vaddr == 0 || (vaddr & mask) == tlb[i].vaddr) &&
-                        (asid == 0 || tlb[i].asid == asid)) {
+                        (asid == 0 || tlb[i].asid == asid))
                         remove(i);
-                    }
                 }
             }
         }
@@ -270,7 +281,7 @@ TLB::checkPermissions(ThreadContext *tc, MemAccessInfo mem_access, Addr vaddr,
                       BaseMMU::Mode mode, PTES pte, Addr gvaddr,
                       XlateStage stage)
 {
-    auto &isa = tc->getIsaPtr<RiscvISA::ISA>();
+    auto isa = tc->getIsaPtr();
     SATP satp_reg = SATP(isa->readMiscRegNoEffect(MISCREG_SATP));
     Addr satp_mode = satp_reg.mode;
 
@@ -390,7 +401,21 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
 
     // if we want to write and it isn't writable, do a page table walk
     // again to update the dirty flag.
-    if (e && (mode == BaseMMU::Write) && !e->pte.w) {
+    auto isa = tc->getIsaPtr();
+    SATP satp_reg = SATP(isa->readMiscRegNoEffect(MISCREG_SATP));
+    Addr satp_mode = satp_reg.mode;
+    bool e_pte_w;
+    switch(satp_mode) {
+        case SV39:
+            e_pte_w = (bool)e->pte.getSV39().w;
+            break;
+        case SV48:
+            e_pte_w = (bool)e->pte.getSV48().w;
+            break;
+        default:
+            panic("Нормальный паник");
+    }
+    if (e && (mode == BaseMMU::Write) && !e_pte_w) {
         DPRINTF(TLB, "Dirty bit not set, repeating PT walk\n");
         fault = walker->start(tc, translation, req, mode);
         // Atomic translations have translation == nullptr
@@ -691,11 +716,22 @@ void
 TLB::unserialize(CheckpointIn &cp)
 {
 
-    auto &isa = tc->getIsaPtr<RiscvISA::ISA>();
+    /*
+
+    auto isa = tc->getIsaPtr();
     SATP satp_reg = SATP(isa->readMiscRegNoEffect(MISCREG_SATP));
     Addr satp_mode = satp_reg.mode;
-
-    AddrXlateMode axm = getAddrXlateMode(satp_mode);
+    AddrXlateMode axm;
+    switch(satp_mode) {
+        case SV39:
+            axm = getAddrXlateMode(SV39);
+            break;
+        case SV48:
+            axm = getAddrXlateMode(SV48);
+            break;
+        default:
+            panic("Нормальный паник");
+    }*/
 
     // Do not allow to restore with a smaller tlb.
     uint32_t _size;
@@ -712,11 +748,10 @@ TLB::unserialize(CheckpointIn &cp)
 
         newEntry->unserializeSection(cp, csprintf("Entry%d", x));
         // TODO: When supporting other addressing modes fix this
-        Addr vpn = getVPNFromVAddr(newEntry->vaddr, axm);
+        Addr vpn = getVPNFromVAddr(newEntry->vaddr, AddrXlateMode::SV39);
         Addr key = buildKey(vpn, newEntry->asid);
-        newEntry->trieHandle = trie.insert(
-            key, TlbEntryTrie::MaxBits - newEntry->logBytes + PageShift,
-            newEntry);
+        newEntry->trieHandle = trie.insert(key,
+            TlbEntryTrie::MaxBits - newEntry->logBytes + PageShift, newEntry);
     }
 }
 

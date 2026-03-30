@@ -187,6 +187,8 @@ class Walker : public ClockedObject
         templateCheckPTEPermissions(T pte, WalkFlags &stepWalkFlags, int level)
         {
 
+            
+
             if (!pte.v || (!pte.r && pte.w)) {
                 stepWalkFlags.doEndWalk = true;
                 return pageFault();
@@ -239,8 +241,9 @@ class Walker : public ClockedObject
 
         Addr setupWalk(Addr vaddr);
 
-        template <class T>
+            ///////////////////////////////////////////////////////////////////////////////////////////////
 
+        template <class T>
         Fault
         templateStepWalk(PacketPtr &write)
         {
@@ -326,7 +329,24 @@ class Walker : public ClockedObject
                             // writes and redo the page table walk in order
                             // to update the dirty flag
                             if (!pte.d && mode != BaseMMU::Write) {
-                                entry.pte.w = 0;
+                                //entry.pte.w = 0;
+
+                                switch(satp.mode) {
+                                    case SV39: {
+                                        PTESv39 tmpsv39 = entry.pte.getSV39();
+                                        tmpsv39.w = 0;
+                                        entry.pte = tmpsv39;
+                                        break;
+                                    }
+                                    case SV48: {
+                                        PTESv48 tmpsv48 = entry.pte.getSV48();
+                                        tmpsv48.w = 0;
+                                        entry.pte = tmpsv48;
+                                        break;
+                                    }
+                                    default:
+                                        panic("нормальное соо. об ошибке");    
+                                }
                             }
 
                             // Don't do TLB insert here when ending TwoStage.
@@ -416,6 +436,8 @@ class Walker : public ClockedObject
             return fault;
         }
 
+        /////////////////////////////////////////////////////////////////////////////////////////////
+
         Fault stepWalk(PacketPtr &write);
 
         template <class T>
@@ -496,7 +518,23 @@ class Walker : public ClockedObject
                             // writes and redo the page table walk in order
                             // to update the dirty flag.
                             if (!pte.d && mode != BaseMMU::Write) {
-                                entry.pte.w = 0;
+                                //entry.pte.w = 0;
+                                switch(satp.mode) {
+                                    case SV39: {
+                                        PTESv39 tmpsv39 = entry.pte.getSV39();
+                                        tmpsv39.w = 0;
+                                        entry.pte = tmpsv39;
+                                        break;
+                                    }
+                                    case SV48: {
+                                        PTESv48 tmpsv48 = entry.pte.getSV48();
+                                        tmpsv48.w = 0;
+                                        entry.pte = tmpsv48;
+                                        break;
+                                    }
+                                    default:
+                                        panic("нормальное соо. об ошибке");    
+                                }
                             }
 
                             // Also don't do TLB inserts on special_access
