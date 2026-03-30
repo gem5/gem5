@@ -187,7 +187,7 @@ class Walker : public ClockedObject
         templateCheckPTEPermissions(T pte, WalkFlags &stepWalkFlags, int level)
         {
 
-            
+
 
             if (!pte.v || (!pte.r && pte.w)) {
                 stepWalkFlags.doEndWalk = true;
@@ -345,7 +345,7 @@ class Walker : public ClockedObject
                                         break;
                                     }
                                     default:
-                                        panic("нормальное соо. об ошибке");    
+                                        panic("нормальное соо. об ошибке");
                                 }
                             }
 
@@ -533,7 +533,7 @@ class Walker : public ClockedObject
                                         break;
                                     }
                                     default:
-                                        panic("нормальное соо. об ошибке");    
+                                        panic("нормальное соо. об ошибке");
                                 }
                             }
 
