@@ -155,10 +155,7 @@ jobs:
     gpu-tests:
         strategy:
             matrix:
-                # The runners will run out of memory when trying to build
-                # ALL/gem5.opt for the long gpu-tests, so only run the quick
-                # and very-long gpu tests, which only use VEGA_X86/gem5.opt
-                test-length: [quick, very-long]
+                test-length: [quick, long, very-long]
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/gcn-gpu:latest
         timeout-minutes: 1440 # 24 hours
@@ -174,11 +171,16 @@ jobs:
                   key: testlib-build-vega-${{ needs.get-date.outputs.date }}
                   restore-keys: |
                       testlib-build-vega
-
+              # The runners will run out of memory when trying to build the ALL
+              # build with --gcov for the gpu-tests, so only run the tests that
+              # use VEGA_X86.
+              # At the time of this change, all of the quick and very-long tests
+              # that use the gcn-gpu host also use the VEGA_X86 build, so this
+              # change only affects the long tests.
             - name: Run Testlib GPU Tests
               id: run-tests
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --length=${{ matrix.test-length }} -vvv --gcov=test-only -j $(nproc) --host gcn_gpu
+              run: ./main.py run --length=${{ matrix.test-length }} -vvv --gcov=test-only -j $(nproc) --host gcn_gpu --isa=VEGA_X86
               timeout-minutes: 1410
 
             - name: Upload results
