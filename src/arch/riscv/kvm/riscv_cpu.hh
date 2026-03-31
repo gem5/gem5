@@ -29,6 +29,7 @@
 #ifndef __ARCH_RISCV_KVM_CPU_HH__
 #define __ARCH_RISCV_KVM_CPU_HH__
 
+#include <unordered_set>
 #include <vector>
 
 #include "arch/riscv/pcstate.hh"
@@ -36,9 +37,17 @@
 #include "arch/riscv/regs/vector.hh"
 #include "cpu/kvm/base.hh"
 
+struct kvm_reg_list;
+
 namespace gem5
 {
 
+namespace RiscvISA
+{
+class ISA;
+}
+
+struct RiscvISAParams;
 struct RiscvKvmCPUParams;
 
 class RiscvKvmCPU : public BaseKvmCPU
@@ -64,6 +73,8 @@ class RiscvKvmCPU : public BaseKvmCPU
     }
 
   private:
+    using RegIndexVector = std::vector<uint64_t>;
+
     /** Mapping between an integer register in gem5 and KVM */
     struct IntRegInfo
     {
@@ -80,8 +91,26 @@ class RiscvKvmCPU : public BaseKvmCPU
         const char *name;
     };
 
+    enum class FpRegMode
+    {
+        None,
+        F,
+        D,
+    };
+
     Tick handleKvmExitRiscvSBI();
     Tick handleKvmExitRiscvCSR();
+
+    const RiscvISA::ISA &riscvIsa() const;
+    const RiscvISAParams &riscvIsaParams() const;
+
+    void refreshRegList();
+    bool getRegList(struct kvm_reg_list &regs) const;
+    bool hasReg(uint64_t id) const;
+
+    void configureKvmFeatures();
+    void configureKvmConfigRegs();
+    void configureKvmIsaExts();
 
     void updateKvmStateCore();
     void updateKvmStateFP();
@@ -101,6 +130,17 @@ class RiscvKvmCPU : public BaseKvmCPU
 
     static const std::vector<IntRegInfo> intRegMap;
     static const std::vector<MiscRegInfo> csrMap;
+
+    /** Cached KVM one-reg list for this vCPU. */
+    RegIndexVector regIndexList;
+    std::unordered_set<uint64_t> regIndexSet;
+
+    /** Active floating-point one-reg interface. */
+    FpRegMode fpRegMode = FpRegMode::D;
+
+    /** S-mode bits visible in sstatus for this guest configuration. */
+    uint64_t kvmSstatusMask =
+        RiscvISA::SSTATUS_MASKS[RiscvISA::RV64][enums::MSU];
 
     /** Host VLENB (bytes), queried from KVM at startup. */
     uint64_t kvmVlenb = 0;

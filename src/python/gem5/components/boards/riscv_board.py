@@ -57,6 +57,7 @@ from m5.params import (
     AddrRange,
     Port,
 )
+from m5.util import warn
 from m5.util.fdthelper import (
     Fdt,
     FdtNode,
@@ -91,6 +92,8 @@ class RiscvBoard(
     * Only works with classic caches
     """
 
+    _default_timebase_frequency = 100000000
+
     def __init__(
         self,
         clk_freq: str,
@@ -109,6 +112,34 @@ class RiscvBoard(
                 "RISCV ISA. Current processor ISA: "
                 f"'{processor.get_isa().name}'."
             )
+
+    def _has_kvm_cores(self) -> bool:
+        return any(
+            core.is_kvm_core() for core in self.get_processor().get_cores()
+        )
+
+    def _cpu_timebase_frequency(self) -> int:
+        if not self._has_kvm_cores():
+            return self._default_timebase_frequency
+
+        for path in (
+            "/sys/firmware/devicetree/base/cpus/timebase-frequency",
+            "/proc/device-tree/cpus/timebase-frequency",
+        ):
+            try:
+                with open(path, "rb") as dt_prop:
+                    data = dt_prop.read()
+            except OSError:
+                continue
+
+            if data:
+                return int.from_bytes(data, byteorder="big")
+
+        warn(
+            "Unable to read the host RISC-V timebase-frequency for KVM; "
+            f"falling back to {self._default_timebase_frequency} Hz."
+        )
+        return self._default_timebase_frequency
 
     @overrides(AbstractBoard)
     def _setup_board(self) -> None:
@@ -327,9 +358,13 @@ class RiscvBoard(
         cpus_state = FdtState(addr_cells=1, size_cells=0)
         cpus_node.append(cpus_state.addrCellsProperty())
         cpus_node.append(cpus_state.sizeCellsProperty())
-        # Used by the CLINT driver to set the timer frequency. Value taken from
-        # RISC-V kernel docs (Note: freedom-u540 is actually 1MHz)
-        cpus_node.append(FdtPropertyWords("timebase-frequency", [100000000]))
+        # Used by the CLINT driver to set the timer frequency. KVM guests must
+        # inherit the host's real timebase or Linux timer calibration is wrong.
+        cpus_node.append(
+            FdtPropertyWords(
+                "timebase-frequency", [self._cpu_timebase_frequency()]
+            )
+        )
 
         for i, core in enumerate(self.get_processor().get_cores()):
             node = FdtNode(f"cpu@{i}")

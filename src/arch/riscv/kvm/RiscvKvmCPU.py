@@ -9,3 +9,7 @@ class RiscvKvmCPU(BaseKvmCPU, RiscvCPU):
     cxx_class = "gem5::RiscvKvmCPU"
 
     mmu = RiscvMMU()
+    # RISC-V perf overflow delivery is not reliable enough to drive KVM exits.
+    # Use the POSIX timer path by default so WFI/timer wakeups do not depend
+    # on the next MMIO exit.
+    usePerf = False

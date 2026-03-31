@@ -28,11 +28,13 @@
 
 #include "arch/riscv/kvm/riscv_cpu.hh"
 
+#include <asm/kvm.h>
 #include <linux/kvm.h>
 
+#include <cerrno>
+#include <memory>
 #include <mutex>
-
-#include <asm/kvm.h>
+#include <utility>
 
 #include "arch/riscv/interrupts.hh"
 #include "arch/riscv/isa.hh"
@@ -45,6 +47,7 @@
 #include "cpu/kvm/vm.hh"
 #include "debug/KvmContext.hh"
 #include "debug/KvmInt.hh"
+#include "params/RiscvISA.hh"
 #include "params/RiscvKvmCPU.hh"
 
 namespace gem5
@@ -74,6 +77,10 @@ constexpr uint64_t SupervisorIPWriteBits =
     (1ULL << INT_SOFTWARE_SUPER) |
     (1ULL << INT_EXT_SUPER);
 
+constexpr uint64_t
+misaBit(char ext)
+{ return 1ULL << (ext - 'a'); }
+
 } // anonymous namespace
 
 /*
@@ -97,12 +104,27 @@ constexpr uint64_t SupervisorIPWriteBits =
     (KVM_REG_RISCV | KVM_REG_SIZE_U64 | \
      KVM_REG_RISCV_CSR | KVM_REG_RISCV_CSR_GENERAL | (off))
 
+#define RISCV_CFG(name)                                                       \
+    (KVM_REG_RISCV | KVM_REG_SIZE_U64 | KVM_REG_RISCV_CONFIG |                \
+     KVM_REG_RISCV_CONFIG_REG(name))
+
+#define RISCV_FP_F(off)                                                       \
+    (KVM_REG_RISCV | KVM_REG_SIZE_U32 | KVM_REG_RISCV_FP_F | (off))
+
+#define RISCV_FP_F_FCSR                                                       \
+    (KVM_REG_RISCV | KVM_REG_SIZE_U32 | KVM_REG_RISCV_FP_F |                  \
+     KVM_REG_RISCV_FP_F_REG(fcsr))
+
 #define RISCV_FP_D(off) \
     (KVM_REG_RISCV | KVM_REG_SIZE_U64 | KVM_REG_RISCV_FP_D | (off))
 
 #define RISCV_FP_D_FCSR \
     (KVM_REG_RISCV | KVM_REG_SIZE_U32 | KVM_REG_RISCV_FP_D | \
      KVM_REG_RISCV_FP_D_REG(fcsr))
+
+#define RISCV_ISA_EXT_SINGLE(ext)                                             \
+    (KVM_REG_RISCV | KVM_REG_SIZE_U64 | KVM_REG_RISCV_ISA_EXT |               \
+     KVM_REG_RISCV_ISA_SINGLE | (ext))
 
 #define RISCV_TIMER_REG(name) \
     (KVM_REG_RISCV | KVM_REG_SIZE_U64 | KVM_REG_RISCV_TIMER | \
@@ -129,13 +151,6 @@ constexpr unsigned KVM_CSR_SENVCFG   = KVM_REG_RISCV_CSR_REG(senvcfg);
 #define RISCV_VEC_CSR(name) \
     (KVM_REG_RISCV | KVM_REG_SIZE_U64 | KVM_REG_RISCV_VECTOR | \
      KVM_REG_RISCV_VECTOR_CSR_REG(name))
-
-/*
- * sstatus mask: use gem5's authoritative RV64 MHSU mask which covers
- * SD, UXL, MXR, SUM, UBE, XS, FS, VS, SPP, SPIE, SIE — all bits
- * visible in S-mode for a system with H-extension support.
- */
-const uint64_t SSTATUS_MASK = SSTATUS_MASKS[RV64][enums::MHSU];
 
 /*
  * Integer register mapping table.
@@ -241,20 +256,200 @@ RiscvKvmCPU::~RiscvKvmCPU()
 {
 }
 
+const ISA &
+RiscvKvmCPU::riscvIsa() const
+{
+    auto *isa = dynamic_cast<ISA *>(tc->getIsaPtr());
+    panic_if(!isa, "RiscvKvmCPU requires a RISC-V ISA instance.\n");
+    return *isa;
+}
+
+const RiscvISAParams &
+RiscvKvmCPU::riscvIsaParams() const
+{ return dynamic_cast<const RiscvISAParams &>(riscvIsa().params()); }
+
+bool
+RiscvKvmCPU::getRegList(struct kvm_reg_list &regs) const
+{
+    if (ioctl(KVM_GET_REG_LIST, (void *)&regs) == -1) {
+        if (errno == E2BIG) {
+            return false;
+        }
+
+        panic("KVM: Failed to get RISC-V vCPU register list (errno: %i)\n",
+              errno);
+    }
+
+    return true;
+}
+
+void
+RiscvKvmCPU::refreshRegList()
+{
+    kvm_reg_list regs_probe;
+    regs_probe.n = 0;
+    getRegList(regs_probe);
+
+    std::unique_ptr<struct kvm_reg_list, void (*)(void *p)> regs(
+        nullptr, [](void *p) { operator delete(p); });
+    const size_t size(sizeof(struct kvm_reg_list) +
+                      regs_probe.n * sizeof(uint64_t));
+    regs.reset((struct kvm_reg_list *)operator new(size));
+    regs->n = regs_probe.n;
+    if (!getRegList(*regs)) {
+        panic("Failed to determine RISC-V KVM register list size.\n");
+    }
+
+    regIndexList.assign(regs->reg, regs->reg + regs->n);
+    regIndexSet.clear();
+    regIndexSet.insert(regIndexList.begin(), regIndexList.end());
+}
+
+bool
+RiscvKvmCPU::hasReg(uint64_t id) const
+{ return regIndexSet.find(id) != regIndexSet.end(); }
+
+void
+RiscvKvmCPU::configureKvmConfigRegs()
+{
+    const RegVal misa = tc->readMiscRegNoEffect(MISCREG_ISA);
+
+    if (hasReg(RISCV_CFG(isa))) {
+        setOneReg(RISCV_CFG(isa), static_cast<uint64_t>(misa & ISA_EXT_MASK));
+        DPRINTF(KvmContext, "Configured KVM base ISA mask: 0x%lx\n",
+                misa & ISA_EXT_MASK);
+    }
+
+    if (hasReg(RISCV_CFG(mvendorid))) {
+        setOneReg(
+            RISCV_CFG(mvendorid),
+            static_cast<uint64_t>(tc->readMiscRegNoEffect(MISCREG_VENDORID)));
+    }
+    if (hasReg(RISCV_CFG(marchid))) {
+        setOneReg(
+            RISCV_CFG(marchid),
+            static_cast<uint64_t>(tc->readMiscRegNoEffect(MISCREG_ARCHID)));
+    }
+    if (hasReg(RISCV_CFG(mimpid))) {
+        setOneReg(
+            RISCV_CFG(mimpid),
+            static_cast<uint64_t>(tc->readMiscRegNoEffect(MISCREG_IMPID)));
+    }
+}
+
+void
+RiscvKvmCPU::configureKvmIsaExts()
+{
+    const auto &isa_params = riscvIsaParams();
+
+    static const std::pair<uint64_t, const char *> requiredExts[] = {
+        {KVM_RISCV_ISA_EXT_ZICNTR, "zicntr"},
+        {KVM_RISCV_ISA_EXT_ZICSR, "zicsr"},
+        {KVM_RISCV_ISA_EXT_ZIFENCEI, "zifencei"},
+        {KVM_RISCV_ISA_EXT_ZIHPM, "zihpm"},
+        {KVM_RISCV_ISA_EXT_ZBA, "zba"},
+        {KVM_RISCV_ISA_EXT_ZBB, "zbb"},
+        {KVM_RISCV_ISA_EXT_ZBS, "zbs"},
+        {KVM_RISCV_ISA_EXT_SVNAPOT, "svnapot"},
+    };
+
+    for (const auto &[ext, name] : requiredExts) {
+        const uint64_t reg = RISCV_ISA_EXT_SINGLE(ext);
+        fatal_if(!hasReg(reg),
+                 "KVM host does not expose the %s extension required by "
+                 "the configured gem5 CPU model.\n",
+                 name);
+
+        setOneReg(reg, uint64_t(1));
+    }
+
+    const struct
+    {
+        uint64_t ext;
+        bool enable;
+        const char *name;
+    } optionalExts[] = {
+        {KVM_RISCV_ISA_EXT_ZICBOM, isa_params.enable_Zicbom_fs, "zicbom"},
+        {KVM_RISCV_ISA_EXT_ZICBOZ, isa_params.enable_Zicboz_fs, "zicboz"},
+    };
+
+    for (const auto &ext : optionalExts) {
+        const uint64_t reg = RISCV_ISA_EXT_SINGLE(ext.ext);
+        if (!hasReg(reg)) {
+            fatal_if(ext.enable,
+                     "KVM host does not expose the %s extension required by "
+                     "the configured gem5 CPU model.\n",
+                     ext.name);
+            continue;
+        }
+
+        setOneReg(reg, uint64_t(ext.enable));
+    }
+}
+
+void
+RiscvKvmCPU::configureKvmFeatures()
+{
+    const auto &isa = riscvIsa();
+    const auto &isa_params = riscvIsaParams();
+
+    fatal_if(isa.rvType() != RV64,
+             "RiscvKvmCPU currently only supports RV64 guests.\n");
+    fatal_if(isa_params.privilege_mode_set == enums::MHSU,
+             "RiscvKvmCPU does not support exposing the RISC-V H extension "
+             "to the guest.\n");
+
+    kvmSstatusMask =
+        SSTATUS_MASKS[isa.rvType()][isa_params.privilege_mode_set];
+
+    configureKvmConfigRegs();
+    configureKvmIsaExts();
+}
+
 void
 RiscvKvmCPU::startup()
 {
     BaseKvmCPU::startup();
 
-    struct kvm_one_reg reg;
+    const auto &isa = riscvIsa();
 
-    reg.id = RISCV_TIMER_REG(frequency);
-    reg.addr = (uint64_t)&kvmTimerFrequency;
-    if (ioctl(KVM_GET_ONE_REG, &reg) == -1) {
+    refreshRegList();
+    configureKvmFeatures();
+    refreshRegList();
+
+    const RegVal gem5Misa = tc->readMiscRegNoEffect(MISCREG_ISA);
+    const bool wantD = gem5Misa & misaBit('d');
+    const bool wantF = gem5Misa & misaBit('f');
+    const bool wantV = gem5Misa & misaBit('v');
+
+    const bool hasFpD = hasReg(RISCV_FP_D(0));
+    const bool hasFpF = hasReg(RISCV_FP_F(0));
+
+    if (wantD) {
+        fatal_if(!hasFpD,
+                 "KVM host does not expose the D extension required by the "
+                 "configured gem5 CPU model.\n");
+        fpRegMode = FpRegMode::D;
+    } else if (wantF) {
+        fatal_if(hasFpD, "KVM host still exposes the D extension after the "
+                         "configured gem5 CPU model disabled it.\n");
+        fatal_if(!hasFpF,
+                 "KVM host does not expose the F extension required by the "
+                 "configured gem5 CPU model.\n");
+        fpRegMode = FpRegMode::F;
+    } else {
+        fatal_if(hasFpD || hasFpF,
+                 "KVM host still exposes floating-point state after the "
+                 "configured gem5 CPU model disabled F/D.\n");
+        fpRegMode = FpRegMode::None;
+    }
+
+    if (!hasReg(RISCV_TIMER_REG(frequency))) {
         warn("KVM: Timer registers not available, "
              "guest time will not be paused while gem5 services exits.\n");
     } else {
         hasKvmTimer = true;
+        getOneReg(RISCV_TIMER_REG(frequency), &kvmTimerFrequency);
         DPRINTF(KvmContext, "KVM timer frequency = %lu Hz\n",
                 kvmTimerFrequency);
 
@@ -270,13 +465,19 @@ RiscvKvmCPU::startup()
      * the host supports, which we need to construct correct register
      * IDs for vector register sync.
      */
-    reg.id = RISCV_VEC_CSR(vlenb);
-    reg.addr = (uint64_t)&kvmVlenb;
-    if (ioctl(KVM_GET_ONE_REG, &reg) == -1) {
-        warn("KVM: Vector registers not available, "
-             "skipping vector sync.\n");
+    if (!wantV) {
+        fatal_if(hasReg(RISCV_VEC_CSR(vlenb)),
+                 "KVM host still exposes vector state after the configured "
+                 "gem5 CPU model disabled RVV.\n");
         kvmVlenb = 0;
+    } else if (!hasReg(RISCV_VEC_CSR(vlenb))) {
+        fatal("KVM host does not expose vector state required by the "
+              "configured gem5 CPU model.\n");
     } else {
+        kvmVlenb = getOneRegU64(RISCV_VEC_CSR(vlenb));
+        fatal_if(kvmVlenb != isa.getVectorLengthInBytes(),
+                 "KVM host VLENB (%lu) does not match gem5 RVV VLENB (%li).\n",
+                 kvmVlenb, isa.getVectorLengthInBytes());
         DPRINTF(KvmContext, "KVM VLENB = %lu bytes (%lu bits)\n",
                 kvmVlenb, kvmVlenb * 8);
     }
@@ -356,18 +557,138 @@ Tick
 RiscvKvmCPU::handleKvmExitRiscvCSR()
 {
     auto *run = getKvmRunState();
+    const auto csr_num = static_cast<uint64_t>(run->riscv_csr.csr_num);
+    const auto &isa = riscvIsa();
+    const auto &csr_data = isa.getCSRDataMap();
+    const auto csr_it = csr_data.find(csr_num);
 
-    warn_once("KVM: Unhandled CSR exit "
-              "(csr=0x%lx, write_mask=0x%lx, "
-              "new_value=0x%lx)\n",
-              run->riscv_csr.csr_num,
-              run->riscv_csr.write_mask,
-              run->riscv_csr.new_value);
+    auto readCsr = [&](RegVal csr, const CSRMetadata &metadata) -> RegVal {
+        RegVal read_val = tc->readMiscReg(metadata.physIndex);
 
-    /*
-     * Return the current value unchanged. The guest will see its
-     * write had no effect on the masked bits.
-     */
+        if (csr == CSR_FCSR) {
+            read_val = tc->readMiscReg(MISCREG_FFLAGS) |
+                       (tc->readMiscReg(MISCREG_FRM) << FRM_OFFSET);
+        }
+
+        const auto &csr_masks = isa.getCSRMaskMap();
+        const auto mask_it = csr_masks.find(csr);
+        const RegVal visible_mask =
+            (mask_it == csr_masks.end()) ? ~RegVal(0) : mask_it->second;
+        read_val &= visible_mask;
+
+        switch (csr) {
+            case CSR_SIP:
+            case CSR_SIE:
+            case CSR_HIP:
+            case CSR_HIE:
+                read_val &= tc->readMiscReg(MISCREG_MIDELEG);
+                break;
+            case CSR_VSIP:
+            case CSR_VSIE:
+                read_val &= tc->readMiscReg(MISCREG_HIDELEG);
+                read_val >>= 1;
+                break;
+            case CSR_HVIP: {
+                INTERRUPT mip = tc->readMiscReg(MISCREG_IP);
+                read_val |= (mip.vssi << 2);
+                break;
+            }
+            default:
+                break;
+        }
+
+        return read_val;
+    };
+
+    auto writeCsr = [&](RegVal csr, const CSRMetadata &metadata,
+                        RegVal write_data) {
+        auto &csr_masks = isa.getCSRMaskMap();
+        auto &csr_write_masks = isa.getCSRWriteMaskMap();
+
+        switch (csr) {
+            case CSR_SIP:
+            case CSR_SIE:
+            case CSR_HIP:
+            case CSR_HIE:
+                write_data &= tc->readMiscReg(MISCREG_MIDELEG);
+                break;
+            case CSR_VSIP:
+            case CSR_VSIE:
+                write_data <<= 1;
+                write_data &= tc->readMiscReg(MISCREG_HIDELEG);
+                break;
+            default:
+                break;
+        }
+
+        RegVal arch_write_mask = ~RegVal(0);
+        const auto write_mask_it = csr_write_masks.find(csr);
+        if (write_mask_it != csr_write_masks.end()) {
+            arch_write_mask = write_mask_it->second;
+        } else {
+            const auto read_mask_it = csr_masks.find(csr);
+            if (read_mask_it != csr_masks.end()) {
+                arch_write_mask = read_mask_it->second;
+            }
+        }
+
+        const RegVal write_data_masked = write_data & arch_write_mask;
+        RegVal reg_data_all = tc->readMiscReg(metadata.physIndex);
+        if (csr == CSR_FCSR) {
+            reg_data_all = tc->readMiscReg(MISCREG_FFLAGS) |
+                           (tc->readMiscReg(MISCREG_FRM) << FRM_OFFSET);
+        }
+
+        RegVal new_reg_data_all =
+            (reg_data_all & ~arch_write_mask) | (write_data & arch_write_mask);
+
+        switch (csr) {
+            case CSR_FCSR:
+                tc->setMiscReg(MISCREG_FFLAGS, bits(write_data_masked, 4, 0));
+                tc->setMiscReg(MISCREG_FRM, bits(write_data_masked, 7, 5));
+                break;
+            case CSR_HVIP: {
+                INTERRUPT mip = tc->readMiscReg(MISCREG_IP);
+                mip.vssi = (new_reg_data_all & VSSI_MASK) >> 2;
+                tc->setMiscReg(MISCREG_IP, mip);
+                new_reg_data_all &= ~VSSI_MASK;
+                tc->setMiscReg(metadata.physIndex, new_reg_data_all);
+                break;
+            }
+            default:
+                tc->setMiscReg(metadata.physIndex, new_reg_data_all);
+                break;
+        }
+    };
+
+    if (csr_it == csr_data.end()) {
+        warn_once("KVM: Unhandled CSR exit "
+                  "(csr=0x%lx, write_mask=0x%lx, "
+                  "new_value=0x%lx)\n",
+                  run->riscv_csr.csr_num, run->riscv_csr.write_mask,
+                  run->riscv_csr.new_value);
+        run->riscv_csr.ret_value = 0;
+        return 0;
+    }
+
+    const RegVal old_value = readCsr(csr_num, csr_it->second);
+    run->riscv_csr.ret_value = old_value;
+
+    if (run->riscv_csr.write_mask) {
+        const RegVal write_mask =
+            static_cast<RegVal>(run->riscv_csr.write_mask);
+        const RegVal new_value = static_cast<RegVal>(run->riscv_csr.new_value);
+        const RegVal write_value =
+            (old_value & ~write_mask) | (new_value & write_mask);
+        writeCsr(csr_num, csr_it->second, write_value);
+    }
+
+    DPRINTF(KvmContext,
+            "KVM: CSR exit handled (csr=0x%lx, old=0x%lx, "
+            "write_mask=0x%lx, new_value=0x%lx)\n",
+            run->riscv_csr.csr_num, old_value, run->riscv_csr.write_mask,
+            run->riscv_csr.new_value);
+
     return 0;
 }
 
@@ -419,8 +740,20 @@ RiscvKvmCPU::dump() const
                getAndFormatOneReg(RISCV_TIMER_REG(state)));
     }
 
-    for (int i = 0; i < 32; ++i)
-        inform("  f%d: %s", i, getAndFormatOneReg(RISCV_FP_D(i)));
+    switch (fpRegMode) {
+        case FpRegMode::F:
+            for (int i = 0; i < 32; ++i) {
+                inform("  f%d: %s", i, getAndFormatOneReg(RISCV_FP_F(i)));
+            }
+            break;
+        case FpRegMode::D:
+            for (int i = 0; i < 32; ++i) {
+                inform("  f%d: %s", i, getAndFormatOneReg(RISCV_FP_D(i)));
+            }
+            break;
+        case FpRegMode::None:
+            break;
+    }
 
     if (kvmVlenb) {
         inform("  vlenb: %lu", kvmVlenb);
@@ -477,17 +810,28 @@ RiscvKvmCPU::updateKvmStateCore()
 void
 RiscvKvmCPU::updateKvmStateFP()
 {
-    // FP registers f0-f31 via D-extension interface
+    if (fpRegMode == FpRegMode::None) {
+        return;
+    }
+
     for (int i = 0; i < 32; ++i) {
         RegVal value = tc->getReg(floatRegClass[i]);
-        setOneReg(RISCV_FP_D(i), (uint64_t)value);
+        if (fpRegMode == FpRegMode::D) {
+            setOneReg(RISCV_FP_D(i), static_cast<uint64_t>(value));
+        } else {
+            setOneReg(RISCV_FP_F(i), static_cast<uint32_t>(unboxF32(value)));
+        }
     }
 
     // FCSR = (FRM << 5) | FFLAGS
     uint32_t fflags = tc->readMiscRegNoEffect(MISCREG_FFLAGS) & 0x1F;
     uint32_t frm = tc->readMiscRegNoEffect(MISCREG_FRM) & 0x7;
     uint32_t fcsr = (frm << 5) | fflags;
-    setOneReg(RISCV_FP_D_FCSR, fcsr);
+    if (fpRegMode == FpRegMode::D) {
+        setOneReg(RISCV_FP_D_FCSR, fcsr);
+    } else {
+        setOneReg(RISCV_FP_F_FCSR, fcsr);
+    }
 }
 
 void
@@ -498,7 +842,7 @@ RiscvKvmCPU::updateKvmStateCSR()
 
         // Mask to S-mode view for registers that are S-mode projections
         if (ri.gem5Idx == MISCREG_STATUS)
-            value &= SSTATUS_MASK;
+            value &= kvmSstatusMask;
         else if (ri.gem5Idx == MISCREG_IE)
             value &= SupervisorIEBits;
         else if (ri.gem5Idx == MISCREG_IP)
@@ -546,14 +890,23 @@ RiscvKvmCPU::updateTCCore()
 void
 RiscvKvmCPU::updateTCFP()
 {
-    // FP registers f0-f31
-    for (int i = 0; i < 32; ++i) {
-        uint64_t value = getOneRegU64(RISCV_FP_D(i));
-        tc->setReg(floatRegClass[i], (RegVal)value);
+    if (fpRegMode == FpRegMode::None) {
+        return;
     }
 
-    // FCSR
-    uint32_t fcsr = getOneRegU32(RISCV_FP_D_FCSR);
+    for (int i = 0; i < 32; ++i) {
+        if (fpRegMode == FpRegMode::D) {
+            uint64_t value = getOneRegU64(RISCV_FP_D(i));
+            tc->setReg(floatRegClass[i], static_cast<RegVal>(value));
+        } else {
+            uint32_t value = getOneRegU32(RISCV_FP_F(i));
+            tc->setReg(floatRegClass[i], static_cast<RegVal>(boxF32(value)));
+        }
+    }
+
+    uint32_t fcsr = (fpRegMode == FpRegMode::D)
+                        ? getOneRegU32(RISCV_FP_D_FCSR)
+                        : getOneRegU32(RISCV_FP_F_FCSR);
     tc->setMiscRegNoEffect(MISCREG_FFLAGS, fcsr & 0x1F);
     tc->setMiscRegNoEffect(MISCREG_FRM, (fcsr >> 5) & 0x7);
 }
@@ -568,7 +921,7 @@ RiscvKvmCPU::updateTCCSR()
         if (ri.gem5Idx == MISCREG_STATUS) {
             // Merge sstatus bits into the full mstatus register
             uint64_t mstatus = tc->readMiscRegNoEffect(MISCREG_STATUS);
-            mstatus = (mstatus & ~SSTATUS_MASK) | (value & SSTATUS_MASK);
+            mstatus = (mstatus & ~kvmSstatusMask) | (value & kvmSstatusMask);
             tc->setMiscRegNoEffect(MISCREG_STATUS, mstatus);
         } else if (ri.gem5Idx == MISCREG_IE ||
                    ri.gem5Idx == MISCREG_IP) {

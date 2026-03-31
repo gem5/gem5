@@ -41,6 +41,7 @@
 #include <algorithm>
 
 #include "cpu/base.hh"
+#include "cpu/kvm/base.hh"
 #include "debug/Plic.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
@@ -367,14 +368,15 @@ Plic::readClaim(Register32& reg, const int context_id)
                 context_id, max_int_id);
             clear(max_int_id);
 
-            // Synchronously deassert the interrupt line so KVM
-            // CPUs see it cleared before re-entering the guest.
-            // Per the PLIC spec, claim atomically de-asserts
-            // the interrupt notification to the target.
+            // KVM can re-enter the guest before the normal delayed
+            // PLIC output update fires, so clear the injected line
+            // synchronously on claim for KVM CPUs only.
             auto [thread_id, int_id] = contextConfigs[context_id];
             auto tc = system->threads[thread_id];
-            tc->getCpuPtr()->clearInterrupt(
-                tc->threadId(), int_id, 0);
+            auto *cpu = tc->getCpuPtr();
+            if (dynamic_cast<BaseKvmCPU *>(cpu)) {
+                cpu->clearInterrupt(tc->threadId(), int_id, 0);
+            }
 
             reg.update(max_int_id);
             return reg.get();
