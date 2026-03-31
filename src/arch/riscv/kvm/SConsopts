@@ -1,0 +1,11 @@
+Import('*')
+
+host_isa = None
+try:
+    import platform
+    host_isa = platform.machine()
+except:
+    pass
+
+if host_isa == 'riscv64':
+    main['CONF']['KVM_ISA'] = 'riscv'
