@@ -198,16 +198,79 @@ class RiscvBoard(
         )
         return fallback
 
-    def _cpu_isa_string(self, fallback: str) -> str:
+    def _cpu_clock_frequency(self, fallback: int) -> int:
         if not self._has_kvm_cores():
             return fallback
 
+        data = self._read_host_cpu_dt_property("clock-frequency")
+        if data:
+            return int.from_bytes(data, byteorder="big")
+
+        warn(
+            "Unable to read the host RISC-V clock-frequency for KVM; "
+            f"falling back to {fallback}."
+        )
+        return fallback
+
+    @staticmethod
+    def _decode_dt_string_list(data: bytes) -> List[str]:
+        return [
+            entry.decode()
+            for entry in data.rstrip(b"\0").split(b"\0")
+            if entry
+        ]
+
+    def _raw_host_cpu_isa_string(self) -> Optional[str]:
         data = self._read_host_cpu_dt_property("riscv,isa")
         if data:
             return data.rstrip(b"\0").decode()
 
+        isa_base = self._read_host_cpu_dt_property("riscv,isa-base")
+        isa_exts = self._read_host_cpu_dt_property("riscv,isa-extensions")
+        if not isa_base or not isa_exts:
+            return None
+
+        isa_tokens = [isa_base.rstrip(b"\0").decode()]
+        isa_tokens.extend(self._decode_dt_string_list(isa_exts))
+        return "_".join(isa_tokens)
+
+    def _cpu_isa_string(self, fallback: str) -> str:
+        if not self._has_kvm_cores():
+            return fallback
+
+        host_isa = self._raw_host_cpu_isa_string()
+        if host_isa:
+            host_tokens = host_isa.split("_")
+            fallback_tokens = fallback.lower().split("_")
+
+            host_base = host_tokens[0]
+            fallback_base = fallback_tokens[0]
+
+            if not host_base.startswith(
+                ("rv32", "rv64")
+            ) or not fallback_base.startswith(("rv32", "rv64")):
+                return host_isa
+
+            filtered_base = host_base[:4] + "".join(
+                ch for ch in host_base[4:] if ch in set(fallback_base[4:])
+            )
+
+            disabled_exts = {
+                ext
+                for ext in ("zicbom", "zicboz")
+                if ext not in set(fallback_tokens[1:])
+            }
+
+            filtered_exts = [
+                ext
+                for ext in host_tokens[1:]
+                if ext.lower() not in disabled_exts
+            ]
+
+            return "_".join([filtered_base, *filtered_exts])
+
         warn(
-            "Unable to read the host RISC-V riscv,isa string for KVM; "
+            "Unable to read the host RISC-V ISA string for KVM; "
             f"falling back to {fallback}."
         )
         return fallback
@@ -439,6 +502,9 @@ class RiscvBoard(
         cpu_isa_string = self._cpu_isa_string(
             self.get_processor().get_cores()[0].core.isa[0].get_isa_string()
         )
+        cpu_clock_frequency = self._cpu_clock_frequency(
+            self.clk_domain.clock[0].frequency
+        )
         # Used by the CLINT driver to set the timer frequency. KVM guests must
         # inherit the host's real timebase or Linux timer calibration is wrong.
         cpus_node.append(
@@ -464,9 +530,9 @@ class RiscvBoard(
                 )
             node.append(FdtPropertyStrings("status", "okay"))
             node.append(FdtPropertyStrings("riscv,isa", cpu_isa_string))
-            # TODO: Should probably get this from the core.
-            freq = self.clk_domain.clock[0].frequency
-            node.append(FdtPropertyWords("clock-frequency", freq))
+            node.append(
+                FdtPropertyWords("clock-frequency", cpu_clock_frequency)
+            )
             node.appendCompatible(["riscv"])
             int_phandle = state.phandle(f"cpu@{i}.int_state")
             node.appendPhandle(f"cpu@{i}")
