@@ -64,9 +64,7 @@ cache_hierarchy = PrivateL1PrivateL2WalkCacheHierarchy(
 
 memory = DualChannelDDR4_2400(size="3GiB")
 
-processor = SimpleProcessor(
-    cpu_type=CPUTypes.KVM, isa=ISA.RISCV, num_cores=1
-)
+processor = SimpleProcessor(cpu_type=CPUTypes.KVM, isa=ISA.RISCV, num_cores=1)
 
 board = RiscvBoard(
     clk_freq="3GHz",
