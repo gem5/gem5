@@ -144,7 +144,7 @@ enum : RegIndex
     // Flags register
     Rflags = DrBase + NumDRegs,
 
-    //Register to keep handy values like the CPU mode in.
+    // Register to keep handy values like the CPU mode in.
     M5Reg,
 
     /*
@@ -398,7 +398,7 @@ enum : RegIndex
     Fooff,
     Fop,
 
-    //XXX Add "Model-Specific Registers"
+    // XXX Add "Model-Specific Registers"
 
     ApicBase,
 
@@ -639,7 +639,7 @@ BitUnion64(CR3)
 EndBitUnion(CR3)
 
 BitUnion64(CR4)
-    Bitfield<22> pke; // Enable Memory Protection Keys
+    Bitfield<22> pke;     // Enable Memory Protection Keys
     Bitfield<18> osxsave; // Enable XSAVE and Proc Extended States
     Bitfield<17> pcide; // PCID Enable
     Bitfield<16> fsgsbase; // Enable RDFSBASE, RDGSBASE, WRFSBASE,
@@ -1090,27 +1090,26 @@ BitUnion64(LocalApicBase)
     Bitfield<8> bsp;
 EndBitUnion(LocalApicBase)
 
-
 /**
  * Protection Key Register (User)
  */
 BitUnion64(PKRU)
-    Bitfield<31,30> mpk15;
-    Bitfield<29,28> mpk14;
-    Bitfield<27,26> mpk13;
-    Bitfield<25,24> mpk12;
-    Bitfield<23,22> mpk11;
-    Bitfield<21,20> mpk10;
-    Bitfield<19,18> mpk9;
-    Bitfield<17,16> mpk8;
-    Bitfield<15,14> mpk7;
-    Bitfield<13,12> mpk6;
-    Bitfield<11,10> mpk5;
-    Bitfield<9,8> mpk4;
-    Bitfield<7,6> mpk3;
-    Bitfield<5,4> mpk2;
-    Bitfield<3,2> mpk1;
-    Bitfield<1,0> mpk0;
+    Bitfield<31, 30> mpk15;
+    Bitfield<29, 28> mpk14;
+    Bitfield<27, 26> mpk13;
+    Bitfield<25, 24> mpk12;
+    Bitfield<23, 22> mpk11;
+    Bitfield<21, 20> mpk10;
+    Bitfield<19, 18> mpk9;
+    Bitfield<17, 16> mpk8;
+    Bitfield<15, 14> mpk7;
+    Bitfield<13, 12> mpk6;
+    Bitfield<11, 10> mpk5;
+    Bitfield<9, 8> mpk4;
+    Bitfield<7, 6> mpk3;
+    Bitfield<5, 4> mpk2;
+    Bitfield<3, 2> mpk1;
+    Bitfield<1, 0> mpk0;
 EndBitUnion(PKRU)
 
 } // namespace X86ISA

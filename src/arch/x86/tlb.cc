@@ -489,29 +489,30 @@ TLB::translate(const RequestPtr &req,
             bool inUser = m5Reg.cpl == 3 && !(flags & CPL0FlagBit);
 
             if (cr4.pke) {
-                //Memory protection keys enabled
+                // Memory protection keys enabled
                 PKRU pkru = tc->readMiscRegNoEffect(misc_reg::Pkru);
 
                 uint8_t key = entry->memoryKey & 0xF;
-                auto permission = bits(pkru, 2 * key + 1,
-                                          2 * key);
+                auto permission = bits(pkru, 2 * key + 1, 2 * key);
 
                 bool accessDisable = bits(permission, 0);
                 bool writeDisable = bits(permission, 1);
                 if (accessDisable) {
 
-                    DPRINTF(TLB, "MPK Illegal access to "
-                                 "address %#x.\n", vaddr);
+                    DPRINTF(TLB,
+                            "MPK Illegal access to "
+                            "address %#x.\n",
+                            vaddr);
 
-                    return std::make_shared<PageFault>(vaddr, true,
-                                                       mode, inUser,
-                                                       false);
+                    return std::make_shared<PageFault>(vaddr, true, mode,
+                                                       inUser, false);
                 } else if (writeDisable && mode == BaseMMU::Write) {
-                    DPRINTF(TLB, "MPK Illegal write to"
-                                 " address %#x.\n", vaddr);
-                    return std::make_shared<PageFault>(vaddr, true,
-                                                       mode, inUser,
-                                                       false);
+                    DPRINTF(TLB,
+                            "MPK Illegal write to"
+                            " address %#x.\n",
+                            vaddr);
+                    return std::make_shared<PageFault>(vaddr, true, mode,
+                                                       inUser, false);
                 }
             }
 

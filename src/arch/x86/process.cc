@@ -378,7 +378,7 @@ X86_64Process::initState()
 
             CR4 cr4 = 0;
             //Turn on pae.
-            cr4.pke = 0; // Disable MPK
+            cr4.pke = 0;     // Disable MPK
             cr4.osxsave = 0; // Disable XSAVE and Proc Extended States
             cr4.osxmmexcpt = 0; // Operating System Unmasked Exception
             cr4.osfxsr = 1; // Operating System FXSave/FSRSTOR Support

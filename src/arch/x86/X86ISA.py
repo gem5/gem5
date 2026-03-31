@@ -73,7 +73,7 @@ class X86ISA(BaseISA):
     #     https://sandpile.org/x86/cpuid.htm
     # 0000_0001h
     FamilyModelStepping = VectorParam.UInt32(
-        [0x00020F51, 0x00000805, 0xEFDBFBFF, 0x0C000209],
+        [0x00020F51, 0x00000805, 0xEFDBFBFF, 0x04000209],
         "type/family/model/stepping and feature flags",
     )
     # 0000_0004h
