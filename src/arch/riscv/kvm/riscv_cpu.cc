@@ -224,9 +224,17 @@ RiscvKvmCPU::startup()
      * the host supports, which we need to construct correct register
      * IDs for vector register sync.
      */
-    kvmVlenb = getOneRegU64(RISCV_VEC_CSR(vlenb));
-    DPRINTF(KvmContext, "KVM VLENB = %lu bytes (%lu bits)\n",
-            kvmVlenb, kvmVlenb * 8);
+    struct kvm_one_reg reg;
+    reg.id = RISCV_VEC_CSR(vlenb);
+    reg.addr = (uint64_t)&kvmVlenb;
+    if (ioctl(KVM_GET_ONE_REG, &reg) == -1) {
+        warn("KVM: Vector registers not available, "
+             "skipping vector sync.\n");
+        kvmVlenb = 0;
+    } else {
+        DPRINTF(KvmContext, "KVM VLENB = %lu bytes (%lu bits)\n",
+                kvmVlenb, kvmVlenb * 8);
+    }
 }
 
 Tick
@@ -296,6 +304,7 @@ RiscvKvmCPU::handleKvmExitRiscvSBI()
     // SBI_ERR_NOT_SUPPORTED
     run->riscv_sbi.ret[0] =
         static_cast<unsigned long>(-2);
+    run->riscv_sbi.ret[1] = 0;
 
     return 0;
 }
@@ -323,18 +332,13 @@ void
 RiscvKvmCPU::ioctlRun()
 {
     /*
-     * Restore the virtual timer counter before entering KVM and save
-     * it after exit, similar to ARM's virtual timer handling.
-     *
-     * Skip on the very first run (savedTime == 0) — the timer
-     * register may not accept writes before the first KVM_RUN.
+     * The RISC-V KVM timer is managed entirely in-kernel via
+     * the sstc extension.  No save/restore is needed for
+     * continuous KVM operation.  Timer state will need to be
+     * saved/restored here when CPU switching (KVM ↔ timing)
+     * is implemented.
      */
-    if (savedTime != 0)
-        setOneReg(RISCV_TIMER_REG(time), savedTime);
-
     BaseKvmCPU::ioctlRun();
-
-    savedTime = getOneRegU64(RISCV_TIMER_REG(time));
 }
 
 void
@@ -383,13 +387,13 @@ RiscvKvmCPU::updateKvmStateCore()
 {
     // PC
     uint64_t pc = tc->pcState().instAddr();
-    DPRINTF(KvmContext, "  PC := 0x%x\n", pc);
+    DPRINTF(KvmContext, "  PC := 0x%lx\n", pc);
     setOneReg(RISCV_CORE_REG(KVM_PC_OFF), pc);
 
     // Integer registers x1-x31 (x0 is hardwired zero)
     for (const auto &ri : intRegMap) {
         uint64_t value = tc->getReg(intRegClass[ri.gem5Idx]);
-        DPRINTF(KvmContext, "  %s := 0x%x\n", ri.name, value);
+        DPRINTF(KvmContext, "  %s := 0x%lx\n", ri.name, value);
         setOneReg(ri.kvmId, value);
     }
 
@@ -432,7 +436,7 @@ RiscvKvmCPU::updateKvmStateCSR()
         if (ri.gem5Idx == MISCREG_STATUS)
             value &= SSTATUS_MASK;
 
-        DPRINTF(KvmContext, "  %s := 0x%x\n", ri.name, value);
+        DPRINTF(KvmContext, "  %s := 0x%lx\n", ri.name, value);
         setOneReg(ri.kvmId, value);
     }
 }
@@ -455,7 +459,7 @@ RiscvKvmCPU::updateTCCore()
     // Integer registers x1-x31
     for (const auto &ri : intRegMap) {
         uint64_t value = getOneRegU64(ri.kvmId);
-        DPRINTF(KvmContext, "  %s := 0x%x\n", ri.name, value);
+        DPRINTF(KvmContext, "  %s := 0x%lx\n", ri.name, value);
         tc->setReg(intRegClass[ri.gem5Idx], value);
     }
 
@@ -467,7 +471,7 @@ RiscvKvmCPU::updateTCCore()
 
     // PC
     uint64_t pc = getOneRegU64(RISCV_CORE_REG(KVM_PC_OFF));
-    DPRINTF(KvmContext, "  PC := 0x%x\n", pc);
+    DPRINTF(KvmContext, "  PC := 0x%lx\n", pc);
     tc->pcState(RiscvISA::PCState(pc));
 }
 
@@ -491,13 +495,17 @@ RiscvKvmCPU::updateTCCSR()
 {
     for (const auto &ri : csrMap) {
         uint64_t value = getOneRegU64(ri.kvmId);
-        DPRINTF(KvmContext, "  %s := 0x%x\n", ri.name, value);
+        DPRINTF(KvmContext, "  %s := 0x%lx\n", ri.name, value);
 
         if (ri.gem5Idx == MISCREG_STATUS) {
             // Merge sstatus bits into the full mstatus register
             uint64_t mstatus = tc->readMiscRegNoEffect(MISCREG_STATUS);
             mstatus = (mstatus & ~SSTATUS_MASK) | (value & SSTATUS_MASK);
             tc->setMiscRegNoEffect(MISCREG_STATUS, mstatus);
+        } else if (ri.gem5Idx == MISCREG_IE ||
+                   ri.gem5Idx == MISCREG_IP) {
+            // Use setMiscReg so the Interrupts controller is updated
+            tc->setMiscReg(ri.gem5Idx, value);
         } else {
             tc->setMiscRegNoEffect(ri.gem5Idx, value);
         }
