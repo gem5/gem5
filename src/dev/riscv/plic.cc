@@ -366,6 +366,13 @@ Plic::readClaim(Register32& reg, const int context_id)
                 "Claim success - context: %d, interrupt ID: %d\n",
                 context_id, max_int_id);
             clear(max_int_id);
+
+            // Synchronously deassert the interrupt line so KVM
+            // CPUs see it cleared before re-entering the guest.
+            auto [tid, iid] = contextConfigs[context_id];
+            system->threads[tid]->getCpuPtr()->clearInterrupt(
+                tid, iid, 0);
+
             reg.update(max_int_id);
             return reg.get();
         } else {
