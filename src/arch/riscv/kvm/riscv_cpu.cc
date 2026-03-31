@@ -398,6 +398,8 @@ RiscvKvmCPU::configureKvmFeatures()
     fatal_if(isa_params.privilege_mode_set == enums::MHSU,
              "RiscvKvmCPU does not support exposing the RISC-V H extension "
              "to the guest.\n");
+    fatal_if(isa_params.privilege_mode_set != enums::MSU,
+             "RiscvKvmCPU requires the RISC-V MSU privilege mode set.\n");
 
     kvmSstatusMask =
         SSTATUS_MASKS[isa.rvType()][isa_params.privilege_mode_set];

@@ -93,6 +93,7 @@ class RiscvBoard(
     """
 
     _default_timebase_frequency = 100000000
+    _default_mmu_type = "riscv,sv48"
 
     def __init__(
         self,
@@ -118,28 +119,98 @@ class RiscvBoard(
             core.is_kvm_core() for core in self.get_processor().get_cores()
         )
 
+    def _read_host_dt_property(self, rel_path: str) -> Optional[bytes]:
+        for root in (
+            "/sys/firmware/devicetree/base",
+            "/proc/device-tree",
+        ):
+            path = os.path.join(root, rel_path)
+            try:
+                with open(path, "rb") as dt_prop:
+                    return dt_prop.read()
+            except OSError:
+                continue
+
+        return None
+
+    def _read_host_cpu_dt_property(self, name: str) -> Optional[bytes]:
+        for root in (
+            "/sys/firmware/devicetree/base/cpus",
+            "/proc/device-tree/cpus",
+        ):
+            try:
+                cpu_dirs = sorted(
+                    entry.path
+                    for entry in os.scandir(root)
+                    if entry.is_dir() and entry.name.startswith("cpu@")
+                )
+            except OSError:
+                continue
+
+            for cpu_dir in cpu_dirs:
+                try:
+                    with open(os.path.join(cpu_dir, name), "rb") as dt_prop:
+                        return dt_prop.read()
+                except OSError:
+                    continue
+
+        return None
+
     def _cpu_timebase_frequency(self) -> int:
         if not self._has_kvm_cores():
             return self._default_timebase_frequency
 
-        for path in (
-            "/sys/firmware/devicetree/base/cpus/timebase-frequency",
-            "/proc/device-tree/cpus/timebase-frequency",
-        ):
-            try:
-                with open(path, "rb") as dt_prop:
-                    data = dt_prop.read()
-            except OSError:
-                continue
-
-            if data:
-                return int.from_bytes(data, byteorder="big")
+        data = self._read_host_dt_property("cpus/timebase-frequency")
+        if data:
+            return int.from_bytes(data, byteorder="big")
 
         warn(
             "Unable to read the host RISC-V timebase-frequency for KVM; "
             f"falling back to {self._default_timebase_frequency} Hz."
         )
         return self._default_timebase_frequency
+
+    def _cpu_mmu_type(self) -> str:
+        if not self._has_kvm_cores():
+            return self._default_mmu_type
+
+        data = self._read_host_cpu_dt_property("mmu-type")
+        if data:
+            return data.rstrip(b"\0").decode()
+
+        warn(
+            "Unable to read the host RISC-V mmu-type for KVM; "
+            f"falling back to {self._default_mmu_type}."
+        )
+        return self._default_mmu_type
+
+    def _cpu_cache_block_size(self, prop: str, fallback: int) -> int:
+        if not self._has_kvm_cores():
+            return fallback
+
+        data = self._read_host_cpu_dt_property(prop)
+        if data:
+            return int.from_bytes(data, byteorder="big")
+
+        warn(
+            f"Unable to read the host RISC-V {prop} for KVM; "
+            f"falling back to {fallback}."
+        )
+        return fallback
+
+    def _cpu_isa_string(self, fallback: str) -> str:
+        if not self._has_kvm_cores():
+            return fallback
+
+        data = self._read_host_cpu_dt_property("riscv,isa")
+        if data:
+            return data.rstrip(b"\0").decode()
+
+        warn(
+            "Unable to read the host RISC-V riscv,isa string for KVM; "
+            f"falling back to {fallback}."
+        )
+        return fallback
 
     @overrides(AbstractBoard)
     def _setup_board(self) -> None:
@@ -156,10 +227,9 @@ class RiscvBoard(
             self.platform.clint.num_threads = self.processor.get_num_cores()
 
             # Add the RTC
-            # TODO: Why 100MHz? Does something else need to change when this does?
             self.platform.rtc = RiscvRTC(
-                frequency=Frequency("100MHz")
-            )  # page 77, section 7.1
+                frequency=Frequency(f"{self._cpu_timebase_frequency()}Hz")
+            )
             self.platform.clint.int_pin = self.platform.rtc.int_pin
 
             # Incoherent I/O bus
@@ -358,37 +428,42 @@ class RiscvBoard(
         cpus_state = FdtState(addr_cells=1, size_cells=0)
         cpus_node.append(cpus_state.addrCellsProperty())
         cpus_node.append(cpus_state.sizeCellsProperty())
+        cpu_timebase_frequency = self._cpu_timebase_frequency()
+        cpu_mmu_type = self._cpu_mmu_type()
+        cpu_cbom_block_size = self._cpu_cache_block_size(
+            "riscv,cbom-block-size", self.get_cache_line_size()
+        )
+        cpu_cboz_block_size = self._cpu_cache_block_size(
+            "riscv,cboz-block-size", self.get_cache_line_size()
+        )
+        cpu_isa_string = self._cpu_isa_string(
+            self.get_processor().get_cores()[0].core.isa[0].get_isa_string()
+        )
         # Used by the CLINT driver to set the timer frequency. KVM guests must
         # inherit the host's real timebase or Linux timer calibration is wrong.
         cpus_node.append(
-            FdtPropertyWords(
-                "timebase-frequency", [self._cpu_timebase_frequency()]
-            )
+            FdtPropertyWords("timebase-frequency", [cpu_timebase_frequency])
         )
 
         for i, core in enumerate(self.get_processor().get_cores()):
             node = FdtNode(f"cpu@{i}")
             node.append(FdtPropertyStrings("device_type", "cpu"))
             node.append(FdtPropertyWords("reg", state.CPUAddrCells(i)))
-            node.append(FdtPropertyStrings("mmu-type", "riscv,sv48"))
+            node.append(FdtPropertyStrings("mmu-type", cpu_mmu_type))
             if core.core.isa[0].enable_Zicbom_fs.value:
                 node.append(
                     FdtPropertyWords(
-                        "riscv,cbom-block-size", self.get_cache_line_size()
+                        "riscv,cbom-block-size", cpu_cbom_block_size
                     )
                 )
             if core.core.isa[0].enable_Zicboz_fs.value:
                 node.append(
                     FdtPropertyWords(
-                        "riscv,cboz-block-size", self.get_cache_line_size()
+                        "riscv,cboz-block-size", cpu_cboz_block_size
                     )
                 )
             node.append(FdtPropertyStrings("status", "okay"))
-            node.append(
-                FdtPropertyStrings(
-                    "riscv,isa", core.core.isa[0].get_isa_string()
-                )
-            )
+            node.append(FdtPropertyStrings("riscv,isa", cpu_isa_string))
             # TODO: Should probably get this from the core.
             freq = self.clk_domain.clock[0].frequency
             node.append(FdtPropertyWords("clock-frequency", freq))
