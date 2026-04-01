@@ -85,6 +85,7 @@ misaBit(char ext)
 constexpr uint64_t SeedOpstEs16 = 0x2ULL << 30;
 constexpr uint64_t SeedOpstDead = 0x3ULL << 30;
 constexpr uint64_t SeedEntropyMask = 0xFFFF;
+constexpr uint64_t CsrSeed = 0x015;
 
 uint64_t
 emulateSeedCsr()
@@ -440,14 +441,14 @@ RiscvKvmCPU::configureKvmIsaExts()
         {KVM_RISCV_ISA_EXT_SMSTATEEN, "smstateen"},
     };
 
-    for (const auto &[ext, name] : unsupportedStateExts) {
+    for (const auto &[ext, extName] : unsupportedStateExts) {
         const uint64_t reg = RISCV_ISA_EXT_SINGLE(ext);
         if (!hasReg(reg)) {
             continue;
         }
 
         DPRINTF(KvmContext, "Disabling unsupported KVM ISA extension: %s\n",
-                name);
+                extName);
         setOneReg(reg, uint64_t(0));
     }
 }
@@ -737,7 +738,7 @@ RiscvKvmCPU::handleKvmExitRiscvCSR()
         }
     };
 
-    if (csr_num == CSR_SEED) {
+    if (csr_num == CsrSeed) {
         /*
          * Linux exits to userspace for SEED so the VMM can provide a virtual
          * entropy source. The CSR write operand is architecturally ignored.
