@@ -29,6 +29,7 @@ import os
 from typing import (
     List,
     Optional,
+    Tuple,
 )
 
 import m5
@@ -94,6 +95,12 @@ class RiscvBoard(
 
     _default_timebase_frequency = 100000000
     _default_mmu_type = "riscv,sv48"
+    _kvm_disabled_isa_extensions = frozenset(
+        (
+            "ssaia",
+            "smstateen",
+        )
+    )
 
     def __init__(
         self,
@@ -220,60 +227,83 @@ class RiscvBoard(
             if entry
         ]
 
-    def _raw_host_cpu_isa_string(self) -> Optional[str]:
-        data = self._read_host_cpu_dt_property("riscv,isa")
-        if data:
-            return data.rstrip(b"\0").decode()
+    @staticmethod
+    def _split_isa_string(isa: str) -> Tuple[str, List[str]]:
+        isa_tokens = isa.lower().split("_")
+        return isa_tokens[0], isa_tokens[1:]
+
+    @staticmethod
+    def _filter_isa_extensions(
+        extensions: List[str],
+        allowed_base_exts: set,
+        disabled_exts: set,
+    ) -> List[str]:
+        filtered: List[str] = []
+        for ext in extensions:
+            ext = ext.lower()
+            if len(ext) == 1:
+                if ext not in allowed_base_exts:
+                    continue
+            elif ext in disabled_exts:
+                continue
+
+            if ext not in filtered:
+                filtered.append(ext)
+
+        return filtered
+
+    def _cpu_isa_description(
+        self, fallback: str
+    ) -> Tuple[str, str, List[str]]:
+        fallback_base, fallback_exts = self._split_isa_string(fallback)
+        if not self._has_kvm_cores():
+            return "legacy", fallback_base, fallback_exts
+
+        if not fallback_base.startswith(("rv32", "rv64")):
+            return "legacy", fallback_base, fallback_exts
+
+        allowed_base_exts = set(fallback_base[4:])
+        disabled_exts = set(self._kvm_disabled_isa_extensions)
+        disabled_exts.update(
+            ext for ext in ("zicbom", "zicboz") if ext not in fallback_exts
+        )
 
         isa_base = self._read_host_cpu_dt_property("riscv,isa-base")
         isa_exts = self._read_host_cpu_dt_property("riscv,isa-extensions")
-        if not isa_base or not isa_exts:
-            return None
+        if isa_base and isa_exts:
+            host_base = isa_base.rstrip(b"\0").decode().lower()
+            if host_base.startswith(("rv32", "rv64")):
+                filtered_base = host_base[:4] + "".join(
+                    ch for ch in host_base[4:] if ch in allowed_base_exts
+                )
+                filtered_exts = self._filter_isa_extensions(
+                    self._decode_dt_string_list(isa_exts),
+                    allowed_base_exts,
+                    disabled_exts,
+                )
+                return "modern", filtered_base, filtered_exts
 
-        isa_tokens = [isa_base.rstrip(b"\0").decode()]
-        isa_tokens.extend(self._decode_dt_string_list(isa_exts))
-        return "_".join(isa_tokens)
-
-    def _cpu_isa_string(self, fallback: str) -> str:
-        if not self._has_kvm_cores():
-            return fallback
-
-        host_isa = self._raw_host_cpu_isa_string()
+        host_isa = self._read_host_cpu_dt_property("riscv,isa")
         if host_isa:
-            host_tokens = host_isa.split("_")
-            fallback_tokens = fallback.lower().split("_")
-
-            host_base = host_tokens[0]
-            fallback_base = fallback_tokens[0]
-
-            if not host_base.startswith(
-                ("rv32", "rv64")
-            ) or not fallback_base.startswith(("rv32", "rv64")):
-                return host_isa
-
-            filtered_base = host_base[:4] + "".join(
-                ch for ch in host_base[4:] if ch in set(fallback_base[4:])
+            host_base, host_exts = self._split_isa_string(
+                host_isa.rstrip(b"\0").decode()
             )
-
-            disabled_exts = {
-                ext
-                for ext in ("zicbom", "zicboz")
-                if ext not in set(fallback_tokens[1:])
-            }
-
-            filtered_exts = [
-                ext
-                for ext in host_tokens[1:]
-                if ext.lower() not in disabled_exts
-            ]
-
-            return "_".join([filtered_base, *filtered_exts])
+            if host_base.startswith(("rv32", "rv64")):
+                filtered_base = host_base[:4] + "".join(
+                    ch for ch in host_base[4:] if ch in allowed_base_exts
+                )
+                filtered_exts = self._filter_isa_extensions(
+                    host_exts,
+                    allowed_base_exts,
+                    disabled_exts,
+                )
+                return "legacy", filtered_base, filtered_exts
 
         warn(
-            "Unable to read the host RISC-V ISA string for KVM; "
-            f"falling back to {fallback}."
+            "Unable to read the host RISC-V ISA description for KVM; "
+            f"falling back to {fallback_base}."
         )
-        return fallback
+        return "legacy", fallback_base, fallback_exts
 
     @overrides(AbstractBoard)
     def _setup_board(self) -> None:
@@ -499,11 +529,15 @@ class RiscvBoard(
         cpu_cboz_block_size = self._cpu_cache_block_size(
             "riscv,cboz-block-size", self.get_cache_line_size()
         )
-        cpu_isa_string = self._cpu_isa_string(
+        cpu_isa_style, cpu_isa_base, cpu_isa_exts = self._cpu_isa_description(
             self.get_processor().get_cores()[0].core.isa[0].get_isa_string()
         )
+        cpu_isa_exts_set = set(cpu_isa_exts)
         cpu_clock_frequency = self._cpu_clock_frequency(
             self.clk_domain.clock[0].frequency
+        )
+        cpu_cbop_block_size = self._cpu_cache_block_size(
+            "riscv,cbop-block-size", self.get_cache_line_size()
         )
         # Used by the CLINT driver to set the timer frequency. KVM guests must
         # inherit the host's real timebase or Linux timer calibration is wrong.
@@ -516,20 +550,35 @@ class RiscvBoard(
             node.append(FdtPropertyStrings("device_type", "cpu"))
             node.append(FdtPropertyWords("reg", state.CPUAddrCells(i)))
             node.append(FdtPropertyStrings("mmu-type", cpu_mmu_type))
-            if core.core.isa[0].enable_Zicbom_fs.value:
+            if "zicbom" in cpu_isa_exts_set:
                 node.append(
                     FdtPropertyWords(
                         "riscv,cbom-block-size", cpu_cbom_block_size
                     )
                 )
-            if core.core.isa[0].enable_Zicboz_fs.value:
+            if "zicbop" in cpu_isa_exts_set:
+                node.append(
+                    FdtPropertyWords(
+                        "riscv,cbop-block-size", cpu_cbop_block_size
+                    )
+                )
+            if "zicboz" in cpu_isa_exts_set:
                 node.append(
                     FdtPropertyWords(
                         "riscv,cboz-block-size", cpu_cboz_block_size
                     )
                 )
             node.append(FdtPropertyStrings("status", "okay"))
-            node.append(FdtPropertyStrings("riscv,isa", cpu_isa_string))
+            if cpu_isa_style == "modern":
+                node.append(FdtPropertyStrings("riscv,isa-base", cpu_isa_base))
+                node.append(
+                    FdtPropertyStrings("riscv,isa-extensions", cpu_isa_exts)
+                )
+            else:
+                cpu_isa_string = cpu_isa_base
+                if cpu_isa_exts:
+                    cpu_isa_string += "_" + "_".join(cpu_isa_exts)
+                node.append(FdtPropertyStrings("riscv,isa", cpu_isa_string))
             node.append(
                 FdtPropertyWords("clock-frequency", cpu_clock_frequency)
             )

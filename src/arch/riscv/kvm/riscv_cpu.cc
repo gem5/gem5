@@ -30,6 +30,7 @@
 
 #include <asm/kvm.h>
 #include <linux/kvm.h>
+#include <sys/random.h>
 
 #include <cerrno>
 #include <memory>
@@ -81,6 +82,39 @@ constexpr uint64_t
 misaBit(char ext)
 { return 1ULL << (ext - 'a'); }
 
+constexpr uint64_t SeedOpstEs16 = 0x2ULL << 30;
+constexpr uint64_t SeedOpstDead = 0x3ULL << 30;
+constexpr uint64_t SeedEntropyMask = 0xFFFF;
+
+uint64_t
+emulateSeedCsr()
+{
+    uint16_t entropy = 0;
+    size_t bytesRead = 0;
+
+    while (bytesRead < sizeof(entropy)) {
+        const auto ret =
+            getrandom(reinterpret_cast<uint8_t *>(&entropy) + bytesRead,
+                      sizeof(entropy) - bytesRead, 0);
+
+        if (ret > 0) {
+            bytesRead += static_cast<size_t>(ret);
+            continue;
+        }
+
+        if (ret == -1 && errno == EINTR) {
+            continue;
+        }
+
+        warn_once("KVM: CSR_SEED emulation failed to fetch entropy "
+                  "(errno=%i); returning DEAD.\n",
+                  errno);
+        return SeedOpstDead;
+    }
+
+    return SeedOpstEs16 | (entropy & SeedEntropyMask);
+}
+
 } // anonymous namespace
 
 /*
@@ -103,6 +137,14 @@ misaBit(char ext)
 #define RISCV_CSR(off) \
     (KVM_REG_RISCV | KVM_REG_SIZE_U64 | \
      KVM_REG_RISCV_CSR | KVM_REG_RISCV_CSR_GENERAL | (off))
+
+#define RISCV_CSR_AIA(off)                                                    \
+    (KVM_REG_RISCV | KVM_REG_SIZE_U64 | KVM_REG_RISCV_CSR |                   \
+     KVM_REG_RISCV_CSR_AIA | (off))
+
+#define RISCV_CSR_SMSTATEEN(off)                                              \
+    (KVM_REG_RISCV | KVM_REG_SIZE_U64 | KVM_REG_RISCV_CSR |                   \
+     KVM_REG_RISCV_CSR_SMSTATEEN | (off))
 
 #define RISCV_CFG(name)                                                       \
     (KVM_REG_RISCV | KVM_REG_SIZE_U64 | KVM_REG_RISCV_CONFIG |                \
@@ -146,6 +188,9 @@ constexpr unsigned KVM_CSR_SIP       = KVM_REG_RISCV_CSR_REG(sip);
 constexpr unsigned KVM_CSR_SATP      = KVM_REG_RISCV_CSR_REG(satp);
 constexpr unsigned KVM_CSR_SCOUNTEREN = KVM_REG_RISCV_CSR_REG(scounteren);
 constexpr unsigned KVM_CSR_SENVCFG   = KVM_REG_RISCV_CSR_REG(senvcfg);
+constexpr unsigned KVM_CSR_AIA_SISELECT = KVM_REG_RISCV_CSR_AIA_REG(siselect);
+constexpr unsigned KVM_CSR_SMSTATEEN0 =
+    KVM_REG_RISCV_CSR_SMSTATEEN_REG(sstateen0);
 
 /* Vector CSR register IDs */
 #define RISCV_VEC_CSR(name) \
@@ -385,6 +430,26 @@ RiscvKvmCPU::configureKvmIsaExts()
 
         setOneReg(reg, uint64_t(ext.enable));
     }
+
+    /*
+     * Linux enables supported host ISA extensions by default. Explicitly
+     * disable extensions whose extra CSR state gem5 does not synchronize.
+     */
+    static const std::pair<uint64_t, const char *> unsupportedStateExts[] = {
+        {KVM_RISCV_ISA_EXT_SSAIA, "ssaia"},
+        {KVM_RISCV_ISA_EXT_SMSTATEEN, "smstateen"},
+    };
+
+    for (const auto &[ext, name] : unsupportedStateExts) {
+        const uint64_t reg = RISCV_ISA_EXT_SINGLE(ext);
+        if (!hasReg(reg)) {
+            continue;
+        }
+
+        DPRINTF(KvmContext, "Disabling unsupported KVM ISA extension: %s\n",
+                name);
+        setOneReg(reg, uint64_t(0));
+    }
 }
 
 void
@@ -418,6 +483,13 @@ RiscvKvmCPU::startup()
     refreshRegList();
     configureKvmFeatures();
     refreshRegList();
+
+    fatal_if(hasReg(RISCV_CSR_AIA(KVM_CSR_AIA_SISELECT)),
+             "KVM host still exposes Ssaia CSR state after gem5 disabled "
+             "the extension.\n");
+    fatal_if(hasReg(RISCV_CSR_SMSTATEEN(KVM_CSR_SMSTATEEN0)),
+             "KVM host still exposes Smstateen CSR state after gem5 "
+             "disabled the extension.\n");
 
     const RegVal gem5Misa = tc->readMiscRegNoEffect(MISCREG_ISA);
     const bool wantD = gem5Misa & misaBit('d');
@@ -478,7 +550,9 @@ RiscvKvmCPU::startup()
     } else {
         kvmVlenb = getOneRegU64(RISCV_VEC_CSR(vlenb));
         fatal_if(kvmVlenb != isa.getVectorLengthInBytes(),
-                 "KVM host VLENB (%lu) does not match gem5 RVV VLENB (%li).\n",
+                 "KVM host VLENB (%lu) does not match gem5 RVV VLENB (%li). "
+                 "Disable RVV for the KVM CPU or configure isa[0].vlen to "
+                 "match the host VLENB.\n",
                  kvmVlenb, isa.getVectorLengthInBytes());
         DPRINTF(KvmContext, "KVM VLENB = %lu bytes (%lu bits)\n",
                 kvmVlenb, kvmVlenb * 8);
@@ -663,14 +737,22 @@ RiscvKvmCPU::handleKvmExitRiscvCSR()
         }
     };
 
-    if (csr_it == csr_data.end()) {
-        warn_once("KVM: Unhandled CSR exit "
-                  "(csr=0x%lx, write_mask=0x%lx, "
-                  "new_value=0x%lx)\n",
-                  run->riscv_csr.csr_num, run->riscv_csr.write_mask,
-                  run->riscv_csr.new_value);
-        run->riscv_csr.ret_value = 0;
+    if (csr_num == CSR_SEED) {
+        /*
+         * Linux exits to userspace for SEED so the VMM can provide a virtual
+         * entropy source. The CSR write operand is architecturally ignored.
+         */
+        run->riscv_csr.ret_value = emulateSeedCsr();
+        DPRINTF(KvmContext, "KVM: CSR_SEED exit handled (ret=0x%lx)\n",
+                run->riscv_csr.ret_value);
         return 0;
+    }
+
+    if (csr_it == csr_data.end()) {
+        panic("KVM: Unhandled CSR exit "
+              "(csr=0x%lx, write_mask=0x%lx, new_value=0x%lx)\n",
+              run->riscv_csr.csr_num, run->riscv_csr.write_mask,
+              run->riscv_csr.new_value);
     }
 
     const RegVal old_value = readCsr(csr_num, csr_it->second);
