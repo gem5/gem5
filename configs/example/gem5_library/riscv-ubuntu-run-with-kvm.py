@@ -64,7 +64,7 @@ cache_hierarchy = PrivateL1PrivateL2WalkCacheHierarchy(
 
 memory = DualChannelDDR4_2400(size="3GiB")
 
-processor = SimpleProcessor(cpu_type=CPUTypes.KVM, isa=ISA.RISCV, num_cores=1)
+processor = SimpleProcessor(cpu_type=CPUTypes.KVM, isa=ISA.RISCV, num_cores=4)
 
 # Use POSIX timers instead of perf for KVM run timer.
 # RISC-V perf overflow signals may not work correctly,
@@ -80,7 +80,7 @@ board = RiscvBoard(
 )
 
 board.set_workload(
-    obtain_resource("riscv-ubuntu-24.04-boot", resource_version="2.0.0")
+    obtain_resource("riscv-ubuntu-24.04-boot-no-systemd", resource_version="2.0.0")
 )
 
 # KVM guests run in VS-mode — the OpenSBI bootloader requires M-mode
