@@ -83,6 +83,7 @@ misaBit(char ext)
 { return 1ULL << (ext - 'a'); }
 
 constexpr uint64_t SeedOpstEs16 = 0x2ULL << 30;
+constexpr uint64_t SeedOpstWait = 0x1ULL << 30;
 constexpr uint64_t SeedOpstDead = 0x3ULL << 30;
 constexpr uint64_t SeedEntropyMask = 0xFFFF;
 constexpr uint64_t CsrSeed = 0x015;
@@ -96,7 +97,7 @@ emulateSeedCsr()
     while (bytesRead < sizeof(entropy)) {
         const auto ret =
             getrandom(reinterpret_cast<uint8_t *>(&entropy) + bytesRead,
-                      sizeof(entropy) - bytesRead, 0);
+                      sizeof(entropy) - bytesRead, GRND_NONBLOCK);
 
         if (ret > 0) {
             bytesRead += static_cast<size_t>(ret);
@@ -105,6 +106,10 @@ emulateSeedCsr()
 
         if (ret == -1 && errno == EINTR) {
             continue;
+        }
+
+        if (ret == -1 && errno == EAGAIN) {
+            return SeedOpstWait;
         }
 
         warn_once("KVM: CSR_SEED emulation failed to fetch entropy "
@@ -564,6 +569,8 @@ Tick
 RiscvKvmCPU::kvmRun(Tick ticks)
 {
     auto *interrupt = dynamic_cast<Interrupts *>(interrupts[0]);
+    panic_if(!interrupt,
+             "KVM: RISC-V KVM CPU requires RiscvISA::Interrupts\n");
 
     /*
      * Sync S-mode interrupt pending bits to KVM by writing the

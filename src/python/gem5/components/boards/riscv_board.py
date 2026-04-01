@@ -236,6 +236,7 @@ class RiscvBoard(
     def _filter_isa_extensions(
         extensions: List[str],
         allowed_base_exts: set,
+        allowed_exts: set,
         disabled_exts: set,
     ) -> List[str]:
         filtered: List[str] = []
@@ -244,7 +245,7 @@ class RiscvBoard(
             if len(ext) == 1:
                 if ext not in allowed_base_exts:
                     continue
-            elif ext in disabled_exts:
+            elif ext in disabled_exts or ext not in allowed_exts:
                 continue
 
             if ext not in filtered:
@@ -263,10 +264,8 @@ class RiscvBoard(
             return "legacy", fallback_base, fallback_exts
 
         allowed_base_exts = set(fallback_base[4:])
+        allowed_exts = set(fallback_exts)
         disabled_exts = set(self._kvm_disabled_isa_extensions)
-        disabled_exts.update(
-            ext for ext in ("zicbom", "zicboz") if ext not in fallback_exts
-        )
 
         isa_base = self._read_host_cpu_dt_property("riscv,isa-base")
         isa_exts = self._read_host_cpu_dt_property("riscv,isa-extensions")
@@ -279,6 +278,7 @@ class RiscvBoard(
                 filtered_exts = self._filter_isa_extensions(
                     self._decode_dt_string_list(isa_exts),
                     allowed_base_exts,
+                    allowed_exts,
                     disabled_exts,
                 )
                 return "modern", filtered_base, filtered_exts
@@ -295,6 +295,7 @@ class RiscvBoard(
                 filtered_exts = self._filter_isa_extensions(
                     host_exts,
                     allowed_base_exts,
+                    allowed_exts,
                     disabled_exts,
                 )
                 return "legacy", filtered_base, filtered_exts
@@ -523,12 +524,6 @@ class RiscvBoard(
         cpus_node.append(cpus_state.sizeCellsProperty())
         cpu_timebase_frequency = self._cpu_timebase_frequency()
         cpu_mmu_type = self._cpu_mmu_type()
-        cpu_cbom_block_size = self._cpu_cache_block_size(
-            "riscv,cbom-block-size", self.get_cache_line_size()
-        )
-        cpu_cboz_block_size = self._cpu_cache_block_size(
-            "riscv,cboz-block-size", self.get_cache_line_size()
-        )
         cpu_isa_style, cpu_isa_base, cpu_isa_exts = self._cpu_isa_description(
             self.get_processor().get_cores()[0].core.isa[0].get_isa_string()
         )
@@ -536,9 +531,21 @@ class RiscvBoard(
         cpu_clock_frequency = self._cpu_clock_frequency(
             self.clk_domain.clock[0].frequency
         )
-        cpu_cbop_block_size = self._cpu_cache_block_size(
-            "riscv,cbop-block-size", self.get_cache_line_size()
-        )
+        cpu_cbom_block_size = self.get_cache_line_size()
+        if "zicbom" in cpu_isa_exts_set:
+            cpu_cbom_block_size = self._cpu_cache_block_size(
+                "riscv,cbom-block-size", cpu_cbom_block_size
+            )
+        cpu_cbop_block_size = self.get_cache_line_size()
+        if "zicbop" in cpu_isa_exts_set:
+            cpu_cbop_block_size = self._cpu_cache_block_size(
+                "riscv,cbop-block-size", cpu_cbop_block_size
+            )
+        cpu_cboz_block_size = self.get_cache_line_size()
+        if "zicboz" in cpu_isa_exts_set:
+            cpu_cboz_block_size = self._cpu_cache_block_size(
+                "riscv,cboz-block-size", cpu_cboz_block_size
+            )
         # Used by the CLINT driver to set the timer frequency. KVM guests must
         # inherit the host's real timebase or Linux timer calibration is wrong.
         cpus_node.append(

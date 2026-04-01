@@ -44,6 +44,7 @@
 
 #include <cerrno>
 #include <csignal>
+#include <ctime>
 #include <ostream>
 
 #include "base/compiler.hh"
@@ -61,6 +62,21 @@
 
 namespace gem5
 {
+
+namespace
+{
+
+uint64_t
+timespecDiffNs(const timespec &start, const timespec &end)
+{
+    const uint64_t start_ns =
+        static_cast<uint64_t>(start.tv_sec) * 1000000000ULL + start.tv_nsec;
+    const uint64_t end_ns =
+        static_cast<uint64_t>(end.tv_sec) * 1000000000ULL + end.tv_nsec;
+    return end_ns - start_ns;
+}
+
+} // anonymous namespace
 
 BaseKvmCPU::BaseKvmCPU(const BaseKvmCPUParams &params)
     : BaseCPU(params),
@@ -770,8 +786,19 @@ BaseKvmCPU::kvmRun(Tick ticks)
         // state update might affect guest cycle counters.
         uint64_t baseCycles(getHostCycles());
         uint64_t baseInstrs = 0;
+        timespec runStartTs = {};
+        timespec runEndTs = {};
         if (usePerf) {
             baseInstrs = hwInstructions->read();
+        } else {
+            // Without perf, we cannot translate guest progress from a
+            // hardware cycle counter. Measure the time spent inside KVM and
+            // use that elapsed host time to keep simulated time moving.
+            if (clock_gettime(CLOCK_MONOTONIC, &runStartTs) == -1) {
+                panic("KVM: Failed to read CLOCK_MONOTONIC before KVM_RUN "
+                      "(errno: %i)\n",
+                      errno);
+            }
         }
 
         // Arm the run timer and start the cycle timer if it isn't
@@ -784,6 +811,12 @@ BaseKvmCPU::kvmRun(Tick ticks)
         }
 
         ioctlRun();
+
+        if (!usePerf && clock_gettime(CLOCK_MONOTONIC, &runEndTs) == -1) {
+            panic("KVM: Failed to read CLOCK_MONOTONIC after KVM_RUN "
+                  "(errno: %i)\n",
+                  errno);
+        }
 
         runTimer->disarm();
         if (usePerf && (!perfControlledByTimer)) {
@@ -799,11 +832,21 @@ BaseKvmCPU::kvmRun(Tick ticks)
 
         const uint64_t hostCyclesExecuted(getHostCycles() - baseCycles);
         const uint64_t simCyclesExecuted(hostCyclesExecuted * hostFactor);
+        const uint64_t hostNsExecuted =
+            usePerf ? 0 : timespecDiffNs(runStartTs, runEndTs);
         uint64_t instsExecuted = 0;
         if (usePerf) {
             instsExecuted = hwInstructions->read() - baseInstrs;
         }
-        ticksExecuted = runTimer->ticksFromHostCycles(hostCyclesExecuted);
+        if (usePerf) {
+            ticksExecuted = runTimer->ticksFromHostCycles(hostCyclesExecuted);
+        } else {
+            // Immediate MMIO exits can be so short that they round down to 0.
+            // Clamp to one cycle so the event queue always makes forward
+            // progress after a real KVM entry.
+            ticksExecuted = std::max<Tick>(
+                runTimer->ticksFromHostNs(hostNsExecuted), clockPeriod());
+        }
 
         /* Update statistics */
         baseStats.numCycles += simCyclesExecuted;

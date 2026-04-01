@@ -15,3 +15,7 @@ class RiscvKvmCPU(BaseKvmCPU, RiscvCPU):
     # by default for portable KVM configs. Users can still opt in by
     # overriding the ISA parameters with a host-matching VLEN/ELEN.
     isa = [RiscvISA(enable_rvv=False)]
+    # gem5 uses perf cycle counters to translate KVM run time into simulated
+    # ticks. RISC-V host guest-cycle accounting is not reliable enough to use
+    # as the default time source, so fall back to the generic wall-clock path.
+    usePerf = False
