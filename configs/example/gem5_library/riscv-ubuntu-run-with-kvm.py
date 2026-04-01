@@ -80,7 +80,9 @@ board = RiscvBoard(
 )
 
 board.set_workload(
-    obtain_resource("riscv-ubuntu-24.04-boot-no-systemd", resource_version="2.0.0")
+    obtain_resource(
+        "riscv-ubuntu-24.04-boot-no-systemd", resource_version="2.0.0"
+    )
 )
 
 # KVM guests run in VS-mode — the OpenSBI bootloader requires M-mode
