@@ -40,8 +40,11 @@
 
 #include <algorithm>
 
+#include "config/use_kvm.hh"
 #include "cpu/base.hh"
+#if USE_KVM
 #include "cpu/kvm/base.hh"
+#endif
 #include "debug/Plic.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
@@ -368,6 +371,7 @@ Plic::readClaim(Register32& reg, const int context_id)
                 context_id, max_int_id);
             clear(max_int_id);
 
+#if USE_KVM
             // KVM can re-enter the guest before the normal delayed
             // PLIC output update fires, so clear the injected line
             // synchronously on claim for KVM CPUs only.
@@ -377,6 +381,7 @@ Plic::readClaim(Register32& reg, const int context_id)
             if (dynamic_cast<BaseKvmCPU *>(cpu)) {
                 cpu->clearInterrupt(tc->threadId(), int_id, 0);
             }
+#endif
 
             reg.update(max_int_id);
             return reg.get();
