@@ -15,7 +15,3 @@ class RiscvKvmCPU(BaseKvmCPU, RiscvCPU):
     # by default for portable KVM configs. Users can still opt in by
     # overriding the ISA parameters with a host-matching VLEN/ELEN.
     isa = [RiscvISA(enable_rvv=False)]
-    # RISC-V perf overflow delivery is not reliable enough to drive KVM exits.
-    # Use the POSIX timer path by default so WFI/timer wakeups do not depend
-    # on the next MMIO exit.
-    usePerf = False

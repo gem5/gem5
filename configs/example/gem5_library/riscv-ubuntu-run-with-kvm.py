@@ -64,13 +64,7 @@ cache_hierarchy = PrivateL1PrivateL2WalkCacheHierarchy(
 
 memory = DualChannelDDR4_2400(size="3GiB")
 
-processor = SimpleProcessor(cpu_type=CPUTypes.KVM, isa=ISA.RISCV, num_cores=4)
-
-# Use POSIX timers instead of perf for KVM run timer.
-# RISC-V perf overflow signals may not work correctly,
-# causing KVM_RUN to block until the next MMIO exit.
-for core in processor.get_cores():
-    core.core.usePerf = False
+processor = SimpleProcessor(cpu_type=CPUTypes.KVM, isa=ISA.RISCV, num_cores=1)
 
 board = RiscvBoard(
     clk_freq="3GHz",
