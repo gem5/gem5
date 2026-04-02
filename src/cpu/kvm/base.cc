@@ -1195,9 +1195,10 @@ BaseKvmCPU::doMMIOAccess(Addr paddr, void *data, int size, bool write)
         std::unique_ptr<PCStateBase> pc(tc->pcState().clone());
         stutterPC(*pc);
         tc->pcState(*pc);
-        // We currently assume that there is no need to migrate to a
-        // different event queue when doing local accesses. Currently, they
-        // are only used for m5ops, so it should be a valid assumption.
+        // Local m5ops can perform functional guest-memory accesses or
+        // schedule exit events, so serialize them on the device event queue
+        // just like regular MMIO handling in multi-core KVM mode.
+        EventQueue::ScopedMigration migrate(deviceEventQueue());
         const Cycles ipr_delay = mmio_req->localAccessor(tc, pkt);
         threadContextDirty = true;
         delete pkt;

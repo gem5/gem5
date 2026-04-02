@@ -95,6 +95,8 @@ class RiscvBoard(
 
     _default_timebase_frequency = 100000000
     _default_mmu_type = "riscv,sv48"
+    _default_m5ops_base = 0x10010000
+    _default_m5ops_size = 0x10000
     _kvm_disabled_isa_extensions = frozenset(
         (
             "ssaia",
@@ -330,6 +332,7 @@ class RiscvBoard(
             self.iobus = IOXBar()
             self.iobus.badaddr_responder = BadAddr()
             self.iobus.default = self.iobus.badaddr_responder.pio
+            self.m5ops_base = self._default_m5ops_base
 
             # The virtio disk
             self.disk = RiscvMmioVirtIO(
@@ -399,6 +402,9 @@ class RiscvBoard(
                 AddrRange(dev.pio_addr, size=dev.pio_size)
                 for dev in self._off_chip_devices
             ]
+            self.bridge.ranges.append(
+                AddrRange(self.m5ops_base, size=self._default_m5ops_size)
+            )
 
             # PCI
             self.bridge.ranges.append(AddrRange(0x2F000000, size="16MiB"))
@@ -412,6 +418,9 @@ class RiscvBoard(
             AddrRange(dev.pio_addr, size=dev.pio_size)
             for dev in self._on_chip_devices + self._off_chip_devices
         ]
+        uncacheable_range.append(
+            AddrRange(self.m5ops_base, size=self._default_m5ops_size)
+        )
 
         # PCI
         uncacheable_range.append(AddrRange(0x2F000000, size="16MiB"))
@@ -837,10 +846,13 @@ class RiscvBoard(
 
     @overrides(KernelDiskWorkload)
     def get_default_kernel_args(self) -> List[str]:
+        m5ops_base = int(getattr(self, "m5ops_base", self._default_m5ops_base))
         return [
             "console=ttyS0",
             "root={root_value}",
             "disk_device={disk_device}",
+            f"gem5_bridge_baseaddr=0x{m5ops_base:x}",
+            f"gem5_bridge_rangesize=0x{self._default_m5ops_size:x}",
             "rw",
         ]
 

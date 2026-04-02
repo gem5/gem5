@@ -101,6 +101,25 @@ const std::string DIST_RANK = "dist-rank";
  */
 const std::string DIST_SIZE = "dist-size";
 
+void
+fullSystemWriteBlob(ThreadContext *tc, Addr addr, const void *data,
+                    uint64_t size)
+{
+    auto gen = tc->getMMUPtr()->translateFunctional(addr, size, tc,
+                                                    BaseMMU::Write, 0);
+    auto *ptr = static_cast<const uint8_t *>(data);
+
+    for (const auto &range : *gen) {
+        if (range.fault) {
+            fatal("writeBlob(%#x, ...) failed", addr);
+        }
+
+        tc->getSystemPtr()->physProxy.writeBlobPhys(range.paddr, range.flags,
+                                                    ptr, range.size);
+        ptr += range.size;
+    }
+}
+
 } // anonymous namespace
 
 void
@@ -400,11 +419,14 @@ readfile(ThreadContext *tc, GuestAddr vaddr, uint64_t len, uint64_t offset)
     }
 
     close(fd);
-    TranslatingPortProxy fs_proxy(tc);
-    SETranslatingPortProxy se_proxy(tc);
-    PortProxy &virt_proxy = FullSystem ? fs_proxy : se_proxy;
-
-    virt_proxy.writeBlob(vaddr.addr, buf, result);
+    if (FullSystem) {
+        fullSystemWriteBlob(tc, vaddr.addr, buf, result);
+    } else {
+        SETranslatingPortProxy se_proxy(tc);
+        se_proxy.writeBlob(vaddr.addr, buf, result);
+    }
+    DPRINTF(PseudoInst, "pseudo_inst::readfile wrote %u bytes to %#x\n",
+            result, vaddr.addr);
     delete [] buf;
     return result;
 }

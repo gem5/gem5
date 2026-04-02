@@ -28,7 +28,11 @@
 
 #include "arch/riscv/linux/fs_workload.hh"
 
+#include <optional>
+
 #include "arch/riscv/faults.hh"
+#include "arch/riscv/mmu.hh"
+#include "arch/riscv/regs/misc.hh"
 #include "base/loader/dtb_file.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
@@ -43,6 +47,43 @@ namespace gem5
 
 namespace RiscvISA
 {
+
+namespace
+{
+
+void
+initBootState(System *system, const std::optional<Addr> &dtbAddr,
+              bool directSupervisorBoot)
+{
+    for (auto *tc : system->threads) {
+        tc->getIsaPtr()->resetThread();
+
+        if (directSupervisorBoot) {
+            /*
+             * Direct S-mode boots skip the M-mode firmware that would
+             * normally install a permissive PMP entry. KVM mostly doesn't
+             * notice because the host executes guest memory accesses, but
+             * gem5-side functional walks for m5ops still consult gem5's PMP
+             * model and need an allow-all rule.
+             */
+            auto *mmu = dynamic_cast<MMU *>(tc->getMMUPtr());
+            auto *pmp = mmu->getPMP();
+
+            pmp->pmpUpdateAddr(0, static_cast<RegVal>(-1));
+            pmp->pmpUpdateCfg(0, 0x1f);
+            tc->setMiscRegNoEffect(MISCREG_PMPADDR00, static_cast<RegVal>(-1));
+            tc->setMiscRegNoEffect(MISCREG_PMPCFG0, 0x1f);
+        }
+
+        tc->setReg(int_reg::A0, tc->contextId());
+        if (dtbAddr.has_value()) {
+            tc->setReg(int_reg::A1, *dtbAddr);
+        }
+        tc->activate();
+    }
+}
+
+} // anonymous namespace
 
 void
 FsLinux::initState()
@@ -65,17 +106,15 @@ FsLinux::initState()
             .write(system->physProxy);
         delete dtb_file;
 
-        for (auto *tc: system->threads) {
-            tc->setReg(int_reg::A1, params().dtb_addr);
-        }
     } else {
         warn("No DTB file specified\n");
     }
 
-    for (auto *tc: system->threads) {
-        tc->getIsaPtr()->resetThread();
-        tc->activate();
-    }
+    initBootState(system,
+                  params().dtb_filename != ""
+                      ? std::optional<Addr>(params().dtb_addr)
+                      : std::nullopt,
+                  true);
 }
 
 void
@@ -223,9 +262,6 @@ BootloaderKernelWorkload::loadDtb()
                 params().dtb_filename,
                 params().dtb_addr);
 
-        for (auto *tc: system->threads) {
-            tc->setReg(int_reg::A1, params().dtb_addr);
-        }
     } else {
         inform("DTB file is not specified.\n");
     }
@@ -263,10 +299,11 @@ BootloaderKernelWorkload::initState()
     loadInitrd();
     loadDtb();
 
-    for (auto *tc: system->threads) {
-        tc->getIsaPtr()->resetThread();
-        tc->activate();
-    }
+    initBootState(system,
+                  params().dtb_filename != ""
+                      ? std::optional<Addr>(params().dtb_addr)
+                      : std::nullopt,
+                  params().bootloader_filename == "");
 }
 
 void

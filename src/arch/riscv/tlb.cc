@@ -42,6 +42,7 @@
 #include "arch/riscv/pma_checker.hh"
 #include "arch/riscv/pmp.hh"
 #include "arch/riscv/pra_constants.hh"
+#include "arch/riscv/reg_abi.hh"
 #include "arch/riscv/utility.hh"
 #include "base/inifile.hh"
 #include "base/str.hh"
@@ -49,10 +50,12 @@
 #include "cpu/thread_context.hh"
 #include "debug/TLB.hh"
 #include "debug/TLBVerbose.hh"
+#include "mem/packet_access.hh"
 #include "mem/page_table.hh"
 #include "params/RiscvTLB.hh"
 #include "sim/full_system.hh"
 #include "sim/process.hh"
+#include "sim/pseudo_inst.hh"
 #include "sim/system.hh"
 
 namespace gem5
@@ -77,10 +80,14 @@ buildKey(Addr vpn, uint16_t asid)
     return (static_cast<Addr>(asid) << 48) | vpn;
 }
 
-TLB::TLB(const Params &p) :
-    BaseTLB(p), size(p.size), tlb(size),
-    lruSeq(0), stats(this), pma(p.pma_checker),
-    pmp(p.pmp)
+TLB::TLB(const Params &p)
+    : BaseTLB(p),
+      size(p.size),
+      tlb(size),
+      lruSeq(0),
+      stats(this),
+      pma(p.pma_checker),
+      pmp(p.pmp)
 {
     for (size_t x = 0; x < size; x++) {
         tlb[x].trieHandle = NULL;
@@ -95,6 +102,13 @@ Walker *
 TLB::getWalker()
 {
     return walker;
+}
+
+void
+TLB::setPMP(PMP *_pmp)
+{
+    pmp = _pmp;
+    walker->setPMP(_pmp);
 }
 
 void
@@ -704,6 +718,33 @@ Fault
 TLB::finalizePhysical(const RequestPtr &req,
                       ThreadContext *tc, BaseMMU::Mode mode) const
 {
+    const Addr paddr = req->getPaddr();
+    const auto &m5opRange = tc->getSystemPtr()->m5opRange();
+
+    if (m5opRange.contains(paddr)) {
+        const bool rv32 =
+            static_cast<ISA *>(tc->getIsaPtr())->rvType() == RV32;
+        uint8_t func;
+
+        req->setFlags(Request::STRICT_ORDER);
+        pseudo_inst::decodeAddrOffset(paddr - m5opRange.start(), func);
+        req->setLocalAccessor(
+            [func, mode, rv32](ThreadContext *tc, PacketPtr pkt) -> Cycles {
+                uint64_t ret;
+                if (rv32) {
+                    pseudo_inst::pseudoInst<RegABI32>(tc, func, ret);
+                } else {
+                    pseudo_inst::pseudoInst<RegABI64>(tc, func, ret);
+                }
+
+                if (mode == BaseMMU::Read) {
+                    pkt->setLE(ret);
+                }
+
+                return Cycles(1);
+            });
+    }
+
     return NoFault;
 }
 

@@ -74,9 +74,13 @@ constexpr uint64_t SupervisorIEBits =
     (1ULL << INT_TIMER_SUPER) |
     (1ULL << INT_EXT_SUPER);
 
-constexpr uint64_t SupervisorIPWriteBits =
-    (1ULL << INT_SOFTWARE_SUPER) |
-    (1ULL << INT_EXT_SUPER);
+/*
+ * KVM handles supervisor software interrupts in-kernel for the SBI IPI
+ * extension. Rewriting SSIP from gem5's Interrupts state on every guest entry
+ * can therefore drop pending IPIs that were raised entirely inside KVM. Only
+ * drive SEIP from gem5 here and preserve the KVM-managed SSIP/STIP bits.
+ */
+constexpr uint64_t SupervisorIPWriteBits = (1ULL << INT_EXT_SUPER);
 
 constexpr uint64_t
 misaBit(char ext)
@@ -484,6 +488,26 @@ RiscvKvmCPU::startup()
 {
     BaseKvmCPU::startup();
 
+    /*
+     * Linux expects non-boot harts to be brought online via SBI HSM instead
+     * of all entering the kernel image at the reset vector. Start secondary
+     * vCPUs in KVM's stopped state so the guest boot hart can release them.
+     */
+    if (getVCpuID() > 0) {
+        if (vm->kvm->capMPState()) {
+            struct kvm_mp_state mpState = {};
+            mpState.mp_state = KVM_MP_STATE_STOPPED;
+            if (ioctl(KVM_SET_MP_STATE, &mpState) == -1) {
+                panic("KVM: Failed to stop secondary RISC-V vCPU %li "
+                      "before guest boot (errno: %i)\n",
+                      getVCpuID(), errno);
+            }
+        } else {
+            warn_once("KVM: Host kernel does not support MP state control for "
+                      "RISC-V vCPUs; secondary harts will start immediately.");
+        }
+    }
+
     const auto &isa = riscvIsa();
 
     refreshRegList();
@@ -576,9 +600,11 @@ RiscvKvmCPU::kvmRun(Tick ticks)
      * Sync S-mode interrupt pending bits to KVM by writing the
      * guest SIP CSR directly via the ONE_REG interface.
      *
-     * SIP.SSIP (bit 1) and SIP.SEIP (bit 9) are writable
-     * through KVM ONE_REG.  SIP.STIP (bit 5) is read-only
-     * (managed by the hardware timer / KVM sstc extension).
+     * SIP.SEIP (bit 9) is driven from gem5 because external interrupts
+     * originate in the gem5 PLIC model. SIP.SSIP (bit 1) is also writable,
+     * but KVM raises SBI IPIs internally, so userspace must preserve that
+     * KVM-managed state instead of rewriting it from gem5's interrupt model.
+     * SIP.STIP (bit 5) is read-only and managed by the KVM timer path.
      *
      * We read-modify-write to preserve bits we don't control.
      */
