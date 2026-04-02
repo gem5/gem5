@@ -1373,7 +1373,7 @@ decode QUADRANT default Unknown::unknown() {
                                 // on menvcfg (01 and 11 respectively)
                                 Mem = 0;
                             }
-                        }}, mem_flags = [INVALIDATE, DST_POC]);
+                        }}, mem_flags=[INVALIDATE, DST_POC, RELEASE]);
                             // mem_flags might need a conditional to add CLEAN
                             // in certain cases; unsure of syntax for that
 
@@ -1393,7 +1393,7 @@ decode QUADRANT default Unknown::unknown() {
                             } else {
                                 Mem = 0;
                             }
-                        }}, mem_flags=[CLEAN, DST_POC]);
+                        }}, mem_flags=[CLEAN, DST_POC, RELEASE]);
                         0x2: cbo_flush({{
                             SENVCFG senvcfg = xc->readMiscReg(MISCREG_SENVCFG);
                             auto pm = (PrivilegeMode)xc->readMiscReg(
@@ -1410,7 +1410,7 @@ decode QUADRANT default Unknown::unknown() {
                             } else {
                                 Mem = 0;
                             }
-                        }}, mem_flags=[CLEAN, INVALIDATE, DST_POC]);
+                        }}, mem_flags=[CLEAN, INVALIDATE, DST_POC, RELEASE]);
                         0x4: cbo_zero({{
                             SENVCFG senvcfg = xc->readMiscReg(MISCREG_SENVCFG);
                             auto pm = (PrivilegeMode)xc->readMiscReg(
@@ -1426,7 +1426,7 @@ decode QUADRANT default Unknown::unknown() {
                             } else {
                                 Mem = 0;
                             }
-                        }}, mem_flags=[CACHE_BLOCK_ZERO]);
+                        }}, mem_flags=[CACHE_BLOCK_ZERO, RELEASE]);
                     }
                 }
             }
