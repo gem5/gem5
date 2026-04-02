@@ -28,6 +28,9 @@
 This script boots RISC-V Ubuntu 24.04 using KVM on a riscv64 host.
 The simulation uses a single KVM core and boots the kernel directly
 without the OpenSBI bootloader (KVM guests run in VS-mode, not M-mode).
+It uses the published RISC-V KVM preview disk image from the
+`selimsandal/gem5-resources` fork until the updated image is accepted
+upstream.
 
 Usage
 -----
@@ -41,6 +44,8 @@ scons build/RISCV/gem5.opt -j$(nproc)
 The simulated system's stdout can be viewed in
 ``m5out/board.platform.terminal``.
 """
+
+import os
 
 from gem5.components.boards.riscv_board import RiscvBoard
 from gem5.components.cachehierarchies.classic.private_l1_private_l2_walk_cache_hierarchy import (
@@ -57,6 +62,17 @@ from gem5.simulate.exit_handler import (
 )
 from gem5.simulate.simulator import Simulator
 from gem5.utils.override import overrides
+
+_preview_resources_url = (
+    "https://github.com/selimsandal/gem5-resources/releases/download/"
+    "riscv-kvm-preview-2026-04-03/riscv-kvm-preview-resources.json"
+)
+
+if (
+    "GEM5_RESOURCE_JSON" not in os.environ
+    and "GEM5_RESOURCE_JSON_APPEND" not in os.environ
+):
+    os.environ["GEM5_RESOURCE_JSON_APPEND"] = _preview_resources_url
 
 cache_hierarchy = PrivateL1PrivateL2WalkCacheHierarchy(
     l1d_size="16KiB", l1i_size="16KiB", l2_size="256KiB"
@@ -75,7 +91,8 @@ board = RiscvBoard(
 
 board.set_workload(
     obtain_resource(
-        "riscv-ubuntu-24.04-boot-no-systemd", resource_version="2.0.0"
+        "riscv-ubuntu-24.04-kvm-preview-boot-no-systemd",
+        resource_version="1.0.0",
     )
 )
 
