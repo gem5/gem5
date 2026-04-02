@@ -89,17 +89,19 @@ board = RiscvBoard(
     cache_hierarchy=cache_hierarchy,
 )
 
-board.set_workload(
-    obtain_resource(
-        "riscv-ubuntu-24.04-kvm-preview-boot-no-systemd",
-        resource_version="1.0.0",
-    )
+# KVM guests run in VS-mode, so the OpenSBI bootloader cannot execute.
+# Configure the workload through the public kernel/disk API and omit the
+# bootloader to direct-boot the kernel at 0x80000000.
+board.set_kernel_disk_workload(
+    kernel=obtain_resource(
+        "riscv-linux-6.8.12-kernel", resource_version="1.0.0"
+    ),
+    disk_image=obtain_resource(
+        "riscv-ubuntu-24.04-kvm-preview-img", resource_version="1.0.0"
+    ),
+    bootloader=None,
+    kernel_args=board.get_default_kernel_args() + ["no_systemd=true"],
 )
-
-# KVM guests run in VS-mode — the OpenSBI bootloader requires M-mode
-# and cannot execute under KVM.  Clearing the bootloader list makes
-# RiscvBoard load the kernel directly at 0x80000000.
-board._bootloader = []
 
 
 class CustomKernelBootedExitHandler(KernelBootedExitHandler):

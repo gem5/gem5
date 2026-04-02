@@ -738,7 +738,7 @@ TLB::finalizePhysical(const RequestPtr &req,
                 }
 
                 if (mode == BaseMMU::Read) {
-                    pkt->setLE(ret);
+                    pkt->setUintX(ret, ByteOrder::little);
                 }
 
                 return Cycles(1);

@@ -32,6 +32,7 @@
 #include <linux/kvm.h>
 #include <sys/random.h>
 
+#include <algorithm>
 #include <cerrno>
 #include <memory>
 #include <mutex>

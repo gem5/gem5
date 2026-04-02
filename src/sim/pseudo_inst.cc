@@ -389,8 +389,10 @@ m5checkpoint(ThreadContext *tc, Tick delay, Tick period)
 uint64_t
 readfile(ThreadContext *tc, GuestAddr vaddr, uint64_t len, uint64_t offset)
 {
-    DPRINTF(PseudoInst, "pseudo_inst::readfile(0x%x, 0x%x, 0x%x)\n",
-            vaddr.addr, len, offset);
+    DPRINTF(PseudoInst, "pseudo_inst::readfile(%#llx, %#llx, %#llx)\n",
+            static_cast<unsigned long long>(vaddr.addr),
+            static_cast<unsigned long long>(len),
+            static_cast<unsigned long long>(offset));
 
     const std::string &file = tc->getSystemPtr()->params().readfile;
     if (file.empty()) {
@@ -425,9 +427,10 @@ readfile(ThreadContext *tc, GuestAddr vaddr, uint64_t len, uint64_t offset)
         SETranslatingPortProxy se_proxy(tc);
         se_proxy.writeBlob(vaddr.addr, buf, result);
     }
-    DPRINTF(PseudoInst, "pseudo_inst::readfile wrote %u bytes to %#x\n",
-            result, vaddr.addr);
-    delete [] buf;
+    DPRINTF(PseudoInst, "pseudo_inst::readfile wrote %llu bytes to %#llx\n",
+            static_cast<unsigned long long>(result),
+            static_cast<unsigned long long>(vaddr.addr));
+    delete[] buf;
     return result;
 }
 
@@ -477,7 +480,7 @@ writefile(ThreadContext *tc, GuestAddr vaddr, uint64_t len, uint64_t offset,
 
     simout.close(out);
 
-    delete [] buf;
+    delete[] buf;
 
     return len;
 }

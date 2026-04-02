@@ -115,6 +115,9 @@ class RiscvBoard(
         AbstractBoard.__init__(
             self, clk_freq, processor, memory, cache_hierarchy
         )
+        # Kernel-disk workloads may query default kernel args before the
+        # full-system board setup assigns the MMIO m5ops window.
+        self.m5ops_base = self._default_m5ops_base
 
         if processor.get_isa() != ISA.RISCV:
             raise Exception(
@@ -545,11 +548,6 @@ class RiscvBoard(
             cpu_cbom_block_size = self._cpu_cache_block_size(
                 "riscv,cbom-block-size", cpu_cbom_block_size
             )
-        cpu_cbop_block_size = self.get_cache_line_size()
-        if "zicbop" in cpu_isa_exts_set:
-            cpu_cbop_block_size = self._cpu_cache_block_size(
-                "riscv,cbop-block-size", cpu_cbop_block_size
-            )
         cpu_cboz_block_size = self.get_cache_line_size()
         if "zicboz" in cpu_isa_exts_set:
             cpu_cboz_block_size = self._cpu_cache_block_size(
@@ -570,12 +568,6 @@ class RiscvBoard(
                 node.append(
                     FdtPropertyWords(
                         "riscv,cbom-block-size", cpu_cbom_block_size
-                    )
-                )
-            if "zicbop" in cpu_isa_exts_set:
-                node.append(
-                    FdtPropertyWords(
-                        "riscv,cbop-block-size", cpu_cbop_block_size
                     )
                 )
             if "zicboz" in cpu_isa_exts_set:
