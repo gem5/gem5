@@ -25,11 +25,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import ctypes
+import errno
+import fcntl
 import os
+import struct
 from typing import (
     List,
     Optional,
-    Tuple,
+    Set,
 )
 
 import m5
@@ -94,14 +98,39 @@ class RiscvBoard(
     """
 
     _default_timebase_frequency = 100000000
-    _default_mmu_type = "riscv,sv48"
+    _default_mmu_type = "riscv,sv39"
     _default_m5ops_base = 0x10010000
     _default_m5ops_size = 0x10000
-    _kvm_disabled_isa_extensions = frozenset(
-        (
-            "ssaia",
-            "smstateen",
-        )
+
+    _kvmio = 0xAE
+    _ioc_nrbits = 8
+    _ioc_typebits = 8
+    _ioc_sizebits = 14
+    _ioc_nrshift = 0
+    _ioc_typeshift = _ioc_nrshift + _ioc_nrbits
+    _ioc_sizeshift = _ioc_typeshift + _ioc_typebits
+    _ioc_dirshift = _ioc_sizeshift + _ioc_sizebits
+    _ioc_none = 0
+    _ioc_write = 1
+    _kvm_get_api_version = (_kvmio << _ioc_typeshift) | 0x00
+    _kvm_create_vm = (_kvmio << _ioc_typeshift) | 0x01
+    _kvm_create_vcpu = (_kvmio << _ioc_typeshift) | 0x41
+    _kvm_get_one_reg = (
+        (_ioc_write << _ioc_dirshift)
+        | (16 << _ioc_sizeshift)
+        | (_kvmio << _ioc_typeshift)
+        | 0xAB
+    )
+    _kvm_expected_api_version = 12
+    _kvm_reg_riscv = 0x8000000000000000
+    _kvm_reg_size_u64 = 0x0030000000000000
+    _kvm_reg_riscv_timer = 0x04 << 24
+    _kvm_reg_riscv_vector = 0x09 << 24
+    _kvm_timer_frequency_reg = (
+        _kvm_reg_riscv | _kvm_reg_size_u64 | _kvm_reg_riscv_timer
+    )
+    _kvm_vector_vlenb_reg = (
+        _kvm_reg_riscv | _kvm_reg_size_u64 | _kvm_reg_riscv_vector | 4
     )
 
     def __init__(
@@ -118,6 +147,8 @@ class RiscvBoard(
         # Kernel-disk workloads may query default kernel args before the
         # full-system board setup assigns the MMIO m5ops window.
         self.m5ops_base = self._default_m5ops_base
+        self._kvm_probe_cache = None
+        self._kvm_host_freq_cache = None
 
         if processor.get_isa() != ISA.RISCV:
             raise Exception(
@@ -131,98 +162,101 @@ class RiscvBoard(
             core.is_kvm_core() for core in self.get_processor().get_cores()
         )
 
-    def _read_host_dt_property(self, rel_path: str) -> Optional[bytes]:
-        for root in (
-            "/sys/firmware/devicetree/base",
-            "/proc/device-tree",
-        ):
-            path = os.path.join(root, rel_path)
-            try:
-                with open(path, "rb") as dt_prop:
-                    return dt_prop.read()
-            except OSError:
+    @staticmethod
+    def _read_int_file(path: str) -> Optional[int]:
+        try:
+            with open(path) as f:
+                return int(f.read().strip())
+        except (OSError, ValueError):
+            return None
+
+    @staticmethod
+    def _read_cpu_list(path: str) -> Set[int]:
+        try:
+            with open(path) as f:
+                spec = f.read().strip()
+        except OSError:
+            return set()
+
+        cpus = set()
+        for chunk in spec.replace(",", " ").split():
+            chunk = chunk.strip()
+            if not chunk:
                 continue
+            if "-" in chunk:
+                start, end = chunk.split("-", 1)
+                cpus.update(range(int(start), int(end) + 1))
+            else:
+                cpus.add(int(chunk))
+        return cpus
 
-        return None
+    def _probe_kvm_one_reg(self, reg_id: int) -> Optional[int]:
+        if not self._has_kvm_cores():
+            return None
 
-    def _read_host_cpu_dt_property(self, name: str) -> Optional[bytes]:
-        for root in (
-            "/sys/firmware/devicetree/base/cpus",
-            "/proc/device-tree/cpus",
-        ):
-            try:
-                cpu_dirs = sorted(
-                    entry.path
-                    for entry in os.scandir(root)
-                    if entry.is_dir() and entry.name.startswith("cpu@")
+        kvm_fd = -1
+        vm_fd = -1
+        vcpu_fd = -1
+
+        try:
+            kvm_fd = os.open("/dev/kvm", os.O_RDWR | os.O_CLOEXEC)
+            api_version = fcntl.ioctl(kvm_fd, self._kvm_get_api_version)
+            if api_version != self._kvm_expected_api_version:
+                raise OSError(
+                    errno.ENOTSUP,
+                    "unsupported KVM API version",
                 )
-            except OSError:
-                continue
 
-            for cpu_dir in cpu_dirs:
-                try:
-                    with open(os.path.join(cpu_dir, name), "rb") as dt_prop:
-                        return dt_prop.read()
-                except OSError:
-                    continue
+            vm_fd = fcntl.ioctl(kvm_fd, self._kvm_create_vm, 0)
+            vcpu_fd = fcntl.ioctl(vm_fd, self._kvm_create_vcpu, 0)
 
-        return None
+            value = struct.pack("Q", 0)
+            value_buf = bytearray(value)
+            addr = ctypes.addressof(ctypes.c_uint64.from_buffer(value_buf))
+            one_reg = bytearray(struct.pack("QQ", reg_id, addr))
+            fcntl.ioctl(vcpu_fd, self._kvm_get_one_reg, one_reg, True)
+            return struct.unpack("Q", value_buf)[0]
+        except OSError as err:
+            if err.errno in (
+                errno.ENOENT,
+                errno.EINVAL,
+                errno.ENOTSUP,
+                errno.EOPNOTSUPP,
+            ):
+                return None
+            raise
+        finally:
+            for fd in (vcpu_fd, vm_fd, kvm_fd):
+                if fd >= 0:
+                    os.close(fd)
+
+    def _kvm_probe_data(self) -> dict:
+        if self._kvm_probe_cache is None:
+            self._kvm_probe_cache = {
+                "timer_frequency": self._probe_kvm_one_reg(
+                    self._kvm_timer_frequency_reg
+                ),
+                "vlenb": self._probe_kvm_one_reg(self._kvm_vector_vlenb_reg),
+            }
+
+        return self._kvm_probe_cache
+
+    def _configured_riscv_isa(self):
+        return self.get_processor().get_cores()[0].core.isa[0]
 
     def _cpu_timebase_frequency(self) -> int:
         if not self._has_kvm_cores():
             return self._default_timebase_frequency
 
-        data = self._read_host_dt_property("cpus/timebase-frequency")
-        if data:
-            return int.from_bytes(data, byteorder="big")
+        timer_frequency = self._kvm_probe_data()["timer_frequency"]
+        if timer_frequency is not None:
+            return timer_frequency
 
         warn(
-            "Unable to read the host RISC-V timebase-frequency for KVM; "
+            "Unable to read the KVM RISC-V timer frequency; "
             f"falling back to {self._default_timebase_frequency} Hz."
         )
         return self._default_timebase_frequency
-
-    def _cpu_mmu_type(self) -> str:
-        if not self._has_kvm_cores():
-            return self._default_mmu_type
-
-        data = self._read_host_cpu_dt_property("mmu-type")
-        if data:
-            return data.rstrip(b"\0").decode()
-
-        warn(
-            "Unable to read the host RISC-V mmu-type for KVM; "
-            f"falling back to {self._default_mmu_type}."
-        )
-        return self._default_mmu_type
-
-    def _cpu_cache_block_size(self, prop: str, fallback: int) -> int:
-        if not self._has_kvm_cores():
-            return fallback
-
-        data = self._read_host_cpu_dt_property(prop)
-        if data:
-            return int.from_bytes(data, byteorder="big")
-
-        warn(
-            f"Unable to read the host RISC-V {prop} for KVM; "
-            f"falling back to {fallback}."
-        )
-        return fallback
-
-    def _cpu_clock_frequency(self, fallback: int) -> int:
-        if not self._has_kvm_cores():
-            return fallback
-
-        data = self._read_host_cpu_dt_property("clock-frequency")
-        if data:
-            return int.from_bytes(data, byteorder="big")
-
-        warn(
-            "Unable to read the host RISC-V clock-frequency for KVM; "
-            f"falling back to {fallback}."
-        )
-        return fallback
 
     @staticmethod
     def _decode_dt_string_list(data: bytes) -> List[str]:
@@ -233,83 +267,135 @@ class RiscvBoard(
         ]
 
     @staticmethod
-    def _split_isa_string(isa: str) -> Tuple[str, List[str]]:
+    def _split_isa_string(isa: str):
         isa_tokens = isa.lower().split("_")
         return isa_tokens[0], isa_tokens[1:]
 
-    @staticmethod
-    def _filter_isa_extensions(
-        extensions: List[str],
-        allowed_base_exts: set,
-        allowed_exts: set,
-        disabled_exts: set,
-    ) -> List[str]:
-        filtered: List[str] = []
-        for ext in extensions:
-            ext = ext.lower()
-            if len(ext) == 1:
-                if ext not in allowed_base_exts:
-                    continue
-            elif ext in disabled_exts or ext not in allowed_exts:
+    def _detect_kvm_host_frequency(self) -> Optional[int]:
+        if self._kvm_host_freq_cache is not None:
+            return self._kvm_host_freq_cache
+
+        affinity = None
+        try:
+            affinity = os.sched_getaffinity(0)
+        except AttributeError:
+            pass
+
+        policies = []
+        root = "/sys/devices/system/cpu/cpufreq"
+        try:
+            entries = sorted(
+                (
+                    entry
+                    for entry in os.scandir(root)
+                    if entry.is_dir() and entry.name.startswith("policy")
+                ),
+                key=lambda entry: entry.name,
+            )
+        except OSError:
+            self._kvm_host_freq_cache = None
+            return None
+
+        for entry in entries:
+            cpus = self._read_cpu_list(
+                os.path.join(entry.path, "affected_cpus")
+            )
+            if affinity is not None and cpus and not (cpus & affinity):
                 continue
 
-            if ext not in filtered:
-                filtered.append(ext)
-
-        return filtered
-
-    def _cpu_isa_description(
-        self, fallback: str
-    ) -> Tuple[str, str, List[str]]:
-        fallback_base, fallback_exts = self._split_isa_string(fallback)
-        if not self._has_kvm_cores():
-            return "legacy", fallback_base, fallback_exts
-
-        if not fallback_base.startswith(("rv32", "rv64")):
-            return "legacy", fallback_base, fallback_exts
-
-        allowed_base_exts = set(fallback_base[4:])
-        allowed_exts = set(fallback_exts)
-        disabled_exts = set(self._kvm_disabled_isa_extensions)
-
-        isa_base = self._read_host_cpu_dt_property("riscv,isa-base")
-        isa_exts = self._read_host_cpu_dt_property("riscv,isa-extensions")
-        if isa_base and isa_exts:
-            host_base = isa_base.rstrip(b"\0").decode().lower()
-            if host_base.startswith(("rv32", "rv64")):
-                filtered_base = host_base[:4] + "".join(
-                    ch for ch in host_base[4:] if ch in allowed_base_exts
-                )
-                filtered_exts = self._filter_isa_extensions(
-                    self._decode_dt_string_list(isa_exts),
-                    allowed_base_exts,
-                    allowed_exts,
-                    disabled_exts,
-                )
-                return "modern", filtered_base, filtered_exts
-
-        host_isa = self._read_host_cpu_dt_property("riscv,isa")
-        if host_isa:
-            host_base, host_exts = self._split_isa_string(
-                host_isa.rstrip(b"\0").decode()
+            freq_khz = self._read_int_file(
+                os.path.join(entry.path, "cpuinfo_max_freq")
             )
-            if host_base.startswith(("rv32", "rv64")):
-                filtered_base = host_base[:4] + "".join(
-                    ch for ch in host_base[4:] if ch in allowed_base_exts
+            if freq_khz is None:
+                freq_khz = self._read_int_file(
+                    os.path.join(entry.path, "scaling_cur_freq")
                 )
-                filtered_exts = self._filter_isa_extensions(
-                    host_exts,
-                    allowed_base_exts,
-                    allowed_exts,
-                    disabled_exts,
-                )
-                return "legacy", filtered_base, filtered_exts
 
-        warn(
-            "Unable to read the host RISC-V ISA description for KVM; "
-            f"falling back to {fallback_base}."
+            if freq_khz is not None:
+                policies.append((entry.name, freq_khz * 1000))
+
+        if not policies:
+            self._kvm_host_freq_cache = None
+            return None
+
+        policy_freqs = sorted({freq for _, freq in policies})
+        host_freq = max(policy_freqs)
+
+        if len(policy_freqs) > 1:
+            policy_desc = ", ".join(
+                f"{name}={freq}Hz" for name, freq in policies
+            )
+            warn(
+                "Detected multiple KVM host CPU frequencies in the current "
+                f"affinity mask ({policy_desc}); using {host_freq}Hz for "
+                "hostFreq. Pin gem5 to a homogeneous cpufreq policy or "
+                "override hostFreq for more accurate perf-cycle scaling."
+            )
+
+        self._kvm_host_freq_cache = host_freq
+        return host_freq
+
+    def _configure_kvm_core_host_freq(self) -> None:
+        if not self._has_kvm_cores():
+            return
+
+        host_freq = self._detect_kvm_host_frequency()
+        if host_freq is None:
+            return
+
+        for core in self.get_processor().get_cores():
+            if not core.is_kvm_core():
+                continue
+
+            sim_core = core.core
+            if "hostFreq" in sim_core._values.local:
+                continue
+
+            sim_core.hostFreq = f"{host_freq}Hz"
+
+    def _configure_kvm_core_rvv(self) -> None:
+        if not self._has_kvm_cores():
+            return
+
+        need_vector_probe = any(
+            core.is_kvm_core() and core.core.isa[0].enable_rvv.value
+            for core in self.get_processor().get_cores()
         )
-        return "legacy", fallback_base, fallback_exts
+        if not need_vector_probe:
+            return
+
+        kvm_vlenb = self._kvm_probe_data()["vlenb"]
+        if kvm_vlenb is None:
+            m5.fatal(
+                "RISC-V KVM RVV was enabled in the gem5 configuration, but "
+                "the host KVM interface does not expose vector state."
+            )
+
+        kvm_vlen = kvm_vlenb * 8
+        for core in self.get_processor().get_cores():
+            if not core.is_kvm_core():
+                continue
+
+            isa = core.core.isa[0]
+            if not isa.enable_rvv.value:
+                continue
+
+            if "vlen" in isa._values.local:
+                if isa.vlen.value != kvm_vlen:
+                    m5.fatal(
+                        "Configured RISC-V KVM RVV VLEN (%d bits) does not "
+                        "match the host KVM VLEN (%d bits). KVM exposes a "
+                        "fixed VLENB, so set isa[0].vlen to %d or disable "
+                        "RVV for the KVM CPU."
+                        % (isa.vlen.value, kvm_vlen, kvm_vlen)
+                    )
+                continue
+
+            isa.vlen = kvm_vlen
+
+    def _configure_kvm_cores(self) -> None:
+        self._configure_kvm_core_host_freq()
+        self._configure_kvm_core_rvv()
 
     @overrides(AbstractBoard)
     def _setup_board(self) -> None:
@@ -535,26 +621,12 @@ class RiscvBoard(
         cpus_node.append(cpus_state.addrCellsProperty())
         cpus_node.append(cpus_state.sizeCellsProperty())
         cpu_timebase_frequency = self._cpu_timebase_frequency()
-        cpu_mmu_type = self._cpu_mmu_type()
-        cpu_isa_style, cpu_isa_base, cpu_isa_exts = self._cpu_isa_description(
-            self.get_processor().get_cores()[0].core.isa[0].get_isa_string()
-        )
+        cpu_isa_string = self._configured_riscv_isa().get_isa_string()
+        _, cpu_isa_exts = self._split_isa_string(cpu_isa_string)
         cpu_isa_exts_set = set(cpu_isa_exts)
-        cpu_clock_frequency = self._cpu_clock_frequency(
-            self.clk_domain.clock[0].frequency
-        )
+        cpu_clock_frequency = self.clk_domain.clock[0].frequency
         cpu_cbom_block_size = self.get_cache_line_size()
-        if "zicbom" in cpu_isa_exts_set:
-            cpu_cbom_block_size = self._cpu_cache_block_size(
-                "riscv,cbom-block-size", cpu_cbom_block_size
-            )
         cpu_cboz_block_size = self.get_cache_line_size()
-        if "zicboz" in cpu_isa_exts_set:
-            cpu_cboz_block_size = self._cpu_cache_block_size(
-                "riscv,cboz-block-size", cpu_cboz_block_size
-            )
-        # Used by the CLINT driver to set the timer frequency. KVM guests must
-        # inherit the host's real timebase or Linux timer calibration is wrong.
         cpus_node.append(
             FdtPropertyWords("timebase-frequency", [cpu_timebase_frequency])
         )
@@ -563,7 +635,7 @@ class RiscvBoard(
             node = FdtNode(f"cpu@{i}")
             node.append(FdtPropertyStrings("device_type", "cpu"))
             node.append(FdtPropertyWords("reg", state.CPUAddrCells(i)))
-            node.append(FdtPropertyStrings("mmu-type", cpu_mmu_type))
+            node.append(FdtPropertyStrings("mmu-type", self._default_mmu_type))
             if "zicbom" in cpu_isa_exts_set:
                 node.append(
                     FdtPropertyWords(
@@ -577,16 +649,7 @@ class RiscvBoard(
                     )
                 )
             node.append(FdtPropertyStrings("status", "okay"))
-            if cpu_isa_style == "modern":
-                node.append(FdtPropertyStrings("riscv,isa-base", cpu_isa_base))
-                node.append(
-                    FdtPropertyStrings("riscv,isa-extensions", cpu_isa_exts)
-                )
-            else:
-                cpu_isa_string = cpu_isa_base
-                if cpu_isa_exts:
-                    cpu_isa_string += "_" + "_".join(cpu_isa_exts)
-                node.append(FdtPropertyStrings("riscv,isa", cpu_isa_string))
+            node.append(FdtPropertyStrings("riscv,isa", cpu_isa_string))
             node.append(
                 FdtPropertyWords("clock-frequency", cpu_clock_frequency)
             )
@@ -791,6 +854,8 @@ class RiscvBoard(
 
     @overrides(AbstractBoard)
     def _pre_instantiate(self, full_system: Optional[bool] = None) -> Root:
+        self._configure_kvm_cores()
+
         # This is a bit of a hack necessary to get the RiscDemoBoard working
         # At the time of writing the RiscvBoard does not support SE mode so
         # this branch looks pointless. However, the RiscvDemoBoard does and

@@ -67,7 +67,8 @@ class RiscvKvmCPU : public BaseKvmCPU
     void updateKvmState() override;
     void updateThreadContext() override;
 
-    void stutterPC(PCStateBase &pc) const override
+    void
+    stutterPC(PCStateBase &pc) const override
     {
         pc.as<RiscvISA::PCState>().setNPC(pc.instAddr());
     }

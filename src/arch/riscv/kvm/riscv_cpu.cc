@@ -40,6 +40,7 @@
 
 #include "arch/riscv/interrupts.hh"
 #include "arch/riscv/isa.hh"
+#include "arch/riscv/pagetable.hh"
 #include "arch/riscv/regs/float.hh"
 #include "arch/riscv/regs/int.hh"
 #include "arch/riscv/regs/misc.hh"
@@ -70,10 +71,9 @@ uint64_t vtimeCounter = 0;
 bool vtimeInitialized = false;
 UncontendedMutex vtimeMutex;
 
-constexpr uint64_t SupervisorIEBits =
-    (1ULL << INT_SOFTWARE_SUPER) |
-    (1ULL << INT_TIMER_SUPER) |
-    (1ULL << INT_EXT_SUPER);
+constexpr uint64_t SupervisorIEBits = (1ULL << INT_SOFTWARE_SUPER) |
+                                      (1ULL << INT_TIMER_SUPER) |
+                                      (1ULL << INT_EXT_SUPER);
 
 /*
  * KVM handles supervisor software interrupts in-kernel for the SBI IPI
@@ -85,7 +85,9 @@ constexpr uint64_t SupervisorIPWriteBits = (1ULL << INT_EXT_SUPER);
 
 constexpr uint64_t
 misaBit(char ext)
-{ return 1ULL << (ext - 'a'); }
+{
+    return 1ULL << (ext - 'a');
+}
 
 constexpr uint64_t SeedOpstEs16 = 0x2ULL << 30;
 constexpr uint64_t SeedOpstWait = 0x1ULL << 30;
@@ -142,12 +144,12 @@ emulateSeedCsr()
  * FP D-extension uses KVM_REG_RISCV_FP_D (type 6).
  */
 
-#define RISCV_CORE_REG(off) \
+#define RISCV_CORE_REG(off)                                                   \
     (KVM_REG_RISCV | KVM_REG_SIZE_U64 | KVM_REG_RISCV_CORE | (off))
 
-#define RISCV_CSR(off) \
-    (KVM_REG_RISCV | KVM_REG_SIZE_U64 | \
-     KVM_REG_RISCV_CSR | KVM_REG_RISCV_CSR_GENERAL | (off))
+#define RISCV_CSR(off)                                                        \
+    (KVM_REG_RISCV | KVM_REG_SIZE_U64 | KVM_REG_RISCV_CSR |                   \
+     KVM_REG_RISCV_CSR_GENERAL | (off))
 
 #define RISCV_CSR_AIA(off)                                                    \
     (KVM_REG_RISCV | KVM_REG_SIZE_U64 | KVM_REG_RISCV_CSR |                   \
@@ -168,19 +170,19 @@ emulateSeedCsr()
     (KVM_REG_RISCV | KVM_REG_SIZE_U32 | KVM_REG_RISCV_FP_F |                  \
      KVM_REG_RISCV_FP_F_REG(fcsr))
 
-#define RISCV_FP_D(off) \
+#define RISCV_FP_D(off)                                                       \
     (KVM_REG_RISCV | KVM_REG_SIZE_U64 | KVM_REG_RISCV_FP_D | (off))
 
-#define RISCV_FP_D_FCSR \
-    (KVM_REG_RISCV | KVM_REG_SIZE_U32 | KVM_REG_RISCV_FP_D | \
+#define RISCV_FP_D_FCSR                                                       \
+    (KVM_REG_RISCV | KVM_REG_SIZE_U32 | KVM_REG_RISCV_FP_D |                  \
      KVM_REG_RISCV_FP_D_REG(fcsr))
 
 #define RISCV_ISA_EXT_SINGLE(ext)                                             \
     (KVM_REG_RISCV | KVM_REG_SIZE_U64 | KVM_REG_RISCV_ISA_EXT |               \
      KVM_REG_RISCV_ISA_SINGLE | (ext))
 
-#define RISCV_TIMER_REG(name) \
-    (KVM_REG_RISCV | KVM_REG_SIZE_U64 | KVM_REG_RISCV_TIMER | \
+#define RISCV_TIMER_REG(name)                                                 \
+    (KVM_REG_RISCV | KVM_REG_SIZE_U64 | KVM_REG_RISCV_TIMER |                 \
      KVM_REG_RISCV_TIMER_REG(name))
 
 /* Core register offsets within kvm_riscv_core */
@@ -188,24 +190,24 @@ constexpr unsigned KVM_PC_OFF = KVM_REG_RISCV_CORE_REG(regs.pc);
 constexpr unsigned KVM_MODE_OFF = KVM_REG_RISCV_CORE_REG(mode);
 
 /* CSR offsets within kvm_riscv_csr */
-constexpr unsigned KVM_CSR_SSTATUS   = KVM_REG_RISCV_CSR_REG(sstatus);
-constexpr unsigned KVM_CSR_SIE       = KVM_REG_RISCV_CSR_REG(sie);
-constexpr unsigned KVM_CSR_STVEC     = KVM_REG_RISCV_CSR_REG(stvec);
-constexpr unsigned KVM_CSR_SSCRATCH  = KVM_REG_RISCV_CSR_REG(sscratch);
-constexpr unsigned KVM_CSR_SEPC      = KVM_REG_RISCV_CSR_REG(sepc);
-constexpr unsigned KVM_CSR_SCAUSE    = KVM_REG_RISCV_CSR_REG(scause);
-constexpr unsigned KVM_CSR_STVAL     = KVM_REG_RISCV_CSR_REG(stval);
-constexpr unsigned KVM_CSR_SIP       = KVM_REG_RISCV_CSR_REG(sip);
-constexpr unsigned KVM_CSR_SATP      = KVM_REG_RISCV_CSR_REG(satp);
+constexpr unsigned KVM_CSR_SSTATUS = KVM_REG_RISCV_CSR_REG(sstatus);
+constexpr unsigned KVM_CSR_SIE = KVM_REG_RISCV_CSR_REG(sie);
+constexpr unsigned KVM_CSR_STVEC = KVM_REG_RISCV_CSR_REG(stvec);
+constexpr unsigned KVM_CSR_SSCRATCH = KVM_REG_RISCV_CSR_REG(sscratch);
+constexpr unsigned KVM_CSR_SEPC = KVM_REG_RISCV_CSR_REG(sepc);
+constexpr unsigned KVM_CSR_SCAUSE = KVM_REG_RISCV_CSR_REG(scause);
+constexpr unsigned KVM_CSR_STVAL = KVM_REG_RISCV_CSR_REG(stval);
+constexpr unsigned KVM_CSR_SIP = KVM_REG_RISCV_CSR_REG(sip);
+constexpr unsigned KVM_CSR_SATP = KVM_REG_RISCV_CSR_REG(satp);
 constexpr unsigned KVM_CSR_SCOUNTEREN = KVM_REG_RISCV_CSR_REG(scounteren);
-constexpr unsigned KVM_CSR_SENVCFG   = KVM_REG_RISCV_CSR_REG(senvcfg);
+constexpr unsigned KVM_CSR_SENVCFG = KVM_REG_RISCV_CSR_REG(senvcfg);
 constexpr unsigned KVM_CSR_AIA_SISELECT = KVM_REG_RISCV_CSR_AIA_REG(siselect);
 constexpr unsigned KVM_CSR_SMSTATEEN0 =
     KVM_REG_RISCV_CSR_SMSTATEEN_REG(sstateen0);
 
 /* Vector CSR register IDs */
-#define RISCV_VEC_CSR(name) \
-    (KVM_REG_RISCV | KVM_REG_SIZE_U64 | KVM_REG_RISCV_VECTOR | \
+#define RISCV_VEC_CSR(name)                                                   \
+    (KVM_REG_RISCV | KVM_REG_SIZE_U64 | KVM_REG_RISCV_VECTOR |                \
      KVM_REG_RISCV_VECTOR_CSR_REG(name))
 
 /*
@@ -218,37 +220,37 @@ constexpr unsigned KVM_CSR_SMSTATEEN0 =
  * and is not synced. PC is handled separately.
  */
 const std::vector<RiscvKvmCPU::IntRegInfo> RiscvKvmCPU::intRegMap = {
-    { RISCV_CORE_REG(1),  int_reg::_RaIdx,  "ra"  },
-    { RISCV_CORE_REG(2),  int_reg::_SpIdx,  "sp"  },
-    { RISCV_CORE_REG(3),  int_reg::_GpIdx,  "gp"  },
-    { RISCV_CORE_REG(4),  int_reg::_TpIdx,  "tp"  },
-    { RISCV_CORE_REG(5),  int_reg::_T0Idx,  "t0"  },
-    { RISCV_CORE_REG(6),  int_reg::_T1Idx,  "t1"  },
-    { RISCV_CORE_REG(7),  int_reg::_T2Idx,  "t2"  },
-    { RISCV_CORE_REG(8),  int_reg::_S0Idx,  "s0"  },
-    { RISCV_CORE_REG(9),  int_reg::_S1Idx,  "s1"  },
-    { RISCV_CORE_REG(10), int_reg::_A0Idx,  "a0"  },
-    { RISCV_CORE_REG(11), int_reg::_A1Idx,  "a1"  },
-    { RISCV_CORE_REG(12), int_reg::_A2Idx,  "a2"  },
-    { RISCV_CORE_REG(13), int_reg::_A3Idx,  "a3"  },
-    { RISCV_CORE_REG(14), int_reg::_A4Idx,  "a4"  },
-    { RISCV_CORE_REG(15), int_reg::_A5Idx,  "a5"  },
-    { RISCV_CORE_REG(16), int_reg::_A6Idx,  "a6"  },
-    { RISCV_CORE_REG(17), int_reg::_A7Idx,  "a7"  },
-    { RISCV_CORE_REG(18), int_reg::_S2Idx,  "s2"  },
-    { RISCV_CORE_REG(19), int_reg::_S3Idx,  "s3"  },
-    { RISCV_CORE_REG(20), int_reg::_S4Idx,  "s4"  },
-    { RISCV_CORE_REG(21), int_reg::_S5Idx,  "s5"  },
-    { RISCV_CORE_REG(22), int_reg::_S6Idx,  "s6"  },
-    { RISCV_CORE_REG(23), int_reg::_S7Idx,  "s7"  },
-    { RISCV_CORE_REG(24), int_reg::_S8Idx,  "s8"  },
-    { RISCV_CORE_REG(25), int_reg::_S9Idx,  "s9"  },
-    { RISCV_CORE_REG(26), int_reg::_S10Idx, "s10" },
-    { RISCV_CORE_REG(27), int_reg::_S11Idx, "s11" },
-    { RISCV_CORE_REG(28), int_reg::_T3Idx,  "t3"  },
-    { RISCV_CORE_REG(29), int_reg::_T4Idx,  "t4"  },
-    { RISCV_CORE_REG(30), int_reg::_T5Idx,  "t5"  },
-    { RISCV_CORE_REG(31), int_reg::_T6Idx,  "t6"  },
+    {RISCV_CORE_REG(1), int_reg::_RaIdx, "ra"},
+    {RISCV_CORE_REG(2), int_reg::_SpIdx, "sp"},
+    {RISCV_CORE_REG(3), int_reg::_GpIdx, "gp"},
+    {RISCV_CORE_REG(4), int_reg::_TpIdx, "tp"},
+    {RISCV_CORE_REG(5), int_reg::_T0Idx, "t0"},
+    {RISCV_CORE_REG(6), int_reg::_T1Idx, "t1"},
+    {RISCV_CORE_REG(7), int_reg::_T2Idx, "t2"},
+    {RISCV_CORE_REG(8), int_reg::_S0Idx, "s0"},
+    {RISCV_CORE_REG(9), int_reg::_S1Idx, "s1"},
+    {RISCV_CORE_REG(10), int_reg::_A0Idx, "a0"},
+    {RISCV_CORE_REG(11), int_reg::_A1Idx, "a1"},
+    {RISCV_CORE_REG(12), int_reg::_A2Idx, "a2"},
+    {RISCV_CORE_REG(13), int_reg::_A3Idx, "a3"},
+    {RISCV_CORE_REG(14), int_reg::_A4Idx, "a4"},
+    {RISCV_CORE_REG(15), int_reg::_A5Idx, "a5"},
+    {RISCV_CORE_REG(16), int_reg::_A6Idx, "a6"},
+    {RISCV_CORE_REG(17), int_reg::_A7Idx, "a7"},
+    {RISCV_CORE_REG(18), int_reg::_S2Idx, "s2"},
+    {RISCV_CORE_REG(19), int_reg::_S3Idx, "s3"},
+    {RISCV_CORE_REG(20), int_reg::_S4Idx, "s4"},
+    {RISCV_CORE_REG(21), int_reg::_S5Idx, "s5"},
+    {RISCV_CORE_REG(22), int_reg::_S6Idx, "s6"},
+    {RISCV_CORE_REG(23), int_reg::_S7Idx, "s7"},
+    {RISCV_CORE_REG(24), int_reg::_S8Idx, "s8"},
+    {RISCV_CORE_REG(25), int_reg::_S9Idx, "s9"},
+    {RISCV_CORE_REG(26), int_reg::_S10Idx, "s10"},
+    {RISCV_CORE_REG(27), int_reg::_S11Idx, "s11"},
+    {RISCV_CORE_REG(28), int_reg::_T3Idx, "t3"},
+    {RISCV_CORE_REG(29), int_reg::_T4Idx, "t4"},
+    {RISCV_CORE_REG(30), int_reg::_T5Idx, "t5"},
+    {RISCV_CORE_REG(31), int_reg::_T6Idx, "t6"},
 };
 
 /*
@@ -260,19 +262,18 @@ const std::vector<RiscvKvmCPU::IntRegInfo> RiscvKvmCPU::intRegMap = {
  * updateTCCSR.
  */
 const std::vector<RiscvKvmCPU::MiscRegInfo> RiscvKvmCPU::csrMap = {
-    { RISCV_CSR(KVM_CSR_SSTATUS),    MISCREG_STATUS,     "sstatus"    },
-    { RISCV_CSR(KVM_CSR_SIE),        MISCREG_IE,         "sie"        },
-    { RISCV_CSR(KVM_CSR_STVEC),      MISCREG_STVEC,      "stvec"      },
-    { RISCV_CSR(KVM_CSR_SSCRATCH),   MISCREG_SSCRATCH,   "sscratch"   },
-    { RISCV_CSR(KVM_CSR_SEPC),       MISCREG_SEPC,       "sepc"       },
-    { RISCV_CSR(KVM_CSR_SCAUSE),     MISCREG_SCAUSE,     "scause"     },
-    { RISCV_CSR(KVM_CSR_STVAL),      MISCREG_STVAL,      "stval"      },
-    { RISCV_CSR(KVM_CSR_SIP),        MISCREG_IP,         "sip"        },
-    { RISCV_CSR(KVM_CSR_SATP),       MISCREG_SATP,       "satp"       },
-    { RISCV_CSR(KVM_CSR_SCOUNTEREN), MISCREG_SCOUNTEREN, "scounteren" },
-    { RISCV_CSR(KVM_CSR_SENVCFG),    MISCREG_SENVCFG,    "senvcfg"    },
+    {RISCV_CSR(KVM_CSR_SSTATUS), MISCREG_STATUS, "sstatus"},
+    {RISCV_CSR(KVM_CSR_SIE), MISCREG_IE, "sie"},
+    {RISCV_CSR(KVM_CSR_STVEC), MISCREG_STVEC, "stvec"},
+    {RISCV_CSR(KVM_CSR_SSCRATCH), MISCREG_SSCRATCH, "sscratch"},
+    {RISCV_CSR(KVM_CSR_SEPC), MISCREG_SEPC, "sepc"},
+    {RISCV_CSR(KVM_CSR_SCAUSE), MISCREG_SCAUSE, "scause"},
+    {RISCV_CSR(KVM_CSR_STVAL), MISCREG_STVAL, "stval"},
+    {RISCV_CSR(KVM_CSR_SIP), MISCREG_IP, "sip"},
+    {RISCV_CSR(KVM_CSR_SATP), MISCREG_SATP, "satp"},
+    {RISCV_CSR(KVM_CSR_SCOUNTEREN), MISCREG_SCOUNTEREN, "scounteren"},
+    {RISCV_CSR(KVM_CSR_SENVCFG), MISCREG_SENVCFG, "senvcfg"},
 };
-
 
 /*
  * Map VLENB (vector register length in bytes) to KVM_REG_SIZE_* constant.
@@ -281,14 +282,20 @@ uint64_t
 RiscvKvmCPU::kvmRegSizeForVlenb(uint64_t vlenb)
 {
     switch (vlenb) {
-      case 8:   return KVM_REG_SIZE_U64;
-      case 16:  return KVM_REG_SIZE_U128;
-      case 32:  return KVM_REG_SIZE_U256;
-      case 64:  return KVM_REG_SIZE_U512;
-      case 128: return KVM_REG_SIZE_U1024;
-      case 256: return KVM_REG_SIZE_U2048;
-      default:
-        panic("RiscvKvmCPU: Unsupported VLENB=%lu\n", vlenb);
+        case 8:
+            return KVM_REG_SIZE_U64;
+        case 16:
+            return KVM_REG_SIZE_U128;
+        case 32:
+            return KVM_REG_SIZE_U256;
+        case 64:
+            return KVM_REG_SIZE_U512;
+        case 128:
+            return KVM_REG_SIZE_U1024;
+        case 256:
+            return KVM_REG_SIZE_U2048;
+        default:
+            panic("RiscvKvmCPU: Unsupported VLENB=%lu\n", vlenb);
     }
 }
 
@@ -302,15 +309,11 @@ RiscvKvmCPU::kvmVecRegId(int regIdx) const
            KVM_REG_RISCV_VECTOR | KVM_REG_RISCV_VECTOR_REG(regIdx);
 }
 
-
-RiscvKvmCPU::RiscvKvmCPU(const RiscvKvmCPUParams &params)
-    : BaseKvmCPU(params)
-{
-}
+RiscvKvmCPU::RiscvKvmCPU(const RiscvKvmCPUParams &params) : BaseKvmCPU(params)
+{}
 
 RiscvKvmCPU::~RiscvKvmCPU()
-{
-}
+{}
 
 const ISA &
 RiscvKvmCPU::riscvIsa() const
@@ -322,7 +325,9 @@ RiscvKvmCPU::riscvIsa() const
 
 const RiscvISAParams &
 RiscvKvmCPU::riscvIsaParams() const
-{ return dynamic_cast<const RiscvISAParams &>(riscvIsa().params()); }
+{
+    return dynamic_cast<const RiscvISAParams &>(riscvIsa().params());
+}
 
 bool
 RiscvKvmCPU::getRegList(struct kvm_reg_list &regs) const
@@ -363,12 +368,15 @@ RiscvKvmCPU::refreshRegList()
 
 bool
 RiscvKvmCPU::hasReg(uint64_t id) const
-{ return regIndexSet.find(id) != regIndexSet.end(); }
+{
+    return regIndexSet.find(id) != regIndexSet.end();
+}
 
 void
 RiscvKvmCPU::configureKvmConfigRegs()
 {
     const RegVal misa = tc->readMiscRegNoEffect(MISCREG_ISA);
+    const auto &isa_params = riscvIsaParams();
 
     if (hasReg(RISCV_CFG(isa))) {
         setOneReg(RISCV_CFG(isa), static_cast<uint64_t>(misa & ISA_EXT_MASK));
@@ -390,6 +398,23 @@ RiscvKvmCPU::configureKvmConfigRegs()
         setOneReg(
             RISCV_CFG(mimpid),
             static_cast<uint64_t>(tc->readMiscRegNoEffect(MISCREG_IMPID)));
+    }
+
+    if (hasReg(RISCV_CFG(satp_mode))) {
+        setOneReg(RISCV_CFG(satp_mode),
+                  static_cast<uint64_t>(AddrXlateMode::SV39));
+    }
+
+    if (hasReg(RISCV_CFG(zicbom_block_size))) {
+        setOneReg(RISCV_CFG(zicbom_block_size),
+                  static_cast<uint64_t>(
+                      isa_params.enable_Zicbom_fs ? cacheLineSize() : 0));
+    }
+
+    if (hasReg(RISCV_CFG(zicboz_block_size))) {
+        setOneReg(RISCV_CFG(zicboz_block_size),
+                  static_cast<uint64_t>(
+                      isa_params.enable_Zicboz_fs ? cacheLineSize() : 0));
     }
 }
 
@@ -585,8 +610,8 @@ RiscvKvmCPU::startup()
                  "Disable RVV for the KVM CPU or configure isa[0].vlen to "
                  "match the host VLENB.\n",
                  kvmVlenb, isa.getVectorLengthInBytes());
-        DPRINTF(KvmContext, "KVM VLENB = %lu bytes (%lu bits)\n",
-                kvmVlenb, kvmVlenb * 8);
+        DPRINTF(KvmContext, "KVM VLENB = %lu bytes (%lu bits)\n", kvmVlenb,
+                kvmVlenb * 8);
     }
 }
 
@@ -611,11 +636,10 @@ RiscvKvmCPU::kvmRun(Tick ticks)
      */
     uint64_t ip = interrupt->readIP();
     uint64_t sipVal = getOneRegU64(RISCV_CSR(KVM_CSR_SIP));
-    uint64_t newSip = (sipVal & ~SupervisorIPWriteBits) |
-                      (ip & SupervisorIPWriteBits);
+    uint64_t newSip =
+        (sipVal & ~SupervisorIPWriteBits) | (ip & SupervisorIPWriteBits);
     if (newSip != sipVal) {
-        DPRINTF(KvmInt, "KVM: SIP 0x%lx -> 0x%lx\n",
-                sipVal, newSip);
+        DPRINTF(KvmInt, "KVM: SIP 0x%lx -> 0x%lx\n", sipVal, newSip);
         setOneReg(RISCV_CSR(KVM_CSR_SIP), newSip);
     }
 
@@ -626,16 +650,16 @@ Tick
 RiscvKvmCPU::handleKvmExit()
 {
     switch (getKvmRunState()->exit_reason) {
-      case KVM_EXIT_RISCV_SBI:
-        _status = Running;
-        return handleKvmExitRiscvSBI();
+        case KVM_EXIT_RISCV_SBI:
+            _status = Running;
+            return handleKvmExitRiscvSBI();
 
-      case KVM_EXIT_RISCV_CSR:
-        _status = Running;
-        return handleKvmExitRiscvCSR();
+        case KVM_EXIT_RISCV_CSR:
+            _status = Running;
+            return handleKvmExitRiscvCSR();
 
-      default:
-        return BaseKvmCPU::handleKvmExit();
+        default:
+            return BaseKvmCPU::handleKvmExit();
     }
 }
 
@@ -644,12 +668,11 @@ RiscvKvmCPU::handleKvmExitRiscvSBI()
 {
     auto *run = getKvmRunState();
 
-    DPRINTF(KvmInt, "KVM: SBI exit (ext_id=0x%lx, func_id=0x%lx, "
+    DPRINTF(KvmInt,
+            "KVM: SBI exit (ext_id=0x%lx, func_id=0x%lx, "
             "a0=0x%lx, a1=0x%lx)\n",
-            run->riscv_sbi.extension_id,
-            run->riscv_sbi.function_id,
-            run->riscv_sbi.args[0],
-            run->riscv_sbi.args[1]);
+            run->riscv_sbi.extension_id, run->riscv_sbi.function_id,
+            run->riscv_sbi.args[0], run->riscv_sbi.args[1]);
 
     /*
      * Most SBI extensions (timer, IPI, rfence, HSM, PMU) are handled
@@ -657,8 +680,7 @@ RiscvKvmCPU::handleKvmExitRiscvSBI()
      * Return SBI_ERR_NOT_SUPPORTED so the guest falls back gracefully.
      */
     // SBI_ERR_NOT_SUPPORTED
-    run->riscv_sbi.ret[0] =
-        static_cast<unsigned long>(-2);
+    run->riscv_sbi.ret[0] = static_cast<unsigned long>(-2);
     run->riscv_sbi.ret[1] = 0;
 
     return 0;
@@ -821,16 +843,18 @@ RiscvKvmCPU::ioctlRun()
 
     {
         std::lock_guard<UncontendedMutex> lock(vtimeMutex);
-        if (vtimeCounter++ == 0)
+        if (vtimeCounter++ == 0) {
             setOneReg(RISCV_TIMER_REG(time), vtime);
+        }
     }
 
     BaseKvmCPU::ioctlRun();
 
     {
         std::lock_guard<UncontendedMutex> lock(vtimeMutex);
-        if (--vtimeCounter == 0)
+        if (--vtimeCounter == 0) {
             vtime = getOneRegU64(RISCV_TIMER_REG(time));
+        }
     }
 }
 
@@ -840,19 +864,20 @@ RiscvKvmCPU::dump() const
     inform("RISC-V KVM CPU state:");
     inform("  PC: %s", getAndFormatOneReg(RISCV_CORE_REG(KVM_PC_OFF)));
 
-    for (const auto &ri : intRegMap)
+    for (const auto &ri : intRegMap) {
         inform("  %s: %s", ri.name, getAndFormatOneReg(ri.kvmId));
+    }
 
     inform("  mode: %s", getAndFormatOneReg(RISCV_CORE_REG(KVM_MODE_OFF)));
 
-    for (const auto &ri : csrMap)
+    for (const auto &ri : csrMap) {
         inform("  %s: %s", ri.name, getAndFormatOneReg(ri.kvmId));
+    }
 
     if (hasKvmTimer) {
         inform("  timer.frequency: %s",
                getAndFormatOneReg(RISCV_TIMER_REG(frequency)));
-        inform("  timer.time: %s",
-               getAndFormatOneReg(RISCV_TIMER_REG(time)));
+        inform("  timer.time: %s", getAndFormatOneReg(RISCV_TIMER_REG(time)));
         inform("  timer.compare: %s",
                getAndFormatOneReg(RISCV_TIMER_REG(compare)));
         inform("  timer.state: %s",
@@ -881,8 +906,9 @@ RiscvKvmCPU::dump() const
         inform("  vtype: %s", getAndFormatOneReg(RISCV_VEC_CSR(vtype)));
         inform("  vcsr: %s", getAndFormatOneReg(RISCV_VEC_CSR(vcsr)));
 
-        for (int i = 0; i < 32; ++i)
+        for (int i = 0; i < 32; ++i) {
             inform("  v%d: %s", i, getAndFormatOneReg(kvmVecRegId(i)));
+        }
     }
 }
 
@@ -894,8 +920,9 @@ RiscvKvmCPU::updateKvmState()
     updateKvmStateCore();
     updateKvmStateFP();
     updateKvmStateCSR();
-    if (kvmVlenb)
+    if (kvmVlenb) {
         updateKvmStateVec();
+    }
 }
 
 void
@@ -920,8 +947,7 @@ RiscvKvmCPU::updateKvmStateCore()
      * Map both PRV_M and PRV_S → KVM_RISCV_MODE_S.
      */
     RegVal prv = tc->readMiscRegNoEffect(MISCREG_PRV);
-    uint64_t kvmMode = (prv == PRV_U) ? KVM_RISCV_MODE_U
-                                      : KVM_RISCV_MODE_S;
+    uint64_t kvmMode = (prv == PRV_U) ? KVM_RISCV_MODE_U : KVM_RISCV_MODE_S;
     DPRINTF(KvmContext, "  mode := %d (prv=%d)\n", kvmMode, prv);
     setOneReg(RISCV_CORE_REG(KVM_MODE_OFF), kvmMode);
 }
@@ -960,12 +986,13 @@ RiscvKvmCPU::updateKvmStateCSR()
         uint64_t value = tc->readMiscRegNoEffect(ri.gem5Idx);
 
         // Mask to S-mode view for registers that are S-mode projections
-        if (ri.gem5Idx == MISCREG_STATUS)
+        if (ri.gem5Idx == MISCREG_STATUS) {
             value &= kvmSstatusMask;
-        else if (ri.gem5Idx == MISCREG_IE)
+        } else if (ri.gem5Idx == MISCREG_IE) {
             value &= SupervisorIEBits;
-        else if (ri.gem5Idx == MISCREG_IP)
+        } else if (ri.gem5Idx == MISCREG_IP) {
             value &= SupervisorIPWriteBits;
+        }
 
         DPRINTF(KvmContext, "  %s := 0x%lx\n", ri.name, value);
         setOneReg(ri.kvmId, value);
@@ -980,8 +1007,9 @@ RiscvKvmCPU::updateThreadContext()
     updateTCCore();
     updateTCFP();
     updateTCCSR();
-    if (kvmVlenb)
+    if (kvmVlenb) {
         updateTCVec();
+    }
 }
 
 void
@@ -1042,8 +1070,7 @@ RiscvKvmCPU::updateTCCSR()
             uint64_t mstatus = tc->readMiscRegNoEffect(MISCREG_STATUS);
             mstatus = (mstatus & ~kvmSstatusMask) | (value & kvmSstatusMask);
             tc->setMiscRegNoEffect(MISCREG_STATUS, mstatus);
-        } else if (ri.gem5Idx == MISCREG_IE ||
-                   ri.gem5Idx == MISCREG_IP) {
+        } else if (ri.gem5Idx == MISCREG_IE || ri.gem5Idx == MISCREG_IP) {
             // Use setMiscReg so the Interrupts controller is updated
             tc->setMiscReg(ri.gem5Idx, value);
         } else {
@@ -1060,15 +1087,15 @@ RiscvKvmCPU::updateKvmStateVec()
     uint64_t vl = tc->readMiscRegNoEffect(MISCREG_VL);
     uint64_t vtype = tc->readMiscRegNoEffect(MISCREG_VTYPE);
     uint64_t vcsr = (tc->readMiscRegNoEffect(MISCREG_VXRM) << 1) |
-                     tc->readMiscRegNoEffect(MISCREG_VXSAT);
+                    tc->readMiscRegNoEffect(MISCREG_VXSAT);
 
     setOneReg(RISCV_VEC_CSR(vstart), vstart);
     setOneReg(RISCV_VEC_CSR(vl), vl);
     setOneReg(RISCV_VEC_CSR(vtype), vtype);
     setOneReg(RISCV_VEC_CSR(vcsr), vcsr);
 
-    DPRINTF(KvmContext, "  vstart=%lu vl=%lu vtype=0x%lx vcsr=0x%lx\n",
-            vstart, vl, vtype, vcsr);
+    DPRINTF(KvmContext, "  vstart=%lu vl=%lu vtype=0x%lx vcsr=0x%lx\n", vstart,
+            vl, vtype, vcsr);
 
     // Vector registers v0-v31
     for (int i = 0; i < NumVecStandardRegs; ++i) {
@@ -1093,8 +1120,8 @@ RiscvKvmCPU::updateTCVec()
     tc->setMiscRegNoEffect(MISCREG_VXSAT, vcsr & 0x1);
     tc->setMiscRegNoEffect(MISCREG_VXRM, (vcsr >> 1) & 0x3);
 
-    DPRINTF(KvmContext, "  vstart=%lu vl=%lu vtype=0x%lx vcsr=0x%lx\n",
-            vstart, vl, vtype, vcsr);
+    DPRINTF(KvmContext, "  vstart=%lu vl=%lu vtype=0x%lx vcsr=0x%lx\n", vstart,
+            vl, vtype, vcsr);
 
     // Vector registers v0-v31
     for (int i = 0; i < NumVecStandardRegs; ++i) {
