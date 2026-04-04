@@ -111,7 +111,8 @@ fullSystemWriteBlob(ThreadContext *tc, Addr addr, const void *data,
 
     for (const auto &range : *gen) {
         if (range.fault) {
-            fatal("writeBlob(%#x, ...) failed", addr);
+            fatal("writeBlob(%#llx, ...) failed",
+                  (unsigned long long)addr);
         }
 
         tc->getSystemPtr()->physProxy.writeBlobPhys(range.paddr, range.flags,
