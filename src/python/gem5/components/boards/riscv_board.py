@@ -112,11 +112,12 @@ class RiscvBoard(
     _ioc_dirshift = _ioc_sizeshift + _ioc_sizebits
     _ioc_none = 0
     _ioc_write = 1
+    _ioc_read = 2
     _kvm_get_api_version = (_kvmio << _ioc_typeshift) | 0x00
     _kvm_create_vm = (_kvmio << _ioc_typeshift) | 0x01
     _kvm_create_vcpu = (_kvmio << _ioc_typeshift) | 0x41
     _kvm_get_one_reg = (
-        (_ioc_write << _ioc_dirshift)
+        ((_ioc_read | _ioc_write) << _ioc_dirshift)
         | (16 << _ioc_sizeshift)
         | (_kvmio << _ioc_typeshift)
         | 0xAB

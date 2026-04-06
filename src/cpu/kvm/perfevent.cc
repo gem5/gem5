@@ -205,7 +205,8 @@ PerfKvmCounter::attach(PerfKvmCounterConfig &config,
                  0); // Flags
     if (fd == -1)
     {
-        if (errno == EACCES || errno == EPERM) {
+        const int saved_errno = errno;
+        if (saved_errno == EACCES || saved_errno == EPERM) {
             long perfEventParanoid = 0;
             const bool haveParanoid = readPerfEventParanoid(perfEventParanoid);
 
@@ -216,7 +217,7 @@ PerfKvmCounter::attach(PerfKvmCounterConfig &config,
                       "  perf counters needed by KVM CPUs with usePerf=True.\n"
                       "  Lower perf_event_paranoid, grant CAP_PERFMON/\n"
                       "  CAP_SYS_ADMIN, or set usePerf=False.\n",
-                      strerror(errno), perfEventParanoid);
+                      strerror(saved_errno), perfEventParanoid);
             }
 
             if (haveParanoid) {
@@ -228,7 +229,7 @@ PerfKvmCounter::attach(PerfKvmCounterConfig &config,
                     "  to some other host policy or missing capability.\n"
                     "  Grant CAP_PERFMON/CAP_SYS_ADMIN, adjust host perf\n"
                     "  policy, or set usePerf=False.\n",
-                    strerror(errno), perfEventParanoid);
+                    strerror(saved_errno), perfEventParanoid);
             }
 
             panic(
@@ -237,9 +238,9 @@ PerfKvmCounter::attach(PerfKvmCounterConfig &config,
                 "  read /proc/sys/kernel/perf_event_paranoid to diagnose the\n"
                 "  host policy. Lower the host perf restrictions, grant\n"
                 "  CAP_PERFMON/CAP_SYS_ADMIN, or set usePerf=False.\n",
-                strerror(errno));
+                strerror(saved_errno));
         }
-        panic("PerfKvmCounter::attach failed (%i)\n", errno);
+        panic("PerfKvmCounter::attach failed (%i)\n", saved_errno);
     }
 
     mmapPerf(1);
