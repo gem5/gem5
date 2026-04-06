@@ -96,6 +96,97 @@ The script runs three cases per benchmark:
   - `gem5/build/RISCV/gem5.opt`
   - custom optimized binary
 
+## Hardware-Loop Microbenchmark
+
+A separate, faster microbenchmark harness is provided for isolating the
+front-end cost of hardware-loop redirects without mixing it into the larger
+`dot4` / `mac` comparison flow.
+
+Source files live in `hwloop_perf_src/`:
+
+- `hwloop_redirect_ref`
+  - same arithmetic work as the looped cases
+  - inner kernel is fully unrolled, so it serves as the no-redirect reference
+- `hwloop_redirect_swloop`
+  - same arithmetic work
+  - inner kernel uses a software back-edge (`addi`/`bnez`)
+- `hwloop_redirect_hwloop`
+  - same arithmetic work
+  - inner kernel uses `lp.setup`, so repeated loop-backs appear as
+    `nonControlRedirects`
+
+Three scales are built for each variant:
+
+- `small`
+- `medium`
+- `large`
+
+This keeps each run quick while still allowing a simple slope check against
+the number of redirects.
+
+## Build The Hardware-Loop Microbench Binaries
+
+```bash
+python3 tests/gem5/riscv_ai_ext/build_hwloop_perf_binaries.py
+```
+
+## Run The Hardware-Loop Microbenchmark
+
+Default usage:
+
+```bash
+python3 tests/gem5/riscv_ai_ext/run_hwloop_perf_compare.py
+```
+
+Useful variants:
+
+```bash
+python3 tests/gem5/riscv_ai_ext/run_hwloop_perf_compare.py --skip-build
+python3 tests/gem5/riscv_ai_ext/run_hwloop_perf_compare.py --out-dir /tmp/riscv_ai_hwloop
+python3 tests/gem5/riscv_ai_ext/run_hwloop_perf_compare.py --cpu o3
+```
+
+The hardware-loop harness runs only on the updated `gem5` tree. It is meant to
+answer a narrower question than the main perf suite:
+
+- how many logical loop-backs the hardware loop should execute
+- how many of those loop-backs still survive as backend
+  `nonControlRedirects`
+- how many extra cycles the hardware-loop case pays relative to the unrolled
+  reference
+- whether hardware loop is better or worse than a software back-edge loop on
+  the same hot body
+
+## Hardware-Loop Metrics
+
+The microbenchmark summary reports:
+
+- `board.processor.cores.core.commit.branchMispredicts`
+- `board.processor.cores.core.branchPred.mispredicted_0::total`
+- `board.processor.cores.core.branchPred.mispredictDueToPredictor_0::total`
+- `board.processor.cores.core.branchPred.mispredictDueToBTBMiss_0::total`
+- `board.processor.cores.core.branchPred.targetWrong_0::total`
+- `board.processor.cores.core.iew.nonControlRedirects`
+- `board.processor.cores.core.iew.dispSquashedInsts`
+- `board.processor.cores.core.commit.commitSquashedInsts`
+- `board.processor.cores.core.fetch.icacheSquashes`
+
+The runner also computes:
+
+- expected loop-back count for the hardware-loop case
+- observed backend redirect count for the hardware-loop case
+- early-elided redirect count and elision ratio
+- `swloop` cycles over `ref`
+- `hwloop` cycles over `ref`
+- estimated `cycles / observed backend redirect`
+- estimated `cycles / expected loop-back`
+- `hwloop` speedup vs. `swloop`
+
+When the front-end learns to predict loop-back early, `nonControlRedirects`
+should drop below the expected loop-back count. That is a good sign: it means
+the fetch path already followed the right target and the backend no longer had
+to repair the PC on every iteration.
+
 ## Reported Metrics
 
 The summary printed to the terminal and saved to `summary.json` / `summary.csv`
@@ -113,6 +204,7 @@ includes:
 - `board.processor.cores.core.branchPred.BTBLookups`
 - `board.processor.cores.core.branchPred.BTBHits`
 - `board.processor.cores.core.iew.branchMispredicts` or commit fallback
+- `board.processor.cores.core.iew.nonControlRedirects`
 
 The script also computes:
 
@@ -140,3 +232,9 @@ Each run creates a timestamped directory under `perf_results/` unless
 - `mac_pipeline` is a more conservative benchmark on `o3`; scalar RV64 integer
   `mul + add` is already fairly strong there, so the gain can be smaller than
   the `dot4` case.
+- `nonControlRedirects` helps separate ISA-managed PC rewrites (for example
+  hardware-loop redirects) from true branch predictor misses in `branchMispredicts`.
+- the hardware-loop microbenchmark currently provides the cleanest way to judge
+  whether O3 is recognizing loop-back early enough, because all three variants
+  share the same arithmetic body and differ only in the inner control-flow
+  mechanism

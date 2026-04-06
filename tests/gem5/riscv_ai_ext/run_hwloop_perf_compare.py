@@ -13,27 +13,33 @@ from typing import Any
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 UPDATE_REPO = SCRIPT_DIR.parents[2]
-DEFAULT_BASELINE_REPO = Path("/home/duydonv/gem5_baseline")
-BIN_DIR = SCRIPT_DIR / "perf_bin"
-BUILD_SCRIPT = SCRIPT_DIR / "build_perf_binaries.py"
+BIN_DIR = SCRIPT_DIR / "hwloop_perf_bin"
+BUILD_SCRIPT = SCRIPT_DIR / "build_hwloop_perf_binaries.py"
 CONFIG_SCRIPT = SCRIPT_DIR / "configs" / "perf_binary_run.py"
+KERNEL_ITERATIONS = 32
 
 BENCHMARKS = {
-    "dot4_pipeline": {
-        "scalar_binary": BIN_DIR / "dot4_pipeline_scalar",
-        "custom_binary": BIN_DIR / "dot4_pipeline_custom",
+    "small": {
+        "outer_repeats": 1024,
+        "ref": BIN_DIR / "hwloop_redirect_ref_small",
+        "swloop": BIN_DIR / "hwloop_redirect_swloop_small",
+        "hwloop": BIN_DIR / "hwloop_redirect_hwloop_small",
     },
-    "mac_pipeline": {
-        "scalar_binary": BIN_DIR / "mac_pipeline_scalar",
-        "custom_binary": BIN_DIR / "mac_pipeline_custom",
+    "medium": {
+        "outer_repeats": 4096,
+        "ref": BIN_DIR / "hwloop_redirect_ref_medium",
+        "swloop": BIN_DIR / "hwloop_redirect_swloop_medium",
+        "hwloop": BIN_DIR / "hwloop_redirect_hwloop_medium",
+    },
+    "large": {
+        "outer_repeats": 16384,
+        "ref": BIN_DIR / "hwloop_redirect_ref_large",
+        "swloop": BIN_DIR / "hwloop_redirect_swloop_large",
+        "hwloop": BIN_DIR / "hwloop_redirect_hwloop_large",
     },
 }
 
-CASE_LAYOUT = (
-    ("baseline_scalar", "baseline", "scalar_binary"),
-    ("update_scalar", "update", "scalar_binary"),
-    ("update_custom", "update", "custom_binary"),
-)
+CASE_LAYOUT = ("ref", "swloop", "hwloop")
 
 STAT_PATHS = {
     "simTicks": ("simTicks",),
@@ -43,15 +49,23 @@ STAT_PATHS = {
     "numCycles": ("board.processor.cores.core.numCycles",),
     "ipc": ("board.processor.cores.core.ipc",),
     "cpi": ("board.processor.cores.core.cpi",),
-    "branchLookups": ("board.processor.cores.core.branchPred.lookups_0::total",),
-    "condIncorrect": ("board.processor.cores.core.branchPred.condIncorrect",),
-    "BTBLookups": ("board.processor.cores.core.branchPred.BTBLookups",),
-    "BTBHits": ("board.processor.cores.core.branchPred.BTBHits",),
     "branchMispredicts": (
         "board.processor.cores.core.commit.branchMispredicts",
         "board.processor.cores.core.iew.branchMispredicts",
     ),
     "nonControlRedirects": ("board.processor.cores.core.iew.nonControlRedirects",),
+    "condIncorrect": ("board.processor.cores.core.branchPred.condIncorrect",),
+    "bpMispredicted": ("board.processor.cores.core.branchPred.mispredicted_0::total",),
+    "predictorMispredicted": (
+        "board.processor.cores.core.branchPred.mispredictDueToPredictor_0::total",
+    ),
+    "btbMispredicted": (
+        "board.processor.cores.core.branchPred.mispredictDueToBTBMiss_0::total",
+    ),
+    "targetWrong": ("board.processor.cores.core.branchPred.targetWrong_0::total",),
+    "dispSquashedInsts": ("board.processor.cores.core.iew.dispSquashedInsts",),
+    "commitSquashedInsts": ("board.processor.cores.core.commit.commitSquashedInsts",),
+    "icacheSquashes": ("board.processor.cores.core.fetch.icacheSquashes",),
 }
 
 BENCH_REGEX = re.compile(r"BENCH_RESULT\s+(\S+)\s+(0x[0-9a-fA-F]+)")
@@ -126,19 +140,37 @@ def format_cell(value: Any) -> str:
     return str(value)
 
 
+def delta(candidate: Any, reference: Any) -> Any:
+    if candidate is None or reference is None:
+        return None
+    return float(candidate) - float(reference)
+
+
+def speedup(base: Any, improved: Any) -> Any:
+    if base in (None, 0) or improved in (None, 0):
+        return None
+    return float(base) / float(improved)
+
+
+def per_redirect(delta_cycles: Any, redirect_count: Any) -> Any:
+    if delta_cycles is None or redirect_count in (None, 0):
+        return None
+    return float(delta_cycles) / float(redirect_count)
+
+
 def print_table(rows: list[dict[str, Any]]) -> None:
     headers = (
         "case",
         "cycles",
-        "ticks",
         "insts",
-        "ipc",
-        "cpi",
         "br_miss",
+        "bp_miss",
+        "pred_bad",
+        "target_bad",
         "pc_redir",
-        "cond_bad",
-        "btb_hit",
-        "btb_lookup",
+        "disp_sq",
+        "commit_sq",
+        "icache_sq",
         "checksum",
     )
     widths = {header: len(header) for header in headers}
@@ -148,15 +180,15 @@ def print_table(rows: list[dict[str, Any]]) -> None:
         rendered = {
             "case": row["case_name"],
             "cycles": format_cell(row["stats"]["numCycles"]),
-            "ticks": format_cell(row["stats"]["simTicks"]),
             "insts": format_cell(row["stats"]["simInsts"]),
-            "ipc": format_cell(row["stats"]["ipc"]),
-            "cpi": format_cell(row["stats"]["cpi"]),
             "br_miss": format_cell(row["stats"]["branchMispredicts"]),
+            "bp_miss": format_cell(row["stats"]["bpMispredicted"]),
+            "pred_bad": format_cell(row["stats"]["predictorMispredicted"]),
+            "target_bad": format_cell(row["stats"]["targetWrong"]),
             "pc_redir": format_cell(row["stats"]["nonControlRedirects"]),
-            "cond_bad": format_cell(row["stats"]["condIncorrect"]),
-            "btb_hit": format_cell(row["stats"]["BTBHits"]),
-            "btb_lookup": format_cell(row["stats"]["BTBLookups"]),
+            "disp_sq": format_cell(row["stats"]["dispSquashedInsts"]),
+            "commit_sq": format_cell(row["stats"]["commitSquashedInsts"]),
+            "icache_sq": format_cell(row["stats"]["icacheSquashes"]),
             "checksum": row["checksum"],
         }
         for key, value in rendered.items():
@@ -170,33 +202,15 @@ def print_table(rows: list[dict[str, Any]]) -> None:
         print("  ".join(rendered[header].ljust(widths[header]) for header in headers))
 
 
-def speedup(base: Any, improved: Any) -> Any:
-    if base in (None, 0) or improved in (None, 0):
-        return None
-    return float(base) / float(improved)
-
-
-def percent_delta(reference: Any, candidate: Any) -> Any:
-    if reference in (None, 0) or candidate is None:
-        return None
-    return (float(candidate) - float(reference)) * 100.0 / float(reference)
-
-
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Build and compare scalar/custom RISC-V AI extension benchmarks."
-    )
-    parser.add_argument(
-        "--baseline-repo",
-        type=Path,
-        default=DEFAULT_BASELINE_REPO,
-        help="Path to the baseline gem5 repository.",
+        description="Run a fast O3 microbenchmark focused on hardware-loop redirect cost."
     )
     parser.add_argument(
         "--update-repo",
         type=Path,
         default=UPDATE_REPO,
-        help="Path to the updated gem5 repository.",
+        help="Path to the gem5 repository used for the benchmark.",
     )
     parser.add_argument(
         "--cpu",
@@ -206,25 +220,20 @@ def main() -> None:
     parser.add_argument(
         "--out-dir",
         type=Path,
-        default=SCRIPT_DIR / "perf_results" / datetime.now().strftime("%Y%m%d_%H%M%S"),
-        help="Directory where comparison outputs will be stored.",
+        default=SCRIPT_DIR / "hwloop_perf_results" / datetime.now().strftime("%Y%m%d_%H%M%S"),
+        help="Directory where microbenchmark outputs will be stored.",
     )
     parser.add_argument(
         "--skip-build",
         action="store_true",
-        help="Skip rebuilding the performance binaries.",
+        help="Skip rebuilding the hardware-loop microbenchmark binaries.",
     )
     args = parser.parse_args()
 
-    baseline_repo = args.baseline_repo.resolve()
     update_repo = args.update_repo.resolve()
     out_dir = args.out_dir.resolve()
-
-    baseline_gem5 = baseline_repo / "build" / "RISCV" / "gem5.opt"
     update_gem5 = update_repo / "build" / "RISCV" / "gem5.opt"
 
-    if not baseline_gem5.is_file():
-        raise FileNotFoundError(f"Baseline gem5 binary not found: {baseline_gem5}")
     if not update_gem5.is_file():
         raise FileNotFoundError(f"Updated gem5 binary not found: {update_gem5}")
     if not CONFIG_SCRIPT.is_file():
@@ -245,107 +254,124 @@ def main() -> None:
 
     summary: dict[str, Any] = {
         "cpu": args.cpu,
-        "baseline_repo": str(baseline_repo),
         "update_repo": str(update_repo),
         "generated_at": datetime.now().isoformat(),
-        "benchmarks": {},
+        "kernel_iterations": KERNEL_ITERATIONS,
+        "scales": {},
     }
 
     mismatches: list[str] = []
 
-    for benchmark_name, benchmark_files in BENCHMARKS.items():
-        print(f"\n## {benchmark_name}")
-        benchmark_output_dir = out_dir / benchmark_name
-        benchmark_output_dir.mkdir(parents=True, exist_ok=True)
+    for scale_name, benchmark_config in BENCHMARKS.items():
+        print(f"\n## {scale_name}")
+        scale_output_dir = out_dir / scale_name
+        scale_output_dir.mkdir(parents=True, exist_ok=True)
 
         rows: list[dict[str, Any]] = []
-        for case_name, repo_kind, binary_key in CASE_LAYOUT:
-            case_output_dir = benchmark_output_dir / case_name
+        for case_name in CASE_LAYOUT:
+            case_output_dir = scale_output_dir / case_name
             case_output_dir.mkdir(parents=True, exist_ok=True)
 
-            binary_path = benchmark_files[binary_key].resolve()
+            binary_path = benchmark_config[case_name].resolve()
             if not binary_path.is_file():
                 raise FileNotFoundError(f"Benchmark binary not found: {binary_path}")
 
-            gem5_binary = baseline_gem5 if repo_kind == "baseline" else update_gem5
-            gem5_repo = baseline_repo if repo_kind == "baseline" else update_repo
-
             command = [
-                str(gem5_binary),
+                str(update_gem5),
                 "-d",
                 str(case_output_dir),
                 str(CONFIG_SCRIPT),
                 str(binary_path),
                 args.cpu,
             ]
-            completed = run_command(command, cwd=gem5_repo, output_dir=case_output_dir)
+            completed = run_command(command, cwd=update_repo, output_dir=case_output_dir)
 
             stats_path = case_output_dir / "stats.txt"
             if not stats_path.is_file():
                 raise FileNotFoundError(f"stats.txt missing: {stats_path}")
 
-            bench_label, checksum = extract_bench_result(
-                completed.stdout, completed.stderr
+            bench_label, checksum = extract_bench_result(completed.stdout, completed.stderr)
+            rows.append(
+                {
+                    "case_name": case_name,
+                    "binary": str(binary_path),
+                    "bench_label": bench_label,
+                    "checksum": checksum,
+                    "stats": parse_stats(stats_path),
+                }
             )
-            row = {
-                "case_name": case_name,
-                "repo_kind": repo_kind,
-                "binary": str(binary_path),
-                "bench_label": bench_label,
-                "checksum": checksum,
-                "stats": parse_stats(stats_path),
-            }
-            rows.append(row)
 
-        baseline_row = next(row for row in rows if row["case_name"] == "baseline_scalar")
-        update_scalar_row = next(row for row in rows if row["case_name"] == "update_scalar")
-        update_custom_row = next(row for row in rows if row["case_name"] == "update_custom")
+        ref_row = next(row for row in rows if row["case_name"] == "ref")
+        swloop_row = next(row for row in rows if row["case_name"] == "swloop")
+        hwloop_row = next(row for row in rows if row["case_name"] == "hwloop")
 
-        expected_checksum = baseline_row["checksum"]
+        expected_checksum = ref_row["checksum"]
         for row in rows:
             row["checksum_match"] = row["checksum"] == expected_checksum
             if not row["checksum_match"]:
                 mismatches.append(
-                    f"{benchmark_name}:{row['case_name']} expected {expected_checksum} got {row['checksum']}"
+                    f"{scale_name}:{row['case_name']} expected {expected_checksum} got {row['checksum']}"
                 )
 
+        expected_redirects = benchmark_config["outer_repeats"] * (KERNEL_ITERATIONS - 1)
+        observed_redirects = hwloop_row["stats"]["nonControlRedirects"]
+        early_elided_redirects = None
+        redirect_elision_ratio = None
+        if observed_redirects is not None:
+            early_elided_redirects = max(expected_redirects - observed_redirects, 0)
+            if expected_redirects:
+                redirect_elision_ratio = early_elided_redirects / float(expected_redirects)
+
         derived = {
-            "speedup_vs_baseline_cycles": speedup(
-                baseline_row["stats"]["numCycles"],
-                update_custom_row["stats"]["numCycles"],
+            "expected_non_control_redirects": expected_redirects,
+            "observed_non_control_redirects": observed_redirects,
+            "early_elided_redirects": early_elided_redirects,
+            "redirect_elision_ratio": redirect_elision_ratio,
+            "swloop_cycles_over_ref": delta(
+                swloop_row["stats"]["numCycles"], ref_row["stats"]["numCycles"]
             ),
-            "speedup_vs_baseline_ticks": speedup(
-                baseline_row["stats"]["simTicks"],
-                update_custom_row["stats"]["simTicks"],
+            "hwloop_cycles_over_ref": delta(
+                hwloop_row["stats"]["numCycles"], ref_row["stats"]["numCycles"]
             ),
-            "control_delta_cycles_pct": percent_delta(
-                baseline_row["stats"]["numCycles"],
-                update_scalar_row["stats"]["numCycles"],
+            "hwloop_cycles_per_observed_redirect": per_redirect(
+                delta(hwloop_row["stats"]["numCycles"], ref_row["stats"]["numCycles"]),
+                observed_redirects,
             ),
-            "control_delta_ticks_pct": percent_delta(
-                baseline_row["stats"]["simTicks"],
-                update_scalar_row["stats"]["simTicks"],
+            "hwloop_cycles_per_expected_loopback": per_redirect(
+                delta(hwloop_row["stats"]["numCycles"], ref_row["stats"]["numCycles"]),
+                expected_redirects,
             ),
-            "custom_ipc_delta_pct": percent_delta(
-                baseline_row["stats"]["ipc"], update_custom_row["stats"]["ipc"]
+            "hwloop_speedup_vs_swloop": speedup(
+                swloop_row["stats"]["numCycles"], hwloop_row["stats"]["numCycles"]
             ),
-            "custom_branch_mispredict_delta": None
-            if baseline_row["stats"]["branchMispredicts"] is None
-            or update_custom_row["stats"]["branchMispredicts"] is None
-            else update_custom_row["stats"]["branchMispredicts"]
-            - baseline_row["stats"]["branchMispredicts"],
+            "redirect_count_match": observed_redirects == expected_redirects,
         }
 
         print_table(rows)
         print(
-            "speedup(cycles): {}x | speedup(ticks): {}x | control cycles delta: {}%".format(
-                format_cell(derived["speedup_vs_baseline_cycles"]),
-                format_cell(derived["speedup_vs_baseline_ticks"]),
-                format_cell(derived["control_delta_cycles_pct"]),
+            "expected loop-backs: {} | observed backend redirects: {} | early-elided: {} | "
+            "elision ratio: {} | redirect match: {}".format(
+                format_cell(derived["expected_non_control_redirects"]),
+                format_cell(derived["observed_non_control_redirects"]),
+                format_cell(derived["early_elided_redirects"]),
+                format_cell(derived["redirect_elision_ratio"]),
+                derived["redirect_count_match"],
+            )
+        )
+        print(
+            "swloop delta vs ref: {} cycles | hwloop delta vs ref: {} cycles | "
+            "hwloop cycles/observed-redirect: {} | hwloop cycles/expected-loopback: {} | "
+            "hwloop speedup vs swloop: {}x".format(
+                format_cell(derived["swloop_cycles_over_ref"]),
+                format_cell(derived["hwloop_cycles_over_ref"]),
+                format_cell(derived["hwloop_cycles_per_observed_redirect"]),
+                format_cell(derived["hwloop_cycles_per_expected_loopback"]),
+                format_cell(derived["hwloop_speedup_vs_swloop"]),
             )
         )
 
-        summary["benchmarks"][benchmark_name] = {
+        summary["scales"][scale_name] = {
+            "outer_repeats": benchmark_config["outer_repeats"],
             "rows": rows,
             "derived": derived,
         }
@@ -359,9 +385,9 @@ def main() -> None:
         writer = csv.writer(csv_file)
         writer.writerow(
             [
-                "benchmark",
+                "scale",
+                "outer_repeats",
                 "case",
-                "repo_kind",
                 "checksum",
                 "checksum_match",
                 "simTicks",
@@ -371,22 +397,26 @@ def main() -> None:
                 "numCycles",
                 "ipc",
                 "cpi",
-                "branchLookups",
-                "condIncorrect",
-                "BTBLookups",
-                "BTBHits",
                 "branchMispredicts",
                 "nonControlRedirects",
+                "condIncorrect",
+                "bpMispredicted",
+                "predictorMispredicted",
+                "btbMispredicted",
+                "targetWrong",
+                "dispSquashedInsts",
+                "commitSquashedInsts",
+                "icacheSquashes",
             ]
         )
-        for benchmark_name, benchmark_summary in summary["benchmarks"].items():
-            for row in benchmark_summary["rows"]:
+        for scale_name, scale_summary in summary["scales"].items():
+            for row in scale_summary["rows"]:
                 stats = row["stats"]
                 writer.writerow(
                     [
-                        benchmark_name,
+                        scale_name,
+                        scale_summary["outer_repeats"],
                         row["case_name"],
-                        row["repo_kind"],
                         row["checksum"],
                         row["checksum_match"],
                         stats["simTicks"],
@@ -396,12 +426,16 @@ def main() -> None:
                         stats["numCycles"],
                         stats["ipc"],
                         stats["cpi"],
-                        stats["branchLookups"],
-                        stats["condIncorrect"],
-                        stats["BTBLookups"],
-                        stats["BTBHits"],
                         stats["branchMispredicts"],
                         stats["nonControlRedirects"],
+                        stats["condIncorrect"],
+                        stats["bpMispredicted"],
+                        stats["predictorMispredicted"],
+                        stats["btbMispredicted"],
+                        stats["targetWrong"],
+                        stats["dispSquashedInsts"],
+                        stats["commitSquashedInsts"],
+                        stats["icacheSquashes"],
                     ]
                 )
 

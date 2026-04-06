@@ -1,3 +1,5 @@
 bin/
 perf_bin/
 perf_results/
+hwloop_perf_bin/
+hwloop_perf_results/
