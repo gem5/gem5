@@ -61,7 +61,7 @@ def main():
         "##################### END OF SIMULATIONS ############################"
     )
 
-    for sim, stats in results:
+    for sim, stats in results.items():
         print(
             f"Host simulation time for {sim}: {stats['hostSeconds']['value']}"
         )
