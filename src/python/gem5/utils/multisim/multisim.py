@@ -264,19 +264,16 @@ def run(module_path: Path, processes: Optional[int] = None) -> Dict[str, Dict]:
             # Wait for active processes to finish
             time.sleep(1)  # Avoid busy-waiting
             with process_lock:
-                # Using list comprehension to remove finished processes
-                # as using `remove` in a loop over the list will cause
-                # the list to be modified during iteration.
-                active_processes = [
-                    (process, pipe, id)
-                    for process, pipe, id in active_processes
-                    if process.is_alive()
-                ]
-
-                for _, pipe, id in active_processes:
-                    if not pipe.poll(0):
-                        continue
-                    stats[id] = pipe.recv()
+                curr_processes = active_processes
+                active_processes = []
+                for process, pipe, id in curr_processes:
+                    if pipe.poll(0):
+                        try:
+                            stats[id] = pipe.recv()
+                        except EOFError:
+                            pass
+                    if process.is_alive():
+                        active_processes.append((process, pipe, id))
 
     finally:
         handle_exit(None, None)
