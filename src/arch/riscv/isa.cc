@@ -32,6 +32,9 @@
 
 #include "arch/riscv/isa.hh"
 
+#include "cpu/o3/cpu.hh"
+#include "cpu/o3/dyn_inst.hh"
+
 #include <ctime>
 #include <set>
 #include <sstream>
@@ -287,6 +290,8 @@ const std::array<const char *, NUM_MISCREGS> MiscRegNames = {{
     [MISCREG_LPEND] = "LPEND",
     [MISCREG_LPCOUNT] = "LPCOUNT",
     [MISCREG_LPACTIVE] = "LPACTIVE",
+    [MISCREG_LPGEN] = "LPGEN",
+    [MISCREG_LPSETUP_PC] = "LPSETUP_PC",
 
     [MISCREG_FFLAGS_EXE]    = "FFLAGS_EXE",
 }};
@@ -1090,14 +1095,15 @@ ISA::resetThread()
 
 void
 ISA::postAdvancePC(ThreadContext *tc, const StaticInst &inst,
-    const PCStateBase &cur_pc, PCStateBase &next_pc) const
+    const PCStateBase &cur_pc, PCStateBase &next_pc,
+    const void *o3_dyn_inst) const
 {
     if (inst.isMicroop() && !inst.isLastMicroop()) {
         return;
     }
 
     redirectHardwareLoop(
-        tc, cur_pc.as<PCState>(), next_pc.as<PCState>());
+        tc, cur_pc.as<PCState>(), next_pc.as<PCState>(), o3_dyn_inst);
 }
 
 void
@@ -1113,7 +1119,8 @@ ISA::commitAdvancePC(ThreadContext *tc, const StaticInst &inst,
 
 void
 ISA::redirectHardwareLoop(
-    ThreadContext *tc, const PCState &cur_pc, PCState &next_pc) const
+    ThreadContext *tc, const PCState &cur_pc, PCState &next_pc,
+    const void *o3_dyn_inst) const
 {
     if (cur_pc.branching() || !tc->readMiscRegNoEffect(MISCREG_LPACTIVE)) {
         return;
@@ -1124,8 +1131,26 @@ ISA::redirectHardwareLoop(
         return;
     }
 
-    const RegVal remaining = tc->readMiscRegNoEffect(MISCREG_LPCOUNT);
-    if (remaining > 1) {
+    RegVal arch_remaining = tc->readMiscRegNoEffect(MISCREG_LPCOUNT);
+
+    // O3: LPCOUNT commits at tail commit; younger tails at LPEND may execute
+    // before an older tail commits. Approximate the logical remaining count by
+    // subtracting older dynamic tails at the same PC already executed.
+    if (o3_dyn_inst != nullptr) {
+        const auto *di = static_cast<const gem5::o3::DynInst *>(o3_dyn_inst);
+        auto *cpu = dynamic_cast<gem5::o3::CPU *>(di->getCpuPtr());
+        if (cpu != nullptr) {
+            const unsigned inflight = cpu->countOlderExecutedSameInstAddr(
+                di->threadNumber, di->seqNum, loop_end);
+            if (arch_remaining > inflight) {
+                arch_remaining -= inflight;
+            } else {
+                arch_remaining = 1;
+            }
+        }
+    }
+
+    if (arch_remaining > 1) {
         const Addr loop_start = rvSext(tc->readMiscRegNoEffect(MISCREG_LPSTART));
         next_pc.set(loop_start);
         next_pc.compressed(false);
@@ -1148,6 +1173,7 @@ ISA::updateHardwareLoopState(
     RegVal remaining = tc->readMiscRegNoEffect(MISCREG_LPCOUNT);
     if (remaining == 0) {
         tc->setMiscReg(MISCREG_LPACTIVE, 0);
+        tc->setMiscReg(MISCREG_LPSETUP_PC, 0);
         return;
     }
 
@@ -1156,6 +1182,7 @@ ISA::updateHardwareLoopState(
 
     if (remaining == 0) {
         tc->setMiscReg(MISCREG_LPACTIVE, 0);
+        tc->setMiscReg(MISCREG_LPSETUP_PC, 0);
     }
 }
 

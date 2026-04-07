@@ -323,6 +323,10 @@ class CPU : public BaseCPU
      */
     void setMiscReg(int misc_reg, RegVal val, ThreadID tid);
 
+    /** See ROB::countOlderExecutedSameInstAddr (RISC-V hardware-loop helper). */
+    unsigned countOlderExecutedSameInstAddr(
+        ThreadID tid, InstSeqNum seq_num, Addr inst_addr) const;
+
     RegVal getReg(PhysRegIdPtr phys_reg, ThreadID tid);
     void getReg(PhysRegIdPtr phys_reg, void *val, ThreadID tid);
     void *getWritableReg(PhysRegIdPtr phys_reg, ThreadID tid);

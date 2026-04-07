@@ -266,6 +266,14 @@ class ROB
      */
     size_t countInsts(ThreadID tid);
 
+    /**
+     * For hardware-loop modeling: count ROB entries for tid that are strictly
+     * older than seq_num, already executed, not squashed, and whose
+     * PCStateBase::instAddr() matches inst_addr.
+     */
+    unsigned countOlderExecutedSameInstAddr(
+        ThreadID tid, InstSeqNum seq_num, Addr inst_addr) const;
+
   private:
     /** Reset the ROB state */
     void resetState();

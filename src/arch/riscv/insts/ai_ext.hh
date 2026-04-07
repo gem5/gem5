@@ -116,6 +116,7 @@ class CLAMP_I : public RiscvStaticInst
  *   lpstart = next PC
  *   lpend   = PC + imm
  *   lpactive = (lpcount > 0)
+ *   lpgen   = lpgen + 1   (monotonic loop-instance id for FE / debug)
  */
 class LP_SETUP_I : public RiscvStaticInst
 {

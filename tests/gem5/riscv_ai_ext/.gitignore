@@ -3,3 +3,6 @@ perf_bin/
 perf_results/
 hwloop_perf_bin/
 hwloop_perf_results/
+hwloop_baseline/*.json
+testing-results/
+o3_hwloop_smoke_debug*/

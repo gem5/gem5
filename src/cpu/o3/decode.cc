@@ -42,6 +42,8 @@
 #include "cpu/o3/decode.hh"
 
 #include "arch/generic/pcstate.hh"
+#include "arch/riscv/isa.hh"
+#include "arch/riscv/regs/misc.hh"
 #include "base/trace.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/dyn_inst.hh"
@@ -89,6 +91,7 @@ Decode::Decode(CPU *_cpu, const BaseO3CPUParams &params)
       fetchToDecodeDelay(params.fetchToDecodeDelay),
       decodeWidth(params.decodeWidth),
       numThreads(params.numThreads),
+      riscvSerializeHardwareLoopTail(params.riscvSerializeHardwareLoopTail),
       stats(_cpu)
 {
     if (decodeWidth > MaxWidth)
@@ -688,6 +691,24 @@ Decode::decodeInsts(ThreadID tid)
         // too much for function correctness.
         if (inst->numSrcRegs() == 0) {
             inst->setCanIssue();
+        }
+
+        // RISC-V hardware loop: postAdvancePC reads committed LPCOUNT. On O3 a
+        // younger dynamic instance at LPEND can execute before an older tail
+        // commits, seeing a stale count and redirecting incorrectly. Optional
+        // SerializeBefore at the tail (see riscvSerializeHardwareLoopTail).
+        if (riscvSerializeHardwareLoopTail &&
+            (!inst->isMicroop() || inst->isLastMicroop())) {
+            gem5::ThreadContext *tc = cpu->tcBase(tid);
+            auto *rv_isa = dynamic_cast<RiscvISA::ISA *>(tc->getIsaPtr());
+            if (rv_isa != nullptr &&
+                tc->readMiscRegNoEffect(RiscvISA::MISCREG_LPACTIVE) != 0) {
+                const Addr loop_end = rv_isa->rvSext(
+                    tc->readMiscRegNoEffect(RiscvISA::MISCREG_LPEND));
+                if (inst->pcState().instAddr() == loop_end) {
+                    inst->setSerializeBefore();
+                }
+            }
         }
 
         // This current instruction is valid, so add it into the decode

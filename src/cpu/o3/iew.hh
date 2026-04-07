@@ -241,10 +241,12 @@ class IEW
     }
 
   private:
-    /** Sends commit proper information for a squash due to a branch
-     * mispredict.
+    /** Sends commit proper information for a fetch redirect discovered at
+     * execute. Control-flow redirects are tagged as branch mispredicts;
+     * non-control redirects (e.g. ISA-managed PC rewrites) are not.
      */
-    void squashDueToBranch(const DynInstPtr &inst, ThreadID tid);
+    void squashDueToBranch(
+        const DynInstPtr &inst, ThreadID tid, bool branchMispredict);
 
     /** Sends commit proper information for a squash due to a memory order
      * violation.
@@ -451,6 +453,10 @@ class IEW
         /** Stat for total number of mispredicted branches detected at
          *  execute. */
         statistics::Formula branchMispredicts;
+        /** Stat for execute-time redirects caused by non-control
+         * instructions, such as ISA-managed hardware loops.
+         */
+        statistics::Scalar nonControlRedirects;
 
         struct ExecutedInstStats : public statistics::Group
         {

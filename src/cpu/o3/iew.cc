@@ -182,6 +182,9 @@ IEW::IEWStats::IEWStats(CPU *cpu)
       ADD_STAT(branchMispredicts, statistics::units::Count::get(),
                "Number of branch mispredicts detected at execute",
                predictedTakenIncorrect + predictedNotTakenIncorrect),
+      ADD_STAT(nonControlRedirects, statistics::units::Count::get(),
+               "Number of execute-time redirects caused by non-control "
+               "instructions"),
       executedInstStats(cpu),
       ADD_STAT(instsToCommit, statistics::units::Count::get(),
                "Cumulative count of insts sent to commit"),
@@ -470,7 +473,8 @@ IEW::squash(ThreadID tid)
 }
 
 void
-IEW::squashDueToBranch(const DynInstPtr& inst, ThreadID tid)
+IEW::squashDueToBranch(
+    const DynInstPtr& inst, ThreadID tid, bool branchMispredict)
 {
     DPRINTF(IEW, "[tid:%i] [sn:%llu] Squashing from a specific instruction,"
             " PC: %s "
@@ -486,9 +490,9 @@ IEW::squashDueToBranch(const DynInstPtr& inst, ThreadID tid)
         inst->staticInst->advancePC(*toCommit->pc[tid]);
         inst->tcBase()->getIsaPtr()->postAdvancePC(
             inst->tcBase(), *inst->staticInst, inst->pcState(),
-            *toCommit->pc[tid]);
+            *toCommit->pc[tid], inst.get());
 
-        toCommit->mispredictInst[tid] = inst;
+        toCommit->mispredictInst[tid] = branchMispredict ? inst : nullptr;
         toCommit->includeSquashInst[tid] = false;
 
         wroteToTimeBuffer = true;
@@ -1297,11 +1301,13 @@ IEW::executeInsts()
             bool loadNotExecuted = !inst->isExecuted() && inst->isLoad();
 
             if (inst->mispredicted() && !loadNotExecuted) {
+                const bool branchMispredict = inst->isControl();
                 fetchRedirect[tid] = true;
 
-                DPRINTF(IEW, "[tid:%i] [sn:%llu] Execute: "
-                        "Branch mispredict detected.\n",
-                        tid, inst->seqNum);
+                DPRINTF(IEW, "[tid:%i] [sn:%llu] Execute: %s detected.\n",
+                        tid, inst->seqNum,
+                        branchMispredict ? "Branch mispredict"
+                                         : "Non-control PC redirect");
                 DPRINTF(IEW, "[tid:%i] [sn:%llu] "
                         "Predicted target was PC: %s\n",
                         tid, inst->seqNum, inst->readPredTarg());
@@ -1309,14 +1315,18 @@ IEW::executeInsts()
                         "Redirecting fetch to PC: %s\n",
                         tid, inst->seqNum, inst->pcState());
                 // If incorrect, then signal the ROB that it must be squashed.
-                squashDueToBranch(inst, tid);
+                squashDueToBranch(inst, tid, branchMispredict);
 
-                ppMispredict->notify(inst);
+                if (branchMispredict) {
+                    ppMispredict->notify(inst);
 
-                if (inst->readPredTaken()) {
-                    iewStats.predictedTakenIncorrect++;
+                    if (inst->readPredTaken()) {
+                        iewStats.predictedTakenIncorrect++;
+                    } else {
+                        iewStats.predictedNotTakenIncorrect++;
+                    }
                 } else {
-                    iewStats.predictedNotTakenIncorrect++;
+                    ++iewStats.nonControlRedirects;
                 }
             } else if (ldstQueue.violation(tid)) {
                 assert(inst->isMemRef());
@@ -1605,23 +1615,29 @@ IEW::checkMisprediction(const DynInstPtr& inst)
         toCommit->squashedSeqNum[tid] > inst->seqNum) {
 
         if (inst->mispredicted()) {
+            const bool branchMispredict = inst->isControl();
             fetchRedirect[tid] = true;
 
-            DPRINTF(IEW, "[tid:%i] [sn:%llu] Execute: "
-                    "Branch mispredict detected.\n",
-                    tid, inst->seqNum);
+            DPRINTF(IEW, "[tid:%i] [sn:%llu] Execute: %s detected.\n",
+                    tid, inst->seqNum,
+                    branchMispredict ? "Branch mispredict"
+                                     : "Non-control PC redirect");
             DPRINTF(IEW, "[tid:%i] [sn:%llu] Predicted target was PC: %s\n",
                     tid, inst->seqNum, inst->readPredTarg());
             DPRINTF(IEW, "[tid:%i] [sn:%llu] Execute: "
                     "Redirecting fetch to PC: %s\n",
                     tid, inst->seqNum, inst->pcState());
             // If incorrect, then signal the ROB that it must be squashed.
-            squashDueToBranch(inst, tid);
+            squashDueToBranch(inst, tid, branchMispredict);
 
-            if (inst->readPredTaken()) {
-                iewStats.predictedTakenIncorrect++;
+            if (branchMispredict) {
+                if (inst->readPredTaken()) {
+                    iewStats.predictedTakenIncorrect++;
+                } else {
+                    iewStats.predictedNotTakenIncorrect++;
+                }
             } else {
-                iewStats.predictedNotTakenIncorrect++;
+                ++iewStats.nonControlRedirects;
             }
         }
     }

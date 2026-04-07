@@ -189,6 +189,29 @@ ROB::countInsts(ThreadID tid)
     return instList[tid].size();
 }
 
+unsigned
+ROB::countOlderExecutedSameInstAddr(
+    ThreadID tid, InstSeqNum seq_num, Addr inst_addr) const
+{
+    unsigned n = 0;
+    for (const auto &di : instList[tid]) {
+        if (di->isSquashed()) {
+            continue;
+        }
+        if (di->seqNum >= seq_num) {
+            continue;
+        }
+        if (!di->isExecuted()) {
+            continue;
+        }
+        if (di->pcState().instAddr() != inst_addr) {
+            continue;
+        }
+        ++n;
+    }
+    return n;
+}
+
 void
 ROB::insertInst(const DynInstPtr &inst)
 {

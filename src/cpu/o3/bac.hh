@@ -40,6 +40,7 @@
 
 #include <list>
 
+#include "base/types.hh"
 #include "base/statistics.hh"
 #include "cpu/o3/comm.hh"
 #include "cpu/o3/dyn_inst_ptr.hh"
@@ -115,6 +116,20 @@ class BAC
     };
 
   private:
+    struct HardwareLoopShadowState
+    {
+        bool valid = false;
+        bool active = false;
+        bool speculative = false;
+        Addr start = 0;
+        Addr end = 0;
+        RegVal remaining = 0;
+        /** Matches MISCREG_LPGEN from the lp.setup that configured this loop. */
+        RegVal lpGen = 0;
+        /** PC of the lp.setup that configured this loop (MISCREG_LPSETUP_PC). */
+        Addr setupPc = 0;
+    };
+
     /** Decode status. */
     BACStatus _status;
 
@@ -212,6 +227,15 @@ class BAC
 
     /** Check the backward signals that update the BPU. */
     bool checkAndUpdateBPUSignals(ThreadID tid);
+
+    /** Reset hardware-loop prediction state for a thread. */
+    void clearHardwareLoopState(ThreadID tid);
+
+    /** Refresh hardware-loop state from the committed architectural state. */
+    void refreshHardwareLoopState(ThreadID tid);
+
+    /** Predict an early loop-back for a non-control instruction if possible. */
+    bool predictHardwareLoop(const DynInstPtr &inst, PCStateBase &fetch_pc);
 
   private:
     /* ----------------------------------------------------------------
@@ -359,6 +383,9 @@ class BAC
 
     /** The decoupled PC which runs ahead of fetch */
     std::unique_ptr<PCStateBase> bacPC[MaxThreads];
+
+    /** Per-thread speculative hardware-loop state for early fetch redirection. */
+    HardwareLoopShadowState hwLoopState[MaxThreads];
 
     /** Variable that tracks if BAC has written to the time buffer this
      * cycle. Used to tell CPU if there is activity this cycle.

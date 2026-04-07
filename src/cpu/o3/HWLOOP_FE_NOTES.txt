@@ -1,0 +1,42 @@
+Hardware-loop fast path (BAC) — design notes
+=============================================
+
+1) Fetch-time seeding of BAC shadow (removed)
+   - Do not seed shadow from lp.setup at fetch: fetch can run ahead of commit,
+     and refresh() after commit is the safe source of truth for CSRs.
+
+2) feAhead
+   - predictHardwareLoop() decrements shadow.remaining before LPCOUNT commits
+     at the tail. refresh must not reload a larger remaining from the CSR in
+     that window.
+
+3) Decoupled frontend / FTQ
+   - Returning true from BAC::updatePC() ends the fetch bundle like a taken
+     branch. The redirected PC must stay within the current FetchTarget range
+     or fetch pops the FTQ head; a failed pop squashes the FTQ.
+
+4) Riscv PCState::branching()
+   - For the loop tail (sequential fallthrough out of the last body insn),
+     branching() is false — matches ISA redirect checks.
+
+5) LPGEN + LPSETUP_PC (CSRs 0x7C4 / 0x7C5)
+   - LPGEN bumps every lp.setup execute. LPSETUP_PC is the PC of the lp.setup
+     that configured the current loop (cleared when LPACTIVE goes 0).
+   - BAC shadow matches both so static lp.setup sites that share the same
+     (LPSTART,LPEND) cannot alias. LPGEN alone is usually enough; LPSETUP_PC
+     adds a direct identity for debug / edge cases.
+
+6) LPCOUNT == shadow.remaining (predict)
+   - Early redirect only when architectural LPCOUNT matches shadow.remaining,
+     so O3 does not over-predict back-edges before the prior tail commits.
+
+7) O3: forward LPCOUNT in redirectHardwareLoop
+   - postAdvancePC(..., o3_dyn_inst) passes the current DynInst on O3 paths.
+     redirectHardwareLoop subtracts older executed-but-not-committed ROB
+     entries at LPEND from architectural LPCOUNT (ROB::countOlderExecutedSameInstAddr).
+   - Optional: BaseO3CPU.riscvSerializeHardwareLoopTail forces SerializeBefore
+     at LPEND if a correctness hole is found in ROB forwarding.
+
+8) Perf metrics (scalar vs hw-loop binaries)
+   - IPC often drops when insts shrink but memory is still the bottleneck;
+     prefer numCycles speedup vs baseline.

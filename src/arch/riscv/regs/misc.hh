@@ -295,6 +295,10 @@ enum MiscRegIndex
     MISCREG_LPEND,
     MISCREG_LPCOUNT,
     MISCREG_LPACTIVE,
+    /** Monotonic id bumped on every lp.setup execute (disambiguates same PC range). */
+    MISCREG_LPGEN,
+    /** PC of the lp.setup that configured the current loop (0 when inactive). */
+    MISCREG_LPSETUP_PC,
 
     NUM_PHYS_MISCREGS,
     MISCREG_FFLAGS_EXE = NUM_PHYS_MISCREGS,
@@ -549,6 +553,8 @@ enum CSRIndex
     CSR_LPEND        = 0x7C1,
     CSR_LPCOUNT      = 0x7C2,
     CSR_LPACTIVE     = 0x7C3,
+    CSR_LPGEN        = 0x7C4,
+    CSR_LPSETUP_PC   = 0x7C5,
 
     // H-extension (RV64) CSRs
 
@@ -1257,6 +1263,11 @@ const std::unordered_map<int, CSRMetadata> CSRData = {
          isaExtsFlags()}},
     {CSR_LPACTIVE,
         {"lpactive", MISCREG_LPACTIVE, rvTypeFlags(RV64, RV32),
+         isaExtsFlags()}},
+    {CSR_LPGEN,
+        {"lpgen", MISCREG_LPGEN, rvTypeFlags(RV64, RV32), isaExtsFlags()}},
+    {CSR_LPSETUP_PC,
+        {"lpsetuppc", MISCREG_LPSETUP_PC, rvTypeFlags(RV64, RV32),
          isaExtsFlags()}},
 
     // H-extension CSR -> MISCREG mappings

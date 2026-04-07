@@ -1036,7 +1036,7 @@ Commit::commitInsts()
                 head_inst->staticInst->advancePC(*pc[tid]);
                 head_inst->tcBase()->getIsaPtr()->postAdvancePC(
                     head_inst->tcBase(), *head_inst->staticInst, *cur_pc,
-                    *pc[tid]);
+                    *pc[tid], head_inst.get());
                 {
                     bool no_squash_from_tc = thread[tid]->noSquashFromTC;
                     thread[tid]->noSquashFromTC = true;

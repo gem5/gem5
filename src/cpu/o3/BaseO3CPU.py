@@ -218,6 +218,14 @@ class BaseO3CPU(BaseCPU):
         64, "Maximum number of receive response bytes per cycle"
     )
 
+    riscvSerializeHardwareLoopTail = Param.Bool(
+        False,
+        "RISC-V only (ignored on other ISAs): legacy fallback—mark the insn at "
+        "LPEND with SerializeBefore when LPACTIVE. Normally unnecessary: "
+        "redirectHardwareLoop uses ROB state to forward LPCOUNT on O3. "
+        "Enable only if you suspect a correctness hole in that forwarding.",
+    )
+
     ## Parameters for decoupled front-end
     decoupledFrontEnd = Param.Bool(False, "Enables the decoupled front-end")
     numFTQEntries = Param.Unsigned(

@@ -965,6 +965,13 @@ CPU::setMiscReg(int misc_reg, RegVal val, ThreadID tid)
     isa[tid]->setMiscReg(misc_reg, val);
 }
 
+unsigned
+CPU::countOlderExecutedSameInstAddr(
+    ThreadID tid, InstSeqNum seq_num, Addr inst_addr) const
+{
+    return rob.countOlderExecutedSameInstAddr(tid, seq_num, inst_addr);
+}
+
 RegVal
 CPU::getReg(PhysRegIdPtr phys_reg, ThreadID tid)
 {

@@ -287,6 +287,13 @@ class Decode
     /** Maximum size of the skid buffer. */
     unsigned skidBufferMax;
 
+    /**
+     * RISC-V only: see BaseO3CPU.riscvSerializeHardwareLoopTail. When false
+     * (default), tails rely on redirectHardwareLoop ROB forwarding; enable
+     * SerializeBefore only for debugging suspected forwarding gaps.
+     */
+    const bool riscvSerializeHardwareLoopTail;
+
     /** SeqNum of Squashing Branch Delay Instruction (used for MIPS)*/
     Addr bdelayDoneSeqNum[MaxThreads];
 

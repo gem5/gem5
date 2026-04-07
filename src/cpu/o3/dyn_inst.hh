@@ -130,6 +130,7 @@ class DynInst : public ExecContext, public RefCounted
     CPU *cpu = nullptr;
 
     BaseCPU *getCpuPtr() { return cpu; }
+    BaseCPU *getCpuPtr() const { return cpu; }
 
     /** Pointer to the thread state. */
     ThreadState *thread = nullptr;
@@ -537,7 +538,8 @@ class DynInst : public ExecContext, public RefCounted
         gem5::ThreadContext *tc = tcBase();
         std::unique_ptr<PCStateBase> next_pc(pc->clone());
         staticInst->advancePC(*next_pc);
-        tc->getIsaPtr()->postAdvancePC(tc, *staticInst, *pc, *next_pc);
+        tc->getIsaPtr()->postAdvancePC(
+            tc, *staticInst, *pc, *next_pc, this);
         return *next_pc != *predPC;
     }
 

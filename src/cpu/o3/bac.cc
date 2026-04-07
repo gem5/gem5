@@ -39,12 +39,16 @@
 
 #include <algorithm>
 
+#include "arch/riscv/isa.hh"
+#include "arch/riscv/pcstate.hh"
+#include "arch/riscv/regs/misc.hh"
 #include "arch/generic/pcstate.hh"
 #include "base/trace.hh"
 #include "cpu/inst_seq.hh"
 #include "cpu/o3/dyn_inst.hh"
 #include "cpu/o3/ftq.hh"
 #include "cpu/o3/limits.hh"
+#include "cpu/thread_context.hh"
 #include "debug/Activity.hh"
 #include "debug/BAC.hh"
 #include "debug/Branch.hh"
@@ -62,6 +66,17 @@ namespace gem5
 
 namespace o3
 {
+
+namespace
+{
+
+RiscvISA::ISA *
+asRiscvISA(gem5::ThreadContext *tc)
+{
+    return dynamic_cast<RiscvISA::ISA *>(tc->getIsaPtr());
+}
+
+} // namespace
 
 // clang-format off
 std::string BAC::BACStats::statusStrings[ThreadStatusMax] = {
@@ -102,6 +117,7 @@ BAC::BAC(CPU *_cpu, const BaseO3CPUParams &params)
     for (int i = 0; i < MaxThreads; i++) {
         bacPC[i].reset(params.isa[0]->newPCState());
         stalls[i] = {false, false, false};
+        clearHardwareLoopState(i);
     }
 }
 
@@ -149,6 +165,7 @@ BAC::clearStates(ThreadID tid)
 {
     bacStatus[tid] = Running;
     set(bacPC[tid], cpu->pcState(tid));
+    clearHardwareLoopState(tid);
 
     stalls[tid].fetch = false;
     stalls[tid].drain = false;
@@ -297,6 +314,7 @@ BAC::checkAndUpdateBPUSignals(ThreadID tid)
 
         // In any case, squash the FTQ and the branch histories in the
         // FTQ first.
+        clearHardwareLoopState(tid);
         squashBpuHistories(tid);
         squash(*fromCommit->commitInfo[tid].pc, tid);
 
@@ -332,6 +350,7 @@ BAC::checkAndUpdateBPUSignals(ThreadID tid)
         // Update the branch predictor if it wasn't a squashed instruction
         // that was broadcasted.
         bpu->update(fromCommit->commitInfo[tid].doneSeqNum, tid);
+        refreshHardwareLoopState(tid);
     }
 
     // Check squash signals from decode.
@@ -340,6 +359,7 @@ BAC::checkAndUpdateBPUSignals(ThreadID tid)
                 *fromDecode->decodeInfo[tid].nextPC);
 
         // Squash.
+        clearHardwareLoopState(tid);
         squashBpuHistories(tid);
         squash(*fromDecode->decodeInfo[tid].nextPC, tid);
 
@@ -364,6 +384,7 @@ BAC::checkAndUpdateBPUSignals(ThreadID tid)
                 *fromFetch->fetchInfo[tid].nextPC);
 
         // Squash unless we're already squashing
+        clearHardwareLoopState(tid);
         squashBpuHistories(tid);
         squash(*fromFetch->fetchInfo[tid].nextPC, tid);
         return true;
@@ -497,6 +518,160 @@ BAC::squash(const PCStateBase &new_pc, ThreadID tid)
 
     // Then squash all fetch targets
     ftq->squash(tid);
+}
+
+void
+BAC::clearHardwareLoopState(ThreadID tid)
+{
+    hwLoopState[tid] = HardwareLoopShadowState{};
+}
+
+void
+BAC::refreshHardwareLoopState(ThreadID tid)
+{
+    gem5::ThreadContext *tc = cpu->tcBase(tid);
+    auto *isa = asRiscvISA(tc);
+    if (isa == nullptr) {
+        clearHardwareLoopState(tid);
+        return;
+    }
+
+    auto &shadow = hwLoopState[tid];
+    const bool active = tc->readMiscRegNoEffect(RiscvISA::MISCREG_LPACTIVE) != 0;
+    const Addr start = active ?
+        isa->rvSext(tc->readMiscRegNoEffect(RiscvISA::MISCREG_LPSTART)) : 0;
+    const Addr end = active ?
+        isa->rvSext(tc->readMiscRegNoEffect(RiscvISA::MISCREG_LPEND)) : 0;
+    const RegVal remaining = active ?
+        tc->readMiscRegNoEffect(RiscvISA::MISCREG_LPCOUNT) : 0;
+    const RegVal lp_gen =
+        tc->readMiscRegNoEffect(RiscvISA::MISCREG_LPGEN);
+    const Addr setup_pc =
+        isa->rvSext(tc->readMiscRegNoEffect(RiscvISA::MISCREG_LPSETUP_PC));
+
+    if (!active) {
+        clearHardwareLoopState(tid);
+        return;
+    }
+
+    // Architectural commits advanced the loop counter past the speculative FE
+    // shadow: pull shadow down to match CSR LPCOUNT.
+    if (shadow.valid && shadow.active == active &&
+        shadow.start == start && shadow.end == end &&
+        shadow.lpGen == lp_gen && shadow.setupPc == setup_pc &&
+        remaining < shadow.remaining) {
+        shadow.remaining = remaining;
+        shadow.speculative = false;
+        if (!remaining) {
+            shadow.active = false;
+        }
+        return;
+    }
+
+    // FE may decrement shadow.remaining before the tail instruction commits
+    // and lowers LPCOUNT. Never reload a larger remaining from the CSR in
+    // that window, or loop-backs are over-predicted.
+    const bool feAhead = shadow.valid && shadow.active == active &&
+        shadow.start == start && shadow.end == end &&
+        shadow.lpGen == lp_gen && shadow.setupPc == setup_pc &&
+        remaining > shadow.remaining;
+
+    const bool newLoopVisible =
+        !shadow.valid || shadow.active != active ||
+        shadow.start != start || shadow.end != end ||
+        shadow.lpGen != lp_gen || shadow.setupPc != setup_pc ||
+        (active && remaining > shadow.remaining && !feAhead);
+
+    const bool speculativeMatchesArchitectural =
+        shadow.valid && shadow.speculative && shadow.active == active &&
+        shadow.start == start && shadow.end == end &&
+        shadow.lpGen == lp_gen && shadow.setupPc == setup_pc &&
+        shadow.remaining == remaining;
+
+    if ((!shadow.speculative && newLoopVisible) ||
+        speculativeMatchesArchitectural) {
+        shadow.valid = true;
+        shadow.active = active;
+        shadow.speculative = false;
+        shadow.start = start;
+        shadow.end = end;
+        shadow.remaining = remaining;
+        shadow.lpGen = lp_gen;
+        shadow.setupPc = setup_pc;
+    }
+}
+
+bool
+BAC::predictHardwareLoop(const DynInstPtr &inst, PCStateBase &fetch_pc)
+{
+    if (inst->isMicroop() && !inst->isLastMicroop()) {
+        return false;
+    }
+
+    const ThreadID tid = inst->threadNumber;
+    gem5::ThreadContext *tc = cpu->tcBase(tid);
+    if (tc->readMiscRegNoEffect(RiscvISA::MISCREG_LPACTIVE) == 0) {
+        // Shadow can lag or resurrect across back-to-back lp.setup sites that
+        // share the same (start,end) PCs; the architectural bit is authoritative.
+        clearHardwareLoopState(tid);
+        return false;
+    }
+
+    auto *isa_pred = asRiscvISA(tc);
+    if (isa_pred == nullptr) {
+        return false;
+    }
+
+    auto &shadow = hwLoopState[tid];
+    if (!shadow.valid || !shadow.active) {
+        return false;
+    }
+
+    const Addr arch_setup_pc = isa_pred->rvSext(
+        tc->readMiscRegNoEffect(RiscvISA::MISCREG_LPSETUP_PC));
+    if (shadow.setupPc != arch_setup_pc) {
+        return false;
+    }
+
+    const RegVal arch_lp_gen =
+        tc->readMiscRegNoEffect(RiscvISA::MISCREG_LPGEN);
+    if (shadow.lpGen != arch_lp_gen) {
+        return false;
+    }
+
+    // Only redirect when architectural LPCOUNT matches the FE shadow.
+    // If shadow was decremented early but LPCOUNT has not yet committed for
+    // the previous tail, arch_lpcnt > shadow.remaining and we must not redirect
+    // (avoids bogus back-edges across lp.setup reuse in hwloop_smoke O3).
+    const RegVal arch_lpcnt =
+        tc->readMiscRegNoEffect(RiscvISA::MISCREG_LPCOUNT);
+    if (arch_lpcnt != shadow.remaining) {
+        return false;
+    }
+
+    const auto &cur_pc = inst->pcState().as<RiscvISA::PCState>();
+    if (cur_pc.branching() || cur_pc.pc() != shadow.end) {
+        return false;
+    }
+
+    if (shadow.remaining > 1) {
+        auto &next_pc = fetch_pc.as<RiscvISA::PCState>();
+        next_pc.set(shadow.start);
+        next_pc.compressed(false);
+        --shadow.remaining;
+        shadow.speculative = true;
+        DPRINTF(BAC,
+                "[tid:%i] Early hardware-loop redirect at PC %#x to %#x "
+                "(remaining after redirect: %llu)\n",
+                tid, cur_pc.pc(), shadow.start,
+                static_cast<unsigned long long>(shadow.remaining));
+        return true;
+    }
+
+    // Final trip through the tail (shadow.remaining == 1): let the ISA path
+    // and commitAdvancePC retire LPCOUNT/LPACTIVE; do not clear shadow here or
+    // refresh can fight FE and the next lp.setup at the same (start,end) PCs.
+    return false;
 }
 
 void
@@ -947,6 +1122,11 @@ BAC::updatePC(const DynInstPtr &inst, PCStateBase &fetch_pc,
         inst->setPredTarg(fetch_pc);
         inst->setPredTaken(false);
         predict_taken = false;
+    }
+
+    if (predictHardwareLoop(inst, fetch_pc)) {
+        inst->setPredTarg(fetch_pc);
+        return true;
     }
 
     if (decoupledFrontEnd) {

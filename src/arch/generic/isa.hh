@@ -91,9 +91,21 @@ class BaseISA : public SimObject
 
     virtual void resetThread() { panic("Thread reset not implemented."); }
 
-    virtual void
+    void
     postAdvancePC(ThreadContext *tc, const StaticInst &inst,
         const PCStateBase &cur_pc, PCStateBase &next_pc) const
+    {
+        postAdvancePC(tc, inst, cur_pc, next_pc, nullptr);
+    }
+
+    /**
+     * Optional O3 hint: when non-null, points to gem5::o3::DynInst for the
+     * dynamic instruction computing next_pc (ISA-specific use).
+     */
+    virtual void
+    postAdvancePC(ThreadContext *tc, const StaticInst &inst,
+        const PCStateBase &cur_pc, PCStateBase &next_pc,
+        const void *o3_dyn_inst) const
     {}
 
     virtual void

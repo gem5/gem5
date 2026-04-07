@@ -311,10 +311,30 @@ LP_SETUP_I::execute(ExecContext *xc, trace::InstRecord *traceData) const
     const Addr loop_start = pc.npc();
     const Addr loop_end = rvSext(pc.pc() + simm12);
 
+    auto *const tc = xc->tcBase();
+    const RegVal lp_gen =
+        tc != nullptr ? rvZext(tc->readMiscRegNoEffect(MISCREG_LPGEN)) + 1 : 1;
+
+    // O3 defers misc-reg commits by default. Mirror the new loop state into
+    // the architectural view immediately so younger postAdvancePC() checks
+    // observe the loop once lp.setup executes.
+    const Addr setup_pc = pc.pc();
+
+    if (tc != nullptr) {
+        tc->setMiscRegNoEffect(MISCREG_LPSTART, loop_start);
+        tc->setMiscRegNoEffect(MISCREG_LPEND, loop_end);
+        tc->setMiscRegNoEffect(MISCREG_LPCOUNT, count);
+        tc->setMiscRegNoEffect(MISCREG_LPACTIVE, count != 0);
+        tc->setMiscRegNoEffect(MISCREG_LPGEN, lp_gen);
+        tc->setMiscRegNoEffect(MISCREG_LPSETUP_PC, setup_pc);
+    }
+
     xc->setMiscReg(MISCREG_LPSTART, loop_start);
     xc->setMiscReg(MISCREG_LPEND, loop_end);
     xc->setMiscReg(MISCREG_LPCOUNT, count);
     xc->setMiscReg(MISCREG_LPACTIVE, count != 0);
+    xc->setMiscReg(MISCREG_LPGEN, lp_gen);
+    xc->setMiscReg(MISCREG_LPSETUP_PC, setup_pc);
 
     return NoFault;
 }

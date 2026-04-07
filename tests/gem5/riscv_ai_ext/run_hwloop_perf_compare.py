@@ -10,13 +10,16 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from hwloop_expectations import KERNEL_ITERATIONS, expected_loop_backs
+
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 UPDATE_REPO = SCRIPT_DIR.parents[2]
 BIN_DIR = SCRIPT_DIR / "hwloop_perf_bin"
 BUILD_SCRIPT = SCRIPT_DIR / "build_hwloop_perf_binaries.py"
 CONFIG_SCRIPT = SCRIPT_DIR / "configs" / "perf_binary_run.py"
-KERNEL_ITERATIONS = 32
+BASELINE_DIR = SCRIPT_DIR / "hwloop_baseline"
+DEFAULT_BASELINE_FILE = BASELINE_DIR / "reference_summary.json"
 
 BENCHMARKS = {
     "small": {
@@ -158,6 +161,65 @@ def per_redirect(delta_cycles: Any, redirect_count: Any) -> Any:
     return float(delta_cycles) / float(redirect_count)
 
 
+def git_head(repo: Path) -> str | None:
+    try:
+        completed = subprocess.run(
+            ["git", "-C", str(repo), "rev-parse", "HEAD"],
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        if completed.returncode == 0:
+            return completed.stdout.strip()
+    except OSError:
+        pass
+    return None
+
+
+def compare_summary_to_baseline(
+    new_summary: dict[str, Any],
+    baseline: dict[str, Any],
+    max_hw_cycle_regression: float,
+) -> list[str]:
+    """
+    Regression checks vs a saved reference_summary.json.
+    Requires identical ref-case checksums per scale; allows hwloop cycle count
+    to improve or stay within max_hw_cycle_regression (e.g. 1.03 = 3% slack).
+    """
+    issues: list[str] = []
+    for scale, base_scale in baseline.get("scales", {}).items():
+        if scale not in new_summary.get("scales", {}):
+            issues.append(f"baseline scale {scale!r} missing in new summary")
+            continue
+        new_scale = new_summary["scales"][scale]
+        base_rows = {r["case_name"]: r for r in base_scale["rows"]}
+        new_rows = {r["case_name"]: r for r in new_scale["rows"]}
+        for case in ("ref", "swloop", "hwloop"):
+            if case not in base_rows or case not in new_rows:
+                issues.append(f"{scale}: missing case {case!r}")
+                continue
+            b_chk = base_rows[case]["checksum"]
+            n_chk = new_rows[case]["checksum"]
+            if b_chk != n_chk:
+                issues.append(
+                    f"{scale}:{case} checksum drift vs baseline "
+                    f"(baseline {b_chk} new {n_chk})"
+                )
+        br = base_rows.get("hwloop")
+        nr = new_rows.get("hwloop")
+        if br and nr:
+            bc = br["stats"].get("numCycles")
+            nc = nr["stats"].get("numCycles")
+            if isinstance(bc, (int, float)) and isinstance(nc, (int, float)):
+                limit = float(bc) * max_hw_cycle_regression
+                if float(nc) > limit + 0.5:
+                    issues.append(
+                        f"{scale}:hwloop cycles regression "
+                        f"(baseline {bc} new {nc}, limit {limit:.1f})"
+                    )
+    return issues
+
+
 def print_table(rows: list[dict[str, Any]]) -> None:
     headers = (
         "case",
@@ -227,6 +289,24 @@ def main() -> None:
         "--skip-build",
         action="store_true",
         help="Skip rebuilding the hardware-loop microbenchmark binaries.",
+    )
+    parser.add_argument(
+        "--save-baseline",
+        action="store_true",
+        help=f"After a successful run, write {DEFAULT_BASELINE_FILE} for regression compares.",
+    )
+    parser.add_argument(
+        "--compare-baseline",
+        type=Path,
+        nargs="?",
+        const=DEFAULT_BASELINE_FILE,
+        help="After run, compare to this JSON (default: hwloop_baseline/reference_summary.json).",
+    )
+    parser.add_argument(
+        "--max-hw-cycle-regression",
+        type=float,
+        default=1.03,
+        help="With --compare-baseline, fail if hwloop numCycles exceeds baseline * this factor.",
     )
     args = parser.parse_args()
 
@@ -313,7 +393,7 @@ def main() -> None:
                     f"{scale_name}:{row['case_name']} expected {expected_checksum} got {row['checksum']}"
                 )
 
-        expected_redirects = benchmark_config["outer_repeats"] * (KERNEL_ITERATIONS - 1)
+        expected_redirects = expected_loop_backs(benchmark_config["outer_repeats"])
         observed_redirects = hwloop_row["stats"]["nonControlRedirects"]
         early_elided_redirects = None
         redirect_elision_ratio = None
@@ -321,6 +401,12 @@ def main() -> None:
             early_elided_redirects = max(expected_redirects - observed_redirects, 0)
             if expected_redirects:
                 redirect_elision_ratio = early_elided_redirects / float(expected_redirects)
+
+        # IEW nonControlRedirects counts execute-time redirects only. BAC fast
+        # path elides most loop-backs at fetch, so observed << expected is normal.
+        redirect_accounting_ok = None
+        if observed_redirects is not None:
+            redirect_accounting_ok = observed_redirects <= expected_redirects
 
         derived = {
             "expected_non_control_redirects": expected_redirects,
@@ -344,18 +430,18 @@ def main() -> None:
             "hwloop_speedup_vs_swloop": speedup(
                 swloop_row["stats"]["numCycles"], hwloop_row["stats"]["numCycles"]
             ),
-            "redirect_count_match": observed_redirects == expected_redirects,
+            "redirect_accounting_ok": redirect_accounting_ok,
         }
 
         print_table(rows)
         print(
-            "expected loop-backs: {} | observed backend redirects: {} | early-elided: {} | "
-            "elision ratio: {} | redirect match: {}".format(
+            "logical loop-backs: {} | IEW nonControlRedirects: {} | elided-at-fetch (est.): {} | "
+            "elision ratio: {} | accounting ok (obs<=logical): {}".format(
                 format_cell(derived["expected_non_control_redirects"]),
                 format_cell(derived["observed_non_control_redirects"]),
                 format_cell(derived["early_elided_redirects"]),
                 format_cell(derived["redirect_elision_ratio"]),
-                derived["redirect_count_match"],
+                derived["redirect_accounting_ok"],
             )
         )
         print(
@@ -378,6 +464,12 @@ def main() -> None:
 
     summary_json = out_dir / "summary.json"
     summary_csv = out_dir / "summary.csv"
+
+    summary["meta"] = {
+        "kernel_iterations": KERNEL_ITERATIONS,
+        "expected_loop_backs_formula": "outer_repeats * (kernel_iterations - 1)",
+        "git_head": git_head(update_repo),
+    }
 
     summary_json.write_text(json.dumps(summary, indent=2), encoding="utf-8")
 
@@ -445,6 +537,27 @@ def main() -> None:
     if mismatches:
         mismatch_text = "\n".join(mismatches)
         raise SystemExit(f"Checksum mismatch detected:\n{mismatch_text}")
+
+    if args.save_baseline:
+        BASELINE_DIR.mkdir(parents=True, exist_ok=True)
+        DEFAULT_BASELINE_FILE.write_text(
+            json.dumps(summary, indent=2), encoding="utf-8"
+        )
+        print(f"Saved baseline: {DEFAULT_BASELINE_FILE}")
+
+    if args.compare_baseline is not None:
+        baseline_path = args.compare_baseline.resolve()
+        if not baseline_path.is_file():
+            raise SystemExit(f"Baseline file not found: {baseline_path}")
+        baseline_data = json.loads(baseline_path.read_text(encoding="utf-8"))
+        regressions = compare_summary_to_baseline(
+            summary, baseline_data, args.max_hw_cycle_regression
+        )
+        if regressions:
+            raise SystemExit(
+                "Baseline compare failed:\n" + "\n".join(regressions)
+            )
+        print(f"Baseline compare OK ({baseline_path})")
 
 
 if __name__ == "__main__":

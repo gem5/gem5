@@ -32,8 +32,11 @@ python3 tests/gem5/riscv_ai_ext/build_binaries.py
 From `tests/`:
 
 ```bash
-./main.py run gem5/riscv_ai_ext --length=quick
+./main.py run gem5/riscv_ai_ext --length=quick --skip-build
 ```
+
+Use `--skip-build` when `gem5.opt` is already up to date; omit it when you need
+the test driver to rebuild gem5 first.
 
 ## Performance Benchmarks
 
@@ -145,6 +148,27 @@ python3 tests/gem5/riscv_ai_ext/run_hwloop_perf_compare.py --skip-build
 python3 tests/gem5/riscv_ai_ext/run_hwloop_perf_compare.py --out-dir /tmp/riscv_ai_hwloop
 python3 tests/gem5/riscv_ai_ext/run_hwloop_perf_compare.py --cpu o3
 ```
+
+Prefer `--skip-build` when `hwloop_perf_bin/` is already built.
+
+### Baseline snapshot and regression compare (optimization workflow)
+
+After you trust a gem5 build (smoke tests green), record a reference summary:
+
+```bash
+python3 tests/gem5/riscv_ai_ext/run_hwloop_perf_compare.py --save-baseline
+```
+
+This writes `hwloop_baseline/reference_summary.json`. Later runs can assert that
+checksums are unchanged and `hwloop` `numCycles` does not regress beyond a
+slack factor (default 3%):
+
+```bash
+python3 tests/gem5/riscv_ai_ext/run_hwloop_perf_compare.py --compare-baseline
+```
+
+Shared constants and the loop-back formula live in `hwloop_expectations.py`
+(keep in sync with `hwloop_perf_common.hpp`).
 
 The hardware-loop harness runs only on the updated `gem5` tree. It is meant to
 answer a narrower question than the main perf suite:

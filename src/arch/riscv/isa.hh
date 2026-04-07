@@ -111,6 +111,12 @@ class ISA : public BaseISA
     */
     const bool _wfiResumeOnPending;
 
+    void redirectHardwareLoop(ThreadContext *tc, const PCState &cur_pc,
+        PCState &next_pc, const void *o3_dyn_inst) const;
+
+    void updateHardwareLoopState(
+        ThreadContext *tc, const PCState &cur_pc) const;
+
     /**
      * Enable Zcd extensions.
      * Set the option to false implies the Zcmp and Zcmt is enable as c.fsdsp
@@ -184,17 +190,12 @@ class ISA : public BaseISA
 
     void
     postAdvancePC(ThreadContext *tc, const StaticInst &inst,
-        const PCStateBase &cur_pc, PCStateBase &next_pc) const override;
+        const PCStateBase &cur_pc, PCStateBase &next_pc,
+        const void *o3_dyn_inst) const override;
 
     void
     commitAdvancePC(ThreadContext *tc, const StaticInst &inst,
         const PCStateBase &cur_pc, const PCStateBase &next_pc) const override;
-
-    void redirectHardwareLoop(
-        ThreadContext *tc, const PCState &cur_pc, PCState &next_pc) const;
-
-    void updateHardwareLoopState(
-        ThreadContext *tc, const PCState &cur_pc) const;
 
     RiscvType rvType() const { return _rvType; }
 
