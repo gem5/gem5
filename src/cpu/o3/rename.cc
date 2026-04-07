@@ -403,9 +403,10 @@ Rename::squash(const InstSeqNum &squash_seq_num, ThreadID tid)
         // that has been flushed but renameStatus is not SerializeStall.
         // This can happen if the status changed after the serialize
         // instruction was set but before squash occurred.
-        DPRINTF(Rename, "[tid:%i] [squash sn:%llu] "
-            "Clearing flushed serializeInst with seqNum %llu\n",
-            tid, squash_seq_num, serializeInst[tid]->seqNum);
+        DPRINTF(Rename,
+                "[tid:%i] [squash sn:%llu] "
+                "Clearing flushed serializeInst with seqNum %llu\n",
+                tid, squash_seq_num, serializeInst[tid]->seqNum);
         serializeInst[tid] = NULL;
     }
 
