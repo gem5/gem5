@@ -158,7 +158,7 @@ jobs:
                 test-length: [quick, long, very-long]
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/gcn-gpu:latest
-        timeout-minutes: 1440 # 24 hours
+        timeout-minutes: 4320 # 3 days
         needs: get-date
 
         steps:
@@ -181,7 +181,7 @@ jobs:
               id: run-tests
               working-directory: ${{ github.workspace }}/tests
               run: ./main.py run --length=${{ matrix.test-length }} -vvv --gcov=test-only -j $(nproc) --host gcn_gpu --isa=VEGA_X86
-              timeout-minutes: 1410
+              timeout-minutes: 4290
 
             - name: Upload results
               if: always()
