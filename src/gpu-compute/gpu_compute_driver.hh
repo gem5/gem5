@@ -69,7 +69,7 @@ class GPUComputeDriver final : public EmulatedDriver
     int open(ThreadContext *tc, int mode, int flags) override;
     Addr mmap(ThreadContext *tc, Addr start, uint64_t length,
               int prot, int tgt_flags, int tgt_fd, off_t offset) override;
-    virtual void signalWakeupEvent(uint32_t event_id);
+    void signalWakeupEvent(uint32_t event_id);
     void sleepCPU(ThreadContext *tc, uint32_t milliSecTimeout);
     /**
      * Called by the compute units right before a request is issued to ruby.

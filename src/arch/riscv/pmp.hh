@@ -36,6 +36,7 @@
 #include "base/types.hh"
 #include "mem/packet.hh"
 #include "params/PMP.hh"
+#include "sim/serialize.hh"
 #include "sim/sim_object.hh"
 
 /**
@@ -99,14 +100,27 @@ class PMP : public SimObject
     int numRules;
 
     /** single pmp entry struct*/
-    struct PmpEntry
+    struct PmpEntry : public Serializable
     {
         /** addr range corresponding to a single pmp entry */
         AddrRange pmpAddr = AddrRange(0, 0);
         /** raw addr in pmpaddr register for a pmp entry */
-        Addr rawAddr;
+        Addr rawAddr = 0;
         /** pmpcfg reg value for a pmp entry */
         uint8_t pmpCfg = 0;
+
+        void
+        serialize(CheckpointOut &cp) const
+        {
+            SERIALIZE_SCALAR(rawAddr);
+            SERIALIZE_SCALAR(pmpCfg);
+        }
+        void
+        unserialize(CheckpointIn &cp)
+        {
+            UNSERIALIZE_SCALAR(rawAddr);
+            UNSERIALIZE_SCALAR(pmpCfg);
+        }
     };
 
     /** a table of pmp entries */
@@ -205,6 +219,8 @@ class PMP : public SimObject
      */
     inline AddrRange pmpDecodeNapot(Addr pmpaddr);
 
+    void serialize(CheckpointOut &cp) const override;
+    void unserialize(CheckpointIn &cp) override;
 };
 
 } // namespace RiscvISA

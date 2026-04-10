@@ -124,6 +124,15 @@ def define_options(parser):
             channel for each virtual network""",
     )
 
+    parser.add_argument(
+        "--per-vnet-links",
+        action="store_true",
+        default=False,
+        help="Create one dedicated physical link per vnet between adjacent "
+        "routers (HeteroGarnet). Requires XY or TABLE routing. "
+        "Default: all vnets share one link per direction.",
+    )
+
 
 def create_network(options, ruby):
     # Allow legacy users to use garnet through garnet2.0 option

@@ -1380,6 +1380,22 @@ def template VlSegConstructor {{
     StaticInstPtr microop;
     uint32_t size_per_elem = width_EEW(_machInst.width) / 8;
 
+    {
+        float vflmul = getVflmul(_machInst.vtype8.vlmul);
+        uint32_t emul = get_emul(width_EEW(_machInst.width),
+                                 getSew(_machInst.vtype8.vsew), vflmul, false);
+        if (emul * NFIELDS > NumVecInternalRegs) {
+            microop = new VectorNopMicroInst(_machInst,
+                std::make_shared<IllegalInstFault>(
+                    "vlseg nf*EMUL > 8: reserved encoding", _machInst));
+            this->microops.push_back(microop);
+            this->microops.front()->setFlag(IsFirstMicroop);
+            this->microops.back()->setFlag(IsLastMicroop);
+            this->flags[IsVector] = true;
+            return;
+        }
+    }
+
     if (micro_vl == 0) {
         microop = new VectorNopMicroInst(_machInst);
         this->microops.push_back(microop);
@@ -1637,6 +1653,22 @@ def template VsSegConstructor {{
     size_t NFIELDS = machInst.nf + 1;
     StaticInstPtr microop;
     uint32_t size_per_elem = width_EEW(_machInst.width) / 8;
+
+    {
+        float vflmul = getVflmul(_machInst.vtype8.vlmul);
+        uint32_t emul = get_emul(width_EEW(_machInst.width),
+                                 getSew(_machInst.vtype8.vsew), vflmul, false);
+        if (emul * NFIELDS > NumVecInternalRegs) {
+            microop = new VectorNopMicroInst(_machInst,
+                std::make_shared<IllegalInstFault>(
+                    "vsseg nf*EMUL > 8: reserved encoding", _machInst));
+            this->microops.push_back(microop);
+            this->microops.front()->setFlag(IsFirstMicroop);
+            this->microops.back()->setFlag(IsLastMicroop);
+            this->flags[IsVector] = true;
+            return;
+        }
+    }
 
     if (micro_vl == 0) {
         microop = new VectorNopMicroInst(_machInst);

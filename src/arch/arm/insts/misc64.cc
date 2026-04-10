@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011-2013,2017-2024 Arm Limited
+ * Copyright (c) 2011-2013,2017-2024, 2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -48,6 +48,16 @@ using namespace ArmISA;
 
 std::string
 ImmOp64::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    ccprintf(ss, "#0x%x", imm);
+    return ss.str();
+}
+
+std::string
+SmeImmOp64::generateDisassembly(Addr pc,
+                                const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     printMnemonic(ss, "", false);
@@ -2674,6 +2684,15 @@ DsbOp64::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
         case 15: ss << "SY";    break;
         default: ss << "#" << imm; break;
     }
+    return ss.str();
+}
+
+std::string
+WFxTOp64::generateDisassembly(Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    printMnemonic(ss, "", false);
+    printIntReg(ss, op1);
     return ss.str();
 }
 

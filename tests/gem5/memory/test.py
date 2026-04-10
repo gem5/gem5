@@ -72,6 +72,21 @@ gem5_verify_config(
 
 null_tests = [
     ("garnet_synth_traffic", None, ["--sim-cycles", "5000000"]),
+    (
+        "garnet_synth_traffic-per-vnet-links",
+        "garnet_synth_traffic",
+        [
+            "--sim-cycles",
+            "5000000",
+            "--network=garnet",
+            "--topology=Mesh_XY",
+            "--num-cpus=4",
+            "--num-dirs=4",
+            "--mesh-rows=2",
+            "--routing-algorithm=1",
+            "--per-vnet-links",
+        ],
+    ),
     ("memcheck", None, ["--maxtick", "2000000000", "--prefetchers"]),
     (
         "ruby_mem_test-garnet",

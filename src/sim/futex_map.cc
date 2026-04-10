@@ -150,8 +150,10 @@ FutexMap::requeue(Addr addr1, uint64_t tgid, int count, int count2, Addr addr2)
     auto &waiterList1 = it1->second;
 
     while (!waiterList1.empty() && woken_up < count) {
-        waiterList1.front().tc->activate();
+        auto *tc = waiterList1.front().tc;
+        tc->activate();
         waiterList1.pop_front();
+        waitingTcs.erase(tc);
         woken_up++;
     }
 

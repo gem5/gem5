@@ -53,11 +53,17 @@ import importlib
 import multiprocessing
 import signal
 import time
-from multiprocessing import Lock
+from multiprocessing import (
+    Lock,
+    Pipe,
+)
 from pathlib import Path
 from typing import (
+    Dict,
+    List,
     Optional,
     Set,
+    Tuple,
 )
 
 from m5.core import override_re_outdir
@@ -160,7 +166,7 @@ def get_num_processes(config_module_path: Path) -> Optional[int]:
     return num_processes_dict["num_processes"]
 
 
-def _run(module_path: Path, id: str) -> None:
+def _run(module_path: Path, id: str, pipe: Pipe) -> None:
     """Run the simulator with the ID specified."""
 
     _load_module(module_path)
@@ -181,14 +187,19 @@ def _run(module_path: Path, id: str) -> None:
     except Exception as e:
         inform(f"Error running simulator {id}: {e}")
 
+    pipe.send(sim_list[0].get_stats())
+    pipe.close()
 
-def run(module_path: Path, processes: Optional[int] = None) -> None:
+
+def run(module_path: Path, processes: Optional[int] = None) -> Dict[str, Dict]:
     """Run the simulators specified in the module in parallel.
 
     :param module_path: The path to the module containing the simulators to
     run.
     :param processes: The number of processes to run in parallel. If not
     specified, the number of available threads will be used.
+
+    :returns A dictionary of simulation names mapped to their statistics
     """
 
     assert len(_multi_sim) == 0, (
@@ -211,22 +222,21 @@ def run(module_path: Path, processes: Optional[int] = None) -> None:
         "configuration script."
     )
 
-    active_processes = []
+    active_processes: List[Tuple[Process, Pipe, str]] = []
+    stats = {}
     remaining_ids = list(ids).copy()
     process_lock = Lock()
     from ..multiprocessing import Process
 
     def handle_exit(signum, frame):
         """Signal handler to clean up processes on termination."""
-        import sys
 
         inform("Cleaning up processes")
         with process_lock:
-            for process in active_processes:
+            for process, _, _ in active_processes:
                 if process.is_alive():
                     inform(f"Terminating process {process.name}")
                     process.terminate()
-        sys.exit(0)
 
     # Register signal handler
     signal.signal(signal.SIGINT, handle_exit)
@@ -238,29 +248,37 @@ def run(module_path: Path, processes: Optional[int] = None) -> None:
             while remaining_ids and len(active_processes) < max_num_processes:
                 id_to_run = remaining_ids.pop()
                 try:
+                    parent_pipe, child_pipe = Pipe()
                     process = Process(
                         target=_run,
-                        args=(module_path, id_to_run),
+                        args=(module_path, id_to_run, child_pipe),
                         name=id_to_run,
                     )
                     process.start()
                     with process_lock:
-                        active_processes.append(process)
+                        active_processes.append(
+                            (process, parent_pipe, id_to_run)
+                        )
                 except Exception as e:
                     inform(f"Error starting process for {id_to_run}: {e}")
             # Wait for active processes to finish
             time.sleep(1)  # Avoid busy-waiting
             with process_lock:
-                # Using list comprehension to remove finished processes
-                # as using `remove` in a loop over the list will cause
-                # the list to be modified during iteration.
-                active_processes = [
-                    process
-                    for process in active_processes
-                    if process.is_alive()
-                ]
+                curr_processes = active_processes
+                active_processes = []
+                for process, pipe, id in curr_processes:
+                    if pipe.poll(0):
+                        try:
+                            stats[id] = pipe.recv()
+                        except EOFError:
+                            pass
+                    if process.is_alive():
+                        active_processes.append((process, pipe, id))
+
     finally:
         handle_exit(None, None)
+
+    return stats
 
 
 def set_num_processes(num_processes: int) -> None:
