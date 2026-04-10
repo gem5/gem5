@@ -67,6 +67,8 @@ class SimpleBTB : public BranchTargetBuffer
                 StaticInstPtr inst = nullptr) override;
     const StaticInstPtr getInst(ThreadID tid, Addr instPC) override;
 
+    void invalidateEntry(ThreadID tid, Addr instPC) override;
+
   private:
 
     /** Internal call to find an address in the BTB

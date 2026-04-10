@@ -98,6 +98,9 @@ class BranchTargetBuffer : public ClockedObject
                           BranchType type = BranchType::NoBranch,
                           StaticInstPtr inst = nullptr) = 0;
 
+    /** Drop a BTB entry if present (e.g. hardware loop tail no longer loops). */
+    virtual void invalidateEntry(ThreadID tid, Addr instPC) {}
+
     /** Update BTB statistics
      */
     virtual void incorrectTarget(Addr inst_pc,

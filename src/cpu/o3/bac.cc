@@ -45,6 +45,7 @@
 #include "arch/generic/pcstate.hh"
 #include "base/trace.hh"
 #include "cpu/inst_seq.hh"
+#include "cpu/o3/cpu.hh"
 #include "cpu/o3/dyn_inst.hh"
 #include "cpu/o3/ftq.hh"
 #include "cpu/o3/limits.hh"
@@ -76,7 +77,61 @@ asRiscvISA(gem5::ThreadContext *tc)
     return dynamic_cast<RiscvISA::ISA *>(tc->getIsaPtr());
 }
 
+bool
+hwLoopBackendRedirectExpected(const DynInstPtr &inst)
+{
+    gem5::ThreadContext *tc = inst->tcBase();
+    if (tc->readMiscRegNoEffect(RiscvISA::MISCREG_LPACTIVE) == 0) {
+        return false;
+    }
+
+    auto *isa = asRiscvISA(tc);
+    if (isa == nullptr) {
+        return false;
+    }
+
+    const auto &cur_pc = inst->pcState().as<RiscvISA::PCState>();
+    if (cur_pc.branching()) {
+        return false;
+    }
+
+    const Addr loop_end = isa->rvSext(
+        tc->readMiscRegNoEffect(RiscvISA::MISCREG_LPEND));
+    if (cur_pc.pc() != loop_end) {
+        return false;
+    }
+
+    RegVal arch_remaining =
+        tc->readMiscRegNoEffect(RiscvISA::MISCREG_LPCOUNT);
+
+    auto *o3cpu = dynamic_cast<CPU *>(inst->getCpuPtr());
+    if (o3cpu != nullptr) {
+        const unsigned inflight = o3cpu->countOlderExecutedSameInstAddr(
+            inst->threadNumber, inst->seqNum, loop_end);
+        if (arch_remaining > inflight) {
+            arch_remaining -= inflight;
+        } else {
+            arch_remaining = 1;
+        }
+    }
+
+    return arch_remaining > 1;
+}
+
 } // namespace
+
+bool
+BAC::consumeHwLoopFallthroughFtqResync(
+    ThreadID tid, std::unique_ptr<PCStateBase> &out_pc)
+{
+    if (!pendingHwLoopFtqResync[tid]) {
+        return false;
+    }
+
+    pendingHwLoopFtqResync[tid] = false;
+    out_pc = std::move(pendingHwLoopResyncPc[tid]);
+    return true;
+}
 
 // clang-format off
 std::string BAC::BACStats::statusStrings[ThreadStatusMax] = {
@@ -166,6 +221,8 @@ BAC::clearStates(ThreadID tid)
     bacStatus[tid] = Running;
     set(bacPC[tid], cpu->pcState(tid));
     clearHardwareLoopState(tid);
+    pendingHwLoopFtqResync[tid] = false;
+    pendingHwLoopResyncPc[tid].reset();
 
     stalls[tid].fetch = false;
     stalls[tid].drain = false;
@@ -515,6 +572,8 @@ BAC::squash(const PCStateBase &new_pc, ThreadID tid)
 
     // Set the new PC
     set(bacPC[tid], new_pc);
+    pendingHwLoopFtqResync[tid] = false;
+    pendingHwLoopResyncPc[tid].reset();
 
     // Then squash all fetch targets
     ftq->squash(tid);
@@ -601,6 +660,38 @@ BAC::refreshHardwareLoopState(ThreadID tid)
     }
 }
 
+void
+BAC::maintainHardwareLoopBtb(ThreadID tid, const StaticInstPtr &tail_inst,
+                             RegVal lpcount_before_tail_commit)
+{
+    if (!decoupledFrontEnd) {
+        return;
+    }
+
+    gem5::ThreadContext *tc = cpu->tcBase(tid);
+    auto *isa = asRiscvISA(tc);
+    if (isa == nullptr) {
+        return;
+    }
+
+    const Addr lpend = isa->rvSext(
+        tc->readMiscRegNoEffect(RiscvISA::MISCREG_LPEND));
+
+    if (lpcount_before_tail_commit <= 1) {
+        bpu->invalidateBTBEntry(tid, lpend);
+        return;
+    }
+
+    const Addr lpstart = isa->rvSext(
+        tc->readMiscRegNoEffect(RiscvISA::MISCREG_LPSTART));
+    RiscvISA::PCState target_pc;
+    target_pc.set(lpstart);
+    target_pc.compressed(false);
+
+    bpu->BTBUpdate(tid, lpend, target_pc,
+                   branch_prediction::BranchType::NoBranch, tail_inst);
+}
+
 bool
 BAC::predictHardwareLoop(const DynInstPtr &inst, PCStateBase &fetch_pc)
 {
@@ -622,20 +713,15 @@ BAC::predictHardwareLoop(const DynInstPtr &inst, PCStateBase &fetch_pc)
         return false;
     }
 
-    auto &shadow = hwLoopState[tid];
-    if (!shadow.valid || !shadow.active) {
-        return false;
-    }
-
     const Addr arch_setup_pc = isa_pred->rvSext(
         tc->readMiscRegNoEffect(RiscvISA::MISCREG_LPSETUP_PC));
-    if (shadow.setupPc != arch_setup_pc) {
-        return false;
-    }
-
     const RegVal arch_lp_gen =
         tc->readMiscRegNoEffect(RiscvISA::MISCREG_LPGEN);
-    if (shadow.lpGen != arch_lp_gen) {
+
+    auto &shadow = hwLoopState[tid];
+    if (!shadow.valid || !shadow.active ||
+        shadow.setupPc != arch_setup_pc ||
+        shadow.lpGen != arch_lp_gen) {
         return false;
     }
 
@@ -813,7 +899,6 @@ BAC::generateFetchTargets(ThreadID tid, bool &status_change)
         // In the first case make the branch prediction and in the later
         // advance the PC to start the search at the following address.
         while (true) {
-
             // Check if the current search address can be found in the BTB
             // indicating the end of the branch.
             branch_found = bpu->BTBValid(tid, search_addr);
@@ -1124,8 +1209,49 @@ BAC::updatePC(const DynInstPtr &inst, PCStateBase &fetch_pc,
         predict_taken = false;
     }
 
+    // LPEND may be a synthetic BTB exit (maintainHardwareLoopBtb): the FT ends
+    // with is_branch and bpuHistory, but only control instructions run
+    // updatePreDecode(), which normally moves history to predHist. Do that for
+    // any non-control exit so FTQ::popHead() succeeds whether or not
+    // predictHardwareLoop() fires this cycle (shadow can lag architectural
+    // LPCOUNT on O3).
+    if (decoupledFrontEnd && ft && ft->bpuHistory != nullptr &&
+        !inst->isControl() &&
+        ft->isExitBranch(inst->pcState().instAddr()) &&
+        (!inst->isMicroop() || inst->isLastMicroop())) {
+        BPredUnit::PredictorHistory *hist = nullptr;
+        std::swap(hist, ft->bpuHistory);
+        assert(hist->type == getBranchType(inst->staticInst));
+        hist->seqNum = inst->seqNum;
+
+        // Match synthetic LPEND exits to ISA redirect semantics on O3. BTB/FTQ
+        // may still say "taken" for the final tail, but the backend falls
+        // through when LPCOUNT (after ROB inflation) says no more loop-backs.
+        const bool isa_wants_back = ft->predTaken() &&
+            hwLoopBackendRedirectExpected(inst);
+        if (isa_wants_back) {
+            set(fetch_pc, ft->readPredTarg());
+            inst->setPredTarg(fetch_pc);
+            predict_taken = true;
+        } else if (ft->predTaken()) {
+            hist->predTaken = false;
+            set(hist->target, std::unique_ptr<PCStateBase>(
+                inst->pcState().clone()));
+            inst->staticInst->advancePC(*hist->target);
+            pendingHwLoopFtqResync[tid] = true;
+            pendingHwLoopResyncPc[tid].reset(fetch_pc.clone());
+        }
+        bpu->insertPredictorHistory(tid, hist);
+    }
+
     if (predictHardwareLoop(inst, fetch_pc)) {
         inst->setPredTarg(fetch_pc);
+        // Drop the current FT at the exit instruction so fetch can popHead.
+        if (decoupledFrontEnd && ft &&
+            ft->isExitInst(inst->pcState().instAddr()) &&
+            (!inst->isMicroop() || inst->isLastMicroop())) {
+            ft = nullptr;
+        }
         return true;
     }
 

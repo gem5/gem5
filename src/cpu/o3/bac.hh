@@ -38,7 +38,9 @@
 #ifndef __CPU_O3_BAC_HH__
 #define __CPU_O3_BAC_HH__
 
+#include <array>
 #include <list>
+#include <memory>
 
 #include "base/types.hh"
 #include "base/statistics.hh"
@@ -195,6 +197,23 @@ class BAC
     }
 
     void deactivateThread(ThreadID tid) {};
+
+    /**
+     * After the architectural loop tail (LPEND) commits: train BTB so the
+     * decoupled front-end treats LPEND like a taken branch to LPSTART while
+     * the loop continues; invalidate when this was the last iteration.
+     * No-op when decoupledFrontEnd is false or ISA is not RISC-V.
+     */
+    void maintainHardwareLoopBtb(ThreadID tid, const StaticInstPtr &tail_inst,
+                                 RegVal lpcount_before_tail_commit);
+
+    /**
+     * If a synthetic LPEND BTB exit queued back-edge fetch targets but the ISA
+     * says the current tail must fall through, Fetch uses this to resync BAC/FTQ
+     * to the architectural next PC.
+     */
+    bool consumeHwLoopFallthroughFtqResync(
+        ThreadID tid, std::unique_ptr<PCStateBase> &out_pc);
 
     /** Process all input signals and create the next fetch target. */
     void tick();
@@ -386,6 +405,8 @@ class BAC
 
     /** Per-thread speculative hardware-loop state for early fetch redirection. */
     HardwareLoopShadowState hwLoopState[MaxThreads];
+    std::array<bool, MaxThreads> pendingHwLoopFtqResync{};
+    std::array<std::unique_ptr<PCStateBase>, MaxThreads> pendingHwLoopResyncPc{};
 
     /** Variable that tracks if BAC has written to the time buffer this
      * cycle. Used to tell CPU if there is activity this cycle.

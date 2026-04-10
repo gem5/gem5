@@ -972,6 +972,13 @@ CPU::countOlderExecutedSameInstAddr(
     return rob.countOlderExecutedSameInstAddr(tid, seq_num, inst_addr);
 }
 
+void
+CPU::maintainRiscvHwLoopBtb(ThreadID tid, const StaticInstPtr &tail_inst,
+                            RegVal lpcount_before_tail_commit)
+{
+    bac.maintainHardwareLoopBtb(tid, tail_inst, lpcount_before_tail_commit);
+}
+
 RegVal
 CPU::getReg(PhysRegIdPtr phys_reg, ThreadID tid)
 {

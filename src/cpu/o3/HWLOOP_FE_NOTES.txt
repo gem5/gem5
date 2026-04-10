@@ -40,3 +40,9 @@ Hardware-loop fast path (BAC) — design notes
 8) Perf metrics (scalar vs hw-loop binaries)
    - IPC often drops when insts shrink but memory is still the bottleneck;
      prefer numCycles speedup vs baseline.
+
+9) BTB priming on tail commit (decoupled FE only)
+   - When the insn at LPEND commits: if LPCOUNT was >1 before
+     commitAdvancePC decrements it, install a BTB entry LPEND→LPSTART with the
+     tail’s StaticInst; if LPCOUNT was 1 (last iteration), invalidate that BTB
+     slot so later code at LPEND is not mispredicted as a loop back-edge.

@@ -327,6 +327,13 @@ class CPU : public BaseCPU
     unsigned countOlderExecutedSameInstAddr(
         ThreadID tid, InstSeqNum seq_num, Addr inst_addr) const;
 
+    /**
+     * RISC-V: after a committed instruction at LPEND, update BTB for the
+     * decoupled front-end (see BAC::maintainHardwareLoopBtb).
+     */
+    void maintainRiscvHwLoopBtb(ThreadID tid, const StaticInstPtr &tail_inst,
+                                RegVal lpcount_before_tail_commit);
+
     RegVal getReg(PhysRegIdPtr phys_reg, ThreadID tid);
     void getReg(PhysRegIdPtr phys_reg, void *val, ThreadID tid);
     void *getWritableReg(PhysRegIdPtr phys_reg, ThreadID tid);

@@ -46,6 +46,7 @@
 #include <cstring>
 #include <list>
 #include <map>
+#include <memory>
 #include <queue>
 
 #include "arch/generic/tlb.hh"
@@ -1289,6 +1290,16 @@ Fetch::fetch(bool &status_change)
 
             // Get the next PC from the BAC stage.
             predictedBranch |= bac->updatePC(instruction, *next_pc, curFT);
+
+            if (decoupledFrontEnd) {
+                std::unique_ptr<PCStateBase> hwloop_ftq_resync_pc;
+                if (bac->consumeHwLoopFallthroughFtqResync(
+                        tid, hwloop_ftq_resync_pc)) {
+                    assert(hwloop_ftq_resync_pc != nullptr);
+                    bacResteer(*hwloop_ftq_resync_pc, tid);
+                    curFT = nullptr;
+                }
+            }
 
             if (instruction->isControl()) {
                 cpu->fetchStats[tid]->numBranches++;

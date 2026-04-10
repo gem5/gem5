@@ -123,5 +123,14 @@ SimpleBTB::update(ThreadID tid, Addr instPC,
     victim->update(target, inst);
 }
 
+void
+SimpleBTB::invalidateEntry(ThreadID tid, Addr instPC)
+{
+    BTBEntry *entry = findEntry(instPC, tid);
+    if (entry) {
+        btb.invalidate(entry);
+    }
+}
+
 
 } // namespace gem5::branch_prediction

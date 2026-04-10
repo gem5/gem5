@@ -51,6 +51,11 @@
 #include "cpu/base.hh"
 #include "cpu/checker/cpu.hh"
 #include "cpu/exetrace.hh"
+#include "arch/riscv/isa.hh"
+#include "arch/riscv/regs/misc.hh"
+
+#include "cpu/thread_context.hh"
+
 #include "cpu/o3/cpu.hh"
 #include "cpu/o3/dyn_inst.hh"
 #include "cpu/o3/limits.hh"
@@ -1032,6 +1037,23 @@ Commit::commitInsts()
 
                 cpu->traceFunctions(pc[tid]->instAddr());
 
+                RegVal riscv_hwloop_lpcount_before = 0;
+                bool riscv_hwloop_tail_for_btb = false;
+                if (auto *rv_isa = dynamic_cast<RiscvISA::ISA *>(
+                        head_inst->tcBase()->getIsaPtr())) {
+                    gem5::ThreadContext *const tc = head_inst->tcBase();
+                    if (tc->readMiscRegNoEffect(RiscvISA::MISCREG_LPACTIVE)) {
+                        const Addr lpend = rv_isa->rvSext(
+                            tc->readMiscRegNoEffect(RiscvISA::MISCREG_LPEND));
+                        if (head_inst->pcState().instAddr() == lpend) {
+                            riscv_hwloop_tail_for_btb = true;
+                            riscv_hwloop_lpcount_before =
+                                tc->readMiscRegNoEffect(
+                                    RiscvISA::MISCREG_LPCOUNT);
+                        }
+                    }
+                }
+
                 std::unique_ptr<PCStateBase> cur_pc(pc[tid]->clone());
                 head_inst->staticInst->advancePC(*pc[tid]);
                 head_inst->tcBase()->getIsaPtr()->postAdvancePC(
@@ -1044,6 +1066,11 @@ Commit::commitInsts()
                         head_inst->tcBase(), *head_inst->staticInst, *cur_pc,
                         *pc[tid]);
                     thread[tid]->noSquashFromTC = no_squash_from_tc;
+                }
+
+                if (riscv_hwloop_tail_for_btb) {
+                    cpu->maintainRiscvHwLoopBtb(tid, head_inst->staticInst,
+                                                riscv_hwloop_lpcount_before);
                 }
 
                 // Keep track of the last sequence number commited

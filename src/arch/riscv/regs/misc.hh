@@ -295,7 +295,7 @@ enum MiscRegIndex
     MISCREG_LPEND,
     MISCREG_LPCOUNT,
     MISCREG_LPACTIVE,
-    /** Monotonic id bumped on every lp.setup execute (disambiguates same PC range). */
+    /** Monotonic id bumped on every lp.setup execute */
     MISCREG_LPGEN,
     /** PC of the lp.setup that configured the current loop (0 when inactive). */
     MISCREG_LPSETUP_PC,

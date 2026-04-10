@@ -181,6 +181,20 @@ class BPredUnit : public SimObject
         return btb->update(tid, pc, target);
     }
 
+    void
+    BTBUpdate(ThreadID tid, Addr pc, const PCStateBase &target,
+              BranchType type, StaticInstPtr inst)
+    {
+        ++stats.BTBUpdates;
+        btb->update(tid, pc, target, type, inst);
+    }
+
+    void
+    invalidateBTBEntry(ThreadID tid, Addr pc)
+    {
+        btb->invalidateEntry(tid, pc);
+    }
+
     /**
      * Special function for the decoupled front-end. In it there can be
      * branches which are not detected by the BPU in the first place as it
