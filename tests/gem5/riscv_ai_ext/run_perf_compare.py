@@ -214,6 +214,16 @@ def main() -> None:
         action="store_true",
         help="Skip rebuilding the performance binaries.",
     )
+    parser.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Forward --no-cache to perf_binary_run.py (direct-to-memory, no L1/L2).",
+    )
+    parser.add_argument(
+        "--no-o3-fdp",
+        action="store_true",
+        help="Forward --no-o3-fdp to perf_binary_run.py for coupled O3 runs.",
+    )
     args = parser.parse_args()
 
     baseline_repo = args.baseline_repo.resolve()
@@ -245,6 +255,8 @@ def main() -> None:
 
     summary: dict[str, Any] = {
         "cpu": args.cpu,
+        "no_cache": args.no_cache,
+        "no_o3_fdp": args.no_o3_fdp,
         "baseline_repo": str(baseline_repo),
         "update_repo": str(update_repo),
         "generated_at": datetime.now().isoformat(),
@@ -278,6 +290,10 @@ def main() -> None:
                 str(binary_path),
                 args.cpu,
             ]
+            if args.no_cache:
+                command.append("--no-cache")
+            if args.no_o3_fdp:
+                command.append("--no-o3-fdp")
             completed = run_command(command, cwd=gem5_repo, output_dir=case_output_dir)
 
             stats_path = case_output_dir / "stats.txt"

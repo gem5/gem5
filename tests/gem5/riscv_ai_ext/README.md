@@ -85,7 +85,28 @@ Useful variants:
 python3 tests/gem5/riscv_ai_ext/run_perf_compare.py --skip-build
 python3 tests/gem5/riscv_ai_ext/run_perf_compare.py --out-dir /tmp/riscv_ai_perf
 python3 tests/gem5/riscv_ai_ext/run_perf_compare.py --baseline-repo /home/duydonv/gem5_baseline --update-repo /home/duydonv/gem5
+python3 tests/gem5/riscv_ai_ext/run_perf_compare.py --no-cache
 ```
+
+The last command forwards `--no-cache` to `perf_binary_run.py` (DRAM-only, for
+apples-to-apples with old NoCache results).
+
+For **O3**, `configs/perf_binary_run.py` enables the **decoupled front-end** (FDP) by
+default so the BTB-driven fetch path and commit-time hardware-loop BTB priming
+apply. The script also switches the branch predictor to **LTAGE** (stdlib
+`DecoupledProcessor` pattern): the default Tournament BP cannot serve FDP’s
+`branchPlaceholder` path. Pass `--no-o3-fdp` to use the classic coupled O3
+front-end and default BP for comparison.
+
+**Memory hierarchy (perf + `local_binary_run.py`):** by default the board uses
+**classic private L1I (32KiB, 8-way) + private L1D (32KiB, 8-way) + shared L2
+(256KiB, 16-way)** via `PrivateL1SharedL2CacheHierarchy`, still backed by
+`SingleChannelDDR3_1600`. This is closer to real cores than `NoCache` (every
+fetch/load hit DRAM) and usually raises IPC on memory-heavy kernels like
+`dot4_pipeline`. Pass **`--no-cache`** to any of these config scripts to
+restore the old direct-to-memory setup when comparing against historical
+numbers. Sizes are fixed in the script for reproducibility; tune there to match
+a specific FPGA/ASIC.
 
 The script runs three cases per benchmark:
 

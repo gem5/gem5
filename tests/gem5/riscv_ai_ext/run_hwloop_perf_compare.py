@@ -308,6 +308,16 @@ def main() -> None:
         default=1.03,
         help="With --compare-baseline, fail if hwloop numCycles exceeds baseline * this factor.",
     )
+    parser.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Forward --no-cache to perf_binary_run.py (DRAM-only).",
+    )
+    parser.add_argument(
+        "--no-o3-fdp",
+        action="store_true",
+        help="Forward --no-o3-fdp to perf_binary_run.py for coupled O3 runs.",
+    )
     args = parser.parse_args()
 
     update_repo = args.update_repo.resolve()
@@ -334,6 +344,8 @@ def main() -> None:
 
     summary: dict[str, Any] = {
         "cpu": args.cpu,
+        "no_cache": args.no_cache,
+        "no_o3_fdp": args.no_o3_fdp,
         "update_repo": str(update_repo),
         "generated_at": datetime.now().isoformat(),
         "kernel_iterations": KERNEL_ITERATIONS,
@@ -364,6 +376,10 @@ def main() -> None:
                 str(binary_path),
                 args.cpu,
             ]
+            if args.no_cache:
+                command.append("--no-cache")
+            if args.no_o3_fdp:
+                command.append("--no-o3-fdp")
             completed = run_command(command, cwd=update_repo, output_dir=case_output_dir)
 
             stats_path = case_output_dir / "stats.txt"
