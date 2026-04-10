@@ -34,10 +34,14 @@ from m5.SimObject import (
     cxxMethod,
 )
 
-
-# Dynamic and static power equations represented by arithmetic operators than strings in MathExprPowerModel
+# Dynamic and static power equations represented by arithmetic operators
+# rather than strings in MathExprPowerModel
 # Dynamic and static power is modeled by Python functions (which return
-# doubles) rather than using strings like in MathExprPowerModel
+# doubles) rather than using strings like in MathExprPowerModel. This also
+# allows more expressive power models (e.g., using linear algebra operators
+# or using ML/weight-based power models).
+
+
 class PowerModelPyFunc(PowerModelState):
     type = "PowerModelPyFunc"
     cxx_header = "sim/power/power_model_pyfunc.hh"
