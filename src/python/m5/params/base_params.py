@@ -683,6 +683,10 @@ class PyFunc(ParamValue):
     cxx_type = "pybind11::object"
 
     def __init__(self, value):
+        if not callable(value):
+            raise TypeError(
+                "value passed must be callable (i.e., a function)!"
+            )
         self.value = value
 
     def __call__(self, value):
