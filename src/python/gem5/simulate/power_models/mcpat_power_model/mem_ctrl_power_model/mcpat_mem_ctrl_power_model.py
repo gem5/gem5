@@ -50,8 +50,14 @@ class McPATMemCtrlPowerOn(PowerModelPyFunc):
     (i.e., P = total_mem_energy / workload_exec_time)
     """
 
-    def __init__(self, mem_ctrl: MemCtrl, act_energies: ActEnergyType):
+    def __init__(
+        self,
+        mem_ctrl: MemCtrl,
+        act_energies: ActEnergyType,
+        print_output: bool = False,
+    ):
         super().__init__()
+        self._print_output = print_output
         self._phy = McPATMemPhyPowerModel(
             mem_ctrl=mem_ctrl, act_energies=act_energies
         )
@@ -73,7 +79,8 @@ class McPATMemCtrlPowerOn(PowerModelPyFunc):
         total = self._backend.dynamic_power()
         total += self._frontend.dynamic_power()
         total += self._phy.dynamic_power()
-        self.print_mcpat(6, total)
+        if self._print_output:
+            self.print_mcpat(6, total)
         return total
 
     def print_mcpat(self, indent, total):

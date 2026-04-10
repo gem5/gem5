@@ -54,9 +54,15 @@ class McPATCpuPowerOn(PowerModelPyFunc):
     time). The units are returned in watts.
     """
 
-    def __init__(self, cpu: BaseCPU, act_energies: ActEnergyType):
+    def __init__(
+        self,
+        cpu: BaseCPU,
+        act_energies: ActEnergyType,
+        print_output: bool = False,
+    ):
         super().__init__()
         self._cpu = cpu
+        self._print_output = print_output
         self._fetch = McPATCpuFetchPowerModel(
             cpu=cpu,
             act_energies=act_energies,
@@ -90,7 +96,7 @@ class McPATCpuPowerOn(PowerModelPyFunc):
         self.st = self.static_power
 
     def static_power(self):
-        # Placeholder for dynamic power
+        # Placeholder for static power
         return 1.0
 
     def dynamic_power(self):
@@ -104,7 +110,8 @@ class McPATCpuPowerOn(PowerModelPyFunc):
         )
         if isinstance(self._cpu, BaseO3CPU):
             total += self._rnu.dynamic_power()
-        self.print_mcpat(6, total)
+        if self._print_output:
+            self.print_mcpat(6, total)
         return total
 
     def print_mcpat(self, indent, total):
