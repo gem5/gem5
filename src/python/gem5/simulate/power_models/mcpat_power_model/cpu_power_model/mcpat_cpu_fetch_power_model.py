@@ -104,27 +104,25 @@ class McPATCpuFetchPowerModel(BaseMcPATPowerModel):
         self._num_pipelines = 1.0
 
     def print_mcpat(self, indent):
-        total_power = (
-            self._decode.dynamic_power()
-            + self._btb.dynamic_power()
-            + self._bp.dynamic_power()
-            + self.convert_to_watts(self.pipeline_energy())
+        total_power = self._decode.dynamic_power() + self.convert_to_watts(
+            self.pipeline_energy()
         )
+        if self._has_predictor:
+            total_power += self._btb.dynamic_power() + self._bp.dynamic_power()
         print(" " * indent + f"Instruction Fetch Unit")
         print(" " * (indent + 2) + f"Runtime Dynamic = {total_power} W\n")
-        self._btb.print_mcpat(indent + 4)
-        self._bp.print_mcpat(indent + 4)
+        if self._has_predictor:
+            self._btb.print_mcpat(indent + 4)
+            self._bp.print_mcpat(indent + 4)
         self._decode.print_mcpat(indent + 4)
 
     def dynamic_power(self) -> float:
-        if not self._has_predictor:
-            return 0.0
-        total_power = (
-            self._decode.dynamic_power()
-            + self._btb.dynamic_power()
-            + self._bp.dynamic_power()
-            + self.convert_to_watts(self.pipeline_energy())
+        total_power = self._decode.dynamic_power() + self.convert_to_watts(
+            self.pipeline_energy()
         )
+        if self._has_predictor:
+            total_power += self._btb.dynamic_power() + self._bp.dynamic_power()
+
         return total_power
 
     def static_power(self) -> float:
