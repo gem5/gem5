@@ -80,6 +80,6 @@ class PrivateL1SharedL2CacheHierarchyWithPowerModel(
             cache.power_state.default_state = "ON"
 
         self.l2cache.power_model = McPATClassicL2PowerModel(
-            cache, cache.writeback_clean, self._act_energies
+            self.l2cache, self.l2cache.writeback_clean, self._act_energies
         )
         self.l2cache.power_state.default_state = "ON"
