@@ -36,6 +36,7 @@
 #include "base/loader/dtb_file.hh"
 #include "base/loader/object_file.hh"
 #include "base/loader/symtab.hh"
+#include "base/logging.hh"
 #include "cpu/pc_event.hh"
 #include "kern/linux/events.hh"
 #include "sim/kernel_workload.hh"
@@ -67,6 +68,8 @@ initBootState(System *system, const std::optional<Addr> &dtbAddr,
              * model and need an allow-all rule.
              */
             auto *mmu = dynamic_cast<MMU *>(tc->getMMUPtr());
+            panic_if(!mmu,
+                     "Direct RISC-V S-mode boot requires a RISC-V MMU.\n");
             auto *pmp = mmu->getPMP();
 
             pmp->pmpUpdateAddr(0, static_cast<RegVal>(-1));

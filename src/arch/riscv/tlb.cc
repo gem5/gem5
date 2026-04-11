@@ -601,6 +601,10 @@ TLB::translate(const RequestPtr &req, ThreadContext *tc,
         }
 
         if (!delayed && fault == NoFault) {
+            fault = finalizePhysical(req, tc, mode);
+        }
+
+        if (!delayed && fault == NoFault) {
             // do pmp check if any checking condition is met.
             // timingFault will be NoFault if pmp checks are
             // passed, otherwise an address fault will be returned.
@@ -637,8 +641,7 @@ TLB::translate(const RequestPtr &req, ThreadContext *tc,
             return std::make_shared<GenericPageTableFault>(req->getVaddr());
 
         req->setPaddr(paddr);
-
-        return NoFault;
+        return finalizePhysical(req, tc, mode);
     }
 }
 
