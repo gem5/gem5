@@ -35,6 +35,7 @@
 #include "arch/riscv/pcstate.hh"
 #include "arch/riscv/regs/misc.hh"
 #include "arch/riscv/regs/vector.hh"
+#include "base/random.hh"
 #include "cpu/kvm/base.hh"
 
 struct kvm_reg_list;
@@ -54,7 +55,7 @@ class RiscvKvmCPU : public BaseKvmCPU
 {
   public:
     RiscvKvmCPU(const RiscvKvmCPUParams &params);
-    ~RiscvKvmCPU();
+    ~RiscvKvmCPU() override = default;
 
     void startup() override;
     void dump() const override;
@@ -135,6 +136,9 @@ class RiscvKvmCPU : public BaseKvmCPU
     /** Cached KVM one-reg list for this vCPU. */
     RegIndexVector regIndexList;
     std::unordered_set<uint64_t> regIndexSet;
+
+    /** Deterministic entropy source for CSR_SEED emulation. */
+    Random::RandomPtr seedEntropyRng;
 
     /** Active floating-point one-reg interface. */
     FpRegMode fpRegMode = FpRegMode::D;

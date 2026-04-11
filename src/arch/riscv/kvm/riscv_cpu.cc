@@ -30,7 +30,6 @@
 
 #include <asm/kvm.h>
 #include <linux/kvm.h>
-#include <sys/random.h>
 
 #include <algorithm>
 #include <cerrno>
@@ -46,6 +45,7 @@
 #include "arch/riscv/regs/misc.hh"
 #include "arch/riscv/regs/vector.hh"
 #include "base/logging.hh"
+#include "base/random.hh"
 #include "base/uncontended_mutex.hh"
 #include "cpu/kvm/vm.hh"
 #include "debug/KvmContext.hh"
@@ -90,42 +90,14 @@ misaBit(char ext)
 }
 
 constexpr uint64_t SeedOpstEs16 = 0x2ULL << 30;
-constexpr uint64_t SeedOpstWait = 0x1ULL << 30;
-constexpr uint64_t SeedOpstDead = 0x3ULL << 30;
 constexpr uint64_t SeedEntropyMask = 0xFFFF;
 constexpr uint64_t CsrSeed = 0x015;
 
 uint64_t
-emulateSeedCsr()
+emulateSeedCsr(Random &rng)
 {
-    uint16_t entropy = 0;
-    size_t bytesRead = 0;
-
-    while (bytesRead < sizeof(entropy)) {
-        const auto ret =
-            getrandom(reinterpret_cast<uint8_t *>(&entropy) + bytesRead,
-                      sizeof(entropy) - bytesRead, GRND_NONBLOCK);
-
-        if (ret > 0) {
-            bytesRead += static_cast<size_t>(ret);
-            continue;
-        }
-
-        if (ret == -1 && errno == EINTR) {
-            continue;
-        }
-
-        if (ret == -1 && errno == EAGAIN) {
-            return SeedOpstWait;
-        }
-
-        warn_once("KVM: CSR_SEED emulation failed to fetch entropy "
-                  "(errno=%i); returning DEAD.\n",
-                  errno);
-        return SeedOpstDead;
-    }
-
-    return SeedOpstEs16 | (entropy & SeedEntropyMask);
+    return SeedOpstEs16 |
+           rng.random<uint16_t>(0, static_cast<uint16_t>(SeedEntropyMask));
 }
 
 } // anonymous namespace
@@ -309,10 +281,10 @@ RiscvKvmCPU::kvmVecRegId(int regIdx) const
            KVM_REG_RISCV_VECTOR | KVM_REG_RISCV_VECTOR_REG(regIdx);
 }
 
-RiscvKvmCPU::RiscvKvmCPU(const RiscvKvmCPUParams &params) : BaseKvmCPU(params)
-{}
-
-RiscvKvmCPU::~RiscvKvmCPU()
+RiscvKvmCPU::RiscvKvmCPU(const RiscvKvmCPUParams &params)
+    : BaseKvmCPU(params),
+      seedEntropyRng(Random::genRandom(
+          static_cast<uint32_t>(Random::globalSeed + params.cpu_id)))
 {}
 
 const ISA &
@@ -444,17 +416,21 @@ RiscvKvmCPU::configureKvmIsaExts()
         setOneReg(reg, uint64_t(1));
     }
 
+    /*
+     * These extensions are controlled by the configured gem5 ISA parameters
+     * rather than being unconditional KVM requirements.
+     */
     const struct
     {
         uint64_t ext;
         bool enable;
         const char *name;
-    } optionalExts[] = {
+    } isaParamExts[] = {
         {KVM_RISCV_ISA_EXT_ZICBOM, isa_params.enable_Zicbom_fs, "zicbom"},
         {KVM_RISCV_ISA_EXT_ZICBOZ, isa_params.enable_Zicboz_fs, "zicboz"},
     };
 
-    for (const auto &ext : optionalExts) {
+    for (const auto &ext : isaParamExts) {
         const uint64_t reg = RISCV_ISA_EXT_SINGLE(ext.ext);
         if (!hasReg(reg)) {
             fatal_if(ext.enable,
@@ -799,7 +775,7 @@ RiscvKvmCPU::handleKvmExitRiscvCSR()
          * Linux exits to userspace for SEED so the VMM can provide a virtual
          * entropy source. The CSR write operand is architecturally ignored.
          */
-        run->riscv_csr.ret_value = emulateSeedCsr();
+        run->riscv_csr.ret_value = emulateSeedCsr(*seedEntropyRng);
         DPRINTF(KvmContext, "KVM: CSR_SEED exit handled (ret=0x%lx)\n",
                 run->riscv_csr.ret_value);
         return 0;
