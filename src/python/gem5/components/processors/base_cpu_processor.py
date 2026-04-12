@@ -94,6 +94,22 @@ class BaseCPUProcessor(AbstractProcessor):
 
             self.kvm_vm = KvmVM()
 
+        if self._any_apple_virt_core():
+            from m5.objects import AppleVirtVM
+
+            self.apple_virt_vm = AppleVirtVM()
+
+    def _any_apple_virt_core(self) -> bool:
+        try:
+            from m5.objects import BaseAppleVirtCPU
+
+            return any(
+                isinstance(core.get_simobject(), BaseAppleVirtCPU)
+                for core in self.get_cores()
+            )
+        except ImportError:
+            return False
+
     @overrides(AbstractProcessor)
     def incorporate_processor(self, board: AbstractBoard) -> None:
         if any(core.is_kvm_core() for core in self.get_cores()):
@@ -104,6 +120,14 @@ class BaseCPUProcessor(AbstractProcessor):
                 for obj in core.get_simobject().descendants():
                     obj.eventq_index = 0
                 core.get_simobject().eventq_index = i + 1
+            board.set_mem_mode(MemMode.ATOMIC_NONCACHING)
+        elif self._any_apple_virt_core():
+            for i, core in enumerate(self.cores):
+                simobj = core.get_simobject()
+                simobj.vm = self.apple_virt_vm
+                for obj in simobj.descendants():
+                    obj.eventq_index = 0
+                simobj.eventq_index = i + 1
             board.set_mem_mode(MemMode.ATOMIC_NONCACHING)
         elif isinstance(
             self.cores[0].get_simobject(),
@@ -129,6 +153,9 @@ class BaseCPUProcessor(AbstractProcessor):
 
     def _pre_instantiate(self, root: Root) -> None:
         super()._pre_instantiate(root)
-        if any(core.is_kvm_core() for core in self.get_cores()):
+        if (
+            any(core.is_kvm_core() for core in self.get_cores())
+            or self._any_apple_virt_core()
+        ):
             m5.ticks.fixGlobalFrequency()
             root.sim_quantum = m5.ticks.fromSeconds(0.001)

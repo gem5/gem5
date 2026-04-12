@@ -137,6 +137,15 @@ class BaseCPUCore(AbstractCore):
 
     @overrides(AbstractCore)
     def set_workload(self, process: Process) -> None:
+        try:
+            from m5.objects import BaseAppleVirtCPU
+
+            if isinstance(self.core, BaseAppleVirtCPU):
+                self.core.workload = [process]
+                return
+        except ImportError:
+            pass
+
         self.core.workload = process
 
     @overrides(AbstractCore)

@@ -1,4 +1,5 @@
-# Copyright 2023 Google LLC
+# Copyright (c) 2026 The Regents of the University of California
+# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -23,14 +24,38 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-config HAVE_CAPSTONE
-    def_bool $(HAVE_CAPSTONE)
+"""Minimal stdlib example configuration for the Apple virtualization CPU."""
 
-rsource "kvm/Kconfig"
-rsource "apple_virt/Kconfig"
+from gem5.components.boards.simple_board import SimpleBoard
+from gem5.components.cachehierarchies.classic.no_cache import NoCache
+from gem5.components.memory import SingleChannelDDR3_1600
+from gem5.components.processors.cpu_types import CPUTypes
+from gem5.components.processors.simple_processor import SimpleProcessor
+from gem5.isas import ISA
+from gem5.resources.resource import obtain_resource
+from gem5.simulate.simulator import Simulator
+from gem5.utils.requires import requires
 
-config USE_CAPSTONE
-    depends on HAVE_CAPSTONE
-    depends on USE_ARM_ISA
-    bool "Use CapstoneDisassembler"
-    default y
+requires(isa_required=ISA.ARM)
+
+cache_hierarchy = NoCache()
+memory = SingleChannelDDR3_1600(size="512MiB")
+processor = SimpleProcessor(
+    cpu_type=CPUTypes.APPLE_VIRT, isa=ISA.ARM, num_cores=1
+)
+
+board = SimpleBoard(
+    clk_freq="3GHz",
+    processor=processor,
+    memory=memory,
+    cache_hierarchy=cache_hierarchy,
+)
+
+board.set_se_binary_workload(
+    obtain_resource("arm-hello64-static", resource_version="1.0.0")
+)
+
+simulator = Simulator(board=board)
+print("Running AppleVirtCPU stdlib smoke test")
+simulator.run(max_ticks=1_000_000)
+print(f"Exited @ tick {simulator.get_current_tick()}")

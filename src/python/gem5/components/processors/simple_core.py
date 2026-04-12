@@ -82,6 +82,7 @@ class SimpleCore(BaseCPUCore):
             CPUTypes.O3: "O3CPU",
             CPUTypes.TIMING: "TimingSimpleCPU",
             CPUTypes.KVM: "KvmCPU",
+            CPUTypes.APPLE_VIRT: "AppleVirtCPU",
             CPUTypes.MINOR: "MinorCPU",
         }
 
@@ -98,9 +99,9 @@ class SimpleCore(BaseCPUCore):
                 "`AbstractCore.cpu_simobject_factory._cpu_types_string_map`"
             )
 
-        if cpu_type == CPUTypes.KVM:
-            # For some reason, the KVM CPU is under "m5.objects" not the
-            # "m5.objects.{ISA}CPU".
+        if cpu_type in (CPUTypes.KVM, CPUTypes.APPLE_VIRT):
+            # For some reason, the KVM and Apple virt CPUs are under
+            # "m5.objects" not the "m5.objects.{ISA}CPU".
             module_str = f"m5.objects"
         else:
             module_str = f"m5.objects.{_isa_string_map[isa]}CPU"
@@ -109,7 +110,13 @@ class SimpleCore(BaseCPUCore):
         # : ArmKvmCPU and ArmV8KvmCPU for 32 bit (Armv7l) and 64 bit (Armv8)
         # respectively.
 
-        if (
+        if cpu_type == CPUTypes.APPLE_VIRT:
+            if isa != ISA.ARM:
+                raise NotImplementedError(
+                    "AppleVirtCPU is currently only supported for ARM ISA"
+                )
+            cpu_class_str = "ArmAppleVirtCPU"
+        elif (
             isa.name == "ARM"
             and cpu_type == CPUTypes.KVM
             and platform.architecture()[0] == "64bit"
@@ -150,9 +157,14 @@ class SimpleCore(BaseCPUCore):
         :param core_id: The id of the core to be returned.
         """
 
-        core = cls.cpu_class_factory(cpu_type=cpu_type, isa=isa)(
-            cpu_id=core_id
-        )
+        cpu_class = cls.cpu_class_factory(cpu_type=cpu_type, isa=isa)
+
+        if cpu_type == CPUTypes.APPLE_VIRT:
+            from m5.objects import AppleVirtVM
+
+            core = cpu_class(cpu_id=core_id, vm=AppleVirtVM())
+        else:
+            core = cpu_class(cpu_id=core_id)
 
         # RISC-V KVM vector state is host-dependent. Use the latest profile
         # without the V extension by default; callers may select RVA23S64 when
