@@ -154,6 +154,7 @@ jobs:
 
     gpu-tests:
         strategy:
+            fail-fast: false
             matrix:
                 test-length: [quick, long, very-long]
         runs-on: [self-hosted, linux, x64]
