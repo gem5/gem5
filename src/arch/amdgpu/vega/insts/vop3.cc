@@ -9815,5 +9815,47 @@ Inst_VOP3__V_PERMLANE32_SWAP_B32::execute(GPUDynInstPtr gpuDynInst)
     src0.write();
     vdst.write();
 } // execute
+// --- Inst_VOP3__V_ADD_I32 class methods ---
+
+Inst_VOP3__V_ADD_I32::Inst_VOP3__V_ADD_I32(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_add_i32", false)
+{
+    setFlag(ALU);
+} // Inst_VOP3__V_ADD_I32
+
+Inst_VOP3__V_ADD_I32::~Inst_VOP3__V_ADD_I32()
+{} // ~Inst_VOP3__V_ADD_I32
+
+// --- description from .arch file ---
+// D.u32 = S0.i32 + S1.i32.
+void
+Inst_VOP3__V_ADD_I32::execute(GPUDynInstPtr gpuDynInst)
+{
+    Wavefront *wf = gpuDynInst->wavefront();
+    ConstVecOperandI32 src0(gpuDynInst, extData.SRC0);
+    ConstVecOperandI32 src1(gpuDynInst, extData.SRC1);
+    VecOperandI32 vdst(gpuDynInst, instData.VDST);
+
+    src0.readSrc();
+    src1.readSrc();
+
+    /**
+     * input modifiers are supported by FP operations only
+     */
+    assert(!(instData.ABS & 0x1));
+    assert(!(instData.ABS & 0x2));
+    assert(!(instData.ABS & 0x4));
+    assert(!(extData.NEG & 0x1));
+    assert(!(extData.NEG & 0x2));
+    assert(!(extData.NEG & 0x4));
+
+    for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+        if (wf->execMask(lane)) {
+            vdst[lane] = src0[lane] + src1[lane];
+        }
+    }
+
+    vdst.write();
+} // execute
 } // namespace VegaISA
 } // namespace gem5
