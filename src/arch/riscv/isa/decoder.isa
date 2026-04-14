@@ -6302,7 +6302,8 @@ decode QUADRANT default Unknown::unknown() {
                                         machInst);
                         }
 
-                        xc->tcBase()->getMMUPtr()->demapPage(Rs1, Rs2);
+                        static_cast<MMU *>(xc->tcBase()->getMMUPtr())->
+                            demapPage(xc->tcBase(), Rs1, Rs2);
                     }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
 
                     0xb: sinval_vvma({{
@@ -6338,7 +6339,8 @@ decode QUADRANT default Unknown::unknown() {
                                         "hfence needs at least S priv",
                                         machInst);
                         }
-                        xc->tcBase()->getMMUPtr()->demapPage(Rs1, Rs2);
+                        static_cast<MMU *>(xc->tcBase()->getMMUPtr())->
+                            demapPage(xc->tcBase(), Rs1, Rs2, false, true);
                         return NoFault;
 
                     }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
@@ -6432,7 +6434,8 @@ decode QUADRANT default Unknown::unknown() {
                                             "hfence in U or TVM on",
                                             machInst);
                             }
-                            xc->tcBase()->getMMUPtr()->demapPage(Rs1, Rs2);
+                            static_cast<MMU *>(xc->tcBase()->getMMUPtr())->
+                                demapPage(xc->tcBase(), Rs1, Rs2, true);
                             return NoFault;
 
                         }}, IsNonSpeculative, IsSerializeAfter, No_OpClass);
