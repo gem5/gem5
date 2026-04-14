@@ -7674,8 +7674,7 @@ Decoder::decode_OPU_VOP3__V_SUB_I16(MachInst iFmt)
 GPUStaticInst *
 Decoder::decode_OPU_VOP3__V_PACK_B32_F16(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3__V_PACK_B32_F16(&iFmt->iFmt_VOP3A);
 }
 
 GPUStaticInst *

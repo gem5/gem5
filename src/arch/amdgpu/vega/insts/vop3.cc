@@ -9857,5 +9857,84 @@ Inst_VOP3__V_ADD_I32::execute(GPUDynInstPtr gpuDynInst)
 
     vdst.write();
 } // execute
+// --- Inst_VOP3__V_PACK_B32_F16 class methods ---
+
+Inst_VOP3__V_PACK_B32_F16::Inst_VOP3__V_PACK_B32_F16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_pack_b32_f16", false)
+{
+    setFlag(ALU);
+} // Inst_VOP3__V_PACK_B32_F16
+
+Inst_VOP3__V_PACK_B32_F16::~Inst_VOP3__V_PACK_B32_F16()
+{} // ~Inst_VOP3__V_PACK_B32_F16
+
+// --- description from .arch file ---
+// D0[31 : 16].f16 = S1.f16;
+// D0[15 : 0].f16 = S0.f16
+void
+Inst_VOP3__V_PACK_B32_F16::execute(GPUDynInstPtr gpuDynInst)
+{
+    Wavefront *wf = gpuDynInst->wavefront();
+    ConstVecOperandU32 src0(gpuDynInst, extData.SRC0);
+    ConstVecOperandU32 src1(gpuDynInst, extData.SRC1);
+    VecOperandU32 vdst(gpuDynInst, instData.VDST);
+
+    src0.readSrc();
+    src1.readSrc();
+
+    panic_if(isSDWAInst(), "SDWA not supported for %s", _opcode);
+    panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+    panic_if(instData.CLAMP, "CLAMP not supported for %s", _opcode);
+    panic_if(extData.OMOD, "OMOD not supported for %s", _opcode);
+
+    unsigned abs = instData.ABS;
+    unsigned neg = extData.NEG;
+    int opsel = instData.OPSEL;
+
+    // Opsel for dest and src2 not used.
+    assert(!(opsel & 0x8) && !(opsel & 0x4));
+
+    for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+        if (wf->execMask(lane)) {
+            uint32_t tmp0, tmp1;
+
+            // Select the correct upper or lower 16-bits from sources.
+            if (opsel & 0x1) {
+                tmp0 = bits(src0[lane], 31, 16);
+            } else {
+                tmp0 = bits(src0[lane], 15, 0);
+            }
+
+            if (opsel & 0x2) {
+                tmp1 = bits(src1[lane], 31, 16);
+            } else {
+                tmp1 = bits(src1[lane], 15, 0);
+            }
+
+            // Apply ABS if set by clearing MSb.
+            if (abs & 0x1) {
+                tmp0 &= 0x7fff;
+            }
+            if (abs & 0x2) {
+                tmp1 &= 0x7fff;
+            }
+
+            // Apply NEG if set by setting MSb.
+            if (neg & 0x1) {
+                tmp0 |= 0x8000;
+            }
+            if (neg & 0x2) {
+                tmp1 |= 0x8000;
+            }
+
+            // Place the F16 bits into the destination.
+            vdst[lane] = 0;
+            replaceBits(vdst[lane], 31, 16, tmp1);
+            replaceBits(vdst[lane], 15, 0, tmp0);
+        }
+    }
+
+    vdst.write();
+} // execute
 } // namespace VegaISA
 } // namespace gem5
