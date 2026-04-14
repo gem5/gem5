@@ -264,9 +264,10 @@ NoncoherentXBar::recvAtomicBackdoor(PacketPtr pkt, PortID cpu_side_port_id,
 
     // forward the request to the appropriate destination
     auto mem_side_port = memSidePorts[mem_side_port_id];
-    Tick response_latency = backdoor ?
-        mem_side_port->sendAtomicBackdoor(pkt, *backdoor) :
-        mem_side_port->sendAtomic(pkt);
+    Tick response_latency =
+        (enableBackdoor && backdoor)
+            ? mem_side_port->sendAtomicBackdoor(pkt, *backdoor)
+            : mem_side_port->sendAtomic(pkt);
 
     // add the response data
     if (pkt->isResponse()) {

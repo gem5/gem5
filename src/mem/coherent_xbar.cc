@@ -815,9 +815,10 @@ CoherentXBar::recvAtomicBackdoor(PacketPtr pkt, PortID cpu_side_port_id,
 
             // forward the request to the appropriate destination
             auto mem_side_port = memSidePorts[mem_side_port_id];
-            response_latency = backdoor ?
-                mem_side_port->sendAtomicBackdoor(pkt, *backdoor) :
-                mem_side_port->sendAtomic(pkt);
+            response_latency =
+                (enableBackdoor && backdoor)
+                    ? mem_side_port->sendAtomicBackdoor(pkt, *backdoor)
+                    : mem_side_port->sendAtomic(pkt);
         } else {
             // if it does not need a response we sink the packet above
             assert(pkt->needsResponse());
