@@ -1033,5 +1033,220 @@ Inst_VOP3P__V_MFMA_LOAD_SCALE::execute(GPUDynInstPtr gpuDynInst)
     }
 }
 
+void
+Inst_VOP3P__V_MAD_MIXLO_F16::execute(GPUDynInstPtr gpuDynInst)
+{
+    // Multiply two inputs and add a third input where the inputs
+    // are a mix of half-precision float and single-precision
+    // float values. Convert the result to a half-precision float.
+    // Store the result into the low bits of a vector register.
+    // Size and location of the three inputs are controlled by
+    // { OPSEL_HI[i], OPSEL[i] }: 0=src[31:0], 1=src[31:0],
+    // 2=src[15:0], 3=src[31:16]. For MIX opcodes the NEG_HI
+    // instruction field acts as an absolute-value modifier
+    // for the three inputs.
+    Wavefront *wf = gpuDynInst->wavefront();
+    ConstVecOperandU32 src0(gpuDynInst, extData.SRC0);
+    ConstVecOperandU32 src1(gpuDynInst, extData.SRC1);
+    ConstVecOperandU32 src2(gpuDynInst, extData.SRC2);
+    VecOperandU16 vdst(gpuDynInst, instData.VDST);
+
+    src0.readSrc();
+    src1.readSrc();
+    src2.readSrc();
+
+    int opsel = instData.OPSEL;
+    int opsel_hi = extData.OPSEL_HI | (instData.OPSEL_HI2 << 2);
+    int neg_hi = instData.NEG_HI;
+
+    ArmISA::FPSCR fpscr;
+
+    for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+        if (wf->execMask(lane)) {
+            float s0, s1, s2;
+
+            // Fill in s0.
+            if (opsel_hi & 0x1) {
+                uint16_t tmp0;
+
+                if (opsel & 0x1) {
+                    tmp0 = bits(src0[lane], 31, 16);
+                } else {
+                    tmp0 = bits(src0[lane], 15, 0);
+                }
+
+                uint32_t conv = ArmISA::fplibConvert<uint16_t, uint32_t>(
+                    tmp0, ArmISA::FPRounding_TIEEVEN, fpscr);
+                s0 = *reinterpret_cast<float *>(&conv);
+            } else {
+                uint32_t tmp0 = src0[lane];
+                s0 = *reinterpret_cast<float *>(&tmp0);
+            }
+
+            if (neg_hi & 0x1) {
+                s0 = std::fabs(s0);
+            }
+
+            // Fill in s1.
+            if (opsel_hi & 0x2) {
+                uint16_t tmp1;
+
+                if (opsel & 0x2) {
+                    tmp1 = bits(src1[lane], 31, 16);
+                } else {
+                    tmp1 = bits(src1[lane], 15, 0);
+                }
+
+                uint32_t conv = ArmISA::fplibConvert<uint16_t, uint32_t>(
+                    tmp1, ArmISA::FPRounding_TIEEVEN, fpscr);
+                s1 = *reinterpret_cast<float *>(&conv);
+            } else {
+                uint32_t tmp1 = src1[lane];
+                s1 = *reinterpret_cast<float *>(&tmp1);
+            }
+
+            if (neg_hi & 0x2) {
+                s1 = std::fabs(s1);
+            }
+
+            // Fill in s2.
+            if (opsel_hi & 0x4) {
+                uint16_t tmp2;
+
+                if (opsel & 0x4) {
+                    tmp2 = bits(src2[lane], 31, 16);
+                } else {
+                    tmp2 = bits(src2[lane], 15, 0);
+                }
+
+                uint32_t conv = ArmISA::fplibConvert<uint16_t, uint32_t>(
+                    tmp2, ArmISA::FPRounding_TIEEVEN, fpscr);
+                s2 = *reinterpret_cast<float *>(&conv);
+            } else {
+                uint32_t tmp2 = src2[lane];
+                s2 = *reinterpret_cast<float *>(&tmp2);
+            }
+
+            if (neg_hi & 0x4) {
+                s2 = std::fabs(s2);
+            }
+
+            float result = std::fma(s0, s1, s2);
+            uint32_t tmpv = *reinterpret_cast<uint32_t *>(&result);
+
+            vdst[lane] = ArmISA::fplibConvert<uint32_t, uint16_t>(
+                tmpv, ArmISA::FPRounding_TIEEVEN, fpscr);
+        }
+    }
+
+    vdst.write();
+}
+
+void
+Inst_VOP3P__V_MAD_MIX_F32::execute(GPUDynInstPtr gpuDynInst)
+{
+    // Multiply two inputs and add a third input where the inputs
+    // are a mix of half-precision float and single-precision
+    // float values. The result is stored as a single-precision
+    // float into the destination vector register. Size and location
+    // of the three inputs are controlled by
+    // { OPSEL_HI[i], OPSEL[i] }: 0=src[31:0], 1=src[31:0],
+    // 2=src[15:0], 3=src[31:16]. For MIX opcodes the NEG_HI
+    // instruction field acts as an absolute-value modifier
+    // for the three inputs.
+    Wavefront *wf = gpuDynInst->wavefront();
+    ConstVecOperandU32 src0(gpuDynInst, extData.SRC0);
+    ConstVecOperandU32 src1(gpuDynInst, extData.SRC1);
+    ConstVecOperandU32 src2(gpuDynInst, extData.SRC2);
+    VecOperandF32 vdst(gpuDynInst, instData.VDST);
+
+    src0.readSrc();
+    src1.readSrc();
+    src2.readSrc();
+
+    int opsel = instData.OPSEL;
+    int opsel_hi = extData.OPSEL_HI | (instData.OPSEL_HI2 << 2);
+    int neg_hi = instData.NEG_HI;
+
+    ArmISA::FPSCR fpscr;
+
+    for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+        if (wf->execMask(lane)) {
+            float s0, s1, s2;
+
+            // Fill in s0.
+            if (opsel_hi & 0x1) {
+                uint16_t tmp0;
+
+                if (opsel & 0x1) {
+                    tmp0 = bits(src0[lane], 31, 16);
+                } else {
+                    tmp0 = bits(src0[lane], 15, 0);
+                }
+
+                uint32_t conv = ArmISA::fplibConvert<uint16_t, uint32_t>(
+                    tmp0, ArmISA::FPRounding_TIEEVEN, fpscr);
+                s0 = *reinterpret_cast<float *>(&conv);
+            } else {
+                uint32_t tmp0 = src0[lane];
+                s0 = *reinterpret_cast<float *>(&tmp0);
+            }
+
+            if (neg_hi & 0x1) {
+                s0 = std::fabs(s0);
+            }
+
+            // Fill in s1.
+            if (opsel_hi & 0x2) {
+                uint16_t tmp1;
+
+                if (opsel & 0x2) {
+                    tmp1 = bits(src1[lane], 31, 16);
+                } else {
+                    tmp1 = bits(src1[lane], 15, 0);
+                }
+
+                uint32_t conv = ArmISA::fplibConvert<uint16_t, uint32_t>(
+                    tmp1, ArmISA::FPRounding_TIEEVEN, fpscr);
+                s1 = *reinterpret_cast<float *>(&conv);
+            } else {
+                uint32_t tmp1 = src1[lane];
+                s1 = *reinterpret_cast<float *>(&tmp1);
+            }
+
+            if (neg_hi & 0x2) {
+                s1 = std::fabs(s1);
+            }
+
+            // Fill in s2.
+            if (opsel_hi & 0x4) {
+                uint16_t tmp2;
+
+                if (opsel & 0x4) {
+                    tmp2 = bits(src2[lane], 31, 16);
+                } else {
+                    tmp2 = bits(src2[lane], 15, 0);
+                }
+
+                uint32_t conv = ArmISA::fplibConvert<uint16_t, uint32_t>(
+                    tmp2, ArmISA::FPRounding_TIEEVEN, fpscr);
+                s2 = *reinterpret_cast<float *>(&conv);
+            } else {
+                uint32_t tmp2 = src2[lane];
+                s2 = *reinterpret_cast<float *>(&tmp2);
+            }
+
+            if (neg_hi & 0x4) {
+                s2 = std::fabs(s2);
+            }
+
+            float result = std::fma(s0, s1, s2);
+            vdst[lane] = result;
+        }
+    }
+
+    vdst.write();
+}
+
 } // namespace VegaISA
 } // namespace gem5
