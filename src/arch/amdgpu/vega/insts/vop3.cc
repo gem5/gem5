@@ -9979,5 +9979,48 @@ Inst_VOP3__V_ADD_I16::execute(GPUDynInstPtr gpuDynInst)
 
     vdst.write();
 } // execute
+// --- Inst_VOP3__V_SUB_I16 class methods ---
+
+Inst_VOP3__V_SUB_I16::Inst_VOP3__V_SUB_I16(InFmt_VOP3A *iFmt)
+    : Inst_VOP3A(iFmt, "v_sub_i16", false)
+{
+    setFlag(ALU);
+} // Inst_VOP3__V_SUB_I16
+
+Inst_VOP3__V_SUB_I16::~Inst_VOP3__V_SUB_I16()
+{} // ~Inst_VOP3__V_SUB_I16
+
+// --- description from .arch file ---
+// D.i16 = S0.i16 - S1.i16.
+// Supports saturation (unsigned 16-bit integer domain).
+void
+Inst_VOP3__V_SUB_I16::execute(GPUDynInstPtr gpuDynInst)
+{
+    Wavefront *wf = gpuDynInst->wavefront();
+    ConstVecOperandI16 src0(gpuDynInst, extData.SRC0);
+    ConstVecOperandI16 src1(gpuDynInst, extData.SRC1);
+    VecOperandI16 vdst(gpuDynInst, instData.VDST);
+
+    src0.readSrc();
+    src1.readSrc();
+
+    /**
+     * input modifiers are supported by FP operations only
+     */
+    assert(!(instData.ABS & 0x1));
+    assert(!(instData.ABS & 0x2));
+    assert(!(instData.ABS & 0x4));
+    assert(!(extData.NEG & 0x1));
+    assert(!(extData.NEG & 0x2));
+    assert(!(extData.NEG & 0x4));
+
+    for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+        if (wf->execMask(lane)) {
+            vdst[lane] = src0[lane] - src1[lane];
+        }
+    }
+
+    vdst.write();
+} // execute
 } // namespace VegaISA
 } // namespace gem5
