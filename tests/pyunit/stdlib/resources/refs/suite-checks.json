@@ -3,17 +3,30 @@
         "id": "suite-example",
         "category": "suite",
         "resource_version": "1.0.0",
-        "gem5_versions": ["develop","23.1", "24.0", "24.1","25.0","25.1"],
+        "gem5_versions": [
+            "develop",
+            "23.1",
+            "24.0",
+            "24.1",
+            "25.0",
+            "25.1"
+        ],
         "workloads": [
             {
                 "id": "simple-workload-1",
                 "resource_version": "1.0.0",
-                "input_group": ["testtag1", "testtag2"]
+                "input_group": [
+                    "testtag1",
+                    "testtag2"
+                ]
             },
             {
                 "id": "simple-workload-2",
                 "resource_version": "1.0.0",
-                "input_group": ["testtag1", "testtag3"]
+                "input_group": [
+                    "testtag1",
+                    "testtag3"
+                ]
             }
         ]
     },
@@ -38,6 +51,7 @@
         "resource_version": "1.0.0",
         "gem5_versions": [
             "develop",
+            "23.1",
             "24.0",
             "24.1",
             "25.0",
@@ -65,6 +79,7 @@
         "resource_version": "1.0.0",
         "gem5_versions": [
             "develop",
+            "23.1",
             "24.0",
             "24.1",
             "25.0",
@@ -78,11 +93,13 @@
         "architecture": "X86",
         "is_zipped": false,
         "md5sum": "4838c99b77d33c8307b939c16624e4ac",
-        "url": "http://dist.gem5.org/dist/develop/kernels/x86/static/vmlinux-5.2.3",
+        "url":
+            "http://dist.gem5.org/dist/develop/kernels/x86/static/vmlinux-5.2.3",
         "source": "src/linux-kernel",
         "resource_version": "1.0.0",
         "gem5_versions": [
             "develop",
+            "23.1",
             "24.0",
             "24.1",
             "25.0",
@@ -96,12 +113,14 @@
         "architecture": "X86",
         "is_zipped": false,
         "md5sum": "dbf120338b37153e3334603970cebd8c",
-        "url": "http://dist.gem5.org/dist/develop/test-progs/hello/bin/x86/linux/hello64-static",
+        "url":
+            "http://dist.gem5.org/dist/develop/test-progs/hello/bin/x86/linux/hello64-static",
         "source": "src/x86-ubuntu",
         "root_partition": "1",
         "resource_version": "1.0.0",
         "gem5_versions": [
             "develop",
+            "23.1",
             "24.0",
             "24.1",
             "25.0",
@@ -115,11 +134,13 @@
         "architecture": "X86",
         "is_zipped": false,
         "md5sum": "dbf120338b37153e3334603970cebd8c",
-        "url": "http://dist.gem5.org/dist/develop/test-progs/hello/bin/x86/linux/hello64-static",
+        "url":
+            "http://dist.gem5.org/dist/develop/test-progs/hello/bin/x86/linux/hello64-static",
         "source": "src/simple",
         "resource_version": "1.0.0",
         "gem5_versions": [
             "develop",
+            "23.1",
             "24.0",
             "24.1",
             "25.0",
