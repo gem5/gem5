@@ -4585,7 +4585,6 @@ decode QUADRANT default Unknown::unknown() {
                             if (elem_mask(Vs1_vu, ei) &&
                                 this->microIdx < num_regs) {
                                 vcompress_buf[vcompress_cnt] = Vs2_vu[i];
-                                Vd_vu[i] = vcompress_buf[vcompress_cnt];
                                 vcompress_cnt ++;
                             }
                             if (ei < vcompress_cnt &&
