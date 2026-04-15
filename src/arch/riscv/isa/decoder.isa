@@ -5552,11 +5552,13 @@ decode QUADRANT default Unknown::unknown() {
                             }
                         }
                     }
-                    if (lastUop) {
-                        if (this->vm || elem_mask(v0,
-                            vdWindowLeft + microVl - 1)) {
-                            auto fd = ftype_freg<et>(freg(Fs1_bits));
-                            Vd_vu[microVl - 1] = fd.v;
+                    if (machInst.vl > 0 && vdWindowLeft <= (int)(machInst.vl - 1) && (int)(machInst.vl - 1) < vdWindowRight) {
+                        int posInMicro = (int)(machInst.vl - 1) - vdWindowLeft;
+                        if (posInMicro < microVl) {
+                            if (this->vm || elem_mask(v0, (int)(machInst.vl - 1))) {
+                                auto fd = ftype_freg<et>(freg(Fs1_bits));
+                                Vd_vu[posInMicro] = fd.v;
+                            }
                         }
                     }
                 }}, OPFVF, SimdMiscOp);
@@ -5903,10 +5905,13 @@ decode QUADRANT default Unknown::unknown() {
                             }
                         }
                     }
-                    if (lastUop) {
-                        if (this->vm || elem_mask(v0,
-                            vdWindowLeft + microVl - 1)) {
-                            Vd_vu[microVl - 1] = Rs1_vu;
+                    if (machInst.vl > 0 && vdWindowLeft <= (int)(machInst.vl - 1)
+                        && (int)(machInst.vl - 1) < vdWindowRight) {
+                        int posInMicro = (int)(machInst.vl - 1) - vdWindowLeft;
+                        if (posInMicro < microVl) {
+                            if (this->vm || elem_mask(v0, (int)(machInst.vl - 1))) {
+                                Vd_vu[posInMicro] = Rs1_vu;
+                            }
                         }
                     }
                 }}, OPIVX, SimdMiscOp);
