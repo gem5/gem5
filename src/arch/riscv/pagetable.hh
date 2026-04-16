@@ -109,7 +109,7 @@ BitUnion64(PTESv48)
     Bitfield<0> v;       // Valid
 EndBitUnion(PTESv48)
 
-Addr
+inline Addr
 getXLEN(Addr mode)
 {
     switch (mode) {
@@ -124,7 +124,7 @@ getXLEN(Addr mode)
     }
 }
 
-Addr
+inline Addr
 getVADDR_BITS(Addr mode)
 {
     switch (mode) {
@@ -139,7 +139,7 @@ getVADDR_BITS(Addr mode)
     }
 }
 
-Addr
+inline Addr
 getLEVELS(Addr mode)
 {
     switch (mode) {
@@ -154,7 +154,7 @@ getLEVELS(Addr mode)
     }
 }
 
-Addr
+inline Addr
 getLEVEL_BITS(Addr mode)
 {
     switch (mode) {
@@ -169,7 +169,7 @@ getLEVEL_BITS(Addr mode)
     }
 }
 
-Addr
+inline Addr
 getWIDENED_BITS(Addr mode)
 {
     switch (mode) {
@@ -184,7 +184,7 @@ getWIDENED_BITS(Addr mode)
     }
 }
 
-size_t
+inline size_t
 getPTESize(Addr mode)
 {
     switch (mode) {

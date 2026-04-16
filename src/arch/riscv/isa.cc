@@ -799,14 +799,20 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             break;
           case MISCREG_SATP:
             {
-                // we only support bare and Sv39 mode; setting a different mode
+                // we only support bare, SV39 and SV48 mode; setting a different mode
                 // shall have no effect (see 4.1.12 in priv ISA manual)
                 SATP cur_val = readMiscRegNoEffect(idx);
                 SATP new_val = val;
                 if (new_val.mode != AddrXlateMode::BARE &&
-                    new_val.mode != AddrXlateMode::SV39)
+                    new_val.mode != AddrXlateMode::SV39 &&
+                    new_val.mode != AddrXlateMode::SV48)
                     new_val.mode = cur_val.mode;
 
+                RiscvISA::TLB* itb = static_cast<RiscvISA::TLB*>(tc->getMMUPtr()->itb);
+                RiscvISA::TLB* dtb = static_cast<RiscvISA::TLB*>(tc->getMMUPtr()->dtb);
+                itb->setSATPMode(cur_val.mode);
+                dtb->setSATPMode(cur_val.mode);
+                
                 // TLB flush can be elided here
                 // --- From the RISCV Privileged Spec 20250508, p.129 ---
                 // "Not imposing upon implementations to flush

@@ -261,8 +261,7 @@ Walker::startWalkWrapper()
 
     // check if we get a tlb hit to skip the walk
     Addr vpn = getVPNFromVAddr(vaddr, currState->satp.mode);
-    TlbEntry *e =
-        tlb->lookup(vpn, currState->satp.asid, currState->mode, true);
+    TlbEntry *e = tlb->lookup(vpn, currState->satp.asid, currState->mode, true);
     Fault fault = NoFault;
     if (e) {
         fault = tlb->checkPermissions(currState->tc, currState->memaccess,

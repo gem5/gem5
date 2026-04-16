@@ -122,6 +122,8 @@ class TLB : public BaseTLB
     PMP *pmp;
 
   private:
+
+    Addr satp_mode;
     AddrXlateMode
     getAddrXlateMode(Addr mode)
     {
@@ -223,6 +225,15 @@ class TLB : public BaseTLB
     }
 
   public:
+
+    void setSATPMode(Addr mode) {
+        satp_mode = mode;
+    }
+
+    Addr getSATPMode() {
+        return satp_mode;
+    }
+
     Fault checkPermissions(ThreadContext *tc, MemAccessInfo mem_access,
                            Addr vaddr, BaseMMU::Mode mode, PTES pte,
                            Addr gvaddr = 0x0,
