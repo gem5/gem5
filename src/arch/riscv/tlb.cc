@@ -263,7 +263,7 @@ Fault
 TLB::checkPermissions(ThreadContext *tc, MemAccessInfo mem_access, Addr vaddr,
                       BaseMMU::Mode mode, PTES pte, Addr gvaddr,
                       XlateStage stage)
-{ 
+{
 
     Fault res;
 
