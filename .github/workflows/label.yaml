@@ -1,0 +1,26 @@
+name: Pull Request Labeler
+
+on:
+  - pull_request_target
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+    - uses: actions/labeler@v6
+      id: label
+      with:
+        repo-token: "${{ secrets.GITHUB_TOKEN }}"
+
+    - name: Add a comment to the PR
+      if: steps.label.outputs.new-labels != ''
+      run: |
+        PR_NUMBER=${{ github.event.pull_request.number }}
+        COMMENT="I added these labels: ${{ steps.label.outputs.new-labels }}"
+        GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+        COMMENT_URL="https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments"
+        curl -s -H "Authorization: token ${GITHUB_TOKEN}" -X POST $COMMENT_URL -d "{\"body\":\"$COMMENT\"}"

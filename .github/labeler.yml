@@ -1,0 +1,32 @@
+arch-arm:
+- changed-files:
+  - any-glob-to-any-file: src/arch/arm/**
+
+arch-riscv:
+- changed-files:
+  - any-glob-to-any-file: src/arch/riscv/**
+
+arch-x86:
+- changed-files:
+  - any-glob-to-any-file: src/arch/x86/**
+
+cpu:
+- changed-files:
+  - any-glob-to-any-file: src/cpu/*
+
+cpu-o3:
+- changed-files:
+  - any-glob-to-any-file: src/cpu/o3/**
+
+mem:
+- changed-files:
+  - any-glob-to-any-file: src/mem/*
+
+python:
+- changed-files:
+  - any-glob-to-any-file: src/python/*
+
+sim:
+- changed-files:
+  - any-glob-to-any-file: src/sim/*
+
