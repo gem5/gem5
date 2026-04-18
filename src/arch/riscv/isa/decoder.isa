@@ -5461,13 +5461,13 @@ decode QUADRANT default Unknown::unknown() {
                         int frontLen = microVlmax - backLen;
                         int vdOffset = 0;
                         for (int i = 0; vdOffset < frontLen
-                            && vdOffset < microVl; vdOffset++) {
+                            && vdOffset < microVl; vdOffset++, i++) {
                             if (this->vm || elem_mask(v0,
                                 vdOffset + vdWindowLeft)) {
                                 Vd_vu[vdOffset] = Vs2_vu[i + backLen];
                             }
                         }
-                        for (int i = 0; vdOffset < microVl; vdOffset++) {
+                        for (int i = 0; vdOffset < microVl; vdOffset++, i++) {
                             if (this->vm || elem_mask(v0,
                                 vdOffset + vdWindowLeft)) {
                                 Vd_vu[vdOffset] = Vs3_vu[i];
