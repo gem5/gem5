@@ -21,8 +21,13 @@ packaging==23.1
 pycparser==2.21
 pymongo==4.6.3
 pyrsistent==0.19.3
+<<<<<<< HEAD
 python-dotenv==1.0.0
 requests==2.33.0
+=======
+python-dotenv==1.2.2
+requests==2.32.4
+>>>>>>> 1e3d7cb97d (build(deps): bump python-dotenv in /util/gem5-resources-manager)
 sentinels==1.0.0
 urllib3==2.6.3
 Werkzeug==3.1.5
