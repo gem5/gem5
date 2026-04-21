@@ -808,7 +808,7 @@ class VCpyVsMicroInst : public VectorArithMicroInst
 class VPinVdMicroInst : public VectorArithMicroInst
 {
     private:
-        RegId srcRegIdxArr[2];
+        RegId srcRegIdxArr[3];
         RegId destRegIdxArr[1];
         const bool isSlideupVx;
         const bool isReduction;
