@@ -176,7 +176,6 @@ System::System(const Params &p)
       physmem(name() + ".physmem", p.memories, p.mmap_using_noreserve,
               p.shared_backstore, p.auto_unlink_shared_backstore,
               p.is_sparse_restore),
-      ShadowRomRanges(p.shadow_rom_ranges.begin(), p.shadow_rom_ranges.end()),
       memoryMode(p.mem_mode),
       _cacheLineSize(p.cache_line_size),
       numWorkIds(p.num_work_ids),

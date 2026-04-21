@@ -96,11 +96,6 @@ class System(SimObject):
         "memory.",
     )
 
-    # The ranges backed by a shadowed ROM
-    shadow_rom_ranges = VectorParam.AddrRange(
-        [], "Ranges  backed by a shadowed ROM"
-    )
-
     shared_backstore = Param.String(
         "",
         "backstore's shmem segment filename, "
