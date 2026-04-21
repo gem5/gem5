@@ -1002,8 +1002,10 @@ void
 CoherentXBar::recvMemBackdoorReq(const MemBackdoorReq &req,
         MemBackdoorPtr &backdoor)
 {
-    PortID dest_id = findPort(req.range());
-    memSidePorts[dest_id]->sendMemBackdoorReq(req, backdoor);
+    if (enableBackdoor) {
+        PortID dest_id = findPort(req.range());
+        memSidePorts[dest_id]->sendMemBackdoorReq(req, backdoor);
+    }
 }
 
 void
