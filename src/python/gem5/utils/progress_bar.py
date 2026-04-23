@@ -48,9 +48,18 @@ class FakeTQDM:
 
 
 try:
+    from threading import RLock
+
     from tqdm.auto import tqdm
+    from tqdm.std import tqdm as std_tqdm
 
     _have_tqdm = True
+
+    # tqdm's default global lock includes a multiprocessing RLock, which may
+    # spawn multiprocessing helper processes. A thread lock is sufficient for
+    # gem5's progress output and avoids launching extra gem5 instances.
+    std_tqdm.set_lock(RLock())
+    tqdm.set_lock(RLock())
 except ImportError:
     tqdm = FakeTQDM()
     _have_tqdm = False
