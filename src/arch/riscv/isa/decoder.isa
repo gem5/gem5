@@ -213,7 +213,7 @@ decode QUADRANT default Unknown::unknown() {
                     return std::make_shared<IllegalInstFault>(
                             "source reg x0", machInst);
                 }
-                Rc1_sw = (int32_t)(Rc1_sw + imm);
+                Rc1_sd = szext<32>((int32_t)Rc1_sd + imm);
             }});
         }
         0x2: CIOp::c_li({{
@@ -301,12 +301,12 @@ decode QUADRANT default Unknown::unknown() {
                     0x1: decode CFUNCT2LOW {
                         0x0: decode RVTYPE {
                             0x1: c_subw({{
-                                Rp1_sd = (int32_t)Rp1_sd - Rp2_sw;
+                                Rp1_sd = szext<32>((int32_t)Rp1_sd - Rp2_sw);
                             }});
                         }
                         0x1: decode RVTYPE {
                             0x1: c_addw({{
-                                Rp1_sd = (int32_t)Rp1_sd + Rp2_sw;
+                                Rp1_sd = szext<32>((int32_t)Rp1_sd + Rp2_sw);
                             }});
                         }
                         0x2: c_mul({{
@@ -1677,11 +1677,11 @@ decode QUADRANT default Unknown::unknown() {
             0x1: decode FUNCT3 {
                 format IOp {
                     0x0: addiw({{
-                        Rd_sw = (int32_t)(Rs1_sw + imm);
+                        Rd_sd = szext<32>(Rs1_sw + imm);
                     }}, int32_t);
                     0x1: decode FS3 {
                         0x0: slliw({{
-                            Rd_sd = Rs1_sw << imm;
+                            Rd_sd = szext<32>(Rs1_sw << imm);
                         }}, imm_type = uint64_t,
                         imm_code = {{ imm = SHAMT5; }});
                         0x1: slli_uw({{
@@ -1702,11 +1702,11 @@ decode QUADRANT default Unknown::unknown() {
                     }
                     0x5: decode FS3 {
                         0x0: srliw({{
-                            Rd_sd = (int32_t)(Rs1_uw >> imm);
+                            Rd_sd = szext<32>((int32_t)(Rs1_uw >> imm));
                         }}, imm_type = uint64_t,
                         imm_code = {{ imm = SHAMT5; }});
                         0x8: sraiw({{
-                            Rd_sd = Rs1_sw >> imm;
+                            Rd_sd = szext<32>(Rs1_sw >> imm);
                         }}, imm_type = uint64_t,
                         imm_code = {{ imm = SHAMT5; }});
                         0xc: roriw({{
@@ -2622,7 +2622,7 @@ decode QUADRANT default Unknown::unknown() {
                 format ROp {
                     0x0: decode FUNCT7 {
                         0x0: addw({{
-                            Rd_sd = Rs1_sw + Rs2_sw;
+                            Rd_sd = szext<32>(Rs1_sw + Rs2_sw);
                         }});
                         0x1: mulw({{
                             Rd_sd = (int32_t)(Rs1_sw*Rs2_sw);
@@ -2631,12 +2631,12 @@ decode QUADRANT default Unknown::unknown() {
                             Rd = Rs1_uw + Rs2;
                         }});
                         0x20: subw({{
-                            Rd_sd = Rs1_sw - Rs2_sw;
+                            Rd_sd = szext<32>(Rs1_sw - Rs2_sw);
                         }});
                     }
                     0x1: decode FUNCT7 {
                         0x0: sllw({{
-                            Rd_sd = Rs1_sw << Rs2<4:0>;
+                            Rd_sd = szext<32>(Rs1_sw << Rs2<4:0>);
                         }});
                         0x30: rolw({{
                             int shamt = Rs2 & (32 - 1);
@@ -2662,13 +2662,13 @@ decode QUADRANT default Unknown::unknown() {
                     }
                     0x5: decode FUNCT7 {
                         0x0: srlw({{
-                            Rd_sd = (int32_t)(Rs1_uw >> Rs2<4:0>);
+                            Rd_sd = szext<32>((int32_t)(Rs1_uw >> Rs2<4:0>));
                         }});
                         0x1: divuw({{
                             Rd = sext<32>(divu<uint32_t>(Rs1, Rs2));
                         }}, IntDivOp);
                         0x20: sraw({{
-                            Rd_sd = Rs1_sw >> Rs2<4:0>;
+                            Rd_sd = szext<32>(Rs1_sw >> Rs2<4:0>);
                         }});
                         0x30: rorw({{
                             int shamt = Rs2 & (32 - 1);
