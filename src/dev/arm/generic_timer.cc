@@ -1003,6 +1003,10 @@ GenericTimerFrame::GenericTimerFrame(const GenericTimerFrameParams &p)
                 *this, systemCounter,
                 p.int_virt->get()),
       accessBits(0x3f),
+      // Default to true: gem5 does not model secure firmware (e.g. ARM
+      // Trusted Firmware), which would normally set CNTNSAR to grant
+      // non-secure access to all timer frames before booting the NS kernel.
+      nonSecureAccess(true),
       system(*dynamic_cast<ArmSystem *>(sys))
 {
     SystemCounter::validateCounterRef(p.counter);
