@@ -39,10 +39,10 @@ Usage
 `<isas>` can be one of `x86`, `arm`, or `riscv`.
 
 
-The `--resource-directory` argument can be passed and along with path to the a
-directory the downloaded resources are to cached. If not set the downloaded
-resources are cached by the gem5 binary's default cache location defaults
-(typically "~/.cache/gem5/resources").
+The `--resource-directory` argument is optional, and can be passed with a 
+<path> in order to specify where the downloaded resources should be cached.
+If not set, the downloaded resources are cached to the default location for
+gem5 binaries (typically "~/.cache/gem5/resources").
 """
 
 import argparse
