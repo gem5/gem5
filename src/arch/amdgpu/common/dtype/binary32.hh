@@ -42,32 +42,29 @@ namespace AMDGPU
 // this format by default. For now as there do not seem to be any MI300
 // instructions operating directly on the types (i.e., they all cast to FP32
 // first and then perform arithmetic operations).
-typedef union binary32_u
+union binary32
 {
-    enum bitSizes
-    {
-        ebits = 8,
-        mbits = 23,
-        sbits = 1,
-        bias = 127,
+    static constexpr size_t ebits = 8;
+    static constexpr size_t mbits = 23;
+    static constexpr size_t sbits = 1;
+    static constexpr size_t bias = 127;
 
-        inf = 0x7f800000,
-        nan = 0x7f800100,
-        max = 0x7f7fffff
-    };
+    static constexpr uint32_t inf = 0x7f800000;
+    static constexpr uint32_t nan = 0x7f800100;
+    static constexpr uint32_t max = 0x7f7fffff;
 
     uint32_t storage;
     float fp32;
     struct
     {
-        unsigned mant : 23;
-        unsigned exp : 8;
-        unsigned sign : 1;
+        unsigned mant : mbits;
+        unsigned exp : ebits;
+        unsigned sign : sbits;
     };
 
     // To help with stdlib functions with T = float.
     operator float() const { return fp32; }
-} binary32;
+};
 static_assert(sizeof(binary32) == 4);
 
 } // namespace AMDGPU
