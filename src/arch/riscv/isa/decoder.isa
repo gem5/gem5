@@ -2625,7 +2625,7 @@ decode QUADRANT default Unknown::unknown() {
                             Rd_sd = szext<32>(Rs1_sw + Rs2_sw);
                         }});
                         0x1: mulw({{
-                            Rd_sd = (int32_t)(Rs1_sw*Rs2_sw);
+                            Rd_sd = szext<32>((int32_t)(Rs1_sw*Rs2_sw));
                         }}, IntMultOp);
                         0x4: add_uw({{
                             Rd = Rs1_uw + Rs2;
@@ -2651,7 +2651,7 @@ decode QUADRANT default Unknown::unknown() {
                     }
                     0x4: decode FUNCT7 {
                         0x1: divw({{
-                            Rd_sd = div<int32_t>(Rs1, Rs2);
+                            Rd_sd = szext<32>(div<int32_t>(Rs1, Rs2));
                         }}, IntDivOp);
                         0x4: packw({{
                             Rd_sd = sext<32>((Rs2_uh << 16) | Rs1_uh);
@@ -2665,7 +2665,7 @@ decode QUADRANT default Unknown::unknown() {
                             Rd_sd = szext<32>((int32_t)(Rs1_uw >> Rs2<4:0>));
                         }});
                         0x1: divuw({{
-                            Rd = sext<32>(divu<uint32_t>(Rs1, Rs2));
+                            Rd = szext<32>(divu<uint32_t>(Rs1, Rs2));
                         }}, IntDivOp);
                         0x20: sraw({{
                             Rd_sd = szext<32>(Rs1_sw >> Rs2<4:0>);
@@ -2678,14 +2678,14 @@ decode QUADRANT default Unknown::unknown() {
                     }
                     0x6:  decode FUNCT7 {
                         0x1: remw({{
-                            Rd_sd = rem<int32_t>(Rs1, Rs2);
+                            Rd_sd = szext<32>(rem<int32_t>(Rs1, Rs2));
                         }}, IntDivOp);
                         0x10: sh3add_uw({{
                             Rd = (((uint64_t)Rs1_uw) << 3) + Rs2;
                         }});
                     }
                     0x7: remuw({{
-                        Rd = sext<32>(remu<uint32_t>(Rs1, Rs2));
+                        Rd = szext<32>(remu<uint32_t>(Rs1, Rs2));
                     }}, IntDivOp);
                 }
             }
