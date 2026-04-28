@@ -38,8 +38,6 @@ Usage
 
 `<isas>` can be one of `x86`, `arm`, or `riscv`.
 
-`<path-to-resources>` is the path to the directory where the resources are
-stored.
 
 The `--resource-directory` argument can be passed and along with path to the a
 directory the downloaded resources are to cached. If not set the downloaded
