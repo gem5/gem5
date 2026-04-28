@@ -77,7 +77,7 @@ for isa in ["x86", "arm", "riscv"]:
         ),
         config_args=[
             isa,
-            f"--resource-directory='{resource_directory}'",
+            f"--resource-directory={resource_directory}",
         ],
         valid_isas=(constants.all_compiled_tag,),
         length=constants.quick_tag,
