@@ -40,20 +40,17 @@ namespace gem5
 namespace AMDGPU
 {
 
-typedef union
+union fp16_e8m7_info
 {
-    enum bitSizes
-    {
-        ebits = 8,
-        mbits = 7,
-        sbits = 1,
-        zbits = 16,
-        bias = 127,
+    static constexpr size_t ebits = 8;
+    static constexpr size_t mbits = 7;
+    static constexpr size_t sbits = 1;
+    static constexpr size_t zbits = 16;
+    static constexpr size_t bias = 127;
 
-        inf = 0x7f800000,
-        nan = 0x7f810000,
-        max = 0x7f7f0000
-    };
+    static constexpr uint32_t inf = 0x7f800000;
+    static constexpr uint32_t nan = 0x7f810000;
+    static constexpr uint32_t max = 0x7f7f0000;
 
     uint32_t storage;
     struct
@@ -63,7 +60,7 @@ typedef union
         unsigned exp : ebits;
         unsigned sign : sbits;
     };
-} fp16_e8m7_info;
+};
 static_assert(sizeof(fp16_e8m7_info) == 4);
 
 } // namespace AMDGPU

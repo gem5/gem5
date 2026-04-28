@@ -123,7 +123,7 @@ class InstId
   public:
     /* Equal if the thread and last set sequence number matches */
     bool
-    operator== (const InstId &rhs)
+    operator==(const InstId &rhs) const
     {
         /* If any of fetch and exec sequence number are not set
          *  they need to be 0, so a straight comparison is still

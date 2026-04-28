@@ -2068,7 +2068,7 @@ decode QUADRANT default Unknown::unknown() {
             0x2: decode AMOFUNCT {
                 0x2: LoadReserved::lr_w({{
                     Rd_sd = Mem_sw;
-                }}, mem_flags=[LLSC, 'ARCH_BITS & XlateFlags::LR']);
+                }}, mem_flags=[LLSC], xlate_flags=['LR']);
                 0x3: StoreCond::sc_w({{
                     Mem_uw = Rs2_uw;
                 }}, {{
@@ -2174,7 +2174,7 @@ decode QUADRANT default Unknown::unknown() {
                 0x1: decode AMOFUNCT {
                     0x2: LoadReserved::lr_d({{
                         Rd_sd = Mem_sd;
-                    }}, mem_flags=[LLSC, 'ARCH_BITS & XlateFlags::LR']);
+                    }}, mem_flags=[LLSC], xlate_flags=['LR']);
                     0x3: StoreCond::sc_d({{
                         Mem = Rs2;
                     }}, {{
@@ -6481,76 +6481,48 @@ decode QUADRANT default Unknown::unknown() {
                 0x30: decode RS2 {
                     0x0: HyperLoad::hlv_b({{
                         Rd_sd = Mem_sb;
-                    }}, mem_flags=[
-                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
-                    ]);
+                    }}, mem_flags=[], xlate_flags=['FORCE_VIRT']);
                     0x1: HyperLoad::hlv_bu({{
                         Rd = Mem_ub;
-                    }}, mem_flags=[
-                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
-                    ]);
+                    }}, mem_flags=[], xlate_flags=['FORCE_VIRT']);
                 }
                 0x31: HyperStore::hsv_b({{
                     Mem_ub = Rs2_ub;
-                }}, mem_flags=[
-                    'ARCH_BITS & XlateFlags::FORCE_VIRT'
-                ]);
+                }}, mem_flags=[], xlate_flags=['FORCE_VIRT']);
                 0x32: decode RS2 {
                     0x0: HyperLoad::hlv_h({{
                         Rd_sd = Mem_sh;
-                    }}, mem_flags=[
-                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
-                    ]);
+                    }}, mem_flags=[], xlate_flags=['FORCE_VIRT']);
                     0x1: HyperLoad::hlv_hu({{
                         Rd = Mem_uh;
-                    }}, mem_flags=[
-                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
-                    ]);
+                    }}, mem_flags=[], xlate_flags=['FORCE_VIRT']);
                     0x3: HyperLoad::hlvx_hu({{
                         Rd = Mem_uh;
-                    }}, mem_flags=[
-                        'ARCH_BITS & XlateFlags::FORCE_VIRT',
-                        'ARCH_BITS & XlateFlags::HLVX'
-                    ]);
+                    }}, mem_flags=[], xlate_flags=['FORCE_VIRT', 'HLVX']);
                 }
                 0x33: HyperStore::hsv_h({{
                         Mem_uh = Rs2_uh
-                    }}, mem_flags=[
-                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
-                    ]);
+                    }}, mem_flags=[], xlate_flags=['FORCE_VIRT']);
                 0x34: decode RS2 {
                     0x0: HyperLoad::hlv_w({{
                         Rd_sd = Mem_sw;
-                    }}, mem_flags=[
-                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
-                    ]);
+                    }}, mem_flags=[], xlate_flags=['FORCE_VIRT']);
                     0x1: HyperLoad::hlv_wu({{
                         Rd = Mem_uw;
-                    }}, mem_flags=[
-                        'ARCH_BITS & XlateFlags::FORCE_VIRT'
-                    ]);
+                    }}, mem_flags=[], xlate_flags=['FORCE_VIRT']);
                     0x3: HyperLoad::hlvx_wu({{
                         Rd = Mem_uw;
-                    }}, mem_flags=[
-                        'ARCH_BITS & XlateFlags::FORCE_VIRT',
-                        'ARCH_BITS & XlateFlags::HLVX'
-                    ]);
+                    }}, mem_flags=[], xlate_flags=['FORCE_VIRT', 'HLVX']);
                 }
                 0x35: HyperStore::hsv_w({{
                     Mem_uw = Rs2_uw;
-                }}, mem_flags=[
-                    'ARCH_BITS & XlateFlags::FORCE_VIRT'
-                ]);
+                }}, mem_flags=[], xlate_flags=['FORCE_VIRT']);
                 0x36: HyperLoad::hlv_d({{
                     Rd_sd = Mem_sd;
-                }}, mem_flags=[
-                    'ARCH_BITS & XlateFlags::FORCE_VIRT'
-                ]);
+                }}, mem_flags=[], xlate_flags=['FORCE_VIRT']);
                 0x37: HyperStore::hsv_d({{
                     Mem_ud = Rs2_ud;
-                }}, mem_flags=[
-                    'ARCH_BITS & XlateFlags::FORCE_VIRT'
-                ]);
+                }}, mem_flags=[], xlate_flags=['FORCE_VIRT']);
 
             }
         }

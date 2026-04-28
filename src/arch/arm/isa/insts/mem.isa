@@ -56,8 +56,11 @@ let {{
 
             # This shouldn't be part of the eaCode, but until the exec templates
             # are converted over it's the easiest place to put it.
+            memFlagsCasted = map(
+                lambda x: f'static_cast<unsigned>({x})', memFlags
+            )
             eaCode += '\n    unsigned memAccessFlags = '
-            eaCode += ('|'.join(memFlags) + ';')
+            eaCode += ('|'.join(memFlagsCasted) + ';')
 
             codeBlobs["ea_code"] = eaCode
 
