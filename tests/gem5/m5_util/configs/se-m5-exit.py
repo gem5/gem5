@@ -33,7 +33,7 @@ Usage
 -----
 
 ```sh
-<gem5> test/gem5/m5_util/configs/se-m5-exit.py <isa>
+<gem5> test/gem5/m5_util/configs/se-m5-exit.py <isa> --resource-directory <path>
 ```
 
 `<isas>` can be one of `x86`, `arm`, or `riscv`.
