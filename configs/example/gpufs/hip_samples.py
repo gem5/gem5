@@ -85,6 +85,7 @@ def addSamplesOptions(parser):
 
 if __name__ == "__m5_main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--exit_at_gpu_kernel", action="store_true", default=False, help="Exit on GPU kernel")
     runfs.addRunFSOptions(parser)
     Options.addCommonOptions(parser)
     AmdGPUOptions.addAmdGPUOptions(parser)

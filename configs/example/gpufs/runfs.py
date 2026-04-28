@@ -203,6 +203,12 @@ def runGpuFSSystem(args):
             print(
                 f"Unknown exit event: {exit_event.getCause()}. Continuing..."
             )
+            # Fix infinite loop bug: step the simulation forward
+            exit_event = m5.simulate(sim_ticks)
+
+            # Optional: if it is specifically the GPU kernel completion, break if doing short tests
+            if "gpu kernel execution complete" in exit_event.getCause().lower() or getattr(args, "exit_at_gpu_kernel", False):
+                break
 
     print(
         "Exiting @ tick %i because %s" % (m5.curTick(), exit_event.getCause())

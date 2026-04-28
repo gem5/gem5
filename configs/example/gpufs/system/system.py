@@ -51,6 +51,10 @@ def makeGpuFSSystem(args):
         "console=ttyS0,9600",
         "lpj=7999923",
         "root=/dev/sda1",
+        # Mask CLFLUSHOPT in the guest. The ROCm 4.2 amdgpu DKMS module can
+        # take the cpa_flush path and issue CLFLUSHOPT while loading, which
+        # faults under this GPUFS/KVM setup.
+        "clearcpuid=311",
         "drm_kms_helper.fbdev_emulation=0",
         "modprobe.blacklist=amdgpu",
         "modprobe.blacklist=psmouse",

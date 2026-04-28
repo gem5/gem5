@@ -88,6 +88,7 @@ def addDemoOptions(parser):
 
 def runVegaGPUFS(cpu_type):
     parser = argparse.ArgumentParser()
+    parser.add_argument("--exit_at_gpu_kernel", action="store_true", default=False, help="Exit on GPU kernel")
     runfs.addRunFSOptions(parser)
     Options.addCommonOptions(parser)
     AmdGPUOptions.addAmdGPUOptions(parser)
