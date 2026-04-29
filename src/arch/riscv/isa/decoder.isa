@@ -5048,7 +5048,9 @@ decode QUADRANT default Unknown::unknown() {
                     bool copyAll = vs3WindowLeft >= vdWindowLeft
                         && vs3WindowLeft < vdWindowRight;
 
-                    COPY_OLD_VD(oldDstIdx);
+                    RiscvISA::vreg_t old_vd;
+                    xc->getRegOperand(this, oldDstIdx, &old_vd);
+                    tmp_d0 = old_vd;
 
                     if (copyAll) {
                         int backLen = vdWindowRight - vs3WindowLeft;
