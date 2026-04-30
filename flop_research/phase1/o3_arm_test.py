@@ -15,7 +15,7 @@ system.mem_ranges = [AddrRange("512MiB")]
 # Configuring deep speculation window limits.
 system.cpu = ArmO3CPU()
 system.cpu.numROBEntries = 256
-system.cpu.numIQEntries = 120
+
 system.cpu.LQEntries = 128
 system.cpu.SQEntries = 128
 
@@ -35,7 +35,7 @@ system.system_port = system.membus.cpu_side_ports
 thispath = os.path.dirname(os.path.realpath(__file__))
 binary = os.path.join(
     thispath,
-    "../../../",
+    "../../",
     "tests/test-progs/hello/bin/arm/linux/hello",
 )
 
