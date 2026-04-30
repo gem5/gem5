@@ -5,12 +5,12 @@
 - [x] simple-arm.py Verified
 - [x] libcapstone-dev installed
 - [x] qemu-user-static installed
-- [ ] Konata Downloaded (User manually tracking)
+- [x] Konata Downloaded (User manually tracking)
 
 ## [Phase 1] O3 Infrastructure
 - [x] O3 Configuration Script
 - [x] Pipeline Trace Captured
-- [ ] Branch pushed to GitHub origin
+- [x] Branch pushed to GitHub origin
 
 ## [Phase 2] LVP Module C++
 - [ ] LVP PC-Tagged Table implementation
