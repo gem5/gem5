@@ -62,8 +62,6 @@
 #include "base/statistics.hh"
 #include "base/types.hh"
 #include "cpu/inst_seq.hh"
-#include "params/LoadValuePredictor.hh"
-#include "sim/sim_object.hh"
 
 namespace gem5
 {
@@ -121,14 +119,21 @@ struct LVPEntry
  *             - Mismatch → counter resets to 0, misprediction is flagged,
  *               and the caller must trigger a pipeline squash.
  */
-class LoadValuePredictor : public SimObject
+class LoadValuePredictor
 {
   public:
     /**
-     * @brief Standard gem5 SimObject constructor.
-     * @param params  Parameters object generated from LoadValuePredictor.py.
+     * @brief Constructor.
+     *
+     * @param name_             Object name (used in stats output).
+     * @param numEntries_       Table size (must be power of two, default 1024).
+     * @param threshold_        Confidence counter threshold (default 250).
+     * @param shiftAmt_         PC right-shift before indexing (default 2).
      */
-    LoadValuePredictor(const LoadValuePredictorParams &params);
+    LoadValuePredictor(const std::string &name_,
+                       unsigned numEntries_ = 1024,
+                       unsigned threshold_  = 250,
+                       unsigned shiftAmt_   = 2);
 
     // -----------------------------------------------------------------------
     // Public API

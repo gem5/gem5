@@ -61,7 +61,6 @@
 #include "sim/process.hh"
 #include "sim/stat_control.hh"
 #include "sim/system.hh"
-#include "params/LoadValuePredictor.hh"
 
 namespace gem5
 {
@@ -239,16 +238,14 @@ CPU::CPU(const BaseO3CPUParams &params)
     iew.setScoreboard(&scoreboard);
 
     // Phase 3: Instantiate the Load Value Predictor and share the pointer
-    // with the Rename and IEW stages. We build the params struct inline
-    // using the same defaults defined in LoadValuePredictor.py.
-    {
-        LoadValuePredictorParams lvp_params;
-        lvp_params.name           = name() + ".lvp";
-        lvp_params.numEntries     = 1024;
-        lvp_params.confidenceThreshold = 250;
-        lvp_params.instShiftAmount = 2;
-        lvp = new LoadValuePredictor(lvp_params);
-    }
+    // with the Rename and IEW stages. We use the plain constructor (not
+    // the SimObject params path) to avoid needing a fully initialised
+    // SimObjectParams base struct, which would require an event queue index
+    // and other fields that are not trivially available here.
+    lvp = new LoadValuePredictor(name() + ".lvp",
+                                 /*numEntries=*/    1024,
+                                 /*threshold=*/     250,
+                                 /*instShiftAmt=*/  2);
     rename.setLVP(lvp);
     iew.setLVP(lvp);
 

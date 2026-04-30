@@ -50,21 +50,22 @@ namespace o3
 // Constructor
 // ---------------------------------------------------------------------------
 
-LoadValuePredictor::LoadValuePredictor(const LoadValuePredictorParams &params)
-    : SimObject(params),
-      numEntries(params.numEntries),
-      confidenceThreshold(params.confidenceThreshold),
-      instShiftAmount(params.instShiftAmount),
-      table(params.numEntries),   // zero-initialises all LVPEntry fields
-      lvpStats(this)
+LoadValuePredictor::LoadValuePredictor(const std::string &name_,
+                                       unsigned numEntries_,
+                                       unsigned threshold_,
+                                       unsigned shiftAmt_)
+    : numEntries(numEntries_),
+      confidenceThreshold(threshold_),
+      instShiftAmount(shiftAmt_),
+      table(numEntries_),
+      lvpStats(nullptr)        // nullptr parent → legacy stat (gem5 permits this)
 {
-    // numEntries must be a power of two so the bitmask index calculation works.
     fatal_if(!isPowerOf2(numEntries),
              "LVP: numEntries (%u) must be a power of two.", numEntries);
 
-    DPRINTF(LVP, "LoadValuePredictor created: numEntries=%u, "
+    DPRINTF(LVP, "LoadValuePredictor '%s' created: numEntries=%u, "
                  "confidenceThreshold=%u, instShiftAmount=%u\n",
-            numEntries, confidenceThreshold, instShiftAmount);
+            name_, numEntries, confidenceThreshold, instShiftAmount);
 }
 
 // ---------------------------------------------------------------------------

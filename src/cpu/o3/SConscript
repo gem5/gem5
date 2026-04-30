@@ -44,7 +44,9 @@ Import('*')
 
 if env['CONF']['BUILD_ISA']:
     SimObject('FUPool.py', sim_objects=['FUPool'])
-    SimObject('LoadValuePredictor.py', sim_objects=['LoadValuePredictor'])
+    # LoadValuePredictor is a plain C++ research class (Phase 3, FLOP).
+    # It no longer inherits from SimObject so we do NOT register it here.
+    # LoadValuePredictor.py is kept as documentation only.
     SimObject('FuncUnitConfig.py', sim_objects=[])
     SimObject('BaseO3CPU.py', sim_objects=['BaseO3CPU'])
     SimObject('IQUnit.py', sim_objects=['IQUnit'])
