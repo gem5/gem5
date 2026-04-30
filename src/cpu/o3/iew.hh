@@ -50,6 +50,7 @@
 #include "cpu/o3/inst_queue.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/o3/lsq.hh"
+#include "cpu/o3/lvp.hh"
 #include "cpu/o3/scoreboard.hh"
 #include "cpu/timebuf.hh"
 #include "debug/IEW.hh"
@@ -156,6 +157,12 @@ class IEW
 
     /** Sets pointer to the scoreboard. */
     void setScoreboard(Scoreboard *sb_ptr);
+
+    /** Sets pointer to the Load Value Predictor (Phase 3 — FLOP Research).
+     *  After this, every load that completes execution will be verified via
+     *  lvp->update() inside executeInsts(), and a squash is triggered on
+     *  misprediction. */
+    void setLVP(LoadValuePredictor *_lvp) { lvp = _lvp; }
 
     /** Perform sanity checks after a drain. */
     void drainSanityCheck() const;
@@ -341,6 +348,14 @@ class IEW
 
     /** Scoreboard pointer. */
     Scoreboard* scoreboard;
+
+    /**
+     * Pointer to the Load Value Predictor (Phase 3 — FLOP Research).
+     * Set by setLVP() during CPU construction. Consulted in executeInsts()
+     * after every load to verify the Rename-stage prediction and trigger
+     * a pipeline squash on misprediction.
+     */
+    LoadValuePredictor *lvp = nullptr;
 
   private:
     /** CPU pointer. */

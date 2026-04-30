@@ -749,6 +749,35 @@ Rename::renameInsts(ThreadID tid)
             storesInProgress[tid]++;
         } else if (inst->isLoad()) {
             loadsInProgress[tid]++;
+
+            // Phase 3 (FLOP Research) — LVP Rename Hook:
+            // Query the predictor for this load's PC. If confident
+            // (counter >= confidenceThreshold), forward the predicted
+            // value into the physical destination register immediately.
+            // This resolves the data dependency without waiting for the
+            // cache, creating the speculative window described in FLOP.
+            if (lvp) {
+                uint64_t predicted = 0;
+                if (lvp->lookup(inst->pcState().instAddr(),
+                                inst->threadNumber, predicted)) {
+                    DPRINTF(Rename,
+                        "[tid:%i] [sn:%llu] LVP: confident prediction "
+                        "0x%llx for load PC=%#x — forwarding to rename.\n",
+                        tid, inst->seqNum, predicted,
+                        inst->pcState().instAddr());
+
+                    // Write the predicted value into the first integer
+                    // destination register so downstream instructions can
+                    // read it without stalling.
+                    if (inst->numDestRegs() > 0 &&
+                        inst->renamedDestIdx(0)->is(IntRegClass)) {
+                        cpu->setReg(inst->renamedDestIdx(0), predicted, tid);
+                        // Mark the physical register ready on the scoreboard
+                        // so dependent instructions are immediately unblocked.
+                        scoreboard->setReg(inst->renamedDestIdx(0));
+                    }
+                }
+            }
         }
 
         ++renamed_insts;

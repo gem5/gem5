@@ -1212,6 +1212,43 @@ IEW::executeInsts()
                 // event adds the instruction to the queue to commit
                 fault = ldstQueue.executeLoad(inst);
 
+                // Phase 3 (FLOP Research) — LVP IEW Verification Hook:
+                // Now that the LSQ has resolved the real memory value, train
+                // the predictor. If the predictor was confident and the value
+                // differs from what was speculatively forwarded at Rename,
+                // update() returns true and we must squash the pipeline.
+                if (lvp && inst->getFault() == NoFault &&
+                    inst->isExecuted() && !inst->isSquashed()) {
+                    // Retrieve the data the load brought back from memory.
+                    // getMemData() returns the raw bytes; we read the first
+                    // 8 bytes zero-extended into a uint64_t.
+                    uint64_t actual = inst->getMemData();
+                    unsigned dataSize = inst->getMemSize();
+                    bool mispredicted = lvp->update(
+                        inst->pcState().instAddr(),
+                        actual, dataSize,
+                        inst->threadNumber);
+
+                    if (mispredicted) {
+                        ThreadID tid = inst->threadNumber;
+                        DPRINTF(IEW,
+                            "[tid:%i] [sn:%llu] LVP MISPREDICTION at PC=%#x "
+                            "— squashing pipeline.\n",
+                            tid, inst->seqNum,
+                            inst->pcState().instAddr());
+                        // Reuse the memory-order violation squash path,
+                        // which flushes all younger instructions in the ROB
+                        // and forces the load to re-execute from the cache.
+                        if (!fetchRedirect[tid] ||
+                            !toCommit->squash[tid] ||
+                            toCommit->squashedSeqNum[tid] > inst->seqNum) {
+                            fetchRedirect[tid] = true;
+                            squashDueToMemOrder(inst, tid);
+                            ++iewStats.memOrderViolationEvents;
+                        }
+                    }
+                }
+
                 if (inst->isTranslationDelayed() &&
                     fault == NoFault) {
                     // A hw page table walk is currently going on; the

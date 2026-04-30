@@ -68,6 +68,7 @@
 #include "cpu/o3/rob.hh"
 #include "cpu/o3/scoreboard.hh"
 #include "cpu/o3/thread_state.hh"
+#include "cpu/o3/lvp.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/timebuf.hh"
 #include "params/BaseO3CPU.hh"
@@ -459,6 +460,14 @@ class CPU : public BaseCPU
 
     /** Integer Register Scoreboard */
     Scoreboard scoreboard;
+
+    /**
+     * Load Value Predictor — FLOP Research (Phase 3).
+     * Allocated at CPU construction time from the LoadValuePredictor
+     * SimObject params. Both Rename and IEW hold a raw pointer to this
+     * object so they can call lookup() and update() respectively.
+     */
+    LoadValuePredictor *lvp;
 
     std::vector<BaseISA *> isa;
 

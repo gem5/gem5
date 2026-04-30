@@ -52,6 +52,7 @@
 #include "cpu/o3/free_list.hh"
 #include "cpu/o3/iew.hh"
 #include "cpu/o3/limits.hh"
+#include "cpu/o3/lvp.hh"
 #include "cpu/timebuf.hh"
 #include "sim/probe/probe.hh"
 
@@ -178,6 +179,11 @@ class Rename
 
     /** Sets pointer to the scoreboard. */
     void setScoreboard(Scoreboard *_scoreboard);
+
+    /** Sets pointer to the Load Value Predictor. Called from CPU constructor.
+     *  After this, every renamed load instruction will be queried via
+     *  lvp->lookup() inside renameInsts(). */
+    void setLVP(LoadValuePredictor *_lvp) { lvp = _lvp; }
 
     /** Perform sanity checks after a drain. */
     void drainSanityCheck() const;
@@ -371,6 +377,13 @@ class Rename
 
     /** Pointer to the scoreboard. */
     Scoreboard *scoreboard;
+
+    /**
+     * Pointer to the Load Value Predictor (Phase 3 — FLOP Research).
+     * Set by setLVP() during CPU construction. Used in renameInsts()
+     * to speculatively forward predicted load values at the Rename stage.
+     */
+    LoadValuePredictor *lvp = nullptr;
 
     /** Count of instructions in progress that have been sent off to the IQ
      * and ROB, but are not yet included in their occupancy counts.
