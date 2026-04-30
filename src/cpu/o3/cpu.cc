@@ -240,12 +240,19 @@ CPU::CPU(const BaseO3CPUParams &params)
     // Phase 3: Instantiate the Load Value Predictor and share the pointer
     // with the Rename and IEW stages. We use the plain constructor (not
     // the SimObject params path) to avoid needing a fully initialised
-    // SimObjectParams base struct, which would require an event queue index
-    // and other fields that are not trivially available here.
-    lvp = new LoadValuePredictor(name() + ".lvp",
-                                 /*numEntries=*/    1024,
-                                 /*threshold=*/     250,
-                                 /*instShiftAmt=*/  2);
+    // SimObjectParams base struct.
+    //
+    // Phase 3.5: Added a runtime toggle to disable LVP for A/B benchmarking
+    // without requiring recompilation.
+    if (getenv("GEM5_DISABLE_LVP")) {
+        DPRINTF(O3CPU, "LVP is DISABLED via GEM5_DISABLE_LVP environment variable.\n");
+        lvp = nullptr;
+    } else {
+        lvp = new LoadValuePredictor(name() + ".lvp",
+                                     /*numEntries=*/    1024,
+                                     /*threshold=*/     250,
+                                     /*instShiftAmt=*/  2);
+    }
     rename.setLVP(lvp);
     iew.setLVP(lvp);
 
