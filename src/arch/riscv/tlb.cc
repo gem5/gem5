@@ -305,8 +305,13 @@ Addr
 TLB::hiddenTranslateWithTLB(Addr vaddr, uint16_t asid, Addr xmode,
                             BaseMMU::Mode mode)
 {
+    DPRINTF(TLB, "Current satp mode : %d\n", satp_mode);
     TlbEntry *e = lookup(getVPNFromVAddr(vaddr, xmode), asid, mode, true);
-    assert(e != nullptr);
+    DPRINTF(TLB, "VADDR: %d, XMODE: %d, ASID: %d, MODE: %d\n", vaddr, xmode, asid, mode);
+    //assert(e != nullptr);
+    if(!e) {
+        panic("TLB miss after page walk");
+    }
     return e->paddr << PageShift | (vaddr & mask(e->logBytes));
 }
 
@@ -315,6 +320,12 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
                  BaseMMU::Translation *translation, BaseMMU::Mode mode,
                  bool &delayed)
 {
+
+    if (satp_mode == BARE) {
+        req->setPaddr((req->getVaddr()));
+        return NoFault;
+    }
+
     delayed = false;
 
     MemAccessInfo memaccess = getMemAccessInfo(tc, mode, req->getArchFlags());
@@ -383,6 +394,8 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
     // again to update the dirty flag.
     bool e_pte_w;
     switch(satp_mode) {
+        /*case BARE:
+            return fault;*/
         case SV39:
             e_pte_w = (bool)e->pte.getSV39().w;
             break;
@@ -390,7 +403,9 @@ TLB::doTranslate(const RequestPtr &req, ThreadContext *tc,
             e_pte_w = (bool)e->pte.getSV48().w;
             break;
         default:
-            panic("Нормальный паник");
+            DPRINTF(TLB, "satp.mode = %d\n", satp.mode);
+            DPRINTF(TLB, "satp_mode = %d\n", satp_mode);
+            panic("Unsupported translation mode: $d\n", satp_mode);
     }
     if (e && (mode == BaseMMU::Write) && !e_pte_w) {
         DPRINTF(TLB, "Dirty bit not set, repeating PT walk\n");

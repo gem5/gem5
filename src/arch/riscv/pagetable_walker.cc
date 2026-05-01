@@ -809,8 +809,15 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
              * permissions violations, so we'll need the return value as
              * well.
              */
-            Addr vaddr = req->getVaddr();
-            vaddr = Addr(sext<SV39_VADDR_BITS>(vaddr));
+            Addr vaddr;
+            switch (satp.mode) {
+                case SV39:
+                    vaddr = Addr(sext<SV39_VADDR_BITS>(req->getVaddr()));
+                    break;
+                case SV48:
+                    vaddr = Addr(sext<SV48_VADDR_BITS>(req->getVaddr()));
+                    break;
+            }
             Addr paddr = walker->tlb->hiddenTranslateWithTLB(vaddr, satp.asid,
                                                              satp.mode, mode);
 
@@ -836,6 +843,133 @@ Walker::WalkerState::recvPacket(PacketPtr pkt)
 
     return false;
 }
+
+//bool
+//Walker::WalkerState::recvPacket(PacketPtr pkt)
+//{
+//    DPRINTF(PageTableWalker, "recvPacket called: pkt=%p inflight=%d state=%d squashed=%d\n",
+//            pkt, inflight, state, squashed);
+//
+//    assert(pkt->isResponse());
+//    assert(inflight);
+//    assert(state == Waiting);
+//
+//    inflight--;
+//    DPRINTF(PageTableWalker, "After decrement inflight=%d\n", inflight);
+//
+//    if (squashed) {
+//        DPRINTF(PageTableWalker, "Request squashed. inflight=%d -> return=%d\n",
+//                inflight, (inflight == 0));
+//        return (inflight == 0);
+//    }
+//
+//    if (pkt->isRead()) {
+//        DPRINTF(PageTableWalker, "Processing READ response pkt=%p\n", pkt);
+//
+//        // should not have a pending read if we also had one outstanding
+//        assert(!read);
+//
+//        // @todo someone should pay for this
+//        pkt->headerDelay = pkt->payloadDelay = 0;
+//
+//        DPRINTF(PageTableWalker, "Cleared pkt delays\n");
+//
+//        state = nextState;
+//        nextState = Ready;
+//
+//        DPRINTF(PageTableWalker, "State transition: state=%d nextState=%d\n",
+//                state, nextState);
+//
+//        PacketPtr write = NULL;
+//        read = pkt;
+//
+//        DPRINTF(PageTableWalker, "Calling stepWalk with read pkt=%p\n", pkt);
+//
+//        timingFault = stepWalk(write);
+//
+//        DPRINTF(PageTableWalker, "Returned from stepWalk: timingFault=%d write=%p\n",
+//                timingFault, write);
+//
+//        state = Waiting;
+//
+//        assert(timingFault == NoFault || read == NULL);
+//
+//        if (write) {
+//            DPRINTF(PageTableWalker, "Generated write pkt=%p, pushing to queue\n", write);
+//            writes.push_back(write);
+//        }
+//
+//        DPRINTF(PageTableWalker, "Calling sendPackets()\n");
+//        sendPackets();
+//
+//    } else {
+//        DPRINTF(PageTableWalker, "Processing NON-READ response pkt=%p (likely write ack)\n", pkt);
+//
+//        delete pkt;
+//
+//        DPRINTF(PageTableWalker, "Deleted pkt, calling sendPackets()\n");
+//        sendPackets();
+//    }
+//
+//    DPRINTF(PageTableWalker,
+//            "Post-processing: inflight=%d read=%p writes.size()=%zu state=%d\n",
+//            inflight, read, writes.size(), state);
+//
+//    if (inflight == 0 && read == NULL && writes.size() == 0) {
+//        DPRINTF(PageTableWalker, "All operations complete. Finalizing translation.\n");
+//
+//        state = Ready;
+//        nextState = Waiting;
+//
+//        DPRINTF(PageTableWalker, "State reset: state=%d nextState=%d\n",
+//                state, nextState);
+//
+//        if (timingFault == NoFault) {
+//            DPRINTF(PageTableWalker, "No timing fault, proceeding with final translation\n");
+//
+//            Addr vaddr = req->getVaddr();
+//            DPRINTF(PageTableWalker, "Original vaddr=0x%lx\n", vaddr);
+//
+//            vaddr = Addr(sext<SV39_VADDR_BITS>(vaddr));
+//            DPRINTF(PageTableWalker, "Sign-extended vaddr=0x%lx\n", vaddr);
+//
+//            Addr paddr =
+//                walker->tlb->hiddenTranslateWithTLB(vaddr, satp.asid,
+//                                                    satp.mode, mode);
+//
+//            DPRINTF(PageTableWalker, "Translated paddr=0x%lx\n", paddr);
+//
+//            req->setPaddr(paddr);
+//
+//            DPRINTF(PageTableWalker, "Running PMP check\n");
+//            timingFault = walker->pmp->pmpCheck(req, mode, pmode, tc);
+//
+//            DPRINTF(PageTableWalker, "PMP result timingFault=%d\n", timingFault);
+//
+//            if (timingFault == NoFault) {
+//                DPRINTF(PageTableWalker, "Running PMA check\n");
+//                timingFault = walker->pma->check(req, mode);
+//                DPRINTF(PageTableWalker, "PMA result timingFault=%d\n", timingFault);
+//            }
+//
+//            DPRINTF(PageTableWalker, "Finishing translation: fault=%d\n", timingFault);
+//            translation->finish(timingFault, req, tc, mode);
+//
+//        } else {
+//            DPRINTF(PageTableWalker,
+//                    "Timing fault occurred during walk: fault=%d\n",
+//                    timingFault);
+//
+//            translation->finish(timingFault, req, tc, mode);
+//        }
+//
+//        DPRINTF(PageTableWalker, "recvPacket returning true\n");
+//        return true;
+//    }
+//
+//    DPRINTF(PageTableWalker, "recvPacket returning false (still work pending)\n");
+//    return false;
+//}
 
 void
 Walker::WalkerState::sendPackets()

@@ -63,7 +63,11 @@ cache_hierarchy = PrivateL1PrivateL2WalkCacheHierarchy(
 )
 
 # Memory: Dual Channel DDR4 2400 DRAM device.
-memory = DualChannelDDR4_2400(size="3GiB")
+# memory = DualChannelDDR4_2400(size="3GiB")
+
+from gem5.components.memory import SingleChannelDDR3_1600
+
+memory = SingleChannelDDR3_1600(size="8GiB")
 
 # Here we set up the processor. We use a simple processor.
 processor = SimpleProcessor(

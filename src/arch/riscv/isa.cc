@@ -810,9 +810,9 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
 
                 RiscvISA::TLB* itb = static_cast<RiscvISA::TLB*>(tc->getMMUPtr()->itb);
                 RiscvISA::TLB* dtb = static_cast<RiscvISA::TLB*>(tc->getMMUPtr()->dtb);
-                itb->setSATPMode(cur_val.mode);
-                dtb->setSATPMode(cur_val.mode);
-
+                itb->setSATPMode(new_val.mode);
+                dtb->setSATPMode(new_val.mode);
+                DPRINTF(TLB, "current satp mode: %d\n", new_val.mode);
                 // TLB flush can be elided here
                 // --- From the RISCV Privileged Spec 20250508, p.129 ---
                 // "Not imposing upon implementations to flush
