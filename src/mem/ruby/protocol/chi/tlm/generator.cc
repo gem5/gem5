@@ -49,7 +49,7 @@ bool
 TlmGenerator::Transaction::Expectation::run(Transaction *tran)
 {
     auto res_print =
-        csprintf("%u: Checking %s...", tran->phase().txn_id, name());
+        csprintf("txn_id=%u: Checking %s...", tran->phase().txn_id, name());
     if (cb(tran)) {
         inform("%s\n", res_print + " Success ");
         return true;
