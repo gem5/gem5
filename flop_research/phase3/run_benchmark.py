@@ -4,10 +4,11 @@ run_benchmark.py — LVP Performance Benchmark Runner
 Runs the benchmark.c loop (5 million loads) to measure IPC and ticks.
 """
 
-import m5
-from m5.objects import *
 import os
 import sys
+
+import m5
+from m5.objects import *
 
 # ── System ──────────────────────────────────────────────────────────────────
 system = System()
@@ -20,8 +21,8 @@ system.mem_ranges = [AddrRange("512MB")]
 # ── O3 CPU ──────────────────────────────────────────────────────────────────
 system.cpu = ArmO3CPU()
 system.cpu.numROBEntries = 256
-system.cpu.LQEntries     = 128
-system.cpu.SQEntries     = 128
+system.cpu.LQEntries = 128
+system.cpu.SQEntries = 128
 
 system.cpu.createInterruptController()
 

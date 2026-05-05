@@ -1,6 +1,6 @@
 # FLOP Research: Git Checkpoint Strategy
 
-Because we are doing "surgery" on the core gem5 C++ pipeline (`rename.cc`, `iew.cc`), we must have a way to undo our changes instantly if the C++ compiler starts throwing errors or the simulator crashes. 
+Because we are doing "surgery" on the core gem5 C++ pipeline (`rename.cc`, `iew.cc`), we must have a way to undo our changes instantly if the C++ compiler starts throwing errors or the simulator crashes.
 
 We use a **Hierarchical Prefix system** to keep research grouped together and strictly separated by phase logic.
 
@@ -21,7 +21,7 @@ We create a new branch for each phase, naming it `research/p[phase#]-[task-name]
 3. Once the task works perfectly, merge it into `research/integration` and start the next branch for Phase 2.
 
 ## 2. GitHub Connectivity
-GitHub serves as a critical off-site backup for WSL environments and provides a clean commit history for NITC evaluation. 
+GitHub serves as a critical off-site backup for WSL environments and provides a clean commit history for NITC evaluation.
 
 **Setup Command**:
 ```bash

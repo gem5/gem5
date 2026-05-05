@@ -20,16 +20,16 @@ int main(void)
 
     /*
      * The loop runs 10,000 times.
-     * 
+     *
      * In each iteration, 'target_value' is loaded from a CONSTANT address.
      * Because the address does not depend on the previous iteration, the
      * Out-of-Order (O3) CPU can issue dozens of loads in parallel to the
      * L1 cache (Memory-Level Parallelism).
-     * 
+     *
      * The latency of the L1 cache (2-3 cycles) is completely hidden by this
      * parallel prefetching. The only bottleneck is the ALU 'add' instruction
      * waiting for the previous 'add' (sum depends on sum).
-     * 
+     *
      * Result:
      * Turning LVP ON or OFF yields the exact same execution time, because the
      * memory load is NOT on the critical path. The CPU executes this loop

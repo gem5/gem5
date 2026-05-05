@@ -21,17 +21,17 @@ int main(void)
 
     /*
      * The loop runs 10,000 times.
-     * 
+     *
      * In each iteration, the address of the next load depends on the VALUE
      * of the current load (current_idx = memory[current_idx]).
      * This creates a strict Read-After-Write (RAW) dependency chain on the
      * memory loads themselves. The Out-of-Order CPU cannot fetch the next
      * iteration's load in parallel because it doesn't know the address yet!
-     * 
+     *
      * With LVP OFF:
      * The CPU must wait for the L1 cache (2-3 cycles) to return '0' before
      * it can calculate the address for the next load.
-     * 
+     *
      * With LVP ON:
      * The predictor learns this PC always returns '0'. It forwards '0' at
      * the Rename stage. The CPU immediately calculates the next address and

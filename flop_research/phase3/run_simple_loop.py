@@ -4,9 +4,10 @@ run_simple_loop.py — MLP Benchmark Runner
 Runs the simple_loop_bench.c to demonstrate Out-of-Order Memory-Level Parallelism.
 """
 
+import os
+
 import m5
 from m5.objects import *
-import os
 
 # ── System ──────────────────────────────────────────────────────────────────
 system = System()
@@ -19,8 +20,8 @@ system.mem_ranges = [AddrRange("512MB")]
 # ── O3 CPU ──────────────────────────────────────────────────────────────────
 system.cpu = ArmO3CPU()
 system.cpu.numROBEntries = 256
-system.cpu.LQEntries     = 128
-system.cpu.SQEntries     = 128
+system.cpu.LQEntries = 128
+system.cpu.SQEntries = 128
 
 system.cpu.createInterruptController()
 

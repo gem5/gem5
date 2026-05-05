@@ -1,6 +1,7 @@
+import os
+
 import m5
 from m5.objects import *
-import os
 
 system = System()
 
