@@ -59,6 +59,10 @@ class NoC_Params:
     router_ext_latency: int = 1
     router_buffer_size: int = 4
     cntrl_msg_size: int = 8
+    req_int_channels: int = 1
+    snp_int_channels: int = 1
+    rsp_int_channels: int = 1
+    dat_int_channels: int = 1
     data_width: int = 32
     cross_links: List[Tuple[int, int]] = field(default_factory=list)
     cross_link_latency: int = 0

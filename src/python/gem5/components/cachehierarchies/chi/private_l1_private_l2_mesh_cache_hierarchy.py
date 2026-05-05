@@ -162,13 +162,19 @@ class PrivateL1PrivateL2MeshCacheHierarchy(
             noc_params=self._noc_params,
         )
 
+        self.ruby_system.network.physical_vnets_channels = [
+            self._noc_params.req_int_channels,
+            self._noc_params.snp_int_channels,
+            self._noc_params.rsp_int_channels,
+            self._noc_params.dat_int_channels,
+        ]
+
         self.ruby_system.network.physical_vnets_bandwidth = [
             self._noc_params.cntrl_msg_size,
             self._noc_params.cntrl_msg_size,
             self._noc_params.cntrl_msg_size,
             self._noc_params.cntrl_msg_size + self._noc_params.data_width,
         ]
-        self.ruby_system.network.physical_vnets_channels = [1] * 4
 
         # Network configurations
         # virtual networks: 0=request, 1=snoop, 2=response, 3=data
