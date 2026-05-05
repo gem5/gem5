@@ -40,6 +40,7 @@ from dataclasses import (
 )
 from typing import (
     List,
+    Optional,
     Tuple,
 )
 
@@ -54,7 +55,8 @@ class NoC_Params:
 
     router_link_latency: int = 1
     node_link_latency: int = 1
-    router_latency: int = 1
+    router_int_latency: int = 1
+    router_ext_latency: int = 1
     router_buffer_size: int = 4
     cntrl_msg_size: int = 8
     data_width: int = 32
