@@ -38,3 +38,8 @@ configs/dram/lowp_sweep.cfg
 .vscode
 typings
 .DS_Store
+
+# Ignore compiled probes/benchmarks
+flop_research/phase*/benchmark
+flop_research/phase*/lvp_probe
+flop_research/phase*/simple_loop_bench
