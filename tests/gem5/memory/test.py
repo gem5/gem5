@@ -45,7 +45,7 @@ simple_mem_params = [
     ("low-latency", {"latency": "1ns"}),
     ("high-latency", {"latency": "1us"}),
     ("low-bandwidth", {"bandwidth": "1MiB/s"}),
-    ("high-var", {"latency_var": "100ns"}),
+    ("high-var", {"latency_dist": "Uniform", "latency_dist_param": "100ns"}),
 ]
 
 
