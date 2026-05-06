@@ -89,6 +89,8 @@ class AbstractController : public ClockedObject, public Consumer
     AbstractController(const Params &p);
     void init();
 
+    DrainState drain() override;
+
     NodeID getVersion() const { return m_machineID.getNum(); }
     MachineType getType() const { return m_machineID.getType(); }
 
@@ -268,6 +270,13 @@ class AbstractController : public ClockedObject, public Consumer
     std::unordered_map<Addr, TransMapPair> m_inTransUnaddressed;
     std::unordered_map<Addr, TransMapPair> m_outTransUnaddressed;
 
+    //! True if there are no incoming transactions
+    bool
+    noInTransactions() const
+    {
+        return m_inTransAddressed.empty() && m_inTransUnaddressed.empty();
+    }
+
     /**
      * Profiles an event that initiates a protocol transactions for a specific
      * line (e.g. events triggered by incoming request messages).
@@ -330,7 +339,10 @@ class AbstractController : public ClockedObject, public Consumer
         stats.inTransLatHist[iter->second.transaction]->sample(
                                 ticksToCycles(curTick() - trans.time));
 
-       m_inTrans.erase(iter);
+        m_inTrans.erase(iter);
+        if (drainState() == DrainState::Draining && noInTransactions()) {
+            signalDrainDone();
+        }
     }
 
     /**
