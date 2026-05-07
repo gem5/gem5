@@ -30,6 +30,7 @@
  */
 
 #include "arch/amdgpu/vega/insts/instructions.hh"
+#include "arch/arm/insts/fplib.hh"
 
 namespace gem5
 {
@@ -615,7 +616,34 @@ Inst_VOPC__V_CMP_EQ_F16::~Inst_VOPC__V_CMP_EQ_F16()
 void
 Inst_VOPC__V_CMP_EQ_F16::execute(GPUDynInstPtr gpuDynInst)
 {
-    panicUnimplemented();
+    Wavefront *wf = gpuDynInst->wavefront();
+    ConstVecOperandU32 src0(gpuDynInst, instData.SRC0);
+    ConstVecOperandU32 src1(gpuDynInst, instData.VSRC1);
+    ScalarOperandU64 vcc(gpuDynInst, REG_VCC_LO);
+
+    src0.readSrc();
+    src1.read();
+
+    auto cmpImpl = [](uint32_t a, uint32_t b) {
+        uint16_t a_fp16 = uint16_t(a & 0xFFFF);
+        uint16_t b_fp16 = uint16_t(b & 0xFFFF);
+        ArmISA::FPSCR fpscr;
+        return int(fplibCompareEQ(a_fp16, b_fp16, fpscr));
+    };
+
+    if (isSDWAInst()) {
+        sdwabHelper<uint32_t>(gpuDynInst, cmpImpl);
+    } else if (isDPPInst()) {
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+    } else {
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                vcc.setBit(lane, cmpImpl(src0[lane], src1[lane]));
+            }
+        }
+
+        vcc.write();
+    }
 } // execute
 // --- Inst_VOPC__V_CMP_LE_F16 class methods ---
 

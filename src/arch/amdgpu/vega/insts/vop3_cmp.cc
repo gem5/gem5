@@ -606,7 +606,47 @@ Inst_VOP3__V_CMP_EQ_F16::~Inst_VOP3__V_CMP_EQ_F16()
 void
 Inst_VOP3__V_CMP_EQ_F16::execute(GPUDynInstPtr gpuDynInst)
 {
-    panicUnimplemented();
+    Wavefront *wf = gpuDynInst->wavefront();
+    ConstVecOperandU16 src0(gpuDynInst, extData.SRC0);
+    ConstVecOperandU16 src1(gpuDynInst, extData.SRC1);
+    ScalarOperandU64 sdst(gpuDynInst, instData.VDST);
+
+    src0.readSrc();
+    src1.readSrc();
+    sdst.read();
+
+    unsigned opsel = instData.OPSEL;
+    unsigned do_abs = instData.ABS;
+    unsigned do_neg = extData.NEG;
+
+    for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+        if (wf->execMask(lane)) {
+            uint32_t i0 = opsel & 0x1 ? bits(src0[lane], 31, 16)
+                                      : bits(src0[lane], 15, 0);
+            uint32_t i1 = opsel & 0x2 ? bits(src1[lane], 31, 16)
+                                      : bits(src1[lane], 15, 0);
+
+            AMDGPU::mxfloat16 s0(i0);
+            AMDGPU::mxfloat16 s1(i1);
+
+            if ((do_abs & 1) && (s0 < 0.0f)) {
+                s0 = -s0;
+            }
+            if ((do_abs & 2) && (s1 < 0.0f)) {
+                s1 = -s1;
+            }
+            if (do_neg & 1) {
+                s0 = -s0;
+            }
+            if (do_neg & 2) {
+                s1 = -s1;
+            }
+
+            sdst.setBit(lane, (float(s0) == float(s1)) ? 1 : 0);
+        }
+    }
+
+    sdst.write();
 } // execute
 // --- Inst_VOP3__V_CMP_LE_F16 class methods ---
 
