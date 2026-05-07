@@ -728,10 +728,10 @@ Inst_VOP3P__V_PK_FMA_F32::execute(GPUDynInstPtr gpuDynInst)
             if (neg & 1) {
                 s0lf = -s0lf;
             }
-            if (neg & 1) {
+            if (neg & 2) {
                 s1lf = -s1lf;
             }
-            if (neg & 1) {
+            if (neg & 4) {
                 s2lf = -s2lf;
             }
 
@@ -751,10 +751,10 @@ Inst_VOP3P__V_PK_FMA_F32::execute(GPUDynInstPtr gpuDynInst)
             if (neg_hi & 1) {
                 s0hf = -s0hf;
             }
-            if (neg_hi & 1) {
+            if (neg_hi & 2) {
                 s1hf = -s1hf;
             }
-            if (neg_hi & 1) {
+            if (neg_hi & 4) {
                 s2hf = -s2hf;
             }
 
