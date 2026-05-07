@@ -29,6 +29,7 @@
 #ifndef __BASE_STATS_TYPES_HH__
 #define __BASE_STATS_TYPES_HH__
 
+#include <cstddef>
 #include <limits>
 #include <map>
 #include <vector>
