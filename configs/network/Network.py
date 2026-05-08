@@ -26,6 +26,8 @@
 
 import math
 
+from routing_tables import LookupReader
+
 import m5
 from m5.defines import buildEnv
 from m5.objects import *
@@ -123,6 +125,13 @@ def define_options(parser):
         help="""SimpleNetwork links uses a separate physical
             channel for each virtual network""",
     )
+    parser.add_argument(
+        "--lookup-csv",
+        action="store",
+        default="routing.csv",
+        type=str,
+        help="CSV file containing routing lookup table",
+    )
 
 
 def create_network(options, ruby):
@@ -172,7 +181,7 @@ def init_network(options, network, InterfaceClass):
         network.ni_flit_size = options.link_width_bits / 8
         network.routing_algorithm = options.routing_algorithm
         network.garnet_deadlock_threshold = options.garnet_deadlock_threshold
-
+        network.lookup_table = LookupReader.read_csv(options.lookup_csv)
         # Create Bridges and connect them to the corresponding links
         for intLink in network.int_links:
             intLink.src_net_bridge = NetworkBridge(
