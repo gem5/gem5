@@ -52,6 +52,8 @@ class GarnetNetwork(RubyNetwork):
     garnet_deadlock_threshold = Param.UInt32(
         50000, "network-level deadlock threshold"
     )
+    # for custom lookup routing
+    lookup_table = VectorParam.UInt32([], "linearized 2d lookup table")
 
 
 class GarnetNetworkInterface(ClockedObject):

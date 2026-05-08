@@ -184,6 +184,7 @@ RoutingUnit::outportCompute(RouteInfo route, int inport,
     // Can be over-ridden from command line using --routing-algorithm = 1
     RoutingAlgorithm routing_algorithm =
         (RoutingAlgorithm) m_router->get_net_ptr()->getRoutingAlgorithm();
+    m_router->get_net_ptr()->getLookupTable(m_lookup);
 
     switch (routing_algorithm) {
         case TABLE_:  outport =
@@ -262,12 +263,32 @@ RoutingUnit::outportComputeXY(RouteInfo route,
 
 // Template for implementing custom routing algorithm
 // using port directions. (Example adaptive)
+// flattened matrix for axes scr,dest,cur_router
+// and entries are next hop routers
 int
 RoutingUnit::outportComputeCustom(RouteInfo route,
                                  int inport,
                                  PortDirection inport_dirn)
 {
-    panic("%s placeholder executed", __FUNCTION__);
+    PortDirection outport_dirn = "Unknown";
+    int next_router = route.dest_router;
+    //loop though our input and find the next hop router
+
+    for (size_t i = 0; i < m_lookup.size(); i+=4) {
+        if (m_lookup[i]==route.src_router &&
+            m_lookup[i+1]==route.dest_router &&
+            m_lookup[i+2]==m_router->get_id())
+            next_router = m_lookup[i+3];
+    }
+    // find the link using output directions the outport
+    // is always a router because otherwise lookup table is used
+    for (int link = 0; link < m_routing_table[route.vnet].size(); link++){
+        DPRINTF(RubyNetwork,
+                "connected routers[%u] = %s\n",
+                link, m_outports_idx2dirn[link]);
+    }
+    DPRINTF(RubyNetwork,"next hop router is  = %d\n",next_router);
+    return m_outports_dirn2idx[std::to_string(next_router)];
 }
 
 } // namespace garnet

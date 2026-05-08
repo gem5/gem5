@@ -71,7 +71,8 @@ GarnetNetwork::GarnetNetwork(const Params &p)
     m_buffers_per_ctrl_vc = p.buffers_per_ctrl_vc;
     m_routing_algorithm = p.routing_algorithm;
     m_next_packet_id = 0;
-
+    //for custom lookup routing
+    m_lookup_table = p.lookup_table;
     m_enable_fault_model = p.enable_fault_model;
     if (m_enable_fault_model)
         fault_model = p.fault_model;
@@ -613,6 +614,33 @@ GarnetNetwork::update_traffic_distribution(RouteInfo route)
         (*m_data_traffic_distribution[src_node][dest_node])++;
     else
         (*m_ctrl_traffic_distribution[src_node][dest_node])++;
+}
+
+bool
+GarnetNetwork::functionalRead(Packet *pkt)
+{
+    bool read = false;
+    for (unsigned int i = 0; i < m_routers.size(); i++) {
+        if (m_routers[i]->functionalRead(pkt))
+            read = true;
+    }
+
+    for (unsigned int i = 0; i < m_nis.size(); ++i) {
+        if (m_nis[i]->functionalRead(pkt))
+            read = true;
+    }
+
+    for (unsigned int i = 0; i < m_networklinks.size(); ++i) {
+        if (m_networklinks[i]->functionalRead(pkt))
+            read = true;
+    }
+
+    for (unsigned int i = 0; i < m_networkbridges.size(); ++i) {
+        if (m_networkbridges[i]->functionalRead(pkt))
+            read = true;
+    }
+
+    return read;
 }
 
 bool

@@ -88,6 +88,7 @@ class RoutingUnit
 
     // Routing Table
     std::vector<std::vector<NetDest>> m_routing_table;
+    std::vector<u_int32_t> m_lookup;
     std::vector<int> m_weight_table;
 
     // Inport and Outport direction to idx maps
