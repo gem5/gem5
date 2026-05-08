@@ -92,6 +92,17 @@ CrossbarSwitch::wakeup()
 }
 
 bool
+CrossbarSwitch::functionalRead(Packet *pkt)
+{
+    bool read = false;
+    for (auto& switch_buffer : switchBuffers) {
+        if (switch_buffer.functionalRead(pkt))
+            read = true;
+   }
+   return read;
+}
+
+bool
 CrossbarSwitch::functionalRead(Packet *pkt, WriteMask &mask)
 {
     bool read = false;

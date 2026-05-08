@@ -152,6 +152,18 @@ InputUnit::increment_credit(int in_vc, bool free_signal, Tick curTime)
 }
 
 bool
+InputUnit::functionalRead(Packet *pkt)
+{
+    bool read = false;
+    for (auto& virtual_channel : virtualChannels) {
+        if (virtual_channel.functionalRead(pkt))
+            read = true;
+    }
+
+    return read;
+}
+
+bool
 InputUnit::functionalRead(Packet *pkt, WriteMask &mask)
 {
     bool read = false;

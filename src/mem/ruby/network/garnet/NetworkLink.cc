@@ -120,6 +120,12 @@ NetworkLink::resetStats()
 }
 
 bool
+NetworkLink::functionalRead(Packet *pkt)
+{
+    return linkBuffer.functionalRead(pkt);
+}
+
+bool
 NetworkLink::functionalRead(Packet *pkt, WriteMask &mask)
 {
     return linkBuffer.functionalRead(pkt, mask);

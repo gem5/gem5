@@ -173,6 +173,12 @@ OutputUnit::insert_flit(flit *t_flit)
 }
 
 bool
+OutputUnit::functionalRead(Packet *pkt)
+{
+    return outBuffer.functionalRead(pkt);
+}
+
+bool
 OutputUnit::functionalRead(Packet *pkt, WriteMask &mask)
 {
     return outBuffer.functionalRead(pkt, mask);

@@ -107,6 +107,7 @@ class flit
         }
     }
 
+    bool functionalRead(Packet *pkt);
     bool functionalRead(Packet *pkt, WriteMask &mask);
     bool functionalWrite(Packet *pkt);
 
