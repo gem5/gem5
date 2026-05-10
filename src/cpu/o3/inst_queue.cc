@@ -81,6 +81,24 @@ namespace gem5
 namespace o3
 {
 
+namespace
+{
+
+bool
+hasDeferredMiscDest(const DynInstPtr &inst)
+{
+    for (int dest_reg_idx = 0; dest_reg_idx < inst->numDestRegs();
+         dest_reg_idx++) {
+        if (inst->renamedDestIdx(dest_reg_idx)->isDeferredMiscReg()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+} // anonymous namespace
+
 IQUnit::IQUnit(const IQUnitParams &params)
     : SimObject(params),
       iqPolicy(params.smtIQPolicy),
@@ -1122,6 +1140,25 @@ InstructionQueue::commit(const InstSeqNum &inst, ThreadID tid)
 int
 InstructionQueue::wakeDependents(const DynInstPtr &completed_inst)
 {
+    return wakeSelectedDependents(completed_inst, false, true);
+}
+
+InstructionQueue::WakeDependentsInfo
+InstructionQueue::wakeMiscDependents(const DynInstPtr &completed_inst)
+{
+    if (!hasDeferredMiscDest(completed_inst)) {
+        return WakeDependentsInfo();
+    }
+
+    return WakeDependentsInfo(
+        wakeSelectedDependents(completed_inst, true, false), true);
+}
+
+int
+InstructionQueue::wakeSelectedDependents(const DynInstPtr &completed_inst,
+                                         bool deferred_misc_only,
+                                         bool process_mem_inst)
+{
     int dependents = 0;
 
     // The instruction queue here takes care of both floating and int ops
@@ -1143,18 +1180,20 @@ InstructionQueue::wakeDependents(const DynInstPtr &completed_inst)
     // instruction if it is a memory instruction.  Also complete the memory
     // instruction at this point since we know it executed without issues.
     ThreadID tid = completed_inst->threadNumber;
-    if (completed_inst->isMemRef()) {
-        memDepUnit[tid].completeInst(completed_inst);
+    if (process_mem_inst) {
+        if (completed_inst->isMemRef()) {
+            memDepUnit[tid].completeInst(completed_inst);
 
-        DPRINTF(IQ, "Completing mem instruction PC: %s [sn:%llu]\n",
-            completed_inst->pcState(), completed_inst->seqNum);
+            DPRINTF(IQ, "Completing mem instruction PC: %s [sn:%llu]\n",
+                    completed_inst->pcState(), completed_inst->seqNum);
 
-        completed_inst->clearInIQ();
-        completed_inst->memOpDone(true);
-    } else if (completed_inst->isReadBarrier() ||
-               completed_inst->isWriteBarrier()) {
-        // Completes a non mem ref barrier
-        memDepUnit[tid].completeInst(completed_inst);
+            completed_inst->clearInIQ();
+            completed_inst->memOpDone(true);
+        } else if (completed_inst->isReadBarrier() ||
+                   completed_inst->isWriteBarrier()) {
+            // Completes a non mem ref barrier
+            memDepUnit[tid].completeInst(completed_inst);
+        }
     }
 
     for (int dest_reg_idx = 0;
@@ -1163,6 +1202,10 @@ InstructionQueue::wakeDependents(const DynInstPtr &completed_inst)
     {
         PhysRegIdPtr dest_reg =
             completed_inst->renamedDestIdx(dest_reg_idx);
+
+        if (dest_reg->isDeferredMiscReg() != deferred_misc_only) {
+            continue;
+        }
 
         // Special case of uniq or control registers.  They are not
         // handled by the IQ and thus have no dependency graph entry.

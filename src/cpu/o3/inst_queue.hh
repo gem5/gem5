@@ -183,6 +183,16 @@ class InstructionQueue
     // Typedef of iterator through the list of instructions.
     typedef typename std::list<DynInstPtr>::iterator ListIt;
 
+    struct WakeDependentsInfo
+    {
+        WakeDependentsInfo(int deps = 0, bool has_deferred_misc_dest = false)
+            : dependents(deps), hasDeferredMiscDest(has_deferred_misc_dest)
+        {}
+
+        int dependents;
+        bool hasDeferredMiscDest;
+    };
+
     /** FU completion event class. */
     class FUCompletion : public Event
     {
@@ -333,6 +343,9 @@ class InstructionQueue
     /** Wakes all dependents of a completed instruction. */
     int wakeDependents(const DynInstPtr &completed_inst);
 
+    /** Wakes dependents on misc regs that only become visible at commit. */
+    WakeDependentsInfo wakeMiscDependents(const DynInstPtr &completed_inst);
+
     /** Adds a ready memory instruction to the ready list. */
     void addReadyMemInst(const DynInstPtr &ready_inst);
 
@@ -378,6 +391,10 @@ class InstructionQueue
   private:
     /** Does the actual squashing. */
     void doSquash(ThreadID tid);
+
+    /** Wakes either deferred misc-reg dependents or all others. */
+    int wakeSelectedDependents(const DynInstPtr &completed_inst,
+                               bool deferred_misc_only, bool process_mem_inst);
 
     /////////////////////////
     // Various pointers

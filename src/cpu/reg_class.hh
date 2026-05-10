@@ -490,6 +490,12 @@ class PhysRegId : private RegId
         return regClass().isSerializing(regClass()[index()]);
     }
 
+    bool
+    isDeferredMiscReg() const
+    {
+        return classValue() == MiscRegClass && !isAlwaysReady();
+    }
+
     /** Flat index accessor */
     const RegIndex& flatIndex() const { return flatIdx; }
 

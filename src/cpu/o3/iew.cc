@@ -569,9 +569,44 @@ IEW::unblock(ThreadID tid)
 }
 
 void
+IEW::wakeReadyDependents(const DynInstPtr &inst, int dependents,
+                         bool deferred_misc_only, const char *ready_msg)
+{
+    for (int i = 0; i < inst->numDestRegs(); i++) {
+        const PhysRegIdPtr dest_reg = inst->renamedDestIdx(i);
+        if (dest_reg->isDeferredMiscReg() != deferred_misc_only) {
+            continue;
+        }
+
+        if (dest_reg->getNumPinnedWritesToComplete() == 0) {
+            DPRINTF(IEW, ready_msg, dest_reg->index(), dest_reg->className());
+            scoreboard->setReg(dest_reg);
+        }
+    }
+
+    if (dependents) {
+        iewStats.producerInst[inst->threadNumber]++;
+        iewStats.consumerInst[inst->threadNumber] += dependents;
+    }
+}
+
+void
 IEW::wakeDependents(const DynInstPtr& inst)
 {
-    instQueue.wakeDependents(inst);
+    wakeReadyDependents(inst, instQueue.wakeDependents(inst), false,
+                        "Setting Destination Register %i (%s)\n");
+}
+
+void
+IEW::wakeMiscDependents(const DynInstPtr &inst)
+{
+    const auto wake_info = instQueue.wakeMiscDependents(inst);
+    if (!wake_info.hasDeferredMiscDest) {
+        return;
+    }
+
+    wakeReadyDependents(inst, wake_info.dependents, true,
+                        "Setting Destination Register %i (%s) at commit\n");
 }
 
 void
@@ -1419,23 +1454,7 @@ IEW::writebackInsts()
         // when it's ready to execute the strictly ordered load.
         if (!inst->isSquashed() && inst->isExecuted() &&
                 inst->getFault() == NoFault) {
-            int dependents = instQueue.wakeDependents(inst);
-
-            for (int i = 0; i < inst->numDestRegs(); i++) {
-                // Mark register as ready if not pinned
-                if (inst->renamedDestIdx(i)->
-                        getNumPinnedWritesToComplete() == 0) {
-                    DPRINTF(IEW,"Setting Destination Register %i (%s)\n",
-                            inst->renamedDestIdx(i)->index(),
-                            inst->renamedDestIdx(i)->className());
-                    scoreboard->setReg(inst->renamedDestIdx(i));
-                }
-            }
-
-            if (dependents) {
-                iewStats.producerInst[tid]++;
-                iewStats.consumerInst[tid]+= dependents;
-            }
+            wakeDependents(inst);
             iewStats.writebackCount[tid]++;
         }
     }
