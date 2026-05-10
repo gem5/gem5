@@ -569,44 +569,41 @@ IEW::unblock(ThreadID tid)
 }
 
 void
-IEW::wakeReadyDependents(const DynInstPtr &inst, int dependents,
-                         bool deferred_misc_only, const char *ready_msg)
+IEW::wakeReadyDependents(ThreadID tid,
+                         const std::vector<PhysRegIdPtr> &ready_regs,
+                         int producers, int dependents, const char *ready_msg)
 {
+    for (const auto dest_reg : ready_regs) {
+        DPRINTF(IEW, ready_msg, dest_reg->index(), dest_reg->className());
+        scoreboard->setReg(dest_reg);
+    }
+
+    if (dependents) {
+        iewStats.producerInst[tid] += producers;
+        iewStats.consumerInst[tid] += dependents;
+    }
+}
+
+void
+IEW::wakeDependents(const DynInstPtr &inst)
+{
+    const int dependents = instQueue.wakeDependents(inst);
+    std::vector<PhysRegIdPtr> ready_regs;
+    ready_regs.reserve(inst->numDestRegs());
+
     for (int i = 0; i < inst->numDestRegs(); i++) {
         const PhysRegIdPtr dest_reg = inst->renamedDestIdx(i);
-        if (dest_reg->isDeferredMiscReg() != deferred_misc_only) {
+        if (dest_reg->isDeferredMiscReg()) {
             continue;
         }
 
         if (dest_reg->getNumPinnedWritesToComplete() == 0) {
-            DPRINTF(IEW, ready_msg, dest_reg->index(), dest_reg->className());
-            scoreboard->setReg(dest_reg);
+            ready_regs.push_back(dest_reg);
         }
     }
 
-    if (dependents) {
-        iewStats.producerInst[inst->threadNumber]++;
-        iewStats.consumerInst[inst->threadNumber] += dependents;
-    }
-}
-
-void
-IEW::wakeDependents(const DynInstPtr& inst)
-{
-    wakeReadyDependents(inst, instQueue.wakeDependents(inst), false,
-                        "Setting Destination Register %i (%s)\n");
-}
-
-void
-IEW::wakeMiscDependents(const DynInstPtr &inst)
-{
-    const auto wake_info = instQueue.wakeMiscDependents(inst);
-    if (!wake_info.hasDeferredMiscDest) {
-        return;
-    }
-
-    wakeReadyDependents(inst, wake_info.dependents, true,
-                        "Setting Destination Register %i (%s) at commit\n");
+    wakeReadyDependents(inst->threadNumber, ready_regs, dependents ? 1 : 0,
+                        dependents, "Setting Destination Register %i (%s)\n");
 }
 
 void
@@ -1524,13 +1521,21 @@ IEW::tick()
         if (fromCommit->commitInfo[tid].doneSeqNum != 0 &&
             !fromCommit->commitInfo[tid].squash &&
             !fromCommit->commitInfo[tid].robSquashing) {
+            const auto deferred_misc_wakeup =
+                instQueue.wakeDeferredMiscDependents(
+                    fromCommit->commitInfo[tid].doneSeqNum, tid);
 
             ldstQueue.commitStores(fromCommit->commitInfo[tid].doneSeqNum,tid);
 
             ldstQueue.commitLoads(fromCommit->commitInfo[tid].doneSeqNum,tid);
 
             updateLSQNextCycle = true;
-            instQueue.commit(fromCommit->commitInfo[tid].doneSeqNum,tid);
+            instQueue.commit(fromCommit->commitInfo[tid].doneSeqNum, tid);
+            wakeReadyDependents(
+                tid, deferred_misc_wakeup.readyRegs,
+                deferred_misc_wakeup.producers,
+                deferred_misc_wakeup.dependents,
+                "Setting Destination Register %i (%s) at commit\n");
         }
 
         if (fromCommit->commitInfo[tid].nonSpecSeqNum != 0) {

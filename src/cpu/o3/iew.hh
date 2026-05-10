@@ -172,9 +172,6 @@ class IEW
     /** Wakes dependents on results that are visible at writeback. */
     void wakeDependents(const DynInstPtr &inst);
 
-    /** Wakes dependents on misc-reg writes once commit makes them visible. */
-    void wakeMiscDependents(const DynInstPtr &inst);
-
     /** Tells memory dependence unit that a memory instruction needs to be
      * rescheduled. It will re-execute once replayMemInst() is called.
      */
@@ -303,8 +300,10 @@ class IEW
     /** Updates execution stats based on the instruction. */
     void updateExeInstStats(const DynInstPtr &inst);
 
-    void wakeReadyDependents(const DynInstPtr &inst, int dependents,
-                             bool deferred_misc_only, const char *ready_msg);
+    void wakeReadyDependents(ThreadID tid,
+                             const std::vector<PhysRegIdPtr> &ready_regs,
+                             int producers, int dependents,
+                             const char *ready_msg);
 
     /** Pointer to main time buffer used for backwards communication. */
     TimeBuffer<TimeStruct> *timeBuffer;

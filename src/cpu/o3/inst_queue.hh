@@ -57,6 +57,7 @@
 #include "cpu/o3/mem_dep_unit.hh"
 #include "cpu/o3/store_set.hh"
 #include "cpu/op_class.hh"
+#include "cpu/reg_class.hh"
 #include "cpu/timebuf.hh"
 #include "enums/SMTQueuePolicy.hh"
 #include "sim/eventq.hh"
@@ -191,6 +192,14 @@ class InstructionQueue
 
         int dependents;
         bool hasDeferredMiscDest;
+        std::vector<PhysRegIdPtr> readyRegs;
+    };
+
+    struct DeferredMiscWakeupInfo
+    {
+        std::vector<PhysRegIdPtr> readyRegs;
+        unsigned producers = 0;
+        int dependents = 0;
     };
 
     /** FU completion event class. */
@@ -333,6 +342,13 @@ class InstructionQueue
 
     /** Schedules a single specific non-speculative instruction. */
     void scheduleNonSpec(const InstSeqNum &inst);
+
+    /**
+     * Wakes misc-reg dependents for instructions that become architecturally
+     * visible once commit reaches IEW.
+     */
+    DeferredMiscWakeupInfo wakeDeferredMiscDependents(const InstSeqNum &inst,
+                                                      ThreadID tid = 0);
 
     /**
      * Commits all instructions up to and including the given sequence number,
@@ -550,6 +566,9 @@ class InstructionQueue
      *  the scoreboard that exists in the rename map.
      */
     std::vector<bool> regScoreboard;
+
+    /** Returns the first IQ entry that is newer than the committed seq num. */
+    ListIt firstUncommitted(const InstSeqNum &inst, ThreadID tid);
 
     /** Adds an instruction to the dependency graph, as a consumer. */
     bool addToDependents(const DynInstPtr &new_inst);

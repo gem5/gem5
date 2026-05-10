@@ -1122,19 +1122,55 @@ InstructionQueue::scheduleNonSpec(const InstSeqNum &inst)
     nonSpecInsts.erase(inst_it);
 }
 
+InstructionQueue::DeferredMiscWakeupInfo
+InstructionQueue::wakeDeferredMiscDependents(const InstSeqNum &inst,
+                                             ThreadID tid)
+{
+    DPRINTF(IQ, "[tid:%i] Waking deferred misc dependents through [sn:%llu]\n",
+            tid, inst);
+
+    DeferredMiscWakeupInfo wakeup_info;
+    const ListIt commit_end = firstUncommitted(inst, tid);
+
+    for (ListIt iq_it = instList[tid].begin(); iq_it != commit_end; ++iq_it) {
+        const DynInstPtr committed_inst = *iq_it;
+        const auto wake_info = wakeMiscDependents(committed_inst);
+
+        if (wake_info.hasDeferredMiscDest) {
+            wakeup_info.readyRegs.insert(wakeup_info.readyRegs.end(),
+                                         wake_info.readyRegs.begin(),
+                                         wake_info.readyRegs.end());
+            wakeup_info.dependents += wake_info.dependents;
+
+            if (wake_info.dependents) {
+                ++wakeup_info.producers;
+            }
+        }
+    }
+
+    return wakeup_info;
+}
+
 void
 InstructionQueue::commit(const InstSeqNum &inst, ThreadID tid)
 {
     DPRINTF(IQ, "[tid:%i] Committing instructions older than [sn:%llu]\n",
             tid,inst);
 
+    instList[tid].erase(instList[tid].begin(), firstUncommitted(inst, tid));
+}
+
+InstructionQueue::ListIt
+InstructionQueue::firstUncommitted(const InstSeqNum &inst, ThreadID tid)
+{
     ListIt iq_it = instList[tid].begin();
 
     while (iq_it != instList[tid].end() &&
            (*iq_it)->seqNum <= inst) {
         ++iq_it;
-        instList[tid].pop_front();
     }
+
+    return iq_it;
 }
 
 int
@@ -1150,8 +1186,24 @@ InstructionQueue::wakeMiscDependents(const DynInstPtr &completed_inst)
         return WakeDependentsInfo();
     }
 
-    return WakeDependentsInfo(
+    WakeDependentsInfo wake_info(
         wakeSelectedDependents(completed_inst, true, false), true);
+
+    for (int dest_reg_idx = 0; dest_reg_idx < completed_inst->numDestRegs();
+         dest_reg_idx++) {
+        const PhysRegIdPtr dest_reg =
+            completed_inst->renamedDestIdx(dest_reg_idx);
+
+        if (!dest_reg->isDeferredMiscReg()) {
+            continue;
+        }
+
+        if (dest_reg->getNumPinnedWritesToComplete() == 0) {
+            wake_info.readyRegs.push_back(dest_reg);
+        }
+    }
+
+    return wake_info;
 }
 
 int
