@@ -58,9 +58,10 @@ enum mxfpRoundingMode
 // in - An MXFP info struct type
 // mode - rounding mode
 // seed - input value for stochastic rounding function
-template<typename dFMT, typename sFMT>
-dFMT convertMXFP(sFMT in, mxfpRoundingMode mode = roundTiesToEven,
-                 uint32_t seed = 0)
+template <typename dFMT, typename sFMT>
+dFMT
+convertMXFP(sFMT in, mxfpRoundingMode mode = roundTiesToEven,
+            uint32_t seed = 0)
 {
     // We assume that *both* exponent and mantissa bits are both >= or <=
     // the target type. Checkable at compile time.
@@ -70,8 +71,8 @@ dFMT convertMXFP(sFMT in, mxfpRoundingMode mode = roundTiesToEven,
     // example. So far all GPU conversion instructions convert explicitly to
     // a larger type from a smaller type or smaller to larger.
     static_assert(((int(sFMT::mbits) >= int(dFMT::mbits)) &&
-                   (int(sFMT::ebits) >= int(dFMT::ebits)))
-               || ((int(sFMT::mbits) <= int(dFMT::mbits)) &&
+                   (int(sFMT::ebits) >= int(dFMT::ebits))) ||
+                  ((int(sFMT::mbits) <= int(dFMT::mbits)) &&
                    (int(sFMT::ebits) <= int(dFMT::ebits))));
 
     dFMT out;
@@ -121,12 +122,12 @@ dFMT convertMXFP(sFMT in, mxfpRoundingMode mode = roundTiesToEven,
         } else if (in.mant == 0 && in.exp == 0) {
             // All MX formats FP32, and FP64 encode 0 as all zeros. Keep sign.
             out.mant = 0;
-            out.exp  = 0;
+            out.exp = 0;
             out.sign = in.sign;
         } else {
             // Extra bits are needed for the mantissa conversion.
             uint32_t mant = in.mant & mask(sFMT::mbits);
-            int32_t exp   = in.exp - sFMT::bias + dFMT::bias;
+            int32_t exp = in.exp - sFMT::bias + dFMT::bias;
             out.sign = in.sign;
 
             // Input is not subnormal, add the implicit 1 bit.
@@ -168,8 +169,8 @@ dFMT convertMXFP(sFMT in, mxfpRoundingMode mode = roundTiesToEven,
             //
             // If the number of destination and source format mantissa bits are
             // the same, the mantissa is unchanged.
-            if (int(sFMT::mbits) > int(dFMT::mbits)
-                    && mode == roundTiesToEven) {
+            if (int(sFMT::mbits) > int(dFMT::mbits) &&
+                mode == roundTiesToEven) {
                 bool round_up = false;
 
                 // Round using guard, round, sticky bits. We want to make sure
@@ -216,8 +217,8 @@ dFMT convertMXFP(sFMT in, mxfpRoundingMode mode = roundTiesToEven,
                         out.mant++;
                     }
                 }
-            } else if (int(sFMT::mbits) > int(dFMT::mbits)
-                    && mode == roundStochastic) {
+            } else if (int(sFMT::mbits) > int(dFMT::mbits) &&
+                       mode == roundStochastic) {
                 // Use the discarded mantissa divided by the max mantissa of
                 // the source format to determine the probability of rounding
                 // up. An alternate implementation of this would be to get a
@@ -238,8 +239,8 @@ dFMT convertMXFP(sFMT in, mxfpRoundingMode mode = roundTiesToEven,
 
                 // Assume stochastic rounding returns up to max uint32_t.
                 // This will return an FP value between 0.0f and 1.0f.
-                float draw_prob = float(srFunc(seed))
-                    / float(std::numeric_limits<uint32_t>::max());
+                float draw_prob = float(srFunc(seed)) /
+                                  float(std::numeric_limits<uint32_t>::max());
 
                 // Round up if the number we drew is less than the rounding
                 // probability. E.g., if round_prob is 90% (0.9) we choose
@@ -295,11 +296,11 @@ dFMT convertMXFP(sFMT in, mxfpRoundingMode mode = roundTiesToEven,
         } else if (in.mant == 0 && in.exp == 0) {
             // All MX formats FP32, and FP64 encode 0 as all zeros. Keep sign.
             out.mant = 0;
-            out.exp  = 0;
+            out.exp = 0;
             out.sign = in.sign;
         } else {
             out.mant = in.mant << (dFMT::mbits - sFMT::mbits);
-            out.exp  = in.exp + dFMT::bias - sFMT::bias;
+            out.exp = in.exp + dFMT::bias - sFMT::bias;
             out.sign = in.sign;
 
             // Normalize input denormals. This only applies when exponents are
@@ -324,18 +325,19 @@ dFMT convertMXFP(sFMT in, mxfpRoundingMode mode = roundTiesToEven,
     return out;
 }
 
-template<typename FMT>
-int min_exp()
+template <typename FMT>
+int
+min_exp()
 {
     return 0;
 }
 
-template<typename FMT>
-int max_exp()
+template <typename FMT>
+int
+max_exp()
 {
     return (1 << FMT::ebits) - 1;
 }
-
 
 } // namespace AMDGPU
 

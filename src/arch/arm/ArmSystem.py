@@ -1,4 +1,4 @@
-# Copyright (c) 2009, 2012-2013, 2015-2025 Arm Limited
+# Copyright (c) 2009, 2012-2013, 2015-2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -116,6 +116,7 @@ class ArmExtension(ScopedEnum):
         # Armv8.7
         "FEAT_HCX",
         "FEAT_XS",
+        "FEAT_WFxT",
         # Armv8.9
         "FEAT_SCTLR2",
         "FEAT_TCR2",
@@ -129,9 +130,16 @@ class ArmExtension(ScopedEnum):
         "FEAT_SVE_PMULL128",
         # Armv9.2
         "FEAT_SME",  # Optional in Armv9.2
+        "FEAT_SME_F64F64",
+        "FEAT_SME_I16I64",
+        # Armv9.3
+        "FEAT_SME2",
         # Armv9.4
         "FEAT_SVE2p1",
+        "FEAT_SME2p1",
         "FEAT_SVE_B16B16",
+        "FEAT_SME_B16B16",
+        "FEAT_SME_F16F16",
         # Others
         "SECURITY",
         "LPAE",
@@ -235,12 +243,21 @@ class ArmDefaultRelease(Armv8):
         # Armv8.7
         "FEAT_HCX",
         "FEAT_XS",
+        "FEAT_WFxT",
         # Armv9.0
         "FEAT_SVE2",
         # Armv9.2
         "FEAT_SME",  # Optional in Armv9.2
+        "FEAT_SME_F64F64",
+        "FEAT_SME_I16I64",
+        # Armv9.3
+        "FEAT_SME2",
         # Armv9.4
         "FEAT_SVE2p1",
+        "FEAT_SME2p1",
+        "FEAT_SVE_B16B16",
+        "FEAT_SME_B16B16",
+        "FEAT_SME_F16F16",
     ]
 
 
@@ -309,6 +326,7 @@ class Armv87(Armv86):
     extensions = Armv86.extensions + [
         "FEAT_HCX",
         "FEAT_XS",
+        "FEAT_WFxT",
     ]
 
 
@@ -328,13 +346,26 @@ class Armv90(Armv89):
 
 
 class Armv92(Armv90):
-    extensions = Armv90.extensions + ["FEAT_SME"]
+    extensions = Armv90.extensions + [
+        "FEAT_SME",
+        "FEAT_SME_F64F64",
+        "FEAT_SME_I16I64",
+    ]
 
 
-class Armv94(Armv92):
+class Armv93(Armv92):
+    extensions = Armv92.extensions + [
+        "FEAT_SME2",
+    ]
+
+
+class Armv94(Armv93):
     extensions = Armv92.extensions + [
         "FEAT_SVE2p1",
+        "FEAT_SME2p1",
         "FEAT_SVE_B16B16",
+        "FEAT_SME_B16B16",
+        "FEAT_SME_F16F16",
     ]
 
 

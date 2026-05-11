@@ -76,14 +76,19 @@ namespace gem5
 namespace memory
 {
 
-PhysicalMemory::PhysicalMemory(const std::string& _name,
-                               const std::vector<AbstractMemory*>& _memories,
+PhysicalMemory::PhysicalMemory(const std::string &_name,
+                               const std::vector<AbstractMemory *> &_memories,
                                bool mmap_using_noreserve,
-                               const std::string& shared_backstore,
-                               bool auto_unlink_shared_backstore) :
-    _name(_name), size(0), mmapUsingNoReserve(mmap_using_noreserve),
-    sharedBackstore(shared_backstore), sharedBackstoreSize(0),
-    pageSize(sysconf(_SC_PAGE_SIZE))
+                               const std::string &shared_backstore,
+                               bool auto_unlink_shared_backstore,
+                               bool is_sparse_restore)
+    : _name(_name),
+      size(0),
+      mmapUsingNoReserve(mmap_using_noreserve),
+      sharedBackstore(shared_backstore),
+      sharedBackstoreSize(0),
+      pageSize(sysconf(_SC_PAGE_SIZE)),
+      isSparseRestore(is_sparse_restore)
 {
     // Register cleanup callback if requested.
     if (auto_unlink_shared_backstore && !sharedBackstore.empty()) {
@@ -464,12 +469,39 @@ PhysicalMemory::unserializeStore(CheckpointIn &cp)
 
     uint64_t curr_size = 0;
     uint32_t bytes_read;
-    while (curr_size < range.size()) {
-        bytes_read = gzread(compressed_mem, pmem, chunk_size);
-        if (bytes_read == 0)
-            break;
-        curr_size += bytes_read;
-        pmem += bytes_read;
+    if (isSparseRestore) {
+        static_assert(chunk_size >= 4096 && (chunk_size % 4096 == 0),
+                      "chunk_size must be a multiple of the 4KB page size");
+        static_assert(
+            chunk_size <= 65536,
+            "chunk_size too large, smaller chunks improve sparse efficiency");
+
+        uint8_t buffer[chunk_size];
+        uint8_t zeros[chunk_size] = {0};
+        while (curr_size < range.size()) {
+            bytes_read = gzread(compressed_mem, buffer, chunk_size);
+            if (bytes_read == 0) {
+                break;
+            }
+
+            bool all_zero = (memcmp(buffer, zeros, bytes_read) == 0);
+
+            if (!all_zero) {
+                memcpy(pmem, buffer, bytes_read);
+            }
+
+            curr_size += bytes_read;
+            pmem += bytes_read;
+        }
+    } else {
+        while (curr_size < range.size()) {
+            bytes_read = gzread(compressed_mem, pmem, chunk_size);
+            if (bytes_read == 0) {
+                break;
+            }
+            curr_size += bytes_read;
+            pmem += bytes_read;
+        }
     }
 
     if (gzclose(compressed_mem))

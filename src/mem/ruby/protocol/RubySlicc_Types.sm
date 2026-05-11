@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021,2023-2024 Arm Limited
+ * Copyright (c) 2020-2021,2023-2024,2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -215,6 +215,7 @@ structure (CacheMemory, external = "yes") {
   AbstractCacheEntry allocate(Addr, AbstractCacheEntry, bool);
   void allocateVoid(Addr, AbstractCacheEntry);
   void deallocate(Addr);
+  void flushEntries();
   AbstractCacheEntry lookup(Addr);
   bool isTagPresent(Addr);
   Cycles getTagLatency();

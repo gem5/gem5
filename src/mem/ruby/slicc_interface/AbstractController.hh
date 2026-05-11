@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017,2019-2023 ARM Limited
+ * Copyright (c) 2017,2019-2023, 2026 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -179,6 +179,16 @@ class AbstractController : public ClockedObject, public Consumer
 
     //! Initialize the message buffers.
     virtual void initNetQueues() = 0;
+
+    //! Flush the internal state of the coherence controller
+    //! (does not write back dirty data and therefore will
+    //! break coherence if used in a normal simulation.
+    //! Supposed to be used for debug/testing purposes only)
+    virtual void
+    flushController()
+    {
+        fatal("flushController not supported in %s", name());
+    }
 
     /** A function used to return the port associated with this bus object. */
     Port &getPort(const std::string &if_name,

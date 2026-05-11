@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2021,2023 ARM Limited
+# Copyright (c) 2019-2021,2023,2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -419,6 +419,27 @@ class $c_ident : public AbstractController
     bool isPossible(${ident}_State state, ${ident}_Event event);
     uint64_t getTransitionCount(${ident}_State state, ${ident}_Event event);
 
+""")
+
+        public_funcs = []
+        private_funcs = []
+        for func in self.functions:
+            if "public" in func and str(func["public"]).lower() == "yes":
+                public_funcs.append(func)
+            else:
+                private_funcs.append(func)
+
+        if public_funcs:
+            code("""
+    // Public helper functions
+""")
+            for func in public_funcs:
+                proto = func.prototype
+                if proto:
+                    code("    $proto")
+
+        code("""
+
 private:
 """)
 
@@ -479,7 +500,7 @@ std::vector<std::vector<statistics::Vector *> > transVec;
 // Internal functions
 """)
 
-        for func in self.functions:
+        for func in private_funcs:
             proto = func.prototype
             if proto:
                 code("$proto")
@@ -791,6 +812,7 @@ $c_ident::init()
                         "NetDest",
                         "PerfectCacheMemory",
                         "TBETable",
+                        "MN_TBETable",
                     ):
                         code(f"(*{vid}).setRubySystem(m_ruby_system);")
 

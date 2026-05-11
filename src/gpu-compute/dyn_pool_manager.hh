@@ -46,19 +46,19 @@ namespace gem5
 class DynPoolManager : public PoolManager
 {
   public:
-    DynPoolManager(const PoolManagerParams &p)
-        : PoolManager(p), _regionSize(0)
+    DynPoolManager(const PoolManagerParams &p) : PoolManager(p), _regionSize(0)
     {
         _totRegSpaceAvailable = p.pool_size;
     }
 
-    uint32_t allocateRegion(const uint32_t size, uint32_t *reservedPoolSize) override;
+    uint32_t allocateRegion(const uint32_t size,
+                            uint32_t *reservedPoolSize) override;
     bool canAllocate(uint32_t numRegions, uint32_t size) override;
     void freeRegion(uint32_t firstIdx, uint32_t lastIdx) override;
     uint32_t minAllocatedElements(uint32_t size);
     std::string printRegion() override;
-    uint32_t regionSize(std::pair<uint32_t,uint32_t> &region) override;
-    void resetRegion(const int & regsPerSimd) override;
+    uint32_t regionSize(std::pair<uint32_t, uint32_t> &region) override;
+    void resetRegion(const int &regsPerSimd) override;
 
   private:
     // actual size of a region (normalized to the minimum size that can
@@ -67,7 +67,7 @@ class DynPoolManager : public PoolManager
     // total registers available - across chunks
     uint32_t _totRegSpaceAvailable;
     // regIndex and freeSpace record
-    std::list<std::pair<int,int>> freeSpaceRecord;
+    std::list<std::pair<int, int>> freeSpaceRecord;
     int reservedSpaceRecord;
     // total registers to be allocated -- treat as a const
     int totalRegSpace;

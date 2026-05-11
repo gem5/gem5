@@ -43,7 +43,7 @@ namespace VegaISA
 using half = uint16_t;
 
 // Helper functions
-template<int N>
+template <int N>
 int32_t
 dotClampI(int32_t value, bool clamp)
 {
@@ -59,7 +59,7 @@ dotClampI(int32_t value, bool clamp)
     return std::clamp<int32_t>(value, min, max);
 }
 
-template<int N>
+template <int N>
 uint32_t
 dotClampU(uint32_t value, bool clamp)
 {
@@ -82,9 +82,9 @@ clampI16(int32_t value, bool clamp)
         return static_cast<int16_t>(value);
     }
 
-    return std::clamp(value,
-            static_cast<int32_t>(std::numeric_limits<int16_t>::min()),
-            static_cast<int32_t>(std::numeric_limits<int16_t>::max()));
+    return std::clamp(
+        value, static_cast<int32_t>(std::numeric_limits<int16_t>::min()),
+        static_cast<int32_t>(std::numeric_limits<int16_t>::max()));
 }
 
 uint16_t
@@ -94,9 +94,9 @@ clampU16(uint32_t value, bool clamp)
         return static_cast<uint16_t>(value);
     }
 
-    return std::clamp(value,
-            static_cast<uint32_t>(std::numeric_limits<uint16_t>::min()),
-            static_cast<uint32_t>(std::numeric_limits<uint16_t>::max()));
+    return std::clamp(
+        value, static_cast<uint32_t>(std::numeric_limits<uint16_t>::min()),
+        static_cast<uint32_t>(std::numeric_limits<uint16_t>::max()));
 }
 
 uint16_t
@@ -126,15 +126,12 @@ clampF32(float value, bool clamp)
     return std::clamp(value, 0.0f, 1.0f);
 }
 
-
-
-
 // Begin instruction execute definitions
-void Inst_VOP3P__V_PK_MAD_I16::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_PK_MAD_I16::execute(GPUDynInstPtr gpuDynInst)
 {
-    auto opImpl =
-        [](int16_t S0, int16_t S1, int16_t S2, bool clamp) -> int16_t
-    {
+    auto opImpl = [](int16_t S0, int16_t S1, int16_t S2,
+                     bool clamp) -> int16_t {
         return clampI16(S0 * S1 + S2, clamp);
     };
 
@@ -144,8 +141,7 @@ void Inst_VOP3P__V_PK_MAD_I16::execute(GPUDynInstPtr gpuDynInst)
 void
 Inst_VOP3P__V_PK_MUL_LO_U16::execute(GPUDynInstPtr gpuDynInst)
 {
-    auto opImpl = [](uint16_t S0, uint16_t S1, bool) -> uint16_t
-    {
+    auto opImpl = [](uint16_t S0, uint16_t S1, bool) -> uint16_t {
         // Only return lower 16 bits of result - This operation cannot clamp.
         uint32_t D = S0 * S1;
         uint16_t Dh = D & 0xFFFF;
@@ -155,30 +151,30 @@ Inst_VOP3P__V_PK_MUL_LO_U16::execute(GPUDynInstPtr gpuDynInst)
     vop3pHelper<uint16_t>(gpuDynInst, opImpl);
 }
 
-void Inst_VOP3P__V_PK_ADD_I16::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_PK_ADD_I16::execute(GPUDynInstPtr gpuDynInst)
 {
-    auto opImpl = [](int16_t S0, int16_t S1, bool clamp) -> int16_t
-    {
+    auto opImpl = [](int16_t S0, int16_t S1, bool clamp) -> int16_t {
         return clampI16(S0 + S1, clamp);
     };
 
     vop3pHelper<int16_t>(gpuDynInst, opImpl);
 }
 
-void Inst_VOP3P__V_PK_SUB_I16::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_PK_SUB_I16::execute(GPUDynInstPtr gpuDynInst)
 {
-    auto opImpl = [](int16_t S0, int16_t S1, bool clamp) -> int16_t
-    {
+    auto opImpl = [](int16_t S0, int16_t S1, bool clamp) -> int16_t {
         return clampI16(S0 - S1, clamp);
     };
 
     vop3pHelper<int16_t>(gpuDynInst, opImpl);
 }
 
-void Inst_VOP3P__V_PK_LSHLREV_B16::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_PK_LSHLREV_B16::execute(GPUDynInstPtr gpuDynInst)
 {
-    auto opImpl = [](uint16_t S0, uint16_t S1, bool) -> uint16_t
-    {
+    auto opImpl = [](uint16_t S0, uint16_t S1, bool) -> uint16_t {
         unsigned shift_val = bits(S0, 3, 0);
 
         // Shift does not clamp
@@ -188,10 +184,10 @@ void Inst_VOP3P__V_PK_LSHLREV_B16::execute(GPUDynInstPtr gpuDynInst)
     vop3pHelper<uint16_t>(gpuDynInst, opImpl);
 }
 
-void Inst_VOP3P__V_PK_LSHRREV_B16::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_PK_LSHRREV_B16::execute(GPUDynInstPtr gpuDynInst)
 {
-    auto opImpl = [](uint16_t S0, uint16_t S1, bool) -> uint16_t
-    {
+    auto opImpl = [](uint16_t S0, uint16_t S1, bool) -> uint16_t {
         unsigned shift_val = bits(S0, 3, 0);
 
         return S1 >> shift_val;
@@ -200,10 +196,10 @@ void Inst_VOP3P__V_PK_LSHRREV_B16::execute(GPUDynInstPtr gpuDynInst)
     vop3pHelper<uint16_t>(gpuDynInst, opImpl);
 }
 
-void Inst_VOP3P__V_PK_ASHRREV_B16::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_PK_ASHRREV_B16::execute(GPUDynInstPtr gpuDynInst)
 {
-    auto opImpl = [](int16_t S0, int16_t S1, bool clamp) -> int16_t
-    {
+    auto opImpl = [](int16_t S0, int16_t S1, bool clamp) -> int16_t {
         // Sign extend to larger type to ensure we don't lose sign bits when
         // shifting.
         int32_t S1e = S1;
@@ -215,81 +211,81 @@ void Inst_VOP3P__V_PK_ASHRREV_B16::execute(GPUDynInstPtr gpuDynInst)
     vop3pHelper<int16_t>(gpuDynInst, opImpl);
 }
 
-void Inst_VOP3P__V_PK_MAX_I16::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_PK_MAX_I16::execute(GPUDynInstPtr gpuDynInst)
 {
-    auto opImpl = [](int16_t S0, int16_t S1, bool clamp) -> int16_t
-    {
+    auto opImpl = [](int16_t S0, int16_t S1, bool clamp) -> int16_t {
         return clampI16((S0 >= S1) ? S0 : S1, clamp);
     };
 
     vop3pHelper<int16_t>(gpuDynInst, opImpl);
 }
 
-void Inst_VOP3P__V_PK_MIN_I16::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_PK_MIN_I16::execute(GPUDynInstPtr gpuDynInst)
 {
-    auto opImpl = [](int16_t S0, int16_t S1, bool clamp) -> int16_t
-    {
+    auto opImpl = [](int16_t S0, int16_t S1, bool clamp) -> int16_t {
         return clampI16((S0 < S1) ? S0 : S1, clamp);
     };
 
     vop3pHelper<int16_t>(gpuDynInst, opImpl);
 }
 
-void Inst_VOP3P__V_PK_MAD_U16::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_PK_MAD_U16::execute(GPUDynInstPtr gpuDynInst)
 {
-    auto opImpl =
-        [](uint16_t S0, uint16_t S1, uint16_t S2, bool clamp) -> uint16_t
-    {
+    auto opImpl = [](uint16_t S0, uint16_t S1, uint16_t S2,
+                     bool clamp) -> uint16_t {
         return clampU16(S0 * S1 + S2, clamp);
     };
 
     vop3pHelper<uint16_t>(gpuDynInst, opImpl);
 }
 
-void Inst_VOP3P__V_PK_ADD_U16::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_PK_ADD_U16::execute(GPUDynInstPtr gpuDynInst)
 {
-    auto opImpl = [](uint16_t S0, uint16_t S1, bool clamp) -> uint16_t
-    {
+    auto opImpl = [](uint16_t S0, uint16_t S1, bool clamp) -> uint16_t {
         return clampU16(S0 + S1, clamp);
     };
 
     vop3pHelper<uint16_t>(gpuDynInst, opImpl);
 }
 
-void Inst_VOP3P__V_PK_SUB_U16::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_PK_SUB_U16::execute(GPUDynInstPtr gpuDynInst)
 {
-    auto opImpl = [](uint16_t S0, uint16_t S1, bool clamp) -> uint16_t
-    {
+    auto opImpl = [](uint16_t S0, uint16_t S1, bool clamp) -> uint16_t {
         return clampU16(S0 - S1, clamp);
     };
 
     vop3pHelper<uint16_t>(gpuDynInst, opImpl);
 }
 
-void Inst_VOP3P__V_PK_MAX_U16::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_PK_MAX_U16::execute(GPUDynInstPtr gpuDynInst)
 {
-    auto opImpl = [](uint16_t S0, uint16_t S1, bool clamp) -> uint16_t
-    {
+    auto opImpl = [](uint16_t S0, uint16_t S1, bool clamp) -> uint16_t {
         return clampU16((S0 >= S1) ? S0 : S1, clamp);
     };
 
     vop3pHelper<uint16_t>(gpuDynInst, opImpl);
 }
 
-void Inst_VOP3P__V_PK_MIN_U16::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_PK_MIN_U16::execute(GPUDynInstPtr gpuDynInst)
 {
-    auto opImpl = [](uint16_t S0, uint16_t S1, bool clamp) -> uint16_t
-    {
+    auto opImpl = [](uint16_t S0, uint16_t S1, bool clamp) -> uint16_t {
         return clampU16((S0 < S1) ? S0 : S1, clamp);
     };
 
     vop3pHelper<uint16_t>(gpuDynInst, opImpl);
 }
 
-void Inst_VOP3P__V_PK_FMA_F16::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_PK_FMA_F16::execute(GPUDynInstPtr gpuDynInst)
 {
-    auto opImpl = [](half S0, half S1, half S2, bool clamp) -> half
-    {
+    auto opImpl = [](half S0, half S1, half S2, bool clamp) -> half {
         ArmISA::FPSCR fpscr;
         return clampF16(fplibMulAdd(S2, S0, S1, fpscr), clamp);
     };
@@ -297,10 +293,10 @@ void Inst_VOP3P__V_PK_FMA_F16::execute(GPUDynInstPtr gpuDynInst)
     vop3pHelper<half>(gpuDynInst, opImpl);
 }
 
-void Inst_VOP3P__V_PK_ADD_F16::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_PK_ADD_F16::execute(GPUDynInstPtr gpuDynInst)
 {
-    auto opImpl = [](half S0, half S1, bool clamp) -> half
-    {
+    auto opImpl = [](half S0, half S1, bool clamp) -> half {
         ArmISA::FPSCR fpscr;
         return clampF16(fplibAdd(S0, S1, fpscr), clamp);
     };
@@ -308,10 +304,10 @@ void Inst_VOP3P__V_PK_ADD_F16::execute(GPUDynInstPtr gpuDynInst)
     vop3pHelper<half>(gpuDynInst, opImpl);
 }
 
-void Inst_VOP3P__V_PK_MUL_F16::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_PK_MUL_F16::execute(GPUDynInstPtr gpuDynInst)
 {
-    auto opImpl = [](half S0, half S1, bool clamp) -> half
-    {
+    auto opImpl = [](half S0, half S1, bool clamp) -> half {
         ArmISA::FPSCR fpscr;
         return clampF16(fplibMul(S0, S1, fpscr), clamp);
     };
@@ -319,10 +315,10 @@ void Inst_VOP3P__V_PK_MUL_F16::execute(GPUDynInstPtr gpuDynInst)
     vop3pHelper<half>(gpuDynInst, opImpl);
 }
 
-void Inst_VOP3P__V_PK_MIN_F16::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_PK_MIN_F16::execute(GPUDynInstPtr gpuDynInst)
 {
-    auto opImpl = [](half S0, half S1, bool clamp) -> half
-    {
+    auto opImpl = [](half S0, half S1, bool clamp) -> half {
         ArmISA::FPSCR fpscr;
         return clampF16(fplibMin(S0, S1, fpscr), clamp);
     };
@@ -330,10 +326,10 @@ void Inst_VOP3P__V_PK_MIN_F16::execute(GPUDynInstPtr gpuDynInst)
     vop3pHelper<half>(gpuDynInst, opImpl);
 }
 
-void Inst_VOP3P__V_PK_MAX_F16::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_PK_MAX_F16::execute(GPUDynInstPtr gpuDynInst)
 {
-    auto opImpl = [](half S0, half S1, bool clamp) -> half
-    {
+    auto opImpl = [](half S0, half S1, bool clamp) -> half {
         ArmISA::FPSCR fpscr;
         return clampF16(fplibMax(S0, S1, fpscr), clamp);
     };
@@ -341,11 +337,11 @@ void Inst_VOP3P__V_PK_MAX_F16::execute(GPUDynInstPtr gpuDynInst)
     vop3pHelper<half>(gpuDynInst, opImpl);
 }
 
-void Inst_VOP3P__V_DOT2_F32_F16::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_DOT2_F32_F16::execute(GPUDynInstPtr gpuDynInst)
 {
-    auto opImpl =
-        [](uint32_t S0r, uint32_t S1r, uint32_t S2r, bool clamp) -> uint32_t
-    {
+    auto opImpl = [](uint32_t S0r, uint32_t S1r, uint32_t S2r,
+                     bool clamp) -> uint32_t {
         constexpr unsigned INBITS = 16;
 
         constexpr unsigned elems = 32 / INBITS;
@@ -353,11 +349,11 @@ void Inst_VOP3P__V_DOT2_F32_F16::execute(GPUDynInstPtr gpuDynInst)
         half S1[elems];
 
         for (int i = 0; i < elems; ++i) {
-            S0[i] = bits(S0r, i*INBITS+INBITS-1, i*INBITS);
-            S1[i] = bits(S1r, i*INBITS+INBITS-1, i*INBITS);
+            S0[i] = bits(S0r, i * INBITS + INBITS - 1, i * INBITS);
+            S1[i] = bits(S1r, i * INBITS + INBITS - 1, i * INBITS);
         }
 
-        float S2 = *reinterpret_cast<float*>(&S2r);
+        float S2 = *reinterpret_cast<float *>(&S2r);
 
         // Compute components individually to prevent overflow across packing
         half C[elems];
@@ -366,14 +362,13 @@ void Inst_VOP3P__V_DOT2_F32_F16::execute(GPUDynInstPtr gpuDynInst)
         for (int i = 0; i < elems; ++i) {
             ArmISA::FPSCR fpscr;
             C[i] = fplibMul(S0[i], S1[i], fpscr);
-            uint32_t conv =
-                ArmISA::fplibConvert<uint16_t, uint32_t>(
-                        C[i], ArmISA::FPRounding_TIEEVEN, fpscr);
-            Csum += clampF32(*reinterpret_cast<float*>(&conv), clamp);
+            uint32_t conv = ArmISA::fplibConvert<uint16_t, uint32_t>(
+                C[i], ArmISA::FPRounding_TIEEVEN, fpscr);
+            Csum += clampF32(*reinterpret_cast<float *>(&conv), clamp);
         }
 
         Csum += S2;
-        uint32_t rv = *reinterpret_cast<uint32_t*>(&Csum);
+        uint32_t rv = *reinterpret_cast<uint32_t *>(&Csum);
 
         return rv;
     };
@@ -381,7 +376,8 @@ void Inst_VOP3P__V_DOT2_F32_F16::execute(GPUDynInstPtr gpuDynInst)
     dotHelper(gpuDynInst, opImpl);
 }
 
-void Inst_VOP3P__V_DOT2_F32_BF16::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_DOT2_F32_BF16::execute(GPUDynInstPtr gpuDynInst)
 {
     // Do not use dotHelper here as OPSEL is ignored for this instruction.
     Wavefront *wf = gpuDynInst->wavefront();
@@ -403,10 +399,18 @@ void Inst_VOP3P__V_DOT2_F32_BF16::execute(GPUDynInstPtr gpuDynInst)
             b1.data = uint16_t(bits(src1[lane], 15, 0));
             b2.data = uint16_t(bits(src1[lane], 31, 16));
 
-            if (instData.NEG_HI & 0x1) a2 = -a2;
-            if (instData.NEG_HI & 0x2) b2 = -b2;
-            if (extData.NEG & 0x1) a1 = -a1;
-            if (extData.NEG & 0x2) b1 = -b1;
+            if (instData.NEG_HI & 0x1) {
+                a2 = -a2;
+            }
+            if (instData.NEG_HI & 0x2) {
+                b2 = -b2;
+            }
+            if (extData.NEG & 0x1) {
+                a1 = -a1;
+            }
+            if (extData.NEG & 0x2) {
+                b1 = -b1;
+            }
 
             vdst[lane] += float(a1) * float(b1);
             vdst[lane] += float(a2) * float(b2);
@@ -419,11 +423,11 @@ void Inst_VOP3P__V_DOT2_F32_BF16::execute(GPUDynInstPtr gpuDynInst)
     vdst.write();
 }
 
-void Inst_VOP3P__V_DOT2_I32_I16::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_DOT2_I32_I16::execute(GPUDynInstPtr gpuDynInst)
 {
-    auto opImpl =
-        [](uint32_t S0r, uint32_t S1r, uint32_t S2r, bool clamp) -> uint32_t
-    {
+    auto opImpl = [](uint32_t S0r, uint32_t S1r, uint32_t S2r,
+                     bool clamp) -> uint32_t {
         constexpr unsigned INBITS = 16;
 
         constexpr unsigned elems = 32 / INBITS;
@@ -431,11 +435,11 @@ void Inst_VOP3P__V_DOT2_I32_I16::execute(GPUDynInstPtr gpuDynInst)
         uint32_t S1[elems];
 
         for (int i = 0; i < elems; ++i) {
-            S0[i] = bits(S0r, i*INBITS+INBITS-1, i*INBITS);
-            S1[i] = bits(S1r, i*INBITS+INBITS-1, i*INBITS);
+            S0[i] = bits(S0r, i * INBITS + INBITS - 1, i * INBITS);
+            S1[i] = bits(S1r, i * INBITS + INBITS - 1, i * INBITS);
         }
 
-        int32_t S2 = *reinterpret_cast<int32_t*>(&S2r);
+        int32_t S2 = *reinterpret_cast<int32_t *>(&S2r);
 
         // Compute components individually to prevent overflow across packing
         int32_t C[elems];
@@ -448,7 +452,7 @@ void Inst_VOP3P__V_DOT2_I32_I16::execute(GPUDynInstPtr gpuDynInst)
         }
 
         Csum += S2;
-        uint32_t rv = *reinterpret_cast<uint32_t*>(&Csum);
+        uint32_t rv = *reinterpret_cast<uint32_t *>(&Csum);
 
         return rv;
     };
@@ -456,11 +460,11 @@ void Inst_VOP3P__V_DOT2_I32_I16::execute(GPUDynInstPtr gpuDynInst)
     dotHelper(gpuDynInst, opImpl);
 }
 
-void Inst_VOP3P__V_DOT2_U32_U16::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_DOT2_U32_U16::execute(GPUDynInstPtr gpuDynInst)
 {
-    auto opImpl =
-        [](uint32_t S0r, uint32_t S1r, uint32_t S2, bool clamp) -> uint32_t
-    {
+    auto opImpl = [](uint32_t S0r, uint32_t S1r, uint32_t S2,
+                     bool clamp) -> uint32_t {
         constexpr unsigned INBITS = 16;
 
         constexpr unsigned elems = 32 / INBITS;
@@ -468,8 +472,8 @@ void Inst_VOP3P__V_DOT2_U32_U16::execute(GPUDynInstPtr gpuDynInst)
         uint32_t S1[elems];
 
         for (int i = 0; i < elems; ++i) {
-            S0[i] = bits(S0r, i*INBITS+INBITS-1, i*INBITS);
-            S1[i] = bits(S1r, i*INBITS+INBITS-1, i*INBITS);
+            S0[i] = bits(S0r, i * INBITS + INBITS - 1, i * INBITS);
+            S1[i] = bits(S1r, i * INBITS + INBITS - 1, i * INBITS);
         }
 
         // Compute components individually to prevent overflow across packing
@@ -490,11 +494,11 @@ void Inst_VOP3P__V_DOT2_U32_U16::execute(GPUDynInstPtr gpuDynInst)
     dotHelper(gpuDynInst, opImpl);
 }
 
-void Inst_VOP3P__V_DOT4_I32_I8::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_DOT4_I32_I8::execute(GPUDynInstPtr gpuDynInst)
 {
-    auto opImpl =
-        [](uint32_t S0r, uint32_t S1r, uint32_t S2r, bool clamp) -> uint32_t
-    {
+    auto opImpl = [](uint32_t S0r, uint32_t S1r, uint32_t S2r,
+                     bool clamp) -> uint32_t {
         constexpr unsigned INBITS = 8;
 
         constexpr unsigned elems = 32 / INBITS;
@@ -502,11 +506,11 @@ void Inst_VOP3P__V_DOT4_I32_I8::execute(GPUDynInstPtr gpuDynInst)
         uint32_t S1[elems];
 
         for (int i = 0; i < elems; ++i) {
-            S0[i] = bits(S0r, i*INBITS+INBITS-1, i*INBITS);
-            S1[i] = bits(S1r, i*INBITS+INBITS-1, i*INBITS);
+            S0[i] = bits(S0r, i * INBITS + INBITS - 1, i * INBITS);
+            S1[i] = bits(S1r, i * INBITS + INBITS - 1, i * INBITS);
         }
 
-        int32_t S2 = *reinterpret_cast<int32_t*>(&S2r);
+        int32_t S2 = *reinterpret_cast<int32_t *>(&S2r);
 
         // Compute components individually to prevent overflow across packing
         int32_t C[elems];
@@ -519,7 +523,7 @@ void Inst_VOP3P__V_DOT4_I32_I8::execute(GPUDynInstPtr gpuDynInst)
         }
 
         Csum += S2;
-        uint32_t rv = *reinterpret_cast<uint32_t*>(&Csum);
+        uint32_t rv = *reinterpret_cast<uint32_t *>(&Csum);
 
         return rv;
     };
@@ -527,11 +531,11 @@ void Inst_VOP3P__V_DOT4_I32_I8::execute(GPUDynInstPtr gpuDynInst)
     dotHelper(gpuDynInst, opImpl);
 }
 
-void Inst_VOP3P__V_DOT4_U32_U8::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_DOT4_U32_U8::execute(GPUDynInstPtr gpuDynInst)
 {
-    auto opImpl =
-        [](uint32_t S0r, uint32_t S1r, uint32_t S2, bool clamp) -> uint32_t
-    {
+    auto opImpl = [](uint32_t S0r, uint32_t S1r, uint32_t S2,
+                     bool clamp) -> uint32_t {
         constexpr unsigned INBITS = 8;
 
         constexpr unsigned elems = 32 / INBITS;
@@ -539,8 +543,8 @@ void Inst_VOP3P__V_DOT4_U32_U8::execute(GPUDynInstPtr gpuDynInst)
         uint32_t S1[elems];
 
         for (int i = 0; i < elems; ++i) {
-            S0[i] = bits(S0r, i*INBITS+INBITS-1, i*INBITS);
-            S1[i] = bits(S1r, i*INBITS+INBITS-1, i*INBITS);
+            S0[i] = bits(S0r, i * INBITS + INBITS - 1, i * INBITS);
+            S1[i] = bits(S1r, i * INBITS + INBITS - 1, i * INBITS);
         }
 
         // Compute components individually to prevent overflow across packing
@@ -561,11 +565,11 @@ void Inst_VOP3P__V_DOT4_U32_U8::execute(GPUDynInstPtr gpuDynInst)
     dotHelper(gpuDynInst, opImpl);
 }
 
-void Inst_VOP3P__V_DOT8_I32_I4::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_DOT8_I32_I4::execute(GPUDynInstPtr gpuDynInst)
 {
-    auto opImpl =
-        [](uint32_t S0r, uint32_t S1r, uint32_t S2r, bool clamp) -> uint32_t
-    {
+    auto opImpl = [](uint32_t S0r, uint32_t S1r, uint32_t S2r,
+                     bool clamp) -> uint32_t {
         constexpr unsigned INBITS = 4;
 
         constexpr unsigned elems = 32 / INBITS;
@@ -573,11 +577,11 @@ void Inst_VOP3P__V_DOT8_I32_I4::execute(GPUDynInstPtr gpuDynInst)
         uint32_t S1[elems];
 
         for (int i = 0; i < elems; ++i) {
-            S0[i] = bits(S0r, i*INBITS+INBITS-1, i*INBITS);
-            S1[i] = bits(S1r, i*INBITS+INBITS-1, i*INBITS);
+            S0[i] = bits(S0r, i * INBITS + INBITS - 1, i * INBITS);
+            S1[i] = bits(S1r, i * INBITS + INBITS - 1, i * INBITS);
         }
 
-        int32_t S2 = *reinterpret_cast<int32_t*>(&S2r);
+        int32_t S2 = *reinterpret_cast<int32_t *>(&S2r);
 
         // Compute components individually to prevent overflow across packing
         int32_t C[elems];
@@ -590,7 +594,7 @@ void Inst_VOP3P__V_DOT8_I32_I4::execute(GPUDynInstPtr gpuDynInst)
         }
 
         Csum += S2;
-        uint32_t rv = *reinterpret_cast<uint32_t*>(&Csum);
+        uint32_t rv = *reinterpret_cast<uint32_t *>(&Csum);
 
         return rv;
     };
@@ -598,11 +602,11 @@ void Inst_VOP3P__V_DOT8_I32_I4::execute(GPUDynInstPtr gpuDynInst)
     dotHelper(gpuDynInst, opImpl);
 }
 
-void Inst_VOP3P__V_DOT8_U32_U4::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_DOT8_U32_U4::execute(GPUDynInstPtr gpuDynInst)
 {
-    auto opImpl =
-        [](uint32_t S0r, uint32_t S1r, uint32_t S2, bool clamp) -> uint32_t
-    {
+    auto opImpl = [](uint32_t S0r, uint32_t S1r, uint32_t S2,
+                     bool clamp) -> uint32_t {
         constexpr unsigned INBITS = 4;
 
         constexpr unsigned elems = 32 / INBITS;
@@ -610,8 +614,8 @@ void Inst_VOP3P__V_DOT8_U32_U4::execute(GPUDynInstPtr gpuDynInst)
         uint32_t S1[elems];
 
         for (int i = 0; i < elems; ++i) {
-            S0[i] = bits(S0r, i*INBITS+INBITS-1, i*INBITS);
-            S1[i] = bits(S1r, i*INBITS+INBITS-1, i*INBITS);
+            S0[i] = bits(S0r, i * INBITS + INBITS - 1, i * INBITS);
+            S1[i] = bits(S1r, i * INBITS + INBITS - 1, i * INBITS);
         }
 
         // Compute components individually to prevent overflow across packing
@@ -632,12 +636,13 @@ void Inst_VOP3P__V_DOT8_U32_U4::execute(GPUDynInstPtr gpuDynInst)
     dotHelper(gpuDynInst, opImpl);
 }
 
-void Inst_VOP3P__V_ACCVGPR_READ::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_ACCVGPR_READ::execute(GPUDynInstPtr gpuDynInst)
 {
     Wavefront *wf = gpuDynInst->wavefront();
     unsigned accum_offset = wf->accumOffset;
 
-    ConstVecOperandU32 src(gpuDynInst, extData.SRC0+accum_offset);
+    ConstVecOperandU32 src(gpuDynInst, extData.SRC0 + accum_offset);
     VecOperandU32 vdst(gpuDynInst, instData.VDST);
 
     src.readSrc();
@@ -651,13 +656,14 @@ void Inst_VOP3P__V_ACCVGPR_READ::execute(GPUDynInstPtr gpuDynInst)
     vdst.write();
 }
 
-void Inst_VOP3P__V_ACCVGPR_WRITE::execute(GPUDynInstPtr gpuDynInst)
+void
+Inst_VOP3P__V_ACCVGPR_WRITE::execute(GPUDynInstPtr gpuDynInst)
 {
     Wavefront *wf = gpuDynInst->wavefront();
     unsigned accum_offset = wf->accumOffset;
 
     ConstVecOperandU32 src(gpuDynInst, extData.SRC0);
-    VecOperandU32 vdst(gpuDynInst, instData.VDST+accum_offset);
+    VecOperandU32 vdst(gpuDynInst, instData.VDST + accum_offset);
 
     src.readSrc();
 
@@ -679,8 +685,7 @@ Inst_VOP3P__V_PK_FMA_F32::Inst_VOP3P__V_PK_FMA_F32(InFmt_VOP3P *iFmt)
 } // Inst_VOP3P__V_PK_FMA_F32
 
 Inst_VOP3P__V_PK_FMA_F32::~Inst_VOP3P__V_PK_FMA_F32()
-{
-} // ~Inst_VOP3P__V_PK_FMA_F32
+{} // ~Inst_VOP3P__V_PK_FMA_F32
 
 // D.f[63:32] = S0.f[63:32] * S1.f[63:32] + S2.f[63:32] . D.f[31:0] =
 //     S0.f[31:0] * S1.f[31:0] + S2.f[31:0] .
@@ -716,13 +721,19 @@ Inst_VOP3P__V_PK_FMA_F32::execute(GPUDynInstPtr gpuDynInst)
             uint32_t s2l = (opsel & 4) ? bits(src2[lane], 63, 32)
                                        : bits(src2[lane], 31, 0);
 
-            float s0lf = *reinterpret_cast<float*>(&s0l);
-            float s1lf = *reinterpret_cast<float*>(&s1l);
-            float s2lf = *reinterpret_cast<float*>(&s2l);
+            float s0lf = *reinterpret_cast<float *>(&s0l);
+            float s1lf = *reinterpret_cast<float *>(&s1l);
+            float s2lf = *reinterpret_cast<float *>(&s2l);
 
-            if (neg & 1) s0lf = -s0lf;
-            if (neg & 1) s1lf = -s1lf;
-            if (neg & 1) s2lf = -s2lf;
+            if (neg & 1) {
+                s0lf = -s0lf;
+            }
+            if (neg & 1) {
+                s1lf = -s1lf;
+            }
+            if (neg & 1) {
+                s2lf = -s2lf;
+            }
 
             float dword1 = std::fma(s0lf, s1lf, s2lf);
 
@@ -733,18 +744,24 @@ Inst_VOP3P__V_PK_FMA_F32::execute(GPUDynInstPtr gpuDynInst)
             uint32_t s2h = (opsel_hi & 4) ? bits(src2[lane], 63, 32)
                                           : bits(src2[lane], 31, 0);
 
-            float s0hf = *reinterpret_cast<float*>(&s0h);
-            float s1hf = *reinterpret_cast<float*>(&s1h);
-            float s2hf = *reinterpret_cast<float*>(&s2h);
+            float s0hf = *reinterpret_cast<float *>(&s0h);
+            float s1hf = *reinterpret_cast<float *>(&s1h);
+            float s2hf = *reinterpret_cast<float *>(&s2h);
 
-            if (neg_hi & 1) s0hf = -s0hf;
-            if (neg_hi & 1) s1hf = -s1hf;
-            if (neg_hi & 1) s2hf = -s2hf;
+            if (neg_hi & 1) {
+                s0hf = -s0hf;
+            }
+            if (neg_hi & 1) {
+                s1hf = -s1hf;
+            }
+            if (neg_hi & 1) {
+                s2hf = -s2hf;
+            }
 
             float dword2 = std::fma(s0hf, s1hf, s2hf);
 
-            uint32_t result1 = *reinterpret_cast<uint32_t*>(&dword1);
-            uint32_t result2 = *reinterpret_cast<uint32_t*>(&dword2);
+            uint32_t result1 = *reinterpret_cast<uint32_t *>(&dword1);
+            uint32_t result2 = *reinterpret_cast<uint32_t *>(&dword2);
 
             vdst[lane] = (static_cast<uint64_t>(result2) << 32) | result1;
         }
@@ -761,8 +778,7 @@ Inst_VOP3P__V_PK_MUL_F32::Inst_VOP3P__V_PK_MUL_F32(InFmt_VOP3P *iFmt)
 } // Inst_VOP3P__V_PK_MUL_F32
 
 Inst_VOP3P__V_PK_MUL_F32::~Inst_VOP3P__V_PK_MUL_F32()
-{
-} // ~Inst_VOP3P__V_PK_MUL_F32
+{} // ~Inst_VOP3P__V_PK_MUL_F32
 
 // D.f[63:32] = S0.f[63:32] * S1.f[63:32] . D.f[31:0] = S0.f[31:0] *
 //              S1.f[31:0]
@@ -794,11 +810,15 @@ Inst_VOP3P__V_PK_MUL_F32::execute(GPUDynInstPtr gpuDynInst)
             uint32_t upper_dword = (opsel & 2) ? bits(src1[lane], 63, 32)
                                                : bits(src1[lane], 31, 0);
 
-            float ldwordf = *reinterpret_cast<float*>(&lower_dword);
-            float udwordf = *reinterpret_cast<float*>(&upper_dword);
+            float ldwordf = *reinterpret_cast<float *>(&lower_dword);
+            float udwordf = *reinterpret_cast<float *>(&upper_dword);
 
-            if (neg & 1) ldwordf = -ldwordf;
-            if (neg & 2) udwordf = -udwordf;
+            if (neg & 1) {
+                ldwordf = -ldwordf;
+            }
+            if (neg & 2) {
+                udwordf = -udwordf;
+            }
 
             float dword1 = ldwordf * udwordf;
 
@@ -807,16 +827,20 @@ Inst_VOP3P__V_PK_MUL_F32::execute(GPUDynInstPtr gpuDynInst)
             upper_dword = (opsel_hi & 2) ? bits(src1[lane], 63, 32)
                                          : bits(src1[lane], 31, 0);
 
-            ldwordf = *reinterpret_cast<float*>(&lower_dword);
-            udwordf = *reinterpret_cast<float*>(&upper_dword);
+            ldwordf = *reinterpret_cast<float *>(&lower_dword);
+            udwordf = *reinterpret_cast<float *>(&upper_dword);
 
-            if (neg_hi & 1) ldwordf = -ldwordf;
-            if (neg_hi & 2) udwordf = -udwordf;
+            if (neg_hi & 1) {
+                ldwordf = -ldwordf;
+            }
+            if (neg_hi & 2) {
+                udwordf = -udwordf;
+            }
 
             float dword2 = ldwordf * udwordf;
 
-            uint32_t result1 = *reinterpret_cast<uint32_t*>(&dword1);
-            uint32_t result2 = *reinterpret_cast<uint32_t*>(&dword2);
+            uint32_t result1 = *reinterpret_cast<uint32_t *>(&dword1);
+            uint32_t result2 = *reinterpret_cast<uint32_t *>(&dword2);
 
             vdst[lane] = (static_cast<uint64_t>(result2) << 32) | result1;
         }
@@ -833,8 +857,7 @@ Inst_VOP3P__V_PK_ADD_F32::Inst_VOP3P__V_PK_ADD_F32(InFmt_VOP3P *iFmt)
 } // Inst_VOP3P__V_PK_ADD_F32
 
 Inst_VOP3P__V_PK_ADD_F32::~Inst_VOP3P__V_PK_ADD_F32()
-{
-} // ~Inst_VOP3P__V_PK_ADD_F32
+{} // ~Inst_VOP3P__V_PK_ADD_F32
 
 // D.f[63:32] = S0.f[63:32] + S1.f[63:32] . D.f[31:0] = S0.f[31:0] +
 //              S1.f[31:0]
@@ -869,11 +892,15 @@ Inst_VOP3P__V_PK_ADD_F32::execute(GPUDynInstPtr gpuDynInst)
             uint32_t upper_dword = (opsel & 2) ? bits(src1[lane], 63, 32)
                                                : bits(src1[lane], 31, 0);
 
-            float ldwordf = *reinterpret_cast<float*>(&lower_dword);
-            float udwordf = *reinterpret_cast<float*>(&upper_dword);
+            float ldwordf = *reinterpret_cast<float *>(&lower_dword);
+            float udwordf = *reinterpret_cast<float *>(&upper_dword);
 
-            if (neg & 1) ldwordf = -ldwordf;
-            if (neg & 2) udwordf = -udwordf;
+            if (neg & 1) {
+                ldwordf = -ldwordf;
+            }
+            if (neg & 2) {
+                udwordf = -udwordf;
+            }
 
             float dword1 = ldwordf + udwordf;
 
@@ -882,16 +909,20 @@ Inst_VOP3P__V_PK_ADD_F32::execute(GPUDynInstPtr gpuDynInst)
             upper_dword = (opsel_hi & 2) ? bits(src1[lane], 63, 32)
                                          : bits(src1[lane], 31, 0);
 
-            ldwordf = *reinterpret_cast<float*>(&lower_dword);
-            udwordf = *reinterpret_cast<float*>(&upper_dword);
+            ldwordf = *reinterpret_cast<float *>(&lower_dword);
+            udwordf = *reinterpret_cast<float *>(&upper_dword);
 
-            if (neg_hi & 1) ldwordf = -ldwordf;
-            if (neg_hi & 2) udwordf = -udwordf;
+            if (neg_hi & 1) {
+                ldwordf = -ldwordf;
+            }
+            if (neg_hi & 2) {
+                udwordf = -udwordf;
+            }
 
             float dword2 = ldwordf + udwordf;
 
-            uint32_t result1 = *reinterpret_cast<uint32_t*>(&dword1);
-            uint32_t result2 = *reinterpret_cast<uint32_t*>(&dword2);
+            uint32_t result1 = *reinterpret_cast<uint32_t *>(&dword1);
+            uint32_t result2 = *reinterpret_cast<uint32_t *>(&dword2);
 
             vdst[lane] = (static_cast<uint64_t>(result2) << 32) | result1;
         }
@@ -908,8 +939,7 @@ Inst_VOP3P__V_PK_MOV_B32::Inst_VOP3P__V_PK_MOV_B32(InFmt_VOP3P *iFmt)
 } // Inst_VOP3P__V_PK_MOV_B32
 
 Inst_VOP3P__V_PK_MOV_B32::~Inst_VOP3P__V_PK_MOV_B32()
-{
-} // ~Inst_VOP3P__V_PK_MOV_B32
+{} // ~Inst_VOP3P__V_PK_MOV_B32
 
 // D.u[63:32] = S1.u[31:0]; D.u[31:0] = S0.u[31:0].
 void

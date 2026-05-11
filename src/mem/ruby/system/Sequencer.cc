@@ -744,6 +744,8 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
             // response back to the core, we can just ignore this
             if (pkt->cmd.isSWPrefetch()) {
                 delete pkt;
+                testDrainComplete();
+                trySendRetries();
                 return;
             }
 
@@ -793,18 +795,19 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
         testerSenderState->subBlock.mergeFrom(data);
     }
 
-    RubySystem *rs = m_ruby_system;
     if (m_ruby_system->getWarmupEnabled()) {
         assert(pkt->req);
         delete pkt;
-        rs->m_cache_recorder->enqueueNextFetchRequest();
+        m_ruby_system->m_cache_recorder->enqueueNextFetchRequest();
     } else if (m_ruby_system->getCooldownEnabled()) {
         delete pkt;
-        rs->m_cache_recorder->enqueueNextFlushRequest();
+        m_ruby_system->m_cache_recorder->enqueueNextFlushRequest();
     } else {
         ruby_hit_callback(pkt);
-        testDrainComplete();
     }
+
+    testDrainComplete();
+    trySendRetries();
 }
 
 void

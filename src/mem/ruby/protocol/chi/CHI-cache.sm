@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Arm Limited
+ * Copyright (c) 2021-2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -793,6 +793,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
   structure(PerfectCacheMemory, external = "yes") {
     void allocate(Addr);
     void deallocate(Addr);
+    void flushEntries();
     DirEntry lookup(Addr);
     bool isTagPresent(Addr);
   }

@@ -70,6 +70,7 @@ class MiscRegOp64;
 
 namespace ArmISA
 {
+// clang-format off
     enum MiscRegIndex
     {
         MISCREG_CPSR = 0,
@@ -592,6 +593,7 @@ namespace ArmISA
         MISCREG_ID_AA64AFR1_EL1,
         MISCREG_ID_AA64ISAR0_EL1,
         MISCREG_ID_AA64ISAR1_EL1,
+        MISCREG_ID_AA64ISAR2_EL1,
         MISCREG_ID_AA64MMFR0_EL1,
         MISCREG_ID_AA64MMFR1_EL1,
         MISCREG_CCSIDR_EL1,
@@ -1227,65 +1229,60 @@ namespace ArmISA
         // Total number of Misc Registers: Physical + Dummy
         NUM_MISCREGS
     };
+// clang-format on
 
-    struct MiscRegNum32
+struct MiscRegNum32
+{
+    MiscRegNum32(unsigned _coproc, unsigned _opc1, unsigned _crn,
+                 unsigned _crm, unsigned _opc2)
+        : reg64(0),
+          coproc(_coproc),
+          opc1(_opc1),
+          crn(_crn),
+          crm(_crm),
+          opc2(_opc2)
     {
-        MiscRegNum32(unsigned _coproc, unsigned _opc1,
-                     unsigned _crn, unsigned _crm,
-                     unsigned _opc2)
-          : reg64(0), coproc(_coproc), opc1(_opc1), crn(_crn),
-            crm(_crm), opc2(_opc2)
-        {
-            // MCR/MRC CP14 or CP15 register
-            assert(coproc == 0b1110 || coproc == 0b1111);
-            assert(opc1 < 8 && crn < 16 && crm < 16 && opc2 < 8);
-        }
+        // MCR/MRC CP14 or CP15 register
+        assert(coproc == 0b1110 || coproc == 0b1111);
+        assert(opc1 < 8 && crn < 16 && crm < 16 && opc2 < 8);
+    }
 
-        MiscRegNum32(unsigned _coproc, unsigned _opc1,
-                     unsigned _crm)
-          : reg64(1), coproc(_coproc), opc1(_opc1), crn(0),
-            crm(_crm), opc2(0)
-        {
-            // MCRR/MRRC CP14 or CP15 register
-            assert(coproc == 0b1110 || coproc == 0b1111);
-            assert(opc1 < 16 && crm < 16);
-        }
+    MiscRegNum32(unsigned _coproc, unsigned _opc1, unsigned _crm)
+        : reg64(1), coproc(_coproc), opc1(_opc1), crn(0), crm(_crm), opc2(0)
+    {
+        // MCRR/MRRC CP14 or CP15 register
+        assert(coproc == 0b1110 || coproc == 0b1111);
+        assert(opc1 < 16 && crm < 16);
+    }
 
-        MiscRegNum32(const MiscRegNum32& rhs) = default;
+    MiscRegNum32(const MiscRegNum32 &rhs) = default;
 
-        bool
-        operator==(const MiscRegNum32 &other) const
-        {
-            return reg64 == other.reg64 &&
-                coproc == other.coproc &&
-                opc1 == other.opc1 &&
-                crn == other.crn &&
-                crm == other.crm &&
-                opc2 == other.opc2;
-        }
+    bool
+    operator==(const MiscRegNum32 &other) const
+    {
+        return reg64 == other.reg64 && coproc == other.coproc &&
+               opc1 == other.opc1 && crn == other.crn && crm == other.crm &&
+               opc2 == other.opc2;
+    }
 
-        uint32_t
-        packed() const
-        {
-            return reg64 << 19  |
-                   coproc << 15 |
-                   opc1 << 11   |
-                   crn << 7     |
-                   crm << 3     |
-                   opc2;
-        }
+    uint32_t
+    packed() const
+    {
+        return reg64 << 19 | coproc << 15 | opc1 << 11 | crn << 7 | crm << 3 |
+               opc2;
+    }
 
-        // 1 if the register is 64bit wide (accessed through MCRR/MRCC)
-        // 0 otherwise. We need this when generating the hash as there
-        // might be collisions between 32 and 64 bit registers
-        const unsigned reg64;
+    // 1 if the register is 64bit wide (accessed through MCRR/MRCC)
+    // 0 otherwise. We need this when generating the hash as there
+    // might be collisions between 32 and 64 bit registers
+    const unsigned reg64;
 
-        unsigned coproc;
-        unsigned opc1;
-        unsigned crn;
-        unsigned crm;
-        unsigned opc2;
-    };
+    unsigned coproc;
+    unsigned opc1;
+    unsigned crn;
+    unsigned crm;
+    unsigned opc2;
+};
 
     struct MiscRegNum64
     {
@@ -1356,7 +1353,7 @@ namespace ArmISA
     // parameter for the instruction. See Operands.isa
     int decodeMrsMsrBankedIntRegIndex(uint8_t sysM, bool r);
 
-    const char * const miscRegName[] = {
+    const char *const miscRegName[] = {
         "cpsr",
         "spsr",
         "spsr_fiq",
@@ -1875,6 +1872,7 @@ namespace ArmISA
         "id_aa64afr1_el1",
         "id_aa64isar0_el1",
         "id_aa64isar1_el1",
+        "id_aa64isar2_el1",
         "id_aa64mmfr0_el1",
         "id_aa64mmfr1_el1",
         "ccsidr_el1",

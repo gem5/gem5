@@ -107,6 +107,14 @@ class MMU : public BaseMMU
 
     }
 
+    void
+    demapPage(ThreadContext *tc, Addr vaddr, uint64_t asn,
+              bool is_gvma = false, bool is_vvma = false)
+    {
+        static_cast<TLB *>(itb)->demapPage(tc, vaddr, asn, is_gvma, is_vvma);
+        static_cast<TLB *>(dtb)->demapPage(tc, vaddr, asn, is_gvma, is_vvma);
+    }
+
     PMP *
     getPMP()
     {

@@ -40,6 +40,7 @@
 
 #include <ARM/TLM/arm_chi.h>
 
+#include "arch/arm/mpam.hh"
 #include "base/types.hh"
 #include "mem/ruby/protocol/CHI/CHIDataType.hh"
 #include "mem/ruby/protocol/CHI/CHIRequestType.hh"
@@ -70,6 +71,8 @@ ARM::CHI::Resp datResp(ruby::CHI::CHIDataType dat);
 ARM::CHI::Resp rspResp(ruby::CHI::CHIResponseType rsp);
 
 }
+
+::gem5::ArmISA::mpam::MpamBundle getMpam(const ARM::CHI::Payload &payload);
 
 Addr transactionSize(ARM::CHI::Size sz);
 

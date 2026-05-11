@@ -165,8 +165,8 @@ namespace RiscvISA
             std::string name() const {return walker->name();}
 
           private:
-            Fault checkPTEPermissions(
-              PTESv39 pte, WalkFlags& stepWalkFlags, int level);
+            Fault checkPTEPermissions(PTE pte, WalkFlags &stepWalkFlags,
+                                      int level);
             Addr setupWalk(Addr vaddr);
             Fault stepWalk(PacketPtr &write);
             Fault stepWalkGStage(PacketPtr &write);

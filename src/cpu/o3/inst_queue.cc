@@ -207,6 +207,12 @@ IQUnit::numFreeEntries(const DynInstPtr &inst) const
     }
 }
 
+bool
+IQUnit::isCapable(OpClass op_class) const
+{
+    return _fuPool->isCapable(op_class);
+}
+
 InstructionQueue::FUCompletion::FUCompletion(const DynInstPtr &_inst,
                                              FUPool *fu_pool, int fu_idx,
                                              InstructionQueue *iq_ptr)
@@ -616,10 +622,23 @@ InstructionQueue::numFreeEntries(ThreadID tid)
 unsigned
 InstructionQueue::numFreeEntries(const DynInstPtr &inst)
 {
+    bool any_capable = false;
     unsigned free_entries = 0;
     for (auto iq : iqs) {
-        free_entries += iq->numFreeEntries(inst);
+        if (iq->isCapable(inst->opClass())) {
+            any_capable = true;
+            free_entries += iq->numFreeEntries(inst);
+        }
     }
+
+    if (any_capable) {
+        return free_entries;
+    }
+
+    for (auto iq : iqs) {
+        free_entries += iq->numFreeEntries(inst->threadNumber);
+    }
+
     return free_entries;
 }
 
@@ -672,13 +691,26 @@ InstructionQueue::hasReadyInsts()
 IQUnit *
 InstructionQueue::findIQ(const DynInstPtr &inst)
 {
+    bool any_capable = false;
     for (auto iq : iqs) {
-        // If the IQ can store the selected instruction,
-        // return the IQ as valid
-        if (iq->numFreeEntries(inst) > 0) {
+        if (iq->isCapable(inst->opClass())) {
+            any_capable = true;
+            if (iq->numFreeEntries(inst) > 0) {
+                return iq;
+            }
+        }
+    }
+
+    if (any_capable) {
+        return nullptr;
+    }
+
+    for (auto iq : iqs) {
+        if (iq->numFreeEntries(inst->threadNumber) > 0) {
             return iq;
         }
     }
+
     return nullptr;
 }
 

@@ -1823,5 +1823,15 @@ getFaultVAddr(Fault fault, Addr &va)
     }
 }
 
+ArmFault::FaultSource
+llFaultSource(ArmFault::FaultSource baseLL, enums::ArmLookupLevel level)
+{
+    assert(level < 4);
+
+    using U = std::underlying_type_t<ArmFault::FaultSource>;
+    const auto base = static_cast<U>(baseLL);
+    return static_cast<ArmFault::FaultSource>(base + static_cast<U>(level));
+}
+
 } // namespace ArmISA
 } // namespace gem5

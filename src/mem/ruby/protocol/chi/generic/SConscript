@@ -37,7 +37,7 @@
 
 Import('*')
 
-if env['CONF']['PROTOCOL'] != 'CHI':
+if not env['CONF']['RUBY_PROTOCOL_CHI']:
     Return()
 
 SimObject('CHIGeneric.py',

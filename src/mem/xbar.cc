@@ -65,9 +65,12 @@ BaseXBar::BaseXBar(const BaseXBarParams &p)
       headerLatency(p.header_latency),
       width(p.width),
       gotAddrRanges(p.port_default_connection_count +
-                          p.port_mem_side_ports_connection_count, false),
-      gotAllAddrRanges(false), defaultPortID(InvalidPortID),
+                        p.port_mem_side_ports_connection_count,
+                    false),
+      gotAllAddrRanges(false),
+      defaultPortID(InvalidPortID),
       useDefaultRange(p.use_default_range),
+      enableBackdoor(p.enable_backdoor),
 
       ADD_STAT(transDist, statistics::units::Count::get(),
                "Transaction distribution"),
