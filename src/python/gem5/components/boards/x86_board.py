@@ -393,7 +393,7 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
 
         # Add the address range for the IO
         self.mem_ranges = data_ranges + [
-            AddrRange(0xC0000000, size=0x100000),  # For I/0
+            AddrRange(0xC0000000, size=0x100000),  # For I/O
         ]
 
     @overrides(KernelDiskWorkload)
