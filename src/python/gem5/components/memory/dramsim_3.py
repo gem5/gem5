@@ -138,6 +138,17 @@ class SingleChannel(AbstractMemorySystem):
                 "Single channel DRAMSim memory controller requires a single "
                 "range which matches the memory's size."
             )
+
+        from m5.params.param_types import (
+            SparseMaskedAddrRange,
+            SparseModuloAddrRange,
+        )
+
+        if isinstance(
+            ranges[0], (SparseModuloAddrRange, SparseMaskedAddrRange)
+        ):
+            raise ValueError("DRAMSim3 does not support sparse address ranges")
+
         self.mem_ctrl.range = ranges[0]
 
 
