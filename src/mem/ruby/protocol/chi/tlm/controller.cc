@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023,2025 Arm Limited
+ * Copyright (c) 2023, 2025-2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -104,8 +104,10 @@ CacheController::recvSnoopMsg(const CHIRequestMsg *msg)
 void
 CacheController::pCreditGrant(const CHIResponseMsg *msg)
 {
-    ARM::CHI::Phase phase;
     ARM::CHI::Payload *payload = ARM::CHI::Payload::new_payload();
+    payload->lpid = msg->m_lpid;
+
+    ARM::CHI::Phase phase;
     phase.channel = ARM::CHI::CHANNEL_RSP;
     phase.rsp_opcode = ARM::CHI::RSP_OPCODE_PCRD_GRANT;
     phase.pcrd_type = 0; // TODO: set this one depending on allow retry
@@ -153,6 +155,30 @@ CacheController::recvDataMsg(const CHIDataMsg *msg)
     return true;
 }
 
+void
+CacheController::functionalRead(const Addr &param_addr, Packet *param_pkt,
+                                ruby::WriteMask &param_mask)
+{
+    if (!params().ignore_functional) {
+        panic("TlmController doesn't implement functionalRead.");
+    }
+
+    // Assume there are no caches behind this controller, so no need
+    // to read.
+}
+
+int
+CacheController::functionalWrite(const Addr &param_addr, Packet *param_pkt)
+{
+    if (!params().ignore_functional) {
+        panic("TlmController doesn't implement functionalWrite.");
+    }
+
+    // Assume that there are no caches behind this controller, so no
+    // need to perform a write.
+    return 0;
+}
+
 bool
 CacheController::Transaction::handle(const CHIResponseMsg *msg)
 {
@@ -161,6 +187,7 @@ CacheController::Transaction::handle(const CHIResponseMsg *msg)
     phase.rsp_opcode = opcode;
     phase.resp = ruby_to_tlm::rspResp(msg->m_type);
     phase.txn_id = msg->m_txnId;
+    phase.c_busy = msg->m_cbusy;
 
     controller->bw(payload, &phase);
     return opcode != ARM::CHI::RSP_OPCODE_RETRY_ACK;
@@ -182,6 +209,7 @@ CacheController::ReadTransaction::handle(const CHIDataMsg *msg)
     phase.resp = ruby_to_tlm::datResp(msg->m_type);
     phase.txn_id = msg->m_txnId;
     phase.data_id = dataId(msg->m_addr + msg->m_bitMask.firstBitSet(true));
+    phase.c_busy = msg->m_cbusy;
 
     // This is a hack, we should fix it on the ruby side
     if (forward(msg)) {
@@ -205,7 +233,15 @@ CacheController::ReadTransaction::handle(const CHIResponseMsg *msg)
 {
     /// TODO: remove this, DBID is not sent
     phase.dbid = msg->m_dbid;
-    return Transaction::handle(msg);
+    const bool finished = Transaction::handle(msg);
+
+    // Read transactions complete on DAT beats, not on RespSepData.
+    // If we terminate here, the following DAT can no longer be matched.
+    if (phase.rsp_opcode == ARM::CHI::RSP_OPCODE_RESP_SEP_DATA) {
+        return false;
+    }
+
+    return finished;
 }
 
 bool
@@ -338,6 +374,7 @@ CacheController::sendRequestMsg(ARM::CHI::Payload &payload,
 
     req_msg->m_txnId = phase.txn_id;
     req_msg->m_ns = payload.ns;
+    req_msg->m_lpid = payload.lpid;
 
     sendRequestMsg(req_msg);
 

@@ -30,13 +30,11 @@ from code_formatter import code_formatter
 
 def createSymbol(symbol, title):
     code = code_formatter()
-    code(
-        """
+    code("""
 <HTML><BODY><BIG>
 $title: ${{formatShorthand(symbol.short)}} - ${{symbol.desc}}
 </BIG></BODY></HTML>
-"""
-    )
+""")
     return code
 
 

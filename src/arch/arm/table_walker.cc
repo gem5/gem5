@@ -784,14 +784,14 @@ WalkUnit::processWalk(WalkerState *curr_state)
             if (curr_state->isFetch) {
                 return std::make_shared<PrefetchAbort>(
                     curr_state->vaddr_tainted,
-                    ArmFault::TranslationLL + LookupLevel::L1, isStage2,
-                    TranMethod::VmsaTran);
+                    llFaultSource(ArmFault::TranslationLL, LookupLevel::L1),
+                    isStage2, TranMethod::VmsaTran);
             } else {
                 return std::make_shared<DataAbort>(
                     curr_state->vaddr_tainted, DomainType::NoAccess,
                     is_atomic ? false : curr_state->isWrite,
-                    ArmFault::TranslationLL + LookupLevel::L1, isStage2,
-                    TranMethod::VmsaTran);
+                    llFaultSource(ArmFault::TranslationLL, LookupLevel::L1),
+                    isStage2, TranMethod::VmsaTran);
             }
         }
         ttbr = curr_state->tc->readMiscReg(
@@ -804,14 +804,14 @@ WalkUnit::processWalk(WalkerState *curr_state)
             if (curr_state->isFetch) {
                 return std::make_shared<PrefetchAbort>(
                     curr_state->vaddr_tainted,
-                    ArmFault::TranslationLL + LookupLevel::L1, isStage2,
-                    TranMethod::VmsaTran);
+                    llFaultSource(ArmFault::TranslationLL, LookupLevel::L1),
+                    isStage2, TranMethod::VmsaTran);
             } else {
                 return std::make_shared<DataAbort>(
                     curr_state->vaddr_tainted, DomainType::NoAccess,
                     is_atomic ? false : curr_state->isWrite,
-                    ArmFault::TranslationLL + LookupLevel::L1, isStage2,
-                    TranMethod::VmsaTran);
+                    llFaultSource(ArmFault::TranslationLL, LookupLevel::L1),
+                    isStage2, TranMethod::VmsaTran);
             }
         }
         ttbr = ttbr1;
@@ -903,14 +903,16 @@ WalkUnit::processWalkLPAE(WalkerState *curr_state)
                 if (curr_state->isFetch) {
                     return std::make_shared<PrefetchAbort>(
                         curr_state->vaddr_tainted,
-                        ArmFault::TranslationLL + LookupLevel::L1, isStage2,
-                        TranMethod::LpaeTran);
+                        llFaultSource(ArmFault::TranslationLL,
+                                      LookupLevel::L1),
+                        isStage2, TranMethod::LpaeTran);
                 } else {
                     return std::make_shared<DataAbort>(
                         curr_state->vaddr_tainted, DomainType::NoAccess,
                         is_atomic ? false : curr_state->isWrite,
-                        ArmFault::TranslationLL + LookupLevel::L1, isStage2,
-                        TranMethod::LpaeTran);
+                        llFaultSource(ArmFault::TranslationLL,
+                                      LookupLevel::L1),
+                        isStage2, TranMethod::LpaeTran);
                 }
             }
             ttbr = curr_state->tc->readMiscReg(
@@ -927,14 +929,16 @@ WalkUnit::processWalkLPAE(WalkerState *curr_state)
                 if (curr_state->isFetch) {
                     return std::make_shared<PrefetchAbort>(
                         curr_state->vaddr_tainted,
-                        ArmFault::TranslationLL + LookupLevel::L1, isStage2,
-                        TranMethod::LpaeTran);
+                        llFaultSource(ArmFault::TranslationLL,
+                                      LookupLevel::L1),
+                        isStage2, TranMethod::LpaeTran);
                 } else {
                     return std::make_shared<DataAbort>(
                         curr_state->vaddr_tainted, DomainType::NoAccess,
                         is_atomic ? false : curr_state->isWrite,
-                        ArmFault::TranslationLL + LookupLevel::L1, isStage2,
-                        TranMethod::LpaeTran);
+                        llFaultSource(ArmFault::TranslationLL,
+                                      LookupLevel::L1),
+                        isStage2, TranMethod::LpaeTran);
                 }
             }
             ttbr = curr_state->tc->readMiscReg(
@@ -950,14 +954,14 @@ WalkUnit::processWalkLPAE(WalkerState *curr_state)
             if (curr_state->isFetch) {
                 return std::make_shared<PrefetchAbort>(
                     curr_state->vaddr_tainted,
-                    ArmFault::TranslationLL + LookupLevel::L1, isStage2,
-                    TranMethod::LpaeTran);
+                    llFaultSource(ArmFault::TranslationLL, LookupLevel::L1),
+                    isStage2, TranMethod::LpaeTran);
             } else {
                 return std::make_shared<DataAbort>(
                     curr_state->vaddr_tainted, DomainType::NoAccess,
                     is_atomic ? false : curr_state->isWrite,
-                    ArmFault::TranslationLL + LookupLevel::L1, isStage2,
-                    TranMethod::LpaeTran);
+                    llFaultSource(ArmFault::TranslationLL, LookupLevel::L1),
+                    isStage2, TranMethod::LpaeTran);
             }
         }
     }
@@ -1243,14 +1247,14 @@ WalkUnit::processWalkAArch64(WalkerState *curr_state)
         if (curr_state->isFetch) {
             return std::make_shared<PrefetchAbort>(
                 curr_state->vaddr_tainted,
-                ArmFault::TranslationLL + LookupLevel::L0, isStage2,
-                TranMethod::LpaeTran);
+                llFaultSource(ArmFault::TranslationLL, LookupLevel::L0),
+                isStage2, TranMethod::LpaeTran);
         } else {
             return std::make_shared<DataAbort>(
                 curr_state->vaddr_tainted, DomainType::NoAccess,
                 is_atomic ? false : curr_state->isWrite,
-                ArmFault::TranslationLL + LookupLevel::L0, isStage2,
-                TranMethod::LpaeTran);
+                llFaultSource(ArmFault::TranslationLL, LookupLevel::L0),
+                isStage2, TranMethod::LpaeTran);
         }
     }
 
@@ -1278,14 +1282,14 @@ WalkUnit::processWalkAArch64(WalkerState *curr_state)
         if (curr_state->isFetch) {
             return std::make_shared<PrefetchAbort>(
                 curr_state->vaddr_tainted,
-                ArmFault::AddressSizeLL + start_lookup_level, isStage2,
-                TranMethod::LpaeTran);
+                llFaultSource(ArmFault::AddressSizeLL, start_lookup_level),
+                isStage2, TranMethod::LpaeTran);
         } else {
             return std::make_shared<DataAbort>(
                 curr_state->vaddr_tainted, DomainType::NoAccess,
                 is_atomic ? false : curr_state->isWrite,
-                ArmFault::AddressSizeLL + start_lookup_level, isStage2,
-                TranMethod::LpaeTran);
+                llFaultSource(ArmFault::AddressSizeLL, start_lookup_level),
+                isStage2, TranMethod::LpaeTran);
         }
     }
 
@@ -1855,14 +1859,14 @@ WalkUnit::doL1Descriptor(WalkerState *curr_state)
             if (curr_state->isFetch) {
                 curr_state->fault = std::make_shared<PrefetchAbort>(
                     curr_state->vaddr_tainted,
-                    ArmFault::TranslationLL + LookupLevel::L1, isStage2,
-                    TranMethod::VmsaTran);
+                    llFaultSource(ArmFault::TranslationLL, LookupLevel::L1),
+                    isStage2, TranMethod::VmsaTran);
             } else {
                 curr_state->fault = std::make_shared<DataAbort>(
                     curr_state->vaddr_tainted, DomainType::NoAccess,
                     is_atomic ? false : curr_state->isWrite,
-                    ArmFault::TranslationLL + LookupLevel::L1, isStage2,
-                    TranMethod::VmsaTran);
+                    llFaultSource(ArmFault::TranslationLL, LookupLevel::L1),
+                    isStage2, TranMethod::VmsaTran);
             }
             return;
         case L1Descriptor::Section:
@@ -1876,8 +1880,8 @@ WalkUnit::doL1Descriptor(WalkerState *curr_state)
                 curr_state->fault = std::make_shared<DataAbort>(
                     curr_state->vaddr_tainted, curr_state->l1Desc.domain(),
                     is_atomic ? false : curr_state->isWrite,
-                    ArmFault::AccessFlagLL + LookupLevel::L1, isStage2,
-                    TranMethod::VmsaTran);
+                    llFaultSource(ArmFault::AccessFlagLL, LookupLevel::L1),
+                    isStage2, TranMethod::VmsaTran);
             }
             if (curr_state->l1Desc.supersection()) {
                 panic("Haven't implemented supersections\n");
@@ -1922,13 +1926,14 @@ WalkUnit::generateLongDescFault(WalkerState *curr_state,
 {
     if (curr_state->isFetch) {
         return std::make_shared<PrefetchAbort>(
-            curr_state->vaddr_tainted, src + curr_state->longDesc.lookupLevel,
-            isStage2, TranMethod::LpaeTran);
+            curr_state->vaddr_tainted,
+            llFaultSource(src, curr_state->longDesc.lookupLevel), isStage2,
+            TranMethod::LpaeTran);
     } else {
         return std::make_shared<DataAbort>(
             curr_state->vaddr_tainted, DomainType::NoAccess,
             curr_state->req->isAtomic() ? false : curr_state->isWrite,
-            src + curr_state->longDesc.lookupLevel, isStage2,
+            llFaultSource(src, curr_state->longDesc.lookupLevel), isStage2,
             TranMethod::LpaeTran);
     }
 }
@@ -1977,8 +1982,8 @@ WalkUnit::doLongDescriptor(WalkerState *curr_state)
             DPRINTF(PageTableWalker,
                     "L%d descriptor Invalid, causing fault type %d\n",
                     curr_state->longDesc.lookupLevel,
-                    ArmFault::TranslationLL +
-                        curr_state->longDesc.lookupLevel);
+                    llFaultSource(ArmFault::TranslationLL,
+                                  curr_state->longDesc.lookupLevel));
 
             curr_state->fault =
                 generateLongDescFault(curr_state, ArmFault::TranslationLL);
@@ -2117,14 +2122,14 @@ WalkUnit::doL2Descriptor(WalkerState *curr_state)
         if (curr_state->isFetch) {
             curr_state->fault = std::make_shared<PrefetchAbort>(
                 curr_state->vaddr_tainted,
-                ArmFault::TranslationLL + LookupLevel::L2, isStage2,
-                TranMethod::VmsaTran);
+                llFaultSource(ArmFault::TranslationLL, LookupLevel::L2),
+                isStage2, TranMethod::VmsaTran);
         } else {
             curr_state->fault = std::make_shared<DataAbort>(
                 curr_state->vaddr_tainted, curr_state->l1Desc.domain(),
                 is_atomic ? false : curr_state->isWrite,
-                ArmFault::TranslationLL + LookupLevel::L2, isStage2,
-                TranMethod::VmsaTran);
+                llFaultSource(ArmFault::TranslationLL, LookupLevel::L2),
+                isStage2, TranMethod::VmsaTran);
         }
         return;
     }
@@ -2140,7 +2145,7 @@ WalkUnit::doL2Descriptor(WalkerState *curr_state)
         curr_state->fault = std::make_shared<DataAbort>(
             curr_state->vaddr_tainted, DomainType::NoAccess,
             is_atomic ? false : curr_state->isWrite,
-            ArmFault::AccessFlagLL + LookupLevel::L2, isStage2,
+            llFaultSource(ArmFault::AccessFlagLL, LookupLevel::L2), isStage2,
             TranMethod::VmsaTran);
     }
 

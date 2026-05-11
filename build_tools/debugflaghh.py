@@ -79,19 +79,16 @@ def write_header_file(
     """
     code = code_formatter()
 
-    code(
-        f"""
+    code(f"""
 #ifndef __DEBUG_{name}_HH__
 #define __DEBUG_{name}_HH__
 
 #include "base/compiler.hh" // For namespace deprecation
 #include "base/debug.hh"
-"""
-    )
+""")
     for flag in components:
         code(f'#include "debug/{flag}.hh"')
-    code(
-        """
+    code("""
 namespace gem5
 {
 
@@ -100,58 +97,51 @@ namespace debug
 
 namespace unions
 {
-"""
-    )
+""")
 
     # Use unions to prevent debug flags from being destructed. It's the
     # responsibility of the programmer to handle object destruction for members
     # of the union. We purposefully leave that destructor empty so that we can
     # use debug flags even in the destructors of other objects.
     if components:
-        code(
-            """
-inline union ${{args.name}}
+        code("""
+inline union ${{name}}
 {
-    ~${{args.name}}() {}
+    ~${{name}}() {}
 
-    CompoundFlag flag${{args.name}};
+    CompoundFlag flag${{name}};
 
-    ${{args.name}}() : flag${{args.name}}("${{args.name}}", "${{args.desc}}",
+    ${{name}}() : flag${{name}}("${{name}}", "${{desc}}",
         {
             ${{",\\n            ".join(
                 f"(Flag *)&::gem5::debug::{flag}" for flag in components)}}
         }) {}
 
-} instance${{args.name}};
-"""
-        )
+} instance${{name}};
+""")
     else:
-        code(
-            """
-inline union ${{args.name}}
+        code("""
+inline union ${{name}}
 {
-    ~${{args.name}}() {}
-    SimpleFlag flag${{args.name}};
+    ~${{name}}() {}
+    SimpleFlag flag${{name}};
 
-    ${{args.name}}() : flag${{args.name}}("${{args.name}}", "${{args.desc}}", ${{"true" if fmt else "false"}}) {}
+    ${{name}}() : flag${{name}}("${{name}}", "${{desc}}", ${{"true" if fmt else "false"}}) {}
 
-} instance${{args.name}};
-"""
-        )
+} instance${{name}};
+""")
 
-    code(
-        """
+    code("""
 } // namespace unions
 
-inline constexpr const auto& ${{args.name}} =
-    ::gem5::debug::unions::instance${{args.name}}.flag${{args.name}};
+inline constexpr const auto& ${{name}} =
+    ::gem5::debug::unions::instance${{name}}.flag${{name}};
 
 } // namespace debug
 } // namespace gem5
 
-#endif // __DEBUG_${{args.name}}_HH__
-"""
-    )
+#endif // __DEBUG_${{name}}_HH__
+""")
 
     code.write(hh)
 

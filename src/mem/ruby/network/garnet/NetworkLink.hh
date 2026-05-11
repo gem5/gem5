@@ -36,6 +36,7 @@
 #include <iostream>
 #include <vector>
 
+#include "base/statistics.hh"
 #include "mem/ruby/common/Consumer.hh"
 #include "mem/ruby/network/garnet/CommonTypes.hh"
 #include "mem/ruby/network/garnet/flitBuffer.hh"
@@ -65,10 +66,17 @@ class NetworkLink : public ClockedObject, public Consumer
     virtual void setVcsPerVnet(uint32_t consumerVcs);
     void setType(link_type type) { m_type = type; }
     link_type getType() { return m_type; }
-    void print(std::ostream& out) const {}
+    void
+    print(std::ostream &out) const override
+    {}
     int get_id() const { return m_id; }
-    flitBuffer *getBuffer() { return &linkBuffer;}
-    virtual void wakeup();
+    flitBuffer *
+    getBuffer()
+    {
+        return &linkBuffer;
+    }
+    void wakeup() override;
+    void regStats() override;
 
     unsigned int getLinkUtilization() const { return m_link_utilized; }
     const std::vector<unsigned int> & getVcLoad() const { return m_vc_load; }
@@ -83,7 +91,7 @@ class NetworkLink : public ClockedObject, public Consumer
 
     bool functionalRead(Packet *pkt, WriteMask &mask);
     uint32_t functionalWrite(Packet *);
-    void resetStats();
+    void resetStats() override;
 
     std::vector<int> mVnets;
     uint32_t bitWidth;
@@ -98,6 +106,8 @@ class NetworkLink : public ClockedObject, public Consumer
     // Statistical variables
     unsigned int m_link_utilized;
     std::vector<unsigned int> m_vc_load;
+    // Per-vnet flit counter: suppressed by nozero when zero (feature off).
+    statistics::Vector m_flits_per_vnet;
 
   protected:
     uint32_t m_virt_nets;

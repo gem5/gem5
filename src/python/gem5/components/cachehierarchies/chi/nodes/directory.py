@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2025 Arm Limited
+# Copyright (c) 2021-2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -40,6 +40,8 @@ import math
 from typing import List
 
 from m5.objects import (
+    CBusy,
+    CBusyTracker,
     ClockDomain,
     RubyCache,
     RubyNetwork,
@@ -149,3 +151,6 @@ class SimpleDirectory(BaseDirectory):
         self.number_of_DVM_TBEs = 1  # should not receive any dvm
         self.number_of_DVM_snoop_TBEs = 1  # should not receive any dvm
         self.unify_repl_TBEs = False
+
+        self.cbusy_generator = CBusy()
+        self.cbusy_tracker = CBusyTracker()

@@ -73,8 +73,7 @@ def write_header_file(sim_object: Type, cxx_config_hh: str):
     entry_class = f"CxxConfigDirectoryEntry_{sim_object_name}"
     param_class = f"{sim_object_name}CxxConfigParams"
 
-    code(
-        """#include "params/${sim_object_name}.hh"
+    code("""#include "params/${sim_object_name}.hh"
 
     #include "sim/cxx_config.hh"
 
@@ -125,8 +124,7 @@ def write_header_file(sim_object: Type, cxx_config_hh: str):
     };
 
     } // namespace gem5
-    """
-    )
+    """)
 
     code.write(cxx_config_hh)
 

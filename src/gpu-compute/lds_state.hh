@@ -57,17 +57,14 @@ class ComputeUnit;
 class LdsChunk
 {
   public:
-    LdsChunk(const uint32_t x_size):
-        chunk(x_size)
-    {
-    }
+    LdsChunk(const uint32_t x_size) : chunk(x_size) {}
 
     LdsChunk() {}
 
     /**
      * a read operation
      */
-    template<class T>
+    template <class T>
     T
     read(const uint32_t index)
     {
@@ -81,21 +78,21 @@ class LdsChunk
             return (T)0;
         }
 
-        T *p0 = (T *) (&(chunk.at(index)));
+        T *p0 = (T *)(&(chunk.at(index)));
 
         if (sizeof(T) <= 4) {
             [[maybe_unused]] uint32_t int_val =
-                *reinterpret_cast<uint32_t*>(p0);
+                *reinterpret_cast<uint32_t *>(p0);
             DPRINTF(GPULDS, "LDS[%d][%d]: Read %08x from index %d\n",
                     dispatchId, wgId, int_val, index);
         } else if (sizeof(T) <= 8) {
             [[maybe_unused]] uint64_t int_val =
-                *reinterpret_cast<uint64_t*>(p0);
+                *reinterpret_cast<uint64_t *>(p0);
             DPRINTF(GPULDS, "LDS[%d][%d]: Read %016lx from index %d\n",
                     dispatchId, wgId, int_val, index);
         } else if (sizeof(T) <= 16) {
             [[maybe_unused]] uint64_t *int_vals =
-                reinterpret_cast<uint64_t*>(p0);
+                reinterpret_cast<uint64_t *>(p0);
             DPRINTF(GPULDS, "LDS[%d][%d]: Read %016lx%016lx from index %d\n",
                     dispatchId, wgId, int_vals[1], int_vals[0], index);
         }
@@ -106,7 +103,7 @@ class LdsChunk
     /**
      * a write operation
      */
-    template<class T>
+    template <class T>
     void
     write(const uint32_t index, const T value)
     {
@@ -120,26 +117,32 @@ class LdsChunk
             return;
         }
 
-        T *p0 = (T *) (&(chunk.at(index)));
+        T *p0 = (T *)(&(chunk.at(index)));
 
         if (sizeof(T) <= 4) {
             [[maybe_unused]] uint32_t prev_val =
-                *reinterpret_cast<uint32_t*>(p0);
-            DPRINTF(GPULDS, "LDS[%d][%d]: Write %08lx to index %d (was "
-                    "%08lx)\n", dispatchId, wgId, value, index, prev_val);
+                *reinterpret_cast<uint32_t *>(p0);
+            DPRINTF(GPULDS,
+                    "LDS[%d][%d]: Write %08lx to index %d (was "
+                    "%08lx)\n",
+                    dispatchId, wgId, value, index, prev_val);
         } else if (sizeof(T) <= 8) {
             [[maybe_unused]] uint64_t prev_val =
-                *reinterpret_cast<uint64_t*>(p0);
-            DPRINTF(GPULDS, "LDS[%d][%d]: Write %016lx to index %d (was "
-                    "%016lx)\n", dispatchId, wgId, value, index, prev_val);
+                *reinterpret_cast<uint64_t *>(p0);
+            DPRINTF(GPULDS,
+                    "LDS[%d][%d]: Write %016lx to index %d (was "
+                    "%016lx)\n",
+                    dispatchId, wgId, value, index, prev_val);
         } else if (sizeof(T) <= 16) {
             [[maybe_unused]] uint64_t *prev_vals =
-                reinterpret_cast<uint64_t*>(p0);
+                reinterpret_cast<uint64_t *>(p0);
             [[maybe_unused]] const uint64_t *next_vals =
-                reinterpret_cast<const uint64_t*>(&value);
-            DPRINTF(GPULDS, "LDS[%d][%d]: Write %016lx%016lx to index %d "
-                    "(was %016lx%016lx)\n", dispatchId, wgId, next_vals[1],
-                    next_vals[0], index, prev_vals[1], prev_vals[0]);
+                reinterpret_cast<const uint64_t *>(&value);
+            DPRINTF(GPULDS,
+                    "LDS[%d][%d]: Write %016lx%016lx to index %d "
+                    "(was %016lx%016lx)\n",
+                    dispatchId, wgId, next_vals[1], next_vals[0], index,
+                    prev_vals[1], prev_vals[0]);
         }
 
         *p0 = value;
@@ -148,7 +151,7 @@ class LdsChunk
     /**
      * an atomic operation
      */
-    template<class T>
+    template <class T>
     T
     atomic(const uint32_t index, AtomicOpFunctorPtr amoOp)
     {
@@ -159,10 +162,10 @@ class LdsChunk
         if (index >= chunk.size()) {
             return (T)0;
         }
-        T *p0 = (T *) (&(chunk.at(index)));
+        T *p0 = (T *)(&(chunk.at(index)));
         T tmp = *p0;
 
-       (*amoOp)((uint8_t *)p0);
+        (*amoOp)((uint8_t *)p0);
         return tmp;
     }
 
@@ -185,30 +188,23 @@ class LdsChunk
 
 // Local Data Share (LDS) State per Wavefront (contents of the LDS region
 // allocated to the WorkGroup of this Wavefront)
-class LdsState: public ClockedObject
+class LdsState : public ClockedObject
 {
   protected:
-
     /**
      * an event to allow event-driven execution
      */
-    class TickEvent: public Event
+    class TickEvent : public Event
     {
       protected:
-
         LdsState *ldsState = nullptr;
 
         Tick nextTick = 0;
 
       public:
+        TickEvent(LdsState *_ldsState) : ldsState(_ldsState) {}
 
-        TickEvent(LdsState *_ldsState) :
-            ldsState(_ldsState)
-        {
-        }
-
-        virtual void
-        process();
+        virtual void process();
 
         void
         schedule(Tick when)
@@ -226,63 +222,50 @@ class LdsState: public ClockedObject
     /**
      * CuSidePort is the LDS Port closer to the CU side
      */
-    class CuSidePort: public ResponsePort
+    class CuSidePort : public ResponsePort
     {
       public:
-        CuSidePort(const std::string &_name, LdsState *_ownerLds) :
-                ResponsePort(_name), ownerLds(_ownerLds)
-        {
-        }
+        CuSidePort(const std::string &_name, LdsState *_ownerLds)
+            : ResponsePort(_name), ownerLds(_ownerLds)
+        {}
 
       protected:
         LdsState *ownerLds;
 
-        virtual bool
-        recvTimingReq(PacketPtr pkt);
+        virtual bool recvTimingReq(PacketPtr pkt);
 
         virtual Tick
         recvAtomic(PacketPtr pkt)
         {
-          return 0;
+            return 0;
         }
 
-        virtual void
-        recvFunctional(PacketPtr pkt);
+        virtual void recvFunctional(PacketPtr pkt);
 
         virtual void
         recvRangeChange()
-        {
-        }
+        {}
 
-        virtual void
-        recvRetry();
+        virtual void recvRetry();
 
-        virtual void
-        recvRespRetry();
+        virtual void recvRespRetry();
 
         virtual AddrRangeList
         getAddrRanges() const
         {
-          AddrRangeList ranges;
-          ranges.push_back(ownerLds->getAddrRange());
-          return ranges;
+            AddrRangeList ranges;
+            ranges.push_back(ownerLds->getAddrRange());
+            return ranges;
         }
 
-        template<typename T>
-        void
-        loadData(PacketPtr packet);
+        template <typename T> void loadData(PacketPtr packet);
 
-        template<typename T>
-        void
-        storeData(PacketPtr packet);
+        template <typename T> void storeData(PacketPtr packet);
 
-        template<typename T>
-        void
-        atomicOperation(PacketPtr packet);
+        template <typename T> void atomicOperation(PacketPtr packet);
     };
 
   protected:
-
     /**
      * the lds reference counter
      * The key is the workgroup ID and dispatch ID
@@ -293,12 +276,12 @@ class LdsState: public ClockedObject
      * transition, not whenever the counter is 0 as it always starts with 0
      * when the workgroup asks for space
      */
-    std::unordered_map<uint32_t,
-                       std::unordered_map<uint32_t, int32_t>> refCounter;
+    std::unordered_map<uint32_t, std::unordered_map<uint32_t, int32_t>>
+        refCounter;
 
     // the map that allows workgroups to access their own chunk of the LDS
-    std::unordered_map<uint32_t,
-                       std::unordered_map<uint32_t, LdsChunk>> chunkMap;
+    std::unordered_map<uint32_t, std::unordered_map<uint32_t, LdsChunk>>
+        chunkMap;
 
     // an event to allow the LDS to wake up at a specified time
     TickEvent tickEvent;
@@ -311,21 +294,16 @@ class LdsState: public ClockedObject
     // whether or not there are pending responses
     bool retryResp = false;
 
-    bool
-    process();
+    bool process();
 
-    GPUDynInstPtr
-    getDynInstr(PacketPtr packet);
+    GPUDynInstPtr getDynInstr(PacketPtr packet);
 
-    bool
-    processPacket(PacketPtr packet);
+    bool processPacket(PacketPtr packet);
 
-    unsigned
-    countBankConflicts(PacketPtr packet, unsigned *bankAccesses);
+    unsigned countBankConflicts(PacketPtr packet, unsigned *bankAccesses);
 
-    unsigned
-    countBankConflicts(GPUDynInstPtr gpuDynInst,
-                       unsigned *numBankAccesses);
+    unsigned countBankConflicts(GPUDynInstPtr gpuDynInst,
+                                unsigned *numBankAccesses);
 
   public:
     using Params = LdsStateParams;
@@ -333,12 +311,9 @@ class LdsState: public ClockedObject
     LdsState(const Params &params);
 
     // prevent copy construction
-    LdsState(const LdsState&) = delete;
+    LdsState(const LdsState &) = delete;
 
-    ~LdsState()
-    {
-        parent = nullptr;
-    }
+    ~LdsState() { parent = nullptr; }
 
     bool
     isRetryResp() const
@@ -353,8 +328,7 @@ class LdsState: public ClockedObject
     }
 
     // prevent assignment
-    LdsState &
-    operator=(const LdsState &) = delete;
+    LdsState &operator=(const LdsState &) = delete;
 
     /**
      * use the dynamic wave id to create or just increase the reference count
@@ -363,8 +337,7 @@ class LdsState: public ClockedObject
     increaseRefCounter(const uint32_t dispatchId, const uint32_t wgId)
     {
         int refCount = getRefCounter(dispatchId, wgId);
-        fatal_if(refCount < 0,
-                 "reference count should not be below zero");
+        fatal_if(refCount < 0, "reference count should not be below zero");
         return ++refCounter[dispatchId][wgId];
     }
 
@@ -375,20 +348,20 @@ class LdsState: public ClockedObject
     int
     decreaseRefCounter(const uint32_t dispatchId, const uint32_t wgId)
     {
-      int refCount = getRefCounter(dispatchId, wgId);
+        int refCount = getRefCounter(dispatchId, wgId);
 
-      fatal_if(refCount <= 0,
-              "reference count should not be below zero or at zero to"
-              "decrement");
+        fatal_if(refCount <= 0,
+                 "reference count should not be below zero or at zero to"
+                 "decrement");
 
-      refCounter[dispatchId][wgId]--;
+        refCounter[dispatchId][wgId]--;
 
-      if (refCounter[dispatchId][wgId] == 0) {
-        releaseSpace(dispatchId, wgId);
-        return 0;
-      } else {
-        return refCounter[dispatchId][wgId];
-      }
+        if (refCounter[dispatchId][wgId] == 0) {
+            releaseSpace(dispatchId, wgId);
+            return 0;
+        } else {
+            return refCounter[dispatchId][wgId];
+        }
     }
 
     /**
@@ -397,30 +370,33 @@ class LdsState: public ClockedObject
     int
     getRefCounter(const uint32_t dispatchId, const uint32_t wgId) const
     {
-      auto dispatchIter = chunkMap.find(dispatchId);
-      fatal_if(dispatchIter == chunkMap.end(),
-               "could not locate this dispatch id [%d]", dispatchId);
+        auto dispatchIter = chunkMap.find(dispatchId);
+        fatal_if(dispatchIter == chunkMap.end(),
+                 "could not locate this dispatch id [%d]", dispatchId);
 
-      auto workgroup = dispatchIter->second.find(wgId);
-      fatal_if(workgroup == dispatchIter->second.end(),
-               "could not find this workgroup id within this dispatch id"
-               " did[%d] wgid[%d]", dispatchId, wgId);
+        auto workgroup = dispatchIter->second.find(wgId);
+        fatal_if(workgroup == dispatchIter->second.end(),
+                 "could not find this workgroup id within this dispatch id"
+                 " did[%d] wgid[%d]",
+                 dispatchId, wgId);
 
-      auto refCountIter = refCounter.find(dispatchId);
-      if (refCountIter == refCounter.end()) {
-        fatal("could not locate this dispatch id [%d]", dispatchId);
-      } else {
-        auto workgroup = refCountIter->second.find(wgId);
-        if (workgroup == refCountIter->second.end()) {
-          fatal("could not find this workgroup id within this dispatch id"
-                  " did[%d] wgid[%d]", dispatchId, wgId);
+        auto refCountIter = refCounter.find(dispatchId);
+        if (refCountIter == refCounter.end()) {
+            fatal("could not locate this dispatch id [%d]", dispatchId);
         } else {
-          return refCounter.at(dispatchId).at(wgId);
+            auto workgroup = refCountIter->second.find(wgId);
+            if (workgroup == refCountIter->second.end()) {
+                fatal(
+                    "could not find this workgroup id within this dispatch id"
+                    " did[%d] wgid[%d]",
+                    dispatchId, wgId);
+            } else {
+                return refCounter.at(dispatchId).at(wgId);
+            }
         }
-      }
 
-      fatal("should not reach this point");
-      return 0;
+        fatal("should not reach this point");
+        return 0;
     }
 
     /**
@@ -429,13 +405,14 @@ class LdsState: public ClockedObject
      */
     LdsChunk *
     reserveSpace(const uint32_t dispatchId, const uint32_t wgId,
-            const uint32_t size)
+                 const uint32_t size)
     {
         if (chunkMap.find(dispatchId) != chunkMap.end()) {
-            panic_if(
-                chunkMap[dispatchId].find(wgId) != chunkMap[dispatchId].end(),
-                "duplicate workgroup ID asking for space in the LDS "
-                "did[%d] wgid[%d]", dispatchId, wgId);
+            panic_if(chunkMap[dispatchId].find(wgId) !=
+                         chunkMap[dispatchId].end(),
+                     "duplicate workgroup ID asking for space in the LDS "
+                     "did[%d] wgid[%d]",
+                     dispatchId, wgId);
         }
 
         if (bytesAllocated + size > maximumSize) {
@@ -462,18 +439,18 @@ class LdsState: public ClockedObject
     LdsChunk *
     getLdsChunk(const uint32_t dispatchId, const uint32_t wgId)
     {
-      fatal_if(chunkMap.find(dispatchId) == chunkMap.end(),
-          "fetch for unknown dispatch ID did[%d]", dispatchId);
+        fatal_if(chunkMap.find(dispatchId) == chunkMap.end(),
+                 "fetch for unknown dispatch ID did[%d]", dispatchId);
 
-      fatal_if(chunkMap[dispatchId].find(wgId) == chunkMap[dispatchId].end(),
-          "fetch for unknown workgroup ID wgid[%d] in dispatch ID did[%d]",
-          wgId, dispatchId);
+        fatal_if(
+            chunkMap[dispatchId].find(wgId) == chunkMap[dispatchId].end(),
+            "fetch for unknown workgroup ID wgid[%d] in dispatch ID did[%d]",
+            wgId, dispatchId);
 
-      return &chunkMap[dispatchId][wgId];
+        return &chunkMap[dispatchId][wgId];
     }
 
-    bool
-    returnQueuePush(std::pair<Tick, PacketPtr> thePair);
+    bool returnQueuePush(std::pair<Tick, PacketPtr> thePair);
 
     Tick
     earliestReturnTime() const
@@ -482,8 +459,7 @@ class LdsState: public ClockedObject
         return returnQueue.empty() ? curTick() : returnQueue.back().first;
     }
 
-    void
-    setParent(ComputeUnit *x_parent);
+    void setParent(ComputeUnit *x_parent);
 
     // accessors
     ComputeUnit *
@@ -548,7 +524,7 @@ class LdsState: public ClockedObject
     bool
     canReserve(uint32_t x_size) const
     {
-      return bytesAllocated + x_size <= maximumSize;
+        return bytesAllocated + x_size <= maximumSize;
     }
 
   private:
@@ -561,13 +537,13 @@ class LdsState: public ClockedObject
         auto dispatchIter = chunkMap.find(x_dispatchId);
 
         if (dispatchIter == chunkMap.end()) {
-          fatal("dispatch id not found [%d]", x_dispatchId);
+            fatal("dispatch id not found [%d]", x_dispatchId);
         } else {
-          auto workgroupIter = dispatchIter->second.find(x_wgId);
-          if (workgroupIter == dispatchIter->second.end()) {
-            fatal("workgroup id [%d] not found in dispatch id [%d]",
-                    x_wgId, x_dispatchId);
-          }
+            auto workgroupIter = dispatchIter->second.find(x_wgId);
+            if (workgroupIter == dispatchIter->second.end()) {
+                fatal("workgroup id [%d] not found in dispatch id [%d]",
+                      x_wgId, x_dispatchId);
+            }
         }
 
         fatal_if(bytesAllocated < chunkMap[x_dispatchId][x_wgId].size(),
@@ -581,7 +557,7 @@ class LdsState: public ClockedObject
     // the port that connects this LDS to its owner CU
     CuSidePort cuPort;
 
-    ComputeUnit* parent = nullptr;
+    ComputeUnit *parent = nullptr;
 
     std::string _name;
 

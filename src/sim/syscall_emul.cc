@@ -393,27 +393,6 @@ linkFunc(SyscallDesc *desc, ThreadContext *tc,
 }
 
 SyscallReturn
-symlinkFunc(SyscallDesc *desc, ThreadContext *tc,
-            VPtr<> pathname, VPtr<> new_pathname)
-{
-    std::string path;
-    std::string new_path;
-    auto p = tc->getProcessPtr();
-
-    SETranslatingPortProxy virt_mem(tc);
-    if (!virt_mem.tryReadString(path, pathname))
-        return -EFAULT;
-    if (!virt_mem.tryReadString(new_path, new_pathname))
-        return -EFAULT;
-
-    path = p->absolutePath(path, true);
-    new_path = p->absolutePath(new_path, true);
-
-    int result = symlink(path.c_str(), new_path.c_str());
-    return (result == -1) ? -errno : result;
-}
-
-SyscallReturn
 mkdirFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname, mode_t mode)
 {
     std::string path;

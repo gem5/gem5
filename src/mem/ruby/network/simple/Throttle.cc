@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 ARM Limited
+ * Copyright (c) 2021,2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -180,6 +180,10 @@ Throttle::operateVnet(int vnet, int channel, int &total_bw_remaining,
     int bw_remaining = m_physical_vnets ?
                 getLinkBandwidth(vnet) : total_bw_remaining;
 
+    if (in->isReady(current_time)) {
+        m_switch->profBackEndRdy(in->peekMsgPtr().get(), vnet);
+    }
+
     auto hasPendingWork = [&]{ return in->isReady(current_time) ||
                                       units_remaining > 0; };
     while ((bw_remaining > 0) && hasPendingWork() &&
@@ -204,6 +208,18 @@ Throttle::operateVnet(int vnet, int channel, int &total_bw_remaining,
                          m_switch->cyclesToTicks(m_link_latency),
                          m_ruby_system->getRandomization(),
                          m_ruby_system->getWarmupEnabled());
+
+            if (out->isInport()) {
+                m_switch->profBackEndFwdExt(net_msg_ptr, out, vnet);
+            } else {
+                m_switch->profBackEndFwd(net_msg_ptr, vnet);
+            }
+
+            // Could still have more ready but won't execute because no more
+            // BW or output port blocked
+            if (in->isReady(current_time)) {
+                m_switch->profBackEndRdy(in->peekMsgPtr().get(), vnet);
+            }
 
             // Count the message
             (*(throttleStats.

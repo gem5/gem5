@@ -80,7 +80,9 @@ class SingleChannelSimpleMemory(AbstractMemorySystem):
         super().__init__()
 
         self.module = SimpleMemory(
-            latency=latency, latency_var=latency_var, bandwidth=bandwidth
+            latency=latency,
+            latency_dist_param=latency_var,
+            bandwidth=bandwidth,
         )
         self._size = toMemorySize(size)
 

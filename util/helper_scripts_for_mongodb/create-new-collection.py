@@ -33,6 +33,7 @@ To run this script you use the following command:
 python3 ./create-new-collection.py --uri <uri> --db_name <db_name> --collection_name <collection_name> /
    --new_collection_name <new_collection_name>
 """
+
 import argparse
 import json
 

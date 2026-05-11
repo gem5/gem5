@@ -189,10 +189,6 @@ SyscallReturn unlinkImpl(SyscallDesc *desc, ThreadContext *tc,
 SyscallReturn linkFunc(SyscallDesc *desc, ThreadContext *tc,
                        VPtr<> pathname, VPtr<> new_pathname);
 
-/// Target symlink() handler.
-SyscallReturn symlinkFunc(SyscallDesc *desc, ThreadContext *tc,
-                          VPtr<> pathname, VPtr<> new_pathname);
-
 /// Target mkdir() handler.
 SyscallReturn mkdirFunc(SyscallDesc *desc, ThreadContext *tc,
                         VPtr<> pathname, mode_t mode);
@@ -1145,6 +1141,55 @@ readlinkFunc(SyscallDesc *desc, ThreadContext *tc,
         pathname, buf_ptr, bufsiz);
 }
 
+/// Target symlinkat() handler.
+template <class OS>
+SyscallReturn
+symlinkatFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> target_ptr,
+              int newdirfd, VPtr<> linkpath_ptr)
+{
+    std::string target;
+    if (!SETranslatingPortProxy(tc).tryReadString(target, target_ptr)) {
+        return -EFAULT;
+    }
+
+    std::string linkpath;
+    if (!SETranslatingPortProxy(tc).tryReadString(linkpath, linkpath_ptr)) {
+        return -EFAULT;
+    }
+
+    auto p = tc->getProcessPtr();
+
+    std::string processed_linkpath;
+    if (newdirfd == OS::TGT_AT_FDCWD) {
+        processed_linkpath = p->checkPathRedirect(linkpath);
+    } else if (!startswith(linkpath, "/")) {
+        std::shared_ptr<FDEntry> fdep = ((*p->fds)[newdirfd]);
+        auto ffdp = std::dynamic_pointer_cast<FileFDEntry>(fdep);
+        if (!ffdp) {
+            return -EBADF;
+        }
+        processed_linkpath =
+            p->checkPathRedirect(ffdp->getFileName() + "/" + linkpath);
+    } else {
+        // absolute path
+        processed_linkpath = p->checkPathRedirect(linkpath);
+    }
+
+    int result = symlink(p->checkPathRedirect(target).c_str(),
+                         processed_linkpath.c_str());
+    return (result == -1) ? -errno : result;
+}
+
+/// Target symlink() handler.
+template <class OS>
+SyscallReturn
+symlinkFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname,
+            VPtr<> new_pathname)
+{
+    return symlinkatFunc<OS>(desc, tc, pathname, OS::TGT_AT_FDCWD,
+                             new_pathname);
+}
+
 /// Target renameat() handler.
 template <class OS>
 SyscallReturn
@@ -1283,10 +1328,11 @@ chmodFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> pathname, mode_t mode)
     return fchmodatFunc<OS>(desc, tc, OS::TGT_AT_FDCWD, pathname, mode);
 }
 
+/// Common implementation for poll and ppoll.
 template <class OS>
 SyscallReturn
-pollFunc(SyscallDesc *desc, ThreadContext *tc,
-         VPtr<> fdsPtr, int nfds, int tmout)
+pollImpl(SyscallDesc *desc, ThreadContext *tc, VPtr<> fdsPtr, int nfds,
+         int tmout)
 {
     auto p = tc->getProcessPtr();
 
@@ -1304,8 +1350,9 @@ pollFunc(SyscallDesc *desc, ThreadContext *tc,
         temp_tgt_fds[index] = ((struct pollfd *)fdsBuf.bufferPtr())[index].fd;
         int tgt_fd = temp_tgt_fds[index];
         auto hbfdp = std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[tgt_fd]);
-        if (!hbfdp)
+        if (!hbfdp) {
             return -EBADF;
+        }
         auto host_fd = hbfdp->getSimFD();
         ((struct pollfd *)fdsBuf.bufferPtr())[index].fd = host_fd;
     }
@@ -1327,16 +1374,21 @@ pollFunc(SyscallDesc *desc, ThreadContext *tc,
              */
             System *sysh = tc->getSystemPtr();
             std::list<BasicSignal>::iterator it;
-            for (it=sysh->signalList.begin(); it!=sysh->signalList.end(); it++)
-                if (it->receiver == p)
+            for (it = sysh->signalList.begin(); it != sysh->signalList.end();
+                 it++) {
+                if (it->receiver == p) {
                     return -EINTR;
+                }
+            }
             return SyscallReturn::retry();
         }
-    } else
+    } else {
         status = poll((struct pollfd *)fdsBuf.bufferPtr(), nfds, 0);
+    }
 
-    if (status == -1)
+    if (status == -1) {
         return -errno;
+    }
 
     /**
      * Replace each host_fd in the returned poll_fd array with its original
@@ -1354,6 +1406,32 @@ pollFunc(SyscallDesc *desc, ThreadContext *tc,
     fdsBuf.copyOut(SETranslatingPortProxy(tc));
 
     return status;
+}
+
+/// Target poll() handler.
+template <class OS>
+SyscallReturn
+pollFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> fdsPtr, int nfds,
+         int tmout)
+{
+    return pollImpl<OS>(desc, tc, fdsPtr, nfds, tmout);
+}
+
+/// Target ppoll() handler.
+/// Note: Signal mask handling is intentionally omitted as it is
+/// not currently required for gem5's SE mode.
+template <class OS>
+SyscallReturn
+ppollFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> fdsPtr, int nfds,
+          VPtr<typename OS::timespec> tsPtr, VPtr<> sigmaskPtr)
+{
+    int tmout = -1;
+    if (tsPtr) {
+        tmout = gtoh(tsPtr->tv_sec, OS::byteOrder) * 1000 +
+                gtoh(tsPtr->tv_nsec, OS::byteOrder) / 1000000;
+    }
+
+    return pollImpl<OS>(desc, tc, fdsPtr, nfds, tmout);
 }
 
 /// Target fchmod() handler.
@@ -3261,6 +3339,28 @@ ftruncateFunc(SyscallDesc *desc, ThreadContext *tc, int tgt_fd,
 
     int result = ftruncate(sim_fd, length);
     return (result == -1) ? -errno : result;
+}
+
+template <class OS>
+SyscallReturn
+rseqFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> rseq_ptr,
+         uint32_t rseq_len, int flags, uint32_t sig)
+{
+    // 1 is RSEQ_FLAG_UNREGISTER
+    if (flags & 1) {
+        return 0;
+    }
+
+    // Register
+    // Write current CPU ID to cpu_id_start (offset 0) and cpu_id (offset 4)
+    uint32_t cpu_id = tc->cpuId();
+    cpu_id = htog(cpu_id, OS::byteOrder);
+
+    SETranslatingPortProxy(tc).writeBlob(rseq_ptr, &cpu_id, sizeof(cpu_id));
+    SETranslatingPortProxy(tc).writeBlob(rseq_ptr + 4, &cpu_id,
+                                         sizeof(cpu_id));
+
+    return 0;
 }
 
 template <typename OS>

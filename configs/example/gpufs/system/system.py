@@ -61,7 +61,7 @@ def makeGpuFSSystem(args):
         panic("Need at least 2GiB of system memory to load amdgpu module")
 
     # Use the common FSConfig to setup a Linux X86 System
-    (TestCPUClass, test_mem_mode) = Simulation.getCPUClass(args.cpu_type)
+    TestCPUClass, test_mem_mode = Simulation.getCPUClass(args.cpu_type)
     if test_mem_mode == "atomic":
         test_mem_mode = "atomic_noncaching"
     disks = [args.disk_image]
@@ -87,9 +87,6 @@ def makeGpuFSSystem(args):
     system.cpu_clk_domain = SrcClockDomain(
         clock=args.cpu_clock, voltage_domain=system.cpu_voltage_domain
     )
-
-    # Setup VGA ROM region
-    system.shadow_rom_ranges = [AddrRange(0xC0000, size=Addr("128KiB"))]
 
     # Create specified number of CPUs. GPUFS really only needs one.
     system.cpu = [

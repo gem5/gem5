@@ -1,16 +1,4 @@
-# Copyright (c) 2020 ARM Limited
-# All rights reserved
-#
-# The license below extends only to copyright in the software and shall
-# not be construed as granting a license to any other intellectual
-# property including but not limited to intellectual property relating
-# to a hardware implementation of the functionality of the software
-# licensed hereunder.  You may use the software subject to the license
-# terms below provided that you ensure that this notice is replicated
-# unmodified and in its entirety in all distributions of the software,
-# modified or unmodified, in source code or in binary form.
-#
-# Copyright (c) 2017 Mark D. Hill and David A. Wood
+# Copyright (c) 2025-2026 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -36,39 +24,42 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""
-Test file for the util m5 exit assembly instruction.
-"""
-import re
-
-from testlib import *
-
-m5_exit_regex = re.compile(
-    r"Exiting @ tick \d* because m5_exit instruction encountered"
+import gem5.utils.multisim as multisim
+from gem5.components.boards.x86_board import X86Board
+from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
+    PrivateL1PrivateL2CacheHierarchy,
 )
+from gem5.components.memory import SingleChannelDDR3_1600
+from gem5.components.processors.cpu_types import CPUTypes
+from gem5.components.processors.simple_processor import SimpleProcessor
+from gem5.isas import ISA
+from gem5.resources.resource import obtain_resource
+from gem5.simulate.simulator import Simulator
 
-if config.bin_path:
-    resource_path = config.bin_path
-else:
-    resource_path = joinpath(absdirpath(__file__), "..", "resources")
+multisim.set_num_processes(4)
 
-a = verifier.MatchRegex(m5_exit_regex)
-gem5_verify_config(
-    name="m5_exit_test",
-    verifiers=[a],
-    fixtures=(),
-    config=joinpath(
-        config.base_dir,
-        "tests",
-        "gem5",
-        "m5_util",
-        "configs",
-        "simple_binary_run.py",
-    ),
-    config_args=[
-        "x86-m5-exit",
-        "--resource-directory",
-        resource_path,
-    ],
-    valid_isas=(constants.all_compiled_tag,),
-)
+for npb_workload in ["bt", "cg", "ep", "ft"]:
+    cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
+        l1d_size="16KiB",
+        l1i_size="16KiB",
+        l2_size="256KiB",
+    )
+    memory = SingleChannelDDR3_1600(size="3GiB")
+    processor = SimpleProcessor(
+        cpu_type=CPUTypes.ATOMIC, isa=ISA.X86, num_cores=1
+    )
+    board = X86Board(
+        clk_freq="1GHz",
+        processor=processor,
+        memory=memory,
+        cache_hierarchy=cache_hierarchy,
+    )
+    board.set_workload(
+        obtain_resource(
+            f"x86-ubuntu-24.04-npb-{npb_workload}-s", resource_version="3.0.0"
+        )
+    )
+
+    multisim.add_simulator(
+        Simulator(board=board, id=f"process_x86-atomic-{npb_workload}-s")
+    )

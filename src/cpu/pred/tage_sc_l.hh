@@ -171,8 +171,8 @@ class TAGE_SC_L: public LTAGE
   public:
     TAGE_SC_L(const TAGE_SC_LParams &params);
 
-    bool predict(
-        ThreadID tid, Addr branch_pc, bool cond_branch, void* &b) override;
+    Prediction predict(ThreadID tid, Addr branch_pc, bool cond_branch,
+                       void *&b) override;
     void squash(ThreadID tid, void * &bp_history) override;
     void update(ThreadID tid, Addr pc, bool taken, void * &bp_history,
                 bool squashed, const StaticInstPtr & inst,

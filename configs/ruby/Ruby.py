@@ -249,7 +249,7 @@ def create_system(
         cpus = system.cpu
 
     try:
-        (cpu_sequencers, dir_cntrls, topology) = import_module(
+        cpu_sequencers, dir_cntrls, topology = import_module(
             f"ruby.{buildEnv['PROTOCOL']}"
         ).create_system(
             options, full_system, system, dma_ports, bootmem, ruby, cpus

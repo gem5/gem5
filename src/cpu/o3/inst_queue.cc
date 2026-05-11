@@ -41,18 +41,35 @@
 
 #include "cpu/o3/inst_queue.hh"
 
-#include <limits>
 #include <vector>
 
+#include "arch/generic/isa.hh"
+#include "base/cprintf.hh"
 #include "base/logging.hh"
+#include "base/stats/group.hh"
+#include "base/stats/info.hh"
+#include "base/stats/units.hh"
+#include "base/trace.hh"
+#include "base/types.hh"
+#include "cpu/inst_seq.hh"
+#include "cpu/o3/comm.hh"
+#include "cpu/o3/cpu.hh"
 #include "cpu/o3/dyn_inst.hh"
+#include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/fu_pool.hh"
+#include "cpu/o3/iew.hh"
 #include "cpu/o3/limits.hh"
+#include "cpu/op_class.hh"
+#include "cpu/reg_class.hh"
+#include "cpu/timebuf.hh"
 #include "debug/IQ.hh"
 #include "enums/OpClass.hh"
+#include "enums/SMTQueuePolicy.hh"
 #include "params/BaseO3CPU.hh"
 #include "params/IQUnit.hh"
 #include "sim/core.hh"
+#include "sim/cur_tick.hh"
+#include "sim/eventq.hh"
 
 // clang complains about std::set being overloaded with Packet::set if
 // we open up the entire namespace std
@@ -188,6 +205,12 @@ IQUnit::numFreeEntries(const DynInstPtr &inst) const
     } else {
         return numFreeEntries(tid);
     }
+}
+
+bool
+IQUnit::isCapable(OpClass op_class) const
+{
+    return _fuPool->isCapable(op_class);
 }
 
 InstructionQueue::FUCompletion::FUCompletion(const DynInstPtr &_inst,
@@ -599,10 +622,23 @@ InstructionQueue::numFreeEntries(ThreadID tid)
 unsigned
 InstructionQueue::numFreeEntries(const DynInstPtr &inst)
 {
+    bool any_capable = false;
     unsigned free_entries = 0;
     for (auto iq : iqs) {
-        free_entries += iq->numFreeEntries(inst);
+        if (iq->isCapable(inst->opClass())) {
+            any_capable = true;
+            free_entries += iq->numFreeEntries(inst);
+        }
     }
+
+    if (any_capable) {
+        return free_entries;
+    }
+
+    for (auto iq : iqs) {
+        free_entries += iq->numFreeEntries(inst->threadNumber);
+    }
+
     return free_entries;
 }
 
@@ -655,13 +691,26 @@ InstructionQueue::hasReadyInsts()
 IQUnit *
 InstructionQueue::findIQ(const DynInstPtr &inst)
 {
+    bool any_capable = false;
     for (auto iq : iqs) {
-        // If the IQ can store the selected instruction,
-        // return the IQ as valid
-        if (iq->numFreeEntries(inst) > 0) {
+        if (iq->isCapable(inst->opClass())) {
+            any_capable = true;
+            if (iq->numFreeEntries(inst) > 0) {
+                return iq;
+            }
+        }
+    }
+
+    if (any_capable) {
+        return nullptr;
+    }
+
+    for (auto iq : iqs) {
+        if (iq->numFreeEntries(inst->threadNumber) > 0) {
             return iq;
         }
     }
+
     return nullptr;
 }
 

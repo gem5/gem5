@@ -238,7 +238,9 @@ def _list_all_resources(
             raise Exception(f"Client: {client} does not exist")
         try:
             resources.extend(
-                clientwrapper[client].get_resources(gem5_version=gem5_version)
+                clientwrapper[client].get_all_resources(
+                    gem5_version=gem5_version
+                )
             )
         except Exception as e:
             warn(f"Error getting resources from client {client}: {str(e)}")

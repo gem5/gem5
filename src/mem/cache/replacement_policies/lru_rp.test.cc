@@ -35,7 +35,7 @@
 #include "params/LRURP.hh"
 
 // We need to initialize the event queue to be able to count ticks
-gem5::EventQueue eventQueue("MRURPTest Queue");
+gem5::EventQueue eventQueue("LRURPTest Queue");
 
 /// Common fixture that initializes the replacement policy
 class LRURPTestF : public ::testing::Test

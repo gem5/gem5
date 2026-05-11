@@ -1,3 +1,15 @@
+# Copyright (c) 2026 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2021 The Regents of the University of California
 # All rights reserved.
 #
@@ -40,7 +52,7 @@ from m5.objects import (
     MemorySize,
     Root,
 )
-from m5.stats.gem5stats import get_simstat
+from m5.stats.gem5stats import JsonOutputVistor
 
 from gem5.components.boards.test_board import TestBoard
 
@@ -270,9 +282,5 @@ print("Beginning simulation!")
 exit_event = m5.simulate()
 print(f"Exiting @ tick {m5.curTick()} because {exit_event.getCause()}.")
 
-simstats = get_simstat(
-    [core.generator for core in generator.get_cores()], prepare_stats=True
-)
-json_output = Path(m5.options.outdir) / "output.json"
-with open(json_output, "w") as stats_file:
-    simstats.dump(stats_file, indent=2)
+json_visitor = JsonOutputVistor(Path(m5.options.outdir) / "output.json")
+json_visitor.dump([core.generator for core in generator.get_cores()])

@@ -74,30 +74,24 @@ def write_cc_file(enum: Type, use_python: bool, enum_cc: str):
     file_name = enum.__name__
     name = enum.__name__ if enum.enum_name is None else enum.enum_name
 
-    code(
-        """#include "base/compiler.hh"
+    code("""#include "base/compiler.hh"
 #include "enums/$file_name.hh"
 
 namespace gem5
 {
 
-"""
-    )
+""")
 
     if enum.wrapper_is_struct:
         code("const char *${wrapper_name}::${name}Strings[Num_${name}] =")
     else:
         if enum.is_class:
-            code(
-                """\
+            code("""\
 const char *${name}Strings[static_cast<int>(${name}::Num_${name})] =
-"""
-            )
+""")
         else:
-            code(
-                """namespace ${wrapper_name}
-{"""
-            )
+            code("""namespace ${wrapper_name}
+{""")
             code.indent(1)
             code("const char *${name}Strings[Num_${name}] =")
 
@@ -119,8 +113,7 @@ const char *${name}Strings[static_cast<int>(${name}::Num_${name})] =
         enum_name = enum.__name__ if enum.enum_name is None else enum.enum_name
         wrapper_name = enum_name if enum.is_class else enum.wrapper_name
 
-        code(
-            """#include "pybind11/pybind11.h"
+        code("""#include "pybind11/pybind11.h"
 #include "pybind11/stl.h"
 
 #include <sim/init.hh>
@@ -135,8 +128,7 @@ module_init(py::module_ &m_internal)
 {
     py::module_ m = m_internal.def_submodule("enum_${name}");
 
-"""
-        )
+""")
         if enum.is_class:
             code('py::enum_<${enum_name}>(m, "enum_${name}")')
         else:
@@ -154,13 +146,11 @@ module_init(py::module_ &m_internal)
 
         code("}")
         code.dedent()
-        code(
-            """
+        code("""
 static EmbeddedPyBind embed_enum("enum_${name}", module_init);
 
 } // namespace gem5
-    """
-        )
+    """)
 
     code.write(enum_cc)
 

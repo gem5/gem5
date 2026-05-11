@@ -179,3 +179,41 @@ class JSONClient(AbstractClient):
             resources_by_id[id] = self.sort_resources(resource_list)[0]
 
         return copy.deepcopy(resources_by_id)
+
+    def get_all_resources(self, gem5_version: str) -> List[Dict[str, Any]]:
+        """
+        Get all resources compatible with the specified gem5 version.
+
+        :param gem5_version: The gem5 version to match against.
+        :returns: A list of resources compatible with the given gem5 version.
+        """
+        if gem5_version.startswith("DEVELOP"):
+            raise ValueError(
+                "All resources are compatible with DEVELOP version. "
+                "Please pass a specific gem5 version from gem5 releases."
+            )
+
+        # Build a list of all possible prefixes from the version
+        # e.g., "25.0.0.1" -> ["25.0", "25.0.0", "25.0.0.1"]
+        version_parts = gem5_version.split(".")
+        prefixes = []
+        for i in range(2, len(version_parts) + 1):
+            prefixes.append(".".join(version_parts[:i]))
+
+        if not prefixes:
+            raise ValueError(
+                "Invalid 'gem5_version' parameter: must have at least "
+                "major.minor format (e.g., '25.0')"
+            )
+
+        # Filter resources where any gem5_version matches one of the prefixes
+        filtered_resources = [
+            resource
+            for resource in self.resources
+            if any(
+                gem5_ver in prefixes
+                for gem5_ver in resource.get("gem5_versions", [])
+            )
+        ]
+
+        return copy.deepcopy(filtered_resources)

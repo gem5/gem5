@@ -52,6 +52,7 @@ namespace gem5
 {
 
 struct BaseO3CPUParams;
+using branch_prediction::Prediction;
 
 namespace o3
 {
@@ -247,10 +248,10 @@ class BAC
      * @param inst The branch instruction.
      * @param ft The fetch target that is currently processed.
      * @param PC The predicted PC is passed back through this parameter.
-     * @return Returns if the branch is taken or not.
+     * @return Returns the prediction result from the BPU.
      */
-    bool predict(ThreadID tid, const StaticInstPtr &inst,
-                 const FetchTargetPtr &ft, PCStateBase &pc);
+    Prediction predict(ThreadID tid, const StaticInstPtr &inst,
+                       const FetchTargetPtr &ft, PCStateBase &pc);
 
     /**
      * Main function that feeds the FTQ with new fetch targets.
@@ -364,6 +365,9 @@ class BAC
      * cycle. Used to tell CPU if there is activity this cycle.
      */
     bool wroteToTimeBuffer;
+
+    /** Tracks remaining cycles that the branch predictor stalls BAC */
+    Cycles branchPredictRemaining[MaxThreads];
 
     /** Source of possible stalls. */
     struct Stalls

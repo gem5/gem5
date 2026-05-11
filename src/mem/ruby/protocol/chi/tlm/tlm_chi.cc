@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Arm Limited
+ * Copyright (c) 2024, 2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -64,18 +64,26 @@ void
 tlm_chi_pybind(pybind11::module_ &m_internal)
 {
     auto tlm_chi = m_internal.def_submodule("tlm_chi");
+
+    using Mpam = decltype(Payload::mpam);
+    py::class_<Mpam>(tlm_chi, "Mpam")
+        .def(py::init<>())
+        .def_readwrite("mpam_ns", &Mpam::mpam_ns)
+        .def_readwrite("part_id", &Mpam::part_id)
+        .def_readwrite("perf_mon_group", &Mpam::perf_mon_group);
+
     py::class_<Payload, std::unique_ptr<Payload, PayloadDeleter<Payload>>>(
         tlm_chi, "TlmPayload")
         .def(py::init(&Payload::new_payload))
         .def_readwrite("address", &Payload::address)
-        .def_property("size",
-            [] (const Payload &p) { return p.size; },
-            [] (Payload &p, SizeEnum val) { p.size = val; })
+        .def_readwrite("mpam", &Payload::mpam)
+        .def_property(
+            "size", [](const Payload &p) { return p.size; },
+            [](Payload &p, SizeEnum val) { p.size = val; })
         .def_readwrite("lpid", &Payload::lpid)
-        .def_property("ns",
-            [] (const Payload &p) { return p.ns; },
-            [] (Payload &p, bool val) { p.ns = val; })
-        ;
+        .def_property(
+            "ns", [](const Payload &p) { return p.ns; },
+            [](Payload &p, bool val) { p.ns = val; });
 
     py::class_<Phase>(tlm_chi, "TlmPhase")
         .def(py::init<>())

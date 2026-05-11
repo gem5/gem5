@@ -91,7 +91,7 @@ board.set_se_binary_workload(
     # the workload should be the same as the one in the save-checkpoint script
     obtain_resource("riscv-hello"),
     checkpoint=obtain_resource(
-        "riscv-hello-example-checkpoint", resource_version="6.0.0"
+        "riscv-hello-example-checkpoint", resource_version="7.0.0"
     ),
 )
 

@@ -1,3 +1,15 @@
+# Copyright (c) 2025 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2021 The Regents of The University of California
 # All rights reserved.
 #
@@ -42,18 +54,25 @@ class SimStat(Group):
     Contains all the statistics for a given simulation.
     """
 
+    creation_time: Optional[datetime]
+    simulated_begin_time: Optional[Union[int, float]]
+    simulated_end_time: Optional[Union[int, float]]
+
     def __init__(
         self,
         creation_time: Optional[datetime] = None,
         time_conversion: Optional[TimeConversion] = None,
         simulated_begin_time: Optional[Union[int, float]] = None,
         simulated_end_time: Optional[Union[int, float]] = None,
-        **kwargs: Dict[str, Union[Group, Statistic, List[Group]]]
+        name: Optional[str] = None,
+        **kwargs: Dict[str, Union[Group, Statistic, List[Group]]],
     ):
+        self.creation_time = creation_time
+        self.simulated_begin_time = simulated_begin_time
+        self.simulated_end_time = simulated_end_time
         super().__init__(
-            creation_time=creation_time,
             time_conversion=time_conversion,
-            simulated_begin_time=simulated_begin_time,
-            simulated_end_time=simulated_end_time,
-            **kwargs
+            type="SimObject",
+            name=name,
+            **kwargs,
         )

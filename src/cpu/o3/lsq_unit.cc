@@ -42,17 +42,30 @@
 #include "cpu/o3/lsq_unit.hh"
 
 #include "arch/generic/debugfaults.hh"
-#include "base/str.hh"
+#include "arch/generic/mmu.hh"
+#include "base/cprintf.hh"
+#include "base/logging.hh"
+#include "base/stats/group.hh"
+#include "base/stats/info.hh"
+#include "base/stats/units.hh"
+#include "base/trace.hh"
+#include "base/types.hh"
 #include "cpu/checker/cpu.hh"
+#include "cpu/inst_seq.hh"
+#include "cpu/o3/cpu.hh"
 #include "cpu/o3/dyn_inst.hh"
+#include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/o3/lsq.hh"
-#include "debug/Activity.hh"
 #include "debug/HtmCpu.hh"
-#include "debug/IEW.hh"
 #include "debug/LSQUnit.hh"
+#include "mem/htm.hh"
 #include "mem/packet.hh"
+#include "mem/port.hh"
 #include "mem/request.hh"
+#include "sim/cur_tick.hh"
+#include "sim/eventq.hh"
+#include "sim/faults.hh"
 
 namespace gem5
 {
@@ -1617,7 +1630,7 @@ LSQUnit::read(LSQRequest *request, ssize_t load_idx)
     // if we the cache is not blocked, do cache access
     // if the request is not sent and cache is unblocked
     // then put the instruction into retry queue so we do not need
-    // an exta cycle to re-issue and execute
+    // an extra cycle to re-issue and execute
     request->buildPackets();
     request->sendPacketToCache();
     if (!request->isSent()) {
@@ -1677,6 +1690,52 @@ LSQUnit::getStoreHeadSeqNum()
     else
         return 0;
 }
+
+LSQEntry::~LSQEntry()
+{
+    if (_request != nullptr) {
+        _request->freeLSQEntry();
+        _request = nullptr;
+    }
+}
+
+void
+LSQEntry::clear()
+{
+    _inst = nullptr;
+    if (_request != nullptr) {
+        _request->freeLSQEntry();
+    }
+    _request = nullptr;
+    _valid = false;
+    _size = 0;
+}
+
+void
+LSQEntry::set(const DynInstPtr &new_inst)
+{
+    assert(!_valid);
+    _inst = new_inst;
+    _valid = true;
+    _size = 0;
+}
+
+SQEntry::SQEntry()
+{ std::memset(_data, 0, DataSize); }
+
+void
+SQEntry::set(const DynInstPtr &inst)
+{ LSQEntry::set(inst); }
+
+void
+SQEntry::clear()
+{
+    LSQEntry::clear();
+    _canWB = _completed = _committed = _isAllZeros = false;
+}
+
+LSQUnit::LSQUnit(const LSQUnit &l) : stats(nullptr)
+{ panic("LSQUnit is not copy-able"); }
 
 } // namespace o3
 } // namespace gem5

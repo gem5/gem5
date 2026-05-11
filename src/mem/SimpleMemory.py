@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2013, 2021 Arm Limited
+# Copyright (c) 2012-2013, 2021, 2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -40,6 +40,19 @@ from m5.objects.AbstractMemory import *
 from m5.params import *
 
 
+class LatencyDistribution(ScopedEnum):
+    vals = [
+        # Uniform distribution between [0, latency_dist_param] which
+        # gets added to the latency Param
+        "Uniform",
+        # Normal distribution norm(latency, latency_dist_param)
+        # latency_dist_param is the standard deviation.
+        # Distribution gets clipped after 3 * stdev from the mean
+        "Normal",
+        "None",
+    ]
+
+
 class SimpleMemory(AbstractMemory):
     type = "SimpleMemory"
     cxx_header = "mem/simple_mem.hh"
@@ -47,7 +60,14 @@ class SimpleMemory(AbstractMemory):
 
     port = ResponsePort("This port sends responses and receives requests")
     latency = Param.Latency("30ns", "Request to response latency")
-    latency_var = Param.Latency("0ns", "Request to response latency variance")
+    latency_dist = Param.LatencyDistribution(
+        "None", "Latency distribution of SimpleMemory"
+    )
+    latency_dist_param = Param.Latency(
+        "0ns",
+        "Request to response latency variance. It is interpreted "
+        "as standard deviation for normal distribution",
+    )
     # The memory bandwidth limit default is set to 12.8GiB/s which is
     # representative of a x64 DDR3-1600 channel.
     bandwidth = Param.MemoryBandwidth(
