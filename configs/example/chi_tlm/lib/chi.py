@@ -104,11 +104,38 @@ def wait_data(transaction):
     return True
 
 
+def cycles(num_cycles):
+    def nothing(transaction):
+        return True
+
+    return nothing, num_cycles
+
+
 def do_comp_ack(transaction):
     transaction.phase.channel = Channel.RSP
     transaction.phase.opcode = RspOpcode.COMP_ACK
     transaction.send()
     return False
+
+
+def do_wr_data(transaction, opcode, data_id):
+    transaction.phase.channel = Channel.DAT
+    transaction.phase.opcode = opcode
+    transaction.phase.data_id = data_id
+    if data_id == 0:
+        transaction.payload.byte_enable = 0x00000000FFFFFFFF
+    else:
+        transaction.payload.byte_enable = 0xFFFFFFFF00000000
+
+    transaction.send()
+    return False
+
+
+def do_copyback_write_gen(data_id):
+    def do_copyback_write(transaction):
+        return do_wr_data(transaction, DatOpcode.COPY_BACK_WR_DATA, data_id)
+
+    return do_copyback_write
 
 
 def checked_read(generator, address, txn_id, req, resp):
@@ -151,6 +178,21 @@ def checked_read_separate_data_resp(
     tran.EXPECT(cacheline_check(expected_resp))
     tran.EXPECT(data_id_check_gen(2))
     tran.DO(do_comp_ack)
+
+    return tran
+
+
+def copy_back_write(generator, address, txn_id, req, expected_resp):
+    payload = payload_gen(address)
+    phase = phase_gen(txn_id, req=req)
+
+    tran = generator.inject(payload, phase)
+    tran.EXPECT(channel_check_gen(Channel.RSP))
+    tran.EXPECT(opcode_check_gen(RspOpcode.COMP_DBID_RESP))
+    tran.EXPECT(cacheline_check(expected_resp))
+    tran.DO(do_copyback_write_gen(0))
+    tran.DO_WAIT_FOR(*cycles(1))
+    tran.DO(do_copyback_write_gen(2))
 
     return tran
 
