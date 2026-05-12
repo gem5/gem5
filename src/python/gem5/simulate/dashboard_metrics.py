@@ -77,7 +77,6 @@ def register_dashboard_metric(name: str, fn: Callable) -> None:
     extension files to override built-in metrics when needed.
     """
     action = "overriding" if name in _METRICS else "registering"
-    print(f"[dashboard_metrics] {action} metric: {name!r}")
     _METRICS[name] = fn
 
 

@@ -25,7 +25,6 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import json
-import subprocess
 import time
 from pathlib import Path
 from typing import (
@@ -34,6 +33,7 @@ from typing import (
     Optional,
 )
 
+from hypercall_actions.dashboard_hypercall_request import get_gem5_data
 from textual import log
 
 
@@ -70,8 +70,8 @@ class Gem5DataManager:
                 of all such lists is sent as the ``metrics`` argument on every
                 hypercall.
         """
-        self._cache: Dict[str, dict] = {}
-        self._cache_time: Dict[str, float] = {}
+        self._cache: Dict[int, dict] = {}
+        self._cache_time: Dict[int, float] = {}
         self._cache_ttl = cache_ttl
 
         # Auto-detect the fixed extension file shipped alongside the dashboard.
@@ -96,7 +96,7 @@ class Gem5DataManager:
             requested if requested else None
         )
 
-    def get_data(self, pid: str) -> dict:
+    async def get_data(self, pid: int) -> dict:
         """
         Get gem5 data for a specific process.
 
@@ -104,7 +104,7 @@ class Gem5DataManager:
         from gem5 via hypercall.
 
         Args:
-            pid: Process ID as a string
+            pid: Process ID
 
         Returns:
             Dictionary containing gem5 data. Returns empty dict on failure.
@@ -112,17 +112,17 @@ class Gem5DataManager:
         if self._is_cache_valid(pid):
             return self._cache[pid]
 
-        data = self._fetch_from_gem5(pid)
+        data = await self._fetch_from_gem5(pid)
         self._cache[pid] = data
         self._cache_time[pid] = time.time()
         return data
 
-    def invalidate(self, pid: str) -> None:
+    def invalidate(self, pid: int) -> None:
         """
         Invalidate cached data for a specific process.
 
         Args:
-            pid: Process ID as a string
+            pid: Process ID
         """
         if pid in self._cache:
             del self._cache[pid]
@@ -134,12 +134,12 @@ class Gem5DataManager:
         self._cache.clear()
         self._cache_time.clear()
 
-    def _is_cache_valid(self, pid: str) -> bool:
+    def _is_cache_valid(self, pid: int) -> bool:
         """
         Check if cached data for a process is still valid.
 
         Args:
-            pid: Process ID as a string
+            pid: Process ID
 
         Returns:
             True if cache exists and is not expired, False otherwise
@@ -150,72 +150,33 @@ class Gem5DataManager:
         elapsed = time.time() - self._cache_time.get(pid, 0)
         return elapsed < self._cache_ttl
 
-    def _fetch_from_gem5(self, pid: str) -> dict:
+    async def _fetch_from_gem5(self, pid: int) -> dict:
         """
-        Fetch dashboard data from gem5 via hypercall.
-
-        Uses subprocess to call dashboard_hypercall_request.py, which sends a
-        hypercall to gem5 and waits for the response via Unix socket.
+        Fetch dashboard data from gem5 via hypercall (in-process, fully async).
 
         Args:
-            pid: Process ID as a string
+            pid: Process ID
 
         Returns:
             Dictionary containing gem5 response data, or empty dict on failure
         """
-        script_path = Path(__file__).parent / "dashboard_hypercall_request.py"
         response = ""
         try:
             log(f"Fetching gem5 data for PID {pid}")
-
-            cmd = ["python3", str(script_path), "--pid", pid]
-            if self._requested_metrics:
-                cmd += ["--metrics"] + self._requested_metrics
-            if self._metrics_ext:
-                cmd += ["--metrics-ext", self._metrics_ext]
-
-            log(f"[data_manager] subprocess cmd={cmd!r}")
-            log(
-                f"[data_manager] _requested_metrics={self._requested_metrics!r}"
+            response = await get_gem5_data(
+                pid,
+                metrics=self._requested_metrics,
+                metrics_ext=self._metrics_ext,
             )
-            log(f"[data_manager] _metrics_ext={self._metrics_ext!r}")
-
-            # Call dashboard_hypercall_request.py as a subprocess
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=5,
-            )
-
-            if result.returncode != 0:
-                log.error(f"Subprocess failed for PID {pid}: {result.stderr}")
-                return {}
-
-            # Parse response
-            # The script outputs: "Response: {json}"
-            response = result.stdout.strip()
-            log(f"Raw response for PID {pid}: {response}")
-
-            # Remove "Response: " prefix if present
-            if response.startswith("Response: "):
-                response = response[10:]
-
             data = json.loads(response)
             log(f"Successfully fetched gem5 data for PID {pid}")
             return data
-
-        except subprocess.TimeoutExpired:
+        except TimeoutError:
             log.error(f"Timeout fetching gem5 data for PID {pid}")
             return {}
         except json.JSONDecodeError as e:
             log.error(
                 f"JSON decode error for PID {pid}: {e}, response: {response}"
-            )
-            return {}
-        except FileNotFoundError:
-            log.error(
-                f"dashboard_hypercall_request.py not found at {script_path}"
             )
             return {}
         except Exception as e:

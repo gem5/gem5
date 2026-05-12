@@ -53,7 +53,7 @@ class DashboardAction(ABC):
         return "default"
 
     @abstractmethod
-    async def execute(self, pid: str, console: Static) -> None:
+    async def execute(self, pid: int, console: Static) -> None:
         """The logic to run when clicked.
         Args:
             pid: The process ID selected.

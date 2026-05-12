@@ -53,7 +53,7 @@ class ProcessDetails(Vertical):
         display: none;
     }
     """
-    current_pid: str | None = None
+    current_pid: int | None = None
 
     def __init__(self, actions: List[DashboardAction], **kwargs):
         super().__init__(**kwargs)
@@ -72,7 +72,7 @@ class ProcessDetails(Vertical):
                 classes="details-view hidden",
             )
 
-    def set_pid(self, pid: str):
+    def set_pid(self, pid: int):
         """Called by the main app when a row is clicked."""
         self.current_pid = pid
         self.query_one("#lbl_status", Label).update(f"Selected PID: {pid}")
@@ -81,7 +81,7 @@ class ProcessDetails(Vertical):
         self.query(".hidden").remove_class("hidden")
         self.query_one("#output_log", Static).update("")  # Clear old logs
 
-    def get_current_pid(self) -> str | None:
+    def get_current_pid(self) -> int | None:
         """Returns the currently selected PID, or None if none is selected."""
         return self.current_pid
 

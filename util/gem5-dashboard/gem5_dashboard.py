@@ -24,7 +24,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import asyncio
 import os
+from multiprocessing import shared_memory
 
 import psutil
 from action_registry import ENABLED_ACTIONS
@@ -65,8 +67,14 @@ class Gem5Dashboard(App):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # Initialize the centralized gem5 data manager with the active column
-        # set so it knows which metrics to request from gem5 on each hypercall.
+        # Force the multiprocessing resource tracker to start before Textual's
+        # event loop begins. Inside the async loop Textual replaces sys.stderr
+        # with a non-file object; if the tracker hasn't started yet its
+        # subprocess spawn fails with "bad value(s) in fds_to_keep".
+        _probe = shared_memory.SharedMemory(create=True, size=1)
+        _probe.close()
+        _probe.unlink()
+        self._update_in_progress = False
         self.gem5_data_manager = Gem5DataManager(cache_ttl=2, columns=COLUMNS)
 
     def compose(self) -> ComposeResult:
@@ -98,7 +106,7 @@ class Gem5Dashboard(App):
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         # Get the PID (row key) from the event
-        pid = event.row_key.value
+        pid = int(event.row_key.value)
         sidebar = self.query_one(ProcessDetails)
         table = self.query_one(DataTable)
 
@@ -112,31 +120,33 @@ class Gem5Dashboard(App):
             sidebar.remove_class("sidebar-hidden")
             table.remove_class("full-width")
 
-    def update_processes(self) -> None:
+    async def update_processes(self) -> None:
         """
         Fetches running gem5 processes, applies filters, and updates the TUI table.
         """
+        if self._update_in_progress:
+            return
+        self._update_in_progress = True
+        try:
+            await self._do_update_processes()
+        finally:
+            self._update_in_progress = False
+
+    async def _do_update_processes(self) -> None:
         table = self.query_one(DataTable)
         sidebar = self.query_one(ProcessDetails)
-        current_pids = set()
 
-        # We iterate over all processes provided by psutil
-        # attrs defines what data we want to fetch to avoid extra syscalls
         attrs = ["pid", "name", "username", "status", "cmdline", "create_time"]
+        gem5_procs: list[tuple] = []
 
         for proc in psutil.process_iter(attrs):
             try:
-                # Skip the dashboard process itself
                 if proc.pid == os.getpid():
                     continue
 
-                # 1. Ownership Filter: psutil handles this internally usually,
-                # but we explicitly check if the process belongs to the current user.
                 if proc.info["username"] != psutil.Process().username():
                     continue
 
-                # 2. Name Filter: Check if 'gem5' is in the name
-                # We also check cmdline as gem5
                 cmd_list = proc.info["cmdline"] or []
                 cmd_str = " ".join(cmd_list)
                 gem5_binaries = ["gem5.opt", "gem5.debug", "gem5.fast"]
@@ -149,11 +159,8 @@ class Gem5Dashboard(App):
                     print(
                         f"process name: {proc.info['name']}, cmdline: {proc.info['cmdline']}"
                     )
-
                     continue
 
-                # 3. Multisim & Wrapper Filter (logic from original dashboard PR)
-                # We filter out the orchestration scripts to show only the actual simulation
                 exclusion_patterns = [
                     "gem5.utils.multisim",
                     "multiprocessing.resource_tracker",
@@ -163,50 +170,55 @@ class Gem5Dashboard(App):
                 if any(pattern in cmd_str for pattern in exclusion_patterns):
                     continue
 
-                # 4. macOS specific check (Ported from original dashboard PR)
-                # If it's a spawn process without an outdir, ignore it
                 if (
                     "multiprocessing.spawn" in cmd_str
                     and "--outdir" not in cmd_str
                 ):
                     continue
 
-                pid = str(proc.info["pid"])
-                current_pids.add(pid)
-
-                # Fetch gem5 data once for this process
-                gem5_data = self.gem5_data_manager.get_data(pid)
-
-                row_data = []
-                for col in COLUMNS:
-                    try:
-                        value = col["func"](proc, gem5_data)
-                        row_data.append(value)
-                    except Exception:
-                        row_data.append("N/A")
-
-                if pid in table.rows:
-                    for col, value in zip(COLUMNS, row_data):
-                        table.update_cell(pid, col["key"], value)
-                else:
-                    table.add_row(*row_data, key=pid)
+                gem5_procs.append((proc, proc.info["pid"]))
 
             except (
                 psutil.NoSuchProcess,
                 psutil.AccessDenied,
                 psutil.ZombieProcess,
             ):
-                # Process died or we lost permission while iterating
                 continue
 
-        # Cleanup: Remove rows for processes that are no longer running and reset sidebar if needed
+        current_pids = {pid for _, pid in gem5_procs}
+        current_pids_str = {str(pid) for pid in current_pids}
+
+        data_list = await asyncio.gather(
+            *[self.gem5_data_manager.get_data(pid) for _, pid in gem5_procs],
+            return_exceptions=True,
+        )
+
+        for (proc, pid), gem5_data in zip(gem5_procs, data_list):
+            if isinstance(gem5_data, Exception):
+                gem5_data = {}
+
+            row_data = []
+            for col in COLUMNS:
+                try:
+                    value = col["func"](proc, gem5_data)
+                    row_data.append(value)
+                except Exception:
+                    row_data.append("N/A")
+
+            if str(pid) in table.rows:
+                for col, value in zip(COLUMNS, row_data):
+                    table.update_cell(str(pid), col["key"], value)
+            else:
+                table.add_row(*row_data, key=str(pid))
+
         rows_to_remove = [
-            row_key for row_key in table.rows if row_key not in current_pids
+            row_key
+            for row_key in table.rows
+            if row_key not in current_pids_str
         ]
         for row_key in rows_to_remove:
             table.remove_row(row_key)
-            # Also invalidate cache for removed processes
-            self.gem5_data_manager.invalidate(row_key)
+            self.gem5_data_manager.invalidate(int(row_key.value))
 
         if sidebar.current_pid and sidebar.current_pid not in current_pids:
             sidebar.reset()

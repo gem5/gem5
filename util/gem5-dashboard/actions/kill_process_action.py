@@ -37,11 +37,11 @@ class KillAction(DashboardAction):
     id = "act_kill"
     variant = "error"
 
-    async def execute(self, pid: str, console: Static):
+    async def execute(self, pid: int, console: Static):
         console.update(f"Sending SIGKILL to {pid}...")
         await asyncio.sleep(0.5)
         try:
-            os.kill(int(pid), signal.SIGKILL)
+            os.kill(pid, signal.SIGKILL)
             console.update(
                 f"[bold green]Success:[/bold green] Process {pid} terminated."
             )

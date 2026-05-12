@@ -22,7 +22,7 @@ class Gem5HypercallAction(DashboardAction):
         """Action identifier sent to gem5 for dispatch, e.g. 'checkpoint'."""
         pass
 
-    def get_arguments(self, pid: str) -> dict:
+    def get_arguments(self, pid: int) -> dict:
         """
         Override to pass additional key-value arguments to gem5.
 
@@ -34,13 +34,13 @@ class Gem5HypercallAction(DashboardAction):
         """
         return {}
 
-    async def execute(self, pid: str, console: Static) -> None:
+    async def execute(self, pid: int, console: Static) -> None:
         console.update(
             f"Sending [bold]{self.action_code}[/bold] to PID {pid}..."
         )
         try:
-            result = send_gem5_action(
-                int(pid), self.action_code, self.get_arguments(pid)
+            result = await send_gem5_action(
+                pid, self.action_code, self.get_arguments(pid)
             )
             console.update(f"[bold green]Done:[/bold green] {result}")
         except TimeoutError:

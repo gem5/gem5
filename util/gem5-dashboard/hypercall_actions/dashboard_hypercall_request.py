@@ -1,11 +1,10 @@
 import argparse
+import asyncio
 import json
 import logging
 import os
-import select
-import signal
-import socket
 import sys
+import tempfile
 from typing import (
     Dict,
     List,
@@ -21,65 +20,62 @@ _hypercall_dir = os.path.join(
     "hypercall_external_signal",
 )
 sys.path.insert(0, os.path.normpath(_hypercall_dir))
-from orchestrator_request import (
-    cleanup,
-    find_gem5_pid,
-    receive_full_message,
-)
-from transmitter import send_signal
+from orchestrator_request import find_gem5_pid
+from transmitter import send_signal_async
 
 logger = logging.getLogger(__name__)
-socket_path = None
-sock = None
 
 
-def _make_hypercall(pid: int, signal_num: int, extra_payload: dict) -> str:
+async def _make_hypercall(
+    pid: int, hypercall_id: int, extra_payload: dict
+) -> str:
     """
-    Core hypercall helper: opens a Unix socket, sends signal_num to pid
+    Core hypercall helper: opens a Unix socket, sends hypercall_id to pid
     with extra_payload merged into the payload, and waits for gem5's response.
 
     :param pid: Process ID of the target gem5 process
-    :param signal_num: Signal number to send to gem5
+    :param hypercall_id: Dispatch ID gem5 uses to route the hypercall
     :param extra_payload: Additional fields to include in the JSON payload
     :return: Raw JSON string containing gem5's response
     :rtype: str
     """
-    global sock, socket_path
+    fd, socket_path = tempfile.mkstemp(
+        suffix=".sock", prefix=f"gem5_{pid}_", dir="/tmp"
+    )
+    os.close(fd)
+    os.unlink(socket_path)
 
-    socket_path = f"/tmp/hypercall_{pid}.sock"
+    response: list[str] = []
+    got_response = asyncio.Event()
 
-    try:
-        os.unlink(socket_path)
-    except OSError:
-        pass
-
-    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    sock.bind(socket_path)
-    sock.listen(1)
-
-    try:
-        payload = json.dumps(
-            {
-                "response_socket": socket_path,
-                **extra_payload,
-            }
-        )
-        send_signal(pid, signal_num, payload)
-
-        ready, _, _ = select.select([sock], [], [], 30.0)
-        if not ready:
-            raise TimeoutError("Timeout waiting for gem5 response")
-
-        conn, addr = sock.accept()
+    async def handle_connection(
+        reader: asyncio.StreamReader, writer: asyncio.StreamWriter
+    ) -> None:
         try:
-            return receive_full_message(conn)
+            data = await asyncio.wait_for(reader.read(-1), timeout=30.0)
+            response.append(data.decode())
         finally:
-            conn.close()
+            writer.close()
+            got_response.set()
+
+    server = await asyncio.start_unix_server(
+        handle_connection, path=socket_path
+    )
+    try:
+        payload = json.dumps({"response_socket": socket_path, **extra_payload})
+        await send_signal_async(pid, hypercall_id, payload)
+        await asyncio.wait_for(got_response.wait(), timeout=5.0)
+        return response[0] if response else ""
     finally:
-        cleanup()
+        server.close()
+        await server.wait_closed()
+        try:
+            os.unlink(socket_path)
+        except OSError:
+            pass
 
 
-def get_gem5_data(
+async def get_gem5_data(
     pid: int,
     metrics: Optional[List[str]] = None,
     metrics_ext: Optional[str] = None,
@@ -100,10 +96,10 @@ def get_gem5_data(
         extra["metrics"] = ",".join(metrics)
     if metrics_ext is not None:
         extra["metrics_ext"] = metrics_ext
-    return _make_hypercall(pid, 999, extra)
+    return await _make_hypercall(pid, 999, extra)
 
 
-def send_gem5_action(
+async def send_gem5_action(
     pid: int, action: str, arguments: Optional[Dict] = None
 ) -> str:
     """
@@ -115,14 +111,12 @@ def send_gem5_action(
     :return: Raw JSON string containing gem5's response
     :rtype: str
     """
-    return _make_hypercall(
+    return await _make_hypercall(
         pid, 998, {"action": action, "arguments": arguments or {}}
     )
 
 
 def main():
-    signal.signal(signal.SIGINT, cleanup)
-
     parser = argparse.ArgumentParser(description="Send hypercalls to gem5")
     parser.add_argument(
         "--pid",
@@ -141,23 +135,26 @@ def main():
     )
     args = parser.parse_args()
 
-    try:
-        pid = args.pid if args.pid is not None else find_gem5_pid()
-        metrics: Optional[List[str]] = args.metrics if args.metrics else None
-        response = get_gem5_data(
-            pid,
-            metrics=metrics,
-            metrics_ext=args.metrics_ext,
-        )
-        print(f"Response: {response}")
-    except (ValueError, TimeoutError) as e:
-        logger.error(f"Error: {str(e)}")
-        sys.exit(1)
-    except OSError as e:
-        logger.error(f"File error: {str(e)}")
-        sys.exit(1)
-    except KeyboardInterrupt:
-        cleanup()
+    async def _run():
+        try:
+            pid = args.pid if args.pid is not None else find_gem5_pid()
+            metrics: Optional[List[str]] = (
+                args.metrics if args.metrics else None
+            )
+            response = await get_gem5_data(
+                pid,
+                metrics=metrics,
+                metrics_ext=args.metrics_ext,
+            )
+            print(f"Response: {response}")
+        except (ValueError, TimeoutError) as e:
+            logger.error(f"Error: {str(e)}")
+            sys.exit(1)
+        except OSError as e:
+            logger.error(f"File error: {str(e)}")
+            sys.exit(1)
+
+    asyncio.run(_run())
 
 
 if __name__ == "__main__":

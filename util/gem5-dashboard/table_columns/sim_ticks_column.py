@@ -21,4 +21,4 @@ def get_sim_ticks(proc, gem5_data=None):
     if ticks is None:
         return "N/A"
 
-    return f"{ticks} ns"
+    return f"{ticks}"
