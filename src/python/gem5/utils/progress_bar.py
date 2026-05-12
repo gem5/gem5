@@ -58,8 +58,9 @@ try:
     # tqdm's default global lock includes a multiprocessing RLock, which may
     # spawn multiprocessing helper processes. A thread lock is sufficient for
     # gem5's progress output and avoids launching extra gem5 instances.
-    std_tqdm.set_lock(RLock())
-    tqdm.set_lock(RLock())
+    _tqdm_lock = RLock()
+    std_tqdm.set_lock(_tqdm_lock)
+    tqdm.set_lock(_tqdm_lock)
 except ImportError:
     tqdm = FakeTQDM()
     _have_tqdm = False
