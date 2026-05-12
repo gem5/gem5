@@ -28,7 +28,11 @@ import json
 import subprocess
 import time
 from pathlib import Path
-from typing import Dict
+from typing import (
+    Dict,
+    List,
+    Optional,
+)
 
 from textual import log
 
@@ -40,18 +44,57 @@ class Gem5DataManager:
     This class handles all communication with gem5 processes via hypercalls,
     maintaining a cache to avoid redundant requests. It provides a single
     point of access for gem5-specific data needed by dashboard columns.
+
+    The set of metrics requested from gem5 is derived from the
+    ``required_metrics`` field of each active column definition.  Only the
+    metrics that are actually displayed are fetched, keeping hypercall
+    payloads small.
+
+    An optional ``metrics_ext`` path can be provided to forward a Python
+    extension file to every gem5 process on each hypercall, allowing users
+    to add custom metrics without modifying gem5 or restarting it.
     """
 
-    def __init__(self, cache_ttl: int = 5):
+    def __init__(
+        self,
+        cache_ttl: int = 5,
+        columns: Optional[List[dict]] = None,
+    ):
         """
         Initialize the data manager.
 
         Args:
             cache_ttl: Time-to-live for cached data in seconds (default: 5)
+            columns: List of column definition dicts from ``table_column_map``.
+                Each entry may contain a ``required_metrics`` list; the union
+                of all such lists is sent as the ``metrics`` argument on every
+                hypercall.
         """
         self._cache: Dict[str, dict] = {}
         self._cache_time: Dict[str, float] = {}
         self._cache_ttl = cache_ttl
+
+        # Auto-detect the fixed extension file shipped alongside the dashboard.
+        # Users add custom metrics by editing that file; no path config needed.
+        _ext_path = (
+            Path(__file__).parent.parent / "dashboard_metrics_ext.py"
+        ).resolve()
+        self._metrics_ext: Optional[str] = (
+            str(_ext_path) if _ext_path.exists() else None
+        )
+
+        # Derive the deduplicated list of metric names needed by active columns.
+        seen = set()
+        requested: List[str] = []
+        for col in columns or []:
+            for name in col.get("required_metrics", []):
+                if name not in seen:
+                    seen.add(name)
+                    requested.append(name)
+        # None means "collect all", only pass an explicit list when columns actually declare their requirements.
+        self._requested_metrics: Optional[List[str]] = (
+            requested if requested else None
+        )
 
     def get_data(self, pid: str) -> dict:
         """
@@ -111,7 +154,7 @@ class Gem5DataManager:
         """
         Fetch dashboard data from gem5 via hypercall.
 
-        Uses subprocess to call orchestrator_request.py, which sends a
+        Uses subprocess to call dashboard_hypercall_request.py, which sends a
         hypercall to gem5 and waits for the response via Unix socket.
 
         Args:
@@ -120,15 +163,26 @@ class Gem5DataManager:
         Returns:
             Dictionary containing gem5 response data, or empty dict on failure
         """
+        script_path = Path(__file__).parent / "dashboard_hypercall_request.py"
+        response = ""
         try:
-            script_path = (
-                Path(__file__).parent / "dashboard_hypercall_request.py"
-            )
             log(f"Fetching gem5 data for PID {pid}")
+
+            cmd = ["python3", str(script_path), "--pid", pid]
+            if self._requested_metrics:
+                cmd += ["--metrics"] + self._requested_metrics
+            if self._metrics_ext:
+                cmd += ["--metrics-ext", self._metrics_ext]
+
+            log(f"[data_manager] subprocess cmd={cmd!r}")
+            log(
+                f"[data_manager] _requested_metrics={self._requested_metrics!r}"
+            )
+            log(f"[data_manager] _metrics_ext={self._metrics_ext!r}")
 
             # Call dashboard_hypercall_request.py as a subprocess
             result = subprocess.run(
-                ["python3", str(script_path), "--pid", pid],
+                cmd,
                 capture_output=True,
                 text=True,
                 timeout=5,
@@ -160,7 +214,9 @@ class Gem5DataManager:
             )
             return {}
         except FileNotFoundError:
-            log.error(f"orchestrator-request.py not found at {script_path}")
+            log.error(
+                f"dashboard_hypercall_request.py not found at {script_path}"
+            )
             return {}
         except Exception as e:
             log.error(

@@ -6,6 +6,11 @@ import select
 import signal
 import socket
 import sys
+from typing import (
+    Dict,
+    List,
+    Optional,
+)
 
 _hypercall_dir = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),  # helpers/
@@ -28,7 +33,7 @@ socket_path = None
 sock = None
 
 
-def _make_hypercall(pid: int, signal_num: int, extra_payload: dict) -> dict:
+def _make_hypercall(pid: int, signal_num: int, extra_payload: dict) -> str:
     """
     Core hypercall helper: opens a Unix socket, sends signal_num to pid
     with extra_payload merged into the payload, and waits for gem5's response.
@@ -36,8 +41,8 @@ def _make_hypercall(pid: int, signal_num: int, extra_payload: dict) -> dict:
     :param pid: Process ID of the target gem5 process
     :param signal_num: Signal number to send to gem5
     :param extra_payload: Additional fields to include in the JSON payload
-    :return: Dictionary containing gem5's response
-    :rtype: dict
+    :return: Raw JSON string containing gem5's response
+    :rtype: str
     """
     global sock, socket_path
 
@@ -74,26 +79,41 @@ def _make_hypercall(pid: int, signal_num: int, extra_payload: dict) -> dict:
         cleanup()
 
 
-def get_gem5_data(pid: int) -> dict:
+def get_gem5_data(
+    pid: int,
+    metrics: Optional[List[str]] = None,
+    metrics_ext: Optional[str] = None,
+) -> str:
     """
     Fetch data from gem5 used by the dashboard via hypercall (signal 999).
 
     :param pid: Process ID of the target gem5 process
-    :return: Dictionary containing gem5 data
-    :rtype: dict
+    :param metrics: Optional list of metric names to collect.  When ``None``
+        gem5 collects all registered metrics.
+    :param metrics_ext: Optional path to a Python extension file that
+        registers additional metrics via ``register_dashboard_metric``.
+    :return: Raw JSON string containing gem5 metric data
+    :rtype: str
     """
-    return _make_hypercall(pid, 999, {})
+    extra: dict = {}
+    if metrics is not None:
+        extra["metrics"] = ",".join(metrics)
+    if metrics_ext is not None:
+        extra["metrics_ext"] = metrics_ext
+    return _make_hypercall(pid, 999, extra)
 
 
-def send_gem5_action(pid: int, action: str, arguments: dict = None) -> dict:
+def send_gem5_action(
+    pid: int, action: str, arguments: Optional[Dict] = None
+) -> str:
     """
     Send an action hypercall to gem5 (signal 998).
 
     :param pid: Process ID of the target gem5 process
     :param action: Action identifier for gem5 to dispatch (e.g. 'checkpoint')
     :param arguments: Optional key-value arguments passed alongside the action
-    :return: Dictionary containing gem5's response
-    :rtype: dict
+    :return: Raw JSON string containing gem5's response
+    :rtype: str
     """
     return _make_hypercall(
         pid, 998, {"action": action, "arguments": arguments or {}}
@@ -110,11 +130,25 @@ def main():
         help="Process ID to send hypercall to "
         "(auto-detected if not specified)",
     )
+    parser.add_argument(
+        "--metrics",
+        nargs="*",
+        help="Metric names to collect (default: all registered metrics)",
+    )
+    parser.add_argument(
+        "--metrics-ext",
+        help="Path to a Python extension file that registers additional metrics",
+    )
     args = parser.parse_args()
 
     try:
         pid = args.pid if args.pid is not None else find_gem5_pid()
-        response = get_gem5_data(pid)
+        metrics: Optional[List[str]] = args.metrics if args.metrics else None
+        response = get_gem5_data(
+            pid,
+            metrics=metrics,
+            metrics_ext=args.metrics_ext,
+        )
         print(f"Response: {response}")
     except (ValueError, TimeoutError) as e:
         logger.error(f"Error: {str(e)}")

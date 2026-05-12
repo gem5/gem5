@@ -354,39 +354,52 @@ class gem5DashboardExitHandler(ExitHandler, hypercall_num=999):
     exit event. This exit event is triggered by the dashboard's periodic
     hypercalls to fetch data from gem5.
 
+    The payload may contain the following optional fields:
+
+    * ``metrics`` — comma-separated metric names to collect, e.g.
+      ``'workload,curr_instructions_executed'``.  When absent all
+      registered metrics are collected.
+    * ``metrics_ext`` — path to a Python file that calls
+      :func:`~gem5.simulate.dashboard_metrics.register_dashboard_metric`
+      to register additional metrics.  The file is re-executed only when
+      its modification time changes.
+
     It will not exit the simulation loop by default.
     """
 
-    def _get_current_stats(self, simulator: "Simulator") -> Dict[str, Any]:
-        import _m5.core
-
-        if not simulator.get_workload():
-            workload_id = "N/A"
-        else:
-            workload_id = simulator.get_workload().get_id()
-        return {
-            "workload": workload_id,
-            "curr_instructions_executed": simulator.get_instruction_count(),
-        }
-
     @overrides(ExitHandler)
     def _process(self, simulator: "Simulator") -> None:
+        from gem5.simulate import dashboard_metrics
+
         try:
             socket_path = self._payload.get("response_socket")
-            if socket_path:
-                sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-                sock.connect(socket_path)
 
-                response = json.dumps(self._get_current_stats(simulator))
+            if not socket_path:
+                return
 
-                if not response:
-                    response = json.dumps({"error": "Failed to fetch stats"})
+            # Load user-supplied extension file if provided.
+            metrics_ext = self._payload.get("metrics_ext")
+            if metrics_ext:
+                dashboard_metrics.load_extension(metrics_ext)
 
-                sock.send(response.encode())
-                sock.close()
+            # Comma-separated list of requested metric names.
+            requested_raw = self._payload.get("metrics")
+            requested = requested_raw.split(",") if requested_raw else None
+
+            response = json.dumps(
+                dashboard_metrics.collect(simulator, requested)
+            )
+
+            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            sock.connect(socket_path)
+            sock.send(response.encode())
+            sock.close()
 
         except Exception as e:
+            import traceback
+
             print(f"Error in gem5DashboardExitHandler: {e}")
+            traceback.print_exc()
 
     @overrides(ExitHandler)
     def _exit_simulation(self) -> bool:

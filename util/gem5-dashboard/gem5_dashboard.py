@@ -65,8 +65,9 @@ class Gem5Dashboard(App):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        # Initialize the centralized gem5 data manager
-        self.gem5_data_manager = Gem5DataManager(cache_ttl=2)
+        # Initialize the centralized gem5 data manager with the active column
+        # set so it knows which metrics to request from gem5 on each hypercall.
+        self.gem5_data_manager = Gem5DataManager(cache_ttl=2, columns=COLUMNS)
 
     def compose(self) -> ComposeResult:
         yield Header()

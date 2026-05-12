@@ -63,39 +63,84 @@ The dashboard uses a plugin-based architecture. You can add new columns or actio
 
 Columns receive two data sources: fast OS-level data from `psutil` and gem5-specific data fetched once per refresh via hypercall. Your function picks what it needs from either source.
 
+There are two cases: your column reads only OS-level data (no gem5 needed), or it reads a gem5 metric.
+
+---
+
+#### Case A — OS-level data only (no gem5 metric needed)
+
 **Step 1: Create a column file in `table_columns/`**
 
-Name the file after the value it displays (e.g., `ticks_column.py`). The function signature must be `(proc, gem5_data=None) -> str`.
-
 ```python
-# table_columns/ticks_column.py
-def get_ticks(proc, gem5_data=None):
-    if gem5_data is None:
-        gem5_data = {}
-    ticks = gem5_data.get("tick", None)
-    return f"{ticks:,}" if ticks else "N/A"
+# table_columns/cpu_percent_column.py
+def get_cpu_percent(proc, gem5_data=None):
+    try:
+        return f"{proc.cpu_percent():.1f}%"
+    except Exception:
+        return "N/A"
 ```
 
-- Use `proc` (a `psutil.Process` info dict) for OS-level fields like PID, status, or CPU usage.
-- Use `gem5_data` for simulation-specific fields. These come from the gem5 hypercall response; if gem5 is unreachable, this will be an empty dict — always guard with a default.
-
-**Step 2: Register in `table_column_map.py`**
+**Step 2: Register in `table_column_map.py`** with an empty `required_metrics` list
 
 ```python
-from table_columns.ticks_column import get_ticks
+from table_columns.cpu_percent_column import get_cpu_percent
 
 COLUMNS = [
-    {"name": "PID",   "key": "PID",   "width": 10, "func": get_pid},
-    {"name": "Ticks", "key": "Ticks", "width": 15, "func": get_ticks},  # new
-    # ...
+    ...
+    {"name": "CPU%", "key": "CPU%", "width": 8,
+     "func": get_cpu_percent, "required_metrics": []},
 ]
 ```
 
-The `"width"` key is optional. Omit it to let the column stretch to fill remaining space.
+---
 
-**Step 3 (if needed): Ensure `gem5DashboardExitHandler` returns the field**
+#### Case B — gem5 metric data
 
-If your column reads from `gem5_data`, make sure the gem5-side hypercall handler `gem5DashboardExitHandler` includes that key in its JSON response (e.g., `"tick": 123456`). The `Gem5DataManager` handles caching and fetching automatically.
+This requires three steps: define the metric inside gem5, expose it in a column function, then declare the dependency in the column map.
+
+**Step 1: Register the metric in `dashboard_metrics_ext.py`**
+
+Open `util/gem5-dashboard/dashboard_metrics_ext.py` and add a function that accepts a `Simulator` and returns a JSON-serialisable value, then register it:
+
+```python
+def my_metric(simulator):
+    return simulator.get_current_tick()
+
+register_dashboard_metric("my_metric", my_metric)
+```
+
+No gem5 rebuild is needed — the file is reloaded automatically whenever its modification time changes.
+
+**Step 2: Create a column file in `table_columns/`**
+
+The function receives the metric value under the key you registered:
+
+```python
+# table_columns/my_metric_column.py
+def get_my_metric(proc, gem5_data=None):
+    if gem5_data is None:
+        gem5_data = {}
+    value = gem5_data.get("my_metric", None)
+    return str(value) if value is not None else "N/A"
+```
+
+- `gem5_data` is an empty dict when gem5 is unreachable — always guard with a default.
+
+**Step 3: Register in `table_column_map.py`** with the metric name in `required_metrics`
+
+```python
+from table_columns.my_metric_column import get_my_metric
+
+COLUMNS = [
+    ...
+    {"name": "My Metric", "key": "My Metric", "width": 15,
+     "func": get_my_metric, "required_metrics": ["my_metric"]},
+]
+```
+
+`Gem5DataManager` reads `required_metrics` across all active columns and requests only that set from gem5 on each hypercall — no other changes needed.
+
+> **Built-in metrics** (`workload`, `curr_instructions_executed`) are always available without `dashboard_metrics_ext.py`. Only custom metrics need to be added there.
 
 ---
 
