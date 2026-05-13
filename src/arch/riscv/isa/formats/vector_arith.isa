@@ -299,12 +299,17 @@ def format VectorCompressFormat(code, category, *flags) {{
     )
     inst_name, inst_suffix = name.split("_", maxsplit=1)
 
-    dest_reg_id = "vecRegClass[_machInst.vd + \
-        (_microIdx)%vtype_regs_per_group(vtype)]"
+    num_regs_expr = "vtype_regs_per_group(vtype)"
+    is_gather     = "(_microIdx < %s)" % num_regs_expr
+    scratch       = "vecRegClass[VecMemInternalReg0]"
+
+    dest_reg_id = ("(%s ? %s : vecRegClass[_machInst.vd + "
+                   "_microIdx %% %s])" % (is_gather, scratch, num_regs_expr))
 
     num_src_regs = 0
 
-    src2_reg_id = "vecRegClass[_machInst.vs2 + _microIdx]"
+    src2_reg_id = ("(%s ? vecRegClass[_machInst.vs2 + _microIdx] : %s)"
+                   % (is_gather, scratch))
     num_src_regs += 1
 
     src1_reg_id = "vecRegClass[_machInst.vs1]"
@@ -318,15 +323,13 @@ def format VectorCompressFormat(code, category, *flags) {{
     set_src_reg_idx += setSrcWrapper(src1_reg_id)
     set_src_reg_idx += setSrcWrapper(src2_reg_id)
 
-    dest_set_src_reg_idx = setSrcWrapper(dest_reg_id)
-
-    set_src_reg_idx += dest_set_src_reg_idx
+    old_vd_reg_id = ("(%s ? %s : vecRegClass[_machInst.vd + "
+                     "_microIdx %% %s])" % (is_gather, scratch, num_regs_expr))
+    set_src_reg_idx += setSrcWrapper(old_vd_reg_id)
     set_src_reg_idx += setSrcVm()
 
     # code
-
     vm_decl_rd = vmDeclAndReadData()
-
     set_vlenb = setVlenb()
 
     microiop = InstObjParams(name + "_micro",
