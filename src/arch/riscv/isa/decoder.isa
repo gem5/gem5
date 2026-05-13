@@ -5552,12 +5552,15 @@ decode QUADRANT default Unknown::unknown() {
                             }
                         }
                     }
-                    if (machInst.vl > 0 && vdWindowLeft <= (int)(machInst.vl - 1) && (int)(machInst.vl - 1) < vdWindowRight) {
-                        int posInMicro = (int)(machInst.vl - 1) - vdWindowLeft;
-                        if (posInMicro < microVl) {
-                            if (this->vm || elem_mask(v0, (int)(machInst.vl - 1))) {
-                                auto fd = ftype_freg<et>(freg(Fs1_bits));
-                                Vd_vu[posInMicro] = fd.v;
+                    if (machInst.vl > 0) {
+                        const int lastElem = (int)machInst.vl - 1;
+                        if (vdWindowLeft <= lastElem && lastElem < vdWindowRight) {
+                            int posInMicro = lastElem - vdWindowLeft;
+                            if (posInMicro < microVl) {
+                                if (this->vm || elem_mask(v0, lastElem)) {
+                                    auto fd = ftype_freg<et>(freg(Fs1_bits));
+                                    Vd_vu[posInMicro] = fd.v;
+                                }
                             }
                         }
                     }
@@ -5905,12 +5908,14 @@ decode QUADRANT default Unknown::unknown() {
                             }
                         }
                     }
-                    if (machInst.vl > 0 && vdWindowLeft <= (int)(machInst.vl - 1)
-                        && (int)(machInst.vl - 1) < vdWindowRight) {
-                        int posInMicro = (int)(machInst.vl - 1) - vdWindowLeft;
-                        if (posInMicro < microVl) {
-                            if (this->vm || elem_mask(v0, (int)(machInst.vl - 1))) {
-                                Vd_vu[posInMicro] = Rs1_vu;
+                    if (machInst.vl > 0) {
+                        const int lastElem = (int)machInst.vl - 1;
+                        if (vdWindowLeft <= lastElem && lastElem < vdWindowRight) {
+                            int posInMicro = lastElem - vdWindowLeft;
+                            if (posInMicro < microVl) {
+                                if (this->vm || elem_mask(v0, lastElem)) {
+                                    Vd_vu[posInMicro] = Rs1_vu;
+                                }
                             }
                         }
                     }
