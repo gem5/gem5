@@ -132,6 +132,10 @@ Fetch::Fetch(CPU *_cpu, const BaseO3CPUParams &params)
       fetchQueueSize(params.fetchQueueSize),
       numThreads(params.numThreads),
       numFetchingThreads(params.smtNumFetchingThreads),
+      enableStarvationEMISSARY(params.enableStarvationEMISSARY),
+      starveRandomness(params.starveRandomness),
+      starveAtleast(params.starveAtleast),
+      randomStarve(params.randomStarve),
       icachePort(this, _cpu),
       finishTranslationEvent(this),
       maxFTPerCycle(params.maxFTPerCycle),
@@ -364,13 +368,42 @@ Fetch::processCacheCompletion(PacketPtr pkt)
     // to return.
     if (fetchStatus[tid] != IcacheWaitResponse ||
         pkt->req != memReq[tid]) {
-        ++fetchStats.icacheSquashes;
+	if (!pkt->isStarved()) {
+            ++fetchStats.icacheSquashes;
+        }
         delete pkt;
         return;
     }
 
     memcpy(fetchBuffer[tid], pkt->getConstPtr<uint8_t>(), fetchBufferSize);
     fetchBufferValid[tid] = true;
+
+    if (enableStarvationEMISSARY && fromDecode->decodeIdle[tid] &&
+        pkt->req->getAccessDepth() > 0) {
+        RequestPtr mark_req = std::make_shared<Request>(
+            pkt->req->getVaddr(), fetchBufferSize, Request::INST_FETCH,
+            cpu->instRequestorId(), pkt->req->getPC(),
+            cpu->thread[tid]->contextId());
+        if (pkt->req->hasPaddr()) {
+            mark_req->setPaddr(pkt->req->getPaddr());
+        }
+        mark_req->taskId(cpu->taskId());
+
+        PacketPtr mark_pkt = new Packet(mark_req, MemCmd::ReadReq);
+        mark_pkt->dataDynamic(new uint8_t[fetchBufferSize]);
+        mark_pkt->setStarved(true);
+
+        const double random =
+            static_cast<double>(rng->random<uint32_t>(0, 9999)) / 100.0;
+        const bool preserve = randomStarve ?
+            (random < starveRandomness) :
+            (starveAtleast == 0 || pkt->starveCount >= starveAtleast);
+        mark_pkt->setPreserve(preserve);
+
+        if (!icachePort.sendTimingReq(mark_pkt)) {
+            delete mark_pkt;
+        }
+    }
 
     // Wake up the CPU (if it went to sleep and was waiting on
     // this completion event).

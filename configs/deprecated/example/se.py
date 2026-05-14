@@ -262,6 +262,12 @@ for i in range(np):
         )
         system.cpu[i].branchPred.indirectBranchPred = indirectBPClass()
 
+    if args.emissary_enable or args.emissary_retirement:
+        system.cpu[i].enableStarvationEMISSARY = True
+    system.cpu[i].starveRandomness = args.starveRandomness
+    system.cpu[i].starveAtleast = args.starveAtleast
+    system.cpu[i].randomStarve = args.randomStarve
+
     system.cpu[i].createThreads()
 
 if args.ruby:

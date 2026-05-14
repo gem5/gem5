@@ -500,6 +500,25 @@ BaseCache::recvTimingReq(PacketPtr pkt)
         // the packet in a response
         ppHit->notify(CacheAccessProbeArg(pkt,accessor));
 
+	if (blk && pkt->isWriteback() && pkt->evictFromL1) {
+            blk->starveHistory =
+                (pkt->starveHistory << 1) | (pkt->isStarved() ? 1 : 0);
+            blk->starveCount = pkt->starveCount + (pkt->isStarved() ? 1 : 0);
+            if (pkt->isStarved()) {
+                blk->setStarved();
+            }
+            if (pkt->isPreserve()) {
+                blk->setPreserve();
+            }
+        }
+
+        if (blk && pkt->isRead() && pkt->isStarved()) {
+            blk->setStarved();
+            if (pkt->isPreserve()) {
+                blk->setPreserve();
+            }
+        }
+
         if (prefetcher && blk && blk->wasPrefetched()) {
             DPRINTF(Cache, "Hit on prefetch for addr %#x (%s)\n",
                     pkt->getAddr(), pkt->isSecure() ? "s" : "ns");
@@ -608,6 +627,13 @@ BaseCache::recvTimingResp(PacketPtr pkt)
         blk = handleFill(pkt, blk, writebacks, allocate);
         assert(blk != nullptr);
         ppFill->notify(CacheAccessProbeArg(pkt, accessor));
+    }
+
+    if (blk && pkt->isRead() && pkt->isStarved()) {
+        blk->setStarved();
+        if (pkt->isPreserve()) {
+            blk->setPreserve();
+        }
     }
 
     // Don't want to promote the Locked RMW Read until
@@ -1214,6 +1240,10 @@ BaseCache::satisfyRequest(PacketPtr pkt, CacheBlk *blk, bool, bool)
             blk->trackLoadLocked(pkt);
         }
 
+	pkt->starveHistory = blk->starveHistory;
+        pkt->accessCount = blk->getRefCount();
+        pkt->starveCount = blk->starveCount;
+
         // all read responses have a data payload
         assert(pkt->hasRespData());
         pkt->setDataFromBlock(blk->data, blkSize);
@@ -1773,6 +1803,17 @@ BaseCache::writebackBlk(CacheBlk *blk)
     PacketPtr pkt =
         new Packet(req, blk->isSet(CacheBlk::DirtyBit) ?
                    MemCmd::WritebackDirty : MemCmd::WritebackClean);
+
+    if (isReadOnly) {
+        pkt->evictFromL1 = true;
+        pkt->setStarved(blk->isStarved());
+        pkt->setPreserve(blk->isPreserve());
+        pkt->tickBlkInserted = blk->getTickInserted();
+        pkt->tickBlkRecentAccess = blk->tickRecentAccess;
+        pkt->accessCount = blk->getRefCount();
+        pkt->starveCount = blk->starveCount;
+        pkt->starveHistory = blk->starveHistory;
+    }
 
     DPRINTF(Cache, "Create Writeback %s writable: %d, dirty: %d\n",
         pkt->print(), blk->isSet(CacheBlk::WritableBit),

@@ -86,12 +86,18 @@ class CacheBlk : public TaggedEntry
         ReadableBit =       0x04,
         /** dirty (modified) */
         DirtyBit =          0x08,
+	/** line contributed to decode starvation */
+        BlkStarved =        0x10,
+        /** preserve candidate line for EMISSARY */
+        BlkPreserve =       0x200,
+        /** line used since last preserve-flush epoch */
+        BlkUsed =           0x400,
 
         /**
          * Helper enum value that includes all other bits. Whenever a new
          * bits is added, this should be updated.
          */
-        AllBits  =          0x0E,
+        AllBits  =          0x61E,
     };
 
     /**
@@ -108,6 +114,9 @@ class CacheBlk : public TaggedEntry
      * meaningful if the block is valid.
      */
     Tick whenReady = 0;
+    Tick tickRecentAccess = 0;
+    unsigned starveCount = 0;
+    uint8_t starveHistory = 0;
 
   protected:
     /**
@@ -189,6 +198,9 @@ class CacheBlk : public TaggedEntry
         setRefCount(other.getRefCount());
         setSrcRequestorId(other.getSrcRequestorId());
         std::swap(lockList, other.lockList);
+	tickRecentAccess = other.tickRecentAccess;
+        starveCount = other.starveCount;
+        starveHistory = other.starveHistory;
 
         other.invalidate();
 
@@ -212,6 +224,9 @@ class CacheBlk : public TaggedEntry
         setRefCount(0);
         setSrcRequestorId(Request::invldRequestorId);
         lockList.clear();
+	tickRecentAccess = 0;
+        starveCount = 0;
+        starveHistory = 0;
     }
 
     /**
@@ -250,6 +265,18 @@ class CacheBlk : public TaggedEntry
      * @return True if the block was a hardware prefetch, unaccesed.
      */
     bool wasPrefetched() const { return _prefetched; }
+
+    bool isStarved() const { return (coherence & BlkStarved) != 0; }
+    void setStarved() { setCoherenceBits(BlkStarved); }
+    void clearStarved() { clearCoherenceBits(BlkStarved); }
+
+    bool isUsed() const { return (coherence & BlkUsed) != 0; }
+    void setUsed() { setCoherenceBits(BlkUsed); }
+    void clearUsed() { clearCoherenceBits(BlkUsed); }
+
+    bool isPreserve() const { return (coherence & BlkPreserve) != 0; }
+    void setPreserve() { setCoherenceBits(BlkPreserve); }
+    void clearPreserve() { clearCoherenceBits(BlkPreserve); }
 
     /**
      * Clear the prefetching bit. Either because it was recently used, or due
@@ -295,6 +322,9 @@ class CacheBlk : public TaggedEntry
 
     /** Get the number of references to this block since insertion. */
     unsigned getRefCount() const { return _refCount; }
+
+    /** Get the tick at which this block was inserted. */
+    Tick getTickInserted() const { return _tickInserted; }
 
     /** Get the number of references to this block since insertion. */
     void increaseRefCount() { _refCount++; }
@@ -407,8 +437,10 @@ class CacheBlk : public TaggedEntry
           default:    s = 'T'; break; // @TODO add other types
         }
         return csprintf("state: %x (%c) writable: %d readable: %d "
-            "dirty: %d prefetched: %d | %s", coherence, s,
+	    "dirty: %d starved: %d preserved: %d prefetched: %d | %s",
+	    coherence, s,
             isSet(WritableBit), isSet(ReadableBit), isSet(DirtyBit),
+	    isStarved(), isPreserve(),
             wasPrefetched(), TaggedEntry::print());
     }
 

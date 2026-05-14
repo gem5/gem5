@@ -78,6 +78,18 @@ class LRURP(BaseReplacementPolicy):
     cxx_class = "gem5::replacement_policy::LRU"
     cxx_header = "mem/cache/replacement_policies/lru_rp.hh"
 
+class LRUEmissaryRP(BaseReplacementPolicy):
+    type = "LRUEmissaryRP"
+    cxx_class = "gem5::replacement_policy::LRUEmissary"
+    cxx_header = "mem/cache/replacement_policies/lru_emissary_rp.hh"
+    lru_ways = Param.Int(Parent.lru_ways, "Number of ways allocated to LRU")
+    preserve_ways = Param.Int(
+        Parent.preserve_ways, "Number of ways allocated to preserve mode"
+    )
+    flush_freq_in_cycles = Param.Unsigned(
+        0, "Frequency in cycles to flush preserve usage counters"
+    )
+    max_val = Param.Unsigned(32, "Max replacement age value")
 
 class BIPRP(LRURP):
     type = "BIPRP"

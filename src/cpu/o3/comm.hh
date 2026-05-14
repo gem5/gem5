@@ -231,6 +231,7 @@ struct TimeStruct
     CommitComm commitInfo[MaxThreads];
 
     bool decodeBlock[MaxThreads];
+    bool decodeIdle[MaxThreads];
     bool decodeUnblock[MaxThreads];
     bool renameBlock[MaxThreads];
     bool renameUnblock[MaxThreads];

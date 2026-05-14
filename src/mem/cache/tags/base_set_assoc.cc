@@ -48,6 +48,7 @@
 #include <string>
 
 #include "base/intmath.hh"
+#include "mem/cache/replacement_policies/lru_emissary_rp.hh"
 
 namespace gem5
 {
@@ -64,11 +65,25 @@ BaseSetAssoc::BaseSetAssoc(const Params &p)
     if (blkSize < 4 || !isPowerOf2(blkSize)) {
         fatal("Block size must be at least 4 and a power of 2");
     }
+
+    auto *emissary =
+        dynamic_cast<replacement_policy::LRUEmissary*>(replacementPolicy);
+    if (emissary) {
+        emissary->indexingPolicy = indexingPolicy;
+        emissary->numWays = p.assoc;
+        emissary->numSets = numBlocks / p.assoc;
+    }
 }
 
 void
 BaseSetAssoc::tagsInit()
 {
+    auto *emissary =
+        dynamic_cast<replacement_policy::LRUEmissary*>(replacementPolicy);
+    if (emissary) {
+        emissary->indexingPolicy = indexingPolicy;
+    }
+
     // Initialize all blocks
     for (unsigned blk_index = 0; blk_index < numBlocks; blk_index++) {
         // Locate next cache block
@@ -81,7 +96,11 @@ BaseSetAssoc::tagsInit()
         blk->data = &dataBlks[blkSize*blk_index];
 
         // Associate a replacement data entry to the block
-        blk->replacementData = replacementPolicy->instantiateEntry();
+	if (emissary) {
+            blk->replacementData = emissary->instantiateEntry(blk);
+        } else {
+            blk->replacementData = replacementPolicy->instantiateEntry();
+        }
 
         // This is not used as of now but we set it for security
         blk->registerTagExtractor(genTagExtractor(indexingPolicy));

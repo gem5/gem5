@@ -70,6 +70,9 @@ CacheBlk::insert(const KeyType &tag,
 
     // Insertion counts as a reference to the block
     increaseRefCount();
+    tickRecentAccess = curTick();
+    starveCount = 0;
+    starveHistory = 0;
 }
 
 void

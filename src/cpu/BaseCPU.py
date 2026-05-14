@@ -163,6 +163,16 @@ class BaseCPU(ClockedObject):
 
     tracer = Param.InstTracer(default_tracer, "Instruction tracer")
 
+    # EMISSARY controls
+    starveRandomness = Param.Float(50.0, "Percentage threshold for random preserve")
+    starveAtleast = Param.Unsigned(
+        0, "Minimum starvation history count in last window to preserve"
+    )
+    randomStarve = Param.Bool(False, "Use random starvation marking")
+    enableStarvationEMISSARY = Param.Bool(
+        False, "Enable starvation-driven EMISSARY line marking"
+    )
+
     icache_port = RequestPort("Instruction Port")
     dcache_port = RequestPort("Data Port")
     _cached_ports = ["icache_port", "dcache_port"]

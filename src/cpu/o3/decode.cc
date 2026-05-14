@@ -132,6 +132,7 @@ Decode::clearStates(ThreadID tid)
         TimeStruct& time_struct = cpu->timeBuffer[i];
         time_struct.decodeInfo[tid] = {};
         time_struct.decodeBlock[tid] = false;
+	time_struct.decodeIdle[tid] = false;
         time_struct.decodeUnblock[tid] = false;
     }
 }
@@ -572,6 +573,7 @@ Decode::tick()
     //Check stall and squash signals.
     for (ThreadID tid : *activeThreads) {
         DPRINTF(Decode,"Processing [tid:%i]\n",tid);
+	toFetch->decodeIdle[tid] = false;
         status_change =  checkSignalsAndUpdate(tid) || status_change;
 
         decode(status_change, tid);
@@ -644,6 +646,7 @@ Decode::decodeInsts(ThreadID tid)
         DPRINTF(Decode, "[tid:%i] Nothing to do, breaking out"
                 " early.\n",tid);
         // Should I change the status to idle?
+	toFetch->decodeIdle[tid] = true;
         ++stats.status[Idle];
         return;
     } else if (decodeStatus[tid] == Unblocking) {
@@ -653,6 +656,8 @@ Decode::decodeInsts(ThreadID tid)
     } else if (decodeStatus[tid] == Running) {
         ++stats.status[Running];
     }
+
+    toFetch->decodeIdle[tid] = false;
 
     std::queue<DynInstPtr>
         &insts_to_decode = decodeStatus[tid] == Unblocking ?

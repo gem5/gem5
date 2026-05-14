@@ -144,6 +144,8 @@ class BaseSetAssoc : public BaseTags
         if (blk != nullptr) {
             // Update number of references to accessed block
             blk->increaseRefCount();
+	    blk->tickRecentAccess = curTick();
+            blk->setUsed();
 
             // Update replacement data of accessed block
             replacementPolicy->touch(blk->replacementData, pkt);

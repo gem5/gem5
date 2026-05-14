@@ -392,6 +392,10 @@ class Packet : public Printable, public Extensible<Packet>
 
     /// True if the request targets the secure memory space.
     bool _isSecure;
+    /// True if this packet marks a starvation-causing line.
+    bool _isStarved;
+    /// True if this packet marks a preserve-worthy line.
+    bool _isPreserve;
 
     /// The size of the request or transfer.
     unsigned size;
@@ -447,6 +451,13 @@ class Packet : public Printable, public Extensible<Packet>
      * relative, a 32-bit unsigned should be sufficient.
      */
     uint32_t payloadDelay;
+
+    Tick tickBlkInserted = 0;
+    Tick tickBlkRecentAccess = 0;
+    int accessCount = 0;
+    int starveCount = 0;
+    bool evictFromL1 = false;
+    uint8_t starveHistory = 0;
 
     /**
      * A virtual base opaque structure used to hold state associated
@@ -839,6 +850,16 @@ class Packet : public Printable, public Extensible<Packet>
         return _isSecure;
     }
 
+    bool isStarved() const
+    {
+        return _isStarved;
+    }
+
+    bool isPreserve() const
+    {
+        return _isPreserve;
+    }
+
     /**
      * Accessor function to atomic op.
      */
@@ -876,7 +897,8 @@ class Packet : public Printable, public Extensible<Packet>
      */
     Packet(const RequestPtr &_req, MemCmd _cmd)
         :  cmd(_cmd), id((PacketId)_req.get()), req(_req),
-           data(nullptr), addr(0), _isSecure(false), size(0),
+           data(nullptr), addr(0), _isSecure(false), _isStarved(false),
+	   _isPreserve(false), size(0),
            _qosValue(0),
            htmReturnReason(HtmCacheFailure::NO_FAIL),
            htmTransactionUid(0),
@@ -917,7 +939,8 @@ class Packet : public Printable, public Extensible<Packet>
      */
     Packet(const RequestPtr &_req, MemCmd _cmd, int _blkSize, PacketId _id = 0)
         :  cmd(_cmd), id(_id ? _id : (PacketId)_req.get()), req(_req),
-           data(nullptr), addr(0), _isSecure(false),
+           data(nullptr), addr(0), _isSecure(false), _isStarved(false),
+	   _isPreserve(false),
            _qosValue(0),
            htmReturnReason(HtmCacheFailure::NO_FAIL),
            htmTransactionUid(0),
@@ -945,7 +968,9 @@ class Packet : public Printable, public Extensible<Packet>
         :  Extensible<Packet>(*pkt),
            cmd(pkt->cmd), id(pkt->id), req(pkt->req),
            data(nullptr),
-           addr(pkt->addr), _isSecure(pkt->_isSecure), size(pkt->size),
+           addr(pkt->addr), _isSecure(pkt->_isSecure), 
+	   _isStarved(pkt->_isStarved), _isPreserve(pkt->_isPreserve),
+	   size(pkt->size),
            bytesValid(pkt->bytesValid),
            _qosValue(pkt->qosValue()),
            htmReturnReason(HtmCacheFailure::NO_FAIL),
@@ -955,6 +980,13 @@ class Packet : public Printable, public Extensible<Packet>
            payloadDelay(pkt->payloadDelay),
            senderState(pkt->senderState)
     {
+	tickBlkInserted = pkt->tickBlkInserted;
+        tickBlkRecentAccess = pkt->tickBlkRecentAccess;
+        accessCount = pkt->accessCount;
+        starveCount = pkt->starveCount;
+        evictFromL1 = pkt->evictFromL1;
+        starveHistory = pkt->starveHistory;
+
         if (!clear_flags)
             flags.set(pkt->flags & COPY_FLAGS);
 
@@ -1101,6 +1133,16 @@ class Packet : public Printable, public Extensible<Packet>
 
         this->size = size;
         flags.set(VALID_SIZE);
+    }
+
+    void setStarved(bool is_starved)
+    {
+        _isStarved = is_starved;
+    }
+
+    void setPreserve(bool is_preserve)
+    {
+        _isPreserve = is_preserve;
     }
 
     /**

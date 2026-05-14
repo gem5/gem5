@@ -533,6 +533,15 @@ class Fetch
      */
     bool interruptPending;
 
+    /** Enable starvation-driven EMISSARY line marking. */
+    bool enableStarvationEMISSARY;
+    /** Random threshold used when randomStarve is enabled. */
+    double starveRandomness;
+    /** Preserve line if starvation count is at least this value. */
+    uint32_t starveAtleast;
+    /** Whether to use random preserve insertion instead of threshold. */
+    bool randomStarve;
+
     /** Instruction port. Note that it has to appear after the fetch stage. */
     IcachePort icachePort;
 

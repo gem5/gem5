@@ -134,6 +134,24 @@ def config_cache(options, system):
         system.l2 = l2_cache_class(
             clk_domain=system.cpu_clk_domain, **_get_cache_opts("l2", options)
         )
+        
+        if hasattr(options, "l2_rp") and options.l2_rp in [
+            "LRUEmissary",
+            "LRUEmissaryRP",
+        ]:
+            system.l2.replacement_policy = LRUEmissaryRP()
+            assoc = int(system.l2.assoc)
+            preserve_ways = max(0, min(int(options.preserve_ways), assoc))
+            lru_ways = assoc - preserve_ways
+            if hasattr(options, "lru_ways") and options.lru_ways > 0:
+                lru_ways = max(1, min(int(options.lru_ways), assoc))
+                preserve_ways = assoc - lru_ways
+            system.l2.lru_ways = lru_ways
+            system.l2.preserve_ways = preserve_ways
+            if hasattr(options, "hist_freq_cycles") and options.hist_freq_cycles:
+                system.l2.replacement_policy.flush_freq_in_cycles = (
+                    options.hist_freq_cycles
+                )
 
         system.tol2bus = L2XBar(clk_domain=system.cpu_clk_domain)
         system.l2.cpu_side = system.tol2bus.mem_side_ports

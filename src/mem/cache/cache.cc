@@ -873,6 +873,8 @@ Cache::serviceMSHRTargets(MSHR *mshr, const PacketPtr pkt, CacheBlk *blk)
                         assert(pkt->getSize() >= tgt_pkt->getSize());
 
                         tgt_pkt->setData(pkt->getConstPtr<uint8_t>());
+			tgt_pkt->starveHistory = pkt->starveHistory;
+                        tgt_pkt->starveCount = pkt->starveCount;
                     } else {
                         // MSHR targets can read data either from the
                         // block or the response pkt. If we can't get data
