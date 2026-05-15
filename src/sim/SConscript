@@ -57,7 +57,7 @@ SimObject('VoltageDomain.py', sim_objects=['VoltageDomain'])
 SimObject(
     'System.py',
     sim_objects=['System'],
-    enums=['MemoryMode', "CheckpointCompressionType"]
+    enums=['MemoryMode', 'CheckpointCompressionType']
 )
 SimObject('DVFSHandler.py', sim_objects=['DVFSHandler'])
 SimObject('SubSystem.py', sim_objects=['SubSystem'])
