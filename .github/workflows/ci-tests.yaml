@@ -171,7 +171,8 @@ jobs:
                     pkg-config \
                     protobuf \
                     grpc \
-                    boost
+                    boost \
+                    zstd
 
 
             - name: Restore macOS build/ALL cache
