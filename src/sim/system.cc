@@ -12,7 +12,7 @@
  * modified or unmodified, in source code or in binary form.
  *
  * Copyright (c) 2003-2006 The Regents of The University of Michigan
- * Copyright (c) 2011 Regents of the University of California
+ * Copyright (c) 2011, 2026 Regents of the University of California
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -175,7 +175,7 @@ System::System(const Params &p)
       workload(p.workload),
       physmem(name() + ".physmem", p.memories, p.mmap_using_noreserve,
               p.shared_backstore, p.auto_unlink_shared_backstore,
-              p.is_sparse_restore),
+              p.is_sparse_restore, p.checkpoint_compression_type),
       memoryMode(p.mem_mode),
       _cacheLineSize(p.cache_line_size),
       numWorkIds(p.num_work_ids),

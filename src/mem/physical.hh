@@ -11,6 +11,9 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
+ * Copyright (c) 2026 Regents of the University of California
+ * All rights reserved.
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met: redistributions of source code must retain the above copyright
@@ -44,6 +47,7 @@
 
 #include "base/addr_range.hh"
 #include "base/addr_range_map.hh"
+#include "enums/CheckpointCompressionType.hh"
 #include "mem/packet.hh"
 #include "sim/serialize.hh"
 
@@ -163,6 +167,7 @@ class PhysicalMemory : public Serializable
     long pageSize;
 
     const bool isSparseRestore;
+    enums::CheckpointCompressionType checkpointCompressionType;
 
     // The physical memory used to provide the memory in the simulated
     // system
@@ -193,12 +198,12 @@ class PhysicalMemory : public Serializable
     /**
      * Create a physical memory object, wrapping a number of memories.
      */
-    PhysicalMemory(const std::string &_name,
-                   const std::vector<AbstractMemory *> &_memories,
-                   bool mmap_using_noreserve,
-                   const std::string &shared_backstore,
-                   bool auto_unlink_shared_backstore,
-                   bool is_sparse_restore = false);
+    PhysicalMemory(
+        const std::string &_name,
+        const std::vector<AbstractMemory *> &_memories,
+        bool mmap_using_noreserve, const std::string &shared_backstore,
+        bool auto_unlink_shared_backstore, bool is_sparse_restore,
+        enums::CheckpointCompressionType checkpoint_compression_type);
 
     /**
      * Unmap all the backing store we have used.
@@ -287,9 +292,13 @@ class PhysicalMemory : public Serializable
      * @param store_id Unique identifier of this backing store
      * @param range The address range of this backing store
      * @param pmem The host pointer to this backing store
+     * @param checkpoint_compression_type The compression type to use for this
+     *   backing store
      */
     void serializeStore(CheckpointOut &cp, unsigned int store_id,
-                        AddrRange range, uint8_t* pmem) const;
+                        AddrRange range, uint8_t *pmem,
+                        const enums::CheckpointCompressionType
+                            checkpoint_compression_type) const;
 
     /**
      * Unserialize the memories in the system. As with the
@@ -301,8 +310,9 @@ class PhysicalMemory : public Serializable
     /**
      * Unserialize a specific backing store, identified by a section.
      */
-    void unserializeStore(CheckpointIn &cp);
-
+    void unserializeStore(
+        CheckpointIn &cp,
+        const enums::CheckpointCompressionType checkpoint_compression_type);
 };
 
 } // namespace memory

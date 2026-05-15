@@ -12,7 +12,7 @@
  * modified or unmodified, in source code or in binary form.
  *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
- * Copyright (c) 2011 Regents of the University of California
+ * Copyright (c) 2011, 2026 Regents of the University of California
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,6 +52,7 @@
 #include "base/loader/symtab.hh"
 #include "base/statistics.hh"
 #include "cpu/pc_event.hh"
+#include "enums/CheckpointCompressionType.hh"
 #include "enums/MemoryMode.hh"
 #include "mem/mem_requestor.hh"
 #include "mem/physical.hh"

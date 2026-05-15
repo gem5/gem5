@@ -11,7 +11,7 @@
 # modified or unmodified, in source code or in binary form.
 #
 # Copyright (c) 2005-2007 The Regents of The University of Michigan
-# Copyright (c) 2011 Regents of the University of California
+# Copyright (c) 2011-2026 Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -47,6 +47,10 @@ from m5.SimObject import *
 
 class MemoryMode(Enum):
     vals = ["invalid", "atomic", "timing", "atomic_noncaching"]
+
+
+class CheckpointCompressionType(Enum):
+    vals = ["raw", "gzip", "zstd"]
 
 
 class System(SimObject):
@@ -113,6 +117,10 @@ class System(SimObject):
         False,
         "Optimizes host RAM footprint by skipping zero-filled pages during restore, "
         "preventing physical memory allocation for unused guest regions.",
+    )
+
+    checkpoint_compression_type = Param.CheckpointCompressionType(
+        CheckpointCompressionType("gzip"), "Compression type for checkpoints"
     )
 
     cache_line_size = Param.Unsigned(64, "Cache line size in bytes")
