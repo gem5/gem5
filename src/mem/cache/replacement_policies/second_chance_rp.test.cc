@@ -235,7 +235,6 @@ TEST_F(SecondChanceRPVictimizationTestF, GetVictimAfterTouch)
     }
 }
 
-
 /// Test that the when an entry is touched it is given a 2nd chance and
 /// it becomes the last entry to be victimized
 TEST_F(SecondChanceRPVictimizationTestF, GetVictimTouchWraparound)
