@@ -138,6 +138,15 @@ def do_copyback_write_gen(data_id):
     return do_copyback_write
 
 
+def do_non_copyback_write_gen(data_id):
+    def do_non_copyback_write(transaction):
+        return do_wr_data(
+            transaction, DatOpcode.NON_COPY_BACK_WR_DATA, data_id
+        )
+
+    return do_non_copyback_write
+
+
 def checked_read(generator, address, txn_id, req, resp):
     payload = payload_gen(address)
     phase = phase_gen(txn_id, req=req)
