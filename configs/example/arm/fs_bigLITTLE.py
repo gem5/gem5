@@ -64,6 +64,7 @@ from devices import (
 )
 
 default_disk = "aarch64-ubuntu-trusty-headless.img"
+default_root = "/dev/vda1"
 
 default_mem_size = "2GiB"
 
@@ -209,7 +210,7 @@ def addOptions(parser):
     parser.add_argument(
         "--root",
         type=str,
-        default="/dev/vda1",
+        default=default_root,
         help="Specify the kernel CLI root= argument",
     )
     parser.add_argument(
@@ -322,6 +323,33 @@ def addOptions(parser):
         "--vio-9p", action="store_true", help=Options.vio_9p_help
     )
     parser.add_argument(
+        "--vio-9p-root",
+        type=str,
+        default=None,
+        metavar="DIR",
+        help="Host directory to export through the VirtIO 9P device.",
+    )
+    parser.add_argument(
+        "--vio-9p-tag",
+        type=str,
+        default=None,
+        metavar="TAG",
+        help="VirtIO 9P mount tag. Defaults to /dev/root when a host "
+        "directory is exported, and to the device default otherwise.",
+    )
+    parser.add_argument(
+        "--rootfs-dir",
+        type=str,
+        default=None,
+        metavar="DIR",
+        help=(
+            "Use a host directory as the guest root filesystem via 9P. "
+            "This implies --vio-9p-root DIR and adds rootfstype=9p "
+            "and rootflags=trans=virtio,version=9p2000.L to the "
+            "kernel command line."
+        ),
+    )
+    parser.add_argument(
         "--dtb-gen",
         action="store_true",
         help="Doesn't run simulation, it generates a DTB only",
@@ -332,6 +360,39 @@ def addOptions(parser):
 def build(options):
     m5.ticks.fixGlobalFrequency()
 
+    rootfs_dir = (
+        os.path.realpath(options.rootfs_dir) if options.rootfs_dir else None
+    )
+    vio_9p_root = options.vio_9p_root
+
+    if rootfs_dir:
+        if vio_9p_root is not None:
+            vio_9p_root = os.path.realpath(vio_9p_root)
+            if vio_9p_root != rootfs_dir:
+                m5.util.fatal(
+                    "--rootfs-dir and --vio-9p-root specify different "
+                    "directories"
+                )
+        if not os.path.isdir(rootfs_dir):
+            m5.util.fatal(
+                f"--rootfs-dir must name an existing directory: {rootfs_dir}"
+            )
+        vio_9p_root = rootfs_dir
+    elif vio_9p_root is not None:
+        vio_9p_root = os.path.realpath(vio_9p_root)
+        if not os.path.isdir(vio_9p_root):
+            m5.util.fatal(
+                f"--vio-9p-root must name an existing directory: "
+                f"{vio_9p_root}"
+            )
+
+    # The mount tag doubles as the kernel's root= argument when the guest
+    # root filesystem is served over 9P, so both need the same default.
+    vio_9p_tag = options.vio_9p_tag
+    if vio_9p_tag is None and vio_9p_root is not None:
+        vio_9p_tag = "/dev/root"
+
+    kernel_root = vio_9p_tag if rootfs_dir else options.root
     kernel_cmd = [
         "earlyprintk",
         "earlycon=pl011,0x1c090000",
@@ -340,15 +401,27 @@ def build(options):
         "norandmaps",
         "loglevel=8",
         f"mem={options.mem_size}",
-        f"root={options.root}",
-        "rw",
-        f"init={options.kernel_init}",
-        "vmalloc=768MB",
+        f"root={kernel_root}",
     ]
+    if rootfs_dir:
+        kernel_cmd.extend(
+            ["rootfstype=9p", "rootflags=trans=virtio,version=9p2000.L"]
+        )
+    kernel_cmd.extend(
+        [
+            "rw",
+            f"init={options.kernel_init}",
+            "vmalloc=768MB",
+        ]
+    )
 
     root = Root(full_system=True)
 
-    disks = [default_disk] if len(options.disk) == 0 else options.disk
+    disks = (
+        options.disk
+        if rootfs_dir
+        else ([default_disk] if len(options.disk) == 0 else options.disk)
+    )
     system = createSystem(
         options.caches,
         options.kernel,
@@ -361,6 +434,12 @@ def build(options):
 
     root.system = system
     if options.kernel_cmd:
+        if rootfs_dir:
+            m5.util.warn(
+                "--rootfs-dir attaches the 9P root device, but --kernel-cmd "
+                "overrides the automatic root=, rootfstype=, and rootflags= "
+                "arguments"
+            )
         system.workload.command_line = options.kernel_cmd
     else:
         system.workload.command_line = " ".join(kernel_cmd)
@@ -429,8 +508,8 @@ def build(options):
             sc.sc_time(10000.0 / 100000000.0, sc.sc_time.SC_SEC)
         )
 
-    if options.vio_9p:
-        FSConfig.attach_9p(system.realview, system.iobus)
+    if options.vio_9p or vio_9p_root is not None:
+        FSConfig.attach_9p(system.realview, root=vio_9p_root, tag=vio_9p_tag)
 
     return root
 
