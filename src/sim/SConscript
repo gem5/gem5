@@ -62,6 +62,7 @@ SimObject('PowerDomain.py', sim_objects=['PowerDomain'])
 SimObject('SignalPort.py', sim_objects=[])
 
 Source('async.cc')
+Source('debug_ctl.cc')
 Source(
     'backtrace_%s.cc' % env['BACKTRACE_IMPL'],
     tags=['gem5 trace']

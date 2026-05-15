@@ -48,8 +48,8 @@ extern volatile bool async_exit;        ///< Async request to exit simulator.
 extern volatile bool async_io;          ///< Async I/O request (SIGIO).
 extern volatile bool async_exception;   ///< Python exception.
 extern volatile bool async_hypercall;
+extern volatile bool async_debug_cmd; ///< Async debug flag cmd (SIGRTMIN+1).
 //@}
-
 
 } // namespace gem5
 

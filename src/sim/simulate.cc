@@ -51,6 +51,7 @@
 #include "base/types.hh"
 #include "debug/EnteringEventQueue.hh"
 #include "sim/async.hh"
+#include "sim/debug_ctl.hh"
 #include "sim/eventq.hh"
 #include "sim/init_signals.hh"
 #include "sim/sim_events.hh"
@@ -194,6 +195,7 @@ simulate(Tick num_cycles)
     // Note: This should be done before initializing the threads
     initSigInt();
     initSigCont();
+    initSigRTMin();
 
     if (global_exit_event)//cleaning last global exit event
         global_exit_event->clean();
@@ -333,6 +335,10 @@ doSimLoop(EventQueue *eventq)
             if (async_hypercall) {
                 async_hypercall = false;
                 processExternalSignal();
+            }
+            if (async_debug_cmd) {
+                async_debug_cmd = false;
+                processDebugCmd();
             }
         }
 

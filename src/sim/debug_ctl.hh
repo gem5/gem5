@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008 The Hewlett-Packard Development Company
+ * Copyright (c) 2025 Polydoros Petrakis
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,38 +26,30 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __SIM_INIT_SIGNALS_HH__
-#define __SIM_INIT_SIGNALS_HH__
-
-#include <csignal>
-#include <string>
+#ifndef __SIM_DEBUG_CTL_HH__
+#define __SIM_DEBUG_CTL_HH__
 
 namespace gem5
 {
 
-void dumpStatsHandler(int sigtype);
-void dumprstStatsHandler(int sigtype);
-void exitNowHandler(int sigtype);
-void abortHandler(int sigtype);
-void initSignals();
-
-// separate out sigint handler so that we can restore the python one
-void initSigInt();
-void initSigCont();
-// SIGRTMIN is reserved for KVM (KVM_KICK_SIGNAL); this installs on SIGRTMIN+1.
-// No-op on platforms without real-time signals (e.g. macOS).
-#ifdef SIGRTMIN
-void initSigRTMin();
-#else
-inline void
-initSigRTMin()
-{}
-#endif
-std::string extractStringFromJSON(std::string &full_str, std::string start_str,
-                                  std::string end_str, size_t &search_start);
-void processExternalSignal(void);
-void restoreSigInt();
+/**
+ * Process debug flag commands from /tmp/gem5_debug_<pid>.cmd.
+ *
+ * Called from doSimLoop() when async_debug_cmd is set (triggered by
+ * SIGRTMIN+1). The command file is written by util/gem5_debug_ctl.sh.
+ *
+ * Command file format (one command per line, # comments supported):
+ *   +FLAG           enable flag (stays on until explicitly disabled)
+ *   +FLAG:Nt        enable flag, auto-disable after N ticks
+ *   -FLAG           disable flag immediately
+ *   trace:on        global trace master enable
+ *   trace:off       global trace master disable
+ *
+ * The file is deleted after processing. Unknown flag names produce a
+ * warning but do not abort processing of remaining commands.
+ */
+void processDebugCmd();
 
 } // namespace gem5
 
-#endif // __SIM_INIT_SIGNALS_HH__
+#endif // __SIM_DEBUG_CTL_HH__

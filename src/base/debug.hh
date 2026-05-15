@@ -42,6 +42,7 @@
 #ifndef __BASE_DEBUG_HH__
 #define __BASE_DEBUG_HH__
 
+#include <atomic>
 #include <initializer_list>
 #include <iostream>
 #include <map>
@@ -63,7 +64,10 @@ class Flag
   protected:
     static bool _globalEnable; // whether debug tracings are enabled
 
-    bool _tracing = false; // tracing is enabled and flag is on
+    // Read by every DPRINTF on every thread; atomic to avoid data races
+    // when changeFlag() is called at runtime. Relaxed ordering suffices:
+    // a stale read causes at most one missed or extra debug line.
+    std::atomic<bool> _tracing{false};
 
     const char *_name;
     const char *_desc;
@@ -77,7 +81,11 @@ class Flag
     std::string name() const { return _name; }
     std::string desc() const { return _desc; }
 
-    bool tracing() const { return TRACING_ON && _tracing; }
+    bool
+    tracing() const
+    {
+        return TRACING_ON && _tracing.load(std::memory_order_relaxed);
+    }
 
     virtual void enable() = 0;
     virtual void disable() = 0;
@@ -96,7 +104,11 @@ class SimpleFlag : public Flag
 
     bool _enabled = false; // flag enablement status
 
-    void sync() override { _tracing = _globalEnable && _enabled; }
+    void
+    sync() override
+    {
+        _tracing.store(_globalEnable && _enabled, std::memory_order_relaxed);
+    }
 
   public:
     SimpleFlag(const char *name, const char *desc, bool is_format=false);

@@ -483,5 +483,21 @@ void restoreSigInt()
     sigaction(SIGINT, &old_int_sa, NULL);
 }
 
+#ifdef SIGRTMIN
+static void
+debugCmdHandler(int sigtype)
+{
+    async_event = true;
+    async_debug_cmd = true;
+    getEventQueue(0)->wakeup();
+}
+
+// SIGRTMIN is reserved for KVM (KVM_KICK_SIGNAL). Use SIGRTMIN+1.
+void
+initSigRTMin()
+{
+    installSignalHandler(SIGRTMIN + 1, debugCmdHandler);
+}
+#endif // SIGRTMIN
 
 } // namespace gem5
