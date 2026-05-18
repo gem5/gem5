@@ -54,3 +54,5 @@ GTest('fifo_rp.test', 'fifo_rp.cc', 'fifo_rp.test.cc',
 GTest('lfu_rp.test', 'lfu_rp.cc', 'lfu_rp.test.cc', with_tag('gem5 simobject'))
 GTest('lru_rp.test', 'lru_rp.cc', 'lru_rp.test.cc', with_tag('gem5 simobject'))
 GTest('mru_rp.test', 'mru_rp.cc', 'mru_rp.test.cc', with_tag('gem5 simobject'))
+GTest('second_chance_rp.test', 'fifo_rp.cc', 'second_chance_rp.cc',
+    'second_chance_rp.test.cc', with_tag('gem5 simobject'))
