@@ -252,8 +252,7 @@ SDMAEngine::unregisterRLCQueue(Addr doorbell, bool unmap_static)
             mqd->rptr = rlc0.globalRptr();
             mqd->wptr = rlc0.getWptr();
 
-            auto cb =
-                new DmaVirtCallback<uint32_t>([=, this](const uint32_t &) {});
+            auto cb = new DmaVirtCallback<uint32_t>([](const uint32_t &) {});
             dmaWriteVirt(rlc0.getMQDAddr(), sizeof(SDMAQueueDesc), cb, mqd);
         } else {
             warn("RLC0 SDMAMQD address invalid\n");
@@ -274,8 +273,7 @@ SDMAEngine::unregisterRLCQueue(Addr doorbell, bool unmap_static)
             mqd->rptr = rlc1.globalRptr();
             mqd->wptr = rlc1.getWptr();
 
-            auto cb =
-                new DmaVirtCallback<uint32_t>([=, this](const uint32_t &) {});
+            auto cb = new DmaVirtCallback<uint32_t>([](const uint32_t &) {});
             dmaWriteVirt(rlc1.getMQDAddr(), sizeof(SDMAQueueDesc), cb, mqd);
         } else {
             warn("RLC1 SDMAMQD address invalid\n");
@@ -385,8 +383,8 @@ SDMAEngine::decodeNext(SDMAQueue *q)
         DPRINTF(SDMAEngine, "Writing rptr %#lx back to host addr %#lx\n",
                 q->globalRptr(), q->rptrWbAddr());
         if (q->rptrWbAddr()) {
-            auto cb = new DmaVirtCallback<uint64_t>(
-                [=, this](const uint64_t &) {}, q->globalRptr());
+            auto cb = new DmaVirtCallback<uint64_t>([](const uint64_t &) {},
+                                                    q->globalRptr());
             dmaWriteVirt(q->rptrWbAddr(), sizeof(Addr), cb, &cb->dmaBuffer);
         }
         q->processing(false);
