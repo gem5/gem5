@@ -38,7 +38,9 @@
 #include "mem/ruby/protocol/chi/tlm/utils.hh"
 
 #include "base/bitfield.hh"
+#include "base/intmath.hh"
 #include "base/logging.hh"
+#include "mem/ruby/protocol/chi/tlm/controller.hh"
 
 namespace gem5 {
 
@@ -328,6 +330,23 @@ rspOpcode(RspOpcode opc, Resp resp)
     };
 }
 
+ruby::MachineID
+srcId(uint16_t src_id)
+{
+    constexpr auto node_bits = log2i(CacheController::MAX_NODES);
+    uint16_t node_opcode = bits(src_id, 16, node_bits);
+    uint16_t node_id = bits(src_id, node_bits - 1, 0);
+    switch (node_opcode) {
+        case 0:
+            return {ruby::MachineType_Cache, node_id};
+        case 1:
+            return {ruby::MachineType_Memory, node_id};
+        case 2:
+            return {ruby::MachineType_MiscNode, node_id};
+        default:
+            panic("Invalid src_id\n");
+    }
+}
 }
 
 namespace ruby_to_tlm {
@@ -483,6 +502,26 @@ rspResp(CHIResponseType rsp)
     }
 }
 
+uint16_t
+srcId(ruby::MachineID src_id)
+{
+    uint16_t type_identifier;
+    switch (src_id.type) {
+        case ruby::MachineType_Cache:
+            type_identifier = 0;
+            break;
+        case ruby::MachineType_Memory:
+            type_identifier = 1;
+            break;
+        case ruby::MachineType_MiscNode:
+            type_identifier = 2;
+            break;
+        default:
+            panic("Invalid src_id\n");
+    }
+
+    return (type_identifier << log2i(CacheController::MAX_NODES)) | src_id.num;
+}
 }
 
 ::gem5::ArmISA::mpam::MpamBundle

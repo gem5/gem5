@@ -92,6 +92,9 @@ namespace tlm::chi {
 class CacheController : public ruby::CHIGenericController
 {
   public:
+    /** We mainly use this when we flatten MachineID into src_id/tgt_id */
+    static constexpr uint64_t MAX_NODES = 1024;
+
     PARAMS(TlmController);
     CacheController(const Params &p);
 
@@ -105,6 +108,8 @@ class CacheController : public ruby::CHIGenericController
     std::function<void(ARM::CHI::Payload* payload, ARM::CHI::Phase* phase)> bw;
 
     Port &getPort(const std::string &if_name, PortID idx) override;
+
+    void init() override;
 
     bool recvRequestMsg(const CHIRequestMsg *msg) override;
     bool recvSnoopMsg(const CHIRequestMsg *msg) override;
