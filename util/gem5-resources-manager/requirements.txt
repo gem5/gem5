@@ -9,7 +9,7 @@ coverage==7.2.7
 cryptography==44.0.1
 dnspython==2.6.1
 Flask==2.3.2
-idna==3.7
+idna==3.15
 importlib-metadata==6.6.0
 itsdangerous==2.1.2
 Jinja2==3.1.6
