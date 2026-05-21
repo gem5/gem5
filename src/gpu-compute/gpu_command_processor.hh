@@ -222,8 +222,8 @@ class GPUCommandProcessor : public DmaVirtDevice
          * DMA a copy of the MQD into the task. some fields of
          * the MQD will be used to initialize register state in VI
          */
-        auto *mqdDmaEvent =
-            new DmaVirtCallback<int>([=](const int &) { MQDDmaEvent(task); });
+        auto *mqdDmaEvent = new DmaVirtCallback<int>(
+            [=, this](const int &) { MQDDmaEvent(task); });
 
         dmaReadVirt(task->hostAMDQueueAddr, sizeof(_amd_queue_t), mqdDmaEvent,
                     &task->amdQueue);
@@ -274,7 +274,7 @@ class GPUCommandProcessor : public DmaVirtDevice
                     task->privMemPerItem());
 
             updateHsaSignal(task->amdQueue.queue_inactive_signal.handle, 1,
-                            [=](const uint64_t &dma_buffer) {
+                            [=, this](const uint64_t &dma_buffer) {
                                 WaitScratchDmaEvent(task, dma_buffer);
                             });
 
@@ -308,7 +308,7 @@ class GPUCommandProcessor : public DmaVirtDevice
              * since other MQD entries won't change since we last read them.
              */
             auto cb = new DmaVirtCallback<int>(
-                [=](const int &) { MQDDmaEvent(task); });
+                [=, this](const int &) { MQDDmaEvent(task); });
 
             dmaReadVirt(task->hostAMDQueueAddr, sizeof(_amd_queue_t), cb,
                         &task->amdQueue);
@@ -323,8 +323,8 @@ class GPUCommandProcessor : public DmaVirtDevice
                     "Polling queue inactive signal at "
                     "%p.\n",
                     value_addr);
-            auto cb =
-                new DmaVirtCallback<uint64_t>([=](const uint64_t &dma_buffer) {
+            auto cb = new DmaVirtCallback<uint64_t>(
+                [=, this](const uint64_t &dma_buffer) {
                     WaitScratchDmaEvent(task, dma_buffer);
                 });
 
