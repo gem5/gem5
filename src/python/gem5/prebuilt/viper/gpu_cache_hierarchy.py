@@ -40,6 +40,7 @@ from m5.objects import (
     SrcClockDomain,
     TreePLRURP,
     VIPERCoalescer,
+    VIPERSequencer,
     VoltageDomain,
 )
 
@@ -196,7 +197,7 @@ class ViperGPUCacheHierarchy(AbstractRubyCacheHierarchy):
 
             sqc.version = idx
 
-            sqc.sequencer = RubySequencer(
+            sqc.sequencer = VIPERSequencer(
                 version=self.seqCount(),
                 dcache=sqc.L1cache,
                 ruby_system=self.ruby_gpu,
@@ -230,7 +231,7 @@ class ViperGPUCacheHierarchy(AbstractRubyCacheHierarchy):
             # Scalar uses same controller as SQC, so add SQC count
             scalar.version = idx + num_sqcs
 
-            scalar.sequencer = RubySequencer(
+            scalar.sequencer = VIPERSequencer(
                 version=self.seqCount(),
                 dcache=scalar.L1cache,
                 ruby_system=self.ruby_gpu,
