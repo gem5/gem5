@@ -1,6 +1,7 @@
 MODULE.bazel.lock
 bazel-*
 build
+build_cmake/
 gem5_build
 parser.out
 parsetab.py
