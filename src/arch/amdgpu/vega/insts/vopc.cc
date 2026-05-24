@@ -30,6 +30,7 @@
  */
 
 #include "arch/amdgpu/vega/insts/instructions.hh"
+#include "arch/arm/insts/fplib.hh"
 
 namespace gem5
 {
@@ -615,7 +616,34 @@ Inst_VOPC__V_CMP_EQ_F16::~Inst_VOPC__V_CMP_EQ_F16()
 void
 Inst_VOPC__V_CMP_EQ_F16::execute(GPUDynInstPtr gpuDynInst)
 {
-    panicUnimplemented();
+    Wavefront *wf = gpuDynInst->wavefront();
+    ConstVecOperandU32 src0(gpuDynInst, instData.SRC0);
+    ConstVecOperandU32 src1(gpuDynInst, instData.VSRC1);
+    ScalarOperandU64 vcc(gpuDynInst, REG_VCC_LO);
+
+    src0.readSrc();
+    src1.read();
+
+    auto cmpImpl = [](uint32_t a, uint32_t b) {
+        uint16_t a_fp16 = uint16_t(a & 0xFFFF);
+        uint16_t b_fp16 = uint16_t(b & 0xFFFF);
+        ArmISA::FPSCR fpscr;
+        return int(fplibCompareEQ(a_fp16, b_fp16, fpscr));
+    };
+
+    if (isSDWAInst()) {
+        sdwabHelper<uint32_t>(gpuDynInst, cmpImpl);
+    } else if (isDPPInst()) {
+        panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+    } else {
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                vcc.setBit(lane, cmpImpl(src0[lane], src1[lane]));
+            }
+        }
+
+        vcc.write();
+    }
 } // execute
 // --- Inst_VOPC__V_CMP_LE_F16 class methods ---
 
@@ -710,7 +738,32 @@ Inst_VOPC__V_CMP_O_F16::~Inst_VOPC__V_CMP_O_F16()
 void
 Inst_VOPC__V_CMP_O_F16::execute(GPUDynInstPtr gpuDynInst)
 {
-    panicUnimplemented();
+    Wavefront *wf = gpuDynInst->wavefront();
+    ConstVecOperandU16 src0(gpuDynInst, instData.SRC0);
+    ConstVecOperandU16 src1(gpuDynInst, instData.VSRC1);
+    ScalarOperandU64 vcc(gpuDynInst, REG_VCC_LO);
+
+    src0.readSrc();
+    src1.readSrc();
+
+    panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
+    panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
+    for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+        if (wf->execMask(lane)) {
+            uint16_t S0 = src0[lane];
+            uint16_t S1 = src1[lane];
+
+            // NaN is max exponent + non-zero mantissa.
+            uint16_t expMask = 0x7C00;
+            uint16_t manMask = 0x03FF;
+            bool isS0NaN = (S0 & expMask) == expMask && (S0 & manMask) != 0;
+            bool isS1NaN = (S1 & expMask) == expMask && (S1 & manMask) != 0;
+            vcc.setBit(lane, (!isS0NaN && !isS1NaN) ? 1 : 0);
+        }
+    }
+
+    vcc.write();
 } // execute
 // --- Inst_VOPC__V_CMP_U_F16 class methods ---
 
