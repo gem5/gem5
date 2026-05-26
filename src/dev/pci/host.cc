@@ -79,6 +79,16 @@ GenericPciHost::~GenericPciHost()
 {
 }
 
+Addr
+GenericPciHost::devConfigAddr(PciBusNum bus_num,
+                              const PciDevAddr &dev_addr) const
+{
+    Addr bus_addr = (bus_num << BUS_OFFSET) + (dev_addr.dev << DEVICE_OFFSET) +
+                    (dev_addr.func << FUNCTION_OFFSET);
+
+    return confBase + (bus_addr << confDeviceBits);
+}
+
 AddrRange
 GenericPciHost::getConfigAddrRange() const
 {
@@ -86,24 +96,32 @@ GenericPciHost::getConfigAddrRange() const
 }
 
 AddrRange
-GenericPciHost::interfaceConfigRange(const PciDevice &device) const
+GenericPciHost::interfaceConfigRange(PciBusNum bus_num,
+                                     const PciDevice &device) const
 {
-    PciDevAddr dev_addr = device.devAddr();
-    Addr bus_addr = (getBusNum() << 8) + (dev_addr.dev << 3) + dev_addr.func;
-
-    Addr start = confBase + (bus_addr << confDeviceBits);
+    Addr start = devConfigAddr(bus_num, device.devAddr());
 
     return RangeSize(start, 1 << confDeviceBits);
 }
 
+AddrRange
+GenericPciHost::interfaceBusConfigRange(PciBusNum start_bus,
+                                        PciBusNum end_bus) const
+{
+    Addr start = devConfigAddr(start_bus, PciDevAddr(0, 0));
+    Addr size = (end_bus - start_bus + 1) << (BUS_OFFSET + confDeviceBits);
+
+    return RangeSize(start, size);
+}
+
 void
-GenericPciHost::interfacePostInt(const PciDevice &device)
+GenericPciHost::interfacePostInt(PciBusNum bus_num, const PciDevice &device)
 {
     platform.postPciInt(mapPciInterrupt(device));
 }
 
 void
-GenericPciHost::interfaceClearInt(const PciDevice &device)
+GenericPciHost::interfaceClearInt(PciBusNum bus_num, const PciDevice &device)
 {
     platform.clearPciInt(mapPciInterrupt(device));
 }

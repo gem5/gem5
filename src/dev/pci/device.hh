@@ -566,6 +566,12 @@ class PciType1Device : public PciDevice
         return _config.type1;
     }
 
+    const PCIConfigType1 &
+    config() const
+    {
+        return _config.type1;
+    }
+
     /**
      * Write to the PCI config space data that is stored locally. This may be
      * overridden by the device but at some point it will eventually call this

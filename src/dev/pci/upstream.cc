@@ -65,6 +65,18 @@ PciConfigError::setAddrRange(AddrRange range)
     pioPort.sendRangeChange();
 }
 
+AddrRangeList
+PciConfigError::getAddrRanges() const
+{
+    // Avoid triggering assertion error with zero size range, which is the case
+    // when the a PCI to PCI bridge isn't configured yet.
+    if (pioSize == 0) {
+        return AddrRangeList();
+    }
+
+    return IsaFake::getAddrRanges();
+}
+
 PciUpstream::PciUpstream(PciUpDownBridge *up_to_down,
                          PciConfigError *config_error_dev,
                          const std::vector<PciDevice *> &pci_devices,
@@ -92,8 +104,6 @@ PciUpstream::PciUpstream(PciUpDownBridge *up_to_down,
 void
 PciUpstream::init()
 {
-    upToDown->setConfigRange(getConfigAddrRange());
-    configErrorDevice->setAddrRange(getConfigAddrRange());
     sendBusChange();
 }
 
@@ -135,7 +145,16 @@ PciUpstream::DeviceInterface::postInt()
 {
     DPRINTF(PciUpstream, "postInt\n");
 
-    upstream.interfacePostInt(device);
+    upstream.interfacePostInt(upstream.getBusNum(), device);
+}
+
+void
+PciUpstream::DeviceInterface::postInt(PciBusNum bus_num,
+                                      const PciDevice &device)
+{
+    DPRINTF(PciUpstream, "postInt\n");
+
+    upstream.interfacePostInt(bus_num, device);
 }
 
 void
@@ -143,36 +162,84 @@ PciUpstream::DeviceInterface::clearInt()
 {
     DPRINTF(PciUpstream, "clearInt\n");
 
-    upstream.interfaceClearInt(device);
+    upstream.interfaceClearInt(upstream.getBusNum(), device);
+}
+
+void
+PciUpstream::DeviceInterface::clearInt(PciBusNum bus_num,
+                                       const PciDevice &device)
+{
+    DPRINTF(PciUpstream, "clearInt\n");
+
+    upstream.interfaceClearInt(bus_num, device);
 }
 
 AddrRange
 PciUpstream::DeviceInterface::configRange() const
 {
-    return upstream.interfaceConfigRange(device);
+    return upstream.interfaceConfigRange(upstream.getBusNum(), device);
+}
+
+AddrRange
+PciUpstream::DeviceInterface::configRange(PciBusNum bus_num,
+                                          const PciDevice &device) const
+{
+    return upstream.interfaceConfigRange(bus_num, device);
 }
 
 Addr
 PciUpstream::DeviceInterface::pioAddr(Addr addr) const
 {
-    return upstream.interfacePioAddr(device, addr);
+    return upstream.interfacePioAddr(upstream.getBusNum(), device, addr);
+}
+
+Addr
+PciUpstream::DeviceInterface::pioAddr(PciBusNum bus_num,
+                                      const PciDevice &device, Addr addr) const
+{
+    return upstream.interfacePioAddr(bus_num, device, addr);
 }
 
 Addr
 PciUpstream::DeviceInterface::memAddr(Addr addr) const
 {
-    return upstream.interfaceMemAddr(device, addr);
+    return upstream.interfaceMemAddr(upstream.getBusNum(), device, addr);
+}
+
+Addr
+PciUpstream::DeviceInterface::memAddr(PciBusNum bus_num,
+                                      const PciDevice &device, Addr addr) const
+{
+    return upstream.interfaceMemAddr(bus_num, device, addr);
 }
 
 Addr
 PciUpstream::DeviceInterface::dmaAddr(Addr addr) const
 {
-    return upstream.interfaceDmaAddr(device, addr);
+    return upstream.interfaceDmaAddr(upstream.getBusNum(), device, addr);
+}
+
+Addr
+PciUpstream::DeviceInterface::dmaAddr(PciBusNum bus_num,
+                                      const PciDevice &device, Addr addr) const
+{
+    return upstream.interfaceDmaAddr(bus_num, device, addr);
+}
+
+AddrRange
+PciUpstream::DeviceInterface::busConfigRange(PciBusNum start_bus,
+                                             PciBusNum end_bus) const
+{
+    return upstream.interfaceBusConfigRange(start_bus, end_bus);
 }
 
 void
 PciUpstream::sendBusChange()
 {
+    // Update bridge and error device configuration range
+    upToDown->setConfigRange(getConfigAddrRange());
+    configErrorDevice->setAddrRange(getConfigAddrRange());
+
     for (std::pair<PciDevAddr, PciDevice *> device : devices) {
         device.second->recvBusChange();
     }
