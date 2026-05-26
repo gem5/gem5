@@ -8,6 +8,7 @@ from pathlib import Path
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+GEM5_ROOT = SCRIPT_DIR.parents[2]
 SRC_DIR = SCRIPT_DIR / "hwloop_perf_src"
 SHARED_SRC_DIR = SCRIPT_DIR / "perf_src"
 BIN_DIR = SCRIPT_DIR / "hwloop_perf_bin"
@@ -80,6 +81,8 @@ def build_program(compiler: str, program: str, source: Path, outer_repeats: int)
         str(SRC_DIR),
         "-I",
         str(SHARED_SRC_DIR),
+        "-I",
+        str(GEM5_ROOT / "include"),
         f"-DHWLOOP_OUTER_REPEATS={outer_repeats}",
         f'-DHWLOOP_BENCH_NAME="{program}"',
         "-Wl,--build-id=none",

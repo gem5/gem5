@@ -10,7 +10,7 @@ runHardwareLoopKernel(perf::hwloop::KernelState &state)
     asm volatile(
         ".option push\n"
         ".option norvc\n"
-        ".insn i 0x0b, 0x2, x0, %[count], 32\n"
+        ".insn i 0x0b, 0x2, x0, %[count], " HWLOOP_LP_SETUP_RAW_IMM "\n"
         HWLOOP_BODY_STEP
         ".option pop\n"
         : [acc0] "+r"(state.acc0),
@@ -26,7 +26,7 @@ runHardwareLoopKernel(perf::hwloop::KernelState &state)
 extern "C" [[noreturn]] void
 _start()
 {
-    const std::uint64_t checksum =
+    const std::uint32_t checksum =
         perf::hwloop::runBenchmark(runHardwareLoopKernel);
     perf::hwloop::printBenchmarkChecksum(checksum);
     perf::syscallExit(0);

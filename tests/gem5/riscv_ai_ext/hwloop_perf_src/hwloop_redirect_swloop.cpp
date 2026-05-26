@@ -29,7 +29,7 @@ runSoftwareLoopKernel(perf::hwloop::KernelState &state)
 extern "C" [[noreturn]] void
 _start()
 {
-    const std::uint64_t checksum =
+    const std::uint32_t checksum =
         perf::hwloop::runBenchmark(runSoftwareLoopKernel);
     perf::hwloop::printBenchmarkChecksum(checksum);
     perf::syscallExit(0);
