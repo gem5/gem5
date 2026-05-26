@@ -8,13 +8,17 @@ from pathlib import Path
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+GEM5_ROOT = SCRIPT_DIR.parents[2]
 SRC_DIR = SCRIPT_DIR / "perf_src"
 BIN_DIR = SCRIPT_DIR / "perf_bin"
+M5OP_SOURCE = GEM5_ROOT / "util" / "m5" / "src" / "abi" / "riscv" / "m5op.S"
 PROGRAMS = (
-    "dot4_pipeline_scalar",
-    "dot4_pipeline_custom",
-    "mac_pipeline_scalar",
-    "mac_pipeline_custom",
+    "mac_clamp_scalar",
+    "mac_clamp_custom",
+    "dot4_acc_clamp_scalar",
+    "dot4_acc_clamp_custom",
+    "dot4_plw_lp_clamp_scalar",
+    "dot4_plw_lp_clamp_custom",
 )
 
 
@@ -53,8 +57,6 @@ def build_program(compiler: str, program: str) -> None:
     output = BIN_DIR / program
     command = [
         compiler,
-        "-x",
-        "c++",
         "-std=c++17",
         "-O3",
         "-ffreestanding",
@@ -64,6 +66,9 @@ def build_program(compiler: str, program: str) -> None:
         "-fno-threadsafe-statics",
         "-fno-use-cxa-atexit",
         "-fno-stack-protector",
+        # These freestanding binaries enter at _start without C runtime
+        # startup, so gp is not initialized. Keep global accesses PC-relative.
+        "-msmall-data-limit=0",
         "-nostdlib",
         "-nostartfiles",
         "-static",
@@ -72,11 +77,15 @@ def build_program(compiler: str, program: str) -> None:
         "-mabi=lp64d",
         "-I",
         str(SRC_DIR),
+        "-I",
+        str(GEM5_ROOT / "include"),
         "-Wl,--build-id=none",
+        "-Wl,--no-relax",
         "-Wl,-e,_start",
         "-o",
         str(output),
         str(source),
+        str(M5OP_SOURCE),
     ]
     subprocess.run(command, check=True)
     print(f"Built {output}")

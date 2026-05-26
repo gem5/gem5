@@ -19,13 +19,17 @@ BUILD_SCRIPT = SCRIPT_DIR / "build_perf_binaries.py"
 CONFIG_SCRIPT = SCRIPT_DIR / "configs" / "perf_binary_run.py"
 
 BENCHMARKS = {
-    "dot4_pipeline": {
-        "scalar_binary": BIN_DIR / "dot4_pipeline_scalar",
-        "custom_binary": BIN_DIR / "dot4_pipeline_custom",
+    "mac_clamp": {
+        "scalar_binary": BIN_DIR / "mac_clamp_scalar",
+        "custom_binary": BIN_DIR / "mac_clamp_custom",
     },
-    "mac_pipeline": {
-        "scalar_binary": BIN_DIR / "mac_pipeline_scalar",
-        "custom_binary": BIN_DIR / "mac_pipeline_custom",
+    "dot4_acc_clamp": {
+        "scalar_binary": BIN_DIR / "dot4_acc_clamp_scalar",
+        "custom_binary": BIN_DIR / "dot4_acc_clamp_custom",
+    },
+    "dot4_plw_lp_clamp": {
+        "scalar_binary": BIN_DIR / "dot4_plw_lp_clamp_scalar",
+        "custom_binary": BIN_DIR / "dot4_plw_lp_clamp_custom",
     },
 }
 
@@ -67,15 +71,33 @@ def parse_number(token: str) -> Any:
 
 
 def parse_stats(stats_path: Path) -> dict[str, Any]:
+    # The perf binaries use m5_reset_stats before the kernel and
+    # m5_dump_reset_stats immediately after it. gem5 still emits a final stats
+    # dump at process exit; select the first dump so the reported counters cover
+    # only the kernel ROI.
+    stat_sections: list[dict[str, Any]] = []
     raw_stats: dict[str, Any] = {}
     with stats_path.open("r", encoding="utf-8") as stats_file:
         for line in stats_file:
+            if "Begin Simulation Statistics" in line:
+                if raw_stats:
+                    stat_sections.append(raw_stats)
+                raw_stats = {}
+                continue
+            if "End Simulation Statistics" in line:
+                stat_sections.append(raw_stats)
+                raw_stats = {}
+                continue
             if not line or line.startswith("-"):
                 continue
             match = STAT_REGEX.match(line)
             if match is None:
                 continue
             raw_stats[match.group(1)] = parse_number(match.group(2))
+
+    if raw_stats:
+        stat_sections.append(raw_stats)
+    raw_stats = stat_sections[0] if stat_sections else {}
 
     selected: dict[str, Any] = {}
     for output_name, candidates in STAT_PATHS.items():

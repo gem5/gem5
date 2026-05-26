@@ -6,26 +6,68 @@
 namespace perf
 {
 
-inline std::uint64_t
-reluClampCustom(long accumulator, std::uint16_t clamp_max)
+inline std::int32_t
+macCustom(std::int32_t accumulator, std::int32_t lhs, std::int32_t rhs)
 {
+    long acc_reg = accumulator;
+    const long lhs_reg = lhs;
+    const long rhs_reg = rhs;
+
     asm volatile(
         ".option push\n"
         ".option norvc\n"
-        ".insn r 0x0b, 0x0, 0x2, %[acc], %[acc], x0\n"
-        ".insn i 0x0b, 0x1, %[acc], %[acc], %[clamp]\n"
+        ".insn r 0x0b, 0x0, 0x0, %[acc], %[lhs], %[rhs]\n"
         ".option pop\n"
-        : [acc] "+r"(accumulator)
-        : [clamp] "i"(clamp_max)
+        : [acc] "+&r"(acc_reg)
+        : [lhs] "r"(lhs_reg), [rhs] "r"(rhs_reg)
         : "memory");
 
-    return static_cast<std::uint64_t>(accumulator);
+    return static_cast<std::int32_t>(acc_reg);
 }
 
-inline std::uint64_t
-dot4CustomKernel(const std::uint32_t *activations,
+inline std::int32_t
+dot4AccCustom(std::int32_t accumulator, std::uint32_t activation_word,
+    std::uint32_t weight_word)
+{
+    long acc_reg = accumulator;
+    const long activation_reg = static_cast<long>(activation_word);
+    const long weight_reg = static_cast<long>(weight_word);
+
+    asm volatile(
+        ".option push\n"
+        ".option norvc\n"
+        ".insn r 0x0b, 0x0, 0x1, %[acc], %[activation], %[weight]\n"
+        ".option pop\n"
+        : [acc] "+&r"(acc_reg)
+        : [activation] "r"(activation_reg), [weight] "r"(weight_reg)
+        : "memory");
+
+    return static_cast<std::int32_t>(acc_reg);
+}
+
+inline std::uint32_t
+clampCustom(std::int32_t value, std::uint32_t upper_bound)
+{
+    long out_reg;
+    const long value_reg = value;
+    const long upper_reg = static_cast<long>(upper_bound);
+
+    asm volatile(
+        ".option push\n"
+        ".option norvc\n"
+        ".insn r 0x0b, 0x1, 0x0, %[out], %[value], %[upper]\n"
+        ".option pop\n"
+        : [out] "=&r"(out_reg)
+        : [value] "r"(value_reg), [upper] "r"(upper_reg)
+        : "memory");
+
+    return static_cast<std::uint32_t>(out_reg);
+}
+
+inline std::uint32_t
+dot4PlwLpCustomKernel(const std::uint32_t *activations,
     const std::uint32_t *weights, std::uint32_t group_count,
-    std::uint16_t clamp_max)
+    std::uint32_t clamp_max)
 {
     std::uintptr_t activation_ptr =
         reinterpret_cast<std::uintptr_t>(activations);
@@ -34,76 +76,27 @@ dot4CustomKernel(const std::uint32_t *activations,
     long accumulator = 0;
     long activation_word;
     long weight_word;
+    const long loop_count = group_count;
 
     asm volatile(
         ".option push\n"
         ".option norvc\n"
-        "mv t0, %[group_count]\n"
-        ".insn i 0x0b, 0x2, x0, t0, 96\n"
-        ".insn i 0x0b, 0x3, %[act_word], %[act_ptr], 0\n"
-        ".insn i 0x0b, 0x3, %[weight_word], %[weight_ptr], 0\n"
-        ".insn r 0x0b, 0x0, 0x1, %[acc], %[act_word], %[weight_word]\n"
-        ".insn i 0x0b, 0x3, %[act_word], %[act_ptr], 0\n"
-        ".insn i 0x0b, 0x3, %[weight_word], %[weight_ptr], 0\n"
-        ".insn r 0x0b, 0x0, 0x1, %[acc], %[act_word], %[weight_word]\n"
-        ".insn i 0x0b, 0x3, %[act_word], %[act_ptr], 0\n"
-        ".insn i 0x0b, 0x3, %[weight_word], %[weight_ptr], 0\n"
-        ".insn r 0x0b, 0x0, 0x1, %[acc], %[act_word], %[weight_word]\n"
-        ".insn i 0x0b, 0x3, %[act_word], %[act_ptr], 0\n"
-        ".insn i 0x0b, 0x3, %[weight_word], %[weight_ptr], 0\n"
-        ".insn r 0x0b, 0x0, 0x1, %[acc], %[act_word], %[weight_word]\n"
-        ".insn i 0x0b, 0x3, %[act_word], %[act_ptr], 0\n"
-        ".insn i 0x0b, 0x3, %[weight_word], %[weight_ptr], 0\n"
-        ".insn r 0x0b, 0x0, 0x1, %[acc], %[act_word], %[weight_word]\n"
-        ".insn i 0x0b, 0x3, %[act_word], %[act_ptr], 0\n"
-        ".insn i 0x0b, 0x3, %[weight_word], %[weight_ptr], 0\n"
-        ".insn r 0x0b, 0x0, 0x1, %[acc], %[act_word], %[weight_word]\n"
-        ".insn i 0x0b, 0x3, %[act_word], %[act_ptr], 0\n"
-        ".insn i 0x0b, 0x3, %[weight_word], %[weight_ptr], 0\n"
-        ".insn r 0x0b, 0x0, 0x1, %[acc], %[act_word], %[weight_word]\n"
-        ".insn i 0x0b, 0x3, %[act_word], %[act_ptr], 0\n"
-        ".insn i 0x0b, 0x3, %[weight_word], %[weight_ptr], 0\n"
+        ".balign 4\n"
+        "mv t0, %[loop_count]\n"
+        ".insn i 0x0b, 0x2, x0, t0, 4\n"
+        ".insn i 0x0b, 0x3, %[act_word], %[act_ptr], 4\n"
+        ".insn i 0x0b, 0x3, %[weight_word], %[weight_ptr], 4\n"
         ".insn r 0x0b, 0x0, 0x1, %[acc], %[act_word], %[weight_word]\n"
         ".option pop\n"
-        : [acc] "+r"(accumulator),
+        : [acc] "+&r"(accumulator),
           [act_ptr] "+r"(activation_ptr),
           [weight_ptr] "+r"(weight_ptr),
           [act_word] "=&r"(activation_word),
           [weight_word] "=&r"(weight_word)
-        : [group_count] "r"(group_count)
+        : [loop_count] "r"(loop_count)
         : "memory", "t0");
 
-    return reluClampCustom(accumulator, clamp_max);
-}
-
-inline void
-macRoundCustom(long &acc0, long &lhs0, long &rhs0,
-    long &acc1, long &lhs1, long &rhs1,
-    long &acc2, long &lhs2, long &rhs2,
-    long &acc3, long &lhs3, long &rhs3)
-{
-    asm volatile(
-        ".option push\n"
-        ".option norvc\n"
-        "addiw %[lhs0], %[lhs0], 13\n"
-        "addiw %[rhs0], %[rhs0], -7\n"
-        ".insn r 0x0b, 0x0, 0x0, %[acc0], %[lhs0], %[rhs0]\n"
-        "addiw %[lhs1], %[lhs1], 17\n"
-        "addiw %[rhs1], %[rhs1], -11\n"
-        ".insn r 0x0b, 0x0, 0x0, %[acc1], %[lhs1], %[rhs1]\n"
-        "addiw %[lhs2], %[lhs2], 19\n"
-        "addiw %[rhs2], %[rhs2], -13\n"
-        ".insn r 0x0b, 0x0, 0x0, %[acc2], %[lhs2], %[rhs2]\n"
-        "addiw %[lhs3], %[lhs3], 23\n"
-        "addiw %[rhs3], %[rhs3], -17\n"
-        ".insn r 0x0b, 0x0, 0x0, %[acc3], %[lhs3], %[rhs3]\n"
-        ".option pop\n"
-        : [acc0] "+r"(acc0), [lhs0] "+r"(lhs0), [rhs0] "+r"(rhs0),
-          [acc1] "+r"(acc1), [lhs1] "+r"(lhs1), [rhs1] "+r"(rhs1),
-          [acc2] "+r"(acc2), [lhs2] "+r"(lhs2), [rhs2] "+r"(rhs2),
-          [acc3] "+r"(acc3), [lhs3] "+r"(lhs3), [rhs3] "+r"(rhs3)
-        :
-        : "memory");
+    return clampCustom(static_cast<std::int32_t>(accumulator), clamp_max);
 }
 
 } // namespace perf

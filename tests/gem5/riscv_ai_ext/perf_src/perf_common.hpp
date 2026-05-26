@@ -4,23 +4,25 @@
 #include <cstddef>
 #include <cstdint>
 
+#include <gem5/m5ops.h>
+
 namespace perf
 {
 
-constexpr std::size_t kDotOutputs = 256;
-constexpr std::size_t kDotPacksPerOutput = 2048;
-constexpr std::size_t kDotTotalPacks = kDotOutputs * kDotPacksPerOutput;
-constexpr std::uint16_t kDotClampMax = 255;
-constexpr std::size_t kCustomUnroll = 8;
+constexpr std::size_t kMacDataWords = 64;
+constexpr std::size_t kMacOutputs = 512;
+constexpr std::size_t kMacTaps = 32;
+constexpr std::uint32_t kMacClampMax = 2047;
+constexpr std::uint32_t kMacChecksumSeed = 0x31415926U;
 
-constexpr std::size_t kMacBlocks = 256;
-constexpr std::size_t kMacIterationsPerBlock = 4096;
-constexpr std::size_t kMacOutputs = kMacBlocks * 4;
-constexpr std::uint16_t kMacClampMax = 2047;
+constexpr std::size_t kDotDataWords = 256;
+constexpr std::size_t kDotOutputs = 128;
+constexpr std::size_t kDotGroups = 64;
+constexpr std::uint32_t kDotClampMax = 255;
+constexpr std::uint32_t kDotChecksumSeed = 0x27182818U;
 
-constexpr std::uint64_t kChecksumSeed = 0xcbf29ce484222325ULL;
-
-static_assert(kDotPacksPerOutput % kCustomUnroll == 0);
+static_assert(kMacDataWords == 64);
+static_assert(kDotDataWords == 4 * kDotGroups);
 
 inline std::size_t
 cstringLen(const char *text)
@@ -80,21 +82,21 @@ appendText(char *buffer, std::size_t &len, const char *text)
 }
 
 inline void
-appendHex(char *buffer, std::size_t &len, std::uint64_t value)
+appendHex32(char *buffer, std::size_t &len, std::uint32_t value)
 {
     static constexpr char kHexDigits[] = "0123456789abcdef";
 
     buffer[len++] = '0';
     buffer[len++] = 'x';
 
-    for (int nibble = 15; nibble >= 0; --nibble) {
+    for (int nibble = 7; nibble >= 0; --nibble) {
         const std::uint64_t shift = static_cast<std::uint64_t>(nibble * 4);
         buffer[len++] = kHexDigits[(value >> shift) & 0xfU];
     }
 }
 
 inline void
-printBenchmarkResult(const char *name, std::uint64_t checksum)
+printBenchmarkResult(const char *name, std::uint32_t checksum)
 {
     char buffer[128];
     std::size_t len = 0;
@@ -102,10 +104,38 @@ printBenchmarkResult(const char *name, std::uint64_t checksum)
     appendText(buffer, len, "BENCH_RESULT ");
     appendText(buffer, len, name);
     appendText(buffer, len, " ");
-    appendHex(buffer, len, checksum);
+    appendHex32(buffer, len, checksum);
     buffer[len++] = '\n';
 
     writeBuffer(buffer, len);
+}
+
+inline void
+compilerFence()
+{
+    asm volatile("" ::: "memory");
+}
+
+inline void
+beginKernelStats()
+{
+    compilerFence();
+    m5_reset_stats(0, 0);
+    compilerFence();
+}
+
+inline void
+endKernelStats()
+{
+    compilerFence();
+    m5_dump_reset_stats(0, 0);
+    compilerFence();
+}
+
+inline std::int32_t
+wrapI8(std::uint32_t value, std::uint32_t mul, std::uint32_t add)
+{
+    return static_cast<std::int32_t>((value * mul + add) & 0x7fU) - 64;
 }
 
 inline std::uint32_t
@@ -119,22 +149,38 @@ packInt8x4(std::int32_t b0, std::int32_t b1,
 }
 
 inline void
+fillMacInputs(std::int32_t *lhs, std::int32_t *rhs)
+{
+    for (std::size_t i = 0; i < kMacDataWords; ++i) {
+        const auto idx = static_cast<std::uint32_t>(i);
+        lhs[i] = wrapI8(idx, 13U, 5U);
+        rhs[i] = wrapI8(idx, 17U, 9U);
+    }
+}
+
+inline void
 fillDot4Inputs(std::uint32_t *activations, std::uint32_t *weights)
 {
-    for (std::size_t i = 0; i < kDotTotalPacks; ++i) {
-        const std::int32_t base = static_cast<std::int32_t>(i);
-        const std::int32_t a0 = ((base * 13 + 5) & 0x7f) - 64;
-        const std::int32_t a1 = ((base * 17 + 9) & 0x7f) - 64;
-        const std::int32_t a2 = ((base * 19 + 3) & 0x7f) - 64;
-        const std::int32_t a3 = ((base * 23 + 11) & 0x7f) - 64;
-        const std::int32_t w0 = ((base * 29 + 7) & 0x7f) - 64;
-        const std::int32_t w1 = ((base * 31 + 1) & 0x7f) - 64;
-        const std::int32_t w2 = ((base * 37 + 13) & 0x7f) - 64;
-        const std::int32_t w3 = ((base * 41 + 15) & 0x7f) - 64;
+    for (std::size_t i = 0; i < kDotDataWords; ++i) {
+        const auto idx = static_cast<std::uint32_t>(i);
 
-        activations[i] = packInt8x4(a0, a1, a2, a3);
-        weights[i] = packInt8x4(w0, w1, w2, w3);
+        activations[i] = packInt8x4(
+            wrapI8(idx, 13U, 5U),
+            wrapI8(idx, 17U, 9U),
+            wrapI8(idx, 19U, 3U),
+            wrapI8(idx, 23U, 11U));
+        weights[i] = packInt8x4(
+            wrapI8(idx, 29U, 7U),
+            wrapI8(idx, 31U, 1U),
+            wrapI8(idx, 37U, 13U),
+            wrapI8(idx, 41U, 15U));
     }
+}
+
+inline std::size_t
+dotBase(std::size_t output_idx)
+{
+    return ((output_idx * 37U) & 3U) * kDotGroups;
 }
 
 inline std::int32_t
@@ -152,31 +198,30 @@ dot4ScalarStep(std::uint32_t activation_word, std::uint32_t weight_word)
     return dot;
 }
 
-inline std::int32_t
-bitCastToInt32(std::uint32_t value)
-{
-    return static_cast<std::int32_t>(value);
-}
-
-inline std::uint64_t
-reluClampScalar(std::int64_t value, std::uint16_t upper_bound)
+inline std::uint32_t
+clampScalar(std::int32_t value, std::uint32_t upper_bound)
 {
     if (value < 0) {
         return 0;
     }
 
-    const std::uint64_t unsigned_value = static_cast<std::uint64_t>(value);
+    const std::uint32_t unsigned_value = static_cast<std::uint32_t>(value);
     return unsigned_value > upper_bound ? upper_bound : unsigned_value;
 }
 
-inline std::uint64_t
-mixChecksum(std::uint64_t checksum, std::uint64_t value)
+inline std::uint32_t
+mix32(std::uint32_t state, std::uint32_t value)
 {
-    checksum ^= value + 0x9e3779b97f4a7c15ULL + (checksum << 6) +
-                (checksum >> 2);
-    checksum *= 0x100000001b3ULL;
-    return checksum;
+    state ^= value + 0x9e3779b9U + (state << 6) + (state >> 2);
+    state ^= state >> 16;
+    state *= 0x7feb352dU;
+    state ^= state >> 15;
+    state *= 0x846ca68bU;
+    state ^= state >> 16;
+    return state;
 }
+
+inline volatile std::uint32_t gSink;
 
 } // namespace perf
 
