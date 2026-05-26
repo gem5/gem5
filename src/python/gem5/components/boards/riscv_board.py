@@ -181,7 +181,7 @@ class RiscvBoard(
             pci_dev=0, pci_func=0, InterruptLine=1, InterruptPin=1
         )
 
-        self.ethernet.upstream = self.platform.pci_host
+        self.platform.pci_host.devices.append(self.ethernet)
         self.ethernet.pio = self.platform.pci_bus.mem_side_ports
         self.ethernet.dma = self.platform.pci_bus.cpu_side_ports
 

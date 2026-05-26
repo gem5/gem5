@@ -33,17 +33,51 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects.PciUpstream import PciUpstream
+from m5.objects.Bridge import (
+    Bridge,
+    BridgeBase,
+)
+from m5.objects.ClockedObject import ClockedObject
+from m5.objects.PciDevice import PciDevice
+from m5.objects.PciUpstream import (
+    PciConfigError,
+    PciUpDownBridge,
+)
 from m5.objects.Platform import Platform
 from m5.params import *
 from m5.proxy import *
 
 
-class PciHost(PciUpstream):
+class PciHost(ClockedObject):
     type = "PciHost"
     cxx_class = "gem5::PciHost"
     cxx_header = "dev/pci/host.hh"
     abstract = True
+
+    up_to_down = Param.PciUpDownBridge(
+        PciUpDownBridge(), "Bridge upstream -> downstream"
+    )
+    down_to_up = Param.BridgeBase(Bridge(), "Bridge downstream -> upstream")
+
+    config_error = Param.PciConfigError(
+        PciConfigError(), "Device to handle config errors"
+    )
+
+    devices = VectorParam.PciDevice(
+        [], "List of all PCI device connected to this upstream"
+    )
+
+    def down_response_port(self):
+        return self.down_to_up.cpu_side_port
+
+    def down_request_port(self):
+        return self.up_to_down.mem_side_port
+
+    def up_response_port(self):
+        return self.up_to_down.cpu_side_port
+
+    def up_request_port(self):
+        return self.down_to_up.mem_side_port
 
 
 class GenericPciHost(PciHost):

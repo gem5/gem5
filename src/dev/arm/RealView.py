@@ -872,7 +872,7 @@ class RealView(Platform):
     def _attach_pci_device(self, device, upstream, bus):
         device.pio = bus.mem_side_ports
         device.dma = bus.cpu_side_ports
-        device.upstream = upstream
+        upstream.devices.append(device)
 
     def _attach_io(self, devices, *args, **kwargs):
         for d in devices:

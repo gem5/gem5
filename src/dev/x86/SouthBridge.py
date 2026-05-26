@@ -79,7 +79,7 @@ class SouthBridge(SimObject):
     # IDE controller
     ide = X86IdeController(disks=[], pci_func=0, pci_dev=4)
 
-    def attachIO(self, bus, pci_bus, dma_ports):
+    def attachIO(self, bus, pci_bus, pci_host, dma_ports):
         # Route interrupt signals
         self.pic1.output = self.io_apic.inputs[0]
         self.pic2.output = self.pic1.inputs[2]
@@ -108,3 +108,4 @@ class SouthBridge(SimObject):
         # Connect PCI devices
         self.ide.pio = pci_bus.mem_side_ports
         self.ide.dma = pci_bus.cpu_side_ports
+        pci_host.devices.append(self.ide)

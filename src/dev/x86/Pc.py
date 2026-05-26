@@ -92,7 +92,7 @@ class Pc(Platform):
     bad_addr = BadAddr(pio=default_bus.default)
 
     def attachIO(self, bus, dma_ports=[]):
-        self.south_bridge.attachIO(bus, self.pci_bus, dma_ports)
+        self.south_bridge.attachIO(bus, self.pci_bus, self.pci_host, dma_ports)
         self.com_1.pio = bus.mem_side_ports
         self.fake_com_2.pio = bus.mem_side_ports
         self.fake_com_3.pio = bus.mem_side_ports
@@ -113,3 +113,4 @@ class Pc(Platform):
     def attachPciDevice(self, device):
         self.pci_bus.cpu_side_ports = device.dma
         self.pci_bus.mem_side_ports = device.pio
+        self.pci_host.devices.append(device)

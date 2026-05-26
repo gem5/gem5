@@ -109,7 +109,7 @@ class BaseViperGPU(SubSystem):
         # pointer required by the AbstractMemory class is set by AMDGPUDevice.
         self.device.memories = self.memory.get_mem_interfaces()
 
-        self.device.upstream = board.get_pci_host()
+        board.get_pci_host().devices.append(self.device)
 
 
 # A scaled down MI210-like device. Defaults to ~1/4th of an MI210.
