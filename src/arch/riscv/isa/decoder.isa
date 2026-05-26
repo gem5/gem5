@@ -2618,10 +2618,10 @@ decode QUADRANT default Unknown::unknown() {
         //   funct7=0x00: mac        rd, rs1, rs2
         //   funct7=0x01: dot4_acc   rd, rs1, rs2
         //   funct7=0x02: relu       rd, rs1 (rs2 ignored)
-        // - I-type:
-        //   clamp rd, rs1, imm12 (imm12 treated as unsigned upper bound)
-        //   lp.setup rs1, imm12  (count=rs1, start=next PC, end=PC+imm12)
-        //   p.lw rd, imm12(rs1!) (load word and post-increment rs1 by 4)
+        // - R/I-type:
+        //   clamp rd, rs1, rs2   (rs2 treated as unsigned upper bound)
+        //   lp.setup rs1, imm12  (raw CORE-V imm: end marker=PC+(imm12<<2))
+        //   p.lw rd, imm12(rs1!) (load word at rs1; rs1 += sext(imm12))
         0x02: decode FUNCT3 {
             0x0: decode FUNCT7 {
                 format MAC_R {
@@ -2634,7 +2634,7 @@ decode QUADRANT default Unknown::unknown() {
                     0x02: relu();
                 }
             }
-            format CLAMP_I {
+            format CLAMP_R {
                 0x1: clamp();
             }
             format LP_SETUP_I {
@@ -2643,7 +2643,9 @@ decode QUADRANT default Unknown::unknown() {
             format PostIncLoad {
                 0x3: p_lw({{
                     Rd_sd = Mem_sw;
-                    Rpw = rvSext(Rs1 + 4);
+                    Rpw = rvSext(Rs1 + offset);
+                }}, {{
+                    EA = rvSext(Rs1);
                 }});
             }
         }

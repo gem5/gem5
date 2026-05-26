@@ -10,8 +10,8 @@ def format RELU_R() {{
     decode_block = 'return new RELU_R(machInst);\n'
 }};
 
-def format CLAMP_I() {{
-    decode_block = 'return new CLAMP_I(machInst);\n'
+def format CLAMP_R() {{
+    decode_block = 'return new CLAMP_R(machInst);\n'
 }};
 
 def format LP_SETUP_I() {{

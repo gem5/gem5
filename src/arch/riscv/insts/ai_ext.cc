@@ -203,11 +203,11 @@ RELU_R::execute(ExecContext *xc, trace::InstRecord *traceData) const
     return NoFault;
 }
 
-CLAMP_I::CLAMP_I(ExtMachInst machInst)
+CLAMP_R::CLAMP_R(ExtMachInst machInst)
     : RiscvStaticInst("clamp", machInst, IntAluOp),
       rd(intRegOrZero(machInst.rd)),
       rs1(intRegOrZero(machInst.rs1)),
-      uimm12((uint16_t)machInst.imm12)
+      rs2(intRegOrZero(machInst.rs2))
 {
     setRegIdxArrays(
         reinterpret_cast<RegIdArrayPtr>(
@@ -218,6 +218,7 @@ CLAMP_I::CLAMP_I(ExtMachInst machInst)
     _numSrcRegs = 0;
     _numDestRegs = 0;
     setSrcRegIdx(_numSrcRegs++, rs1);
+    setSrcRegIdx(_numSrcRegs++, rs2);
     setDestRegIdx(_numDestRegs++, rd);
     _numTypedDestRegs[IntRegClass]++;
 
@@ -225,22 +226,22 @@ CLAMP_I::CLAMP_I(ExtMachInst machInst)
 }
 
 std::string
-CLAMP_I::generateDisassembly(
+CLAMP_R::generateDisassembly(
     Addr pc, const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
     ss << mnemonic << " "
        << registerName(rd) << ", "
        << registerName(rs1) << ", "
-       << (uint32_t)uimm12;
+       << registerName(rs2);
     return ss.str();
 }
 
 Fault
-CLAMP_I::execute(ExecContext *xc, trace::InstRecord *traceData) const
+CLAMP_R::execute(ExecContext *xc, trace::InstRecord *traceData) const
 {
     const RegVal v = xc->getRegOperand(this, 0);
-    const RegVal ub = (RegVal)uimm12; // unsigned upper bound, >= 0
+    const RegVal ub = xc->getRegOperand(this, 1);
 
     RegVal out;
     if (machInst.rv_type == RV32) {
@@ -270,7 +271,7 @@ CLAMP_I::execute(ExecContext *xc, trace::InstRecord *traceData) const
 LP_SETUP_I::LP_SETUP_I(ExtMachInst machInst)
     : RiscvStaticInst("lp.setup", machInst, IntAluOp),
       rs1(intRegOrZero(machInst.rs1)),
-      simm12(sext<12>(machInst.imm12))
+      uimm12((uint16_t)machInst.imm12)
 {
     setRegIdxArrays(
         reinterpret_cast<RegIdArrayPtr>(
@@ -293,23 +294,27 @@ LP_SETUP_I::generateDisassembly(
     std::stringstream ss;
     ss << mnemonic << " "
        << registerName(rs1) << ", "
-       << simm12;
+       << (uint32_t)uimm12;
     return ss.str();
 }
 
 Fault
 LP_SETUP_I::execute(ExecContext *xc, trace::InstRecord *traceData) const
 {
-    if (simm12 < 4 || (simm12 & 0x1) != 0) {
+    if (uimm12 < 2) {
         return std::make_shared<IllegalInstFault>(
-            "lp.setup requires an immediate >= 4 and 2-byte aligned",
+            "lp.setup requires a raw immediate >= 2",
             machInst);
     }
 
     const RegVal count = rvZext(xc->getRegOperand(this, 0));
     const auto &pc = xc->pcState().as<PCState>();
     const Addr loop_start = pc.npc();
-    const Addr loop_end = rvSext(pc.pc() + simm12);
+    // CV32E40P encodes the hardware-loop end marker as
+    // PC + (raw_imm << 2), and the controller redirects at the body tail
+    // when marker == tail_pc + 4. gem5 stores the tail PC because its
+    // redirect path compares the current PC directly with LPEND.
+    const Addr loop_end = rvSext(pc.pc() + ((Addr)uimm12 << 2) - 4);
 
     auto *const tc = xc->tcBase();
     const RegVal lp_gen =

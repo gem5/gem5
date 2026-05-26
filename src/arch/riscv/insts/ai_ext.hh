@@ -84,23 +84,23 @@ class RELU_R : public RiscvStaticInst
 };
 
 /**
- * clamp (I-type)
+ * clamp
  * Semantics:
- *   rd = (rs1 < 0) ? 0 : (rs1 > imm) ? imm : rs1
- * imm is treated as unsigned (>= 0), encoded in imm12 (I-type).
+ *   rd = (rs1 < 0) ? 0 : (rs1 > rs2) ? rs2 : rs1
+ * rs2 is treated as an unsigned upper bound.
  */
-class CLAMP_I : public RiscvStaticInst
+class CLAMP_R : public RiscvStaticInst
 {
   private:
-    RegId srcRegIdxArr[1];
+    RegId srcRegIdxArr[2];
     RegId destRegIdxArr[1];
 
     const RegId rd;
     const RegId rs1;
-    const uint16_t uimm12;
+    const RegId rs2;
 
   public:
-    CLAMP_I(ExtMachInst machInst);
+    CLAMP_R(ExtMachInst machInst);
 
     std::string generateDisassembly(
         Addr pc, const loader::SymbolTable *symtab) const override;
@@ -114,7 +114,7 @@ class CLAMP_I : public RiscvStaticInst
  * Semantics:
  *   lpcount = rs1
  *   lpstart = next PC
- *   lpend   = PC + imm
+ *   lpend   = PC + (raw_imm << 2) - 4
  *   lpactive = (lpcount > 0)
  *   lpgen   = lpgen + 1   (monotonic loop-instance id for FE / debug)
  */
@@ -124,7 +124,7 @@ class LP_SETUP_I : public RiscvStaticInst
     RegId srcRegIdxArr[1];
 
     const RegId rs1;
-    const int16_t simm12;
+    const uint16_t uimm12;
 
   public:
     LP_SETUP_I(ExtMachInst machInst);
