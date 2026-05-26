@@ -9,16 +9,16 @@ This directory now contains both:
 ## Smoke Coverage
 
 - `ai_ops_smoke`
-  - `mac`, `dot4_acc`, `relu`, `clamp`
+  - `mac`, `dot4_acc`, `relu`, `clamp` with register upper bound
   - `x0` source/destination behavior
 - `p_lw_smoke`
-  - load result
-  - post-increment of `rs1`
+  - load result from `Mem[rs1]`
+  - post-increment of `rs1` by `sext(imm12)`
   - `rd = x0` write suppression with pointer update preserved
 - `hwloop_smoke`
   - `lp.setup` loop redirect behavior
   - `count = x0` / zero-count path
-  - minimum valid immediate (`imm = 4`)
+  - minimum valid raw immediate (`raw_imm = 2`)
   - intended to be run on `atomic`, `minor`, and `o3`
 
 ## Build The Smoke Binaries
@@ -40,18 +40,36 @@ the test driver to rebuild gem5 first.
 
 ## Performance Benchmarks
 
-Two standalone benchmark families are provided in `perf_src/`:
+Three standalone benchmark families are provided in `perf_src/`. They mirror
+the firmware benchmark groups used on the DE2i-150/CV32E40P kit:
 
-- `dot4_pipeline`
-  - scalar reference: standard packed-byte dot-product accumulation in C++
-  - custom optimized: `lp.setup + p.lw + dot4_acc + relu + clamp`
-  - this is the main "full custom pipeline" benchmark
-- `mac_pipeline`
-  - scalar reference: large signed multiply-accumulate recurrence in C++
-  - custom optimized: large signed recurrence accelerated with `mac`, then
-    finalized with `relu + clamp`
-  - this benchmark is intentionally arithmetic-heavy so the `mac` instruction
-    itself is the main signal, instead of hardware-loop redirect cost
+- `mac_clamp`
+  - scalar reference: RV64 C++ loop using normal multiply/add, then C clamp
+  - custom optimized: `mac`, then register-bound `clamp`
+  - work size: `512 outputs * 32 taps = 16384 MAC operations`
+- `dot4_acc_clamp`
+  - scalar reference: normal loads, four signed int8 lane multiplies, add,
+    then C clamp
+  - custom optimized: normal loads and normal loop control, but the packed
+    dot product uses `dot4_acc`, then register-bound `clamp`
+  - work size: `128 outputs * 64 packed words = 8192 dot4_acc operations`
+- `dot4_plw_lp_clamp`
+  - scalar reference: same scalar C++ dot4/clamp kernel as `dot4_acc_clamp`
+  - custom optimized: `lp.setup`, `p.lw` post-increment loads, `dot4_acc`,
+    then register-bound `clamp`
+  - work size: `128 outputs * 64 packed words = 8192 dot4_acc operations`
+
+The dot4 benchmarks represent `32768` signed int8 lane multiplies. The gem5
+encoding stays in the prototype custom-0 space, but the semantics now match
+the mapped kit behavior: `clamp` reads the upper bound from a register, `p.lw`
+loads from `rs1` before applying the signed immediate post-increment, and
+`lp.setup` uses the raw CORE-V immediate (`body_words + 1`).
+
+The performance binaries initialize their input arrays before the measured
+region. They then use RISC-V gem5 m5ops to `resetstats` immediately before the
+kernel and `dumpresetstats` immediately after it, so `run_perf_compare.py`
+reports kernel-only counters rather than startup, input fill, checksum print,
+or process-exit overhead.
 
 ## Build The Performance Binaries
 
@@ -103,7 +121,7 @@ front-end and default BP for comparison.
 (256KiB, 16-way)** via `PrivateL1SharedL2CacheHierarchy`, still backed by
 `SingleChannelDDR3_1600`. This is closer to real cores than `NoCache` (every
 fetch/load hit DRAM) and usually raises IPC on memory-heavy kernels like
-`dot4_pipeline`. Pass **`--no-cache`** to any of these config scripts to
+`dot4_plw_lp_clamp`. Pass **`--no-cache`** to any of these config scripts to
 restore the old direct-to-memory setup when comparing against historical
 numbers. Sizes are fixed in the script for reproducibility; tune there to match
 a specific FPGA/ASIC.
@@ -138,6 +156,8 @@ Source files live in `hwloop_perf_src/`:
   - same arithmetic work
   - inner kernel uses `lp.setup`, so repeated loop-backs appear as
     `nonControlRedirects`
+  - `lp.setup` uses the raw CORE-V immediate convention; the 8-instruction
+    body is encoded with raw immediate `9` (`body_words + 1`)
 
 Three scales are built for each variant:
 
@@ -272,11 +292,15 @@ Each run creates a timestamped directory under `perf_results/` unless
 
 - The custom benchmark code forces `.option norvc` inside asm blocks so
   hardware-loop body sizes stay predictable.
-- `dot4_pipeline` is expected to show the clearest gain because `dot4_acc`
+- Performance counters are selected from the first stats dump in `stats.txt`.
+  That dump is emitted by the guest-side `dumpresetstats` at kernel end.
+- `dot4_acc_clamp` is expected to show the packed-ALU gain because `dot4_acc`
   compresses four signed byte multiplies into one custom op.
-- `mac_pipeline` is a more conservative benchmark on `o3`; scalar RV64 integer
+- `dot4_plw_lp_clamp` adds the stream path signal: fewer pointer-update
+  instructions and no explicit branch in the inner loop.
+- `mac_clamp` is a more conservative benchmark on `o3`; scalar RV64 integer
   `mul + add` is already fairly strong there, so the gain can be smaller than
-  the `dot4` case.
+  the dot4 cases.
 - `nonControlRedirects` helps separate ISA-managed PC rewrites (for example
   hardware-loop redirects) from true branch predictor misses in `branchMispredicts`.
 - the hardware-loop microbenchmark currently provides the cleanest way to judge
