@@ -33,17 +33,26 @@ _start:
     li t0, 12
     bne a0, t0, fail
 
-    AI_CLAMP 10, 0, 9
+    li a2, 9
+    AI_CLAMP 10, 0, 12
     bnez a0, fail
 
     li a1, 20
-    AI_CLAMP 10, 11, 9
+    li a2, 9
+    AI_CLAMP 10, 11, 12
     li t0, 9
     bne a0, t0, fail
 
     li a1, 7
-    AI_CLAMP 10, 11, 9
+    li a2, 9
+    AI_CLAMP 10, 11, 12
     li t0, 7
+    bne a0, t0, fail
+
+    li a1, 5000
+    li a2, 4096
+    AI_CLAMP 10, 11, 12
+    li t0, 4096
     bne a0, t0, fail
 
 pass:

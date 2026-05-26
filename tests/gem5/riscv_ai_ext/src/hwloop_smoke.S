@@ -7,7 +7,7 @@ _start:
     li s0, 0
     li s1, 0
     li t0, 3
-    AI_LP_SETUP 5, 8
+    AI_LP_SETUP 5, 3
     addi s0, s0, 2
     addi s1, s1, 1
 
@@ -18,7 +18,7 @@ _start:
 
     li s2, 0
     li s3, 0
-    AI_LP_SETUP 0, 8
+    AI_LP_SETUP 0, 3
     addi s2, s2, 5
     addi s3, s3, 1
 
@@ -29,7 +29,7 @@ _start:
 
     li s4, 0
     li t0, 2
-    AI_LP_SETUP 5, 4
+    AI_LP_SETUP 5, 2
     addi s4, s4, 1
 
     li t1, 2
