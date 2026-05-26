@@ -101,7 +101,7 @@ class BaseViperGPU(SubSystem):
         self.shader.set_cpu_pointer(cpus.cores[0].core)
 
         # Connect all PIO buses
-        self.shader.connect_iobus(board.get_io_bus(), board.get_pci_bus())
+        self.shader.connect_iobus(board.get_io_bus(), board.get_pci_host())
 
         # Collect GPU memory controllers created in the GPU cache hierarchy.
         # First assign them as a child to the device so the SimObject unproxy.
