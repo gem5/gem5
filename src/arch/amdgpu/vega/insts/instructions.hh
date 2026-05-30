@@ -56391,14 +56391,15 @@ using Inst_VOP3P_MAI__V_MFMA_F64_16X16X4_F64 =
     Inst_VOP3P_MAI__V_MFMA<2, 16, 16, 4, 1, ConstVecOperandF64, VecOperandF64,
                            &MNEM__V_MFMA_F64_16X16X4_F64>;
 
-template <const int M, const int N, const int K, const int B, typename MXFPT,
-          const char **MNEMONIC>
+template <const int M, const int N, const int K, const int B, typename MXT1,
+          typename MXT2, const char **MNEMONIC>
 class Inst_VOP3P_MAI__V_MFMA_MXFP : public Inst_VOP3P_MAI
 {
 
   private:
     // Scale GPRs needed by elements / GPR (gpr_ratio)
-    static constexpr int gpr_ratio = 32 / MXFPT::size();
+    static_assert(MXT1::size() == MXT2::size());
+    static constexpr int gpr_ratio = 32 / MXT1::size();
     static constexpr int gprs_a = M * K * B / (64 * gpr_ratio);
     static constexpr int gprs_b = K * N * B / (64 * gpr_ratio);
 
@@ -56411,9 +56412,6 @@ class Inst_VOP3P_MAI__V_MFMA_MXFP : public Inst_VOP3P_MAI
     {
         setFlag(ALU);
         setFlag(MFMA);
-        if (MXFPT::size() == 16) {
-            setFlag(F16);
-        }
     }
     ~Inst_VOP3P_MAI__V_MFMA_MXFP() {}
 
@@ -56568,8 +56566,8 @@ class Inst_VOP3P_MAI__V_MFMA_MXFP : public Inst_VOP3P_MAI
                         int lane_B = j + N * (block + B * (k / K_L));
                         int item = k % K_L;
 
-                        PackedReg<K_L * MXFPT::size(), MXFPT::size()> A_elems;
-                        PackedReg<K_L * MXFPT::size(), MXFPT::size()> B_elems;
+                        PackedReg<K_L * MXT1::size(), MXT1::size()> A_elems;
+                        PackedReg<K_L * MXT2::size(), MXT2::size()> B_elems;
 
                         for (int i = 0; i < gprs_a; ++i) {
                             A_elems.setDword(i, src0[i][lane_A]);
@@ -56578,8 +56576,8 @@ class Inst_VOP3P_MAI__V_MFMA_MXFP : public Inst_VOP3P_MAI
                             B_elems.setDword(i, src1[i][lane_B]);
                         }
 
-                        MXFPT item_A(A_elems.getElem(item));
-                        MXFPT item_B(B_elems.getElem(item));
+                        MXT1 item_A(A_elems.getElem(item));
+                        MXT2 item_B(B_elems.getElem(item));
 
                         result[i][j] += item_A * item_B;
                     }
@@ -56619,34 +56617,123 @@ class Inst_VOP3P_MAI__V_MFMA_MXFP : public Inst_VOP3P_MAI
 static const char *MNEM__V_MFMA_F32_16X16X16_F16 = "v_mfma_f32_16x16x16_f16";
 using Inst_VOP3P_MAI__V_MFMA_F32_16X16X16_F16 =
     Inst_VOP3P_MAI__V_MFMA_MXFP<16, 16, 16, 1, AMDGPU::mxfloat16,
+                                AMDGPU::mxfloat16,
                                 &MNEM__V_MFMA_F32_16X16X16_F16>;
+
+static const char *MNEM__V_MFMA_F32_16X16X16_BF16 = "v_mfma_f32_16x16x16_bf16";
+using Inst_VOP3P_MAI__V_MFMA_F32_16X16X16_BF16 =
+    Inst_VOP3P_MAI__V_MFMA_MXFP<16, 16, 16, 1, AMDGPU::mxbfloat16,
+                                AMDGPU::mxbfloat16,
+                                &MNEM__V_MFMA_F32_16X16X16_BF16>;
 
 static const char *MNEM__V_MFMA_F32_16X16X4_4B_F16 =
     "v_mfma_f32_16x16x4_4b_f16";
 using Inst_VOP3P_MAI__V_MFMA_F32_16X16X4_4B_F16 =
     Inst_VOP3P_MAI__V_MFMA_MXFP<16, 16, 4, 4, AMDGPU::mxfloat16,
+                                AMDGPU::mxfloat16,
                                 &MNEM__V_MFMA_F32_16X16X4_4B_F16>;
+
+static const char *MNEM__V_MFMA_F32_16X16X4_4B_BF16 =
+    "v_mfma_f32_16x16x4_4b_bf16";
+using Inst_VOP3P_MAI__V_MFMA_F32_16X16X4_4B_BF16 =
+    Inst_VOP3P_MAI__V_MFMA_MXFP<16, 16, 4, 4, AMDGPU::mxbfloat16,
+                                AMDGPU::mxbfloat16,
+                                &MNEM__V_MFMA_F32_16X16X4_4B_BF16>;
 
 static const char *MNEM__V_MFMA_F32_32X32X4_2B_F16 =
     "v_mfma_f32_32x32x4_2b_f16";
 using Inst_VOP3P_MAI__V_MFMA_F32_32X32X4_2B_F16 =
     Inst_VOP3P_MAI__V_MFMA_MXFP<32, 32, 4, 2, AMDGPU::mxfloat16,
+                                AMDGPU::mxfloat16,
                                 &MNEM__V_MFMA_F32_32X32X4_2B_F16>;
+
+static const char *MNEM__V_MFMA_F32_32X32X4_2B_BF16 =
+    "v_mfma_f32_32x32x4_2b_bf16";
+using Inst_VOP3P_MAI__V_MFMA_F32_32X32X4_2B_BF16 =
+    Inst_VOP3P_MAI__V_MFMA_MXFP<32, 32, 4, 2, AMDGPU::mxbfloat16,
+                                AMDGPU::mxbfloat16,
+                                &MNEM__V_MFMA_F32_32X32X4_2B_BF16>;
 
 static const char *NMEM__V_MFMA_F32_32X32X8_F16 = "v_mfma_f32_32x32x8_f16";
 using Inst_VOP3P_MAI__V_MFMA_F32_32X32X8_F16 =
     Inst_VOP3P_MAI__V_MFMA_MXFP<32, 32, 8, 1, AMDGPU::mxfloat16,
+                                AMDGPU::mxfloat16,
                                 &NMEM__V_MFMA_F32_32X32X8_F16>;
 
 static const char *MNEM__V_MFMA_F32_4X4X4_16B_F16 = "v_mfma_f32_4x4x4_16b_f16";
 using Inst_VOP3P_MAI__V_MFMA_F32_4X4X4_16B_F16 =
     Inst_VOP3P_MAI__V_MFMA_MXFP<4, 4, 4, 16, AMDGPU::mxfloat16,
+                                AMDGPU::mxfloat16,
                                 &MNEM__V_MFMA_F32_4X4X4_16B_F16>;
+
+static const char *MNEM__V_MFMA_F32_4X4X4_16B_BF16 =
+    "v_mfma_f32_4x4x4_16b_bf16";
+using Inst_VOP3P_MAI__V_MFMA_F32_4X4X4_16B_BF16 =
+    Inst_VOP3P_MAI__V_MFMA_MXFP<4, 4, 4, 16, AMDGPU::mxbfloat16,
+                                AMDGPU::mxbfloat16,
+                                &MNEM__V_MFMA_F32_4X4X4_16B_BF16>;
 
 static const char *MNEM__V_MFMA_F32_32X32X8_BF16 = "v_mfma_f32_32x32x8_bf16";
 using Inst_VOP3P_MAI__V_MFMA_F32_32X32X8_BF16 =
     Inst_VOP3P_MAI__V_MFMA_MXFP<32, 32, 8, 1, AMDGPU::mxbfloat16,
+                                AMDGPU::mxbfloat16,
                                 &MNEM__V_MFMA_F32_32X32X8_BF16>;
+
+static const char *MNEM__V_MFMA_F32_16X16X32_BF8_BF8 =
+    "v_mfma_f32_16x16x32_bf8_bf8";
+using Inst_VOP3P_MAI__V_MFMA_F32_16X16X32_BF8_BF8 =
+    Inst_VOP3P_MAI__V_MFMA_MXFP<16, 16, 32, 1, AMDGPU::mxbfloat8,
+                                AMDGPU::mxbfloat8,
+                                &MNEM__V_MFMA_F32_16X16X32_BF8_BF8>;
+
+static const char *MNEM__V_MFMA_F32_16X16X32_FP8_BF8 =
+    "v_mfma_f32_16x16x32_fp8_bf8";
+using Inst_VOP3P_MAI__V_MFMA_F32_16X16X32_FP8_BF8 =
+    Inst_VOP3P_MAI__V_MFMA_MXFP<16, 16, 32, 1, AMDGPU::mxfloat8,
+                                AMDGPU::mxbfloat8,
+                                &MNEM__V_MFMA_F32_16X16X32_FP8_BF8>;
+
+static const char *MNEM__V_MFMA_F32_16X16X32_BF8_FP8 =
+    "v_mfma_f32_16x16x32_bf8_fp8";
+using Inst_VOP3P_MAI__V_MFMA_F32_16X16X32_BF8_FP8 =
+    Inst_VOP3P_MAI__V_MFMA_MXFP<16, 16, 32, 1, AMDGPU::mxbfloat8,
+                                AMDGPU::mxfloat8,
+                                &MNEM__V_MFMA_F32_16X16X32_BF8_FP8>;
+
+static const char *MNEM__V_MFMA_F32_16X16X32_FP8_FP8 =
+    "v_mfma_f32_16x16x32_fp8_fp8";
+using Inst_VOP3P_MAI__V_MFMA_F32_16X16X32_FP8_FP8 =
+    Inst_VOP3P_MAI__V_MFMA_MXFP<16, 16, 32, 1, AMDGPU::mxfloat8,
+                                AMDGPU::mxfloat8,
+                                &MNEM__V_MFMA_F32_16X16X32_FP8_FP8>;
+
+static const char *MNEM__V_MFMA_F32_32X32X16_BF8_BF8 =
+    "v_mfma_f32_32x32x16_bf8_bf8";
+using Inst_VOP3P_MAI__V_MFMA_F32_32X32X16_BF8_BF8 =
+    Inst_VOP3P_MAI__V_MFMA_MXFP<32, 32, 16, 1, AMDGPU::mxbfloat8,
+                                AMDGPU::mxbfloat8,
+                                &MNEM__V_MFMA_F32_32X32X16_BF8_BF8>;
+
+static const char *MNEM__V_MFMA_F32_32X32X16_FP8_BF8 =
+    "v_mfma_f32_32x32x16_fp8_bf8";
+using Inst_VOP3P_MAI__V_MFMA_F32_32X32X16_FP8_BF8 =
+    Inst_VOP3P_MAI__V_MFMA_MXFP<32, 32, 16, 1, AMDGPU::mxfloat8,
+                                AMDGPU::mxbfloat8,
+                                &MNEM__V_MFMA_F32_32X32X16_FP8_BF8>;
+
+static const char *MNEM__V_MFMA_F32_32X32X16_BF8_FP8 =
+    "v_mfma_f32_32x32x16_bf8_fp8";
+using Inst_VOP3P_MAI__V_MFMA_F32_32X32X16_BF8_FP8 =
+    Inst_VOP3P_MAI__V_MFMA_MXFP<32, 32, 16, 1, AMDGPU::mxbfloat8,
+                                AMDGPU::mxfloat8,
+                                &MNEM__V_MFMA_F32_32X32X16_BF8_FP8>;
+
+static const char *MNEM__V_MFMA_F32_32X32X16_FP8_FP8 =
+    "v_mfma_f32_32x32x16_fp8_fp8";
+using Inst_VOP3P_MAI__V_MFMA_F32_32X32X16_FP8_FP8 =
+    Inst_VOP3P_MAI__V_MFMA_MXFP<32, 32, 16, 1, AMDGPU::mxfloat8,
+                                AMDGPU::mxfloat8,
+                                &MNEM__V_MFMA_F32_32X32X16_FP8_FP8>;
 
 template <const int M, const int N, const int K, const int B,
           const char **MNEMONIC>
