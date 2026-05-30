@@ -56963,9 +56963,29 @@ class Inst_VOP3P_MAI__V_MFMA_I8 : public Inst_VOP3P_MAI
     } // execute
 };
 
+static const char *MNEM__V_MFMA_I32_32X32X4_2B_I8 = "v_mfma_i32_32x32x4_2b_i8";
+using Inst_VOP3P_MAI__V_MFMA_I32_32X32X4_2B_I8 =
+    Inst_VOP3P_MAI__V_MFMA_I8<32, 32, 4, 2, &MNEM__V_MFMA_I32_32X32X4_2B_I8>;
+
+static const char *MNEM__V_MFMA_I32_16X16X4_4B_I8 = "v_mfma_i32_16x16x4_4b_i8";
+using Inst_VOP3P_MAI__V_MFMA_I32_16X16X4_4B_I8 =
+    Inst_VOP3P_MAI__V_MFMA_I8<16, 16, 4, 4, &MNEM__V_MFMA_I32_16X16X4_4B_I8>;
+
+static const char *MNEM__V_MFMA_I32_4X4X4_16B_I8 = "v_mfma_i32_4x4x4_16b_i8";
+using Inst_VOP3P_MAI__V_MFMA_I32_4X4X4_16B_I8 =
+    Inst_VOP3P_MAI__V_MFMA_I8<4, 4, 4, 16, &MNEM__V_MFMA_I32_4X4X4_16B_I8>;
+
 static const char *MNEM__V_MFMA_I32_16X16X16_I8 = "v_mfma_i32_16x16x16_i8";
 using Inst_VOP3P_MAI__V_MFMA_I32_16X16X16_I8 =
     Inst_VOP3P_MAI__V_MFMA_I8<16, 16, 16, 1, &MNEM__V_MFMA_I32_16X16X16_I8>;
+
+static const char *MNEM__V_MFMA_I32_32X32X16_I8 = "v_mfma_i32_32x32x16_i8";
+using Inst_VOP3P_MAI__V_MFMA_I32_32X32X16_I8 =
+    Inst_VOP3P_MAI__V_MFMA_I8<32, 32, 16, 1, &MNEM__V_MFMA_I32_32X32X16_I8>;
+
+static const char *MNEM__V_MFMA_I32_16X16X32_I8 = "v_mfma_i32_16x16x32_i8";
+using Inst_VOP3P_MAI__V_MFMA_I32_16X16X32_I8 =
+    Inst_VOP3P_MAI__V_MFMA_I8<16, 16, 32, 1, &MNEM__V_MFMA_I32_16X16X32_I8>;
 
 class Inst_VOP3__V_CVT_PK_FP8_F32 : public Inst_VOP3A
 {
