@@ -4,7 +4,6 @@ void
 top(uint64_t nodes_addr, uint64_t edges_addr, uint64_t levels_addr,
     uint64_t level_counts_addr, node_index_t starting_node)
 {
-
     // Define Device MMRs
     volatile uint8_t *BFSFlags = (uint8_t *)(BFS);
     volatile uint8_t *BFSConfig = (uint8_t *)(BFS + 1);
