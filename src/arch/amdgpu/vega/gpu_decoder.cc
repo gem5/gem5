@@ -13789,22 +13789,19 @@ Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X16_F16(MachInst iFmt)
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_MFMA_I32_32X32X4_2B_I8(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_MFMA_I32_32X32X4_2B_I8(&iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_MFMA_I32_16X16X4_4B_I8(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_MFMA_I32_16X16X4_4B_I8(&iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_MFMA_I32_4X4X4_16B_I8(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_MFMA_I32_4X4X4_16B_I8(&iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
@@ -13823,36 +13820,34 @@ Decoder::decode_OP_VOP3P__V_MFMA_I32_32X32X8_I8(MachInst iFmt)
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_MFMA_I32_32X32X16_I8(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_MFMA_I32_32X32X16_I8(&iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_MFMA_I32_16X16X32_I8(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_MFMA_I32_16X16X32_I8(&iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X4_2B_BF16(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_MFMA_F32_32X32X4_2B_BF16(
+        &iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X4_4B_BF16(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_MFMA_F32_16X16X4_4B_BF16(
+        &iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_MFMA_F32_4X4X4_16B_BF16(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_MFMA_F32_4X4X4_16B_BF16(
+        &iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
@@ -13864,50 +13859,47 @@ Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X8_BF16(MachInst iFmt)
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X16_BF16(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_MFMA_F32_16X16X16_BF16(&iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_SMFMAC_F32_16X16X32_F16(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_SMFMAC_F32_16X16X32_F16(
+        &iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_SMFMAC_F32_32X32X16_F16(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_SMFMAC_F32_32X32X16_F16(
+        &iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_SMFMAC_F32_16X16X32_BF16(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_SMFMAC_F32_16X16X32_BF16(
+        &iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_SMFMAC_F32_32X32X16_BF16(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_SMFMAC_F32_32X32X16_BF16(
+        &iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_SMFMAC_I32_16X16X64_I8(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_SMFMAC_I32_16X16X64_I8(&iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_SMFMAC_I32_32X32X32_I8(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_SMFMAC_I32_32X32X32_I8(&iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
@@ -13919,113 +13911,113 @@ Decoder::decode_OP_VOP3P__V_MFMA_F64_4X4X4_4B_F64(MachInst iFmt)
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X32_BF8_BF8(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_MFMA_F32_16X16X32_BF8_BF8(
+        &iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X32_BF8_FP8(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_MFMA_F32_16X16X32_BF8_FP8(
+        &iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X32_FP8_BF8(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_MFMA_F32_16X16X32_FP8_BF8(
+        &iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_MFMA_F32_16X16X32_FP8_FP8(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_MFMA_F32_16X16X32_FP8_FP8(
+        &iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X16_BF8_BF8(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_MFMA_F32_32X32X16_BF8_BF8(
+        &iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X16_BF8_FP8(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_MFMA_F32_32X32X16_BF8_FP8(
+        &iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X16_FP8_BF8(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_MFMA_F32_32X32X16_FP8_BF8(
+        &iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_MFMA_F32_32X32X16_FP8_FP8(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_MFMA_F32_32X32X16_FP8_FP8(
+        &iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_SMFMAC_F32_16X16X64_BF8_BF8(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_SMFMAC_F32_16X16X64_BF8_BF8(
+        &iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_SMFMAC_F32_16X16X64_BF8_FP8(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_SMFMAC_F32_16X16X64_BF8_FP8(
+        &iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_SMFMAC_F32_16X16X64_FP8_BF8(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_SMFMAC_F32_16X16X64_FP8_BF8(
+        &iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_SMFMAC_F32_16X16X64_FP8_FP8(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_SMFMAC_F32_16X16X64_FP8_FP8(
+        &iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_SMFMAC_F32_32X32X32_BF8_BF8(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_SMFMAC_F32_32X32X32_BF8_BF8(
+        &iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_SMFMAC_F32_32X32X32_BF8_FP8(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_SMFMAC_F32_32X32X32_BF8_FP8(
+        &iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_SMFMAC_F32_32X32X32_FP8_BF8(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_SMFMAC_F32_32X32X32_FP8_BF8(
+        &iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
 Decoder::decode_OP_VOP3P__V_SMFMAC_F32_32X32X32_FP8_FP8(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_VOP3P_MAI__V_SMFMAC_F32_32X32X32_FP8_FP8(
+        &iFmt->iFmt_VOP3P_MAI);
 }
 
 GPUStaticInst *
