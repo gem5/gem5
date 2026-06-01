@@ -71,7 +71,8 @@ class ThreadContext;
 
 /**
  * This object is a proxy for a port or other object which implements the
- * functional response protocol, to be used for debug accesses.
+ * functional response protocol, to be used for debug accesses or loading
+ * binaries.
  *
  * This proxy object is used when non structural entities
  * (e.g. thread contexts, object file loaders) need access to the
