@@ -815,8 +815,9 @@ BaseRemoteGDB::processCommands(GDBSignal sig)
 bool
 BaseRemoteGDB::readBlob(Addr vaddr, size_t size, char *data)
 {
-    TranslatingPortProxy fs_proxy(tc);
-    SETranslatingPortProxy se_proxy(tc);
+    TranslatingPortProxy fs_proxy(tc, Request::DEBUG);
+    SETranslatingPortProxy se_proxy(tc, SETranslatingPortProxy::NextPage,
+                                    Request::DEBUG);
     PortProxy &virt_proxy = FullSystem ? fs_proxy : se_proxy;
 
     virt_proxy.readBlob(vaddr, data, size);
@@ -826,8 +827,9 @@ BaseRemoteGDB::readBlob(Addr vaddr, size_t size, char *data)
 bool
 BaseRemoteGDB::writeBlob(Addr vaddr, size_t size, const char *data)
 {
-    TranslatingPortProxy fs_proxy(tc);
-    SETranslatingPortProxy se_proxy(tc);
+    TranslatingPortProxy fs_proxy(tc, Request::DEBUG);
+    SETranslatingPortProxy se_proxy(tc, SETranslatingPortProxy::NextPage,
+                                    Request::DEBUG);
     PortProxy &virt_proxy = FullSystem ? fs_proxy : se_proxy;
 
     virt_proxy.writeBlob(vaddr, data, size);
