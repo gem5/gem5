@@ -344,17 +344,19 @@ AMDGPUNbio::processPspCommand(uint32_t new_wptr)
     Addr frame_addr = psp_ring + (Addr)submitted_wptr_dw * 4;
     // frame_addr = frame_addr - 64; // subtract the 64B frame
     // size to get to the start of the frame
-    DPRINTF(AMDGPUDevice, "PSP: Processing command at frame address
-                              before the Addr translation %
-#lx\n ",
-                              frame_addr);
+    DPRINTF(AMDGPUDevice,
+            "PSP: Processing command at frame address before the Addr "
+            "translation %#lx\n ",
+            frame_addr);
 
     bool check_addr = gpuDevice->getVM().inMMHUB(frame_addr);
     if (check_addr) {
         frame_addr = frame_addr - gpuDevice->getVM().getMMHUBBase();
     } else {
-        DPRINTF(AMDGPUDevice, "PSP: Frame address %#lx not in MMHUB aperture.
-             Cannot process command.\n", frame_addr);
+        DPRINTF(AMDGPUDevice,
+                "PSP: Frame address %#lx not in MMHUB aperture.Cannot process "
+                "command.\n",
+                frame_addr);
         return;
     }
 
@@ -363,8 +365,9 @@ AMDGPUNbio::processPspCommand(uint32_t new_wptr)
     ctx->name = name();
 
     // 1. Read the Ring Buffer Frame (64 bytes)
-    DPRINTF(AMDGPUDevice, "PSP: Reading 64B ring frame from physical
-        address %#lx\n", frame_addr);
+    DPRINTF(AMDGPUDevice,
+            "PSP: Reading 64B ring frame from physical address %#lx\n",
+            frame_addr);
 
     // ---------------------------------------------------------------
 
@@ -395,27 +398,27 @@ AMDGPUNbio::readCmdBufferAndProcess(PspCommandContext *ctx)
     ctx->fence_value = ctx->frame.fence_value;
 
     DPRINTF(AMDGPUDevice,
-            "PSP: CmdBufAddr=%#lx, FenceAddr=%#lx,
-            FenceValue = % u\n cmd_buf_size = % u\n ",
-                                                ctx->cmd_buf_addr,
-            ctx->fence_addr, ctx->fence_value, ctx->frame.cmd_buf_size);
+            "PSP: CmdBufAddr=%#lx, FenceAddr=%#lx,FenceValue = % u\n "
+            "cmd_buf_size = % u\n ",
+            ctx->cmd_buf_addr, ctx->fence_addr, ctx->fence_value,
+            ctx->frame.cmd_buf_size);
 
     bool check_addr = gpuDevice->getVM().inMMHUB(ctx->cmd_buf_addr);
-    DPRINTF(AMDGPUDevice, "PSP: Command Buffer address %#lx
-            in MMHUB aperture
-            : % d\n MMHUB Base = % #lx\n ",
-                                   ctx->cmd_buf_addr,
-              check_addr, gpuDevice->getVM().getMMHUBBase());
+    DPRINTF(AMDGPUDevice,
+            "PSP: Command Buffer address %#lx in MMHUB aperture: % d\n MMHUB "
+            "Base = % #lx\n ",
+            ctx->cmd_buf_addr, check_addr, gpuDevice->getVM().getMMHUBBase());
     if (!check_addr) {
-        DPRINTF(AMDGPUDevice, "PSP: Command Buffer address %#lx not
-                              in MMHUB aperture.Cannot process command
-                                  .\n ",
-                              ctx->cmd_buf_addr);
+        DPRINTF(AMDGPUDevice,
+                "PSP: Command Buffer address %#lx not in MMHUB "
+                "aperture.Cannot process command  .\n ",
+                ctx->cmd_buf_addr);
     } else {
         ctx->cmd_buf_addr =
             ctx->cmd_buf_addr - gpuDevice->getVM().getMMHUBBase();
-        DPRINTF(AMDGPUDevice, "PSP: Translated Command Buffer
-                address to %#lx\n ",ctx->cmd_buf_addr);
+        DPRINTF(AMDGPUDevice,
+                "PSP: Translated Command Buffer address to %#lx\n ",
+                ctx->cmd_buf_addr);
     }
 
     auto cb = new EventFunctionWrapper([=] { CmdBufferAndProcessDone(ctx); },
@@ -430,8 +433,7 @@ AMDGPUNbio::CmdBufferAndProcessDone(PspCommandContext *ctx)
 {
     // 3. Process Command
     DPRINTF(AMDGPUDevice, "PSP: Processing command buffer\n");
-    DPRINTF(AMDGPUDevice, "PSP: Command buffer contents
-        (first 64 bytes):\n");
+    DPRINTF(AMDGPUDevice, "PSP: Command buffer contents (first 64 bytes):\n");
     for (int i = 0; i < 64; i += 4) {
         uint32_t val = *(uint32_t *)(ctx->cmd_buffer + i);
         DPRINTF(AMDGPUDevice, "  Offset %#x: %#x\n", i, val);
@@ -448,10 +450,10 @@ AMDGPUNbio::CmdBufferAndProcessDone(PspCommandContext *ctx)
             ta_cmd_buf_addr = (Addr)load_ta->cmd_buf_phys_addr_hi << 32 |
                               load_ta->cmd_buf_phys_addr_lo;
 
-            DPRINTF(AMDGPUDevice, "PSP: GFX_CMD_ID_LOAD_TA processed.
-                    TA Cmd Buf Addr
-                    : % #lx\n ",
-                          ta_cmd_buf_addr);
+            DPRINTF(
+                AMDGPUDevice,
+                "PSP: GFX_CMD_ID_LOAD_TA processed. TA Cmd Buf Addr: % #lx\n ",
+                ta_cmd_buf_addr);
         } break;
 
         case GFX_CMD_ID_SRIOV_SPATIAL_PART: {
@@ -460,10 +462,10 @@ AMDGPUNbio::CmdBufferAndProcessDone(PspCommandContext *ctx)
 
             ctx->sriov_spatial_mode = spatial_part->mode;
 
-            DPRINTF(AMDGPUDevice, "PSP: GFX_CMD_ID_SRIOV_SPATIAL_PART
-                                  processed.Mode
-                    : % #x\n ",
-                          ctx->sriov_spatial_mode);
+            DPRINTF(
+                AMDGPUDevice,
+                "PSP: GFX_CMD_ID_SRIOV_SPATIAL_PART processed.Mode: % #x\n ",
+                ctx->sriov_spatial_mode);
 
             // Update the register value that the driver reads back
             // NOTE: This assumes gpuDevice->setRegVal manages the
@@ -488,8 +490,8 @@ AMDGPUNbio::CmdBufferAndProcessDone(PspCommandContext *ctx)
         } break;
 
         default:
-            DPRINTF(AMDGPUDevice, "PSP: Unknown command ID %#x.
-                 Doing nothing.\n", cmd_id);
+            DPRINTF(AMDGPUDevice,
+                    "PSP: Unknown command ID %#x. Doing nothing.\n", cmd_id);
             break;
     }
 
@@ -498,9 +500,10 @@ AMDGPUNbio::CmdBufferAndProcessDone(PspCommandContext *ctx)
     if (check_addr) {
         ctx->fence_addr = ctx->fence_addr - gpuDevice->getVM().getMMHUBBase();
     } else {
-        DPRINTF(AMDGPUDevice, "PSP: Fence address %#lx not
-            in MMHUB aperture.
-            Cannot write fence.\n", ctx->fence_addr);
+        DPRINTF(AMDGPUDevice,
+                "PSP: Fence address %#lx not in MMHUB aperture. Cannot write "
+                "fence.\n",
+                ctx->fence_addr);
         return;
     }
     // 4. Write Fence Value (Start the final asynchronous step)
@@ -526,8 +529,9 @@ void
 AMDGPUNbio::fenceWriteDone(PspCommandContext *ctx)
 {
     // The fence write is complete, the driver can now proceed.
-    DPRINTF(AMDGPUDevice, "PSP: Command processing complete. Fence address %#lx
-        signaled.\n", ctx->fence_addr);
+    DPRINTF(AMDGPUDevice,
+            "PSP: Command processing complete. Fence address %#lx signaled.\n",
+            ctx->fence_addr);
 
     // Cleanup the dynamically allocated context object
     delete ctx;
