@@ -56381,6 +56381,16 @@ using Inst_VOP3P_MAI__V_MFMA_F32_16X16X1_4B_F32 =
     Inst_VOP3P_MAI__V_MFMA<1, 16, 16, 1, 4, ConstVecOperandF32, VecOperandF32,
                            &MNEM__V_MFMA_F32_16X16X1_4B_F32>;
 
+static const char *MNEM__V_MFMA_F32_16X16X8_XF32 = "v_mfma_f32_16x16x8_xf32";
+using Inst_VOP3P_MAI__V_MFMA_F32_16X16X8_XF32 =
+    Inst_VOP3P_MAI__V_MFMA<1, 16, 16, 8, 1, ConstVecOperandF32, VecOperandF32,
+                           &MNEM__V_MFMA_F32_16X16X8_XF32>;
+
+static const char *MNEM__V_MFMA_F32_32X32X4_XF32 = "v_mfma_f32_32x32x4_xf32";
+using Inst_VOP3P_MAI__V_MFMA_F32_32X32X4_XF32 =
+    Inst_VOP3P_MAI__V_MFMA<1, 32, 32, 4, 1, ConstVecOperandF32, VecOperandF32,
+                           &MNEM__V_MFMA_F32_32X32X4_XF32>;
+
 static const char *MNEM__V_MFMA_F64_4X4X4_4B_F64 = "v_mfma_f64_4x4x4_4b_f64";
 using Inst_VOP3P_MAI__V_MFMA_F64_4X4X4_4B_F64 =
     Inst_VOP3P_MAI__V_MFMA<2, 4, 4, 4, 4, ConstVecOperandF64, VecOperandF64,
