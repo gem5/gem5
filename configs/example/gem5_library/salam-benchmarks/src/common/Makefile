@@ -51,10 +51,24 @@ STRIP        = $(CROSS_COMPILE_DIR)/$(CROSS_COMPILE)strip
 OBJCOPY      = $(CROSS_COMPILE_DIR)/$(CROSS_COMPILE)objcopy
 OBJDUMP      = $(CROSS_COMPILE_DIR)/$(CROSS_COMPILE)objdump
 
-CFLAGS       = -g -O3 -lunistd -I .
-CXXFLAGS     = -g -O3 -lunistd -I . -fno-exceptions
+ifndef M5_PATH
+$(error M5_PATH must be set to the gem5 repository root)
+endif
+
+ifeq ($(ARCH),aarch64)
+M5OP_ABI ?= arm64
+else
+M5OP_ABI ?= $(ARCH)
+endif
+
+M5OP_SRC ?= $(M5_PATH)/util/m5/src/abi/$(M5OP_ABI)/m5op.S
+
+CPPFLAGS += -I. -I$(M5_PATH)/include
+
+CFLAGS       = -g -O3 -lunistd
+CXXFLAGS     = -g -O3 -lunistd -fno-exceptions
 ASFLAGS      = -EL
 LNK_OPT      = -nostartfiles
+
 LNK_SCRIPT   = boot.ld
-#LNK_SCRIPT   = start64.ld
 LNK_FILE_OPT = -nostartfiles -Xlinker -T$(LNK_SCRIPT)

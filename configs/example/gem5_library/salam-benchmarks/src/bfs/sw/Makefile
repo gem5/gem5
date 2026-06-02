@@ -32,13 +32,17 @@
 #			Frederik Lauer
 include ../../common/Makefile
 
-OBJS         = boot.o ../../common/syscalls.o data.o main.o isr.o
+OBJS         = boot.o ../../common/syscalls.o data.o main.o isr.o m5op.o
+
 
 main.elf: $(OBJS) $(LNK_SCRIPT) Makefile
 	$(CC) $(LNK_FILE_OPT) -o $@ $(OBJS) $(LNK_OPT)
 
+m5op.o: $(M5OP_SRC)
+	$(CC) $(CPPFLAGS) -x assembler-with-cpp -c -o $@ $<
+
 boot.o: Makefile
-	$(CPP) boot.s $(CFLAGS) | $(AS) $(ASFLAGS) -o boot.o
+	$(CPP) $(CPPFLAGS) boot.s | $(AS) $(ASFLAGS) -o boot.o
 
 clean:
 	rm -f *.o *.elf

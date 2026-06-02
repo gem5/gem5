@@ -2,7 +2,8 @@
 #include <cstdlib>
 #include <cstring>
 
-#include "../../common/m5ops.h"
+#include <gem5/m5ops.h>
+
 #include "../bfs_clstr_hw_defines.h"
 #include "bench.h"
 
@@ -79,6 +80,6 @@ main(void)
         printf("Check Passed\n");
     }
 #endif
-    m5_dump_stats();
-    m5_exit();
+    m5_dump_stats(0, 0);
+    m5_exit(0);
 }
