@@ -42,8 +42,14 @@ import config_parser
 import yaml
 
 # Define the imports of the gem5 script
-imports = """import m5\nfrom m5.objects import *\nfrom m5.util import *\n
-from configparser import ConfigParser\nfrom HWAccConfig import *\n\n"""
+imports = """import m5
+from m5.objects import *
+from m5.util import *
+
+from configparser import ConfigParser
+from HWAccConfig import *
+
+"""
 
 # L1 Cache defined here for now, need to add some more configurability to this
 l1Cache = """class L1Cache(Cache):
@@ -115,7 +121,8 @@ def parse_yaml(
                     else:
                         FOUND_DEVICE = True
                         cur_config = parent_config
-                        # Set the hard
+                        # Use the parent YAML path as the hardware profile
+                        # path unless this cluster overrides it with HWPath.
                         if not FOUND_HW_PATH and hw_path is None:
                             hw_path = parent_path
             if FOUND_SYS_PATH and FOUND_DEVICE:
