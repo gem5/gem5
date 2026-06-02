@@ -127,7 +127,6 @@ KERNEL=$ACC_BENCH_PATH/"$BENCH_PATH"/sw/main.elf
 SYS_OPTS="--mem-size=16GB \
           --mem-type=DDR4_2400_8x8 \
           --kernel=$KERNEL \
-          --disk-image=$ACC_BENCH_PATH/common/fake.iso \
           --machine-type=VExpress_GEM5_V1 \
           --dtb-file=none --bare-metal \
           --cpu-type=DerivO3CPU"
@@ -155,7 +154,10 @@ fi
 
 if [ $BUILD == True ]; then
   echo "Building Bench"
-  make all -C "$ACC_BENCH_PATH/$BENCH_PATH"
+  if ! make all -C "$ACC_BENCH_PATH/$BENCH_PATH"; then
+    echo "Benchmark build failed"
+    exit 1
+  fi
 fi
 
 if [ ${PRINT_TO_FILE} == True ]; then
