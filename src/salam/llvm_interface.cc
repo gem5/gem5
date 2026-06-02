@@ -184,7 +184,6 @@ LLVMInterface::ActiveFunction::processQueues()
         returned = true;
         return;
     } else if (lockstepReady()) {
-        // TODO: Look into for_each here
         for (auto queue_iter = reservation.begin();
              queue_iter != reservation.end();) {
             if (owner->debug()) {
@@ -441,7 +440,6 @@ LLVMInterface::ActiveFunction::findDynamicDeps(
     std::vector<uint64_t> dep_uids = inst->runtimeInitialize();
 
     // Find dependencies currently in queues
-
     // Reverse search the reservation queue because we want to link
     // only the last instance of each dep
     auto queue_iter = reservation.rbegin();
@@ -1059,37 +1057,7 @@ LLVMInterface::printResults()
 
 void
 LLVMInterface::dumpQueues()
-{
-    // if (DTRACE(Trace))
-    //     DPRINTF(Runtime, "Trace: %s \n", __PRETTY_FUNCTION__);
-    // std::cout << "*****************************************************\n"
-    //           << "Compute Queue\n"
-    //           << "*****************************************************\n";
-    // for (auto compute : computeQueue) {
-    //     std::cout << compute->_LLVMLine << std::endl;
-    // }
-    // std::cout << "*****************************************************\n"
-    //           << "Read Queue\n"
-    //           << "*****************************************************\n";
-    // for (auto read : readQueue) {
-    //     std::cout << read->_LLVMLine << std::endl;
-    // }
-    // std::cout << "*****************************************************\n"
-    //           << "Write Queue\n"
-    //           << "*****************************************************\n";
-    // for (auto write : writeQueue) {
-    //     std::cout << write->_LLVMLine << std::endl;
-    // }
-    // std::cout << "*****************************************************\n"
-    //           << "Reservation Queue\n"
-    //           << "*****************************************************\n";
-    // for (auto reserved : reservation) {
-    //     std::cout << reserved->_LLVMLine << std::endl;
-    // }
-    // std::cout << "*****************************************************\n"
-    //           << "End of queue dump\n"
-    //           << "*****************************************************\n";
-}
+{}
 
 void
 LLVMInterface::launchFunction(std::shared_ptr<SALAM::Function> callee,
