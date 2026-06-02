@@ -1,7 +1,7 @@
-#ifndef DEFINES
-#include "../defines.h"
+#ifndef __BFS_BENCH_H__
+#define __BFS_BENCH_H__
 
-#endif
+#include "../defines.h"
 
 extern volatile int stage;
 
@@ -36,3 +36,5 @@ genData(bfs_struct *bfs)
         bfs->level[i] = MAX_LEVEL;
     }
 }
+
+#endif // __BFS_BENCH_H__
