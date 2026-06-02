@@ -41,18 +41,44 @@
 #include "base/random.hh"
 #include "base/trace.hh"
 #include "debug/Drain.hh"
+#include "debug/MemoryAccess.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "sim/system.hh"
 
 using namespace std;
 
+#if TRACING_ON
+#define TRACE_PACKET(A) tracePacket(system(), A, pkt)
+
+static inline void
+tracePacket(System *sys, const char *label, PacketPtr pkt)
+{
+    int size = pkt->getSize();
+    if (size == 1 || size == 2 || size == 4 || size == 8) {
+        DPRINTF(MemoryAccess,
+                "%s from %s of size %i on address %#x data "
+                "%#x %c\n",
+                label, sys->getRequestorName(pkt->req->requestorId()), size,
+                pkt->getAddr(), pkt->getUintX(ByteOrder::little),
+                pkt->req->isUncacheable() ? 'U' : 'C');
+        return;
+    }
+    DPRINTF(MemoryAccess, "%s from %s of size %i on address %#x %c\n", label,
+            sys->getRequestorName(pkt->req->requestorId()), size,
+            pkt->getAddr(), pkt->req->isUncacheable() ? 'U' : 'C');
+    DDUMP(MemoryAccess, pkt->getConstPtr<uint8_t>(), pkt->getSize());
+}
+
+#else
+#define TRACE_PACKET(A)
+#endif
+
 /*****************************************************************************
  * Scratchpad Scratchpad Device for Accelerators using CommMemInterface
  * Acts as a simple memory for external devices
  * Enables specialization of access for parent device
  ****************************************************************************/
-#include "debug/MemoryAccess.hh"
 
 ScratchpadMemory::ScratchpadMemory(const ScratchpadMemoryParams &p)
     : AbstractMemory(p),
@@ -129,31 +155,6 @@ ScratchpadMemory::setAllReady(bool r)
     }
     initial = true;
 }
-
-static inline void
-tracePacket(System *sys, const char *label, PacketPtr pkt)
-{
-    int size = pkt->getSize();
-    if (size == 1 || size == 2 || size == 4 || size == 8) {
-        DPRINTF(MemoryAccess,
-                "%s from %s of size %i on address %#x data "
-                "%#x %c\n",
-                label, sys->getRequestorName(pkt->req->requestorId()), size,
-                pkt->getAddr(), pkt->getUintX(ByteOrder::little),
-                pkt->req->isUncacheable() ? 'U' : 'C');
-        return;
-    }
-    DPRINTF(MemoryAccess, "%s from %s of size %i on address %#x %c\n", label,
-            sys->getRequestorName(pkt->req->requestorId()), size,
-            pkt->getAddr(), pkt->req->isUncacheable() ? 'U' : 'C');
-    DDUMP(MemoryAccess, pkt->getConstPtr<uint8_t>(), pkt->getSize());
-}
-
-#if TRACING_ON
-#define TRACE_PACKET(A) tracePacket(system(), A, pkt)
-#else
-#define TRACE_PACKET(A)
-#endif
 
 void
 ScratchpadMemory::scratchpadAccess(PacketPtr pkt, bool validateAccess)
@@ -508,15 +509,18 @@ ScratchpadMemory::getPort(const std::string &if_name, PortID idx)
     } else if (if_name == "spm_ports") {
         if (idx >= spm_ports.size()) {
             spm_ports.resize((idx + 1), nullptr);
+            // State vectors use index 0 for the default port. SPM port idx
+            // maps to state-vector index idx + 1.
+            const PortID stateIdx = idx + 1;
             const std::string releaseEventName =
-                name() + "_release[" + std::to_string(idx + 1) + "]";
+                name() + "_release[" + std::to_string(stateIdx) + "]";
             releaseEvent.resize(
-                (idx + 2),
+                stateIdx + 1,
                 EventFunctionWrapper([this] { release(); }, releaseEventName));
-            releaseTick.resize((idx + 2), 0);
-            isBusy.resize((idx + 2), false);
-            retryReq.resize((idx + 2), false);
-            retryResp.resize((idx + 2), false);
+            releaseTick.resize(stateIdx + 1, 0);
+            isBusy.resize(stateIdx + 1, false);
+            retryReq.resize(stateIdx + 1, false);
+            retryResp.resize(stateIdx + 1, false);
         }
         if (spm_ports[idx] == nullptr) {
             const std::string portName =
