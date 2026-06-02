@@ -147,6 +147,7 @@ AddOption('--gprof', action='store_true',
 AddOption('--pprof', action='store_true',
           help='Enable support for the pprof profiler')
 AddOption('--debug-fission', action='store_true', help='Enable debug fission')
+AddOption('--gdb-index', action='store_true', help='Build GDB index')
 # Default to --no-duplicate-sources, but keep --duplicate-sources to opt-out
 # of this new build behaviour in case it introduces regressions. We could use
 # action=argparse.BooleanOptionalAction here once Python 3.9 is required.
@@ -660,6 +661,14 @@ for variant_path in variant_paths:
                     '-gsplit-dwarf'
                 ) or not conf.CheckLinkFlag('-gsplit-dwarf'):
                     error('Debug fission is not supported in the toolchain')
+
+        gdb_index = GetOption('gdb_index')
+        if gdb_index:
+            with gem5_scons.Configure(env) as conf:
+                if not conf.CheckCxxFlag(
+                    '-ggnu-pubnames'
+                ) or not conf.CheckLinkFlag('-Wl,--gdb-index'):
+                    error('GDB index generation is not supported')
 
         # Treat warnings as errors but white list some warnings that we
         # want to allow (e.g., deprecation warnings).
