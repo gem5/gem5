@@ -835,11 +835,16 @@ LSQ::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
             // (e.g. re-exec).
             if (fault != NoFault)
                 inst->getFault() = fault;
-        } else if (isLoad) {
+        } else {
             inst->setMemAccPredicate(false);
-            // Commit will have to clean up whatever happened.  Set this
-            // instruction as executed.
-            inst->setExecuted();
+            if (isLoad) {
+                inst->setExecuted();
+            } else {
+                if (inst->sqIdx >= 0) {
+                    thread[tid]->storeQueue[inst->sqIdx].setRequest(nullptr);
+                }
+                request->discard();
+            }
         }
     }
 
