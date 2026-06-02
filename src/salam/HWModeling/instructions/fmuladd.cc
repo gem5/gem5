@@ -34,7 +34,7 @@
 
 #include "fmuladd.hh"
 
-// AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
+// AUTO-AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 Fmuladd::Fmuladd(const FmuladdParams &params)
     : SimObject(params),

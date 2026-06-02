@@ -34,7 +34,7 @@
 
 #include "fadd.hh"
 
-// AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
+// AUTO-AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 Fadd::Fadd(const FaddParams &params)
     : SimObject(params),

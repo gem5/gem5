@@ -34,7 +34,7 @@
 
 #include "switch_inst.hh"
 
-// AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
+// AUTO-AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 SwitchInst::SwitchInst(const SwitchInstParams &params)
     : SimObject(params),

@@ -38,7 +38,7 @@
 #include "params/InstConfig.hh"
 #include "sim/sim_object.hh"
 
-// GENERATED HEADERS - DO NOT MODIFY
+// AUTO-GENERATED HEADERS (See util/SALAM-docs/README_SALAM.md for details)
 #include <cstdlib>
 #include <iostream>
 #include <vector>
@@ -105,7 +105,8 @@ class InstConfig : public SimObject
   private:
   protected:
   public:
-    // GENERATED CLASS MEMBERS - DO NOT MODIFY
+    // AUTO-GENERATED CLASS MEMBERS (See util/SALAM-docs/README_SALAM.md for
+    // details)
     Add *_add;
     Addrspacecast *_addrspacecast;
     Alloca *_alloca;
@@ -158,7 +159,7 @@ class InstConfig : public SimObject
     XorInst *_xor_inst;
     Zext *_zext;
     InstConfig();
-    // DEFAULT CONSTRUCTOR - DO NOT MODIFY
+    // DEFAULT CONSTRUCTOR (See util/SALAM-docs/README_SALAM.md for details)
     InstConfig(const InstConfigParams &params);
     // END DEFAULT CONSTRUCTOR
     std::vector<InstConfigBase *> inst_list;

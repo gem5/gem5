@@ -34,7 +34,7 @@
 
 #include "store.hh"
 
-// AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
+// AUTO-AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 Store::Store(const StoreParams &params)
     : SimObject(params),

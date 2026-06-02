@@ -38,7 +38,7 @@
 #include "params/FunctionalUnits.hh"
 #include "sim/sim_object.hh"
 
-// GENERATED HEADERS - DO NOT MODIFY
+// AUTO-GENERATED HEADERS (See util/SALAM-docs/README_SALAM.md for details)
 #include <cstdlib>
 #include <iostream>
 #include <vector>
@@ -65,7 +65,8 @@ class FunctionalUnits : public SimObject
   private:
   protected:
   public:
-    // GENERATED CLASS MEMBERS - DO NOT MODIFY
+    // AUTO-GENERATED CLASS MEMBERS (See util/SALAM-docs/README_SALAM.md for
+    // details)
     FloatDivider *_float_divider;
     FloatAdder *_float_adder;
     DoubleMultiplier *_double_multiplier;
@@ -78,7 +79,7 @@ class FunctionalUnits : public SimObject
     IntegerAdder *_integer_adder;
     BitwiseOperations *_bitwise_operations;
     FunctionalUnits();
-    // DEFAULT CONSTRUCTOR - DO NOT MODIFY
+    // DEFAULT CONSTRUCTOR (See util/SALAM-docs/README_SALAM.md for details)
     FunctionalUnits(const FunctionalUnitsParams &params);
     // END DEFAULT CONSTRUCTOR
     std::vector<FunctionalUnitBase *> functional_unit_list;

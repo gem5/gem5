@@ -35,7 +35,7 @@
 #ifndef __HWMODEL_ADDRSPACECAST_HH__
 #define __HWMODEL_ADDRSPACECAST_HH__
 
-// GENERATED FILE - DO NOT MODIFY
+// AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 #include "base.hh"
 #include "params/Addrspacecast.hh"

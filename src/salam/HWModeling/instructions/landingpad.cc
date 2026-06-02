@@ -34,7 +34,7 @@
 
 #include "landingpad.hh"
 
-// AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
+// AUTO-AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 Landingpad::Landingpad(const LandingpadParams &params)
     : SimObject(params),

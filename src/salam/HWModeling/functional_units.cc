@@ -34,7 +34,7 @@
 
 #include "functional_units.hh"
 
-// GENERATED CONSTRUCTOR - DO NOT MODIFY
+// AUTO-GENERATED CONSTRUCTOR (See util/SALAM-docs/README_SALAM.md for details)
 FunctionalUnits::FunctionalUnits(const FunctionalUnitsParams &params)
     : SimObject(params),
       _float_divider(params.float_divider),
@@ -61,4 +61,4 @@ FunctionalUnits::FunctionalUnits(const FunctionalUnitsParams &params)
     functional_unit_list.push_back(_integer_adder);
     functional_unit_list.push_back(_bitwise_operations);
 }
-// END OF GENERATED CONSTRUCTOR
+// END OF AUTO-GENERATED CONSTRUCTOR

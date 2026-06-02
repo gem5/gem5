@@ -35,7 +35,7 @@
 #ifndef __HWMODEL_STORE_HH__
 #define __HWMODEL_STORE_HH__
 
-// GENERATED FILE - DO NOT MODIFY
+// AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 #include "base.hh"
 #include "params/Store.hh"

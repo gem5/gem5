@@ -34,7 +34,7 @@
 
 #include "srem.hh"
 
-// AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
+// AUTO-AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 Srem::Srem(const SremParams &params)
     : SimObject(params),

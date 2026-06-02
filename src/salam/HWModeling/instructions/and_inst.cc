@@ -34,7 +34,7 @@
 
 #include "and_inst.hh"
 
-// AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
+// AUTO-AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 AndInst::AndInst(const AndInstParams &params)
     : SimObject(params),

@@ -34,7 +34,7 @@
 
 #include "unreachable.hh"
 
-// AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
+// AUTO-AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 Unreachable::Unreachable(const UnreachableParams &params)
     : SimObject(params),

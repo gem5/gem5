@@ -34,7 +34,7 @@
 
 #include "vaarg.hh"
 
-// AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
+// AUTO-AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 Vaarg::Vaarg(const VaargParams &params)
     : SimObject(params),

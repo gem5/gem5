@@ -35,7 +35,7 @@
 #ifndef __HWMODEL_INTEGER_MULTIPLIER_HH__
 #define __HWMODEL_INTEGER_MULTIPLIER_HH__
 
-// GENERATED FILE - DO NOT MODIFY
+// AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 #include "base.hh"
 #include "params/IntegerMultiplier.hh"

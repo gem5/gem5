@@ -34,7 +34,7 @@
 
 #include "double_multiplier.hh"
 
-// AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
+// AUTO-AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 DoubleMultiplier::DoubleMultiplier(const DoubleMultiplierParams &params)
     : SimObject(params),

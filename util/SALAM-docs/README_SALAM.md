@@ -111,7 +111,7 @@ gem5-SALAM ships with an auto-generated default 40nm technology node, 5ns latenc
 
 ### Using Custom Hardware Profiles
 
-The gem5-SALAM toolchain also allows you to run benchmarks with custom hardware profiles to be specified in YAML files. The hardware generator in **util/SALAM-tools/hw_generator** auto-generates functional unit and instruction files using the specified YAML profile.
+The gem5-SALAM toolchain also allows you to run benchmarks with custom hardware profiles to be specified in YAML files (see [example](https://github.com/akanksha-sc/benchmarks/tree/main/sys_validation/bfs/configs/hw_interface/functional_units/40nm_model/5ns)). The hardware generator in **util/SALAM-tools/hw_generator** generates functional unit and instruction files using the specified YAML profile.
 
 To utilize this functionality, the following script must be run to generate source code for functional unit and instruction timing models before building and running gem5.
 

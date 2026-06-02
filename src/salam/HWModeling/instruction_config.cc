@@ -34,7 +34,7 @@
 
 #include "instruction_config.hh"
 
-// GENERATED CONSTRUCTOR - DO NOT MODIFY
+// AUTO-GENERATED CONSTRUCTOR (See util/SALAM-docs/README_SALAM.md for details)
 InstConfig::InstConfig(const InstConfigParams &params)
     : SimObject(params),
       _add(params.add),
@@ -141,4 +141,4 @@ InstConfig::InstConfig(const InstConfigParams &params)
     inst_list.push_back(_xor_inst);
     inst_list.push_back(_zext);
 }
-// END OF GENERATED CONSTRUCTOR
+// END OF AUTO-GENERATED CONSTRUCTOR

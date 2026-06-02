@@ -34,7 +34,7 @@
 
 #include "bit_shifter.hh"
 
-// AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
+// AUTO-AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 BitShifter::BitShifter(const BitShifterParams &params)
     : SimObject(params),

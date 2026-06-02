@@ -34,7 +34,7 @@
 
 #include "double_divider.hh"
 
-// AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
+// AUTO-AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 DoubleDivider::DoubleDivider(const DoubleDividerParams &params)
     : SimObject(params),
