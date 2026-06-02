@@ -34,6 +34,15 @@
 
 #include "salam/noncoherent_dma.hh"
 
+namespace
+{
+
+constexpr uint8_t DmaStart = 0x01;
+constexpr uint8_t DmaBusy = 0x02;
+constexpr uint8_t DmaDone = 0x04;
+
+} // anonymous namespace
+
 NoncoherentDma::NoncoherentDma(const NoncoherentDmaParams &p)
     : DmaDevice(p),
       devname(p.devicename),
@@ -112,10 +121,10 @@ NoncoherentDma::getActiveWriteFifo()
 void
 NoncoherentDma::tick()
 {
-    if (!running && ((*FLAGS & 0x01) == 0x01)) {
+    if (!running && (*FLAGS & DmaStart)) {
         running = true;
-        *FLAGS &= 0xFE;
-        *FLAGS |= 0x02;
+        *FLAGS &= ~DmaStart;
+        *FLAGS |= DmaBusy;
         activeSrc = *SRC;
         activeDst = *DST;
         writesLeft = *LEN;
@@ -127,7 +136,7 @@ NoncoherentDma::tick()
         readFifo->startFill(activeSrc, writesLeft);
         writeFifo->startEmpty(activeDst, writesLeft);
     }
-    if (((last_flag & 0x04) == 0x04) && ((*FLAGS & 0x04) != 0x04)) {
+    if ((last_flag & DmaDone) && !(*FLAGS & DmaDone)) {
         // clear interrupts
         gic->clearInt(intNum);
     }
@@ -145,8 +154,8 @@ NoncoherentDma::tick()
         } else {
             if (!writeFifo->isActive()) {
                 running = false;
-                *FLAGS &= 0xFD;
-                *FLAGS |= 0x04;
+                *FLAGS &= ~DmaBusy;
+                *FLAGS |= DmaDone;
                 // raise interrupts
                 gic->sendInt(intNum);
                 double xfer_time = (double)(curTick() - start_time) * (1e-6);
