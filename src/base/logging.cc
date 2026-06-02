@@ -40,7 +40,7 @@
 
 #include "base/logging.hh"
 
-#include <sstream>
+#include <unistd.h>
 
 #include "base/hostinfo.hh"
 
@@ -69,6 +69,18 @@ class FatalLogger : public ExitLogger
     void exit() override { ::exit(1); }
 };
 
+static bool
+shouldANSI()
+{
+    bool mustNotColour =
+        getenv("NO_COLOR") != NULL || getenv("NOCOLOR") != NULL;
+    bool shouldForce =
+        getenv("CLICOLOR_FORCE") != NULL || getenv("FORCE_COLOR") != NULL;
+    char *term = getenv("TERM");
+    bool isTerminal = isatty(2) && (term == NULL || strcmp(term, "dumb") != 0);
+    return !mustNotColour && (shouldForce || isTerminal);
+}
+
 } // anonymous namespace
 
 // We intentionally put all the loggers on the heap to prevent them from being
@@ -79,31 +91,41 @@ class FatalLogger : public ExitLogger
 
 Logger&
 Logger::getPanic() {
-    static ExitLogger* panic_logger = new ExitLogger("panic: ");
+    // bold red
+    auto prefix = shouldANSI() ? "\t\e[1;31mpanic\e[0m: " : "panic: ";
+    static ExitLogger *panic_logger = new ExitLogger(prefix);
     return *panic_logger;
 }
 
 Logger&
 Logger::getFatal() {
-    static FatalLogger* fatal_logger = new FatalLogger("fatal: ");
+    // bold red
+    auto prefix = shouldANSI() ? "\t\e[1;31mfatal\e[0m: " : "fatal: ";
+    static FatalLogger *fatal_logger = new FatalLogger(prefix);
     return *fatal_logger;
 }
 
 Logger&
 Logger::getWarn() {
-    static Logger* warn_logger = new Logger("warn: ");
+    // bold yellow
+    auto prefix = shouldANSI() ? "\t\e[1;33mwarn\e[0m: " : "warn: ";
+    static Logger *warn_logger = new Logger(prefix);
     return *warn_logger;
 }
 
 Logger&
 Logger::getInfo() {
-    static Logger* info_logger = new Logger("info: ");
+    // bold cyan
+    auto prefix = shouldANSI() ? "\t\e[1;36minfo\e[0m: " : "info: ";
+    static Logger *info_logger = new Logger(prefix);
     return *info_logger;
 }
 
 Logger&
 Logger::getHack() {
-    static Logger* hack_logger = new Logger("hack: ");
+    // yellow, non-bold
+    auto prefix = shouldANSI() ? "\t\e[33mhack\e[0m: " : "hack: ";
+    static Logger *hack_logger = new Logger(prefix);
     return *hack_logger;
 }
 

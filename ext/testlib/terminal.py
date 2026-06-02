@@ -27,9 +27,11 @@
 # Author: Steve Reinhardt
 
 import fcntl
+import os
 import struct
 import sys
 import termios
+from typing import TextIO
 
 # Intended usage example:
 #
@@ -99,18 +101,29 @@ class ColorStrings:
 termcap = ColorStrings(cap_string)
 no_termcap = ColorStrings(null_cap_string)
 
-if sys.stdout.isatty():
+
+def should_use_colors(out: TextIO):
+    must_not_colour = "NO_COLOR" in os.environ or "NOCOLOR" in os.environ
+    should_force = (
+        "CLICOLOR_FORCE" in os.environ or "FORCE_COLOR" in os.environ
+    )
+    istty = out.isatty() and os.environ["TERM"] not in [None, "dumb"]
+    return (not must_not_colour) and (should_force or istty)
+
+
+if should_use_colors(sys.stdout):
     tty_termcap = termcap
 else:
     tty_termcap = no_termcap
 
 
 def get_termcap(use_colors=None):
+    if use_colors is None:
+        # option unspecified; default behavior is to use colors iff isatty && NO_COLOR is not set
+        use_colors = should_use_colors(sys.stdout)
+
     if use_colors:
         return termcap
-    elif use_colors is None:
-        # option unspecified; default behavior is to use colors iff isatty
-        return tty_termcap
     else:
         return no_termcap
 
