@@ -45,6 +45,15 @@
 
 using namespace std;
 
+namespace
+{
+
+constexpr uint8_t MmrRun = 0x01;
+constexpr uint8_t MmrBusy = 0x02;
+constexpr uint8_t MmrDone = 0x04;
+
+} // anonymous namespace
+
 /*****************************************************************************
  * CommInterface serves as the general system interface for hardware
  * accelerators. It provides a set of memory-mapped registers, as well as
@@ -284,9 +293,9 @@ CommInterface::checkMMR()
         if (debug()) {
             DPRINTF(CommInterface, "Checking MMR to see if Run bit set\n");
         }
-        if (*mmreg & 0x01) {
-            *mmreg &= 0xfe;
-            *mmreg |= 0x02;
+        if (*mmreg & MmrRun) {
+            *mmreg &= ~MmrRun;
+            *mmreg |= MmrBusy;
             computationNeeded = true;
             cu->initialize();
         }
@@ -625,8 +634,9 @@ CommInterface::tryRead(MemSidePort *port)
         return;
     }
     int size;
-    if (readReq->currentReadAddr % cacheLineSize) {
-        size = cacheLineSize - (readReq->currentReadAddr % cacheLineSize);
+    const unsigned lineOffset = readReq->currentReadAddr % cacheLineSize;
+    if (lineOffset) {
+        size = cacheLineSize - lineOffset;
         if (debug()) {
             DPRINTF(CommInterface, "Aligning\n");
         }
@@ -677,8 +687,9 @@ CommInterface::tryWrite(MemSidePort *port)
     }
 
     int size;
-    if (writeReq->currentWriteAddr % cacheLineSize) {
-        size = cacheLineSize - (writeReq->currentWriteAddr % cacheLineSize);
+    const unsigned lineOffset = writeReq->currentWriteAddr % cacheLineSize;
+    if (lineOffset) {
+        size = cacheLineSize - lineOffset;
         if (debug()) {
             DPRINTF(CommInterface, "Aligning\n");
         }
@@ -743,8 +754,9 @@ CommInterface::tryRead(SPMPort *port)
         return;
     }
     int size;
-    if (readReq->currentReadAddr % cacheLineSize) {
-        size = cacheLineSize - (readReq->currentReadAddr % cacheLineSize);
+    const unsigned lineOffset = readReq->currentReadAddr % cacheLineSize;
+    if (lineOffset) {
+        size = cacheLineSize - lineOffset;
         if (debug()) {
             DPRINTF(CommInterface, "Aligning\n");
         }
@@ -795,8 +807,9 @@ CommInterface::tryWrite(SPMPort *port)
     }
 
     int size;
-    if (writeReq->currentWriteAddr % cacheLineSize) {
-        size = cacheLineSize - (writeReq->currentWriteAddr % cacheLineSize);
+    const unsigned lineOffset = writeReq->currentWriteAddr % cacheLineSize;
+    if (lineOffset) {
+        size = cacheLineSize - lineOffset;
         if (debug()) {
             DPRINTF(CommInterface, "Aligning\n");
         }
@@ -1008,8 +1021,8 @@ CommInterface::enqueueWrite(MemoryRequest *req)
 void
 CommInterface::finish()
 {
-    *mmreg &= 0xfc;
-    *mmreg |= 0x04;
+    *mmreg &= ~(MmrRun | MmrBusy);
+    *mmreg |= MmrDone;
     computationNeeded = false;
     if (int_num > 0) {
         int_flag = true;
