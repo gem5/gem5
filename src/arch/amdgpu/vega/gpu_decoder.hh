@@ -1709,6 +1709,8 @@ class Decoder
     GPUStaticInst *decode_OP_VOP3P__V_MFMA_F32_4X4X1_16B_F32(MachInst);
     GPUStaticInst *decode_OP_VOP3P__V_MFMA_F32_32X32X2_F32(MachInst);
     GPUStaticInst *decode_OP_VOP3P__V_MFMA_F32_16X16X4_F32(MachInst);
+    GPUStaticInst *decode_OP_VOP3P__V_MFMA_F32_16X16X8_XF32(MachInst);
+    GPUStaticInst *decode_OP_VOP3P__V_MFMA_F32_32X32X4_XF32(MachInst);
     GPUStaticInst *decode_OP_VOP3P__V_MFMA_F32_32X32X4_2B_F16(MachInst);
     GPUStaticInst *decode_OP_VOP3P__V_MFMA_F32_16X16X4_4B_F16(MachInst);
     GPUStaticInst *decode_OP_VOP3P__V_MFMA_F32_4X4X4_16B_F16(MachInst);
