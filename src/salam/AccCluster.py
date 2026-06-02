@@ -67,6 +67,13 @@ class AccCluster(Platform):
 
     # System Cache Parameter
     cache_size = Param.String("32kB", "cache size in bytes")
+    cache_assoc = Param.Unsigned(8, "cluster cache associativity")
+    cache_tag_latency = Param.Cycles(20, "cluster cache tag latency")
+    cache_data_latency = Param.Cycles(20, "cluster cache data latency")
+    cache_response_latency = Param.Cycles(20, "cluster cache response latency")
+    cache_mshrs = Param.Unsigned(20, "cluster cache MSHRs")
+    cache_tgts_per_mshr = Param.Unsigned(12, "cluster cache targets per MSHR")
+    cache_write_buffers = Param.Unsigned(8, "cluster cache write buffers")
     local_range_min = Param.Unsigned(
         0x2F000000, "minimal address of local range"
     )
@@ -106,14 +113,10 @@ class AccCluster(Platform):
     def _connect_spm(self, spm):
         spm.port = self.local_bus.mem_side_ports
 
-    def _attach_bridges(self, system, mem_range, ext_ranges):
+    def _attach_bridges(self, system, mem_range, _ext_ranges):
         self.mem2cls = Bridge(delay="1ns", ranges=mem_range)
         self.mem2cls.mem_side_ports = self.local_bus.cpu_side_ports
         self.mem2cls.cpu_side_ports = system.membus.mem_side_ports
-
-        # self.cls2mem = Bridge(delay='1ns', ranges = ext_ranges)
-        # self.cls2mem.mem_side_ports = system.membus.cpu_side_ports
-        # self.cls2mem.cpu_side_ports = self.local_bus.mem_side_ports
 
     def _connect_hwacc(self, hwacc):
         hwacc.pio = self.local_bus.mem_side_ports
@@ -122,6 +125,13 @@ class AccCluster(Platform):
         if options.acc_cache and (cache_size != 0):
             self.cluster_cache = ClusterCache()
             self.cluster_cache.size = cache_size
+            self.cluster_cache.assoc = self.cache_assoc
+            self.cluster_cache.tag_latency = self.cache_tag_latency
+            self.cluster_cache.data_latency = self.cache_data_latency
+            self.cluster_cache.response_latency = self.cache_response_latency
+            self.cluster_cache.mshrs = self.cache_mshrs
+            self.cluster_cache.tgts_per_mshr = self.cache_tgts_per_mshr
+            self.cluster_cache.write_buffers = self.cache_write_buffers
 
             if options.l2cache and l2coherent:
                 self.cluster_cache.mem_side = system.tol2bus.cpu_side_ports
