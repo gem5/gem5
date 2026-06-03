@@ -34,7 +34,7 @@
 
 #include "sext.hh"
 
-// AUTO-AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
+// AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 Sext::Sext(const SextParams &params)
     : SimObject(params),

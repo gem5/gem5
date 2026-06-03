@@ -34,7 +34,7 @@
 
 #include "fptrunc.hh"
 
-// AUTO-AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
+// AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 Fptrunc::Fptrunc(const FptruncParams &params)
     : SimObject(params),

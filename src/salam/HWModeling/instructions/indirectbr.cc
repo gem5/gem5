@@ -34,7 +34,7 @@
 
 #include "indirectbr.hh"
 
-// AUTO-AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
+// AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 Indirectbr::Indirectbr(const IndirectbrParams &params)
     : SimObject(params),

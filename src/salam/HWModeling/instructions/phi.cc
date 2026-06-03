@@ -34,7 +34,7 @@
 
 #include "phi.hh"
 
-// AUTO-AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
+// AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 Phi::Phi(const PhiParams &params)
     : SimObject(params),

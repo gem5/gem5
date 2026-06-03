@@ -34,7 +34,7 @@
 
 #include "float_divider.hh"
 
-// AUTO-AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
+// AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 FloatDivider::FloatDivider(const FloatDividerParams &params)
     : SimObject(params),

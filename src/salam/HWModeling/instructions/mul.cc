@@ -34,7 +34,7 @@
 
 #include "mul.hh"
 
-// AUTO-AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
+// AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 Mul::Mul(const MulParams &params)
     : SimObject(params),

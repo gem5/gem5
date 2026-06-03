@@ -34,7 +34,7 @@
 
 #include "fneg.hh"
 
-// AUTO-AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
+// AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 Fneg::Fneg(const FnegParams &params)
     : SimObject(params),

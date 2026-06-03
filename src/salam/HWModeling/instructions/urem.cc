@@ -34,7 +34,7 @@
 
 #include "urem.hh"
 
-// AUTO-AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
+// AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 Urem::Urem(const UremParams &params)
     : SimObject(params),

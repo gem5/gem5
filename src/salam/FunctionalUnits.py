@@ -30,7 +30,7 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-# AUTO-AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
+# AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 from m5.params import *
 from m5.proxy import *
@@ -78,7 +78,7 @@ class FunctionalUnits(SimObject):
     )
 
 
-# AUTO-AUTO-GENERATED CLASSES (See util/SALAM-docs/README_SALAM.md for details)
+# AUTO-GENERATED CLASSES (See util/SALAM-docs/README_SALAM.md for details)
 class FloatDivider(SimObject):
     # SimObject type
     type = "FloatDivider"

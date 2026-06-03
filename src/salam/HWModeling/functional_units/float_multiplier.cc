@@ -34,7 +34,7 @@
 
 #include "float_multiplier.hh"
 
-// AUTO-AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
+// AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 FloatMultiplier::FloatMultiplier(const FloatMultiplierParams &params)
     : SimObject(params),

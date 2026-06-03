@@ -30,14 +30,14 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-# AUTO-AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
+# AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 from m5.params import *
 from m5.proxy import *
 from m5.SimObject import SimObject
 
 
-# AUTO-AUTO-GENERATED CLASSES (See util/SALAM-docs/README_SALAM.md for details)
+# AUTO-GENERATED CLASSES (See util/SALAM-docs/README_SALAM.md for details)
 class Add(SimObject):
     # SimObject type
     type = "Add"  # gem5-SALAM attached header

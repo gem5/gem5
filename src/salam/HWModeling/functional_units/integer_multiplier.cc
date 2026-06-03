@@ -34,7 +34,7 @@
 
 #include "integer_multiplier.hh"
 
-// AUTO-AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
+// AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 IntegerMultiplier::IntegerMultiplier(const IntegerMultiplierParams &params)
     : SimObject(params),

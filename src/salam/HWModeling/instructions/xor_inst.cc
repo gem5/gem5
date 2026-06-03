@@ -34,7 +34,7 @@
 
 #include "xor_inst.hh"
 
-// AUTO-AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
+// AUTO-GENERATED FILE (See util/SALAM-docs/README_SALAM.md for details)
 
 XorInst::XorInst(const XorInstParams &params)
     : SimObject(params),
