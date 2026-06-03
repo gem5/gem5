@@ -124,6 +124,8 @@ CacheController::pCreditGrant(const CHIResponseMsg *msg)
     phase.channel = ARM::CHI::CHANNEL_RSP;
     phase.rsp_opcode = ARM::CHI::RSP_OPCODE_PCRD_GRANT;
     phase.pcrd_type = 0; // TODO: set this one depending on allow retry
+    phase.c_busy = msg->m_cbusy;
+    phase.src_id = ruby_to_tlm::srcId(msg->m_responder);
 
     bw(payload, &phase);
 
