@@ -438,7 +438,6 @@ LLVMInterface::ActiveFunction::findDynamicDeps(
     }
     // The list of UIDs for any dependencies we want to find
     std::vector<uint64_t> dep_uids = inst->runtimeInitialize();
-
     // Find dependencies currently in queues
     // Reverse search the reservation queue because we want to link
     // only the last instance of each dep
