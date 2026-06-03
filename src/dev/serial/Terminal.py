@@ -39,7 +39,7 @@
 from m5.objects.Serial import SerialDevice
 from m5.params import *
 from m5.proxy import *
-from m5.SimObject import SimObject
+from m5.SimObject import SimObject, cxxMethod
 
 
 class TerminalDump(ScopedEnum):
@@ -55,3 +55,16 @@ class Terminal(SerialDevice):
     outfile = Param.TerminalDump(
         "file", "Selects if and where the terminal is dumping its output"
     )
+
+    @cxxMethod
+    def getListenerOutput(self):
+        """
+        Returns the actual bound address of the listener as a string.
+        Returns an empty string if no listener is attached.
+        """
+        pass
+
+    @cxxMethod
+    def hasListener(self):
+        """Returns True if a listener is attached to this terminal."""
+        pass
