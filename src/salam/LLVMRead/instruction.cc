@@ -105,7 +105,6 @@ SALAM::Instruction::initialize(llvm::Value *irval, irvmap *irmap,
         auto mapit = irmap->find(op);
         std::shared_ptr<SALAM::Value> opval;
         if (mapit == irmap->end()) {
-            // TODO: Handle constant data and constant expressions
             if (dbg) {
                 DPRINTFS(LLVMParse, owner,
                          "Instantiate Operand as Constant Data/Expression\n");
