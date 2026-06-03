@@ -5552,16 +5552,11 @@ decode QUADRANT default Unknown::unknown() {
                             }
                         }
                     }
-                    if (machInst.vl > 0) {
-                        const int lastElem = (int)machInst.vl - 1;
-                        if (vdWindowLeft <= lastElem && lastElem < vdWindowRight) {
-                            int posInMicro = lastElem - vdWindowLeft;
-                            if (posInMicro < microVl) {
-                                if (this->vm || elem_mask(v0, lastElem)) {
-                                    auto fd = ftype_freg<et>(freg(Fs1_bits));
-                                    Vd_vu[posInMicro] = fd.v;
-                                }
-                            }
+                    if (isLastMicroop()) {
+                        if (this->vm || elem_mask(v0,
+                            vdWindowLeft + microVl - 1)) {
+                            auto fd = ftype_freg<et>(freg(Fs1_bits));
+                            Vd_vu[microVl - 1] = fd.v;
                         }
                     }
                 }}, OPFVF, SimdMiscOp);
@@ -5908,15 +5903,10 @@ decode QUADRANT default Unknown::unknown() {
                             }
                         }
                     }
-                    if (machInst.vl > 0) {
-                        const int lastElem = (int)machInst.vl - 1;
-                        if (vdWindowLeft <= lastElem && lastElem < vdWindowRight) {
-                            int posInMicro = lastElem - vdWindowLeft;
-                            if (posInMicro < microVl) {
-                                if (this->vm || elem_mask(v0, lastElem)) {
-                                    Vd_vu[posInMicro] = Rs1_vu;
-                                }
-                            }
+                    if (isLastMicroop()) {
+                        if (this->vm || elem_mask(v0,
+                            vdWindowLeft + microVl - 1)) {
+                            Vd_vu[microVl - 1] = Rs1_vu;
                         }
                     }
                 }}, OPIVX, SimdMiscOp);
