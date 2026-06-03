@@ -119,6 +119,8 @@ To utilize this functionality, the following script must be run to generate sour
 python3 util/SALAM-tools/hw_generator/HWProfileGenerator.py -b <benchmark_name>
 ```
 
+_Note that the default checked-in SALAM hardware profile uses the floating-point functional unit mapping needed by the provided 32-bit ARM examples. Custom profiles should define their desired floating-point units and latencies in YAML before regenerating the hardware model. Future work may make floating-point functional unit selection more directly type-aware from the LLVM instruction precision._
+
 ## Power Modeling using cacti-SALAM
 
 The cacti-SALAM toolchain is a mini-suite of Python scripts to drive CACTI analyses on SALAM scratchpad memories based on YAML accelerator config, aggregating power/area/delay results.
