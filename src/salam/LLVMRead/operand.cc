@@ -54,21 +54,13 @@ SALAM::Constant::initialize(llvm::Value *irval, SALAM::irvmap *irmap,
         // Get it's value and store it in constValue
         if (irtype->isFloatingPointTy()) {
             llvm::ConstantFP *fp = llvm::dyn_cast<llvm::ConstantFP>(cd);
-#if USE_LLVM_AP_VALUES
-            addAPFloatRegister(fp->getValueAPF());
-#else
             auto apfp = fp->getValueAPF();
             auto api = apfp.bitcastToAPInt();
             addAPFloatRegister(api.getLimitedValue());
-#endif
         } else if (irtype->isIntegerTy()) {
             llvm::ConstantInt *in = llvm::dyn_cast<llvm::ConstantInt>(cd);
-#if USE_LLVM_AP_VALUES
-            addAPIntRegister(in->getValue());
-#else
             auto api = in->getValue();
             addAPIntRegister(api.getLimitedValue());
-#endif
         } else if (irtype->isPointerTy()) {
             assert(llvm::dyn_cast<llvm::ConstantPointerNull>(cd));
             addPointerRegister(false, true);
@@ -93,54 +85,23 @@ SALAM::Constant::initialize(llvm::Value *irval, SALAM::irvmap *irmap,
             }
         }
 
-#if USE_LLVM_AP_VALUES
-#if (LLVM_VERSION_MAJOR <= 9)
-        auto rounding = llvm::APFloat::roundingMode::rmNearestTiesToEven;
-#else
-        auto rounding = llvm::APFloat::roundingMode::NearestTiesToEven;
-#endif
-#endif
-
         switch (ce->getOpcode()) {
             case llvm::Instruction::Trunc: {
                 auto opdata = operands.front()->getIntRegValue();
-#if USE_LLVM_AP_VALUES
-                addAPIntRegister(opdata.trunc(size));
-#else
                 addAPIntRegister(opdata);
-#endif
                 break;
             }
             case llvm::Instruction::ZExt: {
                 auto opdata = operands.front()->getIntRegValue();
-#if USE_LLVM_AP_VALUES
-                opdata.setIsSigned(false);
-                addAPIntRegister(opdata.extend(size));
-#else
                 addAPIntRegister(opdata);
-#endif
                 break;
             }
             case llvm::Instruction::SExt: {
-#if USE_LLVM_AP_VALUES
-                auto opdata = operands.front()->getIntRegValue();
-                opdata.setIsSigned(true);
-                addAPIntRegister(opdata.extend(size));
-#else
                 int64_t tmp = operands.front()->getSIntRegValue();
                 addAPIntRegister((uint64_t)tmp);
-#endif
                 break;
             }
             case llvm::Instruction::FPToUI: {
-#if USE_LLVM_AP_VALUES
-                llvm::APSInt tmp(size, true);
-                bool exact;
-                auto opdata = operands.front()->getFloatRegValue();
-                auto err = opdata.convertToInteger(tmp, rounding, &exact);
-                assert(err == llvm::APFloatBase::opStatus::opOK);
-                addAPIntRegister(tmp);
-#else
                 if (operands.front()->getSize() == 32) {
                     auto opdata = operands.front()->getFloatFromReg();
                     addAPIntRegister((uint64_t)opdata);
@@ -148,18 +109,9 @@ SALAM::Constant::initialize(llvm::Value *irval, SALAM::irvmap *irmap,
                     auto opdata = operands.front()->getDoubleFromReg();
                     addAPIntRegister((uint64_t)opdata);
                 }
-#endif
                 break;
             }
             case llvm::Instruction::FPToSI: {
-#if USE_LLVM_AP_VALUES
-                llvm::APSInt tmp(size, false);
-                bool exact;
-                auto opdata = operands.front()->getFloatRegValue();
-                auto err = opdata.convertToInteger(tmp, rounding, &exact);
-                assert(err == llvm::APFloatBase::opStatus::opOK);
-                addAPIntRegister(tmp);
-#else
                 if (operands.front()->getSize() == 32) {
                     auto opdata = operands.front()->getFloatFromReg();
                     addAPIntRegister((uint64_t)(int64_t)opdata);
@@ -167,17 +119,9 @@ SALAM::Constant::initialize(llvm::Value *irval, SALAM::irvmap *irmap,
                     auto opdata = operands.front()->getDoubleFromReg();
                     addAPIntRegister((uint64_t)(int64_t)opdata);
                 }
-#endif
                 break;
             }
             case llvm::Instruction::UIToFP: {
-#if USE_LLVM_AP_VALUES
-                auto opdata = operands.front()->getIntRegValue();
-                llvm::APFloat tmp(irtype->getFltSemantics());
-                auto err = tmp.convertFromAPInt(opdata, false, rounding);
-                assert(err == llvm::APFloatBase::opStatus::opOK);
-                addAPFloatRegister(tmp);
-#else
                 auto opdata = operands.front()->getUIntRegValue();
                 switch (size) {
                     case 32: {
@@ -196,17 +140,9 @@ SALAM::Constant::initialize(llvm::Value *irval, SALAM::irvmap *irmap,
                         break;
                     }
                 }
-#endif
                 break;
             }
             case llvm::Instruction::SIToFP: {
-#if USE_LLVM_AP_VALUES
-                auto opdata = operands.front()->getIntRegValue();
-                llvm::APFloat tmp(irtype->getFltSemantics());
-                auto err = tmp.convertFromAPInt(opdata, false, rounding);
-                assert(err == llvm::APFloatBase::opStatus::opOK);
-                addAPFloatRegister(tmp);
-#else
                 auto opdata = operands.front()->getSIntRegValue();
                 switch (size) {
                     case 32: {
@@ -225,19 +161,9 @@ SALAM::Constant::initialize(llvm::Value *irval, SALAM::irvmap *irmap,
                         break;
                     }
                 }
-#endif
                 break;
             }
             case llvm::Instruction::FPTrunc: {
-#if USE_LLVM_AP_VALUES
-                auto opdata = operands.front()->getFloatRegValue();
-                llvm::APFloat tmp(opdata);
-                bool losesInfo;
-                auto err = tmp.convert(irtype->getFltSemantics(), rounding,
-                                       &losesInfo);
-                assert(err == llvm::APFloatBase::opStatus::opOK);
-                addAPFloatRegister(tmp);
-#else
                 switch (operands.front()->getSize()) {
                     case 64: {
                         double opdata = operands.front()->getDoubleFromReg();
@@ -250,19 +176,9 @@ SALAM::Constant::initialize(llvm::Value *irval, SALAM::irvmap *irmap,
                                "Must use AP values for nonstandard FP sizes.");
                     }
                 }
-#endif
                 break;
             }
             case llvm::Instruction::FPExt: {
-#if USE_LLVM_AP_VALUES
-                auto opdata = operands.front()->getFloatRegValue();
-                llvm::APFloat tmp(opdata);
-                bool losesInfo;
-                auto err = tmp.convert(irtype->getFltSemantics(), rounding,
-                                       &losesInfo);
-                assert(err == llvm::APFloatBase::opStatus::opOK);
-                addAPFloatRegister(tmp);
-#else
                 switch (operands.front()->getSize()) {
                     case 32: {
                         float opdata = operands.front()->getFloatFromReg();
@@ -275,27 +191,16 @@ SALAM::Constant::initialize(llvm::Value *irval, SALAM::irvmap *irmap,
                                "Must use AP values for nonstandard FP sizes.");
                     }
                 }
-#endif
                 break;
             }
             case llvm::Instruction::PtrToInt: {
                 auto opdata = operands.front()->getReg()->getPtrData();
-#if USE_LLVM_AP_VALUES
-                addAPIntRegister(llvm::APInt(64, opdata));
-#else
                 addAPIntRegister(opdata);
-#endif
                 break;
             }
             case llvm::Instruction::IntToPtr: {
                 auto opdata = operands.front()->getIntRegValue();
-#if USE_LLVM_AP_VALUES
-                assert(opdata.isUnsigned());
-                int64_t tmp = opdata.getExtValue();
-                addPointerRegister(*(uint64_t *)&tmp, false, false);
-#else
                 addPointerRegister(opdata, false, false);
-#endif
                 break;
             }
             default:

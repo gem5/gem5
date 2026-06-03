@@ -76,14 +76,8 @@ class Value
     bool inst = false;
 
     void addRegister(llvm::Type *irtype, bool isTracked = true);
-#if USE_LLVM_AP_VALUES
-    void addAPIntRegister(const llvm::APInt &val);
-    void addAPIntRegister(const llvm::APSInt &val);
-    void addAPFloatRegister(const llvm::APFloat &val);
-#else
     void addAPIntRegister(const uint64_t &val);
     void addAPFloatRegister(const uint64_t &val);
-#endif
     void addPointerRegister(bool isTracked = true, bool isNull = false);
     void addPointerRegister(uint64_t val, bool isTracked = true,
                             bool isNull = false);
@@ -170,10 +164,6 @@ class Value
     // tracked registers
     // If you'd like to avoid incrementing write counters, directly pull
     // the register and use its appropriate write function
-#if USE_LLVM_AP_VALUES
-    void setRegisterValue(const llvm::APInt &data);
-    void setRegisterValue(const llvm::APFloat &data);
-#endif
     void setRegisterValue(const uint64_t data);
     void setRegisterValue(uint8_t *data);
     void setRegisterValue(bool data);
@@ -190,18 +180,6 @@ class Value
     {
         return returnReg->getPtrData();
     }
-#if USE_LLVM_AP_VALUES
-    virtual llvm::APFloat
-    getFloatRegValue()
-    {
-        return returnReg->getFloatData();
-    }
-    virtual llvm::APSInt
-    getIntRegValue()
-    {
-        return returnReg->getIntData();
-    }
-#else
     virtual uint64_t
     getFloatRegValue()
     {
@@ -232,7 +210,6 @@ class Value
     {
         return returnReg->getSignedInt(size);
     }
-#endif
 
     virtual bool
     isConstant()

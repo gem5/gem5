@@ -95,28 +95,6 @@ class Operand : public Value
     {
         return lockedValue->getPtrData();
     }
-#if USE_LLVM_AP_VALUES
-    virtual llvm::APFloat
-    getFloatRegValue()
-    {
-        return lockedValue->getFloatData();
-    }
-    virtual llvm::APSInt
-    getIntRegValue()
-    {
-        return lockedValue->getIntData();
-    }
-    virtual bool
-    hasIntVal()
-    {
-        return lockedValue->isInt();
-    }
-    virtual bool
-    hasPtrVal()
-    {
-        return lockedValue->isPtr();
-    }
-#else
     virtual uint64_t
     getFloatRegValue()
     {
@@ -157,7 +135,6 @@ class Operand : public Value
     {
         return lockedValue->isPtr();
     }
-#endif
     std::shared_ptr<SALAM::Register>
     getOpRegister()
     {

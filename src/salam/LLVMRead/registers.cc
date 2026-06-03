@@ -50,36 +50,6 @@ SALAM::Register::Register_Debugger::dumper(SALAM::Register *reg)
 SALAM::APFloatRegister::APFloatRegister(llvm::Type *T, bool tracked)
     : Register(tracked)
 {
-#if USE_LLVM_AP_VALUES
-    switch (T->getTypeID()) {
-        case llvm::Type::FloatTyID: {
-            data = llvm::APFloat::getZero(llvm::APFloat::IEEEsingle());
-            break;
-        }
-        case llvm::Type::DoubleTyID: {
-            data = llvm::APFloat::getZero(llvm::APFloat::IEEEdouble());
-            break;
-        }
-        case llvm::Type::HalfTyID: {
-            data = llvm::APFloat::getZero(llvm::APFloat::IEEEhalf());
-            break;
-        }
-        case llvm::Type::X86_FP80TyID: {
-            data = llvm::APFloat::getZero(llvm::APFloat::x87DoubleExtended());
-            break;
-        }
-        case llvm::Type::FP128TyID: {
-            data = llvm::APFloat::getZero(llvm::APFloat::IEEEquad());
-            break;
-        }
-        case llvm::Type::PPC_FP128TyID: {
-            data = llvm::APFloat::getZero(llvm::APFloat::PPCDoubleDouble());
-            break;
-        }
-        default:
-            assert(0 && "Specified Floating Point type is not supported");
-    }
-#else
     switch (T->getTypeID()) {
         case llvm::Type::FloatTyID: {
             data = 0;
@@ -92,42 +62,11 @@ SALAM::APFloatRegister::APFloatRegister(llvm::Type *T, bool tracked)
         default:
             assert(0 && "Specified Floating Point type is not supported");
     }
-#endif
 }
 
 SALAM::APFloatRegister::APFloatRegister(llvm::Type::TypeID T, bool tracked)
     : Register(tracked)
 {
-#if USE_LLVM_AP_VALUES
-    switch (T) {
-        case llvm::Type::FloatTyID: {
-            data = llvm::APFloat::getZero(llvm::APFloat::IEEEsingle());
-            break;
-        }
-        case llvm::Type::DoubleTyID: {
-            data = llvm::APFloat::getZero(llvm::APFloat::IEEEdouble());
-            break;
-        }
-        case llvm::Type::HalfTyID: {
-            data = llvm::APFloat::getZero(llvm::APFloat::IEEEhalf());
-            break;
-        }
-        case llvm::Type::X86_FP80TyID: {
-            data = llvm::APFloat::getZero(llvm::APFloat::x87DoubleExtended());
-            break;
-        }
-        case llvm::Type::FP128TyID: {
-            data = llvm::APFloat::getZero(llvm::APFloat::IEEEquad());
-            break;
-        }
-        case llvm::Type::PPC_FP128TyID: {
-            data = llvm::APFloat::getZero(llvm::APFloat::PPCDoubleDouble());
-            break;
-        }
-        default:
-            assert(0 && "Specified Floating Point type is not supported");
-    }
-#else
     switch (T) {
         case llvm::Type::FloatTyID: {
             data = 0;
@@ -140,51 +79,32 @@ SALAM::APFloatRegister::APFloatRegister(llvm::Type::TypeID T, bool tracked)
         default:
             assert(0 && "Specified Floating Point type is not supported");
     }
-#endif
 }
 
 SALAM::APFloatRegister::APFloatRegister(const llvm::APFloat &RHS)
     : Register(false)
 {
-#if USE_LLVM_AP_VALUES
-    data = (RHS);
-#else
     auto bitcast = RHS.bitcastToAPInt();
     data = (uint64_t)(bitcast.getLimitedValue());
     regdata = data;
-#endif
 }
 
 SALAM::APIntRegister::APIntRegister(llvm::Type *T, bool tracked)
     : Register(tracked)
 {
-#if USE_LLVM_AP_VALUES
-    llvm::IntegerType *it = llvm::dyn_cast<llvm::IntegerType>(T);
-    assert(it);
-    data = llvm::APSInt::getMinValue(it->getBitWidth(), true);
-#else
     data = 0;
-#endif
 }
 
 SALAM::APIntRegister::APIntRegister(uint64_t bitwidth, bool tracked)
     : Register(tracked)
 {
-#if USE_LLVM_AP_VALUES
-        data = llvm::APSInt::getMinValue(bitwidth), true);
-#else
     data = 0;
-#endif
 }
 
 SALAM::APIntRegister::APIntRegister(const llvm::APInt &RHS) : Register(false)
 {
-#if USE_LLVM_AP_VALUES
-    data = RHS;
-#else
     data = (uint64_t)(RHS.getLimitedValue());
     regdata = data;
-#endif
 }
 
 SALAM::PointerRegister::PointerRegister(bool tracked, bool isNull)
@@ -196,25 +116,6 @@ SALAM::PointerRegister::PointerRegister(uint64_t val, bool tracked,
     : Register(tracked, isNull), pointer(val)
 {}
 
-#if USE_LLVM_AP_VALUES
-llvm::APFloat
-SALAM::APFloatRegister::getFloatData(bool incReads)
-{
-    if (incReads && tracked) {
-        reads++;
-    }
-    return data;
-}
-
-void
-SALAM::APFloatRegister::writeFloatData(llvm::APFloat apf, bool incWrites)
-{
-    if (incWrites && tracked) {
-        writes++;
-    }
-    data = apf;
-}
-#else
 uint64_t
 SALAM::APFloatRegister::getFloatData(bool incReads)
 {
@@ -252,27 +153,7 @@ SALAM::APFloatRegister::writeFloatData(uint64_t apf, size_t len,
     std::memcpy(&data, &apf, len);
     regdata = data;
 }
-#endif
 
-#if USE_LLVM_AP_VALUES
-llvm::APSInt
-SALAM::APIntRegister::getIntData(bool incReads)
-{
-    if (incReads && tracked) {
-        reads++;
-    }
-    return data;
-}
-
-void
-SALAM::APIntRegister::writeIntData(llvm::APInt api, bool incWrites)
-{
-    if (incWrites && tracked) {
-        writes++;
-    }
-    data = api;
-}
-#else
 uint64_t
 SALAM::APIntRegister::getIntData(bool incReads)
 {
@@ -332,7 +213,6 @@ SALAM::APIntRegister::writeIntData(uint64_t api, size_t len, bool incWrites)
     std::memcpy(&data, &api, len);
     regdata = data;
 }
-#endif
 uint64_t
 SALAM::PointerRegister::getPtrData(bool incReads)
 {
@@ -359,13 +239,9 @@ std::string
 SALAM::APFloatRegister::dataString()
 {
     std::stringstream ss;
-#if USE_LLVM_AP_VALUES
-
-#else
     float fdata = *(float *)&data;
     double ddata = *(double *)&data;
     ss << fdata << "f " << ddata << "d";
-#endif
     return ss.str();
 }
 
@@ -373,11 +249,7 @@ std::string
 SALAM::APIntRegister::dataString()
 {
     std::stringstream ss;
-#if USE_LLVM_AP_VALUES
-
-#else
     ss << "0x" << std::hex << data;
-#endif
     return ss.str();
 }
 
@@ -385,10 +257,6 @@ std::string
 SALAM::PointerRegister::dataString()
 {
     std::stringstream ss;
-#if USE_LLVM_AP_VALUES
-
-#else
     ss << "0x" << std::hex << pointer;
-#endif
     return ss.str();
 }

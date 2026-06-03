@@ -428,23 +428,6 @@ Br::getTarget()
                  ir_string);
     }
     if (conditional) {
-#if USE_LLVM_AP_VALUES
-        if (condition->getIntRegValue().isOneValue()) {
-            if (dbg) {
-                DPRINTFS(RuntimeCompute, owner,
-                         "|| Condition: TRUE, Fetching target %s\n",
-                         trueDestination->getIRStub());
-            }
-            return trueDestination;
-        } else {
-            if (dbg) {
-                DPRINTFS(RuntimeCompute, owner,
-                         "|| Condition: FALSE, Fetching target %s\n",
-                         falseDestination->getIRStub());
-            }
-            return falseDestination;
-        }
-#else
         if (condition->getUIntRegValue() == 1) {
             if (dbg) {
                 DPRINTFS(RuntimeCompute, owner,
@@ -460,7 +443,6 @@ Br::getTarget()
             }
             return falseDestination;
         }
-#endif
     }
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| Fetching target %s\n",
@@ -559,16 +541,6 @@ Switch::getTarget()
         DPRINTFS(RuntimeCompute, owner, "|| Launching Switch: %s\n",
                  ir_string);
     }
-#if USE_LLVM_AP_VALUES
-    auto opdata = (operands.front().getIntRegValue());
-
-    for (auto it = cases.begin(); it != cases.end(); ++it) {
-        if (it->first->getIntRegValue().eq(opdata)) {
-            return it->second;
-        }
-    }
-    return defaultDestination;
-#else
     auto opdata = operands.front().getSIntRegValue();
 
     for (auto it = cases.begin(); it != cases.end(); ++it) {
@@ -577,7 +549,6 @@ Switch::getTarget()
         }
     }
     return defaultDestination;
-#endif
 }
 
 void
@@ -683,26 +654,6 @@ Add::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| Computing %s\n", ir_string);
     }
-#if USE_LLVM_AP_VALUES
-    llvm::APInt op1 = (operands.at(0).getIntRegValue());
-    llvm::APInt op2 = (operands.at(1).getIntRegValue());
-    llvm::APInt result = op1 + op2;
-    llvm::SmallString<8> op1str;
-    llvm::SmallString<8> op2str;
-    llvm::SmallString<8> resstr;
-    op1.toStringUnsigned(op1str);
-    op2.toStringUnsigned(op2str);
-    result.toStringUnsigned(resstr);
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| (%s) %s + (%s) %s \n",
-                 operands.at(0).getIRStub(), op1str.c_str(),
-                 operands.at(1).getIRStub(), op2str.c_str());
-    }
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| %s = %s\n", ir_stub,
-                 resstr.c_str());
-    }
-#else
     uint64_t op1 = operands.at(0).getUIntRegValue();
     uint64_t op2 = operands.at(1).getUIntRegValue();
     uint64_t result = op1 + op2;
@@ -714,7 +665,6 @@ Add::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| %s = %d\n", ir_stub, result);
     }
-#endif
     setRegisterValue(result);
 }
 
@@ -757,27 +707,6 @@ FAdd::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| Computing %s\n", ir_string);
     }
-#if USE_LLVM_AP_VALUES
-    llvm::APFloat op1 = (operands.at(0).getFloatRegValue());
-    llvm::APFloat op2 = (operands.at(1).getFloatRegValue());
-    llvm::APFloat result = op1 + op2;
-    llvm::SmallString<8> op1str;
-    llvm::SmallString<8> op2str;
-    llvm::SmallString<8> resstr;
-    op1.toString(op1str);
-    op2.toString(op2str);
-    result.toString(resstr);
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| (%s) %s + (%s) %s \n",
-                 operands.at(0).getIRStub(), op1str.c_str(),
-                 operands.at(1).getIRStub(), op2str.c_str());
-    }
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| %s = %s\n", ir_stub,
-                 resstr.c_str());
-    }
-    setRegisterValue(result);
-#else
     uint64_t bitcastResult;
     switch (size) {
         case 32: {
@@ -819,7 +748,6 @@ FAdd::compute()
         }
     }
     setRegisterValue(bitcastResult);
-#endif
 }
 
 // SALAM-Sub // ------------------------------------------------------------//
@@ -861,26 +789,6 @@ Sub::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| Computing %s\n", ir_string);
     }
-#if USE_LLVM_AP_VALUES
-    llvm::APInt op1 = (operands.at(0).getIntRegValue());
-    llvm::APInt op2 = (operands.at(1).getIntRegValue());
-    llvm::APInt result = op1 - op2;
-    llvm::SmallString<8> op1str;
-    llvm::SmallString<8> op2str;
-    llvm::SmallString<8> resstr;
-    op1.toStringUnsigned(op1str);
-    op2.toStringUnsigned(op2str);
-    result.toStringUnsigned(resstr);
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| (%s) %s - (%s) %s \n",
-                 operands.at(0).getIRStub(), op1str.c_str(),
-                 operands.at(1).getIRStub(), op2str.c_str());
-    }
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| %s = %s\n", ir_stub,
-                 resstr.c_str());
-    }
-#else
     uint64_t op1 = operands.at(0).getUIntRegValue();
     uint64_t op2 = operands.at(1).getUIntRegValue();
     uint64_t result = op1 - op2;
@@ -892,7 +800,6 @@ Sub::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| %s = %d\n", ir_stub, result);
     }
-#endif
     setRegisterValue(result);
 }
 
@@ -935,27 +842,6 @@ FSub::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| Computing %s\n", ir_string);
     }
-#if USE_LLVM_AP_VALUES
-    llvm::APFloat op1 = (operands.at(0).getFloatRegValue());
-    llvm::APFloat op2 = (operands.at(1).getFloatRegValue());
-    llvm::APFloat result = op1 - op2;
-    llvm::SmallString<8> op1str;
-    llvm::SmallString<8> op2str;
-    llvm::SmallString<8> resstr;
-    op1.toString(op1str);
-    op2.toString(op2str);
-    result.toString(resstr);
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| (%s) %s - (%s) %s \n",
-                 operands.at(0).getIRStub(), op1str.c_str(),
-                 operands.at(1).getIRStub(), op2str.c_str());
-    }
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| %s = %s\n", ir_stub,
-                 resstr.c_str());
-    }
-    setRegisterValue(result);
-#else
     uint64_t bitcastResult;
     switch (size) {
         case 32: {
@@ -997,7 +883,6 @@ FSub::compute()
         }
     }
     setRegisterValue(bitcastResult);
-#endif
 }
 
 // SALAM-Mul // ------------------------------------------------------------//
@@ -1037,26 +922,6 @@ Mul::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| Computing %s\n", ir_string);
     }
-#if USE_LLVM_AP_VALUES
-    llvm::APInt op1 = (operands.at(0).getIntRegValue());
-    llvm::APInt op2 = (operands.at(1).getIntRegValue());
-    llvm::APInt result = op1 * op2;
-    llvm::SmallString<8> op1str;
-    llvm::SmallString<8> op2str;
-    llvm::SmallString<8> resstr;
-    op1.toStringUnsigned(op1str);
-    op2.toStringUnsigned(op2str);
-    result.toStringUnsigned(resstr);
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| (%s) %s * (%s) %s \n",
-                 operands.at(0).getIRStub(), op1str.c_str(),
-                 operands.at(1).getIRStub(), op2str.c_str());
-    }
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| %s = %s\n", ir_stub,
-                 resstr.c_str());
-    }
-#else
     uint64_t op1 = operands.at(0).getUIntRegValue();
     uint64_t op2 = operands.at(1).getUIntRegValue();
     uint64_t result = op1 * op2;
@@ -1068,7 +933,6 @@ Mul::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| %s = %d\n", ir_stub, result);
     }
-#endif
     setRegisterValue(result);
 }
 
@@ -1111,27 +975,6 @@ FMul::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| Computing %s\n", ir_string);
     }
-#if USE_LLVM_AP_VALUES
-    llvm::APFloat op1 = (operands.at(0).getFloatRegValue());
-    llvm::APFloat op2 = (operands.at(1).getFloatRegValue());
-    llvm::APFloat result = op1 * op2;
-    llvm::SmallString<8> op1str;
-    llvm::SmallString<8> op2str;
-    llvm::SmallString<8> resstr;
-    op1.toString(op1str);
-    op2.toString(op2str);
-    result.toString(resstr);
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| (%s) %s * (%s) %s \n",
-                 operands.at(0).getIRStub(), op1str.c_str(),
-                 operands.at(1).getIRStub(), op2str.c_str());
-    }
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| %s = %s\n", ir_stub,
-                 resstr.c_str());
-    }
-    setRegisterValue(result);
-#else
     uint64_t bitcastResult;
     switch (size) {
         case 32: {
@@ -1173,7 +1016,6 @@ FMul::compute()
         }
     }
     setRegisterValue(bitcastResult);
-#endif
 }
 
 // SALAM-UDiv // -----------------------------------------------------------//
@@ -1214,26 +1056,6 @@ UDiv::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| Computing %s\n", ir_string);
     }
-#if USE_LLVM_AP_VALUES
-    llvm::APInt op1 = (operands.at(0).getIntRegValue());
-    llvm::APInt op2 = (operands.at(1).getIntRegValue());
-    llvm::APInt result = op1.udiv(op2);
-    llvm::SmallString<8> op1str;
-    llvm::SmallString<8> op2str;
-    llvm::SmallString<8> resstr;
-    op1.toStringUnsigned(op1str);
-    op2.toStringUnsigned(op2str);
-    result.toStringUnsigned(resstr);
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| (%s) %s / (%s) %s \n",
-                 operands.at(0).getIRStub(), op1str.c_str(),
-                 operands.at(1).getIRStub(), op2str.c_str());
-    }
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| %s = %s\n", ir_stub,
-                 resstr.c_str());
-    }
-#else
     uint64_t op1 = operands.at(0).getUIntRegValue();
     uint64_t op2 = operands.at(1).getUIntRegValue();
     uint64_t result = op1 / op2;
@@ -1245,7 +1067,6 @@ UDiv::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| %s = %d\n", ir_stub, result);
     }
-#endif
     setRegisterValue(result);
 }
 
@@ -1288,27 +1109,6 @@ SDiv::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| Computing %s\n", ir_string);
     }
-#if USE_LLVM_AP_VALUES
-    llvm::APInt op1 = (operands.at(0).getIntRegValue());
-    llvm::APInt op2 = (operands.at(1).getIntRegValue());
-    llvm::APInt result = op1.sdiv(op2);
-    llvm::SmallString<8> op1str;
-    llvm::SmallString<8> op2str;
-    llvm::SmallString<8> resstr;
-    op1.toStringSigned(op1str);
-    op2.toStringSigned(op2str);
-    result.toStringSigned(resstr);
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| (%s) %s / (%s) %s \n",
-                 operands.at(0).getIRStub(), op1str.c_str(),
-                 operands.at(1).getIRStub(), op2str.c_str());
-    }
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| %s = %s\n", ir_stub,
-                 resstr.c_str());
-    }
-    setRegisterValue(result);
-#else
     int64_t op1 = operands.at(0).getSIntRegValue();
     int64_t op2 = operands.at(1).getSIntRegValue();
     int64_t result = op1 / op2;
@@ -1321,7 +1121,6 @@ SDiv::compute()
         DPRINTFS(RuntimeCompute, owner, "|| %s = %d\n", ir_stub, result);
     }
     setRegisterValue((uint64_t)result);
-#endif
 }
 
 // SALAM-FDiv // -----------------------------------------------------------//
@@ -1363,27 +1162,6 @@ FDiv::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| Computing %s\n", ir_string);
     }
-#if USE_LLVM_AP_VALUES
-    llvm::APFloat op1 = (operands.at(0).getFloatRegValue());
-    llvm::APFloat op2 = (operands.at(1).getFloatRegValue());
-    llvm::APFloat result = op1 / op2;
-    llvm::SmallString<8> op1str;
-    llvm::SmallString<8> op2str;
-    llvm::SmallString<8> resstr;
-    op1.toString(op1str);
-    op2.toString(op2str);
-    result.toString(resstr);
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| (%s) %s / (%s) %s \n",
-                 operands.at(0).getIRStub(), op1str.c_str(),
-                 operands.at(1).getIRStub(), op2str.c_str());
-    }
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| %s = %s\n", ir_stub,
-                 resstr.c_str());
-    }
-    setRegisterValue(result);
-#else
     uint64_t bitcastResult;
     switch (size) {
         case 32: {
@@ -1425,7 +1203,6 @@ FDiv::compute()
         }
     }
     setRegisterValue(bitcastResult);
-#endif
 }
 
 // SALAM-URem // -----------------------------------------------------------//
@@ -1467,26 +1244,6 @@ URem::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| Computing %s\n", ir_string);
     }
-#if USE_LLVM_AP_VALUES
-    llvm::APInt op1 = (operands.at(0).getIntRegValue());
-    llvm::APInt op2 = (operands.at(1).getIntRegValue());
-    llvm::APInt result = op1.urem(op2);
-    llvm::SmallString<8> op1str;
-    llvm::SmallString<8> op2str;
-    llvm::SmallString<8> resstr;
-    op1.toStringUnsigned(op1str);
-    op2.toStringUnsigned(op2str);
-    result.toStringUnsigned(resstr);
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| (%s) %s % (%s) %s \n",
-                 operands.at(0).getIRStub(), op1str.c_str(),
-                 operands.at(1).getIRStub(), op2str.c_str());
-    }
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| %s = %s\n", ir_stub,
-                 resstr.c_str());
-    }
-#else
     uint64_t op1 = operands.at(0).getUIntRegValue();
     uint64_t op2 = operands.at(1).getUIntRegValue();
     uint64_t result = op1 % op2;
@@ -1498,7 +1255,6 @@ URem::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| %s = %d\n", ir_stub, result);
     }
-#endif
     setRegisterValue(result);
 }
 
@@ -1541,27 +1297,6 @@ SRem::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| Computing %s\n", ir_string);
     }
-#if USE_LLVM_AP_VALUES
-    llvm::APInt op1 = (operands.at(0).getIntRegValue());
-    llvm::APInt op2 = (operands.at(1).getIntRegValue());
-    llvm::APInt result = op1.srem(op2);
-    llvm::SmallString<8> op1str;
-    llvm::SmallString<8> op2str;
-    llvm::SmallString<8> resstr;
-    op1.toStringSigned(op1str);
-    op2.toStringSigned(op2str);
-    result.toStringSigned(resstr);
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| (%s) %s % (%s) %s \n",
-                 operands.at(0).getIRStub(), op1str.c_str(),
-                 operands.at(1).getIRStub(), op2str.c_str());
-    }
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| %s = %s\n", ir_stub,
-                 resstr.c_str());
-    }
-    setRegisterValue(result);
-#else
     int64_t op1 = operands.at(0).getSIntRegValue();
     int64_t op2 = operands.at(1).getSIntRegValue();
     int64_t result = op1 % op2;
@@ -1574,7 +1309,6 @@ SRem::compute()
         DPRINTFS(RuntimeCompute, owner, "|| %s = %d\n", ir_stub, result);
     }
     setRegisterValue((uint64_t)result);
-#endif
 }
 
 // SALAM-FRem // -----------------------------------------------------------//
@@ -1615,29 +1349,6 @@ FRem::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| Computing %s\n", ir_string);
     }
-#if USE_LLVM_AP_VALUES
-    llvm::APFloat op1 = (operands.at(0).getFloatRegValue());
-    llvm::APFloat op2 = (operands.at(1).getFloatRegValue());
-    llvm::APFloat result = op1;
-    auto err = result.remainder(op2);
-    assert(err == llvm::APFloatBase::opStatus::opOK);
-    llvm::SmallString<8> op1str;
-    llvm::SmallString<8> op2str;
-    llvm::SmallString<8> resstr;
-    op1.toString(op1str);
-    op2.toString(op2str);
-    result.toString(resstr);
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| (%s) %s % (%s) %s \n",
-                 operands.at(0).getIRStub(), op1str.c_str(),
-                 operands.at(1).getIRStub(), op2str.c_str());
-    }
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| %s = %s\n", ir_stub,
-                 resstr.c_str());
-    }
-    setRegisterValue(result);
-#else
     uint64_t bitcastResult;
     switch (size) {
         case 32: {
@@ -1679,7 +1390,6 @@ FRem::compute()
         }
     }
     setRegisterValue(bitcastResult);
-#endif
 }
 
 // SALAM-Shl // ------------------------------------------------------------//
@@ -1721,26 +1431,6 @@ Shl::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| Computing %s\n", ir_string);
     }
-#if USE_LLVM_AP_VALUES
-    llvm::APInt op1 = (operands.at(0).getIntRegValue());
-    llvm::APInt op2 = (operands.at(1).getIntRegValue());
-    llvm::APInt result = op1 << op2;
-    llvm::SmallString<8> op1str;
-    llvm::SmallString<8> op2str;
-    llvm::SmallString<8> resstr;
-    op1.toStringUnsigned(op1str);
-    op2.toStringUnsigned(op2str);
-    result.toStringUnsigned(resstr);
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| (%s) %s << (%s) %s \n",
-                 operands.at(0).getIRStub(), op1str.c_str(),
-                 operands.at(1).getIRStub(), op2str.c_str());
-    }
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| %s = %s\n", ir_stub,
-                 resstr.c_str());
-    }
-#else
     uint64_t op1 = operands.at(0).getUIntRegValue();
     uint64_t op2 = operands.at(1).getUIntRegValue();
     uint64_t result = op1 << op2;
@@ -1752,7 +1442,6 @@ Shl::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| %s = %d\n", ir_stub, result);
     }
-#endif
     setRegisterValue(result);
 }
 
@@ -1794,26 +1483,6 @@ LShr::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| Computing %s\n", ir_string);
     }
-#if USE_LLVM_AP_VALUES
-    llvm::APInt op1 = (operands.at(0).getIntRegValue());
-    llvm::APInt op2 = (operands.at(1).getIntRegValue());
-    llvm::APInt result = op1.lshr(op2);
-    llvm::SmallString<8> op1str;
-    llvm::SmallString<8> op2str;
-    llvm::SmallString<8> resstr;
-    op1.toStringUnsigned(op1str);
-    op2.toStringUnsigned(op2str);
-    result.toStringUnsigned(resstr);
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| (%s) %s >> (%s) %s \n",
-                 operands.at(0).getIRStub(), op1str.c_str(),
-                 operands.at(1).getIRStub(), op2str.c_str());
-    }
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| %s = %s\n", ir_stub,
-                 resstr.c_str());
-    }
-#else
     uint64_t op1 = operands.at(0).getUIntRegValue();
     uint64_t op2 = operands.at(1).getUIntRegValue();
     uint64_t result = op1 >> op2;
@@ -1825,7 +1494,6 @@ LShr::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| %s = %d\n", ir_stub, result);
     }
-#endif
     setRegisterValue(result);
 }
 
@@ -1868,27 +1536,6 @@ AShr::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| Computing %s\n", ir_string);
     }
-#if USE_LLVM_AP_VALUES
-    llvm::APInt op1 = (operands.at(0).getIntRegValue());
-    llvm::APInt op2 = (operands.at(1).getIntRegValue());
-    llvm::APInt result = op1.ashr(op2);
-    llvm::SmallString<8> op1str;
-    llvm::SmallString<8> op2str;
-    llvm::SmallString<8> resstr;
-    op1.toStringSigned(op1str);
-    op2.toStringSigned(op2str);
-    result.toStringSigned(resstr);
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| (%s) %s >> (%s) %s \n",
-                 operands.at(0).getIRStub(), op1str.c_str(),
-                 operands.at(1).getIRStub(), op2str.c_str());
-    }
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| %s = %s\n", ir_stub,
-                 resstr.c_str());
-    }
-    setRegisterValue(result);
-#else
     int64_t op1 = operands.at(0).getSIntRegValue();
     int64_t op2 = operands.at(1).getSIntRegValue();
     int64_t result = op1 >> op2;
@@ -1901,7 +1548,6 @@ AShr::compute()
         DPRINTFS(RuntimeCompute, owner, "|| %s = %d\n", ir_stub, result);
     }
     setRegisterValue((uint64_t)result);
-#endif
 }
 
 // SALAM-And // ------------------------------------------------------------//
@@ -1943,26 +1589,6 @@ And::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| Computing %s\n", ir_string);
     }
-#if USE_LLVM_AP_VALUES
-    llvm::APInt op1 = (operands.at(0).getIntRegValue());
-    llvm::APInt op2 = (operands.at(1).getIntRegValue());
-    llvm::APInt result = op1 & op2;
-    llvm::SmallString<8> op1str;
-    llvm::SmallString<8> op2str;
-    llvm::SmallString<8> resstr;
-    op1.toStringUnsigned(op1str);
-    op2.toStringUnsigned(op2str);
-    result.toStringUnsigned(resstr);
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| (%s) %s & (%s) %s \n",
-                 operands.at(0).getIRStub(), op1str.c_str(),
-                 operands.at(1).getIRStub(), op2str.c_str());
-    }
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| %s = %s\n", ir_stub,
-                 resstr.c_str());
-    }
-#else
     uint64_t op1 = operands.at(0).getUIntRegValue();
     uint64_t op2 = operands.at(1).getUIntRegValue();
     uint64_t result = op1 & op2;
@@ -1974,7 +1600,6 @@ And::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| %s = %d\n", ir_stub, result);
     }
-#endif
     setRegisterValue(result);
 }
 
@@ -2017,26 +1642,6 @@ Or::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| Computing %s\n", ir_string);
     }
-#if USE_LLVM_AP_VALUES
-    llvm::APInt op1 = (operands.at(0).getIntRegValue());
-    llvm::APInt op2 = (operands.at(1).getIntRegValue());
-    llvm::APInt result = op1 | op2;
-    llvm::SmallString<8> op1str;
-    llvm::SmallString<8> op2str;
-    llvm::SmallString<8> resstr;
-    op1.toStringUnsigned(op1str);
-    op2.toStringUnsigned(op2str);
-    result.toStringUnsigned(resstr);
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| (%s) %s | (%s) %s \n",
-                 operands.at(0).getIRStub(), op1str.c_str(),
-                 operands.at(1).getIRStub(), op2str.c_str());
-    }
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| %s = %s\n", ir_stub,
-                 resstr.c_str());
-    }
-#else
     uint64_t op1 = operands.at(0).getUIntRegValue();
     uint64_t op2 = operands.at(1).getUIntRegValue();
     uint64_t result = op1 | op2;
@@ -2048,7 +1653,6 @@ Or::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| %s = %d\n", ir_stub, result);
     }
-#endif
     setRegisterValue(result);
 }
 
@@ -2091,26 +1695,6 @@ Xor::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| Computing %s\n", ir_string);
     }
-#if USE_LLVM_AP_VALUES
-    llvm::APInt op1 = (operands.at(0).getIntRegValue());
-    llvm::APInt op2 = (operands.at(1).getIntRegValue());
-    llvm::APInt result = op1 ^ op2;
-    llvm::SmallString<8> op1str;
-    llvm::SmallString<8> op2str;
-    llvm::SmallString<8> resstr;
-    op1.toStringUnsigned(op1str);
-    op2.toStringUnsigned(op2str);
-    result.toStringUnsigned(resstr);
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| (%s) %s ^ (%s) %s \n",
-                 operands.at(0).getIRStub(), op1str.c_str(),
-                 operands.at(1).getIRStub(), op2str.c_str());
-    }
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| %s = %s\n", ir_stub,
-                 resstr.c_str());
-    }
-#else
     uint64_t op1 = operands.at(0).getUIntRegValue();
     uint64_t op2 = operands.at(1).getUIntRegValue();
     uint64_t result = op1 ^ op2;
@@ -2122,7 +1706,6 @@ Xor::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| %s = %d\n", ir_stub, result);
     }
-#endif
     setRegisterValue(result);
 }
 
@@ -2259,15 +1842,6 @@ Store::createMemoryRequest()
         uint64_t regData = dataRegister->getPtrData();
         req = new MemoryRequest(memAddr, (uint8_t *)&regData, reqLen);
     } else {
-#if USE_LLVM_AP_VALUES
-        llvm::APInt regAPData;
-        if (dataRegister->isInt()) {
-            regAPData = (dataRegister->getIntData());
-        } else {
-            regAPData = dataRegister->getFloatData().bitcastToAPInt();
-        }
-        req = new MemoryRequest(memAddr, regAPData.getRawData(), reqLen);
-#else
         uint64_t regData;
         if (dataRegister->isInt()) {
             regData = dataRegister->getIntData();
@@ -2275,7 +1849,6 @@ Store::createMemoryRequest()
             regData = dataRegister->getFloatData();
         }
         req = new MemoryRequest(memAddr, (uint8_t *)&regData, reqLen);
-#endif
         if (dbg) {
             DPRINTFS(RuntimeCompute, owner, "|| Launching %s\n", ir_string);
         }
@@ -2386,11 +1959,7 @@ GetElementPtr::compute()
                          idx.getIRStub(), offsets.at(i - 1));
             }
         } else {
-#if USE_LLVM_AP_VALUES
-            int64_t arrayIdx = idx.getIntRegValue().getSExtValue();
-#else
             int64_t arrayIdx = idx.getSIntRegValue();
-#endif
             if (dbg) {
                 DPRINTFS(RuntimeCompute, owner,
                          "|| %s = %d, dimension offset = %d\n",
@@ -2451,21 +2020,11 @@ Trunc::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| Computing %s\n", ir_string);
     }
-#if USE_LLVM_AP_VALUES
-    llvm::APInt result = operands.at(0).getIntRegValue().trunc(size);
-    llvm::SmallString<8> resstr;
-    result.toStringUnsigned(resstr);
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| %s = %s\n", ir_stub,
-                 resstr.c_str());
-    }
-#else
     // The trunc is handled automatically when we set the return register
     uint64_t result = operands.at(0).getUIntRegValue();
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| %s = %d\n", ir_stub, result);
     }
-#endif
     setRegisterValue(result);
 }
 
@@ -2508,21 +2067,11 @@ ZExt::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| Computing %s\n", ir_string);
     }
-#if USE_LLVM_AP_VALUES
-    llvm::APInt result = operands.at(0).getIntRegValue().zext(size);
-    llvm::SmallString<8> resstr;
-    result.toStringUnsigned(resstr);
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| %s = %s\n", ir_stub,
-                 resstr.c_str());
-    }
-#else
     // Unsigned data doesn't need any modification when ZExtending
     uint64_t result = operands.at(0).getUIntRegValue();
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| %s = %d\n", ir_stub, result);
     }
-#endif
     setRegisterValue(result);
 }
 
@@ -2565,22 +2114,11 @@ SExt::compute()
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| Computing %s\n", ir_string);
     }
-#if USE_LLVM_AP_VALUES
-    llvm::APInt result = operands.at(0).getIntRegValue().sext(size);
-    llvm::SmallString<8> resstr;
-    result.toStringSigned(resstr);
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| %s = %s\n", ir_stub,
-                 resstr.c_str());
-    }
-    setRegisterValue(result);
-#else
     int64_t result = operands.at(0).getSIntRegValue();
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| %s = %d\n", ir_stub, result);
     }
     setRegisterValue((uint64_t)result);
-#endif
 }
 
 // SALAM-FPToUI // ---------------------------------------------------------//
@@ -2616,25 +2154,6 @@ FPToUI::initialize(llvm::Value *irval, irvmap *irmap,
 void
 FPToUI::compute()
 {
-#if USE_LLVM_AP_VALUES
-#if (LLVM_VERSION_MAJOR <= 9)
-    auto rounding = llvm::APFloat::roundingMode::rmNearestTiesToEven;
-#else
-    auto rounding = llvm::APFloat::roundingMode::NearestTiesToEven;
-#endif
-    llvm::APSInt tmp(size, true);
-    bool exact;
-    auto opdata = operands.front().getFloatRegValue();
-    auto err = opdata.convertToInteger(tmp, rounding, &exact);
-    assert(err == llvm::APFloatBase::opStatus::opOK);
-    setRegisterValue(tmp);
-    llvm::SmallString<8> tmpstr;
-    tmp.toString(tmpstr);
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| %s = %s\n", ir_stub,
-                 tmpstr.c_str());
-    }
-#else
     switch (operands.front().getSize()) {
         case 32: {
             float opdata = operands.front().getFloatFromReg();
@@ -2659,7 +2178,6 @@ FPToUI::compute()
             break;
         }
     }
-#endif
 }
 
 // SALAM-FPToSI // ---------------------------------------------------------//
@@ -2696,25 +2214,6 @@ FPToSI::initialize(llvm::Value *irval, irvmap *irmap,
 void
 FPToSI::compute()
 {
-#if USE_LLVM_AP_VALUES
-#if (LLVM_VERSION_MAJOR <= 9)
-    auto rounding = llvm::APFloat::roundingMode::rmNearestTiesToEven;
-#else
-    auto rounding = llvm::APFloat::roundingMode::NearestTiesToEven;
-#endif
-    llvm::APSInt tmp(size, false);
-    bool exact;
-    auto opdata = operands.front().getFloatRegValue();
-    auto err = opdata.convertToInteger(tmp, rounding, &exact);
-    assert(err == llvm::APFloatBase::opStatus::opOK);
-    setRegisterValue(tmp);
-    llvm::SmallString<8> tmpstr;
-    tmp.toString(tmpstr);
-    if (dbg) {
-        DPRINTFS(RuntimeCompute, owner, "|| %s = %s\n", ir_stub,
-                 tmpstr.c_str());
-    }
-#else
     switch (operands.front().getSize()) {
         case 32: {
             float opdata = operands.front().getFloatFromReg();
@@ -2739,7 +2238,6 @@ FPToSI::compute()
             break;
         }
     }
-#endif
 }
 
 // SALAM-UIToFP // ---------------------------------------------------------//
@@ -2775,18 +2273,6 @@ UIToFP::initialize(llvm::Value *irval, irvmap *irmap,
 void
 UIToFP::compute()
 {
-#if USE_LLVM_AP_VALUES
-#if (LLVM_VERSION_MAJOR <= 9)
-    auto rounding = llvm::APFloat::roundingMode::rmNearestTiesToEven;
-#else
-    auto rounding = llvm::APFloat::roundingMode::NearestTiesToEven;
-#endif
-    auto opdata = operands.front().getIntRegValue();
-    llvm::APFloat tmp(irtype->getFltSemantics());
-    auto err = tmp.convertFromAPInt(opdata, false, rounding);
-    assert(err == llvm::APFloatBase::opStatus::opOK);
-    setRegisterValue(tmp);
-#else
     auto opdata = operands.front().getUIntRegValue();
     switch (size) {
         case 32: {
@@ -2805,7 +2291,6 @@ UIToFP::compute()
             break;
         }
     }
-#endif
 }
 
 // SALAM-SIToFP // ---------------------------------------------------------//
@@ -2841,18 +2326,6 @@ SIToFP::initialize(llvm::Value *irval, irvmap *irmap,
 void
 SIToFP::compute()
 {
-#if USE_LLVM_AP_VALUES
-#if (LLVM_VERSION_MAJOR <= 9)
-    auto rounding = llvm::APFloat::roundingMode::rmNearestTiesToEven;
-#else
-    auto rounding = llvm::APFloat::roundingMode::NearestTiesToEven;
-#endif
-    auto opdata = operands.front().getIntRegValue();
-    llvm::APFloat tmp(irtype->getFltSemantics());
-    auto err = tmp.convertFromAPInt(opdata, false, rounding);
-    assert(err == llvm::APFloatBase::opStatus::opOK);
-    setRegisterValue(tmp);
-#else
     auto opdata = operands.front().getSIntRegValue();
     switch (size) {
         case 32: {
@@ -2871,7 +2344,6 @@ SIToFP::compute()
             break;
         }
     }
-#endif
 }
 
 // SALAM-FPTrunc // --------------------------------------------------------//
@@ -2908,19 +2380,6 @@ FPTrunc::initialize(llvm::Value *irval, irvmap *irmap,
 void
 FPTrunc::compute()
 {
-#if USE_LLVM_AP_VALUES
-#if (LLVM_VERSION_MAJOR <= 9)
-    auto rounding = llvm::APFloat::roundingMode::rmNearestTiesToEven;
-#else
-    auto rounding = llvm::APFloat::roundingMode::NearestTiesToEven;
-#endif
-    auto opdata = operands.front().getFloatRegValue();
-    llvm::APFloat tmp(opdata);
-    bool losesInfo;
-    auto err = tmp.convert(irtype->getFltSemantics(), rounding, &losesInfo);
-    assert(err == llvm::APFloatBase::opStatus::opOK);
-    setRegisterValue(tmp);
-#else
     switch (operands.front().getSize()) {
         case 64: {
             double opdata = operands.front().getDoubleFromReg();
@@ -2933,7 +2392,6 @@ FPTrunc::compute()
             assert(0 && "Must use AP values for nonstandard FP sizes.");
         }
     }
-#endif
 }
 
 // SALAM-FPExt // ----------------------------------------------------------//
@@ -2970,19 +2428,6 @@ FPExt::initialize(llvm::Value *irval, irvmap *irmap,
 void
 FPExt::compute()
 {
-#if USE_LLVM_AP_VALUES
-#if (LLVM_VERSION_MAJOR <= 9)
-    auto rounding = llvm::APFloat::roundingMode::rmNearestTiesToEven;
-#else
-    auto rounding = llvm::APFloat::roundingMode::NearestTiesToEven;
-#endif
-    auto opdata = operands.front().getFloatRegValue();
-    llvm::APFloat tmp(opdata);
-    bool losesInfo;
-    auto err = tmp.convert(irtype->getFltSemantics(), rounding, &losesInfo);
-    assert(err == llvm::APFloatBase::opStatus::opOK);
-    setRegisterValue(tmp);
-#else
     switch (operands.front().getSize()) {
         case 32: {
             float opdata = operands.front().getFloatFromReg();
@@ -2994,7 +2439,6 @@ FPExt::compute()
             assert(0 && "Must use AP values for nonstandard FP sizes.");
         }
     }
-#endif
 }
 
 // SALAM-PtrToInt // -------------------------------------------------------//
@@ -3033,11 +2477,7 @@ void
 PtrToInt::compute()
 {
     auto opdata = operands.front().getPtrRegValue();
-#if USE_LLVM_AP_VALUES
-    setRegisterValue(llvm::APInt(64, opdata));
-#else
     setRegisterValue(opdata);
-#endif
 }
 
 // SALAM-IntToPtr // -------------------------------------------------------//
@@ -3075,15 +2515,8 @@ IntToPtr::initialize(llvm::Value *irval, irvmap *irmap,
 void
 IntToPtr::compute()
 {
-#if USE_LLVM_AP_VALUES
-    auto opdata = operands.front().getIntRegValue();
-    assert(opdata.isUnsigned());
-    int64_t tmp = opdata.getExtValue();
-    setRegisterValue(*(uint64_t *)&tmp);
-#else
     auto opdata = operands.front().getUIntRegValue();
     setRegisterValue(opdata);
-#endif
 }
 
 // SALAM-BitCast // --------------------------------------------------------//
@@ -3120,13 +2553,8 @@ BitCast::initialize(llvm::Value *irval, irvmap *irmap,
 void
 BitCast::compute()
 {
-#if USE_LLVM_AP_VALUES
     auto opdata = operands.front().getPtrRegValue();
     setRegisterValue(opdata);
-#else
-    auto opdata = operands.front().getPtrRegValue();
-    setRegisterValue(opdata);
-#endif
 }
 
 // SALAM-ICmp // -----------------------------------------------------------//
@@ -3173,101 +2601,6 @@ ICmp::compute()
         DPRINTFS(RuntimeCompute, owner, "|| Computing %s\n", ir_string);
     }
     bool result = false;
-#if USE_LLVM_AP_VALUES
-    if (operands.at(0).hasIntVal() && operands.at(1).hasIntVal()) {
-        switch (predicate) {
-            case SALAM::Predicate::ICMP_EQ: {
-                result = operands.at(0).getIntRegValue().eq(
-                    (operands.at(1).getIntRegValue()));
-                break;
-            }
-            case SALAM::Predicate::ICMP_NE: {
-                result = operands.at(0).getIntRegValue().ne(
-                    (operands.at(1).getIntRegValue()));
-                break;
-            }
-            case SALAM::Predicate::ICMP_UGT: {
-                result = operands.at(0).getIntRegValue().ugt(
-                    (operands.at(1).getIntRegValue()));
-                break;
-            }
-            case SALAM::Predicate::ICMP_UGE: {
-                result = operands.at(0).getIntRegValue().uge(
-                    (operands.at(1).getIntRegValue()));
-                break;
-            }
-            case SALAM::Predicate::ICMP_ULT: {
-                result = operands.at(0).getIntRegValue().ult(
-                    (operands.at(1).getIntRegValue()));
-                break;
-            }
-            case SALAM::Predicate::ICMP_ULE: {
-                result = operands.at(0).getIntRegValue().ule(
-                    (operands.at(1).getIntRegValue()));
-                break;
-            }
-            case SALAM::Predicate::ICMP_SGT: {
-                result = operands.at(0).getIntRegValue().sgt(
-                    (operands.at(1).getIntRegValue()));
-                break;
-            }
-            case SALAM::Predicate::ICMP_SGE: {
-                result = operands.at(0).getIntRegValue().sge(
-                    (operands.at(1).getIntRegValue()));
-                break;
-            }
-            case SALAM::Predicate::ICMP_SLT: {
-                result = operands.at(0).getIntRegValue().slt(
-                    (operands.at(1).getIntRegValue()));
-                break;
-            }
-            case SALAM::Predicate::ICMP_SLE: {
-                result = operands.at(0).getIntRegValue().sle(
-                    (operands.at(1).getIntRegValue()));
-                break;
-            }
-            default:
-                break;
-        }
-    } else if (operands.at(0).hasPtrVal() && operands.at(1).hasPtrVal()) {
-        switch (predicate) {
-            case SALAM::Predicate::ICMP_EQ: {
-                result = operands.at(0).getPtrRegValue() ==
-                         operands.at(1).getPtrRegValue();
-                break;
-            }
-            case SALAM::Predicate::ICMP_NE: {
-                result = operands.at(0).getPtrRegValue() !=
-                         operands.at(1).getPtrRegValue();
-                break;
-            }
-            case SALAM::Predicate::ICMP_UGT: {
-                result = operands.at(0).getPtrRegValue() >
-                         operands.at(1).getPtrRegValue();
-                break;
-            }
-            case SALAM::Predicate::ICMP_UGE: {
-                result = operands.at(0).getPtrRegValue() >=
-                         operands.at(1).getPtrRegValue();
-                break;
-            }
-            case SALAM::Predicate::ICMP_ULT: {
-                result = operands.at(0).getPtrRegValue() <
-                         operands.at(1).getPtrRegValue();
-                break;
-            }
-            case SALAM::Predicate::ICMP_ULE: {
-                result = operands.at(0).getPtrRegValue() <=
-                         operands.at(1).getPtrRegValue();
-                break;
-            }
-            default:
-                break;
-        }
-    } else {
-        panic("Got either wrong or differing datatypes for ICMP");
-    }
-#else
     if (operands.at(0).hasIntVal() && operands.at(1).hasIntVal()) {
         uint64_t uOp1 = operands.at(0).getUIntRegValue();
         uint64_t uOp2 = operands.at(1).getUIntRegValue();
@@ -3352,7 +2685,6 @@ ICmp::compute()
     } else {
         panic("Got either wrong or differing datatypes for ICMP");
     }
-#endif
     setRegisterValue(result);
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| %s = %s\n", ir_stub,
@@ -3407,87 +2739,6 @@ FCmp::compute()
         DPRINTFS(RuntimeCompute, owner, "|| Computing %s\n", ir_string);
     }
     bool result = false;
-#if USE_LLVM_AP_VALUES
-    auto op1 = operands.at(0).getFloatRegValue();
-    auto op2 = operands.at(1).getFloatRegValue();
-    auto cmp = op1.compare(op2);
-    switch (predicate) {
-        case SALAM::Predicate::FCMP_FALSE: {
-            result = false;
-            break;
-        }
-        case SALAM::Predicate::FCMP_OEQ: {
-            result = (cmp == llvm::APFloatBase::cmpResult::cmpEqual);
-            break;
-        }
-        case SALAM::Predicate::FCMP_OGT: {
-            result = (cmp == llvm::APFloatBase::cmpResult::cmpGreaterThan);
-            break;
-        }
-        case SALAM::Predicate::FCMP_OGE: {
-            result = (cmp == llvm::APFloatBase::cmpResult::cmpEqual) ||
-                     (cmp == llvm::APFloatBase::cmpResult::cmpGreaterThan);
-            break;
-        }
-        case SALAM::Predicate::FCMP_OLT: {
-            result = (cmp == llvm::APFloatBase::cmpResult::cmpLessThan);
-            break;
-        }
-        case SALAM::Predicate::FCMP_OLE: {
-            result = (cmp == llvm::APFloatBase::cmpResult::cmpEqual) ||
-                     (cmp == llvm::APFloatBase::cmpResult::cmpLessThan);
-            break;
-        }
-        case SALAM::Predicate::FCMP_ONE: {
-            result = (cmp != llvm::APFloatBase::cmpResult::cmpUnordered) &&
-                     (cmp != llvm::APFloatBase::cmpResult::cmpEqual);
-            break;
-        }
-        case SALAM::Predicate::FCMP_ORD: {
-            result = (cmp != llvm::APFloatBase::cmpResult::cmpUnordered);
-            break;
-        }
-        case SALAM::Predicate::FCMP_UNO: {
-            result = (cmp == llvm::APFloatBase::cmpResult::cmpUnordered);
-            break;
-        }
-        case SALAM::Predicate::FCMP_UEQ: {
-            result = (cmp != llvm::APFloatBase::cmpResult::cmpUnordered) ||
-                     (cmp == llvm::APFloatBase::cmpResult::cmpEqual);
-            break;
-        }
-        case SALAM::Predicate::FCMP_UGT: {
-            result = (cmp != llvm::APFloatBase::cmpResult::cmpUnordered) ||
-                     (cmp == llvm::APFloatBase::cmpResult::cmpGreaterThan);
-            break;
-        }
-        case SALAM::Predicate::FCMP_UGE: {
-            result = (cmp != llvm::APFloatBase::cmpResult::cmpUnordered) ||
-                     (cmp == llvm::APFloatBase::cmpResult::cmpEqual) ||
-                     (cmp == llvm::APFloatBase::cmpResult::cmpGreaterThan);
-            break;
-        }
-        case SALAM::Predicate::FCMP_ULT: {
-            result = (cmp != llvm::APFloatBase::cmpResult::cmpUnordered) ||
-                     (cmp == llvm::APFloatBase::cmpResult::cmpLessThan);
-            break;
-        }
-        case SALAM::Predicate::FCMP_ULE: {
-            result = (cmp != llvm::APFloatBase::cmpResult::cmpUnordered) ||
-                     (cmp == llvm::APFloatBase::cmpResult::cmpEqual) ||
-                     (cmp == llvm::APFloatBase::cmpResult::cmpLessThan);
-            break;
-        }
-        case SALAM::Predicate::FCMP_UNE: {
-            result = (cmp != llvm::APFloatBase::cmpResult::cmpEqual);
-            break;
-        }
-        case SALAM::Predicate::FCMP_TRUE: {
-            result = true;
-            break;
-        }
-    }
-#else
     double op1, op2;
     switch (operands.front().getSize()) {
         case 32: {
@@ -3572,7 +2823,6 @@ FCmp::compute()
             break;
         }
     }
-#endif
     setRegisterValue(result);
     if (dbg) {
         DPRINTFS(RuntimeCompute, owner, "|| Comparing %f, %f\n", op1, op2);
@@ -3772,11 +3022,6 @@ Select::compute()
     auto trueVal = operands.at(1);
     auto falseVal = operands.at(2);
 
-#if USE_LLVM_AP_VALUES
-    auto resultReg = (cond.getIntRegValue().isOneValue())
-                         ? trueVal.getOpRegister()
-                         : falseVal.getOpRegister();
-#else
     auto resultReg = (cond.getUIntRegValue() == 1) ? trueVal.getOpRegister()
                                                    : falseVal.getOpRegister();
     if (dbg) {
@@ -3788,7 +3033,6 @@ Select::compute()
                  (cond.getUIntRegValue() == 1) ? trueVal.getIRStub()
                                                : falseVal.getIRStub());
     }
-#endif
     setRegisterValue(resultReg);
 }
 
