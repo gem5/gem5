@@ -4551,8 +4551,7 @@ Decoder::decode_OP_SOP2__S_PACK_LL_B32_B16(MachInst iFmt)
 GPUStaticInst *
 Decoder::decode_OP_SOP2__S_PACK_LH_B32_B16(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_SOP2__S_PACK_LH_B32_B16(&iFmt->iFmt_SOP2);
 }
 
 GPUStaticInst *

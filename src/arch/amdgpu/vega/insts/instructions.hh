@@ -2021,6 +2021,48 @@ class Inst_SOP2__S_PACK_LL_B32_B16 : public Inst_SOP2
     void execute(GPUDynInstPtr) override;
 }; // Inst_SOP2__S_PACK_LL_B32_B16
 
+class Inst_SOP2__S_PACK_LH_B32_B16 : public Inst_SOP2
+{
+  public:
+    Inst_SOP2__S_PACK_LH_B32_B16(InFmt_SOP2 *);
+    ~Inst_SOP2__S_PACK_LH_B32_B16();
+
+    int
+    getNumOperands() override
+    {
+        return numDstRegOperands() + numSrcRegOperands();
+    } // getNumOperands
+
+    int
+    numDstRegOperands() override
+    {
+        return 1;
+    }
+    int
+    numSrcRegOperands() override
+    {
+        return 2;
+    }
+
+    int
+    getOperandSize(int opIdx) override
+    {
+        switch (opIdx) {
+            case 0: // ssrc_0
+                return 4;
+            case 1: // ssrc_1
+                return 4;
+            case 2: // sdst
+                return 4;
+            default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+        }
+    } // getOperandSize
+
+    void execute(GPUDynInstPtr) override;
+}; // Inst_SOP2__S_PACK_LH_B32_B16
+
 class Inst_SOPK__S_MOVK_I32 : public Inst_SOPK
 {
   public:

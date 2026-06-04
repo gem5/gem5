@@ -1540,5 +1540,34 @@ Inst_SOP2__S_PACK_LL_B32_B16::execute(GPUDynInstPtr gpuDynInst)
 
     sdst.write();
 } // execute
+
+// --- Inst_SOP2__S_PACK_LH_B32_B16 class methods ---
+
+Inst_SOP2__S_PACK_LH_B32_B16::Inst_SOP2__S_PACK_LH_B32_B16(InFmt_SOP2 *iFmt)
+    : Inst_SOP2(iFmt, "s_pack_lh_b32_b16")
+{
+    setFlag(ALU);
+} // Inst_SOP2__S_PACK_LH_B32_B16
+
+Inst_SOP2__S_PACK_LH_B32_B16::~Inst_SOP2__S_PACK_LH_B32_B16()
+{} // ~Inst_SOP2__S_PACK_LH_B32_B16
+
+// --- description from .arch file ---
+// D.u[15:0]  = S0.u[15:0]   (low  half of S0 → low  half of SDST)
+// D.u[31:16] = S1.u[31:16]  (HIGH half of S1 → high half of SDST)
+void
+Inst_SOP2__S_PACK_LH_B32_B16::execute(GPUDynInstPtr gpuDynInst)
+{
+    ConstScalarOperandU32 src0(gpuDynInst, instData.SSRC0);
+    ConstScalarOperandU32 src1(gpuDynInst, instData.SSRC1);
+    ScalarOperandU32 sdst(gpuDynInst, instData.SDST);
+
+    src0.read();
+    src1.read();
+
+    sdst = (src0.rawData() & 0x0000FFFFU) | (src1.rawData() & 0xFFFF0000U);
+
+    sdst.write();
+} // execute
 } // namespace VegaISA
 } // namespace gem5
