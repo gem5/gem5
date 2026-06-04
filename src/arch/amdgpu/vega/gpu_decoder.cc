@@ -8179,8 +8179,7 @@ Decoder::decode_OP_DS__DS_WRITE_B8_D16_HI(MachInst iFmt)
 GPUStaticInst *
 Decoder::decode_OP_DS__DS_WRITE_B16_D16_HI(MachInst iFmt)
 {
-    fatal("Trying to decode instruction without a class\n");
-    return nullptr;
+    return new Inst_DS__DS_WRITE_B16_D16_HI(&iFmt->iFmt_DS);
 }
 
 GPUStaticInst *

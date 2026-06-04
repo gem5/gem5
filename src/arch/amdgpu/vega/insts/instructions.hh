@@ -41051,6 +41051,48 @@ class Inst_DS__DS_WRITE_B16 : public Inst_DS
     void completeAcc(GPUDynInstPtr) override;
 }; // Inst_DS__DS_WRITE_B16
 
+class Inst_DS__DS_WRITE_B16_D16_HI : public Inst_DS
+{
+  public:
+    Inst_DS__DS_WRITE_B16_D16_HI(InFmt_DS *);
+    ~Inst_DS__DS_WRITE_B16_D16_HI();
+
+    int
+    getNumOperands() override
+    {
+        return numDstRegOperands() + numSrcRegOperands();
+    } // getNumOperands
+
+    int
+    numDstRegOperands() override
+    {
+        return 0;
+    }
+    int
+    numSrcRegOperands() override
+    {
+        return 2;
+    }
+
+    int
+    getOperandSize(int opIdx) override
+    {
+        switch (opIdx) {
+            case 0: // vgpr_a
+                return 4;
+            case 1: // vgpr_d0
+                return 2;
+            default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+        }
+    } // getOperandSize
+
+    void execute(GPUDynInstPtr) override;
+    void initiateAcc(GPUDynInstPtr) override;
+    void completeAcc(GPUDynInstPtr) override;
+}; // Inst_DS__DS_WRITE_B16_D16_HI
+
 class Inst_DS__DS_ADD_RTN_U32 : public Inst_DS
 {
   public:
