@@ -427,7 +427,7 @@ def _changeMemoryMode(system, mode):
         print("System already in target mode. Memory mode unchanged.")
 
 
-def switchCpus(system, cpuList, verbose=True):
+def switchCpus(system, cpuList, verbose=True, is_ruby=False):
     """Switch CPUs in a system.
 
     .. note::
@@ -455,6 +455,8 @@ def switchCpus(system, cpuList, verbose=True):
     new_cpus = [new_cpu for old_cpu, new_cpu in cpuList]
     old_cpu_set = set(old_cpus)
     memory_mode_name = new_cpus[0].memory_mode()
+    if is_ruby and memory_mode_name == "atomic":
+        memory_mode_name = "atomic_noncaching"
     for old_cpu, new_cpu in cpuList:
         if not isinstance(old_cpu, BaseCPU):
             raise TypeError(f"{old_cpu} is not of type BaseCPU")
@@ -470,7 +472,10 @@ def switchCpus(system, cpuList, verbose=True):
             raise RuntimeError(
                 f"New CPU ({old_cpu}) does not support CPU handover."
             )
-        if new_cpu.memory_mode() != memory_mode_name:
+        new_memory_mode = new_cpu.memory_mode()
+        if is_ruby and new_memory_mode == "atomic":
+            new_memory_mode = "atomic_noncaching"
+        if new_memory_mode != memory_mode_name:
             raise RuntimeError(
                 f"{new_cpu} and {new_cpus[0]} require different memory modes."
             )

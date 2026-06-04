@@ -1,3 +1,15 @@
+# Copyright (c) 2025 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2021 The Regents of The University of California
 # All rights reserved.
 #
@@ -85,6 +97,9 @@ class Scalar(Statistic):
         )
         self.unit = unit
         self.datatype = datatype
+
+    def accept(self, visitor):
+        return visitor.visit_scalar(self)
 
 
 class Vector(Statistic):
@@ -179,6 +194,9 @@ class Vector(Statistic):
                 )
         return to_return
 
+    def accept(self, visitor):
+        return visitor.visit_vector(self)
+
 
 class Vector2d(Statistic):
     """
@@ -271,6 +289,9 @@ class Vector2d(Statistic):
                 item = float(item)
         return item in self.value
 
+    def accept(self, visitor):
+        return visitor.visit_vector2d(self)
+
 
 class Distribution(Vector):
     """
@@ -326,6 +347,9 @@ class Distribution(Vector):
         assert self.bin_size >= 0
         assert self.num_bins >= 1
 
+    def accept(self, visitor):
+        return visitor.visit_distribution(self)
+
 
 class SparseHist(Vector):
     """A Sparse Histogram of values. A sparse histogram simply counts the "
@@ -353,3 +377,6 @@ class SparseHist(Vector):
         """
         assert self.value != None
         return sum(self.value.values())
+
+    def accept(self, visitor):
+        return visitor.visit_sparse_hist(self)

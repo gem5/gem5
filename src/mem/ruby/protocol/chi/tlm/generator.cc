@@ -49,7 +49,7 @@ bool
 TlmGenerator::Transaction::Expectation::run(Transaction *tran)
 {
     auto res_print =
-        csprintf("%u: Checking %s...", tran->phase().txn_id, name());
+        csprintf("txn_id=%u: Checking %s...", tran->phase().txn_id, name());
     if (cb(tran)) {
         inform("%s\n", res_print + " Success ");
         return true;
@@ -71,7 +71,13 @@ TlmGenerator::Transaction::Assertion::run(Transaction *tran)
 
 TlmGenerator::Transaction::Transaction(ARM::CHI::Payload *pa,
                                        ARM::CHI::Phase &ph)
-    : passed(true), parent(nullptr), _payload(pa), _phase(ph), _start(0)
+    : runCallbacksEvent([this] { runCallbacks(); }, "Transaction runCallback",
+                        false, Event::CPU_Tick_Pri),
+      passed(true),
+      parent(nullptr),
+      _payload(pa),
+      _phase(ph),
+      _start(0)
 {
     _payload->ref();
 }
@@ -135,9 +141,14 @@ TlmGenerator::Transaction::runCallbacks()
         }
         bool wait = (*it)->wait();
 
+        unsigned timeout = (*it)->waitCycles();
+
         it = actions.erase(it);
 
         if (wait) {
+            if (timeout) {
+                parent->scheduleEvaluation(timeout, this);
+            }
             break;
         }
     }
@@ -166,7 +177,8 @@ TlmGenerator::TlmGenerator(const Params &p)
                 Event::CPU_Tick_Pri),
       outPort(name() + ".out_port", 0, this),
       inPort(name() + ".in_port", 0, this),
-      suiteFailure(false)
+      suiteFailure(false),
+      stats(this)
 {
     inPort.onChange([this](const TlmData &data) {
         auto payload = data.first;
@@ -244,6 +256,8 @@ TlmGenerator::send(Transaction *transaction)
 
     auto tlm_data = TlmData(payload, &phase);
     outPort.send(tlm_data);
+
+    stats.reqOut++;
 }
 
 void
@@ -257,6 +271,10 @@ TlmGenerator::terminate(Transaction *transaction)
 
         // If the transaction has failed, mark the suite as failure
         suiteFailure = suiteFailure || transaction->failed();
+
+        if (!isActive()) {
+            exitSimLoop("TlmGenerator done");
+        }
     } else {
         panic("%u: Can't find transaction id.\n", phase.txn_id);
     }
@@ -302,10 +320,14 @@ TlmGenerator::recv(ARM::CHI::Payload *payload, ARM::CHI::Phase *phase)
     } else {
         warn("%u: Transaction untested\n", phase->txn_id);
     }
+}
 
-    if (!isActive()) {
-        exitSimLoop("TlmGenerator done");
-    }
+void
+TlmGenerator::scheduleEvaluation(unsigned cycles, Transaction *transaction)
+{
+    auto &event = transaction->runCallbacksEvent;
+    panic_if(event.scheduled(), "Already scheduled\n");
+    schedule(event, clockEdge(Cycles(cycles)));
 }
 
 bool
@@ -333,6 +355,8 @@ TlmGenerator::handlePCredit(ARM::CHI::Phase *phase)
         } else {
             pCredit++;
         }
+
+        stats.pcrdGrant++;
         return true;
     } else if (isRetryAck(phase)) {
         auto it = pendingTransactions.find(phase->txn_id);
@@ -349,6 +373,8 @@ TlmGenerator::handlePCredit(ARM::CHI::Phase *phase)
         } else {
             waitingForPCrd.push_back(tran);
         }
+
+        stats.retryAck++;
         return true;
     } else {
         return false;
@@ -384,6 +410,16 @@ TlmGenerator::getPort(const std::string &if_name, PortID idx)
         return SimObject::getPort(if_name, idx);
     }
 }
+
+TlmGenerator::Stats::Stats(statistics::Group *_parent)
+    : statistics::Group(_parent),
+      ADD_STAT(reqOut, statistics::units::Count::get(),
+               "Number of transactions sent in the REQ channel"),
+      ADD_STAT(retryAck, statistics::units::Count::get(),
+               "Number of RetryAck received"),
+      ADD_STAT(pcrdGrant, statistics::units::Count::get(),
+               "Number of PCrdGrant received")
+{}
 
 } // namespace tlm::chi
 

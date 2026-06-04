@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, 2023-2025 Arm Limited
+ * Copyright (c) 2021, 2023-2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -168,12 +168,15 @@ structure(CHIResponseMsg, desc="", interface="Message") {
   CHIResponseType type, desc="Response type";
   MachineID responder,  desc="Responder ID";
   NetDest Destination,  desc="Response destination";
-  bool stale,           desc="Response to a stale request";
   bool usesTxnId,       desc="True if using a Transaction ID", default="false";
   Addr txnId,           desc="Transaction ID", default="0";
   Addr dbid,            desc="Data Buffer ID", default="0";
   uint8_t lpid,         desc="Logical processor ID, used in conjunction with responder field", default="0";
+
+  int cbusy, default="-1", desc="CBusy value of the responder";
+
   //NOTE: not in CHI and for debuging only
+  bool stale,           desc="Response to a stale request";
 
   MessageSizeType MessageSize, default="MessageSizeType_Control";
 
@@ -223,6 +226,8 @@ structure(CHIDataMsg, desc="", interface="Message") {
   WriteMask bitMask,    desc="Which bytes in the data block are valid";
   bool usesTxnId,       desc="True if using a Transaction ID", default="false";
   Addr txnId,           desc="Transaction ID", default="0";
+
+  int cbusy, default="-1", desc="CBusy value of the responder";
 
   MessageSizeType MessageSize, default="MessageSizeType_Data";
 

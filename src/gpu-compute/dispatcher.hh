@@ -73,19 +73,19 @@ class GPUDispatcher : public SimObject
     void setShader(Shader *new_shader);
     void exec();
     bool isReachingKernelEnd(Wavefront *wf);
-    void updateInvCounter(int kern_id, int val=-1);
-    bool updateWbCounter(int kern_id, int val=-1);
+    void updateInvCounter(int kern_id, int val = -1);
+    bool updateWbCounter(int kern_id, int val = -1);
     int getOutstandingWbs(int kern_id);
     void notifyWgCompl(Wavefront *wf);
     void scheduleDispatch();
     void dispatch(HSAQueueEntry *task);
-    HSAQueueEntry* hsaTask(int disp_id);
+    HSAQueueEntry *hsaTask(int disp_id);
 
   private:
     Shader *shader;
     GPUCommandProcessor *gpuCmdProc;
     EventFunctionWrapper tickEvent;
-    std::unordered_map<int, HSAQueueEntry*> hsaQueueEntries;
+    std::unordered_map<int, HSAQueueEntry *> hsaQueueEntries;
     // list of kernel_ids to launch
     std::queue<int> execIds;
     // list of kernel_ids that have finished

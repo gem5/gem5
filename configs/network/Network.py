@@ -1,3 +1,15 @@
+# Copyright (c) 2026 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2016 Georgia Institute of Technology
 # All rights reserved.
 #
@@ -122,6 +134,20 @@ def define_options(parser):
         default=False,
         help="""SimpleNetwork links uses a separate physical
             channel for each virtual network""",
+    )
+    parser.add_argument(
+        "--per-vnet-links",
+        action="store_true",
+        default=False,
+        help="Create one dedicated physical link per vnet between adjacent "
+        "routers (HeteroGarnet). Requires XY or TABLE routing. "
+        "Default: all vnets share one link per direction.",
+    )
+    parser.add_argument(
+        "--simple-trace-routes",
+        action="store_true",
+        default=False,
+        help="""SimpleNetwork traces latency for all routes""",
     )
 
 
@@ -271,6 +297,7 @@ def init_network(options, network, InterfaceClass):
                 network.number_of_virtual_networks
             )
         network.setup_buffers()
+        network.trace_routes = options.simple_trace_routes
 
     if InterfaceClass != None:
         netifs = [

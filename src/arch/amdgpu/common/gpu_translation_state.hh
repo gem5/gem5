@@ -66,17 +66,17 @@ struct GpuTranslationState : public Packet::SenderState
     int pasId; // Process Address Space ID
 
     /*
-    * TLB entry to be populated and passed back and filled in
-    * previous TLBs.  Equivalent to the data cache concept of
-    * "data return."
-    */
+     * TLB entry to be populated and passed back and filled in
+     * previous TLBs.  Equivalent to the data cache concept of
+     * "data return."
+     */
     Serializable *tlbEntry;
     // Is this a TLB prefetch request?
     bool isPrefetch;
     // When was the req for this translation issued
     uint64_t issueTime;
     // Remember where this came from
-    std::vector<ResponsePort*>ports;
+    std::vector<ResponsePort *> ports;
 
     // keep track of #uncoalesced reqs per packet per TLB level;
     // reqCnt per level >= reqCnt higher level
@@ -86,19 +86,31 @@ struct GpuTranslationState : public Packet::SenderState
     Packet::SenderState *saved;
 
     GpuTranslationState(BaseMMU::Mode tlb_mode, ThreadContext *_tc,
-                        bool _prefetch=false,
-                        Packet::SenderState *_saved=nullptr)
-        : tlbMode(tlb_mode), tc(_tc), deviceId(0), pasId(0), tlbEntry(nullptr),
-          isPrefetch(_prefetch), issueTime(0), hitLevel(0), saved(_saved)
-    { }
-
-    GpuTranslationState(BaseMMU::Mode tlb_mode,
-                       bool _prefetch=false,
-                       Packet::SenderState *_saved=nullptr)
-        : tlbMode(tlb_mode), tc(nullptr), deviceId(0), pasId(0),
-          tlbEntry(nullptr), isPrefetch(_prefetch), issueTime(0), hitLevel(0),
+                        bool _prefetch = false,
+                        Packet::SenderState *_saved = nullptr)
+        : tlbMode(tlb_mode),
+          tc(_tc),
+          deviceId(0),
+          pasId(0),
+          tlbEntry(nullptr),
+          isPrefetch(_prefetch),
+          issueTime(0),
+          hitLevel(0),
           saved(_saved)
-    { }
+    {}
+
+    GpuTranslationState(BaseMMU::Mode tlb_mode, bool _prefetch = false,
+                        Packet::SenderState *_saved = nullptr)
+        : tlbMode(tlb_mode),
+          tc(nullptr),
+          deviceId(0),
+          pasId(0),
+          tlbEntry(nullptr),
+          isPrefetch(_prefetch),
+          issueTime(0),
+          hitLevel(0),
+          saved(_saved)
+    {}
 };
 
 } // namespace gem5

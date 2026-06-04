@@ -52,7 +52,7 @@ jobs:
             test-dirs-matrix-very-long: ${{ steps.dir-matrix.outputs.test-dirs-matrix-very-long }}
         steps:
             - uses: actions/checkout@v4
-            - name: Get directories for testlib-very-long
+            - name: Get directories for testlib-${{ matrix.type }}
               working-directory: ${{ github.workspace }}/tests
               id: dir-matrix
               run: |
@@ -85,12 +85,14 @@ jobs:
             test-dirs-matrix-flattened: ${{ steps.flatten-matrix.outputs.matrix }}
         needs: [get-date, get-testlib-dirs]
         steps:
-            - id: flatten-matrix
+            - name: Flatten matrix into length and testdir pairs
+              id: flatten-matrix
               run: |
-                  echo '${{ needs.get-testlib-dirs.outputs.test-dirs-matrix-quick }}'
-                  primary='["quick"]'
+                  primary='["quick", "long", "very-long"]'
                   secondary='{
-                      "quick": ${{ needs.get-testlib-dirs.outputs.test-dirs-matrix-quick }}
+                      "quick": ${{ needs.get-testlib-dirs.outputs.test-dirs-matrix-quick }},
+                      "long": ${{ needs.get-testlib-dirs.outputs.test-dirs-matrix-long }},
+                      "very-long": ${{ needs.get-testlib-dirs.outputs.test-dirs-matrix-very-long }}
                   }'
 
                   flat_matrix=$(echo $secondary | jq -c '[
@@ -107,6 +109,7 @@ jobs:
         name: testlib-tests
         strategy:
             fail-fast: false
+            max-parallel: 5
             matrix:
                 test-type: ${{ fromJson(needs.flatten-length-and-testdir-matrices.outputs.test-dirs-matrix-flattened) }}
         runs-on: [self-hosted, linux, x64]
@@ -140,7 +143,7 @@ jobs:
               if: always()
               uses: actions/upload-artifact@v4
               with:
-                  name: weekly-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-very-long-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir
+                  name: weekly-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-${{ matrix.test-type.length }}-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir
                       }}-status-${{ steps.run-tests.outcome }}-output
                   path: tests/testing-results
 
@@ -152,11 +155,12 @@ jobs:
 
     gpu-tests:
         strategy:
+            fail-fast: false
             matrix:
                 test-length: [quick, long, very-long]
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/gcn-gpu:latest
-        timeout-minutes: 1440 # 24 hours
+        timeout-minutes: 4320 # 3 days
         needs: get-date
 
         steps:
@@ -169,12 +173,17 @@ jobs:
                   key: testlib-build-vega-${{ needs.get-date.outputs.date }}
                   restore-keys: |
                       testlib-build-vega
-
+              # The runners will run out of memory when trying to build the ALL
+              # build with --gcov for the gpu-tests, so only run the tests that
+              # use VEGA_X86.
+              # At the time of this change, all of the quick and very-long tests
+              # that use the gcn-gpu host also use the VEGA_X86 build, so this
+              # change only affects the long tests.
             - name: Run Testlib GPU Tests
               id: run-tests
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --length=${{ matrix.test-length }} -vvv --gcov=test-only -j $(nproc) --host gcn_gpu
-              timeout-minutes: 1410
+              run: ./main.py run --length=${{ matrix.test-length }} -vvv --gcov=test-only -j $(nproc) --host gcn_gpu --isa=VEGA_X86
+              timeout-minutes: 4290
 
             - name: Upload results
               if: always()

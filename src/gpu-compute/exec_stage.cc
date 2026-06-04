@@ -44,10 +44,13 @@ namespace gem5
 
 ExecStage::ExecStage(const ComputeUnitParams &p, ComputeUnit &cu,
                      ScheduleToExecute &from_schedule)
-    : computeUnit(cu), fromSchedule(from_schedule),
+    : computeUnit(cu),
+      fromSchedule(from_schedule),
       lastTimeInstExecuted(false),
-      thisTimeInstExecuted(false), instrExecuted (false),
-      executionResourcesUsed(0), _name(cu.name() + ".ExecStage"),
+      thisTimeInstExecuted(false),
+      instrExecuted(false),
+      executionResourcesUsed(0),
+      _name(cu.name() + ".ExecStage"),
       stats(&cu)
 
 {
@@ -62,7 +65,8 @@ ExecStage::init()
 }
 
 void
-ExecStage::collectStatistics(enum STAT_STATUS stage, int unitId) {
+ExecStage::collectStatistics(enum STAT_STATUS stage, int unitId)
+{
     if (stage == IdleExec) {
         // count cycles when no instruction to a specific execution resource
         // is executed
@@ -112,15 +116,15 @@ ExecStage::dispStatusToStr(int i)
 {
     std::string s("INVALID");
     switch (i) {
-    case EMPTY:
-        s = "EMPTY";
-        break;
-    case SKIP:
-        s = "SKIP";
-        break;
-    case EXREADY:
-        s = "EXREADY";
-        break;
+        case EMPTY:
+            s = "EMPTY";
+            break;
+        case SKIP:
+            s = "SKIP";
+            break;
+        case EXREADY:
+            s = "EXREADY";
+            break;
     }
     return s;
 }
@@ -158,20 +162,18 @@ ExecStage::exec()
     for (int unitId = 0; unitId < computeUnit.numExeUnits(); ++unitId) {
         DISPATCH_STATUS s = fromSchedule.dispatchStatus(unitId);
         switch (s) {
-          case EMPTY:
-            // Do not execute if empty, waiting for VRF reads,
-            // or LM tied to GM waiting for VRF reads
-            collectStatistics(IdleExec, unitId);
-            break;
-          case EXREADY:
-            {
+            case EMPTY:
+                // Do not execute if empty, waiting for VRF reads,
+                // or LM tied to GM waiting for VRF reads
+                collectStatistics(IdleExec, unitId);
+                break;
+            case EXREADY: {
                 collectStatistics(BusyExec, unitId);
                 GPUDynInstPtr &gpu_dyn_inst = fromSchedule.readyInst(unitId);
                 assert(gpu_dyn_inst);
                 Wavefront *wf = gpu_dyn_inst->wavefront();
-                DPRINTF(GPUSched, "Exec[%d]: SIMD[%d] WV[%d]: %s\n",
-                        unitId, wf->simdId, wf->wfDynId,
-                        gpu_dyn_inst->disassemble());
+                DPRINTF(GPUSched, "Exec[%d]: SIMD[%d] WV[%d]: %s\n", unitId,
+                        wf->simdId, wf->wfDynId, gpu_dyn_inst->disassemble());
                 DPRINTF(GPUSched, "dispatchList[%d] EXREADY->EMPTY\n", unitId);
                 wf->exec();
                 (computeUnit.scheduleStage).deleteFromSch(wf);
@@ -179,8 +181,7 @@ ExecStage::exec()
                 wf->freeResources();
                 break;
             }
-          case SKIP:
-            {
+            case SKIP: {
                 collectStatistics(BusyExec, unitId);
                 GPUDynInstPtr &gpu_dyn_inst = fromSchedule.readyInst(unitId);
                 assert(gpu_dyn_inst);
@@ -190,8 +191,8 @@ ExecStage::exec()
                 wf->freeResources();
                 break;
             }
-          default:
-            panic("Unknown dispatch status in exec()\n");
+            default:
+                panic("Unknown dispatch status in exec()\n");
         }
     }
 
@@ -208,25 +209,27 @@ ExecStage::ExecStageStats::ExecStageStats(statistics::Group *parent)
       ADD_STAT(spc,
                "Execution units active per cycle (Exec unit=SIMD,MemPipe)"),
       ADD_STAT(idleDur, "duration of idle periods in cycles"),
-      ADD_STAT(numCyclesWithInstrTypeIssued, "Number of cycles at least one "
+      ADD_STAT(numCyclesWithInstrTypeIssued,
+               "Number of cycles at least one "
                "instruction issued to execution resource type"),
-      ADD_STAT(numCyclesWithNoInstrTypeIssued, "Number of clks no instructions"
+      ADD_STAT(numCyclesWithNoInstrTypeIssued,
+               "Number of clks no instructions"
                " issued to execution resource type")
 {
-    ComputeUnit *compute_unit = static_cast<ComputeUnit*>(parent);
+    ComputeUnit *compute_unit = static_cast<ComputeUnit *>(parent);
 
     spc.init(0, compute_unit->numExeUnits(), 1);
-    idleDur.init(0, 75-1, 5);
+    idleDur.init(0, 75 - 1, 5);
     numCyclesWithInstrTypeIssued.init(compute_unit->numExeUnits());
     numCyclesWithNoInstrTypeIssued.init(compute_unit->numExeUnits());
 
     int c = 0;
-    for (int i = 0; i < compute_unit->numVectorALUs; i++,c++) {
+    for (int i = 0; i < compute_unit->numVectorALUs; i++, c++) {
         std::string s = "VectorALU" + std::to_string(i);
         numCyclesWithNoInstrTypeIssued.subname(c, s);
         numCyclesWithInstrTypeIssued.subname(c, s);
     }
-    for (int i = 0; i < compute_unit->numScalarALUs; i++,c++) {
+    for (int i = 0; i < compute_unit->numScalarALUs; i++, c++) {
         std::string s = "ScalarALU" + std::to_string(i);
         numCyclesWithNoInstrTypeIssued.subname(c, s);
         numCyclesWithInstrTypeIssued.subname(c, s);

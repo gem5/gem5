@@ -37,6 +37,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from m5.objects import (
+    CBusy,
+    CBusyTracker,
     ClockDomain,
     RubyCache,
     RubyNetwork,
@@ -85,6 +87,8 @@ class L2CacheController(AbstractNode):
         self.send_evictions = False
         self.use_prefetcher = False
         self.prefetcher = NULL
+        self.cbusy_generator = CBusy()
+        self.cbusy_tracker = CBusyTracker()
 
         # Only applies to home nodes
         self.is_HN = False

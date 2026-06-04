@@ -171,10 +171,11 @@ Stride::calculatePrefetch(const PrefetchInfo &pfi,
             }
         }
 
-        DPRINTF(HWPrefetch, "Hit: PC %x pkt_addr %x (%s) stride %d (%s), "
-                "conf %d\n", pc, pf_addr, is_secure ? "s" : "ns",
-                new_stride, stride_match ? "match" : "change",
-                (int)entry->confidence);
+        DPRINTF(HWPrefetch,
+                "Hit: PC %#x pkt_addr %#x (%s) stride %d (%s), "
+                "conf %d\n",
+                pc, pf_addr, is_secure ? "s" : "ns", new_stride,
+                stride_match ? "match" : "change", (int)entry->confidence);
 
         entry->lastAddr = pf_addr;
 
@@ -197,7 +198,7 @@ Stride::calculatePrefetch(const PrefetchInfo &pfi,
         }
     } else {
         // Miss in table
-        DPRINTF(HWPrefetch, "Miss: PC %x pkt_addr %x (%s)\n", pc, pf_addr,
+        DPRINTF(HWPrefetch, "Miss: PC %#x pkt_addr %#x (%s)\n", pc, pf_addr,
                 is_secure ? "s" : "ns");
 
         StrideEntry* entry = pc_table.findVictim(key);

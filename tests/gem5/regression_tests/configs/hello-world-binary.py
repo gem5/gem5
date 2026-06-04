@@ -1,3 +1,15 @@
+# Copyright (c) 2026 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2021-2025 The Regents of the University of California
 # All rights reserved.
 #
@@ -108,7 +120,7 @@ board.set_se_binary_workload(obtain_resource(binary_name))
 simulator = Simulator(board=board)
 simulator.run()
 
-stats = simulator.get_stats()
+stats = simulator.get_simstats()
 
 # Compare values in the current run against reference IPC values calculated
 # using simInsts / numCycles. The reference IPC values were obtained by running

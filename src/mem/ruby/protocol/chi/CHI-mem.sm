@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Arm Limited
+ * Copyright (c) 2021-2023, 2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -45,6 +45,7 @@ machine(MachineType:Memory, "Memory controller interface") :
   Cycles to_memory_controller_latency := 1;
 
   int data_channel_size;
+  BackpressureGen * cbusy_generator, default="NULL";
 
   // Interface to the network
   // Note vnet_type is used by Garnet only. "response" type is assumed to
@@ -326,6 +327,30 @@ machine(MachineType:Memory, "Memory controller interface") :
   // Helper functions
   ////////////////////////////////////////////////////////////////////////////
 
+  public int tbeSize() {
+    return storTBEs.size();
+  }
+
+  public int tbeReserved() {
+    return storTBEs.reserved();
+  }
+
+  public int tbeCapacity() {
+    return storTBEs.capacity();
+  }
+
+  public bool hasRetryQueueEntries() {
+    return !retryQueue.empty();
+  }
+
+  int getCurrCBusy(CHIResponseMsg message) {
+    return cbusy_generator.generate(this, message);
+  }
+
+  int getCurrCBusy(CHIDataMsg message) {
+    return cbusy_generator.generate(this, message);
+  }
+
   void printResources() {
     DPRINTF(RubySlicc, "Resources(avail/max): TBEs=%d/%d\n",
                   storTBEs.size(), storTBEs.capacity());
@@ -540,6 +565,7 @@ machine(MachineType:Memory, "Memory controller interface") :
       out_msg.type := CHIResponseType:ReadReceipt;
       out_msg.responder := machineID;
       out_msg.Destination.add(tbe.requestor);
+      out_msg.cbusy := getCurrCBusy(out_msg);
     }
     // also send different type of data when ready
     tbe.useDataSepResp := true;
@@ -552,6 +578,7 @@ machine(MachineType:Memory, "Memory controller interface") :
       out_msg.type := CHIResponseType:CompDBIDResp;
       out_msg.responder := machineID;
       out_msg.Destination.add(tbe.requestor);
+      out_msg.cbusy := getCurrCBusy(out_msg);
     }
   }
 
@@ -620,7 +647,10 @@ machine(MachineType:Memory, "Memory controller interface") :
       out_msg.dataBlk := tbe.dataBlk;
       // Called in order for the whole block so use rxtxBytes as offset
       out_msg.bitMask.setMask(tbe.rxtxBytes, data_channel_size);
+
+      out_msg.responder := machineID;
       out_msg.Destination.add(tbe.destination);
+      out_msg.cbusy := getCurrCBusy(out_msg);
     }
 
     //DPRINTF(RubySlicc, "rxtxBytes=%d\n", tbe.rxtxBytes);
@@ -689,6 +719,7 @@ machine(MachineType:Memory, "Memory controller interface") :
         out_msg.type := CHIResponseType:RetryAck;
         out_msg.responder := machineID;
         out_msg.Destination.add(in_msg.retryDest);
+        out_msg.cbusy := getCurrCBusy(out_msg);
       }
     }
   }
@@ -700,6 +731,7 @@ machine(MachineType:Memory, "Memory controller interface") :
         out_msg.type := CHIResponseType:PCrdGrant;
         out_msg.responder := machineID;
         out_msg.Destination.add(in_msg.retryDest);
+        out_msg.cbusy := getCurrCBusy(out_msg);
       }
     }
   }

@@ -1,3 +1,15 @@
+# Copyright (c) 2026 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2024 The Regents of the University of California
 # All rights reserved.
 #
@@ -33,7 +45,10 @@ from m5.objects import (
     ScalarStatTester,
     VectorStatTester,
 )
-from m5.stats.gem5stats import get_simstat
+from m5.stats.gem5stats import (
+    JsonOutputVistor,
+    get_simstat,
+)
 
 root = Root(full_system=False)
 root.stat_testers = [
@@ -56,10 +71,12 @@ simstat = get_simstat(root)
 
 # 'stat_testers' is a list of SimObjects
 assert hasattr(simstat, "stat_testers"), "No stat_testers attribute found."
-assert len(simstat.stat_testers) == 4, "stat_testers list is not of length 3."
+assert (
+    len(simstat.stat_testers["value"]) == 4
+), "stat_testers list is not of length 3."
 
 # Accessable by index.
-simobject = simstat.stat_testers[0]
+simobject = simstat.stat_testers.value[0]
 
 # We can directly access the statistic we're interested in and its "str"
 # representation should be the same as the value we set. In this case "11.0".
@@ -70,9 +87,9 @@ assert (
 # They can also be accessed like so:
 # "other_stat" is a SimObject with a single stat called "stat".
 str(
-    simstat["stat_testers"][3]["index_4"][0]
+    simstat["stat_testers"]["value"][3]["index_4"][0]
 ) == "44.0", 'simstat[3]["index_4"][0] value is not 44.'
 
 # We can also access other stats like type and description.
-assert simstat.stat_testers[1].placeholder.description == "Index 2 desc."
-assert simstat.stat_testers[1].placeholder.type == "Scalar"
+assert simstat.stat_testers.value[1].placeholder.description == "Index 2 desc."
+assert simstat.stat_testers.value[1].placeholder.type == "Scalar"

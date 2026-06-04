@@ -132,6 +132,8 @@ class IQUnit : public SimObject
         return _fuPool;
     }
 
+    bool isCapable(OpClass op_class) const;
+
   private:
     /** IQ sharing policy for SMT. */
     SMTQueuePolicy iqPolicy;

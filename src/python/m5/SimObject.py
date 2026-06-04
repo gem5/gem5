@@ -1106,7 +1106,12 @@ class SimObject(metaclass=MetaSimObject):
             if issubclass(pdesc.ptype, ptype):
                 match_obj = self._values[pname]
                 if not isproxy(match_obj) and not isNullPointer(match_obj):
-                    all[match_obj] = True
+                    if isSimObjectVector(match_obj):
+                        for item in match_obj:
+                            if not isNullPointer(item):
+                                all[item] = True
+                    else:
+                        all[match_obj] = True
         # Also make sure to sort the keys based on the objects' path to
         # ensure that the order is the same on all hosts
         return sorted(all.keys(), key=lambda o: o.path()), True

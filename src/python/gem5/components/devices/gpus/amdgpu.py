@@ -60,13 +60,33 @@ class BaseViperGPU(SubSystem):
                 "instantiate the gpu memory like gpu_memory = HBM2Stack() "
                 "and **not** like board.gpu_memory = HBM2Stack()"
             )
-        self._memory = gpu_memory
+        self.memory = gpu_memory
 
         # Setup various PCI related parameters
         self._my_id = self.get_gpu_count()
         pci_dev = self.next_pci_dev()
 
         self.device = AMDGPUDevice(pci_func=0, pci_dev=pci_dev)
+
+    def setup_caches(self):
+        # Make the cache hierarchy. This will create an independent RubySystem
+        # class containing only the GPU caches with no network connection to
+        # the CPU cache hierarchy.
+        self.gpu_caches = ViperGPUCacheHierarchy(
+            gpu_memory=self.memory,
+            tcp_size=self._tcp_size,
+            tcp_assoc=self._tcp_assoc,
+            sqc_size=self._sqc_size,
+            sqc_assoc=self._sqc_assoc,
+            scalar_size=self._scalar_size,
+            scalar_assoc=self._scalar_assoc,
+            tcc_size=self._tcc_size,
+            tcc_assoc=self._tcc_assoc,
+            tcc_count=self._tcc_count,
+            cu_per_sqc=self._cu_per_sqc,
+            cache_line_size=self._cache_line_size,
+            shader=self.shader,
+        )
 
     def set_shader(self, shader: ViperShader):
         self.shader = shader
@@ -83,32 +103,11 @@ class BaseViperGPU(SubSystem):
         # Connect all PIO buses
         self.shader.connect_iobus(board.get_io_bus(), board.get_pci_bus())
 
-        # Make the cache hierarchy. This will create an independent RubySystem
-        # class containing only the GPU caches with no network connection to
-        # the CPU cache hierarchy.
-        self.gpu_caches = ViperGPUCacheHierarchy(
-            gpu_memory=self._memory,
-            tcp_size=self._tcp_size,
-            tcp_assoc=self._tcp_assoc,
-            sqc_size=self._sqc_size,
-            sqc_assoc=self._sqc_assoc,
-            scalar_size=self._scalar_size,
-            scalar_assoc=self._scalar_assoc,
-            tcc_size=self._tcc_size,
-            tcc_assoc=self._tcc_assoc,
-            tcc_count=self._tcc_count,
-            cu_per_sqc=self._cu_per_sqc,
-            cache_line_size=self._cache_line_size,
-            shader=self.shader,
-        )
-
-        self.memory = self._memory
-
         # Collect GPU memory controllers created in the GPU cache hierarchy.
         # First assign them as a child to the device so the SimObject unproxy.
         # The device requires the memories parameter to be set as the system
         # pointer required by the AbstractMemory class is set by AMDGPUDevice.
-        self.device.memories = self._memory.get_mem_interfaces()
+        self.device.memories = self.memory.get_mem_interfaces()
 
         self.device.upstream = board.get_pci_host()
 
@@ -160,6 +159,7 @@ class MI210(BaseViperGPU):
             gpu_memory.get_size(),
         )
         self.set_shader(shader)
+        self.setup_caches()
 
         # Setup the SDMA engines depending on device. The MMIO base addresses
         # can be found in the driver code under:
@@ -183,6 +183,7 @@ class MI210(BaseViperGPU):
             "export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH\n"
             "export HSA_ENABLE_INTERRUPT=0\n"
             "export HCC_AMDGPU_TARGET=gfx90a\n"
+            "echo 0 > /proc/sys/kernel/randomize_va_space\n"
             f"{debug_commands}\n"
             "dd if=/root/roms/mi200.rom of=/dev/mem bs=1k seek=768 count=128\n"
             "if [ -f /home/gem5/load_amdgpu.sh ]; then\n"
@@ -246,6 +247,7 @@ class MI300X(BaseViperGPU):
             gpu_memory.get_size(),
         )
         self.set_shader(shader)
+        self.setup_caches()
 
         num_sdmas = 16
         sdma_bases = [
@@ -301,6 +303,7 @@ class MI300X(BaseViperGPU):
             "export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH\n"
             "export HSA_ENABLE_INTERRUPT=0\n"
             "export HCC_AMDGPU_TARGET=gfx942\n"
+            "echo 0 > /proc/sys/kernel/randomize_va_space\n"
             f"{debug_commands}\n"
             "dd if=/root/roms/mi300.rom of=/dev/mem bs=1k seek=768 count=128\n"
             # Check if exists (backwards compat with ROCm <7.0)
@@ -364,6 +367,7 @@ class MI355X(MI300X):
             "export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH\n"
             "export HSA_ENABLE_INTERRUPT=0\n"
             "export HCC_AMDGPU_TARGET=gfx950\n"
+            "echo 0 > /proc/sys/kernel/randomize_va_space\n"
             f"{debug_commands}\n"
             "dd if=/root/roms/mi300.rom of=/dev/mem bs=1k seek=768 count=128\n"
             "if [ -e /usr/lib/firmware/amdgpu/mi350_discovery ]; then\n"

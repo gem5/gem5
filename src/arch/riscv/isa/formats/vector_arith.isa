@@ -558,10 +558,10 @@ def format VectorIntNarrowingFormat(code, category, *flags) {{
         flags)
 
     header_output = \
-        VectorIntWideningMicroDeclare.subst(microiop) + \
-        VectorIntWideningMacroDeclare.subst(iop)
+        VectorIntNarrowingMicroDeclare.subst(microiop) + \
+        VectorIntNarrowingMacroDeclare.subst(iop)
     decoder_output = \
-        VectorIntWideningMicroConstructor.subst(microiop) + \
+        VectorIntNarrowingMicroConstructor.subst(microiop) + \
         VectorIntNarrowingMacroConstructor.subst(iop)
     exec_output = VectorIntNarrowingMicroExecute.subst(microiop)
     decode_block = VectorIntWideningDecodeBlock.subst(iop)
@@ -1020,10 +1020,10 @@ def format VectorFloatNarrowingCvtFormat(code, category, *flags) {{
         flags)
 
     header_output = \
-        VectorFloatCvtMicroDeclare.subst(microiop) + \
-        VectorFloatCvtMacroDeclare.subst(iop)
+        VectorIntNarrowingMicroDeclare.subst(microiop) + \
+        VectorIntNarrowingMacroDeclare.subst(iop)
     decoder_output = \
-        VectorIntWideningMicroConstructor.subst(microiop) + \
+        VectorIntNarrowingMicroConstructor.subst(microiop) + \
         VectorIntNarrowingMacroConstructor.subst(iop)
     exec_output = VectorFloatNarrowingMicroExecute.subst(microiop)
     decode_block = VectorFloatWideningAndNarrowingCvtDecodeBlock.subst(iop)
@@ -1603,10 +1603,11 @@ def VectorSlideBase(name, Name, category, code, flags, macro_construtor,
 
     dest_set_src_reg_idx = ""
     # No dest reg pin: Bypass tail/mask policy to copy unchanged elements
-    if name == "vslideup_vi":
+    slideup_insts = ["vslideup_vx", "vslideup_vi"]
+    if name in slideup_insts:
         dest_set_src_reg_idx = f"oldDstIdx = {num_src_regs};\n"
         dest_set_src_reg_idx += setSrcWrapper(dest_reg_id)
-    elif name not in ["vslideup_vx", "vslidedown_vx"]:
+    elif name not in ["vslidedown_vx"]:
         dest_set_src_reg_idx = tailMaskCondSetSrcWrapper(
             setSrcWrapper(dest_reg_id)
         )

@@ -135,11 +135,13 @@ class TLB : public BaseTLB
     TlbEntry *insert(Addr vpn, const TlbEntry &entry);
     void flushAll() override;
     void demapPage(Addr vaddr, uint64_t asn) override;
+    void demapPage(ThreadContext *tc, Addr vaddr, uint64_t asn,
+                   bool is_gvma = false, bool is_vvma = false);
 
-    Fault checkPermissions(ThreadContext* tc, MemAccessInfo mem_access,
-                            Addr vaddr, BaseMMU::Mode mode, PTESv39 pte,
-                            Addr gvaddr = 0x0,
-                            XlateStage stage = XlateStage::FIRST_STAGE);
+    Fault checkPermissions(ThreadContext *tc, MemAccessInfo mem_access,
+                           Addr vaddr, BaseMMU::Mode mode, PTE pte,
+                           Addr gvaddr = 0x0,
+                           XlateStage stage = XlateStage::FIRST_STAGE);
 
     Fault createPagefault(Addr vaddr, BaseMMU::Mode mode, Addr gvaddr = 0x0,
                           bool gpf = false, bool virt = false);

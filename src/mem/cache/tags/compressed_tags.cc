@@ -105,12 +105,18 @@ CompressedTags::tagsInit()
             // Set its index and sector offset
             blk->setSectorOffset(k);
 
+            // Register TagExtractor for SubBlk
+            blk->registerTagExtractor(genTagExtractor(indexingPolicy));
+
             // Update block index
             ++blk_index;
         }
 
         // Link block to indexing policy
         indexingPolicy->setEntry(superblock, superblock_index);
+
+        // Register TagExtractor for SecBlk
+        superblock->registerTagExtractor(genTagExtractor(indexingPolicy));
     }
 }
 

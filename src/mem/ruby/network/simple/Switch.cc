@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020 Inria
- * Copyright (c) 2019,2021 ARM Limited
+ * Copyright (c) 2019,2021,2026 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -220,6 +220,44 @@ Switch::SwitchStats::regStats()
     }
 
     statistics::Group::regStats();
+}
+
+void
+Switch::profFrontEndRdy(Message *msg, MessageBuffer *src_link, int vnet)
+{
+    m_network_ptr->routeProfiler.profFrontEndRdy(msg, this, src_link, vnet);
+}
+
+void
+Switch::profFrontEndRdyClone(Message *msg, MessageBuffer *src_link, int vnet,
+                             Message *clone_from_msg)
+{
+    m_network_ptr->routeProfiler.profFrontEndRdyClone(msg, this, src_link,
+                                                      vnet, clone_from_msg);
+}
+
+void
+Switch::profFrontEndFwd(Message *msg, int vnet)
+{
+    m_network_ptr->routeProfiler.profFrontEndFwd(msg, this, vnet);
+}
+
+void
+Switch::profBackEndRdy(Message *msg, int vnet)
+{
+    m_network_ptr->routeProfiler.profBackEndRdy(msg, this, vnet);
+}
+
+void
+Switch::profBackEndFwd(Message *msg, int vnet)
+{
+    m_network_ptr->routeProfiler.profBackEndFwd(msg, this, vnet);
+}
+
+void
+Switch::profBackEndFwdExt(Message *msg, MessageBuffer *dest_link, int vnet)
+{
+    m_network_ptr->routeProfiler.profBackEndFwdExt(msg, this, dest_link, vnet);
 }
 
 } // namespace ruby
