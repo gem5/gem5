@@ -93,7 +93,10 @@ Serializable::generateCheckpointOut(const std::string &cpt_dir,
             fatal("couldn't mkdir %s\n", dir);
 
     std::string cpt_file = dir + CheckpointIn::baseFilename;
-    assert(!outstream.is_open());
+    if (outstream.is_open()) {
+        outstream.close();
+    }
+    outstream.clear();
     outstream.open(cpt_file);
     time_t t = time(NULL);
     if (!outstream)
