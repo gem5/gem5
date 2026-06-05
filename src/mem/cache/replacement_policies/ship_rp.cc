@@ -76,7 +76,7 @@ SHiP::SHiP(const Params &p)
 }
 
 void
-SHiP::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
+SHiP::invalidateImpl(const std::shared_ptr<ReplacementData> &replacement_data)
 {
     std::shared_ptr<SHiPReplData> casted_replacement_data =
         std::static_pointer_cast<SHiPReplData>(replacement_data);
@@ -87,12 +87,12 @@ SHiP::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
         SHCT[casted_replacement_data->getSignature()]--;
     }
 
-    BRRIP::invalidate(replacement_data);
+    BRRIP::invalidateImpl(replacement_data);
 }
 
 void
-SHiP::touch(const std::shared_ptr<ReplacementData>& replacement_data,
-    const PacketPtr pkt)
+SHiP::touchImpl(const std::shared_ptr<ReplacementData> &replacement_data,
+                const PacketPtr pkt)
 {
     std::shared_ptr<SHiPReplData> casted_replacement_data =
         std::static_pointer_cast<SHiPReplData>(replacement_data);
@@ -103,12 +103,11 @@ SHiP::touch(const std::shared_ptr<ReplacementData>& replacement_data,
     casted_replacement_data->setReReferenced();
 
     // This was a hit; update replacement data accordingly
-    BRRIP::touch(replacement_data);
+    BRRIP::touchImpl(replacement_data);
 }
 
 void
-SHiP::touch(const std::shared_ptr<ReplacementData>& replacement_data)
-    const
+SHiP::touchImpl(const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     panic("SHiP replacement policy requires packet access information "
           "to train its predictor, but was called without it. "
@@ -120,8 +119,8 @@ SHiP::touch(const std::shared_ptr<ReplacementData>& replacement_data)
 }
 
 void
-SHiP::reset(const std::shared_ptr<ReplacementData>& replacement_data,
-    const PacketPtr pkt)
+SHiP::resetImpl(const std::shared_ptr<ReplacementData> &replacement_data,
+                const PacketPtr pkt)
 {
     std::shared_ptr<SHiPReplData> casted_replacement_data =
         std::static_pointer_cast<SHiPReplData>(replacement_data);
@@ -134,15 +133,14 @@ SHiP::reset(const std::shared_ptr<ReplacementData>& replacement_data,
 
     // If SHCT for signature is set, predict intermediate re-reference.
     // Predict distant re-reference otherwise
-    BRRIP::reset(replacement_data);
+    BRRIP::resetImpl(replacement_data);
     if (SHCT[signature].calcSaturation() >= insertionThreshold) {
         casted_replacement_data->rrpv--;
     }
 }
 
 void
-SHiP::reset(const std::shared_ptr<ReplacementData>& replacement_data)
-    const
+SHiP::resetImpl(const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     panic("SHiP replacement policy requires packet access information "
           "to train its predictor, but was called without it. "

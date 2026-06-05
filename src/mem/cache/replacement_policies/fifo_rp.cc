@@ -46,7 +46,7 @@ FIFO::FIFO(const Params &p)
 }
 
 void
-FIFO::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
+FIFO::invalidateImpl(const std::shared_ptr<ReplacementData> &replacement_data)
 {
     assert(replacement_data);
 
@@ -57,7 +57,7 @@ FIFO::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
 }
 
 void
-FIFO::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
+FIFO::touchImpl(const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     // A touch does not modify the insertion tick. We still check if the data
     // exists to standardize the API
@@ -65,7 +65,7 @@ FIFO::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
 }
 
 void
-FIFO::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
+FIFO::resetImpl(const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     assert(replacement_data);
 
@@ -74,8 +74,8 @@ FIFO::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
         replacement_data)->tickInserted = ++timeTicks;
 }
 
-ReplaceableEntry*
-FIFO::getVictim(const ReplacementCandidates& candidates) const
+ReplaceableEntry *
+FIFO::getVictimImpl(const ReplacementCandidates &candidates) const
 {
     // There must be at least one replacement candidate
     assert(candidates.size() > 0);

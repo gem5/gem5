@@ -48,16 +48,18 @@ WeightedLRU::WeightedLRU(const Params &p)
 }
 
 void
-WeightedLRU::touch(const std::shared_ptr<ReplacementData>& replacement_data,
-    int occupancy) const
+WeightedLRU::touch(const std::shared_ptr<ReplacementData> &replacement_data,
+                   int occupancy) const
 {
-    LRU::touch(replacement_data);
+    // Go through the common interface so the access is counted as a hit, just
+    // like the non-occupancy touch() path.
+    Base::touch(replacement_data);
     std::static_pointer_cast<WeightedLRUReplData>(replacement_data)->
                                                   last_occ_ptr = occupancy;
 }
 
-ReplaceableEntry*
-WeightedLRU::getVictim(const ReplacementCandidates& candidates) const
+ReplaceableEntry *
+WeightedLRU::getVictimImpl(const ReplacementCandidates &candidates) const
 {
     assert(candidates.size() > 0);
 

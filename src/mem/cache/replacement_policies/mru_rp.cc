@@ -46,7 +46,7 @@ MRU::MRU(const Params &p)
 }
 
 void
-MRU::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
+MRU::invalidateImpl(const std::shared_ptr<ReplacementData> &replacement_data)
 {
     assert(replacement_data);
 
@@ -56,7 +56,7 @@ MRU::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
 }
 
 void
-MRU::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
+MRU::touchImpl(const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     assert(replacement_data);
 
@@ -66,7 +66,7 @@ MRU::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
 }
 
 void
-MRU::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
+MRU::resetImpl(const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     assert(replacement_data);
 
@@ -75,8 +75,8 @@ MRU::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
         replacement_data)->lastTouchTick = curTick();
 }
 
-ReplaceableEntry*
-MRU::getVictim(const ReplacementCandidates& candidates) const
+ReplaceableEntry *
+MRU::getVictimImpl(const ReplacementCandidates &candidates) const
 {
     // There must be at least one replacement candidate
     assert(candidates.size() > 0);

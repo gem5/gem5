@@ -109,7 +109,8 @@ TreePLRU::TreePLRU(const Params &p)
 }
 
 void
-TreePLRU::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
+TreePLRU::invalidateImpl(
+    const std::shared_ptr<ReplacementData> &replacement_data)
 {
     // Cast replacement data
     std::shared_ptr<TreePLRUReplData> treePLRU_replacement_data =
@@ -134,8 +135,8 @@ TreePLRU::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
 }
 
 void
-TreePLRU::touch(const std::shared_ptr<ReplacementData>& replacement_data)
-const
+TreePLRU::touchImpl(
+    const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     // Cast replacement data
     std::shared_ptr<TreePLRUReplData> treePLRU_replacement_data =
@@ -160,15 +161,15 @@ const
 }
 
 void
-TreePLRU::reset(const std::shared_ptr<ReplacementData>& replacement_data)
-const
+TreePLRU::resetImpl(
+    const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     // A reset has the same functionality of a touch
     touch(replacement_data);
 }
 
-ReplaceableEntry*
-TreePLRU::getVictim(const ReplacementCandidates& candidates) const
+ReplaceableEntry *
+TreePLRU::getVictimImpl(const ReplacementCandidates &candidates) const
 {
     // There must be at least one replacement candidate
     assert(candidates.size() > 0);

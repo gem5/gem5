@@ -48,17 +48,17 @@ SecondChance::useSecondChance(
     const std::shared_ptr<SecondChanceReplData>& replacement_data) const
 {
     // Reset FIFO data
-    FIFO::reset(replacement_data);
+    FIFO::resetImpl(replacement_data);
 
     // Use second chance
     replacement_data->hasSecondChance = false;
 }
 
 void
-SecondChance::invalidate(
-    const std::shared_ptr<ReplacementData>& replacement_data)
+SecondChance::invalidateImpl(
+    const std::shared_ptr<ReplacementData> &replacement_data)
 {
-    FIFO::invalidate(replacement_data);
+    FIFO::invalidateImpl(replacement_data);
 
     // Do not give a second chance to invalid entries
     std::static_pointer_cast<SecondChanceReplData>(
@@ -66,10 +66,10 @@ SecondChance::invalidate(
 }
 
 void
-SecondChance::touch(
-    const std::shared_ptr<ReplacementData>& replacement_data) const
+SecondChance::touchImpl(
+    const std::shared_ptr<ReplacementData> &replacement_data) const
 {
-    FIFO::touch(replacement_data);
+    FIFO::touchImpl(replacement_data);
 
     // Whenever an entry is touched, it is given a second chance
     std::static_pointer_cast<SecondChanceReplData>(
@@ -77,18 +77,18 @@ SecondChance::touch(
 }
 
 void
-SecondChance::reset(
-    const std::shared_ptr<ReplacementData>& replacement_data) const
+SecondChance::resetImpl(
+    const std::shared_ptr<ReplacementData> &replacement_data) const
 {
-    FIFO::reset(replacement_data);
+    FIFO::resetImpl(replacement_data);
 
     // Entries are inserted with a second chance
     std::static_pointer_cast<SecondChanceReplData>(
         replacement_data)->hasSecondChance = false;
 }
 
-ReplaceableEntry*
-SecondChance::getVictim(const ReplacementCandidates& candidates) const
+ReplaceableEntry *
+SecondChance::getVictimImpl(const ReplacementCandidates &candidates) const
 {
     // There must be at least one replacement candidate
     assert(candidates.size() > 0);
@@ -112,7 +112,7 @@ SecondChance::getVictim(const ReplacementCandidates& candidates) const
     bool search_victim = true;
     while (search_victim) {
         // Do a FIFO victim search
-        victim = FIFO::getVictim(candidates);
+        victim = FIFO::getVictimImpl(candidates);
 
         // Cast victim's replacement data for code readability
         std::shared_ptr<SecondChanceReplData> victim_replacement_data =

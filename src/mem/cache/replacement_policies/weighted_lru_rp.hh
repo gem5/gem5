@@ -65,8 +65,17 @@ class WeightedLRU : public LRU
     ~WeightedLRU() = default;
 
     using Base::touch;
-    void touch(const std::shared_ptr<ReplacementData>& replacement_data,
-                                        int occupancy) const;
+    /**
+     * WeightedLRU-specific touch that records a block's occupancy. This is not
+     * part of the common replacement policy interface; it is called directly
+     * (with the policy's concrete type) by users that track occupancy, such as
+     * Ruby's CacheMemory.
+     *
+     * @param replacement_data Replacement data to be touched.
+     * @param occupancy Occupancy to associate with the entry.
+     */
+    void touch(const std::shared_ptr<ReplacementData> &replacement_data,
+               int occupancy) const;
 
     /**
      * Instantiate a replacement data entry.
@@ -81,8 +90,8 @@ class WeightedLRU : public LRU
      * @param candidates Replacement candidates, selected by indexing policy.
      * @return Replacement entry to be replaced.
      */
-    ReplaceableEntry* getVictim(const ReplacementCandidates&
-                                              candidates) const override;
+    ReplaceableEntry *
+    getVictimImpl(const ReplacementCandidates &candidates) const override;
 };
 
 } // namespace replacement_policy

@@ -97,18 +97,18 @@ class Dueling : public Base
     Dueling(const Params &p);
     ~Dueling() = default;
 
-    void invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
-                                                                    override;
-    void touch(const std::shared_ptr<ReplacementData>& replacement_data,
-        const PacketPtr pkt) override;
-    void touch(const std::shared_ptr<ReplacementData>& replacement_data) const
-                                                                     override;
-    void reset(const std::shared_ptr<ReplacementData>& replacement_data,
-        const PacketPtr pkt) override;
-    void reset(const std::shared_ptr<ReplacementData>& replacement_data) const
-                                                                     override;
-    ReplaceableEntry* getVictim(const ReplacementCandidates& candidates) const
-                                                                     override;
+    void invalidateImpl(
+        const std::shared_ptr<ReplacementData> &replacement_data) override;
+    void touchImpl(const std::shared_ptr<ReplacementData> &replacement_data,
+                   const PacketPtr pkt) override;
+    void touchImpl(const std::shared_ptr<ReplacementData> &replacement_data)
+        const override;
+    void resetImpl(const std::shared_ptr<ReplacementData> &replacement_data,
+                   const PacketPtr pkt) override;
+    void resetImpl(const std::shared_ptr<ReplacementData> &replacement_data)
+        const override;
+    ReplaceableEntry *
+    getVictimImpl(const ReplacementCandidates &candidates) const override;
     std::shared_ptr<ReplacementData> instantiateEntry() override;
 };
 

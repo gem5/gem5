@@ -48,7 +48,7 @@ BRRIP::BRRIP(const Params &p)
 }
 
 void
-BRRIP::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
+BRRIP::invalidateImpl(const std::shared_ptr<ReplacementData> &replacement_data)
 {
     std::shared_ptr<BRRIPReplData> casted_replacement_data =
         std::static_pointer_cast<BRRIPReplData>(replacement_data);
@@ -58,7 +58,8 @@ BRRIP::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
 }
 
 void
-BRRIP::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
+BRRIP::touchImpl(
+    const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     std::shared_ptr<BRRIPReplData> casted_replacement_data =
         std::static_pointer_cast<BRRIPReplData>(replacement_data);
@@ -74,7 +75,8 @@ BRRIP::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
 }
 
 void
-BRRIP::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
+BRRIP::resetImpl(
+    const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     std::shared_ptr<BRRIPReplData> casted_replacement_data =
         std::static_pointer_cast<BRRIPReplData>(replacement_data);
@@ -91,8 +93,8 @@ BRRIP::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
     casted_replacement_data->valid = true;
 }
 
-ReplaceableEntry*
-BRRIP::getVictim(const ReplacementCandidates& candidates) const
+ReplaceableEntry *
+BRRIP::getVictimImpl(const ReplacementCandidates &candidates) const
 {
     // There must be at least one replacement candidate
     assert(candidates.size() > 0);

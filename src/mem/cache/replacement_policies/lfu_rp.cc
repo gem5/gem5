@@ -45,7 +45,7 @@ LFU::LFU(const Params &p)
 }
 
 void
-LFU::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
+LFU::invalidateImpl(const std::shared_ptr<ReplacementData> &replacement_data)
 {
     assert(replacement_data);
 
@@ -54,7 +54,7 @@ LFU::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
 }
 
 void
-LFU::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
+LFU::touchImpl(const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     assert(replacement_data);
 
@@ -63,7 +63,7 @@ LFU::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
 }
 
 void
-LFU::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
+LFU::resetImpl(const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     assert(replacement_data);
 
@@ -71,8 +71,8 @@ LFU::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
     std::static_pointer_cast<LFUReplData>(replacement_data)->refCount = 1;
 }
 
-ReplaceableEntry*
-LFU::getVictim(const ReplacementCandidates& candidates) const
+ReplaceableEntry *
+LFU::getVictimImpl(const ReplacementCandidates &candidates) const
 {
     // There must be at least one replacement candidate
     assert(candidates.size() > 0);

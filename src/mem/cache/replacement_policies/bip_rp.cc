@@ -45,7 +45,7 @@ BIP::BIP(const Params &p)
 }
 
 void
-BIP::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
+BIP::resetImpl(const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     std::shared_ptr<LRUReplData> casted_replacement_data =
         std::static_pointer_cast<LRUReplData>(replacement_data);

@@ -46,13 +46,35 @@ Source('ship_rp.cc')
 Source('tree_plru_rp.cc')
 Source('weighted_lru_rp.cc')
 
+# The common replacement policy base class (replacement_policy::Base) now
+# gathers profiling statistics. Instantiating any policy therefore pulls in
+# the statistics implementation and its dependencies, none of which are part
+# of the 'gem5 simobject' tag. The unit tests below must link them explicitly,
+# and the 'socket_test' tag is reused to pull in the zlib (-lz) dependency
+# required by base/output.cc.
+stats_srcs = [
+    '../../../base/statistics.cc',
+    '../../../base/stats/info.cc',
+    '../../../base/stats/storage.cc',
+    '../../../base/time.cc',
+    '../../../base/hostinfo.cc',
+    '../../../base/output.cc',
+    '../../../sim/core.cc',
+    '../../../sim/root.cc',
+    '../../../sim/globals.cc',
+    '../../../sim/tags.cc',
+]
+stats_tags = [with_tag('gem5 simobject'), with_tag('socket_test')]
+
 GTest('replaceable_entry.test', 'replaceable_entry.test.cc')
+GTest('base_rp.test', 'lru_rp.cc', 'base_rp.test.cc', *stats_srcs,
+    *stats_tags)
 GTest('tree_plru_rp.test', 'tree_plru_rp.cc', 'tree_plru_rp.test.cc',
-    with_tag('gem5 simobject'))
-GTest('fifo_rp.test', 'fifo_rp.cc', 'fifo_rp.test.cc',
-    with_tag('gem5 simobject'))
-GTest('lfu_rp.test', 'lfu_rp.cc', 'lfu_rp.test.cc', with_tag('gem5 simobject'))
-GTest('lru_rp.test', 'lru_rp.cc', 'lru_rp.test.cc', with_tag('gem5 simobject'))
-GTest('mru_rp.test', 'mru_rp.cc', 'mru_rp.test.cc', with_tag('gem5 simobject'))
+    *stats_srcs, *stats_tags)
+GTest('fifo_rp.test', 'fifo_rp.cc', 'fifo_rp.test.cc', *stats_srcs,
+    *stats_tags)
+GTest('lfu_rp.test', 'lfu_rp.cc', 'lfu_rp.test.cc', *stats_srcs, *stats_tags)
+GTest('lru_rp.test', 'lru_rp.cc', 'lru_rp.test.cc', *stats_srcs, *stats_tags)
+GTest('mru_rp.test', 'mru_rp.cc', 'mru_rp.test.cc', *stats_srcs, *stats_tags)
 GTest('second_chance_rp.test', 'fifo_rp.cc', 'second_chance_rp.cc',
-    'second_chance_rp.test.cc', with_tag('gem5 simobject'))
+    'second_chance_rp.test.cc', *stats_srcs, *stats_tags)

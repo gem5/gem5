@@ -32,6 +32,7 @@
 #include <memory>
 
 #include "base/compiler.hh"
+#include "base/statistics.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 #include "mem/packet.hh"
 #include "params/BaseReplacementPolicy.hh"
@@ -50,12 +51,57 @@ namespace replacement_policy
 
 /**
  * A common base class of cache replacement policy objects.
+ *
+ * Concrete policies do not override the public interface directly. Instead,
+ * they implement the protected @c *Impl methods, while the public methods
+ * (invalidate, touch, reset and getVictim) are non-virtual wrappers provided
+ * by this base class. These wrappers gather profiling statistics common to
+ * every policy and then forward to the policy-specific implementation. This
+ * Non-Virtual Interface keeps statistics collection in a single place, so no
+ * policy can accidentally bypass it.
  */
 class Base : public SimObject
 {
+  protected:
+    /** Profiling information shared by all replacement policies. */
+    struct ReplacementStats : public statistics::Group
+    {
+        ReplacementStats(statistics::Group *parent)
+            : statistics::Group(parent),
+              ADD_STAT(victimizations, statistics::units::Count::get(),
+                       "Number of entries selected for eviction by getVictim"),
+              ADD_STAT(hits, statistics::units::Count::get(),
+                       "Number of accesses to entries already present"),
+              ADD_STAT(insertions, statistics::units::Count::get(),
+                       "Number of entries inserted/validated"),
+              ADD_STAT(invalidations, statistics::units::Count::get(),
+                       "Number of entries invalidated"),
+              ADD_STAT(
+                  avgHitsPerInsertion, statistics::units::Ratio::get(),
+                  "Average number of hits seen by an entry before replacement")
+        { avgHitsPerInsertion = hits / insertions; }
+
+        /** Number of entries selected for eviction by getVictim. */
+        statistics::Scalar victimizations;
+        /** Number of accesses to entries already present (cache hits). */
+        statistics::Scalar hits;
+        /** Number of entries inserted/validated. */
+        statistics::Scalar insertions;
+        /** Number of entries invalidated. */
+        statistics::Scalar invalidations;
+        /** Average number of hits seen by an entry before it is replaced. */
+        statistics::Formula avgHitsPerInsertion;
+    };
+
+    /**
+     * Profiling counters. Marked mutable because the const interface methods
+     * (e.g. touch and getVictim) must be able to update them.
+     */
+    mutable ReplacementStats stats;
+
   public:
     typedef BaseReplacementPolicyParams Params;
-    Base(const Params &p) : SimObject(p) {}
+    Base(const Params &p) : SimObject(p), stats(this) {}
     virtual ~Base() = default;
 
     /**
@@ -63,8 +109,12 @@ class Base : public SimObject
      *
      * @param replacement_data Replacement data to be invalidated.
      */
-    virtual void invalidate(const std::shared_ptr<ReplacementData>&
-        replacement_data) = 0;
+    void
+    invalidate(const std::shared_ptr<ReplacementData> &replacement_data)
+    {
+        stats.invalidations++;
+        invalidateImpl(replacement_data);
+    }
 
     /**
      * Update replacement data.
@@ -72,13 +122,19 @@ class Base : public SimObject
      * @param replacement_data Replacement data to be touched.
      * @param pkt Packet that generated this access.
      */
-    virtual void touch(const std::shared_ptr<ReplacementData>&
-        replacement_data, const PacketPtr pkt)
+    void
+    touch(const std::shared_ptr<ReplacementData> &replacement_data,
+          const PacketPtr pkt)
     {
-        touch(replacement_data);
+        stats.hits++;
+        touchImpl(replacement_data, pkt);
     }
-    virtual void touch(const std::shared_ptr<ReplacementData>&
-        replacement_data) const = 0;
+    void
+    touch(const std::shared_ptr<ReplacementData> &replacement_data) const
+    {
+        stats.hits++;
+        touchImpl(replacement_data);
+    }
 
     /**
      * Reset replacement data. Used when it's holder is inserted/validated.
@@ -86,13 +142,19 @@ class Base : public SimObject
      * @param replacement_data Replacement data to be reset.
      * @param pkt Packet that generated this access.
      */
-    virtual void reset(const std::shared_ptr<ReplacementData>&
-        replacement_data, const PacketPtr pkt)
+    void
+    reset(const std::shared_ptr<ReplacementData> &replacement_data,
+          const PacketPtr pkt)
     {
-        reset(replacement_data);
+        stats.insertions++;
+        resetImpl(replacement_data, pkt);
     }
-    virtual void reset(const std::shared_ptr<ReplacementData>&
-        replacement_data) const = 0;
+    void
+    reset(const std::shared_ptr<ReplacementData> &replacement_data) const
+    {
+        stats.insertions++;
+        resetImpl(replacement_data);
+    }
 
     /**
      * Find replacement victim among candidates.
@@ -100,8 +162,12 @@ class Base : public SimObject
      * @param candidates Replacement candidates, selected by indexing policy.
      * @return Replacement entry to be replaced.
      */
-    virtual ReplaceableEntry* getVictim(
-                           const ReplacementCandidates& candidates) const = 0;
+    ReplaceableEntry *
+    getVictim(const ReplacementCandidates &candidates) const
+    {
+        stats.victimizations++;
+        return getVictimImpl(candidates);
+    }
 
     /**
      * Instantiate a replacement data entry.
@@ -109,6 +175,33 @@ class Base : public SimObject
      * @return A shared pointer to the new replacement data.
      */
     virtual std::shared_ptr<ReplacementData> instantiateEntry() = 0;
+
+  protected:
+    /**
+     * Policy-specific implementation of the public interface. See the
+     * corresponding public methods for the expected behavior.
+     * @{
+     */
+    virtual void invalidateImpl(
+        const std::shared_ptr<ReplacementData> &replacement_data) = 0;
+
+    virtual void
+    touchImpl(const std::shared_ptr<ReplacementData> &replacement_data,
+              const PacketPtr pkt)
+    { touchImpl(replacement_data); }
+    virtual void touchImpl(
+        const std::shared_ptr<ReplacementData> &replacement_data) const = 0;
+
+    virtual void
+    resetImpl(const std::shared_ptr<ReplacementData> &replacement_data,
+              const PacketPtr pkt)
+    { resetImpl(replacement_data); }
+    virtual void resetImpl(
+        const std::shared_ptr<ReplacementData> &replacement_data) const = 0;
+
+    virtual ReplaceableEntry *
+    getVictimImpl(const ReplacementCandidates &candidates) const = 0;
+    /** @} */
 };
 
 } // namespace replacement_policy

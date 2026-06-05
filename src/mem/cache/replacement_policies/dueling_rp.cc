@@ -48,7 +48,8 @@ Dueling::Dueling(const Params &p)
 }
 
 void
-Dueling::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
+Dueling::invalidateImpl(
+    const std::shared_ptr<ReplacementData> &replacement_data)
 {
     std::shared_ptr<DuelerReplData> casted_replacement_data =
         std::static_pointer_cast<DuelerReplData>(replacement_data);
@@ -57,8 +58,8 @@ Dueling::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
 }
 
 void
-Dueling::touch(const std::shared_ptr<ReplacementData>& replacement_data,
-    const PacketPtr pkt)
+Dueling::touchImpl(const std::shared_ptr<ReplacementData> &replacement_data,
+                   const PacketPtr pkt)
 {
     std::shared_ptr<DuelerReplData> casted_replacement_data =
         std::static_pointer_cast<DuelerReplData>(replacement_data);
@@ -67,7 +68,8 @@ Dueling::touch(const std::shared_ptr<ReplacementData>& replacement_data,
 }
 
 void
-Dueling::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
+Dueling::touchImpl(
+    const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     std::shared_ptr<DuelerReplData> casted_replacement_data =
         std::static_pointer_cast<DuelerReplData>(replacement_data);
@@ -76,8 +78,8 @@ Dueling::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
 }
 
 void
-Dueling::reset(const std::shared_ptr<ReplacementData>& replacement_data,
-    const PacketPtr pkt)
+Dueling::resetImpl(const std::shared_ptr<ReplacementData> &replacement_data,
+                   const PacketPtr pkt)
 {
     std::shared_ptr<DuelerReplData> casted_replacement_data =
         std::static_pointer_cast<DuelerReplData>(replacement_data);
@@ -92,7 +94,8 @@ Dueling::reset(const std::shared_ptr<ReplacementData>& replacement_data,
 }
 
 void
-Dueling::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
+Dueling::resetImpl(
+    const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     std::shared_ptr<DuelerReplData> casted_replacement_data =
         std::static_pointer_cast<DuelerReplData>(replacement_data);
@@ -106,8 +109,8 @@ Dueling::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
     duelingMonitor.sample(static_cast<Dueler*>(casted_replacement_data.get()));
 }
 
-ReplaceableEntry*
-Dueling::getVictim(const ReplacementCandidates& candidates) const
+ReplaceableEntry *
+Dueling::getVictimImpl(const ReplacementCandidates &candidates) const
 {
     // This function assumes that all candidates are either part of the same
     // sampled set, or are not samples.

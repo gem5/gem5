@@ -45,7 +45,8 @@ Random::Random(const Params &p)
 }
 
 void
-Random::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
+Random::invalidateImpl(
+    const std::shared_ptr<ReplacementData> &replacement_data)
 {
     // Unprioritize replacement data victimization
     std::static_pointer_cast<RandomReplData>(
@@ -53,20 +54,22 @@ Random::invalidate(const std::shared_ptr<ReplacementData>& replacement_data)
 }
 
 void
-Random::touch(const std::shared_ptr<ReplacementData>& replacement_data) const
+Random::touchImpl(
+    const std::shared_ptr<ReplacementData> &replacement_data) const
 {
 }
 
 void
-Random::reset(const std::shared_ptr<ReplacementData>& replacement_data) const
+Random::resetImpl(
+    const std::shared_ptr<ReplacementData> &replacement_data) const
 {
     // Unprioritize replacement data victimization
     std::static_pointer_cast<RandomReplData>(
         replacement_data)->valid = true;
 }
 
-ReplaceableEntry*
-Random::getVictim(const ReplacementCandidates& candidates) const
+ReplaceableEntry *
+Random::getVictimImpl(const ReplacementCandidates &candidates) const
 {
     // There must be at least one replacement candidate
     assert(candidates.size() > 0);
