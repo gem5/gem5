@@ -1,6 +1,10 @@
 # Copyright (c) 2010-2013, 2016, 2019-2020 ARM Limited
 # Copyright (c) 2020 Barkhausen Institut
+# Copyright (c) 2025 Akanksha Chaudhari, Matt Sinclair (University of Wisconsin-Madison)
 # All rights reserved.
+#
+# This file contains modifications and/or code derived from:
+# gem5-SALAM: https://github.com/TeCSAR-UNCC/gem5-SALAM
 #
 # The license below extends only to copyright in the software and shall
 # not be construed as granting a license to any other intellectual
