@@ -4,9 +4,9 @@ import networkx as nx
 
 try:
     from routing_tables import (
+        GraphSetup,
         createGc,
         createGr,
-        GraphSetup,
     )
 except:
     import createGc
@@ -19,9 +19,9 @@ dirname = os.path.dirname(os.path.abspath(__file__))
 
 
 class CommunicationGraph:
-    def __init__(self, app=None, mappingFlag=True, filename = "tgff_64_64.txt"):
+    def __init__(self, app=None, mappingFlag=True, filename="tgff_64_64.txt"):
         if app is None:
-            self.GC = GraphSetup.createGc_from_txt(filename,mappingFlag)
+            self.GC = GraphSetup.createGc_from_txt(filename, mappingFlag)
         else:
             self.GC = createGc.createGc(mappingFlag, app)
         self.cycles = 100000000

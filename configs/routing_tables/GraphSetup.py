@@ -1,16 +1,15 @@
-import re
-import networkx as nx
-import os
 import csv
+import os
+import re
+
+import networkx as nx
 
 # Get the absolute path to the directory containing this script
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 LINE_RE = re.compile(
-    r"PE\s+(\d+)\s*->\s*PE\s*(\d+)\s*"
-    r"d=\s*(\d+)\s*"
-    r"hops=\s*(\d+)\s*(.*)"
+    r"PE\s+(\d+)\s*->\s*PE\s*(\d+)\s*" r"d=\s*(\d+)\s*" r"hops=\s*(\d+)\s*(.*)"
 )
 
 SW_RE = re.compile(r"sw(\d+)")
@@ -29,7 +28,7 @@ def parse_routing_file(filename):
     """
     flows = []
     filename = os.path.join(script_dir, filename)
-    with open(filename, "r") as f:
+    with open(filename) as f:
         for line in f:
             line = line.strip()
 
@@ -60,7 +59,8 @@ def parse_routing_file(filename):
 
     return flows
 
-def createGc_from_txt(filename,mapping =True):
+
+def createGc_from_txt(filename, mapping=True):
     """
     Graph with PE ids as nodes.
     """
@@ -93,6 +93,7 @@ def createGc_from_txt(filename,mapping =True):
             )
     return Gc
 
+
 def createRoutingTable_from_txt(flows):
     with open(os.path.join(script_dir, "ASroute.csv"), "w", newline="") as f:
         writer = csv.writer(f)
@@ -101,13 +102,11 @@ def createRoutingTable_from_txt(flows):
         for flow in flows:
             path = flow["switch_path"]
             for i in range(len(path) - 1):
-                writer.writerow([path[0], path[-1], path[i], path[i+1]])
+                writer.writerow([path[0], path[-1], path[i], path[i + 1]])
     return
 
 
 if __name__ == "__main__":
-    Gc = createGc_from_txt("tgff_64_64.txt",True)
+    Gc = createGc_from_txt("tgff_64_64.txt", True)
     print(Gc.nodes)
-    print(sum(
-            data["demand"] for _, _, data in Gc.edges(data=True)
-        ))
+    print(sum(data["demand"] for _, _, data in Gc.edges(data=True)))

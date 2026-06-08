@@ -40,32 +40,35 @@ scons build/RISCV/gem5.opt
 ```
 """
 
+import os
+
 import m5
 from m5.objects import Root
 from m5.util import addToPath
-import os
 
 addToPath(os.path.dirname(__file__))
 
 
-from gem5.components.boards.riscv_board import RiscvBoard
-from gem5.components.memory.memory import ChanneledMemory
-from m5.objects import DDR4_2400_8x8
-from gem5.components.processors.cpu_types import CPUTypes
-from gem5.components.processors.simple_processor import SimpleProcessor
-from gem5.isas import ISA
-from gem5.resources.resource import obtain_resource
-from gem5.resources.resource import *
-from gem5.simulate.exit_event import ExitEvent
-from gem5.simulate.simulator import Simulator
-from gem5.utils.requires import requires
-
 import math
-import LookupReader,NoCbuilder
+
+import LookupReader
+import NoCbuilder
+
+from m5.objects import DDR4_2400_8x8
+
+from gem5.components.boards.riscv_board import RiscvBoard
 from gem5.components.cachehierarchies.ruby.moesi_cmp_directory_cache_hierarchy import (
     MOESICmpDirectoryCacheHierarchy,
 )
-
+from gem5.components.memory.memory import ChanneledMemory
+from gem5.components.processors.cpu_types import CPUTypes
+from gem5.components.processors.simple_processor import SimpleProcessor
+from gem5.isas import ISA
+from gem5.resources.resource import *
+from gem5.resources.resource import obtain_resource
+from gem5.simulate.exit_event import ExitEvent
+from gem5.simulate.simulator import Simulator
+from gem5.utils.requires import requires
 
 # This runs a check to ensure the gem5 binary is compiled for RISCV.
 num_cpus = 4
@@ -84,7 +87,9 @@ requires(isa_required=ISA.RISCV)
 
 rows = int(math.ceil(math.sqrt(num_cpus)))
 filename = "XYrouting.csv"
-builder = NoCbuilder.TopologyGraph(topo=topo,size=(rows,rows),directory="corners",L2=True)
+builder = NoCbuilder.TopologyGraph(
+    topo=topo, size=(rows, rows), directory="corners", L2=True
+)
 builder.compute_XY_routing_table()
 builder.write_routing_csv(filename=filename)
 lookuplist = LookupReader.read_csv(filename)
@@ -108,7 +113,7 @@ memory = ChanneledMemory(
     dram_interface_class=DDR4_2400_8x8,
     num_channels=4,
     interleaving_size=64,
-    size="4GiB"
+    size="4GiB",
 )
 
 # Here we setup the processor. We use a simple processor.
@@ -129,30 +134,38 @@ fs = False
 
 if fs:
     board.set_kernel_disk_workload(
-        kernel=KernelResource(local_path="/home/amoghsgk/gem5/resources/riscv-linux-6.8.12-kernel"),
-        bootloader=BootloaderResource(local_path="/home/amoghsgk/gem5/resources/riscv-bootloader-opensbi-1.3.1"),
-        disk_image=DiskImageResource(local_path="/home/amoghsgk/gem5/resources/rootfs.img"),
+        kernel=KernelResource(
+            local_path="/home/amoghsgk/gem5/resources/riscv-linux-6.8.12-kernel"
+        ),
+        bootloader=BootloaderResource(
+            local_path="/home/amoghsgk/gem5/resources/riscv-bootloader-opensbi-1.3.1"
+        ),
+        disk_image=DiskImageResource(
+            local_path="/home/amoghsgk/gem5/resources/rootfs.img"
+        ),
         kernel_args=[
-                "console=ttyS0",
-                "root={root_value}",
-                "disk_device={disk_device}",
-                "rw",
-                "no_systemd = 1"
-            ],
-        #checkpoint=CheckpointResource(local_path="./ubuntu-no-systemd_checkpoint/cpt.266844640248"), not working with networks
+            "console=ttyS0",
+            "root={root_value}",
+            "disk_device={disk_device}",
+            "rw",
+            "no_systemd = 1",
+        ],
+        # checkpoint=CheckpointResource(local_path="./ubuntu-no-systemd_checkpoint/cpt.266844640248"), not working with networks
         readfile_contents="""
         echo "running radix"
         ./RADIX -n 32768 -p 4 -s
         m5 exit
-        """
+        """,
     )
 else:
-    board.set_se_binary_workload(BinaryResource(
-        local_path = "/home/amoghsgk/gem5/splash2/codes/kernels/radix/RADIX",
-        architecture=ISA.RISCV
+    board.set_se_binary_workload(
+        BinaryResource(
+            local_path="/home/amoghsgk/gem5/splash2/codes/kernels/radix/RADIX",
+            architecture=ISA.RISCV,
         ),
-        arguments=["-n 32768", "-p", str(num_cpus),"-s"],
+        arguments=["-n 32768", "-p", str(num_cpus), "-s"],
     )
+
 
 def exit_event_handler():
     print("First exit: kernel booted")
