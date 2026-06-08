@@ -4573,24 +4573,43 @@ decode QUADRANT default Unknown::unknown() {
                 }
                 format VectorCompressFormat {
                     0x17: vcompress_vm({{
-                        static uint64_t vcompress_cnt;
-                        static uint64_t vcompress_buf[65536];
-                        if(this->microIdx == 0) {
-                            vcompress_cnt = 0;
+                        const uint32_t elems_per_reg = vlenb / sizeof(ElemType);
+                        const uint64_t total_vl  = (uint64_t)machInst.vl;
+                        const uint64_t dst_start = (uint64_t)this->microIdx * elems_per_reg;
+                        const uint64_t dst_end   = dst_start + elems_per_reg;
+
+                        auto vs2_elem = [&](uint64_t ei) -> ElemType {
+                            const uint32_t src_reg     = (uint32_t)(ei / elems_per_reg);
+                            const uint32_t elem_in_reg = (uint32_t)(ei % elems_per_reg);
+                            gem5::RiscvISA::VecRegContainer tmp;
+                            xc->getRegOperand(this, 1 + src_reg, &tmp);
+                            return tmp.template as<ElemType>()[elem_in_reg];
+                        };
+
+                        uint64_t dst_idx = 0;
+                        uint32_t filled  = 0;
+
+                        for (uint64_t ei = 0; ei < total_vl; ei++) {
+                            if (!elem_mask(Vs1_vu, ei))
+                                continue;
+                            if (dst_idx >= dst_start && dst_idx < dst_end) {
+                                Vd_vu[dst_idx - dst_start] = vs2_elem(ei);
+                                filled++;
+                            }
+                            dst_idx++;
+                            if (dst_idx >= dst_end)
+                                break;
                         }
-                        for (uint32_t i = 0; i < microVl; i++) {
-                            uint32_t num_regs = vtype_regs_per_group(vtype);
-                            uint32_t ei = i + num_elements_reg(vtype, vlen) *
-                                (this->microIdx % num_regs);
-                            if (elem_mask(Vs1_vu, ei) &&
-                                this->microIdx < num_regs) {
-                                vcompress_buf[vcompress_cnt] = Vs2_vu[i];
-                                vcompress_cnt ++;
-                            }
-                            if (ei < vcompress_cnt &&
-                                this->microIdx >= num_regs) {
-                                Vd_vu[i] = vcompress_buf[ei];
-                            }
+
+                        if (!bits(vtype, 6)) {
+                            gem5::RiscvISA::VecRegContainer old_vd_tmp;
+                            xc->getRegOperand(this, 1 + 8, &old_vd_tmp);
+                            auto old_elems = old_vd_tmp.template as<ElemType>();
+                            for (uint32_t i = filled; i < elems_per_reg; i++)
+                                Vd_vu[i] = old_elems[i];
+                        } else {
+                            for (uint32_t i = filled; i < elems_per_reg; i++)
+                                Vd_vu[i] = static_cast<ElemType>(-1);
                         }
                     }}, OPMVV, SimdMiscOp);
                 }
