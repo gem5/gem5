@@ -117,13 +117,12 @@ class AbstractMemory : public ClockedObject
 
     // Pointer to host memory used to implement this memory.
     // Note: pmemAddr provides an O(1) direct pointer calculation for
-    // non-sparse memories, which is essential for performance on the
-    // simulation critical path.
+    // contiguous (non-sparse) memories, which is essential for performance
+    // on the simulation critical path. It acts as a cached optimization.
     uint8_t* pmemAddr;
 
-    // Map of address ranges to host memory pointers. Used when this memory has
-    // a sparse address range.
-    // Note: Either pmemAddr or pmemMap should be used, but not both.
+    // Map of address ranges to host memory pointers. This is always populated
+    // and valid.
     AddrRangeMap<uint8_t *> pmemMap;
 
     // Whether the memory is sparse
@@ -324,6 +323,7 @@ class AbstractMemory : public ClockedObject
             assert(it != pmemMap.end());
             return it->second + addr - it->first.start();
         } else {
+            assert(pmemAddr);
             return pmemAddr + addr - range.start();
         }
     }

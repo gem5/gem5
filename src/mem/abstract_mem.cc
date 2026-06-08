@@ -123,13 +123,15 @@ AbstractMemory::setBackingStore(uint8_t *pmem_addr, const AddrRange &_range)
     backdoor.ptr((range.interleaved() || range.isSparse()) ? nullptr
                                                            : pmem_addr);
 
-    if (range.isSparse()) {
-        assert(_range.valid());
-        DPRINTF(AddrRanges, "Inserting range %s at address %p\n",
-                _range.to_string(), pmem_addr);
-        pmemMap.insert(_range, pmem_addr);
-        assert(pmemAddr == nullptr);
-    } else {
+    assert(_range.valid());
+    DPRINTF(AddrRanges, "Inserting range %s at address %p\n",
+            _range.to_string(), pmem_addr);
+    auto it = pmemMap.insert(_range, pmem_addr);
+    panic_if(it == pmemMap.end(),
+             "Failed to insert backing store range %s (overlap?)\n",
+             _range.to_string());
+
+    if (!range.isSparse()) {
         panic_if(_range.start() != range.start() ||
                      _range.end() != range.end(),
                  "Backing store range does not match abstract memory range");
