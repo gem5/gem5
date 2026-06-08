@@ -1,0 +1,16 @@
+Routing paths (13 flows):
+------------------------------------------------------------------------------
+  PE  1 -> PE2    d=    208  hops=1   sw7 -[N=0]-> sw11
+  PE  1 -> PE5    d=    249  hops=1   sw7 -[N=0]-> sw3
+  PE  1 -> PE7    d=     77  hops=2   sw7 -[N=0]-> sw6 -[N=1]-> sw10
+  PE  2 -> PE7    d=    266  hops=1   sw11 -[N=0]-> sw10
+  PE  2 -> PE9    d=    266  hops=1   sw11 -[N=0]-> sw15
+  PE  6 -> PE1    d=    249  hops=2   sw5 -[N=0]-> sw6 -[N=1]-> sw7
+  PE  6 -> PE11   d=    329  hops=1   sw5 -[N=0]-> sw6
+  PE  7 -> PE0    d=    120  hops=1   sw10 -[N=0]-> sw9
+  PE  7 -> PE11   d=    314  hops=1   sw10 -[N=0]-> sw6
+  PE 11 -> PE1    d=    249  hops=1   sw6 -[N=1]-> sw7
+  PE 11 -> PE12   d=    156  hops=2   sw6 -[N=1]-> sw10 -[N=2]-> sw14
+  PE 12 -> PE7    d=     89  hops=1   sw14 -[N=0]-> sw10
+  PE 12 -> PE9    d=    120  hops=1   sw14 -[N=0]-> sw15
+------------------------------------------------------------------------------

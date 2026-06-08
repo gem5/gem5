@@ -1,0 +1,77 @@
+Routing paths (74 flows):
+------------------------------------------------------------------------------
+  PE  0 -> PE29   d=    109  hops=2   sw42 -[N=0]-> sw34 -[N=1]-> sw26
+  PE  0 -> PE63   d=    315  hops=1   sw42 -[N=0]-> sw41
+  PE  3 -> PE6    d=    292  hops=1   sw10 -[N=0]-> sw9
+  PE  3 -> PE29   d=    203  hops=2   sw10 -[N=2]-> sw18 -[N=3]-> sw26
+  PE  5 -> PE39   d=    250  hops=1   sw52 -[N=1]-> sw51
+  PE  5 -> PE56   d=    266  hops=1   sw52 -[N=0]-> sw60
+  PE  7 -> PE29   d=    284  hops=1   sw25 -[N=0]-> sw26
+  PE  8 -> PE13   d=    217  hops=2   sw34 -[N=0]-> sw42 -[N=10]-> sw50
+  PE  8 -> PE36   d=    197  hops=3   sw34 -[N=2]-> sw35 -[N=3]-> sw36 -[N=4]-> sw28
+  PE  8 -> PE55   d=    318  hops=1   sw34 -[N=7]-> sw33
+  PE  8 -> PE63   d=    160  hops=2   sw34 -[N=7]-> sw33 -[N=8]-> sw41
+  PE  9 -> PE29   d=     89  hops=5   sw22 -[N=0]-> sw21 -[N=1]-> sw20 -[N=3]-> sw28 -[N=4]-> sw27 -[N=5]-> sw26
+  PE  9 -> PE62   d=    329  hops=1   sw22 -[N=0]-> sw21
+  PE 10 -> PE5    d=    247  hops=2   sw36 -[N=0]-> sw44 -[N=1]-> sw52
+  PE 10 -> PE57   d=    192  hops=1   sw36 -[N=5]-> sw37
+  PE 11 -> PE8    d=    176  hops=2   sw32 -[N=0]-> sw33 -[N=1]-> sw34
+  PE 12 -> PE61   d=    160  hops=1   sw3 -[N=222]-> sw2
+  PE 13 -> PE26   d=    253  hops=1   sw50 -[N=0]-> sw49
+  PE 16 -> PE10   d=    160  hops=3   sw19 -[N=2]-> sw20 -[N=3]-> sw28 -[N=4]-> sw36
+  PE 16 -> PE12   d=    156  hops=2   sw19 -[N=0]-> sw11 -[N=1]-> sw3
+  PE 16 -> PE19   d=    284  hops=1   sw19 -[N=0]-> sw18
+  PE 16 -> PE42   d=    143  hops=1   sw19 -[N=2]-> sw27
+  PE 17 -> PE5    d=    266  hops=1   sw53 -[N=0]-> sw52
+  PE 17 -> PE21   d=    314  hops=1   sw53 -[N=0]-> sw45
+  PE 17 -> PE39   d=    116  hops=2   sw53 -[N=0]-> sw52 -[N=1]-> sw51
+  PE 19 -> PE9    d=    121  hops=4   sw18 -[N=1]-> sw19 -[N=2]-> sw20 -[N=3]-> sw21 -[N=4]-> sw22
+  PE 19 -> PE40   d=    266  hops=1   sw18 -[N=3]-> sw17
+  PE 21 -> PE29   d=    116  hops=5   sw45 -[N=0]-> sw37 -[N=1]-> sw29 -[N=2]-> sw28 -[N=4]-> sw27 -[N=5]-> sw26
+  PE 21 -> PE54   d=    109  hops=1   sw45 -[N=0]-> sw44
+  PE 23 -> PE0    d=    194  hops=1   sw43 -[N=0]-> sw42
+  PE 23 -> PE54   d=    253  hops=1   sw43 -[N=0]-> sw44
+  PE 24 -> PE3    d=    318  hops=1   sw11 -[N=1]-> sw10
+  PE 24 -> PE16   d=    159  hops=1   sw11 -[N=0]-> sw19
+  PE 29 -> PE43   d=    155  hops=3   sw26 -[N=0]-> sw27 -[N=3]-> sw28 -[N=5]-> sw20
+  PE 33 -> PE17   d=    155  hops=3   sw29 -[N=1]-> sw37 -[N=6]-> sw45 -[N=7]-> sw53
+  PE 33 -> PE36   d=    292  hops=1   sw29 -[N=2]-> sw28
+  PE 36 -> PE15   d=    194  hops=2   sw28 -[N=0]-> sw29 -[N=1]-> sw30
+  PE 36 -> PE43   d=    329  hops=1   sw28 -[N=5]-> sw20
+  PE 36 -> PE50   d=    116  hops=2   sw28 -[N=4]-> sw36 -[N=5]-> sw35
+  PE 39 -> PE13   d=     96  hops=1   sw51 -[N=0]-> sw50
+  PE 40 -> PE6    d=    217  hops=1   sw17 -[N=0]-> sw9
+  PE 40 -> PE7    d=    105  hops=1   sw17 -[N=0]-> sw25
+  PE 40 -> PE17   d=    149  hops=8   sw17 -[N=0]-> sw18 -[N=1]-> sw19 -[N=2]-> sw27 -[N=3]-> sw28 -[N=4]-> sw36 -[N=5]-> sw37 -[N=6]-> sw45 -[N=7]-> sw53
+  PE 42 -> PE8    d=    107  hops=2   sw27 -[N=0]-> sw35 -[N=6]-> sw34
+  PE 42 -> PE29   d=    109  hops=1   sw27 -[N=5]-> sw26
+  PE 42 -> PE36   d=    160  hops=1   sw27 -[N=3]-> sw28
+  PE 42 -> PE43   d=    160  hops=2   sw27 -[N=3]-> sw28 -[N=5]-> sw20
+  PE 43 -> PE2    d=    116  hops=3   sw20 -[N=3]-> sw21 -[N=4]-> sw22 -[N=223]-> sw14
+  PE 43 -> PE16   d=    314  hops=1   sw20 -[N=0]-> sw19
+  PE 43 -> PE30   d=    149  hops=2   sw20 -[N=6]-> sw12 -[N=7]-> sw4
+  PE 43 -> PE46   d=    237  hops=1   sw20 -[N=6]-> sw12
+  PE 43 -> PE52   d=    203  hops=2   sw20 -[N=3]-> sw21 -[N=4]-> sw13
+  PE 43 -> PE62   d=    120  hops=1   sw20 -[N=3]-> sw21
+  PE 46 -> PE24   d=     89  hops=1   sw12 -[N=0]-> sw11
+  PE 46 -> PE40   d=    119  hops=4   sw12 -[N=0]-> sw11 -[N=1]-> sw10 -[N=2]-> sw18 -[N=3]-> sw17
+  PE 50 -> PE8    d=    156  hops=1   sw35 -[N=6]-> sw34
+  PE 50 -> PE23   d=    120  hops=1   sw35 -[N=6]-> sw43
+  PE 52 -> PE46   d=    203  hops=1   sw13 -[N=0]-> sw12
+  PE 52 -> PE62   d=    217  hops=1   sw13 -[N=0]-> sw21
+  PE 54 -> PE46   d=    192  hops=4   sw44 -[N=0]-> sw36 -[N=4]-> sw28 -[N=5]-> sw20 -[N=6]-> sw12
+  PE 55 -> PE7    d=    237  hops=1   sw33 -[N=0]-> sw25
+  PE 55 -> PE11   d=    329  hops=1   sw33 -[N=0]-> sw32
+  PE 55 -> PE13   d=     96  hops=3   sw33 -[N=8]-> sw41 -[N=9]-> sw42 -[N=10]-> sw50
+  PE 55 -> PE39   d=    107  hops=4   sw33 -[N=1]-> sw34 -[N=2]-> sw35 -[N=6]-> sw43 -[N=7]-> sw51
+  PE 56 -> PE51   d=    159  hops=1   sw60 -[N=0]-> sw61
+  PE 56 -> PE60   d=    194  hops=1   sw60 -[N=0]-> sw59
+  PE 57 -> PE33   d=    149  hops=1   sw37 -[N=1]-> sw29
+  PE 57 -> PE55   d=    203  hops=4   sw37 -[N=2]-> sw36 -[N=5]-> sw35 -[N=6]-> sw34 -[N=7]-> sw33
+  PE 60 -> PE42   d=     89  hops=4   sw59 -[N=0]-> sw51 -[N=1]-> sw43 -[N=2]-> sw35 -[N=3]-> sw27
+  PE 61 -> PE25   d=     87  hops=1   sw2 -[N=223]-> sw1
+  PE 62 -> PE8    d=    120  hops=5   sw21 -[N=0]-> sw29 -[N=1]-> sw37 -[N=2]-> sw36 -[N=5]-> sw35 -[N=6]-> sw34
+  PE 62 -> PE23   d=     87  hops=5   sw21 -[N=1]-> sw20 -[N=3]-> sw28 -[N=4]-> sw36 -[N=5]-> sw35 -[N=6]-> sw43
+  PE 62 -> PE33   d=    314  hops=1   sw21 -[N=0]-> sw29
+  PE 63 -> PE55   d=    292  hops=1   sw41 -[N=0]-> sw33
+------------------------------------------------------------------------------
