@@ -1,3 +1,10 @@
+# Version 25.1.0.1
+
+**[HOTFIX]** This hotfix release applies the following fixes:
+
+- [#3001](https://github.com/gem5/gem5/pull/3001): Fixes RISC-V checkpointing by saving the PMP table to the checkpoint.
+- [#2943](https://github.com/gem5/gem5/pull/2943): Fixes a build error which can occur on Arm systems.
+
 # Version 25.1
 
 gem5 Version 25.1 is the second major release of 2025.
