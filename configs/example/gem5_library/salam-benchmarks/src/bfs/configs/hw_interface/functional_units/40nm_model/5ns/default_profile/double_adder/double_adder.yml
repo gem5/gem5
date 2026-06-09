@@ -1,0 +1,38 @@
+---
+functional_unit:
+    parameters:
+        alias: double_adder
+        stages: 3
+        cycles: 5
+        enum_value: 6
+        datatypes:
+            integer:
+                size: none
+                sign: none
+                APMode: false
+            floating_point:
+                size: double
+                sign: any
+                APMode: true
+            pointer:
+                size: none
+                sign: none
+                APMode: false
+        instructions: # LLVM OpCode: Runtime Cycles
+            - fadd
+            - fsub
+        limit: 0 # Max Concurrent Functional Unit Scheduling (0 = Max IR Instances)
+    power_model:
+        units:
+            power: mW
+            energy: pJ
+            time: ns
+            area: um^2
+        latency: 5
+        internal_power: 9.743773e-03
+        switch_power: 7.400587e-03
+        dynamic_power: 1.800732e-03
+        dynamic_energy: 9.003937e-03
+        leakage_power: 7.395312e-05
+        area: 5.981433e+00
+        path_delay: 1.75

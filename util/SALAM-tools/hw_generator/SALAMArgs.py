@@ -47,4 +47,11 @@ def HWArgs():
     parser.add_argument(
         "-b", "--bench", type=str, required=True, help="Name of benchmark"
     )
+    parser.add_argument(
+        "--bench-path",
+        type=str,
+        default=None,
+        help="Path to benchmark directory relative to ACC_BENCH_PATH "
+        "(default: sys_validation/<bench>, e.g. bfs for in-tree workloads)",
+    )
     return parser.parse_args()

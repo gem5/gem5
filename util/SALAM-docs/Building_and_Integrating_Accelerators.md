@@ -45,7 +45,7 @@ The YAML file has two main roles:
 1. Describe the accelerator cluster (what devices exist and how they are wired).
 2. Describe the timing model (how LLVM IR instructions map to functional units and runtime cycles).
 
-### Accelerator cluster description (acc_cluster)
+### Accelerator cluster description (acc\_cluster)
 
 The `acc_cluster` section declares what hardware blocks exist for the workload. For BFS, that includes:
 
@@ -55,7 +55,7 @@ The `acc_cluster` section declares what hardware blocks exist for the workload. 
 
 This is also where you specify the PIO master bus for each device, PIO window sizes, and (optionally) interrupt numbers.
 
-### Timing model description (hw_config)
+### Timing model description (hw\_config)
 
 The `hw_config` section provides per-kernel instruction timing. The keys under `hw_config` correspond to the LLVM IR file base names. For example, `hw/bfs.ll` maps to the `bfs:` section.
 
@@ -163,3 +163,45 @@ The most common outputs to look at are:
 * `stats.txt`: gem5 statistics (and SALAM object stats if enabled/dumped).
 * `debug-trace.txt` (optional): if `run_system.sh --print` is used, stdout/stderr are redirected here.
 * `system.terminal` (if produced by the platform/scripts): the simulated UART/terminal output.
+
+## Custom Hardware Profiles (BFS)
+
+The checked-in **default hardware profile** in **src/salam/HWModeling/** (40nm technology node, 5ns cycle-time target, `default_profile` functional units) supports running all sys\_validation SALAM suite benchmarks without regeneration. See **util/SALAM-docs/README_SALAM.md** (Hardware Profiles) for how profile YAML fields map to device-level and microarchitectural parameters.
+
+The BFS example additionally includes YAML inputs under **configs/example/gem5_library/salam-benchmarks/src/bfs/configs/hw_interface/** used when you want to regenerate timing models from a workload-specific copy of that profile:
+
+* `instructions/inst_list.yml` — master instruction list (the generator updates functional-unit mappings here)
+* `functional_units/40nm_model/5ns/default_profile/*/*.yml` — functional units read by **HWProfileGenerator** (each file combines `parameters` and a per-device `power_model` at the 40nm tech node)
+* `functional_units/40nm_model/5ns/additional_units/float_trig_sine/` — example optional functional unit (see below)
+
+You only need to rerun the generator if you edit the profile YAMLs under `default_profile/` (or after promoting a unit from `additional_units/`). The workload **config.yml** `hw_config` section supplies per-kernel `runtime_cycles` at simulation time via `AccConfig()`; update that separately if you change instruction timing after regenerating.
+
+The **workloads/** tree is a ready-to-run artifact snapshot (precompiled `hw/*.ll`, `sw/main.elf`, and minimal config). It does not include source or hardware profile YAMLs.
+
+### Adding a custom functional unit
+
+The `float_trig_sine` entry under `additional_units/` demonstrates how to specify an optional functional unit: pipeline depth, cycle count, `enum_value`, datatype support, instruction bindings, and power-model fields. **HWProfileGenerator** only reads YAML files under `default_profile/`; files under `additional_units/` are not processed unless you copy them into `default_profile/`.
+
+To add a custom unit to a regenerated profile:
+
+1. Copy the unit directory from `additional_units/` into `default_profile/` (for example, `default_profile/float_trig_sine/float_trig_sine.yml`).
+2. Update `inst_list.yml` to map the relevant LLVM instructions to the unit's `enum_value`, and adjust **config.yml** `hw_config` if per-kernel `runtime_cycles` change.
+3. Run **HWProfileGenerator**, rebuild gem5 with `--with-salam`, and rerun the workload.
+
+### Regenerating the hardware model
+
+```bash
+export M5_PATH=/path/to/gem5
+export ACC_BENCH_PATH=$M5_PATH/configs/example/gem5_library/salam-benchmarks/src
+
+python3 util/SALAM-tools/hw_generator/HWProfileGenerator.py -b bfs --bench-path bfs
+scons build/ARM/gem5.opt --with-salam -j$(nproc)
+util/SALAM-tools/run_system.sh --bench bfs --bench-path bfs
+```
+
+For benchmarks under `sys_validation/<bench>/` relative to `ACC_BENCH_PATH`, omit `--bench-path` (the generator defaults to `sys_validation/<bench>`):
+
+```bash
+export ACC_BENCH_PATH=/path/to/benchmarks
+python3 util/SALAM-tools/hw_generator/HWProfileGenerator.py -b bfs
+```

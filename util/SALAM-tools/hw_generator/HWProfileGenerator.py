@@ -57,23 +57,26 @@ if not ACC_BENCH_PATH:
 SALAM_DIR = os.path.join(M5_PATH, "src", "salam")
 
 
+def resolve_bench_dir(benchname, bench_path=None):
+    if bench_path:
+        return os.path.join(ACC_BENCH_PATH, bench_path)
+    return os.path.join(ACC_BENCH_PATH, "sys_validation", benchname)
+
+
 class HWModel:
     def __init__(
         self,
         model="40nm_model",
         latency="5ns",
         profile="default_profile",
-        benchname=None,
-        benchfolder=os.path.join(ACC_BENCH_PATH, "sys_validation"),
+        bench_dir=None,
     ):
-        self.benchname = benchname
-        self.benchfolder = benchfolder
+        self.bench_dir = bench_dir
         self.model = model
         self.latency = latency
         self.profile = profile
         self.yaml_dir = os.path.join(
-            benchfolder,
-            benchname,
+            bench_dir,
             "configs",
             "hw_interface",
             "functional_units",
@@ -82,8 +85,7 @@ class HWModel:
             profile,
         )
         self.inst_list_yaml = os.path.join(
-            benchfolder,
-            benchname,
+            bench_dir,
             "configs",
             "hw_interface",
             "instructions",
@@ -194,7 +196,8 @@ os.makedirs(os.path.join(GEN_BASE, "functional_units"), exist_ok=True)
 os.makedirs(os.path.join(GEN_BASE, "instructions"), exist_ok=True)
 
 benchmark_args = HWArgs()
-generate_hw_models = HWModel(benchname=benchmark_args.bench, latency="5ns")
+bench_dir = resolve_bench_dir(benchmark_args.bench, benchmark_args.bench_path)
+generate_hw_models = HWModel(bench_dir=bench_dir, latency="5ns")
 fu_file_generator = FunctionalUnitGenerator(
     fu_directory=os.path.join(SALAM_DIR, "FunctionalUnits.py")
 )
