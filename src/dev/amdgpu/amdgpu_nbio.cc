@@ -34,7 +34,6 @@
 #include "debug/AMDGPUDevice.hh"
 #include "dev/amdgpu/amdgpu_device.hh"
 #include "mem/packet_access.hh"
-#include "sim/eventq.hh"
 
 namespace gem5 {
 
