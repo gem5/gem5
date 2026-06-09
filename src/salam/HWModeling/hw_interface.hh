@@ -46,7 +46,7 @@
 #include <iostream>
 #include <vector>
 
-#include "../common/src/macros.hh"
+#include "../common/macros.hh"
 #include "cycle_counts.hh"
 #include "functional_units.hh"
 #include "hw_statistics.hh"
