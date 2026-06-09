@@ -713,7 +713,7 @@ class VlSegMicroInst : public VectorMicroInst
 class VlSegDeIntrlvMicroInst : public VectorArithMicroInst
 {
   private:
-    RegId srcRegIdxArr[NumVecInternalRegs];
+    RegId srcRegIdxArr[NumVecInternalRegs + 2];
     RegId destRegIdxArr[1];
     uint32_t numSrcs;
     uint32_t numMicroops;
