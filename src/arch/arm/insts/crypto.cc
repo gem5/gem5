@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, 2025 ARM Limited
+ * Copyright (c) 2018, 2025-2026 ARM Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -476,6 +476,9 @@ Crypto::sha1H(uint8_t *output, uint8_t *input)
     uint32_t X[4], Y[4];
     load2Reg(&X[0], &Y[0], output, input);
     X[0] = ror(Y[0], 2);
+    X[1] = 0;
+    X[2] = 0;
+    X[3] = 0;
     store1Reg(output, &X[0]);
 }
 

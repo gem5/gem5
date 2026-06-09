@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 ARM Limited
+ * Copyright (c) 2021,2026 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -144,6 +144,14 @@ class Switch : public BasicRouter
         std::vector<statistics::Formula *> m_msg_counts;
         std::vector<statistics::Formula *> m_msg_bytes;
     } switchStats;
+
+    void profFrontEndRdy(Message *msg, MessageBuffer *src_link, int vnet);
+    void profFrontEndRdyClone(Message *msg, MessageBuffer *src_link, int vnet,
+                              Message *clone_from_msg);
+    void profFrontEndFwd(Message *msg, int vnet);
+    void profBackEndRdy(Message *msg, int vnet);
+    void profBackEndFwd(Message *msg, int vnet);
+    void profBackEndFwdExt(Message *msg, MessageBuffer *dest_link, int vnet);
 };
 
 inline std::ostream&

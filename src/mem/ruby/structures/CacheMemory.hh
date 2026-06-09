@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 ARM Limited
+ * Copyright (c) 2020-2021, 2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -107,6 +107,13 @@ class CacheMemory : public SimObject
 
     // Explicitly free up this address
     void deallocate(Addr address);
+
+    // Explicitly free up this entry
+    void deallocate(AbstractCacheEntry *entry);
+
+    // Flush all entries within the cache.
+    // Mainly used for debug purposes
+    void flushEntries();
 
     // Returns with the physical address of the conflicting cache line
     Addr cacheProbe(Addr address) const;

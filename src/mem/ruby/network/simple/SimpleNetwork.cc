@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020 Advanced Micro Devices, Inc.
- * Copyright (c) 2019,2021 ARM Limited
+ * Copyright (c) 2019,2021,2026 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -89,6 +89,12 @@ SimpleNetwork::SimpleNetwork(const Params &p)
     fatal_if((physical_vnets_bandwidth.size() != vnets) &&
              (physical_vnets_bandwidth.size() != 0),
         "physical_vnets_bandwidth must provide BW for all vnets");
+
+    if (p.trace_routes) {
+        routeProfiler.enable();
+        // Register a callback to write the file with all routes
+        registerExitCallback([this]() { dumpRoutes(); });
+    }
 }
 
 void

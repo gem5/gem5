@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Arm Limited
+ * Copyright (c) 2021-2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -2232,6 +2232,76 @@ action(Receive_RespSepData, desc="") {
   }
 }
 
+
+action(UpdateBPTracker_FromRespSepData, desc="") {
+  peek(rspInPort, CHIResponseMsg) {
+    // consistency check
+    assert(tbe.pendReqDest.count() == 1);
+    assert(in_msg.responder == tbe.pendReqDest.smallestElement());
+    assert(in_msg.cbusy >= 0);
+    cbusy_tracker.update(in_msg.responder, in_msg.cbusy);
+  }
+}
+
+action(UpdateBPTracker_FromDataSepResp, desc="") {
+  // Only update once all data is received
+  if (tbe.expected_req_resp.hasReceivedData()) {
+    peek(datInPort, CHIDataMsg) {
+      assert(in_msg.cbusy >= 0);
+      cbusy_tracker.updateDMT(in_msg.responder, in_msg.cbusy);
+    }
+  }
+}
+
+action(UpdateBPTracker_FromCompData, desc="") {
+  // Only update once all data is received
+  if (tbe.expected_req_resp.hasReceivedData()) {
+    peek(datInPort, CHIDataMsg) {
+      assert(tbe.pendReqDest.count() == 1);
+      MachineID orig_responder := tbe.pendReqDest.smallestElement();
+      if (in_msg.cbusy >= 0) {
+        // response came from downstream
+        if (in_msg.responder == orig_responder) {
+          cbusy_tracker.update(in_msg.responder, in_msg.cbusy);
+        } else {
+          // was a DMT response
+          cbusy_tracker.updateDMT(in_msg.responder, in_msg.cbusy);
+          // NOTE: When responder is a upstream cache (DCT on), cbusy is not set
+        }
+      }
+    }
+  }
+}
+
+action(UpdateBPTracker_FromDatalessResp, desc="") {
+  // Only update once all data is received
+  peek(rspInPort, CHIResponseMsg) {
+    // consistency check
+    assert(tbe.pendReqDest.count() == 1);
+    assert(in_msg.responder == tbe.pendReqDest.smallestElement());
+    assert(in_msg.cbusy >= 0);
+    cbusy_tracker.update(in_msg.responder, in_msg.cbusy);
+  }
+}
+
+action(UpdateBPTracker_FromRetryAck, desc="") {
+  // Only update once all data is received
+  peek(rspInPort, CHIResponseMsg) {
+    // consistency check
+    assert(in_msg.cbusy >= 0);
+    cbusy_tracker.update(in_msg.responder, in_msg.cbusy);
+  }
+}
+
+action(UpdateBPTracker_FromPCrdGrant, desc="") {
+  // Only update once all data is received
+  peek(rspInPort, CHIResponseMsg) {
+    // consistency check
+    assert(in_msg.cbusy >= 0);
+    cbusy_tracker.update(in_msg.responder, in_msg.cbusy);
+  }
+}
+
 action(Receive_ReadReceipt, desc="") {
   assert(is_valid(tbe));
   assert(tbe.expected_req_resp.hasExpected());
@@ -2835,6 +2905,7 @@ action(Send_CompData, desc="") {
                             (tbe.snd_msgType == CHIDataType:CompData_SD_PD);
 
   tbe.snd_destination := tbe.requestor;
+  tbe.snd_cbusy := true;
   setupPendingSend(tbe);
   printTBEState(tbe);
 }
@@ -2875,6 +2946,7 @@ action(Send_WBData, desc="") {
     }
   }
   tbe.snd_destination := mapAddressToDownstreamMachine(tbe.addr);
+  tbe.snd_cbusy := false;
   setupPendingSend(tbe);
 }
 
@@ -2965,6 +3037,7 @@ action(Send_SnpRespData, desc="") {
   }
 
   tbe.snd_destination := tbe.requestor;
+  tbe.snd_cbusy := false;
   setupPendingSend(tbe);
 }
 
@@ -2983,6 +3056,7 @@ action(Send_CompData_SnpUniqueFwd, desc="") {
   tbe.actions.pushFront(Event:SendSnpFwdedResp);
 
   tbe.snd_destination := tbe.fwdRequestor;
+  tbe.snd_cbusy := false;
   setupPendingSend(tbe);
 }
 
@@ -3005,6 +3079,7 @@ action(Send_CompData_SnpSharedFwd, desc="") {
   }
 
   tbe.snd_destination := tbe.fwdRequestor;
+  tbe.snd_cbusy := false;
   setupPendingSend(tbe);
 }
 
@@ -3022,6 +3097,7 @@ action(Send_CompData_SnpNSDFwd, desc="") {
   }
 
   tbe.snd_destination := tbe.fwdRequestor;
+  tbe.snd_cbusy := false;
   setupPendingSend(tbe);
 }
 
@@ -3033,6 +3109,7 @@ action(Send_CompData_SnpOnceFwd, desc="") {
   tbe.actions.pushFront(Event:SendSnpFwdedResp);
 
   tbe.snd_destination := tbe.fwdRequestor;
+  tbe.snd_cbusy := false;
   setupPendingSend(tbe);
 }
 
@@ -3066,6 +3143,7 @@ action(Send_SnpRespDataFwded, desc="") {
   }
 
   tbe.snd_destination := tbe.requestor;
+  tbe.snd_cbusy := false;
   setupPendingSend(tbe);
 }
 
@@ -3148,8 +3226,10 @@ action(Send_Data, desc="") {
     out_msg.bitMask.setMask(offset, range);
 
     out_msg.responder := machineID;
-
     out_msg.Destination.add(tbe.snd_destination);
+    if (tbe.snd_cbusy) {
+      out_msg.cbusy := getCurrCBusy(out_msg);
+    }
   }
 
   // send next chunk (if any) next cycle
@@ -3165,6 +3245,7 @@ action(Send_RespSepData, desc="") {
     out_msg.Destination.add(tbe.requestor);
     out_msg.txnId := tbe.txnId;
     out_msg.dbid := tbe.txnId;
+    out_msg.cbusy := getCurrCBusy(out_msg);
   }
 }
 
@@ -3186,6 +3267,7 @@ action(Send_CompI, desc="") {
     out_msg.Destination.add(tbe.requestor);
     out_msg.txnId := tbe.txnId;
     out_msg.dbid := tbe.txnId;
+    out_msg.cbusy := getCurrCBusy(out_msg);
   }
 }
 
@@ -3198,6 +3280,7 @@ action(Send_CompUC, desc="") {
     out_msg.Destination.add(tbe.requestor);
     out_msg.txnId := tbe.txnId;
     out_msg.dbid := tbe.txnId;
+    out_msg.cbusy := getCurrCBusy(out_msg);
   }
 }
 
@@ -3213,6 +3296,7 @@ action(Send_CompUC_Stale, desc="") {
     // We don't know if this is a stale clean unique or a bug, so flag the
     // reponse so the requestor can make further checks
     out_msg.stale := true;
+    out_msg.cbusy := getCurrCBusy(out_msg);
   }
 }
 
@@ -3225,6 +3309,7 @@ action(Send_CompUD_PD, desc="") {
     out_msg.Destination.add(tbe.requestor);
     out_msg.txnId := tbe.txnId;
     out_msg.dbid := tbe.txnId;
+    out_msg.cbusy := getCurrCBusy(out_msg);
   }
 }
 
@@ -3251,6 +3336,7 @@ action(Send_CompI_Stale, desc="") {
     // We don't know if this is a stale writeback or a bug, so flag the
     // reponse so the requestor can make further checks
     out_msg.stale := true;
+    out_msg.cbusy := getCurrCBusy(out_msg);
   }
 }
 
@@ -3263,6 +3349,7 @@ action(Send_CompDBIDResp, desc="") {
     out_msg.Destination.add(tbe.requestor);
     out_msg.txnId := tbe.txnId;
     out_msg.dbid := tbe.txnId;
+    out_msg.cbusy := getCurrCBusy(out_msg);
   }
 }
 
@@ -3278,6 +3365,7 @@ action(Send_CompDBIDResp_Stale, desc="") {
     // We don't know if this is a stale writeback or a bug, so flag the
     // reponse so the requestor can make further checks
     out_msg.stale := true;
+    out_msg.cbusy := getCurrCBusy(out_msg);
   }
 }
 
@@ -3290,6 +3378,7 @@ action(Send_DBIDResp, desc="") {
     out_msg.Destination.add(tbe.requestor);
     out_msg.dbid := tbe.txnId;
     out_msg.txnId := tbe.txnId;
+    out_msg.cbusy := getCurrCBusy(out_msg);
   }
 }
 
@@ -3358,6 +3447,7 @@ action(Send_RetryAck, desc="") {
       out_msg.Destination.add(in_msg.retryDest);
       out_msg.txnId := in_msg.txnId;
       out_msg.lpid := in_msg.lpid;
+      out_msg.cbusy := getCurrCBusy(out_msg);
     }
   }
 }
@@ -3371,6 +3461,7 @@ action(Send_PCrdGrant, desc="") {
       out_msg.responder := machineID;
       out_msg.Destination.add(in_msg.retryDest);
       out_msg.lpid := in_msg.lpid;
+      out_msg.cbusy := getCurrCBusy(out_msg);
     }
   }
 }
@@ -3709,12 +3800,12 @@ action(Callback_Miss, desc="") {
 
   } else if (tbe.dataValid && (tbe.reqType == CHIRequestType:Load)) {
     DPRINTF(RubySlicc, "Read data %s\n", tbe.dataBlk);
-    sequencer.readCallback(tbe.addr, tbe.dataBlk, true);
+    sequencer.readCallbackCBusy(tbe.addr, tbe.dataBlk, true, cbusy_tracker.report());
 
   } else if (tbe.dataValid && ((tbe.reqType == CHIRequestType:Store) ||
                                (tbe.reqType == CHIRequestType:StoreLine))) {
     DPRINTF(RubySlicc, "Write before %s\n", tbe.dataBlk);
-    sequencer.writeCallback(tbe.addr, tbe.dataBlk, true);
+    sequencer.writeCallbackCBusy(tbe.addr, tbe.dataBlk, true, cbusy_tracker.report());
     DPRINTF(RubySlicc, "Write after %s\n", tbe.dataBlk);
     tbe.dataDirty := true;
 
@@ -3789,7 +3880,7 @@ action(Callback_WriteUnique, desc="") {
   assert((tbe.reqType == CHIRequestType:StoreLine) ||
          (tbe.reqType == CHIRequestType:Store));
   assert(tbe.dataValid == false);
-  sequencer.writeUniqueCallback(tbe.addr, tbe.dataBlk);
+  sequencer.writeUniqueCallbackCBusy(tbe.addr, tbe.dataBlk, cbusy_tracker.report());
   DPRINTF(RubySlicc, "WriteUnique data %s\n", tbe.dataBlk);
   // set mask; note data is never considered valid
   assert(tbe.dataBlkValid.isEmpty());

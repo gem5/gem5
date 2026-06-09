@@ -463,12 +463,13 @@ Sequencer::writeCallbackScFail(Addr address, DataBlock& data)
 }
 
 void
-Sequencer::writeCallback(Addr address, DataBlock& data,
-                         const bool externalHit, const MachineType mach,
-                         const Cycles initialRequestTime,
-                         const Cycles forwardRequestTime,
-                         const Cycles firstResponseTime,
-                         const bool noCoales)
+Sequencer::writeCallbackCBusy(Addr address, DataBlock &data,
+                              const bool externalHit, const int cBusy,
+                              const MachineType mach,
+                              const Cycles initialRequestTime,
+                              const Cycles forwardRequestTime,
+                              const Cycles firstResponseTime,
+                              const bool noCoales)
 {
     //
     // Free the whole list as we assume we have had the exclusive access
@@ -545,7 +546,7 @@ Sequencer::writeCallback(Addr address, DataBlock& data,
             }
 
             markRemoved();
-            hitCallback(&seq_req, data, success, mach, externalHit,
+            hitCallback(&seq_req, data, success, mach, externalHit, cBusy,
                         initialRequestTime, forwardRequestTime,
                         firstResponseTime, !ruby_request);
             ruby_request = false;
@@ -553,7 +554,7 @@ Sequencer::writeCallback(Addr address, DataBlock& data,
             // handle read request
             assert(!ruby_request);
             markRemoved();
-            hitCallback(&seq_req, data, true, mach, externalHit,
+            hitCallback(&seq_req, data, true, mach, externalHit, cBusy,
                         initialRequestTime, forwardRequestTime,
                         firstResponseTime, !ruby_request);
         }
@@ -594,11 +595,11 @@ Sequencer::processReadCallback(SequencerRequest &seq_req,
 }
 
 void
-Sequencer::readCallback(Addr address, DataBlock& data,
-                        bool externalHit, const MachineType mach,
-                        Cycles initialRequestTime,
-                        Cycles forwardRequestTime,
-                        Cycles firstResponseTime)
+Sequencer::readCallbackCBusy(Addr address, DataBlock &data, bool externalHit,
+                             const int cBusy, const MachineType mach,
+                             Cycles initialRequestTime,
+                             Cycles forwardRequestTime,
+                             Cycles firstResponseTime)
 {
     //
     // Free up read requests until we hit the first Write request
@@ -625,9 +626,9 @@ Sequencer::readCallback(Addr address, DataBlock& data,
                               firstResponseTime);
         }
         markRemoved();
-        hitCallback(&seq_req, data, true, mach, externalHit,
-                    initialRequestTime, forwardRequestTime,
-                    firstResponseTime, !ruby_request);
+        hitCallback(&seq_req, data, true, mach, externalHit, cBusy,
+                    initialRequestTime, forwardRequestTime, firstResponseTime,
+                    !ruby_request);
         ruby_request = false;
         seq_req_list.pop_front();
     }
@@ -639,11 +640,12 @@ Sequencer::readCallback(Addr address, DataBlock& data,
 }
 
 void
-Sequencer::atomicCallback(Addr address, DataBlock& data,
-                         const bool externalHit, const MachineType mach,
-                         const Cycles initialRequestTime,
-                         const Cycles forwardRequestTime,
-                         const Cycles firstResponseTime)
+Sequencer::atomicCallbackCBusy(Addr address, DataBlock &data,
+                               const bool externalHit, const int cBusy,
+                               const MachineType mach,
+                               const Cycles initialRequestTime,
+                               const Cycles forwardRequestTime,
+                               const Cycles firstResponseTime)
 {
     //
     // Free the first request (an atomic operation) from the list.
@@ -682,9 +684,9 @@ Sequencer::atomicCallback(Addr address, DataBlock& data,
 
         markRemoved();
         ruby_request = false;
-        hitCallback(&seq_req, data, true, mach, externalHit,
-                    initialRequestTime, forwardRequestTime,
-                    firstResponseTime, false);
+        hitCallback(&seq_req, data, true, mach, externalHit, cBusy,
+                    initialRequestTime, forwardRequestTime, firstResponseTime,
+                    false);
         seq_req_list.pop_front();
     }
 
@@ -695,9 +697,9 @@ Sequencer::atomicCallback(Addr address, DataBlock& data,
 }
 
 void
-Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
-                       bool llscSuccess,
-                       const MachineType mach, const bool externalHit,
+Sequencer::hitCallback(SequencerRequest *srequest, DataBlock &data,
+                       bool llscSuccess, const MachineType mach,
+                       const bool externalHit, const int cBusy,
                        const Cycles initialRequestTime,
                        const Cycles forwardRequestTime,
                        const Cycles firstResponseTime,
@@ -744,6 +746,8 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
             // response back to the core, we can just ignore this
             if (pkt->cmd.isSWPrefetch()) {
                 delete pkt;
+                testDrainComplete();
+                trySendRetries();
                 return;
             }
 
@@ -793,18 +797,20 @@ Sequencer::hitCallback(SequencerRequest* srequest, DataBlock& data,
         testerSenderState->subBlock.mergeFrom(data);
     }
 
-    RubySystem *rs = m_ruby_system;
     if (m_ruby_system->getWarmupEnabled()) {
         assert(pkt->req);
         delete pkt;
-        rs->m_cache_recorder->enqueueNextFetchRequest();
+        m_ruby_system->m_cache_recorder->enqueueNextFetchRequest();
     } else if (m_ruby_system->getCooldownEnabled()) {
         delete pkt;
-        rs->m_cache_recorder->enqueueNextFlushRequest();
+        m_ruby_system->m_cache_recorder->enqueueNextFlushRequest();
     } else {
+        pkt->completerBusy = cBusy;
         ruby_hit_callback(pkt);
-        testDrainComplete();
     }
+
+    testDrainComplete();
+    trySendRetries();
 }
 
 void

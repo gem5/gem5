@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2025 Arm Limited
+ * Copyright (c) 2021-2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -365,6 +365,14 @@ void notifyCoalesced(Addr addr, RubyRequestType type, RequestPtr req,
       pfProxy.notifyPfHit(req, is_read, data_blk);
     }
   }
+}
+
+void flushController() {
+  // Flush the directory
+  directory.flushEntries();
+
+  // Flush the cache
+  cache.flushEntries();
 }
 
 
@@ -765,6 +773,30 @@ void processRetryQueue() {
       out_msg.lpid := e.lpid;
     }
   }
+}
+
+public int tbeSize() {
+  return storTBEs.size();
+}
+
+public int tbeReserved() {
+  return storTBEs.reserved();
+}
+
+public int tbeCapacity() {
+  return storTBEs.capacity();
+}
+
+public bool hasRetryQueueEntries() {
+  return !retryQueue.empty();
+}
+
+int getCurrCBusy(CHIDataMsg message) {
+  return cbusy_generator.generate(this, message);
+}
+
+int getCurrCBusy(CHIResponseMsg message) {
+  return cbusy_generator.generate(this, message);
 }
 
 void printResources() {

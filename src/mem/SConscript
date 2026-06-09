@@ -60,7 +60,8 @@ SimObject('ExternalMaster.py', sim_objects=['ExternalMaster'])
 SimObject('ExternalSlave.py', sim_objects=['ExternalSlave'])
 SimObject('CfiMemory.py', sim_objects=['CfiMemory'])
 SimObject('SharedMemoryServer.py', sim_objects=['SharedMemoryServer'])
-SimObject('SimpleMemory.py', sim_objects=['SimpleMemory'])
+SimObject('SimpleMemory.py', sim_objects=['SimpleMemory'],
+        enums=['LatencyDistribution'])
 SimObject('XBar.py', sim_objects=[
     'BaseXBar', 'NoncoherentXBar', 'CoherentXBar', 'SnoopFilter'])
 SimObject('HMCController.py', sim_objects=['HMCController'])

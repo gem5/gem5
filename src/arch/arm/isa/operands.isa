@@ -526,6 +526,7 @@ def operands {{
     'Dczid' : CntrlReg('MISCREG_DCZID_EL0'),
     'PendingDvm': CntrlReg('MISCREG_TLBINEEDSYNC'),
     'Svcr' : CntrlReg('MISCREG_SVCR'),
+    'LocalTime' : CntrlReg64('MISCREG_CNTVCT_EL0'),
 
     #Register fields for microops
     'URa' : IntReg('ura'),

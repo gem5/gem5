@@ -200,7 +200,7 @@ class ForwardLineData /* : public ReportIF, public BubbleIF */
     std::unique_ptr<PCStateBase> pc;
 
     /** Address of this line of data */
-    Addr fetchAddr;
+    Addr fetchAddr = 0;
 
     /** Explicit line width, don't rely on data.size */
     unsigned int lineWidth = 0;

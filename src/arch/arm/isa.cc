@@ -51,6 +51,7 @@
 #include "arch/arm/utility.hh"
 #include "arch/generic/decoder.hh"
 #include "base/cprintf.hh"
+#include "base/logging.hh"
 #include "base/random.hh"
 #include "cpu/base.hh"
 #include "cpu/checker/cpu.hh"
@@ -64,6 +65,8 @@
 #include "dev/arm/gic_v3.hh"
 #include "dev/arm/gic_v3_cpu_interface.hh"
 #include "params/ArmISA.hh"
+#include "sim/core.hh"
+#include "sim/cur_tick.hh"
 #include "sim/faults.hh"
 #include "sim/stat_control.hh"
 #include "sim/system.hh"
@@ -691,10 +694,24 @@ ISA::readMiscReg(RegIndex idx)
           if (FullSystem) {
               return getGenericTimer().readMiscReg(idx);
           } else {
-              warn("Call to %s attempts to access a system timer which is "
-                   "inaccessible within SE mode. Divergent behaviour is "
-                   "possible.",
-                   miscRegName[idx]);
+              // Intercept specific timer reads for SE mode
+              if (idx == MISCREG_CNTFRQ_EL0 || idx == MISCREG_CNTFRQ) {
+                  // Fix the frequency to 1 GHz
+                  return 1000000000;
+              } else if (idx == MISCREG_CNTVCT_EL0 || idx == MISCREG_CNTVCT) {
+                  // Return the current simulator time. Since CNTFRQ is set to
+                  // 1 GHz convert ticks to ns
+
+                  Tick conversion =
+                      (getClockFrequency() / sim_clock::as_int::ns);
+                  return curTick() / conversion;
+              }
+
+              warn_once(
+                  "Call to %s attempts to access a system timer which is "
+                  "inaccessible within SE mode. Divergent behaviour is "
+                  "possible.",
+                  miscRegName[idx]);
               return 0;
           }
       case MISCREG_ICC_AP0R0 ... MISCREG_ICH_LRC15:

@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2025 Arm Limited
+// Copyright (c) 2011-2026 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -203,6 +203,27 @@ namespace Aarch64
 output decoder {{
 namespace Aarch64
 {
+    StaticInstPtr
+    decodeSysInstsWithRegArg(ExtMachInst machInst)
+    {
+        uint8_t crm = bits(machInst, 11, 8);
+        uint8_t op2 = bits(machInst, 7, 5);
+        uint8_t rt = bits(machInst, 4, 0);
+
+        if (crm != 0) {
+            return new Unknown64(machInst);
+        }
+
+        switch (op2) {
+          case 0b000:
+            return new Wfet64(machInst, rt);
+          case 0b001:
+            return new Wfit64(machInst, rt);
+          default:
+            return new Unknown64(machInst);
+        }
+    }
+
     StaticInstPtr
     decodeSysWithResult(ExtMachInst machInst)
     {
@@ -537,9 +558,9 @@ namespace Aarch64
               case 0x1:
                 return new YieldInst(machInst);
               case 0x2:
-                return new WfeInst(machInst);
+                return new Wfe64(machInst);
               case 0x3:
-                return new WfiInst(machInst);
+                return new Wfi64(machInst);
               case 0x4:
                 return new SevInst(machInst);
               case 0x5:
@@ -705,7 +726,7 @@ namespace Aarch64
                     } else {
                         switch (bits(machInst, 15, 12)) {
                           case 0b0001:
-                            return new Unknown64(machInst);
+                            return decodeSysInstsWithRegArg(machInst);
                           case 0b0010:
                             if (op2 == 0b11111)
                                 return decodeHints(machInst);

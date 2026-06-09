@@ -70,7 +70,11 @@ class ScheduleStage
     void exec();
 
     // Stats related variables and methods
-    const std::string& name() const { return _name; }
+    const std::string &
+    name() const
+    {
+        return _name;
+    }
     enum SchNonRdyType
     {
         SCH_SCALAR_ALU_NRDY,
@@ -118,7 +122,7 @@ class ScheduleStage
     enum SCH_STATUS
     {
         RFBUSY = 0, // RF busy reading operands
-        RFREADY, // ready for exec
+        RFREADY,    // ready for exec
     };
 
   private:

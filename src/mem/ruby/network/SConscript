@@ -31,6 +31,8 @@ Import('*')
 if not env['CONF']['RUBY']:
     Return()
 
+DebugFlag('TraceRoutesDebug')
+
 SimObject('BasicLink.py', sim_objects=[
     'BasicLink', 'BasicExtLink', 'BasicIntLink'])
 SimObject('BasicRouter.py', sim_objects=['BasicRouter'])
@@ -42,4 +44,5 @@ Source('BasicLink.cc')
 Source('BasicRouter.cc')
 Source('MessageBuffer.cc')
 Source('Network.cc')
+Source('RouteProfiler.cc')
 Source('Topology.cc')

@@ -158,6 +158,8 @@ class PhysicalMemory : public Serializable
 
     long pageSize;
 
+    const bool isSparseRestore;
+
     // The physical memory used to provide the memory in the simulated
     // system
     std::vector<BackingStoreEntry> backingStore;
@@ -187,11 +189,12 @@ class PhysicalMemory : public Serializable
     /**
      * Create a physical memory object, wrapping a number of memories.
      */
-    PhysicalMemory(const std::string& _name,
-                   const std::vector<AbstractMemory*>& _memories,
+    PhysicalMemory(const std::string &_name,
+                   const std::vector<AbstractMemory *> &_memories,
                    bool mmap_using_noreserve,
-                   const std::string& shared_backstore,
-                   bool auto_unlink_shared_backstore);
+                   const std::string &shared_backstore,
+                   bool auto_unlink_shared_backstore,
+                   bool is_sparse_restore = false);
 
     /**
      * Unmap all the backing store we have used.

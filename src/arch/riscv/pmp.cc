@@ -292,5 +292,32 @@ PMP::pmpDecodeNapot(Addr pmpaddr)
     }
 }
 
+void
+PMP::serialize(CheckpointOut &cp) const
+{
+    int cptPmpEntries = pmpEntries;
+    SERIALIZE_SCALAR(cptPmpEntries);
+    for (int i = 0; i < pmpEntries; i++) {
+        pmpTable[i].serializeSection(cp, csprintf("Entry%d", i));
+    }
+}
+void
+PMP::unserialize(CheckpointIn &cp)
+{
+    int cptPmpEntries;
+    UNSERIALIZE_SCALAR(cptPmpEntries);
+    if (cptPmpEntries != pmpEntries) {
+        fatal("Current PMP table size (%d) differs from checkpoint PMP table "
+              "size (%d).",
+              pmpEntries, cptPmpEntries);
+    }
+
+    for (int i = 0; i < pmpEntries; i++) {
+        PmpEntry *tmp = &pmpTable[i];
+        tmp->unserializeSection(cp, csprintf("Entry%d", i));
+        pmpUpdateRule(i);
+    }
+}
+
 } // namespace RiscvISA
 } // namespace gem5

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021 ARM Limited
+ * Copyright (c) 2020-2021, 2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -353,13 +353,31 @@ CacheMemory::deallocate(Addr address)
 {
     DPRINTF(RubyCache, "deallocating address: %#x\n", address);
     AbstractCacheEntry* entry = lookup(address);
+    deallocate(entry);
+}
+
+void
+CacheMemory::deallocate(AbstractCacheEntry *entry)
+{
     assert(entry != nullptr);
     m_replacementPolicy_ptr->invalidate(entry->replacementData);
     uint32_t cache_set = entry->getSet();
     uint32_t way = entry->getWay();
+    m_tag_index.erase(entry->m_Address);
     delete entry;
     m_cache[cache_set][way] = NULL;
-    m_tag_index.erase(address);
+}
+
+void
+CacheMemory::flushEntries()
+{
+    for (auto &sets : m_cache) {
+        for (auto &entry : sets) {
+            if (entry) {
+                deallocate(entry);
+            }
+        }
+    }
 }
 
 // Returns with the physical address of the conflicting cache line

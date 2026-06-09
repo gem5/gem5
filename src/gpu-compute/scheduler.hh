@@ -46,7 +46,7 @@ class Scheduler
   public:
     Scheduler(const ComputeUnitParams &params);
     Wavefront *chooseWave();
-    void bindList(std::vector<Wavefront*> *sched_list);
+    void bindList(std::vector<Wavefront *> *sched_list);
 
   private:
     /**
@@ -54,7 +54,7 @@ class Scheduler
      * or round-robin scheduling.
      */
     SchedulingPolicy *schedPolicy;
-    std::vector<Wavefront*> *scheduleList;
+    std::vector<Wavefront *> *scheduleList;
 };
 
 } // namespace gem5

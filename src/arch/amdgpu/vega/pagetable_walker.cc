@@ -62,7 +62,8 @@ Fault
 Walker::startFunctional(Addr base, Addr vaddr, PageTableEntry &pte,
                         unsigned &logBytes, BaseMMU::Mode mode)
 {
-    DPRINTF(GPUPTWalker, "Vega walker walker: %p funcState: %p "
+    DPRINTF(GPUPTWalker,
+            "Vega walker walker: %p funcState: %p "
             "funcState->walker %p\n",
             this, &funcState, funcState.getWalker());
     funcState.initState(mode, base, vaddr, true);
@@ -74,8 +75,10 @@ Walker::WalkerState::startFunctional(Addr base, Addr vaddr,
                                      PageTableEntry &pte, unsigned &logBytes)
 {
     Fault fault = NoFault;
-    DPRINTF(GPUPTWalker, "Vega walker starting with addr: %#lx "
-            "logical: %#lx\n", vaddr, vaddr >> PageShift);
+    DPRINTF(GPUPTWalker,
+            "Vega walker starting with addr: %#lx "
+            "logical: %#lx\n",
+            vaddr, vaddr >> PageShift);
 
     assert(!started);
     started = true;
@@ -106,8 +109,10 @@ Walker::WalkerState::startFunctional(Addr base, Addr vaddr,
 void
 Walker::startTiming(PacketPtr pkt, Addr base, Addr vaddr, BaseMMU::Mode mode)
 {
-    DPRINTF(GPUPTWalker, "Vega walker starting with addr: %#lx "
-            "logical: %#lx\n", vaddr, vaddr >> PageShift);
+    DPRINTF(GPUPTWalker,
+            "Vega walker starting with addr: %#lx "
+            "logical: %#lx\n",
+            vaddr, vaddr >> PageShift);
 
     WalkerState *newState = new WalkerState(this, pkt);
 
@@ -140,7 +145,7 @@ Walker::WalkerState::initState(BaseMMU::Mode _mode, Addr baseAddr, Addr vaddr,
     // baseAddr and vaddr.
     state = PDE2;
     Addr logical_addr = vaddr >> PageShift;
-    Addr pde2Addr = (((baseAddr >> 6) << 3) + (logical_addr >> 3*9)) << 3;
+    Addr pde2Addr = (((baseAddr >> 6) << 3) + (logical_addr >> 3 * 9)) << 3;
     DPRINTF(GPUPTWalker, "Walk PDE2 address is %#lx\n", pde2Addr);
 
     // Start populating the VegaTlbEntry response
@@ -149,8 +154,8 @@ Walker::WalkerState::initState(BaseMMU::Mode _mode, Addr baseAddr, Addr vaddr,
     // Prepare the read packet that will be used at each level
     Request::Flags flags = Request::PHYSICAL;
 
-    RequestPtr request = std::make_shared<Request>(
-        pde2Addr, dataSize, flags, walker->deviceRequestorId);
+    RequestPtr request = std::make_shared<Request>(pde2Addr, dataSize, flags,
+                                                   walker->deviceRequestorId);
 
     read = new Packet(request, MemCmd::ReadReq);
     read->allocate();
@@ -161,8 +166,7 @@ Walker::WalkerState::startWalk()
 {
     if (!started) {
         // Read the first PDE to begin
-        DPRINTF(GPUPTWalker, "Sending timing read to %#lx\n",
-                read->getAddr());
+        DPRINTF(GPUPTWalker, "Sending timing read to %#lx\n", read->getAddr());
 
         started = true;
         sendPackets();
@@ -213,7 +217,7 @@ Walker::WalkerState::stepWalk()
     } else {
         PacketPtr oldRead = read;
 
-        //If we didn't return, we're setting up another read.
+        // If we didn't return, we're setting up another read.
         Request::Flags flags = oldRead->req->getFlags();
         flags.set(Request::UNCACHEABLE, uncacheable);
         RequestPtr request = std::make_shared<Request>(
@@ -255,89 +259,88 @@ Walker::WalkerState::walkStateMachine(PageTableEntry &pte, Addr &nextRead,
         assert(pde.blockFragmentSize == 9);
     }
 
-    switch(state) {
-      case PDE2:
-        if (pde.p) {
-            DPRINTF(GPUPTWalker, "Treating PDE2 as PTE: %#016x frag: %d\n",
-                    (uint64_t)pte, pte.fragment);
-            entry.pte = pte;
-            int fragment = pte.fragment;
-            entry.logBytes = PageShift + std::min(3*9, fragment);
-            entry.vaddr <<= PageShift;
-            entry.vaddr = entry.vaddr & ~mask(entry.logBytes);
-            doEndWalk = true;
-        }
+    switch (state) {
+        case PDE2:
+            if (pde.p) {
+                DPRINTF(GPUPTWalker, "Treating PDE2 as PTE: %#016x frag: %d\n",
+                        (uint64_t)pte, pte.fragment);
+                entry.pte = pte;
+                int fragment = pte.fragment;
+                entry.logBytes = PageShift + std::min(3 * 9, fragment);
+                entry.vaddr <<= PageShift;
+                entry.vaddr = entry.vaddr & ~mask(entry.logBytes);
+                doEndWalk = true;
+            }
 
-        // Read the pde1Addr
-        part1 = ((((uint64_t)pte) >> 6) << 3);
-        part2 = offsetFunc(vaddr, 3*9, 2*9);
-        nextRead = ((part1 + part2) << 3) & mask(48);
-        DPRINTF(GPUPTWalker,
-                "Got PDE2 entry %#016x. write:%s->%#016x va:%#016x\n",
-                (uint64_t)pte, pte.w == 0 ? "yes" : "no", nextRead, vaddr);
-        nextState = PDE1;
-        break;
-      case PDE1:
-        if (pde.p) {
-            DPRINTF(GPUPTWalker, "Treating PDE1 as PTE: %#016x frag: %d\n",
-                    (uint64_t)pte, pte.fragment);
-            entry.pte = pte;
-            int fragment = pte.fragment;
-            entry.logBytes = PageShift + std::min(2*9, fragment);
-            entry.vaddr <<= PageShift;
-            entry.vaddr = entry.vaddr & ~mask(entry.logBytes);
-            doEndWalk = true;
-        }
+            // Read the pde1Addr
+            part1 = ((((uint64_t)pte) >> 6) << 3);
+            part2 = offsetFunc(vaddr, 3 * 9, 2 * 9);
+            nextRead = ((part1 + part2) << 3) & mask(48);
+            DPRINTF(GPUPTWalker,
+                    "Got PDE2 entry %#016x. write:%s->%#016x va:%#016x\n",
+                    (uint64_t)pte, pte.w == 0 ? "yes" : "no", nextRead, vaddr);
+            nextState = PDE1;
+            break;
+        case PDE1:
+            if (pde.p) {
+                DPRINTF(GPUPTWalker, "Treating PDE1 as PTE: %#016x frag: %d\n",
+                        (uint64_t)pte, pte.fragment);
+                entry.pte = pte;
+                int fragment = pte.fragment;
+                entry.logBytes = PageShift + std::min(2 * 9, fragment);
+                entry.vaddr <<= PageShift;
+                entry.vaddr = entry.vaddr & ~mask(entry.logBytes);
+                doEndWalk = true;
+            }
 
-        // Read the pde0Addr
-        part1 = ((((uint64_t)pte) >> 6) << 3);
-        part2 = offsetFunc(vaddr, 2*9, 9);
-        nextRead = ((part1 + part2) << 3) & mask(48);
-        DPRINTF(GPUPTWalker,
-                "Got PDE1 entry %#016x. write:%s->%#016x va: %#016x\n",
-                (uint64_t)pte, pte.w == 0 ? "yes" : "no", nextRead, vaddr);
-        nextState = PDE0;
-        break;
-      case PDE0:
-        if (pde.p || (blockFragmentSize && !pte.f)) {
-            DPRINTF(GPUPTWalker, "Treating PDE0 as PTE: %#016x frag: %d\n",
-                    (uint64_t)pte, pte.fragment);
+            // Read the pde0Addr
+            part1 = ((((uint64_t)pte) >> 6) << 3);
+            part2 = offsetFunc(vaddr, 2 * 9, 9);
+            nextRead = ((part1 + part2) << 3) & mask(48);
+            DPRINTF(GPUPTWalker,
+                    "Got PDE1 entry %#016x. write:%s->%#016x va: %#016x\n",
+                    (uint64_t)pte, pte.w == 0 ? "yes" : "no", nextRead, vaddr);
+            nextState = PDE0;
+            break;
+        case PDE0:
+            if (pde.p || (blockFragmentSize && !pte.f)) {
+                DPRINTF(GPUPTWalker, "Treating PDE0 as PTE: %#016x frag: %d\n",
+                        (uint64_t)pte, pte.fragment);
+                entry.pte = pte;
+                int fragment = pte.fragment;
+                entry.logBytes = PageShift + std::min(9, fragment);
+                entry.vaddr <<= PageShift;
+                entry.vaddr = entry.vaddr & ~mask(entry.logBytes);
+                doEndWalk = true;
+            }
+            // Read the PteAddr
+            part1 = ((((uint64_t)pte) >> 6) << 3);
+            if (pte.f) {
+                // For F bit we want to use the blockFragmentSize in the
+                // previous PDE and the blockFragmentSize in this PTE for
+                // offset function.
+                part2 = offsetFunc(vaddr, blockFragmentSize,
+                                   pde.blockFragmentSize);
+            } else {
+                part2 = offsetFunc(vaddr, 9, 0);
+            }
+            nextRead = ((part1 + part2) << 3) & mask(48);
+            DPRINTF(GPUPTWalker,
+                    "Got PDE0 entry %#016x. write:%s->%#016x va:%#016x\n",
+                    (uint64_t)pte, pte.w == 0 ? "yes" : "no", nextRead, vaddr);
+            nextState = PTE;
+            break;
+        case PTE:
+            DPRINTF(GPUPTWalker, " PTE entry %#016x. write: %s va: %#016x\n",
+                    (uint64_t)pte, pte.w == 0 ? "yes" : "no", vaddr);
             entry.pte = pte;
-            int fragment = pte.fragment;
-            entry.logBytes = PageShift + std::min(9, fragment);
+            entry.logBytes = PageShift;
             entry.vaddr <<= PageShift;
             entry.vaddr = entry.vaddr & ~mask(entry.logBytes);
             doEndWalk = true;
-        }
-        // Read the PteAddr
-        part1 = ((((uint64_t)pte) >> 6) << 3);
-        if (pte.f) {
-            // For F bit we want to use the blockFragmentSize in the previous
-            // PDE and the blockFragmentSize in this PTE for offset function.
-            part2 = offsetFunc(vaddr,
-                               blockFragmentSize,
-                               pde.blockFragmentSize);
-        } else {
-            part2 = offsetFunc(vaddr, 9, 0);
-        }
-        nextRead = ((part1 + part2) << 3) & mask(48);
-        DPRINTF(GPUPTWalker,
-                "Got PDE0 entry %#016x. write:%s->%#016x va:%#016x\n",
-                (uint64_t)pte, pte.w == 0 ? "yes" : "no", nextRead, vaddr);
-        nextState = PTE;
-        break;
-      case PTE:
-        DPRINTF(GPUPTWalker,
-                " PTE entry %#016x. write: %s va: %#016x\n",
-                (uint64_t)pte, pte.w == 0 ? "yes" : "no", vaddr);
-        entry.pte = pte;
-        entry.logBytes = PageShift;
-        entry.vaddr <<= PageShift;
-        entry.vaddr = entry.vaddr & ~mask(entry.logBytes);
-        doEndWalk = true;
-        break;
-      default:
-        panic("Unknown page table walker state %d!\n");
+            break;
+        default:
+            panic("Unknown page table walker state %d!\n");
     }
 
     if (badNX || !pte.v) {
@@ -363,12 +366,12 @@ void
 Walker::WalkerState::sendPackets()
 {
     // If we're already waiting for the port to become available, just return.
-    if (retrying)
+    if (retrying) {
         return;
+    }
     [[maybe_unused]] auto addr = read->getAddr();
     if (!walker->sendTiming(this, read)) {
-        DPRINTF(GPUPTWalker, "Timing request for %#lx failed\n",
-                addr);
+        DPRINTF(GPUPTWalker, "Timing request for %#lx failed\n", addr);
 
         retrying = true;
     }
@@ -379,7 +382,8 @@ Walker::WalkerState::sendPackets()
     // }
 }
 
-bool Walker::sendTiming(WalkerState* sending_walker, PacketPtr pkt)
+bool
+Walker::sendTiming(WalkerState *sending_walker, PacketPtr pkt)
 {
     auto walker_state = new WalkerSenderState(sending_walker);
     pkt->pushSenderState(walker_state);
@@ -419,7 +423,7 @@ Walker::WalkerPort::recvTimingResp(PacketPtr pkt)
 void
 Walker::recvTimingResp(PacketPtr pkt)
 {
-    WalkerSenderState * senderState =
+    WalkerSenderState *senderState =
         safe_cast<WalkerSenderState *>(pkt->popSenderState());
 
     DPRINTF(GPUPTWalker, "Got response for %#lx from walker %p -- %#lx\n",
@@ -454,8 +458,8 @@ void
 Walker::recvReqRetry()
 {
     std::list<WalkerState *>::iterator iter;
-    for (iter = currStates.begin(); iter != currStates.end(); ) {
-        WalkerState * walkerState = *(iter);
+    for (iter = currStates.begin(); iter != currStates.end();) {
+        WalkerState *walkerState = *(iter);
         // retry() might finish the walk, thus the current iterator
         // might be invalid after retry(). Need to update iter now
         iter++;
@@ -466,13 +470,12 @@ Walker::recvReqRetry()
 }
 
 void
-Walker::walkerResponse(WalkerState *state, VegaTlbEntry& entry, PacketPtr pkt)
+Walker::walkerResponse(WalkerState *state, VegaTlbEntry &entry, PacketPtr pkt)
 {
     tlb->walkerResponse(entry, pkt);
 
     delete state;
 }
-
 
 /*
  *  Helper methods
@@ -495,14 +498,16 @@ Walker::WalkerState::pageFault(bool present)
 {
     DPRINTF(GPUPTWalker, "Raising page fault.\n");
     ExceptionCode code;
-    if (mode == BaseMMU::Read)
+    if (mode == BaseMMU::Read) {
         code = ExceptionCode::LOAD_PAGE;
-    else if (mode == BaseMMU::Write)
+    } else if (mode == BaseMMU::Write) {
         code = ExceptionCode::STORE_PAGE;
-    else
+    } else {
         code = ExceptionCode::INST_PAGE;
-    if (mode == BaseMMU::Execute && !enableNX)
+    }
+    if (mode == BaseMMU::Execute && !enableNX) {
         mode = BaseMMU::Read;
+    }
     return std::make_shared<PageFault>(entry.vaddr, code, present, mode, true);
 }
 
@@ -514,17 +519,17 @@ Walker::WalkerState::offsetFunc(Addr logicalAddr, int top, int lsb)
     return ((logicalAddr & ((1 << top) - 1)) >> lsb);
 }
 
-
 /**
  * gem5 methods
  */
 Port &
 Walker::getPort(const std::string &if_name, PortID idx)
 {
-    if (if_name == "port")
+    if (if_name == "port") {
         return port;
-    else
+    } else {
         return ClockedObject::getPort(if_name, idx);
+    }
 }
 
 } // namespace VegaISA

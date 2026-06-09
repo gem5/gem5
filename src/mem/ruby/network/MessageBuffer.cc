@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2021 ARM Limited
+ * Copyright (c) 2019-2021, 2026 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -57,32 +57,41 @@ namespace ruby
 using stl_helpers::operator<<;
 
 MessageBuffer::MessageBuffer(const Params &p)
-    : SimObject(p), m_stall_map_size(0), m_max_size(p.buffer_size),
-    m_max_dequeue_rate(p.max_dequeue_rate), m_dequeues_this_cy(0),
-    m_time_last_time_size_checked(0),
-    m_time_last_time_enqueue(0), m_time_last_time_pop(0),
-    m_last_arrival_time(0), m_last_message_strict_fifo_bypassed(false),
-    m_strict_fifo(p.ordered),
-    m_randomization(p.randomization),
-    m_allow_zero_latency(p.allow_zero_latency),
-    m_routing_priority(p.routing_priority),
-    ADD_STAT(m_not_avail_count, statistics::units::Count::get(),
-             "Number of times this buffer did not have N slots available"),
-    ADD_STAT(m_msg_count, statistics::units::Count::get(),
-             "Number of messages passed the buffer"),
-    ADD_STAT(m_buf_msgs, statistics::units::Rate<
-                statistics::units::Count, statistics::units::Tick>::get(),
-             "Average number of messages in buffer"),
-    ADD_STAT(m_stall_time, statistics::units::Tick::get(),
-             "Total number of ticks messages were stalled in this buffer"),
-    ADD_STAT(m_stall_count, statistics::units::Count::get(),
-             "Number of times messages were stalled"),
-    ADD_STAT(m_avg_stall_time, statistics::units::Rate<
-                statistics::units::Tick, statistics::units::Count>::get(),
-             "Average stall ticks per message"),
-    ADD_STAT(m_occupancy, statistics::units::Rate<
-                statistics::units::Ratio, statistics::units::Tick>::get(),
-             "Average occupancy of buffer capacity")
+    : SimObject(p),
+      m_stall_map_size(0),
+      m_max_size(p.buffer_size),
+      m_max_dequeue_rate(p.max_dequeue_rate),
+      m_dequeues_this_cy(0),
+      m_time_last_time_size_checked(0),
+      m_time_last_time_enqueue(0),
+      m_time_last_time_pop(0),
+      m_last_arrival_time(0),
+      m_last_message_strict_fifo_bypassed(false),
+      m_strict_fifo(p.ordered),
+      m_randomization(p.randomization),
+      m_allow_zero_latency(p.allow_zero_latency),
+      m_routing_priority(p.routing_priority),
+      m_is_inport(false),
+      ADD_STAT(m_not_avail_count, statistics::units::Count::get(),
+               "Number of times this buffer did not have N slots available"),
+      ADD_STAT(m_msg_count, statistics::units::Count::get(),
+               "Number of messages passed the buffer"),
+      ADD_STAT(m_buf_msgs,
+               statistics::units::Rate<statistics::units::Count,
+                                       statistics::units::Tick>::get(),
+               "Average number of messages in buffer"),
+      ADD_STAT(m_stall_time, statistics::units::Tick::get(),
+               "Total number of ticks messages were stalled in this buffer"),
+      ADD_STAT(m_stall_count, statistics::units::Count::get(),
+               "Number of times messages were stalled"),
+      ADD_STAT(m_avg_stall_time,
+               statistics::units::Rate<statistics::units::Tick,
+                                       statistics::units::Count>::get(),
+               "Average stall ticks per message"),
+      ADD_STAT(m_occupancy,
+               statistics::units::Rate<statistics::units::Ratio,
+                                       statistics::units::Tick>::get(),
+               "Average occupancy of buffer capacity")
 {
     m_msg_counter = 0;
     m_consumer = NULL;

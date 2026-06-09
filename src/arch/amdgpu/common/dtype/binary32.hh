@@ -42,35 +42,29 @@ namespace AMDGPU
 // this format by default. For now as there do not seem to be any MI300
 // instructions operating directly on the types (i.e., they all cast to FP32
 // first and then perform arithmetic operations).
-typedef union binary32_u
+union binary32
 {
-    enum bitSizes
-    {
-        ebits = 8,
-        mbits = 23,
-        sbits = 1,
-        bias = 127,
+    static constexpr size_t ebits = 8;
+    static constexpr size_t mbits = 23;
+    static constexpr size_t sbits = 1;
+    static constexpr size_t bias = 127;
 
-        inf = 0x7f800000,
-        nan = 0x7f800100,
-        max = 0x7f7fffff
-    };
+    static constexpr uint32_t inf = 0x7f800000;
+    static constexpr uint32_t nan = 0x7f800100;
+    static constexpr uint32_t max = 0x7f7fffff;
 
     uint32_t storage;
-    float    fp32;
+    float fp32;
     struct
     {
-        unsigned mant : 23;
-        unsigned exp  : 8;
-        unsigned sign : 1;
+        unsigned mant : mbits;
+        unsigned exp : ebits;
+        unsigned sign : sbits;
     };
 
     // To help with stdlib functions with T = float.
-    operator float() const
-    {
-        return fp32;
-    }
-} binary32;
+    operator float() const { return fp32; }
+};
 static_assert(sizeof(binary32) == 4);
 
 } // namespace AMDGPU
@@ -80,12 +74,12 @@ static_assert(sizeof(binary32) == 4);
 namespace std
 {
 
-template<>
-class numeric_limits<gem5::AMDGPU::binary32>
+template <> class numeric_limits<gem5::AMDGPU::binary32>
 {
   public:
     static constexpr bool has_quiet_NaN = true;
-    static gem5::AMDGPU::binary32 quiet_NaN()
+    static gem5::AMDGPU::binary32
+    quiet_NaN()
     {
         gem5::AMDGPU::binary32 tmp;
         tmp.fp32 = std::numeric_limits<float>::quiet_NaN();
@@ -93,14 +87,16 @@ class numeric_limits<gem5::AMDGPU::binary32>
     }
 
     static constexpr bool has_infinity = true;
-    static gem5::AMDGPU::binary32 infinity()
+    static gem5::AMDGPU::binary32
+    infinity()
     {
         gem5::AMDGPU::binary32 tmp;
         tmp.fp32 = std::numeric_limits<float>::infinity();
         return tmp;
     }
 
-    static gem5::AMDGPU::binary32 max()
+    static gem5::AMDGPU::binary32
+    max()
     {
         gem5::AMDGPU::binary32 tmp;
         tmp.fp32 = std::numeric_limits<float>::max();

@@ -401,11 +401,6 @@ class ArmStaticInst : public StaticInst
 
     inline Fault disabledFault() const { return undefined(true); }
 
-    // Utility function used by checkForWFxTrap32 and checkForWFxTrap64
-    // Returns true if processor has to trap a WFI/WFE instruction.
-    bool isWFxTrapping(ThreadContext *tc,
-                       ExceptionLevel targetEL, bool isWfe) const;
-
     /**
      * Trigger a Software Breakpoint.
      *
@@ -454,29 +449,6 @@ class ArmStaticInst : public StaticInst
                                     CPSR cpsr, CPACR cpacr,
                                     NSACR nsacr, FPEXC fpexc,
                                     bool fpexc_check, bool advsimd) const;
-
-    /**
-     * Check if WFE/WFI instruction execution in aarch32 should be trapped.
-     *
-     * See aarch32/exceptions/traps/AArch32.checkForWFxTrap in the
-     * ARM ARM psueodcode library.
-     */
-    Fault checkForWFxTrap32(ThreadContext *tc,
-                            ExceptionLevel tgtEl, bool isWfe) const;
-
-    /**
-     * Check if WFE/WFI instruction execution in aarch64 should be trapped.
-     *
-     * See aarch64/exceptions/traps/AArch64.checkForWFxTrap in the
-     * ARM ARM psueodcode library.
-     */
-    Fault checkForWFxTrap64(ThreadContext *tc,
-                            ExceptionLevel tgtEl, bool isWfe) const;
-
-    /**
-     * WFE/WFI trapping helper function.
-     */
-    Fault trapWFx(ThreadContext *tc, CPSR cpsr, SCR scr, bool isWfe) const;
 
     /**
      * Check if SETEND instruction execution in aarch32 should be trapped.
