@@ -34,6 +34,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import importlib
+import importlib.machinery
+import importlib.util
 from dataclasses import dataclass
 from pathlib import Path
 from typing import (
@@ -59,6 +61,24 @@ from ...chi.nodes.abstract_node import (
     CHI_NodeType,
     Node_Params,
 )
+
+
+def load_topology_config(topology_path: str):
+    """Load a topology config Python file as a module."""
+
+    path = Path(topology_path).expanduser().resolve()
+    if not path.is_file():
+        raise FileNotFoundError(
+            f"Topology config does not exist: {topology_path}"
+        )
+
+    module_name = f"topology_config_{path.stem}"
+    loader = importlib.machinery.SourceFileLoader(module_name, str(path))
+    module = importlib.util.module_from_spec(
+        importlib.util.spec_from_loader(module_name, loader)
+    )
+    loader.exec_module(module)
+    return module
 
 
 @dataclass(kw_only=True)
