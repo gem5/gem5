@@ -178,6 +178,7 @@ TlmGenerator::TlmGenerator(const Params &p)
       outPort(name() + ".out_port", 0, this),
       inPort(name() + ".in_port", 0, this),
       suiteFailure(false),
+      cbusyTracker(p.cbusy_tracker),
       stats(this)
 {
     inPort.onChange([this](const TlmData &data) {
@@ -307,6 +308,8 @@ TlmGenerator::recv(ARM::CHI::Payload *payload, ARM::CHI::Phase *phase)
 {
     DPRINTF(TLM, "[c%d] rcvd %s\n", cpuId, transactionToString(*payload, *phase));
 
+    handleCBusy(phase);
+
     if (handlePCredit(phase)) {
         return;
     } else if (auto it = pendingTransactions.find(phase->txn_id);
@@ -328,6 +331,28 @@ TlmGenerator::scheduleEvaluation(unsigned cycles, Transaction *transaction)
     auto &event = transaction->runCallbacksEvent;
     panic_if(event.scheduled(), "Already scheduled\n");
     schedule(event, clockEdge(Cycles(cycles)));
+}
+
+void
+TlmGenerator::handleCBusy(ARM::CHI::Phase *phase)
+{
+    if (phase->channel != ARM::CHI::CHANNEL_RSP &&
+        phase->channel != ARM::CHI::CHANNEL_DAT) {
+        return;
+    }
+
+    uint8_t cbusy10 = bits(phase->c_busy, 1, 0);
+    bool cbusy2 = bits(phase->c_busy, 2);
+
+    if (cbusy2) {
+        stats.cbusy2++;
+    }
+    stats.cbusy10[cbusy10]++;
+
+    if (cbusyTracker) {
+        const ruby::MachineID responder(tlm_to_ruby::srcId(phase->src_id));
+        cbusyTracker->update(responder, phase->c_busy);
+    }
 }
 
 bool
@@ -418,8 +443,14 @@ TlmGenerator::Stats::Stats(statistics::Group *_parent)
       ADD_STAT(retryAck, statistics::units::Count::get(),
                "Number of RetryAck received"),
       ADD_STAT(pcrdGrant, statistics::units::Count::get(),
-               "Number of PCrdGrant received")
-{}
+               "Number of PCrdGrant received"),
+      ADD_STAT(cbusy2, statistics::units::Count::get(),
+               "CBusy signals revceived"),
+      ADD_STAT(cbusy10, statistics::units::Count::get(),
+               "CBusy signals revceived")
+{
+    cbusy10.init(4);
+}
 
 } // namespace tlm::chi
 
