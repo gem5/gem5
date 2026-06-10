@@ -45,6 +45,7 @@
 
 #include "mem/ruby/protocol/chi/tlm/port.hh"
 #include "mem/ruby/protocol/chi/tlm/utils.hh"
+#include "mem/ruby/structures/BackpressureTracker.hh"
 #include "params/TlmGenerator.hh"
 #include "sim/clocked_object.hh"
 #include "sim/eventq.hh"
@@ -375,6 +376,9 @@ class TlmGenerator : public ClockedObject
      */
     bool handlePCredit(ARM::CHI::Phase *phase);
 
+    /** Handle a C-busy message */
+    void handleCBusy(ARM::CHI::Phase *phase);
+
   protected:
     /** cpuId to mimic the behaviour of a CPU */
     uint8_t cpuId;
@@ -409,6 +413,9 @@ class TlmGenerator : public ClockedObject
     /** Has any transaction of the suite failed? */
     bool suiteFailure;
 
+    /** Tracks responder-reported CBusy values observed by the generator */
+    ruby::BackpressureTracker *cbusyTracker;
+
     struct Stats : public statistics::Group
     {
         Stats(statistics::Group *parent);
@@ -419,6 +426,10 @@ class TlmGenerator : public ClockedObject
         statistics::Scalar retryAck;
         /* Number of PCrdGrant received */
         statistics::Scalar pcrdGrant;
+
+        /* CBusy signals revceived */
+        statistics::Scalar cbusy2;
+        statistics::Vector cbusy10;
     } stats;
 };
 
