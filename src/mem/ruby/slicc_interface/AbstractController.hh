@@ -217,7 +217,7 @@ class AbstractController : public ClockedObject, public Consumer
     /**
      * Map an address to the correct MachineID
      *
-     * This function querries the network for the NodeID of the
+     * This function queries the network for the NodeID of the
      * destination for a given request using its address and the type
      * of the destination. For example for a request with a given
      * address to a directory it will return the MachineID of the
@@ -232,7 +232,7 @@ class AbstractController : public ClockedObject, public Consumer
     /**
      * Map a RequestorID to the correct MachineID
      *
-     * This function querries the network for the NodeID of the
+     * This function queries the network for the NodeID of the
      * target MachineID from RequestorID.
      *
      * @param the RequestorID

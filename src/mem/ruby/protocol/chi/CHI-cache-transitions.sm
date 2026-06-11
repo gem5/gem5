@@ -1073,7 +1073,7 @@ transition(BUSY_BLKD, ReadUnique_PoC_HitUpstream_NoUnique_DataPull) {
 transition(BUSY_BLKD, ReadUnique_Hit_DataPull) {
   Pop_TriggerQueue;
   Initiate_ReadUnique_Hit;
-  Allocate_DirEntry
+  Allocate_DirEntry;
   Profile_Hit;
   ProcessNextState_ClearPending;
 }
@@ -1860,7 +1860,7 @@ transition(BUSY_INTR, Comp_I, BUSY_BLKD) {
 
 transition(BUSY_BLKD, Comp_I, BUSY_BLKD) {
   Receive_ReqResp_Hazard;
-  Profile_OutgoingEnd_DatalessResp_Hazard
+  Profile_OutgoingEnd_DatalessResp_Hazard;
   Pop_RespInQueue;
 }
 

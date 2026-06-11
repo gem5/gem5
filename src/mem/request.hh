@@ -264,7 +264,7 @@ class Request : public Extensible<Request>
          */
         STICKY_FLAGS = INST_FETCH,
         /** TLBI_EXT_SYNC_COMP seems to be the largest value
-            of FlagsType, so HAS_NO_ADDR's value is that << 3 */
+            of FlagsType, so HAS_NO_ADDR's value is that << 4 */
         HAS_NO_ADDR                = 0x0008000000000000,
         // clang-format on
     };
@@ -1097,7 +1097,7 @@ class Request : public Extensible<Request>
     bool
     isStashOnce() const
     {
-        return _flags.isSet(STASH_ONCE);
+        return _flags.isSet(STASH_ONCE) || _flags.isSet(STASH_ONCE_UNIQUE);
     }
     bool
     isStashOnceUnique() const
@@ -1107,7 +1107,7 @@ class Request : public Extensible<Request>
     bool
     isStashOnceShared() const
     {
-        return !isStashOnceUnique();
+        return isStashOnce() && !isStashOnceUnique();
     }
 
     bool
