@@ -2433,7 +2433,7 @@ template<typename ElemType>
 
             microop = new %(class_name)sMicro<ElemType>(
                 _machInst, micro_vl, micro_idx++, i, vs2Idx, vs3Idx, _elen,
-                _vlen, true, j == (std::max(i - 1, 0) - 1), false, false);
+                _vlen, true, j == (std::max(i - 1, 0) - 1), false);
             microop->setDelayedCommit();
             this->microops.push_back(microop);
         }
@@ -2558,7 +2558,7 @@ template<typename ElemType>
 
             microop = new %(class_name)sMicro<ElemType>(
                 _machInst, micro_vl, micro_idx++, i, vs2Idx, vs3Idx, _elen,
-                _vlen, false, j >= (num_microops - 2), false, overlap);
+                _vlen, false, j >= (num_microops - 2), overlap);
             microop->setDelayedCommit();
             this->microops.push_back(microop);
         }
@@ -2618,8 +2618,7 @@ template<typename ElemType>
             if (copyFrontFromVs2 || copyFrontFromVs3 || needZeroTail) {
                 microop = new %(class_name)sMicro<ElemType>(
                     _machInst, micro_vl, micro_idx++, i, vs2Idx, vs3Idx, _elen,
-                    _vlen, false, lastUopForVd,
-                    i == (num_microops - 1) || micro_vl < micro_vlmax);
+                    _vlen, false, lastUopForVd);
                 microop->setDelayedCommit();
                 this->microops.push_back(microop);
                 break;
@@ -2647,13 +2646,12 @@ private:
     RegId destRegIdxArr[1];
     bool vm;
     bool lastUopForVd;
-    bool lastUop;
     bool slideUp;
 public:
     %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
         uint32_t _microIdx, uint32_t _vdIdx, uint32_t _vs2Idx,
         uint32_t _vs3Idx, uint32_t _elen, uint32_t _vlen, bool _slideUp,
-        bool _lastUopForVd, bool _lastUop=false, bool _copyVs = false);
+        bool _lastUopForVd, bool _copyVs = false);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     using %(base_class)s::generateDisassembly;
 };
@@ -2666,11 +2664,10 @@ template<typename ElemType>
 %(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
         uint32_t _microVl, uint32_t _microIdx, uint32_t _vdIdx,
         uint32_t _vs2Idx, uint32_t _vs3Idx, uint32_t _elen, uint32_t _vlen,
-        bool _slideUp, bool _lastUopForVd, bool _lastUop, bool _copyVs)
+        bool _slideUp, bool _lastUopForVd, bool _copyVs)
     : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _microVl,
         _microIdx, _vdIdx, _vs2Idx, _vs3Idx, _elen, _vlen),
       lastUopForVd(_lastUopForVd),
-      lastUop(_lastUop),
       slideUp(_slideUp)
 {
     this->vm = _machInst.vm;

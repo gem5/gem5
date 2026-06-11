@@ -5556,7 +5556,7 @@ decode QUADRANT default Unknown::unknown() {
                             }
                         }
                     }
-                    if (lastUop) {
+                    if (isLastMicroop()) {
                         if (this->vm || elem_mask(v0,
                             vdWindowLeft + microVl - 1)) {
                             auto fd = ftype_freg<et>(freg(Fs1_bits));
@@ -5907,7 +5907,7 @@ decode QUADRANT default Unknown::unknown() {
                             }
                         }
                     }
-                    if (lastUop) {
+                    if (isLastMicroop()) {
                         if (this->vm || elem_mask(v0,
                             vdWindowLeft + microVl - 1)) {
                             Vd_vu[microVl - 1] = Rs1_vu;
