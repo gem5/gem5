@@ -398,6 +398,7 @@ action(Initiate_Snoop_Hazard, desc="") {
 
 action(RestoreFromHazard, desc="") {
   TBE hazard_tbe := getHazardTBE(tbe);
+  CHIRequestType snpReqType := tbe.reqType;
 
   // update
   setDataToBeStates(tbe);
@@ -412,16 +413,19 @@ action(RestoreFromHazard, desc="") {
 
   // if the pending request is a WB or Evict then it becomes a stale request
   // if data is no longer in the expected state
+  bool invalidating_snoop := (snpReqType == CHIRequestType:SnpCleanInvalid) ||
+                             (snpReqType == CHIRequestType:SnpUnique) ||
+                             (snpReqType == CHIRequestType:SnpUniqueFwd);
   if (tbe.pendReqType == CHIRequestType:WriteBackFull) {
-    tbe.is_stale := (tbe.dataValid && tbe.dataDirty) == false;
+    tbe.is_stale := tbe.is_stale || ((tbe.dataValid && tbe.dataDirty) == false);
   } else if (tbe.pendReqType == CHIRequestType:WriteCleanFull) {
-    tbe.is_stale := (tbe.dataValid && tbe.dataDirty) == false;
-  } else if (hazard_tbe.pendReqType == CHIRequestType:WriteEvictFull) {
-    tbe.is_stale := (tbe.dataValid && tbe.dataUnique) == false;
-  } else if (hazard_tbe.pendReqType == CHIRequestType:Evict) {
-    tbe.is_stale := tbe.dataValid == false;
-  } else if (hazard_tbe.pendReqType == CHIRequestType:CleanUnique) {
-    tbe.is_stale := tbe.dataValid == false;
+    tbe.is_stale := tbe.is_stale || ((tbe.dataValid && tbe.dataDirty) == false);
+  } else if (tbe.pendReqType == CHIRequestType:WriteEvictFull) {
+    tbe.is_stale := tbe.is_stale || ((tbe.dataValid && tbe.dataUnique) == false);
+  } else if (tbe.pendReqType == CHIRequestType:Evict) {
+    tbe.is_stale := tbe.is_stale || invalidating_snoop;
+  } else if (tbe.pendReqType == CHIRequestType:CleanUnique) {
+    tbe.is_stale := tbe.is_stale || invalidating_snoop;
   }
 
   // a pending action from the original request may have been stalled during
@@ -3014,7 +3018,7 @@ action(UpdateDirState_FromSnpResp, desc="") {
     // Should not update for Stash Types.
     // because the state responsed from snpstash is imprecise.
     if ((in_msg.type == CHIResponseType:SnpResp_I)
-        && (!isStashReqType(tbe.reqType) && !isStashSnpType(tbe.reqType)) || tbe.dataPull) {
+        && ((!isStashReqType(tbe.reqType) && !isStashSnpType(tbe.reqType)) || tbe.dataPull)) {
       // must have been a known sharer otherwise we would receive data
       assert(tbe.dir_sharers.isElement(in_msg.responder));
       tbe.dir_sharers.remove(in_msg.responder);
@@ -3823,6 +3827,9 @@ action(Send_SnpRespI_DataPull, desc="") {
     tbe.expected_req_resp.setExpectedCount(2);
     tbe.dataBlkValid.clear();
   }
+
+  tbe.pendReqDest.clear();
+  tbe.pendReqDest.add(tbe.snd_destination);
 
   enqueue(rspOutPort, CHIResponseMsg, response_latency) {
     out_msg.addr := address;
