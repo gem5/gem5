@@ -5079,7 +5079,8 @@ decode QUADRANT default Unknown::unknown() {
                     }}, OPIVX, SimdAluOp);
                 }
                 0x0e: VectorSlideUpFormat::vslideup_vx({{
-                    int offset = (int)Rs1_vu;
+                    uint64_t raw_offset = Rs1_vu;
+                    int offset = (raw_offset > RVV_MAX_VLMAX) ? (int)RVV_MAX_VLMAX : (int)raw_offset;
                     int microVlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
                     int vdWindowLeft = microVlmax * vdIdx;
                     int vdWindowRight = microVlmax * (vdIdx + 1);
@@ -5126,7 +5127,8 @@ decode QUADRANT default Unknown::unknown() {
                     }
                 }}, OPIVX, SimdMiscOp);
                 0x0f: VectorSlideDownFormat::vslidedown_vx({{
-                    int offset = (int)Rs1_vu;
+                    uint64_t raw_offset = Rs1_vu;
+                    int offset = (raw_offset > RVV_MAX_VLMAX) ? (int)RVV_MAX_VLMAX : (int)raw_offset;
                     int microVlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
                     int offsetWindow = offset % microVlmax;
                     int vdWindowLeft = microVlmax * vdIdx;
