@@ -424,7 +424,7 @@ def format VectorIntWideningFormat(code, category, *flags) {{
     need_elem_idx = mask_cond or code.find("ei") != -1
     is_destructive_fused = iop.op_class == "SimdMultAccOp"
 
-    old_vd_idx = 2
+    old_vd_idx = 2 if category != "OPIVI" else 1
     dest_reg_id = "vecRegClass[_machInst.vd + _microIdx]"
     dest_sew_mul = 2
     src1_reg_id = ""
