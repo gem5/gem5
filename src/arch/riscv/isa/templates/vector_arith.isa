@@ -2341,9 +2341,8 @@ template<typename ElemType>
 class %(class_name)s : public %(base_class)s
 {
 private:
-    RegId srcRegIdxArr[12];
+    RegId srcRegIdxArr[10];
     RegId destRegIdxArr[1];
-    bool vm;
 public:
     %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
                    uint32_t _microIdx, uint32_t _elen, uint32_t _vlen);
@@ -2352,7 +2351,6 @@ public:
 };
 
 }};
-
 def template VectorCompressMacroConstructor {{
 template<typename ElemType>
 %(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst, uint32_t _elen,
@@ -2378,6 +2376,27 @@ template<typename ElemType>
     }
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+}
+
+%(declare_varith_template)s;
+
+}};
+
+def template VectorCompressMicroConstructor {{
+
+template<typename ElemType>
+%(class_name)s<ElemType>::%(class_name)s(ExtMachInst _machInst,
+                                         uint32_t _microVl, uint32_t _microIdx,
+                                         uint32_t _elen, uint32_t _vlen)
+    : %(base_class)s("%(mnemonic)s", _machInst, %(op_class)s, _microVl,
+                     _microIdx, _elen, _vlen)
+{
+    %(set_reg_idx_arr)s;
+    _numSrcRegs = 0;
+    _numDestRegs = 0;
+    %(set_dest_reg_idx)s;
+    %(set_src_reg_idx)s;
+    %(fast_move_code)s
 }
 
 %(declare_varith_template)s;

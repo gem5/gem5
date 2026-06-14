@@ -4574,36 +4574,39 @@ decode QUADRANT default Unknown::unknown() {
                 format VectorCompressFormat {
                     0x17: vcompress_vm({{
                         const uint32_t elems_per_reg = vlenb / sizeof(ElemType);
-                        const uint64_t total_vl  = (uint64_t)machInst.vl;
+                        const uint64_t total_vl = (uint64_t)machInst.vl;
+                        
                         const uint64_t dst_start = (uint64_t)this->microIdx * elems_per_reg;
-                        const uint64_t dst_end   = dst_start + elems_per_reg;
+                        const uint64_t dst_end = dst_start + elems_per_reg;
 
-                        auto vs2_elem = [&](uint64_t ei) -> ElemType {
-                            const uint32_t src_reg     = (uint32_t)(ei / elems_per_reg);
-                            const uint32_t elem_in_reg = (uint32_t)(ei % elems_per_reg);
+                        uint64_t global_active_count = 0; 
+                        uint32_t filled = 0;
+                        const uint32_t num_vs2_regs = vtype_regs_per_group(vtype);
+
+                        for (uint32_t src_reg = 0; src_reg < num_vs2_regs; src_reg++) {
                             gem5::RiscvISA::VecRegContainer tmp;
                             xc->getRegOperand(this, 1 + src_reg, &tmp);
-                            return tmp.template as<ElemType>()[elem_in_reg];
-                        };
+                            auto src_elems = tmp.template as<ElemType>();
+                            
+                            for (uint32_t elem_in_reg = 0; elem_in_reg < elems_per_reg; elem_in_reg++) {
+                                uint64_t ei = (uint64_t)src_reg * elems_per_reg + elem_in_reg;
+                                
+                                bool is_valid_vl = (ei < total_vl);
+                                bool is_masked_on = is_valid_vl && elem_mask(Vs1_vu, ei);
 
-                        uint64_t dst_idx = 0;
-                        uint32_t filled  = 0;
-
-                        for (uint64_t ei = 0; ei < total_vl; ei++) {
-                            if (!elem_mask(Vs1_vu, ei))
-                                continue;
-                            if (dst_idx >= dst_start && dst_idx < dst_end) {
-                                Vd_vu[dst_idx - dst_start] = vs2_elem(ei);
-                                filled++;
+                                if (is_masked_on) {
+                                    if (global_active_count >= dst_start && global_active_count < dst_end) {
+                                        Vd_vu[filled] = src_elems[elem_in_reg];
+                                        filled++;
+                                    }
+                                    global_active_count++;
+                                }
                             }
-                            dst_idx++;
-                            if (dst_idx >= dst_end)
-                                break;
                         }
 
-                        if (!bits(vtype, 6)) {
+                        if (!machInst.vtype8.vta) {
                             gem5::RiscvISA::VecRegContainer old_vd_tmp;
-                            xc->getRegOperand(this, 1 + 8, &old_vd_tmp);
+                            xc->getRegOperand(this, 1 + num_vs2_regs, &old_vd_tmp);
                             auto old_elems = old_vd_tmp.template as<ElemType>();
                             for (uint32_t i = filled; i < elems_per_reg; i++)
                                 Vd_vu[i] = old_elems[i];

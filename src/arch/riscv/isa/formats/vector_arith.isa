@@ -301,13 +301,14 @@ def format VectorCompressFormat(code, category, *flags) {{
     set_dest_reg_idx = setDestWrapper(dest_reg_id)
     set_src_reg_idx = ""
     set_src_reg_idx += setSrcWrapper("vecRegClass[_machInst.vs1]")
-    for g in range(8):
-        set_src_reg_idx += setSrcWrapper(
-            f"vecRegClass[(_machInst.vs2 + {g}) % NumVecRegs]")
-    old_vd_src_idx = 1 + 8
-    set_src_reg_idx += setSrcWrapper(
-        "vecRegClass[_machInst.vd + _microIdx]")
-    set_src_reg_idx += setSrcVm()
+    set_src_reg_idx += """
+        {
+            const uint32_t _num_vs2_regs = vtype_regs_per_group(vtype);
+            for (uint32_t _g = 0; _g < _num_vs2_regs; _g++)
+                setSrcRegIdx(_numSrcRegs++, vecRegClass[(_machInst.vs2 + _g) % NumVecRegs]);
+        }
+    """
+    set_src_reg_idx += setSrcWrapper("vecRegClass[_machInst.vd + _microIdx]")
     vm_decl_rd = vmDeclAndReadData()
     set_vlenb = setVlenb()
     microiop = InstObjParams(name + "_micro",
@@ -321,11 +322,12 @@ def format VectorCompressFormat(code, category, *flags) {{
          'copy_old_vd': copyOldVd(old_vd_idx),
          'declare_varith_template': declareVArithTemplate(Name + "Micro")},
         flags)
+
     header_output = \
         VectorCompressMicroDeclare.subst(microiop) + \
         VectorIntMacroDeclare.subst(iop)
     decoder_output = \
-        VectorIntMicroConstructor.subst(microiop) + \
+        VectorCompressMicroConstructor.subst(microiop) + \
         VectorCompressMacroConstructor.subst(iop)
     exec_output = VectorIntMicroExecute.subst(microiop)
     decode_block = VectorIntDecodeBlock.subst(iop)
@@ -622,7 +624,7 @@ def format VectorIntMaskFormat(code, category, *flags) {{
 def format VectorGatherFormat(code, category, *flags) {{
     inst_name, inst_suffix = name.split("_", maxsplit=1)
     if inst_name == "vrgatherei16":
-        idx_type = "uint16_t"s
+        idx_type = "uint16_t"
     else:
         idx_type = "elem_type"
     iop = InstObjParams(name, Name, 'VectorArithMacroInst',
