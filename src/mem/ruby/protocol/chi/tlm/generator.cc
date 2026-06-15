@@ -258,7 +258,19 @@ TlmGenerator::send(Transaction *transaction)
     auto tlm_data = TlmData(payload, &phase);
     outPort.send(tlm_data);
 
-    stats.reqOut++;
+    switch (phase.channel) {
+        case ARM::CHI::CHANNEL_REQ:
+            stats.reqOut++;
+            break;
+        case ARM::CHI::CHANNEL_DAT:
+            stats.datOut++;
+            break;
+        case ARM::CHI::CHANNEL_RSP:
+            stats.rspOut++;
+            break;
+        default:
+            break;
+    }
 }
 
 void
@@ -440,6 +452,10 @@ TlmGenerator::Stats::Stats(statistics::Group *_parent)
     : statistics::Group(_parent),
       ADD_STAT(reqOut, statistics::units::Count::get(),
                "Number of transactions sent in the REQ channel"),
+      ADD_STAT(rspOut, statistics::units::Count::get(),
+               "Number of transactions sent in the RSP channel"),
+      ADD_STAT(datOut, statistics::units::Count::get(),
+               "Number of transactions sent in the DAT channel"),
       ADD_STAT(retryAck, statistics::units::Count::get(),
                "Number of RetryAck received"),
       ADD_STAT(pcrdGrant, statistics::units::Count::get(),

@@ -422,6 +422,10 @@ class TlmGenerator : public ClockedObject
 
         /* Number of transactions sent in the REQ channel */
         statistics::Scalar reqOut;
+        /* Number of transactions sent in the RSP channel */
+        statistics::Scalar rspOut;
+        /* Number of transactions sent in the DAT channel */
+        statistics::Scalar datOut;
         /* Number of RetryAck received */
         statistics::Scalar retryAck;
         /* Number of PCrdGrant received */
