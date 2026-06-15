@@ -85,9 +85,6 @@ def slicc_emitter(target, source, env):
             verbose=GetOption("verbose"),
         )
         slicc.process()
-        slicc.writeCodeFiles(output_dir.abspath, slicc_includes)
-        if env["CONF"]["SLICC_HTML"]:
-            slicc.writeHTMLFiles(html_dir.abspath)
 
         files.update([output_dir.File(f) for f in sorted(slicc.files())])
 
