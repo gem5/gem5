@@ -56,7 +56,7 @@ from m5.objects import (
     CowDiskImage,
     GenericTimer,
     IOXBar,
-    PciBus,
+    PciHost,
     PciVirtIO,
     RawDiskImage,
     Root,
@@ -314,12 +314,12 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         return self.iobus
 
     @overrides(AbstractBoard)
-    def has_pci_bus(self) -> bool:
+    def has_pci_host(self) -> bool:
         return True
 
     @overrides(AbstractBoard)
-    def get_pci_bus(self) -> PciBus:
-        return self.realview.pci_bus
+    def get_pci_host(self) -> PciHost:
+        return self.realview.pci_host
 
     @overrides(AbstractBoard)
     def has_coherent_io(self) -> bool:
