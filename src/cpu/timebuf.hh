@@ -145,7 +145,7 @@ class TimeBuffer
         _id = -1;
     }
 
-    TimeBuffer() : past(0), future(0), size(0), data(0), base(0) {}
+    TimeBuffer() : past(0), future(0), size(0), _id(-1), data(0), base(0) {}
 
     void id(int id)
     {
