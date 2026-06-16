@@ -172,7 +172,7 @@ class TimeBuffer
     }
 
   protected:
-    // Calculate the index into this->index for element at position idx
+    // Calculate the index into this->data for element at position idx
     // relative to now
     inline int calculateVectorIndex(int idx) const
     {
