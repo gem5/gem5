@@ -303,7 +303,7 @@ class TlmGenerator : public ClockedObject
     isActive() const
     {
         return !pendingTransactions.empty() ||
-               !unscheduledTransactions.empty() || !waitingForPCrd.empty();
+               !unscheduledTransactions.empty() || !pCreditQueues.empty();
     }
 
     Port &getPort(const std::string &if_name, PortID idx) override;
@@ -359,9 +359,10 @@ class TlmGenerator : public ClockedObject
 
     /**
      * Require a P-credit from the generator
-     * Returns true if a p-credit is available
+     * Returns true if a p-credit is available for
+     * a particular target node
      */
-    bool getPCrd();
+    bool getPCrd(uint16_t tgt_id);
 
     /**
      * Return a list of transactions waiting for
@@ -390,7 +391,7 @@ class TlmGenerator : public ClockedObject
     const uint16_t maxPendingTrans;
 
     /** Numbers of p-credit available to the generator */
-    unsigned pCredit;
+    std::unordered_map<uint16_t, unsigned> pCredit;
 
     /** tick event used to schedule unscheduled transactions */
     EventFunctionWrapper tickEvent;
@@ -398,8 +399,42 @@ class TlmGenerator : public ClockedObject
     /** List of transactions whose injection needs to be scheduled */
     std::list<Transaction *> unscheduledTransactions;
 
-    /** List of processes waiting for a P-credit grant */
-    std::list<Transaction *> waitingForPCrd;
+    /** P-credit waiting queues:
+     * Shelves transactions waiting for a P-credit on apposite
+     * queues. There is a queue per completer, so that whenever
+     * such completers sends a credit to the generator, we
+     * are able to forward it to the right queue/transaction.
+     */
+    struct PCrdWaitingQueues
+    {
+      public:
+        PCrdWaitingQueues() = default;
+        PCrdWaitingQueues(const PCrdWaitingQueues &rhs) = delete;
+
+        /**
+         * Return/Extract a transaction waiting for
+         * a credit from the tgt_id completer passes
+         * as a parameter
+         */
+        Transaction *get(uint16_t tgt_id);
+
+        /**
+         * The passed transaction is going to wait for
+         * a P-credit from tgt_id
+         */
+        void insert(uint16_t tgt_id, Transaction *tran);
+
+        /**
+         * The passed transaction is going to wait for
+         * a P-credit from tgt_id
+         */
+        bool empty() const;
+
+      protected:
+        /** Map of transactions waiting for a P-credit grant indexed by the
+         * tgt_id */
+        std::unordered_map<uint16_t, std::list<Transaction *>> waitingForPCrd;
+    } pCreditQueues;
 
     /** Map of pending (injected) transactions indexed by the txn_id */
     std::unordered_map<uint16_t, Transaction*> pendingTransactions;
