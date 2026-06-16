@@ -207,7 +207,7 @@ jobs:
               id: run-tests
               timeout-minutes: 1410
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --length=long -vvv -j $(nproc) --host gcn_gpu
+              run: ./main.py run --length=long -vvv -j $(nproc) --host gcn_gpu --isa=VEGA_X86
 
             - name: Upload results
               if: always()

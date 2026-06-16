@@ -301,7 +301,7 @@ jobs:
             - name: Run Testlib GPU Tests
               id: run-tests
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run -j$(nproc) -t$(nproc) --host gcn_gpu
+              run: ./main.py run -j$(nproc) -t$(nproc) --host gcn_gpu --isa=VEGA_X86
 
             # Upload the tests/testing-results directory as an artifact.
             - name: Upload results
