@@ -171,6 +171,9 @@ class CacheController : public ruby::CHIGenericController
         bool handle(const CHIResponseMsg *msg) override;
         bool forward(const CHIDataMsg *msg);
 
+        bool handleCompletion();
+
+        uint8_t rspMsgCnt = 0;
         uint8_t dataMsgCnt = 0;
     };
     struct DatalessTransaction : public Transaction

@@ -228,13 +228,19 @@ CacheController::ReadTransaction::handle(const CHIDataMsg *msg)
     phase.c_busy = msg->m_cbusy;
     phase.src_id = ruby_to_tlm::srcId(msg->m_responder);
 
-    // This is a hack, we should fix it on the ruby side
     if (forward(msg)) {
         controller->bw(payload, &phase);
     }
 
-    if (dataMsgCnt == controller->dataMsgsPerLine) {
+    return handleCompletion();
+}
+
+bool
+CacheController::ReadTransaction::handleCompletion()
+{
+    if (dataMsgCnt == controller->dataMsgsPerLine && rspMsgCnt != 0) {
         if (phase.exp_comp_ack == false) {
+            // This is a hack, we should fix it on the ruby side
             // The client is not sending a CompAck but ruby is
             // expecting it so we send it anyway
             controller->sendCompAck(*payload, phase);
@@ -250,15 +256,15 @@ CacheController::ReadTransaction::handle(const CHIResponseMsg *msg)
 {
     /// TODO: remove this, DBID is not sent
     phase.dbid = msg->m_dbid;
-    const bool finished = Transaction::handle(msg);
+    const bool is_not_retry_ack = Transaction::handle(msg);
 
-    // Read transactions complete on DAT beats, not on RespSepData.
-    // If we terminate here, the following DAT can no longer be matched.
-    if (phase.rsp_opcode == ARM::CHI::RSP_OPCODE_RESP_SEP_DATA) {
-        return false;
+    if (is_not_retry_ack) {
+        assert(rspMsgCnt == 0);
+        assert(phase.rsp_opcode == ARM::CHI::RSP_OPCODE_RESP_SEP_DATA);
+        rspMsgCnt++;
     }
 
-    return finished;
+    return handleCompletion();
 }
 
 bool
