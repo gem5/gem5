@@ -30,7 +30,7 @@
 #define __BASE_TIMEBUF_HH__
 
 #include <cassert>
-#include <vector>
+#include <deque>
 
 namespace gem5
 {
@@ -44,10 +44,11 @@ class TimeBuffer
     unsigned size;
     int _id;
 
-    std::vector<T> data;
+    std::deque<T> data;
     unsigned base;
 
-    void valid(int idx) const
+    void
+    valid(int idx) const
     {
         assert (idx >= -past && idx <= future);
     }
@@ -133,22 +134,18 @@ class TimeBuffer
         T *operator->() const { return buffer->access(index); }
     };
 
-
   public:
     TimeBuffer(int p, int f)
-        : past(p), future(f), size(past + future + 1),
-          data(size), base(0)
+        : past(p), future(f), size(past + future + 1), data(size), base(0)
     {
         assert(past >= 0 && future >= 0);
         _id = -1;
     }
 
-    TimeBuffer()
-        : past(0), future(0), size(0), _id(-1), data(0), base(0)
-    {
-    }
+    TimeBuffer() : past(0), future(0), size(0), _id(-1), data(0), base(0) {}
 
-    void id(int id)
+    void
+    id(int id)
     {
         _id = id;
     }
@@ -165,14 +162,15 @@ class TimeBuffer
             base = 0;
 
         int ptr = base + future;
-        if (ptr >= (int)size)
+        if (ptr >= (int)size) {
             ptr -= size;
+        }
         data[ptr] = T{};
     }
 
   protected:
-    //Calculate the index into this->index for element at position idx
-    //relative to now
+    // Calculate the index into this->index for element at position idx
+    // relative to now
     inline int calculateVectorIndex(int idx) const
     {
         //Need more complex math here to calculate index.
@@ -196,21 +194,24 @@ class TimeBuffer
         return &data[vector_index];
     }
 
-    T &operator[](int idx)
+    T &
+    operator[](int idx)
     {
         int vector_index = calculateVectorIndex(idx);
 
         return data[vector_index];
     }
 
-    const T &operator[] (int idx) const
+    const T &
+    operator[](int idx) const
     {
         int vector_index = calculateVectorIndex(idx);
 
         return data[vector_index];
     }
 
-    wire getWire(int idx)
+    wire
+    getWire(int idx)
     {
         valid(idx);
 
