@@ -70,7 +70,9 @@
 import atexit
 import itertools
 import os
+import shutil
 import sys
+import tempfile
 
 from os import mkdir, remove, environ, listdir
 from os.path import abspath, dirname, expanduser
@@ -118,6 +120,9 @@ AddOption('--ignore-style', action='store_true',
           help='Disable style checking hooks')
 AddOption('--linker', action='store', default=None, choices=linker_options,
           help=f'Select which linker to use ({", ".join(linker_options)})')
+AddOption('--compiler-cache', action='store', default='none',
+          help="Wrap C/C++ compiler calls with a compiler cache command, or "
+          "'none' to disable compiler caching")
 AddOption('--gold-linker', action='store_const', const='gold', dest='linker',
           help='Use the gold linker. Deprecated: Use --linker=gold')
 AddOption('--no-compress-debug', action='store_true',
@@ -477,6 +482,62 @@ main["BIN_TARGET_ARCH"] = (
     if bin_target_arch.find("Target: aarch64") != -1
     else "unknown"
 )
+
+compiler_cache = GetOption('compiler_cache')
+if compiler_cache != 'none':
+    def splitCommand(command):
+        if isinstance(command, str):
+            return main.Split(command)
+
+        try:
+            return list(command)
+        except TypeError:
+            return main.Split(str(command))
+
+    def splitCompilerCache(command):
+        parts = splitCommand(command)
+        if parts and shutil.which(parts[0],
+                                  path=main['ENV'].get('PATH')) is not None:
+            return parts
+
+        if os.path.isfile(command) or os.path.dirname(command):
+            return [command]
+        return parts
+
+    compiler_cache_parts = splitCompilerCache(compiler_cache)
+    if not compiler_cache_parts:
+        error('--compiler-cache requires a command, or none')
+
+    compiler_cache_executable = compiler_cache_parts[0]
+    if shutil.which(compiler_cache_executable,
+                    path=main['ENV'].get('PATH')) is None:
+        error(f'--compiler-cache={compiler_cache} requested, but '
+              f'{compiler_cache_executable} was not found in PATH')
+
+    def wrapCompiler(command):
+        return compiler_cache_parts + splitCommand(command)
+
+    main['CC'] = wrapCompiler(main['CC'])
+    main['CXX'] = wrapCompiler(main['CXX'])
+
+    with tempfile.TemporaryDirectory(prefix='gem5-compiler-cache-') as tmpdir:
+        test_source = join(tmpdir, 'compiler-cache-test.cc')
+        test_object = join(tmpdir, 'compiler-cache-test.o')
+
+        with open(test_source, 'w') as source:
+            source.write('int main() { return 0; }\n')
+
+        try:
+            readCommand(main['CXX'] + ['-c', test_source, '-o', test_object])
+        except Exception as e:
+            error(f'--compiler-cache={compiler_cache} failed to compile a '
+                  'test source. Ensure the command is a compiler cache that '
+                  f'can wrap {main["CXX"][len(compiler_cache_parts)]}.\n{e}')
+
+        if not isfile(test_object):
+            error(f'--compiler-cache={compiler_cache} did not produce a test '
+                  'object. Ensure the command is a compiler cache that can '
+                  f'wrap {main["CXX"][len(compiler_cache_parts)]}.')
 
 ########################################################################
 #
