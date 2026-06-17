@@ -40,9 +40,11 @@
  */
 
 #include <algorithm>
+#include <cstdint>
 #include <memory>
 
 #include "base/inet.hh"
+#include "base/logging.hh"
 #include "base/trace.hh"
 #include "debug/Drain.hh"
 #include "debug/EthernetAll.hh"
@@ -180,7 +182,14 @@ IGbE::readDevice(PacketPtr pkt)
     assert(bar == 0);
 
     // Only 32bit accesses allowed
-    assert(pkt->getSize() == 4);
+    if (pkt->getSize() != 4) {
+        warn("IGbE::readDevice: Access size %d not supported (expected 4) to "
+             "register %#x\n",
+             pkt->getSize(), daddr);
+        memset(pkt->getPtr<uint8_t>(), 0, pkt->getSize());
+        pkt->makeAtomicResponse();
+        return pioDelay;
+    }
 
     DPRINTF(Ethernet, "Read device register %#X\n", daddr);
 
@@ -369,7 +378,13 @@ IGbE::writeDevice(PacketPtr pkt)
     assert(bar == 0);
 
     // Only 32bit accesses allowed
-    assert(pkt->getSize() == sizeof(uint32_t));
+    if (pkt->getSize() != sizeof(uint32_t)) {
+        warn("IGbE::writeDevice: Access size %d not supported (expected 4) to "
+             "register %#x\n",
+             pkt->getSize(), daddr);
+        pkt->makeAtomicResponse();
+        return pioDelay;
+    }
 
     DPRINTF(Ethernet, "Wrote device register %#X value %#X\n",
             daddr, pkt->getLE<uint32_t>());
