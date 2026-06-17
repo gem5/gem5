@@ -291,7 +291,7 @@ class ViperBoard(X86Board):
             "chmod +x myapp\n"
             f"./myapp {opts}\n"
             "sleep 20\n"
-            "/sbin/m5 exit\n"
+            "m5 exit\n"
         )
 
         return application_command
