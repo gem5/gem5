@@ -74,7 +74,8 @@ class RouteProfiler
     void profBackEndRdy(Message *msg, BasicRouter *router, int vnet);
 
     // Notifies a ready message was sent through the output link
-    void profBackEndFwd(Message *msg, BasicRouter *router, int vnet);
+    void profBackEndFwd(Message *msg, BasicRouter *router,
+                        MessageBuffer *dest_link, int vnet);
 
     // Notifies a ready message was sent through the output link to
     // its final destination

@@ -1,5 +1,3 @@
-# -*- mode:python -*-
-
 # Copyright (c) 2026 Arm Limited
 # All rights reserved.
 #
@@ -11,9 +9,6 @@
 # terms below provided that you ensure that this notice is replicated
 # unmodified and in its entirety in all distributions of the software,
 # modified or unmodified, in source code or in binary form.
-#
-# Copyright (c) 2009 The Hewlett-Packard Development Company
-# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -38,25 +33,41 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+# import the m5 (gem5) library created when gem5 is built
+import m5
 
-if not env['CONF']['RUBY']:
-    Return()
+# import all of the SimObjects
+from m5.objects import *
 
-DebugFlag('TraceRoutesDebug')
+# create the system we are going to simulate
+root = Root(full_system=False)
 
-SimObject('BasicLink.py', sim_objects=[
-    'BasicLink', 'BasicExtLink', 'BasicIntLink'])
-SimObject('BasicRouter.py', sim_objects=['BasicRouter'])
-SimObject('MessageBuffer.py', sim_objects=['MessageBuffer'],
-        enums=['MessageRandomization'])
-SimObject('MessageBufferTest.py', sim_objects=['MessageBufferProducerTest',
-    'MessageBufferConsumerTest'])
-SimObject('Network.py', sim_objects=['RubyNetwork'])
+# Set the clock fequency of the system (and all of its children)
+root.clk_domain = SrcClockDomain()
+root.clk_domain.clock = "1GHz"
+root.clk_domain.voltage_domain = VoltageDomain()
 
-Source('BasicLink.cc')
-Source('BasicRouter.cc')
-Source('MessageBuffer.cc')
-Source('Network.cc')
-Source('RouteProfiler.cc')
-Source('Topology.cc')
+latency = 12
+channels = 3
+# buffer_size = channels * latency * 2
+buffer_size = channels * (latency + 1)
+# buffer_size = channels
+
+num_msgs = 100000
+
+root.buffer = MessageBuffer(buffer_size=buffer_size, max_dequeue_rate=channels)
+
+root.producer = MessageBufferProducerTest(
+    rate=channels, num_msgs=num_msgs, latency=latency, buffer=root.buffer
+)
+
+root.consumer = MessageBufferConsumerTest(
+    rate=channels, stall_prob=0.01, num_msgs=num_msgs, buffer=root.buffer
+)
+
+# instantiate all of the objects we've created above
+m5.instantiate()
+
+print("Beginning simulation!")
+exit_event = m5.simulate()
+print("Exiting @ tick %i because %s" % (m5.curTick(), exit_event.getCause()))

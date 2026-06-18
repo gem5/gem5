@@ -71,6 +71,8 @@ namespace gem5
 namespace ruby
 {
 
+class BasicIntLink;
+
 class MessageBuffer : public SimObject
 {
   public:
@@ -204,6 +206,19 @@ class MessageBuffer : public SimObject
         return m_is_inport;
     }
 
+    BasicIntLink *
+    getIntLink()
+    {
+        return m_int_link;
+    }
+
+    void
+    setIntLink(BasicIntLink *int_link)
+    {
+        assert(m_int_link == nullptr);
+        m_int_link = int_link;
+    }
+
   private:
     void reanalyzeList(std::list<MsgPtr> &, Tick);
 
@@ -296,6 +311,8 @@ class MessageBuffer : public SimObject
 
     int m_input_link_id;
     int m_vnet_id;
+
+    BasicIntLink *m_int_link;
 
     // Count the # of times I didn't have N slots available
     statistics::Scalar m_not_avail_count;
