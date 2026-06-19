@@ -303,15 +303,18 @@ def format VectorCompressFormat(code, category, *flags) {{
     set_src_reg_idx += setSrcWrapper("vecRegClass[_machInst.vs1]")
     set_src_reg_idx += """
         {
-            const uint32_t _num_vs2_regs = vtype_regs_per_group(vtype);
+            const uint32_t _elems_per_reg = (vlen / 8) / sizeof(ElemType);
+            const uint32_t _num_vs2_regs = (_machInst.vl + _elems_per_reg - 1) / _elems_per_reg;
             for (uint32_t _g = 0; _g < _num_vs2_regs; _g++)
-                setSrcRegIdx(_numSrcRegs++, vecRegClass[(_machInst.vs2 + _g) % NumVecRegs]);
+                setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs2 + _g]);
         }
     """
     set_src_reg_idx += setSrcWrapper("vecRegClass[_machInst.vd + _microIdx]")
     vm_decl_rd = vmDeclAndReadData()
     set_vlenb = setVlenb()
-    microiop = InstObjParams(name + "_micro",
+
+    microiop = InstObjParams(
+        name + "_micro",
         Name + "Micro",
         microop_class_name,
         {'code': code,
@@ -321,7 +324,8 @@ def format VectorCompressFormat(code, category, *flags) {{
          'vm_decl_rd': vm_decl_rd,
          'copy_old_vd': copyOldVd(old_vd_idx),
          'declare_varith_template': declareVArithTemplate(Name + "Micro")},
-        flags)
+        flags
+    )
 
     header_output = \
         VectorCompressMicroDeclare.subst(microiop) + \

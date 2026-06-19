@@ -4573,29 +4573,27 @@ decode QUADRANT default Unknown::unknown() {
                 }
                 format VectorCompressFormat {
                     0x17: vcompress_vm({{
-                        const uint32_t elems_per_reg = vlenb / sizeof(ElemType);
+                        const uint32_t elems_per_reg = (vlen / 8) / sizeof(ElemType);
                         const uint64_t total_vl = (uint64_t)machInst.vl;
-                        
                         const uint64_t dst_start = (uint64_t)this->microIdx * elems_per_reg;
                         const uint64_t dst_end = dst_start + elems_per_reg;
 
-                        uint64_t global_active_count = 0; 
+                        uint64_t global_active_count = 0;
                         uint32_t filled = 0;
-                        const uint32_t num_vs2_regs = vtype_regs_per_group(vtype);
+                        const uint32_t num_vs2_regs = (machInst.vl + elems_per_reg - 1) / elems_per_reg;
 
                         for (uint32_t src_reg = 0; src_reg < num_vs2_regs; src_reg++) {
                             gem5::RiscvISA::VecRegContainer tmp;
                             xc->getRegOperand(this, 1 + src_reg, &tmp);
                             auto src_elems = tmp.template as<ElemType>();
-                            
+
                             for (uint32_t elem_in_reg = 0; elem_in_reg < elems_per_reg; elem_in_reg++) {
                                 uint64_t ei = (uint64_t)src_reg * elems_per_reg + elem_in_reg;
-                                
                                 bool is_valid_vl = (ei < total_vl);
                                 bool is_masked_on = is_valid_vl && elem_mask(Vs1_vu, ei);
-
                                 if (is_masked_on) {
-                                    if (global_active_count >= dst_start && global_active_count < dst_end) {
+                                    if (global_active_count >= dst_start &&
+                                        global_active_count < dst_end) {
                                         Vd_vu[filled] = src_elems[elem_in_reg];
                                         filled++;
                                     }

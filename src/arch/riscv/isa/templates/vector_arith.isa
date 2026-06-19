@@ -2396,7 +2396,6 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
-    %(fast_move_code)s
 }
 
 %(declare_varith_template)s;
