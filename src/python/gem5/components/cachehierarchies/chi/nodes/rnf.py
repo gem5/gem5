@@ -1,4 +1,4 @@
-# Copyright (c) 2025 Arm Limited
+# Copyright (c) 2021-2024, 2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -9,9 +9,6 @@
 # terms below provided that you ensure that this notice is replicated
 # unmodified and in its entirety in all distributions of the software,
 # modified or unmodified, in source code or in binary form.
-#
-# Copyright (c) 2021 The Regents of the University of California
-# All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -36,66 +33,82 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects import (
-    CBusyTracker,
-    ClockDomain,
-    RubyCache,
-    RubyNetwork,
+
+import m5
+from m5.objects import *
+
+from gem5.components.cachehierarchies.chi.nodes.abstract_node import (
+    CHI_Node,
+    CHI_NodeType,
 )
-from m5.params import (
-    NULL,
-)
-
-from .....isas import ISA
-from .abstract_node import CacheController
 
 
-class L1CacheController(CacheController):
+class CHI_RNF(CHI_Node):
+    """
+    Defines a CHI request node.
+    Notice all contollers and sequencers are set as children of the cpus, so
+    this object acts more like a proxy for seting things up and has no topology
+    significance unless the cpus are set as its children at the top level
+    """
+
     def __init__(
         self,
-        size: str,
-        assoc: int,
-        network: RubyNetwork,
-        requires_send_evicts: bool,
-        cache_line_size,
-        target_isa: ISA,
-        clk_domain: ClockDomain,
+        ruby_system,
+        cntrls,
     ):
-        super().__init__(network, cache_line_size)
+        super().__init__(ruby_system, CHI_NodeType.CHI_RNF)
+        self.cntrls = cntrls
+        # last level controler is the last one on the list
+        self._ll_cntrls = [cntrls[-1]]
 
-        self.cache = RubyCache(
-            size=size, assoc=assoc, start_index_bit=self.getBlockSizeBits()
-        )
+    def getNetworkSideControllers(self):
+        """
+        Returns all ruby controllers that need to be connected to the
+        network
+        """
+        return self.cntrls
 
-        self.clk_domain = clk_domain
-        self.send_evictions = requires_send_evicts
-        self.use_prefetcher = False
-        self.prefetcher = NULL
-        self.cbusy_generator = NULL
-        self.cbusy_tracker = CBusyTracker()
+    def setDownstream(self, cntrls):
+        """
+        Sets cntrls as the downstream list of all *last level* controllers
+        of this node
+        """
+        for c in self._ll_cntrls:
+            c.downstream_destinations = cntrls
 
-        # Only applies to home nodes
-        self.is_HN = False
-        self.enable_DMT = False
-        self.enable_DCT = False
 
-        # MOESI states for a 1 level cache
-        self.allow_SD = True
-        self.alloc_on_seq_acc = True
-        self.alloc_on_seq_line_write = False
-        self.alloc_on_readshared = True
-        self.alloc_on_readunique = True
-        self.alloc_on_readonce = True
-        self.alloc_on_writeback = False  # Should never happen in an L1
-        self.alloc_on_atomic = False
-        self.dealloc_on_unique = False
-        self.dealloc_on_shared = False
-        self.dealloc_backinv_unique = True
-        self.dealloc_backinv_shared = True
-        # Some reasonable default TBE params
-        self.number_of_TBEs = 16
-        self.number_of_repl_TBEs = 16
-        self.number_of_snoop_TBEs = 4
-        self.number_of_DVM_TBEs = 16
-        self.number_of_DVM_snoop_TBEs = 4
-        self.unify_repl_TBEs = False
+class CHI_RNI_Base(CHI_Node):
+    def __init__(self, ruby_system, node_type, cntrl):
+        super().__init__(ruby_system, node_type)
+        self.cntrl = cntrl
+
+    def getNetworkSideControllers(self):
+        """
+        Returns all ruby controllers that need to be connected to the
+        network
+        """
+        return [self.cntrl]
+
+    def getAllControllers(self):
+        """
+        Returns all ruby controllers associated with this node
+        """
+        return [self.cntrl]
+
+
+class CHI_RNI_DMA(CHI_RNI_Base):
+    """
+    DMA controller wiredup to a given dma port
+    """
+
+    def __init__(self, ruby_system, cntrl):
+        super().__init__(ruby_system, CHI_NodeType.CHI_RNI_DMA, cntrl)
+
+
+class CHI_RNI_IO(CHI_RNI_Base):
+    """
+    DMA controller wiredup to ruby_system IO port
+    """
+
+    def __init__(self, ruby_system, cntrl):
+        super().__init__(ruby_system, CHI_NodeType.CHI_RNI_IO, cntrl)
