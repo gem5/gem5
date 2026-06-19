@@ -136,7 +136,7 @@ MathExpr::parse(std::string expr) {
                 !( (c >= 'a' && c <= 'z') ||
                    (c >= 'A' && c <= 'Z') ||
                    (c >= '0' && c <= '9') ||
-                   c == '$' || c == '\\' || c == '.' || c == '_');
+                   c == '$' || c == '\\' || c == '.' || c == '_' || c == ':');
 
         if (!contains_non_alpha) {
             Node * n = new Node();
