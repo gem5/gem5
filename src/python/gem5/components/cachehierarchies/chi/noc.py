@@ -1,4 +1,4 @@
-# Copyright (c) 2025 Arm Limited
+# Copyright (c) 2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -9,9 +9,6 @@
 # terms below provided that you ensure that this notice is replicated
 # unmodified and in its entirety in all distributions of the software,
 # modified or unmodified, in source code or in binary form.
-#
-# Copyright (c) 2021 The Regents of the University of California
-# All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -36,66 +33,30 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects import (
-    CBusyTracker,
-    ClockDomain,
-    RubyCache,
-    RubyNetwork,
+
+from dataclasses import (
+    dataclass,
+    field,
 )
-from m5.params import (
-    NULL,
+from typing import (
+    List,
+    Tuple,
 )
 
-from .....isas import ISA
-from .abstract_node import CacheController
 
+@dataclass
+class NoC_Params:
+    """
+    Default parameters for the interconnect. The value of data_width is
+    also used to set the data_channel_size for all CHI controllers.
+    (see configs/ruby/CHI.py)
+    """
 
-class L1CacheController(CacheController):
-    def __init__(
-        self,
-        size: str,
-        assoc: int,
-        network: RubyNetwork,
-        requires_send_evicts: bool,
-        cache_line_size,
-        target_isa: ISA,
-        clk_domain: ClockDomain,
-    ):
-        super().__init__(network, cache_line_size)
-
-        self.cache = RubyCache(
-            size=size, assoc=assoc, start_index_bit=self.getBlockSizeBits()
-        )
-
-        self.clk_domain = clk_domain
-        self.send_evictions = requires_send_evicts
-        self.use_prefetcher = False
-        self.prefetcher = NULL
-        self.cbusy_generator = NULL
-        self.cbusy_tracker = CBusyTracker()
-
-        # Only applies to home nodes
-        self.is_HN = False
-        self.enable_DMT = False
-        self.enable_DCT = False
-
-        # MOESI states for a 1 level cache
-        self.allow_SD = True
-        self.alloc_on_seq_acc = True
-        self.alloc_on_seq_line_write = False
-        self.alloc_on_readshared = True
-        self.alloc_on_readunique = True
-        self.alloc_on_readonce = True
-        self.alloc_on_writeback = False  # Should never happen in an L1
-        self.alloc_on_atomic = False
-        self.dealloc_on_unique = False
-        self.dealloc_on_shared = False
-        self.dealloc_backinv_unique = True
-        self.dealloc_backinv_shared = True
-        # Some reasonable default TBE params
-        self.number_of_TBEs = 16
-        self.number_of_repl_TBEs = 16
-        self.number_of_snoop_TBEs = 4
-        self.number_of_DVM_TBEs = 16
-        self.number_of_DVM_snoop_TBEs = 4
-        self.unify_repl_TBEs = False
+    router_link_latency: int = 1
+    node_link_latency: int = 1
+    router_latency: int = 1
+    router_buffer_size: int = 4
+    cntrl_msg_size: int = 8
+    data_width: int = 32
+    cross_links: List[Tuple[int, int]] = field(default_factory=list)
+    cross_link_latency: int = 0

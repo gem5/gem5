@@ -212,7 +212,7 @@ Throttle::operateVnet(int vnet, int channel, int &total_bw_remaining,
             if (out->isInport()) {
                 m_switch->profBackEndFwdExt(net_msg_ptr, out, vnet);
             } else {
-                m_switch->profBackEndFwd(net_msg_ptr, vnet);
+                m_switch->profBackEndFwd(net_msg_ptr, out, vnet);
             }
 
             // Could still have more ready but won't execute because no more

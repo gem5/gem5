@@ -69,8 +69,11 @@ RouteProfiler::profFrontEndRdy(Message *msg, BasicRouter *router,
     }
     if (entry.entries.empty() || (entry.entries.back().router != router)) {
         entry.entries.emplace_back(router, curTick());
-        DPRINTFS(TraceRoutesDebug, router, "Msg %#x entering router vnet=%d\n",
-                 msg, vnet);
+        DPRINTFS(TraceRoutesDebug, router,
+                 "Msg %#x entering router vnet=%d port=%s\n", msg, vnet,
+                 src_link->getIntLink() == nullptr
+                     ? ""
+                     : src_link->getIntLink()->params().dst_inport);
     }
     assert(entry.entries.back().router == router);
 }
@@ -143,7 +146,8 @@ RouteProfiler::profBackEndRdy(Message *msg, BasicRouter *router, int vnet)
 }
 
 void
-RouteProfiler::profBackEndFwd(Message *msg, BasicRouter *router, int vnet)
+RouteProfiler::profBackEndFwd(Message *msg, BasicRouter *router,
+                              MessageBuffer *dest_link, int vnet)
 {
     if (!m_enabled) {
         return;
@@ -157,10 +161,15 @@ RouteProfiler::profBackEndFwd(Message *msg, BasicRouter *router, int vnet)
     OutstandingRouteEntry &entry = iter->second.entries.back();
     assert(entry.router == router);
     entry.backend_fwd = curTick();
-    DPRINTFS(TraceRoutesDebug, router,
-             "Msg %#x leaving router vnet=%d delay=%d delay_total=%d\n", msg,
-             vnet, entry.backend_fwd - entry.frontend_rdy,
-             entry.backend_fwd - iter->second.entries.front().frontend_rdy);
+    DPRINTFS(
+        TraceRoutesDebug, router,
+        "Msg %#x leaving router vnet=%d port=%s delay=%d delay_total=%d\n",
+        msg, vnet,
+        dest_link->getIntLink() == nullptr
+            ? ""
+            : dest_link->getIntLink()->params().src_outport,
+        entry.backend_fwd - entry.frontend_rdy,
+        entry.backend_fwd - iter->second.entries.front().frontend_rdy);
 }
 
 void
@@ -171,7 +180,7 @@ RouteProfiler::profBackEndFwdExt(Message *msg, BasicRouter *router,
         return;
     }
 
-    profBackEndFwd(msg, router, vnet);
+    profBackEndFwd(msg, router, dest_link, vnet);
     auto iter = outstanding_routes.find(msg);
     OutstandingRoute &entry = iter->second;
 

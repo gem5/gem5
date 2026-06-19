@@ -255,7 +255,7 @@ class PrivateL1CacheHierarchy(AbstractRubyCacheHierarchy):
 
     @overrides(AbstractRubyCacheHierarchy)
     def _reset_version_numbers(self):
-        from .nodes.abstract_node import AbstractNode
+        from .nodes.abstract_node import CacheController
 
-        AbstractNode._version = 0
+        CacheController._version = 0
         MemoryController._version = 0

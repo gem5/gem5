@@ -1,4 +1,4 @@
-# Copyright (c) 2025 Arm Limited
+# Copyright (c) 2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -9,9 +9,6 @@
 # terms below provided that you ensure that this notice is replicated
 # unmodified and in its entirety in all distributions of the software,
 # modified or unmodified, in source code or in binary form.
-#
-# Copyright (c) 2021 The Regents of the University of California
-# All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -36,66 +33,41 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects import (
-    CBusyTracker,
-    ClockDomain,
-    RubyCache,
-    RubyNetwork,
-)
-from m5.params import (
-    NULL,
-)
-
-from .....isas import ISA
-from .abstract_node import CacheController
+from m5.objects.ClockedObject import ClockedObject
+from m5.params import *
+from m5.proxy import *
 
 
-class L1CacheController(CacheController):
-    def __init__(
-        self,
-        size: str,
-        assoc: int,
-        network: RubyNetwork,
-        requires_send_evicts: bool,
-        cache_line_size,
-        target_isa: ISA,
-        clk_domain: ClockDomain,
-    ):
-        super().__init__(network, cache_line_size)
+class MessageBufferProducerTest(ClockedObject):
+    type = "MessageBufferProducerTest"
+    cxx_class = "gem5::ruby::MessageBufferProducerTest"
+    cxx_header = "mem/ruby/network/MessageBufferTest.hh"
 
-        self.cache = RubyCache(
-            size=size, assoc=assoc, start_index_bit=self.getBlockSizeBits()
-        )
+    rate = Param.Int(
+        1,
+        "Number of messages to produce per cycle,"
+        "note negative values are taken as fractional e.g. -5"
+        "is 5 cycles per message",
+    )
 
-        self.clk_domain = clk_domain
-        self.send_evictions = requires_send_evicts
-        self.use_prefetcher = False
-        self.prefetcher = NULL
-        self.cbusy_generator = NULL
-        self.cbusy_tracker = CBusyTracker()
+    num_msgs = Param.Int(1, "Total number of messages to produce")
 
-        # Only applies to home nodes
-        self.is_HN = False
-        self.enable_DMT = False
-        self.enable_DCT = False
+    latency = Param.Cycles(1, "Cycles until message is ready after production")
 
-        # MOESI states for a 1 level cache
-        self.allow_SD = True
-        self.alloc_on_seq_acc = True
-        self.alloc_on_seq_line_write = False
-        self.alloc_on_readshared = True
-        self.alloc_on_readunique = True
-        self.alloc_on_readonce = True
-        self.alloc_on_writeback = False  # Should never happen in an L1
-        self.alloc_on_atomic = False
-        self.dealloc_on_unique = False
-        self.dealloc_on_shared = False
-        self.dealloc_backinv_unique = True
-        self.dealloc_backinv_shared = True
-        # Some reasonable default TBE params
-        self.number_of_TBEs = 16
-        self.number_of_repl_TBEs = 16
-        self.number_of_snoop_TBEs = 4
-        self.number_of_DVM_TBEs = 16
-        self.number_of_DVM_snoop_TBEs = 4
-        self.unify_repl_TBEs = False
+    buffer = Param.MessageBuffer("")
+
+
+class MessageBufferConsumerTest(ClockedObject):
+    type = "MessageBufferConsumerTest"
+    cxx_class = "gem5::ruby::MessageBufferConsumerTest"
+    cxx_header = "mem/ruby/network/MessageBufferTest.hh"
+
+    rate = Param.Int(1, "Maximum number of messages consumable within a cycle")
+
+    num_msgs = Param.Int(1, "Total number of messages to consume")
+
+    stall_prob = Param.Float(
+        0, "Probability consumer cannot consume messages in a cycle"
+    )
+
+    buffer = Param.MessageBuffer("")
