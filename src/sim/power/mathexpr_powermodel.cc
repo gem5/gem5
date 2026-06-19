@@ -125,14 +125,14 @@ MathExprPowerModel::getStatValue(const std::string &name) const
             const VResult &results = fi->result();
             for (size_t i = 0; i < fi->subnames.size(); i++){
                 if (fi->subnames[i] == subName)return results[i];
-               
+
             }
             return fi->total();
         }
     // single value stat like ipc, simSeconds
     return fi->total();
     }
-    
+
 
     panic("Unknown stat type!\n");
 }
