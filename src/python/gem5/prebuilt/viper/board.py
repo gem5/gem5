@@ -36,7 +36,11 @@ from typing import (
     Tuple,
 )
 
-from m5.objects import X86E820Entry
+from m5.objects import (
+    X86ACPIDSDT,
+    X86ACPIFADT,
+    X86E820Entry,
+)
 from m5.params import (
     AddrRange,
     Port,
@@ -195,6 +199,8 @@ class ViperBoard(X86Board):
             "drm_kms_helper.fbdev_emulation=0",
             "modprobe.blacklist=amdgpu",
             "modprobe.blacklist=psmouse",
+            # Tell linux to use MP table for PCI IRQs and not ACPI.
+            "pci=noacpi",
         ]
 
     def get_low_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
@@ -220,6 +226,13 @@ class ViperBoard(X86Board):
         # Call the base class which handles many more things and then
         # overwrite the e820 table for our memory ranges.
         super()._setup_io_devices()
+
+        # FADT pointing at a minimal DSDT. This prevents Linux from disabling
+        # ACPI which is needed by the WMI module which is a dependency for
+        # the amdgpu module.
+        fadt = X86ACPIFADT(dsdt=X86ACPIDSDT(), oem_id="gem5")
+        self.workload.acpi_description_table_pointer.rsdt.entries.append(fadt)
+        self.workload.acpi_description_table_pointer.xsdt.entries.append(fadt)
 
         entries = [
             # Mark the first megabyte of memory as reserved
@@ -278,7 +291,7 @@ class ViperBoard(X86Board):
             "chmod +x myapp\n"
             f"./myapp {opts}\n"
             "sleep 20\n"
-            "/sbin/m5 exit\n"
+            "m5 exit\n"
         )
 
         return application_command
