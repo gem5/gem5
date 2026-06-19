@@ -81,6 +81,7 @@ def remove_stale_protocol_outputs(slicc):
         if os.path.dirname(filename) == slicc.protocol:
             expected.add(os.path.basename(filename))
 
+    expected.add(f"{slicc.protocol}ProtocolInfo.hh")
     for filename in os.listdir(protocol_dir_path):
         filepath = os.path.join(protocol_dir_path, filename)
         if not os.path.isfile(filepath):
