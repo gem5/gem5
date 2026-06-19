@@ -512,7 +512,7 @@ if compiler_cache != 'none':
     if shutil.which(compiler_cache_executable,
                     path=main['ENV'].get('PATH')) is None:
         error(f'--compiler-cache={compiler_cache} requested, but '
-              f'{compiler_cache_executable} was not found in PATH')
+              f'{compiler_cache_executable} was not found or is not executable')
 
     def wrapCompiler(command):
         return compiler_cache_parts + splitCommand(command)
