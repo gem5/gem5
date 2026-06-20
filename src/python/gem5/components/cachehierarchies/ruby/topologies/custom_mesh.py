@@ -281,6 +281,14 @@ class CustomMesh(SimpleNetwork):
 
         num_nodes_per_router = node_params.num_nodes_per_router
         router_idx_list = node_params.router_list
+        # We set the external link latency to the global node_link_larency, unless
+        # the latency is specialized by defining a CHI node specific
+        # inbound_link_latency
+        ext_link_latency = (
+            node_params.inbound_link_latency
+            if node_params.inbound_link_latency
+            else self._node_link_latency
+        )
 
         for router_id in router_idx_list:
             self._check_router_id(int(router_id), node_params.node_type)
@@ -320,7 +328,7 @@ class CustomMesh(SimpleNetwork):
                             link_id=self._link_count,
                             ext_node=controller,
                             int_node=router,
-                            latency=self._node_link_latency,
+                            latency=ext_link_latency,
                         )
                     )
                     self._link_count += 1
@@ -344,7 +352,7 @@ class CustomMesh(SimpleNetwork):
                             link_id=self._link_count,
                             ext_node=controller,
                             int_node=router,
-                            latency=self._node_link_latency,
+                            latency=ext_link_latency,
                         )
                     )
                     self._link_count += 1
