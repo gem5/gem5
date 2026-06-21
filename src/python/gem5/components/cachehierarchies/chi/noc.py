@@ -63,6 +63,10 @@ class NoC_Params:
     snp_int_channels: int = 1
     rsp_int_channels: int = 1
     dat_int_channels: int = 1
+    req_ext_channels: int = 1
+    snp_ext_channels: int = 1
+    rsp_ext_channels: int = 1
+    dat_ext_channels: int = 1
     data_width: int = 32
     cross_links: List[Tuple[int, int]] = field(default_factory=list)
     cross_link_latency: int = 0
