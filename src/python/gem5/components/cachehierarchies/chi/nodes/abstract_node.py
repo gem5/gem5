@@ -180,6 +180,10 @@ class Node_Params:
     external links are bi-directional, so this link latency applies in
     both controller->router and router->controller directions, not just
     traffic incoming to the controller
+
+    'outbound_link_latency` is instead used to set enqueueing
+    latencies in SLICC when the controller within the node
+    is forwarding a message
     """
 
     node_type: CHI_NodeType
@@ -187,6 +191,7 @@ class Node_Params:
     router_list: List[int] = field(default_factory=list)
     dedicated_router: bool = False
     inbound_link_latency: Optional[int] = None
+    outbound_link_latency: Optional[int] = None
 
     def num_nodes(self) -> int:
         """Derive node count from Node_Params placement metadata."""

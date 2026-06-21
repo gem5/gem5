@@ -292,6 +292,11 @@ class PrivateL1PrivateL2MeshCacheHierarchy(
                 if node_params.inbound_link_latency
                 else self._noc_params.node_link_latency
             )
+            outbound_latency = (
+                node_params.outbound_link_latency
+                if node_params.outbound_link_latency
+                else self._noc_params.node_link_latency
+            )
 
             for node in node_list:
                 for ctrl in node.getNetworkSideControllers():
@@ -322,6 +327,25 @@ class PrivateL1PrivateL2MeshCacheHierarchy(
                     ctrl.datIn.buffer_size = dat_channels * (
                         inbound_latency + 1
                     )
+                    ctrl.reqOut.buffer_size = req_channels * (
+                        outbound_latency + 1
+                    )
+                    ctrl.snpOut.buffer_size = snp_channels * (
+                        outbound_latency + 1
+                    )
+                    ctrl.rspOut.buffer_size = rsp_channels * (
+                        outbound_latency + 1
+                    )
+                    ctrl.datOut.buffer_size = dat_channels * (
+                        outbound_latency + 1
+                    )
+
+                    # The latency for outbound messages to the network is defined by
+                    # these parameters when enqueueing messages in the SLICC code
+                    cntrl.request_latency = outbound_latency
+                    cntrl.response_latency = outbound_latency
+                    cntrl.snoop_latency = outbound_latency
+                    cntrl.data_latency = outbound_latency
 
     def _create_hnfs(
         self, board: AbstractBoard, num_hnfs: int
