@@ -115,6 +115,15 @@ class DRAMSysMem(AbstractMemorySystem):
                 "DRAMSys memory controller requires a single "
                 "range which matches the memory's size."
             )
+        from m5.params.param_types import (
+            SparseMaskedAddrRange,
+            SparseModuloAddrRange,
+        )
+
+        if isinstance(
+            ranges[0], (SparseModuloAddrRange, SparseMaskedAddrRange)
+        ):
+            raise ValueError("DRAMSys does not support sparse address ranges")
         self.dramsys.range = ranges[0]
         self.bridge.addr_ranges = ranges[0]
 

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2012, 2018 ARM Limited
+ * Copyright (c) 2026 Google Inc
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -155,4 +156,123 @@ TEST(AddrRangeMapTest, InterleavedTest2)
     ASSERT_NE(i, r.end()) << "start address not found in AddrRangeMap";
     // intlvMatch = 2 for start = 0x80000000
     EXPECT_EQ(i->second, 2);
+}
+
+/**
+ * Test AddrRangeMap with modulo-based interleaved address ranges.
+ * Use 3-way interleaving.
+ */
+TEST(AddrRangeMapTest, ModuloInterleavingTest)
+{
+    const uint32_t stripes = 3;
+    const uint32_t intlvBit = 6; // 64-byte blocks
+    const Addr start = 0x10000;
+    const Addr end = 0x20080;
+
+    AddrRangeMap<int> r;
+    AddrRangeMap<int>::const_iterator i;
+
+    // Populate AddrRangeMap with 3-way modulo interleaved ranges
+    for (uint32_t k = 0; k < stripes; k++) {
+        // AddrRange(start, end, stripes, match, intlv_bit)
+        r.insert(AddrRange(start, end, stripes, k, intlvBit), k);
+    }
+
+    // Verify mapping
+    // 0x10000 >> 6 = 1024. 1024 % 3 = 1. -> Match 1
+    i = r.contains(start);
+    ASSERT_NE(i, r.end());
+    EXPECT_EQ(i->second, 1);
+
+    // 0x10040 >> 6 = 1025. 1025 % 3 = 2. -> Match 2
+    i = r.contains(start + 0x40);
+    ASSERT_NE(i, r.end());
+    EXPECT_EQ(i->second, 2);
+
+    // 0x10080 >> 6 = 1026. 1026 % 3 = 0. -> Match 0
+    i = r.contains(start + 0x80);
+    ASSERT_NE(i, r.end());
+    EXPECT_EQ(i->second, 0);
+
+    // Test a hole (out of range)
+    i = r.contains(start - 1);
+    EXPECT_EQ(i, r.end());
+    i = r.contains(end);
+    EXPECT_EQ(i, r.end());
+}
+
+TEST(AddrRangeMapTest, NestedSparse)
+{
+    // 3-way modulo interleaved sparse range
+    // Range: 0-0x3002. Hole: 0x1002-0x2000.
+    std::vector<std::pair<Addr, Addr>> chunks = {{0, 0x1002},
+                                                 {0x2000, 0x3002}};
+
+    AddrRangeMap<int> r;
+
+    // Insert 0, 1, 2 matches
+    r.insert(AddrRange(chunks, 3, 0), 0);
+    r.insert(AddrRange(chunks, 3, 1), 1);
+    r.insert(AddrRange(chunks, 3, 2), 2);
+
+    // Verify mapping
+    auto it = r.contains(0x0);
+    ASSERT_NE(it, r.end());
+    EXPECT_EQ(it->second, 0);
+
+    it = r.contains(0x1);
+    ASSERT_NE(it, r.end());
+    EXPECT_EQ(it->second, 1);
+
+    it = r.contains(0x2000); // System 8192 -> Match 2
+    ASSERT_NE(it, r.end());
+    EXPECT_EQ(it->second, 2);
+
+    it = r.contains(0x2001); // System 8193 -> Match 0
+    ASSERT_NE(it, r.end());
+    EXPECT_EQ(it->second, 0);
+
+    it = r.contains(0x2002); // System 8194 -> Match 1
+    ASSERT_NE(it, r.end());
+    EXPECT_EQ(it->second, 1);
+
+    // Verify hole
+    it = r.contains(0x1005);
+    EXPECT_EQ(it, r.end());
+
+    it = r.contains(0x1500);
+    EXPECT_EQ(it, r.end());
+}
+
+TEST(AddrRangeMapTest, SparseOverlapHierarchy)
+{
+    AddrRangeMap<int> map;
+
+    // Chunk 1: 0 - 3GB (0 - 3221225472)
+    // Chunk 2: 4GB - 34GB (4294967296 - 35433480192)
+    std::vector<std::pair<Addr, Addr>> chunks = {{0, 0xc0000000},
+                                                 {0x100000000, 0x840000000}};
+    AddrRange merged(chunks); // Sparse
+
+    // Range inside the hole: 3GB - ~4GB
+    AddrRange io(0xc0000000, 0xffff0000);
+
+    map.insert(merged, 1);
+    map.insert(io, 2);
+
+    // Lookup in Chunk 1
+    auto it = map.contains(0x100);
+    ASSERT_NE(it, map.end());
+    EXPECT_EQ(it->second, 1);
+
+    // Lookup in IO
+    it = map.contains(0xc0000000 + 0x100);
+    ASSERT_NE(it, map.end());
+    EXPECT_EQ(it->second, 2);
+
+    // Lookup in Chunk 2 (This is the regression case)
+    // 0x1001c5880 is inside [0x100000000, 0x840000000]
+    it = map.contains(0x1001c5880);
+    ASSERT_NE(it, map.end()) << "Failed to find address";
+    EXPECT_EQ(it->second, 1);
 }
