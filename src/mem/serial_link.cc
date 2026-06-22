@@ -146,9 +146,10 @@ SerialLink::SerialLinkRequestPort::recvTimingResp(PacketPtr pkt)
     // have to wait to receive the whole packet. So we only account for the
     // deserialization latency.
     Cycles cycles = delay;
-    cycles += Cycles(divCeil(pkt->getSize() * 8, serial_link.num_lanes
-                * serial_link.link_speed));
-     Tick t = serial_link.clockEdge(cycles);
+    cycles += serial_link.ticksToCycles(
+        1000 * divCeil(pkt->getSize() * 8,
+                       serial_link.num_lanes * serial_link.link_speed));
+    Tick t = serial_link.clockEdge(cycles);
 
     //@todo: If the processor sends two uncached requests towards HMC and the
     // second one is smaller than the first one. It may happen that the second
@@ -207,8 +208,10 @@ SerialLink::SerialLinkResponsePort::recvTimingReq(PacketPtr pkt)
             // serial link, we should account for its deserialization latency
             // only.
             Cycles cycles = delay;
-            cycles += Cycles(divCeil(pkt->getSize() * 8,
-                    serial_link.num_lanes * serial_link.link_speed));
+            cycles += serial_link.ticksToCycles(
+                1000 *
+                divCeil(pkt->getSize() * 8,
+                        serial_link.num_lanes * serial_link.link_speed));
             Tick t = serial_link.clockEdge(cycles);
 
             //@todo: If the processor sends two uncached requests towards HMC
