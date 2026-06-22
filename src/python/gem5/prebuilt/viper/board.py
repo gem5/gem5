@@ -144,8 +144,12 @@ class ViperBoard(X86Board):
         # This modifies the default value for ECX only (4th in this array).
         # See: https://sandpile.org/x86/cpuid.htm#level_0000_0001h
         # Enables AVX, OSXSAVE, XSAVE, POPCNT, SSE4.2, SSE4.1, CMPXCHG16B,
-        # and FMA.
-        avx_cpu_features = [0x00020F51, 0x00000805, 0xEFDBFBFF, 0x1C803209]
+        # and FMA. Note that SSE4.1 (bit 19) and SSE4.2 (bit 20) are required
+        # for the x86-64-v2 microarchitecture level; without them modern
+        # userspace built for v2 (e.g. numpy/torch wheels) aborts at load with
+        # "built with baseline optimizations (X86_V2) but your machine doesn't
+        # support (X86_V2)".
+        avx_cpu_features = [0x00020F51, 0x00000805, 0xEFDBFBFF, 0x1C983209]
         for core_wrapper in self.get_processor().get_cores():
             if not core_wrapper.is_kvm_core():
                 self.workload.enable_osxsave = 0
