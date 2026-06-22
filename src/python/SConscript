@@ -49,6 +49,123 @@ PySource('gem5.simulate', 'gem5/simulate/simulator.py')
 PySource('gem5.simulate', 'gem5/simulate/exit_event.py')
 PySource('gem5.simulate', 'gem5/simulate/exit_event_generators.py')
 PySource('gem5.simulate', 'gem5/simulate/exit_handler.py')
+PySource('gem5.simulate.power_models',
+         'gem5/simulate/power_models/__init__.py')
+
+PySource('gem5.simulate.power_models',
+         'gem5/simulate/power_models/abstract_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/__init__.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/'
+         'base_mcpat_power_model.py')
+
+# CPU Power Models
+PySource('gem5.simulate.power_models.mcpat_power_model.cpu_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cpu_power_model/'
+         '__init__.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.cpu_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cpu_power_model/'
+         'mcpat_cpu_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.cpu_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cpu_power_model/'
+         'mcpat_cpu_fetch_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.cpu_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cpu_power_model/'
+         'mcpat_cpu_decode_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.cpu_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cpu_power_model/'
+         'mcpat_cpu_btb_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.cpu_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cpu_power_model/'
+         'mcpat_cpu_tournament_bp_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.cpu_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cpu_power_model/'
+         'mcpat_cpu_exec_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.cpu_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cpu_power_model/'
+         'mcpat_cpu_rf_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.cpu_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cpu_power_model/'
+         'mcpat_cpu_alu_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.cpu_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cpu_power_model/'
+         'mcpat_cpu_inst_scheduler_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.cpu_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cpu_power_model/'
+         'mcpat_cpu_lsu_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.cpu_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cpu_power_model/'
+         'mcpat_cpu_mmu_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.cpu_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cpu_power_model/'
+         'mcpat_cpu_renaming_unit_power_model.py')
+
+# Memory Control Power Models
+PySource('gem5.simulate.power_models.mcpat_power_model.mem_ctrl_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/mem_ctrl_power_model/'
+         '__init__.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.mem_ctrl_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/mem_ctrl_power_model/'
+         'mcpat_mem_ctrl_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.mem_ctrl_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/mem_ctrl_power_model/'
+         'mcpat_mem_phy_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.mem_ctrl_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/mem_ctrl_power_model/'
+         'mcpat_mem_frontend_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.mem_ctrl_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/mem_ctrl_power_model/'
+         'mcpat_mem_backend_power_model.py')
+
+# Cache Power Models
+PySource('gem5.simulate.power_models.mcpat_power_model.'
+         'cache_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cache_power_model/'
+         '__init__.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.'
+         'cache_power_model',
+         'gem5/simulate/power_models/mcpat_power_model/cache_power_model/'
+         'cache_act_energy_constants.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.'
+         'cache_power_model.classic',
+         'gem5/simulate/power_models/mcpat_power_model/cache_power_model/'
+         'classic/__init__.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.'
+         'cache_power_model.classic',
+         'gem5/simulate/power_models/mcpat_power_model/cache_power_model/'
+         'classic/mcpat_classic_l1i_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.'
+         'cache_power_model.classic',
+         'gem5/simulate/power_models/mcpat_power_model/cache_power_model/'
+         'classic/mcpat_classic_l1d_power_model.py')
+
+PySource('gem5.simulate.power_models.mcpat_power_model.'
+         'cache_power_model.classic',
+         'gem5/simulate/power_models/mcpat_power_model/cache_power_model/'
+         'classic/mcpat_classic_l2_power_model.py')
 PySource('gem5.components', 'gem5/components/__init__.py')
 PySource('gem5.components.boards', 'gem5/components/boards/__init__.py')
 PySource('gem5.components.boards', 'gem5/components/boards/abstract_board.py')
@@ -135,6 +252,9 @@ PySource('gem5.components.cachehierarchies.classic',
 PySource('gem5.components.cachehierarchies.classic',
     'gem5/components/cachehierarchies/classic/'
     'private_l1_shared_l2_cache_hierarchy.py')
+PySource('gem5.components.cachehierarchies.classic',
+    'gem5/components/cachehierarchies/classic/'
+    'private_l1_shared_l2_cache_hierarchy_with_power_model.py')
 PySource('gem5.components.cachehierarchies.classic',
     'gem5/components/cachehierarchies/classic/'
     'private_l1_shared_l2_walk_cache_hierarchy.py')
