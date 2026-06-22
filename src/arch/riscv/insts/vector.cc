@@ -216,6 +216,47 @@ std::string VectorSlideMacroInst::generateDisassembly(Addr pc,
     return ss.str();
 }
 
+std::string
+VectorGatherMacroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(vecRegClass[machInst.vd]) << ", "
+       << registerName(vecRegClass[machInst.vs2]) << ", ";
+    if (machInst.funct3 == 0x3) {
+        ss << machInst.vecimm;
+    } else if (machInst.funct3 == 0x1) {
+        ss << registerName(intRegClass[machInst.rs1]);
+    } else {
+        ss << registerName(vecRegClass[machInst.vs1]);
+    }
+    if (machInst.vm == 0) {
+        ss << ", v0.t";
+    }
+    return ss.str();
+}
+
+std::string
+VectorGatherMicroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", ";
+    ss << registerName(srcRegIdx(0));
+    if (numVs2Regs > 1) {
+        ss << "-" << registerName(srcRegIdx(numVs2Regs - 1));
+    }
+    ss << ", " << registerName(srcRegIdx(numVs2Regs));
+    if (numVs1Regs > 1) {
+        ss << "-" << registerName(srcRegIdx(numVs2Regs + numVs1Regs - 1));
+    }
+
+    if (machInst.vm == 0) {
+        ss << ", v0.t";
+    }
+    return ss.str();
+}
+
 std::string VleMicroInst::generateDisassembly(Addr pc,
         const loader::SymbolTable *symtab) const
 {

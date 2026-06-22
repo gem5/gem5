@@ -3734,30 +3734,12 @@ decode QUADRANT default Unknown::unknown() {
                     }}, OPIVV, SimdAluOp);
                 }
                 0x0c: VectorGatherFormat::vrgather_vv({{
-                    for (uint32_t i = 0; i < microVl; i++) {
-                        uint32_t ei = i + vs1_idx * vs1_elems + vs1_bias;
-                        if (this->vm || elem_mask(v0, ei)) {
-                            const uint64_t idx = Vs1_vu[i]
-                                - vs2_elems * vs2_idx;
-                            if (Vs1_vu[i] >= vlmax)
-                                Vd_vu[i] = 0;
-                            else if (idx < vs2_elems)
-                                Vd_vu[i] = Vs2_vu[idx];
-                        }
-                    }
+                    IndexType idx = vs1_regs[i/vs1_elems].as<IndexType>()[i];
                 }}, OPIVV, SimdMiscOp);
                 0x0e: VectorGatherFormat::vrgatherei16_vv({{
-                    for (uint32_t i = 0; i < microVl; i++) {
-                        uint32_t ei = i + vs1_idx * vs1_elems + vs1_bias;
-                        if (this->vm || elem_mask(v0, ei)) {
-                            const uint32_t idx = Vs1_uh[i + vs1_bias]
-                                - vs2_elems * vs2_idx;
-                            if (Vs1_uh[i + vs1_bias] >= vlmax)
-                                Vd_vu[i + vd_bias] = 0;
-                            else if (idx < vs2_elems)
-                                Vd_vu[i + vd_bias] = Vs2_vu[idx];
-                        }
-                    }
+                    uint32_t offset = microIdx*vd_elems % vs1_elems;
+                    IndexType idx = vs1_regs[(i+offset)/vs1_elems]
+                                    .as<IndexType>()[i+offset];
                 }}, OPIVV, SimdMiscOp);
                 format VectorIntFormat {
                     0x10: decode VM {
@@ -4745,17 +4727,7 @@ decode QUADRANT default Unknown::unknown() {
                     }}, OPIVI, SimdAluOp);
                 }
                 0x0c: VectorGatherFormat::vrgather_vi({{
-                    for (uint32_t i = 0; i < microVl; i++) {
-                        uint32_t ei = i + vs1_idx * vs1_elems + vs1_bias;
-                        uint64_t zextImm = rvZext(SIMM5);
-                        if (this->vm || elem_mask(v0, ei)) {
-                            const uint64_t idx = zextImm - vs2_elems * vs2_idx;
-                            if (zextImm >= vlmax)
-                                Vd_vu[i] = 0;
-                            else if (idx < vs2_elems)
-                                Vd_vu[i] = Vs2_vu[idx];
-                        }
-                    }
+                    IndexType idx = rvZext(SIMM5);
                 }}, OPIVI, SimdMiscOp);
                 0x0e: VectorSlideUpVIFormat::vslideup_vi({{
                     int offset = (int)(uint64_t)(SIMM5);
@@ -5183,17 +5155,7 @@ decode QUADRANT default Unknown::unknown() {
                     }
                 }}, OPIVX, SimdMiscOp);
                 0x0c: VectorGatherFormat::vrgather_vx({{
-                    for (uint32_t i = 0; i < microVl; i++) {
-                        uint32_t ei = i + vs1_idx * vs1_elems + vs1_bias;
-                        uint64_t zextRs1 = rvZext(Rs1);
-                        if (this->vm || elem_mask(v0, ei)) {
-                            const uint64_t idx = zextRs1 - vs2_elems * vs2_idx;
-                            if (zextRs1 >= vlmax)
-                                Vd_vu[i] = 0;
-                            else if (idx < vs2_elems)
-                                Vd_vu[i] = Vs2_vu[idx];
-                        }
-                    }
+                    IndexType idx = rvZext(rs1);
                 }}, OPIVX, SimdMiscOp);
                 format VectorIntFormat {
                     0x10: decode VM {
