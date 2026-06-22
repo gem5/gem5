@@ -176,6 +176,7 @@ TLB::insert(Addr vpn, const TlbEntry &entry)
 
     Addr key = buildKey(vpn, entry.asid);
     *newEntry = entry;
+    newEntry->trieKey = key;
     newEntry->lruSeq = nextSeq();
     newEntry->trieHandle = trie.insert(
         key, TlbEntryTrie::MaxBits - entry.logBytes + PageShift, newEntry
@@ -185,6 +186,15 @@ TLB::insert(Addr vpn, const TlbEntry &entry)
 
 void
 TLB::demapPage(Addr vaddr, uint64_t asid)
+{
+    warn("TLB::demapPage without ThreadContext is not fully supported for "
+         "RISC-V. Flushing all.\n");
+    flushAll();
+}
+
+void
+TLB::demapPage(ThreadContext *tc, Addr vaddr, uint64_t asid, bool is_gvma,
+               bool is_vvma)
 {
     // Note: vaddr is Reg[rs1] and asid is Reg[rs2]
     // The definition of this instruction is
@@ -205,8 +215,15 @@ TLB::demapPage(Addr vaddr, uint64_t asid)
         flushAll();
     } else {
         if (vaddr != 0 && asid != 0) {
-            // TODO: When supporting other address translation modes, fix this
-            Addr vpn = getVPNFromVAddr(vaddr, AddrXlateMode::SV39);
+            bool is_virt = tc->readMiscReg(MISCREG_VIRT) == 1;
+            RegIndex satp_reg = MISCREG_SATP;
+            if (is_gvma) {
+                satp_reg = MISCREG_HGATP;
+            } else if (is_vvma || is_virt) {
+                satp_reg = MISCREG_VSATP;
+            }
+            SATP satp = tc->readMiscReg(satp_reg);
+            Addr vpn = getVPNFromVAddr(vaddr, satp.mode);
             TlbEntry *entry = lookup(vpn, asid, BaseMMU::Read, true);
             if (entry) {
                 remove(entry - tlb.data());
@@ -249,8 +266,9 @@ TLB::remove(size_t idx)
 }
 
 Fault
-TLB::checkPermissions(ThreadContext* tc, MemAccessInfo mem_access, Addr vaddr,
-            BaseMMU::Mode mode, PTESv39 pte, Addr gvaddr, XlateStage stage)
+TLB::checkPermissions(ThreadContext *tc, MemAccessInfo mem_access, Addr vaddr,
+                      BaseMMU::Mode mode, PTE pte, Addr gvaddr,
+                      XlateStage stage)
 {
     MISA misa = tc->readMiscReg(MISCREG_ISA);
     STATUS status = tc->readMiscReg(MISCREG_STATUS);
@@ -721,10 +739,15 @@ TLB::unserialize(CheckpointIn &cp)
         freeList.pop_front();
 
         newEntry->unserializeSection(cp, csprintf("Entry%d", x));
-        // TODO: When supporting other addressing modes fix this
-        Addr vpn = getVPNFromVAddr(newEntry->vaddr, AddrXlateMode::SV39);
-        Addr key = buildKey(vpn, newEntry->asid);
-        newEntry->trieHandle = trie.insert(key,
+
+        // Backward compatibility for the checkpoints without trieKey.
+        if (newEntry->trieKey == 0) {
+            Addr vpn = getVPNFromVAddr(newEntry->vaddr, AddrXlateMode::SV39);
+            newEntry->trieKey = buildKey(vpn, newEntry->asid);
+        }
+
+        newEntry->trieHandle = trie.insert(
+            newEntry->trieKey,
             TlbEntryTrie::MaxBits - newEntry->logBytes + PageShift, newEntry);
     }
 }

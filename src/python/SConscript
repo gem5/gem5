@@ -83,6 +83,14 @@ PySource('gem5.components.cachehierarchies.chi',
 PySource('gem5.components.cachehierarchies.chi',
     'gem5/components/cachehierarchies/chi/'
     'private_l1_private_l2_cache_hierarchy.py')
+PySource('gem5.components.cachehierarchies.chi',
+    'gem5/components/cachehierarchies/chi/'
+    'private_l1_private_l2_mesh_cache_hierarchy.py')
+PySource('gem5.components.cachehierarchies.chi',
+    'gem5/components/cachehierarchies/chi/'
+    'private_l1_private_l2_shared_l3_mesh_cache_hierarchy.py')
+PySource('gem5.components.cachehierarchies.chi',
+    'gem5/components/cachehierarchies/chi/noc.py')
 PySource('gem5.components.cachehierarchies.chi.nodes',
     'gem5/components/cachehierarchies/chi/nodes/__init__.py')
 PySource('gem5.components.cachehierarchies.chi.nodes',
@@ -97,6 +105,12 @@ PySource('gem5.components.cachehierarchies.chi.nodes',
     'gem5/components/cachehierarchies/chi/nodes/l2_cache.py')
 PySource('gem5.components.cachehierarchies.chi.nodes',
     'gem5/components/cachehierarchies/chi/nodes/memory_controller.py')
+PySource('gem5.components.cachehierarchies.chi.nodes',
+    'gem5/components/cachehierarchies/chi/nodes/rnf.py')
+PySource('gem5.components.cachehierarchies.chi.nodes',
+    'gem5/components/cachehierarchies/chi/nodes/hnf.py')
+PySource('gem5.components.cachehierarchies.chi.nodes',
+    'gem5/components/cachehierarchies/chi/nodes/snf.py')
 PySource('gem5.components.cachehierarchies.classic',
     'gem5/components/cachehierarchies/classic/__init__.py')
 PySource('gem5.components.cachehierarchies.classic',
@@ -220,6 +234,8 @@ PySource('gem5.components.cachehierarchies.ruby.topologies',
     'gem5/components/cachehierarchies/ruby/topologies/__init__.py')
 PySource('gem5.components.cachehierarchies.ruby.topologies',
     'gem5/components/cachehierarchies/ruby/topologies/simple_pt2pt.py')
+PySource('gem5.components.cachehierarchies.ruby.topologies',
+    'gem5/components/cachehierarchies/ruby/topologies/custom_mesh.py')
 
 PySource('gem5.components.devices',
     'gem5/components/devices/__init__.py')
@@ -388,7 +404,6 @@ PySource('gem5.utils.multiprocessing',
 PySource('gem5.utils.multiprocessing',
     'gem5/utils/multiprocessing/popen_spawn_gem5.py')
 
-PySource('', 'importer.py')
 PySource('m5', 'm5/__init__.py')
 PySource('m5', 'm5/SimObject.py')
 PySource('m5', 'm5/citations.py')
@@ -430,7 +445,6 @@ PySource('m5.ext.pyfdt', 'm5/ext/pyfdt/pyfdt.py')
 PySource('m5.ext.pyfdt', 'm5/ext/pyfdt/__init__.py')
 
 PySource('m5.ext.pystats', 'm5/ext/pystats/__init__.py')
-PySource('m5.ext.pystats', 'm5/ext/pystats/serializable_stat.py')
 PySource('m5.ext.pystats', 'm5/ext/pystats/abstract_stat.py')
 PySource('m5.ext.pystats', 'm5/ext/pystats/group.py')
 PySource('m5.ext.pystats', 'm5/ext/pystats/simstat.py')

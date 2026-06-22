@@ -66,7 +66,8 @@ class RoutingUnit
 
     // Topology-specific direction based routing
     void addInDirection(PortDirection inport_dirn, int inport);
-    void addOutDirection(PortDirection outport_dirn, int outport);
+    void addOutDirection(PortDirection outport_dirn, int outport,
+                         const std::vector<int> &supported_vnets = {});
 
     // Routing for Mesh
     int outportComputeXY(RouteInfo route,
@@ -94,7 +95,9 @@ class RoutingUnit
     std::map<PortDirection, int> m_inports_dirn2idx;
     std::map<int, PortDirection> m_inports_idx2dirn;
     std::map<int, PortDirection> m_outports_idx2dirn;
-    std::map<PortDirection, int> m_outports_dirn2idx;
+    // Per-vnet direction-to-port map (HeteroGarnet: each vnet may have its own
+    // dedicated outport per direction). Resized lazily in addOutDirection.
+    std::vector<std::map<PortDirection, int>> m_outports_dirn2idx;
 };
 
 } // namespace garnet

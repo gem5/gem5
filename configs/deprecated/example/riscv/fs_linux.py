@@ -174,7 +174,7 @@ if not args.kernel:
     parser.error("--kernel argument is required")
 
 # CPU and Memory
-(CPUClass, mem_mode, FutureClass) = Simulation.setCPUClass(args)
+CPUClass, mem_mode, FutureClass = Simulation.setCPUClass(args)
 assert issubclass(CPUClass, RiscvCPU)
 MemClass = Simulation.setMemClass(args)
 
@@ -222,16 +222,8 @@ system.platform = HiFive()
 system.platform.rtc = RiscvRTC(frequency=Frequency("100MHz"))
 system.platform.clint.int_pin = system.platform.rtc.int_pin
 
-system.iobus.cpu_side_ports = system.platform.pci_host.up_request_port()
-system.iobus.mem_side_ports = system.platform.pci_host.up_response_port()
-
-system.platform.pci_bus.cpu_side_ports = (
-    system.platform.pci_host.down_request_port()
-)
-system.platform.pci_bus.default = system.platform.pci_host.down_response_port()
-system.platform.pci_bus.config_error_port = (
-    system.platform.pci_host.config_error.pio
-)
+system.platform.pci_host.internal_connect()
+system.platform.pci_host.connect_upper_bus(system.iobus, True)
 
 # VirtIOMMIO
 if args.disk_image:

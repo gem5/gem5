@@ -36,7 +36,11 @@ from typing import (
     Tuple,
 )
 
-from m5.objects import X86E820Entry
+from m5.objects import (
+    X86ACPIDSDT,
+    X86ACPIFADT,
+    X86E820Entry,
+)
 from m5.params import (
     AddrRange,
     Port,
@@ -140,16 +144,22 @@ class ViperBoard(X86Board):
         # This modifies the default value for ECX only (4th in this array).
         # See: https://sandpile.org/x86/cpuid.htm#level_0000_0001h
         # Enables AVX, OSXSAVE, XSAVE, POPCNT, SSE4.2, SSE4.1, CMPXCHG16B,
-        # and FMA.
-        avx_cpu_features = [0x00020F51, 0x00000805, 0xEFDBFBFF, 0x1C803209]
+        # and FMA. Note that SSE4.1 (bit 19) and SSE4.2 (bit 20) are required
+        # for the x86-64-v2 microarchitecture level; without them modern
+        # userspace built for v2 (e.g. numpy/torch wheels) aborts at load with
+        # "built with baseline optimizations (X86_V2) but your machine doesn't
+        # support (X86_V2)".
+        avx_cpu_features = [0x00020F51, 0x00000805, 0xEFDBFBFF, 0x1C983209]
         for core_wrapper in self.get_processor().get_cores():
             if not core_wrapper.is_kvm_core():
+                self.workload.enable_osxsave = 0
                 warn("AVX is only supported with KVM cores")
             core = core_wrapper.get_simobject()
             for isa in core.isa:
                 isa.vendor_string = "AuthenticAMD"
-                isa.ExtendedState = avx_extended_state
-                isa.FamilyModelStepping = avx_cpu_features
+                if self.workload.enable_osxsave:
+                    isa.ExtendedState = avx_extended_state
+                    isa.FamilyModelStepping = avx_cpu_features
 
         # By default stdlib creates multiple event queues whenever KVM CPU is
         # used. Multiple event queues break many things in the GPU model
@@ -193,6 +203,8 @@ class ViperBoard(X86Board):
             "drm_kms_helper.fbdev_emulation=0",
             "modprobe.blacklist=amdgpu",
             "modprobe.blacklist=psmouse",
+            # Tell linux to use MP table for PCI IRQs and not ACPI.
+            "pci=noacpi",
         ]
 
     def get_low_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
@@ -218,6 +230,13 @@ class ViperBoard(X86Board):
         # Call the base class which handles many more things and then
         # overwrite the e820 table for our memory ranges.
         super()._setup_io_devices()
+
+        # FADT pointing at a minimal DSDT. This prevents Linux from disabling
+        # ACPI which is needed by the WMI module which is a dependency for
+        # the amdgpu module.
+        fadt = X86ACPIFADT(dsdt=X86ACPIDSDT(), oem_id="gem5")
+        self.workload.acpi_description_table_pointer.rsdt.entries.append(fadt)
+        self.workload.acpi_description_table_pointer.xsdt.entries.append(fadt)
 
         entries = [
             # Mark the first megabyte of memory as reserved
@@ -276,7 +295,7 @@ class ViperBoard(X86Board):
             "chmod +x myapp\n"
             f"./myapp {opts}\n"
             "sleep 20\n"
-            "/sbin/m5 exit\n"
+            "m5 exit\n"
         )
 
         return application_command

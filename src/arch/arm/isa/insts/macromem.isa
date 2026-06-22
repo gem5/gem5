@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2014 ARM Limited
+// Copyright (c) 2010-2014, 2025 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -725,7 +725,11 @@ let {{
     header_output = MacroMemDeclare.subst(iop)
     decoder_output = MacroMemConstructor.subst(iop)
 
-    iop = ArmInstObjParams("ldpstp", "LdpStp", 'PairMemOp', "", [])
+    iop = ArmInstObjParams("ldp", "Ldp", 'LoadPairOp', "", [])
+    header_output += PairMemDeclare.subst(iop)
+    decoder_output += PairMemConstructor.subst(iop)
+
+    iop = ArmInstObjParams("stp", "Stp", 'StorePairOp', "", [])
     header_output += PairMemDeclare.subst(iop)
     decoder_output += PairMemConstructor.subst(iop)
 

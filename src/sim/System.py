@@ -96,11 +96,6 @@ class System(SimObject):
         "memory.",
     )
 
-    # The ranges backed by a shadowed ROM
-    shadow_rom_ranges = VectorParam.AddrRange(
-        [], "Ranges  backed by a shadowed ROM"
-    )
-
     shared_backstore = Param.String(
         "",
         "backstore's shmem segment filename, "
@@ -112,6 +107,12 @@ class System(SimObject):
         "Automatically remove the "
         "shmem segment file upon destruction. This is used only if "
         "shared_backstore is non-empty.",
+    )
+
+    is_sparse_restore = Param.Bool(
+        False,
+        "Optimizes host RAM footprint by skipping zero-filled pages during restore, "
+        "preventing physical memory allocation for unused guest regions.",
     )
 
     cache_line_size = Param.Unsigned(64, "Cache line size in bytes")

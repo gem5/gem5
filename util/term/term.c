@@ -51,7 +51,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 
-ssize_t atomicio(ssize_t (*)(), int, void *, size_t);
+ssize_t atomicio(ssize_t (*)(int, const void *, size_t), int, void *, size_t);
 void    readwrite(int);
 int     remote_connect_inet(char *, char *);
 int     remote_connect_unix(const char *);
@@ -368,7 +368,7 @@ usage(int ret)
  * ensure all of data on socket comes through. f==read || f==write
  */
 ssize_t
-atomicio(ssize_t (*f) (), int fd, void *_s, size_t n)
+atomicio(ssize_t (*f)(int, const void *, size_t), int fd, void *_s, size_t n)
 {
     char *s = _s;
     ssize_t res, pos = 0;

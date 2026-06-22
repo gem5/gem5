@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, 2019, 2021 ARM Limited
+ * Copyright (c) 2017, 2019, 2021, 2025 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -155,6 +155,7 @@ init_range(py::module_ &m_native)
         .def("mergesWith", &AddrRange::mergesWith)
         .def("intersects", &AddrRange::intersects)
         .def("isSubset", &AddrRange::isSubset)
+        .def("contains", &AddrRange::contains)
         .def("exclude", static_cast<AddrRangeList (AddrRange::*)(
                     const AddrRangeList &) const>(&AddrRange::exclude))
         ;

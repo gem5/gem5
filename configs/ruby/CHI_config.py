@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2024 Arm Limited
+# Copyright (c) 2021-2024, 2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -112,8 +112,13 @@ class NoC_Params:
     router_buffer_size = 4
     cntrl_msg_size = 8
     data_width = 32
-    cross_links = []
-    cross_link_latency = 0
+    # Map of (src,dst) -> weight,latency (cycles)
+    # Customizes the weight and latency for the link between the routers src
+    # and dst.
+    # The custom latency applies in both directions unless both (src,dst) and
+    # (dst,src) are present.
+    # A new link is created if no src->dst link exists.
+    custom_links = {}
 
 
 class CHI_Node(SubSystem):
@@ -257,6 +262,8 @@ class CHI_L1Controller(Base_CHI_Cache_Controller):
         self.cache = cache
         self.prefetcher = prefetcher
         self.use_prefetcher = prefetcher != NULL
+        self.cbusy_generator = NULL
+        self.cbusy_tracker = CBusyTracker()
         self.send_evictions = True
         self.is_HN = False
         self.enable_DMT = False
@@ -295,6 +302,8 @@ class CHI_L2Controller(Base_CHI_Cache_Controller):
         self.cache = cache
         self.prefetcher = prefetcher
         self.use_prefetcher = prefetcher != NULL
+        self.cbusy_generator = CBusy()
+        self.cbusy_tracker = CBusyTracker()
         self.allow_SD = True
         self.is_HN = False
         self.enable_DMT = False
@@ -357,6 +366,8 @@ class CHI_HNFController(Base_CHI_Cache_Controller):
         self.number_of_DVM_TBEs = 1  # should not receive any dvm
         self.number_of_DVM_snoop_TBEs = 1  # should not receive any dvm
         self.unify_repl_TBEs = False
+        self.cbusy_generator = CBusy()
+        self.cbusy_tracker = CBusyTracker()
 
 
 class CHI_MNController(CHI_MiscNode_Controller):
@@ -409,6 +420,8 @@ class CHI_DMAController(Base_CHI_Cache_Controller):
 
         self.prefetcher = NULL
         self.use_prefetcher = False
+        self.cbusy_generator = NULL
+        self.cbusy_tracker = CBusyTracker()
         self.cache = DummyCache()
         self.sequencer.dcache = NULL
         # All allocations are false
@@ -745,6 +758,7 @@ class CHI_SNF_Base(CHI_Node):
             requestToMemory=MemCtrlMessageBuffer(),
             reqRdy=TriggerMessageBuffer(),
             transitions_per_cycle=1024,
+            cbusy_generator=SnfCBusy(),
         )
 
         # The Memory_Controller implementation deallocates the TBE for

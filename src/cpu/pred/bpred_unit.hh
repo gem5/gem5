@@ -70,11 +70,11 @@ namespace branch_prediction
  */
 class BPredUnit : public SimObject
 {
+    /** Branch Predictor Unit (BPU) interface functions */
+  public:
     typedef BranchPredictorParams Params;
     typedef enums::TargetProvider TargetProvider;
 
-    /** Branch Predictor Unit (BPU) interface functions */
-  public:
     /**
      * @param params The params object, that has the size of the BP and BTB.
      */
@@ -94,8 +94,8 @@ class BPredUnit : public SimObject
      * @param tid The thread id.
      * @return Returns if the branch is taken or not.
      */
-    bool predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
-                 PCStateBase &pc, ThreadID tid);
+    Prediction predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
+                       PCStateBase &pc, ThreadID tid);
 
     /**
      * Tells the branch predictor to commit any updates until the given
@@ -127,6 +127,10 @@ class BPredUnit : public SimObject
     void squash(const InstSeqNum &squashed_sn, const PCStateBase &corr_target,
                 bool actually_taken, ThreadID tid, bool from_commit=true);
 
+    /** *******************************************************
+     * Interface functions to the conditional branch predictor
+     *
+     */
     /**
      * Looks up a given PC in the BTB to see if a matching entry exists.
      * @param tid The thread id.
@@ -180,24 +184,6 @@ class BPredUnit : public SimObject
         ++stats.BTBUpdates;
         return btb->update(tid, pc, target);
     }
-
-    /**
-     * Special function for the decoupled front-end. In it there can be
-     * branches which are not detected by the BPU in the first place as it
-     * requires a BTB hit. This function will generate a placeholder for
-     * such a branch once it is pre-decoded in the fetch stage. It will
-     * only create the branch history object but not update any internal state
-     * of the BPU.
-     * If the branch turns to be wrong then decode or commit will
-     * be able to use the normal squash functionality to correct the branch.
-     * Note that not all branch predictors implement this functionality.
-     * @param tid The thread id.
-     * @param pc The branch's PC.
-     * @param uncond Whether or not this branch is an unconditional branch.
-     * @param bp_history Pointer that will be set to an branch history object.
-     */
-    void branchPlaceholder(ThreadID tid, Addr pc,
-                            bool uncond, void * &bp_history);
 
     void dump();
 
@@ -269,6 +255,7 @@ class BPredUnit : public SimObject
      *         +-------------------------------------+
      *
      */
+
     struct PredictorHistory
     {
         /**
@@ -276,16 +263,27 @@ class BPredUnit : public SimObject
          * information needed to update the predictor, BTB, and RAS.
          */
         PredictorHistory(ThreadID _tid, InstSeqNum sn, Addr _pc,
-                         const StaticInstPtr & inst)
-            : seqNum(sn), tid(_tid), pc(_pc),
-              inst(inst), type(getBranchType(inst)),
-              call(inst->isCall()), uncond(!inst->isCondCtrl()),
-              predTaken(false), actuallyTaken(false), condPred(false),
-              btbHit(false), targetProvider(TargetProvider::NoTarget),
-              resteered(false), mispredict(false), target(nullptr),
+                         const StaticInstPtr &inst)
+            : seqNum(sn),
+              tid(_tid),
+              pc(_pc),
+              inst(inst),
+              type(getBranchType(inst)),
+              call(inst->isCall()),
+              uncond(!inst->isCondCtrl()),
+              predTaken(false),
+              actuallyTaken(false),
+              condPred(false),
+              overridden(false),
+              btbHit(false),
+              targetProvider(TargetProvider::NoTarget),
+              resteered(false),
+              mispredict(false),
+              target(nullptr),
               bpHistory(nullptr),
-              indirectHistory(nullptr), rasHistory(nullptr)
-        { }
+              indirectHistory(nullptr),
+              rasHistory(nullptr)
+        {}
 
         ~PredictorHistory()
         {
@@ -333,6 +331,9 @@ class BPredUnit : public SimObject
         /** The prediction of the conditional predictor */
         bool condPred;
 
+        /** Whether the overriding predictor was the provider */
+        bool overridden;
+
         /** Was BTB hit at prediction time */
         bool btbHit;
 
@@ -356,10 +357,11 @@ class BPredUnit : public SimObject
          */
         void *bpHistory = nullptr;
 
+        void *overridingBpHistory = nullptr;
+
         void *indirectHistory = nullptr;
 
         void *rasHistory = nullptr;
-
     };
 
     /**
@@ -374,8 +376,9 @@ class BPredUnit : public SimObject
     /**
      * Internal prediction function.
      */
-    bool predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
-               PCStateBase &pc, ThreadID tid, PredictorHistory* &bpu_history);
+    Prediction predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
+                       PCStateBase &pc, ThreadID tid,
+                       PredictorHistory *&bpu_history);
 
     /**
      * Squashes a particular branch instance. Reverts
@@ -391,7 +394,25 @@ class BPredUnit : public SimObject
      * @param tid The thread id.
      * @param bpu_history The history of the branch to be commited.
      */
-    void commitBranch(ThreadID tid, PredictorHistory* &bpu_history);
+    void commitBranch(ThreadID tid, PredictorHistory *&bpu_history);
+
+    /**
+     * Special function for the decoupled front-end. In it there can be
+     * branches which are not detected by the BPU in the first place as it
+     * requires a BTB hit. This function will generate a placeholder for
+     * such a branch once it is pre-decoded in the fetch stage. It will
+     * only create the branch history object but not update any internal state
+     * of the BPU.
+     * If the branch turns to be wrong then decode or commit will
+     * be able to use the normal squash functionality to correct the branch.
+     * Note that not all branch predictors implement this functionality.
+     * @param tid The thread id.
+     * @param pc The branch's PC.
+     * @param uncond Whether or not this branch is an unconditional branch.
+     * @param bp_history Pointer that will be set to an branch history object.
+     */
+    void branchPlaceholder(ThreadID tid, Addr pc, bool uncond,
+                           PredictorHistory *&bpu_history);
 
     /**
      *  Update the BTB with the correct target of a branch.
@@ -399,6 +420,12 @@ class BPredUnit : public SimObject
      * @param bpu_history The history of the branch to be updated.
      */
     void updateBTB(ThreadID tid, PredictorHistory *&bpu_history);
+
+    /**
+     * Stat collection for overriding
+     */
+    void updateStatsOverriding(bool prediction, bool actuallyTaken,
+                               bool overridden);
 
   protected:
     /** Number of the threads for which the branch history is maintained. */
@@ -437,6 +464,9 @@ class BPredUnit : public SimObject
     /** The conditional branch predictor. */
     ConditionalPredictor * cPred;
 
+    /** The overriding conditional branch predictor. */
+    ConditionalPredictor *overridingCPred;
+
     /** The indirect target predictor. */
     IndirectPredictor * iPred;
 
@@ -444,6 +474,11 @@ class BPredUnit : public SimObject
     struct BPredUnitStats : public statistics::Group
     {
         BPredUnitStats(BPredUnit *bp);
+
+        std::unordered_set<Addr> uniqueBranches;
+
+        void preDumpStats() override;
+        void resetStats() override;
 
         /** Stats per branch type */
         statistics::Vector2d lookups;
@@ -465,7 +500,14 @@ class BPredUnit : public SimObject
         statistics::Scalar condIncorrect;
         statistics::Scalar predTakenBTBMiss;
 
+        /** Additional scalar stats for the overriding predictor */
+        statistics::Scalar condWrongBasePred;
+        statistics::Scalar condWrongOverridden;
+        statistics::Scalar condCorrectBasePred;
+        statistics::Scalar condCorrectOverridden;
+
         /** BTB stats. */
+        statistics::Scalar BTBUniqueBranches;
         statistics::Scalar BTBLookups;
         statistics::Scalar BTBUpdates;
         statistics::Scalar BTBHits;

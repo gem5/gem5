@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2024 Arm Limited
+ * Copyright (c) 2021-2024, 2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -1456,12 +1456,14 @@ transition(BUSY_BLKD,
 
 transition({BUSY_BLKD,BUSY_INTR}, RespSepData, BUSY_BLKD) {
   Receive_RespSepData;
+  UpdateBPTracker_FromRespSepData;
   Pop_RespInQueue;
   ProcessNextState;
 }
 
 transition({BUSY_BLKD,BUSY_INTR}, DataSepResp_UC, BUSY_BLKD) {
   Receive_ReqDataResp;
+  UpdateBPTracker_FromDataSepResp;
   UpdateDataState_FromReqDataResp;
   Callback_Miss;
   Profile_OutgoingEnd_DataResp;
@@ -1474,6 +1476,7 @@ transition({BUSY_BLKD,BUSY_INTR},
             BUSY_BLKD) {
   Receive_RespSepDataFromCompData;
   Receive_ReqDataResp;
+  UpdateBPTracker_FromCompData;
   UpdateDataState_FromReqDataResp;
   Callback_Miss;
   Profile_OutgoingEnd_DataResp;
@@ -1483,6 +1486,7 @@ transition({BUSY_BLKD,BUSY_INTR},
 
 transition(BUSY_INTR, ReadReceipt, BUSY_BLKD) {
   Receive_ReadReceipt;
+  UpdateBPTracker_FromDatalessResp;
   Pop_RespInQueue;
   ProcessNextState;
 }
@@ -1491,12 +1495,14 @@ transition(BUSY_INTR, ReadReceipt, BUSY_BLKD) {
 
 transition(BUSY_INTR, {RetryAck, RetryAck_PoC}) {
   Receive_RetryAck;
+  UpdateBPTracker_FromRetryAck;
   Pop_RespInQueue;
   ProcessNextState;
 }
 
 transition(BUSY_INTR, {PCrdGrant, PCrdGrant_PoC}) {
   Receive_PCrdGrant;
+  UpdateBPTracker_FromPCrdGrant;
   Pop_RespInQueue;
   ProcessNextState;
 }
@@ -1507,12 +1513,14 @@ transition(BUSY_INTR, {PCrdGrant, PCrdGrant_PoC}) {
 
 transition(BUSY_BLKD, RetryAck_PoC) {
   Receive_RetryAck;
+  UpdateBPTracker_FromRetryAck;
   Pop_RespInQueue;
   ProcessNextState;
 }
 
 transition(BUSY_BLKD, PCrdGrant_PoC) {
   Receive_PCrdGrant;
+  UpdateBPTracker_FromPCrdGrant;
   Pop_RespInQueue;
   ProcessNextState;
 }
@@ -1521,12 +1529,14 @@ transition(BUSY_BLKD, PCrdGrant_PoC) {
 // BUSY_BLKD and BUSY_INTR
 transition({BUSY_INTR,BUSY_BLKD}, {RetryAck_Hazard, RetryAck_PoC_Hazard}) {
   Receive_RetryAck_Hazard;
+  UpdateBPTracker_FromRetryAck;
   Pop_RespInQueue;
   ProcessNextState;
 }
 
 transition({BUSY_INTR,BUSY_BLKD}, {PCrdGrant_Hazard, PCrdGrant_PoC_Hazard}) {
   Receive_PCrdGrant_Hazard;
+  UpdateBPTracker_FromPCrdGrant;
   Pop_RespInQueue;
   ProcessNextState;
 }
@@ -1566,6 +1576,7 @@ transition(BUSY_BLKD,
 // waiting for WB or evict ack
 transition(BUSY_INTR, Comp_I, BUSY_BLKD) {
   Receive_ReqResp;
+  UpdateBPTracker_FromDatalessResp;
   Profile_OutgoingEnd_DatalessResp;
   Pop_RespInQueue;
   ProcessNextState;
@@ -1575,6 +1586,7 @@ transition(BUSY_INTR, Comp_I, BUSY_BLKD) {
 transition(BUSY_INTR, Comp_UC, BUSY_BLKD) {
   Receive_ReqResp;
   UpdateDataState_FromCUResp;
+  UpdateBPTracker_FromDatalessResp;
   Profile_OutgoingEnd_DatalessResp;
   Pop_RespInQueue;
   ProcessNextState;
@@ -1584,6 +1596,7 @@ transition(BUSY_INTR, Comp_UC, BUSY_BLKD) {
 transition(BUSY_INTR, CompDBIDResp, BUSY_BLKD) {
   Receive_ReqResp;
   Receive_ReqResp_CopyDBID;
+  UpdateBPTracker_FromDatalessResp;
   Profile_OutgoingEnd_DatalessResp;
   Pop_RespInQueue;
   ProcessNextState;
@@ -1599,6 +1612,7 @@ transition({BUSY_INTR,BUSY_BLKD}, DBIDResp, BUSY_BLKD) {
 }
 transition(BUSY_BLKD, Comp) {
   Receive_ReqResp_WUComp;
+  UpdateBPTracker_FromDatalessResp;
   Profile_OutgoingEnd_DatalessResp;
   Pop_RespInQueue;
   ProcessNextState;

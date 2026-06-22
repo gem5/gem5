@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2013, 2015 ARM Limited
+ * Copyright (c) 2010-2013, 2015, 2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -43,6 +43,7 @@
 #include "base/random.hh"
 #include "base/trace.hh"
 #include "debug/Drain.hh"
+#include "debug/MemoryAccess.hh"
 
 namespace gem5
 {
@@ -50,14 +51,26 @@ namespace gem5
 namespace memory
 {
 
-SimpleMemory::SimpleMemory(const SimpleMemoryParams &p) :
-    AbstractMemory(p),
-    port(name() + ".port", *this), latency(p.latency),
-    latency_var(p.latency_var), bandwidth(p.bandwidth), isBusy(false),
-    retryReq(false), retryResp(false),
-    releaseEvent([this]{ release(); }, name()),
-    dequeueEvent([this]{ dequeue(); }, name())
+SimpleMemory::SimpleMemory(const SimpleMemoryParams &p)
+    : AbstractMemory(p),
+      port(name() + ".port", *this),
+      latency(p.latency),
+      latencyDist(p.latency_dist),
+      latencyDistParam(p.latency_dist_param),
+      bandwidth(p.bandwidth),
+      isBusy(false),
+      retryReq(false),
+      retryResp(false),
+      releaseEvent([this] { release(); }, name()),
+      dequeueEvent([this] { dequeue(); }, name())
 {
+    if (latencyDist == LatencyDistribution::None) {
+        fatal_if(latencyDistParam != 0,
+                 "Setting latency_dist_param when latency_dist = None\n");
+    } else {
+        fatal_if(latencyDistParam == 0,
+                 "Not setting latency_dist_param when latency_dist != None\n");
+    }
 }
 
 void
@@ -236,8 +249,26 @@ SimpleMemory::dequeue()
 Tick
 SimpleMemory::getLatency() const
 {
-    return latency +
-        (latency_var ? rng->random<Tick>(0, latency_var) : 0);
+    Tick lat = 0;
+    switch (latencyDist) {
+        case LatencyDistribution::None:
+            lat = latency;
+            break;
+        case LatencyDistribution::Uniform:
+            lat = latency + rng->random<Tick>(0, latencyDistParam);
+            break;
+        case LatencyDistribution::Normal:
+            lat = rng->random_norm(latency, latencyDistParam);
+            lat = std::min(lat, latency + (latencyDistParam * 3));
+            lat = std::max(lat, latency - (latencyDistParam * 3));
+            break;
+        default:
+            /** We should never get here */
+            lat = latency;
+            break;
+    }
+    DPRINTF(MemoryAccess, "Generated latency = %d\n", lat);
+    return lat;
 }
 
 void

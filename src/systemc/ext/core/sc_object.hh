@@ -88,6 +88,9 @@ class sc_object
 const std::vector<sc_object *> &sc_get_top_level_objects();
 sc_object *sc_find_object(const char *);
 
+// Non-standard symbol.
+extern const char SC_HIERARCHY_CHAR;
+
 } // namespace sc_core
 
 #endif  //__SYSTEMC_EXT_CORE_SC_OBJECT_HH__

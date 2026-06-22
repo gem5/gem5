@@ -367,7 +367,7 @@ SyscallDescTable<EmuLinux::SyscallABI32> EmuLinux::syscallDescs32 = {
     {306, "fchmodat"},
     {307, "faccessat"},
     {308, "pselect6"},
-    {309, "ppoll"},
+    {309, "ppoll", ppollFunc<X86Linux32>},
     {310, "unshare"},
     {311, "set_robust_list", ignoreFunc},
     {312, "get_robust_list", ignoreFunc},

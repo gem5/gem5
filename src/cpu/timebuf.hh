@@ -31,6 +31,7 @@
 
 #include <cassert>
 #include <deque>
+#include <type_traits>
 
 namespace gem5
 {
@@ -138,6 +139,8 @@ class TimeBuffer
     TimeBuffer(int p, int f)
         : past(p), future(f), size(past + future + 1), data(size), base(0)
     {
+        static_assert(std::is_default_constructible_v<T>,
+                      "T must be default constructible.");
         assert(past >= 0 && future >= 0);
         _id = -1;
     }

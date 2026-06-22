@@ -83,7 +83,7 @@ class X86ISA(BaseISA):
     )
     # 0000_0007h
     ExtendedFeatures = VectorParam.UInt32(
-        [0x00000000, 0x01800000, 0x00000000, 0x00000000], "feature flags"
+        [0x00000000, 0x01800001, 0x00000000, 0x00000000], "feature flags"
     )
     # 0000_000Dh - This uses ECX index, so the last entry must be all zeros
     ExtendedState = VectorParam.UInt32(
