@@ -302,15 +302,14 @@ def format VectorCompressFormat(code, category, *flags) {{
     set_src_reg_idx = ""
     set_src_reg_idx += setSrcWrapper("vecRegClass[_machInst.vs1]")
     set_src_reg_idx += """
-        {
-            const uint32_t _elems_per_reg = (vlen / 8) / sizeof(ElemType);
-            const uint32_t _num_vs2_regs = (_machInst.vl + _elems_per_reg - 1) / _elems_per_reg;
-            for (uint32_t _g = 0; _g < _num_vs2_regs; _g++)
-                setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs2 + _g]);
+{
+            const uint32_t elems_per_reg = (vlen / 8) / sizeof(ElemType);
+            const uint32_t num_vs2_regs = (_machInst.vl + elems_per_reg - 1) / elems_per_reg;
+            for (uint32_t g = 0; g < num_vs2_regs; g++)
+                setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs2 + g]);
         }
     """
-    set_src_reg_idx += setSrcWrapper("vecRegClass[_machInst.vd + _microIdx]")
-    vm_decl_rd = vmDeclAndReadData()
+    set_src_reg_idx += tailMaskCondSetSrcWrapper(setSrcWrapper(dest_reg_id))
     set_vlenb = setVlenb()
 
     microiop = InstObjParams(
@@ -321,8 +320,8 @@ def format VectorCompressFormat(code, category, *flags) {{
          'set_dest_reg_idx': set_dest_reg_idx,
          'set_src_reg_idx': set_src_reg_idx,
          'set_vlenb': set_vlenb,
-         'vm_decl_rd': vm_decl_rd,
-         'copy_old_vd': copyOldVd(old_vd_idx),
+         'vm_decl_rd': '',
+         'copy_old_vd': '',
          'declare_varith_template': declareVArithTemplate(Name + "Micro")},
         flags
     )

@@ -4606,11 +4606,13 @@ decode QUADRANT default Unknown::unknown() {
                             gem5::RiscvISA::VecRegContainer old_vd_tmp;
                             xc->getRegOperand(this, 1 + num_vs2_regs, &old_vd_tmp);
                             auto old_elems = old_vd_tmp.template as<ElemType>();
-                            for (uint32_t i = filled; i < elems_per_reg; i++)
+                            for (uint32_t i = filled; i < elems_per_reg; i++){
                                 Vd_vu[i] = old_elems[i];
+                            }
                         } else {
-                            for (uint32_t i = filled; i < elems_per_reg; i++)
+                            for (uint32_t i = filled; i < elems_per_reg; i++){
                                 Vd_vu[i] = static_cast<ElemType>(-1);
+                            }
                         }
                     }}, OPMVV, SimdMiscOp);
                 }
