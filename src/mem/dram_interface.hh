@@ -218,6 +218,9 @@ class DRAMInterface : public MemInterface
          * Track time spent in each power state.
          */
         statistics::Vector pwrStateTime;
+
+        // Number of PRE and PREA commands issued (auto-precharge excluded)
+        statistics::Scalar precharges;
     };
 
     /**
@@ -442,6 +445,15 @@ class DRAMInterface : public MemInterface
          * Reset stats on a stats event
          */
         void resetStats();
+
+        /**
+         * Count one explicit (PRE) or all-bank (PREA) precharge command
+         */
+        void
+        countPrecharge()
+        {
+            ++stats.precharges;
+        }
 
         /**
          * Schedule a transition to power-down (sleep)

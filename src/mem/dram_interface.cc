@@ -314,6 +314,8 @@ DRAMInterface::prechargeBank(Rank &rank_ref, Bank &bank, Tick pre_tick,
             rank_ref.banks[i].preAllowedAt =
                 std::max(pre_at + tPPD, rank_ref.banks[i].preAllowedAt);
         }
+
+        rank_ref.countPrecharge();
     }
 
     Tick pre_done_at = pre_at + tRP;
@@ -1427,6 +1429,8 @@ DRAMInterface::Rank::processRefreshEvent()
 
             // precharge all banks in rank
             cmdList.push_back(Command(MemCommand::PREA, 0, pre_at));
+            // a single PREA closes all open banks, so count it once
+            ++stats.precharges;
 
             DPRINTF(DRAMPower, "%llu,PREA,0,%d\n",
                     divCeil(pre_at, dram.tCK) - dram.timeStampOffset, rank);
@@ -1924,7 +1928,7 @@ DRAMInterface::DRAMStats::DRAMStats(DRAMInterface &_dram)
                "Number of DRAM write bursts"),
 
       ADD_STAT(perBankRdBursts, statistics::units::Count::get(),
-               "Per bank write bursts"),
+               "Per bank read bursts"),
       ADD_STAT(perBankWrBursts, statistics::units::Count::get(),
                "Per bank write bursts"),
 
@@ -2070,7 +2074,9 @@ DRAMInterface::RankStats::RankStats(DRAMInterface &_dram, Rank &_rank)
       ADD_STAT(totalIdleTime, statistics::units::Tick::get(),
                "Total Idle time Per DRAM Rank"),
       ADD_STAT(pwrStateTime, statistics::units::Tick::get(),
-               "Time in different power states")
+               "Time in different power states"),
+      ADD_STAT(precharges, statistics::units::Count::get(),
+               "Number of PRE and PREA commands issued")
 {}
 
 void
