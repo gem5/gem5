@@ -59,7 +59,9 @@ class UncontendedMutex
 
     bool
     testAndSet(int expected, int desired)
-    { return flag.compare_exchange_strong(expected, desired); }
+    {
+        return flag.compare_exchange_strong(expected, desired);
+    }
 
   public:
     UncontendedMutex() : flag(0) {}
