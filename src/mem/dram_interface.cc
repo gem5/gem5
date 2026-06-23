@@ -1413,6 +1413,7 @@ DRAMInterface::Rank::processRefreshEvent()
             for (auto &b : banks) {
                 if (b.openRow != Bank::NO_ROW) {
                     dram.prechargeBank(*this, b, pre_at, true, false);
+                    stats.precharges++;
                 } else {
                     b.actAllowedAt = std::max(b.actAllowedAt, act_allowed_at);
                     b.preAllowedAt = std::max(b.preAllowedAt, pre_at);
@@ -1918,7 +1919,7 @@ DRAMInterface::DRAMStats::DRAMStats(DRAMInterface &_dram)
                "Number of DRAM write bursts"),
 
       ADD_STAT(perBankRdBursts, statistics::units::Count::get(),
-               "Per bank write bursts"),
+               "Per bank read bursts"),
       ADD_STAT(perBankWrBursts, statistics::units::Count::get(),
                "Per bank write bursts"),
 
@@ -2065,7 +2066,9 @@ DRAMInterface::RankStats::RankStats(DRAMInterface &_dram, Rank &_rank)
       ADD_STAT(totalIdleTime, statistics::units::Tick::get(),
                "Total Idle time Per DRAM Rank"),
       ADD_STAT(pwrStateTime, statistics::units::Tick::get(),
-               "Time in different power states")
+               "Time in different power states"),
+      ADD_STAT(precharges, statistics::units::Count::get(),
+               "Number of precharge commands issued")
 {}
 
 void

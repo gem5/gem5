@@ -218,6 +218,9 @@ class DRAMInterface : public MemInterface
          * Track time spent in each power state.
          */
         statistics::Vector pwrStateTime;
+
+        // Number of precharge commands issued
+        statistics::Scalar precharges;
     };
 
     /**
