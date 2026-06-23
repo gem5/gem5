@@ -297,6 +297,15 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
             ),
         ]
 
+        # The first range was assigned above. The last range is I/O.
+        # Add the other ranges to the E820 table.
+        for rng in self.mem_ranges[1:-1]:
+            entries.append(
+                X86E820Entry(
+                    addr=rng.start, size=f"{rng.size()}B", range_type=1
+                )
+            )
+
         # Reserve the last 16KiB of the 32-bit address space for m5ops
         entries.append(
             X86E820Entry(addr=0xFFFF0000, size="64KiB", range_type=2)
@@ -369,17 +378,20 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
         memory = self.get_memory()
 
         if memory.get_size() > toMemorySize("3GiB"):
-            raise Exception(
-                "X86Board currently only supports memory sizes up "
-                "to 3GiB because of the I/O hole."
-            )
-        data_range = AddrRange(memory.get_size())
-        memory.set_memory_range([data_range])
+            data_ranges = [
+                AddrRange(0x0, size=toMemorySize("3GiB")),
+                AddrRange(
+                    0x100000000, size=memory.get_size() - toMemorySize("3GiB")
+                ),
+            ]
+        else:
+            data_ranges = [AddrRange(memory.get_size())]
+
+        memory.set_memory_range(data_ranges)
 
         # Add the address range for the IO
-        self.mem_ranges = [
-            data_range,  # All data
-            AddrRange(0xC0000000, size=0x100000),  # For I/0
+        self.mem_ranges = data_ranges + [
+            AddrRange(0xC0000000, size=0x100000),  # For I/O
         ]
 
     @overrides(KernelDiskWorkload)

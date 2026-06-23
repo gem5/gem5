@@ -69,6 +69,44 @@ slicc_includes = ["mem/ruby/slicc_interface/RubySlicc_includes.hh"] + env[
 ]
 
 
+def remove_stale_protocol_outputs(slicc):
+    protocol_dir = output_dir.Dir(slicc.protocol)
+    protocol_dir_path = protocol_dir.abspath
+
+    if not os.path.isdir(protocol_dir_path):
+        return
+
+    expected = set()
+    for filename in slicc.files():
+        if os.path.dirname(filename) == slicc.protocol:
+            expected.add(os.path.basename(filename))
+
+    expected.add(f"{slicc.protocol}ProtocolInfo.hh")
+    for filename in os.listdir(protocol_dir_path):
+        filepath = os.path.join(protocol_dir_path, filename)
+        if not os.path.isfile(filepath):
+            continue
+
+        if filename.endswith(".py.cc"):
+            continue
+
+        if (
+            filename.endswith((".cc", ".hh", ".py"))
+            and filename not in expected
+        ):
+            os.remove(filepath)
+
+            if filename.endswith(".cc"):
+                objpath = filepath[:-3] + ".o"
+                if os.path.exists(objpath):
+                    os.remove(objpath)
+            elif filename.endswith(".py"):
+                for suffix in (".cc", ".o", ".pyo"):
+                    sidecar = filepath + suffix
+                    if os.path.exists(sidecar):
+                        os.remove(sidecar)
+
+
 def slicc_emitter(target, source, env):
     files = set(target)
     for s in source:
@@ -115,6 +153,7 @@ def slicc_action(target, source, env):
             verbose=GetOption("verbose"),
         )
         slicc.process()
+        remove_stale_protocol_outputs(slicc)
         slicc.writeCodeFiles(output_dir.abspath, slicc_includes)
         if env["CONF"]["SLICC_HTML"]:
             slicc.writeHTMLFiles(html_dir.abspath)
