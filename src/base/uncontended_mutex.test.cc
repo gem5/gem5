@@ -26,6 +26,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <mutex>
 #include <thread>
 #include <vector>
 
@@ -38,7 +39,7 @@ TEST(UncontendedMutex, Lock)
     int data = 0;
     UncontendedMutex m;
 
-    std::thread t1([&] () {
+    std::thread t1([&]() {
         std::lock_guard<UncontendedMutex> g(m);
         // Simulate += operation with a racing change between read and write.
         int tmp = data;
@@ -46,13 +47,13 @@ TEST(UncontendedMutex, Lock)
         data = tmp + 1;
     });
 
-    std::thread t2([&] () {
+    std::thread t2([&]() {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         std::lock_guard<UncontendedMutex> g(m);
         data = data + 1;
     });
 
-    std::thread t3([&] () {
+    std::thread t3([&]() {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
         std::lock_guard<UncontendedMutex> g(m);
         data = data + 1;
@@ -73,8 +74,8 @@ TEST(UncontendedMutex, HeavyContention)
     int data = 0;
     UncontendedMutex m;
 
-    for (int t = 0 ; t < num_of_thread; ++t) {
-        threads.emplace_back([&] () {
+    for (int t = 0; t < num_of_thread; ++t) {
+        threads.emplace_back([&]() {
             for (int k = 0; k < num_of_iter; ++k) {
                 std::lock_guard<UncontendedMutex> g(m);
                 data++;
@@ -82,7 +83,7 @@ TEST(UncontendedMutex, HeavyContention)
         });
     }
 
-    for (auto& t : threads) {
+    for (auto &t : threads) {
         t.join();
     }
     EXPECT_EQ(data, num_of_iter * num_of_thread);
@@ -103,47 +104,47 @@ TEST(UncontendedMutex, SingleThread)
 
 /*
  * FairUncontendedMutex solves the barging issue.
- * This test makes sure the lock is not occupied by a same thread continuously.
+ * This test makes sure the lock is distributed fair enough.
  */
 TEST(FairUncontendedMutex, NoBarging)
 {
-    int num_of_iter = 1000;
     int num_of_thread = 10;
+    int total_work = 10000;
+    int remaining_work = total_work;
+    std::vector<int> workload(num_of_thread);
     std::vector<std::thread> threads;
 
-    int data = 0;
-    int last_served_id = -1;
-    int occupy_streaks = 0;
-    int max_occupy_streaks = 0;
-
+    std::atomic<int> ready_threads = 0;
     FairUncontendedMutex m;
-    m.lock();
+
     for (int t = 0; t < num_of_thread; ++t) {
         threads.emplace_back([&, t]() {
-            for (int k = 0; k < num_of_iter; ++k) {
-                std::lock_guard<FairUncontendedMutex> g(m);
+            ++ready_threads;
+            while (ready_threads.load() < num_of_thread) {
+                std::this_thread::yield();
+            }
+            while (true) {
+                std::scoped_lock<FairUncontendedMutex> g(m);
 
-                if (last_served_id == t) {
-                    ++occupy_streaks;
-                } else {
-                    last_served_id = t;
-                    occupy_streaks = 1;
+                if (remaining_work <= 0) {
+                    break;
                 }
-                max_occupy_streaks =
-                    std::max(max_occupy_streaks, occupy_streaks);
-
-                data++;
+                --remaining_work;
+                ++workload[t];
             }
         });
     }
-    m.unlock(); // Start when all threads created.
 
     for (auto &t : threads) {
         t.join();
     }
 
-    EXPECT_EQ(data, num_of_iter * num_of_thread);
-    EXPECT_LE(max_occupy_streaks, num_of_iter / 10);
+    int minimum_workload = total_work / num_of_thread / 2;
+    EXPECT_EQ(remaining_work, 0);
+    for (int t = 0; t < num_of_thread; ++t) {
+        EXPECT_GT(workload[t], minimum_workload)
+            << "Thread " << t << " did not get enough workload.";
+    }
 }
 
 TEST(FairUncontendedMutex, SingleThread)
