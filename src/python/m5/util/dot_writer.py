@@ -168,7 +168,7 @@ def dot_create_cluster(simNode, full_path, label):
     # Account for the quotes added later around the tooltip string
     tooltip = "&#10;\\".join(ini_strings)
     # Remove existing quotes from the tooltip string.
-    tooltip = tooltip.replace('"', '')
+    tooltip = tooltip.replace('"', "")
     max_tooltip_length = 16384 - 2
     if len(tooltip) > max_tooltip_length:
         truncated = "... (truncated)"
