@@ -108,8 +108,13 @@ AddrRange
 GenericPciHost::interfaceBusConfigRange(PciBusNum start_bus,
                                         PciBusNum end_bus) const
 {
+    if (end_bus < start_bus) {
+        return AddrRange();
+    }
+
     Addr start = devConfigAddr(start_bus, PciDevAddr(0, 0));
-    Addr size = (end_bus - start_bus + 1) << (BUS_OFFSET + confDeviceBits);
+    Addr size = static_cast<Addr>(end_bus - start_bus + 1)
+                << (BUS_OFFSET + confDeviceBits);
 
     return RangeSize(start, size);
 }

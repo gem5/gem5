@@ -97,7 +97,7 @@ class PciToPciBridge : public PciType1Device, public PciUpstream
     PciBusNum getBusNum() const override;
 
     /**
-     * Check whatever a bus number is a valid downstream bus number.
+     * Check whether a bus number is a valid downstream bus number.
      * A valid downstream bus number is contained in the range between
      * secondary and subordinate number for configuration header.
      */
@@ -109,12 +109,15 @@ class PciToPciBridge : public PciType1Device, public PciUpstream
     Tick
     writeDevice(PacketPtr pkt) override
     {
+        pkt->makeAtomicResponse();
         return 0;
     }
 
     Tick
     readDevice(PacketPtr pkt) override
     {
+        pkt->setUintX(0, ByteOrder::little);
+        pkt->makeAtomicResponse();
         return 0;
     }
 };

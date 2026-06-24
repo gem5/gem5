@@ -293,13 +293,6 @@ AddrRangeList
 PciDevice::getAddrRanges() const
 {
     AddrRangeList ranges;
-    PciCommandRegister command = letoh(_config.common.command);
-    for (auto *bar: BARs) {
-        if (command.ioSpace && bar->isIo())
-            ranges.push_back(bar->range());
-        if (command.memorySpace && bar->isMem())
-            ranges.push_back(bar->range());
-    }
 
     // An invalid range can be returned if the upstream PCI to PCI bridge
     // doesn't have a bus number yet. So check that to avoid adding it to the
@@ -308,6 +301,16 @@ PciDevice::getAddrRanges() const
 
     if (config_range.valid()) {
         ranges.push_back(config_range);
+
+        PciCommandRegister command = letoh(_config.common.command);
+        for (auto *bar : BARs) {
+            if (command.ioSpace && bar->isIo()) {
+                ranges.push_back(bar->range());
+            }
+            if (command.memorySpace && bar->isMem()) {
+                ranges.push_back(bar->range());
+            }
+        }
     }
 
     return ranges;

@@ -100,13 +100,14 @@ PciToPciBridge::isDownstreamBus(PciBusNum bus_num) const
 AddrRange
 PciToPciBridge::getConfigAddrRange() const
 {
-    // No bus assigned, return invalid range
-    if (getBusNum() == 0) {
+    // No valid bus assigned, return invalid range
+    const auto bus_num = getBusNum();
+    const auto sub_num = config().subordinateBusNum;
+    if ((bus_num == 0) || sub_num < bus_num) {
         return AddrRange();
     }
 
-    return upstreamInterface->busConfigRange(getBusNum(),
-                                             config().subordinateBusNum);
+    return upstreamInterface->busConfigRange(bus_num, sub_num);
 }
 
 AddrRange

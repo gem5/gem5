@@ -69,7 +69,7 @@ AddrRangeList
 PciConfigError::getAddrRanges() const
 {
     // Avoid triggering assertion error with zero size range, which is the case
-    // when the a PCI to PCI bridge isn't configured yet.
+    // when a PCI-to-PCI bridge isn't configured yet.
     if (pioSize == 0) {
         return AddrRangeList();
     }

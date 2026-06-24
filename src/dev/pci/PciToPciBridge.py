@@ -96,7 +96,7 @@ class PciToPciBridge(PciType1Device):
         """Connect given PCI device to the PCI to PCI bridge"""
         if device in self.devices:
             raise ValueError(
-                f"Device {device} is already connected to this PCI host"
+                f"Device {device} is already connected to this PCI-to-PCI bridge"
             )
         for existing in self.devices:
             if (

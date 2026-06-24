@@ -231,7 +231,7 @@ class PciUpstream
          * bridge to get address from devices downstream of them.
          *
          * @param bus_num Bus number to which the device is connected.
-         * @param device PCI device posting the interrupts.
+         * @param device PCI device requesting memory address translation.
          * @param addr Address in the PCI memory address space
          * @return Address in the system's physical address space.
          */
