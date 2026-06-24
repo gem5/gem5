@@ -336,16 +336,52 @@ class OrchestratorExitHandler(ExitHandler, hypercall_num=1000):
         }
 
     def _add_debug_flags(self, debug_flags: List[str]) -> Dict[str, str]:
+        """Toggle gem5 debug flags at runtime.
+
+        Token grammar (one token per list element):
+            FLAG       enable FLAG
+            FLAG:Nt    enable FLAG, auto-disable after N ticks (N>0)
+            -FLAG      disable FLAG
+
+        Scheduled auto-disables cannot be cancelled; a later FLAG enable
+        will still be turned off when the original timer fires.
+        """
         from m5 import debug
+        from m5.event import (
+            create,
+            getEventQueue,
+        )
 
         flags_disabled = []
         flags_enabled = []
+        flags_scheduled_disable = []
         invalid_flags = []
-        for flag in debug_flags:
+        malformed_tokens = []
+        for token in debug_flags:
             off = False
-            if flag.startswith("-"):
-                flag = flag[1:]
+            if token.startswith("-"):
+                token = token[1:]
                 off = True
+
+            duration = None
+            if ":" in token:
+                if off:
+                    malformed_tokens.append("-" + token)
+                    continue
+                flag, dur_str = token.split(":", 1)
+                if not dur_str.endswith("t"):
+                    malformed_tokens.append(token)
+                    continue
+                try:
+                    duration = int(dur_str[:-1])
+                except ValueError:
+                    malformed_tokens.append(token)
+                    continue
+                if duration <= 0:
+                    malformed_tokens.append(token)
+                    continue
+            else:
+                flag = token
 
             if flag not in debug.flags:
                 invalid_flags.append(flag)
@@ -357,12 +393,33 @@ class OrchestratorExitHandler(ExitHandler, hypercall_num=1000):
             else:
                 flags_enabled.append(flag)
                 debug.flags[flag].enable()
+                if duration is not None:
+                    fire_tick = m5.curTick() + duration
+                    ev = create(debug.flags[flag].disable)
+                    getEventQueue().schedule(ev, fire_tick)
+                    flags_scheduled_disable.append((flag, fire_tick))
 
         return {
             "flags_enabled": str(flags_enabled),
             "flags_disabled": str(flags_disabled),
+            "flags_scheduled_disable": str(flags_scheduled_disable),
             "invalid_flags": str(invalid_flags),
+            "malformed_tokens": str(malformed_tokens),
         }
+
+    def _set_trace_master(self, enabled: bool) -> Dict[str, str]:
+        """Flip the global trace master switch.
+
+        Pauses or resumes all DPRINTF output; per-flag enablement is
+        preserved across the transition.
+        """
+        from m5 import trace
+
+        if enabled:
+            trace.enable()
+        else:
+            trace.disable()
+        return {"trace_master": "on" if enabled else "off"}
 
     @overrides(ExitHandler)
     def _process(self, simulator: "Simulator") -> None:
@@ -382,6 +439,10 @@ class OrchestratorExitHandler(ExitHandler, hypercall_num=1000):
                 elif function == "update_debug_flags":
                     debug_flags = arguments.split(",")
                     response = json.dumps(self._add_debug_flags(debug_flags))
+                elif function == "trace_on":
+                    response = json.dumps(self._set_trace_master(True))
+                elif function == "trace_off":
+                    response = json.dumps(self._set_trace_master(False))
                 else:
                     response = json.dumps(
                         {"error": f"Unknown function: {function}"}
