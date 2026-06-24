@@ -156,6 +156,7 @@ RiscvProcess::argsInit(int pageSize)
         auxv.emplace_back(gem5::auxv::Phnum, elfObject->programHeaderCount());
         auxv.emplace_back(gem5::auxv::Phent, elfObject->programHeaderSize());
         auxv.emplace_back(gem5::auxv::Phdr, elfObject->programHeaderTable());
+        auxv.emplace_back(gem5::auxv::Base, getBias());
         auxv.emplace_back(gem5::auxv::Pagesz, PageBytes);
         auxv.emplace_back(gem5::auxv::Secure, 0);
         auxv.emplace_back(gem5::auxv::Random, stack_top);
@@ -242,6 +243,7 @@ RiscvProcess::argsInit(int pageSize)
         {gem5::auxv::Phnum, "gem5::auxv::Phnum"},
         {gem5::auxv::Phent, "gem5::auxv::Phent"},
         {gem5::auxv::Phdr, "gem5::auxv::Phdr"},
+        {gem5::auxv::Base, "gem5::auxv::Base"},
         {gem5::auxv::Pagesz, "gem5::auxv::Pagesz"},
         {gem5::auxv::Secure, "gem5::auxv::Secure"},
         {gem5::auxv::Random, "gem5::auxv::Random"},
