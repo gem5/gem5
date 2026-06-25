@@ -42,5 +42,6 @@ if env['CONF']['HAVE_PROTOBUF']:
     ProtoBuf('inst_dep_record.proto', tags=['protobuf'])
     ProtoBuf('packet.proto', tags=['protobuf'])
     ProtoBuf('inst.proto', tags=['protobuf'])
+    ProtoBuf('etrace.proto', tags=['protobuf'])
     Source('protobuf.cc', tags=['protobuf'])
     Source('protoio.cc', tags=['protobuf'])
