@@ -227,9 +227,8 @@ class ChanneledMemory(AbstractMemorySystem):
 
         sorted_ranges = sorted(ranges, key=lambda r: r.start)
         for i in range(len(sorted_ranges) - 1):
-            if (
-                sorted_ranges[i].start + sorted_ranges[i].size()
-                >= sorted_ranges[i + 1].start
+            if sorted_ranges[i].start + sorted_ranges[i].size() >= int(
+                sorted_ranges[i + 1].start
             ):
                 raise ValueError(
                     "Memory ranges must be non-overlapping and non-contiguous."
