@@ -107,7 +107,7 @@ def should_use_colors(out: TextIO):
     should_force = (
         "CLICOLOR_FORCE" in os.environ or "FORCE_COLOR" in os.environ
     )
-    istty = out.isatty() and os.environ["TERM"] not in [None, "dumb"]
+    istty = out.isatty() and os.getenv("TERM", default="dumb") != "dumb"
     return (not must_not_colour) and (should_force or istty)
 
 
@@ -117,10 +117,10 @@ else:
     tty_termcap = no_termcap
 
 
-def get_termcap(use_colors=None):
+def get_termcap(stream=sys.stdout, use_colors=None):
     if use_colors is None:
         # option unspecified; default behavior is to use colors iff isatty && NO_COLOR is not set
-        use_colors = should_use_colors(sys.stdout)
+        use_colors = should_use_colors(stream)
 
     if use_colors:
         return termcap

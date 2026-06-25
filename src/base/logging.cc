@@ -42,6 +42,8 @@
 
 #include <unistd.h>
 
+#include <cstdlib>
+
 #include "base/hostinfo.hh"
 
 namespace gem5
@@ -74,11 +76,15 @@ shouldANSI()
 {
     bool mustNotColour =
         getenv("NO_COLOR") != NULL || getenv("NOCOLOR") != NULL;
+
     bool shouldForce =
         getenv("CLICOLOR_FORCE") != NULL || getenv("FORCE_COLOR") != NULL;
+
     char *term = getenv("TERM");
-    bool isTerminal = isatty(2) && (term == NULL || strcmp(term, "dumb") != 0);
-    return !mustNotColour && (shouldForce || isTerminal);
+    bool isTerminal =
+        isatty(STDERR_FILENO) && (term == NULL || strcmp(term, "dumb") != 0);
+
+    return shouldForce || (!mustNotColour && isTerminal);
 }
 
 } // anonymous namespace
@@ -92,7 +98,7 @@ shouldANSI()
 Logger&
 Logger::getPanic() {
     // bold red
-    auto prefix = shouldANSI() ? "\t\e[1;31mpanic\e[0m: " : "panic: ";
+    auto prefix = shouldANSI() ? "\x1b[1;31mpanic\e[0m: " : "panic: ";
     static ExitLogger *panic_logger = new ExitLogger(prefix);
     return *panic_logger;
 }
@@ -100,7 +106,7 @@ Logger::getPanic() {
 Logger&
 Logger::getFatal() {
     // bold red
-    auto prefix = shouldANSI() ? "\t\e[1;31mfatal\e[0m: " : "fatal: ";
+    auto prefix = shouldANSI() ? "\x1b[1;31mfatal\e[0m: " : "fatal: ";
     static FatalLogger *fatal_logger = new FatalLogger(prefix);
     return *fatal_logger;
 }
@@ -108,7 +114,7 @@ Logger::getFatal() {
 Logger&
 Logger::getWarn() {
     // bold yellow
-    auto prefix = shouldANSI() ? "\t\e[1;33mwarn\e[0m: " : "warn: ";
+    auto prefix = shouldANSI() ? "\x1b[1;33mwarn\e[0m: " : "warn: ";
     static Logger *warn_logger = new Logger(prefix);
     return *warn_logger;
 }
@@ -116,7 +122,7 @@ Logger::getWarn() {
 Logger&
 Logger::getInfo() {
     // bold cyan
-    auto prefix = shouldANSI() ? "\t\e[1;36minfo\e[0m: " : "info: ";
+    auto prefix = shouldANSI() ? "\x1b[1;36minfo\e[0m: " : "info: ";
     static Logger *info_logger = new Logger(prefix);
     return *info_logger;
 }
@@ -124,7 +130,7 @@ Logger::getInfo() {
 Logger&
 Logger::getHack() {
     // yellow, non-bold
-    auto prefix = shouldANSI() ? "\t\e[33mhack\e[0m: " : "hack: ";
+    auto prefix = shouldANSI() ? "\x1b[33mhack\e[0m: " : "hack: ";
     static Logger *hack_logger = new Logger(prefix);
     return *hack_logger;
 }
