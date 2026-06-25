@@ -55,6 +55,7 @@ except ImportError:
         print("Failed to import proto definitions")
         exit(-1)
 
+
 def to_signed64(val):
     if val >= (1 << 63):
         return val - (1 << 64)

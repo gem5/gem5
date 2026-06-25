@@ -90,5 +90,7 @@ board.set_se_binary_workload(
 simulator = Simulator(board=board)
 simulator.run()
 
-print(f"Simulation done. Exit cause: '{simulator.get_last_exit_event_cause()}'")
+print(
+    f"Simulation done. Exit cause: '{simulator.get_last_exit_event_cause()}'"
+)
 print("E-Trace output written to m5out/ directory")
