@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-# Copyright (c) 2016 Jason Lowe-Power
+# Copyright (c) 2017 Jason Lowe-Power
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,21 +24,22 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
 
-SimObject('SimpleObject.py', sim_objects=['SimpleObject'])
-SimObject('HelloObject.py', sim_objects=['HelloObject', 'GoodbyeObject'])
-SimObject('SimpleMemobj.py', sim_objects=['SimpleMemobj'])
-SimObject('SimpleCache.py', sim_objects=['SimpleCache'])
-SimObject('PICObject.py', sim_objects=['PICObject'])
+# import the m5 (gem5) library created when gem5 is built
+import m5
 
-Source('simple_object.cc')
-Source('hello_object.cc')
-Source('goodbye_object.cc')
-Source('simple_memobj.cc')
-Source('simple_cache.cc')
-Source('PIC_object.cc')
+# import all of the SimObjects
+from m5.objects import *
 
-DebugFlag('HelloExample', "For Learning gem5 Part 2. Simple example debug flag")
-DebugFlag('SimpleMemobj', "For Learning gem5 Part 2.")
-DebugFlag('SimpleCache', "For Learning gem5 Part 2.")
+# set up the root SimObject and start the simulation
+root = Root(full_system=False)
+
+# Create an instantiation of the simobject you created
+root.pic = PICObject()
+
+# instantiate all of the objects we've created above
+m5.instantiate()
+
+print(f"Beginning simulation!")
+exit_event = m5.simulate()
+print(f"Exiting @ tick {m5.curTick()} because {exit_event.getCause()}")

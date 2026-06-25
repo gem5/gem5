@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-# Copyright (c) 2016 Jason Lowe-Power
+# Copyright (c) 2017 Jason Lowe-Power
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,21 +24,16 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.params import *
+from m5.SimObject import SimObject
 
-SimObject('SimpleObject.py', sim_objects=['SimpleObject'])
-SimObject('HelloObject.py', sim_objects=['HelloObject', 'GoodbyeObject'])
-SimObject('SimpleMemobj.py', sim_objects=['SimpleMemobj'])
-SimObject('SimpleCache.py', sim_objects=['SimpleCache'])
-SimObject('PICObject.py', sim_objects=['PICObject'])
 
-Source('simple_object.cc')
-Source('hello_object.cc')
-Source('goodbye_object.cc')
-Source('simple_memobj.cc')
-Source('simple_cache.cc')
-Source('PIC_object.cc')
+class PICObject(SimObject):
+    type = "PICObject"
+    cxx_header = "learning_gem5/part2/PIC_object.hh"
+    cxx_class = "gem5::PICObject"
 
-DebugFlag('HelloExample', "For Learning gem5 Part 2. Simple example debug flag")
-DebugFlag('SimpleMemobj', "For Learning gem5 Part 2.")
-DebugFlag('SimpleCache', "For Learning gem5 Part 2.")
+    # time_to_wait = Param.Latency("Time before firing the event")
+    # number_of_fires = Param.Int(
+    #     1, "Number of times to fire the event before goodbye"
+    # )
