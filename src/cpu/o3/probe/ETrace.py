@@ -34,9 +34,11 @@ class ETrace(ProbeListenerObject):
     cxx_header = "cpu/o3/probe/etrace.hh"
 
     traceFile = Param.String(
-        "etrace.pb.gz",
-        "Output file for E-Trace packets (protobuf)")
-    startTraceInst = Param.UInt64(0,
-        "Instruction count after which to start tracing")
-    resyncPeriod = Param.UInt64(10000,
-        "Instructions between periodic resync packets")
+        "etrace.pb.gz", "Output file for E-Trace packets (protobuf)"
+    )
+    startTraceInst = Param.UInt64(
+        0, "Instruction count after which to start tracing"
+    )
+    resyncPeriod = Param.UInt64(
+        10000, "Instructions between periodic resync packets"
+    )
