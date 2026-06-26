@@ -959,7 +959,17 @@ void
 RiscvKvmCPU::updateKvmStateCSR()
 {
     for (const auto &ri : csrMap) {
-        uint64_t value = tc->readMiscRegNoEffect(ri.gem5Idx);
+        uint64_t value;
+        if (ri.gem5Idx == MISCREG_IE || ri.gem5Idx == MISCREG_IP) {
+            /*
+             * IE/IP live in the RISC-V interrupt controller. readMiscReg()
+             * returns that canonical state; readMiscRegNoEffect() can be a
+             * stale backing value and must not be written back to KVM.
+             */
+            value = tc->readMiscReg(ri.gem5Idx);
+        } else {
+            value = tc->readMiscRegNoEffect(ri.gem5Idx);
+        }
 
         // Mask to S-mode view for registers that are S-mode projections
         if (ri.gem5Idx == MISCREG_STATUS) {
@@ -967,7 +977,15 @@ RiscvKvmCPU::updateKvmStateCSR()
         } else if (ri.gem5Idx == MISCREG_IE) {
             value &= SupervisorIEBits;
         } else if (ri.gem5Idx == MISCREG_IP) {
-            value &= SupervisorIPWriteBits;
+            /*
+             * KVM owns SSIP/STIP while the guest is running (SBI IPI and
+             * timer). Preserve those bits when resynchronizing gem5 state
+             * after a pseudo-op/MMIO exit; gem5 only drives SEIP from the
+             * modeled external interrupt controller.
+             */
+            const uint64_t kvmSip = getOneRegU64(ri.kvmId);
+            value = (kvmSip & ~SupervisorIPWriteBits) |
+                    (value & SupervisorIPWriteBits);
         }
 
         DPRINTF(KvmContext, "  %s := 0x%lx\n", ri.name, value);

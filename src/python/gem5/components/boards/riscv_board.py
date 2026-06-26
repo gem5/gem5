@@ -150,6 +150,7 @@ class RiscvBoard(
         self.m5ops_base = self._default_m5ops_base
         self._kvm_probe_cache = None
         self._kvm_host_freq_cache = None
+        self._host_timebase_freq_cache = None
 
         if processor.get_isa() != ISA.RISCV:
             raise Exception(
@@ -170,6 +171,19 @@ class RiscvBoard(
                 return int(f.read().strip())
         except (OSError, ValueError):
             return None
+
+    @staticmethod
+    def _read_dt_u32(path: str) -> Optional[int]:
+        try:
+            with open(path, "rb") as f:
+                data = f.read(4)
+        except OSError:
+            return None
+
+        if len(data) != 4:
+            return None
+
+        return int.from_bytes(data, byteorder="big")
 
     @staticmethod
     def _read_cpu_list(path: str) -> Set[int]:
@@ -253,11 +267,35 @@ class RiscvBoard(
         if timer_frequency is not None:
             return timer_frequency
 
+        host_timebase = self._detect_host_timebase_frequency()
+        if host_timebase is not None:
+            warn(
+                "Unable to read the KVM RISC-V timer frequency; "
+                "falling back to the host device-tree timebase-frequency "
+                f"({host_timebase} Hz)."
+            )
+            return host_timebase
+
         warn(
             "Unable to read the KVM RISC-V timer frequency; "
             f"falling back to {self._default_timebase_frequency} Hz."
         )
         return self._default_timebase_frequency
+
+    def _detect_host_timebase_frequency(self) -> Optional[int]:
+        if self._host_timebase_freq_cache is not None:
+            return self._host_timebase_freq_cache
+
+        for path in (
+            "/proc/device-tree/cpus/timebase-frequency",
+            "/sys/firmware/devicetree/base/cpus/timebase-frequency",
+        ):
+            frequency = self._read_dt_u32(path)
+            if frequency is not None:
+                self._host_timebase_freq_cache = frequency
+                return frequency
+
+        return None
 
     @staticmethod
     def _decode_dt_string_list(data: bytes) -> List[str]:
