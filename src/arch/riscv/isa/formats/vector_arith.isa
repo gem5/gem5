@@ -60,7 +60,7 @@ let {{
             }
         '''
     def copyOldVd(vd_idx):
-        return 'COPY_OLD_VD(%d);' % vd_idx
+        return f"COPY_OLD_VD({vd_idx});"
     def copyOldVdIfVL(vd_idx):
         return 'COPY_OLD_VD_IF_VL(%d);' % vd_idx
     def loopWrapper(code, micro_inst = True):
@@ -321,7 +321,7 @@ def format VectorCompressFormat(code, category, *flags) {{
          'set_src_reg_idx': set_src_reg_idx,
          'set_vlenb': set_vlenb,
          'vm_decl_rd': '',
-         'copy_old_vd': '',
+         'copy_old_vd': copyOldVd('oldDstIdx'),
          'declare_varith_template': declareVArithTemplate(Name + "Micro")},
         flags
     )
