@@ -65,8 +65,10 @@ ETrace::ETrace(const ETraceParams &params)
 {
     cpu = dynamic_cast<CPU *>(params.manager);
     fatal_if(!cpu, "Manager of %s is not of type O3CPU.\n", name());
-    fatal_if(cpu->numThreads > 1, "%s supports single-threaded "
-             "workloads only.\n", name());
+    fatal_if(cpu->numThreads > 1,
+             "%s supports single-threaded "
+             "workloads only.\n",
+             name());
 
     std::string filename = simout.resolve(name() + "." + params.traceFile);
     traceStream = new ProtoOutputStream(filename);
@@ -81,9 +83,7 @@ ETrace::ETrace(const ETraceParams &params)
 }
 
 ETrace::~ETrace()
-{
-    delete traceStream;
-}
+{ delete traceStream; }
 
 void
 ETrace::regProbeListeners()
@@ -181,8 +181,8 @@ ETrace::traceCommit(const DynInstPtr &dynInst)
     // Emit initial sync packet on first traced instruction
     if (needsInitialSync) {
         IType itype = classifyInstruction(dynInst);
-        bool isBranch = (itype == ITYPE_TAKEN_BRANCH ||
-                         itype == ITYPE_NTAKEN_BRANCH);
+        bool isBranch =
+            (itype == ITYPE_TAKEN_BRANCH || itype == ITYPE_NTAKEN_BRANCH);
         bool taken = (itype == ITYPE_TAKEN_BRANCH);
         emitSyncPacket(pc, curPriv, isBranch, taken);
         needsInitialSync = false;
@@ -195,8 +195,8 @@ ETrace::traceCommit(const DynInstPtr &dynInst)
             emitBranchMapPacket(true, pc);
         }
         IType itype = classifyInstruction(dynInst);
-        bool isBranch = (itype == ITYPE_TAKEN_BRANCH ||
-                         itype == ITYPE_NTAKEN_BRANCH);
+        bool isBranch =
+            (itype == ITYPE_TAKEN_BRANCH || itype == ITYPE_NTAKEN_BRANCH);
         bool taken = (itype == ITYPE_TAKEN_BRANCH);
         emitSyncPacket(pc, curPriv, isBranch, taken);
         instsSinceSync = 0;
@@ -208,54 +208,53 @@ ETrace::traceCommit(const DynInstPtr &dynInst)
 
     IType itype = classifyInstruction(dynInst);
 
-    DPRINTF(ETrace, "Commit 0x%08x itype=%d %s\n",
-            pc, itype,
+    DPRINTF(ETrace, "Commit 0x%08x itype=%d %s\n", pc, itype,
             dynInst->staticInst->disassemble(pc));
 
     switch (itype) {
-      case ITYPE_NONE:
-        break;
+        case ITYPE_NONE:
+            break;
 
-      case ITYPE_NTAKEN_BRANCH:
-        branchMap |= (1U << branchCount);
-        branchCount++;
-        stats.numBranches++;
-        if (branchCount >= maxBranchMapBits) {
+        case ITYPE_NTAKEN_BRANCH:
+            branchMap |= (1U << branchCount);
+            branchCount++;
+            stats.numBranches++;
+            if (branchCount >= maxBranchMapBits) {
+                emitBranchMapPacket(false, 0);
+            }
+            break;
+
+        case ITYPE_TAKEN_BRANCH:
+            // taken = 0 bit (already zero in branchMap)
+            branchCount++;
+            stats.numBranches++;
+            if (branchCount >= maxBranchMapBits) {
+                emitBranchMapPacket(false, 0);
+            }
+            break;
+
+        case ITYPE_INF_CALL:
+        case ITYPE_INF_JUMP2:
+        case ITYPE_OTHER_INF:
             emitBranchMapPacket(false, 0);
+            break;
+
+        case ITYPE_UNINF_JUMP:
+        case ITYPE_UNINF_CALL:
+        case ITYPE_UNINF_JUMP2:
+        case ITYPE_OTHER_UNINF:
+        case ITYPE_RETURN:
+        case ITYPE_COROUTINE:
+        case ITYPE_EXCEPT_RET: {
+            Addr npc = dynInst->pcState().as<RiscvISA::PCState>().npc();
+            emitBranchMapPacket(true, npc);
+            break;
         }
-        break;
 
-      case ITYPE_TAKEN_BRANCH:
-        // taken = 0 bit (already zero in branchMap)
-        branchCount++;
-        stats.numBranches++;
-        if (branchCount >= maxBranchMapBits) {
-            emitBranchMapPacket(false, 0);
-        }
-        break;
-
-      case ITYPE_INF_CALL:
-      case ITYPE_INF_JUMP2:
-      case ITYPE_OTHER_INF:
-        emitBranchMapPacket(false, 0);
-        break;
-
-      case ITYPE_UNINF_JUMP:
-      case ITYPE_UNINF_CALL:
-      case ITYPE_UNINF_JUMP2:
-      case ITYPE_OTHER_UNINF:
-      case ITYPE_RETURN:
-      case ITYPE_COROUTINE:
-      case ITYPE_EXCEPT_RET: {
-        Addr npc = dynInst->pcState().as<RiscvISA::PCState>().npc();
-        emitBranchMapPacket(true, npc);
-        break;
-      }
-
-      case ITYPE_EXCEPTION:
-      case ITYPE_INTERRUPT:
-        // Handled above via PC discontinuity detection
-        break;
+        case ITYPE_EXCEPTION:
+        case ITYPE_INTERRUPT:
+            // Handled above via PC discontinuity detection
+            break;
     }
 
     // Update expected next PC for discontinuity detection
@@ -278,8 +277,7 @@ ETrace::traceCommit(const DynInstPtr &dynInst)
 }
 
 void
-ETrace::emitSyncPacket(Addr addr, uint8_t priv,
-                        bool isBranch, bool taken)
+ETrace::emitSyncPacket(Addr addr, uint8_t priv, bool isBranch, bool taken)
 {
     ProtoMessage::ETracePacket pkt;
     pkt.set_tick(curTick());
@@ -302,7 +300,7 @@ ETrace::emitSyncPacket(Addr addr, uint8_t priv,
 
 void
 ETrace::emitTrapPacket(Addr addr, uint64_t cause, uint64_t tval,
-                        bool isInterrupt, uint8_t priv)
+                       bool isInterrupt, uint8_t priv)
 {
     ProtoMessage::ETracePacket pkt;
     pkt.set_tick(curTick());
@@ -347,7 +345,8 @@ ETrace::emitBranchMapPacket(bool withAddress, Addr addr)
     stats.numBranchMapPackets++;
     stats.numPackets++;
 
-    DPRINTF(ETrace, "BranchMap packet: withAddr=%d addr=0x%08x "
+    DPRINTF(ETrace,
+            "BranchMap packet: withAddr=%d addr=0x%08x "
             "map=0x%x count=%d\n",
             withAddress, addr, branchMap, branchCount);
 }
@@ -388,8 +387,7 @@ ETrace::ETraceStats::ETraceStats(statistics::Group *parent)
                "Branches traced"),
       ADD_STAT(totalInstsTraced, statistics::units::Count::get(),
                "Total instructions traced")
-{
-}
+{}
 
 } // namespace o3
 } // namespace gem5

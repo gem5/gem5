@@ -29,11 +29,12 @@ syntax = "proto2";
 package ProtoMessage;
 
 // Header for an E-Trace stream, written once at the start.
-message ETraceHeader {
-  optional string obj_id = 1;
-  optional uint32 ver = 2 [default = 1];
-  optional uint64 tick_freq = 3;
-  optional uint32 arch_width = 4;
+message ETraceHeader
+{
+    optional string obj_id = 1;
+    optional uint32 ver = 2 [ default = 1 ];
+    optional uint64 tick_freq = 3;
+    optional uint32 arch_width = 4;
 }
 
 // A single E-Trace packet following the RISC-V Efficient Trace spec v2.0.
@@ -42,28 +43,31 @@ message ETraceHeader {
 //   1 - branch map with address (uninferable discontinuity)
 //   2 - address only (no branch map)
 //   3 - sync/trap/context/support (subformat selects which)
-message ETracePacket {
-  enum Format {
-    BRANCH_MAP = 0;
-    BRANCH_MAP_ADDR = 1;
-    ADDR_ONLY = 2;
-    SYNC = 3;
-  }
-  enum SubFormat {
-    START = 0;
-    TRAP = 1;
-    CONTEXT = 2;
-    SUPPORT = 3;
-  }
-  optional uint64 tick = 1;
-  optional Format format = 2;
-  optional SubFormat subformat = 3;
-  optional uint64 address = 4;
-  optional uint32 branch_map = 5;
-  optional uint32 branch_count = 6;
-  optional uint32 priv = 7;
-  optional uint64 cause = 8;
-  optional uint64 tval = 9;
-  optional bool interrupt = 10;
-  optional uint32 itype = 11;
+message ETracePacket
+{
+    enum Format
+    {
+        BRANCH_MAP = 0;
+        BRANCH_MAP_ADDR = 1;
+        ADDR_ONLY = 2;
+        SYNC = 3;
+    }
+    enum SubFormat
+    {
+        START = 0;
+        TRAP = 1;
+        CONTEXT = 2;
+        SUPPORT = 3;
+    }
+    optional uint64 tick = 1;
+    optional Format format = 2;
+    optional SubFormat subformat = 3;
+    optional uint64 address = 4;
+    optional uint32 branch_map = 5;
+    optional uint32 branch_count = 6;
+    optional uint32 priv = 7;
+    optional uint64 cause = 8;
+    optional uint64 tval = 9;
+    optional bool interrupt = 10;
+    optional uint32 itype = 11;
 }

@@ -55,29 +55,27 @@ class ETrace : public ProbeListenerObject
 
     std::string
     name() const override
-    {
-        return ProbeListenerObject::name() + ".etrace";
-    }
+    { return ProbeListenerObject::name() + ".etrace"; }
 
   private:
     // E-Trace itype encoding per RISC-V Efficient Trace spec v2.0
     enum IType : uint8_t
     {
-        ITYPE_NONE          = 0,
-        ITYPE_EXCEPTION     = 1,
-        ITYPE_INTERRUPT     = 2,
-        ITYPE_EXCEPT_RET    = 3,
+        ITYPE_NONE = 0,
+        ITYPE_EXCEPTION = 1,
+        ITYPE_INTERRUPT = 2,
+        ITYPE_EXCEPT_RET = 3,
         ITYPE_NTAKEN_BRANCH = 4,
-        ITYPE_TAKEN_BRANCH  = 5,
-        ITYPE_UNINF_JUMP    = 6,
-        ITYPE_UNINF_CALL    = 8,
-        ITYPE_INF_CALL      = 9,
-        ITYPE_UNINF_JUMP2   = 10,
-        ITYPE_INF_JUMP2     = 11,
-        ITYPE_COROUTINE     = 12,
-        ITYPE_RETURN        = 13,
-        ITYPE_OTHER_UNINF   = 14,
-        ITYPE_OTHER_INF     = 15,
+        ITYPE_TAKEN_BRANCH = 5,
+        ITYPE_UNINF_JUMP = 6,
+        ITYPE_UNINF_CALL = 8,
+        ITYPE_INF_CALL = 9,
+        ITYPE_UNINF_JUMP2 = 10,
+        ITYPE_INF_JUMP2 = 11,
+        ITYPE_COROUTINE = 12,
+        ITYPE_RETURN = 13,
+        ITYPE_OTHER_UNINF = 14,
+        ITYPE_OTHER_INF = 15,
     };
 
     void traceCommit(const DynInstPtr &dynInst);
