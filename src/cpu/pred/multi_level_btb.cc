@@ -21,7 +21,6 @@ MultiLevelBTB::MultiLevelBTBStats::MultiLevelBTBStats(
     l1Hits.flags(total);
     l2Hits.flags(total);
     l3Hits.flags(total);
-
 }
 
 MultiLevelBTB::MultiLevelBTB(const MultiLevelBTBParams &p)
@@ -80,13 +79,13 @@ MultiLevelBTB::valid(ThreadID tid, Addr instPC)
     }
 
     BTBEntry *l2_entry = l2btb.findEntry({instPC, tid});
-    if(l2_entry != nullptr) {
+    if (l2_entry != nullptr) {
         DPRINTF(BTB, "L2 BTB valid for PC %#x\n", instPC);
         return true;
     }
     if (threeLevel) {
         BTBEntry *l3_entry = l3btb.findEntry({instPC, tid});
-        if(l3_entry != nullptr) {
+        if (l3_entry != nullptr) {
             DPRINTF(BTB, "L3 BTB valid for PC %#x\n", instPC);
             return true;
         }
@@ -111,8 +110,16 @@ MultiLevelBTB::lookup(ThreadID tid, Addr instPC, BranchType type)
     // L1miss, lookup l2 btb
     BTBEntry *l2_entry = l2btb.accessEntry({instPC, tid});
     if (l2_entry != nullptr) {
+        // If L2-BTB is a victim buffer, backup the L2-hit entry in case
+        // the l1_victim overwrites the hit entry when they would be mapped to
+        // the same set in L2.
+        BTBEntry l2_hit_copy(*l2_entry);
+        if (!inclusive) {
+            // Demote the L2-hit entry to the LRU position
+            l2btb.demoteEntry(l2_entry);
+        }
         BTBEntry *l1_victim = handleEviction(tid, instPC, l1btb, l2btb);
-        l1_victim->update(*l2_entry->target, l2_entry->inst);
+        l1_victim->update(*l2_hit_copy.target, l2_hit_copy.inst);
         multilevelstats.l2Hits++;
         DPRINTF(BTB,
                 "L2 BTB hit for PC %#x, latency=%d cycles, "
@@ -124,8 +131,13 @@ MultiLevelBTB::lookup(ThreadID tid, Addr instPC, BranchType type)
     if (threeLevel) {
         BTBEntry *l3_entry = l3btb.accessEntry({instPC, tid});
         if (l3_entry != nullptr) {
+            BTBEntry l3_hit_copy(*l3_entry);
+            if (!inclusive) {
+                // Demote the L3-hit entry to the LRU position
+                l3btb.demoteEntry(l3_entry);
+            }
             BTBEntry *l1_victim = handleEviction(tid, instPC, l1btb, l2btb);
-            l1_victim->update(*l3_entry->target, l3_entry->inst);
+            l1_victim->update(*l3_hit_copy.target, l3_hit_copy.inst);
             multilevelstats.l3Hits++;
             // If lower-level BTB is inclusive of upper-level BTB,
             // also insert the hit entry into the mid-level, i.e., L2-BTB.
@@ -172,13 +184,12 @@ MultiLevelBTB::getInst(ThreadID tid, Addr instPC)
 }
 
 void
-MultiLevelBTB::update(ThreadID tid, Addr instPC,
-                      const PCStateBase &target,
+MultiLevelBTB::update(ThreadID tid, Addr instPC, const PCStateBase &target,
                       BranchType type, StaticInstPtr inst)
 {
     stats.updates[type]++;
 
-    BTBEntry* l1_entry = l1btb.findEntry({instPC, tid});
+    BTBEntry *l1_entry = l1btb.findEntry({instPC, tid});
     if (l1_entry) {
         l1btb.accessEntry(l1_entry);
     } else {
@@ -190,7 +201,7 @@ MultiLevelBTB::update(ThreadID tid, Addr instPC,
     // If lower-level BTB is inclusive of upper-level BTB,
     // insert entry into all levels.
     if (inclusive) {
-        BTBEntry* l2_entry = l2btb.findEntry({instPC, tid});
+        BTBEntry *l2_entry = l2btb.findEntry({instPC, tid});
         if (l2_entry) {
             l2btb.accessEntry(l2_entry);
         } else {
@@ -204,7 +215,7 @@ MultiLevelBTB::update(ThreadID tid, Addr instPC,
         l2_entry->update(target, inst);
 
         if (threeLevel) {
-            BTBEntry* l3_entry = l3btb.findEntry({instPC, tid});
+            BTBEntry *l3_entry = l3btb.findEntry({instPC, tid});
             if (l3_entry) {
                 l3btb.accessEntry(l3_entry);
             } else {

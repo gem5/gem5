@@ -240,7 +240,11 @@ class BTBEntry : public ReplaceableEntry
     StaticInstPtr inst;
 
     /** Get the entry's branch address. */
-    Addr getBranchAddr() const { return branchAddr; }
+    Addr
+    getBranchAddr() const
+    {
+        return branchAddr;
+    }
 
     std::string
     print() const override

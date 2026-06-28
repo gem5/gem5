@@ -154,8 +154,10 @@ class MultiLevelBTB(BranchTargetBuffer):
     threeLevel = Param.Bool(False, "Enable the third-level BTB")
     inclusive = Param.Bool(
         False,
-        "Let L2-BTB be inclusive of L1-BTB; otherwise, "
-        "L2-BTB is a victim buffer of L1-BTB (mostly-exclusive).",
+        "Let lower-level BTB be inclusive of upper-level BTB; otherwise, "
+        "lower-level BTB is a victim buffer of upper-level BTB "
+        "(semi-exclusive). For semi-exclusive, see section 3.3 of paper "
+        '"Two Level Bulk Preload Branch Prediction" by IBM.',
     )
 
     # L1-BTB configuration

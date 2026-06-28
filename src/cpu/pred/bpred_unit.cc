@@ -206,7 +206,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
      */
     stats.BTBLookups++;
     BTBLookupResult btb_res = btb->lookup(tid, pc.instAddr(), brType);
-    const PCStateBase * btb_target = btb_res.target;
+    const PCStateBase *btb_target = btb_res.target;
     // The BTB and CBP are accessed in parallel. The total latency should be
     // the maximum of the bpred latency and the BTB latency.
     totalLatency = std::max(totalLatency, btb_res.latency);

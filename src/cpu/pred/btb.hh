@@ -57,13 +57,15 @@ namespace branch_prediction
 
 struct BTBLookupResult
 {
-  /** The target of the branch */
-  const PCStateBase* target;
-  /** The latency of the lookup */
-  Cycles latency;
+    /** The target of the branch */
+    const PCStateBase *target;
+    /** The latency of the lookup */
+    Cycles latency;
 
-  BTBLookupResult(const PCStateBase* _target = nullptr, Cycles _latency = Cycles(0))
-      : target(_target), latency(_latency) {}
+    BTBLookupResult(const PCStateBase *_target = nullptr,
+                    Cycles _latency = Cycles(0))
+        : target(_target), latency(_latency)
+    {}
 };
 
 class BranchTargetBuffer : public ClockedObject
@@ -89,8 +91,9 @@ class BranchTargetBuffer : public ClockedObject
      *  @return The target of the branch or nullptr if the branch is not
      *          in the BTB and the latency of the lookup.
      */
-    virtual const BTBLookupResult lookup(ThreadID tid, Addr instPC,
-                            BranchType type = BranchType::NoBranch) = 0;
+    virtual const BTBLookupResult
+    lookup(ThreadID tid, Addr instPC,
+           BranchType type = BranchType::NoBranch) = 0;
 
     /** Looks up an address in the BTB and return the instruction
      * information if existant. Does not update statistics.

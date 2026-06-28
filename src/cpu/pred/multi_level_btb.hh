@@ -9,7 +9,6 @@
 namespace gem5::branch_prediction
 {
 
-
 class MultiLevelBTB : public BranchTargetBuffer
 {
   public:
@@ -27,7 +26,6 @@ class MultiLevelBTB : public BranchTargetBuffer
                 StaticInstPtr inst = nullptr) override;
 
     const StaticInstPtr getInst(ThreadID tid, Addr instPC) override;
-
 
   private:
     BTBEntry *handleEviction(ThreadID tid, Addr instPC,
