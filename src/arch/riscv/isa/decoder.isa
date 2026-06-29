@@ -4601,12 +4601,6 @@ decode QUADRANT default Unknown::unknown() {
                                 }
                             }
                         }
-
-                        if (machInst.vtype8.vta) {
-                            for (uint32_t i = filled; i < elems_per_reg; i++) {
-                                Vd_vu[i] = static_cast<ElemType>(-1);
-                            }
-                        }
                     }}, OPMVV, SimdMiscOp);
                 }
                 format VectorMaskFormat {
