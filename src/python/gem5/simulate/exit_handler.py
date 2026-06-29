@@ -437,8 +437,17 @@ class OrchestratorExitHandler(ExitHandler, hypercall_num=1000):
                     stats = simulator.get_stats()
                     response = json.dumps(stats)
                 elif function == "update_debug_flags":
-                    debug_flags = arguments.split(",")
-                    response = json.dumps(self._add_debug_flags(debug_flags))
+                    if not arguments:
+                        response = json.dumps(
+                            {
+                                "error": "Missing arguments for update_debug_flags"
+                            }
+                        )
+                    else:
+                        debug_flags = arguments.split(",")
+                        response = json.dumps(
+                            self._add_debug_flags(debug_flags)
+                        )
                 elif function == "trace_on":
                     response = json.dumps(self._set_trace_master(True))
                 elif function == "trace_off":
