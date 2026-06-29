@@ -396,7 +396,7 @@ class OrchestratorExitHandler(ExitHandler, hypercall_num=1000):
                 if duration is not None:
                     fire_tick = m5.curTick() + duration
                     ev = create(debug.flags[flag].disable)
-                    getEventQueue().schedule(ev, fire_tick)
+                    getEventQueue(0).schedule(ev, fire_tick)
                     flags_scheduled_disable.append((flag, fire_tick))
 
         return {
