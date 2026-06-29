@@ -1383,6 +1383,45 @@ class HBM_6400_8H_1x64(DRAMInterface):
     two_cycle_activate = True
 
 
+# A single HBM3E x64 pseudo-channel interface at the 9.6 Gbps/pin
+# speed bin used by current production HBM3E silicon (NVIDIA H200
+# ships with Micron HBM3E 9.6 Gbps; Samsung Shinebolt and SK hynix
+# HBM3E parts target the same bin).
+#
+# HBM3E reuses the JESD238B.01 (HBM3) protocol — same banks, same
+# burst length, same RFM model — and simply pushes the speed bin
+# higher. So this preset extends HBM_6400_8H_1x64 with the
+# tCK-derived timings rescaled to a 2.4 GHz CK; everything else
+# carries over.
+#
+# tCK = 1 / (9.6 Gbps / 2 DDR) = 0.417 ns -> fCK = 2.4 GHz.
+# Stack assumption is the same as the HBM3 preset (8H x 16 Gb/die).
+# Per-stack aggregate bandwidth at 9.6 Gbps/pin x 1024 pins is
+# ~1.23 TB/s, matching public datasheets for the speed bin.
+class HBM_9600_8H_1x64(HBM_6400_8H_1x64):
+    # 2.4 GHz CK / 9.6 Gbps DDR.
+    tCK = "0.417ns"
+
+    # BL=8 at DDR -> 4 tCK on the data bus -> 4 * 0.417 = 1.67 ns.
+    # Round-trip with JESD238B.01 Table 93's tCCD_L lower bound of
+    # 2.5 ns means tBURST is the smaller of the two and tCCD_L is
+    # still the binding column-to-column constraint at this speed.
+    tBURST = "1.67ns"
+
+    # tCCD_L = max(4 nCK, 2.5 ns). At tCK = 0.417 ns -> 4 nCK = 1.67 ns
+    # -> the 2.5 ns floor wins.
+    tCCD_L = "2.5ns"
+
+    # Power-down / self-refresh exit. HBM3E datasheets typically
+    # quote ~5 nCK; at this tCK that is 2.085 ns. Round to 3 ns.
+    tXP = "3ns"
+
+    # tXS ~ tRFC(ab) + tXP. tRFC stays at the HBM3 8 Gb/channel
+    # value (350 ns); 350 + 3 = 353 ns -> round to 360 ns to match
+    # the HBM3 preset.
+    tXS = "360ns"
+
+
 # A single DDR5-4400 32bit channel (4x8 configuration)
 # A DDR5 DIMM is made up of two (32 bit) channels.
 # Following configuration is modeling only a single 32bit channel.
