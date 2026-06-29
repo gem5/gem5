@@ -658,8 +658,17 @@ class OrchestratorExitHandler(
                     stats = simulator.get_stats()
                     response = json.dumps(stats)
                 elif function == "update_debug_flags":
-                    debug_flags = arguments.split(",")
-                    response = json.dumps(self._add_debug_flags(debug_flags))
+                    if not arguments:
+                        response = json.dumps(
+                            {
+                                "error": "Missing arguments for update_debug_flags"
+                            }
+                        )
+                    else:
+                        debug_flags = arguments.split(",")
+                        response = json.dumps(
+                            self._add_debug_flags(debug_flags)
+                        )
                 else:
                     response = json.dumps(
                         {"error": f"Unknown function: {function}"}
