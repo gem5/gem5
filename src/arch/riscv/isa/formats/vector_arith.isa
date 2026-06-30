@@ -888,6 +888,9 @@ def format VectorFloatCvtFormat(code, category, *flags) {{
 
 def format VectorFloatWideningFormat(code, category, *flags) {{
     varith_macro_declare = declareVArithTemplate(Name, 'float', 16, 32)
+    if "bf16" in name:
+        varith_macro_declare = f"template class {Name}<bfloat16_t>;\n"
+
     iop = InstObjParams(
         name,
         Name,
@@ -952,8 +955,11 @@ def format VectorFloatWideningFormat(code, category, *flags) {{
 
     set_vlenb = setVlenb();
 
-    varith_micro_declare = declareVArithTemplate(
-        Name + "Micro", 'float', 16, 32)
+    if "bf16" in name:
+        varith_micro_declare = f"template class {Name}Micro<bfloat16_t>;\n"
+    else:
+        varith_micro_declare = declareVArithTemplate(
+            Name + "Micro", 'float', 16, 32)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -973,11 +979,17 @@ def format VectorFloatWideningFormat(code, category, *flags) {{
         VectorIntWideningMicroConstructor.subst(microiop) + \
         VectorIntWideningMacroConstructor.subst(iop)
     exec_output = VectorFloatWideningMicroExecute.subst(microiop)
-    decode_block = VectorFloatWideningDecodeBlock.subst(iop)
+    if "bf16" in name:
+        decode_block = VectorBFloatWideningDecodeBlock.subst(iop)
+    else:
+        decode_block = VectorFloatWideningDecodeBlock.subst(iop)
 }};
 
 def format VectorFloatWideningCvtFormat(code, category, *flags) {{
     varith_macro_declare = declareVArithTemplate(Name, 'float', 8, 32)
+    if "bf16" in name:
+        varith_macro_declare = f"template class {Name}<bfloat16_t>;\n"
+
     iop = InstObjParams(
         name,
         Name,
@@ -1006,8 +1018,11 @@ def format VectorFloatWideningCvtFormat(code, category, *flags) {{
 
     set_vlenb = setVlenb();
 
-    varith_micro_declare = declareVArithTemplate(
-        Name + "Micro", 'float', 8, 32)
+    if "bf16" in name:
+        varith_micro_declare = f"template class {Name}Micro<bfloat16_t>;\n"
+    else:
+        varith_micro_declare = declareVArithTemplate(
+            Name + "Micro", 'float', 8, 32)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -1027,11 +1042,19 @@ def format VectorFloatWideningCvtFormat(code, category, *flags) {{
         VectorIntWideningMicroConstructor.subst(microiop) + \
         VectorIntWideningMacroConstructor.subst(iop)
     exec_output = VectorFloatWideningMicroExecute.subst(microiop)
-    decode_block = VectorFloatWideningAndNarrowingCvtDecodeBlock.subst(iop)
+    if "bf16" in name:
+        decode_block = \
+            VectorBFloatWideningAndNarrowingCvtDecodeBlock.subst(iop)
+    else:
+        decode_block = \
+            VectorFloatWideningAndNarrowingCvtDecodeBlock.subst(iop)
 }};
 
 def format VectorFloatNarrowingCvtFormat(code, category, *flags) {{
     varith_macro_declare = declareVArithTemplate(Name, 'float', 8, 32)
+    if "bf16" in name:
+        varith_macro_declare = f"template class {Name}<bfloat16_t>;\n"
+
     iop = InstObjParams(
         name,
         Name,
@@ -1061,8 +1084,11 @@ def format VectorFloatNarrowingCvtFormat(code, category, *flags) {{
 
     set_vlenb = setVlenb();
 
-    varith_micro_declare = declareVArithTemplate(
-        Name + "Micro", 'float', 8, 32)
+    if "bf16" in name:
+        varith_micro_declare = f"template class {Name}Micro<bfloat16_t>;\n"
+    else:
+        varith_micro_declare = declareVArithTemplate(
+            Name + "Micro", 'float', 8, 32)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -1081,7 +1107,12 @@ def format VectorFloatNarrowingCvtFormat(code, category, *flags) {{
         VectorIntNarrowingMicroConstructor.subst(microiop) + \
         VectorIntNarrowingMacroConstructor.subst(iop)
     exec_output = VectorFloatNarrowingMicroExecute.subst(microiop)
-    decode_block = VectorFloatWideningAndNarrowingCvtDecodeBlock.subst(iop)
+    if "bf16" in name:
+        decode_block = \
+            VectorBFloatWideningAndNarrowingCvtDecodeBlock.subst(iop)
+    else:
+        decode_block = \
+            VectorFloatWideningAndNarrowingCvtDecodeBlock.subst(iop)
 }};
 
 def format VectorFloatMaskFormat(code, category, *flags) {{

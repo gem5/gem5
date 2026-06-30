@@ -3102,6 +3102,14 @@ decode QUADRANT default Unknown::unknown() {
                         fd = freg(f16_to_f32(f16(freg(Fs1_bits))));
                         Fd_bits = fd.v;
                     }}, FloatCvtOp);
+                    format FPROp {
+                        0x6: fcvt_s_bf16({{
+                            RM_REQUIRED;
+                            freg_t fd;
+                            fd = freg(bf16_to_f32(bf16(freg(Fs1_bits))));
+                            Fd_bits = fd.v;
+                        }}, FloatCvtOp);
+                    }
                     0x4: fround_s({{
                         RM_REQUIRED;
                         freg_t fd;
@@ -3158,6 +3166,14 @@ decode QUADRANT default Unknown::unknown() {
                         fd = freg(f64_to_f16(f64(freg(Fs1_bits))));
                         Fd_bits = fd.v;
                     }}, FloatCvtOp);
+                    format FPROp {
+                        0x8: fcvt_bf16_s({{
+                            RM_REQUIRED;
+                            freg_t fd;
+                            fd = freg(f32_to_bf16(f32(freg(Fs1_bits))));
+                            Fd_bits = fd.v;
+                        }}, FloatCvtOp);
+                    }
                     0x4: fround_h({{
                         RM_REQUIRED;
                         freg_t fd;
@@ -4100,6 +4116,11 @@ decode QUADRANT default Unknown::unknown() {
                                 ftype<et>(Vs2_vu[i + offset]));
                             Vd_vwu[i] = fd.v;
                         }}, OPFVV, SimdFloatCvtOp);
+                        0x0d: vfwcvtbf16_f_f_v({{
+                            auto fd = f_to_wf<et>(
+                                ftype<et>(Vs2_vu[i + offset]));
+                            Vd_vwu[i] = fd.v;
+                        }}, OPFVV, SimdFloatCvtOp);
                         0x0e: vfwcvt_rtz_xu_f_v({{
                             Vd_vwu[i] = f_to_wui<et>(
                                 ftype<et>(Vs2_vu[i + offset]),
@@ -4132,6 +4153,11 @@ decode QUADRANT default Unknown::unknown() {
                         }}, OPFVV, SimdFloatCvtOp);
                         0x14: vfncvt_f_f_w({{
                             auto fd = f_to_nf<et>(ftype<ewt>(Vs2_vwu[i]));
+                            Vd_vu[i + offset] = fd.v;
+                        }}, OPFVV, SimdFloatCvtOp);
+                        0x1d: vfncvtbf16_f_f_w({{
+                            auto fd = f_to_nf<et>(
+                                ftype<ewt>(Vs2_vwu[i]));
                             Vd_vu[i + offset] = fd.v;
                         }}, OPFVV, SimdFloatCvtOp);
                         0x15: vfncvt_rod_f_f_w({{
@@ -4303,6 +4329,13 @@ decode QUADRANT default Unknown::unknown() {
                             fwiden(ftype<et>(Vs1_vu[i + offset])));
                         Vd_vwu[i] = fd.v;
                     }}, OPFVV, SimdFloatMultOp);
+                    0x3b: vfwmaccbf16_vv({{
+                        auto fd = fmadd<ewt>(
+                            fwiden(ftype<et>(Vs1_vu[i + offset])),
+                            fwiden(ftype<et>(Vs2_vu[i + offset])),
+                            ftype<ewt>(Vs3_vwu[i]));
+                        Vd_vwu[i] = fd.v;
+                    }}, OPFVV, SimdFloatMultAccOp);
                     0x3c: vfwmacc_vv({{
                         auto fd = fmadd<ewt>(
                             fwiden(ftype<et>(Vs1_vu[i + offset])),
@@ -5426,6 +5459,13 @@ decode QUADRANT default Unknown::unknown() {
                             fwiden(ftype_freg<et>(freg(Fs1_bits))));
                         Vd_vwu[i] = fd.v;
                     }}, OPFVF, SimdFloatMultOp);
+                    0x3b: vfwmaccbf16_vf({{
+                        auto fd = fmadd<ewt>(
+                            fwiden(ftype_freg<et>(freg(Fs1_bits))),
+                            fwiden(ftype<et>(Vs2_vu[i + offset])),
+                            ftype<ewt>(Vs3_vwu[i]));
+                        Vd_vwu[i] = fd.v;
+                    }}, OPFVF, SimdFloatMultAccOp);
                     0x3c: vfwmacc_vf({{
                         auto fd = fmadd<ewt>(
                             fwiden(ftype_freg<et>(freg(Fs1_bits))),
