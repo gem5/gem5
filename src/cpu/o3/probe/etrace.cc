@@ -83,7 +83,9 @@ ETrace::ETrace(const ETraceParams &params)
 }
 
 ETrace::~ETrace()
-{ delete traceStream; }
+{
+    delete traceStream;
+}
 
 void
 ETrace::regProbeListeners()

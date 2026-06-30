@@ -55,7 +55,9 @@ class ETrace : public ProbeListenerObject
 
     std::string
     name() const override
-    { return ProbeListenerObject::name() + ".etrace"; }
+    {
+        return ProbeListenerObject::name() + ".etrace";
+    }
 
   private:
     // E-Trace itype encoding per RISC-V Efficient Trace spec v2.0
