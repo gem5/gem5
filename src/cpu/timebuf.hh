@@ -30,7 +30,7 @@
 #define __BASE_TIMEBUF_HH__
 
 #include <cassert>
-#include <deque
+#include <deque>
 #include <type_traits>
 
 namespace gem5
