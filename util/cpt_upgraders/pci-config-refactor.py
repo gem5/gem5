@@ -24,7 +24,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-# Seperate config data into their own index
+# Seperate config data into its own index
 def upgrader(cpt):
     import re
 

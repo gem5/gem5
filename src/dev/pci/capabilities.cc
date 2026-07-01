@@ -47,6 +47,8 @@ PciCapabilityBase::PciCapabilityBase(const Params &p)
       nextCap("next_cap", 0)
 {
     addRegisters({{capId}, {nextCap}});
+    capId.readonly();
+    nextCap.readonly();
 }
 
 void
@@ -74,6 +76,7 @@ PciPowerManagementCap::PciPowerManagementCap(const Params &p)
 void
 PciPowerManagementCap::serialize(CheckpointOut &cp) const
 {
+    PciCapabilityBase::serialize(cp);
     SERIALIZE_SCALAR(pmc);
     SERIALIZE_SCALAR(pmcs);
 }
@@ -81,6 +84,7 @@ PciPowerManagementCap::serialize(CheckpointOut &cp) const
 void
 PciPowerManagementCap::unserialize(CheckpointIn &cp)
 {
+    PciCapabilityBase::unserialize(cp);
     UNSERIALIZE_SCALAR(pmc);
     UNSERIALIZE_SCALAR(pmcs);
 }
@@ -113,6 +117,7 @@ PciMsiCap::PciMsiCap(const Params &p)
 void
 PciMsiCap::serialize(CheckpointOut &cp) const
 {
+    PciCapabilityBase::serialize(cp);
     SERIALIZE_SCALAR(mc);
     SERIALIZE_SCALAR(ma);
     SERIALIZE_SCALAR(mua);
@@ -125,6 +130,7 @@ PciMsiCap::serialize(CheckpointOut &cp) const
 void
 PciMsiCap::unserialize(CheckpointIn &cp)
 {
+    PciCapabilityBase::unserialize(cp);
     UNSERIALIZE_SCALAR(mc);
     UNSERIALIZE_SCALAR(ma);
     UNSERIALIZE_SCALAR(mua);
@@ -157,6 +163,7 @@ PciMsiXCap::PciMsiXCap(const Params &p)
 void
 PciMsiXCap::serialize(CheckpointOut &cp) const
 {
+    PciCapabilityBase::serialize(cp);
     SERIALIZE_SCALAR(mxc);
     SERIALIZE_SCALAR(mtab);
     SERIALIZE_SCALAR(mpba);
@@ -165,6 +172,7 @@ PciMsiXCap::serialize(CheckpointOut &cp) const
 void
 PciMsiXCap::unserialize(CheckpointIn &cp)
 {
+    PciCapabilityBase::unserialize(cp);
     UNSERIALIZE_SCALAR(mxc);
     UNSERIALIZE_SCALAR(mtab);
     UNSERIALIZE_SCALAR(mpba);
@@ -206,6 +214,7 @@ PciExpressCap::PciExpressCap(const Params &p)
 void
 PciExpressCap::serialize(CheckpointOut &cp) const
 {
+    PciCapabilityBase::serialize(cp);
     SERIALIZE_SCALAR(pxcap);
     SERIALIZE_SCALAR(pxdcap);
     SERIALIZE_SCALAR(pxdc);
@@ -233,6 +242,7 @@ PciExpressCap::serialize(CheckpointOut &cp) const
 void
 PciExpressCap::unserialize(CheckpointIn &cp)
 {
+    PciCapabilityBase::unserialize(cp);
     UNSERIALIZE_SCALAR(pxcap);
     UNSERIALIZE_SCALAR(pxdcap);
     UNSERIALIZE_SCALAR(pxdc);

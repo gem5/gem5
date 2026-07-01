@@ -95,21 +95,23 @@ PciDevice::PciDevice(const PciDeviceParams &p,
             mu->lower(ml);
         }
 
-        _config->baseAddr[idx].update(bar->write(*upstreamInterface, 0));
         _config->baseAddr[idx].writer(
             std::bind(&PciDevice::barConfigWriter, this, _1, _2, bar));
-
         idx++;
     }
 
     // Construct PCI capability linked list
     RegisterBankLE::Register8 *nextCapability = &_config->capabilityPtr;
-    for (auto cap : p.capabilities) {
-        nextCapability->update(cap->base());
+    for (auto *cap : p.capabilities) {
+        // Update with mask to override readonly.
+        nextCapability->update(cap->base(), 0xFF);
         nextCapability->resetInitialValue();
 
         addConfigRegisterBank(cap);
+        nextCapability = &cap->nextCap;
     }
+    nextCapability->update(0);
+    nextCapability->resetInitialValue();
 
     _config->command.writer(this, &PciDevice::commandConfigWriter);
     _config->expansionROM.writer(this, &PciDevice::expansionRomConfigWriter);
@@ -124,6 +126,8 @@ PciDevice::init()
              "%s: Missing upstream interface, ensure this device is connected "
              "to a PCI upstream (host bridge or PCI to PCI bridge).",
              name());
+
+    recvBusChange();
 }
 
 void

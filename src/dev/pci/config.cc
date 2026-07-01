@@ -38,7 +38,6 @@
 #include "dev/pci/config.hh"
 
 #include "base/cprintf.hh"
-#include "params/PciExpressCap.hh"
 
 namespace gem5
 {
@@ -63,6 +62,9 @@ PciConfigBase::PciConfigBase(const PciDeviceParams &p, uint8_t header_type,
       interruptLine("interrupt_line", p.InterruptLine),
       interruptPin("interrupt_pin", p.InterruptPin)
 {
+    if (p.MultiFunction) {
+        headerType.update((1 << 7) | header_type);
+    }
 
     addRegisters({
         {PCI_VENDOR_ID, vendorId},
@@ -78,6 +80,16 @@ PciConfigBase::PciConfigBase(const PciDeviceParams &p, uint8_t header_type,
         {PCI_HEADER_TYPE, headerType},
         {PCI_BIST, bist},
     });
+
+    vendorId.readonly();
+    deviceId.readonly();
+    revision.readonly();
+    progIF.readonly();
+    subClassCode.readonly();
+    classCode.readonly();
+    headerType.readonly();
+    capabilityPtr.readonly();
+    interruptPin.readonly();
 
     // Generate base address registers.
     baseAddr.reserve(nb_bar);
@@ -162,6 +174,9 @@ PciConfigType0::PciConfigType0(const PciEndpointParams &p)
         {PCI_INTERRUPT_LINE, interruptLine},
         {PCI_INTERRUPT_PIN, interruptPin},
     });
+
+    subsystemVendorID.readonly();
+    subsystemID.readonly();
 }
 
 void

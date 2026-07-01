@@ -112,6 +112,10 @@ class PciDevice(DmaDevice):
     ClassCode = Param.UInt8(0, "Class Code")
     CacheLineSize = Param.UInt8(0, "System Cacheline Size")
     LatencyTimer = Param.UInt8(0, "PCI Latency Timer")
+    MultiFunction = Param.Bool(
+        False,
+        "Indicate if the device may contain multiple functions (bit 7 of Header Type config register).",
+    )
     BIST = Param.UInt8(0, "Built In Self Test")
 
     ExpansionROM = Param.UInt32(0, "Expansion ROM Base Address")
