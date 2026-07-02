@@ -259,3 +259,12 @@ test_boot(
     boot_type="init",
     length=constants.very_long_tag,
 )
+
+test_boot(
+    cpu="o3",
+    num_cpus=8,
+    mem_system="classic",
+    memory_class="DualChannelDDR4_2400",
+    boot_type="init",
+    length=constants.quick_tag,
+)
