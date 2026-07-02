@@ -31,6 +31,7 @@
 
 #include <cassert>
 #include <deque>
+#include <memory>
 #include <type_traits>
 
 namespace gem5
