@@ -648,6 +648,7 @@ LSQUnit::executeLoad(const DynInstPtr &inst)
                 // so the request no longer keeps the DynInst alive.
                 loadQueue[inst->lqIdx].setRequest(nullptr);
                 request->discard();
+                inst->clearRequest();
             }
         }
         return NoFault;
