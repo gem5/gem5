@@ -46,8 +46,25 @@ with gem5_scons.Configure(main) as conf:
                                     call='H5Fcreate("", 0, 0, 0);') and \
             conf.CheckLibWithHeader('hdf5_cpp', 'H5Cpp.h', 'C++',
                                     call='H5::H5File("", 0);')
+    if conf.env['CONF']['HAVE_HDF5']:
+        conf.env['CONF']['HAVE_HDF5'] = conf.TryCompile(
+            """
+            #include <H5public.h>
+            #if !defined(H5_VERS_MAJOR)
+            #error HDF5 1.10.7 or newer is required
+            #elif H5_VERS_MAJOR < 1
+            #error HDF5 1.10.7 or newer is required
+            #elif H5_VERS_MAJOR == 1 && H5_VERS_MINOR < 10
+            #error HDF5 1.10.7 or newer is required
+            #elif H5_VERS_MAJOR == 1 && H5_VERS_MINOR == 10 && H5_VERS_RELEASE < 7
+            #error HDF5 1.10.7 or newer is required
+            #endif
+            """,
+            extension=".cc",
+        )
 
     if conf.env['CONF']['HAVE_HDF5']:
         conf.env.TagImplies('hdf5', 'gem5 lib')
     else:
-        warning("Couldn't find HDF5 C++ libraries. Disabling HDF5 support.")
+        warning("Couldn't find HDF5 1.10.7 or newer C++ libraries. "
+                "Disabling HDF5 support.")

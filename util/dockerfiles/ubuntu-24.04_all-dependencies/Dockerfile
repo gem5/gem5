@@ -42,7 +42,7 @@ RUN apt -y update && apt -y upgrade && apt -y install \
     libprotoc-dev \
     libgoogle-perftools-dev \
     libboost-all-dev \
-    libhdf5-serial-dev \
+    libhdf5-dev \
     python3-pydot \
     python3-venv \
     python3-tk \
