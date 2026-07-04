@@ -63,7 +63,7 @@ class TestBoard(AbstractSystemBoard):
         clk_freq: str,
         generator: AbstractGenerator,
         memory: AbstractMemorySystem,
-        cache_hierarchy: Optional[AbstractCacheHierarchy],
+        cache_hierarchy: AbstractCacheHierarchy | None,
     ):
         super().__init__(
             clk_freq=clk_freq,  # Only used if cache hierarchy or GUPS-gen
@@ -100,11 +100,11 @@ class TestBoard(AbstractSystemBoard):
         )
 
     @overrides(AbstractSystemBoard)
-    def get_dma_ports(self) -> List[Port]:
+    def get_dma_ports(self) -> list[Port]:
         return False
 
     @overrides(AbstractSystemBoard)
-    def get_dma_ports(self) -> List[Port]:
+    def get_dma_ports(self) -> list[Port]:
         raise NotImplementedError(
             "The TestBoard does not have DMA Ports. "
             "Use `has_dma_ports()` to check this."

@@ -55,8 +55,8 @@ def _get_exception_str(msg: str):
 
 
 def requires(
-    isa_required: Optional[ISA] = None,
-    coherence_protocol_required: Optional[CoherenceProtocol] = None,
+    isa_required: ISA | None = None,
+    coherence_protocol_required: CoherenceProtocol | None = None,
     kvm_required: bool = False,
 ) -> None:
     """

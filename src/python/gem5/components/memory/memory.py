@@ -26,11 +26,11 @@
 
 """Channeled "generic" DDR memory controllers"""
 
+from collections.abc import Sequence
 from math import log
 from typing import (
     List,
     Optional,
-    Sequence,
     Tuple,
     Type,
     Union,
@@ -82,11 +82,11 @@ class ChanneledMemory(AbstractMemorySystem):
 
     def __init__(
         self,
-        dram_interface_class: Type[DRAMInterface],
-        num_channels: Union[int, str],
-        interleaving_size: Union[int, str],
-        size: Optional[str] = None,
-        addr_mapping: Optional[str] = None,
+        dram_interface_class: type[DRAMInterface],
+        num_channels: int | str,
+        interleaving_size: int | str,
+        size: str | None = None,
+        addr_mapping: str | None = None,
     ) -> None:
         """
         :param dram_interface_class: The DRAM interface type to create with
@@ -196,15 +196,15 @@ class ChanneledMemory(AbstractMemorySystem):
             )
 
     @overrides(AbstractMemorySystem)
-    def get_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
+    def get_mem_ports(self) -> Sequence[tuple[AddrRange, Port]]:
         return [(ctrl.dram.range, ctrl.port) for ctrl in self.mem_ctrl]
 
     @overrides(AbstractMemorySystem)
-    def get_memory_controllers(self) -> List[MemCtrl]:
+    def get_memory_controllers(self) -> list[MemCtrl]:
         return [ctrl for ctrl in self.mem_ctrl]
 
     @overrides(AbstractMemorySystem)
-    def get_mem_interfaces(self) -> List[AbstractMemory]:
+    def get_mem_interfaces(self) -> list[AbstractMemory]:
         return self._dram
 
     @overrides(AbstractMemorySystem)
@@ -212,7 +212,7 @@ class ChanneledMemory(AbstractMemorySystem):
         return self._size
 
     @overrides(AbstractMemorySystem)
-    def set_memory_range(self, ranges: List[AddrRange]) -> None:
+    def set_memory_range(self, ranges: list[AddrRange]) -> None:
         """Set the range for the memory to respond to. This range must be
         the same size as the memory's parameter. If multiple ranges are
         specified, they must be non-overlapping and non-contiguous and a
@@ -238,5 +238,5 @@ class ChanneledMemory(AbstractMemorySystem):
         self._interleave_addresses()
 
     @overrides(AbstractMemorySystem)
-    def get_uninterleaved_range(self) -> List[AddrRange]:
+    def get_uninterleaved_range(self) -> list[AddrRange]:
         return self._mem_ranges

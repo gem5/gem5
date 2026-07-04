@@ -188,7 +188,7 @@ class Node_Params:
 
     node_type: CHI_NodeType
     num_nodes_per_router: int = 1
-    router_list: List[int] = field(default_factory=list)
+    router_list: list[int] = field(default_factory=list)
     dedicated_router: bool = False
     inbound_link_latency: Optional[int] = None
     outbound_link_latency: Optional[int] = None

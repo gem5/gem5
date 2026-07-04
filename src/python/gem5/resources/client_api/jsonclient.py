@@ -113,14 +113,14 @@ class JSONClient(AbstractClient):
 
         raise ValueError(f"'{path}' is not a valid file path or URL")
 
-    def get_resources_json(self) -> List[Dict[str, Any]]:
+    def get_resources_json(self) -> list[dict[str, Any]]:
         """Returns a JSON representation of the resources."""
         return self.resources
 
     def get_resources(
         self,
-        client_queries: List[ClientQuery],
-    ) -> Dict[str, Any]:
+        client_queries: list[ClientQuery],
+    ) -> dict[str, Any]:
         def filter_resource(resource, client_queries):
             for resource_query in client_queries:
                 gem5_version_match = False
@@ -180,7 +180,7 @@ class JSONClient(AbstractClient):
 
         return copy.deepcopy(resources_by_id)
 
-    def get_all_resources(self, gem5_version: str) -> List[Dict[str, Any]]:
+    def get_all_resources(self, gem5_version: str) -> list[dict[str, Any]]:
         """
         Get all resources compatible with the specified gem5 version.
 

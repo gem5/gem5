@@ -28,7 +28,7 @@
 in the ArtifactDB.
 """
 
-from typing import Iterator
+from collections.abc import Iterator
 
 from ._artifactdb import ArtifactDB
 from .artifact import Artifact
