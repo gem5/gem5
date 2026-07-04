@@ -68,7 +68,7 @@ RUN apt -y update && apt -y upgrade && apt -y install \
 # the HOME directory is set to "/". Since non-root users do not have permission
 # to write to this directory, an error is returned when pre-commit is executed.
 # pre-commit's default cache directory can be changed via the `XDG_CACHE_HOME`
-# enivoronment variable. Here we set it to "/tmp". With this pre-commit will
+# environment variable. Here we set it to "/tmp". With this pre-commit will
 # create a "/tmp/pre-commit" directory to use for caching. "/tmp" was chosen
 # as it's a directory any user can access and write to. Given this only stores
 # caching information, the "/tmp" directory being wiped is not a concern.
