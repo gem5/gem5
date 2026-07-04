@@ -40,7 +40,7 @@ with gem5_scons.Configure(main) as conf:
         warning('While checking protoc version:', str(e))
 
     # Match the protobuf version shipped with the oldest supported Ubuntu LTS.
-    min_protoc_version = '3.12.4'
+    min_protoc_version = '3.12'
 
     # First two words should be "libprotoc x.y.z"
     if len(protoc_version) < 2 or protoc_version[0] != 'libprotoc':
