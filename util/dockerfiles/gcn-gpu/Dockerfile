@@ -49,7 +49,7 @@ RUN apt -y update && \
     # Use GCC 10 for compatibility with this ROCm environment.
     gcc-10 g++-10 cpp-10
 
-# Update the default compiler to gcc 10
+# Use GCC 10 as the default compiler for this ROCm environment.
 RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100 && \
     update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 && \
     update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-10 100 && \
