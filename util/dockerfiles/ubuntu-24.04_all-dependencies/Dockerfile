@@ -55,6 +55,7 @@ RUN apt -y update && apt -y upgrade && apt -y install \
     wget \
     cmake \
     doxygen \
+    clang-format \
     vim \
     sudo \
     jq \
