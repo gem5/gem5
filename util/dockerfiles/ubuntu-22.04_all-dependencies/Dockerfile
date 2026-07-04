@@ -36,7 +36,6 @@ RUN apt -y update && apt -y upgrade && \
     libpng-dev libelf-dev pkg-config pip python3-venv black python3-tk wget
 
 RUN pip install mypy pre-commit
-
 # DRAMSys requires cmake >= 3.25.0. APT only provides 3.22.1 for Ubuntu 22.04.
 # Therefore, we install cmake from source.
 RUN wget https://github.com/Kitware/CMake/releases/download/v3.25.0/cmake-3.25.0.tar.gz \
