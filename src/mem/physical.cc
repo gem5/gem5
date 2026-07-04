@@ -208,17 +208,17 @@ PhysicalMemory::PhysicalMemory(const std::string &_name,
                            f->isKvmMap());
     }
 
-    if (validAddrMap.empty()) {
-        warn("No valid address ranges found in physical memory\n");
-    } else {
-        // Clean up the valid address map
-        // 1. Sort: Pairs are compared by 'first', then 'second'
-        std::sort(validAddrMap.begin(), validAddrMap.end());
-        // 2. Unique: Move consecutive identical duplicates to the end
-        auto last = std::unique(validAddrMap.begin(), validAddrMap.end());
-        // 3. Erase: Shrink the vector to remove the "garbage" at the end
-        validAddrMap.erase(last, validAddrMap.end());
-    }
+    // Keep this as a warning so backends like SST can instantiate physical
+    // memory without contributing directly to gem5's valid address map.
+    warn_if(validAddrMap.empty(),
+            "No valid address ranges found in physical memory\n");
+    // Clean up the valid address map
+    // 1. Sort: Pairs are compared by 'first', then 'second'
+    std::sort(validAddrMap.begin(), validAddrMap.end());
+    // 2. Unique: Move consecutive identical duplicates to the end
+    auto last = std::unique(validAddrMap.begin(), validAddrMap.end());
+    // 3. Erase: Shrink the vector to remove the "garbage" at the end
+    validAddrMap.erase(last, validAddrMap.end());
 
     if (debug::AddrRanges) {
         for (const auto &r : validAddrMap) {
