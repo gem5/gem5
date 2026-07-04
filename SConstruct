@@ -693,16 +693,20 @@ for variant_path in variant_paths:
               "above you will need to ease fix SConstruct and ",
               "src/SConscript to support that compiler.")))
 
+    def compiler_major_version(version):
+        return version.split(".")[0]
+
     if env['GCC']:
         gcc_min_version = "11"
-        gcc_max_version = "15.2"
+        gcc_max_version = "16"
         gcc_version = env['CXXVERSION']
-        if compareVersions(gcc_version, gcc_min_version) < 0 or \
-              compareVersions(gcc_version, gcc_max_version) > 0:
+        gcc_major_version = compiler_major_version(gcc_version)
+        if compareVersions(gcc_major_version, gcc_min_version) < 0 or \
+              compareVersions(gcc_major_version, gcc_max_version) > 0:
             warning(
                 f'Detected GCC version {gcc_version} is not officially '
-                f'supported.\n'f'gem5 supports GCC v{gcc_min_version} up '
-                f'to v{gcc_max_version}.\n'
+                f'supported.\n'f'gem5 supports GCC major versions '
+                f'{gcc_min_version} through {gcc_max_version}.\n'
             )
 
         # Workaround https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105651
@@ -741,14 +745,15 @@ for variant_path in variant_paths:
 
     elif env['CLANG']:
         clang_min_version = "14"
-        clang_max_version = "19"
+        clang_max_version = "22"
         clang_version = env['CXXVERSION']
-        if compareVersions(clang_version, clang_min_version) < 0 or \
-              compareVersions(clang_version, clang_max_version) > 0:
+        clang_major_version = compiler_major_version(clang_version)
+        if compareVersions(clang_major_version, clang_min_version) < 0 or \
+              compareVersions(clang_major_version, clang_max_version) > 0:
             warning(
                 f'Detected Clang version {clang_version} is not officially '
-                f'supported.\n'f'gem5 supports Clang v{clang_min_version} up '
-                f'to v{clang_max_version}.\n'
+                f'supported.\n'f'gem5 supports Clang major versions '
+                f'{clang_min_version} through {clang_max_version}.\n'
             )
         # Set the Link-Time Optimization (LTO) flags if enabled.
         if GetOption('with_lto'):

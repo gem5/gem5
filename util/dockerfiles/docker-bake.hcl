@@ -56,6 +56,7 @@ target "common" {
 group "base-images" {
     targets = [
         "ubuntu-24-04_all-dependencies",
+        "ubuntu-26-04_all-dependencies",
     ]
 }
 
@@ -94,7 +95,10 @@ group "clang-compilers" {
     "clang-version-16",
     "clang-version-17",
     "clang-version-18",
-    "clang-version-19"
+    "clang-version-19",
+    "clang-version-20",
+    "clang-version-21",
+    "clang-version-22"
   ]
 }
 
@@ -170,12 +174,62 @@ target "clang-version-19" {
   tags = ["${IMAGE_URI}/clang-version-19:${TAG}"]
 }
 
+target "clang-version-20" {
+  inherits = ["common"]
+  annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a Clang v20 compiler."]
+  contexts = {
+    base = "target:ubuntu-26-04_all-dependencies"
+  }
+  args = {
+    base = "base"
+    version = "20"
+  }
+  context = "clang-compiler"
+  cache-from = ["${CACHE_PREFIX}/clang-version-20:${CACHE_TAG}"]
+  cache-to = ["${CACHE_PREFIX}/clang-version-20:${CACHE_TAG}"]
+  tags = ["${IMAGE_URI}/clang-version-20:${TAG}"]
+}
+
+target "clang-version-21" {
+  inherits = ["common"]
+  annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a Clang v21 compiler."]
+  contexts = {
+    base = "target:ubuntu-26-04_all-dependencies"
+  }
+  args = {
+    base = "base"
+    version = "21"
+  }
+  context = "clang-compiler"
+  cache-from = ["${CACHE_PREFIX}/clang-version-21:${CACHE_TAG}"]
+  cache-to = ["${CACHE_PREFIX}/clang-version-21:${CACHE_TAG}"]
+  tags = ["${IMAGE_URI}/clang-version-21:${TAG}"]
+}
+
+target "clang-version-22" {
+  inherits = ["common"]
+  annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a Clang v22 compiler."]
+  contexts = {
+    base = "target:ubuntu-26-04_all-dependencies"
+  }
+  args = {
+    base = "base"
+    version = "22"
+  }
+  context = "clang-compiler"
+  cache-from = ["${CACHE_PREFIX}/clang-version-22:${CACHE_TAG}"]
+  cache-to = ["${CACHE_PREFIX}/clang-version-22:${CACHE_TAG}"]
+  tags = ["${IMAGE_URI}/clang-version-22:${TAG}"]
+}
+
 group "gcc-compilers" {
   targets = [
     "gcc-version-11",
     "gcc-version-12",
     "gcc-version-13",
-    "gcc-version-14"
+    "gcc-version-14",
+    "gcc-version-15",
+    "gcc-version-16"
   ]
 }
 target "gcc-version-11" {
@@ -226,8 +280,41 @@ target "gcc-version-14" {
   tags = ["${IMAGE_URI}/gcc-version-14:${TAG}"]
 }
 
+target "gcc-version-15" {
+  inherits = ["common"]
+  annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a GCC v15 compiler."]
+  contexts = {
+    base = "target:ubuntu-26-04_all-dependencies"
+  }
+  args = {
+    base = "base"
+    version = "15"
+  }
+  context = "gcc-compiler"
+  cache-from = ["${CACHE_PREFIX}/gcc-version-15:${CACHE_TAG}"]
+  cache-to = ["${CACHE_PREFIX}/gcc-version-15:${CACHE_TAG}"]
+  tags = ["${IMAGE_URI}/gcc-version-15:${TAG}"]
+}
+
+target "gcc-version-16" {
+  inherits = ["common"]
+  annotations = ["index,manifest:org.opencontainers.image.description=An image with all dependencies for building gem5 with a GCC v16 compiler."]
+  contexts = {
+    base = "target:ubuntu-26-04_all-dependencies"
+  }
+  args = {
+    base = "base"
+    version = "16"
+  }
+  context = "gcc-compiler"
+  cache-from = ["${CACHE_PREFIX}/gcc-version-16:${CACHE_TAG}"]
+  cache-to = ["${CACHE_PREFIX}/gcc-version-16:${CACHE_TAG}"]
+  tags = ["${IMAGE_URI}/gcc-version-16:${TAG}"]
+}
+
 group "ubuntu-releases" {
   targets=[
+    "ubuntu-26-04_all-dependencies",
     "ubuntu-24-04_all-dependencies",
     "ubuntu-22-04_all-dependencies",
     "ubuntu-24-04_min-dependencies"
@@ -241,6 +328,15 @@ target "ubuntu-24-04_all-dependencies" {
   cache-from = ["${CACHE_PREFIX}/ubuntu-24.04_all-dependencies:${CACHE_TAG}"]
   cache-to = ["${CACHE_PREFIX}/ubuntu-24.04_all-dependencies:${CACHE_TAG}"]
   tags = ["${IMAGE_URI}/ubuntu-24.04_all-dependencies:${TAG}"]
+}
+
+target "ubuntu-26-04_all-dependencies" {
+  inherits = ["common"]
+  annotations = ["index,manifest:org.opencontainers.image.description=An Ubuntu 26.04 image with all dependencies required for building and running gem5."]
+  context = "ubuntu-26.04_all-dependencies"
+  cache-from = ["${CACHE_PREFIX}/ubuntu-26.04_all-dependencies:${CACHE_TAG}"]
+  cache-to = ["${CACHE_PREFIX}/ubuntu-26.04_all-dependencies:${CACHE_TAG}"]
+  tags = ["${IMAGE_URI}/ubuntu-26.04_all-dependencies:${TAG}"]
 }
 
 target "ubuntu-22-04_all-dependencies" {

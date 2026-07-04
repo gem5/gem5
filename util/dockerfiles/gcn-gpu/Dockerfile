@@ -46,7 +46,7 @@ RUN apt -y update && \
     # Requirements for ROCm
     mesa-common-dev libgflags-dev libgoogle-glog-dev \
     # ROCm dependencies and requirements to get ROCm repo and build packages.
-    # Upgrade to gcc 10: gem5 supports gcc 10+.
+    # Use GCC 10 for compatibility with this ROCm environment.
     gcc-10 g++-10 cpp-10
 
 # Update the default compiler to gcc 10
