@@ -85,14 +85,13 @@ from abc import (
 from pathlib import Path
 from typing import (
     Any,
-    Callable,
     Dict,
-    Generator,
     List,
     Optional,
     Type,
     Union,
 )
+from collections.abc import Callable, Generator
 
 import m5
 from m5 import options
@@ -124,7 +123,7 @@ The C++/pybind interface currently transports payload values as strings, so
 handlers should parse values explicitly when they need integers, booleans, or
 other richer types.
 """
-HypercallPayload = Dict[str, str]
+HypercallPayload = dict[str, str]
 
 """A hypercall identifier accepted by the Python ExitHandler registry.
 
@@ -173,9 +172,9 @@ def _resolve_hypercall_id(hypercall: HypercallId) -> int:
 
 
 def _select_hypercall(
-    hypercall: Optional[HypercallId],
-    hypercall_id: Optional[int],
-) -> Optional[HypercallId]:
+    hypercall: HypercallId | None,
+    hypercall_id: int | None,
+) -> HypercallId | None:
     """Choose one of the public selector arguments.
 
     Args:
@@ -211,18 +210,18 @@ class ExitHandler(ABC):
 
     # Shared registry used by the Simulator to map a hypercall ID to the
     # ExitHandler subclass that should be instantiated for that exit event.
-    _handler_map: Dict[int, Type["ExitHandler"]] = {}
+    _handler_map: dict[int, type["ExitHandler"]] = {}
 
     # Hypercall ID handled by this class. Each registered subclass gets its own
     # value, while the base ExitHandler class keeps None.
-    _handler_id: Optional[int] = None
+    _handler_id: int | None = None
 
     def __init_subclass__(
         cls,
         *,
-        hypercall: Optional[HypercallId] = None,
-        hypercall_id: Optional[int] = None,
-        hypercall_num: Optional[int] = None,
+        hypercall: HypercallId | None = None,
+        hypercall_id: int | None = None,
+        hypercall_num: int | None = None,
         **kwargs: Any,
     ) -> None:
         """Register subclasses by the hypercall ID they handle.
@@ -271,7 +270,7 @@ class ExitHandler(ABC):
         ExitHandler._handler_map[hypercall_id] = cls
 
     @classmethod
-    def get_handler_id(cls) -> Optional[int]:
+    def get_handler_id(cls) -> int | None:
         """Returns the hypercall ID handled by this class.
 
         Returns ``None`` for the base ``ExitHandler`` class.
@@ -279,7 +278,7 @@ class ExitHandler(ABC):
         return cls._handler_id
 
     @classmethod
-    def get_handler_map(cls) -> Dict[int, Type["ExitHandler"]]:
+    def get_handler_map(cls) -> dict[int, type["ExitHandler"]]:
         """Returns the mapping of hypercall IDs to handler classes."""
         return cls._handler_map
 
@@ -335,7 +334,7 @@ def _ExitHandlerFactory(
     hypercall: HypercallId,
     func: ExitHandlerFunction,
     description: str,
-) -> Type[ExitHandler]:
+) -> type[ExitHandler]:
     """Create an ``ExitHandler`` subclass around a plain Python callable.
 
     Args:
@@ -370,12 +369,12 @@ def _ExitHandlerFactory(
 
 
 def register_exit_handler(
-    hypercall: Optional[HypercallId],
+    hypercall: HypercallId | None,
     func: ExitHandlerFunction,
     description: str,
     *,
-    hypercall_id: Optional[int] = None,
-) -> Type[ExitHandler]:
+    hypercall_id: int | None = None,
+) -> type[ExitHandler]:
     """Register a new exit handler for the provided hypercall.
 
     ``hypercall`` may be an ``ExitHypercall`` enum value for gem5-defined
@@ -431,11 +430,11 @@ class ScheduledExitEventHandler(
     def _process(self, simulator: "Simulator") -> None:
         pass
 
-    def justification(self) -> Optional[str]:
+    def justification(self) -> str | None:
         """Returns why this scheduled exit event was created, if available."""
         return self._payload.get("justification")
 
-    def scheduled_at_tick(self) -> Optional[int]:
+    def scheduled_at_tick(self) -> int | None:
         """Returns the tick at which this exit was scheduled, if available."""
         tick = self._payload.get("scheduled_at_tick")
         return None if tick is None else int(tick)
@@ -576,7 +575,7 @@ class OrchestratorExitHandler(
     ``status``, ``get_stats``, and ``update_debug_flags``.
     """
 
-    def _get_status(self, simulator: "Simulator") -> Dict[str, Any]:
+    def _get_status(self, simulator: "Simulator") -> dict[str, Any]:
         """Collect basic simulator status for an orchestrator response.
 
         Args:
@@ -600,7 +599,7 @@ class OrchestratorExitHandler(
             "curr_instructions_executed": simulator.get_instruction_count(),
         }
 
-    def _add_debug_flags(self, debug_flags: List[str]) -> Dict[str, str]:
+    def _add_debug_flags(self, debug_flags: list[str]) -> dict[str, str]:
         """Enable or disable gem5 debug flags.
 
         Args:
@@ -817,22 +816,22 @@ class ClassicGeneratorExitHandler(
                 event came through the new structured hypercall path.
         """
         super().__init__(payload)
-        self._exit_on_completion: Optional[bool] = None
+        self._exit_on_completion: bool | None = None
 
     @classmethod
     def set_exit_event_map(
         cls,
-        on_exit_event: Optional[
-            Dict[
+        on_exit_event: None | (
+            dict[
                 ExitEvent,
-                Union[
-                    Generator[Optional[bool], None, None],
-                    List[Callable[[], Optional[bool]]],
-                    Callable[[], Optional[bool]],
-                ],
+                (
+                    Generator[bool | None, None, None]
+                    | list[Callable[[], bool | None]]
+                    | Callable[[], bool | None]
+                ),
             ]
-        ],
-        expected_execution_order: Optional[List[ExitEvent]],
+        ),
+        expected_execution_order: list[ExitEvent] | None,
         board: Optional["Board"],
     ) -> None:
         """Configure legacy ``ExitEvent`` handling for classic exits.
@@ -905,7 +904,7 @@ class ClassicGeneratorExitHandler(
             for key, value in on_exit_event.items():
                 if isinstance(value, Generator):
                     cls._on_exit_event[key] = value
-                elif isinstance(value, List):
+                elif isinstance(value, list):
                     # In instances where we have a list of functions, we
                     # convert this to a generator.
                     cls._on_exit_event[key] = (func() for func in value)
@@ -928,8 +927,8 @@ class ClassicGeneratorExitHandler(
                         )
 
                     def function_generator(
-                        func: Callable[[], Optional[bool]],
-                    ) -> Generator[Optional[bool], None, None]:
+                        func: Callable[[], bool | None],
+                    ) -> Generator[bool | None, None, None]:
                         while True:
                             yield func()
 

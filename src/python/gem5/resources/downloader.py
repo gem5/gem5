@@ -168,8 +168,8 @@ def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
 
 
 def list_resources(
-    clients: Optional[List] = None, gem5_version: Optional[str] = None
-) -> Dict[str, List[str]]:
+    clients: list | None = None, gem5_version: str | None = None
+) -> dict[str, list[str]]:
     """
     Lists all available resources. Returns a dictionary where the key is the
     id of the resources and the value is a list of that resource's versions.
@@ -197,9 +197,9 @@ def get_resource(
     unzip: bool = True,
     untar: bool = True,
     download_md5_mismatch: bool = True,
-    resource_version: Optional[str] = None,
-    clients: Optional[List] = None,
-    gem5_version: Optional[str] = core.gem5Version,
+    resource_version: str | None = None,
+    clients: list | None = None,
+    gem5_version: str | None = core.gem5Version,
     quiet: bool = False,
 ) -> None:
     """
@@ -450,7 +450,7 @@ def get_resource(
             os.remove(download_dest)
 
 
-def _file_uri_to_path(uri: str) -> Optional[Path]:
+def _file_uri_to_path(uri: str) -> Path | None:
     """
     If the URI uses the File scheme (e.g, ``file://host/path``) then
     a Path object for the local path is returned, otherwise ``None``.

@@ -52,7 +52,7 @@ def parse_args():
     return args
 
 
-def write_header_file(enum: Type, enum_hh: str):
+def write_header_file(enum: type, enum_hh: str):
     """Write the header file for an Enum.
 
     This function generates a C++ header file that declares an enum,

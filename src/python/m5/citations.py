@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import Type
 
 
-def add_citation(sim_obj_cls: Type["SimObject"], citation: str):
+def add_citation(sim_obj_cls: type["SimObject"], citation: str):
     """Add a citation to a SimObject class.
 
     :param sim_obj_cls: The SimObject class to add the citation to.

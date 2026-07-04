@@ -182,7 +182,7 @@ def validate_key(key: str) -> bool:
     return all(c.isalnum() or c == "_" for c in key)
 
 
-def create_json(id: int, payload: Optional[str] = "{}") -> str:
+def create_json(id: int, payload: str | None = "{}") -> str:
     """
     Create a properly formatted JSON message for gem5.
 

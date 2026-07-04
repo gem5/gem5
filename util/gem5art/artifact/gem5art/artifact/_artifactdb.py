@@ -42,11 +42,11 @@ from abc import (
     ABC,
     abstractmethod,
 )
+from collections.abc import Iterable
 from pathlib import Path
 from typing import (
     Any,
     Dict,
-    Iterable,
     List,
     Tuple,
     Type,
@@ -76,7 +76,7 @@ class ArtifactDB(ABC):
         pass
 
     @abstractmethod
-    def put(self, key: UUID, artifact: Dict[str, Union[str, UUID]]) -> None:
+    def put(self, key: UUID, artifact: dict[str, str | UUID]) -> None:
         """Insert the artifact into the database with the key"""
         pass
 
@@ -86,12 +86,12 @@ class ArtifactDB(ABC):
         pass
 
     @abstractmethod
-    def __contains__(self, key: Union[UUID, str]) -> bool:
+    def __contains__(self, key: UUID | str) -> bool:
         """Key can be a UUID or a string. Returns true if item in DB"""
         pass
 
     @abstractmethod
-    def get(self, key: Union[UUID, str]) -> Dict[str, str]:
+    def get(self, key: UUID | str) -> dict[str, str]:
         """Key can be a UUID or a string. Returns a dictionary to construct
         an artifact.
         """
@@ -103,13 +103,13 @@ class ArtifactDB(ABC):
         file if it currently exists."""
         pass
 
-    def searchByName(self, name: str, limit: int) -> Iterable[Dict[str, Any]]:
+    def searchByName(self, name: str, limit: int) -> Iterable[dict[str, Any]]:
         """Returns an iterable of all artifacts in the database that match
         some name. Note: Not all DB implementations will implement this
         function"""
         raise NotImplementedError()
 
-    def searchByType(self, typ: str, limit: int) -> Iterable[Dict[str, Any]]:
+    def searchByType(self, typ: str, limit: int) -> Iterable[dict[str, Any]]:
         """Returns an iterable of all artifacts in the database that match
         some type. Note: Not all DB implementations will implement this
         function"""
@@ -117,7 +117,7 @@ class ArtifactDB(ABC):
 
     def searchByNameType(
         self, name: str, typ: str, limit: int
-    ) -> Iterable[Dict[str, Any]]:
+    ) -> Iterable[dict[str, Any]]:
         """Returns an iterable of all artifacts in the database that match
         some name and type. Note: Not all DB implementations will implement
         this function"""
@@ -125,7 +125,7 @@ class ArtifactDB(ABC):
 
     def searchByLikeNameType(
         self, name: str, typ: str, limit: int
-    ) -> Iterable[Dict[str, Any]]:
+    ) -> Iterable[dict[str, Any]]:
         """Returns an iterable of all artifacts in the database that match
         some type and a regex name. Note: Not all DB implementations will
         implement this function"""
@@ -156,7 +156,7 @@ class ArtifactMongoDB(ArtifactDB):
         self.artifacts = self.db.artifacts
         self.fs = gridfs.GridFSBucket(self.db, disable_md5=True)
 
-    def put(self, key: UUID, artifact: Dict[str, Union[str, UUID]]) -> None:
+    def put(self, key: UUID, artifact: dict[str, str | UUID]) -> None:
         """Insert the artifact into the database with the key"""
         assert artifact["_id"] == key
         self.artifacts.insert_one(artifact)
@@ -166,7 +166,7 @@ class ArtifactMongoDB(ArtifactDB):
         with open(path, "rb") as f:
             self.fs.upload_from_stream_with_id(key, str(path), f)
 
-    def __contains__(self, key: Union[UUID, str]) -> bool:
+    def __contains__(self, key: UUID | str) -> bool:
         """Key can be a UUID or a string. Returns true if item in DB"""
         if isinstance(key, UUID):
             count = self.artifacts.count_documents({"_id": key}, limit=1)
@@ -176,7 +176,7 @@ class ArtifactMongoDB(ArtifactDB):
 
         return bool(count > 0)
 
-    def get(self, key: Union[UUID, str]) -> Dict[str, str]:
+    def get(self, key: UUID | str) -> dict[str, str]:
         """Key can be a UUID or a string. Returns a dictionary to construct
         an artifact.
         """
@@ -192,19 +192,19 @@ class ArtifactMongoDB(ArtifactDB):
         with open(path, "wb") as f:
             self.fs.download_to_stream(key, f)
 
-    def searchByName(self, name: str, limit: int) -> Iterable[Dict[str, Any]]:
+    def searchByName(self, name: str, limit: int) -> Iterable[dict[str, Any]]:
         """Returns an iterable of all artifacts in the database that match
         some name."""
         yield from self.artifacts.find({"name": name}, limit=limit)
 
-    def searchByType(self, typ: str, limit: int) -> Iterable[Dict[str, Any]]:
+    def searchByType(self, typ: str, limit: int) -> Iterable[dict[str, Any]]:
         """Returns an iterable of all artifacts in the database that match
         some type."""
         yield from self.artifacts.find({"type": typ}, limit=limit)
 
     def searchByNameType(
         self, name: str, typ: str, limit: int
-    ) -> Iterable[Dict[str, Any]]:
+    ) -> Iterable[dict[str, Any]]:
         """Returns an iterable of all artifacts in the database that match
         some name and type."""
         yield from self.artifacts.find(
@@ -213,7 +213,7 @@ class ArtifactMongoDB(ArtifactDB):
 
     def searchByLikeNameType(
         self, name: str, typ: str, limit: int
-    ) -> Iterable[Dict[str, Any]]:
+    ) -> Iterable[dict[str, Any]]:
         """Returns an iterable of all artifacts in the database that match
         some type and a regex name."""
 
@@ -243,8 +243,8 @@ class ArtifactFileDB(ArtifactDB):
             return ArtifactFileDB.ArtifactEncoder(self, obj)
 
     _json_file: Path
-    _uuid_artifact_map: Dict[str, Dict[str, str]]
-    _hash_uuid_map: Dict[str, List[str]]
+    _uuid_artifact_map: dict[str, dict[str, str]]
+    _hash_uuid_map: dict[str, list[str]]
     _storage_enabled: bool
     _storage_path: Path
 
@@ -278,7 +278,7 @@ class ArtifactFileDB(ArtifactDB):
             self._json_file
         )
 
-    def put(self, key: UUID, artifact: Dict[str, Union[str, UUID]]) -> None:
+    def put(self, key: UUID, artifact: dict[str, str | UUID]) -> None:
         """Insert the artifact into the database with the key."""
         assert artifact["_id"] == key
         assert isinstance(artifact["hash"], str)
@@ -293,17 +293,17 @@ class ArtifactFileDB(ArtifactDB):
         if not dst_path.exists():
             shutil.copy2(src_path, dst_path)
 
-    def __contains__(self, key: Union[UUID, str]) -> bool:
+    def __contains__(self, key: UUID | str) -> bool:
         """Key can be a UUID or a string. Returns true if item in DB"""
         if isinstance(key, UUID):
             return self.has_uuid(key)
         return self.has_hash(key)
 
-    def get(self, key: Union[UUID, str]) -> Dict[str, str]:
+    def get(self, key: UUID | str) -> dict[str, str]:
         """Key can be a UUID or a string. Returns a dictionary to construct
         an artifact.
         """
-        artifact: List[Dict[str, str]] = []
+        artifact: list[dict[str, str]] = []
         if isinstance(key, UUID):
             artifact = list(self.get_artifact_by_uuid(key))
         else:
@@ -322,9 +322,9 @@ class ArtifactFileDB(ArtifactDB):
 
     def _load_from_file(
         self, json_file: Path
-    ) -> Tuple[Dict[str, Dict[str, str]], Dict[str, List[str]]]:
-        uuid_mapping: Dict[str, Dict[str, str]] = {}
-        hash_mapping: Dict[str, List[str]] = {}
+    ) -> tuple[dict[str, dict[str, str]], dict[str, list[str]]]:
+        uuid_mapping: dict[str, dict[str, str]] = {}
+        hash_mapping: dict[str, list[str]] = {}
         if json_file.exists():
             with open(json_file) as f:
                 j = json.load(f)
@@ -348,13 +348,13 @@ class ArtifactFileDB(ArtifactDB):
     def has_hash(self, the_hash: str) -> bool:
         return the_hash in self._hash_uuid_map
 
-    def get_artifact_by_uuid(self, the_uuid: UUID) -> Iterable[Dict[str, str]]:
+    def get_artifact_by_uuid(self, the_uuid: UUID) -> Iterable[dict[str, str]]:
         uuid_str = str(the_uuid)
         if not uuid_str in self._uuid_artifact_map:
             return
         yield self._uuid_artifact_map[uuid_str]
 
-    def get_artifact_by_hash(self, the_hash: str) -> Iterable[Dict[str, str]]:
+    def get_artifact_by_hash(self, the_hash: str) -> Iterable[dict[str, str]]:
         if not the_hash in self._hash_uuid_map:
             return
         for the_uuid in self._hash_uuid_map[the_hash]:
@@ -364,7 +364,7 @@ class ArtifactFileDB(ArtifactDB):
         self,
         the_uuid: UUID,
         the_hash: str,
-        the_artifact: Dict[str, Union[str, UUID]],
+        the_artifact: dict[str, str | UUID],
     ) -> bool:
         """
         Put the artifact to the database.
@@ -385,8 +385,8 @@ class ArtifactFileDB(ArtifactDB):
         return True
 
     def find_exact(
-        self, attr: Dict[str, str], limit: int
-    ) -> Iterable[Dict[str, Any]]:
+        self, attr: dict[str, str], limit: int
+    ) -> Iterable[dict[str, Any]]:
         """
         Return all artifacts such that, for every yielded artifact,
         and for every (k,v) in attr, the attribute `k` of the artifact has
@@ -408,12 +408,12 @@ if MONGO_SUPPORT:
 else:
     _default_uri = "file://db.json"
 
-_db_schemes: Dict[str, Type[ArtifactDB]] = {"file": ArtifactFileDB}
+_db_schemes: dict[str, type[ArtifactDB]] = {"file": ArtifactFileDB}
 if MONGO_SUPPORT:
     _db_schemes["mongodb"] = ArtifactMongoDB
 
 
-def _getDBType(uri: str) -> Type[ArtifactDB]:
+def _getDBType(uri: str) -> type[ArtifactDB]:
     """Internal function to take a URI and return a class that can be
     constructed with that URI. For instance "mongodb://localhost" will return
     an ArtifactMongoDB. More types will be added in the future.

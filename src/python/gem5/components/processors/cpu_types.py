@@ -39,7 +39,7 @@ class CPUTypes(Enum):
     MINOR = "minor"
 
 
-def get_cpu_types_str_set() -> Set[str]:
+def get_cpu_types_str_set() -> set[str]:
     """
     Returns a set of all the CPU types as strings.
     """

@@ -42,7 +42,7 @@ def test_boot(
     memory_class: str,
     length: str,
     boot_type: str = "init",
-    to_tick: Optional[int] = None,
+    to_tick: int | None = None,
 ):
     name = "{}-cpu_{}-cores_{}_{}_{}_x86-boot-test".format(
         cpu, str(num_cpus), mem_system, memory_class, boot_type
