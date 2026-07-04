@@ -376,7 +376,6 @@ if __name__ == "__main__":
         # Run git-clang-format in 'CI' context
         command = [
             "git-clang-format",
-            "--quiet",
             "--style=file",
             f"--commit={ci_pr_base_commit}",
         ]
@@ -400,6 +399,9 @@ if __name__ == "__main__":
     )
 
     if res is not None:
+        if args.verbose:
+            print(f"return code: {res.returncode}")
+            print(res.stdout.strip())
         if args.dry_run and res.returncode == 1:
             print(res.stdout.strip())
         if (not args.pre_commit) and res.returncode != 0:

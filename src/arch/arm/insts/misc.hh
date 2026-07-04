@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2012-2013, 2017-2018, 2021 Arm Limited
+ * Copyright (c) 2010, 2012-2013, 2017-2018, 2021,2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -39,6 +39,7 @@
 #define __ARCH_ARM_INSTS_MISC_HH__
 
 #include "arch/arm/insts/pred_inst.hh"
+#include "arch/arm/insts/wfx.hh"
 
 namespace gem5
 {
@@ -450,6 +451,14 @@ class TlbiOp : public MiscRegRegImmOp
 
     void performTlbi(ExecContext *xc,
                      ArmISA::MiscRegIndex dest_idx, RegVal value) const;
+};
+
+class WFxOp : public ArmISA::PredOp, public WFxOpBase
+{
+  protected:
+    WFxOp(const char *mnem, ArmISA::ExtMachInst _machInst, OpClass __opClass)
+        : ArmISA::PredOp(mnem, _machInst, __opClass)
+    {}
 };
 
 } // namespace gem5

@@ -42,13 +42,12 @@ import m5
 from m5.objects import *
 from m5.proxy import *
 
+from gem5.resources.resource import obtain_resource
+
 m5.util.addToPath("../configs/")
 from base_caches import *
 from base_config import *
-from common import (
-    FSConfig,
-    SysPaths,
-)
+from common import FSConfig
 from common.Benchmarks import SysConfig
 from common.cores.arm.O3_ARM_v7a import *
 
@@ -112,30 +111,70 @@ class LinuxArmSystemBuilder:
 
     def create_system(self):
         if self.aarch64_kernel:
-            gem5_kernel = "vmlinux.arm64"
+            if self.machine_type == "VExpress_GEM5_Foundation":
+                gem5_kernel = obtain_resource(
+                    "arm64-linux-kernel-6.18.19", resource_version="1.0.0"
+                )
+                bootloader = [
+                    obtain_resource(
+                        "arm64-bootloader-foundation", resource_version="2.0.0"
+                    ).get_local_path()
+                ]
+            else:  # VExpress_GEM5_V1
+                gem5_kernel = obtain_resource(
+                    "arm64-linux-kernel-4.18.0", resource_version="1.0.0"
+                )
+                bootloader = [
+                    obtain_resource(
+                        "arm64-bootloader", resource_version="2.0.0"
+                    ).get_local_path(),
+                    obtain_resource(
+                        "arm32-bootloader", resource_version="1.0.0"
+                    ).get_local_path(),
+                ]
+
             try:
                 if issubclass(self.cpu_class, ArmV8KvmCPU):
-                    disk_image = "m5_exit_addr.squashfs.arm64"
+                    disk_image = obtain_resource(
+                        "arm64-m5-exit-addr-squashfs-img",
+                        resource_version="1.0.0",
+                    )
                 else:
-                    disk_image = "m5_exit.squashfs.arm64"
+                    disk_image = obtain_resource(
+                        "arm64-m5-exit-squashfs-img", resource_version="1.0.0"
+                    )
             except:
-                disk_image = "m5_exit.squashfs.arm64"
+                disk_image = obtain_resource(
+                    "arm64-m5-exit-squashfs-img", resource_version="1.0.0"
+                )
         else:
-            gem5_kernel = "vmlinux.arm"
-            disk_image = "m5_exit.squashfs.arm"
+            gem5_kernel = obtain_resource(
+                "arm32-linux-kernel-4.18.0", resource_version="1.0.0"
+            )
+            disk_image = obtain_resource(
+                "arm32-m5-exit-squashfs-img", resource_version="1.0.0"
+            )
+            bootloader = [
+                obtain_resource(
+                    "arm32-bootloader", resource_version="1.0.0"
+                ).get_local_path()
+            ]
 
         default_kernels = {
-            "VExpress_GEM5_V1": gem5_kernel,
-            "VExpress_GEM5_Foundation": gem5_kernel,
+            "VExpress_GEM5_V1": gem5_kernel.get_local_path(),
+            "VExpress_GEM5_Foundation": gem5_kernel.get_local_path(),
         }
 
-        sc = SysConfig(None, self.mem_size, [disk_image], "/dev/sda")
+        sc = SysConfig(
+            None, self.mem_size, [disk_image.get_local_path()], "/dev/sda"
+        )
         system = FSConfig.makeArmSystem(
             self.mem_mode,
             self.machine_type,
             self.num_cpus,
             sc,
             ruby=self.use_ruby,
+            bootloader=bootloader,
         )
 
         # TODO: This is removing SECURITY and VIRTUALIZATION extensions
@@ -150,9 +189,7 @@ class LinuxArmSystemBuilder:
         system.workload.panic_on_panic = True
         system.workload.panic_on_oops = True
 
-        system.workload.object_file = SysPaths.binary(
-            default_kernels[self.machine_type]
-        )
+        system.workload.object_file = default_kernels[self.machine_type]
 
         self.init_system(system)
         if self.enable_dvm:

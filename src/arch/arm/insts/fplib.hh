@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013, 2017-2018, 2024-2025 ARM Limited
+ * Copyright (c) 2012-2013, 2017-2018, 2024-2026 ARM Limited
  * Copyright (c) 2020 Metempsy Technology Consulting
  * All rights reserved
  *
@@ -482,9 +482,9 @@ uint16_t fplibBfMinNum(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
 uint16_t fplibBfMul(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
 uint32_t fplibBfMulH(uint16_t op1, uint16_t op2, FPSCR &fpscr);
 uint16_t fplibBfMulAdd(uint16_t addend, uint16_t op1, uint16_t op2,
-                       FPSCR &fpscr, FPCR fpcr);
+                       FPSCR &fpscr, FPCR fpcr, bool target_za = false);
 uint32_t fplibBfMulAddH(uint32_t addend, uint16_t op1, uint16_t op2,
-                        FPSCR &fpscr, FPCR fpcr);
+                        FPSCR &fpscr, FPCR fpcr, bool target_za = false);
 uint16_t fplibBfNeg(uint16_t op, FPCR fpcr);
 uint16_t fplibBfSub(uint16_t op1, uint16_t op2, FPSCR &fpscr, FPCR fpcr);
 uint32_t fplibAdd_Bf16(uint32_t op1, uint32_t op2, FPSCR &fpscr);

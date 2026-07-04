@@ -117,10 +117,16 @@ SimpleBTB::update(ThreadID tid, Addr instPC,
 {
     stats.updates[type]++;
 
-    BTBEntry *victim = btb.findVictim({instPC, tid});
+    BTBEntry *entry = btb.findEntry({instPC, tid});
+    if (entry) {
+        btb.accessEntry(entry);
+    } else {
+        // If non-existant make space
+        entry = btb.findVictim({instPC, tid});
+        btb.insertEntry({instPC, tid}, entry);
+    }
 
-    btb.insertEntry({instPC, tid}, victim);
-    victim->update(target, inst);
+    entry->update(target, inst);
 }
 
 

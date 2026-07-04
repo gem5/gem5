@@ -69,7 +69,7 @@ class OperandDesc:
         elif isinstance(flags, tuple):
             # it's a tuple: it should be a triple,
             # but each item could be a single string or a list
-            (uncond_flags, src_flags, dest_flags) = flags
+            uncond_flags, src_flags, dest_flags = flags
             flags = (
                 makeList(uncond_flags),
                 makeList(src_flags),
@@ -80,7 +80,7 @@ class OperandDesc:
         # reg_spec is either just a string or a dictionary
         # (for elems of vector)
         if isinstance(reg_spec, tuple):
-            (reg_spec, elem_spec) = reg_spec
+            reg_spec, elem_spec = reg_spec
             if isinstance(elem_spec, str):
                 attrs["elem_spec"] = elem_spec
             else:
@@ -278,8 +278,8 @@ class VecRegOperand(RegOperand):
         self.elemExt = None
 
     def makeDeclElem(self, elem_op):
-        (elem_name, elem_ext) = elem_op
-        (elem_spec, dflt_elem_ext) = self.elems[elem_name]
+        elem_name, elem_ext = elem_op
+        elem_spec, dflt_elem_ext = self.elems[elem_name]
         if elem_ext:
             ext = elem_ext
         else:
@@ -300,8 +300,8 @@ class VecRegOperand(RegOperand):
 
     # Read destination register to write
     def makeReadWElem(self, elem_op):
-        (elem_name, elem_ext) = elem_op
-        (elem_spec, dflt_elem_ext) = self.elems[elem_name]
+        elem_name, elem_ext = elem_op
+        elem_spec, dflt_elem_ext = self.elems[elem_name]
         if elem_ext:
             ext = elem_ext
         else:
@@ -332,8 +332,8 @@ class VecRegOperand(RegOperand):
 
     # Normal source operand read
     def makeReadElem(self, elem_op, name):
-        (elem_name, elem_ext) = elem_op
-        (elem_spec, dflt_elem_ext) = self.elems[elem_name]
+        elem_name, elem_ext = elem_op
+        elem_spec, dflt_elem_ext = self.elems[elem_name]
 
         if elem_ext:
             ext = elem_ext

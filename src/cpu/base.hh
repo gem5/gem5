@@ -246,6 +246,12 @@ class BaseCPU : public ClockedObject
     // @todo remove me after debugging with legion done
     Tick instCount() { return instCnt; }
 
+    virtual void
+    setResetAddr(Addr addr, bool secure = false)
+    {
+        panic("%s not implemented.", __FUNCTION__);
+    }
+
   protected:
     std::vector<BaseInterrupts*> interrupts;
 

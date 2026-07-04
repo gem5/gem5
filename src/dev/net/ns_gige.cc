@@ -131,7 +131,7 @@ NSGigE::NSGigE(const Params &p)
     interface = new NSGigEInt(name() + ".int0", this);
 
     regsReset();
-    memcpy(&rom.perfectMatch, p.hardware_address.bytes(), ETH_ADDR_LEN);
+    memcpy(&rom.perfectMatch, p.hardware_address.bytes(), ETHER_ADDR_LEN);
 
     memset(&rxDesc32, 0, sizeof(rxDesc32));
     memset(&txDesc32, 0, sizeof(txDesc32));
@@ -1922,8 +1922,9 @@ NSGigE::rxFilter(const EthPacketPtr &packet)
         if (acceptPerfect && dst == rom.perfectMatch)
             drop = false;
 
-        if (acceptArp && eth->type() == ETH_TYPE_ARP)
+        if (acceptArp && eth->type() == ETHERTYPE_ARP) {
             drop = false;
+        }
 
     } else if (dst.broadcast()) {
         // if we're accepting broadcasts
@@ -2063,7 +2064,7 @@ NSGigE::serialize(CheckpointOut &cp) const
     SERIALIZE_SCALAR(regs.taner);
     SERIALIZE_SCALAR(regs.tesr);
 
-    SERIALIZE_ARRAY(rom.perfectMatch, ETH_ADDR_LEN);
+    SERIALIZE_ARRAY(rom.perfectMatch, ETHER_ADDR_LEN);
     SERIALIZE_ARRAY(rom.filterHash, FHASH_SIZE);
 
     SERIALIZE_SCALAR(ioEnable);
@@ -2228,7 +2229,7 @@ NSGigE::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(regs.taner);
     UNSERIALIZE_SCALAR(regs.tesr);
 
-    UNSERIALIZE_ARRAY(rom.perfectMatch, ETH_ADDR_LEN);
+    UNSERIALIZE_ARRAY(rom.perfectMatch, ETHER_ADDR_LEN);
     UNSERIALIZE_ARRAY(rom.filterHash, FHASH_SIZE);
 
     UNSERIALIZE_SCALAR(ioEnable);

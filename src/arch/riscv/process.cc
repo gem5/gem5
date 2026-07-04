@@ -104,7 +104,9 @@ RiscvProcess64::initState()
         auto *tc = system->threads[ctx];
         tc->setMiscRegNoEffect(MISCREG_PRV, PRV_U);
         auto *isa = dynamic_cast<ISA*>(tc->getIsaPtr());
-        fatal_if(isa->rvType() != RV64, "RISC V CPU should run in 64 bits mode");
+        fatal_if(!isa, "Incompatible ISA for RISC-V");
+        fatal_if(isa->rvType() != RV64,
+                 "RISC-V CPU should run in 64 bit mode");
         MISA misa = tc->readMiscRegNoEffect(MISCREG_ISA);
         fatal_if(!(misa.rvu && misa.rvs),
             "RISC V SE mode can't run without supervisor and user "
@@ -154,6 +156,7 @@ RiscvProcess::argsInit(int pageSize)
         auxv.emplace_back(gem5::auxv::Phnum, elfObject->programHeaderCount());
         auxv.emplace_back(gem5::auxv::Phent, elfObject->programHeaderSize());
         auxv.emplace_back(gem5::auxv::Phdr, elfObject->programHeaderTable());
+        auxv.emplace_back(gem5::auxv::Base, getBias());
         auxv.emplace_back(gem5::auxv::Pagesz, PageBytes);
         auxv.emplace_back(gem5::auxv::Secure, 0);
         auxv.emplace_back(gem5::auxv::Random, stack_top);
@@ -240,11 +243,11 @@ RiscvProcess::argsInit(int pageSize)
         {gem5::auxv::Phnum, "gem5::auxv::Phnum"},
         {gem5::auxv::Phent, "gem5::auxv::Phent"},
         {gem5::auxv::Phdr, "gem5::auxv::Phdr"},
+        {gem5::auxv::Base, "gem5::auxv::Base"},
         {gem5::auxv::Pagesz, "gem5::auxv::Pagesz"},
         {gem5::auxv::Secure, "gem5::auxv::Secure"},
         {gem5::auxv::Random, "gem5::auxv::Random"},
-        {gem5::auxv::Null, "gem5::auxv::Null"}
-    };
+        {gem5::auxv::Null, "gem5::auxv::Null"}};
     for (const auto &aux: auxv) {
         DPRINTF(Stack, "Wrote aux key %s to address %#x\n",
                 aux_keys[aux.type], sp);

@@ -81,7 +81,13 @@ SimObject(
     sim_objects=['X86ACPISysDescTable', 'X86ACPIRSDT', 'X86ACPIXSDT',
                  'X86ACPIMadtRecord', 'X86ACPIMadt', 'X86ACPIMadtLAPIC',
                  'X86ACPIMadtIOAPIC', 'X86ACPIMadtIntSourceOverride',
-                 'X86ACPIMadtNMI', 'X86ACPIMadtLAPICOverride', 'X86ACPIRSDP'],
+                 'X86ACPIMadtNMI', 'X86ACPIMadtLAPICOverride', 'X86ACPIRSDP',
+                 'X86ACPIFADT', 'X86ACPIDSDT'],
     tags=['x86 isa']
 )
 Source('acpi.cc', tags=['x86 isa'])
+
+# Embeds a precompiled blob for DSDT at build time. See dsdt.asl for the source
+# and how to rebuild the file. It comes prebuilt with gem5 so the user does not
+# need to install ACPI tools.
+Source(env.Blob('dsdt_aml', 'dsdt.aml')[0], tags=['x86 isa'])

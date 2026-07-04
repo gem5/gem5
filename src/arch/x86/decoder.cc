@@ -161,12 +161,16 @@ Decoder::doPrefixState(uint8_t nextByte)
       case CSOverride:
       case DSOverride:
       case ESOverride:
+      case SSOverride:
+          if (emi.mode.submode == SixtyFourBitMode) {
+              break;
+          }
+          [[fallthrough]];
       case FSOverride:
       case GSOverride:
-      case SSOverride:
-        DPRINTF(Decoder, "Found segment override.\n");
-        emi.legacy.seg = prefix;
-        break;
+          DPRINTF(Decoder, "Found segment override.\n");
+          emi.legacy.seg = prefix;
+          break;
       case Lock:
         DPRINTF(Decoder, "Found lock prefix.\n");
         emi.legacy.lock = true;

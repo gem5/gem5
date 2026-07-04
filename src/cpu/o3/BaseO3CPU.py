@@ -56,7 +56,7 @@ from m5.SimObject import *
 class BaseO3CPU(BaseCPU):
     type = "BaseO3CPU"
     cxx_class = "gem5::o3::CPU"
-    cxx_header = "cpu/o3/dyn_inst.hh"
+    cxx_header = "cpu/o3/cpu.hh"
 
     @classmethod
     def memory_mode(cls):

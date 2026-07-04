@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-2013 ARM Limited
+ * Copyright (c) 2012-2013, 2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -49,6 +49,7 @@
 #include <list>
 
 #include "base/random.hh"
+#include "enums/LatencyDistribution.hh"
 #include "mem/abstract_mem.hh"
 #include "mem/port.hh"
 #include "params/SimpleMemory.hh"
@@ -117,7 +118,8 @@ class SimpleMemory : public AbstractMemory
     /**
      * Fudge factor added to the latency.
      */
-    const Tick latency_var;
+    const LatencyDistribution latencyDist;
+    const Tick latencyDistParam;
 
     /**
      * Internal (unbounded) storage to mimic the delay caused by the

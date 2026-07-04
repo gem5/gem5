@@ -1,3 +1,15 @@
+# Copyright (c) 2026 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2021-2025 The Regents of the University of California
 # All rights reserved.
 #
@@ -108,14 +120,14 @@ board.set_se_binary_workload(obtain_resource(binary_name))
 simulator = Simulator(board=board)
 simulator.run()
 
-stats = simulator.get_stats()
+stats = simulator.get_simstats()
 
 # Compare values in the current run against reference IPC values calculated
 # using simInsts / numCycles. The reference IPC values were obtained by running
 # the tests on gem5 v25.0.0.1, commit ddd4ae35adb0a3df1f1ba11e9a973a5c2f8c2944.
 
 reference_ipcs = {
-    "arm": 0.007182533150689518,
+    "arm": 0.00745645746683752,
     "riscv": 0.0063129307138331215,
     "x86": 0.00578978714017867,
 }

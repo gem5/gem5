@@ -84,20 +84,30 @@ def getAlignFlag(iop):
 
 def LoadStoreBase(name, Name, offset_code, ea_code, memacc_code, mem_flags,
         inst_flags, base_class, postacc_code='', decode_template=BasicDecode,
-        exec_template_base=''):
+        exec_template_base='', xlate_flags=None):
     # Make sure flags are in lists (convert to lists if not).
     mem_flags = makeList(mem_flags)
     inst_flags = makeList(inst_flags)
+    xlate_flags = makeList(xlate_flags)
 
     iop = InstObjParams(name, Name, base_class,
         {'offset_code': offset_code, 'ea_code': ea_code,
          'memacc_code': memacc_code, 'postacc_code': postacc_code },
         inst_flags)
 
-    mem_flags = [ '(Request::%s)' % flag for flag in mem_flags ]
+    mem_flags = [
+        'static_cast<Request::FlagsType>(Request::%s)' % flag
+        for flag in mem_flags
+    ]
     align_flag = getAlignFlag(iop)
     if align_flag:
-        mem_flags.append(align_flag)
+        mem_flags.append('static_cast<Request::FlagsType>(%s)' % align_flag)
+    if xlate_flags:
+        xlate_flags_casted = [
+            ('(static_cast<Request::FlagsType>(Request::ARCH_BITS) & '
+             'static_cast<Request::FlagsType>(XlateFlags::%s))') % flag
+            for flag in xlate_flags]
+        mem_flags.extend(xlate_flags_casted)
     if mem_flags:
         s = '\n\tmemAccessFlags = ' + '|'.join(mem_flags) + ';'
         iop.constructor += s
@@ -572,16 +582,18 @@ def format CBMOp(memacc_code, ea_code={{EA = rvSext(Rs1);}},
 
 def format HyperLoad(memacc_code, ea_code = {{EA = rvZext(Rs1 + offset);}},
         offset_code={{offset = 0;}},
-        mem_flags=[], inst_flags=[]) {{
+        mem_flags=[], inst_flags=[], xlate_flags=[]) {{
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, offset_code, ea_code, memacc_code, mem_flags,
-        inst_flags, 'Load', exec_template_base='HyperLoad')
+        inst_flags, 'Load', exec_template_base='HyperLoad',
+        xlate_flags=xlate_flags)
 }};
 
 def format HyperStore(memacc_code, ea_code={{EA = rvZext(Rs1 + offset);}},
         offset_code={{offset = 0;}},
-        mem_flags=[], inst_flags=[]) {{
+        mem_flags=[], inst_flags=[], xlate_flags=[]) {{
     (header_output, decoder_output, decode_block, exec_output) = \
         LoadStoreBase(name, Name, offset_code, ea_code, memacc_code, mem_flags,
-        inst_flags, 'Store', exec_template_base='HyperStore')
+        inst_flags, 'Store', exec_template_base='HyperStore',
+        xlate_flags=xlate_flags)
 }};

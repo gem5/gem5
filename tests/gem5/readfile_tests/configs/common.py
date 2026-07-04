@@ -1,16 +1,4 @@
-# Copyright (c) 2020 ARM Limited
-# All rights reserved
-#
-# The license below extends only to copyright in the software and shall
-# not be construed as granting a license to any other intellectual
-# property including but not limited to intellectual property relating
-# to a hardware implementation of the functionality of the software
-# licensed hereunder.  You may use the software subject to the license
-# terms below provided that you ensure that this notice is replicated
-# unmodified and in its entirety in all distributions of the software,
-# modified or unmodified, in source code or in binary form.
-#
-# Copyright (c) 2017 Mark D. Hill and David A. Wood
+# Copyright (c) 2025 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -37,38 +25,42 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-Test file for the util m5 exit assembly instruction.
+This runs simple tests to ensure that running binaries via readfile works.
 """
+
+import os
 import re
 
 from testlib import *
-
-m5_exit_regex = re.compile(
-    r"Exiting @ tick \d* because m5_exit instruction encountered"
-)
 
 if config.bin_path:
     resource_path = config.bin_path
 else:
     resource_path = joinpath(absdirpath(__file__), "..", "resources")
 
-a = verifier.MatchRegex(m5_exit_regex)
-gem5_verify_config(
-    name="m5_exit_test",
-    verifiers=[a],
-    fixtures=(),
-    config=joinpath(
-        config.base_dir,
-        "tests",
-        "gem5",
-        "m5_util",
-        "configs",
-        "simple_binary_run.py",
-    ),
-    config_args=[
-        "x86-m5-exit",
-        "--resource-directory",
-        resource_path,
-    ],
-    valid_isas=(constants.all_compiled_tag,),
-)
+readfile_verifier = verifier.MatchRegex(re.compile(r"Readfile test passed!"))
+
+
+def test_readfile(isa: str, length: str):
+    gem5_verify_config(
+        name=f"test_readfile_{isa}",
+        fixtures=(),
+        verifiers=(readfile_verifier,),
+        config=joinpath(
+            config.base_dir,
+            "tests",
+            "gem5",
+            "readfile_tests",
+            "configs",
+            "ubuntu-run-with-readfile.py",
+        ),
+        config_args=[
+            "--isa",
+            isa,
+            "--resource-directory",
+            resource_path,
+        ],
+        valid_isas=(constants.all_compiled_tag,),
+        valid_hosts=constants.supported_hosts,
+        length=length,
+    )

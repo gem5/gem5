@@ -42,6 +42,8 @@ class BaseViperGPU(SubSystem):
     _base_pci_dev = 8
     _gpu_count = 0
     _my_id = 0
+    _debug_commands = ""
+    _discovery_value = 2
 
     @classmethod
     def next_pci_dev(cls):
@@ -52,7 +54,12 @@ class BaseViperGPU(SubSystem):
     def get_gpu_count(cls):
         return cls._gpu_count
 
-    def __init__(self, gpu_memory: AbstractMemorySystem):
+    def __init__(
+        self,
+        gpu_memory: AbstractMemorySystem,
+        ipt_binary: str = "",
+        debug: bool = False,
+    ):
         super().__init__()
         if gpu_memory.has_parent():
             raise ValueError(
@@ -60,34 +67,33 @@ class BaseViperGPU(SubSystem):
                 "instantiate the gpu memory like gpu_memory = HBM2Stack() "
                 "and **not** like board.gpu_memory = HBM2Stack()"
             )
-        self._memory = gpu_memory
+        self.memory = gpu_memory
+        if debug:
+            self._debug_commands = (
+                "dmesg -n8\n"
+                "uname -r\n"
+                "lspci -v\n"
+                "echo 0 > /proc/sys/kernel/printk_ratelimit\n"
+            )
+
+        # From amdgpu driver: discovery=0 -> VRAM (gem5 user provided ipt_binary)
+        #                     discovery=2 -> Use file from gem5-resources disk
+        self._discovery_value = 2 if ipt_binary == "" else 0
 
         # Setup various PCI related parameters
         self._my_id = self.get_gpu_count()
         pci_dev = self.next_pci_dev()
 
-        self.device = AMDGPUDevice(pci_func=0, pci_dev=pci_dev)
+        self.device = AMDGPUDevice(
+            pci_func=0, pci_dev=pci_dev, ipt_binary=ipt_binary
+        )
 
-    def set_shader(self, shader: ViperShader):
-        self.shader = shader
-
-    def get_cpu_dma_ports(self):
-        return self.shader.get_cpu_dma_ports()
-
-    def connectGPU(self, board: "ViperBoard") -> None:
-        # Connect a CPU pointer. This is only used for SE mode. Any CPU will
-        # work, so pick assuming there is at least one
-        cpus = board.get_processor()
-        self.shader.set_cpu_pointer(cpus.cores[0].core)
-
-        # Connect all PIO buses
-        self.shader.connect_iobus(board.get_io_bus(), board.get_pci_bus())
-
+    def setup_caches(self):
         # Make the cache hierarchy. This will create an independent RubySystem
         # class containing only the GPU caches with no network connection to
         # the CPU cache hierarchy.
         self.gpu_caches = ViperGPUCacheHierarchy(
-            gpu_memory=self._memory,
+            gpu_memory=self.memory,
             tcp_size=self._tcp_size,
             tcp_assoc=self._tcp_assoc,
             sqc_size=self._sqc_size,
@@ -102,15 +108,28 @@ class BaseViperGPU(SubSystem):
             shader=self.shader,
         )
 
-        self.memory = self._memory
+    def set_shader(self, shader: ViperShader):
+        self.shader = shader
+
+    def get_cpu_dma_ports(self):
+        return self.shader.get_cpu_dma_ports()
+
+    def connectGPU(self, board: "ViperBoard") -> None:
+        # Connect a CPU pointer. This is only used for SE mode. Any CPU will
+        # work, so pick assuming there is at least one
+        cpus = board.get_processor()
+        self.shader.set_cpu_pointer(cpus.cores[0].core)
+
+        # Connect all PIO buses
+        self.shader.connect_iobus(board.get_io_bus(), board.get_pci_host())
 
         # Collect GPU memory controllers created in the GPU cache hierarchy.
         # First assign them as a child to the device so the SimObject unproxy.
         # The device requires the memories parameter to be set as the system
         # pointer required by the AbstractMemory class is set by AMDGPUDevice.
-        self.device.memories = self._memory.get_mem_interfaces()
+        self.device.memories = self.memory.get_mem_interfaces()
 
-        self.device.upstream = board.get_pci_host()
+        board.get_pci_host().devices.append(self.device)
 
 
 # A scaled down MI210-like device. Defaults to ~1/4th of an MI210.
@@ -160,6 +179,7 @@ class MI210(BaseViperGPU):
             gpu_memory.get_size(),
         )
         self.set_shader(shader)
+        self.setup_caches()
 
         # Setup the SDMA engines depending on device. The MMIO base addresses
         # can be found in the driver code under:
@@ -183,13 +203,14 @@ class MI210(BaseViperGPU):
             "export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH\n"
             "export HSA_ENABLE_INTERRUPT=0\n"
             "export HCC_AMDGPU_TARGET=gfx90a\n"
+            "echo 0 > /proc/sys/kernel/randomize_va_space\n"
             f"{debug_commands}\n"
             "dd if=/root/roms/mi200.rom of=/dev/mem bs=1k seek=768 count=128\n"
             "if [ -f /home/gem5/load_amdgpu.sh ]; then\n"
             "    sh /home/gem5/load_amdgpu.sh\n"
             "elif [ ! -f /lib/modules/`uname -r`/updates/dkms/amdgpu.ko ]; then\n"
             '    echo "ERROR: Missing DKMS package for kernel `uname -r`. Exiting gem5."\n'
-            "    /sbin/m5 exit\n"
+            "    m5 exit\n"
             "else\n"
             "    modprobe -v amdgpu ip_block_mask=0x6f ppfeaturemask=0 dpm=0 audio=0 ras_enable=0\n"
             "fi\n"
@@ -215,8 +236,12 @@ class MI300X(BaseViperGPU):
         tcc_assoc: int = 16,
         tcc_count: int = 16,
         cache_line_size: int = 64,
+        ipt_binary: str = "",
+        debug: bool = False,
     ):
-        super().__init__(gpu_memory=gpu_memory)
+        super().__init__(
+            gpu_memory=gpu_memory, ipt_binary=ipt_binary, debug=debug
+        )
 
         self._cu_per_sqc = cu_per_sqc
         self._tcp_size = tcp_size
@@ -246,6 +271,7 @@ class MI300X(BaseViperGPU):
             gpu_memory.get_size(),
         )
         self.set_shader(shader)
+        self.setup_caches()
 
         num_sdmas = 16
         sdma_bases = [
@@ -294,14 +320,13 @@ class MI300X(BaseViperGPU):
 
         self.device.pm4_pkt_procs = shader._create_pm4s(pm4_starts, pm4_ends)
 
-    def get_driver_command(self, debug: bool = False):
-        debug_commands = "dmesg -n8\nuname -r\nlspci -v\n" if debug else ""
-
+    def get_driver_command(self):
         driver_load_command = (
             "export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH\n"
             "export HSA_ENABLE_INTERRUPT=0\n"
             "export HCC_AMDGPU_TARGET=gfx942\n"
-            f"{debug_commands}\n"
+            "echo 0 > /proc/sys/kernel/randomize_va_space\n"
+            f"{self._debug_commands}\n"
             "dd if=/root/roms/mi300.rom of=/dev/mem bs=1k seek=768 count=128\n"
             # Check if exists (backwards compat with ROCm <7.0)
             "if [ -e /usr/lib/firmware/amdgpu/mi300_discovery ]; then\n"
@@ -309,12 +334,11 @@ class MI300X(BaseViperGPU):
             "    ln -s /usr/lib/firmware/amdgpu/mi300_discovery /usr/lib/firmware/amdgpu/ip_discovery.bin\n"
             "fi\n"
             "if [ -f /home/gem5/load_amdgpu.sh ]; then\n"
+            # Last stable support
             "    sh /home/gem5/load_amdgpu.sh\n"
-            "elif [ ! -f /lib/modules/`uname -r`/updates/dkms/amdgpu.ko ]; then\n"
-            '    echo "ERROR: Missing DKMS package for kernel `uname -r`. Exiting gem5."\n'
-            "    /sbin/m5 exit\n"
             "else\n"
-            "    modprobe -v amdgpu ip_block_mask=0x6f ppfeaturemask=0 dpm=0 audio=0 ras_enable=0 discovery=2\n"
+            # develop support
+            f"    modprobe -v amdgpu ip_block_mask=0x6f ppfeaturemask=0 dpm=0 audio=0 ras_enable=0 discovery={self._discovery_value}\n"
             "fi\n"
         )
 
@@ -338,6 +362,8 @@ class MI355X(MI300X):
         tcc_assoc: int = 16,
         tcc_count: int = 16,
         cache_line_size: int = 64,
+        ipt_binary: str = "",
+        debug: bool = False,
     ):
         super().__init__(
             gpu_memory=gpu_memory,
@@ -353,33 +379,34 @@ class MI355X(MI300X):
             tcc_assoc=tcc_assoc,
             tcc_count=tcc_count,
             cache_line_size=cache_line_size,
+            ipt_binary=ipt_binary,
+            debug=debug,
         )
 
         self.device.DeviceID = 0x75A0
+        self.device.device_name = "MI355X"
 
-    def get_driver_command(self, debug: bool = False):
-        debug_commands = "dmesg -n8\nuname -r\nlspci -v\n" if debug else ""
-
+    def get_driver_command(self):
         driver_load_command = (
             "export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH\n"
             "export HSA_ENABLE_INTERRUPT=0\n"
             "export HCC_AMDGPU_TARGET=gfx950\n"
-            f"{debug_commands}\n"
+            "echo 0 > /proc/sys/kernel/randomize_va_space\n"
+            f"{self._debug_commands}\n"
             "dd if=/root/roms/mi300.rom of=/dev/mem bs=1k seek=768 count=128\n"
             "if [ -e /usr/lib/firmware/amdgpu/mi350_discovery ]; then\n"
             "    rm -f /usr/lib/firmware/amdgpu/ip_discovery.bin\n"
             "    ln -s /usr/lib/firmware/amdgpu/mi350_discovery /usr/lib/firmware/amdgpu/ip_discovery.bin\n"
             "else\n"
             '    echo "ERROR: ROCm 7.0+ disk image required for MI355X. Exiting gem5."\n'
-            "    /sbin/m5 exit\n"
+            "    m5 exit\n"
             "fi\n"
             "if [ -f /home/gem5/load_amdgpu.sh ]; then\n"
+            # Last stable support
             "    sh /home/gem5/load_amdgpu.sh\n"
-            "elif [ ! -f /lib/modules/`uname -r`/updates/dkms/amdgpu.ko ]; then\n"
-            '    echo "ERROR: Missing DKMS package for kernel `uname -r`. Exiting gem5."\n'
-            "    /sbin/m5 exit\n"
             "else\n"
-            "    modprobe -v amdgpu ip_block_mask=0x6f ppfeaturemask=0 dpm=0 audio=0 ras_enable=0 discovery=2\n"
+            # develop support
+            f"    modprobe -v amdgpu ip_block_mask=0x6f ppfeaturemask=0 dpm=0 audio=0 ras_enable=0 discovery={self._discovery_value}\n"
             "fi\n"
         )
 

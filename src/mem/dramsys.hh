@@ -29,10 +29,11 @@
 #ifndef __MEM_DRAMSYS_H__
 #define __MEM_DRAMSYS_H__
 
-#include "DRAMSys/config/DRAMSysConfiguration.h"
+#include "DRAMSys/configuration/json/DRAMSysConfiguration.h"
+
 #include "mem/abstract_mem.hh"
 #include "mem/dramsys_wrapper.hh"
-#include "params/DRAMSys.hh"
+#include "systemc/tlm_port_wrapper.hh"
 
 namespace gem5
 {
