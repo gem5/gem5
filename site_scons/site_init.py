@@ -50,35 +50,35 @@ For more details, see:
     raise
 
 
-# Check for the python version. Python 2 is no longer supported.
+# Check for the python version. Python 3.10 or newer is required.
 try:
-    EnsurePythonVersion(3, 6)
+    EnsurePythonVersion(3, 10)
 except SystemExit as e:
     print("""\033[93m
-Python 3 is now required.
+Python 3.10 or newer is now required.
 
-The following are steps to compile gem5 in Python 3 environment,
+The following are steps to compile gem5 in a Python 3.10+ environment,
 
-*Step 1*: ensure Python 3 is installed. On Ubuntu like systems, you can try \
+*Step 1*: ensure Python 3.10 or newer is installed. On Ubuntu like systems, you can try \
 this command:
 
-    sudo apt-get install python3 python-is-python3 python3-pydot
+    sudo apt-get install python3 python-is-python3 python3-dev python3-pydot
 
-To run Python 3 from a container, you can try the Docker files in \
+To run Python 3.10 or newer from a container, you can try the Docker files in \
 util/dockerfiles folder.
 
-*Step 2*: ensure that scons is run in the Python 3 environment. If scons \
-isn't run automatically with Python 3, you can force it by replacing `scons` \
+*Step 2*: ensure that scons is run in the Python 3.10+ environment. If scons \
+isn't run automatically with Python 3.10+, you can force it by replacing `scons` \
 by the following phrase,
 
     /usr/bin/env python3 $(which scons)
 
 For example, the following command will let scons compile gem5/X86 in the \
-Python 3 environment,
+Python 3.10+ environment,
 
    /usr/bin/env python3 $(which scons) build/X86/gem5.opt
 
-(Optional) For convenience reasons, you can set up an alias for the Python3 \
+(Optional) For convenience reasons, you can set up an alias for the Python 3.10+ \
 scons phrase in your environment. \033[0m
 """)
     raise
