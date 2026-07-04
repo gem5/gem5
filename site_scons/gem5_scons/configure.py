@@ -152,6 +152,21 @@ def CheckPkgConfig(context, pkgs, *args):
     return ret
 
 
+def CheckZlibVersion(context):
+    context.Message("Checking zlib version... ")
+    ret = context.TryCompile(
+        """
+        #include <zlib.h>
+        #if !defined(ZLIB_VERNUM) || ZLIB_VERNUM < 0x12b0
+        #error zlib 1.2.11 or newer is required
+        #endif
+        """,
+        extension=".cc",
+    )
+    context.Result(ret)
+    return ret
+
+
 @contextlib.contextmanager
 def Configure(env, *args, **kwargs):
     kwargs.setdefault(
@@ -168,6 +183,7 @@ def Configure(env, *args, **kwargs):
             "CheckMember": CheckMember,
             "CheckPkgConfig": CheckPkgConfig,
             "CheckPythonLib": CheckPythonLib,
+            "CheckZlibVersion": CheckZlibVersion,
         }
     )
     conf = SCons.Script.Configure(env, *args, **kwargs)
