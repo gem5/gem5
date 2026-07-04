@@ -157,8 +157,8 @@ def CheckZlibVersion(context):
     ret = context.TryCompile(
         """
         #include <zlib.h>
-        #if !defined(ZLIB_VERNUM) || ZLIB_VERNUM < 0x12b0
-        #error zlib 1.2.11 or newer is required
+        #if !defined(ZLIB_VERNUM) || ZLIB_VERNUM < 0x1200
+        #error zlib 1.2 or newer is required
         #endif
         """,
         extension=".cc",

@@ -41,7 +41,7 @@
 
 # Check for recent-enough Python and SCons versions.
 try:
-    EnsureSConsVersion(4, 0, 1)
+    EnsureSConsVersion(4, 0, 0)
 except SystemExit as e:
     print("""
 For more details, see:

@@ -46,8 +46,8 @@ with gem5_scons.Configure(main) as conf:
         conf.env['CONF']['HAVE_PNG'] = conf.TryCompile(
             """
             #include <png.h>
-            #if !defined(PNG_LIBPNG_VER) || PNG_LIBPNG_VER < 10637
-            #error libpng 1.6.37 or newer is required
+            #if !defined(PNG_LIBPNG_VER) || PNG_LIBPNG_VER < 10600
+            #error libpng 1.6 or newer is required
             #endif
             """,
             extension=".cc",
@@ -57,7 +57,7 @@ with gem5_scons.Configure(main) as conf:
         conf.env.TagImplies('png', 'gem5 lib')
     else:
         warning("Header file <png.h> not found.\n"
-                "This host has no libpng 1.6.37 or newer library.\n"
+                "This host has no libpng 1.6 or newer library.\n"
                 "Disabling support for PNG framebuffers.")
 
     conf.env['CONF']['HAVE_POSIX_CLOCK'] = \
