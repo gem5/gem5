@@ -34,7 +34,7 @@ RUN apt -y update && apt -y upgrade && \
     libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
     python3-dev doxygen libboost-all-dev libhdf5-dev python3-pydot \
     libpng-dev libelf-dev pkg-config python3-venv black python3-tk mypy \
-    pre-commit wget
+    pre-commit wget clang-format
 
 # pre-commit, as installed via apt, attempts to create a cache directory at
 # "${HOME}/.cache/pre-commit". If running docker with non-root, the HOME
