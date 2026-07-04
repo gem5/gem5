@@ -28,7 +28,11 @@
 #
 # Authors: Nathan Binkert
 
-import os, subprocess
+import os
+import re
+import subprocess
+
+from gem5_scons.util import compareVersions, readCommand
 
 Import('env')
 
@@ -126,6 +130,22 @@ if not SCons.Tool.m4.exists(m4env):
 
 # Setup m4 tool
 m4env.Tool('m4')
+
+min_m4_version = '1.4.18'
+try:
+    m4_version_output = readCommand([m4env['M4'], '--version'])
+except Exception:
+    m4_version_output = ''
+m4_version_match = re.search(r'GNU M4 (\d+(?:\.\d+)*)', m4_version_output)
+if not m4_version_match:
+    print("Error: Can't determine GNU M4 version. Please install GNU M4 "
+          f"{min_m4_version} or newer and try again.")
+    Exit(1)
+m4_version = m4_version_match.group(1)
+if compareVersions(m4_version, min_m4_version) < 0:
+    print(f"Error: GNU M4 {min_m4_version} or newer is required. "
+          f"Found GNU M4 {m4_version}.")
+    Exit(1)
 
 m4env.Append(M4FLAGS=['-DSRCDIR=%s' % Dir('.').srcnode().path])
 m4env['M4COM'] = '$M4 $M4FLAGS $SOURCES > $TARGET'

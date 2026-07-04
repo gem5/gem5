@@ -29,8 +29,9 @@ please see <http://www.gem5.org/documentation> and
 ## Building gem5
 
 To build gem5, you will need the following software: g++ or clang,
-Python (gem5 links in the Python interpreter), SCons, zlib 1.2.11+, m4, and
-lastly protobuf if you want trace capture and playback support. Please see
+Python (gem5 links in the Python interpreter), SCons, zlib 1.2.11+, GNU m4
+1.4.18+, and lastly protobuf if you want trace capture and playback support.
+Please see
 <http://www.gem5.org/documentation/general_docs/building> for more details
 concerning the minimum versions of these tools.
 
