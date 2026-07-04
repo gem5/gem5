@@ -33,10 +33,19 @@ RUN apt -y update && apt -y upgrade && \
     apt -y install build-essential git m4 scons zlib1g zlib1g-dev \
     libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
     python3-dev doxygen libboost-all-dev libhdf5-dev python3-pydot \
-    libpng-dev libelf-dev pkg-config pip python3-venv black python3-tk mypy \
-    wget
+    libpng-dev libelf-dev pkg-config python3-venv black python3-tk mypy \
+    pre-commit wget
 
-RUN pip install pre-commit
+# pre-commit, as installed via apt, attempts to create a cache directory at
+# "${HOME}/.cache/pre-commit". If running docker with non-root, the HOME
+# directory is set to "/". Since non-root users do not have permission to write
+# to this directory, an error is returned when pre-commit is executed.
+# pre-commit's default cache directory can be changed via the `XDG_CACHE_HOME`
+# environment variable. Here we set it to "/tmp". With this pre-commit will
+# create a "/tmp/pre-commit" directory to use for caching. "/tmp" was chosen as
+# it's a directory any user can access and write to. Given this only stores
+# caching information, the "/tmp" directory being wiped is not a concern.
+ENV XDG_CACHE_HOME=/tmp/
 
 # DRAMSys requires cmake >= 3.25.0. APT only provides 3.22.1 for Ubuntu 22.04.
 # Therefore, we install cmake from source.
