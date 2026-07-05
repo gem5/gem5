@@ -35,6 +35,7 @@ from typing import (
     Optional,
     Tuple,
 )
+from collections.abc import Sequence
 
 from m5.objects import (
     X86ACPIDSDT,

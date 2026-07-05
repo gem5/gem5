@@ -44,6 +44,7 @@ from typing import (
     Optional,
     Tuple,
 )
+from collections.abc import Sequence
 
 import m5
 from m5.objects import (

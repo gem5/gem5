@@ -29,6 +29,7 @@ from pathlib import Path
 from typing import (
     Optional,
 )
+from collections.abc import Generator
 
 import m5
 from m5 import stats as m5_stats

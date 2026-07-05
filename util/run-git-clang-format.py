@@ -81,6 +81,7 @@ from pathlib import Path
 from typing import (
     Optional,
 )
+from collections.abc import Iterable
 
 
 def run(

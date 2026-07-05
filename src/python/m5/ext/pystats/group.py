@@ -44,6 +44,7 @@ from typing import (
     Optional,
     Union,
 )
+from collections.abc import Callable
 
 from .abstract_stat import AbstractStat
 from .statistic import Statistic

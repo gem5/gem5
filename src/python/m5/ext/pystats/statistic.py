@@ -48,6 +48,7 @@ from typing import (
     Optional,
     Union,
 )
+from collections.abc import Callable, Iterable
 
 from .abstract_stat import AbstractStat
 from .storagetype import StorageType
