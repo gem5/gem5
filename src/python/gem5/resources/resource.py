@@ -855,7 +855,7 @@ class WorkloadResource(AbstractResource):
         description: Optional[str] = None,
         source: Optional[str] = None,
         local_path: Optional[str] = None,
-        parameters: Optional[dict] = {},
+        parameters: Optional[dict] = None,
         **kwargs,
     ):
         """
@@ -873,7 +873,7 @@ class WorkloadResource(AbstractResource):
 
         self._id = id
         self._func = function
-        self._params = parameters
+        self._params = parameters if parameters is not None else {}
 
     def get_id(self) -> str:
         """Returns the ID of the workload."""
