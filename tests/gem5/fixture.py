@@ -280,7 +280,7 @@ class Gem5Fixture(SConsFixture):
         self.protocol = protocol
         self.set_global()
 
-    def get_get_build_info(self) -> Optional[str]:
+    def get_get_build_info(self) -> str | None:
         build_target = self.target
         return build_target
 
@@ -418,7 +418,7 @@ class DownloadedProgram(UniqueFixture):
         else:
             try:
                 t = self._getremotetime()
-            except (urllib.error.URLError, socket.timeout):
+            except (urllib.error.URLError, TimeoutError):
                 # Problem checking the server, use the old files.
                 log.test_log.debug(
                     "Could not contact server. Binaries may be old."
@@ -467,7 +467,7 @@ class DownloadedArchive(DownloadedProgram):
         else:
             try:
                 t = self._getremotetime()
-            except (urllib.error.URLError, socket.timeout):
+            except (urllib.error.URLError, TimeoutError):
                 # Problem checking the server, use the old files.
                 log.test_log.debug(
                     "Could not contact server. Binaries may be old."

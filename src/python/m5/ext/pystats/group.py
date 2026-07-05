@@ -38,12 +38,12 @@
 
 from typing import (
     Any,
-    Callable,
     Dict,
     List,
     Optional,
     Union,
 )
+from collections.abc import Callable
 
 from .abstract_stat import AbstractStat
 from .statistic import Statistic
@@ -56,20 +56,20 @@ class Group(AbstractStat):
     map of labeled  Groups, Statistics, Lists of Groups, or List of Statistics.
     """
 
-    type: Optional[str]
-    time_conversion: Optional[TimeConversion]
-    values: Dict[
-        str, Union["Group", Statistic, List["Group"], List["Statistic"]]
+    type: str | None
+    time_conversion: TimeConversion | None
+    values: dict[
+        str, Union["Group", Statistic, list["Group"], list["Statistic"]]
     ]
-    name: Optional[str]
+    name: str | None
 
     def __init__(
         self,
-        type: Optional[str] = None,
-        name: Optional[str] = None,
-        time_conversion: Optional[TimeConversion] = None,
-        **kwargs: Dict[
-            str, Union["Group", Statistic, List["Group"], List["Statistic"]]
+        type: str | None = None,
+        name: str | None = None,
+        time_conversion: TimeConversion | None = None,
+        **kwargs: dict[
+            str, Union["Group", Statistic, list["Group"], list["Statistic"]]
         ],
     ):
         if type:
@@ -82,9 +82,9 @@ class Group(AbstractStat):
 
     def children(
         self,
-        predicate: Optional[Callable[[str], bool]] = None,
+        predicate: Callable[[str], bool] | None = None,
         recursive: bool = False,
-    ) -> List["AbstractStat"]:
+    ) -> list["AbstractStat"]:
         to_return = []
         for key, obj in self.values:
             if isinstance(obj, AbstractStat):
@@ -125,8 +125,8 @@ class SimObjectGroup(Group):
 
     def __init__(
         self,
-        name: Optional[str] = None,
-        **kwargs: Dict[str, Union[Group, Statistic]],
+        name: str | None = None,
+        **kwargs: dict[str, Group | Statistic],
     ):
         super().__init__(type="SimObject", name=name, **kwargs)
 
@@ -139,7 +139,7 @@ class SimObjectVectorGroup(Group):
     from something like `system.cpu = [DerivO3CPU(), TimingSimpleCPU()]`.
     """
 
-    def __init__(self, children: List[AbstractStat], **kwargs: Dict[str, Any]):
+    def __init__(self, children: list[AbstractStat], **kwargs: dict[str, Any]):
         assert isinstance(children, list), "Value must be a list"
         kwargs["value"] = children
         super().__init__(type="SimObjectVector", **kwargs)
@@ -159,9 +159,9 @@ class SimObjectVectorGroup(Group):
 
     def children(
         self,
-        predicate: Optional[Callable[[str], bool]] = None,
+        predicate: Callable[[str], bool] | None = None,
         recursive: bool = False,
-    ) -> List["AbstractStat"]:
+    ) -> list["AbstractStat"]:
         to_return = []
         for child in self.values:
             to_return = to_return + child.children(

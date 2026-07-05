@@ -41,15 +41,13 @@ import os
 from typing import (
     Any,
     Dict,
-    Iterator,
     List,
-    Mapping,
     Optional,
-    Sequence,
     TextIO,
     Tuple,
     Union,
 )
+from collections.abc import Iterator, Mapping, Sequence
 
 import yaml
 
@@ -86,13 +84,13 @@ class Status(enum.Enum):
 class Subsystem:
     tag: str
     status: Status
-    maintainers: List[Tuple[str, str]]  # Name, email
+    maintainers: list[tuple[str, str]]  # Name, email
     description: str
 
     def __init__(
         self,
         tag: str,
-        maintainers: Optional[Sequence[Tuple[str, str]]],
+        maintainers: Sequence[tuple[str, str]] | None,
         description: str = "",
         status: Status = Status.ORPHANED,
     ):
@@ -107,7 +105,7 @@ class Maintainers:
         os.path.dirname(__file__), "../../../MAINTAINERS.yaml"
     )
 
-    _subsystems: Dict[str, Subsystem]  # tag -> Subsystem
+    _subsystems: dict[str, Subsystem]  # tag -> Subsystem
 
     def __init__(self, ydict: Mapping[str, Any]):
         self._subsystems = {}
@@ -116,7 +114,7 @@ class Maintainers:
 
     @classmethod
     def from_file(
-        cls, path_or_file: Optional[PathOrFile] = None
+        cls, path_or_file: PathOrFile | None = None
     ) -> "Maintainers":
         return cls(Maintainers._load_maintainers_file(path_or_file))
 
@@ -126,7 +124,7 @@ class Maintainers:
 
     @classmethod
     def _load_maintainers_file(
-        cls, path_or_file: Optional[PathOrFile] = None
+        cls, path_or_file: PathOrFile | None = None
     ) -> Mapping[str, Any]:
         if path_or_file is None:
             path_or_file = cls.DEFAULT_MAINTAINERS
@@ -147,7 +145,7 @@ class Maintainers:
                     f"{tag}: Required field '{name}' is missing"
                 )
 
-        maintainers: List[Tuple[str, str]] = []
+        maintainers: list[tuple[str, str]] = []
         raw_maintainers = ydict.get("maintainers", [])
         if not isinstance(raw_maintainers, Sequence):
             raise IllegalValueException(
@@ -175,7 +173,7 @@ class Maintainers:
             description=ydict.get("desc", ""),
         )
 
-    def __iter__(self) -> Iterator[Tuple[str, Subsystem]]:
+    def __iter__(self) -> Iterator[tuple[str, Subsystem]]:
         return iter(list(self._subsystems.items()))
 
     def __getitem__(self, key: str) -> Subsystem:

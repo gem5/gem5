@@ -27,10 +27,10 @@
 from pathlib import Path
 from typing import (
     List,
-    Mapping,
     Optional,
     Union,
 )
+from collections.abc import Mapping
 
 from m5.objects import (
     Process,
@@ -68,11 +68,11 @@ class SEBinaryWorkload:
         self,
         binary: BinaryResource,
         pid: int = 100,
-        arguments: List[str] = [],
-        stdin_file: Optional[FileResource] = None,
-        stdout_file: Optional[Path] = None,
-        stderr_file: Optional[Path] = None,
-        env_list: Optional[List[str]] = None,
+        arguments: list[str] = [],
+        stdin_file: FileResource | None = None,
+        stdout_file: Path | None = None,
+        stderr_file: Path | None = None,
+        env_list: list[str] | None = None,
     ) -> Process:
 
         process = Process(pid=pid)
@@ -99,7 +99,7 @@ class SEBinaryWorkload:
 
     def _set_checkpoint(
         self,
-        checkpoint: Optional[Union[Path, CheckpointResource]] = None,
+        checkpoint: Path | CheckpointResource | None = None,
     ) -> None:
 
         # Here we set `self._checkpoint`. This is then used by the
@@ -117,14 +117,14 @@ class SEBinaryWorkload:
 
     def set_se_multi_binary_workload(
         self,
-        binaries: List[BinaryResource],
+        binaries: list[BinaryResource],
         exit_on_work_items: bool = True,
-        stdin_files: Optional[List[FileResource]] = None,
-        stdout_files: Optional[List[Path]] = None,
-        stderr_files: Optional[List[Path]] = None,
-        env_lists: Optional[List[List[str]]] = None,
-        arguments: List[List[str]] = [],
-        checkpoint: Optional[Union[Path, CheckpointResource]] = None,
+        stdin_files: list[FileResource] | None = None,
+        stdout_files: list[Path] | None = None,
+        stderr_files: list[Path] | None = None,
+        env_lists: list[list[str]] | None = None,
+        arguments: list[list[str]] = [],
+        checkpoint: Path | CheckpointResource | None = None,
     ) -> None:
         """Set up the system to run a specific binary.
 
@@ -228,14 +228,14 @@ class SEBinaryWorkload:
         self,
         binary: BinaryResource,
         exit_on_work_items: bool = True,
-        stdin_file: Optional[FileResource] = None,
-        stdout_file: Optional[Path] = None,
-        stderr_file: Optional[Path] = None,
-        env_list: Optional[List[str]] = None,
-        arguments: List[str] = [],
-        checkpoint: Optional[Union[Path, CheckpointResource]] = None,
-        redirect_paths: Optional[Mapping[str, List[str]]] = None,
-        loader_path: Optional[str] = None,
+        stdin_file: FileResource | None = None,
+        stdout_file: Path | None = None,
+        stderr_file: Path | None = None,
+        env_list: list[str] | None = None,
+        arguments: list[str] = [],
+        checkpoint: Path | CheckpointResource | None = None,
+        redirect_paths: Mapping[str, list[str]] | None = None,
+        loader_path: str | None = None,
     ) -> None:
         """Set up the system to run a specific binary.
 
@@ -318,9 +318,9 @@ class SEBinaryWorkload:
     def set_se_simpoint_workload(
         self,
         binary: BinaryResource,
-        arguments: List[str] = [],
+        arguments: list[str] = [],
         simpoint: SimpointResource = None,
-        checkpoint: Optional[Union[Path, CheckpointResource]] = None,
+        checkpoint: Path | CheckpointResource | None = None,
     ) -> None:
         """Set up the system to run a SimPoint workload.
 
@@ -371,9 +371,9 @@ class SEBinaryWorkload:
         self,
         binary: AbstractResource,
         looppoint: Looppoint,
-        arguments: List[str] = [],
-        checkpoint: Optional[Union[Path, AbstractResource]] = None,
-        region_id: Optional[Union[int, str]] = None,
+        arguments: list[str] = [],
+        checkpoint: Path | AbstractResource | None = None,
+        region_id: int | str | None = None,
     ) -> None:
         """Set up the system to run a LoopPoint workload.
 
@@ -407,8 +407,8 @@ class SEBinaryWorkload:
         self,
         elfie: AbstractResource,
         elfie_info: ELFieInfo,
-        arguments: List[str] = [],
-        checkpoint: Optional[Union[Path, AbstractResource]] = None,
+        arguments: list[str] = [],
+        checkpoint: Path | AbstractResource | None = None,
     ) -> None:
         """Set up the system to run a ELFie workload.
 

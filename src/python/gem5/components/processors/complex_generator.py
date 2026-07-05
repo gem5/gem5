@@ -26,9 +26,9 @@
 
 from typing import (
     Any,
-    Iterator,
     List,
 )
+from collections.abc import Iterator
 
 from ...utils.override import overrides
 from .abstract_generator import (
@@ -49,7 +49,7 @@ class ComplexGenerator(AbstractGenerator):
         :param num_cores: The number of complex generator cores to create.
         """
 
-    def _create_cores(self, num_cores: int) -> List[ComplexGeneratorCore]:
+    def _create_cores(self, num_cores: int) -> list[ComplexGeneratorCore]:
         """
         Create a list of ComplexGeneratorCore.
         """

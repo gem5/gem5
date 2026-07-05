@@ -53,7 +53,7 @@ def parse_args():
     return args
 
 
-def write_header_file(sim_object: Type, param_hh: str):
+def write_header_file(sim_object: type, param_hh: str):
     """Write the parameter header file for a SimObject.
 
     This function generates a C++ header file that declares the

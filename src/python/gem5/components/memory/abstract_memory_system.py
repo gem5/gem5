@@ -30,9 +30,9 @@ from abc import (
 )
 from typing import (
     List,
-    Sequence,
     Tuple,
 )
+from collections.abc import Sequence
 
 from m5.objects import (
     AbstractMemory,
@@ -74,12 +74,12 @@ class AbstractMemorySystem(SubSystem):
         raise NotImplementedError
 
     @abstractmethod
-    def get_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
+    def get_mem_ports(self) -> Sequence[tuple[AddrRange, Port]]:
         """Get the ports to connect this memory system to the cache."""
         raise NotImplementedError
 
     @abstractmethod
-    def get_memory_controllers(self) -> List[MemCtrl]:
+    def get_memory_controllers(self) -> list[MemCtrl]:
         """Get all of the memory controllers in this memory system.
 
         The "memory controller" is the object that has a port named "port"
@@ -87,7 +87,7 @@ class AbstractMemorySystem(SubSystem):
         raise NotImplementedError
 
     @abstractmethod
-    def get_mem_interfaces(self) -> List[AbstractMemory]:
+    def get_mem_interfaces(self) -> list[AbstractMemory]:
         """Get all memory interfaces in this memory system.
         Useful when creating physical memory objects.
 
@@ -101,7 +101,7 @@ class AbstractMemorySystem(SubSystem):
         raise NotImplementedError
 
     @abstractmethod
-    def set_memory_range(self, ranges: List[AddrRange]) -> None:
+    def set_memory_range(self, ranges: list[AddrRange]) -> None:
         """Set the total range for this memory system.
 
         May pass multiple non-overlapping ranges. The total size of the ranges
@@ -113,7 +113,7 @@ class AbstractMemorySystem(SubSystem):
         raise NotImplementedError
 
     @abstractmethod
-    def get_uninterleaved_range(self) -> List[AddrRange]:
+    def get_uninterleaved_range(self) -> list[AddrRange]:
         """Returns the range of the memory system without interleaving.
         This is useful when other components in the system want to interleave
         the memory range different to how the memory has interleaved them.

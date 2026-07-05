@@ -78,16 +78,16 @@ import subprocess
 import sys
 from pathlib import Path
 from typing import (
-    Iterable,
     Optional,
 )
+from collections.abc import Iterable
 
 
 def run(
     *command: str,
-    cwd: Optional[Path] = None,
+    cwd: Path | None = None,
     check: bool = True,
-) -> Optional[subprocess.CompletedProcess]:
+) -> subprocess.CompletedProcess | None:
     """Safe call to run an external process.
 
     Checks possible exceptions, logs any error messages, and returns
@@ -147,8 +147,8 @@ def run(
 
 
 def run_silent_exit(
-    *command: str, silent_exit: bool, cwd: Optional[Path] = None
-) -> Optional[subprocess.CompletedProcess]:
+    *command: str, silent_exit: bool, cwd: Path | None = None
+) -> subprocess.CompletedProcess | None:
     """Run an external process and exit on error if `silent_exit==True`.
 
     If called with `silent_exit=True`, calls sys.exit(0) on failure.
@@ -167,7 +167,7 @@ def run_silent_exit(
         return res
 
 
-def make_ignore_path_rel(path_str: str, repo_root: Path) -> Optional[Path]:
+def make_ignore_path_rel(path_str: str, repo_root: Path) -> Path | None:
     """Resolve a path relative to repo_root, and check whether it exists.
 
     Logs any errors appropriately and returns the relative path if
@@ -304,7 +304,7 @@ if __name__ == "__main__":
         )
         sys.exit(0)
 
-    ci_pr_base_commit: Optional[str] = os.environ.get(
+    ci_pr_base_commit: str | None = os.environ.get(
         CI_PR_BASE_COMMIT_ENV_VAR_NAME, None
     )
     if ci_pr_base_commit is None:
@@ -316,7 +316,7 @@ if __name__ == "__main__":
     else:
         logger.debug("Running in normal (staged-changes) mode")
 
-    disabled_files: set[Optional[Path]] = {
+    disabled_files: set[Path | None] = {
         make_ignore_path(path) for path in args.ignore
     }
     disabled_files.update(
@@ -345,7 +345,7 @@ if __name__ == "__main__":
             cwd=repo_root,
         )
         if res is not None and res.returncode == 0:
-            changed_files: set[Optional[Path]] = {
+            changed_files: set[Path | None] = {
                 make_ignore_path(path) for path in res.stdout.split("\n")
             }
             changed_files.discard(None)

@@ -41,9 +41,9 @@ from pathlib import Path
 from typing import (
     Any,
     Optional,
-    Sequence,
     Tuple,
 )
+from collections.abc import Sequence
 
 from m5.objects import (
     SimpleExtLink,
@@ -88,7 +88,7 @@ class NoC_Params(CHI_NoC_Params):
 
     num_rows: int = 0
     num_cols: int = 0
-    pairing: Optional[Sequence[Any]] = None
+    pairing: Sequence[Any] | None = None
 
 
 class CustomMesh(SimpleNetwork):
@@ -502,11 +502,11 @@ class CustomMesh(SimpleNetwork):
 
     def connectControllers(
         self,
-        rnf: Optional[Tuple[Sequence[Any], Node_Params]] = None,
-        hnf: Optional[Tuple[Sequence[Any], Node_Params]] = None,
-        snf: Optional[Tuple[Sequence[Any], Node_Params]] = None,
-        snf_boot: Optional[Tuple[Sequence[Any], Node_Params]] = None,
-        rni: Optional[Tuple[Sequence[Any], Node_Params]] = None,
+        rnf: tuple[Sequence[Any], Node_Params] | None = None,
+        hnf: tuple[Sequence[Any], Node_Params] | None = None,
+        snf: tuple[Sequence[Any], Node_Params] | None = None,
+        snf_boot: tuple[Sequence[Any], Node_Params] | None = None,
+        rni: tuple[Sequence[Any], Node_Params] | None = None,
     ):
         # Create all mesh routers.
         self._routers = [

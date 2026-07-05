@@ -39,13 +39,13 @@
 import re
 from typing import (
     Any,
-    Callable,
     List,
     Optional,
-    Pattern,
     Tuple,
     Union,
 )
+from collections.abc import Callable
+from re import Pattern
 
 
 class AbstractStat:
@@ -57,9 +57,9 @@ class AbstractStat:
 
     def children(
         self,
-        predicate: Optional[Callable[[str], bool]] = None,
+        predicate: Callable[[str], bool] | None = None,
         recursive: bool = False,
-    ) -> List["AbstractStat"]:
+    ) -> list["AbstractStat"]:
         """Iterate through all of the children, optionally with a predicate
 
         .. code-block::
@@ -78,7 +78,7 @@ class AbstractStat:
         """
         return []
 
-    def find(self, regex: Union[str, Pattern]) -> List["AbstractStat"]:
+    def find(self, regex: str | Pattern) -> list["AbstractStat"]:
         """Find all stats that match the name, recursively through all the
         SimStats.
 
@@ -103,7 +103,7 @@ class AbstractStat:
             lambda _name: re.match(pattern, _name), recursive=True
         )
 
-    def _get_vector_item(self, item: str) -> Optional[Tuple[str, int, Any]]:
+    def _get_vector_item(self, item: str) -> tuple[str, int, Any] | None:
         """It has been the case in gem5 that SimObject vectors are stored as
         strings such as "cpu0" or "cpu1". This function splits the string into
         the SimObject name and index, (e.g.: ["cpu", 0] and ["cpu", 1]) and

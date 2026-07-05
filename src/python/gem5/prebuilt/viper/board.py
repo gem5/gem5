@@ -32,9 +32,9 @@ import os
 from typing import (
     List,
     Optional,
-    Sequence,
     Tuple,
 )
+from collections.abc import Sequence
 
 from m5.objects import (
     X86ACPIDSDT,
@@ -83,7 +83,7 @@ class ViperBoard(X86Board):
         processor: AbstractProcessor,
         memory: AbstractMemorySystem,
         cache_hierarchy: AbstractCacheHierarchy,
-        gpus: Optional[List[BaseViperGPU]] = None,
+        gpus: list[BaseViperGPU] | None = None,
     ) -> None:
         super().__init__(
             clk_freq=clk_freq,
@@ -189,7 +189,7 @@ class ViperBoard(X86Board):
         return "/dev/sda"
 
     @overrides(KernelDiskWorkload)
-    def get_default_kernel_args(self) -> List[str]:
+    def get_default_kernel_args(self) -> list[str]:
         # The regular parameters used with gem5 plus (1) fbdev_emulation=0
         # to disable having to implement this functionality, (2) blacklist
         # amdgpu because we need to copy the VBIOS into memory first, and (3)
@@ -207,7 +207,7 @@ class ViperBoard(X86Board):
             "pci=noacpi",
         ]
 
-    def get_low_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
+    def get_low_mem_ports(self) -> Sequence[tuple[AddrRange, Port]]:
         return [(ctrl.dram.range, ctrl.port) for ctrl in self.low_mem.mem_ctrl]
 
     @overrides(AbstractSystemBoard)

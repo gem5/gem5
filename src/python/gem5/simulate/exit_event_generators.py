@@ -26,9 +26,9 @@
 
 from pathlib import Path
 from typing import (
-    Generator,
     Optional,
 )
+from collections.abc import Generator
 
 import m5
 from m5 import stats as m5_stats
@@ -97,7 +97,7 @@ def dump_reset_generator():
         yield False
 
 
-def save_checkpoint_generator(checkpoint_dir: Optional[Path] = None):
+def save_checkpoint_generator(checkpoint_dir: Path | None = None):
     """
     A generator for taking a checkpoint. It will take a checkpoint with the
     input path and the current simulation ``Ticks``.

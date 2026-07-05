@@ -27,8 +27,8 @@
 
 from typing import (
     List,
-    Sequence,
 )
+from collections.abc import Sequence
 
 from m5.objects import (
     BaseXBar,
@@ -411,7 +411,7 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
         self.pc.south_bridge.ide.disks = [ide_disk]
 
     @overrides(KernelDiskWorkload)
-    def get_default_kernel_args(self) -> List[str]:
+    def get_default_kernel_args(self) -> list[str]:
         return [
             "earlyprintk=ttyS0",
             "console=ttyS0",

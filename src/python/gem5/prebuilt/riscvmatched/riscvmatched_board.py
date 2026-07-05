@@ -262,7 +262,7 @@ class RISCVMatchedBoard(
         return False
 
     @overrides(AbstractBoard)
-    def get_dma_ports(self) -> List[Port]:
+    def get_dma_ports(self) -> list[Port]:
         raise NotImplementedError(
             "RISCVBoard does not have DMA Ports. "
             "Use `has_dma_ports()` to check this."
@@ -331,7 +331,7 @@ class RISCVMatchedBoard(
             memory.set_memory_range(self.mem_ranges)
 
     @overrides(AbstractBoard)
-    def _pre_instantiate(self, full_system: Optional[bool] = None) -> Root:
+    def _pre_instantiate(self, full_system: bool | None = None) -> Root:
         if self._fs:
             if len(self._bootloader) > 0:
                 self.workload.bootloader_addr = 0x80000000
@@ -618,7 +618,7 @@ class RISCVMatchedBoard(
         )
 
     @overrides(KernelDiskWorkload)
-    def get_default_kernel_args(self) -> List[str]:
+    def get_default_kernel_args(self) -> list[str]:
         return [
             "console=ttyS0",
             "root={root_value}",
@@ -631,10 +631,10 @@ class RISCVMatchedBoard(
         self,
         kernel: AbstractResource,
         disk_image: AbstractResource,
-        bootloader: Optional[AbstractResource] = None,
-        readfile: Optional[str] = None,
-        readfile_contents: Optional[str] = None,
-        kernel_args: Optional[List[str]] = None,
+        bootloader: AbstractResource | None = None,
+        readfile: str | None = None,
+        readfile_contents: str | None = None,
+        kernel_args: list[str] | None = None,
         exit_on_work_items: bool = True,
     ) -> None:
         self.workload = RiscvBootloaderKernelWorkload()

@@ -3,9 +3,9 @@ import os
 from typing import (
     List,
     Optional,
-    Sequence,
     Tuple,
 )
+from collections.abc import Sequence
 
 import m5
 from m5.objects import (
@@ -23,7 +23,7 @@ from ..boards.abstract_board import AbstractBoard
 from .abstract_memory_system import AbstractMemorySystem
 
 
-def config_ds3(mem_type: str, num_chnls: int) -> Tuple[str, str]:
+def config_ds3(mem_type: str, num_chnls: int) -> tuple[str, str]:
     """
     This function creates a config file that will be used to create a memory
     controller of type DRAMSim3. It stores the config file in ``/tmp/`` directory.
@@ -102,7 +102,7 @@ class SingleChannel(AbstractMemorySystem):
     A Single Channel Memory system.
     """
 
-    def __init__(self, mem_type: str, size: Optional[str]):
+    def __init__(self, mem_type: str, size: str | None):
         """
         :param mem_name: The name of the type  of memory to be configured.
         :param num_chnls: The number of channels.
@@ -120,11 +120,11 @@ class SingleChannel(AbstractMemorySystem):
         pass
 
     @overrides(AbstractMemorySystem)
-    def get_mem_ports(self) -> Tuple[Sequence[AddrRange], Port]:
+    def get_mem_ports(self) -> tuple[Sequence[AddrRange], Port]:
         return [(self.mem_ctrl.range, self.mem_ctrl.port)]
 
     @overrides(AbstractMemorySystem)
-    def get_memory_controllers(self) -> List[MemCtrl]:
+    def get_memory_controllers(self) -> list[MemCtrl]:
         return [self.mem_ctrl]
 
     @overrides(AbstractMemorySystem)
@@ -132,7 +132,7 @@ class SingleChannel(AbstractMemorySystem):
         return self._size
 
     @overrides(AbstractMemorySystem)
-    def set_memory_range(self, ranges: List[AddrRange]) -> None:
+    def set_memory_range(self, ranges: list[AddrRange]) -> None:
         if len(ranges) != 1 or ranges[0].size() != self._size:
             raise Exception(
                 "Single channel DRAMSim memory controller requires a single "
@@ -153,7 +153,7 @@ class SingleChannel(AbstractMemorySystem):
 
 
 def SingleChannelDDR3_1600(
-    size: Optional[str] = "2048MiB",
+    size: str | None = "2048MiB",
 ) -> SingleChannel:
     """
     A single channel DDR3_1600.
@@ -163,7 +163,7 @@ def SingleChannelDDR3_1600(
     return SingleChannel("DDR3_8Gb_x8_1600", size)
 
 
-def SingleChannelDDR4_2400(size: Optional[str] = "1024MiB") -> SingleChannel:
+def SingleChannelDDR4_2400(size: str | None = "1024MiB") -> SingleChannel:
     """
     A single channel DDR3_2400.
 
@@ -172,7 +172,7 @@ def SingleChannelDDR4_2400(size: Optional[str] = "1024MiB") -> SingleChannel:
     return SingleChannel("DDR4_4Gb_x8_2400", size)
 
 
-def SingleChannelLPDDR3_1600(size: Optional[str] = "256MiB") -> SingleChannel:
+def SingleChannelLPDDR3_1600(size: str | None = "256MiB") -> SingleChannel:
     """
     A single channel LPDDR3_1600.
 
@@ -181,7 +181,7 @@ def SingleChannelLPDDR3_1600(size: Optional[str] = "256MiB") -> SingleChannel:
     return SingleChannel("LPDDR3_8Gb_x32_1600", size)
 
 
-def SingleChannelHBM(size: Optional[str] = "64MiB") -> SingleChannel:
+def SingleChannelHBM(size: str | None = "64MiB") -> SingleChannel:
     """
     A single channel HBM.
 

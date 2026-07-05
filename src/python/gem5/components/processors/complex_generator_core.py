@@ -27,8 +27,8 @@
 from enum import Enum
 from typing import (
     Any,
-    Iterator,
 )
+from collections.abc import Iterator
 
 from m5.objects import PyTrafficGen
 from m5.params import Port
