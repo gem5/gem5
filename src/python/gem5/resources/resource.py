@@ -855,7 +855,7 @@ class WorkloadResource(AbstractResource):
         description: Optional[str] = None,
         source: Optional[str] = None,
         local_path: Optional[str] = None,
-        parameters: Optional[dict] = {},
+        parameters: dict = {},
         **kwargs,
     ):
         """
