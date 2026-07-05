@@ -32,9 +32,7 @@ class _CitableSimObjectClass(Protocol):
     _citations: str
 
 
-def add_citation(
-    sim_obj_cls: _CitableSimObjectClass, citation: str
-) -> None:
+def add_citation(sim_obj_cls: _CitableSimObjectClass, citation: str) -> None:
     """Add a citation to a SimObject class.
 
     :param sim_obj_cls: The SimObject class to add the citation to.
