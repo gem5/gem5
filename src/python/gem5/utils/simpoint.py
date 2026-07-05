@@ -51,8 +51,8 @@ class SimPoint:
         simpoint_interval: int = None,
         simpoint_file_path: Path = None,
         weight_file_path: Path = None,
-        simpoint_list: list[int] = None,
-        weight_list: list[int] = None,
+        simpoint_list: list[int] | None = None,
+        weight_list: list[float] | None = None,
         warmup_interval: int = 0,
     ) -> None:
         """
