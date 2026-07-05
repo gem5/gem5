@@ -68,12 +68,13 @@ class SEBinaryWorkload:
         self,
         binary: BinaryResource,
         pid: int = 100,
-        arguments: list[str] = [],
+        arguments: list[str] | None = None,
         stdin_file: FileResource | None = None,
         stdout_file: Path | None = None,
         stderr_file: Path | None = None,
         env_list: list[str] | None = None,
     ) -> Process:
+        arguments = [] if arguments is None else arguments
 
         process = Process(pid=pid)
         binary_path = binary.get_local_path()
@@ -123,7 +124,7 @@ class SEBinaryWorkload:
         stdout_files: list[Path] | None = None,
         stderr_files: list[Path] | None = None,
         env_lists: list[list[str]] | None = None,
-        arguments: list[list[str]] = [],
+        arguments: list[list[str]] | None = None,
         checkpoint: Path | CheckpointResource | None = None,
     ) -> None:
         """Set up the system to run a specific binary.
@@ -143,6 +144,8 @@ class SEBinaryWorkload:
         :param checkpoint: The checkpoint directory. Used to restore the
                            simulation to that checkpoint.
         """
+
+        arguments = [] if arguments is None else arguments
 
         # We assume this this is in a multiple-inheritance setup with an
         # Abstract board. This function will not work otherwise.
@@ -232,7 +235,7 @@ class SEBinaryWorkload:
         stdout_file: Path | None = None,
         stderr_file: Path | None = None,
         env_list: list[str] | None = None,
-        arguments: list[str] = [],
+        arguments: list[str] | None = None,
         checkpoint: Path | CheckpointResource | None = None,
         redirect_paths: Mapping[str, list[str]] | None = None,
         loader_path: str | None = None,
@@ -254,6 +257,8 @@ class SEBinaryWorkload:
         :param checkpoint: The checkpoint directory. Used to restore the
                            simulation to that checkpoint.
         """
+
+        arguments = [] if arguments is None else arguments
 
         # We assume this this is in a multiple-inheritance setup with an
         # Abstract board. This function will not work otherwise.
@@ -318,7 +323,7 @@ class SEBinaryWorkload:
     def set_se_simpoint_workload(
         self,
         binary: BinaryResource,
-        arguments: list[str] = [],
+        arguments: list[str] | None = None,
         simpoint: SimpointResource = None,
         checkpoint: Path | CheckpointResource | None = None,
     ) -> None:
@@ -341,6 +346,8 @@ class SEBinaryWorkload:
         :param checkpoint: The checkpoint directory. Used to restore the
                            simulation to that checkpoint.
         """
+
+        arguments = [] if arguments is None else arguments
 
         self._simpoint_resource = simpoint
 
@@ -371,7 +378,7 @@ class SEBinaryWorkload:
         self,
         binary: AbstractResource,
         looppoint: Looppoint,
-        arguments: list[str] = [],
+        arguments: list[str] | None = None,
         checkpoint: Path | AbstractResource | None = None,
         region_id: int | str | None = None,
     ) -> None:
@@ -390,6 +397,8 @@ class SEBinaryWorkload:
                           corresponding to that ID.
         """
 
+        arguments = [] if arguments is None else arguments
+
         assert isinstance(looppoint, Looppoint)
         self._looppoint_object = looppoint
         if region_id:
@@ -407,7 +416,7 @@ class SEBinaryWorkload:
         self,
         elfie: AbstractResource,
         elfie_info: ELFieInfo,
-        arguments: list[str] = [],
+        arguments: list[str] | None = None,
         checkpoint: Path | AbstractResource | None = None,
     ) -> None:
         """Set up the system to run a ELFie workload.
@@ -421,6 +430,8 @@ class SEBinaryWorkload:
                            information for the ELFie.
         :param arguments: The input arguments for the binary.
         """
+
+        arguments = [] if arguments is None else arguments
 
         assert isinstance(elfie_info, ELFieInfo)
         self._elfie_info_object = elfie_info

@@ -90,7 +90,8 @@ def write_header_file(sim_object: type, param_hh: str):
     warned_about_nested_templates = False
 
     class CxxClass:
-        def __init__(self, sig, template_params=[]):
+        def __init__(self, sig, template_params=None):
+            template_params = [] if template_params is None else template_params
             # Split the signature into its constituent parts. This could
             # potentially be done with regular expressions, but
             # it's simple enough to pick appart a class signature

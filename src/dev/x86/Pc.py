@@ -89,7 +89,8 @@ class Pc(Platform):
     # A device to handle any other type of unclaimed access.
     bad_addr = BadAddr(pio=default_bus.default)
 
-    def attachIO(self, bus, dma_ports=[]):
+    def attachIO(self, bus, dma_ports=None):
+        dma_ports = [] if dma_ports is None else dma_ports
         self.south_bridge.attachIO(bus, self.pci_host, dma_ports)
         self.com_1.pio = bus.mem_side_ports
         self.fake_com_2.pio = bus.mem_side_ports
