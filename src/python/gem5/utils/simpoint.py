@@ -130,7 +130,7 @@ class SimPoint:
         self,
         simpoint_path: Path,
         weight_path: Path,
-    ) -> tuple[list[int], list[int]]:
+    ) -> tuple[list[int], list[float]]:
         """
         This function takes in file paths and outputs a list of SimPoints
         instruction starts and a list of weights.
