@@ -183,9 +183,7 @@ class Artifact:
 
         inputs = [] if inputs is None else inputs
         supported_gem5_versions = (
-            []
-            if supported_gem5_versions is None
-            else supported_gem5_versions
+            [] if supported_gem5_versions is None else supported_gem5_versions
         )
 
         # Dictionary with all of the kwargs for construction.
@@ -267,9 +265,7 @@ class Artifact:
 
         inputs = [] if inputs is None else inputs
         supported_gem5_versions = (
-            []
-            if supported_gem5_versions is None
-            else supported_gem5_versions
+            [] if supported_gem5_versions is None else supported_gem5_versions
         )
 
         self = cls.createArtifact(
