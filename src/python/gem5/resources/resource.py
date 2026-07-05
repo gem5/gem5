@@ -855,7 +855,8 @@ class WorkloadResource(AbstractResource):
         description: str | None = None,
         source: str | None = None,
         local_path: str | None = None,
-        parameters: dict | None = None**kwargs,
+        parameters: dict | None = None,
+        **kwargs,
     ):
         """
         :param function: The function to call on the board.
