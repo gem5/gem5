@@ -39,7 +39,6 @@
 import gzip
 import os
 import shutil
-import socket
 import sys
 import tempfile
 import threading
