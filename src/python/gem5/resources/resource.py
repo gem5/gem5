@@ -751,7 +751,7 @@ class SuiteResource(AbstractResource):
 
     def __init__(
         self,
-        workloads: dict["WorkloadResource", set[str]] = {},
+        workloads: dict["WorkloadResource", set[str]] | None = None,
         resource_version: str | None = None,
         description: str | None = None,
         source: str | None = None,
@@ -772,7 +772,7 @@ class SuiteResource(AbstractResource):
                        is ``None``.
         :param resource_version: Version of the resource itself.
         """
-        self._workloads = workloads
+        self._workloads = {} if workloads is None else workloads
         self._description = description
         self._source = source
         self._resource_version = resource_version
@@ -855,7 +855,7 @@ class WorkloadResource(AbstractResource):
         description: str | None = None,
         source: str | None = None,
         local_path: str | None = None,
-        parameters: dict | None = {},
+        parameters: dict | None = None
         **kwargs,
     ):
         """
@@ -873,7 +873,7 @@ class WorkloadResource(AbstractResource):
 
         self._id = id
         self._func = function
-        self._params = parameters
+        self._params = parameters if parameters else {}
 
     def get_id(self) -> str:
         """Returns the ID of the workload."""
@@ -1522,12 +1522,14 @@ class CustomResource(AbstractResource):
         Please use the correct AbstractResource subclass instead.
     """
 
-    def __init__(self, local_path: str, metadata: dict = {}):
+    def __init__(self, local_path: str, metadata: dict | None = None):
         """
         :param local_path: The path of the resource on the host system.
         :param metadata: Add metadata for the custom resource. **Warning:**
                          As of v22.1.1, this parameter is not used.
         """
+        metadata = {} if metadata is None else metadata
+
         warn(
             "The `CustomResource` class is deprecated. Please use an "
             "`AbstractResource` subclass instead."
@@ -1557,7 +1559,7 @@ class CustomDiskImageResource(DiskImageResource):
         local_path: str,
         resource_version: str | None = None,
         root_partition: str | None = None,
-        metadata: dict = {},
+        metadata: dict | None = None,
     ):
         """
         :param local_path: The path of the disk image on the host system.
@@ -1566,6 +1568,8 @@ class CustomDiskImageResource(DiskImageResource):
                          "v22.1.1, this parameter is not used.
         :param resource_version: Version of the resource itself.
         """
+        metadata = {} if metadata is None else metadata
+
         warn(
             "The `CustomDiskImageResource` class is deprecated. Please use "
             "`DiskImageResource` instead."

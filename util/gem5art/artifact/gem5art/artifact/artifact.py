@@ -163,13 +163,13 @@ class Artifact:
         typ: str,
         path: str | Path,
         documentation: str,
-        inputs: list["Artifact"] = [],
+        inputs: list["Artifact"] | None = None,
         architecture: str = "",
         size: int | None = None,
         is_zipped: bool = False,
         md5sum: str = "",
         url: str = "",
-        supported_gem5_versions: list[str] = [],
+        supported_gem5_versions: list[str] | None = None,
         version: str = "",
         **kwargs: str,
     ) -> "Artifact":
@@ -180,6 +180,13 @@ class Artifact:
         already existed in the database, as well as it won't add the artifact
         to the database.
         """
+
+        inputs = [] if inputs is None else inputs
+        supported_gem5_versions = (
+            []
+            if supported_gem5_versions is None
+            else supported_gem5_versions
+        )
 
         # Dictionary with all of the kwargs for construction.
         data: dict[str, Any] = {}
@@ -242,13 +249,13 @@ class Artifact:
         typ: str,
         path: str | Path,
         documentation: str,
-        inputs: list["Artifact"] = [],
+        inputs: list["Artifact"] | None = None,
         architecture: str = "",
         size: int | None = None,
         is_zipped: bool = False,
         md5sum: str = "",
         url: str = "",
-        supported_gem5_versions: list[str] = [],
+        supported_gem5_versions: list[str] | None = None,
         version: str = "",
         **kwargs: str,
     ) -> "Artifact":
@@ -257,6 +264,13 @@ class Artifact:
         This assume either it's not in the database or it is the exact same as
         when it was added to the database
         """
+
+        inputs = [] if inputs is None else inputs
+        supported_gem5_versions = (
+            []
+            if supported_gem5_versions is None
+            else supported_gem5_versions
+        )
 
         self = cls.createArtifact(
             command,
