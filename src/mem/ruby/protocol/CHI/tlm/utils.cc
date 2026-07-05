@@ -35,7 +35,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "mem/ruby/protocol/chi/tlm/utils.hh"
+#include "mem/ruby/protocol/CHI/tlm/utils.hh"
 
 #include "base/bitfield.hh"
 #include "base/logging.hh"

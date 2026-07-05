@@ -45,8 +45,8 @@
 #include "mem/ruby/protocol/CHI/CHIResponseType.hh"
 #include "mem/ruby/protocol/RequestStatus.hh"
 #include "mem/ruby/protocol/WriteMask.hh"
-#include "mem/ruby/protocol/chi/generic/CHIGenericController.hh"
-#include "mem/ruby/protocol/chi/tlm/port.hh"
+#include "mem/ruby/protocol/CHI/generic/CHIGenericController.hh"
+#include "mem/ruby/protocol/CHI/tlm/port.hh"
 #include "params/TlmController.hh"
 
 namespace gem5 {

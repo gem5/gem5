@@ -40,7 +40,7 @@ from m5.params import *
 
 class CHIGenericController(RubyController):
     type = "CHIGenericController"
-    cxx_header = "mem/ruby/protocol/chi/generic/CHIGenericController.hh"
+    cxx_header = "mem/ruby/protocol/CHI/generic/CHIGenericController.hh"
     cxx_class = "gem5::ruby::CHIGenericController"
     abstract = True
 

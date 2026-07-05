@@ -43,8 +43,8 @@
 
 #include <ARM/TLM/arm_chi.h>
 
-#include "mem/ruby/protocol/chi/tlm/port.hh"
-#include "mem/ruby/protocol/chi/tlm/utils.hh"
+#include "mem/ruby/protocol/CHI/tlm/port.hh"
+#include "mem/ruby/protocol/CHI/tlm/utils.hh"
 #include "params/TlmGenerator.hh"
 #include "sim/clocked_object.hh"
 #include "sim/eventq.hh"
