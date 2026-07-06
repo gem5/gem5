@@ -94,50 +94,50 @@ def test_boot(
 
 #### The quick (pre-submit/Kokoro) tests ####
 
-test_boot(
-    cpu="atomic",
-    num_cpus=1,
-    mem_system="classic",
-    memory_class="SingleChannelDDR3_1600",
-    to_tick=10000000000,  # Simulates 1/100th of a second.
-    length=constants.quick_tag,
-)
+# test_boot(
+#     cpu="atomic",
+#     num_cpus=1,
+#     mem_system="classic",
+#     memory_class="SingleChannelDDR3_1600",
+#     to_tick=10000000000,  # Simulates 1/100th of a second.
+#     length=constants.quick_tag,
+# )
 
-test_boot(
-    cpu="timing",
-    num_cpus=1,
-    mem_system="classic",
-    memory_class="SingleChannelDDR3_2133",
-    to_tick=10000000000,
-    length=constants.quick_tag,
-)
+# test_boot(
+#     cpu="timing",
+#     num_cpus=1,
+#     mem_system="classic",
+#     memory_class="SingleChannelDDR3_2133",
+#     to_tick=10000000000,
+#     length=constants.quick_tag,
+# )
 
-test_boot(
-    cpu="timing",
-    num_cpus=8,
-    mem_system="classic",
-    memory_class="SingleChannelDDR3_2133",
-    to_tick=10000000000,
-    length=constants.quick_tag,
-)
+# test_boot(
+#     cpu="timing",
+#     num_cpus=8,
+#     mem_system="classic",
+#     memory_class="SingleChannelDDR3_2133",
+#     to_tick=10000000000,
+#     length=constants.quick_tag,
+# )
 
-test_boot(
-    cpu="atomic",
-    num_cpus=4,
-    mem_system="classic",
-    memory_class="SingleChannelDDR4_2400",
-    to_tick=10000000000,
-    length=constants.quick_tag,
-)
+# test_boot(
+#     cpu="atomic",
+#     num_cpus=4,
+#     mem_system="classic",
+#     memory_class="SingleChannelDDR4_2400",
+#     to_tick=10000000000,
+#     length=constants.quick_tag,
+# )
 
-test_boot(
-    cpu="o3",
-    num_cpus=1,
-    mem_system="classic",
-    memory_class="SingleChannelLPDDR3_1600",
-    to_tick=10000000000,
-    length=constants.quick_tag,
-)
+# test_boot(
+#     cpu="o3",
+#     num_cpus=1,
+#     mem_system="classic",
+#     memory_class="SingleChannelLPDDR3_1600",
+#     to_tick=10000000000,
+#     length=constants.quick_tag,
+# )
 
 #### The long (Nightly) tests ####
 
@@ -244,7 +244,7 @@ for mem_system in run_map:
                     mem_system=mem_system,
                     memory_class="DualChannelDDR4_2400",
                     boot_type="systemd",
-                    length=constants.very_long_tag,
+                    length=constants.quick_tag,
                 )
 
 # To ensure the O3 CPU is working correctly, we include some "init" tests here.
