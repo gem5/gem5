@@ -208,7 +208,9 @@ PhysicalMemory::PhysicalMemory(const std::string &_name,
                            f->isKvmMap());
     }
 
-    panic_if(validAddrMap.empty(), "No valid address ranges found\n");
+    warn_if(validAddrMap.empty(),
+            "No valid address ranges found in physical memory\n");
+
     // Clean up the valid address map
     // 1. Sort: Pairs are compared by 'first', then 'second'
     std::sort(validAddrMap.begin(), validAddrMap.end());
