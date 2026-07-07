@@ -26,12 +26,11 @@
 
 from __future__ import annotations
 
+import re
 from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
-import re
 from typing import Iterable
-
 
 _BEGIN_RE = re.compile(
     r"^---------- Begin Simulation Statistics(?: : (?P<message>.*))? ----------$"
@@ -126,9 +125,7 @@ def _parse_message(line: str) -> str:
     return match.group("message") or ""
 
 
-def _parse_stat_line(
-    line: str, line_number: int
-) -> tuple[str, float] | None:
+def _parse_stat_line(line: str, line_number: int) -> tuple[str, float] | None:
     parts = line.split(maxsplit=2)
     if len(parts) < 2:
         raise StatsParseError(f"line {line_number}: missing stat value")
