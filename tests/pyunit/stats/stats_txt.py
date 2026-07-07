@@ -24,13 +24,18 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from __future__ import annotations
-
 import re
 from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
+from typing import (
+    Iterable,
+    List,
+    Optional,
+    OrderedDict as OrderedDictType,
+    Tuple,
+    Union,
+)
 
 _BEGIN_RE = re.compile(
     r"^---------- Begin Simulation Statistics(?: : (?P<message>.*))? ----------$"
@@ -44,7 +49,7 @@ class StatsParseError(ValueError):
 
 @dataclass
 class StatsDump:
-    stats: OrderedDict[str, float]
+    stats: OrderedDictType[str, float]
     line_number: int
     message: str = ""
 
@@ -52,17 +57,17 @@ class StatsDump:
         return self.stats[stat_name]
 
 
-def parse_stats_file(path: Path | str) -> list[StatsDump]:
+def parse_stats_file(path: Union[Path, str]) -> List[StatsDump]:
     with open(path, encoding="utf-8") as stats_file:
         return parse_stats_text(stats_file)
 
 
-def parse_stats_text(lines: Iterable[str] | str) -> list[StatsDump]:
+def parse_stats_text(lines: Union[Iterable[str], str]) -> List[StatsDump]:
     if isinstance(lines, str):
         lines = lines.splitlines()
 
-    dumps: list[StatsDump] = []
-    current: StatsDump | None = None
+    dumps: List[StatsDump] = []
+    current: Optional[StatsDump] = None
 
     for line_number, line in enumerate(lines, start=1):
         stripped = line.strip()
@@ -125,7 +130,9 @@ def _parse_message(line: str) -> str:
     return match.group("message") or ""
 
 
-def _parse_stat_line(line: str, line_number: int) -> tuple[str, float] | None:
+def _parse_stat_line(
+    line: str, line_number: int
+) -> Optional[Tuple[str, float]]:
     parts = line.split(maxsplit=2)
     if len(parts) < 2:
         raise StatsParseError(f"line {line_number}: missing stat value")
