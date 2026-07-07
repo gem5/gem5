@@ -1,0 +1,12 @@
+
+---------- Begin Simulation Statistics ----------
+system.cpu.dcache.overallAccesses::cpu.data     42 # subname preserved
+system.cpu.branch-predictor.hits[0]              0 # zero value
+system.cpu.negative                             -7.5
+system.cpu.scientific                         1.25e+03 # scientific notation
+system.cpu.percentages                            4 25.00% 75.00% # pdf/cdf columns
+system.cpu.not_a_number                        nan
+system.cpu.infinity                            inf
+system.cpu.oneline_vector                       |           1 |           2 # ignored
+
+---------- End Simulation Statistics   ----------
