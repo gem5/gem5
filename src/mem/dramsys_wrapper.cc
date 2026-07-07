@@ -31,6 +31,8 @@
 #include "sim/core.hh"
 #include "systemc/core/kernel.hh"
 
+#include <DRAMSys/statistics/PrettyFormat.h>
+
 namespace gem5
 {
 
@@ -60,9 +62,13 @@ DRAMSysWrapper::DRAMSysWrapper(sc_core::sc_module_name name,
 
     // Register a callback to compensate for the destructor not
     // being called.
-    registerExitCallback([]() {
+    registerExitCallback([this]() {
         // Workaround for BUG GEM5-1233
         sc_gem5::Kernel::stop();
+
+        std::stringstream stats;
+        ::DRAMSys::Stats::PrettyFormat::collectStats(dramsys.get(), stats);
+        std::cout << stats.str() << std::endl;
     });
 }
 
