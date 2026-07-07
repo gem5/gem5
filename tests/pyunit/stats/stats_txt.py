@@ -32,7 +32,9 @@ from typing import (
     Iterable,
     List,
     Optional,
-    OrderedDict as OrderedDictType,
+)
+from typing import OrderedDict as OrderedDictType
+from typing import (
     Tuple,
     Union,
 )
