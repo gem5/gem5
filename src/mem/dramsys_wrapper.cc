@@ -44,6 +44,12 @@ DRAMSysWrapper::DRAMSysWrapper(sc_core::sc_module_name name,
       dramsys(std::make_unique<::DRAMSys::DRAMSys>("DRAMSys", config)),
       range(range)
 {
+    if (dramsys->memorySize() != range.size()) {
+        panic("The memory size reported to gem5 (%llu Bytes) must match JSON "
+              "configuration of DRAMSys (%llu Bytes)!",
+              range.size(), dramsys->memorySize());
+    }
+
     tSocket.register_nb_transport_fw(this, &DRAMSysWrapper::nb_transport_fw);
     iSocket.register_nb_transport_bw(this, &DRAMSysWrapper::nb_transport_bw);
 

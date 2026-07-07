@@ -37,6 +37,7 @@ system.cpu = traffic_gen
 
 dramsys = DRAMSys(
     configuration="ext/dramsys/DRAMSys/configs/ddr4-example.json",
+    range="4 GiB",
 )
 
 system.target = dramsys
