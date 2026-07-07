@@ -51,10 +51,10 @@ from m5.params import (
     AddrRange,
 )
 
-from .abstract_node import AbstractNode
+from .abstract_node import CacheController
 
 
-class BaseDirectory(AbstractNode):
+class BaseDirectory(CacheController):
     """
     BaseDirectory. Mainly providing address range generation
     capabilities (see create_addr_ranges method)
@@ -148,6 +148,57 @@ class SimpleDirectory(BaseDirectory):
         self.number_of_TBEs = 32
         self.number_of_repl_TBEs = 32
         self.number_of_snoop_TBEs = 1
+        self.number_of_DVM_TBEs = 1  # should not receive any dvm
+        self.number_of_DVM_snoop_TBEs = 1  # should not receive any dvm
+        self.unify_repl_TBEs = False
+
+        self.cbusy_generator = CBusy()
+        self.cbusy_tracker = CBusyTracker()
+
+
+class CachedDirectory(BaseDirectory):
+    """A directory/home node (HNF) with an attached cache."""
+
+    def __init__(
+        self,
+        network: RubyNetwork,
+        cache_line_size: int,
+        clk_domain: ClockDomain,
+        cache: RubyCache,
+        prefetcher,
+        addr_ranges: List[AddrRange],
+    ):
+        super().__init__(network, cache_line_size)
+
+        self.sequencer = NULL
+        self.cache = cache
+        self.prefetcher = prefetcher
+        self.use_prefetcher = prefetcher != NULL
+        self.addr_ranges = addr_ranges
+        self.clk_domain = clk_domain
+        self.allow_SD = True
+        self.is_HN = True
+        self.enable_DMT = True
+        self.enable_DCT = True
+        self.send_evictions = False
+
+        # Match CHI_config.py HN defaults.
+        self.alloc_on_seq_acc = False
+        self.alloc_on_seq_line_write = False
+        self.alloc_on_readshared = True
+        self.alloc_on_readunique = False
+        self.alloc_on_readonce = True
+        self.alloc_on_writeback = True
+        self.alloc_on_atomic = True
+        self.dealloc_on_unique = True
+        self.dealloc_on_shared = False
+        self.dealloc_backinv_unique = False
+        self.dealloc_backinv_shared = False
+
+        # Match CHI_config.py HN defaults for TBEs.
+        self.number_of_TBEs = 32
+        self.number_of_repl_TBEs = 32
+        self.number_of_snoop_TBEs = 1  # should not receive any snoop
         self.number_of_DVM_TBEs = 1  # should not receive any dvm
         self.number_of_DVM_snoop_TBEs = 1  # should not receive any dvm
         self.unify_repl_TBEs = False

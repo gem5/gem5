@@ -104,6 +104,7 @@ MessageBuffer::MessageBuffer(const Params &p)
     m_stall_msg_map.clear();
     m_input_link_id = 0;
     m_vnet_id = 0;
+    m_int_link = nullptr;
 
     m_buf_msgs = 0;
     m_stall_time = 0;

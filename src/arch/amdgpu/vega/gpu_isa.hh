@@ -57,9 +57,13 @@ class GPUISA
     T
     readConstVal(int opIdx) const
     {
-        panic_if(!std::is_integral_v<T>,
-                 "Constant values must be an integer.");
         T val(0);
+
+        // Real hardware returned 0 when using an integer constant with a
+        // floating point instruction. Replicate the behavior.
+        if (!std::is_integral_v<T>) {
+            return val;
+        }
 
         if (isPosConstVal(opIdx)) {
             val = (T)readPosConstReg(opIdx);

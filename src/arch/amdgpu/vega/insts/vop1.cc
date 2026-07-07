@@ -441,25 +441,18 @@ Inst_VOP1__V_CVT_F16_F32::~Inst_VOP1__V_CVT_F16_F32()
 void
 Inst_VOP1__V_CVT_F16_F32::execute(GPUDynInstPtr gpuDynInst)
 {
-    Wavefront *wf = gpuDynInst->wavefront();
-    ConstVecOperandF32 src(gpuDynInst, instData.SRC0);
-    VecOperandU32 vdst(gpuDynInst, instData.VDST);
-
-    src.readSrc();
-
-    panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
-    panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
-
-    for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-        if (wf->execMask(lane)) {
-            float tmp = src[lane];
-            AMDGPU::mxfloat16 out(tmp);
-
-            vdst[lane] = (out.data >> 16);
+    auto opImpl = [](VecOperandU32 &src, VecOperandU32 &vdst, Wavefront *wf) {
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                uint32_t raw_src = src[lane];
+                float tmp = *reinterpret_cast<float *>(&raw_src);
+                AMDGPU::mxfloat16 out(tmp);
+                vdst[lane] = (out.data >> 16);
+            }
         }
-    }
+    };
 
-    vdst.write();
+    vop1Helper<ConstVecOperandU32, VecOperandU32>(gpuDynInst, opImpl);
 } // execute
 // --- Inst_VOP1__V_CVT_F32_F16 class methods ---
 
@@ -485,13 +478,46 @@ Inst_VOP1__V_CVT_F32_F16::execute(GPUDynInstPtr gpuDynInst)
 
     src.readSrc();
 
-    panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
     panic_if(isDPPInst(), "DPP not implemented for %s", _opcode);
 
-    for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
-        if (wf->execMask(lane)) {
-            AMDGPU::mxfloat16 tmp(src[lane]);
-            vdst[lane] = float(tmp);
+    if (isSDWAInst()) {
+        VecOperandU32 src0_sdwa(gpuDynInst, extData.iFmt_VOP_SDWA.SRC0);
+        // use copies of original src0, src1, and vdst during selecting
+        VecOperandU32 origSrc0_sdwa(gpuDynInst, extData.iFmt_VOP_SDWA.SRC0);
+        VecOperandF32 origVdst(gpuDynInst, instData.VDST);
+
+        src0_sdwa.read();
+        origSrc0_sdwa.read();
+
+        DPRINTF(
+            VEGA,
+            "Handling V_CVT_F32_F16 SRC SDWA. SRC0: register "
+            "v[%d], DST_SEL: %d, DST_U: %d, CLMP: %d, SRC0_SEL: "
+            "%d, SRC0_SEXT: %d, SRC0_NEG: %d, SRC0_ABS: %d, SRC1_SEL: "
+            "%d, SRC1_SEXT: %d, SRC1_NEG: %d, SRC1_ABS: %d\n",
+            extData.iFmt_VOP_SDWA.SRC0, extData.iFmt_VOP_SDWA.DST_SEL,
+            extData.iFmt_VOP_SDWA.DST_U, extData.iFmt_VOP_SDWA.CLMP,
+            extData.iFmt_VOP_SDWA.SRC0_SEL, extData.iFmt_VOP_SDWA.SRC0_SEXT,
+            extData.iFmt_VOP_SDWA.SRC0_NEG, extData.iFmt_VOP_SDWA.SRC0_ABS,
+            extData.iFmt_VOP_SDWA.SRC1_SEL, extData.iFmt_VOP_SDWA.SRC1_SEXT,
+            extData.iFmt_VOP_SDWA.SRC1_NEG, extData.iFmt_VOP_SDWA.SRC1_ABS);
+
+        processSDWA_src(extData.iFmt_VOP_SDWA, src0_sdwa, origSrc0_sdwa);
+
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                AMDGPU::mxfloat16 tmp(src0_sdwa[lane]);
+                vdst[lane] = float(tmp);
+            }
+        }
+
+        processSDWA_dst(extData.iFmt_VOP_SDWA, vdst, origVdst);
+    } else {
+        for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+            if (wf->execMask(lane)) {
+                AMDGPU::mxfloat16 tmp(src[lane]);
+                vdst[lane] = float(tmp);
+            }
         }
     }
 

@@ -141,6 +141,8 @@ class HSAQueueEntry
         // Granularity 4. Value 0-63. 0 - accum-offset = 4,
         // 1 - accum-offset = 8, ..., 63 - accum-offset = 256.
         _accumOffset = (akc->accum_offset + 1) * 4;
+
+        _akc = akc;
     }
 
     const GfxVersion &
@@ -452,6 +454,25 @@ class HSAQueueEntry
         return &(_preloadArgs[0]);
     }
 
+    void
+    setEmulated()
+    {
+        _wasEmulated = true;
+    }
+
+    bool
+    wasEmulated() const
+    {
+        return _wasEmulated;
+    }
+
+    AMDKernelCode *
+    akc() const
+    {
+        assert(_akc != nullptr);
+        return _akc;
+    }
+
   private:
     void
     parseKernelCode(AMDKernelCode *akc)
@@ -549,6 +570,12 @@ class HSAQueueEntry
     // max amount. It is of dword type to easily access during wave start.
     unsigned _preloadLength = 0;
     uint32_t _preloadArgs[KernargPreloadPktSize / sizeof(uint32_t)];
+
+    // Set if the task was emulated instead of simulated (e.g., BLIT kernel).
+    // We keep a copy of the akc pointer in case emulated needs to back out
+    // due to an unsupported kernel type.
+    bool _wasEmulated = false;
+    AMDKernelCode *_akc;
 };
 
 } // namespace gem5

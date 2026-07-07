@@ -166,7 +166,7 @@ def main():
         exit(-1)
 
     fig = plt.figure()
-    ax = fig.gca(projection="3d")
+    ax = fig.add_subplot(projection="3d")
     X = np.arange(burst_size, max_size + 1, burst_size)
     Y = np.arange(1, banks + 1, 1)
     X, Y = np.meshgrid(X, Y)

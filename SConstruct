@@ -132,6 +132,8 @@ AddOption('--without-python', action='store_true',
           help='Build without Python configuration support')
 AddOption('--without-tcmalloc', action='store_true',
           help='Disable linking against tcmalloc')
+AddOption('--no-omit-frame-pointer', action='store_true',
+          help='No omit frame pointer')
 AddOption('--with-ubsan', action='store_true',
           help='Build with Undefined Behavior Sanitizer if available')
 AddOption('--with-asan', action='store_true',
@@ -147,6 +149,7 @@ AddOption('--gprof', action='store_true',
 AddOption('--pprof', action='store_true',
           help='Enable support for the pprof profiler')
 AddOption('--debug-fission', action='store_true', help='Enable debug fission')
+AddOption('--gdb-index', action='store_true', help='Build GDB index')
 # Default to --no-duplicate-sources, but keep --duplicate-sources to opt-out
 # of this new build behaviour in case it introduces regressions. We could use
 # action=argparse.BooleanOptionalAction here once Python 3.9 is required.
@@ -661,6 +664,14 @@ for variant_path in variant_paths:
                 ) or not conf.CheckLinkFlag('-gsplit-dwarf'):
                     error('Debug fission is not supported in the toolchain')
 
+        gdb_index = GetOption('gdb_index')
+        if gdb_index:
+            with gem5_scons.Configure(env) as conf:
+                if not conf.CheckCxxFlag(
+                    '-ggnu-pubnames'
+                ) or not conf.CheckLinkFlag('-Wl,--gdb-index'):
+                    error('GDB index generation is not supported')
+
         # Treat warnings as errors but white list some warnings that we
         # want to allow (e.g., deprecation warnings).
         env.Append(CCFLAGS=['-Werror',
@@ -683,7 +694,7 @@ for variant_path in variant_paths:
 
     if env['GCC']:
         gcc_min_version = "11"
-        gcc_max_version = "14.2"
+        gcc_max_version = "15.2"
         gcc_version = env['CXXVERSION']
         if compareVersions(gcc_version, gcc_min_version) < 0 or \
               compareVersions(gcc_version, gcc_max_version) > 0:
@@ -779,6 +790,9 @@ for variant_path in variant_paths:
     else:
         gem5py_env = env.Clone()
         config_embedded_python(gem5py_env)
+
+    if GetOption('no_omit_frame_pointer'):
+        env.Append(CCFLAGS=['-fno-omit-frame-pointer'])
 
     # Add sanitizers flags
     sanitizers=[]

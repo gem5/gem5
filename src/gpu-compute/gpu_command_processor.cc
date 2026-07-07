@@ -63,7 +63,8 @@ GPUCommandProcessor::GPUCommandProcessor(const Params &p)
       _driver(nullptr),
       walker(p.walker),
       hsaPP(p.hsapp),
-      target_non_blit_kernel_id(p.target_non_blit_kernel_id)
+      target_non_blit_kernel_id(p.target_non_blit_kernel_id),
+      emulateBlitKernels(p.emulate_blits)
 {
     assert(hsaPP);
     hsaPP->setDevice(this);
@@ -141,7 +142,7 @@ GPUCommandProcessor::completeTimingRead(int dispType)
                                      dispatchData.host_pkt_addr);
                 break;
             case ComputeUnit::SQCPort::SenderState::DISPATCH_PRELOAD_ARG:
-                initPreload(dispatchData.akc, dispatchData.task);
+                initPreload(dispatchData.task);
                 break;
         }
     }
@@ -259,7 +260,7 @@ GPUCommandProcessor::submitDispatchPkt(void *raw_pkt, uint32_t queue_id,
                     "sending system DMA read for kernel_object\n");
 
             auto dma_callback =
-                new DmaVirtCallback<uint32_t>([=](const uint32_t &) {
+                new DmaVirtCallback<uint32_t>([=, this](const uint32_t &) {
                     dispatchKernelObject(akc, raw_pkt, queue_id,
                                          host_pkt_addr);
                 });
@@ -368,6 +369,23 @@ GPUCommandProcessor::dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
     Tick start_ts = curTick() / sim_clock::as_int::ns;
     dispatchStartTime.insert({disp_pkt->completion_signal, start_ts});
 
+    if (is_blit_kernel && emulateBlitKernels) {
+        DPRINTF(GPUCommandProc, "Emulating blit kernel (Task ID: %i)\n",
+                dynamic_task_id);
+
+        // DMA the kernargs
+        readBlitKernargs(task);
+
+        // This allows debug-at and exit-at GPU task options to work
+        if (dispatcher.hasKernelExitEvents()) {
+            exitSimLoop("GPU Blit Kernel Completed");
+        }
+
+        ++dynamic_task_id;
+
+        return;
+    }
+
     // Potentially skip a non-blit kernel
     if (!is_blit_kernel && (non_blit_kernel_id < target_non_blit_kernel_id)) {
         DPRINTF(GPUCommandProc, "Skipping non-blit kernel %i (Task ID: %i)\n",
@@ -420,7 +438,7 @@ GPUCommandProcessor::dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
 
         delete akc;
     } else {
-        readPreload(akc, task);
+        readPreload(task);
     }
 
     ++dynamic_task_id;
@@ -461,7 +479,7 @@ GPUCommandProcessor::updateHsaSignalAsync(Addr signal_handle, int64_t diff)
 {
     Addr mailbox_addr = getHsaSignalMailboxAddr(signal_handle);
     uint64_t *mailboxValue = new uint64_t;
-    auto cb2 = new DmaVirtCallback<uint64_t>([=](const uint64_t &) {
+    auto cb2 = new DmaVirtCallback<uint64_t>([=, this](const uint64_t &) {
         updateHsaMailboxData(signal_handle, mailboxValue);
     });
     dmaReadVirt(mailbox_addr, sizeof(uint64_t), cb2, (void *)mailboxValue);
@@ -480,7 +498,7 @@ GPUCommandProcessor::updateHsaMailboxData(Addr signal_handle,
         // This is an interruptible signal. Now, read the
         // event ID and directly communicate with the driver
         // about that event notification.
-        auto cb = new DmaVirtCallback<uint64_t>([=](const uint64_t &) {
+        auto cb = new DmaVirtCallback<uint64_t>([=, this](const uint64_t &) {
             updateHsaEventData(signal_handle, mailbox_value);
         });
         dmaReadVirt(event_addr, sizeof(uint64_t), cb, (void *)mailbox_value);
@@ -492,7 +510,7 @@ GPUCommandProcessor::updateHsaMailboxData(Addr signal_handle,
         amd_event_t *event_ts = new amd_event_t;
         event_ts->start_ts = dispatchStartTime[signal_handle];
         event_ts->end_ts = curTick() / sim_clock::as_int::ns;
-        auto cb = new DmaVirtCallback<uint64_t>([=](const uint64_t &) {
+        auto cb = new DmaVirtCallback<uint64_t>([=, this](const uint64_t &) {
             updateHsaEventTs(signal_handle, event_ts);
         });
         dmaWriteVirt(ts_addr, sizeof(amd_event_t), cb, (void *)event_ts);
@@ -514,7 +532,7 @@ GPUCommandProcessor::updateHsaEventData(Addr signal_handle,
     DPRINTF(GPUCommandProc, "updateHsaEventData read %ld\n", *event_value);
     // Write *event_value to the mailbox to clear the event
     auto cb = new DmaVirtCallback<uint64_t>(
-        [=](const uint64_t &) { updateHsaSignalDone(event_value); },
+        [=, this](const uint64_t &) { updateHsaSignalDone(event_value); },
         *event_value);
     dmaWriteVirt(mailbox_addr, sizeof(uint64_t), cb, &cb->dmaBuffer, 0);
 
@@ -523,8 +541,9 @@ GPUCommandProcessor::updateHsaEventData(Addr signal_handle,
     amd_event_t *event_ts = new amd_event_t;
     event_ts->start_ts = dispatchStartTime[signal_handle];
     event_ts->end_ts = curTick() / sim_clock::as_int::ns;
-    auto cb2 = new DmaVirtCallback<uint64_t>(
-        [=](const uint64_t &) { updateHsaEventTs(signal_handle, event_ts); });
+    auto cb2 = new DmaVirtCallback<uint64_t>([=, this](const uint64_t &) {
+        updateHsaEventTs(signal_handle, event_ts);
+    });
     dmaWriteVirt(ts_addr, sizeof(amd_event_t), cb2, (void *)event_ts);
     DPRINTF(GPUCommandProc, "updateHsaEventData reading timestamp addr %lx\n",
             ts_addr);
@@ -541,7 +560,7 @@ GPUCommandProcessor::updateHsaEventTs(Addr signal_handle, amd_event_t *ts)
     int64_t diff = -1;
 
     uint64_t *signalValue = new uint64_t;
-    auto cb = new DmaVirtCallback<uint64_t>([=](const uint64_t &) {
+    auto cb = new DmaVirtCallback<uint64_t>([=, this](const uint64_t &) {
         updateHsaSignalData(value_addr, diff, signalValue);
     });
     dmaReadVirt(value_addr, sizeof(uint64_t), cb, (void *)signalValue);
@@ -558,7 +577,7 @@ GPUCommandProcessor::updateHsaSignalData(Addr value_addr, int64_t diff,
             *prev_value, *prev_value + diff);
     *prev_value += diff;
     auto cb = new DmaVirtCallback<uint64_t>(
-        [=](const uint64_t &) { updateHsaSignalDone(prev_value); });
+        [=, this](const uint64_t &) { updateHsaSignalDone(prev_value); });
     dmaWriteVirt(value_addr, sizeof(uint64_t), cb, (void *)prev_value);
 }
 
@@ -741,13 +760,14 @@ GPUCommandProcessor::signalWakeupEvent(uint32_t event_id)
 }
 
 void
-GPUCommandProcessor::readPreload(AMDKernelCode *akc, HSAQueueEntry *task)
+GPUCommandProcessor::readPreload(HSAQueueEntry *task)
 {
     _hsa_dispatch_packet_t *disp_pkt =
         (_hsa_dispatch_packet_t *)task->dispPktPtr();
 
     // Data preloaded is copied from the kernarg segment. Preloading starts at
     // the dword offset specified by kernarg_preload_spec_offset.
+    AMDKernelCode *akc = task->akc();
     Addr preload_addr =
         (Addr)disp_pkt->kernarg_address + akc->kernarg_preload_spec_offset * 4;
 
@@ -791,7 +811,7 @@ GPUCommandProcessor::readPreload(AMDKernelCode *akc, HSAQueueEntry *task)
         warn("Preload kernarg from host untested!\n");
 
         auto cb = new DmaVirtCallback<uint32_t>(
-            [=](const uint32_t &) { initPreload(akc, task); });
+            [=, this](const uint32_t &) { initPreload(task); });
 
         dmaReadVirt(preload_addr,
                     sizeof(uint32_t) * akc->kernarg_preload_spec_length, cb,
@@ -834,9 +854,10 @@ GPUCommandProcessor::readPreload(AMDKernelCode *akc, HSAQueueEntry *task)
 }
 
 void
-GPUCommandProcessor::initPreload(AMDKernelCode *akc, HSAQueueEntry *task)
+GPUCommandProcessor::initPreload(HSAQueueEntry *task)
 {
     // Fill in SGPRs
+    AMDKernelCode *akc = task->akc();
     int num_sgprs = akc->kernarg_preload_spec_length;
 
     task->preloadLength(num_sgprs);
@@ -860,7 +881,7 @@ void
 GPUCommandProcessor::initABI(HSAQueueEntry *task)
 {
     auto cb = new DmaVirtCallback<uint32_t>(
-        [=](const uint32_t &readDispIdOffset) {
+        [=, this](const uint32_t &readDispIdOffset) {
             ReadDispIdOffsetDmaEvent(task, readDispIdOffset);
         },
         0);

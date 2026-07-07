@@ -807,7 +807,7 @@ namespace ArmISA
 
         // Data Abort ISS2
         SubBitUnion(data_abort_iss2, 55, 32)
-            Bitfield<5> dirtyBit;
+            Bitfield<37> dirtyBit;
         EndSubBitUnion(data_abort_iss2)
 
         Bitfield<31, 26> ec;

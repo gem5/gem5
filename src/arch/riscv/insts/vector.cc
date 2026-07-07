@@ -893,11 +893,10 @@ VCpyVsMicroInst::generateDisassembly(Addr pc,
 
 VPinVdMicroInst::VPinVdMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
                                  uint32_t _numVdPins, uint32_t _elen,
-                                 uint32_t _vlen, bool _isSlideupVx,
-                                 bool _isReduction)
+                                 uint32_t _vlen, bool _isSlideupVx)
     : VectorArithMicroInst("vpinvd_v_micro", _machInst, SimdMiscOp, 0,
                            _microIdx, _elen, _vlen),
-      isSlideupVx(_isSlideupVx), isReduction(_isReduction)
+      isSlideupVx(_isSlideupVx)
 {
     setRegIdxArrays(
         reinterpret_cast<RegIdArrayPtr>(
@@ -940,7 +939,7 @@ VPinVdMicroInst::execute(ExecContext* xc, trace::InstRecord* traceData) const
     const uint32_t sewb = getSew(machInst.vtype8.vsew) >> 3;
     const uint32_t micro_vlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
     const uint32_t micro_vl = std::min(vl - micro_vlmax*microIdx, micro_vlmax);
-    const uint32_t active_bytes = isReduction ? sewb:micro_vl*sewb;
+    const uint32_t active_bytes = micro_vl * sewb;
     const uint32_t total_bytes  = micro_vlmax*sewb;
 
     vreg_t& vd_container = *(vreg_t *)xc->getWritableRegOperand(this, 0);

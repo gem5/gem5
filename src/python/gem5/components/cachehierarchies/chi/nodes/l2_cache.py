@@ -49,7 +49,7 @@ from m5.params import (
 
 from .....isas import ISA
 from ....processors.abstract_core import AbstractCore
-from .abstract_node import AbstractNode
+from .abstract_node import CacheController
 
 
 class L2Cache(RubyCache):
@@ -58,7 +58,7 @@ class L2Cache(RubyCache):
     tagAccessLatency = 2
 
 
-class L2CacheController(AbstractNode):
+class L2CacheController(CacheController):
     """
     Strictly inclusive MOESI L2 controller.
     Strictly inclusive:

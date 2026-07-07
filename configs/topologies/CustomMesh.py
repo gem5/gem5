@@ -1,4 +1,4 @@
-# Copyright (c) 2021,2022 ARM Limited
+# Copyright (c) 2021,2022,2026 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -45,6 +45,7 @@ if buildEnv["PROTOCOL"] == "CHI":
     import ruby.CHI_config as CHI
 
 from topologies.BaseTopology import SimpleTopology
+from topologies.CustomMeshDotWriter import generate_dot
 
 
 class CustomMesh(SimpleTopology):
@@ -54,113 +55,87 @@ class CustomMesh(SimpleTopology):
         self.nodes = controllers
 
     # --------------------------------------------------------------------------
-    # _makeMesh
+    # _makeXYMesh, _makeCustomMesh
     # --------------------------------------------------------------------------
 
-    def _makeMesh(
-        self,
-        IntLink,
-        link_latency,
-        num_rows,
-        num_columns,
-        cross_links,
-        cross_link_latency,
-    ):
+    def _connectRouters(self, latency, weight, src_node, dst_node, dst_port):
+        self._int_links.append(
+            self._IntLink(
+                link_id=self._link_count,
+                src_node=self._routers[src_node],
+                dst_node=self._routers[dst_node],
+                dst_inport=dst_port,
+                latency=latency,
+                weight=weight,
+            )
+        )
+        self._link_count += 1
+
+    def _connectXYRouters(self, weight, src_node, dst_node, dst_port):
+        latency = self._router_link_latency
+        if (src_node, dst_node) in self._custom_links:
+            custom_weight, latency = self._custom_links[(src_node, dst_node)]
+            if (custom_weight != None) and (custom_weight != weight):
+                fatal(
+                    "XY custom link weight (src=%d, dst=%d, weight=%d) "
+                    "must be either 'None' or same as XY weight (=%d)",
+                    src_node,
+                    dst_node,
+                    custom_weight,
+                    weight,
+                )
+            assert (src_node, dst_node) in self._custom_non_XY_links
+            del self._custom_non_XY_links[(src_node, dst_node)]
+        self._connectRouters(latency, weight, src_node, dst_node, dst_port)
+
+    def _makeXYMesh(self, num_rows, num_columns):
+
         # East->West, West->East, North->South, South->North
         # XY routing weights
         link_weights = [1, 1, 2, 2]
 
-        # East output to West input links
-        for row in range(num_rows):
-            for col in range(num_columns):
-                if col + 1 < num_columns:
-                    east_out = col + (row * num_columns)
-                    west_in = (col + 1) + (row * num_columns)
-                    llat = (
-                        cross_link_latency
-                        if (east_out, west_in) in cross_links
-                        else link_latency
-                    )
-                    self._int_links.append(
-                        IntLink(
-                            link_id=self._link_count,
-                            src_node=self._routers[east_out],
-                            dst_node=self._routers[west_in],
-                            dst_inport="West",
-                            latency=llat,
-                            weight=link_weights[0],
-                        )
-                    )
-                    self._link_count += 1
+        # Non-XY custom links will be created later
+        self._custom_non_XY_links = self._custom_links.copy()
 
+        # East output to West input links
         # West output to East input links
         for row in range(num_rows):
             for col in range(num_columns):
                 if col + 1 < num_columns:
-                    east_in = col + (row * num_columns)
-                    west_out = (col + 1) + (row * num_columns)
-                    llat = (
-                        cross_link_latency
-                        if (west_out, east_in) in cross_links
-                        else link_latency
-                    )
-                    self._int_links.append(
-                        IntLink(
-                            link_id=self._link_count,
-                            src_node=self._routers[west_out],
-                            dst_node=self._routers[east_in],
-                            dst_inport="East",
-                            latency=llat,
-                            weight=link_weights[1],
-                        )
-                    )
-                    self._link_count += 1
+                    east = col + (row * num_columns)
+                    west = (col + 1) + (row * num_columns)
+                    # East output to West input
+                    self._connectXYRouters(link_weights[0], east, west, "West")
+                    # West output to East input
+                    self._connectXYRouters(link_weights[1], west, east, "East")
 
         # North output to South input links
-        for col in range(num_columns):
-            for row in range(num_rows):
-                if row + 1 < num_rows:
-                    north_out = col + (row * num_columns)
-                    south_in = col + ((row + 1) * num_columns)
-                    llat = (
-                        cross_link_latency
-                        if (north_out, south_in) in cross_links
-                        else link_latency
-                    )
-                    self._int_links.append(
-                        IntLink(
-                            link_id=self._link_count,
-                            src_node=self._routers[north_out],
-                            dst_node=self._routers[south_in],
-                            dst_inport="South",
-                            latency=llat,
-                            weight=link_weights[2],
-                        )
-                    )
-                    self._link_count += 1
-
         # South output to North input links
         for col in range(num_columns):
             for row in range(num_rows):
                 if row + 1 < num_rows:
-                    north_in = col + (row * num_columns)
-                    south_out = col + ((row + 1) * num_columns)
-                    llat = (
-                        cross_link_latency
-                        if (south_out, north_in) in cross_links
-                        else link_latency
+                    north = col + (row * num_columns)
+                    south = col + ((row + 1) * num_columns)
+                    # North output to South input
+                    self._connectXYRouters(
+                        link_weights[2], north, south, "South"
                     )
-                    self._int_links.append(
-                        IntLink(
-                            link_id=self._link_count,
-                            src_node=self._routers[south_out],
-                            dst_node=self._routers[north_in],
-                            dst_inport="North",
-                            latency=llat,
-                            weight=link_weights[3],
-                        )
+                    # South output to North input
+                    self._connectXYRouters(
+                        link_weights[3], south, north, "North"
                     )
-                    self._link_count += 1
+
+    def _makeCustomMesh(self):
+        for src, dst in self._custom_non_XY_links:
+            weight, latency = self._custom_non_XY_links[(src, dst)]
+            if weight == None:
+                fatal(
+                    "Non XY custom link weight (src=%d, dst=%d) "
+                    "not specified",
+                    src,
+                    dst,
+                )
+            self._connectRouters(latency, weight, src, dst, None)
 
     # --------------------------------------------------------------------------
     # distributeNodes
@@ -172,6 +147,9 @@ class CustomMesh(SimpleTopology):
         node_router = self._Router(
             router_id=len(self._routers), latency=self.node_router_latency
         )
+        node_router._row = mesh_router._row
+        node_router._col = mesh_router._col
+        node_router._main = False
         self._routers.append(node_router)
 
         # connect node_router <-> mesh router
@@ -232,6 +210,8 @@ class CustomMesh(SimpleTopology):
                         )
                     )
                     self._link_count += 1
+                    c._row = router._row
+                    c._col = router._col
         else:
             # try to circulate all nodes to all routers, some routers may be
             # connected to zero or more than one node.
@@ -253,6 +233,8 @@ class CustomMesh(SimpleTopology):
                         )
                     )
                     self._link_count += 1
+                    c._row = router._row
+                    c._col = router._col
                 idx = (idx + 1) % len(router_idx_list)
 
     # --------------------------------------------------------------------------
@@ -278,6 +260,7 @@ class CustomMesh(SimpleTopology):
             print("WARNING: router/node link latencies not provided")
             self._router_link_latency = options.link_latency
             self._node_link_latency = options.link_latency
+        self._custom_links = options.custom_links
 
         # classify nodes into different types
         rnf_nodes = []
@@ -335,19 +318,30 @@ class CustomMesh(SimpleTopology):
             for i in range(num_mesh_routers)
         ]
 
+        # Assign helpers later needed by generate_dot
+        for row in range(num_rows):
+            for col in range(num_cols):
+                router_id = col + (row * num_cols)
+                assert self._routers[router_id].router_id.value == router_id
+                self._routers[router_id]._row = row
+                self._routers[router_id]._col = col
+                self._routers[router_id]._main = True
+
         self._link_count = 0
         self._int_links = []
         self._ext_links = []
 
+        # Expands custom links
+        self._custom_links = {}
+        for k in options.custom_links:
+            weight, latency = options.custom_links[k]
+            self._custom_links[k] = weight, latency
+            if (k[1], k[0]) not in options.custom_links:
+                self._custom_links[(k[1], k[0])] = weight, latency
+
         # Create all the mesh internal links.
-        self._makeMesh(
-            IntLink,
-            self._router_link_latency,
-            num_rows,
-            num_cols,
-            options.cross_links,
-            options.cross_link_latency,
-        )
+        self._makeXYMesh(num_rows, num_cols)
+        self._makeCustomMesh()
 
         # Place CHI_RNF on the mesh
         self.distributeNodes(rnf_params, rnf_nodes)
@@ -380,6 +374,8 @@ class CustomMesh(SimpleTopology):
         pairing = getattr(options, "pairing", None)
         if pairing != None:
             self._autoPairHNFandSNF(hnf_list, mem_ctrls, pairing)
+
+        generate_dot(network, num_rows, num_cols)
 
     # --------------------------------------------------------------------------
     # _autoPair

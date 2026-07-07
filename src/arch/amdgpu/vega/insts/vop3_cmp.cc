@@ -606,7 +606,47 @@ Inst_VOP3__V_CMP_EQ_F16::~Inst_VOP3__V_CMP_EQ_F16()
 void
 Inst_VOP3__V_CMP_EQ_F16::execute(GPUDynInstPtr gpuDynInst)
 {
-    panicUnimplemented();
+    Wavefront *wf = gpuDynInst->wavefront();
+    ConstVecOperandU16 src0(gpuDynInst, extData.SRC0);
+    ConstVecOperandU16 src1(gpuDynInst, extData.SRC1);
+    ScalarOperandU64 sdst(gpuDynInst, instData.VDST);
+
+    src0.readSrc();
+    src1.readSrc();
+    sdst.read();
+
+    unsigned opsel = instData.OPSEL;
+    unsigned do_abs = instData.ABS;
+    unsigned do_neg = extData.NEG;
+
+    for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+        if (wf->execMask(lane)) {
+            uint32_t i0 = opsel & 0x1 ? bits(src0[lane], 31, 16)
+                                      : bits(src0[lane], 15, 0);
+            uint32_t i1 = opsel & 0x2 ? bits(src1[lane], 31, 16)
+                                      : bits(src1[lane], 15, 0);
+
+            AMDGPU::mxfloat16 s0(i0);
+            AMDGPU::mxfloat16 s1(i1);
+
+            if ((do_abs & 1) && (s0 < 0.0f)) {
+                s0 = -s0;
+            }
+            if ((do_abs & 2) && (s1 < 0.0f)) {
+                s1 = -s1;
+            }
+            if (do_neg & 1) {
+                s0 = -s0;
+            }
+            if (do_neg & 2) {
+                s1 = -s1;
+            }
+
+            sdst.setBit(lane, (float(s0) == float(s1)) ? 1 : 0);
+        }
+    }
+
+    sdst.write();
 } // execute
 // --- Inst_VOP3__V_CMP_LE_F16 class methods ---
 
@@ -701,7 +741,38 @@ Inst_VOP3__V_CMP_O_F16::~Inst_VOP3__V_CMP_O_F16()
 void
 Inst_VOP3__V_CMP_O_F16::execute(GPUDynInstPtr gpuDynInst)
 {
-    panicUnimplemented();
+    Wavefront *wf = gpuDynInst->wavefront();
+    ConstVecOperandU32 src0(gpuDynInst, extData.SRC0);
+    ConstVecOperandU32 src1(gpuDynInst, extData.SRC1);
+    ScalarOperandU64 sdst(gpuDynInst, instData.VDST);
+
+    src0.readSrc();
+    src1.readSrc();
+
+    panic_if(isSDWAInst(), "SDWA not implemented for %s", _opcode);
+    panic_if(isDPPInst(), "DPP not supported for %s", _opcode);
+
+    // Modifiers (abs, neg, etc.) should not impact anything as this is
+    // just a NaN check, so they are ignored here.
+    int opsel = instData.OPSEL;
+
+    for (int lane = 0; lane < NumVecElemPerVecReg; ++lane) {
+        if (wf->execMask(lane)) {
+            uint16_t S0 = opsel & 0x1 ? uint16_t(bits(src0[lane], 31, 16))
+                                      : uint16_t(bits(src0[lane], 15, 0));
+            uint16_t S1 = opsel & 0x2 ? uint16_t(bits(src1[lane], 31, 16))
+                                      : uint16_t(bits(src1[lane], 15, 0));
+
+            // NaN is max exponent + non-zero mantissa.
+            uint16_t expMask = 0x7C00;
+            uint16_t manMask = 0x03FF;
+            bool isS0NaN = (S0 & expMask) == expMask && (S0 & manMask) != 0;
+            bool isS1NaN = (S1 & expMask) == expMask && (S1 & manMask) != 0;
+            sdst.setBit(lane, (!isS0NaN && !isS1NaN) ? 1 : 0);
+        }
+    }
+
+    sdst.write();
 } // execute
 // --- Inst_VOP3__V_CMP_U_F16 class methods ---
 

@@ -212,10 +212,9 @@ cache_hierarchy = MESITwoLevelCacheHierarchy(
     l2_assoc=16,
     num_l2_banks=2,
 )
-# Memory: Dual Channel DDR4 2400 DRAM device.
-# The X86 board only supports 3 GiB of main memory.
 
-memory = DualChannelDDR4_2400(size="3GiB")
+# Memory: Dual Channel DDR4 2400 DRAM device. Use 4GiB to speedup boot.
+memory = DualChannelDDR4_2400(size="4GiB")
 
 # Here we setup the processor. This is a special switchable processor in which
 # a starting core type and a switch core type must be specified. Once a

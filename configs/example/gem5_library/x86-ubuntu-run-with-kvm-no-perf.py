@@ -80,7 +80,7 @@ cache_hierarchy = MESITwoLevelCacheHierarchy(
 )
 
 # Main memory
-memory = SingleChannelDDR4_2400(size="3GiB")
+memory = SingleChannelDDR4_2400()
 
 # Here we set up the processor. This is a special switchable processor in which
 # a starting core type and a switch core type must be specified. Once a
