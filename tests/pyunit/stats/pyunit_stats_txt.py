@@ -88,13 +88,11 @@ class StatsTxtParserTestCase(unittest.TestCase):
         self.assertNotIn("system.cpu.oneline_vector", stats)
 
     def test_comments_after_values_are_ignored(self):
-        dumps = parse_stats_text(
-            """
+        dumps = parse_stats_text("""
             ---------- Begin Simulation Statistics ----------
             system.cpu.numCycles 12 # description with words and 99
             ---------- End Simulation Statistics   ----------
-            """
-        )
+            """)
 
         self.assertEqual(12.0, dumps[0]["system.cpu.numCycles"])
 
@@ -126,16 +124,16 @@ class StatsTxtParserTestCase(unittest.TestCase):
             StatsParseError,
             "stats dump was not terminated",
         ):
-            parse_stats_text(
-                """
+            parse_stats_text("""
                 ---------- Begin Simulation Statistics ----------
                 simInsts 1
-                """
-            )
+                """)
 
     def test_end_before_begin_raises_clear_error(self):
         with self.assertRaisesRegex(
             StatsParseError,
             "found stats dump end before begin",
         ):
-            parse_stats_text("---------- End Simulation Statistics   ----------")
+            parse_stats_text(
+                "---------- End Simulation Statistics   ----------"
+            )
