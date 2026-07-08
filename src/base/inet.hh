@@ -48,6 +48,12 @@
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
 #include <netinet/ip_icmp.h>
+// We define __FAVOR_BSD to use the old BSD style names for parts of
+// network data packets, instead of the newer standard (POSIX) names
+// This is because some distribution will have a libdnet library
+// using new names for tcphdr class (source instead of th_sport
+// as an example)
+#define __FAVOR_BSD 1
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
 
