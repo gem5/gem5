@@ -54,6 +54,24 @@ DRAMSys::init()
     AbstractMemory::init();
 }
 
+void
+DRAMSys::resetStats()
+{
+    std::function<void(sc_core::sc_object *)> resetStatsForScObj;
+    resetStatsForScObj = [&](sc_core::sc_object *obj) {
+        if (auto *provider =
+                dynamic_cast<::DRAMSys::Stats::StatsProvider *>(obj)) {
+            provider->resetStats();
+            provider->updateStats();
+
+            for (auto *child : obj->get_child_objects()) {
+                resetStatsForScObj(child);
+            }
+        }
+    };
+    resetStatsForScObj(dramSysWrapper.dramsys.get());
+}
+
 gem5::Port &
 DRAMSys::getPort(const std::string &if_name, PortID idx)
 {

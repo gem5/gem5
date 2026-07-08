@@ -49,6 +49,7 @@ class DRAMSys : public AbstractMemory
   public:
     DRAMSys(Params const &params);
     void init() override;
+    void resetStats() override;
 
     gem5::Port &getPort(const std::string &if_name, PortID idx) override;
 
