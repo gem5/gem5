@@ -319,6 +319,7 @@ class NeoverseV2(ArmO3CPU):
 
     # The Neoverse Scheduler
     # Configured according to https://chipsandcheese.com/p/arms-neoverse-v2-in-awss-graviton-4
+    iqInsertionPolicy = "LeastLoaded"
     instQueues = [
         Neoverse_V2_IQ0(),
         Neoverse_V2_IQ1(),
