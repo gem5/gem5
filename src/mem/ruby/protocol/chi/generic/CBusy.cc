@@ -37,8 +37,8 @@
 
 #include "mem/ruby/protocol/chi/generic/CBusy.hh"
 
-#include "mem/ruby/protocol/CHI/Cache_Controller.hh"
-#include "mem/ruby/protocol/CHI/Memory_Controller.hh"
+#include "Cache_Controller.hh"
+#include "Memory_Controller.hh"
 
 namespace gem5
 {

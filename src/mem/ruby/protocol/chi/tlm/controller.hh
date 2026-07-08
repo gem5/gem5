@@ -40,9 +40,9 @@
 
 #include <ARM/TLM/arm_chi.h>
 
-#include "mem/ruby/protocol/CHI/CHIDataType.hh"
-#include "mem/ruby/protocol/CHI/CHIRequestType.hh"
-#include "mem/ruby/protocol/CHI/CHIResponseType.hh"
+#include "CHIDataType.hh"
+#include "CHIRequestType.hh"
+#include "CHIResponseType.hh"
 #include "mem/ruby/protocol/RequestStatus.hh"
 #include "mem/ruby/protocol/WriteMask.hh"
 #include "mem/ruby/protocol/chi/generic/CHIGenericController.hh"

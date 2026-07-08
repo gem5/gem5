@@ -55,6 +55,9 @@ def get_tlm_paths():
 if env["CONF"]["BUILD_TLM"]:
     include_path, lib_path, tlm_lib = get_tlm_paths()
 
+    # SLICC writes generated CHI headers under the protocol name, while the
+    # hand-written CHI sources live in a lower-case source directory.
+    env.Append(CPPPATH=Dir(env["BUILDDIR"]).Dir("mem/ruby/protocol/CHI"))
     env.Append(CPPPATH=include_path)
     env.Append(LIBPATH=lib_path)
     env.Append(LIBS=[tlm_lib])
