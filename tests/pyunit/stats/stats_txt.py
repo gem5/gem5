@@ -1,4 +1,4 @@
-# Copyright (c) 2026 The Regents of the University of California
+# Copyright (c) 2026 Sungkyunkwan University
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -43,6 +43,9 @@ _BEGIN_RE = re.compile(
     r"^---------- Begin Simulation Statistics(?: : (?P<message>.*))? ----------$"
 )
 _END_LINE = "---------- End Simulation Statistics   ----------"
+_INTEGER_RE = re.compile(r"^[+-]?\d+$")
+
+StatsValue = Union[int, float]
 
 
 class StatsParseError(ValueError):
@@ -51,11 +54,11 @@ class StatsParseError(ValueError):
 
 @dataclass
 class StatsDump:
-    stats: OrderedDictType[str, float]
+    stats: OrderedDictType[str, StatsValue]
     line_number: int
     message: str = ""
 
-    def __getitem__(self, stat_name: str) -> float:
+    def __getitem__(self, stat_name: str) -> StatsValue:
         return self.stats[stat_name]
 
 
@@ -134,7 +137,7 @@ def _parse_message(line: str) -> str:
 
 def _parse_stat_line(
     line: str, line_number: int
-) -> Optional[Tuple[str, float]]:
+) -> Optional[Tuple[str, StatsValue]]:
     parts = line.split(maxsplit=2)
     if len(parts) < 2:
         raise StatsParseError(f"line {line_number}: missing stat value")
@@ -145,12 +148,19 @@ def _parse_stat_line(
         # encode a single stat-name/value pair. Do not synthesize names here.
         return None
 
+    return name, _parse_value(value_text, line_number, name)
+
+
+def _parse_value(
+    value_text: str, line_number: int, stat_name: str
+) -> StatsValue:
+    if _INTEGER_RE.match(value_text):
+        return int(value_text)
+
     try:
-        value = float(value_text)
+        return float(value_text)
     except ValueError as error:
         raise StatsParseError(
             f"line {line_number}: invalid stat value '{value_text}' "
-            f"for '{name}'"
+            f"for '{stat_name}'"
         ) from error
-
-    return name, value

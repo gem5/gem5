@@ -1,4 +1,4 @@
-# Copyright (c) 2026 The Regents of the University of California
+# Copyright (c) 2026 Sungkyunkwan University
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -55,8 +55,8 @@ class StatsTxtParserTestCase(unittest.TestCase):
             list(dumps[0].stats.keys()),
         )
         self.assertEqual(0.000001, dumps[0]["simSeconds"])
-        self.assertEqual(1000.0, dumps[0]["simTicks"])
-        self.assertEqual(500.0, dumps[0]["system.cpu.numCycles"])
+        self.assertEqual(1000, dumps[0]["simTicks"])
+        self.assertEqual(500, dumps[0]["system.cpu.numCycles"])
 
     def test_multiple_dumps_preserve_order_and_messages(self):
         dumps = parse_stats_file(_FIXTURES / "multiple_dumps.txt")
@@ -64,8 +64,8 @@ class StatsTxtParserTestCase(unittest.TestCase):
         self.assertEqual(2, len(dumps))
         self.assertEqual("before reset", dumps[0].message)
         self.assertEqual("after reset", dumps[1].message)
-        self.assertEqual(100.0, dumps[0]["simInsts"])
-        self.assertEqual(2.0, dumps[1]["simInsts"])
+        self.assertEqual(100, dumps[0]["simInsts"])
+        self.assertEqual(2, dumps[1]["simInsts"])
 
     def test_subnames_and_numeric_edge_values(self):
         dumps = parse_stats_file(_FIXTURES / "edge_values.txt")
@@ -73,16 +73,18 @@ class StatsTxtParserTestCase(unittest.TestCase):
 
         self.assertIn("system.cpu.dcache.overallAccesses::cpu.data", stats)
         self.assertEqual(
-            42.0,
+            42,
             stats["system.cpu.dcache.overallAccesses::cpu.data"],
         )
         self.assertEqual(
-            0.0,
+            0,
             stats["system.cpu.branch-predictor.hits[0]"],
         )
+        self.assertEqual(18446744073709551615, stats["system.cpu.big_tick"])
+        self.assertIsInstance(stats["system.cpu.big_tick"], int)
         self.assertEqual(-7.5, stats["system.cpu.negative"])
         self.assertEqual(1250.0, stats["system.cpu.scientific"])
-        self.assertEqual(4.0, stats["system.cpu.percentages"])
+        self.assertEqual(4, stats["system.cpu.percentages"])
         self.assertTrue(math.isnan(stats["system.cpu.not_a_number"]))
         self.assertTrue(math.isinf(stats["system.cpu.infinity"]))
         self.assertNotIn("system.cpu.oneline_vector", stats)
@@ -94,7 +96,7 @@ class StatsTxtParserTestCase(unittest.TestCase):
             ---------- End Simulation Statistics   ----------
             """)
 
-        self.assertEqual(12.0, dumps[0]["system.cpu.numCycles"])
+        self.assertEqual(12, dumps[0]["system.cpu.numCycles"])
 
     def test_empty_dump_is_returned(self):
         dumps = parse_stats_file(_FIXTURES / "empty_dump.txt")
