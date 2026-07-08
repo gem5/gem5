@@ -2,6 +2,7 @@
 ---------- Begin Simulation Statistics ----------
 system.cpu.dcache.overallAccesses::cpu.data     42 # subname preserved
 system.cpu.branch-predictor.hits[0]              0 # zero value
+system.cpu.big_tick           18446744073709551615 # uint64 max preserved
 system.cpu.negative                             -7.5
 system.cpu.scientific                         1.25e+03 # scientific notation
 system.cpu.percentages                            4 25.00% 75.00% # pdf/cdf columns
