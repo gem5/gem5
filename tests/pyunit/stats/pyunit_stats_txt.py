@@ -56,6 +56,7 @@ class StatsTxtParserTestCase(unittest.TestCase):
         )
         self.assertEqual(0.000001, dumps[0]["simSeconds"])
         self.assertEqual(1000, dumps[0]["simTicks"])
+        self.assertIsInstance(dumps[0]["simTicks"], int)
         self.assertEqual(500, dumps[0]["system.cpu.numCycles"])
 
     def test_multiple_dumps_preserve_order_and_messages(self):
@@ -121,6 +122,14 @@ class StatsTxtParserTestCase(unittest.TestCase):
         ):
             parse_stats_file(_FIXTURES / "duplicate_stat.txt")
 
+    def test_missing_value_raises_clear_error(self):
+        with self.assertRaisesRegex(StatsParseError, "missing stat value"):
+            parse_stats_text("""
+                ---------- Begin Simulation Statistics ----------
+                simInsts
+                ---------- End Simulation Statistics   ----------
+                """)
+
     def test_unterminated_dump_raises_clear_error(self):
         with self.assertRaisesRegex(
             StatsParseError,
@@ -139,3 +148,16 @@ class StatsTxtParserTestCase(unittest.TestCase):
             parse_stats_text(
                 "---------- End Simulation Statistics   ----------"
             )
+
+    def test_begin_before_previous_end_raises_clear_error(self):
+        with self.assertRaisesRegex(
+            StatsParseError,
+            "found a new stats dump before the previous dump ended",
+        ):
+            parse_stats_text("""
+                ---------- Begin Simulation Statistics ----------
+                simInsts 1
+                ---------- Begin Simulation Statistics ----------
+                simInsts 2
+                ---------- End Simulation Statistics   ----------
+                """)
