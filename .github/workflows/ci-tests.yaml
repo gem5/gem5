@@ -245,7 +245,7 @@ jobs:
         steps:
         # Checkout the repository then download the gem5.opt artifact.
             - uses: actions/checkout@v7
-            - uses: actions/download-artifact@v4
+            - uses: actions/download-artifact@v8
               name: Download gem5 artifacts
               with:
                   pattern: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds*
