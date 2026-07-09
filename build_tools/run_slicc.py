@@ -77,9 +77,8 @@ def main():
     parser.add_argument("slicc_files", nargs="+")
     args = parser.parse_args()
 
-    sys.path.append(os.path.join(args.src_root, "src", "mem"))
-    sys.path.append(os.path.join(args.src_root, "ext", "ply"))
-
+    sys.path.insert(0, os.path.join(args.src_root, "ext", "ply"))
+    sys.path.insert(0, os.path.join(args.src_root, "src", "mem"))
     from slicc.parser import SLICC
 
     for slicc_file in args.slicc_files:
