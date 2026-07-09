@@ -34,7 +34,7 @@ jobs:
               run: scons build/ALL/unittests.${{ matrix.type.build }} --gcov -j $(nproc)
 
             - name: Upload coverage reports to Codecov
-              uses: codecov/codecov-action@v5
+              uses: codecov/codecov-action@v7
               with:
                   token: ${{ secrets.CODECOV_TOKEN }}
                   flags: unittests-${{ matrix.type.build }},overall-unittests,overall-length-${{ matrix.type.length }}
@@ -148,7 +148,7 @@ jobs:
                   path: tests/testing-results
 
             - name: Upload coverage reports to Codecov
-              uses: codecov/codecov-action@v5
+              uses: codecov/codecov-action@v7
               with:
                   token: ${{ secrets.CODECOV_TOKEN }}
                   flags: overall-testdir-${{steps.sanitize-test-dir.outputs.sanitized-test-dir}},overall-length-${{matrix.test-type.length}},${{steps.sanitize-test-dir.outputs.sanitized-test-dir}}-${{matrix.test-type.length}}
@@ -194,7 +194,7 @@ jobs:
                   path: tests/testing-results
 
             - name: Upload coverage reports to Codecov
-              uses: codecov/codecov-action@v5
+              uses: codecov/codecov-action@v7
               with:
                   token: ${{ secrets.CODECOV_TOKEN }}
                   flags: overall-gpu-tests,overall-length-${{ matrix.test-length }},gpu-tests-${{ matrix.test-length }}
@@ -219,7 +219,7 @@ jobs:
               working-directory: ${{ github.workspace }}/ext/sst
               run: sst --add-lib-path=./ sst/example.py
             - name: Upload coverage reports to Codecov
-              uses: codecov/codecov-action@v5
+              uses: codecov/codecov-action@v7
               with:
                   token: ${{ secrets.CODECOV_TOKEN }}
                   flags: sst-test,overall-length-long
@@ -246,7 +246,7 @@ jobs:
             - name: Continue gem5 within SystemC test
               run: LD_LIBRARY_PATH=build/ARM/:/opt/systemc/lib-linux64/ ./util/systemc/gem5_within_systemc/gem5.opt.sc m5out/config.ini
             - name: Upload coverage reports to Codecov
-              uses: codecov/codecov-action@v5
+              uses: codecov/codecov-action@v7
               with:
                   token: ${{ secrets.CODECOV_TOKEN }}
                   flags: systemc-test,overall-length-long
@@ -274,7 +274,7 @@ jobs:
                   ./build/ALL/gem5.opt configs/example/gem5_library/dramsys/dramsys-traffic.py
                   ./build/ALL/gem5.opt configs/example/dramsys.py
             - name: Upload coverage reports to Codecov
-              uses: codecov/codecov-action@v5
+              uses: codecov/codecov-action@v7
               with:
                   token: ${{ secrets.CODECOV_TOKEN }}
                   flags: dramsys-tests,overall-length-long
