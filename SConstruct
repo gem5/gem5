@@ -678,6 +678,7 @@ for variant_path in variant_paths:
         env.Append(CCFLAGS=['-Werror',
                              '-Wno-error=deprecated-declarations',
                              '-Wno-error=deprecated',
+                             '-Wno-error=nonportable-include-path',
                             ])
     else:
         error('\n'.join((
