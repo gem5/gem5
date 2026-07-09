@@ -18,7 +18,7 @@ The main website can be found at <http://www.gem5.org>.
 [![Daily Tests](https://github.com/gem5/gem5/actions/workflows/daily-tests.yaml/badge.svg?branch=develop)](https://github.com/gem5/gem5/actions/workflows/daily-tests.yaml)
 [![Weekly Tests](https://github.com/gem5/gem5/actions/workflows/weekly-tests.yaml/badge.svg?branch=develop)](https://github.com/gem5/gem5/actions/workflows/weekly-tests.yaml)
 [![Compiler Tests](https://github.com/gem5/gem5/actions/workflows/compiler-tests.yaml/badge.svg?branch=develop)](https://github.com/gem5/gem5/actions/workflows/compiler-tests.yaml)
-[![codecov](https://codecov.io/gh/gem5/gem5/branch/develop/graph/badge.svg)](https://codecov.io/gh/gem5/gem5)
+[![codecov](https://codecov.io/gh/gem5/gem5/branch/develop/graph/badge.svg)](https://app.codecov.io/gh/gem5/gem5/tree/develop)
 
 ## Getting started
 
