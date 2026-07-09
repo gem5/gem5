@@ -42,6 +42,7 @@ import sys
 import os
 import os.path
 import re
+import subprocess
 
 from gem5_scons import Transform
 
@@ -122,12 +123,14 @@ import ply
 arch_dir = Dir('.')
 
 def run_parser(target, source, env):
-    # Add the current directory to the system path so we can import files.
-    sys.path[0:0] = [ arch_dir.srcnode().abspath ]
-    import isa_parser
-
-    parser = isa_parser.ISAParser(target[0].dir.abspath)
-    parser.parse_isa_desc(source[0].abspath)
+    subprocess.check_call([
+        sys.executable,
+        File('#build_tools/run_isa_parser.py').abspath,
+        target[0].dir.abspath,
+        source[0].abspath,
+        '--src-root',
+        Dir('#').abspath,
+    ])
 
 desc_action = MakeAction(run_parser, Transform("ISA DESC", 1))
 
