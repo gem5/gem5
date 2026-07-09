@@ -23,7 +23,7 @@ jobs:
 
             - name: List targets
               id: generate
-              uses: docker/bake-action/subaction/list-targets@v4
+              uses: docker/bake-action/subaction/list-targets@v6
               with:
                   target: default
                   workdir: util/dockerfiles
@@ -49,7 +49,7 @@ jobs:
                   password: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Build and Push
-              uses: docker/bake-action@v6
+              uses: docker/bake-action@v7
               with:
                   source: '{{defaultContext}}:util/dockerfiles'
                   targets: base-images
@@ -89,7 +89,7 @@ jobs:
                   password: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Build and Push
-              uses: docker/bake-action@v6
+              uses: docker/bake-action@v7
               with:
                   source: '{{defaultContext}}:util/dockerfiles'
                   targets: ${{ matrix.target }}
