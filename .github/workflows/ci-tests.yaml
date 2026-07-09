@@ -224,7 +224,7 @@ jobs:
         # stripping the "build" directory. By adding the "anchor.txt" file, we
         # ensure the "build" directory is preserved.
             - run: echo "anchor" > anchor.txt
-            - uses: actions/upload-artifact@v4
+            - uses: actions/upload-artifact@v7
               with:
                   name: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds-${{ steps.sanitize-build-target.outputs.sanitized-build-target }}
                   path: |
@@ -273,7 +273,7 @@ jobs:
         # Upload the tests/testing-results directory as an artifact.
             - name: Upload results
               if: success() || failure()
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               with:
                   name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-quick-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir
                       }}-status-${{ steps.run-tests.outcome }}-output
@@ -306,7 +306,7 @@ jobs:
             # Upload the tests/testing-results directory as an artifact.
             - name: Upload results
               if: success() || failure()
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               with:
                   name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gpu-status-${{ steps.run-tests.outcome }}-output
                   path: tests/testing-results
