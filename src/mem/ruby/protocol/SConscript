@@ -28,6 +28,7 @@
 
 import os.path
 import re
+import subprocess
 import sys
 
 from SCons.Scanner import Classic
@@ -137,23 +138,30 @@ def slicc_emitter(target, source, env):
 
 
 def slicc_action(target, source, env):
+    cmd = [
+        sys.executable,
+        Dir("#").File("build_tools/run_slicc.py").abspath,
+        "--src-root",
+        Dir("#").abspath,
+        "--code-path",
+        output_dir.abspath,
+        "--protocol-base",
+        protocol_base.abspath,
+    ]
+
+    if GetOption("verbose"):
+        cmd.append("--verbose")
+
+    if env["CONF"]["SLICC_HTML"]:
+        cmd.extend(["--html-path", html_dir.abspath])
+
+    for include in slicc_includes:
+        cmd.extend(["--include", include])
+
     for s in source:
-        filepath = s.srcnode().abspath
-        slicc = SLICC(
-            filepath,
-            [
-                os.path.join(
-                    protocol_base.abspath, "RubySlicc_interfaces.slicc"
-                )
-            ],
-            protocol_base.abspath,
-            verbose=GetOption("verbose"),
-        )
-        slicc.process()
-        remove_stale_protocol_outputs(slicc)
-        slicc.writeCodeFiles(output_dir.abspath, slicc_includes)
-        if env["CONF"]["SLICC_HTML"]:
-            slicc.writeHTMLFiles(html_dir.abspath)
+        cmd.append(s.srcnode().abspath)
+
+    subprocess.run(cmd, check=True)
 
 
 slicc_builder = Builder(
