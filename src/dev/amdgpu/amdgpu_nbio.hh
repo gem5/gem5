@@ -68,6 +68,7 @@ class AMDGPUDevice;
 #define AMDGPU_MP0_SMN_C2PMSG_33 0x58184
 #define AMDGPU_MP0_SMN_C2PMSG_35 0x5818c
 #define AMDGPU_MP0_SMN_C2PMSG_64 0x58200
+#define AMDGPU_MP0_SMN_C2PMSG_67 0x5820c
 #define AMDGPU_MP0_SMN_C2PMSG_69 0x58214
 #define AMDGPU_MP0_SMN_C2PMSG_70 0x58218
 #define AMDGPU_MP0_SMN_C2PMSG_71 0x5821c
@@ -104,6 +105,8 @@ class AMDGPUDevice;
 #define MI300X_INV_ENG17_ACK10 0x162f98
 #define MI300X_INV_ENG17_ACK11 0x1e2f98
 #define MI300X_EPF0_STRAP0 0x34d8
+#define NBIO_PARTITION_COMPUTE_STATUS 0x3a0c
+#define NBIO_PARTITION_MEM_STATUS 0x3a10
 
 // Range of register addresses to store the base addresses of
 // page tables for contexts 0-15
@@ -118,6 +121,87 @@ class AMDGPUDevice;
 #define MI200_REG_BM_PAGE_TABLE_END_ADDR_START 0x6b1ac
 #define MI200_REG_BM_PAGE_TABLE_END_ADDR_END 0x6b1c8
 
+// These structures must precisely match the driver's definitions
+//(e.g., alignment and size)
+
+// Define command IDs
+/* load TA */
+static constexpr uint32_t GFX_CMD_ID_LOAD_TA = 0x00000001;
+/* Configure spatial partitioning mode */
+static constexpr uint32_t GFX_CMD_ID_SRIOV_SPATIAL_PART = 0x00000027;
+/* setup TMR region */
+static constexpr uint32_t GFX_CMD_ID_SETUP_TMR = 0x00000005;
+/* load HW IP FW */
+static constexpr uint32_t GFX_CMD_ID_LOAD_IP_FW = 0x00000006;
+static constexpr uint32_t PSP_RB_FRAME_SIZE_BYTES = 64;
+static constexpr uint32_t PSP_RB_FRAME_SIZE_DWORDS = 16;
+static constexpr uint32_t PSP_CMD_BUFFER_MAX_SIZE = 1024;
+
+// Ring Buffer Frame - always 64 bytes
+typedef struct GEM5_PACKED
+{
+    uint32_t cmd_buf_addr_lo; // 0
+    uint32_t cmd_buf_addr_hi; // 4
+    uint32_t cmd_buf_size;    // 8
+    uint32_t fence_addr_lo;   // 12
+    uint32_t fence_addr_hi;   // 16
+    uint32_t fence_value;     // 20
+    uint32_t reserved[10];    // 24-63
+} PspGfxRbFrame;              // sizeof = 64 bytes
+static_assert(sizeof(PspGfxRbFrame) == 64);
+// Main Command Structure Header (psp_gfx_cmd_resp in driver)
+typedef struct GEM5_PACKED
+{
+    uint32_t buf_size; // Size of this header structure
+    uint32_t buf_version;
+    uint32_t cmd_id; // The command identifier
+    //(e.g., GFX_CMD_ID_LOAD_TA)
+    // ... other fields not modelled here
+    uint32_t reserved[253]; // Padding to make total size 1KB
+} PspGfxCmdResp;
+static_assert(sizeof(PspGfxCmdResp) == 1024);
+
+// GFX_CMD_ID_LOAD_TA command payload (part of the union)
+typedef struct GEM5_PACKED
+{
+    uint32_t reserved_pre[3];
+    uint32_t cmd_buf_phys_addr_lo; // Address of
+    // the TA Command Buffer
+    uint32_t cmd_buf_phys_addr_hi;
+    uint32_t cmd_buf_len;
+
+} PspGfxCmdLoadTa;
+
+// GFX_CMD_ID_SRIOV_SPATIAL_PART command payload
+struct PspGfxCmdSriovSpatialPart
+{
+    // ... fields up to mode
+    uint32_t mode; // The partition mode value
+                   // ... other fields
+};
+
+// In src/dev/amdgpu/amdgpu_nbio.hh (outside the AMDGPUNbio class)
+
+// Context structure to hold data between asynchronous stages
+struct PspCommandContext
+{
+    // PSP Ring Frame (64 bytes)
+    PspGfxRbFrame frame = {};
+
+    // Command Buffer (Max 1KB, dynamically read)
+    uint8_t cmd_buffer[PSP_CMD_BUFFER_MAX_SIZE] = {};
+
+    // Fence information extracted from the frame
+    Addr fence_addr = 0;
+    uint32_t fence_value = 0;
+
+    Addr cmd_buf_addr = 0;
+    uint32_t sriov_spatial_mode = 0;
+
+    // The component name is needed for event scheduling
+    std::string name;
+};
+
 class AMDGPUNbio
 {
   public:
@@ -130,6 +214,8 @@ class AMDGPUNbio
 
     bool readFrame(PacketPtr pkt, Addr offset);
     void writeFrame(PacketPtr pkt, Addr offset);
+
+    void processPspCommand(uint32_t new_wptr);
 
     bool
     is_MI200_regBM_PAGE_TABLE_BASE_ADDR(Addr offset)
@@ -201,6 +287,17 @@ class AMDGPUNbio
     Addr psp_ring_listen_addr = 0;
     int psp_ring_size = 0;
     int psp_ring_value = 0;
+
+    // **REQUIRED PSP-specific MMIO state variables:**
+    uint32_t wptr = 0;        // (C2PMSG_67 update)
+    Addr ta_cmd_buf_addr = 0; // Holds the address from
+    // GFX_CMD_ID_LOAD_TA
+    uint32_t sriov_spatial_mode = 0; // Holds the mode from
+    // GFX_CMD_ID_SRIOV_SPATIAL_PART
+
+    void readCmdBufferAndProcess(PspCommandContext *ctx);
+    void CmdBufferAndProcessDone(PspCommandContext *ctx);
+    void fenceWriteDone(PspCommandContext *ctx);
 
     /*
      * Hold values of other registers not explicitly modelled by other blocks.
