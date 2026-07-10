@@ -34,7 +34,6 @@
 #include "debug/AMDGPUDevice.hh"
 #include "dev/amdgpu/amdgpu_device.hh"
 #include "mem/packet_access.hh"
-#include "sim/eventq.hh"
 
 namespace gem5
 {
@@ -325,25 +324,16 @@ AMDGPUNbio::processPspCommand(uint32_t new_wptr)
     uint32_t rb_frame_size_dw = PSP_RB_FRAME_SIZE_DWORDS;
     uint32_t ring_size_dw = psp_ring_size / 4;
 
-    // Calculate the previous wptr (in DWORDS)
-    // The calculation in the driver uses modulo before
-    // the division for the pointer
-    // so let's stick to using the previous wptr for the frame
-    // just submitted.
-    // (wptr - frame_size) % ring_size
     uint32_t submitted_wptr_dw;
 
-    submitted_wptr_dw = (new_wptr - rb_frame_size_dw) % ring_size_dw;
-
-    // we have to substract the base address from the acquired wptr to
-    // get the offset within the ring buffer
-    // put a check here
-    // search mmhub here to get the base address of the ring buffer
+    if (new_wptr == 0) {
+        submitted_wptr_dw = ring_size_dw - rb_frame_size_dw;
+    } else {
+        submitted_wptr_dw = (new_wptr - rb_frame_size_dw) % ring_size_dw;
+    }
 
     // Calculate the physical address of the submitted frame
     Addr frame_addr = psp_ring + (Addr)submitted_wptr_dw * 4;
-    // frame_addr = frame_addr - 64; // subtract the 64B frame
-    // size to get to the start of the frame
     DPRINTF(AMDGPUDevice,
             "PSP: Processing command at frame address before the Addr "
             "translation %#lx\n ",
@@ -369,8 +359,6 @@ AMDGPUNbio::processPspCommand(uint32_t new_wptr)
             "PSP: Reading 64B ring frame from physical address %#lx\n",
             frame_addr);
 
-    // ---------------------------------------------------------------
-
 // Extract key addresses immediately after read
 
     // Schedule the next stage: reading the command buffer, simulating latency
@@ -392,7 +380,6 @@ AMDGPUNbio::readCmdBufferAndProcess(PspCommandContext *ctx)
 
     ctx->cmd_buf_addr =
         (Addr)ctx->frame.cmd_buf_addr_hi << 32 | ctx->frame.cmd_buf_addr_lo;
-    // ctx->cmd_buf_addr = (Addr)ctx->frame.cmd_buf_addr;
     ctx->fence_addr =
         (Addr)ctx->frame.fence_addr_hi << 32 | ctx->frame.fence_addr_lo;
     ctx->fence_value = ctx->frame.fence_value;
@@ -445,7 +432,7 @@ AMDGPUNbio::CmdBufferAndProcessDone(PspCommandContext *ctx)
     switch (cmd_id) {
         case GFX_CMD_ID_LOAD_TA: {
             PspGfxCmdLoadTa *load_ta =
-                (PspGfxCmdLoadTa *)(ctx->cmd_buffer + 28);
+                (PspGfxCmdLoadTa *)(ctx->cmd_buffer + PSP_CMD_PAYLOAD_OFFSET);
 
             ta_cmd_buf_addr = (Addr)load_ta->cmd_buf_phys_addr_hi << 32 |
                               load_ta->cmd_buf_phys_addr_lo;
@@ -458,7 +445,8 @@ AMDGPUNbio::CmdBufferAndProcessDone(PspCommandContext *ctx)
 
         case GFX_CMD_ID_SRIOV_SPATIAL_PART: {
             PspGfxCmdSriovSpatialPart *spatial_part =
-                (PspGfxCmdSriovSpatialPart *)(ctx->cmd_buffer + 28);
+                (PspGfxCmdSriovSpatialPart *)(ctx->cmd_buffer +
+                                              PSP_CMD_PAYLOAD_OFFSET);
 
             ctx->sriov_spatial_mode = spatial_part->mode;
 

@@ -136,6 +136,8 @@ static constexpr uint32_t GFX_CMD_ID_LOAD_IP_FW = 0x00000006;
 static constexpr uint32_t PSP_RB_FRAME_SIZE_BYTES = 64;
 static constexpr uint32_t PSP_RB_FRAME_SIZE_DWORDS = 16;
 static constexpr uint32_t PSP_CMD_BUFFER_MAX_SIZE = 1024;
+// PSP command payload begins after the 28-byte command frame header.
+static constexpr uint32_t PSP_CMD_PAYLOAD_OFFSET = 28;
 
 // Ring Buffer Frame - always 64 bytes
 typedef struct GEM5_PACKED
@@ -179,8 +181,6 @@ struct PspGfxCmdSriovSpatialPart
     uint32_t mode; // The partition mode value
                    // ... other fields
 };
-
-// In src/dev/amdgpu/amdgpu_nbio.hh (outside the AMDGPUNbio class)
 
 // Context structure to hold data between asynchronous stages
 struct PspCommandContext
