@@ -78,6 +78,12 @@ class Instruction : public Value
     HWInterface *hw_interface;
 
   protected:
+    // Each conditions entry is [id, OpCode, cycles].
+    // BaseParamsIndex selects the first entry; CyclesIndex selects the cycles
+    // field.
+    static constexpr uint64_t BaseParamsIndex = 0;
+    static constexpr uint64_t CyclesIndex = 2;
+
     valueListTy staticDependencies;
     // Operands
     std::vector<SALAM::Operand> operands;
@@ -361,7 +367,7 @@ class Ret : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -437,7 +443,7 @@ class Br : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -507,7 +513,7 @@ class Switch : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -557,7 +563,7 @@ class Add : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -604,7 +610,7 @@ class FAdd : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -650,7 +656,7 @@ class Sub : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -696,7 +702,7 @@ class FSub : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -743,7 +749,7 @@ class Mul : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -789,7 +795,7 @@ class FMul : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -835,7 +841,7 @@ class UDiv : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -881,7 +887,7 @@ class SDiv : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -927,7 +933,7 @@ class FDiv : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -973,7 +979,7 @@ class URem : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -1019,7 +1025,7 @@ class SRem : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -1065,7 +1071,7 @@ class FRem : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -1115,7 +1121,7 @@ class Shl : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -1161,7 +1167,7 @@ class LShr : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -1207,7 +1213,7 @@ class AShr : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -1253,7 +1259,7 @@ class And : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -1299,7 +1305,7 @@ class Or : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -1346,7 +1352,7 @@ class Xor : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -1403,7 +1409,7 @@ class Load : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void loadInternal();
@@ -1463,7 +1469,7 @@ class Store : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -1535,7 +1541,7 @@ class GetElementPtr : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     virtual bool
     isGEP() override
@@ -1591,7 +1597,7 @@ class Trunc : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -1637,7 +1643,7 @@ class ZExt : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -1683,7 +1689,7 @@ class SExt : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -1731,7 +1737,7 @@ class FPToUI : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -1777,7 +1783,7 @@ class FPToSI : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -1823,7 +1829,7 @@ class UIToFP : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -1869,7 +1875,7 @@ class SIToFP : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -1915,7 +1921,7 @@ class FPTrunc : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -1961,7 +1967,7 @@ class FPExt : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -2007,7 +2013,7 @@ class PtrToInt : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -2053,7 +2059,7 @@ class IntToPtr : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -2098,7 +2104,7 @@ class BitCast : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -2150,7 +2156,7 @@ class ICmp : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -2197,7 +2203,7 @@ class FCmp : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -2264,7 +2270,7 @@ class Phi : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     virtual valueListTy getStaticDependencies() const override;
@@ -2317,7 +2323,7 @@ class Call : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
@@ -2372,7 +2378,7 @@ class Select : public Instruction
     uint64_t
     getCycleCount()
     {
-        return conditions.at(0).at(2);
+        return conditions.at(BaseParamsIndex).at(CyclesIndex);
     }
     void compute();
     void
