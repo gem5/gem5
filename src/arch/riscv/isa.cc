@@ -505,9 +505,21 @@ ISA::readMiscReg(RegIndex idx)
       case MISCREG_HARTID:
         return tc->contextId();
       case MISCREG_CYCLE:
-            return static_cast<RegVal>(tc->getCpuPtr()->curCycle());
+        {
+            // mcycle/minstret offsets are stored in miscRegFile. The
+            // simulator-owned curCycle()/totalInsts() values remain the
+            // source of counter progression.
+            const RegVal cur_cycle =
+                static_cast<RegVal>(tc->getCpuPtr()->curCycle());
+            return cur_cycle + miscRegFile[MISCREG_CYCLE];
+        }
       case MISCREG_CYCLEH:
-            return bits<RegVal>(tc->getCpuPtr()->curCycle(), 63, 32);
+        {
+            const RegVal cur_cycle =
+                static_cast<RegVal>(tc->getCpuPtr()->curCycle());
+            return bits<RegVal>(
+                cur_cycle + miscRegFile[MISCREG_CYCLE], 63, 32);
+        }
       case MISCREG_TIME: {
           RiscvSystem *sys = dynamic_cast<RiscvSystem *>(tc->getSystemPtr());
           panic_if(!sys, "read MISCREG_TIME not in RiscvSystem");
@@ -519,9 +531,18 @@ ISA::readMiscReg(RegIndex idx)
           return bits(sys->tryReadMtime(), 63, 32);
       }
       case MISCREG_INSTRET:
-            return static_cast<RegVal>(tc->getCpuPtr()->totalInsts());
+        {
+            const RegVal total_insts =
+                static_cast<RegVal>(tc->getCpuPtr()->totalInsts());
+            return total_insts + miscRegFile[MISCREG_INSTRET];
+        }
       case MISCREG_INSTRETH:
-            return bits<RegVal>(tc->getCpuPtr()->totalInsts(), 63, 32);
+        {
+            const RegVal total_insts =
+                static_cast<RegVal>(tc->getCpuPtr()->totalInsts());
+            return bits<RegVal>(
+                total_insts + miscRegFile[MISCREG_INSTRET], 63, 32);
+        }
       case MISCREG_IP:
         {
             auto ic = dynamic_cast<RiscvISA::Interrupts *>(
@@ -702,10 +723,74 @@ ISA::setMiscRegNoEffect(RegIndex idx, RegVal val)
 void
 ISA::setMiscReg(RegIndex idx, RegVal val)
 {
-    if (idx >= MISCREG_CYCLE && idx <= MISCREG_HPMCOUNTER31) {
-        // Ignore writes to HPM counters for now
-        warn("Ignoring write to miscreg %s.\n", MiscRegNames[idx]);
-    } else {
+    switch (idx) {
+      case MISCREG_CYCLE:
+        {
+            const RegVal cur_cycle =
+                static_cast<RegVal>(tc->getCpuPtr()->curCycle());
+
+            if (_rvType == RV32) {
+                const RegVal old_value =
+                    cur_cycle + miscRegFile[MISCREG_CYCLE];
+                const RegVal new_value =
+                    (old_value & ~mask(32)) | (val & mask(32));
+                setMiscRegNoEffect(MISCREG_CYCLE, new_value - cur_cycle);
+            } else {
+                setMiscRegNoEffect(MISCREG_CYCLE, val - cur_cycle);
+            }
+        }
+        break;
+      case MISCREG_CYCLEH:
+        {
+            const RegVal cur_cycle =
+                static_cast<RegVal>(tc->getCpuPtr()->curCycle());
+            const RegVal old_value =
+                cur_cycle + miscRegFile[MISCREG_CYCLE];
+            const RegVal new_value =
+                (old_value & mask(32)) | ((val & mask(32)) << 32);
+
+            setMiscRegNoEffect(MISCREG_CYCLE, new_value - cur_cycle);
+        }
+        break;
+      case MISCREG_INSTRET:
+        {
+            const RegVal total_insts =
+                static_cast<RegVal>(tc->getCpuPtr()->totalInsts());
+
+            if (_rvType == RV32) {
+                const RegVal old_value =
+                    total_insts + miscRegFile[MISCREG_INSTRET];
+                const RegVal new_value =
+                    (old_value & ~mask(32)) | (val & mask(32));
+                setMiscRegNoEffect(
+                    MISCREG_INSTRET, new_value - total_insts);
+            } else {
+                setMiscRegNoEffect(MISCREG_INSTRET, val - total_insts);
+            }
+        }
+        break;
+      case MISCREG_INSTRETH:
+        {
+            const RegVal total_insts =
+                static_cast<RegVal>(tc->getCpuPtr()->totalInsts());
+            const RegVal old_value =
+                total_insts + miscRegFile[MISCREG_INSTRET];
+            const RegVal new_value =
+                (old_value & mask(32)) | ((val & mask(32)) << 32);
+
+            setMiscRegNoEffect(MISCREG_INSTRET, new_value - total_insts);
+        }
+        break;
+      default:
+        if (idx == MISCREG_TIME ||
+                (idx >= MISCREG_HPMCOUNTER03 &&
+                 idx <= MISCREG_HPMCOUNTER31)) {
+            // Keep existing behavior for read-only time and unimplemented HPM
+            // counters.
+            warn("Ignoring write to miscreg %s.\n", MiscRegNames[idx]);
+            return;
+        }
+
         switch (idx) {
 
           // From section 3.7.1 of RISCV priv. specs
