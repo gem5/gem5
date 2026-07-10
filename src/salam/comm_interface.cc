@@ -59,6 +59,9 @@ constexpr uint8_t MmrRun = 0x01;
 constexpr uint8_t MmrBusy = 0x02;
 constexpr uint8_t MmrDone = 0x04;
 
+constexpr uint8_t MmrClearRunMask = 0xfe;
+constexpr uint8_t MmrClearRunBusyMask = 0xfc;
+
 } // anonymous namespace
 
 /*****************************************************************************
@@ -301,7 +304,7 @@ CommInterface::checkMMR()
             DPRINTF(CommInterface, "Checking MMR to see if Run bit set\n");
         }
         if (*mmreg & MmrRun) {
-            *mmreg &= ~MmrRun;
+            *mmreg &= MmrClearRunMask;
             *mmreg |= MmrBusy;
             computationNeeded = true;
             cu->initialize();
@@ -1028,7 +1031,7 @@ CommInterface::enqueueWrite(MemoryRequest *req)
 void
 CommInterface::finish()
 {
-    *mmreg &= ~(MmrRun | MmrBusy);
+    *mmreg &= MmrClearRunBusyMask;
     *mmreg |= MmrDone;
     computationNeeded = false;
     if (int_num > 0) {
@@ -1132,7 +1135,7 @@ CommInterface::write(PacketPtr pkt)
 
     pkt->makeAtomicResponse();
 
-    if (((*mmreg & 0x04) == 0x00) && int_flag) {
+    if (((*mmreg & MmrDone) == 0x00) && int_flag) {
         if (int_num > 0) {
             gic->clearInt(int_num);
         }
