@@ -146,78 +146,86 @@ class SimpleBTB(BranchTargetBuffer):
     )
 
 
+class BTBLevel(SimObject):
+    type = "BTBLevel"
+    cxx_class = "gem5::branch_prediction::BTBLevel"
+    cxx_header = "cpu/pred/multi_level_btb.hh"
+
+    tagBits = Param.Unsigned(64, "Size of the BTB tags, in bits")
+    numEntries = Param.Unsigned(4096, "Number of BTB entries")
+    associativity = Param.Unsigned(8, "BTB associativity")
+    latency = Param.Cycles(1, "BTB access latency in cycles")
+    inclusive = Param.Bool(
+        False,
+        "Whether this level is inclusive of the immediately upper level; "
+        "otherwise, this level is a victim buffer of the upper levels "
+        "(semi-exclusive). For semi-exclusive, see section 3.3 of paper "
+        '"Two Level Bulk Preload Branch Prediction" by IBM.',
+    )
+    instShiftAmt = Param.Unsigned(
+        Parent.instShiftAmt, "Number of bits to shift instructions by"
+    )
+    numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
+    replPolicy = Param.BaseReplacementPolicy(LRURP(), "BTB replacement policy")
+    indexingPolicy = Param.BTBIndexingPolicy(
+        BTBSetAssociative(
+            assoc=Parent.associativity,
+            num_entries=Parent.numEntries,
+            set_shift=Parent.instShiftAmt,
+            tag_bits=Parent.tagBits,
+            numThreads=Parent.numThreads,
+        ),
+        "BTB indexing policy",
+    )
+
+
 class MultiLevelBTB(BranchTargetBuffer):
     type = "MultiLevelBTB"
     cxx_class = "gem5::branch_prediction::MultiLevelBTB"
     cxx_header = "cpu/pred/multi_level_btb.hh"
 
-    threeLevel = Param.Bool(False, "Enable the third-level BTB")
-    inclusive = Param.Bool(
-        False,
-        "Let lower-level BTB be inclusive of upper-level BTB; otherwise, "
-        "lower-level BTB is a victim buffer of upper-level BTB "
-        "(semi-exclusive). For semi-exclusive, see section 3.3 of paper "
-        '"Two Level Bulk Preload Branch Prediction" by IBM.',
-    )
-
-    # L1-BTB configuration
-    l1NumEntries = Param.Unsigned(256, "Number of L1 BTB entries")
-    l1Associativity = Param.Unsigned(8, "L1 BTB associativity")
-    l1Latency = Param.Cycles(0, "L1 BTB access latency in cycles")
-    l1ReplPolicy = Param.BaseReplacementPolicy(
-        LRURP(), "L1 BTB replacement policy"
-    )
-    l1IndexingPolicy = Param.BTBIndexingPolicy(
-        BTBSetAssociative(
-            assoc=Parent.l1Associativity,
-            num_entries=Parent.l1NumEntries,
-            set_shift=Parent.instShiftAmt,
-            numThreads=1,
-        ),
-        "L1-BTB indexing policy",
-    )
-
-    # L2-BTB configuration
-    l2NumEntries = Param.Unsigned(4096, "Number of L2-BTB entries")
-    l2Associativity = Param.Unsigned(8, "L2-BTB associativity")
-    l2Latency = Param.Cycles(1, "L2-BTB override latency in cycles")
-    l2ReplPolicy = Param.BaseReplacementPolicy(
-        LRURP(), "L2-BTB replacement policy"
-    )
-    l2IndexingPolicy = Param.BTBIndexingPolicy(
-        BTBSetAssociative(
-            assoc=Parent.l2Associativity,
-            num_entries=Parent.l2NumEntries,
-            set_shift=Parent.instShiftAmt,
-            numThreads=1,
-        ),
-        "L2-BTB indexing policy",
-    )
-
-    # L3-BTB configuration, ignored when threeLevel set False
-    l3NumEntries = Param.Unsigned(16384, "Number of L3-BTB entries")
-    l3Associativity = Param.Unsigned(8, "L3-BTB associativity")
-    l3Latency = Param.Cycles(3, "L3-BTB override latency in cycles")
-    l3ReplPolicy = Param.BaseReplacementPolicy(
-        LRURP(), "L3-BTB replacement policy"
-    )
-    l3IndexingPolicy = Param.BTBIndexingPolicy(
-        BTBSetAssociative(
-            assoc=Parent.l3Associativity,
-            num_entries=Parent.l3NumEntries,
-            set_shift=Parent.instShiftAmt,
-            numThreads=1,
-        ),
-        "L3-BTB indexing policy",
+    levels = VectorParam.BTBLevel(
+        [],
+        "BTB levels ordered from the uppermost to the lowermost level",
     )
 
 
 class TwoLevelBTB(MultiLevelBTB):
-    threeLevel = False
+    levels = [
+        BTBLevel(
+            numEntries=256,
+            associativity=8,
+            latency=0,
+        ),
+        BTBLevel(
+            numEntries=16384,
+            associativity=8,
+            latency=3,
+            inclusive=False,
+        ),
+    ]
 
 
 class ThreeLevelBTB(MultiLevelBTB):
-    threeLevel = True
+    levels = [
+        BTBLevel(
+            numEntries=256,
+            associativity=8,
+            latency=0,
+        ),
+        BTBLevel(
+            numEntries=4096,
+            associativity=8,
+            latency=1,
+            inclusive=False,
+        ),
+        BTBLevel(
+            numEntries=16384,
+            associativity=8,
+            latency=3,
+            inclusive=True,
+        ),
+    ]
 
 
 class ConditionalPredictor(ClockedObject):
