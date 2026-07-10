@@ -678,7 +678,6 @@ for variant_path in variant_paths:
         env.Append(CCFLAGS=['-Werror',
                              '-Wno-error=deprecated-declarations',
                              '-Wno-error=deprecated',
-                             '-Wno-error=nonportable-include-path',
                             ])
     else:
         error('\n'.join((
@@ -760,6 +759,8 @@ for variant_path in variant_paths:
         with gem5_scons.Configure(env) as conf:
             conf.CheckCxxFlag('-Wno-c99-designator')
             conf.CheckCxxFlag('-Wno-defaulted-function-deleted')
+
+        env.Append(CCFLAGS=['-Wno-error=nonportable-include-path'])
 
         env.Append(TCMALLOC_CCFLAGS=['-fno-builtin'])
 
