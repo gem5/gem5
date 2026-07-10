@@ -67,7 +67,7 @@ MathExprPowerModel::startup()
             // Strip ::subname before resolving
             std::string statName = var;
             auto sepPos = var.find("::");
-            if (sepPos != std::string::npos){
+            if (sepPos != std::string::npos) {
                 statName = var.substr(0, sepPos);
             }
 
@@ -107,7 +107,7 @@ MathExprPowerModel::getStatValue(const std::string &name) const
     auto sepPos = name.find("::");
     if (sepPos != std::string::npos) {
         statName = name.substr(0, sepPos);
-        subName  = name.substr(sepPos + 2);  // skip "::"
+        subName = name.substr(sepPos + 2); // skip "::"
     }
     const auto it = statsMap.find(statName);
     assert(it != statsMap.cend());
@@ -123,16 +123,16 @@ MathExprPowerModel::getStatValue(const std::string &name) const
             // multi-bucket stat like overallAccesses
             // for now return total, later add #subname support here
             const VResult &results = fi->result();
-            for (size_t i = 0; i < fi->subnames.size(); i++){
-                if (fi->subnames[i] == subName)return results[i];
-
+            for (size_t i = 0; i < fi->subnames.size(); i++) {
+                if (fi->subnames[i] == subName) {
+                    return results[i];
+                }
             }
             return fi->total();
         }
-    // single value stat like ipc, simSeconds
-    return fi->total();
+        // single value stat like ipc, simSeconds
+        return fi->total();
     }
-
 
     panic("Unknown stat type!\n");
 }
