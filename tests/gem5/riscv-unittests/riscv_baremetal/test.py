@@ -1,4 +1,4 @@
-# Copyright (c) 2026 Jaeuk Lee
+# Copyright (c) 2026 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,18 +24,47 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-CROSS_COMPILE ?= riscv64-unknown-elf-
-CC = $(CROSS_COMPILE)gcc
-CFLAGS = -march=rv64imac_zicsr -mabi=lp64 -nostdlib -nostartfiles -static
-LDFLAGS = -Wl,-Ttext=0x80000000 -Wl,-e,_start
-OUT = riscv-counter-csr
+from testlib import (
+    config,
+    constants,
+    gem5_verify_config,
+)
+from testlib.helper import joinpath
 
-.PHONY: all clean
+baremetal_tests = (
+    (
+        "riscv-counter-csr",
+        joinpath(
+            config.base_dir,
+            "tests",
+            "test-progs",
+            "riscv-counter-csr",
+            "bin",
+            "riscv",
+            "baremetal",
+            "riscv-counter-csr",
+        ),
+    ),
+)
 
-all: $(OUT)
+baremetal_config = joinpath(
+    config.base_dir,
+    "tests",
+    "gem5",
+    "riscv-unittests",
+    "riscv_baremetal",
+    "configs",
+    "riscv_baremetal.py",
+)
 
-$(OUT): riscv-counter-csr.S
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
-
-clean:
-	rm -f $(OUT)
+for test_name, binary in baremetal_tests:
+    gem5_verify_config(
+        name=f"{test_name}-bare-metal",
+        verifiers=(),
+        fixtures=(),
+        config=baremetal_config,
+        config_args=[binary],
+        valid_isas=(constants.all_compiled_tag,),
+        valid_hosts=constants.supported_hosts,
+        length=constants.quick_tag,
+    )
