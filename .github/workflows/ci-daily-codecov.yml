@@ -34,13 +34,14 @@ jobs:
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         timeout-minutes: 60
         steps:
-            - uses: actions/checkout@v4
-
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha || github.sha }}
             - name: Run ALL/unittests.${{ matrix.type.build }} UnitTests
               run: scons build/ALL/unittests.${{ matrix.type.build }} --gcov -j $(nproc)
 
             - name: Upload coverage reports to Codecov
-              uses: codecov/codecov-action@v5
+              uses: codecov/codecov-action@v7
               with:
                   token: ${{ secrets.CODECOV_TOKEN }}
                   flags: unittests-${{ matrix.type.build }},overall-unittests,overall-length-${{ matrix.type.length }}
@@ -56,7 +57,9 @@ jobs:
             test-dirs-matrix-quick: ${{ steps.dir-matrix.outputs.test-dirs-matrix-quick }}
             test-dirs-matrix-long: ${{ steps.dir-matrix.outputs.test-dirs-matrix-long }}
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha || github.sha }}
             - name: Get directories for testlib-${{ matrix.type }}
               working-directory: ${{ github.workspace }}/tests
               id: dir-matrix
@@ -121,10 +124,11 @@ jobs:
         timeout-minutes: 1800 # 30 hours
         needs: [get-date, get-testlib-dirs, flatten-length-and-testdir-matrices]
         steps:
-            - uses: actions/checkout@v4
-
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha || github.sha }}
             - name: Cache build/ALL
-              uses: actions/cache@v4
+              uses: actions/cache@v6
               with:
                   path: build/ALL
                   key: testlib-build-all-${{ needs.get-date.outputs.date }}
@@ -145,14 +149,14 @@ jobs:
 
             - name: Upload results
               if: always()
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               with:
                   name: ci-daily-codecov-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-${{ matrix.test-type.length }}-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir
                       }}-status-${{ steps.run-tests.outcome }}-output
                   path: tests/testing-results
 
             - name: Upload coverage reports to Codecov
-              uses: codecov/codecov-action@v5
+              uses: codecov/codecov-action@v7
               with:
                   token: ${{ secrets.CODECOV_TOKEN }}
                   flags: overall-testdir-${{steps.sanitize-test-dir.outputs.sanitized-test-dir}},overall-length-${{matrix.test-type.length}},${{steps.sanitize-test-dir.outputs.sanitized-test-dir}}-${{matrix.test-type.length}}
@@ -168,10 +172,11 @@ jobs:
         needs: get-date
 
         steps:
-            - uses: actions/checkout@v4
-
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha || github.sha }}
             - name: Cache build/VEGA_X86
-              uses: actions/cache@v4
+              uses: actions/cache@v6
               with:
                   path: build/VEGA_X86
                   key: testlib-build-vega-${{ needs.get-date.outputs.date }}
@@ -191,14 +196,14 @@ jobs:
 
             - name: Upload results
               if: always()
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               with:
                   name: ci-daily-codecov-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gpu-status-${{ steps.run-tests.outcome }}-length-${{
                       matrix.test-length }}-output
                   path: tests/testing-results
 
             - name: Upload coverage reports to Codecov
-              uses: codecov/codecov-action@v5
+              uses: codecov/codecov-action@v7
               with:
                   token: ${{ secrets.CODECOV_TOKEN }}
                   flags: overall-gpu-tests,overall-length-${{ matrix.test-length }},gpu-tests-${{ matrix.test-length }}
@@ -210,7 +215,9 @@ jobs:
         timeout-minutes: 180
 
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha || github.sha }}
             - name: Build RISCV/libgem5_opt.so with SST
               run: scons build/RISCV/libgem5_opt.so --without-tcmalloc --duplicate-sources --ignore-style --gcov -j $(nproc)
             - name: Makefile ext/sst
@@ -223,7 +230,7 @@ jobs:
               working-directory: ${{ github.workspace }}/ext/sst
               run: sst --add-lib-path=./ sst/example.py
             - name: Upload coverage reports to Codecov
-              uses: codecov/codecov-action@v5
+              uses: codecov/codecov-action@v7
               with:
                   token: ${{ secrets.CODECOV_TOKEN }}
                   flags: sst-test,overall-length-long
@@ -235,14 +242,16 @@ jobs:
         timeout-minutes: 180
 
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha || github.sha }}
             - name: Build ARM/gem5.opt
               run: scons build/ARM/gem5.opt --ignore-style --duplicate-sources --gcov -j$(nproc)
             - name: disable systemc
               run: scons setconfig build/ARM --ignore-style USE_SYSTEMC=n
             - name: Build ARM/libgem5_opt.so
               run: scons build/ARM/libgem5_opt.so --with-cxx-config --without-python --without-tcmalloc -j$(nproc) --duplicate-sources
-            - name: Compile gem5 withing SystemC
+            - name: Compile gem5 within SystemC
               working-directory: ${{ github.workspace }}/util/systemc/gem5_within_systemc
               run: make
             - name: Run gem5 within SystemC test
@@ -250,7 +259,7 @@ jobs:
             - name: Continue gem5 within SystemC test
               run: LD_LIBRARY_PATH=build/ARM/:/opt/systemc/lib-linux64/ ./util/systemc/gem5_within_systemc/gem5.opt.sc m5out/config.ini
             - name: Upload coverage reports to Codecov
-              uses: codecov/codecov-action@v5
+              uses: codecov/codecov-action@v7
               with:
                   token: ${{ secrets.CODECOV_TOKEN }}
                   flags: systemc-test,overall-length-long
@@ -261,7 +270,9 @@ jobs:
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         timeout-minutes: 360 # 6 hours
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha || github.sha }}
             - name: Checkout DRAMSys
               working-directory: ${{ github.workspace }}/ext/dramsys
               run: git clone https://github.com/tukl-msd/DRAMSys --branch v5.3.1 --depth 1 DRAMSys
@@ -278,7 +289,7 @@ jobs:
                   ./build/ALL/gem5.opt configs/example/gem5_library/dramsys/dramsys-traffic.py
                   ./build/ALL/gem5.opt configs/example/dramsys.py
             - name: Upload coverage reports to Codecov
-              uses: codecov/codecov-action@v5
+              uses: codecov/codecov-action@v7
               with:
                   token: ${{ secrets.CODECOV_TOKEN }}
                   flags: dramsys-tests,overall-length-long
