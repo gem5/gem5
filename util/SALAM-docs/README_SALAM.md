@@ -54,7 +54,7 @@ The `BUILD_TYPE` argument sets the the building option for the project and can b
 
 # Using gem5-SALAM
 
-To use gem5-SALAM you need to define the computation model of you accelerator in your language of choice,and compile it to LLVM IR. Any control and dataflow graph optimization (eg. loop unrolling) should be handled by the compiler. You can construct accelerators by associating their LLVM IR with an LLVMInterface and connecting it to the desired CommInterface in the gem5 memory map.
+To use gem5-SALAM you need to define the computation model of you accelerator in your language of choice, and compile it to LLVM IR. Any control and dataflow graph optimization (eg. loop unrolling) should be handled by the compiler. You can construct accelerators by associating their LLVM IR with an LLVMInterface and connecting it to the desired CommInterface in the gem5 memory map.
 
 Below are some resources in the gem5-SALAM directory that can be used when getting started:
 
