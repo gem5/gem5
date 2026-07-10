@@ -760,6 +760,8 @@ for variant_path in variant_paths:
             conf.CheckCxxFlag('-Wno-c99-designator')
             conf.CheckCxxFlag('-Wno-defaulted-function-deleted')
 
+        env.Append(CCFLAGS=['-Wno-error=nonportable-include-path'])
+
         env.Append(TCMALLOC_CCFLAGS=['-fno-builtin'])
 
         # On Mac OS X/Darwin we need to also use libc++ (part of XCode) as
