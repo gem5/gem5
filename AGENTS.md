@@ -118,21 +118,6 @@ target normal work at `develop`; submit to staging only for release-critical
 fixes. Hotfixes branch from `stable`, require normal review, merge back to both
 `stable` and `develop`, and receive an incremented hotfix tag.
 
-# Code Review Guidance
-
-When reviewing pull requests:
-
-- Prioritize correctness over style.
-- Treat changes that could alter simulator behaviour as high priority.
-- Look for API compatibility issues.
-- Look for missing regression tests.
-- Verify documentation remains correct.
-- Consider host-side performance implications.
-- Ignore cosmetic formatting unless it harms readability.
-- Prefer existing gem5 idioms over generic C++ best practices.
-- When reporting a bug, explain the failure scenario.
-- Suggest a concrete fix where practical.
-
 ## Agent-Specific Notes
 
 Preserve user constraints. If asked not to compile or run simulations, stay
