@@ -109,7 +109,8 @@ class CustomMesh(SimpleNetwork):
             raise ValueError("num_rows and num_cols must both be > 0.")
 
         self._num_mesh_routers = self._num_rows * self._num_cols
-        self._router_latency = noc_params.router_latency
+        self._router_int_latency = noc_params.router_int_latency
+        self._router_ext_latency = noc_params.router_ext_latency
         self._router_link_latency = noc_params.router_link_latency
         self._node_link_latency = noc_params.node_link_latency
         self._cross_link_latency = noc_params.cross_link_latency
@@ -232,7 +233,9 @@ class CustomMesh(SimpleNetwork):
     def _create_rnf_router(self, mesh_router):
         # Create a zero-latency router bridging RNF controllers and mesh router.
         node_router = Switch(
-            router_id=len(self._routers), latency=self._node_router_latency
+            router_id=len(self._routers),
+            int_routing_latency=self._node_router_latency,
+            ext_routing_latency=self._node_router_latency,
         )
         self._routers.append(node_router)
 
@@ -278,6 +281,14 @@ class CustomMesh(SimpleNetwork):
 
         num_nodes_per_router = node_params.num_nodes_per_router
         router_idx_list = node_params.router_list
+        # We set the external link latency to the global node_link_larency, unless
+        # the latency is specialized by defining a CHI node specific
+        # inbound_link_latency
+        ext_link_latency = (
+            node_params.inbound_link_latency
+            if node_params.inbound_link_latency
+            else self._node_link_latency
+        )
 
         for router_id in router_idx_list:
             self._check_router_id(int(router_id), node_params.node_type)
@@ -317,7 +328,7 @@ class CustomMesh(SimpleNetwork):
                             link_id=self._link_count,
                             ext_node=controller,
                             int_node=router,
-                            latency=self._node_link_latency,
+                            latency=ext_link_latency,
                         )
                     )
                     self._link_count += 1
@@ -341,7 +352,7 @@ class CustomMesh(SimpleNetwork):
                             link_id=self._link_count,
                             ext_node=controller,
                             int_node=router,
-                            latency=self._node_link_latency,
+                            latency=ext_link_latency,
                         )
                     )
                     self._link_count += 1
@@ -497,7 +508,11 @@ class CustomMesh(SimpleNetwork):
     ):
         # Create all mesh routers.
         self._routers = [
-            Switch(router_id=i, latency=self._router_latency)
+            Switch(
+                router_id=i,
+                int_routing_latency=self._router_int_latency,
+                ext_routing_latency=self._router_ext_latency,
+            )
             for i in range(self._num_mesh_routers)
         ]
 

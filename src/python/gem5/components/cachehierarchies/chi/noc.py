@@ -40,6 +40,7 @@ from dataclasses import (
 )
 from typing import (
     List,
+    Optional,
     Tuple,
 )
 
@@ -54,9 +55,18 @@ class NoC_Params:
 
     router_link_latency: int = 1
     node_link_latency: int = 1
-    router_latency: int = 1
+    router_int_latency: int = 1
+    router_ext_latency: int = 1
     router_buffer_size: int = 4
     cntrl_msg_size: int = 8
+    req_int_channels: int = 1
+    snp_int_channels: int = 1
+    rsp_int_channels: int = 1
+    dat_int_channels: int = 1
+    req_ext_channels: int = 1
+    snp_ext_channels: int = 1
+    rsp_ext_channels: int = 1
+    dat_ext_channels: int = 1
     data_width: int = 32
     cross_links: List[Tuple[int, int]] = field(default_factory=list)
     cross_link_latency: int = 0
