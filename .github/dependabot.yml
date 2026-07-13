@@ -3,6 +3,8 @@ version: 2
 updates:
     - package-ecosystem: pip
       directory: /
+      exclude-paths:
+          - ext
       schedule:
           interval: monthly
       assignees:
