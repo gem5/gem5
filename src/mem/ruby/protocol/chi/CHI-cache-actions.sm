@@ -3391,6 +3391,7 @@ action(Send_Comp_WU, desc="") {
     out_msg.Destination.add(tbe.requestor);
     out_msg.txnId := tbe.txnId;
     out_msg.dbid := tbe.txnId;
+    out_msg.cbusy := getCurrCBusy(out_msg);
   }
 }
 
