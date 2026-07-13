@@ -4,7 +4,7 @@ updates:
     - package-ecosystem: pip
       directory: /
       exclude-paths:
-          - ext
+          - ext/**
       schedule:
           interval: monthly
       assignees:
