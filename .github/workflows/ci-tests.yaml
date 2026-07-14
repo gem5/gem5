@@ -208,7 +208,7 @@ jobs:
                       testlib-build-all
 
             - name: Build gem5
-              run: scons --no-compress-debug ${{ matrix.build-target }} -j $(nproc)
+              run: scons --no-compress-debug ${{ matrix.build-target }} -j $(nproc) --gcov
 
             - name: Sanitize build-target for artifact name
               id: sanitize-build-target
@@ -262,7 +262,7 @@ jobs:
             - name: Run quick ${{ matrix.test-dir }} tests
               id: run-tests
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --skip-build --exclude-tags gcn_gpu ${{  matrix.test-dir }}
+              run: ./main.py run --skip-build --exclude-tags gcn_gpu ${{  matrix.test-dir }} --gcov=test-only
 
         # Get the basename of the matrix.test-dir path (to name the artifact).
             - name: Sanitize test-dir for artifact name
