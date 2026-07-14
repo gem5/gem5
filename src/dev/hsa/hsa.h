@@ -79,7 +79,7 @@
 
 // Try to detect CPU endianness
 #if !defined(LITTLEENDIAN_CPU) && !defined(BIGENDIAN_CPU)
-#if defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || \
+#if defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) ||           \
     defined(_M_X64) || defined(__aarch64__) || defined(__loongarch__)
 #define LITTLEENDIAN_CPU
 #endif
