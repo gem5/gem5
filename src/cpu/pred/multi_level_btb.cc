@@ -21,6 +21,83 @@ BTBLevel::BTBLevel(const BTBLevelParams &p)
              "Number of BTB sets must be a power of two");
 }
 
+BTBEntry *
+BTBLevel::lookup(ThreadID tid, Addr instPC)
+{
+    auto *entry = btb.accessEntry({instPC, tid});
+    if (entry && !inclusive) {
+        btb.demoteEntry(entry);
+    }
+
+    return entry;
+}
+
+BTBEntry *
+BTBLevel::multiLookup(ThreadID tid, Addr instPC, Cycles &hit_latency,
+                      unsigned &hit_level)
+{
+    auto *entry = lookup(tid, instPC);
+    if (entry) {
+        hit_latency = latency;
+        hit_level = level;
+        return entry;
+    }
+
+    if (!nextLevel) {
+        return nullptr;
+    }
+
+    entry = nextLevel->multiLookup(tid, instPC, hit_latency, hit_level);
+    if (entry && inclusive) {
+        // Refilling into this level can cascade an eviction and overwrite
+        // the entry in the hit level. Preserve it before starting the refill.
+        BTBEntry hit_copy(*entry);
+        entry = insertEntry(tid, instPC, *hit_copy.target, hit_copy.inst);
+    }
+
+    return entry;
+}
+
+BTBEntry *
+BTBLevel::insertEntry(ThreadID tid, Addr instPC, const PCStateBase &target,
+                      StaticInstPtr inst)
+{
+    BTBEntry *entry = btb.findEntry({instPC, tid});
+    if (entry) {
+        btb.accessEntry(entry);
+    } else {
+        entry = btb.findVictim({instPC, tid}, false);
+
+        std::optional<BTBEntry> victim;
+        if (entry->isValid()) {
+            victim = *entry;
+        }
+
+        entry->invalidate();
+        btb.insertEntry({instPC, tid}, entry);
+
+        if (victim && nextLevel) {
+            nextLevel->doWriteback(tid, *victim);
+        }
+    }
+
+    entry->update(target, inst);
+    return entry;
+}
+
+void
+BTBLevel::doWriteback(ThreadID tid, const BTBEntry &upper_victim)
+{
+    // An inclusive level already contains entries inserted in its upper
+    // level. Only a victim-buffer level needs to accept the writeback.
+    if (inclusive) {
+        return;
+    }
+
+    insertEntry(tid, upper_victim.getBranchPC(), *upper_victim.target,
+                upper_victim.inst);
+}
+
 MultiLevelBTB::MultiLevelBTBStats::MultiLevelBTBStats(
     statistics::Group *parent, unsigned num_levels)
     : statistics::Group(parent),
@@ -48,6 +125,16 @@ MultiLevelBTB::MultiLevelBTB(const MultiLevelBTBParams &p)
                                           csprintf("L%d", level_num));
         ++level_num;
     }
+
+    for (unsigned level = 0; level < levels.size(); ++level) {
+        levels[level]->level = level;
+        if (level + 1 < levels.size()) {
+            levels[level]->nextLevel = levels[level + 1];
+        }
+    }
+
+    fatal_if(!levels.front()->inclusive, "%s: L1 BTB must be inclusive",
+             name());
 }
 
 void
@@ -78,51 +165,15 @@ MultiLevelBTB::lookup(ThreadID tid, Addr instPC, BranchType type)
 {
     stats.lookups[type]++;
 
-    unsigned level_num = 1;
-    for (auto *lookup_level : levels) {
-        auto *hit_entry = lookup_level->btb.accessEntry({instPC, tid});
-        if (hit_entry) {
-            BTBEntry *result = hit_entry;
-
-            if (level_num > 1) {
-                // If the hit level is a victum buffer, backup the hit entry,
-                // in case the victim from upper level overwrites the hit-entry
-                // slot when they are mapped to the same set in the hit level.
-                BTBEntry hit_backup(*hit_entry);
-
-                if (!lookup_level->inclusive) {
-                    // Demote the hit entry to the LRU position
-                    lookup_level->btb.demoteEntry(hit_entry);
-                }
-
-                bool first_level = true;
-                // Insert the hit entry into the L1 BTB and other
-                // upper levels which are inclusive.
-                for (auto *promotion_level : levels) {
-                    if (promotion_level == lookup_level) {
-                        break;
-                    }
-                    if (first_level || promotion_level->inclusive) {
-                        auto *allocated_entry =
-                            handleEviction(tid, instPC, promotion_level);
-                        allocated_entry->update(*hit_backup.target,
-                                                hit_backup.inst);
-
-                        if (first_level) {
-                            result = allocated_entry;
-                        }
-                    }
-                    first_level = false;
-                }
-            }
-
-            multilevelstats.levelHits[level_num - 1]++;
-            DPRINTF(BTB, "L%d BTB hit for PC %#x, latency=%d cycles\n",
-                    level_num, instPC, lookup_level->latency);
-            return BTBLookupResult(result->target.get(),
-                                   lookup_level->latency);
-        }
-        ++level_num;
+    Cycles hit_latency(0);
+    unsigned hit_level = 0;
+    auto *entry =
+        levels.front()->multiLookup(tid, instPC, hit_latency, hit_level);
+    if (entry) {
+        multilevelstats.levelHits[hit_level]++;
+        DPRINTF(BTB, "L%d BTB hit for PC %#x, latency=%d cycles\n",
+                hit_level + 1, instPC, hit_latency);
+        return BTBLookupResult(entry->target.get(), hit_latency);
     }
 
     // Miss all levels
@@ -150,74 +201,11 @@ MultiLevelBTB::update(ThreadID tid, Addr instPC, const PCStateBase &target,
 {
     stats.updates[type]++;
 
-    bool first_level = true;
-    for (auto *level : levels) {
-        if (first_level || level->inclusive) {
-            auto *entry = level->btb.findEntry({instPC, tid});
-            if (entry) {
-                level->btb.accessEntry(entry);
-            } else {
-                entry = handleEviction(tid, instPC, level);
-            }
-            entry->update(target, inst);
-        }
-        first_level = false;
-    }
-}
-
-BTBEntry *
-MultiLevelBTB::handleEviction(ThreadID tid, Addr instPC,
-                              BTBLevel *insertionLevel)
-{
-    auto &insertion_btb = insertionLevel->btb;
-    BTBEntry *victim_entry = insertion_btb.findVictim({instPC, tid}, false);
-
-    BTBEntry cur_victim(*victim_entry);
-    bool victim_valid = victim_entry->isValid();
-
-    victim_entry->invalidate();
-    insertion_btb.insertEntry({instPC, tid}, victim_entry);
-
-    bool reached_lower_level = false;
-    for (auto *level : levels) {
-        // Possible writeback only happens at lower levels.
-        if (!reached_lower_level) {
-            reached_lower_level = level == insertionLevel;
-            continue;
-        }
-
-        // If this BTB level acts as victim buffer of the upper-level BTB,
-        // settle the evicted victim from the upper-level in this level
-        // Otherwise, simply dump the evicted victim because this level is
-        // inclusive of the immediately upper level.
-        if (level->inclusive || !victim_valid) {
-            break;
-        }
-
-        auto &btb = level->btb;
-        Addr victim_pc = cur_victim.getBranchAddr();
-        BTBEntry *entry = btb.findEntry({victim_pc, tid});
-
-        std::optional<BTBEntry> next_victim;
-        if (entry) {
-            btb.accessEntry(entry);
-        } else {
-            entry = btb.findVictim({victim_pc, tid}, false);
-            if (entry->isValid()) {
-                next_victim = *entry;
-            }
-
-            entry->invalidate();
-            btb.insertEntry({victim_pc, tid}, entry);
-        }
-
-        entry->update(*cur_victim.target, cur_victim.inst);
-        victim_valid = next_victim.has_value();
-        if (victim_valid) {
-            cur_victim = *next_victim;
+    for (unsigned level = 0; level < levels.size(); ++level) {
+        auto *update_level = levels[level];
+        if (update_level->inclusive) {
+            update_level->insertEntry(tid, instPC, target, inst);
         }
     }
-
-    return victim_entry;
 }
 } // namespace gem5::branch_prediction

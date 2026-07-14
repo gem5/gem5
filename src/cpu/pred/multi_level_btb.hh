@@ -21,9 +21,31 @@ class BTBLevel : public SimObject
   private:
     friend class MultiLevelBTB;
 
+    /** Look up instPC at this level only. */
+    BTBEntry *lookup(ThreadID tid, Addr instPC);
+
+    /** Look up instPC at this level, recursing into nextLevel on a miss.
+     *  On a hit in a lower level, the entry is refilled into this level
+     *  (and any other inclusive level along the way) before returning.
+     *  hit_latency/hit_level report the latency and index of the level
+     *  that actually produced the hit, for stats/DPRINTF purposes.
+     */
+    BTBEntry *multiLookup(ThreadID tid, Addr instPC, Cycles &hit_latency,
+                          unsigned &hit_level);
+
+    /** Insert/update instPC's entry at this level, allocating (and
+     *  possibly evicting) a slot for it if it isn't already present.
+     */
+    BTBEntry *insertEntry(ThreadID tid, Addr instPC, const PCStateBase &target,
+                          StaticInstPtr inst);
+
+    void doWriteback(ThreadID tid, const BTBEntry &upper_victim);
+
     AssociativeCache<BTBEntry> btb;
     const Cycles latency;
     const bool inclusive;
+    BTBLevel *nextLevel = nullptr;
+    unsigned level = 0;
 };
 
 class MultiLevelBTB : public BranchTargetBuffer
@@ -45,9 +67,6 @@ class MultiLevelBTB : public BranchTargetBuffer
     const StaticInstPtr getInst(ThreadID tid, Addr instPC) override;
 
   private:
-    BTBEntry *handleEviction(ThreadID tid, Addr instPC,
-                             BTBLevel *insertionLevel);
-
     const std::vector<BTBLevel *> levels;
 
     struct MultiLevelBTBStats : public statistics::Group

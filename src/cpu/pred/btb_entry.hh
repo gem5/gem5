@@ -155,7 +155,7 @@ class BTBEntry : public ReplaceableEntry
           extractTag(ext),
           valid(false),
           tag({MaxAddr, -1}),
-          branchAddr(0)
+          branchPC(0)
     {}
 
     /** Update the target and instruction in the BTB entry.
@@ -188,7 +188,7 @@ class BTBEntry : public ReplaceableEntry
     {
         setValid();
         setTag({extractTag(key.address), key.tid});
-        branchAddr = key.address;
+        branchPC = key.address;
     }
 
     /** Copy constructor */
@@ -198,7 +198,7 @@ class BTBEntry : public ReplaceableEntry
         tag        = other.tag;
         inst       = other.inst;
         extractTag = other.extractTag;
-        branchAddr = other.branchAddr;
+        branchPC = other.branchPC;
         set(target, other.target);
     }
 
@@ -209,7 +209,7 @@ class BTBEntry : public ReplaceableEntry
         tag        = other.tag;
         inst       = other.inst;
         extractTag = other.extractTag;
-        branchAddr = other.branchAddr;
+        branchPC = other.branchPC;
         set(target, other.target);
 
         return *this;
@@ -239,11 +239,11 @@ class BTBEntry : public ReplaceableEntry
     /** Pointer to the static branch inst at this address */
     StaticInstPtr inst;
 
-    /** Get the entry's branch address. */
+    /** Get the entry's branch PC. */
     Addr
-    getBranchAddr() const
+    getBranchPC() const
     {
-        return branchAddr;
+        return branchPC;
     }
 
     std::string
@@ -281,8 +281,8 @@ class BTBEntry : public ReplaceableEntry
     /** The entry's tag. */
     KeyType tag;
 
-    /** The entry's branch address. */
-    Addr branchAddr;
+    /** The branch PC used to index the entry. */
+    Addr branchPC;
 };
 
 } // namespace gem5::branch_prediction

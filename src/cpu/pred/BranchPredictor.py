@@ -192,11 +192,7 @@ class MultiLevelBTB(BranchTargetBuffer):
 
 class TwoLevelBTB(MultiLevelBTB):
     levels = [
-        BTBLevel(
-            numEntries=256,
-            associativity=8,
-            latency=0,
-        ),
+        BTBLevel(numEntries=256, associativity=8, latency=0, inclusive=True),
         BTBLevel(
             numEntries=16384,
             associativity=8,
@@ -208,11 +204,7 @@ class TwoLevelBTB(MultiLevelBTB):
 
 class ThreeLevelBTB(MultiLevelBTB):
     levels = [
-        BTBLevel(
-            numEntries=256,
-            associativity=8,
-            latency=0,
-        ),
+        BTBLevel(numEntries=256, associativity=8, latency=0, inclusive=True),
         BTBLevel(
             numEntries=4096,
             associativity=8,
