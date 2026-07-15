@@ -112,3 +112,22 @@ class PciToPciBridge(PciType1Device):
 
         device.pio = self.internal_bus.mem_side_ports
         device.dma = self.internal_bus.cpu_side_ports
+
+
+class IPcieRootPort(PciToPciBridge):
+    """
+    Based on Intel 6th-10th Gen Core Processor PCIe Controller.
+    This doesn't include PCI capabilities, but is sufficient to have a working
+    PCI-to-PCI bridge.
+
+    Root ports support only one downstream device requires the downstream
+    device device to use pci_dev = 0.
+    """
+
+    VendorID = 0x8086
+    DeviceID = 0x1901
+    HeaderType = 1
+    Revision = 0x5
+    ProgIF = 0x00
+    SubClassCode = 0x04
+    ClassCode = 0x06
