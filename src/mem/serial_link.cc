@@ -147,8 +147,9 @@ SerialLink::SerialLinkRequestPort::recvTimingResp(PacketPtr pkt)
     // deserialization latency.
     Cycles cycles = delay;
     cycles += serial_link.ticksToCycles(
-        divCeil(sim_clock::as_int::s * pkt->getSize() * 8,
-                serial_link.num_lanes * serial_link.link_speed * 1000000000));
+        sim_clock::as_int::ns *
+        divCeil(pkt->getSize() * 8,
+                serial_link.num_lanes * serial_link.link_speed));
     Tick t = serial_link.clockEdge(cycles);
 
     //@todo: If the processor sends two uncached requests towards HMC and the
@@ -208,9 +209,10 @@ SerialLink::SerialLinkResponsePort::recvTimingReq(PacketPtr pkt)
             // serial link, we should account for its deserialization latency
             // only.
             Cycles cycles = delay;
-            cycles += serial_link.ticksToCycles(divCeil(
-                sim_clock::as_int::s * pkt->getSize() * 8,
-                serial_link.num_lanes * serial_link.link_speed * 1000000000));
+            cycles += serial_link.ticksToCycles(
+                sim_clock::as_int::ns *
+                divCeil(pkt->getSize() * 8,
+                        serial_link.num_lanes * serial_link.link_speed));
             Tick t = serial_link.clockEdge(cycles);
 
             //@todo: If the processor sends two uncached requests towards HMC
@@ -296,9 +298,10 @@ SerialLink::SerialLinkRequestPort::trySendTiming()
             DPRINTF(SerialLink, "Scheduling next send\n");
 
             // Make sure bandwidth limitation is met
-            Cycles cycles = serial_link.ticksToCycles(divCeil(
-                sim_clock::as_int::s * pkt->getSize() * 8,
-                serial_link.num_lanes * serial_link.link_speed * 1000000000));
+            Cycles cycles = serial_link.ticksToCycles(
+                sim_clock::as_int::ns *
+                divCeil(pkt->getSize() * 8,
+                        serial_link.num_lanes * serial_link.link_speed));
             Tick t = serial_link.clockEdge(cycles);
             serial_link.schedule(sendEvent, std::max(next_req.tick, t));
         }
@@ -342,9 +345,10 @@ SerialLink::SerialLinkResponsePort::trySendTiming()
             DPRINTF(SerialLink, "Scheduling next send\n");
 
             // Make sure bandwidth limitation is met
-            Cycles cycles = serial_link.ticksToCycles(divCeil(
-                sim_clock::as_int::s * pkt->getSize() * 8,
-                serial_link.num_lanes * serial_link.link_speed * 1000000000));
+            Cycles cycles = serial_link.ticksToCycles(
+                sim_clock::as_int::ns *
+                divCeil(pkt->getSize() * 8,
+                        serial_link.num_lanes * serial_link.link_speed));
             Tick t = serial_link.clockEdge(cycles);
             serial_link.schedule(sendEvent, std::max(next_resp.tick, t));
         }
