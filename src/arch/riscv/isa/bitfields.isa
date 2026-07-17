@@ -142,6 +142,7 @@ def bitfield KFUNCT5    <29:25>;
 def bitfield BS         <31:30>;
 
 // Vector instructions
+def bitfield VSEW       vtype8.vsew;
 def bitfield VFUNCT6    vfunct6;
 def bitfield VFUNCT5    vfunct5;
 def bitfield VFUNCT3    vfunct3;
