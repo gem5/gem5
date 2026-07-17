@@ -74,7 +74,7 @@ RegisterBank is typically mapped into an address range and connected within the 
 
 ## NoncoherentDma
 
-NoncohherentDma provides a memory-to-memory transfer. This is useful for copying data to and from system memory and scratchpads. The MMR layout of the NoncoherentDma is described in noncoherent_dma.hh.
+NoncoherentDma provides a memory-to-memory transfer. This is useful for copying data to and from system memory and scratchpads. The MMR layout of the NoncoherentDma is described in noncoherent_dma.hh.
 
 NoncoherentDma is generally used when you want explicit bulk movement (e.g., system memory → scratchpad before compute, scratchpad → system memory after compute) without stream semantics. It is programmed through its MMRs and performs timed transfers through the memory system based on the connectivity you provide (system-side and accelerator-local side).
 

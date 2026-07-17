@@ -5,8 +5,9 @@ gem5-SALAM (System Architecture for LLVM-based Accelerator Modeling), is a novel
 # Requirements
 
 - gem5 dependencies
-- LLVM-9 or newer
+- LLVM 11–20 (see `SUPPORTED_LLVM_VERSIONS` in `SConstruct`)
 - Frontend LLVM compiler for preferred development language (eg. clang for C)
+- ARM bare-metal cross-compiler (`gcc-arm-none-eabi`) to build SALAM benchmarks / host ELFs
 
 # gem5-SALAM Setup
 
@@ -24,13 +25,23 @@ For a quick start, one can simply run the following to install LLVM and Clang on
 ```bash
 sudo apt install llvm-12 llvm-12-tools clang-12
 ```
-After installing these specific libraries, simply run the [update alternatives](https://github.com/TeCSAR-UNCC/gem5-SALAM/blob/main/docs/update-alternatives.sh) script in docs/.
+Ensure `llvm-config` and `clang` are on your `PATH`. If your package manager installs versioned binaries (for example `llvm-config-12`), point `LLVM_CONFIG` at the matching `llvm-config` or create symlinks so the unversioned names resolve.
 
-Alternatively, you can install the latest version of LLVM via your system package manager or build from source found at https://github.com/llvm/llvm-project.
+Alternatively, you can install a supported LLVM version via your system package manager or build from source found at https://github.com/llvm/llvm-project.
+
+## ARM Cross-Compiler (for benchmarks)
+
+To compile SALAM host programs and related bare-metal support code:
+
+```bash
+sudo apt-get install gcc-multilib gcc-arm-none-eabi
+```
 
 # Building gem5-SALAM
 
 When building gem5-SALAM, there are multiple different binary types that can be created. Just like in gem5 the options are debug, opt, fast, prof, and perf. We recommend that users either use the opt or debug builds, as these are the build types we develop and test on.
+
+`--with-salam` currently requires an **ARM** build target.
 
 Below are the bash commands you would use to build the opt or debug binary.
 
@@ -44,74 +55,44 @@ scons build/ARM/gem5.debug --with-salam -j`nproc`
 
 For more information regarding the binary types, and other build information refer to the gem5 build documentation [here](http://learning.gem5.org/book/part1/building.html).
 
-# Building with docker
-You can use the Dockerfile given in the `docker/` directory to build the project and run the benchmarks. To build the project use the following command:
-```bash
-docker build . --file docker/Dockerfile --build-arg BUILD_TYPE="opt"
-```
-
-The `BUILD_TYPE` argument sets the the building option for the project and can be `opt` or `debug`.
-
 # Using gem5-SALAM
 
-To use gem5-SALAM you need to define the computation model of you accelerator in your language of choice, and compile it to LLVM IR. Any control and dataflow graph optimization (eg. loop unrolling) should be handled by the compiler. You can construct accelerators by associating their LLVM IR with an LLVMInterface and connecting it to the desired CommInterface in the gem5 memory map.
+To use gem5-SALAM you need to define the computation model of your accelerator in your language of choice, and compile it to LLVM IR. Any control and dataflow graph optimization (eg. loop unrolling) should be handled by the compiler. You can construct accelerators by associating their LLVM IR with an LLVMInterface and connecting it to the desired CommInterface in the gem5 memory map.
 
 Below are some resources in the gem5-SALAM directory that can be used when getting started:
 
 - Examples for system-level configuration can be found in **configs/SALAM/HWAcc.py**.
-- Accelerator benchmarks and examples can be found in **gem5-resources**.
+- The in-tree accelerator example is **BFS** under **configs/example/gem5_library/salam-benchmarks/** (`src/bfs`). Additional SALAM benchmarks will be made available later through [gem5 Resources](https://resources.gem5.org).
+- You can also add your own benchmarks. A detailed walkthrough is in **util/SALAM-docs/Building_and_Integrating_Accelerators.md**.
 
-## System Validation Examples
+## Quickstart: build and run BFS
 
-The system validation examples under **configs/example/gem5-library/salam-benchmarks** are good examples for how you interface with the gem5-SALAM simulation objects.
+The BFS example under **configs/example/gem5_library/salam-benchmarks** shows how to interface with the gem5-SALAM simulation objects.
 
-In order to use the system validation benchmarks, it is required to have the ARM GCC cross-compiler installed. If you didn't already install it when you setup the dependencies, you can install it in Ubuntu by running the below command:
-
-```bash
-sudo apt-get install gcc-multilib gcc-arm-none-eabi
-```
-
-**run_system.sh** requires environment variables named **M5_PATH** and **ACC_BENCH_PATH** to be set. You will want to point them to your gem5 and benchmark root paths (respectively) as shown below.
+`run_system.sh` requires **M5_PATH** and **ACC_BENCH_PATH**. Point `ACC_BENCH_PATH` at the buildable **`src/`** tree (it has Makefiles). The sibling **`workloads/`** tree is a precompiled snapshot without Makefiles and is not the default path when `BUILD=True` (the script default). Invoke the script with `bash` (its shebang is not on the first line). Paths passed to `--bench-path` are relative to `ACC_BENCH_PATH`.
 
 ```bash
-export M5_PATH=/path/to/gem5 root
+export M5_PATH=/path/to/gem5
+export ACC_BENCH_PATH=$M5_PATH/configs/example/gem5_library/salam-benchmarks/src
+
+cd $M5_PATH
+scons build/ARM/gem5.opt --with-salam -j`nproc`
+
+# Optional: build the workload yourself first
+# cd $ACC_BENCH_PATH/bfs && make
+
+bash $M5_PATH/util/SALAM-tools/run_system.sh --bench bfs --bench-path bfs
 ```
 
-```bash
-export ACC_BENCH_PATH=/path/to/benchmarks root
-```
-
-All paths passed at runtime as arguments would be relative to this benchmark root.
-
-Next, compile your desired example.
-
-```bash
-cd $ACC_BENCH_PATH/[benchmark path relative to ACC_BENCH_PATH]
-make
-```
-Alternatively, you can set the BUILD option to True in `run_system.sh`.
-
-Finally, you can run any of the benchmarks you have compiled by running the run system script.
-
-```bash
-$M5_PATH/util/SALAM-tools/run_system.sh --bench [benchmark name] --bench-path [benchmark path relative to ACC_BENCH_PATH]
-```
-
-For instance, for bfs you would run:
-
-```bash
-$M5_PATH/util/SALAM-tools/run_system.sh --bench bfs --bench-path bfs
-```
-
-If you would like to see the gem5-SALAM command created by the shell file you would just need to inspect the **RUN_SCRIPT** variable in the shell file.
+With `BUILD=True` (the default), `run_system.sh` runs `make all` in `$ACC_BENCH_PATH/bfs` before launching gem5. To inspect the gem5 command line it constructs, see the **RUN_SCRIPT** variable in the shell file.
 
 ## Hardware Profiles
 
 ### Default hardware profile
 
-gem5-SALAM ships with a checked-in **default hardware profile** under **src/salam/HWModeling/**. It targets a **40nm technology node** with a **5ns cycle-time** budget and is organized in YAML as `functional_units/40nm_model/5ns/default_profile/`. That profile covers the functional units and instruction mappings needed to run all benchmarks in the sys_validation SALAM suite. Rebuild gem5 with `--with-salam` and use `run_system.sh` as usual; you do not need to regenerate this model to run those benchmarks.
+gem5-SALAM ships with a checked-in **default hardware model** (generated C++/Python under **src/salam/HWModeling/** and **src/salam/FunctionalUnits.py**). It targets a **40nm technology node** with a **5ns cycle-time** budget. Rebuild gem5 with `--with-salam` and use `run_system.sh` as usual; you do not need to regenerate this model to run the in-tree BFS example.
 
-The BFS example under **configs/example/gem5_library/salam-benchmarks/src/bfs** includes a copy of that profile layout under **configs/hw_interface/** so you can see how the default was specified and regenerate locally if you change it.
+The **YAML sources** used to regenerate that model live with the workload, not under `src/salam/HWModeling/`. The BFS example under **configs/example/gem5_library/salam-benchmarks/src/bfs** includes them at **configs/hw_interface/** (`functional_units/40nm_model/5ns/default_profile/`, plus `instructions/inst_list.yml`).
 
 ### Where profile numbers come from
 
@@ -124,19 +105,17 @@ The directory name **`5ns`** under `functional_units/40nm_model/` is the profile
 
 Separately, each workload **config.yml** `hw_config` section supplies per-kernel **`runtime_cycles`** at simulation time via `AccConfig()`. Those workload-specific instruction latencies are not regenerated by **HWProfileGenerator**; update them manually if you change functional-unit bindings or timing after regenerating.
 
-Power and area for accelerator **scratchpad memories** (Vars, SPMs) are modeled separately through **cacti-SALAM** (see below), not through the functional-unit YAML `power_model` block.
+To compute power from your own or profile coefficients during a run, extend **`LLVMInterface::printResults()`** in **src/salam/llvm_interface.cc** (that is where the current end-of-run power/area estimates live).
 
 ### Customizing or regenerating a profile
 
-To customize functional-unit or instruction timing models, edit the YAML hardware profile and rerun **util/SALAM-tools/hw_generator**. Profile inputs for the BFS example live at:
+To customize functional-unit or instruction timing models, edit the YAML hardware profile and rerun **util/SALAM-tools/hw_generator**. To see how a custom hardware profile is specified, refer to the in-tree BFS example:
 
 **configs/example/gem5_library/salam-benchmarks/src/bfs/configs/hw_interface/**
 
 * `instructions/inst_list.yml` — master instruction list (the generator updates functional-unit mappings here)
 * `functional_units/40nm_model/5ns/default_profile/*/*.yml` — functional units read by **HWProfileGenerator**
 * `functional_units/40nm_model/5ns/additional_units/float_trig_sine/` — example optional functional unit (see below)
-
-Benchmarks in a separate benchmarks repository use the same layout under **sys_validation/\<bench\>/configs/hw_interface/**.
 
 ### Adding a custom functional unit
 
@@ -150,16 +129,11 @@ To include a custom unit when regenerating:
 
 ### Regenerating from YAML
 
+`--bench-path` is the workload directory under `ACC_BENCH_PATH` (defaults to the same name as `-b` / `--bench`). For in-tree BFS with `ACC_BENCH_PATH=.../salam-benchmarks/src`, that is `bfs` → `$ACC_BENCH_PATH/bfs`.
+
 ```bash
 export M5_PATH=/path/to/gem5
 export ACC_BENCH_PATH=$M5_PATH/configs/example/gem5_library/salam-benchmarks/src
-python3 util/SALAM-tools/hw_generator/HWProfileGenerator.py -b bfs --bench-path bfs
-```
-
-For benchmarks under `sys_validation/<bench>/` relative to `ACC_BENCH_PATH`:
-
-```bash
-export ACC_BENCH_PATH=/path/to/benchmarks
 python3 util/SALAM-tools/hw_generator/HWProfileGenerator.py -b bfs
 ```
 
@@ -169,28 +143,26 @@ _Note that the default checked-in SALAM hardware profile uses the floating-point
 
 ## Power Modeling using cacti-SALAM
 
-The cacti-SALAM toolchain is a mini-suite of Python scripts to drive CACTI analyses on SALAM scratchpad memories based on YAML accelerator config, aggregating power/area/delay results.
-
-Start by running the setup script:
+**cacti-SALAM** (`util/SALAM-tools/cacti-SALAM`) is an **offline helper** for running CACTI on accelerator YAML configs. It is **not wired into** gem5-SALAM simulation.
 
 ```bash
 cd util/SALAM-tools/cacti-SALAM
-./setup_cacti_salam.py
+./setup_cacti_SALAM.py
 ```
 
-Next, in `$ACC_BENCH_PATH/benchmarks.list`, prepare a list of lines with the following fields:
+Create `$ACC_BENCH_PATH/benchmarks.list` with lines of the form:
 
 ```
 path/to/config.yml <benchmark name> <config name>
 ```
 
-Finally, run cacti-SALAM using the following script to generate the lookup table:
+Then:
 
 ```bash
-python3 ./run_cacti_salam.py --bench-list $ACC_BENCH_PATH/benchmarks.list --delay 1.0
+python3 ./run_cacti_SALAM.py --bench-list $ACC_BENCH_PATH/benchmarks.list --delay 1.0
 ```
 
-Check `tools/cacti-SALAM/results/SALAM-out.csv` for the consolidated table of `Benchmark,Config,Acc,…<CACTI columns>`, which will be used by the simulation to generate power/area/delay results.
+Results are written to `util/SALAM-tools/cacti-SALAM/results/SALAM-out.csv`. To use those (or other) coefficients in a simulation power estimate, add code in **`LLVMInterface::printResults()`** in **src/salam/llvm_interface.cc**.
 
 # Resources
 
@@ -204,11 +176,11 @@ The gem5 documentation has a [tutorial for working with gem5](http://learning.ge
 
 ## Building and Integrating Accelerators in gem5-SALAM
 
-We have written a guide on how to create the GEMM system validation example. This will help you get started with creating your own benchmarks and systems. It can be viewed [here](https://github.com/TeCSAR-UNCC/gem5-SALAM/blob/master/docs/Building_and_Integrating_Accelerators.md).
+We have written a guide that walks through the in-tree BFS example. This will help you get started with creating your own benchmarks and systems. It can be viewed at **util/SALAM-docs/Building_and_Integrating_Accelerators.md**.
 
 ## SALAM Object Overview
 
-The [SALAM Object Overview](https://github.com/TeCSAR-UNCC/gem5-SALAM/blob/master/docs/SALAM_Object_Overview.md) covers what various Sim Objects in gem5-SALAM are and their purpose.
+The overview at **util/SALAM-docs/SALAM_Object_Overview.md** covers what various Sim Objects in gem5-SALAM are and their purpose.
 
 ## Full-system OS Simulation ##
 
