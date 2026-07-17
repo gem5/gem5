@@ -141,15 +141,20 @@ class CustomMesh(SimpleTopology):
     # distributeNodes
     # --------------------------------------------------------------------------
 
-    def _createRNFRouter(self, mesh_router):
+    def _createRNFRouter(self, noc_params, mesh_router):
         # Create a zero-latency router bridging node controllers
         # and the mesh router
-        node_router = self._Router(
-            router_id=len(self._routers), latency=self.node_router_latency
-        )
+        node_router = self._Router(router_id=len(self._routers))
         node_router._row = mesh_router._row
         node_router._col = mesh_router._col
         node_router._main = False
+
+        if hasattr(node_router, "int_routing_latency"):
+            node_router.int_routing_latency = self.node_router_latency
+            node_router.ext_routing_latency = self.node_router_latency
+        else:
+            node_router.latency = self.node_router_latency
+
         self._routers.append(node_router)
 
         # connect node_router <-> mesh router
@@ -158,7 +163,7 @@ class CustomMesh(SimpleTopology):
                 link_id=self._link_count,
                 src_node=node_router,
                 dst_node=mesh_router,
-                latency=self._router_link_latency,
+                latency=noc_params.node_link_latency,
             )
         )
         self._link_count += 1
@@ -168,19 +173,19 @@ class CustomMesh(SimpleTopology):
                 link_id=self._link_count,
                 src_node=mesh_router,
                 dst_node=node_router,
-                latency=self._router_link_latency,
+                latency=noc_params.node_link_latency,
             )
         )
         self._link_count += 1
 
         return node_router
 
-    def distributeNodes(self, node_placement_config, node_list):
+    def distributeNodes(self, noc_params, node_params, node_list):
         if len(node_list) == 0:
             return
 
-        num_nodes_per_router = node_placement_config.num_nodes_per_router
-        router_idx_list = node_placement_config.router_list
+        num_nodes_per_router = node_params.num_nodes_per_router
+        router_idx_list = node_params.router_list
 
         if num_nodes_per_router:
             # evenly distribute nodes to all listed routers
@@ -196,7 +201,7 @@ class CustomMesh(SimpleTopology):
                 # and the mesh router
                 # for non-RNF nodes, node router is mesh router
                 if isinstance(node, CHI.CHI_RNF):
-                    router = self._createRNFRouter(router)
+                    router = self._createRNFRouter(noc_params, router)
 
                 # connect all ctrls in the node to node_router
                 ctrls = node.getNetworkSideControllers()
@@ -206,9 +211,10 @@ class CustomMesh(SimpleTopology):
                             link_id=self._link_count,
                             ext_node=c,
                             int_node=router,
-                            latency=self._node_link_latency,
+                            latency=node_params.inbound_link_latency,
                         )
                     )
+                    # See CHI_config.py for outbound_link_latency
                     self._link_count += 1
                     c._row = router._row
                     c._col = router._col
@@ -221,7 +227,7 @@ class CustomMesh(SimpleTopology):
                 router = self._routers[ridx]
 
                 if isinstance(node, CHI.CHI_RNF):
-                    router = self._createRNFRouter(router)
+                    router = self._createRNFRouter(noc_params, router)
                 ctrls = node.getNetworkSideControllers()
                 for c in ctrls:
                     self._ext_links.append(
@@ -229,7 +235,7 @@ class CustomMesh(SimpleTopology):
                             link_id=self._link_count,
                             ext_node=c,
                             int_node=router,
-                            latency=self._node_link_latency,
+                            latency=node_params.inbound_link_latency,
                         )
                     )
                     self._link_count += 1
@@ -253,13 +259,6 @@ class CustomMesh(SimpleTopology):
         self._Router = Router
 
         self.node_router_latency = 1 if options.network == "garnet" else 0
-        if hasattr(options, "router_link_latency"):
-            self._router_link_latency = options.router_link_latency
-            self._node_link_latency = options.node_link_latency
-        else:
-            print("WARNING: router/node link latencies not provided")
-            self._router_link_latency = options.link_latency
-            self._node_link_latency = options.link_latency
         self._custom_links = options.custom_links
 
         # classify nodes into different types
@@ -313,10 +312,18 @@ class CustomMesh(SimpleTopology):
                 )
 
         # Create all mesh routers
-        self._routers = [
-            Router(router_id=i, latency=options.router_latency)
-            for i in range(num_mesh_routers)
-        ]
+        self._routers = [Router(router_id=i) for i in range(num_mesh_routers)]
+        # Set up latency
+        if hasattr(self._routers[0], "int_routing_latency"):
+            for router in self._routers:
+                router.int_routing_latency = options.router_int_latency
+                router.ext_routing_latency = options.router_ext_latency
+        else:
+            print("WARNING: router does not support int/ext routing latencies")
+            for router in self._routers:
+                router.latency = max(
+                    options.router_int_latency, options.router_ext_latency
+                )
 
         # Assign helpers later needed by generate_dot
         for row in range(num_rows):
@@ -344,23 +351,23 @@ class CustomMesh(SimpleTopology):
         self._makeCustomMesh()
 
         # Place CHI_RNF on the mesh
-        self.distributeNodes(rnf_params, rnf_nodes)
+        self.distributeNodes(options, rnf_params, rnf_nodes)
 
         # Place CHI_HNF on the mesh
-        self.distributeNodes(hnf_params, hnf_nodes)
+        self.distributeNodes(options, hnf_params, hnf_nodes)
 
         # Place CHI_MN on the mesh
-        self.distributeNodes(mn_params, mn_nodes)
+        self.distributeNodes(options, mn_params, mn_nodes)
 
         # Place CHI_SNF_MainMem on the mesh
-        self.distributeNodes(mem_params, mem_nodes)
+        self.distributeNodes(options, mem_params, mem_nodes)
 
         # Place all IO mem nodes on the mesh
-        self.distributeNodes(io_mem_params, io_mem_nodes)
+        self.distributeNodes(options, io_mem_params, io_mem_nodes)
 
         # Place all IO request nodes on the mesh
-        self.distributeNodes(rni_dma_params, rni_dma_nodes)
-        self.distributeNodes(rni_io_params, rni_io_nodes)
+        self.distributeNodes(options, rni_dma_params, rni_dma_nodes)
+        self.distributeNodes(options, rni_io_params, rni_io_nodes)
 
         # Set up
         network.int_links = self._int_links
