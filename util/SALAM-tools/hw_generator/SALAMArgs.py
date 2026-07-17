@@ -51,7 +51,7 @@ def HWArgs():
         "--bench-path",
         type=str,
         default=None,
-        help="Path to benchmark directory relative to ACC_BENCH_PATH "
-        "(default: sys_validation/<bench>, e.g. bfs for in-tree workloads)",
+        help="Path to the benchmark directory relative to ACC_BENCH_PATH "
+        "(default: same as --bench, e.g. bfs → $ACC_BENCH_PATH/bfs)",
     )
     return parser.parse_args()

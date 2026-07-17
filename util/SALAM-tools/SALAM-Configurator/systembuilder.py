@@ -76,8 +76,8 @@ def parse_cur_args():
     argparser = argparse.ArgumentParser(description="SALAM System Builder")
     argparser.add_argument(
         "--bench-path",
-        help="Path to Benchmark Directory Relative to ACC_BENCH_PATH."
-        "e.g. gemm's bench path will be benchmarks/sys_validation/gemm",
+        help="Path to the benchmark directory relative to ACC_BENCH_PATH "
+        "(e.g. bfs → $ACC_BENCH_PATH/bfs)",
         required=True,
     )
     argparser.add_argument(

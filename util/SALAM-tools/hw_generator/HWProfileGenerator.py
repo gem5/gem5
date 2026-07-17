@@ -60,7 +60,7 @@ SALAM_DIR = os.path.join(M5_PATH, "src", "salam")
 def resolve_bench_dir(benchname, bench_path=None):
     if bench_path:
         return os.path.join(ACC_BENCH_PATH, bench_path)
-    return os.path.join(ACC_BENCH_PATH, "sys_validation", benchname)
+    return os.path.join(ACC_BENCH_PATH, benchname)
 
 
 class HWModel:
