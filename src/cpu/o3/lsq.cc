@@ -844,6 +844,7 @@ LSQ::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
                     thread[tid]->storeQueue[inst->sqIdx].setRequest(nullptr);
                 }
                 request->discard();
+                inst->clearRequest();
             }
         }
     }

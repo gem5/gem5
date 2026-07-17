@@ -1932,6 +1932,7 @@ def template VlElementMicroConstructor {{
     if (_has_rs2) {
         setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs2]);
     }
+    SET_VM_SRC();
     this->flags[IsLoad] = true;
 }
 

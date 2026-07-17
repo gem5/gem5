@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2019 The Regents of the University of California
  * Copyright (c) 2018-2019, 2021 Arm Limited
+ * Copyright (c) 2026 Google Inc
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -265,7 +266,7 @@ TEST(AddrRangeTest, isSubsetPartialSubset)
 
 TEST(AddrRangeTest, isSubsetInterleavedCompleteOverlap)
 {
-    AddrRange r1(0x00, 0x100, {0x40}, 0);
+    AddrRange r1(0x00, 0x100, std::vector<Addr>{0x40}, 0);
     AddrRange r2(0x00, 0x40);
 
     EXPECT_TRUE(r2.isSubset(r1));
@@ -273,7 +274,7 @@ TEST(AddrRangeTest, isSubsetInterleavedCompleteOverlap)
 
 TEST(AddrRangeTest, isSubsetInterleavedNoOverlap)
 {
-    AddrRange r1(0x00, 0x100, {0x40}, 1);
+    AddrRange r1(0x00, 0x100, std::vector<Addr>{0x40}, 1);
     AddrRange r2(0x00, 0x40);
 
     EXPECT_FALSE(r2.isSubset(r1));
@@ -281,7 +282,7 @@ TEST(AddrRangeTest, isSubsetInterleavedNoOverlap)
 
 TEST(AddrRangeTest, isSubsetInterleavedPartialOverlap)
 {
-    AddrRange r1(0x00, 0x100, {0x40}, 0);
+    AddrRange r1(0x00, 0x100, std::vector<Addr>{0x40}, 0);
     AddrRange r2(0x10, 0x50);
 
     EXPECT_FALSE(r2.isSubset(r1));
@@ -1594,8 +1595,346 @@ TEST(AddrRangeDeathTest, ExcludeInterleavingRanges)
         AddrRange(0x180, 0x210),
     };
 
-    AddrRange r(0x100, 0x200, {1}, 0);
+    AddrRange r(0x100, 0x200, std::vector<Addr>{1}, 0);
 
     EXPECT_TRUE(r.interleaved());
     EXPECT_DEATH(r.exclude(exclude_ranges), "");
+}
+
+/*
+ * Modulo Interleaving Tests
+ */
+
+TEST(AddrRangeTest, ModuloSimple)
+{
+    // Range 0-300, 3 stripes.
+    // Stripe 0: 0, 3, 6...
+    // Stripe 1: 1, 4, 7...
+    // Stripe 2: 2, 5, 8...
+    AddrRange r0(0, 300, 3, 0);
+    AddrRange r1(0, 300, 3, 1);
+    AddrRange r2(0, 300, 3, 2);
+
+    EXPECT_TRUE(r0.contains(0));
+    EXPECT_FALSE(r0.contains(1));
+    EXPECT_FALSE(r0.contains(2));
+    EXPECT_TRUE(r0.contains(3));
+    EXPECT_FALSE(r0.contains(4));
+    EXPECT_FALSE(r0.contains(5));
+
+    EXPECT_FALSE(r1.contains(0));
+    EXPECT_TRUE(r1.contains(1));
+    EXPECT_FALSE(r1.contains(2));
+    EXPECT_FALSE(r1.contains(3));
+    EXPECT_TRUE(r1.contains(4));
+    EXPECT_FALSE(r1.contains(5));
+
+    EXPECT_FALSE(r2.contains(0));
+    EXPECT_FALSE(r2.contains(1));
+    EXPECT_TRUE(r2.contains(2));
+    EXPECT_FALSE(r2.contains(3));
+    EXPECT_FALSE(r2.contains(4));
+    EXPECT_TRUE(r2.contains(5));
+
+    EXPECT_EQ(100, r0.size());
+    EXPECT_EQ(100, r1.size());
+    EXPECT_EQ(100, r2.size());
+}
+
+TEST(AddrRangeTest, ModuloOffset)
+{
+    // Range 0-300, 3 stripes, intlv_bit=0.
+    AddrRange r(0, 300, 3, 1); // matches 1, 4, 7...
+
+    // 1 is the 0th element in this range.
+    EXPECT_EQ(0, r.getOffset(1));
+    // 4 is the 1st element.
+    EXPECT_EQ(1, r.getOffset(4));
+    // 7 is the 2nd element.
+    EXPECT_EQ(2, r.getOffset(7));
+}
+
+TEST(AddrRangeTest, ModuloGranularity)
+{
+    // 2 stripes, granularity 4 (bit 2).
+    // range 0-96.
+    // stripe 0: 0-3, 8-11, 16-19...
+    // stripe 1: 4-7, 12-15, 20-23...
+    AddrRange r(0, 96, 2, 1, 2);
+
+    EXPECT_FALSE(r.contains(0)); // 0>>2 = 0. 0%2 = 0 != 1.
+    EXPECT_FALSE(r.contains(3));
+    EXPECT_TRUE(r.contains(4)); // 4>>2 = 1. 1%2 = 1 == 1.
+    EXPECT_TRUE(r.contains(7));
+    EXPECT_FALSE(r.contains(8));
+
+    // Size: 50?
+    // 0-100 = 100 bytes.
+    // 100 / 4 = 25 blocks.
+    // 25 / 2 = 12 blocks for stripe 1 (since 25 is odd, 12.5? No integers).
+    // Blocks: 0, 1, 2, ... 24.
+    // Stripe 0: 0, 2, 4... 24 (13 blocks)
+    // Stripe 1: 1, 3, 5... 23 (12 blocks)
+    // Size = 12 * 4 = 48 bytes?
+    // Let's check calculation: (100 - 0) -> compact(100) - compact(0).
+    // compact(0) = 0.
+    // compact(100): 100>>2 = 25. 25/2 = 12. 12<<2 = 48. 100&3 = 0. Total 48.
+    // Correct.
+    EXPECT_EQ(48, r.size());
+
+    // Offset of 4 should be 0.
+    EXPECT_EQ(0, r.getOffset(4));
+    // Offset of 5 should be 1.
+    EXPECT_EQ(1, r.getOffset(5));
+    // Offset of 12 (block 3, matches 3%2=1)
+    // Block 1 (4-7) -> local block 0 -> offset 0
+    // Block 3 (12-15) -> local block 1 -> offset 4
+    EXPECT_EQ(4, r.getOffset(12));
+}
+
+/*
+ * Sparse Policy Tests
+ */
+
+TEST(AddrRangeTest, SparseSimple)
+{
+    // Ranges: 0-100, 200-300.
+    std::vector<std::pair<Addr, Addr>> ranges = {{0, 100}, {200, 300}};
+    AddrRange r(ranges);
+
+    EXPECT_EQ(0, r.start());
+    EXPECT_EQ(300, r.end());
+    EXPECT_EQ(200, r.size()); // 100 + 100
+    EXPECT_FALSE(r.interleaved());
+    EXPECT_TRUE(r.isSparse());
+
+    EXPECT_TRUE(r.contains(0));
+    EXPECT_TRUE(r.contains(99));
+    EXPECT_FALSE(r.contains(100)); // Hole check
+    EXPECT_FALSE(r.contains(199));
+    EXPECT_TRUE(r.contains(200));
+    EXPECT_TRUE(r.contains(299));
+    EXPECT_FALSE(r.contains(300));
+}
+
+TEST(AddrRangeTest, SparseOffset)
+{
+    // Ranges: 0-100, 200-300.
+    std::vector<std::pair<Addr, Addr>> ranges = {{0, 100}, {200, 300}};
+    AddrRange r(ranges);
+
+    EXPECT_EQ(0, r.getOffset(0));
+    EXPECT_EQ(99, r.getOffset(99));
+    // 200 should map to 100 (start of second chunk maps to end of first
+    // offsetwise)
+    EXPECT_EQ(100, r.getOffset(200));
+    EXPECT_EQ(101, r.getOffset(201));
+    EXPECT_EQ(199, r.getOffset(299));
+}
+
+TEST(AddrRangeTest, SparseIntersection)
+{
+    // Sparse range: 0-100, 200-300
+    std::vector<std::pair<Addr, Addr>> ranges = {{0, 100}, {200, 300}};
+    AddrRange rSparse(ranges);
+
+    // Flat range in hole: 100-200
+    AddrRange rHole(100, 200);
+    EXPECT_FALSE(rSparse.intersects(rHole));
+    EXPECT_FALSE(rHole.intersects(rSparse));
+
+    // Flat range overlapping first chunk
+    AddrRange rOverlap1(50, 150);
+    EXPECT_TRUE(rSparse.intersects(rOverlap1));
+    EXPECT_TRUE(rOverlap1.intersects(rSparse));
+
+    // Flat range overlapping second chunk
+    AddrRange rOverlap2(250, 350);
+    EXPECT_TRUE(rSparse.intersects(rOverlap2));
+    EXPECT_TRUE(rOverlap2.intersects(rSparse));
+
+    // Flat range fully containing sparse
+    AddrRange rContainer(0, 400);
+    EXPECT_TRUE(rSparse.intersects(rContainer));
+
+    // Sparse vs Sparse disjoint
+    // Sparse2: 100-200 (in hole of rSparse)
+    std::vector<std::pair<Addr, Addr>> ranges2 = {{100, 200}};
+    AddrRange rSparse2(ranges2);
+    EXPECT_FALSE(rSparse.intersects(rSparse2));
+
+    // Sparse vs Sparse overlapping
+    // Sparse3: 50-150
+    std::vector<std::pair<Addr, Addr>> ranges3 = {{50, 150}};
+    AddrRange rSparse3(ranges3);
+    EXPECT_TRUE(rSparse.intersects(rSparse3));
+}
+
+TEST(AddrRangeTest, ConstructorMergeTest)
+{
+    // 1. Compatible policies (Modulo) - Forward order
+    // 2 stripes, bit 6.
+    // Range: 0-256. Stripes: 0 (0-128 interleaved), 1 (0-128 interleaved).
+    // Actually stripes split the address space.
+    // 2 stripes, bit 0 (interleave bit).
+    // range 0-100.
+    // r1: match 0. (0, 2, 4...)
+    // r2: match 1. (1, 3, 5...)
+    // Combined: 0-100 flat.
+    // Wait, Modulo constructor signature:
+    // AddrRange(start, end, stripes, intlvMatch, intlvLowBit)
+    AddrRange m1(0, 100, 2, 0, 0); // stripes=2, match=0, bit=0
+    AddrRange m2(0, 100, 2, 1, 0); // stripes=2, match=1, bit=0
+    std::vector<AddrRange> ranges = {m1, m2};
+    AddrRange merged(ranges);
+    EXPECT_FALSE(merged.interleaved());
+    EXPECT_EQ(merged.start(), 0);
+    EXPECT_EQ(merged.end(), 100);
+
+    // 2. Reverse order
+    std::vector<AddrRange> rangesRev = {m2, m1};
+    AddrRange mergedRev(rangesRev);
+    EXPECT_FALSE(mergedRev.interleaved());
+    EXPECT_EQ(mergedRev.start(), 0);
+    EXPECT_EQ(mergedRev.end(), 100);
+
+    // 3. Incompatible policies (Masked + Modulo)
+    // Masked: 0-100, masks={1}, match=0
+    AddrRange k1(0, 100, std::vector<Addr>{1}, 0);
+    std::vector<AddrRange> mixed = {m1, k1};
+    // Expected to fail
+    EXPECT_ANY_THROW({ AddrRange r(mixed); });
+
+    // 4. Incompatible policies (Modulo mismatch)
+    // Different stripes
+    AddrRange m3(0, 99, 3, 0, 0); // 3 stripes
+    std::vector<AddrRange> mismatch = {m1, m3};
+    EXPECT_ANY_THROW({ AddrRange r(mismatch); });
+}
+
+TEST(AddrRangeTest, NestedSparseTest)
+{
+    // 1. Sparse + Modulo
+    // Range: 0-0x3000. Hole: 0x1000-0x2000.
+    // Valid chunks: [0, 0x1002), [0x2000, 0x3002)
+    // Interleaving: 3 stripes, match 0.
+    // Interleaving: 3 stripes, match 0.
+    std::vector<std::pair<Addr, Addr>> chunks = {{0, 0x1002},
+                                                 {0x2000, 0x3002}};
+    AddrRange r(chunks, 3, 0); // stripes=3, match=0
+
+    // Check contains
+    // System Interleaving:
+    // 0x0 -> System 0. 0%3=0. Match.
+    EXPECT_TRUE(r.contains(0x0));
+    EXPECT_FALSE(r.contains(0x1));    // 1 mod 3 != 0
+    EXPECT_FALSE(r.contains(0x1005)); // Hole
+    EXPECT_FALSE(r.contains(0x1500)); // Hole
+    // 0x2000 -> System 8192. 8192 mod 3 = 2. Match 0 -> False.
+    EXPECT_FALSE(r.contains(0x2000));
+    // 0x2001 -> System 8193. 8193 mod 3 = 0. Match 0 -> True.
+    EXPECT_TRUE(r.contains(0x2001));
+    // 0x2002 -> System 8194. 8194 mod 3 = 1. Match 0 -> False.
+    EXPECT_FALSE(r.contains(0x2002));
+
+    // Check size
+    // Note: AddrRange delegates size calculation to the policy over the
+    // individual sparse chunks. The size is the sum of sizes of all chunks.
+    // Chunk 1: [0, 4098) -> size = toCompact(4098) - toCompact(0) = 1366.
+    // Chunk 2: [8192, 12290)
+    //          -> size = toCompact(12290) - toCompact(8192) = 1366.
+    // Total size = 1366 + 1366 = 2732.
+    EXPECT_EQ(r.size(), 2732);
+
+    // 2. Sparse + Masked
+    // Mask: bit 0 (value 1). Match 1 (odd addresses).
+    // Valid chunks: [0, 10), [20, 30).
+    std::vector<std::pair<Addr, Addr>> chunks2 = {{0, 10}, {20, 30}};
+    AddrRange r2(chunks2, std::vector<Addr>{1}, 1);
+
+    EXPECT_FALSE(r2.contains(0));  // Even
+    EXPECT_TRUE(r2.contains(1));   // Odd
+    EXPECT_FALSE(r2.contains(15)); // Hole
+    EXPECT_TRUE(r2.contains(21));  // Odd in chunk 2
+
+    // Size: 5 + 5 = 10.
+    EXPECT_EQ(r2.size(), 10);
+}
+
+TEST(AddrRangeTest, SparseMergeTest)
+{
+    // Define chunks [0, 100), [200, 300)
+    std::vector<std::pair<Addr, Addr>> chunks = {{0, 100}, {200, 300}};
+
+    // Create 2 ranges with Modulo(2) interleaving
+    // range1: Match 0
+    AddrRange r1(chunks, 2, 0);
+    // range2: Match 1
+    AddrRange r2(chunks, 2, 1);
+
+    // Merge them
+    AddrRange merged(std::vector<AddrRange>{r1, r2});
+
+    // Check if merged range is Sparse + Flat (no sub-policy)
+    // Logical addresses:
+    // [0, 100) -> Logical [0, 100)
+    // [200, 300) -> Logical [100, 200)
+    // Total logical size = 200.
+
+    EXPECT_EQ(merged.size(), 200);
+    EXPECT_TRUE(merged.contains(0));    // Chunk 1 start
+    EXPECT_TRUE(merged.contains(99));   // Chunk 1 end
+    EXPECT_FALSE(merged.contains(150)); // Hole
+    EXPECT_TRUE(merged.contains(200));  // Chunk 2 start
+    EXPECT_TRUE(merged.contains(299));  // Chunk 2 end
+
+    // Verify interleaving property
+    // Merged Modulo(2,0) + Modulo(2,1) -> Flat.
+    // So "interleaved()" should be false (no interleaving policy).
+    EXPECT_FALSE(merged.interleaved());
+    // But isSparse() should be true
+    EXPECT_TRUE(merged.isSparse());
+}
+
+TEST(AddrRangeTest, Phase8RegressionTest)
+{
+    // Simulate DualChannel Setup: 0-3GB, 4GB-End (16GB total -> 33GB Top)
+    // 0-3GB: 0x0 - 0xC0000000
+    // 4GB-34GB: 0x100000000 - 0x880000000 (Size 30GB)
+
+    std::vector<std::pair<Addr, Addr>> chunks;
+    chunks.emplace_back(0, 0xc0000000);
+    chunks.emplace_back(0x100000000, 0x840000000);
+
+    // Create Masks for 2 channels (1 bit, bit 6 for atom size 64)
+    std::vector<Addr> masks = {1ULL << 6}; // 64-byte interleaving
+
+    // Ctrl 0 (Match 0)
+    AddrRange r0(chunks, masks, 0);
+    // Ctrl 1 (Match 1)
+    AddrRange r1(chunks, masks, 1);
+
+    // 1. Verify Properties
+    EXPECT_TRUE(r0.isSparse()) << "r0 should be sparse";
+    EXPECT_TRUE(r1.isSparse()) << "r1 should be sparse";
+    EXPECT_TRUE(r0.interleaved());
+    EXPECT_TRUE(r1.interleaved());
+    EXPECT_EQ(r0.decompose().size(), 2);
+
+    // 2. Verify Merge
+    EXPECT_TRUE(r0.mergesWith(r1)) << "Ranges should strictly merge";
+
+    std::vector<AddrRange> rangeList = {r0, r1};
+    AddrRange merged(rangeList);
+
+    // The merged range should be Sparse (because it has chunks)
+    // and Flat (because masks merged).
+    EXPECT_TRUE(merged.isSparse())
+        << "Merged result MUST be sparse if chunks exist";
+    EXPECT_EQ(merged.decompose().size(), 2);
+    EXPECT_FALSE(merged.interleaved());
+
+    // Verify String output format
+    // Expected: Sparse[0:0x840000000]:[0:0xc0000000]:[0x100000000:0x840000000]
+    std::cout << "Merged String: " << merged.to_string() << std::endl;
 }

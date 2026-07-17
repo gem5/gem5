@@ -34,7 +34,7 @@ jobs:
 
         steps:
             - name: Checkout the gem5 repository
-              uses: actions/checkout@v4
+              uses: actions/checkout@v7
 
             - name: Install the gem5 dependencies
               run: |
@@ -49,7 +49,7 @@ jobs:
 
 
             - name: Cache macOS build/ALL
-              uses: actions/cache@v4
+              uses: actions/cache@v6
               with:
                   path: build/ALL
                   key: macos-all-gem5-${{ matrix.type }}-${{ needs.get-date.outputs.date }}
@@ -80,10 +80,10 @@ jobs:
         needs: get-date
 
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v7
 
             - name: Cache build/ALL
-              uses: actions/cache@v4
+              uses: actions/cache@v6
               with:
                   path: build/ALL
                   key: testlib-build-all-${{ needs.get-date.outputs.date }}
@@ -102,7 +102,7 @@ jobs:
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         timeout-minutes: 60
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v7
 
             - name: Run ALL/unittests.${{ matrix.type }} UnitTests
               run: scons build/ALL/unittests.${{ matrix.type }} -j $(nproc)
@@ -113,7 +113,7 @@ jobs:
         outputs:
             test-dirs-matrix: ${{ steps.dir-matrix.outputs.test-dirs-matrix }}
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v7
             - name: Get directories for testlib-long
               working-directory: ${{ github.workspace }}/tests
               id: dir-matrix
@@ -154,9 +154,9 @@ jobs:
                 test-type: ${{ fromJson(needs.get-testlib-long-dirs.outputs.test-dirs-matrix) }}
 
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v7
             - name: Restore build/ALL cache
-              uses: actions/cache/restore@v4
+              uses: actions/cache/restore@v6
               with:
                   path: build/ALL
                   key: testlib-build-all-${{ needs.get-date.outputs.date }}
@@ -176,7 +176,7 @@ jobs:
 
             - name: Upload results
               if: always()
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               env:
                   MY_STEP_VAR: ${{ steps.sanitize-test-dir.outputs.sanitized-test-dir }}_COMMIT.${{github.sha}}_RUN.${{github.run_id}}_ATTEMPT.${{github.run_attempt}}
               with:
@@ -193,9 +193,9 @@ jobs:
             - get-date
 
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v7
             - name: Cache build/VEGA_X86
-              uses: actions/cache@v4
+              uses: actions/cache@v6
               with:
                   path: build/VEGA_X86
                   key: testlib-build-vega-${{ needs.get-date.outputs.date }}
@@ -207,11 +207,11 @@ jobs:
               id: run-tests
               timeout-minutes: 1410
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --length=long -vvv -j $(nproc) --host gcn_gpu
+              run: ./main.py run --length=long -vvv -j $(nproc) --host gcn_gpu --isa=VEGA_X86
 
             - name: Upload results
               if: always()
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               with:
                   name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gpu-status-${{ steps.run-tests.outcome }}-output
                   path: tests/testing-results
@@ -224,7 +224,7 @@ jobs:
         timeout-minutes: 180
 
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v7
             - name: Build RISCV/libgem5_opt.so with SST
               run: scons build/RISCV/libgem5_opt.so --without-tcmalloc --duplicate-sources --ignore-style -j $(nproc)
             - name: Makefile ext/sst
@@ -245,7 +245,7 @@ jobs:
         timeout-minutes: 180
 
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v7
             - name: Build ARM/gem5.opt
               run: scons build/ARM/gem5.opt --ignore-style --duplicate-sources -j$(nproc)
             - name: disable systemc
@@ -265,7 +265,7 @@ jobs:
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         timeout-minutes: 360 # 6 hours
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v7
             - name: Checkout DRAMSys
               working-directory: ${{ github.workspace }}/ext/dramsys
               run: git clone https://github.com/tukl-msd/DRAMSys --branch v5.3.1 --depth 1 DRAMSys

@@ -64,6 +64,19 @@ CacheController::CacheController(const Params &p)
     };
 }
 
+void
+CacheController::init()
+{
+    uint64_t max_nodes_system = std::max(
+        {m_ruby_system->MachineType_base_count(ruby::MachineType_Cache),
+         m_ruby_system->MachineType_base_count(ruby::MachineType_Memory),
+         m_ruby_system->MachineType_base_count(ruby::MachineType_MiscNode)});
+    panic_if(max_nodes_system > MAX_NODES,
+             "Increse number of supported MAX_NODES\n");
+
+    CHIGenericController::init();
+}
+
 Port &
 CacheController::getPort(const std::string &if_name, PortID idx)
 {
@@ -111,6 +124,8 @@ CacheController::pCreditGrant(const CHIResponseMsg *msg)
     phase.channel = ARM::CHI::CHANNEL_RSP;
     phase.rsp_opcode = ARM::CHI::RSP_OPCODE_PCRD_GRANT;
     phase.pcrd_type = 0; // TODO: set this one depending on allow retry
+    phase.c_busy = msg->m_cbusy;
+    phase.src_id = ruby_to_tlm::srcId(msg->m_responder);
 
     bw(payload, &phase);
 
@@ -188,6 +203,7 @@ CacheController::Transaction::handle(const CHIResponseMsg *msg)
     phase.resp = ruby_to_tlm::rspResp(msg->m_type);
     phase.txn_id = msg->m_txnId;
     phase.c_busy = msg->m_cbusy;
+    phase.src_id = ruby_to_tlm::srcId(msg->m_responder);
 
     controller->bw(payload, &phase);
     return opcode != ARM::CHI::RSP_OPCODE_RETRY_ACK;
@@ -210,6 +226,7 @@ CacheController::ReadTransaction::handle(const CHIDataMsg *msg)
     phase.txn_id = msg->m_txnId;
     phase.data_id = dataId(msg->m_addr + msg->m_bitMask.firstBitSet(true));
     phase.c_busy = msg->m_cbusy;
+    phase.src_id = ruby_to_tlm::srcId(msg->m_responder);
 
     // This is a hack, we should fix it on the ruby side
     if (forward(msg)) {

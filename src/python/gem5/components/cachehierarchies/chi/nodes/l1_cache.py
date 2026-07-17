@@ -47,10 +47,10 @@ from m5.params import (
 )
 
 from .....isas import ISA
-from .abstract_node import AbstractNode
+from .abstract_node import CacheController
 
 
-class L1CacheController(AbstractNode):
+class L1CacheController(CacheController):
     def __init__(
         self,
         size: str,

@@ -35,6 +35,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+from m5.objects.CBusy import CBusyTracker
 from m5.objects.ClockedObject import ClockedObject
 from m5.objects.TlmController import TlmController
 from m5.params import *
@@ -90,5 +91,9 @@ class TlmGenerator(ClockedObject):
     max_pending_tran = OptionalParam.Unsigned(
         "Max number of pending transactions issued via the inject API"
     )
+    cbusy_tracker = Param.BackpressureTracker(
+        CBusyTracker(), "Tracks observed incoming CBusy levels"
+    )
+
     in_port = TlmSinkPort("CHI TLM input/response port")
     out_port = TlmSourcePort("CHI TLM output/request port")

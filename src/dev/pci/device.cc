@@ -78,8 +78,7 @@ PciDevice::PciDevice(const PciDeviceParams &p,
       MSIXCAP_MPBA_OFFSET(p.MSIXCAPBaseOffset + MSIXCAP_MPBA),
       PXCAP_BASE(p.PXCAPBaseOffset),
       BARs(BARs_init),
-      upstreamInterface(p.upstream->registerDevice(this, _devAddr,
-                                                   (PciIntPin)p.InterruptPin)),
+      upstreamInterface(nullptr),
       pioDelay(p.pio_latency),
       configDelay(p.config_latency)
 {
@@ -203,6 +202,26 @@ PciDevice::PciDevice(const PciDeviceParams &p,
     pxcap.pxss2 = p.PXCAPSlotStatus2;
 }
 
+void
+PciDevice::init()
+{
+    DmaDevice::init();
+
+    fatal_if(upstreamInterface == nullptr,
+             "%s: Missing upstream interface, ensure this device is connected "
+             "to a PCI upstream (host bridge or PCI to PCI bridge).",
+             name());
+}
+
+void
+PciDevice::setUpstreamInterface(
+    std::unique_ptr<PciUpstream::DeviceInterface> &&interface)
+{
+    fatal_if(upstreamInterface,
+             "%s: PCI device already has an upstream interface.", name());
+    upstreamInterface = std::move(interface);
+}
+
 Tick
 PciDevice::readConfig(PacketPtr pkt)
 {
@@ -263,7 +282,7 @@ PciDevice::readConfig(PacketPtr pkt)
 Tick
 PciDevice::read(PacketPtr pkt)
 {
-    if (upstreamInterface.configRange().contains(pkt->getAddr())) {
+    if (upstreamInterface->configRange().contains(pkt->getAddr())) {
         return readConfig(pkt);
     }
 
@@ -282,7 +301,7 @@ PciDevice::getAddrRanges() const
             ranges.push_back(bar->range());
     }
 
-    ranges.push_back(upstreamInterface.configRange());
+    ranges.push_back(upstreamInterface->configRange());
 
     return ranges;
 }
@@ -395,17 +414,11 @@ PciDevice::writeConfig(PacketPtr pkt)
 Tick
 PciDevice::write(PacketPtr pkt)
 {
-    if (upstreamInterface.configRange().contains(pkt->getAddr())) {
+    if (upstreamInterface->configRange().contains(pkt->getAddr())) {
         return writeConfig(pkt);
     }
 
     return writeDevice(pkt);
-}
-
-void
-PciDevice::recvBusChange()
-{
-    pioPort.sendRangeChange();
 }
 
 void
@@ -490,6 +503,9 @@ PciDevice::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_ARRAY(_config.data,
                       sizeof(_config.data) / sizeof(_config.data[0]));
+
+    // Update all BAR address ranges
+    recvBusChange();
 
     // unserialize the capability list registers
     uint16_t tmp16;
@@ -605,10 +621,6 @@ PciEndpoint::PciEndpoint(const PciEndpointParams &p)
 {
     fatal_if((_config.common.headerType & 0x7F) != 0, "HeaderType is invalid");
 
-    int idx = 0;
-    for (auto *bar : BARs)
-        _config.type0.baseAddr[idx++] = bar->write(upstreamInterface, 0);
-
     _config.type0.cardbusCIS = htole(p.CardbusCIS);
     _config.type0.subsystemVendorID = htole(p.SubsystemVendorID);
     _config.type0.subsystemID = htole(p.SubsystemID);
@@ -619,6 +631,19 @@ PciEndpoint::PciEndpoint(const PciEndpointParams &p)
 
     _config.type0.minimumGrant = htole(p.MinimumGrant);
     _config.type0.maximumLatency = htole(p.MaximumLatency);
+}
+
+void
+PciEndpoint::init()
+{
+    PciDevice::init();
+
+    int idx = 0;
+    for (auto *bar : BARs) {
+        _config.type0.baseAddr[idx++] = bar->write(*upstreamInterface, 0);
+    }
+
+    pioPort.sendRangeChange();
 }
 
 Tick
@@ -672,7 +697,7 @@ PciEndpoint::writeConfig(PacketPtr pkt)
                 int num = PCI0_BAR_NUMBER(offset);
                 auto *bar = BARs[num];
                 _config.type0.baseAddr[num] = htole(
-                    bar->write(upstreamInterface, pkt->getLE<uint32_t>()));
+                    bar->write(*upstreamInterface, pkt->getLE<uint32_t>()));
                 pioPort.sendRangeChange();
             }
             break;
@@ -700,12 +725,11 @@ PciEndpoint::writeConfig(PacketPtr pkt)
 }
 
 void
-PciEndpoint::unserialize(CheckpointIn &cp)
+PciEndpoint::recvBusChange()
 {
-    PciDevice::unserialize(cp);
-
-    for (int idx = 0; idx < BARs.size(); idx++)
-        BARs[idx]->write(upstreamInterface, _config.type0.baseAddr[idx]);
+    for (int idx = 0; idx < BARs.size(); idx++) {
+        BARs[idx]->write(*upstreamInterface, _config.type0.baseAddr[idx]);
+    }
 
     pioPort.sendRangeChange();
 }
@@ -714,10 +738,6 @@ PciType1Device::PciType1Device(const PciType1DeviceParams &p)
     : PciDevice(p, {p.BAR0, p.BAR1})
 {
     fatal_if((_config.common.headerType & 0x7F) != 1, "HeaderType is invalid");
-
-    int idx = 0;
-    for (auto *bar : BARs)
-        _config.type1.baseAddr[idx++] = bar->write(upstreamInterface, 0);
 
     _config.type1.primaryBusNum = htole(p.PrimaryBusNumber);
     _config.type1.secondaryBusNum = htole(p.SecondaryBusNumber);
@@ -736,6 +756,19 @@ PciType1Device::PciType1Device(const PciType1DeviceParams &p)
     _config.type1.ioLimitUpper = htole(p.IOLimitUpper);
     _config.type1.expansionROM = htole(p.ExpansionROM);
     _config.type1.bridgeControl = htole(p.BridgeControl);
+}
+
+void
+PciType1Device::init()
+{
+    PciDevice::init();
+
+    int idx = 0;
+    for (auto *bar : BARs) {
+        _config.type1.baseAddr[idx++] = bar->write(*upstreamInterface, 0);
+    }
+
+    pioPort.sendRangeChange();
 }
 
 Tick
@@ -830,8 +863,8 @@ PciType1Device::writeConfig(PacketPtr pkt)
             {
               int num = PCI1_BAR_NUMBER(offset);
               auto *bar = BARs[num];
-              _config.type1.baseAddr[num] =
-                  htole(bar->write(upstreamInterface, pkt->getLE<uint32_t>()));
+              _config.type1.baseAddr[num] = htole(
+                  bar->write(*upstreamInterface, pkt->getLE<uint32_t>()));
               pioPort.sendRangeChange();
             }
             break;
@@ -863,12 +896,11 @@ PciType1Device::writeConfig(PacketPtr pkt)
 }
 
 void
-PciType1Device::unserialize(CheckpointIn &cp)
+PciType1Device::recvBusChange()
 {
-    PciDevice::unserialize(cp);
-
-    for (int idx = 0; idx < BARs.size(); idx++)
-        BARs[idx]->write(upstreamInterface, _config.type1.baseAddr[idx]);
+    for (int idx = 0; idx < BARs.size(); idx++) {
+        BARs[idx]->write(*upstreamInterface, _config.type1.baseAddr[idx]);
+    }
 
     pioPort.sendRangeChange();
 }

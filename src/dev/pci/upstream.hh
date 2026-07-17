@@ -48,8 +48,6 @@
 #include "dev/pci/types.hh"
 #include "dev/pci/up_down_bridge.hh"
 #include "params/PciConfigError.hh"
-#include "params/PciUpstream.hh"
-#include "sim/clocked_object.hh"
 
 namespace gem5
 {
@@ -79,23 +77,40 @@ class PciConfigError : public IsaFake
  *         prefetchable memory) to physical memory.
  * </ol>
  *
- * PCI devices need to register themselves with a PCI upstream using the
- * PciUpstream::registerDevice() call. This call returns a
- * PciUpstream::DeviceInterface that provides for common functionality
- * such as interrupt delivery and memory mapping.
+ * PCI devices directly downstream will receive a PciUpstream::DeviceInterface
+ * that provides for common functionality such as interrupt delivery and memory
+ * mapping.
  *
  * The PciUpstream is an abstract class that provides the device registering
  * part and should be inherited by the actual upstream classes, which must
  * provides implementation for the interrupts and memory mapping.
+ *
+ * It can be double inherited with a SimObject to implement an actual objects.
+ * In that case, like shown in the following example, the declaration "using
+ * SimObject::name;" must be added in the derived class to avoid any ambiguity
+ * of name(). (SimObject must be replaced by the actual class name of the
+ * simulation object)
+ *
+ *   class Example : public SimObject, public PciUpstream
+ *   {
+ *     public:
+ *       using SimObject::name;
+ *   };
  */
-class PciUpstream : public ClockedObject
+class PciUpstream
 {
   public:
-    PARAMS(PciUpstream);
+    PciUpstream(PciUpDownBridge *up_to_down, PciConfigError *config_error_dev,
+                const std::vector<PciDevice *> &pci_devices,
+                std::string upstream_name);
 
-    PciUpstream(const Params &p);
+    void init();
 
-    void init() override;
+    /**
+     * Get name of the upstream. Used to print correct object name with
+     * DPRINTF.
+     */
+    std::string name() const;
 
     /**
      * @{
@@ -105,8 +120,8 @@ class PciUpstream : public ClockedObject
     /**
      * Callback interface from PCI devices to the upstream.
      *
-     * Devices get an instance of this object by calling
-     * PciUpstream::registerDevice() on their direct upstream.
+     * Devices get an instance of this object during PciUpstream
+     * initialization.
      */
     class DeviceInterface
     {
@@ -117,11 +132,9 @@ class PciUpstream : public ClockedObject
          * Instantiate a device interface
          *
          * @param upstream PCI upstream that this device belongs to.
-         * @param dev_addr The device's position on the PCI bus
-         * @param pin Interrupt pin
+         * @param device The device associated with the interface
          */
-        DeviceInterface(PciUpstream &upstream, const PciDevAddr &dev_addr,
-                        PciIntPin pin);
+        DeviceInterface(PciUpstream &upstream, PciDevice &device);
 
       public:
         DeviceInterface() = delete;
@@ -145,11 +158,7 @@ class PciUpstream : public ClockedObject
          *
          * @return Address range in the system's physical address space.
          */
-        AddrRange
-        configRange() const
-        {
-            return upstream.interfaceConfigRange(devAddr);
-        }
+        AddrRange configRange() const;
 
         /**
          * Calculate the physical address of an IO location on the PCI
@@ -158,11 +167,7 @@ class PciUpstream : public ClockedObject
          * @param addr Address in the PCI IO address space
          * @return Address in the system's physical address space.
          */
-        Addr
-        pioAddr(Addr addr) const
-        {
-            return upstream.interfacePioAddr(devAddr, addr);
-        }
+        Addr pioAddr(Addr addr) const;
 
         /**
          * Calculate the physical address of a non-prefetchable memory
@@ -171,11 +176,7 @@ class PciUpstream : public ClockedObject
          * @param addr Address in the PCI memory address space
          * @return Address in the system's physical address space.
          */
-        Addr
-        memAddr(Addr addr) const
-        {
-            return upstream.interfaceMemAddr(devAddr, addr);
-        }
+        Addr memAddr(Addr addr) const;
 
         /**
          * Calculate the physical address of a prefetchable memory
@@ -184,29 +185,12 @@ class PciUpstream : public ClockedObject
          * @param addr Address in the PCI DMA memory address space
          * @return Address in the system's physical address space.
          */
-        Addr
-        dmaAddr(Addr addr) const
-        {
-            return upstream.interfaceDmaAddr(devAddr, addr);
-        }
+        Addr dmaAddr(Addr addr) const;
 
       protected:
         PciUpstream &upstream;
-
-        const PciDevAddr devAddr;
-        const PciIntPin interruptPin;
+        PciDevice &device;
     };
-
-    /**
-     * Register a PCI device with the host.
-     *
-     * @param device Device to register
-     * @param dev_addr The device's position on the PCI bus
-     * @param pin Interrupt pin
-     * @return A device-specific DeviceInterface instance.
-     */
-    virtual DeviceInterface registerDevice(PciDevice *device,
-                                           PciDevAddr dev_addr, PciIntPin pin);
 
     /** @} */
 
@@ -232,63 +216,58 @@ class PciUpstream : public ClockedObject
     /**
      * Post an interrupt to the CPU.
      *
-     * @param dev_addr The device's position on the PCI bus
-     * @param pin PCI interrupt pin
+     * @param device The requesting PCI device
      */
-    virtual void interfacePostInt(const PciDevAddr &dev_addr,
-                                  PciIntPin pin) = 0;
+    virtual void interfacePostInt(const PciDevice &device) = 0;
 
     /**
-     * Post an interrupt to the CPU.
+     * Clear an interrupt to the CPU.
      *
-     * @param dev_addr The device's position on the PCI bus
-     * @param pin PCI interrupt pin
+     * @param device The requesting PCI device
      */
-    virtual void interfaceClearInt(const PciDevAddr &dev_addr,
-                                   PciIntPin pin) = 0;
+    virtual void interfaceClearInt(const PciDevice &device) = 0;
 
     /**
      * Calculate the physical address range of the PCI device
      * configuration space.
      *
-     * @param dev_addr The device's position on the PCI bus
+     * @param device The requesting PCI device
      * @return Configuration address range in the system's physical address
      *         space.
      */
-    virtual AddrRange
-    interfaceConfigRange(const PciDevAddr &dev_addr) const = 0;
+    virtual AddrRange interfaceConfigRange(const PciDevice &device) const = 0;
 
     /**
      * Calculate the physical address of an IO location on the PCI
      * bus.
      *
-     * @param dev_addr The device's position on the PCI bus
+     * @param device The requesting PCI device
      * @param pci_addr Address in the PCI IO address space
      * @return Address in the system's physical address space.
      */
-    virtual Addr interfacePioAddr(const PciDevAddr &dev_addr,
+    virtual Addr interfacePioAddr(const PciDevice &device,
                                   Addr pci_addr) const = 0;
 
     /**
      * Calculate the physical address of a non-prefetchable memory
      * location in the PCI address space.
      *
-     * @param dev_addr The device's position on the PCI bus
+     * @param device The requesting PCI device
      * @param pci_addr Address in the PCI memory address space
      * @return Address in the system's physical address space.
      */
-    virtual Addr interfaceMemAddr(const PciDevAddr &dev_addr,
+    virtual Addr interfaceMemAddr(const PciDevice &device,
                                   Addr pci_addr) const = 0;
 
     /**
      * Calculate the physical address of a prefetchable memory
      * location in the PCI address space.
      *
-     * @param dev_addr The device's position on the PCI bus
+     * @param device The requesting PCI device
      * @param pci_addr Address in the PCI DMA memory address space
      * @return Address in the system's physical address space.
      */
-    virtual Addr interfaceDmaAddr(const PciDevAddr &dev_addr,
+    virtual Addr interfaceDmaAddr(const PciDevice &device,
                                   Addr pci_addr) const = 0;
 
     /** @} */
@@ -323,6 +302,8 @@ class PciUpstream : public ClockedObject
     PciUpDownBridge *upToDown;
 
     PciConfigError *configErrorDevice;
+
+    std::string upstreamName;
 };
 
 } // namespace gem5

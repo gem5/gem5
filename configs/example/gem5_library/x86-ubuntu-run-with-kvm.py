@@ -77,7 +77,7 @@ cache_hierarchy = MESITwoLevelCacheHierarchy(
 )
 
 # Set up the system memory.
-memory = SingleChannelDDR3_1600(size="3GiB")
+memory = SingleChannelDDR3_1600()
 
 # Here we set up the processor. This is a special switchable processor in which
 # a starting core type and a switch core type must be specified. Once a

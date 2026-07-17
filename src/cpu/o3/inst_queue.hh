@@ -58,6 +58,7 @@
 #include "cpu/o3/store_set.hh"
 #include "cpu/op_class.hh"
 #include "cpu/timebuf.hh"
+#include "enums/IQInsertionPolicy.hh"
 #include "enums/SMTQueuePolicy.hh"
 #include "sim/eventq.hh"
 
@@ -394,6 +395,9 @@ class InstructionQueue
 
     /** List of Instruction Queues */
     std::vector<IQUnit *> iqs;
+
+    /** Insertion policy for routing instructions to IQs */
+    IQInsertionPolicy insertionPolicy;
 
     /** The memory dependence unit, which tracks/predicts memory dependences
      *  between instructions.

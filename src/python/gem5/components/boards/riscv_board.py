@@ -41,7 +41,7 @@ from m5.objects import (
     HiFive,
     IGbE_e1000,
     IOXBar,
-    PciBus,
+    PciHost,
     PMAChecker,
     RawDiskImage,
     RiscvBootloaderKernelWorkload,
@@ -164,26 +164,15 @@ class RiscvBoard(
     def _setup_io_devices(self) -> None:
         """Connect the I/O devices to the I/O bus."""
         # Add PCI
-        self.iobus.mem_side_ports = self.platform.pci_host.up_response_port()
-        self.iobus.cpu_side_ports = self.platform.pci_host.up_request_port()
-        self.platform.pci_bus.default = (
-            self.platform.pci_host.down_response_port()
-        )
-        self.platform.pci_bus.cpu_side_ports = (
-            self.platform.pci_host.down_request_port()
-        )
-        self.platform.pci_bus.config_error_port = (
-            self.platform.pci_host.config_error.pio
-        )
+        self.platform.pci_host.internal_connect()
+        self.platform.pci_host.connect_upper_bus(self.iobus, True)
 
         # Add Ethernet card
         self.ethernet = IGbE_e1000(
             pci_dev=0, pci_func=0, InterruptLine=1, InterruptPin=1
         )
 
-        self.ethernet.upstream = self.platform.pci_host
-        self.ethernet.pio = self.platform.pci_bus.mem_side_ports
-        self.ethernet.dma = self.platform.pci_bus.cpu_side_ports
+        self.platform.pci_host.connect_device(self.ethernet)
 
         if self.get_cache_hierarchy().is_ruby():
             for device in self._off_chip_devices + self._on_chip_devices:
@@ -255,17 +244,17 @@ class RiscvBoard(
             )
 
     @overrides(AbstractBoard)
-    def has_pci_bus(self) -> bool:
+    def has_pci_host(self) -> bool:
         return self.is_fullsystem()
 
     @overrides(AbstractBoard)
-    def get_pci_bus(self) -> PciBus:
-        if self.has_pci_bus():
-            return self.platform.pci_bus
+    def get_pci_host(self) -> PciHost:
+        if self.has_pci_host():
+            return self.platform.pci_host
         else:
             raise Exception(
-                "Cannot execute `get_pci_bus()`: Board does not have an PCI "
-                "bus to return. Use `has_pci_bus()` to check this."
+                "Cannot execute `get_pci_host()`: Board does not have a PCI "
+                "host to return. Use `has_pci_host()` to check this."
             )
 
     @overrides(AbstractBoard)

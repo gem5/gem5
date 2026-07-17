@@ -3862,14 +3862,14 @@ decode QUADRANT default Unknown::unknown() {
                         Vd_vi[i] = val >> sh;
                     }}, OPIVV, SimdShiftOp);
                 }
-                format VectorReduceIntWideningFormat {
+                format VectorReduceFormat {
                     0x30: vwredsumu_vs({{
                         Vd_vwu[0] = reduce_loop(std::plus<vwu>(),
-                            Vs1_vwu, Vs2_vu);
+                            Vs1_vwu[0]);
                     }}, OPIVV, SimdReduceAddOp);
                     0x31: vwredsum_vs({{
-                        Vd_vwu[0] = reduce_loop(std::plus<vwi>(),
-                            Vs1_vwi, Vs2_vi);
+                        Vd_vwi[0] = reduce_loop(std::plus<vwi>(),
+                            Vs1_vwi[0]);
                     }}, OPIVV, SimdReduceAddOp);
                 }
                 format VectorIntMaskFormat {
@@ -3988,40 +3988,40 @@ decode QUADRANT default Unknown::unknown() {
                                        ftype<et>(Vs1_vu[i]));
                     Vd_vu[i] = fd.v;
                 }}, OPFVV, SimdFloatAddOp);
-                0x01: VectorReduceFloatFormat::vfredusum_vs({{
+                0x01: VectorReduceFormat::vfredusum_vs({{
                     Vd_vu[0] = reduce_loop([](const vu& src1, const vu& src2) {
                         return fadd<et>(ftype<et>(src1), ftype<et>(src2));
-                    }, Vs1_vu, Vs2_vu);
+                    }, Vs1_vu[0]);
                 }}, OPFVV, SimdFloatReduceAddOp);
                 0x02: VectorFloatFormat::vfsub_vv({{
                     auto fd = fsub<et>(ftype<et>(Vs2_vu[i]),
                                        ftype<et>(Vs1_vu[i]));
                     Vd_vu[i] = fd.v;
                 }}, OPFVV, SimdFloatAddOp);
-                0x03: VectorReduceFloatFormat::vfredosum_vs({{
+                0x03: VectorReduceFormat::vfredosum_vs({{
                     Vd_vu[0] = reduce_loop([](const vu& src1, const vu& src2) {
                         return fadd<et>(ftype<et>(src1), ftype<et>(src2));
-                    }, Vs1_vu, Vs2_vu);
-                }}, OPFVV, SimdFloatReduceAddOp, IsSerializeAfter);
+                    }, Vs1_vu[0]);
+                }}, OPFVV, SimdFloatReduceAddOp);
                 0x04: VectorFloatFormat::vfmin_vv({{
                     auto fd = fmin<et>(ftype<et>(Vs2_vu[i]),
                                        ftype<et>(Vs1_vu[i]));
                     Vd_vu[i] = fd.v;
                 }}, OPFVV, SimdFloatCmpOp);
-                0x05: VectorReduceFloatFormat::vfredmin_vs({{
+                0x05: VectorReduceFormat::vfredmin_vs({{
                     Vd_vu[0] = reduce_loop([](const vu& src1, const vu& src2) {
                         return fmin<et>(ftype<et>(src1), ftype<et>(src2));
-                    }, Vs1_vu, Vs2_vu);
+                    }, Vs1_vu[0]);
                 }}, OPFVV, SimdFloatReduceCmpOp);
                 0x06: VectorFloatFormat::vfmax_vv({{
                     auto fd = fmax<et>(ftype<et>(Vs2_vu[i]),
                                        ftype<et>(Vs1_vu[i]));
                     Vd_vu[i] = fd.v;
                 }}, OPFVV, SimdFloatCmpOp);
-                0x07: VectorReduceFloatFormat::vfredmax_vs({{
+                0x07: VectorReduceFormat::vfredmax_vs({{
                     Vd_vu[0] = reduce_loop([](const vu& src1, const vu& src2) {
                         return fmax<et>(ftype<et>(src1), ftype<et>(src2));
-                    }, Vs1_vu, Vs2_vu);
+                    }, Vs1_vu[0]);
                 }}, OPFVV, SimdFloatReduceCmpOp);
                 0x08: VectorFloatFormat::vfsgnj_vv({{
                     Vd_vu[i] = fsgnj<et>(ftype<et>(Vs2_vu[i]),
@@ -4253,24 +4253,24 @@ decode QUADRANT default Unknown::unknown() {
                                             ftype<et>(Vs3_vu[i]));
                         Vd_vu[i] = fd.v;
                     }}, OPFVV, SimdFloatMultAccOp);
-                    0x31: VectorReduceFloatWideningFormat::vfwredusum_vs({{
+                    0x31: VectorReduceFormat::vfwredusum_vs({{
                         Vd_vwu[0] = reduce_loop(
                             [](const vwu& src1, const vu& src2) {
                                 return fadd<ewt>(
                                     ftype<ewt>(src1),
                                     f_to_wf<et>(ftype<et>(src2))
                                 );
-                            }, Vs1_vwu, Vs2_vu);
+                            }, Vs1_vwu[0]);
                     }}, OPFVV, SimdFloatReduceAddOp);
-                    0x33: VectorReduceFloatWideningFormat::vfwredosum_vs({{
+                    0x33: VectorReduceFormat::vfwredosum_vs({{
                         Vd_vwu[0] = reduce_loop(
                             [](const vwu& src1, const vu& src2) {
                                 return fadd<ewt>(
                                     ftype<ewt>(src1),
                                     f_to_wf<et>(ftype<et>(src2))
                                 );
-                            }, Vs1_vwu, Vs2_vu);
-                    }}, OPFVV, SimdFloatReduceAddOp, IsSerializeAfter);
+                            }, Vs1_vwu[0]);
+                    }}, OPFVV, SimdFloatReduceAddOp);
                 }
                 format VectorFloatWideningFormat {
                     0x30: vfwadd_vv({{
@@ -4335,46 +4335,46 @@ decode QUADRANT default Unknown::unknown() {
             }
             // OPMVV
             0x2: decode VFUNCT6 {
-                format VectorReduceIntFormat {
+                format VectorReduceFormat {
                     0x0: vredsum_vs({{
                         Vd_vi[0] =
-                            reduce_loop(std::plus<vi>(), Vs1_vi, Vs2_vi);
+                            reduce_loop(std::plus<vi>(), Vs1_vi[0]);
                     }}, OPMVV, SimdReduceAddOp);
                     0x1: vredand_vs({{
                         Vd_vi[0] =
-                            reduce_loop(std::bit_and<vi>(), Vs1_vi, Vs2_vi);
+                            reduce_loop(std::bit_and<vi>(), Vs1_vi[0]);
                     }}, OPMVV, SimdReduceAluOp);
                     0x2: vredor_vs({{
                         Vd_vi[0] =
-                            reduce_loop(std::bit_or<vi>(), Vs1_vi, Vs2_vi);
+                            reduce_loop(std::bit_or<vi>(), Vs1_vi[0]);
                     }}, OPMVV, SimdReduceAluOp);
                     0x3: vredxor_vs({{
                         Vd_vi[0] =
-                            reduce_loop(std::bit_xor<vi>(), Vs1_vi, Vs2_vi);
+                            reduce_loop(std::bit_xor<vi>(), Vs1_vi[0]);
                     }}, OPMVV, SimdReduceAluOp);
                     0x4: vredminu_vs({{
                         Vd_vu[0] =
                             reduce_loop([](const vu& src1, const vu& src2) {
                                 return std::min<vu>(src1, src2);
-                            }, Vs1_vu, Vs2_vu);
+                            }, Vs1_vu[0]);
                     }}, OPMVV, SimdReduceCmpOp);
                     0x5: vredmin_vs({{
                         Vd_vi[0] =
                             reduce_loop([](const vi& src1, const vi& src2) {
                                 return std::min<vi>(src1, src2);
-                            }, Vs1_vi, Vs2_vi);
+                            }, Vs1_vi[0]);
                     }}, OPMVV, SimdReduceCmpOp);
                     0x6: vredmaxu_vs({{
                         Vd_vu[0] =
                             reduce_loop([](const vu& src1, const vu& src2) {
                                 return std::max<vu>(src1, src2);
-                            }, Vs1_vu, Vs2_vu);
+                            }, Vs1_vu[0]);
                     }}, OPMVV, SimdReduceCmpOp);
                     0x7: vredmax_vs({{
                         Vd_vi[0] =
                             reduce_loop([](const vi& src1, const vi& src2) {
                                 return std::max<vi>(src1, src2);
-                            }, Vs1_vi, Vs2_vi);
+                            }, Vs1_vi[0]);
                     }}, OPMVV, SimdReduceCmpOp);
                 }
                 format VectorIntFormat {
@@ -4417,28 +4417,34 @@ decode QUADRANT default Unknown::unknown() {
                         );
                         Vd_vi[i] = res >> 1;
                     }}, OPMVV, SimdAddOp);
-                    0x0c: vclmul_vv({{
-                        uint64_t result = 0;
-                        uint64_t src1 = Vs1_vu[i];
-                        uint64_t src2 = Vs2_vu[i];
-                        for (int j = 0; j < 64; j++) {
-                            if ((src2 >> j) & 1) {
-                                result ^= src1 << j;
+                    0x0c: decode VSEW {
+                        0x3: vclmul_vv({{
+                            uint64_t result = 0;
+                            uint64_t src1 = Vs1_vu[i];
+                            uint64_t src2 = Vs2_vu[i];
+                            for (int j = 0; j < 64; j++) {
+                                if ((src2 >> j) & 1) {
+                                    result ^= src1 << j;
+                                }
                             }
-                        }
-                        Vd_vu[i] = result;
-                    }}, OPMVV, SimdMultOp);
-                    0x0d: vclmulh_vv({{
-                        uint64_t result = 0;
-                        uint64_t src1 = Vs1_vu[i];
-                        uint64_t src2 = Vs2_vu[i];
-                        for (int j = 1; j < 64; j++) {
-                            if ((src2 >> j) & 1) {
-                                result ^= src1 >> (64-j);
+                            Vd_vu[i] = result;
+                        }}, OPMVV, SimdMultOp);
+                        default: Unknown::unknown();
+                    }
+                    0x0d: decode VSEW {
+                        0x3: vclmulh_vv({{
+                            uint64_t result = 0;
+                            uint64_t src1 = Vs1_vu[i];
+                            uint64_t src2 = Vs2_vu[i];
+                            for (int j = 1; j < 64; j++) {
+                                if ((src2 >> j) & 1) {
+                                    result ^= src1 >> (64-j);
+                                }
                             }
-                        }
-                        Vd_vu[i] = result;
-                    }}, OPMVV, SimdMultOp);
+                            Vd_vu[i] = result;
+                        }}, OPMVV, SimdMultOp);
+                        default: Unknown::unknown();
+                    }
                 }
                 // VWXUNARY0
                 0x10: decode VS1 {
@@ -5079,7 +5085,8 @@ decode QUADRANT default Unknown::unknown() {
                     }}, OPIVX, SimdAluOp);
                 }
                 0x0e: VectorSlideUpFormat::vslideup_vx({{
-                    int offset = (int)Rs1_vu;
+                    uint64_t raw_offset = Rs1_vu;
+                    int offset = (raw_offset > RVV_MAX_VLMAX) ? (int)RVV_MAX_VLMAX : (int)raw_offset;
                     int microVlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
                     int vdWindowLeft = microVlmax * vdIdx;
                     int vdWindowRight = microVlmax * (vdIdx + 1);
@@ -5126,7 +5133,8 @@ decode QUADRANT default Unknown::unknown() {
                     }
                 }}, OPIVX, SimdMiscOp);
                 0x0f: VectorSlideDownFormat::vslidedown_vx({{
-                    int offset = (int)Rs1_vu;
+                    uint64_t raw_offset = Rs1_vu;
+                    int offset = (raw_offset > RVV_MAX_VLMAX) ? (int)RVV_MAX_VLMAX : (int)raw_offset;
                     int microVlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
                     int offsetWindow = offset % microVlmax;
                     int vdWindowLeft = microVlmax * vdIdx;
@@ -5556,7 +5564,7 @@ decode QUADRANT default Unknown::unknown() {
                             }
                         }
                     }
-                    if (lastUop) {
+                    if (isLastMicroop()) {
                         if (this->vm || elem_mask(v0,
                             vdWindowLeft + microVl - 1)) {
                             auto fd = ftype_freg<et>(freg(Fs1_bits));
@@ -5778,28 +5786,34 @@ decode QUADRANT default Unknown::unknown() {
                         );
                         Vd_vi[i] = res >> 1;
                     }}, OPMVX, SimdAddOp);
-                   0x0c: vclmul_vx({{
-                        uint64_t result = 0;
-                        uint64_t src1 = Rs1_vu;
-                        uint64_t src2 = Vs2_vu[i];
-                        for (int j = 0; j < 64; j++) {
-                            if ((src2 >> j) & 1) {
-                                result ^= src1 << j;
+                    0x0c: decode VSEW {
+                        0x3: vclmul_vx({{
+                            uint64_t result = 0;
+                            uint64_t src1 = Rs1_vu;
+                            uint64_t src2 = Vs2_vu[i];
+                            for (int j = 0; j < 64; j++) {
+                                if ((src2 >> j) & 1) {
+                                    result ^= src1 << j;
+                                }
                             }
-                        }
-                        Vd_vu[i] = result;
-                    }}, OPMVX, SimdMultOp);
-                    0x0d: vclmulh_vx({{
-                        uint64_t result = 0;
-                        uint64_t src1 = Rs1_vu;
-                        uint64_t src2 = Vs2_vu[i];
-                        for (int j = 1; j < 64; j++) {
-                            if ((src2 >> j) & 1) {
-                                result ^= src1 >> (64-j);
+                            Vd_vu[i] = result;
+                        }}, OPMVX, SimdMultOp);
+                        default: Unknown::unknown();
+                    }
+                    0x0d: decode VSEW {
+                        0x3: vclmulh_vx({{
+                            uint64_t result = 0;
+                            uint64_t src1 = Rs1_vu;
+                            uint64_t src2 = Vs2_vu[i];
+                            for (int j = 1; j < 64; j++) {
+                                if ((src2 >> j) & 1) {
+                                    result ^= src1 >> (64-j);
+                                }
                             }
-                        }
-                        Vd_vu[i] = result;
-                    }}, OPMVX, SimdMultOp);
+                            Vd_vu[i] = result;
+                        }}, OPMVX, SimdMultOp);
+                        default: Unknown::unknown();
+                    }
                 }
                 0x0e: VectorSlide1UpFormat::vslide1up_vx({{
                     int offset = 1;
@@ -5907,7 +5921,7 @@ decode QUADRANT default Unknown::unknown() {
                             }
                         }
                     }
-                    if (lastUop) {
+                    if (isLastMicroop()) {
                         if (this->vm || elem_mask(v0,
                             vdWindowLeft + microVl - 1)) {
                             Vd_vu[microVl - 1] = Rs1_vu;

@@ -43,6 +43,7 @@ SimObject('GPU.py', sim_objects=[
 SimObject('GPUStaticInstFlags.py', enums=['GPUStaticInstFlags'])
 SimObject('LdsState.py', sim_objects=['LdsState'])
 
+Source('blit_emulation.cc')
 Source('comm.cc')
 Source('compute_unit.cc')
 Source('dispatcher.cc')

@@ -40,7 +40,7 @@ from ...utils.requires import requires
 class X86DemoBoard(X86Board):
     """
     This prebuilt X86 board is used for demonstration purposes. It simulates
-    an X86 3GHz dual-core system with a 3GiB DDR4_2400 memory system. The
+    an X86 3GHz dual-core system with a 4GiB DDR4_2400 memory system. The
     cache hierarchy consists of per-core private L1 instruction and data
     caches (64KiB each) connected to a shared 8MiB L2 cache.
 
@@ -74,9 +74,7 @@ class X86DemoBoard(X86Board):
             "real-world system. Use with caution."
         )
 
-        # The other demo boards have 4 GiB of memory, but X86Board can only
-        # support up to 3 GiB.
-        memory = DualChannelDDR4_2400(size="3GiB")
+        memory = DualChannelDDR4_2400("4GiB")
         processor = SimpleProcessor(
             cpu_type=CPUTypes.TIMING, isa=ISA.X86, num_cores=2
         )

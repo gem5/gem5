@@ -162,6 +162,11 @@ SimpleNetwork::makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
                                 simple_link->m_bw_multiplier,
                                 false,
                                 dst_inport);
+
+    for (auto buffer : simple_link->m_buffers) {
+        buffer->setIntLink(simple_link);
+    }
+
     // Maitain a global list of buffers (used for functional accesses only)
     m_int_link_buffers.insert(m_int_link_buffers.end(),
             simple_link->m_buffers.begin(), simple_link->m_buffers.end());

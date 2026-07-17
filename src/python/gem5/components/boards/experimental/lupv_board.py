@@ -43,7 +43,7 @@ from m5.objects import (
     LupioTMR,
     LupioTTY,
     LupV,
-    PciBus,
+    PciHost,
     Plic,
     PMAChecker,
     RawDiskImage,
@@ -275,14 +275,14 @@ class LupvBoard(RiscvSystem, AbstractBoard, KernelDiskWorkload):
         return self.iobus
 
     @overrides(AbstractBoard)
-    def has_pci_bus(self) -> bool:
+    def has_pci_host(self) -> bool:
         return False
 
     @overrides(AbstractBoard)
-    def get_pci_bus(self) -> PciBus:
+    def get_pci_host(self) -> PciHost:
         raise NotImplementedError(
-            "The LupvBoard does not have PCI bus. "
-            "Use `has_pci_bus()` to check this."
+            "The LupvBoard does not have PCI host. "
+            "Use `has_pci_host()` to check this."
         )
 
     def has_coherent_io(self) -> bool:

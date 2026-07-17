@@ -54,6 +54,8 @@ class Checkpoint;
 namespace RiscvISA
 {
 
+static constexpr uint64_t RVV_MAX_VLMAX = 0x10000;
+
 enum PrivilegeMode
 {
     PRV_U = 0,

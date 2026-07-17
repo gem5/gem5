@@ -125,6 +125,7 @@ def makeGpuFSSystem(args):
         dispatcher=dispatcher,
         walker=cp_pt_walker,
         target_non_blit_kernel_id=target_kernel,
+        emulate_blits=args.emulate_blit_kernels,
     )
     shader.dispatcher = dispatcher
     shader.gpu_cmd_proc = gpu_cmd_proc
