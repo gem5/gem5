@@ -358,7 +358,7 @@ AMDGPUNbio::processPspCommand(uint32_t new_wptr)
             "PSP: Reading 64B ring frame from physical address %#lx\n",
             frame_addr);
 
-// Extract key addresses immediately after read
+    // Extract key addresses immediately after read
 
     // Schedule the next stage: reading the command buffer, simulating latency
     auto cb = new EventFunctionWrapper(
@@ -376,7 +376,6 @@ void
 AMDGPUNbio::readCmdBufferAndProcess(PspCommandContext *ctx)
 {
     // 2. Functional Read of the entire Command Buffer (Max 1KB size)
-
     ctx->cmd_buf_addr =
         (Addr)ctx->frame.cmd_buf_addr_hi << 32 | ctx->frame.cmd_buf_addr_lo;
     ctx->fence_addr =
@@ -463,14 +462,14 @@ AMDGPUNbio::CmdBufferAndProcessDone(PspCommandContext *ctx)
             // similarly if value is 4,
             // then modify the value as 3
             // similary for 2, return 1 and for 1 return 0
-            if (ctx->sriov_spatial_mode == 8) {
-                ctx->sriov_spatial_mode = 4;
-            } else if (ctx->sriov_spatial_mode == 4) {
-                ctx->sriov_spatial_mode = 3;
-            } else if (ctx->sriov_spatial_mode == 2) {
-                ctx->sriov_spatial_mode = 1;
-            } else if (ctx->sriov_spatial_mode == 1) {
-                ctx->sriov_spatial_mode = 0;
+            if (ctx->sriov_spatial_mode == NBIO_COMPUTE_PARTITION_CPX) {
+                ctx->sriov_spatial_mode = COMPUTE_PARTITION_CPX;
+            } else if (ctx->sriov_spatial_mode == NBIO_COMPUTE_PARTITION_QPX) {
+                ctx->sriov_spatial_mode = COMPUTE_PARTITION_QPX;
+            } else if (ctx->sriov_spatial_mode == NBIO_COMPUTE_PARTITION_DPX) {
+                ctx->sriov_spatial_mode = COMPUTE_PARTITION_DPX;
+            } else if (ctx->sriov_spatial_mode == NBIO_COMPUTE_PARTITION_SPX) {
+                ctx->sriov_spatial_mode = COMPUTE_PARTITION_SPX;
             }
             gpuDevice->setRegVal(NBIO_PARTITION_COMPUTE_STATUS,
                                  (ctx->sriov_spatial_mode << 0x4));
@@ -498,7 +497,6 @@ AMDGPUNbio::CmdBufferAndProcessDone(PspCommandContext *ctx)
             ctx->fence_value, ctx->fence_addr);
 
     // We must use the value stored in the context struct
-
     // Schedule the completion callback after a sufficient latency to
     //simulate command execution time
     auto cb = new EventFunctionWrapper(
