@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2021,2023 ARM Limited
+# Copyright (c) 2019-2021,2023,2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -64,6 +64,8 @@ python_class_map = {
     "DMASequencer": "DMASequencer",
     "RubyPrefetcher": "RubyPrefetcher",
     "prefetch::Base": "BasePrefetcher",
+    "BackpressureGen": "BackpressureGen",
+    "BackpressureTracker": "BackpressureTracker",
     "Cycles": "Cycles",
     "Addr": "Addr",
 }
@@ -419,6 +421,27 @@ class $c_ident : public AbstractController
     bool isPossible(${ident}_State state, ${ident}_Event event);
     uint64_t getTransitionCount(${ident}_State state, ${ident}_Event event);
 
+""")
+
+        public_funcs = []
+        private_funcs = []
+        for func in self.functions:
+            if "public" in func and str(func["public"]).lower() == "yes":
+                public_funcs.append(func)
+            else:
+                private_funcs.append(func)
+
+        if public_funcs:
+            code("""
+    // Public helper functions
+""")
+            for func in public_funcs:
+                proto = func.prototype
+                if proto:
+                    code("    $proto")
+
+        code("""
+
 private:
 """)
 
@@ -479,7 +502,7 @@ std::vector<std::vector<statistics::Vector *> > transVec;
 // Internal functions
 """)
 
-        for func in self.functions:
+        for func in private_funcs:
             proto = func.prototype
             if proto:
                 code("$proto")
@@ -776,7 +799,7 @@ $c_ident::init()
                         # DataBlock constructor requires a blk_size argument
                         args = "m_ruby_system->getBlockSizeBytes()"
 
-                    code("$expr($args);")
+                    code("$expr(${{args}});")
                     code("assert($vid != NULL);")
 
                     if "default" in var:
@@ -791,6 +814,7 @@ $c_ident::init()
                         "NetDest",
                         "PerfectCacheMemory",
                         "TBETable",
+                        "MN_TBETable",
                     ):
                         code(f"(*{vid}).setRubySystem(m_ruby_system);")
 
@@ -807,7 +831,7 @@ $c_ident::init()
         code()
         for port in self.in_ports:
             # Set the queue consumers
-            code("${{port.code}}.setConsumer(this);")
+            code("${{port.code}}.setConsumer(this, true);")
 
         # Initialize the transition profiling
         code()

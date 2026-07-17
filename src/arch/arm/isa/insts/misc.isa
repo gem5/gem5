@@ -1,6 +1,6 @@
 // -*- mode:c++ -*-
 
-// Copyright (c) 2010-2013,2017-2021,2023 Arm Limited
+// Copyright (c) 2010-2013,2017-2021,2023,2026 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -744,13 +744,12 @@ let {{
     if (SevMailbox == 1) {
         SevMailbox = 0;
         tc->quiesceTick(next_cycle + 1);
-    } else if (tc->getCpuPtr()->getInterruptController(
-                tc->threadId())->checkInterrupts()) {
+    } else if (%(no_sleep_cond)s) {
         tc->quiesceTick(next_cycle + 1);
     } else {
-        fault = trapWFx(tc, cpsr, scr, true);
+        fault = trapWFx(tc, cpsr, scr, *this, %(type)s);
         if (fault == NoFault) {
-            tc->quiesce();
+            %(sleep)s
         } else {
             tc->quiesceTick(next_cycle + 1);
         }
@@ -761,8 +760,16 @@ let {{
     // and SEV interrupts
     SevMailbox = 1;
     '''
-    wfeIop = ArmInstObjParams("wfe", "WfeInst", "PredOp", \
-            { "code" : wfeCode,
+    wfeInstCode = wfeCode % {
+        "type" : "Type::Wfe",
+        "no_sleep_cond" : '''
+            tc->getCpuPtr()->getInterruptController(
+                tc->threadId())->checkInterrupts()
+        ''',
+        "sleep" : "tc->quiesce();"
+    }
+    wfeIop = ArmInstObjParams("wfe", "WfeInst", "WFxOp", \
+            { "code" : wfeInstCode,
               "pred_fixup" : wfePredFixUpCode,
               "predicate_test" : predicateTest },
             ["IsNonSpeculative", "IsQuiesce",
@@ -770,6 +777,34 @@ let {{
     header_output += BasicDeclare.subst(wfeIop)
     decoder_output += BasicConstructor.subst(wfeIop)
     exec_output += QuiescePredOpExecuteWithFixup.subst(wfeIop)
+
+    wfe64Iop = ArmInstObjParams("wfe", "Wfe64", "WFxOp64",
+                                wfeInstCode,
+                                ["IsNonSpeculative", "IsQuiesce",
+                                 "IsSerializeAfter", "IsUnverifiable"])
+    header_output += BasicDeclare.subst(wfe64Iop)
+    decoder_output += BasicConstructor64.subst(wfe64Iop)
+    exec_output += BasicExecute.subst(wfe64Iop)
+
+    wfetCode = wfeCode % {
+        "type" : "Type::Wfet",
+        "no_sleep_cond" : '''
+            tc->getCpuPtr()->getInterruptController(
+                tc->threadId())->checkInterrupts() ||
+            (localTimeout(xc->tcBase(), LocalTime) >= localTimeout(xc->tcBase(), XOp1))
+        ''',
+        "sleep" : """
+            tc->quiesceTick(
+                localTimeout(xc->tcBase(), XOp1));
+        """
+    }
+    wfet64Iop = ArmInstObjParams("wfet", "Wfet64", "WFxTOp64",
+                                 wfetCode,
+                                 ["IsNonSpeculative", "IsQuiesce",
+                                  "IsSerializeAfter", "IsUnverifiable"])
+    header_output += RegOp64Declare.subst(wfet64Iop)
+    decoder_output += RegOp64Constructor.subst(wfet64Iop)
+    exec_output += BasicExecute.subst(wfet64Iop)
 
     wfiCode = '''
     if (xc->inHtmTransactionalState()) {
@@ -787,26 +822,64 @@ let {{
     auto *ic = dynamic_cast<ArmISA::Interrupts *>(
             tc->getCpuPtr()->getInterruptController(tc->threadId()));
     Tick next_cycle = tc->getCpuPtr()->nextCycle();
-    if (ic->checkWfiWake(hcr, cpsr, scr)) {
+    if (%(no_sleep_cond)s) {
         tc->quiesceTick(next_cycle + 1);
     } else {
-        fault = trapWFx(tc, cpsr, scr, false);
+        fault = trapWFx(tc, cpsr, scr, *this, %(type)s);
         if (fault == NoFault) {
-            tc->quiesce();
-            ArmSystem::callSetStandByWfi(tc);
+            %(sleep)s
         } else {
             tc->quiesceTick(next_cycle + 1);
         }
     }
     tc->getCpuPtr()->clearInterrupt(tc->threadId(), INT_ABT, 0);
     '''
-    wfiIop = ArmInstObjParams("wfi", "WfiInst", "PredOp", \
-            { "code" : wfiCode, "predicate_test" : predicateTest },
+    wfiInstCode = wfiCode % {
+        "type" : "Type::Wfi",
+        "no_sleep_cond" : '''
+            ic->checkWfiWake(hcr, cpsr, scr)
+        ''',
+        "sleep" : '''
+            tc->quiesce();
+            ArmSystem::callSetStandByWfi(tc);
+        '''
+    }
+    wfiIop = ArmInstObjParams("wfi", "WfiInst", "WFxOp",
+            { "code" : wfiInstCode,
+              "predicate_test" : predicateTest },
             ["IsNonSpeculative", "IsQuiesce",
              "IsSerializeAfter", "IsUnverifiable"])
     header_output += BasicDeclare.subst(wfiIop)
     decoder_output += BasicConstructor.subst(wfiIop)
     exec_output += QuiescePredOpExecute.subst(wfiIop)
+
+    wfi64Iop = ArmInstObjParams("wfi", "Wfi64", "WFxOp64",
+                                wfiInstCode,
+                                ["IsNonSpeculative", "IsQuiesce",
+                                 "IsSerializeAfter", "IsUnverifiable"])
+    header_output += BasicDeclare.subst(wfi64Iop)
+    decoder_output += BasicConstructor64.subst(wfi64Iop)
+    exec_output += BasicExecute.subst(wfi64Iop)
+
+    wfitCode = wfiCode % {
+        "type" : "Type::Wfit",
+        "no_sleep_cond" : '''
+            ic->checkWfiWake(hcr, cpsr, scr) ||
+            (localTimeout(xc->tcBase(), LocalTime) >= localTimeout(xc->tcBase(), XOp1))
+        ''',
+        "sleep" : '''
+            tc->quiesceTick(
+                localTimeout(xc->tcBase(), XOp1));
+            ArmSystem::callSetStandByWfi(tc);
+        '''
+    }
+    wfit64Iop = ArmInstObjParams("wfit", "Wfit64", "WFxTOp64",
+                                 wfitCode,
+                                 ["IsNonSpeculative", "IsQuiesce",
+                                  "IsSerializeAfter", "IsUnverifiable"])
+    header_output += RegOp64Declare.subst(wfit64Iop)
+    decoder_output += RegOp64Constructor.subst(wfit64Iop)
+    exec_output += BasicExecute.subst(wfit64Iop)
 
     sevCode = '''
     SevMailbox = 1;

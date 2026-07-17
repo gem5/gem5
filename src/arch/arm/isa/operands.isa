@@ -1,5 +1,5 @@
 // -*- mode:c++ -*-
-// Copyright (c) 2010-2014, 2016-2018, 2021-2022, 2024-2025 Arm Limited
+// Copyright (c) 2010-2014, 2016-2018, 2021-2022, 2024-2026 Arm Limited
 // All rights reserved
 //
 // The license below extends only to copyright in the software and shall
@@ -294,6 +294,7 @@ def operands {{
     'Base': IntRegAPC('base', id=srtBase),
     'XOffset': IntRegX64('offset'),
     'Index': IntReg('index'),
+    'WIndex': IntRegW64('index'),
     'Shift': IntReg('shift'),
     'Op1': IntReg('op1'),
     'Op2': IntReg('op2'),
@@ -432,8 +433,16 @@ def operands {{
     'AA64FpOp1': VectorReg('op1', 'AA64FpOp1'),
     'AA64FpOp2': VectorReg('op2', 'AA64FpOp2'),
     'AA64FpOp3': VectorReg('op3', 'AA64FpOp3'),
+    'AA64FpOp4': VectorReg('op4', 'AA64FpOp4'),
+    'AA64FpOp5': VectorReg('op5', 'AA64FpOp4'),
+    'AA64FpOp6': VectorReg('op6', 'AA64FpOp4'),
+    'AA64FpOp7': VectorReg('op7', 'AA64FpOp4'),
+    'AA64FpOp8': VectorReg('op8', 'AA64FpOp4'),
     'AA64FpDest': VectorReg('dest', 'AA64FpDest'),
+    'AA64FpDest1': VectorReg('dest1', 'AA64FpDest1'),
     'AA64FpDest2': VectorReg('dest2', 'AA64FpDest2'),
+    'AA64FpDest3': VectorReg('dest3', 'AA64FpDest3'),
+    'AA64FpDest4': VectorReg('dest4', 'AA64FpDest4'),
     'AA64FpOp1V0': VectorReg('op1', 'AA64FpOp1', 'V0'),
     'AA64FpOp1V1': VectorReg('op1 + 1', 'AA64FpOp1', 'V1'),
     'AA64FpOp1V2': VectorReg('op1 + 2', 'AA64FpOp1', 'V2'),
@@ -453,6 +462,10 @@ def operands {{
     'AA64IntrlvReg2': VectorReg('INTRLVREG2', 'AA64FpIntrlvReg2'),
     'AA64IntrlvReg3': VectorReg('INTRLVREG3', 'AA64FpIntrlvReg3'),
     'AA64FpDestMerge': VectorReg('dest', 'AA64FpDestMerge'),
+    'AA64FpDest1Merge': VectorReg('dest1', 'AA64FpDest1Merge'),
+    'AA64FpDest2Merge': VectorReg('dest2', 'AA64FpDest2Merge'),
+    'AA64FpDest3Merge': VectorReg('dest3', 'AA64FpDest3Merge'),
+    'AA64FpDest4Merge': VectorReg('dest4', 'AA64FpDest4Merge'),
     'AA64FpBase': VectorReg('base', 'AA64FpBase'),
     'AA64FpOffset': VectorReg('offset', 'AA64FpOffset'),
     'AA64FpUreg0': VectorReg('VECREG_UREG0', 'AA64FpUreg0'),
@@ -472,6 +485,9 @@ def operands {{
 
     # SME ZA Register:
     'ZA': MatrixReg('0'),
+
+    # SME ZT0 Register (fixed 512-bit vec reg):
+    'ZT0': VectorReg('LUT_ZT0', 'ZT0'),
 
     #Abstracted control reg operands
     'MiscDest': CntrlReg('dest'),
@@ -510,6 +526,7 @@ def operands {{
     'Dczid' : CntrlReg('MISCREG_DCZID_EL0'),
     'PendingDvm': CntrlReg('MISCREG_TLBINEEDSYNC'),
     'Svcr' : CntrlReg('MISCREG_SVCR'),
+    'LocalTime' : CntrlReg64('MISCREG_CNTVCT_EL0'),
 
     #Register fields for microops
     'URa' : IntReg('ura'),

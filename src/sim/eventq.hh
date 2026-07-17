@@ -622,7 +622,7 @@ class EventQueue
     Tick _curTick;
 
     //! Mutex to protect async queue.
-    UncontendedMutex async_queue_mutex;
+    FairUncontendedMutex async_queue_mutex;
 
     //! List of events added by other threads to this event queue.
     std::list<Event*> async_queue;
@@ -647,7 +647,7 @@ class EventQueue
      * @see EventQueue::lock()
      * @see EventQueue::unlock()
      */
-    UncontendedMutex service_mutex;
+    FairUncontendedMutex service_mutex;
 
     //! Insert / remove event from the queue. Should only be called
     //! by thread operating this queue.

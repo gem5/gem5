@@ -119,6 +119,11 @@ class HighBandwidthMemory(ChanneledMemory):
 
     @overrides(ChanneledMemory)
     def _interleave_addresses(self):
+        if len(self._mem_ranges) > 1:
+            raise ValueError(
+                "HBM Stack does not support sparse address ranges"
+            )
+
         if self._addr_mapping == "RoRaBaChCo":
             rowbuffer_size = (
                 self._dram_class.device_rowbuffer_size.value
@@ -143,20 +148,25 @@ class HighBandwidthMemory(ChanneledMemory):
         mask_list.insert(0, 1 << 6)
         for i, ctrl in enumerate(self.mem_ctrl):
             ctrl.dram.range = AddrRange(
-                start=self._mem_range.start,
-                size=self._mem_range.size(),
+                start=self._mem_ranges[0].start,
+                size=self._mem_ranges[0].size(),
                 masks=mask_list,
                 intlvMatch=(i << 1) | 0,
             )
             ctrl.dram_2.range = AddrRange(
-                start=self._mem_range.start,
-                size=self._mem_range.size(),
+                start=self._mem_ranges[0].start,
+                size=self._mem_ranges[0].size(),
                 masks=mask_list,
                 intlvMatch=(i << 1) | 1,
             )
 
     @overrides(ChanneledMemory)
     def get_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
+        if len(self._mem_ranges) > 1:
+            raise ValueError(
+                "HBM Stack does not support sparse address ranges"
+            )
+
         intlv_bits = log(self._num_channels, 2)
         mask_list = []
 
@@ -166,8 +176,8 @@ class HighBandwidthMemory(ChanneledMemory):
         for i in range(len(self.mem_ctrl)):
             addr_ranges.append(
                 AddrRange(
-                    start=self._mem_range.start,
-                    size=self._mem_range.size(),
+                    start=self._mem_ranges[0].start,
+                    size=self._mem_ranges[0].size(),
                     masks=mask_list,
                     intlvMatch=i,
                 )

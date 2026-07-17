@@ -51,7 +51,7 @@ using mxfloat16 = mxfp<fp16_e5m10_info>;
 
 using mxfloat32 = mxfp<binary32>;
 
-}
-}
+} // namespace AMDGPU
+} // namespace gem5
 
 #endif // __ARCH_AMDGPU_COMMON_DTYPE_MXFP_TYPES_HH__

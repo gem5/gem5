@@ -109,9 +109,10 @@ IGbE::IGbE(const Params &p)
     memset(&flash, 0, EEPROM_SIZE * 2);
 
     // Set the MAC address
-    memcpy(flash, p.hardware_address.bytes(), ETH_ADDR_LEN);
-    for (int x = 0; x < ETH_ADDR_LEN / 2; x++)
+    memcpy(flash, p.hardware_address.bytes(), ETHER_ADDR_LEN);
+    for (int x = 0; x < ETHER_ADDR_LEN / 2; x++) {
         flash[x] = htobe(flash[x]);
+    }
 
     uint16_t csum = 0;
     for (int x = 0; x < EEPROM_SIZE; x++)

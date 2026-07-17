@@ -40,61 +40,62 @@ namespace gem5
 namespace AMDGPU
 {
 
-typedef union
+union fp8_e4m3_info
 {
-    enum bitSizes
-    {
-        ebits = 4,
-        mbits = 3,
-        sbits = 1,
-        zbits = 24,
-        bias = 7,
+    static constexpr size_t ebits = 4;
+    static constexpr size_t mbits = 3;
+    static constexpr size_t sbits = 1;
+    static constexpr size_t zbits = 24;
+    static constexpr size_t bias = 7;
 
-        inf = (0x7f << zbits),
-        nan = (0xff << zbits),
-        max = (0x7f << zbits)
-    };
+    static constexpr uint32_t inf = (0x7f << zbits);
+    static constexpr uint32_t nan = (0xff << zbits);
+    static constexpr uint32_t max = (0x7f << zbits);
 
     uint32_t storage;
     struct
     {
         unsigned zero : zbits;
         unsigned mant : mbits;
-        unsigned exp  : ebits;
+        unsigned exp : ebits;
         unsigned sign : sbits;
     };
-} fp8_e4m3_info;
+};
 static_assert(sizeof(fp8_e4m3_info) == 4);
 
 } // namespace AMDGPU
 
 } // namespace gem5
 
-
 // std library cmath definitions
 namespace std
 {
 
 // Inf not defined
-constexpr bool isinf(gem5::AMDGPU::fp8_e4m3_info a) { return false; }
+constexpr bool
+isinf(gem5::AMDGPU::fp8_e4m3_info a)
+{
+    return false;
+}
 
-constexpr bool isnan(gem5::AMDGPU::fp8_e4m3_info a)
+constexpr bool
+isnan(gem5::AMDGPU::fp8_e4m3_info a)
 {
     return a.exp == 0xF && a.mant == 0x7;
 }
 
-constexpr bool isnormal(gem5::AMDGPU::fp8_e4m3_info a)
+constexpr bool
+isnormal(gem5::AMDGPU::fp8_e4m3_info a)
 {
     return !(a.exp == 0 && a.mant != 0);
 }
 
-
-template<>
-class numeric_limits<gem5::AMDGPU::fp8_e4m3_info>
+template <> class numeric_limits<gem5::AMDGPU::fp8_e4m3_info>
 {
   public:
     static constexpr bool has_quiet_NaN = true;
-    static gem5::AMDGPU::fp8_e4m3_info quiet_NaN()
+    static gem5::AMDGPU::fp8_e4m3_info
+    quiet_NaN()
     {
         assert(has_quiet_NaN);
         gem5::AMDGPU::fp8_e4m3_info tmp;
@@ -103,7 +104,8 @@ class numeric_limits<gem5::AMDGPU::fp8_e4m3_info>
     }
 
     static constexpr bool has_infinity = false;
-    static gem5::AMDGPU::fp8_e4m3_info infinity()
+    static gem5::AMDGPU::fp8_e4m3_info
+    infinity()
     {
         assert(has_infinity);
         gem5::AMDGPU::fp8_e4m3_info tmp;
@@ -111,7 +113,8 @@ class numeric_limits<gem5::AMDGPU::fp8_e4m3_info>
         return tmp;
     }
 
-    static gem5::AMDGPU::fp8_e4m3_info max()
+    static gem5::AMDGPU::fp8_e4m3_info
+    max()
     {
         gem5::AMDGPU::fp8_e4m3_info tmp;
         tmp.storage = gem5::AMDGPU::fp8_e4m3_info::max;

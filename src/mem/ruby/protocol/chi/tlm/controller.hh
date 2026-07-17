@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023,2025 Arm Limited
+ * Copyright (c) 2023,2025-2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -92,6 +92,9 @@ namespace tlm::chi {
 class CacheController : public ruby::CHIGenericController
 {
   public:
+    /** We mainly use this when we flatten MachineID into src_id/tgt_id */
+    static constexpr uint64_t MAX_NODES = 1024;
+
     PARAMS(TlmController);
     CacheController(const Params &p);
 
@@ -106,10 +109,16 @@ class CacheController : public ruby::CHIGenericController
 
     Port &getPort(const std::string &if_name, PortID idx) override;
 
+    void init() override;
+
     bool recvRequestMsg(const CHIRequestMsg *msg) override;
     bool recvSnoopMsg(const CHIRequestMsg *msg) override;
     bool recvResponseMsg(const CHIResponseMsg *msg) override;
     bool recvDataMsg(const CHIDataMsg *msg) override;
+
+    void functionalRead(const Addr &param_addr, Packet *param_pkt,
+                        ruby::WriteMask &param_mask) override;
+    int functionalWrite(const Addr &param_addr, Packet *param_pkt) override;
 
     void sendMsg(ARM::CHI::Payload &payload, ARM::CHI::Phase &phase);
     using CHIGenericController::sendRequestMsg;
@@ -137,7 +146,7 @@ class CacheController : public ruby::CHIGenericController
         Transaction(CacheController *parent,
             ARM::CHI::Payload &_payload,
             ARM::CHI::Phase &_phase);
-        ~Transaction();
+        virtual ~Transaction();
 
         static std::unique_ptr<Transaction> gen(CacheController *parent,
             ARM::CHI::Payload &_payload,

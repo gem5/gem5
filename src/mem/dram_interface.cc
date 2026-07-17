@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2020 ARM Limited
+ * Copyright (c) 2010-2020, 2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall

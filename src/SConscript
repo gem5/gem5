@@ -39,11 +39,13 @@
 
 import collections
 import copy
+import hashlib
 from shutil import which
 import itertools
 import os
 import os.path
 import re
+import subprocess
 import sys
 
 import SCons
@@ -89,8 +91,12 @@ build_tools = Dir('#build_tools')
 gem5py_env = gem5py_env.Clone()
 gem5py = gem5py_env.File('gem5py', Dir(gem5py_env['BUILDDIR']))
 gem5py_m5 = gem5py_env.File('gem5py_m5', Dir(gem5py_env['BUILDDIR']))
+gem5py_m5_stamp = gem5py_env.File(
+    'gem5py_m5.stamp', Dir(gem5py_env['BUILDDIR'])
+)
 gem5py_env['GEM5PY'] = gem5py.get_abspath()
 gem5py_env['GEM5PY_M5'] = gem5py_m5.get_abspath()
+gem5py_env['GEM5PY_M5_STAMP'] = gem5py_m5_stamp.get_abspath()
 gem5py_env['OBJSUFFIX'] = '.pyo'
 # Inject build_tools into PYTHONPATH for when we run gem5py.
 pythonpath = gem5py_env['ENV'].get('PYTHONPATH', '').split(':')
@@ -164,7 +170,7 @@ class SimObject(PySource):
         for simobj in sim_objects:
             # Some helper functions
             srcs = [ Value(module), Value(simobj),
-                    "${GEM5PY_M5}", "${PYSCRIPT}" ]
+                    "${GEM5PY_M5_STAMP}", "${PYSCRIPT}" ]
             def cmdline(*args):
                 all_args = [ 'GEM5PY_M5', 'PYSCRIPT', 'MODULE' ] + list(args)
                 return ' '.join(list('"${%s}"' % arg for arg in all_args))
@@ -215,7 +221,7 @@ class SimObject(PySource):
         for enum in enums:
             gem5py_env.Command([ "${ENUM_HH}" ],
                     [ Value(module), Value(enum),
-                        "${GEM5PY_M5}", "${ENUMHH_PY}" ],
+                        "${GEM5PY_M5_STAMP}", "${ENUMHH_PY}" ],
                     MakeAction('"${GEM5PY_M5}" "${ENUMHH_PY}" "${MODULE}" ' \
                             '"${ENUM_HH}"',
                         Transform("ENUMDECL", 2)),
@@ -226,7 +232,7 @@ class SimObject(PySource):
             cc_file = build_dir.File(f'enums/{enum}.cc')
             gem5py_env.Command([ "${ENUM_CC}" ],
                     [ Value(module), Value(enum),
-                        "${GEM5PY_M5}", "${ENUMCC_PY}" ],
+                        "${GEM5PY_M5_STAMP}", "${ENUMCC_PY}" ],
                     MakeAction('"${GEM5PY_M5}" "${ENUMCC_PY}" "${MODULE}" ' \
                             '"${ENUM_CC}" "${USE_PYTHON}"',
                         Transform("ENUM STR", 2)),
@@ -355,7 +361,7 @@ class TopLevelBase(object, metaclass=TopLevelMeta):
         srcs = copy.copy(self.srcs)
         for f in self.filters:
             srcs += Source.all.apply_filter(env, f)
-        return srcs
+        return SourceList(sorted(srcs, key=lambda s: str(s)))
 
     def libs(self, env):
         libs = copy.copy(self.sourceLibs)
@@ -649,17 +655,69 @@ gem5py_env.Append(LIBS='z')
 gem5py_env.Append(LINKFLAGS='-rdynamic')
 gem5py_env.Program(gem5py, 'python/gem5py.cc')[0]
 m5_module_source = \
-        Source.all.with_all_tags(env, 'm5_module', 'gem5 lib')
+        sorted(Source.all.with_all_tags(env, 'm5_module', 'gem5 lib'),
+               key=lambda s: str(s))
 m5_module_static = list(map(lambda s: s.static(gem5py_env), m5_module_source))
 gem5py_env.Program(gem5py_m5, [ 'python/gem5py_m5.cc' ] + m5_module_static)
 
 
+def makeGem5PyM5Stamp(target, source, env):
+    digest = hashlib.sha256()
+
+    for src in source:
+        digest.update(str(src).encode())
+        digest.update(b'\0')
+        with open(src.abspath, 'rb') as f:
+            for chunk in iter(lambda: f.read(1024 * 1024), b''):
+                digest.update(chunk)
+
+    contents = digest.hexdigest() + '\n'
+    try:
+        with open(target[0].abspath) as f:
+            if f.read() == contents:
+                return
+    except FileNotFoundError:
+        pass
+
+    with open(target[0].abspath, 'w') as f:
+        f.write(contents)
+
+
+gem5py_env.Command(
+    gem5py_m5_stamp,
+    ['python/gem5py_m5.cc'] + [s.tnode for s in m5_module_source],
+    MakeAction(
+        makeGem5PyM5Stamp, Transform("GEM5PY STAMP", max_sources=1)
+    ),
+)
+gem5py_env.Requires(gem5py_m5_stamp, gem5py_m5)
+
+
 # version tags
-tags = \
-env.Command('sim/tags.cc', None,
-            MakeAction('util/cpt_upgrader.py --get-cc-file > $TARGET',
-                       Transform("VER TAGS")))
-env.AlwaysBuild(tags)
+def makeVersionTags(target, source, env):
+    contents = subprocess.check_output(
+        [sys.executable, source[0].abspath, '--get-cc-file'],
+        text=True,
+    )
+
+    try:
+        with open(target[0].abspath) as f:
+            if f.read() == contents:
+                return
+    except FileNotFoundError:
+        pass
+
+    with open(target[0].abspath, 'w') as f:
+        f.write(contents)
+
+
+cpt_upgrader = File('#util/cpt_upgrader.py')
+cpt_upgraders = sorted(Glob('#util/cpt_upgraders/*.py'), key=lambda f: str(f))
+env.Command(
+    'sim/tags.cc',
+    [cpt_upgrader] + cpt_upgraders,
+    MakeAction(makeVersionTags, Transform("VER TAGS", max_sources=1)),
+)
 
 ########################################################################
 #

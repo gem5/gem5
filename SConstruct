@@ -132,6 +132,8 @@ AddOption('--without-python', action='store_true',
           help='Build without Python configuration support')
 AddOption('--without-tcmalloc', action='store_true',
           help='Disable linking against tcmalloc')
+AddOption('--no-omit-frame-pointer', action='store_true',
+          help='No omit frame pointer')
 AddOption('--with-ubsan', action='store_true',
           help='Build with Undefined Behavior Sanitizer if available')
 AddOption('--with-asan', action='store_true',
@@ -147,6 +149,7 @@ AddOption('--gprof', action='store_true',
 AddOption('--pprof', action='store_true',
           help='Enable support for the pprof profiler')
 AddOption('--debug-fission', action='store_true', help='Enable debug fission')
+AddOption('--gdb-index', action='store_true', help='Build GDB index')
 # Default to --no-duplicate-sources, but keep --duplicate-sources to opt-out
 # of this new build behaviour in case it introduces regressions. We could use
 # action=argparse.BooleanOptionalAction here once Python 3.9 is required.
@@ -156,6 +159,9 @@ AddOption('--duplicate-sources', action='store_true', default=False,
 AddOption('--no-duplicate-sources', action='store_false',
           dest='duplicate_sources',
           help='Do not create symlinks to sources in the build directory')
+AddOption('--gcov', action='store_true', default=False,
+          help="Build gem5 with symbols used by gcov to enable obtaining code "
+          "coverage metrics. This option does not work on Arm hosts.")
 
 # Inject the built_tools directory into the python path.
 sys.path[1:1] = [ Dir('#build_tools').abspath ]
@@ -458,7 +464,8 @@ main['TCMALLOC_CCFLAGS'] = []
 
 CXX_version = readCommand([main['CXX'], '--version'], exception=False)
 
-main['GCC'] = CXX_version and CXX_version.find('g++') >= 0
+main['GCC'] = CXX_version and CXX_version.find('g++') >= 0 and \
+              CXX_version.find('clang') < 0
 main['CLANG'] = CXX_version and CXX_version.find('clang') >= 0
 if main['GCC'] + main['CLANG'] > 1:
     error('Two compilers enabled at once?')
@@ -591,8 +598,14 @@ for variant_path in variant_paths:
         env.Append(CCFLAGS=['-Wall', '-Wundef', '-Wextra',
                             '-Wno-sign-compare', '-Wno-unused-parameter'])
 
-        # We always compile using C++17
-        env.Append(CXXFLAGS=['-std=c++17'])
+        # We always compile using C++20
+        env.Append(CXXFLAGS=['-std=c++20'])
+        # Left operand of volatile is deprecated in C++20 and then
+        # de-deprecaetd. This skip is a workaround to avoid warning on
+        # intermediate compiler versions. Ref:
+        # https://cplusplus.github.io/CWG/issues/2654.html
+        with gem5_scons.Configure(env) as conf:
+            conf.CheckCxxFlag('-Wno-volatile')
 
         if sys.platform.startswith('freebsd'):
             env.Append(CCFLAGS=['-I/usr/local/include'])
@@ -652,6 +665,14 @@ for variant_path in variant_paths:
                 ) or not conf.CheckLinkFlag('-gsplit-dwarf'):
                     error('Debug fission is not supported in the toolchain')
 
+        gdb_index = GetOption('gdb_index')
+        if gdb_index:
+            with gem5_scons.Configure(env) as conf:
+                if not conf.CheckCxxFlag(
+                    '-ggnu-pubnames'
+                ) or not conf.CheckLinkFlag('-Wl,--gdb-index'):
+                    error('GDB index generation is not supported')
+
         # Treat warnings as errors but white list some warnings that we
         # want to allow (e.g., deprecation warnings).
         env.Append(CCFLAGS=['-Werror',
@@ -674,7 +695,7 @@ for variant_path in variant_paths:
 
     if env['GCC']:
         gcc_min_version = "11"
-        gcc_max_version = "14.2"
+        gcc_max_version = "15.2"
         gcc_version = env['CXXVERSION']
         if compareVersions(gcc_version, gcc_min_version) < 0 or \
               compareVersions(gcc_version, gcc_max_version) > 0:
@@ -684,6 +705,9 @@ for variant_path in variant_paths:
                 f'to v{gcc_max_version}.\n'
             )
 
+        # Workaround https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105651
+        if compareVersions(gcc_version, "13") < 0:
+            env.Append(CXXFLAGS=['-Wno-restrict'])
 
         # Add the appropriate Link-Time Optimization (LTO) flags if
         # `--with-lto` is set.
@@ -706,6 +730,15 @@ for variant_path in variant_paths:
             '-fno-builtin-malloc', '-fno-builtin-calloc',
             '-fno-builtin-realloc', '-fno-builtin-free'])
 
+        if GetOption('gcov'):
+            env.Append(CCFLAGS=['-fprofile-arcs', '-ftest-coverage'],
+                       LINKFLAGS=['-lgcov', '--coverage'])
+            if main["BIN_TARGET_ARCH"] == "aarch64":
+                warning('The --gcov option only works on X86 host systems. If '
+                        'using an Arm system, the build will most likely fail '
+                        'due to the code model being too small.'
+                        )
+
     elif env['CLANG']:
         clang_min_version = "14"
         clang_max_version = "19"
@@ -727,6 +760,8 @@ for variant_path in variant_paths:
             conf.CheckCxxFlag('-Wno-c99-designator')
             conf.CheckCxxFlag('-Wno-defaulted-function-deleted')
 
+        env.Append(CCFLAGS=['-Wno-error=nonportable-include-path'])
+
         env.Append(TCMALLOC_CCFLAGS=['-fno-builtin'])
 
         # On Mac OS X/Darwin we need to also use libc++ (part of XCode) as
@@ -734,6 +769,11 @@ for variant_path in variant_paths:
         if not want_libcxx and sys.platform == "darwin":
             env.Append(CXXFLAGS=['-stdlib=libc++'])
             env.Append(LIBS=['c++'])
+        if GetOption('gcov'):
+            warning("Detected use of the Clang compiler with the --gcov "
+                    "option. Gcov can't be used with Clang, so the --gcov "
+                    "option will be ignored."
+                    )
 
     if sys.platform == 'cygwin':
         # cygwin has some header file issues...
@@ -753,6 +793,9 @@ for variant_path in variant_paths:
     else:
         gem5py_env = env.Clone()
         config_embedded_python(gem5py_env)
+
+    if GetOption('no_omit_frame_pointer'):
+        env.Append(CCFLAGS=['-fno-omit-frame-pointer'])
 
     # Add sanitizers flags
     sanitizers=[]

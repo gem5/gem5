@@ -41,3 +41,7 @@ ddf6cb88e48df4ac7de4a9e4b612daf2e7e635c8
 
 # Updated black from 25.12.0 to 26.1.0
 e81893fb70b7143bb481cd24ee10c3ba4cce56c1
+
+# Ran clang-format on src/arch/amdgpu, src/gpu-compute, src/dev/hsa, and
+# src/dev/amdgpu
+4d04b2365d2031b9b629d1476f8a1ff992e024e2

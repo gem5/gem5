@@ -1,4 +1,4 @@
-# Copyright (c) 2021 The Regents of the University of California
+# Copyright (c) 2021-2026 The Regents of the University of California
 # Copyright (c) 2022 Google Inc
 # All rights reserved.
 #
@@ -26,61 +26,97 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-A run script for a very simple Syscall-Execution running simple binaries.
-The system has no cache heirarchy and is as "bare-bones" as you can get in
-gem5 while still being functinal.
+A script used to test the m5_exit magic instruction events function correctly
+for a given ISA.
+
+Usage
+-----
+
+```sh
+<gem5> test/gem5/m5_util/configs/se-m5-exit.py <isa> --resource-directory <path>
+```
+
+`<isas>` can be one of `x86`, `arm`, or `riscv`.
+
+
+The `--resource-directory` argument is optional, and can be passed with a
+<path> in order to specify where the downloaded resources should be cached.
+If not set, the downloaded resources are cached to the default location for
+gem5 binaries (typically "~/.cache/gem5/resources").
 """
 
 import argparse
-import importlib
 
-from m5.util import fatal
-
-from gem5.components.boards.mem_mode import MemMode
 from gem5.components.boards.simple_board import SimpleBoard
 from gem5.components.cachehierarchies.classic.no_cache import NoCache
 from gem5.components.memory import SingleChannelDDR3_1600
-from gem5.components.processors.base_cpu_core import BaseCPUCore
-from gem5.components.processors.base_cpu_processor import BaseCPUProcessor
-from gem5.components.processors.cpu_types import (
-    CPUTypes,
-    get_cpu_type_from_str,
-    get_cpu_types_str_set,
-)
-from gem5.components.processors.simple_core import SimpleCore
+from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.isas import (
     ISA,
     get_isa_from_str,
-    get_isas_str_set,
 )
-from gem5.resources.resource import Resource
+from gem5.resources.resource import (
+    BinaryResource,
+    obtain_resource,
+)
 from gem5.simulate.simulator import Simulator
 
+isa_resource_id_map = {
+    ISA.X86: "x86-m5-exit",
+    ISA.ARM: "arm-m5-exit",
+    ISA.RISCV: "riscv-m5-exit",
+}
+
+resource_id_version_map = {
+    "x86-m5-exit": "2.0.0",
+    "arm-m5-exit": "1.0.0",
+    "riscv-m5-exit": "1.0.0",
+}
+
+assert (
+    len(
+        {isa for isa in isa_resource_id_map.values()}
+        - {isa for isa in resource_id_version_map.keys()}
+    )
+    == 0
+), (
+    "The following resource IDs  are needed by a supported ISA but have no "
+    "version specified in `resource_id_version_map`:\n"
+    f"{isa_resource_id_map.values() - resource_id_version_map.keys()}"
+)
+
 parser = argparse.ArgumentParser(
-    description="A gem5 script for running simple binaries in SE mode."
+    description=(
+        "A gem5 script for checking the m5_exit magic instructions, functions "
+        "correctly in SE mode for a given ISA"
+    )
 )
 
 parser.add_argument(
-    "resource", type=str, help="The gem5 resource binary to run."
+    "isa",
+    type=str,
+    choices={isa.value for isa in isa_resource_id_map.keys()},
+    help="The ISA to run m5_exit on.",
 )
 
 parser.add_argument(
     "--resource-directory",
     type=str,
     required=False,
-    help="The directory in which resources will be downloaded or exist.",
+    help="The directory where downloaded resources are to be cached.",
 )
 
 args = parser.parse_args()
 
-# Setup the system.
+isa = get_isa_from_str(args.isa)
+
+
 cache_hierarchy = NoCache()
 memory = SingleChannelDDR3_1600()
-
 processor = SimpleProcessor(
     cpu_type=CPUTypes.ATOMIC,
-    isa=ISA.X86,
+    isa=isa,
     num_cores=1,
 )
 
@@ -91,16 +127,19 @@ motherboard = SimpleBoard(
     cache_hierarchy=cache_hierarchy,
 )
 
-# Set the workload
-binary = Resource(args.resource, resource_directory=args.resource_directory)
+binary = obtain_resource(
+    resource_id=isa_resource_id_map[isa],
+    resource_version=resource_id_version_map[isa_resource_id_map[isa]],
+    resource_directory=args.resource_directory,
+)
+
+assert isinstance(
+    binary, BinaryResource
+), "binary is not of type BinaryResource."
+
 motherboard.set_se_binary_workload(binary)
 
-# Run the simulation
 simulator = Simulator(board=motherboard)
 simulator.run()
 
-print(
-    "Exiting @ tick {} because {}.".format(
-        simulator.get_current_tick(), simulator.get_last_exit_event_cause()
-    )
-)
+print(f"Exit cause: '{simulator.get_last_exit_event_cause()}'.")

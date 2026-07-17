@@ -1,3 +1,15 @@
+# Copyright (c) 2021-2024,2026 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2021 The Regents of the University of California
 # All Rights Reserved.
 #
@@ -26,11 +38,21 @@
 
 import math
 from abc import abstractmethod
+from dataclasses import (
+    dataclass,
+    field,
+)
+from enum import Enum
+from typing import (
+    List,
+    Optional,
+)
 
 from m5.objects import (
     CHI_Cache_Controller,
     MessageBuffer,
     RubyNetwork,
+    SubSystem,
 )
 
 from .....isas import ISA
@@ -53,10 +75,10 @@ class OrderedTriggerMessageBuffer(TriggerMessageBuffer):
     ordered = True
 
 
-class AbstractNode(CHI_Cache_Controller):
+class CacheController(CHI_Cache_Controller):
     """A node is the abstract unit for caches in the CHI protocol.
 
-    You can extend the AbstractNode to create caches (private or shared) and
+    You can extend the CacheController to create caches (private or shared) and
     directories with or without data caches.
     """
 
@@ -74,7 +96,7 @@ class AbstractNode(CHI_Cache_Controller):
 
         # Note: Need to call versionCount method on *this* class, not the
         # potentially derived class
-        self.version = AbstractNode.versionCount()
+        self.version = CacheController.versionCount()
         self._cache_line_size = cache_line_size
 
         # Set somewhat large number since we really a lot on internal
@@ -129,3 +151,95 @@ class AbstractNode(CHI_Cache_Controller):
         self.rspIn.in_port = network.out_port
         self.snpIn.in_port = network.out_port
         self.datIn.in_port = network.out_port
+
+
+class CHI_NodeType(Enum):
+    CHI_RNF = 1
+    CHI_HNF = 2
+    CHI_MN = 3
+    CHI_SNF_MainMem = 4
+    CHI_SNF_BootMem = 5
+    CHI_RNI_DMA = 6
+    CHI_RNI_IO = 7
+
+
+@dataclass(kw_only=True)
+class Node_Params:
+    """
+    NoC config. parameters and bindings required for CustomMesh topology.
+
+    Maps 'num_nodes_per_router' CHI nodes to each router provided in
+    'router_list'. This assumes len(router_list)*num_nodes_per_router
+    equals the number of nodes
+    If 'num_nodes_per_router' is left undefined, we circulate around
+    'router_list' until all nodes are mapped.
+    See 'distributeNodes' in configs/topologies/CustomMesh.py
+
+    'inbound_link_latency` is used by custom mesh to set the Ruby
+    external-link latency for the node/router connection. Ruby
+    external links are bi-directional, so this link latency applies in
+    both controller->router and router->controller directions, not just
+    traffic incoming to the controller
+
+    'outbound_link_latency` is instead used to set enqueueing
+    latencies in SLICC when the controller within the node
+    is forwarding a message
+    """
+
+    node_type: CHI_NodeType
+    num_nodes_per_router: int = 1
+    router_list: List[int] = field(default_factory=list)
+    dedicated_router: bool = False
+    inbound_link_latency: Optional[int] = None
+    outbound_link_latency: Optional[int] = None
+
+    def num_nodes(self) -> int:
+        """Derive node count from Node_Params placement metadata."""
+
+        if self.num_nodes_per_router < 0:
+            raise ValueError("num_nodes_per_router must be >= 0.")
+        return len(self.router_list) * self.num_nodes_per_router
+
+
+class CHI_Node(SubSystem):
+    """
+    Base class with common functions for setting up Cache or Memory
+    controllers that are part of a CHI RNF, RNFI, HNF, or SNF nodes.
+    Notice getNetworkSideControllers and getAllControllers must be implemented
+    in the derived classes.
+    """
+
+    def __init__(self, ruby_system, node_type):
+        super().__init__()
+        self._ruby_system = ruby_system
+        self._network = ruby_system.network
+        self._node_type = node_type
+
+    def getNetworkSideControllers(self):
+        """
+        Returns all ruby controllers that need to be connected to the
+        network
+        """
+        raise NotImplementedError()
+
+    def getAllControllers(self):
+        """
+        Returns all ruby controllers associated with this node
+        """
+        raise NotImplementedError()
+
+    def setDownstream(self, cntrls):
+        """
+        Sets cntrls as the downstream list of all controllers in this node
+        """
+        for c in self.getNetworkSideControllers():
+            c.downstream_destinations = cntrls
+
+    def setDownstreamNodes(self, nodes):
+        """
+        Sets cntrls as the downstream list of all controllers in this node
+        """
+        cntrls = [
+            cntrl for node in nodes for cntrl in node.getAllControllers()
+        ]
+        self.setDownstream(cntrls)

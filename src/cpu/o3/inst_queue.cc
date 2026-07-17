@@ -207,6 +207,12 @@ IQUnit::numFreeEntries(const DynInstPtr &inst) const
     }
 }
 
+bool
+IQUnit::isCapable(OpClass op_class) const
+{
+    return _fuPool->isCapable(op_class);
+}
+
 InstructionQueue::FUCompletion::FUCompletion(const DynInstPtr &_inst,
                                              FUPool *fu_pool, int fu_idx,
                                              InstructionQueue *iq_ptr)
@@ -242,6 +248,7 @@ InstructionQueue::InstructionQueue(CPU *cpu_ptr, IEW *iew_ptr,
     : cpu(cpu_ptr),
       iewStage(iew_ptr),
       iqs(params.instQueues),
+      insertionPolicy(params.iqInsertionPolicy),
       numThreads(params.numThreads),
       totalWidth(params.issueWidth),
       commitToIEWDelay(params.commitToIEWDelay),
@@ -616,10 +623,23 @@ InstructionQueue::numFreeEntries(ThreadID tid)
 unsigned
 InstructionQueue::numFreeEntries(const DynInstPtr &inst)
 {
+    bool any_capable = false;
     unsigned free_entries = 0;
     for (auto iq : iqs) {
-        free_entries += iq->numFreeEntries(inst);
+        if (iq->isCapable(inst->opClass())) {
+            any_capable = true;
+            free_entries += iq->numFreeEntries(inst);
+        }
     }
+
+    if (any_capable) {
+        return free_entries;
+    }
+
+    for (auto iq : iqs) {
+        free_entries += iq->numFreeEntries(inst->threadNumber);
+    }
+
     return free_entries;
 }
 
@@ -672,13 +692,56 @@ InstructionQueue::hasReadyInsts()
 IQUnit *
 InstructionQueue::findIQ(const DynInstPtr &inst)
 {
+    bool any_capable = false;
+    if (insertionPolicy == IQInsertionPolicy::LeastLoaded) {
+        // LeastLoaded insertion policy
+        // Find the least loaded IQ to insert
+
+        IQUnit *best_iq = nullptr;
+        unsigned best_load = 0;
+
+        for (auto iq : iqs) {
+            if (iq->isCapable(inst->opClass())) {
+                any_capable = true;
+                if (iq->numFreeEntries(inst) > 0) {
+                    unsigned load = iq->numEntries() - iq->numFreeEntries();
+                    if (!best_iq || load < best_load) {
+                        best_iq = iq;
+                        best_load = load;
+                    }
+                }
+            }
+        }
+
+        if (best_iq) {
+            return best_iq;
+        }
+    } else if (insertionPolicy == IQInsertionPolicy::FirstMatch) {
+        // FirstMatch insertion policy (default)
+        // Find the first non-full IQ to insert
+
+        for (auto iq : iqs) {
+            if (iq->isCapable(inst->opClass())) {
+                any_capable = true;
+                if (iq->numFreeEntries(inst) > 0) {
+                    return iq;
+                }
+            }
+        }
+    } else {
+        fatal("Unknown IQ insertion policy %d\n", (int)insertionPolicy);
+    }
+
+    if (any_capable) {
+        return nullptr;
+    }
+
     for (auto iq : iqs) {
-        // If the IQ can store the selected instruction,
-        // return the IQ as valid
-        if (iq->numFreeEntries(inst) > 0) {
+        if (iq->numFreeEntries(inst->threadNumber) > 0) {
             return iq;
         }
     }
+
     return nullptr;
 }
 

@@ -176,6 +176,14 @@ Queued::notify(const CacheAccessProbeArg &acc, const PrefetchInfo &pfi)
     const PacketPtr pkt = acc.pkt;
     const CacheAccessor &cache = acc.cache;
 
+    if (pfi.isCacheMiss()) {
+        DPRINTF(HWPrefetch, "Notify miss pc=%#x addr=%#x\n", pfi.getPC(),
+                pfi.getAddr());
+    } else {
+        DPRINTF(HWPrefetch, "Notify hit pc=%#x addr=%#x\n", pfi.getPC(),
+                pfi.getAddr());
+    }
+
     // Squash queued prefetches if demand miss to same line
     if (queueSquash) {
         auto itr = pfq.begin();

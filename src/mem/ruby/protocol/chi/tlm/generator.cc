@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Arm Limited
+ * Copyright (c) 2024-2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -37,8 +37,9 @@
 
 #include "mem/ruby/protocol/chi/tlm/generator.hh"
 
-#include "mem/ruby/protocol/chi/tlm/controller.hh"
 #include "debug/TLM.hh"
+#include "mem/ruby/protocol/chi/tlm/controller.hh"
+#include "sim/sim_exit.hh"
 
 namespace gem5 {
 
@@ -47,7 +48,8 @@ namespace tlm::chi {
 bool
 TlmGenerator::Transaction::Expectation::run(Transaction *tran)
 {
-    auto res_print = csprintf("Checking %s...", name());
+    auto res_print =
+        csprintf("txn_id=%u: Checking %s...", tran->phase().txn_id, name());
     if (cb(tran)) {
         inform("%s\n", res_print + " Success ");
         return true;
@@ -63,13 +65,19 @@ TlmGenerator::Transaction::Assertion::run(Transaction *tran)
     if (Expectation::run(tran)) {
         return true;
     } else {
-        panic("Failing assertion\n");
+        panic("%u: Failing assertion\n", tran->phase().txn_id);
     }
 }
 
 TlmGenerator::Transaction::Transaction(ARM::CHI::Payload *pa,
                                        ARM::CHI::Phase &ph)
-    : passed(true), parent(nullptr), _payload(pa), _phase(ph), _start(0)
+    : runCallbacksEvent([this] { runCallbacks(); }, "Transaction runCallback",
+                        false, Event::CPU_Tick_Pri),
+      passed(true),
+      parent(nullptr),
+      _payload(pa),
+      _phase(ph),
+      _start(0)
 {
     _payload->ref();
 }
@@ -133,9 +141,14 @@ TlmGenerator::Transaction::runCallbacks()
         }
         bool wait = (*it)->wait();
 
+        unsigned timeout = (*it)->waitCycles();
+
         it = actions.erase(it);
 
         if (wait) {
+            if (timeout) {
+                parent->scheduleEvaluation(timeout, this);
+            }
             break;
         }
     }
@@ -164,7 +177,9 @@ TlmGenerator::TlmGenerator(const Params &p)
                 Event::CPU_Tick_Pri),
       outPort(name() + ".out_port", 0, this),
       inPort(name() + ".in_port", 0, this),
-      suiteFailure(false)
+      suiteFailure(false),
+      cbusyTracker(p.cbusy_tracker),
+      stats(this)
 {
     inPort.onChange([this](const TlmData &data) {
         auto payload = data.first;
@@ -198,8 +213,6 @@ TlmGenerator::scheduleTransaction(Tick when, Transaction *transaction)
     transaction->setStart(when);
 
     auto event = new TransactionEvent(transaction, when);
-
-    scheduledTransactions.push(event);
 
     schedule(event, when);
 }
@@ -244,6 +257,20 @@ TlmGenerator::send(Transaction *transaction)
 
     auto tlm_data = TlmData(payload, &phase);
     outPort.send(tlm_data);
+
+    switch (phase.channel) {
+        case ARM::CHI::CHANNEL_REQ:
+            stats.reqOut++;
+            break;
+        case ARM::CHI::CHANNEL_DAT:
+            stats.datOut++;
+            break;
+        case ARM::CHI::CHANNEL_RSP:
+            stats.rspOut++;
+            break;
+        default:
+            break;
+    }
 }
 
 void
@@ -257,8 +284,12 @@ TlmGenerator::terminate(Transaction *transaction)
 
         // If the transaction has failed, mark the suite as failure
         suiteFailure = suiteFailure || transaction->failed();
+
+        if (!isActive()) {
+            exitSimLoop("TlmGenerator done");
+        }
     } else {
-        panic("Can't find transaction id: %u\n", phase.txn_id);
+        panic("%u: Can't find transaction id.\n", phase.txn_id);
     }
 }
 
@@ -289,6 +320,8 @@ TlmGenerator::recv(ARM::CHI::Payload *payload, ARM::CHI::Phase *phase)
 {
     DPRINTF(TLM, "[c%d] rcvd %s\n", cpuId, transactionToString(*payload, *phase));
 
+    handleCBusy(phase);
+
     if (handlePCredit(phase)) {
         return;
     } else if (auto it = pendingTransactions.find(phase->txn_id);
@@ -300,7 +333,37 @@ TlmGenerator::recv(ARM::CHI::Payload *payload, ARM::CHI::Phase *phase)
         // Check existing expectations
         it->second->runCallbacks();
     } else {
-        warn("Transaction untested\n");
+        warn("%u: Transaction untested\n", phase->txn_id);
+    }
+}
+
+void
+TlmGenerator::scheduleEvaluation(unsigned cycles, Transaction *transaction)
+{
+    auto &event = transaction->runCallbacksEvent;
+    panic_if(event.scheduled(), "Already scheduled\n");
+    schedule(event, clockEdge(Cycles(cycles)));
+}
+
+void
+TlmGenerator::handleCBusy(ARM::CHI::Phase *phase)
+{
+    if (phase->channel != ARM::CHI::CHANNEL_RSP &&
+        phase->channel != ARM::CHI::CHANNEL_DAT) {
+        return;
+    }
+
+    uint8_t cbusy10 = bits(phase->c_busy, 1, 0);
+    bool cbusy2 = bits(phase->c_busy, 2);
+
+    if (cbusy2) {
+        stats.cbusy2++;
+    }
+    stats.cbusy10[cbusy10]++;
+
+    if (cbusyTracker) {
+        const ruby::MachineID responder(tlm_to_ruby::srcId(phase->src_id));
+        cbusyTracker->update(responder, phase->c_busy);
     }
 }
 
@@ -329,11 +392,13 @@ TlmGenerator::handlePCredit(ARM::CHI::Phase *phase)
         } else {
             pCredit++;
         }
+
+        stats.pcrdGrant++;
         return true;
     } else if (isRetryAck(phase)) {
         auto it = pendingTransactions.find(phase->txn_id);
         panic_if(it == pendingTransactions.end(),
-                 "Can't find transaction id: %u\n", phase->txn_id);
+                 "%u: Can't find transaction id\n", phase->txn_id);
 
         auto tran = it->second;
 
@@ -345,6 +410,8 @@ TlmGenerator::handlePCredit(ARM::CHI::Phase *phase)
         } else {
             waitingForPCrd.push_back(tran);
         }
+
+        stats.retryAck++;
         return true;
     } else {
         return false;
@@ -360,6 +427,10 @@ TlmGenerator::passFailCheck()
         inform(" Suite Fail: failed transaction ");
     } else if (!pendingTransactions.empty()) {
         inform(" Suite Fail: non-empty transaction queue ");
+        inform(" Pending transactions:");
+        for (auto &[txn_id, txn] : pendingTransactions) {
+            inform("\t%s", txn->str());
+        }
     } else {
         inform(" Suite Success ");
     }
@@ -375,6 +446,26 @@ TlmGenerator::getPort(const std::string &if_name, PortID idx)
     } else {
         return SimObject::getPort(if_name, idx);
     }
+}
+
+TlmGenerator::Stats::Stats(statistics::Group *_parent)
+    : statistics::Group(_parent),
+      ADD_STAT(reqOut, statistics::units::Count::get(),
+               "Number of transactions sent in the REQ channel"),
+      ADD_STAT(rspOut, statistics::units::Count::get(),
+               "Number of transactions sent in the RSP channel"),
+      ADD_STAT(datOut, statistics::units::Count::get(),
+               "Number of transactions sent in the DAT channel"),
+      ADD_STAT(retryAck, statistics::units::Count::get(),
+               "Number of RetryAck received"),
+      ADD_STAT(pcrdGrant, statistics::units::Count::get(),
+               "Number of PCrdGrant received"),
+      ADD_STAT(cbusy2, statistics::units::Count::get(),
+               "CBusy signals revceived"),
+      ADD_STAT(cbusy10, statistics::units::Count::get(),
+               "CBusy signals revceived")
+{
+    cbusy10.init(4);
 }
 
 } // namespace tlm::chi

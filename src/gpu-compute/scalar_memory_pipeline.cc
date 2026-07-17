@@ -44,18 +44,20 @@ namespace gem5
 
 ScalarMemPipeline::ScalarMemPipeline(const ComputeUnitParams &p,
                                      ComputeUnit &cu)
-    : computeUnit(cu), _name(cu.name() + ".ScalarMemPipeline"),
+    : computeUnit(cu),
+      _name(cu.name() + ".ScalarMemPipeline"),
       queueSize(p.scalar_mem_queue_size),
-      inflightStores(0), inflightLoads(0)
-{
-}
+      inflightStores(0),
+      inflightLoads(0)
+{}
 
 void
 ScalarMemPipeline::exec()
 {
     // afind oldest scalar request whose data has arrived
-    GPUDynInstPtr m = !returnedLoads.empty() ? returnedLoads.front() :
-        !returnedStores.empty() ? returnedStores.front() : nullptr;
+    GPUDynInstPtr m = !returnedLoads.empty()    ? returnedLoads.front()
+                      : !returnedStores.empty() ? returnedStores.front()
+                                                : nullptr;
 
     Wavefront *w = nullptr;
 
@@ -66,21 +68,20 @@ ScalarMemPipeline::exec()
         w = m->wavefront();
 
         accessSrf =
-            w->computeUnit->srf[w->simdId]->
-                canScheduleWriteOperandsFromLoad(w, m);
+            w->computeUnit->srf[w->simdId]->canScheduleWriteOperandsFromLoad(
+                w, m);
     }
 
     if ((!returnedStores.empty() || !returnedLoads.empty()) &&
-        m->latency.rdy() && computeUnit.scalarMemToSrfBus.rdy() &&
-        accessSrf &&
+        m->latency.rdy() && computeUnit.scalarMemToSrfBus.rdy() && accessSrf &&
         (computeUnit.shader->coissue_return ||
          computeUnit.scalarMemUnit.rdy())) {
 
         w = m->wavefront();
 
         if (m->isLoad() || m->isAtomicRet()) {
-            w->computeUnit->srf[w->simdId]->
-                scheduleWriteOperandsFromLoad(w, m);
+            w->computeUnit->srf[w->simdId]->scheduleWriteOperandsFromLoad(w,
+                                                                          m);
         }
 
         m->completeAcc(m);
@@ -102,18 +103,19 @@ ScalarMemPipeline::exec()
 
         if (m->isStore() || m->isAtomic()) {
             computeUnit.shader->ScheduleAdd(&w->scalarOutstandingReqsWrGm,
-                                             m->time, -1);
+                                            m->time, -1);
         }
 
         if (m->isLoad() || m->isAtomic()) {
             computeUnit.shader->ScheduleAdd(&w->scalarOutstandingReqsRdGm,
-                                             m->time, -1);
+                                            m->time, -1);
         }
 
         // Mark write bus busy for appropriate amount of time
         computeUnit.scalarMemToSrfBus.set(m->time);
-        if (!computeUnit.shader->coissue_return)
+        if (!computeUnit.shader->coissue_return) {
             w->computeUnit->scalarMemUnit.set(m->time);
+        }
     }
 
     // If pipeline has executed a global memory instruction
@@ -163,14 +165,13 @@ ScalarMemPipeline::issueRequest(GPUDynInstPtr gpuDynInst)
 
 void
 ScalarMemPipeline::injectScalarMemFence(GPUDynInstPtr gpuDynInst,
-                                        bool kernelMemSync,
-                                        RequestPtr req)
+                                        bool kernelMemSync, RequestPtr req)
 {
     assert(gpuDynInst->isScalar());
 
     if (!req) {
-        req = std::make_shared<Request>(
-                0, 0, 0, computeUnit.requestorId(), 0, gpuDynInst->wfDynId);
+        req = std::make_shared<Request>(0, 0, 0, computeUnit.requestorId(), 0,
+                                        gpuDynInst->wfDynId);
     } else {
         req->requestorId(computeUnit.requestorId());
     }
@@ -191,25 +192,22 @@ ScalarMemPipeline::injectScalarMemFence(GPUDynInstPtr gpuDynInst,
         req->setReqInstSeqNum(gpuDynInst->seqNum());
         req->setFlags(Request::KERNEL);
         sqc_pkt = new Packet(req, MemCmd::MemSyncReq);
-        sqc_pkt->pushSenderState(
-                new ComputeUnit::SQCPort::SenderState(
-                    gpuDynInst->wavefront(), nullptr));
+        sqc_pkt->pushSenderState(new ComputeUnit::SQCPort::SenderState(
+            gpuDynInst->wavefront(), nullptr));
     } else {
         gpuDynInst->setRequestFlags(req);
 
         req->setReqInstSeqNum(gpuDynInst->seqNum());
 
         sqc_pkt = new Packet(req, MemCmd::MemSyncReq);
-        sqc_pkt->pushSenderState(
-                new ComputeUnit::SQCPort::SenderState(
-                    gpuDynInst->wavefront(), nullptr));
+        sqc_pkt->pushSenderState(new ComputeUnit::SQCPort::SenderState(
+            gpuDynInst->wavefront(), nullptr));
     }
 
     ComputeUnit::SQCPort::MemReqEvent *sqc_event =
-            new ComputeUnit::SQCPort::MemReqEvent
-            (computeUnit.sqcPort, sqc_pkt);
-    computeUnit.schedule(
-            sqc_event, curTick() + computeUnit.scalar_req_tick_latency);
+        new ComputeUnit::SQCPort::MemReqEvent(computeUnit.sqcPort, sqc_pkt);
+    computeUnit.schedule(sqc_event,
+                         curTick() + computeUnit.scalar_req_tick_latency);
 
     // When the SQC is invalidated, perform a scalar cache invalidate as well.
     // The SQC and Scalar cache are implement using the same SLICC SM, so this
@@ -224,8 +222,7 @@ ScalarMemPipeline::injectScalarMemFence(GPUDynInstPtr gpuDynInst,
         scalar_req->setFlags(Request::KERNEL);
         scalar_pkt = new Packet(scalar_req, MemCmd::MemSyncReq);
         scalar_pkt->pushSenderState(
-                new ComputeUnit::ScalarDataPort::SenderState(
-                    gpuDynInst));
+            new ComputeUnit::ScalarDataPort::SenderState(gpuDynInst));
     } else {
         gpuDynInst->setRequestFlags(scalar_req);
 
@@ -233,22 +230,22 @@ ScalarMemPipeline::injectScalarMemFence(GPUDynInstPtr gpuDynInst,
 
         scalar_pkt = new Packet(scalar_req, MemCmd::MemSyncReq);
         scalar_pkt->pushSenderState(
-                new ComputeUnit::ScalarDataPort::SenderState(
-                    gpuDynInst));
+            new ComputeUnit::ScalarDataPort::SenderState(gpuDynInst));
     }
 
     ComputeUnit::ScalarDataPort::MemReqEvent *scalar_event =
-            new ComputeUnit::ScalarDataPort::MemReqEvent
-            (computeUnit.scalarDataPort, scalar_pkt);
-    computeUnit.schedule(
-            scalar_event, curTick() + computeUnit.scalar_req_tick_latency);
+        new ComputeUnit::ScalarDataPort::MemReqEvent(
+            computeUnit.scalarDataPort, scalar_pkt);
+    computeUnit.schedule(scalar_event,
+                         curTick() + computeUnit.scalar_req_tick_latency);
 }
 
 void
 ScalarMemPipeline::printProgress()
 {
-    std::cout << "Scalar issued: " << issuedRequests.size() << " returned: "
-              << returnedLoads.size() << "/" << returnedStores.size() << "\n";
+    std::cout << "Scalar issued: " << issuedRequests.size()
+              << " returned: " << returnedLoads.size() << "/"
+              << returnedStores.size() << "\n";
 }
 
 } // namespace gem5

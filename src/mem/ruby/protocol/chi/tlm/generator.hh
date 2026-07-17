@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Arm Limited
+ * Copyright (c) 2024-2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -45,6 +45,7 @@
 
 #include "mem/ruby/protocol/chi/tlm/port.hh"
 #include "mem/ruby/protocol/chi/tlm/utils.hh"
+#include "mem/ruby/structures/BackpressureTracker.hh"
 #include "params/TlmGenerator.hh"
 #include "sim/clocked_object.hh"
 #include "sim/eventq.hh"
@@ -137,8 +138,16 @@ class TlmGenerator : public ClockedObject
             >;
 
             Action(Callback _cb, bool waiting)
-              : cb(_cb), _wait(waiting)
+                : cb(_cb), _wait(waiting), _waitCycles(0)
             {}
+
+            Action(Callback _cb, unsigned cycles)
+                : cb(_cb), _wait(true), _waitCycles(cycles)
+            {
+                panic_if(cycles == 0,
+                         "waiting time should be bigger than 0\n");
+            }
+
             virtual ~Action() {};
 
             /* A basic action always returns true */
@@ -155,9 +164,19 @@ class TlmGenerator : public ClockedObject
              */
             bool wait() const { return _wait; }
 
+            /**
+             * Returning a value != 0 means we are waiting and
+             */
+            unsigned
+            waitCycles() const
+            {
+                return _waitCycles;
+            }
+
           protected:
             Callback cb;
-            bool _wait;
+            bool _wait = false;
+            unsigned _waitCycles = 0;
         };
 
         /**
@@ -250,6 +269,8 @@ class TlmGenerator : public ClockedObject
          */
         void runCallbacks();
 
+        EventFunctionWrapper runCallbacksEvent;
+
         ARM::CHI::Payload* payload() const { return _payload; }
         ARM::CHI::Phase& phase() { return _phase; }
         Tick
@@ -278,6 +299,12 @@ class TlmGenerator : public ClockedObject
     void scheduleTransaction(Tick when, Transaction *tr);
     void enqueueFront(Transaction *tr);
     void enqueueBack(Transaction *tr);
+    bool
+    isActive() const
+    {
+        return !pendingTransactions.empty() ||
+               !unscheduledTransactions.empty() || !waitingForPCrd.empty();
+    }
 
     Port &getPort(const std::string &if_name, PortID idx) override;
 
@@ -315,6 +342,8 @@ class TlmGenerator : public ClockedObject
     void inject(Transaction *transaction);
     void send(Transaction *transaction);
     void terminate(Transaction *transaction);
+    void scheduleEvaluation(unsigned cycles, Transaction *transaction);
+
     void recv(ARM::CHI::Payload *payload, ARM::CHI::Phase *phase);
     void passFailCheck();
 
@@ -347,6 +376,9 @@ class TlmGenerator : public ClockedObject
      */
     bool handlePCredit(ARM::CHI::Phase *phase);
 
+    /** Handle a C-busy message */
+    void handleCBusy(ARM::CHI::Phase *phase);
+
   protected:
     /** cpuId to mimic the behaviour of a CPU */
     uint8_t cpuId;
@@ -362,13 +394,6 @@ class TlmGenerator : public ClockedObject
 
     /** tick event used to schedule unscheduled transactions */
     EventFunctionWrapper tickEvent;
-
-    using SchedulingQueue = std::priority_queue<TransactionEvent*,
-        std::vector<TransactionEvent*>,
-        TransactionEvent::Compare>;
-
-    /** PQ of transactions whose injection has been scheduled */
-    SchedulingQueue scheduledTransactions;
 
     /** List of transactions whose injection needs to be scheduled */
     std::list<Transaction *> unscheduledTransactions;
@@ -387,6 +412,29 @@ class TlmGenerator : public ClockedObject
 
     /** Has any transaction of the suite failed? */
     bool suiteFailure;
+
+    /** Tracks responder-reported CBusy values observed by the generator */
+    ruby::BackpressureTracker *cbusyTracker;
+
+    struct Stats : public statistics::Group
+    {
+        Stats(statistics::Group *parent);
+
+        /* Number of transactions sent in the REQ channel */
+        statistics::Scalar reqOut;
+        /* Number of transactions sent in the RSP channel */
+        statistics::Scalar rspOut;
+        /* Number of transactions sent in the DAT channel */
+        statistics::Scalar datOut;
+        /* Number of RetryAck received */
+        statistics::Scalar retryAck;
+        /* Number of PCrdGrant received */
+        statistics::Scalar pcrdGrant;
+
+        /* CBusy signals revceived */
+        statistics::Scalar cbusy2;
+        statistics::Vector cbusy10;
+    } stats;
 };
 
 } // namespace tlm::chi

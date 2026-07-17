@@ -37,16 +37,15 @@ namespace gem5
 
 GPUExecContext::GPUExecContext(ComputeUnit *_cu, Wavefront *_wf)
     : cu(_cu), wf(_wf), gpuISA(_wf ? &_wf->gpuISA() : nullptr)
-{
-}
+{}
 
-ComputeUnit*
+ComputeUnit *
 GPUExecContext::computeUnit()
 {
     return cu;
 }
 
-Wavefront*
+Wavefront *
 GPUExecContext::wavefront()
 {
     return wf;

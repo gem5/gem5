@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 ARM Limited
+ * Copyright (c) 2023, 2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -40,7 +40,9 @@
 
 #include <ARM/TLM/arm_chi.h>
 
+#include "arch/arm/mpam.hh"
 #include "base/types.hh"
+#include "mem/ruby/common/MachineID.hh"
 #include "mem/ruby/protocol/CHI/CHIDataType.hh"
 #include "mem/ruby/protocol/CHI/CHIRequestType.hh"
 #include "mem/ruby/protocol/CHI/CHIResponseType.hh"
@@ -57,7 +59,7 @@ namespace tlm_to_ruby {
 ruby::CHI::CHIRequestType reqOpcode(ARM::CHI::ReqOpcode req);
 ruby::CHI::CHIDataType datOpcode(ARM::CHI::DatOpcode dat, ARM::CHI::Resp resp);
 ruby::CHI::CHIResponseType rspOpcode(ARM::CHI::RspOpcode res, ARM::CHI::Resp resp);
-
+ruby::MachineID srcId(uint16_t src_id);
 }
 
 namespace ruby_to_tlm {
@@ -68,8 +70,10 @@ uint8_t snpOpcode(ruby::CHI::CHIRequestType snp);
 
 ARM::CHI::Resp datResp(ruby::CHI::CHIDataType dat);
 ARM::CHI::Resp rspResp(ruby::CHI::CHIResponseType rsp);
-
+uint16_t srcId(ruby::MachineID src_id);
 }
+
+::gem5::ArmISA::mpam::MpamBundle getMpam(const ARM::CHI::Payload &payload);
 
 Addr transactionSize(ARM::CHI::Size sz);
 

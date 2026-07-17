@@ -40,6 +40,7 @@
 
 #include "arch/arm/mmu.hh"
 
+#include "arch/arm/faults.hh"
 #include "arch/arm/isa.hh"
 #include "arch/arm/mpam.hh"
 #include "arch/arm/reg_abi.hh"
@@ -413,7 +414,7 @@ MMU::checkPermissions(TlbEntry *te, const RequestPtr &req, Mode mode,
         (te->mtype != TlbEntry::MemoryType::Normal)) {
         return std::make_shared<DataAbort>(
             vaddr, te->domain, is_write,
-            ArmFault::PermissionLL + te->lookupLevel,
+            llFaultSource(ArmFault::PermissionLL, te->lookupLevel),
             state.isStage2, tran_method);
     }
 
@@ -455,12 +456,12 @@ MMU::checkPermissions(TlbEntry *te, const RequestPtr &req, Mode mode,
                 // address reported in FAR
                 return std::make_shared<PrefetchAbort>(
                     req->getPC(),
-                    ArmFault::DomainLL + te->lookupLevel,
+                    llFaultSource(ArmFault::DomainLL, te->lookupLevel),
                     state.isStage2, tran_method);
             } else
                 return std::make_shared<DataAbort>(
                     vaddr, te->domain, is_write,
-                    ArmFault::DomainLL + te->lookupLevel,
+                    llFaultSource(ArmFault::DomainLL, te->lookupLevel),
                     state.isStage2, tran_method);
           case 1:
             // Continue with permissions check
@@ -551,7 +552,7 @@ MMU::checkPermissions(TlbEntry *te, const RequestPtr &req, Mode mode,
         // cache line and should not be the address reported in FAR
         return std::make_shared<PrefetchAbort>(
             req->getPC(),
-            ArmFault::PermissionLL + te->lookupLevel,
+            llFaultSource(ArmFault::PermissionLL, te->lookupLevel),
             state.isStage2, tran_method);
     } else if (abt | hapAbt) {
         stats.permsFaults++;
@@ -559,7 +560,7 @@ MMU::checkPermissions(TlbEntry *te, const RequestPtr &req, Mode mode,
                " write:%d\n", ap, is_priv, is_write);
         return std::make_shared<DataAbort>(
             vaddr, te->domain, is_write,
-            ArmFault::PermissionLL + te->lookupLevel,
+            llFaultSource(ArmFault::PermissionLL, te->lookupLevel),
             state.isStage2 | !abt, tran_method);
     }
     return NoFault;
@@ -604,7 +605,7 @@ MMU::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
         (te->mtype != TlbEntry::MemoryType::Normal)) {
         return std::make_shared<DataAbort>(
             vaddr_tainted, te->domain, is_write,
-            ArmFault::PermissionLL + te->lookupLevel,
+            llFaultSource(ArmFault::PermissionLL, te->lookupLevel),
             state.isStage2, TranMethod::LpaeTran);
     }
 
@@ -661,7 +662,7 @@ MMU::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
             // cache line and should not be the address reported in FAR
             return std::make_shared<PrefetchAbort>(
                 req->getPC(),
-                ArmFault::PermissionLL + te->lookupLevel,
+                llFaultSource(ArmFault::PermissionLL, te->lookupLevel),
                 state.isStage2, TranMethod::LpaeTran);
         } else {
             stats.permsFaults++;
@@ -670,7 +671,7 @@ MMU::checkPermissions64(TlbEntry *te, const RequestPtr &req, Mode mode,
             return std::make_shared<DataAbort>(
                 vaddr_tainted, te->domain,
                 (is_atomic && !grant_read) ? false : is_write,
-                ArmFault::PermissionLL + te->lookupLevel,
+                llFaultSource(ArmFault::PermissionLL, te->lookupLevel),
                 state.isStage2, TranMethod::LpaeTran);
         }
     }

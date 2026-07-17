@@ -1,5 +1,5 @@
 # -*- mode:python -*-
-# Copyright (c) 2024-2025 Arm Limited
+# Copyright (c) 2024-2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -35,6 +35,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+from m5.objects.CBusy import CBusyTracker
 from m5.objects.ClockedObject import ClockedObject
 from m5.objects.TlmController import TlmController
 from m5.params import *
@@ -55,9 +56,12 @@ class TlmGenerator(ClockedObject):
     cxx_exports = [
         PyBindMethod("scheduleTransaction"),
         PyBindMethod("enqueueBack"),
+        PyBindMethod("isActive"),
     ]
 
-    _transactions = []
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._transactions = []
 
     def inject(self, payload, phase, when=None):
         from m5.tlm_chi.utils import Transaction
@@ -87,5 +91,9 @@ class TlmGenerator(ClockedObject):
     max_pending_tran = OptionalParam.Unsigned(
         "Max number of pending transactions issued via the inject API"
     )
+    cbusy_tracker = Param.BackpressureTracker(
+        CBusyTracker(), "Tracks observed incoming CBusy levels"
+    )
+
     in_port = TlmSinkPort("CHI TLM input/response port")
     out_port = TlmSourcePort("CHI TLM output/request port")

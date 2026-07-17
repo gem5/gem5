@@ -33,7 +33,7 @@ jobs:
             # and needs to be used inside a the same repository where the
             # workflows are defined.
             - name: Checkout Repository
-              uses: actions/checkout@v4
+              uses: actions/checkout@v7
 
             - name: Record day and time
               id: timedate-recorder

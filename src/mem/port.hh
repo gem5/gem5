@@ -139,15 +139,7 @@ class RequestPort: public Port, public AtomicRequestProtocol,
   private:
     ResponsePort *_responsePort;
 
-  protected:
-    SimObject &owner;
-
   public:
-    [[deprecated("RequestPort ownership is deprecated. "
-                 "Owner should now be registered in derived classes.")]]
-    RequestPort(const std::string& name, SimObject* _owner,
-                PortID id=InvalidPortID);
-
     RequestPort(const std::string& name, PortID id=InvalidPortID);
 
     virtual ~RequestPort();
@@ -354,15 +346,7 @@ class ResponsePort : public Port, public AtomicResponseProtocol,
 
     bool defaultBackdoorWarned;
 
-  protected:
-    SimObject& owner;
-
   public:
-    [[deprecated("ResponsePort ownership is deprecated. "
-                 "Owner should now be registered in derived classes.")]]
-    ResponsePort(const std::string& name, SimObject* _owner,
-                 PortID id=InvalidPortID);
-
     ResponsePort(const std::string& name, PortID id=InvalidPortID);
 
     virtual ~ResponsePort();
