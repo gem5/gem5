@@ -58,6 +58,7 @@ namespace tlm::chi {
 
 class CacheController;
 class SnoopHandler;
+class TlmSource;
 
 /**
  * TlmGenerator: this class is basically a CHI-tlm traffic generator.
@@ -76,27 +77,9 @@ class SnoopHandler;
  * +--------------+   +---------------+    |               |
  *                                         +---------------+
  *
- * The APIs are entirely exposed to the python world for flexible
- * definition of the unit tests.
- *
- * To inject a CHI-tlm transaction at a specific tick in the
- * simulation, the following TlmGenerator method should be
- * used:
- *
- * def inject(self, payload, phase, when=None):
- *
- * This will return a Transaction object and from that point that will be the
- * handle for managing the transaction: either adding transaction expectations
- * upon response (e.g, what will be the cacheline state), or by adding action
- * callbacks (execute some logic)
- *
- * By default the last kw argument (when) is set to None.
- * This means the new transaction will be added to a pending queue and will
- * only be scheduled in a FCFS policy. The generator will try to schedule
- * a configurable number of new transactions every clock cycle.
- *
- * If the when argument is instead provided, the transaction will be scheduled
- * to happen at a specific point in time, regardless of the existing backlog
+ * Transaction sources are decoupled from the generator. A source provides
+ * transactions and the generator regulates scheduling, tracks outstanding
+ * transactions, and handles retries/responses.
  */
 class TlmGenerator : public ClockedObject
 {
@@ -486,6 +469,9 @@ class TlmGenerator : public ClockedObject
 
     /** Handles incoming snoop transactions */
     SnoopHandler *snpHandler;
+
+    /** Optional source of CHI TLM transactions */
+    TlmSource *source;
 
     struct Stats : public statistics::Group
     {

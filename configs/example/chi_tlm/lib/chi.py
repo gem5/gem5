@@ -151,7 +151,7 @@ def checked_read(generator, address, txn_id, req, resp):
     payload = payload_gen(address)
     phase = phase_gen(txn_id, req=req)
 
-    tran = generator.inject(payload, phase)
+    tran = generator.chi_source.inject(payload, phase)
     tran.EXPECT(channel_check_gen(Channel.DAT))
     tran.EXPECT(opcode_check_gen(DatOpcode.COMP_DATA))
     tran.EXPECT(cacheline_check(resp))
@@ -172,7 +172,7 @@ def checked_read_separate_data_resp(
     payload = payload_gen(address)
     phase = phase_gen(txn_id, req=req)
 
-    tran = generator.inject(payload, phase)
+    tran = generator.chi_source.inject(payload, phase)
     tran.EXPECT(channel_check_gen(Channel.RSP))
     tran.EXPECT(opcode_check_gen(RspOpcode.RESP_SEP_DATA))
     tran.EXPECT(cacheline_check(Resp.RESP_I))
@@ -195,7 +195,7 @@ def copy_back_write(generator, address, txn_id, req, expected_resp):
     payload = payload_gen(address)
     phase = phase_gen(txn_id, req=req)
 
-    tran = generator.inject(payload, phase)
+    tran = generator.chi_source.inject(payload, phase)
     tran.EXPECT(channel_check_gen(Channel.RSP))
     tran.EXPECT(opcode_check_gen(RspOpcode.COMP_DBID_RESP))
     tran.EXPECT(cacheline_check(expected_resp))

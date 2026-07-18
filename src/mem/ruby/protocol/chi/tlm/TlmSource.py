@@ -1,5 +1,5 @@
 # -*- mode:python -*-
-# Copyright (c) 2024-2026 Arm Limited
+# Copyright (c) 2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -34,41 +34,58 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import("*")
+from m5.SimObject import (
+    PyBindMethod,
+    SimObject,
+)
 
-if not env['CONF']['RUBY_PROTOCOL_CHI']:
-    Return()
 
-PySource("m5.tlm_chi", "python/__init__.py")
-PySource("m5.tlm_chi", "python/port.py")
-PySource("m5.tlm_chi", "python/utils.py")
-SimObject(
-    'SnoopHandler.py',
-    sim_objects=['SnoopHandler', 'PySnoopHandler'],
-    tags=['arm isa']
-)
-SimObject(
-    "TlmController.py",
-    sim_objects=["TlmController"],
-    tags=['arm isa']
-)
-SimObject(
-    'TlmGenerator.py',
-    sim_objects=['TlmGenerator'],
-    tags=['arm isa']
-)
-SimObject(
-    'TlmSource.py',
-    sim_objects=['TlmSource', 'PySource'],
-    tags=['arm isa']
-)
-Source("utils.cc", tags=['arm isa'])
-Source("controller.cc", tags=['arm isa'])
-Source('snp_handler.cc', tags=['arm isa'])
-Source('py_snoop_handler.cc', tags=['arm isa'])
-Source('tlm_chi.cc', tags=['arm isa', 'python'])
-Source('tlm_chi_gen.cc', tags=['arm isa', 'python'])
-Source('generator.cc', tags=['arm isa'])
-Source('source.cc', tags=['arm isa'])
-DebugFlag("TLM", tags=['arm isa'])
-DebugFlag("TLMPort", tags=['arm isa'])
+class TlmSource(SimObject):
+    type = "TlmSource"
+    abstract = True
+    cxx_header = "mem/ruby/protocol/chi/tlm/source.hh"
+    cxx_class = "gem5::tlm::chi::TlmSource"
+
+
+class PySource(TlmSource):
+    """
+    Python-facing CHI-TLM transaction source.
+
+    To inject a CHI-TLM transaction at a specific tick in the simulation, use:
+
+        inject(payload, phase, when=None)
+
+    This returns a Transaction object which can then be used for transaction
+    expectations or action callbacks.
+    """
+
+    type = "PySource"
+    cxx_header = "mem/ruby/protocol/chi/tlm/source.hh"
+    cxx_class = "gem5::tlm::chi::PySource"
+
+    cxx_exports = [
+        PyBindMethod("injectTransaction"),
+        PyBindMethod("injectTransactionAt"),
+    ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._transactions = []
+
+    def inject(self, payload, phase, when=None):
+        from m5.tlm_chi.utils import Transaction
+
+        transaction = Transaction(payload, phase)
+
+        if when is not None:
+            self._transactions.append((when, transaction))
+        else:
+            self.getCCObject().injectTransaction(transaction)
+
+        return transaction
+
+    def createCCObject(self):
+        super().createCCObject()
+
+        for when, tr in self._transactions:
+            self.getCCObject().injectTransactionAt(when, tr)
