@@ -54,7 +54,7 @@ decode QUADRANT default Unknown::unknown() {
             Rp2 = rvSext(sp + imm);
         }}, uint64_t);
         format CompressedLoad {
-            0x1: decode ENABLE_ZCD {
+            0x1: decode HAS_ZCD {
                 0x1: c_fld({{
                     offset = CIMM3 << 3 | CIMM2 << 6;
                 }}, {{
@@ -143,7 +143,7 @@ decode QUADRANT default Unknown::unknown() {
             }
         }
         format CompressedStore {
-            0x5: decode ENABLE_ZCD {
+            0x5: decode HAS_ZCD {
                 0x1: c_fsd({{
                     offset = CIMM3 << 3 | CIMM2 << 6;
                 }}, {{
@@ -371,7 +371,7 @@ decode QUADRANT default Unknown::unknown() {
             Rc1 = rvSext(Rc1 << imm);
         }}, uint64_t);
         format CompressedLoad {
-            0x1: decode ENABLE_ZCD {
+            0x1: decode HAS_ZCD {
                 0x1: c_fldsp({{
                     offset = CIMM5<4:3> << 3 |
                              CIMM1 << 5 |
@@ -466,7 +466,7 @@ decode QUADRANT default Unknown::unknown() {
             }
         }
         format CompressedStore {
-            0x5: decode ENABLE_ZCD {
+            0x5: decode HAS_ZCD {
                 0x0: decode CFUNCT6LOW3 {
                     0x0: decode JTINDEX5TO7 {
                         0x0: CmJalt::cm_jt({{
@@ -6403,7 +6403,7 @@ decode QUADRANT default Unknown::unknown() {
                     0x38: mnret({{
                         auto isa = dynamic_cast<RiscvISA::ISA*>(
                             xc->tcBase()->getIsaPtr());
-                        if (!isa->enableSmrnmi()) {
+                        if (!isa->reportsExtension("Smrnmi")) {
                             return std::make_shared<IllegalInstFault>(
                                         "mnret requires smrnmi enabled.",
                                         machInst);
