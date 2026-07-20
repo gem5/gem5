@@ -80,8 +80,8 @@ FetchDirectedPrefetcher::notifyFTQInsert(const o3::FetchTargetPtr &ft)
 
     // Advancing an Addr past the final block near MaxAddr wraps it to zero.
     // Bound iteration by a non-address counter so the loop still terminates.
-    const Addr num_blocks = (end_blk_addr - start_blk_addr) / blkSize + 1;
-    for (Addr block = 0; block < num_blocks; ++block) {
+    const uint64_t num_blocks = (end_blk_addr - start_blk_addr) / blkSize + 1;
+    for (uint64_t block = 0; block < num_blocks; ++block) {
         const Addr blk_addr = start_blk_addr + block * blkSize;
 
         // Check if the address is already in the prefetch queue
