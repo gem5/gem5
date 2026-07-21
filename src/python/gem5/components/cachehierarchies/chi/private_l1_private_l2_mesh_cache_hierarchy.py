@@ -342,10 +342,10 @@ class PrivateL1PrivateL2MeshCacheHierarchy(
 
                     # The latency for outbound messages to the network is defined by
                     # these parameters when enqueueing messages in the SLICC code
-                    cntrl.request_latency = outbound_latency
-                    cntrl.response_latency = outbound_latency
-                    cntrl.snoop_latency = outbound_latency
-                    cntrl.data_latency = outbound_latency
+                    ctrl.request_latency = outbound_latency
+                    ctrl.response_latency = outbound_latency
+                    ctrl.snoop_latency = outbound_latency
+                    ctrl.data_latency = outbound_latency
 
     def _create_hnfs(
         self, board: AbstractBoard, num_hnfs: int
