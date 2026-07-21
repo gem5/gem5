@@ -53,7 +53,7 @@ from m5.objects import DRAMInterface
 class HBM_1000_4H_1x128(DRAMInterface):
     """
     A single HBM x128 interface (one command and address bus), with
-    default timings based on data publically released
+    default timings based on data publicly released
     ("HBM: Memory Solution for High Performance Processors", MemCon, 2014),
     IDD measurement values, and by extrapolating data from other classes.
 
@@ -149,7 +149,7 @@ class HBM_1000_4H_1x128(DRAMInterface):
 class HBM_1000_4H_1x64(HBM_1000_4H_1x128):
     """
     A single HBM x64 interface (one command and address bus), with
-    default timings based on HBM gen1 and data publically released
+    default timings based on HBM gen1 and data publicly released
     A 4H stack is defined, 8Gb per die for a total of 4GiB of memory.
     Note: This defines a pseudo-channel with a unique controller
     instantiated per pseudo-channel.
