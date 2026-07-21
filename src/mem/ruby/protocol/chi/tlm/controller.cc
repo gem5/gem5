@@ -206,7 +206,7 @@ CacheController::Transaction::handle(const CHIResponseMsg *msg)
     phase.src_id = ruby_to_tlm::srcId(msg->m_responder);
 
     controller->bw(payload, &phase);
-    return opcode != ARM::CHI::RSP_OPCODE_RETRY_ACK;
+    return true;
 }
 
 bool
@@ -249,10 +249,19 @@ CacheController::ReadTransaction::compRespToMakeReadUnique(
 }
 
 bool
+CacheController::ReadTransaction::retryAckResp(const ARM::CHI::Phase &resp)
+{
+    return resp.channel == ARM::CHI::CHANNEL_RSP &&
+           resp.rsp_opcode == ARM::CHI::RSP_OPCODE_RETRY_ACK;
+}
+
+bool
 CacheController::ReadTransaction::handleCompletion()
 {
-    if (compRespToMakeReadUnique(phase) ||
-        (dataMsgCnt == controller->dataMsgsPerLine && rspMsgCnt != 0)) {
+    if (retryAckResp(phase)) {
+        return true;
+    } else if (compRespToMakeReadUnique(phase) ||
+               (dataMsgCnt == controller->dataMsgsPerLine && rspMsgCnt != 0)) {
         if (phase.exp_comp_ack == false) {
             // This is a hack, we should fix it on the ruby side
             // The client is not sending a CompAck but ruby is
@@ -270,9 +279,9 @@ CacheController::ReadTransaction::handle(const CHIResponseMsg *msg)
 {
     /// TODO: remove this, DBID is not sent
     phase.dbid = msg->m_dbid;
-    const bool is_not_retry_ack = Transaction::handle(msg);
+    Transaction::handle(msg);
 
-    if (is_not_retry_ack) {
+    if (!retryAckResp(phase)) {
         assert(rspMsgCnt == 0);
         assert(phase.rsp_opcode == ARM::CHI::RSP_OPCODE_RESP_SEP_DATA);
         rspMsgCnt++;
@@ -325,7 +334,10 @@ CacheController::WriteTransaction::handle(const CHIResponseMsg *msg)
     phase.dbid = msg->m_dbid;
     Transaction::handle(msg);
 
-    return recvComp && recvDBID;
+    // RetryAck closes this Ruby request attempt; the TLM requester will
+    // resend the transaction after receiving P-credit.
+    return (opcode == ARM::CHI::RSP_OPCODE_RETRY_ACK) ||
+           (recvComp && recvDBID);
 }
 
 void
@@ -412,6 +424,11 @@ CacheController::sendRequestMsg(ARM::CHI::Payload &payload,
     req_msg->m_txnId = phase.txn_id;
     req_msg->m_ns = payload.ns;
     req_msg->m_lpid = payload.lpid;
+
+    panic_if(pendingTransactions.find(req_msg->m_txnId) !=
+                 pendingTransactions.end(),
+             "Duplicate pending transaction: %s\n",
+             transactionToString(payload, phase));
 
     sendRequestMsg(req_msg);
 

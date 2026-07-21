@@ -174,6 +174,7 @@ class CacheController : public ruby::CHIGenericController
         bool forward(const CHIDataMsg *msg);
 
         bool handleCompletion();
+        bool retryAckResp(const ARM::CHI::Phase &resp);
         bool compRespToMakeReadUnique(const ARM::CHI::Phase &resp);
 
         uint8_t rspMsgCnt = 0;
