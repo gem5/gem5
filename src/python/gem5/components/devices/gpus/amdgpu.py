@@ -212,7 +212,8 @@ class MI210(BaseViperGPU):
             '    echo "ERROR: Missing DKMS package for kernel `uname -r`. Exiting gem5."\n'
             "    m5 exit\n"
             "else\n"
-            "    modprobe -v amdgpu ip_block_mask=0x6f ppfeaturemask=0 dpm=0 audio=0 ras_enable=0\n"
+            "    echo 'options amdgpu ip_block_mask=0x6f ppfeaturemask=0 dpm=0 audio=0 ras_enable=0' > /etc/modprobe.d/amdgpu.conf\n"
+            "    modprobe -v amdgpu\n"
             "fi\n"
         )
 
@@ -338,7 +339,8 @@ class MI300X(BaseViperGPU):
             "    sh /home/gem5/load_amdgpu.sh\n"
             "else\n"
             # develop support
-            f"    modprobe -v amdgpu ip_block_mask=0x6f ppfeaturemask=0 dpm=0 audio=0 ras_enable=0 discovery={self._discovery_value}\n"
+            f"    echo 'options amdgpu ip_block_mask=0x6f ppfeaturemask=0 dpm=0 audio=0 ras_enable=0 discovery={self._discovery_value}' > /etc/modprobe.d/amdgpu.conf\n"
+            "    modprobe -v amdgpu\n"
             "fi\n"
         )
 
@@ -406,7 +408,8 @@ class MI355X(MI300X):
             "    sh /home/gem5/load_amdgpu.sh\n"
             "else\n"
             # develop support
-            f"    modprobe -v amdgpu ip_block_mask=0x6f ppfeaturemask=0 dpm=0 audio=0 ras_enable=0 discovery={self._discovery_value}\n"
+            f"    echo 'options amdgpu ip_block_mask=0x6f ppfeaturemask=0 dpm=0 audio=0 ras_enable=0 discovery={self._discovery_value}' > /etc/modprobe.d/amdgpu.conf\n"
+            "    modprobe -v amdgpu\n"
             "fi\n"
         )
 
