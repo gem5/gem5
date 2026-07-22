@@ -163,10 +163,10 @@ class RiscvISA(BaseISA):
             isa_string += "_Zicbom"  # Cache-block Management Instructions
         if self.enable_Zicboz_fs.value:
             isa_string += "_Zicboz"  # Cache-block Zero Instruction
-        isa_string += "_Zicntr"  # Performance Couter Spec
+        isa_string += "_Zicntr"  # Performance Counter Spec
         isa_string += "_Zicsr"  # RMW CSR Instructions (Privileged Spec)
         isa_string += "_Zifencei"  # FENCE.I Instruction (Unprivileged Spec)
-        isa_string += "_Zihpm"  # Performance Couter Spec
+        isa_string += "_Zihpm"  # Performance Counter Spec
         isa_string += "_Zba"  # Address Generation
         isa_string += "_Zbb"  # Basic Bit Manipulation
         isa_string += "_Zbs"  # Single-bit Instructions
