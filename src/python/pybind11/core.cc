@@ -53,12 +53,13 @@
 #include "base/socket.hh"
 #include "base/temperature.hh"
 #include "base/types.hh"
+#include "cpu/probes/pc_count_pair.hh"
 #include "sim/core.hh"
 #include "sim/cur_tick.hh"
 #include "sim/drain.hh"
+#include "sim/init_signals.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_object.hh"
-#include "cpu/probes/pc_count_pair.hh"
 
 namespace py = pybind11;
 
@@ -375,26 +376,22 @@ pybind_init_core(py::module_ &m_native)
         .value("HACK", Logger::HACK)
         ;
 
-    m_core
-        .def("setLogLevel", &Logger::setLevel)
+    m_core.def("setLogLevel", &Logger::setLevel)
         .def("setOutputDir", &setOutputDir)
         .def("doExitCleanup", &doExitCleanup)
+        .def("initSignals", &initSignals, "Initialize gem5 signal handlers")
 
         .def("disableAllListeners", &ListenSocket::disableAll)
         .def("listenersDisabled", &ListenSocket::allDisabled)
         .def("listenersLoopbackOnly", &ListenSocket::loopbackOnly)
-        .def("seedRandom", [](uint64_t seed) {
-            Random::reseedAll(seed);
-        })
-
+        .def("seedRandom", [](uint64_t seed) { Random::reseedAll(seed); })
 
         .def("fixClockFrequency", &fixClockFrequency)
         .def("clockFrequencyFixed", &clockFrequencyFixed)
 
         .def("setClockFrequency", &setClockFrequency)
         .def("getClockFrequency", &getClockFrequency)
-        .def("curTick", curTick)
-        ;
+        .def("curTick", curTick);
 
     /* TODO: These should be read-only */
     m_core.attr("compileDate") = py::cast(compileDate);
