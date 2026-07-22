@@ -328,7 +328,7 @@
                 }
                 // repe (0xF3)
                 0x4: decode OPCODE_OP_BOTTOM3 {
-                    0x2: CVTSI2SS(Vd,Ed);
+                    0x2: CVTSI2SS(Vd,Edp);
                     0x4: CVTTSS2SI(Gd,Wd);
                     0x5: CVTSS2SI(Gd,Wd);
                     default: UD2();
