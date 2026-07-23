@@ -776,12 +776,12 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
         break;
       case MISCREG_STICK:
       case MISCREG_TICK:
-        // stick and tick are same thing on niagra
-        // use stick for offset and tick for holding interrupt bit
-        stick = mbits(val,62,0) - tc->getCpuPtr()->instCount();
-        tick = mbits(val,63,63);
-        DPRINTF(Timer, "Writing TICK=%#X\n", val);
-        break;
+          // stick and tick are same thing on niagra
+          // use stick for offset and tick for holding interrupt bit
+          stick = mbits(val, 62, 0) - tc->getCpuPtr()->instCount();
+          tick = mbits(val, 63, 63);
+          DPRINTF(Timer, "Writing TICK=%#X\n", val);
+          break;
       case MISCREG_FPRS:
         // Configure the fpu based on the fprs
         break;
