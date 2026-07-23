@@ -190,7 +190,7 @@ SDMAEngine::translate(Addr vaddr, Addr size)
 
 void
 SDMAEngine::registerRLCQueue(Addr doorbell, Addr mqdAddr, SDMAQueueDesc *mqd,
-                             bool isStatic)
+                             bool isStatic, bool isDeviceBacked)
 {
     uint32_t rlc_size = 4UL << bits(mqd->sdmax_rlcx_rb_cntl, 6, 1);
     Addr rptr_wb_addr = mqd->sdmax_rlcx_rb_rptr_addr_hi;
@@ -214,6 +214,7 @@ SDMAEngine::registerRLCQueue(Addr doorbell, Addr mqdAddr, SDMAQueueDesc *mqd,
         rlc0.setMQDAddr(mqdAddr);
         rlc0.setPriv(priv);
         rlc0.setStatic(isStatic);
+        rlc0.setDeviceBacked(isDeviceBacked);
     } else if (!rlc1.valid()) {
         DPRINTF(SDMAEngine, "Doorbell %lx mapped to RLC1\n", doorbell);
         rlcInfo[1] = doorbell;
@@ -229,6 +230,7 @@ SDMAEngine::registerRLCQueue(Addr doorbell, Addr mqdAddr, SDMAQueueDesc *mqd,
         rlc1.setMQDAddr(mqdAddr);
         rlc1.setPriv(priv);
         rlc1.setStatic(isStatic);
+        rlc1.setDeviceBacked(isDeviceBacked);
     } else {
         panic("No free RLCs. Check they are properly unmapped.");
     }
@@ -252,8 +254,24 @@ SDMAEngine::unregisterRLCQueue(Addr doorbell, bool unmap_static)
             mqd->rptr = rlc0.globalRptr();
             mqd->wptr = rlc0.getWptr();
 
-            auto cb = new DmaVirtCallback<uint32_t>([](const uint32_t &) {});
-            dmaWriteVirt(rlc0.getMQDAddr(), sizeof(SDMAQueueDesc), cb, mqd);
+            if (rlc0.isDeviceBacked()) {
+                Addr addr = rlc0.getMQDAddr();
+                ChunkGenerator gen(addr, sizeof(SDMAQueueDesc),
+                                   AMDGPU_MMHUB_PAGE_SIZE);
+                uint8_t *buf = (uint8_t *)mqd;
+                Addr chunk_addr = addr;
+                for (; !gen.done(); gen.next()) {
+                    gpuDevice->getMemMgr()->writeRequest(
+                        chunk_addr, buf, gen.size(), 0, nullptr);
+                    buf += gen.size();
+                    chunk_addr += gen.size();
+                }
+            } else {
+                auto cb =
+                    new DmaVirtCallback<uint32_t>([](const uint32_t &) {});
+                dmaWriteVirt(rlc0.getMQDAddr(), sizeof(SDMAQueueDesc), cb,
+                             mqd);
+            }
         } else {
             warn("RLC0 SDMAMQD address invalid\n");
         }
@@ -273,8 +291,24 @@ SDMAEngine::unregisterRLCQueue(Addr doorbell, bool unmap_static)
             mqd->rptr = rlc1.globalRptr();
             mqd->wptr = rlc1.getWptr();
 
-            auto cb = new DmaVirtCallback<uint32_t>([](const uint32_t &) {});
-            dmaWriteVirt(rlc1.getMQDAddr(), sizeof(SDMAQueueDesc), cb, mqd);
+            if (rlc1.isDeviceBacked()) {
+                Addr addr = rlc1.getMQDAddr();
+                ChunkGenerator gen(addr, sizeof(SDMAQueueDesc),
+                                   AMDGPU_MMHUB_PAGE_SIZE);
+                uint8_t *buf = (uint8_t *)mqd;
+                Addr chunk_addr = addr;
+                for (; !gen.done(); gen.next()) {
+                    gpuDevice->getMemMgr()->writeRequest(
+                        chunk_addr, buf, gen.size(), 0, nullptr);
+                    buf += gen.size();
+                    chunk_addr += gen.size();
+                }
+            } else {
+                auto cb =
+                    new DmaVirtCallback<uint32_t>([](const uint32_t &) {});
+                dmaWriteVirt(rlc1.getMQDAddr(), sizeof(SDMAQueueDesc), cb,
+                             mqd);
+            }
         } else {
             warn("RLC1 SDMAMQD address invalid\n");
         }
@@ -1356,6 +1390,7 @@ SDMAEngine::serialize(CheckpointOut &cp) const
     auto rlc_mqd_addr = std::make_unique<Addr[]>(num_rlc_queues);
     auto rlc_priv = std::make_unique<bool[]>(num_rlc_queues);
     auto rlc_static = std::make_unique<bool[]>(num_rlc_queues);
+    auto rlc_device_backed = std::make_unique<bool[]>(num_rlc_queues);
     auto rlc_mqd = std::make_unique<uint32_t[]>(num_rlc_queues * 128);
 
     // Save RLC queue information in arrays that
@@ -1374,6 +1409,7 @@ SDMAEngine::serialize(CheckpointOut &cp) const
             rlc_mqd_addr[i] = rlc_queues[i]->getMQDAddr();
             rlc_priv[i] = rlc_queues[i]->priv();
             rlc_static[i] = rlc_queues[i]->isStatic();
+            rlc_device_backed[i] = rlc_queues[i]->isDeviceBacked();
             memcpy(rlc_mqd.get() + 128 * i, rlc_queues[i]->getMQD(),
                    sizeof(SDMAQueueDesc));
         }
@@ -1391,6 +1427,7 @@ SDMAEngine::serialize(CheckpointOut &cp) const
     SERIALIZE_UNIQUE_PTR_ARRAY(rlc_mqd_addr, num_rlc_queues);
     SERIALIZE_UNIQUE_PTR_ARRAY(rlc_priv, num_rlc_queues);
     SERIALIZE_UNIQUE_PTR_ARRAY(rlc_static, num_rlc_queues);
+    SERIALIZE_UNIQUE_PTR_ARRAY(rlc_device_backed, num_rlc_queues);
     SERIALIZE_UNIQUE_PTR_ARRAY(rlc_mqd, num_rlc_queues * 128);
 }
 
@@ -1453,6 +1490,7 @@ SDMAEngine::unserialize(CheckpointIn &cp)
     auto rlc_mqd_addr = std::make_unique<Addr[]>(num_rlc_queues);
     auto rlc_priv = std::make_unique<bool[]>(num_rlc_queues);
     auto rlc_static = std::make_unique<bool[]>(num_rlc_queues);
+    auto rlc_device_backed = std::make_unique<bool[]>(num_rlc_queues);
     auto rlc_mqd = std::make_unique<uint32_t[]>(num_rlc_queues * 128);
 
     UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_info, num_rlc_queues);
@@ -1467,6 +1505,7 @@ SDMAEngine::unserialize(CheckpointIn &cp)
     UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_mqd_addr, num_rlc_queues);
     UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_priv, num_rlc_queues);
     UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_static, num_rlc_queues);
+    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_device_backed, num_rlc_queues);
     UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_mqd, num_rlc_queues * 128);
 
     // Save RLC queue information into RLC0, RLC1
@@ -1488,6 +1527,7 @@ SDMAEngine::unserialize(CheckpointIn &cp)
             rlc_queues[i]->setMQDAddr(rlc_mqd_addr[i]);
             rlc_queues[i]->setPriv(rlc_priv[i]);
             rlc_queues[i]->setStatic(rlc_static[i]);
+            rlc_queues[i]->setDeviceBacked(rlc_device_backed[i]);
             SDMAQueueDesc *mqd = new SDMAQueueDesc();
             memcpy(mqd, rlc_mqd.get() + 128 * i, sizeof(SDMAQueueDesc));
             rlc_queues[i]->setMQD(mqd);
