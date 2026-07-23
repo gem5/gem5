@@ -578,6 +578,7 @@ void
 IEW::wakeCommittedMiscRegDependents(const DynInstPtr &inst)
 {
     int dependents = 0;
+    const bool update_producer = inst->lastWakeDependents == -1;
 
     DPRINTF(IEW,
             "Waking misc register dependents of committed instruction.\n");
@@ -599,7 +600,9 @@ IEW::wakeCommittedMiscRegDependents(const DynInstPtr &inst)
 
     if (dependents) {
         ThreadID tid = inst->threadNumber;
-        iewStats.producerInst[tid]++;
+        if (update_producer) {
+            iewStats.producerInst[tid]++;
+        }
         iewStats.consumerInst[tid] += dependents;
     }
 }

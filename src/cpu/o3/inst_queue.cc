@@ -1209,8 +1209,6 @@ InstructionQueue::wakeDependents(const DynInstPtr &completed_inst)
         iqIOStats.intInstQueueWakeupAccesses++;
     }
 
-    completed_inst->lastWakeDependents = curTick();
-
     DPRINTF(IQ, "Waking dependents of completed instruction.\n");
 
     assert(!completed_inst->isSquashed());
@@ -1266,6 +1264,10 @@ InstructionQueue::wakeDependents(const DynInstPtr &completed_inst)
         }
 
         dependents += wakeDependents(dest_reg);
+    }
+
+    if (dependents) {
+        completed_inst->lastWakeDependents = curTick();
     }
 
     return dependents;
