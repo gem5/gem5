@@ -190,7 +190,7 @@ SDMAEngine::translate(Addr vaddr, Addr size)
 
 void
 SDMAEngine::registerRLCQueue(Addr doorbell, Addr mqdAddr, SDMAQueueDesc *mqd,
-                             bool isStatic)
+                             bool isStatic, bool isDeviceBacked)
 {
     uint32_t rlc_size = 4UL << bits(mqd->sdmax_rlcx_rb_cntl, 6, 1);
     Addr rptr_wb_addr = mqd->sdmax_rlcx_rb_rptr_addr_hi;
@@ -214,6 +214,7 @@ SDMAEngine::registerRLCQueue(Addr doorbell, Addr mqdAddr, SDMAQueueDesc *mqd,
         rlc0.setMQDAddr(mqdAddr);
         rlc0.setPriv(priv);
         rlc0.setStatic(isStatic);
+        rlc0.setDeviceBacked(isDeviceBacked);
     } else if (!rlc1.valid()) {
         DPRINTF(SDMAEngine, "Doorbell %lx mapped to RLC1\n", doorbell);
         rlcInfo[1] = doorbell;
@@ -229,6 +230,7 @@ SDMAEngine::registerRLCQueue(Addr doorbell, Addr mqdAddr, SDMAQueueDesc *mqd,
         rlc1.setMQDAddr(mqdAddr);
         rlc1.setPriv(priv);
         rlc1.setStatic(isStatic);
+        rlc1.setDeviceBacked(isDeviceBacked);
     } else {
         panic("No free RLCs. Check they are properly unmapped.");
     }
@@ -252,8 +254,24 @@ SDMAEngine::unregisterRLCQueue(Addr doorbell, bool unmap_static)
             mqd->rptr = rlc0.globalRptr();
             mqd->wptr = rlc0.getWptr();
 
-            auto cb = new DmaVirtCallback<uint32_t>([](const uint32_t &) {});
-            dmaWriteVirt(rlc0.getMQDAddr(), sizeof(SDMAQueueDesc), cb, mqd);
+            if (rlc0.isDeviceBacked()) {
+                Addr addr = rlc0.getMQDAddr();
+                ChunkGenerator gen(addr, sizeof(SDMAQueueDesc),
+                                   AMDGPU_MMHUB_PAGE_SIZE);
+                uint8_t *buf = (uint8_t *)mqd;
+                Addr chunk_addr = addr;
+                for (; !gen.done(); gen.next()) {
+                    gpuDevice->getMemMgr()->writeRequest(
+                        chunk_addr, buf, gen.size(), 0, nullptr);
+                    buf += gen.size();
+                    chunk_addr += gen.size();
+                }
+            } else {
+                auto cb =
+                    new DmaVirtCallback<uint32_t>([](const uint32_t &) {});
+                dmaWriteVirt(rlc0.getMQDAddr(), sizeof(SDMAQueueDesc), cb,
+                             mqd);
+            }
         } else {
             warn("RLC0 SDMAMQD address invalid\n");
         }
@@ -273,8 +291,24 @@ SDMAEngine::unregisterRLCQueue(Addr doorbell, bool unmap_static)
             mqd->rptr = rlc1.globalRptr();
             mqd->wptr = rlc1.getWptr();
 
-            auto cb = new DmaVirtCallback<uint32_t>([](const uint32_t &) {});
-            dmaWriteVirt(rlc1.getMQDAddr(), sizeof(SDMAQueueDesc), cb, mqd);
+            if (rlc1.isDeviceBacked()) {
+                Addr addr = rlc1.getMQDAddr();
+                ChunkGenerator gen(addr, sizeof(SDMAQueueDesc),
+                                   AMDGPU_MMHUB_PAGE_SIZE);
+                uint8_t *buf = (uint8_t *)mqd;
+                Addr chunk_addr = addr;
+                for (; !gen.done(); gen.next()) {
+                    gpuDevice->getMemMgr()->writeRequest(
+                        chunk_addr, buf, gen.size(), 0, nullptr);
+                    buf += gen.size();
+                    chunk_addr += gen.size();
+                }
+            } else {
+                auto cb =
+                    new DmaVirtCallback<uint32_t>([](const uint32_t &) {});
+                dmaWriteVirt(rlc1.getMQDAddr(), sizeof(SDMAQueueDesc), cb,
+                             mqd);
+            }
         } else {
             warn("RLC1 SDMAMQD address invalid\n");
         }
