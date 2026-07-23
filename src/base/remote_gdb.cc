@@ -452,6 +452,17 @@ BaseRemoteGDB::hostSocket() const
     return *listener;
 }
 
+std::string
+BaseRemoteGDB::getListenerOutput() const
+{
+    if (!listener || !listener->islistening())
+        return "";
+
+    std::stringstream ss;
+    listener->output(ss);
+    return ss.str();
+}
+
 void
 BaseRemoteGDB::attach(int f)
 {

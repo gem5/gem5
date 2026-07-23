@@ -88,6 +88,15 @@ Workload::sendToGdb(std::string msg){
         return false;
  }
 
+std::string
+Workload::getGdbListenerOutput() const
+{
+    if (!gdb)
+        return "";
+
+    return gdb->getListenerOutput();
+}
+
 
 void
 Workload::startup()
