@@ -29,12 +29,12 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/amdgpu/vega/tlb_coalescer.hh"
+#include "arch/amdgpu/common/amdgpu_tlb_coalescer.hh"
 
 #include <cstring>
 
 #include "arch/amdgpu/common/gpu_translation_state.hh"
-#include "arch/amdgpu/vega/pagetable.hh"
+#include "arch/amdgpu/common/pagetable.hh"
 #include "arch/generic/mmu.hh"
 #include "base/logging.hh"
 #include "debug/GPUTLB.hh"

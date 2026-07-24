@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __GPU_TLB_HH__
-#define __GPU_TLB_HH__
+#ifndef __ARCH_AMDGPU_COMMON_X86_GPU_TLB_HH__
+#define __ARCH_AMDGPU_COMMON_X86_GPU_TLB_HH__
 
 #include <fstream>
 #include <list>
@@ -406,4 +406,4 @@ class GpuTLB : public ClockedObject
 
 } // namespace gem5
 
-#endif // __GPU_TLB_HH__
+#endif // __ARCH_AMDGPU_COMMON_X86_GPU_TLB_HH__

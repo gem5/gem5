@@ -32,7 +32,7 @@
 #ifndef __ARCH_AMDGPU_VEGA_PAGETABLE_H__
 #define __ARCH_AMDGPU_VEGA_PAGETABLE_H__
 
-#include "arch/amdgpu/vega/page_size.hh"
+#include "arch/amdgpu/common/page_size.hh"
 #include "base/bitunion.hh"
 #include "base/types.hh"
 #include "sim/serialize.hh"

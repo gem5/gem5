@@ -29,8 +29,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_AMDGPU_VEGA_FAULTS_HH__
-#define __ARCH_AMDGPU_VEGA_FAULTS_HH__
+#ifndef __ARCH_AMDGPU_COMMON_FAULTS_HH__
+#define __ARCH_AMDGPU_COMMON_FAULTS_HH__
 
 #include <string>
 
@@ -105,4 +105,4 @@ class PageFault : public VegaFault
 } // namespace VegaISA
 } // namespace gem5
 
-#endif // __ARCH_VEGA_FAULTS_HH__
+#endif // __ARCH_AMDGPU_COMMON_FAULTS_HH__

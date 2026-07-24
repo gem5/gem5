@@ -47,7 +47,7 @@ class VegaPWCIndexingPolicy(BaseIndexingPolicy):
 
     type = "VegaPWCIndexingPolicy"
     cxx_class = "gem5::VegaISA::VegaPWCIndexingPolicy"
-    cxx_header = "arch/amdgpu/vega/page_walk_cache.hh"
+    cxx_header = "arch/amdgpu/common/page_walk_cache.hh"
 
     entries = Param.Int(
         Parent.page_walk_cache_entries,
@@ -58,7 +58,7 @@ class VegaPWCIndexingPolicy(BaseIndexingPolicy):
 class VegaPagetableWalker(ClockedObject):
     type = "VegaPagetableWalker"
     cxx_class = "gem5::VegaISA::Walker"
-    cxx_header = "arch/amdgpu/vega/pagetable_walker.hh"
+    cxx_header = "arch/amdgpu/common/pagetable_walker.hh"
     port = RequestPort("Port for the hardware table walker")
     system = Param.System(Parent.any, "system object")
 
@@ -76,7 +76,7 @@ class VegaPagetableWalker(ClockedObject):
 class VegaGPUTLB(ClockedObject):
     type = "VegaGPUTLB"
     cxx_class = "gem5::VegaISA::GpuTLB"
-    cxx_header = "arch/amdgpu/vega/tlb.hh"
+    cxx_header = "arch/amdgpu/common/amdgpu_tlb.hh"
     size = Param.Int(64, "TLB size (number of entries)")
     assoc = Param.Int(64, "TLB associativity")
 
@@ -97,7 +97,7 @@ class VegaGPUTLB(ClockedObject):
 class VegaTLBCoalescer(ClockedObject):
     type = "VegaTLBCoalescer"
     cxx_class = "gem5::VegaTLBCoalescer"
-    cxx_header = "arch/amdgpu/vega/tlb_coalescer.hh"
+    cxx_header = "arch/amdgpu/common/amdgpu_tlb_coalescer.hh"
     tlb_level = Param.Int(64, "tlb level")
     default_pgSize = Param.MemorySize("2MiB", "Default page size to coalesce")
     maxDownstream = Param.Int(64, "max downstream @ this level")

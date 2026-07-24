@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Advanced Micro Devices, Inc.
+ * Copyright (c) 2011-2015 Advanced Micro Devices, Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,40 +29,46 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_AMDGPU_VEGA_TLB_COALESCER_HH__
-#define __ARCH_AMDGPU_VEGA_TLB_COALESCER_HH__
+#ifndef __ARCH_AMDGPU_COMMON_X86_GPU_TLB_COALESCER_HH__
+#define __ARCH_AMDGPU_COMMON_X86_GPU_TLB_COALESCER_HH__
 
 #include <list>
 #include <queue>
-#include <set>
 #include <string>
 #include <vector>
 
-#include "arch/amdgpu/vega/tlb.hh"
+#include "arch/amdgpu/common/x86_gpu_tlb.hh"
+#include "arch/generic/tlb.hh"
+#include "arch/x86/isa.hh"
+#include "arch/x86/pagetable.hh"
+#include "arch/x86/regs/segment.hh"
+#include "base/logging.hh"
 #include "base/statistics.hh"
 #include "mem/port.hh"
 #include "mem/request.hh"
-#include "params/VegaTLBCoalescer.hh"
+#include "params/TLBCoalescer.hh"
 #include "sim/clocked_object.hh"
 
 namespace gem5
 {
 
+class BaseTLB;
 class Packet;
 class ThreadContext;
 
 /**
- * The VegaTLBCoalescer is a ClockedObject sitting on the front side (CPUSide)
- * of each TLB. It receives packets and issues coalesced requests to the
+ * The TLBCoalescer is a ClockedObject sitting on the front side (CPUSide) of
+ * each TLB. It receives packets and issues coalesced requests to the
  * TLB below it. It controls how requests are coalesced (the rules)
  * and the permitted number of TLB probes per cycle (i.e., how many
  * coalesced requests it feeds the TLB per cycle).
  */
-class VegaTLBCoalescer : public ClockedObject
+class TLBCoalescer : public ClockedObject
 {
   public:
-    VegaTLBCoalescer(const VegaTLBCoalescerParams &p);
-    ~VegaTLBCoalescer() {}
+    typedef TLBCoalescerParams Params;
+    TLBCoalescer(const Params &p);
+    ~TLBCoalescer() {}
 
     // Number of TLB probes per cycle. Parameterizable - default 2.
     int TLBProbesPerCycle;
@@ -91,16 +97,13 @@ class VegaTLBCoalescer : public ClockedObject
      * of the pkt from the ComputeUnit's perspective, but another
      * option is to change it to curTick(), so we coalesce based
      * on the receive time.
-     *
-     * pair.second represents the assume page size.
      */
-    typedef std::map<Tick, std::vector<std::pair<coalescedReq, Addr>>>
-        CoalescingFIFO;
+    typedef std::map<int64_t, std::vector<coalescedReq>> CoalescingFIFO;
 
     CoalescingFIFO coalescerFIFO;
 
     /*
-     * issuedTranslationsTable: a hash_map indexed by virtual page
+     * issuedTranslationsTabler: a hash_map indexed by virtual page
      * address. Each hash_map entry has a vector of PacketPtr associated
      * with it denoting the different packets that share an outstanding
      * coalesced translation request for the same virtual page.
@@ -112,40 +115,19 @@ class VegaTLBCoalescer : public ClockedObject
 
     CoalescingTable issuedTranslationsTable;
 
-    // number of packets the coalescer receives
-    statistics::Scalar uncoalescedAccesses;
-    // number packets the coalescer send to the TLB
-    statistics::Scalar coalescedAccesses;
-
-    // Number of cycles the coalesced requests spend waiting in
-    // coalescerFIFO. For each packet the coalescer receives we take into
-    // account the number of all uncoalesced requests this pkt "represents"
-    statistics::Scalar queuingCycles;
-
-    // On average how much time a request from the
-    // uncoalescedAccesses that reaches the TLB
-    // spends waiting?
-    statistics::Scalar localqueuingCycles;
-    statistics::Scalar localCycles;
-    // localqueuingCycles/uncoalescedAccesses
-    statistics::Formula localLatency;
-    // latency of a request to be completed
-    statistics::Formula latency;
-
-    bool canCoalesce(PacketPtr pkt1, PacketPtr pkt2, Addr pagebytes);
+    bool canCoalesce(PacketPtr pkt1, PacketPtr pkt2);
     void updatePhysAddresses(PacketPtr pkt);
-    void regStats() override;
 
     class CpuSidePort : public ResponsePort
     {
       public:
-        CpuSidePort(const std::string &_name, VegaTLBCoalescer *tlb_coalescer,
+        CpuSidePort(const std::string &_name, TLBCoalescer *tlb_coalescer,
                     PortID _index)
             : ResponsePort(_name), coalescer(tlb_coalescer), index(_index)
         {}
 
       protected:
-        VegaTLBCoalescer *coalescer;
+        TLBCoalescer *coalescer;
         int index;
 
         virtual bool recvTimingReq(PacketPtr pkt);
@@ -173,7 +155,7 @@ class VegaTLBCoalescer : public ClockedObject
     class MemSidePort : public RequestPort
     {
       public:
-        MemSidePort(const std::string &_name, VegaTLBCoalescer *tlb_coalescer,
+        MemSidePort(const std::string &_name, TLBCoalescer *tlb_coalescer,
                     PortID _index)
             : RequestPort(_name), coalescer(tlb_coalescer), index(_index)
         {}
@@ -181,7 +163,7 @@ class VegaTLBCoalescer : public ClockedObject
         std::deque<PacketPtr> retries;
 
       protected:
-        VegaTLBCoalescer *coalescer;
+        TLBCoalescer *coalescer;
         int index;
 
         virtual bool recvTimingResp(PacketPtr pkt);
@@ -220,59 +202,34 @@ class VegaTLBCoalescer : public ClockedObject
     /// in order to free memory and do the required clean-up
     EventFunctionWrapper cleanupEvent;
 
-    void reissue_pkt_helper(PacketPtr pkt);
-
-    Addr default_pgSize = 1ULL << 21;
-    std::set<Addr> potentialPagesize;
-
-    int tlb_level;
-    int maxDownstream;
-    unsigned int numDownstream;
-    CpuSidePort *stalledPort;
-    std::queue<CpuSidePort *> stalledPortsQueue;
-    // enforce uniqueness in queue
-    std::map<CpuSidePort *, CpuSidePort *> stalledPortsMap;
-
-    unsigned int
-    availDownstreamSlots()
-    {
-        assert(tlb_level == 1);
-        return maxDownstream - numDownstream;
-    }
-
-    void insertStalledPortIfNotMapped(CpuSidePort *);
-    bool mustStallCUPort(CpuSidePort *);
-
-    bool
-    stalledPorts()
-    {
-        assert(tlb_level == 1);
-        return stalledPortsQueue.size() > 0;
-    }
-
-    void
-    decrementNumDownstream()
-    {
-        assert(tlb_level == 1);
-        assert(numDownstream > 0);
-        numDownstream--;
-    }
-
-    void
-    incrementNumDownstream()
-    {
-        assert(tlb_level == 1);
-        assert(maxDownstream >= numDownstream);
-        numDownstream++;
-    }
-
-    void unstallPorts();
-
     // this FIFO queue keeps track of the virt. page
     // addresses that are pending cleanup
     std::queue<Addr> cleanupQueue;
+
+  protected:
+    struct TLBCoalescerStats : public statistics::Group
+    {
+        TLBCoalescerStats(statistics::Group *parent);
+
+        // number of packets the coalescer receives
+        statistics::Scalar uncoalescedAccesses;
+        // number packets the coalescer send to the TLB
+        statistics::Scalar coalescedAccesses;
+
+        // Number of cycles the coalesced requests spend waiting in
+        // coalescerFIFO. For each packet the coalescer receives we take into
+        // account the number of all uncoalesced requests this pkt "represents"
+        statistics::Scalar queuingCycles;
+
+        // On average how much time a request from the
+        // uncoalescedAccesses that reaches the TLB
+        // spends waiting?
+        statistics::Scalar localqueuingCycles;
+        // localqueuingCycles/uncoalescedAccesses
+        statistics::Formula localLatency;
+    } stats;
 };
 
 } // namespace gem5
 
-#endif // __ARCH_AMDGPU_VEGA_TLB_COALESCER_HH__
+#endif // __ARCH_AMDGPU_COMMON_X86_GPU_TLB_COALESCER_HH__
