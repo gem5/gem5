@@ -158,9 +158,7 @@ class BTBLevel(SimObject):
     inclusive = Param.Bool(
         False,
         "Whether this level is inclusive of the immediately upper level; "
-        "otherwise, this level is a victim buffer of the upper levels "
-        "(semi-exclusive). For semi-exclusive, see section 3.3 of paper "
-        '"Two Level Bulk Preload Branch Prediction" by IBM.',
+        "otherwise, it is an exclusive victim buffer of the upper levels ",
     )
     instShiftAmt = Param.Unsigned(
         Parent.instShiftAmt, "Number of bits to shift instructions by"
@@ -184,40 +182,22 @@ class MultiLevelBTB(BranchTargetBuffer):
     cxx_class = "gem5::branch_prediction::MultiLevelBTB"
     cxx_header = "cpu/pred/multi_level_btb.hh"
 
+    # Default is a three-level BTB. Subclass can override `levels` to build a
+    # custom BTB hierarchy; the L1-BTB must be inclusive.
     levels = VectorParam.BTBLevel(
-        [],
+        [
+            BTBLevel(
+                numEntries=256, associativity=8, latency=0, inclusive=True
+            ),
+            BTBLevel(
+                numEntries=4096, associativity=8, latency=1, inclusive=True
+            ),
+            BTBLevel(
+                numEntries=16384, associativity=8, latency=3, inclusive=False
+            ),
+        ],
         "BTB levels ordered from the uppermost to the lowermost level",
     )
-
-
-class TwoLevelBTB(MultiLevelBTB):
-    levels = [
-        BTBLevel(numEntries=256, associativity=8, latency=0, inclusive=True),
-        BTBLevel(
-            numEntries=16384,
-            associativity=8,
-            latency=3,
-            inclusive=False,
-        ),
-    ]
-
-
-class ThreeLevelBTB(MultiLevelBTB):
-    levels = [
-        BTBLevel(numEntries=256, associativity=8, latency=0, inclusive=True),
-        BTBLevel(
-            numEntries=4096,
-            associativity=8,
-            latency=1,
-            inclusive=False,
-        ),
-        BTBLevel(
-            numEntries=16384,
-            associativity=8,
-            latency=3,
-            inclusive=True,
-        ),
-    ]
 
 
 class ConditionalPredictor(ClockedObject):

@@ -233,8 +233,8 @@ class AssociativeCache : public Named
      * @param key key to select the possible victim
      * @result entry to be victimized
      */
-    virtual Entry *
-    findVictim(const KeyType &key, bool do_invalidate = true)
+    virtual Entry*
+    findVictim(const KeyType &key)
     {
         auto candidates = indexingPolicy->getPossibleEntries(key);
 
@@ -246,9 +246,7 @@ class AssociativeCache : public Named
                 "Replacing entry: %s\n", victim->print());
         }
 
-        if (do_invalidate) {
-            invalidate(victim);
-        }
+        invalidate(victim);
 
         return victim;
     }
@@ -262,17 +260,6 @@ class AssociativeCache : public Named
     invalidate(Entry *entry)
     {
         entry->invalidate();
-        replPolicy->invalidate(entry->replacementData);
-    }
-
-    /**
-     * Demote replacement data of an entry without invalidating the entry.
-     *
-     * @param entry Entry to be demoted for replacement.
-     */
-    virtual void
-    demoteEntry(Entry *entry)
-    {
         replPolicy->invalidate(entry->replacementData);
     }
 

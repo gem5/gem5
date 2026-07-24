@@ -1,6 +1,33 @@
-#include "cpu/pred/multi_level_btb.hh"
+/*
+ * Copyright (c) 2026 The University of Edinburgh
+ * Copyright (c) 2026 Technical University of Munich
+ * All rights reserved
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
-#include <optional>
+#include "cpu/pred/multi_level_btb.hh"
 
 #include "base/cprintf.hh"
 #include "base/intmath.hh"
@@ -26,7 +53,7 @@ BTBLevel::lookup(ThreadID tid, Addr instPC)
 {
     auto *entry = btb.accessEntry({instPC, tid});
     if (entry && !inclusive) {
-        btb.demoteEntry(entry);
+        btb.invalidate(entry);
     }
 
     return entry;
@@ -66,18 +93,12 @@ BTBLevel::insertEntry(ThreadID tid, Addr instPC, const PCStateBase &target,
     if (entry) {
         btb.accessEntry(entry);
     } else {
-        entry = btb.findVictim({instPC, tid}, false);
-
-        std::optional<BTBEntry> victim;
-        if (entry->isValid()) {
-            victim = *entry;
-        }
-
-        entry->invalidate();
+        entry = btb.findVictim({instPC, tid});
+        BTBEntry victim = *entry;
         btb.insertEntry({instPC, tid}, entry);
 
-        if (victim && nextLevel) {
-            nextLevel->doWriteback(tid, *victim);
+        if (nextLevel) {
+            nextLevel->doWriteback(tid, victim);
         }
     }
 
@@ -90,7 +111,8 @@ BTBLevel::doWriteback(ThreadID tid, const BTBEntry &upper_victim)
 {
     // An inclusive level already contains entries inserted in its upper
     // level. Only a victim-buffer level needs to accept the writeback.
-    if (inclusive) {
+    // Also, ignore writeback if the target address is null - invalid entry.
+    if (inclusive || !upper_victim.target) {
         return;
     }
 
@@ -99,32 +121,27 @@ BTBLevel::doWriteback(ThreadID tid, const BTBEntry &upper_victim)
 }
 
 MultiLevelBTB::MultiLevelBTBStats::MultiLevelBTBStats(
-    statistics::Group *parent, unsigned num_levels)
+    statistics::Group *parent, const std::vector<BTBLevel *> &levels)
     : statistics::Group(parent),
       ADD_STAT(levelHits, statistics::units::Count::get(),
                "Number of BTB hits at each level")
 {
     using namespace statistics;
 
-    levelHits.init(num_levels).flags(total);
+    levelHits.init(levels.size()).flags(total);
+
+    for (unsigned i = 0; i < levels.size(); ++i) {
+        fatal_if(!levels[i], "BTB level %d is null", i + 1);
+        levelHits.subname(i, csprintf("L%d", i + 1));
+    }
 }
 
 MultiLevelBTB::MultiLevelBTB(const MultiLevelBTBParams &p)
-    : BranchTargetBuffer(p),
-      levels(p.levels),
-      multilevelstats(this, levels.size())
+    : BranchTargetBuffer(p), levels(p.levels), multilevelstats(this, levels)
 {
     fatal_if(levels.empty(), "%s must contain at least one BTB level", name());
     DPRINTF(BTB, "%s: creating a %d-level BTB hierarchy\n", name(),
             levels.size());
-
-    unsigned level_num = 1;
-    for (auto *level : levels) {
-        fatal_if(!level, "%s: BTB level %d is null", name(), level_num);
-        multilevelstats.levelHits.subname(level_num - 1,
-                                          csprintf("L%d", level_num));
-        ++level_num;
-    }
 
     for (unsigned level = 0; level < levels.size(); ++level) {
         levels[level]->level = level;
