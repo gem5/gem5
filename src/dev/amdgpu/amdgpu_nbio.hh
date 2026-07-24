@@ -79,9 +79,9 @@ class AMDGPUDevice;
 #define NBIO_COMPUTE_PARTITION_DPX 2
 #define NBIO_COMPUTE_PARTITION_SPX 1
 #define COMPUTE_PARTITION_CPX 4
-#define COMPUTE_PARTITION_CPX 3
-#define COMPUTE_PARTITION_CPX 1
-#define COMPUTE_PARTITION_CPX 0
+#define COMPUTE_PARTITION_QPX 3
+#define COMPUTE_PARTITION_DPX 1
+#define COMPUTE_PARTITION_SPX 0
 
 // Device specific invalidation engines used during initialization
 #define VEGA10_INV_ENG17_ACK1 0x0a318
