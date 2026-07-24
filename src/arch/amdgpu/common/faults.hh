@@ -39,7 +39,7 @@
 
 namespace gem5
 {
-namespace VegaISA
+namespace AMDGPU
 {
 
 enum ExceptionCode : uint64_t
@@ -102,7 +102,7 @@ class PageFault : public VegaFault
     }
 };
 
-} // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5
 
 #endif // __ARCH_AMDGPU_COMMON_FAULTS_HH__

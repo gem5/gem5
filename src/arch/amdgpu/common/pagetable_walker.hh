@@ -49,7 +49,7 @@ namespace gem5
 
 class ThreadContext;
 
-namespace VegaISA
+namespace AMDGPU
 {
 
 class Walker : public ClockedObject
@@ -248,7 +248,7 @@ class Walker : public ClockedObject
     }
 };
 
-} // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5
 
 #endif // __DEV_AMDGPU_PAGETABLE_WALKER_HH__

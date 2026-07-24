@@ -46,6 +46,9 @@ namespace gem5
 
 class Wavefront;
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 class GPUISA
@@ -110,6 +113,7 @@ class GPUISA
     ScalarRegU32 m0;
 };
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5
 
 #endif // __ARCH_VEGA_GPU_ISA_HH__

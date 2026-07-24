@@ -39,7 +39,7 @@
 
 namespace gem5
 {
-namespace VegaISA
+namespace AMDGPU
 {
 
 /*
@@ -532,5 +532,5 @@ Walker::getPort(const std::string &if_name, PortID idx)
     }
 }
 
-} // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5

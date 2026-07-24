@@ -54,7 +54,7 @@ class Packet;
 class AMDGPUDevice;
 class ThreadContext;
 
-namespace VegaISA
+namespace AMDGPU
 {
 
 class Walker;
@@ -116,7 +116,7 @@ class GpuTLB : public ClockedObject
     int getSet(Addr va, unsigned int page_shift);
 
     // List of possible page size, 4k and 2m for now
-    const std::array<unsigned int, 2> logPageShiftList = {VegaISA::PageShift,
+    const std::array<unsigned int, 2> logPageShiftList = {AMDGPU::PageShift,
                                                           21};
 
     int size;
@@ -351,7 +351,7 @@ class GpuTLB : public ClockedObject
     EventFunctionWrapper cleanupEvent;
 };
 
-} // namespace VegaISA
+} // namespace AMDGPU
 
 } // namespace gem5
 

@@ -273,7 +273,7 @@ AMDGPUVM::writeMMIO(PacketPtr pkt, Addr offset)
 }
 
 void
-AMDGPUVM::registerTLB(VegaISA::GpuTLB *tlb)
+AMDGPUVM::registerTLB(AMDGPU::GpuTLB *tlb)
 {
     DPRINTF(AMDGPUDevice, "Registered a TLB with device\n");
     gpu_tlbs.push_back(tlb);

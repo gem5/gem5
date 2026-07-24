@@ -35,7 +35,7 @@
 
 namespace gem5
 {
-namespace VegaISA
+namespace AMDGPU
 {
 
 /**
@@ -68,5 +68,5 @@ VegaTlbEntry::unserialize(CheckpointIn &cp)
     UNSERIALIZE_SCALAR(lruSeq);
 }
 
-} // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5

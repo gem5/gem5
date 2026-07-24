@@ -39,7 +39,7 @@
 
 namespace gem5
 {
-namespace VegaISA
+namespace AMDGPU
 {
 
 /**
@@ -136,7 +136,7 @@ struct VegaTlbEntry : public Serializable
     void unserialize(CheckpointIn &cp) override;
 };
 
-} // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5
 
 #endif // __ARCH_AMDGPU_VEGA_PAGETABLE_H__

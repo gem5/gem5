@@ -194,7 +194,7 @@ class AMDGPUVM : public Serializable
      * List of TLBs associated with the GPU device. This is used for flushing
      * the TLBs upon a driver request.
      */
-    std::vector<VegaISA::GpuTLB *> gpu_tlbs;
+    std::vector<AMDGPU::GpuTLB *> gpu_tlbs;
 
     /**
      * Different MMIO implements for different GFX versions with overlapping
@@ -424,7 +424,7 @@ class AMDGPUVM : public Serializable
     /**
      * Control methods for TLBs associated with the GPU device.
      */
-    void registerTLB(VegaISA::GpuTLB *tlb);
+    void registerTLB(AMDGPU::GpuTLB *tlb);
     void invalidateTLBs();
 
     void serialize(CheckpointOut &cp) const override;
@@ -480,13 +480,13 @@ class AMDGPUVM : public Serializable
     {
       private:
         AMDGPUVM *vm;
-        VegaISA::Walker *walker;
+        AMDGPU::Walker *walker;
         int vmid;
 
         void translate(Range &range) const override;
 
       public:
-        UserTranslationGen(AMDGPUVM *_vm, VegaISA::Walker *_walker, int _vmid,
+        UserTranslationGen(AMDGPUVM *_vm, AMDGPU::Walker *_walker, int _vmid,
                            Addr vaddr, Addr size)
             : TranslationGen(vaddr, size),
               vm(_vm),
