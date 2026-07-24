@@ -455,8 +455,9 @@ BaseRemoteGDB::hostSocket() const
 std::string
 BaseRemoteGDB::getListenerOutput() const
 {
-    if (!listener || !listener->islistening())
+    if (!listener || !listener->islistening()) {
         return "";
+    }
 
     std::stringstream ss;
     listener->output(ss);

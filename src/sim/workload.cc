@@ -79,24 +79,27 @@ Workload::trapToGdb(GDBSignal signal, ContextID ctx_id)
         return true;
     }
     return false;
-};
+}
+
 bool
-Workload::sendToGdb(std::string msg){
-     if (gdb)
+Workload::sendToGdb(std::string msg)
+{
+    if (gdb) {
         return gdb->sendMessage(msg);
-    else
+    } else {
         return false;
- }
+    }
+}
 
 std::string
 Workload::getGdbListenerOutput() const
 {
-    if (!gdb)
+    if (!gdb) {
         return "";
+    }
 
     return gdb->getListenerOutput();
 }
-
 
 void
 Workload::startup()
