@@ -29,15 +29,15 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __ARCH_AMDGPU_VEGA_TLB_HH__
-#define __ARCH_AMDGPU_VEGA_TLB_HH__
+#ifndef __ARCH_AMDGPU_COMMON_AMDGPU_TLB_HH__
+#define __ARCH_AMDGPU_COMMON_AMDGPU_TLB_HH__
 
 #include <list>
 #include <queue>
 #include <string>
 #include <vector>
 
-#include "arch/amdgpu/vega/pagetable.hh"
+#include "arch/amdgpu/common/pagetable.hh"
 #include "arch/generic/mmu.hh"
 #include "base/statistics.hh"
 #include "base/trace.hh"
@@ -355,4 +355,4 @@ class GpuTLB : public ClockedObject
 
 } // namespace gem5
 
-#endif // __ARCH_AMDGPU_VEGA_TLB_HH__
+#endif // __ARCH_AMDGPU_COMMON_AMDGPU_TLB_HH__

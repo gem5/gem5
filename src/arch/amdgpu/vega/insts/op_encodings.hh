@@ -32,8 +32,8 @@
 #ifndef __ARCH_VEGA_INSTS_OP_ENCODINGS_HH__
 #define __ARCH_VEGA_INSTS_OP_ENCODINGS_HH__
 
+#include "arch/amdgpu/common/gpu_mem_helpers.hh"
 #include "arch/amdgpu/vega/gpu_decoder.hh"
-#include "arch/amdgpu/vega/gpu_mem_helpers.hh"
 #include "arch/amdgpu/vega/insts/gpu_static_inst.hh"
 #include "arch/amdgpu/vega/insts/inst_util.hh"
 #include "arch/amdgpu/vega/operand.hh"

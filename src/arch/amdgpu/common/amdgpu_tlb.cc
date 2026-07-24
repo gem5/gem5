@@ -29,14 +29,14 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/amdgpu/vega/tlb.hh"
+#include "arch/amdgpu/common/amdgpu_tlb.hh"
 
 #include <cmath>
 #include <cstring>
 
+#include "arch/amdgpu/common/faults.hh"
 #include "arch/amdgpu/common/gpu_translation_state.hh"
-#include "arch/amdgpu/vega/faults.hh"
-#include "arch/amdgpu/vega/pagetable_walker.hh"
+#include "arch/amdgpu/common/pagetable_walker.hh"
 #include "debug/GPUPrefetch.hh"
 #include "debug/GPUTLB.hh"
 #include "dev/amdgpu/amdgpu_device.hh"

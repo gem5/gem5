@@ -34,7 +34,7 @@
 
 #include <vector>
 
-#include "arch/amdgpu/vega/pagetable_walker.hh"
+#include "arch/amdgpu/common/pagetable_walker.hh"
 #include "base/intmath.hh"
 #include "dev/amdgpu/amdgpu_defines.hh"
 #include "mem/packet.hh"

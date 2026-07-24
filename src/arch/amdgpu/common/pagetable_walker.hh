@@ -34,9 +34,9 @@
 
 #include <vector>
 
-#include "arch/amdgpu/vega/page_walk_cache.hh"
-#include "arch/amdgpu/vega/pagetable.hh"
-#include "arch/amdgpu/vega/tlb.hh"
+#include "arch/amdgpu/common/amdgpu_tlb.hh"
+#include "arch/amdgpu/common/page_walk_cache.hh"
+#include "arch/amdgpu/common/pagetable.hh"
 #include "base/types.hh"
 #include "debug/GPUPTWalker.hh"
 #include "mem/packet.hh"

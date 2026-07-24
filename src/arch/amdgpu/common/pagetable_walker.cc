@@ -29,11 +29,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "arch/amdgpu/vega/pagetable_walker.hh"
+#include "arch/amdgpu/common/pagetable_walker.hh"
 
 #include <memory>
 
-#include "arch/amdgpu/vega/faults.hh"
+#include "arch/amdgpu/common/faults.hh"
 #include "mem/abstract_mem.hh"
 #include "mem/packet_access.hh"
 
