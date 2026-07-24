@@ -44,6 +44,9 @@
 namespace gem5
 {
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 struct BufferRsrcDescriptor
@@ -1906,6 +1909,7 @@ class Inst_FLAT : public VEGAGPUStaticInst
     }
 }; // Inst_FLAT
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5
 
 #endif // __ARCH_VEGA_INSTS_OP_ENCODINGS_HH__

@@ -38,7 +38,7 @@
 namespace gem5
 {
 
-namespace VegaISA
+namespace AMDGPU
 {
 
 // Page walk cache entry
@@ -164,7 +164,7 @@ class PageWalkCache : public AssociativeCache<PWCEntry>
     }
 };
 
-} // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5
 
 #endif // __ARCH_AMDGPU_VEGA_PAGE_WALK_CACHE_HH__

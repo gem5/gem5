@@ -43,6 +43,9 @@
 namespace gem5
 {
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 enum OpSelector : int
@@ -133,13 +136,15 @@ enum OpSelector : int
 };
 
 constexpr size_t MaxOperandDwords(16);
-const int NumVecElemPerVecReg(64);
+constexpr int NumVecElemPerVecReg(64);
 // op selector values 129 - 192 correspond to const values 1 - 64
-const int NumPosConstRegs = REG_INT_CONST_POS_MAX - REG_INT_CONST_POS_MIN + 1;
+constexpr int NumPosConstRegs =
+    (int)REG_INT_CONST_POS_MAX - (int)REG_INT_CONST_POS_MIN + 1;
 // op selector values 193 - 208 correspond to const values -1 - 16
-const int NumNegConstRegs = REG_INT_CONST_NEG_MAX - REG_INT_CONST_NEG_MIN + 1;
-const int BITS_PER_BYTE = 8;
-const int BITS_PER_WORD = 16;
+constexpr int NumNegConstRegs =
+    (int)REG_INT_CONST_NEG_MAX - (int)REG_INT_CONST_NEG_MIN + 1;
+constexpr int BITS_PER_BYTE = 8;
+constexpr int BITS_PER_WORD = 16;
 const int MSB_PER_BYTE = (BITS_PER_BYTE - 1);
 const int MSB_PER_WORD = (BITS_PER_WORD - 1);
 
@@ -247,6 +252,7 @@ bool isFlatScratchReg(int opIdx);
 bool isExecMask(int opIdx);
 bool isVccReg(int opIdx);
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5
 
 #endif // __ARCH_VEGA_REGISTERS_HH__

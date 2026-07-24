@@ -305,7 +305,7 @@ class SDMAEngine : public DmaVirtDevice
     uint64_t pageWptr;
 
     AMDGPUDevice *gpuDevice;
-    VegaISA::Walker *walker;
+    AMDGPU::Walker *walker;
 
     /* processRLC will select the correct queue for the doorbell */
     std::array<Addr, 2> rlcInfo{};

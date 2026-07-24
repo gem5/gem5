@@ -35,7 +35,7 @@
 
 namespace gem5
 {
-namespace VegaISA
+namespace AMDGPU
 {
 
 void
@@ -47,5 +47,5 @@ VegaFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     panic("Vega translation resulted in page fault!");
 }
 
-} // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5

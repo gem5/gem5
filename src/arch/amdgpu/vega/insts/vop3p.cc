@@ -37,6 +37,9 @@
 namespace gem5
 {
 
+namespace AMDGPU
+{
+
 namespace VegaISA
 {
 
@@ -1249,4 +1252,5 @@ Inst_VOP3P__V_MAD_MIX_F32::execute(GPUDynInstPtr gpuDynInst)
 }
 
 } // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5

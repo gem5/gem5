@@ -40,6 +40,9 @@
 namespace gem5
 {
 
+namespace AMDGPU
+{
+
 /**
  * Helper function for instructions declared in op_encodings.  This function
  * takes in all of the arguments for a given memory request we are trying to
@@ -249,6 +252,7 @@ initMemReqScalarHelper(GPUDynInstPtr gpuDynInst, MemCmd mem_req_type)
     }
 }
 
+} // namespace AMDGPU
 } // namespace gem5
 
 #endif // __ARCH_AMDGPU_COMMON_GPU_MEM_HELPERS_HH__

@@ -36,11 +36,11 @@
 
 namespace gem5
 {
-namespace VegaISA
+namespace AMDGPU
 {
 const Addr PageShift = 12;
 const Addr PageBytes = 1ULL << PageShift;
-} // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5
 
 #endif // __ARCH_AMDGPU_VEGA_PAGE_SIZE_H__

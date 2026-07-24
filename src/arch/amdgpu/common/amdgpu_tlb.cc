@@ -43,7 +43,7 @@
 
 namespace gem5
 {
-namespace VegaISA
+namespace AMDGPU
 {
 
 // we have no limit for the number of translations we send
@@ -150,7 +150,7 @@ GpuTLB::createPagefault(Addr vaddr, Mode mode)
 Addr
 GpuTLB::pageAlign(Addr vaddr)
 {
-    Addr pageMask = mask(VegaISA::PageShift);
+    Addr pageMask = mask(AMDGPU::PageShift);
     return (vaddr & ~pageMask);
 }
 
@@ -332,7 +332,7 @@ GpuTLB::issueTLBLookup(PacketPtr pkt)
      * size. The actual VPN can be determined after the first walk is done
      * and fixed up later.
      */
-    Addr virt_page_addr = roundDown(pkt->req->getVaddr(), VegaISA::PageBytes);
+    Addr virt_page_addr = roundDown(pkt->req->getVaddr(), AMDGPU::PageBytes);
 
     GpuTranslationState *sender_state =
         safe_cast<GpuTranslationState *>(pkt->senderState);
@@ -447,9 +447,9 @@ GpuTLB::walkerResponse(VegaTlbEntry &entry, PacketPtr pkt)
     DPRINTF(GPUTLB, "WalkerResponse for %#lx. Entry: (%#lx, %#lx, %#lx)\n",
             pkt->req->getVaddr(), entry.vaddr, entry.paddr, entry.size());
 
-    Addr virt_page_addr = roundDown(pkt->req->getVaddr(), VegaISA::PageBytes);
+    Addr virt_page_addr = roundDown(pkt->req->getVaddr(), AMDGPU::PageBytes);
 
-    Addr page_addr = entry.pte.ppn << VegaISA::PageShift;
+    Addr page_addr = entry.pte.ppn << AMDGPU::PageShift;
     Addr paddr = page_addr + (entry.vaddr & mask(entry.logBytes));
     pkt->req->setPaddr(paddr);
     pkt->req->setSystemReq(entry.pte.s);
@@ -685,7 +685,7 @@ GpuTLB::CpuSidePort::recvTimingReq(PacketPtr pkt)
 {
     bool ret = false;
     [[maybe_unused]] Addr virt_page_addr =
-        roundDown(pkt->req->getVaddr(), VegaISA::PageBytes);
+        roundDown(pkt->req->getVaddr(), AMDGPU::PageBytes);
 
     if (tlb->outstandingReqs < tlb->maxCoalescedReqs) {
         assert(!tlb->translationReturnEvent.count(virt_page_addr));
@@ -749,7 +749,7 @@ GpuTLB::handleFuncTranslationReturn(PacketPtr pkt, tlbOutcome tlb_outcome)
         local_entry = new_entry;
 
         if (allocationPolicy) {
-            Addr virt_page_addr = roundDown(vaddr, VegaISA::PageBytes);
+            Addr virt_page_addr = roundDown(vaddr, AMDGPU::PageBytes);
 
             DPRINTF(GPUTLB, "allocating entry w/ addr %#lx\n", virt_page_addr);
 
@@ -800,7 +800,7 @@ GpuTLB::CpuSidePort::recvFunctional(PacketPtr pkt)
 
     bool update_stats = !sender_state->isPrefetch;
 
-    Addr virt_page_addr = roundDown(pkt->req->getVaddr(), VegaISA::PageBytes);
+    Addr virt_page_addr = roundDown(pkt->req->getVaddr(), AMDGPU::PageBytes);
 
     // do the TLB lookup without updating the stats
     bool success = tlb->tlbLookup(pkt->req, update_stats);
@@ -932,7 +932,7 @@ GpuTLB::CpuSidePort::getAddrRanges() const
 bool
 GpuTLB::MemSidePort::recvTimingResp(PacketPtr pkt)
 {
-    Addr virt_page_addr = roundDown(pkt->req->getVaddr(), VegaISA::PageBytes);
+    Addr virt_page_addr = roundDown(pkt->req->getVaddr(), AMDGPU::PageBytes);
 
     DPRINTF(GPUTLB, "MemSidePort recvTiming for virt_page_addr %#x\n",
             virt_page_addr);
@@ -1005,5 +1005,5 @@ GpuTLB::VegaTLBStats::VegaTLBStats(statistics::Group *parent)
     localLatency = localCycles / localNumTLBAccesses;
 }
 
-} // namespace VegaISA
+} // namespace AMDGPU
 } // namespace gem5
