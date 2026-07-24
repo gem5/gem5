@@ -212,8 +212,6 @@ CacheController::Transaction::handle(const CHIResponseMsg *msg)
 bool
 CacheController::ReadTransaction::handle(const CHIDataMsg *msg)
 {
-    dataMsgCnt++;
-
     for (auto byte = 0; byte < controller->cacheLineSize; byte++) {
         if (msg->m_bitMask.test(byte))
             payload->data[byte] = msg->m_dataBlk.getByte(byte);
@@ -227,6 +225,12 @@ CacheController::ReadTransaction::handle(const CHIDataMsg *msg)
     phase.data_id = dataId(msg->m_addr + msg->m_bitMask.firstBitSet(true));
     phase.c_busy = msg->m_cbusy;
     phase.src_id = ruby_to_tlm::srcId(msg->m_responder);
+
+    dataMsgCnt++;
+    if (phase.dat_opcode == ARM::CHI::DAT_OPCODE_COMP_DATA) {
+        // A CompData counts as a (COMP) response
+        rspMsgCnt++;
+    }
 
     if (forward(msg)) {
         controller->bw(payload, &phase);
