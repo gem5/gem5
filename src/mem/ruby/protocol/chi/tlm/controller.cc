@@ -240,9 +240,19 @@ CacheController::ReadTransaction::handle(const CHIDataMsg *msg)
 }
 
 bool
+CacheController::ReadTransaction::compRespToMakeReadUnique(
+    const ARM::CHI::Phase &resp)
+{
+    return orig.req_opcode == ARM::CHI::REQ_OPCODE_MAKE_READ_UNIQUE &&
+           resp.channel == ARM::CHI::CHANNEL_RSP &&
+           resp.rsp_opcode == ARM::CHI::RSP_OPCODE_COMP;
+}
+
+bool
 CacheController::ReadTransaction::handleCompletion()
 {
-    if (dataMsgCnt == controller->dataMsgsPerLine && rspMsgCnt != 0) {
+    if (compRespToMakeReadUnique(phase) ||
+        (dataMsgCnt == controller->dataMsgsPerLine && rspMsgCnt != 0)) {
         if (phase.exp_comp_ack == false) {
             // This is a hack, we should fix it on the ruby side
             // The client is not sending a CompAck but ruby is
@@ -455,9 +465,9 @@ CacheController::sendResponseMsg(ARM::CHI::Payload &payload,
 }
 
 CacheController::Transaction::Transaction(CacheController *_controller,
-    ARM::CHI::Payload &_payload,
-    ARM::CHI::Phase &_phase)
-  : controller(_controller), payload(&_payload), phase(_phase)
+                                          ARM::CHI::Payload &_payload,
+                                          ARM::CHI::Phase &_phase)
+    : controller(_controller), payload(&_payload), phase(_phase), orig(_phase)
 {
     payload->ref();
 }
