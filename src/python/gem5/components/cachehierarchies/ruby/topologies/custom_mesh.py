@@ -55,6 +55,7 @@ from m5.util import (
     fatal,
     warn,
 )
+from m5.util.custom_mesh_dot_writer import generate_dot
 
 from ...chi.noc import NoC_Params as CHI_NoC_Params
 from ...chi.nodes.abstract_node import (
@@ -237,6 +238,9 @@ class CustomMesh(SimpleNetwork):
             int_routing_latency=self._node_router_latency,
             ext_routing_latency=self._node_router_latency,
         )
+        node_router._row = mesh_router._row
+        node_router._col = mesh_router._col
+        node_router._main = False
         self._routers.append(node_router)
 
         self._int_links.append(
@@ -332,6 +336,8 @@ class CustomMesh(SimpleNetwork):
                         )
                     )
                     self._link_count += 1
+                    controller._row = router._row
+                    controller._col = router._col
         else:
             # Circulate nodes across router_list when num_nodes_per_router == 0.
             idx = 0
@@ -356,6 +362,8 @@ class CustomMesh(SimpleNetwork):
                         )
                     )
                     self._link_count += 1
+                    controller._row = router._row
+                    controller._col = router._col
 
                 idx = (idx + 1) % len(router_idx_list)
 
@@ -516,6 +524,15 @@ class CustomMesh(SimpleNetwork):
             for i in range(self._num_mesh_routers)
         ]
 
+        # Assign helpers later needed by generate_dot.
+        for row in range(self._num_rows):
+            for col in range(self._num_cols):
+                router_id = col + (row * self._num_cols)
+                assert self._routers[router_id].router_id.value == router_id
+                self._routers[router_id]._row = row
+                self._routers[router_id]._col = col
+                self._routers[router_id]._main = True
+
         self._link_count = 0
         self._int_links = []
         self._ext_links = []
@@ -538,3 +555,5 @@ class CustomMesh(SimpleNetwork):
         self.routers = self._routers
         self.int_links = self._int_links
         self.ext_links = self._ext_links
+
+        generate_dot(self, self._num_rows, self._num_cols)
