@@ -30,10 +30,10 @@
 #ifndef __SIM_GLOBAL_EVENT_HH__
 #define __SIM_GLOBAL_EVENT_HH__
 
+#include <barrier>
 #include <mutex>
 #include <vector>
 
-#include "base/barrier.hh"
 #include "sim/eventq.hh"
 
 namespace gem5
@@ -56,6 +56,15 @@ namespace gem5
  * events, while GlobalSyncEvent is optimized for global
  * synchronization operations.
  */
+
+/*
+ * Global barrier used to synchronize threads
+ */
+struct ProcessBarrier
+{
+    BaseGlobalEvent *event;
+    void operator()() const;
+};
 
 /**
  * Common base class for GlobalEvent and GlobalSyncEvent.
@@ -90,7 +99,8 @@ class BaseGlobalEvent : public EventBase
 
         friend class BaseGlobalEvent;
 
-        bool globalBarrier()
+        void
+        globalBarrier()
         {
             // This method will be called from the process() method in
             // the local barrier events
@@ -101,16 +111,15 @@ class BaseGlobalEvent : public EventBase
             // while waiting on the barrier to prevent deadlocks if
             // another thread wants to lock the event queue.
             EventQueue::ScopedRelease release(curEventQueue());
-            return _globalEvent->barrier.wait();
+            return _globalEvent->barrier.arrive_and_wait();
         }
 
       public:
         virtual BaseGlobalEvent *globalEvent() { return _globalEvent; }
     };
 
-    //! The barrier that all threads wait on before performing the
-    //! global event.
-    Barrier barrier;
+    // The barrier that all threads wait on before performing a global event.
+    std::barrier<ProcessBarrier> barrier;
 
     //! The individual local event instances (one per thread/event queue).
     std::vector<BarrierEvent *> barrierEvent;
