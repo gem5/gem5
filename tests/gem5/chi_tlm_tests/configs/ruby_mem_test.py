@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2025 Arm Limited
+# Copyright (c) 2024-2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -38,63 +38,217 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import argparse
-import importlib
+import importlib.util
 import os
 import sys
 
 import m5
-from m5.defines import buildEnv
-from m5.objects import *
-from m5.tlm_chi.utils import *
-from m5.util import addToPath
-
-m5.util.addToPath(os.path.join(m5.util.repoPath(), "configs"))
-from common import Options
-from ruby import (
-    CHI,
-    Ruby,
+from m5.objects import (
+    RubyPortProxy,
+    RubySystem,
+    SrcClockDomain,
+    SubSystem,
+    TlmController,
+    TlmGenerator,
+    VoltageDomain,
 )
-from ruby.CHI_config import (
-    CHI_MN,
-    CHI_Node,
-    Versions,
+from m5.params import (
+    AllMemory,
+    Port,
 )
 
+from gem5.components.boards.test_board import TestBoard
+from gem5.components.cachehierarchies.chi.nodes.abstract_node import (
+    CacheController,
+)
+from gem5.components.cachehierarchies.chi.nodes.directory import (
+    SimpleDirectory,
+)
+from gem5.components.cachehierarchies.chi.nodes.memory_controller import (
+    MemoryController,
+)
+from gem5.components.cachehierarchies.chi.private_l1_private_l2_cache_hierarchy import (
+    PrivateL1PrivateL2CacheHierarchy,
+)
+from gem5.components.cachehierarchies.ruby.topologies.simple_pt2pt import (
+    SimplePt2Pt,
+)
+from gem5.components.memory.simple import SingleChannelSimpleMemory
+from gem5.components.processors.abstract_generator import AbstractGenerator
+from gem5.components.processors.abstract_generator_core import (
+    AbstractGeneratorCore,
+)
+from gem5.isas import ISA
+from gem5.utils.override import overrides
 
-class TLM_RNF(CHI_Node):
-    # The CHI controller can be a child of this object or another if
-    # 'parent' is specified
-    def __init__(self, ruby_system, parent):
-        super().__init__(ruby_system)
 
-        self._cntrl = TlmController(
-            version=Versions.getVersion(CHI_Cache_Controller),
-            ruby_system=ruby_system,
+class TlmGeneratorCore(AbstractGeneratorCore):
+    """Stdlib core wrapper for a CHI TLM generator.
+
+    TlmGenerator does not use the usual stdlib CPU-side cache port path. The
+    hierarchy connects it to a TlmController using CHI TLM ports instead.
+    """
+
+    def __init__(
+        self,
+        cpu_id: int,
+        max_pending_tran: int,
+        clk_domain: SrcClockDomain,
+    ):
+        super().__init__()
+        self.generator = TlmGenerator(
+            cpu_id=cpu_id,
+            max_pending_tran=max_pending_tran,
+            clk_domain=clk_domain,
         )
 
-        parent.out_port = self._cntrl.in_port
-        parent.in_port = self._cntrl.out_port
-        self.connectController(self._cntrl)
+    @overrides(AbstractGeneratorCore)
+    def connect_dcache(self, port: Port) -> None:
+        self.port_end.req_ports = port
 
-    def getSequencers(self):
-        return []
+    @overrides(AbstractGeneratorCore)
+    def start_traffic(self) -> None:
+        pass
 
-    def getAllControllers(self):
-        return [self._cntrl]
-
-    def getNetworkSideControllers(self):
-        return [self._cntrl]
+    def get_tlm_generator(self) -> TlmGenerator:
+        return self.generator
 
 
-def rnf_gen(options, ruby_system, cpus):
-    return [TLM_RNF(ruby_system, cpu) for cpu in system.cpu]
+class TlmGeneratorProcessor(AbstractGenerator):
+    """Stdlib processor wrapper owning one TlmGeneratorCore per RN-F."""
+
+    def __init__(
+        self,
+        num_cores: int,
+        max_pending_tran: int,
+        clk_domain: SrcClockDomain,
+    ):
+        super().__init__(
+            cores=[
+                TlmGeneratorCore(
+                    cpu_id=i,
+                    max_pending_tran=max_pending_tran,
+                    clk_domain=clk_domain,
+                )
+                for i in range(num_cores)
+            ]
+        )
+
+    @overrides(AbstractGenerator)
+    def start_traffic(self) -> None:
+        pass
+
+    @overrides(AbstractGenerator)
+    def get_isa(self) -> ISA:
+        return ISA.NULL
+
+    def get_tlm_generators(self) -> list[TlmGenerator]:
+        return [core.get_tlm_generator() for core in self.get_cores()]
 
 
-def mn_gen(options, ruby_system, cpus):
-    all_rnf_cntrls = []
-    for rnf in ruby_system.rnf:
-        all_rnf_cntrls.extend(rnf.getAllControllers())
-    return [CHI_MN(ruby_system, all_rnf_cntrls)]
+class TlmPrivateL1PrivateL2CacheHierarchy(PrivateL1PrivateL2CacheHierarchy):
+    """PrivateL1PrivateL2-derived CHI hierarchy for TLM RN-F tests.
+
+    The base class provides the stdlib CHI hierarchy shape and version reset
+    logic. This subclass keeps the Ruby system, point-to-point network,
+    directory, and memory-controller construction, but replaces each CPU
+    cluster with a single TlmController RN-F and no RubySequencers, L1s, or
+    L2s.
+    """
+
+    def __init__(
+        self,
+        ruby_clock: str,
+        voltage_domain: VoltageDomain,
+    ):
+        super().__init__(
+            l1i_size="1B",
+            l1i_assoc=1,
+            l1d_size="1B",
+            l1d_assoc=1,
+            l2_size="1B",
+            l2_assoc=1,
+        )
+        self._ruby_clock = ruby_clock
+        self._voltage_domain = voltage_domain
+
+    def _create_core_cluster(
+        self,
+        core: TlmGeneratorCore,
+        core_num: int,
+        board: TestBoard,
+    ) -> SubSystem:
+        """Create a one-controller TLM RN-F cluster."""
+
+        cluster = SubSystem()
+        cluster.rnf = TlmController(
+            version=CacheController.versionCount(),
+            ruby_system=self.ruby_system,
+        )
+        cluster.rnf.data_channel_size = 32
+        cluster.rnf.connectQueues(self.ruby_system.network)
+
+        generator = core.get_tlm_generator()
+        generator.out_port = cluster.rnf.in_port
+        generator.in_port = cluster.rnf.out_port
+
+        cluster.rnf.ruby_system = self.ruby_system
+
+        cluster.rnf.downstream_destinations = [self.directory]
+
+        return cluster
+
+    @overrides(PrivateL1PrivateL2CacheHierarchy)
+    def incorporate_cache(self, board: TestBoard) -> None:
+        """Build the CHI Ruby system around TLM RN-F controllers."""
+
+        self._reset_version_numbers()
+        self.ruby_system = RubySystem()
+
+        self.ruby_system.clk_domain = SrcClockDomain(
+            clock=self._ruby_clock,
+            voltage_domain=self._voltage_domain,
+        )
+        self.ruby_system.randomization = False
+        self.ruby_system.network = SimplePt2Pt(self.ruby_system)
+        self.ruby_system.number_of_virtual_networks = 4
+        self.ruby_system.network.number_of_virtual_networks = 4
+
+        self.directory = SimpleDirectory(
+            self.ruby_system.network,
+            cache_line_size=board.get_cache_line_size(),
+            clk_domain=board.get_clock_domain(),
+            addr_ranges=[AllMemory],
+        )
+        self.directory.ruby_system = self.ruby_system
+
+        self.core_clusters = [
+            self._create_core_cluster(core, i, board)
+            for i, core in enumerate(board.get_processor().get_cores())
+        ]
+
+        self.memory_controllers = [
+            MemoryController(self.ruby_system.network, rng, port)
+            for rng, port in board.get_mem_ports()
+        ]
+        for controller in self.memory_controllers:
+            controller.ruby_system = self.ruby_system
+
+        self.directory.downstream_destinations = self.memory_controllers
+
+        self.ruby_system.num_of_sequencers = 0
+        self.ruby_system.network.connectControllers(
+            [cluster.rnf for cluster in self.core_clusters]
+            + self.memory_controllers
+            + [self.directory]
+            + (self.dma_controllers if board.has_dma_ports() else [])
+        )
+        self.ruby_system.network.setup_buffers()
+
+        self.ruby_system.sys_port_proxy = RubyPortProxy(
+            ruby_system=self.ruby_system
+        )
+        board.connect_system_port(self.ruby_system.sys_port_proxy.in_ports)
 
 
 def suite_importer(file_path):
@@ -110,52 +264,6 @@ def suite_importer(file_path):
     return module
 
 
-def create_system(options, system):
-    system.ruby = RubySystem()
-
-    # Instantiate the network object
-    # so that the controllers can connect to it.
-    system.ruby.network = SimpleNetwork(
-        ruby_system=system.ruby,
-        topology=options.topology,
-        routers=[],
-        ext_links=[],
-        int_links=[],
-        netifs=[],
-    )
-
-    bootmem = None
-    dma_ports = []
-    cpu_sequencers, dir_cntrls, topology = CHI.create_system(
-        options, False, system, dma_ports, bootmem, system.ruby, system.cpu
-    )
-
-    # Create the network topology
-    topology.makeTopology(
-        options, system.ruby.network, SimpleIntLink, SimpleExtLink, Switch
-    )
-
-    system.ruby.network.setup_buffers()
-
-    # Create a port proxy for connecting the system port. This is
-    # independent of the protocol and kept in the protocol-agnostic
-    # part (i.e. here).
-    # Give the system port proxy a SimObject parent without creating a
-    # full-fledged controller
-    system.sys_port_proxy = RubyPortProxy(ruby_system=system.ruby)
-
-    # Connect the system port for loading of binaries etc
-    system.system_port = system.sys_port_proxy.in_ports
-
-    Ruby.setup_memory_controllers(system, system.ruby, dir_cntrls, options)
-
-    system.ruby.number_of_virtual_networks = (
-        system.ruby.network.number_of_virtual_networks
-    )
-    system.ruby._cpu_ports = cpu_sequencers
-    system.ruby.num_of_sequencers = len(cpu_sequencers)
-
-
 parser = argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter
 )
@@ -164,70 +272,95 @@ parser.add_argument(
     type=str,
     help="Path to the suite file",
 )
-Options.addNoISAOptions(parser)
-
-#
-# Add the ruby specific and protocol specific options
-#
-Ruby.define_options(parser)
+parser.add_argument("-n", "--num-cpus", type=int, default=1)
+parser.add_argument(
+    "--sys-voltage",
+    type=str,
+    default="1.0V",
+    help="Top-level voltage",
+)
+parser.add_argument(
+    "--sys-clock",
+    type=str,
+    default="1GHz",
+    help="Top-level clock",
+)
+parser.add_argument(
+    "--ruby-clock",
+    type=str,
+    default="2GHz",
+    help="Ruby clock",
+)
+parser.add_argument(
+    "--tester-clock",
+    type=str,
+    default="3GHz",
+    help="Tester clock frequency",
+)
+parser.add_argument(
+    "--tester-max-pending",
+    type=int,
+    default=64,
+    help="Maximum number of pending transactions",
+)
+parser.add_argument("--mem-size", type=str, default="4GiB")
+parser.add_argument("--cacheline-size", type=int, default=64)
+parser.add_argument(
+    "-m",
+    "--abs-max-tick",
+    type=int,
+    default=m5.MaxTick,
+    metavar="TICKS",
+    help="Run to absolute simulated tick",
+)
 
 args = parser.parse_args()
 
-#
-# Configuring 4GiBs of SimpleMemory
-#
-args.mem_type = "SimpleMemory"
-args.mem_size = "4GiB"
+suite = suite_importer(args.suite)
 
-#
-# Currently ruby does not support atomic or uncacheable accesses
-#
-cpus = [TlmGenerator(cpu_id=i) for i in range(args.num_cpus)]
-
-for cpu in cpus:
-    suite = suite_importer(args.suite)
-    suite.test_all(cpu)
-
-system = System(
-    cpu=cpus,
-    clk_domain=SrcClockDomain(clock=args.sys_clock),
-    mem_ranges=[AddrRange(args.mem_size)],
-)
-m5.util.addToPath("../common")
-
-# Hooking up the RN-F generation callback
-system._rnf_gen = rnf_gen
-system._mn_gen = mn_gen
-
-create_system(args, system)
-
-# Create a top-level voltage domain and clock domain
-system.voltage_domain = VoltageDomain(voltage=args.sys_voltage)
-system.clk_domain = SrcClockDomain(
-    clock=args.sys_clock, voltage_domain=system.voltage_domain
-)
-# Create a seperate clock domain for Ruby
-system.ruby.clk_domain = SrcClockDomain(
-    clock=args.ruby_clock, voltage_domain=system.voltage_domain
+voltage_domain = VoltageDomain(voltage=args.sys_voltage)
+tester_clk_domain = SrcClockDomain(
+    clock=args.tester_clock,
+    voltage_domain=voltage_domain,
 )
 
-# To make unit-tests reproducible, we disable randomization
-system.ruby.randomization = False
+processor = TlmGeneratorProcessor(
+    num_cores=args.num_cpus,
+    max_pending_tran=args.tester_max_pending,
+    clk_domain=tester_clk_domain,
+)
 
-# -----------------------
-# run simulation
-# -----------------------
+memory = SingleChannelSimpleMemory(
+    latency="30ns",
+    latency_var="0ns",
+    bandwidth="12.8GiB/s",
+    size=args.mem_size,
+)
 
-root = Root(full_system=False, system=system)
-root.system.mem_mode = "timing"
+cache_hierarchy = TlmPrivateL1PrivateL2CacheHierarchy(
+    ruby_clock=args.ruby_clock,
+    voltage_domain=voltage_domain,
+)
 
-# Not much point in this being higher than the L1 latency
-m5.ticks.setGlobalFrequency("1ns")
+board = TestBoard(
+    clk_freq=args.sys_clock,
+    generator=processor,
+    memory=memory,
+    cache_hierarchy=cache_hierarchy,
+)
+board.cache_line_size = args.cacheline_size
 
-# instantiate configuration
+for generator in processor.get_tlm_generators():
+    suite.test_all(generator)
+
+root = board._pre_instantiate()
 m5.instantiate()
 
-# simulate until program terminates
 exit_event = m5.simulate(args.abs_max_tick)
 
-print("Exiting @ tick", m5.curTick(), "because", exit_event.getCause())
+print(
+    "Exiting @ tick",
+    m5.curTick(),
+    "because",
+    exit_event.getCause(),
+)
