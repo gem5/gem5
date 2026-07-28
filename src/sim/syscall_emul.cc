@@ -590,15 +590,17 @@ dup2Func(SyscallDesc *desc, ThreadContext *tc, int old_tgt_fd, int new_tgt_fd)
 
     // Bound-check the destination against the guest FD table size.
     // Linux returns EBADF for an out-of-range newfd.
-    if (new_tgt_fd < 0 || new_tgt_fd >= p->fds->getSize())
+    if (new_tgt_fd < 0 || new_tgt_fd >= p->fds->getSize()) {
         return -EBADF;
+    }
 
     // dup2(oldfd, oldfd) is a no-op that returns oldfd when oldfd is valid.
     if (old_tgt_fd == new_tgt_fd) {
         auto old_hbp =
             std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[old_tgt_fd]);
-        if (!old_hbp)
+        if (!old_hbp) {
             return -EBADF;
+        }
         return new_tgt_fd;
     }
 
@@ -613,8 +615,9 @@ dup2Func(SyscallDesc *desc, ThreadContext *tc, int old_tgt_fd, int new_tgt_fd)
      * viable numbers are; we execute the open call to retrieve one.
      */
     int tmp_fd = open("/dev/null", O_RDONLY);
-    if (tmp_fd == -1)
+    if (tmp_fd == -1) {
         return -errno;
+    }
     int res_fd = dup2(old_sim_fd, tmp_fd);
     if (res_fd == -1) {
         close(tmp_fd);
