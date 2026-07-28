@@ -70,10 +70,6 @@ getEventQueue(uint32_t index)
     return mainEventQueue[index];
 }
 
-#ifndef NDEBUG
-Counter Event::instanceCounter = 0;
-#endif
-
 Event::~Event()
 {
     assert(!scheduled());
@@ -417,7 +413,12 @@ const std::string
 Event::instanceString() const
 {
 #ifndef NDEBUG
-    return csprintf("%d", instance);
+    if (origin_queue != nullptr) {
+        return csprintf("[Origin: %s, #%d]", origin_queue->name(), instance);
+    } else {
+        // Event has not been scheduled yet.
+        return csprintf("[Origin: %s, #%d]", "UNKNOWN", instance);
+    }
 #else
     return csprintf("%#x", (uintptr_t)this);
 #endif
@@ -428,13 +429,7 @@ Event::dump() const
 {
     cprintf("Event %s (%s)\n", name(), description());
     cprintf("Flags: %#x\n", flags);
-#ifdef EVENTQ_DEBUG
-    cprintf("Created: %d\n", whenCreated);
-#endif
     if (scheduled()) {
-#ifdef EVENTQ_DEBUG
-        cprintf("Scheduled at  %d\n", whenScheduled);
-#endif
         cprintf("Scheduled for %d, priority %d\n", when(), _priority);
     } else {
         cprintf("Not Scheduled\n");
