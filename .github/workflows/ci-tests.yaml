@@ -55,7 +55,7 @@ jobs:
 
             - name: Run clang-format check
               run: |
-                  python util/run-git-clang-format.py --verbose --ci-pr-base-commit ${{ steps.get-base-commit.outputs.base_commit }}
+                  python util/run-git-clang-format.py --verbose --ci-pr-base-commit ${{ steps.get-base-commit.outputs.base_commit }} --ignore ext
 
     get-date:
     # We use the date to label caches. A cache is a a "hit" if the date is the
