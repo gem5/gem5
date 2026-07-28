@@ -658,7 +658,7 @@ decodeMrsMsrBankedReg(uint8_t sysM, bool r, bool &isIntReg, int &regIdx,
         }
     }
 
-    // Check that the requested register is accessable from the current mode
+    // Check that the requested register is accessible from the current mode
     if (ok && checkSecurity && mode != cpsr.mode) {
         switch (cpsr.mode) {
             case MODE_USER:
@@ -4243,7 +4243,7 @@ ISA::initializeMiscRegMetadata()
           }
 
           CTR ctr = 0;
-          //log2 of minimun i-cache line size (words)
+          //log2 of minimum i-cache line size (words)
           ctr.iCacheLineSize = log2_line_size_words;
           //b11 - gem5 uses pipt
           ctr.l1IndexPolicy = 0x3;
