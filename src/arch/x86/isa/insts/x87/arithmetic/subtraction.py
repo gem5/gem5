@@ -42,14 +42,17 @@ def macroop FSUB1_R
 
 def macroop FSUB1_M
 {
-    ldfp ufp1, seg, sib, disp
+    # Must use ldfp87 so single/double memory values are converted into the
+    # internal double representation. Plain ldfp copies raw bits and turns
+    # e.g. float32 2.0 into a denormal double, breaking x87 fsubs/faddl.
+    ldfp87 ufp1, seg, sib, disp
     subfp st(0), st(0), ufp1
 };
 
 def macroop FSUB1_P
 {
     rdip t7
-    ldfp ufp1, seg, riprel, disp
+    ldfp87 ufp1, seg, riprel, disp
     subfp st(0), st(0), ufp1
 };
 
@@ -60,14 +63,14 @@ def macroop FSUB2_R
 
 def macroop FSUB2_M
 {
-    ldfp ufp1, seg, sib, disp
+    ldfp87 ufp1, seg, sib, disp
     subfp st(0), st(0), ufp1
 };
 
 def macroop FSUB2_P
 {
     rdip t7
-    ldfp ufp1, seg, riprel, disp
+    ldfp87 ufp1, seg, riprel, disp
     subfp st(0), st(0), ufp1
 };
 
