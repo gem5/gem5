@@ -4588,12 +4588,19 @@ decode QUADRANT default Unknown::unknown() {
                             uint32_t num_regs = vtype_regs_per_group(vtype);
                             uint32_t ei = i + num_elements_reg(vtype, vlen) *
                                 (this->microIdx % num_regs);
+                            // Phase 1: gather selected Vs2 elements into the
+                            // compress buffer only. Do NOT write Vd here --
+                            // previously writing Vd at the source index
+                            // overwrote destination tail elements that must
+                            // remain undisturbed under RVV TU policy.
                             if (elem_mask(Vs1_vu, ei) &&
                                 this->microIdx < num_regs) {
                                 vcompress_buf[vcompress_cnt] = Vs2_vu[i];
-                                Vd_vu[i] = vcompress_buf[vcompress_cnt];
                                 vcompress_cnt ++;
                             }
+                            // Phase 2: pack the compressed stream into Vd
+                            // from element 0. Indices >= vcompress_cnt keep
+                            // the pre-instruction Vd value via COPY_OLD_VD.
                             if (ei < vcompress_cnt &&
                                 this->microIdx >= num_regs) {
                                 Vd_vu[i] = vcompress_buf[ei];
