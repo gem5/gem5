@@ -87,8 +87,8 @@ RiscvFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
         // According to riscv-privileged-v1.11, if a NMI occurs at the middle
         // of a M-mode trap handler, the state (epc/cause) will be overwritten
         // and is not necessary recoverable unless smrnmi enabled.
-        warn_if(!isa->enableSmrnmi() && isNonMaskableInterrupt() &&
-                pp == PRV_M && status.mie == 0,
+        warn_if(!isa->reportsExtension("Smrnmi") && isNonMaskableInterrupt() &&
+                    pp == PRV_M && status.mie == 0,
                 "NMI overwriting M-mode trap handler state");
 
         // Set fault handler privilege mode

@@ -174,8 +174,9 @@ TEST(AddrRangeMapTest, ModuloInterleavingTest)
 
     // Populate AddrRangeMap with 3-way modulo interleaved ranges
     for (uint32_t k = 0; k < stripes; k++) {
-        // AddrRange(start, end, stripes, match, intlv_bit)
-        r.insert(AddrRange(start, end, stripes, k, intlvBit), k);
+        r.insert(AddrRange::withModuloInterleaving(start, end, stripes, k,
+                                                   intlvBit),
+                 k);
     }
 
     // Verify mapping
@@ -211,9 +212,9 @@ TEST(AddrRangeMapTest, NestedSparse)
     AddrRangeMap<int> r;
 
     // Insert 0, 1, 2 matches
-    r.insert(AddrRange(chunks, 3, 0), 0);
-    r.insert(AddrRange(chunks, 3, 1), 1);
-    r.insert(AddrRange(chunks, 3, 2), 2);
+    r.insert(AddrRange::withModuloInterleaving(chunks, 3, 0), 0);
+    r.insert(AddrRange::withModuloInterleaving(chunks, 3, 1), 1);
+    r.insert(AddrRange::withModuloInterleaving(chunks, 3, 2), 2);
 
     // Verify mapping
     auto it = r.contains(0x0);
