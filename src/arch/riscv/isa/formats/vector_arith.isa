@@ -41,6 +41,45 @@ let {{
                 setSrcRegIdx(_numSrcRegs++, vecRegClass[%s + i]);
             }
         ''' % (num_regs_expr, reg_base_expr)
+    def getRegOperandGroup(name, num, offset="0"):
+        return '''
+            std::vector<RiscvISA::vreg_t> %s(%s);
+            for (unsigned i=0; i < %s; i++) {
+                xc->getRegOperand(this, i + %s, &%s[i]);
+            }
+        ''' % (name, num, num, offset, name)
+    def generateSlideElementLoop(is_up=True):
+        sign = '-' if is_up else '+'
+        zero_fill = '' if is_up else 'else { Vd_vu[i] = 0; }'
+
+        return '''
+            for (uint32_t i=0; i < microVl; i++) {
+                uint32_t vd_elem_idx = i + microIdx*micro_vlmax;
+                if (!machInst.vm && !elem_mask(v0, vd_elem_idx)) {
+                    continue;
+                }
+                int32_t vs2_elem_idx = (int32_t)vd_elem_idx %s offset;
+                if (vs2_elem_idx >= 0 && vs2_elem_idx < vlmax) {
+                    uint32_t r = vs2_elem_idx / micro_vlmax;
+                    uint32_t e = vs2_elem_idx - r*micro_vlmax;
+                    Vd_vu[i] = vs2_regs[r].as<ElemType>()[e];
+                } %s
+            }
+        ''' % (sign, zero_fill)
+    def generateSlideupOverlapCheck():
+        return '''
+            if (vtype_regs_per_group(vtype) > 1) {
+                uint32_t vs2_end = machInst.vs2
+                                   + vtype_regs_per_group(vtype)-1;
+                uint32_t vd_end = machInst.vd +  vtype_regs_per_group(vtype)-1;
+                if ((machInst.vs2 >= machInst.vd && machInst.vs2 <= vd_end)
+                        || (vs2_end >= machInst.vd && vs2_end <= vd_end)) {
+                    return std::make_shared<IllegalInstFault>(
+                        "Reg overlap not allowed for vslideup variants",
+                        machInst);
+                }
+            }
+        '''
     def generateReduceLoop(is_float=False):
         dot_v = ".v" if is_float else ""
         vs2_type = "vu" if is_float else \
@@ -1470,81 +1509,93 @@ def format VectorIntVxsatFormat(code, category, *flags) {{
 }};
 
 
-let {{
+def format VectorSlideFormat(category, *flags) {{
+    is_up = "up" in name
+    is_vi = (category == "OPIVI")
+    is_vx = (category == "OPIVX")
+    is_vf = (category == "OPFVF")
+    is_slide1 = "1" in name
 
-def VectorSlideBase(name, Name, category, code, flags, macro_construtor,
-        decode_template, micro_execute_template, offset_code=''):
     macroop_class_name = 'VectorSlideMacroInst'
     microop_class_name = 'VectorSlideMicroInst'
-    # Make sure flags are in lists (convert to lists if not).
+
+    varith_macro_declare = declareVArithTemplate(Name)
+
     flags = makeList(flags)
+    iop = InstObjParams(name, Name, macroop_class_name,
+            {'declare_varith_template': varith_macro_declare}, flags)
 
-    if decode_template is VectorIntDecodeBlock:
-        varith_macro_declare = declareVArithTemplate(Name)
-    elif decode_template is VectorFloatDecodeBlock:
-        varith_macro_declare = declareVArithTemplate(Name, 'float', 16)
-
-    iop = InstObjParams(
-        name,
-        Name,
-        macroop_class_name,
-       {'code': code,
-        'declare_varith_template': varith_macro_declare,
-        'offset_code': offset_code},
-        flags
-    )
-    inst_name, inst_suffix = name.split("_", maxsplit=1)
-    dest_reg_id = "vecRegClass[_machInst.vd + vdIdx]"
+    dest_reg_id = "vecRegClass[_machInst.vd + microIdx]"
 
     set_src_reg_idx = ""
+    if is_vx:
+        set_src_reg_idx += setSrcWrapper("intRegClass[_machInst.rs1]")
+    elif is_vf:
+        set_src_reg_idx += setSrcWrapper("floatRegClass[_machInst.rs1]")
 
-    src2_reg_id = "vecRegClass[(_copyVs ? VecMemInternalReg0 " \
-        + ": _machInst.vs2) + vs2Idx]"
-    src3_reg_id = "vecRegClass[(_copyVs ? VecMemInternalReg0 " \
-        + ": _machInst.vs2) + vs3Idx]"
-    src1_ireg_id = "intRegClass[_machInst.rs1]"
-    src1_freg_id = "floatRegClass[_machInst.rs1]"
+    set_src_reg_idx += setVecRegGroupSrcWrapper("vtype_regs_per_group(vtype)",
+                                                "_machInst.vs2")
 
-    num_src_regs = 0
-    if category == "OPIVX":
-        set_src_reg_idx += setSrcWrapper(src1_ireg_id)
-        num_src_regs += 1
-    elif category == "OPFVF":
-        set_src_reg_idx += setSrcWrapper(src1_freg_id)
-        num_src_regs += 1
-
-    set_src_reg_idx += setSrcWrapper(src2_reg_id)
-    set_src_reg_idx += setSrcWrapper(src3_reg_id)
-    num_src_regs += 2
-
-    dest_set_src_reg_idx = ""
-    # No dest reg pin: Bypass tail/mask policy to copy unchanged elements
-    slideup_insts = ["vslideup_vx", "vslideup_vi"]
-    if name in slideup_insts:
-        dest_set_src_reg_idx = f"oldDstIdx = {num_src_regs};\n"
-        dest_set_src_reg_idx += setSrcWrapper(dest_reg_id)
-    elif name not in ["vslidedown_vx"]:
-        dest_set_src_reg_idx = tailMaskCondSetSrcWrapper(
+    if name in ["vslideup_vx", "vslideup_vi"]:
+        set_src_reg_idx += "oldDstIdx = _numSrcRegs;\n"
+        set_src_reg_idx += setSrcWrapper(dest_reg_id)
+        copy_old_vd = '''
+            RiscvISA::vreg_t old_vd;
+            xc->getRegOperand(this, oldDstIdx, &old_vd);
+            tmp_d0 = old_vd;
+        '''
+    else:
+        set_src_reg_idx += tailMaskCondSetSrcWrapper(
             setSrcWrapper(dest_reg_id)
         )
-    set_src_reg_idx += dest_set_src_reg_idx
+        copy_old_vd = "COPY_OLD_VD(oldDstIdx);"
 
     set_dest_reg_idx = setDestWrapper(dest_reg_id)
-    set_vlenb = setVlenb()
 
-    if decode_template is VectorIntDecodeBlock:
-        varith_micro_declare = declareVArithTemplate(Name + "Micro")
-    elif decode_template is VectorFloatDecodeBlock:
-        varith_micro_declare = declareVArithTemplate(
-            Name + "Micro", 'float', 16)
+    if is_slide1:
+        offset = "int offset = 1;"
+    elif is_vi:
+        offset = "int offset = SIMM5;"
+    else:
+        offset = '''
+            int offset = (Rs1_vu > RVV_MAX_VLMAX) ? RVV_MAX_VLMAX : Rs1_vu;
+        '''
+
+    if is_slide1:
+        guard = "isFirstMicroop()" if is_up else "isLastMicroop()"
+        mask_idx = "0" if is_up else "microIdx*micro_vlmax + microVl-1"
+        elem_idx = "0" if is_up else "microVl-1"
+        scalar = "Fs1_bits" if is_vf else "Rs1_vu"
+        scalar_inject = '''
+            if (%s) {
+                if (machInst.vm || elem_mask(v0, %s)) {
+                    Vd_vu[%s] = %s;
+                }
+            }
+        ''' % (guard, mask_idx, elem_idx, scalar)
+    else:
+        scalar_inject = ""
+
+    overlap_check = generateSlideupOverlapCheck() if is_up else ""
+
+    get_vs2_regs = getRegOperandGroup("vs2_regs",
+                                      "vtype_regs_per_group(vtype)",
+                                      "0" if is_vi else "1")
+
+    varith_micro_declare = declareVArithTemplate(Name + "Micro")
 
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         microop_class_name,
-        {'code': code,
-         'set_dest_reg_idx': set_dest_reg_idx,
+        {'set_dest_reg_idx': set_dest_reg_idx,
          'set_src_reg_idx': set_src_reg_idx,
-         'set_vlenb': set_vlenb,
+         'set_vlenb': setVlenb(),
+         'overlap_check': overlap_check,
+         'offset': offset,
+         'copy_old_vd': copy_old_vd,
+         'get_vs2_regs': get_vs2_regs,
+         'slide_loop': generateSlideElementLoop(is_up=is_up),
+         'scalar_inject': scalar_inject,
          'declare_varith_template': varith_micro_declare},
         flags)
 
@@ -1553,87 +1604,7 @@ def VectorSlideBase(name, Name, category, code, flags, macro_construtor,
         VectorSlideMacroDeclare.subst(iop)
     decoder_output = \
         VectorSlideMicroConstructor.subst(microiop) + \
-        macro_construtor.subst(iop)
-    exec_output = micro_execute_template.subst(microiop)
-    decode_block = decode_template.subst(iop)
-    return (header_output, decoder_output, decode_block, exec_output)
-
-}};
-
-def format VectorSlideUpFormat(code, category, *flags) {{
-    (header_output, decoder_output, decode_block, exec_output) = \
-        VectorSlideBase(name, Name, category, code,
-            flags,
-            macro_construtor = VectorSlideUpMacroConstructor,
-            decode_template = VectorIntDecodeBlock,
-            micro_execute_template = VectorSlideMicroExecute)
-}};
-
-def format VectorSlide1UpFormat(code, category, *flags) {{
-    (header_output, decoder_output, decode_block, exec_output) = \
-        VectorSlideBase(name, Name, category, code,
-            flags,
-            macro_construtor = VectorSlideUpImmediateMacroConstructor,
-            decode_template = VectorIntDecodeBlock,
-            micro_execute_template = VectorSlideMicroExecute,
-            offset_code = 'int offset = 1')
-}};
-
-def format VectorSlideUpVIFormat(code, category, *flags) {{
-    (header_output, decoder_output, decode_block, exec_output) = \
-        VectorSlideBase(name, Name, category, code,
-            flags,
-            macro_construtor = VectorSlideUpImmediateMacroConstructor,
-            decode_template = VectorIntDecodeBlock,
-            micro_execute_template = VectorSlideMicroExecute,
-            offset_code = 'int offset = (int)(uint64_t)(SIMM5);')
-}};
-
-def format VectorSlideDownFormat(code, category, *flags) {{
-    (header_output, decoder_output, decode_block, exec_output) = \
-        VectorSlideBase(name, Name, category, code,
-            flags,
-            macro_construtor = VectorSlideDownMacroConstructor,
-            decode_template = VectorIntDecodeBlock,
-            micro_execute_template = VectorSlideMicroExecute)
-}};
-
-def format VectorSlide1DownFormat(code, category, *flags) {{
-    (header_output, decoder_output, decode_block, exec_output) = \
-        VectorSlideBase(name, Name, category, code,
-            flags,
-            macro_construtor = VectorSlideDownImmediateMacroConstructor,
-            decode_template = VectorIntDecodeBlock,
-            micro_execute_template = VectorSlideMicroExecute,
-            offset_code = 'int offset = 1')
-}};
-
-def format VectorSlideDownVIFormat(code, category, *flags) {{
-    (header_output, decoder_output, decode_block, exec_output) = \
-        VectorSlideBase(name, Name, category, code,
-            flags,
-            macro_construtor = VectorSlideDownImmediateMacroConstructor,
-            decode_template = VectorIntDecodeBlock,
-            micro_execute_template = VectorSlideMicroExecute,
-            offset_code = 'int offset = (int)(uint64_t)(SIMM5);')
-}};
-
-def format VectorFloatSlideUpFormat(code, category, *flags) {{
-    (header_output, decoder_output, decode_block, exec_output) = \
-        VectorSlideBase(name, Name, category, code,
-            flags,
-            macro_construtor = VectorSlideUpImmediateMacroConstructor,
-            decode_template = VectorFloatDecodeBlock,
-            micro_execute_template = VectorFloatSlideMicroExecute,
-            offset_code = 'int offset = 1')
-}};
-
-def format VectorFloatSlideDownFormat(code, category, *flags) {{
-    (header_output, decoder_output, decode_block, exec_output) = \
-        VectorSlideBase(name, Name, category, code,
-            flags,
-            macro_construtor = VectorSlideDownImmediateMacroConstructor,
-            decode_template = VectorFloatDecodeBlock,
-            micro_execute_template = VectorFloatSlideMicroExecute,
-            offset_code = 'int offset = 1')
+        VectorSlideMacroConstructor.subst(iop)
+    exec_output = VectorSlideMicroExecute.subst(microiop)
+    decode_block = VectorIntDecodeBlock.subst(iop)
 }};
