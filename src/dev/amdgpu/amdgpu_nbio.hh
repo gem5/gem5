@@ -38,7 +38,8 @@
 #include "base/types.hh"
 #include "mem/packet.hh"
 
-namespace gem5 {
+namespace gem5
+{
 
 class AMDGPUDevice;
 
@@ -216,7 +217,7 @@ class AMDGPUNbio
   public:
     AMDGPUNbio();
 
-    void setGPUDevice(AMDGPUDevice* gpu_device);
+    void setGPUDevice(AMDGPUDevice *gpu_device);
 
     void readMMIO(PacketPtr pkt, Addr offset);
     void writeMMIO(PacketPtr pkt, Addr offset);
@@ -278,7 +279,7 @@ class AMDGPUNbio
     }
 
   private:
-    AMDGPUDevice* gpuDevice;
+    AMDGPUDevice *gpuDevice;
 
     /*
      * Driver initialization sequence helper variables.

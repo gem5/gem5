@@ -35,7 +35,8 @@
 #include "dev/amdgpu/amdgpu_device.hh"
 #include "mem/packet_access.hh"
 
-namespace gem5 {
+namespace gem5
+{
 
 AMDGPUNbio::AMDGPUNbio()
 {
@@ -44,7 +45,7 @@ AMDGPUNbio::AMDGPUNbio()
 }
 
 void
-AMDGPUNbio::setGPUDevice(AMDGPUDevice* gpu_device)
+AMDGPUNbio::setGPUDevice(AMDGPUDevice *gpu_device)
 {
     gpuDevice = gpu_device;
 }
@@ -361,15 +362,11 @@ AMDGPUNbio::processPspCommand(uint32_t new_wptr)
     // Extract key addresses immediately after read
 
     // Schedule the next stage: reading the command buffer, simulating latency
-    auto cb = new EventFunctionWrapper(
-        [=]{
-        readCmdBufferAndProcess(ctx); }, ctx->name);
+    auto cb = new EventFunctionWrapper([=] { readCmdBufferAndProcess(ctx); },
+                                       ctx->name);
 
-    gpuDevice->getMemMgr()->readRequest(frame_addr,
-                                        (uint8_t*)&ctx->frame,
-                                        sizeof(PspGfxRbFrame),
-                                        0,
-                                        cb);
+    gpuDevice->getMemMgr()->readRequest(frame_addr, (uint8_t *)&ctx->frame,
+                                        sizeof(PspGfxRbFrame), 0, cb);
 }
 
 void
@@ -424,7 +421,7 @@ AMDGPUNbio::CmdBufferAndProcessDone(PspCommandContext *ctx)
         DPRINTF(AMDGPUDevice, "  Offset %#x: %#x\n", i, val);
     }
 
-    uint32_t cmd_id = ((PspGfxCmdResp*)ctx->cmd_buffer)->cmd_id;
+    uint32_t cmd_id = ((PspGfxCmdResp *)ctx->cmd_buffer)->cmd_id;
     DPRINTF(AMDGPUDevice, "PSP: Processing Command ID %#x\n", cmd_id);
 
     switch (cmd_id) {
@@ -498,15 +495,13 @@ AMDGPUNbio::CmdBufferAndProcessDone(PspCommandContext *ctx)
 
     // We must use the value stored in the context struct
     // Schedule the completion callback after a sufficient latency to
-    //simulate command execution time
-    auto cb = new EventFunctionWrapper(
-        [=]{
-        fenceWriteDone(ctx); }, ctx->name);
+    // simulate command execution time
+    auto cb =
+        new EventFunctionWrapper([=] { fenceWriteDone(ctx); }, ctx->name);
 
     gpuDevice->getMemMgr()->writeRequest(ctx->fence_addr,
-                                         (uint8_t*)&ctx->fence_value,
-                                         sizeof(ctx->fence_value),
-                                         0,
+                                         (uint8_t *)&ctx->fence_value,
+                                         sizeof(ctx->fence_value), 0,
                                          cb); // Blocking functional write
 }
 
