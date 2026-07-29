@@ -50,7 +50,9 @@
 #include <iostream>
 #include <set>
 
+#include "base/types.hh"
 #include "sim/clocked_object.hh"
+#include "sim/eventq.hh"
 
 namespace gem5
 {

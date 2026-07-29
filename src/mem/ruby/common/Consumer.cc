@@ -40,6 +40,10 @@
 
 #include "mem/ruby/common/Consumer.hh"
 
+#include <cassert>
+
+#include "base/logging.hh"
+
 namespace gem5
 {
 
@@ -55,15 +59,26 @@ Consumer::Consumer(ClockedObject *_em, Event::Priority ev_prio)
 void
 Consumer::scheduleEvent(Cycles timeDelta)
 {
-    m_wakeup_ticks.insert(em->clockEdge(timeDelta));
+    // m_wakeup_ticks is a shared variable whose "home" event queue is the
+    // one for the object associated with thie consumer.
+    assert(em->eventQueue() == curEventQueue());
+    Tick when = em->clockEdge(timeDelta);
+    gem5_assert(when >= em->clockEdge(),
+                "Cannot schedule wakeups in the past");
+    m_wakeup_ticks.insert(when);
     scheduleNextWakeup();
 }
 
 void
 Consumer::scheduleEventAbsolute(Tick evt_time)
 {
-    m_wakeup_ticks.insert(
-        divCeil(evt_time, em->clockPeriod()) * em->clockPeriod());
+    // m_wakeup_ticks is a shared variable whose "home" event queue is the
+    // one for the object associated with thie consumer.
+    assert(em->eventQueue() == curEventQueue());
+    Tick when = divCeil(evt_time, em->clockPeriod()) * em->clockPeriod();
+    gem5_assert(when >= em->clockEdge(),
+                "Cannot schedule wakeups in the past");
+    m_wakeup_ticks.insert(when);
     scheduleNextWakeup();
 }
 
@@ -74,7 +89,6 @@ Consumer::scheduleNextWakeup()
     auto it = m_wakeup_ticks.lower_bound(em->clockEdge());
     if (it != m_wakeup_ticks.end()) {
         Tick when = *it;
-        assert(when >= em->clockEdge());
         if (m_wakeup_event.scheduled() && (when < m_wakeup_event.when()))
             em->reschedule(m_wakeup_event, when, true);
         else if (!m_wakeup_event.scheduled())
