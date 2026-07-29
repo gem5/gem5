@@ -91,6 +91,25 @@ def template VleConstructor {{
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    // Propagate decoder StaticInst flags onto the microop sequence.
+    // IsNonSpeculative applies to every micro (including helpers).
+    // Serialize/squash flags only apply at the sequence boundary so O3
+    // does not drain the ROB between consecutive micros of one vector op.
+    if (flags[IsNonSpeculative]) {
+        for (auto &microop : this->microops) {
+            microop->setFlag(StaticInst::IsNonSpeculative);
+        }
+    }
+    if (flags[IsSerializeBefore]) {
+        this->microops.front()->setFlag(StaticInst::IsSerializeBefore);
+    }
+    if (flags[IsSerializeAfter]) {
+        this->microops.back()->setFlag(StaticInst::IsSerializeAfter);
+    }
+    if (flags[IsSquashAfter]) {
+        this->microops.back()->setFlag(StaticInst::IsSquashAfter);
+    }
+
 }
 
 }};
@@ -136,7 +155,7 @@ def template VleMicroConstructor {{
     if (!_machInst.vm) {
         setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
     }
-    %(flag_constructor)s;
+    %(micro_flag_constructor)s;
 }
 
 }};
@@ -337,7 +356,7 @@ def template VseMicroConstructor {{
     }
     this->flags[IsVector] = true;
     this->flags[IsStore] = true;
-    %(flag_constructor)s;
+    %(micro_flag_constructor)s;
 }
 
 }};
@@ -470,6 +489,25 @@ def template VlmConstructor {{
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    // Propagate decoder StaticInst flags onto the microop sequence.
+    // IsNonSpeculative applies to every micro (including helpers).
+    // Serialize/squash flags only apply at the sequence boundary so O3
+    // does not drain the ROB between consecutive micros of one vector op.
+    if (flags[IsNonSpeculative]) {
+        for (auto &microop : this->microops) {
+            microop->setFlag(StaticInst::IsNonSpeculative);
+        }
+    }
+    if (flags[IsSerializeBefore]) {
+        this->microops.front()->setFlag(StaticInst::IsSerializeBefore);
+    }
+    if (flags[IsSerializeAfter]) {
+        this->microops.back()->setFlag(StaticInst::IsSerializeAfter);
+    }
+    if (flags[IsSquashAfter]) {
+        this->microops.back()->setFlag(StaticInst::IsSquashAfter);
+    }
+
 }
 
 }};
@@ -497,6 +535,25 @@ def template VsmConstructor {{
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    // Propagate decoder StaticInst flags onto the microop sequence.
+    // IsNonSpeculative applies to every micro (including helpers).
+    // Serialize/squash flags only apply at the sequence boundary so O3
+    // does not drain the ROB between consecutive micros of one vector op.
+    if (flags[IsNonSpeculative]) {
+        for (auto &microop : this->microops) {
+            microop->setFlag(StaticInst::IsNonSpeculative);
+        }
+    }
+    if (flags[IsSerializeBefore]) {
+        this->microops.front()->setFlag(StaticInst::IsSerializeBefore);
+    }
+    if (flags[IsSerializeAfter]) {
+        this->microops.back()->setFlag(StaticInst::IsSerializeAfter);
+    }
+    if (flags[IsSquashAfter]) {
+        this->microops.back()->setFlag(StaticInst::IsSquashAfter);
+    }
+
 }
 
 }};
@@ -524,6 +581,25 @@ def template VsWholeConstructor {{
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    // Propagate decoder StaticInst flags onto the microop sequence.
+    // IsNonSpeculative applies to every micro (including helpers).
+    // Serialize/squash flags only apply at the sequence boundary so O3
+    // does not drain the ROB between consecutive micros of one vector op.
+    if (flags[IsNonSpeculative]) {
+        for (auto &microop : this->microops) {
+            microop->setFlag(StaticInst::IsNonSpeculative);
+        }
+    }
+    if (flags[IsSerializeBefore]) {
+        this->microops.front()->setFlag(StaticInst::IsSerializeBefore);
+    }
+    if (flags[IsSerializeAfter]) {
+        this->microops.back()->setFlag(StaticInst::IsSerializeAfter);
+    }
+    if (flags[IsSquashAfter]) {
+        this->microops.back()->setFlag(StaticInst::IsSquashAfter);
+    }
+
 }
 
 }};
@@ -563,7 +639,7 @@ def template VsWholeMicroConstructor {{
     setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs3 + _microIdx]);
     this->flags[IsVector] = true;
     this->flags[IsStore] = true;
-    %(flag_constructor)s;
+    %(micro_flag_constructor)s;
 }
 
 }};
@@ -662,6 +738,25 @@ def template VlWholeConstructor {{
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+    // Propagate decoder StaticInst flags onto the microop sequence.
+    // IsNonSpeculative applies to every micro (including helpers).
+    // Serialize/squash flags only apply at the sequence boundary so O3
+    // does not drain the ROB between consecutive micros of one vector op.
+    if (flags[IsNonSpeculative]) {
+        for (auto &microop : this->microops) {
+            microop->setFlag(StaticInst::IsNonSpeculative);
+        }
+    }
+    if (flags[IsSerializeBefore]) {
+        this->microops.front()->setFlag(StaticInst::IsSerializeBefore);
+    }
+    if (flags[IsSerializeAfter]) {
+        this->microops.back()->setFlag(StaticInst::IsSerializeAfter);
+    }
+    if (flags[IsSquashAfter]) {
+        this->microops.back()->setFlag(StaticInst::IsSquashAfter);
+    }
+
 }
 
 }};
@@ -702,7 +797,7 @@ def template VlWholeMicroConstructor {{
     setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
     this->flags[IsVector] = true;
     this->flags[IsLoad] = true;
-    %(flag_constructor)s;
+    %(micro_flag_constructor)s;
 }
 
 }};
@@ -1035,7 +1130,7 @@ template<typename ElemType>
         setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
     }
     this->flags[IsLoad] = true;
-    %(flag_constructor)s;
+    %(micro_flag_constructor)s;
 }
 
 %(declare_vmem_template)s;
@@ -1264,7 +1359,7 @@ template<typename ElemType>
         setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
     }
     this->flags[IsStore] = true;
-    %(flag_constructor)s;
+    %(micro_flag_constructor)s;
 }
 
 %(declare_vmem_template)s;
@@ -1508,7 +1603,7 @@ def template VlSegMicroConstructor {{
     if (!_machInst.vm) {
         setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
     }
-    %(flag_constructor)s;
+    %(micro_flag_constructor)s;
 }
 
 }};
@@ -1775,7 +1870,7 @@ def template VsSegMicroConstructor {{
     }
     this->flags[IsVector] = true;
     this->flags[IsStore] = true;
-    %(flag_constructor)s;
+    %(micro_flag_constructor)s;
 }
 
 }};
@@ -1942,7 +2037,7 @@ def template VlElementMicroConstructor {{
     }
     SET_VM_SRC();
     this->flags[IsLoad] = true;
-    %(flag_constructor)s;
+    %(micro_flag_constructor)s;
 }
 
 }};
@@ -2108,7 +2203,7 @@ def template VsElementMicroConstructor {{
         vecRegClass[_machInst.vs3 + _segIdx + _regIdx]);
     SET_VM_SRC();
     this->flags[IsStore] = true;
-    %(flag_constructor)s;
+    %(micro_flag_constructor)s;
 }
 
 }};

@@ -493,7 +493,24 @@ class InstObjParams:
         # that manually wire registers (e.g. RISC-V vector microops) can
         # apply ISA flags without also expanding the full %(constructor)s
         # operand auto-numbering that would corrupt micro register maps.
-        self.flag_constructor = makeFlagConstructor(self.flags)
+        #
+        # Position-sensitive flags must not be stamped onto every microop:
+        # IsSerializeAfter/Before and IsSquashAfter belong on the boundary
+        # micro(s) of a sequence (handled by vector MacroConstructors).
+        # makeFlagConstructor mutates its argument, so pass copies.
+        position_sensitive_flags = {
+            "IsSerializeAfter",
+            "IsSerializeBefore",
+            "IsSquashAfter",
+        }
+        self.flag_constructor = makeFlagConstructor(list(self.flags))
+        self.micro_flag_constructor = makeFlagConstructor(
+            [
+                flag
+                for flag in self.flags
+                if flag not in position_sensitive_flags
+            ]
+        )
         self.constructor += self.flag_constructor
 
         # if 'IsFloating' is set, add call to the FP enable check
