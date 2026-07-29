@@ -489,9 +489,12 @@ class InstObjParams:
             else:
                 self.op_class = "IntAluOp"
 
-        # add flag initialization to contructor here to include
-        # any flags added via opt_args
-        self.constructor += makeFlagConstructor(self.flags)
+        # Flag initialization is kept as a separate snippet so templates
+        # that manually wire registers (e.g. RISC-V vector microops) can
+        # apply ISA flags without also expanding the full %(constructor)s
+        # operand auto-numbering that would corrupt micro register maps.
+        self.flag_constructor = makeFlagConstructor(self.flags)
+        self.constructor += self.flag_constructor
 
         # if 'IsFloating' is set, add call to the FP enable check
         # function (which should be provided by isa_desc via a declare)

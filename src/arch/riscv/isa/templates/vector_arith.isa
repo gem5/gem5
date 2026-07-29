@@ -172,6 +172,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    %(flag_constructor)s;
 }
 
 %(declare_varith_template)s;
@@ -436,6 +437,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    %(flag_constructor)s;
 }
 
 %(declare_varith_template)s;
@@ -612,6 +614,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    %(flag_constructor)s;
 }
 
 %(declare_varith_template)s;
@@ -752,6 +755,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    %(flag_constructor)s;
 }
 
 %(declare_varith_template)s;
@@ -1054,6 +1058,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    %(flag_constructor)s;
 }
 
 %(declare_varith_template)s;
@@ -1295,6 +1300,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    %(flag_constructor)s;
 }
 
 %(declare_varith_template)s;
@@ -1416,6 +1422,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    %(flag_constructor)s;
 }
 
 %(declare_varith_template)s;
@@ -1521,6 +1528,7 @@ def template VMvWholeMicroConstructor {{
     setDestRegIdx(_numDestRegs++, vecRegClass[_machInst.vd + _microIdx]);
     _numTypedDestRegs[VecRegClass]++;
     setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs2 + _microIdx]);
+    %(flag_constructor)s;
 }
 
 }};
@@ -1808,6 +1816,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    %(flag_constructor)s;
 }
 
 %(declare_varith_template)s;
@@ -1967,6 +1976,7 @@ template<typename ElemType, typename IndexType>
         _microIdx / vs2_vregs / vd_split_num;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    %(flag_constructor)s;
 }
 
 %(declare_varith_template)s;
@@ -2140,6 +2150,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    %(flag_constructor)s;
 }
 
 %(declare_varith_template)s;
@@ -2207,6 +2218,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    %(flag_constructor)s;
 }
 
 %(declare_varith_template)s;
@@ -2293,6 +2305,7 @@ template<typename ElemType>
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
     SET_VM_SRC();
+    %(flag_constructor)s;
 }
 
 %(declare_varith_template)s;

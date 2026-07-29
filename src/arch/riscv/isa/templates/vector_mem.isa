@@ -136,6 +136,7 @@ def template VleMicroConstructor {{
     if (!_machInst.vm) {
         setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
     }
+    %(flag_constructor)s;
 }
 
 }};
@@ -336,6 +337,7 @@ def template VseMicroConstructor {{
     }
     this->flags[IsVector] = true;
     this->flags[IsStore] = true;
+    %(flag_constructor)s;
 }
 
 }};
@@ -561,6 +563,7 @@ def template VsWholeMicroConstructor {{
     setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs3 + _microIdx]);
     this->flags[IsVector] = true;
     this->flags[IsStore] = true;
+    %(flag_constructor)s;
 }
 
 }};
@@ -699,6 +702,7 @@ def template VlWholeMicroConstructor {{
     setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
     this->flags[IsVector] = true;
     this->flags[IsLoad] = true;
+    %(flag_constructor)s;
 }
 
 }};
@@ -1031,6 +1035,7 @@ template<typename ElemType>
         setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
     }
     this->flags[IsLoad] = true;
+    %(flag_constructor)s;
 }
 
 %(declare_vmem_template)s;
@@ -1259,6 +1264,7 @@ template<typename ElemType>
         setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
     }
     this->flags[IsStore] = true;
+    %(flag_constructor)s;
 }
 
 %(declare_vmem_template)s;
@@ -1502,6 +1508,7 @@ def template VlSegMicroConstructor {{
     if (!_machInst.vm) {
         setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);
     }
+    %(flag_constructor)s;
 }
 
 }};
@@ -1768,6 +1775,7 @@ def template VsSegMicroConstructor {{
     }
     this->flags[IsVector] = true;
     this->flags[IsStore] = true;
+    %(flag_constructor)s;
 }
 
 }};
@@ -1934,6 +1942,7 @@ def template VlElementMicroConstructor {{
     }
     SET_VM_SRC();
     this->flags[IsLoad] = true;
+    %(flag_constructor)s;
 }
 
 }};
@@ -2099,6 +2108,7 @@ def template VsElementMicroConstructor {{
         vecRegClass[_machInst.vs3 + _segIdx + _regIdx]);
     SET_VM_SRC();
     this->flags[IsStore] = true;
+    %(flag_constructor)s;
 }
 
 }};
