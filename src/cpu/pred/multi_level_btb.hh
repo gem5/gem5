@@ -1,18 +1,7 @@
 /*
- * Copyright (c) 2022-2023 The University of Edinburgh
+ * Copyright (c) 2026 The University of Edinburgh
+ * Copyright (c) 2026 Technical University of Munich
  * All rights reserved
- *
- * The license below extends only to copyright in the software and shall
- * not be construed as granting a license to any other intellectual
- * property including but not limited to intellectual property relating
- * to a hardware implementation of the functionality of the software
- * licensed hereunder.  You may use the software subject to the license
- * terms below provided that you ensure that this notice is replicated
- * unmodified and in its entirety in all distributions of the software,
- * modified or unmodified, in source code or in binary form.
- *
- * Copyright (c) 2004-2005 The Regents of The University of Michigan
- * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -38,48 +27,85 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __CPU_PRED_SIMPLE_BTB_HH__
-#define __CPU_PRED_SIMPLE_BTB_HH__
+#ifndef __CPU_PRED_MULTI_LEVEL_BTB_HH__
+#define __CPU_PRED_MULTI_LEVEL_BTB_HH__
+
+#include <vector>
 
 #include "base/cache/associative_cache.hh"
-#include "base/logging.hh"
-#include "base/types.hh"
 #include "cpu/pred/btb.hh"
 #include "cpu/pred/btb_entry.hh"
-#include "mem/cache/replacement_policies/replaceable_entry.hh"
-#include "mem/cache/tags/indexing_policies/base.hh"
-#include "params/SimpleBTB.hh"
+#include "params/BTBLevel.hh"
+#include "params/MultiLevelBTB.hh"
+#include "sim/sim_object.hh"
 
 namespace gem5::branch_prediction
 {
 
-class SimpleBTB : public BranchTargetBuffer
+class BTBLevel : public SimObject
 {
   public:
-    SimpleBTB(const SimpleBTBParams &params);
+    BTBLevel(const BTBLevelParams &params);
+
+  private:
+    friend class MultiLevelBTB;
+
+    /** Look up instPC at this level only. */
+    BTBEntry *lookup(ThreadID tid, Addr instPC);
+
+    /** Look up instPC at this level, recursing into nextLevel on a miss.
+     *  On a hit in a lower level, the entry is refilled into this level
+     *  (and any other inclusive level along the way) before returning.
+     *  hit_latency/hit_level report the latency and index of the level
+     *  that actually produced the hit, for stats/DPRINTF purposes.
+     */
+    BTBEntry *multiLookup(ThreadID tid, Addr instPC, Cycles &hit_latency,
+                          unsigned &hit_level);
+
+    /** Insert/update instPC's entry at this level, allocating (and
+     *  possibly evicting) a slot for it if it isn't already present.
+     */
+    BTBEntry *insertEntry(ThreadID tid, Addr instPC, const PCStateBase &target,
+                          StaticInstPtr inst);
+
+    void doWriteback(ThreadID tid, const BTBEntry &upper_victim);
+
+    AssociativeCache<BTBEntry> btb;
+    const Cycles latency;
+    const bool inclusive;
+    BTBLevel *nextLevel = nullptr;
+    unsigned level = 0;
+};
+
+class MultiLevelBTB : public BranchTargetBuffer
+{
+  public:
+    MultiLevelBTB(const MultiLevelBTBParams &params);
 
     void memInvalidate() override;
     bool valid(ThreadID tid, Addr instPC) override;
+
     const BTBLookupResult
     lookup(ThreadID tid, Addr instPC,
            BranchType type = BranchType::NoBranch) override;
+
     void update(ThreadID tid, Addr instPC, const PCStateBase &target_pc,
                 BranchType type = BranchType::NoBranch,
                 StaticInstPtr inst = nullptr) override;
+
     const StaticInstPtr getInst(ThreadID tid, Addr instPC) override;
 
   private:
+    const std::vector<BTBLevel *> levels;
 
-    /** Internal call to find an address in the BTB
-     * @param instPC The branch's address.
-     * @return Returns a pointer to the BTB entry if found, nullptr otherwise.
-    */
-    BTBEntry *findEntry(Addr instPC, ThreadID tid);
+    struct MultiLevelBTBStats : public statistics::Group
+    {
+        MultiLevelBTBStats(statistics::Group *parent,
+                           const std::vector<BTBLevel *> &levels);
 
-    /** The actual BTB. */
-    AssociativeCache<BTBEntry> btb;
+        statistics::Vector levelHits;
+    } multilevelstats;
 };
-
 } // namespace gem5::branch_prediction
 
-#endif // __CPU_PRED_SIMPLE_BTB_HH__
+#endif // __CPU_PRED_MULTI_LEVEL_BTB_HH__

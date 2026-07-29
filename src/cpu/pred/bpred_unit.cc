@@ -205,7 +205,11 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
      * chance to detect a branch without a BTB hit.
      */
     stats.BTBLookups++;
-    const PCStateBase * btb_target = btb->lookup(tid, pc.instAddr(), brType);
+    BTBLookupResult btb_res = btb->lookup(tid, pc.instAddr(), brType);
+    const PCStateBase *btb_target = btb_res.target;
+    // The BTB and CBP are accessed in parallel. The total latency should be
+    // the maximum of the bpred latency and the BTB latency.
+    totalLatency = std::max(totalLatency, btb_res.latency);
     if (btb_target) {
         stats.BTBHits++;
         hist->btbHit = true;
