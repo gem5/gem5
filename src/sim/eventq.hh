@@ -287,7 +287,7 @@ class Event : public EventBase, public Serializable
     EventQueue *queue;
 
     // The queue from which this event was scheduled.
-    EventQueue *origin_queue;
+    EventQueue *originQueue;
 #endif
 
     void
@@ -403,7 +403,7 @@ class Event : public EventBase, public Serializable
         assert(f.noneSet(~PublicWrite));
 #ifndef NDEBUG
         queue = nullptr;
-        origin_queue = nullptr;
+        originQueue = nullptr;
 #endif
     }
 
@@ -755,7 +755,7 @@ class EventQueue
 
 #ifndef NDEBUG
         event->instance = curEventQueue()->incrementAndGetEventCounter();
-        event->origin_queue = curEventQueue();
+        event->originQueue = curEventQueue();
 #endif
 
         event->setWhen(when, this);

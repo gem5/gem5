@@ -413,8 +413,8 @@ const std::string
 Event::instanceString() const
 {
 #ifndef NDEBUG
-    if (origin_queue != nullptr) {
-        return csprintf("[Origin: %s, #%d]", origin_queue->name(), instance);
+    if (originQueue != nullptr) {
+        return csprintf("[Origin: %s, #%d]", originQueue->name(), instance);
     } else {
         // Event has not been scheduled yet.
         return csprintf("[Origin: %s, #%d]", "UNKNOWN", instance);
