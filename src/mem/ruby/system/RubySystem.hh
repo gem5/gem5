@@ -121,9 +121,6 @@ class RubySystem : public ClockedObject
 
     const ProtocolInfo& getProtocolInfo() { return *protocolInfo; }
 
-    // Get MachineID from RequestorID
-    MachineID getMachineIDFromInt(uint16_t requestor_id) const;
-
   private:
     // Private copy constructor and assignment operator
     RubySystem(const RubySystem& obj);

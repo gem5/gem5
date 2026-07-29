@@ -183,9 +183,9 @@ structure(RubyRequest, desc="...", interface="Message", external="yes") {
   Addr ProgramCounter,    desc="Program counter of the instruction that caused the miss";
   RubyAccessMode AccessMode, desc="user/supervisor access type";
   int Size,                  desc="size in bytes of access";
-  uint16_t StashNID,      desc="Stash target NodeID";
+  int StashNID,              desc="Stash target NodeID";
   bool StashNIDValid,        desc="StashNID is valid";
-  uint16_t StashLPID,     desc="Stash target logical processor ID";
+  int StashLPID,             desc="Stash target logical processor ID";
   bool StashLPIDValid,       desc="StashLPID is valid";
   PrefetchBit Prefetch,      desc="Is this a prefetch request";
   int contextId,             desc="this goes away but must be replace with Nilay";

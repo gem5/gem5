@@ -52,7 +52,6 @@ void unset_cache_entry();
 void set_tbe(TBE b);
 void unset_tbe();
 MachineID mapAddressToDownstreamMachine(Addr addr);
-MachineID mapIntToMachineID(uint16_t requestor);
 MachineID mapAddressToMachine(Addr addr, MachineType mtype);
 
 void incomingTransactionStart(Addr, Event, State, bool);

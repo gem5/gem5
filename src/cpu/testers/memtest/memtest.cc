@@ -349,6 +349,10 @@ MemTest::tick()
             atomicPendingData[req->getPaddr()] = data;
         } else if (do_stash_once) {
             if (!stashNIDs.empty() && !stashLPIDs.empty()) {
+                // choice == 0: no target identifiers; stash to the HN.
+                // choice == 1: StashNID only; stash to a peer cache.
+                // choice == 2: StashNID and StashLPID; stash to a logical
+                // processor behind the peer cache.
                 int choice = rng->random(0, 2);
                 int i = rng->random(0, int(stashNIDs.size()) - 1);
                 if (choice == 1) {
@@ -357,7 +361,6 @@ MemTest::tick()
                     req->setStashNID(stashNIDs[i]);
                     req->setStashLPID(stashLPIDs[i]);
                 }
-                // choice 0: do nothing
             }
 
             if (do_stash_once_unique) {

@@ -68,9 +68,9 @@ class RubyRequest : public Message
     RubyAccessMode m_AccessMode;
     int m_Size;
     // Stash Target ID
-    uint16_t m_StashNID;
+    int m_StashNID;
     bool m_StashNIDValid;
-    uint16_t m_StashLPID;
+    int m_StashLPID;
     bool m_StashLPIDValid;
     PrefetchBit m_Prefetch;
     PacketPtr m_pkt;
@@ -262,7 +262,7 @@ class RubyRequest : public Message
     const int& getSize() const { return m_Size; }
     const PrefetchBit& getPrefetch() const { return m_Prefetch; }
     RequestPtr getRequestPtr() const { return m_pkt->req; }
-    uint16_t
+    int
     getStashNID() const
     {
         return m_StashNID;
@@ -272,7 +272,7 @@ class RubyRequest : public Message
     {
         return m_StashNIDValid;
     }
-    uint16_t
+    int
     getStashLPID() const
     {
         return m_StashLPID;
@@ -284,13 +284,13 @@ class RubyRequest : public Message
     }
 
     void
-    setStashNID(uint16_t nid)
+    setStashNID(int nid)
     {
         m_StashNID = nid;
         m_StashNIDValid = true;
     }
     void
-    setStashLPID(uint16_t lpid)
+    setStashLPID(int lpid)
     {
         m_StashLPID = lpid;
         m_StashLPIDValid = true;

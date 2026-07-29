@@ -359,37 +359,39 @@ class Request : public Extensible<Request>
 
     enum : PrivateFlagsType
     {
+        // clang-format off
         /** Whether or not the size is valid. */
-        VALID_SIZE = 0x00000001,
+        VALID_SIZE           = 0x00000001,
         /** Whether or not paddr is valid (has been written yet). */
-        VALID_PADDR = 0x00000002,
+        VALID_PADDR          = 0x00000002,
         /** Whether or not the vaddr is valid. */
-        VALID_VADDR = 0x00000004,
+        VALID_VADDR          = 0x00000004,
         /** Whether or not the instruction sequence number is valid. */
-        VALID_INST_SEQ_NUM = 0x00000008,
+        VALID_INST_SEQ_NUM   = 0x00000008,
         /** Whether or not the pc is valid. */
-        VALID_PC = 0x00000010,
+        VALID_PC             = 0x00000010,
         /** Whether or not the context ID is valid. */
-        VALID_CONTEXT_ID = 0x00000020,
+        VALID_CONTEXT_ID     = 0x00000020,
         /** Whether or not the sc result is valid. */
-        VALID_EXTRA_DATA = 0x00000080,
+        VALID_EXTRA_DATA     = 0x00000080,
         /** Whether or not the stream ID and substream ID is valid. */
-        VALID_STREAM_ID = 0x00000100,
-        VALID_SUBSTREAM_ID = 0x00000200,
+        VALID_STREAM_ID      = 0x00000100,
+        VALID_SUBSTREAM_ID   = 0x00000200,
         // hardware transactional memory
         /** Whether or not the abort cause is valid. */
         VALID_HTM_ABORT_CAUSE = 0x00000400,
         /** Whether or not the instruction count is valid. */
-        VALID_INST_COUNT = 0x00000800,
+        VALID_INST_COUNT      = 0x00000800,
         /** Whether or not the stash NID is valid. */
-        VALID_STASH_NID = 0x00001000,
+        VALID_STASH_NID       = 0x00001000,
         /** Whether or not the stash LPID is valid. */
-        VALID_STASH_LPID = 0x00002000,
+        VALID_STASH_LPID      = 0x00002000,
         /**
          * These flags are *not* cleared when a Request object is reused
          * (assigned a new address).
          */
         STICKY_PRIVATE_FLAGS = VALID_CONTEXT_ID
+        // clang-format on
     };
 
   private:

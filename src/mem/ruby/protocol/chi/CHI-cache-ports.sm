@@ -184,7 +184,12 @@ in_port(snpInPort, CHIRequestMsg, snpIn, rank=7) {
                   nullCacheEntry(), nullTBE());
         }
       } else {
-        // For SnpStash outstanding snoops.
+        // Only one address-keyed snoop TBE may be outstanding. SnpStash can
+        // retain its snoop TBE while pulled data is forwarded to an LPID.
+        // CompData for a cache line can arrive in two flits, so the TBE must
+        // remain protected across partial data and the downstream CompAck.
+        // Leave a later same-address snoop on snpInPort until completion of
+        // the current transaction deallocates its snoop TBE.
         bool existing_snp_tbe := snpTBEs.isPresent(in_msg.addr);
         if (!existing_snp_tbe) {
           trigger(Event:AllocSnoop, in_msg.addr,

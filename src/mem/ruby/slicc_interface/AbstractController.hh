@@ -230,17 +230,6 @@ class AbstractController : public ClockedObject, public Consumer
     MachineID mapAddressToMachine(Addr addr, MachineType mtype) const;
 
     /**
-     * Map a RequestorID to the correct MachineID
-     *
-     * This function queries the network for the NodeID of the
-     * target MachineID from RequestorID.
-     *
-     * @param the RequestorID
-     * @return the MachineID of the target
-     */
-    MachineID mapIntToMachineID(uint16_t requestor_id) const;
-
-    /**
      * Maps an address to the correct dowstream MachineID (i.e. the component
      * in the next level of the cache hierarchy towards memory)
      *

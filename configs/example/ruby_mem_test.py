@@ -83,6 +83,12 @@ parser.add_argument(
     default=0,
     help="percentage of accesses that should be stash once accesses",
 )
+parser.add_argument(
+    "--stash-unique",
+    type=int,
+    default=50,
+    help="percentage of stash once accesses that should be unique",
+)
 
 #
 # Add the ruby specific and protocol specific options
@@ -125,7 +131,7 @@ cpus = [
         progress_interval=args.progress,
         suppress_func_errors=args.suppress_func_errors,
         percent_stash_once=args.stash,
-        percent_stash_once_unique=50,
+        percent_stash_once_unique=args.stash_unique,
     )
     for i in range(args.num_cpus)
 ]

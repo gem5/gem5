@@ -171,21 +171,6 @@ RubySystem::registerRequestorIDs()
     }
 }
 
-MachineID
-RubySystem::getMachineIDFromInt(uint16_t requestor_id) const
-{
-    // Iterate through all controllers to find the one with matching
-    // RequestorID
-    for (auto &cntrl : m_abs_cntrl_vec) {
-        if (cntrl->getMachineID().getNum() == requestor_id) {
-            return cntrl->getMachineID();
-        }
-    }
-
-    // If no controller found, return an invalid MachineID
-    return MachineID();
-}
-
 RubySystem::~RubySystem()
 {
     delete m_profiler;

@@ -149,9 +149,11 @@ action(AllocateTBE_SeqRequest, desc="") {
       out_msg.accSize := in_msg.Size;
       out_msg.requestor := machineID;
       out_msg.fwdRequestor := machineID;
-      out_msg.stashNID := mapIntToMachineID(in_msg.StashNID);
+      out_msg.stashNID := createMachineID(MachineType:Cache,
+                                          intToID(in_msg.StashNID));
       out_msg.stashNIDValid := in_msg.StashNIDValid;
-      out_msg.stashLPID := mapIntToMachineID(in_msg.StashLPID);
+      out_msg.stashLPID := createMachineID(MachineType:Cache,
+                                           intToID(in_msg.StashLPID));
       out_msg.stashLPIDValid := in_msg.StashLPIDValid;
       out_msg.seqReq := in_msg.getRequestPtr();
       out_msg.isSeqReqValid := true;
@@ -248,9 +250,11 @@ action(AllocateTBE_PfRequest, desc="Allocate TBE for prefetch request") {
       out_msg.accSize := in_msg.Size;
       out_msg.requestor := machineID;
       out_msg.fwdRequestor := machineID;
-      out_msg.stashNID := mapIntToMachineID(in_msg.StashNID);
+      out_msg.stashNID := createMachineID(MachineType:Cache,
+                                          intToID(in_msg.StashNID));
       out_msg.stashNIDValid := in_msg.StashNIDValid;
-      out_msg.stashLPID := mapIntToMachineID(in_msg.StashLPID);
+      out_msg.stashLPID := createMachineID(MachineType:Cache,
+                                           intToID(in_msg.StashLPID));
       out_msg.stashLPIDValid := in_msg.StashLPIDValid;
       out_msg.seqReq := in_msg.getRequestPtr();
       out_msg.isSeqReqValid := true;
