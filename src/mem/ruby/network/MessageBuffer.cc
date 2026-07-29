@@ -47,6 +47,7 @@
 #include "base/random.hh"
 #include "base/stl_helpers.hh"
 #include "debug/RubyQueue.hh"
+#include "sim/eventq.hh"
 
 namespace gem5
 {
@@ -229,6 +230,14 @@ MessageBuffer::enqueue(MsgPtr message, Tick current_time, Tick delta,
                        bool ruby_is_random, bool ruby_warmup,
                        bool bypassStrictFIFO)
 {
+    // Enqueue moves messages from one event queue (producer) to
+    // another (consumer). These event queues can be on different threads
+    // resulting in a thread domain crossing between two Ruby components.
+    // MessageBuffer maintains a shared state between the producer and consumer
+    // resulting in data races for these variables. copedMigration prevents
+    // these by migrating this function call to the consumer's event queue
+    EventQueue::ScopedMigration migration(
+        m_consumer->getObject()->eventQueue());
     // record current time incase we have a pop that also adjusts my size
     if (m_time_last_time_enqueue < current_time) {
         m_msgs_this_cycle = 0;  // first msg this cycle
