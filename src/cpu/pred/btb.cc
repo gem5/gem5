@@ -45,10 +45,10 @@ namespace gem5
 
 namespace branch_prediction
 {
-
 BranchTargetBuffer::BranchTargetBuffer(const Params &params)
     : ClockedObject(params),
       numThreads(params.numThreads),
+      latency(params.latency),
       stats(this)
 {
 }
