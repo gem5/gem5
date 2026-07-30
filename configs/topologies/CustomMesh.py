@@ -45,7 +45,8 @@ if buildEnv["PROTOCOL"] == "CHI":
     import ruby.CHI_config as CHI
 
 from topologies.BaseTopology import SimpleTopology
-from topologies.CustomMeshDotWriter import generate_dot
+
+from m5.util.custom_mesh_dot_writer import generate_dot
 
 
 class CustomMesh(SimpleTopology):
