@@ -276,9 +276,6 @@ class Event : public EventBase, public Serializable
     Flags flags;
 
 #ifndef NDEBUG
-    /// Global counter to generate unique IDs for Event instances
-    static Counter instanceCounter;
-
     /// This event's unique ID.  We can also use pointer values for
     /// this but they're not consistent across runs making debugging
     /// more difficult.  Thus we use a global counter value when
@@ -288,11 +285,9 @@ class Event : public EventBase, public Serializable
     /// queue to which this event belongs (though it may or may not be
     /// scheduled on this queue yet)
     EventQueue *queue;
-#endif
 
-#ifdef EVENTQ_DEBUG
-    Tick whenCreated;   //!< time created
-    Tick whenScheduled; //!< time scheduled
+    // The queue from which this event was scheduled.
+    EventQueue *originQueue;
 #endif
 
     void
@@ -301,9 +296,6 @@ class Event : public EventBase, public Serializable
         _when = when;
 #ifndef NDEBUG
         queue = q;
-#endif
-#ifdef EVENTQ_DEBUG
-        whenScheduled = curTick();
 #endif
     }
 
@@ -410,12 +402,8 @@ class Event : public EventBase, public Serializable
     {
         assert(f.noneSet(~PublicWrite));
 #ifndef NDEBUG
-        instance = ++instanceCounter;
-        queue = NULL;
-#endif
-#ifdef EVENTQ_DEBUG
-        whenCreated = curTick();
-        whenScheduled = 0;
+        queue = nullptr;
+        originQueue = nullptr;
 #endif
     }
 
@@ -661,6 +649,11 @@ class EventQueue
 
     EventQueue(const EventQueue &);
 
+#ifndef NDEBUG
+    // Counter for events created from this event queue.
+    Counter eventCounter = 0;
+#endif
+
   public:
     class ScopedMigration
     {
@@ -759,6 +752,11 @@ class EventQueue
         assert(when >= getCurTick());
         assert(!event->scheduled());
         assert(event->initialized());
+
+#ifndef NDEBUG
+        event->instance = curEventQueue()->incrementAndGetEventCounter();
+        event->originQueue = curEventQueue();
+#endif
 
         event->setWhen(when, this);
 
@@ -960,6 +958,14 @@ class EventQueue
      * @warn Only use this method after unserializing an Event.
      */
     void checkpointReschedule(Event *event);
+
+#ifndef NDEBUG
+    Counter
+    incrementAndGetEventCounter()
+    {
+        return ++eventCounter;
+    }
+#endif
 
     virtual ~EventQueue()
     {

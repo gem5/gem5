@@ -1611,9 +1611,9 @@ TEST(AddrRangeTest, ModuloSimple)
     // Stripe 0: 0, 3, 6...
     // Stripe 1: 1, 4, 7...
     // Stripe 2: 2, 5, 8...
-    AddrRange r0(0, 300, 3, 0);
-    AddrRange r1(0, 300, 3, 1);
-    AddrRange r2(0, 300, 3, 2);
+    AddrRange r0 = AddrRange::withModuloInterleaving(0, 300, 3, 0);
+    AddrRange r1 = AddrRange::withModuloInterleaving(0, 300, 3, 1);
+    AddrRange r2 = AddrRange::withModuloInterleaving(0, 300, 3, 2);
 
     EXPECT_TRUE(r0.contains(0));
     EXPECT_FALSE(r0.contains(1));
@@ -1644,7 +1644,7 @@ TEST(AddrRangeTest, ModuloSimple)
 TEST(AddrRangeTest, ModuloOffset)
 {
     // Range 0-300, 3 stripes, intlv_bit=0.
-    AddrRange r(0, 300, 3, 1); // matches 1, 4, 7...
+    AddrRange r = AddrRange::withModuloInterleaving(0, 300, 3, 1);
 
     // 1 is the 0th element in this range.
     EXPECT_EQ(0, r.getOffset(1));
@@ -1660,7 +1660,7 @@ TEST(AddrRangeTest, ModuloGranularity)
     // range 0-96.
     // stripe 0: 0-3, 8-11, 16-19...
     // stripe 1: 4-7, 12-15, 20-23...
-    AddrRange r(0, 96, 2, 1, 2);
+    AddrRange r = AddrRange::withModuloInterleaving(0, 96, 2, 1, 2);
 
     EXPECT_FALSE(r.contains(0)); // 0>>2 = 0. 0%2 = 0 != 1.
     EXPECT_FALSE(r.contains(3));
@@ -1781,10 +1781,8 @@ TEST(AddrRangeTest, ConstructorMergeTest)
     // r1: match 0. (0, 2, 4...)
     // r2: match 1. (1, 3, 5...)
     // Combined: 0-100 flat.
-    // Wait, Modulo constructor signature:
-    // AddrRange(start, end, stripes, intlvMatch, intlvLowBit)
-    AddrRange m1(0, 100, 2, 0, 0); // stripes=2, match=0, bit=0
-    AddrRange m2(0, 100, 2, 1, 0); // stripes=2, match=1, bit=0
+    AddrRange m1 = AddrRange::withModuloInterleaving(0, 100, 2, 0, 0);
+    AddrRange m2 = AddrRange::withModuloInterleaving(0, 100, 2, 1, 0);
     std::vector<AddrRange> ranges = {m1, m2};
     AddrRange merged(ranges);
     EXPECT_FALSE(merged.interleaved());
@@ -1807,7 +1805,7 @@ TEST(AddrRangeTest, ConstructorMergeTest)
 
     // 4. Incompatible policies (Modulo mismatch)
     // Different stripes
-    AddrRange m3(0, 99, 3, 0, 0); // 3 stripes
+    AddrRange m3 = AddrRange::withModuloInterleaving(0, 99, 3, 0, 0);
     std::vector<AddrRange> mismatch = {m1, m3};
     EXPECT_ANY_THROW({ AddrRange r(mismatch); });
 }
@@ -1821,7 +1819,7 @@ TEST(AddrRangeTest, NestedSparseTest)
     // Interleaving: 3 stripes, match 0.
     std::vector<std::pair<Addr, Addr>> chunks = {{0, 0x1002},
                                                  {0x2000, 0x3002}};
-    AddrRange r(chunks, 3, 0); // stripes=3, match=0
+    AddrRange r = AddrRange::withModuloInterleaving(chunks, 3, 0);
 
     // Check contains
     // System Interleaving:
@@ -1868,9 +1866,9 @@ TEST(AddrRangeTest, SparseMergeTest)
 
     // Create 2 ranges with Modulo(2) interleaving
     // range1: Match 0
-    AddrRange r1(chunks, 2, 0);
+    AddrRange r1 = AddrRange::withModuloInterleaving(chunks, 2, 0);
     // range2: Match 1
-    AddrRange r2(chunks, 2, 1);
+    AddrRange r2 = AddrRange::withModuloInterleaving(chunks, 2, 1);
 
     // Merge them
     AddrRange merged(std::vector<AddrRange>{r1, r2});

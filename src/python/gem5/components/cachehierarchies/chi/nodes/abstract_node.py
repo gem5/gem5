@@ -43,7 +43,10 @@ from dataclasses import (
     field,
 )
 from enum import Enum
-from typing import List
+from typing import (
+    List,
+    Optional,
+)
 
 from m5.objects import (
     CHI_Cache_Controller,
@@ -171,12 +174,24 @@ class Node_Params:
     If 'num_nodes_per_router' is left undefined, we circulate around
     'router_list' until all nodes are mapped.
     See 'distributeNodes' in configs/topologies/CustomMesh.py
+
+    'inbound_link_latency` is used by custom mesh to set the Ruby
+    external-link latency for the node/router connection. Ruby
+    external links are bi-directional, so this link latency applies in
+    both controller->router and router->controller directions, not just
+    traffic incoming to the controller
+
+    'outbound_link_latency` is instead used to set enqueueing
+    latencies in SLICC when the controller within the node
+    is forwarding a message
     """
 
     node_type: CHI_NodeType
     num_nodes_per_router: int = 1
     router_list: List[int] = field(default_factory=list)
     dedicated_router: bool = False
+    inbound_link_latency: Optional[int] = None
+    outbound_link_latency: Optional[int] = None
 
     def num_nodes(self) -> int:
         """Derive node count from Node_Params placement metadata."""

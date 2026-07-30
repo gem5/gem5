@@ -24,7 +24,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from testlib import *
+from testlib import (
+    config,
+    constants,
+    gem5_verify_config,
+)
+from testlib.helper import (
+    absdirpath,
+    joinpath,
+)
 
 if config.bin_path:
     resource_path = config.bin_path
@@ -359,6 +367,7 @@ for cpu_type in cpu_types:
                 config.base_dir,
                 "tests",
                 "gem5",
+                "riscv-unittests",
                 "asmtest",
                 "configs",
                 "riscv_asmtest.py",
@@ -382,6 +391,7 @@ for cpu_type in cpu_types:
                 config.base_dir,
                 "tests",
                 "gem5",
+                "riscv-unittests",
                 "asmtest",
                 "configs",
                 "riscv_asmtest.py",

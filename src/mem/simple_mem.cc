@@ -58,6 +58,7 @@ SimpleMemory::SimpleMemory(const SimpleMemoryParams &p)
       latencyDist(p.latency_dist),
       latencyDistParam(p.latency_dist_param),
       bandwidth(p.bandwidth),
+      enableBackdoor(p.enable_backdoor),
       isBusy(false),
       retryReq(false),
       retryResp(false),
@@ -99,7 +100,9 @@ Tick
 SimpleMemory::recvAtomicBackdoor(PacketPtr pkt, MemBackdoorPtr &_backdoor)
 {
     Tick latency = recvAtomic(pkt);
-    getBackdoor(_backdoor);
+    if (enableBackdoor) {
+        getBackdoor(_backdoor);
+    }
     return latency;
 }
 

@@ -78,7 +78,16 @@ jobs:
               id: run-tests
               timeout-minutes: 4290
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run ${{ matrix.test-type }} --length very-long --gcov=test-only -j$(nproc) -vv --exclude-tags gcn_gpu
+              # The o3-cpu_8-cores_classic_DualChannelDDR4_2400_init test in the
+              # very-long x86_boot_tests fails with a segmentation fault when
+              # run with the --gcov=test-only flag, so run x86_boot_tests
+              # very-long without that flag.
+              run: |
+                  extra_gcov_args="--gcov=test-only"
+                  if [ "${{ matrix.test-type.length }}" = "very-long" ] && [ "${{ matrix.test-type.testdir }}" = "gem5/x86_boot_tests" ]; then
+                    extra_gcov_args=""
+                  fi
+                  ./main.py run ${{ matrix.test-type.testdir }} --length ${{ matrix.test-type.length }} ${extra_gcov_args} -j"$(nproc)" -vv --exclude-tags gcn_gpu
 
             - name: Sanitize test-dir for artifact name
               id: sanitize-test-dir
