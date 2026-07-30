@@ -155,4 +155,5 @@ class IsaFake(BasicPioDevice):
 
 class BadAddr(IsaFake):
     pio_addr = 0
+    pio_size = 0
     ret_bad_addr = True
