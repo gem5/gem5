@@ -1362,6 +1362,39 @@ void resetV(ThreadContext *tc) {
     tc->setMiscReg(MISCREG_VIRT, 0);
 }
 
+// NEW STUFF
+uint64_t upperkeybits = 0x0;
+uint64_t lowerkeybits = 0x0;
+
+void setKey(uint64_t rs1, uint64_t rs2) {
+    upperkeybits = rs1;
+    lowerkeybits = rs2;
+}
+
+uint64_t getUpperKeyBits() {
+    return upperkeybits;
+}
+
+uint64_t getLowerKeyBits() {
+    return lowerkeybits;
+}
+
+uint64_t uppermodifierbits = 0x0;
+uint64_t lowermodifierbits = 0x0;
+
+void setModifier(uint64_t rs1, uint64_t rs2) {
+    uppermodifierbits = rs1;
+    lowermodifierbits = rs2;
+}
+
+uint64_t getUpperModifierBits() {
+    return uppermodifierbits;
+}
+
+uint64_t getLowerModifierBits() {
+    return lowermodifierbits;
+}
+
 // FPU status update function
 Fault
 updateFPUStatus(ExecContext *xc, ExtMachInst machInst, bool set_dirty)

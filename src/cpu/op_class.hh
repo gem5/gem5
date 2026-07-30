@@ -54,6 +54,9 @@ using enums::OpClass;
 using enums::No_OpClass;
 
 static const OpClass IntAluOp = enums::IntAlu;
+/* NEW STUFF */
+static const OpClass LIPPENOp = enums::LIPPEN;
+
 static const OpClass IntMultOp = enums::IntMult;
 static const OpClass IntDivOp = enums::IntDiv;
 static const OpClass FloatAddOp = enums::FloatAdd;

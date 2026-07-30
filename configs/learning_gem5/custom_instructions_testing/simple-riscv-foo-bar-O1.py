@@ -1,16 +1,4 @@
-# Copyright (c) 2017, 2024-2025 Arm Limited
-# All rights reserved
-#
-# The license below extends only to copyright in the software and shall
-# not be construed as granting a license to any other intellectual
-# property including but not limited to intellectual property relating
-# to a hardware implementation of the functionality of the software
-# licensed hereunder.  You may use the software subject to the license
-# terms below provided that you ensure that this notice is replicated
-# unmodified and in its entirety in all distributions of the software,
-# modified or unmodified, in source code or in binary form.
-#
-# Copyright (c) 2006-2007 The Regents of The University of Michigan
+# Copyright (c) 2015 Jason Power
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -36,32 +24,56 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects.FuncUnit import *
-from m5.objects.FuncUnitConfig import *
-from m5.params import *
-from m5.SimObject import SimObject
+"""
+This is the RISCV equivalent to `simple.py` (which is designed to run using the
+X86 ISA). More detailed documentation can be found in `simple.py`.
+"""
 
+import m5
+from m5.objects import *
 
-class FUPool(SimObject):
-    type = "FUPool"
-    cxx_class = "gem5::o3::FUPool"
-    cxx_header = "cpu/o3/fu_pool.hh"
-    FUList = VectorParam.FUDesc("list of FU's for this pool")
+system = System()
 
+system.clk_domain = SrcClockDomain()
+system.clk_domain.clock = "1GHz"
+system.clk_domain.voltage_domain = VoltageDomain()
 
-class DefaultFUPool(FUPool):
-    FUList = [
-        IntALU(),
-        IntMultDiv(),
-        FP_ALU(),
-        FP_MultDiv(),
-        ReadPort(),
-        SIMD_Unit(),
-        Matrix_Unit(),
-        System_Unit(),
-        PredALU(),
-        WritePort(),
-        RdWrPort(),
-        #NEW STUFF
-        LIPPEN(),
-    ]
+system.mem_mode = "timing"
+system.mem_ranges = [AddrRange("512MiB")]
+system.cpu = RiscvTimingSimpleCPU()
+
+system.membus = SystemXBar()
+
+system.cpu.icache_port = system.membus.cpu_side_ports
+system.cpu.dcache_port = system.membus.cpu_side_ports
+
+system.cpu.createInterruptController()
+
+system.mem_ctrl = MemCtrl()
+system.mem_ctrl.dram = DDR3_1600_8x8()
+system.mem_ctrl.dram.range = system.mem_ranges[0]
+system.mem_ctrl.port = system.membus.mem_side_ports
+
+system.system_port = system.membus.cpu_side_ports
+
+thispath = os.path.dirname(os.path.realpath(__file__))
+binary = os.path.join(
+    thispath,
+    "../../../",
+    "tests/test-progs/custom_instructions/bin/foo_barO1.linux.riscv",
+)
+print("Using path:", binary)
+
+system.workload = SEWorkload.init_compatible(binary)
+
+process = Process()
+process.cmd = [binary]
+system.cpu.workload = process
+system.cpu.createThreads()
+
+root = Root(full_system=False, system=system)
+m5.instantiate()
+
+print(f"Beginning simulation!")
+exit_event = m5.simulate()
+print(f"Exiting @ tick {m5.curTick()} because {exit_event.getCause()}")

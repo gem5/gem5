@@ -239,6 +239,22 @@ void setV(ThreadContext *tc);
 void resetV(ExecContext *xc);
 void resetV(ThreadContext *tc);
 
+// NEW STUFF
+
+extern uint64_t upperkeybits;
+extern uint64_t lowerkeybits;
+
+void setKey(uint64_t rs1, uint64_t rs2);
+uint64_t getUpperKeyBits();
+uint64_t getLowerKeyBits();
+
+extern uint64_t uppermodifierbits;
+extern uint64_t lowermodifierbits;
+
+void setModifier(uint64_t rs1, uint64_t rs2);
+uint64_t getUpperModifierBits();
+uint64_t getLowerModifierBits();
+
 Fault updateFPUStatus(
     ExecContext *xc, ExtMachInst machInst, bool set_dirty);
 

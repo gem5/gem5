@@ -44,6 +44,8 @@ class OpClass(Enum):
     vals = [
         "No_OpClass",
         "IntAlu",
+        #NEW STUFF
+        "LIPPEN",
         "IntMult",
         "IntDiv",
         "FloatAdd",

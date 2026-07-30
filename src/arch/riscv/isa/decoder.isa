@@ -1333,6 +1333,23 @@ decode QUADRANT default Unknown::unknown() {
             }
         }
 
+        0x02: decode FUNCT3 {
+            format ROp {
+      		0x6: decode FUNCT7 {
+                    0x0: gcd({{
+                        int result = ((Rs1 < Rs2) ? Rs1 : Rs2);
+                        while (result > 0) {
+                            if (Rs1 % result == 0 && Rs2 % result == 0) {
+                                break;
+                            }
+                            result--;
+                        }
+                        Rd = result;
+                    }});
+                }
+            }
+        }
+
         0x03: decode FUNCT3 {
             format FenceOp {
                 0x0: fence({{
@@ -2063,6 +2080,28 @@ decode QUADRANT default Unknown::unknown() {
                 }}, inst_flags=SimdIndexedStoreOp);
             }
         }
+
+        0x0a: decode FUNCT3 {
+            format ROp {
+            0x3: decode FUNCT7 {
+                0x02: prince_set_key({{
+                    setKey(Rs1, Rs2);
+                }}, LIPPENOp);
+                0x03: prince_set_modifier ({{
+                    setModifier(Rs1, Rs2);
+                }}, LIPPENOp);
+    
+            }
+            0x7: decode FUNCT7 {
+                0x00: prince_auth({{
+                    Rd = rvSext(Rs1 ^ Rs2);; //xor
+                }}, LIPPENOp);
+                0x01: prince_sign({{
+                    Rd = rvSext(Rs1 ^ Rs2);; //xor
+                }}, LIPPENOp);
+            }
+            }
+        } 
 
         0x0b: decode FUNCT3 {
             0x2: decode AMOFUNCT {
@@ -6068,6 +6107,16 @@ decode QUADRANT default Unknown::unknown() {
                 Rd = rvSext(NPC);
                 NPC = rvSext((imm + Rs1) & (~0x1));
             }}, IsIndirectControl, IsUncondControl);
+        }
+
+        0x1a: decode FUNCT3 {
+            format ROp {
+                0x0: decode FUNCT7 {
+                    0x01: mod({{
+                        Rd = Rs1_sd % Rs2_sd;
+                    }});
+                }
+            }
         }
 
         0x1b: JOp::jal({{
