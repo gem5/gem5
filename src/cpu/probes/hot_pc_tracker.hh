@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2022 The Regents of the University of California.
- * All rights reserved.
+ * Copyright 2026 Google, LLC.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -26,42 +25,47 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "cpu/probes/pc_count_tracker.hh"
+#ifndef __CPU_PROBES_HOT_PC_TRACKER_HH__
+#define __CPU_PROBES_HOT_PC_TRACKER_HH__
+
+#include <cstdint>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+
+#include "base/addr_range.hh"
+#include "base/types.hh"
+#include "params/HotPcTracker.hh"
+#include "sim/probe/probe_listener_object.hh"
 
 namespace gem5
 {
 
-PcCountTracker::PcCountTracker(const PcCountTrackerParams &p)
-    : ProbeListenerObject(p), cpuptr(p.core), manager(p.ptmanager)
+class HotPcTracker : public ProbeListenerObject
 {
-    if (!cpuptr || !manager) {
-        fatal("%s is NULL", !cpuptr ? "CPU" : "PcCountTrackerManager");
-    }
-    for (int i = 0; i < p.targets.size(); i++) {
-        // initialize the set of targeting Program Counter addresses
-        targetPC.insert(p.targets[i].getPC());
-    }
-}
+  public:
+    HotPcTracker(const HotPcTrackerParams &params);
 
-void
-PcCountTracker::regProbeListeners()
-{
-    // connect the probe listener with the probe "RetriedInstsPC" in the
-    // corresponding core.
-    // when "RetiredInstsPC" notifies the probe listener, then the function
-    // 'check_pc' is automatically called
-    typedef ProbeListenerArg<PcCountTracker, Addr> PcCountTrackerListener;
-    connectListener<PcCountTrackerListener>(this, "RetiredInstsPC",
-                                            &PcCountTracker::checkPc);
-}
+    /** setup the probelistener */
+    virtual void regProbeListeners() override;
 
-void
-PcCountTracker::checkPc(const Addr& pc) {
-    if (targetPC.find(pc) != targetPC.end()) {
-        // if the PC is one of the target PCs, then notify the
-        // PcCounterTrackerManager by calling its `check_count` function
-        manager->checkCount(pc);
-    }
-}
+    /**
+     * this function is called when the probelistener receives signal from the
+     * probe
+     *
+     * @param pc the targeting Program Counter address
+     */
+    void checkPc(const Addr &pc);
 
+    std::vector<std::pair<Addr, uint64_t>> getHottestPcs(unsigned n) const;
+    void resetStats() override;
+
+  private:
+    Addr pcMask;
+    std::vector<AddrRange> filterRanges;
+    std::unordered_map<Addr, uint64_t> pcCounts;
+};
 } // namespace gem5
+
+#endif // __CPU_PROBES_HOT_PC_TRACKER_HH__

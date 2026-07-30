@@ -1,5 +1,4 @@
-# Copyright (c) 2022 The Regents of the University of California
-# All rights reserved.
+# Copyright 2026 Google, LLC.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -24,26 +23,36 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import("*")
 
-SimObject(
-    "PcCountTracker.py",
-    sim_objects=["PcCountTracker", "PcCountTrackerManager"],
-)
-Source("pc_count_tracker.cc")
-Source("pc_count_tracker_manager.cc")
+from m5.objects.Probe import ProbeListenerObject
+from m5.params import *
+from m5.SimObject import SimObject
+from m5.util.pybind import *
 
-DebugFlag("PcCountTracker")
 
-SimObject(
-    "InstTracker.py",
-    sim_objects=["GlobalInstTracker", "LocalInstTracker"],
-)
-Source("inst_tracker.cc")
+class HotPcTracker(ProbeListenerObject):
+    """This probe listener tracks the number of times a particular pc has been
+    executed so that the user can obtain a list of the N hottest PCs.
+    When desired, the user should call getHottestPcs() on this object,
+    passing in the number of hottest PCs desired.  This tracking
+    optionally supports filtering by range, and grouping
+    PCs by coarser granularity.
+    """
 
-SimObject(
-    "HotPcTracker.py",
-    sim_objects=["HotPcTracker"],
-)
-Source("hot_pc_tracker.cc")
-DebugFlag("InstTracker")
+    type = "HotPcTracker"
+    cxx_header = "cpu/probes/hot_pc_tracker.hh"
+    cxx_class = "gem5::HotPcTracker"
+
+    cxx_exports = [
+        PyBindMethod("getHottestPcs"),
+    ]
+
+    granularity = Param.Unsigned(
+        0,
+        "Number of low bits to mask out when grouping PCs "
+        "(0 = exact PC, 1 = 2B alignment, "
+        "6 = 64B cache line alignment)",
+    )
+    filter_ranges = VectorParam.AddrRange(
+        [], "Only track PCs within these ranges (empty = track all)"
+    )
