@@ -302,7 +302,6 @@ class AMDGPUNbio
     uint32_t wptr = 0;        // (C2PMSG_67 update)
     Addr ta_cmd_buf_addr = 0; // Holds the address from
     // GFX_CMD_ID_LOAD_TA
-    uint32_t sriov_spatial_mode = 0; // Holds the mode from
     // GFX_CMD_ID_SRIOV_SPATIAL_PART
 
     void readCmdBufferAndProcess(PspCommandContext *ctx);
