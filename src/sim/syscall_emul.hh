@@ -154,9 +154,9 @@ SyscallReturn exitFunc(SyscallDesc *desc, ThreadContext *tc, int status);
 SyscallReturn exitGroupFunc(SyscallDesc *desc, ThreadContext *tc, int status);
 
 /// exit_group path used when a process is killed by a signal (e.g. via
-/// tgkill). `status` is typically 128+sig for wait4 WIFSIGNALED status.
+/// tgkill). `sig` is the terminating signal number used for wait4 status.
 SyscallReturn exitGroupSignaledFunc(SyscallDesc *desc, ThreadContext *tc,
-                                    int status);
+                                    int sig);
 
 /// Target set_tid_address() handler.
 SyscallReturn setTidAddressFunc(SyscallDesc *desc, ThreadContext *tc,
@@ -2711,7 +2711,7 @@ tgkillFunc(SyscallDesc *desc, ThreadContext *tc, int tgid, int tid, int sig)
         case OS::TGT_SIGINT:
         case OS::TGT_SIGTERM:
         case OS::TGT_SIGKILL:
-            return exitGroupSignaledFunc(desc, tc, 128 + sig);
+            return exitGroupSignaledFunc(desc, tc, sig);
         default:
             return -EINVAL;
     }

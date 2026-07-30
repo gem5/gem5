@@ -133,9 +133,11 @@ exitImpl(SyscallDesc *desc, ThreadContext *tc, bool group, int status,
 
     // Encode a Linux wait(2) status word so wait4 can distinguish a
     // normal exit (WIFEXITED) from death by signal (WIFSIGNALED).
-    // Callers that kill via signal (e.g. tgkill) pass 128+sig.
+    // When signaled, `status` is the signal number: store it in the low
+    // 7 bits. Do not store the shell-style 128+sig value here -- that
+    // incorrectly sets WCOREDUMP for every fatal signal.
     const int wait_status =
-        signaled ? (status & 0xff) : ((status & 0xff) << 8);
+        signaled ? (status & 0x7f) : ((status & 0xff) << 8);
 
     if (group)
         *p->exitGroup = true;
@@ -275,11 +277,11 @@ exitGroupFunc(SyscallDesc *desc, ThreadContext *tc, int status)
 }
 
 SyscallReturn
-exitGroupSignaledFunc(SyscallDesc *desc, ThreadContext *tc, int status)
+exitGroupSignaledFunc(SyscallDesc *desc, ThreadContext *tc, int sig)
 {
-    // `status` is typically 128+sig from tgkill so wait4 reports
-    // WIFSIGNALED / WTERMSIG / WCOREDUMP correctly.
-    return exitImpl(desc, tc, true, status, true);
+    // `sig` is the terminating signal number. exitImpl encodes a wait(2)
+    // status with WIFSIGNALED / WTERMSIG for the parent wait4.
+    return exitImpl(desc, tc, true, sig, true);
 }
 
 SyscallReturn
