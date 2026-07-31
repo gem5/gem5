@@ -44,7 +44,7 @@ def macroop FSUB1_M
 {
     # Must use ldfp87 so single/double memory values are converted into the
     # internal double representation. Plain ldfp copies raw bits and turns
-    # e.g. float32 2.0 into a denormal double, breaking x87 fsubs/faddl.
+    # e.g. float32 2.0 into a denormal double, breaking FADD/FSUB memory forms.
     ldfp87 ufp1, seg, sib, disp
     subfp st(0), st(0), ufp1
 };
