@@ -87,7 +87,7 @@ class AbstractController : public ClockedObject, public Consumer
   public:
     PARAMS(RubyController);
     AbstractController(const Params &p);
-    void init();
+    void init() override;
 
     DrainState drain() override;
 
@@ -115,10 +115,8 @@ class AbstractController : public ClockedObject, public Consumer
 
     virtual AccessPermission getAccessPermission(const Addr &addr) = 0;
 
-    virtual void print(std::ostream & out) const = 0;
-    virtual void wakeup() = 0;
-    virtual void resetStats() = 0;
-    virtual void regStats();
+    void resetStats() override = 0;
+    void regStats() override;
 
     virtual void recordCacheTrace(int cntrl, CacheRecorder* tr) = 0;
     virtual Sequencer* getCPUSequencer() const = 0;
@@ -194,7 +192,7 @@ class AbstractController : public ClockedObject, public Consumer
 
     /** A function used to return the port associated with this bus object. */
     Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID);
+                  PortID idx = InvalidPortID) override;
 
     bool recvTimingResp(PacketPtr pkt);
     Tick recvAtomic(PacketPtr pkt);
