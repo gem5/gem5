@@ -3054,9 +3054,13 @@ success:
     // Report the child's actual wait(2) status (normal exit or signal).
     // Previously this always wrote 0 (WIFEXITED with code 0), which hid
     // abnormal terminations such as raise(SIGABRT).
-    BufferArg statusBuf(statPtr, sizeof(int));
-    *(int *)statusBuf.bufferPtr() = iter->exitStatus;
-    statusBuf.copyOut(SETranslatingPortProxy(tc));
+    // Linux allows a NULL status pointer; skip the guest write in that case
+    // (same pattern as the rusagePtr guard above).
+    if (statPtr) {
+        BufferArg statusBuf(statPtr, sizeof(int));
+        *(int *)statusBuf.bufferPtr() = iter->exitStatus;
+        statusBuf.copyOut(SETranslatingPortProxy(tc));
+    }
 
     // Return the child PID.
     pid_t retval = iter->sender->pid();
