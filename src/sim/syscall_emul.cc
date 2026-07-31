@@ -590,9 +590,11 @@ dup2Func(SyscallDesc *desc, ThreadContext *tc, int old_tgt_fd, int new_tgt_fd)
 {
     auto p = tc->getProcessPtr();
 
-    // Bound-check the destination against the guest FD table size.
-    // Linux returns EBADF for an out-of-range newfd.
-    if (new_tgt_fd < 0 || new_tgt_fd >= p->fds->getSize()) {
+    // Bound-check both fds against the guest FD table size before any
+    // FDArray::operator[] access (that path asserts on out-of-range
+    // indices). Linux returns EBADF for an out-of-range oldfd or newfd.
+    if (old_tgt_fd < 0 || old_tgt_fd >= p->fds->getSize() ||
+        new_tgt_fd < 0 || new_tgt_fd >= p->fds->getSize()) {
         return -EBADF;
     }
 
