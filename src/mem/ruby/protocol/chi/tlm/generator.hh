@@ -38,10 +38,11 @@
 #ifndef __MEM_RUBY_PROTOCOL_CHI_TLM_GENERATOR_HH__
 #define __MEM_RUBY_PROTOCOL_CHI_TLM_GENERATOR_HH__
 
+#include <ARM/TLM/arm_chi_payload.h>
+#include <ARM/TLM/arm_chi_phase.h>
+
 #include <queue>
 #include <unordered_map>
-
-#include <ARM/TLM/arm_chi.h>
 
 #include "mem/ruby/protocol/chi/tlm/port.hh"
 #include "mem/ruby/protocol/chi/tlm/utils.hh"
