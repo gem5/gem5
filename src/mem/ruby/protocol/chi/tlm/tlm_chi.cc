@@ -89,6 +89,9 @@ tlm_chi_pybind(pybind11::module_ &m_internal)
         .def_property(
             "ns", [](const Payload &p) { return p.ns; },
             [](Payload &p, bool val) { p.ns = val; })
+        .def_property(
+            "ret_to_src", [](const Payload &p) { return p.ret_to_src; },
+            [](Payload &p, bool val) { p.ret_to_src = val; })
         .def_readwrite("byte_enable", &Payload::byte_enable);
 
     py::class_<Phase>(tlm_chi, "TlmPhase")
@@ -97,6 +100,7 @@ tlm_chi_pybind(pybind11::module_ &m_internal)
         .def_readwrite("src_id", &Phase::src_id)
         .def_readwrite("tgt_id", &Phase::tgt_id)
         .def_readwrite("stash_nid", &Phase::stash_nid)
+        .def_readwrite("fwd_nid", &Phase::fwd_nid)
         .def_readwrite("opcode", &Phase::raw_opcode)
         .def_property(
             "channel", [](const Phase &p) { return p.channel; },

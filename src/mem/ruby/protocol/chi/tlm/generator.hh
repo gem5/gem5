@@ -56,6 +56,7 @@ namespace gem5 {
 namespace tlm::chi {
 
 class CacheController;
+class SnoopHandler;
 
 /**
  * TlmGenerator: this class is basically a CHI-tlm traffic generator.
@@ -222,7 +223,7 @@ class TlmGenerator : public ClockedObject
 
         Transaction(const Transaction &rhs) = delete;
         Transaction(ARM::CHI::Payload *pa, ARM::CHI::Phase &ph);
-        ~Transaction();
+        virtual ~Transaction();
 
         /**
          * Registers the TlmGenerator in the transaction. This is
@@ -268,11 +269,18 @@ class TlmGenerator : public ClockedObject
          * in insertion order until a waiting callback is
          * encountered (or if there is a failing assertion)
          */
-        void runCallbacks();
+        virtual void runCallbacks();
 
         EventFunctionWrapper runCallbacksEvent;
 
         ARM::CHI::Payload* payload() const { return _payload; }
+        void
+        setPayload(ARM::CHI::Payload *payload)
+        {
+            assert(!_payload);
+            _payload = payload;
+            _payload->ref();
+        }
         ARM::CHI::Phase& phase() { return _phase; }
         Tick
         start() const
@@ -285,10 +293,14 @@ class TlmGenerator : public ClockedObject
             _start = when;
         }
 
-      private:
+      protected:
+        void scheduleEvaluation(unsigned timeout);
+
+      protected:
         Actions actions;
         bool passed;
 
+      private:
         TlmGenerator *parent;
         ARM::CHI::Payload *_payload;
         ARM::CHI::Phase _phase;
@@ -345,8 +357,12 @@ class TlmGenerator : public ClockedObject
     void terminate(Transaction *transaction);
     void scheduleEvaluation(unsigned cycles, Transaction *transaction);
 
+    void send(ARM::CHI::Payload *payload, ARM::CHI::Phase &phase);
     void recv(ARM::CHI::Payload *payload, ARM::CHI::Phase *phase);
     void passFailCheck();
+
+    /** Handle an incoming snoop transaction */
+    bool handleSnoop(ARM::CHI::Payload *payload, ARM::CHI::Phase *phase);
 
     /**
      * Check if incoming request is a RetryAck
@@ -451,6 +467,9 @@ class TlmGenerator : public ClockedObject
 
     /** Tracks responder-reported CBusy values observed by the generator */
     ruby::BackpressureTracker *cbusyTracker;
+
+    /** Handles incoming snoop transactions */
+    SnoopHandler *snpHandler;
 
     struct Stats : public statistics::Group
     {

@@ -1,5 +1,5 @@
 # -*- mode:python -*-
-# Copyright (c) 2024-2026 Arm Limited
+# Copyright (c) 2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -34,35 +34,61 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import("*")
 
-if not env['CONF']['RUBY_PROTOCOL_CHI']:
-    Return()
+from m5.params import *
+from m5.SimObject import (
+    PyBindMethod,
+    SimObject,
+)
 
-PySource("m5.tlm_chi", "python/__init__.py")
-PySource("m5.tlm_chi", "python/port.py")
-PySource("m5.tlm_chi", "python/utils.py")
-SimObject(
-    'SnoopHandler.py',
-    sim_objects=['SnoopHandler', 'PySnoopHandler'],
-    tags=['arm isa']
-)
-SimObject(
-    "TlmController.py",
-    sim_objects=["TlmController"],
-    tags=['arm isa']
-)
-SimObject(
-    'TlmGenerator.py',
-    sim_objects=['TlmGenerator'],
-    tags=['arm isa']
-)
-Source("utils.cc", tags=['arm isa'])
-Source("controller.cc", tags=['arm isa'])
-Source('snp_handler.cc', tags=['arm isa'])
-Source('py_snoop_handler.cc', tags=['arm isa'])
-Source('tlm_chi.cc', tags=['arm isa', 'python'])
-Source('tlm_chi_gen.cc', tags=['arm isa', 'python'])
-Source('generator.cc', tags=['arm isa'])
-DebugFlag("TLM", tags=['arm isa'])
-DebugFlag("TLMPort", tags=['arm isa'])
+
+class SnoopHandler(SimObject):
+    abstract = True
+    type = "SnoopHandler"
+    cxx_header = "mem/ruby/protocol/chi/tlm/snp_handler.hh"
+    cxx_class = "gem5::tlm::chi::SnoopHandler"
+
+
+class PySnoopHandler(SnoopHandler):
+    type = "PySnoopHandler"
+    cxx_header = "mem/ruby/protocol/chi/tlm/py_snoop_handler.hh"
+    cxx_class = "gem5::tlm::chi::PySnoopHandler"
+
+    cxx_exports = [PyBindMethod("addSnoop")]
+
+    discard_after_snoop = Param.Bool(
+        True,
+        "Discard a programmed transaction once callbacks have run for a "
+        "matching snoop",
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._snoop_transactions = []
+        self._cc_initialized = False
+
+    def add_snoop(self, address):
+        from m5.tlm_chi.utils import (
+            Channel,
+            Resp,
+            RspOpcode,
+            SnoopResponse,
+            TlmPhase,
+        )
+
+        phase = TlmPhase()
+        phase.channel = Channel.RSP
+        phase.opcode = RspOpcode.SNP_RESP
+        phase.resp = Resp.RESP_I
+
+        transaction = SnoopResponse(phase)
+        self._snoop_transactions.append((address, transaction))
+        if self._cc_initialized:
+            self.getCCObject().addSnoop(address, transaction)
+        return transaction
+
+    def createCCObject(self):
+        super().createCCObject()
+        for address, transaction in self._snoop_transactions:
+            self.getCCObject().addSnoop(address, transaction)
+        self._cc_initialized = True
