@@ -86,11 +86,12 @@ def do_comp_ack(transaction):
     return False
 
 
-def test_all(generator):
+def test_all(generators):
+    generator = generators[0]
     payload = payload_gen()
     phase = phase_gen()
 
-    tran = generator.inject(payload, phase, when=10)
+    tran = generator.inject(payload, phase)
     tran.ASSERT(channel_check)
     tran.ASSERT(opcode_check)
     tran.ASSERT(cacheline_check)
@@ -101,3 +102,5 @@ def test_all(generator):
     tran.ASSERT(cacheline_check)
     tran.ASSERT(data_id_check_gen(2))
     tran.DO(do_comp_ack)
+
+    yield lambda *args: None

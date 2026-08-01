@@ -350,17 +350,25 @@ board = TestBoard(
 )
 board.cache_line_size = args.cacheline_size
 
-for generator in processor.get_tlm_generators():
-    suite.test_all(generator)
-
 root = board._pre_instantiate()
 m5.instantiate()
 
-exit_event = m5.simulate(args.abs_max_tick)
+for verifier in suite.test_all(processor.get_tlm_generators()):
+    while True:
+        exit_event = m5.simulate(args.abs_max_tick)
 
-print(
-    "Exiting @ tick",
-    m5.curTick(),
-    "because",
-    exit_event.getCause(),
-)
+        print(
+            "Exiting @ tick",
+            m5.curTick(),
+            "because",
+            exit_event.getCause(),
+        )
+
+        if exit_event.getCause() != "TlmGenerator done" or not any(
+            c.isActive() for c in processor.get_tlm_generators()
+        ):
+            break
+
+    m5.drain()
+
+    verifier(board)
