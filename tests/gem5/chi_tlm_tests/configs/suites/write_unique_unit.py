@@ -1,3 +1,4 @@
+# -*- mode:python -*-
 # Copyright (c) 2026 Arm Limited
 # All rights reserved.
 #
@@ -33,53 +34,86 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import re
+from m5.tlm_chi.utils import *
 
-from testlib import (
-    absdirpath,
-    constants,
-    joinpath,
-    verifier,
-)
 
-from gem5.suite import gem5_verify_config
+def payload_gen():
+    # Populating payload
+    payload = TlmPayload()
+    payload.address = 0x80000000
+    payload.ns = True
+    payload.size = Size.SIZE_64
+    return payload
 
-gem5_verify_config(
-    name="chi-tlm-read-shared",
-    fixtures=(),
-    verifiers=(),
-    config=joinpath(absdirpath(__file__), "configs", "ruby_mem_test.py"),
-    config_args=[
-        joinpath(
-            absdirpath(__file__),
-            "configs",
-            "suites",
-            "read_shared_unit.py",
-        ),
-        "--abs-max-tick",
-        "1000000",
-    ],
-    valid_isas=(constants.all_compiled_tag,),
-    valid_hosts=constants.supported_hosts,
-    length=constants.quick_tag,
-)
 
-gem5_verify_config(
-    name="chi-tlm-write-unique",
-    fixtures=(),
-    verifiers=(),
-    config=joinpath(absdirpath(__file__), "configs", "ruby_mem_test.py"),
-    config_args=[
-        joinpath(
-            absdirpath(__file__),
-            "configs",
-            "suites",
-            "write_unique_unit.py",
-        ),
-        "--abs-max-tick",
-        "1000000",
-    ],
-    valid_isas=(constants.all_compiled_tag,),
-    valid_hosts=constants.supported_hosts,
-    length=constants.quick_tag,
-)
+def phase_gen():
+    # Populating phase
+    phase = TlmPhase()
+    phase.opcode = ReqOpcode.WRITE_UNIQUE_FULL
+    phase.src_id = 0
+    phase.tgt_id = 0
+    return phase
+
+
+def channel_check(transaction):
+    return expect_equal(transaction.phase.channel, Channel.RSP)
+
+
+def opcode_check(transaction):
+    return expect_equal(transaction.phase.opcode, RspOpcode.COMP_DBID_RESP)
+
+
+def cacheline_check(transaction):
+    return expect_equal(transaction.phase.resp, Resp.RESP_I)
+
+
+def cycles(num_cycles):
+    def nothing(transaction):
+        return True
+
+    return nothing, num_cycles
+
+
+def do_write_data_gen(data_id):
+    def do_write_data(transaction):
+        transaction.phase.channel = Channel.DAT
+        transaction.phase.opcode = DatOpcode.NON_COPY_BACK_WR_DATA
+        transaction.phase.data_id = data_id
+        transaction.phase.tgt_id = transaction.phase.src_id
+        if data_id == 0:
+            transaction.payload.byte_enable = 0x00000000FFFFFFFF
+        else:
+            transaction.payload.byte_enable = 0xFFFFFFFF00000000
+
+        transaction.send()
+        return False
+
+    return do_write_data
+
+
+def init(board):
+    pass
+
+
+def test_all(generators):
+    """
+    This is a very simple test for a WriteUnique transaction in CHI
+    - Initial Line State: I
+    - What we test:
+        - response is CompDBIDResp with line in invalid state
+    """
+    # Single generator test
+    generator = generators[0]
+
+    payload = payload_gen()
+    phase = phase_gen()
+
+    tran = generator.inject(payload, phase)
+    tran.ASSERT(channel_check)
+    tran.ASSERT(opcode_check)
+    tran.ASSERT(cacheline_check)
+    tran.DO(do_write_data_gen(0))
+    tran.DO_WAIT_FOR(*cycles(1))
+    tran.DO(do_write_data_gen(2))
+
+    yield lambda *args: None
