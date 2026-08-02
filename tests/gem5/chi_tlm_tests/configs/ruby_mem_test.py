@@ -350,6 +350,11 @@ board = TestBoard(
 )
 board.cache_line_size = args.cacheline_size
 
+# Perform some suite specific initialization of the system
+# (This is used if a suite requires some parameters to be
+# set
+suite.init(board)
+
 root = board._pre_instantiate()
 m5.instantiate()
 

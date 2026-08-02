@@ -86,6 +86,10 @@ def do_comp_ack(transaction):
     return False
 
 
+def init(board):
+    pass
+
+
 def test_all(generators):
     generator = generators[0]
     payload = payload_gen()
