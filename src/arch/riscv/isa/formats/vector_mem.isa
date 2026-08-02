@@ -49,6 +49,9 @@ def getFaultCode():
             fault = NoFault;
             trimVl = true;
         }
+    } else {
+        faultIdx = this->microVl;
+        trimVl = false;
     }
     '''
 
