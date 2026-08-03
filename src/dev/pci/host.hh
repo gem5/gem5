@@ -119,26 +119,22 @@ class GenericPciHost : public PciHost
     AddrRange getConfigAddrRange() const override;
 
   protected: // PciUpstream
-    AddrRange interfaceConfigRange(PciBusNum bus_num,
-                                   const PciDevice &device) const override;
+    AddrRange interfaceConfigRange(const PciDevice &device) const override;
 
     Addr
-    interfacePioAddr(PciBusNum bus_num, const PciDevice &device,
-                     Addr pci_addr) const override
+    interfacePioAddr(const PciDevice &device, Addr pci_addr) const override
     {
         return pciPioBase + pci_addr;
     }
 
     Addr
-    interfaceMemAddr(PciBusNum bus_num, const PciDevice &device,
-                     Addr pci_addr) const override
+    interfaceMemAddr(const PciDevice &device, Addr pci_addr) const override
     {
         return pciMemBase + pci_addr;
     }
 
     Addr
-    interfaceDmaAddr(PciBusNum bus_num, const PciDevice &device,
-                     Addr pci_addr) const override
+    interfaceDmaAddr(const PciDevice &device, Addr pci_addr) const override
     {
         return pciDmaBase + pci_addr;
     }
@@ -153,9 +149,8 @@ class GenericPciHost : public PciHost
     }
 
   protected: // Interrupt handling
-    void interfacePostInt(PciBusNum bus_num, const PciDevice &device) override;
-    void interfaceClearInt(PciBusNum bus_num,
-                           const PciDevice &device) override;
+    void interfacePostInt(const PciDevice &device) override;
+    void interfaceClearInt(const PciDevice &device) override;
 
     virtual uint32_t mapPciInterrupt(const PciDevice &device) const;
 

@@ -111,69 +111,65 @@ PciToPciBridge::getConfigAddrRange() const
 }
 
 AddrRange
-PciToPciBridge::interfaceConfigRange(PciBusNum bus_num,
-                                     const PciDevice &device) const
+PciToPciBridge::interfaceConfigRange(const PciDevice &device) const
 {
-    if (!isDownstreamBus(bus_num)) {
+    if (!isDownstreamBus(device.getBusNum())) {
         return AddrRange();
     }
 
-    return upstreamInterface->configRange(bus_num, device);
+    return upstreamInterface->configRange(device);
 }
 
 Addr
-PciToPciBridge::interfacePioAddr(PciBusNum bus_num, const PciDevice &device,
-                                 Addr pci_addr) const
+PciToPciBridge::interfacePioAddr(const PciDevice &device, Addr pci_addr) const
 {
-    if (!isDownstreamBus(bus_num)) {
+    if (!isDownstreamBus(device.getBusNum())) {
         return 0;
     }
 
-    return upstreamInterface->pioAddr(bus_num, device, pci_addr);
+    return upstreamInterface->pioAddr(device, pci_addr);
 }
 
 Addr
-PciToPciBridge::interfaceMemAddr(PciBusNum bus_num, const PciDevice &device,
-                                 Addr pci_addr) const
+PciToPciBridge::interfaceMemAddr(const PciDevice &device, Addr pci_addr) const
 {
-    if (!isDownstreamBus(bus_num)) {
+    if (!isDownstreamBus(device.getBusNum())) {
         return 0;
     }
 
-    return upstreamInterface->memAddr(bus_num, device, pci_addr);
+    return upstreamInterface->memAddr(device, pci_addr);
 }
 
 Addr
-PciToPciBridge::interfaceDmaAddr(PciBusNum bus_num, const PciDevice &device,
-                                 Addr pci_addr) const
+PciToPciBridge::interfaceDmaAddr(const PciDevice &device, Addr pci_addr) const
 {
-    if (!isDownstreamBus(bus_num)) {
+    if (!isDownstreamBus(device.getBusNum())) {
         return 0;
     }
 
-    return upstreamInterface->dmaAddr(bus_num, device, pci_addr);
+    return upstreamInterface->dmaAddr(device, pci_addr);
 }
 
 void
-PciToPciBridge::interfacePostInt(PciBusNum bus_num, const PciDevice &device)
+PciToPciBridge::interfacePostInt(const PciDevice &device)
 {
-    if (!isDownstreamBus(bus_num)) {
+    if (!isDownstreamBus(device.getBusNum())) {
         warn("Posting interrupt on unmapped bus\n");
         return;
     }
 
-    upstreamInterface->postInt(bus_num, device);
+    upstreamInterface->postInt(device);
 }
 
 void
-PciToPciBridge::interfaceClearInt(PciBusNum bus_num, const PciDevice &device)
+PciToPciBridge::interfaceClearInt(const PciDevice &device)
 {
-    if (!isDownstreamBus(bus_num)) {
+    if (!isDownstreamBus(device.getBusNum())) {
         warn("Clearing interrupt on unmapped bus\n");
         return;
     }
 
-    upstreamInterface->clearInt(bus_num, device);
+    upstreamInterface->clearInt(device);
 }
 
 AddrRange

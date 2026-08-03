@@ -140,21 +140,26 @@ PciUpstream::DeviceInterface::name() const
                     upstream.getBusNum(), dev_addr.dev, dev_addr.func);
 }
 
+PciBusNum
+PciUpstream::DeviceInterface::getBusNum() const
+{
+    return upstream.getBusNum();
+}
+
 void
 PciUpstream::DeviceInterface::postInt()
 {
     DPRINTF(PciUpstream, "postInt\n");
 
-    upstream.interfacePostInt(upstream.getBusNum(), device);
+    upstream.interfacePostInt(device);
 }
 
 void
-PciUpstream::DeviceInterface::postInt(PciBusNum bus_num,
-                                      const PciDevice &device)
+PciUpstream::DeviceInterface::postInt(const PciDevice &device)
 {
     DPRINTF(PciUpstream, "postInt\n");
 
-    upstream.interfacePostInt(bus_num, device);
+    upstream.interfacePostInt(device);
 }
 
 void
@@ -162,68 +167,63 @@ PciUpstream::DeviceInterface::clearInt()
 {
     DPRINTF(PciUpstream, "clearInt\n");
 
-    upstream.interfaceClearInt(upstream.getBusNum(), device);
+    upstream.interfaceClearInt(device);
 }
 
 void
-PciUpstream::DeviceInterface::clearInt(PciBusNum bus_num,
-                                       const PciDevice &device)
+PciUpstream::DeviceInterface::clearInt(const PciDevice &device)
 {
     DPRINTF(PciUpstream, "clearInt\n");
 
-    upstream.interfaceClearInt(bus_num, device);
+    upstream.interfaceClearInt(device);
 }
 
 AddrRange
 PciUpstream::DeviceInterface::configRange() const
 {
-    return upstream.interfaceConfigRange(upstream.getBusNum(), device);
+    return upstream.interfaceConfigRange(device);
 }
 
 AddrRange
-PciUpstream::DeviceInterface::configRange(PciBusNum bus_num,
-                                          const PciDevice &device) const
+PciUpstream::DeviceInterface::configRange(const PciDevice &device) const
 {
-    return upstream.interfaceConfigRange(bus_num, device);
+    return upstream.interfaceConfigRange(device);
 }
 
 Addr
 PciUpstream::DeviceInterface::pioAddr(Addr addr) const
 {
-    return upstream.interfacePioAddr(upstream.getBusNum(), device, addr);
+    return upstream.interfacePioAddr(device, addr);
 }
 
 Addr
-PciUpstream::DeviceInterface::pioAddr(PciBusNum bus_num,
-                                      const PciDevice &device, Addr addr) const
+PciUpstream::DeviceInterface::pioAddr(const PciDevice &device, Addr addr) const
 {
-    return upstream.interfacePioAddr(bus_num, device, addr);
+    return upstream.interfacePioAddr(device, addr);
 }
 
 Addr
 PciUpstream::DeviceInterface::memAddr(Addr addr) const
 {
-    return upstream.interfaceMemAddr(upstream.getBusNum(), device, addr);
+    return upstream.interfaceMemAddr(device, addr);
 }
 
 Addr
-PciUpstream::DeviceInterface::memAddr(PciBusNum bus_num,
-                                      const PciDevice &device, Addr addr) const
+PciUpstream::DeviceInterface::memAddr(const PciDevice &device, Addr addr) const
 {
-    return upstream.interfaceMemAddr(bus_num, device, addr);
+    return upstream.interfaceMemAddr(device, addr);
 }
 
 Addr
 PciUpstream::DeviceInterface::dmaAddr(Addr addr) const
 {
-    return upstream.interfaceDmaAddr(upstream.getBusNum(), device, addr);
+    return upstream.interfaceDmaAddr(device, addr);
 }
 
 Addr
-PciUpstream::DeviceInterface::dmaAddr(PciBusNum bus_num,
-                                      const PciDevice &device, Addr addr) const
+PciUpstream::DeviceInterface::dmaAddr(const PciDevice &device, Addr addr) const
 {
-    return upstream.interfaceDmaAddr(bus_num, device, addr);
+    return upstream.interfaceDmaAddr(device, addr);
 }
 
 AddrRange

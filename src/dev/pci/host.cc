@@ -96,10 +96,9 @@ GenericPciHost::getConfigAddrRange() const
 }
 
 AddrRange
-GenericPciHost::interfaceConfigRange(PciBusNum bus_num,
-                                     const PciDevice &device) const
+GenericPciHost::interfaceConfigRange(const PciDevice &device) const
 {
-    Addr start = devConfigAddr(bus_num, device.devAddr());
+    Addr start = devConfigAddr(device.getBusNum(), device.devAddr());
 
     return RangeSize(start, 1 << confDeviceBits);
 }
@@ -120,13 +119,13 @@ GenericPciHost::interfaceBusConfigRange(PciBusNum start_bus,
 }
 
 void
-GenericPciHost::interfacePostInt(PciBusNum bus_num, const PciDevice &device)
+GenericPciHost::interfacePostInt(const PciDevice &device)
 {
     platform.postPciInt(mapPciInterrupt(device));
 }
 
 void
-GenericPciHost::interfaceClearInt(PciBusNum bus_num, const PciDevice &device)
+GenericPciHost::interfaceClearInt(const PciDevice &device)
 {
     platform.clearPciInt(mapPciInterrupt(device));
 }

@@ -145,6 +145,11 @@ class PciUpstream
         const std::string name() const;
 
         /**
+         * Get the PCI bus number of the upstream bridge.
+         */
+        PciBusNum getBusNum() const;
+
+        /**
          * Post a PCI interrupt to the CPU.
          */
         void postInt();
@@ -154,10 +159,9 @@ class PciUpstream
          * This function should be used by bridges to post interrupts
          * from devices downstream of them.
          *
-         * @param bus_num Bus number to which the device is connected.
          * @param device PCI device posting the interrupts.
          */
-        void postInt(PciBusNum bus_num, const PciDevice &device);
+        void postInt(const PciDevice &device);
 
         /**
          * Clear a posted PCI interrupt
@@ -169,10 +173,9 @@ class PciUpstream
          * This function should be used by bridges to clear interrupts
          * from devices downstream of them.
          *
-         * @param bus_num Bus number to which the device is connected.
          * @param device PCI device posting the interrupts.
          */
-        void clearInt(PciBusNum bus_num, const PciDevice &device);
+        void clearInt(const PciDevice &device);
 
         /**
          * Calculate the physical address range of the PCI device
@@ -187,12 +190,10 @@ class PciUpstream
          * configuration space. This function should be used by bridges to get
          * ranges from devices downstream of them.
          *
-         * @param bus_num Bus number to which the device is connected.
          * @param device PCI device requesting configuration range.
          * @return Address range in the system's physical address space.
          */
-        AddrRange configRange(PciBusNum bus_num,
-                              const PciDevice &device) const;
+        AddrRange configRange(const PciDevice &device) const;
 
         /**
          * Calculate the physical address of an IO location on the PCI
@@ -208,13 +209,11 @@ class PciUpstream
          * bus. This function should be used by bridges to get address
          * from devices downstream of them.
          *
-         * @param bus_num Bus number to which the device is connected.
          * @param device PCI device requesting PIO addr.
          * @param addr Address in the PCI IO address space
          * @return Address in the system's physical address space.
          */
-        Addr pioAddr(PciBusNum bus_num, const PciDevice &device,
-                     Addr addr) const;
+        Addr pioAddr(const PciDevice &device, Addr addr) const;
 
         /**
          * Calculate the physical address of a non-prefetchable memory
@@ -230,13 +229,11 @@ class PciUpstream
          * location in the PCI address space. This function should be used by
          * bridge to get address from devices downstream of them.
          *
-         * @param bus_num Bus number to which the device is connected.
          * @param device PCI device requesting memory address translation.
          * @param addr Address in the PCI memory address space
          * @return Address in the system's physical address space.
          */
-        Addr memAddr(PciBusNum bus_num, const PciDevice &device,
-                     Addr addr) const;
+        Addr memAddr(const PciDevice &device, Addr addr) const;
 
         /**
          * Calculate the physical address of a prefetchable memory
@@ -252,13 +249,11 @@ class PciUpstream
          * location in the PCI address space. This function should be used by
          * bridge to get address from devices downstream of them.
          *
-         * @param bus_num Bus number to which the device is connected.
          * @param device PCI device request DMA address.
          * @param addr Address in the PCI DMA memory address space
          * @return Address in the system's physical address space.
          */
-        Addr dmaAddr(PciBusNum bus_num, const PciDevice &device,
-                     Addr addr) const;
+        Addr dmaAddr(const PciDevice &device, Addr addr) const;
 
         /**
          * Calculate the physical address range of the PCI configuration space
@@ -299,67 +294,58 @@ class PciUpstream
     /**
      * Post an interrupt to the CPU.
      *
-     * @param bus_num Bus number to which the device is connected.
      * @param device The requesting PCI device
      */
-    virtual void interfacePostInt(PciBusNum bus_num,
-                                  const PciDevice &device) = 0;
+    virtual void interfacePostInt(const PciDevice &device) = 0;
 
     /**
      * Clear an interrupt to the CPU.
      *
-     * @param bus_num Bus number to which the device is connected.
      * @param device The requesting PCI device
      */
-    virtual void interfaceClearInt(PciBusNum bus_num,
-                                   const PciDevice &device) = 0;
+    virtual void interfaceClearInt(const PciDevice &device) = 0;
 
     /**
      * Calculate the physical address range of the PCI device
      * configuration space.
      *
-     * @param bus_num Bus number to which the device is connected.
      * @param device The requesting PCI device
      * @return Configuration address range in the system's physical address
      *         space.
      */
-    virtual AddrRange interfaceConfigRange(PciBusNum bus_num,
-                                           const PciDevice &device) const = 0;
+    virtual AddrRange interfaceConfigRange(const PciDevice &device) const = 0;
 
     /**
      * Calculate the physical address of an IO location on the PCI
      * bus.
      *
-     * @param bus_num Bus number to which the device is connected.
      * @param device The requesting PCI device
      * @param pci_addr Address in the PCI IO address space
      * @return Address in the system's physical address space.
      */
-    virtual Addr interfacePioAddr(PciBusNum bus_num, const PciDevice &device,
+    virtual Addr interfacePioAddr(const PciDevice &device,
                                   Addr pci_addr) const = 0;
 
     /**
      * Calculate the physical address of a non-prefetchable memory
      * location in the PCI address space.
      *
-     * @param bus_num Bus number to which the device is connected.
      * @param device The requesting PCI device
      * @param pci_addr Address in the PCI memory address space
      * @return Address in the system's physical address space.
      */
-    virtual Addr interfaceMemAddr(PciBusNum bus_num, const PciDevice &device,
+    virtual Addr interfaceMemAddr(const PciDevice &device,
                                   Addr pci_addr) const = 0;
 
     /**
      * Calculate the physical address of a prefetchable memory
      * location in the PCI address space.
      *
-     * @param bus_num Bus number to which the device is connected.
      * @param device The requesting PCI device
      * @param pci_addr Address in the PCI DMA memory address space
      * @return Address in the system's physical address space.
      */
-    virtual Addr interfaceDmaAddr(PciBusNum bus_num, const PciDevice &device,
+    virtual Addr interfaceDmaAddr(const PciDevice &device,
                                   Addr pci_addr) const = 0;
 
     /**

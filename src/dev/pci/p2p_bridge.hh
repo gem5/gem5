@@ -75,24 +75,22 @@ class PciToPciBridge : public PciType1Device, public PciUpstream
     AddrRange getConfigAddrRange() const override;
 
   protected: // PciUpstream
-    AddrRange interfaceConfigRange(PciBusNum bus_num,
-                                   const PciDevice &device) const override;
+    AddrRange interfaceConfigRange(const PciDevice &device) const override;
 
-    Addr interfacePioAddr(PciBusNum bus_num, const PciDevice &device,
+    Addr interfacePioAddr(const PciDevice &device,
                           Addr pci_addr) const override;
 
-    Addr interfaceMemAddr(PciBusNum bus_num, const PciDevice &device,
+    Addr interfaceMemAddr(const PciDevice &device,
                           Addr pci_addr) const override;
 
-    Addr interfaceDmaAddr(PciBusNum bus_num, const PciDevice &device,
+    Addr interfaceDmaAddr(const PciDevice &device,
                           Addr pci_addr) const override;
 
     AddrRange interfaceBusConfigRange(PciBusNum start_bus,
                                       PciBusNum end_bus) const override;
 
-    void interfacePostInt(PciBusNum bus_num, const PciDevice &device) override;
-    void interfaceClearInt(PciBusNum bus_num,
-                           const PciDevice &device) override;
+    void interfacePostInt(const PciDevice &device) override;
+    void interfaceClearInt(const PciDevice &device) override;
 
     PciBusNum getBusNum() const override;
 
