@@ -84,10 +84,10 @@ jobs:
               # very-long without that flag.
               run: |
                   extra_gcov_args="--gcov=test-only"
-                  if [ "${{ matrix.test-type.length }}" = "very-long" ] && [ "${{ matrix.test-type.testdir }}" = "gem5/x86_boot_tests" ]; then
+                  if [ "${{ matrix.test-type }}" = "gem5/x86_boot_tests" ]; then
                     extra_gcov_args=""
                   fi
-                  ./main.py run ${{ matrix.test-type.testdir }} --length ${{ matrix.test-type.length }} ${extra_gcov_args} -j"$(nproc)" -vv --exclude-tags gcn_gpu
+                  ./main.py run ${{ matrix.test-type }} --length=very-long ${extra_gcov_args} -j"$(nproc)" -vv --exclude-tags gcn_gpu
 
             - name: Sanitize test-dir for artifact name
               id: sanitize-test-dir
