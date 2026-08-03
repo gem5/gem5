@@ -57,6 +57,7 @@
 #include "cpu/o3/mem_dep_unit.hh"
 #include "cpu/o3/store_set.hh"
 #include "cpu/op_class.hh"
+#include "cpu/reg_class.hh"
 #include "cpu/timebuf.hh"
 #include "enums/IQInsertionPolicy.hh"
 #include "enums/SMTQueuePolicy.hh"
@@ -333,6 +334,9 @@ class InstructionQueue
 
     /** Wakes all dependents of a completed instruction. */
     int wakeDependents(const DynInstPtr &completed_inst);
+
+    /** Wakes all dependents waiting on a destination register. */
+    int wakeDependents(PhysRegIdPtr dest_reg);
 
     /** Adds a ready memory instruction to the ready list. */
     void addReadyMemInst(const DynInstPtr &ready_inst);

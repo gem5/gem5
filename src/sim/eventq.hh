@@ -749,7 +749,6 @@ class EventQueue
     void
     schedule(Event *event, Tick when, bool global=false)
     {
-        assert(when >= getCurTick());
         assert(!event->scheduled());
         assert(event->initialized());
 
@@ -811,10 +810,10 @@ class EventQueue
     void
     reschedule(Event *event, Tick when, bool always=false)
     {
+        assert(!inParallelMode || this == curEventQueue());
         assert(when >= getCurTick());
         assert(always || event->scheduled());
         assert(event->initialized());
-        assert(!inParallelMode || this == curEventQueue());
 
         if (event->scheduled()) {
             remove(event);
