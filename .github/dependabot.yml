@@ -9,6 +9,7 @@ updates:
           interval: monthly
       assignees:
           - Harshil2107
+          - erin-le
       commit-message:
           prefix: 'misc: '
     # Raise pull requests for version updates
