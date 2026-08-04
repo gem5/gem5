@@ -38,7 +38,8 @@
 #ifndef __MEM_RUBY_PROTOCOL_CHI_TLM_UTILS_HH__
 #define __MEM_RUBY_PROTOCOL_CHI_TLM_UTILS_HH__
 
-#include <ARM/TLM/arm_chi.h>
+#include <ARM/TLM/arm_chi_payload.h>
+#include <ARM/TLM/arm_chi_phase.h>
 
 #include "arch/arm/mpam.hh"
 #include "base/types.hh"

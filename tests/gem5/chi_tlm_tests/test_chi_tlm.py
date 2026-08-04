@@ -1,5 +1,4 @@
-# -*- mode:python -*-
-# Copyright (c) 2024-2025 Arm Limited
+# Copyright (c) 2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -34,77 +33,33 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.tlm_chi.utils import *
+import re
 
+from testlib import (
+    absdirpath,
+    constants,
+    joinpath,
+    verifier,
+)
 
-def payload_gen():
-    # Populating payload
-    payload = TlmPayload()
-    payload.address = 0x80000000
-    payload.ns = True
-    payload.size = Size.SIZE_64
-    return payload
+from gem5.suite import gem5_verify_config
 
-
-def phase_gen():
-    # Populating phase
-    phase = TlmPhase()
-    phase.opcode = ReqOpcode.READ_SHARED
-    phase.src_id = 0
-    phase.tgt_id = 0
-    phase.exp_comp_ack = True
-    return phase
-
-
-def channel_check(transaction):
-    return expect_equal(transaction.phase.channel, Channel.DAT)
-
-
-def opcode_check(transaction):
-    return expect_equal(transaction.phase.opcode, DatOpcode.COMP_DATA)
-
-
-def cacheline_check(transaction):
-    return expect_equal(transaction.phase.resp, Resp.RESP_UC)
-
-
-def data_id_check_gen(exp):
-    def data_id_check(transaction):
-        return expect_equal(transaction.phase.data_id, exp)
-
-    return data_id_check
-
-
-def wait_data(transaction):
-    return True
-
-
-def do_comp_ack(transaction):
-    transaction.phase.channel = Channel.RSP
-    transaction.phase.opcode = RspOpcode.COMP_ACK
-    transaction.send()
-    return False
-
-
-def init(board):
-    pass
-
-
-def test_all(generators):
-    generator = generators[0]
-    payload = payload_gen()
-    phase = phase_gen()
-
-    tran = generator.inject(payload, phase)
-    tran.ASSERT(channel_check)
-    tran.ASSERT(opcode_check)
-    tran.ASSERT(cacheline_check)
-    tran.ASSERT(data_id_check_gen(0))
-    tran.DO_WAIT(wait_data)
-    tran.ASSERT(channel_check)
-    tran.ASSERT(opcode_check)
-    tran.ASSERT(cacheline_check)
-    tran.ASSERT(data_id_check_gen(2))
-    tran.DO(do_comp_ack)
-
-    yield lambda *args: None
+gem5_verify_config(
+    name="chi-tlm-read-shared",
+    fixtures=(),
+    verifiers=(),
+    config=joinpath(absdirpath(__file__), "configs", "ruby_mem_test.py"),
+    config_args=[
+        joinpath(
+            absdirpath(__file__),
+            "configs",
+            "suites",
+            "read_shared_unit.py",
+        ),
+        "--abs-max-tick",
+        "1000000",
+    ],
+    valid_isas=(constants.all_compiled_tag,),
+    valid_hosts=constants.supported_hosts,
+    length=constants.quick_tag,
+)

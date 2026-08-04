@@ -309,7 +309,7 @@ CacheController::ReadTransaction::forward(const CHIDataMsg *msg)
 bool
 CacheController::DatalessTransaction::handle(const CHIResponseMsg *msg)
 {
-    const auto opcode = ruby_to_tlm::rspOpcode(msg->m_type);
+    [[maybe_unused]] const auto opcode = ruby_to_tlm::rspOpcode(msg->m_type);
     assert(opcode == ARM::CHI::RSP_OPCODE_COMP ||
            opcode == ARM::CHI::RSP_OPCODE_RETRY_ACK);
 
