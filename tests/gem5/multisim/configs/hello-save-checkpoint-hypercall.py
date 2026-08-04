@@ -73,7 +73,9 @@ for isa in [ISA.RISCV, ISA.ARM, ISA.X86]:
 
     memory = SingleChannelDDR3_1600(size="32MiB")
 
-    processor = SimpleProcessor(cpu_type=CPUTypes.TIMING, isa=isa, num_cores=1)
+    processor = SimpleProcessor(
+        cpu_type=CPUTypes.TIMING, isa=isa, num_cores=1, clk_freq="3GHz"
+    )
 
     board = SimpleBoard(
         clk_freq="3GHz",
