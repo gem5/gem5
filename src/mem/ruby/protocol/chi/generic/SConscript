@@ -40,6 +40,10 @@ Import('*')
 if not env['CONF']['RUBY_PROTOCOL_CHI']:
     Return()
 
+# SLICC writes generated CHI headers under the protocol name, while the
+# hand-written CHI sources live in a lower-case source directory.
+env.Append(CPPPATH=Dir(env['BUILDDIR']).Dir('mem/ruby/protocol/CHI'))
+
 SimObject('CHIGeneric.py', sim_objects=['CHIGenericController'])
 SimObject(
     'CBusy.py',

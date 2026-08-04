@@ -48,9 +48,9 @@
 #include "params/CHIGenericController.hh"
 
 // Generated from SLICC
-#include "mem/ruby/protocol/CHI/CHIDataMsg.hh"
-#include "mem/ruby/protocol/CHI/CHIRequestMsg.hh"
-#include "mem/ruby/protocol/CHI/CHIResponseMsg.hh"
+#include "CHIDataMsg.hh"
+#include "CHIRequestMsg.hh"
+#include "CHIResponseMsg.hh"
 
 namespace gem5
 {

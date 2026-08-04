@@ -43,9 +43,9 @@
 #include "arch/arm/mpam.hh"
 #include "base/types.hh"
 #include "mem/ruby/common/MachineID.hh"
-#include "mem/ruby/protocol/CHI/CHIDataType.hh"
-#include "mem/ruby/protocol/CHI/CHIRequestType.hh"
-#include "mem/ruby/protocol/CHI/CHIResponseType.hh"
+#include "CHIDataType.hh"
+#include "CHIRequestType.hh"
+#include "CHIResponseType.hh"
 
 namespace gem5 {
 

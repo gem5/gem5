@@ -38,9 +38,9 @@
 #include "mem/ruby/protocol/chi/tlm/controller.hh"
 
 #include "debug/TLM.hh"
-#include "mem/ruby/protocol/CHI/CHIDataMsg.hh"
-#include "mem/ruby/protocol/CHI/CHIRequestMsg.hh"
-#include "mem/ruby/protocol/CHI/CHIResponseMsg.hh"
+#include "CHIDataMsg.hh"
+#include "CHIRequestMsg.hh"
+#include "CHIResponseMsg.hh"
 #include "mem/ruby/protocol/chi/tlm/utils.hh"
 
 namespace gem5 {
