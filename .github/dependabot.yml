@@ -17,3 +17,4 @@ updates:
     # Labels on pull requests for version updates only
       labels:
           - misc
+          - dependencies
