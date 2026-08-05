@@ -26,8 +26,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Decode a gem5 E-Trace protobuf file and print packets in human-readable
-# format.  Follows the same pattern as util/decode_inst_dep_trace.py.
+# Decode a gem5 E-Trace v2.0 protobuf file and print packets in
+# human-readable form. Understands the spec-conformant packet layout:
+# discovery parameters carried in the header, Format 0/1/2/3 with
+# spec numeric codes, and the XOR-chain disambiguation bits.
 
 import sys
 
@@ -57,10 +59,10 @@ except ImportError:
 
 
 FORMAT_NAMES = {
-    etrace_pb2.ETracePacket.BRANCH_MAP: "BRANCH_MAP",
-    etrace_pb2.ETracePacket.BRANCH_MAP_ADDR: "BRANCH_MAP_ADDR",
-    etrace_pb2.ETracePacket.ADDR_ONLY: "ADDR_ONLY",
-    etrace_pb2.ETracePacket.SYNC: "SYNC",
+    etrace_pb2.ETracePacket.FORMAT_0: "F0",
+    etrace_pb2.ETracePacket.FORMAT_1: "F1",
+    etrace_pb2.ETracePacket.FORMAT_2: "F2",
+    etrace_pb2.ETracePacket.FORMAT_3: "F3",
 }
 
 SUBFORMAT_NAMES = {
@@ -70,34 +72,47 @@ SUBFORMAT_NAMES = {
     etrace_pb2.ETracePacket.SUPPORT: "SUPPORT",
 }
 
+F0_SUBFORMAT_NAMES = {
+    etrace_pb2.ETracePacket.F0_BRANCH_COUNT: "F0.PBC",
+    etrace_pb2.ETracePacket.F0_JTC: "F0.JTC",
+}
+
+QUAL_STATUS_NAMES = {
+    etrace_pb2.ETracePacket.QS_NO_CHANGE: "no_change",
+    etrace_pb2.ETracePacket.QS_ENDED_REP: "ended_rep",
+    etrace_pb2.ETracePacket.QS_TRACE_LOST: "trace_lost",
+    etrace_pb2.ETracePacket.QS_ENDED_NTR: "ended_ntr",
+}
+
 PRIV_NAMES = {0: "U", 1: "S", 3: "M"}
 
 DATA_FORMAT_NAMES = {
-    etrace_pb2.ETraceDataPacket.LOAD_ADDR_DATA: "LOAD_ADDR_DATA",
-    etrace_pb2.ETraceDataPacket.STORE_ADDR_DATA: "STORE_ADDR_DATA",
-    etrace_pb2.ETraceDataPacket.LOAD_ADDR_ONLY: "LOAD_ADDR_ONLY",
-    etrace_pb2.ETraceDataPacket.STORE_ADDR_ONLY: "STORE_ADDR_ONLY",
-    etrace_pb2.ETraceDataPacket.LOAD_DATA_ONLY: "LOAD_DATA_ONLY",
-    etrace_pb2.ETraceDataPacket.STORE_DATA_ONLY: "STORE_DATA_ONLY",
+    etrace_pb2.ETraceDataPacket.LOAD_ALIGNED: "LOAD",
+    etrace_pb2.ETraceDataPacket.LOAD_UNALIGNED: "LOAD_UA",
+    etrace_pb2.ETraceDataPacket.STORE_ALIGNED: "STORE",
+    etrace_pb2.ETraceDataPacket.STORE_UNALIGNED: "STORE_UA",
+    etrace_pb2.ETraceDataPacket.LOAD_DATA_RESP: "LOAD_RESP",
+    etrace_pb2.ETraceDataPacket.CSR: "CSR",
     etrace_pb2.ETraceDataPacket.ATOMIC: "ATOMIC",
 }
 
 ATOMIC_SUBTYPE_NAMES = {
-    etrace_pb2.ETraceDataPacket.SWAP: "SWAP",
-    etrace_pb2.ETraceDataPacket.ADD: "ADD",
-    etrace_pb2.ETraceDataPacket.AND: "AND",
-    etrace_pb2.ETraceDataPacket.OR: "OR",
-    etrace_pb2.ETraceDataPacket.XOR: "XOR",
-    etrace_pb2.ETraceDataPacket.MAX: "MAX",
-    etrace_pb2.ETraceDataPacket.MIN: "MIN",
-    etrace_pb2.ETraceDataPacket.MAXU: "MAXU",
-    etrace_pb2.ETraceDataPacket.MINU: "MINU",
-    etrace_pb2.ETraceDataPacket.LR: "LR",
-    etrace_pb2.ETraceDataPacket.SC: "SC",
+    etrace_pb2.ETraceDataPacket.AMOSWAP: "SWAP",
+    etrace_pb2.ETraceDataPacket.AMOADD: "ADD",
+    etrace_pb2.ETraceDataPacket.AMOAND: "AND",
+    etrace_pb2.ETraceDataPacket.AMOOR: "OR",
+    etrace_pb2.ETraceDataPacket.AMOXOR: "XOR",
+    etrace_pb2.ETraceDataPacket.AMOMAX: "MAX",
+    etrace_pb2.ETraceDataPacket.AMOMIN: "MIN",
+    etrace_pb2.ETraceDataPacket.AMO_RESERVED: "RESERVED",
 }
 
 
 def format_branch_map(bmap, count):
+    """Render a branch map as a taken/not-taken string.
+
+    Per spec, bit 0 is the oldest branch; 0 = taken, 1 = not-taken.
+    """
     bits = []
     for i in range(count):
         bits.append("N" if (bmap >> i) & 1 else "T")
@@ -105,6 +120,7 @@ def format_branch_map(bmap, count):
 
 
 def format_ioptions(ioptions):
+    """Decode ioptions bits — layout is fixed by the encoder (see header)."""
     flags = []
     if ioptions & (1 << 0):
         flags.append("impl_ret")
@@ -116,6 +132,17 @@ def format_ioptions(ioptions):
         flags.append("sijump")
     if ioptions & (1 << 4):
         flags.append("impl_exc")
+    if ioptions & (1 << 5):
+        flags.append("full_addr")
+    return "|".join(flags) if flags else "none"
+
+
+def format_doptions(doptions):
+    flags = []
+    if doptions & (1 << 0):
+        flags.append("no_data")
+    if doptions & (1 << 1):
+        flags.append("no_addr")
     return "|".join(flags) if flags else "none"
 
 
@@ -123,7 +150,26 @@ def format_data_bytes(data):
     return " ".join(f"{b:02x}" for b in data)
 
 
-def decode_instruction_trace(filename, show_stats):
+def branches_field_to_count(branches_field):
+    """Map the on-wire tapered `branches` field to the actual bit count.
+
+    Spec: 0 → 31 (no-address form), 1 → 1, 2-3 → 3, 4-7 → 7, 8-15 → 15,
+    16-31 → 31.
+    """
+    if branches_field == 0:
+        return 31, True   # no-address form
+    if branches_field == 1:
+        return 1, False
+    if branches_field <= 3:
+        return 3, False
+    if branches_field <= 7:
+        return 7, False
+    if branches_field <= 15:
+        return 15, False
+    return 31, False
+
+
+def decode_instruction_trace(filename, show_stats, verify_updiscon=False):
     proto_in = protolib.openFileRd(filename)
 
     magic_number = proto_in.read(4).decode()
@@ -135,151 +181,273 @@ def decode_instruction_trace(filename, show_stats):
     protolib.decodeMessage(proto_in, header)
 
     print(f"Object: {header.obj_id}")
+    print(f"Version: {header.ver}")
     print(f"Tick freq: {header.tick_freq}")
     print(f"Arch width: {header.arch_width}")
+    print("Discovery parameters:")
+    print(f"  iaddress_width_p     = {header.iaddress_width_p}")
+    print(f"  iaddress_lsb_p       = {header.iaddress_lsb_p}")
+    print(f"  privilege_width_p    = {header.privilege_width_p}")
+    print(f"  ecause_width_p       = {header.ecause_width_p}")
+    print(f"  context_width_p      = {header.context_width_p}")
+    print(f"  time_width_p         = {header.time_width_p}")
+    print(f"  f0s_width_p          = {header.f0s_width_p}")
+    print(f"  cache_size_p         = {header.cache_size_p}")
+    print(f"  call_counter_size_p  = {header.call_counter_size_p}")
+    print(f"  bpred_size_p         = {header.bpred_size_p}")
+    print(f"  ioptions_bits (adv)  = 0x{header.ioptions_bits:x} "
+          f"({format_ioptions(header.ioptions_bits)})")
+    print(f"  doptions_bits (adv)  = 0x{header.doptions_bits:x} "
+          f"({format_doptions(header.doptions_bits)})")
     print()
 
     num_packets = 0
-    num_sync = 0
+    num_sync_start = 0
     num_trap = 0
     num_branch_map = 0
     num_addr_only = 0
     num_support = 0
     num_context = 0
+    num_f0_pbc = 0
+    num_f0_jtc = 0
     total_branches = 0
     reconstructed_addr = 0
+    prev_addr_msb = 0   # for XOR-chain reconstruction
+    jtc_mirror = {}     # decoder mirror of the encoder's JTC
 
     packet = etrace_pb2.ETracePacket()
     while protolib.decodeMessage(proto_in, packet):
         num_packets += 1
         fmt = FORMAT_NAMES.get(packet.format, str(packet.format))
 
-        if not show_stats:
-            line = f"[{num_packets:6d}] tick={packet.tick:12d} fmt={fmt:<16s}"
+        if show_stats:
+            # Count-only pass — advance state where the wire semantics
+            # require it, but skip formatting.
+            _classify_for_stats(
+                packet,
+                counters := {
+                    "sync": num_sync_start, "trap": num_trap,
+                    "branch_map": num_branch_map, "addr_only": num_addr_only,
+                    "support": num_support, "context": num_context,
+                    "f0_pbc": num_f0_pbc, "f0_jtc": num_f0_jtc,
+                    "branches": total_branches,
+                },
+            )
+            num_sync_start = counters["sync"]
+            num_trap = counters["trap"]
+            num_branch_map = counters["branch_map"]
+            num_addr_only = counters["addr_only"]
+            num_support = counters["support"]
+            num_context = counters["context"]
+            num_f0_pbc = counters["f0_pbc"]
+            num_f0_jtc = counters["f0_jtc"]
+            total_branches = counters["branches"]
+            continue
 
-            if packet.format == etrace_pb2.ETracePacket.SYNC:
-                subfmt = SUBFORMAT_NAMES.get(
-                    packet.subformat, str(packet.subformat)
-                )
+        line = f"[{num_packets:6d}] tick={packet.tick:12d} fmt={fmt:<4s}"
 
-                if packet.subformat == etrace_pb2.ETracePacket.TRAP:
-                    num_trap += 1
-                    reconstructed_addr = packet.address
-                    priv = PRIV_NAMES.get(packet.priv, str(packet.priv))
-                    line += f" sub={subfmt:<8s}"
-                    if packet.thaddr:
-                        line += f" addr=0x{packet.address:016x}"
-                    else:
-                        line += " addr=<inferable>"
-                    line += f" priv={priv}"
-                    line += f" cause={packet.cause}"
+        if packet.format == etrace_pb2.ETracePacket.FORMAT_3:
+            subfmt = SUBFORMAT_NAMES.get(
+                packet.subformat, str(packet.subformat)
+            )
+            line += f" sub={subfmt:<8s}"
+
+            if packet.subformat == etrace_pb2.ETracePacket.TRAP:
+                num_trap += 1
+                reconstructed_addr = packet.address
+                priv = PRIV_NAMES.get(packet.priv, str(packet.priv))
+                if packet.HasField("address"):
+                    line += f" addr=0x{packet.address:016x}"
+                else:
+                    line += " addr=<inferable>"
+                line += f" priv={priv} branch={int(packet.branch)}"
+                line += f" cause={packet.cause}"
+                if not packet.interrupt:
                     line += f" tval=0x{packet.tval:x}"
-                    line += f" int={packet.interrupt}"
+                line += f" int={packet.interrupt}"
+                if packet.HasField("time"):
+                    line += f" time={packet.time}"
+                # Reset JTC / bpred mirror on any sync.
+                jtc_mirror.clear()
 
-                elif packet.subformat == etrace_pb2.ETracePacket.SUPPORT:
-                    num_support += 1
-                    line += f" sub={subfmt:<8s}"
-                    line += f" ienable={packet.ienable}"
-                    line += f" qual={packet.qual_status}"
-                    line += f" iopts={format_ioptions(packet.ioptions)}"
-                    if packet.denable:
-                        line += f" denable={packet.denable}"
-                        line += f" dopts={packet.doptions}"
-
-                elif packet.subformat == etrace_pb2.ETracePacket.CONTEXT:
-                    num_context += 1
-                    line += f" sub={subfmt:<8s}"
-                    line += f" context=0x{packet.context:x}"
-
-                else:
-                    num_sync += 1
-                    priv = PRIV_NAMES.get(packet.priv, str(packet.priv))
-                    reconstructed_addr = packet.address
-                    line += f" sub={subfmt:<8s} addr=0x{packet.address:016x}"
-                    line += f" priv={priv}"
-                    if packet.branch_count > 0:
-                        bm = format_branch_map(
-                            packet.branch_map, packet.branch_count
-                        )
-                        line += f" branch={bm}"
-
-            elif packet.format == etrace_pb2.ETracePacket.BRANCH_MAP_ADDR:
-                num_branch_map += 1
-                if packet.HasField("saddress"):
-                    delta = packet.saddress
-                else:
-                    delta = packet.address
-                reconstructed_addr += delta
-                reconstructed_addr &= (1 << 64) - 1
-                bm = format_branch_map(
-                    packet.branch_map, packet.branch_count
+            elif packet.subformat == etrace_pb2.ETracePacket.SUPPORT:
+                num_support += 1
+                qs = QUAL_STATUS_NAMES.get(
+                    packet.qual_status, str(packet.qual_status)
                 )
-                total_branches += packet.branch_count
+                line += f" ienable={int(packet.ienable)}"
+                line += f" qual={qs}"
+                line += f" iopts={format_ioptions(packet.ioptions)}"
+                line += f" denable={int(packet.denable)}"
+                line += f" dloss={int(packet.dloss)}"
+                if packet.doptions:
+                    line += f" dopts={format_doptions(packet.doptions)}"
+
+            elif packet.subformat == etrace_pb2.ETracePacket.CONTEXT:
+                num_context += 1
+                priv = PRIV_NAMES.get(packet.priv, str(packet.priv))
+                line += f" priv={priv}"
+                line += f" context=0x{packet.context:x}"
+                if packet.HasField("time"):
+                    line += f" time={packet.time}"
+
+            else:  # START
+                num_sync_start += 1
+                priv = PRIV_NAMES.get(packet.priv, str(packet.priv))
+                reconstructed_addr = packet.address
+                line += (
+                    f" addr=0x{packet.address:016x} priv={priv}"
+                    f" branch={int(packet.branch)}"
+                )
+                if packet.HasField("time"):
+                    line += f" time={packet.time}"
+                if packet.HasField("context"):
+                    line += f" context=0x{packet.context:x}"
+                jtc_mirror.clear()
+
+            prev_addr_msb = (reconstructed_addr >> 63) & 1
+
+        elif packet.format == etrace_pb2.ETracePacket.FORMAT_1:
+            num_branch_map += 1
+            branches_field = packet.branches
+            count, no_addr_form = branches_field_to_count(branches_field)
+            if packet.HasField("saddress"):
+                delta = packet.saddress
+                reconstructed_addr = (reconstructed_addr + delta) & (
+                    (1 << 64) - 1
+                )
+                # Mirror the encoder's JTC: whenever we see an
+                # address-carrying Format 1 or Format 2 packet, its
+                # target could be JTC-cached later.
+                idx = (reconstructed_addr >> 1) & (
+                    (1 << header.cache_size_p) - 1
+                ) if header.cache_size_p > 0 else None
+                if idx is not None:
+                    jtc_mirror[idx] = reconstructed_addr
+                bm = format_branch_map(packet.branch_map, count)
+                total_branches += count
                 line += (
                     f" addr=0x{reconstructed_addr:016x}"
                     f" (delta={delta:+d})"
                     f" branches={bm}"
                 )
-                if packet.HasField("jtc_index"):
-                    line += f" jtc={packet.jtc_index}"
-                if packet.branch_pred_count > 0:
-                    line += f" bpred={packet.branch_pred_count}"
-
-            elif packet.format == etrace_pb2.ETracePacket.BRANCH_MAP:
-                num_branch_map += 1
-                bm = format_branch_map(
-                    packet.branch_map, packet.branch_count
-                )
-                total_branches += packet.branch_count
-                line += f" branches={bm}"
-                if packet.branch_pred_count > 0:
-                    line += f" bpred={packet.branch_pred_count}"
-
-            elif packet.format == etrace_pb2.ETracePacket.ADDR_ONLY:
-                num_addr_only += 1
-                if packet.HasField("saddress"):
-                    delta = packet.saddress
-                else:
-                    delta = packet.address
-                reconstructed_addr += delta
-                reconstructed_addr &= (1 << 64) - 1
-                line += f" addr=0x{reconstructed_addr:016x}"
-                if packet.notify:
-                    line += " NOTIFY"
-                if packet.updiscon:
-                    line += " UPDISCON"
+                if verify_updiscon:
+                    addr_msb = (reconstructed_addr >> 63) & 1
+                    expected_notify = addr_msb
+                    if packet.notify != expected_notify:
+                        line += " [!notify-chain]"
+                    prev_addr_msb = addr_msb
                 if packet.irreport:
                     line += f" IRREPORT(depth={packet.irdepth})"
-
-            print(line)
-        else:
-            if packet.format == etrace_pb2.ETracePacket.SYNC:
-                if packet.subformat == etrace_pb2.ETracePacket.TRAP:
-                    num_trap += 1
-                elif packet.subformat == etrace_pb2.ETracePacket.SUPPORT:
-                    num_support += 1
-                elif packet.subformat == etrace_pb2.ETracePacket.CONTEXT:
-                    num_context += 1
-                else:
-                    num_sync += 1
-            elif packet.format == etrace_pb2.ETracePacket.ADDR_ONLY:
-                num_addr_only += 1
+                if packet.updiscon != packet.notify:
+                    line += " UPDISCON"
             else:
-                num_branch_map += 1
-                total_branches += packet.branch_count
+                # No-address Format 1 (31-bit map).
+                bm = format_branch_map(packet.branch_map, 31)
+                total_branches += 31
+                line += f" branches={bm} [31-bit]"
+
+            if packet.branch_count > 0:
+                line += f" bpred+={packet.branch_count}"
+
+        elif packet.format == etrace_pb2.ETracePacket.FORMAT_2:
+            num_addr_only += 1
+            delta = packet.saddress
+            reconstructed_addr = (reconstructed_addr + delta) & (
+                (1 << 64) - 1
+            )
+            if header.cache_size_p > 0:
+                idx = (reconstructed_addr >> 1) & (
+                    (1 << header.cache_size_p) - 1
+                )
+                jtc_mirror[idx] = reconstructed_addr
+            line += f" addr=0x{reconstructed_addr:016x} (delta={delta:+d})"
+            if packet.irreport:
+                line += f" IRREPORT(depth={packet.irdepth})"
+            if packet.updiscon != packet.notify:
+                line += " UPDISCON"
+
+        elif packet.format == etrace_pb2.ETracePacket.FORMAT_0:
+            sub = F0_SUBFORMAT_NAMES.get(
+                packet.f0_subformat, str(packet.f0_subformat)
+            )
+            line += f" sub={sub:<7s}"
+            if packet.f0_subformat == etrace_pb2.ETracePacket.F0_BRANCH_COUNT:
+                num_f0_pbc += 1
+                # Value on wire is (pbc - 31).
+                pbc = packet.branch_count + 31
+                line += f" pbc={pbc}"
+                if packet.branch_fmt & 0x2:
+                    if packet.HasField("saddress"):
+                        delta = packet.saddress
+                        reconstructed_addr = (
+                            reconstructed_addr + delta
+                        ) & ((1 << 64) - 1)
+                        line += (
+                            f" addr=0x{reconstructed_addr:016x}"
+                            f" (delta={delta:+d})"
+                        )
+                    line += " (mispred)"
+            elif packet.f0_subformat == etrace_pb2.ETracePacket.F0_JTC:
+                num_f0_jtc += 1
+                idx = packet.jtc_index
+                line += f" idx={idx}"
+                # Look up in mirror; if unseen, note it.
+                if idx in jtc_mirror:
+                    tgt = jtc_mirror[idx]
+                    reconstructed_addr = tgt
+                    line += f" -> 0x{tgt:016x}"
+                else:
+                    line += " [uncached-in-mirror]"
+                if packet.branches > 0:
+                    count, _ = branches_field_to_count(packet.branches)
+                    bm = format_branch_map(packet.branch_map, count)
+                    total_branches += count
+                    line += f" branches={bm}"
+
+        print(line)
 
     print()
     print("--- Statistics ---")
     print(f"Total packets:      {num_packets}")
-    print(f"Sync packets:       {num_sync}")
+    print(f"Sync (start):       {num_sync_start}")
     print(f"Trap packets:       {num_trap}")
     print(f"Support packets:    {num_support}")
     print(f"Context packets:    {num_context}")
     print(f"Branch map packets: {num_branch_map}")
     print(f"Addr-only packets:  {num_addr_only}")
+    print(f"F0 PBC packets:     {num_f0_pbc}")
+    print(f"F0 JTC packets:     {num_f0_jtc}")
     print(f"Total branches:     {total_branches}")
 
     proto_in.close()
+
+
+def _classify_for_stats(packet, counters):
+    """Increment stat counters based on packet type."""
+    if packet.format == etrace_pb2.ETracePacket.FORMAT_3:
+        if packet.subformat == etrace_pb2.ETracePacket.TRAP:
+            counters["trap"] += 1
+        elif packet.subformat == etrace_pb2.ETracePacket.SUPPORT:
+            counters["support"] += 1
+        elif packet.subformat == etrace_pb2.ETracePacket.CONTEXT:
+            counters["context"] += 1
+        else:
+            counters["sync"] += 1
+    elif packet.format == etrace_pb2.ETracePacket.FORMAT_1:
+        counters["branch_map"] += 1
+        if packet.HasField("saddress"):
+            count, _ = branches_field_to_count(packet.branches)
+            counters["branches"] += count
+        else:
+            counters["branches"] += 31
+    elif packet.format == etrace_pb2.ETracePacket.FORMAT_2:
+        counters["addr_only"] += 1
+    elif packet.format == etrace_pb2.ETracePacket.FORMAT_0:
+        if packet.f0_subformat == etrace_pb2.ETracePacket.F0_BRANCH_COUNT:
+            counters["f0_pbc"] += 1
+        else:
+            counters["f0_jtc"] += 1
 
 
 def decode_data_trace(filename, show_stats):
@@ -300,26 +468,30 @@ def decode_data_trace(filename, show_stats):
     num_loads = 0
     num_stores = 0
     num_atomics = 0
-    reconstructed_addr = 0
+    num_csr = 0
+    # Per-size (log2 bytes) baseline for delta reconstruction.
+    baseline_by_size = {}
 
     packet = etrace_pb2.ETraceDataPacket()
     while protolib.decodeMessage(proto_in, packet):
         num_packets += 1
         fmt = DATA_FORMAT_NAMES.get(packet.format, str(packet.format))
+        log_size = packet.size
+        bytes_ = 1 << log_size
 
         is_load = packet.format in (
-            etrace_pb2.ETraceDataPacket.LOAD_ADDR_DATA,
-            etrace_pb2.ETraceDataPacket.LOAD_ADDR_ONLY,
-            etrace_pb2.ETraceDataPacket.LOAD_DATA_ONLY,
+            etrace_pb2.ETraceDataPacket.LOAD_ALIGNED,
+            etrace_pb2.ETraceDataPacket.LOAD_UNALIGNED,
+            etrace_pb2.ETraceDataPacket.LOAD_DATA_RESP,
         )
         is_store = packet.format in (
-            etrace_pb2.ETraceDataPacket.STORE_ADDR_DATA,
-            etrace_pb2.ETraceDataPacket.STORE_ADDR_ONLY,
-            etrace_pb2.ETraceDataPacket.STORE_DATA_ONLY,
+            etrace_pb2.ETraceDataPacket.STORE_ALIGNED,
+            etrace_pb2.ETraceDataPacket.STORE_UNALIGNED,
         )
         is_atomic = (
             packet.format == etrace_pb2.ETraceDataPacket.ATOMIC
         )
+        is_csr = packet.format == etrace_pb2.ETraceDataPacket.CSR
 
         if is_load:
             num_loads += 1
@@ -327,22 +499,26 @@ def decode_data_trace(filename, show_stats):
             num_stores += 1
         elif is_atomic:
             num_atomics += 1
+        elif is_csr:
+            num_csr += 1
 
         if not show_stats:
-            line = f"[{num_packets:6d}] tick={packet.tick:12d} fmt={fmt:<18s}"
-            line += f" size={packet.size}"
-
-            has_addr = packet.format in (
-                etrace_pb2.ETraceDataPacket.LOAD_ADDR_DATA,
-                etrace_pb2.ETraceDataPacket.STORE_ADDR_DATA,
-                etrace_pb2.ETraceDataPacket.LOAD_ADDR_ONLY,
-                etrace_pb2.ETraceDataPacket.STORE_ADDR_ONLY,
-                etrace_pb2.ETraceDataPacket.ATOMIC,
+            line = (
+                f"[{num_packets:6d}] tick={packet.tick:12d} fmt={fmt:<9s}"
+                f" size={bytes_}B(log{log_size})"
+                f" diff={packet.diff}"
             )
-            if has_addr:
-                reconstructed_addr += packet.address
-                reconstructed_addr &= (1 << 64) - 1
-                line += f" addr=0x{reconstructed_addr:016x}"
+
+            if packet.HasField("address"):
+                # diff bits: 00 full addr, else delta.
+                if packet.diff == 0:
+                    addr = packet.address
+                else:
+                    addr = (
+                        baseline_by_size.get(log_size, 0) + packet.address
+                    ) & ((1 << 64) - 1)
+                baseline_by_size[log_size] = addr
+                line += f" addr=0x{addr:016x}"
 
             if packet.data:
                 line += f" data=[{format_data_bytes(packet.data)}]"
@@ -356,6 +532,10 @@ def decode_data_trace(filename, show_stats):
                     line += (
                         f" operand=[{format_data_bytes(packet.operand)}]"
                     )
+            if packet.is_lr:
+                line += " [LR]"
+            if packet.is_sc:
+                line += " [SC]"
 
             print(line)
 
@@ -365,6 +545,7 @@ def decode_data_trace(filename, show_stats):
     print(f"Loads:         {num_loads}")
     print(f"Stores:        {num_stores}")
     print(f"Atomics:       {num_atomics}")
+    print(f"CSR accesses:  {num_csr}")
 
     proto_in.close()
 
@@ -375,17 +556,21 @@ def main():
             "Usage:",
             sys.argv[0],
             "<protobuf input> [--stats] [--data-trace]",
+            "[--verify-updiscon]",
         )
         exit(-1)
 
     show_stats = "--stats" in sys.argv
     data_trace = "--data-trace" in sys.argv
+    verify_updiscon = "--verify-updiscon" in sys.argv
     filename = sys.argv[1]
 
     if data_trace:
         decode_data_trace(filename, show_stats)
     else:
-        decode_instruction_trace(filename, show_stats)
+        decode_instruction_trace(
+            filename, show_stats, verify_updiscon=verify_updiscon
+        )
 
 
 if __name__ == "__main__":
