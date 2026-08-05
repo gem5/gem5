@@ -42,3 +42,58 @@ class ETrace(ProbeListenerObject):
     resyncPeriod = Param.UInt64(
         10000, "Instructions between periodic resync packets"
     )
+
+    # Implicit exception mode
+    implicitException = Param.Bool(
+        False, "Omit trap handler address when inferrable from mtvec/stvec"
+    )
+
+    # Implicit return mode
+    implicitReturn = Param.Bool(
+        False, "Enable implicit return tracking to reduce trace size"
+    )
+    callCounterSizeP = Param.UInt32(
+        0, "Log2 of call counter max value (0 disables)"
+    )
+
+    # Branch prediction mode
+    branchPrediction = Param.Bool(
+        False, "Enable branch prediction compression in trace"
+    )
+    bpredSizeP = Param.UInt32(
+        0, "Log2 of branch predictor table entries (0 disables)"
+    )
+
+    # Jump target cache mode
+    jumpTargetCache = Param.Bool(
+        False, "Enable jump target cache compression"
+    )
+    cacheSizeP = Param.UInt32(
+        0, "Log2 of jump target cache entries (0 disables)"
+    )
+
+    # Sequentially inferable jump mode
+    sijump = Param.Bool(
+        False, "Enable sequentially inferable jump detection (lui/auipc+jalr)"
+    )
+
+    # Data trace
+    dataTrace = Param.Bool(False, "Enable data trace")
+    dataTraceMode = Param.UInt32(
+        0, "Data trace mode: 0=addr+data, 1=addr-only, 2=data-only"
+    )
+    dataTraceFile = Param.String(
+        "etrace_data.pb.gz", "Output file for data trace packets"
+    )
+
+    # Context tracking
+    contextWidth = Param.UInt32(
+        0, "Width of context field (0 disables, 16 for ASID)"
+    )
+
+    # Filtering
+    filterPriv = Param.UInt32(
+        0xF, "Bitmask of privilege levels to trace (bit0=U, bit1=S, bit3=M)"
+    )
+    filterAddrStart = Param.Addr(0, "Start of address range filter (0=off)")
+    filterAddrEnd = Param.Addr(0, "End of address range filter (0=off)")

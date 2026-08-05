@@ -29,8 +29,14 @@
 #ifndef __CPU_O3_PROBE_ETRACE_HH__
 #define __CPU_O3_PROBE_ETRACE_HH__
 
+#include <utility>
+#include <vector>
+
+#include "arch/riscv/insts/static_inst.hh"
+#include "arch/riscv/pagetable.hh"
 #include "base/statistics.hh"
 #include "cpu/o3/dyn_inst_ptr.hh"
+#include "mem/packet.hh"
 #include "params/ETrace.hh"
 #include "proto/etrace.pb.h"
 #include "proto/protoio.hh"
@@ -81,14 +87,34 @@ class ETrace : public ProbeListenerObject
     };
 
     void traceCommit(const DynInstPtr &dynInst);
+    void traceDataAccess(
+        const std::pair<DynInstPtr, PacketPtr> &data);
     IType classifyInstruction(const DynInstPtr &dynInst);
 
     void emitSyncPacket(Addr addr, uint8_t priv, bool isBranch, bool taken);
     void emitTrapPacket(Addr addr, uint64_t cause, uint64_t tval,
                         bool isInterrupt, uint8_t priv);
     void emitBranchMapPacket(bool withAddress, Addr addr);
+    void emitSupportPacket(bool isStart);
+    void emitAddrOnlyPacket(Addr addr, bool notify, bool updiscon,
+                            bool irreport, uint32_t irdepth);
+    void emitContextPacket(uint64_t context);
     void resetBranchMap();
     void flushTrace();
+
+    bool predictBranch(Addr pc);
+    void updatePredictor(Addr pc, bool taken);
+    void resetPredictor();
+
+    bool jtCacheLookup(Addr pc, Addr target, uint32_t &index);
+    void jtCacheUpdate(Addr pc, Addr target);
+    void jtCacheInvalidate();
+
+    bool isTrapAddrInferable(uint8_t priv, uint64_t cause,
+                             bool isInterrupt);
+    bool isSeqInferableJump(const DynInstPtr &dynInst);
+    bool passesFilter(Addr pc, uint8_t priv);
+    uint32_t classifyAtomicOp(const DynInstPtr &dynInst);
 
     CPU *cpu;
     ProtoOutputStream *traceStream;
@@ -122,6 +148,53 @@ class ETrace : public ProbeListenerObject
     // Whether initial sync has been sent
     bool needsInitialSync;
 
+    // Implicit exception mode
+    bool implicitException;
+
+    // Implicit return mode
+    bool implicitReturn;
+    uint32_t callCounter;
+    uint32_t callCounterMax;
+
+    // Branch prediction mode
+    bool branchPrediction;
+    uint32_t bpredSizeP;
+    std::vector<uint8_t> bpredTable;
+    uint32_t bpredCorrectCount;
+
+    // Jump target cache
+    bool jumpTargetCache;
+    uint32_t cacheSizeP;
+    std::vector<Addr> jtCache;
+
+    // Sequentially inferable jump detection
+    bool sijump;
+    Addr prevInstPC;
+    uint8_t prevInstOpcode;
+    uint8_t prevInstRd;
+    unsigned prevInstSize;
+    bool havePrevInst;
+
+    // Data trace
+    bool dataTrace;
+    uint32_t dataTraceMode;
+    ProtoOutputStream *dataTraceStream;
+    Addr lastDataAddr;
+
+    // Context tracking
+    uint32_t contextWidth;
+    uint64_t lastContext;
+
+    // Filtering
+    uint32_t filterPrivMask;
+    Addr filterAddrStart;
+    Addr filterAddrEnd;
+    bool filterAddrEnabled;
+    bool wasFiltered;
+
+    // Updiscon tracking
+    bool pendingUpdiscon;
+
     struct ETraceStats : public statistics::Group
     {
         ETraceStats(statistics::Group *parent);
@@ -131,6 +204,15 @@ class ETrace : public ProbeListenerObject
         statistics::Scalar numBranchMapPackets;
         statistics::Scalar numBranches;
         statistics::Scalar totalInstsTraced;
+        statistics::Scalar numAddrOnlyPackets;
+        statistics::Scalar numSupportPackets;
+        statistics::Scalar numContextPackets;
+        statistics::Scalar numDataTracePackets;
+        statistics::Scalar numImplicitReturns;
+        statistics::Scalar numBpredCorrect;
+        statistics::Scalar numJtCacheHits;
+        statistics::Scalar numSijumpInferred;
+        statistics::Scalar numFilteredInsts;
     } stats;
 };
 

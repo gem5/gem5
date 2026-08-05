@@ -70,4 +70,63 @@ message ETracePacket
     optional uint64 tval = 9;
     optional bool interrupt = 10;
     optional uint32 itype = 11;
+
+    // Support packet fields (format 3, subformat 3)
+    optional uint32 ienable = 12;
+    optional uint32 encoder_mode = 13;
+    optional uint32 qual_status = 14;
+    optional uint32 ioptions = 15;
+    optional uint32 denable = 16;
+    optional uint32 doptions = 17;
+
+    // Notification/disambiguation fields (format 1 and 2)
+    optional bool notify = 18;
+    optional bool updiscon = 19;
+    optional bool irreport = 20;
+    optional uint32 irdepth = 21;
+
+    // Context, cache, and compression fields
+    optional uint32 context = 22;
+    optional uint32 jtc_index = 23;
+    optional bool thaddr = 24;
+    optional sint64 saddress = 25;
+    optional uint32 branch_pred_count = 26;
+}
+
+// Data trace packet for load/store/atomic/CSR tracing.
+message ETraceDataPacket
+{
+    enum DataFormat
+    {
+        LOAD_ADDR_DATA = 0;
+        STORE_ADDR_DATA = 1;
+        LOAD_ADDR_ONLY = 2;
+        STORE_ADDR_ONLY = 3;
+        LOAD_DATA_ONLY = 4;
+        STORE_DATA_ONLY = 5;
+        ATOMIC = 6;
+    }
+    enum AtomicSubtype
+    {
+        SWAP = 0;
+        ADD = 1;
+        AND = 2;
+        OR = 3;
+        XOR = 4;
+        MAX = 5;
+        MIN = 6;
+        MAXU = 7;
+        MINU = 8;
+        LR = 9;
+        SC = 10;
+    }
+    optional uint64 tick = 1;
+    optional DataFormat format = 2;
+    optional uint32 size = 3;
+    optional bool diff = 4;
+    optional uint32 data_len = 5;
+    optional bytes data = 6;
+    optional uint64 address = 7;
+    optional AtomicSubtype atomic_subtype = 8;
+    optional bytes operand = 9;
 }
