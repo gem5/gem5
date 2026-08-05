@@ -125,8 +125,11 @@ class ETrace : public ProbeListenerObject
     // only when `withAddress` is true.
     void emitBranchCountPacket(bool withAddress, Addr addr,
                                bool mispredTaken = true);
-    // Format 0-1 (JTC hit).
-    void emitJtcHitPacket(uint32_t index);
+    // Format 0-1 (JTC hit). `target` is the actual jump target (byte
+    // address); the encoder must advance its lastReportedAddr because
+    // the decoder resets its reconstructed_addr to the JTC target
+    // when it sees this packet.
+    void emitJtcHitPacket(uint32_t index, Addr target);
 
     void resetBranchMap();
     void flushTrace();

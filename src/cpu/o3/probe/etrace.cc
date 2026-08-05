@@ -768,9 +768,10 @@ ETrace::traceCommit(const DynInstPtr &dynInst)
             uint32_t jtcIndex;
             if (jtCacheLookup(npc, jtcIndex)) {
                 stats.numJtCacheHits++;
-                emitJtcHitPacket(jtcIndex);
+                emitJtcHitPacket(jtcIndex, npc);
             } else {
-                jtCacheUpdate(npc);
+                // emitAddressPacket → Format 1 or Format 2, both
+                // update the JTC internally.
                 emitAddressPacket(npc);
             }
             break;
@@ -830,9 +831,10 @@ ETrace::traceCommit(const DynInstPtr &dynInst)
             uint32_t jtcIndex;
             if (jtCacheLookup(npc, jtcIndex)) {
                 stats.numJtCacheHits++;
-                emitJtcHitPacket(jtcIndex);
+                emitJtcHitPacket(jtcIndex, npc);
             } else {
-                jtCacheUpdate(npc);
+                // emitAddressPacket → Format 1 or Format 2, both
+                // update the JTC internally.
                 emitAddressPacket(npc);
             }
             break;
@@ -1180,6 +1182,10 @@ ETrace::emitBranchMapPacket(bool withAddress, Addr addr)
             (addr >> iaddressLsbP) - (lastReportedAddr >> iaddressLsbP));
         pkt.set_saddress(delta);
         lastReportedAddr = addr;
+        // Populate JTC on every address-carrying Format 1 emit — the
+        // decoder mirrors on every such packet, so the encoder must
+        // too or a future JTC hit will resolve to a stale target.
+        jtCacheUpdate(addr);
 
         bool isExplicitReturn = pendingExplicitReturn;
         pendingExplicitReturn = false;
@@ -1234,6 +1240,8 @@ ETrace::emitAddrOnlyPacket(Addr addr)
     int64_t delta = static_cast<int64_t>(
         (addr >> iaddressLsbP) - (lastReportedAddr >> iaddressLsbP));
     pkt.set_saddress(delta);
+    // Populate JTC (see emitBranchMapPacket comment).
+    jtCacheUpdate(addr);
 
     bool isExplicitReturn = pendingExplicitReturn;
     pendingExplicitReturn = false;
@@ -1301,7 +1309,7 @@ ETrace::emitBranchCountPacket(bool withAddress, Addr addr, bool mispredTaken)
 
 // Format 0-1 (JTC hit).
 void
-ETrace::emitJtcHitPacket(uint32_t index)
+ETrace::emitJtcHitPacket(uint32_t index, Addr target)
 {
     ProtoMessage::ETracePacket pkt;
     pkt.set_tick(curTick());
@@ -1334,6 +1342,10 @@ ETrace::emitJtcHitPacket(uint32_t index)
     pkt.set_irdepth(isExplicitReturn ? pendingIrdepth : 0);
 
     traceStream->write(pkt);
+    // Decoder resets its reconstructed_addr to the JTC target on
+    // this packet; encoder must do the same for lastReportedAddr so
+    // subsequent saddress deltas are computed from the same anchor.
+    lastReportedAddr = target;
     resetBranchMap();
     stats.numBranchMapPackets++;
     stats.numPackets++;

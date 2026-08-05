@@ -409,6 +409,8 @@ def decode_instruction_trace(filename, show_stats, verify_updiscon=False):
                     bm = format_branch_map(packet.branch_map, count)
                     total_branches += count
                     line += f" branches={bm}"
+                if packet.irreport:
+                    line += f" IRREPORT(depth={packet.irdepth})"
 
         print(line)
 
@@ -515,9 +517,11 @@ def decode_data_trace(filename, show_stats):
             )
 
             if packet.HasField("address"):
+                # `address` is sint64 on the wire; mask to 64-bit
+                # unsigned so kernel/negative addresses render right.
                 # diff bits: 00 full addr, else delta.
                 if packet.diff == 0:
-                    addr = packet.address
+                    addr = packet.address & ((1 << 64) - 1)
                 else:
                     addr = (
                         baseline_by_size.get(log_size, 0) + packet.address
