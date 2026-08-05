@@ -97,3 +97,27 @@ class ETrace(ProbeListenerObject):
     )
     filterAddrStart = Param.Addr(0, "Start of address range filter (0=off)")
     filterAddrEnd = Param.Addr(0, "End of address range filter (0=off)")
+
+    # Spec discovery parameters (E-Trace v2.0 ingressPort.adoc).
+    # These are advertised in the trace header so decoders can
+    # self-configure field widths without out-of-band knowledge.
+    iaddressWidthP = Param.UInt32(
+        64, "Instruction address width (iaddress_width_p)"
+    )
+    iaddressLsbP = Param.UInt32(
+        0, "Instruction address LSB shift (0=RVC, 2=aligned)"
+    )
+    privilegeWidthP = Param.UInt32(
+        2, "Privilege field width (typically 2 bits)"
+    )
+    ecauseWidthP = Param.UInt32(
+        6, "Trap cause field width (ecause_width_p)"
+    )
+    timeWidthP = Param.UInt32(
+        64, "Time field width in bits (0 or notimeP disables)"
+    )
+    f0sWidthP = Param.UInt32(
+        1, "Format 0 subformat selector width"
+    )
+    notimeP = Param.Bool(False, "Omit time field from Format 3 packets")
+    nocontextP = Param.Bool(False, "Omit context field from Format 3 packets")

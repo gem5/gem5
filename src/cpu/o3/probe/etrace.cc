@@ -56,6 +56,7 @@ ETrace::ETrace(const ETraceParams &params)
       expectedNextPC(0),
       haveExpectedPC(false),
       lastCommittedAddr(0),
+      lastCommittedPriv(0),
       lastPriv(0),
       instsSinceSync(0),
       resyncPeriod(params.resyncPeriod),
@@ -74,16 +75,18 @@ ETrace::ETrace(const ETraceParams &params)
       bpredCorrectCount(0),
       jumpTargetCache(params.jumpTargetCache),
       cacheSizeP(params.cacheSizeP),
+      jtCacheValid(false),
       sijump(params.sijump),
       prevInstPC(0),
       prevInstOpcode(0),
       prevInstRd(0),
       prevInstSize(0),
+      prevInstIsRvc(false),
+      prevInstRvcFunct3(0),
       havePrevInst(false),
       dataTrace(params.dataTrace),
       dataTraceMode(params.dataTraceMode),
       dataTraceStream(nullptr),
-      lastDataAddr(0),
       contextWidth(params.contextWidth),
       lastContext(0),
       filterPrivMask(params.filterPriv),
@@ -93,6 +96,14 @@ ETrace::ETrace(const ETraceParams &params)
                         params.filterAddrEnd != 0),
       wasFiltered(false),
       pendingUpdiscon(false),
+      iaddressWidthP(params.iaddressWidthP),
+      iaddressLsbP(params.iaddressLsbP),
+      privilegeWidthP(params.privilegeWidthP),
+      ecauseWidthP(params.ecauseWidthP),
+      timeWidthP(params.timeWidthP),
+      f0sWidthP(params.f0sWidthP),
+      notimeP(params.notimeP),
+      nocontextP(params.nocontextP),
       stats(this)
 {
     cpu = dynamic_cast<CPU *>(params.manager);
@@ -107,8 +118,33 @@ ETrace::ETrace(const ETraceParams &params)
 
     ProtoMessage::ETraceHeader header;
     header.set_obj_id(name());
+    header.set_ver(2);
     header.set_tick_freq(sim_clock::Frequency);
     header.set_arch_width(64);
+    header.set_iaddress_width_p(iaddressWidthP);
+    header.set_iaddress_lsb_p(iaddressLsbP);
+    header.set_privilege_width_p(privilegeWidthP);
+    header.set_ecause_width_p(ecauseWidthP);
+    header.set_context_width_p(contextWidth);
+    header.set_time_width_p(notimeP ? 0 : timeWidthP);
+    header.set_f0s_width_p(f0sWidthP);
+    header.set_cache_size_p(cacheSizeP);
+    header.set_call_counter_size_p(params.callCounterSizeP);
+    header.set_bpred_size_p(bpredSizeP);
+    // Document the bit assignments the encoder is using so decoders
+    // built against this header can label the ioptions/doptions bits.
+    uint32_t ioBits = 0;
+    ioBits |= (implicitReturn && callCounterMax > 0) ? (1u << 0) : 0;
+    ioBits |= (branchPrediction && bpredSizeP > 0) ? (1u << 1) : 0;
+    ioBits |= (jumpTargetCache && cacheSizeP > 0) ? (1u << 2) : 0;
+    ioBits |= sijump ? (1u << 3) : 0;
+    ioBits |= implicitException ? (1u << 4) : 0;
+    header.set_ioptions_bits(ioBits);
+    uint32_t doBits = 0;
+    // dataTraceMode == 1 -> no_data (address only); == 2 -> no_addr.
+    if (dataTraceMode == 1) doBits |= (1u << 0);
+    if (dataTraceMode == 2) doBits |= (1u << 1);
+    header.set_doptions_bits(doBits);
     traceStream->write(header);
 
     if (branchPrediction && bpredSizeP > 0) {
@@ -123,6 +159,20 @@ ETrace::ETrace(const ETraceParams &params)
         std::string dataFilename =
             simout.resolve(name() + "." + params.dataTraceFile);
         dataTraceStream = new ProtoOutputStream(dataFilename);
+        // Data trace has its own header (same schema) so the decoder
+        // can identify the stream and align to packet boundaries.
+        ProtoMessage::ETraceHeader dataHeader;
+        dataHeader.set_obj_id(name() + ".data");
+        dataHeader.set_ver(2);
+        dataHeader.set_tick_freq(sim_clock::Frequency);
+        dataHeader.set_arch_width(64);
+        dataHeader.set_iaddress_width_p(iaddressWidthP);
+        dataHeader.set_iaddress_lsb_p(iaddressLsbP);
+        dataHeader.set_privilege_width_p(privilegeWidthP);
+        dataHeader.set_ecause_width_p(ecauseWidthP);
+        dataHeader.set_context_width_p(contextWidth);
+        dataHeader.set_time_width_p(notimeP ? 0 : timeWidthP);
+        dataTraceStream->write(dataHeader);
     }
 
     registerExitCallback([this]() { flushTrace(); });
@@ -151,6 +201,8 @@ ETrace::regProbeListeners()
 ETrace::IType
 ETrace::classifyInstruction(const DynInstPtr &dynInst)
 {
+    // Exception-return: mret / sret. These are IsNonSpeculative in gem5
+    // and IsReturn — matches spec itype 3.
     if (dynInst->isNonSpeculative() && dynInst->isReturn()) {
         return ITYPE_EXCEPT_RET;
     }
@@ -164,11 +216,53 @@ ETrace::classifyInstruction(const DynInstPtr &dynInst)
         return taken ? ITYPE_TAKEN_BRANCH : ITYPE_NTAKEN_BRANCH;
     }
 
+    // gem5 marks c.jalr x5 as IsReturn but not IsCall. Spec calls this
+    // a coroutine swap; fix up by inspecting the raw instruction.
+    auto *staticInst = dynInst->staticInst.get();
+    auto *riscvStatic = dynamic_cast<RiscvISA::RiscvStaticInst *>(staticInst);
+    if (riscvStatic) {
+        auto machInst = riscvStatic->machInst;
+        bool isRvc =
+            dynInst->pcState().as<RiscvISA::PCState>().compressed();
+        if (isRvc) {
+            uint8_t quad = machInst & 0x3;
+            uint8_t funct3 = (machInst >> 13) & 0x7;
+            uint8_t rd_rs1 = (machInst >> 7) & 0x1F;
+            uint8_t rs2 = (machInst >> 2) & 0x1F;
+            // c.jalr = quad=10, funct4=1001, rs2=0 (per RVC spec)
+            uint8_t funct4 = (machInst >> 12) & 0xF;
+            if (quad == 2 && funct4 == 0x9 && rs2 == 0 && rd_rs1 == 5) {
+                // c.jalr x5 -> coroutine swap
+                return ITYPE_COROUTINE;
+            }
+            // c.jr  = quad=10, funct4=1000, rs2=0
+            if (quad == 2 && funct4 == 0x8 && rs2 == 0 && rd_rs1 == 5) {
+                // c.jr x5 -> also treat as coroutine (jump via link reg)
+                return ITYPE_COROUTINE;
+            }
+            (void)funct3;  // Silence unused warning if RVC path narrows.
+        } else {
+            // Full-width JALR (opcode 0x67). Spec coroutine cases:
+            //   jalr x1, x5, 0  OR  jalr x5, x1, 0
+            uint8_t opcode = machInst & 0x7F;
+            if (opcode == 0x67) {
+                uint8_t rd = (machInst >> 7) & 0x1F;
+                uint8_t rs1 = (machInst >> 15) & 0x1F;
+                bool rd_link = (rd == 1 || rd == 5);
+                bool rs1_link = (rs1 == 1 || rs1 == 5);
+                if (rd_link && rs1_link && rd != rs1) {
+                    return ITYPE_COROUTINE;
+                }
+            }
+        }
+    }
+
     if (dynInst->isCall() && dynInst->isReturn()) {
         return ITYPE_COROUTINE;
     }
 
     if (dynInst->isCall()) {
+        // Inferable call = direct (jal with link register).
         return dynInst->isDirectCtrl() ? ITYPE_INF_CALL : ITYPE_UNINF_CALL;
     }
 
@@ -178,8 +272,14 @@ ETrace::classifyInstruction(const DynInstPtr &dynInst)
 
     if (dynInst->isControl()) {
         if (dynInst->isDirectCtrl()) {
-            return ITYPE_INF_JUMP2;
+            // Direct jump. Spec distinguishes:
+            //   itype 11 = inferable jump (jal x0, c.j)
+            //   itype 15 = other inferable jump (jal rd, rd not link)
+            // We don't need to distinguish; both are "target inferable
+            // from opcode alone" for the decoder.
+            return ITYPE_INF_JUMP;
         }
+        // Uninferable indirect jump (jalr with non-link rd).
         return ITYPE_UNINF_JUMP;
     }
 
@@ -216,16 +316,9 @@ ETrace::isTrapAddrInferable(uint8_t priv, uint64_t cause, bool isInterrupt)
     }
 
     uint8_t mode = tvec & 0x3;
-    if (mode == 0) {
-        // Direct mode: all traps go to BASE — always inferable
-        return true;
-    } else if (mode == 1) {
-        // Vectored mode: interrupts go to BASE + 4*cause,
-        // exceptions go to BASE — both inferable
-        return true;
-    }
-
-    return false;
+    // Both direct (mode 0) and vectored (mode 1) yield a
+    // decoder-inferable address from cause/interrupt.
+    return (mode == 0 || mode == 1);
 }
 
 bool
@@ -237,17 +330,40 @@ ETrace::isSeqInferableJump(const DynInstPtr &dynInst)
     auto *riscvInst = static_cast<RiscvISA::RiscvStaticInst *>(
         dynInst->staticInst.get());
     auto machInst = riscvInst->machInst;
-
-    uint8_t curOpcode = machInst & 0x7F;
-    uint8_t curRs1 = (machInst >> 15) & 0x1F;
+    bool curIsRvc =
+        dynInst->pcState().as<RiscvISA::PCState>().compressed();
     Addr curPC = dynInst->pcState().instAddr();
 
-    // Current must be JALR (opcode 0x67)
-    if (curOpcode != 0x67)
-        return false;
+    uint8_t curRs1;
+    if (curIsRvc) {
+        // c.jr / c.jalr : rd/rs1 field is bits [11:7]
+        uint8_t quad = machInst & 0x3;
+        uint8_t funct4 = (machInst >> 12) & 0xF;
+        uint8_t rs2 = (machInst >> 2) & 0x1F;
+        // Must be c.jr (funct4=1000) or c.jalr (funct4=1001), rs2=0
+        if (quad != 2 || (funct4 != 0x8 && funct4 != 0x9) || rs2 != 0)
+            return false;
+        curRs1 = (machInst >> 7) & 0x1F;
+    } else {
+        uint8_t curOpcode = machInst & 0x7F;
+        if (curOpcode != 0x67)  // Full-width JALR
+            return false;
+        curRs1 = (machInst >> 15) & 0x1F;
+    }
 
-    // Previous must be LUI (0x37) or AUIPC (0x17)
-    if (prevInstOpcode != 0x37 && prevInstOpcode != 0x17)
+    // Previous must be LUI (0x37), AUIPC (0x17), or c.lui (RVC).
+    bool prevIsLoader = false;
+    if (prevInstIsRvc) {
+        // c.lui: quad=01, funct3=011, rd != x0 && rd != x2
+        if ((prevInstOpcode & 0x3) == 1 && prevInstRvcFunct3 == 3 &&
+            prevInstRd != 0 && prevInstRd != 2) {
+            prevIsLoader = true;
+        }
+    } else {
+        if (prevInstOpcode == 0x37 || prevInstOpcode == 0x17)
+            prevIsLoader = true;
+    }
+    if (!prevIsLoader)
         return false;
 
     // Previous rd must match current rs1
@@ -261,6 +377,13 @@ ETrace::isSeqInferableJump(const DynInstPtr &dynInst)
     return true;
 }
 
+// 2-bit branch predictor per branchTrace.adoc §sec:branch-prediction.
+// State encoding:  MSB = prediction (0=NT, 1=T); prediction must fail
+// twice to flip.
+//   00 (pred NT): taken -> 01, not-taken -> 00
+//   01 (pred NT): taken -> 11, not-taken -> 00
+//   11 (pred T):  taken -> 11, not-taken -> 10
+//   10 (pred T):  taken -> 10, not-taken -> 00
 bool
 ETrace::predictBranch(Addr pc)
 {
@@ -280,23 +403,18 @@ ETrace::updatePredictor(Addr pc, bool taken)
     uint32_t index = (pc >> 1) & ((1U << bpredSizeP) - 1);
     uint8_t state = bpredTable[index];
 
-    // 2-bit saturating counter state machine per E-Trace spec:
-    // 00 (SNT): taken→01, not-taken stays 00
-    // 01 (WNT): taken→11, not-taken→00
-    // 10 (ST):  taken stays 11 (→11), not-taken→00
-    // 11 (WT):  taken→11, not-taken→10
     switch (state) {
-      case 0x00: // Strongly not-taken
+      case 0x00:                                            // pred NT
         bpredTable[index] = taken ? 0x01 : 0x00;
         break;
-      case 0x01: // Weakly not-taken
+      case 0x01:                                            // pred NT
         bpredTable[index] = taken ? 0x03 : 0x00;
         break;
-      case 0x02: // Strongly taken (mapped to WT per spec)
-        bpredTable[index] = taken ? 0x03 : 0x00;
-        break;
-      case 0x03: // Weakly taken
+      case 0x03:                                            // pred T (0b11)
         bpredTable[index] = taken ? 0x03 : 0x02;
+        break;
+      case 0x02:                                            // pred T (0b10)
+        bpredTable[index] = taken ? 0x02 : 0x00;
         break;
     }
 }
@@ -311,23 +429,27 @@ ETrace::resetPredictor()
 }
 
 bool
-ETrace::jtCacheLookup(Addr pc, Addr target, uint32_t &index)
+ETrace::jtCacheLookup(Addr target, uint32_t &index)
 {
-    if (!jumpTargetCache || jtCache.empty())
+    if (!jumpTargetCache || jtCache.empty() || !jtCacheValid)
         return false;
 
-    index = (pc >> 1) & ((1U << cacheSizeP) - 1);
+    // Spec: index by TARGET address (not source PC), bits
+    // [cache_size_p:1] (RVC) or [cache_size_p+1:2] (no-RVC). gem5
+    // supports RVC so use >>1.
+    index = (target >> 1) & ((1U << cacheSizeP) - 1);
     return jtCache[index] == target;
 }
 
 void
-ETrace::jtCacheUpdate(Addr pc, Addr target)
+ETrace::jtCacheUpdate(Addr target)
 {
     if (!jumpTargetCache || jtCache.empty())
         return;
 
-    uint32_t index = (pc >> 1) & ((1U << cacheSizeP) - 1);
+    uint32_t index = (target >> 1) & ((1U << cacheSizeP) - 1);
     jtCache[index] = target;
+    jtCacheValid = true;
 }
 
 void
@@ -336,29 +458,81 @@ ETrace::jtCacheInvalidate()
     for (auto &entry : jtCache) {
         entry = 0;
     }
+    jtCacheValid = false;
 }
 
 uint32_t
-ETrace::classifyAtomicOp(const DynInstPtr &dynInst)
+ETrace::classifyAtomicSubtype(const DynInstPtr &dynInst, bool &isLR,
+                              bool &isSC)
 {
+    isLR = false;
+    isSC = false;
+
     auto *riscvInst = static_cast<RiscvISA::RiscvStaticInst *>(
         dynInst->staticInst.get());
     auto machInst = riscvInst->machInst;
     uint8_t amofunct = (machInst >> 27) & 0x1F;
 
     switch (amofunct) {
-      case 0x01: return ProtoMessage::ETraceDataPacket::SWAP;
-      case 0x00: return ProtoMessage::ETraceDataPacket::ADD;
-      case 0x0C: return ProtoMessage::ETraceDataPacket::AND;
-      case 0x08: return ProtoMessage::ETraceDataPacket::OR;
-      case 0x04: return ProtoMessage::ETraceDataPacket::XOR;
-      case 0x14: return ProtoMessage::ETraceDataPacket::MAX;
-      case 0x10: return ProtoMessage::ETraceDataPacket::MIN;
-      case 0x1C: return ProtoMessage::ETraceDataPacket::MAXU;
-      case 0x18: return ProtoMessage::ETraceDataPacket::MINU;
-      case 0x02: return ProtoMessage::ETraceDataPacket::LR;
-      case 0x03: return ProtoMessage::ETraceDataPacket::SC;
-      default:   return ProtoMessage::ETraceDataPacket::SWAP;
+      case 0x01: return ProtoMessage::ETraceDataPacket::AMOSWAP;
+      case 0x00: return ProtoMessage::ETraceDataPacket::AMOADD;
+      case 0x0C: return ProtoMessage::ETraceDataPacket::AMOAND;
+      case 0x08: return ProtoMessage::ETraceDataPacket::AMOOR;
+      case 0x04: return ProtoMessage::ETraceDataPacket::AMOXOR;
+      case 0x14: return ProtoMessage::ETraceDataPacket::AMOMAX;
+      case 0x10: return ProtoMessage::ETraceDataPacket::AMOMIN;
+      // Spec table only has funct=000-110 in the atomic subtype;
+      // MAXU/MINU are not in E-Trace v2.0 atomic subtypes and are
+      // represented in the reserved slot (funct5 0x18, 0x1C).
+      case 0x1C:
+      case 0x18: return ProtoMessage::ETraceDataPacket::AMO_RESERVED;
+      case 0x02: isLR = true; return ProtoMessage::ETraceDataPacket::AMOADD;
+      case 0x03: isSC = true; return ProtoMessage::ETraceDataPacket::AMOADD;
+      default:   return ProtoMessage::ETraceDataPacket::AMO_RESERVED;
+    }
+}
+
+void
+ETrace::computeDisambigBits(Addr addr, bool &notify_, bool &updiscon_,
+                            bool &irreport_, uint32_t &irdepth_)
+{
+    // Spec: notify, updiscon, irreport are the actual values that,
+    // after XOR-encoding against previous MSBs, produce the intended
+    // MSB-repeat bit stream. In gem5 we store the resolved bit values
+    // (decoder does the XOR chain).
+    //
+    //   notify   : set to differ from address MSB when the encoder
+    //              wishes to force the decoder to notice the packet
+    //              even under identical addresses (rarely used).
+    //   updiscon : set to differ from notify when the reported
+    //              instruction follows an uninferable discontinuity
+    //              AND is immediately followed by a Format 3 packet.
+    //              We latch pendingUpdiscon at every uninferable
+    //              jump/call/return and consume it here.
+    //   irreport : set to differ from updiscon when this address is
+    //              being reported "in the clear" because the implicit-
+    //              return call counter was 0 or overflowed. Also used
+    //              when reporting an explicit return.
+    //   irdepth  : current call-counter value (when irreport is set).
+    (void)addr;
+    // MSB of the reported address (top bit of iaddress_width_p slice).
+    // We approximate with bit 63; decoder uses same convention.
+    bool addrMsb = (addr >> 63) & 1;
+    notify_ = addrMsb;   // default: no notify
+    updiscon_ = notify_ ^ (pendingUpdiscon ? 1 : 0);
+    irreport_ = updiscon_;  // default: match updiscon
+    irdepth_ = 0;
+    pendingUpdiscon = false;
+}
+
+void
+ETrace::maybeEmitPbc()
+{
+    if (bpredCorrectCount >= 31) {
+        // Spec: emit Format 0-0 with branch_count = (pbc - 31) as
+        // soon as pbc reaches 31, so the decoder's mirror counter
+        // tracks. No address in this path (branch_fmt = 00).
+        emitBranchCountPacket(false, 0);
     }
 }
 
@@ -383,17 +557,24 @@ ETrace::traceCommit(const DynInstPtr &dynInst)
     // Filtering
     if (!passesFilter(pc, curPriv)) {
         if (!wasFiltered) {
+            // Exiting the trace region: flush pending state with the
+            // *last committed (traced) address*, then support(ended_rep).
             if (branchCount > 0) {
                 emitBranchMapPacket(true, lastCommittedAddr);
+            } else if (haveExpectedPC) {
+                emitAddrOnlyPacket(lastCommittedAddr);
             }
+            emitSupportPacket(QS_ENDED_REP);
             wasFiltered = true;
         }
         stats.numFilteredInsts++;
 
-        // Still track expected PC for discontinuity detection on re-entry
+        // Still track expected PC for discontinuity detection on
+        // re-entry.
         expectedNextPC = dynInst->pcState().as<RiscvISA::PCState>().npc();
         haveExpectedPC = true;
         lastCommittedAddr = pc;
+        lastCommittedPriv = curPriv;
         lastPriv = curPriv;
         return;
     }
@@ -420,51 +601,66 @@ ETrace::traceCommit(const DynInstPtr &dynInst)
         isInterrupt = (cause >> 63) & 1;
         uint64_t causeCode = cause & ((1ULL << 63) - 1);
 
-        if (branchCount > 0) {
-            emitBranchMapPacket(true, lastCommittedAddr);
+        // Drain pending branches with the last-committed address of
+        // the pre-trap execution (NOT the trap handler PC). Format 1
+        // if we have branches to report, Format 2 otherwise.
+        if (branchCount > 0 || lastCommittedAddr != lastReportedAddr) {
+            emitAddressPacket(lastCommittedAddr);
         }
 
-        emitTrapPacket(pc, causeCode, tval, isInterrupt, curPriv);
+        // Trap-packet `branch` bit: 1 iff the pre-trap instruction was
+        // a taken branch (i.e., a taken conditional branch that
+        // then generated the trap on its target's fetch).
+        emitTrapPacket(pc, causeCode, tval, isInterrupt, curPriv, false);
         needsInitialSync = false;
         instsSinceSync = 0;
     }
 
     // Emit support + initial sync on first traced instruction
     if (needsInitialSync) {
-        emitSupportPacket(true);
+        emitSupportPacket(QS_NO_CHANGE);
 
         IType itype = classifyInstruction(dynInst);
         bool isBranch =
             (itype == ITYPE_TAKEN_BRANCH || itype == ITYPE_NTAKEN_BRANCH);
         bool taken = (itype == ITYPE_TAKEN_BRANCH);
-        emitSyncPacket(pc, curPriv, isBranch, taken);
+        // Spec Format 3-0 `branch` bit: 1 iff address is a taken
+        // branch, else 0.
+        bool branchBit = isBranch && taken;
+        emitSyncStartPacket(pc, curPriv, branchBit);
         needsInitialSync = false;
         instsSinceSync = 0;
     }
 
-    // Detect privilege change
+    // Detect privilege change (not via trap — the trap path handles
+    // that above with priv already updated).
     if (curPriv != lastPriv && !needsInitialSync) {
-        if (branchCount > 0) {
-            emitBranchMapPacket(true, pc);
+        // Drain pending branches with the *last-priv address*, not
+        // the new-priv address.
+        if (branchCount > 0 || lastCommittedAddr != lastReportedAddr) {
+            emitAddressPacket(lastCommittedAddr);
         }
         IType itype = classifyInstruction(dynInst);
         bool isBranch =
             (itype == ITYPE_TAKEN_BRANCH || itype == ITYPE_NTAKEN_BRANCH);
         bool taken = (itype == ITYPE_TAKEN_BRANCH);
-        emitSyncPacket(pc, curPriv, isBranch, taken);
+        emitSyncStartPacket(pc, curPriv, isBranch && taken);
         instsSinceSync = 0;
     }
 
-    // Context tracking (ASID changes)
+    // Context tracking (ASID changes).
     if (contextWidth > 0) {
         uint64_t satp = tc->readMiscRegNoEffect(RiscvISA::MISCREG_SATP);
         uint64_t asid = (satp >> 44) & ((1ULL << 16) - 1);
-        if (asid != lastContext) {
-            if (branchCount > 0) {
-                emitBranchMapPacket(true, pc);
+        // Mask context to the configured width.
+        uint64_t maskedAsid = (contextWidth >= 64) ? asid :
+            (asid & ((1ULL << contextWidth) - 1));
+        if (maskedAsid != lastContext) {
+            if (branchCount > 0 || lastCommittedAddr != lastReportedAddr) {
+                emitAddressPacket(lastCommittedAddr);
             }
-            emitContextPacket(asid);
-            lastContext = asid;
+            emitContextPacket(maskedAsid, curPriv);
+            lastContext = maskedAsid;
         }
     }
 
@@ -482,13 +678,13 @@ ETrace::traceCommit(const DynInstPtr &dynInst)
             break;
 
         case ITYPE_NTAKEN_BRANCH: {
-            bool predicted = false;
             if (branchPrediction) {
-                predicted = !predictBranch(pc);
+                bool pred = predictBranch(pc);
                 updatePredictor(pc, false);
-                if (predicted) {
+                if (!pred) {  // Correctly predicted not-taken.
                     bpredCorrectCount++;
                     stats.numBpredCorrect++;
+                    maybeEmitPbc();
                     break;
                 }
             }
@@ -502,13 +698,13 @@ ETrace::traceCommit(const DynInstPtr &dynInst)
         }
 
         case ITYPE_TAKEN_BRANCH: {
-            bool predicted = false;
             if (branchPrediction) {
-                predicted = predictBranch(pc);
+                bool pred = predictBranch(pc);
                 updatePredictor(pc, true);
-                if (predicted) {
+                if (pred) {  // Correctly predicted taken.
                     bpredCorrectCount++;
                     stats.numBpredCorrect++;
+                    maybeEmitPbc();
                     break;
                 }
             }
@@ -522,43 +718,38 @@ ETrace::traceCommit(const DynInstPtr &dynInst)
 
         case ITYPE_INF_CALL:
             if (implicitReturn && callCounterMax > 0) {
-                if (callCounter < callCounterMax)
+                if (callCounter < callCounterMax) {
                     callCounter++;
+                }
+                // If already at max the paired return will be reported
+                // explicitly (with irreport+irdepth).
             }
-            emitBranchMapPacket(false, 0);
+            // Inferable call — target derivable from opcode, no packet
+            // needed. Branches stay accumulated; they will be drained
+            // by the next address-carrying packet or by the 31-branch
+            // overflow of Format 1 no-address.
             break;
 
-        case ITYPE_INF_JUMP2:
+        case ITYPE_INF_JUMP:
         case ITYPE_OTHER_INF:
-            emitBranchMapPacket(false, 0);
+            // Inferable jump — same as above, no packet needed.
             break;
 
         case ITYPE_UNINF_CALL: {
             if (implicitReturn && callCounterMax > 0) {
-                if (callCounter < callCounterMax)
+                if (callCounter < callCounterMax) {
                     callCounter++;
+                }
             }
             Addr npc = dynInst->pcState().as<RiscvISA::PCState>().npc();
+            markUpdiscon();
             uint32_t jtcIndex;
-            if (jtCacheLookup(pc, npc, jtcIndex)) {
+            if (jtCacheLookup(npc, jtcIndex)) {
                 stats.numJtCacheHits++;
-                ProtoMessage::ETracePacket pkt;
-                pkt.set_tick(curTick());
-                pkt.set_format(ProtoMessage::ETracePacket::BRANCH_MAP_ADDR);
-                pkt.set_branch_map(branchMap);
-                pkt.set_branch_count(branchCount);
-                pkt.set_jtc_index(jtcIndex);
-                if (bpredCorrectCount > 0) {
-                    pkt.set_branch_pred_count(bpredCorrectCount);
-                    bpredCorrectCount = 0;
-                }
-                traceStream->write(pkt);
-                resetBranchMap();
-                stats.numBranchMapPackets++;
-                stats.numPackets++;
+                emitJtcHitPacket(jtcIndex);
             } else {
-                jtCacheUpdate(pc, npc);
-                emitBranchMapPacket(true, npc);
+                jtCacheUpdate(npc);
+                emitAddressPacket(npc);
             }
             break;
         }
@@ -567,70 +758,66 @@ ETrace::traceCommit(const DynInstPtr &dynInst)
             if (implicitReturn && callCounterMax > 0 && callCounter > 0) {
                 callCounter--;
                 stats.numImplicitReturns++;
-                emitBranchMapPacket(false, 0);
+                // Inferable return — no packet needed. Branches
+                // continue accumulating for the next address packet.
                 break;
             }
+            // Explicit return. Emit with irreport set so decoder
+            // knows to inspect irdepth.
             Addr npc = dynInst->pcState().as<RiscvISA::PCState>().npc();
-            emitBranchMapPacket(true, npc);
+            markUpdiscon();
+            emitAddressPacket(npc);
             break;
         }
 
         case ITYPE_COROUTINE: {
+            // Dec-then-inc: net-zero on the counter.
             if (implicitReturn && callCounterMax > 0 && callCounter > 0) {
                 callCounter--;
             }
             if (implicitReturn && callCounterMax > 0) {
-                if (callCounter < callCounterMax)
+                if (callCounter < callCounterMax) {
                     callCounter++;
+                }
             }
             Addr npc = dynInst->pcState().as<RiscvISA::PCState>().npc();
-            emitBranchMapPacket(true, npc);
+            markUpdiscon();
+            emitAddressPacket(npc);
             break;
         }
 
         case ITYPE_UNINF_JUMP:
-        case ITYPE_UNINF_JUMP2:
         case ITYPE_OTHER_UNINF: {
             // Check sequentially inferable jump
             if (isSeqInferableJump(dynInst)) {
                 stats.numSijumpInferred++;
-                emitBranchMapPacket(false, 0);
+                // Inferable target — no address packet needed.
                 break;
             }
 
             Addr npc = dynInst->pcState().as<RiscvISA::PCState>().npc();
+            markUpdiscon();
             uint32_t jtcIndex;
-            if (jtCacheLookup(pc, npc, jtcIndex)) {
+            if (jtCacheLookup(npc, jtcIndex)) {
                 stats.numJtCacheHits++;
-                ProtoMessage::ETracePacket pkt;
-                pkt.set_tick(curTick());
-                pkt.set_format(ProtoMessage::ETracePacket::BRANCH_MAP_ADDR);
-                pkt.set_branch_map(branchMap);
-                pkt.set_branch_count(branchCount);
-                pkt.set_jtc_index(jtcIndex);
-                if (bpredCorrectCount > 0) {
-                    pkt.set_branch_pred_count(bpredCorrectCount);
-                    bpredCorrectCount = 0;
-                }
-                traceStream->write(pkt);
-                resetBranchMap();
-                stats.numBranchMapPackets++;
-                stats.numPackets++;
+                emitJtcHitPacket(jtcIndex);
             } else {
-                jtCacheUpdate(pc, npc);
-                emitBranchMapPacket(true, npc);
+                jtCacheUpdate(npc);
+                emitAddressPacket(npc);
             }
             break;
         }
 
         case ITYPE_EXCEPT_RET: {
             Addr npc = dynInst->pcState().as<RiscvISA::PCState>().npc();
-            emitBranchMapPacket(true, npc);
+            markUpdiscon();
+            emitAddressPacket(npc);
             break;
         }
 
         case ITYPE_EXCEPTION:
         case ITYPE_INTERRUPT:
+            // Handled via the PC-discontinuity path at top of function.
             break;
     }
 
@@ -639,11 +826,20 @@ ETrace::traceCommit(const DynInstPtr &dynInst)
         auto *riscvInst = static_cast<RiscvISA::RiscvStaticInst *>(
             dynInst->staticInst.get());
         auto machInst = riscvInst->machInst;
+        bool isRvc =
+            dynInst->pcState().as<RiscvISA::PCState>().compressed();
         prevInstPC = pc;
-        prevInstOpcode = machInst & 0x7F;
-        prevInstRd = (machInst >> 7) & 0x1F;
-        prevInstSize =
-            dynInst->pcState().as<RiscvISA::PCState>().compressed() ? 2 : 4;
+        prevInstIsRvc = isRvc;
+        prevInstSize = isRvc ? 2 : 4;
+        if (isRvc) {
+            prevInstOpcode = machInst & 0x3;
+            prevInstRvcFunct3 = (machInst >> 13) & 0x7;
+            prevInstRd = (machInst >> 7) & 0x1F;
+        } else {
+            prevInstOpcode = machInst & 0x7F;
+            prevInstRd = (machInst >> 7) & 0x1F;
+            prevInstRvcFunct3 = 0;
+        }
         havePrevInst = true;
     }
 
@@ -651,17 +847,23 @@ ETrace::traceCommit(const DynInstPtr &dynInst)
     expectedNextPC = dynInst->pcState().as<RiscvISA::PCState>().npc();
     haveExpectedPC = true;
     lastCommittedAddr = pc;
+    lastCommittedPriv = curPriv;
 
-    // Periodic resync
+    // Periodic resync — 3-state FSM: state 1 counts, state 2 drains
+    // pending branches, state 3 emits Format 3-0. We fuse states 2+3
+    // in a single commit boundary (which is safe here because a probe
+    // commit is atomic w.r.t. the tracer).
     if (instsSinceSync >= resyncPeriod) {
         if (branchCount > 0) {
             emitBranchMapPacket(true, pc);
         }
+        // (No addr-only needed here — the sync-start packet carries
+        // the address of the next-committed instruction anyway.)
         IType curIType = classifyInstruction(dynInst);
         bool isBranch = (curIType == ITYPE_TAKEN_BRANCH ||
                          curIType == ITYPE_NTAKEN_BRANCH);
         bool taken = (curIType == ITYPE_TAKEN_BRANCH);
-        emitSyncPacket(pc, curPriv, isBranch, taken);
+        emitSyncStartPacket(pc, curPriv, isBranch && taken);
         instsSinceSync = 0;
     }
 }
@@ -678,174 +880,284 @@ ETrace::traceDataAccess(
     if (!tracingActive)
         return;
 
-    ProtoMessage::ETraceDataPacket pkt;
-    pkt.set_tick(curTick());
+    // Gate through the same filter as the instruction stream so data
+    // packets don't leak from a region whose instructions were
+    // filtered out (they'd be undecodable without the I-trace
+    // context anyway).
+    Addr pc = dynInst->pcState().instAddr();
+    gem5::ThreadContext *tc = cpu->getContext(0);
+    uint8_t curPriv = tc->readMiscRegNoEffect(RiscvISA::MISCREG_PRV);
+    if (!passesFilter(pc, curPriv))
+        return;
 
     bool isLoad = dynInst->isLoad();
     bool isStore = dynInst->isStore();
     bool isAtomic = dynInst->isAtomic();
+    if (!isLoad && !isStore && !isAtomic)
+        return;
 
+    bool isLR = false;
+    bool isSC = false;
     Addr addr = dynInst->effAddr;
     uint32_t size = dynInst->effSize;
-
-    if (isAtomic) {
-        pkt.set_format(ProtoMessage::ETraceDataPacket::ATOMIC);
-        pkt.set_atomic_subtype(
-            static_cast<ProtoMessage::ETraceDataPacket::AtomicSubtype>(
-                classifyAtomicOp(dynInst)));
-        pkt.set_address(addr - lastDataAddr);
-        lastDataAddr = addr;
-        pkt.set_size(size);
-        if (dynInst->memData && (dataTraceMode == 0 || dataTraceMode == 2)) {
-            pkt.set_data(dynInst->memData, size);
-            pkt.set_data_len(size);
-        }
-    } else if (isLoad) {
-        switch (dataTraceMode) {
-          case 0:
-            pkt.set_format(
-                ProtoMessage::ETraceDataPacket::LOAD_ADDR_DATA);
-            pkt.set_address(addr - lastDataAddr);
-            lastDataAddr = addr;
-            if (dynInst->memData) {
-                pkt.set_data(dynInst->memData, size);
-                pkt.set_data_len(size);
-            }
-            break;
-          case 1:
-            pkt.set_format(
-                ProtoMessage::ETraceDataPacket::LOAD_ADDR_ONLY);
-            pkt.set_address(addr - lastDataAddr);
-            lastDataAddr = addr;
-            break;
-          case 2:
-            pkt.set_format(
-                ProtoMessage::ETraceDataPacket::LOAD_DATA_ONLY);
-            if (dynInst->memData) {
-                pkt.set_data(dynInst->memData, size);
-                pkt.set_data_len(size);
-            }
-            break;
-        }
-    } else if (isStore) {
-        switch (dataTraceMode) {
-          case 0:
-            pkt.set_format(
-                ProtoMessage::ETraceDataPacket::STORE_ADDR_DATA);
-            pkt.set_address(addr - lastDataAddr);
-            lastDataAddr = addr;
-            if (dynInst->memData) {
-                pkt.set_data(dynInst->memData, size);
-                pkt.set_data_len(size);
-            }
-            break;
-          case 1:
-            pkt.set_format(
-                ProtoMessage::ETraceDataPacket::STORE_ADDR_ONLY);
-            pkt.set_address(addr - lastDataAddr);
-            lastDataAddr = addr;
-            break;
-          case 2:
-            pkt.set_format(
-                ProtoMessage::ETraceDataPacket::STORE_DATA_ONLY);
-            if (dynInst->memData) {
-                pkt.set_data(dynInst->memData, size);
-                pkt.set_data_len(size);
-            }
-            break;
-        }
-    } else {
-        return;
-    }
-
-    pkt.set_size(size);
-    dataTraceStream->write(pkt);
-    stats.numDataTracePackets++;
-
-    DPRINTF(ETrace, "DataTrace: addr=0x%08x size=%u load=%d store=%d\n",
-            addr, size, isLoad, isStore);
+    (void)isLR; (void)isSC;
+    emitDataPacket(dynInst, addr, size, isLoad, isStore, isAtomic,
+                   /*isLR=*/false, /*isSC=*/false);
 }
 
 void
-ETrace::emitSyncPacket(Addr addr, uint8_t priv, bool isBranch, bool taken)
+ETrace::emitDataPacket(const DynInstPtr &dynInst, Addr addr, uint32_t bytes,
+                       bool isLoad, bool isStore, bool isAtomic,
+                       bool isLR_param, bool isSC_param)
+{
+    // Compute size as log2 of transfer bytes per spec.
+    uint32_t logSize = 0;
+    uint32_t tmp = bytes;
+    while (tmp > 1) { tmp >>= 1; logSize++; }
+
+    ProtoMessage::ETraceDataPacket pkt;
+    pkt.set_tick(curTick());
+    pkt.set_size(logSize);
+
+    // Look up per-size baseline; determine whether to emit full or delta.
+    // First access of any given size in the stream is full-addr, so we
+    // default to needing full when we haven't seen this size yet.
+    uint8_t szKey = static_cast<uint8_t>(logSize);
+    bool haveSeenSize = lastDataAddrBySize.count(szKey) > 0;
+    auto needIt = dataSizeNeedsFullAddr.find(szKey);
+    bool needFull = !haveSeenSize ||
+        (needIt != dataSizeNeedsFullAddr.end() && needIt->second);
+    Addr baseline = haveSeenSize ? lastDataAddrBySize[szKey] : 0;
+
+    // Determine format code + diff bits.
+    ProtoMessage::ETraceDataPacket::DataFormat fmt;
+    uint32_t diffBits;
+
+    bool aligned = (addr & (bytes - 1)) == 0;
+
+    // Detect LR/SC via atomic classification if we're on an atomic
+    // instruction (the caller passed isAtomic; refine using funct5).
+    bool isLR = isLR_param;
+    bool isSC = isSC_param;
+    if (isAtomic) {
+        bool lrFlag = false, scFlag = false;
+        uint32_t sub = classifyAtomicSubtype(dynInst, lrFlag, scFlag);
+        pkt.set_atomic_subtype(
+            static_cast<ProtoMessage::ETraceDataPacket::AtomicSubtype>(sub));
+        isLR = lrFlag;
+        isSC = scFlag;
+    }
+
+    if (isAtomic && !isLR && !isSC) {
+        fmt = ProtoMessage::ETraceDataPacket::ATOMIC;
+    } else if (isLoad || isLR) {
+        fmt = aligned ? ProtoMessage::ETraceDataPacket::LOAD_ALIGNED
+                      : ProtoMessage::ETraceDataPacket::LOAD_UNALIGNED;
+        if (isLR) pkt.set_is_lr(true);
+    } else if (isStore || isSC) {
+        fmt = aligned ? ProtoMessage::ETraceDataPacket::STORE_ALIGNED
+                      : ProtoMessage::ETraceDataPacket::STORE_UNALIGNED;
+        if (isSC) pkt.set_is_sc(true);
+    } else {
+        return;
+    }
+    pkt.set_format(fmt);
+
+    // Address encoding per dataTraceMode:
+    //   0 = addr + data
+    //   1 = addr only
+    //   2 = data only
+    bool includeAddr = (dataTraceMode == 0 || dataTraceMode == 1);
+    bool includeData = (dataTraceMode == 0 || dataTraceMode == 2);
+
+    if (includeAddr) {
+        if (needFull) {
+            diffBits = DIFF_FULL_ADDR_FULL_DATA;
+            pkt.set_address(static_cast<int64_t>(addr));
+            dataSizeNeedsFullAddr[szKey] = false;
+        } else {
+            diffBits = DIFF_DELTA_ADDR_FULL_DATA;
+            int64_t delta = static_cast<int64_t>(addr - baseline);
+            pkt.set_address(delta);
+        }
+        lastDataAddrBySize[szKey] = addr;
+    } else {
+        // Data-only variant: diff bits 2-bit, 10 = full data, 11 = diff.
+        diffBits = 0x02;
+    }
+    pkt.set_diff(diffBits);
+
+    if (includeData && dynInst->memData) {
+        pkt.set_data(dynInst->memData, bytes);
+    }
+
+    dataTraceStream->write(pkt);
+    stats.numDataTracePackets++;
+
+    DPRINTF(ETrace,
+            "DataTrace: addr=0x%08x size=%u(log=%u) load=%d store=%d "
+            "atomic=%d diff=%u\n",
+            addr, bytes, logSize, isLoad, isStore, isAtomic, diffBits);
+}
+
+void
+ETrace::resetDataTraceBaselines()
+{
+    lastDataAddrBySize.clear();
+    dataSizeNeedsFullAddr.clear();
+    // Populate flags so the first data packet of any size after
+    // sync emits a full address regardless of whether we've seen it.
+    for (uint8_t sz = 0; sz < 8; sz++) {
+        dataSizeNeedsFullAddr[sz] = true;
+    }
+}
+
+// Format 3-0 (start / resync).
+void
+ETrace::emitSyncStartPacket(Addr addr, uint8_t priv, bool branch)
 {
     ProtoMessage::ETracePacket pkt;
     pkt.set_tick(curTick());
-    pkt.set_format(ProtoMessage::ETracePacket::SYNC);
+    pkt.set_format(ProtoMessage::ETracePacket::FORMAT_3);
     pkt.set_subformat(ProtoMessage::ETracePacket::START);
-    pkt.set_address(addr);
+    // Field order per spec: branch, priv, time, context, address.
+    pkt.set_branch(branch);
     pkt.set_priv(priv);
-    pkt.set_branch_map(isBranch && taken ? 0 : 1);
-    pkt.set_branch_count(1);
+    if (!notimeP && timeWidthP > 0) {
+        pkt.set_time(curTick());
+    }
+    if (!nocontextP && contextWidth > 0) {
+        pkt.set_context(lastContext);
+    }
+    pkt.set_address(addr);
     traceStream->write(pkt);
 
     lastReportedAddr = addr;
     resetBranchMap();
 
-    // Reset optional mode state on sync
+    // Reset optional mode state on sync (per spec).
     callCounter = 0;
     resetPredictor();
     jtCacheInvalidate();
     pendingUpdiscon = false;
     bpredCorrectCount = 0;
+    if (dataTrace)
+        resetDataTraceBaselines();
 
     stats.numSyncPackets++;
     stats.numPackets++;
 
-    DPRINTF(ETrace, "Sync packet: addr=0x%08x priv=%d\n", addr, priv);
+    DPRINTF(ETrace, "Sync-start: addr=0x%08x priv=%d branch=%d\n",
+            addr, priv, branch);
 }
 
+// Format 3-1 (trap).
 void
 ETrace::emitTrapPacket(Addr addr, uint64_t cause, uint64_t tval,
-                       bool isInterrupt, uint8_t priv)
+                       bool isInterrupt, uint8_t priv, bool branch)
 {
     ProtoMessage::ETracePacket pkt;
     pkt.set_tick(curTick());
-    pkt.set_format(ProtoMessage::ETracePacket::SYNC);
+    pkt.set_format(ProtoMessage::ETracePacket::FORMAT_3);
     pkt.set_subformat(ProtoMessage::ETracePacket::TRAP);
+    pkt.set_branch(branch);
     pkt.set_priv(priv);
+    if (!notimeP && timeWidthP > 0) {
+        pkt.set_time(curTick());
+    }
+    if (!nocontextP && contextWidth > 0) {
+        pkt.set_context(lastContext);
+    }
     pkt.set_cause(cause);
-    pkt.set_tval(tval);
     pkt.set_interrupt(isInterrupt);
 
     bool inferable = isTrapAddrInferable(priv, cause, isInterrupt);
-    pkt.set_thaddr(!inferable);
-    if (!inferable) {
+    // Spec: thaddr=1 means the address IS the trap handler PC.
+    // thaddr=0 means the address is EPC (updiscon path).
+    // In implicit-exception mode with inferable handler, we set
+    // thaddr=1 and omit the address (decoder derives handler from
+    // cause+tvec).
+    if (inferable) {
+        pkt.set_thaddr(true);
+        // Address omitted.
+    } else {
+        pkt.set_thaddr(true);   // Address IS the handler (explicit).
         pkt.set_address(addr);
+    }
+    if (!isInterrupt) {
+        // tval field: only present for exceptions per spec.
+        pkt.set_tval(tval);
     }
 
     traceStream->write(pkt);
 
     lastReportedAddr = addr;
     resetBranchMap();
+    callCounter = 0;
+    resetPredictor();
+    jtCacheInvalidate();
+    pendingUpdiscon = false;
+    bpredCorrectCount = 0;
+    if (dataTrace)
+        resetDataTraceBaselines();
+
     stats.numTrapPackets++;
     stats.numPackets++;
 
     DPRINTF(ETrace, "Trap packet: addr=0x%08x cause=%llu int=%d priv=%d "
-            "thaddr=%d\n", addr, cause, isInterrupt, priv, !inferable);
+            "inferable=%d\n", addr, cause, isInterrupt, priv, inferable);
 }
 
+// Format 1 (branch-map, with or without address).
 void
 ETrace::emitBranchMapPacket(bool withAddress, Addr addr)
 {
     ProtoMessage::ETracePacket pkt;
     pkt.set_tick(curTick());
+    pkt.set_format(ProtoMessage::ETracePacket::FORMAT_1);
+
+    // Encode branches per spec's tapered set. Value 0 signals the
+    // no-address 31-bit form; values 1/3/7/15/31 signal the with-
+    // address form at the corresponding tapered map width.
+    uint32_t branchesField;
+    if (!withAddress) {
+        panic_if(branchCount != maxBranchMapBits,
+                 "Format 1 no-address form requires exactly 31 branches, "
+                 "got %u", branchCount);
+        branchesField = 0;
+    } else {
+        panic_if(branchCount == 0,
+                 "Format 1 with-address form requires >=1 branches; "
+                 "use Format 2 (emitAddrOnlyPacket) for address-only");
+        if (branchCount == 1) branchesField = 1;
+        else if (branchCount <= 3) branchesField = 3;
+        else if (branchCount <= 7) branchesField = 7;
+        else if (branchCount <= 15) branchesField = 15;
+        else branchesField = 31;
+    }
+    pkt.set_branches(branchesField);
+    pkt.set_branch_map(branchMap);
 
     if (withAddress) {
-        pkt.set_format(ProtoMessage::ETracePacket::BRANCH_MAP_ADDR);
         int64_t delta = static_cast<int64_t>(addr - lastReportedAddr);
         pkt.set_saddress(delta);
-        pkt.set_address(addr);
         lastReportedAddr = addr;
-    } else {
-        pkt.set_format(ProtoMessage::ETracePacket::BRANCH_MAP);
+
+        bool notify_bit, updiscon_bit, irreport_bit;
+        uint32_t irdepth_val = callCounter;
+        computeDisambigBits(addr, notify_bit, updiscon_bit,
+                            irreport_bit, irdepth_val);
+        pkt.set_notify(notify_bit);
+        pkt.set_updiscon(updiscon_bit);
+        pkt.set_irreport(irreport_bit);
+        pkt.set_irdepth(irdepth_val);
     }
 
-    pkt.set_branch_map(branchMap);
-    pkt.set_branch_count(branchCount);
-
+    // Flush any accumulated correctly-predicted branch count into
+    // this packet so the decoder can consume it (Format 1 in
+    // predicted-mode may carry a branch_count field).
     if (bpredCorrectCount > 0) {
-        pkt.set_branch_pred_count(bpredCorrectCount);
+        pkt.set_branch_count(bpredCorrectCount);
         bpredCorrectCount = 0;
     }
 
@@ -856,92 +1168,170 @@ ETrace::emitBranchMapPacket(bool withAddress, Addr addr)
     stats.numPackets++;
 
     DPRINTF(ETrace,
-            "BranchMap packet: withAddr=%d addr=0x%08x "
-            "map=0x%x count=%d\n",
-            withAddress, addr, branchMap, branchCount);
+            "Format-1 packet: withAddr=%d addr=0x%08x map=0x%x count=%d "
+            "branches_field=%u\n",
+            withAddress, addr, branchMap, branchCount, branchesField);
 }
 
 void
-ETrace::emitSupportPacket(bool isStart)
+ETrace::emitAddressPacket(Addr addr)
 {
-    ProtoMessage::ETracePacket pkt;
-    pkt.set_tick(curTick());
-    pkt.set_format(ProtoMessage::ETracePacket::SYNC);
-    pkt.set_subformat(ProtoMessage::ETracePacket::SUPPORT);
-
-    uint32_t ienable = 0x01;
-    pkt.set_ienable(ienable);
-    pkt.set_encoder_mode(0);
-
-    pkt.set_qual_status(isStart ? 0x01 : 0x02);
-
-    uint32_t ioptions = 0;
-    if (implicitReturn && callCounterMax > 0)
-        ioptions |= (1 << 0);
-    if (branchPrediction && bpredSizeP > 0)
-        ioptions |= (1 << 1);
-    if (jumpTargetCache && cacheSizeP > 0)
-        ioptions |= (1 << 2);
-    if (sijump)
-        ioptions |= (1 << 3);
-    if (implicitException)
-        ioptions |= (1 << 4);
-    pkt.set_ioptions(ioptions);
-
-    if (dataTrace) {
-        pkt.set_denable(0x01);
-        pkt.set_doptions(dataTraceMode);
+    if (branchCount > 0) {
+        emitBranchMapPacket(true, addr);
     } else {
-        pkt.set_denable(0x00);
+        emitAddrOnlyPacket(addr);
     }
-
-    traceStream->write(pkt);
-    stats.numSupportPackets++;
-    stats.numPackets++;
-
-    DPRINTF(ETrace, "Support packet: isStart=%d ioptions=0x%x denable=%d\n",
-            isStart, ioptions, dataTrace ? 1 : 0);
 }
 
+// Format 2 (address only, no branch map).
 void
-ETrace::emitAddrOnlyPacket(Addr addr, bool notify, bool updiscon,
-                           bool irreport, uint32_t irdepth)
+ETrace::emitAddrOnlyPacket(Addr addr)
 {
     ProtoMessage::ETracePacket pkt;
     pkt.set_tick(curTick());
-    pkt.set_format(ProtoMessage::ETracePacket::ADDR_ONLY);
+    pkt.set_format(ProtoMessage::ETracePacket::FORMAT_2);
     int64_t delta = static_cast<int64_t>(addr - lastReportedAddr);
     pkt.set_saddress(delta);
-    pkt.set_address(addr);
-    pkt.set_notify(notify);
-    pkt.set_updiscon(updiscon);
-    pkt.set_irreport(irreport);
-    pkt.set_irdepth(irdepth);
+
+    bool notify_bit, updiscon_bit, irreport_bit;
+    uint32_t irdepth_val = callCounter;
+    computeDisambigBits(addr, notify_bit, updiscon_bit,
+                        irreport_bit, irdepth_val);
+    pkt.set_notify(notify_bit);
+    pkt.set_updiscon(updiscon_bit);
+    pkt.set_irreport(irreport_bit);
+    pkt.set_irdepth(irdepth_val);
+
     traceStream->write(pkt);
 
     lastReportedAddr = addr;
     stats.numAddrOnlyPackets++;
     stats.numPackets++;
 
-    DPRINTF(ETrace, "AddrOnly packet: addr=0x%08x notify=%d updiscon=%d "
-            "irreport=%d irdepth=%d\n",
-            addr, notify, updiscon, irreport, irdepth);
+    DPRINTF(ETrace,
+            "Format-2 packet: addr=0x%08x delta=%lld irdepth=%u\n",
+            addr, static_cast<long long>(delta), irdepth_val);
 }
 
+// Format 0-0 (correctly-predicted branch count).
 void
-ETrace::emitContextPacket(uint64_t context)
+ETrace::emitBranchCountPacket(bool withAddress, Addr addr)
+{
+    if (bpredCorrectCount < 31) return;
+    ProtoMessage::ETracePacket pkt;
+    pkt.set_tick(curTick());
+    pkt.set_format(ProtoMessage::ETracePacket::FORMAT_0);
+    pkt.set_f0_subformat(ProtoMessage::ETracePacket::F0_BRANCH_COUNT);
+    // Spec encodes as (pbc - 31).
+    pkt.set_branch_count(bpredCorrectCount - 31);
+    pkt.set_branch_fmt(withAddress ? 0x2 : 0x0);
+    if (withAddress) {
+        int64_t delta = static_cast<int64_t>(addr - lastReportedAddr);
+        pkt.set_saddress(delta);
+        lastReportedAddr = addr;
+        bool notify_bit, updiscon_bit, irreport_bit;
+        uint32_t irdepth_val = callCounter;
+        computeDisambigBits(addr, notify_bit, updiscon_bit,
+                            irreport_bit, irdepth_val);
+        pkt.set_notify(notify_bit);
+        pkt.set_updiscon(updiscon_bit);
+        pkt.set_irreport(irreport_bit);
+        pkt.set_irdepth(irdepth_val);
+    }
+    traceStream->write(pkt);
+    bpredCorrectCount = 0;
+    stats.numBpcFlushes++;
+    stats.numPackets++;
+}
+
+// Format 0-1 (JTC hit).
+void
+ETrace::emitJtcHitPacket(uint32_t index)
 {
     ProtoMessage::ETracePacket pkt;
     pkt.set_tick(curTick());
-    pkt.set_format(ProtoMessage::ETracePacket::SYNC);
+    pkt.set_format(ProtoMessage::ETracePacket::FORMAT_0);
+    pkt.set_f0_subformat(ProtoMessage::ETracePacket::F0_JTC);
+    pkt.set_jtc_index(index);
+
+    // Branch map (if any) piggybacks per spec Format 0-1.
+    uint32_t branchesField;
+    if (branchCount == 0) branchesField = 0;
+    else if (branchCount == 1) branchesField = 1;
+    else if (branchCount <= 3) branchesField = 3;
+    else if (branchCount <= 7) branchesField = 7;
+    else if (branchCount <= 15) branchesField = 15;
+    else branchesField = 31;
+    pkt.set_branches(branchesField);
+    if (branchCount > 0) {
+        pkt.set_branch_map(branchMap);
+    }
+    // irreport for JTC hit.
+    pkt.set_irreport(false);
+    pkt.set_irdepth(callCounter);
+
+    traceStream->write(pkt);
+    resetBranchMap();
+    stats.numBranchMapPackets++;
+    stats.numPackets++;
+}
+
+// Format 3-2 (context change). No address, no branch bit.
+void
+ETrace::emitContextPacket(uint64_t context, uint8_t priv)
+{
+    ProtoMessage::ETracePacket pkt;
+    pkt.set_tick(curTick());
+    pkt.set_format(ProtoMessage::ETracePacket::FORMAT_3);
     pkt.set_subformat(ProtoMessage::ETracePacket::CONTEXT);
+    pkt.set_priv(priv);
+    if (!notimeP && timeWidthP > 0) {
+        pkt.set_time(curTick());
+    }
     pkt.set_context(context);
     traceStream->write(pkt);
 
     stats.numContextPackets++;
     stats.numPackets++;
 
-    DPRINTF(ETrace, "Context packet: context=0x%x\n", context);
+    DPRINTF(ETrace, "Context packet: context=0x%llx priv=%d\n",
+            (unsigned long long)context, priv);
+}
+
+// Format 3-3 (support).
+void
+ETrace::emitSupportPacket(QualStatus qual)
+{
+    ProtoMessage::ETracePacket pkt;
+    pkt.set_tick(curTick());
+    pkt.set_format(ProtoMessage::ETracePacket::FORMAT_3);
+    pkt.set_subformat(ProtoMessage::ETracePacket::SUPPORT);
+    pkt.set_ienable(true);
+    pkt.set_encoder_mode(0);
+    pkt.set_qual_status(
+        static_cast<ProtoMessage::ETracePacket::QualStatus>(qual));
+
+    uint32_t ioptions = 0;
+    if (implicitReturn && callCounterMax > 0) ioptions |= (1u << 0);
+    if (branchPrediction && bpredSizeP > 0)   ioptions |= (1u << 1);
+    if (jumpTargetCache && cacheSizeP > 0)    ioptions |= (1u << 2);
+    if (sijump)                                ioptions |= (1u << 3);
+    if (implicitException)                     ioptions |= (1u << 4);
+    pkt.set_ioptions(ioptions);
+
+    pkt.set_denable(dataTrace);
+    pkt.set_dloss(false);  // gem5 never drops data-trace packets.
+    uint32_t doptions = 0;
+    if (dataTraceMode == 1) doptions |= (1u << 0);
+    if (dataTraceMode == 2) doptions |= (1u << 1);
+    pkt.set_doptions(doptions);
+
+    traceStream->write(pkt);
+    stats.numSupportPackets++;
+    stats.numPackets++;
+
+    DPRINTF(ETrace, "Support packet: qual=0x%x ioptions=0x%x denable=%d\n",
+            qual, ioptions, dataTrace ? 1 : 0);
 }
 
 void
@@ -954,11 +1344,19 @@ ETrace::resetBranchMap()
 void
 ETrace::flushTrace()
 {
+    // Drain any pending Format-1 with the last committed address.
     if (branchCount > 0) {
         emitBranchMapPacket(true, lastCommittedAddr);
+    } else if (haveExpectedPC && lastCommittedAddr != lastReportedAddr) {
+        emitAddrOnlyPacket(lastCommittedAddr);
+    }
+    // Emit a Format 0-0 for any residual predicted-branch count.
+    if (bpredCorrectCount >= 31) {
+        emitBranchCountPacket(false, 0);
     }
 
-    emitSupportPacket(false);
+    // Support(ended_rep): clean end of trace.
+    emitSupportPacket(QS_ENDED_REP);
 
     DPRINTF(ETrace, "Flushing trace: %llu packets, %llu instructions\n",
             stats.numPackets.value(), stats.totalInstsTraced.value());
@@ -998,6 +1396,8 @@ ETrace::ETraceStats::ETraceStats(statistics::Group *parent)
                "Returns inferred via call counter"),
       ADD_STAT(numBpredCorrect, statistics::units::Count::get(),
                "Correctly predicted branches omitted"),
+      ADD_STAT(numBpcFlushes, statistics::units::Count::get(),
+               "Format 0-0 predicted-branch-count flushes"),
       ADD_STAT(numJtCacheHits, statistics::units::Count::get(),
                "Jump target cache hits"),
       ADD_STAT(numSijumpInferred, statistics::units::Count::get(),
