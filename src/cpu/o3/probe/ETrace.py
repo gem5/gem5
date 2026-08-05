@@ -105,7 +105,9 @@ class ETrace(ProbeListenerObject):
         64, "Instruction address width (iaddress_width_p)"
     )
     iaddressLsbP = Param.UInt32(
-        0, "Instruction address LSB shift (0=RVC, 2=aligned)"
+        1, "Instruction address LSB shift: 1=RVC, 2=32-bit aligned. "
+        "Encoder shifts emitted addresses right by this many bits; "
+        "decoder shifts back."
     )
     privilegeWidthP = Param.UInt32(
         2, "Privilege field width (typically 2 bits)"

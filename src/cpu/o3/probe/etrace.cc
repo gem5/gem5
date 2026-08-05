@@ -57,6 +57,7 @@ ETrace::ETrace(const ETraceParams &params)
       haveExpectedPC(false),
       lastCommittedAddr(0),
       lastCommittedPriv(0),
+      lastCommittedWasTakenBranch(false),
       lastPriv(0),
       instsSinceSync(0),
       resyncPeriod(params.resyncPeriod),
@@ -96,6 +97,8 @@ ETrace::ETrace(const ETraceParams &params)
                         params.filterAddrEnd != 0),
       wasFiltered(false),
       pendingUpdiscon(false),
+      pendingExplicitReturn(false),
+      pendingIrdepth(0),
       iaddressWidthP(params.iaddressWidthP),
       iaddressLsbP(params.iaddressLsbP),
       privilegeWidthP(params.privilegeWidthP),
@@ -493,35 +496,50 @@ ETrace::classifyAtomicSubtype(const DynInstPtr &dynInst, bool &isLR,
 }
 
 void
-ETrace::computeDisambigBits(Addr addr, bool &notify_, bool &updiscon_,
+ETrace::computeDisambigBits(Addr addr, bool isExplicitReturn,
+                            bool &notify_, bool &updiscon_,
                             bool &irreport_, uint32_t &irdepth_)
 {
-    // Spec: notify, updiscon, irreport are the actual values that,
-    // after XOR-encoding against previous MSBs, produce the intended
-    // MSB-repeat bit stream. In gem5 we store the resolved bit values
-    // (decoder does the XOR chain).
+    // In gem5's proto we store the RESOLVED bit values (not the XOR
+    // deltas the on-wire form uses); the decoder recovers the intent
+    // by XORing back against the address MSB. See payload.adoc for
+    // the wire-level XOR chain.
     //
-    //   notify   : set to differ from address MSB when the encoder
-    //              wishes to force the decoder to notice the packet
-    //              even under identical addresses (rarely used).
-    //   updiscon : set to differ from notify when the reported
-    //              instruction follows an uninferable discontinuity
-    //              AND is immediately followed by a Format 3 packet.
-    //              We latch pendingUpdiscon at every uninferable
-    //              jump/call/return and consume it here.
-    //   irreport : set to differ from updiscon when this address is
-    //              being reported "in the clear" because the implicit-
-    //              return call counter was 0 or overflowed. Also used
-    //              when reporting an explicit return.
-    //   irdepth  : current call-counter value (when irreport is set).
-    (void)addr;
-    // MSB of the reported address (top bit of iaddress_width_p slice).
-    // We approximate with bit 63; decoder uses same convention.
+    // Semantics of the resolved bit values:
+    //   notify   = address_MSB  by default (no notify).
+    //              Toggled to !address_MSB when the encoder wants to
+    //              force the decoder to notice the packet under
+    //              identical-address edge cases (rarely used).
+    //   updiscon = notify       by default.
+    //              Toggled to !notify when the reported instruction
+    //              follows an uninferable discontinuity AND is
+    //              immediately followed by a Format 3 packet (drives
+    //              the "loop back-edge → interrupt" disambiguator).
+    //   irreport = updiscon     by default.
+    //              Toggled to !updiscon when this address is being
+    //              reported "in the clear" — implicit-return counter
+    //              was 0 (nothing to unwind) or overflowed. When
+    //              toggled, irdepth carries the current counter.
     bool addrMsb = (addr >> 63) & 1;
-    notify_ = addrMsb;   // default: no notify
+    notify_   = addrMsb;                                     // default
     updiscon_ = notify_ ^ (pendingUpdiscon ? 1 : 0);
-    irreport_ = updiscon_;  // default: match updiscon
-    irdepth_ = 0;
+    irreport_ = updiscon_ ^ (isExplicitReturn ? 1 : 0);
+    // Spec (payload.adoc Format 1/2/0-1): "if irreport is the same
+    // value as updiscon, all bits in irdepth also equal updiscon."
+    // So when the explicit-return path is NOT active, irdepth is
+    // a filler run of the updiscon bit (all-1s if updiscon=1, else
+    // all-0s). Only when irreport is toggled does irdepth carry the
+    // latched call counter value.
+    if (isExplicitReturn) {
+        irdepth_ = pendingIrdepth;
+    } else {
+        // Fill with updiscon bit repeated across the field. gem5 uses
+        // the widest irdepth (call_counter_size_p + return_stack_size_p
+        // + 1) which is bounded by the width the encoder advertised
+        // via header.call_counter_size_p. We fill uint32 fully; the
+        // decoder masks to its known width.
+        irdepth_ = updiscon_ ? 0xFFFFFFFFu : 0u;
+    }
     pendingUpdiscon = false;
 }
 
@@ -608,10 +626,12 @@ ETrace::traceCommit(const DynInstPtr &dynInst)
             emitAddressPacket(lastCommittedAddr);
         }
 
-        // Trap-packet `branch` bit: 1 iff the pre-trap instruction was
-        // a taken branch (i.e., a taken conditional branch that
-        // then generated the trap on its target's fetch).
-        emitTrapPacket(pc, causeCode, tval, isInterrupt, curPriv, false);
+        // Format 3-1 `branch` bit: 0 iff the pre-trap committed
+        // instruction was a taken branch, else 1 (spec convention,
+        // matches Format 3-0). We tracked this at last-commit time.
+        bool trapBranchBit = !lastCommittedWasTakenBranch;
+        emitTrapPacket(pc, causeCode, tval, isInterrupt, curPriv,
+                       trapBranchBit);
         needsInitialSync = false;
         instsSinceSync = 0;
     }
@@ -624,9 +644,10 @@ ETrace::traceCommit(const DynInstPtr &dynInst)
         bool isBranch =
             (itype == ITYPE_TAKEN_BRANCH || itype == ITYPE_NTAKEN_BRANCH);
         bool taken = (itype == ITYPE_TAKEN_BRANCH);
-        // Spec Format 3-0 `branch` bit: 1 iff address is a taken
-        // branch, else 0.
-        bool branchBit = isBranch && taken;
+        // Spec Format 3-0 `branch` bit (payload.adoc):
+        //   0 iff address IS a branch instruction AND it was TAKEN
+        //   1 otherwise (not a branch, or branch not taken)
+        bool branchBit = !(isBranch && taken);
         emitSyncStartPacket(pc, curPriv, branchBit);
         needsInitialSync = false;
         instsSinceSync = 0;
@@ -644,7 +665,8 @@ ETrace::traceCommit(const DynInstPtr &dynInst)
         bool isBranch =
             (itype == ITYPE_TAKEN_BRANCH || itype == ITYPE_NTAKEN_BRANCH);
         bool taken = (itype == ITYPE_TAKEN_BRANCH);
-        emitSyncStartPacket(pc, curPriv, isBranch && taken);
+        // See spec branch-bit convention comment above.
+        emitSyncStartPacket(pc, curPriv, !(isBranch && taken));
         instsSinceSync = 0;
     }
 
@@ -762,8 +784,16 @@ ETrace::traceCommit(const DynInstPtr &dynInst)
                 // continue accumulating for the next address packet.
                 break;
             }
-            // Explicit return. Emit with irreport set so decoder
-            // knows to inspect irdepth.
+            // Explicit return: reported "in the clear" because either
+            // implicit-return mode is off, or the call counter is 0
+            // (return goes beyond what the counter has tracked, e.g.
+            // after an overflow'd call in a deeply-nested region).
+            // Spec: set irreport and emit current counter in irdepth
+            // (payload.adoc §sec:implicit-return).
+            if (implicitReturn && callCounterMax > 0) {
+                pendingExplicitReturn = true;
+                pendingIrdepth = callCounter;
+            }
             Addr npc = dynInst->pcState().as<RiscvISA::PCState>().npc();
             markUpdiscon();
             emitAddressPacket(npc);
@@ -848,6 +878,7 @@ ETrace::traceCommit(const DynInstPtr &dynInst)
     haveExpectedPC = true;
     lastCommittedAddr = pc;
     lastCommittedPriv = curPriv;
+    lastCommittedWasTakenBranch = (itype == ITYPE_TAKEN_BRANCH);
 
     // Periodic resync — 3-state FSM: state 1 counts, state 2 drains
     // pending branches, state 3 emits Format 3-0. We fuse states 2+3
@@ -863,7 +894,8 @@ ETrace::traceCommit(const DynInstPtr &dynInst)
         bool isBranch = (curIType == ITYPE_TAKEN_BRANCH ||
                          curIType == ITYPE_NTAKEN_BRANCH);
         bool taken = (curIType == ITYPE_TAKEN_BRANCH);
-        emitSyncStartPacket(pc, curPriv, isBranch && taken);
+        // See spec branch-bit convention comment above.
+        emitSyncStartPacket(pc, curPriv, !(isBranch && taken));
         instsSinceSync = 0;
     }
 }
@@ -1029,7 +1061,9 @@ ETrace::emitSyncStartPacket(Addr addr, uint8_t priv, bool branch)
     if (!nocontextP && contextWidth > 0) {
         pkt.set_context(lastContext);
     }
-    pkt.set_address(addr);
+    // Spec: on-wire address is shifted right by iaddress_lsb_p; the
+    // decoder shifts back. gem5 tracks byte addresses internally.
+    pkt.set_address(addr >> iaddressLsbP);
     traceStream->write(pkt);
 
     lastReportedAddr = addr;
@@ -1072,18 +1106,20 @@ ETrace::emitTrapPacket(Addr addr, uint64_t cause, uint64_t tval,
     pkt.set_interrupt(isInterrupt);
 
     bool inferable = isTrapAddrInferable(priv, cause, isInterrupt);
-    // Spec: thaddr=1 means the address IS the trap handler PC.
-    // thaddr=0 means the address is EPC (updiscon path).
-    // In implicit-exception mode with inferable handler, we set
-    // thaddr=1 and omit the address (decoder derives handler from
-    // cause+tvec).
-    if (inferable) {
-        pkt.set_thaddr(true);
-        // Address omitted.
-    } else {
-        pkt.set_thaddr(true);   // Address IS the handler (explicit).
-        pkt.set_address(addr);
+    // Spec Format 3-1 thaddr:
+    //   thaddr=1: address IS the trap handler PC. In implicit-
+    //             exception mode, address may be omitted (decoder
+    //             derives handler from cause + mtvec/stvec).
+    //   thaddr=0: address is EPC of the last-committed instruction
+    //             (used when the trap follows an uninferable PC
+    //             discontinuity, so the decoder needs the EPC to
+    //             resume). gem5 always has the handler PC available
+    //             at trap time so this path is never taken here.
+    pkt.set_thaddr(true);
+    if (!inferable) {
+        pkt.set_address(addr >> iaddressLsbP);
     }
+    // else: address omitted, decoder infers from cause + tvec.
     if (!isInterrupt) {
         // tval field: only present for exceptions per spec.
         pkt.set_tval(tval);
@@ -1139,13 +1175,18 @@ ETrace::emitBranchMapPacket(bool withAddress, Addr addr)
     pkt.set_branch_map(branchMap);
 
     if (withAddress) {
-        int64_t delta = static_cast<int64_t>(addr - lastReportedAddr);
+        // On-wire delta is computed between shifted addresses per spec.
+        int64_t delta = static_cast<int64_t>(
+            (addr >> iaddressLsbP) - (lastReportedAddr >> iaddressLsbP));
         pkt.set_saddress(delta);
         lastReportedAddr = addr;
 
+        bool isExplicitReturn = pendingExplicitReturn;
+        pendingExplicitReturn = false;
         bool notify_bit, updiscon_bit, irreport_bit;
-        uint32_t irdepth_val = callCounter;
-        computeDisambigBits(addr, notify_bit, updiscon_bit,
+        uint32_t irdepth_val = 0;
+        computeDisambigBits(addr, isExplicitReturn,
+                            notify_bit, updiscon_bit,
                             irreport_bit, irdepth_val);
         pkt.set_notify(notify_bit);
         pkt.set_updiscon(updiscon_bit);
@@ -1190,12 +1231,16 @@ ETrace::emitAddrOnlyPacket(Addr addr)
     ProtoMessage::ETracePacket pkt;
     pkt.set_tick(curTick());
     pkt.set_format(ProtoMessage::ETracePacket::FORMAT_2);
-    int64_t delta = static_cast<int64_t>(addr - lastReportedAddr);
+    int64_t delta = static_cast<int64_t>(
+        (addr >> iaddressLsbP) - (lastReportedAddr >> iaddressLsbP));
     pkt.set_saddress(delta);
 
+    bool isExplicitReturn = pendingExplicitReturn;
+    pendingExplicitReturn = false;
     bool notify_bit, updiscon_bit, irreport_bit;
-    uint32_t irdepth_val = callCounter;
-    computeDisambigBits(addr, notify_bit, updiscon_bit,
+    uint32_t irdepth_val = 0;
+    computeDisambigBits(addr, isExplicitReturn,
+                        notify_bit, updiscon_bit,
                         irreport_bit, irdepth_val);
     pkt.set_notify(notify_bit);
     pkt.set_updiscon(updiscon_bit);
@@ -1215,7 +1260,7 @@ ETrace::emitAddrOnlyPacket(Addr addr)
 
 // Format 0-0 (correctly-predicted branch count).
 void
-ETrace::emitBranchCountPacket(bool withAddress, Addr addr)
+ETrace::emitBranchCountPacket(bool withAddress, Addr addr, bool mispredTaken)
 {
     if (bpredCorrectCount < 31) return;
     ProtoMessage::ETracePacket pkt;
@@ -1224,14 +1269,24 @@ ETrace::emitBranchCountPacket(bool withAddress, Addr addr)
     pkt.set_f0_subformat(ProtoMessage::ETracePacket::F0_BRANCH_COUNT);
     // Spec encodes as (pbc - 31).
     pkt.set_branch_count(bpredCorrectCount - 31);
-    pkt.set_branch_fmt(withAddress ? 0x2 : 0x0);
+    // branch_fmt per spec: 00 no-address; 10 address (mispred taken);
+    // 11 address (mispred not-taken).
+    uint32_t bf;
+    if (!withAddress)      bf = 0x0;
+    else if (mispredTaken) bf = 0x2;
+    else                   bf = 0x3;
+    pkt.set_branch_fmt(bf);
     if (withAddress) {
-        int64_t delta = static_cast<int64_t>(addr - lastReportedAddr);
+        int64_t delta = static_cast<int64_t>(
+            (addr >> iaddressLsbP) - (lastReportedAddr >> iaddressLsbP));
         pkt.set_saddress(delta);
         lastReportedAddr = addr;
+        bool isExplicitReturn = pendingExplicitReturn;
+        pendingExplicitReturn = false;
         bool notify_bit, updiscon_bit, irreport_bit;
-        uint32_t irdepth_val = callCounter;
-        computeDisambigBits(addr, notify_bit, updiscon_bit,
+        uint32_t irdepth_val = 0;
+        computeDisambigBits(addr, isExplicitReturn,
+                            notify_bit, updiscon_bit,
                             irreport_bit, irdepth_val);
         pkt.set_notify(notify_bit);
         pkt.set_updiscon(updiscon_bit);
@@ -1266,9 +1321,17 @@ ETrace::emitJtcHitPacket(uint32_t index)
     if (branchCount > 0) {
         pkt.set_branch_map(branchMap);
     }
-    // irreport for JTC hit.
-    pkt.set_irreport(false);
-    pkt.set_irdepth(callCounter);
+    // Format 0-1 carries irreport (spec: chained off branch_map MSB
+    // or branches MSB when no map). It does not carry notify/updiscon
+    // as separate fields — those are subsumed by the JTC lookup itself
+    // being an implicit ack of the last uninferable discontinuity.
+    // Consume the pending flags here so they don't leak into the next
+    // Format 3 packet.
+    bool isExplicitReturn = pendingExplicitReturn;
+    pendingExplicitReturn = false;
+    pendingUpdiscon = false;
+    pkt.set_irreport(isExplicitReturn);
+    pkt.set_irdepth(isExplicitReturn ? pendingIrdepth : 0);
 
     traceStream->write(pkt);
     resetBranchMap();
@@ -1290,6 +1353,12 @@ ETrace::emitContextPacket(uint64_t context, uint8_t priv)
     }
     pkt.set_context(context);
     traceStream->write(pkt);
+
+    // Spec: context change is a sync-class event; data-trace per-size
+    // baselines must be invalidated so the next data packet emits a
+    // full address.
+    if (dataTrace)
+        resetDataTraceBaselines();
 
     stats.numContextPackets++;
     stats.numPackets++;

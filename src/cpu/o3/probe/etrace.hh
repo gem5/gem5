@@ -119,8 +119,12 @@ class ETrace : public ProbeListenerObject
     // Route to Format 1 with-address when branchCount > 0,
     // Format 2 when branchCount == 0.
     void emitAddressPacket(Addr addr);
-    // Format 0-0 (correctly-predicted branch count).
-    void emitBranchCountPacket(bool withAddress, Addr addr);
+    // Format 0-0 (correctly-predicted branch count). branch_fmt values
+    // per spec: 0 = no-address, 2 = address (mispred taken),
+    // 3 = address (mispred not-taken). `mispredTaken` is meaningful
+    // only when `withAddress` is true.
+    void emitBranchCountPacket(bool withAddress, Addr addr,
+                               bool mispredTaken = true);
     // Format 0-1 (JTC hit).
     void emitJtcHitPacket(uint32_t index);
 
@@ -161,8 +165,24 @@ class ETrace : public ProbeListenerObject
     // packet that carries this address. In gem5's proto, we store
     // the resolved bit values (not the XOR deltas). Decoder does the
     // inverse XOR chain to verify. The `depth` in irdepth is the
-    // current call-counter or return-stack value.
-    void computeDisambigBits(Addr addr, bool &notify, bool &updiscon,
+    // current call-counter value when `isExplicitReturn` is true,
+    // and 0 otherwise.
+    //
+    // Spec semantics for the three chained bits (payload.adoc):
+    //   notify   : set to differ from address MSB when the encoder
+    //              wishes to force the decoder to notice the packet
+    //              even under identical addresses (rarely used).
+    //   updiscon : set to differ from notify when this reported
+    //              instruction follows an uninferable discontinuity
+    //              AND is immediately followed by a Format 3 packet
+    //              (encoder latches pendingUpdiscon at each uninf jump
+    //              and consumes here).
+    //   irreport : set to differ from updiscon when this address is
+    //              being reported "in the clear" because the implicit-
+    //              return call counter was 0 or overflowed. When set,
+    //              irdepth carries the counter value at emission time.
+    void computeDisambigBits(Addr addr, bool isExplicitReturn,
+                             bool &notify, bool &updiscon,
                              bool &irreport, uint32_t &irdepth);
 
     // Data trace helpers.
@@ -198,6 +218,11 @@ class ETrace : public ProbeListenerObject
     bool haveExpectedPC;
     Addr lastCommittedAddr;
     uint8_t lastCommittedPriv;
+    // True iff the most recently committed traced instruction was a
+    // taken conditional branch. Used to compute the Format 3-1 trap
+    // `branch` bit polarity (spec: 0 iff last-committed was a taken
+    // branch, else 1).
+    bool lastCommittedWasTakenBranch;
 
     // Privilege tracking
     uint8_t lastPriv;
@@ -268,6 +293,14 @@ class ETrace : public ProbeListenerObject
     // Updiscon tracking (set on uninferable discontinuities; consumed
     // by the next Format 3 packet if any).
     bool pendingUpdiscon;
+    // Explicit-return tracking. Set when a return is being reported
+    // "in the clear" — either the implicit-return call counter was
+    // 0 (nothing to unwind) or the counter overflowed (nested deeper
+    // than callCounterSizeP allows). Consumed by the next Format 1/2
+    // emit, which sets irreport and emits the current call counter
+    // as irdepth per payload.adoc §sec:implicit-return.
+    bool pendingExplicitReturn;
+    uint32_t pendingIrdepth;
 
     // Spec discovery parameters (mirrored from Python params so the
     // header can advertise them and the encoder can size fields).

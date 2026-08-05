@@ -246,6 +246,9 @@ def decode_instruction_trace(filename, show_stats, verify_updiscon=False):
 
         line = f"[{num_packets:6d}] tick={packet.tick:12d} fmt={fmt:<4s}"
 
+        # Shift factor for wire address recovery (spec iaddress_lsb_p).
+        lsb = header.iaddress_lsb_p
+
         if packet.format == etrace_pb2.ETracePacket.FORMAT_3:
             subfmt = SUBFORMAT_NAMES.get(
                 packet.subformat, str(packet.subformat)
@@ -254,10 +257,10 @@ def decode_instruction_trace(filename, show_stats, verify_updiscon=False):
 
             if packet.subformat == etrace_pb2.ETracePacket.TRAP:
                 num_trap += 1
-                reconstructed_addr = packet.address
+                reconstructed_addr = packet.address << lsb
                 priv = PRIV_NAMES.get(packet.priv, str(packet.priv))
                 if packet.HasField("address"):
-                    line += f" addr=0x{packet.address:016x}"
+                    line += f" addr=0x{reconstructed_addr:016x}"
                 else:
                     line += " addr=<inferable>"
                 line += f" priv={priv} branch={int(packet.branch)}"
@@ -294,9 +297,9 @@ def decode_instruction_trace(filename, show_stats, verify_updiscon=False):
             else:  # START
                 num_sync_start += 1
                 priv = PRIV_NAMES.get(packet.priv, str(packet.priv))
-                reconstructed_addr = packet.address
+                reconstructed_addr = packet.address << lsb
                 line += (
-                    f" addr=0x{packet.address:016x} priv={priv}"
+                    f" addr=0x{reconstructed_addr:016x} priv={priv}"
                     f" branch={int(packet.branch)}"
                 )
                 if packet.HasField("time"):
@@ -312,7 +315,9 @@ def decode_instruction_trace(filename, show_stats, verify_updiscon=False):
             branches_field = packet.branches
             count, no_addr_form = branches_field_to_count(branches_field)
             if packet.HasField("saddress"):
-                delta = packet.saddress
+                # Delta is in wire units (shifted-out iaddress_lsb_p);
+                # multiply back to byte units before accumulating.
+                delta = packet.saddress << lsb
                 reconstructed_addr = (reconstructed_addr + delta) & (
                     (1 << 64) - 1
                 )
@@ -337,7 +342,7 @@ def decode_instruction_trace(filename, show_stats, verify_updiscon=False):
                     if packet.notify != expected_notify:
                         line += " [!notify-chain]"
                     prev_addr_msb = addr_msb
-                if packet.irreport:
+                if packet.irreport != packet.updiscon:
                     line += f" IRREPORT(depth={packet.irdepth})"
                 if packet.updiscon != packet.notify:
                     line += " UPDISCON"
@@ -352,7 +357,7 @@ def decode_instruction_trace(filename, show_stats, verify_updiscon=False):
 
         elif packet.format == etrace_pb2.ETracePacket.FORMAT_2:
             num_addr_only += 1
-            delta = packet.saddress
+            delta = packet.saddress << lsb
             reconstructed_addr = (reconstructed_addr + delta) & (
                 (1 << 64) - 1
             )
@@ -362,7 +367,7 @@ def decode_instruction_trace(filename, show_stats, verify_updiscon=False):
                 )
                 jtc_mirror[idx] = reconstructed_addr
             line += f" addr=0x{reconstructed_addr:016x} (delta={delta:+d})"
-            if packet.irreport:
+            if packet.irreport != packet.updiscon:
                 line += f" IRREPORT(depth={packet.irdepth})"
             if packet.updiscon != packet.notify:
                 line += " UPDISCON"
