@@ -37,6 +37,8 @@
 
 #include "mem/ruby/protocol/chi/tlm/generator.hh"
 
+#include <algorithm>
+
 #include "debug/TLM.hh"
 #include "mem/ruby/protocol/chi/tlm/controller.hh"
 #include "mem/ruby/protocol/chi/tlm/snp_handler.hh"
@@ -180,7 +182,9 @@ TlmGenerator::TransactionEvent::process()
 TlmGenerator::TlmGenerator(const Params &p)
     : ClockedObject(p),
       cpuId(p.cpu_id),
-      transPerCycle(p.tran_per_cycle),
+      departureRate(p.departure_rate),
+      arrivalRate(p.arrival_rate),
+      cyclesToNextArrival(1),
       maxPendingTrans(
           p.max_pending_tran.value_or(std::numeric_limits<uint16_t>::max())),
       pCredit(),
@@ -206,18 +210,51 @@ TlmGenerator::TlmGenerator(const Params &p)
     registerExitCallback([this](){ passFailCheck(); });
 }
 
+unsigned
+TlmGenerator::generateNArrivals()
+{
+    if (inputTransactions.empty() || arrivalRate == 0) {
+        return 0;
+    }
+
+    // One or more transactions per cycle
+    if (arrivalRate >= 1) {
+        return arrivalRate;
+    } else {
+        // Less than one transaction per cycle
+        if (cyclesToNextArrival > 1) {
+            cyclesToNextArrival--;
+            return 0;
+        }
+
+        cyclesToNextArrival = static_cast<unsigned>(-arrivalRate);
+        return 1;
+    }
+}
+
 void
 TlmGenerator::tick()
 {
-    unsigned pending_size = pendingTransactions.size();
-    auto slots = std::min(transPerCycle, maxPendingTrans - pending_size);
+    auto arrivals = generateNArrivals();
+    while (!inputTransactions.empty() && arrivals > 0) {
+        unscheduledTransactions.push_back(inputTransactions.front());
+        inputTransactions.pop_front();
+        arrivals--;
+    }
+
+    const auto pending = pendingTransactions.size();
+    assert(pending <= maxPendingTrans);
+    auto slots = std::min(departureRate,
+                          static_cast<unsigned>(maxPendingTrans - pending));
+
     while (!unscheduledTransactions.empty() && slots > 0) {
         auto tran = unscheduledTransactions.front();
         scheduleTransaction(curTick(), tran);
         unscheduledTransactions.pop_front();
         slots--;
     }
-    if (!unscheduledTransactions.empty()) {
+
+    if (!inputTransactions.empty() || !unscheduledTransactions.empty()) {
         schedule(tickEvent, nextCycle());
     }
 }
@@ -231,6 +268,16 @@ TlmGenerator::scheduleTransaction(Tick when, Transaction *transaction)
     auto event = new TransactionEvent(transaction, when);
 
     schedule(event, when);
+}
+
+void
+TlmGenerator::enqueueInput(Transaction *transaction)
+{
+    inputTransactions.push_back(transaction);
+
+    if (!tickEvent.scheduled()) {
+        schedule(tickEvent, nextCycle());
+    }
 }
 
 void
@@ -507,6 +554,13 @@ TlmGenerator::getPort(const std::string &if_name, PortID idx)
     } else {
         return SimObject::getPort(if_name, idx);
     }
+}
+
+void
+TlmGenerator::setArrivalRate(int rate)
+{
+    arrivalRate = rate;
+    cyclesToNextArrival = 1;
 }
 
 TlmGenerator::Stats::Stats(statistics::Group *_parent)
