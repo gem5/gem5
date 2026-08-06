@@ -53,7 +53,7 @@ Router::Router(const Params &p)
     m_virtual_networks(p.virt_nets), m_vc_per_vnet(p.vcs_per_vnet),
     m_num_vcs(m_virtual_networks * m_vc_per_vnet), m_bit_width(p.width),
     m_network_ptr(nullptr), routingUnit(this), switchAllocator(this),
-    crossbarSwitch(this)
+    crossbarSwitch(this), m_stats(this)
 {
     m_input_unit.clear();
     m_output_unit.clear();
@@ -187,35 +187,25 @@ Router::getPortDirectionName(PortDirection direction)
     return direction;
 }
 
+Router::RouterStats::RouterStats(Router *parent)
+    : statistics::Group(parent),
+      m_buffer_reads(this, "buffer_reads"),
+      m_buffer_writes(this, "buffer_writes"),
+      m_sw_input_arbiter_activity(this, "sw_input_arbiter_activity"),
+      m_sw_output_arbiter_activity(this, "sw_output_arbiter_activity"),
+      m_crossbar_activity(this, "crossbar_activity")
+{
+    m_buffer_reads.flags(statistics::nozero);
+    m_buffer_writes.flags(statistics::nozero);
+    m_crossbar_activity.flags(statistics::nozero);
+    m_sw_input_arbiter_activity.flags(statistics::nozero);
+    m_sw_output_arbiter_activity.flags(statistics::nozero);
+}
+
 void
 Router::regStats()
 {
     BasicRouter::regStats();
-
-    m_buffer_reads
-        .name(name() + ".buffer_reads")
-        .flags(statistics::nozero)
-    ;
-
-    m_buffer_writes
-        .name(name() + ".buffer_writes")
-        .flags(statistics::nozero)
-    ;
-
-    m_crossbar_activity
-        .name(name() + ".crossbar_activity")
-        .flags(statistics::nozero)
-    ;
-
-    m_sw_input_arbiter_activity
-        .name(name() + ".sw_input_arbiter_activity")
-        .flags(statistics::nozero)
-    ;
-
-    m_sw_output_arbiter_activity
-        .name(name() + ".sw_output_arbiter_activity")
-        .flags(statistics::nozero)
-    ;
 }
 
 void
@@ -223,15 +213,18 @@ Router::collateStats()
 {
     for (int j = 0; j < m_virtual_networks; j++) {
         for (int i = 0; i < m_input_unit.size(); i++) {
-            m_buffer_reads += m_input_unit[i]->get_buf_read_activity(j);
-            m_buffer_writes += m_input_unit[i]->get_buf_write_activity(j);
+            m_stats.m_buffer_reads +=
+                m_input_unit[i]->get_buf_read_activity(j);
+            m_stats.m_buffer_writes +=
+                m_input_unit[i]->get_buf_write_activity(j);
         }
     }
 
-    m_sw_input_arbiter_activity = switchAllocator.get_input_arbiter_activity();
-    m_sw_output_arbiter_activity =
+    m_stats.m_sw_input_arbiter_activity =
+        switchAllocator.get_input_arbiter_activity();
+    m_stats.m_sw_output_arbiter_activity =
         switchAllocator.get_output_arbiter_activity();
-    m_crossbar_activity = crossbarSwitch.get_crossbar_activity();
+    m_stats.m_crossbar_activity = crossbarSwitch.get_crossbar_activity();
 }
 
 void

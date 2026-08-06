@@ -60,6 +60,10 @@ from ...components.cachehierarchies.ruby.caches.viper.tcp import TCPCache
 from ...components.devices.gpus.viper_shader import ViperShader
 from ...components.memory.abstract_memory_system import AbstractMemorySystem
 from ...utils.requires import requires
+from .viper_garnet_network import (
+    GarnetDoubleCrossbar,
+    GarnetPt2Pt,
+)
 from .viper_network import SimpleDoubleCrossbar
 
 
@@ -86,6 +90,7 @@ class ViperGPUCacheHierarchy(AbstractRubyCacheHierarchy):
         tcc_count: int,
         cu_per_sqc: int,
         cache_line_size: int,
+        use_garnet: bool,
         shader: ViperShader,
     ):
         """
@@ -103,6 +108,7 @@ class ViperGPUCacheHierarchy(AbstractRubyCacheHierarchy):
         self._tcc_size = tcc_size
         self._tcc_assoc = tcc_assoc
         self._cache_line_size = cache_line_size
+        self._use_garnet = use_garnet
 
         # We have everything we need to know to create the GPU cache hierarchy
         # immediately. Therefore, an incorporate_cache method is not part of
@@ -113,7 +119,10 @@ class ViperGPUCacheHierarchy(AbstractRubyCacheHierarchy):
         self.ruby_gpu.block_size_bytes = cache_line_size
 
         # Ruby network for this GPU
-        self.ruby_gpu.network = SimpleDoubleCrossbar(self.ruby_gpu)
+        if self._use_garnet:
+            self.ruby_gpu.network = GarnetDoubleCrossbar(self.ruby_gpu)
+        else:
+            self.ruby_gpu.network = SimpleDoubleCrossbar(self.ruby_gpu)
 
         # VIPER uses 6 virtual networks.
         self.ruby_gpu.number_of_virtual_networks = 6
@@ -339,7 +348,8 @@ class ViperGPUCacheHierarchy(AbstractRubyCacheHierarchy):
             + self._directory_controllers
             + self._dma_controllers
         )
-        self.ruby_gpu.network.setup_buffers()
+        if not self._use_garnet:
+            self.ruby_gpu.network.setup_buffers()
 
     def get_mem_ctrls(self):
         return self._mem_ctrls
