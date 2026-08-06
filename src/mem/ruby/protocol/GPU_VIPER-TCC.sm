@@ -665,11 +665,34 @@ machine(MachineType:TCC, "TCC Cache")
   }
 
   action(p_profileMiss, "pm", desc="Profile cache miss") {
+      peek(coreRequestNetwork_in, CPURequestMsg) {
+          if (in_msg.Type == CoherenceRequestType:RdBlk) {
+              L2cache.profileReadMiss();
+          } else if (in_msg.Type == CoherenceRequestType:WriteThrough) {
+              L2cache.profileWriteMiss();
+          } else if (in_msg.Type == CoherenceRequestType:Atomic ||
+                  in_msg.Type == CoherenceRequestType:AtomicReturn ||
+                  in_msg.Type == CoherenceRequestType:AtomicNoReturn) {
+              L2cache.profileAtomicMiss();
+          }
+      }
+
       L2cache.profileDemandMiss();
       DPRINTF(RubyHitMiss, "in TCC miss at %#lx\n", address);
   }
 
   action(p_profileHit, "ph", desc="Profile cache hit") {
+      peek(coreRequestNetwork_in, CPURequestMsg) {
+          if (in_msg.Type == CoherenceRequestType:RdBlk) {
+              L2cache.profileReadHit();
+          } else if (in_msg.Type == CoherenceRequestType:WriteThrough) {
+              L2cache.profileWriteHit();
+          } else if (in_msg.Type == CoherenceRequestType:Atomic ||
+                  in_msg.Type == CoherenceRequestType:AtomicReturn ||
+                  in_msg.Type == CoherenceRequestType:AtomicNoReturn) {
+              L2cache.profileAtomicHit();
+          }
+      }
       L2cache.profileDemandHit();
       DPRINTF(RubyHitMiss, "in TCC hit at %#lx\n", address);
   }
