@@ -665,11 +665,17 @@ machine(MachineType:TCC, "TCC Cache")
   }
 
   action(p_profileMiss, "pm", desc="Profile cache miss") {
+      // TODO: Fix this so all RM != WM
+      L2cache.profileReadMiss();
+      L2cache.profileWriteMiss();
       L2cache.profileDemandMiss();
       DPRINTF(RubyHitMiss, "in TCC miss at %#lx\n", address);
   }
 
   action(p_profileHit, "ph", desc="Profile cache hit") {
+      // TODO: Fix this so all RH != WH
+      L2cache.profileReadHit();
+      L2cache.profileWriteHit();
       L2cache.profileDemandHit();
       DPRINTF(RubyHitMiss, "in TCC hit at %#lx\n", address);
   }
