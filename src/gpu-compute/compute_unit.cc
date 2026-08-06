@@ -2361,6 +2361,20 @@ ComputeUnit::isVectorAluIdle(uint32_t simdId) const
     return true;
 }
 
+bool
+ComputeUnit::hasWorkInFlight() const
+{
+    for (int simd = 0; simd < numVectorALUs; ++simd) {
+        for (auto *wf : wfList[simd]) {
+            if (wf->getStatus() != Wavefront::S_STOPPED) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 /**
  * send a general request to the LDS
  * make sure to look at the return value here as your request might be
