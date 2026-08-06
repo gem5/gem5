@@ -70,26 +70,37 @@ class SimpleNetwork : public Network
 
     void init();
 
-    int getBufferSize() { return m_buffer_size; }
-    int getEndpointBandwidth() { return m_endpoint_bandwidth; }
+    int
+    getBufferSize()
+    {
+        return m_buffer_size;
+    }
+    int
+    getEndpointBandwidth()
+    {
+        return m_endpoint_bandwidth;
+    }
 
     void
     collateStats()
     {} // SimpleNetwork uses new-style stats
 
-    bool isVNetOrdered(int vnet) const { return m_ordered[vnet]; }
+    bool
+    isVNetOrdered(int vnet) const
+    {
+        return m_ordered[vnet];
+    }
 
     // Methods used by Topology to setup the network
-    void makeExtOutLink(SwitchID src, NodeID dest, BasicLink* link,
-                     std::vector<NetDest>& routing_table_entry);
-    void makeExtInLink(NodeID src, SwitchID dest, BasicLink* link,
-                    std::vector<NetDest>& routing_table_entry);
-    void makeInternalLink(SwitchID src, SwitchID dest, BasicLink* link,
-                          std::vector<NetDest>& routing_table_entry,
-                          PortDirection src_outport,
-                          PortDirection dst_inport);
+    void makeExtOutLink(SwitchID src, NodeID dest, BasicLink *link,
+                        std::vector<NetDest> &routing_table_entry);
+    void makeExtInLink(NodeID src, SwitchID dest, BasicLink *link,
+                       std::vector<NetDest> &routing_table_entry);
+    void makeInternalLink(SwitchID src, SwitchID dest, BasicLink *link,
+                          std::vector<NetDest> &routing_table_entry,
+                          PortDirection src_outport, PortDirection dst_inport);
 
-    void print(std::ostream& out) const;
+    void print(std::ostream &out) const;
 
     bool functionalRead(Packet *pkt);
     bool functionalRead(Packet *pkt, WriteMask &mask);
@@ -98,18 +109,17 @@ class SimpleNetwork : public Network
   private:
     void addLink(SwitchID src, SwitchID dest, int link_latency);
     void makeLink(SwitchID src, SwitchID dest,
-        const NetDest& routing_table_entry, int link_latency);
+                  const NetDest &routing_table_entry, int link_latency);
     void makeTopology();
 
     // Private copy constructor and assignment operator
-    SimpleNetwork(const SimpleNetwork& obj);
-    SimpleNetwork& operator=(const SimpleNetwork& obj);
+    SimpleNetwork(const SimpleNetwork &obj);
+    SimpleNetwork &operator=(const SimpleNetwork &obj);
 
-    std::unordered_map<int, Switch*> m_switches;
-    std::vector<MessageBuffer*> m_int_link_buffers;
+    std::unordered_map<int, Switch *> m_switches;
+    std::vector<MessageBuffer *> m_int_link_buffers;
     const int m_buffer_size;
     const int m_endpoint_bandwidth;
-
 
     struct NetworkStats : public statistics::Group
     {
@@ -120,9 +130,24 @@ class SimpleNetwork : public Network
         void regStats() override; // Need to override as switches created late
         NetworkStats(SimpleNetwork *parent);
 
-        //Statistical variables
-        std::vector<statistics::Formula *> m_msg_counts;
-        std::vector<statistics::Formula *> m_msg_bytes;
+        // A real subgroup, not a flat stat with a dot baked into its own
+        // name -- resolveStat() only splits on subgroup boundaries, not
+        // on a dot that happens to be part of a stat's name. Group name
+        // matches the existing stats.txt prefix, so dumped paths don't
+        // change.
+        struct MessageSizeStats : public statistics::Group
+        {
+            MessageSizeStats(statistics::Group *parent, const char *name,
+                             const statistics::units::Base *unit,
+                             const char *desc);
+
+            // Indexed by MessageSizeType, one Formula per type.
+            std::vector<statistics::Formula *> m_stats;
+        };
+
+        // Statistical variables
+        MessageSizeStats m_msg_counts;
+        MessageSizeStats m_msg_bytes;
     } networkStats;
 
   public:
@@ -135,8 +160,8 @@ class SimpleNetwork : public Network
     }
 };
 
-inline std::ostream&
-operator<<(std::ostream& out, const SimpleNetwork& obj)
+inline std::ostream &
+operator<<(std::ostream &out, const SimpleNetwork &obj)
 {
     obj.print(out);
     out << std::flush;
