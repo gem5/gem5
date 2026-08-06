@@ -12,7 +12,7 @@ jobs:
     close-stale-issues:
         runs-on: ubuntu-24.04
         steps:
-            - uses: actions/stale@v8.0.0
+            - uses: actions/stale@v10
               with:
                   close-issue-message: This issue is being closed because it has been inactive waiting for response for 30 days. If this is still an issue,
                       please open a new issue and reference this one.

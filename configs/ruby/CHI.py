@@ -93,6 +93,8 @@ def create_system(
 
     # NoC params
     params = chi_defs.NoC_Params
+    params.network = options.network
+    params.topology = options.topology
     # Node types
     CHI_RNF = chi_defs.CHI_RNF
     CHI_HNF = chi_defs.CHI_HNF
@@ -228,18 +230,13 @@ def create_system(
     for hnf in ruby_system.hnf:
         hnf.setDownstream(mem_dests)
 
-    # Setup data message size for all controllers
-    for cntrl in all_cntrls:
-        cntrl.data_channel_size = params.data_width
+    # Configure network
+    params = chi_defs.setup_network_parameters(ruby_system, params)
 
-    # Network configurations
-    # virtual networks: 0=request, 1=snoop, 2=response, 3=data
-    ruby_system.network.number_of_virtual_networks = 4
-
-    ruby_system.network.control_msg_size = params.cntrl_msg_size
-    ruby_system.network.data_msg_size = params.data_width
-    if options.network == "simple":
-        ruby_system.network.buffer_size = params.router_buffer_size
+    # setup_network_parameters sets the channel parameter so reset this option
+    if options.simple_physical_channels:
+        print("WARNING: CHI ignores --simple-physical-channels")
+        options.simple_physical_channels = False
 
     # Incorporate the params into options so it's propagated to
     # makeTopology and create_topology the parent scripts

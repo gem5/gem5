@@ -2381,13 +2381,30 @@ prlimitFunc(SyscallDesc *desc, ThreadContext *tc,
 }
 
 /// Target clock_gettime() function.
-template <class OS>
+template <class OS, typename TS = typename OS::timespec>
 SyscallReturn
-clock_gettimeFunc(SyscallDesc *desc, ThreadContext *tc,
-                  int clk_id, VPtr<typename OS::timespec> tp)
+clock_gettimeFunc(SyscallDesc *desc, ThreadContext *tc, int clk_id,
+                  VPtr<TS> tp)
 {
     getElapsedTimeNano(tp->tv_sec, tp->tv_nsec);
-    tp->tv_sec += seconds_since_epoch;
+    switch (clk_id) {
+        case OS::TGT_CLOCK_REALTIME:
+        case OS::TGT_CLOCK_REALTIME_ALARM:
+        case OS::TGT_CLOCK_REALTIME_COARSE:
+        case OS::TGT_CLOCK_TAI:
+            tp->tv_sec += seconds_since_epoch;
+            break;
+        case OS::TGT_CLOCK_MONOTONIC:
+        case OS::TGT_CLOCK_MONOTONIC_COARSE:
+        case OS::TGT_CLOCK_MONOTONIC_RAW:
+        case OS::TGT_CLOCK_BOOTTIME:
+        case OS::TGT_CLOCK_BOOTTIME_ALARM:
+            break;
+        case OS::TGT_CLOCK_PROCESS_CPUTIME:
+        case OS::TGT_CLOCK_THREAD_CPUTIME:
+        default:
+            return -EINVAL;
+    }
     tp->tv_sec = htog(tp->tv_sec, OS::byteOrder);
     tp->tv_nsec = htog(tp->tv_nsec, OS::byteOrder);
 

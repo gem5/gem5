@@ -172,7 +172,7 @@ TlmGenerator::TlmGenerator(const Params &p)
       transPerCycle(p.tran_per_cycle),
       maxPendingTrans(
           p.max_pending_tran.value_or(std::numeric_limits<uint16_t>::max())),
-      pCredit(0),
+      pCredit(),
       tickEvent([this] { tick(); }, "TlmGenerator tick", false,
                 Event::CPU_Tick_Pri),
       outPort(name() + ".out_port", 0, this),
@@ -294,24 +294,47 @@ TlmGenerator::terminate(Transaction *transaction)
 }
 
 TlmGenerator::Transaction *
-TlmGenerator::getPCrdWaiting()
+TlmGenerator::PCrdWaitingQueues::get(uint16_t tgt_id)
 {
-    if (waitingForPCrd.empty()) {
+    if (auto it = waitingForPCrd.find(tgt_id); it == waitingForPCrd.end()) {
+
         return nullptr;
     } else {
-        auto waiting = waitingForPCrd.front();
-        waitingForPCrd.pop_front();
-        return waiting;
+        if (auto &queue = it->second; queue.empty()) {
+            return nullptr;
+        } else {
+            auto waiting = queue.front();
+            queue.pop_front();
+            return waiting;
+        }
     }
 }
 
-bool
-TlmGenerator::getPCrd()
+void
+TlmGenerator::PCrdWaitingQueues::insert(uint16_t tgt_id, Transaction *tran)
 {
-    if (pCredit > 0) {
-        return pCredit--;
+    waitingForPCrd[tgt_id].push_back(tran);
+}
+
+bool
+TlmGenerator::PCrdWaitingQueues::empty() const
+{
+    for (auto it : waitingForPCrd) {
+        if (!it.second.empty()) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool
+TlmGenerator::getPCrd(uint16_t tgt_id)
+{
+    auto &p_credit = pCredit[tgt_id];
+    if (p_credit > 0) {
+        return p_credit--;
     } else {
-        return pCredit;
+        return p_credit;
     }
 }
 
@@ -385,12 +408,12 @@ bool
 TlmGenerator::handlePCredit(ARM::CHI::Phase *phase)
 {
     if (isPCrdGrant(phase)) {
-        if (auto tran = getPCrdWaiting(); tran) {
+        if (auto tran = pCreditQueues.get(phase->src_id); tran) {
             // There is a waiting transaction, pass it the credit
             tran->phase().allow_retry = false;
             enqueueFront(tran);
         } else {
-            pCredit++;
+            pCredit[phase->src_id]++;
         }
 
         stats.pcrdGrant++;
@@ -404,11 +427,12 @@ TlmGenerator::handlePCredit(ARM::CHI::Phase *phase)
 
         pendingTransactions.erase(it);
 
-        if (getPCrd()) {
+        auto completer_id = phase->src_id;
+        if (getPCrd(completer_id)) {
             tran->phase().allow_retry = false;
             enqueueFront(tran);
         } else {
-            waitingForPCrd.push_back(tran);
+            pCreditQueues.insert(completer_id, tran);
         }
 
         stats.retryAck++;

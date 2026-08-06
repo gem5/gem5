@@ -103,14 +103,25 @@ class NoC_Params:
     """
     Default parameters for the interconnect. The value of data_width is
     also used to set the data_channel_size for all CHI controllers.
-    (see configs/ruby/CHI.py)
+    (see CHINode::connectController in this file)
     """
 
+    network = "simple"
+    topology = "CustomMesh"
     router_link_latency = 1
     node_link_latency = 1
-    router_latency = 1
+    router_ext_latency = 1
+    router_int_latency = 1
     router_buffer_size = 4
     cntrl_msg_size = 8
+    req_int_channels = 1
+    snp_int_channels = 1
+    dat_int_channels = 1
+    rsp_int_channels = 1
+    req_ext_channels = 1
+    snp_ext_channels = 1
+    dat_ext_channels = 1
+    rsp_ext_channels = 1
     data_width = 32
     # Map of (src,dst) -> weight,latency (cycles)
     # Customizes the weight and latency for the link between the routers src
@@ -119,6 +130,52 @@ class NoC_Params:
     # (dst,src) are present.
     # A new link is created if no src->dst link exists.
     custom_links = {}
+
+
+def setup_network_parameters(ruby_system, noc_params):
+    """
+    Configures the parameters of Ruby's network object for CHI according
+    to the provided configuration file
+    """
+    network = ruby_system.network
+
+    # virtual networks: 0=request, 1=snoop, 2=response, 3=data
+    network.number_of_virtual_networks = 4
+    ruby_system.number_of_virtual_networks = 4
+
+    # Message sizes
+    network.control_msg_size = noc_params.cntrl_msg_size
+    network.data_msg_size = noc_params.data_width
+
+    # Link bandwidth.
+    ctrl_link_width = noc_params.cntrl_msg_size
+    data_link_width = noc_params.cntrl_msg_size + noc_params.data_width
+    req_channels = noc_params.req_int_channels
+    snp_channels = noc_params.snp_int_channels
+    rsp_channels = noc_params.rsp_int_channels
+    dat_channels = noc_params.dat_int_channels
+
+    if noc_params.network == "garnet":
+        # later passed on to Garnet's init functions
+        noc_params.link_width_bits = data_link_width * 8
+    else:
+        # Router port buffer (per vnet)
+        network.buffer_size = noc_params.router_buffer_size
+
+        # Use separate physical channels per vnet in simple network
+        network.physical_vnets_channels = [
+            req_channels,
+            snp_channels,
+            rsp_channels,
+            dat_channels,
+        ]
+        network.physical_vnets_bandwidth = [
+            ctrl_link_width,
+            ctrl_link_width,
+            ctrl_link_width,
+            data_link_width,
+        ]
+    return noc_params
 
 
 class CHI_Node(SubSystem):
@@ -139,10 +196,29 @@ class CHI_Node(SubSystem):
         If 'num_nodes_per_router' is left undefined, we circulate around
         'router_list' until all nodes are mapped.
         See 'distributeNodes' in configs/topologies/CustomMesh.py
+
+        The inbound/outbound link latency define the latency to send/receive
+        messages from/to the network router.
+        These latencies do not map 1:1 to send vs. receive timing on the
+        Ruby external link. `outbound_link_latency` is used when messages
+        are enqueued in the *.sm files, and is therefore applied to the
+        SLICC controller message latencies: request_latency,
+        response_latency, snoop_latency, and data_latency.
+        `inbound_link_latency` is used by CustomMesh.py to set the Ruby
+        external-link latency for the controller/router connection. Ruby
+        external links are bi-directional, so this link latency applies in
+        both controller->router and router->controller directions, not just
+        traffic incoming to the controller. Both default to the global
+        NoC_Params.node_link_latency.
         """
 
         num_nodes_per_router = None
         router_list = None
+
+        inbound_link_latency = NoC_Params.node_link_latency
+        outbound_link_latency = NoC_Params.node_link_latency
+
+        gbl_noc_params = NoC_Params
 
     def __init__(self, ruby_system):
         super().__init__()
@@ -195,6 +271,56 @@ class CHI_Node(SubSystem):
         cntrl.rspIn.in_port = self._network.out_port
         cntrl.snpIn.in_port = self._network.out_port
         cntrl.datIn.in_port = self._network.out_port
+
+        # Adjust node params for the provided interconnect configuration
+        node_params = self.NoC_Params
+        gbl_params = node_params.gbl_noc_params
+        req_channels = gbl_params.req_ext_channels
+        snp_channels = gbl_params.snp_ext_channels
+        rsp_channels = gbl_params.rsp_ext_channels
+        dat_channels = gbl_params.dat_ext_channels
+
+        # Set the data message size
+        cntrl.data_channel_size = NoC_Params.data_width
+
+        # Enforces the number of channels or ports between
+        # the node and the router by limiting the number of
+        # messages that can be consumed in a cycle
+        cntrl.reqIn.max_dequeue_rate = req_channels
+        cntrl.snpIn.max_dequeue_rate = snp_channels
+        cntrl.reqOut.max_dequeue_rate = req_channels
+        cntrl.snpOut.max_dequeue_rate = snp_channels
+        cntrl.rspIn.max_dequeue_rate = rsp_channels
+        cntrl.datIn.max_dequeue_rate = dat_channels
+        cntrl.rspOut.max_dequeue_rate = rsp_channels
+        cntrl.datOut.max_dequeue_rate = dat_channels
+
+        # The latency for outbound messages to the network is defined by
+        # these parameters when enqueueing messages in the SLICC code
+        cntrl.request_latency = node_params.outbound_link_latency
+        cntrl.response_latency = node_params.outbound_link_latency
+        cntrl.snoop_latency = node_params.outbound_link_latency
+        cntrl.data_latency = node_params.outbound_link_latency
+
+        # if using SimpleNetwork + physical_vnets option, also fine tuned
+        # the buffers size to properly create contention and network stalls.
+        # Sizes are set similarly to src/mem/ruby/network/simple/SimpleLink.py
+        # NOTE: this has not been properly tested with garnet so buffer sizes
+        # remain unlimited in those configs. Also see setup_network_parameters
+        if gbl_params.network == "simple":
+            latency = node_params.inbound_link_latency
+            cntrl.reqIn.buffer_size = req_channels * (latency + 1)
+            cntrl.snpIn.buffer_size = snp_channels * (latency + 1)
+            cntrl.rspIn.buffer_size = rsp_channels * (latency + 1)
+            cntrl.datIn.buffer_size = dat_channels * (latency + 1)
+            # Memory_Controller currently assumes no resource stall in the
+            # output ports so only set the sizes for Cache_Controllers
+            if isinstance(cntrl, Cache_Controller):
+                latency = node_params.outbound_link_latency
+                cntrl.reqOut.buffer_size = req_channels * (latency + 1)
+                cntrl.snpOut.buffer_size = snp_channels * (latency + 1)
+                cntrl.rspOut.buffer_size = rsp_channels * (latency + 1)
+                cntrl.datOut.buffer_size = dat_channels * (latency + 1)
 
 
 class TriggerMessageBuffer(MessageBuffer):
@@ -689,6 +815,9 @@ class CHI_HNF(CHI_Node):
             parent.cntrl = self._cntrl
 
         self.connectController(self._cntrl)
+
+    def connectController(self, cntrl):
+        CHI_Node.connectController(self, cntrl)
 
     def getAllControllers(self):
         return [self._cntrl]

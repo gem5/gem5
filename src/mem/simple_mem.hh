@@ -136,6 +136,12 @@ class SimpleMemory : public AbstractMemory
     const double bandwidth;
 
     /**
+     * Whether to enable the backdoor mechanism or not. If disabled, it will
+     * ignore the backdoor requests when receives.
+     */
+    const bool enableBackdoor;
+
+    /**
      * Track the state of the memory as either idle or busy, no need
      * for an enum with only two states.
      */

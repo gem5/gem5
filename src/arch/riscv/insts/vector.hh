@@ -289,16 +289,12 @@ class VectorSlideMacroInst : public VectorMacroInst
 class VectorSlideMicroInst : public VectorMicroInst
 {
   protected:
-    uint32_t vdIdx;
-    uint32_t vs2Idx;
-    uint32_t vs3Idx;
+    uint8_t numVs2Regs = 0;
     VectorSlideMicroInst(const char *mnem, ExtMachInst _machInst,
                          OpClass __opClass, uint32_t _microVl,
-                         uint32_t _microIdx, uint32_t _vdIdx, uint32_t _vs2Idx,
-                         uint32_t _vs3Idx, uint32_t _elen, uint32_t _vlen)
+                         uint32_t _microIdx, uint32_t _elen, uint32_t _vlen)
         : VectorMicroInst(mnem, _machInst, __opClass, _microVl, _microIdx,
                           _elen, _vlen)
-        , vdIdx(_vdIdx), vs2Idx(_vs2Idx), vs3Idx(_vs3Idx)
     {}
 
     std::string generateDisassembly(
@@ -810,12 +806,10 @@ class VPinVdMicroInst : public VectorArithMicroInst
     private:
         RegId srcRegIdxArr[3];
         RegId destRegIdxArr[1];
-        const bool isSlideupVx;
 
       public:
         VPinVdMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
-                        uint32_t _numVdPins, uint32_t _elen, uint32_t _vlen,
-                        bool _isSlideupVx = false);
+                        uint32_t _numVdPins, uint32_t _elen, uint32_t _vlen);
         Fault execute(ExecContext *, trace::InstRecord *) const override;
         std::string generateDisassembly(
                 Addr pc, const loader::SymbolTable *symtab) const override;

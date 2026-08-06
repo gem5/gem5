@@ -131,6 +131,8 @@ TEST(FairUncontendedMutex, NoBarging)
                 }
                 --remaining_work;
                 ++workload[t];
+
+                std::this_thread::yield();
             }
         });
     }

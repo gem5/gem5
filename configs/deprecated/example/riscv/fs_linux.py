@@ -285,7 +285,16 @@ system.cpu = [
 
 if args.riscv_32bits:
     for core in system.cpu:
-        core.ArchISA.riscv_type = "RV32"
+        core.ArchISA.riscv_profile = "RVI20U32"
+        core.ArchISA.extra_extensions = [
+            "M",
+            "A",
+            "F",
+            "D",
+            "C",
+            "Zicsr",
+            "Zifencei",
+        ]
 
 if args.caches or args.l2cache:
     # By default the IOCache runs at the system clock
