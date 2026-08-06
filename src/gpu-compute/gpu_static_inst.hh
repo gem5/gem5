@@ -141,51 +141,31 @@ class GPUStaticInst : public GPUStaticInstFlags
         return 0;
     }
 
-    bool
-    isALU() const
-    {
-        return _flags[ALU];
-    }
-    bool
-    isBranch() const
-    {
-        return _flags[Branch];
-    }
-    bool
-    isCondBranch() const
-    {
-        return _flags[CondBranch];
-    }
-    bool
-    isNop() const
-    {
-        return _flags[Nop];
-    }
-    bool
-    isReturn() const
-    {
-        return _flags[Return];
-    }
-    bool
-    isEndOfKernel() const
-    {
-        return _flags[EndOfKernel];
-    }
-    bool
-    isKernelLaunch() const
-    {
-        return _flags[KernelLaunch];
-    }
-    bool
-    isSDWAInst() const
-    {
-        return _flags[IsSDWA];
-    }
-    bool
-    isDPPInst() const
-    {
-        return _flags[IsDPP];
-    }
+    bool isALU() const { return _flags[ALU]; }
+    bool isIntMul() const { return _flags[IntMul]; }
+    bool isIntMul24() const { return _flags[IntMul24]; }
+    bool isIntMul32() const { return _flags[IntMul32]; }
+    bool isIntDiv() const { return _flags[IntDiv]; }
+    bool isFpMul() const { return _flags[FpMul]
+        && (_flags[F16] || _flags[F32]); }
+    bool isFpDiv() const { return _flags[FpDiv]
+        && (_flags[F16] || _flags[F32]); }
+    bool isDpMul() const { return _flags[FpMul] && _flags[F64]; }
+    bool isDpDiv() const { return _flags[FpDiv] && _flags[F64]; }
+    bool isFpSqrt() const { return _flags[FpSqrt]; }
+    bool isFpLg() const { return _flags[FpLg]; }
+    bool isFpSin() const { return _flags[FpSin]; }
+    bool isFpExp() const { return _flags[FpExp]; }
+    bool isTex() const { return _flags[Tex]; }
+
+    bool isBranch() const { return _flags[Branch]; }
+    bool isCondBranch() const { return _flags[CondBranch]; }
+    bool isNop() const { return _flags[Nop]; }
+    bool isReturn() const { return _flags[Return]; }
+    bool isEndOfKernel() const { return _flags[EndOfKernel]; }
+    bool isKernelLaunch() const { return _flags[KernelLaunch]; }
+    bool isSDWAInst() const { return _flags[IsSDWA]; }
+    bool isDPPInst() const { return _flags[IsDPP]; }
 
     bool
     isUnconditionalJump() const
