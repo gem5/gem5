@@ -96,6 +96,8 @@ class Shader : public ClockedObject
 
     // Last tick that all CUs attached to this shader were inactive
     Tick _lastInactiveTick;
+    bool _accountedLastActiveCycle = false;
+    Cycles _lastActiveCycle;
 
     // If a kernel-based exit event was requested, wait for all CUs in the
     // shader to complete before actually exiting so that stats are updated.
@@ -328,6 +330,7 @@ class Shader : public ClockedObject
     void functionalTLBAccess(PacketPtr pkt, int cu_id, BaseMMU::Mode mode);
     void updateContext(int cid);
     void notifyCuSleep();
+    void notifyCuActive();
 
     void
     incVectorInstSrcOperand(int num_operands)
@@ -393,6 +396,7 @@ class Shader : public ClockedObject
         statistics::Distribution *cacheBlockRoundTrip;
 
         statistics::Scalar shaderActiveTicks;
+        statistics::Scalar shaderActiveCycles;
         statistics::Vector vectorInstSrcOperand;
         statistics::Vector vectorInstDstOperand;
     } stats;
