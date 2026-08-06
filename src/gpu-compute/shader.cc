@@ -58,6 +58,7 @@ Shader::Shader(const Params &p)
     : ClockedObject(p),
       _activeCus(0),
       _lastInactiveTick(0),
+      _lastActiveCycle(0),
       cpuThread(nullptr),
       gpuTc(nullptr),
       cpuPointer(p.cpu_pointer),
@@ -555,6 +556,21 @@ Shader::sampleLineRoundTrip(const std::map<Addr, std::vector<Tick>> &lineMap)
 }
 
 void
+Shader::notifyCuActive()
+{
+    const Cycles cycle = curCycle();
+
+    if (_accountedLastActiveCycle && cycle == _lastActiveCycle) {
+        return;
+    }
+
+    _accountedLastActiveCycle = true;
+    _lastActiveCycle = cycle;
+
+    stats.shaderActiveCycles++;
+}
+
+void
 Shader::notifyCuSleep() {
     // If all CUs attached to his shader are asleep, update shaderActiveTicks
     panic_if(_activeCus <= 0 || _activeCus > cuList.size(),
@@ -629,6 +645,8 @@ Shader::ShaderStats::ShaderStats(statistics::Group *parent, int wf_size)
                "Number of cache lines for coalesced request"),
       ADD_STAT(shaderActiveTicks,
                "Total ticks that any CU attached to this shader is active"),
+      ADD_STAT(shaderActiveCycles,
+               "Total cycles that any CU attached to this shader is active"),
       ADD_STAT(vectorInstSrcOperand,
                "vector instruction source operand distribution"),
       ADD_STAT(vectorInstDstOperand,

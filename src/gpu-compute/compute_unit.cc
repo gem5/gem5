@@ -930,6 +930,7 @@ ComputeUnit::exec()
     scoreboardCheckStage.exec();
     fetchStage.exec();
 
+    shader->notifyCuActive();
     stats.totalCycles++;
     execCycles++;
 
