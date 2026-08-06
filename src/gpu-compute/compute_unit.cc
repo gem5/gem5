@@ -941,6 +941,7 @@ ComputeUnit::exec()
 
     // Put this CU to sleep if there is no more work to be done.
     if (!isDone()) {
+        shader->notifyCuActive();
         schedule(tickEvent, nextCycle());
     } else {
         shader->notifyCuSleep();
