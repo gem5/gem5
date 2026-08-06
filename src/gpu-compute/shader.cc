@@ -555,8 +555,7 @@ Shader::sampleLineRoundTrip(const std::map<Addr, std::vector<Tick>> &lineMap)
 }
 
 void
-Shader::notifyCuSleep()
-{
+Shader::notifyCuSleep() {
     // If all CUs attached to his shader are asleep, update shaderActiveTicks
     panic_if(_activeCus <= 0 || _activeCus > cuList.size(),
              "Invalid activeCu size\n");
