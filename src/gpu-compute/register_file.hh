@@ -173,6 +173,11 @@ class RegisterFile : public SimObject
         // Total number of register writes per DWORD per thread
         statistics::Scalar registerWrites;
 
+        // Similar to register[Reads,Writes] but counts number of operands
+        // instead of number of DWORDS.
+        statistics::Scalar registerReadsOperands;
+        statistics::Scalar registerWritesOperands;
+
         // Number of register file SRAM activations for reads.
         // The register file may be implemented with multiple SRAMs. This stat
         // tracks how many times the SRAMs are accessed for reads.

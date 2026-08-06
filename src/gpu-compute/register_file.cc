@@ -191,6 +191,10 @@ RegisterFile::RegisterFileStats::RegisterFileStats(statistics::Group *parent)
                "Total number of writes to existing registers in the rfc"),
       ADD_STAT(registerWrites,
                "Total number of DWORDS written to register file"),
+      ADD_STAT(registerReadsOperands,
+              "Total number of operands read from register file"),
+      ADD_STAT(registerWritesOperands,
+              "Total number of operands written to register file"),
       ADD_STAT(
           sramReads,
           "Total number of register file bank SRAM activations for reads"),
