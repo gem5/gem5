@@ -528,6 +528,7 @@ class ComputeUnit : public ClockedObject
 
     bool isDone() const;
     bool isVectorAluIdle(uint32_t simdId) const;
+    bool hasWorkInFlight() const;
 
     void handleSQCReturn(PacketPtr pkt);
 

@@ -340,67 +340,80 @@ GPUDynInst::isALU() const
     return _staticInst->isALU();
 }
 
-bool GPUDynInst::isIntMul() const
+bool
+GPUDynInst::isIntMul() const
 {
     return _staticInst->isIntMul();
 }
 
-bool GPUDynInst::isIntMul24() const
+bool
+GPUDynInst::isIntMul24() const
 {
     return _staticInst->isIntMul24();
 }
 
-bool GPUDynInst::isIntMul32() const
+bool
+GPUDynInst::isIntMul32() const
 {
     return _staticInst->isIntMul32();
 }
 
-bool GPUDynInst::isIntDiv() const
+bool
+GPUDynInst::isIntDiv() const
 {
     return _staticInst->isIntDiv();
 }
 
-bool GPUDynInst::isFpMul() const
+bool
+GPUDynInst::isFpMul() const
 {
     return _staticInst->isFpMul();
 }
 
-bool GPUDynInst::isFpDiv() const
+bool
+GPUDynInst::isFpDiv() const
 {
     return _staticInst->isFpDiv();
 }
 
-bool GPUDynInst::isDpMul() const
+bool
+GPUDynInst::isDpMul() const
 {
     return _staticInst->isDpMul();
 }
 
-bool GPUDynInst::isDpDiv() const
+bool
+GPUDynInst::isDpDiv() const
 {
     return _staticInst->isDpDiv();
 }
 
-bool GPUDynInst::isFpSqrt() const
+bool
+GPUDynInst::isFpSqrt() const
 {
     return _staticInst->isFpSqrt();
 }
 
-bool GPUDynInst::isFpLg() const
+bool
+GPUDynInst::isFpLg() const
 {
     return _staticInst->isFpLg();
 }
 
-bool GPUDynInst::isFpSin() const
+bool
+GPUDynInst::isFpSin() const
 {
     return _staticInst->isFpSin();
 }
 
-bool GPUDynInst::isFpExp() const
+bool
+GPUDynInst::isFpExp() const
 {
     return _staticInst->isFpExp();
 }
 
-bool GPUDynInst::isTex() const
+bool
+GPUDynInst::isTex() const
 {
     return _staticInst->isTex();
 }
