@@ -217,7 +217,7 @@ class ViperShader(Shader):
 
         # This arbitrary address is something in the X86 I/O hole
         hsapp_gpu_map_paddr = 0xE00000000 + 0x1000 * shader_id
-        self.dispatcher = GPUDispatcher()
+        self.dispatcher = GPUDispatcher(kernel_exit_events=True)
         self.gpu_cmd_proc = GPUCommandProcessor(
             hsapp=HSAPacketProcessor(
                 pioAddr=hsapp_gpu_map_paddr,

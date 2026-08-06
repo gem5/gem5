@@ -579,6 +579,22 @@ Shader::shaderActiveCycleTick()
 }
 
 void
+Shader::emitKernelExitIfRequested() {
+    // The completion signal and the last CU going idle are two separate
+    // edges, and either can happen first. Check both here so we catch it
+    // no matter which one lands last. The flag reset keeps this from
+    // firing twice.
+    if (kernelExitRequested && !_activeCus) {
+        kernelExitRequested = false;
+        if (blitKernel) {
+            exitSimLoop("GPU Blit Kernel Completed");
+        } else {
+            exitSimLoop("GPU Kernel Completed");
+        }
+    }
+}
+
+void
 Shader::notifyCuSleep() {
     // If all CUs attached to his shader are asleep, update shaderActiveTicks
     panic_if(_activeCus <= 0 || _activeCus > cuList.size(),
@@ -586,16 +602,17 @@ Shader::notifyCuSleep() {
     _activeCus--;
     if (!_activeCus) {
         stats.shaderActiveTicks += curTick() - _lastInactiveTick;
-
-        if (kernelExitRequested) {
-            kernelExitRequested = false;
-            if (blitKernel) {
-                exitSimLoop("GPU Blit Kernel Completed");
-            } else {
-                exitSimLoop("GPU Kernel Completed");
-            }
-        }
     }
+    emitKernelExitIfRequested();
+}
+
+void
+Shader::requestKernelExitEvent(bool is_blit_kernel) {
+    kernelExitRequested = true;
+    blitKernel = is_blit_kernel;
+    // If every CU already went idle before this signal showed up, we
+    // missed the usual exit point -- fire it now instead.
+    emitKernelExitIfRequested();
 }
 
 void

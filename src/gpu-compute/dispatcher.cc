@@ -121,7 +121,13 @@ GPUDispatcher::dispatch(HSAQueueEntry *task)
     ++stats.numKernelLaunched;
 
     if (kernelExitEvents) {
-        exitSimLoopNow("GPU Kernel Started");
+        DPRINTF(GPUKernelInfo, "launching kernel, isBlitKernel: %d\n",
+                task->isBlitKernel());
+        if (task->isBlitKernel()){
+            exitSimLoopNow("GPU Blit Kernel Started");
+        } else {
+            exitSimLoopNow("GPU Kernel Started");
+        }
     }
 
     DPRINTF(GPUDisp, "launching kernel: %s, dispatch ID: %d\n",
@@ -165,6 +171,7 @@ GPUDispatcher::exec()
         int exec_id = execIds.front();
         auto task = hsaQueueEntries[exec_id];
         bool launched(false);
+        bool first_wg = (task->globalWgId() == 0);
 
         // acq is needed before starting dispatch
         if (shader->impl_kern_launch_acq) {
@@ -217,6 +224,9 @@ GPUDispatcher::exec()
                 disp_count++;
                 DPRINTF(GPUKernelInfo, "Launched kernel %d for WG %d\n",
                         exec_id, disp_count);
+                if (kernelExitEvents && first_wg && !task->isBlitKernel()) {
+                    exitSimLoopNow("GPU Kernel First WG Dispatched");
+                }
             }
         }
 
@@ -339,7 +349,13 @@ GPUDispatcher::notifyWgCompl(Wavefront *wf)
         DPRINTF(GPUKernelInfo, "Completed kernel %d\n", kern_id);
 
         if (kernelExitEvents) {
-            shader->requestKernelExitEvent(task->completionSignal());
+            // Use this task's own isBlitKernel(), not the shared shader
+            // flag -- a blit kernel submitted in between could flip that
+            // flag on us and make us skip one of the two events.
+            if (!task->isBlitKernel()) {
+                exitSimLoopNow("GPU Kernel All WGs Retired");
+            }
+            shader->requestKernelExitEvent(task->isBlitKernel());
         }
     }
 
