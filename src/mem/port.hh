@@ -53,6 +53,8 @@
 #include <vector>
 
 #include "base/addr_range.hh"
+#include "base/trace.hh"
+#include "debug/PortTrace.hh"
 #include "mem/packet.hh"
 #include "mem/protocol/atomic.hh"
 #include "mem/protocol/functional.hh"
@@ -141,7 +143,7 @@ class TracingExtension : public gem5::Extension<Packet, TracingExtension>
     {
         auto ext = pkt->getExtension<gem5::TracingExtension>();
         if (ext) {
-            warn("%s", ext->getTraceInString());
+            DPRINTF(PortTrace, "%s", ext->getTraceInString());
         }
     }
 
