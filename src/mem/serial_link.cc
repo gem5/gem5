@@ -147,9 +147,10 @@ SerialLink::SerialLinkRequestPort::recvTimingResp(PacketPtr pkt)
     // deserialization latency.
     Cycles cycles = delay;
     cycles += serial_link.ticksToCycles(
-        sim_clock::as_int::ns *
+        sim_clock::as_int::s *
         divCeil(pkt->getSize() * 8,
-                serial_link.num_lanes * serial_link.link_speed));
+                serial_link.num_lanes * serial_link.link_speed) /
+        1'000'000'000);
     Tick t = serial_link.clockEdge(cycles);
 
     //@todo: If the processor sends two uncached requests towards HMC and the
@@ -210,9 +211,10 @@ SerialLink::SerialLinkResponsePort::recvTimingReq(PacketPtr pkt)
             // only.
             Cycles cycles = delay;
             cycles += serial_link.ticksToCycles(
-                sim_clock::as_int::ns *
+                sim_clock::as_int::s *
                 divCeil(pkt->getSize() * 8,
-                        serial_link.num_lanes * serial_link.link_speed));
+                        serial_link.num_lanes * serial_link.link_speed) /
+                1'000'000'000);
             Tick t = serial_link.clockEdge(cycles);
 
             //@todo: If the processor sends two uncached requests towards HMC
@@ -299,9 +301,10 @@ SerialLink::SerialLinkRequestPort::trySendTiming()
 
             // Make sure bandwidth limitation is met
             Cycles cycles = serial_link.ticksToCycles(
-                sim_clock::as_int::ns *
+                sim_clock::as_int::s *
                 divCeil(pkt->getSize() * 8,
-                        serial_link.num_lanes * serial_link.link_speed));
+                        serial_link.num_lanes * serial_link.link_speed) /
+                1'000'000'000);
             Tick t = serial_link.clockEdge(cycles);
             serial_link.schedule(sendEvent, std::max(next_req.tick, t));
         }
@@ -346,9 +349,10 @@ SerialLink::SerialLinkResponsePort::trySendTiming()
 
             // Make sure bandwidth limitation is met
             Cycles cycles = serial_link.ticksToCycles(
-                sim_clock::as_int::ns *
+                sim_clock::as_int::s *
                 divCeil(pkt->getSize() * 8,
-                        serial_link.num_lanes * serial_link.link_speed));
+                        serial_link.num_lanes * serial_link.link_speed) /
+                1'000'000'000);
             Tick t = serial_link.clockEdge(cycles);
             serial_link.schedule(sendEvent, std::max(next_resp.tick, t));
         }
