@@ -214,7 +214,7 @@ SyscallReturn rmdirImpl(SyscallDesc *desc, ThreadContext *tc,
 SyscallReturn renameFunc(SyscallDesc *desc, ThreadContext *tc,
                          VPtr<> oldpath, VPtr<> newpath);
 SyscallReturn renameImpl(SyscallDesc *desc, ThreadContext *tc,
-                         std::string oldpath, std::string newpath);
+                         std::string old_name, std::string new_name);
 
 /// Target truncate64() handler.
 SyscallReturn truncate64Func(SyscallDesc *desc, ThreadContext *tc,
@@ -254,6 +254,10 @@ SyscallReturn dupFunc(SyscallDesc *desc, ThreadContext *tc,
 /// Target dup2() handler.
 SyscallReturn dup2Func(SyscallDesc *desc, ThreadContext *tc,
                        int old_tgt_fd, int new_tgt_fd);
+
+/// Target dup3() handler.
+SyscallReturn dup3Func(SyscallDesc *desc, ThreadContext *tc, int old_tgt_fd,
+                       int new_tgt_fd, int flags);
 
 /// Target fcntl() handler.
 SyscallReturn fcntlFunc(SyscallDesc *desc, ThreadContext *tc,
@@ -373,6 +377,37 @@ atSyscallPath(ThreadContext *tc, int dirfd, std::string &path)
     }
 
     return 0;
+}
+
+/// Target prctl() handler.
+template <class OS>
+SyscallReturn
+prctlFunc(SyscallDesc *desc, ThreadContext *tc, int option, uint64_t arg2,
+          uint64_t arg3, uint64_t arg4, uint64_t arg5)
+{
+    auto p = tc->getProcessPtr();
+    std::shared_ptr<MemState> mem_state = p->memState;
+
+    if (option == OS::TGT_PR_SET_MM) {
+        switch (arg2) {
+            case OS::TGT_PR_SET_MM_START_BRK:
+                DPRINTF_SYSCALL(
+                    Verbose, "prctl(PR_SET_MM, PR_SET_MM_START_BRK, %#lx)\n",
+                    arg3);
+                return 0;
+            case OS::TGT_PR_SET_MM_BRK:
+                DPRINTF_SYSCALL(
+                    Verbose, "prctl(PR_SET_MM, PR_SET_MM_BRK, %#lx)\n", arg3);
+                mem_state->setBrkPoint(arg3);
+                return 0;
+            default:
+                warn("prctl(PR_SET_MM, %d, ...) unimplemented\n", arg2);
+                return -EINVAL;
+        }
+    }
+
+    warn("prctl(%d, ...) unimplemented\n", option);
+    return -EINVAL;
 }
 
 /// Futex system call
@@ -928,7 +963,7 @@ openatFunc(SyscallDesc *desc, ThreadContext *tc,
             { "/proc/meminfo", "/system/", "/platform/", "/etc/passwd",
               "/proc/self/maps", "/dev/urandom",
               "/sys/devices/system/cpu/online" };
-    for (auto entry : special_paths) {
+    for (const auto &entry : special_paths) {
         if (startswith(path, entry)) {
             sim_fd = OS::openSpecialFile(abs_path, p, tc);
             used_path = abs_path;
@@ -2889,9 +2924,10 @@ selectFunc(SyscallDesc *desc, ThreadContext *tc, int nfds,
              * signal would break the poll out of the retry cycle and try to
              * return the signal interrupt instead.
              */
-            for (auto sig : tc->getSystemPtr()->signalList)
+            for (const auto &sig : tc->getSystemPtr()->signalList) {
                 if (sig.receiver == p)
                     return -EINTR;
+            }
             return SyscallReturn::retry();
         }
     }
