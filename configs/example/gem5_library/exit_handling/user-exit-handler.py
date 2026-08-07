@@ -66,7 +66,9 @@ args = parser.parse_args()
 # Create the system
 cache_hierarchy = NoCache()
 memory = SingleChannelDDR3_1600(size="512MB")
-processor = SimpleProcessor(cpu_type=CPUTypes.ATOMIC, isa=ISA.X86, num_cores=1)
+processor = SimpleProcessor(
+    cpu_type=CPUTypes.ATOMIC, isa=ISA.X86, num_cores=1, clk_freq="1GHz"
+)
 
 # Create the board
 board = SimpleBoard(

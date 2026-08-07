@@ -52,7 +52,10 @@ for no_systemd in [True, False]:
     )
     memory = SingleChannelDDR3_1600(size="3GiB")
     processor = SimpleProcessor(
-        cpu_type=CPUTypes.ATOMIC, isa=ISA.RISCV, num_cores=1
+        cpu_type=CPUTypes.ATOMIC,
+        isa=ISA.RISCV,
+        num_cores=1,
+        clk_freq="3GHz",
     )
 
     board = RiscvBoard(
@@ -91,7 +94,10 @@ for isa in [ISA.X86, ISA.ARM]:
         memory = SingleChannelDDR3_1600(size="32MiB")
 
         processor = SimpleProcessor(
-            cpu_type=CPUTypes.TIMING, isa=isa, num_cores=1
+            cpu_type=CPUTypes.TIMING,
+            isa=isa,
+            num_cores=1,
+            clk_freq="3GHz",
         )
 
         board = SimpleBoard(
