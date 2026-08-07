@@ -143,7 +143,7 @@ class TracingExtension : public gem5::Extension<Packet, TracingExtension>
     {
         auto ext = pkt->getExtension<gem5::TracingExtension>();
         if (ext) {
-            DPRINTF(PortTrace, "%s", ext->getTraceInString());
+            DPRINTF(PortTrace, "%s\n", ext->getTraceInString());
         }
     }
 
