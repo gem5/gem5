@@ -75,7 +75,9 @@ class TlmGenerator(ClockedObject):
 
         return transaction
 
-    def init(self):
+    def createCCObject(self):
+        super().createCCObject()
+
         for when, tr in self._transactions:
             self.getCCObject().scheduleTransaction(when, tr)
 
