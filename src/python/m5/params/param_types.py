@@ -645,7 +645,7 @@ class AddrRange(ParamValue):
         # Go from the Python class to the wrapped C++ class
         from _m5.range import AddrRange
 
-        return AddrRange(
+        return AddrRange.withMaskInterleaving(
             int(self.start), int(self.end), self.masks, int(self.intlvMatch)
         )
 
@@ -735,7 +735,7 @@ class ModuloAddrRange(AddrRange):
     def getValue(self):
         from _m5.range import AddrRange
 
-        return AddrRange(
+        return AddrRange.withModuloInterleaving(
             int(self.start),
             int(self.end),
             int(self.stripes),
@@ -784,7 +784,7 @@ class SparseModuloAddrRange(ModuloAddrRange):
         from _m5.range import AddrRange
 
         cxx_ranges = [r.getValue() for r in self.ranges]
-        return AddrRange(
+        return AddrRange.withModuloInterleaving(
             cxx_ranges,
             int(self.stripes),
             int(self.stripeMatch),
@@ -813,7 +813,9 @@ class SparseMaskedAddrRange(AddrRange):
         from _m5.range import AddrRange
 
         cxx_ranges = [r.getValue() for r in self.ranges]
-        return AddrRange(cxx_ranges, self.masks, int(self.intlvMatch))
+        return AddrRange.withMaskInterleaving(
+            cxx_ranges, self.masks, int(self.intlvMatch)
+        )
 
 
 # Boolean parameter type.  Python doesn't let you subclass bool, since

@@ -3777,6 +3777,51 @@ output decoder {{
         '1','X', // op1
         'X','X','X','X', // op2
         'X','X','X','X','X','X','X','X','X'>(); // op3
+
+    inline constexpr auto isCrypto3RegImm2 = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '1','1','0','0', // op0
+        '1','1','1',
+        '0','0', // op1
+        '1','0','X','X', // op2
+        'X','X','X','1','0','X','X','X','X'>(); // op3
+
+    inline constexpr auto isCrypto3RegSha512 = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '1','1','0','0', // op0
+        '1','1','1',
+        '0','0', // op1
+        '1','1','X','X', // op2
+        'X','X','X','1','X','0','0','X','X'>(); // op3
+
+    inline constexpr auto isCrypto4Reg = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '1','1','0','0', // op0
+        '1','1','1',
+        '0','0', // op1
+        'X','X','X','X', // op2
+        'X','X','X','0','X','X','X','X','X'>(); // op3
+
+    inline constexpr auto isCrypto2RegSha512 = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '1','1','0','0', // op0
+        '1','1','1',
+        '0','1', // op1
+        '1','0','0','0', // op2
+        '0','0','0','1','0','0','0','X','X'>(); // op3
+
+    inline constexpr auto isCryptoXar = bitPatternMatcher<
+        MachInst,
+        31, 10,
+        '1','1','0','0', // op0
+        '1','1','1',
+        '0','1', // op1
+        '0','0','X','X', // op2
+        'X','X','X','X','X','X','X','X','X'>(); // op3
 }};
 
 output decoder {{
@@ -3823,6 +3868,13 @@ namespace Aarch64
         if (isFpDataProc2Source(machInst)) return decodeFpDataProc2Source(machInst);
         if (isFpCondSel(machInst)) return decodeFpCondSel(machInst);
         if (isFpDataProc(machInst)) return decodeFpDataProc(machInst);
+        if (isCrypto3RegImm2(machInst)) return decodeCrypto3RegImm2(machInst);
+        if (isCrypto3RegSha512(machInst))
+            return decodeCrypto3RegSha512(machInst);
+        if (isCrypto4Reg(machInst)) return decodeCrypto4Reg(machInst);
+        if (isCrypto2RegSha512(machInst))
+            return decodeCrypto2RegSha512(machInst);
+        if (isCryptoXar(machInst)) return decodeCryptoXar(machInst);
 
         return new Unknown64(machInst);
     }

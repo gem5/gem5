@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2014, 2017-2019, 2021 Arm Limited
+ * Copyright (c) 2012, 2014, 2017-2019, 2021, 2026 Arm Limited
  * Copyright (c) 2026 Google Inc.
  * All rights reserved
  *
@@ -194,21 +194,32 @@ class AddrRange
     }
 
     /**
-     * Create an address range with modulo-based interleaving.
+     * Create an address range with mask-based interleaving.
      *
-     * If the user provides a stripe count of 1, the address range is not
-     * interleaved.
-     * Using modulo instead of interleaving allows for non-power
-     * of 2 stripe counts.
+     * The direct constructor remains public for backwards compatibility, but
+     * new code should prefer this factory for clearer call sites.
      *
-     * @param start The start address of the range.
-     * @param end The end address of the range.
-     * @param stripes The number of stripes (channels).
-     * @param intlv_match The stripe index for this range.
-     * @param intlv_low_bit The bit position of the interleaving granularity
-     *                      (log2).
+     * @param start The start address of this range
+     * @param end The end address of this range (not included in the range)
+     * @param masks The input vector of masks
+     * @param intlv_match The matching value of the xor operations
      *
      * @ingroup api_addr_range
+     */
+    static AddrRange
+    withMaskInterleaving(Addr start, Addr end, const std::vector<Addr> &masks,
+                         uint8_t intlv_match)
+    {
+        return AddrRange(start, end, masks, intlv_match);
+    }
+
+  private:
+    /**
+     * The modulo-based interleaving constructor is private.
+     * An address range with modulo-based interleaving can only
+     * be constructed via the factory method below (withModuloInterleaving).
+     * This is done to improve readability and decrease chances of
+     * misconfiguring the interleaving policy.
      */
     AddrRange(Addr start, Addr end, uint32_t stripes, uint32_t intlv_match,
               uint32_t intlv_low_bit = 0)
@@ -233,6 +244,31 @@ class AddrRange
             _policy = std::make_shared<ModuloInterleavingPolicy>(
                 stripes, intlv_match, intlv_low_bit);
         }
+    }
+
+  public:
+    /**
+     * Create an address range with modulo-based interleaving.
+     *
+     * If the user provides a stripe count of 1, the address range is not
+     * interleaved.
+     * Using modulo instead of interleaving allows for non-power
+     * of 2 stripe counts.
+     *
+     * @param start The start address of the range.
+     * @param end The end address of the range.
+     * @param stripes The number of stripes (channels).
+     * @param intlv_match The stripe index for this range.
+     * @param intlv_low_bit The bit position of the interleaving granularity
+     *                      (log2).
+     *
+     * @ingroup api_addr_range
+     */
+    static AddrRange
+    withModuloInterleaving(Addr start, Addr end, uint32_t stripes,
+                           uint32_t intlv_match, uint32_t intlv_low_bit = 0)
+    {
+        return AddrRange(start, end, stripes, intlv_match, intlv_low_bit);
     }
 
     /**
@@ -303,20 +339,27 @@ class AddrRange
     }
 
     /**
-     * Create an address range with sparse sub-ranges and modulo interleaving.
+     * Create an address range with sparse sub-ranges and mask-based
+     * interleaving.
      *
-     * This constructor will create an interleaved address range in the same
-     * way as the modulo interleaving constructor, but with sparse sub-ranges.
-     * If the stripes are 1, the address range will be sparse only.
+     * The direct constructor remains public for backwards compatibility, but
+     * new code should prefer this factory for clearer call sites.
      *
      * @param ranges Vector of valid address chunks (start, end).
      *               Must be sorted and non-overlapping.
-     * @param stripes The number of stripes (channels).
-     * @param intlv_match The matching value of the modulo operation.
-     * @param intlv_low_bit The lowest bit to use for the modulo operation.
+     * @param masks The input vector of masks.
+     * @param intlv_match The matching value of the xor operations.
      *
      * @ingroup api_addr_range
      */
+    static AddrRange
+    withMaskInterleaving(const std::vector<std::pair<Addr, Addr>> &ranges,
+                         const std::vector<Addr> &masks, uint8_t intlv_match)
+    {
+        return AddrRange(ranges, masks, intlv_match);
+    }
+
+  private:
     AddrRange(const std::vector<std::pair<Addr, Addr>> &ranges,
               uint32_t stripes, uint32_t intlv_match,
               uint32_t intlv_low_bit = 0)
@@ -343,6 +386,30 @@ class AddrRange
             _policy = std::make_shared<ModuloInterleavingPolicy>(
                 stripes, intlv_match, intlv_low_bit);
         }
+    }
+
+  public:
+    /**
+     * Create an address range with sparse sub-ranges and modulo interleaving.
+     *
+     * This function will create an interleaved address range in the same way
+     * as the modulo interleaving factory, but with sparse sub-ranges. If the
+     * stripes are 1, the address range will be sparse only.
+     *
+     * @param ranges Vector of valid address chunks (start, end).
+     *               Must be sorted and non-overlapping.
+     * @param stripes The number of stripes (channels).
+     * @param intlv_match The matching value of the modulo operation.
+     * @param intlv_low_bit The lowest bit to use for the modulo operation.
+     *
+     * @ingroup api_addr_range
+     */
+    static AddrRange
+    withModuloInterleaving(const std::vector<std::pair<Addr, Addr>> &ranges,
+                           uint32_t stripes, uint32_t intlv_match,
+                           uint32_t intlv_low_bit = 0)
+    {
+        return AddrRange(ranges, stripes, intlv_match, intlv_low_bit);
     }
 
     /**
@@ -513,14 +580,14 @@ class AddrRange
                 if (auto masked =
                         std::dynamic_pointer_cast<MaskedInterleavingPolicy>(
                             _policy)) {
-                    decomposed.emplace_back(chunk.first, chunk.second,
-                                            masked->getMasks(),
-                                            masked->getMatch());
+                    decomposed.push_back(withMaskInterleaving(
+                        chunk.first, chunk.second, masked->getMasks(),
+                        masked->getMatch()));
                 } else if (auto modulo = std::dynamic_pointer_cast<
                                ModuloInterleavingPolicy>(_policy)) {
-                    decomposed.emplace_back(
+                    decomposed.push_back(withModuloInterleaving(
                         chunk.first, chunk.second, modulo->getStripes(),
-                        modulo->getMatch(), modulo->getLowBit());
+                        modulo->getMatch(), modulo->getLowBit()));
                 } else {
                     panic("Unknown policy type in AddrRange::decompose");
                 }

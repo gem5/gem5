@@ -132,11 +132,11 @@ MathExpr::parse(std::string expr) {
     {
         bool contains_non_alpha = false;
         for (auto & c: expr)
-            contains_non_alpha = contains_non_alpha or
-                !( (c >= 'a' && c <= 'z') ||
-                   (c >= 'A' && c <= 'Z') ||
-                   (c >= '0' && c <= '9') ||
-                   c == '$' || c == '\\' || c == '.' || c == '_');
+            contains_non_alpha =
+                contains_non_alpha or
+                !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+                  (c >= '0' && c <= '9') || c == '$' || c == '\\' ||
+                  c == '.' || c == '_' || c == ':');
 
         if (!contains_non_alpha) {
             Node * n = new Node();

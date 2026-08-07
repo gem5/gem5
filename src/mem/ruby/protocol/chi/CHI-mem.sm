@@ -42,6 +42,8 @@ machine(MachineType:Memory, "Memory controller interface") :
   // cycle to the response enqueue latency as default
   Cycles response_latency := 2;
   Cycles data_latency := 1;
+  Cycles request_latency := 1; // Not used, but required by CHI_config.py
+  Cycles snoop_latency := 1; // Not used, but required by CHI_config.py
   Cycles to_memory_controller_latency := 1;
 
   int data_channel_size;

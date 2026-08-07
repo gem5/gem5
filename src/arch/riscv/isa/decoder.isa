@@ -54,7 +54,7 @@ decode QUADRANT default Unknown::unknown() {
             Rp2 = rvSext(sp + imm);
         }}, uint64_t);
         format CompressedLoad {
-            0x1: decode ENABLE_ZCD {
+            0x1: decode HAS_ZCD {
                 0x1: c_fld({{
                     offset = CIMM3 << 3 | CIMM2 << 6;
                 }}, {{
@@ -143,7 +143,7 @@ decode QUADRANT default Unknown::unknown() {
             }
         }
         format CompressedStore {
-            0x5: decode ENABLE_ZCD {
+            0x5: decode HAS_ZCD {
                 0x1: c_fsd({{
                     offset = CIMM3 << 3 | CIMM2 << 6;
                 }}, {{
@@ -371,7 +371,7 @@ decode QUADRANT default Unknown::unknown() {
             Rc1 = rvSext(Rc1 << imm);
         }}, uint64_t);
         format CompressedLoad {
-            0x1: decode ENABLE_ZCD {
+            0x1: decode HAS_ZCD {
                 0x1: c_fldsp({{
                     offset = CIMM5<4:3> << 3 |
                              CIMM1 << 5 |
@@ -466,7 +466,7 @@ decode QUADRANT default Unknown::unknown() {
             }
         }
         format CompressedStore {
-            0x5: decode ENABLE_ZCD {
+            0x5: decode HAS_ZCD {
                 0x0: decode CFUNCT6LOW3 {
                     0x0: decode JTINDEX5TO7 {
                         0x0: CmJalt::cm_jt({{
@@ -4417,28 +4417,34 @@ decode QUADRANT default Unknown::unknown() {
                         );
                         Vd_vi[i] = res >> 1;
                     }}, OPMVV, SimdAddOp);
-                    0x0c: vclmul_vv({{
-                        uint64_t result = 0;
-                        uint64_t src1 = Vs1_vu[i];
-                        uint64_t src2 = Vs2_vu[i];
-                        for (int j = 0; j < 64; j++) {
-                            if ((src2 >> j) & 1) {
-                                result ^= src1 << j;
+                    0x0c: decode VSEW {
+                        0x3: vclmul_vv({{
+                            uint64_t result = 0;
+                            uint64_t src1 = Vs1_vu[i];
+                            uint64_t src2 = Vs2_vu[i];
+                            for (int j = 0; j < 64; j++) {
+                                if ((src2 >> j) & 1) {
+                                    result ^= src1 << j;
+                                }
                             }
-                        }
-                        Vd_vu[i] = result;
-                    }}, OPMVV, SimdMultOp);
-                    0x0d: vclmulh_vv({{
-                        uint64_t result = 0;
-                        uint64_t src1 = Vs1_vu[i];
-                        uint64_t src2 = Vs2_vu[i];
-                        for (int j = 1; j < 64; j++) {
-                            if ((src2 >> j) & 1) {
-                                result ^= src1 >> (64-j);
+                            Vd_vu[i] = result;
+                        }}, OPMVV, SimdMultOp);
+                        default: Unknown::unknown();
+                    }
+                    0x0d: decode VSEW {
+                        0x3: vclmulh_vv({{
+                            uint64_t result = 0;
+                            uint64_t src1 = Vs1_vu[i];
+                            uint64_t src2 = Vs2_vu[i];
+                            for (int j = 1; j < 64; j++) {
+                                if ((src2 >> j) & 1) {
+                                    result ^= src1 >> (64-j);
+                                }
                             }
-                        }
-                        Vd_vu[i] = result;
-                    }}, OPMVV, SimdMultOp);
+                            Vd_vu[i] = result;
+                        }}, OPMVV, SimdMultOp);
+                        default: Unknown::unknown();
+                    }
                 }
                 // VWXUNARY0
                 0x10: decode VS1 {
@@ -4573,24 +4579,32 @@ decode QUADRANT default Unknown::unknown() {
                 }
                 format VectorCompressFormat {
                     0x17: vcompress_vm({{
-                        static uint64_t vcompress_cnt;
-                        static uint64_t vcompress_buf[65536];
-                        if(this->microIdx == 0) {
-                            vcompress_cnt = 0;
-                        }
-                        for (uint32_t i = 0; i < microVl; i++) {
-                            uint32_t num_regs = vtype_regs_per_group(vtype);
-                            uint32_t ei = i + num_elements_reg(vtype, vlen) *
-                                (this->microIdx % num_regs);
-                            if (elem_mask(Vs1_vu, ei) &&
-                                this->microIdx < num_regs) {
-                                vcompress_buf[vcompress_cnt] = Vs2_vu[i];
-                                Vd_vu[i] = vcompress_buf[vcompress_cnt];
-                                vcompress_cnt ++;
-                            }
-                            if (ei < vcompress_cnt &&
-                                this->microIdx >= num_regs) {
-                                Vd_vu[i] = vcompress_buf[ei];
+                        const uint32_t elems_per_reg = (vlen / 8) / sizeof(ElemType);
+                        const uint64_t total_vl = (uint64_t)machInst.vl;
+                        const uint64_t dst_start = (uint64_t)this->microIdx * elems_per_reg;
+                        const uint64_t dst_end = dst_start + elems_per_reg;
+                        uint64_t global_active_count = 0;
+                        uint32_t filled = 0;
+                        const uint32_t num_vs2_regs = (machInst.vl + elems_per_reg - 1) / elems_per_reg;
+
+                        for (uint32_t src_reg = 0; src_reg < num_vs2_regs; src_reg++) {
+                            gem5::RiscvISA::VecRegContainer tmp;
+                            xc->getRegOperand(this, 1 + src_reg, &tmp);
+                            auto src_elems = tmp.template as<ElemType>();
+
+                            for (uint32_t elem_in_reg = 0; elem_in_reg < elems_per_reg; elem_in_reg++) {
+                                uint64_t ei = (uint64_t)src_reg * elems_per_reg + elem_in_reg;
+                                bool is_valid_vl = (ei < total_vl);
+                                bool is_masked_on = is_valid_vl && elem_mask(Vs1_vu, ei);
+
+                                if (is_masked_on) {
+                                    if (global_active_count >= dst_start &&
+                                        global_active_count < dst_end) {
+                                        Vd_vu[filled] = src_elems[elem_in_reg];
+                                        filled++;
+                                    }
+                                    global_active_count++;
+                                }
                             }
                         }
                     }}, OPMVV, SimdMiscOp);
@@ -4757,110 +4771,8 @@ decode QUADRANT default Unknown::unknown() {
                         }
                     }
                 }}, OPIVI, SimdMiscOp);
-                0x0e: VectorSlideUpVIFormat::vslideup_vi({{
-                    int offset = (int)(uint64_t)(SIMM5);
-                    int microVlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
-                    int vdWindowLeft = microVlmax * vdIdx;
-                    int vdWindowRight = microVlmax * (vdIdx + 1);
-                    int vs3WindowLeft = microVlmax * (vs2Idx + 1) + offset;
-                    bool copyAll = vs3WindowLeft >= vdWindowLeft
-                        && vs3WindowLeft < vdWindowRight;
-
-                    RiscvISA::vreg_t old_vd;
-                    xc->getRegOperand(this, oldDstIdx, &old_vd);
-                    tmp_d0 = old_vd;
-
-                    if (copyAll) {
-                        int backLen = vdWindowRight - vs3WindowLeft;
-                        int frontLen = microVlmax - backLen;
-                        int vdOffset = 0;
-                        for (int i = 0; vdOffset < frontLen
-                            && vdOffset < microVl; vdOffset++, i++) {
-                            if (this->vm || elem_mask(v0,
-                                vdOffset + vdWindowLeft)) {
-                                Vd_vu[vdOffset] = Vs2_vu[i + backLen];
-                            }
-                        }
-                        for (int i = 0; vdOffset < microVl; vdOffset++, i++) {
-                            if (this->vm || elem_mask(v0,
-                                vdOffset + vdWindowLeft)) {
-                                Vd_vu[vdOffset] = Vs3_vu[i];
-                            }
-                        }
-                    } else {
-                        int vs2WindowLeft = microVlmax * vs2Idx + offset;
-                        bool copyBack = vs2Idx == 0 && vs2WindowLeft
-                            >= vdWindowLeft && vs2WindowLeft < vdWindowRight;
-                        if (copyBack) {
-                            int backLen = vdWindowRight - vs2WindowLeft;
-                            int vdOffset = microVlmax - backLen;
-                            for (int i = 0; i < backLen && vdOffset < microVl;
-                                vdOffset++, i++) {
-                                if (this->vm || elem_mask(v0,
-                                    vdOffset + vdWindowLeft)) {
-                                    Vd_vu[vdOffset] = Vs2_vu[i];
-                                }
-                            }
-                        }
-                    }
-                }}, OPIVI, SimdMiscOp);
-                0x0f: VectorSlideDownVIFormat::vslidedown_vi({{
-                    int offset = (int)(uint64_t)(SIMM5);
-                    int microVlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
-                    int offsetWindow = offset % microVlmax;
-                    int vdWindowLeft = microVlmax * vdIdx;
-                    int vdWindowRight = microVlmax * (vdIdx + 1);
-                    int vs3WindowLeftSlide = microVlmax * vs3Idx - offset;
-                    int vs3WindowRightSlide = microVlmax * (vs3Idx + 1)
-                        - offset;
-                    bool copyFrontFromVs2 = vs3WindowLeftSlide > vdWindowLeft
-                        && vs3WindowLeftSlide <= vdWindowRight;
-                    bool copyFrontFromVs3 = lastUopForVd && vs3WindowRightSlide
-                        > vdWindowLeft && vs3WindowRightSlide <= vdWindowRight;
-                    bool needZeroTail = lastUopForVd && vs3WindowRightSlide
-                        <= vdWindowLeft;
-                    int vdOffset = 0;
-
-                    COPY_OLD_VD(oldDstIdx);
-
-                    if (copyFrontFromVs2) {
-                        int frontLen = vs3WindowLeftSlide - vdWindowLeft;
-                        for (; vdOffset < frontLen && vdOffset < microVl;
-                            vdOffset++) {
-                            if (this->vm || elem_mask(v0,
-                                vdWindowLeft + vdOffset)) {
-                                Vd_vu[vdOffset] =
-                                    Vs2_vu[vdOffset + offsetWindow];
-                            }
-                        }
-                        for (int i = 0; vdOffset < microVl; vdOffset++, i++) {
-                            if (this->vm || elem_mask(v0,
-                                vdWindowLeft + vdOffset)) {
-                                Vd_vu[vdOffset] = Vs3_vu[i];
-                            }
-                        }
-                    } else {
-                        if (copyFrontFromVs3) {
-                            int frontLen = vs3WindowRightSlide - vdWindowLeft;
-                            for (; vdOffset < frontLen && vdOffset < microVl;
-                                vdOffset++) {
-                                if (this->vm || elem_mask(v0,
-                                    vdWindowLeft + vdOffset)) {
-                                    Vd_vu[vdOffset] =
-                                        Vs3_vu[vdOffset + offsetWindow];
-                                }
-                            }
-                        }
-                        if (copyFrontFromVs3 || needZeroTail) {
-                            for (; vdOffset < microVl; vdOffset++) {
-                                if (this->vm || elem_mask(v0,
-                                    vdWindowLeft + vdOffset)) {
-                                    Vd_vu[vdOffset] = 0;
-                                }
-                            }
-                        }
-                    }
-                }}, OPIVI, SimdMiscOp);
+                0x0e: VectorSlideFormat::vslideup_vi(OPIVI, SimdMiscOp);
+                0x0f: VectorSlideFormat::vslidedown_vi(OPIVI, SimdMiscOp);
                 format VectorIntFormat {
                     0x10: decode VM {
                         0x0: vadc_vim({{
@@ -5078,110 +4990,8 @@ decode QUADRANT default Unknown::unknown() {
                         Vd_vu[i] = Vs2_vu[i] ^ Rs1_vu;
                     }}, OPIVX, SimdAluOp);
                 }
-                0x0e: VectorSlideUpFormat::vslideup_vx({{
-                    uint64_t raw_offset = Rs1_vu;
-                    int offset = (raw_offset > RVV_MAX_VLMAX) ? (int)RVV_MAX_VLMAX : (int)raw_offset;
-                    int microVlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
-                    int vdWindowLeft = microVlmax * vdIdx;
-                    int vdWindowRight = microVlmax * (vdIdx + 1);
-                    int vs3WindowLeft = microVlmax * (vs2Idx + 1) + offset;
-                    bool copyAll = vs3WindowLeft >= vdWindowLeft
-                        && vs3WindowLeft < vdWindowRight;
-
-                    RiscvISA::vreg_t old_vd;
-                    xc->getRegOperand(this, oldDstIdx, &old_vd);
-                    tmp_d0 = old_vd;
-
-                    if (copyAll) {
-                        int backLen = vdWindowRight - vs3WindowLeft;
-                        int frontLen = microVlmax - backLen;
-                        int vdOffset = 0;
-                        for (int i = 0; vdOffset < frontLen
-                            && vdOffset < microVl; vdOffset++, i++) {
-                            if (this->vm || elem_mask(v0,
-                                vdOffset + vdWindowLeft)) {
-                                Vd_vu[vdOffset] = Vs2_vu[i + backLen];
-                            }
-                        }
-                        for (int i = 0; vdOffset < microVl; vdOffset++, i++) {
-                            if (this->vm || elem_mask(v0,
-                                vdOffset + vdWindowLeft)) {
-                                Vd_vu[vdOffset] = Vs3_vu[i];
-                            }
-                        }
-                    } else {
-                        int vs2WindowLeft = microVlmax * vs2Idx + offset;
-                        bool copyBack = vs2Idx == 0 && vs2WindowLeft
-                            >= vdWindowLeft && vs2WindowLeft < vdWindowRight;
-                        if (copyBack) {
-                            int backLen = vdWindowRight - vs2WindowLeft;
-                            int vdOffset = microVlmax - backLen;
-                            for (int i = 0; i < backLen && vdOffset < microVl;
-                                vdOffset++, i++) {
-                                if (this->vm || elem_mask(v0,
-                                    vdOffset + vdWindowLeft)) {
-                                    Vd_vu[vdOffset] = Vs2_vu[i];
-                                }
-                            }
-                        }
-                    }
-                }}, OPIVX, SimdMiscOp);
-                0x0f: VectorSlideDownFormat::vslidedown_vx({{
-                    uint64_t raw_offset = Rs1_vu;
-                    int offset = (raw_offset > RVV_MAX_VLMAX) ? (int)RVV_MAX_VLMAX : (int)raw_offset;
-                    int microVlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
-                    int offsetWindow = offset % microVlmax;
-                    int vdWindowLeft = microVlmax * vdIdx;
-                    int vdWindowRight = microVlmax * (vdIdx + 1);
-                    int vs3WindowLeftSlide = microVlmax * vs3Idx - offset;
-                    int vs3WindowRightSlide = microVlmax * (vs3Idx + 1)
-                        - offset;
-                    bool copyFrontFromVs2 = vs3WindowLeftSlide > vdWindowLeft
-                        && vs3WindowLeftSlide <= vdWindowRight;
-                    bool copyFrontFromVs3 = lastUopForVd && vs3WindowRightSlide
-                        > vdWindowLeft && vs3WindowRightSlide <= vdWindowRight;
-                    bool needZeroTail = lastUopForVd && vs3WindowRightSlide
-                        <= vdWindowLeft;
-                    int vdOffset = 0;
-
-                    if (copyFrontFromVs2) {
-                        int frontLen = vs3WindowLeftSlide - vdWindowLeft;
-                        for (; vdOffset < frontLen && vdOffset < microVl;
-                            vdOffset++) {
-                            if (this->vm || elem_mask(v0,
-                                vdWindowLeft + vdOffset)) {
-                                Vd_vu[vdOffset] =
-                                    Vs2_vu[vdOffset + offsetWindow];
-                            }
-                        }
-                        for (int i = 0; vdOffset < microVl; vdOffset++, i++) {
-                            if (this->vm || elem_mask(v0,
-                                vdWindowLeft + vdOffset)) {
-                                Vd_vu[vdOffset] = Vs3_vu[i];
-                            }
-                        }
-                    } else {
-                        if (copyFrontFromVs3) {
-                            int frontLen = vs3WindowRightSlide - vdWindowLeft;
-                            for (; vdOffset < frontLen && vdOffset < microVl;
-                                vdOffset++) {
-                                if (this->vm || elem_mask(v0,
-                                    vdWindowLeft + vdOffset)) {
-                                    Vd_vu[vdOffset] =
-                                        Vs3_vu[vdOffset + offsetWindow];
-                                }
-                            }
-                        }
-                        if (copyFrontFromVs3 || needZeroTail) {
-                            for (; vdOffset < microVl; vdOffset++) {
-                                if (this->vm || elem_mask(v0,
-                                    vdWindowLeft + vdOffset)) {
-                                    Vd_vu[vdOffset] = 0;
-                                }
-                            }
-                        }
-                    }
-                }}, OPIVX, SimdMiscOp);
+                0x0e: VectorSlideFormat::vslideup_vx(OPIVX, SimdMiscOp);
+                0x0f: VectorSlideFormat::vslidedown_vx(OPIVX, SimdMiscOp);
                 0x0c: VectorGatherFormat::vrgather_vx({{
                     for (uint32_t i = 0; i < microVl; i++) {
                         uint32_t ei = i + vs1_idx * vs1_elems + vs1_bias;
@@ -5451,121 +5261,8 @@ decode QUADRANT default Unknown::unknown() {
                                              false, true).v;
                     }}, OPFVF, SimdFloatExtOp);
                 }
-                0x0e: VectorFloatSlideUpFormat::vfslide1up_vf({{
-                    int offset = 1;
-                    int microVlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
-                    int vdWindowLeft = microVlmax * vdIdx;
-                    int vdWindowRight = microVlmax * (vdIdx + 1);
-                    int vs3WindowLeft = microVlmax * (vs2Idx + 1) + offset;
-                    bool copyAll = vs3WindowLeft >= vdWindowLeft
-                        && vs3WindowLeft < vdWindowRight;
-
-                    COPY_OLD_VD(oldDstIdx);
-
-                    if (copyAll) {
-                        int backLen = vdWindowRight - vs3WindowLeft;
-                        int frontLen = microVlmax - backLen;
-                        int vdOffset = 0;
-                        for (int i = 0; vdOffset < frontLen
-                            && vdOffset < microVl; vdOffset++, i++) {
-                            if (this->vm || elem_mask(v0,
-                                vdOffset + vdWindowLeft)) {
-                                Vd_vu[vdOffset] = Vs2_vu[i + backLen];
-                            }
-                        }
-                        for (int i = 0; vdOffset < microVl; vdOffset++, i++) {
-                            if (this->vm || elem_mask(v0,
-                                vdOffset + vdWindowLeft)) {
-                                Vd_vu[vdOffset] = Vs3_vu[i];
-                            }
-                        }
-                    } else {
-                        int vs2WindowLeft = microVlmax * vs2Idx + offset;
-                        bool copyBack = vs2Idx == 0 && vs2WindowLeft
-                            >= vdWindowLeft && vs2WindowLeft < vdWindowRight;
-                        if (copyBack) {
-                            int backLen = vdWindowRight - vs2WindowLeft;
-                            int vdOffset = microVlmax - backLen;
-                            for (int i = 0; i < backLen && vdOffset < microVl;
-                                vdOffset++, i++) {
-                                if (this->vm || elem_mask(v0,
-                                    vdOffset + vdWindowLeft)) {
-                                    Vd_vu[vdOffset] = Vs2_vu[i];
-                                }
-                            }
-                        }
-                    }
-                    if (vdIdx == 0) {
-                        if (this->vm || elem_mask(v0, 0)) {
-                            auto fd = ftype_freg<et>(freg(Fs1_bits));
-                            Vd_vu[0] = fd.v;
-                        }
-                    }
-                }}, OPFVF, SimdMiscOp);
-                0x0f: VectorFloatSlideDownFormat::vfslide1down_vf({{
-                    int offset = 1;
-                    int microVlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
-                    int offsetWindow = offset % microVlmax;
-                    int vdWindowLeft = microVlmax * vdIdx;
-                    int vdWindowRight = microVlmax * (vdIdx + 1);
-                    int vs3WindowLeftSlide = microVlmax * vs3Idx - offset;
-                    int vs3WindowRightSlide = microVlmax * (vs3Idx + 1)
-                        - offset;
-                    bool copyFrontFromVs2 = vs3WindowLeftSlide > vdWindowLeft
-                        && vs3WindowLeftSlide <= vdWindowRight;
-                    bool copyFrontFromVs3 = lastUopForVd && vs3WindowRightSlide
-                        > vdWindowLeft && vs3WindowRightSlide <= vdWindowRight;
-                    bool needZeroTail = lastUopForVd && vs3WindowRightSlide
-                        <= vdWindowLeft;
-                    int vdOffset = 0;
-
-                    COPY_OLD_VD(oldDstIdx);
-
-                    if (copyFrontFromVs2) {
-                        int frontLen = vs3WindowLeftSlide - vdWindowLeft;
-                        for (; vdOffset < frontLen && vdOffset < microVl;
-                            vdOffset++) {
-                            if (this->vm || elem_mask(v0,
-                                vdWindowLeft + vdOffset)) {
-                                Vd_vu[vdOffset] =
-                                    Vs2_vu[vdOffset + offsetWindow];
-                            }
-                        }
-                        for (int i = 0; vdOffset < microVl; vdOffset++, i++) {
-                            if (this->vm || elem_mask(v0,
-                                vdWindowLeft + vdOffset)) {
-                                Vd_vu[vdOffset] = Vs3_vu[i];
-                            }
-                        }
-                    } else {
-                        if (copyFrontFromVs3) {
-                            int frontLen = vs3WindowRightSlide - vdWindowLeft;
-                            for (; vdOffset < frontLen && vdOffset < microVl;
-                                vdOffset++) {
-                                if (this->vm || elem_mask(v0,
-                                    vdWindowLeft + vdOffset)) {
-                                    Vd_vu[vdOffset] =
-                                        Vs3_vu[vdOffset + offsetWindow];
-                                }
-                            }
-                        }
-                        if (copyFrontFromVs3 || needZeroTail) {
-                            for (; vdOffset < microVl; vdOffset++) {
-                                if (this->vm || elem_mask(v0,
-                                    vdWindowLeft + vdOffset)) {
-                                    Vd_vu[vdOffset] = 0;
-                                }
-                            }
-                        }
-                    }
-                    if (isLastMicroop()) {
-                        if (this->vm || elem_mask(v0,
-                            vdWindowLeft + microVl - 1)) {
-                            auto fd = ftype_freg<et>(freg(Fs1_bits));
-                            Vd_vu[microVl - 1] = fd.v;
-                        }
-                    }
-                }}, OPFVF, SimdMiscOp);
+                0x0e: VectorSlideFormat::vfslide1up_vf(OPFVF, SimdMiscOp);
+                0x0f: VectorSlideFormat::vfslide1down_vf(OPFVF, SimdMiscOp);
                 // VRFUNARY0
                 0x10: decode VS2 {
                     0x00: decode VM {
@@ -5780,142 +5477,37 @@ decode QUADRANT default Unknown::unknown() {
                         );
                         Vd_vi[i] = res >> 1;
                     }}, OPMVX, SimdAddOp);
-                   0x0c: vclmul_vx({{
-                        uint64_t result = 0;
-                        uint64_t src1 = Rs1_vu;
-                        uint64_t src2 = Vs2_vu[i];
-                        for (int j = 0; j < 64; j++) {
-                            if ((src2 >> j) & 1) {
-                                result ^= src1 << j;
+                    0x0c: decode VSEW {
+                        0x3: vclmul_vx({{
+                            uint64_t result = 0;
+                            uint64_t src1 = Rs1_vu;
+                            uint64_t src2 = Vs2_vu[i];
+                            for (int j = 0; j < 64; j++) {
+                                if ((src2 >> j) & 1) {
+                                    result ^= src1 << j;
+                                }
                             }
-                        }
-                        Vd_vu[i] = result;
-                    }}, OPMVX, SimdMultOp);
-                    0x0d: vclmulh_vx({{
-                        uint64_t result = 0;
-                        uint64_t src1 = Rs1_vu;
-                        uint64_t src2 = Vs2_vu[i];
-                        for (int j = 1; j < 64; j++) {
-                            if ((src2 >> j) & 1) {
-                                result ^= src1 >> (64-j);
+                            Vd_vu[i] = result;
+                        }}, OPMVX, SimdMultOp);
+                        default: Unknown::unknown();
+                    }
+                    0x0d: decode VSEW {
+                        0x3: vclmulh_vx({{
+                            uint64_t result = 0;
+                            uint64_t src1 = Rs1_vu;
+                            uint64_t src2 = Vs2_vu[i];
+                            for (int j = 1; j < 64; j++) {
+                                if ((src2 >> j) & 1) {
+                                    result ^= src1 >> (64-j);
+                                }
                             }
-                        }
-                        Vd_vu[i] = result;
-                    }}, OPMVX, SimdMultOp);
+                            Vd_vu[i] = result;
+                        }}, OPMVX, SimdMultOp);
+                        default: Unknown::unknown();
+                    }
                 }
-                0x0e: VectorSlide1UpFormat::vslide1up_vx({{
-                    int offset = 1;
-                    int microVlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
-                    int vdWindowLeft = microVlmax * vdIdx;
-                    int vdWindowRight = microVlmax * (vdIdx + 1);
-                    int vs3WindowLeft = microVlmax * (vs2Idx + 1) + offset;
-                    bool copyAll = vs3WindowLeft >= vdWindowLeft
-                        && vs3WindowLeft < vdWindowRight;
-
-                    COPY_OLD_VD(oldDstIdx);
-
-                    if (copyAll) {
-                        int backLen = vdWindowRight - vs3WindowLeft;
-                        int frontLen = microVlmax - backLen;
-                        int vdOffset = 0;
-                        for (int i = 0; vdOffset < frontLen
-                            && vdOffset < microVl; vdOffset++, i++) {
-                            if (this->vm || elem_mask(v0,
-                                vdOffset + vdWindowLeft)) {
-                                Vd_vu[vdOffset] = Vs2_vu[i + backLen];
-                            }
-                        }
-                        for (int i = 0; vdOffset < microVl; vdOffset++, i++) {
-                            if (this->vm || elem_mask(v0,
-                                vdOffset + vdWindowLeft)) {
-                                Vd_vu[vdOffset] = Vs3_vu[i];
-                            }
-                        }
-                    } else {
-                        int vs2WindowLeft = microVlmax * vs2Idx + offset;
-                        bool copyBack = vs2Idx == 0 && vs2WindowLeft
-                            >= vdWindowLeft && vs2WindowLeft < vdWindowRight;
-                        if (copyBack) {
-                            int backLen = vdWindowRight - vs2WindowLeft;
-                            int vdOffset = microVlmax - backLen;
-                            for (int i = 0; i < backLen && vdOffset < microVl;
-                                vdOffset++, i++) {
-                                if (this->vm || elem_mask(v0,
-                                    vdOffset + vdWindowLeft)) {
-                                    Vd_vu[vdOffset] = Vs2_vu[i];
-                                }
-                            }
-                        }
-                    }
-                    if (vdIdx == 0) {
-                        if (this->vm || elem_mask(v0, 0)) {
-                            Vd_vu[0] = Rs1_vu;
-                        }
-                    }
-                }}, OPIVX, SimdMiscOp);
-                0x0f: VectorSlide1DownFormat::vslide1down_vx({{
-                    int offset = 1;
-                    int microVlmax = vtype_VLMAX(machInst.vtype8, vlen, true);
-                    int offsetWindow = offset % microVlmax;
-                    int vdWindowLeft = microVlmax * vdIdx;
-                    int vdWindowRight = microVlmax * (vdIdx + 1);
-                    int vs3WindowLeftSlide = microVlmax * vs3Idx - offset;
-                    int vs3WindowRightSlide = microVlmax * (vs3Idx + 1)
-                        - offset;
-                    bool copyFrontFromVs2 = vs3WindowLeftSlide > vdWindowLeft
-                        && vs3WindowLeftSlide <= vdWindowRight;
-                    bool copyFrontFromVs3 = lastUopForVd && vs3WindowRightSlide
-                        > vdWindowLeft && vs3WindowRightSlide <= vdWindowRight;
-                    bool needZeroTail = lastUopForVd && vs3WindowRightSlide
-                        <= vdWindowLeft;
-                    int vdOffset = 0;
-
-                    COPY_OLD_VD(oldDstIdx);
-
-                    if (copyFrontFromVs2) {
-                        int frontLen = vs3WindowLeftSlide - vdWindowLeft;
-                        for (; vdOffset < frontLen && vdOffset < microVl;
-                            vdOffset++) {
-                            if (this->vm || elem_mask(v0,
-                                vdWindowLeft + vdOffset)) {
-                                Vd_vu[vdOffset] =
-                                    Vs2_vu[vdOffset + offsetWindow];
-                            }
-                        }
-                        for (int i = 0; vdOffset < microVl; vdOffset++, i++) {
-                            if (this->vm || elem_mask(v0,
-                                vdWindowLeft + vdOffset)) {
-                                Vd_vu[vdOffset] = Vs3_vu[i];
-                            }
-                        }
-                    } else {
-                        if (copyFrontFromVs3) {
-                            int frontLen = vs3WindowRightSlide - vdWindowLeft;
-                            for (; vdOffset < frontLen && vdOffset < microVl;
-                                vdOffset++) {
-                                if (this->vm || elem_mask(v0,
-                                    vdWindowLeft + vdOffset)) {
-                                    Vd_vu[vdOffset] =
-                                        Vs3_vu[vdOffset + offsetWindow];
-                                }
-                            }
-                        }
-                        if (copyFrontFromVs3 || needZeroTail) {
-                            for (; vdOffset < microVl; vdOffset++) {
-                                if (this->vm || elem_mask(v0,
-                                    vdWindowLeft + vdOffset)) {
-                                    Vd_vu[vdOffset] = 0;
-                                }
-                            }
-                        }
-                    }
-                    if (isLastMicroop()) {
-                        if (this->vm || elem_mask(v0,
-                            vdWindowLeft + microVl - 1)) {
-                            Vd_vu[microVl - 1] = Rs1_vu;
-                        }
-                    }
-                }}, OPIVX, SimdMiscOp);
+                0x0e: VectorSlideFormat::vslide1up_vx(OPIVX, SimdMiscOp);
+                0x0f: VectorSlideFormat::vslide1down_vx(OPIVX, SimdMiscOp);
                 // VRXUNARY0
                 0x10: decode VS2 {
                     0x00: decode VM {
@@ -6391,7 +5983,7 @@ decode QUADRANT default Unknown::unknown() {
                     0x38: mnret({{
                         auto isa = dynamic_cast<RiscvISA::ISA*>(
                             xc->tcBase()->getIsaPtr());
-                        if (!isa->enableSmrnmi()) {
+                        if (!isa->reportsExtension("Smrnmi")) {
                             return std::make_shared<IllegalInstFault>(
                                         "mnret requires smrnmi enabled.",
                                         machInst);
