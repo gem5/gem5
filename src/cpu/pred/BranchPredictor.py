@@ -39,6 +39,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from m5.defines import buildEnv
 from m5.objects.ClockedObject import ClockedObject
 from m5.objects.IndexingPolicies import *
 from m5.objects.ReplacementPolicies import *
@@ -217,6 +218,18 @@ class ConditionalPredictor(ClockedObject):
         Parent.speculativeHistUpdate,
         "Use speculative update for the conditional predictor",
     )
+
+
+if any(
+    buildEnv[isa] for isa in ("USE_ARM_ISA", "USE_X86_ISA", "USE_RISCV_ISA")
+):
+
+    class RUNLTS(ConditionalPredictor):
+        type = "RUNLTS"
+        cxx_class = "gem5::branch_prediction::RUNLTS"
+        cxx_header = "cpu/pred/runlts_192KB.hh"
+
+        use_logical = Param.Bool(False, "Use Log-RBias instead of Seq-RBias")
 
 
 class IndirectPredictor(SimObject):
