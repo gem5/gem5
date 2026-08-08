@@ -214,6 +214,9 @@ class BAC
     /** Check the backward signals that update the BPU. */
     bool checkAndUpdateBPUSignals(ThreadID tid);
 
+    /** Deliver delayed instruction events to the BPU. */
+    bool processInstructionEvents();
+
   private:
     /* ----------------------------------------------------------------
      * Decoupled Frontend Functionality
@@ -352,6 +355,9 @@ class BAC
     /** Wire to get decode's information from backwards time buffer. */
     TimeBuffer<TimeStruct>::wire fromDecode;
 
+    /** Wire to get IEW's information from backwards time buffer. */
+    TimeBuffer<TimeStruct>::wire fromIEW;
+
     /** Wire to get commit's information from backwards time buffer. */
     TimeBuffer<TimeStruct>::wire fromCommit;
 
@@ -388,6 +394,9 @@ class BAC
 
     /** Decode to fetch delay. (Same delay for BAC as for fetch) */
     const Cycles decodeToFetchDelay;
+
+    /** IEW to fetch delay. (Same delay for BAC as for fetch) */
+    const Cycles iewToFetchDelay;
 
     /** Commit to fetch delay. (Same delay for BAC as for fetch) */
     const Cycles commitToFetchDelay;

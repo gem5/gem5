@@ -97,6 +97,12 @@ class BPredUnit : public SimObject
     Prediction predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
                        PCStateBase &pc, ThreadID tid);
 
+    /** Whether any conditional predictor consumes instruction events. */
+    bool requiresInstructionEvents() const;
+
+    /** Forward an instruction event to interested predictors. */
+    void instructionEvent(const o3::InstructionEvent &event);
+
     /**
      * Tells the branch predictor to commit any updates until the given
      * sequence number.

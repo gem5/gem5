@@ -51,6 +51,11 @@
 namespace gem5
 {
 
+namespace o3
+{
+struct InstructionEvent;
+}
+
 namespace branch_prediction
 {
 
@@ -60,6 +65,25 @@ class ConditionalPredictor : public ClockedObject
     typedef ConditionalPredictorParams Params;
 
     ConditionalPredictor(const Params &params);
+
+    /**
+     * Returns whether this predictor requires instruction events.
+     *
+     * The default implementation returns false.
+     */
+    virtual bool
+    requiresInstructionEvents() const
+    { return false; }
+
+    /**
+     * Receives an instruction event from the CPU pipeline.
+     *
+     * The default implementation ignores the event.
+     * @param event The event to consume.
+     */
+    virtual void
+    instructionEvent(const o3::InstructionEvent &event)
+    {}
 
     /**
      * Returns the default prediction latency in cycles
@@ -83,6 +107,22 @@ class ConditionalPredictor : public ClockedObject
     virtual Prediction lookup(ThreadID tid, Addr pc, void *&bp_history) = 0;
 
     /**
+     * Looks up a conditional branch using its instruction sequence number.
+     *
+     * The default implementation forwards to the sequence-number-independent
+     * lookup().
+     * @param tid The thread id.
+     * @param pc The PC to look up.
+     * @param seq_num A sequence number of the branch instruction.
+     * @param bp_history Pointer that will be set to an object that
+     * has the branch predictor state associated with the lookup.
+     * @return Whether the branch is taken or not taken.
+     */
+    virtual Prediction
+    lookup(ThreadID tid, Addr pc, InstSeqNum seq_num, void *&bp_history)
+    { return lookup(tid, pc, bp_history); }
+
+    /**
      * Ones done with the prediction this function updates the
      * path and global history. All branches call this function
      * including unconditional once.
@@ -103,12 +143,35 @@ class ConditionalPredictor : public ClockedObject
                                  void * &bp_history) = 0;
 
     /**
+     * Updates path and global history after prediction, using the instruction
+     * sequence number.
+     *
+     * The default implementation forwards to the sequence-number-independent
+     * updateHistories().
+     * @param tid The thread id.
+     * @param pc The branch's pc that will be updated.
+     * @param seq_num A sequence number of the branch instruction.
+     * @param uncond Whether or not this branch is an unconditional branch.
+     * @param taken Whether or not the branch was taken
+     * @param target The final target of branch. Some modern
+     * predictors use the target in their history.
+     * @param inst Static instruction information
+     * @param bp_history Pointer that will be set to an object that
+     * has the branch predictor state associated with the lookup.
+     *
+     */
+    virtual void
+    updateHistories(ThreadID tid, Addr pc, InstSeqNum seq_num, bool uncond,
+                    bool taken, Addr target, const StaticInstPtr &inst,
+                    void *&bp_history)
+    { updateHistories(tid, pc, uncond, taken, target, inst, bp_history); }
+
+    /**
      * @param tid The thread id.
      * @param bp_history Pointer to the history object.  The predictor
      * will need to update any state and delete the object.
      */
     virtual void squash(ThreadID tid, void * &bp_history) = 0;
-
 
     /**
      * Updates the BP with taken/not taken information.

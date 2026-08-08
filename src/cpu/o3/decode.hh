@@ -275,6 +275,9 @@ class Decode
     /** The width of decode, in instructions. */
     unsigned decodeWidth;
 
+    /** Whether the predictor consumes instruction events. */
+    bool instructionEventsEnabled;
+
     /** Index of instructions being sent to rename. */
     unsigned toRenameIndex;
 
