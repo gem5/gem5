@@ -40,9 +40,10 @@
 
 Import('*')
 
+RUNLTS_SUPPORTED = any(env['CONF'][isa] \
+    for isa in ('USE_ARM_ISA', 'USE_X86_ISA', 'USE_RISCV_ISA'))
 
-SimObject('BranchPredictor.py',
-    sim_objects=[
+sim_objects = [
     'BranchPredictor',
     'ConditionalPredictor',
     'IndirectPredictor', 'SimpleIndirectPredictor',
@@ -61,8 +62,12 @@ SimObject('BranchPredictor.py',
     'MultiperspectivePerceptronTAGE', 'MPP_StatisticalCorrector_64KB',
     'MultiperspectivePerceptronTAGE64KB', 'MPP_TAGE_8KB',
     'MPP_LoopPredictor_8KB', 'MPP_StatisticalCorrector_8KB',
-    'MultiperspectivePerceptronTAGE8KB', 'GshareBP'],
-    enums=['BranchType', 'TargetProvider'])
+    'MultiperspectivePerceptronTAGE8KB', 'GshareBP']
+
+if RUNLTS_SUPPORTED: sim_objects.append('RUNLTS')
+
+SimObject('BranchPredictor.py',
+    sim_objects=sim_objects, enums=['BranchType', 'TargetProvider'])
 
 Source('bpred_unit.cc')
 Source('2bit_local.cc')
@@ -87,6 +92,7 @@ Source('statistical_corrector.cc')
 Source('tage_sc_l.cc')
 Source('tage_sc_l_8KB.cc')
 Source('tage_sc_l_64KB.cc')
+if RUNLTS_SUPPORTED: Source('runlts_192KB.cc')
 Source('gshare.cc')
 Source('btb.cc')
 Source('simple_btb.cc')
@@ -99,3 +105,4 @@ DebugFlag('Branch')
 DebugFlag('Tage')
 DebugFlag('LTage')
 DebugFlag('TageSCL')
+if RUNLTS_SUPPORTED: DebugFlag('RUNLTS')
