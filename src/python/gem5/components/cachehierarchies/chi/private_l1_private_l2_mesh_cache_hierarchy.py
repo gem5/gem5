@@ -393,7 +393,7 @@ class PrivateL1PrivateL2MeshCacheHierarchy(
                 requires_send_evicts=core.requires_send_evicts(),
                 cache_line_size=board.get_cache_line_size(),
                 target_isa=board.get_processor().get_isa(),
-                clk_domain=board.get_clock_domain(),
+                clk_domain=board.get_processor().get_clock_domain(),
             )
             dcache.sc_lock_enabled = True
             icache = L1CacheController(
@@ -403,7 +403,7 @@ class PrivateL1PrivateL2MeshCacheHierarchy(
                 requires_send_evicts=core.requires_send_evicts(),
                 cache_line_size=board.get_cache_line_size(),
                 target_isa=board.get_processor().get_isa(),
-                clk_domain=board.get_clock_domain(),
+                clk_domain=board.get_processor().get_clock_domain(),
             )
 
             icache.sequencer = RubySequencer(
@@ -424,7 +424,7 @@ class PrivateL1PrivateL2MeshCacheHierarchy(
                 assoc=self._l2_assoc,
                 network=self.ruby_system.network,
                 cache_line_size=board.get_cache_line_size(),
-                clk_domain=board.get_clock_domain(),
+                clk_domain=board.get_processor().get_clock_domain(),
             )
 
             rnf = CHI_RNF(self.ruby_system, [dcache, icache, l2])
