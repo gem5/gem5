@@ -63,6 +63,7 @@ for start_type in core_types:
             switch_core_type=switch_type,
             isa=ISA.X86,
             num_cores=1,
+            clk_freq="3GHz",
         )
 
         board = X86Board(
