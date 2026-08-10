@@ -141,7 +141,6 @@ if not main['HAVE_LUA51']:
 
 conf.Finish()
 
-print('Checking for ext/googletest ...')
 main['HAVE_GTEST'] = googletest_dir.File('SConscript').exists()
 if not main['HAVE_GTEST']:
     print('googletest not found, not building unit tests.')
