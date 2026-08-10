@@ -796,6 +796,7 @@ class SimObject(metaclass=MetaSimObject):
         self._parent = None
         self._name = None
         self._ccObject = None  # pointer to C++ object
+        self._ccSimObjCapsule = None  # Raw C++ pointer to SimObject
         self._ccParams = None
         self._instantiated = False  # really "cloned"
         self._init_called = True  # Checked so subclasses don't forget __init__

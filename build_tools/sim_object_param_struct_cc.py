@@ -178,6 +178,12 @@ py::module_ m = m_internal.def_submodule("param_${sim_object}");
                 'm, "${py_class_name}")'
             )
         code.indent()
+        if getattr(sim_object, "cxx_base", True) is not None:
+            code(
+                '.def("getCapsule", [](${{sim_object.cxx_class}} *obj) '
+                "-> py::capsule { return py::capsule("
+                'static_cast<gem5::SimObject*>(obj), "gem5::SimObject"); })'
+            )
         for exp in sim_object.cxx_exports:
             exp.export(code, sim_object.cxx_class)
         code(";")
