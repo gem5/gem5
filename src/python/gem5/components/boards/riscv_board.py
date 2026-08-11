@@ -98,7 +98,7 @@ class RiscvBoard(
     """
 
     _default_timebase_frequency = 100000000
-    _default_mmu_type = "riscv,sv39"
+    _kvm_mmu_type = "riscv,sv39"
     _default_m5ops_base = 0x10010000
     _default_m5ops_size = 0x10000
 
@@ -256,9 +256,6 @@ class RiscvBoard(
 
         return self._kvm_probe_cache
 
-    def _configured_riscv_isa(self):
-        return self.get_processor().get_cores()[0].core.isa[0]
-
     def _cpu_timebase_frequency(self) -> int:
         if not self._has_kvm_cores():
             return self._default_timebase_frequency
@@ -304,11 +301,6 @@ class RiscvBoard(
             for entry in data.rstrip(b"\0").split(b"\0")
             if entry
         ]
-
-    @staticmethod
-    def _split_isa_string(isa: str):
-        isa_tokens = isa.lower().split("_")
-        return isa_tokens[0], isa_tokens[1:]
 
     def _detect_kvm_host_frequency(self) -> Optional[int]:
         if self._kvm_host_freq_cache is not None:
@@ -397,7 +389,7 @@ class RiscvBoard(
             return
 
         need_vector_probe = any(
-            core.is_kvm_core() and core.core.isa[0].enable_rvv.value
+            core.is_kvm_core() and core.core.isa[0].reports_extension("V")
             for core in self.get_processor().get_cores()
         )
         if not need_vector_probe:
@@ -416,7 +408,7 @@ class RiscvBoard(
                 continue
 
             isa = core.core.isa[0]
-            if not isa.enable_rvv.value:
+            if not isa.reports_extension("V"):
                 continue
 
             if "vlen" in isa._values.local:
@@ -460,7 +452,6 @@ class RiscvBoard(
             self.iobus = IOXBar()
             self.iobus.badaddr_responder = BadAddr()
             self.iobus.default = self.iobus.badaddr_responder.pio
-            self.m5ops_base = self._default_m5ops_base
 
             # The virtio disk
             self.disk = RiscvMmioVirtIO(
@@ -519,9 +510,10 @@ class RiscvBoard(
                 AddrRange(dev.pio_addr, size=dev.pio_size)
                 for dev in self._off_chip_devices
             ]
-            self.bridge.ranges.append(
-                AddrRange(self.m5ops_base, size=self._default_m5ops_size)
-            )
+            if self.m5ops_base:
+                self.bridge.ranges.append(
+                    AddrRange(self.m5ops_base, size=self._default_m5ops_size)
+                )
 
             # PCI
             self.bridge.ranges.append(AddrRange(0x2F000000, size="16MiB"))
@@ -535,9 +527,10 @@ class RiscvBoard(
             AddrRange(dev.pio_addr, size=dev.pio_size)
             for dev in self._on_chip_devices + self._off_chip_devices
         ]
-        uncacheable_range.append(
-            AddrRange(self.m5ops_base, size=self._default_m5ops_size)
-        )
+        if self.m5ops_base:
+            uncacheable_range.append(
+                AddrRange(self.m5ops_base, size=self._default_m5ops_size)
+            )
 
         # PCI
         uncacheable_range.append(AddrRange(0x2F000000, size="16MiB"))
@@ -649,9 +642,6 @@ class RiscvBoard(
         cpus_node.append(cpus_state.addrCellsProperty())
         cpus_node.append(cpus_state.sizeCellsProperty())
         cpu_timebase_frequency = self._cpu_timebase_frequency()
-        cpu_isa_string = self._configured_riscv_isa().get_isa_string()
-        _, cpu_isa_exts = self._split_isa_string(cpu_isa_string)
-        cpu_isa_exts_set = set(cpu_isa_exts)
         cpu_clock_frequency = self.clk_domain.clock[0].frequency
         cpu_cbom_block_size = self.get_cache_line_size()
         cpu_cboz_block_size = self.get_cache_line_size()
@@ -663,7 +653,10 @@ class RiscvBoard(
             node = FdtNode(f"cpu@{i}")
             node.append(FdtPropertyStrings("device_type", "cpu"))
             node.append(FdtPropertyWords("reg", state.CPUAddrCells(i)))
-            node.append(FdtPropertyStrings("mmu-type", "riscv,sv48"))
+            mmu_type = (
+                self._kvm_mmu_type if core.is_kvm_core() else "riscv,sv48"
+            )
+            node.append(FdtPropertyStrings("mmu-type", mmu_type))
             if core.core.isa[0].reports_extension("Zicbom"):
                 node.append(
                     FdtPropertyWords(
@@ -677,7 +670,11 @@ class RiscvBoard(
                     )
                 )
             node.append(FdtPropertyStrings("status", "okay"))
-            node.append(FdtPropertyStrings("riscv,isa", cpu_isa_string))
+            node.append(
+                FdtPropertyStrings(
+                    "riscv,isa", core.core.isa[0].get_isa_string()
+                )
+            )
             node.append(
                 FdtPropertyWords("clock-frequency", cpu_clock_frequency)
             )
@@ -932,14 +929,19 @@ class RiscvBoard(
     @overrides(KernelDiskWorkload)
     def get_default_kernel_args(self) -> List[str]:
         m5ops_base = int(getattr(self, "m5ops_base", self._default_m5ops_base))
-        return [
+        args = [
             "console=ttyS0",
             "root={root_value}",
             "disk_device={disk_device}",
-            f"gem5_bridge_baseaddr=0x{m5ops_base:x}",
-            f"gem5_bridge_rangesize=0x{self._default_m5ops_size:x}",
-            "rw",
         ]
+        if m5ops_base:
+            args.extend(
+                [
+                    f"gem5_bridge_baseaddr=0x{m5ops_base:x}",
+                    f"gem5_bridge_rangesize=0x{self._default_m5ops_size:x}",
+                ]
+            )
+        return args + ["rw"]
 
     @overrides(SimObject)
     def createCCObject(self):

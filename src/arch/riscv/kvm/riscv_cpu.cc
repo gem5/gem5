@@ -34,7 +34,6 @@
 #include <algorithm>
 #include <cerrno>
 #include <memory>
-#include <mutex>
 #include <utility>
 
 #include "arch/riscv/interrupts.hh"
@@ -46,12 +45,12 @@
 #include "arch/riscv/regs/vector.hh"
 #include "base/logging.hh"
 #include "base/random.hh"
-#include "base/uncontended_mutex.hh"
 #include "cpu/kvm/vm.hh"
 #include "debug/KvmContext.hh"
 #include "debug/KvmInt.hh"
 #include "params/RiscvISA.hh"
 #include "params/RiscvKvmCPU.hh"
+#include "sim/core.hh"
 
 namespace gem5
 {
@@ -60,16 +59,6 @@ using namespace RiscvISA;
 
 namespace
 {
-
-/*
- * Like ARM's in-kernel timer, the RISC-V KVM timer keeps advancing while
- * gem5 is servicing userspace events. Preserve a VM-global guest time across
- * KVM entries so guest time only advances while the vCPU is actually running.
- */
-uint64_t vtime = 0;
-uint64_t vtimeCounter = 0;
-bool vtimeInitialized = false;
-UncontendedMutex vtimeMutex;
 
 constexpr uint64_t SupervisorIEBits = (1ULL << INT_SOFTWARE_SUPER) |
                                       (1ULL << INT_TIMER_SUPER) |
@@ -348,7 +337,7 @@ void
 RiscvKvmCPU::configureKvmConfigRegs()
 {
     const RegVal misa = tc->readMiscRegNoEffect(MISCREG_ISA);
-    const auto &isa_params = riscvIsaParams();
+    const auto &isa = riscvIsa();
 
     if (hasReg(RISCV_CFG(isa))) {
         setOneReg(RISCV_CFG(isa), static_cast<uint64_t>(misa & ISA_EXT_MASK));
@@ -380,57 +369,79 @@ RiscvKvmCPU::configureKvmConfigRegs()
     if (hasReg(RISCV_CFG(zicbom_block_size))) {
         setOneReg(RISCV_CFG(zicbom_block_size),
                   static_cast<uint64_t>(
-                      isa_params.enable_Zicbom_fs ? cacheLineSize() : 0));
+                      isa.reportsExtension("Zicbom") ? cacheLineSize() : 0));
     }
 
     if (hasReg(RISCV_CFG(zicboz_block_size))) {
         setOneReg(RISCV_CFG(zicboz_block_size),
                   static_cast<uint64_t>(
-                      isa_params.enable_Zicboz_fs ? cacheLineSize() : 0));
+                      isa.reportsExtension("Zicboz") ? cacheLineSize() : 0));
     }
 }
 
 void
 RiscvKvmCPU::configureKvmIsaExts()
 {
-    const auto &isa_params = riscvIsaParams();
+    const auto &isa = riscvIsa();
 
-    static const std::pair<uint64_t, const char *> requiredExts[] = {
-        {KVM_RISCV_ISA_EXT_ZICNTR, "zicntr"},
-        {KVM_RISCV_ISA_EXT_ZICSR, "zicsr"},
-        {KVM_RISCV_ISA_EXT_ZIFENCEI, "zifencei"},
-        {KVM_RISCV_ISA_EXT_ZIHPM, "zihpm"},
-        {KVM_RISCV_ISA_EXT_ZBA, "zba"},
-        {KVM_RISCV_ISA_EXT_ZBB, "zbb"},
-        {KVM_RISCV_ISA_EXT_ZBS, "zbs"},
-        {KVM_RISCV_ISA_EXT_SVNAPOT, "svnapot"},
-    };
-
-    for (const auto &[ext, name] : requiredExts) {
-        const uint64_t reg = RISCV_ISA_EXT_SINGLE(ext);
-        fatal_if(!hasReg(reg),
-                 "KVM host does not expose the %s extension required by "
-                 "the configured gem5 CPU model.\n",
-                 name);
-
-        setOneReg(reg, uint64_t(1));
-    }
-
-    /*
-     * These extensions are controlled by the configured gem5 ISA parameters
-     * rather than being unconditional KVM requirements.
-     */
     const struct
     {
         uint64_t ext;
         bool enable;
         const char *name;
-    } isaParamExts[] = {
-        {KVM_RISCV_ISA_EXT_ZICBOM, isa_params.enable_Zicbom_fs, "zicbom"},
-        {KVM_RISCV_ISA_EXT_ZICBOZ, isa_params.enable_Zicboz_fs, "zicboz"},
+    } configuredExts[] = {
+        {KVM_RISCV_ISA_EXT_SVPBMT, isa.reportsExtension("Svpbmt"), "svpbmt"},
+        {KVM_RISCV_ISA_EXT_SSTC, isa.reportsExtension("Sstc"), "sstc"},
+        {KVM_RISCV_ISA_EXT_SVINVAL, isa.reportsExtension("Svinval"),
+         "svinval"},
+        {KVM_RISCV_ISA_EXT_ZIHINTPAUSE, isa.reportsExtension("Zihintpause"),
+         "zihintpause"},
+        {KVM_RISCV_ISA_EXT_ZICNTR, isa.reportsExtension("Zicntr"), "zicntr"},
+        {KVM_RISCV_ISA_EXT_ZICSR, isa.reportsExtension("Zicsr"), "zicsr"},
+        {KVM_RISCV_ISA_EXT_ZIFENCEI, isa.reportsExtension("Zifencei"),
+         "zifencei"},
+        {KVM_RISCV_ISA_EXT_ZIHPM, isa.reportsExtension("Zihpm"), "zihpm"},
+        {KVM_RISCV_ISA_EXT_ZBA, isa.reportsExtension("Zba"), "zba"},
+        {KVM_RISCV_ISA_EXT_ZBB, isa.reportsExtension("Zbb"), "zbb"},
+        {KVM_RISCV_ISA_EXT_ZBS, isa.reportsExtension("Zbs"), "zbs"},
+        {KVM_RISCV_ISA_EXT_SVNAPOT, isa.reportsExtension("Svnapot"),
+         "svnapot"},
+        {KVM_RISCV_ISA_EXT_ZICBOM, isa.reportsExtension("Zicbom"), "zicbom"},
+        {KVM_RISCV_ISA_EXT_ZICBOZ, isa.reportsExtension("Zicboz"), "zicboz"},
+        {KVM_RISCV_ISA_EXT_V, isa.reportsExtension("V"), "v"},
+        {KVM_RISCV_ISA_EXT_ZICOND, isa.reportsExtension("Zicond"), "zicond"},
+        {KVM_RISCV_ISA_EXT_ZBC, isa.reportsExtension("Zbc"), "zbc"},
+        {KVM_RISCV_ISA_EXT_ZBKB, isa.reportsExtension("Zbkb"), "zbkb"},
+        {KVM_RISCV_ISA_EXT_ZBKC, isa.reportsExtension("Zbkc"), "zbkc"},
+        {KVM_RISCV_ISA_EXT_ZBKX, isa.reportsExtension("Zbkx"), "zbkx"},
+        {KVM_RISCV_ISA_EXT_ZKND, isa.reportsExtension("Zknd"), "zknd"},
+        {KVM_RISCV_ISA_EXT_ZKNE, isa.reportsExtension("Zkne"), "zkne"},
+        {KVM_RISCV_ISA_EXT_ZKNH, isa.reportsExtension("Zknh"), "zknh"},
+        {KVM_RISCV_ISA_EXT_ZKR, isa.reportsExtension("Zkr"), "zkr"},
+        {KVM_RISCV_ISA_EXT_ZKSED, isa.reportsExtension("Zksed"), "zksed"},
+        {KVM_RISCV_ISA_EXT_ZKSH, isa.reportsExtension("Zksh"), "zksh"},
+        {KVM_RISCV_ISA_EXT_ZKT, isa.reportsExtension("Zkt"), "zkt"},
+        {KVM_RISCV_ISA_EXT_ZVBB, isa.reportsExtension("Zvbb"), "zvbb"},
+        {KVM_RISCV_ISA_EXT_ZVBC, isa.reportsExtension("Zvbc"), "zvbc"},
+        {KVM_RISCV_ISA_EXT_ZVKB, isa.reportsExtension("Zvkb"), "zvkb"},
+        {KVM_RISCV_ISA_EXT_ZVKG, isa.reportsExtension("Zvkg"), "zvkg"},
+        {KVM_RISCV_ISA_EXT_ZVKNED, isa.reportsExtension("Zvkned"), "zvkned"},
+        {KVM_RISCV_ISA_EXT_ZVKNHA, isa.reportsExtension("Zvknha"), "zvknha"},
+        {KVM_RISCV_ISA_EXT_ZVKNHB, isa.reportsExtension("Zvknhb"), "zvknhb"},
+        {KVM_RISCV_ISA_EXT_ZVKSED, isa.reportsExtension("Zvksed"), "zvksed"},
+        {KVM_RISCV_ISA_EXT_ZVKSH, isa.reportsExtension("Zvksh"), "zvksh"},
+        {KVM_RISCV_ISA_EXT_ZVKT, isa.reportsExtension("Zvkt"), "zvkt"},
+        {KVM_RISCV_ISA_EXT_ZFH, isa.reportsExtension("Zfh"), "zfh"},
+        {KVM_RISCV_ISA_EXT_ZFHMIN, isa.reportsExtension("Zfhmin"), "zfhmin"},
+        {KVM_RISCV_ISA_EXT_ZIHINTNTL, isa.reportsExtension("Zihintntl"),
+         "zihintntl"},
+        {KVM_RISCV_ISA_EXT_ZVFH, isa.reportsExtension("Zvfh"), "zvfh"},
+        {KVM_RISCV_ISA_EXT_ZVFHMIN, isa.reportsExtension("Zvfhmin"),
+         "zvfhmin"},
+        {KVM_RISCV_ISA_EXT_ZFA, isa.reportsExtension("Zfa"), "zfa"},
     };
 
-    for (const auto &ext : isaParamExts) {
+    for (const auto &ext : configuredExts) {
         const uint64_t reg = RISCV_ISA_EXT_SINGLE(ext.ext);
         if (!hasReg(reg)) {
             fatal_if(ext.enable,
@@ -556,14 +567,10 @@ RiscvKvmCPU::startup()
     } else {
         hasKvmTimer = true;
         getOneReg(RISCV_TIMER_REG(frequency), &kvmTimerFrequency);
+        fatal_if(kvmTimerFrequency == 0,
+                 "KVM reported a zero RISC-V timer frequency.\n");
         DPRINTF(KvmContext, "KVM timer frequency = %lu Hz\n",
                 kvmTimerFrequency);
-
-        std::lock_guard<UncontendedMutex> lock(vtimeMutex);
-        if (!vtimeInitialized) {
-            vtime = getOneRegU64(RISCV_TIMER_REG(time));
-            vtimeInitialized = true;
-        }
     }
 
     /*
@@ -711,8 +718,8 @@ RiscvKvmCPU::handleKvmExitRiscvCSR()
 
     auto writeCsr = [&](RegVal csr, const CSRMetadata &metadata,
                         RegVal write_data) {
-        auto &csr_masks = isa.getCSRMaskMap();
-        auto &csr_write_masks = isa.getCSRWriteMaskMap();
+        const auto &csr_masks = isa.getCSRMaskMap();
+        const auto &csr_write_masks = isa.getCSRWriteMaskMap();
 
         switch (csr) {
             case CSR_SIP:
@@ -817,21 +824,18 @@ RiscvKvmCPU::ioctlRun()
         return;
     }
 
-    {
-        std::lock_guard<UncontendedMutex> lock(vtimeMutex);
-        if (vtimeCounter++ == 0) {
-            setOneReg(RISCV_TIMER_REG(time), vtime);
-        }
-    }
+    /*
+     * KVM's RISC-V timer offset is shared by all vCPUs in a VM. Deriving the
+     * entry time from gem5's simulation tick gives every vCPU scheduled at
+     * that tick the same starting time and pauses the timer while gem5 is
+     * servicing userspace events.
+     */
+    const uint64_t guestTime = static_cast<uint64_t>(
+        (static_cast<__uint128_t>(curTick()) * kvmTimerFrequency) /
+        sim_clock::Frequency);
+    setOneReg(RISCV_TIMER_REG(time), guestTime);
 
     BaseKvmCPU::ioctlRun();
-
-    {
-        std::lock_guard<UncontendedMutex> lock(vtimeMutex);
-        if (--vtimeCounter == 0) {
-            vtime = getOneRegU64(RISCV_TIMER_REG(time));
-        }
-    }
 }
 
 void

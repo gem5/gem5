@@ -111,7 +111,7 @@ fullSystemWriteBlob(ThreadContext *tc, Addr addr, const void *data,
 
     for (const auto &range : *gen) {
         if (range.fault) {
-            fatal("writeBlob(%#llx, ...) failed",
+            fatal("pseudo_inst::readfile failed to write to %#llx",
                   (unsigned long long)addr);
         }
 

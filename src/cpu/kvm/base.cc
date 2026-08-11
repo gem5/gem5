@@ -832,7 +832,6 @@ BaseKvmCPU::kvmRun(Tick ticks)
         discardPendingSignal(KVM_KICK_SIGNAL);
 
         const uint64_t hostCyclesExecuted(getHostCycles() - baseCycles);
-        const uint64_t simCyclesExecuted(hostCyclesExecuted * hostFactor);
         const uint64_t hostNsExecuted =
             usePerf ? 0 : timespecDiffNs(runStartTs, runEndTs);
         uint64_t instsExecuted = 0;
@@ -848,6 +847,9 @@ BaseKvmCPU::kvmRun(Tick ticks)
             ticksExecuted = std::max<Tick>(
                 runTimer->ticksFromHostNs(hostNsExecuted), clockPeriod());
         }
+        const uint64_t simCyclesExecuted =
+            usePerf ? hostCyclesExecuted * hostFactor
+                    : ticksToCycles(ticksExecuted);
 
         /* Update statistics */
         baseStats.numCycles += simCyclesExecuted;

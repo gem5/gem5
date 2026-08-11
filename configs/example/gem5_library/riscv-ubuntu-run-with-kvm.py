@@ -82,11 +82,6 @@ memory = DualChannelDDR4_2400(size="3GiB")
 
 processor = SimpleProcessor(cpu_type=CPUTypes.KVM, isa=ISA.RISCV, num_cores=1)
 
-# Keep RVV opt-in for this KVM config. If users enable RVV, the board
-# validates the requested VLEN against KVM before instantiation.
-for core in processor.get_cores():
-    core.core.isa[0].enable_rvv = False
-
 board = RiscvBoard(
     clk_freq="3GHz",
     processor=processor,

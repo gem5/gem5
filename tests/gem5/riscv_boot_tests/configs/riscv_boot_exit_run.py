@@ -156,12 +156,6 @@ processor = SimpleProcessor(
     clk_freq="1GHz",
 )
 
-if cpu_type == CPUTypes.KVM:
-    # Keep RVV opt-in for this KVM boot test. If users enable RVV, the
-    # board validates the requested VLEN against KVM before instantiation.
-    for core in processor.get_cores():
-        core.core.isa[0].enable_rvv = False
-
 # Setup the board.
 board = RiscvBoard(
     clk_freq="1GHz",
