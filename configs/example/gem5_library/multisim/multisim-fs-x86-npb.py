@@ -100,6 +100,7 @@ for benchmark in ["bt", "cg", "ep", "ft", "is", "lu", "mg", "sp", "ua"]:
             switch_core_type=CPUTypes.TIMING,
             isa=ISA.X86,
             num_cores=num_cores,
+            clk_freq="3GHz",
         )
         board = X86Board(
             clk_freq="3GHz",
