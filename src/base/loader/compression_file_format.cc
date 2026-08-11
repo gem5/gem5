@@ -48,6 +48,10 @@
 #include <vector>
 
 #include "base/loader/gzip_compression.hh"
+#include "config/have_zstd.hh"
+#if HAVE_ZSTD
+#include "base/loader/zstd_compression.hh"
+#endif
 #include "base/logging.hh"
 
 namespace gem5
@@ -72,6 +76,9 @@ void
 registerBuiltinCompressionFileFormats()
 {
     registerGzipCompressionFormat();
+#if HAVE_ZSTD
+    registerZstdCompressionFormat();
+#endif
 }
 
 } // anonymous namespace

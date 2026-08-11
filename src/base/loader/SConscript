@@ -51,6 +51,9 @@ image_file_data_test_sources = [
     'compression_file_format.cc',
     'gzip_compression.cc',
 ]
+if env['CONF']['HAVE_ZSTD']:
+    Source('zstd_compression.cc')
+    image_file_data_test_sources.append('zstd_compression.cc')
 GTest('image_file_data.test', *image_file_data_test_sources)
 Source('memory_image.cc')
 Source('object_file.cc')
