@@ -94,7 +94,7 @@ class ElfObject : public ObjectFile
     // The ldMin and ldMax fields are required to know how large of an
     // area is required to map the interpreter.
     Addr ldMin = MaxAddr;
-    Addr ldMax = MaxAddr;
+    Addr ldMax = 0;
 
     /// Helper functions for loadGlobalSymbols() and loadLocalSymbols().
     bool loadSomeSymbols(SymbolTable *symtab, int binding, Addr mask,
@@ -116,7 +116,14 @@ class ElfObject : public ObjectFile
 
     Addr bias() const override { return ldBias; }
     bool relocatable() const override { return relocate; }
-    Addr mapSize() const override { return ldMax - ldMin; }
+    Addr
+    mapSize() const override
+    {
+        // ldMin/ldMax stay at their sentinel values if no non-empty
+        // PT_LOAD segment was seen. Returning ldMax - ldMin in that case
+        // would underflow, so report an empty mapping instead.
+        return (ldMin <= ldMax) ? (ldMax - ldMin) : 0;
+    }
     void updateBias(Addr bias_addr) override;
 
     bool hasTLS() override { return sectionExists(".tbss"); }

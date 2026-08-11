@@ -1,5 +1,4 @@
-# -*- mode:python -*-
-# Copyright (c) 2023 ARM Limited
+# Copyright (c) 2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -34,25 +33,77 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+import re
 
-import os
+from testlib import *
 
-tlm_vars = Variables()
-tlm_vars.AddVariables(
-    PathVariable('TLM_PATH', "CHI TLM library path", '.', PathVariable.PathIsDir),
+if config.bin_path:
+    resource_path = config.bin_path
+else:
+    resource_path = joinpath(absdirpath(__file__), "..", "resources")
+
+
+def test_boot_mesh(
+    cpu: str,
+    num_cpus: int,
+    length: str,
+    systemd: bool,
+    to_tick: int,
+):
+    name = f"{cpu}-cpu_{num_cpus}-cores_arm_boot_test_mesh_2x4"
+
+    config_args = [
+        "--cpu",
+        cpu,
+        "--num-cpus",
+        str(num_cpus),
+        "--resource-directory",
+        resource_path,
+        "--topology-config",
+        joinpath(
+            config.base_dir,
+            "configs",
+            "example",
+            "arm",
+            "noc_configs",
+            "mesh_2x4.py",
+        ),
+        "--systemd" if systemd else "--no-systemd",
+        "--tick-exit",
+        str(to_tick),
+    ]
+
+    verifiers = [
+        verifier.MatchRegex(
+            re.compile(
+                f"Exiting @ tick {str(to_tick)} because simulate\\(\\) limit reached"
+            )
+        )
+    ]
+
+    gem5_verify_config(
+        name=name,
+        verifiers=verifiers,
+        fixtures=(),
+        config=joinpath(
+            config.base_dir,
+            "tests",
+            "gem5",
+            "arm_boot_tests",
+            "configs",
+            "arm_boot_exit_run_mesh.py",
+        ),
+        config_args=config_args,
+        valid_isas=(constants.all_compiled_tag,),
+        valid_hosts=constants.supported_hosts,
+        length=length,
     )
-tlm_vars.Update(main)
 
-main["CONF"]["BUILD_TLM"] = False
 
-tlm_path_ev = os.environ.get("TLM_PATH", None)
-if tlm_path_ev is not None and tlm_path_ev != ".":
-    print(f"Setting TLM_PATH from os.environ: {tlm_path_ev}")
-    main["CONF"]["TLM_PATH"] = tlm_path_ev
-    main["CONF"]["BUILD_TLM"] = True
-
-if "TLM_PATH" in main and main["TLM_PATH"] != ".":
-    print(f"Setting TLM_PATH to SCons command line: {main['TLM_PATH']}")
-    main["CONF"]["TLM_PATH"] = str(main["TLM_PATH"])
-    main["CONF"]["BUILD_TLM"] = True
+test_boot_mesh(
+    cpu="timing",
+    num_cpus=4,
+    length=constants.quick_tag,
+    to_tick=10000000000,
+    systemd=False,
+)

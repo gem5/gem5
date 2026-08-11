@@ -210,7 +210,8 @@ HSAPacketProcessor::updateReadIndex(int pid, uint32_t rl_idx)
     AQLRingBuffer *aqlbuf = regdQList[rl_idx]->qCntxt.aqlBuf;
     HSAQueueDescriptor *qDesc = regdQList[rl_idx]->qCntxt.qDesc;
     auto cb = new DmaVirtCallback<uint64_t>(
-        [=](const uint32_t &dma_data) { this->updateReadDispIdDma(); }, 0);
+        [=, this](const uint32_t &dma_data) { this->updateReadDispIdDma(); },
+        0);
 
     DPRINTF(HSAPacketProcessor, "%s: read-pointer offset [0x%x]\n",
             __FUNCTION__, aqlbuf->rdIdx());
@@ -572,7 +573,7 @@ HSAPacketProcessor::getCommandsFromHost(int pid, uint32_t rl_idx)
 
         void *aql_buf = aqlRingBuffer->ptr(dma_start_ix);
         auto cb = new DmaVirtCallback<uint64_t>(
-            [=](const uint32_t &dma_data) {
+            [=, this](const uint32_t &dma_data) {
                 this->cmdQueueCmdDma(this, pid, true, dma_start_ix, num_2_xfer,
                                      series_ctx, aql_buf);
             },

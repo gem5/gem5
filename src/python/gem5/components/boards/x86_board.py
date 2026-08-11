@@ -37,7 +37,7 @@ from m5.objects import (
     IdeDisk,
     IOXBar,
     Pc,
-    PciBus,
+    PciHost,
     RawDiskImage,
     X86ACPIMadt,
     X86ACPIMadtIntSourceOverride,
@@ -109,9 +109,9 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
             # which will hang forever. The hanging can be reproduced b
             # removing the following three lines then running gem5 with the
             # "configs/example/gem5_library/x86-ubuntu-run.py" script.
-            self.pc.pci_bus.frontend_latency = 0
-            self.pc.pci_bus.forward_latency = 0
-            self.pc.pci_bus.response_latency = 0
+            self.pc.pci_host.internal_bus.frontend_latency = 0
+            self.pc.pci_host.internal_bus.forward_latency = 0
+            self.pc.pci_host.internal_bus.response_latency = 0
 
             self.workload = X86FsLinux()
 
@@ -140,9 +140,7 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
 
         # Setup memory system specific settings.
         if self.get_cache_hierarchy().is_ruby():
-            self.pc.attachIO(
-                self.get_io_bus(), [self.pc.pci_host.up_request_port()]
-            )
+            self.pc.attachIO(self.get_io_bus(), [self.pc.pci_host.dma_port()])
         else:
             self.bridge = Bridge(delay="50ns")
             self.bridge.mem_side_port = self.get_io_bus().cpu_side_ports
@@ -299,6 +297,15 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
             ),
         ]
 
+        # The first range was assigned above. The last range is I/O.
+        # Add the other ranges to the E820 table.
+        for rng in self.mem_ranges[1:-1]:
+            entries.append(
+                X86E820Entry(
+                    addr=rng.start, size=f"{rng.size()}B", range_type=1
+                )
+            )
+
         # Reserve the last 16KiB of the 32-bit address space for m5ops
         entries.append(
             X86E820Entry(addr=0xFFFF0000, size="64KiB", range_type=2)
@@ -321,17 +328,17 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
             )
 
     @overrides(AbstractSystemBoard)
-    def has_pci_bus(self) -> bool:
+    def has_pci_host(self) -> bool:
         return self.is_fullsystem()
 
     @overrides(AbstractSystemBoard)
-    def get_pci_bus(self) -> PciBus:
-        if self.has_pci_bus():
-            return self.pc.pci_bus
+    def get_pci_host(self) -> PciHost:
+        if self.has_pci_host():
+            return self.pc.pci_host
         else:
             raise Exception(
-                "Cannot execute `get_pci_bus()`: Board does not have a PCI "
-                "bus to return. Use `has_pci_bus()` to check this."
+                "Cannot execute `get_pci_host()`: Board does not have a PCI "
+                "host to return. Use `has_pci_host()` to check this."
             )
 
     @overrides(AbstractSystemBoard)
@@ -342,7 +349,7 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
     def get_dma_ports(self) -> Sequence[Port]:
         if self.has_dma_ports():
             return [
-                self.pc.pci_host.up_request_port(),
+                self.pc.pci_host.dma_port(),
                 self.iobus.mem_side_ports,
             ]
         else:
@@ -371,17 +378,20 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
         memory = self.get_memory()
 
         if memory.get_size() > toMemorySize("3GiB"):
-            raise Exception(
-                "X86Board currently only supports memory sizes up "
-                "to 3GiB because of the I/O hole."
-            )
-        data_range = AddrRange(memory.get_size())
-        memory.set_memory_range([data_range])
+            data_ranges = [
+                AddrRange(0x0, size=toMemorySize("3GiB")),
+                AddrRange(
+                    0x100000000, size=memory.get_size() - toMemorySize("3GiB")
+                ),
+            ]
+        else:
+            data_ranges = [AddrRange(memory.get_size())]
+
+        memory.set_memory_range(data_ranges)
 
         # Add the address range for the IO
-        self.mem_ranges = [
-            data_range,  # All data
-            AddrRange(0xC0000000, size=0x100000),  # For I/0
+        self.mem_ranges = data_ranges + [
+            AddrRange(0xC0000000, size=0x100000),  # For I/O
         ]
 
     @overrides(KernelDiskWorkload)

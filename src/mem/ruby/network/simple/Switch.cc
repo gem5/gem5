@@ -249,9 +249,9 @@ Switch::profBackEndRdy(Message *msg, int vnet)
 }
 
 void
-Switch::profBackEndFwd(Message *msg, int vnet)
+Switch::profBackEndFwd(Message *msg, MessageBuffer *dest_link, int vnet)
 {
-    m_network_ptr->routeProfiler.profBackEndFwd(msg, this, vnet);
+    m_network_ptr->routeProfiler.profBackEndFwd(msg, this, dest_link, vnet);
 }
 
 void

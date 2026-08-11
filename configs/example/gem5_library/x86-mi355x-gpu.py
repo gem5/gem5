@@ -117,7 +117,9 @@ args = parser.parse_args()
 memory = SingleChannelDDR4_2400(size="8GiB")
 
 # Note: Only KVM and ATOMIC work due to buggy MOESI_AMD_Base protocol.
-processor = SimpleProcessor(cpu_type=CPUTypes.KVM, isa=ISA.X86, num_cores=1)
+processor = SimpleProcessor(
+    cpu_type=CPUTypes.KVM, isa=ISA.X86, num_cores=1, clk_freq="3GHz"
+)
 
 for core in processor.cores:
     if core.is_kvm_core():

@@ -179,7 +179,7 @@ PM4PacketProcessor::decodeNext(PM4Queue *q)
          */
         PM4Header h{{{0, 0, 0, 0, 0, 0}}};
         auto cb = new DmaVirtCallback<PM4Header>(
-            [=](PM4Header header) { decodeHeader(q, header); }, h);
+            [=, this](PM4Header header) { decodeHeader(q, header); }, h);
         dmaReadVirt(getGARTAddr(q->rptr()), sizeof(uint32_t), cb,
                     &cb->dmaBuffer);
     } else {
@@ -233,7 +233,7 @@ PM4PacketProcessor::decodeHeader(PM4Queue *q, PM4Header header)
             DPRINTF(PM4PacketProcessor,
                     "PM4 writeData header: %x, count: %d\n", header.ordinal,
                     header.count);
-            cb = new DmaVirtCallback<uint64_t>([=](const uint64_t &) {
+            cb = new DmaVirtCallback<uint64_t>([=, this](const uint64_t &) {
                 writeData(q, (PM4WriteData *)dmaBuffer, header);
             });
             dmaReadVirt(getGARTAddr(q->rptr()), sizeof(PM4WriteData), cb,
@@ -242,7 +242,7 @@ PM4PacketProcessor::decodeHeader(PM4Queue *q, PM4Header header)
 
         case IT_MAP_QUEUES: {
             dmaBuffer = new PM4MapQueues();
-            cb = new DmaVirtCallback<uint64_t>([=](const uint64_t &) {
+            cb = new DmaVirtCallback<uint64_t>([=, this](const uint64_t &) {
                 mapQueues(q, (PM4MapQueues *)dmaBuffer);
             });
             dmaReadVirt(getGARTAddr(q->rptr()), sizeof(PM4MapQueues), cb,
@@ -251,7 +251,7 @@ PM4PacketProcessor::decodeHeader(PM4Queue *q, PM4Header header)
 
         case IT_RELEASE_MEM: {
             dmaBuffer = new PM4ReleaseMem();
-            cb = new DmaVirtCallback<uint64_t>([=](const uint64_t &) {
+            cb = new DmaVirtCallback<uint64_t>([=, this](const uint64_t &) {
                 releaseMem(q, (PM4ReleaseMem *)dmaBuffer);
             });
             dmaReadVirt(getGARTAddr(q->rptr()), sizeof(PM4ReleaseMem), cb,
@@ -260,7 +260,7 @@ PM4PacketProcessor::decodeHeader(PM4Queue *q, PM4Header header)
 
         case IT_INDIRECT_BUFFER: {
             dmaBuffer = new PM4IndirectBuf();
-            cb = new DmaVirtCallback<uint64_t>([=](const uint64_t &) {
+            cb = new DmaVirtCallback<uint64_t>([=, this](const uint64_t &) {
                 indirectBuffer(q, (PM4IndirectBuf *)dmaBuffer);
             });
             dmaReadVirt(getGARTAddr(q->rptr()), sizeof(PM4IndirectBuf), cb,
@@ -269,7 +269,7 @@ PM4PacketProcessor::decodeHeader(PM4Queue *q, PM4Header header)
 
         case IT_SWITCH_BUFFER: {
             dmaBuffer = new PM4SwitchBuf();
-            cb = new DmaVirtCallback<uint64_t>([=](const uint64_t &) {
+            cb = new DmaVirtCallback<uint64_t>([=, this](const uint64_t &) {
                 switchBuffer(q, (PM4SwitchBuf *)dmaBuffer);
             });
             dmaReadVirt(getGARTAddr(q->rptr()), sizeof(PM4SwitchBuf), cb,
@@ -278,7 +278,7 @@ PM4PacketProcessor::decodeHeader(PM4Queue *q, PM4Header header)
 
         case IT_SET_UCONFIG_REG: {
             dmaBuffer = new PM4SetUconfigReg();
-            cb = new DmaVirtCallback<uint64_t>([=](const uint64_t &) {
+            cb = new DmaVirtCallback<uint64_t>([=, this](const uint64_t &) {
                 setUconfigReg(q, (PM4SetUconfigReg *)dmaBuffer);
             });
             dmaReadVirt(getGARTAddr(q->rptr()), sizeof(PM4SetUconfigReg), cb,
@@ -287,7 +287,7 @@ PM4PacketProcessor::decodeHeader(PM4Queue *q, PM4Header header)
 
         case IT_WAIT_REG_MEM: {
             dmaBuffer = new PM4WaitRegMem();
-            cb = new DmaVirtCallback<uint64_t>([=](const uint64_t &) {
+            cb = new DmaVirtCallback<uint64_t>([=, this](const uint64_t &) {
                 waitRegMem(q, (PM4WaitRegMem *)dmaBuffer);
             });
             dmaReadVirt(getGARTAddr(q->rptr()), sizeof(PM4WaitRegMem), cb,
@@ -298,16 +298,18 @@ PM4PacketProcessor::decodeHeader(PM4Queue *q, PM4Header header)
                 gpuDevice->getGfxVersion() == GfxVersion::gfx942 ||
                 gpuDevice->getGfxVersion() == GfxVersion::gfx950) {
                 dmaBuffer = new PM4MapProcessV2();
-                cb = new DmaVirtCallback<uint64_t>([=](const uint64_t &) {
-                    mapProcessV2(q, (PM4MapProcessV2 *)dmaBuffer);
-                });
+                cb =
+                    new DmaVirtCallback<uint64_t>([=, this](const uint64_t &) {
+                        mapProcessV2(q, (PM4MapProcessV2 *)dmaBuffer);
+                    });
                 dmaReadVirt(getGARTAddr(q->rptr()), sizeof(PM4MapProcessV2),
                             cb, dmaBuffer);
             } else {
                 dmaBuffer = new PM4MapProcess();
-                cb = new DmaVirtCallback<uint64_t>([=](const uint64_t &) {
-                    mapProcessV1(q, (PM4MapProcess *)dmaBuffer);
-                });
+                cb =
+                    new DmaVirtCallback<uint64_t>([=, this](const uint64_t &) {
+                        mapProcessV1(q, (PM4MapProcess *)dmaBuffer);
+                    });
                 dmaReadVirt(getGARTAddr(q->rptr()), sizeof(PM4MapProcess), cb,
                             dmaBuffer);
             }
@@ -315,7 +317,7 @@ PM4PacketProcessor::decodeHeader(PM4Queue *q, PM4Header header)
 
         case IT_UNMAP_QUEUES: {
             dmaBuffer = new PM4UnmapQueues();
-            cb = new DmaVirtCallback<uint64_t>([=](const uint64_t &) {
+            cb = new DmaVirtCallback<uint64_t>([=, this](const uint64_t &) {
                 unmapQueues(q, (PM4UnmapQueues *)dmaBuffer);
             });
             dmaReadVirt(getGARTAddr(q->rptr()), sizeof(PM4UnmapQueues), cb,
@@ -324,7 +326,7 @@ PM4PacketProcessor::decodeHeader(PM4Queue *q, PM4Header header)
 
         case IT_RUN_LIST: {
             dmaBuffer = new PM4RunList();
-            cb = new DmaVirtCallback<uint64_t>([=](const uint64_t &) {
+            cb = new DmaVirtCallback<uint64_t>([=, this](const uint64_t &) {
                 runList(q, (PM4RunList *)dmaBuffer);
             });
             dmaReadVirt(getGARTAddr(q->rptr()), sizeof(PM4RunList), cb,
@@ -333,7 +335,7 @@ PM4PacketProcessor::decodeHeader(PM4Queue *q, PM4Header header)
 
         case IT_QUERY_STATUS: {
             dmaBuffer = new PM4QueryStatus();
-            cb = new DmaVirtCallback<uint64_t>([=](const uint64_t &) {
+            cb = new DmaVirtCallback<uint64_t>([=, this](const uint64_t &) {
                 queryStatus(q, (PM4QueryStatus *)dmaBuffer);
             });
             dmaReadVirt(getGARTAddr(q->rptr()), sizeof(PM4QueryStatus), cb,
@@ -380,7 +382,7 @@ PM4PacketProcessor::writeData(PM4Queue *q, PM4WriteData *pkt, PM4Header header)
 
         DPRINTF(PM4PacketProcessor, "Writing %d bytes to %p\n", size, addr);
         auto cb = new DmaVirtCallback<uint32_t>(
-            [=](const uint32_t &) { writeDataDone(q, pkt, addr); });
+            [=, this](const uint32_t &) { writeDataDone(q, pkt, addr); });
         dmaWriteVirt(addr, size, cb, &pkt->data);
 
         if (!pkt->writeConfirm) {
@@ -445,7 +447,7 @@ PM4PacketProcessor::mapQueues(PM4Queue *q, PM4MapQueues *pkt)
 
         QueueDesc *mqd = new QueueDesc();
         memset(mqd, 0, sizeof(QueueDesc));
-        auto cb = new DmaVirtCallback<uint32_t>([=](const uint32_t &) {
+        auto cb = new DmaVirtCallback<uint32_t>([=, this](const uint32_t &) {
             processMQD(pkt, q, addr, mqd, gpuDevice->lastVMID());
         });
         dmaReadVirt(addr, sizeof(QueueDesc), cb, mqd);
@@ -456,7 +458,7 @@ PM4PacketProcessor::mapQueues(PM4Queue *q, PM4MapQueues *pkt)
         // For SDMA we read the full MQD, so there is no offset calculation.
         Addr addr = getGARTAddr(pkt->mqdAddr);
 
-        auto cb = new DmaVirtCallback<uint32_t>([=](const uint32_t &) {
+        auto cb = new DmaVirtCallback<uint32_t>([=, this](const uint32_t &) {
             processSDMAMQD(pkt, q, addr, sdmaMQD, gpuDevice->lastVMID());
         });
         dmaReadVirt(addr, sizeof(SDMAQueueDesc), cb, sdmaMQD);
@@ -562,7 +564,7 @@ PM4PacketProcessor::releaseMem(PM4Queue *q, PM4ReleaseMem *pkt)
 
     if (pkt->dataSelect == 1) {
         auto cb = new DmaVirtCallback<uint32_t>(
-            [=](const uint32_t &) { releaseMemDone(q, pkt, addr); },
+            [=, this](const uint32_t &) { releaseMemDone(q, pkt, addr); },
             pkt->dataLo);
         dmaWriteVirt(addr, sizeof(uint32_t), cb, &cb->dmaBuffer);
     } else {
@@ -633,7 +635,7 @@ PM4PacketProcessor::unmapAllQueues(bool unmap_static)
                 getGARTAddr(queues[id]->mqdBase() + 96 * sizeof(uint32_t));
             Addr mqd_base = queues[id]->mqdBase();
             auto cb = new DmaVirtCallback<uint32_t>(
-                [=](const uint32_t &) { doneMQDWrite(mqd_base, addr); });
+                [=, this](const uint32_t &) { doneMQDWrite(mqd_base, addr); });
             mqd->base >>= 8;
             dmaWriteVirt(addr, sizeof(QueueDesc), cb, mqd);
             queues.erase(id);
@@ -871,7 +873,8 @@ PM4PacketProcessor::queryStatus(PM4Queue *q, PM4QueryStatus *pkt)
         Addr addr = getGARTAddr(pkt->addr);
         DPRINTF(PM4PacketProcessor, "Using GART addr %lx\n", addr);
         auto cb = new DmaVirtCallback<uint64_t>(
-            [=](const uint64_t &) { queryStatusDone(q, pkt); }, pkt->data);
+            [=, this](const uint64_t &) { queryStatusDone(q, pkt); },
+            pkt->data);
         dmaWriteVirt(addr, sizeof(uint64_t), cb, &cb->dmaBuffer);
     } else {
         // No other combinations used in amdkfd v9

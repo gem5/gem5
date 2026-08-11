@@ -67,7 +67,10 @@ memory = DualChannelDDR4_2400(size="3GiB")
 
 # Here we set up the processor. We use a simple processor.
 processor = SimpleProcessor(
-    cpu_type=CPUTypes.TIMING, isa=ISA.RISCV, num_cores=2
+    cpu_type=CPUTypes.TIMING,
+    isa=ISA.RISCV,
+    num_cores=2,
+    clk_freq="3GHz",
 )
 
 # Here we set up the board. The RiscvBoard allows for FS mode (full system) and

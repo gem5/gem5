@@ -246,7 +246,10 @@ cache_hierarchy = CacheHierarchy(
 # Next setup the decoupled front-end. Its implemented in the O3 core.
 # Create the processor with one core
 processor = SimpleProcessor(
-    cpu_type=CPUTypes.O3, isa=isa_choices[args.isa], num_cores=1
+    cpu_type=CPUTypes.O3,
+    isa=isa_choices[args.isa],
+    num_cores=1,
+    clk_freq="3GHz",
 )
 
 for core in processor.cores:

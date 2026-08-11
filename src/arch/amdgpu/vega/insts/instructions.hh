@@ -1979,6 +1979,132 @@ class Inst_SOP2__S_MUL_HI_I32 : public Inst_SOP2
     void execute(GPUDynInstPtr) override;
 }; // Inst_SOP2__S_MUL_HI_I32
 
+class Inst_SOP2__S_PACK_LL_B32_B16 : public Inst_SOP2
+{
+  public:
+    Inst_SOP2__S_PACK_LL_B32_B16(InFmt_SOP2 *);
+    ~Inst_SOP2__S_PACK_LL_B32_B16();
+
+    int
+    getNumOperands() override
+    {
+        return numDstRegOperands() + numSrcRegOperands();
+    } // getNumOperands
+
+    int
+    numDstRegOperands() override
+    {
+        return 1;
+    }
+    int
+    numSrcRegOperands() override
+    {
+        return 2;
+    }
+
+    int
+    getOperandSize(int opIdx) override
+    {
+        switch (opIdx) {
+            case 0: // ssrc_0
+                return 4;
+            case 1: // ssrc_1
+                return 4;
+            case 2: // sdst
+                return 4;
+            default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+        }
+    } // getOperandSize
+
+    void execute(GPUDynInstPtr) override;
+}; // Inst_SOP2__S_PACK_LL_B32_B16
+
+class Inst_SOP2__S_PACK_LH_B32_B16 : public Inst_SOP2
+{
+  public:
+    Inst_SOP2__S_PACK_LH_B32_B16(InFmt_SOP2 *);
+    ~Inst_SOP2__S_PACK_LH_B32_B16();
+
+    int
+    getNumOperands() override
+    {
+        return numDstRegOperands() + numSrcRegOperands();
+    } // getNumOperands
+
+    int
+    numDstRegOperands() override
+    {
+        return 1;
+    }
+    int
+    numSrcRegOperands() override
+    {
+        return 2;
+    }
+
+    int
+    getOperandSize(int opIdx) override
+    {
+        switch (opIdx) {
+            case 0: // ssrc_0
+                return 4;
+            case 1: // ssrc_1
+                return 4;
+            case 2: // sdst
+                return 4;
+            default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+        }
+    } // getOperandSize
+
+    void execute(GPUDynInstPtr) override;
+}; // Inst_SOP2__S_PACK_LH_B32_B16
+
+class Inst_SOP2__S_PACK_HH_B32_B16 : public Inst_SOP2
+{
+  public:
+    Inst_SOP2__S_PACK_HH_B32_B16(InFmt_SOP2 *);
+    ~Inst_SOP2__S_PACK_HH_B32_B16();
+
+    int
+    getNumOperands() override
+    {
+        return numDstRegOperands() + numSrcRegOperands();
+    } // getNumOperands
+
+    int
+    numDstRegOperands() override
+    {
+        return 1;
+    }
+    int
+    numSrcRegOperands() override
+    {
+        return 2;
+    }
+
+    int
+    getOperandSize(int opIdx) override
+    {
+        switch (opIdx) {
+            case 0: // ssrc_0
+                return 4;
+            case 1: // ssrc_1
+                return 4;
+            case 2: // sdst
+                return 4;
+            default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+        }
+    } // getOperandSize
+
+    void execute(GPUDynInstPtr) override;
+}; // Inst_SOP2__S_PACK_HH_B32_B16
+
 class Inst_SOPK__S_MOVK_I32 : public Inst_SOPK
 {
   public:
@@ -40925,6 +41051,48 @@ class Inst_DS__DS_WRITE_B16 : public Inst_DS
     void completeAcc(GPUDynInstPtr) override;
 }; // Inst_DS__DS_WRITE_B16
 
+class Inst_DS__DS_WRITE_B16_D16_HI : public Inst_DS
+{
+  public:
+    Inst_DS__DS_WRITE_B16_D16_HI(InFmt_DS *);
+    ~Inst_DS__DS_WRITE_B16_D16_HI();
+
+    int
+    getNumOperands() override
+    {
+        return numDstRegOperands() + numSrcRegOperands();
+    } // getNumOperands
+
+    int
+    numDstRegOperands() override
+    {
+        return 0;
+    }
+    int
+    numSrcRegOperands() override
+    {
+        return 2;
+    }
+
+    int
+    getOperandSize(int opIdx) override
+    {
+        switch (opIdx) {
+            case 0: // vgpr_a
+                return 4;
+            case 1: // vgpr_d0
+                return 2;
+            default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+        }
+    } // getOperandSize
+
+    void execute(GPUDynInstPtr) override;
+    void initiateAcc(GPUDynInstPtr) override;
+    void completeAcc(GPUDynInstPtr) override;
+}; // Inst_DS__DS_WRITE_B16_D16_HI
+
 class Inst_DS__DS_ADD_RTN_U32 : public Inst_DS
 {
   public:
@@ -53554,6 +53722,96 @@ class Inst_FLAT__FLAT_LOAD_UBYTE : public Inst_FLAT
     void completeAcc(GPUDynInstPtr) override;
 }; // Inst_FLAT__FLAT_LOAD_UBYTE
 
+class Inst_FLAT__FLAT_LOAD_UBYTE_D16 : public Inst_FLAT
+{
+  public:
+    Inst_FLAT__FLAT_LOAD_UBYTE_D16(InFmt_FLAT *);
+    ~Inst_FLAT__FLAT_LOAD_UBYTE_D16();
+
+    int
+    getNumOperands() override
+    {
+        return numDstRegOperands() + numSrcRegOperands();
+    } // getNumOperands
+
+    int
+    numDstRegOperands() override
+    {
+        return 1;
+    }
+    int
+    numSrcRegOperands() override
+    {
+        return isFlat() ? 1 : 2;
+    }
+
+    int
+    getOperandSize(int opIdx) override
+    {
+        switch (opIdx) {
+            case 0: // vgpr_addr
+                return vgprIsOffset() ? 4 : 8;
+            case 1: // vgpr_dst or saddr
+                return isFlat() ? 1 : 8;
+            case 2: // vgpr_dst
+                assert(!isFlat());
+                return 1;
+            default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+        }
+    } // getOperandSize
+
+    void execute(GPUDynInstPtr) override;
+    void initiateAcc(GPUDynInstPtr) override;
+    void completeAcc(GPUDynInstPtr) override;
+}; // Inst_FLAT__FLAT_LOAD_UBYTE_D16
+
+class Inst_FLAT__FLAT_LOAD_UBYTE_D16_HI : public Inst_FLAT
+{
+  public:
+    Inst_FLAT__FLAT_LOAD_UBYTE_D16_HI(InFmt_FLAT *);
+    ~Inst_FLAT__FLAT_LOAD_UBYTE_D16_HI();
+
+    int
+    getNumOperands() override
+    {
+        return numDstRegOperands() + numSrcRegOperands();
+    } // getNumOperands
+
+    int
+    numDstRegOperands() override
+    {
+        return 1;
+    }
+    int
+    numSrcRegOperands() override
+    {
+        return isFlat() ? 1 : 2;
+    }
+
+    int
+    getOperandSize(int opIdx) override
+    {
+        switch (opIdx) {
+            case 0: // vgpr_addr
+                return vgprIsOffset() ? 4 : 8;
+            case 1: // vgpr_dst or saddr
+                return isFlat() ? 1 : 8;
+            case 2: // vgpr_dst
+                assert(!isFlat());
+                return 1;
+            default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+        }
+    } // getOperandSize
+
+    void execute(GPUDynInstPtr) override;
+    void initiateAcc(GPUDynInstPtr) override;
+    void completeAcc(GPUDynInstPtr) override;
+}; // Inst_FLAT__FLAT_LOAD_UBYTE_D16_HI
+
 class Inst_FLAT__FLAT_LOAD_SBYTE : public Inst_FLAT
 {
   public:
@@ -53598,6 +53856,186 @@ class Inst_FLAT__FLAT_LOAD_SBYTE : public Inst_FLAT
     void initiateAcc(GPUDynInstPtr) override;
     void completeAcc(GPUDynInstPtr) override;
 }; // Inst_FLAT__FLAT_LOAD_SBYTE
+
+class Inst_FLAT__FLAT_LOAD_SBYTE_D16 : public Inst_FLAT
+{
+  public:
+    Inst_FLAT__FLAT_LOAD_SBYTE_D16(InFmt_FLAT *);
+    ~Inst_FLAT__FLAT_LOAD_SBYTE_D16();
+
+    int
+    getNumOperands() override
+    {
+        return numDstRegOperands() + numSrcRegOperands();
+    } // getNumOperands
+
+    int
+    numDstRegOperands() override
+    {
+        return 1;
+    }
+    int
+    numSrcRegOperands() override
+    {
+        return isFlat() ? 1 : 2;
+    }
+
+    int
+    getOperandSize(int opIdx) override
+    {
+        switch (opIdx) {
+            case 0: // vgpr_addr
+                return vgprIsOffset() ? 4 : 8;
+            case 1: // vgpr_dst or saddr
+                return isFlat() ? 1 : 8;
+            case 2: // vgpr_dst
+                assert(!isFlat());
+                return 1;
+            default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+        }
+    } // getOperandSize
+
+    void execute(GPUDynInstPtr) override;
+    void initiateAcc(GPUDynInstPtr) override;
+    void completeAcc(GPUDynInstPtr) override;
+}; // Inst_FLAT__FLAT_LOAD_SBYTE_D16
+
+class Inst_FLAT__FLAT_LOAD_SBYTE_D16_HI : public Inst_FLAT
+{
+  public:
+    Inst_FLAT__FLAT_LOAD_SBYTE_D16_HI(InFmt_FLAT *);
+    ~Inst_FLAT__FLAT_LOAD_SBYTE_D16_HI();
+
+    int
+    getNumOperands() override
+    {
+        return numDstRegOperands() + numSrcRegOperands();
+    } // getNumOperands
+
+    int
+    numDstRegOperands() override
+    {
+        return 1;
+    }
+    int
+    numSrcRegOperands() override
+    {
+        return isFlat() ? 1 : 2;
+    }
+
+    int
+    getOperandSize(int opIdx) override
+    {
+        switch (opIdx) {
+            case 0: // vgpr_addr
+                return vgprIsOffset() ? 4 : 8;
+            case 1: // vgpr_dst or saddr
+                return isFlat() ? 1 : 8;
+            case 2: // vgpr_dst
+                assert(!isFlat());
+                return 1;
+            default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+        }
+    } // getOperandSize
+
+    void execute(GPUDynInstPtr) override;
+    void initiateAcc(GPUDynInstPtr) override;
+    void completeAcc(GPUDynInstPtr) override;
+}; // Inst_FLAT__FLAT_LOAD_SBYTE_D16_HI
+
+class Inst_FLAT__FLAT_LOAD_SHORT_D16 : public Inst_FLAT
+{
+  public:
+    Inst_FLAT__FLAT_LOAD_SHORT_D16(InFmt_FLAT *);
+    ~Inst_FLAT__FLAT_LOAD_SHORT_D16();
+
+    int
+    getNumOperands() override
+    {
+        return numDstRegOperands() + numSrcRegOperands();
+    } // getNumOperands
+
+    int
+    numDstRegOperands() override
+    {
+        return 1;
+    }
+    int
+    numSrcRegOperands() override
+    {
+        return isFlat() ? 1 : 2;
+    }
+
+    int
+    getOperandSize(int opIdx) override
+    {
+        switch (opIdx) {
+            case 0: // vgpr_addr
+                return vgprIsOffset() ? 4 : 8;
+            case 1: // vgpr_dst or saddr
+                return isFlat() ? 2 : 8;
+            case 2: // vgpr_dst
+                assert(!isFlat());
+                return 2;
+            default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+        }
+    } // getOperandSize
+
+    void execute(GPUDynInstPtr) override;
+    void initiateAcc(GPUDynInstPtr) override;
+    void completeAcc(GPUDynInstPtr) override;
+}; // Inst_FLAT__FLAT_LOAD_SHORT_D16
+
+class Inst_FLAT__FLAT_LOAD_SHORT_D16_HI : public Inst_FLAT
+{
+  public:
+    Inst_FLAT__FLAT_LOAD_SHORT_D16_HI(InFmt_FLAT *);
+    ~Inst_FLAT__FLAT_LOAD_SHORT_D16_HI();
+
+    int
+    getNumOperands() override
+    {
+        return numDstRegOperands() + numSrcRegOperands();
+    } // getNumOperands
+
+    int
+    numDstRegOperands() override
+    {
+        return 1;
+    }
+    int
+    numSrcRegOperands() override
+    {
+        return isFlat() ? 1 : 2;
+    }
+
+    int
+    getOperandSize(int opIdx) override
+    {
+        switch (opIdx) {
+            case 0: // vgpr_addr
+                return vgprIsOffset() ? 4 : 8;
+            case 1: // vgpr_dst or saddr
+                return isFlat() ? 2 : 8;
+            case 2: // vgpr_dst
+                assert(!isFlat());
+                return 2;
+            default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+        }
+    } // getOperandSize
+
+    void execute(GPUDynInstPtr) override;
+    void initiateAcc(GPUDynInstPtr) override;
+    void completeAcc(GPUDynInstPtr) override;
+}; // Inst_FLAT__FLAT_LOAD_SHORT_D16_HI
 
 class Inst_FLAT__FLAT_LOAD_USHORT : public Inst_FLAT
 {
@@ -53913,6 +54351,51 @@ class Inst_FLAT__FLAT_STORE_BYTE : public Inst_FLAT
     void initiateAcc(GPUDynInstPtr) override;
     void completeAcc(GPUDynInstPtr) override;
 }; // Inst_FLAT__FLAT_STORE_BYTE
+
+class Inst_FLAT__FLAT_STORE_BYTE_D16_HI : public Inst_FLAT
+{
+  public:
+    Inst_FLAT__FLAT_STORE_BYTE_D16_HI(InFmt_FLAT *);
+    ~Inst_FLAT__FLAT_STORE_BYTE_D16_HI();
+
+    int
+    getNumOperands() override
+    {
+        return numDstRegOperands() + numSrcRegOperands();
+    } // getNumOperands
+
+    int
+    numDstRegOperands() override
+    {
+        return 0;
+    }
+    int
+    numSrcRegOperands() override
+    {
+        return isFlat() ? 2 : 3;
+    }
+
+    int
+    getOperandSize(int opIdx) override
+    {
+        switch (opIdx) {
+            case 0: // vgpr_addr
+                return vgprIsOffset() ? 4 : 8;
+            case 1: // vgpr_src
+                return 1;
+            case 2: // saddr
+                assert(!isFlat());
+                return 8;
+            default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+        }
+    } // getOperandSize
+
+    void execute(GPUDynInstPtr) override;
+    void initiateAcc(GPUDynInstPtr) override;
+    void completeAcc(GPUDynInstPtr) override;
+}; // Inst_FLAT__FLAT_STORE_BYTE_D16_HI
 
 class Inst_FLAT__FLAT_STORE_SHORT : public Inst_FLAT
 {
@@ -56381,6 +56864,16 @@ using Inst_VOP3P_MAI__V_MFMA_F32_16X16X1_4B_F32 =
     Inst_VOP3P_MAI__V_MFMA<1, 16, 16, 1, 4, ConstVecOperandF32, VecOperandF32,
                            &MNEM__V_MFMA_F32_16X16X1_4B_F32>;
 
+static const char *MNEM__V_MFMA_F32_16X16X8_XF32 = "v_mfma_f32_16x16x8_xf32";
+using Inst_VOP3P_MAI__V_MFMA_F32_16X16X8_XF32 =
+    Inst_VOP3P_MAI__V_MFMA<1, 16, 16, 8, 1, ConstVecOperandF32, VecOperandF32,
+                           &MNEM__V_MFMA_F32_16X16X8_XF32>;
+
+static const char *MNEM__V_MFMA_F32_32X32X4_XF32 = "v_mfma_f32_32x32x4_xf32";
+using Inst_VOP3P_MAI__V_MFMA_F32_32X32X4_XF32 =
+    Inst_VOP3P_MAI__V_MFMA<1, 32, 32, 4, 1, ConstVecOperandF32, VecOperandF32,
+                           &MNEM__V_MFMA_F32_32X32X4_XF32>;
+
 static const char *MNEM__V_MFMA_F64_4X4X4_4B_F64 = "v_mfma_f64_4x4x4_4b_f64";
 using Inst_VOP3P_MAI__V_MFMA_F64_4X4X4_4B_F64 =
     Inst_VOP3P_MAI__V_MFMA<2, 4, 4, 4, 4, ConstVecOperandF64, VecOperandF64,
@@ -56391,14 +56884,15 @@ using Inst_VOP3P_MAI__V_MFMA_F64_16X16X4_F64 =
     Inst_VOP3P_MAI__V_MFMA<2, 16, 16, 4, 1, ConstVecOperandF64, VecOperandF64,
                            &MNEM__V_MFMA_F64_16X16X4_F64>;
 
-template <const int M, const int N, const int K, const int B, typename MXFPT,
-          const char **MNEMONIC>
+template <const int M, const int N, const int K, const int B, typename MXT1,
+          typename MXT2, const char **MNEMONIC>
 class Inst_VOP3P_MAI__V_MFMA_MXFP : public Inst_VOP3P_MAI
 {
 
   private:
     // Scale GPRs needed by elements / GPR (gpr_ratio)
-    static constexpr int gpr_ratio = 32 / MXFPT::size();
+    static_assert(MXT1::size() == MXT2::size());
+    static constexpr int gpr_ratio = 32 / MXT1::size();
     static constexpr int gprs_a = M * K * B / (64 * gpr_ratio);
     static constexpr int gprs_b = K * N * B / (64 * gpr_ratio);
 
@@ -56411,9 +56905,6 @@ class Inst_VOP3P_MAI__V_MFMA_MXFP : public Inst_VOP3P_MAI
     {
         setFlag(ALU);
         setFlag(MFMA);
-        if (MXFPT::size() == 16) {
-            setFlag(F16);
-        }
     }
     ~Inst_VOP3P_MAI__V_MFMA_MXFP() {}
 
@@ -56568,8 +57059,8 @@ class Inst_VOP3P_MAI__V_MFMA_MXFP : public Inst_VOP3P_MAI
                         int lane_B = j + N * (block + B * (k / K_L));
                         int item = k % K_L;
 
-                        PackedReg<K_L * MXFPT::size(), MXFPT::size()> A_elems;
-                        PackedReg<K_L * MXFPT::size(), MXFPT::size()> B_elems;
+                        PackedReg<K_L * MXT1::size(), MXT1::size()> A_elems;
+                        PackedReg<K_L * MXT2::size(), MXT2::size()> B_elems;
 
                         for (int i = 0; i < gprs_a; ++i) {
                             A_elems.setDword(i, src0[i][lane_A]);
@@ -56578,8 +57069,8 @@ class Inst_VOP3P_MAI__V_MFMA_MXFP : public Inst_VOP3P_MAI
                             B_elems.setDword(i, src1[i][lane_B]);
                         }
 
-                        MXFPT item_A(A_elems.getElem(item));
-                        MXFPT item_B(B_elems.getElem(item));
+                        MXT1 item_A(A_elems.getElem(item));
+                        MXT2 item_B(B_elems.getElem(item));
 
                         result[i][j] += item_A * item_B;
                     }
@@ -56619,34 +57110,123 @@ class Inst_VOP3P_MAI__V_MFMA_MXFP : public Inst_VOP3P_MAI
 static const char *MNEM__V_MFMA_F32_16X16X16_F16 = "v_mfma_f32_16x16x16_f16";
 using Inst_VOP3P_MAI__V_MFMA_F32_16X16X16_F16 =
     Inst_VOP3P_MAI__V_MFMA_MXFP<16, 16, 16, 1, AMDGPU::mxfloat16,
+                                AMDGPU::mxfloat16,
                                 &MNEM__V_MFMA_F32_16X16X16_F16>;
+
+static const char *MNEM__V_MFMA_F32_16X16X16_BF16 = "v_mfma_f32_16x16x16_bf16";
+using Inst_VOP3P_MAI__V_MFMA_F32_16X16X16_BF16 =
+    Inst_VOP3P_MAI__V_MFMA_MXFP<16, 16, 16, 1, AMDGPU::mxbfloat16,
+                                AMDGPU::mxbfloat16,
+                                &MNEM__V_MFMA_F32_16X16X16_BF16>;
 
 static const char *MNEM__V_MFMA_F32_16X16X4_4B_F16 =
     "v_mfma_f32_16x16x4_4b_f16";
 using Inst_VOP3P_MAI__V_MFMA_F32_16X16X4_4B_F16 =
     Inst_VOP3P_MAI__V_MFMA_MXFP<16, 16, 4, 4, AMDGPU::mxfloat16,
+                                AMDGPU::mxfloat16,
                                 &MNEM__V_MFMA_F32_16X16X4_4B_F16>;
+
+static const char *MNEM__V_MFMA_F32_16X16X4_4B_BF16 =
+    "v_mfma_f32_16x16x4_4b_bf16";
+using Inst_VOP3P_MAI__V_MFMA_F32_16X16X4_4B_BF16 =
+    Inst_VOP3P_MAI__V_MFMA_MXFP<16, 16, 4, 4, AMDGPU::mxbfloat16,
+                                AMDGPU::mxbfloat16,
+                                &MNEM__V_MFMA_F32_16X16X4_4B_BF16>;
 
 static const char *MNEM__V_MFMA_F32_32X32X4_2B_F16 =
     "v_mfma_f32_32x32x4_2b_f16";
 using Inst_VOP3P_MAI__V_MFMA_F32_32X32X4_2B_F16 =
     Inst_VOP3P_MAI__V_MFMA_MXFP<32, 32, 4, 2, AMDGPU::mxfloat16,
+                                AMDGPU::mxfloat16,
                                 &MNEM__V_MFMA_F32_32X32X4_2B_F16>;
+
+static const char *MNEM__V_MFMA_F32_32X32X4_2B_BF16 =
+    "v_mfma_f32_32x32x4_2b_bf16";
+using Inst_VOP3P_MAI__V_MFMA_F32_32X32X4_2B_BF16 =
+    Inst_VOP3P_MAI__V_MFMA_MXFP<32, 32, 4, 2, AMDGPU::mxbfloat16,
+                                AMDGPU::mxbfloat16,
+                                &MNEM__V_MFMA_F32_32X32X4_2B_BF16>;
 
 static const char *NMEM__V_MFMA_F32_32X32X8_F16 = "v_mfma_f32_32x32x8_f16";
 using Inst_VOP3P_MAI__V_MFMA_F32_32X32X8_F16 =
     Inst_VOP3P_MAI__V_MFMA_MXFP<32, 32, 8, 1, AMDGPU::mxfloat16,
+                                AMDGPU::mxfloat16,
                                 &NMEM__V_MFMA_F32_32X32X8_F16>;
 
 static const char *MNEM__V_MFMA_F32_4X4X4_16B_F16 = "v_mfma_f32_4x4x4_16b_f16";
 using Inst_VOP3P_MAI__V_MFMA_F32_4X4X4_16B_F16 =
     Inst_VOP3P_MAI__V_MFMA_MXFP<4, 4, 4, 16, AMDGPU::mxfloat16,
+                                AMDGPU::mxfloat16,
                                 &MNEM__V_MFMA_F32_4X4X4_16B_F16>;
+
+static const char *MNEM__V_MFMA_F32_4X4X4_16B_BF16 =
+    "v_mfma_f32_4x4x4_16b_bf16";
+using Inst_VOP3P_MAI__V_MFMA_F32_4X4X4_16B_BF16 =
+    Inst_VOP3P_MAI__V_MFMA_MXFP<4, 4, 4, 16, AMDGPU::mxbfloat16,
+                                AMDGPU::mxbfloat16,
+                                &MNEM__V_MFMA_F32_4X4X4_16B_BF16>;
 
 static const char *MNEM__V_MFMA_F32_32X32X8_BF16 = "v_mfma_f32_32x32x8_bf16";
 using Inst_VOP3P_MAI__V_MFMA_F32_32X32X8_BF16 =
     Inst_VOP3P_MAI__V_MFMA_MXFP<32, 32, 8, 1, AMDGPU::mxbfloat16,
+                                AMDGPU::mxbfloat16,
                                 &MNEM__V_MFMA_F32_32X32X8_BF16>;
+
+static const char *MNEM__V_MFMA_F32_16X16X32_BF8_BF8 =
+    "v_mfma_f32_16x16x32_bf8_bf8";
+using Inst_VOP3P_MAI__V_MFMA_F32_16X16X32_BF8_BF8 =
+    Inst_VOP3P_MAI__V_MFMA_MXFP<16, 16, 32, 1, AMDGPU::mxbfloat8,
+                                AMDGPU::mxbfloat8,
+                                &MNEM__V_MFMA_F32_16X16X32_BF8_BF8>;
+
+static const char *MNEM__V_MFMA_F32_16X16X32_FP8_BF8 =
+    "v_mfma_f32_16x16x32_fp8_bf8";
+using Inst_VOP3P_MAI__V_MFMA_F32_16X16X32_FP8_BF8 =
+    Inst_VOP3P_MAI__V_MFMA_MXFP<16, 16, 32, 1, AMDGPU::mxfloat8,
+                                AMDGPU::mxbfloat8,
+                                &MNEM__V_MFMA_F32_16X16X32_FP8_BF8>;
+
+static const char *MNEM__V_MFMA_F32_16X16X32_BF8_FP8 =
+    "v_mfma_f32_16x16x32_bf8_fp8";
+using Inst_VOP3P_MAI__V_MFMA_F32_16X16X32_BF8_FP8 =
+    Inst_VOP3P_MAI__V_MFMA_MXFP<16, 16, 32, 1, AMDGPU::mxbfloat8,
+                                AMDGPU::mxfloat8,
+                                &MNEM__V_MFMA_F32_16X16X32_BF8_FP8>;
+
+static const char *MNEM__V_MFMA_F32_16X16X32_FP8_FP8 =
+    "v_mfma_f32_16x16x32_fp8_fp8";
+using Inst_VOP3P_MAI__V_MFMA_F32_16X16X32_FP8_FP8 =
+    Inst_VOP3P_MAI__V_MFMA_MXFP<16, 16, 32, 1, AMDGPU::mxfloat8,
+                                AMDGPU::mxfloat8,
+                                &MNEM__V_MFMA_F32_16X16X32_FP8_FP8>;
+
+static const char *MNEM__V_MFMA_F32_32X32X16_BF8_BF8 =
+    "v_mfma_f32_32x32x16_bf8_bf8";
+using Inst_VOP3P_MAI__V_MFMA_F32_32X32X16_BF8_BF8 =
+    Inst_VOP3P_MAI__V_MFMA_MXFP<32, 32, 16, 1, AMDGPU::mxbfloat8,
+                                AMDGPU::mxbfloat8,
+                                &MNEM__V_MFMA_F32_32X32X16_BF8_BF8>;
+
+static const char *MNEM__V_MFMA_F32_32X32X16_FP8_BF8 =
+    "v_mfma_f32_32x32x16_fp8_bf8";
+using Inst_VOP3P_MAI__V_MFMA_F32_32X32X16_FP8_BF8 =
+    Inst_VOP3P_MAI__V_MFMA_MXFP<32, 32, 16, 1, AMDGPU::mxfloat8,
+                                AMDGPU::mxbfloat8,
+                                &MNEM__V_MFMA_F32_32X32X16_FP8_BF8>;
+
+static const char *MNEM__V_MFMA_F32_32X32X16_BF8_FP8 =
+    "v_mfma_f32_32x32x16_bf8_fp8";
+using Inst_VOP3P_MAI__V_MFMA_F32_32X32X16_BF8_FP8 =
+    Inst_VOP3P_MAI__V_MFMA_MXFP<32, 32, 16, 1, AMDGPU::mxbfloat8,
+                                AMDGPU::mxfloat8,
+                                &MNEM__V_MFMA_F32_32X32X16_BF8_FP8>;
+
+static const char *MNEM__V_MFMA_F32_32X32X16_FP8_FP8 =
+    "v_mfma_f32_32x32x16_fp8_fp8";
+using Inst_VOP3P_MAI__V_MFMA_F32_32X32X16_FP8_FP8 =
+    Inst_VOP3P_MAI__V_MFMA_MXFP<32, 32, 16, 1, AMDGPU::mxfloat8,
+                                AMDGPU::mxfloat8,
+                                &MNEM__V_MFMA_F32_32X32X16_FP8_FP8>;
 
 template <const int M, const int N, const int K, const int B,
           const char **MNEMONIC>
@@ -56876,9 +57456,383 @@ class Inst_VOP3P_MAI__V_MFMA_I8 : public Inst_VOP3P_MAI
     } // execute
 };
 
+static const char *MNEM__V_MFMA_I32_32X32X4_2B_I8 = "v_mfma_i32_32x32x4_2b_i8";
+using Inst_VOP3P_MAI__V_MFMA_I32_32X32X4_2B_I8 =
+    Inst_VOP3P_MAI__V_MFMA_I8<32, 32, 4, 2, &MNEM__V_MFMA_I32_32X32X4_2B_I8>;
+
+static const char *MNEM__V_MFMA_I32_16X16X4_4B_I8 = "v_mfma_i32_16x16x4_4b_i8";
+using Inst_VOP3P_MAI__V_MFMA_I32_16X16X4_4B_I8 =
+    Inst_VOP3P_MAI__V_MFMA_I8<16, 16, 4, 4, &MNEM__V_MFMA_I32_16X16X4_4B_I8>;
+
+static const char *MNEM__V_MFMA_I32_4X4X4_16B_I8 = "v_mfma_i32_4x4x4_16b_i8";
+using Inst_VOP3P_MAI__V_MFMA_I32_4X4X4_16B_I8 =
+    Inst_VOP3P_MAI__V_MFMA_I8<4, 4, 4, 16, &MNEM__V_MFMA_I32_4X4X4_16B_I8>;
+
 static const char *MNEM__V_MFMA_I32_16X16X16_I8 = "v_mfma_i32_16x16x16_i8";
 using Inst_VOP3P_MAI__V_MFMA_I32_16X16X16_I8 =
     Inst_VOP3P_MAI__V_MFMA_I8<16, 16, 16, 1, &MNEM__V_MFMA_I32_16X16X16_I8>;
+
+static const char *MNEM__V_MFMA_I32_32X32X16_I8 = "v_mfma_i32_32x32x16_i8";
+using Inst_VOP3P_MAI__V_MFMA_I32_32X32X16_I8 =
+    Inst_VOP3P_MAI__V_MFMA_I8<32, 32, 16, 1, &MNEM__V_MFMA_I32_32X32X16_I8>;
+
+static const char *MNEM__V_MFMA_I32_16X16X32_I8 = "v_mfma_i32_16x16x32_i8";
+using Inst_VOP3P_MAI__V_MFMA_I32_16X16X32_I8 =
+    Inst_VOP3P_MAI__V_MFMA_I8<16, 16, 32, 1, &MNEM__V_MFMA_I32_16X16X32_I8>;
+
+template <typename T>
+constexpr int
+smfmac_type_size()
+{
+    if constexpr (std::is_integral_v<T>) {
+        return sizeof(T) * 8;
+    } else {
+        return T::size();
+    }
+}
+
+template <const int M, const int N, const int K, typename OutT,
+          typename VecOutT, typename InT1, typename InT2,
+          const char **MNEMONIC>
+class Inst_VOP3P_MAI__V_SMFMAC : public Inst_VOP3P_MAI
+{
+  private:
+    // Currently fixed but useful to parameterize.
+    static constexpr int InT_bits = smfmac_type_size<InT1>();
+    static constexpr int B = 1;
+    static constexpr int block = 0;
+
+    // GPR ratio determines number of elements of the data type that can fit
+    // in a GPR (32-bit register). The number of GPRs needed is the dimensions
+    // of the matrix divided by the number of elements per wavefront. The A
+    // matrix has half the number of elements due to 4:2 structured sparsity.
+    static constexpr int gpr_ratio = 32 / InT_bits;
+    static constexpr int gprs_a = M * K / (64 * gpr_ratio) / 2;
+    static constexpr int gprs_b = K * N / (64 * gpr_ratio);
+
+    // Current output types are F32/I32 which has an effective gpr_ratio of 1.
+    // Therefore simply divide by 64.
+    static constexpr int gprs_d = M * N / 64;
+
+  public:
+    Inst_VOP3P_MAI__V_SMFMAC(InFmt_VOP3P_MAI *iFmt)
+        : Inst_VOP3P_MAI(iFmt, *MNEMONIC)
+    {
+        setFlag(ALU);
+    }
+
+    ~Inst_VOP3P_MAI__V_SMFMAC() {}
+
+    int
+    getNumOperands() override
+    {
+        return numDstRegOperands() + numSrcRegOperands();
+    }
+
+    int
+    numDstRegOperands() override
+    {
+        return 1;
+    }
+    int
+    numSrcRegOperands() override
+    {
+        return 3;
+    }
+
+    int
+    getOperandSize(int opIdx) override
+    {
+        switch (opIdx) {
+            case 0: // src0 "A"
+                return 4 * gprs_a;
+            case 1: // src1 "B"
+                return 4 * gprs_b;
+            case 2: // sparse index
+                return 4;
+            case 3: // dest / "C"
+                return 4 * gprs_d;
+            default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+        }
+    }
+
+    void
+    execute(GPUDynInstPtr gpuDynInst) override
+    {
+        // Accumulation register offsets for A, B, C, and D matrix. C must
+        // always be an ArchVgpr therefore no c_offset.
+        int a_offset = 0;
+        int b_offset = 0;
+        int d_offset = 0;
+        if (instData.ACC_CD) {
+            d_offset = gpuDynInst->wavefront()->accumOffset;
+        }
+        if (extData.ACC) {
+            if (extData.ACC & 0x1) {
+                a_offset = gpuDynInst->wavefront()->accumOffset;
+            } else if (extData.ACC & 0x2) {
+                b_offset = gpuDynInst->wavefront()->accumOffset;
+            }
+        }
+
+        // Inputs are always packed types. Use U32 as "untyped" 32-bits.
+        using T1 = ConstVecOperandU32;
+        using T2 = ConstVecOperandU32;
+
+        alignas(T1) std::byte _src0[sizeof(T1) * gprs_a];
+        alignas(T1) std::byte _src1[sizeof(T1) * gprs_b];
+        alignas(VecOutT) std::byte _vdst[sizeof(VecOutT) * gprs_d];
+
+        // src2 is always a 32-bit value. Launder the rest for dynamic size.
+        T1 *src0 = std::launder(reinterpret_cast<T1 *>(&_src0));
+        T1 *src1 = std::launder(reinterpret_cast<T1 *>(&_src1));
+        T2 src2(gpuDynInst, extData.SRC2);
+        VecOutT *vdst = std::launder(reinterpret_cast<VecOutT *>(&_vdst));
+
+        // Use "delta" to handle SGPRs and inline constants. This ensures that
+        // each GPR reads the same register index corresponding to the const
+        // value or broadcast value from SGPR.
+        int delta = isVectorReg(extData.SRC0) ? 1 : 0;
+        for (int i = 0; i < gprs_a; i++) {
+            new (&src0[i]) T1(gpuDynInst, extData.SRC0 + a_offset + i * delta);
+            src0[i].readSrc();
+        }
+
+        delta = isVectorReg(extData.SRC1) ? 1 : 0;
+        for (int i = 0; i < gprs_b; i++) {
+            new (&src1[i]) T1(gpuDynInst, extData.SRC1 + b_offset + i * delta);
+            src1[i].readSrc();
+        }
+
+        src2.readSrc();
+
+        // This must be VGPRs. Read the dest since we are accumulating.
+        for (int i = 0; i < gprs_d; i++) {
+            new (&vdst[i]) VecOutT(gpuDynInst, instData.VDST + d_offset + i);
+            vdst[i].read();
+        }
+
+        // These values and meanings are described in the MI300 ISA manual:
+        //
+        // https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/
+        //    instruction-set-architectures/
+        //    amd-instinct-mi300-cdna3-instruction-set-architecture.pdf
+        //
+        // in section 7.1.4.2. The same are used for SMFMAC.
+
+        // Output layout
+        constexpr int H = 4;
+        constexpr int B_I = (64 + (N * M / H) - 1) / (N * M / H);
+        constexpr int M_I = (64 / B_I) / N;
+        constexpr int G = M / (H * M_I);
+
+        OutT result[M][N] = {};
+
+        // Input layout
+        constexpr int K_L = K / (64 / M);
+
+        // Read in the accumulated matrix values so far.
+        for (int i = 0; i < M; ++i) {
+            for (int j = 0; j < N; ++j) {
+                int item = (i % H) + H * (i / (H * M_I) + G * (block / B_I));
+                int lane = j + N * ((i / H) % M_I + M_I * (block % B_I));
+
+                result[i][j] = vdst[item][lane];
+            }
+        }
+
+        // Compute new matrix to add to accumulated value. This is similar to
+        // MFMA with the addition of some logic to read the non-zero value
+        // locations from the compact A matrix.
+        for (int i = 0; i < M; ++i) {
+            for (int j = 0; j < N; ++j) {
+                for (int k = 0; k < K; ++k) {
+                    int lane_A = i + M * (block + B * (k / K_L));
+                    int lane_B = j + N * (block + B * (k / K_L));
+                    int item = k % K_L;
+
+                    // There are always half as many A matrix values
+                    PackedReg<K_L * InT_bits / 2, InT_bits> A_elems;
+                    PackedReg<K_L * InT_bits, InT_bits> B_elems;
+
+                    for (int d = 0; d < gprs_a; ++d) {
+                        A_elems.setDword(d, src0[d][lane_A]);
+                    }
+                    for (int d = 0; d < gprs_b; ++d) {
+                        B_elems.setDword(d, src1[d][lane_B]);
+                    }
+
+                    InT2 item_B(B_elems.getElem(item));
+
+                    // If CBSZ[1:0] = 0, use ABID to select which indices to
+                    // use. The number of bits in ABID is determined by the
+                    // data type size (e.g., 8-bit types need 16-bits so there
+                    // are two sets of indices possible so use ABID[0]. For
+                    // 16-bit types, 8 bits of index values are needed to use
+                    // ABID[0:1], etc.).
+                    uint16_t idx_select = 0;
+                    if (bits(instData.CBSZ, 1, 0) == 0) {
+                        idx_select = bits(instData.ABID, InT_bits / 8 - 1, 0);
+                    }
+
+                    // select_size is the number of index bits consumed per
+                    // ABID group (wavefront column stripe).  There are 4 bits
+                    // per group of 4 K elements, and K_L elements per stripe,
+                    // giving K_L / 4 groups * 4 bits = K_L bits per stripe.
+                    constexpr int select_size = K_L;
+                    unsigned indices =
+                        bits(src2[lane_A],
+                             idx_select * select_size + select_size - 1,
+                             idx_select * select_size);
+
+                    // There are 4 bits for each group of four elements in the
+                    // A matrix. The bit group can be determined by zeroing
+                    // out the item value.
+                    int nz0 = bits(indices, (item & ~3) + 1, (item & ~3));
+                    int nz1 = bits(indices, (item & ~3) + 3, (item & ~3) + 2);
+
+                    // Assume zero unless equal to a non-zero element. The
+                    // spec says that nz0 != nz1, but for this implementation
+                    // we will return *something* instead of panic'ing. If the
+                    // values are equal, we will only have one non-zero element
+                    // in A as the others will be zeroed out by default.
+                    InT2 item_A(uint32_t(0));
+                    if ((item % 4) == nz0) {
+                        item_A = InT2(A_elems.getElem(2 * (item >> 2)));
+                    } else if ((item % 4) == nz1) {
+                        item_A = InT2(A_elems.getElem(2 * (item >> 2) + 1));
+                    }
+
+                    // Note: If item_A is implicitly zero and item_B is NaN,
+                    // the hardware will output 0 instead of NaN. gem5 will
+                    // output NaN here. The hardware behavior could be coded
+                    // into an else statement in the conditional above.
+                    result[i][j] += OutT(item_A) * OutT(item_B);
+                }
+            }
+        }
+
+        // Accumulate new values into destination VGPRs.
+        for (int i = 0; i < M; ++i) {
+            for (int j = 0; j < N; ++j) {
+                int item = (i % H) + H * (i / (H * M_I) + G * (block / B_I));
+                int lane = j + N * ((i / H) % M_I + M_I * (block % B_I));
+
+                vdst[item][lane] = result[i][j];
+            }
+        }
+
+        for (int i = 0; i < gprs_d; ++i) {
+            vdst[i].write();
+        }
+
+        for (int i = 0; i < gprs_a; i++) {
+            std::destroy_at(&src0[i]);
+        }
+        for (int i = 0; i < gprs_b; i++) {
+            std::destroy_at(&src1[i]);
+        }
+        for (int i = 0; i < gprs_d; i++) {
+            std::destroy_at(&vdst[i]);
+        }
+    }
+};
+
+static const char *MNEM__V_SMFMAC_F32_16X16X64_BF8_BF8 =
+    "v_smfmac_f32_16x16x64_bf8_bf8";
+using Inst_VOP3P_MAI__V_SMFMAC_F32_16X16X64_BF8_BF8 =
+    Inst_VOP3P_MAI__V_SMFMAC<16, 16, 64, VecElemF32, VecOperandF32,
+                             AMDGPU::mxbfloat8, AMDGPU::mxbfloat8,
+                             &MNEM__V_SMFMAC_F32_16X16X64_BF8_BF8>;
+
+static const char *MNEM__V_SMFMAC_F32_16X16X64_BF8_FP8 =
+    "v_smfmac_f32_16x16x64_bf8_fp8";
+using Inst_VOP3P_MAI__V_SMFMAC_F32_16X16X64_BF8_FP8 =
+    Inst_VOP3P_MAI__V_SMFMAC<16, 16, 64, VecElemF32, VecOperandF32,
+                             AMDGPU::mxbfloat8, AMDGPU::mxfloat8,
+                             &MNEM__V_SMFMAC_F32_16X16X64_BF8_FP8>;
+
+static const char *MNEM__V_SMFMAC_F32_16X16X64_FP8_BF8 =
+    "v_smfmac_f32_16x16x64_fp8_bf8";
+using Inst_VOP3P_MAI__V_SMFMAC_F32_16X16X64_FP8_BF8 =
+    Inst_VOP3P_MAI__V_SMFMAC<16, 16, 64, VecElemF32, VecOperandF32,
+                             AMDGPU::mxfloat8, AMDGPU::mxbfloat8,
+                             &MNEM__V_SMFMAC_F32_16X16X64_FP8_BF8>;
+
+static const char *MNEM__V_SMFMAC_F32_16X16X64_FP8_FP8 =
+    "v_smfmac_f32_16x16x64_fp8_fp8";
+using Inst_VOP3P_MAI__V_SMFMAC_F32_16X16X64_FP8_FP8 =
+    Inst_VOP3P_MAI__V_SMFMAC<16, 16, 64, VecElemF32, VecOperandF32,
+                             AMDGPU::mxfloat8, AMDGPU::mxfloat8,
+                             &MNEM__V_SMFMAC_F32_16X16X64_FP8_FP8>;
+
+static const char *MNEM__V_SMFMAC_F32_32X32X32_BF8_BF8 =
+    "v_smfmac_f32_32x32x32_bf8_bf8";
+using Inst_VOP3P_MAI__V_SMFMAC_F32_32X32X32_BF8_BF8 =
+    Inst_VOP3P_MAI__V_SMFMAC<32, 32, 32, VecElemF32, VecOperandF32,
+                             AMDGPU::mxbfloat8, AMDGPU::mxbfloat8,
+                             &MNEM__V_SMFMAC_F32_32X32X32_BF8_BF8>;
+
+static const char *MNEM__V_SMFMAC_F32_32X32X32_BF8_FP8 =
+    "v_smfmac_f32_32x32x32_bf8_fp8";
+using Inst_VOP3P_MAI__V_SMFMAC_F32_32X32X32_BF8_FP8 =
+    Inst_VOP3P_MAI__V_SMFMAC<32, 32, 32, VecElemF32, VecOperandF32,
+                             AMDGPU::mxbfloat8, AMDGPU::mxfloat8,
+                             &MNEM__V_SMFMAC_F32_32X32X32_BF8_FP8>;
+
+static const char *MNEM__V_SMFMAC_F32_32X32X32_FP8_BF8 =
+    "v_smfmac_f32_32x32x32_fp8_bf8";
+using Inst_VOP3P_MAI__V_SMFMAC_F32_32X32X32_FP8_BF8 =
+    Inst_VOP3P_MAI__V_SMFMAC<32, 32, 32, VecElemF32, VecOperandF32,
+                             AMDGPU::mxfloat8, AMDGPU::mxbfloat8,
+                             &MNEM__V_SMFMAC_F32_32X32X32_FP8_BF8>;
+
+static const char *MNEM__V_SMFMAC_F32_32X32X32_FP8_FP8 =
+    "v_smfmac_f32_32x32x32_fp8_fp8";
+using Inst_VOP3P_MAI__V_SMFMAC_F32_32X32X32_FP8_FP8 =
+    Inst_VOP3P_MAI__V_SMFMAC<32, 32, 32, VecElemF32, VecOperandF32,
+                             AMDGPU::mxfloat8, AMDGPU::mxfloat8,
+                             &MNEM__V_SMFMAC_F32_32X32X32_FP8_FP8>;
+
+static const char *MNEM__V_SMFMAC_F32_16X16X32_F16 =
+    "v_smfmac_f32_16x16x32_f16";
+using Inst_VOP3P_MAI__V_SMFMAC_F32_16X16X32_F16 =
+    Inst_VOP3P_MAI__V_SMFMAC<16, 16, 32, VecElemF32, VecOperandF32,
+                             AMDGPU::mxfloat16, AMDGPU::mxfloat16,
+                             &MNEM__V_SMFMAC_F32_16X16X32_F16>;
+
+static const char *MNEM__V_SMFMAC_F32_32X32X16_F16 =
+    "v_smfmac_f32_32x32x16_f16";
+using Inst_VOP3P_MAI__V_SMFMAC_F32_32X32X16_F16 =
+    Inst_VOP3P_MAI__V_SMFMAC<32, 32, 16, VecElemF32, VecOperandF32,
+                             AMDGPU::mxfloat16, AMDGPU::mxfloat16,
+                             &MNEM__V_SMFMAC_F32_32X32X16_F16>;
+
+static const char *MNEM__V_SMFMAC_F32_16X16X32_BF16 =
+    "v_smfmac_f32_16x16x32_bf16";
+using Inst_VOP3P_MAI__V_SMFMAC_F32_16X16X32_BF16 =
+    Inst_VOP3P_MAI__V_SMFMAC<16, 16, 32, VecElemF32, VecOperandF32,
+                             AMDGPU::mxbfloat16, AMDGPU::mxbfloat16,
+                             &MNEM__V_SMFMAC_F32_16X16X32_BF16>;
+
+static const char *MNEM__V_SMFMAC_F32_32X32X16_BF16 =
+    "v_smfmac_f32_32x32x16_bf16";
+using Inst_VOP3P_MAI__V_SMFMAC_F32_32X32X16_BF16 =
+    Inst_VOP3P_MAI__V_SMFMAC<32, 32, 16, VecElemF32, VecOperandF32,
+                             AMDGPU::mxbfloat16, AMDGPU::mxbfloat16,
+                             &MNEM__V_SMFMAC_F32_32X32X16_BF16>;
+
+static const char *MNEM__V_SMFMAC_I32_16X16X64_I8 = "v_smfmac_i32_16x16x64_i8";
+using Inst_VOP3P_MAI__V_SMFMAC_I32_16X16X64_I8 =
+    Inst_VOP3P_MAI__V_SMFMAC<16, 16, 64, VecElemI32, VecOperandI32, VecElemI8,
+                             VecElemI8, &MNEM__V_SMFMAC_I32_16X16X64_I8>;
+
+static const char *MNEM__V_SMFMAC_I32_32X32X32_I8 = "v_smfmac_i32_32x32x32_i8";
+using Inst_VOP3P_MAI__V_SMFMAC_I32_32X32X32_I8 =
+    Inst_VOP3P_MAI__V_SMFMAC<32, 32, 32, VecElemI32, VecOperandI32, VecElemI8,
+                             VecElemI8, &MNEM__V_SMFMAC_I32_32X32X32_I8>;
 
 class Inst_VOP3__V_CVT_PK_FP8_F32 : public Inst_VOP3A
 {
@@ -57003,6 +57957,214 @@ class Inst_VOP3P__V_MFMA_LOAD_SCALE : public Inst_VOP3P
 
     void execute(GPUDynInstPtr) override;
 };
+class Inst_VOP3__V_ADD_I32 : public Inst_VOP3A
+{
+  public:
+    Inst_VOP3__V_ADD_I32(InFmt_VOP3A *);
+    ~Inst_VOP3__V_ADD_I32();
+
+    int
+    getNumOperands() override
+    {
+        return numDstRegOperands() + numSrcRegOperands();
+    } // getNumOperands
+
+    int
+    numDstRegOperands() override
+    {
+        return 1;
+    }
+    int
+    numSrcRegOperands() override
+    {
+        return 2;
+    }
+
+    int
+    getOperandSize(int opIdx) override
+    {
+        switch (opIdx) {
+            case 0: // src_0
+                return 4;
+            case 1: // src_1
+                return 4;
+            case 2: // vdst
+                return 4;
+            default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+        }
+    } // getOperandSize
+
+    void execute(GPUDynInstPtr) override;
+}; // Inst_VOP3__V_ADD_I32
+class Inst_VOP3__V_PACK_B32_F16 : public Inst_VOP3A
+{
+  public:
+    Inst_VOP3__V_PACK_B32_F16(InFmt_VOP3A *);
+    ~Inst_VOP3__V_PACK_B32_F16();
+
+    int
+    getNumOperands() override
+    {
+        return numDstRegOperands() + numSrcRegOperands();
+    } // getNumOperands
+
+    int
+    numDstRegOperands() override
+    {
+        return 1;
+    }
+    int
+    numSrcRegOperands() override
+    {
+        return 2;
+    }
+
+    int
+    getOperandSize(int opIdx) override
+    {
+        switch (opIdx) {
+            case 0: // src_0
+                return 4;
+            case 1: // src_1
+                return 4;
+            case 2: // vdst
+                return 4;
+            default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+        }
+    } // getOperandSize
+
+    void execute(GPUDynInstPtr) override;
+}; // Inst_VOP3__V_PACK_B32_F16
+
+class Inst_VOP3__V_ADD_I16 : public Inst_VOP3A
+{
+  public:
+    Inst_VOP3__V_ADD_I16(InFmt_VOP3A *);
+    ~Inst_VOP3__V_ADD_I16();
+
+    int
+    getNumOperands() override
+    {
+        return numDstRegOperands() + numSrcRegOperands();
+    } // getNumOperands
+
+    int
+    numDstRegOperands() override
+    {
+        return 1;
+    }
+    int
+    numSrcRegOperands() override
+    {
+        return 2;
+    }
+
+    int
+    getOperandSize(int opIdx) override
+    {
+        switch (opIdx) {
+            case 0: // src_0
+                return 4;
+            case 1: // src_1
+                return 4;
+            case 2: // vdst
+                return 4;
+            default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+        }
+    } // getOperandSize
+
+    void execute(GPUDynInstPtr) override;
+}; // Inst_VOP3__V_ADD_I16
+
+class Inst_VOP3__V_SUB_I16 : public Inst_VOP3A
+{
+  public:
+    Inst_VOP3__V_SUB_I16(InFmt_VOP3A *);
+    ~Inst_VOP3__V_SUB_I16();
+
+    int
+    getNumOperands() override
+    {
+        return numDstRegOperands() + numSrcRegOperands();
+    } // getNumOperands
+
+    int
+    numDstRegOperands() override
+    {
+        return 1;
+    }
+    int
+    numSrcRegOperands() override
+    {
+        return 2;
+    }
+
+    int
+    getOperandSize(int opIdx) override
+    {
+        switch (opIdx) {
+            case 0: // src_0
+                return 4;
+            case 1: // src_1
+                return 4;
+            case 2: // vdst
+                return 4;
+            default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+        }
+    } // getOperandSize
+
+    void execute(GPUDynInstPtr) override;
+}; // Inst_VOP3__V_SUB_I16
+
+class Inst_VOP3__V_SUB_I32 : public Inst_VOP3A
+{
+  public:
+    Inst_VOP3__V_SUB_I32(InFmt_VOP3A *);
+    ~Inst_VOP3__V_SUB_I32();
+
+    int
+    getNumOperands() override
+    {
+        return numDstRegOperands() + numSrcRegOperands();
+    } // getNumOperands
+
+    int
+    numDstRegOperands() override
+    {
+        return 1;
+    }
+    int
+    numSrcRegOperands() override
+    {
+        return 2;
+    }
+
+    int
+    getOperandSize(int opIdx) override
+    {
+        switch (opIdx) {
+            case 0: // src_0
+                return 4;
+            case 1: // src_1
+                return 4;
+            case 2: // vdst
+                return 4;
+            default:
+                fatal("op idx %i out of bounds\n", opIdx);
+                return -1;
+        }
+    } // getOperandSize
+
+    void execute(GPUDynInstPtr) override;
+}; // Inst_VOP3__V_SUB_I32
 } // namespace VegaISA
 } // namespace gem5
 

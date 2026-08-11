@@ -502,7 +502,8 @@ TLB::getMemAccessInfo(ThreadContext *tc, BaseMMU::Mode mode,
     ISA* isa = dynamic_cast<ISA*>(tc->getIsaPtr());
     assert(isa);
 
-    bool nmie = !isa->enableSmrnmi() || tc->readMiscRegNoEffect(MISCREG_NMIE);
+    bool nmie = !isa->reportsExtension("Smrnmi") ||
+                tc->readMiscRegNoEffect(MISCREG_NMIE);
     bool in_mprv = nmie && (status.mprv == 1);
     bool virt = misa.rvh ? virtualizationEnabled(tc) : false;
     bool force_virt = false;

@@ -1527,9 +1527,9 @@ Fault
     if (update_fault != NoFault) { return update_fault; }
 
 
-    const int64_t vlmul = vtype_vlmul(machInst.vtype8);
-    if (((1 << vlmul) * this->numFields) > 8)
-        return std::make_shared<IllegalInstFault>("LMUL value is illegal for vlseg inst", machInst);
+    if (vtype_regs_per_group(machInst.vtype8) * this->numFields > 8)
+        return std::make_shared<IllegalInstFault>(
+            "LMUL value is illegal for vlseg inst", machInst);
 
 
     if(!machInst.vm) {
@@ -1581,9 +1581,9 @@ Fault
     Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
     if (update_fault != NoFault) { return update_fault; }
 
-    const int64_t vlmul = vtype_vlmul(machInst.vtype8);
-    if (((1 << vlmul) * this->numFields) > 8)
-        return std::make_shared<IllegalInstFault>("LMUL value is illegal for vlseg inst", machInst);
+    if (vtype_regs_per_group(machInst.vtype8) * this->numFields > 8)
+        return std::make_shared<IllegalInstFault>(
+            "LMUL value is illegal for vlseg inst", machInst);
 
     const std::vector<bool> byte_enable(mem_size, true);
     Fault fault = initiateMemRead(xc, EA, mem_size, memAccessFlags,
@@ -1799,9 +1799,9 @@ Fault
     %(op_rd)s;
     %(ea_code)s;
 
-    const int64_t vlmul = vtype_vlmul(machInst.vtype8);
-    if (((1 << vlmul) * this->numFields) > 8)
-        return std::make_shared<IllegalInstFault>("LMUL value is illegal for vsseg inst", machInst);
+    if (vtype_regs_per_group(machInst.vtype8) * this->numFields > 8)
+        return std::make_shared<IllegalInstFault>(
+            "LMUL value is illegal for vsseg inst", machInst);
 
     const size_t micro_vlmax = vlen / width_EEW(machInst.width);
 
@@ -1854,9 +1854,9 @@ Fault
     %(op_rd)s;
     %(ea_code)s;
 
-    const int64_t vlmul = vtype_vlmul(machInst.vtype8);
-    if (((1 << vlmul) * this->numFields) > 8)
-        return std::make_shared<IllegalInstFault>("LMUL value is illegal for vsseg inst", machInst);
+    if (vtype_regs_per_group(machInst.vtype8) * this->numFields > 8)
+        return std::make_shared<IllegalInstFault>(
+            "LMUL value is illegal for vsseg inst", machInst);
 
     const size_t micro_vlmax = vlen / width_EEW(machInst.width);
 
@@ -1932,6 +1932,7 @@ def template VlElementMicroConstructor {{
     if (_has_rs2) {
         setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs2]);
     }
+    SET_VM_SRC();
     this->flags[IsLoad] = true;
 }
 

@@ -150,7 +150,7 @@ class Switch : public BasicRouter
                               Message *clone_from_msg);
     void profFrontEndFwd(Message *msg, int vnet);
     void profBackEndRdy(Message *msg, int vnet);
-    void profBackEndFwd(Message *msg, int vnet);
+    void profBackEndFwd(Message *msg, MessageBuffer *dest_link, int vnet);
     void profBackEndFwdExt(Message *msg, MessageBuffer *dest_link, int vnet);
 };
 

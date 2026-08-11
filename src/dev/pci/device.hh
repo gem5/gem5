@@ -419,34 +419,55 @@ class PciDevice : public DmaDevice
     virtual Tick readDevice(PacketPtr pkt) = 0;
 
   protected:
-    PciUpstream::DeviceInterface upstreamInterface;
+    std::unique_ptr<PciUpstream::DeviceInterface> upstreamInterface;
 
     Tick pioDelay;
     Tick configDelay;
 
   public:
+    /**
+     * Bind the PCI upstream interface for this device.
+     *
+     * Ownership is transferred from the caller: the argument must be passed as
+     * an rvalue `std::unique_ptr`, and this device becomes the sole owner.
+     *
+     * Expected usage: call exactly once during system construction (before
+     * `init()` and before any config/PIO/DMA transactions). Rebinding after
+     * the device is active is not supported.
+     *
+     * @param interface Rvalue `std::unique_ptr` to the upstream interface.
+     */
+    void setUpstreamInterface(
+        std::unique_ptr<PciUpstream::DeviceInterface> &&interface);
+
     Addr
     pciToDma(Addr pci_addr) const
     {
-        return upstreamInterface.dmaAddr(pci_addr);
+        return upstreamInterface->dmaAddr(pci_addr);
     }
 
     void
     intrPost()
     {
-        upstreamInterface.postInt();
+        upstreamInterface->postInt();
     }
 
     void
     intrClear()
     {
-        upstreamInterface.clearInt();
+        upstreamInterface->clearInt();
     }
 
     uint8_t
     interruptLine() const
     {
         return letoh(_config.common.interruptLine);
+    }
+
+    PciIntPin
+    interruptPin() const
+    {
+        return (PciIntPin)letoh(_config.common.interruptPin);
     }
 
     /**
@@ -463,6 +484,8 @@ class PciDevice : public DmaDevice
      */
     PciDevice(const PciDeviceParams &params,
               std::initializer_list<PciBar *> BARs_init);
+
+    void init() override;
 
     /**
      * Serialize this object to the given output stream.
@@ -489,7 +512,7 @@ class PciDevice : public DmaDevice
      * (configuration, ...) can be changed, so this will send a range
      * change to the peer request port.
      */
-    void recvBusChange();
+    virtual void recvBusChange() = 0;
 };
 
 /**
@@ -523,12 +546,8 @@ class PciEndpoint : public PciDevice
      */
     PciEndpoint(const PciEndpointParams &params);
 
-    /**
-     * Reconstruct the state of this object from a checkpoint.
-     * @param cp The checkpoint use.
-     * @param section The section name of this object
-     */
-    void unserialize(CheckpointIn &cp) override;
+    void init() override;
+    void recvBusChange() override;
 };
 
 /**
@@ -563,12 +582,8 @@ class PciType1Device : public PciDevice
      */
     PciType1Device(const PciType1DeviceParams &params);
 
-    /**
-     * Reconstruct the state of this object from a checkpoint.
-     * @param cp The checkpoint use.
-     * @param section The section name of this object
-     */
-    void unserialize(CheckpointIn &cp) override;
+    void init() override;
+    void recvBusChange() override;
 };
 
 } // namespace gem5

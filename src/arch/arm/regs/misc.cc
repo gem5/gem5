@@ -3559,6 +3559,9 @@ Fault
 faultIdst(const MiscRegLUTEntry &entry,
     ThreadContext *tc, const MiscRegOp64 &inst)
 {
+    if (!FullSystem) {
+        return NoFault;
+    }
     if (HaveExt(tc, ArmExtension::FEAT_IDST)) {
         const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
         if (EL2Enabled(tc) && hcr.tge) {
@@ -5768,6 +5771,11 @@ ISA::initializeMiscRegMetadata()
           isar0_el1.rndr = release->has(ArmExtension::FEAT_RNG) ? 0x1 : 0x0;
           isar0_el1.fhm = release->has(ArmExtension::FEAT_FP16) ? 0x1 :
                           (release->has(ArmExtension::FEAT_FHM) ? 0x1 : 0x0);
+          isar0_el1.sm3 = release->has(ArmExtension::FEAT_SM3) ? 0x1 : 0x0;
+          isar0_el1.sm4 = release->has(ArmExtension::FEAT_SM4) ? 0x1 : 0x0;
+          isar0_el1.sha3 = release->has(ArmExtension::FEAT_SHA3) ? 0x1 : 0x0;
+          isar0_el1.sha2 = release->has(ArmExtension::FEAT_SHA512) ? 0x2 :
+                        release->has(ArmExtension::FEAT_SHA256) ? 0x1 : 0x0;
           return isar0_el1;
       }())
       .serializing(false)

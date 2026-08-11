@@ -38,7 +38,9 @@
 #include "mem/ruby/protocol/chi/tlm/utils.hh"
 
 #include "base/bitfield.hh"
+#include "base/intmath.hh"
 #include "base/logging.hh"
+#include "mem/ruby/protocol/chi/tlm/controller.hh"
 
 namespace gem5 {
 
@@ -306,13 +308,26 @@ datOpcode(DatOpcode dat, Resp resp)
         }
       case DAT_OPCODE_SNP_RESP_DATA:
         RESP_CASE(CHIDataType_SnpRespData)
+      case DAT_OPCODE_COMP_DATA:
+          switch (resp) {
+              case RESP_I:
+                  return CHIDataType_CompData_I;
+              case RESP_UC:
+                  return CHIDataType_CompData_UC;
+              case RESP_SC:
+                  return CHIDataType_CompData_SC;
+              case RESP_SD_PD:
+                  return CHIDataType_CompData_SD_PD;
+              default:
+                  panic("");
+          }
       default:
         panic("Unsupported Translation: %s\n", datOpcodeToName(dat));
     }
 }
 
 CHIResponseType
-rspOpcode(RspOpcode opc, Resp resp)
+rspOpcode(RspOpcode opc, Resp resp, Resp fwd_state)
 {
     switch(opc) {
       case RSP_OPCODE_COMP_ACK: return CHIResponseType_CompAck;
@@ -321,13 +336,79 @@ rspOpcode(RspOpcode opc, Resp resp)
       case RSP_OPCODE_SNP_RESP:
         switch (resp) {
           case RESP_I: return CHIResponseType_SnpResp_I;
+          case RESP_SC:
+              return CHIResponseType_SnpResp_SC;
           default: panic("Invalid resp %d for %d\n", resp, opc);
         }
+      case RSP_OPCODE_SNP_RESP_FWDED:
+          switch (resp) {
+              case RESP_I:
+                  switch (fwd_state) {
+                      case RESP_UC:
+                          return CHIResponseType_SnpResp_I_Fwded_UC;
+                      case RESP_UD_PD:
+                          return CHIResponseType_SnpResp_I_Fwded_UD_PD;
+                      default:
+                          panic(
+                              "Invalid fwd_state %d for resp %d, opcode %d\n",
+                              fwd_state, resp, opc);
+                  }
+              case RESP_SC:
+                  switch (fwd_state) {
+                      case RESP_I:
+                          return CHIResponseType_SnpResp_SC_Fwded_I;
+                      case RESP_SC:
+                          return CHIResponseType_SnpResp_SC_Fwded_SC;
+                      case RESP_SD_PD:
+                          return CHIResponseType_SnpResp_SC_Fwded_SD_PD;
+                      default:
+                          panic(
+                              "Invalid fwd_state %d for resp %d, opcode %d\n",
+                              fwd_state, resp, opc);
+                  }
+              case RESP_UC:
+                  switch (fwd_state) {
+                      case RESP_I:
+                          return CHIResponseType_SnpResp_UC_Fwded_I;
+                      default:
+                          panic(
+                              "Invalid fwd_state %d for resp %d, opcode %d\n",
+                              fwd_state, resp, opc);
+                  }
+              case RESP_SD:
+                  switch (fwd_state) {
+                      case RESP_I:
+                          return CHIResponseType_SnpResp_SD_Fwded_I;
+                      default:
+                          panic(
+                              "Invalid fwd_state %d for resp %d, opcode %d\n",
+                              fwd_state, resp, opc);
+                  }
+              default:
+                  panic("Invalid resp %d for %d\n", resp, opc);
+          }
       default:
         panic("Unsupported Translation: %s\n", rspOpcodeToName(opc));
     };
 }
 
+ruby::MachineID
+srcId(uint16_t src_id)
+{
+    constexpr auto node_bits = log2i(CacheController::MAX_NODES);
+    uint16_t node_opcode = bits(src_id, 16, node_bits);
+    uint16_t node_id = bits(src_id, node_bits - 1, 0);
+    switch (node_opcode) {
+        case 0:
+            return {ruby::MachineType_Cache, node_id};
+        case 1:
+            return {ruby::MachineType_Memory, node_id};
+        case 2:
+            return {ruby::MachineType_MiscNode, node_id};
+        default:
+            panic("Invalid src_id\n");
+    }
+}
 }
 
 namespace ruby_to_tlm {
@@ -405,6 +486,8 @@ snpOpcode(CHIRequestType snp)
         return SNP_OPCODE_SNP_ONCE;
       case CHIRequestType_SnpShared:
         return SNP_OPCODE_SNP_SHARED;
+      case CHIRequestType_SnpSharedFwd:
+          return SNP_OPCODE_SNP_SHARED_FWD;
       case CHIRequestType_SnpCleanInvalid:
         return SNP_OPCODE_SNP_CLEAN_INVALID;
       case CHIRequestType_SnpUnique:
@@ -483,6 +566,26 @@ rspResp(CHIResponseType rsp)
     }
 }
 
+uint16_t
+srcId(ruby::MachineID src_id)
+{
+    uint16_t type_identifier;
+    switch (src_id.type) {
+        case ruby::MachineType_Cache:
+            type_identifier = 0;
+            break;
+        case ruby::MachineType_Memory:
+            type_identifier = 1;
+            break;
+        case ruby::MachineType_MiscNode:
+            type_identifier = 2;
+            break;
+        default:
+            panic("Invalid src_id\n");
+    }
+
+    return (type_identifier << log2i(CacheController::MAX_NODES)) | src_id.num;
+}
 }
 
 ::gem5::ArmISA::mpam::MpamBundle
