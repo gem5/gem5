@@ -164,7 +164,7 @@ class PrivateL1CacheHierarchy(AbstractRubyCacheHierarchy):
             requires_send_evicts=core.requires_send_evicts(),
             cache_line_size=board.get_cache_line_size(),
             target_isa=board.get_processor().get_isa(),
-            clk_domain=board.get_clock_domain(),
+            clk_domain=board.get_processor().get_clock_domain(),
         )
         cluster.icache = L1CacheController(
             size=self._size,
@@ -173,7 +173,7 @@ class PrivateL1CacheHierarchy(AbstractRubyCacheHierarchy):
             requires_send_evicts=core.requires_send_evicts(),
             cache_line_size=board.get_cache_line_size(),
             target_isa=board.get_processor().get_isa(),
-            clk_domain=board.get_clock_domain(),
+            clk_domain=board.get_processor().get_clock_domain(),
         )
 
         cluster.icache.sequencer = RubySequencer(

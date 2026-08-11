@@ -862,6 +862,7 @@ Fault
     using ewt = typename double_width<et>::type;
     using vwu = decltype(ewt::v);
 
+
     if (vtype_vlmul(machInst.vtype8) == 3)
         return std::make_shared<IllegalInstFault>("LMUL=8 is illegal for widening inst", machInst);
 
@@ -904,6 +905,7 @@ Fault
     using vu [[maybe_unused]] = decltype(et::v);
     using ewt = typename double_width<et>::type;
     using vwu = decltype(ewt::v);
+
 
     bool set_dirty = true;
     bool check_vill = true;
@@ -949,6 +951,24 @@ switch(machInst.vtype8.vsew) {
 case 0b000: return new %(class_name)s<float8_t>(machInst, elen, vlen);
 case 0b001: return new %(class_name)s<float16_t>(machInst, elen, vlen);
 case 0b010: return new %(class_name)s<float32_t>(machInst, elen, vlen);
+default: GEM5_UNREACHABLE;
+}
+
+}};
+
+def template VectorBFloatWideningDecodeBlock {{
+
+switch(machInst.vtype8.vsew) {
+case 0b001: return new %(class_name)s<bfloat16_t>(machInst, elen, vlen);
+default: GEM5_UNREACHABLE;
+}
+
+}};
+
+def template VectorBFloatWideningAndNarrowingCvtDecodeBlock {{
+
+switch(machInst.vtype8.vsew) {
+case 0b001: return new %(class_name)s<bfloat16_t>(machInst, elen, vlen);
 default: GEM5_UNREACHABLE;
 }
 

@@ -59,7 +59,9 @@ namespace tlm_to_ruby {
 
 ruby::CHI::CHIRequestType reqOpcode(ARM::CHI::ReqOpcode req);
 ruby::CHI::CHIDataType datOpcode(ARM::CHI::DatOpcode dat, ARM::CHI::Resp resp);
-ruby::CHI::CHIResponseType rspOpcode(ARM::CHI::RspOpcode res, ARM::CHI::Resp resp);
+ruby::CHI::CHIResponseType rspOpcode(ARM::CHI::RspOpcode res,
+                                     ARM::CHI::Resp resp,
+                                     ARM::CHI::Resp fwd_state);
 ruby::MachineID srcId(uint16_t src_id);
 }
 

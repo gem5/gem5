@@ -49,7 +49,11 @@ from m5.params import (
 
 from ...utils.override import overrides
 from .abstract_memory_system import AbstractMemorySystem
-from .dram_interfaces.hbm import HBM_2000_4H_1x64
+from .dram_interfaces.hbm import (
+    HBM_2000_4H_1x64,
+    HBM_6400_8H_1x64,
+    HBM_9600_8H_1x64,
+)
 from .memory import (
     ChanneledMemory,
     _try_convert,
@@ -197,3 +201,28 @@ def HBM2Stack(
     size: Optional[str] = "4GiB",
 ) -> AbstractMemorySystem:
     return HighBandwidthMemory(HBM_2000_4H_1x64, 8, 128, size=size)
+
+
+def HBM3Stack(
+    size: Optional[str] = "8GiB",
+) -> AbstractMemorySystem:
+    """HBM3 stack at 6.4 Gbps/pin (JESD238B.01), 8H x 16Gb dies.
+
+    Matches shipping HBM3 silicon (NVIDIA H100, AMD MI300). A single
+    stack presents 16 pseudo-channels (8 channels x 2 PCs) totalling
+    8 GiB by default.
+    """
+    return HighBandwidthMemory(HBM_6400_8H_1x64, 16, 64, size=size)
+
+
+def HBM3EStack(
+    size: Optional[str] = "8GiB",
+) -> AbstractMemorySystem:
+    """HBM3E stack at 9.6 Gbps/pin (JESD238B.01 speed bin), 8H x 16Gb dies.
+
+    Matches shipping HBM3E silicon (NVIDIA H200 with Micron HBM3E,
+    Samsung Shinebolt, SK hynix HBM3E). Same JESD238B.01 protocol as
+    HBM3, higher data rate; per-stack aggregate bandwidth is
+    ~1.23 TB/s (9.6 Gbps/pin x 1024 pins).
+    """
+    return HighBandwidthMemory(HBM_9600_8H_1x64, 16, 64, size=size)
