@@ -41,6 +41,7 @@
 #include "dev/net/etherpkt.hh"
 #include "dev/net/ns_gige_reg.h"
 #include "dev/net/pktfifo.hh"
+#include "dev/pci/config.hh"
 #include "params/NSGigE.hh"
 #include "sim/eventq.hh"
 
@@ -331,10 +332,11 @@ class NSGigE : public EtherDevBase
     NSGigEInt *interface;
 
   protected:
-    Tick writeConfig(PacketPtr pkt) override;
-
     Tick readDevice(PacketPtr pkt) override;
     Tick writeDevice(PacketPtr pkt) override;
+
+    void commandConfigWriter(PciConfigBase::PciCommandRegister &reg,
+                             const PciCommand &value) override;
 
   public:
     PARAMS(NSGigE);

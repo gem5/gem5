@@ -51,7 +51,7 @@ PciVirtIO::PciVirtIO(const Params &params)
       vio(*params.vio)
 {
     // Override the subsystem ID with the device ID from VirtIO
-    config().subsystemID = htole(vio.deviceId);
+    config().subsystemID.update(vio.deviceId);
 
     // The kernel driver expects the BAR size to be an exact power of
     // two. Nothing else is supported. Therefore, we need to force

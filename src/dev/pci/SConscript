@@ -40,10 +40,16 @@
 
 Import('*')
 
+SimObject('PciCapability.py', sim_objects=[
+    'PciCapabilityBase', 'PciPowerManagementCap', 'PciMsiCap',
+    'PciMsiXCap', 'PciExpressCap'])
+Source('capabilities.cc')
+
 SimObject('PciDevice.py', sim_objects=[
     'PciBar', 'PciBarNone', 'PciIoBar', 'PciLegacyIoBar', 'PciMemBar',
     'PciMemUpperBar', 'PciDevice', 'PciEndpoint', 'PciType1Device'])
 Source('device.cc')
+Source('config.cc')
 DebugFlag('PciDevice')
 
 SimObject('PciUpstream.py', sim_objects=[

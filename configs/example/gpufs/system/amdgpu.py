@@ -223,16 +223,18 @@ def connectGPU(system, args):
     # capability at 0x80 and set the PXCAP (PCI express) capability to
     # that address. Mark the type ID as PCI express.
     # We leave the next ID of PXCAP blank to end the list.
-    system.pc.south_bridge.gpu.PXCAPBaseOffset = 0x80
-    system.pc.south_bridge.gpu.CapabilityPtr = 0x80
-    system.pc.south_bridge.gpu.PXCAPCapId = 0x10
-
-    # Set bits 7 and 8 in the second PCIe device capabilities register which
-    # reports support for PCIe atomics for 32 and 64 bits respectively.
-    # Bit 9 for 128-bit compare and swap is not set because the amdgpu driver
-    # does not check this.
-    system.pc.south_bridge.gpu.PXCAPDevCap2 = 0x00000180
-
-    # Set bit 6 to enable atomic requestor, meaning this device can request
-    # atomics from other PCI devices.
-    system.pc.south_bridge.gpu.PXCAPDevCtrl2 = 0x0040
+    system.pc.south_bridge.gpu.px_cap = PciExpressCap(
+        BaseOffset=0x80,
+        # Set bits 7 and 8 in the second PCIe device capabilities register
+        # which reports support for PCIe atomics for 32 and 64 bits
+        # respectively.
+        # Bit 9 for 128-bit compare and swap is not set because the amdgpu
+        # driver does not check this.
+        DevCap2=0x00000180,
+        # Set bit 6 to enable atomic requestor, meaning this device can request
+        # atomics from other PCI devices.
+        DevCtrl2=0x0040,
+    )
+    system.pc.south_bridge.gpu.capabilities.append(
+        system.pc.south_bridge.gpu.px_cap
+    )

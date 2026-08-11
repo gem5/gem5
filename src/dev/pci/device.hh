@@ -1,4 +1,7 @@
 /*
+ * Copyright (c) 2025 REDS institute of the HEIG-VD
+ * All rights reserved
+ *
  * Copyright (c) 2013 ARM Limited
  * All rights reserved
  *
@@ -49,7 +52,7 @@
 #include <vector>
 
 #include "dev/dma_device.hh"
-#include "dev/pci/pcireg.h"
+#include "dev/pci/config.hh"
 #include "dev/pci/types.hh"
 #include "dev/pci/upstream.hh"
 #include "params/PciBar.hh"
@@ -286,6 +289,9 @@ class PciType1Device;
  * by the struct PciConfigType0/1. The remaining bytes are specifics to the
  * device itself and can contain a set of PCI capabilities (power management,
  * interrupts, ...) or other registres depending on vendor implementation.
+ * To add custom registers, the function addConfigRegisterBank can be called
+ * with a class extending RegisterBankLE. The bank will be added to a map, then
+ * PCI configuration read/write will be performed on the correct register bank.
  *
  * Devices inheriting from a PCI device type can override readConfig() and
  * writeConfig() to manage the configuration access after the 64th byte.
@@ -299,49 +305,16 @@ class PciDevice : public DmaDevice
     friend PciType1Device;
 
   private:
-    /** The current config space.  */
-    PCIConfig _config;
+    /** The device configuration header. */
+    PciConfigBase *_config;
 
-    bool
-    isCommonConfig(Addr offs)
-    {
-        return (offs <= PCI_BIST) || (offs == PCI_CAP_PTR) ||
-               (offs == PCI_INTERRUPT_LINE) || (offs == PCI_INTERRUPT_PIN);
-    }
+    /** The device the configuration space's register bank (header +
+     * capability).
+     */
+    std::map<Addr, RegisterBankLE *> _configSpace;
 
   protected:
     const PciDevAddr _devAddr;
-
-    /** The capability list structures and base addresses
-     * @{
-     */
-    const int PMCAP_BASE;
-    const int PMCAP_ID_OFFSET;
-    const int PMCAP_PC_OFFSET;
-    const int PMCAP_PMCS_OFFSET;
-    PMCAP pmcap;
-
-    const int MSICAP_BASE;
-    MSICAP msicap;
-
-    const int MSIXCAP_BASE;
-    const int MSIXCAP_ID_OFFSET;
-    const int MSIXCAP_MXC_OFFSET;
-    const int MSIXCAP_MTAB_OFFSET;
-    const int MSIXCAP_MPBA_OFFSET;
-    int MSIX_TABLE_OFFSET;
-    int MSIX_TABLE_END;
-    int MSIX_PBA_OFFSET;
-    int MSIX_PBA_END;
-    MSIXCAP msixcap;
-
-    const int PXCAP_BASE;
-    PXCAP pxcap;
-    /** @} */
-
-    /** MSIX Table and PBA Structures */
-    std::vector<MSIXTable> msix_table;
-    std::vector<MSIXPbaEntry> msix_pba;
 
     std::vector<PciBar *> BARs{};
 
@@ -368,6 +341,20 @@ class PciDevice : public DmaDevice
         return false;
     }
 
+    /**
+     * Add a register bank to the device configuration space.
+     *
+     * The bank base address is interpreted as an offset from the device
+     * configuration-space base address. Boundary checks ensure the new bank
+     * does not overlap with any existing bank; a violation triggers a fatal.
+     *
+     * To keep the layout consistent, do not add registers to the bank after
+     * it has been registered.
+     *
+     * @param bank Register bank to add to the configuration space.
+     */
+    void addConfigRegisterBank(RegisterBankLE *bank);
+
   public:
     /**
      * Final implementation of write access from DmaDevice. This function
@@ -393,16 +380,18 @@ class PciDevice : public DmaDevice
      * overridden by the device but at some point it will eventually call this
      * for normal operations that it does not need to override.
      * @param pkt packet containing the write offset into config space
+     * @param offset configuration offset to which data is wrote
      */
-    virtual Tick writeConfig(PacketPtr pkt);
+    virtual Tick writeConfig(PacketPtr pkt, Addr offset);
 
     /**
      * Read from the PCI config space data that is stored locally. This may be
      * overridden by the device but at some point it will eventually call this
      * for normal operations that it does not need to override.
      * @param pkt packet containing the read offset into config space
+     * @param offset configuration offset to which data is read
      */
-    virtual Tick readConfig(PacketPtr pkt);
+    virtual Tick readConfig(PacketPtr pkt, Addr offset);
 
     /**
      * Write to the PCI device. This must be implemented by the device to
@@ -417,6 +406,24 @@ class PciDevice : public DmaDevice
      * @param pkt packet containing the read request
      */
     virtual Tick readDevice(PacketPtr pkt) = 0;
+
+    /**
+     * Writer callback for the BARs configuration registers.
+     */
+    virtual void barConfigWriter(PciConfigBase::Register32 &reg,
+                                 const uint32_t &value, PciBar *bar);
+
+    /**
+     * Writer callback for the command configuration register.
+     */
+    virtual void commandConfigWriter(PciConfigBase::PciCommandRegister &reg,
+                                     const PciCommand &value);
+
+    /**
+     * Writer callback for the expansion ROM configuration register.
+     */
+    virtual void expansionRomConfigWriter(PciConfigBase::Register32 &reg,
+                                          const uint32_t &value);
 
   protected:
     std::unique_ptr<PciUpstream::DeviceInterface> upstreamInterface;
@@ -461,13 +468,13 @@ class PciDevice : public DmaDevice
     uint8_t
     interruptLine() const
     {
-        return letoh(_config.common.interruptLine);
+        return _config->interruptLine.get();
     }
 
     PciIntPin
     interruptPin() const
     {
-        return (PciIntPin)letoh(_config.common.interruptPin);
+        return (PciIntPin)_config->interruptPin.get();
     }
 
     /**
@@ -483,7 +490,8 @@ class PciDevice : public DmaDevice
      * a PciHost object.
      */
     PciDevice(const PciDeviceParams &params,
-              std::initializer_list<PciBar *> BARs_init);
+              std::initializer_list<PciBar *> BARs_init,
+              PciConfigBase *config);
 
     void init() override;
 
@@ -524,19 +532,11 @@ class PciDevice : public DmaDevice
 class PciEndpoint : public PciDevice
 {
   protected:
-    PCIConfigType0 &
+    PciConfigType0 &
     config()
     {
-        return _config.type0;
+        return *static_cast<PciConfigType0 *>(_config);
     }
-
-    /**
-     * Write to the PCI config space data that is stored locally. This may be
-     * overridden by the device but at some point it will eventually call this
-     * for normal operations that it does not need to override.
-     * @param pkt packet containing the write the offset into config space
-     */
-    Tick writeConfig(PacketPtr pkt) override;
 
   public:
     /**
@@ -545,6 +545,8 @@ class PciEndpoint : public PciDevice
      * a PciHost object.
      */
     PciEndpoint(const PciEndpointParams &params);
+
+    ~PciEndpoint();
 
     void init() override;
     void recvBusChange() override;
@@ -560,19 +562,11 @@ class PciEndpoint : public PciDevice
 class PciType1Device : public PciDevice
 {
   protected:
-    PCIConfigType1 &
+    PciConfigType1 &
     config()
     {
-        return _config.type1;
+        return *static_cast<PciConfigType1 *>(_config);
     }
-
-    /**
-     * Write to the PCI config space data that is stored locally. This may be
-     * overridden by the device but at some point it will eventually call this
-     * for normal operations that it does not need to override.
-     * @param pkt packet containing the write the offset into config space
-     */
-    Tick writeConfig(PacketPtr pkt) override;
 
   public:
     /**
@@ -581,6 +575,8 @@ class PciType1Device : public PciDevice
      * a PciHost object.
      */
     PciType1Device(const PciType1DeviceParams &params);
+
+    ~PciType1Device();
 
     void init() override;
     void recvBusChange() override;

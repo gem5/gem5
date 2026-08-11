@@ -198,7 +198,7 @@ Device::prepareWrite(ContextID cpu, int index)
 Tick
 Device::readDevice(PacketPtr pkt)
 {
-    assert(config().command & PCI_CMD_MSE);
+    assert(config().command.get().memorySpace);
 
     Addr daddr = pkt->getAddr();
     assert(BARs[0]->range().contains(daddr));
@@ -289,7 +289,7 @@ Device::iprRead(Addr daddr, ContextID cpu, uint64_t &result)
 Tick
 Device::writeDevice(PacketPtr pkt)
 {
-    assert(config().command & PCI_CMD_MSE);
+    assert(config().command.get().memorySpace);
 
     Addr daddr = pkt->getAddr();
     assert(BARs[0]->range().contains(daddr));

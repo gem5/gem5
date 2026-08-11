@@ -479,8 +479,6 @@ class IGbE : public EtherDevice
     Tick readDevice(PacketPtr pkt) override;
     Tick writeDevice(PacketPtr pkt) override;
 
-    Tick writeConfig(PacketPtr pkt) override;
-
   public:
     PARAMS(IGbE);
 

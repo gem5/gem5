@@ -177,8 +177,10 @@ class AMDGPUDevice : public PciEndpoint
     /**
      * Methods inherited from PciEndpoint
      */
-    Tick writeConfig(PacketPtr pkt) override;
-    Tick readConfig(PacketPtr pkt) override;
+    Tick readConfig(PacketPtr pkt, Addr offset) override;
+
+    void expansionRomConfigWriter(PciConfigBase::Register32 &reg,
+                                  const uint32_t &value) override;
 
     Tick readDevice(PacketPtr pkt) override;
     Tick writeDevice(PacketPtr pkt) override;

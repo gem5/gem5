@@ -42,6 +42,7 @@
 #include "base/types.hh"
 #include "debug/EthernetAll.hh"
 #include "dev/net/etherlink.hh"
+#include "dev/pci/config.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
 #include "params/NSGigE.hh"
@@ -144,31 +145,16 @@ NSGigE::~NSGigE()
     delete interface;
 }
 
-/**
- * This is to write to the PCI general configuration registers
- */
-Tick
-NSGigE::writeConfig(PacketPtr pkt)
+void
+NSGigE::commandConfigWriter(PciConfigBase::PciCommandRegister &reg,
+                            const PciCommand &value)
 {
-    int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
-    if (offset < PCI_DEVICE_SPECIFIC)
-        PciEndpoint::writeConfig(pkt);
-    else
-        panic("Device specific PCI config space not implemented!\n");
+    EtherDevBase::commandConfigWriter(reg, value);
 
-    switch (offset) {
-        // seems to work fine without all these PCI settings, but i
-        // put in the IO to double check, an assertion will fail if we
-        // need to properly implement it
-      case PCI_COMMAND:
-        if (config().command & PCI_CMD_IOSE)
-            ioEnable = true;
-        else
-            ioEnable = false;
-        break;
-    }
-
-    return configDelay;
+    // seems to work fine without all these PCI settings, but i
+    // put in the IO to double check, an assertion will fail if we
+    // need to properly implement it
+    ioEnable = value.ioSpace;
 }
 
 Port &
@@ -199,7 +185,7 @@ NSGigE::readDevice(PacketPtr pkt)
     if (daddr > LAST && daddr <=  RESERVED) {
         panic("Accessing reserved register");
     } else if (daddr > RESERVED && daddr <= 0x3FC) {
-        return readConfig(pkt);
+        return readConfig(pkt, daddr & 0xff);
     } else if (daddr >= MIB_START && daddr <= MIB_END) {
         // don't implement all the MIB's.  hopefully the kernel
         // doesn't actually DEPEND upon their values
@@ -417,7 +403,7 @@ NSGigE::writeDevice(PacketPtr pkt)
     if (daddr > LAST && daddr <=  RESERVED) {
         panic("Accessing reserved register");
     } else if (daddr > RESERVED && daddr <= 0x3FC) {
-        return writeConfig(pkt);
+        return writeConfig(pkt, daddr & 0xff);
     } else if (daddr > 0x3FC)
         panic("Something is messed up!\n");
 

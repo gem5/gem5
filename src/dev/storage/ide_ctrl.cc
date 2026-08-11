@@ -98,6 +98,8 @@ IdeController::IdeController(const Params &p)
 
     primary.select(false);
     secondary.select(false);
+
+    addConfigRegisterBank(&configSpaceRegs);
 }
 
 void
@@ -152,44 +154,6 @@ IdeController::clearInterrupt(bool is_primary)
     // If the interrupt isn't still needed by the other channel...
     if (!other.pendingInterrupt())
         PciEndpoint::intrClear();
-}
-
-Tick
-IdeController::readConfig(PacketPtr pkt)
-{
-    int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
-    if (offset < PCI_DEVICE_SPECIFIC)
-        return PciEndpoint::readConfig(pkt);
-
-    size_t size = pkt->getSize();
-
-    configSpaceRegs.read(offset, pkt->getPtr<void>(), size);
-
-    DPRINTF(IdeCtrl, "PCI read offset: %#x size: %d data: %#x\n", offset, size,
-            pkt->getUintX(ByteOrder::little));
-
-    pkt->makeAtomicResponse();
-    return configDelay;
-}
-
-
-Tick
-IdeController::writeConfig(PacketPtr pkt)
-{
-    int offset = pkt->getAddr() & PCI_CONFIG_SIZE;
-
-    if (offset < PCI_DEVICE_SPECIFIC)
-        return PciEndpoint::writeConfig(pkt);
-
-    size_t size = pkt->getSize();
-
-    DPRINTF(IdeCtrl, "PCI write offset: %#x size: %d data: %#x\n",
-            offset, size, pkt->getUintX(ByteOrder::little));
-
-    configSpaceRegs.write(offset, pkt->getConstPtr<void>(), size);
-
-    pkt->makeAtomicResponse();
-    return configDelay;
 }
 
 void
@@ -347,16 +311,17 @@ IdeController::dispatchAccess(PacketPtr pkt, bool read)
         break;
       case 4:
         {
-            PciCommandRegister command = letoh(config().command);
-            if (!read && !command.busMaster)
-                return;
+          PciCommand command = config().command.get();
+          if (!read && !command.busMaster) {
+              return;
+          }
 
-            if (offset < sizeof(Channel::BMIRegs)) {
-                primary.accessBMI(offset, size, dataPtr, read);
-            } else {
-                offset -= sizeof(Channel::BMIRegs);
-                secondary.accessBMI(offset, size, dataPtr, read);
-            }
+          if (offset < sizeof(Channel::BMIRegs)) {
+              primary.accessBMI(offset, size, dataPtr, read);
+          } else {
+              offset -= sizeof(Channel::BMIRegs);
+              secondary.accessBMI(offset, size, dataPtr, read);
+          }
         }
     }
 
