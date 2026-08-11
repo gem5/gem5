@@ -160,6 +160,7 @@ class RISCVMatchedBoard(
             )
             self.platform.attachPlic()
             self.platform.clint.num_threads = self.processor.get_num_cores()
+            self.platform.clear_child("pdma")
 
             # Add the RTC
             self.platform.rtc = RiscvRTC(
