@@ -38,14 +38,16 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "base/loader/image_file_data.hh"
+#include "base/loader/compression_file_format.hh"
 
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <sys/types.h>
 #include <unistd.h>
 
-#include "base/loader/compression_file_format.hh"
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+#include <vector>
+
+#include "base/loader/gzip_compression.hh"
 #include "base/logging.hh"
 
 namespace gem5
@@ -54,35 +56,94 @@ namespace gem5
 namespace loader
 {
 
-ImageFileData::ImageFileData(const std::string &fname, bool try_decompress)
+namespace
 {
-    _filename = fname;
 
-    // Open the file.
-    int fd = open(fname.c_str(), O_RDONLY);
-    fatal_if(fd < 0, "Failed to open file %s.\n"
-        "This error typically occurs when the file path specified is "
-        "incorrect.\n", fname);
+typedef std::vector<CompressionFileFormat *> CompressionFileFormatList;
 
-    if (try_decompress) {
-        fd = decompressImageFile(fd, fname);
-    }
-
-    // Find the length of the file by seeking to the end.
-    off_t off = lseek(fd, 0, SEEK_END);
-    fatal_if(off < 0, "Failed to determine size of file %s.\n", fname);
-    _len = static_cast<size_t>(off);
-
-    // Mmap the whole shebang.
-    _data = (uint8_t *)mmap(NULL, _len, PROT_READ, MAP_SHARED, fd, 0);
-    close(fd);
-
-    panic_if(_data == MAP_FAILED, "Failed to mmap file %s.\n", fname);
+CompressionFileFormatList &
+compressionFileFormats()
+{
+    static CompressionFileFormatList formats;
+    return formats;
 }
 
-ImageFileData::~ImageFileData()
+void
+registerBuiltinCompressionFileFormats()
 {
-    munmap((void *)_data, _len);
+    registerGzipCompressionFormat();
+}
+
+} // anonymous namespace
+
+CompressionFileFormat::CompressionFileFormat()
+{
+    compressionFileFormats().emplace_back(this);
+}
+
+bool
+CompressionFileFormat::hasMagic(int fd, const uint8_t *magic, size_t magic_len)
+{
+    std::vector<uint8_t> buf(magic_len);
+    ssize_t sz = pread(fd, buf.data(), magic_len, 0);
+    panic_if(sz < 0, "Couldn't read magic bytes from object file");
+    if (static_cast<size_t>(sz) != magic_len) {
+        return false;
+    }
+
+    return memcmp(buf.data(), magic, magic_len) == 0;
+}
+
+bool
+CompressionFileFormat::writeAll(int fd, const uint8_t *buf, size_t size)
+{
+    while (size > 0) {
+        ssize_t sz = write(fd, buf, size);
+        if (sz <= 0) {
+            return false;
+        }
+
+        size -= sz;
+        buf += sz;
+    }
+
+    return true;
+}
+
+int
+CompressionFileFormat::makeTempFile(const char *suffix)
+{
+    std::string tmpnam_str = std::string(P_tmpdir) + suffix;
+    char *tmpnam = tmpnam_str.data();
+    int fd = mkstemp(tmpnam);
+    if (fd < 0) {
+        return fd;
+    }
+
+    if (unlink(tmpnam) != 0) {
+        warn("couldn't remove temporary file %s\n", tmpnam);
+    }
+
+    return fd;
+}
+
+int
+decompressImageFile(int fd, const std::string &filename)
+{
+    registerBuiltinCompressionFileFormats();
+
+    for (const auto &format : compressionFileFormats()) {
+        if (!format->matches(fd)) {
+            continue;
+        }
+
+        int decompressed_fd = format->decompress(fd);
+        panic_if(decompressed_fd < 0, "Failed to uncompress %s file %s.\n",
+                 format->name(), filename);
+        return decompressed_fd;
+    }
+
+    return fd;
 }
 
 } // namespace loader

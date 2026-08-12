@@ -11,9 +11,6 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
- * Copyright (c) 2002-2004 The Regents of The University of Michigan
- * All rights reserved.
- *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met: redistributions of source code must retain the above copyright
@@ -38,15 +35,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "base/loader/image_file_data.hh"
-
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <sys/types.h>
-#include <unistd.h>
+#ifndef __BASE_LOADER_GZIP_COMPRESSION_HH__
+#define __BASE_LOADER_GZIP_COMPRESSION_HH__
 
 #include "base/loader/compression_file_format.hh"
-#include "base/logging.hh"
 
 namespace gem5
 {
@@ -54,36 +46,19 @@ namespace gem5
 namespace loader
 {
 
-ImageFileData::ImageFileData(const std::string &fname, bool try_decompress)
+class GzipCompressionFormat : public CompressionFileFormat
 {
-    _filename = fname;
+  public:
+    GzipCompressionFormat();
 
-    // Open the file.
-    int fd = open(fname.c_str(), O_RDONLY);
-    fatal_if(fd < 0, "Failed to open file %s.\n"
-        "This error typically occurs when the file path specified is "
-        "incorrect.\n", fname);
+    bool matches(int fd) const override;
+    int decompress(int fd) const override;
+    const char *name() const override;
+};
 
-    if (try_decompress) {
-        fd = decompressImageFile(fd, fname);
-    }
-
-    // Find the length of the file by seeking to the end.
-    off_t off = lseek(fd, 0, SEEK_END);
-    fatal_if(off < 0, "Failed to determine size of file %s.\n", fname);
-    _len = static_cast<size_t>(off);
-
-    // Mmap the whole shebang.
-    _data = (uint8_t *)mmap(NULL, _len, PROT_READ, MAP_SHARED, fd, 0);
-    close(fd);
-
-    panic_if(_data == MAP_FAILED, "Failed to mmap file %s.\n", fname);
-}
-
-ImageFileData::~ImageFileData()
-{
-    munmap((void *)_data, _len);
-}
+void registerGzipCompressionFormat();
 
 } // namespace loader
 } // namespace gem5
+
+#endif // __BASE_LOADER_GZIP_COMPRESSION_HH__
