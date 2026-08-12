@@ -94,6 +94,7 @@ processor = SimpleSwitchableProcessor(
     switch_core_type=CPUTypes.TIMING,
     isa=ISA.X86,
     num_cores=2,
+    clk_freq="3GHz",
 )
 
 # Here we tell the KVM CPU (the starting CPU) not to use perf.

@@ -85,6 +85,7 @@ class BranchTargetBuffer(ClockedObject):
     abstract = True
 
     numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
+    latency = Param.Cycles(0, "Latency of the BTB (in cycles)")
 
 
 class BTBIndexingPolicy(SimObject):
@@ -142,6 +143,60 @@ class SimpleBTB(BranchTargetBuffer):
             numThreads=1,
         ),
         "BTB indexing policy",
+    )
+
+
+class BTBLevel(SimObject):
+    type = "BTBLevel"
+    cxx_class = "gem5::branch_prediction::BTBLevel"
+    cxx_header = "cpu/pred/multi_level_btb.hh"
+
+    tagBits = Param.Unsigned(64, "Size of the BTB tags, in bits")
+    numEntries = Param.Unsigned(4096, "Number of BTB entries")
+    associativity = Param.Unsigned(8, "BTB associativity")
+    latency = Param.Cycles(1, "BTB access latency in cycles")
+    inclusive = Param.Bool(
+        False,
+        "Whether this level is inclusive of the immediately upper level; "
+        "otherwise, it is an exclusive victim buffer of the upper levels ",
+    )
+    instShiftAmt = Param.Unsigned(
+        Parent.instShiftAmt, "Number of bits to shift instructions by"
+    )
+    numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
+    replPolicy = Param.BaseReplacementPolicy(LRURP(), "BTB replacement policy")
+    indexingPolicy = Param.BTBIndexingPolicy(
+        BTBSetAssociative(
+            assoc=Parent.associativity,
+            num_entries=Parent.numEntries,
+            set_shift=Parent.instShiftAmt,
+            tag_bits=Parent.tagBits,
+            numThreads=Parent.numThreads,
+        ),
+        "BTB indexing policy",
+    )
+
+
+class MultiLevelBTB(BranchTargetBuffer):
+    type = "MultiLevelBTB"
+    cxx_class = "gem5::branch_prediction::MultiLevelBTB"
+    cxx_header = "cpu/pred/multi_level_btb.hh"
+
+    # Default is a three-level BTB. Subclass can override `levels` to build a
+    # custom BTB hierarchy; the L1-BTB must be inclusive.
+    levels = VectorParam.BTBLevel(
+        [
+            BTBLevel(
+                numEntries=256, associativity=8, latency=0, inclusive=True
+            ),
+            BTBLevel(
+                numEntries=4096, associativity=8, latency=1, inclusive=True
+            ),
+            BTBLevel(
+                numEntries=16384, associativity=8, latency=3, inclusive=False
+            ),
+        ],
+        "BTB levels ordered from the uppermost to the lowermost level",
     )
 
 

@@ -190,13 +190,16 @@ std::string VectorSlideMicroInst::generateDisassembly(Addr pc,
         const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
+    bool is_vi = (machInst.funct3 == 0x3);
     ss << mnemonic << ' ' << registerName(destRegIdx(0)) <<  ", ";
-    if (machInst.funct3 == 0x3) {
-      ss  << registerName(srcRegIdx(0)) << ", "
-        << registerName(srcRegIdx(1)) << ", " << machInst.vecimm;
+    ss << registerName(srcRegIdx(!is_vi));
+    if (numVs2Regs > 1) {
+        ss << "-" << registerName(srcRegIdx(!is_vi + numVs2Regs - 1));
+    }
+    if (is_vi) {
+        ss << ", " << machInst.vecimm;
     } else {
-      ss  << registerName(srcRegIdx(1)) << ", "
-        << registerName(srcRegIdx(2)) << ", " << registerName(srcRegIdx(0));
+        ss << ", " << registerName(srcRegIdx(0));
     }
     if (machInst.vm == 0) ss << ", v0.t";
     return ss.str();
@@ -206,13 +209,57 @@ std::string VectorSlideMacroInst::generateDisassembly(Addr pc,
         const loader::SymbolTable *symtab) const
 {
     std::stringstream ss;
-    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", ";
+    ss << mnemonic << ' ' << registerName(vecRegClass[machInst.vd]) << ", "
+       << registerName(vecRegClass[machInst.vs2]) << ", ";
     if (machInst.funct3 == 0x3) {
-      ss  << registerName(srcRegIdx(0)) << ", " << machInst.vecimm;
+        ss << machInst.vecimm;
+    } else if (machInst.funct3 == 0x5) {
+        ss << registerName(floatRegClass[machInst.rs1]);
     } else {
-      ss  << registerName(srcRegIdx(1)) << ", " << registerName(srcRegIdx(0));
+        ss << registerName(intRegClass[machInst.rs1]);
     }
     if (machInst.vm == 0) ss << ", v0.t";
+    return ss.str();
+}
+
+std::string
+VectorGatherMacroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(vecRegClass[machInst.vd]) << ", "
+       << registerName(vecRegClass[machInst.vs2]) << ", ";
+    if (machInst.funct3 == 0x3) {
+        ss << machInst.vecimm;
+    } else if (machInst.funct3 == 0x1) {
+        ss << registerName(intRegClass[machInst.rs1]);
+    } else {
+        ss << registerName(vecRegClass[machInst.vs1]);
+    }
+    if (machInst.vm == 0) {
+        ss << ", v0.t";
+    }
+    return ss.str();
+}
+
+std::string
+VectorGatherMicroInst::generateDisassembly(
+    Addr pc, const loader::SymbolTable *symtab) const
+{
+    std::stringstream ss;
+    ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", ";
+    ss << registerName(srcRegIdx(0));
+    if (numVs2Regs > 1) {
+        ss << "-" << registerName(srcRegIdx(numVs2Regs - 1));
+    }
+    ss << ", " << registerName(srcRegIdx(numVs2Regs));
+    if (numVs1Regs > 1) {
+        ss << "-" << registerName(srcRegIdx(numVs2Regs + numVs1Regs - 1));
+    }
+
+    if (machInst.vm == 0) {
+        ss << ", v0.t";
+    }
     return ss.str();
 }
 
@@ -893,10 +940,9 @@ VCpyVsMicroInst::generateDisassembly(Addr pc,
 
 VPinVdMicroInst::VPinVdMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
                                  uint32_t _numVdPins, uint32_t _elen,
-                                 uint32_t _vlen, bool _isSlideupVx)
+                                 uint32_t _vlen)
     : VectorArithMicroInst("vpinvd_v_micro", _machInst, SimdMiscOp, 0,
-                           _microIdx, _elen, _vlen),
-      isSlideupVx(_isSlideupVx)
+                           _microIdx, _elen, _vlen)
 {
     setRegIdxArrays(
         reinterpret_cast<RegIdArrayPtr>(
@@ -909,13 +955,8 @@ VPinVdMicroInst::VPinVdMicroInst(ExtMachInst _machInst, uint32_t _microIdx,
     setDestRegIdx(_numDestRegs++, vecRegClass[_machInst.vd + _microIdx]);
     _numTypedDestRegs[VecRegClass]++;
 
-    if (!_machInst.vtype8.vta || (!_machInst.vm && !_machInst.vtype8.vma)
-                              || isSlideupVx) {
+    if (!_machInst.vtype8.vta || (!_machInst.vm && !_machInst.vtype8.vma)) {
         setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vd + _microIdx]);
-    }
-
-    if (isSlideupVx) {
-        setSrcRegIdx(_numSrcRegs++, intRegClass[_machInst.rs1]);
     }
 
     if (!_machInst.vm) {
@@ -947,22 +988,10 @@ VPinVdMicroInst::execute(ExecContext* xc, trace::InstRecord* traceData) const
 
     // tail/mask policy: both undisturbed if one is, 1s if none
     uint8_t* old_vd;
-    if (!machInst.vtype8.vta || (!machInst.vm && !machInst.vtype8.vma)
-                             || isSlideupVx) {
+    if (!machInst.vtype8.vta || (!machInst.vm && !machInst.vtype8.vma)) {
         vreg_t old_vd_container;
         xc->getRegOperand(this, 0, &old_vd_container);
         old_vd = old_vd_container.as<uint8_t>();
-    }
-
-    // pin on vslideup.vx: vd has a start offset that needs to be undisturbed
-    if (isSlideupVx) {
-        uint32_t offset = xc->getRegOperand(this, 1);
-        if (offset > micro_vlmax*microIdx) {
-            uint32_t micro_offset = std::min(offset - micro_vlmax*microIdx,
-                                             micro_vlmax);
-            uint32_t micro_offset_bytes = sewb*micro_offset;
-            memcpy(vd, old_vd, micro_offset_bytes);
-        }
     }
 
     // apply tail policy
@@ -1003,12 +1032,8 @@ VPinVdMicroInst::generateDisassembly(Addr pc,
     std::stringstream ss;
     ss << mnemonic << ' ' << registerName(destRegIdx(0)) << ", ";
 
-    if (!machInst.vtype8.vta || (!machInst.vm && !machInst.vtype8.vma)
-                             || isSlideupVx) {
+    if (!machInst.vtype8.vta || (!machInst.vm && !machInst.vtype8.vma)) {
         ss << registerName(srcRegIdx(0));
-        if (isSlideupVx) {
-            ss << ", " << registerName(srcRegIdx(1));
-        }
     } else {
         ss << "~0";
     }

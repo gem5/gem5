@@ -178,6 +178,7 @@ class BAC
     takeOverFrom()
     {
         resetStage();
+        switchToActive();
     }
 
     void deactivateThread(ThreadID tid) {};
