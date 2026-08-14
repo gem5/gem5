@@ -115,6 +115,11 @@ class System(SimObject):
         "preventing physical memory allocation for unused guest regions.",
     )
 
+    anonymous_shared_backstore = Param.Bool(
+        False,
+        "Create the shared backstore anonymously with memfd_create(2).",
+    )
+
     cache_line_size = Param.Unsigned(64, "Cache line size in bytes")
 
     redirect_paths = VectorParam.RedirectPath([], "Path redirections")

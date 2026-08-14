@@ -71,6 +71,7 @@ def gem5_verify_config(
     valid_hosts=constants.supported_hosts,
     protocol=None,
     uses_kvm=False,
+    uses_pin=False,
 ):
     """
     Helper class to generate common gem5 tests using verifiers.
@@ -99,6 +100,8 @@ def gem5_verify_config(
 
     :param uses_kvm: States if this verifier uses KVM. If so, the "kvm" tag
         will be included.
+    :param uses_pin: States if this test uses Intel Pin. If so, the "pin"
+        tag will be included.
     """
     fixtures = list(fixtures)
     testsuites = []
@@ -137,6 +140,9 @@ def gem5_verify_config(
 
                 if uses_kvm:
                     tags.append(constants.kvm_tag)
+
+                if uses_pin:
+                    tags.append(constants.pin_tag)
 
                 # Create the gem5 target for the specific architecture and
                 # variant.

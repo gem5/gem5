@@ -73,3 +73,14 @@ RUN apt -y update && apt -y upgrade && apt -y install \
 # as it's a directory any user can access and write to. Given this only stores
 # caching information, the "/tmp" directory being wiped is not a concern.
 ENV XDG_CACHE_HOME=/tmp/
+
+# Install Intel Pin (optional) on x86-64 hosts, as it is required to build
+# and test the PinCPU model.
+ARG TARGETARCH
+RUN if [ "${TARGETARCH}" = "amd64" ]; then \
+        mkdir -p /opt/pin && \
+        wget -qO- https://software.intel.com/sites/landingpage/pintool/downloads/pin-external-3.31-98869-gfa6f126a8-gcc-linux.tar.gz \
+        | tar -C /opt/pin -x --gzip --strip-components=1 && \
+        test -f /opt/pin/pin;
+    fi
+ENV PIN_DIR=/opt/pin
