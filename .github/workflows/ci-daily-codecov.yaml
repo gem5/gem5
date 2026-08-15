@@ -1,0 +1,295 @@
+---
+# This workflow runs all of the CI and Daily tests and uploads the gcov code
+# coverage information to Codecov
+
+name: CI and Daily Tests for Codecov
+
+on:
+    # This is triggered after the Weekly Tests finish.
+    # It can also be triggered manually.
+    workflow_dispatch:
+    workflow_run:
+        workflows: [Weekly Tests]
+        types:
+            - completed
+
+
+jobs:
+
+    get-date:
+        runs-on: ubuntu-24.04
+        outputs:
+            date: ${{ steps.date.outputs.date }}
+        steps:
+            - name: Get the current date
+              id: date
+              run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+  # this builds and runs unittests.fast, opt, and debug
+    unittests-fast-opt-debug:
+        strategy:
+            matrix:
+                type: [{build: fast, length: quick}, {build: opt, length: quick}, {build: debug, length: long}]
+        runs-on: [self-hosted, linux, x64]
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        timeout-minutes: 60
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+            - name: Run ALL/unittests.${{ matrix.type.build }} UnitTests
+              run: scons build/ALL/unittests.${{ matrix.type.build }} --gcov -j $(nproc)
+
+            - name: Upload coverage reports to Codecov
+              uses: codecov/codecov-action@v7
+              with:
+                  token: ${{ secrets.CODECOV_TOKEN }}
+                  flags: unittests-${{ matrix.type.build }},overall-unittests,overall-length-${{ matrix.type.length }}
+
+    # get TestLib test directories for quick and long tests
+    get-testlib-dirs:
+        strategy:
+            matrix:
+                type: [quick, long]
+        runs-on: ubuntu-24.04
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        outputs:
+            test-dirs-matrix-quick: ${{ steps.dir-matrix.outputs.test-dirs-matrix-quick }}
+            test-dirs-matrix-long: ${{ steps.dir-matrix.outputs.test-dirs-matrix-long }}
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+            - name: Get directories for testlib-${{ matrix.type }}
+              working-directory: ${{ github.workspace }}/tests
+              id: dir-matrix
+              run: |
+                  unset PREV
+                  echo "test-dirs-matrix-${{ matrix.type }}=$(\
+                    ./main.py list gem5 \
+                    --suites \
+                    --length ${{ matrix.type }} \
+                    --gcov=test-only \
+                    --exclude-tags gcn_gpu | \
+                    grep "$SUITEUID:" | \
+                    cut -d: -f2 | \
+                    cut -d/ -f 2- | \
+                    xargs dirname | \
+                    sort -u  | \
+                    while read x; do \
+                      if [ -z "${PREV}" ] || [ "$x" != "${PREV}/*" ]; then \
+                        PREV=$x; \
+                        echo $x; \
+                      fi; \
+                    done  | \
+                    jq -ncR '[inputs]'\
+                  )" >>$GITHUB_OUTPUT
+
+    flatten-length-and-testdir-matrices:
+        name: flatten-length-and-testdir-matrices
+        runs-on: ubuntu-24.04
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        outputs:
+            test-dirs-matrix-flattened: ${{ steps.flatten-matrix.outputs.matrix }}
+        needs: [get-date, get-testlib-dirs]
+        steps:
+            - name: Flatten matrix into length and testdir pairs
+              id: flatten-matrix
+              run: |
+                  primary='["quick", "long"]'
+                  secondary='{
+                      "quick": ${{ needs.get-testlib-dirs.outputs.test-dirs-matrix-quick }},
+                      "long": ${{ needs.get-testlib-dirs.outputs.test-dirs-matrix-long }}
+                  }'
+
+                  flat_matrix=$(echo $secondary | jq -c '[
+                    to_entries[] |
+                    .key as $k |
+                    .value[] |
+                    {length: $k, testdir: .}
+                  ]')
+
+                  echo "matrix=$flat_matrix" >> $GITHUB_OUTPUT
+
+    # start running the quick and long TestLib tests
+    testlib-tests:
+        name: testlib-tests
+        strategy:
+            fail-fast: false
+            max-parallel: 5
+            matrix:
+                test-type: ${{ fromJson(needs.flatten-length-and-testdir-matrices.outputs.test-dirs-matrix-flattened) }}
+        runs-on: [self-hosted, linux, x64]
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        timeout-minutes: 1800 # 30 hours
+        needs: [get-date, get-testlib-dirs, flatten-length-and-testdir-matrices]
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+            - name: Cache build/ALL
+              uses: actions/cache@v6
+              with:
+                  path: build/ALL
+                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      testlib-build-all
+
+            - name: Run ${{ matrix.test-type.length }} ${{ matrix.test-type.testdir }} tests
+              id: run-tests
+              timeout-minutes: 1770
+              working-directory: ${{ github.workspace }}/tests
+              run: ./main.py run ${{ matrix.test-type.testdir }} --length ${{ matrix.test-type.length }} --gcov=test-only -j$(nproc) -vv --exclude-tags
+                  gcn_gpu
+
+            - name: Sanitize test-dir for artifact name
+              id: sanitize-test-dir
+              if: always()
+              run: echo "sanitized-test-dir=$(echo '${{ matrix.test-type.testdir }}' | sed 's/\//-/g')" >> $GITHUB_OUTPUT
+
+            - name: Upload results
+              if: always()
+              uses: actions/upload-artifact@v7
+              with:
+                  name: ci-daily-codecov-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-${{ matrix.test-type.length }}-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir
+                      }}-status-${{ steps.run-tests.outcome }}-output
+                  path: tests/testing-results
+
+            - name: Upload coverage reports to Codecov
+              uses: codecov/codecov-action@v7
+              with:
+                  token: ${{ secrets.CODECOV_TOKEN }}
+                  flags: overall-testdir-${{steps.sanitize-test-dir.outputs.sanitized-test-dir}},overall-length-${{matrix.test-type.length}},${{steps.sanitize-test-dir.outputs.sanitized-test-dir}}-${{matrix.test-type.length}}
+
+    gpu-tests:
+        strategy:
+            fail-fast: false
+            matrix:
+                test-length: [quick, long]
+        runs-on: [self-hosted, linux, x64]
+        container: ghcr.io/gem5/gcn-gpu:latest
+        timeout-minutes: 1620 # 27 hours. Sum of daily and CI test timeout
+        needs: get-date
+
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+            - name: Cache build/VEGA_X86
+              uses: actions/cache@v6
+              with:
+                  path: build/VEGA_X86
+                  key: testlib-build-vega-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      testlib-build-vega
+              # The runners will run out of memory when trying to build the ALL
+              # build with --gcov for the gpu-tests, so only run the tests that
+              # use VEGA_X86.
+              # At the time of this change, all of the quick and very-long
+              # tests that use the gcn-gpu host also use the VEGA_X86 build,
+              # so this change only affects the long tests.
+            - name: Run Testlib GPU Tests
+              id: run-tests
+              working-directory: ${{ github.workspace }}/tests
+              run: ./main.py run --length=${{ matrix.test-length }} -vvv --gcov=test-only -j $(nproc) --host gcn_gpu --isa=VEGA_X86
+              timeout-minutes: 1590
+
+            - name: Upload results
+              if: always()
+              uses: actions/upload-artifact@v7
+              with:
+                  name: ci-daily-codecov-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gpu-status-${{ steps.run-tests.outcome }}-length-${{
+                      matrix.test-length }}-output
+                  path: tests/testing-results
+
+            - name: Upload coverage reports to Codecov
+              uses: codecov/codecov-action@v7
+              with:
+                  token: ${{ secrets.CODECOV_TOKEN }}
+                  flags: overall-gpu-tests,overall-length-${{ matrix.test-length }},gpu-tests-${{ matrix.test-length }}
+
+  # Get code coverage for sst-test (from the Daily Tests).
+    sst-test:
+        runs-on: [self-hosted, linux, x64]
+        container: ghcr.io/gem5/sst-env:latest
+        timeout-minutes: 180
+
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+            - name: Build RISCV/libgem5_opt.so with SST
+              run: scons build/RISCV/libgem5_opt.so --without-tcmalloc --duplicate-sources --ignore-style --gcov -j $(nproc)
+            - name: Makefile ext/sst
+              working-directory: ${{ github.workspace }}/ext/sst
+              run: mv Makefile.linux Makefile
+            - name: Compile ext/sst
+              working-directory: ${{ github.workspace }}/ext/sst
+              run: make -j $(nproc)
+            - name: Run SST test
+              working-directory: ${{ github.workspace }}/ext/sst
+              run: sst --add-lib-path=./ sst/example.py
+            - name: Upload coverage reports to Codecov
+              uses: codecov/codecov-action@v7
+              with:
+                  token: ${{ secrets.CODECOV_TOKEN }}
+                  flags: sst-test,overall-length-long
+
+  # Get code coverage for systemc-test (from the Daily Tests).
+    systemc-test:
+        runs-on: [self-hosted, linux, x64]
+        container: ghcr.io/gem5/systemc-env:latest
+        timeout-minutes: 180
+
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+            - name: Build ARM/gem5.opt
+              run: scons build/ARM/gem5.opt --ignore-style --duplicate-sources --gcov -j$(nproc)
+            - name: disable systemc
+              run: scons setconfig build/ARM --ignore-style USE_SYSTEMC=n
+            - name: Build ARM/libgem5_opt.so
+              run: scons build/ARM/libgem5_opt.so --with-cxx-config --without-python --without-tcmalloc -j$(nproc) --duplicate-sources
+            - name: Compile gem5 within SystemC
+              working-directory: ${{ github.workspace }}/util/systemc/gem5_within_systemc
+              run: make
+            - name: Run gem5 within SystemC test
+              run: ./build/ARM/gem5.opt configs/deprecated/example/se.py -c tests/test-progs/hello/bin/arm/linux/hello
+            - name: Continue gem5 within SystemC test
+              run: LD_LIBRARY_PATH=build/ARM/:/opt/systemc/lib-linux64/ ./util/systemc/gem5_within_systemc/gem5.opt.sc m5out/config.ini
+            - name: Upload coverage reports to Codecov
+              uses: codecov/codecov-action@v7
+              with:
+                  token: ${{ secrets.CODECOV_TOKEN }}
+                  flags: systemc-test,overall-length-long
+
+# Get code coverage for dramsys-tests (from the Daily Tests).
+    dramsys-tests:
+        runs-on: [self-hosted, linux, x64]
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        timeout-minutes: 360 # 6 hours
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+            - name: Checkout DRAMSys
+              working-directory: ${{ github.workspace }}/ext/dramsys
+              run: git clone https://github.com/tukl-msd/DRAMSys --branch v5.3.1 --depth 1 DRAMSys
+
+              # gem5 is built separately because it depends on the DRAMSys library
+            - name: Build gem5
+              working-directory: ${{ github.workspace }}
+              run: scons build/ALL/gem5.opt --gcov -j $(nproc)
+
+            - name: Run DRAMSys Checks
+              working-directory: ${{ github.workspace }}
+              run: |
+                  ./build/ALL/gem5.opt configs/example/gem5_library/dramsys/arm-hello-dramsys.py
+                  ./build/ALL/gem5.opt configs/example/gem5_library/dramsys/dramsys-traffic.py
+                  ./build/ALL/gem5.opt configs/example/dramsys.py
+            - name: Upload coverage reports to Codecov
+              uses: codecov/codecov-action@v7
+              with:
+                  token: ${{ secrets.CODECOV_TOKEN }}
+                  flags: dramsys-tests,overall-length-long
