@@ -36,9 +36,24 @@ systems, and cache hierarchies should expose clear constructor parameters and
 avoid hidden global state. Prefer adding small extension points over special
 cases in a prebuilt board unless the behavior is truly board-specific.
 
+## Pybind11 Bindings
+
+gem5 uses pybind11 to expose C++ simulator APIs to its embedded Python
+interpreter. Core hand-written bindings live under `src/python/pybind11` and
+are registered in `src/python/SConscript`. Subsystem-specific bindings may live
+beside their C++ implementation and use `EmbeddedPyBind` to add `_m5`
+submodules.
+
+Bindings for SimObject params, enums, and `cxx_exports` are generated from
+Python declarations by scripts under `build_tools`; update those declarations
+or generators rather than generated files under `build/`. Keep Python-facing
+names, C++ signatures, ownership and return-value policies, SCons registration,
+and tests synchronized when changing a binding.
+
 ## Validation
 
 For Python-only edits, run `python3 -m py_compile` on touched files when
-practical. For SimObject, param, enum, or pybind-facing edits, also use a
-targeted SCons build or `scons -Q --help` when build registration may be
-affected.
+practical. For SimObject, param, enum, or pybind-facing edits, build the
+affected gem5 target so the generated bindings are compiled. `scons -Q --help`
+only validates top-level configuration and is not a substitute for a binding
+build.
