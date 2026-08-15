@@ -6,15 +6,20 @@ interfaces, external memory wrappers, probes, and Ruby.
 
 ## Request Paths
 
-Start memory investigations by identifying the mode and path: atomic, timing,
-functional, or snoop; Classic or Ruby; CPU-side, memory-side, DMA, or external
-port. `Request` carries architectural request metadata, `Packet` carries a
+Start memory investigations by identifying the configured `System.mem_mode`
+(`atomic`, `timing`, or `atomic_noncaching`), the cache hierarchy (Classic or
+Ruby), and the request origin and path (CPU-side, memory-side, DMA, or external
+port). `Request` carries architectural request metadata, `Packet` carries a
 specific memory transaction, and ports define how SimObjects exchange packets.
 
 Do not assume timing-mode behavior applies to atomic or functional access.
-Functional accesses are for inspecting or updating simulated state, atomic
-accesses model instantaneous service with latency accounting, and timing
-accesses model queued/asynchronous packet flow.
+Functional accesses are zero-time debug operations for inspecting or updating
+simulated state and are not a `System.mem_mode`. Atomic accesses flow through
+the configured memory system without event-driven timing, while
+`atomic_noncaching` is used for paths that bypass caches, including KVM and
+Ruby atomic accesses. Timing accesses model queued, asynchronous packet flow.
+Snoops are cache-coherence traffic within these access mechanisms, not a
+separate memory mode.
 
 ## Classic, Ruby, And Controllers
 
