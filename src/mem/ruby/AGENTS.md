@@ -1,7 +1,9 @@
 # Ruby Agent Notes
 
-Ruby combines hand-written C++/Python, SCons glue, and SLICC protocol inputs.
-Generated protocol output belongs under `build/`; do not edit it directly.
+Ruby combines hand-written C++/Python, SCons glue, and protocol inputs written
+in SLICC, a domain-specific language for describing cache-coherence state
+machines. Generated protocol output belongs under `build/`; do not edit it
+directly.
 
 ## SLICC And Generated Files
 
