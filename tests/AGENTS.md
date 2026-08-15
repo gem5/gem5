@@ -3,6 +3,9 @@
 This directory contains gem5 test entry points, TestLib suites, PyUnit tests,
 fixtures, and test resources.
 
+See [`../TESTING.md`](../TESTING.md) for the repository's testing overview and
+instructions for running each test family.
+
 ## Test Families
 
 C++ GTests are generally declared near the C++ code under `src/` and built with
