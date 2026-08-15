@@ -2,6 +2,10 @@ This document serves as a guide to contributing to gem5.
 The following subsections outline, in order, the steps involved in contributing
 to the gem5 project.
 
+Contributors using coding agents should also consult [AGENTS.md](AGENTS.md).
+More specific `AGENTS.md` files under the repository provide additional
+guidance for changes in their directory trees.
+
 ## Determining what you can contribute
 
 The easiest way to see how you can contribute to gem5 is to check our Jira
