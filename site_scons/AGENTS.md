@@ -28,6 +28,14 @@ Keep dependency and compiler support policy aligned with `SConstruct`,
 ## Validation
 
 For SCons edits, run `python3 -m py_compile` on touched Python files and
-`scons -Q --help` when option parsing, registration, or configure behavior may
-be affected. For dependency-edge or generator changes, use targeted
-`scons -n ... --debug=explain` and `sconsign` checks before broad rebuilds.
+treat it as a syntax check only. `scons -Q --help` evaluates the top-level
+`SConstruct` and imported site initialization, so it is useful for that narrow
+startup and top-level option-registration path. With no build target it does
+not read build-specific `SConsopts` or `SConscript` files, run configure
+probes, or validate source and generator registration.
+
+Use the narrowest explicit build target that reaches the changed logic when
+registration or configure behavior matters. A dry run with
+`scons -n <target> --debug=explain` can help inspect dependency decisions after
+configure state is current, but it does not execute actions and can fail if a
+configure test needs to update its output.

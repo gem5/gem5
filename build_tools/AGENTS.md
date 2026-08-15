@@ -25,6 +25,8 @@ output is wrong, fix the relevant source declaration or generator rather than
 
 ## Validation
 
-Run `python3 -m py_compile` on touched generator files. Prefer a targeted SCons
-build of the generated target or a dry run with `--debug=explain` before
-running broad builds.
+Run `python3 -m py_compile` on touched generator files as a syntax check. A dry
+run can inspect command and dependency selection, but it does not execute the
+generator and may fail when configure outputs need updating. Build the
+narrowest target that actually regenerates and compiles the affected output;
+compare generated files when output text or ordering changes.

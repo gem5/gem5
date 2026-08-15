@@ -8,14 +8,12 @@ systems, cache hierarchies, resources, and simulator helpers.
 
 ## Standard Library Stability
 
-`src/python/gem5` is user-facing stdlib code and has a higher API-stability bar
-than much of the rest of gem5. Users should generally be able to run older
-configuration files on newer gem5 releases without surprising breakage.
-
-Do not remove or rename stdlib APIs without a deprecation path. Provide at
-least one release with a user-visible warning before removal, and keep
-deprecations longer when migration risk is high. Existing examples include
-warnings in `gem5/simulate/simulator.py`, `gem5/resources/resource.py`,
+`src/python/gem5` is the user-facing standard library, so compatibility is an
+explicit review concern. The repository contains deprecation mechanisms, but
+does not define one universal deprecation period for every stdlib API. Follow
+the policy established by the affected subsystem and its maintainers; do not
+invent a fixed release count. Existing deprecation examples include warnings
+in `gem5/simulate/simulator.py`, `gem5/resources/resource.py`,
 `gem5/resources/workload.py`, and `gem5/utils/simpoint.py`.
 
 Use `m5.util.warn` for runtime deprecation warnings and keep replacement
@@ -53,7 +51,8 @@ and tests synchronized when changing a binding.
 ## Validation
 
 For Python-only edits, run `python3 -m py_compile` on touched files when
-practical. For SimObject, param, enum, or pybind-facing edits, build the
+practical, but remember that it checks syntax rather than imports or runtime
+behavior. For SimObject, param, enum, or pybind-facing edits, build the
 affected gem5 target so the generated bindings are compiled. `scons -Q --help`
-only validates top-level configuration and is not a substitute for a binding
-build.
+only evaluates the top-level SConstruct and site initialization; it does not
+process the build-specific SConscripts or generate and compile bindings.

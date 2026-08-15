@@ -6,11 +6,13 @@ Most ISAs combine hand-written C++/Python with generated C++ from `.isa` files.
 
 ## Generated ISA Code
 
-The ISA parser in `src/arch/isa_parser` reads each ISA's `isa/main.isa` and the
-files it includes, such as `decoder.isa`, `operands.isa`, `bitfields.isa`, and
-`includes.isa`. The generated code creates decoder tables and `StaticInst`
-classes used by CPU models. Do not edit generated files under `build/`; change
-the `.isa` input, parser support code, or hand-written ISA files instead.
+For ISAs registered with `ISADesc`, the parser in `src/arch/isa_parser` reads
+the architecture's `isa/main.isa` and its includes. Common inputs include
+decoder fragments, `operands.isa`, `bitfields.isa`, and `includes.isa`; exact
+file organization differs by ISA. Generated decoder and instruction classes
+are used through `StaticInst`. Do not edit generated files under `build/`;
+change the `.isa` input, parser support code, or hand-written ISA files
+instead.
 
 `decoder.isa` describes instruction decode patterns and semantic code.
 `operands.isa` maps ISA operands onto gem5 register classes and memory
@@ -31,3 +33,10 @@ When adding or changing instructions, check decode, execution, disassembly,
 register operands, memory flags, faults, and PC advancement. For macroop or
 microop ISAs such as x86, preserve the macro/micro instruction contract and
 micro-PC behavior.
+
+## Validation
+
+Build a target containing the affected ISA so the parser executes and the
+generated C++ compiles. Add or run focused execution and disassembly coverage
+for the changed encoding; a successful parser run alone does not validate
+instruction semantics across CPU models.

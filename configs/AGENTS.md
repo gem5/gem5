@@ -1,8 +1,10 @@
 # Config Agent Notes
 
-This directory contains simulation configuration scripts and examples. These
-files are not the primary public interface to gem5. Do not treat
-`configs/example` as canonical APIs or copy its patterns blindly into new work.
+This directory contains simulation configuration scripts and examples. Many
+are examples, compatibility helpers, or scripts for a specific test or study;
+their presence does not make every helper a stable public API. Treat
+`configs/example` as runnable examples, not as a single canonical interface to
+copy blindly.
 
 ## Creating Simulations
 
@@ -24,3 +26,10 @@ avoid turning examples into reusable interfaces.
 Avoid extending deprecated scripts unless the task explicitly asks for legacy
 support. If changing `configs/common` or `configs/ruby`, check existing users
 and TestLib coverage because these helpers can affect many legacy examples.
+
+## Validation
+
+Run `python3 -m py_compile` for syntax-only checks where imports permit it.
+Then run the narrowest configuration or TestLib suite that instantiates the
+changed path; compilation alone does not prove that SimObject wiring, resource
+requirements, or exit-event handling is correct.

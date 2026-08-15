@@ -32,3 +32,11 @@ When changing instruction flow, memory requests, faults, branches, or
 squashing, trace the path through fetch/decode/execute/commit for the relevant
 CPU model. For O3, distinguish `StaticInst` architectural semantics from
 `DynInst` lifetime, request ownership, and squash/commit behavior.
+
+## Validation
+
+Build the narrowest target containing the changed model and run a focused test
+with that model. Do not generalize a pass from AtomicSimpleCPU or
+TimingSimpleCPU to MinorCPU or O3CPU: their timing, ownership, squash, and
+drain paths differ. For a cross-model interface change, exercise each affected
+model explicitly.

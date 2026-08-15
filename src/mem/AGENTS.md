@@ -36,7 +36,9 @@ wrapper expectations.
 
 ## Validation
 
-Prefer focused builds or unit tests for touched components before broad
-simulator builds. When reproducing memory-system bugs, preserve the exact CPU
-model, memory mode, cache hierarchy, coherence protocol, and workload because
-small config differences can route requests through different code paths.
+Prefer focused builds and the narrowest unit test or simulation that exercises
+the touched path before broad validation. Compilation alone does not validate
+packet ordering or coherence behavior. When reproducing a memory-system bug,
+preserve the exact CPU model, memory mode, cache hierarchy, coherence protocol,
+and workload because small configuration differences can route requests
+through different code paths.

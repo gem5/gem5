@@ -7,10 +7,11 @@ directly.
 
 ## SLICC And Generated Files
 
-Protocol source files live under `src/mem/ruby/protocol`. If generated C++ or
-HTML looks wrong, change the SLICC input or generator path, then rebuild. Keep
-SCons emitters side-effect free: emitters should discover targets, while
-actions should write generated files.
+Built-in protocol source files live under `src/mem/ruby/protocol`; build logic
+can add other protocol directories. If generated C++ or HTML looks wrong,
+change the SLICC input or generator path, then rebuild. Keep SCons emitters
+side-effect free: emitters should discover targets, while actions should write
+generated files.
 
 ## Ruby And Classic
 
@@ -19,10 +20,12 @@ direct cache/memory object graph in C++ and are usually configured by composing
 cache, bus, and memory objects. Ruby models cache-coherence protocols as
 message-passing controller state machines connected through Ruby networks.
 
-Ruby protocols are written in SLICC under `src/mem/ruby/protocol`; SLICC
-generates controller C++ code, protocol message types, and HTML protocol
-documentation under `build/`. Protocol behavior should be changed in the SLICC
-state machines or the Ruby support code they call, not in generated files.
+Built-in Ruby protocols are written in SLICC under `src/mem/ruby/protocol`;
+additional protocol directories can be supplied by the build. SLICC generates
+controller C++ code and protocol types under the selected build directory. It
+generates HTML there only when the `SLICC_HTML` Kconfig option is enabled.
+Protocol behavior should be changed in the SLICC state machines or the Ruby
+support code they call, not in generated files.
 
 When working on coherence behavior, identify whether the bug belongs to the
 Ruby protocol, the generated controller, the network, the Sequencer, or the
@@ -34,3 +37,10 @@ that a Ruby protocol fix applies to every protocol.
 
 For protocol path or case changes, verify generated paths and source directory
 case exactly.
+
+## Validation
+
+Build a configuration that enables the affected Ruby protocol so SLICC runs
+and its generated C++ compiles. Then run a focused Ruby test for the changed
+state-machine path; successful generation alone does not validate coherence
+transitions or message ordering.
