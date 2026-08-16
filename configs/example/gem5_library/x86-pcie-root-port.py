@@ -1,3 +1,6 @@
+# Copyright (c) 2026 REDS institute of the HEIG-VD
+# All rights reserved.
+#
 # Copyright (c) 2021-2025 The Regents of the University of California
 # All rights reserved.
 #
@@ -25,24 +28,36 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
+This script is copied from x86-ubuntu-run-with-kvm.py and adds an example of
+a PCI-to-PCI bridge usage. To demonstrate it, a simple PCIe Root Port is added,
+which only adds the required PCI configuration to be detected correctly.
+An ethernet port is connected behind the port.
 
-This script shows an example of running a full system Ubuntu boot simulation
-using the gem5 library. This simulation boots Ubuntu 24.04 using 2 KVM CPU
-cores. The simulation then switches to 2 Timing CPU cores for the rest of the
-simulation.
+After boot, the simulation will run `lspci` and `ip link` to show that the root port
+and the ethernet card are present and detected.
 
 Usage
 -----
 
 ```
 scons build/ALL/gem5.opt
-./build/ALL/gem5.opt configs/example/gem5_library/x86-ubuntu-run-with-kvm.py
+./build/ALL/gem5.opt configs/example/gem5_library/x86-pcie-root-port.py
 ```
 """
 
+from m5.objects import (
+    IGbE_e1000,
+    IPcieRootPort,
+)
+
 from gem5.coherence_protocol import CoherenceProtocol
 from gem5.components.boards.x86_board import X86Board
+from gem5.components.cachehierarchies.abstract_cache_hierarchy import (
+    AbstractCacheHierarchy,
+)
+from gem5.components.memory.abstract_memory_system import AbstractMemorySystem
 from gem5.components.memory.single_channel import SingleChannelDDR3_1600
+from gem5.components.processors.abstract_processor import AbstractProcessor
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_switchable_processor import (
     SimpleSwitchableProcessor,
@@ -77,7 +92,7 @@ cache_hierarchy = MESITwoLevelCacheHierarchy(
 )
 
 # Set up the system memory.
-memory = SingleChannelDDR3_1600()
+memory = SingleChannelDDR3_1600(size="3GiB")
 
 # Here we set up the processor. This is a special switchable processor in which
 # a starting core type and a switch core type must be specified. Once a
@@ -92,19 +107,52 @@ processor = SimpleSwitchableProcessor(
     switch_core_type=CPUTypes.TIMING,
     isa=ISA.X86,
     num_cores=2,
-    clk_freq="3GHz",
 )
 
 # Here we set up the board. The X86Board allows for FS mode (full system) or
 # SE mode (syscall emulation) X86 simulations.
 
-board = X86Board(
+
+class PcieRootX86Board(X86Board):
+
+    # Add PCI root port (PCI-to-PCI bridge)
+    pcie_root_port = IPcieRootPort(
+        pci_dev=1,
+        pci_func=0,
+    )
+
+    # PCI device behind the bridge. pci_dev must be 0 for PCIe Root Port.
+    ethernet = IGbE_e1000(
+        pci_dev=0,
+        pci_func=0,
+    )
+
+    def __init__(
+        self,
+        clk_freq: str,
+        processor: AbstractProcessor,
+        memory: AbstractMemorySystem,
+        cache_hierarchy: AbstractCacheHierarchy,
+    ) -> None:
+        super().__init__(clk_freq, processor, memory, cache_hierarchy)
+
+        self._set_readfile_contents("lspci -v && ip link")
+
+    def _setup_io_devices(self):
+        super()._setup_io_devices()
+
+        # Connect the PCI root port with the host bridge and the downstream device.
+        self.pcie_root_port.internal_connect()
+        self.pcie_root_port.connect_upper_bridge(self.get_pci_host())
+        self.pcie_root_port.connect_device(self.ethernet)
+
+
+board = PcieRootX86Board(
     clk_freq="3GHz",
     processor=processor,
     memory=memory,
     cache_hierarchy=cache_hierarchy,
 )
-
 
 workload = obtain_resource(
     "x86-ubuntu-24.04-boot-with-systemd", resource_version="5.0.0"

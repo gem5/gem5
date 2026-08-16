@@ -150,6 +150,15 @@ class SimpleCore(BaseCPUCore):
         :param core_id: The id of the core to be returned.
         """
 
-        return cls.cpu_class_factory(cpu_type=cpu_type, isa=isa)(
+        core = cls.cpu_class_factory(cpu_type=cpu_type, isa=isa)(
             cpu_id=core_id
         )
+
+        # RISC-V KVM vector state is host-dependent. Use the latest profile
+        # without the V extension by default; callers may select RVA23S64 when
+        # the host exposes vector state.
+        if cpu_type == CPUTypes.KVM and isa == ISA.RISCV:
+            core.isa[0].riscv_profile = "RVA22S64"
+            core.isa[0].extra_extensions = []
+
+        return core

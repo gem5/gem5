@@ -124,11 +124,20 @@ exitFutexWake(ThreadContext *tc, VPtr<> addr, uint64_t tgid)
 }
 
 static SyscallReturn
-exitImpl(SyscallDesc *desc, ThreadContext *tc, bool group, int status)
+exitImpl(SyscallDesc *desc, ThreadContext *tc, bool group, int status,
+         bool signaled = false)
 {
     auto p = tc->getProcessPtr();
 
     System *sys = tc->getSystemPtr();
+
+    // Encode a Linux wait(2) status word so wait4 can distinguish a
+    // normal exit (WIFEXITED) from death by signal (WIFSIGNALED).
+    // When signaled, `status` is the signal number: store it in the low
+    // 7 bits. Do not store the shell-style 128+sig value here -- that
+    // incorrectly sets WCOREDUMP for every fatal signal.
+    const int wait_status =
+        signaled ? (status & 0x7f) : ((status & 0xff) << 8);
 
     if (group)
         *p->exitGroup = true;
@@ -199,7 +208,8 @@ exitImpl(SyscallDesc *desc, ThreadContext *tc, bool group, int status)
     if (last_thread) {
         if (parent) {
             assert(tg_lead);
-            sys->signalList.push_back(BasicSignal(tg_lead, parent, SIGCHLD));
+            sys->signalList.push_back(
+                BasicSignal(tg_lead, parent, SIGCHLD, wait_status));
         }
 
         /**
@@ -264,6 +274,14 @@ SyscallReturn
 exitGroupFunc(SyscallDesc *desc, ThreadContext *tc, int status)
 {
     return exitImpl(desc, tc, true, status);
+}
+
+SyscallReturn
+exitGroupSignaledFunc(SyscallDesc *desc, ThreadContext *tc, int sig)
+{
+    // `sig` is the terminating signal number. exitImpl encodes a wait(2)
+    // status with WIFSIGNALED / WTERMSIG for the parent wait4.
+    return exitImpl(desc, tc, true, sig, true);
 }
 
 SyscallReturn
@@ -571,6 +589,25 @@ SyscallReturn
 dup2Func(SyscallDesc *desc, ThreadContext *tc, int old_tgt_fd, int new_tgt_fd)
 {
     auto p = tc->getProcessPtr();
+
+    // Bound-check both fds against the guest FD table size before any
+    // FDArray::operator[] access (that path asserts on out-of-range
+    // indices). Linux returns EBADF for an out-of-range oldfd or newfd.
+    if (old_tgt_fd < 0 || old_tgt_fd >= p->fds->getSize() ||
+        new_tgt_fd < 0 || new_tgt_fd >= p->fds->getSize()) {
+        return -EBADF;
+    }
+
+    // dup2(oldfd, oldfd) is a no-op that returns oldfd when oldfd is valid.
+    if (old_tgt_fd == new_tgt_fd) {
+        auto old_hbp =
+            std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[old_tgt_fd]);
+        if (!old_hbp) {
+            return -EBADF;
+        }
+        return new_tgt_fd;
+    }
+
     auto old_hbp = std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[old_tgt_fd]);
     if (!old_hbp)
         return -EBADF;
@@ -581,18 +618,29 @@ dup2Func(SyscallDesc *desc, ThreadContext *tc, int old_tgt_fd, int new_tgt_fd)
      * the second parameter for dup2 (newfd), but we don't know what the
      * viable numbers are; we execute the open call to retrieve one.
      */
-    int res_fd = dup2(old_sim_fd, open("/dev/null", O_RDONLY));
-    if (res_fd == -1)
+    int tmp_fd = open("/dev/null", O_RDONLY);
+    if (tmp_fd == -1) {
         return -errno;
+    }
+    int res_fd = dup2(old_sim_fd, tmp_fd);
+    if (res_fd == -1) {
+        close(tmp_fd);
+        return -errno;
+    }
 
+    // Close whatever currently occupies the requested target FD, then
+    // place the clone exactly at new_tgt_fd. Using allocFD() here was
+    // wrong: it always picks the next free slot (dup semantics) and
+    // ignores new_tgt_fd.
     auto new_hbp = std::dynamic_pointer_cast<HBFDEntry>((*p->fds)[new_tgt_fd]);
     if (new_hbp)
         p->fds->closeFDEntry(new_tgt_fd);
     new_hbp = std::dynamic_pointer_cast<HBFDEntry>(old_hbp->clone());
     new_hbp->setSimFD(res_fd);
     new_hbp->setCOE(false);
+    p->fds->setFDEntry(new_tgt_fd, new_hbp);
 
-    return p->fds->allocFD(new_hbp);
+    return new_tgt_fd;
 }
 
 SyscallReturn

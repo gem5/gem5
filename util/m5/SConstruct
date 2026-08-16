@@ -141,6 +141,10 @@ if not main['HAVE_LUA51']:
 
 conf.Finish()
 
+main['HAVE_GTEST'] = googletest_dir.File('SConscript').exists()
+if not main['HAVE_GTEST']:
+    print('googletest not found, not building unit tests.')
+
 # Put the sconsign file in the build dir so everything can be deleted at once.
 main.SConsignFile(os.path.join(abspath(build_dir), 'sconsign'))
 # Use soft links instead of hard links when setting up a build directory.
@@ -181,9 +185,11 @@ native = main.Clone()
 native_dir = build_dir.Dir('native')
 
 # Bring in the googletest sources.
-native.SConscript(googletest_dir.File('SConscript'),
-        variant_dir=native_dir.Dir('googletest'), exports={ 'env': native },
-                  duplicate=GetOption('duplicate_sources'))
+if native['HAVE_GTEST']:
+    native.SConscript(googletest_dir.File('SConscript'),
+            variant_dir=native_dir.Dir('googletest'),
+            exports={ 'env': native },
+            duplicate=GetOption('duplicate_sources'))
 
 native.SConscript(src_dir.File('SConscript.native'),
         variant_dir=native_dir, exports={ 'env': native },
@@ -271,9 +277,11 @@ for root, dirs, files in os.walk(abspath(src_dir)):
         # this abi.
         abi_dir = build_dir.Dir(env.subst('${ABI}'))
         # Bring in the googletest sources.
-        env.SConscript(googletest_dir.File('SConscript'),
-                variant_dir=abi_dir.Dir('googletest'),
-                exports='env', duplicate=GetOption('duplicate_sources'))
+        if env['HAVE_GTEST']:
+            env.SConscript(googletest_dir.File('SConscript'),
+                    variant_dir=abi_dir.Dir('googletest'),
+                    exports='env',
+                    duplicate=GetOption('duplicate_sources'))
         env.SConscript(src_dir.File('SConscript'),
                        variant_dir=abi_dir, exports='env',
                        duplicate=GetOption('duplicate_sources'))

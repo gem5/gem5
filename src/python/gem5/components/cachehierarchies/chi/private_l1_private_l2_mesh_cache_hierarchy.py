@@ -179,6 +179,10 @@ class PrivateL1PrivateL2MeshCacheHierarchy(
         # virtual networks: 0=request, 1=snoop, 2=response, 3=data
         self.ruby_system.number_of_virtual_networks = 4
         self.ruby_system.network.number_of_virtual_networks = 4
+        self.ruby_system.network.control_msg_size = (
+            self._noc_params.cntrl_msg_size
+        )
+        self.ruby_system.network.data_msg_size = self._noc_params.data_width
 
         rnf_params = self._get_node_params(CHI_NodeType.CHI_RNF)
         hnf_params = self._get_node_params(CHI_NodeType.CHI_HNF)

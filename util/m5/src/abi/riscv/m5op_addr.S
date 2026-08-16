@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 Advanced Micro Devices, Inc.
+ * Copyright (c) 2026 Ozyegin University CAST Lab
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,34 +24,35 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * Author: Brandon Potter
  */
 
-#ifndef __SE_SIGNAL_HH__
-#define __SE_SIGNAL_HH__
+#include <gem5/asm/generic/m5ops.h>
 
-namespace gem5
-{
+#if __riscv_xlen == 64
+#define M5OP_LOAD ld
+#else
+#define M5OP_LOAD lw
+#endif
 
-class Process;
+.macro  m5op_func, name, func
+        .globl \name
+        .type \name, @function
+\name:
+        .option push
+        .option norelax
+        la t0, m5_mem
+        .option pop
+        M5OP_LOAD t0, 0(t0)
+        li t1, (\func << 8)
+        add t0, t0, t1
+        M5OP_LOAD a0, 0(t0)
+        ret
+        .size \name, .-\name
+.endm
 
-class BasicSignal
-{
-  public:
-    Process *sender;
-    Process *receiver;
-    int signalValue;
-    // wait()/wait4() status word for SIGCHLD (Linux WIFEXITED /
-    // WIFSIGNALED encoding). Stored when the child exits so the parent
-    // can report it.
-    int exitStatus;
+.text
+#define M5OP(name, func) m5op_func M5OP_MERGE_TOKENS(name, _addr), func;
+        M5OP_FOREACH
+#undef M5OP
 
-    BasicSignal(Process *sender, Process *receiver, int signal_val,
-                int exit_status = 0);
-    ~BasicSignal();
-};
-
-} // namespace gem5
-
-#endif // __SE_SIGNAL_HH__
+.section .note.GNU-stack

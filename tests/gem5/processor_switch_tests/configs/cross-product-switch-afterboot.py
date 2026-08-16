@@ -184,6 +184,7 @@ if args.isa == "x86":
         switch_core_type=get_cpu_type_from_str(args.switch_cores),
         isa=ISA.X86,
         num_cores=args.num_cores,
+        clk_freq="3GHz",
     )
 
     board = X86Board(
@@ -223,6 +224,7 @@ elif args.isa == "arm":
         switch_core_type=get_cpu_type_from_str(args.switch_cores),
         isa=ISA.ARM,
         num_cores=args.num_cores,
+        clk_freq="3GHz",
     )
 
     release = ArmDefaultRelease.for_kvm()
@@ -266,6 +268,7 @@ elif args.isa == "riscv":
         switch_core_type=get_cpu_type_from_str(args.switch_cores),
         isa=ISA.RISCV,
         num_cores=args.num_cores,
+        clk_freq="3GHz",
     )
 
     board = RiscvBoard(

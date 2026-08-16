@@ -240,6 +240,11 @@ namespace RiscvISA
 
 
       public:
+        void
+        setPMP(PMP *_pmp)
+        {
+            pmp = _pmp;
+        }
 
         void setTLB(TLB * _tlb)
         {
