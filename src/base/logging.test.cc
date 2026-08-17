@@ -45,7 +45,7 @@ class LoggingFixture : public ::testing::Test
     {
         old = std::cerr.rdbuf(gtestLogOutput.rdbuf());
         oldTerm = getenv("TERM");
-        setenv("TERM", "dummy", /* overwrite */ true);
+        setenv("TERM", "dumb", /* overwrite */ true);
     }
     void
     TearDown() override

@@ -75,10 +75,13 @@ static bool
 shouldANSI()
 {
     bool mustNotColour =
-        getenv("NO_COLOR") != NULL || getenv("NOCOLOR") != NULL;
+        (getenv("NO_COLOR") != NULL && getenv("NO_COLOR")[0] != '\0') ||
+        (getenv("NOCOLOR") != NULL && getenv("NOCOLOR")[0] != '\0');
 
     bool shouldForce =
-        getenv("CLICOLOR_FORCE") != NULL || getenv("FORCE_COLOR") != NULL;
+        (getenv("CLICOLOR_FORCE") != NULL &&
+         getenv("CLICOLOR_FORCE")[0] != '\0') ||
+        (getenv("FORCE_COLOR") != NULL && getenv("FORCE_COLOR")[0] != '\0');
 
     char *term = getenv("TERM");
     bool isTerminal =
