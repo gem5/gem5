@@ -65,9 +65,7 @@ class ETrace(ProbeListenerObject):
     )
 
     # Jump target cache mode
-    jumpTargetCache = Param.Bool(
-        False, "Enable jump target cache compression"
-    )
+    jumpTargetCache = Param.Bool(False, "Enable jump target cache compression")
     cacheSizeP = Param.UInt32(
         0, "Log2 of jump target cache entries (0 disables)"
     )
@@ -105,21 +103,18 @@ class ETrace(ProbeListenerObject):
         64, "Instruction address width (iaddress_width_p)"
     )
     iaddressLsbP = Param.UInt32(
-        1, "Instruction address LSB shift: 1=RVC, 2=32-bit aligned. "
+        1,
+        "Instruction address LSB shift: 1=RVC, 2=32-bit aligned. "
         "Encoder shifts emitted addresses right by this many bits; "
-        "decoder shifts back."
+        "decoder shifts back.",
     )
     privilegeWidthP = Param.UInt32(
         2, "Privilege field width (typically 2 bits)"
     )
-    ecauseWidthP = Param.UInt32(
-        6, "Trap cause field width (ecause_width_p)"
-    )
+    ecauseWidthP = Param.UInt32(6, "Trap cause field width (ecause_width_p)")
     timeWidthP = Param.UInt32(
         64, "Time field width in bits (0 or notimeP disables)"
     )
-    f0sWidthP = Param.UInt32(
-        1, "Format 0 subformat selector width"
-    )
+    f0sWidthP = Param.UInt32(1, "Format 0 subformat selector width")
     notimeP = Param.Bool(False, "Omit time field from Format 3 packets")
     nocontextP = Param.Bool(False, "Omit context field from Format 3 packets")

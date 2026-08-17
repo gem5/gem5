@@ -157,7 +157,7 @@ def branches_field_to_count(branches_field):
     16-31 → 31.
     """
     if branches_field == 0:
-        return 31, True   # no-address form
+        return 31, True  # no-address form
     if branches_field == 1:
         return 1, False
     if branches_field <= 3:
@@ -195,10 +195,14 @@ def decode_instruction_trace(filename, show_stats, verify_updiscon=False):
     print(f"  cache_size_p         = {header.cache_size_p}")
     print(f"  call_counter_size_p  = {header.call_counter_size_p}")
     print(f"  bpred_size_p         = {header.bpred_size_p}")
-    print(f"  ioptions_bits (adv)  = 0x{header.ioptions_bits:x} "
-          f"({format_ioptions(header.ioptions_bits)})")
-    print(f"  doptions_bits (adv)  = 0x{header.doptions_bits:x} "
-          f"({format_doptions(header.doptions_bits)})")
+    print(
+        f"  ioptions_bits (adv)  = 0x{header.ioptions_bits:x} "
+        f"({format_ioptions(header.ioptions_bits)})"
+    )
+    print(
+        f"  doptions_bits (adv)  = 0x{header.doptions_bits:x} "
+        f"({format_doptions(header.doptions_bits)})"
+    )
     print()
 
     num_packets = 0
@@ -212,8 +216,8 @@ def decode_instruction_trace(filename, show_stats, verify_updiscon=False):
     num_f0_jtc = 0
     total_branches = 0
     reconstructed_addr = 0
-    prev_addr_msb = 0   # for XOR-chain reconstruction
-    jtc_mirror = {}     # decoder mirror of the encoder's JTC
+    prev_addr_msb = 0  # for XOR-chain reconstruction
+    jtc_mirror = {}  # decoder mirror of the encoder's JTC
 
     packet = etrace_pb2.ETracePacket()
     while protolib.decodeMessage(proto_in, packet):
@@ -226,10 +230,14 @@ def decode_instruction_trace(filename, show_stats, verify_updiscon=False):
             _classify_for_stats(
                 packet,
                 counters := {
-                    "sync": num_sync_start, "trap": num_trap,
-                    "branch_map": num_branch_map, "addr_only": num_addr_only,
-                    "support": num_support, "context": num_context,
-                    "f0_pbc": num_f0_pbc, "f0_jtc": num_f0_jtc,
+                    "sync": num_sync_start,
+                    "trap": num_trap,
+                    "branch_map": num_branch_map,
+                    "addr_only": num_addr_only,
+                    "support": num_support,
+                    "context": num_context,
+                    "f0_pbc": num_f0_pbc,
+                    "f0_jtc": num_f0_jtc,
                     "branches": total_branches,
                 },
             )
@@ -324,9 +332,12 @@ def decode_instruction_trace(filename, show_stats, verify_updiscon=False):
                 # Mirror the encoder's JTC: whenever we see an
                 # address-carrying Format 1 or Format 2 packet, its
                 # target could be JTC-cached later.
-                idx = (reconstructed_addr >> 1) & (
-                    (1 << header.cache_size_p) - 1
-                ) if header.cache_size_p > 0 else None
+                idx = (
+                    (reconstructed_addr >> 1)
+                    & ((1 << header.cache_size_p) - 1)
+                    if header.cache_size_p > 0
+                    else None
+                )
                 if idx is not None:
                     jtc_mirror[idx] = reconstructed_addr
                 bm = format_branch_map(packet.branch_map, count)
@@ -358,9 +369,7 @@ def decode_instruction_trace(filename, show_stats, verify_updiscon=False):
         elif packet.format == etrace_pb2.ETracePacket.FORMAT_2:
             num_addr_only += 1
             delta = packet.saddress << lsb
-            reconstructed_addr = (reconstructed_addr + delta) & (
-                (1 << 64) - 1
-            )
+            reconstructed_addr = (reconstructed_addr + delta) & ((1 << 64) - 1)
             if header.cache_size_p > 0:
                 idx = (reconstructed_addr >> 1) & (
                     (1 << header.cache_size_p) - 1
@@ -385,9 +394,9 @@ def decode_instruction_trace(filename, show_stats, verify_updiscon=False):
                 if packet.branch_fmt & 0x2:
                     if packet.HasField("saddress"):
                         delta = packet.saddress
-                        reconstructed_addr = (
-                            reconstructed_addr + delta
-                        ) & ((1 << 64) - 1)
+                        reconstructed_addr = (reconstructed_addr + delta) & (
+                            (1 << 64) - 1
+                        )
                         line += (
                             f" addr=0x{reconstructed_addr:016x}"
                             f" (delta={delta:+d})"
@@ -495,9 +504,7 @@ def decode_data_trace(filename, show_stats):
             etrace_pb2.ETraceDataPacket.STORE_ALIGNED,
             etrace_pb2.ETraceDataPacket.STORE_UNALIGNED,
         )
-        is_atomic = (
-            packet.format == etrace_pb2.ETraceDataPacket.ATOMIC
-        )
+        is_atomic = packet.format == etrace_pb2.ETraceDataPacket.ATOMIC
         is_csr = packet.format == etrace_pb2.ETraceDataPacket.CSR
 
         if is_load:
@@ -538,9 +545,7 @@ def decode_data_trace(filename, show_stats):
                 )
                 line += f" op={sub}"
                 if packet.operand:
-                    line += (
-                        f" operand=[{format_data_bytes(packet.operand)}]"
-                    )
+                    line += f" operand=[{format_data_bytes(packet.operand)}]"
             if packet.is_lr:
                 line += " [LR]"
             if packet.is_sc:
