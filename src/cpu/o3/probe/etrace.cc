@@ -1034,6 +1034,24 @@ ETrace::emitDataPacket(const DynInstPtr &dynInst, Addr addr, uint32_t bytes,
         pkt.set_data(dynInst->memData, bytes);
     }
 
+    // Operand (rs2's pre-operation value) is mandatory on true AMO
+    // packets per dataTracePayload.adoc -- src[1] is rs2 for every
+    // AtomicMemOp instruction (src[0] is rs1, used only for the
+    // effective address). Confirmed empirically at the
+    // DataAccessComplete probe point: e.g. "amoswap_w a5,a5,(s1)"
+    // reports src[0]==s1's value (the address), src[1]==the actual
+    // swap operand. LR/SC have no operand field (they're represented
+    // as plain LOAD/STORE forms, not the ATOMIC format) so this is
+    // skipped for them.
+    if (fmt == ProtoMessage::ETraceDataPacket::ATOMIC && includeData &&
+            dynInst->numSrcRegs() >= 2) {
+        RegVal operandVal = dynInst->getRegOperand(
+            dynInst->staticInst.get(), 1);
+        uint8_t operandBytes[sizeof(RegVal)];
+        std::memcpy(operandBytes, &operandVal, sizeof(RegVal));
+        pkt.set_operand(operandBytes, bytes);
+    }
+
     dataTraceStream->write(pkt);
     stats.numDataTracePackets++;
 
