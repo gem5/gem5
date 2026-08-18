@@ -1304,12 +1304,15 @@ ETrace::emitBranchCountPacket(bool withAddress, Addr addr, bool mispredTaken)
     pkt.set_f0_subformat(ProtoMessage::ETracePacket::F0_BRANCH_COUNT);
     // Spec encodes as (pbc - 31).
     pkt.set_branch_count(bpredCorrectCount - 31);
-    // branch_fmt per spec: 00 no-address; 10 address (mispred taken);
-    // 11 address (mispred not-taken).
+    // branch_fmt per spec (payload.adoc Format 0-0, address form):
+    // 00 no-address; 10 address, points to a branch that was
+    // predicted correctly (or to a non-branch instruction); 11
+    // address, points to a branch which failed prediction. Was
+    // previously inverted (0x2/0x3 swapped).
     uint32_t bf;
     if (!withAddress)      bf = 0x0;
-    else if (mispredTaken) bf = 0x2;
-    else                   bf = 0x3;
+    else if (mispredTaken) bf = 0x3;
+    else                   bf = 0x2;
     pkt.set_branch_fmt(bf);
     if (withAddress) {
         int64_t delta = static_cast<int64_t>(
