@@ -63,6 +63,18 @@ class ETrace(ProbeListenerObject):
     bpredSizeP = Param.UInt32(
         0, "Log2 of branch predictor table entries (0 disables)"
     )
+    pbcFlushThreshold = Param.UInt32(
+        31,
+        "Correctly-predicted-branch count at which to proactively "
+        "flush a Format 0-0 packet (E-Trace v2.0 payload.adoc: "
+        "'branch count reaches its maximum value' condition). The "
+        "wire encoding is always (count - 31), so this must be >= "
+        "31 -- the spec's own ceiling is 0xffffffff. The default "
+        "(31) flushes as early as legally possible (simple, matches "
+        "pre-existing behavior); raising it lets more correctly-"
+        "predicted branches be omitted per packet, improving "
+        "compression at the cost of a larger in-flight counter.",
+    )
 
     # Jump target cache mode
     jumpTargetCache = Param.Bool(False, "Enable jump target cache compression")

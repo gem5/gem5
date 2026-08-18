@@ -153,22 +153,14 @@ def format_data_bytes(data):
 
 
 def branches_field_to_count(branches_field):
-    """Map the on-wire tapered `branches` field to the actual bit count.
-
-    Spec: 0 → 31 (no-address form), 1 → 1, 2-3 → 3, 4-7 → 7, 8-15 → 15,
-    16-31 → 31.
+    """The on-wire `branches` field is the EXACT count of valid
+    branch_map bits (spec: "branches=12" means branch_map is 15 bits
+    long with the 12 LSBs valid) -- not a tapered width code. 0 means
+    the no-address 31-bit form.
     """
     if branches_field == 0:
         return 31, True  # no-address form
-    if branches_field == 1:
-        return 1, False
-    if branches_field <= 3:
-        return 3, False
-    if branches_field <= 7:
-        return 7, False
-    if branches_field <= 15:
-        return 15, False
-    return 31, False
+    return branches_field, False
 
 
 def decode_instruction_trace(filename, show_stats, verify_updiscon=False):

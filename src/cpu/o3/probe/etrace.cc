@@ -75,6 +75,7 @@ ETrace::ETrace(const ETraceParams &params)
       branchPrediction(params.branchPrediction),
       bpredSizeP(params.bpredSizeP),
       bpredCorrectCount(0),
+      pbcFlushThreshold(params.pbcFlushThreshold),
       jumpTargetCache(params.jumpTargetCache),
       cacheSizeP(params.cacheSizeP),
       jtCacheValid(false),
@@ -115,6 +116,11 @@ ETrace::ETrace(const ETraceParams &params)
     fatal_if(cpu->numThreads > 1,
              "%s supports single-threaded "
              "workloads only.\n",
+             name());
+    fatal_if(pbcFlushThreshold < 31,
+             "%s: pbcFlushThreshold must be >= 31 (Format 0-0's "
+             "branch_count field is wire-encoded as count-31; a "
+             "lower threshold cannot be legally represented).\n",
              name());
 
     std::string filename = simout.resolve(name() + "." + params.traceFile);
@@ -545,14 +551,32 @@ ETrace::computeDisambigBits(Addr addr, bool isExplicitReturn,
 }
 
 void
-ETrace::maybeEmitPbc()
+ETrace::maybeEmitPbc(Addr addr)
 {
-    if (bpredCorrectCount >= 31) {
-        // Spec: emit Format 0-0 with branch_count = (pbc - 31) as
-        // soon as pbc reaches 31, so the decoder's mirror counter
-        // tracks. No address in this path (branch_fmt = 00).
-        emitBranchCountPacket(false, 0);
+    if (bpredCorrectCount >= pbcFlushThreshold) {
+        // payload.adoc: "The branch count reaches its maximum value"
+        // -- carries an address (branch_fmt=10) so the packet is not
+        // format-distinguishable from the bullet-2 (forced address)
+        // case; the reported address is this branch's own PC, and
+        // since it just extended the correctly-predicted streak, it
+        // was itself predicted correctly (mispredTaken=false).
+        emitBranchCountPacket(true, addr, false);
     }
+}
+
+bool
+ETrace::maybeFlushPbcForAddress(Addr addr)
+{
+    // payload.adoc bullet 2: "An updiscon, interrupt or exception
+    // requires the encoder to output an address. In this case the
+    // encoder will output the branch count." Only legally encodable
+    // once the streak has reached the wire floor of 31 (branch_count
+    // is always pbc-31); a smaller pending count has no packet to
+    // carry it and simply keeps accumulating across this address
+    // report (matches the Format 1/2 comments at their call sites).
+    if (bpredCorrectCount < 31) return false;
+    emitBranchCountPacket(true, addr, false);
+    return true;
 }
 
 void
@@ -707,9 +731,19 @@ ETrace::traceCommit(const DynInstPtr &dynInst)
                 if (!pred) {  // Correctly predicted not-taken.
                     bpredCorrectCount++;
                     stats.numBpredCorrect++;
-                    maybeEmitPbc();
+                    maybeEmitPbc(pc);
                     break;
                 }
+                // Misprediction: per payload.adoc Format 0-0, a
+                // pending count of at least 31 correctly predicted
+                // branches must be flushed (branch_fmt=00, no
+                // address -- it is implicitly this branch) before
+                // the streak resets.
+                stats.numBpredMispredict++;
+                if (bpredCorrectCount >= 31) {
+                    emitBranchCountPacket(false, 0);
+                }
+                bpredCorrectCount = 0;
             }
             branchMap |= (1U << branchCount);
             branchCount++;
@@ -727,9 +761,17 @@ ETrace::traceCommit(const DynInstPtr &dynInst)
                 if (pred) {  // Correctly predicted taken.
                     bpredCorrectCount++;
                     stats.numBpredCorrect++;
-                    maybeEmitPbc();
+                    maybeEmitPbc(pc);
                     break;
                 }
+                // Misprediction: flush any pending >=31 streak
+                // (branch_fmt=00, no address) before resetting.
+                // See payload.adoc Format 0-0.
+                stats.numBpredMispredict++;
+                if (bpredCorrectCount >= 31) {
+                    emitBranchCountPacket(false, 0);
+                }
+                bpredCorrectCount = 0;
             }
             branchCount++;
             stats.numBranches++;
@@ -1177,13 +1219,28 @@ ETrace::emitTrapPacket(Addr addr, uint64_t cause, uint64_t tval,
 void
 ETrace::emitBranchMapPacket(bool withAddress, Addr addr)
 {
+    // payload.adoc bullet 2: a forced address report must carry a
+    // pending >=31 correctly-predicted-branch count instead of being
+    // emitted as a plain Format 1 (which has no branch_count field).
+    // Any pending branch-map bits are left in place for a later
+    // Format 1 -- they are independent of the pbc streak.
+    if (withAddress && maybeFlushPbcForAddress(addr)) {
+        return;
+    }
+
     ProtoMessage::ETracePacket pkt;
     pkt.set_tick(curTick());
     pkt.set_format(ProtoMessage::ETracePacket::FORMAT_1);
 
     // Encode branches per spec's tapered set. Value 0 signals the
-    // no-address 31-bit form; values 1/3/7/15/31 signal the with-
-    // address form at the corresponding tapered map width.
+    // no-address 31-bit form; a nonzero value with-address is the
+    // EXACT count of valid branch_map bits, per spec ("branches=12"
+    // means branch_map is 15 bits long, with the 12 LSBs valid --
+    // the field is not a tapered width code). Was previously storing
+    // only the tier boundary (1/3/7/15/31), silently padding the gap
+    // with phantom not-taken branches whenever the real count fell
+    // strictly between tiers -- e.g. an actual count of 5 was
+    // reported as 7, fabricating 2 branches that never happened.
     uint32_t branchesField;
     if (!withAddress) {
         panic_if(branchCount != maxBranchMapBits,
@@ -1194,11 +1251,7 @@ ETrace::emitBranchMapPacket(bool withAddress, Addr addr)
         panic_if(branchCount == 0,
                  "Format 1 with-address form requires >=1 branches; "
                  "use Format 2 (emitAddrOnlyPacket) for address-only");
-        if (branchCount == 1) branchesField = 1;
-        else if (branchCount <= 3) branchesField = 3;
-        else if (branchCount <= 7) branchesField = 7;
-        else if (branchCount <= 15) branchesField = 15;
-        else branchesField = 31;
+        branchesField = branchCount;
     }
     pkt.set_branches(branchesField);
     pkt.set_branch_map(branchMap);
@@ -1227,13 +1280,11 @@ ETrace::emitBranchMapPacket(bool withAddress, Addr addr)
         pkt.set_irdepth(irdepth_val);
     }
 
-    // Flush any accumulated correctly-predicted branch count into
-    // this packet so the decoder can consume it (Format 1 in
-    // predicted-mode may carry a branch_count field).
-    if (bpredCorrectCount > 0) {
-        pkt.set_branch_count(bpredCorrectCount);
-        bpredCorrectCount = 0;
-    }
+    // Note: Format 1 has no branch_count field (payload.adoc Format 1
+    // tables list only format/branches/branch_map[/address/notify/
+    // updiscon/irreport/irdepth]). Any pending bpredCorrectCount was
+    // already handled by the maybeFlushPbcForAddress() check above
+    // when withAddress -- it's never written into this packet.
 
     traceStream->write(pkt);
 
@@ -1261,6 +1312,11 @@ ETrace::emitAddressPacket(Addr addr)
 void
 ETrace::emitAddrOnlyPacket(Addr addr)
 {
+    // payload.adoc bullet 2 (see emitBranchMapPacket comment).
+    if (maybeFlushPbcForAddress(addr)) {
+        return;
+    }
+
     ProtoMessage::ETracePacket pkt;
     pkt.set_tick(curTick());
     pkt.set_format(ProtoMessage::ETracePacket::FORMAT_2);
@@ -1347,29 +1403,32 @@ ETrace::emitJtcHitPacket(uint32_t index, Addr target)
     pkt.set_f0_subformat(ProtoMessage::ETracePacket::F0_JTC);
     pkt.set_jtc_index(index);
 
-    // Branch map (if any) piggybacks per spec Format 0-1.
-    uint32_t branchesField;
-    if (branchCount == 0) branchesField = 0;
-    else if (branchCount == 1) branchesField = 1;
-    else if (branchCount <= 3) branchesField = 3;
-    else if (branchCount <= 7) branchesField = 7;
-    else if (branchCount <= 15) branchesField = 15;
-    else branchesField = 31;
+    // Branch map (if any) piggybacks per spec Format 0-1. branches is
+    // the EXACT valid-bit count, not a tapered width code -- see the
+    // matching fix/comment in emitBranchMapPacket.
+    uint32_t branchesField = branchCount;
     pkt.set_branches(branchesField);
     if (branchCount > 0) {
         pkt.set_branch_map(branchMap);
     }
-    // Format 0-1 carries irreport (spec: chained off branch_map MSB
-    // or branches MSB when no map). It does not carry notify/updiscon
+    // Format 0-1 carries irreport (spec: chained off branch_map MSB,
+    // or branches MSB when no map -- both reduce to the top bit of
+    // the declared tapered width). It does not carry notify/updiscon
     // as separate fields — those are subsumed by the JTC lookup itself
     // being an implicit ack of the last uninferable discontinuity.
     // Consume the pending flags here so they don't leak into the next
     // Format 3 packet.
+    bool refBit = branchesField > 0
+                  ? ((branchMap >> (branchesField - 1)) & 1) : false;
     bool isExplicitReturn = pendingExplicitReturn;
     pendingExplicitReturn = false;
     pendingUpdiscon = false;
-    pkt.set_irreport(isExplicitReturn);
-    pkt.set_irdepth(isExplicitReturn ? pendingIrdepth : 0);
+    pkt.set_irreport(refBit ^ isExplicitReturn);
+    // Spec: if irreport equals the reference bit, all bits of irdepth
+    // also equal the reference bit (fill pattern); otherwise irdepth
+    // carries the latched implicit-return depth/counter.
+    pkt.set_irdepth(isExplicitReturn ? pendingIrdepth
+                                      : (refBit ? 0xFFFFFFFFu : 0u));
 
     traceStream->write(pkt);
     // Decoder resets its reconstructed_addr to the JTC target on
@@ -1514,6 +1573,8 @@ ETrace::ETraceStats::ETraceStats(statistics::Group *parent)
                "Returns inferred via call counter"),
       ADD_STAT(numBpredCorrect, statistics::units::Count::get(),
                "Correctly predicted branches omitted"),
+      ADD_STAT(numBpredMispredict, statistics::units::Count::get(),
+               "Branch predictor compression mispredictions"),
       ADD_STAT(numBpcFlushes, statistics::units::Count::get(),
                "Format 0-0 predicted-branch-count flushes"),
       ADD_STAT(numJtCacheHits, statistics::units::Count::get(),

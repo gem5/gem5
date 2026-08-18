@@ -147,11 +147,23 @@ class ETrace : public ProbeListenerObject
     bool isSeqInferableJump(const DynInstPtr &dynInst);
     bool passesFilter(Addr pc, uint8_t priv);
 
-    // Emit the correctly-predicted branch count if it has reached 31,
-    // per spec: as soon as pbc == 31 the encoder emits a Format 0-0
-    // packet (no-address form) so the decoder's counter tracks the
-    // encoder's.
-    void maybeEmitPbc();
+    // Emit the correctly-predicted branch count if it has reached
+    // pbcFlushThreshold, per payload.adoc's "branch count reaches its
+    // maximum value" condition (Format 0-0, with-address form,
+    // branch_fmt=10 -- the address is that of the branch which just
+    // pushed the count to the threshold, and it was itself predicted
+    // correctly by construction). addr is that triggering branch's PC.
+    void maybeEmitPbc(Addr addr);
+
+    // Format 0-0 "updiscon, interrupt or exception requires the
+    // encoder to output an address" flush (payload.adoc bullet 2):
+    // if a correctly-predicted-branch count is pending (>=31, the
+    // minimum legally encodable value), emit it as a Format 0-0
+    // with-address packet carrying addr instead of letting the
+    // caller's own address packet (Format 1/2) report it. Returns
+    // true if it flushed (and thus emitted addr's report) -- callers
+    // must skip their own packet in that case.
+    bool maybeFlushPbcForAddress(Addr addr);
 
     // Update pendingUpdiscon on uninferable discontinuities.
     void markUpdiscon() { pendingUpdiscon = true; }
@@ -255,6 +267,11 @@ class ETrace : public ProbeListenerObject
     uint32_t bpredSizeP;
     std::vector<uint8_t> bpredTable;
     uint32_t bpredCorrectCount;
+    // Count at which to proactively flush a Format 0-0 packet
+    // (payload.adoc "reaches its maximum value" condition). Always
+    // >= 31, since branch_count is wire-encoded as (count - 31);
+    // configurable up to the spec's true 0xffffffff ceiling.
+    const uint32_t pbcFlushThreshold;
 
     // Jump target cache
     bool jumpTargetCache;
@@ -331,6 +348,7 @@ class ETrace : public ProbeListenerObject
         statistics::Scalar numDataTracePackets;
         statistics::Scalar numImplicitReturns;
         statistics::Scalar numBpredCorrect;
+        statistics::Scalar numBpredMispredict;
         statistics::Scalar numBpcFlushes;
         statistics::Scalar numJtCacheHits;
         statistics::Scalar numSijumpInferred;
