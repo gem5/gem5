@@ -676,6 +676,15 @@ ETrace::traceCommit(const DynInstPtr &dynInst)
         emitSyncStartPacket(pc, curPriv, branchBit);
         needsInitialSync = false;
         instsSinceSync = 0;
+        // Seed lastPriv from the privilege the initial sync just
+        // reported, not the constructor's default of 0. Otherwise,
+        // if the trace starts at a nonzero privilege (e.g. FS-mode
+        // boots into M-mode), the privilege-change check just below
+        // fires spuriously on this same instruction -- curPriv !=
+        // lastPriv(0) is trivially true the moment needsInitialSync
+        // flips to false, well before the real assignment further
+        // down ever runs.
+        lastPriv = curPriv;
     }
 
     // Detect privilege change (not via trap — the trap path handles
