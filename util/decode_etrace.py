@@ -31,6 +31,7 @@
 # discovery parameters carried in the header, Format 0/1/2/3 with
 # spec numeric codes, and the XOR-chain disambiguation bits.
 
+import os
 import sys
 
 import protolib
@@ -41,12 +42,20 @@ except ImportError:
     print("Did not find proto definition, attempting to generate")
     from subprocess import call
 
+    # Resolve paths from this script's own location, not the current
+    # working directory -- the documented usage runs this from inside
+    # util/ (`cd util && python3 decode_etrace.py ...`), where the
+    # old repo-root-relative paths ("util", "src/proto") pointed at
+    # util/util and a nonexistent src/proto, silently breaking the
+    # auto-generation fallback in exactly the workflow it documents.
+    _script_dir = os.path.dirname(os.path.abspath(__file__))
+    _repo_root = os.path.dirname(_script_dir)
     error = call(
         [
             "protoc",
-            "--python_out=util",
-            "--proto_path=src/proto",
-            "src/proto/etrace.proto",
+            f"--python_out={_script_dir}",
+            f"--proto_path={os.path.join(_repo_root, 'src', 'proto')}",
+            os.path.join(_repo_root, "src", "proto", "etrace.proto"),
         ]
     )
     if not error:
