@@ -101,14 +101,13 @@ no_termcap = ColorStrings(null_cap_string)
 def should_use_colors(out: TextIO):
     # is there a *non-empty* variable named NO_COLOR/NOCOLOR in the env?
     must_not_colour = (
-        os.getenv("NO_COLOR", default=os.getenv("NOCOLOR", default="")) != ""
+        os.getenv("NO_COLOR", default="") != ""
+        or os.getenv("NOCOLOR", default="") != ""
     )
     # is there a *non-empty* variable named CLICOLOR_FORCE/FORCE_COLOR in the env?
     should_force = (
-        os.getenv(
-            "CLICOLOR_FORCE", default=os.getenv("FORCE_COLOR", default="")
-        )
-        != ""
+        os.getenv("CLICOLOR_FORCE", default="") != ""
+        or os.getenv("FORCE_COLOR", default="") != ""
     )
     istty = out.isatty() and os.getenv("TERM", default="dumb") != "dumb"
     return should_force or ((not must_not_colour) and istty)
