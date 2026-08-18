@@ -1435,6 +1435,13 @@ ETrace::emitSupportPacket(QualStatus qual)
     uint32_t doptions = 0;
     if (dataTraceMode == 1) doptions |= (1u << 0);
     if (dataTraceMode == 2) doptions |= (1u << 1);
+    // bit 2: data payload is always sent full/uncompressed -- gem5's
+    // emitDataPacket never applies XOR or arithmetic compression to
+    // the data field (only the address gets per-size delta encoding),
+    // so this must always be advertised, or a decoder that infers
+    // compression state purely from doptions (as spec intends) will
+    // wrongly try to decompress an already-full value.
+    if (dataTrace && dataTraceMode != 1) doptions |= (1u << 2);
     pkt.set_doptions(doptions);
 
     traceStream->write(pkt);

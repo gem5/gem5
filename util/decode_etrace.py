@@ -143,6 +143,8 @@ def format_doptions(doptions):
         flags.append("no_data")
     if doptions & (1 << 1):
         flags.append("no_addr")
+    if doptions & (1 << 2):
+        flags.append("full_data")
     return "|".join(flags) if flags else "none"
 
 
