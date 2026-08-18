@@ -96,7 +96,7 @@ GpuTLB::GpuTLB(const Params &p)
     /**
      * @warning: the set-associative version assumes you have a
      * fixed page size of 4KB.
-     * If the page size is greather than 4KB (as defined in the
+     * If the page size is greater than 4KB (as defined in the
      * X86ISA::PageBytes), then there are various issues w/ the current
      * implementation (you'd have the same 8KB page being replicated in
      * different sets etc)
@@ -910,7 +910,7 @@ GpuTLB::translationReturn(Addr virtPageAddr, tlbOutcome outcome, PacketPtr pkt)
         }
 
         if (hasMemSidePort) {
-            // the one cyle added here represent the delay from when we get
+            // the one cycle added here represent the delay from when we get
             // the reply back till when we propagate it to the coalescer
             // above.
             if (update_stats) {
@@ -1102,7 +1102,7 @@ GpuTLB::handleFuncTranslationReturn(PacketPtr pkt, tlbOutcome tlb_outcome)
     /**
      * Do paging checks if it's a normal functional access.  If it's for a
      * prefetch, then sometimes you can try to prefetch something that
-     * won't pass protection. We don't actually want to fault becuase there
+     * won't pass protection. We don't actually want to fault because there
      * is no demand access to deem this a violation.  Just put it in the
      * TLB and it will fault if indeed a future demand access touches it in
      * violation.
@@ -1231,7 +1231,7 @@ GpuTLB::CpuSidePort::recvFunctional(PacketPtr pkt)
     }
     // This is the function that would populate pkt->req with the paddr of
     // the translation. But if no translation happens (i.e Prefetch fails)
-    // then the early returns in the above code wiill keep this function
+    // then the early returns in the above code will keep this function
     // from executing.
     tlb->handleFuncTranslationReturn(pkt, tlb_outcome);
 }
@@ -1379,7 +1379,7 @@ GpuTLB::exitCallback()
 
                 prev = iter.second.localTLBAccesses[i];
                 // update the localTLBAccesses value
-                // with the actual differece
+                // with the actual difference
                 iter.second.localTLBAccesses[i] -= tmp;
                 // compute the sum of AccessDistance per page
                 // used later for mean

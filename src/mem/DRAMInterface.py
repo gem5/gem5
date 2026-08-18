@@ -1040,7 +1040,7 @@ class GDDR5_4000_2x32(DRAMInterface):
 
 
 # A single HBM x128 interface (one command and address bus), with
-# default timings based on data publically released
+# default timings based on data publicly released
 # ("HBM: Memory Solution for High Performance Processors", MemCon, 2014),
 # IDD measurement values, and by extrapolating data from other classes.
 # Architecture values based on published HBM spec
@@ -1129,7 +1129,7 @@ class HBM_1000_4H_1x128(DRAMInterface):
 
 
 # A single HBM x64 interface (one command and address bus), with
-# default timings based on HBM gen1 and data publically released
+# default timings based on HBM gen1 and data publicly released
 # A 4H stack is defined, 8Gb per die for a total of 4GiB of memory.
 # Note: This defines a pseudo-channel with a unique controller
 # instantiated per pseudo-channel
@@ -1917,7 +1917,7 @@ class LPDDR5_6400_1x16_BG_BL32(LPDDR5_5500_1x16_BG_BL32):
 
 # A single LPDDR5 x16 interface (one command/address bus)
 # for a single x16 channel with default timings based on initial
-# JEDEC specifcation
+# JEDEC specification
 # 6.4Gbps data rates and 8Gbit die
 # Configuring for 16-bank mode with bank-group architecture, burst of 16
 class LPDDR5_6400_1x16_BG_BL16(LPDDR5_6400_1x16_BG_BL32):

@@ -6796,7 +6796,7 @@ Inst_VOP3__V_DIV_SCALE_F32::~Inst_VOP3__V_DIV_SCALE_F32()
 // Denominator, s2.f = Numerator -- s0 must equal s1 or s2. Given a
 // numerator and denominator, this opcode will appropriately scale inputs
 // for division to avoid subnormal terms during Newton-Raphson correction
-// algorithm. This opcode producses a VCC flag for post-scale of quotient.
+// algorithm. This opcode produces a VCC flag for post-scale of quotient.
 void
 Inst_VOP3__V_DIV_SCALE_F32::execute(GPUDynInstPtr gpuDynInst)
 {
@@ -6851,7 +6851,7 @@ Inst_VOP3__V_DIV_SCALE_F64::~Inst_VOP3__V_DIV_SCALE_F64()
 // Denominator, s2.d = Numerator -- s0 must equal s1 or s2. Given a
 // numerator and denominator, this opcode will appropriately scale inputs
 // for division to avoid subnormal terms during Newton-Raphson correction
-// algorithm. This opcode producses a VCC flag for post-scale of quotient.
+// algorithm. This opcode produces a VCC flag for post-scale of quotient.
 void
 Inst_VOP3__V_DIV_SCALE_F64::execute(GPUDynInstPtr gpuDynInst)
 {
