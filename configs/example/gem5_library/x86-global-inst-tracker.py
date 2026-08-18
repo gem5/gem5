@@ -79,7 +79,9 @@ memory = SingleChannelDDR4_2400("1GB")
 
 # using 9 cores because when using openmp in SE mode, the number of cores
 # should be # cores + 1
-processor = SimpleProcessor(cpu_type=CPUTypes.TIMING, num_cores=9, isa=ISA.X86)
+processor = SimpleProcessor(
+    cpu_type=CPUTypes.TIMING, num_cores=9, isa=ISA.X86, clk_freq="1GHz"
+)
 
 # set up instruction tracker
 

@@ -120,6 +120,7 @@ processor = SimpleProcessor(
     cpu_type=cpu_enum,
     isa=isa_enum,
     num_cores=args.num_cores,
+    clk_freq="3GHz",
 )
 
 motherboard = SimpleBoard(

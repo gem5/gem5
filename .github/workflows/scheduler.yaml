@@ -89,3 +89,20 @@ jobs:
                   else
                     echo "Compiler tests not scheduled."
                   fi
+            - name: Install gh-aw extension
+              run: gh extension install github/gh-aw
+
+            - name: Weekly Repo Status
+              env:
+                  DAY: ${{ steps.timedate-recorder.outputs.DAY }}
+                  HOUR: ${{ steps.timedate-recorder.outputs.HOUR }}
+              run: |
+                  # If the current day is Tuesday and the time is 9am then run
+                  # the workflow.
+                  if [[ $DAY == '2' ]] && [[ $HOUR  == '16' ]]
+                  then
+                    gh workflow run weekly-repo-status.lock.yml --ref develop >/dev/null
+                    echo "Weekly repo status summary workflow scheduled to run on the develop branch."
+                  else
+                    echo "Weekly repo status summary workflow not scheduled."
+                  fi

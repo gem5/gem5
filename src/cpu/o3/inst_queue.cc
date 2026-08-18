@@ -1151,10 +1151,55 @@ InstructionQueue::commit(const InstSeqNum &inst, ThreadID tid)
 }
 
 int
-InstructionQueue::wakeDependents(const DynInstPtr &completed_inst)
+InstructionQueue::wakeDependents(PhysRegIdPtr dest_reg)
 {
     int dependents = 0;
 
+    // Serializing fixed-mapping registers do not use the IQ dependency
+    // graph.
+    if (dest_reg->isAlwaysReady()) {
+        DPRINTF(IQ, "Reg %d [%s] is part of a fix mapping, skipping\n",
+                dest_reg->index(), dest_reg->className());
+        return dependents;
+    }
+
+    DPRINTF(IQ, "Waking any dependents on register %i (%s).\n",
+            dest_reg->index(), dest_reg->className());
+
+    // Go through the dependency chain, marking the registers as ready within
+    // the waiting instructions.
+    DynInstPtr dep_inst = dependGraph.pop(dest_reg->flatIndex());
+
+    while (dep_inst) {
+        DPRINTF(IQ, "Waking up a dependent instruction, [sn:%llu] PC %s.\n",
+                dep_inst->seqNum, dep_inst->pcState());
+
+        // Might want to give more information to the instruction so that it
+        // knows which of its source registers is ready. However that would
+        // mean that the dependency graph entries would need to hold the
+        // src_reg_idx.
+        dep_inst->markSrcRegReady();
+
+        addIfReady(dep_inst);
+
+        dep_inst = dependGraph.pop(dest_reg->flatIndex());
+
+        ++dependents;
+    }
+
+    // Reset the head node now that all of its dependents have been woken up.
+    assert(dependGraph.empty(dest_reg->flatIndex()));
+    dependGraph.clearInst(dest_reg->flatIndex());
+
+    // Mark the scoreboard as having that register ready.
+    regScoreboard[dest_reg->flatIndex()] = true;
+
+    return dependents;
+}
+
+int
+InstructionQueue::wakeDependents(const DynInstPtr &completed_inst)
+{
     // The instruction queue here takes care of both floating and int ops
     if (completed_inst->isFloating()) {
         iqIOStats.fpInstQueueWakeupAccesses++;
@@ -1163,8 +1208,6 @@ InstructionQueue::wakeDependents(const DynInstPtr &completed_inst)
     } else {
         iqIOStats.intInstQueueWakeupAccesses++;
     }
-
-    completed_inst->lastWakeDependents = curTick();
 
     DPRINTF(IQ, "Waking dependents of completed instruction.\n");
 
@@ -1178,7 +1221,7 @@ InstructionQueue::wakeDependents(const DynInstPtr &completed_inst)
         memDepUnit[tid].completeInst(completed_inst);
 
         DPRINTF(IQ, "Completing mem instruction PC: %s [sn:%llu]\n",
-            completed_inst->pcState(), completed_inst->seqNum);
+                completed_inst->pcState(), completed_inst->seqNum);
 
         completed_inst->clearInIQ();
         completed_inst->memOpDone(true);
@@ -1188,25 +1231,31 @@ InstructionQueue::wakeDependents(const DynInstPtr &completed_inst)
         memDepUnit[tid].completeInst(completed_inst);
     }
 
-    for (int dest_reg_idx = 0;
-         dest_reg_idx < completed_inst->numDestRegs();
-         dest_reg_idx++)
-    {
+    int dependents = 0;
+    for (int dest_reg_idx = 0; dest_reg_idx < completed_inst->numDestRegs();
+         ++dest_reg_idx) {
         PhysRegIdPtr dest_reg =
             completed_inst->renamedDestIdx(dest_reg_idx);
 
-        // Special case of uniq or control registers.  They are not
-        // handled by the IQ and thus have no dependency graph entry.
+        // Misc register writes become visible at commit, so their dependents
+        // are woken by the commit-time path.
+        if (dest_reg->is(MiscRegClass)) {
+            continue;
+        }
+
+        // Serializing fixed-mapping registers do not use the IQ dependency
+        // graph or pinned-write accounting.
         if (dest_reg->isAlwaysReady()) {
             DPRINTF(IQ, "Reg %d [%s] is part of a fix mapping, skipping\n",
                     dest_reg->index(), dest_reg->className());
             continue;
         }
 
-        // Avoid waking up dependents if the register is pinned
+        // Avoid waking up dependents if the register is pinned.
         dest_reg->decrNumPinnedWritesToComplete();
-        if (dest_reg->isPinned())
+        if (dest_reg->isPinned()) {
             completed_inst->setPinnedRegsWritten();
+        }
 
         if (dest_reg->getNumPinnedWritesToComplete() != 0) {
             DPRINTF(IQ, "Reg %d [%s] is pinned, skipping\n",
@@ -1214,39 +1263,13 @@ InstructionQueue::wakeDependents(const DynInstPtr &completed_inst)
             continue;
         }
 
-        DPRINTF(IQ, "Waking any dependents on register %i (%s).\n",
-                dest_reg->index(),
-                dest_reg->className());
-
-        //Go through the dependency chain, marking the registers as
-        //ready within the waiting instructions.
-        DynInstPtr dep_inst = dependGraph.pop(dest_reg->flatIndex());
-
-        while (dep_inst) {
-            DPRINTF(IQ, "Waking up a dependent instruction, [sn:%llu] "
-                    "PC %s.\n", dep_inst->seqNum, dep_inst->pcState());
-
-            // Might want to give more information to the instruction
-            // so that it knows which of its source registers is
-            // ready.  However that would mean that the dependency
-            // graph entries would need to hold the src_reg_idx.
-            dep_inst->markSrcRegReady();
-
-            addIfReady(dep_inst);
-
-            dep_inst = dependGraph.pop(dest_reg->flatIndex());
-
-            ++dependents;
-        }
-
-        // Reset the head node now that all of its dependents have
-        // been woken up.
-        assert(dependGraph.empty(dest_reg->flatIndex()));
-        dependGraph.clearInst(dest_reg->flatIndex());
-
-        // Mark the scoreboard as having that register ready.
-        regScoreboard[dest_reg->flatIndex()] = true;
+        dependents += wakeDependents(dest_reg);
     }
+
+    if (dependents) {
+        completed_inst->lastWakeDependents = curTick();
+    }
+
     return dependents;
 }
 

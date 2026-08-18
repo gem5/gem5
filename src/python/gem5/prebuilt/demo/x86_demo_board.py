@@ -76,7 +76,10 @@ class X86DemoBoard(X86Board):
 
         memory = DualChannelDDR4_2400("4GiB")
         processor = SimpleProcessor(
-            cpu_type=CPUTypes.TIMING, isa=ISA.X86, num_cores=2
+            cpu_type=CPUTypes.TIMING,
+            isa=ISA.X86,
+            num_cores=2,
+            clk_freq="3GHz",
         )
 
         cache_hierarchy = PrivateL1SharedL2WalkCacheHierarchy(

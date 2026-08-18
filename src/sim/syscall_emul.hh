@@ -153,6 +153,11 @@ SyscallReturn exitFunc(SyscallDesc *desc, ThreadContext *tc, int status);
 /// Target exit_group() handler: terminate simulation. (exit all threads)
 SyscallReturn exitGroupFunc(SyscallDesc *desc, ThreadContext *tc, int status);
 
+/// exit_group path used when a process is killed by a signal (e.g. via
+/// tgkill). `sig` is the terminating signal number used for wait4 status.
+SyscallReturn exitGroupSignaledFunc(SyscallDesc *desc, ThreadContext *tc,
+                                    int sig);
+
 /// Target set_tid_address() handler.
 SyscallReturn setTidAddressFunc(SyscallDesc *desc, ThreadContext *tc,
                                 VPtr<> tidPtr);
@@ -2706,8 +2711,7 @@ tgkillFunc(SyscallDesc *desc, ThreadContext *tc, int tgid, int tid, int sig)
         case OS::TGT_SIGINT:
         case OS::TGT_SIGTERM:
         case OS::TGT_SIGKILL:
-            exitGroupFunc(desc, tc, 128 + sig);
-            break;
+            return exitGroupSignaledFunc(desc, tc, sig);
         default:
             return -EINVAL;
     }
@@ -3047,11 +3051,16 @@ wait4Func(SyscallDesc *desc, ThreadContext *tc,
     return (options & OS::TGT_WNOHANG) ? 0 : SyscallReturn::retry();
 
 success:
-    // Set status to EXITED for WIFEXITED evaluations.
-    const int EXITED = 0;
-    BufferArg statusBuf(statPtr, sizeof(int));
-    *(int *)statusBuf.bufferPtr() = EXITED;
-    statusBuf.copyOut(SETranslatingPortProxy(tc));
+    // Report the child's actual wait(2) status (normal exit or signal).
+    // Previously this always wrote 0 (WIFEXITED with code 0), which hid
+    // abnormal terminations such as raise(SIGABRT).
+    // Linux allows a NULL status pointer; skip the guest write in that case
+    // (same pattern as the rusagePtr guard above).
+    if (statPtr) {
+        BufferArg statusBuf(statPtr, sizeof(int));
+        *(int *)statusBuf.bufferPtr() = iter->exitStatus;
+        statusBuf.copyOut(SETranslatingPortProxy(tc));
+    }
 
     // Return the child PID.
     pid_t retval = iter->sender->pid();

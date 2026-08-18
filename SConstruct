@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2013, 2015-2020, 2023, 2025 Arm Limited
+# Copyright (c) 2013, 2015-2020, 2023, 2025-2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -964,8 +964,9 @@ for variant_path in variant_paths:
             print("Reading", sconsopts_path)
         SConscript(sconsopts_path, exports={'main': env})
 
+    ext_dir = Dir('#ext').abspath
     trySConsopts(Dir('#').abspath)
-    for bdir in [ base_dir ] + extras_dir_list:
+    for bdir in [ base_dir, ext_dir ] + extras_dir_list:
         if not isdir(bdir):
             error("Directory '%s' does not exist." % bdir)
         for root, dirs, files in os.walk(bdir):
@@ -1038,7 +1039,6 @@ for variant_path in variant_paths:
 
     exports=['env', 'gem5py_env']
 
-    ext_dir = Dir('#ext').abspath
     variant_ext = os.path.join(variant_path, 'ext')
     for root, dirs, files in os.walk(ext_dir):
         if 'SConscript' in files:

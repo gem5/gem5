@@ -209,7 +209,7 @@ StatisticalCorrector::gPredict(Addr branch_pc, int64_t hist,
 {
     int percsum = 0;
     for (int i = 0; i < nbr; i++) {
-        int64_t bhist = hist & ((int64_t) ((1 << length[i]) - 1));
+        int64_t bhist = hist & ((int64_t) ((1ULL << length[i]) - 1));
         int64_t index = gIndex(branch_pc, bhist, logs, nbr, i);
         int8_t ctr = tab[i][index];
         percsum += (2 * ctr + 1);
@@ -226,7 +226,7 @@ StatisticalCorrector::gUpdate(Addr branch_pc, bool taken, int64_t hist,
 {
     int percsum = 0;
     for (int i = 0; i < nbr; i++) {
-        int64_t bhist = hist & ((int64_t) ((1 << length[i]) - 1));
+        int64_t bhist = hist & ((int64_t) ((1ULL << length[i]) - 1));
         int64_t index = gIndex(branch_pc, bhist, logs, nbr, i);
         percsum += (2 * tab[i][index] + 1);
         ctrUpdate(tab[i][index], taken, scCountersWidth);

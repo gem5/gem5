@@ -1,3 +1,15 @@
+# Copyright (c) 2026 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2021 The Regents of the University of California
 # All rights reserved.
 #
@@ -34,8 +46,11 @@ from typing import (
 )
 
 from m5.objects import (
+    ClockDomain,
     Root,
+    SrcClockDomain,
     SubSystem,
+    VoltageDomain,
 )
 from m5.util import warn
 
@@ -52,13 +67,22 @@ class AbstractProcessor(SubSystem):
         self,
         cores: Optional[List[AbstractCore]] = None,
         isa: ISA = ISA.NULL,
+        *,
+        clk_freq: str,
     ) -> None:
         """Set the cores on the processor
 
         Cores are optional for some processor types. If a processor does not
         set the cores here, it must override ``get_num_cores`` and ``get_cores``.
+
+        :param clk_freq: The clock frequency for the processor's cores.
         """
         super().__init__()
+
+        self.voltage_domain = VoltageDomain()
+        self.clk_domain = SrcClockDomain(
+            clock=clk_freq, voltage_domain=self.voltage_domain
+        )
 
         if cores:
             # In the stdlib we assume the system processor conforms to a single
@@ -79,6 +103,10 @@ class AbstractProcessor(SubSystem):
 
     def get_isa(self) -> ISA:
         return self._isa
+
+    def get_clock_domain(self) -> ClockDomain:
+        """Get the processor's core clock domain."""
+        return self.clk_domain
 
     def get_total_instructions(self) -> int:
         """Return the number of instructions executed by all cores.

@@ -3559,6 +3559,9 @@ Fault
 faultIdst(const MiscRegLUTEntry &entry,
     ThreadContext *tc, const MiscRegOp64 &inst)
 {
+    if (!FullSystem) {
+        return NoFault;
+    }
     if (HaveExt(tc, ArmExtension::FEAT_IDST)) {
         const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
         if (EL2Enabled(tc) && hcr.tge) {

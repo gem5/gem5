@@ -116,6 +116,7 @@ processor = SimpleSwitchableProcessor(
     switch_core_type=get_cpu_type_from_str(args.switch_cores),
     num_cores=1,
     isa=get_isa_from_str(args.isa),
+    clk_freq="3GHz",
 )
 
 board = SimpleBoard(

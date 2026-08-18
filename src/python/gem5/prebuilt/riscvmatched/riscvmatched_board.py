@@ -137,7 +137,7 @@ class RISCVMatchedBoard(
 
         memory = U74Memory()
 
-        processor = U74Processor(is_fs=is_fs)
+        processor = U74Processor(is_fs=is_fs, clk_freq=clk_freq)
         super().__init__()
         AbstractBoard.__init__(
             self,

@@ -942,6 +942,7 @@ Fault
     using ewt = typename double_width<et>::type;
     using vwu = decltype(ewt::v);
 
+
     if (vtype_vlmul(machInst.vtype8) == 3)
         return std::make_shared<IllegalInstFault>("LMUL=8 is illegal for widening inst", machInst);
 
@@ -984,6 +985,7 @@ Fault
     using vu [[maybe_unused]] = decltype(et::v);
     using ewt = typename double_width<et>::type;
     using vwu = decltype(ewt::v);
+
 
     bool set_dirty = true;
     bool check_vill = true;
@@ -1029,6 +1031,24 @@ switch(machInst.vtype8.vsew) {
 case 0b000: return new %(class_name)s<float8_t>(machInst, elen, vlen);
 case 0b001: return new %(class_name)s<float16_t>(machInst, elen, vlen);
 case 0b010: return new %(class_name)s<float32_t>(machInst, elen, vlen);
+default: GEM5_UNREACHABLE;
+}
+
+}};
+
+def template VectorBFloatWideningDecodeBlock {{
+
+switch(machInst.vtype8.vsew) {
+case 0b001: return new %(class_name)s<bfloat16_t>(machInst, elen, vlen);
+default: GEM5_UNREACHABLE;
+}
+
+}};
+
+def template VectorBFloatWideningAndNarrowingCvtDecodeBlock {{
+
+switch(machInst.vtype8.vsew) {
+case 0b001: return new %(class_name)s<bfloat16_t>(machInst, elen, vlen);
 default: GEM5_UNREACHABLE;
 }
 
@@ -2048,17 +2068,8 @@ template<typename ElemType, typename IndexType>
 {
     %(set_reg_idx_arr)s;
     %(constructor)s;
-    constexpr uint32_t vd_eewb = sizeof(ElemType);
-    constexpr uint32_t vs2_eewb = sizeof(ElemType);
-    constexpr uint32_t vs1_eewb = sizeof(IndexType);
-    const int8_t lmul = vtype_vlmul(vtype);
-    const int8_t vs1_emul = lmul + __builtin_ctz(vs1_eewb)
-                                 - __builtin_ctz(vs2_eewb);
-    const uint8_t vs2_vregs = lmul < 0 ? 1 : 1 << lmul;
-    const uint8_t vs1_vregs = vs1_emul < 0 ? 1 : 1 << vs1_emul;
-    const uint8_t vd_vregs = vs2_vregs;
-    uint32_t vlenb = vlen >> 3;
-    const int32_t micro_vlmax = vlenb / std::max(vd_eewb, vs1_eewb);
+    const int32_t micro_vlmax = vtype_VLMAX(vtype, vlen, true);
+    const uint32_t num_microops = vtype_regs_per_group(vtype);
     int32_t remaining_vl = this->vl;
     int32_t micro_vl = std::min(remaining_vl, micro_vlmax);
     StaticInstPtr microop;
@@ -2068,28 +2079,11 @@ template<typename ElemType, typename IndexType>
         this->microops.push_back(microop);
     }
 
-    uint32_t vd_vlmax = vlenb / vd_eewb;
-    uint32_t vs1_vlmax = vlenb / vs1_eewb;
-    for (uint32_t i = 0; i < ceil((float) this->vl / vd_vlmax); i++) {
-        uint32_t pinvd_micro_vl = (vd_vlmax <= remaining_vl)
-                                  ? vd_vlmax : remaining_vl;
-        uint8_t num_vd_pins = ceil((float) pinvd_micro_vl/vs1_vlmax)*vs2_vregs;
-        microop = new VPinVdMicroInst(machInst, i, num_vd_pins, elen, vlen);
-        microop->setFlag(IsDelayedCommit);
+    for (uint32_t i = 0; i < num_microops && micro_vl > 0; i++) {
+        microop = new %(class_name)sMicro<ElemType, IndexType>(
+            _machInst, micro_vl, i, _elen, _vlen);
+        microop->setDelayedCommit();
         this->microops.push_back(microop);
-
-        remaining_vl -= pinvd_micro_vl;
-    }
-
-    remaining_vl = this->vl;
-    for (uint32_t i = 0; i < std::max(vs1_vregs, vd_vregs) && micro_vl > 0;
-            i++) {
-        for (uint8_t j = 0; j < vs2_vregs; j++) {
-            microop = new %(class_name)sMicro<ElemType, IndexType>(
-                _machInst, micro_vl, i * vs2_vregs + j, _elen, _vlen);
-            microop->setDelayedCommit();
-            this->microops.push_back(microop);
-        }
         micro_vl = std::min(remaining_vl -= micro_vlmax, micro_vlmax);
     }
 
@@ -2126,14 +2120,13 @@ template<typename ElemType, typename IndexType>
 class %(class_name)s : public %(base_class)s
 {
 private:
-    // vs2, vs1, vtmp0, vm
-    RegId srcRegIdxArr[4];
+    // vs2 (up to 8), rs1/vs1 (up to 2), old_vd (optional), vm (optional)
+    RegId srcRegIdxArr[12];
     RegId destRegIdxArr[1];
     bool vm;
 public:
-    %(class_name)s(ExtMachInst _machInst,
-                   uint32_t _microVl, uint32_t _microIdx, uint32_t _elen,
-                   uint32_t _vlen);
+    %(class_name)s(ExtMachInst _machInst, uint32_t _microVl,
+                   uint32_t _microIdx, uint32_t _elen, uint32_t _vlen);
     Fault execute(ExecContext* xc, trace::InstRecord* traceData)const override;
     using %(base_class)s::generateDisassembly;
 };
@@ -2152,18 +2145,9 @@ template<typename ElemType, typename IndexType>
     %(set_reg_idx_arr)s;
     _numSrcRegs = 0;
     _numDestRegs = 0;
-    [[maybe_unused]] constexpr uint32_t vd_eewb = sizeof(ElemType);
-    [[maybe_unused]] constexpr uint32_t vs2_eewb = sizeof(ElemType);
-    [[maybe_unused]] constexpr uint32_t vs1_eewb = sizeof(IndexType);
-    constexpr uint32_t vs1_split_num = (vd_eewb + vs1_eewb - 1) / vs1_eewb;
-    constexpr uint32_t vd_split_num = (vs1_eewb + vd_eewb - 1) / vd_eewb;
-    const int8_t lmul = vtype_vlmul(vtype);
-    const uint8_t vs2_vregs = lmul < 0 ? 1 : 1 << lmul;
-    [[maybe_unused]] const uint32_t vs2_idx = _microIdx % vs2_vregs;
-    [[maybe_unused]] const uint32_t vs1_idx =
-        _microIdx / vs2_vregs / vs1_split_num;
-    [[maybe_unused]] const uint32_t vd_idx =
-        _microIdx / vs2_vregs / vd_split_num;
+
+    %(set_vlenb)s;
+
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
     %(micro_flag_constructor)s;
@@ -2180,9 +2164,6 @@ Fault
 %(class_name)s<ElemType, IndexType>::execute(ExecContext* xc,
                                   trace::InstRecord* traceData) const
 {
-    using vu [[maybe_unused]] = std::make_unsigned_t<ElemType>;
-    [[maybe_unused]] constexpr size_t sew = sizeof(vu) * 8;
-
     bool set_dirty = true;
     bool check_vill = true;
     Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
@@ -2192,30 +2173,43 @@ Fault
     %(op_rd)s;
     %(set_vlenb)s;
     %(vm_decl_rd)s;
-    const uint32_t vlmax = vtype_VLMAX(vtype,vlen);
+
     constexpr uint32_t vd_eewb = sizeof(ElemType);
-    constexpr uint32_t vs1_eewb = sizeof(IndexType);
     constexpr uint32_t vs2_eewb = sizeof(ElemType);
-    constexpr uint32_t vs1_split_num = (vd_eewb + vs1_eewb - 1) / vs1_eewb;
-    constexpr uint32_t vd_split_num = (vs1_eewb + vd_eewb - 1) / vd_eewb;
-    [[maybe_unused]] const uint32_t vd_elems = vlenb / vd_eewb;
-    [[maybe_unused]] const uint32_t vs1_elems = vlenb / vs1_eewb;
-    [[maybe_unused]] const uint32_t vs2_elems = vlenb / vs2_eewb;
-    [[maybe_unused]] const int8_t lmul = vtype_vlmul(vtype);
-    [[maybe_unused]] const uint8_t vs2_vregs = lmul < 0 ? 1 : 1 << lmul;
-    [[maybe_unused]] const uint32_t vs2_idx = microIdx % vs2_vregs;
-    [[maybe_unused]] const uint32_t vs1_idx =
-        microIdx / vs2_vregs / vs1_split_num;
-    [[maybe_unused]] const uint32_t vd_idx =
-        microIdx / vs2_vregs / vd_split_num;
-    [[maybe_unused]] const uint32_t vs1_bias =
-        vs1_elems * (vd_idx % vs1_split_num) / vs1_split_num;
-    [[maybe_unused]] const uint32_t vd_bias =
-        vd_elems * (vs1_idx % vd_split_num) / vd_split_num;
 
+    const uint32_t vlmax = vtype_VLMAX(vtype, vlen);
+    const uint32_t vd_elems = vlenb / vd_eewb;
+    const uint32_t vs2_elems = vlenb / vs2_eewb;
 
-    %(code)s;
-    %(op_wb)s;
+    RiscvISA::vreg_t& tmp_d0 = *(RiscvISAInst::VecRegContainer*)
+                               xc->getWritableRegOperand(this, 0);
+    ElemType* vd = tmp_d0.as<ElemType>();
+
+    %(copy_old_vd)s;
+    %(get_vs_regs)s
+
+    for (uint32_t i=0; i < microVl; i++) {
+        if (!this->vm && !elem_mask(v0, i + microIdx*vd_elems)) {
+            continue;
+        }
+
+        %(code)s
+
+        const IndexType vs2_reg_idx = idx / vs2_elems;
+        const IndexType elem_offset = idx - vs2_reg_idx*vs2_elems;
+
+        ElemType elem = 0;
+        if (idx < vlmax) {
+            const RiscvISA::vreg_t& vs2 = vs2_regs[vs2_reg_idx % numVs2Regs];
+            elem = vs2.as<ElemType>()[elem_offset];
+        }
+
+        vd[i] = elem;
+    }
+
+    if (traceData) {
+        traceData->setData(vecRegClass, &tmp_d0);
+    }
 
     return NoFault;
 }

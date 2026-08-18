@@ -35,7 +35,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <ARM/TLM/arm_chi.h>
+#include <ARM/TLM/arm_chi_payload.h>
+#include <ARM/TLM/arm_chi_phase.h>
 
 #include "mem/ruby/protocol/chi/tlm/generator.hh"
 // This is required by Transaction::expect

@@ -308,13 +308,26 @@ datOpcode(DatOpcode dat, Resp resp)
         }
       case DAT_OPCODE_SNP_RESP_DATA:
         RESP_CASE(CHIDataType_SnpRespData)
+      case DAT_OPCODE_COMP_DATA:
+          switch (resp) {
+              case RESP_I:
+                  return CHIDataType_CompData_I;
+              case RESP_UC:
+                  return CHIDataType_CompData_UC;
+              case RESP_SC:
+                  return CHIDataType_CompData_SC;
+              case RESP_SD_PD:
+                  return CHIDataType_CompData_SD_PD;
+              default:
+                  panic("");
+          }
       default:
         panic("Unsupported Translation: %s\n", datOpcodeToName(dat));
     }
 }
 
 CHIResponseType
-rspOpcode(RspOpcode opc, Resp resp)
+rspOpcode(RspOpcode opc, Resp resp, Resp fwd_state)
 {
     switch(opc) {
       case RSP_OPCODE_COMP_ACK: return CHIResponseType_CompAck;
@@ -323,8 +336,57 @@ rspOpcode(RspOpcode opc, Resp resp)
       case RSP_OPCODE_SNP_RESP:
         switch (resp) {
           case RESP_I: return CHIResponseType_SnpResp_I;
+          case RESP_SC:
+              return CHIResponseType_SnpResp_SC;
           default: panic("Invalid resp %d for %d\n", resp, opc);
         }
+      case RSP_OPCODE_SNP_RESP_FWDED:
+          switch (resp) {
+              case RESP_I:
+                  switch (fwd_state) {
+                      case RESP_UC:
+                          return CHIResponseType_SnpResp_I_Fwded_UC;
+                      case RESP_UD_PD:
+                          return CHIResponseType_SnpResp_I_Fwded_UD_PD;
+                      default:
+                          panic(
+                              "Invalid fwd_state %d for resp %d, opcode %d\n",
+                              fwd_state, resp, opc);
+                  }
+              case RESP_SC:
+                  switch (fwd_state) {
+                      case RESP_I:
+                          return CHIResponseType_SnpResp_SC_Fwded_I;
+                      case RESP_SC:
+                          return CHIResponseType_SnpResp_SC_Fwded_SC;
+                      case RESP_SD_PD:
+                          return CHIResponseType_SnpResp_SC_Fwded_SD_PD;
+                      default:
+                          panic(
+                              "Invalid fwd_state %d for resp %d, opcode %d\n",
+                              fwd_state, resp, opc);
+                  }
+              case RESP_UC:
+                  switch (fwd_state) {
+                      case RESP_I:
+                          return CHIResponseType_SnpResp_UC_Fwded_I;
+                      default:
+                          panic(
+                              "Invalid fwd_state %d for resp %d, opcode %d\n",
+                              fwd_state, resp, opc);
+                  }
+              case RESP_SD:
+                  switch (fwd_state) {
+                      case RESP_I:
+                          return CHIResponseType_SnpResp_SD_Fwded_I;
+                      default:
+                          panic(
+                              "Invalid fwd_state %d for resp %d, opcode %d\n",
+                              fwd_state, resp, opc);
+                  }
+              default:
+                  panic("Invalid resp %d for %d\n", resp, opc);
+          }
       default:
         panic("Unsupported Translation: %s\n", rspOpcodeToName(opc));
     };
@@ -424,6 +486,8 @@ snpOpcode(CHIRequestType snp)
         return SNP_OPCODE_SNP_ONCE;
       case CHIRequestType_SnpShared:
         return SNP_OPCODE_SNP_SHARED;
+      case CHIRequestType_SnpSharedFwd:
+          return SNP_OPCODE_SNP_SHARED_FWD;
       case CHIRequestType_SnpCleanInvalid:
         return SNP_OPCODE_SNP_CLEAN_INVALID;
       case CHIRequestType_SnpUnique:
