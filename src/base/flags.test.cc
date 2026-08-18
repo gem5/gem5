@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2026 Arm Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2020 Daniel R. Carvalho
  * All rights reserved.
  *
@@ -211,4 +223,87 @@ TEST(FlagsTest, ReplaceOverlapping)
     Flags<uint32_t> flags(value_a);
     flags.replace(value_b, mask);
     ASSERT_EQ(result, uint32_t(flags));
+}
+
+enum class TestFlag : uint8_t
+{
+    FlagA,
+    FlagB,
+    FlagC,
+    NumFlags
+};
+
+using TestFlags =
+    BitsetFlag<TestFlag, static_cast<size_t>(TestFlag::NumFlags)>;
+
+/** Test default zero-initialized constructor for bitset-backed flags. */
+TEST(BitsetFlagTest, ConstructorZero)
+{
+    const TestFlags flags;
+    ASSERT_TRUE(flags.noneSet(TestFlag::FlagA));
+}
+
+/** Test construction and queries with scoped enum flags. */
+TEST(BitsetFlagTest, ScopedEnum)
+{
+    TestFlags flags(TestFlag::FlagA);
+    flags.set(TestFlag::FlagC);
+
+    ASSERT_TRUE(flags.isSet(TestFlag::FlagA));
+    ASSERT_FALSE(flags.isSet(TestFlag::FlagB));
+    ASSERT_TRUE(flags.isSet(TestFlag::FlagC));
+}
+
+/** Test operator composition with scoped enum flags. */
+TEST(BitsetFlagTest, OperatorOr)
+{
+    const TestFlags flags = TestFlags(TestFlag::FlagA) | TestFlag::FlagB;
+    ASSERT_TRUE(flags.isSet(TestFlag::FlagA));
+    ASSERT_TRUE(flags.isSet(TestFlag::FlagB));
+    ASSERT_FALSE(flags.isSet(TestFlag::FlagC));
+}
+
+/** Test allSet when the rhs is a BitsetFlag itself */
+TEST(BitsetFlagTest, BitsetAllSet)
+{
+    const TestFlags flags = TestFlags(TestFlag::FlagA) | TestFlag::FlagB;
+    const TestFlags compare_flags =
+        TestFlags(TestFlag::FlagA) | TestFlag::FlagB;
+
+    ASSERT_TRUE(flags.allSet(compare_flags));
+}
+
+/** Test isSet when the rhs is a BitsetFlag itself */
+TEST(BitsetFlagTest, BitsetIsSet)
+{
+    const TestFlags flags = TestFlags(TestFlag::FlagA) | TestFlag::FlagB;
+    const TestFlags compare_flags =
+        TestFlags(TestFlag::FlagC) | TestFlag::FlagB;
+
+    ASSERT_TRUE(flags.isSet(compare_flags));
+}
+
+/** Test clearing all bits except a selected flag set. */
+TEST(BitsetFlagTest, ClearAllExcept)
+{
+    TestFlags flags =
+        TestFlags(TestFlag::FlagA) | TestFlag::FlagB | TestFlag::FlagC;
+    flags.clearAllExcept(TestFlags(TestFlag::FlagB));
+    ASSERT_TRUE(flags.noneSet(TestFlag::FlagA));
+    ASSERT_TRUE(flags.isSet(TestFlag::FlagB));
+    ASSERT_TRUE(flags.noneSet(TestFlag::FlagC));
+}
+
+/** Test replacing a masked selection of flags. */
+TEST(BitsetFlagTest, Replace)
+{
+    TestFlags flags = TestFlags(TestFlag::FlagA) | TestFlag::FlagB;
+    const TestFlags replacement = TestFlags(TestFlag::FlagC);
+    const TestFlags mask = TestFlags(TestFlag::FlagA) | TestFlag::FlagC;
+
+    flags.replace(replacement, mask);
+
+    ASSERT_TRUE(flags.noneSet(TestFlag::FlagA));
+    ASSERT_TRUE(flags.isSet(TestFlag::FlagB));
+    ASSERT_TRUE(flags.isSet(TestFlag::FlagC));
 }
