@@ -90,6 +90,13 @@ export HSA_OVERRIDE_GFX_VERSION="9.4.2"
 echo 0 > /proc/sys/kernel/randomize_va_space
 dmesg -n8
 dd if=/root/roms/mi300.rom of=/dev/mem bs=1k seek=768 count=128
+
+# Check if exists (backwards compat with ROCm <7.0)
+if [ -e /usr/lib/firmware/amdgpu/mi300_discovery ]; then
+    rm -f /usr/lib/firmware/amdgpu/ip_discovery.bin
+    ln -s /usr/lib/firmware/amdgpu/mi300_discovery /usr/lib/firmware/amdgpu/ip_discovery.bin
+fi
+
 if [ ! -f /lib/modules/`uname -r`/updates/dkms/amdgpu.ko ]; then
     echo "ERROR: Missing DKMS package for kernel `uname -r`. Exiting gem5."
     /sbin/m5 exit
