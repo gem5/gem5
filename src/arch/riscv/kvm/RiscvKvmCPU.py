@@ -1,4 +1,5 @@
-# Copyright 2020 Google, Inc.
+# Copyright (c) 2026 Ozyegin University CAST Lab
+# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -23,14 +24,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.objects.BaseKvmCPU import BaseKvmCPU
+from m5.objects.RiscvCPU import RiscvCPU
+from m5.objects.RiscvMMU import RiscvMMU
 
-env['ABI'] = 'riscv'
-get_abi_opt('CROSS_COMPILE', 'riscv64-unknown-linux-gnu-')
-get_abi_opt('QEMU_ARCH', 'riscv64')
 
-env['CALL_TYPE']['inst'].impl('m5op.S', 'verify_inst.cc')
-env['CALL_TYPE']['addr'].impl('m5op_addr.S', default=True)
+class RiscvKvmCPU(BaseKvmCPU, RiscvCPU):
+    type = "RiscvKvmCPU"
+    cxx_header = "arch/riscv/kvm/riscv_cpu.hh"
+    cxx_class = "gem5::RiscvKvmCPU"
 
-env.Append(CXXFLAGS='-DM5OP_ADDR=0x10010000')
-env.Append(CCFLAGS='-DM5OP_ADDR=0x10010000')
+    mmu = RiscvMMU()
