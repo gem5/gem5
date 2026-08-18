@@ -418,7 +418,7 @@ ETrace::updatePredictor(Addr pc, bool taken)
         bpredTable[index] = taken ? 0x03 : 0x02;
         break;
       case 0x02:                                            // pred T (0b10)
-        bpredTable[index] = taken ? 0x02 : 0x00;
+        bpredTable[index] = taken ? 0x03 : 0x00;
         break;
     }
 }
