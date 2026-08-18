@@ -30,6 +30,7 @@
 
 #include <cstring>
 
+#include "arch/riscv/insts/amo.hh"
 #include "arch/riscv/isa.hh"
 #include "arch/riscv/regs/misc.hh"
 #include "base/callback.hh"
@@ -930,13 +931,21 @@ ETrace::traceDataAccess(
     if (!isLoad && !isStore && !isAtomic)
         return;
 
-    bool isLR = false;
-    bool isSC = false;
+    // gem5's RISC-V ISA does not flag load-reserved/store-conditional
+    // as IsAtomic -- only true read-modify-write AMOs (AMOADD, AMOSWAP,
+    // etc.) get that flag; LoadReservedMicro overrides no flags beyond
+    // the default IsLoad, and StoreCondMicro only sets IsStoreConditional
+    // (see isa/formats/amo.isa, AtomicMemOpRMWConstructor vs the LR/SC
+    // constructors). So LR/SC must be detected separately here, or they
+    // silently fall through as plain, unmarked loads/stores below.
+    bool isSC = dynInst->isStoreConditional();
+    bool isLR = isLoad && !isSC &&
+        dynamic_cast<RiscvISA::LoadReservedMicro *>(
+            dynInst->staticInst.get()) != nullptr;
     Addr addr = dynInst->effAddr;
     uint32_t size = dynInst->effSize;
-    (void)isLR; (void)isSC;
     emitDataPacket(dynInst, addr, size, isLoad, isStore, isAtomic,
-                   /*isLR=*/false, /*isSC=*/false);
+                   isLR, isSC);
 }
 
 void
