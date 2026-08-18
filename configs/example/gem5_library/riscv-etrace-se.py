@@ -68,6 +68,7 @@ processor = SimpleProcessor(
     cpu_type=CPUTypes.O3,
     isa=ISA.RISCV,
     num_cores=1,
+    clk_freq="1GHz",
 )
 
 for core in processor.get_cores():
