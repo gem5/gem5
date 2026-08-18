@@ -403,7 +403,16 @@ def decode_instruction_trace(filename, show_stats, verify_updiscon=False):
                             f" addr=0x{reconstructed_addr:016x}"
                             f" (delta={delta:+d})"
                         )
-                    line += " (mispred)"
+                    # branch_fmt 10 (0x2): address points to a branch
+                    # predicted correctly (or a non-branch instruction).
+                    # branch_fmt 11 (0x3): address points to a branch
+                    # that failed prediction. Only the latter is a
+                    # misprediction.
+                    line += (
+                        " (mispred)"
+                        if packet.branch_fmt == 0x3
+                        else " (predicted)"
+                    )
             elif packet.f0_subformat == etrace_pb2.ETracePacket.F0_JTC:
                 num_f0_jtc += 1
                 idx = packet.jtc_index
