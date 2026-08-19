@@ -49,6 +49,7 @@
 #include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/timebuf.hh"
+#include "sim/probe/probe.hh"
 
 namespace gem5
 {
@@ -110,6 +111,9 @@ class Decode
 
     /** Returns the name of decode. */
     std::string name() const;
+
+    /** Registers probes. */
+    void regProbePoints();
 
     /** Sets the main backwards communication time buffer pointer. */
     void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
@@ -301,6 +305,9 @@ class Decode
      *  instruction (used for MIPS).
      */
     bool squashAfterDelaySlot[MaxThreads];
+
+    /** Probe points. */
+    ProbePointArg<DynInstPtr> *ppDecode;
 
     struct DecodeStats : public statistics::Group
     {

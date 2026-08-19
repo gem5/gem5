@@ -125,6 +125,13 @@ BAC::name() const
 }
 
 void
+BAC::regProbePoints()
+{
+    ppSquashDecided = new ProbePointArg<std::pair<ThreadID, InstSeqNum>>(
+        cpu->getProbeManager(), "SquashDecided");
+}
+
+void
 BAC::setTimeBuffer(TimeBuffer<TimeStruct> *time_buffer)
 {
     timeBuffer = time_buffer;
@@ -357,6 +364,7 @@ BAC::checkAndUpdateBPUSignals(ThreadID tid)
         // If it was a branch mispredict on a control instruction, update the
         // branch predictor with that instruction, otherwise just kill the
         // invalid state we generated in after sequence number
+        ppSquashDecided->notify({tid, fromCommit->commitInfo[tid].doneSeqNum});
         if (fromCommit->commitInfo[tid].mispredictInst &&
             fromCommit->commitInfo[tid].mispredictInst->isControl()) {
 
@@ -398,6 +406,7 @@ BAC::checkAndUpdateBPUSignals(ThreadID tid)
         squash(*fromDecode->decodeInfo[tid].nextPC, tid);
 
         // Update the branch predictor.
+        ppSquashDecided->notify({tid, fromDecode->decodeInfo[tid].doneSeqNum});
         if (fromDecode->decodeInfo[tid].branchMispredict) {
 
             bpu->squash(fromDecode->decodeInfo[tid].doneSeqNum,

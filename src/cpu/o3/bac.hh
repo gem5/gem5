@@ -47,6 +47,7 @@
 #include "cpu/pred/bpred_unit.hh"
 #include "cpu/pred/branch_type.hh"
 #include "cpu/timebuf.hh"
+#include "sim/probe/probe.hh"
 
 namespace gem5
 {
@@ -133,10 +134,8 @@ class BAC
     /** Returns the name of the stage. */
     std::string name() const;
 
-    /** Registers probes and listeners. */
-    void
-    regProbePoints()
-    {}
+    /** Registers probes. */
+    void regProbePoints();
 
     /** Sets the main backwards communication time buffer pointer. */
     void setTimeBuffer(TimeBuffer<TimeStruct> *tb_ptr);
@@ -372,6 +371,12 @@ class BAC
      * cycle. Used to tell CPU if there is activity this cycle.
      */
     bool wroteToTimeBuffer;
+
+    /**
+     * Probe for squash decisions: {thread ID, last non-squashed sequence
+     * number}.
+     */
+    ProbePointArg<std::pair<ThreadID, InstSeqNum>> *ppSquashDecided;
 
     /** Tracks remaining cycles that the branch predictor stalls BAC */
     Cycles branchPredictRemaining[MaxThreads];
