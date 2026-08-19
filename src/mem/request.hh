@@ -254,14 +254,18 @@ class Request : public Extensible<Request>
             remote TLB Sync request has completed */
         TLBI_EXT_SYNC_COMP          = 0x0000800000000000,
 
+        /** StashOnce request types */
+        STASH_ONCE                  = 0x0001000000000000,
+        STASH_ONCE_UNIQUE           = 0x0002000000000000,
+
         /**
          * These flags are *not* cleared when a Request object is
          * reused (assigned a new address).
          */
         STICKY_FLAGS = INST_FETCH,
         /** TLBI_EXT_SYNC_COMP seems to be the largest value
-            of FlagsType, so HAS_NO_ADDR's value is that << 1 */
-        HAS_NO_ADDR                = 0x0001000000000000,
+            of FlagsType, so HAS_NO_ADDR's value is that << 4 */
+        HAS_NO_ADDR                = 0x0008000000000000,
         // clang-format on
     };
     static const FlagsType STORE_NO_DATA = CACHE_BLOCK_ZERO |
@@ -355,6 +359,7 @@ class Request : public Extensible<Request>
 
     enum : PrivateFlagsType
     {
+        // clang-format off
         /** Whether or not the size is valid. */
         VALID_SIZE           = 0x00000001,
         /** Whether or not paddr is valid (has been written yet). */
@@ -377,11 +382,16 @@ class Request : public Extensible<Request>
         VALID_HTM_ABORT_CAUSE = 0x00000400,
         /** Whether or not the instruction count is valid. */
         VALID_INST_COUNT      = 0x00000800,
+        /** Whether or not the stash NID is valid. */
+        VALID_STASH_NID       = 0x00001000,
+        /** Whether or not the stash LPID is valid. */
+        VALID_STASH_LPID      = 0x00002000,
         /**
          * These flags are *not* cleared when a Request object is reused
          * (assigned a new address).
          */
         STICKY_PRIVATE_FLAGS = VALID_CONTEXT_ID
+        // clang-format on
     };
 
   private:
@@ -449,6 +459,13 @@ class Request : public Extensible<Request>
      */
     bool _systemReq = 0;
 
+    /**
+     * Stash Target ID identifies the target cache to which the stash
+     * operation is directed.
+     */
+    uint16_t _stashNID = 0;
+    uint16_t _stashLPID = 0;
+
     /** The virtual address of the request. */
     Addr _vaddr = MaxAddr;
 
@@ -512,21 +529,28 @@ class Request : public Extensible<Request>
         _isGPUFuncAccess = false;
     }
 
-    Request(const Request& other)
+    Request(const Request &other)
         : Extensible<Request>(other),
-          _paddr(other._paddr), _size(other._size),
+          _paddr(other._paddr),
+          _size(other._size),
           _byteEnable(other._byteEnable),
           _requestorId(other._requestorId),
           _flags(other._flags),
           _cacheCoherenceFlags(other._cacheCoherenceFlags),
           privateFlags(other.privateFlags),
           _time(other._time),
-          _taskId(other._taskId), _vaddr(other._vaddr),
-          _extraData(other._extraData), _contextId(other._contextId),
-          _pc(other._pc), _reqInstSeqNum(other._reqInstSeqNum),
+          _taskId(other._taskId),
+          _stashNID(other._stashNID),
+          _stashLPID(other._stashLPID),
+          _vaddr(other._vaddr),
+          _extraData(other._extraData),
+          _contextId(other._contextId),
+          _pc(other._pc),
+          _reqInstSeqNum(other._reqInstSeqNum),
           _localAccessor(other._localAccessor),
           translateDelta(other.translateDelta),
-          accessDelta(other.accessDelta), depth(other.depth)
+          accessDelta(other.accessDelta),
+          depth(other.depth)
     {
         atomicOpFunctor.reset(other.atomicOpFunctor ?
                                 other.atomicOpFunctor->clone() : nullptr);
@@ -1071,6 +1095,23 @@ class Request : public Extensible<Request>
     }
     bool isMemMgmt() const { return isTlbiCmd() || isHTMCmd(); }
 
+    /** Accessor functions for stashOnce flags */
+    bool
+    isStashOnce() const
+    {
+        return _flags.isSet(STASH_ONCE) || _flags.isSet(STASH_ONCE_UNIQUE);
+    }
+    bool
+    isStashOnceUnique() const
+    {
+        return _flags.isSet(STASH_ONCE_UNIQUE);
+    }
+    bool
+    isStashOnceShared() const
+    {
+        return isStashOnce() && !isStashOnceUnique();
+    }
+
     bool
     isAtomic() const
     {
@@ -1118,6 +1159,43 @@ class Request : public Extensible<Request>
     isGL2CacheFlush() const
     {
         return _cacheCoherenceFlags.isSet(FLUSH_L2);
+    }
+
+    /**
+     * Accessor functions for stash target ID fields
+     */
+    uint16_t
+    StashNID() const
+    {
+        return _stashNID;
+    }
+    bool
+    hasStashNID() const
+    {
+        return privateFlags.isSet(VALID_STASH_NID);
+    }
+    uint16_t
+    StashLPID() const
+    {
+        return _stashLPID;
+    }
+    bool
+    hasStashLPID() const
+    {
+        return privateFlags.isSet(VALID_STASH_LPID);
+    }
+
+    void
+    setStashNID(uint16_t nid)
+    {
+        _stashNID = nid;
+        privateFlags.set(VALID_STASH_NID);
+    }
+    void
+    setStashLPID(uint16_t lpid)
+    {
+        _stashLPID = lpid;
+        privateFlags.set(VALID_STASH_LPID);
     }
 
     /**
