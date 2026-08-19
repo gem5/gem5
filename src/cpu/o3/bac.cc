@@ -216,18 +216,6 @@ BAC::drainSanityCheck() const
 bool
 BAC::isDrained() const
 {
-    // Wait until all instruction events in the time buffer are delivered.
-    if (bpu->requiresInstructionEvents() && timeBuffer) {
-        for (int i = -timeBuffer->getPast(); i <= timeBuffer->getFuture();
-             i++) {
-            const TimeStruct &time_struct = (*timeBuffer)[i];
-            if (time_struct.decodedInstructionEvents.size ||
-                time_struct.writtenBackInstructionEvents.size) {
-                return false;
-            }
-        }
-    }
-
     // Make sure the FTQ is empty and the state of all threads is idle.
     for (ThreadID i = 0; i < numThreads; ++i) {
         // Verify the FTQ is drained
@@ -241,31 +229,6 @@ BAC::isDrained() const
         }
     }
     return true;
-}
-
-bool
-BAC::processInstructionEvents()
-{
-    if (!bpu->requiresInstructionEvents()) {
-        return false;
-    }
-
-    bool processed = false;
-    InstructionEventComm &decoded = fromDecode->decodedInstructionEvents;
-    for (int i = 0; i < decoded.size; i++) {
-        bpu->instructionEvent(decoded.events[i]);
-        processed = true;
-    }
-    decoded = {};
-
-    InstructionEventComm &writebacks = fromIEW->writtenBackInstructionEvents;
-    for (int i = 0; i < writebacks.size; i++) {
-        bpu->instructionEvent(writebacks.events[i]);
-        processed = true;
-    }
-    writebacks = {};
-
-    return processed;
 }
 
 void
@@ -579,7 +542,7 @@ BAC::squash(const PCStateBase &new_pc, ThreadID tid)
 void
 BAC::tick()
 {
-    bool activity = processInstructionEvents();
+    bool activity = false;
     bool status_change = false;
 
     if (decoupledFrontEnd) {
@@ -992,10 +955,6 @@ BAC::updatePC(const DynInstPtr &inst, PCStateBase &fetch_pc,
     // the branch prediction.
     bool predict_taken;
     ThreadID tid = inst->threadNumber;
-
-    if (bpu->requiresInstructionEvents()) {
-        bpu->instructionEvent({InstructionFetched{tid, inst->seqNum}});
-    }
 
     if (inst->isControl()) {
         // The instruction is a control instruction.

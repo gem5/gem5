@@ -110,11 +110,16 @@
 #include "arch/x86/regs/int.hh"
 
 #endif
-#include "cpu/o3/comm.hh"
+#include "cpu/o3/cpu.hh"
+#include "cpu/o3/dyn_inst.hh"
 #include "cpu/op_class.hh"
 #include "cpu/reg_class.hh"
 #include "cpu/static_inst.hh"
 #include "debug/RUNLTS.hh"
+#include "params/BaseO3CPU.hh"
+#include "sim/cur_tick.hh"
+#include "sim/faults.hh"
+#include "sim/probe/probe.hh"
 
 namespace gem5
 {
@@ -1974,8 +1979,9 @@ class Predictor
         return hash % (1 << W);
     }
 
+    template <typename Writeback>
     void
-    writeback(const o3::InstructionWrittenBack &writeback)
+    writeback(const Writeback &writeback)
     {
         const InstSeqNum seq_num = writeback.seqNum;
         auto set_digest = [&](size_t reg, uint64_t value) {
@@ -2404,6 +2410,7 @@ struct RUNLTS::ThreadState
     explicit ThreadState(bool use_logical) : pred(use_logical) {}
 
     runlts_impl::Predictor pred;
+    InstSeqNum fetchedSeqNum = 0;
 };
 
 struct RUNLTSHistory
@@ -2413,7 +2420,13 @@ struct RUNLTSHistory
 };
 
 RUNLTS::RUNLTS(const Params &params)
-    : ConditionalPredictor(params), useLogical(params.use_logical)
+    : ConditionalPredictor(params),
+      useLogical(params.use_logical),
+      cpuProbeManager(nullptr),
+      cpu(nullptr),
+      decodeToFetchDelay(0),
+      iewToFetchDelay(0),
+      feedbackEvent([this] { processFeedback(); }, name() + ".feedback")
 {
     fatal_if(params.numThreads != 1,
              "RUNLTS currently supports exactly one hardware thread");
@@ -2434,46 +2447,167 @@ RUNLTS::threadState(ThreadID tid)
 }
 
 void
-RUNLTS::instructionEvent(const o3::InstructionEvent &event)
+RUNLTS::setProbeTarget(BaseCPU *target)
+{ cpuProbeManager = target->getProbeManager(); }
+
+void
+RUNLTS::regProbeListeners()
 {
-    std::visit(
-        [this](const auto &typed_event) {
-            handleInstructionEvent(typed_event);
-        },
-        event.data);
+    probeListeners.push_back(
+        cpuProbeManager->connect<ProbeListenerArg<RUNLTS, o3::DynInstPtr>>(
+            this, "Fetch", &RUNLTS::fetched));
+    probeListeners.push_back(
+        cpuProbeManager->connect<ProbeListenerArg<RUNLTS, o3::DynInstPtr>>(
+            this, "Decode", &RUNLTS::decoded));
+    probeListeners.push_back(
+        cpuProbeManager->connect<ProbeListenerArg<RUNLTS, o3::DynInstPtr>>(
+            this, "ToCommit", &RUNLTS::writtenBack));
+    probeListeners.push_back(
+        cpuProbeManager->connect<
+            ProbeListenerArg<RUNLTS, std::pair<ThreadID, InstSeqNum>>>(
+            this, "SquashDecided", &RUNLTS::squashDecided));
 }
 
 void
-RUNLTS::handleInstructionEvent(const o3::InstructionFetched &event)
-{ threadState(event.tid).pred.fetch(event.seqNum); }
+RUNLTS::fetched(const o3::DynInstPtr &inst)
+{
+    if (!cpu) {
+        cpu = inst->cpu;
+        const auto &o3_params =
+            static_cast<const BaseO3CPUParams &>(cpu->params());
+        decodeToFetchDelay = o3_params.decodeToFetchDelay;
+        iewToFetchDelay = o3_params.iewToFetchDelay;
+    }
+    ThreadState &state = threadState(inst->threadNumber);
+    state.fetchedSeqNum = inst->seqNum;
+    state.pred.fetch(inst->seqNum);
+}
 
 void
-RUNLTS::handleInstructionEvent(const o3::InstructionDecoded &event)
-{ threadState(event.tid).pred.decode(event.seqNum, event.staticInst); }
+RUNLTS::decoded(const o3::DynInstPtr &inst)
+{
+    const Tick when = cpu->clockEdge(decodeToFetchDelay);
+    decodedEvents.push_back(
+        {when, inst->threadNumber, inst->seqNum, inst->staticInst});
+    scheduleFeedback(when);
+}
 
 void
-RUNLTS::handleInstructionEvent(const o3::InstructionWrittenBack &event)
-{ threadState(event.tid).pred.writeback(event); }
+RUNLTS::writtenBack(const o3::DynInstPtr &inst)
+{
+    if (inst->isSquashed() || !inst->isExecuted() ||
+        inst->getFault() != NoFault) {
+        return;
+    }
+
+    WritebackEvent event{cpu->clockEdge(iewToFetchDelay),
+                         inst->threadNumber,
+                         inst->seqNum,
+                         inst->staticInst,
+                         {}};
+    event.destRegValues.reserve(inst->numDestRegs());
+    for (size_t i = 0; i < inst->numDestRegs(); i++) {
+        const RegId &dest_reg = inst->destRegIdx(i);
+        if (!dest_reg.isRenameable()) {
+            continue;
+        }
+
+        const PhysRegIdPtr phys_reg = inst->renamedDestIdx(i);
+        if (!phys_reg || phys_reg->is(InvalidRegClass)) {
+            continue;
+        }
+
+        const RegClass &reg_class = dest_reg.regClass();
+        switch (reg_class.type()) {
+            case IntRegClass:
+            case FloatRegClass:
+            case VecElemClass:
+            case CCRegClass:
+                event.destRegValues.push_back(
+                    {dest_reg,
+                     InstResult(reg_class,
+                                cpu->getReg(phys_reg, inst->threadNumber))});
+                break;
+
+            case VecRegClass:
+            case VecPredRegClass:
+            case MatRegClass: {
+                std::vector<uint8_t> value(reg_class.regBytes());
+                cpu->getReg(phys_reg, value.data(), inst->threadNumber);
+                event.destRegValues.push_back(
+                    {dest_reg, InstResult(reg_class, value.data())});
+                break;
+            }
+
+            case MiscRegClass:
+            case InvalidRegClass:
+                break;
+        }
+    }
+    writtenBackEvents.push_back(std::move(event));
+    scheduleFeedback(writtenBackEvents.back().when);
+}
 
 void
-RUNLTS::handleInstructionEvent(const o3::InstructionSquash &event)
-{ threadState(event.tid).pred.squashInstructionState(event.seqNum); }
+RUNLTS::squashDecided(const std::pair<ThreadID, InstSeqNum> &squash)
+{ threadState(squash.first).pred.squashInstructionState(squash.second); }
+
+void
+RUNLTS::scheduleFeedback(Tick when)
+{
+    if (!feedbackEvent.scheduled()) {
+        schedule(feedbackEvent, when);
+    } else if (when < feedbackEvent.when()) {
+        reschedule(feedbackEvent, when);
+    }
+}
+
+void
+RUNLTS::processFeedback()
+{
+    while (!decodedEvents.empty() && decodedEvents.front().when <= curTick()) {
+        const DecodeEvent &event = decodedEvents.front();
+        threadState(event.tid).pred.decode(event.seqNum, event.staticInst);
+        decodedEvents.pop_front();
+    }
+    while (!writtenBackEvents.empty() &&
+           writtenBackEvents.front().when <= curTick()) {
+        const WritebackEvent &event = writtenBackEvents.front();
+        threadState(event.tid).pred.writeback(event);
+        writtenBackEvents.pop_front();
+    }
+
+    if (decodedEvents.empty() && writtenBackEvents.empty()) {
+        signalDrainDone();
+        return;
+    }
+
+    Tick next = MaxTick;
+    if (!decodedEvents.empty()) {
+        next = decodedEvents.front().when;
+    }
+    if (!writtenBackEvents.empty()) {
+        next = std::min(next, writtenBackEvents.front().when);
+    }
+    scheduleFeedback(next);
+}
+
+DrainState
+RUNLTS::drain()
+{
+    return decodedEvents.empty() && writtenBackEvents.empty()
+               ? DrainState::Drained
+               : DrainState::Draining;
+}
 
 Prediction
 RUNLTS::lookup(ThreadID tid, Addr pc, void *&bp_history)
 {
-    fatal("RUNLTS requires the sequence-number-aware O3 predictor "
-          "interface");
-}
-
-Prediction
-RUNLTS::lookup(ThreadID tid, Addr pc, InstSeqNum seq_no, void *&bp_history)
-{
     ThreadState &state = threadState(tid);
 
     auto *h = new RUNLTSHistory();
-    h->seqNum = seq_no;
-    const bool pred = state.pred.predict(pc, seq_no, h->snap);
+    h->seqNum = state.fetchedSeqNum;
+    const bool pred = state.pred.predict(pc, h->seqNum, h->snap);
     bp_history = static_cast<void *>(h);
     return predictWithDefaultLatency(pred);
 }
@@ -2483,22 +2617,13 @@ RUNLTS::updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
                         Addr target, const StaticInstPtr &inst,
                         void *&bp_history)
 {
-    fatal("RUNLTS requires the sequence-number-aware O3 predictor "
-          "interface");
-}
-
-void
-RUNLTS::updateHistories(ThreadID tid, Addr pc, InstSeqNum seq_no, bool uncond,
-                        bool taken, Addr target, const StaticInstPtr &inst,
-                        void *&bp_history)
-{
     ThreadState &state = threadState(tid);
 
     if (!bp_history) {
         assert(uncond);
         auto *h = new RUNLTSHistory();
-        h->seqNum = seq_no;
-        state.pred.predict(pc, seq_no, h->snap);
+        h->seqNum = state.fetchedSeqNum;
+        state.pred.predict(pc, h->seqNum, h->snap);
         bp_history = static_cast<void *>(h);
     }
 

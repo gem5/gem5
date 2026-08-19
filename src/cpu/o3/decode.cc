@@ -54,7 +54,6 @@
 #include "cpu/o3/dyn_inst.hh"
 #include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/o3/limits.hh"
-#include "cpu/pred/bpred_unit.hh"
 #include "cpu/timebuf.hh"
 #include "debug/Activity.hh"
 #include "debug/Decode.hh"
@@ -99,7 +98,6 @@ Decode::Decode(CPU *_cpu, const BaseO3CPUParams &params)
       commitToDecodeDelay(params.commitToDecodeDelay),
       fetchToDecodeDelay(params.fetchToDecodeDelay),
       decodeWidth(params.decodeWidth),
-      instructionEventsEnabled(params.branchPred->requiresInstructionEvents()),
       numThreads(params.numThreads),
       stats(_cpu)
 {
@@ -142,7 +140,6 @@ Decode::clearStates(ThreadID tid)
     for (int i = -cpu->timeBuffer.getPast();
          i <= cpu->timeBuffer.getFuture(); ++i) {
         TimeStruct& time_struct = cpu->timeBuffer[i];
-        removeInstructionEvents(tid, time_struct.decodedInstructionEvents);
         time_struct.decodeInfo[tid] = {};
         time_struct.decodeBlock[tid] = false;
         time_struct.decodeUnblock[tid] = false;
@@ -718,14 +715,6 @@ Decode::decodeInsts(ThreadID tid)
         --insts_available;
 
         inst->decodeTick = curTick() - inst->fetchTick;
-
-        if (instructionEventsEnabled) {
-            InstructionEventComm &comm = toFetch->decodedInstructionEvents;
-            comm.events.at(comm.size++).data = InstructionDecoded{
-                {.tid = inst->threadNumber, .seqNum = inst->seqNum},
-                inst->staticInst};
-            wroteToTimeBuffer = true;
-        }
         ppDecode->notify(inst);
 
         // Ensure that if it was predicted as a branch, it really is a

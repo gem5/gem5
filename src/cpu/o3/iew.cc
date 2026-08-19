@@ -47,7 +47,6 @@
 
 #include <queue>
 #include <string>
-#include <vector>
 
 #include "arch/generic/pcstate.hh"
 #include "base/logging.hh"
@@ -65,7 +64,6 @@
 #include "cpu/o3/limits.hh"
 #include "cpu/o3/lsq_unit.hh"
 #include "cpu/o3/scoreboard.hh"
-#include "cpu/pred/bpred_unit.hh"
 #include "cpu/timebuf.hh"
 #include "debug/Activity.hh"
 #include "debug/Drain.hh"
@@ -79,63 +77,6 @@ namespace gem5
 
 namespace o3
 {
-
-namespace
-{
-
-InstructionWrittenBack
-makeInstructionWrittenBack(CPU *cpu, const DynInstPtr &inst)
-{
-    InstructionWrittenBack event;
-    event.tid = inst->threadNumber;
-    event.seqNum = inst->seqNum;
-    event.staticInst = inst->staticInst;
-    event.destRegValues.reserve(inst->numDestRegs());
-
-    for (size_t i = 0; i < inst->numDestRegs(); i++) {
-        const RegId &dest_reg = inst->destRegIdx(i);
-        if (!dest_reg.isRenameable()) {
-            continue;
-        }
-
-        const PhysRegIdPtr phys_reg = inst->renamedDestIdx(i);
-        if (!phys_reg || phys_reg->is(InvalidRegClass)) {
-            continue;
-        }
-
-        const RegClass &reg_class = dest_reg.regClass();
-        switch (reg_class.type()) {
-            case IntRegClass:
-            case FloatRegClass:
-            case VecElemClass:
-            case CCRegClass:
-                event.destRegValues.push_back(
-                    {dest_reg,
-                     InstResult(reg_class,
-                                cpu->getReg(phys_reg, inst->threadNumber))});
-                break;
-
-            case VecRegClass:
-            case VecPredRegClass:
-            case MatRegClass: {
-                std::vector<uint8_t> value(reg_class.regBytes());
-                cpu->getReg(phys_reg, value.data(), inst->threadNumber);
-                event.destRegValues.push_back(
-                    {dest_reg, InstResult(reg_class, value.data())});
-                break;
-            }
-
-            case MiscRegClass:
-            case InvalidRegClass:
-                // Currently ignored.
-                break;
-        }
-    }
-
-    return event;
-}
-
-} // anonymous namespace
 
 // clang-format off
 std::string IEW::IEWStats::statusStrings[ThreadStatusMax] = {
@@ -161,7 +102,6 @@ IEW::IEW(CPU *_cpu, const BaseO3CPUParams &params)
       wbNumInst(0),
       wbCycle(0),
       wbWidth(params.wbWidth),
-      instructionEventsEnabled(params.branchPred->requiresInstructionEvents()),
       numThreads(params.numThreads),
       iewStats(cpu)
 {
@@ -384,7 +324,6 @@ IEW::clearStates(ThreadID tid)
     for (int i = -cpu->timeBuffer.getPast();
          i <= cpu->timeBuffer.getFuture(); ++i) {
         TimeStruct& time_struct = cpu->timeBuffer[i];
-        removeInstructionEvents(tid, time_struct.writtenBackInstructionEvents);
         time_struct.iewInfo[tid] = {};
         time_struct.iewBlock[tid] = false;
         time_struct.iewUnblock[tid] = false;
@@ -1514,14 +1453,6 @@ IEW::writebackInsts()
         if (!inst->isSquashed() && inst->isExecuted() &&
                 inst->getFault() == NoFault) {
             int dependents = instQueue.wakeDependents(inst);
-
-            if (instructionEventsEnabled) {
-                InstructionEventComm &comm =
-                    toFetch->writtenBackInstructionEvents;
-                comm.events.at(comm.size++).data =
-                    makeInstructionWrittenBack(cpu, inst);
-                wroteToTimeBuffer = true;
-            }
 
             for (int i = 0; i < inst->numDestRegs(); i++) {
                 PhysRegIdPtr dest_reg = inst->renamedDestIdx(i);

@@ -47,7 +47,6 @@
 #include "arch/generic/pcstate.hh"
 #include "base/compiler.hh"
 #include "base/trace.hh"
-#include "cpu/o3/comm.hh"
 #include "debug/Branch.hh"
 
 namespace gem5
@@ -72,23 +71,6 @@ BPredUnit::BPredUnit(const Params &params)
 {
 }
 
-bool
-BPredUnit::requiresInstructionEvents() const
-{
-    return cPred->requiresInstructionEvents() ||
-           (overridingCPred && overridingCPred->requiresInstructionEvents());
-}
-
-void
-BPredUnit::instructionEvent(const o3::InstructionEvent &event)
-{
-    if (cPred->requiresInstructionEvents()) {
-        cPred->instructionEvent(event);
-    }
-    if (overridingCPred && overridingCPred->requiresInstructionEvents()) {
-        overridingCPred->instructionEvent(event);
-    }
-}
 
 probing::PMUUPtr
 BPredUnit::pmuProbePoint(const char *name)
@@ -175,13 +157,13 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
         // Conditional branches -------
         ++stats.condPredicted;
         Prediction condPred =
-            cPred->lookup(tid, pc.instAddr(), seqNum, hist->bpHistory);
+            cPred->lookup(tid, pc.instAddr(), hist->bpHistory);
         hist->condPred = condPred.taken;
 
         if (overridingCPred) {
 
             Prediction secondaryPred = overridingCPred->lookup(
-                tid, pc.instAddr(), seqNum, hist->overridingBpHistory);
+                tid, pc.instAddr(), hist->overridingBpHistory);
             if (secondaryPred.taken != hist->condPred) {
                 // If the predictors disagree,
                 // use the result of the overriding predictor
@@ -366,13 +348,13 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
      * The actual prediction tables will updated once
      * we know the correct direction.
      **/
-    cPred->updateHistories(tid, hist->pc, seqNum, hist->uncond,
-                           hist->predTaken, hist->target->instAddr(),
-                           hist->inst, hist->bpHistory);
+    cPred->updateHistories(tid, hist->pc, hist->uncond, hist->predTaken,
+                           hist->target->instAddr(), hist->inst,
+                           hist->bpHistory);
 
     if (overridingCPred) {
         overridingCPred->updateHistories(
-            tid, hist->pc, seqNum, hist->uncond, hist->predTaken,
+            tid, hist->pc, hist->uncond, hist->predTaken,
             hist->target->instAddr(), hist->inst, hist->overridingBpHistory);
     }
 
@@ -490,10 +472,6 @@ BPredUnit::squash(const InstSeqNum &squashed_sn, ThreadID tid)
 
         DPRINTF(Branch, "[tid:%i] [squash sn:%llu] pred_hist.size(): %i\n",
                 tid, squashed_sn, predHist[tid].size());
-    }
-
-    if (requiresInstructionEvents()) {
-        instructionEvent({o3::InstructionSquash{tid, squashed_sn}});
     }
 }
 

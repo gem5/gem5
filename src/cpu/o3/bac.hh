@@ -214,9 +214,6 @@ class BAC
     /** Check the backward signals that update the BPU. */
     bool checkAndUpdateBPUSignals(ThreadID tid);
 
-    /** Deliver delayed instruction events to the BPU. */
-    bool processInstructionEvents();
-
   private:
     /* ----------------------------------------------------------------
      * Decoupled Frontend Functionality

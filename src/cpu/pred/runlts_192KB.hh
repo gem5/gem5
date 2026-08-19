@@ -37,23 +37,27 @@
 #ifndef __CPU_PRED_RUNLTS_192KB_HH__
 #define __CPU_PRED_RUNLTS_192KB_HH__
 
+#include <deque>
 #include <memory>
+#include <utility>
 #include <vector>
 
+#include "cpu/base.hh"
+#include "cpu/inst_res.hh"
+#include "cpu/o3/dyn_inst_ptr.hh"
 #include "cpu/pred/conditional.hh"
+#include "cpu/reg_class.hh"
 #include "params/RUNLTS.hh"
+#include "sim/eventq.hh"
+#include "sim/probe/probe.hh"
 
 namespace gem5
 {
 
 namespace o3
 {
-struct InstructionEvent;
-struct InstructionFetched;
-struct InstructionDecoded;
-struct InstructionWrittenBack;
-struct InstructionSquash;
-} // namespace o3
+class CPU;
+}
 
 namespace branch_prediction
 {
@@ -78,13 +82,8 @@ class RUNLTS : public ConditionalPredictor
     RUNLTS(const Params &params);
 
     Prediction lookup(ThreadID tid, Addr pc, void *&bp_history) override;
-    Prediction lookup(ThreadID tid, Addr pc, InstSeqNum seq_no,
-                      void *&bp_history) override;
     void updateHistories(ThreadID tid, Addr pc, bool uncond, bool taken,
                          Addr target, const StaticInstPtr &inst,
-                         void *&bp_history) override;
-    void updateHistories(ThreadID tid, Addr pc, InstSeqNum seq_no, bool uncond,
-                         bool taken, Addr target, const StaticInstPtr &inst,
                          void *&bp_history) override;
     void update(ThreadID tid, Addr pc, bool taken, void *&bp_history,
                 bool squashed, const StaticInstPtr &inst,
@@ -92,20 +91,46 @@ class RUNLTS : public ConditionalPredictor
     void squash(ThreadID tid, void *&bp_history) override;
     void branchPlaceholder(ThreadID tid, Addr pc, bool uncond,
                            void *&bp_history) override;
-    bool
-    requiresInstructionEvents() const override
-    { return true; }
-    void instructionEvent(const o3::InstructionEvent &event) override;
+    void setProbeTarget(BaseCPU *target);
+    void regProbeListeners() override;
+    DrainState drain() override;
 
   private:
+    struct DecodeEvent
+    {
+        Tick when;
+        ThreadID tid;
+        InstSeqNum seqNum;
+        StaticInstPtr staticInst;
+    };
+
+    struct WritebackEvent
+    {
+        Tick when;
+        ThreadID tid;
+        InstSeqNum seqNum;
+        StaticInstPtr staticInst;
+        std::vector<std::pair<RegId, InstResult>> destRegValues;
+    };
+
     struct ThreadState;
     ThreadState &threadState(ThreadID tid);
-    void handleInstructionEvent(const o3::InstructionFetched &event);
-    void handleInstructionEvent(const o3::InstructionDecoded &event);
-    void handleInstructionEvent(const o3::InstructionWrittenBack &event);
-    void handleInstructionEvent(const o3::InstructionSquash &event);
+    void fetched(const o3::DynInstPtr &inst);
+    void decoded(const o3::DynInstPtr &inst);
+    void writtenBack(const o3::DynInstPtr &inst);
+    void squashDecided(const std::pair<ThreadID, InstSeqNum> &squash);
+    void processFeedback();
+    void scheduleFeedback(Tick when);
 
     const bool useLogical;
+    ProbeManager *cpuProbeManager;
+    o3::CPU *cpu;
+    Cycles decodeToFetchDelay;
+    Cycles iewToFetchDelay;
+    EventFunctionWrapper feedbackEvent;
+    std::deque<DecodeEvent> decodedEvents;
+    std::deque<WritebackEvent> writtenBackEvents;
+    std::vector<ProbeListenerPtr<>> probeListeners;
     std::vector<std::unique_ptr<ThreadState>> threadStates;
 };
 

@@ -412,9 +412,6 @@ class IEW
     /** Writeback width. */
     unsigned wbWidth;
 
-    /** Whether the predictor consumes instruction events. */
-    bool instructionEventsEnabled;
-
     /** Number of active threads. */
     ThreadID numThreads;
 
