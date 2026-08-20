@@ -650,7 +650,7 @@ Walker::WalkerState::startFunctional(Addr &addr, unsigned &logBytes)
 }
 
 Fault
-Walker::WalkerState::checkPTEPermissions(PTE pte, WalkFlags &stepWalkFlags,
+Walker::WalkerState::checkPTEPermissions(PTE& pte, WalkFlags &stepWalkFlags,
                                          int level)
 {
     // If valid bit is off OR
