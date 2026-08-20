@@ -54,7 +54,10 @@ from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.isas import ISA
 from gem5.prebuilt.viper.board import ViperBoard
 from gem5.prebuilt.viper.cpu_cache_hierarchy import ViperCPUCacheHierarchy
-from gem5.resources.resource import DiskImageResource, FileResource
+from gem5.resources.resource import (
+    DiskImageResource,
+    FileResource,
+)
 from gem5.simulate.simulator import Simulator
 from gem5.utils.requires import requires
 
