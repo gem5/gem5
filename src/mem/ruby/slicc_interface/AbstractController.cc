@@ -464,6 +464,7 @@ const
         name(), addr, mtype);
 }
 
+
 void
 AbstractController::memRespQueueDequeued() {
     if (m_mem_ctrl_waiting_retry && !mRetryRespEvent.scheduled()) {
