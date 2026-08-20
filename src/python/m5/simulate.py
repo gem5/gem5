@@ -43,6 +43,7 @@ import sys
 from typing import Optional
 
 from m5.objects import Root
+from m5.SimObject import MetaSimObject
 from m5.util.dot_writer import (
     do_dot,
     do_dvfs_dot,
@@ -144,6 +145,66 @@ def _dump_configs(
     gather_citations(root, outdir)
 
 
+def _bind_all_ports(root):
+    """Connects all ports in the object graph.
+
+    Uses C++ batch binding for pure C++ SimObjects, falls back to python binding
+    for SystemC or other edge cases.
+
+    Batching port connections when both endpoints are C++ SimObjects
+    significantly reduces the overhead of crossing the Python-C++ language
+    boundary during initialization. The fallback method is expensive, requiring
+    three separate boundary crossings (two getPort calls and one bind call) for
+    every single port connection. In contrast, the batching approach executes
+    all connections in a single context switch. Additionally, it uses the
+    SimObject Capsule to pass raw C++ pointers, completely bypassing the heavy
+    py::cast<SimObject*>() type-casting overhead in pybind11.
+    """
+    obj_ptrs, obj_port_names, obj_port_indices = [], [], []
+    peer_ptrs, peer_port_names, peer_port_indices = [], [], []
+
+    for obj in root.descendants():
+        if obj._ccSimObjCapsule is None:
+            obj.connectPorts()
+            continue
+
+        for attr, port_ref in sorted(obj._port_refs.items()):
+            # VectorPortRef has elements
+            refs = getattr(port_ref, "elements", [port_ref])
+
+            for ref in refs:
+                if ref.ccConnected or not ref.peer:
+                    continue
+
+                peer_ref = ref.peer
+                peer_obj = peer_ref.simobj
+
+                if peer_obj._ccSimObjCapsule is None:
+                    obj_cc = obj.getCCObject()
+                    peer_cc = peer_obj.getCCObject()
+                    port = obj_cc.getPort(ref.name, ref.index)
+                    peer_port = peer_cc.getPort(peer_ref.name, peer_ref.index)
+                    port.bind(peer_port)
+                else:
+                    obj_ptrs.append(obj._ccSimObjCapsule)
+                    obj_port_names.append(ref.name)
+                    obj_port_indices.append(ref.index)
+                    peer_ptrs.append(peer_obj._ccSimObjCapsule)
+                    peer_port_names.append(peer_ref.name)
+                    peer_port_indices.append(peer_ref.index)
+
+                ref.ccConnected = True
+
+    _m5_core.bindPorts(
+        obj_ptrs,
+        obj_port_names,
+        obj_port_indices,
+        peer_ptrs,
+        peer_port_names,
+        peer_port_indices,
+    )
+
+
 def _create_cpp_objects(root, ckpt_dir):
     """Does simboject initialization.
 
@@ -161,24 +222,33 @@ def _create_cpp_objects(root, ckpt_dir):
     # Create the C++ sim objects and connect ports
     for obj in root.descendants():
         obj.createCCObject()
-    for obj in root.descendants():
-        obj.connectPorts()
+        # Some objects are SimObject in python but not SimObject in C++.
+        # For example: SystemC objects set cxx_base = None, meaning they don't
+        # inherit from gem5::SimObject in C++ and cannot be cast to SimObject*.
+        if MetaSimObject.isCxxSimObject(type(obj)):
+            # Stores a capsule to reduce overhead of py::cast<SimObject*>() in future use.
+            obj._ccSimObjCapsule = obj.getCCObject().getCapsule()
+
+    _bind_all_ports(root)
+
+    simobj_capsules = [
+        obj._ccSimObjCapsule
+        for obj in root.descendants()
+        if obj._ccSimObjCapsule is not None
+    ]
 
     # Do a second pass to finish initializing the sim objects
-    for obj in root.descendants():
-        obj.init()
+    _m5_core.initAll(simobj_capsules)
 
     # Do a third pass to initialize statistics
     stats._bindStatHierarchy(root)
     root.regStats()
 
     # Do a fourth pass to initialize probe points
-    for obj in root.descendants():
-        obj.regProbePoints()
+    _m5_core.regProbePointsAll(simobj_capsules)
 
     # Do a fifth pass to connect probe listeners
-    for obj in root.descendants():
-        obj.regProbeListeners()
+    _m5_core.regProbeListenersAll(simobj_capsules)
 
     # We're done registering statistics.  Enable the stats package now.
     stats.enable()
@@ -187,11 +257,9 @@ def _create_cpp_objects(root, ckpt_dir):
     if ckpt_dir:
         _drain_manager.preCheckpointRestore()
         ckpt = _m5_core.getCheckpoint(ckpt_dir)
-        for obj in root.descendants():
-            obj.loadState(ckpt)
+        _m5_core.loadStateAll(ckpt, simobj_capsules)
     else:
-        for obj in root.descendants():
-            obj.initState()
+        _m5_core.initStateAll(simobj_capsules)
 
     # Check to see if any of the stat events are in the past after resuming from
     # a checkpoint, If so, this call will shift them to be at a valid time.
