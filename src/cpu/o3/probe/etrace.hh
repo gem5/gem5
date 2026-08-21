@@ -216,57 +216,57 @@ class ETrace : public ProbeListenerObject
     uint32_t classifyAtomicSubtype(const DynInstPtr &dynInst,
                                    bool &isLR, bool &isSC);
 
-    CPU *cpu;
-    ProtoOutputStream *traceStream;
+    CPU *cpu = nullptr;
+    ProtoOutputStream *traceStream = nullptr;
 
     static constexpr uint32_t maxBranchMapBits = 31;
 
     // Branch map state
-    uint32_t branchMap;
-    uint32_t branchCount;
+    uint32_t branchMap = 0;
+    uint32_t branchCount = 0;
 
     // Address tracking for delta encoding
-    Addr lastReportedAddr;
+    Addr lastReportedAddr = 0;
 
     // Expected next PC for exception detection
-    Addr expectedNextPC;
-    bool haveExpectedPC;
-    Addr lastCommittedAddr;
-    uint8_t lastCommittedPriv;
+    Addr expectedNextPC = 0;
+    bool haveExpectedPC = false;
+    Addr lastCommittedAddr = 0;
+    uint8_t lastCommittedPriv = 0;
     // True iff the most recently committed traced instruction was a
     // taken conditional branch. Used to compute the Format 3-1 trap
     // `branch` bit polarity (spec: 0 iff last-committed was a taken
     // branch, else 1).
-    bool lastCommittedWasTakenBranch;
+    bool lastCommittedWasTakenBranch = false;
 
     // Privilege tracking
-    uint8_t lastPriv;
+    uint8_t lastPriv = 0;
 
     // Resync tracking
-    uint64_t instsSinceSync;
+    uint64_t instsSinceSync = 0;
     uint64_t resyncPeriod;
 
     // Start tracing control
     uint64_t startTraceInst;
-    uint64_t totalInstsCommitted;
+    uint64_t totalInstsCommitted = 0;
     bool tracingActive;
 
     // Whether initial sync has been sent
-    bool needsInitialSync;
+    bool needsInitialSync = true;
 
     // Implicit exception mode
     bool implicitException;
 
     // Implicit return mode
     bool implicitReturn;
-    uint32_t callCounter;
+    uint32_t callCounter = 0;
     uint32_t callCounterMax;
 
     // Branch prediction mode
     bool branchPrediction;
     uint32_t bpredSizeP;
     std::vector<uint8_t> bpredTable;
-    uint32_t bpredCorrectCount;
+    uint32_t bpredCorrectCount = 0;
     // Count at which to proactively flush a Format 0-0 packet
     // (payload.adoc "reaches its maximum value" condition). Always
     // >= 31, since branch_count is wire-encoded as (count - 31);
@@ -277,22 +277,22 @@ class ETrace : public ProbeListenerObject
     bool jumpTargetCache;
     uint32_t cacheSizeP;
     std::vector<Addr> jtCache;
-    bool jtCacheValid;      // false immediately after sync/invalidate
+    bool jtCacheValid = false;      // false immediately after sync/invalidate
 
     // Sequentially inferable jump detection
     bool sijump;
-    Addr prevInstPC;
-    uint8_t prevInstOpcode;   // 7-bit for full-width, 2-bit quadrant for RVC
-    uint8_t prevInstRd;
-    unsigned prevInstSize;
-    bool prevInstIsRvc;       // If true, opcode/funct handled RVC-style
-    uint8_t prevInstRvcFunct3;
-    bool havePrevInst;
+    Addr prevInstPC = 0;
+    uint8_t prevInstOpcode = 0;   // 7-bit for full-width, 2-bit quadrant for RVC
+    uint8_t prevInstRd = 0;
+    unsigned prevInstSize = 0;
+    bool prevInstIsRvc = false;       // If true, opcode/funct handled RVC-style
+    uint8_t prevInstRvcFunct3 = 0;
+    bool havePrevInst = false;
 
     // Data trace
     bool dataTrace;
     uint32_t dataTraceMode;
-    ProtoOutputStream *dataTraceStream;
+    ProtoOutputStream *dataTraceStream = nullptr;
     // Per-size (in bytes) last-address baseline for differential
     // encoding, per dataTracePayload.adoc.
     std::unordered_map<uint8_t, Addr> lastDataAddrBySize;
@@ -301,26 +301,26 @@ class ETrace : public ProbeListenerObject
 
     // Context tracking
     uint32_t contextWidth;
-    uint64_t lastContext;
+    uint64_t lastContext = 0;
 
     // Filtering
     uint32_t filterPrivMask;
     Addr filterAddrStart;
     Addr filterAddrEnd;
     bool filterAddrEnabled;
-    bool wasFiltered;
+    bool wasFiltered = false;
 
     // Updiscon tracking (set on uninferable discontinuities; consumed
     // by the next Format 3 packet if any).
-    bool pendingUpdiscon;
+    bool pendingUpdiscon = false;
     // Explicit-return tracking. Set when a return is being reported
     // "in the clear" — either the implicit-return call counter was
     // 0 (nothing to unwind) or the counter overflowed (nested deeper
     // than callCounterSizeP allows). Consumed by the next Format 1/2
     // emit, which sets irreport and emits the current call counter
     // as irdepth per payload.adoc §sec:implicit-return.
-    bool pendingExplicitReturn;
-    uint32_t pendingIrdepth;
+    bool pendingExplicitReturn = false;
+    uint32_t pendingIrdepth = 0;
 
     // Spec discovery parameters (mirrored from Python params so the
     // header can advertise them and the encoder can size fields).
