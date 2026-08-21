@@ -82,9 +82,9 @@ MemTest::sendPkt(PacketPtr pkt) {
 
 MemTest::MemTest(const Params &p)
     : ClockedObject(p),
-      tickEvent([this]{ tick(); }, name()),
-      noRequestEvent([this]{ noRequest(); }, name()),
-      noResponseEvent([this]{ noResponse(); }, name()),
+      tickEvent([this] { tick(); }, name()),
+      noRequestEvent([this] { noRequest(); }, name()),
+      noResponseEvent([this] { noResponse(); }, name()),
       port("port", *this),
       retryPkt(nullptr),
       waitResponse(false),
@@ -94,6 +94,8 @@ MemTest::MemTest(const Params &p)
       percentFunctional(p.percent_functional),
       percentUncacheable(p.percent_uncacheable),
       percentAtomic(p.percent_atomic),
+      percentStashOnce(p.percent_stash_once),
+      percentStashOnceUnique(p.percent_stash_once_unique),
       requestorId(p.system->getRequestorId(this)),
       blockSize(p.system->cacheLineSize()),
       blockAddrMask(blockSize - 1),
@@ -106,7 +108,8 @@ MemTest::MemTest(const Params &p)
       nextProgressMessage(p.progress_interval),
       maxLoads(p.max_loads),
       atomic(p.system->isAtomicMode()),
-      suppressFuncErrors(p.suppress_func_errors), stats(this)
+      suppressFuncErrors(p.suppress_func_errors),
+      stats(this)
 {
     id = TESTER_ALLOCATOR++;
     fatal_if(id >= blockSize, "Too many testers, only %d allowed\n",
@@ -116,6 +119,7 @@ MemTest::MemTest(const Params &p)
     numReads = 0;
     numWrites = 0;
     numAtomics = 0;
+    numStashes = 0;
 
     // kick things into action
     schedule(tickEvent, curTick());
@@ -186,14 +190,18 @@ MemTest::completeRequest(PacketPtr pkt, bool functional)
 
             if (numReads == (uint64_t)nextProgressMessage) {
                 ccprintf(std::cerr,
-                        "%s: completed %d read, %d write, "
-                        "%d atomic accesses @%d\n",
-                        name(), numReads, numWrites, numAtomics, curTick());
-                        nextProgressMessage += progressInterval;
+                         "%s: completed %d read, %d write, "
+                         "%d atomic accesses, %d stash once accesses @%d\n",
+                         name(), numReads, numWrites, numAtomics, numStashes,
+                         curTick());
+                nextProgressMessage += progressInterval;
             }
 
             if (maxLoads != 0 && numReads >= maxLoads)
                 exitSimLoop("maximum number of loads reached");
+        } else if (pkt->isStashOnce()) {
+            numStashes++;
+            stats.numStashes++;
         } else {
             assert(pkt->isWrite());
 
@@ -221,13 +229,15 @@ MemTest::completeRequest(PacketPtr pkt, bool functional)
     }
 }
 MemTest::MemTestStats::MemTestStats(statistics::Group *parent)
-      : statistics::Group(parent),
+    : statistics::Group(parent),
       ADD_STAT(numReads, statistics::units::Count::get(),
                "number of read accesses completed"),
       ADD_STAT(numWrites, statistics::units::Count::get(),
                "number of write accesses completed"),
       ADD_STAT(numAtomics, statistics::units::Count::get(),
-               "number of atomic accesses completed")
+               "number of atomic accesses completed"),
+      ADD_STAT(numStashes, statistics::units::Count::get(),
+               "number of stash once accesses completed")
 {
 
 }
@@ -245,6 +255,12 @@ MemTest::tick()
     bool uncacheable = rng->random(0, 100) < percentUncacheable;
     bool do_atomic = (rng->random(0, 100) < percentAtomic) &&
                      !uncacheable;
+    bool do_stash_once =
+        (rng->random(0, 100) < percentStashOnce) && !uncacheable && !do_atomic;
+    bool do_stash_once_unique = false;
+    if (do_stash_once) {
+        do_stash_once_unique = (rng->random(0, 100) < percentStashOnceUnique);
+    }
     unsigned base = rng->random(0, 1);
     Request::Flags flags;
     Addr paddr;
@@ -268,6 +284,12 @@ MemTest::tick()
             flags.set(Request::UNCACHEABLE);
             paddr = uncacheAddr + offset;
         } else  {
+            if (do_stash_once) {
+                flags.set(Request::STASH_ONCE);
+                if (do_stash_once_unique) {
+                    flags.set(Request::STASH_ONCE_UNIQUE);
+                }
+            }
             paddr = ((base) ? baseAddr1 : baseAddr2) + offset;
         }
     } while (outstandingAddrs.find(paddr) != outstandingAddrs.end());
@@ -325,6 +347,37 @@ MemTest::tick()
             pkt->dataDynamic(pkt_data);
             pkt_data[0] = data;
             atomicPendingData[req->getPaddr()] = data;
+        } else if (do_stash_once) {
+            if (!stashNIDs.empty() && !stashLPIDs.empty()) {
+                // choice == 0: no target identifiers; stash to the HN.
+                // choice == 1: StashNID only; stash to a peer cache.
+                // choice == 2: StashNID and StashLPID; stash to a logical
+                // processor behind the peer cache.
+                int choice = rng->random(0, 2);
+                int i = rng->random(0, int(stashNIDs.size()) - 1);
+                if (choice == 1) {
+                    req->setStashNID(stashNIDs[i]);
+                } else if (choice == 2) {
+                    req->setStashNID(stashNIDs[i]);
+                    req->setStashLPID(stashLPIDs[i]);
+                }
+            }
+
+            if (do_stash_once_unique) {
+                DPRINTF(MemTest,
+                        "Initiating stashOnceUnique at addr %x (blk %x) value "
+                        "%x\n",
+                        req->getPaddr(), blockAlign(req->getPaddr()), data);
+                pkt = new Packet(req, MemCmd::StashOnceUniqueReq);
+            } else {
+                DPRINTF(MemTest,
+                        "Initiating stashOnceShared at addr %x (blk %x) value "
+                        "%x\n",
+                        req->getPaddr(), blockAlign(req->getPaddr()), data);
+                pkt = new Packet(req, MemCmd::StashOnceSharedReq);
+            }
+            pkt->dataDynamic(pkt_data);
+            pkt_data[0] = data;
         } else {
             DPRINTF(MemTest,
                     "Initiating %swrite at addr %x (blk %x) value %x\n",
@@ -387,6 +440,18 @@ MemTest::recvRetry()
         schedule(tickEvent, clockEdge(interval));
         reschedule(noRequestEvent, clockEdge(progressCheck), true);
     }
+}
+
+void
+MemTest::set_stash_node_ids(const std::vector<unsigned> &node_ids)
+{
+    stashNIDs = node_ids;
+}
+
+void
+MemTest::set_stash_lp_ids(const std::vector<unsigned> &lp_ids)
+{
+    stashLPIDs = lp_ids;
 }
 
 } // namespace gem5
