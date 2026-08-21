@@ -1158,18 +1158,24 @@ ETrace::emitTrapPacket(Addr addr, uint64_t cause, uint64_t tval,
     bool inferable = isTrapAddrInferable(priv, cause, isInterrupt);
     // Spec Format 3-1 thaddr:
     //   thaddr=1: address IS the trap handler PC. In implicit-
-    //             exception mode, address may be omitted (decoder
-    //             derives handler from cause + mtvec/stvec).
+    //             exception mode, the spec permits omitting address
+    //             when it's inferable from cause + mtvec/stvec, but
+    //             this encoder always advances lastReportedAddr to
+    //             the real handler PC either way, and
+    //             util/decode_etrace.py has no independent CSR/tvec
+    //             model to re-derive it -- an omitted address here
+    //             desyncs the decoder's delta baseline from every
+    //             subsequent packet. So the address is always
+    //             emitted for now; `inferable` is retained only to
+    //             annotate whether it *could* have been omitted,
+    //             pending decoder-side CSR-state tracking.
     //   thaddr=0: address is EPC of the last-committed instruction
     //             (used when the trap follows an uninferable PC
     //             discontinuity, so the decoder needs the EPC to
     //             resume). gem5 always has the handler PC available
     //             at trap time so this path is never taken here.
     pkt.set_thaddr(true);
-    if (!inferable) {
-        pkt.set_address(addr >> iaddressLsbP);
-    }
-    // else: address omitted, decoder infers from cause + tvec.
+    pkt.set_address(addr >> iaddressLsbP);
     if (!isInterrupt) {
         // tval field: only present for exceptions per spec.
         pkt.set_tval(tval);
