@@ -15,9 +15,10 @@ permissions:
   copilot-requests: write
 
 tools:
+  bash: ["cat", "ls", "find", "grep", "head", "tail", "wc"]
   github:
     toolsets: [issues, labels, repos]
-    lockdown: false
+    min-integrity: none
 
 safe-outputs:
   add-labels:

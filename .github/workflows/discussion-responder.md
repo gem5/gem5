@@ -15,11 +15,12 @@ permissions:
   copilot-requests: write
 
 tools:
+  bash: ["*"]
   web-fetch:
   web-search:
   github:
     toolsets: [discussions, repos]
-    lockdown: false
+    min-integrity: none
 
 safe-outputs:
   add-comment:
