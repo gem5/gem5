@@ -86,8 +86,8 @@ class Consumer
         return em;
     }
 
-    void scheduleEventAbsolute(Tick timeAbs);
-    void scheduleEvent(Cycles timeDelta);
+    void scheduleEventAbsolute(Tick evt_time);
+    void scheduleEvent(Cycles time_delta);
 
   private:
     std::set<Tick> m_wakeup_ticks;

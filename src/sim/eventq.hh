@@ -749,9 +749,7 @@ class EventQueue
     void name(const std::string &st) { objName = st; }
     /** @}*/ //end of api_eventq group
 
-    void
-    setNextSimQuantum(Tick when)
-    { _nextSimQuantum = when; }
+    void setNextSimQuantum(Tick when) { _nextSimQuantum = when; }
 
     /**
      * Schedule the given event on this queue. Safe to call from any thread.

@@ -57,12 +57,12 @@ Consumer::Consumer(ClockedObject *_em, Event::Priority ev_prio)
 { }
 
 void
-Consumer::scheduleEvent(Cycles timeDelta)
+Consumer::scheduleEvent(Cycles time_delta)
 {
     // m_wakeup_ticks is a shared variable whose "home" event queue is the
     // one for the object associated with thie consumer.
     assert(em->eventQueue() == curEventQueue());
-    Tick when = em->clockEdge(timeDelta);
+    Tick when = em->clockEdge(time_delta);
     gem5_assert(when >= em->clockEdge(),
                 "Cannot schedule wakeups in the past");
     m_wakeup_ticks.insert(when);
