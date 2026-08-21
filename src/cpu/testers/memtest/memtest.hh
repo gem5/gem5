@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2021 Arm Limited
+ * Copyright (c) 2015, 2021, 2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -209,6 +209,7 @@ class MemTest : public ClockedObject
 
   private:
     Random::RandomPtr rng = Random::genRandom();
+    Random::RandomPtr stashRng = Random::genRandom();
     std::vector<unsigned> stashNIDs;
     std::vector<unsigned> stashLPIDs;
 };

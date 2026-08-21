@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2019, 2021 Arm Limited
+ * Copyright (c) 2015, 2019, 2021, 2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -255,11 +255,12 @@ MemTest::tick()
     bool uncacheable = rng->random(0, 100) < percentUncacheable;
     bool do_atomic = (rng->random(0, 100) < percentAtomic) &&
                      !uncacheable;
-    bool do_stash_once =
-        (rng->random(0, 100) < percentStashOnce) && !uncacheable && !do_atomic;
+    bool do_stash_once = (stashRng->random(0, 100) < percentStashOnce) &&
+                         !uncacheable && !do_atomic;
     bool do_stash_once_unique = false;
     if (do_stash_once) {
-        do_stash_once_unique = (rng->random(0, 100) < percentStashOnceUnique);
+        do_stash_once_unique =
+            (stashRng->random(0, 100) < percentStashOnceUnique);
     }
     unsigned base = rng->random(0, 1);
     Request::Flags flags;
