@@ -396,7 +396,10 @@ def decode_instruction_trace(filename, show_stats, verify_updiscon=False):
                 line += f" pbc={pbc}"
                 if packet.branch_fmt & 0x2:
                     if packet.HasField("saddress"):
-                        delta = packet.saddress
+                        # Delta is in wire units (shifted-out
+                        # iaddress_lsb_p), same as Format 1/2; multiply
+                        # back to byte units before accumulating.
+                        delta = packet.saddress << lsb
                         reconstructed_addr = (reconstructed_addr + delta) & (
                             (1 << 64) - 1
                         )
