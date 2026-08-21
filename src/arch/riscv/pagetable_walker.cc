@@ -636,7 +636,7 @@ Walker::WalkerState::guestToHostPage(Addr vaddr)
 Fault
 Walker::WalkerState::startFunctional(Addr &addr, unsigned &logBytes)
 {
-    // Pass the addess to entry here
+    // Pass the address to entry here
     // initState cannot because there is no req object
     entry.vaddr = addr;
     // just call walk

@@ -603,7 +603,7 @@ fp16_process_NaNs(uint16_t a, uint16_t b, int mode, int *flags)
     int b_exp = FP16_EXP(b);
     uint16_t b_mnt = FP16_MANT(b);
 
-    // Handle NaN propogate when enabling FEAT_AFP.
+    // Handle NaN propagate when enabling FEAT_AFP.
     if (mode & FPLIB_AH) {
         if (fp16_is_NaN(a_exp, a_mnt) && fp16_is_NaN(b_exp, b_mnt)) {
             if (fp16_is_signalling_NaN(a_exp, a_mnt) ||
@@ -640,7 +640,7 @@ fp32_process_NaNs(uint32_t a, uint32_t b, int mode, int *flags)
     int b_exp = FP32_EXP(b);
     uint32_t b_mnt = FP32_MANT(b);
 
-    // Handle NaN propogate when enabling FEAT_AFP.
+    // Handle NaN propagate when enabling FEAT_AFP.
     if (mode & FPLIB_AH) {
         if (fp32_is_NaN(a_exp, a_mnt) && fp32_is_NaN(b_exp, b_mnt)) {
             if (fp32_is_signalling_NaN(a_exp, a_mnt) ||
@@ -677,7 +677,7 @@ fp64_process_NaNs(uint64_t a, uint64_t b, int mode, int *flags)
     int b_exp = FP64_EXP(b);
     uint64_t b_mnt = FP64_MANT(b);
 
-    // Handle NaN propogate when enabling FEAT_AFP.
+    // Handle NaN propagate when enabling FEAT_AFP.
     if (mode & FPLIB_AH) {
         if (fp64_is_NaN(a_exp, a_mnt) && fp64_is_NaN(b_exp, b_mnt)) {
             if (fp64_is_signalling_NaN(a_exp, a_mnt) ||
@@ -3169,7 +3169,7 @@ modeConv(FPSCR fpscr, FPCR fpcr)
         mode |= FPLIB_NEP;
     return mode;
     // AHP bit is ignored. Only fplibConvert uses AHP.
-    // EBF bit is ingored. Only BFDOT, BFMMLA, BFMOPA, BFMOPS uses EBF.
+    // EBF bit is ignored. Only BFDOT, BFMMLA, BFMOPA, BFMOPS uses EBF.
 }
 
 static void
@@ -7036,7 +7036,7 @@ bf16_process_NaNs(uint16_t a, uint16_t b, int mode, int *flags)
     int b_exp = BF16_EXP(b);
     uint16_t b_mnt = BF16_MANT(b);
 
-    // Handle NaN propogate when enabling FEAT_AFP.
+    // Handle NaN propagate when enabling FEAT_AFP.
     if (mode & FPLIB_AH) {
         if (bf16_is_NaN(a_exp, a_mnt) && bf16_is_NaN(b_exp, b_mnt)) {
             if (bf16_is_signalling_NaN(a_exp, a_mnt) ||

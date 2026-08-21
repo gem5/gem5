@@ -200,7 +200,7 @@ VegaTLBCoalescer::updatePhysAddresses(PacketPtr pkt)
             safe_cast<GpuTranslationState *>(local_pkt->senderState);
 
         // we are sending the packet back, so pop the reqCnt associated
-        // with this level in the TLB hiearchy
+        // with this level in the TLB hierarchy
         if (!sender_state->isPrefetch) {
             sender_state->reqCnt.pop_back();
             localCycles += curCycle();
@@ -507,7 +507,7 @@ VegaTLBCoalescer::MemSidePort::recvTimingResp(PacketPtr pkt)
 void
 VegaTLBCoalescer::MemSidePort::recvReqRetry()
 {
-    // we've receeived a retry. Schedule a probeTLBEvent
+    // we've received a retry. Schedule a probeTLBEvent
     if (!coalescer->probeTLBEvent.scheduled()) {
         coalescer->schedule(coalescer->probeTLBEvent,
                             curTick() + coalescer->clockPeriod());
@@ -560,7 +560,7 @@ VegaTLBCoalescer::processProbeTLBEvent()
         while (i < coalescedReq_cnt) {
             ++i;
             PacketPtr first_packet = iter->second[vector_index].first[0];
-            // The request to coalescer is origanized as follows.
+            // The request to coalescer is organized as follows.
             // The coalescerFIFO is a map which is indexed by coalescingWindow
             //  cycle. Only requests that falls in the same coalescingWindow
             //  considered for coalescing. Each entry of a coalescerFIFO is a
@@ -617,7 +617,7 @@ VegaTLBCoalescer::processProbeTLBEvent()
                 if (update_stats) {
                     // req_cnt is total number of packets represented
                     // by the one we just sent counting all the way from
-                    // the top of TLB hiearchy (i.e., from the CU)
+                    // the top of TLB hierarchy (i.e., from the CU)
                     int req_cnt = tmp_sender_state->reqCnt.back();
                     queuingCycles += (curCycle() * req_cnt);
 
