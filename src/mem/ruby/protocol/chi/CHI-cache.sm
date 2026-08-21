@@ -648,6 +648,8 @@ machine(MachineType:Cache, "Cache coherency protocol") :
 
   // TBE fields
   structure(TBE, desc="Transaction buffer entry definition") {
+    Tick timestamp, desc="Time this entry was allocated. Affects order of trigger events";
+
     // in which table was this allocated
     bool is_req_tbe, desc="Allocated in the request table";
     bool is_snp_tbe, desc="Allocated in the snoop table";
