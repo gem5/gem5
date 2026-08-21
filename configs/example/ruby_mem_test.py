@@ -205,10 +205,11 @@ m5.ticks.setGlobalFrequency("1ns")
 # instantiate configuration
 m5.instantiate()
 
-# Set the stash node IDs for each CPU after C++ objects are constructed
-for cpu in cpus:
-    cpu.set_stash_node_ids([_.l2.version for _ in cpus if _ != cpu])
-    cpu.set_stash_lp_ids([_.l1d.version for _ in cpus if _ != cpu])
+# Set the stash node IDs for each CPU after C++ objects are constructed.
+if buildEnv["PROTOCOL"] == "CHI":
+    for cpu in cpus:
+        cpu.set_stash_node_ids([_.l2.version for _ in cpus if _ != cpu])
+        cpu.set_stash_lp_ids([_.l1d.version for _ in cpus if _ != cpu])
 
 # simulate until program terminates
 exit_event = m5.simulate(args.abs_max_tick)
