@@ -518,12 +518,6 @@ futexFunc(SyscallDesc *desc, ThreadContext *tc,
 /// returning a second value in a register other than the normal return register
 SyscallReturn pipePseudoFunc(SyscallDesc *desc, ThreadContext *tc);
 
-
-/// Approximate seconds since the epoch (1/1/1970).  About a billion,
-/// by my reckoning.  We want to keep this a constant (not use the
-/// real-world time) to keep simulations repeatable.
-const unsigned seconds_since_epoch = 1000 * 1000 * 1000;
-
 /// Helper function to convert current elapsed time to seconds and
 /// microseconds.
 template <class T1, class T2>
@@ -1286,7 +1280,7 @@ sysinfoFunc(SyscallDesc *desc, ThreadContext *tc,
 {
     auto process = tc->getProcessPtr();
 
-    sysinfo->uptime = seconds_since_epoch;
+    sysinfo->uptime = tc->getProcessPtr()->secondsSinceEpoch();
     sysinfo->totalram = process->system->memSize();
     sysinfo->mem_unit = 1;
 
@@ -2397,7 +2391,7 @@ clock_gettimeFunc(SyscallDesc *desc, ThreadContext *tc, int clk_id,
         case OS::TGT_CLOCK_REALTIME_ALARM:
         case OS::TGT_CLOCK_REALTIME_COARSE:
         case OS::TGT_CLOCK_TAI:
-            tp->tv_sec += seconds_since_epoch;
+            tp->tv_sec += tc->getProcessPtr()->secondsSinceEpoch();
             break;
         case OS::TGT_CLOCK_MONOTONIC:
         case OS::TGT_CLOCK_MONOTONIC_COARSE:
@@ -2436,7 +2430,7 @@ gettimeofdayFunc(SyscallDesc *desc, ThreadContext *tc,
                  VPtr<typename OS::timeval> tp, VPtr<> tz_ptr)
 {
     getElapsedTimeMicro(tp->tv_sec, tp->tv_usec);
-    tp->tv_sec += seconds_since_epoch;
+    tp->tv_sec += tc->getProcessPtr()->secondsSinceEpoch();
     tp->tv_sec = htog(tp->tv_sec, OS::byteOrder);
     tp->tv_usec = htog(tp->tv_usec, OS::byteOrder);
 
@@ -2658,7 +2652,7 @@ timeFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> taddr)
 {
     typename OS::time_t sec, usec;
     getElapsedTimeMicro(sec, usec);
-    sec += seconds_since_epoch;
+    sec += tc->getProcessPtr()->secondsSinceEpoch();
 
     SETranslatingPortProxy p(tc);
     if (taddr != 0) {
