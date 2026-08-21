@@ -134,7 +134,7 @@ Benchmarks = {
     "ValMemLat": [SysConfig("micro_memlat.rcS", "512MiB")],
     "ValMemLat2MB": [SysConfig("micro_memlat2mb.rcS", "512MiB")],
     "ValMemLat8MB": [SysConfig("micro_memlat8mb.rcS", "512MiB")],
-    "ValMemLat": [SysConfig("micro_memlat8.rcS", "512MiB")],
+    "ValMemLat8": [SysConfig("micro_memlat8.rcS", "512MiB")],
     "ValTlbLat": [SysConfig("micro_tlblat.rcS", "512MiB")],
     "ValSysLat": [SysConfig("micro_syscall.rcS", "512MiB")],
     "ValCtxLat": [SysConfig("micro_ctx.rcS", "512MiB")],
