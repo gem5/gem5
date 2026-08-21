@@ -142,7 +142,12 @@ jobs:
     testlib-long-tests:
         name: long-tests
         runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        container:
+            image: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+            volumes:
+                - /gem5-resource-cache:/gem5-resource-cache
+        env:
+            GEM5_RESOURCE_DIR: /gem5-resource-cache
         timeout-minutes: 1440 # 24 hours for entire matrix to run
         needs:
             - build-all-gem5
@@ -167,7 +172,15 @@ jobs:
               id: run-tests
               timeout-minutes: 1410
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run ${{ matrix.test-type }} -j$(nproc) --length=long -vv -t $(nproc) --exclude-tags gcn_gpu
+              run: |
+                  resource_dir="$GEM5_RESOURCE_DIR"
+                  # These legacy fixtures do not checksum or lock downloads.
+                  case "${{ matrix.test-type }}" in
+                    gem5/cpu_tests|gem5/fdp_tests|gem5/m5threads_test_atomic)
+                      resource_dir="$RUNNER_TEMP/gem5-testlib-downloads"
+                      ;;
+                  esac
+                  ./main.py run ${{ matrix.test-type }} -j$(nproc) --length=long -vv -t $(nproc) --exclude-tags gcn_gpu --bin-path "$resource_dir"
 
             - name: Sanitize test-dir for artifact name
               id: sanitize-test-dir
@@ -187,7 +200,12 @@ jobs:
 
     gpu-tests:
         runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/gcn-gpu:latest
+        container:
+            image: ghcr.io/gem5/gcn-gpu:latest
+            volumes:
+                - /gem5-resource-cache:/gem5-resource-cache
+        env:
+            GEM5_RESOURCE_DIR: /gem5-resource-cache
         timeout-minutes: 1440 # 24 hours
         needs:
             - get-date
@@ -207,7 +225,7 @@ jobs:
               id: run-tests
               timeout-minutes: 1410
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --length=long -vvv -j $(nproc) --host gcn_gpu --isa=VEGA_X86
+              run: ./main.py run --length=long -vvv -j $(nproc) --host gcn_gpu --isa=VEGA_X86 --bin-path "$GEM5_RESOURCE_DIR"
 
             - name: Upload results
               if: always()
@@ -262,7 +280,12 @@ jobs:
 
     dramsys-tests:
         runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        container:
+            image: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+            volumes:
+                - /gem5-resource-cache:/gem5-resource-cache
+        env:
+            GEM5_RESOURCE_DIR: /gem5-resource-cache
         timeout-minutes: 360 # 6 hours
         steps:
             - uses: actions/checkout@v7
