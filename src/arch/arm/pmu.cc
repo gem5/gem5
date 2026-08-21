@@ -865,7 +865,7 @@ PMU::CounterState::add(uint64_t delta)
     if (delta > value_until_overflow) {
 
         // overflow situation detected
-        // flag the overflow occurence
+        // flag the overflow occurrence
         pmu.reg_pmovsr |= (1 << counterId);
 
         // Deliver a PMU interrupt if interrupt delivery is enabled

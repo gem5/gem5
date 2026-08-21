@@ -127,6 +127,7 @@ structure (NetDest, external = "yes", non_obj="yes", implicit_ctor="m_ruby_syste
 }
 
 structure (Sequencer, external = "yes") {
+  void stashCallback(Addr);
   void readCallback(Addr, DataBlock);
   void readCallback(Addr, DataBlock, bool);
   void readCallback(Addr, DataBlock, bool, MachineType);
@@ -182,6 +183,10 @@ structure(RubyRequest, desc="...", interface="Message", external="yes") {
   Addr ProgramCounter,    desc="Program counter of the instruction that caused the miss";
   RubyAccessMode AccessMode, desc="user/supervisor access type";
   int Size,                  desc="size in bytes of access";
+  int StashNID,              desc="Stash target NodeID";
+  bool StashNIDValid,        desc="StashNID is valid";
+  int StashLPID,             desc="Stash target logical processor ID";
+  bool StashLPIDValid,       desc="StashLPID is valid";
   PrefetchBit Prefetch,      desc="Is this a prefetch request";
   int contextId,             desc="this goes away but must be replace with Nilay";
   WriteMask writeMask,       desc="Writethrough mask";

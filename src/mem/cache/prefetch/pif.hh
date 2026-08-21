@@ -38,6 +38,8 @@
 #define __MEM_CACHE_PREFETCH_PIF_HH__
 
 #include <deque>
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "base/cache/associative_cache.hh"
@@ -183,6 +185,9 @@ class PIF : public Queued
         /** Array of probe listeners */
         std::vector<ProbeListenerPtr<PrefetchListenerPC>> listenersPC;
 
+        /** Probes to connect in regProbeListeners() */
+        std::vector<std::pair<SimObject *, std::string>> probeEventsPC;
+
 
     public:
         PIF(const PIFPrefetcherParams &p);
@@ -190,10 +195,14 @@ class PIF : public Queued
 
         void calculatePrefetch(const PrefetchInfo &pfi,
                                std::vector<AddrPriority> &addresses,
-                               const CacheAccessor &cache);
+                               const CacheAccessor &cache) override;
+
+        void regProbeListeners() override;
 
         /**
-         * Add a SimObject and a probe name to monitor the retired instructions
+         * Add a SimObject and a probe name to monitor the retired
+         * instructions. The listener is only connected in
+         * regProbeListeners().
          * @param obj The SimObject pointer to listen from
          * @param name The probe name
          */
