@@ -249,30 +249,26 @@ CHIRequestType
 reqOpcode(ReqOpcode req)
 {
     static std::unordered_map<uint8_t, CHIRequestType> translation_map = {
-        {REQ_OPCODE_READ_SHARED, CHIRequestType_ReadShared},
-        {REQ_OPCODE_READ_CLEAN, CHIRequestType_ReadOnce}, // TODO
-        {REQ_OPCODE_READ_ONCE, CHIRequestType_ReadOnce},
-        {REQ_OPCODE_READ_NO_SNP, CHIRequestType_ReadNoSnp}, // TODO
-        {REQ_OPCODE_READ_UNIQUE, CHIRequestType_ReadUnique},
-        {REQ_OPCODE_READ_NOT_SHARED_DIRTY, CHIRequestType_ReadNotSharedDirty},
-        {REQ_OPCODE_READ_PREFER_UNIQUE, CHIRequestType_ReadUnique},   // TODO
-        {REQ_OPCODE_MAKE_READ_UNIQUE, CHIRequestType_MakeReadUnique}, // TODO
+        { REQ_OPCODE_READ_SHARED, CHIRequestType_ReadShared },
+        { REQ_OPCODE_READ_CLEAN, CHIRequestType_ReadOnce }, // TODO
+        { REQ_OPCODE_READ_ONCE, CHIRequestType_ReadOnce },
+        { REQ_OPCODE_READ_NO_SNP, CHIRequestType_ReadNoSnp }, // TODO
+        { REQ_OPCODE_READ_UNIQUE, CHIRequestType_ReadUnique },
+        { REQ_OPCODE_READ_NOT_SHARED_DIRTY, CHIRequestType_ReadNotSharedDirty },
+        { REQ_OPCODE_READ_PREFER_UNIQUE, CHIRequestType_ReadUnique }, // TODO
+        { REQ_OPCODE_MAKE_READ_UNIQUE, CHIRequestType_MakeReadUnique }, // TODO
 
-        {REQ_OPCODE_CLEAN_UNIQUE, CHIRequestType_CleanUnique},
-        {REQ_OPCODE_MAKE_UNIQUE, CHIRequestType_CleanUnique}, // TODO
-        {REQ_OPCODE_EVICT, CHIRequestType_Evict},
-        {REQ_OPCODE_STASH_ONCE_SHARED, CHIRequestType_StashOnceShared},
-        {REQ_OPCODE_STASH_ONCE_UNIQUE, CHIRequestType_StashOnceUnique},
-        {REQ_OPCODE_STASH_ONCE_SEP_SHARED,
-         CHIRequestType_StashOnceShared}, // TODO
-        {REQ_OPCODE_STASH_ONCE_SEP_UNIQUE, CHIRequestType_StashOnceUnique},
-        {REQ_OPCODE_WRITE_NO_SNP_PTL, CHIRequestType_WriteUniquePtl},
-        {REQ_OPCODE_WRITE_NO_SNP_FULL, CHIRequestType_WriteUniqueFull},
-        {REQ_OPCODE_WRITE_UNIQUE_FULL, CHIRequestType_WriteUniqueFull},
-        {REQ_OPCODE_WRITE_UNIQUE_ZERO, CHIRequestType_WriteUniqueZero},
-        {REQ_OPCODE_WRITE_BACK_FULL, CHIRequestType_WriteBackFull},
-        {REQ_OPCODE_WRITE_EVICT_OR_EVICT,
-         CHIRequestType_WriteEvictFull}, // TODO
+        { REQ_OPCODE_CLEAN_UNIQUE, CHIRequestType_CleanUnique },
+        { REQ_OPCODE_MAKE_UNIQUE, CHIRequestType_CleanUnique }, // TODO
+        { REQ_OPCODE_EVICT, CHIRequestType_Evict },
+        { REQ_OPCODE_STASH_ONCE_SEP_SHARED, CHIRequestType_StashOnceShared }, // TODO
+        { REQ_OPCODE_STASH_ONCE_SEP_UNIQUE, CHIRequestType_StashOnceUnique },
+        { REQ_OPCODE_WRITE_NO_SNP_PTL, CHIRequestType_WriteUniquePtl },
+        { REQ_OPCODE_WRITE_NO_SNP_FULL, CHIRequestType_WriteUniqueFull },
+        { REQ_OPCODE_WRITE_UNIQUE_FULL, CHIRequestType_WriteUniqueFull },
+        { REQ_OPCODE_WRITE_UNIQUE_ZERO, CHIRequestType_WriteUniqueZero },
+        { REQ_OPCODE_WRITE_BACK_FULL, CHIRequestType_WriteBackFull },
+        { REQ_OPCODE_WRITE_EVICT_OR_EVICT, CHIRequestType_WriteEvictFull }, // TODO
     };
 
     auto it = translation_map.find(req);
@@ -496,10 +492,6 @@ snpOpcode(CHIRequestType snp)
         return SNP_OPCODE_SNP_CLEAN_INVALID;
       case CHIRequestType_SnpUnique:
         return SNP_OPCODE_SNP_UNIQUE;
-      case CHIRequestType_SnpStashShared:
-          return SNP_OPCODE_SNP_STASH_SHARED;
-      case CHIRequestType_SnpStashUnique:
-          return SNP_OPCODE_SNP_STASH_UNIQUE;
       default:
         panic("Unrecognised snp opcode: %d\n", snp);
     }

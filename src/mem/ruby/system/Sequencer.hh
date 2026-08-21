@@ -139,8 +139,6 @@ class Sequencer : public RubyPort
                            Cycles(0), Cycles(0), Cycles(0), true);
     }
 
-    void stashCallback(Addr address);
-
     void readCallbackCBusy(Addr address, DataBlock &data,
                            const bool externalHit = false,
                            const int cBusy = -1,

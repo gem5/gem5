@@ -179,12 +179,6 @@ transition({BUSY_INTR,BUSY_BLKD}, SnpOncePipe) {
   ProcessNextState_ClearPending;
 }
 
-transition({BUSY_INTR,BUSY_BLKD}, SnpStashPipe) {
-  Pop_TriggerQueue;
-  SnpStashPipe;
-  ProcessNextState_ClearPending;
-}
-
 // ReadShared / ReadNotSharedDirty
 
 transition(I, {ReadShared,ReadNotSharedDirty}, BUSY_BLKD) {
@@ -958,258 +952,13 @@ transition(BUSY_INTR, {SnpOnce,SnpOnceFwd}, BUSY_BLKD) {
   ProcessNextState;
 }
 
-transition(I, {SnpStashShared,SnpStashUnique}, BUSY_BLKD) {
-  // If cannot reserve TBE, should return SnpResp_I directly
-  Initiate_Snoop;
-  Initiate_SnpStash_DataPull;
-  Pop_SnoopRdyQueue;
-  ProcessNextState;
-}
-
-transition({SC,SD,UC,UD,UD_T,RU,RSC,RSD,RUSC,RUSD,UC_RSC,UD_RSC,SC_RSC,SD_RSC,UD_RSD,SD_RSD,UC_RU,UD_RU},
-           {SnpStashShared,SnpStashUnique}, BUSY_BLKD) {
-  // For SnpStashShared: SnpResp_I is mandatory
-  // For SnpStashUnique: SnpResp_I is Optional, but we just send SnpResp_I
-  SnpStashPipe;
-  Send_SnpRespI;
-  Pop_SnoopRdyQueue;
-  ProcessNextState_ClearPending;
-}
-
-transition(BUSY_INTR, {SnpStashShared,SnpStashUnique}, BUSY_BLKD) {
-  // Do not take the stash hint and send SnpResp_I.
-  Initiate_Snoop_Hazard;
-  Initiate_SnpStash_Stale;
-  Pop_SnoopRdyQueue;
-  ProcessNextState;
-}
-
-// DataPull
-
-transition(BUSY_BLKD, ReadNotSharedDirty_DataPull) {
-  Pop_TriggerQueue;
-  Initiate_ReadNotSharedDirty_DataPull;
-  ProcessNextState_ClearPending;
-}
-
-transition(BUSY_INTR, AllocateDirEntry) {
-  Pop_TriggerQueue;
-  Allocate_DirEntry;
-  ProcessNextState_ClearPending;
-}
-
-transition(BUSY_BLKD, ReadNSD_Miss_DataPull) {
-  Pop_TriggerQueue;
-  Initiate_ReadShared_Miss;
-  Allocate_DirEntry;
-  Profile_Miss;
-  ProcessNextState_ClearPending;
-}
-
-transition(BUSY_BLKD, ReadNSD_HitUpstream_NoOwner_DataPull) {
-  Pop_TriggerQueue;
-  Initiate_ReadShared_HitUpstream_NoOwner;
-  Profile_Miss;
-  ProcessNextState_ClearPending;
-}
-
-transition(BUSY_BLKD, ReadNSD_HitUpstream_DataPull) {
-  Pop_TriggerQueue;
-  Initiate_ReadShared_HitUpstream;
-  Profile_Miss;
-  ProcessNextState_ClearPending;
-}
-
-transition(BUSY_BLKD, ReadNSD_Hit_DataPull_AllocDir) {
-  Pop_TriggerQueue;
-  Initiate_ReadShared_Hit;
-  Allocate_DirEntry;
-  Profile_Hit;
-  ProcessNextState_ClearPending;
-}
-
-transition(BUSY_BLKD, ReadNSD_Hit_DataPull) {
-  Pop_TriggerQueue;
-  Initiate_ReadShared_Hit;
-  Profile_Hit;
-  ProcessNextState_ClearPending;
-}
-
-transition(BUSY_BLKD, ReadUnique_DataPull) {
-  Pop_TriggerQueue;
-  Initiate_ReadUnique_DataPull;
-  ProcessNextState_ClearPending;
-}
-
-transition(BUSY_BLKD, ReadUnique_Miss_DataPull) {
-  Pop_TriggerQueue;
-  Initiate_ReadUnique_Miss;
-  Allocate_DirEntry;
-  Profile_Miss;
-  ProcessNextState_ClearPending;
-}
-
-transition(BUSY_BLKD, ReadUnique_HitUpstream_DataPull) {
-  Pop_TriggerQueue;
-  Initiate_ReadUnique_HitUpstream;
-  Profile_Miss;
-  ProcessNextState_ClearPending;
-}
-
-transition(BUSY_BLKD, ReadUnique_HitUpstream_NoUnique_DataPull) {
-  Pop_TriggerQueue;
-  Initiate_ReadUnique_Upgrade;
-  Profile_Miss;
-  ProcessNextState_ClearPending;
-}
-transition(BUSY_BLKD, ReadUnique_PoC_HitUpstream_NoUnique_DataPull) {
-  Pop_TriggerQueue;
-  Initiate_ReadUnique_AutoUpgrade;
-  Initiate_ReadUnique_HitUpstream;
-  Profile_Miss;
-  ProcessNextState_ClearPending;
-}
-
-transition(BUSY_BLKD, ReadUnique_Hit_DataPull) {
-  Pop_TriggerQueue;
-  Initiate_ReadUnique_Hit;
-  Allocate_DirEntry;
-  Profile_Hit;
-  ProcessNextState_ClearPending;
-}
-
-transition(BUSY_BLKD, ReadUnique_PoC_Hit_NoUnique_DataPull) {
-  Pop_TriggerQueue;
-  Initiate_ReadUnique_AutoUpgrade;
-  Initiate_ReadUnique_Hit;
-  Allocate_DirEntry;
-  Profile_Hit;
-  ProcessNextState_ClearPending;
-}
-
-transition(BUSY_BLKD, ReadUnique_Hit_NoUnique_DataPull) {
-  Pop_TriggerQueue;
-  Initiate_ReadUnique_Upgrade;
-  Allocate_DirEntry;
-  Profile_Hit;
-  ProcessNextState_ClearPending;
-}
-
-transition(BUSY_BLKD, ReadUnique_Hit_InvUpstream_DataPull) {
-  Pop_TriggerQueue;
-  Initiate_ReadUnique_Hit_InvUpstream;
-  Profile_Hit;
-  ProcessNextState_ClearPending;
-}
-
-transition(BUSY_BLKD, ReadUnique_Hit_NoUnique_InvUpstream_DataPull) {
-  Pop_TriggerQueue;
-  Initiate_ReadUnique_AutoUpgrade;
-  Initiate_ReadUnique_Hit_InvUpstream;
-  Profile_Hit;
-  ProcessNextState_ClearPending;
-}
-
 // Stash
-transition(BUSY_BLKD,SendStashOnce,BUSY_INTR) {DestinationAvailable} {
-  Pop_TriggerQueue;
-  Send_StashOnce;
-  Profile_OutgoingStart;
-  ProcessNextState_ClearPending;
-}
-
-transition({BUSY_BLKD,BUSY_INTR}, StashOnceCallback) {
-  Pop_TriggerQueue;
-  Callback_StashOnce;
-  ProcessNextState_ClearPending;
-}
-
 transition({I,SC,UC,SD,UD,RU,RSC,RSD,RUSD,SC_RSC,UC_RSC,SD_RSC,UD_RSC,UC_RU,UD_RU,UD_RSD,SD_RSD,RUSC},
            {StashOnceShared,StashOnceUnique}, BUSY_BLKD) {
   Initiate_Request;
-  Initiate_StashOnce_Forward;
+  Send_CompI;
   Pop_ReqRdyQueue;
   ProcessNextState;
-}
-
-transition({I,SC,UC,SD,UD,RU,RSC,RSD,RUSD,SC_RSC,UC_RSC,SD_RSC,UD_RSC,UC_RU,UD_RU,UD_RSD,SD_RSD,RUSC},
-           {StashShared,StashUnique}, BUSY_BLKD) {
-  Initiate_Request;
-  Initiate_StashOnce_Forward;
-  Pop_ReqRdyQueue;
-  ProcessNextState;
-}
-
-transition(I,
-           {StashOnceShared_PoC,StashOnceUnique_PoC}, BUSY_BLKD) {
-  Initiate_Request;
-  Initiate_SnpStash_Miss;
-  Pop_ReqRdyQueue;
-  ProcessNextState;
-}
-
-transition(I,
-           {StashShared_PoC,StashUnique_PoC}, BUSY_BLKD) {
-  Initiate_Request;
-  Initiate_SnpStash_Miss;
-  Pop_ReqRdyQueue;
-  ProcessNextState;
-}
-
-
-transition({SC,SD,UC,UD,SD_RSC,UD_RSC,UC_RSC,SC_RSC},
-           {StashOnceShared_PoC,StashOnceUnique_PoC}, BUSY_BLKD) {
-  Initiate_Request;
-  Initiate_SnpStash_Hit;
-  Pop_ReqRdyQueue;
-  ProcessNextState;
-}
-
-transition({SC,SD,UC,UD,SD_RSC,UD_RSC,UC_RSC,SC_RSC},
-           {StashShared_PoC,StashUnique_PoC}, BUSY_BLKD) {
-  Initiate_Request;
-  Initiate_SnpStash_Hit;
-  Pop_ReqRdyQueue;
-  ProcessNextState;
-}
-
-transition({RSD,RU,RUSD,UD_RU,UC_RU,SD_RSD,UD_RSD},
-           {StashOnceShared_PoC,StashOnceUnique_PoC}, BUSY_BLKD) {
-  Initiate_Request;
-  Initiate_SnpStash_HitUpstream;
-  Pop_ReqRdyQueue;
-  ProcessNextState;
-}
-
-transition({RSD,RU,RUSD,UD_RU,UC_RU,SD_RSD,UD_RSD},
-           {StashShared_PoC,StashUnique_PoC}, BUSY_BLKD) {
-  Initiate_Request;
-  Initiate_SnpStash_HitUpstream;
-  Pop_ReqRdyQueue;
-  ProcessNextState;
-}
-
-
-transition({RSC,RUSC},
-           {StashOnceShared_PoC,StashOnceUnique_PoC}, BUSY_BLKD) {
-  Initiate_Request;
-  Initiate_SnpStash_HitUpstream_NoOwner;
-  Pop_ReqRdyQueue;
-  ProcessNextState;
-}
-
-transition({RSC,RUSC},
-           {StashShared_PoC,StashUnique_PoC}, BUSY_BLKD) {
-  Initiate_Request;
-  Initiate_SnpStash_HitUpstream_NoOwner;
-  Pop_ReqRdyQueue;
-  ProcessNextState;
-}
-
-transition(BUSY_BLKD,SendSnpStash) {
-  Pop_TriggerQueue;
-  Send_SnpStash;
-  ProcessNextState_ClearPending;
 }
 
 // Stalls
@@ -1229,8 +978,7 @@ transition({BUSY_BLKD,BUSY_INTR},
             WriteUniqueZero,
             AtomicReturn,AtomicReturn_PoC, AtomicReturn_PoC_Alloc
             AtomicNoReturn,AtomicNoReturn_PoC, AtomicNoReturn_PoC_Alloc
-            StashOnceShared,StashOnceUnique,StashShared,StashUnique,
-            StashOnceShared_PoC,StashOnceUnique_PoC,StashShared_PoC,StashUnique_PoC}) {
+            StashOnceShared,StashOnceUnique}) {
   StallRequest;
 }
 
@@ -1247,8 +995,7 @@ transition(UD_T, {Global_Eviction, Local_Eviction, LocalHN_Eviction}, UD) {
 
 transition(BUSY_BLKD,
             {SnpCleanInvalid,SnpShared,SnpUnique,SnpSharedFwd,SnpUniqueFwd,
-            SnpOnce,SnpOnceFwd,SnpNotSharedDirtyFwd,
-            SnpStashShared,SnpStashUnique}) {
+            SnpOnce,SnpOnceFwd,SnpNotSharedDirtyFwd}) {
   StallSnoop;
 }
 
@@ -1428,14 +1175,7 @@ transition(BUSY_BLKD, SendSnpIResp) {
   ProcessNextState_ClearPending;
 }
 
-transition(BUSY_BLKD, SendSnpIRespDataPull) {
-  Pop_TriggerQueue;
-  Send_SnpRespI_DataPull;
-  Profile_OutgoingStart;
-  ProcessNextState_ClearPending;
-}
-
-transition({BUSY_BLKD, BUSY_INTR}, SendCompIResp) {
+transition(BUSY_BLKD, SendCompIResp) {
   Pop_TriggerQueue;
   Send_CompI;
   ProcessNextState_ClearPending;
@@ -1822,29 +1562,13 @@ transition({BUSY_BLKD,BUSY_INTR}, CompAck) {
 }
 
 transition(BUSY_BLKD,
-           {SnpResp_SC,
+           {SnpResp_I,SnpResp_SC,
             SnpResp_I_Fwded_UC,SnpResp_I_Fwded_UD_PD,
             SnpResp_SC_Fwded_SC,SnpResp_SC_Fwded_SD_PD,
             SnpResp_UC_Fwded_I,SnpResp_UD_Fwded_I,
             SnpResp_SC_Fwded_I,SnpResp_SD_Fwded_I}) {
   Receive_SnpResp;
   UpdateDirState_FromSnpResp;
-  Pop_RespInQueue;
-  ProcessNextState;
-}
-
-transition(BUSY_BLKD,SnpResp_I) {
-  Receive_SnpResp;
-  UpdateDirState_FromSnpResp;
-  Initiate_SnpResp_Fwd;
-  Pop_RespInQueue;
-  ProcessNextState;
-}
-
-transition(BUSY_BLKD, SnpResp_I_Read) {
-  Receive_SnpResp;
-  UpdateDirState_FromSnpResp;
-  Initiate_SnpResp_DataPull;
   Pop_RespInQueue;
   ProcessNextState;
 }
@@ -1856,12 +1580,6 @@ transition(BUSY_INTR, Comp_I, BUSY_BLKD) {
   Profile_OutgoingEnd_DatalessResp;
   Pop_RespInQueue;
   ProcessNextState;
-}
-
-transition(BUSY_BLKD, Comp_I, BUSY_BLKD) {
-  Receive_ReqResp_Hazard;
-  Profile_OutgoingEnd_DatalessResp_Hazard;
-  Pop_RespInQueue;
 }
 
 // currently this happens after a CleanUnique
