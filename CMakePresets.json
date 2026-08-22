@@ -1,0 +1,122 @@
+{
+    "version": 2,
+    "configurePresets": [
+        {
+            "name": "default",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build_cmake/${presetName}",
+            "cacheVariables": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            }
+        },
+        {
+            "name": "_debug-base",
+            "hidden": true,
+            "inherits": "default",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "GEM5_DEBUG"
+            }
+        },
+        {
+            "name": "_opt-base",
+            "hidden": true,
+            "inherits": "default",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "GEM5_OPT"
+            }
+        },
+        {
+            "name": "_fast-base",
+            "hidden": true,
+            "inherits": "default",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "GEM5_FAST"
+            }
+        },
+        {
+            "name": "debug-x86",
+            "inherits": "_debug-base",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "X86"
+            }
+        },
+        {
+            "name": "opt-x86",
+            "inherits": "_opt-base",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "X86"
+            }
+        },
+        {
+            "name": "fast-x86",
+            "inherits": "_fast-base",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "X86"
+            }
+        },
+        {
+            "name": "debug-arm",
+            "inherits": "_debug-base",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "ARM"
+            }
+        },
+        {
+            "name": "opt-arm",
+            "inherits": "_opt-base",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "ARM"
+            }
+        },
+        {
+            "name": "fast-arm",
+            "inherits": "_fast-base",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "ARM"
+            }
+        },
+        {
+            "name": "debug-riscv",
+            "inherits": "_debug-base",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "RISCV"
+            }
+        },
+        {
+            "name": "opt-riscv",
+            "inherits": "_opt-base",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "RISCV"
+            }
+        },
+        {
+            "name": "fast-riscv",
+            "inherits": "_fast-base",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "RISCV"
+            }
+        },
+        {
+            "name": "debug-all",
+            "inherits": "_debug-base",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "ALL"
+            }
+        },
+        {
+            "name": "opt-all",
+            "inherits": "_opt-base",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "ALL"
+            }
+        },
+        {
+            "name": "fast-all",
+            "inherits": "_fast-base",
+            "cacheVariables": {
+                "GEM5_BUILD_VARIANT": "ALL"
+            }
+        }
+    ]
+}
