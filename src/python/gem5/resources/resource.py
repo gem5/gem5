@@ -43,7 +43,6 @@ from typing import (
     get_args,
     get_origin,
 )
-from collections.abc import Generator
 
 from m5.util import (
     fatal,

@@ -33,7 +33,6 @@ from typing import (
     List,
     Tuple,
 )
-from collections.abc import Sequence
 
 from m5.objects import (
     AbstractMemory,

@@ -39,7 +39,6 @@ from typing import (
     Type,
     Union,
 )
-from collections.abc import Callable, Generator
 
 import m5
 from m5.ext.pystats.simstat import SimStat

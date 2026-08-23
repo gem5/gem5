@@ -31,7 +31,6 @@ from typing import (
     Optional,
     Union,
 )
-from collections.abc import Mapping
 
 from m5.objects import (
     Process,

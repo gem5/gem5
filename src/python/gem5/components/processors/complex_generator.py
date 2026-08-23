@@ -29,7 +29,6 @@ from typing import (
     Any,
     List,
 )
-from collections.abc import Iterator
 
 from ...utils.override import overrides
 from .abstract_generator import (

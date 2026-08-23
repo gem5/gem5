@@ -46,8 +46,6 @@ from typing import (
     Tuple,
     Union,
 )
-from collections.abc import Callable
-from re import Pattern
 
 
 class AbstractStat:

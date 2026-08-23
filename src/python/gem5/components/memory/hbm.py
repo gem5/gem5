@@ -35,7 +35,6 @@ from typing import (
     Type,
     Union,
 )
-from collections.abc import Sequence
 
 from m5.objects import (
     AbstractMemory,

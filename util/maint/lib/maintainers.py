@@ -52,7 +52,6 @@ from typing import (
     Tuple,
     Union,
 )
-from collections.abc import Iterator, Mapping, Sequence
 
 import yaml
 
