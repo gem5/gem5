@@ -37,6 +37,8 @@
 
 #include "proto/protoio.hh"
 
+#include <cstdint>
+#include <limits>
 #include <string>
 
 #include "base/logging.hh"
@@ -90,7 +92,10 @@ ProtoOutputStream::write(const Message& msg)
 
     // Write the size of the message to the stream
     auto msg_size = msg.ByteSizeLong();
-    codedStream.WriteVarint32(msg_size);
+    panic_if(msg_size > std::numeric_limits<uint32_t>::max(),
+             "Protobuf message size %zu exceeds the 32-bit stream format",
+             msg_size);
+    codedStream.WriteVarint32(static_cast<uint32_t>(msg_size));
 
     // Write the message itself to the stream
     msg.SerializeWithCachedSizes(&codedStream);
