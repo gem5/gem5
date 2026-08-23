@@ -38,13 +38,13 @@
 
 """Simple memory controllers"""
 
+from collections.abc import Sequence
 from math import log
 from typing import (
     List,
     Tuple,
     Union,
 )
-from collections.abc import Sequence
 
 from m5.objects import (
     AbstractMemory,
@@ -142,12 +142,12 @@ class MultiChannelSimpleMemory(AbstractMemorySystem):
 
     def __init__(
         self,
-        num_channels: Union[int, str],
+        num_channels: int | str,
         latency: str,
         latency_var: str,
         bandwidth: str,
         size: str,
-        interleaving_size: Union[int, str] = 64,
+        interleaving_size: int | str = 64,
     ):
         """
         :param num_channels: Number of SimpleMemory channels (must be a
@@ -210,11 +210,11 @@ class MultiChannelSimpleMemory(AbstractMemorySystem):
             )
 
     @overrides(AbstractMemorySystem)
-    def get_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
+    def get_mem_ports(self) -> Sequence[tuple[AddrRange, Port]]:
         return [(m.range, m.port) for m in self.mem_ctrl]
 
     @overrides(AbstractMemorySystem)
-    def get_memory_controllers(self) -> List[MemCtrl]:
+    def get_memory_controllers(self) -> list[MemCtrl]:
         return list(self.mem_ctrl)
 
     @overrides(AbstractMemorySystem)
@@ -222,7 +222,7 @@ class MultiChannelSimpleMemory(AbstractMemorySystem):
         return self._size
 
     @overrides(AbstractMemorySystem)
-    def set_memory_range(self, ranges: List[AddrRange]) -> None:
+    def set_memory_range(self, ranges: list[AddrRange]) -> None:
         if len(ranges) != 1 or ranges[0].size() != self._size:
             raise Exception(
                 "Multi-channel SimpleMemory requires a single range which "
@@ -234,9 +234,9 @@ class MultiChannelSimpleMemory(AbstractMemorySystem):
         self._interleave_addresses()
 
     @overrides(AbstractMemorySystem)
-    def get_uninterleaved_range(self) -> List[AddrRange]:
+    def get_uninterleaved_range(self) -> list[AddrRange]:
         return [self._mem_range]
 
     @overrides(AbstractMemorySystem)
-    def get_mem_interfaces(self) -> List[AbstractMemory]:
+    def get_mem_interfaces(self) -> list[AbstractMemory]:
         return list(self.mem_ctrl)

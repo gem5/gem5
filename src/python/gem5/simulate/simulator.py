@@ -26,6 +26,10 @@
 
 import os
 import sys
+from collections.abc import (
+    Callable,
+    Generator,
+)
 from pathlib import Path
 from typing import (
     Dict,
@@ -35,7 +39,6 @@ from typing import (
     Type,
     Union,
 )
-from collections.abc import Callable, Generator
 
 import m5
 from m5.ext.pystats.simstat import SimStat
@@ -90,9 +93,9 @@ class Simulator:
             dict[
                 ExitEvent,
                 (
-                    Generator[bool | None, None, None] |
-                    list[Callable] |
-                    Callable
+                    Generator[bool | None, None, None]
+                    | list[Callable]
+                    | Callable
                 ),
             ]
         ) = None,

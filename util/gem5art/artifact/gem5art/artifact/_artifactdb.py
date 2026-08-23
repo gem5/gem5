@@ -42,6 +42,7 @@ from abc import (
     ABC,
     abstractmethod,
 )
+from collections.abc import Iterable
 from pathlib import Path
 from typing import (
     Any,
@@ -51,7 +52,6 @@ from typing import (
     Type,
     Union,
 )
-from collections.abc import Iterable
 from urllib.parse import urlparse
 from uuid import UUID
 

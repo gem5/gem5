@@ -76,11 +76,11 @@ import os
 import shlex
 import subprocess
 import sys
+from collections.abc import Iterable
 from pathlib import Path
 from typing import (
     Optional,
 )
-from collections.abc import Iterable
 
 
 def run(

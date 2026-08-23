@@ -39,6 +39,10 @@ import signal
 import subprocess
 import time
 import zipfile
+from collections.abc import (
+    Callable,
+    Iterable,
+)
 from pathlib import Path
 from typing import (
     Any,
@@ -48,7 +52,6 @@ from typing import (
     Tuple,
     Union,
 )
-from collections.abc import Callable, Iterable
 from uuid import (
     UUID,
     uuid4,

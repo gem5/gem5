@@ -689,10 +689,10 @@ def _process_group(group: _m5_stats.Group) -> dict:
 
 def _process_simobject_stats(
     simobject: (
-        _m5_stats.Group |
-        SimObject |
-        SimObjectVector |
-        list[SimObject | SimObjectVector]
+        _m5_stats.Group
+        | SimObject
+        | SimObjectVector
+        | list[SimObject | SimObjectVector]
     ),
 ) -> list[Dict] | Dict:
     """
@@ -720,10 +720,7 @@ def _process_simobject_stats(
 
 
 def get_simstat(
-    root: (
-        SimObject | SimObjectVector |
-        list[SimObject | SimObjectVector]
-    ),
+    root: SimObject | SimObjectVector | list[SimObject | SimObjectVector],
     prepare_stats: bool = True,
 ) -> SimStat:
     """

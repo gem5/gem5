@@ -38,6 +38,11 @@
 import email.utils
 import enum
 import os
+from collections.abc import (
+    Iterator,
+    Mapping,
+    Sequence,
+)
 from typing import (
     Any,
     Dict,
@@ -47,7 +52,6 @@ from typing import (
     Tuple,
     Union,
 )
-from collections.abc import Iterator, Mapping, Sequence
 
 import yaml
 

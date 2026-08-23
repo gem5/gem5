@@ -24,11 +24,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from collections.abc import Generator
 from pathlib import Path
 from typing import (
     Optional,
 )
-from collections.abc import Generator
 
 import m5
 from m5 import stats as m5_stats

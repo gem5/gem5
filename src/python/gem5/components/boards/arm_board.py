@@ -38,12 +38,12 @@
 
 import os
 from abc import ABCMeta
+from collections.abc import Sequence
 from typing import (
     List,
     Optional,
     Tuple,
 )
-from collections.abc import Sequence
 
 import m5
 from m5.objects import (

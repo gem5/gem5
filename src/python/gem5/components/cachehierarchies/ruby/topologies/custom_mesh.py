@@ -36,6 +36,7 @@
 import importlib
 import importlib.machinery
 import importlib.util
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import (
@@ -43,7 +44,6 @@ from typing import (
     Optional,
     Tuple,
 )
-from collections.abc import Sequence
 
 from m5.objects import (
     SimpleExtLink,

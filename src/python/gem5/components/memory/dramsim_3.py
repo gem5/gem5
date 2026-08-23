@@ -1,11 +1,11 @@
 import configparser
 import os
+from collections.abc import Sequence
 from typing import (
     List,
     Optional,
     Tuple,
 )
-from collections.abc import Sequence
 
 import m5
 from m5.objects import (

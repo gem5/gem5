@@ -37,6 +37,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from abc import ABC
+from collections.abc import (
+    Callable,
+    Iterable,
+)
 from typing import (
     Any,
     Dict,
@@ -44,7 +48,6 @@ from typing import (
     Optional,
     Union,
 )
-from collections.abc import Callable, Iterable
 
 from .abstract_stat import AbstractStat
 from .storagetype import StorageType

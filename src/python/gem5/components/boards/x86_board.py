@@ -25,10 +25,10 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+from collections.abc import Sequence
 from typing import (
     List,
 )
-from collections.abc import Sequence
 
 from m5.objects import (
     BaseXBar,

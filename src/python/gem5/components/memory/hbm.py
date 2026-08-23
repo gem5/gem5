@@ -26,6 +26,7 @@
 
 """HBM2 memory system using HBMCtrl"""
 
+from collections.abc import Sequence
 from math import log
 from typing import (
     List,
@@ -34,7 +35,6 @@ from typing import (
     Type,
     Union,
 )
-from collections.abc import Sequence
 
 from m5.objects import (
     AbstractMemory,

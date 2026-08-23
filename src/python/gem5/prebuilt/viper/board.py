@@ -29,12 +29,12 @@
 
 import base64
 import os
+from collections.abc import Sequence
 from typing import (
     List,
     Optional,
     Tuple,
 )
-from collections.abc import Sequence
 
 from m5.objects import (
     X86ACPIDSDT,

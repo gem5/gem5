@@ -130,9 +130,7 @@ class PrivateL1PrivateL2MeshCacheHierarchy(
     def add_nodes(self, node_params: Node_Params):
         self._node_params[node_params.node_type] = node_params
 
-    def _get_node_params(
-        self, node_type: CHI_NodeType
-    ) -> Node_Params | None:
+    def _get_node_params(self, node_type: CHI_NodeType) -> Node_Params | None:
         mandatory_node_types = (
             CHI_NodeType.CHI_RNF,
             CHI_NodeType.CHI_HNF,

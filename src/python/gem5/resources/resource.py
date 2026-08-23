@@ -27,6 +27,7 @@
 import inspect
 import os
 from abc import ABCMeta
+from collections.abc import Generator
 from functools import partial
 from pathlib import Path
 from typing import (
@@ -39,7 +40,6 @@ from typing import (
     Type,
     Union,
 )
-from collections.abc import Generator
 
 from m5.util import (
     fatal,

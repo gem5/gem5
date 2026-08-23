@@ -24,11 +24,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from collections.abc import Iterator
 from typing import (
     Any,
     List,
 )
-from collections.abc import Iterator
 
 from ...utils.override import overrides
 from .abstract_generator import (

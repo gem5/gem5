@@ -37,6 +37,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import re
+from collections.abc import Callable
+from re import Pattern
 from typing import (
     Any,
     List,
@@ -44,8 +46,6 @@ from typing import (
     Tuple,
     Union,
 )
-from collections.abc import Callable
-from re import Pattern
 
 
 class AbstractStat:

@@ -36,6 +36,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from collections.abc import Callable
 from typing import (
     Any,
     Dict,
@@ -43,7 +44,6 @@ from typing import (
     Optional,
     Union,
 )
-from collections.abc import Callable
 
 from .abstract_stat import AbstractStat
 from .statistic import Statistic
