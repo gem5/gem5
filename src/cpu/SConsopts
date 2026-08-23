@@ -56,5 +56,5 @@ with gem5_scons.Configure(main) as conf:
     if conf.env['CONF']['HAVE_CAPSTONE']:
         conf.env.TagImplies('capstone', 'gem5 lib')
     else:
-        warning("Header file <capstone/capstone.h> not found.\n"
-                "This host has no Capstone 4.0 or newer library installed.")
+        warning("Capstone 4.0 or newer was not found.\n"
+                "Disabling Capstone disassembly support.")
