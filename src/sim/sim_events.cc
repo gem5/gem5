@@ -227,9 +227,10 @@ exitSimulationLoop(ExitHypercallId hypercall_id, ExitPayload payload,
 {
     if (hypercall_id == classicGeneratorHypercallId()) {
         validateClassicGeneratorPayload(payload);
-        new GlobalSimLoopExitEvent(when, classicGeneratorCause(payload),
-                                   classicGeneratorCode(payload), repeat,
-                                   hypercall_id, std::move(payload));
+        const auto cause = classicGeneratorCause(payload);
+        const auto code = classicGeneratorCode(payload);
+        new GlobalSimLoopExitEvent(when, cause, code, repeat, hypercall_id,
+                                   std::move(payload));
         return;
     }
 
@@ -241,9 +242,10 @@ exitSimulationLoopNow(ExitHypercallId hypercall_id, ExitPayload payload)
 {
     if (hypercall_id == classicGeneratorHypercallId()) {
         validateClassicGeneratorPayload(payload);
-        new GlobalSimLoopExitEvent(classicGeneratorCause(payload),
-                                   classicGeneratorCode(payload), 0,
-                                   hypercall_id, payload);
+        const auto cause = classicGeneratorCause(payload);
+        const auto code = classicGeneratorCode(payload);
+        new GlobalSimLoopExitEvent(cause, code, 0, hypercall_id,
+                                   std::move(payload));
         return;
     }
 
