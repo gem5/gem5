@@ -91,6 +91,22 @@ def create(func, priority=Event.Default_Pri):
     return EventWrapper(func, priority=priority)
 
 
+def exitSimulationLoopClassic(
+    message, exit_code=0, when=None, repeat=0, serialize=False
+):
+    """Schedule a classic exit while preserving its cause and code."""
+    return _m5.event.exitSimulationLoopClassic(
+        str(message), int(exit_code), when, repeat, serialize
+    )
+
+
+def exitSimulationLoop(hypercall_id, payload=None, when=None, repeat=None):
+    """Schedule an exit identified by a hypercall ID and payload."""
+    if payload is None:
+        payload = {}
+    return _m5.event.exitSimulationLoop(hypercall_id, payload, when, repeat)
+
+
 def exitSimLoop(message, exit_code=0, when=None, repeat=0, serialize=False):
     """Compatibility wrapper preserving the legacy exitSimLoop signature.
 
@@ -125,5 +141,7 @@ __all__ = [
     "SimExit",
     "mainq",
     "create",
+    "exitSimulationLoop",
+    "exitSimulationLoopClassic",
     "exitSimLoop",
 ]

@@ -55,6 +55,11 @@ class TestExitHandlerCompatibility(unittest.TestCase):
         )
         self.assertEqual(resolved_int, int(member.value))
         self.assertEqual(exit_handler_mod._resolve_hypercall_id(4096), 4096)
+        self.assertEqual(exit_handler_mod._resolve_hypercall_id(0), 0)
+        self.assertEqual(
+            exit_handler_mod._resolve_hypercall_id((1 << 64) - 1),
+            (1 << 64) - 1,
+        )
 
     def test_resolve_hypercall_id_rejects_unknown_selectors(self):
         from gem5.simulate import exit_handler as exit_handler_mod
@@ -64,6 +69,12 @@ class TestExitHandlerCompatibility(unittest.TestCase):
 
         with self.assertRaisesRegex(TypeError, "ExitHypercall enum"):
             exit_handler_mod._resolve_hypercall_id(object())
+        with self.assertRaisesRegex(TypeError, "not bool"):
+            exit_handler_mod._resolve_hypercall_id(True)
+        with self.assertRaisesRegex(ValueError, "unsigned 64-bit"):
+            exit_handler_mod._resolve_hypercall_id(-1)
+        with self.assertRaisesRegex(ValueError, "unsigned 64-bit"):
+            exit_handler_mod._resolve_hypercall_id(1 << 64)
 
     def test_exit_handler_class_registration_accepts_exit_hypercall(self):
         from gem5.simulate import exit_handler as exit_handler_mod
@@ -433,6 +444,40 @@ class TestExitHandlerCompatibility(unittest.TestCase):
 
         finally:
             _m5_event.exitSimulationLoopClassic = original
+
+    def test_public_exit_helpers_forward_to_native_bindings(self):
+        import m5.event as m5_event
+
+        import _m5.event as _m5_event
+
+        original_classic = _m5_event.exitSimulationLoopClassic
+        original_hypercall = _m5_event.exitSimulationLoop
+        calls = []
+
+        try:
+            _m5_event.exitSimulationLoopClassic = lambda *args: calls.append(
+                ("classic", args)
+            )
+            _m5_event.exitSimulationLoop = lambda *args: calls.append(
+                ("hypercall", args)
+            )
+
+            m5_event.exitSimulationLoopClassic("cause", 3, 10, 4, False)
+            m5_event.exitSimulationLoop(4096, {"key": "value"}, 20, 5)
+
+            self.assertEqual(
+                calls,
+                [
+                    ("classic", ("cause", 3, 10, 4, False)),
+                    ("hypercall", (4096, {"key": "value"}, 20, 5)),
+                ],
+            )
+            self.assertIn("exitSimulationLoop", m5_event.__all__)
+            self.assertIn("exitSimulationLoopClassic", m5_event.__all__)
+
+        finally:
+            _m5_event.exitSimulationLoopClassic = original_classic
+            _m5_event.exitSimulationLoop = original_hypercall
 
     def test_default_tick_exit_uses_compatibility_path(self):
         # The internal scheduled-tick helper should no longer call the

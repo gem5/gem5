@@ -158,7 +158,13 @@ def _resolve_hypercall_id(hypercall: HypercallId) -> int:
     """
     if isinstance(hypercall, ExitHypercall):
         return int(hypercall.value)
+    if isinstance(hypercall, bool):
+        raise TypeError("hypercall IDs must be integers, not bool")
     if isinstance(hypercall, int):
+        if not 0 <= hypercall <= (1 << 64) - 1:
+            raise ValueError(
+                "hypercall IDs must fit in an unsigned 64-bit integer"
+            )
         return hypercall
     raise TypeError(
         "hypercall must be an ExitHypercall enum member or an integer "
