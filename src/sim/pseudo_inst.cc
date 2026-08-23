@@ -106,8 +106,8 @@ void
 fullSystemWriteBlob(ThreadContext *tc, Addr addr, const void *data,
                     uint64_t size)
 {
-    auto gen = tc->getMMUPtr()->translateFunctional(addr, size, tc,
-                                                    BaseMMU::Write, 0);
+    auto gen = tc->getMMUPtr()->translateFunctional(
+        addr, size, tc, BaseMMU::Write, Request::Flags());
     auto *ptr = static_cast<const uint8_t *>(data);
 
     for (const auto &range : *gen) {

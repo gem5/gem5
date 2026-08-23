@@ -187,7 +187,8 @@ let {{
         if isTbh:
             eaCode = '''
             Request::Flags memAccessFlags =
-                (ArmISA::MMU::AllowUnaligned | ArmISA::MMU::AlignHalfWord);
+                Request::archFlags(ArmISA::MMU::AllowUnaligned |
+                                   ArmISA::MMU::AlignHalfWord);
             EA = Op1 + Op2 * 2
             '''
             accCode = 'NPC = PC + 2 * (Mem_uh);\n'
@@ -195,7 +196,8 @@ let {{
         else:
             eaCode = '''
             Request::Flags memAccessFlags =
-                (ArmISA::MMU::AllowUnaligned | ArmISA::MMU::AlignByte);
+                Request::archFlags(ArmISA::MMU::AllowUnaligned |
+                                   ArmISA::MMU::AlignByte);
             EA = Op1 + Op2
             '''
             accCode = 'NPC = PC + 2 * (Mem_ub)'

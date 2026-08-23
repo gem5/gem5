@@ -228,8 +228,8 @@ Checker<DynInstPtr>::verify(const DynInstPtr &completed_inst)
             if (!curMacroStaticInst) {
                 // set up memory request for instruction fetch
                 auto mem_req = std::make_shared<Request>(
-                    fetch_PC, decoder->moreBytesSize(), 0, requestorId,
-                    fetch_PC, thread->contextId());
+                    fetch_PC, decoder->moreBytesSize(), Request::Flags(),
+                    requestorId, fetch_PC, thread->contextId());
 
                 mem_req->setVirt(fetch_PC, decoder->moreBytesSize(),
                                  Request::INST_FETCH, requestorId,

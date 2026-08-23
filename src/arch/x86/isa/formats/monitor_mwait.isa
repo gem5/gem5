@@ -63,7 +63,7 @@ def template MwaitInitiateAcc {{
             trace::InstRecord * traceData) const
     {
         unsigned s = 0x8;        //size
-        unsigned f = 0;          //flags
+        Request::Flags f;        //flags
         if (!xc->getAddrMonitor()->armed) {
             return NoFault;
         }

@@ -141,16 +141,18 @@ class BaseMMU : public SimObject
 
       public:
         MMUTranslationGen(Addr page_bytes, Addr new_start, Addr new_size,
-                ThreadContext *new_tc, BaseMMU *new_mmu,
-                BaseMMU::Mode new_mode, Request::Flags new_flags);
+                          ThreadContext *new_tc, BaseMMU *new_mmu,
+                          BaseMMU::Mode new_mode,
+                          const Request::Flags &new_flags);
     };
 
     /**
      * Returns a translation generator for a region of virtual addresses,
      * instead of directly translating a specific address.
      */
-    virtual TranslationGenPtr translateFunctional(Addr start, Addr size,
-            ThreadContext *tc, BaseMMU::Mode mode, Request::Flags flags) = 0;
+    virtual TranslationGenPtr
+    translateFunctional(Addr start, Addr size, ThreadContext *tc,
+                        BaseMMU::Mode mode, const Request::Flags &flags) = 0;
 
     virtual Fault
     finalizePhysical(const RequestPtr &req, ThreadContext *tc,

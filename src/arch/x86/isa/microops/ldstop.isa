@@ -76,7 +76,7 @@ def template MicroLeaDeclare {{
         template <typename ...Args>
         %(class_name)s(ExtMachInst mach_inst, const char *inst_mnem,
                 uint64_t set_flags, uint8_t data_size, uint8_t address_size,
-                Request::FlagsType mem_flags, Args ...args) :
+                const Request::Flags &mem_flags, Args ...args) :
             %(base_class)s(mach_inst, "%(mnemonic)s", inst_mnem, set_flags,
                     args..., data_size, address_size, mem_flags, %(op_class)s)
         {
@@ -107,7 +107,7 @@ def template MicroLoadExecute {{
 
         if (fault == NoFault) {
             %(code)s;
-        } else if (memFlags & Request::PREFETCH) {
+        } else if (memFlags.isSet(Request::PREFETCH)) {
             // For prefetches, ignore any faults/exceptions.
             return NoFault;
         }
@@ -235,7 +235,7 @@ def template MicroLdStOpDeclare {{
         template <typename ...Args>
         %(class_name)s(ExtMachInst mach_inst, const char *inst_mnem,
                 uint64_t set_flags, uint8_t data_size, uint8_t address_size,
-                Request::FlagsType mem_flags, Args ...args) :
+                const Request::Flags &mem_flags, Args ...args) :
             %(base_class)s(mach_inst, "%(mnemonic)s", inst_mnem, set_flags,
                     args..., data_size, address_size, mem_flags, %(op_class)s)
         {
@@ -266,7 +266,7 @@ def template MicroLdStSplitOpDeclare {{
                 uint8_t _scale, GpRegIndex _index, GpRegIndex _base,
                 uint64_t _disp, SegRegIndex _segment,
                 uint8_t data_size, uint8_t address_size,
-                Request::FlagsType mem_flags);
+                const Request::Flags &mem_flags);
 
         Fault execute(ExecContext *, trace::InstRecord *) const override;
         Fault initiateAcc(ExecContext *, trace::InstRecord *) const override;
@@ -282,7 +282,7 @@ def template MicroLdStSplitOpConstructor {{
             uint8_t _scale, GpRegIndex _index, GpRegIndex _base,
             uint64_t _disp, SegRegIndex _segment,
             uint8_t data_size, uint8_t address_size,
-            Request::FlagsType mem_flags) :
+            const Request::Flags &mem_flags) :
         %(base_class)s(mach_inst, "%(mnemonic)s", inst_mnem, set_flags,
                 data_low, data_hi, _scale, _index, _base, _disp, _segment,
                 data_size, address_size, mem_flags, %(op_class)s)
@@ -305,7 +305,7 @@ let {{
             self.addressSize = addressSize
             self.memFlags = baseFlags
             if atCPL0:
-                self.memFlags += " | CPL0FlagBit"
+                self.memFlags += " | Request::archFlags(CPL0FlagBit)"
             self.instFlags = ""
             if prefetch:
                 self.memFlags += " | Request::PREFETCH"
@@ -315,7 +315,8 @@ let {{
             if uncacheable:
                 self.instFlags += " | Request::UNCACHEABLE"
             self.memFlags += \
-                " | ((log2i(%s) & AddrSizeFlagMask) << AddrSizeFlagShift)" % \
+                " | Request::archFlags((log2i(%s) & AddrSizeFlagMask) << " \
+                "AddrSizeFlagShift)" % \
                 addressSize
 
         def getAllocator(self, microFlags):
@@ -345,7 +346,7 @@ let {{
             self.addressSize = addressSize
             self.memFlags = baseFlags
             if atCPL0:
-                self.memFlags += " | CPL0FlagBit"
+                self.memFlags += " | Request::archFlags(CPL0FlagBit)"
             self.instFlags = ""
             if prefetch:
                 self.memFlags += " | Request::PREFETCH"
@@ -355,7 +356,8 @@ let {{
             if uncacheable:
                 self.instFlags += " | Request::UNCACHEABLE"
             self.memFlags += \
-                " | ((log2i(%s) & AddrSizeFlagMask) << AddrSizeFlagShift)" % \
+                " | Request::archFlags((log2i(%s) & AddrSizeFlagMask) << " \
+                "AddrSizeFlagShift)" % \
                 addressSize
 
         def getAllocator(self, microFlags):
@@ -411,7 +413,7 @@ let {{
     class MemNoDataOp(X86Microop):
         def __init__(self, segment, addr, disp=0,
                 dataSize="env.dataSize", addressSize="env.addressSize",
-                baseFlags="0"):
+                baseFlags="Request::Flags()"):
             [self.scale, self.index, self.base] = addr
             self.disp = disp
             self.segment = segment
@@ -419,7 +421,8 @@ let {{
             self.addressSize = addressSize
             self.instFlags = ""
             self.memFlags = baseFlags + \
-                " | ((log2i(%s) & AddrSizeFlagMask) << AddrSizeFlagShift)" % \
+                " | Request::archFlags((log2i(%s) & AddrSizeFlagMask) << " \
+                "AddrSizeFlagShift)" % \
                 addressSize
 
         def getAllocator(self, microFlags):
@@ -453,8 +456,8 @@ let {{
     calculateEA = 'EA = SegBase + ' + segmentEAExpr
 
     def defineMicroLoadOp(mnemonic, code, bigCode='',
-                          mem_flags="0", big=True, nonSpec=False,
-                          is_float=False):
+                          mem_flags="Request::Flags()", big=True,
+                          nonSpec=False, is_float=False):
         global header_output
         global decoder_output
         global exec_output
@@ -546,7 +549,8 @@ let {{
         }
     ''', big=False, is_float=True)
 
-    def defineMicroLoadSplitOp(mnemonic, code, mem_flags="0", nonSpec=False):
+    def defineMicroLoadSplitOp(mnemonic, code, mem_flags="Request::Flags()",
+                               nonSpec=False):
         global header_output
         global decoder_output
         global exec_output
@@ -591,8 +595,9 @@ let {{
                            'Request::READ_MODIFY_WRITE | Request::LOCKED_RMW',
                            nonSpec=True)
 
-    def defineMicroStoreOp(mnemonic, code, completeCode="", mem_flags="0",
-                           is_float=False, has_data=True):
+    def defineMicroStoreOp(mnemonic, code, completeCode="",
+                           mem_flags="Request::Flags()", is_float=False,
+                           has_data=True):
         global header_output
         global decoder_output
         global exec_output
@@ -671,7 +676,7 @@ let {{
                        mem_flags="Request::CLEAN | Request::DST_POC")
 
     def defineMicroStoreSplitOp(mnemonic, code,
-                                completeCode="", mem_flags="0"):
+                                completeCode="", mem_flags="Request::Flags()"):
         global header_output
         global decoder_output
         global exec_output
@@ -732,7 +737,7 @@ let {{
         def __init__(self, data, segment, addr, disp = 0,
                 dataSize="env.dataSize", addressSize="env.addressSize"):
             super().__init__(data, segment, addr, disp,
-                    dataSize, addressSize, "0",
+                    dataSize, addressSize, "Request::Flags()",
                     False, False, False, False)
             self.className = "Lea"
             self.mnemonic = "lea"

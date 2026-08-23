@@ -42,6 +42,7 @@
 #define __ARCH_ARM_MACROMEM_HH__
 
 #include "arch/arm/insts/pred_inst.hh"
+#include "arch/arm/mmu.hh"
 #include "arch/arm/pcstate.hh"
 #include "arch/arm/tlb.hh"
 #include "cpu/thread_context.hh"
@@ -426,8 +427,9 @@ class MicroMemOp : public MicroIntImmOp
 
     MicroMemOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
                RegIndex _ura, RegIndex _urb, bool _up, uint8_t _imm)
-            : MicroIntImmOp(mnem, machInst, __opClass, _ura, _urb, _imm),
-              up(_up), memAccessFlags(MMU::AlignWord)
+        : MicroIntImmOp(mnem, machInst, __opClass, _ura, _urb, _imm),
+          up(_up),
+          memAccessFlags(Request::archFlags(MMU::AlignWord))
     {
     }
 
@@ -444,11 +446,15 @@ class MicroMemPairOp : public MicroOp
     Request::Flags memAccessFlags;
 
     MicroMemPairOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
-            RegIndex _dreg1, RegIndex _dreg2, RegIndex _base,
-            bool _up, uint8_t _imm)
+                   RegIndex _dreg1, RegIndex _dreg2, RegIndex _base, bool _up,
+                   uint8_t _imm)
         : MicroOp(mnem, machInst, __opClass),
-        dest(_dreg1), dest2(_dreg2), urb(_base), up(_up), imm(_imm),
-        memAccessFlags(MMU::AlignWord)
+          dest(_dreg1),
+          dest2(_dreg2),
+          urb(_base),
+          up(_up),
+          imm(_imm),
+          memAccessFlags(Request::archFlags(MMU::AlignWord))
     {
     }
 
@@ -554,7 +560,7 @@ class VldMultOp : public PredMacroOp
   protected:
     VldMultOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
               unsigned elems, RegIndex rn, RegIndex vd, unsigned regs,
-              unsigned inc, uint32_t size, uint32_t align, RegIndex rm);
+              unsigned inc, uint32_t size, MMU::ArmFlags align, RegIndex rm);
 };
 
 class VldSingleOp : public PredMacroOp
@@ -563,7 +569,7 @@ class VldSingleOp : public PredMacroOp
     VldSingleOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
                 bool all, unsigned elems, RegIndex rn, RegIndex vd,
                 unsigned regs, unsigned inc, uint32_t size,
-                uint32_t align, RegIndex rm, unsigned lane);
+                MMU::ArmFlags align, RegIndex rm, unsigned lane);
 };
 
 /**
@@ -574,7 +580,7 @@ class VstMultOp : public PredMacroOp
   protected:
     VstMultOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
               unsigned width, RegIndex rn, RegIndex vd, unsigned regs,
-              unsigned inc, uint32_t size, uint32_t align, RegIndex rm);
+              unsigned inc, uint32_t size, MMU::ArmFlags align, RegIndex rm);
 };
 
 class VstSingleOp : public PredMacroOp
@@ -583,7 +589,7 @@ class VstSingleOp : public PredMacroOp
     VstSingleOp(const char *mnem, ExtMachInst machInst, OpClass __opClass,
                 bool all, unsigned elems, RegIndex rn, RegIndex vd,
                 unsigned regs, unsigned inc, uint32_t size,
-                uint32_t align, RegIndex rm, unsigned lane);
+                MMU::ArmFlags align, RegIndex rm, unsigned lane);
 };
 
 /**

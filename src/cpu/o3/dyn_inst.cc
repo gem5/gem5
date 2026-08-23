@@ -428,8 +428,8 @@ DynInst::trap(const Fault &fault)
 }
 
 Fault
-DynInst::initiateMemRead(Addr addr, unsigned size, Request::Flags flags,
-                               const std::vector<bool> &byte_enable)
+DynInst::initiateMemRead(Addr addr, unsigned size, const Request::Flags &flags,
+                         const std::vector<bool> &byte_enable)
 {
     assert(byte_enable.size() == size);
     return cpu->pushRequest(
@@ -439,7 +439,7 @@ DynInst::initiateMemRead(Addr addr, unsigned size, Request::Flags flags,
 }
 
 Fault
-DynInst::initiateMemMgmtCmd(Request::Flags flags)
+DynInst::initiateMemMgmtCmd(const Request::Flags &flags)
 {
     const unsigned int size = 8;
     return cpu->pushRequest(
@@ -450,8 +450,8 @@ DynInst::initiateMemMgmtCmd(Request::Flags flags)
 
 Fault
 DynInst::writeMem(uint8_t *data, unsigned size, Addr addr,
-                        Request::Flags flags, uint64_t *res,
-                        const std::vector<bool> &byte_enable)
+                  const Request::Flags &flags, uint64_t *res,
+                  const std::vector<bool> &byte_enable)
 {
     assert(byte_enable.size() == size);
     return cpu->pushRequest(
@@ -461,8 +461,8 @@ DynInst::writeMem(uint8_t *data, unsigned size, Addr addr,
 }
 
 Fault
-DynInst::initiateMemAMO(Addr addr, unsigned size, Request::Flags flags,
-                              AtomicOpFunctorPtr amo_op)
+DynInst::initiateMemAMO(Addr addr, unsigned size, const Request::Flags &flags,
+                        AtomicOpFunctorPtr amo_op)
 {
     // atomic memory instructions do not have data to be written to memory yet
     // since the atomic operations will be executed directly in cache/memory.

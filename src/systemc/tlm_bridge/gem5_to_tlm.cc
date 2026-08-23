@@ -166,7 +166,7 @@ packet2payload(PacketPtr packet)
     trans->set_streaming_width(size);
     trans->set_data_ptr(data);
 
-    if ((packet->req->getFlags() & Request::NO_ACCESS) != 0) {
+    if (packet->req->getFlags().isSet(Request::NO_ACCESS)) {
         /* Do nothing */
         trans->set_command(tlm::TLM_IGNORE_COMMAND);
     } else if (packet->isRead()) {

@@ -368,9 +368,9 @@ class AtOp64 : public MiscRegRegImmOp64
     std::pair<Fault, uint64_t> performAt(ExecContext *xc,
         ArmISA::MiscRegIndex idx, RegVal val) const;
 
-    std::pair<Fault, uint64_t> addressTranslation64(ThreadContext* tc,
-        ArmISA::MMU::ArmTranslationType tran_type,
-        BaseMMU::Mode mode, Request::Flags flags, RegVal val) const;
+    std::pair<Fault, uint64_t> addressTranslation64(
+        ThreadContext *tc, ArmISA::MMU::ArmTranslationType tran_type,
+        BaseMMU::Mode mode, ArmISA::MMU::ArmFlags flags, RegVal val) const;
 };
 
 class IsbOp64 : public ArmISA::ArmStaticInst

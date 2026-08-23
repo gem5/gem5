@@ -105,9 +105,8 @@ class ExecContext : public gem5::ExecContext
     }
 
     Fault
-    initiateMemRead(Addr addr, unsigned int size,
-                    Request::Flags flags,
-                    const std::vector<bool>& byte_enable) override
+    initiateMemRead(Addr addr, unsigned int size, const Request::Flags &flags,
+                    const std::vector<bool> &byte_enable) override
     {
         assert(byte_enable.size() == size);
         return execute.getLSQ().pushRequest(inst, true /* load */, nullptr,
@@ -115,7 +114,7 @@ class ExecContext : public gem5::ExecContext
     }
 
     Fault
-    initiateMemMgmtCmd(Request::Flags flags) override
+    initiateMemMgmtCmd(const Request::Flags &flags) override
     {
         panic("ExecContext::initiateMemMgmtCmd() not implemented "
               " on MinorCPU\n");
@@ -124,9 +123,8 @@ class ExecContext : public gem5::ExecContext
 
     Fault
     writeMem(uint8_t *data, unsigned int size, Addr addr,
-             Request::Flags flags, uint64_t *res,
-             const std::vector<bool>& byte_enable)
-        override
+             const Request::Flags &flags, uint64_t *res,
+             const std::vector<bool> &byte_enable) override
     {
         assert(byte_enable.size() == size);
         return execute.getLSQ().pushRequest(inst, false /* store */, data,
@@ -134,7 +132,7 @@ class ExecContext : public gem5::ExecContext
     }
 
     Fault
-    initiateMemAMO(Addr addr, unsigned int size, Request::Flags flags,
+    initiateMemAMO(Addr addr, unsigned int size, const Request::Flags &flags,
                    AtomicOpFunctorPtr amo_op) override
     {
         // AMO requests are pushed through the store path

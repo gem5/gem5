@@ -89,7 +89,7 @@ initMemReqHelper(GPUDynInstPtr gpuDynInst, MemCmd mem_req_type,
                 assert(!misaligned_acc);
 
                 req = std::make_shared<Request>(
-                    vaddr, sizeof(T), 0,
+                    vaddr, sizeof(T), Request::Flags(),
                     gpuDynInst->computeUnit()->requestorId(), 0,
                     gpuDynInst->wfDynId,
                     gpuDynInst->makeAtomicOpFunctor<T>(
@@ -97,7 +97,7 @@ initMemReqHelper(GPUDynInstPtr gpuDynInst, MemCmd mem_req_type,
                         &(reinterpret_cast<T *>(gpuDynInst->x_data))[lane]));
             } else {
                 req = std::make_shared<Request>(
-                    vaddr, req_size, 0,
+                    vaddr, req_size, Request::Flags(),
                     gpuDynInst->computeUnit()->requestorId(), 0,
                     gpuDynInst->wfDynId);
             }
@@ -169,7 +169,7 @@ initScratchReqHelper(GPUDynInstPtr gpuDynInst, MemCmd mem_req_type)
             PacketPtr pkt[N];
             for (int dword = 0; dword < N; ++dword) {
                 req[dword] = std::make_shared<Request>(
-                    vaddr[dword], req_size, 0,
+                    vaddr[dword], req_size, Request::Flags(),
                     gpuDynInst->computeUnit()->requestorId(), 0,
                     gpuDynInst->wfDynId);
                 gpuDynInst->setRequestFlags(req[dword]);

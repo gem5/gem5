@@ -285,7 +285,7 @@ class ElasticTrace : public ProbeListenerObject
         /* The instruction PC for a load, store or non load/store. */
         Addr pc;
         /* Request flags in case of a load/store instruction */
-        Request::FlagsType reqFlags;
+        Request::Flags reqFlags;
         /* Request physical address in case of a load/store instruction */
         Addr physAddr;
         /* Request virtual address in case of a load/store instruction */

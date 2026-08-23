@@ -80,7 +80,8 @@ def format LoadAlt(code, *opt_flags) {{
          decoder_output,
          exec_output,
          decode_block) = doMemFormat(code, LoadFuncs,
-            AlternateASIPrivFaultCheck, name, Name, "EXT_ASI", opt_flags)
+            AlternateASIPrivFaultCheck, name, Name,
+            'Request::archFlags(EXT_ASI)', opt_flags)
 }};
 
 def format LoadfAlt(code, *opt_flags) {{
@@ -89,7 +90,8 @@ def format LoadfAlt(code, *opt_flags) {{
          decoder_output,
          exec_output,
          decode_block) = doMemFormat(code, LoadFuncs,
-            AlternateASIPrivFaultCheck + fp_enabled, name, Name, "EXT_ASI",
+            AlternateASIPrivFaultCheck + fp_enabled, name, Name,
+            'Request::archFlags(EXT_ASI)',
             opt_flags)
 }};
 
@@ -99,7 +101,8 @@ def format StoreAlt(code, *opt_flags) {{
          decoder_output,
          exec_output,
          decode_block) = doMemFormat(code, StoreFuncs,
-            AlternateASIPrivFaultCheck, name, Name, "EXT_ASI", opt_flags)
+            AlternateASIPrivFaultCheck, name, Name,
+            'Request::archFlags(EXT_ASI)', opt_flags)
 }};
 
 def format StorefAlt(code, *opt_flags) {{
@@ -108,7 +111,8 @@ def format StorefAlt(code, *opt_flags) {{
          decoder_output,
          exec_output,
          decode_block) = doMemFormat(code, StoreFuncs,
-            AlternateASIPrivFaultCheck + fp_enabled, name, Name, "EXT_ASI",
+            AlternateASIPrivFaultCheck + fp_enabled, name, Name,
+            'Request::archFlags(EXT_ASI)',
             opt_flags)
 }};
 
@@ -118,7 +122,7 @@ def format Load(code, *opt_flags) {{
          decoder_output,
          exec_output,
          decode_block) = doMemFormat(code,
-             LoadFuncs, '', name, Name, 0, opt_flags)
+             LoadFuncs, '', name, Name, 'Request::Flags()', opt_flags)
 }};
 
 def format Loadf(code, *opt_flags) {{
@@ -127,7 +131,7 @@ def format Loadf(code, *opt_flags) {{
          decoder_output,
          exec_output,
          decode_block) = doMemFormat(code,
-             LoadFuncs, fp_enabled, name, Name, 0, opt_flags)
+             LoadFuncs, fp_enabled, name, Name, 'Request::Flags()', opt_flags)
 }};
 
 def format Store(code, *opt_flags) {{
@@ -136,7 +140,7 @@ def format Store(code, *opt_flags) {{
          decoder_output,
          exec_output,
          decode_block) = doMemFormat(code,
-             StoreFuncs, '', name, Name, 0, opt_flags)
+             StoreFuncs, '', name, Name, 'Request::Flags()', opt_flags)
 }};
 
 def format Storef(code, *opt_flags) {{
@@ -145,7 +149,8 @@ def format Storef(code, *opt_flags) {{
          decoder_output,
          exec_output,
          decode_block) = doMemFormat(code,
-             StoreFuncs, fp_enabled, name, Name, 0, opt_flags)
+             StoreFuncs, fp_enabled, name, Name,
+             'Request::Flags()', opt_flags)
 }};
 
 def format StoreFsr(code, *opt_flags) {{
@@ -154,7 +159,7 @@ def format StoreFsr(code, *opt_flags) {{
          decoder_output,
          exec_output,
          decode_block) = doMemFormat(code,
-             StoreFuncs, '', name, Name, 0, opt_flags,
+             StoreFuncs, '', name, Name, 'Request::Flags()', opt_flags,
              'Fsr = insertBits(Fsr,16,14,0);')
 }};
 
@@ -164,5 +169,5 @@ def format TwinLoad(code, *opt_flags) {{
          exec_output,
          decode_block) = doMemFormat(code, LoadFuncs,
             AlternateASIPrivFaultCheck + TwinAlignmentFaultCheck,
-            name, Name, "EXT_ASI", opt_flags)
+            name, Name, 'Request::archFlags(EXT_ASI)', opt_flags)
 }};

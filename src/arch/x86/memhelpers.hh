@@ -46,7 +46,7 @@ namespace X86ISA
 /// Initiate a read from memory in timing mode.
 static Fault
 initiateMemRead(ExecContext *xc, trace::InstRecord *traceData, Addr addr,
-                unsigned dataSize, Request::Flags flags)
+                unsigned dataSize, const Request::Flags &flags)
 {
     const std::vector<bool> byte_enable(dataSize, true);
     return xc->initiateMemRead(addr, dataSize, flags, byte_enable);
@@ -104,10 +104,9 @@ getMem(PacketPtr pkt, std::array<uint64_t, N> &mem, unsigned dataSize,
         traceData->setData(mem[0]);
 }
 
-
 static Fault
 readMemAtomic(ExecContext *xc, trace::InstRecord *traceData, Addr addr,
-              uint64_t &mem, unsigned dataSize, Request::Flags flags)
+              uint64_t &mem, unsigned dataSize, const Request::Flags &flags)
 {
     memset(&mem, 0, sizeof(mem));
     const std::vector<bool> byte_enable(dataSize, true);
@@ -127,7 +126,7 @@ readMemAtomic(ExecContext *xc, trace::InstRecord *traceData, Addr addr,
 template <typename T, size_t N>
 static Fault
 readPackedMemAtomic(ExecContext *xc, Addr addr, std::array<uint64_t, N> &mem,
-                    unsigned flags)
+                    const Request::Flags &flags)
 {
     std::array<T, N> real_mem;
     // Size is fixed at compilation time. Make a static vector.
@@ -147,7 +146,7 @@ template <size_t N>
 static Fault
 readMemAtomic(ExecContext *xc, trace::InstRecord *traceData, Addr addr,
               std::array<uint64_t, N> &mem, unsigned dataSize,
-              unsigned flags)
+              const Request::Flags &flags)
 {
     Fault fault = NoFault;
 
@@ -169,7 +168,7 @@ readMemAtomic(ExecContext *xc, trace::InstRecord *traceData, Addr addr,
 template <typename T, size_t N>
 static Fault
 writePackedMem(ExecContext *xc, std::array<uint64_t, N> &mem, Addr addr,
-               unsigned flags, uint64_t *res)
+               const Request::Flags &flags, uint64_t *res)
 {
     std::array<T, N> real_mem;
     for (int i = 0; i < N; i++)
@@ -184,7 +183,7 @@ writePackedMem(ExecContext *xc, std::array<uint64_t, N> &mem, Addr addr,
 
 static Fault
 writeMemTiming(ExecContext *xc, trace::InstRecord *traceData, uint64_t mem,
-               unsigned dataSize, Addr addr, Request::Flags flags,
+               unsigned dataSize, Addr addr, const Request::Flags &flags,
                uint64_t *res)
 {
     if (traceData)
@@ -198,8 +197,8 @@ writeMemTiming(ExecContext *xc, trace::InstRecord *traceData, uint64_t mem,
 template <size_t N>
 static Fault
 writeMemTiming(ExecContext *xc, trace::InstRecord *traceData,
-               std::array<uint64_t, N> &mem, unsigned dataSize,
-               Addr addr, unsigned flags, uint64_t *res)
+               std::array<uint64_t, N> &mem, unsigned dataSize, Addr addr,
+               const Request::Flags &flags, uint64_t *res)
 {
     if (traceData)
         traceData->setData(mem[0]);
@@ -216,7 +215,7 @@ writeMemTiming(ExecContext *xc, trace::InstRecord *traceData,
 
 static Fault
 writeMemAtomic(ExecContext *xc, trace::InstRecord *traceData, uint64_t mem,
-               unsigned dataSize, Addr addr, Request::Flags flags,
+               unsigned dataSize, Addr addr, const Request::Flags &flags,
                uint64_t *res)
 {
     if (traceData)
@@ -233,8 +232,8 @@ writeMemAtomic(ExecContext *xc, trace::InstRecord *traceData, uint64_t mem,
 template <size_t N>
 static Fault
 writeMemAtomic(ExecContext *xc, trace::InstRecord *traceData,
-               std::array<uint64_t, N> &mem, unsigned dataSize,
-               Addr addr, unsigned flags, uint64_t *res)
+               std::array<uint64_t, N> &mem, unsigned dataSize, Addr addr,
+               const Request::Flags &flags, uint64_t *res)
 {
     if (traceData)
         traceData->setData(mem[0]);

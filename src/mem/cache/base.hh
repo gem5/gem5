@@ -848,7 +848,8 @@ class BaseCache : public ClockedObject
      * @param id Use the given packet id for the write clean operation.
      * @return The generated write clean packet.
      */
-    PacketPtr writecleanBlk(CacheBlk *blk, Request::Flags dest, PacketId id);
+    PacketPtr writecleanBlk(CacheBlk *blk, const Request::Flags &dest,
+                            PacketId id);
 
     /**
      * Write back dirty blocks in the cache using functional accesses.

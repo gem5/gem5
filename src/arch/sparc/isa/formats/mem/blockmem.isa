@@ -147,7 +147,7 @@ let {{
                     makeMicroName(name + "Imm", microPc),
                     makeMicroName(Name, microPc),
                     makeMicroName(Name + "Imm", microPc),
-                    "EXT_ASI", opt_flags);
+                    "Request::archFlags(EXT_ASI)", opt_flags);
             faultCode = ''
         return (header_output, decoder_output, exec_output, decode_block)
 }};

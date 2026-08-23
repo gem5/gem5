@@ -87,9 +87,9 @@ CacheRecorder::enqueueNextFlushRequest()
     if (m_records_flushed < m_records.size()) {
         TraceRecord* rec = m_records[m_records_flushed];
         m_records_flushed++;
-        auto req = std::make_shared<Request>(rec->m_data_address,
-                                             m_block_size_bytes, 0,
-                                             Request::funcRequestorId);
+        auto req = std::make_shared<Request>(
+            rec->m_data_address, m_block_size_bytes, Request::Flags(),
+            Request::funcRequestorId);
         MemCmd::Command requestType = MemCmd::FlushReq;
         Packet *pkt = new Packet(req, requestType);
         pkt->req->setReqInstSeqNum(m_records_flushed);
@@ -127,8 +127,8 @@ CacheRecorder::enqueueNextFetchRequest()
                 requestType = MemCmd::ReadReq;
                 req = std::make_shared<Request>(
                     traceRecord->m_data_address + rec_bytes_read,
-                    m_block_size_bytes, 0,
-                                    Request::funcRequestorId);
+                    m_block_size_bytes, Request::Flags(),
+                    Request::funcRequestorId);
             }   else if (traceRecord->m_type == RubyRequestType_IFETCH) {
                 requestType = MemCmd::ReadReq;
                 req = std::make_shared<Request>(
@@ -139,8 +139,8 @@ CacheRecorder::enqueueNextFetchRequest()
                 requestType = MemCmd::WriteReq;
                 req = std::make_shared<Request>(
                     traceRecord->m_data_address + rec_bytes_read,
-                    m_block_size_bytes, 0,
-                                Request::funcRequestorId);
+                    m_block_size_bytes, Request::Flags(),
+                    Request::funcRequestorId);
             }
 
             Packet *pkt = new Packet(req, requestType);

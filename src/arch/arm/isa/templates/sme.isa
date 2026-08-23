@@ -168,7 +168,7 @@ def template SmeLd1xExecute {{
                                           trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
-        Request::Flags flags = 0;
+        Request::Flags flags;
 
         %(op_decl)s;
         %(op_rd)s;
@@ -201,7 +201,7 @@ def template SmeLd1xInitiateAcc {{
                                             trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
-        Request::Flags flags = 0;
+        Request::Flags flags;
 
         %(op_decl)s;
         %(op_rd)s;
@@ -291,7 +291,7 @@ def template SmeLdrExecute {{
                                   trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
-        Request::Flags flags = 0;
+        Request::Flags flags;
 
         %(op_decl)s;
         %(op_rd)s;
@@ -320,7 +320,7 @@ def template SmeLdrInitiateAcc {{
                                   trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
-        Request::Flags flags = 0;
+        Request::Flags flags;
 
         %(op_decl)s;
         %(op_rd)s;
@@ -399,7 +399,7 @@ def template SmeLdrTableExecute {{
                                   trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
-        Request::Flags flags = 0;
+        Request::Flags flags;
 
         %(op_decl)s;
         %(op_rd)s;
@@ -428,7 +428,7 @@ def template SmeLdrTableInitiateAcc {{
                                   trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
-        Request::Flags flags = 0;
+        Request::Flags flags;
 
         %(op_decl)s;
         %(op_rd)s;
@@ -861,7 +861,7 @@ def template SmeSt1xExecute {{
                                   trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
-        Request::Flags flags = 0;
+        Request::Flags flags;
 
         %(op_decl)s;
         %(op_rd)s;
@@ -882,7 +882,7 @@ def template SmeSt1xInitiateAcc {{
                                   trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
-        Request::Flags flags = 0;
+        Request::Flags flags;
 
         %(op_decl)s;
         %(op_rd)s;
@@ -935,7 +935,7 @@ def template SmeStrExecute {{
                                   trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
-        Request::Flags flags = 0;
+        Request::Flags flags;
 
         %(op_decl)s;
         %(op_rd)s;
@@ -957,7 +957,7 @@ def template SmeStrInitiateAcc {{
                                   trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
-        Request::Flags flags = 0;
+        Request::Flags flags;
 
         %(op_decl)s;
         %(op_rd)s;
@@ -1015,7 +1015,7 @@ def template SmeStrTableExecute {{
                                   trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
-        Request::Flags flags = 0;
+        Request::Flags flags;
 
         %(op_decl)s;
         %(op_rd)s;
@@ -1037,7 +1037,7 @@ def template SmeStrTableInitiateAcc {{
                                   trace::InstRecord *traceData) const
     {
         Fault fault = NoFault;
-        Request::Flags flags = 0;
+        Request::Flags flags;
 
         %(op_decl)s;
         %(op_rd)s;

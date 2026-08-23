@@ -502,8 +502,8 @@ LSQUnit::checkSnoop(PacketPtr pkt)
 
     // Check that this snoop didn't just invalidate our lock flag
     if (ld_inst->effAddrValid() && request &&
-        request->isCacheBlockHit(invalidate_addr, cacheBlockMask)
-        && ld_inst->memReqFlags & Request::LLSC) {
+        request->isCacheBlockHit(invalidate_addr, cacheBlockMask) &&
+        ld_inst->memReqFlags.isSet(Request::LLSC)) {
         ld_inst->tcBase()->getIsaPtr()->handleLockedSnoopHit(ld_inst.get());
     }
 
@@ -541,7 +541,7 @@ LSQUnit::checkSnoop(PacketPtr pkt)
                 // Make sure that we don't lose a snoop hitting a LOCKED
                 // address since the LOCK* flags don't get updated until
                 // commit.
-                if (ld_inst->memReqFlags & Request::LLSC) {
+                if (ld_inst->memReqFlags.isSet(Request::LLSC)) {
                     ld_inst->tcBase()->getIsaPtr()->
                         handleLockedSnoopHit(ld_inst.get());
                 }
@@ -1718,15 +1718,15 @@ LSQUnit::write(LSQRequest *request, uint8_t *data, ssize_t store_idx)
     unsigned size = request->_size;
     storeQueue[store_idx].size() = size;
     bool store_no_data =
-        request->mainReq()->getFlags() & Request::STORE_NO_DATA;
+        request->mainReq()->getFlags().isSet(Request::STORE_NO_DATA);
     storeQueue[store_idx].isAllZeros() = store_no_data;
     assert(size <= SQEntry::DataSize || store_no_data);
 
     // copy data into the storeQueue only if the store request has valid data
-    if (!(request->req()->getFlags() & Request::CACHE_BLOCK_ZERO) &&
-        !request->req()->isCacheMaintenance() &&
-        !request->req()->isAtomic())
+    if (!request->req()->getFlags().isSet(Request::CACHE_BLOCK_ZERO) &&
+        !request->req()->isCacheMaintenance() && !request->req()->isAtomic()) {
         memcpy(storeQueue[store_idx].data(), data, size);
+    }
 
     // This function only writes the data to the store queue, so no fault
     // can happen here.

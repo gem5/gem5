@@ -170,7 +170,8 @@ ScalarMemPipeline::injectScalarMemFence(GPUDynInstPtr gpuDynInst,
     assert(gpuDynInst->isScalar());
 
     if (!req) {
-        req = std::make_shared<Request>(0, 0, 0, computeUnit.requestorId(), 0,
+        req = std::make_shared<Request>(0, 0, Request::Flags(),
+                                        computeUnit.requestorId(), 0,
                                         gpuDynInst->wfDynId);
     } else {
         req->requestorId(computeUnit.requestorId());

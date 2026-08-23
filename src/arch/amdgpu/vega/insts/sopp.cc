@@ -679,7 +679,7 @@ Inst_SOPP__S_ICACHE_INV::execute(GPUDynInstPtr gpuDynInst)
     gpuDynInst->resetEntireStatusVector();
     gpuDynInst->setStatusVector(0, 1);
     RequestPtr req = std::make_shared<Request>(
-        0, 0, 0, gpuDynInst->computeUnit()->requestorId(), 0,
+        0, 0, Request::Flags(), gpuDynInst->computeUnit()->requestorId(), 0,
         gpuDynInst->wfDynId);
     gpuDynInst->setRequestFlags(req);
     gpuDynInst->computeUnit()->scalarMemoryPipe.injectScalarMemFence(

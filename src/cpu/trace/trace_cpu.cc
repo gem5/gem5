@@ -564,10 +564,11 @@ TraceCPU::ElasticDataGen::execute()
 PacketPtr
 TraceCPU::ElasticDataGen::executeMemReq(GraphNode* node_ptr)
 {
-    DPRINTF(TraceCPUData, "Executing memory request %lli (phys addr %d, "
-            "virt addr %d, pc %#x, size %d, flags %d).\n",
+    DPRINTF(TraceCPUData,
+            "Executing memory request %lli (phys addr %d, "
+            "virt addr %d, pc %#x, size %d, flags %s).\n",
             node_ptr->seqNum, node_ptr->physAddr, node_ptr->virtAddr,
-            node_ptr->pc, node_ptr->size, node_ptr->flags);
+            node_ptr->pc, node_ptr->size, node_ptr->flags.bits());
 
     // If the request is strictly ordered, do not send it. Just return nullptr
     // as if it was succesfully sent.
@@ -1079,8 +1080,8 @@ TraceCPU::FixedRetryGen::nextExecute()
 }
 
 bool
-TraceCPU::FixedRetryGen::send(Addr addr, unsigned size, const MemCmd& cmd,
-        Request::FlagsType flags, Addr pc)
+TraceCPU::FixedRetryGen::send(Addr addr, unsigned size, const MemCmd &cmd,
+                              const Request::Flags &flags, Addr pc)
 {
 
     // Create new request
@@ -1277,10 +1278,12 @@ TraceCPU::ElasticDataGen::InputStream::read(GraphNode* element)
         else
             element->size = 0;
 
-        if (pkt_msg.has_flags())
-            element->flags = pkt_msg.flags();
-        else
-            element->flags = 0;
+        if (pkt_msg.has_flags()) {
+            element->flags =
+                Request::Flags::LegacyAdaptor::flagsFromBits(pkt_msg.flags());
+        } else {
+            element->flags = Request::Flags();
+        }
 
         if (pkt_msg.has_pc())
             element->pc = pkt_msg.pc();
@@ -1358,7 +1361,7 @@ TraceCPU::ElasticDataGen::GraphNode::writeElementAsTrace() const
     if (isLoad() || isStore()) {
         DPRINTFR(TraceCPUData, ",%i", physAddr);
         DPRINTFR(TraceCPUData, ",%i", size);
-        DPRINTFR(TraceCPUData, ",%i", flags);
+        DPRINTFR(TraceCPUData, ",%s", flags.bits());
     }
     DPRINTFR(TraceCPUData, ",%lli", compDelay);
     DPRINTFR(TraceCPUData, "robDep:");
@@ -1416,7 +1419,10 @@ TraceCPU::FixedRetryGen::InputStream::read(TraceElement* element)
         element->addr = pkt_msg.addr();
         element->blocksize = pkt_msg.size();
         element->tick = pkt_msg.tick();
-        element->flags = pkt_msg.has_flags() ? pkt_msg.flags() : 0;
+        element->flags =
+            pkt_msg.has_flags()
+                ? Request::Flags::LegacyAdaptor::flagsFromBits(pkt_msg.flags())
+                : Request::Flags();
         element->pc = pkt_msg.has_pc() ? pkt_msg.pc() : 0;
         return true;
     }

@@ -50,10 +50,12 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <limits>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "base/amo.hh"
@@ -97,25 +99,15 @@ typedef uint16_t RequestorID;
 class Request : public Extensible<Request>
 {
   public:
-    typedef uint64_t FlagsType;
     typedef uint8_t ArchFlagsType;
-    typedef gem5::Flags<FlagsType> Flags;
 
-    enum : FlagsType
+    enum class FlagsType : uint64_t
     {
         // clang-format off
-        /**
-         * Architecture specific flags.
-         *
-         * These bits int the flag field are reserved for
-         * architecture-specific code. For example, SPARC uses them to
-         * represent ASIs.
-         */
-        ARCH_BITS                   = 0x000000FF,
         /** The request was an instruction fetch. */
-        INST_FETCH                  = 0x00000100,
+        INST_FETCH,
         /** The virtual address is also the physical address. */
-        PHYSICAL                    = 0x00000200,
+        PHYSICAL,
         /**
          * The request is to an uncacheable address.
          *
@@ -123,7 +115,7 @@ class Request : public Extensible<Request>
          * STRICT_ORDER flag should be set if such reordering is
          * undesirable.
          */
-        UNCACHEABLE                 = 0x00000400,
+        UNCACHEABLE,
         /**
          * The request is required to be strictly ordered by <i>CPU
          * models</i> and is non-speculative.
@@ -133,18 +125,18 @@ class Request : public Extensible<Request>
          * memory system may still reorder requests in caches unless
          * the UNCACHEABLE flag is set as well.
          */
-        STRICT_ORDER                = 0x00000800,
+        STRICT_ORDER,
         /** This request is made in privileged mode. */
-        PRIVILEGED                  = 0x00008000,
+        PRIVILEGED,
 
         /**
          * This is a write that is targeted and zeroing an entire
          * cache block.  There is no need for a read/modify/write
          */
-        CACHE_BLOCK_ZERO            = 0x00010000,
+        CACHE_BLOCK_ZERO,
 
         /** The request should not cause a memory access. */
-        NO_ACCESS                   = 0x00080000,
+        NO_ACCESS,
         /**
          * This request will lock or unlock the accessed memory. When
          * used with a load, the access locks the particular chunk of
@@ -152,71 +144,68 @@ class Request : public Extensible<Request>
          * that locked accesses have to be made up of a locked load,
          * some operation on the data, and then a locked store.
          */
-        LOCKED_RMW                  = 0x00100000,
+        LOCKED_RMW,
         /** The request is a Load locked/store conditional. */
-        LLSC                        = 0x00200000,
+        LLSC,
         /** This request is for a memory swap. */
-        MEM_SWAP                    = 0x00400000,
-        MEM_SWAP_COND               = 0x00800000,
+        MEM_SWAP,
+        MEM_SWAP_COND,
         /** This request is a read which will be followed by a write. */
-        READ_MODIFY_WRITE           = 0x0020000000000000,
+        READ_MODIFY_WRITE,
 
         /** The request is a prefetch. */
-        PREFETCH                    = 0x01000000,
+        PREFETCH,
         /** The request should be prefetched into the exclusive state. */
-        PF_EXCLUSIVE                = 0x02000000,
+        PF_EXCLUSIVE,
         /** The request should be marked as LRU. */
-        EVICT_NEXT                  = 0x04000000,
+        EVICT_NEXT,
         /** The request should be marked with ACQUIRE. */
-        ACQUIRE                     = 0x00020000,
+        ACQUIRE,
         /** The request should be marked with ACQUIRE_PC. */
-        ACQUIRE_PC                  = 0x00002000,
+        ACQUIRE_PC,
         /** The request should be marked with RELEASE. */
-        RELEASE                     = 0x00040000,
+        RELEASE,
 
         /** The request is an atomic that returns data. */
-        ATOMIC_RETURN_OP            = 0x40000000,
+        ATOMIC_RETURN_OP,
         /** The request is an atomic that does not return data. */
-        ATOMIC_NO_RETURN_OP         = 0x80000000,
+        ATOMIC_NO_RETURN_OP,
 
         /** The request should be marked with KERNEL.
           * Used to indicate the synchronization associated with a GPU kernel
           * launch or completion.
           */
-        KERNEL                      = 0x00001000,
+        KERNEL,
 
         /** The request targets the secure memory space. */
-        SECURE                      = 0x10000000,
+        SECURE,
         /** The request is a page table walk */
-        PT_WALK                     = 0x20000000,
+        PT_WALK,
 
         /** The request invalidates a memory location */
-        INVALIDATE                  = 0x0000000100000000,
+        INVALIDATE,
         /** The request cleans a memory location */
-        CLEAN                       = 0x0000000200000000,
+        CLEAN,
 
         /** The request targets the point of unification */
-        DST_POU                     = 0x0000001000000000,
+        DST_POU,
 
         /** The request targets the point of coherence */
-        DST_POC                     = 0x0000002000000000,
-
-        /** Bits to define the destination of a request */
-        DST_BITS                    = 0x0000003000000000,
+        DST_POC,
 
         /** hardware transactional memory **/
 
         /** The request starts a HTM transaction */
-        HTM_START                   = 0x0000010000000000,
+        HTM_START,
 
         /** The request commits a HTM transaction */
-        HTM_COMMIT                  = 0x0000020000000000,
+        HTM_COMMIT,
 
         /** The request cancels a HTM transaction */
-        HTM_CANCEL                  = 0x0000040000000000,
+        HTM_CANCEL,
 
         /** The request aborts a HTM transaction */
-        HTM_ABORT                   = 0x0000080000000000,
+        HTM_ABORT,
 
         // What is the different between HTM cancel and abort?
         //
@@ -241,41 +230,317 @@ class Request : public Extensible<Request>
         // of the system work correctly together.
 
         /** The Request is a TLB shootdown */
-        TLBI                        = 0x0000100000000000,
+        TLBI,
 
         /** The Request is a TLB shootdown sync */
-        TLBI_SYNC                   = 0x0000200000000000,
+        TLBI_SYNC,
 
         /** The Request tells the CPU model that a
             remote TLB Sync has been requested */
-        TLBI_EXT_SYNC               = 0x0000400000000000,
+        TLBI_EXT_SYNC,
 
         /** The Request tells the interconnect that a
             remote TLB Sync request has completed */
-        TLBI_EXT_SYNC_COMP          = 0x0000800000000000,
+        TLBI_EXT_SYNC_COMP,
 
         /** StashOnce request types */
-        STASH_ONCE                  = 0x0001000000000000,
-        STASH_ONCE_UNIQUE           = 0x0002000000000000,
+        STASH_ONCE,
+        STASH_ONCE_UNIQUE,
 
-        /**
-         * These flags are *not* cleared when a Request object is
-         * reused (assigned a new address).
-         */
-        STICKY_FLAGS = INST_FETCH,
-        /** TLBI_EXT_SYNC_COMP seems to be the largest value
-            of FlagsType, so HAS_NO_ADDR's value is that << 4 */
-        HAS_NO_ADDR                = 0x0008000000000000,
+        /** The request has no valid address. */
+        HAS_NO_ADDR,
+
+        NumFlags,
         // clang-format on
     };
-    static const FlagsType STORE_NO_DATA = CACHE_BLOCK_ZERO |
-        CLEAN | INVALIDATE;
+    using enum FlagsType;
 
-    static const FlagsType HTM_CMD = HTM_START | HTM_COMMIT |
-        HTM_CANCEL | HTM_ABORT;
+    typedef gem5::BitsetFlag<FlagsType,
+                             static_cast<std::size_t>(FlagsType::NumFlags)>
+        GenericFlags;
 
-    static const FlagsType TLBI_CMD = TLBI | TLBI_SYNC |
-        TLBI_EXT_SYNC | TLBI_EXT_SYNC_COMP;
+    typedef ArchFlagsType ArchFlags;
+
+    /**
+     * Request flag container.
+     *
+     * ISA-agnostic flags are stored in a BitsetFlag, while architecture
+     * flags are stored separately in an ArchFlags byte. FlagsType always
+     * identifies an ISA-agnostic flag. Architecture flags must be passed via
+     * Request::archFlags() and retrieved with getArchFlags().
+     */
+    struct Flags
+    {
+        /**
+         * The LegacyAdaptor provides a utility for converting between
+         * the legacy flag format (64bit variable containing both generic
+         * and architectural flags) and the new flag format.
+         *
+         * It's main APIs are
+         *
+         * flagsFromBits: converts from old_flag to new_flag
+         * flagsToBits: converts from new_flag to old_flag
+         *
+         * We need to maintain some backward compatibility with the old
+         * flag system as we serialize/deserialize request flags, for
+         * example in the protobuf logic
+         * Code still using the unsigned variable for request flags should
+         * either update to the new format or rely on the LegacyAdaptor
+         * for the time being.
+         * The big disadvantage of clinging to the adaptor is that it
+         * will only represent 64-bit of flags so information could
+         * be lost during translation
+         */
+        struct LegacyAdaptor
+        {
+            struct FlagMapEntry
+            {
+                uint64_t bits;
+                FlagsType flag;
+            };
+
+            inline static constexpr uint64_t ARCH_BITS = 0x000000FF;
+
+            inline static constexpr FlagMapEntry FLAG_MAP[] = {
+                {0x0000000000000100, INST_FETCH},
+                {0x0000000000000200, PHYSICAL},
+                {0x0000000000000400, UNCACHEABLE},
+                {0x0000000000000800, STRICT_ORDER},
+                {0x0000000000008000, PRIVILEGED},
+                {0x0000000000010000, CACHE_BLOCK_ZERO},
+                {0x0000000000080000, NO_ACCESS},
+                {0x0000000000100000, LOCKED_RMW},
+                {0x0000000000200000, LLSC},
+                {0x0000000000400000, MEM_SWAP},
+                {0x0000000000800000, MEM_SWAP_COND},
+                {0x0020000000000000, READ_MODIFY_WRITE},
+                {0x0000000001000000, PREFETCH},
+                {0x0000000002000000, PF_EXCLUSIVE},
+                {0x0000000004000000, EVICT_NEXT},
+                {0x0000000000020000, ACQUIRE},
+                {0x0000000000002000, ACQUIRE_PC},
+                {0x0000000000040000, RELEASE},
+                {0x0000000040000000, ATOMIC_RETURN_OP},
+                {0x0000000080000000, ATOMIC_NO_RETURN_OP},
+                {0x0000000000001000, KERNEL},
+                {0x0000000010000000, SECURE},
+                {0x0000000020000000, PT_WALK},
+                {0x0000000100000000, INVALIDATE},
+                {0x0000000200000000, CLEAN},
+                {0x0000001000000000, DST_POU},
+                {0x0000002000000000, DST_POC},
+                {0x0000010000000000, HTM_START},
+                {0x0000020000000000, HTM_COMMIT},
+                {0x0000040000000000, HTM_CANCEL},
+                {0x0000080000000000, HTM_ABORT},
+                {0x0000100000000000, TLBI},
+                {0x0000200000000000, TLBI_SYNC},
+                {0x0000400000000000, TLBI_EXT_SYNC},
+                {0x0000800000000000, TLBI_EXT_SYNC_COMP},
+                {0x0001000000000000, STASH_ONCE},
+                {0x0002000000000000, STASH_ONCE_UNIQUE},
+                {0x0008000000000000, HAS_NO_ADDR},
+            };
+
+            static Flags flagsFromBits(uint64_t bits);
+            static uint64_t flagsToBits(const Flags &flags);
+        };
+
+        /** ISA-agnostic request flags. */
+        GenericFlags genericFlags;
+
+        /** Architecture-specific request flags. */
+        ArchFlags archFlags = 0;
+
+        /** Initialize with all flags cleared. */
+        Flags() = default;
+
+        /** Initialize with a single request flag set. */
+        Flags(FlagsType flag) { set(flag); }
+
+        /** Replace all flags with a single request flag. */
+        const Flags &
+        operator=(FlagsType flag)
+        {
+            clear();
+            set(flag);
+            return *this;
+        }
+
+        /**
+         * Return the flags as a sequence of bits (for debug purposes)
+         */
+        std::string
+        bits() const
+        {
+            std::string result;
+            result.reserve(8 + static_cast<std::size_t>(NumFlags));
+            for (unsigned bit = 0; bit < 8; ++bit) {
+                result += (archFlags & (uint64_t(1) << bit)) ? '1' : '0';
+            }
+            for (unsigned bit = 0; bit < static_cast<unsigned>(NumFlags);
+                 ++bit) {
+                const auto flag = static_cast<FlagsType>(bit);
+                result += genericFlags.isSet(flag) ? '1' : '0';
+            }
+            return result;
+        }
+
+        /** Return whether a single request flag is set. */
+        bool
+        isSet(FlagsType flag) const
+        {
+            return genericFlags.isSet(flag);
+        }
+
+        /** Return whether any flag in the given set is also set here. */
+        bool
+        isSet(const Flags &flags) const
+        {
+            return !genericFlags.noneSet(flags.genericFlags) ||
+                   (archFlags & flags.archFlags);
+        }
+
+        /** Return whether every flag in the given set is also set here. */
+        bool
+        allSet(const Flags &flags) const
+        {
+            return genericFlags.allSet(flags.genericFlags) &&
+                   ((archFlags & flags.archFlags) == flags.archFlags);
+        }
+
+        /** Return whether a single request flag is clear. */
+        bool
+        noneSet(FlagsType flag) const
+        {
+            return !isSet(flag);
+        }
+
+        /** Return whether every flag in the given set is clear here. */
+        bool
+        noneSet(const Flags &flags) const
+        {
+            return genericFlags.noneSet(flags.genericFlags) &&
+                   !(archFlags & flags.archFlags);
+        }
+
+        /** Clear all flags. */
+        void
+        clear()
+        {
+            genericFlags.clear();
+            archFlags = 0;
+        }
+
+        /** Clear a single request flag. */
+        void
+        clear(FlagsType flag)
+        {
+            genericFlags.clear(flag);
+        }
+
+        /** Clear every flag in the given set. */
+        void
+        clear(const Flags &flags)
+        {
+            genericFlags.clear(flags.genericFlags);
+            archFlags = static_cast<ArchFlags>(archFlags & ~flags.archFlags);
+        }
+
+        /** Clear all flags except those in the given set. */
+        void
+        clearAllExcept(const Flags &flags)
+        {
+            genericFlags.clearAllExcept(flags.genericFlags);
+            archFlags &= flags.archFlags;
+        }
+
+        /** Set a single request flag. */
+        void
+        set(FlagsType flag)
+        {
+            genericFlags.set(flag);
+        }
+
+        /** Set every flag in the given set. */
+        void
+        set(const Flags &flags)
+        {
+            genericFlags.set(flags.genericFlags);
+            archFlags |= flags.archFlags;
+        }
+
+        /** Set or clear a single request flag based on condition. */
+        void
+        set(FlagsType flag, bool condition)
+        {
+            condition ? set(flag) : clear(flag);
+        }
+
+        /** Set or clear every flag in the given set based on condition. */
+        void
+        set(const Flags &flags, bool condition)
+        {
+            condition ? set(flags) : clear(flags);
+        }
+
+        /**
+         * Replace masked flags with values from another flag set.
+         *
+         * Flags outside mask are preserved.
+         */
+        void
+        replace(const Flags &flags, const Flags &mask)
+        {
+            genericFlags.replace(flags.genericFlags, mask.genericFlags);
+            archFlags = (archFlags & ~mask.archFlags) |
+                        (flags.archFlags & mask.archFlags);
+        }
+
+        /** Return a new set containing this set plus one request flag. */
+        Flags
+        operator|(FlagsType flag) const
+        {
+            Flags result(*this);
+            result.set(flag);
+            return result;
+        }
+
+        /** Return a new set containing the union of both flag sets. */
+        Flags
+        operator|(const Flags &flags) const
+        {
+            Flags result(*this);
+            result.set(flags);
+            return result;
+        }
+    };
+
+    static Flags
+    archFlags(ArchFlagsType bits)
+    {
+        Flags flags;
+        flags.archFlags = bits;
+        return flags;
+    }
+
+    /**
+     * These flags are *not* cleared when a Request object is reused
+     * (assigned a new address).
+     */
+    inline static const Flags STICKY_FLAGS = Flags(INST_FETCH);
+
+    inline static const Flags STORE_NO_DATA =
+        Flags(CACHE_BLOCK_ZERO) | CLEAN | INVALIDATE;
+
+    /** Flags that define the destination of a request. */
+    inline static const Flags DST_BITS = Flags(DST_POU) | DST_POC;
+
+    inline static const Flags HTM_CMD =
+        Flags(HTM_START) | HTM_COMMIT | HTM_CANCEL | HTM_ABORT;
+
+    inline static const Flags TLBI_CMD =
+        Flags(TLBI) | TLBI_SYNC | TLBI_EXT_SYNC | TLBI_EXT_SYNC_COMP;
 
     /** Requestor Ids that are statically allocated
      * @{*/
@@ -510,17 +775,16 @@ class Request : public Extensible<Request>
      * just physical address, size, flags, and timestamp (to curTick()).
      * These fields are adequate to perform a request.
      */
-    Request(Addr paddr, unsigned size, Flags flags, RequestorID id) :
-        _paddr(paddr), _size(size), _requestorId(id), _time(curTick())
+    Request(Addr paddr, unsigned size, const Flags &flags, RequestorID id)
+        : _paddr(paddr), _size(size), _requestorId(id), _time(curTick())
     {
         _flags.set(flags);
         privateFlags.set(VALID_PADDR|VALID_SIZE);
         _byteEnable = std::vector<bool>(size, true);
     }
 
-    Request(Addr vaddr, unsigned size, Flags flags,
-            RequestorID id, Addr pc, ContextID cid,
-            AtomicOpFunctorPtr atomic_op=nullptr)
+    Request(Addr vaddr, unsigned size, const Flags &flags, RequestorID id,
+            Addr pc, ContextID cid, AtomicOpFunctorPtr atomic_op = nullptr)
     {
         setVirt(vaddr, size, flags, id, pc, std::move(atomic_op));
         setContext(cid);
@@ -567,7 +831,7 @@ class Request : public Extensible<Request>
      * unspecified addr and size.
      */
     static RequestPtr
-    createMemManagement(Flags flags, RequestorID id)
+    createMemManagement(const Flags &flags, RequestorID id)
     {
         auto mgmt_req = std::make_shared<Request>();
         mgmt_req->_flags.set(flags);
@@ -608,8 +872,8 @@ class Request : public Extensible<Request>
      * allocated Request object.
      */
     void
-    setVirt(Addr vaddr, unsigned size, Flags flags, RequestorID id, Addr pc,
-            AtomicOpFunctorPtr amo_op=nullptr)
+    setVirt(Addr vaddr, unsigned size, const Flags &flags, RequestorID id,
+            Addr pc, AtomicOpFunctorPtr amo_op = nullptr)
     {
         _vaddr = vaddr;
         _size = size;
@@ -617,7 +881,7 @@ class Request : public Extensible<Request>
         _pc = pc;
         _time = curTick();
 
-        _flags.clear(~STICKY_FLAGS);
+        _flags.clearAllExcept(STICKY_FLAGS);
         _flags.set(flags);
         privateFlags.clear(~STICKY_PRIVATE_FLAGS);
         privateFlags.set(VALID_VADDR|VALID_SIZE|VALID_PC);
@@ -828,7 +1092,7 @@ class Request : public Extensible<Request>
     }
 
     /** Accessor for flags. */
-    Flags
+    const Flags &
     getFlags()
     {
         assert(hasPaddr() || hasVaddr());
@@ -840,14 +1104,14 @@ class Request : public Extensible<Request>
         _flags field.  Thus this method should rightly be called
         setFlags() and not just flags(). */
     void
-    setFlags(Flags flags)
+    setFlags(const Flags &flags)
     {
         assert(hasPaddr() || hasVaddr());
         _flags.set(flags);
     }
 
     void
-    clearFlags(Flags flags)
+    clearFlags(const Flags &flags)
     {
         assert(hasPaddr() || hasVaddr());
         _flags.clear(flags);
@@ -912,7 +1176,7 @@ class Request : public Extensible<Request>
     getArchFlags() const
     {
         assert(hasPaddr() || hasVaddr());
-        return _flags & ARCH_BITS;
+        return _flags.archFlags;
     }
 
     /** Accessor function to check if sc result is valid. */
@@ -1056,18 +1320,22 @@ class Request : public Extensible<Request>
     bool
     isPrefetch() const
     {
-        return (_flags.isSet(PREFETCH | PF_EXCLUSIVE));
+        return (_flags.isSet(Flags(PREFETCH) | PF_EXCLUSIVE));
     }
     bool isPrefetchEx() const { return _flags.isSet(PF_EXCLUSIVE); }
     bool isLLSC() const { return _flags.isSet(LLSC); }
     bool isPriv() const { return _flags.isSet(PRIVILEGED); }
     bool isLockedRMW() const { return _flags.isSet(LOCKED_RMW); }
-    bool isSwap() const { return _flags.isSet(MEM_SWAP | MEM_SWAP_COND); }
+    bool
+    isSwap() const
+    {
+        return _flags.isSet(Flags(MEM_SWAP) | MEM_SWAP_COND);
+    }
     bool isCondSwap() const { return _flags.isSet(MEM_SWAP_COND); }
     bool
     isReadModifyWrite() const
     {
-        return _flags.isSet(LOCKED_RMW | READ_MODIFY_WRITE);
+        return _flags.isSet(Flags(LOCKED_RMW) | READ_MODIFY_WRITE);
     }
     bool isSecure() const { return _flags.isSet(SECURE); }
     bool isPTWalk() const { return _flags.isSet(PT_WALK); }
@@ -1132,7 +1400,13 @@ class Request : public Extensible<Request>
      */
     bool isToPOU() const { return _flags.isSet(DST_POU); }
     bool isToPOC() const { return _flags.isSet(DST_POC); }
-    Flags getDest() const { return _flags & DST_BITS; }
+    Flags
+    getDest() const
+    {
+        Flags dest = _flags;
+        dest.clearAllExcept(DST_BITS);
+        return dest;
+    }
 
     bool
     isAcquire() const
@@ -1220,7 +1494,11 @@ class Request : public Extensible<Request>
      * @{ */
     bool isCacheClean() const { return _flags.isSet(CLEAN); }
     bool isCacheInvalidate() const { return _flags.isSet(INVALIDATE); }
-    bool isCacheMaintenance() const { return _flags.isSet(CLEAN|INVALIDATE); }
+    bool
+    isCacheMaintenance() const
+    {
+        return _flags.isSet(Flags(CLEAN) | INVALIDATE);
+    }
     /** @} */
 
     void
@@ -1234,6 +1512,43 @@ class Request : public Extensible<Request>
         return _isGPUFuncAccess;
     }
 };
+
+inline Request::Flags
+Request::Flags::LegacyAdaptor::flagsFromBits(uint64_t bits)
+{
+    Request::Flags flags;
+    flags.archFlags = static_cast<Request::ArchFlags>(bits & ARCH_BITS);
+    for (const auto &entry : FLAG_MAP) {
+        if (bits & entry.bits) {
+            flags.set(entry.flag);
+        }
+    }
+    return flags;
+}
+
+inline uint64_t
+Request::Flags::LegacyAdaptor::flagsToBits(const Request::Flags &flags)
+{
+    uint64_t bits = flags.archFlags & ARCH_BITS;
+    for (const auto &entry : FLAG_MAP) {
+        if (flags.isSet(entry.flag)) {
+            bits |= entry.bits;
+        }
+    }
+    return bits;
+}
+
+inline Request::Flags
+operator|(Request::FlagsType lhs, Request::FlagsType rhs)
+{
+    return Request::Flags(lhs) | rhs;
+}
+
+inline Request::Flags
+operator|(Request::FlagsType lhs, const Request::Flags &rhs)
+{
+    return Request::Flags(lhs) | rhs;
+}
 
 } // namespace gem5
 

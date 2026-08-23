@@ -146,37 +146,38 @@ class BaseSimpleCPU : public BaseCPU
     void resetStats() override;
 
     virtual Fault
-    readMem(Addr addr, uint8_t* data, unsigned size, Request::Flags flags,
-            const std::vector<bool>& byte_enable=std::vector<bool>())
+    readMem(Addr addr, uint8_t *data, unsigned size,
+            const Request::Flags &flags,
+            const std::vector<bool> &byte_enable = std::vector<bool>())
     {
         panic("readMem() is not implemented");
     }
 
     virtual Fault
-    initiateMemRead(Addr addr, unsigned size, Request::Flags flags,
-            const std::vector<bool>& byte_enable=std::vector<bool>())
+    initiateMemRead(Addr addr, unsigned size, const Request::Flags &flags,
+                    const std::vector<bool> &byte_enable = std::vector<bool>())
     {
         panic("initiateMemRead() is not implemented\n");
     }
 
     virtual Fault
-    writeMem(uint8_t* data, unsigned size, Addr addr, Request::Flags flags,
-            uint64_t* res,
-            const std::vector<bool>& byte_enable=std::vector<bool>())
+    writeMem(uint8_t *data, unsigned size, Addr addr,
+             const Request::Flags &flags, uint64_t *res,
+             const std::vector<bool> &byte_enable = std::vector<bool>())
     {
         panic("writeMem() is not implemented\n");
     }
 
     virtual Fault
-    amoMem(Addr addr, uint8_t* data, unsigned size, Request::Flags flags,
-            AtomicOpFunctorPtr amo_op)
+    amoMem(Addr addr, uint8_t *data, unsigned size,
+           const Request::Flags &flags, AtomicOpFunctorPtr amo_op)
     {
         panic("amoMem() is not implemented\n");
     }
 
     virtual Fault
-    initiateMemAMO(Addr addr, unsigned size, Request::Flags flags,
-            AtomicOpFunctorPtr amo_op)
+    initiateMemAMO(Addr addr, unsigned size, const Request::Flags &flags,
+                   AtomicOpFunctorPtr amo_op)
     {
         panic("initiateMemAMO() is not implemented\n");
     }
@@ -197,8 +198,7 @@ class BaseSimpleCPU : public BaseCPU
      * For this reason the interface is extended,
      * and initiateMemMgmtCmd() is used to instigate the command.
      */
-    virtual Fault initiateMemMgmtCmd(Request::Flags flags) = 0;
-
+    virtual Fault initiateMemMgmtCmd(const Request::Flags &flags) = 0;
 };
 
 } // namespace gem5

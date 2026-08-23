@@ -712,11 +712,11 @@ class LSQ : public Named
 
     /** Single interface for readMem/writeMem/amoMem to issue requests into
      *  the LSQ */
-    Fault pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
-                      unsigned int size, Addr addr, Request::Flags flags,
-                      uint64_t *res, AtomicOpFunctorPtr amo_op,
-                      const std::vector<bool>& byte_enable =
-                          std::vector<bool>());
+    Fault
+    pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
+                unsigned int size, Addr addr, const Request::Flags &flags,
+                uint64_t *res, AtomicOpFunctorPtr amo_op,
+                const std::vector<bool> &byte_enable = std::vector<bool>());
 
     /** Push a predicate failed-representing request into the queues just
      *  to maintain commit order */

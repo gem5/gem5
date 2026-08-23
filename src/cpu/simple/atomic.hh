@@ -213,18 +213,17 @@ class AtomicSimpleCPU : public BaseSimpleCPU
      * @param[in,out] size_left Size left to be processed in the memory access.
      * @return True if the byte-enable mask for the fragment is not all-false.
      */
-    bool genMemFragmentRequest(const RequestPtr &req, Addr frag_addr,
-                               int size, Request::Flags flags,
+    bool genMemFragmentRequest(const RequestPtr &req, Addr frag_addr, int size,
+                               const Request::Flags &flags,
                                const std::vector<bool> &byte_enable,
                                int &frag_size, int &size_left) const;
 
-    Fault readMem(Addr addr, uint8_t *data, unsigned size,
-                  Request::Flags flags,
-                  const std::vector<bool> &byte_enable=std::vector<bool>())
-        override;
+    Fault readMem(
+        Addr addr, uint8_t *data, unsigned size, const Request::Flags &flags,
+        const std::vector<bool> &byte_enable = std::vector<bool>()) override;
 
     Fault
-    initiateMemMgmtCmd(Request::Flags flags) override
+    initiateMemMgmtCmd(const Request::Flags &flags) override
     {
         panic("initiateMemMgmtCmd() is for timing accesses, and "
               "should never be called on AtomicSimpleCPU.\n");
@@ -238,13 +237,14 @@ class AtomicSimpleCPU : public BaseSimpleCPU
               "never be called on AtomicSimpleCPU.");
     }
 
-    Fault writeMem(uint8_t *data, unsigned size,
-                   Addr addr, Request::Flags flags, uint64_t *res,
-                   const std::vector<bool> &byte_enable=std::vector<bool>())
-        override;
+    Fault writeMem(
+        uint8_t *data, unsigned size, Addr addr, const Request::Flags &flags,
+        uint64_t *res,
+        const std::vector<bool> &byte_enable = std::vector<bool>()) override;
 
     Fault amoMem(Addr addr, uint8_t *data, unsigned size,
-                 Request::Flags flags, AtomicOpFunctorPtr amo_op) override;
+                 const Request::Flags &flags,
+                 AtomicOpFunctorPtr amo_op) override;
 
     void regProbePoints() override;
 

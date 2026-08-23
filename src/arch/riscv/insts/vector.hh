@@ -378,16 +378,16 @@ class VectorMemMicroInst : public VectorMicroInst
     const uint8_t veew;
     const uint32_t eew;
 
-    VectorMemMicroInst(const char* mnem, ExtMachInst _machInst,
+    VectorMemMicroInst(const char *mnem, ExtMachInst _machInst,
                        OpClass __opClass, uint32_t _microVl,
                        uint32_t _microIdx, uint32_t _offset, uint32_t _elen,
                        uint32_t _vlen)
         : VectorMicroInst(mnem, _machInst, __opClass, _microVl, _microIdx,
-                          _elen, _vlen)
-        , offset(_offset)
-        , memAccessFlags(0)
-        , veew(_machInst.width)
-        , eew(width_EEW(veew))
+                          _elen, _vlen),
+          offset(_offset),
+          memAccessFlags(),
+          veew(_machInst.width),
+          eew(width_EEW(veew))
     {}
 };
 

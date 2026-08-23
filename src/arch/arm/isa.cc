@@ -1160,11 +1160,13 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             idx = MISCREG_IFAR_S;
             break;
           case MISCREG_ATS1CPR:
-            addressTranslation(MMU::S1CTran, BaseMMU::Read, 0, val);
-            return;
+              addressTranslation(MMU::S1CTran, BaseMMU::Read,
+                                 static_cast<MMU::ArmFlags>(0), val);
+              return;
           case MISCREG_ATS1CPW:
-            addressTranslation(MMU::S1CTran, BaseMMU::Write, 0, val);
-            return;
+              addressTranslation(MMU::S1CTran, BaseMMU::Write,
+                                 static_cast<MMU::ArmFlags>(0), val);
+              return;
           case MISCREG_ATS1CUR:
             addressTranslation(MMU::S1CTran, BaseMMU::Read,
                 MMU::UserMode, val);
@@ -1176,12 +1178,14 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
           case MISCREG_ATS12NSOPR:
             if (!release->has(ArmExtension::SECURITY))
                 panic("Security Extensions required for ATS12NSOPR");
-            addressTranslation(MMU::S1S2NsTran, BaseMMU::Read, 0, val);
+            addressTranslation(MMU::S1S2NsTran, BaseMMU::Read,
+                               static_cast<MMU::ArmFlags>(0), val);
             return;
           case MISCREG_ATS12NSOPW:
             if (!release->has(ArmExtension::SECURITY))
                 panic("Security Extensions required for ATS12NSOPW");
-            addressTranslation(MMU::S1S2NsTran, BaseMMU::Write, 0, val);
+            addressTranslation(MMU::S1S2NsTran, BaseMMU::Write,
+                               static_cast<MMU::ArmFlags>(0), val);
             return;
           case MISCREG_ATS12NSOUR:
             if (!release->has(ArmExtension::SECURITY))
@@ -1196,11 +1200,13 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                 MMU::UserMode, val);
             return;
           case MISCREG_ATS1HR:
-            addressTranslation(MMU::HypMode, BaseMMU::Read, 0, val);
-            return;
+              addressTranslation(MMU::HypMode, BaseMMU::Read,
+                                 static_cast<MMU::ArmFlags>(0), val);
+              return;
           case MISCREG_ATS1HW:
-            addressTranslation(MMU::HypMode, BaseMMU::Write, 0, val);
-            return;
+              addressTranslation(MMU::HypMode, BaseMMU::Write,
+                                 static_cast<MMU::ArmFlags>(0), val);
+              return;
           case MISCREG_TTBCR:
             {
                 TTBCR ttbcr = readMiscRegNoEffect(MISCREG_TTBCR);
@@ -1763,8 +1769,8 @@ ISA::unserialize(CheckpointIn &cp)
 }
 
 void
-ISA::addressTranslation(MMU::ArmTranslationType tran_type,
-    BaseMMU::Mode mode, Request::Flags flags, RegVal val)
+ISA::addressTranslation(MMU::ArmTranslationType tran_type, BaseMMU::Mode mode,
+                        MMU::ArmFlags flags, RegVal val)
 {
     // If we're in timing mode then doing the translation in
     // functional mode then we're slightly distorting performance
@@ -1775,7 +1781,7 @@ ISA::addressTranslation(MMU::ArmTranslationType tran_type,
     warn_once("Doing AT (address translation) in functional mode! Fix Me!\n");
 
     auto req = std::make_shared<Request>(
-        val, 0, flags,  Request::funcRequestorId,
+        val, 0, Request::archFlags(flags), Request::funcRequestorId,
         tc->pcState().instAddr(), tc->contextId());
 
     Fault fault = getMMUPtr(tc)->translateFunctional(

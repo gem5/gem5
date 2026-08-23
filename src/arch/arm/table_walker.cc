@@ -2351,7 +2351,7 @@ WalkUnit::doLongDescriptorWrapper(LookupLevel curr_lookup_level)
 void
 WalkUnit::fetchDescriptor(
     Addr desc_addr, DescriptorBase &descriptor, int num_bytes,
-    Request::Flags flags, LookupLevel lookup_level, Event *event,
+    const Request::Flags &flags, LookupLevel lookup_level, Event *event,
     void (WalkUnit::*doDescriptor)(WalkerState *curr_state),
     WalkerState *curr_state)
 {
@@ -2640,8 +2640,8 @@ WalkUnit::pageSizeNtoStatBin(uint8_t N)
 
 Fault
 WalkUnit::readDataUntimed(ThreadContext *tc, Addr vaddr, Addr desc_addr,
-                          uint8_t *data, int num_bytes, Request::Flags flags,
-                          BaseMMU::Mode mode,
+                          uint8_t *data, int num_bytes,
+                          const Request::Flags &flags, BaseMMU::Mode mode,
                           MMU::ArmTranslationType tran_type, bool functional)
 {
     Fault fault;
@@ -2690,7 +2690,7 @@ WalkUnit::mpamTagTableWalk(WalkerState *curr_state, RequestPtr &req) const
 void
 WalkUnit::readDataTimed(ThreadContext *tc, Addr desc_addr,
                         Stage2Walk *translation, int num_bytes,
-                        Request::Flags flags)
+                        const Request::Flags &flags)
 {
     // translate to physical address using the second stage MMU
     translation->setVirt(desc_addr, num_bytes, flags | Request::PT_WALK,

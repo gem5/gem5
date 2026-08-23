@@ -780,9 +780,10 @@ LSQ::dumpInsts(ThreadID tid) const
 { thread.at(tid)->dumpInsts(); }
 
 Fault
-LSQ::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
-        unsigned int size, Addr addr, Request::Flags flags, uint64_t *res,
-        AtomicOpFunctorPtr amo_op, const std::vector<bool>& byte_enable)
+LSQ::pushRequest(const DynInstPtr &inst, bool isLoad, uint8_t *data,
+                 unsigned int size, Addr addr, const Request::Flags &flags,
+                 uint64_t *res, AtomicOpFunctorPtr amo_op,
+                 const std::vector<bool> &byte_enable)
 {
     // This comming request can be either load, store or atomic.
     // Atomic request has a corresponding pointer to its atomic memory
@@ -802,8 +803,8 @@ LSQ::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
     // lines. For now, such cross-line update is not supported.
     assert(!isAtomic || (isAtomic && !needs_burst));
 
-    const bool htm_cmd = isLoad && (flags & Request::HTM_CMD);
-    const bool tlbi_cmd = isLoad && (flags & Request::TLBI_CMD);
+    const bool htm_cmd = isLoad && flags.isSet(Request::HTM_CMD);
+    const bool tlbi_cmd = isLoad && flags.isSet(Request::TLBI_CMD);
 
     if (inst->translationStarted()) {
         request = inst->savedRequest;
@@ -1068,7 +1069,7 @@ LSQRequest::LSQRequest(LSQUnit *port, const DynInstPtr &inst, bool isLoad)
       _res(nullptr),
       _addr(0),
       _size(0),
-      _flags(0),
+      _flags(),
       _numOutstandingPackets(0),
       _amo_op(nullptr)
 {

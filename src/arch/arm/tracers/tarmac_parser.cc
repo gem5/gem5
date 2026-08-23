@@ -955,7 +955,8 @@ TarmacParserRecord::dump()
     std::ostream &outs = trace::output();
 
     uint64_t written_data = 0;
-    unsigned mem_flags = 3 | ArmISA::MMU::AllowUnaligned;
+    Request::ArchFlagsType mem_flags =
+        ArmISA::MMU::AllowUnaligned | ArmISA::MMU::AlignDoubleWord;
 
     ISetState isetstate;
 
@@ -1263,13 +1264,13 @@ TarmacParserRecord::advanceTrace()
 
 bool
 TarmacParserRecord::readMemNoEffect(Addr addr, uint8_t *data, unsigned size,
-                                    unsigned flags)
+                                    Request::ArchFlagsType flags)
 {
     const RequestPtr &req = memReq;
     auto mmu = static_cast<MMU*>(thread->getMMUPtr());
 
-    req->setVirt(addr, size, flags, thread->pcState().instAddr(),
-                 Request::funcRequestorId);
+    req->setVirt(addr, size, Request::archFlags(flags),
+                 Request::funcRequestorId, thread->pcState().instAddr());
 
     // Translate to physical address
     Fault fault = mmu->translateAtomic(req, thread, BaseMMU::Read);

@@ -1581,9 +1581,9 @@ LSQ::needsToTick()
 
 Fault
 LSQ::pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
-                 unsigned int size, Addr addr, Request::Flags flags,
+                 unsigned int size, Addr addr, const Request::Flags &flags,
                  uint64_t *res, AtomicOpFunctorPtr amo_op,
-                 const std::vector<bool>& byte_enable)
+                 const std::vector<bool> &byte_enable)
 {
     assert(inst->translationFault == NoFault || inst->inLSQ);
 
@@ -1610,9 +1610,10 @@ LSQ::pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
      *  packet and then it will own the data */
     uint8_t *request_data = NULL;
 
-    DPRINTF(MinorMem, "Pushing request (%s) addr: 0x%x size: %d flags:"
-        " 0x%x%s lineWidth : 0x%x\n",
-        (isLoad ? "load" : "store/atomic"), addr, size, flags,
+    DPRINTF(MinorMem,
+            "Pushing request (%s) addr: 0x%x size: %d flags:"
+            " %s%s lineWidth : 0x%x\n",
+            (isLoad ? "load" : "store/atomic"), addr, size, flags.bits(),
             (needs_burst ? " (needs burst)" : ""), lineWidth);
 
     if (!isLoad) {
@@ -1620,7 +1621,7 @@ LSQ::pushRequest(MinorDynInstPtr inst, bool isLoad, uint8_t *data,
          *  and destroyed by its destructor */
         request_data = new uint8_t[size];
         if (inst->staticInst->isAtomic() ||
-            (flags & Request::STORE_NO_DATA)) {
+            (flags.isSet(Request::STORE_NO_DATA))) {
             /* For atomic or store-no-data, just use zeroed data */
             std::memset(request_data, 0, size);
         } else {

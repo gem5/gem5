@@ -262,7 +262,8 @@ SDMAEngine::unregisterRLCQueue(Addr doorbell, bool unmap_static)
                 Addr chunk_addr = addr;
                 for (; !gen.done(); gen.next()) {
                     gpuDevice->getMemMgr()->writeRequest(
-                        chunk_addr, buf, gen.size(), 0, nullptr);
+                        chunk_addr, buf, gen.size(), Request::Flags(),
+                        nullptr);
                     buf += gen.size();
                     chunk_addr += gen.size();
                 }
@@ -299,7 +300,8 @@ SDMAEngine::unregisterRLCQueue(Addr doorbell, bool unmap_static)
                 Addr chunk_addr = addr;
                 for (; !gen.done(); gen.next()) {
                     gpuDevice->getMemMgr()->writeRequest(
-                        chunk_addr, buf, gen.size(), 0, nullptr);
+                        chunk_addr, buf, gen.size(), Request::Flags(),
+                        nullptr);
                     buf += gen.size();
                     chunk_addr += gen.size();
                 }
@@ -705,7 +707,7 @@ SDMAEngine::writeReadData(SDMAQueue *q, sdmaWrite *pkt, uint32_t *dmaBuffer)
         auto cb = new EventFunctionWrapper(
             [=, this] { writeDone(q, pkt, dmaBuffer); }, name());
         gpuDevice->getMemMgr()->writeRequest(mmhub_addr, (uint8_t *)dmaBuffer,
-                                             bufferSize, 0, cb);
+                                             bufferSize, Request::Flags(), cb);
     } else {
         if (q->priv() && cur_vmid == 0) {
             pkt->dest = getGARTAddr(pkt->dest);
@@ -783,7 +785,7 @@ SDMAEngine::copy(SDMAQueue *q, sdmaCopy *pkt)
                     gen.size(), gen.addr(), chunk_addr);
 
             gpuDevice->getMemMgr()->readRequest(chunk_addr, buffer_ptr,
-                                                gen.size(), 0,
+                                                gen.size(), Request::Flags(),
                                                 gen.last() ? cb : nullptr);
             buffer_ptr += gen.size();
         }
@@ -830,7 +832,7 @@ SDMAEngine::copyReadData(SDMAQueue *q, sdmaCopy *pkt, uint8_t *dmaBuffer)
                     gen.size(), gen.addr(), chunk_addr);
 
             gpuDevice->getMemMgr()->writeRequest(chunk_addr, buffer_ptr,
-                                                 gen.size(), 0,
+                                                 gen.size(), Request::Flags(),
                                                  gen.last() ? cb : nullptr);
 
             buffer_ptr += gen.size();
@@ -1147,8 +1149,8 @@ SDMAEngine::ptePde(SDMAQueue *q, sdmaPtePde *pkt)
         auto cb = new EventFunctionWrapper(
             [=, this] { ptePdeDone(q, pkt, dmaBuffer); }, name());
         gpuDevice->getMemMgr()->writeRequest(mmhub_addr, (uint8_t *)dmaBuffer,
-                                             sizeof(uint64_t) * pkt->count, 0,
-                                             cb);
+                                             sizeof(uint64_t) * pkt->count,
+                                             Request::Flags(), cb);
     } else {
         if (q->priv() && cur_vmid == 0) {
             pkt->dest = getGARTAddr(pkt->dest);
@@ -1295,7 +1297,7 @@ SDMAEngine::constFill(SDMAQueue *q, sdmaConstFill *pkt, uint32_t header)
                     gen.size(), gen.addr(), chunk_addr);
 
             gpuDevice->getMemMgr()->writeRequest(chunk_addr, fill_data_ptr,
-                                                 gen.size(), 0,
+                                                 gen.size(), Request::Flags(),
                                                  gen.last() ? cb : nullptr);
             fill_data_ptr += gen.size();
         }

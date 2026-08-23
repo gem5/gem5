@@ -230,8 +230,8 @@ RequestPort::getAddrRanges() const
 void
 RequestPort::printAddr(Addr a)
 {
-    auto req = std::make_shared<Request>(
-        a, 1, 0, Request::funcRequestorId);
+    auto req = std::make_shared<Request>(a, 1, Request::Flags(),
+                                         Request::funcRequestorId);
 
     Packet pkt(req, MemCmd::PrintReq);
     Packet::PrintReqState prs(std::cerr);

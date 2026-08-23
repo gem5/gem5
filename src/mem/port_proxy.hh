@@ -119,22 +119,20 @@ class PortProxy : FunctionalRequestProtocol
     /**
      * Read size bytes memory at physical address and store in p.
      */
-    void readBlobPhys(Addr addr, Request::Flags flags,
-                      void *p, uint64_t size) const;
+    void readBlobPhys(Addr addr, const Request::Flags &flags, void *p,
+                      uint64_t size) const;
 
     /**
      * Write size bytes from p to physical address.
      */
-    void writeBlobPhys(Addr addr, Request::Flags flags,
-                       const void *p, uint64_t size) const;
+    void writeBlobPhys(Addr addr, const Request::Flags &flags, const void *p,
+                       uint64_t size) const;
 
     /**
      * Fill size bytes starting at physical addr with byte value val.
      */
-    void memsetBlobPhys(Addr addr, Request::Flags flags,
-                        uint8_t v, uint64_t size) const;
-
-
+    void memsetBlobPhys(Addr addr, const Request::Flags &flags, uint8_t v,
+                        uint64_t size) const;
 
     /** Methods to override in base classes */
 
@@ -145,7 +143,8 @@ class PortProxy : FunctionalRequestProtocol
     virtual bool
     tryReadBlob(Addr addr, void *p, uint64_t size) const
     {
-        readBlobPhys(addr, 0, p, size);
+        Request::Flags flags = {};
+        readBlobPhys(addr, flags, p, size);
         return true;
     }
 
@@ -156,7 +155,8 @@ class PortProxy : FunctionalRequestProtocol
     virtual bool
     tryWriteBlob(Addr addr, const void *p, uint64_t size) const
     {
-        writeBlobPhys(addr, 0, p, size);
+        Request::Flags flags = {};
+        writeBlobPhys(addr, flags, p, size);
         return true;
     }
 
@@ -167,7 +167,8 @@ class PortProxy : FunctionalRequestProtocol
     virtual bool
     tryMemsetBlob(Addr addr, uint8_t val, uint64_t size) const
     {
-        memsetBlobPhys(addr, 0, val, size);
+        Request::Flags flags = {};
+        memsetBlobPhys(addr, flags, val, size);
         return true;
     }
 

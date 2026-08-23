@@ -147,10 +147,9 @@ void
 ElasticTrace::fetchReqTrace(const RequestPtr &req)
 {
 
-    DPRINTFR(ElasticTrace, "Fetch Req %i,(%lli,%lli,%lli),%i,%i,%lli\n",
-             (MemCmd::ReadReq),
-             req->getPC(), req->getVaddr(), req->getPaddr(),
-             req->getFlags(), req->getSize(), curTick());
+    DPRINTFR(ElasticTrace, "Fetch Req %i,(%lli,%lli,%lli),%s,%i,%lli\n",
+             (MemCmd::ReadReq), req->getPC(), req->getVaddr(), req->getPaddr(),
+             req->getFlags().bits(), req->getSize(), curTick());
 
     // Create a protobuf message including the request fields necessary to
     // recreate the request in the TraceCPU.
@@ -158,7 +157,8 @@ ElasticTrace::fetchReqTrace(const RequestPtr &req)
     inst_fetch_pkt.set_tick(curTick());
     inst_fetch_pkt.set_cmd(MemCmd::ReadReq);
     inst_fetch_pkt.set_pc(req->getPC());
-    inst_fetch_pkt.set_flags(req->getFlags());
+    inst_fetch_pkt.set_flags(
+        Request::Flags::LegacyAdaptor::flagsToBits(req->getFlags()));
     inst_fetch_pkt.set_addr(req->getPaddr());
     inst_fetch_pkt.set_size(req->getSize());
     // Write the message to the stream.
@@ -802,9 +802,11 @@ ElasticTrace::writeDepTrace(uint32_t num_to_write)
                      "is as follows:\n", temp_ptr->instNum);
             if (temp_ptr->isLoad() || temp_ptr->isStore()) {
                 DPRINTFR(ElasticTrace, "\tis a %s\n", temp_ptr->typeToStr());
-                DPRINTFR(ElasticTrace, "\thas a request with phys addr %i, "
-                         "size %i, flags %i\n", temp_ptr->physAddr,
-                         temp_ptr->size, temp_ptr->reqFlags);
+                DPRINTFR(ElasticTrace,
+                         "\thas a request with phys addr %i, "
+                         "size %i, flags %s\n",
+                         temp_ptr->physAddr, temp_ptr->size,
+                         temp_ptr->reqFlags.bits());
             } else {
                  DPRINTFR(ElasticTrace, "\tis a %s\n", temp_ptr->typeToStr());
             }
@@ -827,7 +829,8 @@ ElasticTrace::writeDepTrace(uint32_t num_to_write)
             dep_pkt.set_type(temp_ptr->type);
             dep_pkt.set_pc(temp_ptr->pc);
             if (temp_ptr->isLoad() || temp_ptr->isStore()) {
-                dep_pkt.set_flags(temp_ptr->reqFlags);
+                dep_pkt.set_flags(Request::Flags::LegacyAdaptor::flagsToBits(
+                    temp_ptr->reqFlags));
                 dep_pkt.set_p_addr(temp_ptr->physAddr);
                 // If tracing of virtual addresses is enabled, set the optional
                 // field for it

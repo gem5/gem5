@@ -366,7 +366,8 @@ AMDGPUNbio::processPspCommand(uint32_t new_wptr)
                                        ctx->name);
 
     gpuDevice->getMemMgr()->readRequest(frame_addr, (uint8_t *)&ctx->frame,
-                                        sizeof(PspGfxRbFrame), 0, cb);
+                                        sizeof(PspGfxRbFrame),
+                                        Request::Flags(), cb);
 }
 
 void
@@ -407,7 +408,8 @@ AMDGPUNbio::readCmdBufferAndProcess(PspCommandContext *ctx)
                                        ctx->name);
 
     gpuDevice->getMemMgr()->readRequest(ctx->cmd_buf_addr, ctx->cmd_buffer,
-                                        PSP_CMD_BUFFER_MAX_SIZE, 0,
+                                        PSP_CMD_BUFFER_MAX_SIZE,
+                                        Request::Flags(),
                                         cb); // Blocking functional read
 }
 void
@@ -501,10 +503,10 @@ AMDGPUNbio::CmdBufferAndProcessDone(PspCommandContext *ctx)
     auto cb =
         new EventFunctionWrapper([=] { fenceWriteDone(ctx); }, ctx->name);
 
-    gpuDevice->getMemMgr()->writeRequest(ctx->fence_addr,
-                                         (uint8_t *)&ctx->fence_value,
-                                         sizeof(ctx->fence_value), 0,
-                                         cb); // Blocking functional write
+    gpuDevice->getMemMgr()->writeRequest(
+        ctx->fence_addr, (uint8_t *)&ctx->fence_value,
+        sizeof(ctx->fence_value), Request::Flags(),
+        cb); // Blocking functional write
 }
 
 void

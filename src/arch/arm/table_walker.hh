@@ -1212,7 +1212,7 @@ class WalkUnit : public ClockedObject
             ThreadContext *tc, BaseMMU::Mode mode);
 
         void
-        setVirt(Addr vaddr, int size, Request::Flags flags,
+        setVirt(Addr vaddr, int size, const Request::Flags &flags,
                 int requestorId)
         {
             numBytes = size;
@@ -1223,12 +1223,12 @@ class WalkUnit : public ClockedObject
     };
 
     Fault readDataUntimed(ThreadContext *tc, Addr vaddr, Addr desc_addr,
-                          uint8_t *data, int num_bytes, Request::Flags flags,
-                          BaseMMU::Mode mode, MMU::ArmTranslationType tran_type,
-                          bool functional);
+                          uint8_t *data, int num_bytes,
+                          const Request::Flags &flags, BaseMMU::Mode mode,
+                          MMU::ArmTranslationType tran_type, bool functional);
     void readDataTimed(ThreadContext *tc, Addr desc_addr,
                        Stage2Walk *translation, int num_bytes,
-                       Request::Flags flags);
+                       const Request::Flags &flags);
 
     /** Timing mode: saves the currState into the stateQueues */
     void stashCurrState(WalkerState *state, int queue_idx);
@@ -1380,7 +1380,7 @@ class WalkUnit : public ClockedObject
     Event* LongDescEventByLevel[4];
 
     void fetchDescriptor(Addr desc_addr, DescriptorBase &descriptor,
-                         int num_bytes, Request::Flags flags,
+                         int num_bytes, const Request::Flags &flags,
                          LookupLevel lookup_lvl, Event *event,
                          void (WalkUnit::*doDescriptor)(WalkerState *state),
                          WalkerState *state);

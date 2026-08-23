@@ -169,7 +169,7 @@ AMDGPUSystemHub::AtomicResponseEvent::process()
 
     // Create a new write packet which will be modifed then written
     RequestPtr write_req = std::make_shared<Request>(
-        pkt->getAddr(), pkt->getSize(), 0, pkt->requestorId());
+        pkt->getAddr(), pkt->getSize(), Request::Flags(), pkt->requestorId());
 
     PacketPtr write_pkt = Packet::createWrite(write_req);
     uint8_t *write_data = new uint8_t[pkt->getSize()];

@@ -141,12 +141,16 @@ BaseMMU::finalizePhysical(const RequestPtr &req, ThreadContext *tc,
     return getTlb(mode)->finalizePhysical(req, tc, mode);
 }
 
-BaseMMU::MMUTranslationGen::MMUTranslationGen(Addr page_bytes,
-        Addr new_start, Addr new_size, ThreadContext *new_tc,
-        BaseMMU *new_mmu, BaseMMU::Mode new_mode, Request::Flags new_flags) :
-    TranslationGen(new_start, new_size), tc(new_tc), cid(tc->contextId()),
-    mmu(new_mmu), mode(new_mode), flags(new_flags),
-    pageBytes(page_bytes)
+BaseMMU::MMUTranslationGen::MMUTranslationGen(
+    Addr page_bytes, Addr new_start, Addr new_size, ThreadContext *new_tc,
+    BaseMMU *new_mmu, BaseMMU::Mode new_mode, const Request::Flags &new_flags)
+    : TranslationGen(new_start, new_size),
+      tc(new_tc),
+      cid(tc->contextId()),
+      mmu(new_mmu),
+      mode(new_mode),
+      flags(new_flags),
+      pageBytes(page_bytes)
 {}
 
 void

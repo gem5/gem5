@@ -163,7 +163,8 @@ InstPBTrace::traceInst(ThreadContext *tc, StaticInstPtr si,
 }
 
 void
-InstPBTrace::traceMem(StaticInstPtr si, Addr a, Addr s, unsigned f)
+InstPBTrace::traceMem(StaticInstPtr si, Addr a, Addr s,
+                      const Request::Flags &f)
 {
     panic_if(!curMsg, "Memory access w/o msg?!");
 
@@ -173,8 +174,7 @@ InstPBTrace::traceMem(StaticInstPtr si, Addr a, Addr s, unsigned f)
     ProtoMessage::Inst::MemAccess *mem_msg = curMsg->add_mem_access();
     mem_msg->set_addr(a);
     mem_msg->set_size(s);
-    mem_msg->set_mem_flags(f);
-
+    mem_msg->set_mem_flags(Request::Flags::LegacyAdaptor::flagsToBits(f));
 }
 
 } // namespace trace

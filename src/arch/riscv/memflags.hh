@@ -36,34 +36,31 @@ namespace gem5
 
 namespace RiscvISA {
 
-    // We can only utilize the lower 8 bits of a
-    // 64-bit value to encode these.
-    // see src/mem/request.hh ARCH_BITS
-    // Lower 3 bits are already used in mmu.hh
-    // for alignment flags
-    enum XlateFlags
-    {
-        // Some mmu accesses must be handled
-        // in a special manner.
-        // We use these flags to signal this fact.
+// These flags are stored separately from Request::FlagsType values.
+// Lower 3 bits are already used in mmu.hh for alignment flags.
+enum XlateFlags
+{
+    // Some mmu accesses must be handled
+    // in a special manner.
+    // We use these flags to signal this fact.
 
-        // Signal a hypervisor load that checks the
-        // executable permission instead of readable
-        // (i.e. can load from executable memory that might not
-        // be readable)
-        HLVX = 1ULL << 3,
+    // Signal a hypervisor load that checks the
+    // executable permission instead of readable
+    // (i.e. can load from executable memory that might not
+    // be readable)
+    HLVX = 1ULL << 3,
 
-        // Force virtualization on
-        // This is needed to forcefully enable two-stage translation
-        // for hypervisor special instructions (e.g. HLV)
-        // These are executed in non-virtualized mode (HS)
-        // but the mmu must treat the translation as if
-        // virtualization is enabled.
-        FORCE_VIRT = 1ULL << 4,
+    // Force virtualization on
+    // This is needed to forcefully enable two-stage translation
+    // for hypervisor special instructions (e.g. HLV)
+    // These are executed in non-virtualized mode (HS)
+    // but the mmu must treat the translation as if
+    // virtualization is enabled.
+    FORCE_VIRT = 1ULL << 4,
 
-        // Signal a Load Reserved access
-        LR = 1ULL << 5,
-    };
+    // Signal a Load Reserved access
+    LR = 1ULL << 5,
+};
 
 } // namespace RiscvISA
 } // namespace gem5

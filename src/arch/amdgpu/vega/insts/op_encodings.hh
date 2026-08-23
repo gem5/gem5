@@ -1216,8 +1216,8 @@ class Inst_MUBUF : public VEGAGPUStaticInst
         gpuDynInst->resetEntireStatusVector();
         gpuDynInst->setStatusVector(0, 1);
         RequestPtr req = std::make_shared<Request>(
-            0, 0, 0, gpuDynInst->computeUnit()->requestorId(), 0,
-            gpuDynInst->wfDynId);
+            0, 0, Request::Flags(), gpuDynInst->computeUnit()->requestorId(),
+            0, gpuDynInst->wfDynId);
         gpuDynInst->setRequestFlags(req);
         gpuDynInst->computeUnit()->injectGlobalMemFence(gpuDynInst, false,
                                                         req);

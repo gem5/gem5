@@ -83,8 +83,8 @@ class BaseGen
      * @param cmd Memory command to send
      * @param flags Optional request flags
      */
-    PacketPtr getPacket(Addr addr, unsigned size, const MemCmd& cmd,
-                        Request::FlagsType flags = 0);
+    PacketPtr getPacket(Addr addr, unsigned size, const MemCmd &cmd,
+                        const Request::Flags &flags = {});
 
   public:
 

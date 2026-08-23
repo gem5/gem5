@@ -52,8 +52,8 @@ BaseGen::BaseGen(SimObject &obj, RequestorID requestor_id, Tick _duration)
 }
 
 PacketPtr
-BaseGen::getPacket(Addr addr, unsigned size, const MemCmd& cmd,
-                   Request::FlagsType flags)
+BaseGen::getPacket(Addr addr, unsigned size, const MemCmd &cmd,
+                   const Request::Flags &flags)
 {
     // Create new request
     RequestPtr req = std::make_shared<Request>(addr, size, flags,

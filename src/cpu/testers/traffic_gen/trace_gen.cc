@@ -83,7 +83,10 @@ TraceGen::InputStream::read(TraceElement& element)
         element.addr = pkt_msg.addr();
         element.blocksize = pkt_msg.size();
         element.tick = pkt_msg.tick();
-        element.flags = pkt_msg.has_flags() ? pkt_msg.flags() : 0;
+        element.flags =
+            pkt_msg.has_flags()
+                ? Request::Flags::LegacyAdaptor::flagsFromBits(pkt_msg.flags())
+                : Request::Flags();
         return true;
     }
 
@@ -142,11 +145,9 @@ TraceGen::getNextPacket()
     assert(currElement.isValid());
 
     DPRINTF(TrafficGen, "TraceGen::getNextPacket: %c %d %d %d 0x%x\n",
-            currElement.cmd.isRead() ? 'r' : 'w',
-            currElement.addr,
-            currElement.blocksize,
-            currElement.tick,
-            currElement.flags);
+            currElement.cmd.isRead() ? 'r' : 'w', currElement.addr,
+            currElement.blocksize, currElement.tick,
+            Request::Flags::LegacyAdaptor::flagsToBits(currElement.flags));
 
     PacketPtr pkt = getPacket(currElement.addr + addrOffset,
                               currElement.blocksize,

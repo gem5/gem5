@@ -73,7 +73,7 @@ class TranslationGen
 
         Addr paddr = 0;
         // PTEs can also set the Secure/non-secure bit, so it is stored here.
-        Request::Flags flags = 0;
+        Request::Flags flags = {};
         Fault fault = NoFault;
     };
 

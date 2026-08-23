@@ -46,12 +46,11 @@ class MemOp : public PowerStaticInst
   protected:
 
     /// Memory request flags.  See mem_req_base.hh.
-    unsigned memAccessFlags;
+    Request::Flags memAccessFlags;
 
     /// Constructor
     MemOp(const char *mnem, MachInst _machInst, OpClass __opClass)
-      : PowerStaticInst(mnem, _machInst, __opClass),
-        memAccessFlags(0)
+        : PowerStaticInst(mnem, _machInst, __opClass), memAccessFlags()
     {
     }
 

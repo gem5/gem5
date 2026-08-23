@@ -138,9 +138,9 @@ CheckerCPU::unserialize(CheckpointIn &cp)
 
 RequestPtr
 CheckerCPU::genMemFragmentRequest(Addr frag_addr, int size,
-                                  Request::Flags flags,
-                                  const std::vector<bool>& byte_enable,
-                                  int& frag_size, int& size_left) const
+                                  const Request::Flags &flags,
+                                  const std::vector<bool> &byte_enable,
+                                  int &frag_size, int &size_left) const
 {
     frag_size = std::min(
         cacheLineSize() - addrBlockOffset(frag_addr, cacheLineSize()),
@@ -165,8 +165,8 @@ CheckerCPU::genMemFragmentRequest(Addr frag_addr, int size,
 
 Fault
 CheckerCPU::readMem(Addr addr, uint8_t *data, unsigned size,
-                    Request::Flags flags,
-                    const std::vector<bool>& byte_enable)
+                    const Request::Flags &flags,
+                    const std::vector<bool> &byte_enable)
 {
     assert(byte_enable.size() == size);
 
@@ -238,9 +238,9 @@ CheckerCPU::readMem(Addr addr, uint8_t *data, unsigned size,
     }
 
     if (!flags_match) {
-        warn("%lli: Flags do not match CPU:%#x %#x %#x Checker:%#x %#x %#x\n",
+        warn("%lli: Flags do not match CPU:%#x %#x %s Checker:%#x %#x %s\n",
              curTick(), unverifiedReq->getVaddr(), unverifiedReq->getPaddr(),
-             unverifiedReq->getFlags(), frag_addr, pAddr, flags);
+             unverifiedReq->getFlags().bits(), frag_addr, pAddr, flags.bits());
         handleError();
     }
 
@@ -248,9 +248,9 @@ CheckerCPU::readMem(Addr addr, uint8_t *data, unsigned size,
 }
 
 Fault
-CheckerCPU::writeMem(uint8_t *data, unsigned size,
-                     Addr addr, Request::Flags flags, uint64_t *res,
-                     const std::vector<bool>& byte_enable)
+CheckerCPU::writeMem(uint8_t *data, unsigned size, Addr addr,
+                     const Request::Flags &flags, uint64_t *res,
+                     const std::vector<bool> &byte_enable)
 {
     assert(byte_enable.size() == size);
 
@@ -306,9 +306,9 @@ CheckerCPU::writeMem(uint8_t *data, unsigned size,
    }
 
    if (!flags_match) {
-       warn("%lli: Flags do not match CPU:%#x %#x Checker:%#x %#x %#x\n",
+       warn("%lli: Flags do not match CPU:%#x %#x %s Checker:%#x %#x %s\n",
             curTick(), unverifiedReq->getVaddr(), unverifiedReq->getPaddr(),
-            unverifiedReq->getFlags(), frag_addr, pAddr, flags);
+            unverifiedReq->getFlags().bits(), frag_addr, pAddr, flags.bits());
        handleError();
    }
 
@@ -332,7 +332,7 @@ CheckerCPU::writeMem(uint8_t *data, unsigned size,
    // If the request is to ZERO a cache block, there is no data to check
    // against, but it's all zero. We need something to compare to, so use a
    // const set of zeros.
-   if (flags & Request::STORE_NO_DATA) {
+   if (flags.isSet(Request::STORE_NO_DATA)) {
        assert(!data);
        assert(sizeof(zero_data) <= size);
        data = zero_data;
@@ -354,15 +354,14 @@ CheckerCPU::writeMem(uint8_t *data, unsigned size,
  */
 bool
 CheckerCPU::checkFlags(const RequestPtr &unverified_req, Addr vAddr,
-                       Addr pAddr, int flags)
+                       Addr pAddr, const Request::Flags &flags)
 {
     Addr unverifiedVAddr = unverified_req->getVaddr();
     Addr unverifiedPAddr = unverified_req->getPaddr();
-    int unverifiedFlags = unverified_req->getFlags();
+    Request::Flags unverifiedFlags = unverified_req->getFlags();
 
-    if (unverifiedVAddr != vAddr ||
-        unverifiedPAddr != pAddr ||
-        unverifiedFlags != flags) {
+    if (unverifiedVAddr != vAddr || unverifiedPAddr != pAddr ||
+        unverifiedFlags.bits() != flags.bits()) {
         return false;
     }
 

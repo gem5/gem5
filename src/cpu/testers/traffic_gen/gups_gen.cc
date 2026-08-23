@@ -107,7 +107,8 @@ GUPSGen::indexToAddr (uint64_t index)
 PacketPtr
 GUPSGen::getReadPacket(Addr addr, unsigned int size)
 {
-    RequestPtr req = std::make_shared<Request>(addr, size, 0, requestorId);
+    RequestPtr req =
+        std::make_shared<Request>(addr, size, Request::Flags(), requestorId);
     // Dummy PC to have PC-based prefetchers latch on; get entropy into higher
     // bits
     req->setPC(((Addr)requestorId) << 2);
@@ -122,8 +123,8 @@ GUPSGen::getReadPacket(Addr addr, unsigned int size)
 PacketPtr
 GUPSGen::getWritePacket(Addr addr, unsigned int size, uint8_t *data)
 {
-    RequestPtr req = std::make_shared<Request>(addr, size, 0,
-                                               requestorId);
+    RequestPtr req =
+        std::make_shared<Request>(addr, size, Request::Flags(), requestorId);
     // Dummy PC to have PC-based prefetchers latch on; get entropy into higher
     // bits
     req->setPC(((Addr)requestorId) << 2);

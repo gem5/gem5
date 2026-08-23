@@ -194,7 +194,7 @@ void
 DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
                    uint8_t *data, std::optional<uint32_t> sid,
                    std::optional<uint32_t> ssid, Tick delay,
-                   Request::Flags flag)
+                   const Request::Flags &flag)
 {
     DPRINTF(DMA, "Starting DMA for addr: %#x size: %d sched: %d\n", addr, size,
             event ? event->scheduled() : -1);
@@ -214,7 +214,7 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
 
 void
 DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
-                   uint8_t *data, Tick delay, Request::Flags flag)
+                   uint8_t *data, Tick delay, const Request::Flags &flag)
 {
     dmaAction(cmd, addr, size, event, data,
               defaultSid, defaultSSid, delay, flag);
@@ -429,12 +429,13 @@ DmaDevice::getPort(const std::string &if_name, PortID idx)
     return PioDevice::getPort(if_name, idx);
 }
 
-DmaReadFifo::DmaReadFifo(DmaPort &_port, size_t size,
-                         unsigned max_req_size,
-                         unsigned max_pending,
-                         Request::Flags flags)
-    : maxReqSize(max_req_size), fifoSize(size),
-      reqFlags(flags), port(_port), cacheLineSize(port.sys->cacheLineSize()),
+DmaReadFifo::DmaReadFifo(DmaPort &_port, size_t size, unsigned max_req_size,
+                         unsigned max_pending, const Request::Flags &flags)
+    : maxReqSize(max_req_size),
+      fifoSize(size),
+      reqFlags(flags),
+      port(_port),
+      cacheLineSize(port.sys->cacheLineSize()),
       buffer(size)
 {
     freeRequests.resize(max_pending);
