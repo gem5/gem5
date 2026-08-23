@@ -56,8 +56,7 @@ with gem5_scons.Configure(main) as conf:
     if conf.env['CONF']['HAVE_PNG']:
         conf.env.TagImplies('png', 'gem5 lib')
     else:
-        warning("Header file <png.h> not found.\n"
-                "This host has no libpng 1.6 or newer library.\n"
+        warning("libpng 1.6 or newer was not found.\n"
                 "Disabling support for PNG framebuffers.")
 
     conf.env['CONF']['HAVE_POSIX_CLOCK'] = \
