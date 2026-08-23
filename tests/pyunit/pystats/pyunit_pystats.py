@@ -45,7 +45,7 @@ def _get_mock_simstat() -> SimStat:
     most of the different types of values that can be stored in a Statistic.
     """
     simobject_vector_group = SimObjectVectorGroup(
-        value=[
+        children=[
             SimObjectGroup(
                 **{
                     "vector2d": Vector2d(
@@ -159,6 +159,21 @@ class NavigatingPyStatsTestCase(unittest.TestCase):
         self.assertTrue(hasattr(self.simstat.simobject_vector[0], "vector2d"))
         self.assertIsInstance(
             self.simstat.simobject_vector[0].vector2d, Vector2d
+        )
+
+    def test_simobject_group_children_predicate_uses_name(self):
+        group = self.simstat.simobject_vector[0]
+        self.assertEqual(
+            [group.vector2d],
+            group.children(lambda name: name == "vector2d"),
+        )
+
+    def test_simobject_vector_navigation(self):
+        vector = self.simstat.simobject_vector
+        self.assertEqual(list(vector), [vector[0], vector[1]])
+        self.assertEqual(
+            [vector[0].vector2d],
+            vector.children(lambda name: name == "vector2d"),
         )
 
     def test_vector2d_index(self):
