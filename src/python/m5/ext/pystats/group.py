@@ -86,9 +86,9 @@ class Group(AbstractStat):
         recursive: bool = False,
     ) -> list["AbstractStat"]:
         to_return = []
-        for key, obj in self.values:
+        for key, obj in self.values.items():
             if isinstance(obj, AbstractStat):
-                if (predicate and predicate(obj)) or not predicate:
+                if (predicate and predicate(key)) or not predicate:
                     to_return.append(obj)
                 if recursive:
                     to_return = to_return + obj.children(
@@ -106,7 +106,10 @@ class Group(AbstractStat):
         try:
             return self.values[name]
         except KeyError:
-            raise AttributeError(name)
+            vector_item = self._get_vector_item(name)
+            if vector_item:
+                return vector_item[2]
+            raise AttributeError(name) from None
 
     def __setattr__(self, name, value):
         # Let normal attributes be handled normally
@@ -145,17 +148,16 @@ class SimObjectVectorGroup(Group):
         super().__init__(type="SimObjectVector", **kwargs)
 
     def __iter__(self):
-        return iter(self.values)
+        return iter(self.values["value"])
 
     def __len__(self):
-        return len(self.values)
+        return len(self.values["value"])
 
     def __getitem__(self, item: int):
-        return self.values[item]
+        return self.values["value"][item]
 
     def __contains__(self, item):
-        if isinstance(item, int):
-            return item >= 0 and item < len(self)
+        return isinstance(item, int) and 0 <= item < len(self)
 
     def children(
         self,
@@ -163,7 +165,7 @@ class SimObjectVectorGroup(Group):
         recursive: bool = False,
     ) -> list["AbstractStat"]:
         to_return = []
-        for child in self.values:
+        for child in self.values["value"]:
             to_return = to_return + child.children(
                 predicate=predicate, recursive=recursive
             )
