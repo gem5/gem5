@@ -207,7 +207,7 @@ let {{
                 Request::STRICT_ORDER|Request::TLBI_SYNC;
 
             if (!PendingDvm) {
-                memAccessFlags = memAccessFlags | Request::NO_ACCESS;
+                memAccessFlags.set(Request::NO_ACCESS);
             }
 
             fault = xc->initiateMemMgmtCmd(memAccessFlags);
