@@ -165,7 +165,8 @@ namespace RiscvISA
             std::string name() const {return walker->name();}
 
           private:
-            Fault checkPTEPermissions(PTE pte, WalkFlags &stepWalkFlags,
+            // Mutates pte's access (a) and dirty (d) bits.
+            Fault checkPTEPermissions(PTE& pte, WalkFlags &stepWalkFlags,
                                       int level);
             Addr setupWalk(Addr vaddr);
             Fault stepWalk(PacketPtr &write);
