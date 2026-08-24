@@ -1,3 +1,4 @@
+# -*- mode:python -*-
 # Copyright (c) 2026 Arm Limited
 # All rights reserved.
 #
@@ -33,75 +34,61 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import re
 
-from testlib import (
-    absdirpath,
-    constants,
-    joinpath,
-    verifier,
+from m5.params import *
+from m5.SimObject import (
+    PyBindMethod,
+    SimObject,
 )
 
-from gem5.suite import gem5_verify_config
 
-gem5_verify_config(
-    name="chi-tlm-read-shared",
-    fixtures=(),
-    verifiers=(),
-    config=joinpath(absdirpath(__file__), "configs", "ruby_mem_test.py"),
-    config_args=[
-        joinpath(
-            absdirpath(__file__),
-            "configs",
-            "suites",
-            "read_shared_unit.py",
-        ),
-        "--abs-max-tick",
-        "1000000",
-    ],
-    valid_isas=(constants.all_compiled_tag,),
-    valid_hosts=constants.supported_hosts,
-    length=constants.quick_tag,
-)
+class SnoopHandler(SimObject):
+    abstract = True
+    type = "SnoopHandler"
+    cxx_header = "mem/ruby/protocol/chi/tlm/snp_handler.hh"
+    cxx_class = "gem5::tlm::chi::SnoopHandler"
 
-gem5_verify_config(
-    name="chi-tlm-write-unique",
-    fixtures=(),
-    verifiers=(),
-    config=joinpath(absdirpath(__file__), "configs", "ruby_mem_test.py"),
-    config_args=[
-        joinpath(
-            absdirpath(__file__),
-            "configs",
-            "suites",
-            "write_unique_unit.py",
-        ),
-        "--abs-max-tick",
-        "1000000",
-    ],
-    valid_isas=(constants.all_compiled_tag,),
-    valid_hosts=constants.supported_hosts,
-    length=constants.quick_tag,
-)
 
-gem5_verify_config(
-    name="chi-tlm-snp-shared",
-    fixtures=(),
-    verifiers=(),
-    config=joinpath(absdirpath(__file__), "configs", "ruby_mem_test.py"),
-    config_args=[
-        joinpath(
-            absdirpath(__file__),
-            "configs",
-            "suites",
-            "snp_shared_unit.py",
-        ),
-        "--num-cpus",
-        "2",
-        "--abs-max-tick",
-        "1000000",
-    ],
-    valid_isas=(constants.all_compiled_tag,),
-    valid_hosts=constants.supported_hosts,
-    length=constants.quick_tag,
-)
+class PySnoopHandler(SnoopHandler):
+    type = "PySnoopHandler"
+    cxx_header = "mem/ruby/protocol/chi/tlm/py_snoop_handler.hh"
+    cxx_class = "gem5::tlm::chi::PySnoopHandler"
+
+    cxx_exports = [PyBindMethod("addSnoop")]
+
+    discard_after_snoop = Param.Bool(
+        True,
+        "Discard a programmed transaction once callbacks have run for a "
+        "matching snoop",
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._snoop_transactions = []
+        self._cc_initialized = False
+
+    def add_snoop(self, address):
+        from m5.tlm_chi.utils import (
+            Channel,
+            Resp,
+            RspOpcode,
+            SnoopResponse,
+            TlmPhase,
+        )
+
+        phase = TlmPhase()
+        phase.channel = Channel.RSP
+        phase.opcode = RspOpcode.SNP_RESP
+        phase.resp = Resp.RESP_I
+
+        transaction = SnoopResponse(phase)
+        self._snoop_transactions.append((address, transaction))
+        if self._cc_initialized:
+            self.getCCObject().addSnoop(address, transaction)
+        return transaction
+
+    def createCCObject(self):
+        super().createCCObject()
+        for address, transaction in self._snoop_transactions:
+            self.getCCObject().addSnoop(address, transaction)
+        self._cc_initialized = True

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 Arm Limited
+ * Copyright (c) 2024-2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -39,6 +39,7 @@
 #include <ARM/TLM/arm_chi_phase.h>
 
 #include "mem/ruby/protocol/chi/tlm/generator.hh"
+#include "mem/ruby/protocol/chi/tlm/snp_handler.hh"
 // This is required by Transaction::expect
 #include "pybind11/functional.h"
 #include "python/pybind11/pybind.hh"
@@ -106,6 +107,10 @@ tlm_chi_generator_pybind(pybind11::module_ &m_tlm_chi)
                                &tlm::chi::TlmGenerator::Transaction::payload)
         .def_property_readonly("start",
                                &tlm::chi::TlmGenerator::Transaction::start);
+
+    py::class_<tlm::chi::SnoopResponse, tlm::chi::TlmGenerator::Transaction>(
+        tlm_chi_gen, "SnoopResponse")
+        .def(py::init<Phase &>());
 }
 
 EmbeddedPyBind embed_("tlm_chi_gen", &tlm_chi_generator_pybind, "tlm_chi");
