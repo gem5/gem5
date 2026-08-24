@@ -906,6 +906,9 @@ class LSQ
 
     RequestPort &getDataPort() { return dcachePort; }
 
+    /** Split alignment used by transferNeedsBurst / SplitDataRequest. */
+    unsigned splitGrain(const DynInstPtr &inst) const;
+
     void sendRetryResp();
 
   protected:
@@ -958,6 +961,8 @@ class LSQ
     unsigned LQEntries;
     /** Total Size of SQ Entries. */
     unsigned SQEntries;
+    /** 0 uses the cache line. See BaseO3CPU.vecMemPackWidth. */
+    const unsigned vecMemPackWidth;
 
     /** Max LQ Size - Used to Enforce Sharing Policies. */
     unsigned maxLQEntries;

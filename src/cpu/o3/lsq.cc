@@ -61,6 +61,7 @@
 #include "cpu/o3/iew.hh"
 #include "cpu/o3/limits.hh"
 #include "cpu/o3/lsq_unit.hh"
+#include "cpu/o3/vec_mem_pack.hh"
 #include "cpu/thread_context.hh"
 #include "cpu/utils.hh"
 #include "debug/Drain.hh"
@@ -134,6 +135,7 @@ LSQ::LSQ(CPU *cpu_ptr, IEW *iew_ptr, const BaseO3CPUParams &params)
       lsqPolicy(params.smtLSQPolicy),
       LQEntries(params.LQEntries),
       SQEntries(params.SQEntries),
+      vecMemPackWidth(params.vecMemPackWidth),
       maxLQEntries(maxLSQAllocation(lsqPolicy, LQEntries, params.numThreads,
                   params.smtLSQThreshold)),
       maxSQEntries(maxLSQAllocation(lsqPolicy, SQEntries, params.numThreads,
@@ -150,6 +152,11 @@ LSQ::LSQ(CPU *cpu_ptr, IEW *iew_ptr, const BaseO3CPUParams &params)
       retryRespEvent([this]{ sendRetryResp(); }, name())
 {
     assert(numThreads > 0 && numThreads <= MaxThreads);
+
+    fatal_if(vecMemPackWidth != 0 &&
+             (vecMemPackWidth & (vecMemPackWidth - 1)) != 0,
+             "vecMemPackWidth must be 0 or a power of two, got %u",
+             vecMemPackWidth);
 
     //**********************************************
     //************ Handle SMT Parameters ***********
@@ -190,6 +197,13 @@ std::string
 LSQ::name() const
 {
     return iewStage->name() + ".lsq";
+}
+
+unsigned
+LSQ::splitGrain(const DynInstPtr &inst) const
+{
+    return vecMemSplitGrain(vecMemPackWidth, cpu->cacheLineSize(),
+                            inst->opClass());
 }
 
 void
@@ -770,8 +784,8 @@ LSQ::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
     [[maybe_unused]] bool isAtomic = !isLoad && amo_op;
 
     ThreadID tid = cpu->contextToThread(inst->contextId());
-    auto cacheLineSize = cpu->cacheLineSize();
-    bool needs_burst = transferNeedsBurst(addr, size, cacheLineSize);
+    const unsigned split_grain = splitGrain(inst);
+    bool needs_burst = transferNeedsBurst(addr, size, split_grain);
     LSQRequest* request = nullptr;
 
     // Atomic requests that access data across cache line boundary are
@@ -812,6 +826,10 @@ LSQ::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
         inst->getFault() = NoFault;
 
         request->initiateTranslation();
+
+        if (vecMemPackWidth != 0 && isVecMemPackable(inst->opClass())) {
+            thread[tid]->recordVecMemPack(request->_reqs.size());
+        }
     }
 
     /* This is the place were instructions get the effAddr. */
@@ -971,10 +989,10 @@ SplitDataRequest::mainReq()
 void
 SplitDataRequest::initiateTranslation()
 {
-    auto cacheLineSize = _port.cacheLineSize();
+    const unsigned grain = _port.splitGrain(_inst);
     Addr base_addr = _addr;
-    Addr next_addr = addrBlockAlign(_addr + cacheLineSize, cacheLineSize);
-    Addr final_addr = addrBlockAlign(_addr + _size, cacheLineSize);
+    Addr next_addr = addrBlockAlign(_addr + grain, grain);
+    Addr final_addr = addrBlockAlign(_addr + _size, grain);
     uint32_t size_so_far = 0;
 
     _mainReq = std::make_shared<Request>(base_addr,
@@ -999,11 +1017,11 @@ SplitDataRequest::initiateTranslation()
     base_addr = next_addr;
     while (base_addr != final_addr) {
         auto it_start = _byteEnable.begin() + size_so_far;
-        auto it_end = _byteEnable.begin() + size_so_far + cacheLineSize;
-        addReq(base_addr, cacheLineSize,
+        auto it_end = _byteEnable.begin() + size_so_far + grain;
+        addReq(base_addr, grain,
                          std::vector<bool>(it_start, it_end));
-        size_so_far += cacheLineSize;
-        base_addr += cacheLineSize;
+        size_so_far += grain;
+        base_addr += grain;
     }
 
     /* Deal with the tail. */
