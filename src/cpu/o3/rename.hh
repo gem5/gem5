@@ -243,6 +243,14 @@ class Rename
      */
     bool unblock(ThreadID tid);
 
+    /** Releases decode from a stall this stage previously signalled.
+     * If the block signal for this cycle has not been picked up yet it is
+     * simply retracted, otherwise an unblock is sent. Doing nothing when
+     * decode is already running is what keeps the block/unblock signals
+     * strictly paired.
+     */
+    void releaseUpstream(ThreadID tid);
+
     /** Executes actual squash, removing squashed instructions. */
     void doSquash(const InstSeqNum &squash_seq_num, ThreadID tid);
 
@@ -424,6 +432,14 @@ class Rename
     /** Tracks which stages are telling decode to stall. */
     Stalls stalls[MaxThreads];
 
+    /** Tracks whether decode has been told that rename is blocked.
+     * The unblock signal is sent early, while rename is still draining its
+     * skid buffer, so the stage status is no longer a proxy for what decode
+     * believes. Keeping this explicit is what prevents rename from either
+     * losing a block signal or asserting both signals in the same cycle.
+     */
+    bool upstreamStalled[MaxThreads];
+
     /** The serialize instruction that rename has stalled on. */
     DynInstPtr serializeInst[MaxThreads];
 
@@ -440,6 +456,12 @@ class Rename
 
     /** Delay between commit and rename, in ticks. */
     unsigned commitToRenameDelay;
+
+    /** Delay between rename and decode, in ticks. Together with
+     * decodeToRenameDelay this forms the round trip of the block/unblock
+     * signals.
+     */
+    Cycles renameToDecodeDelay;
 
     /** Rename width, in instructions. */
     unsigned renameWidth;
@@ -461,6 +483,13 @@ class Rename
 
     /** The maximum skid buffer size. */
     unsigned skidBufferMax;
+
+    /** Skid buffer occupancy at or below which decode is signalled to
+     * unblock. Releasing decode early compensates for the round trip of the
+     * block/unblock signals, so decode's instructions arrive just as the
+     * skid buffer runs dry instead of one or more cycles later.
+     */
+    unsigned earlyUnblockThreshold;
 
     /** Enum to record the source of a structure full stall.  Can come from
      * either ROB, IQ, LSQ, and it is priortized in that order.

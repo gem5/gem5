@@ -97,6 +97,7 @@ IEW::IEW(CPU *_cpu, const BaseO3CPUParams &params)
       commitToIEWDelay(params.commitToIEWDelay),
       renameToIEWDelay(params.renameToIEWDelay),
       issueToExecuteDelay(params.issueToExecuteDelay),
+      iewToRenameDelay(params.iewToRenameDelay),
       dispatchWidth(params.dispatchWidth),
       issueWidth(params.issueWidth),
       wbNumInst(0),
@@ -134,11 +135,30 @@ IEW::IEW(CPU *_cpu, const BaseO3CPUParams &params)
     for (ThreadID tid = 0; tid < MaxThreads; tid++) {
         dispatchStatus[tid] = Running;
         fetchRedirect[tid] = false;
+        upstreamStalled[tid] = false;
     }
 
     updateLSQNextCycle = false;
 
-    skidBufferMax = (renameToIEWDelay + 1) * params.renameWidth;
+    // The skid buffer has to absorb every instruction rename can still send
+    // while a block signal is in flight, which spans the whole
+    // rename -> IEW -> rename round trip. Rename is the producer here, so
+    // its width is the relevant bandwidth.
+    const unsigned round_trip = renameToIEWDelay + iewToRenameDelay;
+    skidBufferMax = (round_trip ? round_trip : 1) * params.renameWidth;
+    // Rename's instructions land round_trip cycles after the unblock signal
+    // is sent, so the skid buffer needs to keep dispatch busy for all but
+    // that last cycle. Anything larger would risk overflowing the skid
+    // buffer.
+    earlyUnblockThreshold =
+        params.earlyUnblock
+            ? (round_trip ? round_trip - 1 : 0) * params.renameWidth
+            : 0;
+
+    fatal_if(earlyUnblockThreshold + params.renameWidth > skidBufferMax,
+             "IEW skid buffer (%u) cannot hold the early unblock "
+             "threshold (%u) plus one cycle of rename bandwidth (%u)\n",
+             skidBufferMax, earlyUnblockThreshold, params.renameWidth);
 }
 
 std::string
@@ -328,6 +348,8 @@ IEW::clearStates(ThreadID tid)
         time_struct.iewBlock[tid] = false;
         time_struct.iewUnblock[tid] = false;
     }
+
+    upstreamStalled[tid] = false;
 }
 
 void
@@ -440,6 +462,11 @@ IEW::takeOverFrom()
     for (ThreadID tid = 0; tid < numThreads; tid++) {
         dispatchStatus[tid] = Running;
         fetchRedirect[tid] = false;
+        // Rename drops its stall latch in its own takeOverFrom, so the record
+        // of having stalled it has to go as well. Keeping it would make
+        // block() believe rename is already stalled and silently swallow the
+        // first block signal after the switch.
+        upstreamStalled[tid] = false;
     }
 
     updateLSQNextCycle = false;
@@ -539,9 +566,16 @@ IEW::block(ThreadID tid)
 {
     DPRINTF(IEW, "[tid:%i] Blocking.\n", tid);
 
-    if (dispatchStatus[tid] != Blocked &&
-        dispatchStatus[tid] != Unblocking) {
+    // An early unblock may already have been signalled in this same cycle.
+    // Retract it so rename never observes both signals at once.
+    toRename->iewUnblock[tid] = false;
+
+    // Only tell rename to stall if it does not already believe dispatch is
+    // blocked. The stage status cannot be used for this test: an early
+    // unblock releases rename while dispatch is still Blocked or Unblocking.
+    if (!upstreamStalled[tid]) {
         toRename->iewBlock[tid] = true;
+        upstreamStalled[tid] = true;
         wroteToTimeBuffer = true;
     }
 
@@ -558,14 +592,52 @@ IEW::unblock(ThreadID tid)
     DPRINTF(IEW, "[tid:%i] Reading instructions out of the skid "
             "buffer %u.\n",tid, tid);
 
-    // If the skid bufffer is empty, signal back to previous stages to unblock.
-    // Also switch status to running.
-    if (skidBuffer[tid].empty()) {
+    // A block decision taken earlier in this cycle wins. Rename must not be
+    // told to resume when dispatch has just stalled again.
+    if (toRename->iewBlock[tid]) {
+        return;
+    }
+
+    // Release rename as soon as the entries left in the skid buffer can keep
+    // dispatch busy until rename's instructions arrive. Waiting for the skid
+    // buffer to drain completely would leave a bubble as wide as the
+    // block/unblock round trip.
+    if (upstreamStalled[tid] &&
+        skidBuffer[tid].size() <= earlyUnblockThreshold) {
+        DPRINTF(IEW,
+                "[tid:%i] Unblocking rename, skid buffer size %u is "
+                "within the early unblock threshold %u.\n",
+                tid, skidBuffer[tid].size(), earlyUnblockThreshold);
+
         toRename->iewUnblock[tid] = true;
+        upstreamStalled[tid] = false;
         wroteToTimeBuffer = true;
+    }
+
+    // Dispatch is done unblocking only if the skid buffer is empty.
+    if (skidBuffer[tid].empty()) {
         DPRINTF(IEW, "[tid:%i] Done unblocking.\n",tid);
         dispatchStatus[tid] = Running;
     }
+}
+
+void
+IEW::releaseUpstream(ThreadID tid)
+{
+    if (!upstreamStalled[tid]) {
+        return;
+    }
+
+    if (toRename->iewBlock[tid]) {
+        // The block signal raised in this cycle has not been picked up by
+        // rename yet, so it can simply be retracted.
+        toRename->iewBlock[tid] = false;
+    } else {
+        toRename->iewUnblock[tid] = true;
+        wroteToTimeBuffer = true;
+    }
+
+    upstreamStalled[tid] = false;
 }
 
 void
@@ -775,11 +847,8 @@ IEW::checkSignalsAndUpdate(ThreadID tid)
     if (fromCommit->commitInfo[tid].squash) {
         squash(tid);
 
-        if (dispatchStatus[tid] == Blocked ||
-            dispatchStatus[tid] == Unblocking) {
-            toRename->iewUnblock[tid] = true;
-            wroteToTimeBuffer = true;
-        }
+        // The squash empties the skid buffer, so rename can be released.
+        releaseUpstream(tid);
 
         dispatchStatus[tid] = Squashing;
         fetchRedirect[tid] = false;

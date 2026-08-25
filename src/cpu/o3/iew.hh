@@ -262,6 +262,14 @@ class IEW
      */
     void unblock(ThreadID tid);
 
+    /** Releases rename from a stall this stage previously signalled.
+     * If the block signal for this cycle has not been picked up yet it is
+     * simply retracted, otherwise an unblock is sent. Doing nothing when
+     * rename is already running is what keeps the block/unblock signals
+     * strictly paired.
+     */
+    void releaseUpstream(ThreadID tid);
+
     /** Determines proper actions to take given Dispatch's status. */
     void dispatch(ThreadID tid);
 
@@ -392,6 +400,26 @@ class IEW
      * scheduled, and sent to a FU for execution.
      */
     Cycles issueToExecuteDelay;
+
+    /** IEW to rename delay. Together with renameToIEWDelay this forms the
+     * round trip of the block/unblock signals.
+     */
+    Cycles iewToRenameDelay;
+
+    /** Tracks whether rename has been told that dispatch is blocked.
+     * The unblock signal is sent early, while dispatch is still draining its
+     * skid buffer, so the stage status is no longer a proxy for what rename
+     * believes. Keeping this explicit is what prevents IEW from either
+     * losing a block signal or asserting both signals in the same cycle.
+     */
+    bool upstreamStalled[MaxThreads];
+
+    /** Skid buffer occupancy at or below which rename is signalled to
+     * unblock. Releasing rename early compensates for the round trip of the
+     * block/unblock signals, so rename's instructions arrive just as the
+     * skid buffer runs dry instead of one or more cycles later.
+     */
+    unsigned earlyUnblockThreshold;
 
     /** Width of dispatch, in instructions. */
     unsigned dispatchWidth;

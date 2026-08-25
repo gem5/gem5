@@ -84,6 +84,7 @@ Rename::Rename(CPU *_cpu, const BaseO3CPUParams &params)
       iewToRenameDelay(params.iewToRenameDelay),
       decodeToRenameDelay(params.decodeToRenameDelay),
       commitToRenameDelay(params.commitToRenameDelay),
+      renameToDecodeDelay(params.renameToDecodeDelay),
       renameWidth(params.renameWidth),
       numThreads(params.numThreads),
       stats(_cpu)
@@ -93,8 +94,26 @@ Rename::Rename(CPU *_cpu, const BaseO3CPUParams &params)
              "\tincrease MaxWidth in src/cpu/o3/limits.hh\n",
              renameWidth, static_cast<int>(MaxWidth));
 
-    // @todo: Make into a parameter.
-    skidBufferMax = (decodeToRenameDelay + 1) * params.decodeWidth;
+    // The skid buffer has to absorb every instruction decode can still send
+    // while a block signal is in flight, which spans the whole
+    // decode -> rename -> decode round trip. Decode is the producer here, so
+    // its width is the relevant bandwidth.
+    const unsigned round_trip = static_cast<unsigned>(decodeToRenameDelay) +
+                                static_cast<unsigned>(renameToDecodeDelay);
+    skidBufferMax = (round_trip ? round_trip : 1) * params.decodeWidth;
+    // Decode's instructions land round_trip cycles after the unblock signal
+    // is sent, so the skid buffer needs to keep rename busy for all but that
+    // last cycle. Anything larger would risk overflowing the skid buffer.
+    earlyUnblockThreshold =
+        params.earlyUnblock
+            ? (round_trip ? round_trip - 1 : 0) * params.decodeWidth
+            : 0;
+
+    fatal_if(earlyUnblockThreshold + params.decodeWidth > skidBufferMax,
+             "rename skid buffer (%u) cannot hold the early unblock "
+             "threshold (%u) plus one cycle of decode bandwidth (%u)\n",
+             skidBufferMax, earlyUnblockThreshold, params.decodeWidth);
+
     for (uint32_t tid = 0; tid < MaxThreads; tid++) {
         renameStatus[tid] = Idle;
         renameMap[tid] = nullptr;
@@ -104,6 +123,7 @@ Rename::Rename(CPU *_cpu, const BaseO3CPUParams &params)
         freeEntries[tid] = {0, 0, 0, 0};
         emptyROB[tid] = true;
         stalls[tid] = {false, false};
+        upstreamStalled[tid] = false;
         serializeInst[tid] = nullptr;
         serializeOnNextInst[tid] = false;
     }
@@ -256,6 +276,7 @@ Rename::clearStates(ThreadID tid)
     emptyROB[tid] = true;
 
     stalls[tid].iew = false;
+    upstreamStalled[tid] = false;
     serializeInst[tid] = NULL;
 
     instsInProgress[tid] = 0;
@@ -301,6 +322,7 @@ Rename::resetStage()
         emptyROB[tid] = true;
 
         stalls[tid].iew = false;
+        upstreamStalled[tid] = false;
         serializeInst[tid] = NULL;
 
         instsInProgress[tid] = 0;
@@ -379,7 +401,8 @@ Rename::squash(const InstSeqNum &squash_seq_num, ThreadID tid)
     // cycle and there should be space to hold everything due to the squash.
     if (renameStatus[tid] == Blocked ||
         renameStatus[tid] == Unblocking) {
-        toDecode->renameUnblock[tid] = 1;
+        // The squash empties the skid buffer, so decode can be released.
+        releaseUpstream(tid);
 
         resumeSerialize = false;
         serializeInst[tid] = NULL;
@@ -392,7 +415,10 @@ Rename::squash(const InstSeqNum &squash_seq_num, ThreadID tid)
             assert(serializeInst[tid]);
         } else {
             resumeSerialize = false;
-            toDecode->renameUnblock[tid] = 1;
+
+            // The serializing instruction survived the squash, so rename
+            // stops stalling on it and decode has to be released.
+            releaseUpstream(tid);
 
             serializeInst[tid] = NULL;
         }
@@ -894,23 +920,26 @@ Rename::block(ThreadID tid)
     // reprocessed when this stage unblocks.
     skidInsert(tid);
 
-    // Only signal backwards to block if the previous stages do not think
-    // rename is already blocked. While Unblocking, decode already believes
-    // rename is stalled (skid drain); do not re-assert renameBlock.
-    if (renameStatus[tid] != Blocked) {
-        if (renameStatus[tid] != Unblocking) {
-            toDecode->renameBlock[tid] = true;
-            toDecode->renameUnblock[tid] = false;
-            wroteToTimeBuffer = true;
-        }
+    // An early unblock may already have been signalled in this same cycle.
+    // Retract it so decode never observes both signals at once.
+    toDecode->renameUnblock[tid] = false;
 
-        // Rename can not go from SerializeStall to Blocked, otherwise
-        // it would not know to complete the serialize stall.
-        if (renameStatus[tid] != SerializeStall) {
-            // Set status to Blocked.
-            renameStatus[tid] = Blocked;
-            return true;
-        }
+    // Only signal backwards to block if decode does not already believe
+    // rename is blocked. The stage status cannot be used for this test: an
+    // early unblock releases decode while rename is still Blocked or
+    // Unblocking.
+    if (!upstreamStalled[tid]) {
+        toDecode->renameBlock[tid] = true;
+        upstreamStalled[tid] = true;
+        wroteToTimeBuffer = true;
+    }
+
+    // Rename can not go from SerializeStall to Blocked, otherwise
+    // it would not know to complete the serialize stall.
+    if (renameStatus[tid] != SerializeStall && renameStatus[tid] != Blocked) {
+        // Set status to Blocked.
+        renameStatus[tid] = Blocked;
+        return true;
     }
 
     return false;
@@ -921,19 +950,55 @@ Rename::unblock(ThreadID tid)
 {
     DPRINTF(Rename, "[tid:%i] Trying to unblock.\n", tid);
 
-    // Rename is done unblocking if the skid buffer is empty.
-    if (skidBuffer[tid].empty() && renameStatus[tid] != SerializeStall) {
+    // A block decision taken earlier in this cycle wins. Decode must not be
+    // told to resume when rename has just stalled again.
+    if (toDecode->renameBlock[tid]) {
+        return false;
+    }
 
-        DPRINTF(Rename, "[tid:%i] Done unblocking.\n", tid);
+    // Release decode as soon as the entries left in the skid buffer can keep
+    // rename busy until decode's instructions arrive. A serialize stall has
+    // no bound on its duration, so no early release is possible there.
+    if (upstreamStalled[tid] && renameStatus[tid] != SerializeStall &&
+        skidBuffer[tid].size() <= earlyUnblockThreshold) {
+        DPRINTF(Rename,
+                "[tid:%i] Unblocking decode, skid buffer size %i is "
+                "within the early unblock threshold %i.\n",
+                tid, skidBuffer[tid].size(), earlyUnblockThreshold);
 
         toDecode->renameUnblock[tid] = true;
+        upstreamStalled[tid] = false;
         wroteToTimeBuffer = true;
+    }
+
+    // Rename is done unblocking if the skid buffer is empty.
+    if (skidBuffer[tid].empty() && renameStatus[tid] != SerializeStall) {
+        DPRINTF(Rename, "[tid:%i] Done unblocking.\n", tid);
 
         renameStatus[tid] = Running;
         return true;
     }
 
     return false;
+}
+
+void
+Rename::releaseUpstream(ThreadID tid)
+{
+    if (!upstreamStalled[tid]) {
+        return;
+    }
+
+    if (toDecode->renameBlock[tid]) {
+        // The block signal raised in this cycle has not been picked up by
+        // decode yet, so it can simply be retracted.
+        toDecode->renameBlock[tid] = false;
+    } else {
+        toDecode->renameUnblock[tid] = true;
+        wroteToTimeBuffer = true;
+    }
+
+    upstreamStalled[tid] = false;
 }
 
 void
@@ -1277,6 +1342,7 @@ Rename::readStallSignals(ThreadID tid)
 
     if (fromIEW->iewUnblock[tid]) {
         assert(stalls[tid].iew);
+        assert(!fromIEW->iewBlock[tid]);
         stalls[tid].iew = false;
     }
 }

@@ -192,6 +192,14 @@ class Decode
      */
     bool unblock(ThreadID tid);
 
+    /** Releases fetch from a stall this stage previously signalled.
+     * If the block signal for this cycle has not been picked up yet it is
+     * simply retracted, otherwise an unblock is sent. Doing nothing when
+     * fetch is already running is what keeps the block/unblock signals
+     * strictly paired.
+     */
+    void releaseUpstream(ThreadID tid);
+
     /** Squashes if there is a PC-relative branch that was predicted
      * incorrectly. Sends squash information back to fetch.
      * @param inst The instruction that was mispredicted.
@@ -260,6 +268,14 @@ class Decode
     /** Tracks which stages are telling decode to stall. */
     Stalls stalls[MaxThreads];
 
+    /** Tracks whether fetch has been told that decode is blocked.
+     * The unblock signal is sent early, while decode is still draining its
+     * skid buffer, so the stage status is no longer a proxy for what fetch
+     * believes. Keeping this explicit is what prevents decode from either
+     * losing a block signal or asserting both signals in the same cycle.
+     */
+    bool upstreamStalled[MaxThreads];
+
     /** Rename to decode delay. */
     Cycles renameToDecodeDelay;
 
@@ -271,6 +287,11 @@ class Decode
 
     /** Fetch to decode delay. */
     Cycles fetchToDecodeDelay;
+
+    /** Decode to fetch delay. Together with fetchToDecodeDelay this forms
+     * the round trip of the block/unblock signals.
+     */
+    Cycles decodeToFetchDelay;
 
     /** The width of decode, in instructions. */
     unsigned decodeWidth;
@@ -286,6 +307,13 @@ class Decode
 
     /** Maximum size of the skid buffer. */
     unsigned skidBufferMax;
+
+    /** Skid buffer occupancy at or below which fetch is signalled to
+     * unblock. Releasing fetch early compensates for the round trip of the
+     * block/unblock signals, so fetch's instructions arrive just as the skid
+     * buffer runs dry instead of one or more cycles later.
+     */
+    unsigned earlyUnblockThreshold;
 
     /** SeqNum of Squashing Branch Delay Instruction (used for MIPS)*/
     Addr bdelayDoneSeqNum[MaxThreads];

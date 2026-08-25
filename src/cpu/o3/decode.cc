@@ -97,6 +97,7 @@ Decode::Decode(CPU *_cpu, const BaseO3CPUParams &params)
       iewToDecodeDelay(params.iewToDecodeDelay),
       commitToDecodeDelay(params.commitToDecodeDelay),
       fetchToDecodeDelay(params.fetchToDecodeDelay),
+      decodeToFetchDelay(params.decodeToFetchDelay),
       decodeWidth(params.decodeWidth),
       numThreads(params.numThreads),
       stats(_cpu)
@@ -106,10 +107,29 @@ Decode::Decode(CPU *_cpu, const BaseO3CPUParams &params)
              "\tincrease MaxWidth in src/cpu/o3/limits.hh\n",
              decodeWidth, static_cast<int>(MaxWidth));
 
-    // @todo: Make into a parameter
-    skidBufferMax = (fetchToDecodeDelay + 1) *  params.decodeWidth;
+    // The skid buffer has to absorb every instruction fetch can still send
+    // while a block signal is in flight, which spans the whole
+    // fetch -> decode -> fetch round trip. Note that fetch rate limits
+    // itself to decodeWidth instructions per cycle, so that is the relevant
+    // producer bandwidth here.
+    const unsigned round_trip = fetchToDecodeDelay + decodeToFetchDelay;
+    skidBufferMax = (round_trip ? round_trip : 1) * params.decodeWidth;
+    // Fetch's instructions land round_trip cycles after the unblock signal
+    // is sent, so the skid buffer needs to keep decode busy for all but that
+    // last cycle. Anything larger would risk overflowing the skid buffer.
+    earlyUnblockThreshold =
+        params.earlyUnblock
+            ? (round_trip ? round_trip - 1 : 0) * params.decodeWidth
+            : 0;
+
+    fatal_if(earlyUnblockThreshold + params.decodeWidth > skidBufferMax,
+             "decode skid buffer (%u) cannot hold the early unblock "
+             "threshold (%u) plus one cycle of fetch bandwidth (%u)\n",
+             skidBufferMax, earlyUnblockThreshold, params.decodeWidth);
+
     for (int tid = 0; tid < MaxThreads; tid++) {
         stalls[tid] = {false};
+        upstreamStalled[tid] = false;
         decodeStatus[tid] = Idle;
         bdelayDoneSeqNum[tid] = 0;
         squashInst[tid] = nullptr;
@@ -128,6 +148,7 @@ Decode::clearStates(ThreadID tid)
 {
     decodeStatus[tid] = Idle;
     stalls[tid].rename = false;
+    upstreamStalled[tid] = false;
 
     // Clear out any of this thread's instructions being sent to rename.
     for (int i = -cpu->decodeQueue.getPast();
@@ -156,6 +177,7 @@ Decode::resetStage()
         decodeStatus[tid] = Idle;
 
         stalls[tid].rename = false;
+        upstreamStalled[tid] = false;
     }
 }
 
@@ -279,34 +301,55 @@ Decode::block(ThreadID tid)
     // reprocessed when this stage unblocks.
     skidInsert(tid);
 
-    // If the decode status is blocked or unblocking then decode has not yet
-    // signalled fetch to unblock. In that case, there is no need to tell
-    // fetch to block.
-    if (decodeStatus[tid] != Blocked) {
-        // Set the status to Blocked.
-        decodeStatus[tid] = Blocked;
+    const bool status_change = decodeStatus[tid] != Blocked;
 
-        if (toFetch->decodeUnblock[tid]) {
-            toFetch->decodeUnblock[tid] = false;
-        } else {
-            toFetch->decodeBlock[tid] = true;
-            wroteToTimeBuffer = true;
-        }
+    // Set the status to Blocked.
+    decodeStatus[tid] = Blocked;
 
-        return true;
+    // An early unblock may already have been signalled in this same cycle.
+    // Retract it so fetch never observes both signals at once.
+    toFetch->decodeUnblock[tid] = false;
+
+    // Only tell fetch to stall if it does not already believe decode is
+    // blocked. The stage status cannot be used for this test: an early
+    // unblock releases fetch while decode is still Blocked or Unblocking.
+    if (!upstreamStalled[tid]) {
+        toFetch->decodeBlock[tid] = true;
+        upstreamStalled[tid] = true;
+        wroteToTimeBuffer = true;
     }
 
-    return false;
+    return status_change;
 }
 
 bool
 Decode::unblock(ThreadID tid)
 {
+    // A block decision taken earlier in this cycle wins. Fetch must not be
+    // told to resume when decode has just stalled again.
+    if (toFetch->decodeBlock[tid]) {
+        return false;
+    }
+
+    // Release fetch as soon as the entries left in the skid buffer can keep
+    // decode busy until fetch's instructions arrive. Waiting for the skid
+    // buffer to drain completely would leave a bubble as wide as the
+    // block/unblock round trip.
+    if (upstreamStalled[tid] &&
+        skidBuffer[tid].size() <= earlyUnblockThreshold) {
+        DPRINTF(Decode,
+                "[tid:%i] Unblocking fetch, skid buffer size %i is "
+                "within the early unblock threshold %i.\n",
+                tid, skidBuffer[tid].size(), earlyUnblockThreshold);
+
+        toFetch->decodeUnblock[tid] = true;
+        upstreamStalled[tid] = false;
+        wroteToTimeBuffer = true;
+    }
+
     // Decode is done unblocking only if the skid buffer is empty.
     if (skidBuffer[tid].empty()) {
         DPRINTF(Decode, "[tid:%i] Done unblocking.\n", tid);
-        toFetch->decodeUnblock[tid] = true;
-        wroteToTimeBuffer = true;
 
         decodeStatus[tid] = Running;
         return true;
@@ -315,6 +358,25 @@ Decode::unblock(ThreadID tid)
     DPRINTF(Decode, "[tid:%i] Currently unblocking.\n", tid);
 
     return false;
+}
+
+void
+Decode::releaseUpstream(ThreadID tid)
+{
+    if (!upstreamStalled[tid]) {
+        return;
+    }
+
+    if (toFetch->decodeBlock[tid]) {
+        // The block signal raised in this cycle has not been picked up by
+        // fetch yet, so it can simply be retracted.
+        toFetch->decodeBlock[tid] = false;
+    } else {
+        toFetch->decodeUnblock[tid] = true;
+        wroteToTimeBuffer = true;
+    }
+
+    upstreamStalled[tid] = false;
 }
 
 void
@@ -346,10 +408,7 @@ Decode::squash(const DynInstPtr &inst, bool control_miss, ThreadID tid)
     InstSeqNum squash_seq_num = inst->seqNum;
 
     // Might have to tell fetch to unblock.
-    if (decodeStatus[tid] == Blocked ||
-        decodeStatus[tid] == Unblocking) {
-        toFetch->decodeUnblock[tid] = 1;
-    }
+    releaseUpstream(tid);
 
     // Set status to squashing.
     decodeStatus[tid] = Squashing;
@@ -380,21 +439,8 @@ Decode::squash(ThreadID tid)
 {
     DPRINTF(Decode, "[tid:%i] Squashing.\n",tid);
 
-    if (decodeStatus[tid] == Blocked ||
-        decodeStatus[tid] == Unblocking) {
-        if (FullSystem) {
-            toFetch->decodeUnblock[tid] = 1;
-        } else {
-            // In syscall emulation, we can have both a block and a squash due
-            // to a syscall in the same cycle.  This would cause both signals
-            // to be high.  This shouldn't happen in full system.
-            // @todo: Determine if this still happens.
-            if (toFetch->decodeBlock[tid])
-                toFetch->decodeBlock[tid] = 0;
-            else
-                toFetch->decodeUnblock[tid] = 1;
-        }
-    }
+    // The squash empties the skid buffer, so fetch can be released.
+    releaseUpstream(tid);
 
     // Set status to squashing.
     decodeStatus[tid] = Squashing;
@@ -508,6 +554,7 @@ Decode::readStallSignals(ThreadID tid)
 
     if (fromRename->renameUnblock[tid]) {
         assert(stalls[tid].rename);
+        assert(!fromRename->renameBlock[tid]);
         stalls[tid].rename = false;
     }
 }

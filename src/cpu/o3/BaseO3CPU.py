@@ -100,6 +100,16 @@ class BaseO3CPU(BaseCPU):
     fetchToDecodeDelay = Param.Cycles(1, "Fetch to decode delay")
     decodeWidth = Param.Unsigned(8, "Decode width")
 
+    earlyUnblock = Param.Bool(
+        True,
+        "Signal an upstream stage to unblock as soon as the entries left in "
+        "the skid buffer can keep this stage busy for the block/unblock "
+        "signal round trip, instead of waiting for the skid buffer to drain "
+        "completely. Waiting for a fully drained skid buffer leaves a bubble "
+        "as wide as the round trip. Set to False to restore the legacy "
+        "behaviour.",
+    )
+
     iewToRenameDelay = Param.Cycles(
         1, "Issue/Execute/Writeback to rename delay"
     )
