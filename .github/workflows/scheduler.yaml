@@ -106,3 +106,17 @@ jobs:
                   else
                     echo "Weekly repo status summary workflow not scheduled."
                   fi
+            - name: Agentics Maintenance
+              env:
+                  DAY: ${{ steps.timedate-recorder.outputs.DAY }}
+                  HOUR: ${{ steps.timedate-recorder.outputs.HOUR }}
+              run: |
+                  # If the current day is Friday and the time is 9am then run
+                  # the workflow.
+                  if [[ $DAY == '5' ]] && [[ $HOUR  == '16' ]]
+                  then
+                    gh workflow run agentics-maintenance.yml --ref develop >/dev/null
+                    echo "Agentics maintenance workflow scheduled to run on the develop branch."
+                  else
+                    echo "Agentics maintenance workflow not scheduled."
+                  fi

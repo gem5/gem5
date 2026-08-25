@@ -44,7 +44,10 @@ tools:
     # `default` expands to context, repos, issues, pull_requests and users;
     # `actions` allows for access to workflow logs and artifacts
     toolsets: [default, actions]
-    lockdown: false
+    # Setting min-integrity to `unapproved` allows this workflow to run on PRs
+    # by first time contributors and contributors. The default for public repos
+    # is `approved`, which is more strict
+    min-integrity: unapproved
 timeout-minutes: 20
 
 engine:
