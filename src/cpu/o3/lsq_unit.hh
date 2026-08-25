@@ -563,7 +563,7 @@ class LSQUnit
         /** SQ Occupancy */
         statistics::Average sqAvgOccupancy;
 
-        /** Unit-stride vector accesses with vecMemPackWidth != 0. */
+        /** Unit-stride vector accesses with vecMemPackWidth specified. */
         statistics::Scalar vecMemPackAccesses;
         /** LSQ fragments created for those accesses. */
         statistics::Scalar vecMemPackFlows;

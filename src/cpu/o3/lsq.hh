@@ -45,6 +45,7 @@
 #include <cassert>
 #include <cstdint>
 #include <list>
+#include <optional>
 #include <vector>
 
 #include "arch/generic/mmu.hh"
@@ -961,8 +962,11 @@ class LSQ
     unsigned LQEntries;
     /** Total Size of SQ Entries. */
     unsigned SQEntries;
-    /** 0 uses the cache line. See BaseO3CPU.vecMemPackWidth. */
-    const unsigned vecMemPackWidth;
+    /**
+     * Unit-stride vector LSU split grain in bytes.
+     * Unspecified uses the cache-line size. See BaseO3CPU.vecMemPackWidth.
+     */
+    const std::optional<unsigned> vecMemPackWidth;
 
     /** Max LQ Size - Used to Enforce Sharing Policies. */
     unsigned maxLQEntries;

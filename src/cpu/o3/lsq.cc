@@ -49,6 +49,7 @@
 
 #include "arch/generic/mmu.hh"
 #include "base/amo.hh"
+#include "base/intmath.hh"
 #include "base/logging.hh"
 #include "base/stats/group.hh"
 #include "base/stats/units.hh"
@@ -153,10 +154,12 @@ LSQ::LSQ(CPU *cpu_ptr, IEW *iew_ptr, const BaseO3CPUParams &params)
 {
     assert(numThreads > 0 && numThreads <= MaxThreads);
 
-    fatal_if(vecMemPackWidth != 0 &&
-             (vecMemPackWidth & (vecMemPackWidth - 1)) != 0,
-             "vecMemPackWidth must be 0 or a power of two, got %u",
-             vecMemPackWidth);
+    // 0 is not a valid grain (and is no longer a "use default" sentinel).
+    fatal_if(vecMemPackWidth.has_value() && *vecMemPackWidth == 0,
+             "vecMemPackWidth must be greater than zero");
+    fatal_if(vecMemPackWidth.has_value() && !isPowerOf2(*vecMemPackWidth),
+             "vecMemPackWidth must be a power of two, got %u",
+             *vecMemPackWidth);
 
     //**********************************************
     //************ Handle SMT Parameters ***********
@@ -202,8 +205,9 @@ LSQ::name() const
 unsigned
 LSQ::splitGrain(const DynInstPtr &inst) const
 {
-    return vecMemSplitGrain(vecMemPackWidth, cpu->cacheLineSize(),
-                            inst->opClass());
+    return vecMemSplitGrain(
+        vecMemPackWidth.value_or(cpu->cacheLineSize()),
+        cpu->cacheLineSize(), inst->opClass());
 }
 
 void
@@ -827,7 +831,8 @@ LSQ::pushRequest(const DynInstPtr& inst, bool isLoad, uint8_t *data,
 
         request->initiateTranslation();
 
-        if (vecMemPackWidth != 0 && isVecMemPackable(inst->opClass())) {
+        if (vecMemPackWidth.has_value() &&
+            isVecMemPackable(inst->opClass())) {
             thread[tid]->recordVecMemPack(request->_reqs.size());
         }
     }
