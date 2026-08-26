@@ -91,24 +91,7 @@ def template VleConstructor {{
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
-    // Propagate decoder StaticInst flags onto the microop sequence.
-    // IsNonSpeculative applies to every micro (including helpers).
-    // Serialize/squash flags only apply at the sequence boundary so O3
-    // does not drain the ROB between consecutive micros of one vector op.
-    if (flags[IsNonSpeculative]) {
-        for (auto &microop : this->microops) {
-            microop->setFlag(StaticInst::IsNonSpeculative);
-        }
-    }
-    if (flags[IsSerializeBefore]) {
-        this->microops.front()->setFlag(StaticInst::IsSerializeBefore);
-    }
-    if (flags[IsSerializeAfter]) {
-        this->microops.back()->setFlag(StaticInst::IsSerializeAfter);
-    }
-    if (flags[IsSquashAfter]) {
-        this->microops.back()->setFlag(StaticInst::IsSquashAfter);
-    }
+%(flag_micro_constructor)s
 
 }
 
@@ -314,6 +297,7 @@ def template VseConstructor {{
 
     this->microops.front()->setFlag(IsFirstMicroop);
     this->microops.back()->setFlag(IsLastMicroop);
+%(flag_micro_constructor)s
 }
 
 }};
@@ -489,24 +473,7 @@ def template VlmConstructor {{
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
-    // Propagate decoder StaticInst flags onto the microop sequence.
-    // IsNonSpeculative applies to every micro (including helpers).
-    // Serialize/squash flags only apply at the sequence boundary so O3
-    // does not drain the ROB between consecutive micros of one vector op.
-    if (flags[IsNonSpeculative]) {
-        for (auto &microop : this->microops) {
-            microop->setFlag(StaticInst::IsNonSpeculative);
-        }
-    }
-    if (flags[IsSerializeBefore]) {
-        this->microops.front()->setFlag(StaticInst::IsSerializeBefore);
-    }
-    if (flags[IsSerializeAfter]) {
-        this->microops.back()->setFlag(StaticInst::IsSerializeAfter);
-    }
-    if (flags[IsSquashAfter]) {
-        this->microops.back()->setFlag(StaticInst::IsSquashAfter);
-    }
+%(flag_micro_constructor)s
 
 }
 
@@ -535,24 +502,7 @@ def template VsmConstructor {{
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
-    // Propagate decoder StaticInst flags onto the microop sequence.
-    // IsNonSpeculative applies to every micro (including helpers).
-    // Serialize/squash flags only apply at the sequence boundary so O3
-    // does not drain the ROB between consecutive micros of one vector op.
-    if (flags[IsNonSpeculative]) {
-        for (auto &microop : this->microops) {
-            microop->setFlag(StaticInst::IsNonSpeculative);
-        }
-    }
-    if (flags[IsSerializeBefore]) {
-        this->microops.front()->setFlag(StaticInst::IsSerializeBefore);
-    }
-    if (flags[IsSerializeAfter]) {
-        this->microops.back()->setFlag(StaticInst::IsSerializeAfter);
-    }
-    if (flags[IsSquashAfter]) {
-        this->microops.back()->setFlag(StaticInst::IsSquashAfter);
-    }
+%(flag_micro_constructor)s
 
 }
 
@@ -581,24 +531,7 @@ def template VsWholeConstructor {{
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
-    // Propagate decoder StaticInst flags onto the microop sequence.
-    // IsNonSpeculative applies to every micro (including helpers).
-    // Serialize/squash flags only apply at the sequence boundary so O3
-    // does not drain the ROB between consecutive micros of one vector op.
-    if (flags[IsNonSpeculative]) {
-        for (auto &microop : this->microops) {
-            microop->setFlag(StaticInst::IsNonSpeculative);
-        }
-    }
-    if (flags[IsSerializeBefore]) {
-        this->microops.front()->setFlag(StaticInst::IsSerializeBefore);
-    }
-    if (flags[IsSerializeAfter]) {
-        this->microops.back()->setFlag(StaticInst::IsSerializeAfter);
-    }
-    if (flags[IsSquashAfter]) {
-        this->microops.back()->setFlag(StaticInst::IsSquashAfter);
-    }
+%(flag_micro_constructor)s
 
 }
 
@@ -738,24 +671,7 @@ def template VlWholeConstructor {{
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
-    // Propagate decoder StaticInst flags onto the microop sequence.
-    // IsNonSpeculative applies to every micro (including helpers).
-    // Serialize/squash flags only apply at the sequence boundary so O3
-    // does not drain the ROB between consecutive micros of one vector op.
-    if (flags[IsNonSpeculative]) {
-        for (auto &microop : this->microops) {
-            microop->setFlag(StaticInst::IsNonSpeculative);
-        }
-    }
-    if (flags[IsSerializeBefore]) {
-        this->microops.front()->setFlag(StaticInst::IsSerializeBefore);
-    }
-    if (flags[IsSerializeAfter]) {
-        this->microops.back()->setFlag(StaticInst::IsSerializeAfter);
-    }
-    if (flags[IsSquashAfter]) {
-        this->microops.back()->setFlag(StaticInst::IsSquashAfter);
-    }
+%(flag_micro_constructor)s
 
 }
 
