@@ -60,7 +60,12 @@ jobs:
             matrix:
                 test-type: ${{ fromJson(needs.get-testlib-very-long-dirs.outputs.test-dirs-matrix) }}
         runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        container:
+            image: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+            volumes:
+                - /gem5-resource-cache:/gem5-resource-cache
+        env:
+            GEM5_RESOURCE_DIR: /gem5-resource-cache
         timeout-minutes: 4320 # 3 days
         needs: [get-date, get-testlib-very-long-dirs]
         steps:
@@ -84,10 +89,22 @@ jobs:
               # very-long without that flag.
               run: |
                   extra_gcov_args="--gcov=test-only"
+                  resource_dir="$GEM5_RESOURCE_DIR"
                   if [ "${{ matrix.test-type }}" = "gem5/x86_boot_tests" ]; then
                     extra_gcov_args=""
                   fi
-                  ./main.py run ${{ matrix.test-type }} --length=very-long ${extra_gcov_args} -j"$(nproc)" -vv --exclude-tags gcn_gpu
+                  # These legacy fixtures do not checksum or lock downloads.
+                  case "${{ matrix.test-type }}" in
+                    gem5/cpu_tests|gem5/fdp_tests|gem5/m5threads_test_atomic)
+                      resource_dir="$RUNNER_TEMP/gem5-testlib-downloads"
+                      ;;
+                  esac
+                  # This suite intentionally downloads and deletes every
+                  # resource version. Keep it out of the persistent cache.
+                  if [ "${{ matrix.test-type }}" = "gem5/gem5_resources" ]; then
+                    resource_dir="$RUNNER_TEMP/gem5-resource-download-test"
+                  fi
+                  ./main.py run ${{ matrix.test-type }} --length=very-long ${extra_gcov_args} -j"$(nproc)" -vv --exclude-tags gcn_gpu --bin-path "$resource_dir"
 
             - name: Sanitize test-dir for artifact name
               id: sanitize-test-dir
@@ -112,7 +129,12 @@ jobs:
         strategy:
             fail-fast: false
         runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/gcn-gpu:latest
+        container:
+            image: ghcr.io/gem5/gcn-gpu:latest
+            volumes:
+                - /gem5-resource-cache:/gem5-resource-cache
+        env:
+            GEM5_RESOURCE_DIR: /gem5-resource-cache
         timeout-minutes: 4320 # 3 days
         needs: get-date
 
@@ -130,7 +152,7 @@ jobs:
             - name: Run Testlib GPU Tests
               id: run-tests
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --length=very-long -vvv --gcov=test-only -j $(nproc) --host gcn_gpu --isa=VEGA_X86
+              run: ./main.py run --length=very-long -vvv --gcov=test-only -j $(nproc) --host gcn_gpu --isa=VEGA_X86 --bin-path "$GEM5_RESOURCE_DIR"
               timeout-minutes: 4290
 
             - name: Upload results
