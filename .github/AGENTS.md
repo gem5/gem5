@@ -7,9 +7,9 @@ changes reviewable and mechanical.
 
 `ci-tests.yaml` runs for non-draft pull-request updates. `daily-tests.yaml`,
 `weekly-tests.yaml`, and `compiler-tests.yaml` expose `workflow_dispatch`; the
-hourly `scheduler.yaml` dispatches them on their daily or weekly cadence. Keep
-related changes aligned across workflows, Docker images, bake targets, and
-documentation.
+cron-driven `scheduler.yaml` dispatches them on their daily or weekly cadence.
+Keep related changes aligned across workflows, Docker images, bake targets,
+and documentation.
 
 The aggregate `ci-tests` job does not depend on `clang-format-check`, so the
 workflow dependency graph does not make formatting a prerequisite for that

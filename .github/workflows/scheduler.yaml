@@ -10,14 +10,22 @@ name: Workflow Scheduler
 # This workflow is designed to run on the stable branch and will trigger other
 # workflows on the develop branch.
 #
-# To do so we simply schedule this workflow to run every hour and use some
-# simple bash logic to determine if the current time is when we want to run the
-# other workflows.
+# Each cron expression identifies the workflow or workflows to dispatch. This
+# avoids using the runner's clock, since GitHub may delay scheduled runs and
+# cause two hourly invocations to observe the same hour.
 
 on:
     schedule:
-    # Runs every hour, 30 minutes past the hour.
-        - cron: 30 * * * *
+        # Daily tests at 7:30pm UTC, except Friday.
+        - cron: 30 19 * * 0-4,6
+        # Daily and Weekly tests at 7:30pm UTC on Friday.
+        - cron: 30 19 * * 5
+        # Compiler tests at 9:30pm UTC on Tuesday.
+        - cron: 30 21 * * 2
+        # Weekly repository status at 4:30pm UTC on Tuesday.
+        - cron: 30 16 * * 2
+        # Agentics maintenance at 4:30pm UTC on Friday.
+        - cron: 30 16 * * 5
 
 env:
   # This is the token used to authenticate with GitHub.
@@ -35,88 +43,40 @@ jobs:
             - name: Checkout Repository
               uses: actions/checkout@v7
 
-            - name: Record day and time
-              id: timedate-recorder
-              run: |
-                  # `date +H` returns the current hour as a number from
-                  # `00` to `23`.
-                  echo "HOUR=$(date +%H)" >> $GITHUB_OUTPUT
-
-                  # `date +%u` returns the day of the week as a number from
-                  # `1` to `7`.
-                  # `1` is Monday and `7` is Sunday.
-                  echo "DAY=$(date +%u)" >> $GITHUB_OUTPUT
-
             - name: Daily Tests
-              env:
-                  HOUR: ${{ steps.timedate-recorder.outputs.HOUR }}
+              if: >-
+                  github.event.schedule == '30 19 * * 0-4,6' ||
+                  github.event.schedule == '30 19 * * 5'
               run: |
-                  # If current time is 7pm then run the workflow.
-                  if [[ $HOUR  == '19' ]]
-                  then
-                    gh workflow run daily-tests.yaml --ref develop >/dev/null
-                    echo "Daily test scheduled to run on develop branch."
-                  else
-                    echo "Daily tests not scheduled."
-                  fi
+                  gh workflow run daily-tests.yaml --ref develop >/dev/null
+                  echo "Daily test scheduled to run on develop branch."
 
             - name: Weekly Tests
-              env:
-                  DAY: ${{ steps.timedate-recorder.outputs.DAY }}
-                  HOUR: ${{ steps.timedate-recorder.outputs.HOUR }}
+              if: github.event.schedule == '30 19 * * 5'
               run: |
-                  # If the current day is Friday and the time is 7pm then run
-                  # the workflow.
-                  if [[ $DAY == '5' ]] && [[ $HOUR  == '19' ]]
-                  then
-                    gh workflow run weekly-tests.yaml --ref develop >/dev/null
-                    echo "Weekly test scheduled to run on develop branch."
-                  else
-                    echo "Weekly tests not scheduled."
-                  fi
+                  gh workflow run weekly-tests.yaml --ref develop >/dev/null
+                  echo "Weekly test scheduled to run on develop branch."
 
             - name: Compiler Tests
-              env:
-                  DAY: ${{ steps.timedate-recorder.outputs.DAY }}
-                  HOUR: ${{ steps.timedate-recorder.outputs.HOUR }}
+              if: github.event.schedule == '30 21 * * 2'
               run: |
-                  # If the current day is Tuesday and the time is 9pm then run
-                  # the workflow.
-                  if [[ $DAY == '2' ]] && [[ $HOUR  == '21' ]]
-                  then
-                    gh workflow run compiler-tests.yaml --ref develop >/dev/null
-                    echo "Compiler tests scheduled to run on the develop branch."
-                  else
-                    echo "Compiler tests not scheduled."
-                  fi
+                  gh workflow run compiler-tests.yaml --ref develop >/dev/null
+                  echo "Compiler tests scheduled to run on the develop branch."
+
             - name: Install gh-aw extension
+              if: github.event.schedule == '30 16 * * 2'
               run: gh extension install github/gh-aw
 
             - name: Weekly Repo Status
-              env:
-                  DAY: ${{ steps.timedate-recorder.outputs.DAY }}
-                  HOUR: ${{ steps.timedate-recorder.outputs.HOUR }}
+              if: github.event.schedule == '30 16 * * 2'
               run: |
-                  # If the current day is Tuesday and the time is 9am then run
-                  # the workflow.
-                  if [[ $DAY == '2' ]] && [[ $HOUR  == '16' ]]
-                  then
-                    gh workflow run weekly-repo-status.lock.yml --ref develop >/dev/null
-                    echo "Weekly repo status summary workflow scheduled to run on the develop branch."
-                  else
-                    echo "Weekly repo status summary workflow not scheduled."
-                  fi
+                  gh workflow run weekly-repo-status.lock.yml \
+                      --ref develop >/dev/null
+                  echo "Weekly repository status scheduled on develop."
+
             - name: Agentics Maintenance
-              env:
-                  DAY: ${{ steps.timedate-recorder.outputs.DAY }}
-                  HOUR: ${{ steps.timedate-recorder.outputs.HOUR }}
+              if: github.event.schedule == '30 16 * * 5'
               run: |
-                  # If the current day is Friday and the time is 9am then run
-                  # the workflow.
-                  if [[ $DAY == '5' ]] && [[ $HOUR  == '16' ]]
-                  then
-                    gh workflow run agentics-maintenance.yml --ref develop >/dev/null
-                    echo "Agentics maintenance workflow scheduled to run on the develop branch."
-                  else
-                    echo "Agentics maintenance workflow not scheduled."
-                  fi
+                  gh workflow run agentics-maintenance.yml \
+                      --ref develop >/dev/null
+                  echo "Agentics maintenance scheduled on develop."
