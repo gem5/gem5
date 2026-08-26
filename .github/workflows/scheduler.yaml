@@ -63,9 +63,6 @@ jobs:
                   gh workflow run compiler-tests.yaml --ref develop >/dev/null
                   echo "Compiler tests scheduled to run on the develop branch."
 
-            - name: Install gh-aw extension
-              if: github.event.schedule == '30 16 * * 2'
-              run: gh extension install github/gh-aw
 
             - name: Weekly Repo Status
               if: github.event.schedule == '30 16 * * 2'
