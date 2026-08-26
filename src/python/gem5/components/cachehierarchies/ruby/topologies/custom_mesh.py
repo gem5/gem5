@@ -99,7 +99,7 @@ class CustomMesh(SimpleNetwork):
         self.netifs = []
 
         # TODO: These should be in a base class.
-        # https://gem5.atlassian.net/browse/GEM5-1039
+        # https://github.com/gem5/gem5/issues/3450
         self.ruby_system = ruby_system
 
         self._num_rows = noc_params.num_rows

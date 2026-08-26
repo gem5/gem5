@@ -59,7 +59,7 @@ setup(
     install_requires=["gem5art-artifact"],
     python_requires=">=3.6",
     project_urls={
-        "Bug Reports": "https://gem5.atlassian.net/",
+        "Bug Reports": "https://github.com/gem5/gem5/issues",
         "Source": "https://github.com/gem5/gem5/",
         "Documentation": "https://www.gem5.org/documentation/gem5art",
     },

@@ -465,8 +465,7 @@ def __get_statistic(statistic: _m5_stats.Info) -> Optional[Statistic]:
     elif isinstance(statistic, _m5_stats.DistInfo):
         return __get_distribution(statistic)
     elif isinstance(statistic, _m5_stats.FormulaInfo):
-        # We don't do anything with Formula's right now.
-        # We may never do so, see https://gem5.atlassian.net/browse/GEM5-868.
+        # We don't do anything with Formula's right now and may never do so.
         pass
     elif isinstance(statistic, _m5_stats.VectorInfo):
         return __get_vector(statistic)
@@ -765,7 +764,7 @@ def get_simstat(
         stats_map = stats_map[next(iter(stats_map))]
 
     creation_time = datetime.now()
-    time_converstion = None  # TODO https://gem5.atlassian.net/browse/GEM5-846
+    # TODO: https://github.com/gem5/gem5/issues/3447
     final_tick = Root.getInstance().resolveStat("finalTick").value
     sim_ticks = Root.getInstance().resolveStat("simTicks").value
     simulated_begin_time = int(final_tick - sim_ticks)
