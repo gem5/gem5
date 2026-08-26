@@ -563,71 +563,123 @@ def format VectorIntWideningFormat(code, category, *flags) {{
     decode_block = VectorIntWideningDecodeBlock.subst(iop)
 }};
 
-def format VectorIntNarrowingFormat(code, category, *flags) {{
+def format VectorNarrowingFormat(code, category, *flags) {{
+    inst_name, _ = name.split("_", maxsplit=1)
+    is_float = inst_name.startswith("vf")
+    is_bf16 = is_float and inst_name.endswith("bf16")
+
+    if is_float:
+        type_def = '''
+            using et = ElemType;
+            using vu [[maybe_unused]] = decltype(et::v);
+            using ewt [[maybe_unused]] = typename double_width<et>::type;
+            using vwu [[maybe_unused]] = decltype(ewt::v);
+        '''
+        vrm_required = "VRM_REQUIRED;\n"
+        fflags_pre = "std::feclearexcept(FE_ALL_EXCEPT);\n"
+        fflags_post = '''
+            xc->setMiscReg(MISCREG_FFLAGS_EXE, softfloat_exceptionFlags);
+            softfloat_exceptionFlags = 0;
+        '''
+
+        type = ("b" if is_bf16 else "") + "float"
+        min_size, max_size = (16, 16) if is_bf16 else (8, 32)
+        macro_declare = declareVArithTemplate(Name, type, min_size, max_size)
+        micro_declare = declareVArithTemplate(Name + "Micro", type, min_size,
+                                              max_size)
+        decode_block_tpl = VectorBFloatWideningAndNarrowingCvtDecodeBlock \
+            if is_bf16 else VectorFloatWideningAndNarrowingCvtDecodeBlock
+    else:
+        type_def = '''
+            using vu [[maybe_unused]] = std::make_unsigned_t<ElemType>;
+            using vi [[maybe_unused]] = std::make_signed_t<ElemType>;
+            using vwu [[maybe_unused]] = typename double_width<vu>::type;
+            using vwi [[maybe_unused]] = typename double_width<vi>::type;
+        '''
+        vrm_required = ""
+        fflags_pre = ""
+        fflags_post = ""
+        macro_declare = declareVArithTemplate(Name, max_size=32)
+        micro_declare = declareVArithTemplate(Name + "Micro", max_size=32)
+        decode_block_tpl = VectorIntWideningDecodeBlock
+
     iop = InstObjParams(
         name,
         Name,
-        'VectorArithMacroInst',
-        {'code': code,
-         'declare_varith_template': declareVArithTemplate(Name, max_size=32)},
+        'VectorNarrowingMacroInst',
+        {'declare_varith_template': macro_declare},
         flags
     )
-    mask_cond = True
-    need_elem_idx = True
 
-    dest_reg_id = "vecRegClass[_machInst.vd + _microIdx / 2]"
+    dest_reg_id = "vecRegClass[_machInst.vd + _microIdx]"
+    set_dest_reg_idx = setDestWrapper(dest_reg_id)
+
+    set_src_reg_idx = ""
+    set_src_reg_idx += "numVs2Regs = (vtype_vlmul(vtype) >= 0) ? 2 : 1;\n"
+    set_src_reg_idx += setVecRegGroupSrcWrapper("numVs2Regs",
+        "_machInst.vs2 + _microIdx * numVs2Regs")
+
     src1_is_vec = False
-    if category in ["OPIVV"]:
-        src1_reg_id = "vecRegClass[(_copyVs1 ? VecMemInternalReg0\
-                                             : _machInst.vs1) + _microIdx / 2]"
+    get_src1 = ""
+    if category == "OPIVV":
+        set_src_reg_idx += \
+            setSrcWrapper("vecRegClass[_machInst.vs1 + _microIdx]")
         src1_is_vec = True
-    elif category in ["OPIVX"]:
-        src1_reg_id = "intRegClass[_machInst.rs1]"
-    elif category == "OPIVI":
+        get_src1 = '''
+            RiscvISA::vreg_t tmp_vs1;
+            xc->getRegOperand(this, numVs2Regs, &tmp_vs1);
+            vu* vs1 = tmp_vs1.as<vu>();
+        '''
+    elif category == "OPIVX":
+        set_src_reg_idx += setSrcWrapper("intRegClass[_machInst.rs1]")
+        get_src1 = '''
+            vu rs1 = (vu)xc->getRegOperand(this, numVs2Regs);
+        '''
+    elif category == "OPIVI" or (is_float and category == "OPFVV"):
         pass
     else:
-        error("not supported category for VectorIntFormat: %s" % category)
+        error("not supported category for VectorNarrowingFormat: %s"
+              % category)
 
-    src2_reg_id = "vecRegClass[(_copyVs2 ? VecMemInternalReg0 : _machInst.vs2)\
-                               + _microIdx]"
-    src2_sew_mul = 2
-
-    set_dest_reg_idx = setDestWrapper(dest_reg_id)
-    set_src_reg_idx = ""
-    if category != "OPIVI":
-        set_src_reg_idx += setSrcWrapper(src1_reg_id)
-    set_src_reg_idx += setSrcWrapper(src2_reg_id)
+    set_src_reg_idx += tailMaskCondSetSrcWrapper(setSrcWrapper(dest_reg_id))
     set_src_reg_idx += setSrcVm()
-    # code
-    code = maskCondWrapper(code)
-    code = eiDeclarePrefix(code, widening=True)
-    code = loopWrapper(code)
-    code = narrowingOpRegisterConstraintChecks(code, src2_sew_mul, src1_is_vec)
+
+    src2_sew_mul = 2
+    narrowing_checks = narrowingOpRegisterConstraintChecks("", src2_sew_mul,
+                                                           src1_is_vec)
+
+    get_vs2_regs = getRegOperandGroup("vs2_regs", "numVs2Regs", offset="0")
+    copy_old_vd = "COPY_OLD_VD(oldDstIdx);"
     vm_decl_rd = vmDeclAndReadData()
+    set_vlenb = setVlenb()
 
-    set_vlenb = setVlenb();
-
-    varith_micro_declare = declareVArithTemplate(Name + "Micro", max_size=32)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
-        'VectorArithMicroInst',
+        'VectorNarrowingMicroInst',
         {'code': code,
          'set_dest_reg_idx': set_dest_reg_idx,
          'set_src_reg_idx': set_src_reg_idx,
          'set_vlenb': set_vlenb,
          'vm_decl_rd': vm_decl_rd,
-         'declare_varith_template': varith_micro_declare
-        },
+         'type_def': type_def,
+         'vrm_required': vrm_required,
+         'narrowing_checks': narrowing_checks,
+         'get_vs2_regs': get_vs2_regs,
+         'get_src1': get_src1,
+         'copy_old_vd': copy_old_vd,
+         'fflags_pre': fflags_pre,
+         'fflags_post': fflags_post,
+         'declare_varith_template': micro_declare},
         flags)
 
     header_output = \
-        VectorIntNarrowingMicroDeclare.subst(microiop) + \
-        VectorIntNarrowingMacroDeclare.subst(iop)
+        VectorNarrowingMicroDeclare.subst(microiop) + \
+        VectorNarrowingMacroDeclare.subst(iop)
     decoder_output = \
-        VectorIntNarrowingMicroConstructor.subst(microiop) + \
-        VectorIntNarrowingMacroConstructor.subst(iop)
-    exec_output = VectorIntNarrowingMicroExecute.subst(microiop)
-    decode_block = VectorIntWideningDecodeBlock.subst(iop)
+        VectorNarrowingMicroConstructor.subst(microiop) + \
+        VectorNarrowingMacroConstructor.subst(iop)
+    exec_output = VectorNarrowingMicroExecute.subst(microiop)
+    decode_block = decode_block_tpl.subst(iop)
 }};
 
 def format VectorIntMaskFormat(code, category, *flags) {{
@@ -1082,71 +1134,6 @@ def format VectorFloatWideningCvtFormat(code, category, *flags) {{
         VectorIntWideningMicroConstructor.subst(microiop) + \
         VectorIntWideningMacroConstructor.subst(iop)
     exec_output = VectorFloatWideningMicroExecute.subst(microiop)
-    if "bf16" in name:
-        decode_block = \
-            VectorBFloatWideningAndNarrowingCvtDecodeBlock.subst(iop)
-    else:
-        decode_block = \
-            VectorFloatWideningAndNarrowingCvtDecodeBlock.subst(iop)
-}};
-
-def format VectorFloatNarrowingCvtFormat(code, category, *flags) {{
-    varith_macro_declare = declareVArithTemplate(Name, 'float', 8, 32)
-    if "bf16" in name:
-        varith_macro_declare = f"template class {Name}<bfloat16_t>;\n"
-
-    iop = InstObjParams(
-        name,
-        Name,
-        'VectorArithMacroInst',
-        {'code': code,
-         'declare_varith_template': varith_macro_declare},
-        flags
-    )
-
-    dest_reg_id = "vecRegClass[_machInst.vd + _microIdx / 2]"
-    src2_reg_id = "vecRegClass[(_copyVs2 ? VecMemInternalReg0 : _machInst.vs2)\
-                               + _microIdx]"
-    src2_sew_mul = 2
-
-    set_dest_reg_idx = setDestWrapper(dest_reg_id)
-
-    set_src_reg_idx = ""
-    set_src_reg_idx += setSrcWrapper(src2_reg_id)
-    set_src_reg_idx += setSrcVm()
-    code = maskCondWrapper(code)
-    code = eiDeclarePrefix(code, widening=True)
-    code = loopWrapper(code)
-    code = fflags_wrapper(code)
-    code = narrowingOpRegisterConstraintChecks(code, src2_sew_mul, False)
-
-    vm_decl_rd = vmDeclAndReadData()
-
-    set_vlenb = setVlenb();
-
-    if "bf16" in name:
-        varith_micro_declare = f"template class {Name}Micro<bfloat16_t>;\n"
-    else:
-        varith_micro_declare = declareVArithTemplate(
-            Name + "Micro", 'float', 8, 32)
-    microiop = InstObjParams(name + "_micro",
-        Name + "Micro",
-        'VectorArithMicroInst',
-        {'code': code,
-         'set_dest_reg_idx': set_dest_reg_idx,
-         'set_src_reg_idx': set_src_reg_idx,
-         'set_vlenb': set_vlenb,
-         'vm_decl_rd': vm_decl_rd,
-         'declare_varith_template': varith_micro_declare},
-        flags)
-
-    header_output = \
-        VectorIntNarrowingMicroDeclare.subst(microiop) + \
-        VectorIntNarrowingMacroDeclare.subst(iop)
-    decoder_output = \
-        VectorIntNarrowingMicroConstructor.subst(microiop) + \
-        VectorIntNarrowingMacroConstructor.subst(iop)
-    exec_output = VectorFloatNarrowingMicroExecute.subst(microiop)
     if "bf16" in name:
         decode_block = \
             VectorBFloatWideningAndNarrowingCvtDecodeBlock.subst(iop)
