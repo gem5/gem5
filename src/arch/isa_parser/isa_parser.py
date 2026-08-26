@@ -448,8 +448,7 @@ def makeFlagMicroConstructor(flag_list):
         )
     if "IsSquashAfter" in flags:
         lines.append(
-            "    this->microops.back()->setFlag("
-            "StaticInst::IsSquashAfter);"
+            "    this->microops.back()->setFlag(" "StaticInst::IsSquashAfter);"
         )
     if not lines:
         return ""
@@ -562,7 +561,9 @@ class InstObjParams:
                 if flag not in position_sensitive_flags
             ]
         )
-        self.flag_micro_constructor = makeFlagMicroConstructor(list(self.flags))
+        self.flag_micro_constructor = makeFlagMicroConstructor(
+            list(self.flags)
+        )
         self.constructor += self.flag_constructor
 
         # if 'IsFloating' is set, add call to the FP enable check
