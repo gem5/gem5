@@ -119,10 +119,16 @@ class LocalSimLoopExitEvent : public Event
     std::string cause;
     int code;
     Tick repeat;
+    uint64_t hypercall_id = 0;
 
   public:
+    // The "old style" constructors for LocalSimLoopExitEvent
     LocalSimLoopExitEvent();
     LocalSimLoopExitEvent(const std::string &_cause, int c, Tick repeat = 0);
+
+    // The "new style" constructor for LocalSimLoopExitEvent, with hypercalls
+    LocalSimLoopExitEvent(const std::string &_cause, int c, Tick repeat = 0,
+                          uint64_t hypercall_id = 0);
 
     const std::string getCause() const { return cause; }
     int getCode() const { return code; }

@@ -365,8 +365,11 @@ class Simulator:
 
         :param insts: A number of instructions to run to.
         """
+        hypercall_num = 8  # MAX_INSTS
         for core in self._board.get_processor().get_cores():
-            core._set_inst_stop_any_thread(inst, self._instantiated)
+            core._set_inst_stop_any_thread(
+                inst, self._instantiated, hypercall_num
+            )
 
     def get_instruction_count(self) -> int:
         """

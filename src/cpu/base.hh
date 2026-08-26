@@ -488,11 +488,16 @@ class BaseCPU : public ClockedObject
      * when the script wants to simulate for a specific number of
      * instructions rather than ticks.
      *
+     * The hypercall number is used to identify the exit event in
+     * the gem5 standard library.
+     *
      * @param tid Thread monitor.
      * @param insts Number of instructions into the future.
      * @param cause Cause to signal in the exit event.
+     * @param hypercall_num The hypercall number of the exit event.
      */
-    void scheduleInstStop(ThreadID tid, Counter insts, std::string cause);
+    void scheduleInstStop(ThreadID tid, Counter insts, std::string cause,
+                          uint64_t hypercall_num = 0);
 
     /**
      * Schedule simpoint events using the scheduleInstStop function.
@@ -506,14 +511,18 @@ class BaseCPU : public ClockedObject
     void scheduleSimpointsInstStop(std::vector<Counter> inst_starts);
 
     /**
-     * Schedule an exit event when any threads in the core reach the max_insts
+     * Schedule an exit event with the given hypercall number
+     * when any threads in the core reach the max_insts
      * instructions using the scheduleInstStop function.
      *
-     * This is used to raise a MAX_INSTS exit event in thegem5 standard library
+     * This is used to raise a MAX_INSTS exit event in
+     * the gem5 standard library
      *
      * @param max_insts Number of instructions into the future.
+     * @param hypercall_num The hypercall number of the exit event.
      */
-    void scheduleInstStopAnyThread(Counter max_insts);
+    void scheduleInstStopAnyThread(Counter max_insts,
+                                   uint64_t hypercall_num = 0);
 
     /**
      * Get the number of instructions executed by the specified thread
