@@ -734,6 +734,7 @@ void prepareRequestRetry(TBE tbe, CHIRequestMsg & out_msg) {
   out_msg.allowRetry := false;
 
   out_msg.addr := tbe.addr;
+  out_msg.txnId := tbe.txnId;
   out_msg.requestor := machineID;
   out_msg.fwdRequestor := tbe.requestor;
   out_msg.stashNID := tbe.stashNID;
