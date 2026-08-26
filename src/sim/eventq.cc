@@ -446,8 +446,12 @@ EventQueue::EventQueue(const std::string &n)
 void
 EventQueue::asyncInsert(Event *event)
 {
+    gem5_assert(
+        event->when() >= _nextSimQuantum,
+        "Asynchronous event must be scheduled after the next sim quantum");
     async_queue_mutex.lock();
     async_queue.push_back(event);
+    event->trace("async inserted");
     async_queue_mutex.unlock();
 }
 
