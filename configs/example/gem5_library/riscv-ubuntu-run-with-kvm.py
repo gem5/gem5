@@ -28,9 +28,13 @@
 This script boots RISC-V Ubuntu 24.04 using KVM on a riscv64 host.
 The simulation uses a single KVM core and boots the kernel directly
 without the OpenSBI bootloader (KVM guests run in VS-mode, not M-mode).
-It uses the published RISC-V KVM preview disk image from the
-`selimsandal/gem5-resources` fork until the updated image is accepted
-upstream.
+The RISC-V KVM disk-image changes are under review in gem5-resources PR #83:
+https://github.com/gem5/gem5-resources/pull/83
+
+Until that image is published, check out gem5-resources PR #83 and follow
+the disk-image build instructions in
+`src/riscv-fs/riscv-ubuntu-22.04-24.04/BUILING.md`. This path is in the
+gem5-resources PR checkout; it is not part of the gem5 repository.
 
 Usage
 -----
@@ -38,14 +42,15 @@ Usage
 ```
 scons build/RISCV/gem5.opt -j$(nproc)
 ./build/RISCV/gem5.opt \
-    configs/example/gem5_library/riscv-ubuntu-run-with-kvm.py
+    configs/example/gem5_library/riscv-ubuntu-run-with-kvm.py \
+    --disk-image /path/to/riscv-ubuntu
 ```
 
 The simulated system's stdout can be viewed in
 ``m5out/board.platform.terminal``.
 """
 
-import os
+import argparse
 
 from gem5.components.boards.riscv_board import RiscvBoard
 from gem5.components.cachehierarchies.classic.private_l1_private_l2_walk_cache_hierarchy import (
@@ -55,7 +60,10 @@ from gem5.components.memory import DualChannelDDR4_2400
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.isas import ISA
-from gem5.resources.resource import obtain_resource
+from gem5.resources.resource import (
+    DiskImageResource,
+    obtain_resource,
+)
 from gem5.simulate.exit_handler import (
     ExitHandler,
     KernelBootedExitHandler,
@@ -63,16 +71,15 @@ from gem5.simulate.exit_handler import (
 from gem5.simulate.simulator import Simulator
 from gem5.utils.override import overrides
 
-_preview_resources_url = (
-    "https://github.com/selimsandal/gem5-resources/releases/download/"
-    "riscv-kvm-preview-2026-04-03/riscv-kvm-preview-resources.json"
+parser = argparse.ArgumentParser(
+    description="Boot RISC-V Ubuntu 24.04 using KVM."
 )
-
-if (
-    "GEM5_RESOURCE_JSON" not in os.environ
-    and "GEM5_RESOURCE_JSON_APPEND" not in os.environ
-):
-    os.environ["GEM5_RESOURCE_JSON_APPEND"] = _preview_resources_url
+parser.add_argument(
+    "--disk-image",
+    required=True,
+    help="Path to a RISC-V KVM-compatible Ubuntu 24.04 disk image.",
+)
+args = parser.parse_args()
 
 cache_hierarchy = PrivateL1PrivateL2WalkCacheHierarchy(
     l1d_size="16KiB", l1i_size="16KiB", l2_size="256KiB"
@@ -96,8 +103,8 @@ board.set_kernel_disk_workload(
     kernel=obtain_resource(
         "riscv-linux-6.8.12-kernel", resource_version="1.0.0"
     ),
-    disk_image=obtain_resource(
-        "riscv-ubuntu-24.04-kvm-preview-img", resource_version="1.0.0"
+    disk_image=DiskImageResource(
+        local_path=args.disk_image, root_partition="1"
     ),
     bootloader=None,
     kernel_args=board.get_default_kernel_args() + ["no_systemd=true"],
