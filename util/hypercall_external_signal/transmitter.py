@@ -65,6 +65,7 @@ enable debug logging, set environment variable::
     export PYTHONLOG=DEBUG
 """
 
+import asyncio
 import json
 import logging
 import os
@@ -150,6 +151,72 @@ def send_signal(pid: int, id: int, payload: str) -> None:
             logger.debug("Process has ended!")
             break
         sleep(1)
+        sleep_count += 1
+        if sleep_count == timeout:
+            logger.debug(
+                "Timeout waiting for gem5 to finish using shared memory!"
+            )
+            break
+    logger.debug("Done message received")
+    shm.close()
+    try:
+        shm.unlink()
+    except FileNotFoundError:
+        pass
+
+
+async def send_signal_async(pid: int, id: int, payload: str) -> None:
+    """
+    Async version of send_signal. Identical behaviour but uses
+    ``asyncio.sleep`` instead of ``time.sleep`` so the event loop is not
+    blocked while waiting for gem5 to acknowledge the shared-memory write.
+
+    :param pid: Process ID of the target gem5 process
+    :param id: Message ID for the signal
+    :param payload: String payload to send
+    """
+    shared_mem_name = "shared_gem5_signal_mem_" + str(pid)
+    shared_mem_size = 4096
+    try:
+        shm = shared_memory.SharedMemory(
+            name=shared_mem_name, create=True, size=shared_mem_size
+        )
+    except FileExistsError:
+        shm = shared_memory.SharedMemory(name=shared_mem_name)
+
+    shm.buf[:shared_mem_size] = b"\x00" * shared_mem_size
+    try:
+        final_payload = create_json(id, payload)
+        shm.buf[: len(final_payload.encode())] = final_payload.encode()
+        os.kill(pid, signal.SIGCONT)
+    except ProcessLookupError:
+        shm.close()
+        shm.unlink()
+        return
+    except json.decoder.JSONDecodeError as e:
+        logger.error(
+            f"JSON Parsing Error: {str(e)}\nPayload that caused error:"
+            f"{payload}"
+        )
+        shm.close()
+        shm.unlink()
+        return
+    except Exception as e:
+        logger.error(f"An error occurred: {str(e)}")
+        shm.close()
+        shm.unlink()
+        return
+
+    timeout = 10
+    sleep_count = 0
+    while bytes(shm.buf[:shared_mem_size]).decode().strip("\x00") != "done":
+        logger.debug("Waiting for gem5 to finish using shared memory...")
+        try:
+            os.kill(pid, 0)
+        except ProcessLookupError:
+            logger.debug("Process has ended!")
+            break
+        await asyncio.sleep(1)
         sleep_count += 1
         if sleep_count == timeout:
             logger.debug(
