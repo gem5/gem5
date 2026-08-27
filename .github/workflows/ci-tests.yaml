@@ -107,8 +107,7 @@ jobs:
                   unset PREV
                   echo "test-dirs-matrix=$(\
                     ./main.py list gem5 \
-                    --suites \
-                    --exclude-tags gcn_gpu | \
+                    --suites | \
                     grep "$SUITEUID:" | \
                     cut -d: -f2 | \
                     cut -d/ -f 2- | \
@@ -262,7 +261,7 @@ jobs:
             - name: Run quick ${{ matrix.test-dir }} tests
               id: run-tests
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --skip-build --exclude-tags gcn_gpu ${{  matrix.test-dir }}
+              run: ./main.py run --skip-build ${{  matrix.test-dir }}
 
         # Get the basename of the matrix.test-dir path (to name the artifact).
             - name: Sanitize test-dir for artifact name
@@ -280,37 +279,6 @@ jobs:
                   path: tests/testing-results
                   retention-days: 30
 
-    gpu-tests:
-        runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/gcn-gpu:latest
-        timeout-minutes: 180
-        needs: [pre-commit, get-date]
-        steps:
-            - uses: actions/checkout@v7
-
-            # Obtain the cache if available.
-            - name: Cache build/VEGA_X86
-              uses: actions/cache/restore@v6
-              with:
-                  path: build/VEGA_X86
-                  key: testlib-build-vega-${{ needs.get-date.outputs.date }}
-                  restore-keys: |
-                      testlib-build-vega
-
-            # Run the GPU tests.
-            - name: Run Testlib GPU Tests
-              id: run-tests
-              working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run -j$(nproc) -t$(nproc) --host gcn_gpu --isa=VEGA_X86
-
-            # Upload the tests/testing-results directory as an artifact.
-            - name: Upload results
-              if: success() || failure()
-              uses: actions/upload-artifact@v7
-              with:
-                  name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gpu-status-${{ steps.run-tests.outcome }}-output
-                  path: tests/testing-results
-
     ci-tests:
     # It is 'testlib-quick' which needs to pass for the pull request to be
     # merged. This job is a dummy job that depends on all the other jobs.
@@ -321,6 +289,5 @@ jobs:
             - unittests-all-fast-opt
             - macos-compilation
             - pre-commit
-            - gpu-tests
         steps:
             - run: echo "This job's status is ${{ job.status }}."
