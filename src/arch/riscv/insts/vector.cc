@@ -548,9 +548,11 @@ VMaskMergeMicroInst::generateDisassembly(Addr pc,
 Fault
 VxsatMicroInst::execute(ExecContext* xc, trace::InstRecord* traceData) const
 {
-    xc->setMiscReg(MISCREG_VXSAT, *vxsat);
-    auto vcsr = xc->readMiscReg(MISCREG_VCSR);
-    xc->setMiscReg(MISCREG_VCSR, ((vcsr&~1)|*vxsat));
+    if (*vxsat) {
+        xc->setMiscReg(MISCREG_VXSAT, *vxsat);
+        auto vcsr = xc->readMiscReg(MISCREG_VCSR);
+        xc->setMiscReg(MISCREG_VCSR, ((vcsr&~1)|*vxsat));
+    }
     return NoFault;
 }
 
