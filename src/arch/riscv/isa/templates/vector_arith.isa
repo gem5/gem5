@@ -1550,13 +1550,17 @@ def template VMvWholeMicroExecute {{
 Fault
 %(class_name)s::execute(ExecContext* xc, trace::InstRecord* traceData) const
 {
-    // TODO: Check register alignment.
-    // TODO: If vd is equal to vs2 the instruction is an architectural NOP.
 
     bool set_dirty = true;
     bool check_vill = false;
     Fault update_fault = updateVPUStatus(xc, machInst, set_dirty, check_vill);
     if (update_fault != NoFault) { return update_fault; }
+
+    uint32_t num_regs = machInst.simm3 + 1;
+    if ((machInst.vd % num_regs != 0) || (machInst.vs2 % num_regs != 0)) {
+            return std::make_shared<IllegalInstFault>("Vector register unaligned", machInst);
+    }
+    if (machInst.vd == machInst.vs2) { return NoFault; }
 
     %(op_decl)s;
     %(op_rd)s;
