@@ -953,6 +953,7 @@ MemCtrl::processNextReqEvent(MemInterface* mem_intr,
                 // ensuring all banks are closed and
                 // have exited low power states
                 if (drainState() == DrainState::Draining &&
+                    !totalWriteQueueSize && !totalReadQueueSize &&
                     respQEmpty() && allIntfDrained()) {
 
                     DPRINTF(Drain, "MemCtrl controller done draining\n");
