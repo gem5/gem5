@@ -125,7 +125,7 @@ jobs:
             - name: Get the build targets for testlib-quick-gem5-builds
               working-directory: ${{ github.workspace }}/tests
               id: build-matrix
-              run: echo "build-matrix=$(./main.py list --build-targets --exclude-tags VEGA_X86 -q | jq -ncR '[inputs]')" >>$GITHUB_OUTPUT
+              run: echo "build-matrix=$(./main.py list --build-targets -q | jq -ncR '[inputs]')" >>$GITHUB_OUTPUT
 
         outputs:
             build-matrix: ${{ steps.build-matrix.outputs.build-matrix }}

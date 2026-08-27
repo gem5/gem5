@@ -35,8 +35,7 @@ jobs:
                     ./main.py list gem5 \
                     --suites \
                     --length very-long \
-                    --gcov=test-only \
-                    --exclude-tags gcn_gpu | \
+                    --gcov=test-only | \
                     grep "$SUITEUID:" | \
                     cut -d: -f2 | \
                     cut -d/ -f 2- | \
@@ -104,7 +103,7 @@ jobs:
                   if [ "${{ matrix.test-type }}" = "gem5/gem5_resources" ]; then
                     resource_dir="$RUNNER_TEMP/gem5-resource-download-test"
                   fi
-                  ./main.py run ${{ matrix.test-type }} --length=very-long ${extra_gcov_args} -j"$(nproc)" -vv --exclude-tags gcn_gpu --bin-path "$resource_dir"
+                  ./main.py run ${{ matrix.test-type }} --length=very-long ${extra_gcov_args} -j"$(nproc)" -vv --bin-path "$resource_dir"
 
             - name: Sanitize test-dir for artifact name
               id: sanitize-test-dir
@@ -124,46 +123,3 @@ jobs:
               with:
                   token: ${{ secrets.CODECOV_TOKEN }}
                   flags: overall-testdir-${{steps.sanitize-test-dir.outputs.sanitized-test-dir}},overall-length-very-long,${{steps.sanitize-test-dir.outputs.sanitized-test-dir}}-very-long
-
-    gpu-tests:
-        strategy:
-            fail-fast: false
-        runs-on: [self-hosted, linux, x64]
-        container:
-            image: ghcr.io/gem5/gcn-gpu:latest
-            volumes:
-                - /gem5-resource-cache:/gem5-resource-cache
-        env:
-            GEM5_RESOURCE_DIR: /gem5-resource-cache
-        timeout-minutes: 4320 # 3 days
-        needs: get-date
-
-        steps:
-            - uses: actions/checkout@v7
-
-            - name: Cache build/VEGA_X86
-              uses: actions/cache@v6
-              with:
-                  path: build/VEGA_X86
-                  key: testlib-build-vega-${{ needs.get-date.outputs.date }}
-                  restore-keys: |
-                      testlib-build-vega
-
-            - name: Run Testlib GPU Tests
-              id: run-tests
-              working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --length=very-long -vvv --gcov=test-only -j $(nproc) --host gcn_gpu --isa=VEGA_X86 --bin-path "$GEM5_RESOURCE_DIR"
-              timeout-minutes: 4290
-
-            - name: Upload results
-              if: always()
-              uses: actions/upload-artifact@v7
-              with:
-                  name: weekly-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gpu-status-${{ steps.run-tests.outcome }}-output
-                  path: tests/testing-results
-
-            - name: Upload coverage reports to Codecov
-              uses: codecov/codecov-action@v7
-              with:
-                  token: ${{ secrets.CODECOV_TOKEN }}
-                  flags: overall-gpu-tests,overall-length-very-long,gpu-tests-very-long
