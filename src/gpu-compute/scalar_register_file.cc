@@ -91,6 +91,7 @@ void
 ScalarRegisterFile::waveExecuteInst(Wavefront *w, GPUDynInstPtr ii)
 {
     stats.registerReads += ii->numSrcScalarDWords();
+    stats.registerReadsOperands += ii->numSrcScalarRegOperands();
 
     if (!ii->isLoad() && !(ii->isAtomic() || ii->isMemSync())) {
         Cycles delay(computeUnit->scalarPipeLength());
@@ -103,6 +104,7 @@ ScalarRegisterFile::waveExecuteInst(Wavefront *w, GPUDynInstPtr ii)
         }
 
         stats.registerWrites += ii->numDstScalarDWords();
+        stats.registerWritesOperands += ii->numDstScalarRegOperands();
     }
 }
 
@@ -118,6 +120,7 @@ ScalarRegisterFile::scheduleWriteOperandsFromLoad(Wavefront *w,
     }
 
     stats.registerWrites += ii->numDstScalarDWords();
+    stats.registerWritesOperands += ii->numDstScalarRegOperands();
 }
 
 } // namespace gem5

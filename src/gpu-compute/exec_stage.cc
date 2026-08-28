@@ -195,6 +195,31 @@ ExecStage::exec()
                 panic("Unknown dispatch status in exec()\n");
         }
     }
+    bool anyResourceBusy = false;
+    for (int j = 0; j < computeUnit.numVectorALUs; ++j) {
+        if (!computeUnit.vectorALUs[j].rdy()) {
+            anyResourceBusy = true;
+            break;
+        }
+    }
+    for (int j = 0; !anyResourceBusy && j < computeUnit.numScalarALUs; ++j) {
+        if (!computeUnit.scalarALUs[j].rdy()) {
+            anyResourceBusy = true;
+        }
+    }
+    if (!anyResourceBusy && !computeUnit.vectorGlobalMemUnit.rdy()) {
+        anyResourceBusy = true;
+    }
+    if (!anyResourceBusy && !computeUnit.vectorSharedMemUnit.rdy()) {
+        anyResourceBusy = true;
+    }
+    if (!anyResourceBusy && !computeUnit.scalarMemUnit.rdy()) {
+        anyResourceBusy = true;
+    }
+
+    if (instrExecuted || anyResourceBusy || computeUnit.hasWorkInFlight()) {
+        stats.numCyclesWithAnyWorkInFlight++;
+    }
 
     collectStatistics(PostExec, 0);
 }
@@ -214,7 +239,11 @@ ExecStage::ExecStageStats::ExecStageStats(statistics::Group *parent)
                "instruction issued to execution resource type"),
       ADD_STAT(numCyclesWithNoInstrTypeIssued,
                "Number of clks no instructions"
-               " issued to execution resource type")
+               " issued to execution resource type"),
+      ADD_STAT(numCyclesWithAnyWorkInFlight,
+               "number of cycles an instruction has been issued or "
+               "executed for a given CU or there is at least one "
+               "resident wavefront, which includes memory stalls")
 {
     ComputeUnit *compute_unit = static_cast<ComputeUnit *>(parent);
 

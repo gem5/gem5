@@ -1095,6 +1095,52 @@ Wavefront::exec()
         const int num_active_lanes = execMask().count();
         computeUnit->stats.controlFlowDivergenceDist.sample(num_active_lanes);
         computeUnit->stats.numVecOpsExecuted += num_active_lanes;
+        if (ii->isALU()) {
+            if (ii->isIntMul24()) {
+                computeUnit->stats.intMul24Insts
+                    += num_active_lanes;
+                computeUnit->stats.intMulInsts += num_active_lanes;
+            } else if (ii->isIntMul32()) {
+                computeUnit->stats.intMul32Insts
+                    += num_active_lanes;
+                computeUnit->stats.intMulInsts += num_active_lanes;
+            } else if (ii->isIntDiv()) {
+                computeUnit->stats.intDivInsts
+                    += num_active_lanes;
+            } else if (ii->isIntMul()) {
+                computeUnit->stats.intMulInsts += num_active_lanes;
+            } else if (ii->isFpMul()) {
+                computeUnit->stats.fpMulInsts
+                    += num_active_lanes;
+            } else if (ii->isFpDiv()) {
+                computeUnit->stats.fpDivInsts
+                    += num_active_lanes;
+            } else if (ii->isFpSqrt()) {
+                computeUnit->stats.fpSqrtInsts
+                    += num_active_lanes;
+            } else if (ii->isFpLg()) {
+                computeUnit->stats.fpLgInsts
+                    += num_active_lanes;
+            } else if (ii->isFpSin()) {
+                computeUnit->stats.fpSinInsts
+                    += num_active_lanes;
+            } else if (ii->isFpExp()) {
+                computeUnit->stats.fpExpInsts
+                    += num_active_lanes;
+            } else if (ii->isDpMul()) {
+                computeUnit->stats.dpMulInsts
+                    += num_active_lanes;
+            } else if (ii->isDpDiv()) {
+                computeUnit->stats.dpDivInsts
+                    += num_active_lanes;
+            } else if (ii->isF16() || ii->isF32()) {
+                computeUnit->stats.fpInsts += num_active_lanes;
+            } else if (ii->isF64()) {
+                computeUnit->stats.dpInsts += num_active_lanes;
+            } else {
+                computeUnit->stats.intInsts += num_active_lanes;
+            }
+        }
 
         if (ii->isMFMA()) {
             computeUnit->stats.numVecOpsExecutedMFMA += num_active_lanes;

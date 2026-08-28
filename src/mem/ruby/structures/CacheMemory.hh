@@ -254,6 +254,18 @@ class CacheMemory : public SimObject
           statistics::Scalar m_demand_misses;
           statistics::Formula m_demand_accesses;
 
+          statistics::Scalar accelwattch_read_hits;
+          statistics::Scalar accelwattch_read_misses;
+          statistics::Formula accelwattch_read_accesses;
+
+          statistics::Scalar accelwattch_write_hits;
+          statistics::Scalar accelwattch_write_misses;
+          statistics::Formula accelwattch_write_accesses;
+
+          statistics::Scalar accelwattch_atomic_hits;
+          statistics::Scalar accelwattch_atomic_misses;
+          statistics::Formula accelwattch_atomic_accesses;
+
           statistics::Scalar m_prefetch_hits;
           statistics::Scalar m_prefetch_misses;
           statistics::Formula m_prefetch_accesses;
@@ -266,6 +278,16 @@ class CacheMemory : public SimObject
       // each time they are called
       void profileDemandHit();
       void profileDemandMiss();
+
+      // These functions increment the profile[Read/Write/Atomic][Hit/Miss]
+      // Which are only supported/incremented in the GPU Viper TCC/TCP/SQC
+      // protocols.
+      void profileReadHit();
+      void profileReadMiss();
+      void profileWriteHit();
+      void profileWriteMiss();
+      void profileAtomicHit();
+      void profileAtomicMiss();
       void profilePrefetchHit();
       void profilePrefetchMiss();
 };

@@ -120,9 +120,24 @@ class SimpleNetwork : public Network
         void regStats() override; // Need to override as switches created late
         NetworkStats(SimpleNetwork *parent);
 
+        // A real subgroup, not a flat stat with a dot baked into its own
+        // name -- resolveStat() only splits on subgroup boundaries, not
+        // on a dot that happens to be part of a stat's name. Group name
+        // matches the existing stats.txt prefix, so dumped paths don't
+        // change.
+        struct MessageSizeStats : public statistics::Group
+        {
+            MessageSizeStats(statistics::Group *parent, const char *name,
+                              const statistics::units::Base *unit,
+                              const char *desc);
+
+            // Indexed by MessageSizeType, one Formula per type.
+            std::vector<statistics::Formula *> m_stats;
+        };
+
         //Statistical variables
-        std::vector<statistics::Formula *> m_msg_counts;
-        std::vector<statistics::Formula *> m_msg_bytes;
+        MessageSizeStats m_msg_counts;
+        MessageSizeStats m_msg_bytes;
     } networkStats;
 
   public:

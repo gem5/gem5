@@ -580,8 +580,7 @@ CacheMemory::isLocked(Addr address, int context)
     return entry->isLocked(context);
 }
 
-CacheMemory::
-CacheMemoryStats::CacheMemoryStats(statistics::Group *parent)
+CacheMemory::CacheMemoryStats::CacheMemoryStats(statistics::Group *parent)
     : statistics::Group(parent),
       ADD_STAT(numDataArrayReads, "Number of data array reads"),
       ADD_STAT(numDataArrayWrites, "Number of data array writes"),
@@ -590,7 +589,8 @@ CacheMemoryStats::CacheMemoryStats(statistics::Group *parent)
       ADD_STAT(numTagArrayStalls, "Number of stalls caused by tag array"),
       ADD_STAT(numDataArrayStalls, "Number of stalls caused by data array"),
       ADD_STAT(numAtomicALUOperations, "Number of atomic ALU operations"),
-      ADD_STAT(numAtomicALUArrayStalls, "Number of stalls caused by atomic ALU array"),
+      ADD_STAT(numAtomicALUArrayStalls,
+               "Number of stalls caused by atomic ALU array"),
       ADD_STAT(htmTransCommitReadSet, "Read set size of a committed "
                                       "transaction"),
       ADD_STAT(htmTransCommitWriteSet, "Write set size of a committed "
@@ -602,6 +602,18 @@ CacheMemoryStats::CacheMemoryStats(statistics::Group *parent)
       ADD_STAT(m_demand_misses, "Number of cache demand misses"),
       ADD_STAT(m_demand_accesses, "Number of cache demand accesses",
                m_demand_hits + m_demand_misses),
+      ADD_STAT(accelwattch_read_hits, "Number of cache read hits"),
+      ADD_STAT(accelwattch_read_misses, "Number of cache read misses"),
+      ADD_STAT(accelwattch_read_accesses, "Number of cache read accesses",
+               accelwattch_read_hits + accelwattch_read_misses),
+      ADD_STAT(accelwattch_write_hits, "Number of cache write hits"),
+      ADD_STAT(accelwattch_write_misses, "Number of cache write misses"),
+      ADD_STAT(accelwattch_write_accesses, "Number of cache write accesses",
+               accelwattch_write_hits + accelwattch_write_misses),
+      ADD_STAT(accelwattch_atomic_hits, "Number of cache atomic hits"),
+      ADD_STAT(accelwattch_atomic_misses, "Number of cache atomic misses"),
+      ADD_STAT(accelwattch_atomic_accesses, "Number of cache atomic accesses",
+               accelwattch_atomic_hits + accelwattch_atomic_misses),
       ADD_STAT(m_prefetch_hits, "Number of cache prefetch hits"),
       ADD_STAT(m_prefetch_misses, "Number of cache prefetch misses"),
       ADD_STAT(m_prefetch_accesses, "Number of cache prefetch accesses",
@@ -664,6 +676,16 @@ CacheMemoryStats::CacheMemoryStats(statistics::Group *parent)
     m_accessModeType
         .init(RubyRequestType_NUM)
         .flags(statistics::pdf | statistics::total);
+
+    accelwattch_read_hits.flags(statistics::nozero);
+    accelwattch_write_hits.flags(statistics::nozero);
+    accelwattch_atomic_hits.flags(statistics::nozero);
+    accelwattch_read_misses.flags(statistics::nozero);
+    accelwattch_write_misses.flags(statistics::nozero);
+    accelwattch_atomic_misses.flags(statistics::nozero);
+    accelwattch_read_accesses.flags(statistics::nozero);
+    accelwattch_write_accesses.flags(statistics::nozero);
+    accelwattch_atomic_accesses.flags(statistics::nozero);
 
     for (int i = 0; i < RubyAccessMode_NUM; i++) {
         m_accessModeType
@@ -839,6 +861,42 @@ void
 CacheMemory::profileDemandMiss()
 {
     cacheMemoryStats.m_demand_misses++;
+}
+
+void
+CacheMemory::profileReadHit()
+{
+    cacheMemoryStats.accelwattch_read_hits++;
+}
+
+void
+CacheMemory::profileReadMiss()
+{
+    cacheMemoryStats.accelwattch_read_misses++;
+}
+
+void
+CacheMemory::profileWriteHit()
+{
+    cacheMemoryStats.accelwattch_write_hits++;
+}
+
+void
+CacheMemory::profileWriteMiss()
+{
+    cacheMemoryStats.accelwattch_write_misses++;
+}
+
+void
+CacheMemory::profileAtomicHit()
+{
+    cacheMemoryStats.accelwattch_atomic_hits++;
+}
+
+void
+CacheMemory::profileAtomicMiss()
+{
+    cacheMemoryStats.accelwattch_atomic_misses++;
 }
 
 void

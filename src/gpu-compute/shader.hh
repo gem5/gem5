@@ -96,6 +96,7 @@ class Shader : public ClockedObject
 
     // Last tick that all CUs attached to this shader were inactive
     Tick _lastInactiveTick;
+    Cycles _lastActiveCycle;
 
     // If a kernel-based exit event was requested, wait for all CUs in the
     // shader to complete before actually exiting so that stats are updated.
@@ -123,6 +124,11 @@ class Shader : public ClockedObject
     void sampleInstRoundTrip(std::vector<Tick> roundTripTime);
     void sampleLineRoundTrip(
         const std::map<Addr, std::vector<Tick>> &roundTripTime);
+
+    void
+    setBlitKernel(bool is_blit_kernel) {
+        blitKernel = is_blit_kernel;
+    }
 
     SimpleThread *cpuThread;
     ThreadContext *gpuTc;
@@ -197,6 +203,13 @@ class Shader : public ClockedObject
         return is_scratch;
     }
 
+    // Checks if the current kernel is a blit kernel
+    bool
+    isBlitKernel() const
+    {
+        return blitKernel;
+    }
+
     Addr
     getScratchBase()
     {
@@ -233,6 +246,8 @@ class Shader : public ClockedObject
     GfxVersion getGfxVersion() const;
 
     EventFunctionWrapper tickEvent;
+    EventFunctionWrapper shaderActiveCycleEvent;
+    void shaderActiveCycleTick();
 
     // is this simulation going to be timing mode in the memory?
     bool timingSim;
@@ -328,6 +343,13 @@ class Shader : public ClockedObject
     void functionalTLBAccess(PacketPtr pkt, int cu_id, BaseMMU::Mode mode);
     void updateContext(int cid);
     void notifyCuSleep();
+    void notifyCuActive();
+
+    // Fires the "Kernel Completed" exit once both the completion signal
+    // has arrived and every CU is idle. Called from both places that
+    // could end up being the last one to happen, so it doesn't matter
+    // which order they occur in.
+    void emitKernelExitIfRequested();
 
     void
     incVectorInstSrcOperand(int num_operands)
@@ -341,12 +363,7 @@ class Shader : public ClockedObject
         stats.vectorInstDstOperand[num_operands]++;
     }
 
-    void
-    requestKernelExitEvent(bool is_blit_kernel)
-    {
-        kernelExitRequested = true;
-        blitKernel = is_blit_kernel;
-    }
+    void requestKernelExitEvent(bool is_blit_kernel);
 
     void decNumOutstandingInvL2s();
     void
@@ -393,6 +410,7 @@ class Shader : public ClockedObject
         statistics::Distribution *cacheBlockRoundTrip;
 
         statistics::Scalar shaderActiveTicks;
+        statistics::Scalar shaderActiveCycles;
         statistics::Vector vectorInstSrcOperand;
         statistics::Vector vectorInstDstOperand;
     } stats;

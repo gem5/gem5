@@ -528,6 +528,7 @@ class ComputeUnit : public ClockedObject
 
     bool isDone() const;
     bool isVectorAluIdle(uint32_t simdId) const;
+    bool hasWorkInFlight() const;
 
     void handleSQCReturn(PacketPtr pkt);
 
@@ -1198,6 +1199,26 @@ class ComputeUnit : public ClockedObject
         statistics::Scalar vALUInsts;
         statistics::Formula vALUInstsPerWF;
         statistics::Scalar sALUInsts;
+        statistics::Scalar totalInsts;
+        statistics::Scalar decodedInsts;
+        statistics::Scalar decodedIntInsts;
+        statistics::Scalar decodedFpInsts;
+        statistics::Scalar intInsts;
+        statistics::Scalar fpInsts;
+        statistics::Scalar dpInsts;
+        statistics::Scalar intMulInsts;
+        statistics::Scalar intMul24Insts;
+        statistics::Scalar intMul32Insts;
+        statistics::Scalar intDivInsts;
+        statistics::Scalar fpMulInsts;
+        statistics::Scalar fpDivInsts;
+        statistics::Scalar fpSqrtInsts;
+        statistics::Scalar fpLgInsts;
+        statistics::Scalar fpSinInsts;
+        statistics::Scalar fpExpInsts;
+        statistics::Scalar dpMulInsts;
+        statistics::Scalar dpDivInsts;
+        statistics::Scalar texInsts;
         statistics::Formula sALUInstsPerWF;
         statistics::Scalar instCyclesVALU;
         statistics::Scalar instCyclesSALU;

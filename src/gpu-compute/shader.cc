@@ -58,11 +58,15 @@ Shader::Shader(const Params &p)
     : ClockedObject(p),
       _activeCus(0),
       _lastInactiveTick(0),
+      _lastActiveCycle(0),
       cpuThread(nullptr),
       gpuTc(nullptr),
       cpuPointer(p.cpu_pointer),
       tickEvent([this] { execScheduledAdds(); }, "Shader scheduled adds event",
                 false, Event::CPU_Tick_Pri),
+      shaderActiveCycleEvent([this] { shaderActiveCycleTick(); },
+                             "Shader active event", false,
+                             Event::CPU_Tick_Pri),
       timingSim(p.timing),
       hsail_mode(SIMT),
       impl_kern_launch_acq(p.impl_kern_launch_acq),
@@ -116,6 +120,9 @@ Shader::Shader(const Params &p)
         assert(i == cuList[i]->cu_id);
         cuList[i]->shader = this;
         cuList[i]->idleCUTimeout = p.idlecu_timeout;
+    }
+    if (shaderActiveCycleEvent.scheduled()) {
+        reschedule(shaderActiveCycleEvent, clockEdge(), true);
     }
 }
 
@@ -555,24 +562,57 @@ Shader::sampleLineRoundTrip(const std::map<Addr, std::vector<Tick>> &lineMap)
 }
 
 void
-Shader::notifyCuSleep()
+Shader::notifyCuActive()
 {
+    if (!shaderActiveCycleEvent.scheduled()) {
+        schedule(shaderActiveCycleEvent, clockEdge());
+    }
+}
+
+void
+Shader::shaderActiveCycleTick()
+{
+    if (_activeCus > 0) {
+        stats.shaderActiveCycles++;
+        schedule(shaderActiveCycleEvent, clockEdge(Cycles(1)));
+    }
+}
+
+void
+Shader::emitKernelExitIfRequested() {
+    // The completion signal and the last CU going idle are two separate
+    // edges, and either can happen first. Check both here so we catch it
+    // no matter which one lands last. The flag reset keeps this from
+    // firing twice.
+    if (kernelExitRequested && !_activeCus) {
+        kernelExitRequested = false;
+        if (blitKernel) {
+            exitSimLoop("GPU Blit Kernel Completed");
+        } else {
+            exitSimLoop("GPU Kernel Completed");
+        }
+    }
+}
+
+void
+Shader::notifyCuSleep() {
     // If all CUs attached to his shader are asleep, update shaderActiveTicks
     panic_if(_activeCus <= 0 || _activeCus > cuList.size(),
              "Invalid activeCu size\n");
     _activeCus--;
     if (!_activeCus) {
         stats.shaderActiveTicks += curTick() - _lastInactiveTick;
-
-        if (kernelExitRequested) {
-            kernelExitRequested = false;
-            if (blitKernel) {
-                exitSimLoop("GPU Blit Kernel Completed");
-            } else {
-                exitSimLoop("GPU Kernel Completed");
-            }
-        }
     }
+    emitKernelExitIfRequested();
+}
+
+void
+Shader::requestKernelExitEvent(bool is_blit_kernel) {
+    kernelExitRequested = true;
+    blitKernel = is_blit_kernel;
+    // If every CU already went idle before this signal showed up, we
+    // missed the usual exit point -- fire it now instead.
+    emitKernelExitIfRequested();
 }
 
 void
@@ -630,6 +670,8 @@ Shader::ShaderStats::ShaderStats(statistics::Group *parent, int wf_size)
                "Number of cache lines for coalesced request"),
       ADD_STAT(shaderActiveTicks,
                "Total ticks that any CU attached to this shader is active"),
+      ADD_STAT(shaderActiveCycles,
+               "Total cycles that any CU attached to this shader is active"),
       ADD_STAT(vectorInstSrcOperand,
                "vector instruction source operand distribution"),
       ADD_STAT(vectorInstDstOperand,

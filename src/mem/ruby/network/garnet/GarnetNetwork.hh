@@ -118,40 +118,58 @@ class GarnetNetwork : public Network
     void print(std::ostream& out) const;
 
     // increment counters
-    void increment_injected_packets(int vnet) { m_packets_injected[vnet]++; }
-    void increment_received_packets(int vnet) { m_packets_received[vnet]++; }
+    void
+    increment_injected_packets(int vnet)
+    {
+        m_stats.m_packets_injected[vnet]++;
+    }
+
+    void
+    increment_received_packets(int vnet)
+    {
+        m_stats.m_packets_received[vnet]++;
+    }
 
     void
     increment_packet_network_latency(Tick latency, int vnet)
     {
-        m_packet_network_latency[vnet] += latency;
+        m_stats.m_packet_network_latency[vnet] += latency;
     }
 
     void
     increment_packet_queueing_latency(Tick latency, int vnet)
     {
-        m_packet_queueing_latency[vnet] += latency;
+        m_stats.m_packet_queueing_latency[vnet] += latency;
     }
 
-    void increment_injected_flits(int vnet) { m_flits_injected[vnet]++; }
-    void increment_received_flits(int vnet) { m_flits_received[vnet]++; }
+    void
+    increment_injected_flits(int vnet)
+    {
+        m_stats.m_flits_injected[vnet]++;
+    }
+
+    void
+    increment_received_flits(int vnet)
+    {
+        m_stats.m_flits_received[vnet]++;
+    }
 
     void
     increment_flit_network_latency(Tick latency, int vnet)
     {
-        m_flit_network_latency[vnet] += latency;
+        m_stats.m_flit_network_latency[vnet] += latency;
     }
 
     void
     increment_flit_queueing_latency(Tick latency, int vnet)
     {
-        m_flit_queueing_latency[vnet] += latency;
+        m_stats.m_flit_queueing_latency[vnet] += latency;
     }
 
     void
     increment_total_hops(int hops)
     {
-        m_total_hops += hops;
+        m_stats.m_total_hops += hops;
     }
 
     void update_traffic_distribution(RouteInfo route);
@@ -169,37 +187,57 @@ class GarnetNetwork : public Network
     bool m_enable_fault_model;
 
     // Statistical variables
-    statistics::Vector m_packets_received;
-    statistics::Vector m_packets_injected;
-    statistics::Vector m_packet_network_latency;
-    statistics::Vector m_packet_queueing_latency;
+    //
+    // Grouped so these are resolvable via resolveStat(), not just
+    // dumped to stats.txt. Merged with no name of its own, so paths
+    // stay "network.<stat>" instead of "network.m_stats.<stat>".
+    struct GarnetNetworkStats : public statistics::Group
+    {
+        GarnetNetworkStats(GarnetNetwork *parent);
+        void regStats() override; // Deferred: several stats depend on
+                                   // state (e.g. m_max_vcs_per_vnet) that
+                                   // isn't finalized until after
+                                   // construction.
 
-    statistics::Formula m_avg_packet_vnet_latency;
-    statistics::Formula m_avg_packet_vqueue_latency;
-    statistics::Formula m_avg_packet_network_latency;
-    statistics::Formula m_avg_packet_queueing_latency;
-    statistics::Formula m_avg_packet_latency;
+      private:
+        GarnetNetwork *parent;
 
-    statistics::Vector m_flits_received;
-    statistics::Vector m_flits_injected;
-    statistics::Vector m_flit_network_latency;
-    statistics::Vector m_flit_queueing_latency;
+      public:
+        statistics::Vector m_packets_received;
+        statistics::Vector m_packets_injected;
+        statistics::Vector m_packet_network_latency;
+        statistics::Vector m_packet_queueing_latency;
 
-    statistics::Formula m_avg_flit_vnet_latency;
-    statistics::Formula m_avg_flit_vqueue_latency;
-    statistics::Formula m_avg_flit_network_latency;
-    statistics::Formula m_avg_flit_queueing_latency;
-    statistics::Formula m_avg_flit_latency;
+        statistics::Formula m_avg_packet_vnet_latency;
+        statistics::Formula m_avg_packet_vqueue_latency;
+        statistics::Formula m_avg_packet_network_latency;
+        statistics::Formula m_avg_packet_queueing_latency;
+        statistics::Formula m_avg_packet_latency;
 
-    statistics::Scalar m_total_ext_in_link_utilization;
-    statistics::Scalar m_total_ext_out_link_utilization;
-    statistics::Scalar m_total_int_link_utilization;
-    statistics::Scalar m_average_link_utilization;
-    statistics::Vector m_average_vc_load;
+        statistics::Vector m_flits_received;
+        statistics::Vector m_flits_injected;
+        statistics::Vector m_flit_network_latency;
+        statistics::Vector m_flit_queueing_latency;
 
-    statistics::Scalar  m_total_hops;
-    statistics::Formula m_avg_hops;
+        statistics::Formula m_avg_flit_vnet_latency;
+        statistics::Formula m_avg_flit_vqueue_latency;
+        statistics::Formula m_avg_flit_network_latency;
+        statistics::Formula m_avg_flit_queueing_latency;
+        statistics::Formula m_avg_flit_latency;
 
+        statistics::Scalar m_total_ext_in_link_utilization;
+        statistics::Scalar m_total_ext_out_link_utilization;
+        statistics::Scalar m_total_int_link_utilization;
+        statistics::Scalar m_average_link_utilization;
+        statistics::Vector m_average_vc_load;
+
+        statistics::Scalar  m_total_hops;
+        statistics::Formula m_avg_hops;
+    } m_stats;
+
+    // Still not resolvable -- their names have a literal '.' in them,
+    // and resolveStat() treats any dot as a subgroup separator. Left as
+    // legacy stats for now.
     std::vector<std::vector<statistics::Scalar *>> m_data_traffic_distribution;
     std::vector<std::vector<statistics::Scalar *>> m_ctrl_traffic_distribution;
 

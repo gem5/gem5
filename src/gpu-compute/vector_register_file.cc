@@ -125,6 +125,8 @@ VectorRegisterFile::waveExecuteInst(Wavefront *w, GPUDynInstPtr ii)
     // increment count of number of DWords read from VRF
     int DWords = ii->numSrcVecDWords();
     stats.registerReads += (DWords * w->execMask().count());
+    stats.registerReadsOperands +=
+        (ii->numSrcVecRegOperands() * w->execMask().count());
 
     for (const auto &dstVecOp : ii->dstVecRegOperands()) {
         for (const auto &physIdx : dstVecOp.physIndices()) {
@@ -167,6 +169,8 @@ VectorRegisterFile::waveExecuteInst(Wavefront *w, GPUDynInstPtr ii)
         // increment count of number of DWords written to VRF
         DWords = ii->numDstVecDWords();
         stats.registerWrites += (DWords * w->execMask().count());
+        stats.registerWritesOperands +=
+            (ii->numDstVecRegOperands() * w->execMask().count());
 
         mask = w->execMask().to_ullong();
         srams = w->execMask().size() / 4;
@@ -192,6 +196,8 @@ VectorRegisterFile::scheduleWriteOperandsFromLoad(Wavefront *w,
     // increment count of number of DWords written to VRF
     int DWords = ii->numDstVecDWords();
     stats.registerWrites += (DWords * ii->exec_mask.count());
+    stats.registerWritesOperands +=
+        (ii->numDstVecRegOperands() * ii->exec_mask.count());
 
     uint64_t mask = ii->exec_mask.to_ullong();
     int srams = ii->exec_mask.size() / 4;

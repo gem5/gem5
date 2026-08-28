@@ -228,28 +228,29 @@ SimpleNetwork::functionalWrite(Packet *pkt)
     return num_functional_writes;
 }
 
-SimpleNetwork::NetworkStats::NetworkStats(SimpleNetwork *parent)
-    : statistics::Group(parent), parent(parent)
+SimpleNetwork::NetworkStats::MessageSizeStats::MessageSizeStats(
+    statistics::Group *parent, const char *name,
+    const statistics::units::Base *unit, const char *desc)
+    : statistics::Group(parent, name)
 {
     for (MessageSizeType type = MessageSizeType_FIRST;
          type < MessageSizeType_NUM; ++type) {
-        std::string name_count = csprintf(
-            "msg_count.%s", MessageSizeType_to_string(MessageSizeType(type)));
-        auto msg_count = new statistics::Formula(
-            parent, name_count.c_str(), statistics::units::Count::get(),
-            "Total messages through network");
-        msg_count->flags(statistics::nozero);
-
-        std::string name_bytes = csprintf(
-            "msg_byte.%s", MessageSizeType_to_string(MessageSizeType(type)));
-        auto msg_bytes = new statistics::Formula(
-            parent, name_bytes.c_str(), statistics::units::Byte::get(),
-            "Total bytes through network");
-        msg_bytes->flags(statistics::nozero);
-
-        m_msg_counts.push_back(msg_count);
-        m_msg_bytes.push_back(msg_bytes);
+        std::string stat_name =
+            MessageSizeType_to_string(MessageSizeType(type));
+        auto *stat = new statistics::Formula(
+            this, stat_name.c_str(), unit, desc);
+        stat->flags(statistics::nozero);
+        m_stats.push_back(stat);
     }
+}
+
+SimpleNetwork::NetworkStats::NetworkStats(SimpleNetwork *parent)
+    : statistics::Group(parent), parent(parent),
+      m_msg_counts(this, "msg_count", statistics::units::Count::get(),
+                   "Total messages through network"),
+      m_msg_bytes(this, "msg_byte", statistics::units::Byte::get(),
+                  "Total bytes through network")
+{
 }
 
 void
@@ -259,10 +260,10 @@ SimpleNetwork::NetworkStats::regStats()
     for (MessageSizeType type = MessageSizeType_FIRST;
          type < MessageSizeType_NUM; ++type) {
         for (auto &it : parent->m_switches) {
-            *(m_msg_counts[type]) += sum(it.second->getMsgCount(type));
+            *(m_msg_counts.m_stats[type]) += sum(it.second->getMsgCount(type));
         }
-        *(m_msg_bytes[type]) =
-            *(m_msg_counts[type]) *
+        *(m_msg_bytes.m_stats[type]) =
+            *(m_msg_counts.m_stats[type]) *
             statistics::constant(Network::MessageSizeType_to_int(type));
     }
 
