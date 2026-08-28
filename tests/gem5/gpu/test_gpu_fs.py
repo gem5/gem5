@@ -34,8 +34,33 @@ resource_directory = (
     if config.bin_path
     else joinpath(absdirpath(__file__), "resources")
 )
+gpu_config_directory = joinpath(
+    config.base_dir, "configs", "example", "gem5_library"
+)
+gpu_check_script = joinpath(absdirpath(__file__), "gpu_fs_check.sh")
 
 mi355x_checkpoint_resource = "x86-mi355x-gpu-fs-smoke-checkpoint"
+mi355x_checkpoint_resource_version = "1.0.0"
+gpu_fs_boot_services = (
+    "multipathd.service",
+    "snapd.service",
+    "snapd.seeded.service",
+    "systemd-networkd.service",
+    "systemd-networkd-wait-online.service",
+    "systemd-resolved.service",
+    "systemd-timesyncd.service",
+    "thermald.service",
+    "unattended-upgrades.service",
+)
+
+
+def gpu_fs_boot_args():
+    """Return example arguments that disable unrelated guest services."""
+
+    args = []
+    for service in gpu_fs_boot_services:
+        args.extend(("--kernel-arg", f"systemd.mask={service}"))
+    return tuple(args)
 
 
 def gpu_fs_test(name, config_file, expected_gpu, length):
@@ -49,8 +74,20 @@ def gpu_fs_test(name, config_file, expected_gpu, length):
                 (serial_output,),
             ),
         ),
-        config=joinpath(absdirpath(__file__), "configs", config_file),
-        config_args=("--resource-directory", resource_directory),
+        config=joinpath(gpu_config_directory, config_file),
+        config_args=(
+            "--resource-directory",
+            resource_directory,
+            "--cpu-type",
+            "atomic",
+            "--num-cus",
+            "4",
+            "--app",
+            gpu_check_script,
+            "--opts",
+            expected_gpu,
+        )
+        + gpu_fs_boot_args(),
         valid_isas=(constants.all_compiled_tag,),
         valid_hosts=constants.supported_hosts,
         length=length,
@@ -59,7 +96,7 @@ def gpu_fs_test(name, config_file, expected_gpu, length):
 
 gpu_fs_test(
     name="gpu-fs-mi200-stdlib-driver",
-    config_file="mi200_gpu.py",
+    config_file="x86-mi200-gpu.py",
     expected_gpu="gfx90a",
     # Retain a full boot in Daily to cover the CDNA2 driver/device path.
     length=constants.long_tag,
@@ -67,7 +104,7 @@ gpu_fs_test(
 
 gpu_fs_test(
     name="gpu-fs-mi355x-stdlib-driver",
-    config_file="mi355x_gpu.py",
+    config_file="x86-mi355x-gpu.py",
     expected_gpu="gfx950",
     # Retain a full boot in Daily to cover the CDNA4 driver/device path.
     length=constants.long_tag,
@@ -81,14 +118,20 @@ gem5_verify_config(
             (serial_output,),
         ),
     ),
-    config=joinpath(absdirpath(__file__), "configs", "mi355x_gpu.py"),
+    config=joinpath(gpu_config_directory, "x86-mi355x-gpu.py"),
     config_args=(
         "--resource-directory",
         resource_directory,
-        "--mode",
-        "restore",
+        "--cpu-type",
+        "atomic",
+        "--num-cus",
+        "4",
         "--checkpoint-resource",
         mi355x_checkpoint_resource,
+        "--checkpoint-resource-version",
+        mi355x_checkpoint_resource_version,
+        "--kernel-arg",
+        "init=/home/gem5/run_gem5_app.sh",
     ),
     valid_isas=(constants.all_compiled_tag,),
     valid_hosts=constants.supported_hosts,
