@@ -18,9 +18,7 @@ GPU-architecture compatibility override.
 The examples obtain version `1.0.0` of
 `x86-ubuntu-24.04-gpu-img` and `x86-linux-kernel-6.8.0-gpu`. The image is
 extracted sparsely to reduce allocated storage, and its AMDGPU driver was
-built for the paired kernel. Guest services unrelated to the offline smoke
-check are masked to avoid simulating networking, snap, multipath, thermal,
-and update management.
+built for the paired kernel.
 
 The shared `configs/example/gem5_library/x86_gpu.py` helper also supports
 local `--image` and `--kernel` paths, KVM or Atomic CPUs, a reduced compute-unit
