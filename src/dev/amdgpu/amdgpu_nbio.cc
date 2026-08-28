@@ -468,6 +468,8 @@ AMDGPUNbio::CmdBufferAndProcessDone(PspCommandContext *ctx)
             } else if (ctx->sriov_spatial_mode == NBIO_COMPUTE_PARTITION_SPX) {
                 ctx->sriov_spatial_mode = COMPUTE_PARTITION_SPX;
             }
+            // The spatial mode is stored in bits 7:4 of
+            // NBIO_PARTITION_COMPUTE_STATUS.
             gpuDevice->setRegVal(NBIO_PARTITION_COMPUTE_STATUS,
                                  (ctx->sriov_spatial_mode << 0x4));
         } break;
