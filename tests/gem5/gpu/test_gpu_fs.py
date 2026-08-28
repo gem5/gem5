@@ -28,7 +28,7 @@ import re
 
 from testlib import *
 
-serial_output = "system.pc.com_1.device"
+serial_output = "board.pc.com_1.device"
 resource_directory = (
     config.bin_path
     if config.bin_path
