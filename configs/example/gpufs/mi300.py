@@ -69,12 +69,10 @@ fi
 
 if [ -f /home/gem5/load_amdgpu.sh ]; then
     sh /home/gem5/load_amdgpu.sh
-elif [ ! -f /lib/modules/`uname -r`/updates/dkms/amdgpu.ko ]; then
-    echo "ERROR: Missing DKMS package for kernel `uname -r`. Exiting gem5."
-    /sbin/m5 exit
 else
+    echo 'options amdgpu ip_block_mask=0x6f ppfeaturemask=0 dpm=0 audio=0 ras_enable=0 discovery=2' > /etc/modprobe.d/amdgpu.conf
     # Backward compatibility with old disk images (ROCm 6.1)
-    modprobe -v amdgpu ip_block_mask=0x6f ppfeaturemask=0 dpm=0 audio=0 ras_enable=0 discovery=2
+    modprobe -v amdgpu
 fi
 
 echo "Running {} {}"
