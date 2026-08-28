@@ -1,10 +1,12 @@
 # GPU
 
-These tests exercise standard-library MI200 and MI355X full-system
-configurations without requiring a ROCm installation on the host. The two
-Daily tests boot the GPUFS image and check that ROCm identifies the simulated
-GPUs as `gfx90a` and `gfx950`. The quick pull-request test restores an MI355X
-checkpoint and verifies one `gfx950` GPU kernel result.
+These tests execute the public
+`configs/example/gem5_library/x86-mi200-gpu.py` and
+`configs/example/gem5_library/x86-mi355x-gpu.py` full-system examples without
+requiring a ROCm installation on the host. The two Daily tests boot the GPUFS
+image and check that ROCm identifies the simulated GPUs as `gfx90a` and
+`gfx950`. The quick pull-request test uses the MI355X example to restore a
+checkpoint and verify one `gfx950` GPU kernel result.
 
 All three tests use an Atomic CPU, `ViperBoard`, and the Viper cache hierarchy.
 They configure 8 GiB of system memory, 16 GiB of GPU memory, and four compute
@@ -13,22 +15,30 @@ while avoiding the cost of the larger default topologies. The `MI210` and
 `MI355X` components supply the driver setup directly; the tests do not use a
 GPU-architecture compatibility override.
 
-The configs obtain version `1.0.0` of
+The examples obtain version `1.0.0` of
 `x86-ubuntu-24.04-gpu-img` and `x86-linux-kernel-6.8.0-gpu`. The image is
 extracted sparsely to reduce allocated storage, and its AMDGPU driver was
 built for the paired kernel. Guest services unrelated to the offline smoke
 check are masked to avoid simulating networking, snap, multipath, thermal,
 and update management.
 
+The shared `configs/example/gem5_library/x86_gpu.py` helper also supports
+local `--image` and `--kernel` paths, KVM or Atomic CPUs, a reduced compute-unit
+count, additional kernel arguments, and local or resource checkpoints. The
+MI300X example uses the same helper even though it is not part of these tests.
+
 ## MI355X smoke checkpoint
 
-`configs/mi355x_gpu.py` supports the two checkpoint-generation stages used
-by the `x86-mi355x-gpu-fs-smoke-checkpoint` resource. First, boot the GPUFS
-image and stop after the initialized HIP loader requests its checkpoint:
+The public `x86-mi355x-gpu-checkpoint.py` example supports the two
+checkpoint-generation stages used by the
+`x86-mi355x-gpu-fs-smoke-checkpoint` resource. It uses the same system builder
+as the tested MI355X example and defaults to the checkpoint's Atomic CPU and
+four-CU topology. First, boot the GPUFS image and stop after the initialized
+HIP loader requests its checkpoint:
 
 ```bash
 build/ALL/gem5.opt \
-    tests/gem5/gpu/configs/mi355x_gpu.py \
+    configs/example/gem5_library/x86-mi355x-gpu-checkpoint.py \
     --mode=create-loader \
     --checkpoint-output=m5out/mi355x-loader \
     --gpu-application-binary=/path/to/hip-checkpoint-runner.py
@@ -39,7 +49,7 @@ Then restore that checkpoint, supply the `gfx950` code object through
 
 ```bash
 build/ALL/gem5.opt \
-    tests/gem5/gpu/configs/mi355x_gpu.py \
+    configs/example/gem5_library/x86-mi355x-gpu-checkpoint.py \
     --mode=create-kernel \
     --checkpoint-directory=m5out/mi355x-loader \
     --checkpoint-output=m5out/mi355x-smoke \
@@ -60,9 +70,11 @@ with:
 
 ```bash
 build/ALL/gem5.opt \
-    tests/gem5/gpu/configs/mi355x_gpu.py \
-    --mode=restore \
-    --checkpoint-directory=m5out/mi355x-smoke
+    configs/example/gem5_library/x86-mi355x-gpu.py \
+    --cpu-type=atomic \
+    --num-cus=4 \
+    --checkpoint-directory=m5out/mi355x-smoke \
+    --kernel-arg=init=/home/gem5/run_gem5_app.sh
 ```
 
 After validation, publish the final checkpoint as
