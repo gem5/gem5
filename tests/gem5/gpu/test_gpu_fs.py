@@ -41,26 +41,6 @@ gpu_check_script = joinpath(absdirpath(__file__), "gpu_fs_check.sh")
 
 mi355x_checkpoint_resource = "x86-mi355x-gpu-fs-smoke-checkpoint"
 mi355x_checkpoint_resource_version = "1.0.0"
-gpu_fs_boot_services = (
-    "multipathd.service",
-    "snapd.service",
-    "snapd.seeded.service",
-    "systemd-networkd.service",
-    "systemd-networkd-wait-online.service",
-    "systemd-resolved.service",
-    "systemd-timesyncd.service",
-    "thermald.service",
-    "unattended-upgrades.service",
-)
-
-
-def gpu_fs_boot_args():
-    """Return example arguments that disable unrelated guest services."""
-
-    args = []
-    for service in gpu_fs_boot_services:
-        args.extend(("--kernel-arg", f"systemd.mask={service}"))
-    return tuple(args)
 
 
 def gpu_fs_test(name, config_file, expected_gpu, length):
@@ -86,8 +66,7 @@ def gpu_fs_test(name, config_file, expected_gpu, length):
             gpu_check_script,
             "--opts",
             expected_gpu,
-        )
-        + gpu_fs_boot_args(),
+        ),
         valid_isas=(constants.all_compiled_tag,),
         valid_hosts=constants.supported_hosts,
         length=length,
