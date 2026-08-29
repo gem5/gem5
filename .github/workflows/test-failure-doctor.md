@@ -11,6 +11,9 @@ on:
   bots: ["github-actions[bot]"]
   roles: all
 
+concurrency:
+  group: "test-failure-doctor-${{ github.event.inputs.failed_workflow_id }}"
+
 permissions: read-all
 
 network: defaults
