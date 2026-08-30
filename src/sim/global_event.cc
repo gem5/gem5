@@ -36,10 +36,15 @@ namespace gem5
 
 std::mutex BaseGlobalEvent::globalQMutex;
 
-// Defines the function that is called **once** per barrier sync event
+// Defines the function that is called **once** per barrier sync event.
 void
-ProcessBarrier::operator()() const
+ProcessBarrier::operator()() const noexcept
 {
+    // BarrierEvent::globalBarrier() releases the event queue lock before
+    // waiting. Global event process() methods expect that lock to be held, so
+    // reacquire it for the duration of the completion step. The other event
+    // queues remain unlocked until the barrier phase completes.
+    std::lock_guard<EventQueue> lock(*curEventQueue());
     event->process();
 }
 

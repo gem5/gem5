@@ -63,7 +63,7 @@ namespace gem5
 struct ProcessBarrier
 {
     BaseGlobalEvent *event;
-    void operator()() const;
+    void operator()() const noexcept;
 };
 
 /**
@@ -111,7 +111,7 @@ class BaseGlobalEvent : public EventBase
             // while waiting on the barrier to prevent deadlocks if
             // another thread wants to lock the event queue.
             EventQueue::ScopedRelease release(curEventQueue());
-            return _globalEvent->barrier.arrive_and_wait();
+            _globalEvent->barrier.arrive_and_wait();
         }
 
       public:
@@ -175,14 +175,13 @@ class BaseGlobalEventTemplate : public BaseGlobalEvent
     virtual ~BaseGlobalEventTemplate(){}
 };
 
-
 /**
  * The main global event class.  Ordinary global events should derive
  * from this class, and define process() to specify the action to be
  * taken when the event is reached.  All threads will synchronize at a
  * barrier, exactly one of the threads will execute the process()
- * method, then the threads will synchronize again so that none of
- * them continue until process() is complete.
+ * method as the barrier completion step. The barrier does not release
+ * the threads until process() is complete.
  */
 class GlobalEvent : public BaseGlobalEventTemplate<GlobalEvent>
 {
