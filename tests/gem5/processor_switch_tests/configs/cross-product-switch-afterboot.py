@@ -56,6 +56,7 @@ from gem5.isas import ISA
 from gem5.resources.resource import obtain_resource
 from gem5.simulate.exit_handler import (
     ExitHandler,
+    ExitHypercall,
     WorkBeginExitHandler,
 )
 from gem5.simulate.simulator import Simulator
@@ -109,7 +110,9 @@ class WorkBeginExit(WorkBeginExitHandler):
         return False
 
 
-class ScheduledStatsDumpHandler(ExitHandler, hypercall_num=6):
+class ScheduledStatsDumpHandler(
+    ExitHandler, hypercall=ExitHypercall.SCHEDULED_EXIT
+):
     process_count = 0
 
     @overrides(ExitHandler)

@@ -85,7 +85,7 @@ board.set_se_binary_workload(
 
 
 # The exit handler which will be used to take checkpoints when the scheduled
-# exit event is triggered (hypercall ID 6).
+# exit event is triggered (SCHEDULED_EXIT hypercall (ID 6)).
 class MyExitHandler(ScheduledExitEventHandler):
     def _process(self, simulator: "Simulator") -> None:
         super()._process(simulator)

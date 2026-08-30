@@ -37,7 +37,10 @@ from gem5.components.processors.simple_switchable_processor import (
 )
 from gem5.isas import get_isa_from_str
 from gem5.resources.resource import obtain_resource
-from gem5.simulate.exit_handler import ExitHandler
+from gem5.simulate.exit_handler import (
+    ExitHandler,
+    ExitHypercall,
+)
 from gem5.simulate.simulator import Simulator
 from gem5.utils.override import overrides
 
@@ -50,7 +53,9 @@ parser.add_argument("--isa", type=str, required=True)
 args = parser.parse_args()
 
 
-class ScheduledProcessorSwitchHandler(ExitHandler, hypercall_num=6):
+class ScheduledProcessorSwitchHandler(
+    ExitHandler, hypercall=ExitHypercall.SCHEDULED_EXIT
+):
     process_count = 0
 
     @overrides(ExitHandler)
