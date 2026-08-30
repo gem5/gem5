@@ -82,6 +82,10 @@ from abc import (
     ABC,
     abstractmethod,
 )
+from collections.abc import (
+    Callable,
+    Generator,
+)
 from pathlib import Path
 from typing import (
     Any,
@@ -91,7 +95,6 @@ from typing import (
     Type,
     Union,
 )
-from collections.abc import Callable, Generator
 
 import m5
 from m5 import options

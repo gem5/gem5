@@ -143,7 +143,7 @@ class CustomMesh(SimpleNetwork):
         weight: int,
         src_node: int,
         dst_node: int,
-        dst_port: Optional[str],
+        dst_port: str | None,
     ):
         self._int_links.append(
             SimpleIntLink(
