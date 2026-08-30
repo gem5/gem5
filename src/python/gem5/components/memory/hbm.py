@@ -204,7 +204,7 @@ def HBM2Stack(
 
 
 def HBM3Stack(
-    size: Optional[str] = "8GiB",
+    size: str | None = "8GiB",
 ) -> AbstractMemorySystem:
     """HBM3 stack at 6.4 Gbps/pin (JESD238B.01), 8H x 16Gb dies.
 
@@ -216,7 +216,7 @@ def HBM3Stack(
 
 
 def HBM3EStack(
-    size: Optional[str] = "8GiB",
+    size: str | None = "8GiB",
 ) -> AbstractMemorySystem:
     """HBM3E stack at 9.6 Gbps/pin (JESD238B.01 speed bin), 8H x 16Gb dies.
 

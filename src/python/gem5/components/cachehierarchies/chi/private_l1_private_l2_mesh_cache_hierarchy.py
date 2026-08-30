@@ -277,7 +277,7 @@ class PrivateL1PrivateL2MeshCacheHierarchy(
         board.connect_system_port(self.ruby_system.sys_port_proxy.in_ports)
 
     def _configure_controllers(
-        self, *node_groups: Tuple[List[SubSystem], Optional[Node_Params]]
+        self, *node_groups: tuple[list[SubSystem], Node_Params | None]
     ) -> None:
         req_channels = self._noc_params.req_ext_channels
         snp_channels = self._noc_params.snp_ext_channels

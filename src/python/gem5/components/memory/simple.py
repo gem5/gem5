@@ -38,13 +38,13 @@
 
 """Simple memory controllers"""
 
+from collections.abc import Sequence
 from math import log
 from typing import (
     List,
     Tuple,
     Union,
 )
-from collections.abc import Sequence
 
 from m5.objects import (
     AbstractMemory,
