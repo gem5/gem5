@@ -63,7 +63,7 @@ def getHash(path: Path) -> str:
     return md5.hexdigest()
 
 
-def getGit(path: Path) -> dict[str, str]:
+def getGit(path: Path) -> Dict[str, str]:
     """
     Returns dictionary with origin, current commit, and repo name for the
     base repository for `path`.
@@ -139,20 +139,20 @@ class Artifact:
     path: Path
     hash: str
     time: float
-    git: dict[str, str]
+    git: Dict[str, str]
     cwd: Path
-    inputs: list["Artifact"]
+    inputs: List["Artifact"]
 
     # Optional fields
     architecture: str
-    size: int | None
+    size: Optional[int]
     is_zipped: bool
     md5sum: str
     url: str
-    supported_gem5_versions: list[str]
+    supported_gem5_versions: List[str]
     version: str
 
-    extra: dict[str, str]
+    extra: Dict[str, str]
 
     @classmethod
     def createArtifact(
@@ -161,15 +161,15 @@ class Artifact:
         name: str,
         cwd: str,
         typ: str,
-        path: str | Path,
+        path: Union[str, Path],
         documentation: str,
-        inputs: list["Artifact"] | None = None,
+        inputs: List["Artifact"] = [],
         architecture: str = "",
-        size: int | None = None,
+        size: Optional[int] = None,
         is_zipped: bool = False,
         md5sum: str = "",
         url: str = "",
-        supported_gem5_versions: list[str] | None = None,
+        supported_gem5_versions: List[str] = [],
         version: str = "",
         **kwargs: str,
     ) -> "Artifact":
@@ -181,13 +181,8 @@ class Artifact:
         to the database.
         """
 
-        inputs = [] if inputs is None else inputs
-        supported_gem5_versions = (
-            [] if supported_gem5_versions is None else supported_gem5_versions
-        )
-
         # Dictionary with all of the kwargs for construction.
-        data: dict[str, Any] = {}
+        data: Dict[str, Any] = {}
 
         data["name"] = name
         data["type"] = typ
@@ -245,15 +240,15 @@ class Artifact:
         name: str,
         cwd: str,
         typ: str,
-        path: str | Path,
+        path: Union[str, Path],
         documentation: str,
-        inputs: list["Artifact"] | None = None,
+        inputs: List["Artifact"] = [],
         architecture: str = "",
-        size: int | None = None,
+        size: Optional[int] = None,
         is_zipped: bool = False,
         md5sum: str = "",
         url: str = "",
-        supported_gem5_versions: list[str] | None = None,
+        supported_gem5_versions: List[str] = [],
         version: str = "",
         **kwargs: str,
     ) -> "Artifact":
@@ -262,11 +257,6 @@ class Artifact:
         This assume either it's not in the database or it is the exact same as
         when it was added to the database
         """
-
-        inputs = [] if inputs is None else inputs
-        supported_gem5_versions = (
-            [] if supported_gem5_versions is None else supported_gem5_versions
-        )
 
         self = cls.createArtifact(
             command,
@@ -304,13 +294,13 @@ class Artifact:
 
         return self
 
-    def __init__(self, other: str | UUID | dict[str, Any]) -> None:
+    def __init__(self, other: Union[str, UUID, Dict[str, Any]]) -> None:
         """Constructs an artifact object from the database based on a UUID or
         dictionary from the database. Note that if the variable `other` is of
         type `Dict[str, Any]`, this function will not try to establish a
         connection to the database.
         """
-        if not isinstance(other, dict):
+        if not isinstance(other, Dict):
             _db = getDBConnection()
             if isinstance(other, str):
                 other = UUID(other)
@@ -380,7 +370,7 @@ class Artifact:
     def __repr__(self) -> str:
         return vars(self).__repr__()
 
-    def _getSerializable(self) -> dict[str, str | UUID]:
+    def _getSerializable(self) -> Dict[str, Union[str, UUID]]:
         data = vars(self).copy()
         data["inputs"] = [input._id for input in self.inputs]
         data["cwd"] = str(data["cwd"])
