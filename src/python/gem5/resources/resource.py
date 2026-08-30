@@ -30,6 +30,7 @@ from abc import ABCMeta
 from collections.abc import Generator
 from functools import partial
 from pathlib import Path
+from types import UnionType
 from typing import (
     Any,
     Dict,
@@ -39,6 +40,8 @@ from typing import (
     Tuple,
     Type,
     Union,
+    get_args,
+    get_origin,
 )
 
 from m5.util import (
@@ -1105,10 +1108,9 @@ def _resources_schema_validator(resource_json: dict[str, Any]) -> None:
             continue  # Skip type checking if no type annotation
 
         # Handle Union and Optional types
-        if getattr(param_type, "__origin__", None) == Union:
-            # Get all possible types from the Union using get_args, excluding None for Optional
-            from typing import get_args
-
+        if get_origin(param_type) in (Union, UnionType):
+            # Get all possible types from the Union, excluding None for
+            # Optional.
             valid_types = tuple(
                 t for t in get_args(param_type) if t != type(None)
             )
@@ -1119,14 +1121,10 @@ def _resources_schema_validator(resource_json: dict[str, Any]) -> None:
             if value is None and type(None) in get_args(param_type):
                 continue
             if not any(
-                isinstance(value, t)
-                for t in valid_types
-                if not hasattr(t, "__origin__")
+                isinstance(value, get_origin(t) or t) for t in valid_types
             ):
                 type_names = " or ".join(
-                    t.__name__
-                    for t in valid_types
-                    if not hasattr(t, "__origin__")
+                    (get_origin(t) or t).__name__ for t in valid_types
                 )
                 raise Exception(
                     f"Resource {resource_json['id']} version {resource_json['resource_version']} "
