@@ -238,6 +238,9 @@ class GlobalSyncEvent : public BaseGlobalEventTemplate<GlobalSyncEvent>
         : Base(p, f), repeat(_repeat)
     {
         schedule(when);
+        for (int i = 0; i < numMainEventQueues; ++i) {
+            mainEventQueue[i]->setNextSimQuantum(when);
+        }
     }
 
     virtual ~GlobalSyncEvent (){}

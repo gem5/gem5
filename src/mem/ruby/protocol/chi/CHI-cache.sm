@@ -310,12 +310,18 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     // See CHIRequestType in CHi-msg.sm for descriptions
     Load,                        desc="", in_trans="yes";
     Store,                       desc="", in_trans="yes";
+    StashShared,                 desc="", in_trans="yes";
+    StashUnique,                 desc="", in_trans="yes";
+    StashShared_PoC,             desc="", in_trans="yes";
+    StashUnique_PoC,             desc="", in_trans="yes";
     AtomicLoad,                  desc="", in_trans="yes";
     AtomicStore,                 desc="", in_trans="yes";
     Prefetch,                    desc="", in_trans="yes";
     ReadShared,                  desc="", in_trans="yes";
     ReadNotSharedDirty,          desc="", in_trans="yes";
+    ReadNotSharedDirty_DataPull, desc="", in_trans="yes";
     ReadUnique,                  desc="", in_trans="yes";
+    ReadUnique_DataPull,         desc="", in_trans="yes";
     ReadUnique_PoC,              desc="", in_trans="yes";
     ReadNoSnp,                   desc="", in_trans="yes";
     ReadOnce,                    desc="", in_trans="yes";
@@ -345,8 +351,12 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     SnpOnce,                     desc="", in_trans="yes";
     SnpOnceFwd,                  desc="", in_trans="yes";
     SnpStalled, desc="", in_trans="yes"; // A snoop stall triggered from the inport
-    StashOnceShared,             desc="", in_trans="yes"; // Just discarding the hint
-    StashOnceUnique,             desc="", in_trans="yes"; // Just discarding the hint
+    StashOnceShared,             desc="", in_trans="yes";
+    StashOnceUnique,             desc="", in_trans="yes";
+    StashOnceShared_PoC,         desc="", in_trans="yes", out_trans="yes";
+    StashOnceUnique_PoC,         desc="", in_trans="yes", out_trans="yes";
+    SnpStashShared,              desc="", in_trans="yes";
+    SnpStashUnique,              desc="", in_trans="yes";
 
     // DVM sequencer requests
     DvmTlbi_Initiate, desc="", out_trans="yes", in_trans="yes"; // triggered when a CPU core wants to send a TLBI
@@ -366,6 +376,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     ReadReceipt,             desc="";
     RespSepData,             desc="";
     SnpResp_I,               desc="";
+    SnpResp_I_Read,          desc="";
     SnpResp_I_Fwded_UC,      desc="";
     SnpResp_I_Fwded_UD_PD,   desc="";
     SnpResp_SC,              desc="";
@@ -383,6 +394,22 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     RetryAck_PoC_Hazard,     desc="";
     PCrdGrant_Hazard,        desc="";
     PCrdGrant_PoC_Hazard,    desc="";
+
+    // Events triggered by incoming DataPull from SnpResp_I_Read
+    ReadNSD_Miss_DataPull,   desc="";
+    ReadNSD_HitUpstream_NoOwner_DataPull, desc="";
+    ReadNSD_HitUpstream_DataPull, desc="";
+    ReadNSD_Hit_DataPull_AllocDir, desc="";
+    ReadNSD_Hit_DataPull, desc="";
+    ReadUnique_Miss_DataPull, desc="";
+    ReadUnique_HitUpstream_DataPull, desc="";
+    ReadUnique_HitUpstream_NoUnique_DataPull, desc="";
+    ReadUnique_PoC_HitUpstream_NoUnique_DataPull, desc="";
+    ReadUnique_Hit_DataPull, desc="";
+    ReadUnique_Hit_NoUnique_DataPull, desc="";
+    ReadUnique_PoC_Hit_NoUnique_DataPull, desc="";
+    ReadUnique_Hit_InvUpstream_DataPull, desc="";
+    ReadUnique_Hit_NoUnique_InvUpstream_DataPull, desc="";
 
     // Events triggered by incoming DVM messages
     SnpDvmOpSync_P1,         desc="", in_trans="yes";
@@ -466,6 +493,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     SnpSharedPipe, desc="Latency for SnpShared requests";
     SnpInvPipe,    desc="Latency for SnpUnique and SnpCleanInv requests";
     SnpOncePipe,   desc="Latency for SnpOnce requests";
+    SnpStashPipe,  desc="Latency for SnpStash requests";
 
     // Send a read request downstream.
     SendReadShared,       out_trans="yes", desc="Send a ReadShared or ReadNotSharedDirty is allow_SD is false";
@@ -516,6 +544,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     SendCompUCResp, desc="Ack CleanUnique with Comp_UC";
     SendCompUCRespStale, desc="Ack stale CleanUnique with Comp_UC";
     SendCompUDResp, desc="Ack MakeReadUnique with Comp_UD_PD";
+    SendStashOnce, out_trans="yes", desc="Send StashOnce to downstream";
 
     // Checks if an upgrade using a CleanUnique was sucessfull
     CheckUpgrade_FromStore, desc="Upgrade needed by a Store";
@@ -534,9 +563,12 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     SendSnpUniqueFwd,         desc="Send a SnpUniqueFwd to a single sharer";
     SendSnpCleanInvalid,      desc="Send a SnpCleanInvalid to all sharers";
     SendSnpCleanInvalidNoReq, desc="Send a SnpCleanInvalid to all sharers except requestor";
+    SendSnpStash,             desc="Send a SnpStashShared/SnpStashUnique to stash target";
+
     // Snoop responses
     SendSnpData,                      desc="Send SnpRespData as snoop reply";
     SendSnpIResp,                     desc="Send SnpResp_I as snoop reply";
+    SendSnpIRespDataPull,             out_trans="yes", desc="Send SnpResp_I_Read as snoop reply";
     SendInvSnpResp,                   desc="Check data state and queue either SendSnpIResp or SendSnpData";
     SendSnpUniqueFwdCompData,         desc="Send CompData to SnpUniqueFwd target and queue either SendSnpFwdedData or SendSnpFwdedResp";
     SendSnpSharedFwdCompData,         desc="Send CompData to SnpUniqueFwd target and queue either SendSnpFwdedData or SendSnpFwdedResp";
@@ -567,7 +599,8 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     FinishCopyBack_Stale, desc="Check if a Evict needs to be sent";
     ActionStalledOnHazard, desc="Stall a trigger action because until finish handling snoop hazard";
     WriteZero, desc="Stall a trigger action because until finish handling snoop hazard";
-
+    StashOnceCallback, desc="Callback for StashOnce requests to complete the transaction after the stash is done";
+    AllocateDirEntry, desc="Allocate a directory entry for the line";
     // This is triggered once a transaction doesn't have
     // any queued action and is not expecting responses/data. The transaction
     // is finalized and the next stable state is stored in the cache/directory
@@ -648,6 +681,8 @@ machine(MachineType:Cache, "Cache coherency protocol") :
 
   // TBE fields
   structure(TBE, desc="Transaction buffer entry definition") {
+    Tick timestamp, desc="Time this entry was allocated. Affects order of trigger events";
+
     // in which table was this allocated
     bool is_req_tbe, desc="Allocated in the request table";
     bool is_snp_tbe, desc="Allocated in the snoop table";
@@ -666,6 +701,10 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     bool ns,                desc="Secure State of the transaction. NS=NonSecure", default="true";
     MachineID requestor,    desc="Requestor ID";
     MachineID fwdRequestor, desc="Requestor to receive data on fwding snoops";
+    MachineID stashNID,     desc="Stash target ID";
+    bool      stashNIDValid,desc="Stash target ID is valid";
+    MachineID stashLPID,    desc="Stash target LPID";
+    bool      stashLPIDValid,desc="Stash target LPID is valid";
     bool use_DMT,           desc="Use DMT for this transaction";
     bool use_DCT,           desc="Use DCT for this transaction";
 
@@ -710,6 +749,7 @@ machine(MachineType:Cache, "Cache coherency protocol") :
     bool dir_ownerExists,         desc="Owner ID is valid";
     bool dir_ownerIsExcl,         desc="Owner is UD or UC; SD otherwise";
     bool doCacheFill,             desc="Write valid data to the cache when completing transaction";
+    bool dataPull,                desc="Data pull transaction";
     // NOTE: dataMaybeDirtyUpstream and dir_ownerExists are the same except
     // when we had just sent dirty data upstream and are waiting for ack to set
     // dir_ownerExists

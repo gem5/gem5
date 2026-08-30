@@ -1,0 +1,36 @@
+---
+
+name: Run issue labeler when an issue is opened
+
+on:
+    workflow_dispatch:
+    issues:
+        types: [opened]
+
+env:
+  # This is the token used to authenticate with GitHub.
+  # It is required to run the `gh` CLI.
+    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+    run_workflows:
+        permissions:
+            actions: write
+            contents: read
+        runs-on: ubuntu-24.04
+        steps:
+            # This step is necessary to allow the `gh` CLI to be used in the
+            # following steps. The `gh` CLI is used to trigger the workflows.
+            # and needs to be used inside a the same repository where the
+            # workflows are defined.
+            - name: Checkout Repository
+              uses: actions/checkout@v4
+
+            - name: Install gh-aw extension
+              run: gh extension install github/gh-aw
+
+            - name: Run Issue labeler
+              run: |
+                  gh aw run issue-labeler-first-half --ref develop --raw-field issue_number=${{ github.event.issue.number }}
+                  gh aw run issue-labeler-second-half --ref develop --raw-field issue_number=${{ github.event.issue.number }}
+                  echo "Issue labeler scheduled to run on develop branch"

@@ -155,7 +155,7 @@ TAGE_SC_L_TAGE::calculateIndicesAndTags(
     }
 
     Addr t = (shifted_pc ^ (threadHistory[tid].pathHist &
-                    ((1 << histLengths[firstLongTagTable]) - 1)))
+                    ((1ULL << histLengths[firstLongTagTable]) - 1)))
              % longTagsTageFactor;
 
     for (int i = firstLongTagTable; i <= nHistoryTables; i++) {
@@ -168,7 +168,7 @@ TAGE_SC_L_TAGE::calculateIndicesAndTags(
     }
 
     t = (shifted_pc ^ (threadHistory[tid].pathHist &
-                    ((1 << histLengths[1]) - 1)))
+                    ((1ULL << histLengths[1]) - 1)))
         % shortTagsTageFactor;
 
     for (int i = 1; i <= firstLongTagTable - 1; i++) {

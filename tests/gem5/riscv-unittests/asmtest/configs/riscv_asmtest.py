@@ -91,6 +91,7 @@ processor = SimpleProcessor(
     cpu_type=get_cpu_type_from_str(args.cpu),
     isa=ISA.RISCV,
     num_cores=args.num_cores,
+    clk_freq="3GHz",
 )
 
 if args.riscv_32bits:

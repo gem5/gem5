@@ -73,6 +73,7 @@ class SimpleMemory(AbstractMemory):
     bandwidth = Param.MemoryBandwidth(
         "12.8GiB/s", "Combined read and write bandwidth"
     )
+    enable_backdoor = Param.Bool(True, "Enable the backdoor mechanism")
 
     def controller(self):
         # Simple memory doesn't use a MemCtrl

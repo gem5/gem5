@@ -49,9 +49,8 @@ namespace gem5::branch_prediction
 
 SimpleBTB::SimpleBTB(const SimpleBTBParams &p)
     : BranchTargetBuffer(p),
-      btb("simpleBTB", p.numEntries, p.associativity,
-          p.btbReplPolicy, p.btbIndexingPolicy,
-          BTBEntry(genTagExtractor(p.btbIndexingPolicy)))
+      btb("simpleBTB", p.numEntries, p.associativity, p.btbReplPolicy,
+          p.btbIndexingPolicy, BTBEntry(genTagExtractor(p.btbIndexingPolicy)))
 {
     DPRINTF(BTB, "BTB: Creating BTB object.\n");
 
@@ -83,7 +82,7 @@ SimpleBTB::valid(ThreadID tid, Addr instPC)
 // @todo Create some sort of return struct that has both whether or not the
 // address is valid, and also the address.  For now will just use addr = 0 to
 // represent invalid entry.
-const PCStateBase *
+const BTBLookupResult
 SimpleBTB::lookup(ThreadID tid, Addr instPC, BranchType type)
 {
     stats.lookups[type]++;
@@ -91,11 +90,11 @@ SimpleBTB::lookup(ThreadID tid, Addr instPC, BranchType type)
     BTBEntry *entry = btb.accessEntry({instPC, tid});
 
     if (entry) {
-        return entry->target.get();
+        return BTBLookupResult(entry->target.get(), latency);
     }
 
     stats.misses[type]++;
-    return nullptr;
+    return BTBLookupResult();
 }
 
 const StaticInstPtr

@@ -44,7 +44,10 @@ from gem5.components.processors.simple_switchable_processor import (
 from gem5.isas import ISA
 from gem5.resources.resource import obtain_resource
 from gem5.simulate.exit_event import ExitEvent
-from gem5.simulate.exit_handler import ExitHandler
+from gem5.simulate.exit_handler import (
+    ExitHandler,
+    ExitHypercall,
+)
 from gem5.simulate.simulator import Simulator
 from gem5.utils.requires import requires
 
@@ -76,7 +79,7 @@ def MESI_cache_test(workload_id, resource_version):
         obtain_resource(workload_id, resource_version=resource_version)
     )
 
-    class KernelBootedExit(ExitHandler, hypercall_num=1):
+    class KernelBootedExit(ExitHandler, hypercall=ExitHypercall.KERNEL_BOOTED):
         def _process(self, simulator: "Simulator") -> None:
             print("Kernel Booted with MESI cache. Test Passed")
 
@@ -107,7 +110,7 @@ def KVM_test(workload_id, resource_version):
         obtain_resource(workload_id, resource_version=resource_version)
     )
 
-    class KernelBootedExit(ExitHandler, hypercall_num=1):
+    class KernelBootedExit(ExitHandler, hypercall=ExitHypercall.KERNEL_BOOTED):
         def _process(self, simulator: "Simulator") -> None:
             print("Kernel Booted with KVM CPU. Test Passed")
 
@@ -136,7 +139,7 @@ def O3_test(workload_id, resource_version):
         obtain_resource(workload_id, resource_version=resource_version)
     )
 
-    class KernelBootedExit(ExitHandler, hypercall_num=1):
+    class KernelBootedExit(ExitHandler, hypercall=ExitHypercall.KERNEL_BOOTED):
         def _process(self, simulator: "Simulator") -> None:
             print("Kernel Booted with O3 CPU. Test Passed")
 
@@ -167,7 +170,7 @@ def MINOR_test(workload_id, resource_version):
         obtain_resource(workload_id, resource_version=resource_version)
     )
 
-    class KernelBootedExit(ExitHandler, hypercall_num=1):
+    class KernelBootedExit(ExitHandler, hypercall=ExitHypercall.KERNEL_BOOTED):
         def _process(self, simulator: "Simulator") -> None:
             print("Kernel Booted with MINOR CPU. Test Passed")
 
@@ -198,7 +201,7 @@ def TIMING_test(workload_id, resource_version):
         obtain_resource(workload_id, resource_version=resource_version)
     )
 
-    class KernelBootedExit(ExitHandler, hypercall_num=1):
+    class KernelBootedExit(ExitHandler, hypercall=ExitHypercall.KERNEL_BOOTED):
         def _process(self, simulator: "Simulator") -> None:
             print("Kernel Booted with TIMING CPU. Test Passed")
 
@@ -229,7 +232,7 @@ def ATOMIC_test(workload_id, resource_version):
         obtain_resource(workload_id, resource_version=resource_version)
     )
 
-    class KernelBootedExit(ExitHandler, hypercall_num=1):
+    class KernelBootedExit(ExitHandler, hypercall=ExitHypercall.KERNEL_BOOTED):
         def _process(self, simulator: "Simulator") -> None:
             print("Kernel Booted with ATOMIC CPU. Test Passed")
 
@@ -260,7 +263,7 @@ def ATOMIC_2_core_test(workload_id, resource_version):
         obtain_resource(workload_id, resource_version=resource_version)
     )
 
-    class KernelBootedExit(ExitHandler, hypercall_num=1):
+    class KernelBootedExit(ExitHandler, hypercall=ExitHypercall.KERNEL_BOOTED):
         def _process(self, simulator: "Simulator") -> None:
             print("Kernel Booted with ATOMIC CPU, 2 cores. Test Passed")
 
@@ -291,7 +294,7 @@ def ATOMIC_4_core_test(workload_id, resource_version):
         obtain_resource(workload_id, resource_version=resource_version)
     )
 
-    class KernelBootedExit(ExitHandler, hypercall_num=1):
+    class KernelBootedExit(ExitHandler, hypercall=ExitHypercall.KERNEL_BOOTED):
         def _process(self, simulator: "Simulator") -> None:
             print("Kernel Booted with ATOMIC CPU, 4 cores. Test Passed")
 
@@ -322,7 +325,7 @@ def ATOMIC_8_core_test(workload_id, resource_version):
         obtain_resource(workload_id, resource_version=resource_version)
     )
 
-    class KernelBootedExit(ExitHandler, hypercall_num=1):
+    class KernelBootedExit(ExitHandler, hypercall=ExitHypercall.KERNEL_BOOTED):
         def _process(self, simulator: "Simulator") -> None:
             print("Kernel Booted with ATOMIC CPU, 8 cores. Test Passed")
 

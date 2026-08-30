@@ -39,6 +39,7 @@
 
 #include "debug/TLM.hh"
 #include "mem/ruby/protocol/chi/tlm/controller.hh"
+#include "mem/ruby/protocol/chi/tlm/snp_handler.hh"
 #include "sim/sim_exit.hh"
 
 namespace gem5 {
@@ -79,12 +80,16 @@ TlmGenerator::Transaction::Transaction(ARM::CHI::Payload *pa,
       _phase(ph),
       _start(0)
 {
-    _payload->ref();
+    if (_payload) {
+        _payload->ref();
+    }
 }
 
 TlmGenerator::Transaction::~Transaction()
 {
-    _payload->unref();
+    if (_payload) {
+        _payload->unref();
+    }
 }
 
 void
@@ -147,7 +152,7 @@ TlmGenerator::Transaction::runCallbacks()
 
         if (wait) {
             if (timeout) {
-                parent->scheduleEvaluation(timeout, this);
+                scheduleEvaluation(timeout);
             }
             break;
         }
@@ -158,6 +163,12 @@ TlmGenerator::Transaction::runCallbacks()
     if (it == actions.end()) {
         parent->terminate(this);
     }
+}
+
+void
+TlmGenerator::Transaction::scheduleEvaluation(unsigned timeout)
+{
+    parent->scheduleEvaluation(timeout, this);
 }
 
 void
@@ -179,6 +190,7 @@ TlmGenerator::TlmGenerator(const Params &p)
       inPort(name() + ".in_port", 0, this),
       suiteFailure(false),
       cbusyTracker(p.cbusy_tracker),
+      snpHandler(p.snp_handler),
       stats(this)
 {
     inPort.onChange([this](const TlmData &data) {
@@ -186,6 +198,10 @@ TlmGenerator::TlmGenerator(const Params &p)
         auto phase = data.second;
         this->recv(payload, phase);
     });
+
+    if (snpHandler) {
+        snpHandler->setGenerator(this);
+    }
 
     registerExitCallback([this](){ passFailCheck(); });
 }
@@ -253,7 +269,14 @@ TlmGenerator::send(Transaction *transaction)
     auto payload = transaction->payload();
     ARM::CHI::Phase &phase = transaction->phase();
 
-    DPRINTF(TLM, "[c%d] send %s\n", cpuId, transactionToString(*payload, phase));
+    send(payload, phase);
+}
+
+void
+TlmGenerator::send(ARM::CHI::Payload *payload, ARM::CHI::Phase &phase)
+{
+    DPRINTF(TLM, "[c%d] send %s\n", cpuId,
+            transactionToString(*payload, phase));
 
     auto tlm_data = TlmData(payload, &phase);
     outPort.send(tlm_data);
@@ -286,7 +309,7 @@ TlmGenerator::terminate(Transaction *transaction)
         suiteFailure = suiteFailure || transaction->failed();
 
         if (!isActive()) {
-            exitSimLoop("TlmGenerator done");
+            exitSimulationLoopClassic("TlmGenerator done");
         }
     } else {
         panic("%u: Can't find transaction id.\n", phase.txn_id);
@@ -343,6 +366,10 @@ TlmGenerator::recv(ARM::CHI::Payload *payload, ARM::CHI::Phase *phase)
 {
     DPRINTF(TLM, "[c%d] rcvd %s\n", cpuId, transactionToString(*payload, *phase));
 
+    if (handleSnoop(payload, phase)) {
+        return;
+    }
+
     handleCBusy(phase);
 
     if (handlePCredit(phase)) {
@@ -357,6 +384,16 @@ TlmGenerator::recv(ARM::CHI::Payload *payload, ARM::CHI::Phase *phase)
         it->second->runCallbacks();
     } else {
         warn("%u: Transaction untested\n", phase->txn_id);
+    }
+}
+
+bool
+TlmGenerator::handleSnoop(ARM::CHI::Payload *payload, ARM::CHI::Phase *phase)
+{
+    if (snpHandler && phase->channel == ARM::CHI::CHANNEL_SNP) {
+        return snpHandler->snoop(payload, phase);
+    } else {
+        return false;
     }
 }
 

@@ -104,9 +104,12 @@ CacheController::recvSnoopMsg(const CHIRequestMsg *msg)
 
     payload->address = msg->m_addr;
     payload->ns = msg->m_ns;
+    payload->ret_to_src = msg->m_retToSrc;
     phase.channel = ARM::CHI::CHANNEL_SNP;
     phase.snp_opcode = ruby_to_tlm::snpOpcode(msg->m_type);
     phase.txn_id = msg->m_txnId;
+    phase.src_id = ruby_to_tlm::srcId(msg->m_requestor);
+    phase.fwd_nid = ruby_to_tlm::srcId(msg->m_fwdRequestor);
 
     bw(payload, &phase);
 
@@ -309,7 +312,7 @@ CacheController::ReadTransaction::forward(const CHIDataMsg *msg)
 bool
 CacheController::DatalessTransaction::handle(const CHIResponseMsg *msg)
 {
-    const auto opcode = ruby_to_tlm::rspOpcode(msg->m_type);
+    [[maybe_unused]] const auto opcode = ruby_to_tlm::rspOpcode(msg->m_type);
     assert(opcode == ARM::CHI::RSP_OPCODE_COMP ||
            opcode == ARM::CHI::RSP_OPCODE_RETRY_ACK);
 
@@ -413,6 +416,14 @@ CacheController::sendRequestMsg(ARM::CHI::Payload &payload,
     req_msg->m_accSize = reqSize(payload, phase);
     req_msg->m_requestor = getMachineID();
     req_msg->m_fwdRequestor = getMachineID();
+    req_msg->m_stashNIDValid = payload.stash_nid_valid;
+    if (req_msg->m_stashNIDValid) {
+        req_msg->m_stashNID = tlm_to_ruby::srcId(phase.stash_nid);
+    }
+    req_msg->m_stashLPIDValid = phase.stash_lpid.valid;
+    if (req_msg->m_stashLPIDValid) {
+        req_msg->m_stashLPID = tlm_to_ruby::srcId(phase.stash_lpid.value);
+    }
     req_msg->m_dataToFwdRequestor = false;
     req_msg->m_type = tlm_to_ruby::reqOpcode(phase.req_opcode);
     req_msg->m_isSeqReqValid = false;
@@ -446,8 +457,7 @@ CacheController::sendDataMsg(ARM::CHI::Payload &payload,
     data_msg->m_addr = ruby::makeLineAddress(payload.address, cacheLineBits);
     data_msg->m_responder = getMachineID();
     data_msg->m_type = tlm_to_ruby::datOpcode(phase.dat_opcode, phase.resp);
-    data_msg->m_Destination.add(
-        mapAddressToDownstreamMachine(payload.address));
+    data_msg->m_Destination.add(tlm_to_ruby::srcId(phase.tgt_id));
     data_msg->m_txnId = phase.txn_id;
     data_msg->m_dataBlk.setData(payload.data, 0, cacheLineSize);
 
@@ -474,8 +484,9 @@ CacheController::sendResponseMsg(ARM::CHI::Payload &payload,
 
     res_msg->m_addr = ruby::makeLineAddress(payload.address, cacheLineBits);
     res_msg->m_responder = getMachineID();
-    res_msg->m_type = tlm_to_ruby::rspOpcode(phase.rsp_opcode, phase.resp);
-    res_msg->m_Destination.add(mapAddressToDownstreamMachine(payload.address));
+    res_msg->m_type =
+        tlm_to_ruby::rspOpcode(phase.rsp_opcode, phase.resp, phase.fwd_state);
+    res_msg->m_Destination.add(tlm_to_ruby::srcId(phase.tgt_id));
     res_msg->m_txnId = phase.txn_id;
 
     sendResponseMsg(res_msg);
@@ -523,6 +534,8 @@ CacheController::Transaction::gen(CacheController *controller,
       case ARM::CHI::REQ_OPCODE_CLEAN_UNIQUE:
       case ARM::CHI::REQ_OPCODE_MAKE_UNIQUE:
       case ARM::CHI::REQ_OPCODE_EVICT:
+      case ARM::CHI::REQ_OPCODE_STASH_ONCE_SHARED:
+      case ARM::CHI::REQ_OPCODE_STASH_ONCE_UNIQUE:
       case ARM::CHI::REQ_OPCODE_STASH_ONCE_SEP_SHARED:
       case ARM::CHI::REQ_OPCODE_STASH_ONCE_SEP_UNIQUE:
         return std::make_unique<DatalessTransaction>(

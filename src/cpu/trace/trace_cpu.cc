@@ -192,7 +192,7 @@ TraceCPU::checkAndSchedExitEvent()
         // schedule the counted exit that counts down completion of each Trace
         // CPU.
         if (enableEarlyExit) {
-            exitSimLoop("End of trace reached");
+            exitSimulationLoopClassic("End of trace reached");
         } else {
             schedule(*execCompleteEvent, curTick());
         }
