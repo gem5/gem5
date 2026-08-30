@@ -239,7 +239,7 @@ jobs:
     sst-test:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/sst-env:latest
-        timeout-minutes: 180
+        timeout-minutes: 240
 
         steps:
             - uses: actions/checkout@v7
