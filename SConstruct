@@ -839,7 +839,7 @@ for variant_path in variant_paths:
             env.Append(CCFLAGS=['-fsanitize=%s' % sanitizers,
                                  '-fno-omit-frame-pointer'],
                        LINKFLAGS=['-fsanitize=%s' % sanitizers] + libsan)
-            warning(f"Building gem5 with {sanitizers} sanitizer(s)")
+            print(f"Info: Building gem5 with {sanitizers} sanitizer(s)")
 
             if main["BIN_TARGET_ARCH"] == "x86_64":
                 # Sanitizers can enlarge binary size drammatically, north of
