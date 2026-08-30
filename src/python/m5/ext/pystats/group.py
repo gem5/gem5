@@ -153,8 +153,10 @@ class SimObjectVectorGroup(Group):
     def __len__(self):
         return len(self.values["value"])
 
-    def __getitem__(self, item: int):
-        return self.values["value"][item]
+    def __getitem__(self, item: int | str):
+        if isinstance(item, int):
+            return self.values["value"][item]
+        return super().__getitem__(item)
 
     def __contains__(self, item):
         return isinstance(item, int) and 0 <= item < len(self)

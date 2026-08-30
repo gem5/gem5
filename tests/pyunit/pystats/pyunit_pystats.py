@@ -149,6 +149,10 @@ class NavigatingPyStatsTestCase(unittest.TestCase):
     def test_simobject_vector_index(self):
         self.assertTrue(self.simstat.simobject_vector[0], SimObjectGroup)
 
+    def test_simobject_vector_value_index(self):
+        vector = self.simstat.simobject_vector
+        self.assertEqual(vector["value"], [vector[0], vector[1]])
+
     def test_simobject_group_index(self):
         self.assertTrue("vector2d" in self.simstat.simobject_vector[0])
         self.assertIsInstance(
