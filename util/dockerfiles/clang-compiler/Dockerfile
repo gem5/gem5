@@ -16,3 +16,6 @@ RUN apt -y update && \
         /usr/bin/c++ c++ /usr/bin/clang++-${version} 100 && \
     update-alternatives --install \
         /usr/bin/cc cc /usr/bin/clang-${version} 100
+
+ENV CC=clang \
+    CXX=clang++
