@@ -907,6 +907,8 @@ for variant_path in variant_paths:
                   'Please install zlib and try again.')
         if not conf.CheckZlibVersion():
             error('zlib 1.2 or newer is required.')
+        if not conf.CheckM4Version():
+            error('GNU m4 1.4 or newer is required.')
 
         conf.env['HAVE_ZSTD'] = conf.CheckLibWithHeader(
             'zstd', 'zstd.h', 'C++', call='ZSTD_versionNumber();')
