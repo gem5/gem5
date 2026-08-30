@@ -72,6 +72,7 @@ repos:
       rev: 8.0.1
       hooks:
           - id: isort
+            exclude: ^util/gem5art/
     - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
       rev: 0.2.3
       hooks:
@@ -80,10 +81,12 @@ repos:
       rev: 26.5.1
       hooks:
           - id: black
+            exclude: ^util/gem5art/
     - repo: https://github.com/asottile/pyupgrade
       rev: v3.21.2
       hooks:
           - id: pyupgrade
+            exclude: ^util/gem5art/
             # Python 3.10 is the earliest version supported.
             # We therefore conform to the standards compatible with 3.10+.
             args: [--py310-plus]
