@@ -887,6 +887,8 @@ for variant_path in variant_paths:
                   'Please install zlib and try again.')
         if not conf.CheckZlibVersion():
             error('zlib 1.2 or newer is required.')
+        if not conf.CheckM4Version():
+            error('GNU m4 1.4 or newer is required.')
 
     if not GetOption('without_tcmalloc'):
         with gem5_scons.Configure(env) as conf:
