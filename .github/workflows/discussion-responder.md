@@ -9,6 +9,9 @@ on:
         required: true
         type: string
 
+concurrency:
+  group: "test-failure-doctor-${{ github.event.inputs.discussion_number }}"
+
 permissions:
   discussions: read
   contents: read
