@@ -39,14 +39,12 @@ import signal
 import subprocess
 import time
 import zipfile
-from collections.abc import (
-    Callable,
-    Iterable,
-)
 from pathlib import Path
 from typing import (
     Any,
+    Callable,
     Dict,
+    Iterable,
     List,
     Optional,
     Tuple,
@@ -76,7 +74,7 @@ class gem5Run:
     gem5_artifact: Artifact
     gem5_git_artifact: Artifact
     run_script_git_artifact: Artifact
-    params: tuple[str, ...]
+    params: Tuple[str, ...]
     timeout: int
     check_failure: Callable[["gem5Run"], bool]
 
@@ -93,7 +91,7 @@ class gem5Run:
     linux_binary_artifact: Artifact
     disk_image_artifact: Artifact
 
-    command: list[str]
+    command: List[str]
 
     running: bool
     enqueue_time: float
@@ -105,8 +103,8 @@ class gem5Run:
     pid: int
     task_id: Any
 
-    results: Artifact | None
-    artifacts: list[Artifact]
+    results: Optional[Artifact]
+    artifacts: List[Artifact]
 
     rerunnable: bool
 
@@ -119,7 +117,7 @@ class gem5Run:
         gem5_artifact: Artifact,
         gem5_git_artifact: Artifact,
         run_script_git_artifact: Artifact,
-        params: tuple[str, ...],
+        params: Tuple[str, ...],
         timeout: int,
         check_failure: Callable[["gem5Run"], bool],
     ) -> "gem5Run":
@@ -334,7 +332,7 @@ class gem5Run:
             raise
 
     @classmethod
-    def loadFromDict(cls, d: dict[str, str | UUID]) -> "gem5Run":
+    def loadFromDict(cls, d: Dict[str, Union[str, UUID]]) -> "gem5Run":
         """Returns new gem5Run instance from the dictionary of values in d"""
         run = cls()
         run.artifacts = []
@@ -403,7 +401,7 @@ class gem5Run:
             except UnicodeDecodeError:
                 return False
 
-    def _getSerializable(self) -> dict[str, str | UUID]:
+    def _getSerializable(self) -> Dict[str, Union[str, UUID]]:
         """Returns a dictionary that can be used to recreate this object
 
         Note: All artifacts are converted to a UUID instead of an Artifact.
@@ -441,7 +439,7 @@ class gem5Run:
         return hashlib.md5(b"".join(to_hash)).hexdigest()
 
     @classmethod
-    def _convertForJson(cls, d: dict[str, Any]) -> dict[str, str]:
+    def _convertForJson(cls, d: Dict[str, Any]) -> Dict[str, str]:
         """Converts UUID objects to strings for json compatibility"""
         for k, v in d.items():
             if isinstance(v, UUID):
