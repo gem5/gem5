@@ -873,7 +873,7 @@ class WorkloadResource(AbstractResource):
 
         self._id = id
         self._func = function
-        self._params = parameters if parameters else {}
+        self._params = {} if parameters is None else parameters
 
     def get_id(self) -> str:
         """Returns the ID of the workload."""
