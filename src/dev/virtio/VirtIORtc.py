@@ -1,6 +1,6 @@
 # -*- mode:python -*-
 
-# Copyright (c) 2014, 2016 ARM Limited
+# Copyright (c) 2026 Kuan-Wei Chiu <visitorckw@gmail.com>
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -35,30 +35,14 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-Import('*')
+from m5.objects.VirtIO import VirtIODeviceBase
+from m5.params import *
+from m5.proxy import *
 
-SimObject('VirtIO.py', sim_objects=[
-    'VirtIODeviceBase', 'VirtIODummyDevice', 'PciVirtIO'])
-SimObject('VirtIOConsole.py', sim_objects=['VirtIOConsole'])
-SimObject('VirtIOBlock.py', sim_objects=['VirtIOBlock'])
-SimObject('VirtIORng.py', sim_objects=['VirtIORng'])
-SimObject('VirtIORtc.py', sim_objects=['VirtIORtc'])
-SimObject('VirtIO9P.py', sim_objects=[
-    'VirtIO9PBase', 'VirtIO9PProxy', 'VirtIO9PDiod', 'VirtIO9PSocket'])
 
-Source('base.cc')
-Source('pci.cc')
-Source('console.cc')
-Source('block.cc')
-Source('fs9p.cc')
-Source('rng.cc')
-Source('rtc.cc')
+class VirtIORtc(VirtIODeviceBase):
+    type = "VirtIORtc"
+    cxx_header = "dev/virtio/rtc.hh"
+    cxx_class = "gem5::VirtIORtc"
 
-DebugFlag('VIO', 'VirtIO base functionality')
-DebugFlag('VIORng', 'VirtIO entropy source device ')
-DebugFlag('VIORtc', 'VirtIO real time clock device')
-DebugFlag('VIOIface', 'VirtIO transport')
-DebugFlag('VIOConsole', 'VirtIO console device')
-DebugFlag('VIOBlock', 'VirtIO block device')
-DebugFlag('VIO9P', 'General 9p over VirtIO debugging')
-DebugFlag('VIO9PData', 'Dump data in VirtIO 9p connections')
+    qSize = Param.Unsigned(64, "Request queue size")
