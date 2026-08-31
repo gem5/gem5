@@ -176,13 +176,13 @@ run_map = {
             1: False,  # Redundant
             2: False,  # Redundant
             4: False,  # We already run this in the long (Nightly) tests.
-            8: False,  # Jira: https://gem5.atlassian.net/browse/GEM5-1217
+            8: False,  # https://github.com/gem5/gem5/issues/3442
         },
         "timing": {
             1: False,  # Redundant
             2: False,  # Removed as already doing 4-cores
             4: True,
-            8: False,  # Jira: https://gem5.atlassian.net/browse/GEM5-1217
+            8: False,  # https://github.com/gem5/gem5/issues/3442
         },
         "o3": {
             1: False,  # Timeout
@@ -200,7 +200,7 @@ run_map = {
         },
         "timing": {
             1: False,  # MI_Example does not successfully boot with the Timing
-            2: False,  # Jira: https://gem5.atlassian.net/browse/GEM5-1216
+            2: False,  # https://github.com/gem5/gem5/issues/3443
             4: False,
             8: False,
         },
@@ -220,8 +220,7 @@ run_map = {
         },
         "timing": {
             1: False,  # Redundant,
-            2: False,  # Disabled due to
-            # https://gem5.atlassian.net/browse/GEM5-1219.
+            2: False,  # https://github.com/gem5/gem5/issues/3444
             4: False,  # Disabled as we already do 8-cores
             8: True,
         },

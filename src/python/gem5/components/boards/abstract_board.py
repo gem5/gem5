@@ -435,11 +435,11 @@ class AbstractBoard:
 
         .. note::
 
-            * The processor is incorporated after the cache hierarchy due to a bug
-            noted here: https://gem5.atlassian.net/browse/GEM5-1113. Until this
-            bug is fixed, this ordering must be maintained.
-            * Once this function is called ``_connect_things_called`` *must* be set
-            to ``True``.
+            * The processor is incorporated after the cache hierarchy due to
+              https://github.com/gem5/gem5/issues/3446. Until this bug is fixed,
+              this ordering must be maintained.
+            * Once this function is called ``_connect_things_called`` *must* be
+              set to ``True``.
         """
 
         if self._connect_things_called:
