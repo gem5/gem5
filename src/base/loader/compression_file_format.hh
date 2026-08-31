@@ -11,9 +11,6 @@
  * unmodified and in its entirety in all distributions of the software,
  * modified or unmodified, in source code or in binary form.
  *
- * Copyright (c) 2002-2004 The Regents of The University of Michigan
- * All rights reserved.
- *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met: redistributions of source code must retain the above copyright
@@ -38,15 +35,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "base/loader/image_file_data.hh"
+#ifndef __BASE_LOADER_COMPRESSION_FILE_FORMAT_HH__
+#define __BASE_LOADER_COMPRESSION_FILE_FORMAT_HH__
 
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <sys/types.h>
-#include <unistd.h>
-
-#include "base/loader/compression_file_format.hh"
-#include "base/logging.hh"
+#include <cstddef>
+#include <cstdint>
+#include <string>
 
 namespace gem5
 {
@@ -54,36 +48,60 @@ namespace gem5
 namespace loader
 {
 
-ImageFileData::ImageFileData(const std::string &fname, bool try_decompress)
+/**
+ * Override this class when providing support for a new compression format
+ * for guest binaries (this means decompressing a guest binary on the fly
+ * before running it instead of manually decompressing it beforehand).
+ *
+ * The decompression works by decompressing the binary and by writing
+ * the output stream (writeAll) to a temporary file (makeTempFile)
+ * which will be mapped later on to the guest address space
+ *
+ * The class/interface has two main APIs that have to be implemented
+ *
+ * matches => returns true if the file pointed by the file descriptor
+ * has been compressed with the class format
+ *
+ * decompress => implements the decompression
+ */
+class CompressionFileFormat
 {
-    _filename = fname;
+  protected:
+    CompressionFileFormat();
+    virtual ~CompressionFileFormat() = default;
 
-    // Open the file.
-    int fd = open(fname.c_str(), O_RDONLY);
-    fatal_if(fd < 0, "Failed to open file %s.\n"
-        "This error typically occurs when the file path specified is "
-        "incorrect.\n", fname);
+    static bool hasMagic(int fd, const uint8_t *magic, size_t magic_len);
+    // Writes the output stream to a file fd. Returns false if there has
+    // been an error, true otherwise
+    static bool writeAll(int fd, const uint8_t *buf, size_t size);
+    static int makeTempFile(const char *suffix);
 
-    if (try_decompress) {
-        fd = decompressImageFile(fd, fname);
-    }
+  public:
+    CompressionFileFormat(const CompressionFileFormat &) = delete;
+    void operator=(const CompressionFileFormat &) = delete;
 
-    // Find the length of the file by seeking to the end.
-    off_t off = lseek(fd, 0, SEEK_END);
-    fatal_if(off < 0, "Failed to determine size of file %s.\n", fname);
-    _len = static_cast<size_t>(off);
+    /**
+     * Can the file fd be decompressed by this handler?
+     *
+     * @param fd file descriptor
+     * @return true if this can decompress fd, false otherwise
+     */
+    virtual bool matches(int fd) const = 0;
 
-    // Mmap the whole shebang.
-    _data = (uint8_t *)mmap(NULL, _len, PROT_READ, MAP_SHARED, fd, 0);
-    close(fd);
+    /**
+     * Decompress the file fd. Return the new file descriptor
+     * for the decompressed binary
+     *
+     * @param fd file descriptor
+     * @return new_fd pointing to the decompressed file
+     */
+    virtual int decompress(int fd) const = 0;
+    virtual const char *name() const = 0;
+};
 
-    panic_if(_data == MAP_FAILED, "Failed to mmap file %s.\n", fname);
-}
-
-ImageFileData::~ImageFileData()
-{
-    munmap((void *)_data, _len);
-}
+int decompressImageFile(int fd, const std::string &filename);
 
 } // namespace loader
 } // namespace gem5
+
+#endif // __BASE_LOADER_COMPRESSION_FILE_FORMAT_HH__

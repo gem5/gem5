@@ -889,6 +889,9 @@ for variant_path in variant_paths:
                   'and/or zlib.h header file.\n'
                   'Please install zlib and try again.')
 
+        conf.env['HAVE_ZSTD'] = conf.CheckLibWithHeader(
+            'zstd', 'zstd.h', 'C++', call='ZSTD_versionNumber();')
+
     if not GetOption('without_tcmalloc'):
         with gem5_scons.Configure(env) as conf:
             if conf.CheckLib('tcmalloc_minimal'):
@@ -950,6 +953,7 @@ for variant_path in variant_paths:
 
     # Variables which were determined with Configure.
     env['CONF'] = {}
+    env['CONF']['HAVE_ZSTD'] = env['HAVE_ZSTD']
 
     # Walk the tree and execute all SConsopts scripts that wil add to the
     # above variables

@@ -38,15 +38,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "base/loader/image_file_data.hh"
+#include "base/loader/gzip_compression.hh"
 
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <sys/types.h>
 #include <unistd.h>
-
-#include "base/loader/compression_file_format.hh"
-#include "base/logging.hh"
+#include <zlib.h>
 
 namespace gem5
 {
@@ -54,35 +49,62 @@ namespace gem5
 namespace loader
 {
 
-ImageFileData::ImageFileData(const std::string &fname, bool try_decompress)
+GzipCompressionFormat::GzipCompressionFormat() : CompressionFileFormat()
+{}
+
+bool
+GzipCompressionFormat::matches(int fd) const
 {
-    _filename = fname;
-
-    // Open the file.
-    int fd = open(fname.c_str(), O_RDONLY);
-    fatal_if(fd < 0, "Failed to open file %s.\n"
-        "This error typically occurs when the file path specified is "
-        "incorrect.\n", fname);
-
-    if (try_decompress) {
-        fd = decompressImageFile(fd, fname);
-    }
-
-    // Find the length of the file by seeking to the end.
-    off_t off = lseek(fd, 0, SEEK_END);
-    fatal_if(off < 0, "Failed to determine size of file %s.\n", fname);
-    _len = static_cast<size_t>(off);
-
-    // Mmap the whole shebang.
-    _data = (uint8_t *)mmap(NULL, _len, PROT_READ, MAP_SHARED, fd, 0);
-    close(fd);
-
-    panic_if(_data == MAP_FAILED, "Failed to mmap file %s.\n", fname);
+    const uint8_t magic[] = {0x1f, 0x8b};
+    return hasMagic(fd, magic, sizeof(magic));
 }
 
-ImageFileData::~ImageFileData()
+int
+GzipCompressionFormat::decompress(int fd) const
 {
-    munmap((void *)_data, _len);
+    const size_t blk_sz = 4096;
+
+    gzFile fdz = gzdopen(fd, "rb");
+    if (!fdz) {
+        return -1;
+    }
+
+    fd = makeTempFile("/gem5-gz-obj-XXXXXX");
+    if (fd < 0) {
+        gzclose(fdz);
+        return fd;
+    }
+
+    auto buf = new uint8_t[blk_sz];
+    int r;
+    while ((r = gzread(fdz, buf, blk_sz)) > 0) {
+        if (!writeAll(fd, buf, r)) {
+            delete[] buf;
+            gzclose(fdz);
+            close(fd);
+            return -1;
+        }
+    }
+    delete[] buf;
+    gzclose(fdz);
+    if (r < 0) {
+        close(fd);
+        return -1;
+    }
+
+    return fd;
+}
+
+const char *
+GzipCompressionFormat::name() const
+{
+    return "gzip";
+}
+
+void
+registerGzipCompressionFormat()
+{
+    static GzipCompressionFormat gzipCompressionFormat;
 }
 
 } // namespace loader
