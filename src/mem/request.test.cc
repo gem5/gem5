@@ -31,6 +31,9 @@
 
 namespace gem5
 {
+// TODO: This test file currently covers only the Request functionality
+// relevant to the copy constructor changes. Additional Request behavior
+// should be covered by future tests.
 
 TEST(Request, CopyConstructorPreservesStreamId)
 {
