@@ -138,6 +138,8 @@ AddOption('--with-ubsan', action='store_true',
           help='Build with Undefined Behavior Sanitizer if available')
 AddOption('--with-asan', action='store_true',
           help='Build with Address Sanitizer if available')
+AddOption('--with-tsan', action='store_true',
+          help='Build with Thread Sanitizer if available')
 AddOption('--with-systemc-tests', action='store_true',
           help='Build systemc tests')
 AddOption('--install-hooks', action='store_true',
@@ -816,17 +818,28 @@ for variant_path in variant_paths:
                 suppressions_opts)
         warning('LSAN_OPTIONS=%s' % suppressions_opts)
         print()
+    if GetOption('with_tsan'):
+        if GetOption('with_asan'):
+            error('Address Sanitizer and Thread Sanitizer cannot be used '
+                  'together')
+        sanitizers.append('thread')
     if sanitizers:
         sanitizers = ','.join(sanitizers)
         if env['GCC'] or env['CLANG']:
-            libsan = (
-                ['-static-libubsan', '-static-libasan']
-                if env['GCC']
-                else ['-static-libsan']
-            )
+            if env['GCC']:
+                libsan = []
+                if GetOption('with_ubsan'):
+                    libsan.append('-static-libubsan')
+                if GetOption('with_asan'):
+                    libsan.append('-static-libasan')
+                if GetOption('with_tsan'):
+                    libsan.append('-static-libtsan')
+            else:
+                libsan = ['-static-libsan']
             env.Append(CCFLAGS=['-fsanitize=%s' % sanitizers,
                                  '-fno-omit-frame-pointer'],
                        LINKFLAGS=['-fsanitize=%s' % sanitizers] + libsan)
+            print(f"Info: Building gem5 with {sanitizers} sanitizer(s)")
 
             if main["BIN_TARGET_ARCH"] == "x86_64":
                 # Sanitizers can enlarge binary size drammatically, north of
