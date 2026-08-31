@@ -323,6 +323,7 @@ class FunctionalUnitGenerator:
             self.base_header_file.write(
                 '#include "../salam_power_model.hh"\n\n'
             )
+            self.base_header_file.write("#include <cstdint>\n")
             self.base_header_file.write("#include <map>\n")
             self.base_header_file.write("#include <iostream>\n")
             self.base_header_file.write("#include <cstdlib>\n")
@@ -1137,6 +1138,7 @@ class InstConfigGenerator:
             self.base_header_file.write(
                 "#define __HWMODEL_INST_CONFIG_BASE_HH__\n\n"
             )
+            self.base_header_file.write("#include <cstdint>\n")
             self.base_header_file.write("#include <map>\n")
             self.base_header_file.write("#include <iostream>\n")
             self.base_header_file.write("#include <cstdlib>\n")

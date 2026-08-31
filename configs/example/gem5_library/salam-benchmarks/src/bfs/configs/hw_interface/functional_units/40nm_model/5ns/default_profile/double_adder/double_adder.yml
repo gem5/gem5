@@ -21,6 +21,7 @@ functional_unit:
         instructions: # LLVM OpCode: Runtime Cycles
             - fadd
             - fsub
+            - fneg
         limit: 0 # Max Concurrent Functional Unit Scheduling (0 = Max IR Instances)
     power_model:
         units:

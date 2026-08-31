@@ -65,6 +65,16 @@ instructions:
         functional_unit_limit: 0
         opcode_num: 18
         runtime_cycles: 4
+    fmuladd:
+        functional_unit: 9
+        functional_unit_limit: 0
+        opcode_num: 99
+        runtime_cycles: 3
+    fneg:
+        functional_unit: 6
+        functional_unit_limit: 0
+        opcode_num: 62
+        runtime_cycles: 1
     fpext:
         functional_unit: 0
         functional_unit_limit: 0

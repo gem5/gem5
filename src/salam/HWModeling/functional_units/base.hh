@@ -42,6 +42,7 @@
 #ifndef __HWMODEL_FUNCTIONAL_UNIT_BASE_HH__
 #define __HWMODEL_FUNCTIONAL_UNIT_BASE_HH__
 
+#include <cstdint>
 #include <cstdlib>
 #include <iostream>
 #include <map>
