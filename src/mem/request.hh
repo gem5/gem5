@@ -494,7 +494,7 @@ class Request : public Extensible<Request>
     /** The cause for HTM transaction abort */
     HtmFailureFaultCause _htmAbortCause = HtmFailureFaultCause::INVALID;
 
-    bool _isGPUFuncAccess;
+    bool _isGPUFuncAccess = false;
 
   public:
 
@@ -516,7 +516,6 @@ class Request : public Extensible<Request>
         _flags.set(flags);
         privateFlags.set(VALID_PADDR|VALID_SIZE);
         _byteEnable = std::vector<bool>(size, true);
-        _isGPUFuncAccess = false;
     }
 
     Request(Addr vaddr, unsigned size, Flags flags,
@@ -526,7 +525,6 @@ class Request : public Extensible<Request>
         setVirt(vaddr, size, flags, id, pc, std::move(atomic_op));
         setContext(cid);
         _byteEnable = std::vector<bool>(size, true);
-        _isGPUFuncAccess = false;
     }
 
     Request(const Request &other)
@@ -540,6 +538,9 @@ class Request : public Extensible<Request>
           privateFlags(other.privateFlags),
           _time(other._time),
           _taskId(other._taskId),
+          _streamId(other._streamId),
+          _substreamId(other._substreamId),
+          _systemReq(other._systemReq),
           _stashNID(other._stashNID),
           _stashLPID(other._stashLPID),
           _vaddr(other._vaddr),
@@ -548,6 +549,9 @@ class Request : public Extensible<Request>
           _pc(other._pc),
           _reqInstSeqNum(other._reqInstSeqNum),
           _localAccessor(other._localAccessor),
+          _instCount(other._instCount),
+          _htmAbortCause(other._htmAbortCause),
+          _isGPUFuncAccess(other._isGPUFuncAccess),
           translateDelta(other.translateDelta),
           accessDelta(other.accessDelta),
           depth(other.depth)
