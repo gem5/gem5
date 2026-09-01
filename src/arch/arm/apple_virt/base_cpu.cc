@@ -101,7 +101,9 @@ BaseArmAppleVirtCPU::BaseArmAppleVirtCPU(
 
 void
 BaseArmAppleVirtCPU::startup()
-{ BaseAppleVirtCPU::startup(); }
+{
+    BaseAppleVirtCPU::startup();
+}
 
 void
 BaseArmAppleVirtCPU::syncThreadToHV()

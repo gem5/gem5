@@ -43,7 +43,9 @@ namespace
 
 constexpr uint64_t
 makeEsr(uint8_t ec, uint32_t iss)
-{ return (static_cast<uint64_t>(ec) << 26) | (iss & 0x1ffffff); }
+{
+    return (static_cast<uint64_t>(ec) << 26) | (iss & 0x1ffffff);
+}
 
 TEST(AppleVirtExitDecode, DecodesWfiAndWfe)
 {
