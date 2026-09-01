@@ -136,7 +136,6 @@ SALAM::Value::addRegister(llvm::Type *irtype, bool istracked)
     } else if (irtype->isFloatingPointTy()) {
         returnReg = std::make_shared<APFloatRegister>(irtype, istracked);
     } else {
-        // assert(0); // Type is invalid for a register
         returnReg = nullptr;
     }
 }

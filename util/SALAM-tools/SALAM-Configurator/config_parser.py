@@ -432,8 +432,6 @@ class Accelerator:
                 )
             else:
                 assert False, "Shouldn't be here?"
-                # lines.append("clstr." + self.name + ".pio " +
-                #              "=" " clstr." + i + ".local")
         # Add StreamIn
         for inCon in self.stream_in:
             lines.append(

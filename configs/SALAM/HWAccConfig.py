@@ -61,19 +61,10 @@ def AccConfig(acc, bench_file, config_file):
     benchPath = Path(bench_file).parts
     m5PathLen = len(Path(M5_Path).parts)
 
-    # Set scheduling constraints
-    # acc.llvm_interface.sched_threshold =
-    #     ConfigSectionMap("Scheduler")['sched_threshold']
-    # acc.llvm_interface.clock_period =
-    #     ConfigSectionMap("AccConfig")['clock_period']
-    # acc.llvm_interface.lockstep_mode =
-    #     Config.getboolean("Scheduler", 'lockstep_mode')
-
     # Initialize HWInterface Objects
     acc.hw_interface = HWInterface()
     # Define HW Counts
     acc.hw_interface.cycle_counts = CycleCounts()
-    # acc.hw_interface.cycle_counts
 
     if benchPath[m5PathLen + 1] == "mobilenetv2":
         fu_yaml = open(config_file)

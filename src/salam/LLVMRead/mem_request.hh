@@ -51,7 +51,7 @@ using namespace gem5;
 class MemoryRequest
 {
     friend class CommInterface;
-    // friend class LLVMInterface;
+
   private:
     Addr address;
     size_t length;

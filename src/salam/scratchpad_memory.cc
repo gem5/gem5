@@ -431,7 +431,6 @@ ScratchpadMemory::recvTimingReq(PacketPtr pkt, PortID recvPort,
 
         if (!retryResp[idx] && !dequeueEvent.scheduled()) {
             schedule(dequeueEvent, packetQueue.back().tick);
-            // dequeueTick[idx] = packetQueue.back().tick;
         }
     } else {
         pendingDelete.reset(pkt);
@@ -443,7 +442,6 @@ ScratchpadMemory::recvTimingReq(PacketPtr pkt, PortID recvPort,
 void
 ScratchpadMemory::release()
 {
-    // Tick now = curTick();
     unsigned idx;
     for (idx = 0; idx < isBusy.size(); idx++) {
         if ((!releaseEvent[idx].scheduled()) && (isBusy[idx])) {

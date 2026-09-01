@@ -47,10 +47,3 @@ class SimulatorConfig(SimObject):
     type = "SimulatorConfig"
     # gem5-SALAM attached header
     cxx_header = "salam/HWModeling/simulator_config.hh"
-    ### Templates
-    ### YML Type: simulator_config.functional_unit
-    ## alias = Param.UInt32(limit,
-    ##     "Max Concurrent Functional Units, 0 = IR Defined")
-    ### YML Type: simulator_config
-    ## 'output_to_file' = Param.Bool(output_to_file,
-    ##     "Print Terminal Runtime Output to File")

@@ -149,7 +149,6 @@ HWInterface::availableFunctionalUnit(uint64_t functional_unit)
             break;
         }
         default: {
-            // assert()
             return false;
         }
     }
@@ -220,7 +219,6 @@ HWInterface::clearFunctionalUnit(uint64_t unit)
             break;
         }
         default: {
-            // assert()
         }
     }
 }

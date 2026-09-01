@@ -15,7 +15,6 @@ acc_cluster:
             PIOSize: 37
             InterruptNum: 68
             PIOMaster: LocalBus
-      # Local to PIO
             LocalSlaves: LocalBus
             Debug: false
             ClockPeriod_ns: 0.1
@@ -23,7 +22,6 @@ acc_cluster:
           - Name: bfs
             IrPath: hw/bfs.ll
             TopName: top
-      # Debug: True
             Debug: false
             PIOSize: 5
             PIOMaster: LocalBus

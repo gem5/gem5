@@ -132,7 +132,6 @@ CommInterface::MemSidePort::recvReqRetry()
         // engine should schedule tick as necessary. Need a test case
         if (!owner->tickEvent.scheduled()) {
             owner->schedule(owner->tickEvent, curTick() + owner->processDelay);
-            // owner->schedule(owner->tickEvent, owner->nextCycle());
         }
     }
 }
@@ -175,7 +174,6 @@ CommInterface::SPMPort::recvReqRetry()
         // engine should schedule tick as necessary. Need a test case
         if (!owner->tickEvent.scheduled()) {
             owner->schedule(owner->tickEvent, curTick() + owner->processDelay);
-            // owner->schedule(owner->tickEvent, owner->nextCycle());
         }
     }
 }

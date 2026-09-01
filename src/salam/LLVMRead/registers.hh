@@ -215,7 +215,6 @@ class APFloatRegister : public Register
     APFloatRegister(llvm::Type *T, bool isTracked = true);
     // This constructor is only used for constants.
     APFloatRegister(const llvm::APFloat &RHS);
-    // ~APFloatRegister() { if (data) delete data; }
     // This constructor is only used for constants.
     APFloatRegister(const uint64_t RHS) : Register(false)
     {
@@ -245,7 +244,6 @@ class APIntRegister : public Register
     APIntRegister(llvm::Type *T, bool isTracked = true);
     // This constructor is only used for constants.
     APIntRegister(const llvm::APInt &RHS);
-    // ~APIntRegister() { if (data) delete data; }
     // This constructor is only used for constants.
     APIntRegister(const uint64_t RHS) : Register(false)
     {
@@ -274,7 +272,6 @@ class PointerRegister : public Register
   public:
     PointerRegister(bool isTracked = true, bool isNull = false);
     PointerRegister(uint64_t val, bool isTracked = true, bool isNull = false);
-    // ~PointerRegister() { if (pointer) delete pointer; }
     virtual bool
     isPtr() override
     {

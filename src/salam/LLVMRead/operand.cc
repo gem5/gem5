@@ -231,7 +231,6 @@ SALAM::GlobalConstant::initialize(llvm::Value *irval, SALAM::irvmap *irmap,
     auto glb = llvm::dyn_cast<llvm::GlobalVariable>(irval);
     assert(glb);
     assert(glb->hasInitializer());
-    // glb->getInitializer()->print(llvm::outs());
 
     // Initialize SALAM::ConstantData
     SALAM::Constant::initialize(glb->getInitializer(), irmap, values);

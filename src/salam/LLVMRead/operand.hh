@@ -87,7 +87,6 @@ class Operand : public Value
         }
     }
     void initOperandReg();
-    // Operand(uint64_t id);
     Operand(const SALAM::Value &copy_val);
     Operand(const Operand &copy_val);
     Operand(std::shared_ptr<SALAM::Value> copy_val);

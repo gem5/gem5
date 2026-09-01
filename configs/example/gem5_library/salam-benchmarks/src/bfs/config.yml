@@ -14,13 +14,11 @@ acc_cluster:
             PIOSize: 37
             InterruptNum: 68
             PIOMaster: LocalBus
-      # Local to PIO
             LocalSlaves: LocalBus
             Debug: false
     - Accelerator:
           - Name: bfs
             IrPath: hw/bfs.ll
-      # Debug: True
             Debug: false
             PIOSize: 5
             PIOMaster: LocalBus

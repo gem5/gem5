@@ -42,7 +42,6 @@ BENCH=""
 BENCH_PATH=""
 CONFIG_NAME=""
 FLAGS=""
-#FLAGS="CommInterface,LLVMInterface"
 BUILD=True
 DEBUG=False
 PRINT_TO_FILE=False

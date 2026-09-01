@@ -230,8 +230,6 @@ def load_og_header(clusters, working_dir: str):
     header_list = []
     for i in clusters:
         try:
-            # f = open(working_dir + i.name  + "_" + args.headerName +
-            #     ".h", 'r')
             f = open(working_dir + i.name + "_hw_defines.h")
             oldHeader = f.readlines()
             for i in range(0, len(oldHeader)):

@@ -595,9 +595,6 @@ class FunctionalUnitGenerator:
 
     def simobject_generator(self, hwmodel):
         self.hwmodel = hwmodel
-        # create Python SimObject
-        # self.simobject_file = self.directory + '/' + self.alias + '.py'
-        # self.simobject_file = self.classname + '.py'
         with open(self.fu_directory, "a+") as self.simobject_file:
             self.simobject_file.write(
                 "class " + self.classname + "(SimObject):\n"
@@ -845,12 +842,6 @@ class InstConfigGenerator:
                 "// END OF GENERATED CONSTRUCTOR\n"
             )
             self.inst_config_source_file.write("\n")
-
-    # def instruction_simobject(self, instruction):
-    # self.functional_unit = instruction["functional_unit"]
-    # self.functional_unit_limit = instruction.get("functional_unit_limit", 0)
-    # self.opcode_num = instruction["opcode_num"]
-    # self.runtime_cycles = instruction["runtime_cycles"]
 
     def instruction_simobject_generator(self, hwmodel):
         self.hwmodel = hwmodel
