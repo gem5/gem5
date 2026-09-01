@@ -312,14 +312,15 @@ BaseArmAppleVirtCPU::handleException(const hv_vcpu_exit_exception_t &exception)
     const auto decoded = ArmISA::AppleVirt::decodeExit(exception.syndrome);
     using ArmISA::AppleVirt::ExitKind;
 
-    DPRINTF(AppleVirtRun,
-            "exception PC=%#x ESR=%#llx EC=%#x ISS=%#x FAR=%#llx "
-            "IPA=%#llx\n",
-            threadContext->pcState().instAddr(),
-            static_cast<unsigned long long>(exception.syndrome), decoded.ec,
-            decoded.iss,
-            static_cast<unsigned long long>(exception.virtual_address),
-            static_cast<unsigned long long>(exception.physical_address));
+    DPRINTF(
+        AppleVirtRun,
+        "exception PC=%#llx ESR=%#llx EC=%#x ISS=%#x FAR=%#llx "
+        "IPA=%#llx\n",
+        static_cast<unsigned long long>(threadContext->pcState().instAddr()),
+        static_cast<unsigned long long>(exception.syndrome), decoded.ec,
+        decoded.iss,
+        static_cast<unsigned long long>(exception.virtual_address),
+        static_cast<unsigned long long>(exception.physical_address));
 
     if (decoded.kind == ExitKind::Wfi || decoded.kind == ExitKind::Wfe) {
         advancePC();
