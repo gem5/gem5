@@ -104,8 +104,10 @@ class SwitchableProcessor(AbstractProcessor):
         if self._prepare_apple_virt and not any(
             core.is_apple_virt_core() for core in self._current_cores
         ):
-            raise ValueError("AppleVirtCPU must be in the starting core set")
-
+            raise ValueError(
+                "AppleVirtCPU must be in the starting core set because it "
+                "requires atomic non-caching memory mode"
+            )
         if self._prepare_kvm:
             from m5.objects import KvmVM
 
@@ -151,6 +153,10 @@ class SwitchableProcessor(AbstractProcessor):
     @overrides(AbstractProcessor)
     def get_cores(self) -> List[AbstractCore]:
         return self._current_cores
+
+    @overrides(AbstractProcessor)
+    def get_all_cores(self) -> List[AbstractCore]:
+        return list(self._all_cores())
 
     def _all_cores(self):
         for core_list in self._switchable_cores.values():

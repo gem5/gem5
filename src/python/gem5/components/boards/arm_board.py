@@ -233,7 +233,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         # Hardware-virtualized CPUs need gem5 to simulate the GIC.
         if any(
             core.is_kvm_core() or core.is_apple_virt_core()
-            for core in self.processor.get_cores()
+            for core in self.processor.get_all_cores()
         ):
             # The following is taken from
             # `tests/fs/linux/arm/configs/arm_generic.py`:

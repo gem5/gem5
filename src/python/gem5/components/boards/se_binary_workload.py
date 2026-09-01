@@ -89,7 +89,7 @@ class SEBinaryWorkload:
             process.env = env_list
 
         if any(
-            core.is_kvm_core() for core in self.get_processor().get_cores()
+            core.is_kvm_core() for core in self.get_processor().get_all_cores()
         ):
             # Running KVM in SE mode requires special flags to be set for the
             # process.

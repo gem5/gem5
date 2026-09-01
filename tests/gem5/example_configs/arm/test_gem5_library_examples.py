@@ -24,6 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import os
 import platform
 import re
 import shutil
@@ -62,6 +63,14 @@ def supports_apple_virt():
         )
     except (OSError, subprocess.CalledProcessError):
         return False
+
+
+def supports_arm_kvm():
+    return (
+        sys.platform.startswith("linux")
+        and platform.machine().lower() in ("armv7l", "aarch64", "arm64")
+        and os.access("/dev/kvm", mode=os.R_OK | os.W_OK)
+    )
 
 
 gem5_verify_config(
@@ -134,4 +143,31 @@ if supports_apple_virt():
         valid_isas=(constants.all_compiled_tag,),
         valid_hosts=(constants.host_arm_tag,),
         length=constants.quick_tag,
+    )
+
+
+if supports_apple_virt() or supports_arm_kvm():
+    gem5_verify_config(
+        name="test-gem5-library-example-virtualized-processor-switch",
+        fixtures=(),
+        verifiers=(
+            verifier.MatchRegex(
+                re.compile(
+                    "Host-resolved virtualized processor completed "
+                    "successfully"
+                )
+            ),
+        ),
+        config=joinpath(
+            config.base_dir,
+            "configs",
+            "example",
+            "gem5_library",
+            "virtualized_processor_switch.py",
+        ),
+        config_args=[],
+        valid_isas=(constants.all_compiled_tag,),
+        valid_hosts=(constants.host_arm_tag,),
+        length=constants.quick_tag,
+        uses_kvm=supports_arm_kvm(),
     )
