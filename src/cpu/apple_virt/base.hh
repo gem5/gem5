@@ -31,7 +31,11 @@
 
 #include <Hypervisor/hv_vcpu.h>
 
+#include <chrono>
+#include <condition_variable>
 #include <memory>
+#include <mutex>
+#include <thread>
 
 #include "cpu/apple_virt/vm.hh"
 #include "cpu/base.hh"
@@ -45,10 +49,13 @@ namespace gem5
 struct BaseAppleVirtCPUParams;
 
 /**
- * Skeleton CPU model that will eventually offload execution to the Apple
- * Hypervisor framework.  At the moment it only allocates the shared VM and
- * prepares per-CPU bookkeeping; the run loop will be fleshed out as the
- * backend implementation matures.
+ * Base class for CPUs accelerated by Apple's Hypervisor framework.
+ *
+ * The initial implementation intentionally supports one full-system CPU in
+ * atomic non-caching mode. A host-side watchdog bounds each blocking
+ * hv_vcpu_run() call so gem5's event queue continues to make progress.
+ * Hypervisor.framework does not expose a retired-instruction counter, so
+ * instruction-count events and instruction statistics are unsupported.
  */
 class BaseAppleVirtCPU : public BaseCPU
 {
@@ -58,6 +65,9 @@ class BaseAppleVirtCPU : public BaseCPU
 
     void init() override;
     void startup() override;
+    DrainState drain() override;
+    void drainResume() override;
+    void verifyMemoryMode() const override;
 
     Port &
     getDataPort() override
@@ -66,10 +76,14 @@ class BaseAppleVirtCPU : public BaseCPU
     getInstPort() override
     { return instPort; }
     void wakeup(ThreadID tid = 0) override;
+    bool
+    wakeupOnInterrupt(ThreadID tid) const override
+    { return true; }
+    void activateContext(ThreadID thread_num) override;
+    void suspendContext(ThreadID thread_num) override;
+    void haltContext(ThreadID thread_num) override;
 
-    ThreadContext *
-    getContext(int tid) override
-    { return threadContext; }
+    ThreadContext *getContext(int tid) override;
 
     Counter
     totalInsts() const override
@@ -92,6 +106,14 @@ class BaseAppleVirtCPU : public BaseCPU
     hv_vcpu_t hvVCPU;
     hv_vcpu_exit_t *hvExit;
 
+    enum class Status
+    {
+        Idle,
+        Running,
+    };
+
+    Status status;
+
     class AppleVirtCPUPort : public RequestPort
     {
       public:
@@ -105,14 +127,38 @@ class BaseAppleVirtCPU : public BaseCPU
 
     bool hvReady;
     EventFunctionWrapper runEvent;
-    Cycles runPeriod;
+    std::chrono::microseconds hostRunTime;
 
     AppleVirtCPUPort dataPort;
     AppleVirtCPUPort instPort;
 
     void runOnce();
+    void createVCPU();
+    void destroyVCPU();
+    void startWatchdog();
+    void stopWatchdog();
+    void armWatchdog();
+    void disarmWatchdog();
+    void watchdogLoop();
+
+    Tick doMMIOAccess(Addr paddr, void *data, unsigned size, bool write);
+    void advancePC();
+
     virtual void syncThreadToHV();
     virtual void syncHVToThread();
+    virtual void
+    updateInterrupts()
+    {}
+    virtual Tick handleException(const hv_vcpu_exit_exception_t &exception);
+    virtual void handleVTimerActivated();
+
+    std::thread::id ownerThread;
+    std::thread watchdogThread;
+    std::mutex watchdogMutex;
+    std::condition_variable watchdogCV;
+    bool watchdogStop;
+    bool watchdogArmed;
+    uint64_t watchdogGeneration;
 };
 
 } // namespace gem5

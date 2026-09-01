@@ -52,6 +52,7 @@ from m5.objects import (
 )
 from m5.util import warn
 
+from ...isas import ISA
 from ...utils.override import overrides
 from ..boards.abstract_board import AbstractBoard
 from ..boards.mem_mode import MemMode
@@ -95,20 +96,15 @@ class BaseCPUProcessor(AbstractProcessor):
             self.kvm_vm = KvmVM()
 
         if self._any_apple_virt_core():
-            from m5.objects import AppleVirtVM
-
-            self.apple_virt_vm = AppleVirtVM()
+            if len(self.get_cores()) != 1:
+                raise ValueError(
+                    "AppleVirtCPU currently supports exactly one core"
+                )
+            if self.get_isa() != ISA.ARM:
+                raise ValueError("AppleVirtCPU only supports the ARM ISA")
 
     def _any_apple_virt_core(self) -> bool:
-        try:
-            from m5.objects import BaseAppleVirtCPU
-
-            return any(
-                isinstance(core.get_simobject(), BaseAppleVirtCPU)
-                for core in self.get_cores()
-            )
-        except ImportError:
-            return False
+        return any(core.is_apple_virt_core() for core in self.get_cores())
 
     @overrides(AbstractProcessor)
     def incorporate_processor(self, board: AbstractBoard) -> None:
@@ -122,12 +118,16 @@ class BaseCPUProcessor(AbstractProcessor):
                 core.get_simobject().eventq_index = i + 1
             board.set_mem_mode(MemMode.ATOMIC_NONCACHING)
         elif self._any_apple_virt_core():
-            for i, core in enumerate(self.cores):
+            if not board.is_fullsystem():
+                raise ValueError(
+                    "AppleVirtCPU only supports full-system simulation"
+                )
+            from m5.objects import AppleVirtVM
+
+            board.apple_virt_vm = AppleVirtVM()
+            for core in self.cores:
                 simobj = core.get_simobject()
-                simobj.vm = self.apple_virt_vm
-                for obj in simobj.descendants():
-                    obj.eventq_index = 0
-                simobj.eventq_index = i + 1
+                simobj.vm = board.apple_virt_vm
             board.set_mem_mode(MemMode.ATOMIC_NONCACHING)
         elif isinstance(
             self.cores[0].get_simobject(),
@@ -153,9 +153,6 @@ class BaseCPUProcessor(AbstractProcessor):
 
     def _pre_instantiate(self, root: Root) -> None:
         super()._pre_instantiate(root)
-        if (
-            any(core.is_kvm_core() for core in self.get_cores())
-            or self._any_apple_virt_core()
-        ):
+        if any(core.is_kvm_core() for core in self.get_cores()):
             m5.ticks.fixGlobalFrequency()
             root.sim_quantum = m5.ticks.fromSeconds(0.001)

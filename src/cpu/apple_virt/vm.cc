@@ -31,6 +31,11 @@
 #include <Hypervisor/hv_types.h>
 #include <Hypervisor/hv_vm.h>
 
+#include <unistd.h>
+
+#include <cassert>
+#include <cstdint>
+
 #include "base/logging.hh"
 #include "mem/physical.hh"
 #include "params/AppleVirtVM.hh"
@@ -40,17 +45,40 @@ namespace gem5
 {
 
 AppleVirtVM::AppleVirtVM(const AppleVirtVMParams &params)
-    : SimObject(params), initialized(false)
-{}
+    : SimObject(params),
+      initialized(false),
+      activeCPUs(0),
+      hostPageSize(sysconf(_SC_PAGESIZE))
+{
+    fatal_if(hostPageSize <= 0,
+             "AppleVirtVM could not determine the host page size");
+}
 
 AppleVirtVM::~AppleVirtVM()
 {
     if (initialized) {
+        warn_if(activeCPUs != 0,
+                "Destroying AppleVirtVM while %u vCPU(s) remain", activeCPUs);
         hv_return_t hv_err = hv_vm_destroy();
         if (hv_err != HV_SUCCESS) {
             warn("hv_vm_destroy failed (%d)", hv_err);
         }
     }
+}
+
+void
+AppleVirtVM::registerCPU()
+{
+    fatal_if(activeCPUs != 0,
+             "AppleVirtVM currently supports exactly one vCPU");
+    ++activeCPUs;
+}
+
+void
+AppleVirtVM::unregisterCPU()
+{
+    assert(activeCPUs == 1);
+    --activeCPUs;
 }
 
 void
@@ -80,7 +108,18 @@ AppleVirtVM::mapSystemMemory(System &system)
         }
 
         const AddrRange &range = entry.range;
+        fatal_if(range.interleaved(),
+                 "AppleVirtVM cannot map interleaved range %s",
+                 range.to_string());
         const uint64_t size = range.size();
+        const auto host_addr = reinterpret_cast<uintptr_t>(entry.pmem);
+        fatal_if(host_addr % hostPageSize != 0 ||
+                     range.start() % hostPageSize != 0 ||
+                     size % hostPageSize != 0,
+                 "AppleVirtVM mapping [%#llx, %#llx) is not aligned to "
+                 "the %ld-byte host page size",
+                 static_cast<unsigned long long>(range.start()),
+                 static_cast<unsigned long long>(range.end()), hostPageSize);
         hv_return_t hv_err =
             hv_vm_map(static_cast<void *>(entry.pmem), range.start(), size,
                       HV_MEMORY_READ | HV_MEMORY_WRITE | HV_MEMORY_EXEC);

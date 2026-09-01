@@ -157,14 +157,9 @@ class SimpleCore(BaseCPUCore):
         :param core_id: The id of the core to be returned.
         """
 
-        cpu_class = cls.cpu_class_factory(cpu_type=cpu_type, isa=isa)
-
-        if cpu_type == CPUTypes.APPLE_VIRT:
-            from m5.objects import AppleVirtVM
-
-            core = cpu_class(cpu_id=core_id, vm=AppleVirtVM())
-        else:
-            core = cpu_class(cpu_id=core_id)
+        core = cls.cpu_class_factory(cpu_type=cpu_type, isa=isa)(
+            cpu_id=core_id
+        )
 
         # RISC-V KVM vector state is host-dependent. Use the latest profile
         # without the V extension by default; callers may select RVA23S64 when

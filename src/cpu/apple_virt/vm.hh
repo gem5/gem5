@@ -58,8 +58,16 @@ class AppleVirtVM : public SimObject
     /** Ensure the VM is initialised before any CPU touches it. */
     void ensureInitialized(System &system);
 
+    /** Register the single vCPU supported by the initial backend. */
+    void registerCPU();
+
+    /** Record that the vCPU has been destroyed. */
+    void unregisterCPU();
+
   private:
     bool initialized;
+    unsigned activeCPUs;
+    long hostPageSize;
 };
 
 } // namespace gem5

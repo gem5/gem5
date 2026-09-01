@@ -36,6 +36,16 @@ class BaseAppleVirtCPU(BaseCPU):
     cxx_class = "gem5::BaseAppleVirtCPU"
     abstract = True
 
-    run_period = Param.Cycles(1, "Scheduling quantum between HVF entries")
+    @classmethod
+    def memory_mode(cls):
+        return "atomic_noncaching"
+
+    @classmethod
+    def support_take_over(cls):
+        return False
+
+    host_run_time_us = Param.Unsigned(
+        1000, "Maximum host microseconds spent in one HVF entry"
+    )
 
     vm = Param.AppleVirtVM(Parent.any, "Shared Apple virtual machine instance")

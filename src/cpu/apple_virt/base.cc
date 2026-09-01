@@ -30,13 +30,19 @@
 
 #include <Hypervisor/hv_vcpu.h>
 
+#include <algorithm>
+#include <cassert>
+
 #include "arch/arm/regs/int.hh"
+#include "arch/generic/mmu.hh"
 #include "base/logging.hh"
 #include "cpu/base.hh"
 #include "cpu/simple_thread.hh"
 #include "cpu/thread_context.hh"
 #include "debug/AppleVirtRun.hh"
 #include "params/BaseAppleVirtCPU.hh"
+#include "sim/core.hh"
+#include "sim/faults.hh"
 #include "sim/full_system.hh"
 #include "sim/process.hh"
 #include "sim/system.hh"
@@ -62,24 +68,22 @@ BaseAppleVirtCPU::BaseAppleVirtCPU(const BaseAppleVirtCPUParams &params)
       threadContext(nullptr),
       hvVCPU(static_cast<hv_vcpu_t>(~0U)),
       hvExit(nullptr),
+      status(Status::Idle),
       hvReady(false),
       runEvent([this]() { runOnce(); }, name() + ".run"),
-      runPeriod(params.run_period),
+      hostRunTime(params.host_run_time_us),
       dataPort(name() + ".dcache_port"),
-      instPort(name() + ".icache_port")
+      instPort(name() + ".icache_port"),
+      watchdogStop(false),
+      watchdogArmed(false),
+      watchdogGeneration(0)
 {
     fatal_if(!vm, "BaseAppleVirtCPU requires an AppleVirtVM instance");
+    fatal_if(!FullSystem,
+             "AppleVirtCPU currently supports full-system mode only");
 
-    if (FullSystem) {
-        thread = new SimpleThread(this, 0, params.system, params.mmu,
-                                  params.isa[0], params.decoder[0]);
-    } else {
-        fatal_if(params.workload.empty(),
-                 "AppleVirtCPU requires exactly one SE workload");
-        thread =
-            new SimpleThread(this, 0, params.system, params.workload[0],
-                             params.mmu, params.isa[0], params.decoder[0]);
-    }
+    thread = new SimpleThread(this, 0, params.system, params.mmu,
+                              params.isa[0], params.decoder[0]);
 
     thread->setStatus(ThreadContext::Halted);
     threadContext = thread->getTC();
@@ -88,13 +92,8 @@ BaseAppleVirtCPU::BaseAppleVirtCPU(const BaseAppleVirtCPUParams &params)
 
 BaseAppleVirtCPU::~BaseAppleVirtCPU()
 {
-    if (hvReady) {
-        hv_return_t hv_err = hv_vcpu_destroy(hvVCPU);
-        if (hv_err != HV_SUCCESS) {
-            warn("hv_vcpu_destroy failed (err=%d)", hv_err);
-        }
-    }
-
+    stopWatchdog();
+    destroyVCPU();
     delete thread;
 }
 
@@ -105,6 +104,9 @@ BaseAppleVirtCPU::init()
 
     fatal_if(numThreads != 1,
              "AppleVirtCPU currently supports only a single thread");
+    fatal_if(!thread->comInstEventQueue.empty(),
+             "AppleVirtCPU does not support instruction-count events");
+    verifyMemoryMode();
 }
 
 void
@@ -112,7 +114,15 @@ BaseAppleVirtCPU::startup()
 {
     BaseCPU::startup();
     vm->ensureInitialized(*system);
-    schedule(runEvent, clockEdge(runPeriod));
+    createVCPU();
+    startWatchdog();
+
+    if (thread->status() == ThreadContext::Active) {
+        status = Status::Running;
+        if (!runEvent.scheduled()) {
+            schedule(runEvent, clockEdge(Cycles(0)));
+        }
+    }
 }
 
 void
@@ -122,42 +132,311 @@ BaseAppleVirtCPU::wakeup(ThreadID tid)
         return;
     }
 
+    if (hvReady) {
+        hv_vcpu_t vcpu = hvVCPU;
+        hv_vcpus_exit(&vcpu, 1);
+    }
+
+    if (thread->status() == ThreadContext::Suspended) {
+        thread->activate();
+    }
+}
+
+void
+BaseAppleVirtCPU::activateContext(ThreadID thread_num)
+{
+    assert(thread_num == 0);
+    if (status == Status::Running) {
+        return;
+    }
+
+    status = Status::Running;
     if (!runEvent.scheduled()) {
         schedule(runEvent, clockEdge(Cycles(0)));
     }
 }
 
 void
-BaseAppleVirtCPU::runOnce()
+BaseAppleVirtCPU::suspendContext(ThreadID thread_num)
 {
-    if (!hvReady) {
-        hv_return_t hv_err = hv_vcpu_create(&hvVCPU, &hvExit, nullptr);
-        fatal_if(hv_err != HV_SUCCESS,
-                 "hv_vcpu_create failed for AppleVirtCPU (err=%d)", hv_err);
-        hvReady = true;
+    assert(thread_num == 0);
+    if (runEvent.scheduled()) {
+        deschedule(runEvent);
+    }
+    status = Status::Idle;
+}
+
+void
+BaseAppleVirtCPU::haltContext(ThreadID thread_num)
+{
+    suspendContext(thread_num);
+    updateCycleCounters(BaseCPU::CPU_STATE_SLEEP);
+}
+
+ThreadContext *
+BaseAppleVirtCPU::getContext(int tid)
+{
+    assert(tid == 0);
+    if (hvReady && std::this_thread::get_id() == ownerThread) {
+        syncHVToThread();
+    }
+    return threadContext;
+}
+
+DrainState
+BaseAppleVirtCPU::drain()
+{
+    if (runEvent.scheduled()) {
+        deschedule(runEvent);
+    }
+    status = Status::Idle;
+    if (hvReady && std::this_thread::get_id() == ownerThread) {
+        syncHVToThread();
+    }
+    return DrainState::Drained;
+}
+
+void
+BaseAppleVirtCPU::drainResume()
+{
+    assert(!runEvent.scheduled());
+    if (switchedOut()) {
+        return;
     }
 
-    syncThreadToHV();
+    verifyMemoryMode();
+    if (thread->status() == ThreadContext::Active) {
+        status = Status::Running;
+        schedule(runEvent, clockEdge(Cycles(0)));
+    }
+}
 
+void
+BaseAppleVirtCPU::verifyMemoryMode() const
+{
+    fatal_if(!system->bypassCaches(),
+             "AppleVirtCPU requires atomic non-caching memory mode");
+}
+
+void
+BaseAppleVirtCPU::createVCPU()
+{
+    assert(!hvReady);
+    ownerThread = std::this_thread::get_id();
+    vm->registerCPU();
+
+    hv_return_t hv_err = hv_vcpu_create(&hvVCPU, &hvExit, nullptr);
+    fatal_if(hv_err != HV_SUCCESS,
+             "hv_vcpu_create failed for AppleVirtCPU (err=%d)", hv_err);
+    hvReady = true;
+}
+
+void
+BaseAppleVirtCPU::destroyVCPU()
+{
+    if (!hvReady) {
+        return;
+    }
+
+    fatal_if(std::this_thread::get_id() != ownerThread,
+             "AppleVirtCPU vCPU must be destroyed by its owner thread");
+    hv_return_t hv_err = hv_vcpu_destroy(hvVCPU);
+    warn_if(hv_err != HV_SUCCESS, "hv_vcpu_destroy failed (err=%d)", hv_err);
+    if (hv_err == HV_SUCCESS) {
+        hvReady = false;
+        vm->unregisterCPU();
+    }
+}
+
+void
+BaseAppleVirtCPU::runOnce()
+{
+    assert(status == Status::Running);
+    fatal_if(std::this_thread::get_id() != ownerThread,
+             "AppleVirtCPU must run on the thread which created its vCPU");
+    fatal_if(!thread->comInstEventQueue.empty(),
+             "AppleVirtCPU does not support instruction-count events");
+
+    syncThreadToHV();
+    updateInterrupts();
+    armWatchdog();
+
+    const auto host_start = std::chrono::steady_clock::now();
     hv_return_t hv_err = hv_vcpu_run(hvVCPU);
+    const auto host_end = std::chrono::steady_clock::now();
+    disarmWatchdog();
     fatal_if(hv_err != HV_SUCCESS,
              "hv_vcpu_run failed for AppleVirtCPU (err=%d)", hv_err);
 
-    if (hvExit) {
-        DPRINTF(AppleVirtRun, "vCPU exited with reason %u\n", hvExit->reason);
-        if (hvExit->reason == HV_EXIT_REASON_EXCEPTION) {
-            warn("AppleVirtCPU exception exit: syndrome=%#x far=%#llx",
-                 hvExit->exception.syndrome,
-                 static_cast<unsigned long long>(
-                     hvExit->exception.virtual_address));
-            return;
-        }
+    syncHVToThread();
+    fatal_if(!hvExit, "AppleVirtCPU run completed without exit information");
+
+    DPRINTF(AppleVirtRun, "vCPU exited with reason %u\n", hvExit->reason);
+    Tick delay = 0;
+    switch (hvExit->reason) {
+        case HV_EXIT_REASON_CANCELED:
+            break;
+        case HV_EXIT_REASON_EXCEPTION:
+            delay = handleException(hvExit->exception);
+            break;
+        case HV_EXIT_REASON_VTIMER_ACTIVATED:
+            handleVTimerActivated();
+            break;
+        case HV_EXIT_REASON_UNKNOWN:
+        default:
+            fatal("AppleVirtCPU exited for an unknown reason");
     }
 
-    syncHVToThread();
-
-    schedule(runEvent, clockEdge(runPeriod));
+    if (status == Status::Running) {
+        const auto host_ns =
+            std::chrono::duration_cast<std::chrono::nanoseconds>(host_end -
+                                                                 host_start)
+                .count();
+        const Tick execution_delay =
+            std::max<Tick>(1, host_ns * sim_clock::as_int::ns);
+        baseStats.numCycles += ticksToCycles(execution_delay);
+        Cycles next_cycles = ticksToCycles(execution_delay + delay);
+        next_cycles = std::max(next_cycles, Cycles(1));
+        schedule(runEvent, clockEdge(next_cycles));
+    }
 }
+
+void
+BaseAppleVirtCPU::startWatchdog()
+{
+    watchdogThread = std::thread([this]() { watchdogLoop(); });
+}
+
+void
+BaseAppleVirtCPU::stopWatchdog()
+{
+    if (!watchdogThread.joinable()) {
+        return;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(watchdogMutex);
+        watchdogStop = true;
+        watchdogArmed = false;
+        ++watchdogGeneration;
+    }
+    watchdogCV.notify_all();
+    watchdogThread.join();
+}
+
+void
+BaseAppleVirtCPU::armWatchdog()
+{
+    {
+        std::lock_guard<std::mutex> lock(watchdogMutex);
+        watchdogArmed = true;
+        ++watchdogGeneration;
+    }
+    watchdogCV.notify_all();
+}
+
+void
+BaseAppleVirtCPU::disarmWatchdog()
+{
+    {
+        std::lock_guard<std::mutex> lock(watchdogMutex);
+        watchdogArmed = false;
+        ++watchdogGeneration;
+    }
+    watchdogCV.notify_all();
+}
+
+void
+BaseAppleVirtCPU::watchdogLoop()
+{
+    std::unique_lock<std::mutex> lock(watchdogMutex);
+    while (!watchdogStop) {
+        watchdogCV.wait(lock,
+                        [this]() { return watchdogStop || watchdogArmed; });
+        if (watchdogStop) {
+            break;
+        }
+
+        const uint64_t generation = watchdogGeneration;
+        if (watchdogCV.wait_for(lock, hostRunTime, [this, generation]() {
+                return watchdogStop || !watchdogArmed ||
+                       watchdogGeneration != generation;
+            })) {
+            continue;
+        }
+
+        hv_vcpu_t vcpu = hvVCPU;
+        watchdogArmed = false;
+        lock.unlock();
+        hv_return_t hv_err = hv_vcpus_exit(&vcpu, 1);
+        warn_if(hv_err != HV_SUCCESS,
+                "hv_vcpus_exit failed in AppleVirtCPU watchdog (err=%d)",
+                hv_err);
+        lock.lock();
+    }
+}
+
+Tick
+BaseAppleVirtCPU::doMMIOAccess(Addr paddr, void *data, unsigned size,
+                               bool write)
+{
+    RequestPtr request = std::make_shared<Request>(
+        paddr, size, Request::UNCACHEABLE, dataRequestorId());
+    request->setContext(threadContext->contextId());
+
+    const BaseMMU::Mode mode = write ? BaseMMU::Write : BaseMMU::Read;
+    Fault fault = threadContext->getMMUPtr()->finalizePhysical(
+        request, threadContext, mode);
+    if (fault != NoFault) {
+        warn("Finalizing AppleVirtCPU MMIO failed: %s", fault->name());
+    }
+
+    PacketPtr packet =
+        new Packet(request, write ? MemCmd::WriteReq : MemCmd::ReadReq);
+    packet->dataStatic(data);
+
+    if (request->isLocalAccess()) {
+        const Cycles local_delay =
+            request->localAccessor(threadContext, packet);
+        delete packet;
+        return clockPeriod() * local_delay;
+    }
+
+    EventQueue::ScopedMigration migrate(vm->eventQueue());
+    Tick delay = dataPort.sendAtomic(packet);
+    delete packet;
+    return delay;
+}
+
+void
+BaseAppleVirtCPU::advancePC()
+{
+    uint64_t pc = 0;
+    hv_return_t hv_err = hv_vcpu_get_reg(hvVCPU, HV_REG_PC, &pc);
+    fatal_if(hv_err != HV_SUCCESS,
+             "Failed to read HVF PC while completing an exit (err=%d)",
+             hv_err);
+    pc += 4;
+    hv_err = hv_vcpu_set_reg(hvVCPU, HV_REG_PC, pc);
+    fatal_if(hv_err != HV_SUCCESS,
+             "Failed to advance HVF PC while completing an exit (err=%d)",
+             hv_err);
+    threadContext->pcState(static_cast<Addr>(pc));
+}
+
+Tick
+BaseAppleVirtCPU::handleException(const hv_vcpu_exit_exception_t &exception)
+{
+    fatal("Unhandled AppleVirtCPU exception: syndrome=%#llx far=%#llx "
+          "ipa=%#llx",
+          static_cast<unsigned long long>(exception.syndrome),
+          static_cast<unsigned long long>(exception.virtual_address),
+          static_cast<unsigned long long>(exception.physical_address));
+}
+
+void
+BaseAppleVirtCPU::handleVTimerActivated()
+{ fatal("AppleVirtCPU does not implement the architectural virtual timer"); }
 
 void
 BaseAppleVirtCPU::syncThreadToHV()

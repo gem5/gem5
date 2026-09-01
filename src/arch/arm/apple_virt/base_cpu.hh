@@ -51,6 +51,9 @@ class BaseArmAppleVirtCPU : public BaseAppleVirtCPU
   protected:
     void syncThreadToHV() override;
     void syncHVToThread() override;
+    void updateInterrupts() override;
+    Tick handleException(const hv_vcpu_exit_exception_t &exception) override;
+    void handleVTimerActivated() override;
 };
 
 } // namespace gem5
