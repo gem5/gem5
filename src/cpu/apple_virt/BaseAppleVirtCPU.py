@@ -42,7 +42,7 @@ class BaseAppleVirtCPU(BaseCPU):
 
     @classmethod
     def support_take_over(cls):
-        return False
+        return True
 
     host_run_time_us = Param.Unsigned(
         1000, "Maximum host microseconds spent in one HVF entry"

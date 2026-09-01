@@ -33,6 +33,7 @@ from typing import (
 import m5
 from m5.objects import Root
 
+from ...isas import ISA
 from ...utils.override import *
 from ..boards.abstract_board import AbstractBoard
 from .abstract_core import AbstractCore
@@ -90,16 +91,32 @@ class SwitchableProcessor(AbstractProcessor):
         self._prepare_kvm = any(
             core.is_kvm_core() for core in self._all_cores()
         )
-
-        if any(core.is_apple_virt_core() for core in self._all_cores()):
-            raise NotImplementedError(
-                "AppleVirtCPU does not support CPU switching"
+        apple_virt_cores = [
+            core for core in self._all_cores() if core.is_apple_virt_core()
+        ]
+        self._prepare_apple_virt = bool(apple_virt_cores)
+        if len(apple_virt_cores) > 1:
+            raise ValueError(
+                "AppleVirtCPU currently supports exactly one core"
             )
+        if self._prepare_apple_virt and self.get_isa() != ISA.ARM:
+            raise ValueError("AppleVirtCPU only supports the ARM ISA")
+        if self._prepare_apple_virt and not any(
+            core.is_apple_virt_core() for core in self._current_cores
+        ):
+            raise ValueError("AppleVirtCPU must be in the starting core set")
 
         if self._prepare_kvm:
             from m5.objects import KvmVM
 
             self.kvm_vm = KvmVM()
+
+        if self._prepare_apple_virt:
+            from m5.objects import AppleVirtVM
+
+            self.apple_virt_vm = AppleVirtVM()
+            for core in apple_virt_cores:
+                core.get_simobject().vm = self.apple_virt_vm
 
     @overrides(AbstractProcessor)
     def incorporate_processor(self, board: AbstractBoard) -> None:
@@ -108,6 +125,11 @@ class SwitchableProcessor(AbstractProcessor):
         # argument. We therefore need to store the board when incorporating the
         # procsesor
         self._board = board
+
+        if self._prepare_apple_virt and not board.is_fullsystem():
+            raise ValueError(
+                "AppleVirtCPU only supports full-system simulation"
+            )
 
         if self._prepare_kvm:
             # To get the KVM CPUs to run on different host CPUs
