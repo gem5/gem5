@@ -82,11 +82,12 @@ the `noop` tool.
 ### Phase 2: Deep Log Analysis
 
 1. **Retrieve Logs**: Use `get_job_logs` with `failed_only=true` to get logs
-from all failed jobs. Additionally, look in the `Upload results` step(s) of the
-failed job(s) and download the artifact. This artifact contains logs for the
-simulations that the tests run. In particular, look for the files named
-`simerr.txt` and `simout.txt`, which will be located under a filepath with the
-following pattern: `weekly-tests-run-*/SuiteUID-*/TestUID-*/`.
+from all failed jobs. Additionally, if the workflow is a CI, Daily, or Weekly
+test, look in the `Upload results` step of the failed job(s) and download the
+artifact. This artifact contains logs for the simulations that the tests run. In
+particular, look for the files named `simerr.txt` and `simout.txt`, which will
+be located under a filepath with the following pattern:
+`(ci|daily|weekly)-tests-run-*/SuiteUID-*/TestUID-*/`.
 
 2. **Pattern Recognition**: Analyze logs for:
    - Error messages and stack traces
