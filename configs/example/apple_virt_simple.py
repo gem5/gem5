@@ -24,11 +24,22 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Minimal stdlib example configuration for the Apple virtualization CPU."""
+"""Boot ARM Ubuntu with one AppleVirtCPU in full-system mode.
 
-from gem5.components.boards.simple_board import SimpleBoard
-from gem5.components.cachehierarchies.classic.no_cache import NoCache
-from gem5.components.memory import SingleChannelDDR3_1600
+The simulated system's output is written to
+``m5out/board.terminal``.
+"""
+
+from m5.objects import (
+    ArmDefaultRelease,
+    VExpress_GEM5_V1,
+)
+
+from gem5.components.boards.arm_board import ArmBoard
+from gem5.components.cachehierarchies.classic.private_l1_private_l2_cache_hierarchy import (
+    PrivateL1PrivateL2CacheHierarchy,
+)
+from gem5.components.memory import DualChannelDDR4_2400
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.isas import ISA
@@ -38,24 +49,31 @@ from gem5.utils.requires import requires
 
 requires(isa_required=ISA.ARM)
 
-cache_hierarchy = NoCache()
-memory = SingleChannelDDR3_1600(size="512MiB")
+cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
+    l1d_size="16KiB", l1i_size="16KiB", l2_size="256KiB"
+)
+memory = DualChannelDDR4_2400(size="2GiB")
 processor = SimpleProcessor(
-    cpu_type=CPUTypes.APPLE_VIRT, isa=ISA.ARM, num_cores=1
+    cpu_type=CPUTypes.APPLE_VIRT,
+    isa=ISA.ARM,
+    num_cores=1,
+    clk_freq="3GHz",
 )
 
-board = SimpleBoard(
+board = ArmBoard(
     clk_freq="3GHz",
     processor=processor,
     memory=memory,
     cache_hierarchy=cache_hierarchy,
+    release=ArmDefaultRelease.for_kvm(),
+    platform=VExpress_GEM5_V1(),
 )
 
-board.set_se_binary_workload(
-    obtain_resource("arm-hello64-static", resource_version="1.0.0")
+board.set_workload(
+    obtain_resource(
+        "arm-ubuntu-24.04-boot-with-systemd", resource_version="3.0.0"
+    )
 )
 
 simulator = Simulator(board=board)
-print("Running AppleVirtCPU stdlib smoke test")
-simulator.run(max_ticks=1_000_000)
-print(f"Exited @ tick {simulator.get_current_tick()}")
+simulator.run()

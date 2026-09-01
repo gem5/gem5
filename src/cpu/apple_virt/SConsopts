@@ -45,9 +45,8 @@ with gem5_scons.Configure(main) as conf:
 def create_use_apple_virt_var():
     # Kconfig computes USE_APPLE_VIRT from HAVE_APPLE_VIRT and
     # APPLE_VIRT_ISA. Leave the value unset here so Kconfig can
-    # auto-enable it (matching KVM behavior) when host and ISA
-    # support
-    # are available.
+    # auto-enable it (matching KVM behavior) when host and ISA support are
+    # available.
     have_host = main['CONF']['HAVE_APPLE_VIRT']
     have_isa = main['CONF']['APPLE_VIRT_ISA']
     if not (have_host and have_isa):

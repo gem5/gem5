@@ -91,6 +91,11 @@ class SwitchableProcessor(AbstractProcessor):
             core.is_kvm_core() for core in self._all_cores()
         )
 
+        if any(core.is_apple_virt_core() for core in self._all_cores()):
+            raise NotImplementedError(
+                "AppleVirtCPU does not support CPU switching"
+            )
+
         if self._prepare_kvm:
             from m5.objects import KvmVM
 

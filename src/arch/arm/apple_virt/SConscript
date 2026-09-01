@@ -38,3 +38,5 @@ SimObject('ArmAppleVirtCPU.py', sim_objects=['ArmAppleVirtCPU'],
 
 Source('base_cpu.cc', tags=['arm apple_virt'])
 Source('arm_cpu.cc', tags=['arm apple_virt'])
+
+GTest('exit_decode.test', 'exit_decode.test.cc')
