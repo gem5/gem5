@@ -67,6 +67,8 @@ class BaseAppleVirtCPU : public BaseCPU
     void startup() override;
     DrainState drain() override;
     void drainResume() override;
+    void switchOut() override;
+    void takeOverFrom(BaseCPU *cpu) override;
     void serializeThread(CheckpointOut &cp, ThreadID tid) const override;
     void unserializeThread(CheckpointIn &cp, ThreadID tid) override;
     void verifyMemoryMode() const override;

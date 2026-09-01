@@ -213,6 +213,33 @@ BaseAppleVirtCPU::drainResume()
 }
 
 void
+BaseAppleVirtCPU::switchOut()
+{
+    BaseCPU::switchOut();
+
+    // CPU switching drains the system before switching out a core. The
+    // AppleVirt run event must therefore be descheduled and the host vCPU
+    // state must already be reflected in the gem5 ThreadContext.
+    assert(!runEvent.scheduled());
+    assert(status == Status::Idle);
+}
+
+void
+BaseAppleVirtCPU::takeOverFrom(BaseCPU *cpu)
+{
+    BaseCPU::takeOverFrom(cpu);
+
+    // The vCPU is created during startup even when this CPU starts switched
+    // out. Push the newly copied ThreadContext into Hypervisor.framework now
+    // so the first run begins from the exact takeover state.
+    assert(!runEvent.scheduled());
+    assert(status == Status::Idle);
+    assert(hvReady);
+    assert(threadContexts.size() == 1);
+    syncThreadToHV();
+}
+
+void
 BaseAppleVirtCPU::serializeThread(CheckpointOut &cp, ThreadID tid) const
 {
     assert(tid == 0);

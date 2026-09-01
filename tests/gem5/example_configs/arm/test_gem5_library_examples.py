@@ -114,3 +114,24 @@ if supports_apple_virt():
             valid_hosts=(constants.host_arm_tag,),
             length=constants.quick_tag,
         )
+
+    gem5_verify_config(
+        name="test-gem5-library-example-apple-virt-switch",
+        fixtures=(),
+        verifiers=(
+            verifier.MatchRegex(
+                re.compile("AppleVirt switching completed successfully")
+            ),
+        ),
+        config=joinpath(
+            config.base_dir,
+            "configs",
+            "example",
+            "gem5_library",
+            "apple_virt_switch.py",
+        ),
+        config_args=[],
+        valid_isas=(constants.all_compiled_tag,),
+        valid_hosts=(constants.host_arm_tag,),
+        length=constants.quick_tag,
+    )
