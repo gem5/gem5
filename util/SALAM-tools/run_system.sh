@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright (c) 2025 Akanksha Chaudhari, Matt Sinclair
 # (University of Wisconsin-Madison)
 # All rights reserved.
@@ -37,7 +38,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#!/bin/bash
 BENCH=""
 BENCH_PATH=""
 CONFIG_NAME=""

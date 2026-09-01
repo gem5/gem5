@@ -1,40 +1,38 @@
-# gem5-SALAM #
+# gem5-SALAM
 
 gem5-SALAM (System Architecture for LLVM-based Accelerator Modeling), is a novel system architecture designed to enable LLVM-based modeling and simulation of custom hardware accelerators.
 
 # Requirements
 
-- gem5 dependencies
-- LLVM 11–20 (see `SUPPORTED_LLVM_VERSIONS` in `SConstruct`)
-- Frontend LLVM compiler for preferred development language (eg. clang for C)
-- ARM bare-metal cross-compiler (`gcc-arm-none-eabi`) to build SALAM benchmarks / host ELFs
+- gem5 build dependencies
+- LLVM development headers and libraries
+- An LLVM frontend for generating accelerator IR (Clang for the in-tree C benchmarks)
+- ARM bare-metal cross-compiler (`gcc-arm-none-eabi`) to build SALAM host ELFs
 
 # gem5-SALAM Setup
 
-## All Required Dependencies for gem5-SALAM (Ubuntu 20.04)
+## Dependencies
+
+Install the host dependencies for gem5 using the
+[gem5 build documentation](https://www.gem5.org/documentation/general_docs/building).
+
+SALAM additionally requires:
+
+- LLVM development headers and libraries
+- Clang to generate accelerator LLVM IR
+- an ARM bare-metal cross compiler (`gcc-arm-none-eabi`) to build SALAM host ELFs
+
+When building with `--with-salam`, `SConstruct` first uses `LLVM_CONFIG` if it points to an existing `llvm-config` executable, then `llvm-config` on `PATH`, and otherwise searches for the highest available `llvm-config-N` where `N` is 11 through 20.
+
+The current port has been verified to build with LLVM/Clang 14 on Ubuntu 22.04 and LLVM/Clang 18 on Ubuntu 24.04.
+
+To select a particular LLVM installation, set `LLVM_CONFIG` to its
+`llvm-config` executable. For compatibility, it is recommended to generate accelerator LLVM IR with a Clang from the same LLVM major version.
+
+On Ubuntu, install the SALAM-specific dependencies:
 
 ```bash
-sudo apt install build-essential git m4 scons zlib1g zlib1g-dev \
-    libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
-    python3-dev python-is-python3 libboost-all-dev pkg-config
-```
-
-## LLVM/Clang Setup
-
-For a quick start, one can simply run the following to install LLVM and Clang on Ubuntu 20.04.
-```bash
-sudo apt install llvm-12 llvm-12-tools clang-12
-```
-Ensure `llvm-config` and `clang` are on your `PATH`. If your package manager installs versioned binaries (for example `llvm-config-12`), point `LLVM_CONFIG` at the matching `llvm-config` or create symlinks so the unversioned names resolve.
-
-Alternatively, you can install a supported LLVM version via your system package manager or build from source found at https://github.com/llvm/llvm-project.
-
-## ARM Cross-Compiler (for benchmarks)
-
-To compile SALAM host programs and related bare-metal support code:
-
-```bash
-sudo apt-get install gcc-multilib gcc-arm-none-eabi
+sudo apt install llvm-dev clang gcc-arm-none-eabi
 ```
 
 # Building gem5-SALAM
@@ -53,11 +51,11 @@ scons build/ARM/gem5.opt --with-salam -j`nproc`
 scons build/ARM/gem5.debug --with-salam -j`nproc`
 ```
 
-For more information regarding the binary types, and other build information refer to the gem5 build documentation [here](http://learning.gem5.org/book/part1/building.html).
+For more information regarding the binary types, and other build information refer to the gem5 build documentation [here](https://www.gem5.org/documentation/general_docs/building).
 
 # Using gem5-SALAM
 
-To use gem5-SALAM you need to define the computation model of your accelerator in your language of choice, and compile it to LLVM IR. Any control and dataflow graph optimization (eg. loop unrolling) should be handled by the compiler. You can construct accelerators by associating their LLVM IR with an LLVMInterface and connecting it to the desired CommInterface in the gem5 memory map.
+To use gem5-SALAM you need to define the computation model of your accelerator in C/C++ (or another language that can produce compatible LLVM IR), and compile it to LLVM IR. Any control and dataflow graph optimization (eg. loop unrolling) should be handled by the compiler. You can construct accelerators by associating their LLVM IR with an LLVMInterface and connecting it to the desired CommInterface in the gem5 memory map.
 
 Below are some resources in the gem5-SALAM directory that can be used when getting started:
 
@@ -69,7 +67,9 @@ Below are some resources in the gem5-SALAM directory that can be used when getti
 
 The BFS example under **configs/example/gem5_library/salam-benchmarks** shows how to interface with the gem5-SALAM simulation objects.
 
-`run_system.sh` requires **M5_PATH** and **ACC_BENCH_PATH**. Point `ACC_BENCH_PATH` at the buildable **`src/`** tree (it has Makefiles). The sibling **`workloads/`** tree is a precompiled snapshot without Makefiles and is not the default path when `BUILD=True` (the script default). Invoke the script with `bash` (its shebang is not on the first line). Paths passed to `--bench-path` are relative to `ACC_BENCH_PATH`.
+`run_system.sh` requires **M5_PATH** and **ACC_BENCH_PATH**. Point `ACC_BENCH_PATH` at the buildable `src/` tree (it has Makefiles). The sibling `workloads/` tree is a precompiled snapshot without Makefiles and is not the default path when `BUILD=True` (the script default).
+
+`--bench` should be a simple identifier such as `bfs`; it names the generated SALAM configuration and is also passed to the simulation as the accelerator benchmark name. `--bench-path` separately specifies the workload directory relative to `ACC_BENCH_PATH`; if omitted, it defaults to the `--bench` value.
 
 ```bash
 export M5_PATH=/path/to/gem5
@@ -81,7 +81,7 @@ scons build/ARM/gem5.opt --with-salam -j`nproc`
 # Optional: build the workload yourself first
 # cd $ACC_BENCH_PATH/bfs && make
 
-bash $M5_PATH/util/SALAM-tools/run_system.sh --bench bfs --bench-path bfs
+$M5_PATH/util/SALAM-tools/run_system.sh --bench bfs --bench-path bfs
 ```
 
 With `BUILD=True` (the default), `run_system.sh` runs `make all` in `$ACC_BENCH_PATH/bfs` before launching gem5. To inspect the gem5 command line it constructs, see the **RUN_SCRIPT** variable in the shell file.
@@ -98,14 +98,14 @@ The **YAML sources** used to regenerate that model live with the workload, not u
 
 Each functional-unit YAML file has two parts:
 
-* **`parameters`** — microarchitectural description used by **HWProfileGenerator**: pipeline `stages` and `cycles`, `enum_value`, supported datatypes, which LLVM instructions bind to the unit, and scheduling `limit`.
-* **`power_model`** — device-level characterization at the chosen technology node (`40nm_model` in the default profile): `area`, `leakage_power`, `internal_power`, `switch_power`, `dynamic_power`, `dynamic_energy`, `path_delay`, and a target `latency` (ns). These values are stored per functional unit in the YAML and compiled into the SALAM SimObjects under **src/salam/HWModeling/** and **src/salam/FunctionalUnits.py**.
+- `parameters` — microarchitectural description used by **HWProfileGenerator**: pipeline `stages` and `cycles`, `enum_value`, supported datatypes, which LLVM instructions bind to the unit, and scheduling `limit`.
+- `power_model` — device-level characterization at the chosen technology node (`40nm_model` in the default profile): `area`, `leakage_power`, `internal_power`, `switch_power`, `dynamic_power`, `dynamic_energy`, `path_delay`, and a target `latency` (ns). These values are stored per functional unit in the YAML and compiled into the SALAM SimObjects under **src/salam/HWModeling/** and **src/salam/FunctionalUnits.py**.
 
-The directory name **`5ns`** under `functional_units/40nm_model/` is the profile's target cycle-time bucket (matching the default `power_model.latency` values in the YAML). **`default_profile/`** is the set of units **HWProfileGenerator** reads when you regenerate.
+The directory name `5ns` under `functional_units/40nm_model/` is the profile's target cycle-time bucket (matching the default `power_model.latency` values in the YAML). `default_profile/` is the set of units **HWProfileGenerator** reads when you regenerate.
 
-Separately, each workload **config.yml** `hw_config` section supplies per-kernel **`runtime_cycles`** at simulation time via `AccConfig()`. Those workload-specific instruction latencies are not regenerated by **HWProfileGenerator**; update them manually if you change functional-unit bindings or timing after regenerating.
+Separately, each workload **config.yml** `hw_config` section supplies per-kernel `runtime_cycles` at simulation time via `AccConfig()`. Those workload-specific instruction latencies are not regenerated by **HWProfileGenerator**; update them manually if you change functional-unit bindings or timing after regenerating.
 
-To compute power from your own or profile coefficients during a run, extend **`LLVMInterface::printResults()`** in **src/salam/llvm_interface.cc** (that is where the current end-of-run power/area estimates live).
+To compute power from your own or profile coefficients during a run, extend `LLVMInterface::printResults()` in **src/salam/llvm_interface.cc** (that is where the current end-of-run power/area estimates live).
 
 ### Customizing or regenerating a profile
 
@@ -113,23 +113,49 @@ To customize functional-unit or instruction timing models, edit the YAML hardwar
 
 **configs/example/gem5_library/salam-benchmarks/src/bfs/configs/hw_interface/**
 
-* `instructions/inst_list.yml` — master instruction list (the generator updates functional-unit mappings here)
-* `functional_units/40nm_model/5ns/default_profile/*/*.yml` — functional units read by **HWProfileGenerator**
-* `functional_units/40nm_model/5ns/additional_units/float_trig_sine/` — example optional functional unit (see below)
+- `instructions/inst_list.yml` — master instruction list (the generator updates its `functional_unit` fields from the FU YAML `instructions` lists)
+- `functional_units/40nm_model/5ns/default_profile/*/*.yml` — functional units read by **HWProfileGenerator**
+- `functional_units/40nm_model/5ns/additional_units/float_trig_sine/` — example optional functional unit (see below)
 
 ### Adding a custom functional unit
 
-The `float_trig_sine` YAML under `additional_units/` shows how to define an optional functional unit: alias, pipeline stages, cycles, `enum_value`, supported datatypes, instruction bindings, and a CACTI-style power model. **HWProfileGenerator** only processes YAML files under `default_profile/`. The `additional_units/` tree is not read automatically; it is included as a reference for how to structure custom units.
+SALAM maps LLVM instructions to functional-unit (FU) models. The
+`instructions` list in each FU YAML specifies which existing LLVM
+instructions are associated with that unit. During regeneration,
+**HWProfileGenerator** uses these lists to update the corresponding
+`functional_unit` fields in `inst_list.yml`.
 
-To include a custom unit when regenerating:
+The `additional_units/` directory contains example FU definitions that are
+not part of the default profile. To include one when regenerating:
 
-1. Copy the unit directory from `additional_units/` into `default_profile/` (for example, `default_profile/float_trig_sine/float_trig_sine.yml`).
-2. Bind LLVM instructions to the unit in `inst_list.yml` (and update the workload **config.yml** `hw_config` section if per-kernel `runtime_cycles` change).
-3. Run **HWProfileGenerator**, rebuild gem5 with `--with-salam`, and rerun the workload.
+1. Copy its directory from `additional_units/` into `default_profile/`.
+2. Add the LLVM instruction names modeled by that unit to its `instructions`
+  list, removing them from any previous FU's list.
+3. If this introduces a new generated SimObject class, add its class name to
+   the `sim_objects` list for `FunctionalUnits.py` in `src/salam/SConscript`.
+4. Run **HWProfileGenerator**, rebuild gem5 with `--with-salam`, and rerun the
+  workload.
 
-### Regenerating from YAML
+Existing `opcode_num` values are part of SALAM's checked-in instruction
+configuration; they are not user-assigned IDs for defining new LLVM
+instructions. When adding or remapping a functional unit, list an
+existing supported instruction in the FU YAML `instructions` field and
+let the generator retain that instruction's existing configuration.
+Supporting a new LLVM instruction requires extending the instruction
+model rather than inventing a new `opcode_num`.
 
-`--bench-path` is the workload directory under `ACC_BENCH_PATH` (defaults to the same name as `-b` / `--bench`). For in-tree BFS with `ACC_BENCH_PATH=.../salam-benchmarks/src`, that is `bfs` → `$ACC_BENCH_PATH/bfs`.
+The current scheduler does not enforce FU occupancy when launching
+instructions, so `functional_unit_limit` is not an effective
+resource-constrained performance-modeling parameter on this branch.
+
+### Regenerating the hardware model from YAML
+
+After modifying the instruction or functional-unit YAML files, run
+**HWProfileGenerator** to regenerate the SALAM hardware model. `--bench-path`
+identifies the workload directory under `ACC_BENCH_PATH` and defaults to the
+`-b` / `--bench` value. For in-tree BFS with
+`ACC_BENCH_PATH=.../salam-benchmarks/src`, that is
+`bfs` → `$ACC_BENCH_PATH/bfs`.
 
 ```bash
 export M5_PATH=/path/to/gem5
@@ -139,22 +165,33 @@ python3 util/SALAM-tools/hw_generator/HWProfileGenerator.py -b bfs
 
 Then rebuild gem5 (`scons build/ARM/gem5.opt --with-salam`) before running simulations.
 
-_Note that the default checked-in SALAM hardware profile uses the floating-point functional unit mapping needed by the provided 32-bit ARM examples. Custom profiles should define their desired floating-point units and latencies in YAML before regenerating the hardware model. Future work may make floating-point functional unit selection more directly type-aware from the LLVM instruction precision._
+*Note that the default checked-in SALAM hardware profile uses the floating-point functional unit mapping needed by the provided 32-bit ARM examples. Custom profiles should define their desired floating-point units and latencies in YAML before regenerating the hardware model. The current generator does not automatically select floating-point functional units based on LLVM instruction precision.*
 
 ## Power Modeling using cacti-SALAM
 
 **cacti-SALAM** (`util/SALAM-tools/cacti-SALAM`) is an **offline helper** for running CACTI on accelerator YAML configs. It is **not wired into** gem5-SALAM simulation.
+
+On x86_64 Ubuntu, its 32-bit build additionally requires:
+
+```bash
+sudo apt install gcc-multilib g++-multilib
+```
 
 ```bash
 cd util/SALAM-tools/cacti-SALAM
 ./setup_cacti_SALAM.py
 ```
 
-Create `$ACC_BENCH_PATH/benchmarks.list` with lines of the form:
+Create `$ACC_BENCH_PATH/benchmarks.list` with three whitespace-separated
+fields per line:
 
 ```
-path/to/config.yml <benchmark name> <config name>
+path/to/config.yml <benchmark-name> <config-name>
 ```
+
+The first field identifies the YAML configuration. The remaining two fields
+are labels written to the `Benchmark` and `Config` columns of
+`SALAM-out.csv`.
 
 Then:
 
@@ -162,17 +199,22 @@ Then:
 python3 ./run_cacti_SALAM.py --bench-list $ACC_BENCH_PATH/benchmarks.list --delay 1.0
 ```
 
-Results are written to `util/SALAM-tools/cacti-SALAM/results/SALAM-out.csv`. To use those (or other) coefficients in a simulation power estimate, add code in **`LLVMInterface::printResults()`** in **src/salam/llvm_interface.cc**.
+Results are written to `util/SALAM-tools/cacti-SALAM/results/SALAM-out.csv`. To use those (or other) coefficients in a simulation power estimate, add code in `LLVMInterface::printResults()` in **src/salam/llvm_interface.cc**.
 
 # Resources
 
 ## gem5 Documentation
 
-https://www.gem5.org/documentation/
+[https://www.gem5.org/documentation/](https://www.gem5.org/documentation/)
 
 ## gem5 Tutorial
 
 The gem5 documentation has a [tutorial for working with gem5](http://learning.gem5.org/book/index.html#) that will help get you started with the basics of creating your own sim objects.
+
+## gem5 Bootcamp
+
+The [gem5 Bootcamp](https://bootcamp.gem5.org/) provides hands-on tutorials
+for learning and using gem5.
 
 ## Building and Integrating Accelerators in gem5-SALAM
 
@@ -182,8 +224,8 @@ We have written a guide that walks through the in-tree BFS example. This will he
 
 The overview at **util/SALAM-docs/SALAM_Object_Overview.md** covers what various Sim Objects in gem5-SALAM are and their purpose.
 
-## Full-system OS Simulation ##
+## Full-system OS Simulation
 
-Please download the latest version of the Linux Kernel for ARM from the [gem5 ARM kernel page](http://gem5.org/ARM_Kernel).
-You will also need the [ARM disk images](http://www.gem5.org/dist/current/arm/) for full system simulation.
+Full-system resources such as kernels and disk images are available through
+[gem5 Resources](https://resources.gem5.org/).
 Devices operate in the physical memory address space.

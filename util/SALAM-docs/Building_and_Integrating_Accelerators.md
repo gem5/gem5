@@ -156,7 +156,7 @@ Older versions of SALAM used per-kernel INI files to describe cycle counts and d
 The YAML file has two main roles:
 
 1. Describe the accelerator cluster (what devices exist and how they are wired).
-2. Describe the timing model (how LLVM IR instructions map to functional units and runtime cycles).
+2. Describe per-kernel instruction timing through `runtime_cycles`.
 
 ### Describe the accelerator cluster
 
@@ -205,7 +205,7 @@ The full file also declares the `EDGES`, `LEVELS`, and `LEVELCOUNTS` RegisterBan
 
 The `hw_config` section provides per-kernel instruction timing. The keys under `hw_config` correspond to the LLVM IR file base names. For example, `hw/bfs.ll` maps to the `bfs:` section.
 
-Each listed instruction gives SALAM the LLVM opcode, functional-unit mapping, and execution latency. For example:
+Each listed instruction includes opcode and functional-unit metadata along with its execution latency. In the current flow, `AccConfig()` uses the `runtime_cycles` values from this section to configure per-kernel instruction timing. For example:
 
 ```yaml
 hw_config:
@@ -262,7 +262,7 @@ The main pieces involved are:
 
   * an LLVM IR kernel (via `LLVMInterface.in_file`)
   * a timing model loaded from `config.yml` (runtime cycles per instruction)
-  * the HWModeling instruction/functional-unit objects used during execution
+  * the HWModeling instruction configuration used during execution
 
 In the generated `<bench>.py`, each accelerator is instantiated as a `CommInterface`, then configured by calling `AccConfig(...)` with its `.ll` path and the YAML config file.
 
@@ -279,9 +279,9 @@ This command generates the gem5 Python files and `bfs/bfs_clstr_hw_defines.h`. T
 
 ## Step 6: Write the Host Program
 
-For BFS, the host program is a bare-metal application compiled to an ELF:
+For BFS, the host program is a bare-metal application compiled to an ELF. Under `configs/example/gem5_library/salam-benchmarks/src/bfs`:
 
-**bfs/sw/main.elf**
+**sw/main.elf**
 
 The host program is responsible for:
 
@@ -360,8 +360,6 @@ The recommended entry point is:
 
 **util/SALAM-tools/run_system.sh**
 
-Invoke it with `bash` (the script’s shebang is not on the first line).
-
 The run script performs the complete flow:
 
 1. Run the configurator to generate `configs/SALAM/<bench>.py`, `configs/SALAM/fs_<bench>.py`, and the `*_hw_defines.h` header.
@@ -381,10 +379,10 @@ Example for the in-tree BFS workload:
 cd $M5_PATH
 scons build/ARM/gem5.opt --with-salam -j$(nproc)
 
-bash $M5_PATH/util/SALAM-tools/run_system.sh --bench bfs --bench-path bfs --print
+$M5_PATH/util/SALAM-tools/run_system.sh --bench bfs --bench-path bfs --print
 ```
 
-The `--print` flag redirects gem5 stdout/stderr to the output directory so the SALAM performance summary is easy to inspect. LLVM 11–20 and an ARM bare-metal cross-compiler (`gcc-arm-none-eabi`) are required; see **util/SALAM-docs/README_SALAM.md** for setup details.
+The `--print` flag redirects gem5 stdout/stderr to the output directory so the SALAM performance summary is easy to inspect. See **util/SALAM-docs/README_SALAM.md** for the current LLVM/Clang and ARM cross-compiler setup.
 
 ## Step 9: Inspect the Output
 
@@ -408,7 +406,7 @@ The checked-in **default hardware model** under **src/salam/HWModeling/** (gener
 
 The BFS example additionally includes YAML inputs under **configs/example/gem5_library/salam-benchmarks/src/bfs/configs/hw_interface/** used when you want to regenerate timing models from a workload-specific copy of that profile:
 
-* `instructions/inst_list.yml` — master instruction list (the generator updates functional-unit mappings here)
+* `instructions/inst_list.yml` — master instruction list (the generator updates its `functional_unit` fields from the FU YAML `instructions` lists)
 * `functional_units/40nm_model/5ns/default_profile/*/*.yml` — functional units read by **HWProfileGenerator** (each file combines `parameters` and a per-device `power_model` at the 40nm tech node)
 * `functional_units/40nm_model/5ns/additional_units/float_trig_sine/` — example optional functional unit (see below)
 
@@ -416,15 +414,47 @@ You only need to rerun the generator if you edit the profile YAMLs under `defaul
 
 The **workloads/** tree is a ready-to-run artifact snapshot (precompiled `hw/*.ll`, `sw/main.elf`, and minimal config). It does not include source or hardware profile YAMLs.
 
-### Adding a custom functional unit
+### Functional-unit configuration
 
-The `float_trig_sine` entry under `additional_units/` demonstrates how to specify an optional functional unit: pipeline depth, cycle count, `enum_value`, datatype support, instruction bindings, and power-model fields. **HWProfileGenerator** only reads YAML files under `default_profile/`; files under `additional_units/` are not processed unless you copy them into `default_profile/`.
+SALAM maps LLVM instructions to hardware functional-unit (FU) models. The
+instruction configuration specifies properties such as the LLVM opcode and
+runtime latency, while each FU YAML file lists the LLVM instructions mapped
+to that unit.
 
-To add a custom unit to a regenerated profile:
+During regeneration, `HWProfileGenerator` uses the FU YAML `instructions`
+lists to update the corresponding `functional_unit` fields in
+`inst_list.yml`. Therefore, change an instruction's FU assignment in the FU
+YAML rather than editing `functional_unit` in `inst_list.yml` directly.
 
-1. Copy the unit directory from `additional_units/` into `default_profile/` (for example, `default_profile/float_trig_sine/float_trig_sine.yml`).
-2. Update `inst_list.yml` to map the relevant LLVM instructions to the unit's `enum_value`, and adjust **config.yml** `hw_config` if per-kernel `runtime_cycles` change.
-3. Run **HWProfileGenerator**, rebuild gem5 with `--with-salam`, and rerun the workload.
+The `additional_units/` directory contains example FU definitions that are
+not part of the default profile. For example, `float_trig_sine` demonstrates
+the YAML fields used to describe an additional FU.
+
+To add an FU to a regenerated profile:
+
+1. Copy its YAML directory from `additional_units/` into `default_profile/`.
+2. Add the LLVM instruction names modeled by that FU to its `instructions`
+   list, removing them from any previous FU's list.
+3. If this introduces a new generated SimObject class, add that class to the
+   `FunctionalUnits.py` `sim_objects` list in `src/salam/SConscript`.
+4. Run `HWProfileGenerator`, rebuild gem5 with `--with-salam`, and rerun the
+   workload.
+
+Existing `opcode_num` values are part of SALAM's checked-in instruction
+configuration; they are not user-assigned IDs for defining new LLVM
+instructions. When adding or remapping a functional unit, list an
+existing supported instruction in the FU YAML `instructions` field and
+let the generator retain that instruction's existing configuration.
+Supporting a new LLVM instruction requires extending the instruction
+model rather than inventing a new `opcode_num`.
+
+### Functional-unit scheduling limitation
+
+The current SALAM scheduler does not enforce functional-unit occupancy when
+launching instructions. FU assignments are retained as part of the hardware
+model, but ready instructions are not stalled based on FU availability.
+Therefore, `functional_unit_limit` should not be used as a
+resource-constrained performance-modeling parameter on this branch.
 
 ### Regenerating the hardware model
 
@@ -436,7 +466,7 @@ export ACC_BENCH_PATH=$M5_PATH/configs/example/gem5_library/salam-benchmarks/src
 
 python3 util/SALAM-tools/hw_generator/HWProfileGenerator.py -b bfs
 scons build/ARM/gem5.opt --with-salam -j$(nproc)
-bash util/SALAM-tools/run_system.sh --bench bfs --bench-path bfs
+util/SALAM-tools/run_system.sh --bench bfs --bench-path bfs
 ```
 
 The same workload structure used for BFS—kernel source under `hw/`, a host program under `sw/`, and a `config.yml` that describes the cluster and timing—applies to other kernels as well (for example GEMM or stencil). Once that pattern is familiar, adding a new accelerator is largely a matter of writing a new kernel and updating the YAML, rather than rebuilding the system from scratch. Multiple kernels can also be placed in one AccCluster and connected through shared local memories and DMA, which makes it practical to assemble end-to-end workloads such as MobileNet from a set of cooperating accelerators.

@@ -42,6 +42,7 @@
 import os
 import stat
 import subprocess
+import sys
 import time
 
 M5_PATH_ENV_VAR = "M5_PATH"
