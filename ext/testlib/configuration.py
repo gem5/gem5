@@ -276,6 +276,7 @@ def define_constants(constants):
     constants.host_gcn_gpu_tag = "gcn_gpu"
 
     constants.kvm_tag = "kvm"
+    constants.pin_tag = "pin"
 
     constants.supported_tags = {
         constants.isa_tag_type: (
