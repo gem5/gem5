@@ -42,10 +42,7 @@
 #ifndef __DEFINES_H__
 #define __DEFINES_H__
 
-#include <inttypes.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <stdint.h>
 
 // #define CHECK
 

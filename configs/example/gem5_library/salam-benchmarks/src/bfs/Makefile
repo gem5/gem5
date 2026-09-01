@@ -42,7 +42,7 @@ FOLDERS=hw sw
 .PHONY: build clean all
 
 build:
-	@( for f in $(FOLDERS); do $(MAKE) CFLAGS="$(CFLAGS)" -C $$f; done )
+	@( for f in $(FOLDERS); do $(MAKE) CFLAGS="$(CFLAGS)" -C $$f || exit; done )
 
 clean:
 	@( for f in $(FOLDERS); do $(MAKE) -C $$f clean || exit ; done )

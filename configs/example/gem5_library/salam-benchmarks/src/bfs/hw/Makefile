@@ -40,7 +40,7 @@
 TARGET=bfs.ll top.ll
 
 %.ll : %.c
-	clang -O1 -S -target armv7-pc-none-eabi -emit-llvm -o $@ $<
+	clang -O1 -S -target armv7-pc-none-eabi -ffreestanding -emit-llvm -o $@ $<
 build : $(TARGET)
 
 clean:
