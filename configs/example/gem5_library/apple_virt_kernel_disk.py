@@ -1,4 +1,4 @@
-# Copyright (c) 2026 The Regents of the University of California
+# Copyright (c) 2026 The Regents of The University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,10 +24,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Boot ARM Ubuntu with one AppleVirtCPU in full-system mode.
+"""Boot gem5 Resource kernel and disk artifacts with AppleVirtCPU.
 
-The simulated system's output is written to
-``m5out/board.terminal``.
+This example shows the individual kernel, disk-image, and bootloader resource
+interface. The simulated terminal is written to ``m5out/board.terminal``.
 """
 
 from m5.objects import (
@@ -69,10 +69,16 @@ board = ArmBoard(
     platform=VExpress_GEM5_V1(),
 )
 
-board.set_workload(
-    obtain_resource(
-        "arm-ubuntu-24.04-boot-with-systemd", resource_version="3.0.0"
-    )
+board.set_kernel_disk_workload(
+    kernel=obtain_resource(
+        "arm64-linux-kernel-6.8.12", resource_version="1.0.0"
+    ),
+    disk_image=obtain_resource(
+        "arm-ubuntu-24.04-img", resource_version="3.0.0"
+    ),
+    bootloader=obtain_resource(
+        "arm64-bootloader-foundation", resource_version="2.0.0"
+    ),
 )
 
 simulator = Simulator(board=board)
