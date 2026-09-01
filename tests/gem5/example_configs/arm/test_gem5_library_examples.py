@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2025 The Regents of the University of California
+# Copyright (c) 2021-2026 The Regents of the University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,7 +24,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import platform
 import re
+import shutil
+import subprocess
+import sys
 
 from testlib import (
     config,
@@ -39,6 +43,26 @@ hello_verifier = verifier.MatchRegex(re.compile(r"Hello world!"))
 save_checkpoint_verifier = verifier.MatchRegex(
     re.compile(r"Done taking a checkpoint")
 )
+
+
+def supports_apple_virt():
+    if (
+        sys.platform != "darwin"
+        or platform.machine().lower() not in ("arm64", "aarch64")
+        or shutil.which("codesign") is None
+    ):
+        return False
+
+    try:
+        return (
+            subprocess.check_output(
+                ("sysctl", "-n", "kern.hv_support"), text=True
+            ).strip()
+            == "1"
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return False
+
 
 gem5_verify_config(
     name="test-gem5-library-example-arm-hello",
@@ -70,3 +94,23 @@ gem5_verify_config(
     valid_hosts=constants.supported_hosts,
     length=constants.long_tag,
 )
+
+
+if supports_apple_virt():
+    for example in ("apple_virt_simple", "apple_virt_kernel_disk"):
+        gem5_verify_config(
+            name=f"test-gem5-library-example-{example.replace('_', '-')}",
+            fixtures=(),
+            verifiers=(),
+            config=joinpath(
+                config.base_dir,
+                "configs",
+                "example",
+                "gem5_library",
+                f"{example}.py",
+            ),
+            config_args=[],
+            valid_isas=(constants.all_compiled_tag,),
+            valid_hosts=(constants.host_arm_tag,),
+            length=constants.quick_tag,
+        )
