@@ -73,14 +73,20 @@ class BaseAppleVirtCPU : public BaseCPU
 
     Port &
     getDataPort() override
-    { return dataPort; }
+    {
+        return dataPort;
+    }
     Port &
     getInstPort() override
-    { return instPort; }
+    {
+        return instPort;
+    }
     void wakeup(ThreadID tid = 0) override;
     bool
     wakeupOnInterrupt(ThreadID tid) const override
-    { return true; }
+    {
+        return true;
+    }
     void activateContext(ThreadID thread_num) override;
     void suspendContext(ThreadID thread_num) override;
     void haltContext(ThreadID thread_num) override;
@@ -89,10 +95,14 @@ class BaseAppleVirtCPU : public BaseCPU
 
     Counter
     totalInsts() const override
-    { return 0; }
+    {
+        return 0;
+    }
     Counter
     totalOps() const override
-    { return 0; }
+    {
+        return 0;
+    }
 
   protected:
     /** Shared virtual machine front-end. */

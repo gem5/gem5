@@ -58,7 +58,9 @@ BaseAppleVirtCPU::AppleVirtCPUPort::recvTimingResp(PacketPtr)
 
 void
 BaseAppleVirtCPU::AppleVirtCPUPort::recvReqRetry()
-{ panic("%s does not support request retries", name()); }
+{
+    panic("%s does not support request retries", name());
+}
 
 BaseAppleVirtCPU::BaseAppleVirtCPU(const BaseAppleVirtCPUParams &params)
     : BaseCPU(params),
