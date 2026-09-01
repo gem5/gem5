@@ -50,7 +50,8 @@ from gem5.utils.requires import requires
 
 GPUFS_DISK_RESOURCE = "x86-ubuntu-24.04-gpu-img"
 GPUFS_KERNEL_RESOURCE = "x86-linux-kernel-6.8.0-gpu"
-GPUFS_RESOURCE_VERSION = "1.0.0"
+GPUFS_DISK_RESOURCE_VERSION = "1.0.0"
+GPUFS_KERNEL_RESOURCE_VERSION = "1.0.0"
 
 
 def create_parser(description):
@@ -88,9 +89,14 @@ def create_parser(description):
         help="directory used for resources obtained by gem5",
     )
     parser.add_argument(
-        "--resource-version",
-        default=GPUFS_RESOURCE_VERSION,
-        help="version of the GPUFS disk and kernel resources",
+        "--disk-resource-version",
+        default=GPUFS_DISK_RESOURCE_VERSION,
+        help="version of the GPUFS disk image resource",
+    )
+    parser.add_argument(
+        "--kernel-resource-version",
+        default=GPUFS_KERNEL_RESOURCE_VERSION,
+        help="version of the GPUFS kernel resource",
     )
     parser.add_argument(
         "--cpu-type",
@@ -142,16 +148,21 @@ def _resource_kwargs(args, resource_version):
 def obtain_gpu_fs_resources(args):
     """Return the paired GPUFS disk and kernel from local or gem5 resources."""
 
-    resource_kwargs = _resource_kwargs(args, args.resource_version)
     disk = (
         DiskImageResource(local_path=args.image, root_partition="1")
         if args.image
-        else obtain_resource(GPUFS_DISK_RESOURCE, **resource_kwargs)
+        else obtain_resource(
+            GPUFS_DISK_RESOURCE,
+            **_resource_kwargs(args, args.disk_resource_version),
+        )
     )
     kernel = (
         FileResource(local_path=args.kernel)
         if args.kernel
-        else obtain_resource(GPUFS_KERNEL_RESOURCE, **resource_kwargs)
+        else obtain_resource(
+            GPUFS_KERNEL_RESOURCE,
+            **_resource_kwargs(args, args.kernel_resource_version),
+        )
     )
     return disk, kernel
 
