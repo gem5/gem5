@@ -49,6 +49,7 @@ class BaseArmAppleVirtCPU : public BaseAppleVirtCPU
     void startup() override;
 
   protected:
+    void advancePC() override;
     void syncThreadToHV() override;
     void syncHVToThread() override;
     void updateInterrupts() override;

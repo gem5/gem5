@@ -67,6 +67,8 @@ class SimpleCore(BaseCPUCore):
 
         assert isa is not None
         requires(isa_required=isa)
+        if cpu_type == CPUTypes.APPLE_VIRT:
+            requires(apple_virt_required=True)
 
         _isa_string_map = {
             ISA.X86: "X86",
@@ -134,7 +136,7 @@ class SimpleCore(BaseCPUCore):
             to_return_cls = getattr(
                 importlib.import_module(module_str), cpu_class_str
             )
-        except ImportError:
+        except (AttributeError, ImportError):
             raise Exception(
                 f"Cannot find CPU type '{cpu_type.name}' for '{isa.name}' "
                 "ISA. Please ensure you have compiled the correct version of "

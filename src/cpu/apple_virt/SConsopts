@@ -26,20 +26,53 @@
 
 Import('*')
 
+import sys
+
 from gem5_scons import warning
 
 import gem5_scons
 
 main['CONF'].setdefault('APPLE_VIRT_ISA', '')
 
+
+def check_hypervisor_framework(conf, code):
+    previous_linkflags = list(conf.env['LINKFLAGS'])
+    try:
+        conf.env.Append(LINKFLAGS=['-framework', 'Hypervisor'])
+        return conf.TryLink(code, '.cc')
+    finally:
+        conf.env['LINKFLAGS'] = previous_linkflags
+
+
 with gem5_scons.Configure(main) as conf:
     main['CONF']['HAVE_APPLE_VIRT'] = False
+    main['CONF']['APPLE_VIRT_CODESIGN'] = ''
 
-    if not conf.CheckHeader('Hypervisor/hv.h', '<>'):
-        warning("Info: Compatible header file <Hypervisor/hv.h> not found, "
-                "disabling Apple virtualization support.")
+    link_test = r'''
+#include <Hypervisor/hv_vm.h>
+
+int
+main()
+{
+    auto create_vm = &hv_vm_create;
+    (void)create_vm;
+    return 0;
+}
+'''
+
+    if sys.platform != 'darwin':
+        warning("Apple virtualization is only available on macOS; disabling "
+                "support")
+    elif not check_hypervisor_framework(conf, link_test):
+        warning("Cannot compile and link against Hypervisor.framework; "
+                "disabling Apple virtualization support")
+    elif not main.Detect('codesign'):
+        warning("Cannot find codesign, which is required to apply the Apple "
+                "hypervisor entitlement; disabling Apple virtualization "
+                "support")
     else:
         main['CONF']['HAVE_APPLE_VIRT'] = True
+        main['CONF']['APPLE_VIRT_CODESIGN'] = main.Detect('codesign')
 
 
 def create_use_apple_virt_var():

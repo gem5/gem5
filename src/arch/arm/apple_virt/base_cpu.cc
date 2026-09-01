@@ -64,6 +64,16 @@ const SysRegMap sysRegMap[] = {
     {HV_SYS_REG_TTBR0_EL1, ArmISA::MISCREG_TTBR0_EL1},
     {HV_SYS_REG_TTBR1_EL1, ArmISA::MISCREG_TTBR1_EL1},
     {HV_SYS_REG_TCR_EL1, ArmISA::MISCREG_TCR_EL1},
+    {HV_SYS_REG_APIAKEYLO_EL1, ArmISA::MISCREG_APIAKeyLo_EL1},
+    {HV_SYS_REG_APIAKEYHI_EL1, ArmISA::MISCREG_APIAKeyHi_EL1},
+    {HV_SYS_REG_APIBKEYLO_EL1, ArmISA::MISCREG_APIBKeyLo_EL1},
+    {HV_SYS_REG_APIBKEYHI_EL1, ArmISA::MISCREG_APIBKeyHi_EL1},
+    {HV_SYS_REG_APDAKEYLO_EL1, ArmISA::MISCREG_APDAKeyLo_EL1},
+    {HV_SYS_REG_APDAKEYHI_EL1, ArmISA::MISCREG_APDAKeyHi_EL1},
+    {HV_SYS_REG_APDBKEYLO_EL1, ArmISA::MISCREG_APDBKeyLo_EL1},
+    {HV_SYS_REG_APDBKEYHI_EL1, ArmISA::MISCREG_APDBKeyHi_EL1},
+    {HV_SYS_REG_APGAKEYLO_EL1, ArmISA::MISCREG_APGAKeyLo_EL1},
+    {HV_SYS_REG_APGAKEYHI_EL1, ArmISA::MISCREG_APGAKeyHi_EL1},
     {HV_SYS_REG_SPSR_EL1, ArmISA::MISCREG_SPSR_EL1},
     {HV_SYS_REG_ELR_EL1, ArmISA::MISCREG_ELR_EL1},
     {HV_SYS_REG_AFSR0_EL1, ArmISA::MISCREG_AFSR0_EL1},
@@ -76,6 +86,7 @@ const SysRegMap sysRegMap[] = {
     {HV_SYS_REG_VBAR_EL1, ArmISA::MISCREG_VBAR_EL1},
     {HV_SYS_REG_CONTEXTIDR_EL1, ArmISA::MISCREG_CONTEXTIDR_EL1},
     {HV_SYS_REG_TPIDR_EL1, ArmISA::MISCREG_TPIDR_EL1},
+    {HV_SYS_REG_CSSELR_EL1, ArmISA::MISCREG_CSSELR_EL1},
     {HV_SYS_REG_TPIDR_EL0, ArmISA::MISCREG_TPIDR_EL0},
     {HV_SYS_REG_TPIDRRO_EL0, ArmISA::MISCREG_TPIDRRO_EL0},
     {HV_SYS_REG_CNTKCTL_EL1, ArmISA::MISCREG_CNTKCTL_EL1, true},
@@ -95,10 +106,22 @@ BaseArmAppleVirtCPU::startup()
 void
 BaseArmAppleVirtCPU::syncThreadToHV()
 {
-    BaseAppleVirtCPU::syncThreadToHV();
-
     ThreadContext *tc = threadContext;
     fatal_if(!tc, "AppleVirtCPU has no thread context to sync");
+
+    const auto pc = tc->pcState().instAddr();
+    hv_return_t hv_err = hv_vcpu_set_reg(hvVCPU, HV_REG_PC, pc);
+    fatal_if(hv_err != HV_SUCCESS,
+             "Failed to set HVF PC register (pc=%#llx err=%d)",
+             static_cast<unsigned long long>(pc), hv_err);
+
+    for (int idx = 0; idx < 31; ++idx) {
+        const hv_reg_t hv_reg = static_cast<hv_reg_t>(HV_REG_X0 + idx);
+        hv_err = hv_vcpu_set_reg(hvVCPU, hv_reg,
+                                 tc->getReg(ArmISA::int_reg::x(idx)));
+        fatal_if(hv_err != HV_SUCCESS,
+                 "Failed to set HVF X%d register (err=%d)", idx, hv_err);
+    }
 
     fatal_if(!ArmISA::inAArch64(tc),
              "AppleVirtCPU supports AArch64 guest state only");
@@ -109,8 +132,7 @@ BaseArmAppleVirtCPU::syncThreadToHV()
     pstate.c = tc->getReg(ArmISA::cc_reg::C);
     pstate.v = tc->getReg(ArmISA::cc_reg::V);
 
-    hv_return_t hv_err =
-        hv_vcpu_set_reg(hvVCPU, HV_REG_CPSR, static_cast<RegVal>(pstate));
+    hv_err = hv_vcpu_set_reg(hvVCPU, HV_REG_CPSR, static_cast<RegVal>(pstate));
     fatal_if(hv_err != HV_SUCCESS,
              "Failed to set HVF PSTATE register (err=%d)", hv_err);
 
@@ -166,13 +188,26 @@ BaseArmAppleVirtCPU::syncThreadToHV()
 void
 BaseArmAppleVirtCPU::syncHVToThread()
 {
-    BaseAppleVirtCPU::syncHVToThread();
-
     ThreadContext *tc = threadContext;
     fatal_if(!tc, "AppleVirtCPU has no thread context to sync");
 
+    RegVal pc = 0;
+    hv_return_t hv_err = hv_vcpu_get_reg(hvVCPU, HV_REG_PC, &pc);
+    fatal_if(hv_err != HV_SUCCESS, "Failed to read HVF PC register (err=%d)",
+             hv_err);
+    tc->pcState(static_cast<Addr>(pc));
+
+    for (int idx = 0; idx < 31; ++idx) {
+        const hv_reg_t hv_reg = static_cast<hv_reg_t>(HV_REG_X0 + idx);
+        RegVal value = 0;
+        hv_err = hv_vcpu_get_reg(hvVCPU, hv_reg, &value);
+        fatal_if(hv_err != HV_SUCCESS,
+                 "Failed to read HVF X%d register (err=%d)", idx, hv_err);
+        tc->setReg(ArmISA::int_reg::x(idx), value);
+    }
+
     RegVal pstate = 0;
-    hv_return_t hv_err = hv_vcpu_get_reg(hvVCPU, HV_REG_CPSR, &pstate);
+    hv_err = hv_vcpu_get_reg(hvVCPU, HV_REG_CPSR, &pstate);
     fatal_if(hv_err != HV_SUCCESS,
              "Failed to read HVF PSTATE register (err=%d)", hv_err);
     const ArmISA::CPSR cpsr(pstate);
@@ -229,12 +264,28 @@ BaseArmAppleVirtCPU::syncHVToThread()
              hv_err);
     tc->setMiscRegNoEffect(ArmISA::MISCREG_FPSR, value);
 
-    ArmISA::PCState pc = tc->pcState().as<ArmISA::PCState>();
-    pc.aarch64(true);
-    pc.nextAArch64(true);
-    pc.thumb(false);
-    pc.nextThumb(false);
-    tc->pcState(pc);
+    ArmISA::PCState pc_state = tc->pcState().as<ArmISA::PCState>();
+    pc_state.aarch64(true);
+    pc_state.nextAArch64(true);
+    pc_state.thumb(false);
+    pc_state.nextThumb(false);
+    tc->pcState(pc_state);
+}
+
+void
+BaseArmAppleVirtCPU::advancePC()
+{
+    uint64_t pc = 0;
+    hv_return_t hv_err = hv_vcpu_get_reg(hvVCPU, HV_REG_PC, &pc);
+    fatal_if(hv_err != HV_SUCCESS,
+             "Failed to read HVF PC while completing an exit (err=%d)",
+             hv_err);
+    pc += sizeof(uint32_t);
+    hv_err = hv_vcpu_set_reg(hvVCPU, HV_REG_PC, pc);
+    fatal_if(hv_err != HV_SUCCESS,
+             "Failed to advance HVF PC while completing an exit (err=%d)",
+             hv_err);
+    threadContext->pcState(static_cast<Addr>(pc));
 }
 
 void

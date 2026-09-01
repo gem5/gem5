@@ -34,5 +34,5 @@ config APPLE_VIRT_ISA
 
 config USE_APPLE_VIRT
     bool "Enable Apple Hypervisor backend"
-    depends on APPLE_VIRT_ISA != "" && HAVE_APPLE_VIRT
+    depends on APPLE_VIRT_ISA = "arm" && HAVE_APPLE_VIRT && USE_ARM_ISA
     default y

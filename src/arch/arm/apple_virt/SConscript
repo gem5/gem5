@@ -40,3 +40,8 @@ Source('base_cpu.cc', tags=['arm apple_virt'])
 Source('arm_cpu.cc', tags=['arm apple_virt'])
 
 GTest('exit_decode.test', 'exit_decode.test.cc')
+GTest(
+    'hypervisor.test',
+    'hypervisor.test.cc',
+    apple_virt_entitlement=True,
+)
