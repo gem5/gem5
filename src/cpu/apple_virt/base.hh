@@ -67,6 +67,8 @@ class BaseAppleVirtCPU : public BaseCPU
     void startup() override;
     DrainState drain() override;
     void drainResume() override;
+    void serializeThread(CheckpointOut &cp, ThreadID tid) const override;
+    void unserializeThread(CheckpointIn &cp, ThreadID tid) override;
     void verifyMemoryMode() const override;
 
     Port &
@@ -142,15 +144,14 @@ class BaseAppleVirtCPU : public BaseCPU
     void watchdogLoop();
 
     Tick doMMIOAccess(Addr paddr, void *data, unsigned size, bool write);
-    void advancePC();
 
-    virtual void syncThreadToHV();
-    virtual void syncHVToThread();
-    virtual void
-    updateInterrupts()
-    {}
-    virtual Tick handleException(const hv_vcpu_exit_exception_t &exception);
-    virtual void handleVTimerActivated();
+    virtual void advancePC() = 0;
+    virtual void syncThreadToHV() = 0;
+    virtual void syncHVToThread() = 0;
+    virtual void updateInterrupts() = 0;
+    virtual Tick
+    handleException(const hv_vcpu_exit_exception_t &exception) = 0;
+    virtual void handleVTimerActivated() = 0;
 
     std::thread::id ownerThread;
     std::thread watchdogThread;

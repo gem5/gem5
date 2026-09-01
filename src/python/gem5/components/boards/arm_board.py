@@ -54,7 +54,6 @@ from m5.objects import (
     BadAddr,
     Bridge,
     CowDiskImage,
-    GenericTimer,
     IOXBar,
     PciHost,
     PciVirtIO,
@@ -242,7 +241,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
             # order to work we need to remove the system interface of the
             # generic timer from the DTB and we need to inform the MuxingKvmGic
             # class to use the gem5 GIC instead of relying on the host one
-            GenericTimer.generateDeviceTree = SimObject.generateDeviceTree
+            self.realview.generic_timer.generate_system_interface = False
             if hasattr(self.realview.gic, "simulate_gic"):
                 self.realview.gic.simulate_gic = True
 

@@ -33,7 +33,6 @@
 #include <algorithm>
 #include <cassert>
 
-#include "arch/arm/regs/int.hh"
 #include "arch/generic/mmu.hh"
 #include "base/logging.hh"
 #include "cpu/base.hh"
@@ -209,6 +208,22 @@ BaseAppleVirtCPU::drainResume()
         status = Status::Running;
         schedule(runEvent, clockEdge(Cycles(0)));
     }
+}
+
+void
+BaseAppleVirtCPU::serializeThread(CheckpointOut &cp, ThreadID tid) const
+{
+    assert(tid == 0);
+    assert(status == Status::Idle);
+    thread->serialize(cp);
+}
+
+void
+BaseAppleVirtCPU::unserializeThread(CheckpointIn &cp, ThreadID tid)
+{
+    assert(tid == 0);
+    assert(status == Status::Idle);
+    thread->unserialize(cp);
 }
 
 void
@@ -406,83 +421,6 @@ BaseAppleVirtCPU::doMMIOAccess(Addr paddr, void *data, unsigned size,
     Tick delay = dataPort.sendAtomic(packet);
     delete packet;
     return delay;
-}
-
-void
-BaseAppleVirtCPU::advancePC()
-{
-    uint64_t pc = 0;
-    hv_return_t hv_err = hv_vcpu_get_reg(hvVCPU, HV_REG_PC, &pc);
-    fatal_if(hv_err != HV_SUCCESS,
-             "Failed to read HVF PC while completing an exit (err=%d)",
-             hv_err);
-    pc += 4;
-    hv_err = hv_vcpu_set_reg(hvVCPU, HV_REG_PC, pc);
-    fatal_if(hv_err != HV_SUCCESS,
-             "Failed to advance HVF PC while completing an exit (err=%d)",
-             hv_err);
-    threadContext->pcState(static_cast<Addr>(pc));
-}
-
-Tick
-BaseAppleVirtCPU::handleException(const hv_vcpu_exit_exception_t &exception)
-{
-    fatal("Unhandled AppleVirtCPU exception: syndrome=%#llx far=%#llx "
-          "ipa=%#llx",
-          static_cast<unsigned long long>(exception.syndrome),
-          static_cast<unsigned long long>(exception.virtual_address),
-          static_cast<unsigned long long>(exception.physical_address));
-}
-
-void
-BaseAppleVirtCPU::handleVTimerActivated()
-{ fatal("AppleVirtCPU does not implement the architectural virtual timer"); }
-
-void
-BaseAppleVirtCPU::syncThreadToHV()
-{
-    ThreadContext *tc = threadContext;
-    fatal_if(!tc, "AppleVirtCPU has no thread context to sync");
-
-    const auto pc = tc->pcState().instAddr();
-    hv_return_t hv_err = hv_vcpu_set_reg(hvVCPU, HV_REG_PC, pc);
-    fatal_if(hv_err != HV_SUCCESS,
-             "Failed to set HVF PC register (pc=%#llx err=%d)",
-             static_cast<unsigned long long>(pc), hv_err);
-
-    for (int idx = 0; idx < 31; ++idx) {
-        hv_reg_t hv_reg = static_cast<hv_reg_t>(HV_REG_X0 + idx);
-        hv_err = hv_vcpu_set_reg(hvVCPU, hv_reg,
-                                 tc->getReg(ArmISA::int_reg::x(idx)));
-        fatal_if(hv_err != HV_SUCCESS,
-                 "Failed to set HVF X%d register (err=%d)", idx, hv_err);
-    }
-
-    // TODO: sync SP once an HVF mapping is confirmed.
-}
-
-void
-BaseAppleVirtCPU::syncHVToThread()
-{
-    ThreadContext *tc = threadContext;
-    fatal_if(!tc, "AppleVirtCPU has no thread context to sync");
-
-    RegVal pc = 0;
-    hv_return_t hv_err = hv_vcpu_get_reg(hvVCPU, HV_REG_PC, &pc);
-    fatal_if(hv_err != HV_SUCCESS, "Failed to read HVF PC register (err=%d)",
-             hv_err);
-    tc->pcState(static_cast<Addr>(pc));
-
-    for (int idx = 0; idx < 31; ++idx) {
-        hv_reg_t hv_reg = static_cast<hv_reg_t>(HV_REG_X0 + idx);
-        RegVal value = 0;
-        hv_err = hv_vcpu_get_reg(hvVCPU, hv_reg, &value);
-        fatal_if(hv_err != HV_SUCCESS,
-                 "Failed to read HVF X%d register (err=%d)", idx, hv_err);
-        tc->setReg(ArmISA::int_reg::x(idx), value);
-    }
-
-    // TODO: sync SP once an HVF mapping is confirmed.
 }
 
 } // namespace gem5

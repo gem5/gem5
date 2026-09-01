@@ -1,4 +1,4 @@
-# Copyright (c) 2026 The Regents of the University of California
+# Copyright (c) 2026 The Regents of The University of California
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,11 +24,25 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Boot ARM Ubuntu with one AppleVirtCPU in full-system mode.
+"""Boot a local AArch64 kernel and disk image with AppleVirtCPU.
 
-The simulated system's output is written to
+Usage
+-----
+
+```
+scons build/ARM/gem5.opt -j$(sysctl -n hw.ncpu)
+./build/ARM/gem5.opt configs/example/apple_virt_kernel_disk.py \
+    --kernel /path/to/vmlinux.arm64 \
+    --disk-image /path/to/arm64-disk.img \
+    --bootloader /path/to/boot.arm64
+```
+
+The kernel, disk image, and bootloader must be compatible with the
+``VExpress_GEM5_V1`` platform. The simulated terminal is written to
 ``m5out/board.terminal``.
 """
+
+import argparse
 
 from m5.objects import (
     ArmDefaultRelease,
@@ -43,9 +57,30 @@ from gem5.components.memory import DualChannelDDR4_2400
 from gem5.components.processors.cpu_types import CPUTypes
 from gem5.components.processors.simple_processor import SimpleProcessor
 from gem5.isas import ISA
-from gem5.resources.resource import obtain_resource
+from gem5.resources.resource import (
+    BootloaderResource,
+    DiskImageResource,
+    KernelResource,
+)
 from gem5.simulate.simulator import Simulator
 from gem5.utils.requires import requires
+
+parser = argparse.ArgumentParser(
+    description="Boot local AArch64 artifacts with AppleVirtCPU."
+)
+parser.add_argument("--kernel", required=True, help="Path to the ARM kernel.")
+parser.add_argument(
+    "--disk-image", required=True, help="Path to the ARM disk image."
+)
+parser.add_argument(
+    "--bootloader", required=True, help="Path to the ARM bootloader."
+)
+parser.add_argument(
+    "--root-partition",
+    default="1",
+    help="Root partition number in the disk image (default: 1).",
+)
+args = parser.parse_args()
 
 requires(isa_required=ISA.ARM, apple_virt_required=True)
 
@@ -69,11 +104,14 @@ board = ArmBoard(
     platform=VExpress_GEM5_V1(),
 )
 
-board.set_workload(
-    obtain_resource(
-        "arm-ubuntu-24.04-boot-with-systemd", resource_version="3.0.0"
-    )
+board.set_kernel_disk_workload(
+    kernel=KernelResource(local_path=args.kernel, architecture=ISA.ARM),
+    disk_image=DiskImageResource(
+        local_path=args.disk_image, root_partition=args.root_partition
+    ),
+    bootloader=BootloaderResource(
+        local_path=args.bootloader, architecture=ISA.ARM
+    ),
 )
 
-simulator = Simulator(board=board)
-simulator.run()
+Simulator(board=board).run()
