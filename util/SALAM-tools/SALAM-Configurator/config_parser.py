@@ -95,8 +95,8 @@ class AccCluster:
                                 pio_masters=pio_masters,
                                 address=top_address,
                                 dmaType=device_dict["Type"],
-                                int_num=device_dict["BufferSize"],
-                                size=device_dict["MaxReqSize"],
+                                size=device_dict["BufferSize"],
+                                maxReq=device_dict["MaxReqSize"],
                             )
                         )
                     aligned_inc = int(pio_size) + (64 - (int(pio_size) % 64))

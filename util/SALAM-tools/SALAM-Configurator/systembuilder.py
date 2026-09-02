@@ -97,6 +97,12 @@ def parse_cur_args():
     argparser.add_argument(
         "--m5-path", help="Path to M5 Directory", required=False, default=None
     )
+    argparser.add_argument(
+        "--acc-bench-path",
+        help="Path to ACC_BENCH_PATH root (salam-benchmarks/src)",
+        required=False,
+        default=None,
+    )
     return argparser.parse_args()
 
 
@@ -223,26 +229,35 @@ def gen_config(clusters, config_path: str, file_name: str):
             )
 
 
+def is_generated_begin(line):
+    return line.strip() in (
+        "//BEGIN GENERATED CODE",
+        "// BEGIN GENERATED CODE",
+    )
+
+
+def is_generated_end(line):
+    return line.strip() in ("//END GENERATED CODE", "// END GENERATED CODE")
+
+
 def load_og_header(clusters, working_dir: str):
-    begin = None
-    end = None
     # Read in existing header
     header_list = []
     for i in clusters:
+        begin = None
+        end = None
         try:
             f = open(working_dir + i.name + "_hw_defines.h")
             oldHeader = f.readlines()
-            for i in range(0, len(oldHeader)):
-                if oldHeader[i] == "//BEGIN GENERATED CODE\n":
-                    begin = i
-                elif (
-                    oldHeader[i] == "//END GENERATED CODE\n"
-                    or oldHeader[i] == "//END GENERATED CODE"
-                ):
-                    end = i
-            del oldHeader[begin : end + 1]
+            for line_num in range(0, len(oldHeader)):
+                if is_generated_begin(oldHeader[line_num]):
+                    begin = line_num
+                elif is_generated_end(oldHeader[line_num]):
+                    end = line_num
+            if begin is not None and end is not None and begin <= end:
+                del oldHeader[begin : end + 1]
             header_list.append(oldHeader)
-        except:
+        except Exception:
             print("No Header Found")
             emptyList = []
             header_list.append(emptyList)
@@ -254,15 +269,13 @@ def gen_header(header_list, clusters, working_dir: str):
     for current_header in header_list:
         for cluster in clusters:
             with open(working_dir + cluster.name + "_hw_defines.h", "w") as f:
-                current_header.append("//BEGIN GENERATED CODE\n")
+                current_header.append("// BEGIN GENERATED CODE\n")
                 current_header.append(
-                    "//Cluster: " + cluster.name.upper() + "\n"
+                    "// Cluster: " + cluster.name.upper() + "\n"
                 )
                 for dma in cluster.dmas:
                     if dma.dmaType == "NonCoherent":
-                        current_header.append(
-                            "//" + dma.dmaType + "DMA" + "\n"
-                        )
+                        current_header.append("// NonCoherentDMA\n")
                         current_header.append(
                             "#define "
                             + dma.name.upper()
@@ -292,9 +305,7 @@ def gen_header(header_list, clusters, working_dir: str):
                             + "\n"
                         )
                     elif dma.dmaType == "Stream":
-                        current_header.append(
-                            "//" + dma.dmaType + "DMA" + "\n"
-                        )
+                        current_header.append("// StreamDMA\n")
                         current_header.append(
                             "#define "
                             + dma.name.upper()
@@ -374,7 +385,7 @@ def gen_header(header_list, clusters, working_dir: str):
                         )
                 for acc in cluster.accs:
                     current_header.append(
-                        "//Accelerator: " + acc.name.upper() + "\n"
+                        "// Accelerator: " + acc.name.upper() + "\n"
                     )
                     current_header.append(
                         "#define "
@@ -409,7 +420,7 @@ def gen_header(header_list, clusters, working_dir: str):
                                 + hex(var.address)
                                 + "\n"
                             )
-                current_header.append("//END GENERATED CODE")
+                current_header.append("// END GENERATED CODE\n")
                 f.writelines(current_header)
                 current_header = []
 
@@ -430,17 +441,17 @@ def main():
         print("Looking for Path Argument from Command Line")
         if args.m5_path is None:
             raise Exception("Path argument required when M5_PATH not set")
-        M5_Path = args.path
+        M5_Path = args.m5_path
         if M5_Path is None:
             raise Exception("M5_PATH Not Found")
 
     if acc_bench_path is None:
-        print("Looking for Path Argument from Command Line")
-        if args.m5_path is None:
+        print("Looking for ACC_BENCH_PATH argument from Command Line")
+        if args.acc_bench_path is None:
             raise Exception(
-                "Path argument required when ACC_BENCH_PATH not set"
+                "ACC_BENCH_PATH not set and --acc-bench-path not provided"
             )
-        acc_bench_path = args.path
+        acc_bench_path = args.acc_bench_path
         if acc_bench_path is None:
             raise Exception("ACC_BENCH_PATH Not Found")
 
