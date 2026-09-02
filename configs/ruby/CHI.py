@@ -1,4 +1,4 @@
-# Copyright (c) 2021, 2024 Arm Limited
+# Copyright (c) 2021, 2024, 2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -37,6 +37,7 @@ import m5
 from m5.defines import buildEnv
 from m5.objects import *
 
+from . import CHI_config
 from .Ruby import create_topology
 
 
@@ -89,7 +90,7 @@ def create_system(
         m5.fatal("--noc-config must be provided if topology is CustomMesh")
     else:
         # Use the defaults from CHI_config
-        from . import CHI_config as chi_defs
+        chi_defs = CHI_config
 
     # NoC params
     params = chi_defs.NoC_Params
@@ -231,7 +232,7 @@ def create_system(
         hnf.setDownstream(mem_dests)
 
     # Configure network
-    params = chi_defs.setup_network_parameters(ruby_system, params)
+    params = CHI_config.setup_network_parameters(ruby_system, params)
 
     # setup_network_parameters sets the channel parameter so reset this option
     if options.simple_physical_channels:
