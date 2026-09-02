@@ -3,6 +3,7 @@
 gem5 Version 26.0 is the first major release of 2026. This release consists
 of 774 commits contributed through 379 merged GitHub pull requests from 84
 unique contributors.
+<!-- Refresh these statistics after #3281, #3287, and #3401 merge. -->
 
 ## Major Highlights
 
@@ -48,13 +49,15 @@ unique contributors.
   MI300X, including the ACPI support required by newer kernels. Vega/CDNA3
   instruction coverage now includes operations used by Triton, additional
   matrix instructions, and 16-bit data types. Optional BLIT-kernel emulation
-  can substantially reduce simulation time for copy-heavy workloads
+  can substantially reduce simulation time for copy-heavy workloads. Public
+  examples and regression coverage now exercise MI200 and MI355X GPUFS
   ([#3234](https://github.com/gem5/gem5/pull/3234),
   [#3458](https://github.com/gem5/gem5/pull/3458),
   [#3184](https://github.com/gem5/gem5/pull/3184),
   [#3198](https://github.com/gem5/gem5/pull/3198),
   [#3213](https://github.com/gem5/gem5/pull/3213),
-  [#3149](https://github.com/gem5/gem5/pull/3149)).
+  [#3149](https://github.com/gem5/gem5/pull/3149),
+  [#3401](https://github.com/gem5/gem5/pull/3401)).
 
 * **Unified simulation-exit handling.**
   Hypercall identifiers and payload dispatch are now the primary exit model
@@ -80,6 +83,12 @@ unique contributors.
   gem5's build selects the C++20 language standard. Out-of-tree C++ code and
   custom toolchains must therefore be C++20-compatible
   ([#3028](https://github.com/gem5/gem5/pull/3028)).
+
+* **Python 3.10 or newer is required.**
+  Python 3.6 through 3.9 are no longer supported. The embedded interpreter
+  check, active Python sources, type annotations, and formatting hooks now
+  target Python 3.10 and newer
+  ([#3281](https://github.com/gem5/gem5/pull/3281)).
 
 * **RISC-V ISA selection is profile-based.**
   The previous independent `riscv_type`, `enable_rvv`, `enable_Zicbom_fs`,
@@ -116,10 +125,13 @@ unique contributors.
   factories for non-power-of-two channel counts and holes
   ([#2861](https://github.com/gem5/gem5/pull/2861)).
 
-* **The minimum Protocol Buffers compiler is version 3.0.0.**
-  Builds using an older `protoc` now fail during configuration with a clear
-  diagnostic
-  ([#3101](https://github.com/gem5/gem5/pull/3101)).
+* **Dependency floors follow supported Ubuntu LTS releases.**
+  Required dependencies now include SCons 4.0+, zlib 1.2+, and GNU m4 1.4+.
+  Optional trace, framebuffer, disassembly, and statistics features require
+  `protoc` 3.12+, libpng 1.6+, Capstone 4+, and HDF5 1.10+, respectively.
+  Missing or older optional libraries disable the associated feature rather
+  than failing the entire build
+  ([#3287](https://github.com/gem5/gem5/pull/3287)).
 
 * **Older GPU disk images are being retired.**
   The standard-library GPU setup now provides the ACPI tables and direct
@@ -152,6 +164,13 @@ unique contributors.
   `libzstd` dependency. Existing uncompressed and gzip-compressed image
   support is unchanged
   ([#3400](https://github.com/gem5/gem5/pull/3400)).
+
+* **Sparse disk-image resources by default.**
+  Disk-image downloads, copies, and gzip decompression preserve a sparse
+  representation to avoid allocating large zero-filled regions.
+  Callers can request dense output with `sparse=False`, and
+  `util/obtain-resource.py` provides `--no-sparse`
+  ([#3401](https://github.com/gem5/gem5/pull/3401)).
 
 * **More readable terminal diagnostics.**
   Panic, fatal, warning, information, and TestLib messages use color when
@@ -345,6 +364,15 @@ unique contributors.
   ([#3149](https://github.com/gem5/gem5/pull/3149),
   [#3107](https://github.com/gem5/gem5/pull/3107)).
 
+* **MI200 and MI355X GPUFS examples and regression coverage.**
+  Public standard-library examples share the board, resource, and checkpoint
+  configuration used by the tests. Daily coverage cold-boots MI200-family
+  (`gfx90a`) and MI355X (`gfx950`) systems, while pull-request CI restores a
+  warmed MI355X checkpoint and verifies a second real GPU kernel. The
+  deprecated `gcn-gpu` image and active tests that depended on it have been
+  removed
+  ([#3401](https://github.com/gem5/gem5/pull/3401)).
+
 ## Memory System and AMBA CHI
 
 * **Bundled AMBA TLM 2.0 integration.**
@@ -408,21 +436,33 @@ unique contributors.
 * **Draining and checkpoint correctness.**
   Ruby controllers can account for outstanding transient transactions while
   draining, checkpoint restore can skip unused memory chunks, and memory
-  backdoors can be disabled or updated when address ranges change
+  backdoors can be disabled or updated when address ranges change. Objects
+  created during an active drain now enter the next pass safely, and HBM
+  controllers account for both pseudo channels before checkpoint completion
   ([#3358](https://github.com/gem5/gem5/pull/3358),
   [#2794](https://github.com/gem5/gem5/pull/2794),
   [#3333](https://github.com/gem5/gem5/pull/3333),
-  [#3334](https://github.com/gem5/gem5/pull/3334)).
+  [#3334](https://github.com/gem5/gem5/pull/3334),
+  [#3401](https://github.com/gem5/gem5/pull/3401)).
 
 ## Build, Tooling, and Testing
 
-* **New compiler and host support.**
-  gem5 builds as C++20, officially supports GCC 15.2, and can build and run
+* **Updated compiler and host support.**
+  gem5 builds as C++20 and officially supports GCC major versions 11 through
+  16 and Clang major versions 14 through 22. It can also build and run
   natively on LoongArch64 hosts. LoongArch support is for the host platform;
   it does not add a simulated LoongArch ISA
   ([#3028](https://github.com/gem5/gem5/pull/3028),
   [#3125](https://github.com/gem5/gem5/pull/3125),
+  [#3287](https://github.com/gem5/gem5/pull/3287),
   [#3309](https://github.com/gem5/gem5/pull/3309)).
+
+* **Current Ubuntu LTS dependency images.**
+  The all-dependencies images cover Ubuntu 22.04, 24.04, and 26.04 and prefer
+  supported distribution packages. Ubuntu 26.04 supplies the base for the
+  newest GCC and Clang images; the Ubuntu 22.04 image builds CMake 3.25 for
+  the current DRAMSys integration
+  ([#3287](https://github.com/gem5/gem5/pull/3287)).
 
 * **Debugging-oriented build options.**
   `--with-tsan` enables ThreadSanitizer, `--gdb-index` can reduce GDB symbol
@@ -444,11 +484,13 @@ unique contributors.
 * **Broader coverage and failure artifacts.**
   TestLib can collect gcovr coverage, CI uploads broader Codecov data,
   timed-out tests preserve artifacts, and Daily/Weekly jobs no longer mask
-  failures with `continue-on-error`
+  failures with `continue-on-error`. GPUFS suites now run through the standard
+  `ALL` CI and Daily matrices with the standard Ubuntu dependencies image
   ([#2860](https://github.com/gem5/gem5/pull/2860),
   [#3007](https://github.com/gem5/gem5/pull/3007),
   [#2877](https://github.com/gem5/gem5/pull/2877),
-  [#2940](https://github.com/gem5/gem5/pull/2940)).
+  [#2940](https://github.com/gem5/gem5/pull/2940),
+  [#3401](https://github.com/gem5/gem5/pull/3401)).
 
 # Version 25.0.0.1
 
