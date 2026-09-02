@@ -521,14 +521,17 @@ def configure_llvm_for_salam(env):
 
     print(f"scons: Using LLVM config at '{llvm_config}' for SALAM")
 
-    env.Append(CPPFLAGS=_llvm_out(llvm_config, "--cppflags"))
+    for flag_cmd in (
+        [llvm_config, '--cppflags'],
+        [llvm_config, '--ldflags'],
+        [llvm_config, '--libs', 'all'],
+        [llvm_config, '--system-libs'],
+    ):
+        env.ParseConfig(flag_cmd)
 
-    libdir = _llvm_out(llvm_config, "--libdir")
-    env.Append(LIBPATH=libdir)
+    libdir = _llvm_out(llvm_config, '--libdir')
     env.Append(RPATH=libdir)
 
-    env.Append(LIBS=_llvm_out(llvm_config, "--libs", "all"))
-    env.Append(CPPPATH=_llvm_out(llvm_config, "--includedir"))
     env.Append(
         CPPDEFINES=['LLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1']
     )
