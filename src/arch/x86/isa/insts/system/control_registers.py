@@ -81,4 +81,27 @@ def macroop SMSW_P {
     rdip t7, dataSize=asz
     st t1, seg, riprel, disp, dataSize=2
 };
+
+def macroop RDPKRU
+{
+    rdpkru rax
+};
+
+def macroop WRPKRU
+{
+    .serialize_before
+    wrpkru rax
+    .serialize_after
+};
+
+def macroop XGETBV
+{
+    xgetbv rax
+};
+
+def macroop XSETBV
+{
+    xsetbv rax
+};
+
 """
