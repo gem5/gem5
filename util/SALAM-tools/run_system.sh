@@ -50,21 +50,37 @@ VALGRIND=False
 while [[ $# -gt 0 ]]; do
   case $1 in
     --bench)
+      if [[ -z "${2:-}" || "$2" == -* ]]; then
+        echo "Missing value for $1"
+        exit 1
+      fi
       BENCH="$2"
       shift # past argument
       shift # past value
       ;;
     --bench-path)
+      if [[ -z "${2:-}" || "$2" == -* ]]; then
+        echo "Missing value for $1"
+        exit 1
+      fi
       BENCH_PATH="$2"
       shift # past argument
       shift # past value
       ;;
     --config-name)
+      if [[ -z "${2:-}" || "$2" == -* ]]; then
+        echo "Missing value for $1"
+        exit 1
+      fi
       CONFIG_NAME="$2"
       shift # past argument
       shift # past value
       ;;
     -f|--flags)
+      if [[ -z "${2:-}" || "$2" == -* ]]; then
+        echo "Missing value for $1"
+        exit 1
+      fi
       FLAGS="$2"
       shift # past argument
       shift # past value
@@ -77,15 +93,17 @@ while [[ $# -gt 0 ]]; do
       BUILD=True
       shift # past argument
       ;;
+    --no-build)
+      BUILD=False
+      shift # past argument
+      ;;
     -p|--print)
       PRINT_TO_FILE=True
       shift # past argument
-      shift # past value
       ;;
     -v|--valgrind)
       VALGRIND=True
       shift # past argument
-      shift # past value
       ;;
     -*)
       echo "Unknown option $1"

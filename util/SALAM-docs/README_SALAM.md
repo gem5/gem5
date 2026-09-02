@@ -84,7 +84,7 @@ scons build/ARM/gem5.opt --with-salam -j`nproc`
 $M5_PATH/util/SALAM-tools/run_system.sh --bench bfs --bench-path bfs
 ```
 
-With `BUILD=True` (the default), `run_system.sh` runs `make all` in `$ACC_BENCH_PATH/bfs` before launching gem5. To inspect the gem5 command line it constructs, see the **RUN_SCRIPT** variable in the shell file.
+With `BUILD=True` (the default), `run_system.sh` runs `make all` in `$ACC_BENCH_PATH/bfs` before launching gem5. To run the precompiled snapshot under `salam-benchmarks/workloads/` instead, point `ACC_BENCH_PATH` there and pass `--no-build`. To inspect the gem5 command line it constructs, see the **RUN_SCRIPT** variable in the shell file.
 
 ## Hardware Profiles
 

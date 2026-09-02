@@ -99,7 +99,7 @@ def parse_cur_args():
     )
     argparser.add_argument(
         "--acc-bench-path",
-        help="Path to ACC_BENCH_PATH root (salam-benchmarks/src)",
+        help="Path to ACC_BENCH_PATH root",
         required=False,
         default=None,
     )
