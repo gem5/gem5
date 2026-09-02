@@ -741,49 +741,49 @@ class FunctionalUnitGenerator:
                 + '.yml")\n'
             )
             self.simobject_file.write(
-                "\tinternal_power = Param.UInt32("
+                "\tinternal_power = Param.Float("
                 + str(self.hwmodel.internal_power)
                 + ', "Default values set from '
                 + self.alias
                 + '.yml")\n'
             )
             self.simobject_file.write(
-                "\tswitch_power = Param.UInt32("
+                "\tswitch_power = Param.Float("
                 + str(self.hwmodel.switch_power)
                 + ', "Default values set from '
                 + self.alias
                 + '.yml")\n'
             )
             self.simobject_file.write(
-                "\tdynamic_power = Param.UInt32("
+                "\tdynamic_power = Param.Float("
                 + str(self.hwmodel.dynamic_power)
                 + ', "Default values set from '
                 + self.alias
                 + '.yml")\n'
             )
             self.simobject_file.write(
-                "\tdynamic_energy = Param.UInt32("
+                "\tdynamic_energy = Param.Float("
                 + str(self.hwmodel.dynamic_energy)
                 + ', "Default values set from '
                 + self.alias
                 + '.yml")\n'
             )
             self.simobject_file.write(
-                "\tleakage_power = Param.UInt32("
+                "\tleakage_power = Param.Float("
                 + str(self.hwmodel.leakage_power)
                 + ', "Default values set from '
                 + self.alias
                 + '.yml")\n'
             )
             self.simobject_file.write(
-                "\tarea = Param.UInt32("
+                "\tarea = Param.Float("
                 + str(self.hwmodel.area)
                 + ', "Default values set from '
                 + self.alias
                 + '.yml")\n'
             )
             self.simobject_file.write(
-                "\tpath_delay = Param.UInt32("
+                "\tpath_delay = Param.Float("
                 + str(self.hwmodel.path_delay)
                 + ', "Default values set from '
                 + self.alias
