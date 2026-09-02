@@ -244,18 +244,20 @@ Both the host code and accelerator kernels include these definitions, directly o
 
 SALAM uses gem5 full-system mode to run a bare-metal ARM binary on a modeled platform. The key difference from the standard gem5 full-system scripts is that SALAM inserts an accelerator cluster into the system and connects it to the system buses.
 
-Rather than requiring you to hand-write a new gem5 config for each workload, SALAM generates per-workload gem5 Python configs from the YAML file.
+Rather than requiring you to hand-write a new gem5 config for each workload, SALAM parses `config.yml` at gem5 configuration time and constructs the accelerator cluster.
 
 The main pieces involved are:
 
 * **util/SALAM-tools/SALAM-Configurator/systembuilder.py**
   Parses `config.yml`, assigns addresses, and generates:
 
-  * `configs/SALAM/<bench>.py` (accelerator cluster construction)
-  * `configs/SALAM/fs_<bench>.py` (full-system wrapper)
+  * `$BENCH/{cluster}_hw_defines.h` (host/accelerator MMIO macros)
 
-* **util/SALAM-tools/SALAM-Configurator/fs_template.py**
-  The template full-system script that imports `<bench>.py` and calls `makeHWAcc()`.
+* **configs/SALAM/fs.py**
+  The checked-in full-system gem5 configuration. On ARM it calls `HWAcc.makeHWAcc()`.
+
+* **configs/SALAM/HWAcc.py**
+  Constructs AccCluster, DMA, CommInterface, and memory SimObjects from the same YAML used for headers.
 
 * **configs/SALAM/HWAccConfig.py**
   Contains `AccConfig(...)`, which binds a CommInterface to:
@@ -264,9 +266,9 @@ The main pieces involved are:
   * a timing model loaded from `config.yml` (runtime cycles per instruction)
   * the HWModeling instruction configuration used during execution
 
-In the generated `<bench>.py`, each accelerator is instantiated as a `CommInterface`, then configured by calling `AccConfig(...)` with its `.ll` path and the YAML config file.
+In `HWAcc.py`, each accelerator is instantiated as a `CommInterface`, then configured by calling `AccConfig(...)` with its `.ll` path and the YAML config file.
 
-From the gem5 repository root, the BFS configuration can be generated with:
+From the gem5 repository root, the BFS hardware header can be generated with:
 
 ```bash
 util/SALAM-tools/SALAM-Configurator/systembuilder.py \
@@ -275,7 +277,7 @@ util/SALAM-tools/SALAM-Configurator/systembuilder.py \
     --config-name config.yml
 ```
 
-This command generates the gem5 Python files and `bfs/bfs_clstr_hw_defines.h`. The normal workflow does not require running it separately because `run_system.sh`, used in Step 8, invokes the configurator before building and running the workload.
+This command generates `bfs/bfs_clstr_hw_defines.h`. The normal workflow does not require running it separately because `run_system.sh`, used in Step 8, invokes the configurator before building and running the workload.
 
 ## Step 6: Write the Host Program
 
@@ -362,9 +364,9 @@ The recommended entry point is:
 
 The run script performs the complete flow:
 
-1. Run the configurator to generate `configs/SALAM/<bench>.py`, `configs/SALAM/fs_<bench>.py`, and the `*_hw_defines.h` header.
+1. Run the configurator to refresh `*_hw_defines.h`.
 2. Build the workload (`make all` in the workload directory). `BUILD=True` is the default.
-3. Launch gem5 using the generated `fs_<bench>.py` config and the host ELF as `--kernel`.
+3. Launch gem5 using `configs/SALAM/fs.py` and the host ELF as `--kernel`.
 
 The script uses:
 

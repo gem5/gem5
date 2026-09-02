@@ -60,7 +60,7 @@ addToPath("../../")
 
 import sys
 
-import TEMPLATE
+import HWAcc
 from common import (
     CacheConfig,
     CpuConfig,
@@ -92,6 +92,13 @@ def addHWAccOptions(parser):
         type=str,
         help="""Name of benchmark to accelerate""",
         default="",
+    )
+    parser.add_argument(
+        "--acccfg",
+        action="store",
+        type=str,
+        help="Accelerator cluster YAML filename relative to --accpath",
+        default="config.yml",
     )
 
 
@@ -265,7 +272,7 @@ def build_test_system(np):
         MemConfig.config_mem(args, test_sys)
 
     if buildEnv["USE_ARM_ISA"]:
-        TEMPLATE.makeHWAcc(args, test_sys)
+        HWAcc.makeHWAcc(args, test_sys)
 
     if ObjectList.is_kvm_cpu(TestCPUClass) or ObjectList.is_kvm_cpu(
         FutureClass

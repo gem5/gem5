@@ -59,7 +59,7 @@ To use gem5-SALAM you need to define the computation model of your accelerator i
 
 Below are some resources in the gem5-SALAM directory that can be used when getting started:
 
-- Examples for system-level configuration can be found in **configs/SALAM/HWAcc.py**.
+- **configs/SALAM/HWAcc.py** constructs accelerator SimObjects from the workload YAML at gem5 configuration time.
 - The in-tree accelerator example is **BFS** under **configs/example/gem5_library/salam-benchmarks/** (`src/bfs`). Additional SALAM benchmarks will be made available later through [gem5 Resources](https://resources.gem5.org).
 - You can also add your own benchmarks. A detailed walkthrough is in **util/SALAM-docs/Building_and_Integrating_Accelerators.md**.
 
@@ -69,7 +69,7 @@ The BFS example under **configs/example/gem5_library/salam-benchmarks** shows ho
 
 `run_system.sh` requires **M5_PATH** and **ACC_BENCH_PATH**. Point `ACC_BENCH_PATH` at the buildable `src/` tree (it has Makefiles). The sibling `workloads/` tree is a precompiled snapshot without Makefiles and is not the default path when `BUILD=True` (the script default).
 
-`--bench` should be a simple identifier such as `bfs`; it names the generated SALAM configuration and is also passed to the simulation as the accelerator benchmark name. `--bench-path` separately specifies the workload directory relative to `ACC_BENCH_PATH`; if omitted, it defaults to the `--bench` value.
+`--bench` should be a simple identifier such as `bfs`; it is passed to the simulation as the accelerator benchmark name. `--bench-path` separately specifies the workload directory relative to `ACC_BENCH_PATH`; if omitted, it defaults to the `--bench` value.
 
 ```bash
 export M5_PATH=/path/to/gem5

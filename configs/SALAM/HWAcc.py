@@ -37,101 +37,191 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import ConfigParser
-from HWAccConfig import *
+import os
 
-import m5
+from common.Caches import L1Cache
+from HWAccConfig import AccConfig
+
 from m5.objects import *
-from m5.util import *
+from m5.util import addToPath
+
+_repo_root = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..")
+)
+addToPath(
+    os.path.join(_repo_root, "util", "SALAM-tools", "SALAM-Configurator")
+)
+
+import config_parser  # isort: skip
 
 
 def makeHWAcc(options, system):
-    # Specify the path to the benchmark file for an accelerator
-    # acc_bench = <Absolute path to benchmark LLVM file>
-    acc_bench = (
-        options.accpath
-        + "/"
-        + options.accbench
-        + "/bench/"
-        + options.accbench
-        + ".ll"
+    working_dir = options.accpath
+    config_name = getattr(options, "acccfg", "config.yml")
+    clusters = config_parser.load_clusters(working_dir, config_name)
+    for spec in clusters:
+        setattr(system, spec.name.lower(), AccCluster())
+        clstr = getattr(system, spec.name.lower())
+        _attach_cluster(options, system, clstr, spec)
+
+
+def _attach_cluster(options, system, clstr, spec):
+    system.iobus.mem_side_ports = clstr.local_bus.cpu_side_ports
+    clstr._connect_caches(system, options, l2coherent=False)
+    gic = system.realview.gic
+
+    for dma in spec.dmas:
+        if dma.dmaType == "Stream":
+            _attach_stream_dma(clstr, dma, gic)
+        else:
+            _attach_noncoherent_dma(clstr, dma, gic)
+
+    # Create every CommInterface before wiring.
+    for acc in spec.accs:
+        _attach_accelerator(clstr, acc, gic)
+    for acc in spec.accs:
+        _connect_accelerator(clstr, acc)
+
+
+def _attach_noncoherent_dma(clstr, dma, gic):
+    params = {
+        "pio_addr": dma.address,
+        "pio_size": dma.pio,
+        "gic": gic,
+    }
+    if dma.int_num is not None:
+        params["int_num"] = dma.int_num
+    setattr(clstr, dma.name, NoncoherentDma(**params))
+    obj = getattr(clstr, dma.name)
+    obj.cluster_dma = clstr.local_bus.cpu_side_ports
+    obj.max_req_size = dma.maxReq
+    obj.buffer_size = dma.size
+    obj.dma = clstr.coherency_bus.cpu_side_ports
+    if dma.pio_masters is not None:
+        for master in dma.pio_masters:
+            getattr(clstr, master.lower()).mem_side_ports = obj.pio
+
+
+def _attach_stream_dma(clstr, dma, gic):
+    setattr(
+        clstr,
+        dma.name,
+        StreamDma(
+            pio_addr=dma.address,
+            status_addr=dma.statusAddress,
+            pio_size=dma.pio,
+            gic=gic,
+            max_pending=dma.pio,
+        ),
     )
+    obj = getattr(clstr, dma.name)
+    obj.stream_addr = dma.address + dma.pio
+    obj.stream_size = dma.size
+    obj.pio_delay = "1ns"
+    if dma.rd_int != None:
+        obj.rd_int = dma.rd_int
+    if dma.wr_int != None:
+        obj.wr_int = dma.wr_int
+    obj.dma = clstr.coherency_bus.cpu_side_ports
+    if dma.pio_masters is not None:
+        for master in dma.pio_masters:
+            getattr(clstr, master.lower()).mem_side_ports = obj.pio
 
-    # Specify the path to the config file for an accelerator
-    # acc_config = <Absolute path to the config file>
-    # acc_config = options.accpath + "/" + options.accbench + "/config.ini"
 
-    ################### Creating the Accelerator Cluster #####################
-    # Create a new Accelerator Cluster
-    system.acctest = AccCluster()
-    local_low = 0x2F000000
-    local_high = 0x2FFFFFFF
-    local_range = AddrRange(local_low, local_high)
-    external_range = [
-        AddrRange(0x00000000, local_low - 1),
-        AddrRange(local_high + 1, 0xFFFFFFFF),
-    ]
-    system.acctest._attach_bridges(system, local_range, external_range)
-    system.acctest._connect_caches(system, options, l2coherent=True)
+def _attach_accelerator(clstr, acc, gic):
+    ir = acc.working_dir + "/" + acc.ir_path
+    hw_config = acc.hw_config_path
+    if acc.int_num is not None:
+        setattr(
+            clstr,
+            acc.name,
+            CommInterface(
+                devicename=acc.name,
+                gic=gic,
+                pio_addr=acc.address,
+                pio_size=acc.size,
+                int_num=acc.int_num,
+            ),
+        )
+    else:
+        setattr(
+            clstr,
+            acc.name,
+            CommInterface(
+                devicename=acc.name,
+                gic=gic,
+                pio_addr=acc.address,
+                pio_size=acc.size,
+            ),
+        )
+    AccConfig(getattr(clstr, acc.name), ir, hw_config)
 
-    ################### Adding Accelerators to Cluster #######################
-    # Add an accelerator to the cluster
-    system.acctest.acc = CommInterface(devicename=options.accbench)
-    AccConfig(system.acctest.acc, acc_config, acc_bench)
 
-    # Add an SPM for the accelerator
-    system.acctest.acc_spm = ScratchpadMemory()
-    system.acctest._connect_spm(system.acctest.acc_spm)
-    system.acctest.acc_spm.reset_on_scratchpad_read = False
+def _connect_accelerator(clstr, acc):
+    obj = getattr(clstr, acc.name)
+    for connection in acc.local_connections:
+        if "LocalBus" in connection:
+            obj.local = clstr.local_bus.cpu_side_ports
+        else:
+            obj.local = getattr(clstr, connection.lower()).pio
+    for master in acc.pio_masters:
+        if "LocalBus" in master:
+            obj.pio = clstr.local_bus.mem_side_ports
+        else:
+            assert False, "Shouldn't be here?"
+    for inCon in acc.stream_in:
+        obj.stream = getattr(clstr, inCon.lower()).stream_in
+    for outCon in acc.stream_out:
+        obj.stream = getattr(clstr, outCon.lower()).stream_out
+    obj.enable_debug_msgs = acc.debug
+    for var in acc.variables:
+        _attach_variable(clstr, var)
 
-    # Connect the accelerator to the system's interrupt controller
-    system.acctest.acc.gic = system.realview.gic
 
-    # Connect HWAcc to cluster buses
-    system.acctest._connect_hwacc(system.acctest.acc)
-    system.acctest.acc.local = system.acctest.local_bus.cpu_side_ports
-    system.acctest.acc.acp = system.acctest.coherency_bus.cpu_side_ports
-
-    # Enable display of debug messages for the accelerator
-    system.acctest.acc.enable_debug_msgs = False
-
-    #################### Adding DMAs to Cluster ##############################
-    # Add DMA devices to the cluster and connect them
-    system.acctest.dma = NoncoherentDma(
-        pio_addr=0x2FF00000,
-        pio_size=24,
-        gic=system.realview.gic,
-        max_pending=32,
-        int_num=95,
-    )
-    system.acctest._connect_cluster_dma(system, system.acctest.dma)
-
-    system.acctest.stream_dma_0 = StreamDma(
-        pio_addr=0x2FF10000,
-        pio_size=32,
-        gic=system.realview.gic,
-        max_pending=32,
-    )
-    system.acctest.stream_dma_0.stream_in = system.acctest.acc.stream
-    system.acctest.stream_dma_0.stream_out = system.acctest.acc.stream
-    system.acctest.stream_dma_0.stream_addr = 0x2FF10020
-    system.acctest.stream_dma_0.stream_size = 8
-    system.acctest.stream_dma_0.pio_delay = "1ns"
-    system.acctest.stream_dma_0.rd_int = 210
-    system.acctest.stream_dma_0.wr_int = 211
-    system.acctest._connect_dma(system, system.acctest.stream_dma_0)
-
-    system.acctest.stream_dma_1 = StreamDma(
-        pio_addr=0x2FF20000,
-        pio_size=32,
-        gic=system.realview.gic,
-        max_pending=32,
-    )
-    system.acctest.stream_dma_1.stream_in = system.acctest.acc.stream
-    system.acctest.stream_dma_1.stream_out = system.acctest.acc.stream
-    system.acctest.stream_dma_1.stream_addr = 0x2FF20020
-    system.acctest.stream_dma_1.stream_size = 8
-    system.acctest.stream_dma_1.pio_delay = "1ns"
-    system.acctest.stream_dma_1.rd_int = 212
-    system.acctest.stream_dma_1.wr_int = 213
-    system.acctest._connect_dma(system, system.acctest.stream_dma_1)
+def _attach_variable(clstr, var):
+    if var.type == "Stream":
+        setattr(
+            clstr,
+            var.name.lower(),
+            StreamBuffer(
+                stream_address=var.address,
+                status_address=var.statusAddress,
+                stream_size=var.streamSize,
+                buffer_size=var.bufferSize,
+            ),
+        )
+        buf = getattr(clstr, var.name.lower())
+        getattr(clstr, var.inCon).stream = buf.stream_in
+        getattr(clstr, var.outCon).stream = buf.stream_out
+    elif var.type == "SPM":
+        spmRange = AddrRange(var.address, var.address + var.size)
+        setattr(clstr, var.name.lower(), ScratchpadMemory(range=spmRange))
+        spm = getattr(clstr, var.name.lower())
+        spm.conf_table_reported = False
+        spm.ready_mode = var.readyMode
+        spm.reset_on_scratchpad_read = var.resetOnRead
+        spm.read_on_invalid = var.readOnInvalid
+        spm.write_on_valid = var.writeOnValid
+        spm.port = clstr.local_bus.mem_side_ports
+        for con in var.connections:
+            for i in range(con.numPorts):
+                getattr(clstr, con.conName.lower()).spm = spm.spm_ports
+    elif var.type == "RegisterBank":
+        regRange = AddrRange(var.address, var.address + var.size)
+        setattr(clstr, var.name.lower(), RegisterBank(range=regRange))
+        reg = getattr(clstr, var.name.lower())
+        reg.load_port = clstr.local_bus.mem_side_ports
+        for con in var.connections:
+            getattr(clstr, con.conName.lower()).reg = reg.reg_port
+    elif var.type == "Cache":
+        setattr(clstr, var.name, L1Cache(size=str(var.size) + "B"))
+        cache = getattr(clstr, var.name)
+        cache.mem_side = clstr.coherency_bus.cpu_side_ports
+        cache.cpu_side = getattr(clstr, var.accName).local
+    else:
+        raise Exception(
+            "The variable: "
+            + var.name
+            + " has an invalid type named: "
+            + var.type
+        )

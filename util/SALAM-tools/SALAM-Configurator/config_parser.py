@@ -37,6 +37,115 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import yaml
+
+
+def open_yaml(yml_path: str):
+    stream = open(yml_path)
+    config = yaml.safe_load_all(stream)
+    return config
+
+
+def parse_yaml(
+    parent_config,
+    base_address,
+    working_dir: str,
+    parent_path: str = None,
+    hw_path: str = None,
+):
+    clusters = []
+    # Load in each acc cluster and add it to the list
+    for cluster_dict in parent_config:
+        for list_type, params in cluster_dict.items():
+            FOUND_SYS_PATH = False
+            FOUND_HW_PATH = False
+            FOUND_DEVICE = False
+            if list_type == "acc_cluster":
+                for param in params:
+                    if "SysPath" in param:
+                        FOUND_SYS_PATH = True
+                        cur_config = open_yaml(
+                            yml_path=(working_dir + param["SysPath"])
+                        )
+                        cur_path = working_dir + param["SysPath"]
+                    elif "HWPath" in param:
+                        FOUND_HW_PATH = True
+                        hw_path = working_dir + param["HWPath"]
+                    else:
+                        FOUND_DEVICE = True
+                        cur_config = parent_config
+                        # Use the parent YAML path as the hardware profile
+                        # path unless this cluster overrides it with HWPath.
+                        if not FOUND_HW_PATH and hw_path is None:
+                            hw_path = parent_path
+            if FOUND_SYS_PATH and FOUND_DEVICE:
+                raise Exception(
+                    "Found device definitions in a cluster with a"
+                    " path to another YAML file."
+                )
+            if FOUND_SYS_PATH:
+                # Recursion Alert!
+                base_address, temp_cluster = parse_yaml(
+                    parent_config=cur_config,
+                    base_address=base_address,
+                    working_dir=working_dir,
+                    parent_path=cur_path,
+                    hw_path=hw_path,
+                )
+                clusters.extend(temp_cluster)
+            elif FOUND_HW_PATH:
+                raise Exception(
+                    "HW Path should be defined with a System Config file"
+                )
+
+        cluster_name = None
+        dmas = []
+        accs = []
+        for list_type, devices in cluster_dict.items():
+            if list_type == "acc_cluster":
+                for device in devices:
+                    if "Name" in device:
+                        cluster_name = device["Name"]
+                    if "DMA" in device:
+                        dmas.append(device)
+                    if "Accelerator" in device:
+                        accs.append(device)
+        if cluster_name is None:
+            continue
+        clusters.append(
+            AccCluster(
+                name=cluster_name,
+                dmas=dmas,
+                accs=accs,
+                base_address=base_address,
+                working_dir=working_dir,
+                config_path=parent_path,
+                hw_config_path=hw_path,
+            )
+        )
+        base_address = clusters[-1].top_address + (
+            64 - (int(clusters[-1].top_address) % 64)
+        )
+        if (int(base_address) % 64) != 0:
+            print("Address Alignment Error: " + hex(base_address))
+    return base_address, clusters
+
+
+def load_clusters(
+    working_dir, config_name="config.yml", base_address=0x2F000000
+):
+    if not working_dir.endswith("/"):
+        working_dir = working_dir + "/"
+    main_yml_path = working_dir + config_name
+    config = open_yaml(yml_path=main_yml_path)
+    _, clusters = parse_yaml(
+        parent_config=config,
+        base_address=base_address,
+        working_dir=working_dir,
+        parent_path=main_yml_path,
+    )
+    return clusters
+
 
 class AccCluster:
     def __init__(
@@ -299,33 +408,6 @@ class AccCluster:
         self.dmas = dma_class
         self.top_address = top_address
 
-    def genConfig(self):
-        lines = []
-        # Need to add some customization here. Consider this a placeholder
-        # Also need to edit AccCluster.py's addresses to match the gem5
-        # supported ones
-        lines.append(
-            "def build" + self.name + "(options, system, clstr):" + "\n"
-        )
-        lines.append("	local_low = " + hex(self.base_address))
-        lines.append("	local_high = " + hex(self.top_address))
-        lines.append("	local_range = AddrRange(local_low, local_high)")
-        lines.append(
-            "	external_range = [AddrRange(0x00000000, local_low-1),"
-            " AddrRange(local_high+1, 0xFFFFFFFF)]"
-        )
-        lines.append(
-            "	system.iobus.mem_side_ports = clstr.local_bus.cpu_side_ports"
-        )
-        # Need to define l2coherency in the YAML file?
-        lines.append(
-            "	clstr._connect_caches(system, options, l2coherent=False)"
-        )
-        lines.append("	gic = system.realview.gic")
-        lines.append("")
-
-        return lines
-
 
 class Accelerator:
 
@@ -363,107 +445,6 @@ class Accelerator:
         self.variables = variables
         self.debug = debug
 
-    def genDefinition(self):
-        lines = []
-        lines.append("# " + self.name + " Definition")
-        lines.append("acc = " + '"' + self.name + '"')
-        lines.append(
-            "ir = " + '"' + self.working_dir + "/" + self.ir_path + '"'
-        )
-        lines.append("hw_config = " '"' + self.hw_config_path + '"')
-
-        # Add interrupt number if it exists
-        if self.int_num is not None:
-            lines.append(
-                "clstr."
-                + self.name
-                + " = CommInterface(devicename=acc, gic=gic, pio_addr="
-                + str(hex(self.address))
-                + ", pio_size="
-                + str(self.size)
-                + ", int_num="
-                + str(self.int_num)
-                + ")"
-            )
-        else:
-            lines.append(
-                "clstr."
-                + self.name
-                + " = CommInterface(devicename=acc, gic=gic, pio_addr="
-                + str(hex(self.address))
-                + ", pio_size="
-                + str(self.size)
-                + ")"
-            )
-
-        lines.append("AccConfig(clstr." + self.name + ", ir, hw_config)")
-        lines.append("")
-
-        return lines
-
-    def genConfig(self):
-        lines = []
-
-        lines.append("# " + self.name + " Config")
-
-        for connection in self.local_connections:
-            if "LocalBus" in connection:
-                lines.append(
-                    "clstr."
-                    + self.name
-                    + ".local = clstr.local_bus.cpu_side_ports"
-                )
-            else:
-                lines.append(
-                    "clstr."
-                    + self.name
-                    + ".local = clstr."
-                    + connection.lower()
-                    + ".pio"
-                )
-
-        # Assign PIO Masters
-        for master in self.pio_masters:
-            if "LocalBus" in master:
-                lines.append(
-                    "clstr."
-                    + self.name
-                    + ".pio = clstr.local_bus.mem_side_ports"
-                )
-            else:
-                assert False, "Shouldn't be here?"
-        # Add StreamIn
-        for inCon in self.stream_in:
-            lines.append(
-                "clstr."
-                + self.name
-                + ".stream = clstr."
-                + inCon.lower()
-                + ".stream_in"
-            )
-        # Add StreamOut
-        for outCon in self.stream_out:
-            lines.append(
-                "clstr."
-                + self.name
-                + ".stream = clstr."
-                + outCon.lower()
-                + ".stream_out"
-            )
-
-        lines.append(
-            "clstr." + self.name + ".enable_debug_msgs = " + str(self.debug)
-        )
-        lines.append("")
-
-        # Add scratchpad variables
-        for var in self.variables:
-            # Have the variable create its config
-            lines = var.genConfig(lines)
-            lines.append("")
-        # Return finished config portion
-        return lines
-
 
 class StreamDMA:
     def __init__(
@@ -494,55 +475,6 @@ class StreamDMA:
                 pio_masters[count] = "local_bus"
                 count += 1
 
-    # Probably could apply the style used here in other genConfigs
-
-    def genConfig(self):
-        lines = []
-        dmaPath = "clstr." + self.name + "."
-        # Need to fix max_pending?
-        lines.append("# Stream DMA")
-        lines.append(
-            "clstr."
-            + self.name
-            + " = StreamDma(pio_addr="
-            + hex(self.address)
-            + ", status_addr="
-            + hex(self.statusAddress)
-            + ", pio_size = "
-            + str(self.pio)
-            + ", gic=gic, max_pending = "
-            + str(self.pio)
-            + ")"
-        )
-        lines.append(
-            dmaPath
-            + "stream_addr = "
-            + hex(self.address)
-            + " + "
-            + str(self.pio)
-        )
-        lines.append(dmaPath + "stream_size = " + str(self.size))
-        lines.append(dmaPath + "pio_delay = '1ns'")
-        if self.rd_int != None:
-            lines.append(dmaPath + "rd_int = " + str(self.rd_int))
-        if self.wr_int != None:
-            lines.append(dmaPath + "wr_int = " + str(self.wr_int))
-        lines.append(
-            "clstr." + self.name + ".dma = clstr.coherency_bus.cpu_side_ports"
-        )
-        if self.pio_masters is not None:
-            for master in self.pio_masters:
-                lines.append(
-                    "clstr."
-                    + master.lower()
-                    + ".mem_side_ports = clstr."
-                    + self.name
-                    + ".pio"
-                )
-        lines.append("")
-
-        return lines
-
 
 class DMA:
     def __init__(
@@ -570,48 +502,6 @@ class DMA:
             if "localbus" in master.lower():
                 pio_masters[count] = "local_bus"
                 count += 1
-
-    # Probably could apply the style used here in other genConfigs
-
-    def genConfig(self):
-        lines = []
-        dmaPath = "clstr." + self.name + "."
-        systemPath = "clstr."
-        lines.append("# Noncoherent DMA")
-        lines.append(
-            "clstr."
-            + self.name
-            + " = NoncoherentDma(pio_addr="
-            + hex(self.address)
-            + ", pio_size = "
-            + str(self.pio)
-            + ", gic=gic, int_num="
-            + str(self.int_num)
-            + ")"
-        )
-        lines.append(
-            dmaPath
-            + "cluster_dma = "
-            + systemPath
-            + "local_bus.cpu_side_ports"
-        )
-        lines.append(dmaPath + "max_req_size = " + str(self.maxReq))
-        lines.append(dmaPath + "buffer_size = " + str(self.size))
-        lines.append(
-            "clstr." + self.name + ".dma = clstr.coherency_bus.cpu_side_ports"
-        )
-        if self.pio_masters is not None:
-            for master in self.pio_masters:
-                lines.append(
-                    "clstr."
-                    + master.lower()
-                    + ".mem_side_ports = clstr."
-                    + self.name
-                    + ".pio"
-                )
-        lines.append("")
-
-        return lines
 
 
 class PortedConnection:
@@ -685,176 +575,3 @@ class Variable:
                 + self.type
             )
             raise Exception(exceptionString)
-
-    def genConfig(self, lines):
-        # Add new variable configs here
-        # Stream Buffer Variable
-        if self.type == "Stream":
-            lines.append("# " + self.name + " (Stream Variable)")
-            lines.append("addr = " + hex(self.address))
-            lines.append(
-                "clstr."
-                + self.name.lower()
-                + " = StreamBuffer(stream_address = addr, status_address= "
-                + hex(self.statusAddress)
-                + ", stream_size = "
-                + str(self.streamSize)
-                + ", buffer_size = "
-                + str(self.bufferSize)
-                + ")"
-            )
-            lines.append(
-                "clstr."
-                + self.inCon
-                + ".stream = "
-                + "clstr."
-                + self.name.lower()
-                + ".stream_in"
-            )
-            lines.append(
-                "clstr."
-                + self.outCon
-                + ".stream = "
-                + "clstr."
-                + self.name.lower()
-                + ".stream_out"
-            )
-            lines.append("")
-        # Scratchpad Memory
-        elif self.type == "SPM":
-            lines.append("# " + self.name + " (Variable)")
-            lines.append("addr = " + hex(self.address))
-            lines.append(
-                "spmRange = AddrRange(addr, addr + " + hex(self.size) + ")"
-            )
-            # When appending convert all connections to lowercase
-            # for standardization
-            lines.append(
-                "clstr."
-                + self.name.lower()
-                + " = ScratchpadMemory(range = spmRange)"
-            )
-            # Probably need to add table and read mode to the YAML File
-            lines.append(
-                "clstr."
-                + self.name.lower()
-                + "."
-                + "conf_table_reported = False"
-            )
-            lines.append(
-                "clstr."
-                + self.name.lower()
-                + "."
-                + "ready_mode = "
-                + str(self.readyMode)
-            )
-            lines.append(
-                "clstr."
-                + self.name.lower()
-                + "."
-                + "reset_on_scratchpad_read = "
-                + str(self.resetOnRead)
-            )
-            lines.append(
-                "clstr."
-                + self.name.lower()
-                + "."
-                + "read_on_invalid = "
-                + str(self.readOnInvalid)
-            )
-            lines.append(
-                "clstr."
-                + self.name.lower()
-                + "."
-                + "write_on_valid = "
-                + str(self.writeOnValid)
-            )
-            lines.append(
-                "clstr."
-                + self.name.lower()
-                + "."
-                + "port"
-                + " = "
-                + "clstr.local_bus.mem_side_ports"
-            )
-            for con in self.connections:
-                lines.append("")
-                lines.append(
-                    "# Connecting " + self.name + " to " + con.conName
-                )
-                lines.append("for i in range(" + str(con.numPorts) + "):")
-                lines.append(
-                    "	clstr."
-                    + con.conName.lower()
-                    + ".spm = "
-                    + "clstr."
-                    + self.name.lower()
-                    + ".spm_ports"
-                )
-        # RegisterBank
-        elif self.type == "RegisterBank":
-            lines.append("# " + self.name + " (Variable)")
-            lines.append("addr = " + hex(self.address))
-            lines.append(
-                "regRange = AddrRange(addr, addr + " + hex(self.size) + ")"
-            )
-            # When appending convert all connections to lowercase
-            # for standardization
-            lines.append(
-                "clstr."
-                + self.name.lower()
-                + " = RegisterBank(range = regRange)"
-            )
-            lines.append(
-                "clstr."
-                + self.name.lower()
-                + "."
-                + "load_port"
-                + " = "
-                + "clstr.local_bus.mem_side_ports"
-            )
-            for con in self.connections:
-                lines.append("")
-                lines.append(
-                    "# Connecting " + self.name + " to " + con.conName
-                )
-                lines.append(
-                    "clstr."
-                    + con.conName.lower()
-                    + ".reg = "
-                    + "clstr."
-                    + self.name.lower()
-                    + ".reg_port"
-                )
-        # L1 Cache, need to add L2 still...
-        elif self.type == "Cache":
-            lines.append("# " + self.name + " (Cache)")
-            lines.append(
-                "clstr."
-                + self.name
-                + " = L1Cache(size = '"
-                + str(self.size)
-                + "B')"
-            )
-            lines.append(
-                "clstr."
-                + self.name
-                + ".mem_side = clstr.coherency_bus.cpu_side_ports"
-            )
-            lines.append(
-                "clstr."
-                + self.name
-                + ".cpu_side = clstr."
-                + self.accName
-                + ".local"
-            )
-        else:
-            # Should never get here... but just in case throw an exception
-            exceptionString = (
-                "The variable: "
-                + self.name
-                + " has an invalid type named: "
-                + self.type
-            )
-            raise Exception(exceptionString)
-        return lines

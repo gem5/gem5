@@ -1,6 +1,7 @@
 # Ignore everything
 *
 
-# Except these two files
+# Except maintained source files
 !HWAcc.py
 !HWAccConfig.py
+!fs.py

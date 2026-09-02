@@ -167,9 +167,10 @@ if [ "${FLAGS}"  != "" ]; then
 fi
 
 RUN_SCRIPT="$BINARY $DEBUG_FLAGS --outdir=$OUTDIR \
-			$M5_PATH/configs/SALAM/fs_$BENCH.py $SYS_OPTS \
+			$M5_PATH/configs/SALAM/fs.py $SYS_OPTS \
 			--accpath=$ACC_BENCH_PATH/$BENCH_PATH \
-			--accbench=$BENCH $CACHE_OPTS"
+			--accbench=$BENCH \
+			--acccfg=$CONFIG_NAME $CACHE_OPTS"
 
 if (! "$M5_PATH"/util/SALAM-tools/SALAM-Configurator/systembuilder.py --sys-name "$BENCH" --bench-path "$BENCH_PATH" --config-name $CONFIG_NAME) then
 	echo "Configurator failed"
