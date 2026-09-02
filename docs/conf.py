@@ -24,8 +24,8 @@ exclude_patterns = [
     "_build",
     "Thumbs.db",
     ".DS_Store",
-    "build/lib64/python3.8/site-packages",
-    "build/lib/python3.8/site-packages",
+    "build/lib64/python3.*/site-packages",
+    "build/lib/python3.*/site-packages",
 ]
 
 language = "en"

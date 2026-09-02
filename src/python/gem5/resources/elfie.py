@@ -41,10 +41,10 @@ class ELFieInfo:
 
     def __init__(
         self,
-        start_pc: Optional[str] = None,
-        end_pc: Optional[str] = None,
-        start_pc_count: Optional[str] = None,
-        end_pc_count: Optional[str] = None,
+        start_pc: str | None = None,
+        end_pc: str | None = None,
+        start_pc_count: str | None = None,
+        end_pc_count: str | None = None,
         start: Optional["PcCountPair"] = None,
         end: Optional["PcCountPair"] = None,
         **kwargs
@@ -81,7 +81,7 @@ class ELFieInfo:
         for core in processor.get_cores():
             core.add_pc_tracker_probe(self.get_targets(), self.get_manager())
 
-    def get_targets(self) -> List[PcCountPair]:
+    def get_targets(self) -> list[PcCountPair]:
         """Returns the complete list of targets PcCountPairs. That is, the
         PcCountPairs each region starts with as well as the relevant warmup
         intervals."""

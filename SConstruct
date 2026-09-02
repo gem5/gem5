@@ -152,9 +152,8 @@ AddOption('--pprof', action='store_true',
           help='Enable support for the pprof profiler')
 AddOption('--debug-fission', action='store_true', help='Enable debug fission')
 AddOption('--gdb-index', action='store_true', help='Build GDB index')
-# Default to --no-duplicate-sources, but keep --duplicate-sources to opt-out
-# of this new build behaviour in case it introduces regressions. We could use
-# action=argparse.BooleanOptionalAction here once Python 3.9 is required.
+# Default to --no-duplicate-sources, but keep --duplicate-sources to opt out
+# of this build behavior in case it introduces regressions.
 AddOption('--duplicate-sources', action='store_true', default=False,
           dest='duplicate_sources',
           help='Create symlinks to sources in the build directory')
@@ -543,8 +542,8 @@ def config_embedded_python(env):
     # Found a working Python installation. Check if it meets minimum
     # requirements.
     ver_string = '.'.join(map(str, py_version))
-    if py_version[0] < 3 or (py_version[0] == 3 and py_version[1] < 6):
-        error('Embedded python library 3.6 or newer required, found '
+    if py_version[0] < 3 or (py_version[0] == 3 and py_version[1] < 10):
+        error('Embedded python library 3.10 or newer required, found '
               f'{ver_string}.')
     elif py_version[0] > 3:
         warning('Embedded python library too new. '

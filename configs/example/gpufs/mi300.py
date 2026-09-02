@@ -122,9 +122,9 @@ def addDemoOptions(parser):
 
 def runMI300GPUFS(
     cpu_type,
-    disk: Optional[AbstractResource] = None,
-    kernel: Optional[AbstractResource] = None,
-    app: Optional[AbstractResource] = None,
+    disk: AbstractResource | None = None,
+    kernel: AbstractResource | None = None,
+    app: AbstractResource | None = None,
 ):
     parser = argparse.ArgumentParser()
     runfs.addRunFSOptions(parser)

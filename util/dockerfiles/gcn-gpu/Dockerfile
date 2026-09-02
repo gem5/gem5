@@ -32,6 +32,7 @@ LABEL org.opencontainers.image.description="An image used to build and run gem5 
 LABEL org.opencontainers.image.licenses=BSD-3-Clause
 
 ENV DEBIAN_FRONTEND=noninteractive
+ARG PYTHON_VERSION=3.10.20
 
 RUN apt -y update && \
     apt -y install \
@@ -43,11 +44,31 @@ RUN apt -y update && \
     python3-dev python-is-python3 doxygen libboost-all-dev \
     libhdf5-serial-dev python3-pydot libpng-dev libelf-dev pkg-config gdb \
     cmake wget gnupg2 rpm gfortran \
+    libbz2-dev libffi-dev liblzma-dev libreadline-dev libsqlite3-dev \
+    libssl-dev tk-dev uuid-dev xz-utils \
     # Requirements for ROCm
     mesa-common-dev libgflags-dev libgoogle-glog-dev \
     # ROCm dependencies and requirements to get ROCm repo and build packages.
     # Upgrade to gcc 10: gem5 supports gcc 10+.
     gcc-10 g++-10 cpp-10
+
+# Ubuntu 20.04's default Python 3.8 is too old for gem5. The ROCm 4.0.1
+# package set used by this image is tied to the Ubuntu 20.04/xenial apt stack,
+# so install Python 3.10 from source instead of changing the base image.
+RUN wget -q \
+        https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tgz && \
+    tar -xzf Python-${PYTHON_VERSION}.tgz && \
+    cd Python-${PYTHON_VERSION} && \
+    OPT= ./configure --enable-shared --with-ensurepip=install && \
+    OPT= make -j$(nproc) && \
+    OPT= make altinstall && \
+    cd / && \
+    rm -rf Python-${PYTHON_VERSION} Python-${PYTHON_VERSION}.tgz && \
+    ldconfig && \
+    ln -sf /usr/local/bin/python3.10 /usr/local/bin/python3 && \
+    ln -sf /usr/local/bin/python3.10 /usr/local/bin/python && \
+    ln -sf /usr/local/bin/python3.10-config /usr/local/bin/python3-config && \
+    python3 -m pip install --no-cache-dir "scons==3.1.2" pydot
 
 # Update the default compiler to gcc 10
 RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100 && \

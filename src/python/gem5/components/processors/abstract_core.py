@@ -117,8 +117,8 @@ class AbstractCore(SubSystem):
     @abstractmethod
     def connect_interrupt(
         self,
-        interrupt_requestor: Optional[Port] = None,
-        interrupt_responce: Optional[Port] = None,
+        interrupt_requestor: Port | None = None,
+        interrupt_responce: Port | None = None,
     ) -> None:
         """Connect the core interrupts to the interrupt controller
 
@@ -148,7 +148,7 @@ class AbstractCore(SubSystem):
 
     @abstractmethod
     def _set_simpoint(
-        self, inst_starts: List[int], board_initialized: bool
+        self, inst_starts: list[int], board_initialized: bool
     ) -> None:
         """Schedule simpoint exit events for the core.
 
@@ -185,7 +185,7 @@ class AbstractCore(SubSystem):
 
     @abstractmethod
     def add_pc_tracker_probe(
-        self, target_pair: List[PcCountPair], manager: PcCountTrackerManager
+        self, target_pair: list[PcCountPair], manager: PcCountTrackerManager
     ) -> None:
         raise NotImplementedError
 

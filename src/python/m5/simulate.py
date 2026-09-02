@@ -95,10 +95,10 @@ def _fix_all_objects(root):
 
 def _dump_configs(
     root,
-    outdir: Optional[str] = None,
-    ini_config: Optional[str] = None,
-    json_config: Optional[str] = None,
-    dot_config: Optional[str] = None,
+    outdir: str | None = None,
+    ini_config: str | None = None,
+    json_config: str | None = None,
+    dot_config: str | None = None,
 ):
     # Use a slightly convoluted way to set these variables for backwards
     # compatibility. Now, this function is no longer dependent on main.py and

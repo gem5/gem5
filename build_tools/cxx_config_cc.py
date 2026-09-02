@@ -54,7 +54,7 @@ def parse_args():
     return args
 
 
-def write_cc_file(sim_object: Type, cxx_config_cc: str):
+def write_cc_file(sim_object: type, cxx_config_cc: str):
     """
     Generates the C++ source file for the C++ configuration of a SimObject.
 
