@@ -46,21 +46,11 @@ from SALAMClassGenerator import (
     InstConfigGenerator,
 )
 
-M5_PATH = os.environ.get("M5_PATH")
-if not M5_PATH:
-    raise RuntimeError("Environment variable M5_PATH must be set")
 
-ACC_BENCH_PATH = os.environ.get("ACC_BENCH_PATH")
-if not ACC_BENCH_PATH:
-    raise RuntimeError("Environment variable ACC_BENCH_PATH must be set")
-
-SALAM_DIR = os.path.join(M5_PATH, "src", "salam")
-
-
-def resolve_bench_dir(benchname, bench_path=None):
+def resolve_bench_dir(acc_bench_path, benchname, bench_path=None):
     if bench_path:
-        return os.path.join(ACC_BENCH_PATH, bench_path)
-    return os.path.join(ACC_BENCH_PATH, benchname)
+        return os.path.join(acc_bench_path, bench_path)
+    return os.path.join(acc_bench_path, benchname)
 
 
 class HWModel:
@@ -191,48 +181,69 @@ class HWModel:
         ]
 
 
-GEN_BASE = os.path.join(SALAM_DIR, "HWModeling")
-os.makedirs(os.path.join(GEN_BASE, "functional_units"), exist_ok=True)
-os.makedirs(os.path.join(GEN_BASE, "instructions"), exist_ok=True)
+def generate_hw_profile(m5_path, acc_bench_path, bench, bench_path=None):
+    salam_dir = os.path.join(m5_path, "src", "salam")
+    gen_base = os.path.join(salam_dir, "HWModeling")
+    os.makedirs(os.path.join(gen_base, "functional_units"), exist_ok=True)
+    os.makedirs(os.path.join(gen_base, "instructions"), exist_ok=True)
 
-benchmark_args = HWArgs()
-bench_dir = resolve_bench_dir(benchmark_args.bench, benchmark_args.bench_path)
-generate_hw_models = HWModel(bench_dir=bench_dir, latency="5ns")
-fu_file_generator = FunctionalUnitGenerator(
-    fu_directory=os.path.join(SALAM_DIR, "FunctionalUnits.py")
-)
-fu_file_generator.initialize_functional_unit_base_header_file()
-fu_file_generator.initalize_fu_list_header(generate_hw_models.get_fu_list())
-fu_file_generator.initialize_simobject_file(generate_hw_models.get_fu_list())
+    bench_dir = resolve_bench_dir(acc_bench_path, bench, bench_path)
+    generate_hw_models = HWModel(bench_dir=bench_dir, latency="5ns")
+    fu_file_generator = FunctionalUnitGenerator(
+        fu_directory=os.path.join(salam_dir, "FunctionalUnits.py")
+    )
+    fu_file_generator.initialize_functional_unit_base_header_file()
+    fu_file_generator.initalize_fu_list_header(
+        generate_hw_models.get_fu_list()
+    )
+    fu_file_generator.initialize_simobject_file(
+        generate_hw_models.get_fu_list()
+    )
 
-for functional_unit in generate_hw_models.get_fu_list():
-    generate_hw_models.generate_hw(functional_unit)
-    generate_hw_models.generate_power_model(functional_unit)
-    fu_file_generator.set_fu(functional_unit)
-    fu_file_generator.functional_unit_header_generator(generate_hw_models)
-    fu_file_generator.simobject_generator(generate_hw_models)
+    for functional_unit in generate_hw_models.get_fu_list():
+        generate_hw_models.generate_hw(functional_unit)
+        generate_hw_models.generate_power_model(functional_unit)
+        fu_file_generator.set_fu(functional_unit)
+        fu_file_generator.functional_unit_header_generator(generate_hw_models)
+        fu_file_generator.simobject_generator(generate_hw_models)
 
-inst_cfg_gen = InstConfigGenerator()
+    inst_cfg_gen = InstConfigGenerator()
 
-inst_cfg_gen.initialize_inst_config_base_header_file()
-inst_cfg_gen.instruction_simobject_generator(generate_hw_models)
-inst_cfg_gen.initalize_inst_config_header(
-    generate_hw_models.get_instruction_list()
-)
-for inst in generate_hw_models.get_instruction_list()["instructions"].keys():
-    inst_cfg_gen.inst_config_header_generator(inst)
+    inst_cfg_gen.initialize_inst_config_base_header_file()
+    inst_cfg_gen.instruction_simobject_generator(generate_hw_models)
+    inst_cfg_gen.initalize_inst_config_header(
+        generate_hw_models.get_instruction_list()
+    )
+    for inst in generate_hw_models.get_instruction_list()[
+        "instructions"
+    ].keys():
+        inst_cfg_gen.inst_config_header_generator(inst)
 
-# source + SCons
-inst_cfg_gen.generate_inst_config_source(
-    generate_hw_models.get_instruction_list()
-)
-inst_cfg_gen.generate_inst_config_sconscript(
-    generate_hw_models.get_instruction_list()["instructions"]
-)
-fu_file_generator.generate_fu_list_source(generate_hw_models.get_fu_list())
-fu_file_generator.generate_functional_unit_sconscript(
-    generate_hw_models.get_fu_list()
-)
+    # source + SCons
+    inst_cfg_gen.generate_inst_config_source(
+        generate_hw_models.get_instruction_list()
+    )
+    inst_cfg_gen.generate_inst_config_sconscript(
+        generate_hw_models.get_instruction_list()["instructions"]
+    )
+    fu_file_generator.generate_fu_list_source(generate_hw_models.get_fu_list())
+    fu_file_generator.generate_functional_unit_sconscript(
+        generate_hw_models.get_fu_list()
+    )
+
+
+def main():
+    m5_path = os.environ.get("M5_PATH")
+    if not m5_path:
+        raise RuntimeError("Environment variable M5_PATH must be set")
+
+    acc_bench_path = os.environ.get("ACC_BENCH_PATH")
+    if not acc_bench_path:
+        raise RuntimeError("Environment variable ACC_BENCH_PATH must be set")
+
+    args = HWArgs()
+    generate_hw_profile(m5_path, acc_bench_path, args.bench, args.bench_path)
+
 
 if __name__ == "__main__":
-    pass
+    main()

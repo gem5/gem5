@@ -39,11 +39,12 @@
 
 import os
 
-M5_PATH = os.environ.get("M5_PATH")
-if not M5_PATH:
-    raise RuntimeError("Environment variable M5_PATH must be set.")
 
-SALAM_DIR = os.path.join(M5_PATH, "src", "salam")
+def salam_dir():
+    m5_path = os.environ.get("M5_PATH")
+    if not m5_path:
+        raise RuntimeError("Environment variable M5_PATH must be set.")
+    return os.path.join(m5_path, "src", "salam")
 
 
 class FunctionalUnitGenerator:
@@ -54,15 +55,16 @@ class FunctionalUnitGenerator:
         self.classname = ""
         self.header_name = ""
         self.cxx_header = os.path.join(
-            SALAM_DIR, "HWModeling", "functional_units.hh"
+            salam_dir(), "HWModeling", "functional_units.hh"
         )
         self.cxx_header_py_path = "salam/HWModeling/functional_units.hh"
         self.fu_base_directory = (
-            os.path.join(SALAM_DIR, "HWModeling", "functional_units") + os.sep
+            os.path.join(salam_dir(), "HWModeling", "functional_units")
+            + os.sep
         )
         self.fu_base_directory_py_path = "salam/HWModeling/functional_units/"
         self.scons_dir_fu = os.path.join(
-            SALAM_DIR,
+            salam_dir(),
             "HWModeling",
             "functional_units",
             "SConscript",
@@ -280,7 +282,7 @@ class FunctionalUnitGenerator:
 
     def generate_fu_list_source(self, fu_list=[]):
         agg_source_path = os.path.join(
-            SALAM_DIR, "HWModeling", "functional_units.cc"
+            salam_dir(), "HWModeling", "functional_units.cc"
         )
         with open(agg_source_path, "w+") as self.fu_list_source_file:
             self.fu_list_source_file.write(
@@ -801,20 +803,20 @@ class InstConfigGenerator:
         self.alias = ""
         self.classname = ""
         self.header_name = ""
-        self.cxx_header = os.path.join(SALAM_DIR, "HWModeling", ".hh")
+        self.cxx_header = os.path.join(salam_dir(), "HWModeling", ".hh")
         self.cxx_header_py_path = "salam/HWModeling/instruction_config"
         self.inst_base_directory = (
-            os.path.join(SALAM_DIR, "HWModeling", "instructions") + os.sep
+            os.path.join(salam_dir(), "HWModeling", "instructions") + os.sep
         )
         self.inst_base_directory_py_path = "salam/HWModeling/instructions/"
         self.scons_dir_inst = os.path.join(
-            SALAM_DIR, "HWModeling", "instructions", "SConscript"
+            salam_dir(), "HWModeling", "instructions", "SConscript"
         )
 
     def generate_inst_config_source(self, inst_list_dict={}):
         instructions = list(inst_list_dict["instructions"].keys())
         agg_source_path = os.path.join(
-            SALAM_DIR, "HWModeling", "instruction_config.cc"
+            salam_dir(), "HWModeling", "instruction_config.cc"
         )
         with open(agg_source_path, "w+") as self.inst_config_source_file:
             self.inst_config_source_file.write(
@@ -849,7 +851,7 @@ class InstConfigGenerator:
     def instruction_simobject_generator(self, hwmodel):
         self.hwmodel = hwmodel
         self.inst_dict = hwmodel.get_instruction_list()
-        inst_config_py = os.path.join(SALAM_DIR, "InstConfig.py")
+        inst_config_py = os.path.join(salam_dir(), "InstConfig.py")
         with open(inst_config_py, "w+") as self.simobject_file:
             # Warning
             self.simobject_file.write(
@@ -1123,7 +1125,7 @@ class InstConfigGenerator:
 
     def initialize_inst_config_base_header_file(self):
         self.base_header = os.path.join(
-            SALAM_DIR, "HWModeling", "instructions", "base.hh"
+            salam_dir(), "HWModeling", "instructions", "base.hh"
         )
         with open(self.base_header, "w+") as self.base_header_file:
             self.base_header_file.write(
