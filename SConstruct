@@ -745,6 +745,12 @@ for variant_path in variant_paths:
         clang_min_version = "14"
         clang_max_version = "19"
         clang_version = env['CXXVERSION']
+
+        # Clang versions before 17 require this extension to accept C23-style
+        # attributes such as [[fallthrough]] in older C language modes.
+        if compareVersions(clang_version, "17") < 0:
+            env.Append(CFLAGS=['-fdouble-square-bracket-attributes'])
+
         if compareVersions(clang_version, clang_min_version) < 0 or \
               compareVersions(clang_version, clang_max_version) > 0:
             warning(
