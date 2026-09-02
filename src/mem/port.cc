@@ -61,13 +61,10 @@ TracingExtension::clone() const
 }
 
 void
-TracingExtension::add(const RequestPort *request_port,
-                      const ResponsePort *response_port, gem5::Addr addr)
+TracingExtension::add(const RequestPort *request_port, gem5::Addr addr)
 {
     assert(request_port);
-    trace_.push_back(TraceEntry{.request_port = request_port,
-                                .response_port = response_port,
-                                .addr = addr});
+    trace_.push_back(TraceEntry{.request_port = request_port, .addr = addr});
 }
 
 void
@@ -90,16 +87,18 @@ TracingExtension::getTraceInString() const
     std::stringstream port_trace;
     port_trace << "Port trace of the Packet (" << std::endl
                << "[Destination] ";
-    for (auto rit = trace_.rbegin(); rit != trace_.rend(); rit++) {
-        if (rit->response_port) {
-            port_trace << rit->response_port->name() << std::endl;
+    for (auto rit = trace_.rbegin(); rit != trace_.rend(); ++rit) {
+        const RequestPort *req_port = rit->request_port;
+        assert(req_port);
+        const ResponsePort *resp_port = req_port->getResponsePort();
+        if (resp_port) {
+            port_trace << resp_port->name() << std::endl;
         }
         if (std::next(rit) == trace_.rend()) {
             port_trace << "[Source] ";
         }
-        assert(rit->request_port);
-        port_trace << rit->request_port->name()
-                   << csprintf(" addr=%#llx", rit->addr) << std::endl;
+        port_trace << req_port->name() << csprintf(" addr=%#llx", rit->addr)
+                   << std::endl;
     }
     port_trace << ")";
     return port_trace.str();
@@ -251,7 +250,7 @@ RequestPort::addTrace(PacketPtr pkt) const
         ext = std::make_shared<TracingExtension>();
         pkt->setExtension(ext);
     }
-    ext->add(this, _responsePort, pkt->getAddr());
+    ext->add(this, pkt->getAddr());
 }
 
 void

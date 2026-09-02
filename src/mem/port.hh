@@ -84,7 +84,6 @@ class TracingExtension : public gem5::Extension<Packet, TracingExtension>
     struct TraceEntry
     {
         const RequestPort *request_port;
-        const ResponsePort *response_port;
         gem5::Addr addr;
     };
 
@@ -95,8 +94,7 @@ class TracingExtension : public gem5::Extension<Packet, TracingExtension>
     std::unique_ptr<ExtensionBase> clone() const override;
 
     /* Adds a trace to port trace vector. First in, first out. */
-    void add(const RequestPort *request_port,
-             const ResponsePort *response_port, gem5::Addr addr);
+    void add(const RequestPort *request_port, gem5::Addr addr);
 
     /* Removes a trace to port trace vector. */
     void remove();
@@ -142,6 +140,12 @@ class RequestPort: public Port, public AtomicRequestProtocol,
     RequestPort(const std::string& name, PortID id=InvalidPortID);
 
     virtual ~RequestPort();
+
+    const ResponsePort *
+    getResponsePort() const
+    {
+        return _responsePort;
+    }
 
     /**
      * Bind this request port to a response port. This also does the
