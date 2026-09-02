@@ -153,7 +153,7 @@ class SpatterKernel:
         base_index_addr: Addr,
         value_size: int,
         base_value_addr: Addr,
-        kernel_trace: List[int],
+        kernel_trace: list[int],
     ):
         self._id = kernel_id
         self._delta = kernel_delta
@@ -195,7 +195,7 @@ class SpatterKernel:
         )
 
 
-def parse_kernel(kernel: dict, default_delta=8) -> Tuple[int, int, str, List]:
+def parse_kernel(kernel: dict, default_delta=8) -> tuple[int, int, str, list]:
     """
     Function to parse a kernel from a dictionary. Each Spatter trace is
     represented as a list of dictionaries in JSON. Each dictionary in the list
@@ -229,7 +229,7 @@ def parse_kernel(kernel: dict, default_delta=8) -> Tuple[int, int, str, List]:
 
 
 def unroll_trace(
-    original_trace: List,
+    original_trace: list,
     delta: int,
     count: int,
     min_elements: int,
@@ -328,7 +328,7 @@ def prepare_kernels(
     interleave_size: int,
     base_index_addr: Addr,
     base_value_addr: Addr,
-) -> List[List[SpatterKernel]]:
+) -> list[list[SpatterKernel]]:
     """
     Function to prepare kernels from a spatter trace. It will read the trace
     from the given path and prepare kernels for the given number of cores and

@@ -269,7 +269,7 @@ def toMemoryBandwidth(value):
     return toBinaryFloat(value, "memory bandwidth", "B/s")
 
 
-def _base_10_to_2(value: str, unit: str) -> Optional[str]:
+def _base_10_to_2(value: str, unit: str) -> str | None:
     """Convert a base 10 memory/cache size SI prefix strings to base 2. Used
     in `checkBaseConversion` to provide a warning message to the user. Will
     return None if no conversion is required.

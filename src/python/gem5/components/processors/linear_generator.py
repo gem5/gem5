@@ -92,7 +92,7 @@ class LinearGenerator(AbstractGenerator):
         max_addr: int,
         rd_perc: int,
         data_limit: int,
-    ) -> List[LinearGeneratorCore]:
+    ) -> list[LinearGeneratorCore]:
         """
         The helper function to create the cores for the generator, it will use
         the same inputs as the constructor function.

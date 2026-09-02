@@ -1,4 +1,4 @@
-# Copyright (c) 2024-2026 The Regents of the University of California
+# Copyright (c) 2026 The Regents of the University of California
 # All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,7 +23,7 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-FROM ubuntu:24.04
+FROM ubuntu:26.04
 
 LABEL org.opencontainers.image.source=https://github.com/gem5/gem5
 LABEL org.opencontainers.image.licenses=BSD-3-Clause
@@ -64,13 +64,13 @@ RUN apt -y update && apt -y upgrade && apt -y install \
     curl \
     gpg
 
-# pre-commit, as installed via apt in 24.04, attempts to create a cache
-# directory at "${HOME}/.cache/pre-commit". If running docker with non-root,
-# the HOME directory is set to "/". Since non-root users do not have permission
-# to write to this directory, an error is returned when pre-commit is executed.
+# pre-commit, as installed via apt, attempts to create a cache directory at
+# "${HOME}/.cache/pre-commit". If running docker with non-root, the HOME
+# directory is set to "/". Since non-root users do not have permission to write
+# to this directory, an error is returned when pre-commit is executed.
 # pre-commit's default cache directory can be changed via the `XDG_CACHE_HOME`
 # environment variable. Here we set it to "/tmp". With this pre-commit will
-# create a "/tmp/pre-commit" directory to use for caching. "/tmp" was chosen
-# as it's a directory any user can access and write to. Given this only stores
+# create a "/tmp/pre-commit" directory to use for caching. "/tmp" was chosen as
+# it's a directory any user can access and write to. Given this only stores
 # caching information, the "/tmp" directory being wiped is not a concern.
 ENV XDG_CACHE_HOME=/tmp/

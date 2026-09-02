@@ -40,9 +40,14 @@
 
 import contextlib
 import os
+import re
 
 import SCons.Script
 import SCons.Util
+from gem5_scons.util import (
+    compareVersions,
+    readCommand,
+)
 
 
 def CheckCxxFlag(context, flag, autoadd=True):
@@ -152,6 +157,46 @@ def CheckPkgConfig(context, pkgs, *args):
     return ret
 
 
+def CheckZlibVersion(context):
+    context.Message("Checking zlib version... ")
+    ret = context.TryCompile(
+        """
+        #include <zlib.h>
+        #if !defined(ZLIB_VERNUM) || ZLIB_VERNUM < 0x1200
+        #error zlib 1.2 or newer is required
+        #endif
+        """,
+        extension=".cc",
+    )
+    context.Result(ret)
+    return ret
+
+
+def CheckM4Version(context):
+    context.Message("Checking GNU m4 version... ")
+    m4 = context.env.Detect("gm4") or context.env.Detect("m4")
+    if not m4:
+        context.Result(False)
+        return False
+
+    try:
+        version_output = readCommand([m4, "--version"])
+    except Exception:
+        context.Result(False)
+        return False
+
+    version_match = re.search(
+        r"GNU M4\)?\s+(\d+(?:\.\d+)*)", version_output, re.IGNORECASE
+    )
+    if not version_match:
+        context.Result(False)
+        return False
+
+    version = version_match.group(1)
+    context.Result(version)
+    return compareVersions(version, "1.4") >= 0
+
+
 @contextlib.contextmanager
 def Configure(env, *args, **kwargs):
     kwargs.setdefault(
@@ -165,9 +210,11 @@ def Configure(env, *args, **kwargs):
         {
             "CheckCxxFlag": CheckCxxFlag,
             "CheckLinkFlag": CheckLinkFlag,
+            "CheckM4Version": CheckM4Version,
             "CheckMember": CheckMember,
             "CheckPkgConfig": CheckPkgConfig,
             "CheckPythonLib": CheckPythonLib,
+            "CheckZlibVersion": CheckZlibVersion,
         }
     )
     conf = SCons.Script.Configure(env, *args, **kwargs)

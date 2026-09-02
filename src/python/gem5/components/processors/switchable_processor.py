@@ -52,7 +52,7 @@ class SwitchableProcessor(AbstractProcessor):
 
     def __init__(
         self,
-        switchable_cores: Dict[str, List[SimpleCore]],
+        switchable_cores: dict[str, list[SimpleCore]],
         starting_cores: str,
         clk_freq: str,
     ) -> None:
@@ -122,7 +122,7 @@ class SwitchableProcessor(AbstractProcessor):
         return len(self._current_cores)
 
     @overrides(AbstractProcessor)
-    def get_cores(self) -> List[AbstractCore]:
+    def get_cores(self) -> list[AbstractCore]:
         return self._current_cores
 
     def _all_cores(self):

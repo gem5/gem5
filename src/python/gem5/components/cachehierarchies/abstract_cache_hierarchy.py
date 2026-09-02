@@ -40,7 +40,7 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
-from typing import Callable
+from collections.abc import Callable
 
 from m5.objects import (
     Root,

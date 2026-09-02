@@ -24,10 +24,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from collections.abc import Sequence
 from pathlib import Path
 from typing import (
     List,
-    Sequence,
     Tuple,
 )
 
@@ -87,11 +87,11 @@ class DRAMSysMem(AbstractMemorySystem):
         pass
 
     @overrides(AbstractMemorySystem)
-    def get_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
+    def get_mem_ports(self) -> Sequence[tuple[AddrRange, Port]]:
         return [(self.dramsys.range, self.bridge.gem5)]
 
     @overrides(AbstractMemorySystem)
-    def get_memory_controllers(self) -> List[MemCtrl]:
+    def get_memory_controllers(self) -> list[MemCtrl]:
         return [self.dramsys]
 
     @overrides(AbstractMemorySystem)
@@ -99,7 +99,7 @@ class DRAMSysMem(AbstractMemorySystem):
         return self._size
 
     @overrides(AbstractMemorySystem)
-    def set_memory_range(self, ranges: List[AddrRange]) -> None:
+    def set_memory_range(self, ranges: list[AddrRange]) -> None:
         if len(ranges) != 1 or ranges[0].size() != self._size:
             raise Exception(
                 "DRAMSys memory controller requires a single "

@@ -41,15 +41,15 @@ RUN apt -y update && \
     build-essential git m4 scons zlib1g zlib1g-dev \
     libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
     python3-dev python-is-python3 doxygen libboost-all-dev \
-    libhdf5-serial-dev python3-pydot libpng-dev libelf-dev pkg-config gdb \
+    libhdf5-dev python3-pydot libpng-dev libelf-dev pkg-config gdb \
     cmake wget gnupg2 rpm gfortran \
     # Requirements for ROCm
     mesa-common-dev libgflags-dev libgoogle-glog-dev \
     # ROCm dependencies and requirements to get ROCm repo and build packages.
-    # Upgrade to gcc 10: gem5 supports gcc 10+.
+    # Use GCC 10 for compatibility with this ROCm environment.
     gcc-10 g++-10 cpp-10
 
-# Update the default compiler to gcc 10
+# Use GCC 10 as the default compiler for this ROCm environment.
 RUN update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100 && \
     update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 && \
     update-alternatives --install /usr/bin/c++ c++ /usr/bin/g++-10 100 && \

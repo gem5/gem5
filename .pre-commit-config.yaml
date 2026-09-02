@@ -34,7 +34,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-minimum_pre_commit_version: '2.18'
+minimum_pre_commit_version: '2.17'
 
 default_language_version:
     python: python3
@@ -72,6 +72,7 @@ repos:
       rev: 9.0.1
       hooks:
           - id: isort
+            exclude: ^util/gem5art/
     - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
       rev: 0.2.3
       hooks:
@@ -80,13 +81,15 @@ repos:
       rev: 26.5.1
       hooks:
           - id: black
+            exclude: ^util/gem5art/
     - repo: https://github.com/asottile/pyupgrade
       rev: v3.21.2
       hooks:
           - id: pyupgrade
-            # Python 3.8 is the earliest version supported.
-            # We therefore conform to the standards compatible with 3.8+.
-            args: [--py38-plus]
+            exclude: ^util/gem5art/
+            # Python 3.10 is the earliest version supported.
+            # We therefore conform to the standards compatible with 3.10+.
+            args: [--py310-plus]
     - repo: local
       hooks:
           - id: gem5-style-checker
