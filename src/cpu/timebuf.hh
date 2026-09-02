@@ -30,8 +30,9 @@
 #define __BASE_TIMEBUF_HH__
 
 #include <cassert>
+#include <deque>
+#include <memory>
 #include <type_traits>
-#include <vector>
 
 namespace gem5
 {
@@ -45,11 +46,11 @@ class TimeBuffer
     unsigned size;
     int _id;
 
-    char *data;
-    std::vector<char *> index;
+    std::deque<T> data;
     unsigned base;
 
-    void valid(int idx) const
+    void
+    valid(int idx) const
     {
         assert (idx >= -past && idx <= future);
     }
@@ -135,38 +136,20 @@ class TimeBuffer
         T *operator->() const { return buffer->access(index); }
     };
 
-
   public:
     TimeBuffer(int p, int f)
-        : past(p), future(f), size(past + future + 1),
-          data(new char[size * sizeof(T)]), index(size), base(0)
+        : past(p), future(f), size(past + future + 1), data(size), base(0)
     {
         static_assert(std::is_default_constructible_v<T>,
                       "T must be default constructible.");
         assert(past >= 0 && future >= 0);
-        char *ptr = data;
-        for (unsigned i = 0; i < size; i++) {
-            index[i] = ptr;
-            new (ptr) T();
-            ptr += sizeof(T);
-        }
-
         _id = -1;
     }
 
-    TimeBuffer()
-        : data(NULL)
-    {
-    }
+    TimeBuffer() : past(0), future(0), size(0), _id(-1), data(0), base(0) {}
 
-    ~TimeBuffer()
-    {
-        for (unsigned i = 0; i < size; ++i)
-            (reinterpret_cast<T *>(index[i]))->~T();
-        delete [] data;
-    }
-
-    void id(int id)
+    void
+    id(int id)
     {
         _id = id;
     }
@@ -183,15 +166,15 @@ class TimeBuffer
             base = 0;
 
         int ptr = base + future;
-        if (ptr >= (int)size)
+        if (ptr >= (int)size) {
             ptr -= size;
-        (reinterpret_cast<T *>(index[ptr]))->~T();
-        new (index[ptr]) T();
+        }
+        data[ptr] = T{};
     }
 
   protected:
-    //Calculate the index into this->index for element at position idx
-    //relative to now
+    // Calculate the index into this->data for element at position idx
+    // relative to now
     inline int calculateVectorIndex(int idx) const
     {
         //Need more complex math here to calculate index.
@@ -212,24 +195,27 @@ class TimeBuffer
     {
         int vector_index = calculateVectorIndex(idx);
 
-        return reinterpret_cast<T *>(index[vector_index]);
+        return &data[vector_index];
     }
 
-    T &operator[](int idx)
+    T &
+    operator[](int idx)
     {
         int vector_index = calculateVectorIndex(idx);
 
-        return reinterpret_cast<T &>(*index[vector_index]);
+        return data[vector_index];
     }
 
-    const T &operator[] (int idx) const
+    const T &
+    operator[](int idx) const
     {
         int vector_index = calculateVectorIndex(idx);
 
-        return reinterpret_cast<const T &>(*index[vector_index]);
+        return data[vector_index];
     }
 
-    wire getWire(int idx)
+    wire
+    getWire(int idx)
     {
         valid(idx);
 
