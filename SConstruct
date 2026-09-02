@@ -464,8 +464,10 @@ main['LTO_LINKFLAGS'] = []
 # compiler we're using.
 main['TCMALLOC_CCFLAGS'] = []
 
+CC_version = readCommand([main['CC'], '--version'], exception=False)
 CXX_version = readCommand([main['CXX'], '--version'], exception=False)
 
+main['CC_CLANG'] = CC_version and CC_version.find('clang') >= 0
 main['GCC'] = CXX_version and CXX_version.find('g++') >= 0 and \
               CXX_version.find('clang') < 0
 main['CLANG'] = CXX_version and CXX_version.find('clang') >= 0
@@ -695,6 +697,12 @@ for variant_path in variant_paths:
               "above you will need to ease fix SConstruct and ",
               "src/SConscript to support that compiler.")))
 
+    # Clang versions before 17 require this extension to accept C23-style
+    # attributes such as [[fallthrough]] in older C language modes.
+    if env['CC_CLANG'] and \
+            compareVersions(env['CCVERSION'], "17") < 0:
+        env.Append(CFLAGS=['-fdouble-square-bracket-attributes'])
+
     if env['GCC']:
         gcc_min_version = "11"
         gcc_max_version = "15.2"
@@ -745,11 +753,6 @@ for variant_path in variant_paths:
         clang_min_version = "14"
         clang_max_version = "19"
         clang_version = env['CXXVERSION']
-
-        # Clang versions before 17 require this extension to accept C23-style
-        # attributes such as [[fallthrough]] in older C language modes.
-        if compareVersions(clang_version, "17") < 0:
-            env.Append(CFLAGS=['-fdouble-square-bracket-attributes'])
 
         if compareVersions(clang_version, clang_min_version) < 0 or \
               compareVersions(clang_version, clang_max_version) > 0:
