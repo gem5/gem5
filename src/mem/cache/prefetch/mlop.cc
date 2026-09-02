@@ -28,15 +28,15 @@ MLOP::MLOP(const MLOPPrefetcherParams &p)
         fatal("%s: lookahead_levels must be > 0\n", name());
     }
     if (!isPowerOfTwo(bitVectorSize)) {
-        fatal("%s: bit_vector_size (%u) must be a power of two\n",
-              name(), bitVectorSize);
+        fatal("%s: bit_vector_size (%u) must be a power of two\n", name(),
+              bitVectorSize);
     }
     if (maxOffset <= 0) {
         fatal("%s: max_offset must be > 0 (got %d)\n", name(), maxOffset);
     }
     if (maxOffset >= int(bitVectorSize)) {
-        fatal("%s: max_offset (%d) must be < bit_vector_size (%u)\n",
-              name(), maxOffset, bitVectorSize);
+        fatal("%s: max_offset (%d) must be < bit_vector_size (%u)\n", name(),
+              maxOffset, bitVectorSize);
     }
     if (recentDepth > 0 && recentDepth >= bitVectorSize) {
         fatal("%s: lookahead_levels (%u) implies recentDepth=%u, which "
