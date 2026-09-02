@@ -81,9 +81,9 @@ class FunctionalUnitBase
     double _area;
     double _path_delay;
 
-    uint64_t _available;
+    uint64_t _available = 0;
 
-    uint64_t _in_use;
+    uint64_t _in_use = 0;
 
   public:
     FunctionalUnitBase();
@@ -259,7 +259,7 @@ class FunctionalUnitBase
     bool
     is_available()
     {
-        return (_in_use >= _available);
+        return (_available == 0 || _in_use < _available);
     }
     void
     use_functional_unit()

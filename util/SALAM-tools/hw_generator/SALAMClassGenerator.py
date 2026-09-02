@@ -368,8 +368,8 @@ class FunctionalUnitGenerator:
             self.base_header_file.write("\t\tdouble _leakage_power;\n")
             self.base_header_file.write("\t\tdouble _area;\n")
             self.base_header_file.write("\t\tdouble _path_delay;\n\n")
-            self.base_header_file.write("\t\tuint64_t _available;\n\n")
-            self.base_header_file.write("\t\tuint64_t _in_use;\n\n")
+            self.base_header_file.write("\t\tuint64_t _available = 0;\n\n")
+            self.base_header_file.write("\t\tuint64_t _in_use = 0;\n\n")
             # methods
 
             # define public members and methods
@@ -523,9 +523,12 @@ class FunctionalUnitGenerator:
             self.base_header_file.write(
                 "\t\tdouble get_path_delay() { return _path_delay; }\n"
             )
+            self.base_header_file.write("\t\tbool is_available()\n")
+            self.base_header_file.write("\t\t{\n")
             self.base_header_file.write(
-                "\t\tbool is_available() { return (_in_use >= _available); }\n"
+                "\t\t\treturn (_available == 0 || _in_use < _available);\n"
             )
+            self.base_header_file.write("\t\t}\n")
             self.base_header_file.write(
                 "\t\tvoid use_functional_unit() { _in_use++; }\n"
             )
