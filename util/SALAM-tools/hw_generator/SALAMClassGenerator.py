@@ -1172,7 +1172,17 @@ class InstConfigGenerator:
                 "\t\t\tuint32_t functional_unit_limit,\n"
             )
             self.base_header_file.write("\t\t\tuint32_t opcode_num,\n")
-            self.base_header_file.write("\t\t\tuint32_t runtime_cycles) { }\n")
+            self.base_header_file.write("\t\t\tuint32_t runtime_cycles) :\n")
+            self.base_header_file.write(
+                "\t\t\t_functional_unit(functional_unit),\n"
+            )
+            self.base_header_file.write(
+                "\t\t\t_functional_unit_limit(functional_unit_limit),\n"
+            )
+            self.base_header_file.write("\t\t\t_opcode_num(opcode_num),\n")
+            self.base_header_file.write(
+                "\t\t\t_runtime_cycles(runtime_cycles) { }\n"
+            )
 
             # Getters / Setters
             self.base_header_file.write(
