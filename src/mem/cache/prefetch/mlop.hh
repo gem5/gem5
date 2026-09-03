@@ -23,6 +23,8 @@
 #include <utility>
 #include <vector>
 
+#include "base/bitfield.hh"
+#include "base/intmath.hh"
 #include "base/types.hh"
 #include "mem/cache/prefetch/queued.hh"
 
@@ -84,18 +86,6 @@ class MLOP : public Queued
 
     AMTEntry &findOrAllocAmtEntry(Addr baseBlock);
     void updateScoresWithAccess(Addr block);
-
-    static inline unsigned
-    ctz64(uint64_t x)
-    {
-        return (unsigned)__builtin_ctzll(x);
-    }
-
-    static inline bool
-    isPowerOfTwo(unsigned x)
-    {
-        return x && ((x & (x - 1)) == 0);
-    }
 };
 
 } // namespace prefetch

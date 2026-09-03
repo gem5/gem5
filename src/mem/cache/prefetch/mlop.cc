@@ -24,12 +24,15 @@ MLOP::MLOP(const MLOPPrefetcherParams &p)
       regionMask(Addr(bitVectorSize - 1)),
       amt(amtEntries)
 {
+    if (amtEntries == 0) {
+        fatal("%s: amt_entries must be > 0\n", name());
+    }
     if (lookaheadLevels == 0) {
         fatal("%s: lookahead_levels must be > 0\n", name());
     }
-    if (!isPowerOfTwo(bitVectorSize)) {
-        fatal("%s: bit_vector_size (%u) must be a power of two\n", name(),
-              bitVectorSize);
+    if (!isPowerOf2(bitVectorSize) || bitVectorSize > 64) {
+        fatal("%s: bit_vector_size (%u) must be a power of two no greater "
+            "than 64\n", name(), bitVectorSize);
     }
     if (maxOffset <= 0) {
         fatal("%s: max_offset must be > 0 (got %d)\n", name(), maxOffset);
@@ -109,13 +112,14 @@ MLOP::updateScoresWithAccess(Addr block)
     // this access from what remains.
     for (unsigned exclude = 0; exclude <= lookaheadLevels - 1; exclude++) {
         uint64_t masked = entry.bitVector;
-        for (unsigned r = 0; r < std::min<unsigned>(exclude, entry.recent.size(); r++) {
+        for (unsigned r = 0;
+             r < std::min<unsigned>(exclude, entry.recent.size()); r++) {
             masked &= ~(1ULL << entry.recent[r]);
         }
 
         uint64_t bits = masked;
         while (bits) {
-            const unsigned j = ctz64(bits);
+            const unsigned j = findLsbSet(bits);
             bits &= (bits - 1);
 
             const int k = int(idx) - int(j);
