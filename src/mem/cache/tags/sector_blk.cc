@@ -41,6 +41,13 @@
 namespace gem5
 {
 
+SectorSubBlk &
+SectorSubBlk::operator=(SectorSubBlk &&other)
+{
+    CacheBlk::operator=(std::move(other));
+    return *this;
+}
+
 void
 SectorSubBlk::setSectorBlock(SectorBlk* sector_blk)
 {

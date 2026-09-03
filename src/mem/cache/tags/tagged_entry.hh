@@ -119,6 +119,46 @@ class TaggedEntry : public ReplaceableEntry
     {}
     ~TaggedEntry() = default;
 
+    TaggedEntry(const TaggedEntry &other) = default;
+    TaggedEntry(TaggedEntry &&other) = delete;
+
+    TaggedEntry &operator=(const TaggedEntry &other) = delete;
+
+    /**
+     * Move assignment operator.
+     * This should only be used to move an existing valid entry into an
+     * invalid one, not to create a new entry. In the end the valid entry
+     * will become invalid, and the invalid, valid. All location related
+     * variables will remain the same, that is, an entry cannot move its
+     * data, just its metadata contents. Because of this, we do not interact
+     * with any stored ReplaceableEntry data.
+     *
+     * @param other A valid TaggedEntry whose metadata should be moved into the
+     *              current entry
+     * @return *this
+     */
+    TaggedEntry &
+    operator=(TaggedEntry &&other)
+    {
+        // Copying an entry into a valid one would imply in skipping all
+        // replacement steps, so it cannot be allowed
+        assert(!isValid());
+        assert(other.isValid());
+
+        setValid();
+        setTag(other.getTag());
+
+        if (other.isSecure()) {
+            setSecure();
+        } else {
+            clearSecure();
+        }
+
+        other.invalidate();
+
+        return *this;
+    }
+
     void
     registerTagExtractor(TagExtractor ext)
     {
