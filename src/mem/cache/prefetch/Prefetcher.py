@@ -801,7 +801,7 @@ class MLOPPrefetcher(QueuedPrefetcher):
 
     evaluation_period = Param.Unsigned(500, "Accesses per scoring epoch")
     lookahead_levels = Param.Unsigned(16, "Number of lookahead levels")
-    max_offset = Param.Int(63, "Max signed offset, in cache lines")
+    max_offset = Param.Unsigned(63, "Max signed offset, in cache lines")
     score_threshold = Param.Unsigned(
         1, "Min score for an offset to be selected at a given lookahead"
     )
