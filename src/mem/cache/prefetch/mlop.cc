@@ -107,11 +107,9 @@ MLOP::updateScoresWithAccess(Addr block)
     // For each lookahead level L, exclude the last (L-1) accesses from
     // the bit-vector, then credit every offset that would have predicted
     // this access from what remains.
-    for (unsigned L = 1; L <= lookaheadLevels; L++) {
+    for (unsigned exclude = 0; exclude <= lookaheadLevels - 1; exclude++) {
         uint64_t masked = entry.bitVector;
-        const unsigned exclude = (L > 1) ? (L - 1) : 0;
-        const unsigned ex = std::min<unsigned>(exclude, entry.recent.size());
-        for (unsigned r = 0; r < ex; r++) {
+        for (unsigned r = 0; r < std::min<unsigned>(exclude, entry.recent.size(); r++) {
             masked &= ~(1ULL << entry.recent[r]);
         }
 
@@ -126,7 +124,7 @@ MLOP::updateScoresWithAccess(Addr block)
             }
             auto it = offsetTable.find(k);
             if (it != offsetTable.end()) {
-                it->second.scores[L - 1]++;
+                it->second.scores[exclude]++;
             }
         }
     }
