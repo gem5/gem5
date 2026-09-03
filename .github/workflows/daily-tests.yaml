@@ -122,8 +122,7 @@ jobs:
                   echo "test-dirs-matrix=$(\
                     ./main.py list gem5 \
                     --suites \
-                    --length=long \
-                    --exclude-tags gcn_gpu | \
+                    --length=long | \
                     grep "$SUITEUID:" | \
                     cut -d: -f2 | \
                     cut -d/ -f 2- | \
@@ -180,7 +179,7 @@ jobs:
                       resource_dir="$RUNNER_TEMP/gem5-testlib-downloads"
                       ;;
                   esac
-                  ./main.py run ${{ matrix.test-type }} -j$(nproc) --length=long -vv -t $(nproc) --exclude-tags gcn_gpu --bin-path "$resource_dir"
+                  ./main.py run ${{ matrix.test-type }} -j$(nproc) --length=long -vv -t $(nproc) --bin-path "$resource_dir"
 
             - name: Sanitize test-dir for artifact name
               id: sanitize-test-dir
@@ -196,44 +195,6 @@ jobs:
                   name: daily-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-long-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir
                       }}-status-${{ steps.run-tests.outcome }}-output
                   path: tests/testing-results
-
-
-    gpu-tests:
-        runs-on: [self-hosted, linux, x64]
-        container:
-            image: ghcr.io/gem5/gcn-gpu:latest
-            volumes:
-                - /gem5-resource-cache:/gem5-resource-cache
-        env:
-            GEM5_RESOURCE_DIR: /gem5-resource-cache
-        timeout-minutes: 1440 # 24 hours
-        needs:
-            - get-date
-
-        steps:
-            - uses: actions/checkout@v7
-            - name: Cache build/VEGA_X86
-              uses: actions/cache@v6
-              with:
-                  path: build/VEGA_X86
-                  key: testlib-build-vega-${{ needs.get-date.outputs.date }}
-                  restore-keys: |
-                      testlib-build-vega
-
-
-            - name: Run Testlib GPU Tests
-              id: run-tests
-              timeout-minutes: 1410
-              working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --length=long -vvv -j $(nproc) --host gcn_gpu --isa=VEGA_X86 --bin-path "$GEM5_RESOURCE_DIR"
-
-            - name: Upload results
-              if: always()
-              uses: actions/upload-artifact@v7
-              with:
-                  name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gpu-status-${{ steps.run-tests.outcome }}-output
-                  path: tests/testing-results
-
   # This runs the SST-gem5 integration compilation and tests it with
   # ext/sst/sst/example.py.
     sst-test:

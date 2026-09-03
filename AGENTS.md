@@ -147,13 +147,12 @@ historical reproduction also requires the workflow revision and the image
 digest used by the failing job because a `:latest` tag can change. Ubuntu
 all-dependency images are the baseline for many CI jobs. To reproduce a
 failure, inspect the relevant workflow and use its image where practical. GPU
-SE-mode CI uses the `gcn-gpu` image.
+full-system tests use the all-dependencies image and the `ALL` build alongside
+the other TestLib suites.
 
-A GPU container alone does not select GPU TestLib suites; use `--host gcn_gpu`.
-Current GPU suites also declare `VEGA_X86`, so the host-only selector resolves
-to that build today. Add `--isa=VEGA_X86` when the task must explicitly lock
-the target, and always confirm selection with `./main.py list ... -q` before
-an expensive run.
+A GPU container alone does not select GPU TestLib suites. Use `--isa=ALL` with
+the appropriate length and always confirm selection with
+`./main.py list ... -q` before an expensive run.
 
 Do not edit generated build outputs under `build/`. When generated files look
 wrong, change the source generator, SCons rule, SLICC input, or SimObject

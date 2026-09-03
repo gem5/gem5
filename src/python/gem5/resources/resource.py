@@ -920,6 +920,7 @@ def obtain_resource(
     gem5_version=core.gem5Version,
     to_path: Optional[str] = None,
     quiet: bool = False,
+    sparse: bool = True,
 ) -> AbstractResource:
     """
     This function primarily serves as a factory for resources. It will return
@@ -953,6 +954,9 @@ def obtain_resource(
                     **Note**: Usage of this parameter will override the
                     ``resource_directory`` parameter.
     :param quiet: If ``True``, suppress output. ``False`` by default.
+    :param sparse: If ``True``, request a sparse local representation of a
+                   disk image resource. If ``False``, disable sparse
+                   downloading. ``True`` by default.
     """
 
     # Some basic validation. Resource_id must be of type string and not empty.
@@ -965,6 +969,9 @@ def obtain_resource(
         raise ValueError(
             "Resource ID cannot be an empty or whitespace-only string."
         )
+
+    if not isinstance(sparse, bool):
+        raise TypeError(f"sparse must be a bool, got {type(sparse).__name__}.")
 
     # Obtain the resource object entry for this resource
     resource_json = get_resource_json_obj(
@@ -984,6 +991,7 @@ def obtain_resource(
         clients=clients,
         gem5_version=gem5_version,
         quiet=quiet,
+        sparse=sparse,
     )
 
     # The 'workload' and 'suite' are special and need some translating into
@@ -997,6 +1005,7 @@ def obtain_resource(
             clients,
             gem5_version,
             quiet,
+            sparse=sparse,
         )
 
     if resource_json.get("category") == "workload":
@@ -1008,6 +1017,7 @@ def obtain_resource(
             clients,
             gem5_version,
             quiet,
+            sparse=sparse,
         )
 
     # Check the schema of the 'resource_json' object.
@@ -1157,6 +1167,7 @@ def _get_suite(
     clients: List[str],
     gem5_version: str,
     quiet: bool,
+    sparse: bool = True,
 ) -> Dict[str, Any]:
     """
     :param suite: The suite JSON object.
@@ -1172,6 +1183,7 @@ def _get_suite(
                          resource versions. By default set to the current gem5
                          version.
     :param quiet: If ``True``, suppress output. ``False`` by default.
+    :param sparse: Whether nested disk images should be materialized sparsely.
     """
     # Mapping input groups to workload IDs
     id_input_group_dict = {}
@@ -1215,6 +1227,7 @@ def _get_suite(
             clients,
             gem5_version,
             quiet,
+            sparse=sparse,
         )
         _resources_schema_validator(workload_dict)
         workload_input_group_dict[
@@ -1236,6 +1249,7 @@ def _get_workload(
     clients: List[str],
     gem5_version: str,
     quiet: bool,
+    sparse: bool = True,
 ) -> Dict[str, Any]:
     """
     :param workload: The workload JSON object.
@@ -1251,6 +1265,7 @@ def _get_workload(
                          resource versions. By default set to the current gem5
                          version.
     :param quiet: If ``True``, suppress output. ``False`` by default.
+    :param sparse: Whether nested disk images should be materialized sparsely.
     """
 
     db_query = []
@@ -1326,6 +1341,7 @@ def _get_workload(
             clients=clients,
             gem5_version=gem5_version,
             quiet=quiet,
+            sparse=sparse,
         )
 
         _resources_schema_validator(resource_match)
@@ -1395,6 +1411,7 @@ def _get_to_path_and_downloader_partial(
     clients: List[str],
     gem5_version: str,
     quiet: bool,
+    sparse: bool = True,
 ) -> Tuple[str, Optional[partial]]:
 
     if "resource_version" not in resource_json:
@@ -1473,6 +1490,7 @@ def _get_to_path_and_downloader_partial(
             clients=clients,
             gem5_version=gem5_version,
             quiet=quiet,
+            sparse=sparse,
         )
     return to_path, downloader
 
