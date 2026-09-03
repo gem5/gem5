@@ -256,7 +256,7 @@ def create_system(
         )
     except:
         print(
-            "Error: could not create sytem for ruby protocol "
+            "Error: could not create system for ruby protocol "
             f"{buildEnv['PROTOCOL']}"
         )
         raise
