@@ -165,6 +165,10 @@ Decode::name() const
     return cpu->name() + ".decode";
 }
 
+void
+Decode::regProbePoints()
+{ ppDecode = new ProbePointArg<DynInstPtr>(cpu->getProbeManager(), "Decode"); }
+
 Decode::DecodeStats::DecodeStats(CPU *cpu)
     : statistics::Group(cpu, "decode"),
       ADD_STAT(status, statistics::units::Cycle::get(),
@@ -711,6 +715,7 @@ Decode::decodeInsts(ThreadID tid)
         --insts_available;
 
         inst->decodeTick = curTick() - inst->fetchTick;
+        ppDecode->notify(inst);
 
         // Ensure that if it was predicted as a branch, it really is a
         // branch.
