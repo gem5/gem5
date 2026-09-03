@@ -28,6 +28,16 @@
 
 #include "cpu/probes/pc_count_tracker.hh"
 
+#include <algorithm>
+#include <cstdint>
+#include <utility>
+#include <vector>
+
+#include "base/logging.hh"
+#include "base/types.hh"
+#include "params/PcCountTracker.hh"
+#include "sim/probe/probe.hh"
+#include "sim/probe/probe_listener_object.hh"
 
 namespace gem5
 {
@@ -35,14 +45,27 @@ namespace gem5
 PcCountTracker::PcCountTracker(const PcCountTrackerParams &p)
     : ProbeListenerObject(p),
       cpuptr(p.core),
-      manager(p.ptmanager)
+      ptmanager(p.ptmanager),
+      enablePcProfiling(p.enable_pc_profiling),
+      filterRanges(p.filter_ranges)
 {
-    if (!cpuptr || !manager) {
-        fatal("%s is NULL", !cpuptr ? "CPU": "PcCountTrackerManager");
-    }
+    fatal_if(p.granularity >= sizeof(unsigned long long) * 8,
+             "granularity %d too large for %zu bits. Granularity is the bits "
+             "to mask,"
+             " not the size",
+             p.granularity, sizeof(unsigned long long) * 8);
+    pcMask = ~((1ULL << p.granularity) - 1);
+    fatal_if(!cpuptr, "CPU is NULL");
+    fatal_if(!ptmanager && !enablePcProfiling,
+             "PcCountTracker requires either a PcCountTrackerManager or "
+             "enable_pc_profiling=True");
     for (int i = 0; i < p.targets.size(); i++) {
         // initialize the set of targeting Program Counter addresses
         targetPC.insert(p.targets[i].getPC());
+    }
+    if (targetPC.size() == 1) {
+        singleTargetPC = *targetPC.begin();
+        hasSingleTarget = true;
     }
 }
 
@@ -60,11 +83,60 @@ PcCountTracker::regProbeListeners()
 
 void
 PcCountTracker::checkPc(const Addr& pc) {
-    if (targetPC.find(pc) != targetPC.end()) {
-        // if the PC is one of the target PCs, then notify the
-        // PcCounterTrackerManager by calling its `check_count` function
-        manager->checkCount(pc);
+    // Apply filter first
+    bool allow = filterRanges.empty();
+    for (const auto &range : filterRanges) {
+        if (range.contains(pc)) {
+            allow = true;
+            break;
+        }
     }
+    if (!allow) {
+        return;
+    }
+
+    Addr masked_pc = pc & pcMask;
+
+    if (enablePcProfiling) {
+        pcCounts[masked_pc]++;
+    }
+    if (ptmanager) {
+        if (hasSingleTarget) {
+            if (pc == singleTargetPC) {
+                ptmanager->checkCount(pc);
+            }
+        } else if (targetPC.find(pc) != targetPC.end()) {
+            ptmanager->checkCount(pc);
+        }
+    }
+}
+
+std::vector<std::pair<Addr, uint64_t>>
+PcCountTracker::getHottestPcs(unsigned n) const
+{
+    if (n == 0 || pcCounts.empty()) {
+        return {};
+    }
+
+    std::vector<std::pair<Addr, uint64_t>> sorted_pcs(pcCounts.begin(),
+                                                      pcCounts.end());
+    std::sort(sorted_pcs.begin(), sorted_pcs.end(),
+              [](const std::pair<Addr, uint64_t> &a,
+                 const std::pair<Addr, uint64_t> &b) {
+                  return a.second > b.second;
+              });
+
+    if (sorted_pcs.size() > n) {
+        sorted_pcs.resize(n);
+    }
+    return sorted_pcs;
+}
+
+void
+PcCountTracker::resetStats()
+{
+    ProbeListenerObject::resetStats();
+    pcCounts.clear();
 }
 
 } // namespace gem5
