@@ -561,8 +561,6 @@ template<typename ElemType>
 
     if (_opClass == SimdCvtOp){
         microop = new VxsatMicroInst(&vxsat, _machInst, _elen, _vlen);
-        microop->setFlag(StaticInst::IsSerializeAfter);
-        microop->setFlag(StaticInst::IsNonSpeculative);
         this->microops.push_back(microop);
     }
 
