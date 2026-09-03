@@ -131,6 +131,8 @@ template<typename ElemType>
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+%(flag_micro_constructor)s
+
 }
 
 %(declare_varith_template)s;
@@ -172,6 +174,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    %(micro_flag_constructor)s;
 }
 
 %(declare_varith_template)s;
@@ -395,6 +398,8 @@ template<typename ElemType>
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+%(flag_micro_constructor)s
+
 }
 
 %(declare_varith_template)s;
@@ -436,6 +441,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    %(micro_flag_constructor)s;
 }
 
 %(declare_varith_template)s;
@@ -568,6 +574,8 @@ template<typename ElemType>
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+%(flag_micro_constructor)s
+
 }
 
 %(declare_varith_template)s;
@@ -612,6 +620,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    %(micro_flag_constructor)s;
 }
 
 %(declare_varith_template)s;
@@ -713,6 +722,8 @@ template<typename ElemType>
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+%(flag_micro_constructor)s
+
 }
 
 %(declare_varith_template)s;
@@ -752,6 +763,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    %(micro_flag_constructor)s;
 }
 
 %(declare_varith_template)s;
@@ -1024,6 +1036,8 @@ template<typename ElemType>
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+%(flag_micro_constructor)s
+
 }
 
 %(declare_varith_template)s;
@@ -1074,6 +1088,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    %(micro_flag_constructor)s;
 }
 
 %(declare_varith_template)s;
@@ -1273,6 +1288,8 @@ template<typename ElemType>
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+%(flag_micro_constructor)s
+
 }
 
 %(declare_varith_template)s;
@@ -1315,6 +1332,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    %(micro_flag_constructor)s;
 }
 
 %(declare_varith_template)s;
@@ -1395,6 +1413,8 @@ template<typename ElemType>
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+%(flag_micro_constructor)s
+
 }
 
 %(declare_varith_template)s;
@@ -1436,6 +1456,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    %(micro_flag_constructor)s;
 }
 
 %(declare_varith_template)s;
@@ -1506,6 +1527,8 @@ def template VMvWholeMacroConstructor {{
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+%(flag_micro_constructor)s
+
 }
 
 }};
@@ -1541,6 +1564,7 @@ def template VMvWholeMicroConstructor {{
     setDestRegIdx(_numDestRegs++, vecRegClass[_machInst.vd + _microIdx]);
     _numTypedDestRegs[VecRegClass]++;
     setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs2 + _microIdx]);
+    %(micro_flag_constructor)s;
 }
 
 }};
@@ -1787,6 +1811,8 @@ template<typename ElemType>
     this->microops.push_back(microop);
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+%(flag_micro_constructor)s
+
 }
 
 %(declare_varith_template)s;
@@ -1828,6 +1854,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    %(micro_flag_constructor)s;
 }
 
 %(declare_varith_template)s;
@@ -1909,6 +1936,8 @@ template<typename ElemType, typename IndexType>
 
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+%(flag_micro_constructor)s
+
 }
 
 %(declare_varith_template)s;
@@ -1951,6 +1980,7 @@ template<typename ElemType, typename IndexType>
 
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    %(micro_flag_constructor)s;
 }
 
 %(declare_varith_template)s;
@@ -2092,6 +2122,8 @@ template<typename ElemType>
     this->microops.push_back(microop);
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+%(flag_micro_constructor)s
+
 }
 
 %(declare_varith_template)s;
@@ -2134,6 +2166,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    %(micro_flag_constructor)s;
 }
 
 %(declare_varith_template)s;
@@ -2181,6 +2214,8 @@ template<typename ElemType>
     }
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+%(flag_micro_constructor)s
+
 }
 
 %(declare_varith_template)s;
@@ -2201,6 +2236,7 @@ template<typename ElemType>
     _numDestRegs = 0;
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
+    %(micro_flag_constructor)s;
 }
 
 %(declare_varith_template)s;
@@ -2249,6 +2285,8 @@ template<typename ElemType>
     }
     this->microops.front()->setFirstMicroop();
     this->microops.back()->setLastMicroop();
+%(flag_micro_constructor)s
+
 }
 
 %(declare_varith_template)s;
@@ -2287,6 +2325,7 @@ template<typename ElemType>
     %(set_dest_reg_idx)s;
     %(set_src_reg_idx)s;
     SET_VM_SRC();
+    %(micro_flag_constructor)s;
 }
 
 %(declare_varith_template)s;

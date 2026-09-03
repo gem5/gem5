@@ -410,6 +410,54 @@ def makeFlagConstructor(flag_list):
     return code
 
 
+def makeFlagMicroConstructor(flag_list):
+    """C++ pasted into vector MacroConstructors after the micro sequence
+    is built (after setFirstMicroop/setLastMicroop).
+
+    IsNonSpeculative is already set on the instruction's own *Micro class
+    by micro_flag_constructor. The loop below is for helpers that are a
+    different StaticInst (VectorNopMicroInst, VCpyVsMicroInst,
+    VlFFTrimVlMicroOp, ...) and never run that snippet. setFlag is
+    idempotent on *Micro.
+
+    Serialize/squash cannot go in micro_flag_constructor: that snippet
+    runs in each micro constructor, before the macro knows which micro
+    is first or last. Stamping IsSerializeAfter on every micro would
+    make O3 drain the ROB between micros of one vector instruction.
+    """
+    flags = set(flag_list)
+    lines = []
+    if "IsNonSpeculative" in flags:
+        lines.extend(
+            [
+                "    // Helpers are not this op's *Micro class; stamp again.",
+                "    for (auto &microop : this->microops) {",
+                "        microop->setFlag(StaticInst::IsNonSpeculative);",
+                "    }",
+            ]
+        )
+    if "IsSerializeBefore" in flags:
+        lines.append(
+            "    this->microops.front()->setFlag("
+            "StaticInst::IsSerializeBefore);"
+        )
+    if "IsSerializeAfter" in flags:
+        lines.append(
+            "    this->microops.back()->setFlag("
+            "StaticInst::IsSerializeAfter);"
+        )
+    if "IsSquashAfter" in flags:
+        lines.append(
+            "    this->microops.back()->setFlag(" "StaticInst::IsSquashAfter);"
+        )
+    if not lines:
+        return ""
+    header = [
+        "    // Sequence flags after first/last are known.",
+    ]
+    return "\n" + "\n".join(header + lines)
+
+
 # Assume all instruction flags are of the form 'IsFoo'
 instFlagRE = re.compile(r"Is.*")
 
@@ -489,9 +537,34 @@ class InstObjParams:
             else:
                 self.op_class = "IntAluOp"
 
-        # add flag initialization to contructor here to include
-        # any flags added via opt_args
-        self.constructor += makeFlagConstructor(self.flags)
+        # Flag initialization is kept as a separate snippet so templates
+        # that manually wire registers (e.g. RISC-V vector microops) can
+        # apply ISA flags without also expanding the full %(constructor)s
+        # operand auto-numbering that would corrupt micro register maps.
+        #
+        # Position-sensitive flags must not be stamped onto every microop:
+        # IsSerializeAfter/Before and IsSquashAfter belong on the boundary
+        # micro(s) of a sequence. Vector MacroConstructors expand
+        # flag_micro_constructor after the sequence is built (boundary
+        # flags plus IsNonSpeculative on helper micros).
+        # makeFlagConstructor mutates its argument, so pass copies.
+        position_sensitive_flags = {
+            "IsSerializeAfter",
+            "IsSerializeBefore",
+            "IsSquashAfter",
+        }
+        self.flag_constructor = makeFlagConstructor(list(self.flags))
+        self.micro_flag_constructor = makeFlagConstructor(
+            [
+                flag
+                for flag in self.flags
+                if flag not in position_sensitive_flags
+            ]
+        )
+        self.flag_micro_constructor = makeFlagMicroConstructor(
+            list(self.flags)
+        )
+        self.constructor += self.flag_constructor
 
         # if 'IsFloating' is set, add call to the FP enable check
         # function (which should be provided by isa_desc via a declare)
