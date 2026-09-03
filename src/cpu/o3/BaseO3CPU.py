@@ -141,6 +141,10 @@ class BaseO3CPU(BaseCPU):
 
     LQEntries = Param.Unsigned(32, "Number of load queue entries")
     SQEntries = Param.Unsigned(32, "Number of store queue entries")
+    vecMemPackWidth = OptionalParam.Unsigned(
+        "Unit-stride vector LSU split grain in bytes. "
+        "If unspecified, use the cache-line size.",
+    )
     LSQDepCheckShift = Param.Unsigned(
         4, "Number of places to shift addr before check"
     )
