@@ -183,7 +183,9 @@ class SuperBlk : public SectorBlk
   public:
     SuperBlk();
     SuperBlk(const SuperBlk&) = delete;
+    SuperBlk(SuperBlk &&) = delete;
     SuperBlk& operator=(const SuperBlk&) = delete;
+    SuperBlk &operator=(SuperBlk &&) = delete;
     ~SuperBlk() {};
 
     /**
