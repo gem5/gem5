@@ -161,7 +161,7 @@ class RiscvBoard(
 
     def _has_kvm_cores(self) -> bool:
         return any(
-            core.is_kvm_core() for core in self.get_processor().get_cores()
+            core.is_kvm_core() for core in self.get_processor().get_all_cores()
         )
 
     @staticmethod
@@ -374,7 +374,7 @@ class RiscvBoard(
         if host_freq is None:
             return
 
-        for core in self.get_processor().get_cores():
+        for core in self.get_processor().get_all_cores():
             if not core.is_kvm_core():
                 continue
 
@@ -390,7 +390,7 @@ class RiscvBoard(
 
         need_vector_probe = any(
             core.is_kvm_core() and core.core.isa[0].reports_extension("V")
-            for core in self.get_processor().get_cores()
+            for core in self.get_processor().get_all_cores()
         )
         if not need_vector_probe:
             return
@@ -403,7 +403,7 @@ class RiscvBoard(
             )
 
         kvm_vlen = kvm_vlenb * 8
-        for core in self.get_processor().get_cores():
+        for core in self.get_processor().get_all_cores():
             if not core.is_kvm_core():
                 continue
 
