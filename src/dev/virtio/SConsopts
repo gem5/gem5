@@ -1,6 +1,5 @@
 # -*- mode:python -*-
-
-# Copyright (c) 2014,2017 ARM Limited
+# Copyright (c) 2025 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -35,50 +34,30 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from m5.objects.VirtIO import VirtIODeviceBase
-from m5.params import *
-from m5.proxy import *
+Import('*')
 
+import os
 
-class VirtIO9PBase(VirtIODeviceBase):
-    type = "VirtIO9PBase"
-    abstract = True
-    cxx_header = "dev/virtio/fs9p.hh"
-    cxx_class = "gem5::VirtIO9PBase"
+npfs_vars = Variables()
+npfs_vars.AddVariables(
+    PathVariable(
+        'NPFS_PATH',
+        "npfs source directory containing include/, libnpfs/, and libufs/",
+        '.',
+        PathVariable.PathIsDir,
+    ),
+)
+npfs_vars.Update(main)
 
-    queueSize = Param.Unsigned(32, "Output queue size (pages)")
-    tag = Param.String("gem5", "Mount tag")
+main["CONF"]["BUILD_9PUFS"] = False
 
+npfs_path_ev = os.environ.get("NPFS_PATH", None)
+if npfs_path_ev is not None and npfs_path_ev != ".":
+    print(f"Setting NPFS_PATH from os.environ: {npfs_path_ev}")
+    main["CONF"]["NPFS_PATH"] = npfs_path_ev
+    main["CONF"]["BUILD_9PUFS"] = True
 
-class VirtIO9PProxy(VirtIO9PBase):
-    type = "VirtIO9PProxy"
-    abstract = True
-    cxx_header = "dev/virtio/fs9p.hh"
-    cxx_class = "gem5::VirtIO9PProxy"
-
-
-class VirtIO9PDiod(VirtIO9PProxy):
-    type = "VirtIO9PDiod"
-    cxx_header = "dev/virtio/fs9p.hh"
-    cxx_class = "gem5::VirtIO9PDiod"
-
-    diod = Param.String("diod", "Path to diod, optionally in PATH")
-    root = Param.String("Path to export through diod")
-    socketPath = Param.String("Unused socket to diod")
-
-
-class VirtIO9PSocket(VirtIO9PProxy):
-    type = "VirtIO9PSocket"
-    cxx_header = "dev/virtio/fs9p.hh"
-    cxx_class = "gem5::VirtIO9PSocket"
-
-    server = Param.String("127.0.0.1", "9P server address or host name")
-    port = Param.String("564", "9P server port")
-
-
-class VirtIO9PUfs(VirtIO9PProxy):
-    type = "VirtIO9PUfs"
-    cxx_header = "dev/virtio/fs9pufs.hh"
-    cxx_class = "gem5::VirtIO9PUfs"
-
-    root = Param.String("Host directory to export through npfs/ufs")
+if "NPFS_PATH" in main and main["NPFS_PATH"] != ".":
+    print(f"Setting NPFS_PATH to SCons command line: {main['NPFS_PATH']}")
+    main["CONF"]["NPFS_PATH"] = str(main["NPFS_PATH"])
+    main["CONF"]["BUILD_9PUFS"] = True
