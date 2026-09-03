@@ -91,12 +91,26 @@ processor = SimpleProcessor(
     cpu_type=get_cpu_type_from_str(args.cpu),
     isa=ISA.RISCV,
     num_cores=args.num_cores,
+    clk_freq="3GHz",
 )
 
 if args.riscv_32bits:
     for simple_core in processor.cores:
         for i in range(len(simple_core.core.isa)):
-            simple_core.core.isa[i].riscv_type = "RV32"
+            isa = simple_core.core.isa[i]
+            isa.riscv_profile = "RVI20U32"
+            isa.extra_extensions = [
+                "M",
+                "A",
+                "F",
+                "D",
+                "C",
+                "Zba",
+                "Zbb",
+                "Zbs",
+                "Zicsr",
+                "Zifencei",
+            ]
 
 motherboard = SimpleBoard(
     clk_freq="3GHz",

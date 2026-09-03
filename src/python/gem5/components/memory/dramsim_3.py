@@ -83,7 +83,7 @@ class DRAMSim3MemCtrl(DRAMsim3):
     A DRAMSim3 Memory Controller.
 
     The class serves as a SimObject object wrapper, utiliszing the DRAMSim3
-    configuratons.
+    configurations.
     """
 
     def __init__(self, mem_name: str, num_chnls: int) -> None:

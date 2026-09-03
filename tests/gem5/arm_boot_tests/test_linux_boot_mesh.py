@@ -50,7 +50,7 @@ def test_boot_mesh(
     systemd: bool,
     to_tick: int,
 ):
-    name = f"{cpu}-cpu_{num_cpus}-cores_{mem_system}_" "arm_boot_test_mesh_2x4"
+    name = f"{cpu}-cpu_{num_cpus}-cores_arm_boot_test_mesh_2x4"
 
     config_args = [
         "--cpu",

@@ -35,6 +35,7 @@ Import("env")
 
 build_root = Dir("../..").abspath
 build_current = Dir(".").abspath
+install_prefix = Dir(".").abspath + "/prefix"
 src_root = Dir(".").srcnode().abspath
 scons_root = Dir("#").abspath
 
@@ -62,10 +63,12 @@ subprocess.run(
         f"-S{src_root}",
         f"-B{build_current}",
         "-DCMAKE_BUILD_TYPE=Release",
+        "-DCMAKE_INSTALL_MESSAGE=NEVER",
         f"-DSCONS_SOURCE_DIR:STRING={scons_root}",
         "-DDRAMSYS_BUILD_CLI=OFF",
+        "-DDRAMSYS_INSTALL=ON",
+        "-DDRAMSYS_USE_DRAMPOWER=ON",
         "-DDRAMSYS_USE_FETCH_CONTENT=ON",
-        "-DDRAMSYS_USE_FETCH_CONTENT_INTERNAL=ON",
         "-DDRAMSYS_USE_FETCH_CONTENT_SYSTEMC=OFF",
     ],
     check=True
@@ -76,18 +79,32 @@ subprocess.run(
     check=True
 )
 
+subprocess.run(
+    ["cmake", "--install", build_current, "--prefix", install_prefix],
+    check=True
+)
+
+# Sane defaults
+libdir = "lib"
+incdir = "include"
+
+# Try to get real dirs from cache vars
+cache_vars = subprocess.check_output(
+    ["cmake", "-LA", "-N", build_current],
+    text=True
+)
+
+for line in cache_vars.splitlines():
+    if line.startswith("CMAKE_INSTALL_LIBDIR:"):
+        libdir = line.split("=", 1)[1]
+    if line.startswith("CMAKE_INSTALL_INCLUDEDIR:"):
+        incdir = line.split("=", 1)[1]
+
 env.Append(LIBS="dramsys")
-env.Append(LIBPATH=Dir("./DRAMSys/src").abspath)
-
 env.Append(LIBS="DRAMPower")
-env.Append(LIBPATH=Dir("./_deps/drampower-build/src/DRAMPower").abspath)
-
 env.Append(LIBS="sqlite3")
-env.Append(LIBPATH=Dir("./DRAMSys/lib/sqlite3").abspath)
 
-env.Append(CPPPATH=src_root + "/DRAMSys/src")
-env.Append(CPPPATH=build_current + "/_deps/nlohmann_json-src/include/")
-env.Append(CPPPATH=build_current + "/_deps/dramutils-src/include/")
-env.Append(CPPPATH=build_current + "/_deps/drampower-src/src/DRAMPower")
+env.Append(LIBPATH=f"{install_prefix}/{libdir}")
+env.Append(CPPPATH=f"{install_prefix}/{incdir}")
 
 env.Prepend(CPPDEFINES=[("SYSTEMC_VERSION", 20191203)])

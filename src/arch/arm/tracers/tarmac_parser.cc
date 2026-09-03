@@ -901,11 +901,15 @@ TarmacParserRecord::TarmacParserRecordEvent::process()
 
     if (mismatchOnPcOrOpcode && (parent.exitOnDiff ||
                                  parent.exitOnInsnDiff))
-        exitSimLoop("a mismatch with the TARMAC trace has been detected "
-                    "on PC or opcode", 1);
+        exitSimulationLoopClassic(
+            "a mismatch with the TARMAC trace has been detected "
+            "on PC or opcode",
+            1);
     if (mismatch && parent.exitOnDiff)
-        exitSimLoop("a mismatch with the TARMAC trace has been detected "
-                    "on data value", 1);
+        exitSimulationLoopClassic(
+            "a mismatch with the TARMAC trace has been detected "
+            "on data value",
+            1);
 }
 
 const char *
@@ -1044,8 +1048,10 @@ TarmacParserRecord::dump()
             mainEventQueue[0]->schedule(event, curTick());
         } else if (mismatchOnPcOrOpcode && (parent.exitOnDiff ||
                                             parent.exitOnInsnDiff)) {
-            exitSimLoop("a mismatch with the TARMAC trace has been detected "
-                        "on PC or opcode", 1);
+            exitSimulationLoopClassic(
+                "a mismatch with the TARMAC trace has been detected "
+                "on PC or opcode",
+                1);
         }
     } else {
         parent.macroopInProgress = true;

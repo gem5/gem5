@@ -137,7 +137,7 @@ class CoreComplex(SubSystem, RubyNetworkComponent):
             core=core,
             cache_line_size=self._cache_line_size,
             target_isa=self._board.processor.get_isa(),
-            clk_domain=self._board.get_clock_domain(),
+            clk_domain=self._board.get_processor().get_clock_domain(),
         )
         cluster.l1_cache.sequencer = RubySequencer(
             version=core_id,
@@ -172,7 +172,7 @@ class CoreComplex(SubSystem, RubyNetworkComponent):
             cache_line_size=self._cache_line_size,
             cluster_id=self._core_complex_id,
             target_isa=self._board.processor.get_isa(),
-            clk_domain=self._board.get_clock_domain(),
+            clk_domain=self._board.get_processor().get_clock_domain(),
         )
         cluster.l2_cache.ruby_system = self._ruby_system
         # L0Cache in the ruby backend is l1 cache in stdlib

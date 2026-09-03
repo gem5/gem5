@@ -33,7 +33,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from itertools import chain
 from typing import (
     Dict,
     List,
@@ -162,18 +161,28 @@ class PrivateL1PrivateL2MeshCacheHierarchy(
             noc_params=self._noc_params,
         )
 
+        self.ruby_system.network.physical_vnets_channels = [
+            self._noc_params.req_int_channels,
+            self._noc_params.snp_int_channels,
+            self._noc_params.rsp_int_channels,
+            self._noc_params.dat_int_channels,
+        ]
+
         self.ruby_system.network.physical_vnets_bandwidth = [
             self._noc_params.cntrl_msg_size,
             self._noc_params.cntrl_msg_size,
             self._noc_params.cntrl_msg_size,
             self._noc_params.cntrl_msg_size + self._noc_params.data_width,
         ]
-        self.ruby_system.network.physical_vnets_channels = [1] * 4
 
         # Network configurations
         # virtual networks: 0=request, 1=snoop, 2=response, 3=data
         self.ruby_system.number_of_virtual_networks = 4
         self.ruby_system.network.number_of_virtual_networks = 4
+        self.ruby_system.network.control_msg_size = (
+            self._noc_params.cntrl_msg_size
+        )
+        self.ruby_system.network.data_msg_size = self._noc_params.data_width
 
         rnf_params = self._get_node_params(CHI_NodeType.CHI_RNF)
         hnf_params = self._get_node_params(CHI_NodeType.CHI_HNF)
@@ -252,6 +261,14 @@ class PrivateL1PrivateL2MeshCacheHierarchy(
             rni=(rni_nodes, rni_params),
         )
 
+        self._configure_controllers(
+            (rnf_nodes, rnf_params),
+            (hnf_nodes, hnf_params),
+            (snf_nodes, snf_params),
+            (snf_boot_nodes, snf_boot_params),
+            (rni_nodes, rni_params),
+        )
+
         self.ruby_system.network.setup_buffers()
 
         # Set up a proxy port for the system_port. Used for load binaries and
@@ -260,6 +277,79 @@ class PrivateL1PrivateL2MeshCacheHierarchy(
             ruby_system=self.ruby_system
         )
         board.connect_system_port(self.ruby_system.sys_port_proxy.in_ports)
+
+    def _configure_controllers(
+        self, *node_groups: Tuple[List[SubSystem], Optional[Node_Params]]
+    ) -> None:
+        req_channels = self._noc_params.req_ext_channels
+        snp_channels = self._noc_params.snp_ext_channels
+        rsp_channels = self._noc_params.rsp_ext_channels
+        dat_channels = self._noc_params.dat_ext_channels
+
+        for node_list, node_params in node_groups:
+            if node_params is None:
+                continue
+
+            # Keep aligned with CustomMesh.distribute_nodes latency handling.
+            inbound_latency = (
+                node_params.inbound_link_latency
+                if node_params.inbound_link_latency
+                else self._noc_params.node_link_latency
+            )
+            outbound_latency = (
+                node_params.outbound_link_latency
+                if node_params.outbound_link_latency
+                else self._noc_params.node_link_latency
+            )
+
+            for node in node_list:
+                for ctrl in node.getNetworkSideControllers():
+                    # Enforces the number of channels or ports between
+                    # the node and the router by limiting the number of
+                    # messages that can be consumed in a cycle
+                    ctrl.reqIn.max_dequeue_rate = req_channels
+                    ctrl.snpIn.max_dequeue_rate = snp_channels
+                    ctrl.rspIn.max_dequeue_rate = rsp_channels
+                    ctrl.datIn.max_dequeue_rate = dat_channels
+                    ctrl.reqOut.max_dequeue_rate = req_channels
+                    ctrl.snpOut.max_dequeue_rate = snp_channels
+                    ctrl.rspOut.max_dequeue_rate = rsp_channels
+                    ctrl.datOut.max_dequeue_rate = dat_channels
+
+                    # Fine tuned the buffers size to properly create contention
+                    # and network stalls.  Sizes are set similarly to
+                    # src/mem/ruby/network/simple/SimpleLink.py
+                    ctrl.reqIn.buffer_size = req_channels * (
+                        inbound_latency + 1
+                    )
+                    ctrl.snpIn.buffer_size = snp_channels * (
+                        inbound_latency + 1
+                    )
+                    ctrl.rspIn.buffer_size = rsp_channels * (
+                        inbound_latency + 1
+                    )
+                    ctrl.datIn.buffer_size = dat_channels * (
+                        inbound_latency + 1
+                    )
+                    ctrl.reqOut.buffer_size = req_channels * (
+                        outbound_latency + 1
+                    )
+                    ctrl.snpOut.buffer_size = snp_channels * (
+                        outbound_latency + 1
+                    )
+                    ctrl.rspOut.buffer_size = rsp_channels * (
+                        outbound_latency + 1
+                    )
+                    ctrl.datOut.buffer_size = dat_channels * (
+                        outbound_latency + 1
+                    )
+
+                    # The latency for outbound messages to the network is defined by
+                    # these parameters when enqueueing messages in the SLICC code
+                    ctrl.request_latency = outbound_latency
+                    ctrl.response_latency = outbound_latency
+                    ctrl.snoop_latency = outbound_latency
+                    ctrl.data_latency = outbound_latency
 
     def _create_hnfs(
         self, board: AbstractBoard, num_hnfs: int
@@ -307,7 +397,7 @@ class PrivateL1PrivateL2MeshCacheHierarchy(
                 requires_send_evicts=core.requires_send_evicts(),
                 cache_line_size=board.get_cache_line_size(),
                 target_isa=board.get_processor().get_isa(),
-                clk_domain=board.get_clock_domain(),
+                clk_domain=board.get_processor().get_clock_domain(),
             )
             dcache.sc_lock_enabled = True
             icache = L1CacheController(
@@ -317,7 +407,7 @@ class PrivateL1PrivateL2MeshCacheHierarchy(
                 requires_send_evicts=core.requires_send_evicts(),
                 cache_line_size=board.get_cache_line_size(),
                 target_isa=board.get_processor().get_isa(),
-                clk_domain=board.get_clock_domain(),
+                clk_domain=board.get_processor().get_clock_domain(),
             )
 
             icache.sequencer = RubySequencer(
@@ -338,7 +428,7 @@ class PrivateL1PrivateL2MeshCacheHierarchy(
                 assoc=self._l2_assoc,
                 network=self.ruby_system.network,
                 cache_line_size=board.get_cache_line_size(),
-                clk_domain=board.get_clock_domain(),
+                clk_domain=board.get_processor().get_clock_domain(),
             )
 
             rnf = CHI_RNF(self.ruby_system, [dcache, icache, l2])

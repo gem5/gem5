@@ -38,10 +38,12 @@
 
 """Simple memory controllers"""
 
+from math import log
 from typing import (
     List,
     Sequence,
     Tuple,
+    Union,
 )
 
 from m5.objects import (
@@ -58,6 +60,11 @@ from m5.util.convert import toMemorySize
 from ...utils.override import overrides
 from ..boards.abstract_board import AbstractBoard
 from .abstract_memory_system import AbstractMemorySystem
+
+
+def _isPow2(num):
+    log_num = int(log(num, 2))
+    return 2**log_num == num
 
 
 class SingleChannelSimpleMemory(AbstractMemorySystem):
@@ -118,3 +125,118 @@ class SingleChannelSimpleMemory(AbstractMemorySystem):
                 "range which matches the memory's size."
             )
         self.module.range = ranges[0]
+
+
+class MultiChannelSimpleMemory(AbstractMemorySystem):
+    """A class to implement a multi-channel memory system using SimpleMemory.
+
+    Each channel is a SimpleMemory SimObject with identical latency and
+    bandwidth parameters. Addresses are interleaved across channels at a
+    configurable granularity (default: 64 B, i.e., one cache line per
+    channel at a time) using gem5's AddrRange bit-mask interleaving.
+
+    This is useful for bandwidth-scaling experiments where the modelled
+    memory technology is not important, but the aggregate bandwidth is.
+    The number of channels must be a power of 2.
+    """
+
+    def __init__(
+        self,
+        num_channels: Union[int, str],
+        latency: str,
+        latency_var: str,
+        bandwidth: str,
+        size: str,
+        interleaving_size: Union[int, str] = 64,
+    ):
+        """
+        :param num_channels: Number of SimpleMemory channels (must be a
+                             power of 2).
+        :param latency: Average request-to-response latency per channel.
+        :param latency_var: Variance of request-to-response latency.
+        :param bandwidth: Combined read/write bandwidth *per channel*.
+                          Total aggregate bandwidth scales linearly with the
+                          number of channels.
+        :param size: Total size of the memory system across all channels.
+        :param interleaving_size: Interleaving granularity in bytes.
+                                  Must be a power of 2 and >= the board's
+                                  cache line size. Defaults to 64 B.
+        """
+        num_channels = int(num_channels)
+        interleaving_size = int(interleaving_size)
+
+        if not _isPow2(num_channels):
+            raise ValueError(
+                "Number of SimpleMemory channels must be a power of 2."
+            )
+        if not _isPow2(interleaving_size):
+            raise ValueError("Memory interleaving size must be a power of 2.")
+
+        super().__init__()
+        self._num_channels = num_channels
+        self._intlv_size = interleaving_size
+        self._size = toMemorySize(size)
+
+        self.mem_ctrl = [
+            SimpleMemory(
+                latency=latency,
+                latency_var=latency_var,
+                bandwidth=bandwidth,
+            )
+            for _ in range(num_channels)
+        ]
+
+    def _interleave_addresses(self) -> None:
+        intlv_bits = int(log(self._num_channels, 2))
+        intlv_low_bit = int(log(self._intlv_size, 2))
+        for i, module in enumerate(self.mem_ctrl):
+            module.range = AddrRange(
+                start=self._mem_range.start,
+                size=self._mem_range.size(),
+                intlvHighBit=intlv_low_bit + intlv_bits - 1,
+                xorHighBit=0,
+                intlvBits=intlv_bits,
+                intlvMatch=i,
+            )
+
+    @overrides(AbstractMemorySystem)
+    def incorporate_memory(self, board: AbstractBoard) -> None:
+        if self._intlv_size < int(board.get_cache_line_size()):
+            raise ValueError(
+                "Memory interleaving size cannot be smaller than the board's "
+                f"cache line size.\nBoard cache line size: "
+                f"{board.get_cache_line_size()}\nThis memory's interleaving "
+                f"size: {self._intlv_size}"
+            )
+
+    @overrides(AbstractMemorySystem)
+    def get_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
+        return [(m.range, m.port) for m in self.mem_ctrl]
+
+    @overrides(AbstractMemorySystem)
+    def get_memory_controllers(self) -> List[MemCtrl]:
+        return list(self.mem_ctrl)
+
+    @overrides(AbstractMemorySystem)
+    def get_size(self) -> int:
+        return self._size
+
+    @overrides(AbstractMemorySystem)
+    def set_memory_range(self, ranges: List[AddrRange]) -> None:
+        if len(ranges) != 1 or ranges[0].size() != self._size:
+            raise Exception(
+                "Multi-channel SimpleMemory requires a single range which "
+                "matches the memory's total size.\n"
+                f"Range size: {ranges[0].size()}\n"
+                f"Memory size: {self._size}"
+            )
+        self._mem_range = ranges[0]
+        self._interleave_addresses()
+
+    @overrides(AbstractMemorySystem)
+    def get_uninterleaved_range(self) -> List[AddrRange]:
+        return [self._mem_range]
+
+    @overrides(AbstractMemorySystem)
+    def get_mem_interfaces(self) -> List[AbstractMemory]:
+        return list(self.mem_ctrl)

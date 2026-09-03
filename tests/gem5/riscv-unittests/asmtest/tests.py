@@ -24,16 +24,23 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from testlib import *
+from testlib import (
+    config,
+    constants,
+    gem5_verify_config,
+)
+from testlib.helper import (
+    absdirpath,
+    joinpath,
+)
 
 if config.bin_path:
     resource_path = config.bin_path
 else:
     resource_path = joinpath(absdirpath(__file__), "..", "resources")
 
-# The following lists the RISCV binaries. Those commented out presently result
-# in a test failure. This is outlined in the following Jira issue:
-# https://gem5.atlassian.net/browse/GEM5-496
+# The following lists the RISCV binaries. Those commented out are tracked in:
+# https://github.com/gem5/gem5/issues/3465
 rv64_binaries = (
     "rv64samt-ps-sysclone_d",
     "rv64samt-ps-sysfutex1_d",
@@ -359,6 +366,7 @@ for cpu_type in cpu_types:
                 config.base_dir,
                 "tests",
                 "gem5",
+                "riscv-unittests",
                 "asmtest",
                 "configs",
                 "riscv_asmtest.py",
@@ -382,6 +390,7 @@ for cpu_type in cpu_types:
                 config.base_dir,
                 "tests",
                 "gem5",
+                "riscv-unittests",
                 "asmtest",
                 "configs",
                 "riscv_asmtest.py",

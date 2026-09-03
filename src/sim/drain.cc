@@ -149,7 +149,7 @@ DrainManager::signalDrainDone()
     assert(_count > 0);
     if (--_count == 0) {
         DPRINTF(Drain, "All %u objects drained..\n", drainableCount());
-        exitSimLoop("Finished drain", 0);
+        exitSimulationLoopClassic("Finished drain");
     }
 }
 

@@ -38,7 +38,8 @@
 #ifndef __MEM_RUBY_PROTOCOL_CHI_TLM_UTILS_HH__
 #define __MEM_RUBY_PROTOCOL_CHI_TLM_UTILS_HH__
 
-#include <ARM/TLM/arm_chi.h>
+#include <ARM/TLM/arm_chi_payload.h>
+#include <ARM/TLM/arm_chi_phase.h>
 
 #include "arch/arm/mpam.hh"
 #include "base/types.hh"
@@ -58,7 +59,9 @@ namespace tlm_to_ruby {
 
 ruby::CHI::CHIRequestType reqOpcode(ARM::CHI::ReqOpcode req);
 ruby::CHI::CHIDataType datOpcode(ARM::CHI::DatOpcode dat, ARM::CHI::Resp resp);
-ruby::CHI::CHIResponseType rspOpcode(ARM::CHI::RspOpcode res, ARM::CHI::Resp resp);
+ruby::CHI::CHIResponseType rspOpcode(ARM::CHI::RspOpcode res,
+                                     ARM::CHI::Resp resp,
+                                     ARM::CHI::Resp fwd_state);
 ruby::MachineID srcId(uint16_t src_id);
 }
 

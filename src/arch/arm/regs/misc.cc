@@ -658,7 +658,7 @@ decodeMrsMsrBankedReg(uint8_t sysM, bool r, bool &isIntReg, int &regIdx,
         }
     }
 
-    // Check that the requested register is accessable from the current mode
+    // Check that the requested register is accessible from the current mode
     if (ok && checkSecurity && mode != cpsr.mode) {
         switch (cpsr.mode) {
             case MODE_USER:
@@ -3559,6 +3559,9 @@ Fault
 faultIdst(const MiscRegLUTEntry &entry,
     ThreadContext *tc, const MiscRegOp64 &inst)
 {
+    if (!FullSystem) {
+        return NoFault;
+    }
     if (HaveExt(tc, ArmExtension::FEAT_IDST)) {
         const HCR hcr = tc->readMiscReg(MISCREG_HCR_EL2);
         if (EL2Enabled(tc) && hcr.tge) {
@@ -4243,7 +4246,7 @@ ISA::initializeMiscRegMetadata()
           }
 
           CTR ctr = 0;
-          //log2 of minimun i-cache line size (words)
+          //log2 of minimum i-cache line size (words)
           ctr.iCacheLineSize = log2_line_size_words;
           //b11 - gem5 uses pipt
           ctr.l1IndexPolicy = 0x3;
@@ -5768,6 +5771,11 @@ ISA::initializeMiscRegMetadata()
           isar0_el1.rndr = release->has(ArmExtension::FEAT_RNG) ? 0x1 : 0x0;
           isar0_el1.fhm = release->has(ArmExtension::FEAT_FP16) ? 0x1 :
                           (release->has(ArmExtension::FEAT_FHM) ? 0x1 : 0x0);
+          isar0_el1.sm3 = release->has(ArmExtension::FEAT_SM3) ? 0x1 : 0x0;
+          isar0_el1.sm4 = release->has(ArmExtension::FEAT_SM4) ? 0x1 : 0x0;
+          isar0_el1.sha3 = release->has(ArmExtension::FEAT_SHA3) ? 0x1 : 0x0;
+          isar0_el1.sha2 = release->has(ArmExtension::FEAT_SHA512) ? 0x2 :
+                        release->has(ArmExtension::FEAT_SHA256) ? 0x1 : 0x0;
           return isar0_el1;
       }())
       .serializing(false)

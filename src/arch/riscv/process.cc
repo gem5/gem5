@@ -247,8 +247,7 @@ RiscvProcess::argsInit(int pageSize)
         {gem5::auxv::Pagesz, "gem5::auxv::Pagesz"},
         {gem5::auxv::Secure, "gem5::auxv::Secure"},
         {gem5::auxv::Random, "gem5::auxv::Random"},
-        {gem5::auxv::Null, "gem5::auxv::Null"}
-    };
+        {gem5::auxv::Null, "gem5::auxv::Null"}};
     for (const auto &aux: auxv) {
         DPRINTF(Stack, "Wrote aux key %s to address %#x\n",
                 aux_keys[aux.type], sp);

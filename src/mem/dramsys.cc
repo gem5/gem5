@@ -28,9 +28,6 @@
 
 #include "dramsys.hh"
 
-#include "DRAMSys/common/Deserialize.h"
-#include "DRAMSys/common/Serialize.h"
-
 namespace gem5
 {
 
@@ -43,94 +40,67 @@ DRAMSys::DRAMSys(Params const &params)
       config(::DRAMSys::Config::from_path(params.configuration)),
       dramSysWrapper(params.name.c_str(), config, params.range)
 {
-    dramSysWrapper.dramsys->registerIdleCallback(
-        [this]
-        {
-            if (dramSysWrapper.dramsys->idle())
-            {
-                signalDrainDone();
-            }
-        });
+    dramSysWrapper.dramsys->registerIdleCallback([this] {
+        if (dramSysWrapper.dramsys->idle()) {
+            signalDrainDone();
+        }
+    });
 }
 
-gem5::Port& DRAMSys::getPort(const std::string& if_name, PortID idx)
+void
+DRAMSys::init()
 {
-    if (if_name != "tlm")
-    {
+    dramSysWrapper.dramsys->setBackingStore(pmemAddr);
+    AbstractMemory::init();
+}
+
+void
+DRAMSys::resetStats()
+{
+    std::function<void(sc_core::sc_object *)> resetStatsForScObj;
+    resetStatsForScObj = [&](sc_core::sc_object *obj) {
+        if (auto *provider =
+                dynamic_cast<::DRAMSys::Stats::StatsProvider *>(obj)) {
+            provider->resetStats();
+            provider->updateStats();
+
+            for (auto *child : obj->get_child_objects()) {
+                resetStatsForScObj(child);
+            }
+        }
+    };
+    resetStatsForScObj(dramSysWrapper.dramsys.get());
+}
+
+gem5::Port &
+DRAMSys::getPort(const std::string &if_name, PortID idx)
+{
+    if (if_name != "tlm") {
         return AbstractMemory::getPort(if_name, idx);
     }
 
     return tlmWrapper;
 }
 
-DrainState DRAMSys::drain()
+DrainState
+DRAMSys::drain()
 {
     return dramSysWrapper.dramsys->idle() ? DrainState::Drained
                                           : DrainState::Draining;
 }
 
-void DRAMSys::serialize(CheckpointOut& cp) const
+void
+DRAMSys::serialize(CheckpointOut &cp) const
 {
     std::filesystem::path checkpointPath = CheckpointIn::dir();
-
-    auto topLevelObjects = sc_core::sc_get_top_level_objects();
-    for (auto const* object : topLevelObjects)
-    {
-        std::function<void(sc_core::sc_object const*)> serialize;
-        serialize =
-            [&serialize, &checkpointPath](sc_core::sc_object const* object)
-        {
-            auto const* serializableObject =
-                dynamic_cast<::DRAMSys::Serialize const*>(object);
-
-            if (serializableObject != nullptr)
-            {
-                std::string dumpFileName(object->name());
-                std::ofstream stream(checkpointPath / dumpFileName,
-                                     std::ios::binary);
-                serializableObject->serialize(stream);
-            }
-
-            for (auto const* childObject : object->get_child_objects())
-            {
-                serialize(childObject);
-            }
-        };
-
-        serialize(object);
-    }
+    dramSysWrapper.dramsys->serialize(checkpointPath);
 }
 
-void DRAMSys::unserialize(CheckpointIn& cp)
+void
+DRAMSys::unserialize(CheckpointIn &cp)
 {
     std::filesystem::path checkpointPath = CheckpointIn::dir();
-
-    auto topLevelObjects = sc_core::sc_get_top_level_objects();
-    for (auto* object : topLevelObjects)
-    {
-        std::function<void(sc_core::sc_object*)> deserialize;
-        deserialize =
-            [&deserialize, &checkpointPath](sc_core::sc_object* object)
-        {
-            auto* deserializableObject =
-                dynamic_cast<::DRAMSys::Deserialize*>(object);
-
-            if (deserializableObject != nullptr)
-            {
-                std::string dumpFileName(object->name());
-                std::ifstream stream(checkpointPath / dumpFileName,
-                                     std::ios::binary);
-                deserializableObject->deserialize(stream);
-            }
-
-            for (auto* childObject : object->get_child_objects())
-            {
-                deserialize(childObject);
-            }
-        };
-
-        deserialize(object);
-    }
+    dramSysWrapper.dramsys->deserialize(checkpointPath);
 }
 
 } // namespace memory

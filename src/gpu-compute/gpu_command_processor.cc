@@ -63,7 +63,8 @@ GPUCommandProcessor::GPUCommandProcessor(const Params &p)
       _driver(nullptr),
       walker(p.walker),
       hsaPP(p.hsapp),
-      target_non_blit_kernel_id(p.target_non_blit_kernel_id)
+      target_non_blit_kernel_id(p.target_non_blit_kernel_id),
+      emulateBlitKernels(p.emulate_blits)
 {
     assert(hsaPP);
     hsaPP->setDevice(this);
@@ -141,7 +142,7 @@ GPUCommandProcessor::completeTimingRead(int dispType)
                                      dispatchData.host_pkt_addr);
                 break;
             case ComputeUnit::SQCPort::SenderState::DISPATCH_PRELOAD_ARG:
-                initPreload(dispatchData.akc, dispatchData.task);
+                initPreload(dispatchData.task);
                 break;
         }
     }
@@ -368,6 +369,23 @@ GPUCommandProcessor::dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
     Tick start_ts = curTick() / sim_clock::as_int::ns;
     dispatchStartTime.insert({disp_pkt->completion_signal, start_ts});
 
+    if (is_blit_kernel && emulateBlitKernels) {
+        DPRINTF(GPUCommandProc, "Emulating blit kernel (Task ID: %i)\n",
+                dynamic_task_id);
+
+        // DMA the kernargs
+        readBlitKernargs(task);
+
+        // This allows debug-at and exit-at GPU task options to work
+        if (dispatcher.hasKernelExitEvents()) {
+            exitSimulationLoopClassic("GPU Blit Kernel Completed");
+        }
+
+        ++dynamic_task_id;
+
+        return;
+    }
+
     // Potentially skip a non-blit kernel
     if (!is_blit_kernel && (non_blit_kernel_id < target_non_blit_kernel_id)) {
         DPRINTF(GPUCommandProc, "Skipping non-blit kernel %i (Task ID: %i)\n",
@@ -393,7 +411,7 @@ GPUCommandProcessor::dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
         delete akc;
 
         // Notify the run script that a kernel has been skipped
-        exitSimLoop("Skipping GPU Kernel");
+        exitSimulationLoopClassic("Skipping GPU Kernel");
 
         return;
     }
@@ -420,7 +438,7 @@ GPUCommandProcessor::dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
 
         delete akc;
     } else {
-        readPreload(akc, task);
+        readPreload(task);
     }
 
     ++dynamic_task_id;
@@ -742,13 +760,14 @@ GPUCommandProcessor::signalWakeupEvent(uint32_t event_id)
 }
 
 void
-GPUCommandProcessor::readPreload(AMDKernelCode *akc, HSAQueueEntry *task)
+GPUCommandProcessor::readPreload(HSAQueueEntry *task)
 {
     _hsa_dispatch_packet_t *disp_pkt =
         (_hsa_dispatch_packet_t *)task->dispPktPtr();
 
     // Data preloaded is copied from the kernarg segment. Preloading starts at
     // the dword offset specified by kernarg_preload_spec_offset.
+    AMDKernelCode *akc = task->akc();
     Addr preload_addr =
         (Addr)disp_pkt->kernarg_address + akc->kernarg_preload_spec_offset * 4;
 
@@ -792,7 +811,7 @@ GPUCommandProcessor::readPreload(AMDKernelCode *akc, HSAQueueEntry *task)
         warn("Preload kernarg from host untested!\n");
 
         auto cb = new DmaVirtCallback<uint32_t>(
-            [=, this](const uint32_t &) { initPreload(akc, task); });
+            [=, this](const uint32_t &) { initPreload(task); });
 
         dmaReadVirt(preload_addr,
                     sizeof(uint32_t) * akc->kernarg_preload_spec_length, cb,
@@ -835,9 +854,10 @@ GPUCommandProcessor::readPreload(AMDKernelCode *akc, HSAQueueEntry *task)
 }
 
 void
-GPUCommandProcessor::initPreload(AMDKernelCode *akc, HSAQueueEntry *task)
+GPUCommandProcessor::initPreload(HSAQueueEntry *task)
 {
     // Fill in SGPRs
+    AMDKernelCode *akc = task->akc();
     int num_sgprs = akc->kernarg_preload_spec_length;
 
     task->preloadLength(num_sgprs);

@@ -32,6 +32,7 @@
 
 #include "arch/riscv/isa.hh"
 
+#include <algorithm>
 #include <ctime>
 #include <set>
 #include <sstream>
@@ -299,11 +300,14 @@ RegClass ccRegClass(CCRegClass, CCRegClassName, 0, debug::IntRegs);
 
 } // anonymous namespace
 
-ISA::ISA(const Params &p) : BaseISA(p, "riscv"),
-    _rvType(p.riscv_type), enableRvv(p.enable_rvv), vlen(p.vlen), elen(p.elen),
-    _privilegeModeSet(p.privilege_mode_set),
-    _wfiResumeOnPending(p.wfi_resume_on_pending), _enableZcd(p.enable_Zcd),
-    _enableSmrnmi(p.enable_Smrnmi)
+ISA::ISA(const Params &p)
+    : BaseISA(p, "riscv"),
+      _rvType(p.riscv_profile == enums::RVI20U32 ? enums::RV32 : enums::RV64),
+      vlen(p.vlen),
+      elen(p.elen),
+      _privilegeModeSet(p.privilege_mode_set),
+      _reportedExtensions(p.reported_extensions),
+      _wfiResumeOnPending(p.wfi_resume_on_pending)
 {
     _regClasses.push_back(&intRegClass);
     _regClasses.push_back(&floatRegClass);
@@ -314,15 +318,44 @@ ISA::ISA(const Params &p) : BaseISA(p, "riscv"),
     _regClasses.push_back(&ccRegClass);
     _regClasses.push_back(&miscRegClass);
 
-    if (enableRvv) {
+    if (hasVectorExtension()) {
         fatal_if(p.vlen < p.elen, "VLEN should be greater or equal",
                  "than ELEN. Ch. 2RISC-V vector spec.");
 
-        inform("RVV enabled, VLEN = %d bits, ELEN = %d bits", p.vlen, p.elen);
+        inform("RISC-V vector extension enabled, VLEN = %d bits, "
+               "ELEN = %d bits",
+               p.vlen, p.elen);
     }
 
     miscRegFile.resize(NUM_PHYS_MISCREGS);
     clear();
+}
+
+bool
+ISA::reportsExtension(std::string_view extension) const
+{
+    return std::any_of(_reportedExtensions.begin(), _reportedExtensions.end(),
+                       [extension](const std::string &reported) {
+                           return std::string_view(reported) == extension;
+                       });
+}
+
+bool
+ISA::reportsAllExtensions(
+    std::initializer_list<std::string_view> extensions) const
+{
+    return std::all_of(extensions.begin(), extensions.end(),
+                       [this](std::string_view extension) {
+                           return reportsExtension(extension);
+                       });
+}
+
+bool
+ISA::hasVectorExtension() const
+{
+    return reportsExtension("V") || reportsExtension("Zve32x") ||
+           reportsExtension("Zve32f") || reportsExtension("Zve64x") ||
+           reportsExtension("Zve64f") || reportsExtension("Zve64d");
 }
 
 bool ISA::inUserMode() const
@@ -368,8 +401,14 @@ void ISA::clear()
     MISA misa = 0;
     STATUS status = 0;
 
-    // default config arch isa string is rv64(32)imafdc
-    misa.rvi = misa.rvm = misa.rva = misa.rvf = misa.rvd = misa.rvc = 1;
+    // MISA reports the effective extension set exposed to software.
+    misa.rvi = 1;
+    misa.rvm = reportsExtension("M");
+    misa.rva = reportsExtension("A");
+    misa.rvf = reportsExtension("F");
+    misa.rvd = reportsExtension("D");
+    misa.rvc = reportsExtension("C");
+    misa.rvb = reportsExtension("B");
 
     switch (getPrivilegeModeSet()) {
         case enums::M:
@@ -381,8 +420,11 @@ void ISA::clear()
           misa.rvs = misa.rvu = 1;
           break;
         case enums::MHSU:
-          misa.rvh = misa.rvs = misa.rvu = 1;
-          inform("RVH enabled.");
+            misa.rvh = reportsExtension("H");
+            misa.rvs = misa.rvu = 1;
+            if (misa.rvh) {
+                inform("RVH enabled.");
+            }
           break;
         default:
           panic("Privilege mode set config should not reach here");
@@ -408,8 +450,9 @@ void ISA::clear()
               vsstatus.uxl = 2;
               vsstatus.fs = FPUStatus::INITIAL;
 
-              if (getEnableRvv())
-                vsstatus.vs = VPUStatus::INITIAL;
+              if (hasVectorExtension()) {
+                  vsstatus.vs = VPUStatus::INITIAL;
+              }
 
               miscRegFile[MISCREG_VSSTATUS] = vsstatus;
           }
@@ -417,10 +460,10 @@ void ISA::clear()
         default:
           panic("%s: Unknown _rvType: %d", name(), (int)_rvType);
     }
-    if (getEnableRvv()) {
+    if (hasVectorExtension()) {
         status.vs = VPUStatus::INITIAL;
-        misa.rvv = 1;
     }
+    misa.rvv = reportsExtension("V");
 
     miscRegFile[MISCREG_ISA] = misa;
     miscRegFile[MISCREG_STATUS] = status;
@@ -429,7 +472,7 @@ void ISA::clear()
     // don't set it to zero; software may try to determine the supported
     // triggers, starting at zero. simply set a different value here.
     miscRegFile[MISCREG_TSELECT] = 1;
-    miscRegFile[MISCREG_NMIE] = enableSmrnmi() ? 0 : 1;
+    miscRegFile[MISCREG_NMIE] = reportsExtension("Smrnmi") ? 0 : 1;
 }
 
 Fault
@@ -504,10 +547,19 @@ ISA::readMiscReg(RegIndex idx)
     switch (idx) {
       case MISCREG_HARTID:
         return tc->contextId();
-      case MISCREG_CYCLE:
-            return static_cast<RegVal>(tc->getCpuPtr()->curCycle());
-      case MISCREG_CYCLEH:
-            return bits<RegVal>(tc->getCpuPtr()->curCycle(), 63, 32);
+      case MISCREG_CYCLE: {
+          // mcycle/minstret offsets are stored in miscRegFile. The
+          // simulator-owned curCycle()/totalInsts() values remain the
+          // source of counter progression.
+          const RegVal cur_cycle =
+              static_cast<RegVal>(tc->getCpuPtr()->curCycle());
+          return cur_cycle + miscRegFile[MISCREG_CYCLE];
+      }
+      case MISCREG_CYCLEH: {
+          const RegVal cur_cycle =
+              static_cast<RegVal>(tc->getCpuPtr()->curCycle());
+          return bits<RegVal>(cur_cycle + miscRegFile[MISCREG_CYCLE], 63, 32);
+      }
       case MISCREG_TIME: {
           RiscvSystem *sys = dynamic_cast<RiscvSystem *>(tc->getSystemPtr());
           panic_if(!sys, "read MISCREG_TIME not in RiscvSystem");
@@ -518,10 +570,17 @@ ISA::readMiscReg(RegIndex idx)
           panic_if(!sys, "read MISCREG_TIME not in RiscvSystem");
           return bits(sys->tryReadMtime(), 63, 32);
       }
-      case MISCREG_INSTRET:
-            return static_cast<RegVal>(tc->getCpuPtr()->totalInsts());
-      case MISCREG_INSTRETH:
-            return bits<RegVal>(tc->getCpuPtr()->totalInsts(), 63, 32);
+      case MISCREG_INSTRET: {
+          const RegVal total_insts =
+              static_cast<RegVal>(tc->getCpuPtr()->totalInsts());
+          return total_insts + miscRegFile[MISCREG_INSTRET];
+      }
+      case MISCREG_INSTRETH: {
+          const RegVal total_insts =
+              static_cast<RegVal>(tc->getCpuPtr()->totalInsts());
+          return bits<RegVal>(total_insts + miscRegFile[MISCREG_INSTRET], 63,
+                              32);
+      }
       case MISCREG_IP:
         {
             auto ic = dynamic_cast<RiscvISA::Interrupts *>(
@@ -702,8 +761,66 @@ ISA::setMiscRegNoEffect(RegIndex idx, RegVal val)
 void
 ISA::setMiscReg(RegIndex idx, RegVal val)
 {
-    if (idx >= MISCREG_CYCLE && idx <= MISCREG_HPMCOUNTER31) {
-        // Ignore writes to HPM counters for now
+    switch (idx) {
+        case MISCREG_CYCLE: {
+            const RegVal cur_cycle =
+                static_cast<RegVal>(tc->getCpuPtr()->curCycle());
+
+            if (_rvType == RV32) {
+                const RegVal old_value =
+                    cur_cycle + miscRegFile[MISCREG_CYCLE];
+                const RegVal new_value =
+                    (old_value & ~mask(32)) | (val & mask(32));
+                setMiscRegNoEffect(MISCREG_CYCLE, new_value - cur_cycle);
+            } else {
+                setMiscRegNoEffect(MISCREG_CYCLE, val - cur_cycle);
+            }
+            return;
+        }
+        case MISCREG_CYCLEH: {
+            const RegVal cur_cycle =
+                static_cast<RegVal>(tc->getCpuPtr()->curCycle());
+            const RegVal old_value = cur_cycle + miscRegFile[MISCREG_CYCLE];
+            const RegVal new_value =
+                (old_value & mask(32)) | ((val & mask(32)) << 32);
+
+            setMiscRegNoEffect(MISCREG_CYCLE, new_value - cur_cycle);
+            return;
+        }
+        case MISCREG_INSTRET: {
+            const RegVal total_insts =
+                static_cast<RegVal>(tc->getCpuPtr()->totalInsts());
+
+            if (_rvType == RV32) {
+                const RegVal old_value =
+                    total_insts + miscRegFile[MISCREG_INSTRET];
+                const RegVal new_value =
+                    (old_value & ~mask(32)) | (val & mask(32));
+                setMiscRegNoEffect(MISCREG_INSTRET, new_value - total_insts);
+            } else {
+                setMiscRegNoEffect(MISCREG_INSTRET, val - total_insts);
+            }
+            return;
+        }
+        case MISCREG_INSTRETH: {
+            const RegVal total_insts =
+                static_cast<RegVal>(tc->getCpuPtr()->totalInsts());
+            const RegVal old_value =
+                total_insts + miscRegFile[MISCREG_INSTRET];
+            const RegVal new_value =
+                (old_value & mask(32)) | ((val & mask(32)) << 32);
+
+            setMiscRegNoEffect(MISCREG_INSTRET, new_value - total_insts);
+            return;
+        }
+        default:
+            break;
+    }
+
+    if (idx == MISCREG_TIME ||
+        (idx >= MISCREG_HPMCOUNTER03 && idx <= MISCREG_HPMCOUNTER31)) {
+        // Keep existing behavior for read-only time and unimplemented HPM
+        // counters.
         warn("Ignoring write to miscreg %s.\n", MiscRegNames[idx]);
     } else {
         switch (idx) {
@@ -902,7 +1019,7 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                             2, 0) != 0) {
                     new_misa.rvc = new_misa.rvc | cur_misa.rvc;
                 }
-                if (!getEnableRvv()) {
+                if (!reportsExtension("V")) {
                     new_misa.rvv = 0;
                 }
                 new_misa.rvs = cur_misa.rvs;
@@ -918,8 +1035,8 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
                     val &= ~(STATUS_SXL_MASK | STATUS_UXL_MASK);
                     val |= cur & (STATUS_SXL_MASK | STATUS_UXL_MASK);
                 }
-                if (!getEnableRvv()) {
-                    // Always OFF is rvv is disabled.
+                if (!hasVectorExtension()) {
+                    // Always OFF if no vector extension is enabled.
                     val &= ~STATUS_VS_MASK;
                 }
                 setMiscRegNoEffect(idx, val);
@@ -1401,16 +1518,19 @@ Fault
 updateVPUStatus(
     ExecContext *xc, ExtMachInst machInst, bool set_dirty, bool check_vill)
 {
+    auto *isa = static_cast<ISA *>(xc->tcBase()->getIsaPtr());
     MISA misa = xc->readMiscReg(MISCREG_ISA);
     STATUS status = xc->readMiscReg(MISCREG_STATUS);
     STATUS vsstatus = misa.rvh && virtualizationEnabled(xc) ?
         xc->readMiscReg(MISCREG_VSSTATUS) : 0;
 
-    if (!misa.rvv || status.vs == VPUStatus::OFF ||
+    if (!isa->hasVectorExtension() ||
+        (isa->reportsExtension("V") && !misa.rvv) ||
+        status.vs == VPUStatus::OFF ||
         (misa.rvh && virtualizationEnabled(xc) &&
          vsstatus.vs == VPUStatus::OFF)) {
         return std::make_shared<IllegalInstFault>(
-            "RVV is disabled or VPU is off", machInst);
+            "Vector extension is disabled or VPU is off", machInst);
     }
 
     if (check_vill && machInst.vill) {

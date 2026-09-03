@@ -214,6 +214,16 @@ Kvm::capIRQLineLayout2() const
 #endif
 }
 
+bool
+Kvm::capMPState() const
+{
+#if defined(KVM_CAP_MP_STATE)
+    return checkExtension(KVM_CAP_MP_STATE) != 0;
+#else
+    return false;
+#endif
+}
+
 #if defined(__i386__) || defined(__x86_64__)
 bool
 Kvm::getSupportedCPUID(struct kvm_cpuid2 &cpuid) const

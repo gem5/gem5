@@ -103,8 +103,11 @@ output header {{
                 return new BaseS<int32_t, int64_t>(machInst, dest, op1, gp);
             }
           case 3:
-            assert(u);
-            return new BaseU<uint64_t, uint64_t>(machInst, dest, op1, gp);
+            if (u) {
+                return new BaseU<uint64_t, uint64_t>(machInst, dest, op1, gp);
+            } else {
+                return new Unknown64(machInst);
+            }
           default:
             return new Unknown64(machInst);
         }

@@ -36,8 +36,8 @@
 microcode = """
 def macroop FXCH_R
 {
-    movfp ufp1, sti
-    movfp sti, st(0)
-    movfp st(0), ufp1
+    movfp ufp1, sti, dataSize=8
+    movfp sti, st(0), dataSize=8
+    movfp st(0), ufp1, dataSize=8
 };
 """

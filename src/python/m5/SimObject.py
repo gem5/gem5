@@ -147,6 +147,39 @@ class MetaSimObject(type):
     # Attributes that can be set any time
     keywords = {"check": FunctionType}
 
+    # Methods that live only on the C++ SimObject. SimObject has no Python
+    # attribute of these names, so obj.init() and friends reach C++ through
+    # SimObject.__getattr__. Defining one of them in Python therefore
+    # replaces the C++ method instead of extending it, and is bypassed
+    # entirely if the C++ methods are called in bulk from C++.
+    reserved_cxx_methods = (
+        "init",
+        "initState",
+        "loadState",
+        "regProbePoints",
+        "regProbeListeners",
+    )
+
+    @classmethod
+    def isCxxSimObject(mcls, cls):
+        """Whether cls has a gem5::SimObject behind it in C++.
+
+        Setting cxx_base to None says it does not. SystemC_ScObject is the
+        one example in the tree: it wraps sc_core::sc_object, which is
+        unrelated to gem5::SimObject. Such a class has no C++ method to
+        call down into, so it has to define its own in Python.
+
+        cxx_base is read out of the class bodies rather than with
+        getattr(), which MetaSimObject.__getattr__ would answer from the
+        C++ bindings. Those are not built yet while this runs.
+        """
+        for klass in cls.__mro__:
+            value_dict = klass.__dict__.get("_value_dict")
+            if value_dict and "cxx_base" in value_dict:
+                return value_dict["cxx_base"] is not None
+
+        return True
+
     # __new__ is called before __init__, and is where the statements
     # in the body of the class definition get loaded into the class's
     # __dict__.  We intercept this to filter out parameter & port assignments
@@ -188,6 +221,16 @@ class MetaSimObject(type):
             value_dict["override_create"] = False
         cls_dict["_value_dict"] = value_dict
         cls = super().__new__(mcls, name, bases, cls_dict)
+
+        if bases and mcls.isCxxSimObject(cls):
+            for method in mcls.reserved_cxx_methods:
+                if method in dict:
+                    raise TypeError(
+                        f"SimObject {name} defines {method}(), which will "
+                        f"not be executed: {method}() is called on the C++ "
+                        f"SimObject."
+                    )
+
         if "type" in value_dict:
             allClasses[name] = cls
         return cls
@@ -753,6 +796,7 @@ class SimObject(metaclass=MetaSimObject):
         self._parent = None
         self._name = None
         self._ccObject = None  # pointer to C++ object
+        self._ccSimObjCapsule = None  # Raw C++ pointer to SimObject
         self._ccParams = None
         self._instantiated = False  # really "cloned"
         self._init_called = True  # Checked so subclasses don't forget __init__

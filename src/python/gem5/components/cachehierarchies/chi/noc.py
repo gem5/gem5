@@ -39,7 +39,8 @@ from dataclasses import (
     field,
 )
 from typing import (
-    List,
+    Dict,
+    Optional,
     Tuple,
 )
 
@@ -54,9 +55,24 @@ class NoC_Params:
 
     router_link_latency: int = 1
     node_link_latency: int = 1
-    router_latency: int = 1
+    router_int_latency: int = 1
+    router_ext_latency: int = 1
     router_buffer_size: int = 4
     cntrl_msg_size: int = 8
+    req_int_channels: int = 1
+    snp_int_channels: int = 1
+    rsp_int_channels: int = 1
+    dat_int_channels: int = 1
+    req_ext_channels: int = 1
+    snp_ext_channels: int = 1
+    rsp_ext_channels: int = 1
+    dat_ext_channels: int = 1
     data_width: int = 32
-    cross_links: List[Tuple[int, int]] = field(default_factory=list)
-    cross_link_latency: int = 0
+    # Map of (src,dst) -> (weight,latency) in cycles.
+    # A custom link updates the weight and latency between routers src and
+    # dst. The custom latency applies in both directions unless both
+    # (src,dst) and (dst,src) are present. A new link is created if no
+    # src->dst link exists.
+    custom_links: Dict[Tuple[int, int], Tuple[Optional[int], int]] = field(
+        default_factory=dict
+    )

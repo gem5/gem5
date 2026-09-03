@@ -1,3 +1,15 @@
+# Copyright (c) 2026 Arm Limited
+# All rights reserved.
+#
+# The license below extends only to copyright in the software and shall
+# not be construed as granting a license to any other intellectual
+# property including but not limited to intellectual property relating
+# to a hardware implementation of the functionality of the software
+# licensed hereunder.  You may use the software subject to the license
+# terms below provided that you ensure that this notice is replicated
+# unmodified and in its entirety in all distributions of the software,
+# modified or unmodified, in source code or in binary form.
+#
 # Copyright (c) 2022 The Regents of the University of California
 # All rights reserved.
 #
@@ -25,7 +37,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from typing import List
+from typing import (
+    List,
+)
 
 import m5
 from m5.objects import (
@@ -61,8 +75,19 @@ class BaseCPUProcessor(AbstractProcessor):
     and is not officially supported.
     """
 
-    def __init__(self, cores: List[BaseCPUCore]):
-        super().__init__(cores=cores)
+    def __init__(
+        self,
+        cores: List[BaseCPUCore],
+        clk_freq: str,
+    ):
+        """
+        :param cores: The cores to include in this processor.
+        :param clk_freq: The clock frequency for the processor's cores.
+        """
+        super().__init__(cores=cores, clk_freq=clk_freq)
+
+        for core in self.get_cores():
+            core.get_simobject().clk_domain = self.get_clock_domain()
 
         if any(core.is_kvm_core() for core in self.get_cores()):
             from m5.objects import KvmVM

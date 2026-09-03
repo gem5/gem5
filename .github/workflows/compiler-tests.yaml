@@ -20,7 +20,7 @@ jobs:
         timeout-minutes: 2880 # 48 hours
         container: ghcr.io/gem5/${{ matrix.image }}:latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v7
             - name: Compile build/ALL/gem5${{ matrix.opts }} with ${{ matrix.image }}
               run: /usr/bin/env python3 /usr/bin/scons --ignore-style build/ALL/gem5${{ matrix.opts }} -j$(nproc)
               timeout-minutes: 600 # 10 hours
@@ -38,7 +38,7 @@ jobs:
         timeout-minutes: 2880 # 48 hours
         container: ghcr.io/gem5/${{ matrix.image }}:latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v7
             - name: Compile build/${{ matrix.gem5-compilation }}/gem5${{ matrix.opts }} with ${{ matrix.image }}
               run: /usr/bin/env python3 /usr/bin/scons --ignore-style build/${{ matrix.gem5-compilation }}/gem5${{ matrix.opts }} -j$(nproc)
               timeout-minutes: 600 # 10 hours
@@ -59,7 +59,7 @@ jobs:
         timeout-minutes: 2880 # 48 hours
         container: ghcr.io/gem5/${{ matrix.image }}:latest
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v7
             - name: Compile build/ALL/gem5${{ matrix.opts }} with ${{ matrix.sanitizer }} in ${{ matrix.image }}
               # The address sanitizer is quite memory intensive; triggering OOM errors on smaller runners.
               # To mitigate this, we limit scons to a single thread (`-j1`)

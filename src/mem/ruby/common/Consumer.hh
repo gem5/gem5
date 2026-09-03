@@ -50,7 +50,9 @@
 #include <iostream>
 #include <set>
 
+#include "base/types.hh"
 #include "sim/clocked_object.hh"
+#include "sim/eventq.hh"
 
 namespace gem5
 {
@@ -84,8 +86,8 @@ class Consumer
         return em;
     }
 
-    void scheduleEventAbsolute(Tick timeAbs);
-    void scheduleEvent(Cycles timeDelta);
+    void scheduleEventAbsolute(Tick evt_time);
+    void scheduleEvent(Cycles time_delta);
 
   private:
     std::set<Tick> m_wakeup_ticks;

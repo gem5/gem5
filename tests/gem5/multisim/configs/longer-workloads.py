@@ -46,7 +46,10 @@ for npb_workload in ["bt", "cg", "ep", "ft"]:
     )
     memory = SingleChannelDDR3_1600(size="3GiB")
     processor = SimpleProcessor(
-        cpu_type=CPUTypes.ATOMIC, isa=ISA.X86, num_cores=1
+        cpu_type=CPUTypes.ATOMIC,
+        isa=ISA.X86,
+        num_cores=1,
+        clk_freq="1GHz",
     )
     board = X86Board(
         clk_freq="1GHz",

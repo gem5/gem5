@@ -398,10 +398,9 @@ class DownloadedProgram(UniqueFixture):
             urllib.request.urlretrieve(self.url, self.filename)
 
     def _getremotetime(self):
+        import _strptime  # Needed for python threading bug
         import datetime
         import time
-
-        import _strptime  # Needed for python threading bug
 
         u = urllib.request.urlopen(self.url, timeout=10)
 

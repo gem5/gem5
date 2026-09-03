@@ -131,11 +131,12 @@ def template MicroNeonMemDeclare {{
 
       public:
         %(class_name)s(ExtMachInst machInst, RegIndex _dest,
-                       RegIndex _ura, uint32_t _imm, unsigned extraMemFlags) :
+                       RegIndex _ura, uint32_t _imm,
+                       Request::Flags extraMemFlags) :
             %(base_class)s("%(mnemonic)s", machInst,
                               %(op_class)s, _dest, _ura, _imm)
         {
-            memAccessFlags |= extraMemFlags;
+            memAccessFlags.set(extraMemFlags);
             %(set_reg_idx_arr)s;
             %(constructor)s;
             if (!(condCode == COND_AL || condCode == COND_UC)) {

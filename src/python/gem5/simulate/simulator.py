@@ -223,8 +223,8 @@ class Simulator:
 
     def get_exit_handler_id_map(self) -> Dict[int, Type[ExitHandler]]:
         """
-        Returns the exit handler ID map. This is a dictionary mapping exit
-        event IDs to the ExitEvent handler class responsible for handling them.
+        Returns the exit handler map. This is a dictionary mapping hypercall
+        IDs to the ExitHandler class responsible for handling them.
         """
         return ExitHandler.get_handler_map()
 
@@ -284,7 +284,7 @@ class Simulator:
             )
         if self._hypercall_max_ticks:
             warn(
-                "A hypercall 6 exit has already been scheduled for tick "
+                "A SCHEDULED_EXIT hypercall (ID 6) has already been scheduled for tick "
                 f"{self._hypercall_max_ticks}. Setting hypercall and classic "
                 "exits in the same simulation is not well tested and the "
                 "simulation may not behave as expected."
@@ -300,7 +300,7 @@ class Simulator:
         self, max_tick: int, exit_str: str = "Max ticks reached"
     ) -> None:
         """Set the maximum number of ticks to simulate before the simulation
-        exits with a hypercall 6 exit. This exit will be handled by
+        exits with a SCHEDULED_EXIT hypercall (ID 6). This exit will be handled by
         ScheduledExitEventHandler by default. See `src/python/gem5/simulate/
         exit_handler.py` for details.
 
@@ -328,7 +328,7 @@ class Simulator:
         self, ticks_from_current: int, exit_str: str = "Max ticks reached"
     ) -> None:
         """Set the number of ticks to simulate from the current tick before the
-        simulation exits with a hypercall 6 exit. This exit will be handled by
+        simulation exits with a SCHEDULED_EXIT hypercall (ID 6). This exit will be handled by
         ScheduledExitEventHandler by default. See `src/python/gem5/simulate/
         exit_handler.py` for details.
 
@@ -646,9 +646,9 @@ class Simulator:
                 not in self.get_exit_handler_id_map().keys()
             ):
                 warn(
-                    f"Warning: Exit event type ID "
+                    f"Warning: Hypercall ID "
                     f"{self._last_exit_event.getHypercallId()} "
-                    f"not in exit handler ID map. Reentering simulation loop."
+                    f"not in exit handler map. Reentering simulation loop."
                 )
                 continue
             exit_handler = self.get_exit_handler_id_map()[

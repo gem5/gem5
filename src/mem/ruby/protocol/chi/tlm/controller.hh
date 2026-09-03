@@ -38,7 +38,8 @@
 #ifndef __MEM_RUBY_PROTOCOL_CHI_TLM_CONTROLLER_HH__
 #define __MEM_RUBY_PROTOCOL_CHI_TLM_CONTROLLER_HH__
 
-#include <ARM/TLM/arm_chi.h>
+#include <ARM/TLM/arm_chi_payload.h>
+#include <ARM/TLM/arm_chi_phase.h>
 
 #include "mem/ruby/protocol/CHI/CHIDataType.hh"
 #include "mem/ruby/protocol/CHI/CHIRequestType.hh"
@@ -163,6 +164,8 @@ class CacheController : public ruby::CHIGenericController
         CacheController *controller;
         ARM::CHI::Payload *payload;
         ARM::CHI::Phase phase;
+        // Original phase of the REQ. Unmutable
+        const ARM::CHI::Phase orig;
     };
     struct ReadTransaction : public Transaction
     {
@@ -171,6 +174,11 @@ class CacheController : public ruby::CHIGenericController
         bool handle(const CHIResponseMsg *msg) override;
         bool forward(const CHIDataMsg *msg);
 
+        bool handleCompletion();
+        bool retryAckResp(const ARM::CHI::Phase &resp);
+        bool compRespToMakeReadUnique(const ARM::CHI::Phase &resp);
+
+        uint8_t rspMsgCnt = 0;
         uint8_t dataMsgCnt = 0;
     };
     struct DatalessTransaction : public Transaction
