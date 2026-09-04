@@ -123,6 +123,7 @@ processor = SimpleProcessor(
     cpu_type=CPUTypes.TIMING,
     isa=isa,
     num_cores=args.num_cores,
+    clk_freq="3GHz",
 )
 
 board = SimpleBoard(

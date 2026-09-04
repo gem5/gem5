@@ -184,9 +184,9 @@ test_boot(
 
 #### The long (Nightly) tests ####
 
-# Due to Nightly test timeout issues, outlined here:
-# https://gem5.atlassian.net/browse/GEM5-1120, these tests have been disabled
-# until the exact error causing the Nightly tests to timeout is established.
+# Due to Nightly test timeout issues, these tests have been disabled until the
+# exact error causing the Nightly tests to timeout is established.
+# https://github.com/gem5/gem5/issues/3440
 
 # test_boot(
 #     cpu="atomic",

@@ -33,8 +33,7 @@ from testlib import *
 cpu_types = (
     # We're currently ignoring these cpu_types (therefore, disabling the test)
     # due to a `fatal:syscall set_tid_address (#166)` fatal error being thrown.
-    # This is documented in this gem5 Jira ticket:
-    # https://gem5.atlassian.net/browse/GEM5-747
+    # https://github.com/gem5/gem5/issues/3449
     # 'DerivO3CPU',
     # 'TimingSimpleCPU',
 )

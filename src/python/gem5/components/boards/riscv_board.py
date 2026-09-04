@@ -25,10 +25,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import ctypes
+import errno
+import fcntl
 import os
+import struct
 from typing import (
     List,
     Optional,
+    Set,
 )
 
 import m5
@@ -41,7 +46,7 @@ from m5.objects import (
     HiFive,
     IGbE_e1000,
     IOXBar,
-    PciBus,
+    PciHost,
     PMAChecker,
     RawDiskImage,
     RiscvBootloaderKernelWorkload,
@@ -57,6 +62,7 @@ from m5.params import (
     AddrRange,
     Port,
 )
+from m5.util import warn
 from m5.util.fdthelper import (
     Fdt,
     FdtNode,
@@ -91,6 +97,43 @@ class RiscvBoard(
     * Only works with classic caches
     """
 
+    _default_timebase_frequency = 100000000
+    _kvm_mmu_type = "riscv,sv39"
+    _default_m5ops_base = 0x10010000
+    _default_m5ops_size = 0x10000
+
+    _kvmio = 0xAE
+    _ioc_nrbits = 8
+    _ioc_typebits = 8
+    _ioc_sizebits = 14
+    _ioc_nrshift = 0
+    _ioc_typeshift = _ioc_nrshift + _ioc_nrbits
+    _ioc_sizeshift = _ioc_typeshift + _ioc_typebits
+    _ioc_dirshift = _ioc_sizeshift + _ioc_sizebits
+    _ioc_none = 0
+    _ioc_write = 1
+    _ioc_read = 2
+    _kvm_get_api_version = (_kvmio << _ioc_typeshift) | 0x00
+    _kvm_create_vm = (_kvmio << _ioc_typeshift) | 0x01
+    _kvm_create_vcpu = (_kvmio << _ioc_typeshift) | 0x41
+    _kvm_get_one_reg = (
+        ((_ioc_read | _ioc_write) << _ioc_dirshift)
+        | (16 << _ioc_sizeshift)
+        | (_kvmio << _ioc_typeshift)
+        | 0xAB
+    )
+    _kvm_expected_api_version = 12
+    _kvm_reg_riscv = 0x8000000000000000
+    _kvm_reg_size_u64 = 0x0030000000000000
+    _kvm_reg_riscv_timer = 0x04 << 24
+    _kvm_reg_riscv_vector = 0x09 << 24
+    _kvm_timer_frequency_reg = (
+        _kvm_reg_riscv | _kvm_reg_size_u64 | _kvm_reg_riscv_timer
+    )
+    _kvm_vector_vlenb_reg = (
+        _kvm_reg_riscv | _kvm_reg_size_u64 | _kvm_reg_riscv_vector | 4
+    )
+
     def __init__(
         self,
         clk_freq: str,
@@ -102,6 +145,12 @@ class RiscvBoard(
         AbstractBoard.__init__(
             self, clk_freq, processor, memory, cache_hierarchy
         )
+        # Kernel-disk workloads may query default kernel args before the
+        # full-system board setup assigns the MMIO m5ops window.
+        self.m5ops_base = self._default_m5ops_base
+        self._kvm_probe_cache = None
+        self._kvm_host_freq_cache = None
+        self._host_timebase_freq_cache = None
 
         if processor.get_isa() != ISA.RISCV:
             raise Exception(
@@ -109,6 +158,275 @@ class RiscvBoard(
                 "RISCV ISA. Current processor ISA: "
                 f"'{processor.get_isa().name}'."
             )
+
+    def _has_kvm_cores(self) -> bool:
+        return any(
+            core.is_kvm_core() for core in self.get_processor().get_cores()
+        )
+
+    @staticmethod
+    def _read_int_file(path: str) -> Optional[int]:
+        try:
+            with open(path) as f:
+                return int(f.read().strip())
+        except (OSError, ValueError):
+            return None
+
+    @staticmethod
+    def _read_dt_u32(path: str) -> Optional[int]:
+        try:
+            with open(path, "rb") as f:
+                data = f.read(4)
+        except OSError:
+            return None
+
+        if len(data) != 4:
+            return None
+
+        return int.from_bytes(data, byteorder="big")
+
+    @staticmethod
+    def _read_cpu_list(path: str) -> Set[int]:
+        try:
+            with open(path) as f:
+                spec = f.read().strip()
+        except OSError:
+            return set()
+
+        cpus = set()
+        for chunk in spec.replace(",", " ").split():
+            chunk = chunk.strip()
+            if not chunk:
+                continue
+            if "-" in chunk:
+                start, end = chunk.split("-", 1)
+                cpus.update(range(int(start), int(end) + 1))
+            else:
+                cpus.add(int(chunk))
+        return cpus
+
+    def _probe_kvm_one_reg(self, reg_id: int) -> Optional[int]:
+        if not self._has_kvm_cores():
+            return None
+
+        kvm_fd = -1
+        vm_fd = -1
+        vcpu_fd = -1
+
+        try:
+            kvm_fd = os.open("/dev/kvm", os.O_RDWR | os.O_CLOEXEC)
+            api_version = fcntl.ioctl(kvm_fd, self._kvm_get_api_version)
+            if api_version != self._kvm_expected_api_version:
+                raise OSError(
+                    errno.ENOTSUP,
+                    "unsupported KVM API version",
+                )
+
+            vm_fd = fcntl.ioctl(kvm_fd, self._kvm_create_vm, 0)
+            vcpu_fd = fcntl.ioctl(vm_fd, self._kvm_create_vcpu, 0)
+
+            value = struct.pack("Q", 0)
+            value_buf = bytearray(value)
+            addr = ctypes.addressof(ctypes.c_uint64.from_buffer(value_buf))
+            one_reg = bytearray(struct.pack("QQ", reg_id, addr))
+            fcntl.ioctl(vcpu_fd, self._kvm_get_one_reg, one_reg, True)
+            return struct.unpack("Q", value_buf)[0]
+        except OSError as err:
+            if err.errno in (
+                errno.ENOENT,
+                errno.EINVAL,
+                errno.ENOTSUP,
+                errno.EOPNOTSUPP,
+            ):
+                return None
+            raise
+        finally:
+            for fd in (vcpu_fd, vm_fd, kvm_fd):
+                if fd >= 0:
+                    os.close(fd)
+
+    def _kvm_probe_data(self) -> dict:
+        if self._kvm_probe_cache is None:
+            self._kvm_probe_cache = {
+                "timer_frequency": self._probe_kvm_one_reg(
+                    self._kvm_timer_frequency_reg
+                ),
+                "vlenb": self._probe_kvm_one_reg(self._kvm_vector_vlenb_reg),
+            }
+
+        return self._kvm_probe_cache
+
+    def _cpu_timebase_frequency(self) -> int:
+        if not self._has_kvm_cores():
+            return self._default_timebase_frequency
+
+        timer_frequency = self._kvm_probe_data()["timer_frequency"]
+        if timer_frequency is not None:
+            return timer_frequency
+
+        host_timebase = self._detect_host_timebase_frequency()
+        if host_timebase is not None:
+            warn(
+                "Unable to read the KVM RISC-V timer frequency; "
+                "falling back to the host device-tree timebase-frequency "
+                f"({host_timebase} Hz)."
+            )
+            return host_timebase
+
+        warn(
+            "Unable to read the KVM RISC-V timer frequency; "
+            f"falling back to {self._default_timebase_frequency} Hz."
+        )
+        return self._default_timebase_frequency
+
+    def _detect_host_timebase_frequency(self) -> Optional[int]:
+        if self._host_timebase_freq_cache is not None:
+            return self._host_timebase_freq_cache
+
+        for path in (
+            "/proc/device-tree/cpus/timebase-frequency",
+            "/sys/firmware/devicetree/base/cpus/timebase-frequency",
+        ):
+            frequency = self._read_dt_u32(path)
+            if frequency is not None:
+                self._host_timebase_freq_cache = frequency
+                return frequency
+
+        return None
+
+    @staticmethod
+    def _decode_dt_string_list(data: bytes) -> List[str]:
+        return [
+            entry.decode()
+            for entry in data.rstrip(b"\0").split(b"\0")
+            if entry
+        ]
+
+    def _detect_kvm_host_frequency(self) -> Optional[int]:
+        if self._kvm_host_freq_cache is not None:
+            return self._kvm_host_freq_cache
+
+        affinity = None
+        try:
+            affinity = os.sched_getaffinity(0)
+        except AttributeError:
+            pass
+
+        policies = []
+        root = "/sys/devices/system/cpu/cpufreq"
+        try:
+            entries = sorted(
+                (
+                    entry
+                    for entry in os.scandir(root)
+                    if entry.is_dir() and entry.name.startswith("policy")
+                ),
+                key=lambda entry: entry.name,
+            )
+        except OSError:
+            self._kvm_host_freq_cache = None
+            return None
+
+        for entry in entries:
+            cpus = self._read_cpu_list(
+                os.path.join(entry.path, "affected_cpus")
+            )
+            if affinity is not None and cpus and not (cpus & affinity):
+                continue
+
+            freq_khz = self._read_int_file(
+                os.path.join(entry.path, "cpuinfo_max_freq")
+            )
+            if freq_khz is None:
+                freq_khz = self._read_int_file(
+                    os.path.join(entry.path, "scaling_cur_freq")
+                )
+
+            if freq_khz is not None:
+                policies.append((entry.name, freq_khz * 1000))
+
+        if not policies:
+            self._kvm_host_freq_cache = None
+            return None
+
+        policy_freqs = sorted({freq for _, freq in policies})
+        host_freq = max(policy_freqs)
+
+        if len(policy_freqs) > 1:
+            policy_desc = ", ".join(
+                f"{name}={freq}Hz" for name, freq in policies
+            )
+            warn(
+                "Detected multiple KVM host CPU frequencies in the current "
+                f"affinity mask ({policy_desc}); using {host_freq}Hz for "
+                "hostFreq. Pin gem5 to a homogeneous cpufreq policy or "
+                "override hostFreq for more accurate perf-cycle scaling."
+            )
+
+        self._kvm_host_freq_cache = host_freq
+        return host_freq
+
+    def _configure_kvm_core_host_freq(self) -> None:
+        if not self._has_kvm_cores():
+            return
+
+        host_freq = self._detect_kvm_host_frequency()
+        if host_freq is None:
+            return
+
+        for core in self.get_processor().get_cores():
+            if not core.is_kvm_core():
+                continue
+
+            sim_core = core.core
+            if "hostFreq" in sim_core._values.local:
+                continue
+
+            sim_core.hostFreq = f"{host_freq}Hz"
+
+    def _configure_kvm_core_rvv(self) -> None:
+        if not self._has_kvm_cores():
+            return
+
+        need_vector_probe = any(
+            core.is_kvm_core() and core.core.isa[0].reports_extension("V")
+            for core in self.get_processor().get_cores()
+        )
+        if not need_vector_probe:
+            return
+
+        kvm_vlenb = self._kvm_probe_data()["vlenb"]
+        if kvm_vlenb is None:
+            m5.fatal(
+                "RISC-V KVM RVV was enabled in the gem5 configuration, but "
+                "the host KVM interface does not expose vector state."
+            )
+
+        kvm_vlen = kvm_vlenb * 8
+        for core in self.get_processor().get_cores():
+            if not core.is_kvm_core():
+                continue
+
+            isa = core.core.isa[0]
+            if not isa.reports_extension("V"):
+                continue
+
+            if "vlen" in isa._values.local:
+                if isa.vlen.value != kvm_vlen:
+                    m5.fatal(
+                        "Configured RISC-V KVM RVV VLEN (%d bits) does not "
+                        "match the host KVM VLEN (%d bits). KVM exposes a "
+                        "fixed VLENB, so set isa[0].vlen to %d or disable "
+                        "RVV for the KVM CPU."
+                        % (isa.vlen.value, kvm_vlen, kvm_vlen)
+                    )
+                continue
+
+            isa.vlen = kvm_vlen
+
+    def _configure_kvm_cores(self) -> None:
+        self._configure_kvm_core_host_freq()
+        self._configure_kvm_core_rvv()
 
     @overrides(AbstractBoard)
     def _setup_board(self) -> None:
@@ -125,10 +443,9 @@ class RiscvBoard(
             self.platform.clint.num_threads = self.processor.get_num_cores()
 
             # Add the RTC
-            # TODO: Why 100MHz? Does something else need to change when this does?
             self.platform.rtc = RiscvRTC(
-                frequency=Frequency("100MHz")
-            )  # page 77, section 7.1
+                frequency=Frequency(f"{self._cpu_timebase_frequency()}Hz")
+            )
             self.platform.clint.int_pin = self.platform.rtc.int_pin
 
             # Incoherent I/O bus
@@ -164,26 +481,15 @@ class RiscvBoard(
     def _setup_io_devices(self) -> None:
         """Connect the I/O devices to the I/O bus."""
         # Add PCI
-        self.iobus.mem_side_ports = self.platform.pci_host.up_response_port()
-        self.iobus.cpu_side_ports = self.platform.pci_host.up_request_port()
-        self.platform.pci_bus.default = (
-            self.platform.pci_host.down_response_port()
-        )
-        self.platform.pci_bus.cpu_side_ports = (
-            self.platform.pci_host.down_request_port()
-        )
-        self.platform.pci_bus.config_error_port = (
-            self.platform.pci_host.config_error.pio
-        )
+        self.platform.pci_host.internal_connect()
+        self.platform.pci_host.connect_upper_bus(self.iobus, True)
 
         # Add Ethernet card
         self.ethernet = IGbE_e1000(
             pci_dev=0, pci_func=0, InterruptLine=1, InterruptPin=1
         )
 
-        self.ethernet.upstream = self.platform.pci_host
-        self.ethernet.pio = self.platform.pci_bus.mem_side_ports
-        self.ethernet.dma = self.platform.pci_bus.cpu_side_ports
+        self.platform.pci_host.connect_device(self.ethernet)
 
         if self.get_cache_hierarchy().is_ruby():
             for device in self._off_chip_devices + self._on_chip_devices:
@@ -204,6 +510,10 @@ class RiscvBoard(
                 AddrRange(dev.pio_addr, size=dev.pio_size)
                 for dev in self._off_chip_devices
             ]
+            if self.m5ops_base:
+                self.bridge.ranges.append(
+                    AddrRange(self.m5ops_base, size=self._default_m5ops_size)
+                )
 
             # PCI
             self.bridge.ranges.append(AddrRange(0x2F000000, size="16MiB"))
@@ -217,6 +527,10 @@ class RiscvBoard(
             AddrRange(dev.pio_addr, size=dev.pio_size)
             for dev in self._on_chip_devices + self._off_chip_devices
         ]
+        if self.m5ops_base:
+            uncacheable_range.append(
+                AddrRange(self.m5ops_base, size=self._default_m5ops_size)
+            )
 
         # PCI
         uncacheable_range.append(AddrRange(0x2F000000, size="16MiB"))
@@ -255,17 +569,17 @@ class RiscvBoard(
             )
 
     @overrides(AbstractBoard)
-    def has_pci_bus(self) -> bool:
+    def has_pci_host(self) -> bool:
         return self.is_fullsystem()
 
     @overrides(AbstractBoard)
-    def get_pci_bus(self) -> PciBus:
-        if self.has_pci_bus():
-            return self.platform.pci_bus
+    def get_pci_host(self) -> PciHost:
+        if self.has_pci_host():
+            return self.platform.pci_host
         else:
             raise Exception(
-                "Cannot execute `get_pci_bus()`: Board does not have an PCI "
-                "bus to return. Use `has_pci_bus()` to check this."
+                "Cannot execute `get_pci_host()`: Board does not have a PCI "
+                "host to return. Use `has_pci_host()` to check this."
             )
 
     @overrides(AbstractBoard)
@@ -327,25 +641,32 @@ class RiscvBoard(
         cpus_state = FdtState(addr_cells=1, size_cells=0)
         cpus_node.append(cpus_state.addrCellsProperty())
         cpus_node.append(cpus_state.sizeCellsProperty())
-        # Used by the CLINT driver to set the timer frequency. Value taken from
-        # RISC-V kernel docs (Note: freedom-u540 is actually 1MHz)
-        cpus_node.append(FdtPropertyWords("timebase-frequency", [100000000]))
+        cpu_timebase_frequency = self._cpu_timebase_frequency()
+        cpu_clock_frequency = self.clk_domain.clock[0].frequency
+        cpu_cbom_block_size = self.get_cache_line_size()
+        cpu_cboz_block_size = self.get_cache_line_size()
+        cpus_node.append(
+            FdtPropertyWords("timebase-frequency", [cpu_timebase_frequency])
+        )
 
         for i, core in enumerate(self.get_processor().get_cores()):
             node = FdtNode(f"cpu@{i}")
             node.append(FdtPropertyStrings("device_type", "cpu"))
             node.append(FdtPropertyWords("reg", state.CPUAddrCells(i)))
-            node.append(FdtPropertyStrings("mmu-type", "riscv,sv48"))
-            if core.core.isa[0].enable_Zicbom_fs.value:
+            mmu_type = (
+                self._kvm_mmu_type if core.is_kvm_core() else "riscv,sv48"
+            )
+            node.append(FdtPropertyStrings("mmu-type", mmu_type))
+            if core.core.isa[0].reports_extension("Zicbom"):
                 node.append(
                     FdtPropertyWords(
-                        "riscv,cbom-block-size", self.get_cache_line_size()
+                        "riscv,cbom-block-size", cpu_cbom_block_size
                     )
                 )
-            if core.core.isa[0].enable_Zicboz_fs.value:
+            if core.core.isa[0].reports_extension("Zicboz"):
                 node.append(
                     FdtPropertyWords(
-                        "riscv,cboz-block-size", self.get_cache_line_size()
+                        "riscv,cboz-block-size", cpu_cboz_block_size
                     )
                 )
             node.append(FdtPropertyStrings("status", "okay"))
@@ -354,9 +675,9 @@ class RiscvBoard(
                     "riscv,isa", core.core.isa[0].get_isa_string()
                 )
             )
-            # TODO: Should probably get this from the core.
-            freq = self.clk_domain.clock[0].frequency
-            node.append(FdtPropertyWords("clock-frequency", freq))
+            node.append(
+                FdtPropertyWords("clock-frequency", cpu_clock_frequency)
+            )
             node.appendCompatible(["riscv"])
             int_phandle = state.phandle(f"cpu@{i}.int_state")
             node.appendPhandle(f"cpu@{i}")
@@ -558,6 +879,8 @@ class RiscvBoard(
 
     @overrides(AbstractBoard)
     def _pre_instantiate(self, full_system: Optional[bool] = None) -> Root:
+        self._configure_kvm_cores()
+
         # This is a bit of a hack necessary to get the RiscDemoBoard working
         # At the time of writing the RiscvBoard does not support SE mode so
         # this branch looks pointless. However, the RiscvDemoBoard does and
@@ -605,12 +928,20 @@ class RiscvBoard(
 
     @overrides(KernelDiskWorkload)
     def get_default_kernel_args(self) -> List[str]:
-        return [
+        m5ops_base = int(getattr(self, "m5ops_base", self._default_m5ops_base))
+        args = [
             "console=ttyS0",
             "root={root_value}",
             "disk_device={disk_device}",
-            "rw",
         ]
+        if m5ops_base:
+            args.extend(
+                [
+                    f"gem5_bridge_baseaddr=0x{m5ops_base:x}",
+                    f"gem5_bridge_rangesize=0x{self._default_m5ops_size:x}",
+                ]
+            )
+        return args + ["rw"]
 
     @overrides(SimObject)
     def createCCObject(self):

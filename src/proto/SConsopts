@@ -39,8 +39,8 @@ with gem5_scons.Configure(main) as conf:
     except Exception as e:
         warning('While checking protoc version:', str(e))
 
-    # Based on the availability of the compress stream wrappers, require 2.1.0.
-    min_protoc_version = '2.1.0'
+    # The proto files use the 'reserved' keyword, which requires 3.0.0.
+    min_protoc_version = '3.0.0'
 
     # First two words should be "libprotoc x.y.z"
     if len(protoc_version) < 2 or protoc_version[0] != 'libprotoc':

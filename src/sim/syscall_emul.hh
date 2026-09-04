@@ -153,6 +153,11 @@ SyscallReturn exitFunc(SyscallDesc *desc, ThreadContext *tc, int status);
 /// Target exit_group() handler: terminate simulation. (exit all threads)
 SyscallReturn exitGroupFunc(SyscallDesc *desc, ThreadContext *tc, int status);
 
+/// exit_group path used when a process is killed by a signal (e.g. via
+/// tgkill). `sig` is the terminating signal number used for wait4 status.
+SyscallReturn exitGroupSignaledFunc(SyscallDesc *desc, ThreadContext *tc,
+                                    int sig);
+
 /// Target set_tid_address() handler.
 SyscallReturn setTidAddressFunc(SyscallDesc *desc, ThreadContext *tc,
                                 VPtr<> tidPtr);
@@ -512,12 +517,6 @@ futexFunc(SyscallDesc *desc, ThreadContext *tc,
 /// Pseudo Funcs  - These functions use a different return convension,
 /// returning a second value in a register other than the normal return register
 SyscallReturn pipePseudoFunc(SyscallDesc *desc, ThreadContext *tc);
-
-
-/// Approximate seconds since the epoch (1/1/1970).  About a billion,
-/// by my reckoning.  We want to keep this a constant (not use the
-/// real-world time) to keep simulations repeatable.
-const unsigned seconds_since_epoch = 1000 * 1000 * 1000;
 
 /// Helper function to convert current elapsed time to seconds and
 /// microseconds.
@@ -1281,7 +1280,7 @@ sysinfoFunc(SyscallDesc *desc, ThreadContext *tc,
 {
     auto process = tc->getProcessPtr();
 
-    sysinfo->uptime = seconds_since_epoch;
+    sysinfo->uptime = tc->getProcessPtr()->secondsSinceEpoch();
     sysinfo->totalram = process->system->memSize();
     sysinfo->mem_unit = 1;
 
@@ -2381,13 +2380,30 @@ prlimitFunc(SyscallDesc *desc, ThreadContext *tc,
 }
 
 /// Target clock_gettime() function.
-template <class OS>
+template <class OS, typename TS = typename OS::timespec>
 SyscallReturn
-clock_gettimeFunc(SyscallDesc *desc, ThreadContext *tc,
-                  int clk_id, VPtr<typename OS::timespec> tp)
+clock_gettimeFunc(SyscallDesc *desc, ThreadContext *tc, int clk_id,
+                  VPtr<TS> tp)
 {
     getElapsedTimeNano(tp->tv_sec, tp->tv_nsec);
-    tp->tv_sec += seconds_since_epoch;
+    switch (clk_id) {
+        case OS::TGT_CLOCK_REALTIME:
+        case OS::TGT_CLOCK_REALTIME_ALARM:
+        case OS::TGT_CLOCK_REALTIME_COARSE:
+        case OS::TGT_CLOCK_TAI:
+            tp->tv_sec += tc->getProcessPtr()->secondsSinceEpoch();
+            break;
+        case OS::TGT_CLOCK_MONOTONIC:
+        case OS::TGT_CLOCK_MONOTONIC_COARSE:
+        case OS::TGT_CLOCK_MONOTONIC_RAW:
+        case OS::TGT_CLOCK_BOOTTIME:
+        case OS::TGT_CLOCK_BOOTTIME_ALARM:
+            break;
+        case OS::TGT_CLOCK_PROCESS_CPUTIME:
+        case OS::TGT_CLOCK_THREAD_CPUTIME:
+        default:
+            return -EINVAL;
+    }
     tp->tv_sec = htog(tp->tv_sec, OS::byteOrder);
     tp->tv_nsec = htog(tp->tv_nsec, OS::byteOrder);
 
@@ -2414,7 +2430,7 @@ gettimeofdayFunc(SyscallDesc *desc, ThreadContext *tc,
                  VPtr<typename OS::timeval> tp, VPtr<> tz_ptr)
 {
     getElapsedTimeMicro(tp->tv_sec, tp->tv_usec);
-    tp->tv_sec += seconds_since_epoch;
+    tp->tv_sec += tc->getProcessPtr()->secondsSinceEpoch();
     tp->tv_sec = htog(tp->tv_sec, OS::byteOrder);
     tp->tv_usec = htog(tp->tv_usec, OS::byteOrder);
 
@@ -2636,7 +2652,7 @@ timeFunc(SyscallDesc *desc, ThreadContext *tc, VPtr<> taddr)
 {
     typename OS::time_t sec, usec;
     getElapsedTimeMicro(sec, usec);
-    sec += seconds_since_epoch;
+    sec += tc->getProcessPtr()->secondsSinceEpoch();
 
     SETranslatingPortProxy p(tc);
     if (taddr != 0) {
@@ -2689,8 +2705,7 @@ tgkillFunc(SyscallDesc *desc, ThreadContext *tc, int tgid, int tid, int sig)
         case OS::TGT_SIGINT:
         case OS::TGT_SIGTERM:
         case OS::TGT_SIGKILL:
-            exitGroupFunc(desc, tc, 128 + sig);
-            break;
+            return exitGroupSignaledFunc(desc, tc, sig);
         default:
             return -EINVAL;
     }
@@ -3030,11 +3045,16 @@ wait4Func(SyscallDesc *desc, ThreadContext *tc,
     return (options & OS::TGT_WNOHANG) ? 0 : SyscallReturn::retry();
 
 success:
-    // Set status to EXITED for WIFEXITED evaluations.
-    const int EXITED = 0;
-    BufferArg statusBuf(statPtr, sizeof(int));
-    *(int *)statusBuf.bufferPtr() = EXITED;
-    statusBuf.copyOut(SETranslatingPortProxy(tc));
+    // Report the child's actual wait(2) status (normal exit or signal).
+    // Previously this always wrote 0 (WIFEXITED with code 0), which hid
+    // abnormal terminations such as raise(SIGABRT).
+    // Linux allows a NULL status pointer; skip the guest write in that case
+    // (same pattern as the rusagePtr guard above).
+    if (statPtr) {
+        BufferArg statusBuf(statPtr, sizeof(int));
+        *(int *)statusBuf.bufferPtr() = iter->exitStatus;
+        statusBuf.copyOut(SETranslatingPortProxy(tc));
+    }
 
     // Return the child PID.
     pid_t retval = iter->sender->pid();

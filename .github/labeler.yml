@@ -1,0 +1,181 @@
+---
+# If this action would apply 5+ labels to a PR, don't apply any labels.
+changed-files-labels-limit: 4
+
+arch:
+    - changed-files:
+          - all-globs-to-any-file: [src/arch/**, '!src/arch/arm/**', '!src/arch/mips/**', '!src/arch/power/**', '!src/arch/riscv/**', '!src/arch/sparc/**',
+                '!src/arch/amdgpu/**', '!src/arch/x86/**']
+
+arch-arm:
+    - changed-files:
+          - all-globs-to-any-file: [src/arch/arm/**, '!src/arch/arm/fastmodel/**']
+
+arch-mips:
+    - changed-files:
+          - any-glob-to-any-file: src/arch/mips/**
+
+arch-power:
+    - changed-files:
+          - any-glob-to-any-file: src/arch/power/**
+
+arch-riscv:
+    - changed-files:
+          - any-glob-to-any-file: src/arch/riscv/**
+
+arch-sparc:
+    - changed-files:
+          - any-glob-to-any-file: src/arch/sparc/**
+
+arch-vega:
+    - changed-files:
+          - any-glob-to-any-file: src/arch/amdgpu/**
+
+arch-x86:
+    - changed-files:
+          - any-glob-to-any-file: src/arch/x86/**
+
+base:
+    - changed-files:
+          - all-globs-to-any-file: [src/base/**, '!src/base/stats/**']
+
+base-stats:
+    - changed-files:
+          - any-glob-to-any-file: src/base/stats/**
+
+classic caches:
+    - changed-files:
+          - any-glob-to-any-file: src/python/gem5/components/cachehierarchies/classic/**
+
+configs:
+    - changed-files:
+          - any-glob-to-any-file: configs/**
+
+cpu:
+    - changed-files:
+          - all-globs-to-any-file: [src/cpu/**, '!src/cpu/kvm/**', '!src/cpu/minor/**', '!src/cpu/o3/**', '!src/cpu/simple/**']
+
+cpu-kvm:
+    - changed-files:
+          - any-glob-to-any-file: src/cpu/kvm/**
+
+cpu-minor:
+    - changed-files:
+          - any-glob-to-any-file: src/cpu/minor/**
+
+cpu-o3:
+    - changed-files:
+          - any-glob-to-any-file: src/cpu/o3/**
+
+cpu-simple:
+    - changed-files:
+          - any-glob-to-any-file: src/cpu/simple/**
+
+dependencies:
+    - changed-files:
+          - any-glob-to-any-file: util/gem5-resources-manager/requirements.txt
+
+dev:
+    - changed-files:
+          - all-globs-to-any-file: [src/dev/**, '!src/dev/arm/**', '!src/dev/hsa/**', '!src/dev/virtio/**']
+
+dev-arm:
+    - changed-files:
+          - any-glob-to-any-file: src/dev/arm/**
+
+dev-hsa:
+    - changed-files:
+          - any-glob-to-any-file: src/dev/hsa/**
+
+dev-virtio:
+    - changed-files:
+          - any-glob-to-any-file: src/dev/virtio/**
+
+doc:
+    - changed-files:
+          - any-glob-to-any-file: [CODE-OF-CONDUCT.md, CONTRIBUTING.md, COPYING, KCONFIG.md, LICENSE, MAINTAINERS.yaml, RELEASE-NOTES.md, TESTING.md]
+          - all-globs-to-any-file: ['**/README.md', '!tests/gem5/**/README.md'] # Don't apply the `doc` label for changes to README files for tests
+
+ext:
+    - changed-files:
+          - all-globs-to-any-file: [ext/**, '!ext/testlib/**']
+
+ext-testlib:
+    - changed-files:
+          - any-glob-to-any-file: ext/testlib/**
+
+fastmodel:
+    - changed-files:
+          - any-glob-to-any-file: src/arch/arm/fastmodel/**
+
+github:
+    - changed-files:
+          - any-glob-to-any-file: .github/**
+
+gpu-compute:
+    - changed-files:
+          - any-glob-to-any-file: src/gpu-compute/**
+
+learning-gem5:
+    - changed-files:
+          - any-glob-to-any-file: src/learning_gem5/**
+
+mem:
+    - changed-files:
+          - all-globs-to-any-file: [src/mem/**, '!src/mem/cache/**', '!src/mem/ruby/network/garnet/**', '!src/mem/ruby/**']
+
+mem-cache:
+    - changed-files:
+          - any-glob-to-any-file: src/mem/cache/**
+
+mem-garnet:
+    - changed-files:
+          - any-glob-to-any-file: src/mem/ruby/network/garnet/**
+
+mem-ruby:
+    - changed-files:
+          - all-globs-to-any-file: [src/mem/ruby/**, '!src/mem/ruby/network/garnet/**']
+
+python:
+    - changed-files:
+          - all-globs-to-any-file: [src/python/**, '!src/python/gem5/resources/**', '!src/python/gem5/**']
+
+resources:
+    - changed-files:
+          - any-glob-to-any-file: src/python/gem5/resources/**
+
+sim:
+    - changed-files:
+          - all-globs-to-any-file: [src/sim/**, '!**/se_**.**', '!**/syscall**.**', '!**/se_binary_workload.py', '!src/sim/process.**', '!src/sim/fd_**.**']
+
+sim-se:
+    - changed-files:
+          - any-glob-to-any-file: ['**/se_**.**', '**/syscall**.**', '**/se_binary_workload.py', src/sim/process.**, src/sim/fd_**.**]
+
+stdlib:
+    - changed-files:
+          - all-globs-to-any-file: [src/python/gem5/**, '!src/python/gem5/resources/**']
+
+systemc:
+    - changed-files:
+          - any-glob-to-any-file: src/systemc/**
+
+tests:
+    - changed-files:
+          - any-glob-to-any-file: tests/**
+
+util:
+    - changed-files:
+          - all-globs-to-any-file: [util/**, '!util/dockerfiles/**', '!util/gem5art/**', '!util/m5/**']
+
+util-docker:
+    - changed-files:
+          - any-glob-to-any-file: util/dockerfiles/**
+
+util-gem5art:
+    - changed-files:
+          - any-glob-to-any-file: util/gem5art/**
+
+util-m5:
+    - changed-files:
+          - any-glob-to-any-file: util/m5/**

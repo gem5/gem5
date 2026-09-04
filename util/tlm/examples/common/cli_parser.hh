@@ -34,6 +34,7 @@
 #define __CLI_PARSER_HH__
 
 #include <cassert>
+#include <cstdint>
 #include <string>
 #include <vector>
 

@@ -42,6 +42,7 @@
 #include "arch/riscv/pma_checker.hh"
 #include "arch/riscv/pmp.hh"
 #include "arch/riscv/pra_constants.hh"
+#include "arch/riscv/reg_abi.hh"
 #include "arch/riscv/utility.hh"
 #include "base/inifile.hh"
 #include "base/str.hh"
@@ -49,10 +50,12 @@
 #include "cpu/thread_context.hh"
 #include "debug/TLB.hh"
 #include "debug/TLBVerbose.hh"
+#include "mem/packet_access.hh"
 #include "mem/page_table.hh"
 #include "params/RiscvTLB.hh"
 #include "sim/full_system.hh"
 #include "sim/process.hh"
+#include "sim/pseudo_inst.hh"
 #include "sim/system.hh"
 
 namespace gem5
@@ -77,10 +80,14 @@ buildKey(Addr vpn, uint16_t asid)
     return (static_cast<Addr>(asid) << 48) | vpn;
 }
 
-TLB::TLB(const Params &p) :
-    BaseTLB(p), size(p.size), tlb(size),
-    lruSeq(0), stats(this), pma(p.pma_checker),
-    pmp(p.pmp)
+TLB::TLB(const Params &p)
+    : BaseTLB(p),
+      size(p.size),
+      tlb(size),
+      lruSeq(0),
+      stats(this),
+      pma(p.pma_checker),
+      pmp(p.pmp)
 {
     for (size_t x = 0; x < size; x++) {
         tlb[x].trieHandle = NULL;
@@ -95,6 +102,13 @@ Walker *
 TLB::getWalker()
 {
     return walker;
+}
+
+void
+TLB::setPMP(PMP *_pmp)
+{
+    pmp = _pmp;
+    walker->setPMP(_pmp);
 }
 
 void
@@ -176,6 +190,7 @@ TLB::insert(Addr vpn, const TlbEntry &entry)
 
     Addr key = buildKey(vpn, entry.asid);
     *newEntry = entry;
+    newEntry->trieKey = key;
     newEntry->lruSeq = nextSeq();
     newEntry->trieHandle = trie.insert(
         key, TlbEntryTrie::MaxBits - entry.logBytes + PageShift, newEntry
@@ -185,6 +200,15 @@ TLB::insert(Addr vpn, const TlbEntry &entry)
 
 void
 TLB::demapPage(Addr vaddr, uint64_t asid)
+{
+    warn("TLB::demapPage without ThreadContext is not fully supported for "
+         "RISC-V. Flushing all.\n");
+    flushAll();
+}
+
+void
+TLB::demapPage(ThreadContext *tc, Addr vaddr, uint64_t asid, bool is_gvma,
+               bool is_vvma)
 {
     // Note: vaddr is Reg[rs1] and asid is Reg[rs2]
     // The definition of this instruction is
@@ -205,8 +229,15 @@ TLB::demapPage(Addr vaddr, uint64_t asid)
         flushAll();
     } else {
         if (vaddr != 0 && asid != 0) {
-            // TODO: When supporting other address translation modes, fix this
-            Addr vpn = getVPNFromVAddr(vaddr, AddrXlateMode::SV39);
+            bool is_virt = tc->readMiscReg(MISCREG_VIRT) == 1;
+            RegIndex satp_reg = MISCREG_SATP;
+            if (is_gvma) {
+                satp_reg = MISCREG_HGATP;
+            } else if (is_vvma || is_virt) {
+                satp_reg = MISCREG_VSATP;
+            }
+            SATP satp = tc->readMiscReg(satp_reg);
+            Addr vpn = getVPNFromVAddr(vaddr, satp.mode);
             TlbEntry *entry = lookup(vpn, asid, BaseMMU::Read, true);
             if (entry) {
                 remove(entry - tlb.data());
@@ -249,8 +280,9 @@ TLB::remove(size_t idx)
 }
 
 Fault
-TLB::checkPermissions(ThreadContext* tc, MemAccessInfo mem_access, Addr vaddr,
-            BaseMMU::Mode mode, PTESv39 pte, Addr gvaddr, XlateStage stage)
+TLB::checkPermissions(ThreadContext *tc, MemAccessInfo mem_access, Addr vaddr,
+                      BaseMMU::Mode mode, PTE pte, Addr gvaddr,
+                      XlateStage stage)
 {
     MISA misa = tc->readMiscReg(MISCREG_ISA);
     STATUS status = tc->readMiscReg(MISCREG_STATUS);
@@ -470,7 +502,8 @@ TLB::getMemAccessInfo(ThreadContext *tc, BaseMMU::Mode mode,
     ISA* isa = dynamic_cast<ISA*>(tc->getIsaPtr());
     assert(isa);
 
-    bool nmie = !isa->enableSmrnmi() || tc->readMiscRegNoEffect(MISCREG_NMIE);
+    bool nmie = !isa->reportsExtension("Smrnmi") ||
+                tc->readMiscRegNoEffect(MISCREG_NMIE);
     bool in_mprv = nmie && (status.mprv == 1);
     bool virt = misa.rvh ? virtualizationEnabled(tc) : false;
     bool force_virt = false;
@@ -569,6 +602,10 @@ TLB::translate(const RequestPtr &req, ThreadContext *tc,
         }
 
         if (!delayed && fault == NoFault) {
+            fault = finalizePhysical(req, tc, mode);
+        }
+
+        if (!delayed && fault == NoFault) {
             // do pmp check if any checking condition is met.
             // timingFault will be NoFault if pmp checks are
             // passed, otherwise an address fault will be returned.
@@ -605,8 +642,7 @@ TLB::translate(const RequestPtr &req, ThreadContext *tc,
             return std::make_shared<GenericPageTableFault>(req->getVaddr());
 
         req->setPaddr(paddr);
-
-        return NoFault;
+        return finalizePhysical(req, tc, mode);
     }
 }
 
@@ -686,6 +722,33 @@ Fault
 TLB::finalizePhysical(const RequestPtr &req,
                       ThreadContext *tc, BaseMMU::Mode mode) const
 {
+    const Addr paddr = req->getPaddr();
+    const auto &m5opRange = tc->getSystemPtr()->m5opRange();
+
+    if (m5opRange.contains(paddr)) {
+        const bool rv32 =
+            static_cast<ISA *>(tc->getIsaPtr())->rvType() == RV32;
+        uint8_t func;
+
+        req->setFlags(Request::STRICT_ORDER);
+        pseudo_inst::decodeAddrOffset(paddr - m5opRange.start(), func);
+        req->setLocalAccessor(
+            [func, mode, rv32](ThreadContext *tc, PacketPtr pkt) -> Cycles {
+                uint64_t ret = 0;
+                if (rv32) {
+                    pseudo_inst::pseudoInst<RegABI32>(tc, func, ret);
+                } else {
+                    pseudo_inst::pseudoInst<RegABI64>(tc, func, ret);
+                }
+
+                if (mode == BaseMMU::Read) {
+                    pkt->setUintX(ret, ByteOrder::little);
+                }
+
+                return Cycles(1);
+            });
+    }
+
     return NoFault;
 }
 
@@ -721,10 +784,15 @@ TLB::unserialize(CheckpointIn &cp)
         freeList.pop_front();
 
         newEntry->unserializeSection(cp, csprintf("Entry%d", x));
-        // TODO: When supporting other addressing modes fix this
-        Addr vpn = getVPNFromVAddr(newEntry->vaddr, AddrXlateMode::SV39);
-        Addr key = buildKey(vpn, newEntry->asid);
-        newEntry->trieHandle = trie.insert(key,
+
+        // Backward compatibility for the checkpoints without trieKey.
+        if (newEntry->trieKey == 0) {
+            Addr vpn = getVPNFromVAddr(newEntry->vaddr, AddrXlateMode::SV39);
+            newEntry->trieKey = buildKey(vpn, newEntry->asid);
+        }
+
+        newEntry->trieHandle = trie.insert(
+            newEntry->trieKey,
             TlbEntryTrie::MaxBits - newEntry->logBytes + PageShift, newEntry);
     }
 }

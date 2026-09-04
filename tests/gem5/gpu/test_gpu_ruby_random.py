@@ -55,11 +55,9 @@ gem5_verify_config(
         "50000",
         "--num-dmas",
         "0",
-        "--protocol",
-        "GPU_VIPER",
     ],
-    valid_isas=(constants.all_compiled_tag,),
-    valid_hosts=constants.supported_hosts,
+    valid_isas=(constants.vega_x86_tag,),
+    valid_hosts=(constants.host_gcn_gpu_tag,),
     length=constants.quick_tag,
 )
 
@@ -90,10 +88,8 @@ gem5_verify_config(
         "150000",
         "--num-dmas",
         "0",
-        "--protocol",
-        "GPU_VIPER",
     ],
-    valid_isas=(constants.all_compiled_tag,),
-    valid_hosts=constants.supported_hosts,
+    valid_isas=(constants.vega_x86_tag,),
+    valid_hosts=(constants.host_gcn_gpu_tag,),
     length=constants.long_tag,
 )

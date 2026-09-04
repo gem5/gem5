@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Arm Limited
+ * Copyright (c) 2024, 2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -35,7 +35,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <ARM/TLM/arm_chi.h>
+#include <ARM/TLM/arm_chi_payload.h>
+#include <ARM/TLM/arm_chi_phase.h>
 
 #include "python/pybind11/pybind.hh"
 #include "sim/init.hh"
@@ -64,74 +65,91 @@ void
 tlm_chi_pybind(pybind11::module_ &m_internal)
 {
     auto tlm_chi = m_internal.def_submodule("tlm_chi");
+
+    using Mpam = decltype(Payload::mpam);
+    py::class_<Mpam>(tlm_chi, "Mpam")
+        .def(py::init<>())
+        .def_readwrite("mpam_ns", &Mpam::mpam_ns)
+        .def_readwrite("part_id", &Mpam::part_id)
+        .def_readwrite("perf_mon_group", &Mpam::perf_mon_group);
+
     py::class_<Payload, std::unique_ptr<Payload, PayloadDeleter<Payload>>>(
         tlm_chi, "TlmPayload")
         .def(py::init(&Payload::new_payload))
         .def_readwrite("address", &Payload::address)
-        .def_property("size",
-            [] (const Payload &p) { return p.size; },
-            [] (Payload &p, SizeEnum val) { p.size = val; })
+        .def_readwrite("mpam", &Payload::mpam)
+        .def_property(
+            "size", [](const Payload &p) { return p.size; },
+            [](Payload &p, SizeEnum val) { p.size = val; })
         .def_readwrite("lpid", &Payload::lpid)
-        .def_property("ns",
-            [] (const Payload &p) { return p.ns; },
-            [] (Payload &p, bool val) { p.ns = val; })
-        ;
+        .def_property(
+            "stash_nid_valid",
+            [](const Payload &p) { return p.stash_nid_valid; },
+            [](Payload &p, bool val) { p.stash_nid_valid = val; })
+        .def_property(
+            "ns", [](const Payload &p) { return p.ns; },
+            [](Payload &p, bool val) { p.ns = val; })
+        .def_property(
+            "ret_to_src", [](const Payload &p) { return p.ret_to_src; },
+            [](Payload &p, bool val) { p.ret_to_src = val; })
+        .def_readwrite("byte_enable", &Payload::byte_enable);
 
     py::class_<Phase>(tlm_chi, "TlmPhase")
         .def(py::init<>())
         .def_readwrite("txn_id", &Phase::txn_id)
         .def_readwrite("src_id", &Phase::src_id)
         .def_readwrite("tgt_id", &Phase::tgt_id)
+        .def_readwrite("stash_nid", &Phase::stash_nid)
+        .def_readwrite("fwd_nid", &Phase::fwd_nid)
         .def_readwrite("opcode", &Phase::raw_opcode)
-        .def_property("channel",
-            [] (const Phase &p) { return p.channel; },
-            [] (Phase &p, Channel val) { p.channel = val; })
-        .def_property("sub_channel",
-            [] (const Phase &p) { return p.sub_channel; },
-            [] (Phase &p, uint8_t val) { p.sub_channel = val; })
-        .def_property("lcrd",
-            [] (const Phase &p) { return p.lcrd; },
-            [] (Phase &p, bool val) { p.lcrd = val; })
-        .def_property("exp_comp_ack",
-            [] (const Phase &p) { return p.exp_comp_ack; },
-            [] (Phase &p, bool val) { p.exp_comp_ack = val; })
-        .def_property("snp_attr",
-            [] (const Phase &p) { return p.snp_attr; },
-            [] (Phase &p, bool val) { p.snp_attr = val; })
-        .def_property("allow_retry",
-            [] (const Phase &p) { return p.allow_retry; },
-            [] (Phase &p, bool val) { p.allow_retry = val; })
-        .def_property("do_dwt",
-            [] (const Phase &p) { return p.do_dwt; },
-            [] (Phase &p, bool val) { p.do_dwt = val; })
-        .def_property("data_id",
-            [] (const Phase &p) { return p.data_id; },
-            [] (Phase &p, uint8_t val) { p.data_id = val; })
-        .def_property("c_busy",
-            [] (const Phase &p) { return p.c_busy; },
-            [] (Phase &p, uint8_t val) { p.c_busy = val; })
-        .def_property("pcrd_type",
-            [] (const Phase &p) { return p.pcrd_type; },
-            [] (Phase &p, uint8_t val) { p.pcrd_type = val; })
-        .def_property("qos",
-            [] (const Phase &p) { return p.qos; },
-            [] (Phase &p, uint8_t val) { p.qos = val; })
-        .def_property("resp",
-            [] (const Phase &p) { return p.resp; },
-            [] (Phase &p, Resp val) { p.resp = val; })
-        .def_property("fwd_state",
-            [] (const Phase &p) { return p.fwd_state; },
-            [] (Phase &p, Resp val) { p.fwd_state = val; })
-        .def_property("order",
-            [] (const Phase &p) { return p.order; },
-            [] (Phase &p, Order val) { p.order = val; })
-        .def_property("resp_err",
-            [] (const Phase &p) { return p.resp_err; },
-            [] (Phase &p, RespErr val) { p.resp_err = val; })
-        .def_property("tag_op",
-            [] (const Phase &p) { return p.tag_op; },
-            [] (Phase &p, TagOp val) { p.tag_op = val; })
-        ;
+        .def_property(
+            "channel", [](const Phase &p) { return p.channel; },
+            [](Phase &p, Channel val) { p.channel = val; })
+        .def_property(
+            "sub_channel", [](const Phase &p) { return p.sub_channel; },
+            [](Phase &p, uint8_t val) { p.sub_channel = val; })
+        .def_property(
+            "lcrd", [](const Phase &p) { return p.lcrd; },
+            [](Phase &p, bool val) { p.lcrd = val; })
+        .def_property(
+            "exp_comp_ack", [](const Phase &p) { return p.exp_comp_ack; },
+            [](Phase &p, bool val) { p.exp_comp_ack = val; })
+        .def_property(
+            "snp_attr", [](const Phase &p) { return p.snp_attr; },
+            [](Phase &p, bool val) { p.snp_attr = val; })
+        .def_property(
+            "allow_retry", [](const Phase &p) { return p.allow_retry; },
+            [](Phase &p, bool val) { p.allow_retry = val; })
+        .def_property(
+            "do_dwt", [](const Phase &p) { return p.do_dwt; },
+            [](Phase &p, bool val) { p.do_dwt = val; })
+        .def_property(
+            "data_id", [](const Phase &p) { return p.data_id; },
+            [](Phase &p, uint8_t val) { p.data_id = val; })
+        .def_property(
+            "c_busy", [](const Phase &p) { return p.c_busy; },
+            [](Phase &p, uint8_t val) { p.c_busy = val; })
+        .def_property(
+            "pcrd_type", [](const Phase &p) { return p.pcrd_type; },
+            [](Phase &p, uint8_t val) { p.pcrd_type = val; })
+        .def_property(
+            "qos", [](const Phase &p) { return p.qos; },
+            [](Phase &p, uint8_t val) { p.qos = val; })
+        .def_property(
+            "resp", [](const Phase &p) { return p.resp; },
+            [](Phase &p, Resp val) { p.resp = val; })
+        .def_property(
+            "fwd_state", [](const Phase &p) { return p.fwd_state; },
+            [](Phase &p, Resp val) { p.fwd_state = val; })
+        .def_property(
+            "order", [](const Phase &p) { return p.order; },
+            [](Phase &p, Order val) { p.order = val; })
+        .def_property(
+            "resp_err", [](const Phase &p) { return p.resp_err; },
+            [](Phase &p, RespErr val) { p.resp_err = val; })
+        .def_property(
+            "tag_op", [](const Phase &p) { return p.tag_op; },
+            [](Phase &p, TagOp val) { p.tag_op = val; });
 
     py::enum_<Resp>(tlm_chi, "Resp")
         .value("RESP_I", RESP_I)

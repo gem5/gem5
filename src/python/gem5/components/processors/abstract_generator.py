@@ -68,7 +68,7 @@ class AbstractGenerator(AbstractProcessor):
         Keyword (optional arguments) are still allowable in the constructor of
         the inheriting classes.
         """
-        super().__init__(cores=cores)
+        super().__init__(cores=cores, clk_freq="1GHz")
 
     @overrides(AbstractProcessor)
     def incorporate_processor(self, board: AbstractBoard) -> None:

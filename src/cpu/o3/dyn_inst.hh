@@ -349,7 +349,7 @@ class DynInst : public ExecContext, public RefCounted
     Addr physEffAddr = 0;
 
     /** The memory request flags (from translation). */
-    unsigned memReqFlags = 0;
+    Request::Flags memReqFlags = 0;
 
     /** The size of the request */
     unsigned effSize;
@@ -370,7 +370,7 @@ class DynInst : public ExecContext, public RefCounted
      * Saved memory request (needed when the DTB address translation is
      * delayed due to a hw page table walk).
      */
-    LSQRequest *savedRequest;
+    LSQRequest *savedRequest = nullptr;
 
     /////////////////////// Checker //////////////////////
     // Need a copy of main request pointer to verify on writes.
@@ -954,6 +954,15 @@ class DynInst : public ExecContext, public RefCounted
     bool hasRequest() const { return instFlags[ReqMade]; }
     /** Assert this instruction has generated a memory request. */
     void setRequest() { instFlags[ReqMade] = true; }
+    /** Clear request and translation bookkeeping after request release. */
+    void
+    clearRequest()
+    {
+        instFlags.reset(ReqMade);
+        translationStarted(false);
+        translationCompleted(false);
+        savedRequest = nullptr;
+    }
 
     /** Returns iterator to this instruction in the list of all insts. */
     ListIt &getInstListIt() { return instListIt; }

@@ -164,7 +164,8 @@ typedef unsigned int sc_digit; // 32-bit unsigned integer
 
 // Support for the long long type. This type is not in the standard
 // but is usually supported by compilers.
-#if defined(__x86_64__) || defined(__aarch64__) || defined(__powerpc64__)
+#if defined(__x86_64__) || defined(__aarch64__) || defined(__powerpc64__) ||  \
+    defined(__loongarch64)
 typedef long long int64;
 typedef unsigned long long uint64;
 #else

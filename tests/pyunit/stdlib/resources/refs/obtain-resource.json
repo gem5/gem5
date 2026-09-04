@@ -6,14 +6,17 @@
         "architecture": "ARM",
         "is_zipped": false,
         "md5sum": "71b2cb004fe2cda4556f0b1a38638af6",
-        "url": "http://dist.gem5.org/dist/develop/test-progs/hello/bin/arm/linux/hello64-static",
+        "url":
+            "http://dist.gem5.org/dist/develop/test-progs/hello/bin/arm/linux/hello64-static",
         "source": "src/test-source",
         "resource_version": "2.5.0",
         "gem5_versions": [
-            "25.0",
+            "23.0",
+            "23.1",
             "24.0",
             "24.1",
-            "25.0"
+            "25.0",
+            "25.1"
         ]
     },
     {
@@ -23,14 +26,16 @@
         "architecture": "ARM",
         "is_zipped": false,
         "md5sum": "71b2cb004fe2cda4556f0b1a38638af6",
-        "url": "http://dist.gem5.org/dist/develop/test-progs/hello/bin/arm/linux/hello64-static",
+        "url":
+            "http://dist.gem5.org/dist/develop/test-progs/hello/bin/arm/linux/hello64-static",
         "source": "src/test-source",
         "resource_version": "2.0.0",
         "gem5_versions": [
             "23.0",
             "24.0",
             "24.1",
-            "25.0"
+            "25.0",
+            "25.1"
         ]
     },
     {
@@ -40,7 +45,8 @@
         "architecture": "ARM",
         "is_zipped": false,
         "md5sum": "71b2cb004fe2cda4556f0b1a38638af6",
-        "url": "http://dist.gem5.org/dist/develop/test-progs/hello/bin/arm/linux/hello64-static",
+        "url":
+            "http://dist.gem5.org/dist/develop/test-progs/hello/bin/arm/linux/hello64-static",
         "source": "src/test-source",
         "resource_version": "1.7.0",
         "gem5_versions": [
@@ -48,7 +54,8 @@
             "develop-2",
             "24.0",
             "24.1",
-            "25.0"
+            "25.0",
+            "25.1"
         ]
     },
     {
@@ -58,14 +65,16 @@
         "architecture": "ARM",
         "is_zipped": false,
         "md5sum": "71b2cb004fe2cda4556f0b1a38638af6",
-        "url": "http://dist.gem5.org/dist/develop/test-progs/hello/bin/arm/linux/hello64-static",
+        "url":
+            "http://dist.gem5.org/dist/develop/test-progs/hello/bin/arm/linux/hello64-static",
         "source": "src/test-source",
         "resource_version": "1.5.0",
         "gem5_versions": [
             "develop",
             "24.0",
             "24.1",
-            "25.0"
+            "25.0",
+            "25.1"
         ]
     },
     {
@@ -75,14 +84,16 @@
         "architecture": "ARM",
         "is_zipped": false,
         "md5sum": "71b2cb004fe2cda4556f0b1a38638af6",
-        "url": "http://dist.gem5.org/dist/develop/test-progs/hello/bin/arm/linux/hello64-static",
+        "url":
+            "http://dist.gem5.org/dist/develop/test-progs/hello/bin/arm/linux/hello64-static",
         "source": "src/test-source",
         "resource_version": "1.0.0",
         "gem5_versions": [
             "develop",
             "24.0",
             "24.1",
-            "25.0"
+            "25.0",
+            "25.1"
         ]
     },
     {
@@ -91,14 +102,16 @@
         "architecture": "ARM",
         "is_zipped": false,
         "md5sum": "71b2cb004fe2cda4556f0b1a38638af6",
-        "url": "http://dist.gem5.org/dist/develop/test-progs/hello/bin/arm/linux/hello64-static",
+        "url":
+            "http://dist.gem5.org/dist/develop/test-progs/hello/bin/arm/linux/hello64-static",
         "source": "src/test-source",
         "resource_version": "1.0.0",
         "gem5_versions": [
             "develop",
             "24.0",
             "24.1",
-            "25.0"
+            "25.0",
+            "25.1"
         ]
     },
     {
@@ -107,14 +120,16 @@
         "description": "test description for missing md5sum test",
         "architecture": "ARM",
         "is_zipped": false,
-        "url": "http://dist.gem5.org/dist/develop/test-progs/hello/bin/arm/linux/hello64-static",
+        "url":
+            "http://dist.gem5.org/dist/develop/test-progs/hello/bin/arm/linux/hello64-static",
         "source": "src/test-source",
         "resource_version": "1.0.0",
         "gem5_versions": [
             "develop",
             "24.0",
             "24.1",
-            "25.0"
+            "25.0",
+            "25.1"
         ]
     },
     {
@@ -130,7 +145,8 @@
             "develop",
             "24.0",
             "24.1",
-            "25.0"
+            "25.0",
+            "25.1"
         ]
     },
     {
@@ -138,7 +154,7 @@
         "id": "test-workload-invalid-resources-field",
         "description": "Description of workload here",
         "function": "set_kernel_disk_workload",
-        "resources":[],
+        "resources": [],
         "additional_params": {
             "readfile_contents": "echo 'Boot successful'; m5 exit"
         },
@@ -147,24 +163,42 @@
             "develop",
             "24.0",
             "24.1",
-            "25.0"
+            "25.0",
+            "25.1"
         ]
     },
     {
         "id": "tests-no-workload-field-suite",
         "category": "suite",
         "resource_version": "1.0.0",
-        "gem5_versions": ["develop","23.1", "24.0", "24.1","25.0"]
+        "gem5_versions": [
+            "develop",
+            "23.1",
+            "24.0",
+            "24.1",
+            "25.0",
+            "25.1"
+        ]
     },
     {
         "id": "tests-no-id-in-workload-field-suite",
         "category": "suite",
         "resource_version": "1.0.0",
-        "gem5_versions": ["develop","23.1", "24.0", "24.1","25.0"],
+        "gem5_versions": [
+            "develop",
+            "23.1",
+            "24.0",
+            "24.1",
+            "25.0",
+            "25.1"
+        ],
         "workloads": [
             {
                 "resource_version": "1.0.0",
-                "input_group": ["testtag1", "testtag2"]
+                "input_group": [
+                    "testtag1",
+                    "testtag2"
+                ]
             }
         ]
     },
@@ -172,7 +206,14 @@
         "id": "tests-no-input-group-in-workload-field-suite",
         "category": "suite",
         "resource_version": "1.0.0",
-        "gem5_versions": ["develop","23.1", "24.0", "24.1","25.0"],
+        "gem5_versions": [
+            "develop",
+            "23.1",
+            "24.0",
+            "24.1",
+            "25.0",
+            "25.1"
+        ],
         "workloads": [
             {
                 "id": "simple-workload-1",

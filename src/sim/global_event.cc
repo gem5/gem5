@@ -158,7 +158,11 @@ void
 GlobalSyncEvent::process()
 {
     if (repeat) {
-        schedule(curTick() + repeat);
+        Tick next_sim_quantum = curTick() + repeat;
+        schedule(next_sim_quantum);
+        for (int i = 0; i < numMainEventQueues; ++i) {
+            mainEventQueue[i]->setNextSimQuantum(next_sim_quantum);
+        }
     }
 }
 

@@ -246,6 +246,12 @@ class BaseCPU : public ClockedObject
     // @todo remove me after debugging with legion done
     Tick instCount() { return instCnt; }
 
+    virtual void
+    setResetAddr(Addr addr, bool secure = false)
+    {
+        panic("%s not implemented.", __FUNCTION__);
+    }
+
   protected:
     std::vector<BaseInterrupts*> interrupts;
 
@@ -261,6 +267,15 @@ class BaseCPU : public ClockedObject
     }
 
     virtual void wakeup(ThreadID tid) = 0;
+
+    /**
+     * Return true if a newly posted interrupt should wake this CPU.
+     *
+     * Most CPU models can use their cached interrupt controller state to
+     * decide whether an interrupt is unmasked. CPU models with interrupt
+     * state that may be advanced outside gem5 can override this hook.
+     */
+    virtual bool wakeupOnInterrupt(ThreadID tid) const;
 
     void postInterrupt(ThreadID tid, int int_num, int index);
 

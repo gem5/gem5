@@ -53,7 +53,7 @@ void
 Feeder::feed()
 {
     if (index >= strings.size())
-        gem5::exitSimLoop("Printed all the words.");
+        gem5::exitSimulationLoopClassic("Printed all the words.");
     else
         buf.write(strings[index++].c_str());
 

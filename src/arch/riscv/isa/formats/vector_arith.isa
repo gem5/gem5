@@ -35,6 +35,82 @@ let {{
                "_numTypedDestRegs[VecRegClass]++;\n"
     def setSrcWrapper(srcRegId):
         return "setSrcRegIdx(_numSrcRegs++, " + srcRegId + ");\n"
+    def setVecRegGroupSrcWrapper(num_regs_expr, reg_base_expr):
+        return '''
+            for (unsigned i=0; i < %s; i++) {
+                setSrcRegIdx(_numSrcRegs++, vecRegClass[%s + i]);
+            }
+        ''' % (num_regs_expr, reg_base_expr)
+    def getRegOperandGroup(name, num, offset="0"):
+        return '''
+            std::vector<RiscvISA::vreg_t> %s(%s);
+            for (unsigned i=0; i < %s; i++) {
+                xc->getRegOperand(this, i + %s, &%s[i]);
+            }
+        ''' % (name, num, num, offset, name)
+    def generateSlideElementLoop(is_up=True):
+        sign = '-' if is_up else '+'
+        zero_fill = '' if is_up else 'else { Vd_vu[i] = 0; }'
+
+        return '''
+            for (uint32_t i=0; i < microVl; i++) {
+                uint32_t vd_elem_idx = i + microIdx*micro_vlmax;
+                if (!machInst.vm && !elem_mask(v0, vd_elem_idx)) {
+                    continue;
+                }
+                int32_t vs2_elem_idx = (int32_t)vd_elem_idx %s offset;
+                if (vs2_elem_idx >= 0 && vs2_elem_idx < vlmax) {
+                    uint32_t r = vs2_elem_idx / micro_vlmax;
+                    uint32_t e = vs2_elem_idx - r*micro_vlmax;
+                    Vd_vu[i] = vs2_regs[r].as<ElemType>()[e];
+                } %s
+            }
+        ''' % (sign, zero_fill)
+    def generateSlideupOverlapCheck():
+        return '''
+            if (vtype_regs_per_group(vtype) > 1) {
+                uint32_t vs2_end = machInst.vs2
+                                   + vtype_regs_per_group(vtype)-1;
+                uint32_t vd_end = machInst.vd +  vtype_regs_per_group(vtype)-1;
+                if ((machInst.vs2 >= machInst.vd && machInst.vs2 <= vd_end)
+                        || (vs2_end >= machInst.vd && vs2_end <= vd_end)) {
+                    return std::make_shared<IllegalInstFault>(
+                        "Reg overlap not allowed for vslideup variants",
+                        machInst);
+                }
+            }
+        '''
+    def generateReduceLoop(is_float=False):
+        dot_v = ".v" if is_float else ""
+        vs2_type = "vu" if is_float else \
+            "std::conditional_t<std::is_signed_v<acc_t>, vi, vu>"
+        return '''
+            auto reduce_loop =
+                [&, this](const auto& f, const auto& vs1_val) {
+                    using acc_t = std::decay_t<decltype(vs1_val)>;
+                    acc_t result = vs1_val;
+                    uint32_t num_elems = this->microVl;
+                    uint32_t elems_per_reg = vtype_VLMAX(vtype, vlen, true);
+                    uint32_t num_regs = (num_elems+elems_per_reg-1)
+                                        / elems_per_reg;
+                    for (uint32_t r=0; r < num_regs; r++) {
+                        RiscvISA::vreg_t vs2_reg;
+                        xc->getRegOperand(this, 1+r, &vs2_reg);
+                        auto vs2 = vs2_reg.as<%s>();
+                        uint32_t elems_so_far = r*elems_per_reg;
+                        uint32_t num_reg_elems =
+                            (elems_so_far+elems_per_reg > num_elems)
+                            ? num_elems-elems_so_far : elems_per_reg;
+
+                        for (uint32_t i=0; i < num_reg_elems; i++) {
+                            if (this->vm || elem_mask(v0, elems_so_far+i)) {
+                                result = f(result, vs2[i])%s;
+                            }
+                        }
+                    }
+                    return result;
+                };
+        ''' % (vs2_type, dot_v)
     def tailMaskCondSetSrcWrapper(setSrcRegCode):
         return "if (!_machInst.vtype8.vta || (!_machInst.vm " \
             + "&& !_machInst.vtype8.vma)) {\n" \
@@ -44,12 +120,6 @@ let {{
     def setSrcVm():
         return "if (!this->vm)\n" + \
                "    setSrcRegIdx(_numSrcRegs++, vecRegClass[0]);"
-    def setSrcVmOrTmp0():
-        return "if (!this->vm){\n" + \
-               "(_machInst.vd == 0) ? " + \
-               "setSrcRegIdx(_numSrcRegs++,vecRegClass[VecMemInternalReg0]):"+\
-               "setSrcRegIdx(_numSrcRegs++,vecRegClass[0]);\n" + \
-               "}\n"
     def vmDeclAndReadData():
         return '''
             [[maybe_unused]] RiscvISA::vreg_t tmp_v0;
@@ -60,7 +130,7 @@ let {{
             }
         '''
     def copyOldVd(vd_idx):
-        return 'COPY_OLD_VD(%d);' % vd_idx
+        return f"COPY_OLD_VD({vd_idx});"
     def copyOldVdIfVL(vd_idx):
         return 'COPY_OLD_VD_IF_VL(%d);' % vd_idx
     def loopWrapper(code, micro_inst = True):
@@ -189,6 +259,14 @@ let {{
             code += ('template class'
                      f' {class_name}<uint{size}_t, {idx_type}>;\n')
         return code
+
+    def getRegOperandGroup(name, num, offset="0"):
+        return ('''
+            std::vector<RiscvISA::vreg_t> %s(%s);
+            for (unsigned i=0; i < %s; i++) {
+                xc->getRegOperand(this, i + %s, &%s[i]);
+            }
+        ''' % (name, num, num, offset, name))
 }};
 
 
@@ -288,7 +366,6 @@ def format VectorIntFormat(code, category, *flags) {{
 def format VectorCompressFormat(code, category, *flags) {{
     macroop_class_name = 'VectorArithMacroInst'
     microop_class_name = 'VectorArithMicroInst'
-
     iop = InstObjParams(
         name,
         Name,
@@ -298,54 +375,40 @@ def format VectorCompressFormat(code, category, *flags) {{
         flags
     )
     inst_name, inst_suffix = name.split("_", maxsplit=1)
-
-    dest_reg_id = "vecRegClass[_machInst.vd + \
-        (_microIdx)%vtype_regs_per_group(vtype)]"
-
-    num_src_regs = 0
-
-    src2_reg_id = "vecRegClass[_machInst.vs2 + _microIdx]"
-    num_src_regs += 1
-
-    src1_reg_id = "vecRegClass[_machInst.vs1]"
-    num_src_regs += 1
-
-    old_vd_idx = num_src_regs
-
+    dest_reg_id = "vecRegClass[_machInst.vd + _microIdx]"
     set_dest_reg_idx = setDestWrapper(dest_reg_id)
-
     set_src_reg_idx = ""
-    set_src_reg_idx += setSrcWrapper(src1_reg_id)
-    set_src_reg_idx += setSrcWrapper(src2_reg_id)
-
-    dest_set_src_reg_idx = setSrcWrapper(dest_reg_id)
-
-    set_src_reg_idx += dest_set_src_reg_idx
-    set_src_reg_idx += setSrcVm()
-
-    # code
-
-    vm_decl_rd = vmDeclAndReadData()
-
+    set_src_reg_idx += setSrcWrapper("vecRegClass[_machInst.vs1]")
+    set_src_reg_idx += """
+{
+            const uint32_t elems_per_reg = (vlen / 8) / sizeof(ElemType);
+            const uint32_t num_vs2_regs = (_machInst.vl + elems_per_reg - 1) / elems_per_reg;
+            for (uint32_t g = 0; g < num_vs2_regs; g++)
+                setSrcRegIdx(_numSrcRegs++, vecRegClass[_machInst.vs2 + g]);
+        }
+    """
+    set_src_reg_idx += tailMaskCondSetSrcWrapper(setSrcWrapper(dest_reg_id))
     set_vlenb = setVlenb()
 
-    microiop = InstObjParams(name + "_micro",
+    microiop = InstObjParams(
+        name + "_micro",
         Name + "Micro",
         microop_class_name,
         {'code': code,
          'set_dest_reg_idx': set_dest_reg_idx,
          'set_src_reg_idx': set_src_reg_idx,
-         'set_vlenb' : set_vlenb,
-         'vm_decl_rd': vm_decl_rd,
-         'copy_old_vd': copyOldVd(old_vd_idx),
+         'set_vlenb': set_vlenb,
+         'vm_decl_rd': '',
+         'copy_old_vd': copyOldVd('oldDstIdx'),
          'declare_varith_template': declareVArithTemplate(Name + "Micro")},
-        flags)
+        flags
+    )
 
     header_output = \
-        VectorIntMicroDeclare.subst(microiop) + \
+        VectorCompressMicroDeclare.subst(microiop) + \
         VectorIntMacroDeclare.subst(iop)
     decoder_output = \
-        VectorIntMicroConstructor.subst(microiop) + \
+        VectorCompressMicroConstructor.subst(microiop) + \
         VectorCompressMacroConstructor.subst(iop)
     exec_output = VectorIntMicroExecute.subst(microiop)
     decode_block = VectorIntDecodeBlock.subst(iop)
@@ -424,7 +487,7 @@ def format VectorIntWideningFormat(code, category, *flags) {{
     need_elem_idx = mask_cond or code.find("ei") != -1
     is_destructive_fused = iop.op_class == "SimdMultAccOp"
 
-    old_vd_idx = 2
+    old_vd_idx = 2 if category != "OPIVI" else 1
     dest_reg_id = "vecRegClass[_machInst.vd + _microIdx]"
     dest_sew_mul = 2
     src1_reg_id = ""
@@ -645,51 +708,83 @@ def format VectorGatherFormat(code, category, *flags) {{
         idx_type = "uint16_t"
     else:
         idx_type = "elem_type"
-    iop = InstObjParams(name, Name, 'VectorArithMacroInst',
+
+    iop = InstObjParams(name, Name, 'VectorGatherMacroInst',
         {'idx_type': idx_type,
          'code': code,
          'declare_varith_template': declareGatherTemplate(Name, idx_type)},
         flags)
-    dest_reg_id = "vecRegClass[_machInst.vd + vd_idx]"
-    src1_reg_id = ""
-    if category in ["OPIVV"]:
-        src1_reg_id = "vecRegClass[_machInst.vs1 + vs1_idx]"
-    elif category in ["OPIVX"]:
-        src1_reg_id = "intRegClass[_machInst.rs1]"
-    elif category == "OPIVI":
-        old_vd_idx = 1
-    else:
-        error("not supported category for VectorIntFormat: %s" % category)
-    src2_reg_id = "vecRegClass[_machInst.vs2 + vs2_idx]"
 
-    # vtmp0 as dummy src reg to create dependency with pin vd micro
-    src3_reg_id = "vecRegClass[VecMemInternalReg0 + vd_idx]"
-
+    dest_reg_id = "vecRegClass[_machInst.vd + _microIdx]"
     set_dest_reg_idx = setDestWrapper(dest_reg_id)
 
     set_src_reg_idx = ""
-    if category != "OPIVI":
-        set_src_reg_idx += setSrcWrapper(src1_reg_id)
-    set_src_reg_idx += setSrcWrapper(src2_reg_id)
-    set_src_reg_idx += setSrcWrapper(src3_reg_id)
+    get_vs_regs = ""
+
+    if category == "OPIVI":
+        set_src_reg_idx += '''
+            if (rvZext(SIMM5) < vtype_VLMAX(vtype, vlen, false)) {
+                uint8_t vs2_reg = rvZext(SIMM5)
+                                  / vtype_VLMAX(vtype, vlen, true);
+                %s
+                numVs2Regs = 1;
+            }
+        ''' % (setSrcWrapper("vecRegClass[_machInst.vs2 + vs2_reg]"))
+    else:
+        set_src_reg_idx += "numVs2Regs = vtype_regs_per_group(vtype);"
+        set_src_reg_idx += setVecRegGroupSrcWrapper(
+                "numVs2Regs", "_machInst.vs2")
+
+    get_vs_regs += getRegOperandGroup("vs2_regs", "numVs2Regs");
+
+    if category == "OPIVV":
+        set_src_reg_idx += """
+            constexpr uint32_t vd_eewb = sizeof(ElemType);
+            constexpr uint32_t vs1_eewb = sizeof(IndexType);
+            const uint32_t vs1_elems = vlenb / vs1_eewb;
+            numVs1Regs = (microVl+vs1_elems-1) / vs1_elems;
+        """
+        set_src_reg_idx += setVecRegGroupSrcWrapper(
+            "numVs1Regs",
+            "_machInst.vs1 + _microIdx*vs1_eewb/vd_eewb"
+        )
+
+        get_vs_regs += """
+            constexpr uint32_t vs1_eewb = sizeof(IndexType);
+            const uint32_t vs1_elems = vlenb / vs1_eewb;
+        """
+        get_vs_regs += getRegOperandGroup("vs1_regs", "numVs1Regs",
+                                          offset="numVs2Regs");
+    elif category == "OPIVX":
+        set_src_reg_idx += setSrcWrapper("intRegClass[_machInst.rs1]")
+        get_vs_regs += """
+            const uint64_t rs1 = xc->getRegOperand(this, numVs2Regs);
+        """
+    elif category == "OPIVI":
+        pass
+    else:
+        error("not supported category for VectorGatherFormat: %s" % category)
+
+    set_src_reg_idx += tailMaskCondSetSrcWrapper(setSrcWrapper(dest_reg_id))
     set_src_reg_idx += setSrcVm()
 
-    # code
-
     vm_decl_rd = vmDeclAndReadData()
-
     set_vlenb = setVlenb();
+    copy_old_vd = copyOldVd("oldDstIdx")
 
     varith_micro_declare = declareGatherTemplate(Name + "Micro", idx_type)
+
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
-        'VectorArithMicroInst',
+        'VectorGatherMicroInst',
         {'code': code,
          'set_dest_reg_idx': set_dest_reg_idx,
          'set_src_reg_idx': set_src_reg_idx,
          'set_vlenb': set_vlenb,
          'vm_decl_rd': vm_decl_rd,
          'idx_type': idx_type,
+         'copy_old_vd': copy_old_vd,
+         'get_vs_regs': get_vs_regs,
          'declare_varith_template': varith_micro_declare},
         flags)
 
@@ -833,6 +928,9 @@ def format VectorFloatCvtFormat(code, category, *flags) {{
 
 def format VectorFloatWideningFormat(code, category, *flags) {{
     varith_macro_declare = declareVArithTemplate(Name, 'float', 16, 32)
+    if "bf16" in name:
+        varith_macro_declare = f"template class {Name}<bfloat16_t>;\n"
+
     iop = InstObjParams(
         name,
         Name,
@@ -897,8 +995,11 @@ def format VectorFloatWideningFormat(code, category, *flags) {{
 
     set_vlenb = setVlenb();
 
-    varith_micro_declare = declareVArithTemplate(
-        Name + "Micro", 'float', 16, 32)
+    if "bf16" in name:
+        varith_micro_declare = f"template class {Name}Micro<bfloat16_t>;\n"
+    else:
+        varith_micro_declare = declareVArithTemplate(
+            Name + "Micro", 'float', 16, 32)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -918,11 +1019,17 @@ def format VectorFloatWideningFormat(code, category, *flags) {{
         VectorIntWideningMicroConstructor.subst(microiop) + \
         VectorIntWideningMacroConstructor.subst(iop)
     exec_output = VectorFloatWideningMicroExecute.subst(microiop)
-    decode_block = VectorFloatWideningDecodeBlock.subst(iop)
+    if "bf16" in name:
+        decode_block = VectorBFloatWideningDecodeBlock.subst(iop)
+    else:
+        decode_block = VectorFloatWideningDecodeBlock.subst(iop)
 }};
 
 def format VectorFloatWideningCvtFormat(code, category, *flags) {{
     varith_macro_declare = declareVArithTemplate(Name, 'float', 8, 32)
+    if "bf16" in name:
+        varith_macro_declare = f"template class {Name}<bfloat16_t>;\n"
+
     iop = InstObjParams(
         name,
         Name,
@@ -951,8 +1058,11 @@ def format VectorFloatWideningCvtFormat(code, category, *flags) {{
 
     set_vlenb = setVlenb();
 
-    varith_micro_declare = declareVArithTemplate(
-        Name + "Micro", 'float', 8, 32)
+    if "bf16" in name:
+        varith_micro_declare = f"template class {Name}Micro<bfloat16_t>;\n"
+    else:
+        varith_micro_declare = declareVArithTemplate(
+            Name + "Micro", 'float', 8, 32)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -972,11 +1082,19 @@ def format VectorFloatWideningCvtFormat(code, category, *flags) {{
         VectorIntWideningMicroConstructor.subst(microiop) + \
         VectorIntWideningMacroConstructor.subst(iop)
     exec_output = VectorFloatWideningMicroExecute.subst(microiop)
-    decode_block = VectorFloatWideningAndNarrowingCvtDecodeBlock.subst(iop)
+    if "bf16" in name:
+        decode_block = \
+            VectorBFloatWideningAndNarrowingCvtDecodeBlock.subst(iop)
+    else:
+        decode_block = \
+            VectorFloatWideningAndNarrowingCvtDecodeBlock.subst(iop)
 }};
 
 def format VectorFloatNarrowingCvtFormat(code, category, *flags) {{
     varith_macro_declare = declareVArithTemplate(Name, 'float', 8, 32)
+    if "bf16" in name:
+        varith_macro_declare = f"template class {Name}<bfloat16_t>;\n"
+
     iop = InstObjParams(
         name,
         Name,
@@ -1006,8 +1124,11 @@ def format VectorFloatNarrowingCvtFormat(code, category, *flags) {{
 
     set_vlenb = setVlenb();
 
-    varith_micro_declare = declareVArithTemplate(
-        Name + "Micro", 'float', 8, 32)
+    if "bf16" in name:
+        varith_micro_declare = f"template class {Name}Micro<bfloat16_t>;\n"
+    else:
+        varith_micro_declare = declareVArithTemplate(
+            Name + "Micro", 'float', 8, 32)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -1026,7 +1147,12 @@ def format VectorFloatNarrowingCvtFormat(code, category, *flags) {{
         VectorIntNarrowingMicroConstructor.subst(microiop) + \
         VectorIntNarrowingMacroConstructor.subst(iop)
     exec_output = VectorFloatNarrowingMicroExecute.subst(microiop)
-    decode_block = VectorFloatWideningAndNarrowingCvtDecodeBlock.subst(iop)
+    if "bf16" in name:
+        decode_block = \
+            VectorBFloatWideningAndNarrowingCvtDecodeBlock.subst(iop)
+    else:
+        decode_block = \
+            VectorFloatWideningAndNarrowingCvtDecodeBlock.subst(iop)
 }};
 
 def format VectorFloatMaskFormat(code, category, *flags) {{
@@ -1292,86 +1418,73 @@ def format VectorMaskFormat(code, category, *flags) {{
     decode_block = VectorMaskDecodeBlock.subst(iop)
 }};
 
-def format VectorReduceIntFormat(code, category, *flags) {{
+def format VectorReduceFormat(code, category, *flags) {{
+    is_float = name.startswith("vf");
+    is_widening = name.startswith("vw") or name.startswith("vfw")
+
+    varith_template_iop = declareVArithTemplate(
+        Name,
+        type_name = "float" if is_float else "uint",
+        min_size = 16 if is_float else 8,
+        max_size = 32 if is_widening else 64
+    )
+
     iop = InstObjParams(
         name,
         Name,
         'VectorArithMacroInst',
         {'code': code,
-         'declare_varith_template': declareVArithTemplate(Name)},
+         'declare_varith_template': varith_template_iop},
         flags
     )
     inst_name, inst_suffix = name.split("_", maxsplit=1)
     dest_reg_id = "vecRegClass[_machInst.vd]"
-    src1_reg_id = "vecRegClass[_machInst.vs1 == _machInst.vd\
-                               ? VecMemInternalReg0 : _machInst.vs1]"
-    src2_reg_id = "vecRegClass[(_machInst.vs2 + _microIdx == _machInst.vd\
-                               ? VecMemInternalReg0 : _machInst.vs2)\
-                               + _microIdx]"
+    src1_reg_id = "vecRegClass[_machInst.vs1]"
     set_dest_reg_idx = setDestWrapper(dest_reg_id)
     set_src_reg_idx = setSrcWrapper(src1_reg_id)
-    set_src_reg_idx += setSrcWrapper(src2_reg_id)
-    set_src_reg_idx += setSrcVmOrTmp0()
+
+    set_src_reg_idx += '''
+        uint32_t num_elems = this->microVl;
+        uint32_t elems_per_reg = vtype_VLMAX(vtype, vlen, true);
+        uint32_t num_vs2_regs = (num_elems+elems_per_reg-1) / elems_per_reg;
+    '''
+    set_src_reg_idx += setVecRegGroupSrcWrapper("num_vs2_regs",
+                                                "_machInst.vs2")
+
+    set_src_reg_idx += tailMaskCondSetSrcWrapper(setSrcWrapper(dest_reg_id))
+    set_src_reg_idx += setSrcVm()
     vm_decl_rd = vmDeclAndReadData()
     set_vlenb = setVlenb()
 
-    type_def = '''
-        using vu [[maybe_unused]] = std::make_unsigned_t<ElemType>;
-        using vi [[maybe_unused]] = std::make_signed_t<ElemType>;
-    '''
-    microiop = InstObjParams(name + "_micro",
+    if is_float:
+        code = fflags_wrapper(code)
+        type_def = '''
+            using et = ElemType;
+            using vu = decltype(et::v);
+        '''
+        if is_widening:
+            type_def += '''
+                using ewt = typename double_width<et>::type;
+                using vwu [[maybe_unused]] = decltype(ewt::v);
+            '''
+    else:
+        type_def = '''
+            using vu = std::make_unsigned_t<ElemType>;
+            using vi [[maybe_unused]] = std::make_signed_t<ElemType>;
+        '''
+        if is_widening:
+            type_def += '''
+                using vwu [[maybe_unused]] = typename double_width<vu>::type;
+                using vwi [[maybe_unused]] = typename double_width<vi>::type;
+            '''
+
+    varith_template_microiop = declareVArithTemplate(
         Name + "Micro",
-        'VectorArithMicroInst',
-        {'code': code,
-         'set_dest_reg_idx': set_dest_reg_idx,
-         'set_src_reg_idx': set_src_reg_idx,
-         'set_vlenb' : set_vlenb,
-         'vm_decl_rd': vm_decl_rd,
-         'type_def': type_def,
-         'declare_varith_template': declareVArithTemplate(Name + "Micro")},
-        flags)
-
-    header_output = \
-        VectorReduceMicroDeclare.subst(microiop) + \
-        VectorReduceMacroDeclare.subst(iop)
-    decoder_output = \
-        VectorReduceMicroConstructor.subst(microiop) + \
-        VectorReduceMacroConstructor.subst(iop)
-    exec_output = VectorReduceIntMicroExecute.subst(microiop)
-    decode_block = VectorIntDecodeBlock.subst(iop)
-}};
-
-def format VectorReduceFloatFormat(code, category, *flags) {{
-    iop = InstObjParams(
-        name,
-        Name,
-        'VectorArithMacroInst',
-        {'code': code,
-         'declare_varith_template': declareVArithTemplate(Name, 'float', 16)},
-        flags
+        type_name = "float" if is_float else "uint",
+        min_size = 16 if is_float else 8,
+        max_size = 32 if is_widening else 64
     )
-    inst_name, inst_suffix = name.split("_", maxsplit=1)
-    dest_reg_id = "vecRegClass[_machInst.vd]"
-    src1_reg_id = "vecRegClass[_machInst.vs1 == _machInst.vd\
-                               ? VecMemInternalReg0 : _machInst.vs1]"
-    src2_reg_id = "vecRegClass[(_machInst.vs2 + _microIdx == _machInst.vd\
-                               ? VecMemInternalReg0 : _machInst.vs2)\
-                               + _microIdx]"
-    set_dest_reg_idx = setDestWrapper(dest_reg_id)
-    set_src_reg_idx = setSrcWrapper(src1_reg_id)
-    set_src_reg_idx += setSrcWrapper(src2_reg_id)
-    set_src_reg_idx += setSrcVmOrTmp0()
-    vm_decl_rd = vmDeclAndReadData()
-    set_vlenb = setVlenb()
 
-    type_def = '''
-        using et = ElemType;
-        using vu = decltype(et::v);
-    '''
-
-    code = fflags_wrapper(code)
-
-    varith_micro_declare = declareVArithTemplate(Name + "Micro", 'float', 16)
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -1381,7 +1494,9 @@ def format VectorReduceFloatFormat(code, category, *flags) {{
          'set_vlenb': set_vlenb,
          'vm_decl_rd': vm_decl_rd,
          'type_def': type_def,
-         'declare_varith_template': varith_micro_declare},
+         'copy_old_vd': copyOldVd('oldDstIdx'),
+         'reduce_loop': generateReduceLoop(is_float=is_float),
+         'declare_varith_template': varith_template_microiop},
         flags)
 
     header_output = \
@@ -1390,62 +1505,18 @@ def format VectorReduceFloatFormat(code, category, *flags) {{
     decoder_output = \
         VectorReduceMicroConstructor.subst(microiop) + \
         VectorReduceMacroConstructor.subst(iop)
-    exec_output = VectorReduceFloatMicroExecute.subst(microiop)
-    decode_block = VectorFloatDecodeBlock.subst(iop)
-}};
+    exec_output = VectorReduceMicroExecute.subst(microiop)
 
-def format VectorReduceFloatWideningFormat(code, category, *flags) {{
-    varith_macro_declare = declareVArithTemplate(Name, 'float', 16, 32)
-    iop = InstObjParams(
-        name,
-        Name,
-        'VectorArithMacroInst',
-        {'code': code,
-         'declare_varith_template': varith_macro_declare},
-        flags
-    )
-    inst_name, inst_suffix = name.split("_", maxsplit=1)
-    dest_reg_id = "vecRegClass[_machInst.vd]"
-    src1_reg_id = "vecRegClass[_machInst.vs1 == _machInst.vd\
-                               ? VecMemInternalReg0 : _machInst.vs1]"
-    src2_reg_id = "vecRegClass[(_machInst.vs2 + _microIdx == _machInst.vd\
-                               ? VecMemInternalReg0 : _machInst.vs2)\
-                               + _microIdx]"
-    set_dest_reg_idx = setDestWrapper(dest_reg_id)
-    set_src_reg_idx = setSrcWrapper(src1_reg_id)
-    set_src_reg_idx += setSrcWrapper(src2_reg_id)
-    set_src_reg_idx += setSrcVmOrTmp0()
-    vm_decl_rd = vmDeclAndReadData()
-    set_vlenb = setVlenb()
-    type_def = '''
-        using et = ElemType;
-        using vu [[maybe_unused]] = decltype(et::v);
-        using ewt = typename double_width<et>::type;
-        using vwu = decltype(ewt::v);
-    '''
-
-    varith_micro_declare = declareVArithTemplate(
-        Name + "Micro", 'float', 16, 32)
-    microiop = InstObjParams(name + "_micro",
-        Name + "Micro",
-        'VectorArithMicroInst',
-        {'code': code,
-         'set_dest_reg_idx': set_dest_reg_idx,
-         'set_src_reg_idx': set_src_reg_idx,
-         'set_vlenb': set_vlenb,
-         'vm_decl_rd': vm_decl_rd,
-         'type_def': type_def,
-         'declare_varith_template': varith_micro_declare},
-        flags)
-
-    header_output = \
-        VectorReduceMicroDeclare.subst(microiop) + \
-        VectorReduceMacroDeclare.subst(iop)
-    decoder_output = \
-        VectorReduceMicroConstructor.subst(microiop) + \
-        VectorReduceMacroConstructor.subst(iop)
-    exec_output = VectorReduceFloatWideningMicroExecute.subst(microiop)
-    decode_block = VectorFloatWideningDecodeBlock.subst(iop)
+    if is_float:
+        if is_widening:
+            decode_block = VectorFloatWideningDecodeBlock.subst(iop)
+        else:
+            decode_block = VectorFloatDecodeBlock.subst(iop)
+    else:
+        if is_widening:
+            decode_block = VectorIntWideningDecodeBlock.subst(iop)
+        else:
+            decode_block = VectorIntDecodeBlock.subst(iop)
 }};
 
 def format VectorIntVxsatFormat(code, category, *flags) {{
@@ -1508,126 +1579,94 @@ def format VectorIntVxsatFormat(code, category, *flags) {{
     decode_block = VectorIntDecodeBlock.subst(iop)
 }};
 
-def format VectorReduceIntWideningFormat(code, category, *flags) {{
-    iop = InstObjParams(
-        name,
-        Name,
-        'VectorArithMacroInst',
-        {'code': code,
-         'declare_varith_template': declareVArithTemplate(Name, max_size=32)},
-        flags
-    )
-    inst_name, inst_suffix = name.split("_", maxsplit=1)
-    dest_reg_id = "vecRegClass[_machInst.vd]"
-    src1_reg_id = "vecRegClass[_machInst.vs1 == _machInst.vd\
-                               ? VecMemInternalReg0 : _machInst.vs1]"
-    src2_reg_id = "vecRegClass[(_machInst.vs2 + _microIdx == _machInst.vd\
-                               ? VecMemInternalReg0 : _machInst.vs2)\
-                               + _microIdx]"
-    set_dest_reg_idx = setDestWrapper(dest_reg_id)
-    set_src_reg_idx = setSrcWrapper(src1_reg_id)
-    set_src_reg_idx += setSrcWrapper(src2_reg_id)
-    set_src_reg_idx += setSrcVmOrTmp0()
-    vm_decl_rd = vmDeclAndReadData()
-    set_vlenb = setVlenb()
 
-    varith_micro_declare = declareVArithTemplate(Name + "Micro", max_size=32)
-    microiop = InstObjParams(name + "_micro",
-        Name + "Micro",
-        'VectorArithMicroInst',
-        {'code': code,
-         'set_dest_reg_idx': set_dest_reg_idx,
-         'set_src_reg_idx': set_src_reg_idx,
-         'set_vlenb': set_vlenb,
-         'vm_decl_rd': vm_decl_rd,
-         'declare_varith_template': varith_micro_declare},
-        flags)
+def format VectorSlideFormat(category, *flags) {{
+    is_up = "up" in name
+    is_vi = (category == "OPIVI")
+    is_vx = (category == "OPIVX")
+    is_vf = (category == "OPFVF")
+    is_slide1 = "1" in name
 
-    header_output = \
-        VectorReduceMicroDeclare.subst(microiop) + \
-        VectorReduceMacroDeclare.subst(iop)
-    decoder_output = \
-        VectorReduceMicroConstructor.subst(microiop) + \
-        VectorReduceMacroConstructor.subst(iop)
-    exec_output = VectorReduceIntWideningMicroExecute.subst(microiop)
-    decode_block = VectorIntWideningDecodeBlock.subst(iop)
-}};
-
-
-let {{
-
-def VectorSlideBase(name, Name, category, code, flags, macro_construtor,
-        decode_template, micro_execute_template, offset_code=''):
     macroop_class_name = 'VectorSlideMacroInst'
     microop_class_name = 'VectorSlideMicroInst'
-    # Make sure flags are in lists (convert to lists if not).
+
+    varith_macro_declare = declareVArithTemplate(Name)
+
     flags = makeList(flags)
+    iop = InstObjParams(name, Name, macroop_class_name,
+            {'declare_varith_template': varith_macro_declare}, flags)
 
-    if decode_template is VectorIntDecodeBlock:
-        varith_macro_declare = declareVArithTemplate(Name)
-    elif decode_template is VectorFloatDecodeBlock:
-        varith_macro_declare = declareVArithTemplate(Name, 'float', 16)
-
-    iop = InstObjParams(
-        name,
-        Name,
-        macroop_class_name,
-       {'code': code,
-        'declare_varith_template': varith_macro_declare,
-        'offset_code': offset_code},
-        flags
-    )
-    inst_name, inst_suffix = name.split("_", maxsplit=1)
-    dest_reg_id = "vecRegClass[_machInst.vd + vdIdx]"
+    dest_reg_id = "vecRegClass[_machInst.vd + microIdx]"
 
     set_src_reg_idx = ""
+    if is_vx:
+        set_src_reg_idx += setSrcWrapper("intRegClass[_machInst.rs1]")
+    elif is_vf:
+        set_src_reg_idx += setSrcWrapper("floatRegClass[_machInst.rs1]")
 
-    src2_reg_id = "vecRegClass[(_copyVs ? VecMemInternalReg0 " \
-        + ": _machInst.vs2) + vs2Idx]"
-    src3_reg_id = "vecRegClass[(_copyVs ? VecMemInternalReg0 " \
-        + ": _machInst.vs2) + vs3Idx]"
-    src1_ireg_id = "intRegClass[_machInst.rs1]"
-    src1_freg_id = "floatRegClass[_machInst.rs1]"
+    set_src_reg_idx += setVecRegGroupSrcWrapper("vtype_regs_per_group(vtype)",
+                                                "_machInst.vs2")
 
-    num_src_regs = 0
-    if category == "OPIVX":
-        set_src_reg_idx += setSrcWrapper(src1_ireg_id)
-        num_src_regs += 1
-    elif category == "OPFVF":
-        set_src_reg_idx += setSrcWrapper(src1_freg_id)
-        num_src_regs += 1
-
-    set_src_reg_idx += setSrcWrapper(src2_reg_id)
-    set_src_reg_idx += setSrcWrapper(src3_reg_id)
-    num_src_regs += 2
-
-    dest_set_src_reg_idx = ""
-    # No dest reg pin: Bypass tail/mask policy to copy unchanged elements
-    if name == "vslideup_vi":
-        dest_set_src_reg_idx = f"oldDstIdx = {num_src_regs};\n"
-        dest_set_src_reg_idx += setSrcWrapper(dest_reg_id)
-    elif name not in ["vslideup_vx", "vslidedown_vx"]:
-        dest_set_src_reg_idx = tailMaskCondSetSrcWrapper(
+    if name in ["vslideup_vx", "vslideup_vi"]:
+        set_src_reg_idx += "oldDstIdx = _numSrcRegs;\n"
+        set_src_reg_idx += setSrcWrapper(dest_reg_id)
+        copy_old_vd = '''
+            RiscvISA::vreg_t old_vd;
+            xc->getRegOperand(this, oldDstIdx, &old_vd);
+            tmp_d0 = old_vd;
+        '''
+    else:
+        set_src_reg_idx += tailMaskCondSetSrcWrapper(
             setSrcWrapper(dest_reg_id)
         )
-    set_src_reg_idx += dest_set_src_reg_idx
+        copy_old_vd = "COPY_OLD_VD(oldDstIdx);"
 
     set_dest_reg_idx = setDestWrapper(dest_reg_id)
-    set_vlenb = setVlenb()
 
-    if decode_template is VectorIntDecodeBlock:
-        varith_micro_declare = declareVArithTemplate(Name + "Micro")
-    elif decode_template is VectorFloatDecodeBlock:
-        varith_micro_declare = declareVArithTemplate(
-            Name + "Micro", 'float', 16)
+    if is_slide1:
+        offset = "int offset = 1;"
+    elif is_vi:
+        offset = "int offset = SIMM5;"
+    else:
+        offset = '''
+            int offset = (Rs1_vu > RVV_MAX_VLMAX) ? RVV_MAX_VLMAX : Rs1_vu;
+        '''
+
+    if is_slide1:
+        guard = "isFirstMicroop()" if is_up else "isLastMicroop()"
+        mask_idx = "0" if is_up else "microIdx*micro_vlmax + microVl-1"
+        elem_idx = "0" if is_up else "microVl-1"
+        scalar = "Fs1_bits" if is_vf else "Rs1_vu"
+        scalar_inject = '''
+            if (%s) {
+                if (machInst.vm || elem_mask(v0, %s)) {
+                    Vd_vu[%s] = %s;
+                }
+            }
+        ''' % (guard, mask_idx, elem_idx, scalar)
+    else:
+        scalar_inject = ""
+
+    overlap_check = generateSlideupOverlapCheck() if is_up else ""
+
+    get_vs2_regs = getRegOperandGroup("vs2_regs",
+                                      "vtype_regs_per_group(vtype)",
+                                      "0" if is_vi else "1")
+
+    varith_micro_declare = declareVArithTemplate(Name + "Micro")
 
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         microop_class_name,
-        {'code': code,
-         'set_dest_reg_idx': set_dest_reg_idx,
+        {'set_dest_reg_idx': set_dest_reg_idx,
          'set_src_reg_idx': set_src_reg_idx,
-         'set_vlenb': set_vlenb,
+         'set_vlenb': setVlenb(),
+         'overlap_check': overlap_check,
+         'offset': offset,
+         'copy_old_vd': copy_old_vd,
+         'get_vs2_regs': get_vs2_regs,
+         'slide_loop': generateSlideElementLoop(is_up=is_up),
+         'scalar_inject': scalar_inject,
          'declare_varith_template': varith_micro_declare},
         flags)
 
@@ -1636,87 +1675,7 @@ def VectorSlideBase(name, Name, category, code, flags, macro_construtor,
         VectorSlideMacroDeclare.subst(iop)
     decoder_output = \
         VectorSlideMicroConstructor.subst(microiop) + \
-        macro_construtor.subst(iop)
-    exec_output = micro_execute_template.subst(microiop)
-    decode_block = decode_template.subst(iop)
-    return (header_output, decoder_output, decode_block, exec_output)
-
-}};
-
-def format VectorSlideUpFormat(code, category, *flags) {{
-    (header_output, decoder_output, decode_block, exec_output) = \
-        VectorSlideBase(name, Name, category, code,
-            flags,
-            macro_construtor = VectorSlideUpMacroConstructor,
-            decode_template = VectorIntDecodeBlock,
-            micro_execute_template = VectorSlideMicroExecute)
-}};
-
-def format VectorSlide1UpFormat(code, category, *flags) {{
-    (header_output, decoder_output, decode_block, exec_output) = \
-        VectorSlideBase(name, Name, category, code,
-            flags,
-            macro_construtor = VectorSlideUpImmediateMacroConstructor,
-            decode_template = VectorIntDecodeBlock,
-            micro_execute_template = VectorSlideMicroExecute,
-            offset_code = 'int offset = 1')
-}};
-
-def format VectorSlideUpVIFormat(code, category, *flags) {{
-    (header_output, decoder_output, decode_block, exec_output) = \
-        VectorSlideBase(name, Name, category, code,
-            flags,
-            macro_construtor = VectorSlideUpImmediateMacroConstructor,
-            decode_template = VectorIntDecodeBlock,
-            micro_execute_template = VectorSlideMicroExecute,
-            offset_code = 'int offset = (int)(uint64_t)(SIMM5);')
-}};
-
-def format VectorSlideDownFormat(code, category, *flags) {{
-    (header_output, decoder_output, decode_block, exec_output) = \
-        VectorSlideBase(name, Name, category, code,
-            flags,
-            macro_construtor = VectorSlideDownMacroConstructor,
-            decode_template = VectorIntDecodeBlock,
-            micro_execute_template = VectorSlideMicroExecute)
-}};
-
-def format VectorSlide1DownFormat(code, category, *flags) {{
-    (header_output, decoder_output, decode_block, exec_output) = \
-        VectorSlideBase(name, Name, category, code,
-            flags,
-            macro_construtor = VectorSlideDownImmediateMacroConstructor,
-            decode_template = VectorIntDecodeBlock,
-            micro_execute_template = VectorSlideMicroExecute,
-            offset_code = 'int offset = 1')
-}};
-
-def format VectorSlideDownVIFormat(code, category, *flags) {{
-    (header_output, decoder_output, decode_block, exec_output) = \
-        VectorSlideBase(name, Name, category, code,
-            flags,
-            macro_construtor = VectorSlideDownImmediateMacroConstructor,
-            decode_template = VectorIntDecodeBlock,
-            micro_execute_template = VectorSlideMicroExecute,
-            offset_code = 'int offset = (int)(uint64_t)(SIMM5);')
-}};
-
-def format VectorFloatSlideUpFormat(code, category, *flags) {{
-    (header_output, decoder_output, decode_block, exec_output) = \
-        VectorSlideBase(name, Name, category, code,
-            flags,
-            macro_construtor = VectorSlideUpImmediateMacroConstructor,
-            decode_template = VectorFloatDecodeBlock,
-            micro_execute_template = VectorFloatSlideMicroExecute,
-            offset_code = 'int offset = 1')
-}};
-
-def format VectorFloatSlideDownFormat(code, category, *flags) {{
-    (header_output, decoder_output, decode_block, exec_output) = \
-        VectorSlideBase(name, Name, category, code,
-            flags,
-            macro_construtor = VectorSlideDownImmediateMacroConstructor,
-            decode_template = VectorFloatDecodeBlock,
-            micro_execute_template = VectorFloatSlideMicroExecute,
-            offset_code = 'int offset = 1')
+        VectorSlideMacroConstructor.subst(iop)
+    exec_output = VectorSlideMicroExecute.subst(microiop)
+    decode_block = VectorIntDecodeBlock.subst(iop)
 }};

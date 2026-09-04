@@ -57,7 +57,9 @@
 #include "cpu/o3/mem_dep_unit.hh"
 #include "cpu/o3/store_set.hh"
 #include "cpu/op_class.hh"
+#include "cpu/reg_class.hh"
 #include "cpu/timebuf.hh"
+#include "enums/IQInsertionPolicy.hh"
 #include "enums/SMTQueuePolicy.hh"
 #include "sim/eventq.hh"
 
@@ -131,6 +133,8 @@ class IQUnit : public SimObject
     {
         return _fuPool;
     }
+
+    bool isCapable(OpClass op_class) const;
 
   private:
     /** IQ sharing policy for SMT. */
@@ -331,6 +335,9 @@ class InstructionQueue
     /** Wakes all dependents of a completed instruction. */
     int wakeDependents(const DynInstPtr &completed_inst);
 
+    /** Wakes all dependents waiting on a destination register. */
+    int wakeDependents(PhysRegIdPtr dest_reg);
+
     /** Adds a ready memory instruction to the ready list. */
     void addReadyMemInst(const DynInstPtr &ready_inst);
 
@@ -392,6 +399,9 @@ class InstructionQueue
 
     /** List of Instruction Queues */
     std::vector<IQUnit *> iqs;
+
+    /** Insertion policy for routing instructions to IQs */
+    IQInsertionPolicy insertionPolicy;
 
     /** The memory dependence unit, which tracks/predicts memory dependences
      *  between instructions.

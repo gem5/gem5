@@ -43,6 +43,7 @@ import sys
 from typing import Optional
 
 from m5.objects import Root
+from m5.SimObject import MetaSimObject
 from m5.util.dot_writer import (
     do_dot,
     do_dvfs_dot,
@@ -144,6 +145,66 @@ def _dump_configs(
     gather_citations(root, outdir)
 
 
+def _bind_all_ports(root):
+    """Connects all ports in the object graph.
+
+    Uses C++ batch binding for pure C++ SimObjects, falls back to python binding
+    for SystemC or other edge cases.
+
+    Batching port connections when both endpoints are C++ SimObjects
+    significantly reduces the overhead of crossing the Python-C++ language
+    boundary during initialization. The fallback method is expensive, requiring
+    three separate boundary crossings (two getPort calls and one bind call) for
+    every single port connection. In contrast, the batching approach executes
+    all connections in a single context switch. Additionally, it uses the
+    SimObject Capsule to pass raw C++ pointers, completely bypassing the heavy
+    py::cast<SimObject*>() type-casting overhead in pybind11.
+    """
+    obj_ptrs, obj_port_names, obj_port_indices = [], [], []
+    peer_ptrs, peer_port_names, peer_port_indices = [], [], []
+
+    for obj in root.descendants():
+        if obj._ccSimObjCapsule is None:
+            obj.connectPorts()
+            continue
+
+        for attr, port_ref in sorted(obj._port_refs.items()):
+            # VectorPortRef has elements
+            refs = getattr(port_ref, "elements", [port_ref])
+
+            for ref in refs:
+                if ref.ccConnected or not ref.peer:
+                    continue
+
+                peer_ref = ref.peer
+                peer_obj = peer_ref.simobj
+
+                if peer_obj._ccSimObjCapsule is None:
+                    obj_cc = obj.getCCObject()
+                    peer_cc = peer_obj.getCCObject()
+                    port = obj_cc.getPort(ref.name, ref.index)
+                    peer_port = peer_cc.getPort(peer_ref.name, peer_ref.index)
+                    port.bind(peer_port)
+                else:
+                    obj_ptrs.append(obj._ccSimObjCapsule)
+                    obj_port_names.append(ref.name)
+                    obj_port_indices.append(ref.index)
+                    peer_ptrs.append(peer_obj._ccSimObjCapsule)
+                    peer_port_names.append(peer_ref.name)
+                    peer_port_indices.append(peer_ref.index)
+
+                ref.ccConnected = True
+
+    _m5_core.bindPorts(
+        obj_ptrs,
+        obj_port_names,
+        obj_port_indices,
+        peer_ptrs,
+        peer_port_names,
+        peer_port_indices,
+    )
+
+
 def _create_cpp_objects(root, ckpt_dir):
     """Does simboject initialization.
 
@@ -161,24 +222,33 @@ def _create_cpp_objects(root, ckpt_dir):
     # Create the C++ sim objects and connect ports
     for obj in root.descendants():
         obj.createCCObject()
-    for obj in root.descendants():
-        obj.connectPorts()
+        # Some objects are SimObject in python but not SimObject in C++.
+        # For example: SystemC objects set cxx_base = None, meaning they don't
+        # inherit from gem5::SimObject in C++ and cannot be cast to SimObject*.
+        if MetaSimObject.isCxxSimObject(type(obj)):
+            # Stores a capsule to reduce overhead of py::cast<SimObject*>() in future use.
+            obj._ccSimObjCapsule = obj.getCCObject().getCapsule()
+
+    _bind_all_ports(root)
+
+    simobj_capsules = [
+        obj._ccSimObjCapsule
+        for obj in root.descendants()
+        if obj._ccSimObjCapsule is not None
+    ]
 
     # Do a second pass to finish initializing the sim objects
-    for obj in root.descendants():
-        obj.init()
+    _m5_core.initAll(simobj_capsules)
 
     # Do a third pass to initialize statistics
     stats._bindStatHierarchy(root)
     root.regStats()
 
     # Do a fourth pass to initialize probe points
-    for obj in root.descendants():
-        obj.regProbePoints()
+    _m5_core.regProbePointsAll(simobj_capsules)
 
     # Do a fifth pass to connect probe listeners
-    for obj in root.descendants():
-        obj.regProbeListeners()
+    _m5_core.regProbeListenersAll(simobj_capsules)
 
     # We're done registering statistics.  Enable the stats package now.
     stats.enable()
@@ -187,11 +257,9 @@ def _create_cpp_objects(root, ckpt_dir):
     if ckpt_dir:
         _drain_manager.preCheckpointRestore()
         ckpt = _m5_core.getCheckpoint(ckpt_dir)
-        for obj in root.descendants():
-            obj.loadState(ckpt)
+        _m5_core.loadStateAll(ckpt, simobj_capsules)
     else:
-        for obj in root.descendants():
-            obj.initState()
+        _m5_core.initStateAll(simobj_capsules)
 
     # Check to see if any of the stat events are in the past after resuming from
     # a checkpoint, If so, this call will shift them to be at a valid time.
@@ -329,6 +397,10 @@ def scheduleTickExitAbsolute(
     The default ``exit_string`` value is used by the stdlib Simulator module to
     declare this exit event as ``ExitEvent.SCHEDULED_TICK``.
 
+    Note: when a non-default ``exit_string`` is provided, this function uses
+    the newer ExitHypercall mechanism via ``_m5_event.exitSimulationLoop`` to
+    convey structured exit metadata to the simulator core.
+
     :param tick: The absolute simulation tick to schedule the exit event.
     :param exit_string: The exit string to return when the exit event is
                         triggered.
@@ -340,10 +412,16 @@ def scheduleTickExitAbsolute(
     # the exit string is used (as it maps the an ExitEvent enum value). For
     # other string values we use the newer approach.
     if exit_string == "Tick exit reached":
-        _m5_event.exitSimLoop(exit_string, 0, tick, 0, False)
+        _m5_event.exitSimulationLoopClassic(
+            exit_string,
+            0,
+            tick,
+            0,
+            False,
+        )
     else:
         _m5_event.exitSimulationLoop(
-            6,
+            _m5_event.ExitHypercall.SCHEDULED_EXIT,
             {
                 "scheduled_at_tick": str(curTick()),
                 "justification": exit_string,
@@ -427,7 +505,7 @@ def _changeMemoryMode(system, mode):
         print("System already in target mode. Memory mode unchanged.")
 
 
-def switchCpus(system, cpuList, verbose=True):
+def switchCpus(system, cpuList, verbose=True, is_ruby=False):
     """Switch CPUs in a system.
 
     .. note::
@@ -455,6 +533,8 @@ def switchCpus(system, cpuList, verbose=True):
     new_cpus = [new_cpu for old_cpu, new_cpu in cpuList]
     old_cpu_set = set(old_cpus)
     memory_mode_name = new_cpus[0].memory_mode()
+    if is_ruby and memory_mode_name == "atomic":
+        memory_mode_name = "atomic_noncaching"
     for old_cpu, new_cpu in cpuList:
         if not isinstance(old_cpu, BaseCPU):
             raise TypeError(f"{old_cpu} is not of type BaseCPU")
@@ -470,7 +550,10 @@ def switchCpus(system, cpuList, verbose=True):
             raise RuntimeError(
                 f"New CPU ({old_cpu}) does not support CPU handover."
             )
-        if new_cpu.memory_mode() != memory_mode_name:
+        new_memory_mode = new_cpu.memory_mode()
+        if is_ruby and new_memory_mode == "atomic":
+            new_memory_mode = "atomic_noncaching"
+        if new_memory_mode != memory_mode_name:
             raise RuntimeError(
                 f"{new_cpu} and {new_cpus[0]} require different memory modes."
             )

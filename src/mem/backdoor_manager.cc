@@ -45,10 +45,26 @@ namespace gem5
 
 BackdoorManager::BackdoorManager(const std::vector<AddrRange> &original_ranges,
                                  const std::vector<AddrRange> &remapped_ranges)
-    : originalRanges(original_ranges),
-      remappedRanges(remapped_ranges),
-      backdoorLists(original_ranges.size())
+    : originalRanges(original_ranges), remappedRanges(remapped_ranges)
 {
+}
+
+void
+BackdoorManager::updateAddrRange(const std::vector<AddrRange> &original_ranges,
+                                 const std::vector<AddrRange> &remapped_ranges)
+{
+    /* The entries in the map is not erased, so we don't need to re-register
+     * the callback when the same backdoor is returned again.
+     */
+    for (auto &pair : backdoorMap) {
+        auto &backdoor_list = pair.second;
+        for (auto &backdoor_ptr : backdoor_list) {
+            backdoor_ptr->invalidate();
+        }
+        backdoor_list.clear();
+    }
+    originalRanges = original_ranges;
+    remappedRanges = remapped_ranges;
 }
 
 MemBackdoorPtr
@@ -66,7 +82,28 @@ MemBackdoorPtr
 BackdoorManager::createRevertedBackdoor(MemBackdoorPtr backdoor,
                                         const AddrRange &pkt_range)
 {
-    std::unique_ptr<MemBackdoor> reverted_backdoor = std::make_unique<MemBackdoor>();
+    auto it = backdoorMap.find(backdoor);
+    /* If the backdoor is not registered yet, register the callback to inform
+     * the backdoor to clear the map when invalidated. The entry in the map
+     * will be implicitly added later.
+     */
+    if (it == backdoorMap.end()) {
+        backdoor->addInvalidationCallback([this](const MemBackdoor &backdoor) {
+            auto &backdoorMap = this->backdoorMap;
+            auto it = backdoorMap.find(&backdoor);
+            if (it == backdoorMap.end()) {
+                return;
+            }
+            auto &backdoor_list = it->second;
+            for (auto &backdoor_ptr : backdoor_list) {
+                backdoor_ptr->invalidate();
+            }
+            backdoorMap.erase(it);
+        });
+    }
+
+    std::unique_ptr<MemBackdoor> reverted_backdoor =
+        std::make_unique<MemBackdoor>();
     reverted_backdoor->flags(backdoor->flags());
     reverted_backdoor->ptr(backdoor->ptr());
 
@@ -101,18 +138,15 @@ BackdoorManager::createRevertedBackdoor(MemBackdoorPtr backdoor,
             reverted_backdoor->ptr(backdoor->ptr() + shrinked_offset);
 
             /**
-             * Bind the life cycle of the created backdoor with the target
-             * backdoor. Invalid and delete the created backdoor when the
-             * target backdoor is invalidated.
+             * The created backdoors will be invalidated and deleted when the
+             * target backdoor is invalidated, or the manager is reset.
              */
             MemBackdoorPtr reverted_backdoor_raw_ptr = reverted_backdoor.get();
-            auto it = backdoorLists[i].insert(backdoorLists[i].end(),
-                                              std::move(reverted_backdoor));
-            backdoor->addInvalidationCallback(
-                [this, i, it](const MemBackdoor &backdoor) {
-                    (*it)->invalidate();  // *it is unique_ptr reverted_backdoor
-                    this->backdoorLists[i].erase(it);
-                });
+            /**
+             * If the backdoor is not registered yet, the following statement
+             * will also implicitly insert an entry to the map with empty list.
+             */
+            backdoorMap[backdoor].push_back(std::move(reverted_backdoor));
             return reverted_backdoor_raw_ptr;
         }
     }
@@ -125,20 +159,11 @@ BackdoorManager::findBackdoor(const AddrRange &pkt_range) const
 {
     Addr addr = pkt_range.start();
     Addr size = pkt_range.size();
-    for (int i = 0; i < originalRanges.size(); ++i) {
-        /** The original ranges should be disjoint, so at most one range
-         * contains the begin address.
-         */
-        if (originalRanges[i].contains(addr)) {
-            if (!originalRanges[i].contains(addr + size - 1)) {
-                /** The request range doesn't fit in any address range. */
-                return nullptr;
-            }
-            for (const auto &backdoor : backdoorLists[i]) {
-                if (backdoor->range().contains(addr) &&
-                    backdoor->range().contains(addr + size - 1)) {
-                    return backdoor.get();
-                }
+    for (const auto &pair : backdoorMap) {
+        for (const auto &backdoor : pair.second) {
+            if (backdoor->range().contains(addr) &&
+                backdoor->range().contains(addr + size - 1)) {
+                return backdoor.get();
             }
         }
     }
