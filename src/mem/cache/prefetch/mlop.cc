@@ -1,3 +1,31 @@
+/*
+ * Copyright (c) 2026 Marco Frank, Erik Chao, and Matthew Mosher
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met: redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer;
+ * redistributions in binary form must reproduce the above copyright
+ * notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution;
+ * neither the name of the copyright holders nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 #include "mem/cache/prefetch/mlop.hh"
 
 #include <algorithm>
@@ -32,7 +60,8 @@ MLOP::MLOP(const MLOPPrefetcherParams &p)
     }
     if (!isPowerOf2(bitVectorSize) || bitVectorSize > 64) {
         fatal("%s: bit_vector_size (%u) must be a power of two no greater "
-            "than 64\n", name(), bitVectorSize);
+              "than 64\n",
+              name(), bitVectorSize);
     }
     if (maxOffset <= 0) {
         fatal("%s: max_offset must be > 0 (got %d)\n", name(), maxOffset);
@@ -107,9 +136,8 @@ MLOP::updateScoresWithAccess(Addr block)
 
     AMTEntry &entry = findOrAllocAmtEntry(baseBlock);
 
-    // For each lookahead level L, exclude the last (L-1) accesses from
-    // the bit-vector, then credit every offset that would have predicted
-    // this access from what remains.
+    // For each level L, credit every offset that would have predicted
+    // this access after excluding the last (L-1) accesses.
     for (unsigned exclude = 0; exclude <= lookaheadLevels - 1; exclude++) {
         uint64_t masked = entry.bitVector;
         for (unsigned r = 0;
@@ -148,21 +176,37 @@ MLOP::selectBestOffsets()
 {
     bestOffsets.clear();
 
-    for (unsigned L = 1; L <= lookaheadLevels; L++) {
-        uint32_t bestScore = 0;
-        const OffsetEntry *bestEntry = nullptr;
+    // Keep every tied top-scorer per level, process longest lookahead
+    // first so a claimed offset isn't reissued at a shorter one.
+    std::vector<bool> used(2 * maxOffset + 1, false);
+    std::vector<std::vector<const OffsetEntry *>> perLevel(lookaheadLevels);
 
+    for (unsigned L = lookaheadLevels; L >= 1; L--) {
+        uint32_t bestScore = 0;
         for (auto &kv : offsetTable) {
-            const OffsetEntry &e = kv.second;
-            const uint32_t s = e.scores[L - 1];
-            if (s >= scoreThreshold && s > bestScore) {
-                bestScore = s;
-                bestEntry = &e;
-            }
+            bestScore = std::max(bestScore, kv.second.scores[L - 1]);
+        }
+        if (bestScore < scoreThreshold) {
+            continue;
         }
 
-        if (bestEntry) {
-            bestOffsets.emplace_back(L, bestEntry);
+        std::vector<const OffsetEntry *> &winners = perLevel[L - 1];
+        for (auto &kv : offsetTable) {
+            const OffsetEntry &e = kv.second;
+            if (e.scores[L - 1] == bestScore && !used[e.offset + maxOffset]) {
+                winners.push_back(&e);
+            }
+        }
+        for (const OffsetEntry *e : winners) {
+            used[e->offset + maxOffset] = true;
+        }
+    }
+
+    // Emit in increasing-lookahead order (L=1 first) so the existing
+    // issue-order priority in calculatePrefetch is preserved.
+    for (unsigned L = 1; L <= lookaheadLevels; L++) {
+        for (const OffsetEntry *e : perLevel[L - 1]) {
+            bestOffsets.emplace_back(L, e);
         }
     }
 }
