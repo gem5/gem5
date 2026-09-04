@@ -1,0 +1,72 @@
+---
+acc_cluster:
+    - Name: # Cluster name here (Required)
+  # NonCoherent DMA Example
+    - DMA:
+          - Name: # DMA name here (Required)
+            MaxReqSize: # Max Request Size for DMA in Bytes (Optional)
+            BufferSize: # DMA Buffer Size in Bytes (Optional)
+            PIOMaster: # PIO Master list (Required)
+      # Can be LocalBus or any combination of Accs
+      # e.g. FirstAcc,SecondAcc
+            Type: # Selects the type of DMA, can be NonCoherent or Stream (Required)
+            InterruptNum: # Sets the Interrupt Number (Optional)
+  # Streaming DMA Example
+    - DMA:
+          - Name: # DMA name here (Required)
+            PIOMaster: # PIO Master list (Required)
+      # Can be LocalBus or any combination of Accs
+      # e.g. FirstAcc,SecondAcc
+            BufferSize: # DMA Buffer Size in Bytes (Optional)
+            Type: # Selects the type of DMA, can be NonCoherent or Stream (Required)
+            ReadInt: # Interrupt Number for when read frames are finished (Optional)
+            WriteInt: # Interrupt Number for when write frames are finished (Optional)
+  # Accelerator Example
+    - Accelerator:
+          - Name: # Acc name here (Required)
+            IrPath: # Path for the IR file relative to ACC_BENCH_PATH (Required)
+      # E.g. benchmarks/mobilenetv2/hw/ir/tail/Reshape.ll
+            ConfigPath: # Path for the Config file relative to ACC_BENCH_PATH (Required)
+      # E.g. benchmarks/mobilenetv2/hw/ir/tail/Reshape.ini
+            Debug: # True or False, prints acc debug messages (Optional)
+            PIOSize: # Sets the PIO register size in bytes (Required)
+            PIOMaster: # PIO Master list (Required)
+      # Can be LocalBus or any combination of Accs
+      # e.g. FirstAcc,SecondAcc
+    # Standard SPM Example, automatically connects to parent acc
+          - Var:
+                - Name: # Var name here (Required)
+                  Type: # SPM
+                  Size: # Size in Bytes (Required)
+                  Ports: # Number of ports to connect to parent Acc
+                  ResetOnRead: # True/False | Reset ready bit on private scratchpad memory read
+                  ReadOnInvalid: # True/False | Enable reads on invalid memory segments when ready mode is used
+                  WriteOnValid: # True/False | Enable writes on valid memory sectors when ready mode is used
+    # SPM with Multiple Accs Example
+          - Var:
+                - Name: # Var name here (Required)
+                  Type: # SPM
+                  Size: # Size in Bytes
+                  Ports: # Number of ports to connect to parent Acc
+                  Connections: # Define extra connections here with porting
+        # e.g. SecondAcc:1,ThirdAccAcc:1
+    # Stream Buffer Example
+          - Var:
+                - Name: # Var name here (Required)
+                  Type: # Stream
+                  StreamSize: # Stream buffer width in bytes (Optional)
+                  BufferSize: # Stream buffer size in bytes (Optional)
+                  InCon: # Input connection, Acc Name (Required)
+                  OutCon: # Output connection, Acc Name (Required)
+    # RegisterBank Example
+          - Var:
+                - Name: # Var name here (Required)
+                  Type: # RegisterBank
+                  Size: # Register size in Bytes
+                  Connections: # Define extra connections here with porting
+        # e.g. SecondAcc:1,ThirdAccAcc:1
+    # L1 Cache Example
+          - Var:
+                - Name: # Var name here (Required)
+                  Type: # Cache
+                  Size: # Cache size in Bytes

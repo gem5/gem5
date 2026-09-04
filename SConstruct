@@ -70,6 +70,7 @@
 import atexit
 import itertools
 import os
+import subprocess
 import sys
 
 from os import mkdir, remove, environ, listdir
@@ -161,6 +162,8 @@ AddOption('--duplicate-sources', action='store_true', default=False,
 AddOption('--no-duplicate-sources', action='store_false',
           dest='duplicate_sources',
           help='Do not create symlinks to sources in the build directory')
+AddOption('--with-salam', action='store_true',
+          help='Build with SALAM accelerator-model support (requires LLVM)')
 AddOption('--gcov', action='store_true', default=False,
           help="Build gem5 with symbols used by gcov to enable obtaining code "
           "coverage metrics. This option does not work on Arm hosts.")
@@ -446,6 +449,94 @@ main.Prepend(CPPPATH=Dir('include'))
 if not GetOption('duplicate_sources'):
     main.Prepend(CPPPATH=Dir('src'))
 
+
+########################################################################
+#
+# LLVM Configuration for optional SALAM builds
+#
+########################################################################
+
+def _llvm_out(llvm_config_path, *args):
+    """Executes llvm-config and returns the output as a list of strings."""
+    try:
+        command = [llvm_config_path] + list(args)
+        return Split(readCommand(command))
+    except (subprocess.CalledProcessError, SCons.Errors.UserError) as e:
+        error(f"Command '{' '.join(command)}' failed:\n{e}")
+
+
+SUPPORTED_LLVM_VERSIONS = {11, 12, 13, 14, 15, 16, 17, 18, 19, 20}
+
+
+def _find_llvm_config(env):
+    llvm_config = None
+
+    candidate = environ.get("LLVM_CONFIG")
+    if candidate:
+        if isfile(candidate):
+            llvm_config = candidate
+        else:
+            warning(
+                f"LLVM_CONFIG is set to '{candidate}' but it's not a file."
+            )
+
+    if not llvm_config:
+        llvm_config = env.WhereIs("llvm-config")
+
+    if not llvm_config:
+        search_paths = set(environ.get("PATH", "").split(os.pathsep))
+        search_paths.update([
+            "/usr/bin",
+            "/usr/local/bin",
+            "/opt/homebrew/opt/llvm/bin",
+        ])
+
+        candidates = []
+        for path in filter(isdir, search_paths):
+            for f in listdir(path):
+                if not f.startswith("llvm-config-"):
+                    continue
+                try:
+                    version = int(f.split('-')[-1].split('.')[0])
+                    if version in SUPPORTED_LLVM_VERSIONS:
+                        candidates.append((version, join(path, f)))
+                except (ValueError, IndexError):
+                    continue
+
+        if candidates:
+            llvm_config = sorted(candidates, reverse=True)[0][1]
+
+    return llvm_config
+
+
+def configure_llvm_for_salam(env):
+    llvm_config = _find_llvm_config(env)
+
+    if not llvm_config:
+        error(
+            "SALAM build requested (--with-salam), but no supported "
+            "'llvm-config' executable was found.\n"
+            f"Supported versions: {sorted(list(SUPPORTED_LLVM_VERSIONS))}\n"
+            "Fix: Install a supported LLVM, ensure it's on PATH, "
+            "or set the LLVM_CONFIG environment variable."
+        )
+
+    print(f"scons: Using LLVM config at '{llvm_config}' for SALAM")
+
+    for flag_cmd in (
+        [llvm_config, '--cppflags'],
+        [llvm_config, '--ldflags'],
+        [llvm_config, '--libs', 'all'],
+        [llvm_config, '--system-libs'],
+    ):
+        env.ParseConfig(flag_cmd)
+
+    libdir = _llvm_out(llvm_config, '--libdir')
+    env.Append(RPATH=libdir)
+
+    env.Append(
+        CPPDEFINES=['LLVM_DISABLE_ABI_BREAKING_CHECKS_ENFORCING=1']
+    )
 
 ########################################################################
 #
@@ -1044,6 +1135,13 @@ for variant_path in variant_paths:
                 config_file.abspath)
 
     kconfig.update_env(env, kconfig_file.abspath, config_file.abspath)
+
+    env['CONF']['WITH_SALAM'] = GetOption('with_salam')
+
+    if env['CONF']['WITH_SALAM']:
+        if not env['CONF']['USE_ARM_ISA']:
+            error("--with-salam currently requires an ARM build target.")
+        configure_llvm_for_salam(env)
 
     # Do this after we save setting back, or else we'll tack on an
     # extra 'qdo' every time we run scons.
