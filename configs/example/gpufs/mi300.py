@@ -56,6 +56,7 @@ demo_runscript_without_checkpoint = """\
 export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
 export HSA_ENABLE_INTERRUPT=0
 export HCC_AMDGPU_TARGET=gfx942
+echo 0 > /proc/sys/kernel/randomize_va_space
 dmesg -n8
 cat /proc/cpuinfo
 dd if=/root/roms/mi300.rom of=/dev/mem bs=1k seek=768 count=128
@@ -68,12 +69,10 @@ fi
 
 if [ -f /home/gem5/load_amdgpu.sh ]; then
     sh /home/gem5/load_amdgpu.sh
-elif [ ! -f /lib/modules/`uname -r`/updates/dkms/amdgpu.ko ]; then
-    echo "ERROR: Missing DKMS package for kernel `uname -r`. Exiting gem5."
-    /sbin/m5 exit
 else
+    echo 'options amdgpu ip_block_mask=0x6f ppfeaturemask=0 dpm=0 audio=0 ras_enable=0 discovery=2' > /etc/modprobe.d/amdgpu.conf
     # Backward compatibility with old disk images (ROCm 6.1)
-    modprobe -v amdgpu ip_block_mask=0x6f ppfeaturemask=0 dpm=0 audio=0 ras_enable=0 discovery=2
+    modprobe -v amdgpu
 fi
 
 echo "Running {} {}"
@@ -88,8 +87,16 @@ export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
 export HSA_ENABLE_INTERRUPT=0
 export HCC_AMDGPU_TARGET=gfx942
 export HSA_OVERRIDE_GFX_VERSION="9.4.2"
+echo 0 > /proc/sys/kernel/randomize_va_space
 dmesg -n8
 dd if=/root/roms/mi300.rom of=/dev/mem bs=1k seek=768 count=128
+
+# Check if exists (backwards compat with ROCm <7.0)
+if [ -e /usr/lib/firmware/amdgpu/mi300_discovery ]; then
+    rm -f /usr/lib/firmware/amdgpu/ip_discovery.bin
+    ln -s /usr/lib/firmware/amdgpu/mi300_discovery /usr/lib/firmware/amdgpu/ip_discovery.bin
+fi
+
 if [ ! -f /lib/modules/`uname -r`/updates/dkms/amdgpu.ko ]; then
     echo "ERROR: Missing DKMS package for kernel `uname -r`. Exiting gem5."
     /sbin/m5 exit

@@ -997,12 +997,15 @@ GenericTimerFrame::GenericTimerFrame(const GenericTimerFrameParams &p)
       timerRange(RangeSize(p.cnt_base, ArmSystem::PageBytes)),
       addrRanges({timerRange}),
       systemCounter(*p.counter),
-      physTimer(csprintf("%s.phys_timer", name()),
-                *this, systemCounter, p.int_phys->get()),
-      virtTimer(csprintf("%s.virt_timer", name()),
-                *this, systemCounter,
+      physTimer(csprintf("%s.phys_timer", name()), *this, systemCounter,
+                p.int_phys->get()),
+      virtTimer(csprintf("%s.virt_timer", name()), *this, systemCounter,
                 p.int_virt->get()),
       accessBits(0x3f),
+      // Default to true: enable non-secure access to simplify bootloader
+      // implementation, which otherwise would need to program CNTNSAR
+      // before booting a non-secure kernel.
+      nonSecureAccess(true),
       system(*dynamic_cast<ArmSystem *>(sys))
 {
     SystemCounter::validateCounterRef(p.counter);

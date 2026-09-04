@@ -100,6 +100,7 @@ for benchmark in ["bt", "cg", "ep", "ft", "is", "lu", "mg", "sp", "ua"]:
             switch_core_type=CPUTypes.TIMING,
             isa=ISA.X86,
             num_cores=num_cores,
+            clk_freq="3GHz",
         )
         board = X86Board(
             clk_freq="3GHz",
@@ -119,8 +120,9 @@ for benchmark in ["bt", "cg", "ep", "ft", "is", "lu", "mg", "sp", "ua"]:
         # As this is just an example we will only run the simulation for a
         # billion ticks. An actual run could take days of time to simulate.
         #
-        # We use `set_hypercall_absolute_max_ticks` to schedule a hypercall 6
-        # exit at 1 billion ticks. The default hypercall 6 behavior is to
+        # We use `set_hypercall_absolute_max_ticks` to schedule a
+        # SCHEDULED_EXIT hypercall (ID 6) at 1 billion ticks. The default
+        # SCHEDULED_EXIT hypercall behavior is to
         # end simulation, but this can be overridden with a custom hypercall
         # handler. See `src/python/gem5/simulate/exit_handler.py` for more
         # information.

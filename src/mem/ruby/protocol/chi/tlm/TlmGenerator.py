@@ -35,7 +35,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+from m5.objects.CBusy import CBusyTracker
 from m5.objects.ClockedObject import ClockedObject
+from m5.objects.SnoopHandler import PySnoopHandler
 from m5.objects.TlmController import TlmController
 from m5.params import *
 from m5.SimObject import (
@@ -74,7 +76,9 @@ class TlmGenerator(ClockedObject):
 
         return transaction
 
-    def init(self):
+    def createCCObject(self):
+        super().createCCObject()
+
         for when, tr in self._transactions:
             self.getCCObject().scheduleTransaction(when, tr)
 
@@ -90,5 +94,12 @@ class TlmGenerator(ClockedObject):
     max_pending_tran = OptionalParam.Unsigned(
         "Max number of pending transactions issued via the inject API"
     )
+    cbusy_tracker = Param.BackpressureTracker(
+        CBusyTracker(), "Tracks observed incoming CBusy levels"
+    )
+    snp_handler = Param.SnoopHandler(
+        PySnoopHandler(), "Handler for incoming snoop transactions"
+    )
+
     in_port = TlmSinkPort("CHI TLM input/response port")
     out_port = TlmSourcePort("CHI TLM output/request port")

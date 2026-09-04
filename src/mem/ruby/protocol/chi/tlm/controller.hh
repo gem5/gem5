@@ -38,7 +38,8 @@
 #ifndef __MEM_RUBY_PROTOCOL_CHI_TLM_CONTROLLER_HH__
 #define __MEM_RUBY_PROTOCOL_CHI_TLM_CONTROLLER_HH__
 
-#include <ARM/TLM/arm_chi.h>
+#include <ARM/TLM/arm_chi_payload.h>
+#include <ARM/TLM/arm_chi_phase.h>
 
 #include "mem/ruby/protocol/CHI/CHIDataType.hh"
 #include "mem/ruby/protocol/CHI/CHIRequestType.hh"
@@ -92,6 +93,9 @@ namespace tlm::chi {
 class CacheController : public ruby::CHIGenericController
 {
   public:
+    /** We mainly use this when we flatten MachineID into src_id/tgt_id */
+    static constexpr uint64_t MAX_NODES = 1024;
+
     PARAMS(TlmController);
     CacheController(const Params &p);
 
@@ -105,6 +109,8 @@ class CacheController : public ruby::CHIGenericController
     std::function<void(ARM::CHI::Payload* payload, ARM::CHI::Phase* phase)> bw;
 
     Port &getPort(const std::string &if_name, PortID idx) override;
+
+    void init() override;
 
     bool recvRequestMsg(const CHIRequestMsg *msg) override;
     bool recvSnoopMsg(const CHIRequestMsg *msg) override;
@@ -158,6 +164,8 @@ class CacheController : public ruby::CHIGenericController
         CacheController *controller;
         ARM::CHI::Payload *payload;
         ARM::CHI::Phase phase;
+        // Original phase of the REQ. Unmutable
+        const ARM::CHI::Phase orig;
     };
     struct ReadTransaction : public Transaction
     {
@@ -166,6 +174,11 @@ class CacheController : public ruby::CHIGenericController
         bool handle(const CHIResponseMsg *msg) override;
         bool forward(const CHIDataMsg *msg);
 
+        bool handleCompletion();
+        bool retryAckResp(const ARM::CHI::Phase &resp);
+        bool compRespToMakeReadUnique(const ARM::CHI::Phase &resp);
+
+        uint8_t rspMsgCnt = 0;
         uint8_t dataMsgCnt = 0;
     };
     struct DatalessTransaction : public Transaction

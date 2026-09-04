@@ -1105,7 +1105,7 @@ AbortFault<T>::update(ThreadContext *tc)
                 override_LPAE = true;
             } else {
                 // Unimplemented code option, not seen in testing.  May need
-                // extension according to the manual exceprt above.
+                // extension according to the manual excerpt above.
                 DPRINTF(Faults, "Warning: Incomplete translation method "
                         "override detected.\n");
             }
@@ -1821,6 +1821,16 @@ getFaultVAddr(Fault fault, Addr &va)
         // Return false since it's not an address triggered exception
         return false;
     }
+}
+
+ArmFault::FaultSource
+llFaultSource(ArmFault::FaultSource baseLL, enums::ArmLookupLevel level)
+{
+    assert(level < 4);
+
+    using U = std::underlying_type_t<ArmFault::FaultSource>;
+    const auto base = static_cast<U>(baseLL);
+    return static_cast<ArmFault::FaultSource>(base + static_cast<U>(level));
 }
 
 } // namespace ArmISA

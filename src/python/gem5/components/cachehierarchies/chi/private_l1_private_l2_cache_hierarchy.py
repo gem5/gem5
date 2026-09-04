@@ -200,7 +200,7 @@ class PrivateL1PrivateL2CacheHierarchy(
             requires_send_evicts=core.requires_send_evicts(),
             cache_line_size=board.get_cache_line_size(),
             target_isa=board.get_processor().get_isa(),
-            clk_domain=board.get_clock_domain(),
+            clk_domain=board.get_processor().get_clock_domain(),
         )
         cluster.icache = L1CacheController(
             size=self._l1i_size,
@@ -209,7 +209,7 @@ class PrivateL1PrivateL2CacheHierarchy(
             requires_send_evicts=core.requires_send_evicts(),
             cache_line_size=board.get_cache_line_size(),
             target_isa=board.get_processor().get_isa(),
-            clk_domain=board.get_clock_domain(),
+            clk_domain=board.get_processor().get_clock_domain(),
         )
 
         cluster.icache.sequencer = RubySequencer(
@@ -230,7 +230,7 @@ class PrivateL1PrivateL2CacheHierarchy(
             assoc=self._l2_assoc,
             network=self.ruby_system.network,
             cache_line_size=board.get_cache_line_size(),
-            clk_domain=board.get_clock_domain(),
+            clk_domain=board.get_processor().get_clock_domain(),
         )
 
         if board.has_io_bus():
@@ -301,7 +301,7 @@ class PrivateL1PrivateL2CacheHierarchy(
 
     @overrides(AbstractRubyCacheHierarchy)
     def _reset_version_numbers(self):
-        from .nodes.abstract_node import AbstractNode
+        from .nodes.abstract_node import CacheController
 
-        AbstractNode._version = 0
+        CacheController._version = 0
         MemoryController._version = 0

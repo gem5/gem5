@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021,2023,2025 Arm Limited
+ * Copyright (c) 2020-2021,2023,2025-2026 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -55,6 +55,8 @@ external_type(Tick, primitive="yes", default="0");
 external_type(RequestPtr, primitive="yes", default="nullptr");
 external_type(RequestorID, primitive="yes");
 external_type(prefetch::Base, primitive="yes");
+external_type(AbstractController, primitive="yes");
+external_type(Message, primitive="yes");
 
 structure(WriteMask, external="yes", desc="...") {
   void clear();
@@ -198,7 +200,9 @@ enumeration(RubyRequestType, desc="...", default="RubyRequestType_NULL") {
   TLBI_SYNC,         desc="TLB Invalidation Sync operation - Potential initiation";
   TLBI_EXT_SYNC,      desc="TLB Invalidation Sync operation - External Sync has been requested";
   TLBI_EXT_SYNC_COMP, desc="TLB Invalidation Sync operation - External Sync has been completed";
-  hasNoAddr,        desc="Request for timing purposes in VIPERSequencer hitCallback and processReadCallback but reads no address";
+  hasNoAddr,          desc="Request for timing purposes in VIPERSequencer hitCallback and processReadCallback but reads no address";
+  Stash_Unique,       desc="Stash Only request type";
+  Stash_Shared,       desc="Stash Only request type";
 }
 
 bool isWriteRequest(RubyRequestType type);

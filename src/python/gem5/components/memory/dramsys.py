@@ -27,7 +27,6 @@
 from pathlib import Path
 from typing import (
     List,
-    Optional,
     Sequence,
     Tuple,
 )
@@ -60,31 +59,22 @@ class DRAMSysMem(AbstractMemorySystem):
     to notify gem5 of DRAMSys's memory size.
     Therefore it has to match the DRAMSys configuration.
     DRAMSys is configured using JSON files, whose base configuration has to be passed as a
-    parameter. Sub-configs are specified relative to the optional resource directory parameter.
+    parameter.
     """
 
     def __init__(
         self,
         configuration: str,
         size: str,
-        resource_directory: Optional[str] = None,
     ) -> None:
         """
         :param configuration: Path to the base configuration JSON for DRAMSys.
         :param size: Memory size of DRAMSys. Must match the size specified in JSON configuration.
-        :param resource_directory: Path to the base resource directory for DRAMSys.
         """
         super().__init__()
 
-        resource_directory_path = (
-            DEFAULT_DRAMSYS_DIRECTORY / "configs"
-            if resource_directory is None
-            else Path(resource_directory)
-        )
-
         self.dramsys = DRAMSys(
             configuration=configuration,
-            resource_directory=resource_directory_path.as_posix(),
         )
 
         self._size = toMemorySize(size)
@@ -115,6 +105,15 @@ class DRAMSysMem(AbstractMemorySystem):
                 "DRAMSys memory controller requires a single "
                 "range which matches the memory's size."
             )
+        from m5.params.param_types import (
+            SparseMaskedAddrRange,
+            SparseModuloAddrRange,
+        )
+
+        if isinstance(
+            ranges[0], (SparseModuloAddrRange, SparseMaskedAddrRange)
+        ):
+            raise ValueError("DRAMSys does not support sparse address ranges")
         self.dramsys.range = ranges[0]
         self.bridge.addr_ranges = ranges[0]
 

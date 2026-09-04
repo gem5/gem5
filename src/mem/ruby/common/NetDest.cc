@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2026 Arm Limited
+ * All rights reserved.
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 1999-2008 Mark D. Hill and David A. Wood
  * All rights reserved.
  *
@@ -314,14 +326,18 @@ NetDest::resize()
 void
 NetDest::print(std::ostream& out) const
 {
-    assert(m_bits.size() > 0);
-    out << "[NetDest (" << m_bits.size() << ") ";
-
-    for (int i = 0; i < m_bits.size(); i++) {
-        for (int j = 0; j < m_bits[i].getSize(); j++) {
-            out << (bool) m_bits[i].isElement(j) << " ";
+    out << "[NetDest: ";
+    for (int i = 0; i < MachineType_NULL; ++i) {
+        MachineType mtype = (MachineType)i;
+        int vec_index = MachineType_base_level(mtype);
+        if (m_bits[vec_index].count() == 0) {
+            continue;
         }
-        out << " - ";
+        out << MachineType_to_string(mtype) << "(";
+        for (int j = 0; j < m_bits[vec_index].getSize(); j++) {
+            out << (bool)m_bits[vec_index].isElement(j) << ",";
+        }
+        out << ") ";
     }
     out << "]";
 }

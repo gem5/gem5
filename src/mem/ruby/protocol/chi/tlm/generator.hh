@@ -38,13 +38,15 @@
 #ifndef __MEM_RUBY_PROTOCOL_CHI_TLM_GENERATOR_HH__
 #define __MEM_RUBY_PROTOCOL_CHI_TLM_GENERATOR_HH__
 
+#include <ARM/TLM/arm_chi_payload.h>
+#include <ARM/TLM/arm_chi_phase.h>
+
 #include <queue>
 #include <unordered_map>
 
-#include <ARM/TLM/arm_chi.h>
-
 #include "mem/ruby/protocol/chi/tlm/port.hh"
 #include "mem/ruby/protocol/chi/tlm/utils.hh"
+#include "mem/ruby/structures/BackpressureTracker.hh"
 #include "params/TlmGenerator.hh"
 #include "sim/clocked_object.hh"
 #include "sim/eventq.hh"
@@ -54,6 +56,7 @@ namespace gem5 {
 namespace tlm::chi {
 
 class CacheController;
+class SnoopHandler;
 
 /**
  * TlmGenerator: this class is basically a CHI-tlm traffic generator.
@@ -137,8 +140,16 @@ class TlmGenerator : public ClockedObject
             >;
 
             Action(Callback _cb, bool waiting)
-              : cb(_cb), _wait(waiting)
+                : cb(_cb), _wait(waiting), _waitCycles(0)
             {}
+
+            Action(Callback _cb, unsigned cycles)
+                : cb(_cb), _wait(true), _waitCycles(cycles)
+            {
+                panic_if(cycles == 0,
+                         "waiting time should be bigger than 0\n");
+            }
+
             virtual ~Action() {};
 
             /* A basic action always returns true */
@@ -155,9 +166,19 @@ class TlmGenerator : public ClockedObject
              */
             bool wait() const { return _wait; }
 
+            /**
+             * Returning a value != 0 means we are waiting and
+             */
+            unsigned
+            waitCycles() const
+            {
+                return _waitCycles;
+            }
+
           protected:
             Callback cb;
-            bool _wait;
+            bool _wait = false;
+            unsigned _waitCycles = 0;
         };
 
         /**
@@ -202,7 +223,7 @@ class TlmGenerator : public ClockedObject
 
         Transaction(const Transaction &rhs) = delete;
         Transaction(ARM::CHI::Payload *pa, ARM::CHI::Phase &ph);
-        ~Transaction();
+        virtual ~Transaction();
 
         /**
          * Registers the TlmGenerator in the transaction. This is
@@ -248,9 +269,18 @@ class TlmGenerator : public ClockedObject
          * in insertion order until a waiting callback is
          * encountered (or if there is a failing assertion)
          */
-        void runCallbacks();
+        virtual void runCallbacks();
+
+        EventFunctionWrapper runCallbacksEvent;
 
         ARM::CHI::Payload* payload() const { return _payload; }
+        void
+        setPayload(ARM::CHI::Payload *payload)
+        {
+            assert(!_payload);
+            _payload = payload;
+            _payload->ref();
+        }
         ARM::CHI::Phase& phase() { return _phase; }
         Tick
         start() const
@@ -263,10 +293,14 @@ class TlmGenerator : public ClockedObject
             _start = when;
         }
 
-      private:
+      protected:
+        void scheduleEvaluation(unsigned timeout);
+
+      protected:
         Actions actions;
         bool passed;
 
+      private:
         TlmGenerator *parent;
         ARM::CHI::Payload *_payload;
         ARM::CHI::Phase _phase;
@@ -282,7 +316,7 @@ class TlmGenerator : public ClockedObject
     isActive() const
     {
         return !pendingTransactions.empty() ||
-               !unscheduledTransactions.empty() || !waitingForPCrd.empty();
+               !unscheduledTransactions.empty() || !pCreditQueues.empty();
     }
 
     Port &getPort(const std::string &if_name, PortID idx) override;
@@ -321,8 +355,14 @@ class TlmGenerator : public ClockedObject
     void inject(Transaction *transaction);
     void send(Transaction *transaction);
     void terminate(Transaction *transaction);
+    void scheduleEvaluation(unsigned cycles, Transaction *transaction);
+
+    void send(ARM::CHI::Payload *payload, ARM::CHI::Phase &phase);
     void recv(ARM::CHI::Payload *payload, ARM::CHI::Phase *phase);
     void passFailCheck();
+
+    /** Handle an incoming snoop transaction */
+    bool handleSnoop(ARM::CHI::Payload *payload, ARM::CHI::Phase *phase);
 
     /**
      * Check if incoming request is a RetryAck
@@ -336,9 +376,10 @@ class TlmGenerator : public ClockedObject
 
     /**
      * Require a P-credit from the generator
-     * Returns true if a p-credit is available
+     * Returns true if a p-credit is available for
+     * a particular target node
      */
-    bool getPCrd();
+    bool getPCrd(uint16_t tgt_id);
 
     /**
      * Return a list of transactions waiting for
@@ -353,6 +394,9 @@ class TlmGenerator : public ClockedObject
      */
     bool handlePCredit(ARM::CHI::Phase *phase);
 
+    /** Handle a C-busy message */
+    void handleCBusy(ARM::CHI::Phase *phase);
+
   protected:
     /** cpuId to mimic the behaviour of a CPU */
     uint8_t cpuId;
@@ -364,7 +408,7 @@ class TlmGenerator : public ClockedObject
     const uint16_t maxPendingTrans;
 
     /** Numbers of p-credit available to the generator */
-    unsigned pCredit;
+    std::unordered_map<uint16_t, unsigned> pCredit;
 
     /** tick event used to schedule unscheduled transactions */
     EventFunctionWrapper tickEvent;
@@ -372,8 +416,42 @@ class TlmGenerator : public ClockedObject
     /** List of transactions whose injection needs to be scheduled */
     std::list<Transaction *> unscheduledTransactions;
 
-    /** List of processes waiting for a P-credit grant */
-    std::list<Transaction *> waitingForPCrd;
+    /** P-credit waiting queues:
+     * Shelves transactions waiting for a P-credit on apposite
+     * queues. There is a queue per completer, so that whenever
+     * such completers sends a credit to the generator, we
+     * are able to forward it to the right queue/transaction.
+     */
+    struct PCrdWaitingQueues
+    {
+      public:
+        PCrdWaitingQueues() = default;
+        PCrdWaitingQueues(const PCrdWaitingQueues &rhs) = delete;
+
+        /**
+         * Return/Extract a transaction waiting for
+         * a credit from the tgt_id completer passes
+         * as a parameter
+         */
+        Transaction *get(uint16_t tgt_id);
+
+        /**
+         * The passed transaction is going to wait for
+         * a P-credit from tgt_id
+         */
+        void insert(uint16_t tgt_id, Transaction *tran);
+
+        /**
+         * The passed transaction is going to wait for
+         * a P-credit from tgt_id
+         */
+        bool empty() const;
+
+      protected:
+        /** Map of transactions waiting for a P-credit grant indexed by the
+         * tgt_id */
+        std::unordered_map<uint16_t, std::list<Transaction *>> waitingForPCrd;
+    } pCreditQueues;
 
     /** Map of pending (injected) transactions indexed by the txn_id */
     std::unordered_map<uint16_t, Transaction*> pendingTransactions;
@@ -386,6 +464,32 @@ class TlmGenerator : public ClockedObject
 
     /** Has any transaction of the suite failed? */
     bool suiteFailure;
+
+    /** Tracks responder-reported CBusy values observed by the generator */
+    ruby::BackpressureTracker *cbusyTracker;
+
+    /** Handles incoming snoop transactions */
+    SnoopHandler *snpHandler;
+
+    struct Stats : public statistics::Group
+    {
+        Stats(statistics::Group *parent);
+
+        /* Number of transactions sent in the REQ channel */
+        statistics::Scalar reqOut;
+        /* Number of transactions sent in the RSP channel */
+        statistics::Scalar rspOut;
+        /* Number of transactions sent in the DAT channel */
+        statistics::Scalar datOut;
+        /* Number of RetryAck received */
+        statistics::Scalar retryAck;
+        /* Number of PCrdGrant received */
+        statistics::Scalar pcrdGrant;
+
+        /* CBusy signals revceived */
+        statistics::Scalar cbusy2;
+        statistics::Vector cbusy10;
+    } stats;
 };
 
 } // namespace tlm::chi

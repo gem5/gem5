@@ -83,7 +83,7 @@ class DRAMSim3MemCtrl(DRAMsim3):
     A DRAMSim3 Memory Controller.
 
     The class serves as a SimObject object wrapper, utiliszing the DRAMSim3
-    configuratons.
+    configurations.
     """
 
     def __init__(self, mem_name: str, num_chnls: int) -> None:
@@ -138,6 +138,17 @@ class SingleChannel(AbstractMemorySystem):
                 "Single channel DRAMSim memory controller requires a single "
                 "range which matches the memory's size."
             )
+
+        from m5.params.param_types import (
+            SparseMaskedAddrRange,
+            SparseModuloAddrRange,
+        )
+
+        if isinstance(
+            ranges[0], (SparseModuloAddrRange, SparseMaskedAddrRange)
+        ):
+            raise ValueError("DRAMSim3 does not support sparse address ranges")
+
         self.mem_ctrl.range = ranges[0]
 
 

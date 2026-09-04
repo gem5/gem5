@@ -73,7 +73,7 @@ TLB::Table::accessEntry(const KeyType &key)
 TlbEntry*
 TLB::Table::findEntry(const KeyType &key) const
 {
-    // Exploiting locality to maximaize simulator performance
+    // Exploiting locality to maximize simulator performance
     if (prev && prev->N == key.pageSize && prev->match(key)) {
         return prev;
     }

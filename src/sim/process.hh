@@ -87,6 +87,7 @@ class Process : public SimObject
     inline uint64_t pgid() { return _pgid; }
     inline void pgid(uint64_t pgid) { _pgid = pgid; }
     inline uint64_t tgid() { return _tgid; }
+    inline uint64_t secondsSinceEpoch() const { return _secondsSinceEpoch; }
 
     const char *progName() const { return executable.c_str(); }
 
@@ -278,6 +279,9 @@ class Process : public SimObject
 
     // Syscall emulation uname release.
     std::string release;
+
+    // Epoch start timestamp in seconds for SE syscalls
+    const uint64_t _secondsSinceEpoch;
 
     // Id of the owner of the process
     uint64_t _uid;

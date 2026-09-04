@@ -222,16 +222,8 @@ system.platform = HiFive()
 system.platform.rtc = RiscvRTC(frequency=Frequency("100MHz"))
 system.platform.clint.int_pin = system.platform.rtc.int_pin
 
-system.iobus.cpu_side_ports = system.platform.pci_host.up_request_port()
-system.iobus.mem_side_ports = system.platform.pci_host.up_response_port()
-
-system.platform.pci_bus.cpu_side_ports = (
-    system.platform.pci_host.down_request_port()
-)
-system.platform.pci_bus.default = system.platform.pci_host.down_response_port()
-system.platform.pci_bus.config_error_port = (
-    system.platform.pci_host.config_error.pio
-)
+system.platform.pci_host.internal_connect()
+system.platform.pci_host.connect_upper_bus(system.iobus, True)
 
 # VirtIOMMIO
 if args.disk_image:
@@ -293,7 +285,16 @@ system.cpu = [
 
 if args.riscv_32bits:
     for core in system.cpu:
-        core.ArchISA.riscv_type = "RV32"
+        core.ArchISA.riscv_profile = "RVI20U32"
+        core.ArchISA.extra_extensions = [
+            "M",
+            "A",
+            "F",
+            "D",
+            "C",
+            "Zicsr",
+            "Zifencei",
+        ]
 
 if args.caches or args.l2cache:
     # By default the IOCache runs at the system clock

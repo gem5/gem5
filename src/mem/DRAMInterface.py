@@ -1040,7 +1040,7 @@ class GDDR5_4000_2x32(DRAMInterface):
 
 
 # A single HBM x128 interface (one command and address bus), with
-# default timings based on data publically released
+# default timings based on data publicly released
 # ("HBM: Memory Solution for High Performance Processors", MemCon, 2014),
 # IDD measurement values, and by extrapolating data from other classes.
 # Architecture values based on published HBM spec
@@ -1129,7 +1129,7 @@ class HBM_1000_4H_1x128(DRAMInterface):
 
 
 # A single HBM x64 interface (one command and address bus), with
-# default timings based on HBM gen1 and data publically released
+# default timings based on HBM gen1 and data publicly released
 # A 4H stack is defined, 8Gb per die for a total of 4GiB of memory.
 # Note: This defines a pseudo-channel with a unique controller
 # instantiated per pseudo-channel
@@ -1256,6 +1256,170 @@ class HBM_2000_4H_1x64(DRAMInterface):
     write_buffer_size = 64
 
     two_cycle_activate = True
+
+
+# A single HBM3 x64 pseudo-channel interface, anchored to
+# JEDEC JESD238B.01 (April 2025). HBM3 introduces several
+# changes over HBM2 that this preset captures:
+#
+#   * Native burst length BL=8 (JESD238B.01 Figure 32 onwards);
+#     HBM2 pseudo-channel defaults to BL=4.
+#   * 6.4 Gbps/pin base data rate (used by current production
+#     silicon — e.g. NVIDIA H100 HBM3 stacks). The JESD238B.01
+#     speed bins (Table 92) start at 6.8 Gbps; the 6.4 Gbps
+#     point is the most widely deployed bin in shipping HBM3
+#     parts, hence chosen here as the minimum-viable baseline.
+#     tCK = 0.625 ns (1.6 GHz CK; WDQS at 3.2 GHz DDR).
+#   * Per-bank Refresh (REFpb) is a first-class command; refresh
+#     handling differs from HBM2 but the DRAMInterface side just
+#     needs the matching tRFCpb / tRREFD timings. Controller-side
+#     wiring is left to a follow-up HBMCtrl change.
+#
+# Total stack assumed: 16 channels x 2 pseudo-channels x 8H x
+# 16 Gb/die = 16 GiB per stack -> 512 MiB per pseudo-channel.
+# Tune ``device_size`` for other stack heights / die densities.
+#
+# Where JESD238B.01 leaves a parameter to the vendor datasheet,
+# values are taken from public HBM3 6.4 Gbps part datasheets and
+# marked accordingly so reviewers can refine.
+class HBM_6400_8H_1x64(DRAMInterface):
+    # 64-bit interface for a single pseudo-channel (DQ[31:0] on
+    # PC0, DQ[63:32] on PC1; JESD238B.01 Table 94).
+    device_bus_width = 64
+
+    # HBM3 native burst length is 8 (JESD238B.01 Figure 32, 33,
+    # 40, 41 — every read/write burst diagram uses BL=8).
+    burst_length = 8
+
+    # 8H x 16 Gb/die stack -> 8 Gb per channel -> 512 MiB per
+    # pseudo-channel (16 channels x 2 PCs per stack).
+    device_size = "512MiB"
+
+    # Row buffer size: HBM3 retains the 1 KiB row (JESD238B.01
+    # §3.2 — 32-bit DQ x BL=8 x 1024 columns per row segment).
+    device_rowbuffer_size = "1KiB"
+
+    devices_per_rank = 1
+
+    ranks_per_channel = 1
+
+    # 16 banks per pseudo-channel, organised as 4 bank groups
+    # (JESD238B.01 §3.2 Table 5).
+    banks_per_rank = 16
+    bank_groups_per_rank = 4
+
+    # 1.6 GHz CK for 6.4 Gbps/pin DDR data rate; tCK = 0.625 ns
+    # (just outside the JESD238B.01 Table 92 6.8 Gbps speed bin
+    # — chosen to match shipping HBM3 silicon as noted above).
+    tCK = "0.625ns"
+
+    # Row-access timings (JESD238B.01 Table 93). The spec leaves
+    # MIN values for most row timings to the vendor datasheet;
+    # values below are taken from publicly available HBM3
+    # 6.4 Gbps datasheets (SK hynix, Samsung) and rounded to gem5
+    # quantum granularity. Refine for a specific part.
+    tRP = "14ns"
+    tRCD = "14ns"
+    tRCD_WR = "8ns"
+    tCL = "18ns"
+    tCWL = "8ns"
+    tRAS = "29ns"
+
+    # tCCD_L = max(4 nCK, 2.5 ns) per JESD238B.01 Table 93.
+    # At tCK = 0.625 ns -> 4 nCK = 2.5 ns -> floor.
+    tCCD_L = "2.5ns"
+
+    # BL=8 at DDR -> 8/2 = 4 tCK on the data bus -> 2.5 ns.
+    tBURST = "2.5ns"
+
+    # tRFCab for 8H x 16 Gb (8 Gb / channel) -> 350 ns
+    # (JESD238B.01 Table 93, Refresh Timings row).
+    #
+    # JESD238B.01 also defines tRFCpb (per-bank refresh duration,
+    # 200 ns at 16 Gb/die) and tRREFD (REFpb-to-REFpb spacing,
+    # MAX(3 tCK, 8 ns)). Those plug into REFpb dispatch in
+    # HBMCtrl rather than DRAMInterface, so they are deferred to
+    # the follow-up HBMCtrl HBM3 change tracked in gem5/gem5#3269.
+    tRFC = "350ns"
+
+    # Average periodic refresh interval (Table 93).
+    tREFI = "3.9us"
+
+    tWR = "14ns"
+    tRTP = "7.5ns"
+    tWTR = "4ns"
+    tWTR_L = "9ns"
+    tRTW = "18ns"
+
+    # tAAD inherited from HBM2 timing — RBus latency.
+    tAAD = "1ns"
+
+    # Single-rank pseudo-channel.
+    tCS = "0ns"
+
+    # tRRD_S: vendor-typical 3 ns at 6.4 Gbps. tRRD_L is the
+    # same-bank-group variant; JESD238B.01 Table 93 leaves the
+    # MIN to the datasheet — 4 ns is conservative.
+    tRRD = "3ns"
+    tRRD_L = "4ns"
+
+    # tFAW for HBM3 at 6.4 Gbps — vendor datasheets typically
+    # advertise 12 ns (HBM2 was ~16 ns at slower clocks).
+    tXAW = "12ns"
+    activation_limit = 4
+
+    # Power-down exit. HBM3 datasheets typically allow ~5 nCK
+    # exit; at tCK = 0.625 ns -> 3.125 ns. Round to 4 ns.
+    tXP = "4ns"
+
+    # tXS ~ tRFC(ab) + tXP -> 350 + 4 = 354 ns; round up.
+    tXS = "360ns"
+
+    page_policy = "close_adaptive"
+
+    read_buffer_size = 64
+    write_buffer_size = 64
+
+    two_cycle_activate = True
+
+
+# A single HBM3E x64 pseudo-channel interface at the 9.6 Gbps/pin
+# speed bin used by current production HBM3E silicon (NVIDIA H200
+# ships with Micron HBM3E 9.6 Gbps; Samsung Shinebolt and SK hynix
+# HBM3E parts target the same bin).
+#
+# HBM3E reuses the JESD238B.01 (HBM3) protocol — same banks, same
+# burst length, same RFM model — and simply pushes the speed bin
+# higher. So this preset extends HBM_6400_8H_1x64 with the
+# tCK-derived timings rescaled to a 2.4 GHz CK; everything else
+# carries over.
+#
+# tCK = 1 / (9.6 Gbps / 2 DDR) = 0.417 ns -> fCK = 2.4 GHz.
+# Stack assumption is the same as the HBM3 preset (8H x 16 Gb/die).
+# Per-stack aggregate bandwidth at 9.6 Gbps/pin x 1024 pins is
+# ~1.23 TB/s, matching public datasheets for the speed bin.
+class HBM_9600_8H_1x64(HBM_6400_8H_1x64):
+    # 2.4 GHz CK / 9.6 Gbps DDR.
+    tCK = "0.417ns"
+
+    # BL=8 at DDR -> 4 tCK on the data bus -> 4 * 0.417 = 1.67 ns.
+    # Round-trip with JESD238B.01 Table 93's tCCD_L lower bound of
+    # 2.5 ns means tBURST is the smaller of the two and tCCD_L is
+    # still the binding column-to-column constraint at this speed.
+    tBURST = "1.67ns"
+
+    # tCCD_L = max(4 nCK, 2.5 ns). At tCK = 0.417 ns -> 4 nCK = 1.67 ns
+    # -> the 2.5 ns floor wins.
+    tCCD_L = "2.5ns"
+
+    # Power-down / self-refresh exit. HBM3E datasheets typically
+    # quote ~5 nCK; at this tCK that is 2.085 ns. Round to 3 ns.
+    tXP = "3ns"
+
+    # tXS ~ tRFC(ab) + tXP. tRFC stays at the HBM3 8 Gb/channel
+    # value (350 ns); 350 + 3 = 353 ns -> round to 360 ns to match
+    # the HBM3 preset.
+    tXS = "360ns"
 
 
 # A single DDR5-4400 32bit channel (4x8 configuration)
@@ -1753,7 +1917,7 @@ class LPDDR5_6400_1x16_BG_BL32(LPDDR5_5500_1x16_BG_BL32):
 
 # A single LPDDR5 x16 interface (one command/address bus)
 # for a single x16 channel with default timings based on initial
-# JEDEC specifcation
+# JEDEC specification
 # 6.4Gbps data rates and 8Gbit die
 # Configuring for 16-bank mode with bank-group architecture, burst of 16
 class LPDDR5_6400_1x16_BG_BL16(LPDDR5_6400_1x16_BG_BL32):

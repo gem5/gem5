@@ -78,8 +78,7 @@ PciDevice::PciDevice(const PciDeviceParams &p,
       MSIXCAP_MPBA_OFFSET(p.MSIXCAPBaseOffset + MSIXCAP_MPBA),
       PXCAP_BASE(p.PXCAPBaseOffset),
       BARs(BARs_init),
-      upstreamInterface(p.upstream->registerDevice(this, _devAddr,
-                                                   (PciIntPin)p.InterruptPin)),
+      upstreamInterface(nullptr),
       pioDelay(p.pio_latency),
       configDelay(p.config_latency)
 {
@@ -203,6 +202,26 @@ PciDevice::PciDevice(const PciDeviceParams &p,
     pxcap.pxss2 = p.PXCAPSlotStatus2;
 }
 
+void
+PciDevice::init()
+{
+    DmaDevice::init();
+
+    fatal_if(upstreamInterface == nullptr,
+             "%s: Missing upstream interface, ensure this device is connected "
+             "to a PCI upstream (host bridge or PCI to PCI bridge).",
+             name());
+}
+
+void
+PciDevice::setUpstreamInterface(
+    std::unique_ptr<PciUpstream::DeviceInterface> &&interface)
+{
+    fatal_if(upstreamInterface,
+             "%s: PCI device already has an upstream interface.", name());
+    upstreamInterface = std::move(interface);
+}
+
 Tick
 PciDevice::readConfig(PacketPtr pkt)
 {
@@ -263,7 +282,7 @@ PciDevice::readConfig(PacketPtr pkt)
 Tick
 PciDevice::read(PacketPtr pkt)
 {
-    if (upstreamInterface.configRange().contains(pkt->getAddr())) {
+    if (upstreamInterface->configRange().contains(pkt->getAddr())) {
         return readConfig(pkt);
     }
 
@@ -274,15 +293,25 @@ AddrRangeList
 PciDevice::getAddrRanges() const
 {
     AddrRangeList ranges;
-    PciCommandRegister command = letoh(_config.common.command);
-    for (auto *bar: BARs) {
-        if (command.ioSpace && bar->isIo())
-            ranges.push_back(bar->range());
-        if (command.memorySpace && bar->isMem())
-            ranges.push_back(bar->range());
-    }
 
-    ranges.push_back(upstreamInterface.configRange());
+    // An invalid range can be returned if the upstream PCI to PCI bridge
+    // doesn't have a bus number yet. So check that to avoid adding it to the
+    // range list.
+    auto config_range = upstreamInterface->configRange();
+
+    if (config_range.valid()) {
+        ranges.push_back(config_range);
+
+        PciCommandRegister command = letoh(_config.common.command);
+        for (auto *bar : BARs) {
+            if (command.ioSpace && bar->isIo()) {
+                ranges.push_back(bar->range());
+            }
+            if (command.memorySpace && bar->isMem()) {
+                ranges.push_back(bar->range());
+            }
+        }
+    }
 
     return ranges;
 }
@@ -395,17 +424,11 @@ PciDevice::writeConfig(PacketPtr pkt)
 Tick
 PciDevice::write(PacketPtr pkt)
 {
-    if (upstreamInterface.configRange().contains(pkt->getAddr())) {
+    if (upstreamInterface->configRange().contains(pkt->getAddr())) {
         return writeConfig(pkt);
     }
 
     return writeDevice(pkt);
-}
-
-void
-PciDevice::recvBusChange()
-{
-    pioPort.sendRangeChange();
 }
 
 void
@@ -490,6 +513,9 @@ PciDevice::unserialize(CheckpointIn &cp)
 {
     UNSERIALIZE_ARRAY(_config.data,
                       sizeof(_config.data) / sizeof(_config.data[0]));
+
+    // Update all BAR address ranges
+    recvBusChange();
 
     // unserialize the capability list registers
     uint16_t tmp16;
@@ -605,10 +631,6 @@ PciEndpoint::PciEndpoint(const PciEndpointParams &p)
 {
     fatal_if((_config.common.headerType & 0x7F) != 0, "HeaderType is invalid");
 
-    int idx = 0;
-    for (auto *bar : BARs)
-        _config.type0.baseAddr[idx++] = bar->write(upstreamInterface, 0);
-
     _config.type0.cardbusCIS = htole(p.CardbusCIS);
     _config.type0.subsystemVendorID = htole(p.SubsystemVendorID);
     _config.type0.subsystemID = htole(p.SubsystemID);
@@ -619,6 +641,19 @@ PciEndpoint::PciEndpoint(const PciEndpointParams &p)
 
     _config.type0.minimumGrant = htole(p.MinimumGrant);
     _config.type0.maximumLatency = htole(p.MaximumLatency);
+}
+
+void
+PciEndpoint::init()
+{
+    PciDevice::init();
+
+    int idx = 0;
+    for (auto *bar : BARs) {
+        _config.type0.baseAddr[idx++] = bar->write(*upstreamInterface, 0);
+    }
+
+    pioPort.sendRangeChange();
 }
 
 Tick
@@ -672,7 +707,7 @@ PciEndpoint::writeConfig(PacketPtr pkt)
                 int num = PCI0_BAR_NUMBER(offset);
                 auto *bar = BARs[num];
                 _config.type0.baseAddr[num] = htole(
-                    bar->write(upstreamInterface, pkt->getLE<uint32_t>()));
+                    bar->write(*upstreamInterface, pkt->getLE<uint32_t>()));
                 pioPort.sendRangeChange();
             }
             break;
@@ -700,12 +735,11 @@ PciEndpoint::writeConfig(PacketPtr pkt)
 }
 
 void
-PciEndpoint::unserialize(CheckpointIn &cp)
+PciEndpoint::recvBusChange()
 {
-    PciDevice::unserialize(cp);
-
-    for (int idx = 0; idx < BARs.size(); idx++)
-        BARs[idx]->write(upstreamInterface, _config.type0.baseAddr[idx]);
+    for (int idx = 0; idx < BARs.size(); idx++) {
+        BARs[idx]->write(*upstreamInterface, _config.type0.baseAddr[idx]);
+    }
 
     pioPort.sendRangeChange();
 }
@@ -714,10 +748,6 @@ PciType1Device::PciType1Device(const PciType1DeviceParams &p)
     : PciDevice(p, {p.BAR0, p.BAR1})
 {
     fatal_if((_config.common.headerType & 0x7F) != 1, "HeaderType is invalid");
-
-    int idx = 0;
-    for (auto *bar : BARs)
-        _config.type1.baseAddr[idx++] = bar->write(upstreamInterface, 0);
 
     _config.type1.primaryBusNum = htole(p.PrimaryBusNumber);
     _config.type1.secondaryBusNum = htole(p.SecondaryBusNumber);
@@ -736,6 +766,19 @@ PciType1Device::PciType1Device(const PciType1DeviceParams &p)
     _config.type1.ioLimitUpper = htole(p.IOLimitUpper);
     _config.type1.expansionROM = htole(p.ExpansionROM);
     _config.type1.bridgeControl = htole(p.BridgeControl);
+}
+
+void
+PciType1Device::init()
+{
+    PciDevice::init();
+
+    int idx = 0;
+    for (auto *bar : BARs) {
+        _config.type1.baseAddr[idx++] = bar->write(*upstreamInterface, 0);
+    }
+
+    pioPort.sendRangeChange();
 }
 
 Tick
@@ -761,114 +804,146 @@ PciType1Device::writeConfig(PacketPtr pkt)
     }
 
     switch (pkt->getSize()) {
-      case sizeof(uint8_t):
-        switch (offset) {
-          case PCI1_PRI_BUS_NUM:
-            _config.type1.primaryBusNum = pkt->getLE<uint8_t>();
-            break;
-          case PCI1_SEC_BUS_NUM:
-            _config.type1.secondaryBusNum = pkt->getLE<uint8_t>();
-            break;
-          case PCI1_SUB_BUS_NUM:
-            _config.type1.subClassCode = pkt->getLE<uint8_t>();
-            break;
-          case PCI1_SEC_LAT_TIMER:
-            _config.type1.secondaryLatencyTimer = pkt->getLE<uint8_t>();
-            break;
-          case PCI1_IO_BASE:
-            _config.type1.ioBase = pkt->getLE<uint8_t>();
-            break;
-          case PCI1_IO_LIMIT:
-            _config.type1.ioLimit = pkt->getLE<uint8_t>();
-            break;
-          default:
-              panic("writing to a read only register");
-        }
-        DPRINTF(PciDevice,
+        case sizeof(uint8_t):
+            switch (offset) {
+                case PCI1_PRI_BUS_NUM:
+                    _config.type1.primaryBusNum = pkt->getLE<uint8_t>();
+                    break;
+                case PCI1_SEC_BUS_NUM:
+                    _config.type1.secondaryBusNum = pkt->getLE<uint8_t>();
+                    break;
+                case PCI1_SUB_BUS_NUM:
+                    _config.type1.subordinateBusNum = pkt->getLE<uint8_t>();
+                    break;
+                case PCI1_SEC_LAT_TIMER:
+                    _config.type1.secondaryLatencyTimer =
+                        pkt->getLE<uint8_t>();
+                    break;
+                case PCI1_IO_BASE:
+                    _config.type1.ioBase = pkt->getLE<uint8_t>();
+                    break;
+                case PCI1_IO_LIMIT:
+                    _config.type1.ioLimit = pkt->getLE<uint8_t>();
+                    break;
+                default:
+                    panic("writing to a read only register");
+            }
+            DPRINTF(
+                PciDevice,
                 "writeConfig: dev %#x func %#x reg %#x 1 bytes: data = %#x\n",
                 _devAddr.dev, _devAddr.func, offset,
                 (uint32_t)pkt->getLE<uint8_t>());
-        break;
-      case sizeof(uint16_t):
-        switch (offset) {
-          case PCI1_SECONDARY_STATUS:
-            _config.type1.secondaryStatus = pkt->getLE<uint16_t>();
             break;
-          case PCI1_MEM_BASE:
-            _config.type1.memBase = pkt->getLE<uint16_t>();
-            break;
-          case PCI1_MEM_LIMIT:
-            _config.type1.memLimit = pkt->getLE<uint16_t>();
-            break;
-          case PCI1_PRF_MEM_BASE:
-            _config.type1.prefetchMemBase = pkt->getLE<uint16_t>();
-            break;
-          case PCI1_PRF_MEM_LIMIT:
-            _config.type1.prefetchMemLimit = pkt->getLE<uint16_t>();
-            break;
-          case PCI1_IO_BASE_UPPER:
-            _config.type1.ioBaseUpper = pkt->getLE<uint16_t>();
-            break;
-          case PCI1_IO_LIMIT_UPPER:
-            _config.type1.ioLimitUpper = pkt->getLE<uint16_t>();
-            break;
-          case PCI1_BRIDGE_CTRL:
-            _config.type1.bridgeControl = pkt->getLE<uint16_t>();
-            break;
-          default:
-            panic("writing to a read only register");
-        }
-        DPRINTF(PciDevice,
+        case sizeof(uint16_t):
+            switch (offset) {
+                case PCI1_IO_BASE: {
+                    uint16_t ioConfig = pkt->getLE<uint16_t>();
+                    _config.type1.ioBase = ioConfig & mask(8);
+                    _config.type1.ioLimit = ioConfig >> 8;
+                } break;
+                case PCI1_SECONDARY_STATUS:
+                    _config.type1.secondaryStatus = pkt->getLE<uint16_t>();
+                    break;
+                case PCI1_MEM_BASE:
+                    _config.type1.memBase = pkt->getLE<uint16_t>();
+                    break;
+                case PCI1_MEM_LIMIT:
+                    _config.type1.memLimit = pkt->getLE<uint16_t>();
+                    break;
+                case PCI1_PRF_MEM_BASE:
+                    _config.type1.prefetchMemBase = pkt->getLE<uint16_t>();
+                    break;
+                case PCI1_PRF_MEM_LIMIT:
+                    _config.type1.prefetchMemLimit = pkt->getLE<uint16_t>();
+                    break;
+                case PCI1_IO_BASE_UPPER:
+                    _config.type1.ioBaseUpper = pkt->getLE<uint16_t>();
+                    break;
+                case PCI1_IO_LIMIT_UPPER:
+                    _config.type1.ioLimitUpper = pkt->getLE<uint16_t>();
+                    break;
+                case PCI1_BRIDGE_CTRL:
+                    _config.type1.bridgeControl = pkt->getLE<uint16_t>();
+                    break;
+                default:
+                    panic("writing to a read only register");
+            }
+            DPRINTF(
+                PciDevice,
                 "writeConfig: dev %#x func %#x reg %#x 2 bytes: data = %#x\n",
                 _devAddr.dev, _devAddr.func, offset,
                 (uint32_t)pkt->getLE<uint16_t>());
-        break;
-      case sizeof(uint32_t):
-        switch (offset) {
-          case PCI1_BASE_ADDR0:
-          case PCI1_BASE_ADDR1:
-            {
-              int num = PCI1_BAR_NUMBER(offset);
-              auto *bar = BARs[num];
-              _config.type1.baseAddr[num] =
-                  htole(bar->write(upstreamInterface, pkt->getLE<uint32_t>()));
-              pioPort.sendRangeChange();
+            break;
+        case sizeof(uint32_t):
+            switch (offset) {
+                case PCI1_BASE_ADDR0:
+                case PCI1_BASE_ADDR1: {
+                    int num = PCI1_BAR_NUMBER(offset);
+                    auto *bar = BARs[num];
+                    _config.type1.baseAddr[num] = htole(bar->write(
+                        *upstreamInterface, pkt->getLE<uint32_t>()));
+                    pioPort.sendRangeChange();
+                } break;
+                case PCI1_PRI_BUS_NUM: {
+                    uint32_t busConfig = pkt->getLE<uint32_t>();
+                    _config.type1.primaryBusNum = busConfig & mask(8);
+                    _config.type1.secondaryBusNum = (busConfig >> 8) & mask(8);
+                    _config.type1.subordinateBusNum =
+                        (busConfig >> 16) & mask(8);
+                    _config.type1.secondaryLatencyTimer =
+                        (busConfig >> 24) & mask(8);
+                } break;
+                case PCI1_MEM_BASE: {
+                    uint32_t memConfig = pkt->getLE<uint32_t>();
+                    _config.type1.memBase = memConfig & mask(16);
+                    _config.type1.memLimit = memConfig >> 16;
+                } break;
+                case PCI1_PRF_MEM_BASE: {
+                    uint32_t prefConfig = pkt->getLE<uint32_t>();
+                    _config.type1.prefetchMemBase = prefConfig & mask(16);
+                    _config.type1.prefetchMemLimit = prefConfig >> 16;
+                } break;
+                case PCI1_PRF_BASE_UPPER:
+                    _config.type1.prefetchBaseUpper = pkt->getLE<uint32_t>();
+                    break;
+                case PCI1_PRF_LIMIT_UPPER:
+                    _config.type1.prefetchLimitUpper = pkt->getLE<uint32_t>();
+                    break;
+                case PCI1_IO_BASE_UPPER: {
+                    uint32_t ioUpperConfig = pkt->getLE<uint32_t>();
+                    _config.type1.ioBaseUpper = ioUpperConfig & mask(16);
+                    _config.type1.ioLimitUpper = ioUpperConfig >> 16;
+                } break;
+                case PCI1_ROM_BASE_ADDR:
+                    if (letoh(pkt->getLE<uint32_t>()) == 0xfffffffe) {
+                        _config.type1.expansionROM =
+                            htole((uint32_t)0xffffffff);
+                    } else {
+                        _config.type1.expansionROM = pkt->getLE<uint32_t>();
+                    }
+                    break;
+                default:
+                    panic("writing to a read only register");
             }
-            break;
-          case PCI1_PRF_BASE_UPPER:
-            _config.type1.prefetchBaseUpper = pkt->getLE<uint32_t>();
-            break;
-          case PCI1_PRF_LIMIT_UPPER:
-            _config.type1.prefetchLimitUpper = pkt->getLE<uint32_t>();
-            break;
-          case PCI1_ROM_BASE_ADDR:
-            if (letoh(pkt->getLE<uint32_t>()) == 0xfffffffe)
-                _config.type1.expansionROM = htole((uint32_t)0xffffffff);
-            else
-                _config.type1.expansionROM = pkt->getLE<uint32_t>();
-            break;
-          default:
-            panic("writing to a read only register");
-        }
-        DPRINTF(PciDevice,
+            DPRINTF(
+                PciDevice,
                 "writeConfig: dev %#x func %#x reg %#x 4 bytes: data = %#x\n",
                 _devAddr.dev, _devAddr.func, offset,
                 (uint32_t)pkt->getLE<uint32_t>());
-        break;
-      default:
-        panic("invalid access size(?) for PCI configspace!\n");
+            break;
+        default:
+            panic("invalid access size(?) for PCI configspace!\n");
     }
     pkt->makeAtomicResponse();
     return configDelay;
 }
 
 void
-PciType1Device::unserialize(CheckpointIn &cp)
+PciType1Device::recvBusChange()
 {
-    PciDevice::unserialize(cp);
-
-    for (int idx = 0; idx < BARs.size(); idx++)
-        BARs[idx]->write(upstreamInterface, _config.type1.baseAddr[idx]);
+    for (int idx = 0; idx < BARs.size(); idx++) {
+        BARs[idx]->write(*upstreamInterface, _config.type1.baseAddr[idx]);
+    }
 
     pioPort.sendRangeChange();
 }

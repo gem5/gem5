@@ -42,12 +42,12 @@ namespace gem5
 /**
  * Scoreboard/Schedule stage interface.
  */
-ScoreboardCheckToSchedule::ScoreboardCheckToSchedule(const ComputeUnitParams
-                                                     &p)
+ScoreboardCheckToSchedule::ScoreboardCheckToSchedule(
+    const ComputeUnitParams &p)
 {
-    int num_func_units = p.num_SIMDs + p.num_scalar_cores
-        + p.num_global_mem_pipes + p.num_shared_mem_pipes
-        + p.num_scalar_mem_pipes;
+    int num_func_units = p.num_SIMDs + p.num_scalar_cores +
+                         p.num_global_mem_pipes + p.num_shared_mem_pipes +
+                         p.num_scalar_mem_pipes;
     _readyWFs.resize(num_func_units);
 
     for (auto &func_unit_wf_list : _readyWFs) {
@@ -75,7 +75,7 @@ ScoreboardCheckToSchedule::numReadyLists() const
     return _readyWFs.size();
 }
 
-std::vector<Wavefront*>&
+std::vector<Wavefront *> &
 ScoreboardCheckToSchedule::readyWFs(int func_unit_id)
 {
     return _readyWFs[func_unit_id];
@@ -88,7 +88,7 @@ ScoreboardCheckToSchedule::readyWFs(int func_unit_id)
 void
 ScoreboardCheckToSchedule::updateReadyList(int func_unit_id)
 {
-    std::vector<Wavefront*> &func_unit_wf_list = _readyWFs[func_unit_id];
+    std::vector<Wavefront *> &func_unit_wf_list = _readyWFs[func_unit_id];
 
     for (auto it = func_unit_wf_list.begin(); it != func_unit_wf_list.end();) {
         if ((*it)->instructionBuffer.empty()) {
@@ -104,9 +104,9 @@ ScoreboardCheckToSchedule::updateReadyList(int func_unit_id)
  */
 ScheduleToExecute::ScheduleToExecute(const ComputeUnitParams &p)
 {
-    int num_func_units = p.num_SIMDs + p.num_scalar_cores
-        + p.num_global_mem_pipes + p.num_shared_mem_pipes
-        + p.num_scalar_mem_pipes;
+    int num_func_units = p.num_SIMDs + p.num_scalar_cores +
+                         p.num_global_mem_pipes + p.num_shared_mem_pipes +
+                         p.num_scalar_mem_pipes;
     _readyInsts.resize(num_func_units, nullptr);
     _dispatchStatus.resize(num_func_units, EMPTY);
 }
@@ -123,7 +123,7 @@ ScheduleToExecute::reset()
     }
 }
 
-GPUDynInstPtr&
+GPUDynInstPtr &
 ScheduleToExecute::readyInst(int func_unit_id)
 {
     return _readyInsts[func_unit_id];

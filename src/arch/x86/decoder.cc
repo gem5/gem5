@@ -152,10 +152,12 @@ Decoder::doPrefixState(uint8_t nextByte)
       case OperandSizeOverride:
         DPRINTF(Decoder, "Found operand size override prefix.\n");
         emi.legacy.op = true;
+        emi.rex = 0;
         break;
       case AddressSizeOverride:
         DPRINTF(Decoder, "Found address size override prefix.\n");
         emi.legacy.addr = true;
+        emi.rex = 0;
         break;
         // Segment override prefixes
       case CSOverride:
@@ -163,6 +165,10 @@ Decoder::doPrefixState(uint8_t nextByte)
       case ESOverride:
       case SSOverride:
           if (emi.mode.submode == SixtyFourBitMode) {
+              // Even though these are ignored in 64-bit mode,
+              // placing these after a REX prefix still renders
+              // the REX invalid.
+              emi.rex = 0;
               break;
           }
           [[fallthrough]];
@@ -170,18 +176,22 @@ Decoder::doPrefixState(uint8_t nextByte)
       case GSOverride:
           DPRINTF(Decoder, "Found segment override.\n");
           emi.legacy.seg = prefix;
+          emi.rex = 0;
           break;
       case Lock:
         DPRINTF(Decoder, "Found lock prefix.\n");
         emi.legacy.lock = true;
+        emi.rex = 0;
         break;
       case Rep:
         DPRINTF(Decoder, "Found rep prefix.\n");
         emi.legacy.rep = true;
+        emi.rex = 0;
         break;
       case Repne:
         DPRINTF(Decoder, "Found repne prefix.\n");
         emi.legacy.repne = true;
+        emi.rex = 0;
         break;
       case RexPrefix:
         DPRINTF(Decoder, "Found Rex prefix %#x.\n", nextByte);
@@ -189,13 +199,35 @@ Decoder::doPrefixState(uint8_t nextByte)
         break;
       case Vex2Prefix:
         DPRINTF(Decoder, "Found VEX two-byte prefix %#x.\n", nextByte);
-        emi.vex.present = 1;
-        nextState = Vex2Of2State;
+        if (emi.rex != 0) {
+            // This is an invalid combination that should cause an undefined
+            // instruction exception.
+            // Pretend this was an undefined instruction so the main decoder
+            // will behave correctly, and stop trying to interpret bytes.
+            instDone = true;
+            nextState = ResetState;
+            emi.opcode.type = TwoByteOpcode;
+            emi.opcode.op = 0x0B;
+        } else {
+            emi.vex.present = 1;
+            nextState = Vex2Of2State;
+        }
         break;
       case Vex3Prefix:
         DPRINTF(Decoder, "Found VEX three-byte prefix %#x.\n", nextByte);
-        emi.vex.present = 1;
-        nextState = Vex2Of3State;
+        if (emi.rex != 0) {
+            // This is an invalid combination that should cause an undefined
+            // instruction exception.
+            // Pretend this was an undefined instruction so the main decoder
+            // will behave correctly, and stop trying to interpret bytes.
+            instDone = true;
+            nextState = ResetState;
+            emi.opcode.type = TwoByteOpcode;
+            emi.opcode.op = 0x0B;
+        } else {
+            emi.vex.present = 1;
+            nextState = Vex2Of3State;
+        }
         break;
       case 0:
         nextState = OneByteOpcodeState;
@@ -419,7 +451,7 @@ Decoder::processOpcode(ByteTable &immTable, ByteTable &modrmTable,
     State nextState = ErrorState;
     const uint8_t opcode = emi.opcode.op;
 
-    // Figure out the effective operand size. This can be overriden to
+    // Figure out the effective operand size. This can be overridden to
     // a fixed value at the decoder level.
     int logOpSize;
     if (emi.rex.w)
@@ -432,7 +464,7 @@ Decoder::processOpcode(ByteTable &immTable, ByteTable &modrmTable,
     // Set the actual op size.
     emi.opSize = 1 << logOpSize;
 
-    // Figure out the effective address size. This can be overriden to
+    // Figure out the effective address size. This can be overridden to
     // a fixed value at the decoder level.
     int logAddrSize;
     if (emi.legacy.addr)
@@ -443,11 +475,11 @@ Decoder::processOpcode(ByteTable &immTable, ByteTable &modrmTable,
     // Set the actual address size.
     emi.addrSize = 1 << logAddrSize;
 
-    // Figure out the effective stack width. This can be overriden to
+    // Figure out the effective stack width. This can be overridden to
     // a fixed value at the decoder level.
     emi.stackSize = 1 << stack;
 
-    // Figure out how big of an immediate we'll retreive based
+    // Figure out how big of an immediate we'll retrieve based
     // on the opcode.
     int immType = immTable[opcode];
     if (addrSizedImm)

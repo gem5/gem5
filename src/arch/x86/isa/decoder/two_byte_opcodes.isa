@@ -71,7 +71,15 @@
                         0x4: vmxoff();
                         default: Inst::UD2();
                     }
-                    default: sgdt_Ms();
+                    default: decode MODE_SUBMODE {
+                        0x0: Inst::SGDT(M);
+                        default: decode OPSIZE {
+                            // 16 bit operand sizes are special, but only
+                            // in legacy and compatibility modes.
+                            0x2: Inst::SGDT_16(M);
+                            default: Inst::SGDT(M);
+                        }
+                    }
                 }
                 0x1: decode MODRM_MOD {
                     0x3: decode MODRM_RM {
@@ -91,7 +99,15 @@
                         }});
                         default: Inst::UD2();
                     }
-                    default: sidt_Ms();
+                    default: decode MODE_SUBMODE {
+                        0x0: Inst::SIDT(M);
+                        default: decode OPSIZE {
+                            // 16 bit operand sizes are special, but only
+                            // in legacy and compatibility modes.
+                            0x2: Inst::SIDT_16(M);
+                            default: Inst::SIDT(M);
+                        }
+                    }
                 }
                 0x2: decode MODRM_MOD {
                     0x3: decode MODRM_RM {
@@ -328,7 +344,7 @@
                 }
                 // repe (0xF3)
                 0x4: decode OPCODE_OP_BOTTOM3 {
-                    0x2: CVTSI2SS(Vd,Ed);
+                    0x2: CVTSI2SS(Vd,Edp);
                     0x4: CVTTSS2SI(Gd,Wd);
                     0x5: CVTSS2SI(Gd,Wd);
                     default: UD2();
