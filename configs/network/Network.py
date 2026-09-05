@@ -55,8 +55,8 @@ def define_options(parser):
     parser.add_argument(
         "--network",
         default="simple",
-        choices=["simple", "garnet"],
-        help="""'simple'|'garnet' (garnet2.0 will be deprecated.)""",
+        choices=["simple", "garnet", "betaar"],
+        help="""'simple'|'garnet'|'betaar' (garnet2.0 will be deprecated.)""",
     )
     parser.add_argument(
         "--router-latency",
@@ -144,6 +144,13 @@ def create_network(options, ruby):
         RouterClass = GarnetRouter
         InterfaceClass = GarnetNetworkInterface
 
+    elif options.network == "betaar":
+        NetworkClass = BetaarNetwork
+        IntLinkClass = BetaarIntLink
+        ExtLinkClass = BetaarExtLink
+        RouterClass = BetaarRouter
+        InterfaceClass = BetaarNetworkInterface
+
     else:
         NetworkClass = SimpleNetwork
         IntLinkClass = SimpleIntLink
@@ -166,31 +173,44 @@ def create_network(options, ruby):
 
 
 def init_network(options, network, InterfaceClass):
-    if options.network == "garnet":
+    if options.network in ("garnet", "betaar"):
+        BridgeClass = (
+            BetaarNetworkBridge
+            if options.network == "betaar"
+            else NetworkBridge
+        )
+
         network.num_rows = options.mesh_rows
         network.vcs_per_vnet = options.vcs_per_vnet
         network.ni_flit_size = options.link_width_bits / 8
         network.routing_algorithm = options.routing_algorithm
-        network.garnet_deadlock_threshold = options.garnet_deadlock_threshold
+        if options.network == "betaar":
+            network.betaar_deadlock_threshold = (
+                options.garnet_deadlock_threshold
+            )
+        else:
+            network.garnet_deadlock_threshold = (
+                options.garnet_deadlock_threshold
+            )
 
         # Create Bridges and connect them to the corresponding links
         for intLink in network.int_links:
-            intLink.src_net_bridge = NetworkBridge(
+            intLink.src_net_bridge = BridgeClass(
                 link=intLink.network_link,
                 vtype="OBJECT_LINK",
                 width=intLink.src_node.width,
             )
-            intLink.src_cred_bridge = NetworkBridge(
+            intLink.src_cred_bridge = BridgeClass(
                 link=intLink.credit_link,
                 vtype="LINK_OBJECT",
                 width=intLink.src_node.width,
             )
-            intLink.dst_net_bridge = NetworkBridge(
+            intLink.dst_net_bridge = BridgeClass(
                 link=intLink.network_link,
                 vtype="LINK_OBJECT",
                 width=intLink.dst_node.width,
             )
-            intLink.dst_cred_bridge = NetworkBridge(
+            intLink.dst_cred_bridge = BridgeClass(
                 link=intLink.credit_link,
                 vtype="OBJECT_LINK",
                 width=intLink.dst_node.width,
@@ -199,14 +219,14 @@ def init_network(options, network, InterfaceClass):
         for extLink in network.ext_links:
             ext_net_bridges = []
             ext_net_bridges.append(
-                NetworkBridge(
+                BridgeClass(
                     link=extLink.network_links[0],
                     vtype="OBJECT_LINK",
                     width=extLink.width,
                 )
             )
             ext_net_bridges.append(
-                NetworkBridge(
+                BridgeClass(
                     link=extLink.network_links[1],
                     vtype="LINK_OBJECT",
                     width=extLink.width,
@@ -216,14 +236,14 @@ def init_network(options, network, InterfaceClass):
 
             ext_credit_bridges = []
             ext_credit_bridges.append(
-                NetworkBridge(
+                BridgeClass(
                     link=extLink.credit_links[0],
                     vtype="LINK_OBJECT",
                     width=extLink.width,
                 )
             )
             ext_credit_bridges.append(
-                NetworkBridge(
+                BridgeClass(
                     link=extLink.credit_links[1],
                     vtype="OBJECT_LINK",
                     width=extLink.width,
@@ -233,14 +253,14 @@ def init_network(options, network, InterfaceClass):
 
             int_net_bridges = []
             int_net_bridges.append(
-                NetworkBridge(
+                BridgeClass(
                     link=extLink.network_links[0],
                     vtype="LINK_OBJECT",
                     width=extLink.int_node.width,
                 )
             )
             int_net_bridges.append(
-                NetworkBridge(
+                BridgeClass(
                     link=extLink.network_links[1],
                     vtype="OBJECT_LINK",
                     width=extLink.int_node.width,
@@ -250,14 +270,14 @@ def init_network(options, network, InterfaceClass):
 
             int_cred_bridges = []
             int_cred_bridges.append(
-                NetworkBridge(
+                BridgeClass(
                     link=extLink.credit_links[0],
                     vtype="OBJECT_LINK",
                     width=extLink.int_node.width,
                 )
             )
             int_cred_bridges.append(
-                NetworkBridge(
+                BridgeClass(
                     link=extLink.credit_links[1],
                     vtype="LINK_OBJECT",
                     width=extLink.int_node.width,
@@ -279,6 +299,6 @@ def init_network(options, network, InterfaceClass):
         network.netifs = netifs
 
     if options.network_fault_model:
-        assert options.network == "garnet"
+        assert options.network in ("garnet", "betaar")
         network.enable_fault_model = True
         network.fault_model = FaultModel()
