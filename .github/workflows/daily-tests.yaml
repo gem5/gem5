@@ -60,17 +60,13 @@ jobs:
               working-directory: ${{ github.workspace }}
               run: |
                   CMD="scons build/ALL/gem5.${{ matrix.type }} -j $(sysctl -n hw.ncpu)"
-                  ${CMD}
-                  status=$?
-                  if [ $status -ne 0 ]; then
+                  if ! ${CMD}; then
                       echo "Failed to build on top of cached build." 1>&2
                       echo "This may be due to env changes since the cache build." 1>&2
                       echo "Clearing cache and attempting another build..." 1>&2
                       rm -rf build
                       ${CMD}
-                      status=$?
                   fi
-                  exit $status
               timeout-minutes: 120
 
     build-all-gem5:
