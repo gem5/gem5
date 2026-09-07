@@ -2108,8 +2108,12 @@ decode QUADRANT default Unknown::unknown() {
                 }}, {{
                     TypedAtomicOpFunctor<uint32_t> *amo_op =
                           new AtomicGeneric3Op<uint32_t>(Rd_sd, Rs2_uw,
-                                  [](uint32_t* b, uint32_t a,
-                                  uint32_t c){ if (a == *b){ *b = c; } });
+                                  [](uint32_t* b, uint32_t a, uint32_t c){
+                                      uint32_t mem_data = letoh(*b);
+                                      if (a == mem_data){
+                                          *b = htole(c);
+                                      }
+                                  });
                 }}, mem_flags=ATOMIC_RETURN_OP);
                 0x8: AtomicMemOp::amoor_w({{
                     Rd_sd = Mem_sw;
@@ -2222,8 +2226,12 @@ decode QUADRANT default Unknown::unknown() {
                     }}, {{
                         TypedAtomicOpFunctor<uint64_t> *amo_op =
                             new AtomicGeneric3Op<uint64_t>(Rd_ud, Rs2_ud,
-                                    [](uint64_t* b, uint64_t a,
-                                    uint64_t c){ if (a == *b){ *b = c; } });
+                                    [](uint64_t* b, uint64_t a, uint64_t c){
+                                         uint64_t mem_data = letoh(*b);
+                                         if (a == mem_data){
+                                             *b = htole(c);
+                                         }
+                                    });
                     }}, mem_flags=ATOMIC_RETURN_OP);
                     0x8: AtomicMemOp::amoor_d({{
                         Rd_sd = Mem_sd;
