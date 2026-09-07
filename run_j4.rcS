@@ -1,0 +1,16 @@
+#!/bin/sh
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+export GCC_EXEC_PREFIX=/usr/lib/gcc/
+export COMPILER_PATH=/usr/bin
+cd /root/linux-build
+echo "=== CTX BEFORE ==="
+cat /proc/ctx_switch_stats
+m5 resetstats
+echo "=== BUILD START ==="
+make -j4 Image
+echo "MAKE_EXIT=$?"
+m5 dumpstats
+echo "=== CTX AFTER ==="
+cat /proc/ctx_switch_stats
+sync
+m5 exit

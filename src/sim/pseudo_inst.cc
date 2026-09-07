@@ -51,6 +51,7 @@
 #include <string>
 #include <vector>
 
+#include "cpu/reg_class.hh"
 #include "base/debug.hh"
 #include "base/output.hh"
 #include "cpu/base.hh"
@@ -70,6 +71,51 @@
 #include "sim/stat_control.hh"
 #include "sim/stats.hh"
 #include "sim/system.hh"
+#include "sim/ctx_switch_state.hh"
+#include "arch/generic/isa.hh"
+#include "cpu/reg_class.hh"
+#include "arch/generic/isa.hh"
+#include "cpu/reg_class.hh"
+//bool g_ctx_monitor_active = false;
+
+struct CtxMemAccess {
+    uint64_t tick;
+    uint64_t pc;
+    uint64_t vaddr;
+};
+
+// 2. NEW STRUCT (This was missing!)
+struct CtxInstAccess {
+    uint64_t tick;
+    uint64_t pc;
+};
+
+struct CtxInstInfo {
+    uint64_t tick;
+    uint64_t pc;
+    std::string mnemonic;
+};
+
+std::unordered_map<int, bool> g_ctx_monitor_active;
+std::unordered_map<int, bool> g_ctx_capture_next;
+std::unordered_map<int, uint64_t> g_ctx_start_tick;
+std::unordered_map<int, std::vector<CtxInstInfo>> g_ctx_inst_accesses;
+
+std::unordered_map<int, CtxInstInfo> g_last_committed_inst;
+std::unordered_map<int, CtxInstInfo> g_ctx_pre_inst;
+
+std::unordered_map<int, CtxInstInfo> g_last_user_inst;
+std::unordered_map<int, CtxInstInfo> g_pre_switch_user_inst;
+std::unordered_map<int, bool> g_wait_for_user_inst;
+
+
+std::unordered_map<int, uint64_t> g_ctx_prev_pid;
+std::unordered_map<int, uint64_t> g_ctx_next_pid;
+// 3. GLOBAL VARIABLES
+//std::unordered_map<int, bool> g_ctx_monitor_active;
+//std::unordered_map<int, std::vector<CtxMemAccess>> g_ctx_accesses;
+//std::unordered_map<int, uint64_t> g_ctx_start_tick;
+//std::unordered_map<int, std::vector<CtxInstAccess>> g_ctx_inst_accesses;
 
 namespace gem5
 {
@@ -603,6 +649,187 @@ workend(ThreadContext *tc, uint64_t workid, uint64_t threadid)
         }
     }
 }
+/* ===== Context switch instrumentation handlers ===== */
 
+/*void
+m5CtxSwitchBegin(ThreadContext *tc)
+{
+    DPRINTF(PseudoInst, "pseudo_inst::m5CtxSwitchBegin()\n");
+    ctxSwitchBegin();
+    ctxInstsAtBegin = tc->getCpuPtr()->totalInsts();   // ← اضافه شد
+    g_ctx_monitor_active = true;
+}
+
+void
+m5CtxSwitchEnd(ThreadContext *tc)
+{
+    DPRINTF(PseudoInst, "pseudo_inst::m5CtxSwitchEnd()\n");
+    ctxSwitchEnd();
+
+    g_ctx_monitor_active = false;
+
+    // Dump captured data to CSV
+    std::ofstream out_file("m5out/ctx_mem_plot.csv", std::ios_base::app);
+    if (out_file.is_open()) {
+        for (const auto& acc : g_ctx_accesses) {
+            out_file << acc.tick << ",0x" << std::hex << acc.pc 
+                     << ",0x" << acc.vaddr << std::dec << "\n";
+        }
+    }
+    // Clear the vector for the next context switch
+    g_ctx_accesses.clear();	
+}*/
+/*void
+m5CtxSwitchBegin(ThreadContext *tc)
+{
+    DPRINTF(PseudoInst, "pseudo_inst::m5CtxSwitchBegin()\n");
+    ctxSwitchBegin();
+    ctxInstsAtBegin = tc->getCpuPtr()->totalInsts();
+
+    // Get the ID of the core executing this switch
+    int cid = tc->contextId();
+
+    // Turn ON the cache monitor only for this specific core
+    g_ctx_monitor_active[cid] = true;
+    g_ctx_start_tick[cid] = curTick();
+}*/
+
+void
+m5CtxSwitchBegin(ThreadContext *tc)
+{
+    DPRINTF(PseudoInst, "pseudo_inst::m5CtxSwitchBegin()\n");
+    ctxSwitchBegin();
+
+    int cid = tc->contextId();
+    
+    
+    auto int_reg_class = tc->getIsaPtr()->regClasses()[0];
+    g_ctx_prev_pid[cid] = tc->getReg(gem5::RegId(*int_reg_class, 0)); 
+    g_ctx_next_pid[cid] = tc->getReg(gem5::RegId(*int_reg_class, 1)); 
+
+    g_ctx_start_tick[cid] = curTick();
+    g_ctx_monitor_active[cid] = true;
+
+    if (g_last_committed_inst.find(cid) != g_last_committed_inst.end()) {
+        g_ctx_pre_inst[cid] = g_last_committed_inst[cid];
+    } else {
+        g_ctx_pre_inst[cid] = {0, 0, "none"};
+    }
+
+    if (g_last_user_inst.find(cid) != g_last_user_inst.end()) {
+        g_pre_switch_user_inst[cid] = g_last_user_inst[cid];
+    } else {
+        g_pre_switch_user_inst[cid] = {0, 0, "none"};
+    }
+}
+
+
+
+void
+m5CtxSwitchEnd(ThreadContext *tc)
+{
+    DPRINTF(PseudoInst, "pseudo_inst::m5CtxSwitchEnd()\n");
+    ctxSwitchEnd();
+
+    int cid = tc->contextId();
+    uint64_t end_tick = curTick();
+    uint64_t begin_tick = g_ctx_start_tick[cid];
+
+    g_ctx_monitor_active[cid] = false;
+    g_ctx_capture_next[cid] = true;
+
+    std::ofstream interval_file("m5out/ctx_switch_intervals.csv", std::ios_base::app);
+    if (interval_file.is_open()) {
+        interval_file << begin_tick << "," << end_tick << "," 
+                      << g_ctx_prev_pid[cid] << "," << g_ctx_next_pid[cid] << "\n";
+    }
+    std::ofstream inst_file("m5out/ctx_inst_trace.csv", std::ios_base::app);
+    if (inst_file.is_open()) {
+        for (const auto& inst : g_ctx_inst_accesses[cid]) {
+            inst_file << inst.tick << "," << cid << ",0x" << std::hex << inst.pc << std::dec << "," << inst.mnemonic << "\n";
+        }
+    }
+
+    g_ctx_inst_accesses[cid].clear();
+}
+
+uint64_t
+m5CtxGetL1dMisses(ThreadContext *tc)
+{
+    return ctxL1dMisses;
+    //return 1 ;
+}
+
+uint64_t
+m5CtxGetL2Misses(ThreadContext *tc)
+{
+	return ctxL2Misses;
+	//return 1;
+}
+
+uint64_t
+m5CtxGetDtlbMisses(ThreadContext *tc)
+{
+    return ctxDtlbMisses;
+}
+
+uint64_t
+m5CtxGetItlbMisses(ThreadContext *tc)
+{
+    return ctxItlbMisses;
+}
+
+uint64_t
+m5CtxGetL1dAccesses(ThreadContext *tc)
+{
+    return ctxL1dAccesses;
+    //return 1;
+}
+uint64_t
+m5CtxGetL2Accesses(ThreadContext *tc)
+{
+    return ctxL2Accesses;
+    //return 1 ; 
+}
+uint64_t
+m5CtxGetDtlbAccesses(ThreadContext *tc)
+{
+    return ctxDtlbAccesses;
+}
+uint64_t
+m5CtxGetItlbAccesses(ThreadContext *tc)
+{
+    return ctxItlbAccesses;
+}
+uint64_t
+m5CtxGetInsts(ThreadContext *tc)
+{
+    return tc->getCpuPtr()->totalInsts() - ctxInstsAtBegin;
+}
+uint64_t m5CtxGetL1iMisses(ThreadContext *tc) { 
+	return ctxL1iMisses; 
+	//return 1 ;
+}
+uint64_t m5CtxGetL1iAccesses(ThreadContext *tc) {
+       	return ctxL1iAccesses; 
+	//return 1 ; 
+}
+void
+m5CtxDumpAddrs(ThreadContext *tc, uint64_t prev, uint64_t next, uint64_t pc)
+{
+    // Log to standard gem5 debug trace (enabled via --debug-flags=PseudoInst)
+    DPRINTF(PseudoInst, "pseudo_inst::m5CtxDumpAddrs(prev=%#llx, next=%#llx, pc=%#llx)\n",
+            prev, next, pc);
+
+    // Write directly to a dedicated trace file in the m5out directory
+    // std::ios_base::app ensures we append to the file on every switch
+    std::ofstream out_file("m5out/ctx_switch_trace.txt", std::ios_base::app);
+    if (out_file.is_open()) {
+        out_file << std::hex 
+                 << "prev=0x" << prev << ", "
+                 << "next=0x" << next << ", "
+                 << "pc=0x"   << pc   << "\n";
+    }
+}
 } // namespace pseudo_inst
 } // namespace gem5

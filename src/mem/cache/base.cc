@@ -62,10 +62,71 @@
 #include "params/BaseCache.hh"
 #include "params/WriteAllocator.hh"
 #include "sim/cur_tick.hh"
-
+#include "sim/ctx_switch_state.hh"
+#include <string>
+#include <unordered_map> // REQUIRED FOR MULTI-CORE
+struct CtxMemAccess {
+    uint64_t tick;
+    uint64_t pc;
+    uint64_t vaddr;
+};
+extern std::unordered_map<int, bool> g_ctx_monitor_active;
+extern std::unordered_map<int, std::vector<CtxMemAccess>> g_ctx_accesses;
+//extern bool g_ctx_monitor_active;
+//extern std::vector<CtxMemAccess> g_ctx_accesses;
 namespace gem5
 {
 
+
+static bool
+isOverallCacheCommand(const MemCmd &cmd)
+{
+    return cmd == MemCmd::ReadReq ||
+           cmd == MemCmd::WriteReq ||
+           cmd == MemCmd::WriteLineReq ||
+           cmd == MemCmd::ReadExReq ||
+           cmd == MemCmd::ReadCleanReq ||
+           cmd == MemCmd::ReadSharedReq ||
+           cmd == MemCmd::SoftPFReq ||
+           cmd == MemCmd::HardPFReq ||
+           cmd == MemCmd::SoftPFExReq;
+}
+
+bool
+isGem5DemandCommand(const MemCmd &cmd)
+{
+    switch (cmd.toInt()) {
+      case MemCmd::ReadReq:
+      case MemCmd::WriteReq:
+      case MemCmd::WriteLineReq:
+      case MemCmd::ReadExReq:
+      case MemCmd::ReadCleanReq:
+      case MemCmd::ReadSharedReq:
+        return true;
+
+      default:
+        return false;
+    }
+}
+bool
+isGem5NonDemandCommand(const MemCmd &cmd)
+{
+    switch (cmd.toInt()) {
+      case MemCmd::SoftPFReq:
+      case MemCmd::HardPFReq:
+      case MemCmd::SoftPFExReq:
+        return true;
+
+      default:
+        return false;
+    }
+}
+bool
+isGem5OverallCommand(const MemCmd &cmd)
+{
+    return isGem5DemandCommand(cmd) ||
+           isGem5NonDemandCommand(cmd);
+}
 BaseCache::CacheResponsePort::CacheResponsePort(const std::string &_name,
                                           BaseCache *_cache,
                                           const std::string &_label)
@@ -220,6 +281,101 @@ BaseCache::inRange(Addr addr) const
     return false;
 }
 
+// void
+// BaseCache::recordCustomCacheResult(PacketPtr pkt, bool is_miss)
+// {
+//     const bool is_demand =
+//         isGem5DemandCommand(pkt->cmd);
+
+//     const bool is_overall =
+//         isGem5OverallCommand(pkt->cmd);
+
+//     /*
+//      * شمارنده‌های Mirror:
+//      * همیشه فعال هستند و باید با stats رسمی gem5
+//      * برابر شوند.
+//      */
+//     if (is_demand) {
+//         stats.mirrorDemandAccesses++;
+
+//         if (is_miss) {
+//             stats.mirrorDemandMisses++;
+//         }
+//     }
+
+//     if (is_overall) {
+//         stats.mirrorOverallAccesses++;
+
+//         if (is_miss) {
+//             stats.mirrorOverallMisses++;
+//         }
+//     }
+
+//     /*
+//      * شمارنده‌های Context Switch:
+//      * فقط زمانی فعال هستند که Marker مربوط به
+//      * Context Switch فعال باشد.
+//      */
+//     if (gem5::inContextSwitch) {
+//         if (is_demand) {
+//             stats.ctxDemandAccesses++;
+
+//             if (is_miss) {
+//                 stats.ctxDemandMisses++;
+//             }
+//         }
+
+//         if (is_overall) {
+//             stats.ctxOverallAccesses++;
+
+//             if (is_miss) {
+//                 stats.ctxOverallMisses++;
+//             }
+//         }
+//     }
+// }
+
+void
+BaseCache::recordCustomCacheResult(PacketPtr pkt, bool is_miss)
+{
+    const bool is_demand =
+        isGem5DemandCommand(pkt->cmd);
+
+    const bool is_overall =
+        isGem5OverallCommand(pkt->cmd);
+
+    /*
+     * Independent mirror of gem5 demand statistics.
+     */
+    if (is_demand) {
+        stats.mirrorDemandAccesses++;
+
+        if (is_miss) {
+            stats.mirrorDemandMisses++;
+        }
+    }
+
+    /*
+     * Independent mirror of gem5 overall statistics.
+     */
+    if (is_overall) {
+        stats.mirrorOverallAccesses++;
+
+        if (is_miss) {
+            stats.mirrorOverallMisses++;
+        }
+
+        /*
+         * Context-switch counters use exactly the same event
+         * definition as gem5 overallAccesses/overallMisses.
+         *
+         * ctxRecord... internally checks inContextSwitch.
+         */
+
+    }
+}
+
+
 void
 BaseCache::handleTimingReqHit(PacketPtr pkt, CacheBlk *blk, Tick request_time)
 {
@@ -337,6 +493,7 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
                         pkt->print());
 
                 assert(pkt->req->requestorId() < system->maxRequestors());
+
                 stats.cmdStats(pkt).mshrHits[pkt->req->requestorId()]++;
 
                 // We use forward_time here because it is the same
@@ -361,6 +518,7 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
     } else {
         // no MSHR
         assert(pkt->req->requestorId() < system->maxRequestors());
+
         stats.cmdStats(pkt).mshrMisses[pkt->req->requestorId()]++;
         if (prefetcher && pkt->isDemand())
             prefetcher->incrDemandMhsrMisses();
@@ -402,8 +560,28 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
 void
 BaseCache::recvTimingReq(PacketPtr pkt)
 {
-    // anything that is merely forwarded pays for the forward latency and
-    // the delay provided by the crossbar
+    /*if (g_ctx_monitor_active && !pkt->req->isInstFetch() && 
+        pkt->req->hasPC() && pkt->req->hasVaddr()) 
+    {
+        if (name().find("dcache") != std::string::npos) {
+            g_ctx_accesses.push_back({curTick(), pkt->req->getPC(), pkt->req->getVaddr()});
+        }
+    }*/
+
+    /*if (!pkt->req->isInstFetch() && pkt->req->hasPC() && 
+        pkt->req->hasVaddr() && pkt->req->hasContextId()) 
+    {
+        int cid = pkt->req->contextId();
+        
+        // Check if the monitor is active for the core that sent this packet
+        if (g_ctx_monitor_active[cid]) {
+            // Only capture at the L1 Data Cache
+            if (name().find("dcache") != std::string::npos) {
+                g_ctx_accesses[cid].push_back({curTick(), pkt->req->getPC(), pkt->req->getVaddr()});
+            }
+        }
+    }*/
+
     Tick forward_time = clockEdge(forwardLatency) + pkt->headerDelay;
 
     if (pkt->cmd == MemCmd::LockedRMWWriteReq) {
@@ -434,7 +612,34 @@ BaseCache::recvTimingReq(PacketPtr pkt)
         // happening below
         doWritebacks(writebacks, clockEdge(lat + forwardLatency));
     }
+    if (gem5::inContextSwitch) {
+        if (pkt->isDemand() || pkt->cmd.isPrefetch()) {
+            gem5::ctxRecordCacheAccess(name());     // همیشه دسترسی را بشمار
+            if (!satisfied) {
+                gem5::ctxRecordCacheMiss(name());   // اگر удовлетво نشد، یعنی Miss است
+            }
+        }
+    }
+    if (!satisfied && pkt->req) {
+        if (pkt->req->isInstFetch() && pkt->req->hasVaddr() && pkt->req->hasContextId()) {
+            int cid = pkt->req->contextId();
 
+
+            if (g_ctx_monitor_active.count(cid) && g_ctx_monitor_active[cid]) {
+
+
+                if (name().find("icache") != std::string::npos) {
+                    std::ofstream miss_file("m5out/ctx_icache_misses.csv", std::ios_base::app);
+                    if (miss_file.is_open()) {
+
+                        miss_file << curTick() << ","
+                                  << cid << ",0x"
+                                  << std::hex << pkt->req->getVaddr() << std::dec << "\n";
+                    }
+                }
+            }
+        }
+    }
     // Here we charge the headerDelay that takes into account the latencies
     // of the bus, if the packet comes from it.
     // The latency charged is just the value set by the access() function.
@@ -632,6 +837,7 @@ BaseCache::recvTimingResp(PacketPtr pkt)
 Tick
 BaseCache::recvAtomic(PacketPtr pkt)
 {
+
     // should assert here that there are no outstanding MSHRs or
     // writebacks... that would mean that someone used an atomic
     // access in timing mode
@@ -643,7 +849,14 @@ BaseCache::recvAtomic(PacketPtr pkt)
     CacheBlk *blk = nullptr;
     PacketList writebacks;
     bool satisfied = access(pkt, blk, lat, writebacks);
-
+    if (gem5::inContextSwitch) {
+        if (pkt->isDemand() || pkt->cmd.isPrefetch()) {
+            gem5::ctxRecordCacheAccess(name());
+            if (!satisfied) {
+                gem5::ctxRecordCacheMiss(name());
+            }
+        }
+    }    
     if (pkt->isClean() && blk && blk->isSet(CacheBlk::DirtyBit)) {
         // A cache clean opearation is looking for a dirty
         // block. If a dirty block is encountered a WriteClean
@@ -922,6 +1135,12 @@ BaseCache::getNextQueueEntry()
                 // Update statistic on number of prefetches issued
                 // (hwpf_mshr_misses)
                 assert(pkt->req->requestorId() < system->maxRequestors());
+                if (gem5::inContextSwitch) {
+                    if (pkt->isDemand() || pkt->cmd.isPrefetch()) {
+                        gem5::ctxRecordCacheAccess(name());
+                        gem5::ctxRecordCacheMiss(name());
+                    }
+                }    
                 stats.cmdStats(pkt).mshrMisses[pkt->req->requestorId()]++;
 
                 // allocate an MSHR and return it, note
@@ -1228,6 +1447,7 @@ bool
 BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
                   PacketList &writebacks)
 {
+
     // sanity check
     assert(pkt->isRequest());
 
@@ -1367,7 +1587,7 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
         updateBlockData(blk, pkt, has_old_data);
         DPRINTF(Cache, "%s new state is %s\n", __func__, blk->print());
         incHitCount(pkt);
-
+        
         // When the packet metadata arrives, the tag lookup will be done while
         // the payload is arriving. Then the block will be ready to access as
         // soon as the fill is done
@@ -1481,6 +1701,7 @@ BaseCache::access(PacketPtr pkt, CacheBlk *&blk, Cycles &lat,
     // or have block but need writable
 
     incMissCount(pkt);
+
 
     lat = calculateAccessLatency(blk, pkt->headerDelay, tag_latency);
 
@@ -2271,7 +2492,49 @@ BaseCache::CacheStats::CacheStats(BaseCache &c)
              "number of data expansions"),
     ADD_STAT(dataContractions, statistics::units::Count::get(),
              "number of data contractions"),
+    
+    ADD_STAT(
+        mirrorDemandAccesses,
+        statistics::units::Count::get(),
+        "custom mirror of gem5 demand accesses"),
+
+    ADD_STAT(
+        mirrorDemandMisses,
+        statistics::units::Count::get(),
+        "custom mirror of gem5 demand misses"),
+
+    ADD_STAT(
+        mirrorOverallAccesses,
+        statistics::units::Count::get(),
+        "custom mirror of gem5 overall accesses"),
+
+    ADD_STAT(
+        mirrorOverallMisses,
+        statistics::units::Count::get(),
+        "custom mirror of gem5 overall misses"),
+
+    ADD_STAT(
+        ctxDemandAccesses,
+        statistics::units::Count::get(),
+        "demand accesses during context switch"),
+
+    ADD_STAT(
+        ctxDemandMisses,
+        statistics::units::Count::get(),
+        "demand misses during context switch"),
+
+    ADD_STAT(
+        ctxOverallAccesses,
+        statistics::units::Count::get(),
+        "overall accesses during context switch"),
+
+    ADD_STAT(
+        ctxOverallMisses,
+        statistics::units::Count::get(),
+        "overall misses during context switch"),
+
     cmd(MemCmd::NUM_MEM_CMDS)
+       
 {
     for (int idx = 0; idx < MemCmd::NUM_MEM_CMDS; ++idx)
         cmd[idx].reset(new CacheCmdStats(c, MemCmd(idx).toString()));

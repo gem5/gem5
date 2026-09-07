@@ -103,6 +103,7 @@ class BaseCache : public ClockedObject
         MSHRQueue_MSHRs,
         MSHRQueue_WriteBuffer
     };
+    void recordCustomCacheResult(PacketPtr pkt, bool is_miss);
 
   public:
     /**
@@ -1051,6 +1052,19 @@ class BaseCache : public ClockedObject
 
         const BaseCache &cache;
 
+
+        statistics::Scalar mirrorDemandAccesses;
+        statistics::Scalar mirrorDemandMisses;
+        statistics::Scalar mirrorOverallAccesses;
+        statistics::Scalar mirrorOverallMisses;
+
+        statistics::Scalar ctxDemandAccesses;
+        statistics::Scalar ctxDemandMisses;
+        statistics::Scalar ctxOverallAccesses;
+        statistics::Scalar ctxOverallMisses;
+
+
+
         /** Number of hits for demand accesses. */
         statistics::Formula demandHits;
         /** Number of hit for all accesses. */
@@ -1297,6 +1311,10 @@ class BaseCache : public ClockedObject
     {
         assert(pkt->req->requestorId() < system->maxRequestors());
         stats.cmdStats(pkt).misses[pkt->req->requestorId()]++;
+        
+        recordCustomCacheResult(pkt, true); ////////////////
+
+
         pkt->req->incAccessDepth();
         if (missCount) {
             --missCount;
@@ -1308,6 +1326,8 @@ class BaseCache : public ClockedObject
     {
         assert(pkt->req->requestorId() < system->maxRequestors());
         stats.cmdStats(pkt).hits[pkt->req->requestorId()]++;
+        recordCustomCacheResult(pkt, false);
+
     }
 
     /**

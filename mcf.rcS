@@ -1,0 +1,13 @@
+#!/bin/sh
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+cd /root/spec_bench/mcf
+echo "=== mcf start ==="
+m5 resetstats
+./mcf inp.in > /tmp/mcf.out 2>&1
+EXIT=$?
+m5 dumpstats
+echo "=== mcf done EXIT=$EXIT ==="
+tail -5 /tmp/mcf.out
+m5 writefile /tmp/mcf.out mcf_output.txt
+sync
+m5 exit

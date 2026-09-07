@@ -1,0 +1,11 @@
+#!/bin/sh
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+m5 resetstats
+cat /proc/ctx_switch_stats > /tmp/cb.txt ; m5 writefile /tmp/cb.txt ctx_before.txt
+/root/memproc 9 10240 1 4096
+echo "EXIT=$?"
+# dump نهایی
+m5 dumpstats
+cat /proc/ctx_switch_stats > /tmp/ca.txt ; m5 writefile /tmp/ca.txt ctx_after.txt
+sync
+m5 exit

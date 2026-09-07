@@ -32,3 +32,45 @@ configs/example/memcheck.cfg
 configs/dram/lowp_sweep.cfg
 .pyenv
 .vscode
+
+# ============================================================
+# Context Switch Project - Generated / Experimental Data
+# ============================================================
+
+# gem5 simulation outputs
+/m5out/
+/m5out_*/
+/--outdir=m5out_*
+
+# checkpoints
+/checkpoint/
+/checkpoint_*/
+
+# large experiment directories
+/backup/
+/multicpu/
+/200/
+/400/
+
+# generated analysis directories
+/analysis_plots/
+/analysis_plots2/
+
+# generated datasets
+*.csv
+
+# generated plots
+*.png
+*.svg
+
+# logs
+*.log
+
+# Python generated files
+__pycache__/
+*.pyc
+*.pyo
+
+# generated/untracked bootloader binary
+/system/arm/bootloader/arm64/boot_foundation.arm64
+

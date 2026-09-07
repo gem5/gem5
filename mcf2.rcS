@@ -1,0 +1,27 @@
+#!/bin/sh
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+cat /proc/ctx_switch_stats > /tmp/cb.txt
+m5 writefile /tmp/cb.txt ctx_before.txt
+
+cd /root/spec_bench/mcf
+echo "=== mcf start ==="
+m5 resetstats
+
+./mcf inp.in > /tmp/mcf.out 2>&1 &
+MCF_PID=$!
+
+sleep 5
+
+kill $MCF_PID
+
+m5 dumpstats
+echo "=== mcf stopped ==="
+
+cat /proc/ctx_switch_stats > /tmp/ca.txt
+m5 writefile /tmp/ca.txt ctx_after.txt
+
+tail -5 /tmp/mcf.out
+m5 writefile /tmp/mcf.out mcf_output.txt
+sync
+m5 exit

@@ -1,0 +1,10 @@
+#!/bin/sh
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+cat /proc/ctx_switch_stats > /tmp/cb.txt ; m5 writefile /tmp/cb.txt ctx_before.txt
+m5 resetstats
+/root/memproc 30 2048 5 128
+echo "EXIT=$?"
+m5 dumpstats
+cat /proc/ctx_switch_stats > /tmp/ca.txt ; m5 writefile /tmp/ca.txt ctx_after.txt
+sync
+m5 exit

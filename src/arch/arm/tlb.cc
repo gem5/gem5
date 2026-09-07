@@ -52,6 +52,7 @@
 #include "debug/TLB.hh"
 #include "debug/TLBVerbose.hh"
 #include "params/ArmTLB.hh"
+#include "sim/ctx_switch_state.hh"
 
 namespace gem5
 {
@@ -173,30 +174,34 @@ TLB::lookup(const Lookup &lookup_data)
             retval ? retval->el        : 0);
 
     // Updating stats if this was not a functional lookup
-    if (!lookup_data.functional) {
+	if (!lookup_data.functional) {
         if (!retval) {
             if (mode == BaseMMU::Execute) {
+                if (gem5::inContextSwitch) { gem5::ctxItlbMisses++; gem5::ctxItlbAccesses++; }
                 stats.instMisses++;
             } else if (mode == BaseMMU::Write) {
+                if (gem5::inContextSwitch) { gem5::ctxDtlbMisses++; gem5::ctxDtlbAccesses++; }
                 stats.writeMisses++;
             } else {
+                if (gem5::inContextSwitch) { gem5::ctxDtlbMisses++; gem5::ctxDtlbAccesses++; }
                 stats.readMisses++;
             }
         } else {
             if (retval->partial) {
                 stats.partialHits++;
             }
-
             if (mode == BaseMMU::Execute) {
+                if (gem5::inContextSwitch) gem5::ctxItlbAccesses++;
                 stats.instHits++;
             } else if (mode == BaseMMU::Write) {
-               stats.writeHits++;
+                if (gem5::inContextSwitch) gem5::ctxDtlbAccesses++;
+                stats.writeHits++;
             } else {
+                if (gem5::inContextSwitch) gem5::ctxDtlbAccesses++;
                 stats.readHits++;
             }
         }
     }
-
     return retval;
 }
 

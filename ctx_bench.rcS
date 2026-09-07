@@ -1,0 +1,12 @@
+#!/bin/sh
+echo "=== CTX BEFORE ==="
+cat /proc/ctx_switch_stats
+m5 resetstats
+echo "=== BENCH START ==="
+/root/ctx_bench 50000
+echo "BENCH_EXIT=$?"
+m5 dumpstats
+echo "=== CTX AFTER ==="
+cat /proc/ctx_switch_stats
+sync
+m5 exit

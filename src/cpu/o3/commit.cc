@@ -66,6 +66,38 @@
 #include "params/BaseO3CPU.hh"
 #include "sim/faults.hh"
 #include "sim/full_system.hh"
+#include <unordered_map>
+#include <vector>
+
+struct CtxInstAccess {
+    uint64_t tick;
+    uint64_t pc;
+};
+struct CtxInstInfo {
+    uint64_t tick;
+    uint64_t pc;
+    std::string mnemonic;
+};
+
+// extern std::unordered_map<int, bool> g_ctx_monitor_active;
+// extern std::unordered_map<int, bool> g_ctx_capture_next;
+// extern std::unordered_map<int, std::vector<CtxInstInfo>> g_ctx_inst_accesses;
+// extern std::unordered_map<int, CtxInstInfo> g_last_committed_inst;
+// extern std::unordered_map<int, CtxInstInfo> g_ctx_pre_inst;
+// extern std::unordered_map<int, CtxInstInfo> g_last_user_inst;
+// extern std::unordered_map<int, CtxInstInfo> g_pre_switch_user_inst;
+// extern std::unordered_map<int, bool> g_wait_for_user_inst;
+// //extern std::unordered_map<int, bool> g_ctx_monitor_active;
+//extern std::unordered_map<int, std::vector<CtxInstAccess>> g_ctx_inst_accesses;
+extern std::unordered_map<int, bool> g_ctx_monitor_active;
+extern std::unordered_map<int, bool> g_ctx_capture_next;
+extern std::unordered_map<int, std::vector<CtxInstInfo>> g_ctx_inst_accesses;
+extern std::unordered_map<int, CtxInstInfo> g_last_committed_inst;
+extern std::unordered_map<int, CtxInstInfo> g_ctx_pre_inst;
+
+extern std::unordered_map<int, CtxInstInfo> g_last_user_inst;
+extern std::unordered_map<int, CtxInstInfo> g_pre_switch_user_inst;
+extern std::unordered_map<int, bool> g_wait_for_user_inst;
 
 namespace gem5
 {
@@ -1143,6 +1175,60 @@ bool
 Commit::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
 {
     assert(head_inst);
+   
+    
+    if (head_inst->thread) {
+        int cid = head_inst->thread->contextId();
+        uint64_t inst_pc = head_inst->pcState().instAddr();
+        std::string inst_name = head_inst->staticInst ? head_inst->staticInst->getName() : "unknown";
+
+
+        bool is_user_space = (inst_pc < 0x8000000000000000ULL);
+
+
+        if (is_user_space) {
+
+            if (g_wait_for_user_inst.count(cid) && g_wait_for_user_inst[cid]) {
+                g_wait_for_user_inst[cid] = false; 
+                
+                std::ofstream user_file("m5out/user_app_boundaries.csv", std::ios_base::app);
+                if (user_file.is_open()) {
+                    const auto& pre = g_pre_switch_user_inst[cid];
+                    user_file << cid << "," 
+                              << pre.tick << ",0x" << std::hex << pre.pc << std::dec << "," << pre.mnemonic << ","
+                              << curTick() << ",0x" << std::hex << inst_pc << std::dec << "," << inst_name << "\n";
+                }
+            }
+
+            g_last_user_inst[cid] = {curTick(), inst_pc, inst_name};
+        }
+
+
+        bool is_monitoring_op = (inst_name == "gem5op" || inst_name.rfind("m5", 0) == 0 || inst_name.find("pseudo") != std::string::npos);
+
+        if (g_ctx_monitor_active.count(cid) && g_ctx_monitor_active[cid]) {
+            if (!is_monitoring_op) {
+                g_ctx_inst_accesses[cid].push_back({curTick(), inst_pc, inst_name});
+            }
+        }
+        else if (g_ctx_capture_next.count(cid) && g_ctx_capture_next[cid]) {
+            if (!is_monitoring_op) {
+                g_ctx_capture_next[cid] = false;
+                std::ofstream b_file("m5out/ctx_boundaries.csv", std::ios_base::app);
+                if (b_file.is_open()) {
+                    const auto& pre = g_ctx_pre_inst[cid];
+                    b_file << cid << "," 
+                           << pre.tick << ",0x" << std::hex << pre.pc << std::dec << "," << pre.mnemonic << ","
+                           << curTick() << ",0x" << std::hex << inst_pc << std::dec << "," << inst_name << "\n";
+                }
+            }
+        }
+
+
+        if (!is_monitoring_op) {
+            g_last_committed_inst[cid] = {curTick(), inst_pc, inst_name};
+        }
+    }
 
     ThreadID tid = head_inst->threadNumber;
 

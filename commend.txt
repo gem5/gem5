@@ -1,0 +1,73 @@
+m5 resetstats
+cat /proc/ctx_switch_stats > /tmp/cb.txt ; m5 writefile /tmp/cb.txt ctx_before.txt
+/root/memproc 50 10240 1 4096
+m5 dumpstats
+cat /proc/ctx_switch_stats > /tmp/ca.txt ; m5 writefile /tmp/ca.txt ctx_after.txt
+m5 exit
+
+
+
+
+./build/ARM/gem5.opt --outdir=m5out_memproc_o3_test5 configs/example/fs.py --checkpoint-dir=m5out_shell_cpt --checkpoint-restore=1 --cpu-type=DerivO3CPU --kernel=/home/zag-20/context_switch/linux-5.4.49-instrumented/vmlinux --disk-image=/home/zag-20/back/arm64-dev.img --machine-type=VExpress_GEM5_V2 --caches --l2cache --num-cpus=1 --mem-size=8GB --l1d_size=16kB --l1i_size=16kB --l2_size=256kB --script=memproc.rcS
+
+
+
+
+
+./build/ARM/gem5.opt --outdir=m5out_mcf_AG configs/example/fs.py --kernel=/home/zag-20/context_switch/linux-5.4.49-instrumented/vmlinux --disk-image=/home/zag-20/back/arm64-dev.img --machine-type=VExpress_GEM5_V2 --cpu-type=DerivO3CPU --caches --l2cache --l1d_size=32kB --l1i_size=32kB --l2_size=2MB --num-cpus=1 --mem-size=8GB --checkpoint-dir=/home/zag-20/context_switch/gem5/m5out_shell_cpt_new -r 1 --script=mcf3.rcS
+
+
+
+
+470.lbm : 
+
+./build/ARM/gem5.opt \
+--outdir=m5out_lbm_icache \
+configs/example/fs.py \
+--kernel=/home/zag-20/context_switch/linux-5.4.49-instrumented/vmlinux \
+--disk:-image=/home/zag-20/back/arm64-dev.img \
+--machine-type=VExpress_GEM5_V2 \
+--cpu-type=DerivO3CPU \
+--caches \
+--l2cache \
+--l1d_size=32kB \
+--l1i_size=32kB \
+--l2_size=2MB \
+--num-cpus=1 \
+--mem-size=8GB \
+--checkpoint-dir=/home/zag-20/context_switch/gem5/m5out_cpt_benchmark_with_icache \
+-r 1
+
+
+cd /root/spec_bench/lbm_ref && echo 1 > /proc/ctx_switch_stats_reset && cat /proc/ctx_switch_stats > /tmp/cb.txt && m5 writefile /tmp/cb.txt ctx_before.txt && echo 1 > /proc/ctx_switch_stats_reset && m5 resetstats && { ./lbm_arm64 3000 reference.dat 0 0 100_100_130_ldc.of > /tmp/lbm.out 2>&1 & echo $!; }
+
+
+kill 125 && m5 dumpstats && cat /proc/ctx_switch_stats > /tmp/ca.txt && m5 writefile /tmp/ca.txt ctx_after.txt && m5 writefile /tmp/lbm.out lbm.out && m5 exit
+
+
+
+mcf : 
+
+
+./build/ARM/gem5.opt \
+--outdir=m5out_mcf_ref \
+configs/example/fs.py \
+--kernel=/home/zag-20/context_switch/linux-5.4.49-instrumented/vmlinux \
+--disk-image=/home/zag-20/back/arm64-dev.img \
+--machine-type=VExpress_GEM5_V2 \
+--cpu-type=DerivO3CPU \
+--caches \
+--l2cache \
+--l1d_size=32kB \
+--l1i_size=32kB \
+--l2_size=2MB \
+--num-cpus=1 \
+--mem-size=8GB \
+--checkpoint-dir=/home/zag-20/context_switch/gem5/m5out_cpt_new \
+-r 1
+
+
+cd /root/spec_bench/mcf_ref && echo 1 > /proc/ctx_switch_stats_reset && cat /proc/ctx_switch_stats > /tmp/cb.txt && m5 writefile /tmp/cb.txt ctx_before.txt && echo 1 > /proc/ctx_switch_stats_reset && m5 resetstats && { ./mcf_arm64 inp.in > /tmp/mcf.out 2>&1 & echo $!; }
+
+
+kill 125 && m5 dumpstats && cat /proc/ctx_switch_stats > /tmp/ca.txt && m5 writefile /tmp/ca.txt ctx_after.txt && m5 writefile /tmp/mcf.out mcf.out && m5 exit

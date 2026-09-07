@@ -1,0 +1,42 @@
+cd /root/spec_bench/lbm_ref
+./lbm_arm64 3000 reference.dat 0 0 100_100_130_ldc.of > /tmp/lbm_1.out 2>&1 &
+./lbm_arm64 3000 reference.dat 0 0 100_100_130_ldc.of > /tmp/lbm_2.out 2>&1 &
+./lbm_arm64 3000 reference.dat 0 0 100_100_130_ldc.of > /tmp/lbm_3.out 2>&1 &
+./lbm_arm64 3000 reference.dat 0 0 100_100_130_ldc.of > /tmp/lbm_4.out 2>&1 &
+
+cd /root/spec_bench/mcf_ref
+./mcf_arm64 inp.in > /tmp/mcf_1.out 2>&1 &
+./mcf_arm64 inp.in > /tmp/mcf_2.out 2>&1 &
+./mcf_arm64 inp.in > /tmp/mcf_3.out 2>&1 &
+
+cd /root/spec_bench/omnetpp_ref
+./omnetpp_arm64 omnetpp.ini > /tmp/omnetpp_1.out 2>&1 &
+./omnetpp_arm64 omnetpp.ini > /tmp/omnetpp_2.out 2>&1 &
+./omnetpp_arm64 omnetpp.ini > /tmp/omnetpp_3.out 2>&1 &
+
+kill 12
+kill 12
+kill 12
+kill 12
+kill 12
+kill 12
+kill 12
+kill 12
+kill 12
+kill 12
+kill 12
+kill 12
+kill 12
+kill 12
+
+
+
+m5 dumpstats
+cat /proc/ctx_switch_stats > /tmp/ca.txt
+m5 writefile /tmp/ca.txt ctx_after.txt
+
+m5 writefile /tmp/lbm_1.out lbm_1.out
+m5 writefile /tmp/mcf_1.out mcf_1.out
+m5 writefile /tmp/omnetpp_1.out omnetpp_1.out
+
+m5 exit

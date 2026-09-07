@@ -80,6 +80,21 @@
 
 #define M5OP_WORKLOAD           0x70
 
+#define M5OP_CTX_SWITCH_BEGIN     0x80
+#define M5OP_CTX_SWITCH_END       0x81
+#define M5OP_CTX_GET_L1D_MISSES   0x82
+#define M5OP_CTX_GET_L2_MISSES    0x83
+#define M5OP_CTX_GET_DTLB_MISSES  0x84
+#define M5OP_CTX_GET_ITLB_MISSES  0x85
+
+#define M5OP_CTX_GET_L1D_ACCESSES  0x86 //added 
+#define M5OP_CTX_GET_L2_ACCESSES   0x87 //added 
+#define M5OP_CTX_GET_DTLB_ACCESSES 0x88 //added 
+#define M5OP_CTX_GET_ITLB_ACCESSES 0x89 //added
+#define M5OP_CTX_GET_INSTS         0x8a //added
+#define M5OP_CTX_GET_L1I_MISSES    0x8b //added
+#define M5OP_CTX_GET_L1I_ACCESSES  0x8c //added
+#define M5OP_CTX_DUMP_ADDRS        0x8d //added
 
 #define M5OP_FOREACH                                            \
     M5OP(m5_arm, M5OP_ARM)                                      \
@@ -108,6 +123,20 @@
     M5OP(m5_work_end, M5OP_WORK_END)                            \
     M5OP(m5_dist_toggle_sync, M5OP_DIST_TOGGLE_SYNC)            \
     M5OP(m5_workload, M5OP_WORKLOAD)                            \
+    M5OP(m5_ctx_switch_begin, M5OP_CTX_SWITCH_BEGIN) \
+    M5OP(m5_ctx_switch_end, M5OP_CTX_SWITCH_END) \
+    M5OP(m5_ctx_get_l1d_misses, M5OP_CTX_GET_L1D_MISSES) \
+    M5OP(m5_ctx_get_l2_misses, M5OP_CTX_GET_L2_MISSES) \
+    M5OP(m5_ctx_get_dtlb_misses, M5OP_CTX_GET_DTLB_MISSES) \
+    M5OP(m5_ctx_get_itlb_misses, M5OP_CTX_GET_ITLB_MISSES) \
+    M5OP(m5_ctx_get_l1d_accesses, M5OP_CTX_GET_L1D_ACCESSES) \
+    M5OP(m5_ctx_get_l2_accesses, M5OP_CTX_GET_L2_ACCESSES) \
+    M5OP(m5_ctx_get_dtlb_accesses, M5OP_CTX_GET_DTLB_ACCESSES) \
+    M5OP(m5_ctx_get_itlb_accesses, M5OP_CTX_GET_ITLB_ACCESSES) \
+    M5OP(m5_ctx_get_insts, M5OP_CTX_GET_INSTS) \
+    M5OP(m5_ctx_get_l1i_misses, M5OP_CTX_GET_L1I_MISSES) \
+    M5OP(m5_ctx_get_l1i_accesses, M5OP_CTX_GET_L1I_ACCESSES) \
+    M5OP(m5_ctx_dump_addrs, M5OP_CTX_DUMP_ADDRS) \
 
 #define M5OP_MERGE_TOKENS_I(a, b) a##b
 #define M5OP_MERGE_TOKENS(a, b) M5OP_MERGE_TOKENS_I(a, b)

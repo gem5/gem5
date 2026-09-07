@@ -1,0 +1,22 @@
+#!/bin/sh
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+export GCC_EXEC_PREFIX=/usr/lib/gcc/
+export COMPILER_PATH=/usr/bin
+date -s "2026-06-15 12:00:00"
+cd /root/kbuild
+cat /proc/ctx_switch_stats > /tmp/cb.txt
+m5 writefile /tmp/cb.txt ctx_before.txt
+cat > /tmp/stopnow << 'STOP'
+m5 dumpstats
+cat /proc/ctx_switch_stats > /tmp/ca.txt
+m5 writefile /tmp/ca.txt ctx_after.txt
+sync
+echo STOPPED_OK
+m5 exit
+STOP
+chmod +x /tmp/stopnow
+m5 resetstats
+echo "=== BUILD STARTED (background). watch: tail -f /tmp/build.log ==="
+echo "=== after ~10 min run:  sh /tmp/stopnow ==="
+make -j4 Image > /tmp/build.log 2>&1 &
+exec /bin/sh

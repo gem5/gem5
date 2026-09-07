@@ -64,6 +64,20 @@ decodeAddrOffset(Addr offset, uint8_t &func)
 {
     func = bits(offset, 15, 8);
 }
+void m5CtxSwitchBegin(ThreadContext *tc);
+void m5CtxSwitchEnd(ThreadContext *tc);
+uint64_t m5CtxGetL1dMisses(ThreadContext *tc);
+uint64_t m5CtxGetL2Misses(ThreadContext *tc);
+uint64_t m5CtxGetDtlbMisses(ThreadContext *tc);
+uint64_t m5CtxGetItlbMisses(ThreadContext *tc);
+uint64_t m5CtxGetL1dAccesses(ThreadContext *tc);
+uint64_t m5CtxGetL2Accesses(ThreadContext *tc);
+uint64_t m5CtxGetDtlbAccesses(ThreadContext *tc);
+uint64_t m5CtxGetItlbAccesses(ThreadContext *tc);
+uint64_t m5CtxGetInsts(ThreadContext *tc);
+uint64_t m5CtxGetL1iMisses(ThreadContext *tc);
+uint64_t m5CtxGetL1iAccesses(ThreadContext *tc);
+void m5CtxDumpAddrs(ThreadContext *tc, uint64_t prev, uint64_t next, uint64_t pc);
 
 void arm(ThreadContext *tc);
 void quiesce(ThreadContext *tc);
@@ -212,6 +226,53 @@ pseudoInstWork(ThreadContext *tc, uint8_t func, uint64_t &result)
 
       case M5OP_WORK_END:
         invokeSimcall<ABI>(tc, workend);
+        return true;
+      case M5OP_CTX_SWITCH_BEGIN:
+        invokeSimcall<ABI>(tc, m5CtxSwitchBegin);
+        return true;
+
+      case M5OP_CTX_SWITCH_END:
+        invokeSimcall<ABI>(tc, m5CtxSwitchEnd);
+        return true;
+
+      case M5OP_CTX_GET_L1D_MISSES:
+        result = invokeSimcall<ABI, store_ret>(tc, m5CtxGetL1dMisses);
+        return true;
+
+      case M5OP_CTX_GET_L2_MISSES:
+        result = invokeSimcall<ABI, store_ret>(tc, m5CtxGetL2Misses);
+        return true;
+
+      case M5OP_CTX_GET_DTLB_MISSES:
+        result = invokeSimcall<ABI, store_ret>(tc, m5CtxGetDtlbMisses);
+        return true;
+
+      case M5OP_CTX_GET_ITLB_MISSES:
+        result = invokeSimcall<ABI, store_ret>(tc, m5CtxGetItlbMisses);
+        return true;
+      case M5OP_CTX_GET_L1D_ACCESSES:
+        result = invokeSimcall<ABI, store_ret>(tc, m5CtxGetL1dAccesses);
+        return true;
+      case M5OP_CTX_GET_L2_ACCESSES:
+        result = invokeSimcall<ABI, store_ret>(tc, m5CtxGetL2Accesses);
+        return true;
+      case M5OP_CTX_GET_DTLB_ACCESSES:
+        result = invokeSimcall<ABI, store_ret>(tc, m5CtxGetDtlbAccesses);
+        return true;
+      case M5OP_CTX_GET_ITLB_ACCESSES:
+        result = invokeSimcall<ABI, store_ret>(tc, m5CtxGetItlbAccesses);
+        return true;
+      case M5OP_CTX_GET_INSTS:
+        result = invokeSimcall<ABI, store_ret>(tc, m5CtxGetInsts);
+        return true;
+      case M5OP_CTX_GET_L1I_MISSES:
+        result = invokeSimcall<ABI, store_ret>(tc, m5CtxGetL1iMisses);
+        return true;
+      case M5OP_CTX_GET_L1I_ACCESSES:
+        result = invokeSimcall<ABI, store_ret>(tc, m5CtxGetL1iAccesses);
+        return true;
+      case M5OP_CTX_DUMP_ADDRS:
+        invokeSimcall<ABI>(tc, m5CtxDumpAddrs);
         return true;
 
       case M5OP_RESERVED1:
