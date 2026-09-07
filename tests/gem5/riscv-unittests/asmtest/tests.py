@@ -51,6 +51,8 @@ rv64_binaries = (
     "rv64ua-ps-amoadd_w",
     "rv64ua-ps-amoand_d",
     "rv64ua-ps-amoand_w",
+    "rv64ua-ps-amocas_d",
+    "rv64ua-ps-amocas_w",
     "rv64ua-ps-amomax_d",
     "rv64ua-ps-amomax_w",
     "rv64ua-ps-amomaxu_d",
@@ -223,6 +225,7 @@ rv64_binaries = (
 rv32_binaries = (
     "rv32ua-ps-amoadd_w",
     "rv32ua-ps-amoand_w",
+    "rv32ua-ps-amocas_w",
     "rv32ua-ps-amomaxu_w",
     "rv32ua-ps-amomax_w",
     "rv32ua-ps-amominu_w",
