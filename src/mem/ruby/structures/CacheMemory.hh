@@ -45,9 +45,12 @@
 #include <unordered_map>
 #include <vector>
 
+#include "base/cache/associative_cache.hh"
+#include "base/cache/cache_entry.hh"
 #include "base/statistics.hh"
 #include "mem/cache/replacement_policies/base.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
+#include "mem/cache/tags/indexing_policies/base.hh"
 #include "mem/ruby/common/DataBlock.hh"
 #include "mem/ruby/protocol/CacheRequestType.hh"
 #include "mem/ruby/protocol/CacheResourceType.hh"
@@ -67,8 +70,7 @@ namespace ruby
 class CacheMemory : public SimObject
 {
   public:
-    typedef RubyCacheParams Params;
-    typedef std::shared_ptr<replacement_policy::ReplacementData> ReplData;
+    PARAMS(RubyCache);
     CacheMemory(const Params &p);
     ~CacheMemory();
 
@@ -166,29 +168,72 @@ class CacheMemory : public SimObject
     // convert a Address to its location in the cache
     int64_t addressToCacheSet(Addr address) const;
 
-    // Given a cache tag: returns the index of the tag in a set.
-    // returns -1 if the tag is not found.
-    int findTagInSet(int64_t line, Addr tag) const;
-    int findTagInSetIgnorePermissions(int64_t cacheSet, Addr tag) const;
-
     // Private copy constructor and assignment operator
     CacheMemory(const CacheMemory& obj);
     CacheMemory& operator=(const CacheMemory& obj);
 
   private:
+    /**
+     * RubyCacheSlot provides an adapter between the protocol specific
+     * requirements of Ruby cache entries - storage of access
+     * time, cache-line addresses, permissions and SLICC fields within
+     * derived classes using AbstractCacheEntry. While also meeting
+     * the requirements of AssociativeCache using CacheEntry.
+     */
+    class RubyCacheSlot : public CacheEntry
+    {
+      public:
+        explicit RubyCacheSlot(CacheEntry::TagExtractor tag_extractor)
+            : CacheEntry(tag_extractor)
+        {}
+
+        bool
+        isValid() const override
+        {
+            return CacheEntry::isValid() && entry != nullptr &&
+                   entry->m_Permission != AccessPermission_NotPresent;
+        }
+
+        bool
+        match(const Addr addr) const override
+        {
+            return isValid() && entry->m_Address == addr;
+        }
+
+        void
+        invalidate() override
+        {
+            CacheEntry::invalidate();
+            entry = nullptr;
+        }
+
+        AbstractCacheEntry *entry = nullptr;
+    };
+
+    /**
+     * Ruby Cache needs to perform a couple extra functions to the classic
+     * namely cache probing and weighted replacement policy. Therefore we
+     * extend associative cache to enable this.
+     */
+    class RubyCache : public AssociativeCache<RubyCacheSlot>
+    {
+      public:
+        using AssociativeCache<RubyCacheSlot>::AssociativeCache;
+
+        RubyCacheSlot *
+        selectVictim(const std::vector<RubyCacheSlot *> &candidates) const;
+        void weightedTouch(RubyCacheSlot *entry, int occupancy) const;
+    };
+
+    RubyCacheSlot *lookupSlot(Addr address);
+    const RubyCacheSlot *lookupSlot(Addr address) const;
+
     // Data Members (m_prefix)
     bool m_is_instruction_only_cache;
 
-    // The first index is the # of cache lines.
-    // The second index is the the amount associativity.
-    std::unordered_map<Addr, int> m_tag_index;
-    std::vector<std::vector<AbstractCacheEntry*> > m_cache;
-
-    /** We use the replacement policies from the Classic memory system. */
-    replacement_policy::Base *m_replacementPolicy_ptr;
-
     BankedArray dataArray;
     BankedArray tagArray;
+    RubyCache rubyCache;
     ALUFreeListArray atomicALUArray;
 
     int m_cache_size;
@@ -199,16 +244,6 @@ class CacheMemory : public SimObject
     bool m_resource_stalls;
     int m_block_size;
     bool m_is_power_of_2_sets;
-
-    /**
-     * We store all the ReplacementData in a 2-dimensional array. By doing
-     * this, we can use all replacement policies from Classic system. Ruby
-     * cache will deallocate cache entry every time we evict the cache block
-     * so we cannot store the ReplacementData inside the cache entry.
-     * Instantiate ReplacementData for multiple times will break replacement
-     * policy like TreePLRU.
-     */
-    std::vector<std::vector<ReplData> > replacement_data;
 
     /**
      * Set to true when using WeightedLRU replacement policy, otherwise, set to

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 Inria
- * Copyright (c) 2012-2014,2017 ARM Limited
+ * Copyright (c) 2012-2014,2017,2026 Arm Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -52,7 +52,9 @@ namespace gem5
 {
 
 SetAssociative::SetAssociative(const Params &p)
-    : BaseIndexingPolicy(p, p.size / p.entry_size, floorLog2(p.entry_size))
+    : BaseIndexingPolicy(p, p.size / p.entry_size,
+                         p.index_start_bit >= 0 ? p.index_start_bit
+                                                : floorLog2(p.entry_size))
 {
 }
 
