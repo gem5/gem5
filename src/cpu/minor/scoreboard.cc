@@ -488,7 +488,9 @@ namespace gem5
                                         (*cant_forward_from_fu_indices)[src_reg_fu];
 
                     Cycles relative_latency = (cant_forward ? Cycles(0) : (1 >= num_relative_latencies ? default_relative_latency : (*src_reg_relative_latencies)[1]));
-                    Cycles retCycle = returnCycle[index];
+                    Cycles retCycle =
+                        writingInst[index] > inst->id.execSeqNum ?
+                        oldReturnCycles[index] : returnCycle[index];
                     if (retCycle > now ||
                         numUnpredictableResults[index] != 0)
                     {
