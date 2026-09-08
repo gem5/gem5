@@ -1,4 +1,5 @@
-# Copyright 2023 Google LLC
+# Copyright (c) 2026 The Regents of the University of California
+# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -23,14 +24,33 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-config HAVE_CAPSTONE
-    def_bool $(HAVE_CAPSTONE)
+Import('*')
 
-rsource "kvm/Kconfig"
-rsource "apple_virt/Kconfig"
+if not env['CONF'].get('USE_APPLE_VIRT', False):
+    Return()
 
-config USE_CAPSTONE
-    depends on HAVE_CAPSTONE
-    depends on USE_ARM_ISA
-    bool "Use CapstoneDisassembler"
-    default y
+env.Append(LINKFLAGS=['-framework', 'Hypervisor'])
+
+env.TagImplies('apple_virt', 'gem5 lib')
+env.TagImplies(env.subst('${CONF["APPLE_VIRT_ISA"]} apple_virt'),
+               env.subst('${CONF["APPLE_VIRT_ISA"]} isa'))
+
+SimObject('AppleVirtVM.py', sim_objects=['AppleVirtVM'], tags=['apple_virt'])
+SimObject(
+    'BaseAppleVirtCPU.py',
+    sim_objects=['BaseAppleVirtCPU'],
+    tags=['apple_virt'],
+)
+
+Source('vm.cc', tags=['apple_virt'])
+Source('base.cc', tags=['apple_virt'])
+
+DebugFlag(
+    'AppleVirt',
+    'Apple virtualization backend diagnostics',
+    tags=['apple_virt'],
+)
+DebugFlag('AppleVirtRun', 'HVF run-loop tracing', tags=['apple_virt'])
+
+CompoundFlag('AppleVirtAll', ['AppleVirt', 'AppleVirtRun'],
+             'All Apple virtualization debug flags', tags=['apple_virt'])

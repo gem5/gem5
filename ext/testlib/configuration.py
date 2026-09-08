@@ -1,4 +1,5 @@
 # Copyright (c) 2020-2021 ARM Limited
+# Copyright (c) 2026 The Regents of The University of California
 # All rights reserved
 #
 # The license below extends only to copyright in the software and shall
@@ -406,7 +407,9 @@ def define_post_processors(config):
             try:
                 import platform
 
-                host_machine = platform.machine()
+                host_machine = platform.machine().lower()
+                if host_machine == "arm64":
+                    host_machine = constants.host_arm_tag
                 if host_machine not in constants.supported_hosts:
                     raise ValueError("Invalid host machine")
                 return [[host_machine]]

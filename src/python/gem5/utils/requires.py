@@ -28,6 +28,8 @@ import inspect
 import os
 from typing import Optional
 
+from m5.defines import buildEnv
+
 from ..coherence_protocol import CoherenceProtocol
 from ..isas import ISA
 from ..runtime import (
@@ -58,16 +60,19 @@ def requires(
     isa_required: Optional[ISA] = None,
     coherence_protocol_required: Optional[CoherenceProtocol] = None,
     kvm_required: bool = False,
+    apple_virt_required: bool = False,
 ) -> None:
     """
-    Ensures the ISA/Coherence protocol/KVM requirements are met. An exception
-    will be raise if they are not.
+    Ensures the ISA/coherence protocol/host virtualization requirements are
+    met. An exception will be raised if they are not.
 
     :param isa_required: The ISA(s) gem5 must be compiled to.
     :param coherence_protocol_required: The coherence protocol gem5 must be
                                         compiled to.
     :param kvm_required: The host system must have the Kernel-based Virtual
                          Machine available.
+    :param apple_virt_required: The gem5 binary must include Apple
+                                virtualization support.
     :raises Exception: Raises an exception if the required ISA or coherence
                        protocol do not match that of the current gem5 binary.
     """
@@ -120,5 +125,13 @@ def requires(
         raise Exception(
             _get_exception_str(
                 msg="KVM is required but is unavailable on this system"
+            )
+        )
+
+    if apple_virt_required and not buildEnv.get("USE_APPLE_VIRT", False):
+        raise Exception(
+            _get_exception_str(
+                msg="Apple virtualization is required but is unavailable in "
+                "this gem5 binary"
             )
         )
