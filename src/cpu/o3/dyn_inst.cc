@@ -344,6 +344,23 @@ DynInst::setSquashed()
 {
     status.set(Squashed);
 
+    // Handle fault-induced squashes
+    // (e.g., from page faults in SVE gathers)
+    // If the instruction has pinned destination registers and is squashed
+    // due to a fault, reset the pinned writes to prevent assertion failures
+    if (isPinnedRegsRenamed() && !isPinnedRegsSquashDone() &&
+        fault != NoFault) {
+        for (int idx = 0; idx < numDestRegs(); ++idx) {
+            auto phys_dest_reg = renamedDestIdx(idx);
+            if (phys_dest_reg && phys_dest_reg->isPinned()) {
+                phys_dest_reg->setNumPinnedWrites(0);
+                phys_dest_reg->setNumPinnedWritesToComplete(0);
+            }
+        }
+        setPinnedRegsSquashDone();
+        return;
+    }
+
     if (!isPinnedRegsRenamed() || isPinnedRegsSquashDone())
         return;
 
