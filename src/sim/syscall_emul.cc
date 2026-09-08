@@ -44,14 +44,12 @@
 #include <sys/syscall.h>
 #include <unistd.h>
 
+#include <cerrno>
 #include <csignal>
-#include <iostream>
-#include <mutex>
 #include <string>
 #include <unordered_map>
 
-#include "base/chunk_generator.hh"
-#include "base/trace.hh"
+#include "base/logging.hh"
 #include "cpu/thread_context.hh"
 #include "dev/net/dist_iface.hh"
 #include "mem/page_table.hh"
@@ -642,6 +640,18 @@ dup2Func(SyscallDesc *desc, ThreadContext *tc, int old_tgt_fd, int new_tgt_fd)
     p->fds->setFDEntry(new_tgt_fd, new_hbp);
 
     return new_tgt_fd;
+}
+
+SyscallReturn
+dup3Func(SyscallDesc *desc, ThreadContext *tc, int old_tgt_fd, int new_tgt_fd,
+         int flags)
+{
+    if (old_tgt_fd == new_tgt_fd) {
+        return -EINVAL;
+    }
+
+    // For now we just call dup2Func and ignore flags.
+    return dup2Func(desc, tc, old_tgt_fd, new_tgt_fd);
 }
 
 SyscallReturn
@@ -1327,7 +1337,7 @@ sendmsgFunc(SyscallDesc *desc, ThreadContext *tc,
 
     /**
      * Iterate through the iovec structures:
-     * Get the base buffer addreses, reserve iov_len amount of space for each.
+     * Get the base buffer addresses, reserve iov_len amount of space for each.
      * Put the buf address into the bufferArray for later retrieval.
      */
     for (int iovIndex = 0 ; iovIndex < msgHdr.msg_iovlen; iovIndex++) {
@@ -1409,7 +1419,7 @@ getsocknameFunc(SyscallDesc *desc, ThreadContext *tc,
         return -EBADF;
     int sim_fd = sfdp->getSimFD();
 
-    // lenPtr is an in-out paramenter:
+    // lenPtr is an in-out parameter:
     // sending the address length in, conveying the final length out
 
     SETranslatingPortProxy proxy(tc);

@@ -42,6 +42,11 @@
 #ifndef __SYSTEM_HH__
 #define __SYSTEM_HH__
 
+#include <cassert>
+#include <cstdint>
+#include <iterator>
+#include <list>
+#include <map>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -49,9 +54,9 @@
 #include <vector>
 
 #include "base/loader/memory_image.hh"
-#include "base/loader/symtab.hh"
 #include "base/statistics.hh"
 #include "cpu/pc_event.hh"
+#include "cpu/thread_context.hh"
 #include "enums/MemoryMode.hh"
 #include "mem/mem_requestor.hh"
 #include "mem/physical.hh"
@@ -593,7 +598,7 @@ class System : public SimObject, public PCEventScope
 
     FutexMap futexMap;
 
-    static const int maxPID = 32768;
+    static const int maxPID = 8388608;
 
     /** Process set to track which PIDs have already been allocated */
     std::set<int> PIDs;
