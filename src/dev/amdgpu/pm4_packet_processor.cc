@@ -416,6 +416,16 @@ PM4PacketProcessor::writeDataDone(PM4Queue *q, PM4WriteData *pkt, Addr addr)
     delete pkt;
 }
 
+bool
+PM4PacketProcessor::isSDMAQueue(PM4MapQueues *pkt)
+{
+    if (pkt->engineSel == 0 || pkt->engineSel == 1 || pkt->engineSel == 4) {
+        return false;
+    }
+
+    return true;
+}
+
 void
 PM4PacketProcessor::mapQueues(PM4Queue *q, PM4MapQueues *pkt)
 {
@@ -431,19 +441,31 @@ PM4PacketProcessor::mapQueues(PM4Queue *q, PM4MapQueues *pkt)
             pkt->checkDisable, pkt->doorbellOffset, pkt->mqdAddr,
             pkt->wptrAddr);
 
-    // Partially reading the mqd with an offset of 96 dwords
-    if (pkt->engineSel == 0 || pkt->engineSel == 1 || pkt->engineSel == 4) {
-        Addr addr = getGARTAddr(pkt->mqdAddr + 96 * sizeof(uint32_t));
-
-        DPRINTF(PM4PacketProcessor,
-                "Mapping mqd from %p %p (vmid %d - last vmid %d).\n", addr,
-                pkt->mqdAddr, pkt->vmid, gpuDevice->lastVMID());
-
+    if (!isSDMAQueue(pkt)) {
         // The doorbellOffset is a dword address. We shift by two / multiply
         // by four to get the byte address to match doorbell addresses in
         // the GPU device.
         gpuDevice->mapDoorbellToVMID(pkt->doorbellOffset << 2,
                                      gpuDevice->lastVMID());
+    }
+
+    if (gpuDevice->getVM().inMMHUB(pkt->mqdAddr)) {
+        mapDeviceQueue(q, pkt);
+    } else {
+        mapHostQueue(q, pkt);
+    }
+}
+
+void
+PM4PacketProcessor::mapHostQueue(PM4Queue *q, PM4MapQueues *pkt)
+{
+    if (!isSDMAQueue(pkt)) {
+        // Partially reading the mqd with an offset of 96 dwords
+        Addr addr = getGARTAddr(pkt->mqdAddr + pm4MqdOffset);
+
+        DPRINTF(PM4PacketProcessor,
+                "Mapping host mqd from %p %p (vmid %d - last vmid %d).\n",
+                addr, pkt->mqdAddr, pkt->vmid, gpuDevice->lastVMID());
 
         QueueDesc *mqd = new QueueDesc();
         memset(mqd, 0, sizeof(QueueDesc));
@@ -463,6 +485,86 @@ PM4PacketProcessor::mapQueues(PM4Queue *q, PM4MapQueues *pkt)
         });
         dmaReadVirt(addr, sizeof(SDMAQueueDesc), cb, sdmaMQD);
     } else {
+        // Support for engine 2 - 15 not yet implemented (used by xGMI only).
+        panic("Unknown engine for MQD: %d\n", pkt->engineSel);
+    }
+}
+
+void
+PM4PacketProcessor::mapDeviceQueue(PM4Queue *q, PM4MapQueues *pkt)
+{
+    pkt->mqdAddr = pkt->mqdAddr - gpuDevice->getVM().getMMHUBBase();
+
+    // We are known to be in MMHUB. Subtract MMHUB base to get device address.
+    if (!isSDMAQueue(pkt)) {
+        // Partially reading the mqd with an offset of 96 dwords
+        Addr addr = pkt->mqdAddr + pm4MqdOffset;
+
+        DPRINTF(PM4PacketProcessor,
+                "Mapping device mqd from %p %p (vmid %d - last vmid %d).\n",
+                addr, pkt->mqdAddr, pkt->vmid, gpuDevice->lastVMID());
+
+        QueueDesc *mqd = new QueueDesc();
+        memset(mqd, 0, sizeof(QueueDesc));
+        auto cb = new EventFunctionWrapper(
+            [=, this] {
+                processMQD(pkt, q, addr, mqd, gpuDevice->lastVMID());
+                Addr doorbell_offset = mqd->doorbell & 0x1ffffffc;
+                if (queuesMap.count(doorbell_offset)) {
+                    queuesMap[doorbell_offset]->setDeviceBacked(true);
+                }
+            },
+            name());
+
+        // Copy the minimum page size at a time in case the physical addresses
+        // are not contiguous.
+        ChunkGenerator gen(addr, sizeof(QueueDesc), AMDGPU_MMHUB_PAGE_SIZE);
+        uint8_t *buffer_ptr = (uint8_t *)mqd;
+        Addr chunk_addr = addr;
+        for (; !gen.done(); gen.next()) {
+            DPRINTF(PM4PacketProcessor,
+                    "Copying chunk of %d bytes from %#lx (%#lx)\n", gen.size(),
+                    gen.addr(), chunk_addr);
+
+            gpuDevice->getMemMgr()->readRequest(chunk_addr, buffer_ptr,
+                                                gen.size(), 0,
+                                                gen.last() ? cb : nullptr);
+            buffer_ptr += gen.size();
+            chunk_addr += gen.size();
+        }
+    } else if (pkt->engineSel == 2 || pkt->engineSel == 3) {
+        SDMAQueueDesc *sdmaMQD = new SDMAQueueDesc();
+        memset(sdmaMQD, 0, sizeof(SDMAQueueDesc));
+
+        // For SDMA we read the full MQD, so there is no offset calculation.
+        Addr addr = pkt->mqdAddr;
+
+        auto cb = new EventFunctionWrapper(
+            [=, this] {
+                processSDMAMQD(pkt, q, addr, sdmaMQD, gpuDevice->lastVMID(),
+                               true);
+            },
+            name());
+
+        // Copy the minimum page size at a time in case the physical addresses
+        // are not contiguous.
+        ChunkGenerator gen(addr, sizeof(SDMAQueueDesc),
+                           AMDGPU_MMHUB_PAGE_SIZE);
+        uint8_t *buffer_ptr = (uint8_t *)sdmaMQD;
+        Addr chunk_addr = addr;
+        for (; !gen.done(); gen.next()) {
+            DPRINTF(PM4PacketProcessor,
+                    "Copying chunk of %d bytes from %#lx (%#lx)\n", gen.size(),
+                    gen.addr(), chunk_addr);
+
+            gpuDevice->getMemMgr()->readRequest(chunk_addr, buffer_ptr,
+                                                gen.size(), 0,
+                                                gen.last() ? cb : nullptr);
+            buffer_ptr += gen.size();
+            chunk_addr += gen.size();
+        }
+    } else {
+        // Support for engine 2 - 15 not yet implemented (used by xGMI only).
         panic("Unknown engine for MQD: %d\n", pkt->engineSel);
     }
 }
@@ -512,7 +614,8 @@ PM4PacketProcessor::processMQD(PM4MapQueues *pkt, PM4Queue *q, Addr addr,
 
 void
 PM4PacketProcessor::processSDMAMQD(PM4MapQueues *pkt, PM4Queue *q, Addr addr,
-                                   SDMAQueueDesc *mqd, uint16_t vmid)
+                                   SDMAQueueDesc *mqd, uint16_t vmid,
+                                   bool isDeviceBacked)
 {
     uint32_t rlc_size = 4UL << bits(mqd->sdmax_rlcx_rb_cntl, 6, 1);
     Addr rptr_wb_addr = mqd->sdmax_rlcx_rb_rptr_addr_hi;
@@ -535,7 +638,8 @@ PM4PacketProcessor::processSDMAMQD(PM4MapQueues *pkt, PM4Queue *q, Addr addr,
     bool is_static = (pkt->queueType == 2) || (pkt->queueType == 3);
 
     // Register RLC queue with SDMA
-    sdma_eng->registerRLCQueue(pkt->doorbellOffset << 2, addr, mqd, is_static);
+    sdma_eng->registerRLCQueue(pkt->doorbellOffset << 2, addr, mqd, is_static,
+                               isDeviceBacked);
 
     // Register doorbell with GPU device
     gpuDevice->setSDMAEngine(pkt->doorbellOffset << 2, sdma_eng);
@@ -628,16 +732,32 @@ PM4PacketProcessor::unmapAllQueues(bool unmap_static)
                     "index %ld\n",
                     id, mqd->mqdReadIndex);
 
-            // Partially writing the mqd with an offset of 96 dwords as gem5
-            // does not use the full MQD and begins 96 dwords from the start
-            // of the full MQD structure. See src/dev/amdgpu/pm4_queues.hh.
-            Addr addr =
-                getGARTAddr(queues[id]->mqdBase() + 96 * sizeof(uint32_t));
-            Addr mqd_base = queues[id]->mqdBase();
-            auto cb = new DmaVirtCallback<uint32_t>(
-                [=, this](const uint32_t &) { doneMQDWrite(mqd_base, addr); });
             mqd->base >>= 8;
-            dmaWriteVirt(addr, sizeof(QueueDesc), cb, mqd);
+            Addr mqd_base = queues[id]->mqdBase();
+            if (queues[id]->isDeviceBacked()) {
+                Addr addr = queues[id]->mqdPktAddr() + pm4MqdOffset;
+                auto cb = new EventFunctionWrapper(
+                    [=, this] { doneMQDWrite(mqd_base, addr); }, name());
+
+                ChunkGenerator gen(addr, sizeof(QueueDesc),
+                                   AMDGPU_MMHUB_PAGE_SIZE);
+                uint8_t *buf = (uint8_t *)mqd;
+                Addr chunk_addr = addr;
+                for (; !gen.done(); gen.next()) {
+                    gpuDevice->getMemMgr()->writeRequest(
+                        chunk_addr, buf, gen.size(), 0,
+                        gen.last() ? cb : nullptr);
+                    buf += gen.size();
+                    chunk_addr += gen.size();
+                }
+            } else {
+                Addr addr = getGARTAddr(queues[id]->mqdBase() + pm4MqdOffset);
+                auto cb =
+                    new DmaVirtCallback<uint32_t>([=, this](const uint32_t &) {
+                        doneMQDWrite(mqd_base, addr);
+                    });
+                dmaWriteVirt(addr, sizeof(QueueDesc), cb, mqd);
+            }
             queues.erase(id);
             hsa_pp.unsetDeviceQueueDesc(id, 8);
             delete mqd;
