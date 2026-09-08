@@ -457,20 +457,6 @@ CacheMemory::setMRU(Addr address, int occupancy)
     }
 }
 
-int
-CacheMemory::getReplacementWeight(int64_t set, int64_t loc)
-{
-    assert(set < m_cache_num_sets);
-    assert(loc < m_cache_assoc);
-    int ret = 0;
-    if (m_cache[set][loc] != NULL) {
-        ret = m_cache[set][loc]->getNumValidBlocks();
-        assert(ret >= 0);
-    }
-
-    return ret;
-}
-
 void
 CacheMemory::recordCacheContents(int cntrl, CacheRecorder* tr) const
 {
@@ -749,18 +735,6 @@ CacheMemory::checkResourceAvailable(CacheResourceType res, Addr addr)
     } else {
         panic("Unrecognized cache resource type.");
     }
-}
-
-bool
-CacheMemory::isBlockInvalid(int64_t cache_set, int64_t loc)
-{
-  return (m_cache[cache_set][loc]->m_Permission == AccessPermission_Invalid);
-}
-
-bool
-CacheMemory::isBlockNotBusy(int64_t cache_set, int64_t loc)
-{
-  return (m_cache[cache_set][loc]->m_Permission != AccessPermission_Busy);
 }
 
 /* hardware transactional memory */
