@@ -73,25 +73,54 @@ jobs:
                   exit $status
               timeout-minutes: 120
 
-    build-all-gem5:
+    build-testlib-gem5:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         timeout-minutes: 180
-        needs: get-date
-
+        needs: [get-date, get-testlib-long-dirs]
+        strategy:
+            fail-fast: false
+            max-parallel: 2
+            matrix:
+                target: ${{ fromJson(needs.get-testlib-long-dirs.outputs.build-matrix) }}
         steps:
             - uses: actions/checkout@v7
 
-            - name: Cache build/ALL
+            - name: Cache the producer's incremental build
               uses: actions/cache@v6
               with:
-                  path: build/ALL
-                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
+                  path: build/${{ matrix.target }}
+                  key: testlib-binary-build-${{ matrix.target }}-${{ needs.get-date.outputs.date }}
                   restore-keys: |
-                      testlib-build-all
+                      testlib-binary-build-${{ matrix.target }}-
 
-            - name: Build ALL/gem5.opt
-              run: scons --no-compress-debug build/ALL/gem5.opt -j $(nproc)
+            - name: Build the TestLib binary
+              env:
+                  BUILD_TARGET: ${{ matrix.target }}
+              run: |
+                  # Match Gem5Fixture, including objects used only by tests.
+                  scons --ignore-style --no-compress-debug defconfig "build/$BUILD_TARGET" "build_opts/$BUILD_TARGET"
+                  scons --ignore-style --no-compress-debug setconfig "build/$BUILD_TARGET" USE_TEST_OBJECTS=y
+                  scons --ignore-style --no-compress-debug "build/$BUILD_TARGET/gem5.opt" -j "$(nproc)"
+
+            - name: Package the exact binary and its provenance
+              env:
+                  BUILD_TARGET: ${{ matrix.target }}
+              run: |
+                  printf '%s\n' "$GITHUB_SHA" > "build/$BUILD_TARGET/COMMIT"
+                  sha256sum "build/$BUILD_TARGET/gem5.opt" > "build/$BUILD_TARGET/binary.sha256"
+                  tar -czf "gem5-$BUILD_TARGET.tar.gz" "build/$BUILD_TARGET/gem5.opt" "build/$BUILD_TARGET/COMMIT" "build/$BUILD_TARGET/binary.sha256"
+
+            - name: Publish the execution artifact
+              uses: actions/upload-artifact@v7
+              with:
+                  # Keep names stable when rerunning only failed consumers.
+                  name: daily-gem5-${{ github.run_id }}-${{ matrix.target }}
+                  path: gem5-${{ matrix.target }}.tar.gz
+                  compression-level: 0
+                  if-no-files-found: error
+                  retention-days: 7
+                  overwrite: true
 
   # this builds and runs unittests.debug
     unittests-debug:
@@ -112,6 +141,7 @@ jobs:
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         outputs:
             test-dirs-matrix: ${{ steps.dir-matrix.outputs.test-dirs-matrix }}
+            build-matrix: ${{ steps.build-matrix.outputs.build-matrix }}
         steps:
             - uses: actions/checkout@v7
             - name: Get directories for testlib-long
@@ -138,6 +168,23 @@ jobs:
                     jq -ncR '[inputs]'\
                   )" >>$GITHUB_OUTPUT
 
+            - name: Discover required binary configurations
+              id: build-matrix
+              working-directory: ${{ github.workspace }}/tests
+              run: |
+                  ./main.py list gem5 --length=long --host x86_64 --exclude-tags gcn_gpu --build-targets -q > "$RUNNER_TEMP/build-targets"
+                  # Fail if new suites need a variant/protocol this producer
+                  # does not yet handle, rather than silently dropping tests.
+                  grep -Eq '/build/[A-Z0-9_]+/gem5\.opt$' "$RUNNER_TEMP/build-targets"
+                  if grep -Ev '/build/[A-Z0-9_]+/gem5\.opt$' "$RUNNER_TEMP/build-targets"; then
+                    exit 1
+                  fi
+                  while read -r binary; do
+                    target=$(basename "$(dirname "$binary")")
+                    test -f "../build_opts/$target"
+                  done < "$RUNNER_TEMP/build-targets"
+                  echo "build-matrix=$(jq -Rsc 'split("\n") | map(select(length > 0) | split("/")[-2]) | unique' "$RUNNER_TEMP/build-targets")" >> "$GITHUB_OUTPUT"
+
   # start running all of the long tests
     testlib-long-tests:
         name: long-tests
@@ -150,7 +197,7 @@ jobs:
             GEM5_RESOURCE_DIR: /gem5-resource-cache
         timeout-minutes: 1440 # 24 hours for entire matrix to run
         needs:
-            - build-all-gem5
+            - build-testlib-gem5
             - get-testlib-long-dirs
             - get-date
         strategy:
@@ -160,13 +207,22 @@ jobs:
 
         steps:
             - uses: actions/checkout@v7
-            - name: Restore build/ALL cache
-              uses: actions/cache/restore@v6
+            - name: Download this run's binary artifacts
+              uses: actions/download-artifact@v8
               with:
-                  path: build/ALL
-                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
-                  restore-keys: |
-                      testlib-build-all
+                  pattern: daily-gem5-${{ github.run_id }}-*
+                  path: ${{ runner.temp }}/gem5-binaries
+                  merge-multiple: true
+
+            - name: Verify and unpack the binaries
+              run: |
+                  for archive in "$RUNNER_TEMP"/gem5-binaries/gem5-*.tar.gz; do
+                    tar -xzf "$archive"
+                  done
+                  for manifest in build/*/binary.sha256; do
+                    sha256sum --check "$manifest"
+                    printf '%s\n' "$GITHUB_SHA" | cmp - "$(dirname "$manifest")/COMMIT"
+                  done
 
             - name: Run long ${{ matrix.test-type }} tests
               id: run-tests
@@ -180,7 +236,11 @@ jobs:
                       resource_dir="$RUNNER_TEMP/gem5-testlib-downloads"
                       ;;
                   esac
-                  ./main.py run ${{ matrix.test-type }} -j$(nproc) --length=long -vv -t $(nproc) --exclude-tags gcn_gpu --bin-path "$resource_dir"
+                  ./main.py list ${{ matrix.test-type }} --length=long --exclude-tags gcn_gpu --build-targets -q > "$RUNNER_TEMP/required-binaries"
+                  while read -r binary; do
+                    test -x "$binary"
+                  done < "$RUNNER_TEMP/required-binaries"
+                  ./main.py run ${{ matrix.test-type }} --skip-build -j$(nproc) --length=long -vv -t $(nproc) --exclude-tags gcn_gpu --bin-path "$resource_dir"
 
             - name: Sanitize test-dir for artifact name
               id: sanitize-test-dir
