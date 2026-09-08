@@ -1079,6 +1079,16 @@ del wrap
         # next split's #define from the parser and add it to the current
         # emission-in-progress.
         try:
+            # x86 requires more python files to be interpreted. To allow this
+            # script to be run from other locations for x86, force adding the
+            # x86 ISA directory to the Python path.
+            import os
+            import sys
+
+            current_file_path = os.path.realpath(__file__)
+            arch_dir = os.path.dirname(os.path.dirname(current_file_path))
+            sys.path.append(arch_dir)
+            sys.path.append(os.path.join(arch_dir, "x86/isa/"))
             exec(split_setup + fixPythonIndentation(t[2]), self.exportContext)
         except Exception as exc:
             traceback.print_exc(file=sys.stdout)
