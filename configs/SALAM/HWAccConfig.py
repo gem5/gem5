@@ -39,7 +39,6 @@
 
 import os
 from configparser import ConfigParser
-from pathlib import Path
 
 import yaml
 
@@ -54,55 +53,30 @@ def AccConfig(acc, bench_file, config_file):
 
     # Benchmark path
     acc.llvm_interface.in_file = bench_file
-    M5_Path = os.getenv("ACC_BENCH_PATH")
+    # Hardware profile identity is the IR basename, independent of the
+    # directory that contains the IR file.
     benchname = os.path.splitext(os.path.basename(bench_file))[0]
-
-    # lenet config launcher custom stuff
-    benchPath = Path(bench_file).parts
-    m5PathLen = len(Path(M5_Path).parts)
 
     # Initialize HWInterface Objects
     acc.hw_interface = HWInterface()
     # Define HW Counts
     acc.hw_interface.cycle_counts = CycleCounts()
 
-    if benchPath[m5PathLen + 1] == "mobilenetv2":
-        fu_yaml = open(config_file)
-        for yaml_inst_list in yaml.safe_load_all(fu_yaml):
-            document = yaml_inst_list["hw_config"]
-            current_acc = yaml_inst_list["hw_config"]["name"] + "_" + benchname
-            if benchPath[9] == current_acc:
-                print(current_acc + " Profile Loaded")
-                print(yaml_inst_list["hw_config"][benchname])
-                inst_list = yaml_inst_list["hw_config"][current_acc][
-                    "instructions"
-                ].keys()
-                for instruction in inst_list:
-                    setattr(
-                        acc.hw_interface.cycle_counts,
-                        instruction,
-                        yaml_inst_list["hw_config"][current_acc][
-                            "instructions"
-                        ][instruction]["runtime_cycles"],
-                    )
-        fu_yaml.close()
-
-    else:
-        fu_yaml = open(config_file)
-        yaml_inst_list = yaml.safe_load(fu_yaml)
-        if yaml_inst_list["hw_config"][benchname] is not None:
-            inst_list = yaml_inst_list["hw_config"][benchname][
-                "instructions"
-            ].keys()
-            for instruction in inst_list:
-                setattr(
-                    acc.hw_interface.cycle_counts,
-                    instruction,
-                    yaml_inst_list["hw_config"][benchname]["instructions"][
-                        instruction
-                    ]["runtime_cycles"],
-                )
-        fu_yaml.close()
+    fu_yaml = open(config_file)
+    yaml_inst_list = yaml.safe_load(fu_yaml)
+    if yaml_inst_list["hw_config"][benchname] is not None:
+        inst_list = yaml_inst_list["hw_config"][benchname][
+            "instructions"
+        ].keys()
+        for instruction in inst_list:
+            setattr(
+                acc.hw_interface.cycle_counts,
+                instruction,
+                yaml_inst_list["hw_config"][benchname]["instructions"][
+                    instruction
+                ]["runtime_cycles"],
+            )
+    fu_yaml.close()
 
     #  Functional Units
     acc.hw_interface.functional_units = FunctionalUnits()
