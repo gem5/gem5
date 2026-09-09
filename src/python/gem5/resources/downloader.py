@@ -25,10 +25,12 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import gzip
+import hashlib
 import os
 import random
 import shutil
 import tarfile
+import tempfile
 import time
 import urllib.parse
 import urllib.request
@@ -62,6 +64,245 @@ from .md5_utils import (
 This Python module contains functions used to download, list, and obtain
 information about resources from resources.gem5.org.
 """
+
+
+_SPARSE_COPY_CHUNK_SIZE = 1024 * 1024
+
+
+def _copy_to_sparse_file(source, destination) -> str:
+    """Copy a byte stream while turning zero-filled chunks into holes.
+
+    The returned MD5 hash describes the logical contents of the destination.
+    Sparse and dense copies of the same file therefore produce the same hash.
+    """
+
+    md5 = hashlib.md5()
+    zero_chunk = bytes(_SPARSE_COPY_CHUNK_SIZE)
+
+    while chunk := source.read(_SPARSE_COPY_CHUNK_SIZE):
+        md5.update(chunk)
+        if len(chunk) == _SPARSE_COPY_CHUNK_SIZE:
+            is_zero = chunk == zero_chunk
+        else:
+            is_zero = chunk == zero_chunk[: len(chunk)]
+
+        if not is_zero:
+            destination.write(chunk)
+        else:
+            # Seeking instead of writing advances the logical file position
+            # without allocating blocks on filesystems that support holes.
+            destination.seek(len(chunk), os.SEEK_CUR)
+
+    # A seek beyond the last written byte does not extend a file. Truncating at
+    # the current position preserves any zero-filled chunk at the end.
+    destination.truncate()
+    return md5.hexdigest()
+
+
+def _copy_to_dense_file(source, destination) -> str:
+    """Copy a byte stream without creating filesystem holes."""
+
+    md5 = hashlib.md5()
+    while chunk := source.read(_SPARSE_COPY_CHUNK_SIZE):
+        md5.update(chunk)
+        destination.write(chunk)
+    return md5.hexdigest()
+
+
+def _write_file_atomically(
+    source,
+    to_path: str,
+    sparse: bool,
+    expected_md5: Optional[str] = None,
+    copy_stat_from: Optional[str] = None,
+) -> None:
+    """Write ``source`` and atomically replace ``to_path``."""
+
+    destination = Path(to_path)
+    # Keep the temporary file beside the destination so that os.replace is an
+    # atomic rename within a single filesystem.
+    file_descriptor, temporary_path = tempfile.mkstemp(
+        dir=destination.parent,
+        prefix=f".{destination.name}.",
+        suffix=".part",
+    )
+
+    try:
+        with os.fdopen(file_descriptor, "wb") as output:
+            copy = _copy_to_sparse_file if sparse else _copy_to_dense_file
+            md5 = copy(source, output)
+            output.flush()
+            os.fsync(output.fileno())
+
+        # The checksum covers the decompressed logical contents, including
+        # zeroes represented by holes, rather than the downloaded gzip stream.
+        if expected_md5 is not None and md5 != expected_md5:
+            raise Exception(
+                f"The downloaded resource has an invalid MD5 checksum: "
+                f"expected {expected_md5}, received {md5}."
+            )
+
+        if copy_stat_from is not None:
+            shutil.copystat(copy_stat_from, temporary_path)
+        else:
+            # ``mkstemp`` always creates mode 0600, unlike the previous dense
+            # download path. Apply the normal umask-derived file mode so a
+            # shared resource cache remains readable by other accounts.
+            current_umask = os.umask(0)
+            os.umask(current_umask)
+            os.chmod(temporary_path, 0o666 & ~current_umask)
+
+        os.replace(temporary_path, to_path)
+    except Exception:
+        try:
+            os.remove(temporary_path)
+        except FileNotFoundError:
+            pass
+        raise
+
+
+def _write_sparse_file(
+    source,
+    to_path: str,
+    expected_md5: Optional[str] = None,
+    copy_stat_from: Optional[str] = None,
+) -> None:
+    """Write ``source`` sparsely and atomically replace ``to_path``."""
+
+    _write_file_atomically(
+        source=source,
+        to_path=to_path,
+        sparse=True,
+        expected_md5=expected_md5,
+        copy_stat_from=copy_stat_from,
+    )
+
+
+def _write_dense_file(
+    source,
+    to_path: str,
+    expected_md5: Optional[str] = None,
+    copy_stat_from: Optional[str] = None,
+) -> None:
+    """Write ``source`` densely and atomically replace ``to_path``."""
+
+    _write_file_atomically(
+        source=source,
+        to_path=to_path,
+        sparse=False,
+        expected_md5=expected_md5,
+        copy_stat_from=copy_stat_from,
+    )
+
+
+def _sparsify_file(
+    path: str,
+    expected_md5: Optional[str] = None,
+) -> None:
+    """Atomically replace an existing file with a sparse equivalent."""
+
+    with open(path, "rb") as source:
+        _write_sparse_file(
+            source=source,
+            to_path=path,
+            expected_md5=expected_md5,
+            copy_stat_from=path,
+        )
+
+
+def _densify_file(
+    path: str,
+    expected_md5: Optional[str] = None,
+) -> None:
+    """Atomically replace an existing file with a dense equivalent."""
+
+    with open(path, "rb") as source:
+        _write_dense_file(
+            source=source,
+            to_path=path,
+            expected_md5=expected_md5,
+            copy_stat_from=path,
+        )
+
+
+def _file_has_holes(path: str) -> bool:
+    """Return whether the host filesystem reports holes in ``path``."""
+
+    file_stat = os.stat(path)
+    if not hasattr(file_stat, "st_blocks"):
+        return False
+    return file_stat.st_blocks * 512 < file_stat.st_size
+
+
+def _download_to_sparse_file(
+    url: str,
+    to_path: str,
+    decompress: bool,
+    expected_md5: Optional[str] = None,
+    max_attempts: int = 6,
+) -> None:
+    """Download a resource directly into a sparse local file.
+
+    If ``decompress`` is true, ``url`` is interpreted as a gzip stream. The
+    compressed bytes are never stored locally.
+    """
+
+    attempt = 0
+    while True:
+        try:
+            request = urllib.request.Request(url)
+            proxy_context = get_proxy_context()
+            with urllib.request.urlopen(
+                request,
+                context=proxy_context,
+            ) as response:
+                total = response.headers.get("Content-Length")
+                with tqdm.wrapattr(
+                    response,
+                    "read",
+                    miniters=1,
+                    desc=f"Downloading {to_path}",
+                    total=int(total) if total is not None else None,
+                ) as downloaded:
+                    if decompress:
+                        with gzip.GzipFile(
+                            fileobj=downloaded,
+                            mode="rb",
+                        ) as source:
+                            _write_sparse_file(
+                                source=source,
+                                to_path=to_path,
+                                expected_md5=expected_md5,
+                            )
+                    else:
+                        _write_sparse_file(
+                            source=downloaded,
+                            to_path=to_path,
+                            expected_md5=expected_md5,
+                        )
+            return
+        except HTTPError as error:
+            if error.code not in (408, 429) and not 500 <= error.code < 600:
+                raise
+        except ConnectionResetError:
+            # ``ConnectionResetError`` already identifies the retryable
+            # condition. Its errno is host-specific (104 on Linux, 54 on
+            # macOS), so filtering by the Linux value disables retries on
+            # other supported hosts.
+            pass
+        except EOFError:
+            # ``gzip.GzipFile`` raises ``EOFError`` when an HTTP response ends
+            # before the gzip trailer arrives. Retry the complete request;
+            # the atomic writer has already removed the partial output.
+            pass
+
+        attempt += 1
+        if attempt >= max_attempts:
+            raise Exception(
+                f"After {attempt} attempts, resource '{url}' could not be "
+                "downloaded."
+            )
+        time.sleep((2**attempt) + random.uniform(0, 1))
 
 
 def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
@@ -201,6 +442,7 @@ def get_resource(
     clients: Optional[List] = None,
     gem5_version: Optional[str] = core.gem5Version,
     quiet: bool = False,
+    sparse: bool = True,
 ) -> None:
     """
     Obtains a gem5 resource and stored it to a specified location. If the
@@ -216,6 +458,10 @@ def get_resource(
 
     :param untar: If ``True``, tar achieve resource will be unpacked prior to
                   saving to ``to_path``. ``True`` by default.
+
+    :param sparse: If ``True``, disk images are downloaded or decompressed
+                   sparsely. If ``False``, they are materialized densely.
+                   ``True`` by default.
 
     :param download_md5_mismatch: If a resource is present with an incorrect
                                   hash (e.g., an outdated version of the resource
@@ -257,6 +503,19 @@ def get_resource(
             gem5_version=gem5_version,
         )
 
+        if not isinstance(sparse, bool):
+            raise TypeError(
+                f"sparse must be a bool, got {type(sparse).__name__}."
+            )
+
+        # Sparse storage is a disk-image policy. Include the legacy generic
+        # resource shape that ``obtain_resource`` specializes as a disk image.
+        is_disk_image = resource_json.get("category") == "disk-image" or (
+            resource_json.get("category") == "resource"
+            and "root_partition" in resource_json
+        )
+        make_sparse = sparse and is_disk_image
+
         if os.path.exists(to_path):
             if os.path.isfile(to_path):
                 md5 = md5_file(Path(to_path))
@@ -266,6 +525,30 @@ def get_resource(
             if md5 == resource_json.get("md5sum"):
                 # In this case, the file has already been download, no need to
                 # do so again.
+                if (
+                    make_sparse
+                    and os.path.isfile(to_path)
+                    and not _file_has_holes(to_path)
+                ):
+                    # A valid dense image may predate sparse downloading.
+                    # Rewrite it atomically so the requested representation is
+                    # also honored for resources already in the cache.
+                    _sparsify_file(
+                        path=to_path,
+                        expected_md5=resource_json.get("md5sum"),
+                    )
+                elif (
+                    not sparse
+                    and is_disk_image
+                    and os.path.isfile(to_path)
+                    and _file_has_holes(to_path)
+                ):
+                    # Honor an explicit dense request even when the valid
+                    # cached image was previously materialized sparsely.
+                    _densify_file(
+                        path=to_path,
+                        expected_md5=resource_json.get("md5sum"),
+                    )
                 return
             elif download_md5_mismatch or "md5sum" not in resource_json:
                 # In the case the the md5sum is not present in the resource
@@ -343,14 +626,12 @@ def get_resource(
         # string-based way of doing things. It can be refactored away over
         # time:
         # https://gem5-review.googlesource.com/c/public/gem5-resources/+/51168
-        run_unzip = False
+        is_zipped = False
         if "is_zipped" in resource_json:
             if isinstance(resource_json["is_zipped"], str):
-                run_unzip = (
-                    unzip and resource_json["is_zipped"].lower() == "true"
-                )
+                is_zipped = resource_json["is_zipped"].lower() == "true"
             elif isinstance(resource_json["is_zipped"], bool):
-                run_unzip = unzip and resource_json["is_zipped"]
+                is_zipped = resource_json["is_zipped"]
             else:
                 raise Exception(
                     "The resource.json entry for '{}' has a value for the "
@@ -358,11 +639,17 @@ def get_resource(
                         resource_name
                     )
                 )
+        run_unzip = unzip and is_zipped
 
-        run_tar_extract = (
-            untar
-            and "is_tar_archive" in resource_json
-            and resource_json["is_tar_archive"]
+        is_tar_archive = bool(resource_json.get("is_tar_archive", False))
+        run_tar_extract = untar and is_tar_archive
+
+        # Sparse materialization only applies to the logical disk image. If
+        # archive extraction was disabled, preserve the packaged bytes using
+        # the existing dense path. Tar archives also retain dense extraction
+        # because they may create multiple paths.
+        sparse_download = (
+            make_sparse and not is_tar_archive and (not is_zipped or run_unzip)
         )
 
         tar_extension = ".tar"
@@ -374,7 +661,51 @@ def get_resource(
             download_dest += zip_extension
 
         file_uri_path = _file_uri_to_path(resource_json["url"])
-        if file_uri_path:
+        if sparse_download:
+            if file_uri_path:
+                if not file_uri_path.exists():
+                    raise Exception(
+                        f"Could not find file at path '{file_uri_path}'"
+                    )
+                print(
+                    "Resource '{}' is being copied sparsely from '{}' to "
+                    "'{}'...".format(
+                        resource_name,
+                        urlparse(resource_json["url"]).path,
+                        to_path,
+                    )
+                )
+                if run_unzip:
+                    with gzip.open(file_uri_path, "rb") as source:
+                        _write_sparse_file(
+                            source=source,
+                            to_path=to_path,
+                            expected_md5=resource_json.get("md5sum"),
+                            copy_stat_from=str(file_uri_path),
+                        )
+                else:
+                    with open(file_uri_path, "rb") as source:
+                        _write_sparse_file(
+                            source=source,
+                            to_path=to_path,
+                            expected_md5=resource_json.get("md5sum"),
+                            copy_stat_from=str(file_uri_path),
+                        )
+            else:
+                if not quiet:
+                    print(
+                        f"Resource '{resource_name}' was not found locally. "
+                        f"Downloading sparsely to '{to_path}'..."
+                    )
+                _download_to_sparse_file(
+                    url=resource_json["url"],
+                    to_path=to_path,
+                    decompress=run_unzip,
+                    expected_md5=resource_json.get("md5sum"),
+                )
+            download_dest = to_path
+            run_unzip = False
+        elif file_uri_path:
             if not file_uri_path.exists():
                 raise Exception(
                     f"Could not find file at path '{file_uri_path}'"

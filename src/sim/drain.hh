@@ -282,6 +282,12 @@ class Drainable
      * until all objects return DrainState::Drained on the first call
      * to drain().
      *
+     * A Drainable constructed while the manager is Draining has not yet
+     * been asked to drain and has not contributed to the active drain count.
+     * It therefore starts in the Running state rather than inheriting
+     * Draining. A later dmDrain() call, normally from the next tryDrain()
+     * pass, transitions and accounts for it normally.
+     *
      * @return DrainState::Drained if the object is drained at this
      * point in time, DrainState::Draining if it needs further
      * simulation.

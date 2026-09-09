@@ -69,7 +69,6 @@ group "default" {
     "clang-compilers",
     "gcc-compilers",
     "ubuntu-releases",
-    "gcn-gpu",
     "gpu-fs",
     "sst",
     "systemc",
@@ -259,15 +258,6 @@ target "ubuntu-24-04_min-dependencies" {
   cache-from = ["${CACHE_PREFIX}/ubuntu-24.04_min-dependencies:${CACHE_TAG}"]
   cache-to = ["${CACHE_PREFIX}/ubuntu-24.04_min-dependencies:${CACHE_TAG}"]
   tags = ["${IMAGE_URI}/ubuntu-24.04_min-dependencies:${TAG}"]
-}
-
-target "gcn-gpu" {
-  inherits = ["common"]
-  platforms = ["linux/amd64"] # Only build for x86.
-  context = "gcn-gpu"
-  cache-from = ["${CACHE_PREFIX}/gcn-gpu:${CACHE_TAG}"]
-  cache-to = ["${CACHE_PREFIX}/gcn-gpu:${CACHE_TAG}"]
-  tags = ["${IMAGE_URI}/gcn-gpu:${TAG}"]
 }
 
 target "gpu-fs" {
