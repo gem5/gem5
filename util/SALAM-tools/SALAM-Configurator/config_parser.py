@@ -507,7 +507,7 @@ class DMA:
 class PortedConnection:
     def __init__(self, conName: str, numPorts: int):
         self.conName = conName
-        self.numPorts = numPorts
+        self.numPorts = int(numPorts)
 
 
 class Variable:
