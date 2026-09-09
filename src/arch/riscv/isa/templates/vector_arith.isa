@@ -2318,8 +2318,8 @@ Fault
     const uint32_t vlmax = vtype_VLMAX(vtype, vlen);
 
     %(offset)s;
-    %(copy_old_vd)s;
     %(get_vs2_regs)s;
+    %(copy_old_vd)s;
     %(slide_loop)s;
     %(scalar_inject)s;
     %(op_wb)s;
