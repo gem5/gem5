@@ -115,164 +115,165 @@ def load_og_header(clusters, working_dir: str):
 
 
 def gen_header(header_list, clusters, working_dir: str):
-    # Write out headers
-    for current_header in header_list:
-        for cluster in clusters:
-            with open(working_dir + cluster.name + "_hw_defines.h", "w") as f:
-                current_header.append("// BEGIN GENERATED CODE\n")
-                current_header.append(
-                    "// Cluster: " + cluster.name.upper() + "\n"
-                )
-                for dma in cluster.dmas:
-                    if dma.dmaType == "NonCoherent":
-                        current_header.append("// NonCoherentDMA\n")
-                        current_header.append(
-                            "#define "
-                            + dma.name.upper()
-                            + "_Flags "
-                            + hex(dma.address)
-                            + "\n"
-                        )
-                        current_header.append(
-                            "#define "
-                            + dma.name.upper()
-                            + "_RdAddr "
-                            + hex(dma.address + 1)
-                            + "\n"
-                        )
-                        current_header.append(
-                            "#define "
-                            + dma.name.upper()
-                            + "_WrAddr "
-                            + hex(dma.address + 9)
-                            + "\n"
-                        )
-                        current_header.append(
-                            "#define "
-                            + dma.name.upper()
-                            + "_CopyLen "
-                            + hex(dma.address + 17)
-                            + "\n"
-                        )
-                    elif dma.dmaType == "Stream":
-                        current_header.append("// StreamDMA\n")
-                        current_header.append(
-                            "#define "
-                            + dma.name.upper()
-                            + "_Flags "
-                            + hex(dma.address)
-                            + "\n"
-                        )
-                        current_header.append(
-                            "#define "
-                            + dma.name.upper()
-                            + "_RdAddr "
-                            + hex(dma.address + 4)
-                            + "\n"
-                        )
-                        current_header.append(
-                            "#define "
-                            + dma.name.upper()
-                            + "_WrAddr "
-                            + hex(dma.address + 12)
-                            + "\n"
-                        )
-                        current_header.append(
-                            "#define "
-                            + dma.name.upper()
-                            + "_RdFrameSize "
-                            + hex(dma.address + 20)
-                            + "\n"
-                        )
-                        current_header.append(
-                            "#define "
-                            + dma.name.upper()
-                            + "_NumRdFrames "
-                            + hex(dma.address + 24)
-                            + "\n"
-                        )
-                        current_header.append(
-                            "#define "
-                            + dma.name.upper()
-                            + "_RdFrameBufSize "
-                            + hex(dma.address + 25)
-                            + "\n"
-                        )
-                        current_header.append(
-                            "#define "
-                            + dma.name.upper()
-                            + "_WrFrameSize "
-                            + hex(dma.address + 26)
-                            + "\n"
-                        )
-                        current_header.append(
-                            "#define "
-                            + dma.name.upper()
-                            + "_NumWrFrames "
-                            + hex(dma.address + 30)
-                            + "\n"
-                        )
-                        current_header.append(
-                            "#define "
-                            + dma.name.upper()
-                            + "_WrFrameBufSize "
-                            + hex(dma.address + 31)
-                            + "\n"
-                        )
-                        current_header.append(
-                            "#define "
-                            + dma.name.upper()
-                            + "_Stream "
-                            + hex(dma.address + 32)
-                            + "\n"
-                        )
-                        current_header.append(
-                            "#define "
-                            + dma.name.upper()
-                            + "_Status "
-                            + hex(dma.statusAddress)
-                            + "\n"
-                        )
-                for acc in cluster.accs:
+    # Write out headers. Pair each preserved header with its cluster so
+    # multi-cluster configs do not append every cluster into every file.
+    if len(header_list) != len(clusters):
+        raise ValueError(
+            "Header and cluster counts must match when generating headers."
+        )
+    for current_header, cluster in zip(header_list, clusters):
+        with open(working_dir + cluster.name + "_hw_defines.h", "w") as f:
+            current_header.append("// BEGIN GENERATED CODE\n")
+            current_header.append("// Cluster: " + cluster.name.upper() + "\n")
+            for dma in cluster.dmas:
+                if dma.dmaType == "NonCoherent":
+                    current_header.append("// NonCoherentDMA\n")
                     current_header.append(
-                        "// Accelerator: " + acc.name.upper() + "\n"
+                        "#define "
+                        + dma.name.upper()
+                        + "_Flags "
+                        + hex(dma.address)
+                        + "\n"
                     )
                     current_header.append(
                         "#define "
-                        + acc.name.upper()
-                        + " "
-                        + hex(acc.address)
+                        + dma.name.upper()
+                        + "_RdAddr "
+                        + hex(dma.address + 1)
                         + "\n"
                     )
-                    for var in acc.variables:
-                        if "Cache" in var.type:
-                            continue
-                        elif "Stream" in var.type:
-                            current_header.append(
-                                "#define "
-                                + var.name
-                                + " "
-                                + hex(var.address)
-                                + "\n"
-                            )
-                            current_header.append(
-                                "#define "
-                                + var.name
-                                + "_Status "
-                                + hex(var.statusAddress)
-                                + "\n"
-                            )
-                        else:
-                            current_header.append(
-                                "#define "
-                                + var.name
-                                + " "
-                                + hex(var.address)
-                                + "\n"
-                            )
-                current_header.append("// END GENERATED CODE\n")
-                f.writelines(current_header)
-                current_header = []
+                    current_header.append(
+                        "#define "
+                        + dma.name.upper()
+                        + "_WrAddr "
+                        + hex(dma.address + 9)
+                        + "\n"
+                    )
+                    current_header.append(
+                        "#define "
+                        + dma.name.upper()
+                        + "_CopyLen "
+                        + hex(dma.address + 17)
+                        + "\n"
+                    )
+                elif dma.dmaType == "Stream":
+                    current_header.append("// StreamDMA\n")
+                    current_header.append(
+                        "#define "
+                        + dma.name.upper()
+                        + "_Flags "
+                        + hex(dma.address)
+                        + "\n"
+                    )
+                    current_header.append(
+                        "#define "
+                        + dma.name.upper()
+                        + "_RdAddr "
+                        + hex(dma.address + 4)
+                        + "\n"
+                    )
+                    current_header.append(
+                        "#define "
+                        + dma.name.upper()
+                        + "_WrAddr "
+                        + hex(dma.address + 12)
+                        + "\n"
+                    )
+                    current_header.append(
+                        "#define "
+                        + dma.name.upper()
+                        + "_RdFrameSize "
+                        + hex(dma.address + 20)
+                        + "\n"
+                    )
+                    current_header.append(
+                        "#define "
+                        + dma.name.upper()
+                        + "_NumRdFrames "
+                        + hex(dma.address + 24)
+                        + "\n"
+                    )
+                    current_header.append(
+                        "#define "
+                        + dma.name.upper()
+                        + "_RdFrameBufSize "
+                        + hex(dma.address + 25)
+                        + "\n"
+                    )
+                    current_header.append(
+                        "#define "
+                        + dma.name.upper()
+                        + "_WrFrameSize "
+                        + hex(dma.address + 26)
+                        + "\n"
+                    )
+                    current_header.append(
+                        "#define "
+                        + dma.name.upper()
+                        + "_NumWrFrames "
+                        + hex(dma.address + 30)
+                        + "\n"
+                    )
+                    current_header.append(
+                        "#define "
+                        + dma.name.upper()
+                        + "_WrFrameBufSize "
+                        + hex(dma.address + 31)
+                        + "\n"
+                    )
+                    current_header.append(
+                        "#define "
+                        + dma.name.upper()
+                        + "_Stream "
+                        + hex(dma.address + 32)
+                        + "\n"
+                    )
+                    current_header.append(
+                        "#define "
+                        + dma.name.upper()
+                        + "_Status "
+                        + hex(dma.statusAddress)
+                        + "\n"
+                    )
+            for acc in cluster.accs:
+                current_header.append(
+                    "// Accelerator: " + acc.name.upper() + "\n"
+                )
+                current_header.append(
+                    "#define "
+                    + acc.name.upper()
+                    + " "
+                    + hex(acc.address)
+                    + "\n"
+                )
+                for var in acc.variables:
+                    if "Cache" in var.type:
+                        continue
+                    elif "Stream" in var.type:
+                        current_header.append(
+                            "#define "
+                            + var.name
+                            + " "
+                            + hex(var.address)
+                            + "\n"
+                        )
+                        current_header.append(
+                            "#define "
+                            + var.name
+                            + "_Status "
+                            + hex(var.statusAddress)
+                            + "\n"
+                        )
+                    else:
+                        current_header.append(
+                            "#define "
+                            + var.name
+                            + " "
+                            + hex(var.address)
+                            + "\n"
+                        )
+            current_header.append("// END GENERATED CODE\n")
+            f.writelines(current_header)
 
 
 def main():
