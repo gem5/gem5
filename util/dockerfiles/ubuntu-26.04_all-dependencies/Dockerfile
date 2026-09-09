@@ -1,4 +1,4 @@
-# Copyright (c) 2022 The Regents of the University of California
+# Copyright (c) 2026 The Regents of the University of California
 # All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -23,18 +23,47 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-FROM ubuntu:22.04
+FROM ubuntu:26.04
 
 LABEL org.opencontainers.image.source=https://github.com/gem5/gem5
 LABEL org.opencontainers.image.licenses=BSD-3-Clause
 
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt -y update && apt -y upgrade && \
-    apt -y install build-essential git m4 scons zlib1g zlib1g-dev \
-    libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
-    python3-dev doxygen libboost-all-dev libhdf5-dev python3-pydot \
-    libpng-dev libelf-dev pkg-config python3-venv black python3-tk mypy \
-    pre-commit wget clang-format zstd
+RUN apt -y update && apt -y upgrade && apt -y install \
+    build-essential \
+    scons \
+    python3-dev \
+    git \
+    pre-commit \
+    zlib1g \
+    zlib1g-dev \
+    libprotobuf-dev \
+    protobuf-compiler \
+    libprotoc-dev \
+    libgoogle-perftools-dev \
+    libboost-all-dev \
+    libhdf5-dev \
+    python3-pydot \
+    python3-venv \
+    python3-tk \
+    mypy \
+    m4 \
+    libcapstone-dev \
+    libpng-dev \
+    libelf-dev \
+    pkg-config \
+    wget \
+    cmake \
+    doxygen \
+    clang-format \
+    vim \
+    sudo \
+    jq \
+    # The next three are required for codecov/codecov-action in GitHub Actions
+    bash \
+    curl \
+    gpg \
+    zstd
 
 # pre-commit, as installed via apt, attempts to create a cache directory at
 # "${HOME}/.cache/pre-commit". If running docker with non-root, the HOME
@@ -46,14 +75,3 @@ RUN apt -y update && apt -y upgrade && \
 # it's a directory any user can access and write to. Given this only stores
 # caching information, the "/tmp" directory being wiped is not a concern.
 ENV XDG_CACHE_HOME=/tmp/
-
-# DRAMSys requires cmake >= 3.25.0. APT only provides 3.22.1 for Ubuntu 22.04.
-# Therefore, we install cmake from source.
-RUN wget https://github.com/Kitware/CMake/releases/download/v3.25.0/cmake-3.25.0.tar.gz \
-    && tar -xzf cmake-3.25.0.tar.gz \
-    && cd cmake-3.25.0 \
-    && ./bootstrap --parallel=`nproc`\
-    && make -j`nproc` \
-    && make install \
-    && cd .. \
-    && rm -rf cmake-3.25.0.tar.gz cmake-3.25.0
