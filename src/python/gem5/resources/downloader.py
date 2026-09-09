@@ -113,8 +113,8 @@ def _write_file_atomically(
     source,
     to_path: str,
     sparse: bool,
-    expected_md5: Optional[str] = None,
-    copy_stat_from: Optional[str] = None,
+    expected_md5: str | None = None,
+    copy_stat_from: str | None = None,
 ) -> None:
     """Write ``source`` and atomically replace ``to_path``."""
 
@@ -164,8 +164,8 @@ def _write_file_atomically(
 def _write_sparse_file(
     source,
     to_path: str,
-    expected_md5: Optional[str] = None,
-    copy_stat_from: Optional[str] = None,
+    expected_md5: str | None = None,
+    copy_stat_from: str | None = None,
 ) -> None:
     """Write ``source`` sparsely and atomically replace ``to_path``."""
 
@@ -181,8 +181,8 @@ def _write_sparse_file(
 def _write_dense_file(
     source,
     to_path: str,
-    expected_md5: Optional[str] = None,
-    copy_stat_from: Optional[str] = None,
+    expected_md5: str | None = None,
+    copy_stat_from: str | None = None,
 ) -> None:
     """Write ``source`` densely and atomically replace ``to_path``."""
 
@@ -197,7 +197,7 @@ def _write_dense_file(
 
 def _sparsify_file(
     path: str,
-    expected_md5: Optional[str] = None,
+    expected_md5: str | None = None,
 ) -> None:
     """Atomically replace an existing file with a sparse equivalent."""
 
@@ -212,7 +212,7 @@ def _sparsify_file(
 
 def _densify_file(
     path: str,
-    expected_md5: Optional[str] = None,
+    expected_md5: str | None = None,
 ) -> None:
     """Atomically replace an existing file with a dense equivalent."""
 
@@ -238,7 +238,7 @@ def _download_to_sparse_file(
     url: str,
     to_path: str,
     decompress: bool,
-    expected_md5: Optional[str] = None,
+    expected_md5: str | None = None,
     max_attempts: int = 6,
 ) -> None:
     """Download a resource directly into a sparse local file.
