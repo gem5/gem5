@@ -247,19 +247,7 @@ def run_gpu_example(gpu_class, description):
 
     requires(coherence_protocol_required=CoherenceProtocol.GPU_VIPER)
     parser = create_parser(description)
-    parser.add_argument(
-        "--download-resources-only",
-        action="store_true",
-        help="prepare the GPUFS resources and exit without simulating",
-    )
     args = parser.parse_args()
-    if args.download_resources_only:
-        for resource in obtain_gpu_fs_resources(args):
-            print(f"GPUFS resource ready: {resource.get_local_path()}")
-        if args.checkpoint_resource:
-            checkpoint = obtain_checkpoint(args)
-            print(f"GPUFS checkpoint ready: {checkpoint.get_local_path()}")
-        return
     if not args.app and not (
         args.checkpoint_directory or args.checkpoint_resource
     ):

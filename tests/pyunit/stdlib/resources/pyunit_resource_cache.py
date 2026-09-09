@@ -35,6 +35,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from gem5.resources.downloader import _write_sparse_file
 from gem5.resources.resource import obtain_resource
 from gem5.utils.filelock import (
     FileLock,
@@ -150,41 +151,69 @@ class ResourceCacheTestSuite(unittest.TestCase):
             self.assertTrue(Path(owner.lockfile).exists())
         self.assertFalse(Path(f"{self.destination}.lock.lock").exists())
 
-    def test_waiter_uses_resource_after_publisher_releases_lock(self):
+    def test_concurrent_opt_out_requests_materialize_once(self):
         started = threading.Event()
         publish = threading.Event()
+        errors = []
+        results = []
+
+        def write_resource(*args, **kwargs):
+            # Pause the real download writer while it owns the resource lock.
+            started.set()
+            if not publish.wait(5):
+                raise RuntimeError("The second resource request did not wait")
+            return _write_sparse_file(*args, **kwargs)
 
         def publisher():
-            with FileLock(f"{self.destination}.lock"):
-                started.set()
-                if publish.wait(5):
-                    self.destination.write_bytes(self.contents)
+            try:
+                results.append(
+                    self.obtain(skip_cache_hash_check=True, lock_timeout=5)
+                )
+            except Exception as error:
+                errors.append(error)
 
-        thread = threading.Thread(target=publisher)
-        thread.start()
-        try:
-            self.assertTrue(started.wait(5))
-            # Waiting output signals the owner to finish. Use a real lock
-            # rather than mocking acquisition or its exclusive-create rules.
-            output = io.StringIO()
-            real_write = output.write
+        output = io.StringIO()
+        real_write = output.write
 
-            def write(message):
-                result = real_write(message)
-                if "Waiting for resource" in message:
-                    publish.set()
-                return result
+        def write(message):
+            result = real_write(message)
+            if "Waiting for resource" in message:
+                publish.set()
+            return result
 
-            with patch.object(
-                output, "write", side_effect=write
-            ), contextlib.redirect_stdout(output):
-                self.obtain(lock_timeout=5)
-            self.assertIn("test-image", output.getvalue())
-            self.assertEqual(self.contents, self.destination.read_bytes())
-        finally:
-            publish.set()
-            thread.join(6)
-        self.assertFalse(thread.is_alive())
+        with patch(
+            "gem5.resources.downloader._write_sparse_file",
+            side_effect=write_resource,
+        ) as writer, patch(
+            "gem5.resources.downloader.md5_file"
+        ) as hash_file, patch(
+            "gem5.resources.downloader.warn"
+        ) as warn, patch.object(
+            output, "write", side_effect=write
+        ), contextlib.redirect_stdout(
+            output
+        ):
+            thread = threading.Thread(target=publisher)
+            thread.start()
+            try:
+                self.assertTrue(started.wait(5))
+                # Contention output lets the owner finish its download. Both
+                # callers use the real exclusive-create lock and downloader.
+                results.append(
+                    self.obtain(skip_cache_hash_check=True, lock_timeout=5)
+                )
+            finally:
+                publish.set()
+                thread.join(6)
+            self.assertFalse(thread.is_alive())
+            self.assertEqual([], errors)
+            self.assertEqual([str(self.destination)] * 2, results)
+            writer.assert_called_once()
+            hash_file.assert_not_called()
+            warn.assert_called_once()
+        self.assertIn("Waiting for resource", output.getvalue())
+        self.assertEqual(self.contents, self.destination.read_bytes())
+        self.assertFalse(Path(f"{self.destination}.lock.lock").exists())
 
     def test_invalid_cache_option(self):
         for value in (None, "false", 1):

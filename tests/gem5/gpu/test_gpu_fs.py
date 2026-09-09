@@ -24,7 +24,6 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import os
 import re
 
 from testlib import *
@@ -47,13 +46,6 @@ mi355x_checkpoint_resource_version = "1.0.0"
 def gpu_fs_test(name, config_file, expected_gpu, length):
     """Register a GPUFS driver smoke test for one simulated GPU model."""
 
-    # Daily sets this only after its shared GPUFS prefetch has succeeded.
-    # Standalone TestLib runs continue to verify cached resource hashes.
-    cache_args = (
-        ("--skip-cache-hash-check",)
-        if os.environ.get("GEM5_GPU_SKIP_CACHE_HASH_CHECK") == "1"
-        else ()
-    )
     gem5_verify_config(
         name=name,
         verifiers=(
@@ -66,6 +58,11 @@ def gpu_fs_test(name, config_file, expected_gpu, length):
         config_args=(
             "--resource-directory",
             resource_directory,
+            # One test fills a cold shared cache while the other waits for
+            # its lock. Reuse the completed resources without rehashing them.
+            "--skip-cache-hash-check",
+            "--resource-lock-timeout",
+            "3600",
             "--cpu-type",
             "atomic",
             "--num-cus",
@@ -74,8 +71,7 @@ def gpu_fs_test(name, config_file, expected_gpu, length):
             gpu_check_script,
             "--opts",
             expected_gpu,
-        )
-        + cache_args,
+        ),
         valid_isas=(constants.all_compiled_tag,),
         valid_hosts=constants.supported_hosts,
         length=length,

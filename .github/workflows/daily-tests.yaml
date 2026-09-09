@@ -240,18 +240,6 @@ jobs:
                     printf '%s\n' "$GITHUB_SHA" | cmp - "$(dirname "$manifest")/COMMIT"
                   done
 
-            - name: Prepare shared GPUFS resources
-              if: matrix.test-type == 'gem5/gpu'
-              timeout-minutes: 120
-              run: |
-                  # Both long GPU tests use the disk/kernel pair defined by
-                  # x86_gpu.py. Download or verify it once before parallel tests.
-                  build/ALL/gem5.opt configs/example/gem5_library/x86-mi355x-gpu.py \
-                    --download-resources-only \
-                    --resource-directory "$GEM5_RESOURCE_DIR" \
-                    --resource-lock-timeout 3600
-                  echo "GEM5_GPU_SKIP_CACHE_HASH_CHECK=1" >> "$GITHUB_ENV"
-
             - name: Run long ${{ matrix.test-type }} tests
               id: run-tests
               timeout-minutes: 1410
