@@ -171,7 +171,8 @@ static std::unique_ptr<SimulatorThreads> simulatorThreads;
 
 struct DescheduleDeleter
 {
-    void operator()(BaseGlobalEvent *event)
+    void
+    operator()(GlobalSyncEvent *event)
     {
         if (!event)
             return;
