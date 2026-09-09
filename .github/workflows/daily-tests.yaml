@@ -206,14 +206,35 @@ jobs:
 
         steps:
             - uses: actions/checkout@v7
+            - name: Select the binaries needed by these suites
+              id: required-binaries
+              working-directory: ${{ github.workspace }}/tests
+              env:
+                  TEST_DIR: ${{ matrix.test-type }}
+              run: |
+                  ./main.py list "$TEST_DIR" --length=long --build-targets -q > "$RUNNER_TEMP/required-binaries"
+                  if [ ! -s "$RUNNER_TEMP/required-binaries" ]; then
+                    echo "has-binaries=false" >> "$GITHUB_OUTPUT"
+                    exit 0
+                  fi
+                  if grep -Ev '/build/[A-Z0-9_]+/gem5\.opt$' "$RUNNER_TEMP/required-binaries"; then
+                    exit 1
+                  fi
+                  targets=$(jq -Rrsc 'split("\n") | map(select(length > 0) | split("/")[-2]) | unique | join("|")' "$RUNNER_TEMP/required-binaries")
+                  echo "has-binaries=true" >> "$GITHUB_OUTPUT"
+                  # download-artifact uses minimatch: match exactly this set.
+                  echo "artifact-pattern=daily-gem5-$GITHUB_RUN_ID-@($targets)" >> "$GITHUB_OUTPUT"
+
             - name: Download this run's binary artifacts
+              if: steps.required-binaries.outputs.has-binaries == 'true'
               uses: actions/download-artifact@v8
               with:
-                  pattern: daily-gem5-${{ github.run_id }}-*
+                  pattern: ${{ steps.required-binaries.outputs.artifact-pattern }}
                   path: ${{ runner.temp }}/gem5-binaries
                   merge-multiple: true
 
             - name: Verify and unpack the binaries
+              if: steps.required-binaries.outputs.has-binaries == 'true'
               run: |
                   for archive in "$RUNNER_TEMP"/gem5-binaries/gem5-*.tar.gz; do
                     tar -xzf "$archive"
@@ -235,7 +256,6 @@ jobs:
                       resource_dir="$RUNNER_TEMP/gem5-testlib-downloads"
                       ;;
                   esac
-                  ./main.py list ${{ matrix.test-type }} --length=long --build-targets -q > "$RUNNER_TEMP/required-binaries"
                   while read -r binary; do
                     test -x "$binary"
                   done < "$RUNNER_TEMP/required-binaries"
