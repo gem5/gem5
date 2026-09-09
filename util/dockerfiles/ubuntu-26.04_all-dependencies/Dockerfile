@@ -62,7 +62,8 @@ RUN apt -y update && apt -y upgrade && apt -y install \
     # The next three are required for codecov/codecov-action in GitHub Actions
     bash \
     curl \
-    gpg
+    gpg \
+    zstd
 
 # pre-commit, as installed via apt, attempts to create a cache directory at
 # "${HOME}/.cache/pre-commit". If running docker with non-root, the HOME
