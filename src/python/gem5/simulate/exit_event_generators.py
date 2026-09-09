@@ -24,9 +24,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from collections.abc import Generator
 from pathlib import Path
 from typing import (
-    Generator,
     Optional,
 )
 
@@ -97,7 +97,7 @@ def dump_reset_generator():
         yield False
 
 
-def save_checkpoint_generator(checkpoint_dir: Optional[Path] = None):
+def save_checkpoint_generator(checkpoint_dir: Path | None = None):
     """
     A generator for taking a checkpoint. It will take a checkpoint with the
     input path and the current simulation ``Ticks``.

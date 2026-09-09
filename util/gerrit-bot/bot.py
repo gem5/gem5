@@ -43,7 +43,8 @@ import maint.lib.maintainers
 
 
 class GerritBotConfig:
-    def __init__(self, config={}):
+    def __init__(self, config=None):
+        config = {} if config is None else config
         self.__dict__.update(config)
 
     @staticmethod

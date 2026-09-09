@@ -58,7 +58,7 @@ class ISA(Enum):
     NULL = "null"
 
 
-def get_isas_str_set() -> Set[str]:
+def get_isas_str_set() -> set[str]:
     """
     Returns a set of all the ISA as strings.
     """

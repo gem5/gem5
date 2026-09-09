@@ -113,8 +113,8 @@ def _write_file_atomically(
     source,
     to_path: str,
     sparse: bool,
-    expected_md5: Optional[str] = None,
-    copy_stat_from: Optional[str] = None,
+    expected_md5: str | None = None,
+    copy_stat_from: str | None = None,
 ) -> None:
     """Write ``source`` and atomically replace ``to_path``."""
 
@@ -164,8 +164,8 @@ def _write_file_atomically(
 def _write_sparse_file(
     source,
     to_path: str,
-    expected_md5: Optional[str] = None,
-    copy_stat_from: Optional[str] = None,
+    expected_md5: str | None = None,
+    copy_stat_from: str | None = None,
 ) -> None:
     """Write ``source`` sparsely and atomically replace ``to_path``."""
 
@@ -181,8 +181,8 @@ def _write_sparse_file(
 def _write_dense_file(
     source,
     to_path: str,
-    expected_md5: Optional[str] = None,
-    copy_stat_from: Optional[str] = None,
+    expected_md5: str | None = None,
+    copy_stat_from: str | None = None,
 ) -> None:
     """Write ``source`` densely and atomically replace ``to_path``."""
 
@@ -197,7 +197,7 @@ def _write_dense_file(
 
 def _sparsify_file(
     path: str,
-    expected_md5: Optional[str] = None,
+    expected_md5: str | None = None,
 ) -> None:
     """Atomically replace an existing file with a sparse equivalent."""
 
@@ -212,7 +212,7 @@ def _sparsify_file(
 
 def _densify_file(
     path: str,
-    expected_md5: Optional[str] = None,
+    expected_md5: str | None = None,
 ) -> None:
     """Atomically replace an existing file with a dense equivalent."""
 
@@ -238,7 +238,7 @@ def _download_to_sparse_file(
     url: str,
     to_path: str,
     decompress: bool,
-    expected_md5: Optional[str] = None,
+    expected_md5: str | None = None,
     max_attempts: int = 6,
 ) -> None:
     """Download a resource directly into a sparse local file.
@@ -409,8 +409,8 @@ def _download(url: str, download_to: str, max_attempts: int = 6) -> None:
 
 
 def list_resources(
-    clients: Optional[List] = None, gem5_version: Optional[str] = None
-) -> Dict[str, List[str]]:
+    clients: list | None = None, gem5_version: str | None = None
+) -> dict[str, list[str]]:
     """
     Lists all available resources. Returns a dictionary where the key is the
     id of the resources and the value is a list of that resource's versions.
@@ -438,9 +438,9 @@ def get_resource(
     unzip: bool = True,
     untar: bool = True,
     download_md5_mismatch: bool = True,
-    resource_version: Optional[str] = None,
-    clients: Optional[List] = None,
-    gem5_version: Optional[str] = core.gem5Version,
+    resource_version: str | None = None,
+    clients: list | None = None,
+    gem5_version: str | None = core.gem5Version,
     quiet: bool = False,
     sparse: bool = True,
 ) -> None:
@@ -781,7 +781,7 @@ def get_resource(
             os.remove(download_dest)
 
 
-def _file_uri_to_path(uri: str) -> Optional[Path]:
+def _file_uri_to_path(uri: str) -> Path | None:
     """
     If the URI uses the File scheme (e.g, ``file://host/path``) then
     a Path object for the local path is returned, otherwise ``None``.

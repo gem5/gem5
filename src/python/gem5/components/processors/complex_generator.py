@@ -24,9 +24,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from collections.abc import Iterator
 from typing import (
     Any,
-    Iterator,
     List,
 )
 
@@ -49,7 +49,7 @@ class ComplexGenerator(AbstractGenerator):
         :param num_cores: The number of complex generator cores to create.
         """
 
-    def _create_cores(self, num_cores: int) -> List[ComplexGeneratorCore]:
+    def _create_cores(self, num_cores: int) -> list[ComplexGeneratorCore]:
         """
         Create a list of ComplexGeneratorCore.
         """

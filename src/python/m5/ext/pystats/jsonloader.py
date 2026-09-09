@@ -60,7 +60,7 @@ class JsonLoader(json.JSONDecoder):
     def __init__(self):
         super().__init__(self, object_hook=self.__json_to_simstat)
 
-    def __json_to_simstat(self, d: dict) -> Union[SimStat, Statistic, Group]:
+    def __json_to_simstat(self, d: dict) -> SimStat | Statistic | Group:
         if "type" in d:
             if d["type"] == "Scalar":
                 d.pop("type", None)

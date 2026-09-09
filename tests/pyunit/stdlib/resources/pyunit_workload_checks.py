@@ -91,7 +91,7 @@ class CustomWorkloadTestSuite(unittest.TestCase):
         # Tests `CustomWorkload.get_parameter`
 
         parameters = self.custom_workload.get_parameters()
-        self.assertTrue(isinstance(parameters, Dict))
+        self.assertTrue(isinstance(parameters, dict))
         self.assertEqual(2, len(parameters))
 
         self.assertTrue("binary" in parameters)
@@ -162,7 +162,7 @@ class WorkloadTestSuite(unittest.TestCase):
 
         parameters = self.workload.get_parameters()
 
-        self.assertTrue(isinstance(parameters, Dict))
+        self.assertTrue(isinstance(parameters, dict))
         self.assertEqual(3, len(parameters))
 
         self.assertTrue("kernel" in parameters)
@@ -249,7 +249,7 @@ class MultiBinaryWorkloadTestSuite(unittest.TestCase):
         # Tests `WorkloadResource.get_parameters` for multi-binary workload
 
         parameters = self.multi_binary_workload.get_parameters()
-        self.assertTrue(isinstance(parameters, Dict))
+        self.assertTrue(isinstance(parameters, dict))
         self.assertEqual(2, len(parameters))
 
         self.assertTrue("binaries" in parameters)

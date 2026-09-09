@@ -41,7 +41,7 @@ def test_boot(
     cache_type: str,
     memory_class: str,
     length: str,
-    to_tick: Optional[int] = None,
+    to_tick: int | None = None,
 ):
     name = "{}-cpu_{}-cores_{}_{}_riscv-boot-test".format(
         cpu, str(num_cpus), cache_type, memory_class

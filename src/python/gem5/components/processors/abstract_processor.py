@@ -65,7 +65,7 @@ class AbstractProcessor(SubSystem):
 
     def __init__(
         self,
-        cores: Optional[List[AbstractCore]] = None,
+        cores: list[AbstractCore] | None = None,
         isa: ISA = ISA.NULL,
         *,
         clk_freq: str,
@@ -97,7 +97,7 @@ class AbstractProcessor(SubSystem):
         assert getattr(self, "cores")
         return len(self.cores)
 
-    def get_cores(self) -> List[AbstractCore]:
+    def get_cores(self) -> list[AbstractCore]:
         assert getattr(self, "cores")
         return self.cores
 

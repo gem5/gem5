@@ -53,9 +53,9 @@ class AzureFunctionsAPIClientHttpJsonRequestError(Exception):
     def __init__(
         self,
         client: "AzureFunctionsAPIClient",
-        data: Dict[str, Any],
-        purpose_of_request: Optional[str],
-        response: Optional[str] = None,
+        data: dict[str, Any],
+        purpose_of_request: str | None,
+        response: str | None = None,
     ):
         """An exception raised when an HTTP request to the Azure Functions API fails.
         :param client: The AzureFunctionsAPI instance that raised the exception.
@@ -76,7 +76,7 @@ class AzureFunctionsAPIClientHttpJsonRequestError(Exception):
 
 
 class AzureFunctionsAPIClient(AbstractClient):
-    def __init__(self, config: Dict[str, str]):
+    def __init__(self, config: dict[str, str]):
         """
         Initializes a connection to the gem5 resources database via azure functions API.
 
@@ -87,11 +87,11 @@ class AzureFunctionsAPIClient(AbstractClient):
     def _functions_http_json_req(
         self,
         url: str,
-        data_json: List[Dict[str, str]],
-        purpose_of_request: Optional[str],
+        data_json: list[dict[str, str]],
+        purpose_of_request: str | None,
         max_failed_attempts: int = 3,
         reattempt_pause_base: int = 2,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Sends a JSON object over HTTP to a given Azure functions API and
         returns the response. This function will attempt to reconnect to the
         server if the connection fails a set number of times before raising an
@@ -155,8 +155,8 @@ class AzureFunctionsAPIClient(AbstractClient):
 
     def get_resources(
         self,
-        client_queries: List[ClientQuery],
-    ) -> Dict[str, Any]:
+        client_queries: list[ClientQuery],
+    ) -> dict[str, Any]:
         url = self.url
         url += "/find-resources-in-batch"
 
@@ -207,7 +207,7 @@ class AzureFunctionsAPIClient(AbstractClient):
                     )
         return resources_by_id
 
-    def get_all_resources(self, gem5_version: str) -> List[Dict[str, Any]]:
+    def get_all_resources(self, gem5_version: str) -> list[dict[str, Any]]:
         url = self.url
         url += "/list-all-resources"
 

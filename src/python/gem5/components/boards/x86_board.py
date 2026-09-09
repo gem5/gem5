@@ -25,9 +25,9 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
+from collections.abc import Sequence
 from typing import (
     List,
-    Sequence,
 )
 
 from m5.objects import (
@@ -411,7 +411,7 @@ class X86Board(AbstractSystemBoard, KernelDiskWorkload, SEBinaryWorkload):
         self.pc.south_bridge.ide.disks = [ide_disk]
 
     @overrides(KernelDiskWorkload)
-    def get_default_kernel_args(self) -> List[str]:
+    def get_default_kernel_args(self) -> list[str]:
         return [
             "earlyprintk=ttyS0",
             "console=ttyS0",
