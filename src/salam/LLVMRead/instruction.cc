@@ -1361,7 +1361,7 @@ FRem::compute()
         case 32: {
             float op1 = operands.at(0).getFloatFromReg();
             float op2 = operands.at(1).getFloatFromReg();
-            float result = std::remainderf(op1, op2);
+            float result = std::fmod(op1, op2);
             if (dbg) {
                 DPRINTFS(RuntimeCompute, owner, "|| (%s) %f % (%s) %f\n",
                          operands.at(0).getIRStub(), op1,
@@ -1378,7 +1378,7 @@ FRem::compute()
         case 64: {
             double op1 = operands.at(0).getDoubleFromReg();
             double op2 = operands.at(1).getDoubleFromReg();
-            double result = std::remainder(op1, op2);
+            double result = std::fmod(op1, op2);
             if (dbg) {
                 DPRINTFS(RuntimeCompute, owner, "|| (%s) %f % (%s) %f\n",
                          operands.at(0).getIRStub(), op1,
