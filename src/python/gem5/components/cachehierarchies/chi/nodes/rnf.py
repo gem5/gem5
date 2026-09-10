@@ -61,6 +61,9 @@ class CHI_RNF(CHI_Node):
         # last level controler is the last one on the list
         self._ll_cntrls = [cntrls[-1]]
 
+        # Append the rnf tag to the node
+        self.add_ini_tags(["rnf"])
+
     def getNetworkSideControllers(self):
         """
         Returns all ruby controllers that need to be connected to the

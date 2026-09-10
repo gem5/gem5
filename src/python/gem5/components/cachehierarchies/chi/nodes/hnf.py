@@ -59,6 +59,9 @@ class CHI_HNF(CHI_Node):
         super().__init__(ruby_system, CHI_NodeType.CHI_HNF)
         self.cntrl = cntrl
 
+        # Append the hnf tag to the node
+        self.add_ini_tags(["hnf"])
+
     def getNetworkSideControllers(self):
         """
         Returns all ruby controllers that need to be connected to the
