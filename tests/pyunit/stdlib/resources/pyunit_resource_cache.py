@@ -29,6 +29,8 @@ import copy
 import gzip
 import hashlib
 import io
+import runpy
+import sys
 import tempfile
 import threading
 import unittest
@@ -75,6 +77,57 @@ class ResourceCacheTestSuite(unittest.TestCase):
         return obtain_resource(
             "test-image", resource_directory=str(self.root), **kwargs
         ).get_local_path()
+
+    def run_resource_cli(self, *args):
+        script = (
+            Path(__file__).resolve().parents[4] / "util/obtain-resource.py"
+        )
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        argv = [str(script), "test-image", "-p", str(self.destination), *args]
+        with patch.object(sys, "argv", argv), contextlib.redirect_stdout(
+            stdout
+        ), contextlib.redirect_stderr(stderr):
+            with self.assertRaises(SystemExit) as exit_status:
+                runpy.run_path(
+                    str(script),
+                    run_name="__m5_main__",
+                    init_globals={"exit": sys.exit},
+                )
+        self.assertEqual(0, exit_status.exception.code)
+        return stdout.getvalue(), stderr.getvalue()
+
+    def test_cli_materializes_missing_resource_in_both_output_modes(self):
+        for quiet in (False, True):
+            with self.subTest(quiet=quiet), patch(
+                "gem5.resources.downloader.md5_file"
+            ) as cached_hash:
+                stdout, _ = self.run_resource_cli(*(["-q"] if quiet else []))
+                self.assertEqual(self.contents, self.destination.read_bytes())
+                self.assertEqual(not quiet, "Resource at:" in stdout)
+                # Printing the result must not trigger a second acquisition.
+                cached_hash.assert_not_called()
+                self.destination.unlink()
+
+    def test_quiet_cli_warns_when_trusting_cached_resource(self):
+        self.destination.write_bytes(b"trusted cache")
+        with patch("gem5.resources.downloader.md5_file") as cached_hash:
+            stdout, stderr = self.run_resource_cli(
+                "-q", "--skip-cache-hash-check"
+            )
+        self.assertNotIn("Resource at:", stdout)
+        self.assertEqual(1, stderr.count("without checking its hash"))
+        cached_hash.assert_not_called()
+        self.assertEqual(b"trusted cache", self.destination.read_bytes())
+
+    def test_quiet_cli_respects_active_resource_lock(self):
+        self.destination.write_bytes(self.contents)
+        with FileLock(f"{self.destination}.lock") as owner:
+            with self.assertRaises(FileLockException):
+                self.run_resource_cli(
+                    "-q", "--skip-cache-hash-check", "--lock-timeout", "0"
+                )
+            self.assertTrue(Path(owner.lockfile).exists())
 
     def test_default_rejects_bad_cached_contents(self):
         self.destination.write_bytes(b"bad image")

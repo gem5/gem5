@@ -108,8 +108,11 @@ if __name__ == "__m5_main__":
         lock_timeout=args.lock_timeout,
     )
 
+    # Acquisition is lazy; quiet mode suppresses the path print, not the
+    # download, locking, or cache-trust warning.
+    local_path = resource.get_local_path()
     if not args.quiet:
-        print(f"Resource at: '" + str(resource.get_local_path()) + "'")
+        print(f"Resource at: '{local_path}'")
 
     exit(0)
 
