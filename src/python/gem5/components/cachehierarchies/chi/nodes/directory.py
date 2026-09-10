@@ -67,6 +67,9 @@ class BaseDirectory(CacheController):
     ):
         super().__init__(network, cache_line_size)
 
+        # Append the hnf tag to the node
+        self.add_ini_tags(["hnf-controller"])
+
     @classmethod
     def create_addr_ranges(
         cls,
