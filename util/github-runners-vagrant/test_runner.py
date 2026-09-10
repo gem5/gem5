@@ -93,6 +93,45 @@ class ControllerTest(unittest.TestCase):
             "drained", (self.root / "runner-state/status").read_text()
         )
 
+    def test_successful_jobs_register_again_without_sleeping(self):
+        self.script("bin/sleep", 'echo "sleep $*" >> calls')
+        self.script(
+            "run.sh",
+            "echo run >> calls; "
+            "if test -e ran; then touch runner-state/drain; "
+            "else touch ran; fi",
+        )
+        result = self.run_controller()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.calls().count("run"), 2)
+        self.assertFalse(any(c.startswith("sleep ") for c in self.calls()))
+
+    def test_listener_failure_retains_backoff(self):
+        self.script("bin/sleep", 'echo "sleep $*" >> calls')
+        self.script(
+            "run.sh",
+            "echo run >> calls; "
+            "if test -e ran; then touch runner-state/drain; "
+            "else touch ran; exit 1; fi",
+        )
+        result = self.run_controller()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.calls().count("run"), 2)
+        self.assertEqual(self.calls().count("sleep 180"), 1)
+
+    def test_registration_failure_retains_backoff(self):
+        self.script("bin/sleep", 'echo "sleep $*" >> calls')
+        self.script(
+            "bin/curl",
+            "echo curl >> calls; "
+            "if test ! -e retried; then touch retried; exit 1; fi; "
+            "echo unused",
+        )
+        result = self.run_controller()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.calls().count("run"), 1)
+        self.assertEqual(self.calls().count("sleep 180"), 1)
+
     def test_cleanup_failure_quarantines(self):
         self.script("runner-cleanup.py", "echo cleanup >> calls; exit 1")
         result = self.run_controller()

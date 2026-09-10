@@ -123,5 +123,7 @@ while true; do
         failures=0
     fi
     state ready
-    [[ -e "$state_dir/drain" ]] || sleep 180
+    if (( result != 0 )) && [[ ! -e "$state_dir/drain" ]]; then
+        sleep 180
+    fi
 done
