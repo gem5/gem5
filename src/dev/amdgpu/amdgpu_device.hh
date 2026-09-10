@@ -173,6 +173,17 @@ class AMDGPUDevice : public PciEndpoint
     const int gpuId;
     Addr vramSize;
 
+    /* XGMI */
+    bool xgmiEnabled = false;
+    XGMIHive *xgmiHive = nullptr;
+    int xgmiNode = 0;
+
+    // Optional: when enabled, remap GART PTEs for peer buffers into a
+    // peer GPU's BAR aperture instead of system memory. This allows "true"
+    // P2P when the emulated driver programs GART entries for peer buffers.
+    bool forceP2PGartRemap = false;
+    int p2pPeerId = 1;
+
   protected:
     /**
      * Methods inherited from PciEndpoint

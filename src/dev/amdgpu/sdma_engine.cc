@@ -155,6 +155,11 @@ SDMAEngine::getDeviceAddress(Addr raw_addr)
         } else {
             device_addr = tmp_addr - gpuDevice->getVM().getMMHUBBase();
         }
+    } else if (gpuDevice->getXgmiHive()->isXgmiAddress(tmp_addr)) {
+        // If the address is in the XGMI Hive, it is a valid device address.
+        // We return the physical address directly as it will be handled
+        // by the XGMI logic in the copy function.
+        device_addr = tmp_addr;
     }
 
     return device_addr;
@@ -732,8 +737,21 @@ SDMAEngine::copy(SDMAQueue *q, sdmaCopy *pkt)
     // Read data from the source first, then call the copyReadData method
     uint8_t *dmaBuffer = new uint8_t[pkt->count];
     Addr device_addr = getDeviceAddress(pkt->source);
+
+    // Translate source address to physical address for XGMI check
+    Addr phys_source = pkt->source;
+    auto tgen = translate(pkt->source, 64);
+    if (tgen) {
+        auto addr_range = *(tgen->begin());
+        phys_source = addr_range.paddr;
+        DPRINTF(SDMAEngine, "Translation: Virt %#lx -> Phys %#lx\n", pkt->source, phys_source);
+    }
+
     if (device_addr) {
         DPRINTF(SDMAEngine, "Copying from device address %#lx\n", device_addr);
+        if (gpuDevice->getXgmiHive()->isXgmiAddress(phys_source)) {
+             DPRINTF(SDMAEngine, "Note: Address %#lx is also in XGMI Hive. Local path taken.\n", phys_source);
+        }
         auto cb = new EventFunctionWrapper(
             [=, this] { copyReadData(q, pkt, dmaBuffer); }, name());
 
@@ -754,6 +772,7 @@ SDMAEngine::copy(SDMAQueue *q, sdmaCopy *pkt)
             buffer_ptr += gen.size();
         }
     } else {
+        DPRINTF(SDMAEngine, "Copying from host address %#lx\n", pkt->source);
         auto cb = new DmaVirtCallback<uint64_t>(
             [=, this](const uint64_t &) { copyReadData(q, pkt, dmaBuffer); });
         dmaReadVirt(pkt->source, pkt->count, cb, (void *)dmaBuffer,
@@ -778,9 +797,32 @@ SDMAEngine::copyReadData(SDMAQueue *q, sdmaCopy *pkt, uint8_t *dmaBuffer)
     }
 
     Addr device_addr = getDeviceAddress(pkt->dest);
+
+    // Translate destination address to physical address for XGMI check
+    Addr phys_dest = pkt->dest;
+    auto tgen = translate(pkt->dest, 64);
+    if (tgen) {
+        auto addr_range = *(tgen->begin());
+        phys_dest = addr_range.paddr;
+        DPRINTF(SDMAEngine, "Translation: Virt %#lx -> Phys %#lx\n", pkt->dest, phys_dest);
+    }
+
+    if (gpuDevice->getXgmiHive()) {
+        DPRINTF(SDMAEngine, "Hive Check: ID %d, Nodes %d. Addr %#lx isXgmi? %d\n",
+                gpuDevice->getXgmiHive()->getHiveId(),
+                gpuDevice->getXgmiHive()->getNodeCount(),
+                phys_dest,
+                gpuDevice->getXgmiHive()->isXgmiAddress(phys_dest));
+    } else {
+        DPRINTF(SDMAEngine, "Hive Check: No XGMI Hive configured.\n");
+    }
+
     // Write read data to the destination address then call the copyDone method
     if (device_addr) {
         DPRINTF(SDMAEngine, "Copying to device address %#lx\n", device_addr);
+        if (gpuDevice->getXgmiHive()->isXgmiAddress(phys_dest)) {
+             DPRINTF(SDMAEngine, "Note: Address %#lx is also in XGMI Hive. Local path taken.\n", phys_dest);
+        }
         auto cb = new EventFunctionWrapper(
             [=, this] { copyDone(q, pkt, dmaBuffer); }, name());
 
@@ -803,6 +845,9 @@ SDMAEngine::copyReadData(SDMAQueue *q, sdmaCopy *pkt, uint8_t *dmaBuffer)
         }
     } else {
         DPRINTF(SDMAEngine, "Copying to host address %#lx\n", pkt->dest);
+
+        // Defer L2 invalidation until after the host write completes to avoid
+        // racing with stale data still in memory.
         auto cb = new DmaVirtCallback<uint64_t>(
             [=, this](const uint64_t &) { copyDone(q, pkt, dmaBuffer); });
         dmaWriteVirt(pkt->dest, pkt->count, cb, (void *)dmaBuffer);
