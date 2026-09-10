@@ -805,13 +805,22 @@ class MLOPPrefetcher(QueuedPrefetcher):
     score_threshold = Param.Unsigned(
         200,
         "Min score for an offset to be selected at a given lookahead. "
-        "L1D_THRESH (0.40) times the default evaluation_period (500)",
+        "confidence threshold (0.40) times the default evaluation "
+        "period (500) from their implementation",
     )
-    prefetch_degree = Param.Unsigned(
-        16, "Max number of prefetches issued per access"
+    degree = Param.Unsigned(16, "Max number of prefetches issued per access")
+    amt_entries = Param.MemorySize(
+        "256", "Number of entries in the Access Map Table"
     )
-    amt_entries = Param.Unsigned(
-        256, "Number of entries in the Access Map Table"
+    amt_assoc = Param.Unsigned(256, "Associativity of the Access Map Table")
+    amt_indexing_policy = Param.TaggedIndexingPolicy(
+        TaggedSetAssociative(
+            entry_size=1, assoc=Parent.amt_assoc, size=Parent.amt_entries
+        ),
+        "Indexing policy of the Access Map Table",
+    )
+    amt_replacement_policy = Param.BaseReplacementPolicy(
+        LRURP(), "Replacement policy of the Access Map Table"
     )
     bit_vector_size = Param.Unsigned(64, "Bit-vector length")
 

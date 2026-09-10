@@ -30,6 +30,8 @@
 
 #include <algorithm>
 
+#include "base/bitfield.hh"
+#include "base/intmath.hh"
 #include "base/logging.hh"
 #include "debug/HWPrefetch.hh"
 #include "params/MLOPPrefetcher.hh"
@@ -41,174 +43,155 @@ namespace prefetch
 
 MLOP::MLOP(const MLOPPrefetcherParams &p)
     : Queued(p),
-      evalPeriod(p.evaluation_period),
-      lookaheadLevels(p.lookahead_levels),
-      maxOffset(p.max_offset),
-      scoreThreshold(p.score_threshold),
-      prefetchDegree(p.prefetch_degree),
-      amtEntries(p.amt_entries),
-      bitVectorSize(p.bit_vector_size),
-      recentDepth(lookaheadLevels > 0 ? lookaheadLevels - 1 : 0),
-      regionMask(Addr(bitVectorSize - 1)),
-      amt(amtEntries)
+      eval_period(p.evaluation_period),
+      lookahead_levels(p.lookahead_levels),
+      max_offset(p.max_offset),
+      score_threshold(p.score_threshold),
+      prefetch_degree(p.degree),
+      amt_entries(p.amt_entries),
+      bit_vector_size(p.bit_vector_size),
+      recent_depth(lookahead_levels > 0 ? lookahead_levels - 1 : 0),
+      region_mask(Addr(bit_vector_size - 1)),
+      amt("AMT", p.amt_entries, p.amt_assoc, p.amt_replacement_policy,
+          p.amt_indexing_policy,
+          AMTEntry(genTagExtractor(p.amt_indexing_policy))),
+      offset_table(2 * max_offset + 1,
+                   OffsetEntry{std::vector<uint32_t>(lookahead_levels, 0)})
 {
-    if (amtEntries == 0) {
-        fatal("%s: amt_entries must be > 0\n", name());
+    if (amt_entries == 0) {
+        fatal("%s: number of Access Map Table entries must be > 0\n", name());
     }
-    if (lookaheadLevels == 0) {
-        fatal("%s: lookahead_levels must be > 0\n", name());
+    if (lookahead_levels == 0) {
+        fatal("%s: number of lookahead levels must be > 0\n", name());
     }
-    if (!isPowerOf2(bitVectorSize) || bitVectorSize > 64) {
-        fatal("%s: bit_vector_size (%u) must be a power of two no greater "
-              "than 64\n",
-              name(), bitVectorSize);
+    if (!isPowerOf2(bit_vector_size) || bit_vector_size > 64) {
+        fatal("%s: bit vector size must be a power of two and no "
+              "greater than 64\n",
+              name());
     }
-    if (maxOffset <= 0) {
-        fatal("%s: max_offset must be > 0 (got %d)\n", name(), maxOffset);
+    if (max_offset <= 0) {
+        fatal("%s: maximum offset must be > 0\n", name());
     }
-    if (maxOffset >= int(bitVectorSize)) {
-        fatal("%s: max_offset (%d) must be < bit_vector_size (%u)\n", name(),
-              maxOffset, bitVectorSize);
+    if (max_offset >= int(bit_vector_size)) {
+        fatal("%s: maximum offset must be less than the bit vector size\n",
+              name());
     }
-    if (recentDepth > 0 && recentDepth >= bitVectorSize) {
-        fatal("%s: lookahead_levels (%u) implies recentDepth=%u, which "
-              "must be < bit_vector_size (%u)\n",
-              name(), lookaheadLevels, recentDepth, bitVectorSize);
-    }
-
-    // Offsets from -maxOffset to +maxOffset, excluding 0.
-    for (int o = -maxOffset; o <= maxOffset; o++) {
-        if (o == 0) {
-            continue;
-        }
-        OffsetEntry e;
-        e.offset = o;
-        e.scores.assign(lookaheadLevels, 0);
-        offsetTable.emplace(o, std::move(e));
+    if (recent_depth > 0 && recent_depth >= bit_vector_size) {
+        fatal("%s: lookahead levels configuration implies a recent depth that "
+              "must be less than the bit vector size\n",
+              name());
     }
 }
 
 void
 MLOP::resetScores()
 {
-    for (auto &kv : offsetTable) {
-        std::fill(kv.second.scores.begin(), kv.second.scores.end(), 0);
+    for (auto &entry : offset_table) {
+        std::fill(entry.scores.begin(), entry.scores.end(), 0);
     }
 }
 
 MLOP::AMTEntry &
-MLOP::findOrAllocAmtEntry(Addr baseBlock)
+MLOP::findOrAllocAmtEntry(Addr base_block)
 {
-    int freeIdx = -1;
-    int lruIdx = -1;
-    uint64_t lruTouch = UINT64_MAX;
+    const AMTEntry::KeyType key{base_block, false};
 
-    for (unsigned i = 0; i < amt.size(); i++) {
-        AMTEntry &e = amt[i];
-        if (e.valid && e.baseBlock == baseBlock) {
-            e.lastTouch = ++amtClock;
-            return e;
-        }
-        if (!e.valid && freeIdx < 0) {
-            freeIdx = (int)i;
-        }
-        if (e.valid && e.lastTouch < lruTouch) {
-            lruTouch = e.lastTouch;
-            lruIdx = (int)i;
-        }
+    AMTEntry *entry = amt.findEntry(key);
+    if (entry != nullptr) {
+        amt.accessEntry(entry);
+    } else {
+        entry = amt.findVictim(key);
+        amt.insertEntry(key, entry);
+        entry->recent.reserve(recent_depth);
     }
-
-    AMTEntry &victim = amt[(freeIdx >= 0) ? freeIdx : lruIdx];
-    victim.valid = true;
-    victim.baseBlock = baseBlock;
-    victim.bitVector = 0;
-    victim.recent.clear();
-    victim.recent.reserve(recentDepth);
-    victim.lastTouch = ++amtClock;
-    return victim;
+    return *entry;
 }
 
 void
 MLOP::updateScoresWithAccess(Addr block)
 {
-    const Addr baseBlock = block & ~regionMask;
-    const unsigned idx = unsigned(block & regionMask);
+    const Addr base_block = block & ~region_mask;
+    const unsigned idx = unsigned(block & region_mask);
 
-    AMTEntry &entry = findOrAllocAmtEntry(baseBlock);
+    AMTEntry &entry = findOrAllocAmtEntry(base_block);
 
     // For each level L, credit every offset that would have predicted
     // this access after excluding the last (L-1) accesses.
-    for (unsigned exclude = 0; exclude <= lookaheadLevels - 1; exclude++) {
-        uint64_t masked = entry.bitVector;
+    for (unsigned exclude = 0; exclude < lookahead_levels; exclude++) {
+        uint64_t bits = entry.bit_vector;
         for (unsigned r = 0;
              r < std::min<unsigned>(exclude, entry.recent.size()); r++) {
-            masked &= ~(1ULL << entry.recent[r]);
+            bits &= ~(1ULL << entry.recent[r]);
         }
 
-        uint64_t bits = masked;
         while (bits) {
             const unsigned j = findLsbSet(bits);
             bits &= (bits - 1);
 
             const int k = int(idx) - int(j);
-            if (k == 0 || k < -maxOffset || k > maxOffset) {
+            if (k == 0 || k < -max_offset || k > max_offset) {
                 continue;
             }
-            auto it = offsetTable.find(k);
-            if (it != offsetTable.end()) {
-                it->second.scores[exclude]++;
-            }
+            offset_table[k + max_offset].scores[exclude]++;
         }
     }
 
-    if (recentDepth > 0) {
+    if (recent_depth > 0) {
         entry.recent.insert(entry.recent.begin(), uint8_t(idx));
-        if (entry.recent.size() > recentDepth) {
-            entry.recent.resize(recentDepth);
+        if (entry.recent.size() > recent_depth) {
+            entry.recent.resize(recent_depth);
         }
     }
 
-    entry.bitVector |= (1ULL << idx);
+    entry.bit_vector |= (1ULL << idx);
 }
 
-void
+std::vector<std::pair<unsigned, int>>
 MLOP::selectBestOffsets()
 {
-    bestOffsets.clear();
+    std::vector<std::pair<unsigned, int>> selection;
 
     // Keep every tied top-scorer per level, process longest lookahead
-    // first so a claimed offset isn't reissued at a shorter one.
-    std::vector<bool> used(2 * maxOffset + 1, false);
-    std::vector<std::vector<const OffsetEntry *>> perLevel(lookaheadLevels);
+    // first so a claimed offset isn't reissued at a shorter one. Index
+    // max_offset (offset 0) is never a valid candidate and stays unused.
+    std::vector<bool> used(offset_table.size(), false);
+    std::vector<std::vector<int>> per_level(lookahead_levels);
 
-    for (unsigned L = lookaheadLevels; L >= 1; L--) {
-        uint32_t bestScore = 0;
-        for (auto &kv : offsetTable) {
-            bestScore = std::max(bestScore, kv.second.scores[L - 1]);
+    for (unsigned L = lookahead_levels; L >= 1; L--) {
+        uint32_t best_score = 0;
+        for (unsigned i = 0; i < offset_table.size(); i++) {
+            if (i == unsigned(max_offset)) {
+                continue;
+            }
+            best_score = std::max(best_score, offset_table[i].scores[L - 1]);
         }
-        if (bestScore < scoreThreshold) {
+        if (best_score < score_threshold) {
             continue;
         }
 
-        std::vector<const OffsetEntry *> &winners = perLevel[L - 1];
-        for (auto &kv : offsetTable) {
-            const OffsetEntry &e = kv.second;
-            if (e.scores[L - 1] == bestScore && !used[e.offset + maxOffset]) {
-                winners.push_back(&e);
+        std::vector<int> &winners = per_level[L - 1];
+        for (unsigned i = 0; i < offset_table.size(); i++) {
+            if (i == unsigned(max_offset)) {
+                continue;
+            }
+            if (offset_table[i].scores[L - 1] == best_score && !used[i]) {
+                winners.push_back(int(i) - max_offset);
             }
         }
-        for (const OffsetEntry *e : winners) {
-            used[e->offset + maxOffset] = true;
+        for (int offset : winners) {
+            used[offset + max_offset] = true;
         }
     }
 
     // Emit in increasing-lookahead order (L=1 first) so the existing
     // issue-order priority in calculatePrefetch is preserved.
-    for (unsigned L = 1; L <= lookaheadLevels; L++) {
-        for (const OffsetEntry *e : perLevel[L - 1]) {
-            bestOffsets.emplace_back(L, e);
+    for (unsigned L = 1; L <= lookahead_levels; L++) {
+        for (int offset : per_level[L - 1]) {
+            selection.emplace_back(L, offset);
         }
     }
+
+    return selection;
 }
 
 void
@@ -220,36 +203,28 @@ MLOP::calculatePrefetch(const PrefetchInfo &pfi,
     const Addr block = addr >> lBlkSize;
 
     updateScoresWithAccess(block);
-    accessCounter++;
+    access_counter++;
 
-    if (accessCounter >= evalPeriod) {
-        selectBestOffsets();
+    if (access_counter >= eval_period) {
+        best_offsets = selectBestOffsets();
         resetScores();
-        accessCounter = 0;
-    }
-
-    if (bestOffsets.empty()) {
-        return;
+        access_counter = 0;
     }
 
     // Issue in increasing lookahead order, L=1 first: it needs to arrive
     // soonest, so it gets the highest queue priority.
     unsigned issued = 0;
-    for (const auto &p : bestOffsets) {
-        if (issued >= prefetchDegree) {
+    for (const auto &p : best_offsets) {
+        if (issued >= prefetch_degree) {
             break;
         }
 
         const unsigned L = p.first;
-        const OffsetEntry *e = p.second;
-        const Addr pfAddr = addr + (Addr(e->offset) << lBlkSize);
+        const int offset = p.second;
+        const Addr pf_addr = addr + (Addr(offset) << lBlkSize);
 
-        if (!samePage(addr, pfAddr)) {
-            continue;
-        }
-
-        const int32_t prio = int32_t(lookaheadLevels - L);
-        addresses.emplace_back(pfAddr, prio);
+        const int32_t prio = int32_t(lookahead_levels - L);
+        addresses.emplace_back(pf_addr, prio);
         issued++;
     }
 }
