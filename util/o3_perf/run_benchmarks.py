@@ -458,6 +458,8 @@ def main():
         default=("o3-small", "o3-medium", "o3-large"),
     )
     args = parser.parse_args()
+    if args.runs < 1:
+        parser.error("--runs must be at least 1")
 
     binaries = {}
     for specification in args.gem5:
