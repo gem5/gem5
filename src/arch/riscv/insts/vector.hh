@@ -333,6 +333,38 @@ class VectorGatherMicroInst : public VectorMicroInst
                         const loader::SymbolTable *symtab) const override;
 };
 
+class VectorNarrowingMacroInst : public VectorMacroInst
+{
+  protected:
+    VectorNarrowingMacroInst(const char *mnem, ExtMachInst _machInst,
+                             OpClass __opClass, uint32_t _elen, uint32_t _vlen)
+        : VectorMacroInst(mnem, _machInst, __opClass, _elen, _vlen)
+    {
+        this->flags[IsVector] = true;
+    }
+
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
+};
+
+class VectorNarrowingMicroInst : public VectorMicroInst
+{
+  protected:
+    uint8_t numVs2Regs = 0;
+    VectorNarrowingMicroInst(const char *mnem, ExtMachInst _machInst,
+                             OpClass __opClass, uint32_t _microVl,
+                             uint32_t _microIdx, uint32_t _elen,
+                             uint32_t _vlen)
+        : VectorMicroInst(mnem, _machInst, __opClass, _microVl, _microIdx,
+                          _elen, _vlen)
+    {}
+
+    std::string
+    generateDisassembly(Addr pc,
+                        const loader::SymbolTable *symtab) const override;
+};
+
 class VectorMemMicroInst : public VectorMicroInst
 {
   protected:
