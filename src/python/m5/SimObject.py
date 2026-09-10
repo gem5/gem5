@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2020, 2025 Arm Limited
+# Copyright (c) 2017-2020, 2025-2026 Arm Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -801,6 +801,7 @@ class SimObject(metaclass=MetaSimObject):
         self._ccParams = None
         self._instantiated = False  # really "cloned"
         self._init_called = True  # Checked so subclasses don't forget __init__
+        self._ini_tags = set()
 
         # Clone children specified at class level.  No need for a
         # multidict here since we will be cloning everything.
@@ -1088,6 +1089,9 @@ class SimObject(metaclass=MetaSimObject):
     def ini_str(self):
         return self.path()
 
+    def add_ini_tags(self, tags):
+        return self._ini_tags.update(tags)
+
     def find_any(self, ptype):
         if isinstance(self, ptype):
             return self, True
@@ -1193,6 +1197,12 @@ class SimObject(metaclass=MetaSimObject):
 
         if hasattr(self, "type"):
             print(f"type={self.type}", file=ini_file)
+
+        if len(self._ini_tags):
+            print(
+                "tags=%s" % " ".join(tag for tag in self._ini_tags),
+                file=ini_file,
+            )
 
         if len(self._children.keys()):
             print(
