@@ -183,7 +183,6 @@ class SConsFixture(UniqueFixture):
             "-C",
             self.directory,
             "--ignore-style",
-            "--no-compress-debug",
             "defconfig",
             self.target_dir,
             joinpath(self.directory, "build_opts", self.isa.upper()),
@@ -198,7 +197,6 @@ class SConsFixture(UniqueFixture):
                 "-C",
                 self.directory,
                 "--ignore-style",
-                "--no-compress-debug",
                 "setconfig",
                 self.target_dir,
                 f"RUBY_PROTOCOL_{self.protocol.upper()}=y",
@@ -214,7 +212,6 @@ class SConsFixture(UniqueFixture):
             "-C",
             self.directory,
             "--ignore-style",
-            "--no-compress-debug",
             "setconfig",
             self.target_dir,
             "USE_TEST_OBJECTS=y",
@@ -234,7 +231,6 @@ class SConsFixture(UniqueFixture):
             "-j",
             str(config.threads),
             "--ignore-style",
-            "--no-compress-debug",
         ]
 
         if config.gcov:
