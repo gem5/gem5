@@ -31,11 +31,8 @@ Test file for the m5threads atomic test
 from testlib import *
 
 cpu_types = (
-    # We're currently ignoring these cpu_types (therefore, disabling the test)
-    # due to a `fatal:syscall set_tid_address (#166)` fatal error being thrown.
-    # https://github.com/gem5/gem5/issues/3449
-    # 'DerivO3CPU',
-    # 'TimingSimpleCPU',
+    "DerivO3CPU",
+    "TimingSimpleCPU",
 )
 
 base_path = joinpath(config.bin_path, "pthreads", "sparc64")
