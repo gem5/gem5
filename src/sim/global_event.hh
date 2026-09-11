@@ -57,6 +57,8 @@ namespace gem5
  * synchronization operations.
  */
 
+class BaseGlobalEvent;
+
 /*
  * Global barrier used to synchronize threads
  */
