@@ -158,6 +158,9 @@ class PhysicalMemory : public Serializable
     const bool mmapUsingNoReserve;
 
     const std::string sharedBackstore;
+    // Whether the shared backing store is created anonymously with
+    // memfd_create(2) instead of shm_open(3). Linux only.
+    const bool anonymousSharedBackstore;
     uint64_t sharedBackstoreSize;
 
     long pageSize;
@@ -198,7 +201,8 @@ class PhysicalMemory : public Serializable
                    bool mmap_using_noreserve,
                    const std::string &shared_backstore,
                    bool auto_unlink_shared_backstore,
-                   bool is_sparse_restore = false);
+                   bool is_sparse_restore = false,
+                   bool anonymous_shared_backstore = false);
 
     /**
      * Unmap all the backing store we have used.

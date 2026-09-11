@@ -104,7 +104,9 @@ class VMA
      */
     void sliceRegionLeft(Addr slice_addr);
 
-    const std::string& getName() { return _vmaName; }
+    const std::string &
+    getName() const
+    { return _vmaName; }
     off_t getFileMappingOffset() const
     {
         return hasHostBuf() ? _origHostBuf->getOffset() : 0;
@@ -113,9 +115,15 @@ class VMA
     /**
      * Defer AddrRange related calls to the AddrRange.
      */
-    Addr size() { return _addrRange.size(); }
-    Addr start() { return _addrRange.start(); }
-    Addr end() { return _addrRange.end(); }
+    Addr
+    size() const
+    { return _addrRange.size(); }
+    Addr
+    start() const
+    { return _addrRange.start(); }
+    Addr
+    end() const
+    { return _addrRange.end(); }
 
     bool
     mergesWith(const AddrRange& r) const
