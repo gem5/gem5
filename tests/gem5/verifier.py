@@ -275,7 +275,7 @@ class NoMatchRegex(MatchRegex):
 
         for fname in self.filenames:
             if self.parse_file(joinpath(tempdir, fname)):
-                raise AssertionError("Could not match regex.")
+                raise AssertionError("Regex matched unexpectedly.")
 
 
 class MatchJSONStats(Verifier):
@@ -304,22 +304,22 @@ class MatchJSONStats(Verifier):
     def _compare_stats(self, trusted_file, test_file):
         trusted_stats = json.load(trusted_file)
         test_stats = json.load(test_file)
-        is_subset = trusted_stats.items() <= test_stats.items()
-        if is_subset:
+        diffs = {
+            key: value
+            for key, value in trusted_stats.items()
+            if key not in test_stats or value != test_stats[key]
+        }
+        if diffs:
             err = (
                 "Following differences found between "
                 + f"{self.truth_name} and {self.test_name}.\n"
             )
-            diffs = set(trusted_stats.items()) - set(test_stats.items())
-            for diff in diffs:
-                trusted_value = trusted_stats[diff[0]]
-                test_value = None
-                if diff[0] in test_stats.keys():
-                    test_value = test_stats[diff[0]]
-                err += f"{diff[0]}:\n"
+            for key, trusted_value in diffs.items():
+                test_value = test_stats.get(key, "<missing>")
+                err += f"{key}:\n"
                 err += (
                     f"trusted_value: {trusted_value}, "
-                    + f"test_value: {test_value}"
+                    + f"test_value: {test_value}\n"
                 )
             raise AssertionError(err)
 
