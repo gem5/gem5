@@ -78,7 +78,7 @@ class CheckH5StatsExist(Verifier):
         tempdir = params.fixtures[constants.tempdir_fixture_name].path
         h5_file = joinpath(tempdir, self.stats_file)
         if not os.path.isfile(h5_file):
-            test_util.fail("Could not find h5 stats file %s", h5_file)
+            raise AssertionError(f"Could not find h5 stats file {h5_file}")
 
 
 class MatchGoldStandard(Verifier):
@@ -120,8 +120,9 @@ class MatchGoldStandard(Verifier):
             logger=params.log,
         )
         if diff is not None:
-            test_util.fail(
-                f"Stdout did not match:\n{diff}\nSee {tempdir} for full results"
+            raise AssertionError(
+                f"{self.test_filename} did not match:\n{diff}\n"
+                f"See {tempdir} for full results"
             )
 
     def _generic_instance_warning(self, kwargs):
@@ -244,7 +245,7 @@ class MatchFileRegex(Verifier):
             if self.parse_file(joinpath(tempdir, fname)):
                 return  # Success
 
-        test_util.fail("Could not match regex.")
+        raise AssertionError("Could not match regex.")
 
 
 class MatchRegex(MatchFileRegex):
@@ -275,7 +276,7 @@ class NoMatchRegex(MatchRegex):
 
         for fname in self.filenames:
             if self.parse_file(joinpath(tempdir, fname)):
-                test_util.fail("Could not match regex.")
+                raise AssertionError("Regex matched unexpectedly.")
 
 
 class MatchJSONStats(Verifier):
@@ -304,24 +305,24 @@ class MatchJSONStats(Verifier):
     def _compare_stats(self, trusted_file, test_file):
         trusted_stats = json.load(trusted_file)
         test_stats = json.load(test_file)
-        is_subset = trusted_stats.items() <= test_stats.items()
-        if is_subset:
+        diffs = {
+            key: value
+            for key, value in trusted_stats.items()
+            if key not in test_stats or value != test_stats[key]
+        }
+        if diffs:
             err = (
                 "Following differences found between "
                 + f"{self.truth_name} and {self.test_name}.\n"
             )
-            diffs = set(trusted_stats.items()) - set(test_stats.items())
-            for diff in diffs:
-                trusted_value = trusted_stats[diff[0]]
-                test_value = None
-                if diff[0] in test_stats.keys():
-                    test_value = test_stats[diff[0]]
-                err += f"{diff[0]}:\n"
+            for key, trusted_value in diffs.items():
+                test_value = test_stats.get(key, "<missing>")
+                err += f"{key}:\n"
                 err += (
                     f"trusted_value: {trusted_value}, "
-                    + f"test_value: {test_value}"
+                    + f"test_value: {test_value}\n"
                 )
-            test_util.fail(err)
+            raise AssertionError(err)
 
     def test(self, params):
         trusted_file = open(self.truth_name)
