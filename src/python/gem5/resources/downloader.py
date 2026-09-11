@@ -30,6 +30,7 @@ import math
 import os
 import random
 import shutil
+import sys
 import tarfile
 import tempfile
 import time
@@ -515,6 +516,7 @@ def get_resource(
             f"Waiting for resource '{resource_name}' at '{to_path}': "
             f"{elapsed:.0f}s elapsed, {lock_timeout:g}s timeout. "
             "Another process may be downloading or verifying it.",
+            file=sys.stderr,
             flush=True,
         )
 

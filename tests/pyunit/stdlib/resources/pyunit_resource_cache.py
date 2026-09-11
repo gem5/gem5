@@ -225,8 +225,9 @@ class ResourceCacheTestSuite(unittest.TestCase):
             except Exception as error:
                 errors.append(error)
 
-        output = io.StringIO()
-        real_write = output.write
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        real_write = stderr.write
 
         def write(message):
             result = real_write(message)
@@ -242,9 +243,11 @@ class ResourceCacheTestSuite(unittest.TestCase):
         ) as hash_file, patch(
             "gem5.resources.downloader.warn"
         ) as warn, patch.object(
-            output, "write", side_effect=write
+            stderr, "write", side_effect=write
         ), contextlib.redirect_stdout(
-            output
+            stdout
+        ), contextlib.redirect_stderr(
+            stderr
         ):
             thread = threading.Thread(target=publisher)
             thread.start()
@@ -264,7 +267,8 @@ class ResourceCacheTestSuite(unittest.TestCase):
             writer.assert_called_once()
             hash_file.assert_not_called()
             warn.assert_called_once()
-        self.assertIn("Waiting for resource", output.getvalue())
+        self.assertIn("Waiting for resource", stderr.getvalue())
+        self.assertNotIn("Waiting for resource", stdout.getvalue())
         self.assertEqual(self.contents, self.destination.read_bytes())
         self.assertFalse(Path(f"{self.destination}.lock.lock").exists())
 
