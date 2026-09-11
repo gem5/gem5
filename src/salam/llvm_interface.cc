@@ -42,6 +42,8 @@
 // LLVMInterface Includes
 #include "salam/llvm_interface.hh"
 
+#include "llvm/Support/raw_ostream.h"
+
 LLVMInterface::LLVMInterface(const LLVMInterfaceParams &p)
     : AccComputeUnit(p),
       filename(p.in_file),
@@ -1354,9 +1356,13 @@ LLVMInterface::createInstruction(llvm::Instruction *inst, uint64_t id)
                                            functional_unit);
             break;
         default: {
-            warn("Tried to create instance of undefined instruction type!");
-            return SALAM::createBadInst(id, this, dbg, OpCode, 0, 0);
-            break;
+            std::string ir_text;
+            llvm::raw_string_ostream ss(ir_text);
+            ss << *inst;
+            fatal("SALAM does not support LLVM instruction '%s' "
+                  "(opcode %u): %s",
+                  llvm::Instruction::getOpcodeName(OpCode), OpCode,
+                  ss.str().c_str());
         }
     }
 }
