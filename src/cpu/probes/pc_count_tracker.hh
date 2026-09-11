@@ -29,8 +29,14 @@
 #ifndef __CPU_PROBES_PC_COUNT_TRACKER_HH__
 #define __CPU_PROBES_PC_COUNT_TRACKER_HH__
 
+#include <cstdint>
+#include <unordered_map>
 #include <unordered_set>
+#include <utility>
+#include <vector>
 
+#include "base/addr_range.hh"
+#include "base/types.hh"
 #include "cpu/probes/pc_count_tracker_manager.hh"
 #include "params/PcCountTracker.hh"
 #include "sim/probe/probe_listener_object.hh"
@@ -54,18 +60,28 @@ class PcCountTracker : public ProbeListenerObject
      */
     void checkPc(const Addr& pc);
 
+    std::vector<std::pair<Addr, uint64_t>> getHottestPcs(unsigned n) const;
+    void resetStats() override;
+
   private:
     /**
      * a set of Program Counter addresses that should notify the
      * PcCounterTrackerManager for
      */
     std::unordered_set<Addr> targetPC;
+    Addr singleTargetPC = 0;
+    bool hasSingleTarget = false;
 
     /** the core this PcCountTracker is tracking at */
     BaseCPU *cpuptr;
 
     /** the PcCounterTrackerManager */
-    PcCountTrackerManager *manager;
+    PcCountTrackerManager *ptmanager;
+
+    bool enablePcProfiling;
+    Addr pcMask;
+    std::vector<AddrRange> filterRanges;
+    std::unordered_map<Addr, uint64_t> pcCounts;
 };
 }
 
