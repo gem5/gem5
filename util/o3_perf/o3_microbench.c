@@ -26,6 +26,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <ctype.h>
 #include <errno.h>
 #include <inttypes.h>
 #include <stdint.h>
@@ -41,7 +42,8 @@ parse_u64(const char *text, const char *name)
     char *end = NULL;
     errno = 0;
     const unsigned long long value = strtoull(text, &end, 0);
-    if (errno || !end || *end != '\0') {
+    /* strtoull skips leading whitespace and accepts a sign. */
+    if (!isdigit((unsigned char)text[0]) || errno || *end != '\0') {
         fprintf(stderr, "invalid %s: %s\n", name, text);
         exit(2);
     }
@@ -123,10 +125,14 @@ streaming(uint64_t iterations, size_t elements)
 static uint64_t
 pointer_chase(uint64_t iterations, size_t elements)
 {
+    if (elements == 0 || elements > UINT32_MAX) {
+        fputs("invalid working set size\n", stderr);
+        exit(2);
+    }
     uint32_t *order = malloc(elements * sizeof(*order));
     uint32_t *next = malloc(elements * sizeof(*next));
-    if (!order || !next || elements > UINT32_MAX) {
-        fputs("allocation failed or working set too large\n", stderr);
+    if (!order || !next) {
+        fputs("allocation failed\n", stderr);
         exit(2);
     }
     for (size_t i = 0; i < elements; ++i) {
@@ -156,6 +162,10 @@ pointer_chase(uint64_t iterations, size_t elements)
 static uint64_t
 mixed(uint64_t iterations, size_t elements)
 {
+    if (elements == 0) {
+        fputs("invalid working set size\n", stderr);
+        exit(2);
+    }
     uint64_t *data = malloc(elements * sizeof(*data));
     if (!data) {
         fputs("allocation failed\n", stderr);
