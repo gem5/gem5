@@ -95,7 +95,7 @@ class MongoDBClient(Client):
 
         return collection
 
-    def find_resource(self, query: Dict) -> Dict:
+    def find_resource(self, query: dict) -> dict:
         """
         Find a resource in the database
 
@@ -127,7 +127,7 @@ class MongoDBClient(Client):
             return {"exists": False}
         return res[0]
 
-    def update_resource(self, query: Dict) -> Dict[str, str]:
+    def update_resource(self, query: dict) -> dict[str, str]:
         """
         This function updates a resource in the database by first checking if
         the resource version in the request matches the resource version
@@ -154,7 +154,7 @@ class MongoDBClient(Client):
             return {"status": "Resource does not exist"}
         return {"status": "Updated"}
 
-    def get_versions(self, query: Dict) -> List[Dict]:
+    def get_versions(self, query: dict) -> list[dict]:
         """
         This function retrieves all versions of a resource with the given ID
         from the database.
@@ -171,7 +171,7 @@ class MongoDBClient(Client):
         res = json_util.dumps(versions)
         return json_util.loads(res)
 
-    def delete_resource(self, query: Dict) -> Dict[str, str]:
+    def delete_resource(self, query: dict) -> dict[str, str]:
         """
         This function deletes a resource from the database by first checking
         if the resource version in the request matches the resource version
@@ -187,7 +187,7 @@ class MongoDBClient(Client):
         )
         return {"status": "Deleted"}
 
-    def insert_resource(self, query: Dict) -> Dict[str, str]:
+    def insert_resource(self, query: dict) -> dict[str, str]:
         """
         This function inserts a new resource into the database using the
         'insert_one' method of the MongoDB client.
@@ -203,7 +203,7 @@ class MongoDBClient(Client):
             return {"status": "Resource already exists"}
         return {"status": "Inserted"}
 
-    def check_resource_exists(self, query: Dict) -> Dict:
+    def check_resource_exists(self, query: dict) -> dict:
         """
         This function checks if a resource exists in the database by searching
         for a resource with a matching 'id' and 'resource_version' in
@@ -231,7 +231,7 @@ class MongoDBClient(Client):
             return {"exists": False}
         return {"exists": True}
 
-    def save_session(self) -> Dict:
+    def save_session(self) -> dict:
         """
         This function saves the client session to a dictionary.
         :return: A dictionary containing the client session.

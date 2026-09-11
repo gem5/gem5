@@ -175,7 +175,8 @@ def toNum(value, target_type, units, prefixes, converter):
     return convert(magnitude) * scale, unit
 
 
-def toFloat(value, target_type="float", units=None, prefixes=[]):
+def toFloat(value, target_type="float", units=None, prefixes=None):
+    prefixes = [] if prefixes is None else prefixes
     return toNum(value, target_type, units, prefixes, float)[0]
 
 
@@ -187,7 +188,8 @@ def toBinaryFloat(value, target_type="float", units=None):
     return toFloat(value, target_type, units, binary_prefixes)
 
 
-def toInteger(value, target_type="integer", units=None, prefixes=[]):
+def toInteger(value, target_type="integer", units=None, prefixes=None):
+    prefixes = [] if prefixes is None else prefixes
     return toNum(value, target_type, units, prefixes, lambda x: int(x, 0))[0]
 
 
@@ -269,7 +271,7 @@ def toMemoryBandwidth(value):
     return toBinaryFloat(value, "memory bandwidth", "B/s")
 
 
-def _base_10_to_2(value: str, unit: str) -> Optional[str]:
+def _base_10_to_2(value: str, unit: str) -> str | None:
     """Convert a base 10 memory/cache size SI prefix strings to base 2. Used
     in `checkBaseConversion` to provide a warning message to the user. Will
     return None if no conversion is required.

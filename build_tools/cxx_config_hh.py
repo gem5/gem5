@@ -54,7 +54,7 @@ def parse_args():
     return args
 
 
-def write_header_file(sim_object: Type, cxx_config_hh: str):
+def write_header_file(sim_object: type, cxx_config_hh: str):
     """
     Generates the C++ header file for the C++ configuration of a SimObject.
 

@@ -34,7 +34,7 @@ from .traffic_generator_core import TrafficGeneratorCore
 class TrafficGenerator(AbstractGenerator):
     def __init__(
         self,
-        config_file_list: List[str],
+        config_file_list: list[str],
     ) -> None:
         super().__init__(
             cores=self._create_cores(config_file_list=config_file_list)
@@ -50,8 +50,8 @@ class TrafficGenerator(AbstractGenerator):
         """
 
     def _create_cores(
-        self, config_file_list: List[str]
-    ) -> List[TrafficGeneratorCore]:
+        self, config_file_list: list[str]
+    ) -> list[TrafficGeneratorCore]:
         """
         The helper function to create the cores for the generator, it will use
         the same inputs as the constructor function.

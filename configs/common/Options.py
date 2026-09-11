@@ -244,7 +244,7 @@ def addNoISAOptions(parser):
 # Add common options that assume a non-NULL ISA.
 
 
-def addCommonOptions(parser, default_isa: Optional[ISA] = None):
+def addCommonOptions(parser, default_isa: ISA | None = None):
     # start by adding the base options that do not assume an ISA
     addNoISAOptions(parser)
     if default_isa is None:

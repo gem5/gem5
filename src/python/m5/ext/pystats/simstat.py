@@ -54,18 +54,18 @@ class SimStat(Group):
     Contains all the statistics for a given simulation.
     """
 
-    creation_time: Optional[datetime]
-    simulated_begin_time: Optional[Union[int, float]]
-    simulated_end_time: Optional[Union[int, float]]
+    creation_time: datetime | None
+    simulated_begin_time: int | float | None
+    simulated_end_time: int | float | None
 
     def __init__(
         self,
-        creation_time: Optional[datetime] = None,
-        time_conversion: Optional[TimeConversion] = None,
-        simulated_begin_time: Optional[Union[int, float]] = None,
-        simulated_end_time: Optional[Union[int, float]] = None,
-        name: Optional[str] = None,
-        **kwargs: Dict[str, Union[Group, Statistic, List[Group]]],
+        creation_time: datetime | None = None,
+        time_conversion: TimeConversion | None = None,
+        simulated_begin_time: int | float | None = None,
+        simulated_end_time: int | float | None = None,
+        name: str | None = None,
+        **kwargs: dict[str, Group | Statistic | list[Group]],
     ):
         self.creation_time = creation_time
         self.simulated_begin_time = simulated_begin_time

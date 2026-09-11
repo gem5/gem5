@@ -86,7 +86,6 @@ demo_runscript_with_checkpoint = """\
 export LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
 export HSA_ENABLE_INTERRUPT=0
 export HCC_AMDGPU_TARGET=gfx942
-export HSA_OVERRIDE_GFX_VERSION="9.4.2"
 echo 0 > /proc/sys/kernel/randomize_va_space
 dmesg -n8
 dd if=/root/roms/mi300.rom of=/dev/mem bs=1k seek=768 count=128
@@ -122,9 +121,9 @@ def addDemoOptions(parser):
 
 def runMI300GPUFS(
     cpu_type,
-    disk: Optional[AbstractResource] = None,
-    kernel: Optional[AbstractResource] = None,
-    app: Optional[AbstractResource] = None,
+    disk: AbstractResource | None = None,
+    kernel: AbstractResource | None = None,
+    app: AbstractResource | None = None,
 ):
     parser = argparse.ArgumentParser()
     runfs.addRunFSOptions(parser)

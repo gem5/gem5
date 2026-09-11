@@ -1,4 +1,4 @@
-# -*- mode:python -*-
+    # -*- mode:python -*-
 
 # Copyright (c) 2013, 2015-2020, 2023, 2025-2026 Arm Limited
 # All rights reserved.
@@ -93,15 +93,6 @@ except ImportError:
     # SCons.Errors.EnvironmentError for version < 4.0.0
     from SCons.Errors import EnvironmentError as SConsEnvironmentError
 
-if getattr(SCons, '__version__', None) in ('3.0.0', '3.0.1'):
-    # Monkey patch a fix which appears in version 3.0.2, since we only
-    # require version 3.0.0
-    def __hash__(self):
-        return hash(self.lstr)
-    import SCons.Subst
-    SCons.Subst.Literal.__hash__ = __hash__
-
-
 ########################################################################
 #
 # Command line options.
@@ -152,9 +143,8 @@ AddOption('--pprof', action='store_true',
           help='Enable support for the pprof profiler')
 AddOption('--debug-fission', action='store_true', help='Enable debug fission')
 AddOption('--gdb-index', action='store_true', help='Build GDB index')
-# Default to --no-duplicate-sources, but keep --duplicate-sources to opt-out
-# of this new build behaviour in case it introduces regressions. We could use
-# action=argparse.BooleanOptionalAction here once Python 3.9 is required.
+# Default to --no-duplicate-sources, but keep --duplicate-sources to opt out
+# of this build behavior in case it introduces regressions.
 AddOption('--duplicate-sources', action='store_true', default=False,
           dest='duplicate_sources',
           help='Create symlinks to sources in the build directory')
@@ -534,7 +524,8 @@ def config_embedded_python(env):
             error("Check failed for Python.h header.\n",
                   "Two possible reasons:\n"
                   "1. Python headers are not installed (You can install the "
-                  "package python-dev on Ubuntu and RedHat)\n"
+                  "package python3-dev on Ubuntu or python3-devel on "
+                  "Red Hat)\n"
                   "2. SCons is using a wrong C compiler. This can happen if "
                   "CC has the wrong value.\n"
                   f"CC = {env['CC']}")
@@ -545,8 +536,8 @@ def config_embedded_python(env):
     # Found a working Python installation. Check if it meets minimum
     # requirements.
     ver_string = '.'.join(map(str, py_version))
-    if py_version[0] < 3 or (py_version[0] == 3 and py_version[1] < 6):
-        error('Embedded python library 3.6 or newer required, found '
+    if py_version[0] < 3 or (py_version[0] == 3 and py_version[1] < 10):
+        error('Embedded python library 3.10 or newer required, found '
               f'{ver_string}.')
     elif py_version[0] > 3:
         warning('Embedded python library too new. '
@@ -697,6 +688,9 @@ for variant_path in variant_paths:
               "above you will need to ease fix SConstruct and ",
               "src/SConscript to support that compiler.")))
 
+    def compiler_major_version(version):
+        return version.split(".")[0]
+
     # Clang versions before 17 require this extension to accept C23-style
     # attributes such as [[fallthrough]] in older C language modes.
     if env['CC_CLANG'] and \
@@ -705,14 +699,15 @@ for variant_path in variant_paths:
 
     if env['GCC']:
         gcc_min_version = "11"
-        gcc_max_version = "15.2"
+        gcc_max_version = "16"
         gcc_version = env['CXXVERSION']
-        if compareVersions(gcc_version, gcc_min_version) < 0 or \
-              compareVersions(gcc_version, gcc_max_version) > 0:
+        gcc_major_version = compiler_major_version(gcc_version)
+        if compareVersions(gcc_major_version, gcc_min_version) < 0 or \
+              compareVersions(gcc_major_version, gcc_max_version) > 0:
             warning(
                 f'Detected GCC version {gcc_version} is not officially '
-                f'supported.\n'f'gem5 supports GCC v{gcc_min_version} up '
-                f'to v{gcc_max_version}.\n'
+                f'supported.\n'f'gem5 supports GCC major versions '
+                f'{gcc_min_version} through {gcc_max_version}.\n'
             )
 
         # Workaround https://gcc.gnu.org/bugzilla/show_bug.cgi?id=105651
@@ -751,15 +746,15 @@ for variant_path in variant_paths:
 
     elif env['CLANG']:
         clang_min_version = "14"
-        clang_max_version = "19"
+        clang_max_version = "22"
         clang_version = env['CXXVERSION']
-
-        if compareVersions(clang_version, clang_min_version) < 0 or \
-              compareVersions(clang_version, clang_max_version) > 0:
+        clang_major_version = compiler_major_version(clang_version)
+        if compareVersions(clang_major_version, clang_min_version) < 0 or \
+              compareVersions(clang_major_version, clang_max_version) > 0:
             warning(
                 f'Detected Clang version {clang_version} is not officially '
-                f'supported.\n'f'gem5 supports Clang v{clang_min_version} up '
-                f'to v{clang_max_version}.\n'
+                f'supported.\n'f'gem5 supports Clang major versions '
+                f'{clang_min_version} through {clang_max_version}.\n'
             )
         # Set the Link-Time Optimization (LTO) flags if enabled.
         if GetOption('with_lto'):
@@ -910,6 +905,10 @@ for variant_path in variant_paths:
             error('Did not find needed zlib compression library '
                   'and/or zlib.h header file.\n'
                   'Please install zlib and try again.')
+        if not conf.CheckZlibVersion():
+            error('zlib 1.2 or newer is required.')
+        if not conf.CheckM4Version():
+            error('GNU m4 1.4 or newer is required.')
 
         conf.env['HAVE_ZSTD'] = conf.CheckLibWithHeader(
             'zstd', 'zstd.h', 'C++', call='ZSTD_versionNumber();')

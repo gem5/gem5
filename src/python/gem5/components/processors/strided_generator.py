@@ -43,7 +43,7 @@ class StridedGenerator(AbstractGenerator):
         rate: str = "100GiB/s",
         block_size: int = 64,
         superblock_size: int = 64,
-        stride_size: Optional[int] = None,
+        stride_size: int | None = None,
         min_addr: int = 0,
         max_addr: int = 32768,
         rd_perc: int = 100,
@@ -107,7 +107,7 @@ class StridedGenerator(AbstractGenerator):
         max_addr: int,
         rd_perc: int,
         data_limit: int,
-    ) -> List[StridedGeneratorCore]:
+    ) -> list[StridedGeneratorCore]:
         return [
             StridedGeneratorCore(
                 duration=duration,

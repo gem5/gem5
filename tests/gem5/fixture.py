@@ -39,7 +39,6 @@
 import gzip
 import os
 import shutil
-import socket
 import sys
 import tempfile
 import threading
@@ -184,7 +183,6 @@ class SConsFixture(UniqueFixture):
             "-C",
             self.directory,
             "--ignore-style",
-            "--no-compress-debug",
             "defconfig",
             self.target_dir,
             joinpath(self.directory, "build_opts", self.isa.upper()),
@@ -199,7 +197,6 @@ class SConsFixture(UniqueFixture):
                 "-C",
                 self.directory,
                 "--ignore-style",
-                "--no-compress-debug",
                 "setconfig",
                 self.target_dir,
                 f"RUBY_PROTOCOL_{self.protocol.upper()}=y",
@@ -215,7 +212,6 @@ class SConsFixture(UniqueFixture):
             "-C",
             self.directory,
             "--ignore-style",
-            "--no-compress-debug",
             "setconfig",
             self.target_dir,
             "USE_TEST_OBJECTS=y",
@@ -235,7 +231,6 @@ class SConsFixture(UniqueFixture):
             "-j",
             str(config.threads),
             "--ignore-style",
-            "--no-compress-debug",
         ]
 
         if config.gcov:
@@ -280,7 +275,7 @@ class Gem5Fixture(SConsFixture):
         self.protocol = protocol
         self.set_global()
 
-    def get_get_build_info(self) -> Optional[str]:
+    def get_get_build_info(self) -> str | None:
         build_target = self.target
         return build_target
 
@@ -417,7 +412,7 @@ class DownloadedProgram(UniqueFixture):
         else:
             try:
                 t = self._getremotetime()
-            except (urllib.error.URLError, socket.timeout):
+            except (urllib.error.URLError, TimeoutError):
                 # Problem checking the server, use the old files.
                 log.test_log.debug(
                     "Could not contact server. Binaries may be old."
@@ -466,7 +461,7 @@ class DownloadedArchive(DownloadedProgram):
         else:
             try:
                 t = self._getremotetime()
-            except (urllib.error.URLError, socket.timeout):
+            except (urllib.error.URLError, TimeoutError):
                 # Problem checking the server, use the old files.
                 log.test_log.debug(
                     "Could not contact server. Binaries may be old."

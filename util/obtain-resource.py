@@ -71,12 +71,28 @@ if __name__ == "__m5_main__":
         help="Suppress output.",
     )
 
+    sparse_group = parser.add_mutually_exclusive_group()
+    sparse_group.add_argument(
+        "--sparse",
+        dest="sparse",
+        action="store_true",
+        help="Store disk image resources sparsely (the default).",
+    )
+    sparse_group.add_argument(
+        "--no-sparse",
+        dest="sparse",
+        action="store_false",
+        help="Disable automatic sparse storage for disk images.",
+    )
+    parser.set_defaults(sparse=True)
+
     args = parser.parse_args()
 
     resource = obtain_resource(
         resource_id=args.id,
         quiet=args.quiet,
         to_path=args.path,
+        sparse=args.sparse,
     )
 
     if not args.quiet:

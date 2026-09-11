@@ -42,7 +42,7 @@ from .resource import (
 )
 
 
-def CustomWorkload(function: str, parameters: Dict[str, Any]):
+def CustomWorkload(function: str, parameters: dict[str, Any]):
     """
     A custom workload gem5 resource. It can be used to specify a custom,
     local workload.
@@ -65,10 +65,10 @@ def CustomWorkload(function: str, parameters: Dict[str, Any]):
 
 def Workload(
     workload_name: str,
-    resource_directory: Optional[str] = None,
-    resource_version: Optional[str] = None,
-    clients: Optional[List] = None,
-    gem5_version: Optional[str] = core.gem5Version,
+    resource_directory: str | None = None,
+    resource_version: str | None = None,
+    clients: list | None = None,
+    gem5_version: str | None = core.gem5Version,
 ):
     """
     .. warning::

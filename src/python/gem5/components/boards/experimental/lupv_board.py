@@ -260,7 +260,7 @@ class LupvBoard(RiscvSystem, AbstractBoard, KernelDiskWorkload):
         return False
 
     @overrides(AbstractBoard)
-    def get_dma_ports(self) -> List[Port]:
+    def get_dma_ports(self) -> list[Port]:
         raise NotImplementedError(
             "The LupvBoard does not have DMA Ports. "
             "Use `has_dma_ports()` to check this."
@@ -567,7 +567,7 @@ class LupvBoard(RiscvSystem, AbstractBoard, KernelDiskWorkload):
         return "/dev/lda"
 
     @overrides(KernelDiskWorkload)
-    def get_default_kernel_args(self) -> List[str]:
+    def get_default_kernel_args(self) -> list[str]:
         return [
             "console=ttyLIO0",
             "root={root_value}",

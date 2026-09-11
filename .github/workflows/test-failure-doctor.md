@@ -202,12 +202,12 @@ You can see this command in GitHub by clicking on the failed `clang-format-check
 
 If there were failure types other than the clang-format-check, print the message for the clang-format-check first, then report the other test failures in the same comment.
 
-When reporting test failures other than the `clang-format-check`, always print the name of the failed job before the analysis in the `Root cause analysis` section. For example, if the `gpu-tests` and `quick-tests (gem5/cpu_tests)` jobs failed, you should format the analysis as follows:
+When reporting test failures other than the `clang-format-check`, always print the name of the failed job before the analysis in the `Root cause analysis` section. For example, if the `quick-tests (gem5/gpu)` and `quick-tests (gem5/cpu_tests)` jobs failed, you should format the analysis as follows:
 
 ```markdown
 ## Root cause analysis
 
-- `gpu-tests`: [analysis of why the gpu-tests failed]
+- `quick-tests (gem5/gpu)`: [analysis of why the GPU tests failed]
 
 - `quick-tests (gem5/cpu-tests)`: [analysis of why the gem5/cpu-tests failed]
 ```
