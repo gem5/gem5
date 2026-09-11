@@ -44,6 +44,7 @@
 
 #include <cstdint>
 #include <list>
+#include <memory>
 #include <queue>
 #include <string>
 
@@ -209,10 +210,10 @@ class DynInst : public ExecContext, public RefCounted
     std::bitset<NumStatus> status;
 
   protected:
-    /** The result of the instruction; assumes an instruction can have many
-     *  destination registers.
+    /** Results retained for the optional checker CPU. The queue is allocated
+     *  lazily because ordinary O3CPU execution never consumes these values.
      */
-    std::queue<InstResult> instResult;
+    std::unique_ptr<std::queue<InstResult>> instResult;
 
     /** PC state for this instruction. */
     std::unique_ptr<PCStateBase> pc;
@@ -702,31 +703,36 @@ class DynInst : public ExecContext, public RefCounted
     /** Returns the logical register index of the i'th source register. */
     const RegId& srcRegIdx(int i) const { return staticInst->srcRegIdx(i); }
 
-    /** Return the size of the instResult queue. */
-    uint8_t resultSize() { return instResult.size(); }
+    /** Return the size of the instResult queue. O(1) time and space. */
+    uint8_t resultSize() { return instResult ? instResult->size() : 0; }
 
-    /** Pops a result off the instResult queue.
+    /** Pops a result off the instResult queue. O(1) time and space.
      * If the result stack is empty, return the default value.
      * */
     InstResult
     popResult(InstResult dflt=InstResult())
     {
-        if (!instResult.empty()) {
-            InstResult t = instResult.front();
-            instResult.pop();
+        if (instResult && !instResult->empty()) {
+            InstResult t = instResult->front();
+            instResult->pop();
             return t;
         }
         return dflt;
     }
 
-    /** Pushes a result onto the instResult queue. */
+    /** Pushes a result onto the instResult queue. Amortised O(1) time and
+     *  O(n) space for n recorded results.
+     */
     /** @{ */
     template<typename T>
     void
     setResult(const RegClass &reg_class, T &&t)
     {
         if (instFlags[RecordResult]) {
-            instResult.emplace(reg_class, std::forward<T>(t));
+            if (!instResult) {
+                instResult = std::make_unique<std::queue<InstResult>>();
+            }
+            instResult->emplace(reg_class, std::forward<T>(t));
         }
     }
     /** @} */
