@@ -22,6 +22,10 @@ jobs:
               with:
                   python-version: '3.10'
             - uses: pre-commit/action@v3.0.1
+              env:
+                  # Formatting runs in the separate clang-format-check job
+                  # so its failures remain advisory.
+                  SKIP: gem5-git-clang-format
 
     # Runs on the github hosted runner
     # Checks changed lines against the PR merge base with the same pinned
