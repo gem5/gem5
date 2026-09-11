@@ -64,7 +64,9 @@ class LockCheckingGlobalEvent : public GlobalEvent
 
     const char *
     description() const override
-    { return "lock checking event"; }
+    {
+        return "lock checking event";
+    }
 
     std::promise<void> contenderReady;
     std::future<void> contenderIsReady;
