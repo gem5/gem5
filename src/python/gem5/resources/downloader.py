@@ -26,9 +26,11 @@
 
 import gzip
 import hashlib
+import math
 import os
 import random
 import shutil
+import sys
 import tarfile
 import tempfile
 import time
@@ -443,6 +445,8 @@ def get_resource(
     gem5_version: str | None = core.gem5Version,
     quiet: bool = False,
     sparse: bool = True,
+    skip_cache_hash_check: bool = False,
+    lock_timeout: float = 900,
 ) -> None:
     """
     Obtains a gem5 resource and stored it to a specified location. If the
@@ -484,18 +488,47 @@ def get_resource(
     :param quiet: If ``True``, no output will be printed to the console (baring
                   exceptions). ``False`` by default.
 
+    :param skip_cache_hash_check: Trust an existing cache path without hashing
+                   its contents, and warn even when ``quiet`` is set. Defaults
+                   to ``False``. Cached disk images keep their current storage
+                   representation. Missing resources are downloaded normally.
+
+    :param lock_timeout: Maximum seconds to wait for the resource lock. Defaults
+                   to 900. Must be finite and non-negative.
+
     :raises Exception: An exception is thrown if a file is already present at
                        ``to_path`` but it does not have the correct md5 sum. An
                        exception will also be thrown is a directory is present
                        at ``to_path``.
     """
 
-    # We apply a lock for a specific resource. This is to avoid circumstances
-    # where multiple instances of gem5 are running and trying to obtain the
-    # same resources at once. The timeout here is somewhat arbitarily put at 15
-    # minutes.Most resources should be downloaded and decompressed in this
-    # timeframe, even on the most constrained of systems.
-    with FileLock(f"{to_path}.lock", timeout=900):
+    if not isinstance(skip_cache_hash_check, bool):
+        raise TypeError("skip_cache_hash_check must be a bool.")
+    if isinstance(lock_timeout, bool) or not isinstance(
+        lock_timeout, (int, float)
+    ):
+        raise TypeError("lock_timeout must be a finite non-negative number.")
+    if not math.isfinite(lock_timeout) or lock_timeout < 0:
+        raise ValueError("lock_timeout must be a finite non-negative number.")
+
+    def report_wait(elapsed):
+        print(
+            f"Waiting for resource '{resource_name}' at '{to_path}': "
+            f"{elapsed:.0f}s elapsed, {lock_timeout:g}s timeout. "
+            "Another process may be downloading or verifying it.",
+            file=sys.stderr,
+            flush=True,
+        )
+
+    # Keep exclusive-create locking even when hashes are skipped: another
+    # process may still be writing the cache entry. Retain the existing lock
+    # path for compatibility with other gem5 processes sharing the cache.
+    with FileLock(
+        f"{to_path}.lock",
+        timeout=lock_timeout,
+        delay=1,
+        on_wait=None if quiet else report_wait,
+    ):
         resource_json = get_resource_json_obj(
             resource_name,
             resource_version=resource_version,
@@ -517,6 +550,14 @@ def get_resource(
         make_sparse = sparse and is_disk_image
 
         if os.path.exists(to_path):
+            if skip_cache_hash_check:
+                warn(
+                    f"Using cached resource '{resource_name}' at '{to_path}' "
+                    "without checking its hash (skip_cache_hash_check=True). "
+                    "The cache path is trusted; corrupted or incorrect "
+                    "contents will not be detected."
+                )
+                return
             if os.path.isfile(to_path):
                 md5 = md5_file(Path(to_path))
             else:

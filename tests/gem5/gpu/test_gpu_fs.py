@@ -58,6 +58,11 @@ def gpu_fs_test(name, config_file, expected_gpu, length):
         config_args=(
             "--resource-directory",
             resource_directory,
+            # One test fills a cold shared cache while the other waits for
+            # its lock. Reuse the completed resources without rehashing them.
+            "--skip-cache-hash-check",
+            "--resource-lock-timeout",
+            "3600",
             "--cpu-type",
             "atomic",
             "--num-cus",
