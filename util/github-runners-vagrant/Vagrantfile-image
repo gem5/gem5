@@ -1,0 +1,68 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Copyright (c) 2023 The Regents of the University of California
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are
+# met: redistributions of source code must retain the above copyright
+# notice, this list of conditions and the following disclaimer;
+# redistributions in binary form must reproduce the above copyright
+# notice, this list of conditions and the following disclaimer in the
+# documentation and/or other materials provided with the distribution;
+# neither the name of the copyright holders nor the names of its
+# contributors may be used to endorse or promote products derived from
+# this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Use a separate working directory and Vagrant home (see README).
+Vagrant.configure("2") do |config|
+  config.vm.box = "generic/ubuntu2204"
+  config.vm.box_version = "4.3.6"
+  config.vm.box_check_update = false
+  config.vm.hostname = "gem5-image-builder"
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+  config.vm.provider :libvirt do |lv|
+    lv.cpus = 4
+    lv.memory = 16384
+    lv.machine_virtual_size = 128
+    lv.storage_pool_name = ENV.fetch("GEM5_IMAGE_POOL", "loupe-ssd")
+    lv.disk_driver cache: "none", discard: "unmap"
+  end
+  config.vm.provision :shell, path: "provision_root.sh"
+  config.vm.provision :reload
+  %w[action-run.sh runner-health.sh runner-cleanup.py provision_runner.sh
+     gem5-runner.service install-runner-service.sh].each do |file|
+    config.vm.provision "file", source: File.join(__dir__, file),
+      destination: "/home/vagrant/#{file}"
+  end
+  config.vm.provision :shell, privileged: false, inline: <<-SHELL
+    set -eu
+    cd /home/vagrant
+    chmod +x ./*.sh ./runner-cleanup.py
+    ./provision_runner.sh
+    docker pull ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+    RUNNER_RESOURCE_CACHE='' ./runner-health.sh
+    ./bin/Runner.Listener --version
+    uname -r
+    dpkg-query -W > image-packages.txt
+    docker images --digests > image-docker-images.txt
+  SHELL
+  config.vm.provision :shell, inline: <<-SHELL
+    test ! -e /etc/gem5-runner.env
+    test ! -e /home/vagrant/.runner
+    /home/vagrant/install-runner-service.sh
+  SHELL
+end
