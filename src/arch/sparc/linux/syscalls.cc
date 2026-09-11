@@ -263,7 +263,7 @@ SyscallDescTable<SEWorkload::SyscallABI32> EmuLinux::syscall32Descs = {
     {163, "setdomainname"}, // 32 bit
     {164, "ni_syscall"},
     {165, "quotactl"},
-    {166, "set_tid_address"},
+    {166, "set_tid_address", setTidAddressFunc},
     {167, "mount"},
     {168, "ustat"},
     {169, "setxattr"},  // 32 bit
@@ -565,7 +565,7 @@ SyscallDescTable<SEWorkload::SyscallABI64> EmuLinux::syscallDescs = {
     {163, "setdomainname"},
     {164, "utrap_install"},
     {165, "quotactl"},
-    {166, "set_tid_address"},
+    {166, "set_tid_address", setTidAddressFunc},
     {167, "mount"},
     {168, "ustat"},
     {169, "setxattr"},
