@@ -2975,6 +2975,20 @@ Call::initialize(llvm::Value *irval, irvmap *irmap,
                  SALAM::valueListTy *valueList)
 {
     SALAM::Instruction::initialize(irval, irmap, valueList);
+
+    llvm::CallInst *callInst = llvm::dyn_cast<llvm::CallInst>(irval);
+    assert(callInst);
+    llvm::Function *calledFunction = callInst->getCalledFunction();
+    if (!calledFunction) {
+        fatal("SALAM does not support indirect or unresolved LLVM calls: %s",
+              ir_string.c_str());
+    }
+    if (calledFunction->isDeclaration()) {
+        fatal("SALAM does not support calls to LLVM function declarations "
+              "('%s'): %s",
+              calledFunction->getName().str().c_str(), ir_string.c_str());
+    }
+
     callee = staticDependencies.back();
     staticDependencies.pop_back();
 }
