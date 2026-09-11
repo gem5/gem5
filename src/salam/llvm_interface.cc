@@ -649,6 +649,10 @@ LLVMInterface::constructStaticGraph()
     // Detect Loop Latches
     for (auto func_iter = m->begin(); func_iter != m->end(); func_iter++) {
         llvm::Function &func = *func_iter;
+        // Declarations have no basic blocks and cannot contain loop latches.
+        if (func.isDeclaration()) {
+            continue;
+        }
         dt->recalculate(func);
         loopInfo->releaseMemory();
         loopInfo->analyze(*dt);
