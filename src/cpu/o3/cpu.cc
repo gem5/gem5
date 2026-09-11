@@ -336,6 +336,7 @@ CPU::regProbePoints()
     ftq.regProbePoints();
     bac.regProbePoints();
     fetch.regProbePoints();
+    decode.regProbePoints();
     rename.regProbePoints();
     iew.regProbePoints();
     commit.regProbePoints();
