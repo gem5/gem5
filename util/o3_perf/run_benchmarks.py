@@ -466,6 +466,8 @@ def main():
         label, separator, path = specification.partition("=")
         if not label or not separator or not path:
             parser.error(f"invalid --gem5 value: {specification}")
+        if label in binaries:
+            parser.error(f"duplicate --gem5 label: {label}")
         binaries[label] = Path(path)
     labels = list(binaries)
     args.gem5_hashes = {
