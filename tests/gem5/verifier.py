@@ -121,7 +121,8 @@ class MatchGoldStandard(Verifier):
         )
         if diff is not None:
             raise AssertionError(
-                f"Stdout did not match:\n{diff}\nSee {tempdir} for full results"
+                f"{self.test_filename} did not match:\n{diff}\n"
+                f"See {tempdir} for full results"
             )
 
     def _generic_instance_warning(self, kwargs):
