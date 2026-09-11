@@ -21,6 +21,7 @@ network: defaults
 safe-outputs:
   create-issue:
     title-prefix: "misc: [Test Failure Doctor] "
+    labels: [misc, agentic-workflows]
   add-comment:
   update-issue:
   noop:
