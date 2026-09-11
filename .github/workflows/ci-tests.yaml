@@ -24,8 +24,8 @@ jobs:
             - uses: pre-commit/action@v3.0.1
 
     # Runs on the github hosted runner
-    # Iterates through all of the commits in the the PR and runs
-    # clang-format to make sure that nothing changes.
+    # Checks changed lines against the PR merge base with the same pinned
+    # clang-format version used by the local pre-commit hook.
     clang-format-check:
         runs-on: ubuntu-24.04
         if: github.event.pull_request.draft == false
@@ -40,9 +40,6 @@ jobs:
               with:
                   python-version: '3.10'
 
-            - name: Install clang-format
-              run: sudo apt-get install -y clang-format
-
             - name: Get merge base commit
               id: get-base-commit
               run: |
@@ -54,8 +51,11 @@ jobs:
                   echo "base_commit=$MERGE_BASE" >> $GITHUB_OUTPUT
 
             - name: Run clang-format check
-              run: |
-                  python util/run-git-clang-format.py --verbose --ci-pr-base-commit ${{ steps.get-base-commit.outputs.base_commit }}
+              uses: pre-commit/action@v3.0.1
+              with:
+                  extra_args: gem5-git-clang-format --all-files
+              env:
+                  GEM5_CI_PR_BASE_COMMIT: ${{ steps.get-base-commit.outputs.base_commit }}
 
     get-date:
     # We use the date to label caches. A cache is a a "hit" if the date is the
