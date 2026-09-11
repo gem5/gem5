@@ -78,7 +78,7 @@ class CheckH5StatsExist(Verifier):
         tempdir = params.fixtures[constants.tempdir_fixture_name].path
         h5_file = joinpath(tempdir, self.stats_file)
         if not os.path.isfile(h5_file):
-            test_util.fail("Could not find h5 stats file %s", h5_file)
+            raise AssertionError(f"Could not find h5 stats file {h5_file}")
 
 
 class MatchGoldStandard(Verifier):
@@ -120,7 +120,7 @@ class MatchGoldStandard(Verifier):
             logger=params.log,
         )
         if diff is not None:
-            test_util.fail(
+            raise AssertionError(
                 f"Stdout did not match:\n{diff}\nSee {tempdir} for full results"
             )
 
@@ -244,7 +244,7 @@ class MatchFileRegex(Verifier):
             if self.parse_file(joinpath(tempdir, fname)):
                 return  # Success
 
-        test_util.fail("Could not match regex.")
+        raise AssertionError("Could not match regex.")
 
 
 class MatchRegex(MatchFileRegex):
@@ -275,7 +275,7 @@ class NoMatchRegex(MatchRegex):
 
         for fname in self.filenames:
             if self.parse_file(joinpath(tempdir, fname)):
-                test_util.fail("Could not match regex.")
+                raise AssertionError("Could not match regex.")
 
 
 class MatchJSONStats(Verifier):
@@ -321,7 +321,7 @@ class MatchJSONStats(Verifier):
                     f"trusted_value: {trusted_value}, "
                     + f"test_value: {test_value}"
                 )
-            test_util.fail(err)
+            raise AssertionError(err)
 
     def test(self, params):
         trusted_file = open(self.truth_name)
