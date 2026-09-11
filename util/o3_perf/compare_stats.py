@@ -28,7 +28,10 @@
 
 import argparse
 import json
-import math
+from decimal import (
+    Decimal,
+    InvalidOperation,
+)
 from pathlib import Path
 
 
@@ -39,16 +42,16 @@ def parse_stats(path):
         if len(fields) < 2 or fields[0].startswith("-"):
             continue
         try:
-            value = float(fields[1])
-        except ValueError:
+            value = Decimal(fields[1])
+        except InvalidOperation:
             continue
         statistics[fields[0]] = value
     return statistics
 
 
 def values_equal(left, right):
-    if math.isnan(left) and math.isnan(right):
-        return True
+    if left.is_nan() or right.is_nan():
+        return left.is_nan() and right.is_nan()
     return left == right
 
 
@@ -82,8 +85,8 @@ def main():
             continue
         difference = {
             "name": name,
-            "baseline": baseline[name],
-            "candidate": candidate[name],
+            "baseline": str(baseline[name]),
+            "candidate": str(candidate[name]),
         }
         if name.startswith("host"):
             result["host_only_differences"].append(difference)
