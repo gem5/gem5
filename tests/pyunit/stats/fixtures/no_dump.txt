@@ -1,0 +1,3 @@
+# A file with comments and non-stats text outside dump delimiters.
+gem5 Simulator System.  https://www.gem5.org
+This text should be ignored by the parser.

@@ -1,0 +1,6 @@
+
+---------- Begin Simulation Statistics ----------
+simInsts 1
+simInsts 2
+
+---------- End Simulation Statistics   ----------

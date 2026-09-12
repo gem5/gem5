@@ -1,0 +1,7 @@
+
+---------- Begin Simulation Statistics ----------
+simSeconds                                  0.000001 # Number of seconds simulated
+simTicks                                      1000 # Number of ticks simulated
+system.cpu.numCycles                           500 # CPU cycles
+
+---------- End Simulation Statistics   ----------
