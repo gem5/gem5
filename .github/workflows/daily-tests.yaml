@@ -95,9 +95,9 @@ jobs:
                   BUILD_TARGET: ${{ matrix.target }}
               run: |
                   # Match Gem5Fixture, including objects used only by tests.
-                  scons --ignore-style --no-compress-debug defconfig "build/$BUILD_TARGET" "build_opts/$BUILD_TARGET"
-                  scons --ignore-style --no-compress-debug setconfig "build/$BUILD_TARGET" USE_TEST_OBJECTS=y
-                  scons --ignore-style --no-compress-debug "build/$BUILD_TARGET/gem5.opt" -j "$(nproc)"
+                  scons --ignore-style defconfig "build/$BUILD_TARGET" "build_opts/$BUILD_TARGET"
+                  scons --ignore-style setconfig "build/$BUILD_TARGET" USE_TEST_OBJECTS=y
+                  scons --ignore-style "build/$BUILD_TARGET/gem5.opt" -j "$(nproc)"
 
             - name: Package the exact binary and its provenance
               env:

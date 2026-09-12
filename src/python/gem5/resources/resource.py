@@ -924,6 +924,8 @@ def obtain_resource(
     to_path: str | None = None,
     quiet: bool = False,
     sparse: bool = True,
+    skip_cache_hash_check: bool = False,
+    lock_timeout: float = 900,
 ) -> AbstractResource:
     """
     This function primarily serves as a factory for resources. It will return
@@ -953,13 +955,24 @@ def obtain_resource(
                          version. If `None`, this filtering is not performed.
     :param to_path: The path to which the resource is to be downloaded. If
                     ``None``, the resource will be downloaded to the resource directory
-                    with the file/directory name equal to the ID of the resource.
+                    with the file/directory name ``<id>-<resource_version>``.
                     **Note**: Usage of this parameter will override the
                     ``resource_directory`` parameter.
     :param quiet: If ``True``, suppress output. ``False`` by default.
     :param sparse: If ``True``, request a sparse local representation of a
                    disk image resource. If ``False``, disable sparse
                    downloading. ``True`` by default.
+    :param skip_cache_hash_check: If ``True``, reuse an existing cache path
+                   without verifying its contents, and emit a warning even
+                   when ``quiet`` is set. ``False`` by default. The default
+                   cache name includes the resource ID and version; with
+                   ``to_path``, the caller is responsible for the mapping.
+                   Cached disk images retain their current sparse/dense
+                   representation. Missing resources follow the normal
+                   download path. Applies to workload and suite resources too.
+    :param lock_timeout: Maximum seconds to wait for another process to finish
+                   using a resource lock. Defaults to 900 (15 minutes). Must
+                   be finite and non-negative; zero attempts acquisition once.
     """
 
     # Some basic validation. Resource_id must be of type string and not empty.
@@ -975,6 +988,9 @@ def obtain_resource(
 
     if not isinstance(sparse, bool):
         raise TypeError(f"sparse must be a bool, got {type(sparse).__name__}.")
+
+    if not isinstance(skip_cache_hash_check, bool):
+        raise TypeError("skip_cache_hash_check must be a bool.")
 
     # Obtain the resource object entry for this resource
     resource_json = get_resource_json_obj(
@@ -995,6 +1011,8 @@ def obtain_resource(
         gem5_version=gem5_version,
         quiet=quiet,
         sparse=sparse,
+        skip_cache_hash_check=skip_cache_hash_check,
+        lock_timeout=lock_timeout,
     )
 
     # The 'workload' and 'suite' are special and need some translating into
@@ -1009,6 +1027,8 @@ def obtain_resource(
             gem5_version,
             quiet,
             sparse=sparse,
+            skip_cache_hash_check=skip_cache_hash_check,
+            lock_timeout=lock_timeout,
         )
 
     if resource_json.get("category") == "workload":
@@ -1021,6 +1041,8 @@ def obtain_resource(
             gem5_version,
             quiet,
             sparse=sparse,
+            skip_cache_hash_check=skip_cache_hash_check,
+            lock_timeout=lock_timeout,
         )
 
     # Check the schema of the 'resource_json' object.
@@ -1166,6 +1188,8 @@ def _get_suite(
     gem5_version: str,
     quiet: bool,
     sparse: bool = True,
+    skip_cache_hash_check: bool = False,
+    lock_timeout: float = 900,
 ) -> dict[str, Any]:
     """
     :param suite: The suite JSON object.
@@ -1182,6 +1206,8 @@ def _get_suite(
                          version.
     :param quiet: If ``True``, suppress output. ``False`` by default.
     :param sparse: Whether nested disk images should be materialized sparsely.
+    :param skip_cache_hash_check: Whether to trust cached nested resources.
+    :param lock_timeout: Maximum seconds to wait for each resource lock.
     """
     # Mapping input groups to workload IDs
     id_input_group_dict = {}
@@ -1226,6 +1252,8 @@ def _get_suite(
             gem5_version,
             quiet,
             sparse=sparse,
+            skip_cache_hash_check=skip_cache_hash_check,
+            lock_timeout=lock_timeout,
         )
         _resources_schema_validator(workload_dict)
         workload_input_group_dict[
@@ -1248,6 +1276,8 @@ def _get_workload(
     gem5_version: str,
     quiet: bool,
     sparse: bool = True,
+    skip_cache_hash_check: bool = False,
+    lock_timeout: float = 900,
 ) -> dict[str, Any]:
     """
     :param workload: The workload JSON object.
@@ -1264,6 +1294,8 @@ def _get_workload(
                          version.
     :param quiet: If ``True``, suppress output. ``False`` by default.
     :param sparse: Whether nested disk images should be materialized sparsely.
+    :param skip_cache_hash_check: Whether to trust cached nested resources.
+    :param lock_timeout: Maximum seconds to wait for each resource lock.
     """
 
     db_query = []
@@ -1340,6 +1372,8 @@ def _get_workload(
             gem5_version=gem5_version,
             quiet=quiet,
             sparse=sparse,
+            skip_cache_hash_check=skip_cache_hash_check,
+            lock_timeout=lock_timeout,
         )
 
         _resources_schema_validator(resource_match)
@@ -1410,6 +1444,8 @@ def _get_to_path_and_downloader_partial(
     gem5_version: str,
     quiet: bool,
     sparse: bool = True,
+    skip_cache_hash_check: bool = False,
+    lock_timeout: float = 900,
 ) -> tuple[str, partial | None]:
 
     if "resource_version" not in resource_json:
@@ -1489,6 +1525,8 @@ def _get_to_path_and_downloader_partial(
             gem5_version=gem5_version,
             quiet=quiet,
             sparse=sparse,
+            skip_cache_hash_check=skip_cache_hash_check,
+            lock_timeout=lock_timeout,
         )
     return to_path, downloader
 
