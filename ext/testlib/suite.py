@@ -64,7 +64,7 @@ class TestSuite:
         fixtures=tuple(),
         tests=tuple(),
         tags=tuple(),
-        **kwargs
+        **kwargs,
     ):
         self.fixtures = self.fixtures + list(fixtures)
         self.tags = self.tags | set(tags)
