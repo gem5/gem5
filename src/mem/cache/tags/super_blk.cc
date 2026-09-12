@@ -50,13 +50,24 @@ CompressionBlk::CompressionBlk()
 CacheBlk&
 CompressionBlk::operator=(CacheBlk&& other)
 {
-    operator=(std::move(static_cast<CompressionBlk&&>(other)));
+    auto *comp_other = dynamic_cast<CompressionBlk *>(&other);
+
+    if (!comp_other) {
+        panic("CompressionBlk mixed with other CacheBlk types. Cannot move!");
+    }
+
+    operator=(std::move(*comp_other));
     return *this;
 }
 
 CompressionBlk&
 CompressionBlk::operator=(CompressionBlk&& other)
 {
+    // Copying an entry into a valid one would imply in skipping all
+    // replacement steps, so it cannot be allowed
+    assert(!isValid());
+    assert(other.isValid());
+
     // Copy internal variables; if moving, that means we had an expansion or
     // contraction, and therefore the size is no longer valid, so it is not
     // moved
@@ -67,7 +78,12 @@ CompressionBlk::operator=(CompressionBlk&& other)
         setUncompressed();
     }
 
+    // We assume that the TaggedEntry move assignment operator (called by
+    // the CacheBlk move assignment operator) invalidates the source block.
+    // We cannot call invalidate again, as this would cause side effects on
+    // some CacheBlk implementations.
     CacheBlk::operator=(std::move(other));
+    assert(!other.isValid());
     return *this;
 }
 
