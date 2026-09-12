@@ -67,8 +67,8 @@ class IndirectMemoryV2 : public Queued
     const unsigned int prefetchThreshold;
     /** streamCounter value to trigger the streaming prefetcher */
     const int streamCounterThreshold;
-    /** Number of prefetches generated when using the streaming prefetcher */
-    const int streamingDistance;
+    /** Number of stream prefetches generated per trigger. */
+    // const int streamingDistance;
     /** multi-level and multi-way model controllor switch */
     const bool use_multi_way;
     const bool use_multi_level;
@@ -87,7 +87,7 @@ class IndirectMemoryV2 : public Queued
         Addr address;
         /** Whether this address is in the secure region */
         bool secure;
-        /** Index element size for this stream (Sniper data_length: 4 or 8). */
+        /** Index element size for this stream (data_length: 4 or 8). */
         unsigned dataSize;
         /** Confidence counter of the stream */
         unsigned int streamCounter;
@@ -98,12 +98,12 @@ class IndirectMemoryV2 : public Queued
         unsigned currHit;
         unsigned numHitNextDetect;
 
-        /* Indirect table fields (Sniper IndirectTableEntry) */
+        /* Indirect table fields (IndirectTableEntry) */
 
-        /** Pattern found (Sniper: indirect_pattern_on). Alone does not issue
+        /** Pattern found (indirect_pattern_on). Alone does not issue
          * PF. */
         bool enabled;
-        /** Confirmed enough to issue indirect PF (Sniper: prefetch_on). */
+        /** Confirmed enough to issue indirect PF (prefetch_on). */
         bool prefetchOn;
         /** Current index value */
         int64_t index;
@@ -112,7 +112,7 @@ class IndirectMemoryV2 : public Queued
         /** Shift detected */
         int shift;
         /**
-         * Sniper indirect_hit_count. Stored in SatCounter; updates follow
+         * indirect_hit_count. Stored in SatCounter; updates follow
          * insertIndex / isIndirectHit, not paper-style "match last index".
          */
         SatCounter8 indirectCounter;
@@ -120,7 +120,7 @@ class IndirectMemoryV2 : public Queued
         static constexpr unsigned MaxUnmatchedIndices = 4;
         std::deque<std::pair<int64_t, bool>> unmatchedIndices;
         /**
-         * Sniper curr_prefetch_distance: how far ahead to read B[i+d].
+         * curr_prefetch_distance: how far ahead to read B[i+d].
          * Grows by 1 per successful issue opportunity, capped at
          * maxPrefetchDistance; each B[i] issues at most 1–2 indirect PFs.
          */
@@ -210,7 +210,7 @@ class IndirectMemoryV2 : public Queued
 
         /**
          * Soft stop: turn off issuing but keep (base, shift, enabled) so IPD
-         * does not retrain the same pattern (unlike Sniper full clear).
+         * does not retrain the same pattern (unlike full clear).
          */
         void
         disablePrefetchOn()
@@ -312,24 +312,24 @@ class IndirectMemoryV2 : public Queued
     /** Byte order used to access the cache */
     const ByteOrder byteOrder;
 
-    /** Sniper-style address helpers (support negative shift). */
+    /** address helpers (support negative shift). */
     static Addr getBaseAddress(Addr address, int64_t index, int shift);
     static Addr getIndirectAddress(Addr base_address, int64_t index,
                                    int shift);
 
     /**
-     * Sniper index-stream: size 4/8 and delta exactly ±size.
+     * index-stream: size 4/8 and delta exactly ±size.
      */
     static bool isIndexStreamAccess(unsigned size, int64_t delta);
 
     /**
-     * Sniper insertIndex: enqueue index; if queue already full, slide and
+     * insertIndex: enqueue index; if queue already full, slide and
      * penalize indirectCounter / maybe disable prefetchOn.
      */
     void insertIndex(PrefetchTableEntry &entry, int64_t index);
 
     /**
-     * Sniper isIndirectHit: match addr against unmatched_indices, update
+     * isIndirectHit: match addr against unmatched_indices, update
      * indirectCounter and prefetchOn. Returns true on hit.
      */
     bool isIndirectHit(PrefetchTableEntry &entry, Addr addr);
@@ -340,7 +340,7 @@ class IndirectMemoryV2 : public Queued
                            int64_t &index) const;
 
     /**
-     * Sniper next_level chain: A = f(B), Aval = *A.
+     * next_level chain: A = f(B), Aval = *A.
      * If do_insert, insertIndex(next_level, Aval).
      * If addresses != nullptr and next_level->prefetchOn, emit C.
      */
@@ -353,7 +353,7 @@ class IndirectMemoryV2 : public Queued
 
     bool enqueueReadyIndirectPrefetch(Addr target, bool secure);
     /**
-     * For every pattern-on PT entry, try Sniper-style confirm on this access.
+     * For every pattern-on PT entry, try confirm on this access.
      */
     void checkAccessMatchOnActiveEntries(const PrefetchInfo &pfi,
                                          const CacheAccessor &cache);

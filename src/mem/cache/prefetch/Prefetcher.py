@@ -296,7 +296,7 @@ class IndirectMemoryPrefetcherV2(QueuedPrefetcher):
     type = "IndirectMemoryPrefetcherV2"
     cxx_class = "gem5::prefetch::IndirectMemoryV2"
     cxx_header = "mem/cache/prefetch/indirect_memory_v2.hh"
-    # Approximate Sniper handleCacheAccess: notify on every L1D read access
+    # Approximate handleCacheAccess: notify on every L1D read access
     # (hit and miss), not only PF-line hits.
     #
     # Base default prefetch_on_pf_hit=True runs FIRST in observeAccess() and
@@ -308,7 +308,7 @@ class IndirectMemoryPrefetcherV2(QueuedPrefetcher):
     prefetch_on_pf_hit = Param.Bool(
         False,
         "If True, hits only notify when on a prefetched line; "
-        "set False for Sniper-like observe-every-access",
+        "set False for observe-every-access",
     )
     on_miss = False
     on_inst = False
@@ -354,21 +354,21 @@ class IndirectMemoryPrefetcherV2(QueuedPrefetcher):
     ipd_table_replacement_policy = Param.BaseReplacementPolicy(
         LRURP(), "Replacement policy of the Indirect Pattern Detector"
     )
-    # Match Sniper L1IndirectPrefetcher shift set ({2,3,4,-6}).
+    # Match L1IndirectPrefetcher shift set ({2,3,4,-6}).
     shift_values = VectorParam.Int([0, 2, 3, 4], "Shift values to evaluate")
     addr_array_len = Param.Unsigned(4, "Number of misses tracked")
     prefetch_threshold = Param.Unsigned(
         3,
-        "Sniper trigger_indirect_length: confirm hits before prefetch_on "
+        "trigger_indirect_length: confirm hits before prefetch_on "
         "(enable when hit_count > threshold/2)",
     )
-    # Sniper trigger_stream_length = 2.
+    # trigger_stream_length = 2.
     stream_counter_threshold = Param.Unsigned(
         2, "Counter threshold to enable the stream prefetcher"
     )
-    streaming_distance = Param.Unsigned(
-        4, "Number of prefetches to generate when using the stream prefetcher"
-    )
+    # streaming_distance = Param.Unsigned(
+    #     4, "Number of stream prefetches generated per trigger"
+    # )
     use_multi_way = Param.Bool(
         True, "Same B[i] trains a second (base, shift) into nextWay"
     )

@@ -49,7 +49,7 @@ IndirectMemoryV2::IndirectMemoryV2(const IndirectMemoryPrefetcherV2Params &p)
       shiftValues(p.shift_values),
       prefetchThreshold(p.prefetch_threshold),
       streamCounterThreshold(p.stream_counter_threshold),
-      streamingDistance(p.streaming_distance),
+      //   streamingDistance(p.streaming_distance),
       use_multi_way(p.use_multi_way),
       use_multi_level(p.use_multi_level),
       maxIndirectWay(p.max_indirect_way),
@@ -95,7 +95,7 @@ IndirectMemoryV2::isIndexStreamAccess(unsigned size, int64_t delta)
     if (size != sizeof(uint32_t) && size != sizeof(uint64_t)) {
         return false;
     }
-    // Sniper: only ±data_length steps count as the index stream.
+    // only ±data_length steps count as the index stream.
     const int64_t sz = static_cast<int64_t>(size);
     return delta == sz || delta == -sz;
 }
