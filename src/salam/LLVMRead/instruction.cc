@@ -2599,6 +2599,22 @@ ICmp::initialize(llvm::Value *irval, irvmap *irmap,
                  "Integer Comparison Predicate [%i | %s]\n", this->predicate,
                  inst->getPredicateName(inst->getPredicate()).str());
     }
+    // i1 is a valid condition type, but SALAM does not model signed
+    // one-bit ordering comparisons. Reject at graph construction.
+    switch (predicate) {
+        case SALAM::Predicate::ICMP_SGT:
+        case SALAM::Predicate::ICMP_SGE:
+        case SALAM::Predicate::ICMP_SLT:
+        case SALAM::Predicate::ICMP_SLE:
+            if (staticDependencies.at(0)->getSize() == 1 ||
+                staticDependencies.at(1)->getSize() == 1) {
+                fatal("SALAM does not support signed i1 comparisons: %s",
+                      ir_string.c_str());
+            }
+            break;
+        default:
+            break;
+    }
 }
 
 void
@@ -2609,49 +2625,64 @@ ICmp::compute()
     }
     bool result = false;
     if (operands.at(0).hasIntVal() && operands.at(1).hasIntVal()) {
-        uint64_t uOp1 = operands.at(0).getUIntRegValue();
-        uint64_t uOp2 = operands.at(1).getUIntRegValue();
-        int64_t sOp1 = operands.at(0).getSIntRegValue();
-        int64_t sOp2 = operands.at(1).getSIntRegValue();
-
         switch (predicate) {
             case SALAM::Predicate::ICMP_EQ: {
+                uint64_t uOp1 = operands.at(0).getUIntRegValue();
+                uint64_t uOp2 = operands.at(1).getUIntRegValue();
                 result = (uOp1 == uOp2);
                 break;
             }
             case SALAM::Predicate::ICMP_NE: {
+                uint64_t uOp1 = operands.at(0).getUIntRegValue();
+                uint64_t uOp2 = operands.at(1).getUIntRegValue();
                 result = (uOp1 != uOp2);
                 break;
             }
             case SALAM::Predicate::ICMP_UGT: {
+                uint64_t uOp1 = operands.at(0).getUIntRegValue();
+                uint64_t uOp2 = operands.at(1).getUIntRegValue();
                 result = (uOp1 > uOp2);
                 break;
             }
             case SALAM::Predicate::ICMP_UGE: {
+                uint64_t uOp1 = operands.at(0).getUIntRegValue();
+                uint64_t uOp2 = operands.at(1).getUIntRegValue();
                 result = (uOp1 >= uOp2);
                 break;
             }
             case SALAM::Predicate::ICMP_ULT: {
+                uint64_t uOp1 = operands.at(0).getUIntRegValue();
+                uint64_t uOp2 = operands.at(1).getUIntRegValue();
                 result = (uOp1 < uOp2);
                 break;
             }
             case SALAM::Predicate::ICMP_ULE: {
+                uint64_t uOp1 = operands.at(0).getUIntRegValue();
+                uint64_t uOp2 = operands.at(1).getUIntRegValue();
                 result = (uOp1 <= uOp2);
                 break;
             }
             case SALAM::Predicate::ICMP_SGT: {
+                int64_t sOp1 = operands.at(0).getSIntRegValue();
+                int64_t sOp2 = operands.at(1).getSIntRegValue();
                 result = (sOp1 > sOp2);
                 break;
             }
             case SALAM::Predicate::ICMP_SGE: {
+                int64_t sOp1 = operands.at(0).getSIntRegValue();
+                int64_t sOp2 = operands.at(1).getSIntRegValue();
                 result = (sOp1 >= sOp2);
                 break;
             }
             case SALAM::Predicate::ICMP_SLT: {
+                int64_t sOp1 = operands.at(0).getSIntRegValue();
+                int64_t sOp2 = operands.at(1).getSIntRegValue();
                 result = (sOp1 < sOp2);
                 break;
             }
             case SALAM::Predicate::ICMP_SLE: {
+                int64_t sOp1 = operands.at(0).getSIntRegValue();
+                int64_t sOp2 = operands.at(1).getSIntRegValue();
                 result = (sOp1 <= sOp2);
                 break;
             }
