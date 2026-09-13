@@ -130,11 +130,31 @@ not part of the default profile. To include one when regenerating:
 
 1. Copy its directory from `additional_units/` into `default_profile/`.
 2. Add the LLVM instruction names modeled by that unit to its `instructions`
-  list, removing them from any previous FU's list.
-3. If this introduces a new generated SimObject class, add its class name to
-   the `sim_objects` list for `FunctionalUnits.py` in `src/salam/SConscript`.
-4. Run **HWProfileGenerator**, rebuild gem5 with `--with-salam`, and rerun the
-  workload.
+   list, removing them from any previous FU's list.
+3. Run **HWProfileGenerator**. This regenerates `FunctionalUnits.py` and the
+   matching C++ under `src/salam/HWModeling/functional_units/`, including a
+   new SimObject class such as `FloatTrigSine` for `float_trig_sine`.
+4. If this introduces a new SimObject class, add that class name to the
+   `sim_objects` list for `SimObject("FunctionalUnits.py", ...)` in
+   `src/salam/SConscript`. Without that registration, the build does not emit
+   `build/.../params/<ClassName>.hh` (for example `params/FloatTrigSine.hh`),
+   which the generated FU header includes.
+5. Instantiate the new unit in `configs/SALAM/HWAccConfig.py` next to the
+   other functional units, for example:
+
+   ```python
+   acc.hw_interface.functional_units.float_trig_sine = FloatTrigSine()
+   ```
+
+   `FunctionalUnits` declares each child with `Param.<Class>(Parent.any, ...)`.
+   Explicit instantiation is required so that proxy resolves during
+   configuration; omitting it fails at instantiate time even if the binary
+   built successfully.
+6. Rebuild gem5 with `--with-salam` and rerun the workload.
+
+`HWProfileGenerator` does not update `src/salam/SConscript` or
+`HWAccConfig.py`. Those two manual steps remain required for any FU that
+is not already part of the checked-in profile.
 
 Existing `opcode_num` values are part of SALAM's checked-in instruction
 configuration; they are not user-assigned IDs for defining new LLVM
