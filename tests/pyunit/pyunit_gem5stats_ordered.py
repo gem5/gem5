@@ -138,17 +138,63 @@ class OrderedStatsTest(unittest.TestCase):
         self.queue.assert_called_once_with()
         self.prepare.assert_called_once_with(self.first)
 
-    def test_ordinary_lists_are_rejected_before_preparation(self):
-        for roots in (
-            [],
-            [self.first],
-            [self.first, self.second],
-            [[self.first]],
-            (self.first, self.second),
-        ):
-            with self.subTest(roots=roots):
-                with self.assertRaisesRegex(TypeError, "SimObjectVector"):
-                    gem5stats.get_simstat(roots)
+    def test_list_maps_each_entry_recursively(self):
+        self.assertEqual(
+            self.export([self.first, [self.second, self.first], []]),
+            [
+                self.expected(11.0),
+                [self.expected(22.0), self.expected(11.0)],
+                [],
+            ],
+        )
+        self.assertEqual(self.queue.call_count, 3)
+        self.assertEqual(
+            [call.args[0] for call in self.prepare.call_args_list],
+            [self.first, self.second, self.first],
+        )
+
+    def test_singleton_list_remains_a_list(self):
+        stats = gem5stats.get_simstat([self.first])
+        self.assertIsInstance(stats, list)
+        self.assertEqual(len(stats), 1)
+        self.assertIsInstance(stats[0], SimStat)
+        self.assertEqual(self.export([self.first]), [self.expected(11.0)])
+
+    def test_list_can_contain_a_vector(self):
+        self.assertEqual(
+            self.export([SimObjectVector([self.first, self.second])]),
+            [[self.expected(11.0), self.expected(22.0)]],
+        )
+
+    def test_empty_list_does_not_prepare(self):
+        self.assertEqual(gem5stats.get_simstat([]), [])
+        self.queue.assert_not_called()
+        self.prepare.assert_not_called()
+
+    def test_list_forwards_prepare_stats_false(self):
+        stats = gem5stats.get_simstat(
+            [self.first, [self.second]], prepare_stats=False
+        )
+        self.assertEqual(
+            gem5stats.JsonOutputVistor(None).visit_simstat(stats),
+            [self.expected(11.0), [self.expected(22.0)]],
+        )
+        self.queue.assert_not_called()
+        self.prepare.assert_not_called()
+
+    def test_recursive_snapshots_can_be_flattened_for_csv(self):
+        visitor = gem5stats.CsvOutputVisitor(None)
+        values = visitor.visit_simstat(
+            gem5stats.get_simstat([[self.first, self.second], self.first])
+        )
+        columns = visitor.flatten_dict(values)
+        self.assertEqual(columns["0.0.count.value"], 11.0)
+        self.assertEqual(columns["0.1.count.value"], 22.0)
+        self.assertEqual(columns["1.count.value"], 11.0)
+
+    def test_unsupported_input_is_rejected_before_preparation(self):
+        with self.assertRaisesRegex(TypeError, "SimObjectVector"):
+            gem5stats.get_simstat((self.first, self.second))
         self.queue.assert_not_called()
         self.prepare.assert_not_called()
 

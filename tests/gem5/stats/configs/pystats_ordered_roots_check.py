@@ -75,18 +75,21 @@ selections = (
     ([first.generator, first.generator], [11.0, 11.0]),
 )
 for objects, values in selections:
-    output = visitor.visit_simstat([get_simstat(obj) for obj in objects])
+    output = visitor.visit_simstat(get_simstat(objects))
     assert isinstance(output, list)
     assert [entry["count"]["value"] for entry in output] == values
     assert [entry["name"] for entry in output] == ["generator"] * len(values)
 
-# Ordinary lists belong to the caller or dump selection layer.
-try:
-    get_simstat([first, second])
-except TypeError:
-    pass
-else:
-    raise AssertionError("get_simstat accepted a Python list")
+# Lists map recursively; vector conversion retains its own semantics.
+single = visitor.visit_simstat(get_simstat([first.generator]))
+assert isinstance(single, list) and len(single) == 1
+assert single[0]["count"]["value"] == 11.0
+nested = visitor.visit_simstat(get_simstat([root.processor.cores]))
+assert isinstance(nested, list) and len(nested) == 1
+assert [entry["generator"]["count"]["value"] for entry in nested[0]] == [
+    11.0,
+    22.0,
+]
 
 outdir = Path(m5.options.outdir)
 json_path = outdir / "ordered.json"

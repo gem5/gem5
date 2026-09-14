@@ -65,7 +65,7 @@ from m5.params import SimObjectVector
 
 from _m5 import stats as _m5_stats
 
-StatsSnapshot: TypeAlias = SimStat | list[SimStat]
+StatsSnapshot: TypeAlias = SimStat | list["StatsSnapshot"]
 
 
 class Visitor(ABC):
@@ -231,7 +231,8 @@ class CsvOutputVisitor(Visitor):
             entries = []
             for item in element:
                 entry = self.visit_simstat(item)
-                entry["name"] = item.name
+                if isinstance(item, SimStat):
+                    entry["name"] = item.name
                 entries.append(entry)
             return entries
 
@@ -266,6 +267,12 @@ class CsvOutputVisitor(Visitor):
                 for key, value in self.flatten_dict(v, new_key, sep).items():
                     add(key, value)
             elif isinstance(v, (list, tuple)):
+                if isinstance(d, (list, tuple)):
+                    for key, value in self.flatten_dict(
+                        v, new_key, sep
+                    ).items():
+                        add(key, value)
+                    continue
                 # Preserve existing indexed columns for vectors within groups.
                 for i, item in enumerate(v):
                     if isinstance(item, dict):
@@ -754,10 +761,10 @@ def _process_simobject_stats(
 
 
 def get_simstat(
-    root: SimObject | SimObjectVector,
+    root: SimObject | SimObjectVector | list,
     prepare_stats: bool = True,
 ) -> StatsSnapshot:
-    """Obtain statistics for a SimObject or SimObjectVector.
+    """Obtain object/vector statistics, mapping Python lists recursively.
 
     A SimObject returns a SimStat containing its statistics and descendants,
     without an outer object-name key. A SimObjectVector returns an ordered
@@ -768,11 +775,11 @@ def get_simstat(
     metadata. Names are never used as keys for the selected vector members.
     Selecting Root still exports the full hierarchy as a single SimStat.
 
-    Ordinary Python lists are not accepted. To select unrelated objects,
-    call ``get_simstat`` for each object, or use ``m5.stats.dump(roots=...)``
-    to write a selected collection to the registered outputs.
+    A Python list returns one recursive ``get_simstat`` result per element,
+    preserving order, nesting, and empty or singleton lists. Each recursive
+    call receives ``prepare_stats`` and obtains its own snapshot metadata.
 
-    :param root: The SimObject or SimObjectVector to export.
+    :param root: A SimObject, SimObjectVector, or list of supported inputs.
     :param prepare_stats: Prepare the selected statistics before conversion.
     :returns: A SimStat or ordered list, with singleton vectors unwrapped.
     """
@@ -782,10 +789,11 @@ def get_simstat(
         objects = list(root)
         if not all(isinstance(obj, SimObject) for obj in objects):
             raise TypeError("SimObjectVector entries must be SimObjects.")
+    elif isinstance(root, list):
+        return [get_simstat(obj, prepare_stats=prepare_stats) for obj in root]
     else:
         raise TypeError(
-            "get_simstat expects a SimObject or SimObjectVector; "
-            "call get_simstat separately for each object in a Python list."
+            "get_simstat expects a SimObject, SimObjectVector, or list."
         )
 
     if prepare_stats:
@@ -831,4 +839,4 @@ def _get_dump_stats(
         raise TypeError("Dump roots must be a flat list of SimObjects.")
     if len(roots) == 1:
         return get_simstat(roots[0], prepare_stats=False)
-    return [get_simstat(obj, prepare_stats=False) for obj in roots]
+    return get_simstat(roots, prepare_stats=False)
