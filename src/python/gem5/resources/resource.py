@@ -715,9 +715,10 @@ class SimpointDirectoryResource(SimpointResource):
         the files.
         """
         simpoint_weight_pair = []
-        with open(self.get_simpoint_file()) as simpoint_file, open(
-            self.get_weight_file()
-        ) as weight_file:
+        with (
+            open(self.get_simpoint_file()) as simpoint_file,
+            open(self.get_weight_file()) as weight_file,
+        ):
             while True:
                 line = simpoint_file.readline()
                 if not line:

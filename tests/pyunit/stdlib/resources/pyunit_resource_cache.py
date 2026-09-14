@@ -85,9 +85,11 @@ class ResourceCacheTestSuite(unittest.TestCase):
         stdout = io.StringIO()
         stderr = io.StringIO()
         argv = [str(script), "test-image", "-p", str(self.destination), *args]
-        with patch.object(sys, "argv", argv), contextlib.redirect_stdout(
-            stdout
-        ), contextlib.redirect_stderr(stderr):
+        with (
+            patch.object(sys, "argv", argv),
+            contextlib.redirect_stdout(stdout),
+            contextlib.redirect_stderr(stderr),
+        ):
             with self.assertRaises(SystemExit) as exit_status:
                 runpy.run_path(
                     str(script),
@@ -99,9 +101,10 @@ class ResourceCacheTestSuite(unittest.TestCase):
 
     def test_cli_materializes_missing_resource_in_both_output_modes(self):
         for quiet in (False, True):
-            with self.subTest(quiet=quiet), patch(
-                "gem5.resources.downloader.md5_file"
-            ) as cached_hash:
+            with (
+                self.subTest(quiet=quiet),
+                patch("gem5.resources.downloader.md5_file") as cached_hash,
+            ):
                 stdout, _ = self.run_resource_cli(*(["-q"] if quiet else []))
                 self.assertEqual(self.contents, self.destination.read_bytes())
                 self.assertEqual(not quiet, "Resource at:" in stdout)
@@ -138,15 +141,13 @@ class ResourceCacheTestSuite(unittest.TestCase):
     def test_opt_out_reuses_path_without_hashing_or_rewriting(self):
         self.destination.write_bytes(b"trusted without checking")
         for sparse in (True, False):
-            with self.subTest(sparse=sparse), patch(
-                "gem5.resources.downloader.md5_file"
-            ) as hash_file, patch(
-                "gem5.resources.downloader._sparsify_file"
-            ) as sparsify, patch(
-                "gem5.resources.downloader._densify_file"
-            ) as densify, patch(
-                "gem5.resources.downloader.warn"
-            ) as warn:
+            with (
+                self.subTest(sparse=sparse),
+                patch("gem5.resources.downloader.md5_file") as hash_file,
+                patch("gem5.resources.downloader._sparsify_file") as sparsify,
+                patch("gem5.resources.downloader._densify_file") as densify,
+                patch("gem5.resources.downloader.warn") as warn,
+            ):
                 result = self.obtain(
                     skip_cache_hash_check=True,
                     download_md5_mismatch=False,
@@ -168,9 +169,10 @@ class ResourceCacheTestSuite(unittest.TestCase):
     def test_opt_out_reuses_cached_directory(self):
         self.metadata["category"] = "directory"
         self.destination.mkdir()
-        with patch("gem5.resources.downloader.md5_dir") as hash_dir, patch(
-            "gem5.resources.downloader.warn"
-        ) as warn:
+        with (
+            patch("gem5.resources.downloader.md5_dir") as hash_dir,
+            patch("gem5.resources.downloader.warn") as warn,
+        ):
             self.obtain(skip_cache_hash_check=True)
         hash_dir.assert_not_called()
         warn.assert_called_once()
@@ -235,19 +237,16 @@ class ResourceCacheTestSuite(unittest.TestCase):
                 publish.set()
             return result
 
-        with patch(
-            "gem5.resources.downloader._write_sparse_file",
-            side_effect=write_resource,
-        ) as writer, patch(
-            "gem5.resources.downloader.md5_file"
-        ) as hash_file, patch(
-            "gem5.resources.downloader.warn"
-        ) as warn, patch.object(
-            stderr, "write", side_effect=write
-        ), contextlib.redirect_stdout(
-            stdout
-        ), contextlib.redirect_stderr(
-            stderr
+        with (
+            patch(
+                "gem5.resources.downloader._write_sparse_file",
+                side_effect=write_resource,
+            ) as writer,
+            patch("gem5.resources.downloader.md5_file") as hash_file,
+            patch("gem5.resources.downloader.warn") as warn,
+            patch.object(stderr, "write", side_effect=write),
+            contextlib.redirect_stdout(stdout),
+            contextlib.redirect_stderr(stderr),
         ):
             thread = threading.Thread(target=publisher)
             thread.start()
@@ -279,8 +278,9 @@ class ResourceCacheTestSuite(unittest.TestCase):
 
     def test_invalid_lock_timeout(self):
         for value in (None, "60", True, -1, float("inf"), float("nan")):
-            with self.subTest(value=value), self.assertRaises(
-                (TypeError, ValueError)
+            with (
+                self.subTest(value=value),
+                self.assertRaises((TypeError, ValueError)),
             ):
                 self.obtain(lock_timeout=value)
 
@@ -308,19 +308,22 @@ class ResourceCacheTestSuite(unittest.TestCase):
         }
         self.destination.write_bytes(b"trusted cache")
         for top in (workload, suite):
-            with self.subTest(category=top["category"]), patch(
-                "gem5.resources.resource.get_resource_json_obj",
-                return_value=copy.deepcopy(top),
-            ), patch(
-                "gem5.resources.resource.get_multiple_resource_json_obj",
-                side_effect=(
-                    [copy.deepcopy([workload]), [self.metadata]]
-                    if top is suite
-                    else [[self.metadata]]
+            with (
+                self.subTest(category=top["category"]),
+                patch(
+                    "gem5.resources.resource.get_resource_json_obj",
+                    return_value=copy.deepcopy(top),
                 ),
-            ), patch(
-                "gem5.resources.downloader.warn"
-            ) as warn:
+                patch(
+                    "gem5.resources.resource.get_multiple_resource_json_obj",
+                    side_effect=(
+                        [copy.deepcopy([workload]), [self.metadata]]
+                        if top is suite
+                        else [[self.metadata]]
+                    ),
+                ),
+                patch("gem5.resources.downloader.warn") as warn,
+            ):
                 resource = obtain_resource(
                     top["id"],
                     resource_directory=str(self.root),
@@ -332,8 +335,9 @@ class ResourceCacheTestSuite(unittest.TestCase):
                 disk = resource.get_parameters()["disk_image"]
                 self.assertEqual(str(self.destination), disk.get_local_path())
                 warn.assert_called_once()
-                with FileLock(f"{self.destination}.lock"), self.assertRaises(
-                    FileLockException
+                with (
+                    FileLock(f"{self.destination}.lock"),
+                    self.assertRaises(FileLockException),
                 ):
                     disk.get_local_path()
 
@@ -344,10 +348,13 @@ class FileLockWaitTestSuite(unittest.TestCase):
             name = str(Path(directory) / "resource")
             notices = []
             with FileLock(name) as owner:
-                with patch(
-                    "gem5.utils.filelock.time.monotonic",
-                    side_effect=[0, 0, 30, 60, 90],
-                ), patch("gem5.utils.filelock.time.sleep"):
+                with (
+                    patch(
+                        "gem5.utils.filelock.time.monotonic",
+                        side_effect=[0, 0, 30, 60, 90],
+                    ),
+                    patch("gem5.utils.filelock.time.sleep"),
+                ):
                     with self.assertRaisesRegex(
                         FileLockException, "90 seconds"
                     ):

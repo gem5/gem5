@@ -47,7 +47,7 @@ class ELFieInfo:
         end_pc_count: str | None = None,
         start: Optional["PcCountPair"] = None,
         end: Optional["PcCountPair"] = None,
-        **kwargs
+        **kwargs,
     ):
         self._start = start
         self._end = end
