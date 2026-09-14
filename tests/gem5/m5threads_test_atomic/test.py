@@ -41,14 +41,11 @@ binary = "test_atomic"
 url = config.resource_url + "/test-progs/pthreads/sparc64/" + binary
 test_atomic = DownloadedProgram(url, base_path, binary)
 
-verifiers = (
-    verifier.MatchStdoutNoPerf(joinpath(getcwd(), "ref/sparc64/simout.txt")),
-)
-
 for cpu in cpu_types:
     gem5_verify_config(
         name="test-atomic-" + cpu,
-        verifiers=verifiers,
+        # The workload is silent; atomic_system.py checks its exit status.
+        verifiers=(),
         fixtures=(test_atomic,),
         config=joinpath(getcwd(), "atomic_system.py"),
         config_args=[
