@@ -1505,7 +1505,13 @@ SDMAEngine::unserialize(CheckpointIn &cp)
     UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_mqd_addr, num_rlc_queues);
     UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_priv, num_rlc_queues);
     UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_static, num_rlc_queues);
-    UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_device_backed, num_rlc_queues);
+    {
+        std::string dummy;
+        if (cp.find(Serializable::currentSection(), "rlc_device_backed",
+                    dummy)) {
+            UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_device_backed, num_rlc_queues);
+        }
+    }
     UNSERIALIZE_UNIQUE_PTR_ARRAY(rlc_mqd, num_rlc_queues * 128);
 
     // Save RLC queue information into RLC0, RLC1

@@ -1424,8 +1424,13 @@ PM4PacketProcessor::unserialize(CheckpointIn &cp)
     UNSERIALIZE_UNIQUE_PTR_ARRAY(aql, num_queues);
     UNSERIALIZE_UNIQUE_PTR_ARRAY(doorbell, num_queues);
     UNSERIALIZE_UNIQUE_PTR_ARRAY(hqd_pq_control, num_queues);
-    UNSERIALIZE_UNIQUE_PTR_ARRAY(device_backed, num_queues);
-    UNSERIALIZE_UNIQUE_PTR_ARRAY(mqd_pkt_addr, num_queues);
+    {
+        std::string dummy;
+        if (cp.find(Serializable::currentSection(), "device_backed", dummy)) {
+            UNSERIALIZE_UNIQUE_PTR_ARRAY(device_backed, num_queues);
+            UNSERIALIZE_UNIQUE_PTR_ARRAY(mqd_pkt_addr, num_queues);
+        }
+    }
 
     for (int i = 0; i < num_queues; i++) {
         QueueDesc *mqd = new QueueDesc();
