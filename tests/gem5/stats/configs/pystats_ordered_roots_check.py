@@ -36,6 +36,7 @@ from m5.objects import (
     ScalarStatTester,
     SubSystem,
 )
+from m5.params import SimObjectVector
 from m5.stats.gem5stats import (
     CsvOutputVisitor,
     JsonOutputVistor,
@@ -80,7 +81,10 @@ for objects, values in selections:
     assert [entry["count"]["value"] for entry in output] == values
     assert [entry["name"] for entry in output] == ["generator"] * len(values)
 
-# Lists map recursively; vector conversion retains its own semantics.
+# Every collection retains its container, including singleton vectors.
+single_vector = visitor.visit_simstat(get_simstat(SimObjectVector([first])))
+assert isinstance(single_vector, list) and len(single_vector) == 1
+assert single_vector[0]["generator"]["count"]["value"] == 11.0
 single = visitor.visit_simstat(get_simstat([first.generator]))
 assert isinstance(single, list) and len(single) == 1
 assert single[0]["count"]["value"] == 11.0
@@ -112,21 +116,21 @@ assert [float(row["0.count.value"]) for row in rows] == [11.0, 22.0]
 assert [float(row["1.count.value"]) for row in rows] == [22.0, 11.0]
 assert all(row["0.name"] == row["1.name"] == "generator" for row in rows)
 
-# Singleton selections keep the existing object and CSV column formats.
+# Singleton dump selections also retain their array and indexed columns.
 single_csv_path = outdir / "singleton.csv"
 m5.stats.global_dump_roots = []
 m5.stats.outputList = [json_visitor, CsvOutputVisitor(single_csv_path)]
 m5.stats.dump(roots=[first.generator])
 output = json.loads(json_path.read_text())
-assert isinstance(output, dict)
-assert output["count"]["value"] == 11.0
-assert output["name"] == "generator"
+assert isinstance(output, list) and len(output) == 1
+assert output[0]["count"]["value"] == 11.0
+assert output[0]["name"] == "generator"
 m5.stats.global_dump_roots = [first.generator]
 m5.stats.dump()
-assert isinstance(json.loads(json_path.read_text()), dict)
+assert isinstance(json.loads(json_path.read_text()), list)
 with single_csv_path.open() as stream:
     rows = list(csv.DictReader(stream))
 assert len(rows) == 2
-assert all(float(row["count.value"]) == 11.0 for row in rows)
-assert all("0.count.value" not in row for row in rows)
+assert all(float(row["0.count.value"]) == 11.0 for row in rows)
+assert all("count.value" not in row for row in rows)
 m5.stats.global_dump_roots = []

@@ -125,12 +125,14 @@ class OrderedStatsTest(unittest.TestCase):
             [self.expected(22.0), self.expected(11.0)],
         )
 
-    def test_singleton_vector_matches_the_object(self):
+    def test_singleton_vector_remains_a_list(self):
         stats = gem5stats.get_simstat(SimObjectVector([self.first]))
-        self.assertIsInstance(stats, SimStat)
+        self.assertIsInstance(stats, list)
+        self.assertEqual(len(stats), 1)
+        self.assertIsInstance(stats[0], SimStat)
         self.assertEqual(
             gem5stats.JsonOutputVistor(None).visit_simstat(stats),
-            self.expected(11.0),
+            [self.expected(11.0)],
         )
 
     def test_singleton_vector_prepares_once(self):
@@ -215,11 +217,7 @@ class OrderedStatsTest(unittest.TestCase):
             with self.subTest(values=values):
                 self.assertEqual(
                     self.export(SimObjectVector(roots)),
-                    (
-                        self.expected(values[0])
-                        if len(values) == 1
-                        else [self.expected(v) for v in values]
-                    ),
+                    [self.expected(v) for v in values],
                 )
 
     def test_callers_can_collect_independent_snapshots(self):
@@ -306,31 +304,28 @@ class OrderedStatsTest(unittest.TestCase):
                 [float(row["1.count.value"]) for row in rows], [22.0, 11.0]
             )
 
-    def test_json_singleton_file_is_an_object(self):
+    def test_json_files_preserve_input_container(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "stats.json"
-            for roots in ([self.first], SimObjectVector([self.first])):
+            for roots, expected in (
+                (self.first, self.expected(11.0)),
+                ([self.first], [self.expected(11.0)]),
+                (SimObjectVector([self.first]), [self.expected(11.0)]),
+                ([], []),
+                (SimObjectVector([]), []),
+            ):
                 with self.subTest(roots=roots):
                     gem5stats.JsonOutputVistor(path).dump(roots)
-                    self.assertEqual(
-                        json.loads(path.read_text()), self.expected(11.0)
-                    )
+                    self.assertEqual(json.loads(path.read_text()), expected)
 
-    def test_csv_singleton_and_object_columns_are_unchanged(self):
+    def test_csv_object_and_singleton_collection_columns(self):
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "stats.csv"
-            visitor = gem5stats.CsvOutputVisitor(path)
-            for roots in (
-                self.first,
-                [self.first],
-                SimObjectVector([self.first]),
-            ):
-                visitor.dump(roots)
+            path = Path(directory) / "object.csv"
+            gem5stats.CsvOutputVisitor(path).dump(self.first)
             with path.open() as stream:
-                rows = list(csv.DictReader(stream))
-            self.assertEqual(len(rows), 3)
+                row = next(csv.DictReader(stream))
             self.assertEqual(
-                set(rows[0]),
+                set(row),
                 {
                     "time_conversion",
                     "creation_time",
@@ -339,11 +334,36 @@ class OrderedStatsTest(unittest.TestCase):
                     "count.value",
                 },
             )
-            self.assertEqual(float(rows[0]["count.value"]), 11.0)
-            self.assertTrue(all(row == rows[0] for row in rows))
+            self.assertEqual(float(row["count.value"]), 11.0)
+
+            path = Path(directory) / "collection.csv"
+            visitor = gem5stats.CsvOutputVisitor(path)
+            visitor.dump([self.first])
+            visitor.dump(SimObjectVector([self.first]))
+            with path.open() as stream:
+                rows = list(csv.DictReader(stream))
+            self.assertEqual(len(rows), 2)
+            self.assertEqual(
+                set(rows[0]),
+                {
+                    "0.time_conversion",
+                    "0.creation_time",
+                    "0.simulated_begin_time",
+                    "0.simulated_end_time",
+                    "0.count.value",
+                    "0.name",
+                },
+            )
+            self.assertEqual(float(rows[0]["0.count.value"]), 11.0)
+            self.assertEqual(rows[0]["0.name"], "generator")
+            self.assertEqual(rows[0], rows[1])
 
     def test_csv_rejects_changed_collection_schema_before_writing(self):
         for initial, changed in (
+            ([self.first], self.first),
+            (self.first, [self.first]),
+            (SimObjectVector([self.first]), self.first),
+            (self.first, SimObjectVector([self.first])),
             ([self.first], [self.first, self.second]),
             ([self.first, self.second], [self.first]),
             ([self.first, self.second], self.first),

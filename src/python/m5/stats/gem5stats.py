@@ -769,8 +769,7 @@ def get_simstat(
 
     A SimObject returns a SimStat containing its statistics and descendants,
     without an outer object-name key. A SimObjectVector returns an ordered
-    list of snapshots, except that a one-element vector returns its member's
-    SimStat for compatibility. An empty vector returns an empty list.
+    list of snapshots, including empty and one-element vectors.
 
     Each snapshot retains its local ``name`` and the same simulation timing
     metadata. Names are never used as keys for the selected vector members.
@@ -782,7 +781,7 @@ def get_simstat(
 
     :param root: A SimObject, SimObjectVector, or list of supported inputs.
     :param prepare_stats: Prepare the selected statistics before conversion.
-    :returns: A SimStat or ordered list, with singleton vectors unwrapped.
+    :returns: A SimStat for an object, or a list for a vector or Python list.
     """
     if isinstance(root, SimObject):
         objects = [root]
@@ -821,7 +820,7 @@ def get_simstat(
                 **stats.values,
             )
         )
-    return snapshots[0] if len(snapshots) == 1 else snapshots
+    return snapshots[0] if isinstance(root, SimObject) else snapshots
 
 
 def _get_dump_stats(
@@ -830,7 +829,7 @@ def _get_dump_stats(
     """Adapt the dump API's flat root selection to individual conversions.
 
     Dump visitors expect statistics to have been prepared by their caller.
-    Keep a single selected object in its historical unwrapped format.
+    Preserve the container even when only one object is selected.
     """
     if isinstance(roots, (SimObject, SimObjectVector)):
         return get_simstat(roots, prepare_stats=False)
@@ -838,6 +837,4 @@ def _get_dump_stats(
         isinstance(obj, SimObject) for obj in roots
     ):
         raise TypeError("Dump roots must be a flat list of SimObjects.")
-    if len(roots) == 1:
-        return get_simstat(roots[0], prepare_stats=False)
     return get_simstat(roots, prepare_stats=False)
