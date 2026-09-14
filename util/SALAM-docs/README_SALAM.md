@@ -35,6 +35,9 @@ On Ubuntu, install the SALAM-specific dependencies:
 sudo apt install llvm-dev clang gcc-arm-none-eabi
 ```
 
+The offline **cacti-SALAM** helper additionally needs `gcc-multilib` and
+`g++-multilib` on x86_64 Ubuntu; see **Power Modeling using cacti-SALAM**.
+
 # Building gem5-SALAM
 
 When building gem5-SALAM, there are multiple different binary types that can be created. Just like in gem5 the options are debug, opt, fast, prof, and perf. We recommend that users either use the opt or debug builds, as these are the build types we develop and test on.
@@ -69,7 +72,11 @@ The BFS example under **configs/example/gem5_library/salam-benchmarks** shows ho
 
 `run_system.sh` requires **M5_PATH** and **ACC_BENCH_PATH**. Point `ACC_BENCH_PATH` at the buildable `src/` tree (it has Makefiles). The sibling `workloads/` tree is a precompiled snapshot without Makefiles and is not the default path when `BUILD=True` (the script default).
 
-`--bench` should be a simple identifier such as `bfs`; it is passed to the simulation as the accelerator benchmark name. `--bench-path` separately specifies the workload directory relative to `ACC_BENCH_PATH`; if omitted, it defaults to the `--bench` value.
+`--bench-path` is the workload directory under `ACC_BENCH_PATH` (host ELF,
+IR, and `config.yml`). If omitted, it defaults to the `--bench` value.
+`--bench` is a simple identifier such as `bfs` that `run_system.sh` also
+passes as `--sys-name` to the configurator and as `--accbench` to
+`configs/SALAM/fs.py`. For the in-tree BFS flow, set both to `bfs`.
 
 ```bash
 export M5_PATH=/path/to/gem5
@@ -203,15 +210,17 @@ cd util/SALAM-tools/cacti-SALAM
 ```
 
 Create `$ACC_BENCH_PATH/benchmarks.list` with three whitespace-separated
-fields per line:
+fields per line (no spaces within a field):
 
 ```
 path/to/config.yml <benchmark-name> <config-name>
 ```
 
-The first field identifies the YAML configuration. The remaining two fields
-are labels written to the `Benchmark` and `Config` columns of
-`SALAM-out.csv`.
+The first field is the path to a workload YAML configuration. It is used as
+written when that path exists; otherwise it is resolved relative to
+`ACC_BENCH_PATH`. The remaining two fields are labels written to the
+`Benchmark` and `Config` columns of `SALAM-out.csv`; they are not YAML keys.
+`--bench-list` defaults to `$ACC_BENCH_PATH/benchmarks.list` when omitted.
 
 Then:
 

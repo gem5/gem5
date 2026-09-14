@@ -251,7 +251,7 @@ The main pieces involved are:
 * **util/SALAM-tools/SALAM-Configurator/systembuilder.py**
   Parses `config.yml`, assigns addresses, and generates:
 
-  * `$BENCH/{cluster}_hw_defines.h` (host/accelerator MMIO macros)
+  * `$ACC_BENCH_PATH/<bench-path>/{cluster}_hw_defines.h` (host/accelerator MMIO macros)
 
 * **configs/SALAM/fs.py**
   The checked-in full-system gem5 configuration. On ARM it calls `HWAcc.makeHWAcc()`.
@@ -277,7 +277,12 @@ util/SALAM-tools/SALAM-Configurator/systembuilder.py \
     --config-name config.yml
 ```
 
-This command generates `bfs/bfs_clstr_hw_defines.h`. The normal workflow does not require running it separately because `run_system.sh`, used in Step 8, invokes the configurator before building and running the workload.
+This writes `$ACC_BENCH_PATH/bfs/bfs_clstr_hw_defines.h` (for example
+`configs/example/gem5_library/salam-benchmarks/src/bfs/bfs_clstr_hw_defines.h`
+when `ACC_BENCH_PATH` points at `.../salam-benchmarks/src`). The normal
+workflow does not require running it separately because `run_system.sh`,
+used in Step 8, invokes the configurator before building and running the
+workload.
 
 ## Step 6: Write the Host Program
 
@@ -374,6 +379,10 @@ The script uses:
 * `ACC_BENCH_PATH` for the directory containing the workload and the shared `common/` directory.
 
 Point `ACC_BENCH_PATH` at the buildable **`src/`** tree (for example `$M5_PATH/configs/example/gem5_library/salam-benchmarks/src`). The sibling **`workloads/`** tree is a precompiled snapshot without Makefiles and is not the default path when `BUILD=True`.
+
+`--bench-path` selects `$ACC_BENCH_PATH/<bench-path>/`. If omitted, it
+defaults to `--bench`. For the in-tree BFS example, use
+`--bench bfs --bench-path bfs`.
 
 Example for the in-tree BFS workload:
 
