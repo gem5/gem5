@@ -125,8 +125,24 @@ class OrderedStatsTest(unittest.TestCase):
             [self.expected(22.0), self.expected(11.0)],
         )
 
-    def test_singleton_list_stays_a_list(self):
-        self.assertEqual(self.export([self.first]), [self.expected(11.0)])
+    def test_singleton_collections_match_the_object(self):
+        for roots in (
+            [self.first],
+            SimObjectVector([self.first]),
+            [[self.first]],
+        ):
+            with self.subTest(roots=roots):
+                stats = gem5stats.get_simstat(roots)
+                self.assertIsInstance(stats, SimStat)
+                self.assertEqual(
+                    gem5stats.JsonOutputVistor(None).visit_simstat(stats),
+                    self.expected(11.0),
+                )
+
+    def test_singleton_prepares_once(self):
+        gem5stats.get_simstat([self.first])
+        self.queue.assert_called_once_with()
+        self.prepare.assert_called_once_with(self.first)
 
     def test_empty_list(self):
         self.assertEqual(self.export([]), [])
@@ -140,13 +156,17 @@ class OrderedStatsTest(unittest.TestCase):
             with self.subTest(values=values):
                 self.assertEqual(
                     self.export(SimObjectVector(roots)),
-                    [self.expected(v) for v in values],
+                    (
+                        self.expected(values[0])
+                        if len(values) == 1
+                        else [self.expected(v) for v in values]
+                    ),
                 )
 
     def test_vector_inside_list(self):
         self.assertEqual(
             self.export([SimObjectVector([self.first, self.second])]),
-            [[self.expected(11.0), self.expected(22.0)]],
+            [self.expected(11.0), self.expected(22.0)],
         )
 
     def test_repeated_objects_are_not_deduplicated(self):
@@ -210,14 +230,31 @@ class OrderedStatsTest(unittest.TestCase):
                 [float(row["1.count.value"]) for row in rows], [22.0, 11.0]
             )
 
-    def test_csv_single_object_columns_are_unchanged(self):
+    def test_json_singleton_file_is_an_object(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "stats.json"
+            for roots in ([self.first], SimObjectVector([self.first])):
+                with self.subTest(roots=roots):
+                    gem5stats.JsonOutputVistor(path).dump(roots)
+                    self.assertEqual(
+                        json.loads(path.read_text()), self.expected(11.0)
+                    )
+
+    def test_csv_singleton_and_object_columns_are_unchanged(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "stats.csv"
-            gem5stats.CsvOutputVisitor(path).dump(self.first)
+            visitor = gem5stats.CsvOutputVisitor(path)
+            for roots in (
+                self.first,
+                [self.first],
+                SimObjectVector([self.first]),
+            ):
+                visitor.dump(roots)
             with path.open() as stream:
-                row = next(csv.DictReader(stream))
+                rows = list(csv.DictReader(stream))
+            self.assertEqual(len(rows), 3)
             self.assertEqual(
-                set(row),
+                set(rows[0]),
                 {
                     "time_conversion",
                     "creation_time",
@@ -226,14 +263,15 @@ class OrderedStatsTest(unittest.TestCase):
                     "count.value",
                 },
             )
-            self.assertEqual(float(row["count.value"]), 11.0)
+            self.assertEqual(float(rows[0]["count.value"]), 11.0)
+            self.assertTrue(all(row == rows[0] for row in rows))
 
     def test_csv_rejects_changed_collection_schema_before_writing(self):
         for initial, changed in (
             ([self.first], [self.first, self.second]),
             ([self.first, self.second], [self.first]),
-            ([self.first], self.first),
-            (self.first, [self.first]),
+            ([self.first, self.second], self.first),
+            (self.first, [self.first, self.second]),
         ):
             with self.subTest(initial=initial, changed=changed):
                 with tempfile.TemporaryDirectory() as directory:

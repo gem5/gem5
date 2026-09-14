@@ -758,13 +758,15 @@ def get_simstat(
     root: StatsRoot,
     prepare_stats: bool = True,
 ) -> StatsSnapshot:
-    """Obtain statistics while preserving the shape of the selection.
+    """Obtain statistics for one object or an ordered selection.
 
     A single SimObject returns a SimStat containing that object's statistics
     and descendants, without an outer object-name key. A list or
-    SimObjectVector returns an ordered list of snapshots. Empty collections,
-    one-element collections, nested collections, and repeated objects retain
-    their shape; object names are metadata, never keys for the selection.
+    SimObjectVector with one element is unwrapped, preserving the existing
+    single-object output. Larger collections return ordered lists of snapshots,
+    including repeated objects; empty collections return empty lists. The same
+    rule applies to nested selections. Object names are metadata, never keys
+    for the selection.
 
     Each SimStat retains its local ``name`` and the same simulation timing
     metadata. Selecting the simulation's Root still returns the full
@@ -772,7 +774,7 @@ def get_simstat(
 
     :param root: A SimObject, list, or SimObjectVector to export.
     :param prepare_stats: Prepare the selected statistics before conversion.
-    :returns: A SimStat or a list matching the supplied collection structure.
+    :returns: A SimStat or ordered list, with singleton selections unwrapped.
     """
     if prepare_stats:
         _m5_stats.processDumpQueue()
@@ -795,6 +797,8 @@ def get_simstat(
 
     def snapshot(selected):
         if isinstance(selected, (list, SimObjectVector)):
+            if len(selected) == 1:
+                return snapshot(selected[0])
             return [snapshot(obj) for obj in selected]
 
         stats = _process_simobject_stats(selected)

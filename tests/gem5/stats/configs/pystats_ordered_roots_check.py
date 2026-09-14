@@ -70,7 +70,6 @@ assert [core["generator"]["count"]["value"] for core in cores] == [11.0, 22.0]
 # Equal names, reversed inputs and repeated objects retain every entry.
 selections = (
     ([], []),
-    ([first.generator], [11.0]),
     ([first.generator, second.generator], [11.0, 22.0]),
     ([second.generator, first.generator], [22.0, 11.0]),
     ([first.generator, first.generator], [11.0, 11.0]),
@@ -82,8 +81,8 @@ for objects, values in selections:
     assert [entry["name"] for entry in output] == ["generator"] * len(values)
 
 nested = visitor.visit_simstat(get_simstat([root.processor.cores]))
-assert isinstance(nested, list) and len(nested) == 1
-assert [entry["generator"]["count"]["value"] for entry in nested[0]] == [
+assert isinstance(nested, list) and len(nested) == 2
+assert [entry["generator"]["count"]["value"] for entry in nested] == [
     11.0,
     22.0,
 ]
@@ -109,10 +108,21 @@ assert [float(row["0.count.value"]) for row in rows] == [11.0, 22.0]
 assert [float(row["1.count.value"]) for row in rows] == [22.0, 11.0]
 assert all(row["0.name"] == row["1.name"] == "generator" for row in rows)
 
-# A selected singleton remains a JSON array through the public dump API.
+# Singleton selections keep the existing object and CSV column formats.
+single_csv_path = outdir / "singleton.csv"
 m5.stats.global_dump_roots = []
-m5.stats.outputList = [json_visitor]
+m5.stats.outputList = [json_visitor, CsvOutputVisitor(single_csv_path)]
 m5.stats.dump(roots=[first.generator])
 output = json.loads(json_path.read_text())
-assert isinstance(output, list) and len(output) == 1
-assert output[0]["count"]["value"] == 11.0
+assert isinstance(output, dict)
+assert output["count"]["value"] == 11.0
+assert output["name"] == "generator"
+m5.stats.global_dump_roots = [first.generator]
+m5.stats.dump()
+assert isinstance(json.loads(json_path.read_text()), dict)
+with single_csv_path.open() as stream:
+    rows = list(csv.DictReader(stream))
+assert len(rows) == 2
+assert all(float(row["count.value"]) == 11.0 for row in rows)
+assert all("0.count.value" not in row for row in rows)
+m5.stats.global_dump_roots = []
