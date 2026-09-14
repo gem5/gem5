@@ -65,6 +65,7 @@ from m5.params import SimObjectVector
 
 from _m5 import stats as _m5_stats
 
+StatsRoot: TypeAlias = SimObject | SimObjectVector | list["StatsRoot"]
 StatsSnapshot: TypeAlias = SimStat | list["StatsSnapshot"]
 
 
@@ -761,7 +762,7 @@ def _process_simobject_stats(
 
 
 def get_simstat(
-    root: SimObject | SimObjectVector | list,
+    root: StatsRoot,
     prepare_stats: bool = True,
 ) -> StatsSnapshot:
     """Obtain object/vector statistics, mapping Python lists recursively.
