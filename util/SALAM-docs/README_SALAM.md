@@ -35,8 +35,8 @@ On Ubuntu, install the SALAM-specific dependencies:
 sudo apt install llvm-dev clang gcc-arm-none-eabi
 ```
 
-The offline **cacti-SALAM** helper additionally needs `gcc-multilib` and
-`g++-multilib` on x86_64 Ubuntu; see **Power Modeling using cacti-SALAM**.
+The offline **cacti-SALAM** helper additionally needs `g++-multilib` on
+x86_64 Ubuntu; see **Power Modeling using cacti-SALAM**.
 
 # Building gem5-SALAM
 
@@ -198,14 +198,25 @@ Then rebuild gem5 (`scons build/ARM/gem5.opt --with-salam`) before running simul
 
 **cacti-SALAM** (`util/SALAM-tools/cacti-SALAM`) is an **offline helper** for running CACTI on accelerator YAML configs. It is **not wired into** gem5-SALAM simulation.
 
-On x86_64 Ubuntu, its 32-bit build additionally requires:
+On x86_64 Ubuntu, CACTI's 32-bit build needs a 32-bit C/C++ toolchain.
+The ordinary gem5 and SALAM packages above do not provide `gcc -m32` /
+`g++ -m32`. Install:
 
 ```bash
-sudo apt install gcc-multilib g++-multilib
+sudo apt install g++-multilib
 ```
 
+On Ubuntu 22.04 and 24.04, that package also pulls `gcc-multilib`. You do
+not need to name `gcc-multilib` as a separate `apt install` argument.
+`g++-multilib` is the package that must be installed explicitly.
+
+`setup_cacti_SALAM.py` and `run_cacti_SALAM.py` both require **M5_PATH**
+and **ACC_BENCH_PATH** (the same exports used by `run_system.sh`).
+
 ```bash
-cd util/SALAM-tools/cacti-SALAM
+export M5_PATH=/path/to/gem5
+export ACC_BENCH_PATH=$M5_PATH/configs/example/gem5_library/salam-benchmarks/src
+cd $M5_PATH/util/SALAM-tools/cacti-SALAM
 ./setup_cacti_SALAM.py
 ```
 
@@ -228,7 +239,17 @@ Then:
 python3 ./run_cacti_SALAM.py --bench-list $ACC_BENCH_PATH/benchmarks.list --delay 1.0
 ```
 
-Results are written to `util/SALAM-tools/cacti-SALAM/results/SALAM-out.csv`. To use those (or other) coefficients in a simulation power estimate, add code in `LLVMInterface::printResults()` in **src/salam/llvm_interface.cc**.
+`run_cacti_SALAM.py` only models YAML Vars with `Type: SPM`. It checks for
+the CACTI binary at `$M5_PATH/ext/mcpat/cacti/cacti` before walking the
+YAML, so setup is required even when a config has no SPMs. The in-tree BFS
+`config.yml` uses RegisterBanks (`NODES`, `EDGES`, `LEVELS`,
+`LEVELCOUNTS`); the helper ignores those, prints that no SPMs were found,
+exits 0, and does not write `results/SALAM-out.csv`.
+
+When SPMs are present, results are written to
+`util/SALAM-tools/cacti-SALAM/results/SALAM-out.csv`. To use those (or other)
+coefficients in a simulation power estimate, add code in
+`LLVMInterface::printResults()` in **src/salam/llvm_interface.cc**.
 
 # Resources
 
