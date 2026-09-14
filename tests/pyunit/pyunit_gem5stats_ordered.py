@@ -24,7 +24,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Check that statistics exports preserve the shape of root selections."""
+"""Check object/vector conversion and legacy dump selections."""
 
 import csv
 import json
@@ -115,37 +115,50 @@ class OrderedStatsTest(unittest.TestCase):
             self.expected(11.0),
         )
 
-    def test_list_preserves_colliding_names_and_order(self):
+    def test_vector_preserves_colliding_names_and_order(self):
         self.assertEqual(
-            self.export([self.first, self.second]),
+            self.export(SimObjectVector([self.first, self.second])),
             [self.expected(11.0), self.expected(22.0)],
         )
         self.assertEqual(
-            self.export([self.second, self.first]),
+            self.export(SimObjectVector([self.second, self.first])),
             [self.expected(22.0), self.expected(11.0)],
         )
 
-    def test_singleton_collections_match_the_object(self):
-        for roots in (
-            [self.first],
-            SimObjectVector([self.first]),
-            [[self.first]],
-        ):
-            with self.subTest(roots=roots):
-                stats = gem5stats.get_simstat(roots)
-                self.assertIsInstance(stats, SimStat)
-                self.assertEqual(
-                    gem5stats.JsonOutputVistor(None).visit_simstat(stats),
-                    self.expected(11.0),
-                )
+    def test_singleton_vector_matches_the_object(self):
+        stats = gem5stats.get_simstat(SimObjectVector([self.first]))
+        self.assertIsInstance(stats, SimStat)
+        self.assertEqual(
+            gem5stats.JsonOutputVistor(None).visit_simstat(stats),
+            self.expected(11.0),
+        )
 
-    def test_singleton_prepares_once(self):
-        gem5stats.get_simstat([self.first])
+    def test_singleton_vector_prepares_once(self):
+        gem5stats.get_simstat(SimObjectVector([self.first]))
         self.queue.assert_called_once_with()
         self.prepare.assert_called_once_with(self.first)
 
-    def test_empty_list(self):
-        self.assertEqual(self.export([]), [])
+    def test_ordinary_lists_are_rejected_before_preparation(self):
+        for roots in (
+            [],
+            [self.first],
+            [self.first, self.second],
+            [[self.first]],
+            (self.first, self.second),
+        ):
+            with self.subTest(roots=roots):
+                with self.assertRaisesRegex(TypeError, "SimObjectVector"):
+                    gem5stats.get_simstat(roots)
+        self.queue.assert_not_called()
+        self.prepare.assert_not_called()
+
+    def test_nested_vectors_are_rejected_before_preparation(self):
+        with self.assertRaisesRegex(TypeError, "SimObject"):
+            gem5stats.get_simstat(
+                SimObjectVector([SimObjectVector([self.first, self.second])])
+            )
+        self.queue.assert_not_called()
+        self.prepare.assert_not_called()
 
     def test_vector_preserves_shape(self):
         for roots, values in (
@@ -163,15 +176,18 @@ class OrderedStatsTest(unittest.TestCase):
                     ),
                 )
 
-    def test_vector_inside_list(self):
+    def test_callers_can_collect_independent_snapshots(self):
+        snapshots = [
+            gem5stats.get_simstat(obj) for obj in (self.first, self.second)
+        ]
         self.assertEqual(
-            self.export([SimObjectVector([self.first, self.second])]),
+            gem5stats.JsonOutputVistor(None).visit_simstat(snapshots),
             [self.expected(11.0), self.expected(22.0)],
         )
 
     def test_repeated_objects_are_not_deduplicated(self):
         self.assertEqual(
-            self.export([self.first, self.first]),
+            self.export(SimObjectVector([self.first, self.first])),
             [self.expected(11.0), self.expected(11.0)],
         )
 
@@ -180,12 +196,12 @@ class OrderedStatsTest(unittest.TestCase):
             with self.subTest(name=name):
                 self.first._name = self.second._name = name
                 self.assertEqual(
-                    self.export([self.first, self.second]),
+                    self.export(SimObjectVector([self.first, self.second])),
                     [self.expected(11.0, name), self.expected(22.0, name)],
                 )
 
     def test_prepare_queue_once_for_collection(self):
-        gem5stats.get_simstat([self.first, SimObjectVector([self.second])])
+        gem5stats.get_simstat(SimObjectVector([self.first, self.second]))
         self.queue.assert_called_once_with()
         self.assertEqual(
             [call.args[0] for call in self.prepare.call_args_list],
@@ -193,7 +209,9 @@ class OrderedStatsTest(unittest.TestCase):
         )
 
     def test_skip_preparation(self):
-        gem5stats.get_simstat([self.first, self.second], prepare_stats=False)
+        gem5stats.get_simstat(
+            SimObjectVector([self.first, self.second]), prepare_stats=False
+        )
         self.queue.assert_not_called()
         self.prepare.assert_not_called()
 
@@ -205,6 +223,18 @@ class OrderedStatsTest(unittest.TestCase):
                 json.loads(path.read_text()),
                 [self.expected(11.0), self.expected(22.0)],
             )
+
+    def test_dump_rejects_nested_root_selections(self):
+        with tempfile.TemporaryDirectory() as directory:
+            for visitor_type in (
+                gem5stats.JsonOutputVistor,
+                gem5stats.CsvOutputVisitor,
+            ):
+                path = Path(directory) / "stats"
+                path.write_text("existing output")
+                with self.assertRaisesRegex(TypeError, "SimObject"):
+                    visitor_type(path).dump([[self.first]])
+                self.assertEqual(path.read_text(), "existing output")
 
     def test_csv_keeps_input_order_and_names_across_dumps(self):
         self.first._name = "first"
