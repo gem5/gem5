@@ -46,6 +46,7 @@
 
 #include "mem/cache/tags/indexing_policies/set_associative.hh"
 
+#include "base/intmath.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
 
 namespace gem5
@@ -58,17 +59,11 @@ SetAssociative::SetAssociative(const Params &p)
 {
 }
 
-uint32_t
-SetAssociative::extractSet(const Addr addr) const
-{
-    return (addr >> setShift) & setMask;
-}
-
 Addr
 SetAssociative::regenerateAddr(const Addr &tag,
                                const ReplaceableEntry* entry) const
 {
-    return (tag << tagShift) | (entry->getSet() << setShift);
+    return ((tag * numSets) + entry->getSet()) << setShift;
 }
 
 std::vector<ReplaceableEntry*>

@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 Inria
- * Copyright (c) 2012-2013, 2015, 2022, 2024 Arm Limited
+ * Copyright (c) 2012-2013, 2015, 2022, 2024, 2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -52,6 +52,7 @@
 #include <vector>
 
 #include "base/cache/associative_cache.hh"
+#include "base/intmath.hh"
 #include "base/sat_counter.hh"
 #include "base/types.hh"
 #include "mem/cache/prefetch/queued.hh"
@@ -80,14 +81,20 @@ namespace prefetch
 class StridePrefetcherHashedSetAssociative : public TaggedSetAssociative
 {
   protected:
+    /** Distance used to fold upper PC bits into the set hash. */
+    const int tagShift;
+
     uint32_t extractSet(const KeyType &key) const override;
     Addr extractTag(const Addr addr) const override;
 
   public:
     StridePrefetcherHashedSetAssociative(
         const StridePrefetcherHashedSetAssociativeParams &p)
-      : TaggedSetAssociative(p)
+        : TaggedSetAssociative(p), tagShift(setShift + floorLog2(numSets))
     {
+        fatal_if(!isPowerOf2(numSets),
+                 "# of sets must be a power of 2 to use "
+                 "StridePrefetcherHashedSetAssociative indexing");
     }
     ~StridePrefetcherHashedSetAssociative() = default;
 };

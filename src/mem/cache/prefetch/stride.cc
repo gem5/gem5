@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 Inria
- * Copyright (c) 2012-2013, 2015, 2022-2024 Arm Limited
+ * Copyright (c) 2012-2013, 2015, 2022-2024, 2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -215,7 +215,7 @@ StridePrefetcherHashedSetAssociative::extractSet(const KeyType &key) const
     const Addr pc = key.address;
     const Addr hash1 = pc >> 1;
     const Addr hash2 = hash1 >> tagShift;
-    return (hash1 ^ hash2) & setMask;
+    return (hash1 ^ hash2) % numSets;
 }
 
 Addr

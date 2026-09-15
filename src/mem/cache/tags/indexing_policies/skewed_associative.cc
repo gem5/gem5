@@ -1,4 +1,16 @@
 /*
+ * Copyright (c) 2026 Arm Limited
+ * All rights reserved
+ *
+ * The license below extends only to copyright in the software and shall
+ * not be construed as granting a license to any other intellectual
+ * property including but not limited to intellectual property relating
+ * to a hardware implementation of the functionality of the software
+ * licensed hereunder.  You may use the software subject to the license
+ * terms below provided that you ensure that this notice is replicated
+ * unmodified and in its entirety in all distributions of the software,
+ * modified or unmodified, in source code or in binary form.
+ *
  * Copyright (c) 2018 Inria
  * All rights reserved.
  *
@@ -43,8 +55,13 @@ namespace gem5
 
 SkewedAssociative::SkewedAssociative(const Params &p)
     : BaseIndexingPolicy(p, p.size / p.entry_size, floorLog2(p.entry_size)),
-      msbShift(floorLog2(numSets) - 1)
+      msbShift(floorLog2(numSets) - 1),
+      setMask(numSets - 1),
+      tagShift(setShift + floorLog2(numSets))
 {
+    fatal_if(!isPowerOf2(numSets),
+             "# of sets must be a power of 2 for skewed indexing");
+
     if (assoc > NUM_SKEWING_FUNCTIONS) {
         warn_once("Associativity higher than number of skewing functions. " \
                   "Expect sub-optimal skewing.\n");

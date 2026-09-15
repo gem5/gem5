@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2026 Arm Limited
  * Copyright (c) 2024 Pranith Kumar
  * All rights reserved.
  *
@@ -47,6 +48,7 @@
 
 #include "arch/generic/pcstate.hh"
 #include "base/intmath.hh"
+#include "base/logging.hh"
 #include "base/types.hh"
 #include "cpu/static_inst.hh"
 #include "mem/cache/replacement_policies/replaceable_entry.hh"
@@ -78,8 +80,12 @@ class BTBSetAssociative : public BTBIndexingPolicy
 
     BTBSetAssociative(const Params &p)
         : BTBIndexingPolicy(p, p.num_entries, p.set_shift),
+          setMask(numSets - 1),
+          tagShift(setShift + floorLog2(numSets)),
           tagMask(mask(p.tag_bits))
     {
+        fatal_if(!isPowerOf2(numSets),
+                 "# of sets must be a power of 2 for BTB indexing");
         setNumThreads(p.numThreads);
     }
 
@@ -135,6 +141,8 @@ class BTBSetAssociative : public BTBIndexingPolicy
     }
 
   private:
+    const unsigned setMask;
+    const int tagShift;
     const uint64_t tagMask;
     unsigned log2NumThreads;
 };

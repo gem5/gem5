@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018 Inria
- * Copyright (c) 2012-2014,2017 ARM Limited
+ * Copyright (c) 2012-2014,2017,2026 ARM Limited
  * All rights reserved.
  *
  * The license below extends only to copyright in the software and shall
@@ -81,15 +81,6 @@ class ReplaceableEntry;
  */
 class SetAssociative : public BaseIndexingPolicy
 {
-  protected:
-    /**
-     * Apply a hash function to calculate address set.
-     *
-     * @param addr The address to calculate the set for.
-     * @return The set index for given combination of address and way.
-     */
-    virtual uint32_t extractSet(const Addr addr) const;
-
   public:
     /**
      * Convenience typedef.
