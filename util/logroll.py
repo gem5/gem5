@@ -179,11 +179,12 @@ class TestLogroll(unittest.TestCase):
             mock_print.assert_has_calls(calls)
 
     def test_dump_and_exit(self):
-        with unittest.mock.patch(
-            "sys.exit"
-        ) as mock_sys_exit, unittest.mock.patch(
-            __name__ + ".dump_lines", new_callable=CopyingMock
-        ) as mock_dump_lines:
+        with (
+            unittest.mock.patch("sys.exit") as mock_sys_exit,
+            unittest.mock.patch(
+                __name__ + ".dump_lines", new_callable=CopyingMock
+            ) as mock_dump_lines,
+        ):
             idx = 1
             dump_and_exit(self.lines3, idx)
             mock_dump_lines.assert_called_with(self.lines3, idx)
@@ -206,11 +207,12 @@ class TestLogroll(unittest.TestCase):
             mock_print.assert_has_calls(calls)
 
     def test_sigusr1_filling_main(self):
-        with unittest.mock.patch(
-            "signal.signal"
-        ) as mock_signal, unittest.mock.patch(
-            __name__ + ".dump_lines", new_callable=CopyingMock
-        ) as mock_dump_lines:
+        with (
+            unittest.mock.patch("signal.signal") as mock_signal,
+            unittest.mock.patch(
+                __name__ + ".dump_lines", new_callable=CopyingMock
+            ) as mock_dump_lines,
+        ):
             signal_dict = self.mock_signal_dict(mock_signal)
 
             main(
@@ -228,11 +230,12 @@ class TestLogroll(unittest.TestCase):
             )
 
     def test_sigint_filling_main(self):
-        with unittest.mock.patch(
-            "signal.signal"
-        ) as mock_signal, unittest.mock.patch(
-            __name__ + ".dump_lines", new_callable=CopyingMock
-        ) as mock_dump_lines:
+        with (
+            unittest.mock.patch("signal.signal") as mock_signal,
+            unittest.mock.patch(
+                __name__ + ".dump_lines", new_callable=CopyingMock
+            ) as mock_dump_lines,
+        ):
             signal_dict = self.mock_signal_dict(mock_signal)
 
             with self.assertRaises(SystemExit):
@@ -248,11 +251,12 @@ class TestLogroll(unittest.TestCase):
             )
 
     def test_sigusr1_full_main(self):
-        with unittest.mock.patch(
-            "signal.signal"
-        ) as mock_signal, unittest.mock.patch(
-            __name__ + ".dump_lines", new_callable=CopyingMock
-        ) as mock_dump_lines:
+        with (
+            unittest.mock.patch("signal.signal") as mock_signal,
+            unittest.mock.patch(
+                __name__ + ".dump_lines", new_callable=CopyingMock
+            ) as mock_dump_lines,
+        ):
             signal_dict = self.mock_signal_dict(mock_signal)
 
             main(
@@ -272,11 +276,12 @@ class TestLogroll(unittest.TestCase):
             )
 
     def test_sigint_full_main(self):
-        with unittest.mock.patch(
-            "signal.signal"
-        ) as mock_signal, unittest.mock.patch(
-            __name__ + ".dump_lines", new_callable=CopyingMock
-        ) as mock_dump_lines:
+        with (
+            unittest.mock.patch("signal.signal") as mock_signal,
+            unittest.mock.patch(
+                __name__ + ".dump_lines", new_callable=CopyingMock
+            ) as mock_dump_lines,
+        ):
             signal_dict = self.mock_signal_dict(mock_signal)
 
             with self.assertRaises(SystemExit):
