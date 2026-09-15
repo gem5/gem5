@@ -91,7 +91,7 @@ class QueuedResponsePort : public ResponsePort
      * @param pkt Packet to send
      * @param when Absolute time (in ticks) to send packet
      */
-    void schedTimingResp(PacketPtr pkt, Tick when)
+    virtual void schedTimingResp(PacketPtr pkt, Tick when)
     { respQueue.schedSendTiming(pkt, when); }
 
     /** Check the list of buffered packets against the supplied
