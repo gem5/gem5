@@ -49,7 +49,7 @@ ProcessBarrier::operator()() const noexcept
 }
 
 BaseGlobalEvent::BaseGlobalEvent(Priority p, Flags f)
-    : barrier(numMainEventQueues, ProcessBarrier(this)),
+    : barrier(numMainEventQueues, ProcessBarrier{this}),
       barrierEvent(numMainEventQueues, NULL)
 {
 }
