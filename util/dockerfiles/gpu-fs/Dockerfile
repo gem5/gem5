@@ -38,7 +38,7 @@ RUN apt -y update && apt -y upgrade && \
     apt -y install build-essential git m4 scons zlib1g zlib1g-dev \
     libprotobuf-dev protobuf-compiler libprotoc-dev libgoogle-perftools-dev \
     python3-dev python-is-python3 doxygen libboost-all-dev \
-    libhdf5-serial-dev python3-pydot libpng-dev libelf-dev pkg-config wget
+    libhdf5-dev python3-pydot libpng-dev libelf-dev pkg-config wget
 
 # The follow were adapted from instructions at the URL below, accessed 4/12/24:
 # https://rocm.docs.amd.com/projects/install-on-linux/en/latest/how-to/

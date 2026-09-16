@@ -165,7 +165,7 @@ class RiscvBoard(
         )
 
     @staticmethod
-    def _read_int_file(path: str) -> Optional[int]:
+    def _read_int_file(path: str) -> int | None:
         try:
             with open(path) as f:
                 return int(f.read().strip())
@@ -173,7 +173,7 @@ class RiscvBoard(
             return None
 
     @staticmethod
-    def _read_dt_u32(path: str) -> Optional[int]:
+    def _read_dt_u32(path: str) -> int | None:
         try:
             with open(path, "rb") as f:
                 data = f.read(4)
@@ -186,7 +186,7 @@ class RiscvBoard(
         return int.from_bytes(data, byteorder="big")
 
     @staticmethod
-    def _read_cpu_list(path: str) -> Set[int]:
+    def _read_cpu_list(path: str) -> set[int]:
         try:
             with open(path) as f:
                 spec = f.read().strip()
@@ -205,7 +205,7 @@ class RiscvBoard(
                 cpus.add(int(chunk))
         return cpus
 
-    def _probe_kvm_one_reg(self, reg_id: int) -> Optional[int]:
+    def _probe_kvm_one_reg(self, reg_id: int) -> int | None:
         if not self._has_kvm_cores():
             return None
 
@@ -279,7 +279,7 @@ class RiscvBoard(
         )
         return self._default_timebase_frequency
 
-    def _detect_host_timebase_frequency(self) -> Optional[int]:
+    def _detect_host_timebase_frequency(self) -> int | None:
         if self._host_timebase_freq_cache is not None:
             return self._host_timebase_freq_cache
 
@@ -295,14 +295,14 @@ class RiscvBoard(
         return None
 
     @staticmethod
-    def _decode_dt_string_list(data: bytes) -> List[str]:
+    def _decode_dt_string_list(data: bytes) -> list[str]:
         return [
             entry.decode()
             for entry in data.rstrip(b"\0").split(b"\0")
             if entry
         ]
 
-    def _detect_kvm_host_frequency(self) -> Optional[int]:
+    def _detect_kvm_host_frequency(self) -> int | None:
         if self._kvm_host_freq_cache is not None:
             return self._kvm_host_freq_cache
 
@@ -548,7 +548,7 @@ class RiscvBoard(
         return False
 
     @overrides(AbstractBoard)
-    def get_dma_ports(self) -> List[Port]:
+    def get_dma_ports(self) -> list[Port]:
         raise Exception(
             "Cannot execute `get_dma_ports()`: Board does not have DMA ports "
             "to return. Use `has_dma_ports()` to check this."
@@ -878,7 +878,7 @@ class RiscvBoard(
         return "/dev/vda"
 
     @overrides(AbstractBoard)
-    def _pre_instantiate(self, full_system: Optional[bool] = None) -> Root:
+    def _pre_instantiate(self, full_system: bool | None = None) -> Root:
         self._configure_kvm_cores()
 
         # This is a bit of a hack necessary to get the RiscDemoBoard working
@@ -927,7 +927,7 @@ class RiscvBoard(
         self._setup_pma()
 
     @overrides(KernelDiskWorkload)
-    def get_default_kernel_args(self) -> List[str]:
+    def get_default_kernel_args(self) -> list[str]:
         m5ops_base = int(getattr(self, "m5ops_base", self._default_m5ops_base))
         args = [
             "console=ttyS0",

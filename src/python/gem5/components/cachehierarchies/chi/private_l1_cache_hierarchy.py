@@ -218,7 +218,7 @@ class PrivateL1CacheHierarchy(AbstractRubyCacheHierarchy):
 
     def _create_memory_controllers(
         self, board: AbstractBoard
-    ) -> List[MemoryController]:
+    ) -> list[MemoryController]:
         memory_controllers = []
         for rng, port in board.get_mem_ports():
             mc = MemoryController(self.ruby_system.network, rng, port)
@@ -228,7 +228,7 @@ class PrivateL1CacheHierarchy(AbstractRubyCacheHierarchy):
 
     def _create_dma_controllers(
         self, board: AbstractBoard
-    ) -> List[DMARequestor]:
+    ) -> list[DMARequestor]:
         dma_controllers = []
         for i, port in enumerate(board.get_dma_ports()):
             ctrl = DMARequestor(

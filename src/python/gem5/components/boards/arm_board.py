@@ -38,10 +38,10 @@
 
 import os
 from abc import ABCMeta
+from collections.abc import Sequence
 from typing import (
     List,
     Optional,
-    Sequence,
     Tuple,
 )
 
@@ -294,7 +294,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         return super().get_mem_ranges() + [self.realview.bootmem.range]
 
     @overrides(AbstractBoard)
-    def get_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
+    def get_mem_ports(self) -> Sequence[tuple[AddrRange, Port]]:
         # Note: Ruby needs to create a directory for the realview bootmem
         if self.get_cache_hierarchy().is_ruby():
             all_ports = [
@@ -344,7 +344,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         return True
 
     @overrides(AbstractBoard)
-    def get_dma_ports(self) -> List[Port]:
+    def get_dma_ports(self) -> list[Port]:
         # The DMA ports differ depending upon the cache hierarchy. The method
         # self.set_dma_ports takes care of that. In the case of ruby caches,
         # this method should initially return an empty list.
@@ -360,7 +360,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         self.system_port = port
 
     @overrides(AbstractBoard)
-    def _pre_instantiate(self, full_system: Optional[bool] = None) -> Root:
+    def _pre_instantiate(self, full_system: bool | None = None) -> Root:
         root = super()._pre_instantiate(full_system=full_system)
 
         # Add the PCI devices.
@@ -429,7 +429,7 @@ class ArmBoard(ArmSystem, AbstractBoard, KernelDiskWorkload):
         pass
 
     @overrides(KernelDiskWorkload)
-    def get_default_kernel_args(self) -> List[str]:
+    def get_default_kernel_args(self) -> list[str]:
         # The default kernel string is taken from the devices.py file.
         return [
             "console=ttyAMA0",

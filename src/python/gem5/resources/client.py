@@ -50,7 +50,7 @@ from .client_api.client_query import ClientQuery
 from .client_api.jsonclient import JSONClient
 
 
-def getFileContent(file_path: Path) -> Dict:
+def getFileContent(file_path: Path) -> dict:
     """
     Get the content of the file at the given path.
 
@@ -135,9 +135,9 @@ def _get_clientwrapper():
 
 
 def list_resources(
-    clients: Optional[List[str]] = None,
-    gem5_version: Optional[str] = core.gem5Version,
-) -> Dict[str, List[str]]:
+    clients: list[str] | None = None,
+    gem5_version: str | None = core.gem5Version,
+) -> dict[str, list[str]]:
     """
     List all the resources available
 
@@ -154,10 +154,10 @@ def list_resources(
 
 def get_resource_json_obj(
     resource_id,
-    resource_version: Optional[str] = None,
-    clients: Optional[List[str]] = None,
-    gem5_version: Optional[str] = core.gem5Version,
-) -> Dict:
+    resource_version: str | None = None,
+    clients: list[str] | None = None,
+    gem5_version: str | None = core.gem5Version,
+) -> dict:
     """
     Get the resource json object from the clients wrapper.
 
@@ -183,9 +183,9 @@ def get_resource_json_obj(
 
 
 def get_multiple_resource_json_obj(
-    client_queries: List[ClientQuery],
-    clients: Optional[List[str]] = None,
-) -> List[Dict]:
+    client_queries: list[ClientQuery],
+    clients: list[str] | None = None,
+) -> list[dict]:
     """
     Get the resource json object from the clients wrapper.
 
@@ -198,8 +198,8 @@ def get_multiple_resource_json_obj(
 
 
 def _create_clients(
-    config: Dict,
-) -> Dict:
+    config: dict,
+) -> dict:
     """
     This function creates respective client object for each source in the
     config file according to the type of source.
@@ -222,9 +222,9 @@ def _create_clients(
 
 
 def _list_all_resources(
-    clients: Optional[List[str]] = None,
-    gem5_version: Optional[str] = core.gem5Version,
-) -> Dict[str, List[str]]:
+    clients: list[str] | None = None,
+    gem5_version: str | None = core.gem5Version,
+) -> dict[str, list[str]]:
     global clientwrapper
     clients_to_search = (
         list(clientwrapper.keys()) if clients is None else clients
@@ -254,9 +254,9 @@ def _list_all_resources(
 
 
 def _get_resource_json_obj_from_client(
-    client_queries: List[ClientQuery],
-    clients: Optional[List[str]] = None,
-) -> Dict:
+    client_queries: list[ClientQuery],
+    clients: list[str] | None = None,
+) -> dict:
     """
     This function returns the resource object from the client with the
     given id and version.
@@ -292,9 +292,9 @@ def _get_resource_json_obj_from_client(
 
 
 def _get_all_resources_by_id(
-    client_queries: List[ClientQuery],
-    clients: Optional[List[str]] = None,
-) -> Dict[str, Any]:
+    client_queries: list[ClientQuery],
+    clients: list[str] | None = None,
+) -> dict[str, Any]:
     """
     This function returns all the resources with the given id from all the
     sources.
@@ -349,7 +349,7 @@ def _get_all_resources_by_id(
     return resources
 
 
-def _sort_resources(resources: List) -> List:
+def _sort_resources(resources: list) -> list:
     """
     Sorts the resources by ID.
 
@@ -360,7 +360,7 @@ def _sort_resources(resources: List) -> List:
     :return: A list of sorted resources.
     """
 
-    def sort_tuple(resource: Dict) -> Tuple:
+    def sort_tuple(resource: dict) -> tuple:
         """This is used for sorting resources by ID and version. First
         the ID is sorted, then the version. In cases where the version
         contains periods, it's assumed this is to separate a

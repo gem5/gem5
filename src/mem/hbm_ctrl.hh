@@ -71,6 +71,10 @@ class HBMCtrl : public MemCtrl
         return (respQueue.empty() && respQueuePC1.empty());
     }
 
+    bool allIntfDrained() const override;
+
+    DrainState drain() override;
+
   private:
 
     /**

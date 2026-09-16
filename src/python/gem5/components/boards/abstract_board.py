@@ -41,11 +41,11 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
+from collections.abc import Sequence
 from pathlib import Path
 from typing import (
     List,
     Optional,
-    Sequence,
     Tuple,
 )
 
@@ -165,7 +165,7 @@ class AbstractBoard:
         """
         return self.get_memory().get_uninterleaved_range()
 
-    def get_mem_ports(self) -> Sequence[Tuple[AddrRange, Port]]:
+    def get_mem_ports(self) -> Sequence[tuple[AddrRange, Port]]:
         """Get the memory ports exposed on this board
 
         .. note::
@@ -286,7 +286,7 @@ class AbstractBoard:
 
         func(**workload.get_parameters())
 
-    def get_workload(self) -> Optional[WorkloadResource]:
+    def get_workload(self) -> WorkloadResource | None:
         return self._workload
 
     @abstractmethod
@@ -315,7 +315,7 @@ class AbstractBoard:
         raise NotImplementedError
 
     @abstractmethod
-    def get_dma_ports(self) -> List[Port]:
+    def get_dma_ports(self) -> list[Port]:
         """Get the board's Direct Memory Access ports.
         This abstract method must be implemented within the subclasses if they
         support DMA and/or full system simulation.
@@ -389,7 +389,7 @@ class AbstractBoard:
         """
         raise NotImplementedError
 
-    def get_checkpoint_dir(self) -> Optional[Path]:
+    def get_checkpoint_dir(self) -> Path | None:
         return self._checkpoint
 
     @abstractmethod
@@ -466,7 +466,7 @@ class AbstractBoard:
             self.get_cache_hierarchy()._post_instantiate()
         self.get_memory()._post_instantiate()
 
-    def _pre_instantiate(self, full_system: Optional[bool] = None) -> Root:
+    def _pre_instantiate(self, full_system: bool | None = None) -> Root:
         """To be called immediately before ``m5.instantiate``. This is where
         ``_connect_things`` is executed by default and the root object is Root
         object is created and returned.

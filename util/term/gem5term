@@ -120,7 +120,7 @@ class TerminalClient:
                 sys.stdin.fileno(), termios.TCSANOW, self.saved_term_settings
             )
 
-    def connect(self, host: str, port: Union[str, int]) -> socket.socket:
+    def connect(self, host: str, port: str | int) -> socket.socket:
         """
         Create a connection to either a TCP/IP host or Unix domain socket.
 

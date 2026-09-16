@@ -212,7 +212,7 @@ class LinuxArmFSSystem(LinuxArmSystemBuilder, BaseFSSystem):
         machine_type="VExpress_GEM5_Foundation",
         aarch64_kernel=True,
         enable_dvm=False,
-        **kwargs
+        **kwargs,
     ):
         """Initialize an ARM system that supports full system simulation.
 
@@ -248,7 +248,7 @@ class LinuxArmFSSystemUniprocessor(
         self,
         machine_type="VExpress_GEM5_Foundation",
         aarch64_kernel=True,
-        **kwargs
+        **kwargs,
     ):
         BaseFSSystemUniprocessor.__init__(self, **kwargs)
         LinuxArmSystemBuilder.__init__(
@@ -263,7 +263,7 @@ class LinuxArmFSSwitcheroo(LinuxArmSystemBuilder, BaseFSSwitcheroo):
         self,
         machine_type="VExpress_GEM5_Foundation",
         aarch64_kernel=True,
-        **kwargs
+        **kwargs,
     ):
         BaseFSSwitcheroo.__init__(self, **kwargs)
         LinuxArmSystemBuilder.__init__(

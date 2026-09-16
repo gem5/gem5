@@ -369,7 +369,8 @@ class SimObjectVector(VectorParamValue):
     # Enumerate the params of each member of the SimObject vector. Creates
     # strings that will allow indexing into the vector by the python code and
     # allow it to be specified on the command line.
-    def enumerateParams(self, flags_dict={}, cmd_line_str="", access_str=""):
+    def enumerateParams(self, flags_dict=None, cmd_line_str="", access_str=""):
+        flags_dict = {} if flags_dict is None else flags_dict
         if hasattr(self, "_paramEnumed"):
             print(f"Cycle detected enumerating params at {cmd_line_str}?!")
         else:

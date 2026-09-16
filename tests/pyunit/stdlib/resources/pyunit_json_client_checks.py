@@ -142,7 +142,7 @@ class JSONClientTestSuite(unittest.TestCase):
     def tearDownClass(cls) -> None:
         os.remove(cls.file_path)
 
-    def verify_json(self, json: Dict) -> None:
+    def verify_json(self, json: dict) -> None:
         """
         This verifies the JSON file created in created in
         "create_temp_resources_json" has been loaded correctly into a Python

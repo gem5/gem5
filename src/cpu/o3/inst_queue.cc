@@ -1495,11 +1495,14 @@ InstructionQueue::doSquash(ThreadID tid)
                 // nonSpecInsts already when they are ready, and so we
                 // cannot always expect to find them
                 if (ns_inst_it == nonSpecInsts.end()) {
-                    // loads that became ready but stalled on a
-                    // blocked cache are alreayd removed from
-                    // nonSpecInsts, and have not faulted
+                    // Non-speculative instructions may already have been
+                    // removed from nonSpecInsts after commit releases
+                    // them for execution -- a barrier still at the ROB
+                    // head is the common case. Memory references may
+                    // also have been removed after becoming ready.
                     assert(squashed_inst->getFault() != NoFault ||
-                           squashed_inst->isMemRef());
+                           squashed_inst->isMemRef() ||
+                           squashed_inst->isAtCommit());
                 } else {
 
                     (*ns_inst_it).second = NULL;

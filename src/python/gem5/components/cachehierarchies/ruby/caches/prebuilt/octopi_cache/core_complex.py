@@ -72,7 +72,7 @@ class CoreComplex(SubSystem, RubyNetworkComponent):
     def __init__(
         self,
         board: AbstractBoard,
-        cores: List[AbstractCore],
+        cores: list[AbstractCore],
         ruby_system,
         l1i_size: str,
         l1i_assoc: int,

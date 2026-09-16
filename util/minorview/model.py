@@ -500,7 +500,8 @@ class IdedObj:
     """An object identified by an Id carrying paired data.
     The super class for Inst and Line"""
 
-    def __init__(self, id, pairs={}):
+    def __init__(self, id, pairs=None):
+        pairs = {} if pairs is None else pairs
         self.id = id
         self.pairs = pairs
 
@@ -520,7 +521,8 @@ class IdedObj:
 class Inst(IdedObj):
     """A non-fault instruction"""
 
-    def __init__(self, id, disassembly, addr, pairs={}):
+    def __init__(self, id, disassembly, addr, pairs=None):
+        pairs = {} if pairs is None else pairs
         super().__init__(id, pairs)
         if "nextAddr" in pairs:
             self.nextAddr = int(pairs["nextAddr"], 0)
@@ -544,7 +546,7 @@ class Inst(IdedObj):
 class InstFault(IdedObj):
     """A fault instruction"""
 
-    def __init__(self, id, fault, addr, pairs={}):
+    def __init__(self, id, fault, addr, pairs=None):
         super().__init__(id, pairs)
         self.fault = fault
         self.addr = addr
@@ -559,7 +561,7 @@ class InstFault(IdedObj):
 class Line(IdedObj):
     """A fetched line"""
 
-    def __init__(self, id, vaddr, paddr, size, pairs={}):
+    def __init__(self, id, vaddr, paddr, size, pairs=None):
         super().__init__(id, pairs)
         self.vaddr = vaddr
         self.paddr = paddr
@@ -575,7 +577,7 @@ class Line(IdedObj):
 class LineFault(IdedObj):
     """A faulting line"""
 
-    def __init__(self, id, fault, vaddr, pairs={}):
+    def __init__(self, id, fault, vaddr, pairs=None):
         super().__init__(id, pairs)
         self.vaddr = vaddr
         self.fault = fault
@@ -590,7 +592,8 @@ class LineFault(IdedObj):
 class BlobEvent:
     """Time event for a single blob"""
 
-    def __init__(self, unit, time, pairs={}):
+    def __init__(self, unit, time, pairs=None):
+        pairs = {} if pairs is None else pairs
         # blob's unit name
         self.unit = unit
         self.time = time
