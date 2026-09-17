@@ -45,6 +45,7 @@
 #include <vector>
 
 #include "arch/x86/fs_workload.hh"
+#include "arch/x86/isa.hh"
 #include "arch/x86/page_size.hh"
 #include "arch/x86/regs/int.hh"
 #include "arch/x86/regs/misc.hh"
@@ -377,8 +378,10 @@ X86_64Process::initState()
             tc->setMiscReg(misc_reg::Cr3, cr3);
 
             CR4 cr4 = 0;
-            //Turn on pae.
-            cr4.osxsave = 0; // Disable XSAVE and Proc Extended States
+            // AMX requires OSXSAVE and the tile XCR0 components.
+            auto *x86_isa = dynamic_cast<ISA *>(tc->getIsaPtr());
+            const bool enable_amx = x86_isa && x86_isa->amxState.seEnabled;
+            cr4.osxsave = enable_amx ? 1 : 0;
             cr4.osxmmexcpt = 0; // Operating System Unmasked Exception
             cr4.osfxsr = 1; // Operating System FXSave/FSRSTOR Support
             cr4.pce = 0; // Performance-Monitoring Counter Enable
@@ -393,6 +396,14 @@ X86_64Process::initState()
             cr4.fsgsbase = 1; // Enable FSGSBASE instructions
 
             tc->setMiscReg(misc_reg::Cr4, cr4);
+
+            if (enable_amx) {
+                // Internal XCR0 mirror: bit17=XTILECFG, bit18=XTILEDATA.
+                // Not a substitute for XGETBV/XSAVE correctness.
+                RegVal xcr0 = tc->readMiscRegNoEffect(misc_reg::Xcr0);
+                xcr0 |= (1ULL << 17) | (1ULL << 18) | 0x7;
+                tc->setMiscRegNoEffect(misc_reg::Xcr0, xcr0);
+            }
 
             CR8 cr8 = 0;
             tc->setMiscReg(misc_reg::Cr8, cr8);
@@ -629,9 +640,18 @@ X86_64Process::initState()
 
             // Setting pcide bit in CR4
             CR4 cr4 = tc->readMiscRegNoEffect(misc_reg::Cr4);
+            auto *x86_isa = dynamic_cast<ISA *>(tc->getIsaPtr());
+            const bool enable_amx = x86_isa && x86_isa->amxState.seEnabled;
             cr4.pcide = 1;
             cr4.fsgsbase = 1; // Enable FSGSBASE instructions
+            cr4.osxsave = enable_amx ? 1 : 0;
             tc->setMiscReg(misc_reg::Cr4, cr4);
+
+            if (enable_amx) {
+                RegVal xcr0 = tc->readMiscRegNoEffect(misc_reg::Xcr0);
+                xcr0 |= (1ULL << 17) | (1ULL << 18) | 0x7;
+                tc->setMiscRegNoEffect(misc_reg::Xcr0, xcr0);
+            }
         }
     }
 }
