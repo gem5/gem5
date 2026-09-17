@@ -47,6 +47,92 @@ from m5.objects import *
 # https://chipsandcheese.com/p/arms-neoverse-v2-in-awss-graviton-4
 
 
+# -----------------------------------------------------------------------
+#                Architecture version
+# -----------------------------------------------------------------------
+# Neoverse V2 implements Armv9.0-A: SVE2 with 128-bit vectors, no SME,
+# no TME. Without stating that here the model inherits gem5's generic
+# defaults, which advertise FEAT_SME and TME and omit FEAT_SVE2 -- so the
+# HWCAP bits seen by the simulated program describe a different machine,
+# and libraries that dispatch on them (OpenBLAS, Arm PL, oneDNN) select
+# kernels the real core would not run.
+
+
+class NeoverseV2_Release(Armv90):
+    """Full-system release: Armv9.0-A, what Neoverse V2 implements.
+
+    Use as ``system.release = NeoverseV2_Release()``; pair it with
+    ``system.sve_vl = 1`` (V2 is 4x128-bit, so one 128-bit granule).
+    """
+
+
+class NeoverseV2_SE_Release(ArmRelease):
+    """Syscall-emulation release: the same ISA surface without the
+    EL2/EL3 features, which SE mode has no use for. Built flat for the
+    same reason ArmDefaultSERelease is.
+    """
+
+    extensions = [
+        "FEAT_AES",
+        "FEAT_PMULL",
+        "FEAT_SHA1",
+        "FEAT_SHA256",
+        "FEAT_CRC32",
+        # Armv8.1
+        "FEAT_LSE",
+        "FEAT_RDM",
+        "FEAT_FHM",
+        # Armv8.2
+        "FEAT_SVE",
+        "FEAT_FP16",
+        "FEAT_DOTPROD",
+        "FEAT_F32MM",
+        "FEAT_F64MM",
+        "FEAT_I8MM",
+        "FEAT_BF16",
+        # Armv8.3
+        "FEAT_FCMA",
+        "FEAT_JSCVT",
+        "FEAT_PAuth",
+        "FEAT_LRCPC",
+        # Armv8.4
+        "FEAT_FLAGM",
+        "FEAT_FRINTTS",
+        "FEAT_LRCPC2",
+        # Armv8.5
+        "FEAT_FLAGM2",
+        "FEAT_RNG",
+        # Armv9.0
+        "FEAT_SVE2",
+        # The SVE crypto extensions are optional in Armv9.0. Graviton4
+        # (a Neoverse V2 implementation) reports SVEAES, SVEPMULL,
+        # SVEBITPERM and SVESHA3 in its HWCAP2 bits, so V2 has these four.
+        # See aws/aws-graviton-getting-started, runtime-feature-detection.md
+        "FEAT_SVE_AES",
+        "FEAT_SVE_PMULL128",
+        "FEAT_SVE_BitPerm",
+        "FEAT_SVE_SHA3",
+        # FEAT_SVE_SM4 is deliberately absent: Graviton4 reports SM3/SM4
+        # (the NEON forms) but not SVESM4.
+        #
+        # Also deliberately absent, because Graviton4 reports neither:
+        #   FEAT_SME, TME
+    ]
+
+
+class NeoverseV2_ISA(ArmISA):
+    """The ISA every Neoverse V2 thread gets.
+
+    BaseCPU.createThreads() instantiates ``self.ArchISA`` once per
+    thread, so overriding ArchISA on the core below gives every user the
+    right feature set with no action on their part, for any numThreads.
+    """
+
+    release_se = NeoverseV2_SE_Release()
+    # SVE vector length in 128-bit granules. V2 is 4x128-bit, so 1.
+    sve_vl_se = 1
+
+
 # Simple ALU Instructions have a latency of 1
 class NeoverseV2_Simple_Int(FUDesc):
     opList = [OpDesc(opClass="IntAlu", opLat=1)]
@@ -299,6 +385,10 @@ class NeoverseMMU(ArmMMU):
 
 
 class NeoverseV2(ArmO3CPU):
+
+    # Every thread gets the Armv9.0-A feature set defined above instead
+    # of gem5's generic default.
+    ArchISA = NeoverseV2_ISA
 
     # Backward latencies
     decodeToFetchDelay = 1
