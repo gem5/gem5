@@ -471,7 +471,6 @@ class L1Cache(Cache):
 
 # Instruction Cache
 class L1I(L1Cache):
-    mshrs = 16
     size = "64KiB"
     assoc = 8
     mshrs = 12
@@ -480,7 +479,6 @@ class L1I(L1Cache):
 
 # Data Cache
 class L1D(L1Cache):
-    mshrs = 16
     size = "64KiB"
     assoc = 8
     mshrs = 12
