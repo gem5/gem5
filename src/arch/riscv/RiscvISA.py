@@ -227,7 +227,7 @@ _EXTENSION_REGISTRY = {
     "Zicboz": {"implemented": True},
     "Ziccamoa": {"implemented": False},
     "Ziccamoc": {"implemented": False},
-    "Ziccif": {"implemented": True},
+    "Ziccif": {"implemented": False},
     "Zicclsm": {"implemented": False},
     "Ziccrse": {"implemented": False},
     "Zicfilp": {"implemented": False},
