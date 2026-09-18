@@ -143,3 +143,9 @@ class OptionParser(dict):
         self._optparse.print_help()
         if exitcode is not None:
             sys.exit(exitcode)
+
+
+# Provide a default module-level attribute for callers that invoke
+# m5.instantiate() directly and set attributes on the m5.options module
+# without calling m5.main.parse_options().
+citations_bib = None
