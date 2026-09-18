@@ -429,9 +429,7 @@ ScratchpadMemory::recvTimingReq(PacketPtr pkt, PortID recvPort,
         // the iterator, so advance it one step
         packetQueue.emplace(++i, pkt, when_to_send, idx);
 
-        if (!retryResp[idx] && !dequeueEvent.scheduled()) {
-            schedule(dequeueEvent, packetQueue.back().tick);
-        }
+        scheduleNextResponse();
     } else {
         pendingDelete.reset(pkt);
     }
@@ -474,18 +472,24 @@ ScratchpadMemory::dequeue()
     if (!retryResp[idx]) {
         packetQueue.pop_front();
 
-        // if the queue is not empty, schedule the next dequeue event,
-        // otherwise signal that we are drained if we were asked to do so
         if (!packetQueue.empty()) {
-            // if there were packets that got in-between then we
-            // already have an event scheduled, so use re-schedule
-            reschedule(dequeueEvent,
-                       std::max(packetQueue.front().tick, curTick()), true);
+            scheduleNextResponse();
         } else if (drainState() == DrainState::Draining) {
             DPRINTF(Drain, "Draining of ScratchpadMemory complete\n");
             signalDrainDone();
         }
     }
+}
+
+void
+ScratchpadMemory::scheduleNextResponse()
+{
+    if (packetQueue.empty() || dequeueEvent.scheduled() ||
+        retryResp[packetQueue.front().origin]) {
+        return;
+    }
+
+    schedule(dequeueEvent, std::max(packetQueue.front().tick, curTick()));
 }
 
 Tick
@@ -502,8 +506,8 @@ ScratchpadMemory::recvRespRetry(PortID id)
 {
     PortID idx = id + 1;
     assert(retryResp[idx]);
-
-    dequeue();
+    retryResp[idx] = false;
+    scheduleNextResponse();
 }
 
 Port &

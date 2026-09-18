@@ -312,6 +312,7 @@ class ScratchpadMemory : public AbstractMemory
      * the port where it will be sent as soon as possible.
      */
     void dequeue();
+    void scheduleNextResponse();
 
     EventFunctionWrapper dequeueEvent;
 
