@@ -261,13 +261,17 @@ class CommInterface : public BasicPioDevice
 
       private:
         CommInterface *owner;
+        std::queue<PacketPtr> outstandingPkts;
         MemoryRequest *readReq;
         MemoryRequest *writeReq;
 
       public:
         RegPort(const std::string &name, CommInterface *_owner,
                 PortID id = InvalidPortID)
-            : RequestPort(name), owner(_owner)
+            : RequestPort(name),
+              owner(_owner),
+              readReq(nullptr),
+              writeReq(nullptr)
         {}
         void
         setReadReq(MemoryRequest *req = nullptr)
@@ -290,7 +294,7 @@ class CommInterface : public BasicPioDevice
             return 0;
         }
         virtual void recvFunctional(PacketPtr pkt) {};
-        void sendPacket(PacketPtr pkt);
+        bool sendPacket(PacketPtr pkt);
         bool
         debug()
         {
