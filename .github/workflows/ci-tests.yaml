@@ -108,28 +108,26 @@ jobs:
               working-directory: ${{ github.workspace }}/tests
               id: dir-matrix
               run: |
-                  unset PREV
-                  echo "test-dirs-matrix=$(\
-                    ./main.py list gem5 \
-                    --suites | \
-                    grep "$SUITEUID:" | \
-                    cut -d: -f2 | \
-                    cut -d/ -f 2- | \
-                    xargs dirname | \
-                    sort -u  | \
-                    while read x; do \
-                      if [ -z "${PREV}" ] || [ "$x" != "${PREV}/*" ]; then \
-                        PREV=$x; \
-                        echo $x; \
-                      fi; \
-                    done  | \
-                    jq -ncR '[inputs]'\
-                  )" >>$GITHUB_OUTPUT
+                  ./main.py list gem5 --suites -q > "$RUNNER_TEMP/test-suites"
+                  test_dirs=$(jq -Rsc '
+                    split("\n") |
+                    map(select(startswith("SuiteUID:")) |
+                        split(":")[1] | split("/")[1:-1] | join("/")) |
+                    unique |
+                    if length == 0 then error("No TestLib suites found") else . end
+                  ' "$RUNNER_TEMP/test-suites")
+                  echo "test-dirs-matrix=$test_dirs" >> "$GITHUB_OUTPUT"
 
             - name: Get the build targets for testlib-quick-gem5-builds
               working-directory: ${{ github.workspace }}/tests
               id: build-matrix
-              run: echo "build-matrix=$(./main.py list --build-targets -q | jq -ncR '[inputs]')" >>$GITHUB_OUTPUT
+              run: |
+                  ./main.py list --build-targets -q > "$RUNNER_TEMP/build-targets"
+                  build_matrix=$(jq -Rsc '
+                    split("\n") | map(select(length > 0)) |
+                    if length == 0 then error("No TestLib build targets found") else . end
+                  ' "$RUNNER_TEMP/build-targets")
+                  echo "build-matrix=$build_matrix" >> "$GITHUB_OUTPUT"
 
         outputs:
             build-matrix: ${{ steps.build-matrix.outputs.build-matrix }}
