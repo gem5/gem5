@@ -254,9 +254,19 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/sst-env:latest
         timeout-minutes: 240
+        needs: get-date
 
         steps:
             - uses: actions/checkout@v7
+
+            - name: Cache the SST build
+              uses: actions/cache@v6
+              with:
+                  path: build/*
+                  key: sst-build-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      sst-build
+
             - name: Build RISCV/libgem5_opt.so with SST
               run: scons build/RISCV/libgem5_opt.so --without-tcmalloc --duplicate-sources --ignore-style -j $(nproc)
             - name: Makefile ext/sst
@@ -275,11 +285,22 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/systemc-env:latest
         timeout-minutes: 180
-
+        needs: get-date
         steps:
             - uses: actions/checkout@v7
+            - name: Cache the build
+              uses: actions/cache@v6
+              with:
+                  path: build/*
+                  key: systemc-build-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      systemc-build
+
             - name: Build ARM/gem5.opt
-              run: scons build/ARM/gem5.opt --ignore-style --duplicate-sources -j$(nproc)
+              run: |
+                  # The cached shared-library build has USE_SYSTEMC disabled.
+                  scons defconfig build/ARM build_opts/ARM --ignore-style
+                  scons build/ARM/gem5.opt --ignore-style --duplicate-sources -j$(nproc)
             - name: disable systemc
               run: scons setconfig build/ARM --ignore-style USE_SYSTEMC=n
             - name: Build ARM/libgem5_opt.so
@@ -301,11 +322,20 @@ jobs:
         env:
             GEM5_RESOURCE_DIR: /gem5-resource-cache
         timeout-minutes: 360 # 6 hours
+        needs: get-date
         steps:
             - uses: actions/checkout@v7
             - name: Checkout DRAMSys
               working-directory: ${{ github.workspace }}/ext/dramsys
               run: git clone https://github.com/tukl-msd/DRAMSys --branch v5.6.0 --depth 1 DRAMSys
+
+            - name: Cache the build
+              uses: actions/cache@v6
+              with:
+                  path: build/*
+                  key: dramsys-build-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      dramsys-build
 
               # gem5 is built separately because it depends on the DRAMSys library
             - name: Build gem5
