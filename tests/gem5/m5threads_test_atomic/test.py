@@ -31,11 +31,8 @@ Test file for the m5threads atomic test
 from testlib import *
 
 cpu_types = (
-    # We're currently ignoring these cpu_types (therefore, disabling the test)
-    # due to a `fatal:syscall set_tid_address (#166)` fatal error being thrown.
-    # https://github.com/gem5/gem5/issues/3449
-    # 'DerivO3CPU',
-    # 'TimingSimpleCPU',
+    "DerivO3CPU",
+    "TimingSimpleCPU",
 )
 
 base_path = joinpath(config.bin_path, "pthreads", "sparc64")
@@ -44,14 +41,11 @@ binary = "test_atomic"
 url = config.resource_url + "/test-progs/pthreads/sparc64/" + binary
 test_atomic = DownloadedProgram(url, base_path, binary)
 
-verifiers = (
-    verifier.MatchStdoutNoPerf(joinpath(getcwd(), "ref/sparc64/simout.txt")),
-)
-
 for cpu in cpu_types:
     gem5_verify_config(
         name="test-atomic-" + cpu,
-        verifiers=verifiers,
+        # The workload is silent; atomic_system.py checks its exit status.
+        verifiers=(),
         fixtures=(test_atomic,),
         config=joinpath(getcwd(), "atomic_system.py"),
         config_args=[
@@ -64,5 +58,5 @@ for cpu in cpu_types:
         ],
         valid_isas=(constants.all_compiled_tag,),
         valid_hosts=constants.supported_hosts,
-        length=constants.long_tag,
+        length=constants.quick_tag,
     )
