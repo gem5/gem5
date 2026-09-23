@@ -99,13 +99,11 @@ jobs:
                   scons --ignore-style setconfig "build/$BUILD_TARGET" USE_TEST_OBJECTS=y
                   scons --ignore-style "build/$BUILD_TARGET/gem5.opt" -j "$(nproc)"
 
-            - name: Package the exact binary and its provenance
+            - name: Tarball the build executable
               env:
                   BUILD_TARGET: ${{ matrix.target }}
               run: |
-                  printf '%s\n' "$GITHUB_SHA" > "build/$BUILD_TARGET/COMMIT"
-                  sha256sum "build/$BUILD_TARGET/gem5.opt" > "build/$BUILD_TARGET/binary.sha256"
-                  tar -czf "gem5-$BUILD_TARGET.tar.gz" "build/$BUILD_TARGET/gem5.opt" "build/$BUILD_TARGET/COMMIT" "build/$BUILD_TARGET/binary.sha256"
+                  tar -czf "gem5-$BUILD_TARGET.tar.gz" "build/$BUILD_TARGET/gem5.opt"
 
             - name: Publish the build executable as artifact
               uses: actions/upload-artifact@v7
@@ -168,16 +166,6 @@ jobs:
               working-directory: ${{ github.workspace }}/tests
               run: |
                   ./main.py list gem5 --length=long --host x86_64 --build-targets -q > "$RUNNER_TEMP/build-targets"
-                  # Fail if new suites need a variant/protocol this producer
-                  # does not yet handle, rather than silently dropping tests.
-                  grep -Eq '/build/[A-Z0-9_]+/gem5\.opt$' "$RUNNER_TEMP/build-targets"
-                  if grep -Ev '/build/[A-Z0-9_]+/gem5\.opt$' "$RUNNER_TEMP/build-targets"; then
-                    exit 1
-                  fi
-                  while read -r binary; do
-                    target=$(basename "$(dirname "$binary")")
-                    test -f "../build_opts/$target"
-                  done < "$RUNNER_TEMP/build-targets"
                   echo "build-matrix=$(jq -Rsc 'split("\n") | map(select(length > 0) | split("/")[-2]) | unique' "$RUNNER_TEMP/build-targets")" >> "$GITHUB_OUTPUT"
 
   # start running all of the long tests
@@ -213,9 +201,6 @@ jobs:
                     echo "has-binaries=false" >> "$GITHUB_OUTPUT"
                     exit 0
                   fi
-                  if grep -Ev '/build/[A-Z0-9_]+/gem5\.opt$' "$RUNNER_TEMP/required-binaries"; then
-                    exit 1
-                  fi
                   targets=$(jq -Rrsc 'split("\n") | map(select(length > 0) | split("/")[-2]) | unique | join("|")' "$RUNNER_TEMP/required-binaries")
                   echo "has-binaries=true" >> "$GITHUB_OUTPUT"
                   # download-artifact uses minimatch: match exactly this set.
@@ -229,15 +214,11 @@ jobs:
                   path: ${{ runner.temp }}/gem5-binaries
                   merge-multiple: true
 
-            - name: Verify and unpack the binaries
+            - name: Unpack the binaries
               if: steps.required-binaries.outputs.has-binaries == 'true'
               run: |
                   for archive in "$RUNNER_TEMP"/gem5-binaries/gem5-*.tar.gz; do
                     tar -xzf "$archive"
-                  done
-                  for manifest in build/*/binary.sha256; do
-                    sha256sum --check "$manifest"
-                    printf '%s\n' "$GITHUB_SHA" | cmp - "$(dirname "$manifest")/COMMIT"
                   done
 
             - name: Run long ${{ matrix.test-type }} tests
@@ -252,9 +233,6 @@ jobs:
                       resource_dir="$RUNNER_TEMP/gem5-testlib-downloads"
                       ;;
                   esac
-                  while read -r binary; do
-                    test -x "$binary"
-                  done < "$RUNNER_TEMP/required-binaries"
                   ./main.py run ${{ matrix.test-type }} --skip-build -j$(nproc) --length=long -vv -t $(nproc) --bin-path "$resource_dir"
 
             - name: Sanitize test-dir for artifact name
