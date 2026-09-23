@@ -44,6 +44,10 @@ variable "TAG" {
   default = "latest"
 }
 
+variable "PACKAGE_REFRESH" {
+  default = "local"
+}
+
 # Common attributes across all targets. Note: these can be overwritten.
 target "common" {
   # Here we are enabling multi-platform builds. We are compiling to ARM64 and
@@ -72,10 +76,7 @@ group "default" {
     "ubuntu-releases",
     "gpu-fs",
     "sst",
-    "systemc",
-    "devcontainer",
-    "devcontainer-demo",
-    "devcontainer-workloads"
+    "systemc"
   ]
 }
 
@@ -393,6 +394,7 @@ target "devcontainer" {
   }
   args = {
     BASE_IMAGE = "base"
+    PACKAGE_REFRESH = PACKAGE_REFRESH
   }
   context = "devcontainer"
   target = "development"
@@ -417,4 +419,9 @@ target "devcontainer-workloads" {
   cache-from = ["${CACHE_PREFIX}/devcontainer-workloads:${CACHE_TAG}"]
   cache-to = ["${CACHE_PREFIX}/devcontainer-workloads:${CACHE_TAG}"]
   tags = ["${IMAGE_URI}/devcontainer-workloads:${TAG}"]
+}
+
+# Published separately after the complete devcontainer smoke tests pass.
+group "devcontainers" {
+  targets = ["devcontainer", "devcontainer-demo", "devcontainer-workloads"]
 }

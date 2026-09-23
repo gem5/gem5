@@ -42,6 +42,8 @@ FROM ${BASE_IMAGE} AS development
 LABEL org.opencontainers.image.source=https://github.com/gem5/gem5
 LABEL org.opencontainers.image.licenses=BSD-3-Clause
 
+# Change this value when publishing to refresh the additional packages.
+ARG PACKAGE_REFRESH=local
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ccache \
     locales \
