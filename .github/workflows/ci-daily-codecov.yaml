@@ -188,7 +188,7 @@ jobs:
             - name: disable systemc
               run: scons setconfig build/ARM --ignore-style USE_SYSTEMC=n
             - name: Build ARM/libgem5_opt.so
-              run: scons build/ARM/libgem5_opt.so --with-cxx-config --without-python --without-tcmalloc -j$(nproc) --duplicate-sources
+              run: scons build/ARM/libgem5_opt.so --with-cxx-config --without-python --without-tcmalloc --gcov -j$(nproc) --duplicate-sources
             - name: Compile gem5 within SystemC
               working-directory: ${{ github.workspace }}/util/systemc/gem5_within_systemc
               run: make
