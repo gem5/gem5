@@ -82,15 +82,15 @@ jobs:
         steps:
             - uses: actions/checkout@v7
 
-            - name: Cache the producer's incremental build
+            - name: Cache the incremental build
               uses: actions/cache@v6
               with:
                   path: build/${{ matrix.target }}
-                  key: testlib-binary-build-${{ matrix.target }}-${{ needs.get-date.outputs.date }}
+                  key: testlib-build-${{ matrix.target }}-${{ needs.get-date.outputs.date }}
                   restore-keys: |
-                      testlib-binary-build-${{ matrix.target }}-
+                      testlib-build-${{ matrix.target }}
 
-            - name: Build the TestLib binary
+            - name: Build the TestLib target
               env:
                   BUILD_TARGET: ${{ matrix.target }}
               run: |
@@ -107,7 +107,7 @@ jobs:
                   sha256sum "build/$BUILD_TARGET/gem5.opt" > "build/$BUILD_TARGET/binary.sha256"
                   tar -czf "gem5-$BUILD_TARGET.tar.gz" "build/$BUILD_TARGET/gem5.opt" "build/$BUILD_TARGET/COMMIT" "build/$BUILD_TARGET/binary.sha256"
 
-            - name: Publish the execution artifact
+            - name: Publish the build executable as artifact
               uses: actions/upload-artifact@v7
               with:
                   # Keep names stable when rerunning only failed consumers.

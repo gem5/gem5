@@ -206,9 +206,9 @@ jobs:
               if: ${{ endsWith(matrix.build-target, 'build/ALL/gem5.opt') }}
               with:
                   path: build/ALL
-                  key: testlib-binary-build-ALL-${{ needs.get-date.outputs.date }}
+                  key: testlib-build-ALL-${{ needs.get-date.outputs.date }}
                   restore-keys: |
-                      testlib-binary-build-ALL-
+                      testlib-build-ALL-
 
             - name: Build gem5
               run: scons ${{ matrix.build-target }} -j $(nproc)
