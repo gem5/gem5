@@ -1,0 +1,34 @@
+{
+    "name": "gem5 Demonstration Container",
+    "image": "ghcr.io/gem5/devcontainer-demo:latest",
+    "hostRequirements": {
+        "cpus": 8,
+        "memory": "16gb",
+        "storage": "32gb"
+    },
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "eamodio.gitlens",
+                "GitHub.copilot",
+                "GitHub.copilot-chat",
+                "GitHub.vscode-pull-request-github",
+                "ms-python.debugpy",
+                "ms-python.isort",
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-vscode.cpptools-extension-pack",
+                "ms-vscode.makefile-tools",
+                "ms-vscode-remote.remote-containers",
+                "Tsinghua-Hexin-Joint-Institute.gem5-slicc"
+            ]
+        }
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+        "ghcr.io/devcontainers/features/github-cli:1": {},
+        "ghcr.io/devcontainers-extra/features/actionlint:1": {},
+        "ghcr.io/devcontainers-extra/features/vscode-cli:1": {}
+    },
+    "onCreateCommand": "./.devcontainer/on-create.sh"
+}

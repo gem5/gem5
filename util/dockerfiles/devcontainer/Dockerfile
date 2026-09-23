@@ -35,31 +35,13 @@
 #
 # `docker buildx bake devcontainer --push`
 
-# Stage 1: We build the stable version of gem5.
-# In the next stage this is copied into /usr/local/bin/gem5. This ensures
-# there is a pre-built gem5 binary in each devcontainer. This can save time
-# if the container is used for education or demonstration purposes.
-FROM ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest AS builder
+# Keep the development environment independent of the demo executable.
+ARG BASE_IMAGE=ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+FROM ${BASE_IMAGE} AS development
 
 LABEL org.opencontainers.image.source=https://github.com/gem5/gem5
 LABEL org.opencontainers.image.licenses=BSD-3-Clause
 
-RUN wget https://github.com/gem5/gem5/archive/refs/tags/v24.1.0.1.tar.gz && \
-    tar xzf v24.1.0.1.tar.gz && mv gem5-24.1.0.1 gem5 && rm v24.1.0.1.tar.gz
-WORKDIR /gem5
-RUN scons build/ALL/gem5.opt -j`nproc`
-
-# Stage 2: Create the devcontainer image.
-# This includes all dependencies for building and running gem5, the
-# dependencies for developing gem5, and a pre-built gem5 binary.
-FROM ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-COPY --from=builder /gem5/build/ALL/gem5.opt /usr/local/bin/gem5
-
-# Stage 3: Install additional packages.
-# While the base image includes all dependencies for building and running gem5,
-# we install packages which are useful when running in a dev container and/or
-# developing gem5. (e.g. vim to edit files, qemu for building disk images,
-# etc.).
 RUN apt -y update  && \
     apt -y install \
     vim \
@@ -77,3 +59,21 @@ RUN apt -y update  && \
 
 RUN locale-gen en_US.UTF-8
 ENV LANG=en_US.UTF-8
+
+# Build a release executable only for the optional demonstration image.
+FROM ${BASE_IMAGE} AS release-builder
+ARG GEM5_VERSION=25.1.0.1
+ARG BUILD_JOBS=2
+RUN wget -O /tmp/gem5.tar.gz \
+        "https://github.com/gem5/gem5/archive/refs/tags/v${GEM5_VERSION}.tar.gz" && \
+    mkdir /gem5 && \
+    tar xzf /tmp/gem5.tar.gz -C /gem5 --strip-components=1 && \
+    rm /tmp/gem5.tar.gz
+WORKDIR /gem5
+RUN scons build/ALL/gem5.fast -j"${BUILD_JOBS}"
+
+FROM development AS demo
+ARG GEM5_VERSION=25.1.0.1
+LABEL org.opencontainers.image.version=${GEM5_VERSION}
+COPY --from=release-builder /gem5/build/ALL/gem5.fast \
+    /usr/local/bin/gem5-release

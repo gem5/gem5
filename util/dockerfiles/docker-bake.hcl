@@ -73,7 +73,8 @@ group "default" {
     "gpu-fs",
     "sst",
     "systemc",
-    "devcontainer"
+    "devcontainer",
+    "devcontainer-demo"
   ]
 }
 
@@ -388,7 +389,17 @@ target "devcontainer" {
   annotations = ["index,manifest:org.opencontainers.image.description=A devcontainer image for gem5 development referenced in the repo's ./devcontainer/devcontainer.json file. Includes all dependencies required for gem5 development."]
   dependencies = ["devcontainer"]
   context = "devcontainer"
+  target = "development"
   cache-from = ["${CACHE_PREFIX}/devcontainer:${CACHE_TAG}"]
   cache-to = ["${CACHE_PREFIX}/devcontainer:${CACHE_TAG}"]
   tags = ["${IMAGE_URI}/devcontainer:${TAG}"]
+}
+
+# An optional release executable for teaching and demonstrations.
+target "devcontainer-demo" {
+  inherits = ["devcontainer"]
+  target = "demo"
+  cache-from = ["${CACHE_PREFIX}/devcontainer-demo:${CACHE_TAG}"]
+  cache-to = ["${CACHE_PREFIX}/devcontainer-demo:${CACHE_TAG}"]
+  tags = ["${IMAGE_URI}/devcontainer-demo:${TAG}"]
 }
