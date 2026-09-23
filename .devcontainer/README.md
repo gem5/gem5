@@ -98,3 +98,20 @@ The existing 8-CPU, 16-GB-memory and 32-GB-storage requirements remain unchanged
 Large full-system resources or multiple build variants may need more storage;
 select build parallelism for the available memory rather than blindly using
 all CPUs.
+
+## Editor tasks and debugging
+
+Run **gem5: build** to choose a build configuration and job count. It builds
+`gem5.opt` and generates a matching compilation database. **gem5: generate
+compiler commands** generates just the database. Both tasks update an ignored
+symlink used by C++ IntelliSense, so it follows the selected build configuration.
+
+**gem5: list quick suites** lists the ALL-ISA quick TestLib suites. Copy a suite
+UID into **gem5: run selected quick suite** to run it, including required builds.
+This task does not skip builds or run every quick suite automatically.
+
+Build the desired configuration, open a gem5 Python configuration script, then
+choose **gem5: debug current configuration script** and the same build
+configuration. GDB launches the workspace binary with the open script. Add
+script-specific arguments to the launch configuration when needed. This debugs
+simulator C++; it does not attach a Python debugger to embedded Python code.
