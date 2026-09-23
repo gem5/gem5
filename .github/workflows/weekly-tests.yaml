@@ -70,14 +70,6 @@ jobs:
         steps:
             - uses: actions/checkout@v7
 
-            - name: Cache build/ALL
-              uses: actions/cache@v6
-              with:
-                  path: build/ALL
-                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
-                  restore-keys: |
-                      testlib-build-all
-
             - name: Run very-long ${{ matrix.test-type }} tests
               id: run-tests
               timeout-minutes: 4290
