@@ -71,3 +71,30 @@ pins are installed in the virtual environment rather than system Python.
 
 After changing branches or requirements, rerun `.devcontainer/on-create.sh` to
 refresh the tools and hooks. Setup is safe to repeat.
+
+## Codespaces prebuilds and caches
+
+Configure a Codespaces prebuild for `develop` in the repository's **Settings >
+Codespaces > Prebuild configuration**. Use the default devcontainer and an
+update frequency appropriate to usage. This is a repository setting and is not
+enabled merely by merging these files.
+
+`updateContentCommand` installs requirements and prepares hook environments on
+prebuild updates. `postCreateCommand` installs the hooks in each user's checkout.
+No simulator build is performed automatically; use the build tasks for the ISA
+you need. If source builds are later added to prebuilds, put incremental work in
+`updateContentCommand` and measure the compute and storage cost first.
+
+Caches live in the ignored `.devcontainer-cache` directory in the workspace.
+This preserves them across both Codespaces rebuilds and local container rebuilds
+without relying on a writable parent directory or a particular repository name.
+`GEM5_RESOURCE_DIR` selects its `resources` subdirectory; explicit resource paths
+in a configuration or test still take precedence. Compiler calls use ccache with
+a 2 GiB limit. Use `ccache --show-stats` to inspect it. Resource downloads and
+pre-commit environments have no automatic size cap; remove unused entries when
+space is needed. The workspace `.venv` is refreshed during content setup.
+
+The existing 8-CPU, 16-GB-memory and 32-GB-storage requirements remain unchanged.
+Large full-system resources or multiple build variants may need more storage;
+select build parallelism for the available memory rather than blindly using
+all CPUs.

@@ -43,6 +43,7 @@ LABEL org.opencontainers.image.source=https://github.com/gem5/gem5
 LABEL org.opencontainers.image.licenses=BSD-3-Clause
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    ccache \
     locales \
     gdb \
     unzip && \
@@ -50,6 +51,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN locale-gen en_US.UTF-8
 ENV LANG=en_US.UTF-8
+ENV PATH="/usr/lib/ccache:${PATH}"
+ENV CCACHE_MAXSIZE=2G
 
 # Build a release executable only for the optional demonstration image.
 FROM ${BASE_IMAGE} AS release-builder

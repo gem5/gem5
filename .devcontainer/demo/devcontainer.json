@@ -33,8 +33,16 @@
         "ghcr.io/devcontainers-extra/features/actionlint:1": {},
         "ghcr.io/devcontainers-extra/features/vscode-cli:1": {}
     },
-    "onCreateCommand": "./.devcontainer/on-create.sh",
     "remoteEnv": {
-        "PATH": "${containerWorkspaceFolder}/.venv/bin:${containerEnv:PATH}"
-    }
+        "PATH": "${containerWorkspaceFolder}/.venv/bin:${containerEnv:PATH}",
+        "XDG_CACHE_HOME": "${containerWorkspaceFolder}/.devcontainer-cache",
+        "PRE_COMMIT_HOME":
+            "${containerWorkspaceFolder}/.devcontainer-cache/pre-commit",
+        "CCACHE_DIR": "${containerWorkspaceFolder}/.devcontainer-cache/ccache",
+        "GEM5_RESOURCE_DIR":
+            "${containerWorkspaceFolder}/.devcontainer-cache/resources"
+    },
+    "updateContentCommand": "./.devcontainer/on-create.sh",
+    "postCreateCommand":
+        ".venv/bin/pre-commit install -t pre-commit -t commit-msg"
 }

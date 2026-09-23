@@ -26,8 +26,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# This script is run when the Docker container specified in devcontainer.json
-# is created.
+# Prepare tools and caches during creation and Codespaces prebuild updates.
 
 set -euo pipefail
 
@@ -35,6 +34,9 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 # Making the downloaded repository safe as the owner might differ for .devcontainer env.
 git config --global --add safe.directory /workspaces/gem5
+
+# Keep caches with the persistent workspace, including for local containers.
+mkdir -p "${PRE_COMMIT_HOME}" "${CCACHE_DIR}" "${GEM5_RESOURCE_DIR}"
 
 # Reuse distro modules such as SCons and pydot while installing the exact
 # development-tool versions requested by this checkout into a writable venv.
