@@ -1,6 +1,7 @@
 {
     "name": "gem5 Workload Development Container",
     "image": "ghcr.io/gem5/devcontainer-workloads:latest",
+    "remoteUser": "gem5",
     "hostRequirements": {
         "cpus": 8,
         "memory": "16gb",

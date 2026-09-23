@@ -115,3 +115,11 @@ choose **gem5: debug current configuration script** and the same build
 configuration. GDB launches the workspace binary with the open script. Add
 script-specific arguments to the launch configuration when needed. This debugs
 simulator C++; it does not attach a Python debugger to embedded Python code.
+
+## Container user and workspace ownership
+
+All configurations run development commands as `gem5`, with a writable home and
+passwordless sudo for additional packages. VS Code can map this user's UID/GID
+when opening a local Linux bind mount. Setup discovers the actual checkout
+location and adds an exact Git trust entry only when ownership requires it;
+forks and renamed directories do not need `/workspaces/gem5`.

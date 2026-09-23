@@ -387,7 +387,7 @@ target "systemc" {
 
 target "devcontainer" {
   inherits = ["common"]
-  annotations = ["index,manifest:org.opencontainers.image.description=A devcontainer image for gem5 development referenced in the repo's ./devcontainer/devcontainer.json file. Includes all dependencies required for gem5 development."]
+  annotations = ["index,manifest:org.opencontainers.image.description=A devcontainer image for gem5 development referenced in the repo's .devcontainer/devcontainer.json file. Includes all dependencies required for gem5 development."]
   contexts = {
     base = "target:ubuntu-24-04_all-dependencies"
   }

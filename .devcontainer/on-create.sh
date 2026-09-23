@@ -32,8 +32,12 @@ set -euo pipefail
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-# Making the downloaded repository safe as the owner might differ for .devcontainer env.
-git config --global --add safe.directory /workspaces/gem5
+# Trust only this checkout, and only if Git rejects its current ownership.
+# Confirm it is a repository before adding an entry to the user's config.
+if ! git rev-parse --show-toplevel >/dev/null 2>&1; then
+    git -c safe.directory="$PWD" rev-parse --show-toplevel >/dev/null
+    git config --global --add safe.directory "$PWD"
+fi
 
 # Keep caches with the persistent workspace, including for local containers.
 mkdir -p "${PRE_COMMIT_HOME}" "${CCACHE_DIR}" "${GEM5_RESOURCE_DIR}"

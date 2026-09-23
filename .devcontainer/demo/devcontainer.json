@@ -1,6 +1,7 @@
 {
     "name": "gem5 Demonstration Container",
     "image": "ghcr.io/gem5/devcontainer-demo:latest",
+    "remoteUser": "gem5",
     "hostRequirements": {
         "cpus": 8,
         "memory": "16gb",

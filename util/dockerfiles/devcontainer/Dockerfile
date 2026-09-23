@@ -25,8 +25,8 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 # This Dockerfile creates a devcontainer for gem5 development referenced in
-# ./devcontainer/devcontainer.json. The devcontainer is a multi-platform
-# container that can be built for x86, arm, and riscv and includes all
+# .devcontainer/devcontainer.json. The devcontainer is a multi-platform
+# container built for amd64 and arm64 hosts and includes all
 # dependencies required for gem5 development.
 
 # As this is a multi-platform image, we must build it using the
@@ -54,6 +54,19 @@ ENV LANG=en_US.UTF-8
 ENV PATH="/usr/lib/ccache:${PATH}"
 ENV CCACHE_MAXSIZE=2G
 
+# Reuse Ubuntu's default UID when present so local UID mapping has no conflict.
+RUN if id ubuntu >/dev/null 2>&1; then \
+        usermod --login gem5 --home /home/gem5 --move-home ubuntu && \
+        groupmod --new-name gem5 ubuntu; \
+    else \
+        useradd --create-home --shell /bin/bash gem5; \
+    fi && \
+    usermod --shell /bin/bash gem5 && \
+    echo 'gem5 ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/gem5 && \
+    chmod 0440 /etc/sudoers.d/gem5
+ENV XDG_CACHE_HOME=/home/gem5/.cache
+USER gem5
+
 # Build a release executable only for the optional demonstration image.
 FROM ${BASE_IMAGE} AS release-builder
 ARG GEM5_VERSION=25.1.0.1
@@ -74,6 +87,7 @@ COPY --from=release-builder /gem5/build/ALL/gem5.fast \
 
 # Tools for building guest workloads and full-system disk images.
 FROM development AS workloads
+USER root
 RUN apt-get update && apt-get install -y --no-install-recommends \
     qemu-system \
     qemu-utils \
@@ -81,3 +95,4 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     g++-riscv64-linux-gnu \
     g++-x86-64-linux-gnu && \
     rm -rf /var/lib/apt/lists/*
+USER gem5
