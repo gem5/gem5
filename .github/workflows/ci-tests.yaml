@@ -211,7 +211,13 @@ jobs:
                       testlib-build-ALL-
 
             - name: Build gem5
-              run: scons ${{ matrix.build-target }} -j $(nproc)
+              env:
+                  BUILD_TARGET: ${{ matrix.build-target }}
+              run: |
+                  build_dir=$(dirname "$BUILD_TARGET")
+                  build_config=$(basename "$build_dir")
+                  scons defconfig "$build_dir" "build_opts/$build_config"
+                  scons "$BUILD_TARGET" -j "$(nproc)"
 
             - name: Sanitize build-target for artifact name
               id: sanitize-build-target

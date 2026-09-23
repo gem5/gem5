@@ -268,7 +268,9 @@ jobs:
                       sst-build
 
             - name: Build RISCV/libgem5_opt.so with SST
-              run: scons build/RISCV/libgem5_opt.so --without-tcmalloc --duplicate-sources --ignore-style -j $(nproc)
+              run: |
+                  scons defconfig build/RISCV build_opts/RISCV --ignore-style
+                  scons build/RISCV/libgem5_opt.so --without-tcmalloc --duplicate-sources --ignore-style -j $(nproc)
             - name: Makefile ext/sst
               working-directory: ${{ github.workspace }}/ext/sst
               run: mv Makefile.linux Makefile
@@ -340,7 +342,9 @@ jobs:
               # gem5 is built separately because it depends on the DRAMSys library
             - name: Build gem5
               working-directory: ${{ github.workspace }}
-              run: scons build/ALL/gem5.opt -j $(nproc)
+              run: |
+                  scons defconfig build/ALL build_opts/ALL
+                  scons build/ALL/gem5.opt -j $(nproc)
 
             - name: Run DRAMSys Checks
               working-directory: ${{ github.workspace }}
