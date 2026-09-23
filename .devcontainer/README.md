@@ -30,3 +30,15 @@ docker buildx bake devcontainer-demo \
 
 Both configurations retain the Ubuntu 24.04 environment used by most gem5 CI
 jobs. Formatting is provided by the repository's pinned pre-commit hooks.
+
+## Guest workloads and disk images
+
+Choose **gem5 Workload Development Container** for QEMU, `qemu-img`, and the
+AArch64, RISC-V, and x86-64 cross-compilers. It also enables Docker-in-Docker for
+nested build environments. The default and demo configurations omit these tools
+and the nested Docker daemon. Building gem5 itself does not require a guest
+cross-compiler. Installing QEMU does not grant access to host KVM; accelerated
+guests still require an accessible `/dev/kvm`.
+
+Build this image with `docker buildx bake devcontainer-workloads` from
+`util/dockerfiles`.

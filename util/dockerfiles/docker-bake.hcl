@@ -74,7 +74,8 @@ group "default" {
     "sst",
     "systemc",
     "devcontainer",
-    "devcontainer-demo"
+    "devcontainer-demo",
+    "devcontainer-workloads"
   ]
 }
 
@@ -402,4 +403,13 @@ target "devcontainer-demo" {
   cache-from = ["${CACHE_PREFIX}/devcontainer-demo:${CACHE_TAG}"]
   cache-to = ["${CACHE_PREFIX}/devcontainer-demo:${CACHE_TAG}"]
   tags = ["${IMAGE_URI}/devcontainer-demo:${TAG}"]
+}
+
+# Guest workload and disk-image development tools.
+target "devcontainer-workloads" {
+  inherits = ["devcontainer"]
+  target = "workloads"
+  cache-from = ["${CACHE_PREFIX}/devcontainer-workloads:${CACHE_TAG}"]
+  cache-to = ["${CACHE_PREFIX}/devcontainer-workloads:${CACHE_TAG}"]
+  tags = ["${IMAGE_URI}/devcontainer-workloads:${TAG}"]
 }

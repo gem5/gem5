@@ -42,20 +42,11 @@ FROM ${BASE_IMAGE} AS development
 LABEL org.opencontainers.image.source=https://github.com/gem5/gem5
 LABEL org.opencontainers.image.licenses=BSD-3-Clause
 
-RUN apt -y update  && \
-    apt -y install \
-    vim \
-    qemu-system \
-    qemu-kvm \
-    g++-aarch64-linux-gnu \
-    g++-riscv64-linux-gnu \
-    gcc-aarch64-linux-gnu \
-    gcc-riscv64-linux-gnu \
-    gcc-x86-64-linux-gnu \
-    g++-x86-64-linux-gnu \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     locales \
     gdb \
-    unzip
+    unzip && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN locale-gen en_US.UTF-8
 ENV LANG=en_US.UTF-8
@@ -77,3 +68,13 @@ ARG GEM5_VERSION=25.1.0.1
 LABEL org.opencontainers.image.version=${GEM5_VERSION}
 COPY --from=release-builder /gem5/build/ALL/gem5.fast \
     /usr/local/bin/gem5-release
+
+# Tools for building guest workloads and full-system disk images.
+FROM development AS workloads
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    qemu-system \
+    qemu-utils \
+    g++-aarch64-linux-gnu \
+    g++-riscv64-linux-gnu \
+    g++-x86-64-linux-gnu && \
+    rm -rf /var/lib/apt/lists/*
