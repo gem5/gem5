@@ -388,7 +388,12 @@ target "systemc" {
 target "devcontainer" {
   inherits = ["common"]
   annotations = ["index,manifest:org.opencontainers.image.description=A devcontainer image for gem5 development referenced in the repo's ./devcontainer/devcontainer.json file. Includes all dependencies required for gem5 development."]
-  dependencies = ["devcontainer"]
+  contexts = {
+    base = "target:ubuntu-24-04_all-dependencies"
+  }
+  args = {
+    BASE_IMAGE = "base"
+  }
   context = "devcontainer"
   target = "development"
   cache-from = ["${CACHE_PREFIX}/devcontainer:${CACHE_TAG}"]
@@ -401,7 +406,7 @@ target "devcontainer-demo" {
   inherits = ["devcontainer"]
   target = "demo"
   cache-from = ["${CACHE_PREFIX}/devcontainer-demo:${CACHE_TAG}"]
-  cache-to = ["${CACHE_PREFIX}/devcontainer-demo:${CACHE_TAG}"]
+  cache-to = ["${CACHE_PREFIX}/devcontainer-demo:${CACHE_TAG},mode=max"]
   tags = ["${IMAGE_URI}/devcontainer-demo:${TAG}"]
 }
 

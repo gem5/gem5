@@ -42,3 +42,21 @@ guests still require an accessible `/dev/kvm`.
 
 Build this image with `docker buildx bake devcontainer-workloads` from
 `util/dockerfiles`.
+
+## Image build dependencies
+
+Bake connects all three images directly to the Ubuntu 24.04 base target. Local
+base-Dockerfile changes therefore apply without first publishing a base image.
+The demo target exports intermediate builder layers with `mode=max`; its
+registry cache can be substantially larger than the final image. Other targets
+retain the smaller default cache mode.
+
+A local single-platform build can be loaded into Docker for testing:
+
+```sh
+docker buildx bake devcontainer --load \
+    --set '*.platform=linux/arm64'
+```
+
+Use `linux/amd64` on an x86 host. Both supported host architectures can simulate
+guest architectures other than their own; RISC-V is not an image host platform.
