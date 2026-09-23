@@ -3,8 +3,10 @@
 This tests the gem5 memory components with a simple traffic generator.
 It also checks the correctness of the statistics outputted by gem5.
 
-The trusted JSON files contain the deterministic fields from the exported
-statistics. The time at which the output was created and the undefined
+The processor is exported as a single statistics root. The trusted JSON files
+check its simulation timing and the deterministic fields of each generator
+under `cores.value[index].generator`, including single-core configurations.
+The time at which the output was created and the undefined
 `logs` field of empty distributions are omitted. Dictionary entries are
 compared recursively, so gem5 may add unrelated statistics or metadata without
 invalidating the references. Lists are compared in order and must have the same
