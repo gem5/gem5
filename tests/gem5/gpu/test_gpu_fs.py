@@ -82,16 +82,16 @@ gpu_fs_test(
     name="gpu-fs-mi200-stdlib-driver",
     config_file="x86-mi200-gpu.py",
     expected_gpu="gfx90a",
-    # Retain a full boot in Daily to cover the CDNA2 driver/device path.
-    length=constants.long_tag,
+    # Run a full boot in Weekly to cover the CDNA2 driver/device path.
+    length=constants.very_long_tag,
 )
 
 gpu_fs_test(
     name="gpu-fs-mi355x-stdlib-driver",
     config_file="x86-mi355x-gpu.py",
     expected_gpu="gfx950",
-    # Retain a full boot in Daily to cover the CDNA4 driver/device path.
-    length=constants.long_tag,
+    # Run a full boot in Weekly to cover the CDNA4 driver/device path.
+    length=constants.very_long_tag,
 )
 
 gem5_verify_config(
@@ -119,5 +119,5 @@ gem5_verify_config(
     ),
     valid_isas=(constants.all_compiled_tag,),
     valid_hosts=constants.supported_hosts,
-    length=constants.quick_tag,
+    length=constants.long_tag,
 )

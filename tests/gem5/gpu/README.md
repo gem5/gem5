@@ -3,10 +3,13 @@
 These tests execute the public
 `configs/example/gem5_library/x86-mi200-gpu.py` and
 `configs/example/gem5_library/x86-mi355x-gpu.py` full-system examples without
-requiring a ROCm installation on the host. The two Daily tests boot the GPUFS
+requiring a ROCm installation on the host. The two Weekly tests boot the GPUFS
 image and check that ROCm identifies the simulated GPUs as `gfx90a` and
-`gfx950`. The quick pull-request test uses the MI355X example to restore a
+`gfx950`. The Daily test uses the MI355X example to restore a
 checkpoint and verify one `gfx950` GPU kernel result.
+
+The checkpoint test is tagged `long`, and the full-boot tests are tagged
+`very-long`. The quick pull-request workflow does not run these GPUFS tests.
 
 All three tests use an Atomic CPU, `ViperBoard`, and the Viper cache hierarchy.
 They configure 8 GiB of system memory, 16 GiB of GPU memory, and four compute
@@ -78,6 +81,6 @@ build/ALL/gem5.opt \
 After validation, publish the final checkpoint as
 `x86-mi355x-gpu-fs-smoke-checkpoint`, version `1.0.0`. Publish the matching
 `gfx950` code-object source and build recipe as
-`x86-mi355x-gpu-fs-smoke`. The quick TestLib suite obtains the final
+`x86-mi355x-gpu-fs-smoke`. The Daily TestLib suite obtains the final
 checkpoint and passes only after the resumed loader prints
 `GPU checkpoint restore test passed` to the guest serial output.
