@@ -90,11 +90,6 @@ jobs:
                       resource_dir="$RUNNER_TEMP/gem5-testlib-downloads"
                       ;;
                   esac
-                  # This suite intentionally downloads and deletes every
-                  # resource version. Keep it out of the persistent cache.
-                  if [ "${{ matrix.test-type }}" = "gem5/gem5_resources" ]; then
-                    resource_dir="$RUNNER_TEMP/gem5-resource-download-test"
-                  fi
                   ./main.py run ${{ matrix.test-type }} --length=very-long ${extra_gcov_args} -j"$(nproc)" -vv --bin-path "$resource_dir"
 
             - name: Sanitize test-dir for artifact name
