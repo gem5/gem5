@@ -21,7 +21,11 @@
                 "ms-vscode.makefile-tools",
                 "ms-vscode-remote.remote-containers",
                 "Tsinghua-Hexin-Joint-Institute.gem5-slicc"
-            ]
+            ],
+            "settings": {
+                "python.defaultInterpreterPath":
+                    "${workspaceFolder}/.venv/bin/python"
+            }
         }
     },
     "features": {
@@ -30,5 +34,8 @@
         "ghcr.io/devcontainers-extra/features/actionlint:1": {},
         "ghcr.io/devcontainers-extra/features/vscode-cli:1": {}
     },
-    "onCreateCommand": "./.devcontainer/on-create.sh"
+    "onCreateCommand": "./.devcontainer/on-create.sh",
+    "remoteEnv": {
+        "PATH": "${containerWorkspaceFolder}/.venv/bin:${containerEnv:PATH}"
+    }
 }

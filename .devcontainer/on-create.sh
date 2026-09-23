@@ -29,13 +29,18 @@
 # This script is run when the Docker container specified in devcontainer.json
 # is created.
 
-set -e
+set -euo pipefail
+
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 # Making the downloaded repository safe as the owner might differ for .devcontainer env.
 git config --global --add safe.directory /workspaces/gem5
 
-# Refresh the git index.
-git update-index
+# Reuse distro modules such as SCons and pydot while installing the exact
+# development-tool versions requested by this checkout into a writable venv.
+python3 -m venv --system-site-packages .venv
+.venv/bin/python -m pip install -r requirements.txt
+export PATH="${PWD}/.venv/bin:${PATH}"
 
-# Install the pre-commit checks.
-./util/pre-commit-install.sh
+# Prepare hook environments now instead of downloading them on first commit.
+pre-commit install --install-hooks -t pre-commit -t commit-msg

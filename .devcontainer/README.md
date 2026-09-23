@@ -60,3 +60,14 @@ docker buildx bake devcontainer --load \
 
 Use `linux/amd64` on an x86 host. Both supported host architectures can simulate
 guest architectures other than their own; RISC-V is not an image host platform.
+
+## Python tooling and hooks
+
+Setup installs `requirements.txt` into the workspace's ignored `.venv` and
+initializes the pinned pre-commit hook environments, including clang-format.
+The terminal and Python extension use this virtual environment. Distro Python
+modules remain available for tools such as SCons and pydot; development-tool
+pins are installed in the virtual environment rather than system Python.
+
+After changing branches or requirements, rerun `.devcontainer/on-create.sh` to
+refresh the tools and hooks. Setup is safe to repeat.
