@@ -213,6 +213,19 @@ class HSAQueueEntry
         return _completionSignal;
     }
 
+    /**
+     * True if this task is a blit kernel (same rule the command processor
+     * uses: a completion signal means blit). Per-task, unlike
+     * Shader::isBlitKernel(), which just tracks whichever kernel was most
+     * recently submitted and can be wrong once multiple kernels are in
+     * flight.
+     */
+    bool
+    isBlitKernel() const
+    {
+        return _completionSignal != 0;
+    }
+
     Addr
     codeAddr() const
     {
