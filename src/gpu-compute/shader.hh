@@ -32,6 +32,7 @@
 #ifndef __SHADER_HH__
 #define __SHADER_HH__
 
+#include <deque>
 #include <functional>
 #include <string>
 
@@ -99,12 +100,11 @@ class Shader : public ClockedObject
     bool _accountedLastActiveCycle = false;
     Cycles _lastActiveCycle;
 
-    // If a kernel-based exit event was requested, wait for all CUs in the
-    // shader to complete before actually exiting so that stats are updated.
-    bool kernelExitRequested = false;
-
-    // Set to true by the dispatcher if the current kernel is a blit kernel
-    bool blitKernel = false;
+    // Kernels whose WGs have all retired but whose "Kernel Completed" exit
+    // is waiting for every CU in the shader to go idle, so stats are
+    // updated first. One entry per kernel, in completion order; true marks
+    // a blit kernel.
+    std::deque<bool> pendingKernelExits;
 
     // Number of pending non-instruction invalidates outstanding. The shader
     // should wait for these to be done to ensure correctness.
@@ -332,6 +332,11 @@ class Shader : public ClockedObject
     void notifyCuSleep();
     void notifyCuActive();
 
+    // Fires one "Kernel Completed" exit per pending kernel once every CU
+    // is idle. Called from both places that could end up being the last
+    // one to happen, so it doesn't matter which order they occur in.
+    void emitKernelExitIfRequested();
+
     void
     incVectorInstSrcOperand(int num_operands)
     {
@@ -344,12 +349,7 @@ class Shader : public ClockedObject
         stats.vectorInstDstOperand[num_operands]++;
     }
 
-    void
-    requestKernelExitEvent(bool is_blit_kernel)
-    {
-        kernelExitRequested = true;
-        blitKernel = is_blit_kernel;
-    }
+    void requestKernelExitEvent(bool is_blit_kernel);
 
     void decNumOutstandingInvL2s();
     void
