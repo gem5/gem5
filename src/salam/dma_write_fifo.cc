@@ -169,22 +169,29 @@ DmaWriteFifo::resumeEmpty()
 void
 DmaWriteFifo::resumeEmptyFunctional()
 {
-    const size_t fifo_space = buffer.capacity() - buffer.size();
-    const size_t kvm_watermark = port.sys->cacheLineSize();
-    if (fifo_space >= kvm_watermark || buffer.capacity() < kvm_watermark) {
-        const size_t block_remaining = endAddr - nextAddr;
-        const size_t xfer_size = std::min(fifo_space, block_remaining);
-        std::vector<uint8_t> tmp_buffer(xfer_size);
+    // atomic_noncaching completes dmaAction before return, so the
+    // chunk buffer is live for the whole write. Fifo::read consumes.
+    assert(pendingRequests.empty());
 
-        assert(pendingRequests.empty());
+    while (!atEndOfBlock() && buffer.size() > 0) {
+        const Addr block_remaining = endAddr - nextAddr;
+        const Addr available = static_cast<Addr>(buffer.size());
+        const Addr req_size =
+            std::min(maxReqSize, std::min(block_remaining, available));
+        if (req_size == 0) {
+            break;
+        }
+
+        std::vector<uint8_t> chunk(req_size);
+        buffer.read(chunk.data(), req_size);
         DPRINTF(DMA,
-                "KVM Bypassing startAddr=%#x xfer_size=%#x "
-                "fifo_space=%#x block_remaining=%#x\n",
-                nextAddr, xfer_size, fifo_space, block_remaining);
+                "KVM bypass write startAddr=%#x req_size=%#x "
+                "fifo_size=%#x block_remaining=%#x\n",
+                nextAddr, req_size, buffer.size(), block_remaining);
 
-        port.sys->physProxy.readBlob(nextAddr, tmp_buffer.data(), xfer_size);
-        buffer.write(tmp_buffer.begin(), xfer_size);
-        nextAddr += xfer_size;
+        port.dmaAction(MemCmd::WriteReq, nextAddr, req_size, nullptr,
+                       chunk.data(), 0, reqFlags);
+        nextAddr += req_size;
     }
 }
 
