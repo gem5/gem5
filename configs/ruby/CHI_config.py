@@ -315,7 +315,7 @@ class CHI_Node(SubSystem):
             cntrl.datIn.buffer_size = dat_channels * (latency + 1)
             # Memory_Controller currently assumes no resource stall in the
             # output ports so only set the sizes for Cache_Controllers
-            if isinstance(cntrl, Cache_Controller):
+            if isinstance(cntrl, CHI_Cache_Controller):
                 latency = node_params.outbound_link_latency
                 cntrl.reqOut.buffer_size = req_channels * (latency + 1)
                 cntrl.snpOut.buffer_size = snp_channels * (latency + 1)
