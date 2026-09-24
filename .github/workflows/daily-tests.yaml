@@ -279,20 +279,12 @@ jobs:
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/systemc-env:latest
         timeout-minutes: 180
-        needs: get-date
+        # The shared-library build changes the configuration and generated
+        # headers. Restoring it can race header regeneration on the next run.
         steps:
             - uses: actions/checkout@v7
-            - name: Cache the build
-              uses: actions/cache@v6
-              with:
-                  path: build/*
-                  key: systemc-build-${{ needs.get-date.outputs.date }}
-                  restore-keys: |
-                      systemc-build
-
             - name: Build ARM/gem5.opt
               run: |
-                  # The cached shared-library build has USE_SYSTEMC disabled.
                   scons defconfig build/ARM build_opts/ARM --ignore-style
                   scons build/ARM/gem5.opt --ignore-style --duplicate-sources -j$(nproc)
             - name: disable systemc
