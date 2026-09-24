@@ -92,7 +92,11 @@ class MemCmd
         WriteCompleteResp,
         WritebackDirty,
         WritebackClean,
-        WriteClean,            // writes dirty data below without evicting
+        WriteClean, // writes dirty data below without evicting
+        StashOnceUniqueReq,
+        StashOnceUniqueResp,
+        StashOnceSharedReq,
+        StashOnceSharedResp,
         CleanEvict,
         SoftPFReq,
         SoftPFExReq,
@@ -101,17 +105,17 @@ class MemCmd
         HardPFResp,
         WriteLineReq,
         UpgradeReq,
-        SCUpgradeReq,           // Special "weak" upgrade for StoreCond
+        SCUpgradeReq, // Special "weak" upgrade for StoreCond
         UpgradeResp,
-        SCUpgradeFailReq,       // Failed SCUpgradeReq in MSHR (never sent)
-        UpgradeFailResp,        // Valid for SCUpgradeReq only
+        SCUpgradeFailReq, // Failed SCUpgradeReq in MSHR (never sent)
+        UpgradeFailResp,  // Valid for SCUpgradeReq only
         ReadExReq,
         ReadExResp,
         ReadCleanReq,
         ReadSharedReq,
         LoadLockedReq,
         StoreCondReq,
-        StoreCondFailReq,       // Failed StoreCondReq in MSHR (never sent)
+        StoreCondFailReq, // Failed StoreCondReq in MSHR (never sent)
         StoreCondResp,
         LockedRMWReadReq,
         LockedRMWReadResp,
@@ -132,16 +136,16 @@ class MemCmd
         // @TODO these should be classified as responses rather than
         // requests; coding them as requests initially for backwards
         // compatibility
-        InvalidDestError,  // packet dest field invalid
-        BadAddressError,   // memory address invalid
-        ReadError,         // packet dest unable to fulfill read command
-        WriteError,        // packet dest unable to fulfill write command
-        FunctionalReadError, // unable to fulfill functional read
+        InvalidDestError,     // packet dest field invalid
+        BadAddressError,      // memory address invalid
+        ReadError,            // packet dest unable to fulfill read command
+        WriteError,           // packet dest unable to fulfill write command
+        FunctionalReadError,  // unable to fulfill functional read
         FunctionalWriteError, // unable to fulfill functional write
         // Fake simulator-only commands
-        PrintReq,       // Print state matching address
-        FlushReq,      //request for a cache flush
-        InvalidateReq,   // request for address to be invalidated
+        PrintReq,      // Print state matching address
+        FlushReq,      // request for a cache flush
+        InvalidateReq, // request for address to be invalidated
         InvalidateResp,
         // hardware transactional memory
         HTMReq,
@@ -158,25 +162,28 @@ class MemCmd
      */
     enum Attribute
     {
-        IsRead,         //!< Data flows from responder to requester
-        IsWrite,        //!< Data flows from requester to responder
+        IsRead,            //!< Data flows from responder to requester
+        IsWrite,           //!< Data flows from requester to responder
+        IsStashOnceUnique, //!< Stash flows from requester to responder
+        IsStashOnceShared, //!< Stash flows from requester to responder, but is
+                           //!< shared
         IsUpgrade,
         IsInvalidate,
-        IsClean,        //!< Cleans any existing dirty blocks
-        NeedsWritable,  //!< Requires writable copy to complete in-cache
-        IsRequest,      //!< Issued by requester
-        IsResponse,     //!< Issue by responder
-        NeedsResponse,  //!< Requester needs response from target
+        IsClean,       //!< Cleans any existing dirty blocks
+        NeedsWritable, //!< Requires writable copy to complete in-cache
+        IsRequest,     //!< Issued by requester
+        IsResponse,    //!< Issue by responder
+        NeedsResponse, //!< Requester needs response from target
         IsEviction,
         IsSWPrefetch,
         IsHWPrefetch,
-        IsLlsc,         //!< Alpha/MIPS LL or SC access
-        IsLockedRMW,    //!< x86 locked RMW access
-        HasData,        //!< There is an associated payload
-        IsError,        //!< Error response
-        IsPrint,        //!< Print state matching address (for debugging)
-        IsFlush,        //!< Flush the address from caches
-        FromCache,      //!< Request originated from a caching agent
+        IsLlsc,      //!< Alpha/MIPS LL or SC access
+        IsLockedRMW, //!< x86 locked RMW access
+        HasData,     //!< There is an associated payload
+        IsError,     //!< Error response
+        IsPrint,     //!< Print state matching address (for debugging)
+        IsFlush,     //!< Flush the address from caches
+        FromCache,   //!< Request originated from a caching agent
         NUM_COMMAND_ATTRIBUTES
     };
 
@@ -235,6 +242,17 @@ class MemCmd
     bool isEviction() const        { return testCmdAttrib(IsEviction); }
     bool isClean() const           { return testCmdAttrib(IsClean); }
     bool fromCache() const         { return testCmdAttrib(FromCache); }
+    bool
+    isStashOnceUnique() const
+    {
+        return testCmdAttrib(IsStashOnceUnique);
+    }
+
+    bool
+    isStashOnceShared() const
+    {
+        return testCmdAttrib(IsStashOnceShared);
+    }
 
     /**
      * A writeback is an eviction that carries data.
@@ -606,6 +624,21 @@ class Packet : public Printable, public Extensible<Packet>
 
     bool isRead() const              { return cmd.isRead(); }
     bool isWrite() const             { return cmd.isWrite(); }
+    bool
+    isStashOnceUnique() const
+    {
+        return cmd.isStashOnceUnique();
+    }
+    bool
+    isStashOnceShared() const
+    {
+        return cmd.isStashOnceShared();
+    }
+    bool
+    isStashOnce() const
+    {
+        return cmd.isStashOnceUnique() || cmd.isStashOnceShared();
+    }
     bool isDemand() const            { return cmd.isDemand(); }
     bool isUpgrade()  const          { return cmd.isUpgrade(); }
     bool isRequest() const           { return cmd.isRequest(); }

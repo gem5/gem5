@@ -300,7 +300,9 @@ bool fromSequencer(CHIRequestType reqType) {
          reqType == CHIRequestType:Store ||
          reqType == CHIRequestType:StoreLine ||
          reqType == CHIRequestType:AtomicLoad ||
-         reqType == CHIRequestType:AtomicStore;
+         reqType == CHIRequestType:AtomicStore ||
+         reqType == CHIRequestType:StashShared ||
+         reqType == CHIRequestType:StashUnique;
 }
 
 void regProbePoints() {
@@ -395,6 +397,8 @@ void clearExpectedSnpResp(TBE tbe) {
 void initializeTBE(TBE tbe, Addr addr, int storSlot) {
   assert(is_valid(tbe));
 
+  tbe.timestamp := curTick();
+
   tbe.wakeup_pending_req := false;
   tbe.wakeup_pending_snp := false;
   tbe.wakeup_pending_tgr := false;
@@ -440,6 +444,10 @@ TBE allocateRequestTBE(Addr addr, CHIRequestMsg in_msg), return_by_pointer="yes"
   } else {
     tbe.txnId := in_msg.txnId;
   }
+  tbe.stashNID := in_msg.stashNID;
+  tbe.stashLPID := in_msg.stashLPID;
+  tbe.stashNIDValid := in_msg.stashNIDValid;
+  tbe.stashLPIDValid := in_msg.stashLPIDValid;
   tbe.ns := in_msg.ns;
 
   assert(tbe.is_snp_tbe == false);
@@ -528,6 +536,10 @@ TBE allocateSnoopTBE(Addr addr, CHIRequestMsg in_msg), return_by_pointer="yes" {
   tbe.fwdRequestor := in_msg.fwdRequestor;
   tbe.reqType := in_msg.type;
   tbe.txnId := in_msg.txnId;
+  tbe.stashNID := in_msg.stashNID;
+  tbe.stashLPID := in_msg.stashLPID;
+  tbe.stashNIDValid := in_msg.stashNIDValid;
+  tbe.stashLPIDValid := in_msg.stashLPIDValid;
 
   tbe.snpNeedsData := in_msg.retToSrc;
 
@@ -626,7 +638,7 @@ void scheduleSendData(TBE tbe, int when) {
     tbe.snd_pendEv := true;
     // enqueue send event
     tbe.pendAction := Event:TX_Data;
-    enqueue(triggerOutPort, TriggerMsg, intToCycles(when)) {
+    enqueue(triggerOutPort, TriggerMsg, intToCycles(when), false, tbe.timestamp) {
       out_msg.addr := tbe.addr;
       out_msg.from_hazard := tbe.is_req_hazard || tbe.is_repl_hazard;
     }
@@ -676,8 +688,23 @@ void prepareRequest(TBE tbe, CHIRequestType type, CHIRequestMsg & out_msg) {
   out_msg.is_local_pf := false;
   out_msg.is_remote_pf := tbe.is_local_pf || tbe.is_remote_pf;
   out_msg.txnId := tbe.txnId;
+  out_msg.stashNID := tbe.stashNID;
+  out_msg.stashNIDValid := tbe.stashNIDValid;
+  out_msg.stashLPID := tbe.stashLPID;
+  out_msg.stashLPIDValid := tbe.stashLPIDValid;
 
   assert(tbe.txnId != static_cast(Addr, "value", -1));
+}
+
+void updateTBEFromDataPull(TBE tbe, CHIResponseMsg in_msg) {
+  tbe.dataPull := true;
+  tbe.requestor := in_msg.responder;
+  tbe.fwdRequestor := in_msg.responder;
+  tbe.txnId := in_msg.dbid;
+  if (!is_HN) {
+    // snd_destination is used for SnpResp_I_Read forward to HN
+    tbe.snd_destination := mapAddressToDownstreamMachine(tbe.addr);
+  }
 }
 
 void prepareRequestAtomic(TBE tbe, CHIRequestType type,
@@ -707,8 +734,13 @@ void prepareRequestRetry(TBE tbe, CHIRequestMsg & out_msg) {
   out_msg.allowRetry := false;
 
   out_msg.addr := tbe.addr;
+  out_msg.txnId := tbe.txnId;
   out_msg.requestor := machineID;
   out_msg.fwdRequestor := tbe.requestor;
+  out_msg.stashNID := tbe.stashNID;
+  out_msg.stashNIDValid := tbe.stashNIDValid;
+  out_msg.stashLPID := tbe.stashLPID;
+  out_msg.stashLPIDValid := tbe.stashLPIDValid;
   out_msg.accAddr := tbe.pendReqAccAddr;
   out_msg.accSize := tbe.pendReqAccSize;
   out_msg.type := tbe.pendReqType;
@@ -835,14 +867,18 @@ bool needCacheEntry(CHIRequestType req_type,
        ((req_type == CHIRequestType:ReadShared) ||
         (req_type == CHIRequestType:ReadUnique) ||
         (req_type == CHIRequestType:MakeReadUnique) ||
-        (req_type == CHIRequestType:ReadOnce)))) {
+        (req_type == CHIRequestType:ReadOnce) ||
+        (req_type == CHIRequestType:StashOnceShared) ||
+        (req_type == CHIRequestType:StashOnceUnique)))) {
     return false;
   } else {
     return is_prefetch ||
            (alloc_on_readshared && ((req_type == CHIRequestType:ReadShared) ||
-                                    (req_type == CHIRequestType:ReadNotSharedDirty))) ||
+                                    (req_type == CHIRequestType:ReadNotSharedDirty) ||
+                                    (req_type == CHIRequestType:StashOnceShared))) ||
            (alloc_on_readunique && ((req_type == CHIRequestType:ReadUnique) ||
-                                   (req_type == CHIRequestType:MakeReadUnique))) ||
+                                   (req_type == CHIRequestType:MakeReadUnique) ||
+                                   (req_type == CHIRequestType:StashOnceUnique))) ||
            (alloc_on_readonce && (req_type == CHIRequestType:ReadOnce)) ||
            (alloc_on_writeback && ((req_type == CHIRequestType:WriteBackFull) ||
                                    (req_type == CHIRequestType:WriteCleanFull) ||
@@ -860,10 +896,12 @@ bool needCacheEntry(CHIRequestType req_type,
 
 bool needDeallocCacheEntry(CHIRequestType req_type) {
   return (dealloc_on_shared && ((req_type == CHIRequestType:ReadShared) ||
-                                (req_type == CHIRequestType:ReadNotSharedDirty))) ||
+                                (req_type == CHIRequestType:ReadNotSharedDirty) ||
+                                (req_type == CHIRequestType:StashOnceShared))) ||
          (dealloc_on_unique && ((req_type == CHIRequestType:ReadUnique) ||
                                 (req_type == CHIRequestType:MakeReadUnique) ||
-                                (req_type == CHIRequestType:CleanUnique)));
+                                (req_type == CHIRequestType:CleanUnique) ||
+                                (req_type == CHIRequestType:StashOnceUnique)));
 }
 
 bool upstreamHasUnique(State state) {
@@ -1246,7 +1284,17 @@ bool isWriteReqType(CHIRequestType type) {
 
 bool isStashReqType(CHIRequestType type) {
   if (type == CHIRequestType:StashOnceShared ||
-      type == CHIRequestType:StashOnceUnique) {
+      type == CHIRequestType:StashOnceUnique ||
+      type == CHIRequestType:StashShared ||
+      type == CHIRequestType:StashUnique) {
+    return true;
+  }
+  return false;
+}
+
+bool isStashSnpType(CHIRequestType type) {
+  if (type == CHIRequestType:SnpStashShared ||
+      type == CHIRequestType:SnpStashUnique) {
     return true;
   }
   return false;
@@ -1262,6 +1310,18 @@ Event reqToEvent(CHIRequestType type, bool is_prefetch) {
     } else {
       return Event:Prefetch;
     }
+  } else if (type == CHIRequestType:StashShared) {
+      if (is_HN) {
+          return Event:StashShared_PoC;
+      } else {
+          return Event:StashShared;
+      }
+  } else if (type == CHIRequestType:StashUnique) {
+      if (is_HN) {
+          return Event:StashUnique_PoC;
+      } else {
+          return Event:StashUnique;
+      }
   } else if (type == CHIRequestType:Store) {
     return Event:Store;
   } else if (type == CHIRequestType:StoreLine) {
@@ -1313,9 +1373,17 @@ Event reqToEvent(CHIRequestType type, bool is_prefetch) {
   } else if (type == CHIRequestType:WriteUniqueZero) {
       return Event:WriteUniqueZero;
   } else if (type == CHIRequestType:StashOnceShared) {
-      return Event:StashOnceShared;
+      if (is_HN) {
+          return Event:StashOnceShared_PoC;
+      } else {
+          return Event:StashOnceShared;
+      }
   } else if (type == CHIRequestType:StashOnceUnique) {
-      return Event:StashOnceUnique;
+      if (is_HN) {
+          return Event:StashOnceUnique_PoC;
+      } else {
+          return Event:StashOnceUnique;
+      }
   } else if (type == CHIRequestType:DvmTlbi_Initiate) {
     return Event:DvmTlbi_Initiate;
   } else if (type == CHIRequestType:DvmSync_Initiate) {
@@ -1363,6 +1431,8 @@ Event respToEvent (CHIResponseType type, TBE tbe) {
     return Event:RespSepData;
   } else if (type == CHIResponseType:SnpResp_I) {
     return Event:SnpResp_I;
+  } else if (type == CHIResponseType:SnpResp_I_Read) {
+    return Event:SnpResp_I_Read;
   } else if (type == CHIResponseType:SnpResp_I_Fwded_UC) {
     return Event:SnpResp_I_Fwded_UC;
   } else if (type == CHIResponseType:SnpResp_I_Fwded_UD_PD) {
@@ -1475,6 +1545,10 @@ Event dataToEvent (CHIDataType type) {
 Event snpToEvent (CHIRequestType type) {
   if (type == CHIRequestType:SnpCleanInvalid) {
     return Event:SnpCleanInvalid;
+  } else if (type == CHIRequestType:SnpStashShared) {
+    return Event:SnpStashShared;
+  } else if (type == CHIRequestType:SnpStashUnique) {
+    return Event:SnpStashUnique;
   } else if (type == CHIRequestType:SnpShared) {
     return Event:SnpShared;
   } else if (type == CHIRequestType:SnpUnique) {

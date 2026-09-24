@@ -22,10 +22,14 @@ jobs:
               with:
                   python-version: '3.10'
             - uses: pre-commit/action@v3.0.1
+              env:
+                  # Formatting runs in the separate clang-format-check job
+                  # so its failures remain advisory.
+                  SKIP: gem5-git-clang-format
 
     # Runs on the github hosted runner
-    # Iterates through all of the commits in the the PR and runs
-    # clang-format to make sure that nothing changes.
+    # Checks changed lines against the PR merge base with the same pinned
+    # clang-format version used by the local pre-commit hook.
     clang-format-check:
         runs-on: ubuntu-24.04
         if: github.event.pull_request.draft == false
@@ -40,9 +44,6 @@ jobs:
               with:
                   python-version: '3.10'
 
-            - name: Install clang-format
-              run: sudo apt-get install -y clang-format
-
             - name: Get merge base commit
               id: get-base-commit
               run: |
@@ -54,8 +55,11 @@ jobs:
                   echo "base_commit=$MERGE_BASE" >> $GITHUB_OUTPUT
 
             - name: Run clang-format check
-              run: |
-                  python util/run-git-clang-format.py --verbose --ci-pr-base-commit ${{ steps.get-base-commit.outputs.base_commit }} --ignore ext
+              uses: pre-commit/action@v3.0.1
+              with:
+                  extra_args: gem5-git-clang-format --all-files
+              env:
+                  GEM5_CI_PR_BASE_COMMIT: ${{ steps.get-base-commit.outputs.base_commit }}
 
     get-date:
     # We use the date to label caches. A cache is a a "hit" if the date is the
@@ -88,7 +92,7 @@ jobs:
             - uses: actions/checkout@v7
             - name: CI Unittests (${{ matrix.type }})
               working-directory: ${{ github.workspace }}
-              run: scons --no-compress-debug build/ALL/unittests.${{ matrix.type }} -j $(nproc)
+              run: scons build/ALL/unittests.${{ matrix.type }} -j $(nproc)
             - run: echo "This job's status is ${{ job.status }}."
 
     testlib-quick-matrix:
@@ -104,29 +108,26 @@ jobs:
               working-directory: ${{ github.workspace }}/tests
               id: dir-matrix
               run: |
-                  unset PREV
-                  echo "test-dirs-matrix=$(\
-                    ./main.py list gem5 \
-                    --suites \
-                    --exclude-tags gcn_gpu | \
-                    grep "$SUITEUID:" | \
-                    cut -d: -f2 | \
-                    cut -d/ -f 2- | \
-                    xargs dirname | \
-                    sort -u  | \
-                    while read x; do \
-                      if [ -z "${PREV}" ] || [ "$x" != "${PREV}/*" ]; then \
-                        PREV=$x; \
-                        echo $x; \
-                      fi; \
-                    done  | \
-                    jq -ncR '[inputs]'\
-                  )" >>$GITHUB_OUTPUT
+                  ./main.py list gem5 --suites -q > "$RUNNER_TEMP/test-suites"
+                  test_dirs=$(jq -Rsc '
+                    split("\n") |
+                    map(select(startswith("SuiteUID:")) |
+                        split(":")[1] | split("/")[1:-1] | join("/")) |
+                    unique |
+                    if length == 0 then error("No TestLib suites found") else . end
+                  ' "$RUNNER_TEMP/test-suites")
+                  echo "test-dirs-matrix=$test_dirs" >> "$GITHUB_OUTPUT"
 
             - name: Get the build targets for testlib-quick-gem5-builds
               working-directory: ${{ github.workspace }}/tests
               id: build-matrix
-              run: echo "build-matrix=$(./main.py list --build-targets --exclude-tags VEGA_X86 -q | jq -ncR '[inputs]')" >>$GITHUB_OUTPUT
+              run: |
+                  ./main.py list --build-targets -q > "$RUNNER_TEMP/build-targets"
+                  build_matrix=$(jq -Rsc '
+                    split("\n") | map(select(length > 0)) |
+                    if length == 0 then error("No TestLib build targets found") else . end
+                  ' "$RUNNER_TEMP/build-targets")
+                  echo "build-matrix=$build_matrix" >> "$GITHUB_OUTPUT"
 
         outputs:
             build-matrix: ${{ steps.build-matrix.outputs.build-matrix }}
@@ -139,7 +140,7 @@ jobs:
         # for compilation error to be exposed.
         runs-on: [self-hosted, linux, x64]
         if: github.event.pull_request.draft == false
-        container: ghcr.io/gem5/clang-version-19:latest
+        container: ghcr.io/gem5/clang-version-22:latest
         needs: [pre-commit]
         timeout-minutes: 90
         steps:
@@ -203,12 +204,18 @@ jobs:
               if: ${{ endsWith(matrix.build-target, 'build/ALL/gem5.opt') }}
               with:
                   path: build/ALL
-                  key: testlib-build-all-${{ needs.get-date.outputs.date }}
+                  key: testlib-build-ALL-${{ needs.get-date.outputs.date }}
                   restore-keys: |
-                      testlib-build-all
+                      testlib-build-ALL-
 
             - name: Build gem5
-              run: scons --no-compress-debug ${{ matrix.build-target }} -j $(nproc)
+              env:
+                  BUILD_TARGET: ${{ matrix.build-target }}
+              run: |
+                  build_dir=$(dirname "$BUILD_TARGET")
+                  build_config=$(basename "$build_dir")
+                  scons defconfig "$build_dir" "build_opts/$build_config"
+                  scons "$BUILD_TARGET" -j "$(nproc)"
 
             - name: Sanitize build-target for artifact name
               id: sanitize-build-target
@@ -227,6 +234,8 @@ jobs:
             - uses: actions/upload-artifact@v7
               with:
                   name: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds-${{ steps.sanitize-build-target.outputs.sanitized-build-target }}
+                  # Rebuilds replace artifacts; consumer-only reruns reuse them.
+                  overwrite: true
                   path: |
                       build/*/gem5.*
                       anchor.txt
@@ -262,7 +271,7 @@ jobs:
             - name: Run quick ${{ matrix.test-dir }} tests
               id: run-tests
               working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run --skip-build --exclude-tags gcn_gpu ${{  matrix.test-dir }}
+              run: ./main.py run --skip-build -t $(nproc) ${{  matrix.test-dir }}
 
         # Get the basename of the matrix.test-dir path (to name the artifact).
             - name: Sanitize test-dir for artifact name
@@ -279,37 +288,6 @@ jobs:
                       }}-status-${{ steps.run-tests.outcome }}-output
                   path: tests/testing-results
                   retention-days: 30
-
-    gpu-tests:
-        runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/gcn-gpu:latest
-        timeout-minutes: 180
-        needs: [pre-commit, get-date]
-        steps:
-            - uses: actions/checkout@v7
-
-            # Obtain the cache if available.
-            - name: Cache build/VEGA_X86
-              uses: actions/cache/restore@v6
-              with:
-                  path: build/VEGA_X86
-                  key: testlib-build-vega-${{ needs.get-date.outputs.date }}
-                  restore-keys: |
-                      testlib-build-vega
-
-            # Run the GPU tests.
-            - name: Run Testlib GPU Tests
-              id: run-tests
-              working-directory: ${{ github.workspace }}/tests
-              run: ./main.py run -j$(nproc) -t$(nproc) --host gcn_gpu --isa=VEGA_X86
-
-            # Upload the tests/testing-results directory as an artifact.
-            - name: Upload results
-              if: success() || failure()
-              uses: actions/upload-artifact@v7
-              with:
-                  name: ci-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-gpu-status-${{ steps.run-tests.outcome }}-output
-                  path: tests/testing-results
 
     salam-link-test:
         runs-on: [self-hosted, linux, x64]
@@ -338,7 +316,6 @@ jobs:
             - unittests-all-fast-opt
             - macos-compilation
             - pre-commit
-            - gpu-tests
             - salam-link-test
         steps:
             - run: echo "This job's status is ${{ job.status }}."

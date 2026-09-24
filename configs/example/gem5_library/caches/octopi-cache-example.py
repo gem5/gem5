@@ -82,6 +82,7 @@ processor = SimpleProcessor(
     cpu_type=CPUTypes.TIMING,
     isa=ISA.ARM,
     num_cores=num_ccds * num_cores_per_ccd,
+    clk_freq="4GHz",
 )
 
 release = ArmDefaultRelease()

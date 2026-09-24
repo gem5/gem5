@@ -37,6 +37,7 @@
 
 from m5.objects.CBusy import CBusyTracker
 from m5.objects.ClockedObject import ClockedObject
+from m5.objects.SnoopHandler import PySnoopHandler
 from m5.objects.TlmController import TlmController
 from m5.params import *
 from m5.SimObject import (
@@ -55,8 +56,9 @@ class TlmGenerator(ClockedObject):
 
     cxx_exports = [
         PyBindMethod("scheduleTransaction"),
-        PyBindMethod("enqueueBack"),
+        PyBindMethod("enqueueInput"),
         PyBindMethod("isActive"),
+        PyBindMethod("setArrivalRate"),
     ]
 
     def __init__(self, *args, **kwargs):
@@ -71,28 +73,36 @@ class TlmGenerator(ClockedObject):
         if when:
             self._transactions.append((when, transaction))
         else:
-            self.getCCObject().enqueueBack(transaction)
+            self.getCCObject().enqueueInput(transaction)
 
         return transaction
 
-    def init(self):
+    def createCCObject(self):
+        super().createCCObject()
+
         for when, tr in self._transactions:
             self.getCCObject().scheduleTransaction(when, tr)
 
     cpu_id = Param.Int("TlmGenerator CPU identifier")
-    tran_per_cycle = Param.Unsigned(
+    arrival_rate = Param.Int(
         2,
-        "Number of transaction per cycle to be scheduled "
-        "(For transactions injected with the inject method "
-        "and not with injectAt, which forces a transaction to "
-        "be injected at a specific tick overriding any clock "
-        "based timing)",
+        "Arrival rate for transactions supplied through inject(). Positive "
+        "values specify transactions per cycle; -N means one transaction "
+        "every N cycles. Transactions supplied with a specific tick bypass "
+        "this rate",
+    )
+    departure_rate = Param.Unsigned(
+        2,
+        "Maximum number of admitted transactions to schedule per cycle",
     )
     max_pending_tran = OptionalParam.Unsigned(
         "Max number of pending transactions issued via the inject API"
     )
     cbusy_tracker = Param.BackpressureTracker(
         CBusyTracker(), "Tracks observed incoming CBusy levels"
+    )
+    snp_handler = Param.SnoopHandler(
+        PySnoopHandler(), "Handler for incoming snoop transactions"
     )
 
     in_port = TlmSinkPort("CHI TLM input/response port")

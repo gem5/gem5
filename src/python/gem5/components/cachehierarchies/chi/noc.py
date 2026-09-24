@@ -73,6 +73,6 @@ class NoC_Params:
     # dst. The custom latency applies in both directions unless both
     # (src,dst) and (dst,src) are present. A new link is created if no
     # src->dst link exists.
-    custom_links: Dict[Tuple[int, int], Tuple[Optional[int], int]] = field(
+    custom_links: dict[tuple[int, int], tuple[int | None, int]] = field(
         default_factory=dict
     )

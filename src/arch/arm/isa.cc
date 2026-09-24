@@ -1132,14 +1132,13 @@ ISA::setMiscReg(RegIndex idx, RegVal val)
             pmu->setMiscReg(idx, newVal);
             break;
 
-
-          case MISCREG_HSTR: // TJDBX, now redifined to be RES0
-            {
-                HSTR hstrMask = 0;
-                hstrMask.tjdbx = 1;
-                newVal &= ~((uint32_t) hstrMask);
-                break;
-            }
+          case MISCREG_HSTR: // TJDBX, now redefined to be RES0
+          {
+              HSTR hstrMask = 0;
+              hstrMask.tjdbx = 1;
+              newVal &= ~((uint32_t)hstrMask);
+              break;
+          }
           case MISCREG_HCPTR:
             {
                 // If a CP bit in NSACR is 0 then the corresponding bit in
@@ -1816,10 +1815,10 @@ ISA::addressTranslation(MMU::ArmTranslationType tran_type,
         par.s = arm_fault->isStage2() ? 1 : 0;
 
         if (par.lpae) {
-            // LPAE - rearange fault status
+            // LPAE - rearrange fault status
             par.fst = fsr.status;
         } else {
-            // VMSA - rearange fault status
+            // VMSA - rearrange fault status
             par.fs4_0 = fsr.fsLow | (fsr.fsHigh << 5);
             par.fs5 = fsr.ext;
         }

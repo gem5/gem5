@@ -40,11 +40,11 @@ It just runs an SE simulation with the hdf5 stats and checks that the
 simulation succeeds and the stats file exists.
 No specific checks on the stats are performed.
 
-**Important Note**: This test has a major design flaw, noted here:
-https://gem5.atlassian.net/browse/GEM5-1073.
+**Important Note**: This test has a major design flaw.
 It will not run if the build/ARM/gem5.opt has not been built. As this is not
 built prior to this test being processed during the Weekly run, this test is
 not run.
+See https://github.com/gem5/gem5/issues/3441.
 """
 
 import os
@@ -85,7 +85,6 @@ if have_hdf5():
     ok_verifier = verifier.MatchRegex(ok_exit_regex)
 
     # FIXME: flaky, should check return code instead...
-    # See: https://gem5.atlassian.net/browse/GEM5-1099
     err_regex = re.compile(
         r"RuntimeError: Failed creating H5::DataSet \w+; .*"
     )

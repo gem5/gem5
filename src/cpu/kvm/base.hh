@@ -109,6 +109,19 @@ class BaseKvmCPU : public BaseCPU
     Port &getInstPort() override { return instPort; }
 
     void wakeup(ThreadID tid = 0) override;
+
+    /*
+     * KVM owns part of the live interrupt-enable/pending state while the guest
+     * is running, so gem5's cached interrupt controller state can be stale.
+     * Always kick the vCPU when a device posts an interrupt and let KVM/the
+     * guest decide whether it is architecturally visible.
+     */
+    bool
+    wakeupOnInterrupt(ThreadID) const override
+    {
+        return true;
+    }
+
     void activateContext(ThreadID thread_num) override;
     void suspendContext(ThreadID thread_num) override;
     void deallocateContext(ThreadID thread_num);

@@ -179,7 +179,7 @@ Inst_SOPP__S_ENDPGM::execute(GPUDynInstPtr gpuDynInst)
 
         /**
          * if it is a kernel end, inject a memory sync, i.e., GL2 WB, and
-         * retire the workgroup after receving response.
+         * retire the workgroup after receiving response.
          * note that GL0V and GL1 are read only, and they just forward GL2
          * WB request. When forwarding, GL1 send the request to all GL2 in
          * the complex

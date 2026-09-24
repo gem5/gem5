@@ -1302,7 +1302,7 @@ Inst_VOP3P_MAI::generateDisassembly()
     // The output size much be a multiple of dword size
     int dst_size = getOperandSize(numSrcRegOperands());
 
-    // opSelectorToRegSym handles formating for us. VDST is always VGPR
+    // opSelectorToRegSym handles formatting for us. VDST is always VGPR
     // so only the last 8 bits are used. This adds the implicit 9th bit
     // which is 1 for VGPRs as VGPR op nums are from 256-255.
     int dst_opnum = instData.VDST + 0x100;

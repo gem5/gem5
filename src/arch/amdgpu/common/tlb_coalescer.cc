@@ -174,7 +174,7 @@ TLBCoalescer::updatePhysAddresses(PacketPtr pkt)
             safe_cast<GpuTranslationState *>(local_pkt->senderState);
 
         // we are sending the packet back, so pop the reqCnt associated
-        // with this level in the TLB hiearchy
+        // with this level in the TLB hierarchy
         if (!sender_state->isPrefetch) {
             sender_state->reqCnt.pop_back();
         }
@@ -392,7 +392,7 @@ TLBCoalescer::MemSidePort::recvTimingResp(PacketPtr pkt)
 void
 TLBCoalescer::MemSidePort::recvReqRetry()
 {
-    // we've receeived a retry. Schedule a probeTLBEvent
+    // we've received a retry. Schedule a probeTLBEvent
     if (!coalescer->probeTLBEvent.scheduled()) {
         coalescer->schedule(coalescer->probeTLBEvent,
                             curTick() + coalescer->clockPeriod());
@@ -482,7 +482,7 @@ TLBCoalescer::processProbeTLBEvent()
                 if (update_stats) {
                     // req_cnt is total number of packets represented
                     // by the one we just sent counting all the way from
-                    // the top of TLB hiearchy (i.e., from the CU)
+                    // the top of TLB hierarchy (i.e., from the CU)
                     int req_cnt = tmp_sender_state->reqCnt.back();
                     stats.queuingCycles += (curTick() * req_cnt);
 

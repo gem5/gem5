@@ -29,4 +29,8 @@ env['ABI'] = 'riscv'
 get_abi_opt('CROSS_COMPILE', 'riscv64-unknown-linux-gnu-')
 get_abi_opt('QEMU_ARCH', 'riscv64')
 
-env['CALL_TYPE']['inst'].impl('m5op.S', 'verify_inst.cc', default=True)
+env['CALL_TYPE']['inst'].impl('m5op.S', 'verify_inst.cc')
+env['CALL_TYPE']['addr'].impl('m5op_addr.S', default=True)
+
+env.Append(CXXFLAGS='-DM5OP_ADDR=0x10010000')
+env.Append(CCFLAGS='-DM5OP_ADDR=0x10010000')

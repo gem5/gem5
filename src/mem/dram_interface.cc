@@ -717,16 +717,22 @@ DRAMInterface::DRAMInterface(const DRAMInterfaceParams &_p)
                   "groups per rank (%d) for equal banks per bank group\n",
                   banksPerRank, bankGroupsPerRank);
         }
-        // tCCD_L should be greater than minimal, back-to-back burst delay
-        if (tCCD_L <= tBURST) {
-            fatal("tCCD_L (%d) should be larger than the minimum bus delay "
+        // tCCD_L must not be shorter than the burst delay, otherwise
+        // back-to-back CAS in the same bank group would overlap on the
+        // data bus. The boundary case tCCD_L == tBURST is JEDEC-legal
+        // (tight-packed back-to-back CAS, zero overlap, zero gap) and
+        // occurs at speed bins where the nCK floor of tCCD_L lines up
+        // exactly with BL/2 * tCK — e.g. HBM3 6.4 Gbps
+        // (tCCD_L = 4 nCK = 2.5 ns = tBURST @ tCK = 0.625 ns).
+        if (tCCD_L < tBURST) {
+            fatal("tCCD_L (%d) must be at least the minimum bus delay "
                   "(%d) when bank groups per rank (%d) is greater than 1\n",
                   tCCD_L, tBURST, bankGroupsPerRank);
         }
-        // tCCD_L_WR should be greater than minimal, back-to-back burst delay
-        if (tCCD_L_WR <= tBURST) {
-            fatal("tCCD_L_WR (%d) should be larger than the minimum bus delay "
-                  " (%d) when bank groups per rank (%d) is greater than 1\n",
+        // Same argument for tCCD_L_WR.
+        if (tCCD_L_WR < tBURST) {
+            fatal("tCCD_L_WR (%d) must be at least the minimum bus delay "
+                  "(%d) when bank groups per rank (%d) is greater than 1\n",
                   tCCD_L_WR, tBURST, bankGroupsPerRank);
         }
         // tRRD_L is greater than minimal, same bank group ACT-to-ACT delay

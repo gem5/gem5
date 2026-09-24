@@ -194,15 +194,17 @@ int
 TAGEBase::F(int A, int size, int bank) const
 {
     int A1, A2;
+    int table_size = logTagTableSizes[bank];
+    int shift = bank % table_size;
 
     A = A & ((1ULL << size) - 1);
-    A1 = (A & ((1ULL << logTagTableSizes[bank]) - 1));
-    A2 = (A >> logTagTableSizes[bank]);
-    A2 = ((A2 << bank) & ((1ULL << logTagTableSizes[bank]) - 1))
-       + (A2 >> (logTagTableSizes[bank] - bank));
+    A1 = (A & ((1ULL << table_size) - 1));
+    A2 = (A >> table_size);
+    A2 = ((A2 << shift) & ((1ULL << table_size) - 1))
+       + (A2 >> (table_size - shift));
     A = A1 ^ A2;
-    A = ((A << bank) & ((1ULL << logTagTableSizes[bank]) - 1))
-      + (A >> (logTagTableSizes[bank] - bank));
+    A = ((A << shift) & ((1ULL << table_size) - 1))
+      + (A >> (table_size - shift));
     return (A);
 }
 

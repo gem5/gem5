@@ -103,7 +103,7 @@ class Visitor(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def dump(self, roots: Union[List[SimObject], Root], **kwargs) -> None:
+    def dump(self, roots: list[SimObject] | Root, **kwargs) -> None:
         raise NotImplementedError
 
     def _acceptable_type(self, element):
@@ -260,7 +260,7 @@ class CsvOutputVisitor(Visitor):
 
         return items
 
-    def dump(self, roots: Union[List[SimObject], Root], **kwargs) -> None:
+    def dump(self, roots: list[SimObject] | Root, **kwargs) -> None:
         """
         Dumps the stats of a simulation root (or list of roots) to the output
         CSV file specified in the constructor.
@@ -420,7 +420,7 @@ class JsonOutputVistor(Visitor):
         values["name"] = element.name
         return values
 
-    def dump(self, roots: Union[List[SimObject], Root], **kwargs) -> None:
+    def dump(self, roots: list[SimObject] | Root, **kwargs) -> None:
         """
         Dumps the stats of a simulation root (or list of roots) to the output
         JSON file specified in the JsonOutput constructor.
@@ -465,8 +465,7 @@ def __get_statistic(statistic: _m5_stats.Info) -> Optional[Statistic]:
     elif isinstance(statistic, _m5_stats.DistInfo):
         return __get_distribution(statistic)
     elif isinstance(statistic, _m5_stats.FormulaInfo):
-        # We don't do anything with Formula's right now.
-        # We may never do so, see https://gem5.atlassian.net/browse/GEM5-868.
+        # We don't do anything with Formula's right now and may never do so.
         pass
     elif isinstance(statistic, _m5_stats.VectorInfo):
         return __get_vector(statistic)
@@ -527,7 +526,7 @@ def __get_distribution(statistic: _m5_stats.DistInfo) -> Distribution:
 
 
 def __get_vector(statistic: _m5_stats.VectorInfo) -> Vector:
-    vec: Dict[Union[str, int, float], Scalar] = {}
+    vec: Dict[str | int | float, Scalar] = {}
 
     for index in range(statistic.size):
         # All the values in a Vector are Scalar values
@@ -572,7 +571,7 @@ def __get_vector2d(statistic: _m5_stats.Vector2dInfo) -> Vector2d:
     x_size = statistic.x_size
     y_size = statistic.y_size
 
-    vector_rep: Dict[Union[str, int, float], Vector] = {}
+    vector_rep: Dict[str | int | float, Vector] = {}
     for x_index in range(x_size):
         x_index_string = x_index
         if x_index in statistic.subnames:
@@ -688,13 +687,13 @@ def _process_group(group: _m5_stats.Group) -> dict:
 
 
 def _process_simobject_stats(
-    simobject: Union[
-        _m5_stats.Group,
-        SimObject,
-        SimObjectVector,
-        List[Union[SimObject, SimObjectVector]],
-    ],
-) -> Union[List[Dict], Dict]:
+    simobject: (
+        _m5_stats.Group
+        | SimObject
+        | SimObjectVector
+        | list[SimObject | SimObjectVector]
+    ),
+) -> list[Dict] | Dict:
     """
     Processes the stats of a SimObject, SimObjectVector, or List of either, and
     returns a dictionary of the PySqtats for the SimObject.
@@ -720,10 +719,7 @@ def _process_simobject_stats(
 
 
 def get_simstat(
-    root: Union[
-        Union[SimObject, SimObjectVector],
-        List[Union[SimObject, SimObjectVector]],
-    ],
+    root: SimObject | SimObjectVector | list[SimObject | SimObjectVector],
     prepare_stats: bool = True,
 ) -> SimStat:
     """
@@ -765,7 +761,7 @@ def get_simstat(
         stats_map = stats_map[next(iter(stats_map))]
 
     creation_time = datetime.now()
-    time_converstion = None  # TODO https://gem5.atlassian.net/browse/GEM5-846
+    # TODO: https://github.com/gem5/gem5/issues/3447
     final_tick = Root.getInstance().resolveStat("finalTick").value
     sim_ticks = Root.getInstance().resolveStat("simTicks").value
     simulated_begin_time = int(final_tick - sim_ticks)

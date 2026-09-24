@@ -99,7 +99,7 @@ class SimpleBoard(AbstractSystemBoard, SEBinaryWorkload):
         return False
 
     @overrides(AbstractSystemBoard)
-    def get_dma_ports(self) -> List[Port]:
+    def get_dma_ports(self) -> list[Port]:
         raise NotImplementedError(
             "SimpleBoard does not have DMA Ports. "
             "Use `has_dma_ports()` to check this."

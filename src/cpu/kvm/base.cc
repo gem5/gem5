@@ -42,8 +42,10 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <cerrno>
 #include <csignal>
+#include <ctime>
 #include <ostream>
 
 #include "base/compiler.hh"
@@ -61,6 +63,21 @@
 
 namespace gem5
 {
+
+namespace
+{
+
+uint64_t
+timespecDiffNs(const timespec &start, const timespec &end)
+{
+    const uint64_t start_ns =
+        static_cast<uint64_t>(start.tv_sec) * 1000000000ULL + start.tv_nsec;
+    const uint64_t end_ns =
+        static_cast<uint64_t>(end.tv_sec) * 1000000000ULL + end.tv_nsec;
+    return end_ns - start_ns;
+}
+
+} // anonymous namespace
 
 BaseKvmCPU::BaseKvmCPU(const BaseKvmCPUParams &params)
     : BaseCPU(params),
@@ -770,8 +787,19 @@ BaseKvmCPU::kvmRun(Tick ticks)
         // state update might affect guest cycle counters.
         uint64_t baseCycles(getHostCycles());
         uint64_t baseInstrs = 0;
+        timespec runStartTs = {};
+        timespec runEndTs = {};
         if (usePerf) {
             baseInstrs = hwInstructions->read();
+        } else {
+            // Without perf, we cannot translate guest progress from a
+            // hardware cycle counter. Measure the time spent inside KVM and
+            // use that elapsed host time to keep simulated time moving.
+            if (clock_gettime(CLOCK_MONOTONIC, &runStartTs) == -1) {
+                panic("KVM: Failed to read CLOCK_MONOTONIC before KVM_RUN "
+                      "(errno: %i)\n",
+                      errno);
+            }
         }
 
         // Arm the run timer and start the cycle timer if it isn't
@@ -784,6 +812,12 @@ BaseKvmCPU::kvmRun(Tick ticks)
         }
 
         ioctlRun();
+
+        if (!usePerf && clock_gettime(CLOCK_MONOTONIC, &runEndTs) == -1) {
+            panic("KVM: Failed to read CLOCK_MONOTONIC after KVM_RUN "
+                  "(errno: %i)\n",
+                  errno);
+        }
 
         runTimer->disarm();
         if (usePerf && (!perfControlledByTimer)) {
@@ -798,12 +832,24 @@ BaseKvmCPU::kvmRun(Tick ticks)
         discardPendingSignal(KVM_KICK_SIGNAL);
 
         const uint64_t hostCyclesExecuted(getHostCycles() - baseCycles);
-        const uint64_t simCyclesExecuted(hostCyclesExecuted * hostFactor);
+        const uint64_t hostNsExecuted =
+            usePerf ? 0 : timespecDiffNs(runStartTs, runEndTs);
         uint64_t instsExecuted = 0;
         if (usePerf) {
             instsExecuted = hwInstructions->read() - baseInstrs;
         }
-        ticksExecuted = runTimer->ticksFromHostCycles(hostCyclesExecuted);
+        if (usePerf) {
+            ticksExecuted = runTimer->ticksFromHostCycles(hostCyclesExecuted);
+        } else {
+            // Immediate MMIO exits can be so short that they round down to 0.
+            // Clamp to one cycle so the event queue always makes forward
+            // progress after a real KVM entry.
+            ticksExecuted = std::max<Tick>(
+                runTimer->ticksFromHostNs(hostNsExecuted), clockPeriod());
+        }
+        const uint64_t simCyclesExecuted =
+            usePerf ? hostCyclesExecuted * hostFactor
+                    : ticksToCycles(ticksExecuted);
 
         /* Update statistics */
         baseStats.numCycles += simCyclesExecuted;
@@ -1152,9 +1198,10 @@ BaseKvmCPU::doMMIOAccess(Addr paddr, void *data, int size, bool write)
         std::unique_ptr<PCStateBase> pc(tc->pcState().clone());
         stutterPC(*pc);
         tc->pcState(*pc);
-        // We currently assume that there is no need to migrate to a
-        // different event queue when doing local accesses. Currently, they
-        // are only used for m5ops, so it should be a valid assumption.
+        // Local m5ops can perform functional guest-memory accesses or
+        // schedule exit events, so serialize them on the device event queue
+        // just like regular MMIO handling in multi-core KVM mode.
+        EventQueue::ScopedMigration migrate(deviceEventQueue());
         const Cycles ipr_delay = mmio_req->localAccessor(tc, pkt);
         threadContextDirty = true;
         delete pkt;

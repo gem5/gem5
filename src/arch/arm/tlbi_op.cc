@@ -156,10 +156,9 @@ TLBIASID::operator()(ThreadContext* tc)
 bool
 TLBIASID::matchEntry(TlbEntry* te, vmid_t vmid) const
 {
-    return te->valid && te->asid == asid &&
-        ss == te->ss &&
-        te->checkRegime(targetRegime) &&
-        (te->vmid == vmid || !el2Enabled || !useVMID(targetRegime));
+    return te->valid && (!te->global || te->partial) && te->asid == asid &&
+           ss == te->ss && te->checkRegime(targetRegime) &&
+           (te->vmid == vmid || !el2Enabled || !useVMID(targetRegime));
 }
 
 void

@@ -111,6 +111,7 @@ processor = SimpleProcessor(
     # The number of cores must be equal or greater than that used when taking
     # the checkpoint.
     num_cores=9,
+    clk_freq="3GHz",
 )
 
 board = SimpleBoard(

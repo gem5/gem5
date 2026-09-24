@@ -74,7 +74,10 @@ for ticks in [500_000, 1_000_000, 1_500_000]:
     memory = SingleChannelDDR3_1600(size="32MiB")
 
     processor = SimpleProcessor(
-        cpu_type=CPUTypes.TIMING, isa=ISA.RISCV, num_cores=1
+        cpu_type=CPUTypes.TIMING,
+        isa=ISA.RISCV,
+        num_cores=1,
+        clk_freq="3GHz",
     )
 
     board = SimpleBoard(

@@ -39,9 +39,8 @@ if config.bin_path:
 else:
     resource_path = joinpath(absdirpath(__file__), "..", "resources")
 
-# The following lists the RISCV binaries. Those commented out presently result
-# in a test failure. This is outlined in the following Jira issue:
-# https://gem5.atlassian.net/browse/GEM5-496
+# The following lists the RISCV binaries. Those commented out are tracked in:
+# https://github.com/gem5/gem5/issues/3465
 rv64_binaries = (
     "rv64samt-ps-sysclone_d",
     "rv64samt-ps-sysfutex1_d",

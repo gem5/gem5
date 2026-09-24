@@ -58,6 +58,9 @@ SimObject('PciHost.py', sim_objects=['PciHost', 'GenericPciHost'])
 Source('host.cc')
 DebugFlag('PciHost')
 
+SimObject('PciToPciBridge.py', sim_objects=['PciToPciBridge'])
+Source('p2p_bridge.cc')
+
 SimObject('CopyEngine.py', sim_objects=['CopyEngine'])
 Source('copy_engine.cc')
 DebugFlag('DMACopyEngine')

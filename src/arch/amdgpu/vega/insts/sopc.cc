@@ -480,7 +480,7 @@ Inst_SOPC__S_SETVSKIP::~Inst_SOPC__S_SETVSKIP()
 // --- description from .arch file ---
 // VSKIP = S0.u[S1.u[4:0]].
 // Enables and disables VSKIP mode.
-// When VSKIP is enabled, no VOP*/M*BUF/MIMG/DS/FLAT/EXP instuctions are
+// When VSKIP is enabled, no VOP*/M*BUF/MIMG/DS/FLAT/EXP instructions are
 // issued.
 // If any vector operations are outstanding, S_WAITCNT must be issued
 // before executing.

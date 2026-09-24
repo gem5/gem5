@@ -40,7 +40,11 @@
 
 #include <algorithm>
 
+#include "config/use_kvm.hh"
 #include "cpu/base.hh"
+#if USE_KVM
+#include "cpu/kvm/base.hh"
+#endif
 #include "debug/Plic.hh"
 #include "mem/packet.hh"
 #include "mem/packet_access.hh"
@@ -359,19 +363,40 @@ Plic::readClaim(Register32& reg, const int context_id)
         int src_index = max_int_id >> 5;
         int src_offset = max_int_id & 0x1F;
 
+#if USE_KVM
+        auto clear_kvm_line = [&]() {
+            // KVM can re-enter the guest before the normal delayed
+            // PLIC output update fires, so clear the injected line
+            // synchronously for KVM CPUs only.
+            auto [thread_id, int_id] = contextConfigs[context_id];
+            auto tc = system->threads[thread_id];
+            auto *cpu = tc->getCpuPtr();
+            if (dynamic_cast<BaseKvmCPU *>(cpu)) {
+                cpu->clearInterrupt(tc->threadId(), int_id, 0);
+            }
+        };
+#endif
+
         // Check pending bits
         if (bits(registers.pending[src_index].get(), src_offset)) {
             lastID[context_id] = max_int_id;
-            DPRINTF(Plic,
-                "Claim success - context: %d, interrupt ID: %d\n",
-                context_id, max_int_id);
+            DPRINTF(Plic, "Claim success - context: %d, interrupt ID: %d\n",
+                    context_id, max_int_id);
             clear(max_int_id);
+
+#if USE_KVM
+            clear_kvm_line();
+#endif
+
             reg.update(max_int_id);
             return reg.get();
         } else {
             DPRINTF(Plic,
                 "Claim already cleared - context: %d, interrupt ID: %d\n",
                 context_id, max_int_id);
+#if USE_KVM
+            clear_kvm_line();
+#endif
             return 0;
         }
     } else {

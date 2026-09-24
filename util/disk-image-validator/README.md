@@ -8,7 +8,7 @@ This utility is used to verify that full system workloads in gem5 function as ex
 
 ## gem5-Bridge Driver Validator
 
-To validate the `gem5-bridge` driver, run the `gem5-bridge-driver-validate.py` script. This script verifies the driver installation by executing a simple C program that makes an m5 hypercall (hypercall number 1234), without requiring superuser privileges.
+To validate the `gem5-bridge` driver, run the `gem5-bridge-driver-validate.py` script. This script verifies the driver installation by executing a simple C program that makes an m5 hypercall (hypercall ID 1234), without requiring superuser privileges.
 
 ### Usage
 
@@ -44,7 +44,7 @@ build/ALL/gem5.opt util/disk-image-validator/gem5-bridge-driver-validate.py --is
 
 - Selects the appropriate demo board based on the specified ISA (`x86`, `arm`, or `riscv`)
 - Loads the given workload and optional resource version
-- Runs a shell script (`test_gem5_bridge.sh`) during the simulation to test whether m5 hypercall 1234 executes successfully (without requiring `sudo`)
+- Runs a shell script (`test_gem5_bridge.sh`) during the simulation to test whether m5 hypercall ID 1234 executes successfully (without requiring `sudo`)
 - Prints a success message if the test passes
 
 ### Exit Conditions

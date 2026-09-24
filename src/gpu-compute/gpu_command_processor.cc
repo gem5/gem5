@@ -378,7 +378,7 @@ GPUCommandProcessor::dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
 
         // This allows debug-at and exit-at GPU task options to work
         if (dispatcher.hasKernelExitEvents()) {
-            exitSimLoop("GPU Blit Kernel Completed");
+            exitSimulationLoopClassic("GPU Blit Kernel Completed");
         }
 
         ++dynamic_task_id;
@@ -411,7 +411,7 @@ GPUCommandProcessor::dispatchKernelObject(AMDKernelCode *akc, void *raw_pkt,
         delete akc;
 
         // Notify the run script that a kernel has been skipped
-        exitSimLoop("Skipping GPU Kernel");
+        exitSimulationLoopClassic("Skipping GPU Kernel");
 
         return;
     }

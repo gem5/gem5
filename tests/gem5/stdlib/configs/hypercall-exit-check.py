@@ -72,7 +72,10 @@ board = SimpleBoard(
     memory=SingleChannelDDR3_1600(),
     cache_hierarchy=NoCache(),
     processor=SimpleProcessor(
-        cpu_type=CPUTypes.ATOMIC, isa=ISA.X86, num_cores=1
+        cpu_type=CPUTypes.ATOMIC,
+        isa=ISA.X86,
+        num_cores=1,
+        clk_freq="3GHz",
     ),
 )
 

@@ -34,7 +34,7 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-minimum_pre_commit_version: '2.18'
+minimum_pre_commit_version: '2.17'
 
 default_language_version:
     python: python3
@@ -69,9 +69,10 @@ repos:
           - id: destroyed-symlinks
           - id: requirements-txt-fixer
     - repo: https://github.com/PyCQA/isort
-      rev: 8.0.1
+      rev: 9.0.1
       hooks:
           - id: isort
+            exclude: ^util/gem5art/
     - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
       rev: 0.2.3
       hooks:
@@ -80,13 +81,15 @@ repos:
       rev: 26.5.1
       hooks:
           - id: black
+            exclude: ^util/gem5art/
     - repo: https://github.com/asottile/pyupgrade
       rev: v3.21.2
       hooks:
           - id: pyupgrade
-            # Python 3.8 is the earliest version supported.
-            # We therefore conform to the standards compatible with 3.8+.
-            args: [--py38-plus]
+            exclude: ^util/gem5art/
+            # Python 3.10 is the earliest version supported.
+            # We therefore conform to the standards compatible with 3.10+.
+            args: [--py310-plus]
     - repo: local
       hooks:
           - id: gem5-style-checker
@@ -98,11 +101,12 @@ repos:
             description: The gem5 style checker hook.
           - id: gem5-git-clang-format
             name: gem5 clang-format
-            entry: util/run-git-clang-format.py
+            entry: python util/run-git-clang-format.py
             args: [--pre-commit]
             always_run: true
             exclude: .*
-            language: system
+            language: python
+            additional_dependencies: [clang-format==18.1.8]
             description: Run git-clang-format on the commit.
           - id: gem5-commit-msg-checker
             name: gem5 commit msg checker

@@ -538,7 +538,7 @@ vcvtFpFpH(FPSCR &fpscr, bool flush, bool defaultNan,
                     exponent = 0x1f;
                     mantissa = 0x3ff;
                     fpscr.ioc = 1;
-                    // Supress inexact exception.
+                    // Suppress inexact exception.
                     inexact = false;
                 }
             } else {

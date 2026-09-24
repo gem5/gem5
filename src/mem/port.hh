@@ -47,11 +47,14 @@
 #define __MEM_PORT_HH__
 
 #include <memory>
+#include <optional>
 #include <sstream>
-#include <stack>
 #include <string>
+#include <vector>
 
 #include "base/addr_range.hh"
+#include "base/trace.hh"
+#include "debug/PortTrace.hh"
 #include "mem/packet.hh"
 #include "mem/protocol/atomic.hh"
 #include "mem/protocol/functional.hh"
@@ -71,54 +74,82 @@ class ResponsePort;
 
 /**
  * TracingExtension is an Extension of the Packet for recording the trace
- * of the Packet. The stack in the TracingExtension holds the name of the
+ * of the Packet. The vector in the TracingExtension holds the name of the
  * ports that the Packet has passed through.
  */
 class TracingExtension : public gem5::Extension<Packet, TracingExtension>
 {
- public:
-   TracingExtension() = default;
-   TracingExtension(const std::stack<std::string>& q) { trace_ = q; }
+  public:
+    TracingExtension() = default;
+    TracingExtension(const std::vector<std::string> &q) { trace_ = q; }
 
-   std::unique_ptr<ExtensionBase> clone() const override
-   {
-       return std::make_unique<TracingExtension>(trace_);
-   }
+    std::unique_ptr<ExtensionBase>
+    clone() const override
+    { return std::make_unique<TracingExtension>(trace_); }
 
-   void
-   add(std::string request_port, std::string response_port, gem5::Addr addr)
-   {
-       trace_.push(request_port + csprintf(" addr=%#llx", addr));
-       trace_.push(response_port);
-   }
+    void
+    add(std::string request_port, std::string response_port, gem5::Addr addr)
+    {
+        trace_.push_back(request_port + csprintf(" addr=%#llx", addr));
+        trace_.push_back(response_port);
+    }
 
-   void
-   remove()
-   {
-       trace_.pop();  // Remove the response port name.
-       trace_.pop();  // Remove the request port name.
-   }
+    void
+    remove()
+    {
+        trace_.pop_back(); // Remove the response port name.
+        trace_.pop_back(); // Remove the request port name.
+    }
 
-   bool empty() { return trace_.empty(); }
-   std::stack<std::string>& getTrace() { return trace_; }
-   std::string getTraceInString()
-   {
-       std::stringstream port_trace;
-       std::stack<std::string> copy_stack = trace_;
-       port_trace << "Port trace of the Packet (" << std::endl
-                  << "[Destination] ";
-       while (!copy_stack.empty()) {
-           if (copy_stack.size() == 1)
-               port_trace << "[Source] ";
-           port_trace << copy_stack.top() << std::endl;
-           copy_stack.pop();
-       }
-       port_trace << ")";
-       return port_trace.str();
-   }
+    bool
+    empty()
+    { return trace_.empty(); }
+
+    std::vector<std::string> &
+    getTrace()
+    { return trace_; }
+
+    std::string
+    getTraceInString() const
+    {
+        std::stringstream port_trace;
+        port_trace << "Port trace of the Packet (" << std::endl
+                   << "[Destination] ";
+        for (auto rit = trace_.rbegin(); rit != trace_.rend(); rit++) {
+            if (std::next(rit) == trace_.rend()) {
+                port_trace << "[Source] ";
+            }
+            port_trace << *rit << std::endl;
+        }
+        port_trace << ")";
+        return port_trace.str();
+    }
+
+    /**
+     * @return the source port of the trace, return std::nullopt if the trace
+     * is empty
+     */
+    std::optional<std::string>
+    getTraceSource() const
+    {
+        if (trace_.empty()) {
+            return std::nullopt;
+        }
+        return trace_[0];
+    }
+
+    static void
+    dumpPortTrace(const gem5::PacketPtr pkt)
+    {
+        auto ext = pkt->getExtension<gem5::TracingExtension>();
+        if (ext) {
+            DPRINTF(PortTrace, "%s\n", ext->getTraceInString());
+        }
+    }
 
   private:
-   std::stack<std::string> trace_;
+    // Ordered from the original source to the current point in the trace
+    std::vector<std::string> trace_;
 };
 
 /**

@@ -33,10 +33,12 @@
 namespace gem5
 {
 
-BasicSignal::BasicSignal(Process *send, Process *receive, int signal_val)
+BasicSignal::BasicSignal(Process *send, Process *receive, int signal_val,
+                         int exit_status)
     : sender(send),
       receiver(receive),
-      signalValue(signal_val)
+      signalValue(signal_val),
+      exitStatus(exit_status)
 {
 }
 

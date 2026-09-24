@@ -9217,7 +9217,7 @@ GPUStaticInst *
 Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_ADD_F32(MachInst iFmt)
 {
     // Note: There is no flat_atomic_add_f32 as of MI200. However, gem5
-    // impelements all global and scratch instructions as Inst_FLAT.
+    // implements all global and scratch instructions as Inst_FLAT.
     return new Inst_FLAT__FLAT_ATOMIC_ADD_F32(&iFmt->iFmt_FLAT);
 }
 
@@ -9225,7 +9225,7 @@ GPUStaticInst *
 Decoder::decode_OP_GLOBAL__GLOBAL_ATOMIC_PK_ADD_F16(MachInst iFmt)
 {
     // Note: There is no flat_atomic_pk_add_f16 as of MI200. However, gem5
-    // impelements all global and scratch instructions as Inst_FLAT.
+    // implements all global and scratch instructions as Inst_FLAT.
     return new Inst_FLAT__FLAT_ATOMIC_PK_ADD_F16(&iFmt->iFmt_FLAT);
 }
 

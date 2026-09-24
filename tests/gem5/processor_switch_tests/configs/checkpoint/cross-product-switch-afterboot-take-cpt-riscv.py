@@ -87,6 +87,7 @@ processor = SimpleSwitchableProcessor(
     switch_core_type=CPUTypes.ATOMIC,
     isa=ISA.RISCV,
     num_cores=args.num_cores,
+    clk_freq="3GHz",
 )
 
 # Here we setup the board. The RiscvBoard allows for Full-System RISCV

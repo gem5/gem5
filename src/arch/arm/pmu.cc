@@ -459,14 +459,14 @@ PMU::pmuExitEvent(bool check_reset)
         pmuEnabled = any_counter_enabled;
         if (pmuEnabled) {
             inform("Exiting simulation: PMU enable detected");
-            exitSimLoop("performance counter enabled", 0);
+            exitSimulationLoopClassic("performance counter enabled");
         } else {
             inform("Exiting simulation: PMU disable detected");
-            exitSimLoop("performance counter disabled", 0);
+            exitSimulationLoopClassic("performance counter disabled");
         }
     } else if (check_reset && reg_pmcr.p) {
         inform("Exiting simulation: PMU reset detected");
-        exitSimLoop("performance counter reset", 0);
+        exitSimulationLoopClassic("performance counter reset");
     }
 }
 
@@ -738,7 +738,7 @@ PMU::raiseInterrupt()
 {
     if (exitOnPMUInterrupt) {
         inform("Exiting simulation: PMU interrupt detected");
-        exitSimLoop("performance counter interrupt", 0);
+        exitSimulationLoopClassic("performance counter interrupt");
     }
     if (interrupt) {
         DPRINTF(PMUVerbose, "Delivering PMU interrupt.\n");
@@ -865,7 +865,7 @@ PMU::CounterState::add(uint64_t delta)
     if (delta > value_until_overflow) {
 
         // overflow situation detected
-        // flag the overflow occurence
+        // flag the overflow occurrence
         pmu.reg_pmovsr |= (1 << counterId);
 
         // Deliver a PMU interrupt if interrupt delivery is enabled

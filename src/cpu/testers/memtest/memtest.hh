@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2021 Arm Limited
+ * Copyright (c) 2015, 2021, 2026 Arm Limited
  * All rights reserved
  *
  * The license below extends only to copyright in the software and shall
@@ -133,6 +133,8 @@ class MemTest : public ClockedObject
     const unsigned percentFunctional;
     const unsigned percentUncacheable;
     const unsigned percentAtomic;
+    const unsigned percentStashOnce;
+    const unsigned percentStashOnceUnique;
 
     /** Request id for all generated traffic */
     RequestorID requestorId;
@@ -173,6 +175,7 @@ class MemTest : public ClockedObject
     uint64_t numReads;
     uint64_t numWrites;
     uint64_t numAtomics;
+    uint64_t numStashes;
     const uint64_t maxLoads;
 
     const bool atomic;
@@ -185,6 +188,7 @@ class MemTest : public ClockedObject
         statistics::Scalar numReads;
         statistics::Scalar numWrites;
         statistics::Scalar numAtomics;
+        statistics::Scalar numStashes;
     } stats;
 
     /**
@@ -199,8 +203,15 @@ class MemTest : public ClockedObject
 
     void recvRetry();
 
+  public:
+    void set_stash_node_ids(const std::vector<unsigned> &node_ids);
+    void set_stash_lp_ids(const std::vector<unsigned> &lp_ids);
+
   private:
     Random::RandomPtr rng = Random::genRandom();
+    Random::RandomPtr stashRng = Random::genRandom();
+    std::vector<unsigned> stashNIDs;
+    std::vector<unsigned> stashLPIDs;
 };
 
 } // namespace gem5

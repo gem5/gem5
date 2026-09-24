@@ -2180,7 +2180,7 @@ ComputeUnit::updateInstStats(GPUDynInstPtr gpuDynInst)
         if (gpuDynInst->isALU()) {
             shader->total_valu_insts++;
             if (shader->total_valu_insts == shader->max_valu_insts) {
-                exitSimLoop("max vALU insts");
+                exitSimulationLoopClassic("max vALU insts");
             }
             stats.vALUInsts++;
             stats.instCyclesVALU++;

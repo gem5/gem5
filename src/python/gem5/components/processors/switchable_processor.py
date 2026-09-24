@@ -52,9 +52,16 @@ class SwitchableProcessor(AbstractProcessor):
 
     def __init__(
         self,
-        switchable_cores: Dict[str, List[SimpleCore]],
+        switchable_cores: dict[str, list[SimpleCore]],
         starting_cores: str,
+        clk_freq: str,
     ) -> None:
+        """
+        :param switchable_cores: A dictionary mapping processor names to the
+                                 cores that can be switched in.
+        :param starting_cores: The key of the cores to start with.
+        :param clk_freq: The clock frequency for the processor's cores.
+        """
         if starting_cores not in switchable_cores.keys():
             raise AssertionError(
                 f"Key {starting_cores} cannot be found in the "
@@ -67,7 +74,10 @@ class SwitchableProcessor(AbstractProcessor):
         # In the stdlib we assume the system processor conforms to a single
         # ISA target.
         assert len({core.get_isa() for core in self._current_cores}) == 1
-        super().__init__(isa=self._current_cores[0].get_isa())
+        super().__init__(
+            isa=self._current_cores[0].get_isa(),
+            clk_freq=clk_freq,
+        )
 
         for name, core_list in self._switchable_cores.items():
             # Use the names from the user as the member variables
@@ -75,6 +85,7 @@ class SwitchableProcessor(AbstractProcessor):
             setattr(self, name, core_list)
             for core in core_list:
                 core.set_switched_out(core not in self._current_cores)
+                core.get_simobject().clk_domain = self.get_clock_domain()
 
         self._prepare_kvm = any(
             core.is_kvm_core() for core in self._all_cores()
@@ -111,7 +122,7 @@ class SwitchableProcessor(AbstractProcessor):
         return len(self._current_cores)
 
     @overrides(AbstractProcessor)
-    def get_cores(self) -> List[AbstractCore]:
+    def get_cores(self) -> list[AbstractCore]:
         return self._current_cores
 
     def _all_cores(self):

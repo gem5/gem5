@@ -53,12 +53,13 @@
 #include "base/socket.hh"
 #include "base/temperature.hh"
 #include "base/types.hh"
+#include "cpu/probes/pc_count_pair.hh"
 #include "sim/core.hh"
 #include "sim/cur_tick.hh"
 #include "sim/drain.hh"
+#include "sim/init_signals.hh"
 #include "sim/serialize.hh"
 #include "sim/sim_object.hh"
-#include "cpu/probes/pc_count_pair.hh"
 
 namespace py = pybind11;
 
@@ -410,26 +411,22 @@ pybind_init_core(py::module_ &m_native)
         .value("HACK", Logger::HACK)
         ;
 
-    m_core
-        .def("setLogLevel", &Logger::setLevel)
+    m_core.def("setLogLevel", &Logger::setLevel)
         .def("setOutputDir", &setOutputDir)
         .def("doExitCleanup", &doExitCleanup)
+        .def("initSignals", &initSignals, "Initialize gem5 signal handlers")
 
         .def("disableAllListeners", &ListenSocket::disableAll)
         .def("listenersDisabled", &ListenSocket::allDisabled)
         .def("listenersLoopbackOnly", &ListenSocket::loopbackOnly)
-        .def("seedRandom", [](uint64_t seed) {
-            Random::reseedAll(seed);
-        })
-
+        .def("seedRandom", [](uint64_t seed) { Random::reseedAll(seed); })
 
         .def("fixClockFrequency", &fixClockFrequency)
         .def("clockFrequencyFixed", &clockFrequencyFixed)
 
         .def("setClockFrequency", &setClockFrequency)
         .def("getClockFrequency", &getClockFrequency)
-        .def("curTick", curTick)
-        ;
+        .def("curTick", curTick);
 
     /* TODO: These should be read-only */
     m_core.attr("compileDate") = py::cast(compileDate);
@@ -451,6 +448,74 @@ pybind_init_core(py::module_ &m_native)
 
         ;
 
+    /*
+     * Instantiation helpers
+     */
+    m_core
+        .def("bindPorts",
+             [](const py::list &obj_ptrs,
+                const std::vector<std::string> &obj_port_names,
+                const std::vector<PortID> &obj_port_indices,
+                const py::list &peer_ptrs,
+                const std::vector<std::string> &peer_port_names,
+                const std::vector<PortID> &peer_port_indices) {
+                 const size_t n = obj_ptrs.size();
+                 for (size_t i = 0; i < n; ++i) {
+                     // We use py::capsule instead of directly passing a Python
+                     // list of SimObject instances (which can be automatically
+                     // cast to std::vector<SimObject*> by pybind11) to
+                     // eliminate massive type-casting overhead.
+                     auto *obj =
+                         py::capsule(obj_ptrs[i]).get_pointer<SimObject>();
+                     auto *peer =
+                         py::capsule(peer_ptrs[i]).get_pointer<SimObject>();
+
+                     Port &pa =
+                         obj->getPort(obj_port_names[i], obj_port_indices[i]);
+                     Port &pb = peer->getPort(peer_port_names[i],
+                                              peer_port_indices[i]);
+                     pa.bind(pb);
+                 }
+             })
+        // We pass a list of capsules to reduce pybind11 overhead.
+        .def("initAll",
+             [](const py::list &capsules) {
+                 for (py::handle cap : capsules) {
+                     auto *obj =
+                         cap.cast<py::capsule>().get_pointer<SimObject>();
+                     obj->init();
+                 }
+             })
+        .def("regProbePointsAll",
+             [](const py::list &capsules) {
+                 for (py::handle cap : capsules) {
+                     auto *obj =
+                         cap.cast<py::capsule>().get_pointer<SimObject>();
+                     obj->regProbePoints();
+                 }
+             })
+        .def("regProbeListenersAll",
+             [](const py::list &capsules) {
+                 for (py::handle cap : capsules) {
+                     auto *obj =
+                         cap.cast<py::capsule>().get_pointer<SimObject>();
+                     obj->regProbeListeners();
+                 }
+             })
+        .def("initStateAll",
+             [](const py::list &capsules) {
+                 for (py::handle cap : capsules) {
+                     auto *obj =
+                         cap.cast<py::capsule>().get_pointer<SimObject>();
+                     obj->initState();
+                 }
+             })
+        .def("loadStateAll", [](CheckpointIn &cp, const py::list &capsules) {
+            for (py::handle cap : capsules) {
+                auto *obj = cap.cast<py::capsule>().get_pointer<SimObject>();
+                obj->loadState(cp);
+            }
+        });
 
     init_drain(m_native);
     init_serialize(m_native);

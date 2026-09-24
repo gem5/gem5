@@ -56,7 +56,7 @@ def parse_args():
     return args
 
 
-def write_cc_file(enum: Type, use_python: bool, enum_cc: str):
+def write_cc_file(enum: type, use_python: bool, enum_cc: str):
     """Write the C++ source file for an Enum.
 
     This function generates a C++ source file that defines the

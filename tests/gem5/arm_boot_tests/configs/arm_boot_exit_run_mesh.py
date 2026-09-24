@@ -171,7 +171,10 @@ memory = ChanneledMemory(
 cpu_type = get_cpu_type_from_str(args.cpu)
 
 processor = SimpleProcessor(
-    cpu_type=cpu_type, num_cores=args.num_cpus, isa=ISA.ARM
+    cpu_type=cpu_type,
+    num_cores=args.num_cpus,
+    isa=ISA.ARM,
+    clk_freq="1GHz",
 )
 
 

@@ -69,7 +69,7 @@ namespace {
  * When the simulator returns from KVM for simulating other models, the
  * in-kernel timer doesn't stop. We have to save the virtual time and
  * restore before going into KVM next time. Moreover, setting virtual time
- * affacts all vcpus according to the kvm implementation. We maintain a global
+ * affects all vcpus according to the kvm implementation. We maintain a global
  * virtual time here, restore it before the first vcpu going into KVM, and save
  * it after the last vcpu back from KVM.
  */

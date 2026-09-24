@@ -451,7 +451,7 @@ Decoder::processOpcode(ByteTable &immTable, ByteTable &modrmTable,
     State nextState = ErrorState;
     const uint8_t opcode = emi.opcode.op;
 
-    // Figure out the effective operand size. This can be overriden to
+    // Figure out the effective operand size. This can be overridden to
     // a fixed value at the decoder level.
     int logOpSize;
     if (emi.rex.w)
@@ -464,7 +464,7 @@ Decoder::processOpcode(ByteTable &immTable, ByteTable &modrmTable,
     // Set the actual op size.
     emi.opSize = 1 << logOpSize;
 
-    // Figure out the effective address size. This can be overriden to
+    // Figure out the effective address size. This can be overridden to
     // a fixed value at the decoder level.
     int logAddrSize;
     if (emi.legacy.addr)
@@ -475,11 +475,11 @@ Decoder::processOpcode(ByteTable &immTable, ByteTable &modrmTable,
     // Set the actual address size.
     emi.addrSize = 1 << logAddrSize;
 
-    // Figure out the effective stack width. This can be overriden to
+    // Figure out the effective stack width. This can be overridden to
     // a fixed value at the decoder level.
     emi.stackSize = 1 << stack;
 
-    // Figure out how big of an immediate we'll retreive based
+    // Figure out how big of an immediate we'll retrieve based
     // on the opcode.
     int immType = immTable[opcode];
     if (addrSizedImm)

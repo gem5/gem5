@@ -34,13 +34,14 @@ from gem5.resources.resource import (
     obtain_resource,
 )
 from gem5.simulate.exit_event import ExitEvent
+from gem5.simulate.exit_handler import ExitHandler
 from gem5.simulate.simulator import Simulator
 
 """
 gem5 Bridge Driver Test Script
 
 This script tests whether the gem5-bridge driver is correctly installed by
-running a simple C program that makes an m5 hypercall (hypercall number 1234)
+running a simple C program that makes an m5 hypercall (hypercall ID 1234)
 without requiring superuser privileges.
 
 Usage:
@@ -64,7 +65,7 @@ Requirements:
 Functionality:
     - Selects the appropriate demo board (X86, Arm, or RISC-V) based on the given ISA.
     - Loads the specified workload and resource version (if provided).
-    - Runs a shell script (`test_gem5_bridge.sh`) to check whether m5 hypercall 1234
+    - Runs a shell script (`test_gem5_bridge.sh`) to check whether m5 hypercall ID 1234
       executes successfully without requiring `sudo`.
     - Prints a success message if the test passes.
 
@@ -73,6 +74,16 @@ Exit Conditions:
     - If an invalid ISA is provided, the script raises an exception.
 
 """
+
+"""Custom hypercall ID used only by the gem5-bridge validation test.
+
+The matching guest program in ``test_gem5_bridge.sh`` issues this same raw ID
+with ``m5_hypercall_addr``. It deliberately does not use the built-in
+``ExitHypercall`` enum because the test is validating that arbitrary m5
+hypercalls can be delivered through the gem5 bridge driver without superuser
+privileges.
+"""
+GEM5_BRIDGE_TEST_HYPERCALL_ID = 1234
 
 
 parser = argparse.ArgumentParser()
@@ -114,10 +125,10 @@ board.set_binary_to_run(
     args=[],
 )
 
-from gem5.simulate.exit_handler import ExitHandler
 
-
-class Gem5BridgeDriverTestExitHandler(ExitHandler, hypercall_num=1234):
+class Gem5BridgeDriverTestExitHandler(
+    ExitHandler, hypercall_id=GEM5_BRIDGE_TEST_HYPERCALL_ID
+):
     def _process(self, simulator):
         print("Successfully called m5 hypercall without superuser privileges")
         print("Test passed")

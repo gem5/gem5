@@ -35,7 +35,10 @@
 
 from m5.objects.Graphics import *
 from m5.params import *
-from m5.SimObject import SimObject
+from m5.SimObject import (
+    SimObject,
+    cxxMethod,
+)
 
 
 class VncInput(SimObject):
@@ -52,3 +55,16 @@ class VncServer(VncInput):
     cxx_class = "gem5::VncServer"
     port = Param.HostSocket(5900, "listen port/socket")
     number = Param.Int(0, "vnc client number")
+
+    @cxxMethod
+    def getListenerOutput(self) -> str:
+        """Returns the actual bound address of the listener as a string.
+
+        Returns an empty string if no listener is attached.
+        """
+        pass
+
+    @cxxMethod
+    def hasListener(self) -> bool:
+        """Returns True if a listener is attached to this VNC server."""
+        pass

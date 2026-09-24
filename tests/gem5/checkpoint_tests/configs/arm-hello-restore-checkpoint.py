@@ -70,7 +70,9 @@ cache_hierarchy = PrivateL1PrivateL2CacheHierarchy(
 
 memory = SingleChannelDDR3_1600(size="32MiB")
 
-processor = SimpleProcessor(cpu_type=CPUTypes.ATOMIC, isa=ISA.ARM, num_cores=2)
+processor = SimpleProcessor(
+    cpu_type=CPUTypes.ATOMIC, isa=ISA.ARM, num_cores=2, clk_freq="3GHz"
+)
 
 board = SimpleBoard(
     clk_freq="3GHz",

@@ -608,6 +608,7 @@ class EventQueue
     std::string objName;
     Event *head;
     Tick _curTick;
+    Tick _nextSimQuantum;
 
     //! Mutex to protect async queue.
     FairUncontendedMutex async_queue_mutex;
@@ -741,6 +742,8 @@ class EventQueue
     void name(const std::string &st) { objName = st; }
     /** @}*/ //end of api_eventq group
 
+    void setNextSimQuantum(Tick when) { _nextSimQuantum = when; }
+
     /**
      * Schedule the given event on this queue. Safe to call from any thread.
      *
@@ -749,7 +752,6 @@ class EventQueue
     void
     schedule(Event *event, Tick when, bool global=false)
     {
-        assert(when >= getCurTick());
         assert(!event->scheduled());
         assert(event->initialized());
 
@@ -811,10 +813,10 @@ class EventQueue
     void
     reschedule(Event *event, Tick when, bool always=false)
     {
+        assert(!inParallelMode || this == curEventQueue());
         assert(when >= getCurTick());
         assert(always || event->scheduled());
         assert(event->initialized());
-        assert(!inParallelMode || this == curEventQueue());
 
         if (event->scheduled()) {
             remove(event);

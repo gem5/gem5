@@ -62,6 +62,14 @@ class Workload(SimObject):
         """
         pass
 
+    @cxxMethod
+    def getGdbListenerOutput(self):
+        """
+        Returns the actual bound address of the remote GDB listener as a string.
+        Returns an empty string if no listener is attached.
+        """
+        pass
+
 
 class StubWorkload(Workload):
     type = "StubWorkload"

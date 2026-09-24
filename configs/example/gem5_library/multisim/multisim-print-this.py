@@ -78,7 +78,10 @@ for process_id in range(5):
     cache_hierarchy = NoCache()
     memory = SingleChannelDDR3_1600(size="32MiB")
     processor = SimpleProcessor(
-        cpu_type=CPUTypes.TIMING, isa=ISA.X86, num_cores=1
+        cpu_type=CPUTypes.TIMING,
+        isa=ISA.X86,
+        num_cores=1,
+        clk_freq="1GHz",
     )
     board = SimpleBoard(
         clk_freq="1GHz",

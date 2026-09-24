@@ -200,7 +200,7 @@ class PrivateL1PrivateL2CacheHierarchy(
             requires_send_evicts=core.requires_send_evicts(),
             cache_line_size=board.get_cache_line_size(),
             target_isa=board.get_processor().get_isa(),
-            clk_domain=board.get_clock_domain(),
+            clk_domain=board.get_processor().get_clock_domain(),
         )
         cluster.icache = L1CacheController(
             size=self._l1i_size,
@@ -209,7 +209,7 @@ class PrivateL1PrivateL2CacheHierarchy(
             requires_send_evicts=core.requires_send_evicts(),
             cache_line_size=board.get_cache_line_size(),
             target_isa=board.get_processor().get_isa(),
-            clk_domain=board.get_clock_domain(),
+            clk_domain=board.get_processor().get_clock_domain(),
         )
 
         cluster.icache.sequencer = RubySequencer(
@@ -230,7 +230,7 @@ class PrivateL1PrivateL2CacheHierarchy(
             assoc=self._l2_assoc,
             network=self.ruby_system.network,
             cache_line_size=board.get_cache_line_size(),
-            clk_domain=board.get_clock_domain(),
+            clk_domain=board.get_processor().get_clock_domain(),
         )
 
         if board.has_io_bus():
@@ -264,7 +264,7 @@ class PrivateL1PrivateL2CacheHierarchy(
 
     def _create_memory_controllers(
         self, board: AbstractBoard
-    ) -> List[MemoryController]:
+    ) -> list[MemoryController]:
         memory_controllers = []
         for rng, port in board.get_mem_ports():
             mc = MemoryController(self.ruby_system.network, rng, port)
@@ -274,7 +274,7 @@ class PrivateL1PrivateL2CacheHierarchy(
 
     def _create_dma_controllers(
         self, board: AbstractBoard
-    ) -> List[DMARequestor]:
+    ) -> list[DMARequestor]:
         dma_controllers = []
         for i, port in enumerate(board.get_dma_ports()):
             ctrl = DMARequestor(

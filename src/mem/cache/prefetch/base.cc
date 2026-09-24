@@ -270,6 +270,13 @@ Base::probeNotify(const CacheAccessProbeArg &acc, bool miss)
 void
 Base::regProbeListeners()
 {
+    // Must stay ahead of the listeners.empty() test below: a prefetcher
+    // given an explicit probe does not get the default ones.
+    for (const auto &[obj, name] : probeEvents) {
+        ProbeManager *pm = obj->getProbeManager();
+        listeners.push_back(pm->connect<PrefetchListener>(*this, name));
+    }
+
     /**
      * If no probes were added by the configuration scripts, connect to the
      * parent cache using the probe "Miss". Also connect to "Hit", if the
@@ -290,8 +297,7 @@ Base::regProbeListeners()
 void
 Base::addEventProbe(SimObject *obj, const char *name)
 {
-    ProbeManager *pm = obj->getProbeManager();
-    listeners.push_back(pm->connect<PrefetchListener>(*this, name));
+    probeEvents.emplace_back(obj, name);
 }
 
 void

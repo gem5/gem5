@@ -71,7 +71,7 @@ def macroop STI {
 
     # Extract the IOPL.
     srli t2, t1, 12, dataSize=8
-    andi t2, t1, 0x3, dataSize=8
+    andi t2, t2, 0x3, dataSize=8
 
     # Find the CPL.
     rdm5reg t3, dataSize=8
@@ -129,7 +129,7 @@ def macroop CLI {
 
     # Extract the IOPL.
     srli t2, t1, 12, dataSize=8
-    andi t2, t1, 0x3, dataSize=8
+    andi t2, t2, 0x3, dataSize=8
 
     # Find the CPL.
     rdm5reg t3, dataSize=8

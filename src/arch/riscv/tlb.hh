@@ -121,6 +121,7 @@ class TLB : public BaseTLB
     TLB(const Params &p);
 
     Walker *getWalker();
+    void setPMP(PMP *_pmp);
 
     void takeOverFrom(BaseTLB *old) override {}
 

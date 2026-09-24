@@ -38,7 +38,8 @@
 #ifndef __MEM_RUBY_PROTOCOL_CHI_TLM_CONTROLLER_HH__
 #define __MEM_RUBY_PROTOCOL_CHI_TLM_CONTROLLER_HH__
 
-#include <ARM/TLM/arm_chi.h>
+#include <ARM/TLM/arm_chi_payload.h>
+#include <ARM/TLM/arm_chi_phase.h>
 
 #include "mem/ruby/protocol/CHI/CHIDataType.hh"
 #include "mem/ruby/protocol/CHI/CHIRequestType.hh"

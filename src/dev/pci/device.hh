@@ -507,6 +507,15 @@ class PciDevice : public DmaDevice
     }
 
     /**
+     * Get the PCI bus number to which this device is connected.
+     */
+    PciBusNum
+    getBusNum() const
+    {
+        return upstreamInterface->getBusNum();
+    }
+
+    /**
      * Called to receive a bus number change from the PCI upstream.
      * A bus number change means that all address ranges
      * (configuration, ...) can be changed, so this will send a range
@@ -562,6 +571,12 @@ class PciType1Device : public PciDevice
   protected:
     PCIConfigType1 &
     config()
+    {
+        return _config.type1;
+    }
+
+    const PCIConfigType1 &
+    config() const
     {
         return _config.type1;
     }

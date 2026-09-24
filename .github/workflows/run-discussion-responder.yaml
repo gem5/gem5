@@ -1,0 +1,35 @@
+---
+
+name: Run discussion responder when a Q&A discussion is opened
+
+on:
+    discussion:
+        types: [created, transferred]
+
+env:
+  # This is the token used to authenticate with GitHub.
+  # It is required to run the `gh` CLI.
+    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+    run_workflows:
+        if: github.event.discussion.category.name == 'Q&A'
+        permissions:
+            actions: write
+            contents: read
+        runs-on: ubuntu-24.04
+        steps:
+            # This step is necessary to allow the `gh` CLI to be used in the
+            # following steps. The `gh` CLI is used to trigger the workflows.
+            # and needs to be used inside the same repository where the
+            # workflows are defined.
+            - name: Checkout Repository
+              uses: actions/checkout@v4
+
+            - name: Install gh-aw extension
+              run: gh extension install github/gh-aw
+
+            - name: Run Discussion Responder
+              run: |
+                  gh aw run discussion-responder --ref develop --raw-field discussion_number=${{ github.event.discussion.number }}
+                  echo "Discussion responder scheduled to run on develop branch"

@@ -139,6 +139,9 @@ class GenericPciHost : public PciHost
         return pciDmaBase + pci_addr;
     }
 
+    AddrRange interfaceBusConfigRange(PciBusNum start_bus,
+                                      PciBusNum end_bus) const override;
+
     PciBusNum
     getBusNum() const override
     {
@@ -152,6 +155,8 @@ class GenericPciHost : public PciHost
     virtual uint32_t mapPciInterrupt(const PciDevice &device) const;
 
   protected:
+    Addr devConfigAddr(PciBusNum bus_num, const PciDevAddr &dev_addr) const;
+
     Platform &platform;
 
     const Addr confBase;
@@ -161,6 +166,10 @@ class GenericPciHost : public PciHost
     const Addr pciPioBase;
     const Addr pciMemBase;
     const Addr pciDmaBase;
+
+    constexpr static uint64_t FUNCTION_OFFSET = 0;
+    constexpr static uint64_t DEVICE_OFFSET = 3;
+    constexpr static uint64_t BUS_OFFSET = 8;
 };
 
 } // namespace gem5

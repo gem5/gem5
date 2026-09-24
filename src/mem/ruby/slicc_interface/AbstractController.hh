@@ -87,7 +87,9 @@ class AbstractController : public ClockedObject, public Consumer
   public:
     PARAMS(RubyController);
     AbstractController(const Params &p);
-    void init();
+    void init() override;
+
+    DrainState drain() override;
 
     NodeID getVersion() const { return m_machineID.getNum(); }
     MachineType getType() const { return m_machineID.getType(); }
@@ -113,10 +115,8 @@ class AbstractController : public ClockedObject, public Consumer
 
     virtual AccessPermission getAccessPermission(const Addr &addr) = 0;
 
-    virtual void print(std::ostream & out) const = 0;
-    virtual void wakeup() = 0;
-    virtual void resetStats() = 0;
-    virtual void regStats();
+    void resetStats() override = 0;
+    void regStats() override;
 
     virtual void recordCacheTrace(int cntrl, CacheRecorder* tr) = 0;
     virtual Sequencer* getCPUSequencer() const = 0;
@@ -192,7 +192,7 @@ class AbstractController : public ClockedObject, public Consumer
 
     /** A function used to return the port associated with this bus object. */
     Port &getPort(const std::string &if_name,
-                  PortID idx=InvalidPortID);
+                  PortID idx = InvalidPortID) override;
 
     bool recvTimingResp(PacketPtr pkt);
     Tick recvAtomic(PacketPtr pkt);
@@ -217,7 +217,7 @@ class AbstractController : public ClockedObject, public Consumer
     /**
      * Map an address to the correct MachineID
      *
-     * This function querries the network for the NodeID of the
+     * This function queries the network for the NodeID of the
      * destination for a given request using its address and the type
      * of the destination. For example for a request with a given
      * address to a directory it will return the MachineID of the
@@ -267,6 +267,13 @@ class AbstractController : public ClockedObject, public Consumer
 
     std::unordered_map<Addr, TransMapPair> m_inTransUnaddressed;
     std::unordered_map<Addr, TransMapPair> m_outTransUnaddressed;
+
+    //! True if there are no incoming transactions
+    bool
+    noInTransactions() const
+    {
+        return m_inTransAddressed.empty() && m_inTransUnaddressed.empty();
+    }
 
     /**
      * Profiles an event that initiates a protocol transactions for a specific
@@ -330,7 +337,10 @@ class AbstractController : public ClockedObject, public Consumer
         stats.inTransLatHist[iter->second.transaction]->sample(
                                 ticksToCycles(curTick() - trans.time));
 
-       m_inTrans.erase(iter);
+        m_inTrans.erase(iter);
+        if (drainState() == DrainState::Draining && noInTransactions()) {
+            signalDrainDone();
+        }
     }
 
     /**

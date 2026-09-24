@@ -188,10 +188,10 @@ class Node_Params:
 
     node_type: CHI_NodeType
     num_nodes_per_router: int = 1
-    router_list: List[int] = field(default_factory=list)
+    router_list: list[int] = field(default_factory=list)
     dedicated_router: bool = False
-    inbound_link_latency: Optional[int] = None
-    outbound_link_latency: Optional[int] = None
+    inbound_link_latency: int | None = None
+    outbound_link_latency: int | None = None
 
     def num_nodes(self) -> int:
         """Derive node count from Node_Params placement metadata."""

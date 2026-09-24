@@ -268,6 +268,15 @@ class BaseCPU : public ClockedObject
 
     virtual void wakeup(ThreadID tid) = 0;
 
+    /**
+     * Return true if a newly posted interrupt should wake this CPU.
+     *
+     * Most CPU models can use their cached interrupt controller state to
+     * decide whether an interrupt is unmasked. CPU models with interrupt
+     * state that may be advanced outside gem5 can override this hook.
+     */
+    virtual bool wakeupOnInterrupt(ThreadID tid) const;
+
     void postInterrupt(ThreadID tid, int int_num, int index);
 
     void

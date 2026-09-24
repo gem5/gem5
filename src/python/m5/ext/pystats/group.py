@@ -36,9 +36,9 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from collections.abc import Callable
 from typing import (
     Any,
-    Callable,
     Dict,
     List,
     Optional,
@@ -56,20 +56,20 @@ class Group(AbstractStat):
     map of labeled  Groups, Statistics, Lists of Groups, or List of Statistics.
     """
 
-    type: Optional[str]
-    time_conversion: Optional[TimeConversion]
-    values: Dict[
-        str, Union["Group", Statistic, List["Group"], List["Statistic"]]
+    type: str | None
+    time_conversion: TimeConversion | None
+    values: dict[
+        str, Union["Group", Statistic, list["Group"], list["Statistic"]]
     ]
-    name: Optional[str]
+    name: str | None
 
     def __init__(
         self,
-        type: Optional[str] = None,
-        name: Optional[str] = None,
-        time_conversion: Optional[TimeConversion] = None,
-        **kwargs: Dict[
-            str, Union["Group", Statistic, List["Group"], List["Statistic"]]
+        type: str | None = None,
+        name: str | None = None,
+        time_conversion: TimeConversion | None = None,
+        **kwargs: dict[
+            str, Union["Group", Statistic, list["Group"], list["Statistic"]]
         ],
     ):
         if type:
@@ -82,13 +82,13 @@ class Group(AbstractStat):
 
     def children(
         self,
-        predicate: Optional[Callable[[str], bool]] = None,
+        predicate: Callable[[str], bool] | None = None,
         recursive: bool = False,
-    ) -> List["AbstractStat"]:
+    ) -> list["AbstractStat"]:
         to_return = []
-        for key, obj in self.values:
+        for key, obj in self.values.items():
             if isinstance(obj, AbstractStat):
-                if (predicate and predicate(obj)) or not predicate:
+                if (predicate and predicate(key)) or not predicate:
                     to_return.append(obj)
                 if recursive:
                     to_return = to_return + obj.children(
@@ -106,7 +106,10 @@ class Group(AbstractStat):
         try:
             return self.values[name]
         except KeyError:
-            raise AttributeError(name)
+            vector_item = self._get_vector_item(name)
+            if vector_item:
+                return vector_item[2]
+            raise AttributeError(name) from None
 
     def __setattr__(self, name, value):
         # Let normal attributes be handled normally
@@ -125,8 +128,8 @@ class SimObjectGroup(Group):
 
     def __init__(
         self,
-        name: Optional[str] = None,
-        **kwargs: Dict[str, Union[Group, Statistic]],
+        name: str | None = None,
+        **kwargs: dict[str, Group | Statistic],
     ):
         super().__init__(type="SimObject", name=name, **kwargs)
 
@@ -139,31 +142,32 @@ class SimObjectVectorGroup(Group):
     from something like `system.cpu = [DerivO3CPU(), TimingSimpleCPU()]`.
     """
 
-    def __init__(self, children: List[AbstractStat], **kwargs: Dict[str, Any]):
+    def __init__(self, children: list[AbstractStat], **kwargs: dict[str, Any]):
         assert isinstance(children, list), "Value must be a list"
         kwargs["value"] = children
         super().__init__(type="SimObjectVector", **kwargs)
 
     def __iter__(self):
-        return iter(self.values)
+        return iter(self.values["value"])
 
     def __len__(self):
-        return len(self.values)
+        return len(self.values["value"])
 
-    def __getitem__(self, item: int):
-        return self.values[item]
+    def __getitem__(self, item: int | str):
+        if isinstance(item, int):
+            return self.values["value"][item]
+        return super().__getitem__(item)
 
     def __contains__(self, item):
-        if isinstance(item, int):
-            return item >= 0 and item < len(self)
+        return isinstance(item, int) and 0 <= item < len(self)
 
     def children(
         self,
-        predicate: Optional[Callable[[str], bool]] = None,
+        predicate: Callable[[str], bool] | None = None,
         recursive: bool = False,
-    ) -> List["AbstractStat"]:
+    ) -> list["AbstractStat"]:
         to_return = []
-        for child in self.values:
+        for child in self.values["value"]:
             to_return = to_return + child.children(
                 predicate=predicate, recursive=recursive
             )

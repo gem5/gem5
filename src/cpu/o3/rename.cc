@@ -287,7 +287,6 @@ Rename::resetStage()
     _status = Inactive;
 
     resumeSerialize = false;
-    resumeUnblocking = false;
 
     // Grab the number of free entries directly from the stages.
     for (ThreadID tid = 0; tid < numThreads; tid++) {
@@ -513,12 +512,6 @@ Rename::rename(bool &status_change, ThreadID tid)
         if (resumeSerialize) {
             resumeSerialize = false;
             block(tid);
-            toDecode->renameUnblock[tid] = false;
-        }
-    } else if (renameStatus[tid] == Unblocking) {
-        if (resumeUnblocking) {
-            block(tid);
-            resumeUnblocking = false;
             toDecode->renameUnblock[tid] = false;
         }
     }
@@ -902,12 +895,10 @@ Rename::block(ThreadID tid)
     skidInsert(tid);
 
     // Only signal backwards to block if the previous stages do not think
-    // rename is already blocked.
+    // rename is already blocked. While Unblocking, decode already believes
+    // rename is stalled (skid drain); do not re-assert renameBlock.
     if (renameStatus[tid] != Blocked) {
-        // If resumeUnblocking is set, we unblocked during the squash,
-        // but now we're have unblocking status. We need to tell earlier
-        // stages to block.
-        if (resumeUnblocking || renameStatus[tid] != Unblocking) {
+        if (renameStatus[tid] != Unblocking) {
             toDecode->renameBlock[tid] = true;
             toDecode->renameUnblock[tid] = false;
             wroteToTimeBuffer = true;
@@ -1409,18 +1400,14 @@ Rename::checkSignalsAndUpdate(ThreadID tid)
 
     if (renameStatus[tid] == Squashing) {
         // Switch status to running if rename isn't being told to block or
-        // squash this cycle.
+        // squash this cycle. Squash clears the skid buffer, so there is
+        // nothing to resume-unblock afterwards (unlike SerializeStall,
+        // which may still need resumeSerialize).
         if (resumeSerialize) {
             DPRINTF(Rename,
                     "[tid:%i] Done squashing, switching to serialize.\n", tid);
 
             renameStatus[tid] = SerializeStall;
-            return true;
-        } else if (resumeUnblocking) {
-            DPRINTF(Rename,
-                    "[tid:%i] Done squashing, switching to unblocking.\n",
-                    tid);
-            renameStatus[tid] = Unblocking;
             return true;
         } else {
             DPRINTF(Rename, "[tid:%i] Done squashing, switching to running.\n",

@@ -292,7 +292,7 @@ class ViperShader(Shader):
 
         device.gpu_id = self._shader_id
 
-    def _create_pm4s(self, pm4_starts: List[int], pm4_ends: List[int]):
+    def _create_pm4s(self, pm4_starts: list[int], pm4_ends: list[int]):
         """Create PM4 packet processors."""
         num_pm4s = len(pm4_starts)
 
@@ -309,7 +309,7 @@ class ViperShader(Shader):
 
         return pm4_procs
 
-    def _create_sdmas(self, sdma_bases: List[int], sdma_sizes: List[int]):
+    def _create_sdmas(self, sdma_bases: list[int], sdma_sizes: list[int]):
         """Create the SDMA engines."""
         num_sdmas = len(sdma_bases)
 

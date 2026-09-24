@@ -100,8 +100,8 @@ def test_parsec(
 # benchmarks have been chosen.
 #
 # Note: At present the MESI_Two_Level protocol does not appear to work
-# correctly with the SwitchableProcessor. As such they are commented out. This
-# issue is documented here: https://gem5.atlassian.net/browse/GEM5-1085.
+# correctly with the SwitchableProcessor. As such they are commented out.
+# https://github.com/gem5/gem5/issues/3439
 
 test_parsec(
     boot_cpu="kvm",

@@ -168,6 +168,9 @@ class PMP : public SimObject
      */
     void pmpReset();
 
+    /** Copy runtime PMP state when switching between CPU/MMU instances. */
+    void takeOverFrom(PMP *old);
+
   private:
     /**
      * createAddrfault creates an address fault

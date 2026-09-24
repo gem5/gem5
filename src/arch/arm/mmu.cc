@@ -391,7 +391,7 @@ MMU::checkPermissions(TlbEntry *te, const RequestPtr &req, Mode mode,
                       CachedState &state)
 {
     // a data cache maintenance instruction that operates by MVA does
-    // not generate a Data Abort exeception due to a Permission fault
+    // not generate a Data Abort exception due to a Permission fault
     if (req->isCacheMaintenance()) {
         return NoFault;
     }
@@ -402,7 +402,7 @@ MMU::checkPermissions(TlbEntry *te, const RequestPtr &req, Mode mode,
     bool is_write  = (mode == Write);
     bool is_priv   = state.isPriv && !(flags & UserMode);
 
-    // Get the translation type from the actuall table entry
+    // Get the translation type from the actual table entry
     TranMethod tran_method = te->longDescFormat ?
         TranMethod::LpaeTran : TranMethod::VmsaTran;
 
@@ -883,7 +883,7 @@ MMU::s1DirectPermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
 
     TranslationRegime regime = !is_priv ? TranslationRegime::EL10 :
                                           state.currRegime;
-    // Tranditional permission check.
+    // Traditional permission check.
     if (hasUnprivRegime(regime)) {
         bool pr = false;
         bool pw = false;
@@ -955,7 +955,7 @@ MMU::s1PermBits64(TlbEntry *te, const RequestPtr &req, Mode mode,
     bool grant = false;
     bool grant_read = true, grant_write = true, grant_exec = true;
 
-    // Check the feature of indirected premission.
+    // Check the feature of indirected permission.
     if (state.pie) {
         std::tie(grant_read, grant_write, grant_exec) =
             s1IndirectPermBits64(te, req, mode, tc, state, r, w, x);
@@ -1715,7 +1715,7 @@ MMU::getTE(TlbEntry **te, const RequestPtr &req, ThreadContext *tc, Mode mode,
         }
 
         // start translation table walk, pass variables rather than
-        // re-retreaving in table walker for speed
+        // re-retrieving in table walker for speed
         DPRINTF(MMU,
                 "TLB Miss: Starting hardware table walker for %#x(%d:%d)\n",
                 vaddr_tainted, state.asid, state.vmid);

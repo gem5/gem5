@@ -112,14 +112,18 @@ class _LegacyCoreAdapter:
 
 
 class _LegacyProcessorAdapter:
-    def __init__(self, cpus: List):
-        self._cores = [_LegacyCoreAdapter(cpu) for cpu in cpus]
+    def __init__(self, cluster):
+        self._cluster = cluster
+        self._cores = [_LegacyCoreAdapter(cpu) for cpu in cluster]
 
     def get_cores(self):
         return self._cores
 
     def get_isa(self):
         return ISA.ARM
+
+    def get_clock_domain(self):
+        return self._cluster.clk_domain
 
 
 class _LegacyBoardAdapter:
@@ -189,18 +193,16 @@ def create(args):
         readfile=args.script,
     )
 
-    system.cpu_cluster = [
-        devices.ArmCpuCluster(
-            system,
-            args.num_cpus,
-            args.cpu_freq,
-            "1.0V",
-            cpu_class,
-            None,
-            None,
-            None,
-        )
-    ]
+    system.cpu_cluster = devices.ArmCpuCluster(
+        system,
+        args.num_cpus,
+        args.cpu_freq,
+        "1.0V",
+        cpu_class,
+        None,
+        None,
+        None,
+    )
 
     topology_config = load_topology_config(args.topology_config)
 
@@ -239,8 +241,7 @@ def create(args):
         )
     memory.set_memory_range(system.mem_ranges)
 
-    cpus = [cpu for cl in system.cpu_cluster for cpu in cl.cpus]
-    proc_adapter = _LegacyProcessorAdapter(cpus)
+    proc_adapter = _LegacyProcessorAdapter(system.cpu_cluster)
     board_adapter = _LegacyBoardAdapter(system, proc_adapter, memory)
 
     system.mesh_cache = cache_hierarchy()

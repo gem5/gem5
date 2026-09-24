@@ -1105,7 +1105,7 @@ AbortFault<T>::update(ThreadContext *tc)
                 override_LPAE = true;
             } else {
                 // Unimplemented code option, not seen in testing.  May need
-                // extension according to the manual exceprt above.
+                // extension according to the manual excerpt above.
                 DPRINTF(Faults, "Warning: Incomplete translation method "
                         "override detected.\n");
             }

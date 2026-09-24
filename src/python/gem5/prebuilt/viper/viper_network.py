@@ -45,8 +45,8 @@ class SimplePt2Pt(SimpleNetwork):
         super().__init__()
         self.netifs = []
 
-        # TODO: These should be in a base class
-        # https://gem5.atlassian.net/browse/GEM5-1039
+        # TODO: These should be in a base class.
+        # https://github.com/gem5/gem5/issues/3450
         self.ruby_system = ruby_system
 
     def connect(self, controllers):

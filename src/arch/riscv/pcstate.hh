@@ -135,9 +135,24 @@ class PCState : public GenericISA::UPCState<4>
     equals(const PCStateBase &other) const override
     {
         auto &opc = other.as<PCState>();
+        // Skip vl/vtype unless this PC carries a new vset (#1709): otherwise
+        // every later control inst looks mispredicted on O3.
         return Base::equals(other) &&
             (_new_vconf == opc._new_vconf) &&
             (!_new_vconf || (_vtype == opc._vtype && _vl == opc._vl)) &&
+            _zcmtSecondFetch == opc._zcmtSecondFetch &&
+            _zcmtPc == opc._zcmtPc;
+    }
+
+    bool
+    fullEquals(const PCStateBase &other) const override
+    {
+        auto &opc = other.as<PCState>();
+        // Always compare vl/vtype. Used by Minor to recover the decoder
+        // when a predicted loop branch cloned a stale vector config (#2742).
+        return Base::equals(other) &&
+            (_new_vconf == opc._new_vconf) &&
+            (_vtype == opc._vtype && _vl == opc._vl) &&
             _zcmtSecondFetch == opc._zcmtSecondFetch &&
             _zcmtPc == opc._zcmtPc;
     }

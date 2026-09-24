@@ -47,7 +47,9 @@
 #include <csignal>
 #include <cstring>
 #include <iostream>
+#include <map>
 #include <string>
+#include <utility>
 
 #if defined(__FreeBSD__)
 #include <sys/param.h>
@@ -391,8 +393,8 @@ processExternalSignal(void)
     munmap(shm_ptr, shared_mem_size);
     close(shm_fd);
 
-    exitSimLoopWithHypercall("Handling external signal!", 0, curTick(), 0,
-                             payload_map, hypercall_id, false);
+    exitSimulationLoop(hypercall_id, std::move(payload_map),
+                       curTick() + simQuantum);
 }
 
 std::string

@@ -215,7 +215,7 @@ _EXTENSION_REGISTRY = {
     "Zcmt": {"implemented": True},
     "Zdinx": {"implemented": False},
     "Zfa": {"implemented": True},
-    "Zfbfmin": {"implemented": False},
+    "Zfbfmin": {"implemented": True},
     "Zfh": {"implemented": True},
     "Zfhmin": {"implemented": True},
     "Zfinx": {"implemented": False},
@@ -260,8 +260,8 @@ _EXTENSION_REGISTRY = {
     "Zve64d": {"implemented": True},
     "Zve64f": {"implemented": True},
     "Zve64x": {"implemented": True},
-    "Zvfbfmin": {"implemented": False},
-    "Zvfbfwma": {"implemented": False},
+    "Zvfbfmin": {"implemented": True},
+    "Zvfbfwma": {"implemented": True},
     "Zvfh": {"implemented": True},
     "Zvfhmin": {"implemented": True},
     "Zvkb": {"implemented": False},
@@ -537,6 +537,7 @@ class RiscvISA(BaseISA):
             # "Zcf",        # RV32-only and implied by C+F
             # "Zcmp",       # C+D implies Zcd which is used by default
             # "Zcmt",       # C+D implies Zcd which is used by default
+            "Zfbfmin",
             "Zfh",
             "Zknd",
             "Zkne",
@@ -544,6 +545,8 @@ class RiscvISA(BaseISA):
             "Zksed",
             "Zksh",
             "Zvbc",
+            "Zvfbfmin",
+            "Zvfbfwma",
             "Zvfh",
             # "Smrnmi",     # Not enabled by default, changes trapping behavior
         ],
@@ -603,7 +606,10 @@ class RiscvISA(BaseISA):
             extension.value if hasattr(extension, "value") else extension
             for extension in self.extra_extensions
         }
-        return mandatory, requested, mandatory | requested
+        effective = mandatory | requested
+        if "Zvfbfwma" in effective:
+            effective.update(("Zfbfmin", "Zvfbfmin"))
+        return mandatory, requested, effective
 
     def _is_supported(self, extension):
         if extension == "H" and self.privilege_mode_set.value != "MHSU":
@@ -617,6 +623,39 @@ class RiscvISA(BaseISA):
                 raise ValueError(
                     "Unknown standard RISC-V extension: %s" % extension
                 )
+
+        bf16_extensions = effective & {
+            "Zfbfmin",
+            "Zvfbfmin",
+            "Zvfbfwma",
+        }
+        if bf16_extensions and "F" not in effective:
+            extensions = ", ".join(_ordered_extension_names(bf16_extensions))
+            if len(bf16_extensions) == 1:
+                raise ValueError(
+                    "RISC-V extension %s requires the F extension" % extensions
+                )
+            raise ValueError(
+                "RISC-V extensions %s require the F extension" % extensions
+            )
+
+        vector_bf16_extensions = effective & {
+            "Zvfbfmin",
+            "Zvfbfwma",
+        }
+        if vector_bf16_extensions and not effective.intersection(
+            ("V", "Zve32f")
+        ):
+            extensions = ", ".join(
+                _ordered_extension_names(vector_bf16_extensions)
+            )
+            if len(vector_bf16_extensions) == 1:
+                raise ValueError(
+                    "RISC-V extension %s requires V or Zve32f" % extensions
+                )
+            raise ValueError(
+                "RISC-V extensions %s require V or Zve32f" % extensions
+            )
 
         unimplemented_extras = sorted(
             extension

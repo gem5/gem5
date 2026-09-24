@@ -2544,7 +2544,7 @@ WalkUnit::insertTableEntry(WalkerState *curr_state, DescriptorBase &descriptor,
         te.pxn = curr_state->longDescData->pxnTable || l_descriptor.pxn();
         if (isStage2) {
             // this is actually the HAP field, but its stored in the same bit
-            // possitions as the AP field in a stage 1 translation.
+            // positions as the AP field in a stage 1 translation.
             te.hap = l_descriptor.ap();
         } else {
             te.ap =
@@ -2671,7 +2671,7 @@ WalkUnit::readDataUntimed(ThreadContext *tc, Addr vaddr, Addr desc_addr,
         assert(!pkt.isError());
     }
 
-    // If there was a fault annotate it with the flag saying the foult occured
+    // If there was a fault annotate it with the flag saying the fault occurred
     // while doing a translation for a stage 1 page table walk.
     if (fault != NoFault) {
         ArmFault *arm_fault = reinterpret_cast<ArmFault *>(fault.get());
@@ -2722,7 +2722,7 @@ WalkUnit::Stage2Walk::finish(const Fault &_fault, const RequestPtr &req,
 {
     fault = _fault;
 
-    // If there was a fault annotate it with the flag saying the foult occured
+    // If there was a fault annotate it with the flag saying the fault occurred
     // while doing a translation for a stage 1 page table walk.
     if (fault != NoFault) {
         ArmFault *arm_fault = reinterpret_cast<ArmFault *>(fault.get());

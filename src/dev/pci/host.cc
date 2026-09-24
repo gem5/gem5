@@ -79,6 +79,16 @@ GenericPciHost::~GenericPciHost()
 {
 }
 
+Addr
+GenericPciHost::devConfigAddr(PciBusNum bus_num,
+                              const PciDevAddr &dev_addr) const
+{
+    Addr bus_addr = (bus_num << BUS_OFFSET) + (dev_addr.dev << DEVICE_OFFSET) +
+                    (dev_addr.func << FUNCTION_OFFSET);
+
+    return confBase + (bus_addr << confDeviceBits);
+}
+
 AddrRange
 GenericPciHost::getConfigAddrRange() const
 {
@@ -88,12 +98,24 @@ GenericPciHost::getConfigAddrRange() const
 AddrRange
 GenericPciHost::interfaceConfigRange(const PciDevice &device) const
 {
-    PciDevAddr dev_addr = device.devAddr();
-    Addr bus_addr = (getBusNum() << 8) + (dev_addr.dev << 3) + dev_addr.func;
-
-    Addr start = confBase + (bus_addr << confDeviceBits);
+    Addr start = devConfigAddr(device.getBusNum(), device.devAddr());
 
     return RangeSize(start, 1 << confDeviceBits);
+}
+
+AddrRange
+GenericPciHost::interfaceBusConfigRange(PciBusNum start_bus,
+                                        PciBusNum end_bus) const
+{
+    if (end_bus < start_bus) {
+        return AddrRange();
+    }
+
+    Addr start = devConfigAddr(start_bus, PciDevAddr(0, 0));
+    Addr size = static_cast<Addr>(end_bus - start_bus + 1)
+                << (BUS_OFFSET + confDeviceBits);
+
+    return RangeSize(start, size);
 }
 
 void

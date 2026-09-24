@@ -510,7 +510,7 @@ TLB::translateInst(const RequestPtr &req, ThreadContext *tc)
         }
     }
 
-    // were not priviledged accesing priv page
+    // were not priviledged accessing priv page
     if (!priv && e->pte.priv()) {
         writeTagAccess(vaddr, context);
         writeSfsr(false, ct, false, PrivViolation, asi);

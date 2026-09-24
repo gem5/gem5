@@ -584,7 +584,7 @@ GpuTLB::translationReturn(Addr virtPageAddr, tlbOutcome outcome, PacketPtr pkt)
 
         DPRINTF(GPUTLB, "This is a TLB miss\n");
         if (hasMemSidePort) {
-            // the one cyle added here represent the delay from when we get
+            // the one cycle added here represent the delay from when we get
             // the reply back till when we propagate it to the coalescer
             // above.
 
@@ -767,7 +767,7 @@ GpuTLB::handleFuncTranslationReturn(PacketPtr pkt, tlbOutcome tlb_outcome)
     /**
      * Do paging checks if it's a normal functional access.  If it's for a
      * prefetch, then sometimes you can try to prefetch something that
-     * won't pass protection. We don't actually want to fault becuase there
+     * won't pass protection. We don't actually want to fault because there
      * is no demand access to deem this a violation.  Just put it in the
      * TLB and it will fault if indeed a future demand access touches it in
      * violation.
@@ -902,7 +902,7 @@ GpuTLB::CpuSidePort::recvFunctional(PacketPtr pkt)
 
     // This is the function that would populate pkt->req with the paddr of
     // the translation. But if no translation happens (i.e Prefetch fails)
-    // then the early returns in the above code wiill keep this function
+    // then the early returns in the above code will keep this function
     // from executing.
     tlb->handleFuncTranslationReturn(pkt, tlb_outcome);
 }

@@ -185,7 +185,7 @@ FsWorkload::initState()
     // won't actually set up real mode or legacy protected mode descriptor
     // tables because we aren't executing any code that would require
     // them. We do, however toggle the control bits in the correct order
-    // while allowing consistency checks and the underlying mechansims
+    // while allowing consistency checks and the underlying mechanisms
     // just to be safe.
 
     const int NumPDTs = 4;

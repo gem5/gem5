@@ -63,7 +63,10 @@ memory = SingleChannelDDR4_2400(size="32MiB")
 
 # We use a simple ATOMIC processor with one core.
 processor = SimpleProcessor(
-    cpu_type=CPUTypes.ATOMIC, isa=ISA.POWER, num_cores=1
+    cpu_type=CPUTypes.ATOMIC,
+    isa=ISA.POWER,
+    num_cores=1,
+    clk_freq="3GHz",
 )
 
 # The gem5 library simple board which can be used to run SE-mode simulations.
