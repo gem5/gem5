@@ -82,7 +82,7 @@ jobs:
                       --ref develop >/dev/null
                   echo "Agentics maintenance scheduled on develop."
 
-            - name: Refresh Devcontainers
+            - name: Refresh Devcontainer
               if: github.event.schedule == '30 8 * * 1'
               run: |
                   gh workflow run devcontainer-build.yaml \

@@ -1,55 +1,22 @@
 # Developing gem5 in a container
 
-The default configuration provides the tools to build and debug the checked-out
+The configuration provides the tools to build and debug the checked-out
 source. It does not install a separate gem5 executable. Build a workspace binary
 with, for example, `scons build/ALL/gem5.opt -j2`.
 
-The **gem5 Demonstration Container** configuration additionally installs
-`gem5-release`, currently built from v25.1.0.1. This is a release executable for
-teaching and examples; it does not include changes made in the workspace. It uses
-`gem5.fast` to avoid distributing debug information for the release binary.
-Use the workspace's `gem5.opt` or `gem5.debug` when debugging simulator changes.
-Choose the configuration in the Codespaces creation options or VS Code's
-**Dev Containers: Reopen in Container** command.
+The container uses the Ubuntu 24.04 environment used by most gem5 CI jobs.
+Formatting is provided by the repository's pinned pre-commit hooks.
 
-To build the images locally, run the following from `util/dockerfiles`:
+## Building the image
+
+Bake connects the devcontainer directly to the Ubuntu 24.04 base target. Local
+base-Dockerfile changes apply without first publishing a base image.
+
+To build the image locally, run this from `util/dockerfiles`:
 
 ```sh
 docker buildx bake devcontainer
-docker buildx bake devcontainer-demo
 ```
-
-The demo build accepts `GEM5_VERSION` and `BUILD_JOBS` build arguments. The default
-of two build jobs limits memory pressure, including when building under QEMU:
-
-```sh
-docker buildx bake devcontainer-demo \
-    --set devcontainer-demo.args.GEM5_VERSION=25.1.0.1 \
-    --set devcontainer-demo.args.BUILD_JOBS=2
-```
-
-All configurations retain the Ubuntu 24.04 environment used by most gem5 CI
-jobs. Formatting is provided by the repository's pinned pre-commit hooks.
-
-## Guest workloads and disk images
-
-Choose **gem5 Workload Development Container** for QEMU, `qemu-img`, and the
-AArch64, RISC-V, and x86-64 cross-compilers. It also enables Docker-in-Docker for
-nested build environments. The default and demo configurations omit these tools
-and the nested Docker daemon. Building gem5 itself does not require a guest
-cross-compiler. Installing QEMU does not grant access to host KVM; accelerated
-guests still require an accessible `/dev/kvm`.
-
-Build this image with `docker buildx bake devcontainer-workloads` from
-`util/dockerfiles`.
-
-## Image build dependencies
-
-Bake connects all three images directly to the Ubuntu 24.04 base target. Local
-base-Dockerfile changes therefore apply without first publishing a base image.
-The demo target exports intermediate builder layers with `mode=max`; its
-registry cache can be substantially larger than the final image. Other targets
-retain the smaller default cache mode.
 
 A local single-platform build can be loaded into Docker for testing:
 
@@ -118,25 +85,25 @@ simulator C++; it does not attach a Python debugger to embedded Python code.
 
 ## Container user and workspace ownership
 
-All configurations run development commands as `gem5`, with a writable home and
+The container runs development commands as `gem5`, with a writable home and
 passwordless sudo for additional packages. VS Code can map this user's UID/GID
 when opening a local Linux bind mount. Setup discovers the actual checkout
 location and adds an exact Git trust entry only when ownership requires it;
 forks and renamed directories do not need `/workspaces/gem5`.
 
-## Publishing and refreshing images
+## Publishing and refreshing the image
 
-`devcontainer-build.yaml` builds the `devcontainers` Bake group separately from
-the general Docker image workflow. It publishes candidates using a unique tag
+`devcontainer-build.yaml` builds the `devcontainer` Bake target separately from
+the general Docker image workflow. It publishes a candidate using a unique tag
 containing the UTC date, source revision, workflow run ID, and attempt. It then
-creates all three complete configurations on native amd64 and arm64 runners,
-including Features and lifecycle commands, and runs `smoke-test.sh`. Only after
-every configuration passes does it promote those candidates to `latest`.
+creates the complete configuration on native amd64 and arm64 runners, including
+Features and lifecycle commands, and runs `smoke-test.sh`. Only after both
+architectures pass does it promote the candidate to `latest`.
 The candidate tags remain available for identifying or selecting an exact build.
 The registry cache is mutable; candidate tags are not reused by this workflow.
 
 The smoke test checks non-root access, Python pins, hooks, writable caches,
-compilation-database generation, a focused C++ unit test, GDB, and variant tools.
+compilation-database generation, a focused C++ unit test, and GDB.
 It does not run the full simulator regression suite or validate VS Code's UI.
 
 Dockerfile and development-configuration changes on `develop` trigger a build.
@@ -149,20 +116,13 @@ stable-branch maintenance process. This PR does not update `stable` itself.
 To run the same smoke test in an existing development container:
 
 ```sh
-.devcontainer/smoke-test.sh devcontainer
+.devcontainer/smoke-test.sh
 ```
-
-Use `devcontainer-demo` or `devcontainer-workloads` for the other configurations.
 
 Candidate builds bypass the Ubuntu dependency target's layer cache so APT checks
 for updates even when the upstream Ubuntu image digest has not changed. The
-development and workload stages also receive a per-publication
-`PACKAGE_REFRESH` argument to refresh their packages. The release-builder cache
-remains enabled, subject to changes in its base image.
-Smoke jobs authenticate to GHCR because new packages can initially be private.
-After the first successful publication, maintainers must make the new
-`devcontainer-demo` and `devcontainer-workloads` packages public for general
-Codespaces and local use; repository linkage alone does not set visibility.
+devcontainer also receives a per-publication `PACKAGE_REFRESH` argument to
+refresh its additional packages.
 
 For local Docker Desktop use, a Linux volume for the checkout avoids bind-mount
 ownership inconsistencies that can make Git reject newly created pre-commit

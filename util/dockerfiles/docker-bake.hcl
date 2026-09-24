@@ -397,31 +397,7 @@ target "devcontainer" {
     PACKAGE_REFRESH = PACKAGE_REFRESH
   }
   context = "devcontainer"
-  target = "development"
   cache-from = ["${CACHE_PREFIX}/devcontainer:${CACHE_TAG}"]
   cache-to = ["${CACHE_PREFIX}/devcontainer:${CACHE_TAG}"]
   tags = ["${IMAGE_URI}/devcontainer:${TAG}"]
-}
-
-# An optional release executable for teaching and demonstrations.
-target "devcontainer-demo" {
-  inherits = ["devcontainer"]
-  target = "demo"
-  cache-from = ["${CACHE_PREFIX}/devcontainer-demo:${CACHE_TAG}"]
-  cache-to = ["${CACHE_PREFIX}/devcontainer-demo:${CACHE_TAG},mode=max"]
-  tags = ["${IMAGE_URI}/devcontainer-demo:${TAG}"]
-}
-
-# Guest workload and disk-image development tools.
-target "devcontainer-workloads" {
-  inherits = ["devcontainer"]
-  target = "workloads"
-  cache-from = ["${CACHE_PREFIX}/devcontainer-workloads:${CACHE_TAG}"]
-  cache-to = ["${CACHE_PREFIX}/devcontainer-workloads:${CACHE_TAG}"]
-  tags = ["${IMAGE_URI}/devcontainer-workloads:${TAG}"]
-}
-
-# Published separately after the complete devcontainer smoke tests pass.
-group "devcontainers" {
-  targets = ["devcontainer", "devcontainer-demo", "devcontainer-workloads"]
 }

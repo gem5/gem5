@@ -1,5 +1,5 @@
 ---
-name: Build and test devcontainers
+name: Build and test the devcontainer
 
 on:
     push:
@@ -24,7 +24,7 @@ jobs:
     build:
         if: github.repository == 'gem5/gem5' && github.ref == 'refs/heads/develop'
         runs-on: [self-hosted, linux, x64]
-        timeout-minutes: 360
+        timeout-minutes: 120
         permissions:
             contents: read
             packages: write
@@ -45,14 +45,14 @@ jobs:
                   tag="$(date -u +%Y%m%d)-${GITHUB_SHA:0:12}"
                   tag="${tag}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
                   echo "tag=$tag" >> "$GITHUB_OUTPUT"
-            - name: Build candidate images
+            - name: Build the candidate image
               uses: docker/bake-action@v7
               env:
                   TAG: ${{ steps.candidate.outputs.tag }}
                   PACKAGE_REFRESH: ${{ steps.candidate.outputs.tag }}
               with:
                   source: '{{defaultContext}}:util/dockerfiles'
-                  targets: devcontainers
+                  targets: devcontainer
                   provenance: true
                   push: true
                   set: |
@@ -68,11 +68,9 @@ jobs:
             fail-fast: false
             matrix:
                 runner: [ubuntu-24.04, ubuntu-24.04-arm]
-                variant: [devcontainer, devcontainer-demo, devcontainer-workloads]
         runs-on: ${{ matrix.runner }}
         timeout-minutes: 60
         env:
-            VARIANT: ${{ matrix.variant }}
             IMAGE_TAG: ${{ needs.build.outputs.tag }}
         steps:
             - uses: actions/checkout@v7
@@ -93,29 +91,21 @@ jobs:
                   import os
                   from pathlib import Path
 
-                  variant = os.environ["VARIANT"]
-                  configurations = {
-                      "devcontainer": ".devcontainer/devcontainer.json",
-                      "devcontainer-demo": ".devcontainer/demo/devcontainer.json",
-                      "devcontainer-workloads": ".devcontainer/workloads/devcontainer.json",
-                  }
-                  path = Path(configurations[variant])
+                  path = Path(".devcontainer/devcontainer.json")
                   config = json.loads(path.read_text())
                   tag = os.environ["IMAGE_TAG"]
-                  config["image"] = f"ghcr.io/gem5/{variant}:{tag}"
+                  config["image"] = f"ghcr.io/gem5/devcontainer:{tag}"
                   path.write_text(json.dumps(config, indent=4) + "\n")
-                  with open(os.environ["GITHUB_ENV"], "a") as output:
-                      output.write(f"DEVCONTAINER_CONFIG={path}\n")
                   PYCODE
             - name: Create the complete development container
               run: |
                   devcontainer up --workspace-folder . \
-                      --config "$DEVCONTAINER_CONFIG"
+                      --config .devcontainer/devcontainer.json
             - name: Check tools, hooks, compiler commands, and a C++ test
               run: |
                   devcontainer exec --workspace-folder . \
-                      --config "$DEVCONTAINER_CONFIG" \
-                      .devcontainer/smoke-test.sh "$VARIANT"
+                      --config .devcontainer/devcontainer.json \
+                      .devcontainer/smoke-test.sh
 
     promote:
         needs: [build, smoke]
@@ -131,10 +121,8 @@ jobs:
                   registry: ghcr.io
                   username: ${{ github.repository_owner }}
                   password: ${{ secrets.GITHUB_TOKEN }}
-            - name: Promote tested images
+            - name: Promote the tested image
               run: |
-                  for variant in devcontainer devcontainer-demo devcontainer-workloads; do
-                      image="ghcr.io/gem5/$variant"
-                      docker buildx imagetools create \
-                          --tag "$image:latest" "$image:$IMAGE_TAG"
-                  done
+                  image="ghcr.io/gem5/devcontainer"
+                  docker buildx imagetools create \
+                      --tag "$image:latest" "$image:$IMAGE_TAG"

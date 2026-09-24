@@ -35,9 +35,8 @@
 #
 # `docker buildx bake devcontainer --push`
 
-# Keep the development environment independent of the demo executable.
 ARG BASE_IMAGE=ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
-FROM ${BASE_IMAGE} AS development
+FROM ${BASE_IMAGE}
 
 LABEL org.opencontainers.image.source=https://github.com/gem5/gem5
 LABEL org.opencontainers.image.licenses=BSD-3-Clause
@@ -67,34 +66,4 @@ RUN if id ubuntu >/dev/null 2>&1; then \
     echo 'gem5 ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/gem5 && \
     chmod 0440 /etc/sudoers.d/gem5
 ENV XDG_CACHE_HOME=/home/gem5/.cache
-USER gem5
-
-# Build a release executable only for the optional demonstration image.
-FROM ${BASE_IMAGE} AS release-builder
-ARG GEM5_VERSION=25.1.0.1
-ARG BUILD_JOBS=2
-RUN wget -O /tmp/gem5.tar.gz \
-        "https://github.com/gem5/gem5/archive/refs/tags/v${GEM5_VERSION}.tar.gz" && \
-    mkdir /gem5 && \
-    tar xzf /tmp/gem5.tar.gz -C /gem5 --strip-components=1 && \
-    rm /tmp/gem5.tar.gz
-WORKDIR /gem5
-RUN scons build/ALL/gem5.fast -j"${BUILD_JOBS}"
-
-FROM development AS demo
-ARG GEM5_VERSION=25.1.0.1
-LABEL org.opencontainers.image.version=${GEM5_VERSION}
-COPY --from=release-builder /gem5/build/ALL/gem5.fast \
-    /usr/local/bin/gem5-release
-
-# Tools for building guest workloads and full-system disk images.
-FROM development AS workloads
-USER root
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    qemu-system \
-    qemu-utils \
-    g++-aarch64-linux-gnu \
-    g++-riscv64-linux-gnu \
-    g++-x86-64-linux-gnu && \
-    rm -rf /var/lib/apt/lists/*
 USER gem5

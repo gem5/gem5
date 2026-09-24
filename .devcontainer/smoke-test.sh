@@ -29,7 +29,6 @@
 # Exercise the complete configuration, not only the underlying Docker image.
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
-variant=${1:-devcontainer}
 
 test "$(id -un)" = gem5
 test "$(id -u)" -ne 0
@@ -64,23 +63,3 @@ test -s .devcontainer-cache/compile_commands.json
 scons build/NULL/base/bitunion.test.opt -j2
 build/NULL/base/bitunion.test.opt
 gdb --batch -ex run -ex 'quit $_exitcode' --args /bin/true
-
-case "$variant" in
-    devcontainer-demo)
-        gem5-release --version
-        ;;
-    devcontainer-workloads)
-        qemu-img --version
-        aarch64-linux-gnu-g++ --version
-        riscv64-linux-gnu-g++ --version
-        x86_64-linux-gnu-g++ --version
-        docker info
-        ;;
-    devcontainer)
-        if command -v gem5-release; then
-            echo "The development image should not bundle a release." >&2
-            exit 1
-        fi
-        ;;
-    *) echo "Unknown devcontainer variant: $variant" >&2; exit 1 ;;
-esac
