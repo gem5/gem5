@@ -89,14 +89,8 @@ let {{
                 [&, this](const auto& f, const auto& vs1_val) {
                     using acc_t = std::decay_t<decltype(vs1_val)>;
                     acc_t result = vs1_val;
-                    uint32_t num_elems = this->microVl;
-                    uint32_t elems_per_reg = vtype_VLMAX(vtype, vlen, true);
-                    uint32_t num_regs = (num_elems+elems_per_reg-1)
-                                        / elems_per_reg;
-                    for (uint32_t r=0; r < num_regs; r++) {
-                        RiscvISA::vreg_t vs2_reg;
-                        xc->getRegOperand(this, 1+r, &vs2_reg);
-                        auto vs2 = vs2_reg.as<%s>();
+                    for (uint32_t r=0; r < num_vs2_regs; r++) {
+                        auto vs2 = vs2_regs[r].as<%s>();
                         uint32_t elems_so_far = r*elems_per_reg;
                         uint32_t num_reg_elems =
                             (elems_so_far+elems_per_reg > num_elems)
@@ -1485,6 +1479,12 @@ def format VectorReduceFormat(code, category, *flags) {{
         max_size = 32 if is_widening else 64
     )
 
+    get_vs2_regs = '''
+        uint32_t num_elems = this->microVl;
+        uint32_t elems_per_reg = vtype_VLMAX(vtype, vlen, true);
+        uint32_t num_vs2_regs = (num_elems+elems_per_reg-1) / elems_per_reg;
+    ''' + getRegOperandGroup("vs2_regs", "num_vs2_regs", "1")
+
     microiop = InstObjParams(name + "_micro",
         Name + "Micro",
         'VectorArithMicroInst',
@@ -1494,6 +1494,7 @@ def format VectorReduceFormat(code, category, *flags) {{
          'set_vlenb': set_vlenb,
          'vm_decl_rd': vm_decl_rd,
          'type_def': type_def,
+         'get_vs2_regs': get_vs2_regs,
          'copy_old_vd': copyOldVd('oldDstIdx'),
          'reduce_loop': generateReduceLoop(is_float=is_float),
          'declare_varith_template': varith_template_microiop},
