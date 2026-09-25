@@ -179,3 +179,28 @@ python3 util/coverage/index.py tests-for-line coverage-index/index.json \
 python3 util/coverage/index.py tests-for-branch coverage-index/index.json \
   src/example.cc BRANCH_ID --language native
 ```
+
+## Suggesting tests for a change
+
+Suggestions are prior observations, not permission to skip CI. They include
+all observed covering suites, unknown changes, collection limitations and the
+exact tested revision. Added lines have no prior coordinates: suggestions
+broaden to suites covering the old file and explicitly leave the new lines
+unproven. A completely new file may have no evidence at all.
+
+Prefer a repository-backed comparison so the tool verifies both commits and
+obtains the old-side diff itself:
+
+```sh
+python3 util/coverage/analysis.py suggest coverage-index/index.json \
+  --repository /path/to/gem5 --target-revision HEAD
+python3 util/coverage/analysis.py suggest coverage-index/index.json \
+  --file src/cpu/base.cc
+```
+
+A supplied `--diff change.patch` requires `--base-revision` equal to the index
+revision. Its provenance remains caller-supplied; the tool does not pretend it
+verified an arbitrary patch against a repository. Mismatched bases and malformed
+hunks are rejected. New-side line numbers are never looked up in old coverage.
+`--language python` selects the separate Python inventory. Evidence examples
+are capped at 20 locations per suggestion while match counts retain the total.
