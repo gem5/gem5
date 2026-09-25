@@ -335,13 +335,36 @@ def tests_for_line(index, path, line, language="native"):
     }
 
 
-def tests_for_branch(index, path, identity, language="native"):
+def tests_for_branch(
+    index, path, identity, language="native", artifact_root=None
+):
     source_path(path)
     if language not in ("native", "python"):
         raise ValueError("Unknown coverage language")
     branch = (
         index.get("branches", {}).get(language, {}).get(path, {}).get(identity)
     )
+    if index.get("branch_shards"):
+        if artifact_root is None:
+            raise ValueError(
+                "Branch queries on a sharded index require its artifact directory"
+            )
+        try:
+            from .index_artifact import read_branch_shard
+        except ImportError:
+            from index_artifact import read_branch_shard
+        descriptors = index["branch_shards"].get(language, {}).get(path, [])
+        for descriptor in descriptors:
+            if descriptor["first"] <= identity <= descriptor["last"]:
+                candidate = read_branch_shard(artifact_root, descriptor).get(
+                    identity
+                )
+                if candidate is not None:
+                    if branch is not None:
+                        raise ValueError(
+                            "Duplicate branch identity across graph shards"
+                        )
+                    branch = candidate
     tests = {}
     if branch:
         for ordinal in index["memberships"][branch["membership"]]:
@@ -424,7 +447,7 @@ def write_browser(index, output, chunk_size=4096):
     output = Path(output)
     sidecars = output / "branches"
     sidecars.mkdir(parents=True, exist_ok=True)
-    pages = {}
+    pages = index.get("branch_pages", {})
     for language, files in index.get("branches", {}).items():
         for path, branches in files.items():
             by_line = {}
@@ -463,6 +486,7 @@ def write_browser(index, output, chunk_size=4096):
             if chunk:
                 save()
     view = {**index, "branches": {}, "branch_pages": pages}
+    view.pop("branch_shards", None)
     (output / "index.html").write_text(render_html(view), encoding="utf-8")
 
 
@@ -715,10 +739,20 @@ HTML = r"""<!doctype html>
     const promise = new Promise((resolve, reject) => {
       const script = document.createElement("script");
       script.src = filename;
-      script.onload = () => {
-        const payload = globalThis.gem5CoverageBranchData[filename];
+      script.onload = async () => {
+        let payload = globalThis.gem5CoverageBranchData[filename];
         delete globalThis.gem5CoverageBranchData[filename]; script.remove();
-        payload ? resolve(payload) : reject(new Error("Empty branch page"));
+        try {
+          if (typeof payload === "string") {
+            if (typeof DecompressionStream === "undefined") {
+              throw new Error("This browser cannot decompress coverage shards");
+            }
+            const bytes = Uint8Array.from(atob(payload), char => char.charCodeAt(0));
+            const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
+            payload = await new Response(stream).json();
+          }
+          payload ? resolve(payload) : reject(new Error("Empty branch page"));
+        } catch (error) { reject(error); }
       };
       script.onerror = () => {
         script.remove(); reject(new Error("Branch page could not be loaded"));
@@ -873,8 +907,12 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         if args.command == "build":
-            result = build_index(
-                read_index_records(args.input), args.repository_url
+            try:
+                from .index_artifact import build_artifact
+            except ImportError:
+                from index_artifact import build_artifact
+            result = build_artifact(
+                args.input, args.output, args.repository_url
             )
             if args.source_map:
                 attach_source_links(result, args.source_map, args.output)
@@ -896,7 +934,8 @@ def main(argv=None):
             stored = json.loads(args.index.read_text(encoding="utf-8"))
             if (
                 not isinstance(stored, dict)
-                or stored.get("schema_version") != 1
+                or type(stored.get("schema_version")) is not int
+                or stored["schema_version"] not in (1, 2)
                 or stored.get("format") != "gem5-coverage-index"
             ):
                 raise ValueError("Unsupported coverage index schema_version")
@@ -912,7 +951,11 @@ def main(argv=None):
                 )
             elif args.command == "tests-for-branch":
                 answer = tests_for_branch(
-                    result, args.path, args.identity, args.language
+                    result,
+                    args.path,
+                    args.identity,
+                    args.language,
+                    artifact_root=args.index.parent,
                 )
             else:
                 answer = lines_for_test(result, args.test_uid)

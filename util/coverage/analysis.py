@@ -48,7 +48,8 @@ def load_index(path):
     index = json.loads(Path(path).read_text(encoding="utf-8"))
     if (
         index.get("format") != "gem5-coverage-index"
-        or index.get("schema_version") != 1
+        or type(index.get("schema_version")) is not int
+        or index["schema_version"] not in (1, 2)
     ):
         raise ValueError("Unsupported coverage index")
     return index

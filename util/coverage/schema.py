@@ -382,6 +382,12 @@ class SparseProfile:
 _CATALOGS = OrderedDict()
 
 
+def clear_baseline_cache():
+    """Release large parsed graphs between independent artifact build groups."""
+    _BASELINES.clear()
+    _CATALOGS.clear()
+
+
 def _baseline_catalog(identity, baseline):
     if identity in _CATALOGS:
         _CATALOGS.move_to_end(identity)
