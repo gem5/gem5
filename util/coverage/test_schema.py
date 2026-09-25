@@ -27,10 +27,12 @@
 
 """Check public profile compatibility, sparse storage and language isolation."""
 
+import gzip
 import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 from util.coverage import (
     index,
@@ -83,6 +85,54 @@ def baseline():
 
 
 class SchemaTest(unittest.TestCase):
+    def test_duplicate_and_compressed_baselines_share_one_parsed_graph(self):
+        base = baseline()
+        branch = base["files"][0]["branches"][0]
+        base["files"][0]["branches"].insert(0, {**branch, "id": "z-before-a"})
+        identity = schema.canonical_hash(base)
+        sparse = profile(schema_version=2, baseline_id=identity, files=[])
+        schema._BASELINES.clear()
+        schema._CATALOGS.clear()
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            paths = []
+            for shard in ("plain", "compressed", "copy"):
+                parent = root / shard
+                folder = parent / "baselines" / identity
+                folder.mkdir(parents=True)
+                content = json.dumps(base).encode()
+                if shard == "compressed":
+                    (folder / "baseline.json.gz").write_bytes(
+                        gzip.compress(content)
+                    )
+                else:
+                    (folder / "baseline.json").write_bytes(content)
+                path = parent / "coverage.json"
+                path.write_text(json.dumps(sparse))
+                paths.append(path)
+            with mock.patch.object(
+                schema.json, "load", wraps=json.load
+            ) as parse:
+                records = [
+                    schema.load_sparse_record(path, root) for path in paths
+                ]
+                self.assertEqual(parse.call_count, 1)
+            self.assertIs(records[0].baseline, records[1].baseline)
+            self.assertIs(records[0].baseline, records[2].baseline)
+            self.assertEqual(
+                schema.load_record(paths[0], root),
+                schema.load_record(paths[1], root),
+            )
+            changed = root / "copy" / "baselines" / identity / "baseline.json"
+            invalid = {**base, "build_id": "changed"}
+            changed.write_text(json.dumps(invalid))
+            with self.assertRaisesRegex(ValueError, "hash mismatch"):
+                schema.load_sparse_record(paths[2], root)
+            compressed_folder = root / "compressed" / "baselines" / identity
+            (compressed_folder / "baseline.json").write_text(json.dumps(base))
+            with self.assertRaisesRegex(ValueError, "Ambiguous"):
+                schema.load_record(paths[1], root)
+
     def test_v1_validation_rejects_invalid_build_schema_and_duplicate_files(
         self,
     ):

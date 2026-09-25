@@ -33,6 +33,7 @@ The canonical in-memory representation is v1 with storage_schema_version=2
 for expanded records. Profile files and raw archives remain unchanged.
 """
 
+import gzip
 import hashlib
 import json
 from collections import OrderedDict
@@ -91,7 +92,7 @@ def count_value(value):
     return value
 
 
-def _files(entries, language):
+def _files(entries, language, *, copy_entries=True):
     if not isinstance(entries, list):
         raise ValueError("files must be a list")
     files = {}
@@ -141,7 +142,10 @@ def _files(entries, language):
                 for flag in ("fallthrough", "throw"):
                     if flag in branch and type(branch[flag]) is not bool:
                         raise ValueError("Invalid native branch flag")
-            branches[identity] = dict(branch)
+            branches[identity] = dict(branch) if copy_entries else branch
+        if not copy_entries:
+            files[path] = entry
+            continue
         files[path] = {
             **entry,
             "lines": dict(sorted(lines.items(), key=lambda x: int(x[0]))),
@@ -275,13 +279,42 @@ def profile_paths(directory):
     return sorted(path for name in PROFILE_NAMES for path in root.rglob(name))
 
 
-@lru_cache(maxsize=8)
+_BASELINES = OrderedDict()
+
+
+def _baseline_stream(path):
+    return (
+        gzip.open(path, "rb")
+        if str(path).endswith(".gz")
+        else open(path, "rb")
+    )
+
+
+@lru_cache(maxsize=256)
+def _baseline_checksum(path, size, modified):
+    # Cache only small fingerprints by file identity. Shards often contain
+    # byte-identical copies at different paths; do not parse/cache each copy.
+    checksum = hashlib.sha256()
+    with _baseline_stream(path) as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            checksum.update(chunk)
+    return checksum.hexdigest()
+
+
 def _baseline_file(path, size, modified):
-    # File identity invalidates the cache on mutation; paths come from the
-    # confined resolver below. Consumers never modify this shared object.
-    baseline = json.loads(Path(path).read_text(encoding="utf-8"))
+    checksum = _baseline_checksum(path, size, modified)
+    if checksum in _BASELINES:
+        return _BASELINES[checksum]
+    # A baseline can contain millions of branches. Keep only one graph in
+    # these caches; consumers holding a previous graph own its lifetime.
+    _BASELINES.clear()
+    _CATALOGS.clear()
+    with _baseline_stream(path) as stream:
+        baseline = json.load(stream)
     identity = canonical_hash(baseline)
-    return baseline, identity
+    result = baseline, identity
+    _BASELINES[checksum] = result
+    return result
 
 
 def _stored_record(path, root):
@@ -305,8 +338,18 @@ def _stored_record(path, root):
             raise ValueError("Invalid baseline identity")
         parent = path.parent
         while parent.is_relative_to(root):
-            candidate = parent / "baselines" / identity / "baseline.json"
-            if candidate.is_file():
+            folder = parent / "baselines" / identity
+            candidates = [
+                folder / name
+                for name in ("baseline.json", "baseline.json.gz")
+                if (folder / name).is_file()
+            ]
+            if len(candidates) > 1:
+                raise ValueError(
+                    "Ambiguous plain and compressed coverage baselines"
+                )
+            if candidates:
+                candidate = candidates[0]
                 if not candidate.resolve().is_relative_to(root):
                     raise ValueError("Baseline escapes input directory")
                 stat = candidate.stat()
@@ -348,16 +391,19 @@ def _baseline_catalog(identity, baseline):
         or baseline.get("schema_version") != 1
     ):
         raise ValueError("Invalid coverage baseline format")
-    files = _files(baseline.get("files"), baseline.get("language"))
+    files = _files(
+        baseline.get("files"), baseline.get("language"), copy_entries=False
+    )
     for entry in files:
         if any(entry["lines"].values()) or any(
             branch["count"] for branch in entry.get("branches", [])
         ):
             raise ValueError("Coverage baseline must contain zero counters")
-    canonical = {**baseline, "files": files}
-    result = canonical, {entry["path"]: entry for entry in files}
+    # Validate without copying or reordering the content-addressed graph.
+    # Raw-file and catalog caches share the same immutable branch objects.
+    result = baseline, {entry["path"]: entry for entry in files}
     _CATALOGS[identity] = result
-    if len(_CATALOGS) > 8:
+    if len(_CATALOGS) > 1:
         _CATALOGS.popitem(last=False)
     return result
 
