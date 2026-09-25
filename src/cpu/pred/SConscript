@@ -40,9 +40,7 @@
 
 Import('*')
 
-
-SimObject('BranchPredictor.py',
-    sim_objects=[
+sim_objects = [
     'BranchPredictor',
     'ConditionalPredictor',
     'IndirectPredictor', 'SimpleIndirectPredictor',
@@ -61,8 +59,18 @@ SimObject('BranchPredictor.py',
     'MultiperspectivePerceptronTAGE', 'MPP_StatisticalCorrector_64KB',
     'MultiperspectivePerceptronTAGE64KB', 'MPP_TAGE_8KB',
     'MPP_LoopPredictor_8KB', 'MPP_StatisticalCorrector_8KB',
-    'MultiperspectivePerceptronTAGE8KB', 'GshareBP'],
-    enums=['BranchType', 'TargetProvider'])
+    'MultiperspectivePerceptronTAGE8KB', 'GshareBP']
+
+if any(
+    env['CONF'][isa]
+    for isa in ('USE_ARM_ISA', 'USE_X86_ISA', 'USE_RISCV_ISA')
+):
+    sim_objects.append('RUNLTS')
+    Source('runlts_192KB.cc')
+    DebugFlag('RUNLTS')
+
+SimObject('BranchPredictor.py',
+    sim_objects=sim_objects, enums=['BranchType', 'TargetProvider'])
 
 Source('bpred_unit.cc')
 Source('2bit_local.cc')

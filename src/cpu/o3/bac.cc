@@ -93,6 +93,7 @@ BAC::BAC(CPU *_cpu, const BaseO3CPUParams &params)
       decoupledFrontEnd(params.decoupledFrontEnd),
       fetchToBacDelay(params.fetchToBacDelay),
       decodeToFetchDelay(params.decodeToFetchDelay),
+      iewToFetchDelay(params.iewToFetchDelay),
       commitToFetchDelay(params.commitToFetchDelay),
       bacToFetchDelay(params.bacToFetchDelay),
       cacheBlkSize(cpu->cacheLineSize()),
@@ -124,6 +125,13 @@ BAC::name() const
 }
 
 void
+BAC::regProbePoints()
+{
+    ppSquashDecided = new ProbePointArg<std::pair<ThreadID, InstSeqNum>>(
+        cpu->getProbeManager(), "SquashDecided");
+}
+
+void
 BAC::setTimeBuffer(TimeBuffer<TimeStruct> *time_buffer)
 {
     timeBuffer = time_buffer;
@@ -131,6 +139,7 @@ BAC::setTimeBuffer(TimeBuffer<TimeStruct> *time_buffer)
     // Create wires to get information from proper places in time buffer.
     fromFetch = timeBuffer->getWire(-fetchToBacDelay);
     fromDecode = timeBuffer->getWire(-decodeToFetchDelay);
+    fromIEW = timeBuffer->getWire(-iewToFetchDelay);
     fromCommit = timeBuffer->getWire(-commitToFetchDelay);
 }
 
@@ -318,6 +327,7 @@ BAC::checkAndUpdateBPUSignals(ThreadID tid)
         // If it was a branch mispredict on a control instruction, update the
         // branch predictor with that instruction, otherwise just kill the
         // invalid state we generated in after sequence number
+        ppSquashDecided->notify({tid, fromCommit->commitInfo[tid].doneSeqNum});
         if (fromCommit->commitInfo[tid].mispredictInst &&
             fromCommit->commitInfo[tid].mispredictInst->isControl()) {
 
@@ -359,6 +369,7 @@ BAC::checkAndUpdateBPUSignals(ThreadID tid)
         squash(*fromDecode->decodeInfo[tid].nextPC, tid);
 
         // Update the branch predictor.
+        ppSquashDecided->notify({tid, fromDecode->decodeInfo[tid].doneSeqNum});
         if (fromDecode->decodeInfo[tid].branchMispredict) {
 
             bpu->squash(fromDecode->decodeInfo[tid].doneSeqNum,
