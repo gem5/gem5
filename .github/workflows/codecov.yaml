@@ -1,0 +1,173 @@
+---
+# Run one coverage campaign per UTC week of qualifying Weekly test runs.
+# workflow_run and relative reusable workflows must exist on the default
+# branch (stable). source-ref pins tested code and uploads to develop's SHA.
+name: Code Coverage
+
+on:
+    workflow_run:
+        workflows: [Daily Tests, Weekly Tests]
+        types: [completed]
+        branches: [develop]
+
+permissions:
+    contents: read
+    actions: read
+
+# Serialize campaigns, including admission, without cancelling running tests.
+concurrency:
+    group: codecov-${{ github.repository }}
+    cancel-in-progress: false
+
+jobs:
+    gate:
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
+        runs-on: ubuntu-24.04
+        outputs:
+            allowed: ${{ steps.check.outputs.allowed }}
+            source-ref: ${{ steps.check.outputs.source-ref }}
+        steps:
+            - name: Require passing Daily and Weekly tests
+              id: check
+              uses: actions/github-script@v9
+              with:
+                  script: |
+                      const repo = context.repo;
+                      const trigger = (await github.rest.actions.getWorkflowRun({
+                        ...repo, run_id: context.payload.workflow_run.id
+                      })).data;
+                      const skip = async reason => {
+                        core.notice(reason);
+                        await core.summary.addHeading('Coverage skipped')
+                          .addRaw(reason).write();
+                      };
+                      const trusted = run =>
+                        run.head_repository?.full_name ===
+                          `${repo.owner}/${repo.repo}` &&
+                        run.head_branch === 'develop' &&
+                        run.event === 'workflow_dispatch';
+                      if (!trusted(trigger) || ![
+                        '.github/workflows/daily-tests.yaml',
+                        '.github/workflows/weekly-tests.yaml'
+                      ].includes(trigger.path)) {
+                        return skip('The completed run is not a trusted test workflow.');
+                      }
+                      let weekly = trigger;
+                      if (trigger.path === '.github/workflows/daily-tests.yaml') {
+                        // Daily can finish after Weekly. Recheck the latest
+                        // Weekly run, without falling back to an older success.
+                        const runs = await github.paginate(
+                          github.rest.actions.listWorkflowRuns, {
+                            ...repo, workflow_id: 'weekly-tests.yaml',
+                            branch: 'develop', event: 'workflow_dispatch',
+                            per_page: 100
+                          });
+                        weekly = runs.sort((a, b) => b.id - a.id)[0];
+                        if (!weekly || weekly.head_sha !== trigger.head_sha) {
+                          return skip('No matching latest Weekly run for this Daily commit.');
+                        }
+                      }
+                      if (!trusted(weekly) ||
+                          weekly.path !== '.github/workflows/weekly-tests.yaml' ||
+                          weekly.status !== 'completed' ||
+                          weekly.conclusion !== 'success') {
+                        return skip('Weekly tests did not pass on trusted develop code.');
+                      }
+                      const dailyRuns = await github.paginate(
+                        github.rest.actions.listWorkflowRuns, {
+                          ...repo, workflow_id: 'daily-tests.yaml',
+                          branch: 'develop', head_sha: weekly.head_sha,
+                          event: 'workflow_dispatch', per_page: 100
+                        });
+                      const daily = dailyRuns.sort((a, b) => b.id - a.id)[0];
+                      if (!daily || !trusted(daily) ||
+                          daily.head_sha !== weekly.head_sha ||
+                          daily.status !== 'completed' ||
+                          daily.conclusion !== 'success') {
+                        return skip('The latest Daily run for the Weekly commit has not passed.');
+                      }
+                      const week = new Date(weekly.created_at);
+                      week.setUTCDate(week.getUTCDate() -
+                        (week.getUTCDay() + 6) % 7);
+                      week.setUTCHours(0, 0, 0, 0);
+                      const marker = `coverage-source-${week.toISOString().slice(0, 10)}`;
+                      // An artifact records admission, even if tests or uploads
+                      // subsequently fail. Rerunning this campaign is allowed.
+                      const artifacts = await github.paginate(
+                        github.rest.actions.listArtifactsForRepo, {
+                          ...repo, name: marker, per_page: 100
+                        });
+                      for (const artifact of artifacts) {
+                        const id = artifact.workflow_run?.id;
+                        if (artifact.expired || !id ||
+                            String(id) === String(context.runId)) continue;
+                        // PR and unrelated workflows can use the same name.
+                        // Only this trusted completion workflow can admit a run.
+                        const producer = (await github.rest.actions.getWorkflowRun({
+                          ...repo, run_id: id
+                        })).data;
+                        if (producer.path === '.github/workflows/codecov.yaml' &&
+                            producer.event === 'workflow_run' &&
+                            producer.head_repository?.full_name ===
+                              `${repo.owner}/${repo.repo}`) {
+                          return skip('A coverage campaign for this UTC week already exists.');
+                        }
+                      }
+                      const manifest = {
+                        commit: weekly.head_sha, branch: 'develop',
+                        week: week.toISOString().slice(0, 10),
+                        daily: {id: daily.id, attempt: daily.run_attempt,
+                          url: daily.html_url},
+                        weekly: {id: weekly.id, attempt: weekly.run_attempt,
+                          url: weekly.html_url}
+                      };
+                      const fs = require('fs');
+                      fs.writeFileSync(`${process.env.RUNNER_TEMP}/coverage-source.json`,
+                        JSON.stringify(manifest, null, 2) + '\n');
+                      core.setOutput('source-ref', weekly.head_sha);
+                      core.setOutput('marker', marker);
+                      core.setOutput('allowed', 'true');
+                      await core.summary.addHeading('Coverage source')
+                        .addCodeBlock(JSON.stringify(manifest, null, 2), 'json').write();
+
+            - name: Record the admitted weekly campaign
+              if: steps.check.outputs.allowed == 'true'
+              uses: actions/upload-artifact@v7
+              with:
+                  name: ${{ steps.check.outputs.marker }}
+                  path: ${{ runner.temp }}/coverage-source.json
+                  retention-days: 30
+                  overwrite: true
+                  if-no-files-found: error
+
+    quick:
+        needs: gate
+        if: needs.gate.outputs.allowed == 'true'
+        uses: ./.github/workflows/quick-tests.yaml
+        with:
+            coverage: true
+            source-ref: ${{ needs.gate.outputs.source-ref }}
+        secrets:
+            CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+    daily:
+        # Keep the coverage matrices within the existing five-job limit.
+        # A failed workload must not prevent collection from the next one.
+        needs: [gate, quick]
+        if: ${{ !cancelled() && needs.gate.result == 'success' && needs.gate.outputs.allowed == 'true' }}
+        uses: ./.github/workflows/daily-tests.yaml
+        with:
+            coverage: true
+            source-ref: ${{ needs.gate.outputs.source-ref }}
+        secrets:
+            CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+    weekly:
+        needs: [gate, daily]
+        if: ${{ !cancelled() && needs.gate.result == 'success' && needs.gate.outputs.allowed == 'true' }}
+        uses: ./.github/workflows/weekly-tests.yaml
+        with:
+            coverage: true
+            source-ref: ${{ needs.gate.outputs.source-ref }}
+        secrets:
+            CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

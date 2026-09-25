@@ -1,12 +1,27 @@
 ---
-# This workflow runs all of the very-long tests within main.py and uploads gcov
-# code coverage information to Codecov
+# Very-long TestLib suites, shared by ordinary and coverage runs.
 
 name: Weekly Tests
 
 on:
     # This is triggered weekly via the 'scheduler.yaml' workflow.
     workflow_dispatch:
+    workflow_call:
+        inputs:
+            source-ref:
+                description: Tested commit to check out for a coverage campaign
+                type: string
+                default: ''
+            coverage:
+                description: Build with gcov and upload coverage reports
+                type: boolean
+                default: false
+        secrets:
+            CODECOV_TOKEN:
+                required: false
+
+env:
+    GCOV_FLAGS: ${{ inputs.coverage && '--gcov' || '' }}
 
 jobs:
 
@@ -17,11 +32,13 @@ jobs:
             test-dirs-matrix: ${{ steps.dir-matrix.outputs.test-dirs-matrix }}
         steps:
             - uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.source-ref || github.sha }}
             - name: Get directories for testlib-very-long
               working-directory: ${{ github.workspace }}/tests
               id: dir-matrix
               run: |
-                  ./main.py list gem5 --suites -q --length=very-long --gcov=test-only > "$RUNNER_TEMP/test-suites"
+                  ./main.py list gem5 --suites -q --length=very-long ${GCOV_FLAGS:+--gcov=test-only} > "$RUNNER_TEMP/test-suites"
                   test_dirs=$(jq -Rsc '
                     split("\n") |
                     map(select(startswith("SuiteUID:")) |
@@ -50,6 +67,8 @@ jobs:
         needs: [get-testlib-very-long-dirs]
         steps:
             - uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.source-ref || github.sha }}
 
             - name: Run very-long ${{ matrix.test-type }} tests
               id: run-tests
@@ -60,10 +79,12 @@ jobs:
               # run with the --gcov=test-only flag, so run x86_boot_tests
               # very-long without that flag.
               run: |
-                  extra_gcov_args="--gcov=test-only"
+                  extra_gcov_args="${GCOV_FLAGS:+--gcov=test-only}"
                   resource_dir="$GEM5_RESOURCE_DIR"
-                  if [ "${{ matrix.test-type }}" = "gem5/x86_boot_tests" ]; then
+                  if [ -n "$GCOV_FLAGS" ] && [ "${{ matrix.test-type }}" = "gem5/x86_boot_tests" ]; then
                     extra_gcov_args=""
+                    echo "::warning::x86_boot_tests runs without coverage due to a known instrumentation crash."
+                    echo "Coverage excludes very-long x86_boot_tests (known gcov crash)." >> "$GITHUB_STEP_SUMMARY"
                   fi
                   # These legacy fixtures do not checksum or lock downloads.
                   case "${{ matrix.test-type }}" in
@@ -82,12 +103,16 @@ jobs:
               if: always()
               uses: actions/upload-artifact@v7
               with:
-                  name: weekly-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-very-long-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir
-                      }}-status-${{ steps.run-tests.outcome }}-output
+                  name: ${{ inputs.coverage && 'gcov-' || '' }}weekly-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-very-long-${{
+                      steps.sanitize-test-dir.outputs.sanitized-test-dir }}-status-${{ steps.run-tests.outcome }}-output
                   path: tests/testing-results
 
             - name: Upload coverage reports to Codecov
+              if: ${{ !cancelled() && inputs.coverage && matrix.test-type != 'gem5/x86_boot_tests' && steps.run-tests.outcome != 'skipped' }}
               uses: codecov/codecov-action@v7
               with:
                   token: ${{ secrets.CODECOV_TOKEN }}
+                  override_commit: ${{ inputs.source-ref || github.sha }}
+                  override_branch: ${{ inputs.source-ref && 'develop' || github.ref_name }}
+                  fail_ci_if_error: true
                   flags: overall-testdir-${{steps.sanitize-test-dir.outputs.sanitized-test-dir}},overall-length-very-long,${{steps.sanitize-test-dir.outputs.sanitized-test-dir}}-very-long

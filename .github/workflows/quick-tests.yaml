@@ -5,6 +5,10 @@ name: Quick Tests
 on:
     workflow_call:
         inputs:
+            source-ref:
+                description: Tested commit to check out for a coverage campaign
+                type: string
+                default: ''
             coverage:
                 description: Build with gcov and upload coverage reports
                 type: boolean
@@ -44,6 +48,8 @@ jobs:
         timeout-minutes: 60
         steps:
             - uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.source-ref || github.sha }}
             - name: CI Unittests (${{ matrix.type }})
               working-directory: ${{ github.workspace }}
               run: scons build/ALL/unittests.${{ matrix.type }} ${GCOV_FLAGS:+--gcov} -j $(nproc)
@@ -54,6 +60,9 @@ jobs:
               uses: codecov/codecov-action@v7
               with:
                   token: ${{ secrets.CODECOV_TOKEN }}
+                  override_commit: ${{ inputs.source-ref || github.sha }}
+                  override_branch: ${{ inputs.source-ref && 'develop' || github.ref_name }}
+                  fail_ci_if_error: true
                   flags: unittests-${{ matrix.type }},overall-unittests,overall-length-quick
 
     testlib-quick-matrix:
@@ -63,6 +72,8 @@ jobs:
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         steps:
             - uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.source-ref || github.sha }}
             - name: Get directories for testlib-quick
               working-directory: ${{ github.workspace }}/tests
               id: dir-matrix
@@ -101,6 +112,8 @@ jobs:
                 build-target: ${{ fromJson(needs.testlib-quick-matrix.outputs.build-matrix) }}
         steps:
             - uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.source-ref || github.sha }}
 
             - name: Cache build/ALL
               uses: actions/cache/restore@v6
@@ -179,6 +192,8 @@ jobs:
         steps:
         # Checkout the repository then download the gem5.opt artifact.
             - uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.source-ref || github.sha }}
             - uses: actions/download-artifact@v8
               name: Download gem5 artifacts
               with:
@@ -245,5 +260,8 @@ jobs:
               uses: codecov/codecov-action@v7
               with:
                   token: ${{ secrets.CODECOV_TOKEN }}
+                  override_commit: ${{ inputs.source-ref || github.sha }}
+                  override_branch: ${{ inputs.source-ref && 'develop' || github.ref_name }}
+                  fail_ci_if_error: true
                   flags: overall-testdir-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir }},overall-length-quick,${{ steps.sanitize-test-dir.outputs.sanitized-test-dir
                       }}-quick
