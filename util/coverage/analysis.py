@@ -124,6 +124,9 @@ def parse_diff(patch):
                 raise ValueError("Malformed or truncated unified diff hunk")
             prefix = text[0]
             if prefix in " -":
+                current["old_map"][old_line] = (
+                    new_line if prefix == " " else None
+                )
                 remaining_old -= 1
                 if prefix == "-":
                     current["old_lines"].add(old_line)
@@ -146,6 +149,8 @@ def parse_diff(patch):
                 "old_lines": set(),
                 "added_lines": [],
                 "binary": False,
+                "hunks": [],
+                "old_map": {},
             }
             changes.append(current)
             in_hunk = False
@@ -169,6 +174,9 @@ def parse_diff(patch):
             old_line, new_line = int(old_line), int(new_line)
             remaining_old = int(old_count) if old_count is not None else 1
             remaining_new = int(new_count) if new_count is not None else 1
+            current["hunks"].append(
+                (old_line, remaining_old, new_line, remaining_new)
+            )
             in_hunk = True
         elif (
             text.startswith(("Binary files ", "GIT binary patch")) and current
@@ -325,6 +333,198 @@ def repository_diff(repository, base, target):
     return base_sha, target_sha, patch
 
 
+def observed_scope(index, language):
+    records = [
+        item
+        for item in index["invocations"]
+        if item.get("language", "native") == language
+    ]
+    return records, {
+        (item["test_uid"], item["build"].get("compatibility_id"))
+        for item in records
+    }
+
+
+def line_totals(index, language):
+    measured = covered = 0
+    for entries in inventory(index, language).values():
+        measured += len(entries)
+        covered += sum(bool(hit[0]) for hit in entries.values())
+    return {"measured_lines": measured, "covered_lines": covered}
+
+
+def mapped_line(change, number):
+    """Map unchanged old source lines; edited/deleted lines have no peer."""
+    if change is None:
+        return number
+    if change["binary"] or change["new_path"] is None:
+        return None
+    offset = 0
+    for old_start, old_count, new_start, new_count in change["hunks"]:
+        if number < old_start or (not old_count and number == old_start):
+            return number + offset
+        if old_count and number < old_start + old_count:
+            return change["old_map"].get(number)
+        offset += new_count - old_count
+    return number + offset
+
+
+def compare_indexes(before, after, language="native", repository=None):
+    """Compare observed line coverage only with matching build/test scopes."""
+    old_records, old_scope = observed_scope(before, language)
+    new_records, new_scope = observed_scope(after, language)
+    reasons = []
+    if not old_scope or not new_scope:
+        reasons.append("No observed tests in the selected language")
+    if any(not identity for _, identity in old_scope | new_scope):
+        reasons.append("Build compatibility identity is unavailable")
+    if old_scope != new_scope:
+        reasons.append("Observed test/build scopes differ")
+    if any(
+        item["collection"] != "complete" for item in old_records + new_records
+    ):
+        reasons.append("One or more observed profiles are incomplete")
+    changes = {}
+    if before["revision"] != after["revision"]:
+        if repository is None:
+            reasons.append(
+                "Different revisions require repository-backed line mapping"
+            )
+        else:
+            base, target, patch = repository_diff(
+                repository, before["revision"], after["revision"]
+            )
+            if (base, target) != (before["revision"], after["revision"]):
+                raise ValueError(
+                    "Coverage revisions must be full commit identities"
+                )
+            changes = {item["old_path"]: item for item in parse_diff(patch)}
+    result = {
+        "before_revision": before["revision"],
+        "after_revision": after["revision"],
+        "language": language,
+        "comparable": not reasons,
+        "reasons": reasons,
+        "before": line_totals(before, language),
+        "after": line_totals(after, language),
+        "collection": {
+            "before": collection_limits(before, language),
+            "after": collection_limits(after, language),
+        },
+        "caveat": "Observed-scope comparison only; absent tests require campaign accounting. "
+        "Hit frequencies and branches from different build graphs are not compared.",
+    }
+    if reasons:
+        return result
+    counts = dict.fromkeys(
+        (
+            "jointly_measured",
+            "gained",
+            "lost",
+            "source_changed",
+            "not_jointly_measured",
+        ),
+        0,
+    )
+    examples = {"gained": [], "lost": []}
+    new_files = inventory(after, language)
+    for path, lines in inventory(before, language).items():
+        change = changes.get(path)
+        new_path = change["new_path"] if change else path
+        for number, hit in lines.items():
+            mapped = mapped_line(change, int(number))
+            if mapped is None:
+                counts["source_changed"] += 1
+                continue
+            peer = new_files.get(new_path, {}).get(str(mapped))
+            if peer is None:
+                counts["not_jointly_measured"] += 1
+                continue
+            counts["jointly_measured"] += 1
+            direction = (
+                "lost"
+                if hit[0] and not peer[0]
+                else ("gained" if peer[0] and not hit[0] else None)
+            )
+            if direction:
+                counts[direction] += 1
+                if len(examples[direction]) < 20:
+                    examples[direction].append(
+                        {
+                            "before_path": path,
+                            "before_line": int(number),
+                            "after_path": new_path,
+                            "after_line": mapped,
+                        }
+                    )
+    result.update(counts=counts, examples=examples)
+    return result
+
+
+def unique_contributions(index, language="native", compatibility_id=None):
+    """Count exclusivity among observed suites, collapsing repeated runs."""
+    records, scopes = observed_scope(index, language)
+    identities = {identity for _, identity in scopes}
+    if not identities or None in identities or "" in identities:
+        raise ValueError(
+            "Unique contributions require build compatibility identities"
+        )
+    if compatibility_id is None:
+        if len(identities) != 1:
+            raise ValueError(
+                "Choose --compatibility-id for one observed build scope"
+            )
+        compatibility_id = next(iter(identities))
+    if compatibility_id not in identities:
+        raise ValueError(
+            "Requested build compatibility identity was not observed"
+        )
+    ordinals = {
+        number
+        for number, item in enumerate(index["invocations"])
+        if item.get("language", "native") == language
+        and item["build"].get("compatibility_id") == compatibility_id
+    }
+    suites = {
+        index["invocations"][number]["test_uid"]: {
+            "observed_unique_lines": 0,
+            "examples": [],
+        }
+        for number in ordinals
+    }
+    groups = {}
+    for path, lines in inventory(index, language).items():
+        for number, hit in lines.items():
+            if not hit[0]:
+                continue
+            group = groups.setdefault(hit[1], {"count": 0, "examples": []})
+            group["count"] += 1
+            if len(group["examples"]) < 20:
+                group["examples"].append({"path": path, "line": int(number)})
+    for membership, group in groups.items():
+        covering = {
+            index["invocations"][number]["test_uid"]
+            for number in index["memberships"][membership]
+            if number in ordinals
+        }
+        if len(covering) == 1:
+            row = suites[next(iter(covering))]
+            row["observed_unique_lines"] += group["count"]
+            row["examples"] = (row["examples"] + group["examples"])[:20]
+    return {
+        "revision": index["revision"],
+        "language": language,
+        "compatibility_id": compatibility_id,
+        "collection": collection_limits(index, language),
+        "caveat": "Exclusive among observed suites in this build scope only. "
+        "Missing profiles or absent tests may overstate exclusivity; "
+        "this is not evidence that another test is redundant.",
+        "tests": [
+            {"test_uid": uid, **row} for uid, row in sorted(suites.items())
+        ],
+    }
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -341,8 +541,38 @@ def main(argv=None):
     suggest.add_argument(
         "--language", choices=("native", "python"), default="native"
     )
+    compare = commands.add_parser(
+        "compare", help="Compare matching observed scopes"
+    )
+    compare.add_argument("before", type=Path)
+    compare.add_argument("after", type=Path)
+    compare.add_argument("--repository", type=Path)
+    unique = commands.add_parser(
+        "unique", help="Exclusive coverage among observed suites"
+    )
+    unique.add_argument("index", type=Path)
+    unique.add_argument("--compatibility-id")
+    for command in (compare, unique):
+        command.add_argument(
+            "--language", choices=("native", "python"), default="native"
+        )
     args = parser.parse_args(argv)
     try:
+        if args.command == "compare":
+            result = compare_indexes(
+                load_index(args.before),
+                load_index(args.after),
+                args.language,
+                args.repository,
+            )
+            print(json.dumps(result, indent=2, sort_keys=True))
+            return 0
+        if args.command == "unique":
+            result = unique_contributions(
+                load_index(args.index), args.language, args.compatibility_id
+            )
+            print(json.dumps(result, indent=2, sort_keys=True))
+            return 0
         index = load_index(args.index)
         patch = args.diff.read_text() if args.diff else None
         base, target = args.base_revision, args.target_revision

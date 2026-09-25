@@ -208,3 +208,27 @@ verified an arbitrary patch against a repository. Mismatched bases and malformed
 hunks are rejected. New-side line numbers are never looked up in old coverage.
 `--language python` selects the separate Python inventory. Evidence examples
 are capped at 20 locations per suggestion while match counts retain the total.
+
+## Comparing collections and finding exclusive coverage
+
+```sh
+python3 util/coverage/analysis.py compare before/index.json after/index.json --repository .
+python3 util/coverage/analysis.py unique coverage-index/index.json
+```
+
+Comparisons require matching observed suite/build compatibility scopes and
+complete profiles in both inputs. Different source revisions additionally
+require the repository containing both commits: unchanged lines are mapped
+through Git's diff, while edited/deleted lines and lines not measured in both
+builds are counted separately. A rejected comparison returns
+`comparable: false` and reasons, with no gains/losses. Counts measure covered
+lines, not execution frequency; branch identities across changed build graphs are not
+compared. Native and Python data are separate (`--language python`).
+
+`unique` reports lines covered exclusively by one suite among the observed
+suites, collapsing multiple invocations of that suite. If several build
+compatibility scopes exist, select one with `--compatibility-id`. Examples
+are capped at 20 locations per suite while total counts remain exact.
+Missing profiles and absent tests can overstate exclusivity. Neither command
+proves campaign completeness or justifies removing tests: consult the campaign
+accounting report for the expected inventory and collection failures.

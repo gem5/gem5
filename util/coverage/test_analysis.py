@@ -216,5 +216,126 @@ new file mode 100644
             )
 
 
+class ComparisonTest(unittest.TestCase):
+    def test_same_scope_reports_gains_and_losses_without_hit_frequencies(self):
+        before = index.build_index([record("one", {"1": 8, "2": 0})])
+        after = index.build_index([record("one", {"1": 0, "2": 1})])
+        result = analysis.compare_indexes(before, after)
+        self.assertTrue(result["comparable"])
+        self.assertEqual(result["counts"]["lost"], 1)
+        self.assertEqual(result["counts"]["gained"], 1)
+        self.assertFalse(
+            result["collection"]["before"]["expected_test_inventory_known"]
+        )
+
+    def test_scope_and_missing_data_do_not_claim_regressions(self):
+        before = index.build_index([record("one", {"1": 1})])
+        for changed in (
+            record("two", {"1": 0}),
+            record("one", {"1": 0}, build={"compatibility_id": "other"}),
+            record("one", {}, collection="missing"),
+            record("one", {"1": 0}, build={}),
+            record("one", {"1": 0}, revision="b" * 40),
+        ):
+            with self.subTest(changed=changed):
+                result = analysis.compare_indexes(
+                    before, index.build_index([changed])
+                )
+                self.assertFalse(result["comparable"])
+                self.assertNotIn("counts", result)
+                self.assertTrue(result["reasons"])
+
+    def test_unmeasured_line_is_not_a_regression(self):
+        before = index.build_index([record("one", {"1": 1, "2": 1})])
+        after = index.build_index([record("one", {"1": 1})])
+        result = analysis.compare_indexes(before, after)
+        self.assertEqual(result["counts"]["not_jointly_measured"], 1)
+        self.assertEqual(result["counts"]["lost"], 0)
+
+    def test_repository_mapping_handles_inserted_and_edited_lines(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+
+            def git(*args):
+                return subprocess.check_output(
+                    ["git", "-C", str(root), *args], text=True
+                ).strip()
+
+            def commit():
+                git("add", ".")
+                git(
+                    "-c",
+                    "user.name=Fixture",
+                    "-c",
+                    "user.email=f@example.invalid",
+                    "commit",
+                    "-qm",
+                    "fixture",
+                )
+                return git("rev-parse", "HEAD")
+
+            git("init", "-q")
+            source = root / "src/example.cc"
+            source.parent.mkdir()
+            source.write_text("stable first\nremoved second\nstable third\n")
+            base = commit()
+            source.write_text(
+                "inserted\nstable first\nreplacement\nstable third\n"
+            )
+            target = commit()
+            before = index.build_index(
+                [record("one", {"1": 1, "2": 1, "3": 0}, revision=base)]
+            )
+            after = index.build_index(
+                [
+                    record(
+                        "one",
+                        {"1": 0, "2": 1, "3": 0, "4": 1},
+                        revision=target,
+                    )
+                ]
+            )
+            result = analysis.compare_indexes(before, after, repository=root)
+            self.assertTrue(result["comparable"])
+            self.assertEqual(result["counts"]["jointly_measured"], 2)
+            self.assertEqual(result["counts"]["source_changed"], 1)
+            self.assertEqual(result["counts"]["lost"], 0)
+            self.assertEqual(result["examples"]["gained"][0]["after_line"], 4)
+
+    def test_uniqueness_collapses_retries_and_reports_partial_scope(self):
+        data = index.build_index(
+            [
+                record("one", {"1": 1, "2": 1}),
+                record("one", {"1": 1}, invocation_id="retry"),
+                record("two", {"1": 0, "2": 1}),
+                record("missing", {}, collection="missing"),
+            ]
+        )
+        result = analysis.unique_contributions(data)
+        rows = {row["test_uid"].split(":")[-1]: row for row in result["tests"]}
+        self.assertEqual(rows["one"]["observed_unique_lines"], 1)
+        self.assertEqual(rows["two"]["observed_unique_lines"], 0)
+        self.assertEqual(result["collection"]["incomplete_invocations"], 1)
+        self.assertIn("overstate exclusivity", result["caveat"])
+
+    def test_uniqueness_requires_one_build_scope_and_separates_languages(self):
+        data = index.build_index(
+            [
+                record("one", {"1": 1}),
+                record("two", {"1": 1}, build={"compatibility_id": "other"}),
+                record("python", {"1": 1}, language="python"),
+            ]
+        )
+        with self.assertRaisesRegex(ValueError, "Choose"):
+            analysis.unique_contributions(data)
+        result = analysis.unique_contributions(data, compatibility_id="other")
+        self.assertEqual(len(result["tests"]), 1)
+        self.assertEqual(result["tests"][0]["observed_unique_lines"], 1)
+        self.assertTrue(result["tests"][0]["test_uid"].endswith(":two"))
+        result = analysis.unique_contributions(data, language="python")
+        self.assertEqual(len(result["tests"]), 1)
+        self.assertTrue(result["tests"][0]["test_uid"].endswith(":python"))
+
+
 if __name__ == "__main__":
     unittest.main()
