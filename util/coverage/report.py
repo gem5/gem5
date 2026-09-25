@@ -45,6 +45,11 @@ from pathlib import (
     PurePosixPath,
 )
 
+from schema import (
+    load_record,
+    profile_paths,
+)
+
 
 def write_json(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -60,7 +65,7 @@ def suite_directory(uid):
     return str(path.parent)
 
 
-def manifest(listing, revision, length, output):
+def manifest(listing, revision, length, output, python_coverage=False):
     tests = sorted(
         {
             line.strip()
@@ -82,6 +87,9 @@ def manifest(listing, revision, length, output):
             "schema_version": 1,
             "revision": revision,
             "length": length,
+            "required_languages": (
+                ["native", "python"] if python_coverage else ["native"]
+            ),
             "expected": tests,
             "excluded": excluded,
         },
@@ -167,6 +175,7 @@ def summarize(source, output, revision, campaign=False):
     source, output = Path(source), Path(output)
     output.mkdir(parents=True, exist_ok=True)
     errors, expected, excluded, lengths = [], {}, {}, set()
+    required_languages = {}
     for path in source.rglob("expected.json"):
         try:
             data = json.loads(path.read_text())
@@ -188,6 +197,9 @@ def summarize(source, output, revision, campaign=False):
                 if len(parts) != 3 or not parts[2]:
                     raise ValueError("Invalid expected suite UID")
                 safe_path(parts[1])
+            languages = data.get("required_languages", ["native"])
+            if languages not in (["native"], ["native", "python"]):
+                raise ValueError("Invalid required coverage languages")
             omissions = data.get("excluded", {})
             if not isinstance(omissions, dict) or any(
                 uid not in tests
@@ -200,7 +212,13 @@ def summarize(source, output, revision, campaign=False):
             for uid in tests:
                 if uid in expected and expected[uid] != length:
                     raise ValueError("Suite appears in conflicting lengths")
+                if (
+                    uid in required_languages
+                    and required_languages[uid] != languages
+                ):
+                    raise ValueError("Conflicting required coverage languages")
                 expected[uid] = length
+                required_languages[uid] = languages
             excluded.update(omissions)
         except (ValueError, KeyError, TypeError, AttributeError) as error:
             errors.append(f"Invalid discovery manifest: {error}")
@@ -213,62 +231,60 @@ def summarize(source, output, revision, campaign=False):
         )
     records, seen = defaultdict(list), set()
     groups = defaultdict(list)
-    for path in source.rglob("coverage.json"):
+    native_ids, python_parents = {}, {}
+    for path in profile_paths(source):
         try:
-            record = json.loads(path.read_text())
-            if record.get("schema_version") != 1:
-                raise ValueError("Unsupported profile schema")
-            if record.get("revision") != revision:
+            record = load_record(path, root=source)
+            if record["revision"] != revision:
                 raise ValueError("Profile revision mismatch")
             uid, identity = record["test_uid"], record["invocation_id"]
-            if (
-                not isinstance(uid, str)
-                or not isinstance(identity, str)
-                or not identity
-            ):
-                raise ValueError("Invalid invocation identity")
             if identity in seen:
                 raise ValueError("Duplicate invocation identity")
             if uid not in expected:
                 raise ValueError("Profile has no expected suite")
-            if record.get("collection") not in {
-                "complete",
-                "missing",
-                "error",
-            }:
-                raise ValueError("Unknown collection status")
-            if record.get("outcome") not in {
-                "passed",
-                "failed",
-                "interrupted",
-            }:
-                raise ValueError("Unknown execution outcome")
-            line_count = 0
-            for entry in record["files"]:
-                safe_path(entry["path"])
-                for line, count in entry["lines"].items():
-                    if not str(line).isdigit() or int(line) < 1:
-                        raise ValueError("Invalid source line")
-                    if type(count) is not int or count < 0:
-                        raise ValueError("Invalid execution count")
-                    line_count += 1
+            language = record["language"]
+            line_count = sum(len(entry["lines"]) for entry in record["files"])
             if record["collection"] == "complete" and not line_count:
                 raise ValueError(
                     "Complete profile contains no executable lines"
                 )
             seen.add(identity)
-            records[uid].append(
-                {
-                    "outcome": record["outcome"],
-                    "collection": record["collection"],
-                }
-            )
+            metadata = {key: record[key] for key in ("outcome", "collection")}
+            if language == "native":
+                records[uid].append(metadata)
+                native_ids[identity] = uid
+            else:
+                parent = record["parent_invocation_id"]
+                if parent in python_parents:
+                    raise ValueError("Duplicate Python parent invocation")
+                python_parents[parent] = (uid, metadata)
             if record["collection"] == "complete":
-                directory = suite_directory(uid)
-                group = (expected[uid], directory)
-                groups[group].append(path)
-        except (ValueError, KeyError, TypeError, AttributeError) as error:
+                groups[(language, expected[uid], suite_directory(uid))].append(
+                    path
+                )
+        except (
+            ValueError,
+            KeyError,
+            TypeError,
+            AttributeError,
+            OSError,
+        ) as error:
             errors.append(f"Invalid profile {path.parent.name}: {error}")
+    missing_python = []
+    for identity, uid in native_ids.items():
+        if "python" in required_languages[uid]:
+            child = python_parents.get(identity)
+            if child is None or child[1]["collection"] != "complete":
+                missing_python.append(identity)
+    for parent, (uid, metadata) in python_parents.items():
+        if native_ids.get(parent) != uid:
+            errors.append(
+                f"Python profile has no matching native invocation: {parent}"
+            )
+    if missing_python:
+        errors.append(
+            f"Missing Python profiles for {len(missing_python)} native invocations"
+        )
     statuses = xml_statuses(source, errors)
     suites = []
     for uid, length in sorted(expected.items()):
@@ -316,29 +332,52 @@ def summarize(source, output, revision, campaign=False):
         expected=len(suites),
         excluded=len(excluded),
         missing_profiles=sum(row["missing_profiles"] for row in suites),
-        invocations=len(seen),
+        invocations=len(native_ids),
+        python_invocations=len(python_parents),
+        missing_python_profiles=len(missing_python),
     )
     uploads = []
-    for (length, directory), paths in sorted(groups.items()):
+    for (language, length, directory), paths in sorted(groups.items()):
         slug = directory.replace("/", "-")
         if not re.fullmatch(r"[a-zA-Z0-9_.-]+", slug):
             errors.append("Invalid TestLib group directory")
             continue
-        filename = f"testlib-{length}-{slug}.info"
+        filename = f"{'python' if language == 'python' else 'testlib'}-{length}-{slug}.info"
         chunks = []
         # Re-read one group at a time rather than retaining every suite's
         # zero-count baseline (hundreds of thousands of lines) in memory.
         by_file = defaultdict(lambda: defaultdict(int))
+        by_branch = defaultdict(dict)
         for profile_path in paths:
-            profile = json.loads(profile_path.read_text())
+            profile = load_record(profile_path, root=source)
             for entry in profile["files"]:
                 for line, count in entry["lines"].items():
                     by_file[entry["path"]][int(line)] += count
+                for branch in entry.get("branches", []):
+                    previous = by_branch[entry["path"]].get(
+                        branch["id"], (branch["line"], 0)
+                    )
+                    by_branch[entry["path"]][branch["id"]] = (
+                        branch["line"],
+                        previous[1] + branch["count"],
+                    )
         for path, hits in sorted(by_file.items()):
             chunks.extend(["TN:", f"SF:{path}"])
             chunks.extend(
                 f"DA:{line},{count}" for line, count in sorted(hits.items())
             )
+            branches = by_branch[path]
+            for ordinal, (_, (line, count)) in enumerate(
+                sorted(branches.items())
+            ):
+                chunks.append(f"BRDA:{line},0,{ordinal},{count}")
+            if branches:
+                chunks.extend(
+                    [
+                        f"BRF:{len(branches)}",
+                        f"BRH:{sum(count > 0 for _, count in branches.values())}",
+                    ]
+                )
             chunks.extend(
                 [
                     f"LF:{len(hits)}",
@@ -350,7 +389,8 @@ def summarize(source, output, revision, campaign=False):
         uploads.append(
             {
                 "file": filename,
-                "flags": f"overall-testdir-{slug},overall-length-{length},{slug}-{length}",
+                "flags": ("python," if language == "python" else "")
+                + f"overall-testdir-{slug},overall-length-{length},{slug}-{length}",
             }
         )
     planned_native = {}
@@ -446,13 +486,16 @@ def summarize(source, output, revision, campaign=False):
         "schema_version": 1,
         "revision": revision,
         "complete": complete,
-        "scope": "Native TestLib suite invocations; Python is not measured. "
-        "GTest and integrations are aggregate groups, not individual tests.",
+        "scope": "Native TestLib suite invocations and separately recorded Python "
+        "execution after gem5 initialization. GTest and integrations are "
+        "aggregate groups, not individual tests. Native branch identities "
+        "remain specific to their compiled build.",
         "counts": counts,
         "suites": suites,
         "errors": errors,
         "aggregate_groups": sorted(aggregate_groups),
         "aggregates": aggregate_rows,
+        "missing_python_invocations": missing_python,
         "generated_at": datetime.now(timezone.utc).isoformat(),
     }
     write_json(output / "summary.json", summary)
@@ -569,7 +612,7 @@ def package(source, output, revision):
     """Archive raw profiles once, preserving the collector's hard links."""
     source, output = Path(source), Path(output)
     output.mkdir(parents=True, exist_ok=True)
-    coverage = source / "coverage"
+    coverage = (source / "coverage").resolve()
     write_json(
         output / "artifact.json",
         {
@@ -583,7 +626,9 @@ def package(source, output, revision):
             output / "raw-profiles.tar.gz", "w:gz", dereference=False
         ) as archive:
             archive.add(coverage, arcname="coverage")
-        for path in coverage.rglob("coverage.json"):
+        paths = profile_paths(coverage)
+        paths.extend(coverage.rglob("baseline.json"))
+        for path in paths:
             target = output / "records" / path.relative_to(coverage)
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(path, target)
@@ -597,6 +642,7 @@ def main():
     commands = parser.add_subparsers(dest="command", required=True)
     plan = commands.add_parser("manifest")
     plan.add_argument("listing")
+    plan.add_argument("--python-coverage", action="store_true")
     plan.add_argument(
         "--length", required=True, choices=["quick", "long", "very-long"]
     )
@@ -620,7 +666,13 @@ def main():
         command.add_argument("--output", required=True)
     args = parser.parse_args()
     if args.command == "manifest":
-        manifest(args.listing, args.revision, args.length, args.output)
+        manifest(
+            args.listing,
+            args.revision,
+            args.length,
+            args.output,
+            args.python_coverage,
+        )
     elif args.command == "landing":
         from landing import build as build_landing
 

@@ -30,12 +30,14 @@
 import importlib.util
 import json
 import os
+import sys
 import tarfile
 import tempfile
 import unittest
 from pathlib import Path
 
 MODULE = Path(__file__).resolve().parents[1] / "report.py"
+sys.path.insert(0, str(MODULE.parent))
 spec = importlib.util.spec_from_file_location("coverage_report", MODULE)
 report = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(report)
@@ -374,6 +376,83 @@ class CoverageReportTest(unittest.TestCase):
         report.write_json(path, data)
         self.assertIn(
             "Missing aggregate reports: new-group", self.run_report()["errors"]
+        )
+
+    def test_sparse_baseline_and_branch_counts_export(self):
+        from schema import canonical_hash
+
+        baseline = {
+            "schema_version": 1,
+            "format": "gem5-coverage-baseline",
+            "revision": REVISION,
+            "language": "native",
+            "build_id": "build-one",
+            "files": [
+                {
+                    "path": "src/example.cc",
+                    "lines": {"1": 0, "2": 0},
+                    "branches": [{"id": "branch-one", "line": 1, "count": 0}],
+                }
+            ],
+        }
+        identity = canonical_hash(baseline)
+        report.write_json(
+            self.source / "baselines" / identity / "baseline.json", baseline
+        )
+        self.profile(
+            schema_version=2,
+            baseline_id=identity,
+            build={"build_id": "build-one"},
+            files=[
+                {
+                    "path": "src/example.cc",
+                    "lines": {"1": 3},
+                    "branches": [{"id": "branch-one", "count": 2}],
+                }
+            ],
+        )
+        self.assertTrue(self.run_report()["complete"])
+        text = next(self.output.glob("*.info")).read_text()
+        self.assertIn("DA:2,0", text)
+        self.assertIn("BRDA:1,0,0,2", text)
+
+    def test_required_python_profile_accounted_per_parent(self):
+        self.profile()
+        plan = self.source / "quick/expected.json"
+        data = json.loads(plan.read_text())
+        data["required_languages"] = ["native", "python"]
+        report.write_json(plan, data)
+        result = self.run_report()
+        self.assertFalse(result["complete"])
+        self.assertEqual(result["counts"]["missing_python_profiles"], 1)
+        native = json.loads((self.source / "one/coverage.json").read_text())
+        python = dict(
+            native,
+            language="python",
+            invocation_id="one-python",
+            parent_invocation_id="one",
+        )
+        report.write_json(self.source / "one/python-coverage.json", python)
+        result = self.run_report()
+        self.assertTrue(result["complete"])
+        self.assertEqual(result["counts"]["invocations"], 1)
+        self.assertEqual(result["counts"]["python_invocations"], 1)
+        self.assertTrue(list(self.output.glob("python-*.info")))
+        python["parent_invocation_id"] = "unknown"
+        report.write_json(self.source / "one/python-coverage.json", python)
+        self.assertFalse(self.run_report()["complete"])
+
+    def test_package_retains_python_and_shared_baselines(self):
+        source = self.root / "package-input"
+        coverage = source / "coverage"
+        report.write_json(coverage / "one/python-coverage.json", {})
+        report.write_json(coverage / "baselines/hash/baseline.json", {})
+        report.package(source, self.output, REVISION)
+        self.assertTrue(
+            (self.output / "records/one/python-coverage.json").is_file()
+        )
+        self.assertTrue(
+            (self.output / "records/baselines/hash/baseline.json").is_file()
         )
 
 
