@@ -40,11 +40,15 @@
 
 #include "sim/faults.hh"
 
-#include <csignal>
+#include <cassert>
+#include <memory>
 
 #include "arch/generic/decoder.hh"
+#include "arch/generic/isa.hh"
 #include "base/logging.hh"
 #include "cpu/base.hh"
+#include "cpu/reg_class.hh"
+#include "cpu/static_inst_fwd.hh"
 #include "cpu/thread_context.hh"
 #include "debug/Faults.hh"
 #include "mem/page_table.hh"
@@ -99,6 +103,37 @@ GenericPageTableFault::invoke(ThreadContext *tc, const StaticInstPtr &inst)
     if (!FullSystem) {
         Process *p = tc->getProcessPtr();
         handled = p->fixupFault(vaddr);
+    }
+    if (!handled) {
+#if TRACING_ON
+        Addr pc = tc->pcState().instAddr();
+        DPRINTF(
+            Faults,
+            "GenericPageTableFault: Unhandled fault at virtual address %#x, "
+            "Guest PC: %#x\n",
+            vaddr, pc);
+
+        const RegClass *int_reg_class = nullptr;
+        if (auto isa = tc->getIsaPtr()) {
+            for (auto rc : isa->regClasses()) {
+                if (rc->type() == IntRegClass) {
+                    int_reg_class = rc;
+                    break;
+                }
+            }
+        }
+
+        if (int_reg_class) {
+            DPRINTF(Faults, "Guest Integer Registers:\n");
+            int num_to_print = std::min<int>(32, int_reg_class->numRegs());
+            for (int i = 0; i < num_to_print; ++i) {
+                RegId reg_id(*int_reg_class, i);
+                DPRINTF(Faults, "  x%d: %#lx\n", i, tc->getReg(reg_id));
+            }
+        } else {
+            DPRINTF(Faults, "Guest Integer Registers: class not found!\n");
+        }
+#endif
     }
     panic_if(!handled &&
             !tc->getSystemPtr()->trapToGdb(GDBSignal::SEGV, tc->contextId()),
