@@ -232,3 +232,16 @@ are capped at 20 locations per suite while total counts remain exact.
 Missing profiles and absent tests can overstate exclusivity. Neither command
 proves campaign completeness or justifies removing tests: consult the campaign
 accounting report for the expected inventory and collection failures.
+
+## Retained source navigation
+
+To open generated or retained source files without GitHub links, build with
+`--source-map coverage-report/sources/map.json`. The map associates each
+repository-relative source path with a `page` such as `pages/abc.html`,
+relative to the map's directory. Pages must exist inside that directory;
+traversal, escaping symlinks, missing files, and non-HTML pages are rejected.
+The index computes relative artifact links, with `#L<number>` anchors, and
+uses GitHub links for sources absent from the map. Keep the source and index
+artifact directories together when moving the report. Programmatic report
+builders can call `attach_source_links(index, map_path, output_directory)`
+before writing `index.json` and rendering HTML.

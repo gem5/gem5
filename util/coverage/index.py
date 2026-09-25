@@ -30,11 +30,15 @@
 import argparse
 import hashlib
 import json
+import os
 import sys
 from pathlib import (
     Path,
 )
-from urllib.parse import urlsplit
+from urllib.parse import (
+    quote,
+    urlsplit,
+)
 
 try:
     from .schema import (
@@ -58,6 +62,32 @@ except ImportError:  # Direct command-line execution.
     )
 
 REPOSITORY_URL = "https://github.com/gem5/gem5"
+
+
+def attach_source_links(index, source_map_path, output_directory):
+    """Resolve retained source pages inside their artifact before linking."""
+    source_map_path = Path(source_map_path).resolve()
+    root = source_map_path.parent
+    mapping = json.loads(source_map_path.read_text(encoding="utf-8"))
+    if not isinstance(mapping, dict):
+        raise ValueError("Source map must contain a path-to-page mapping")
+    links = {}
+    for path, entry in mapping.items():
+        source_path(path)
+        if not isinstance(entry, dict):
+            raise ValueError("Source map entries must describe a page")
+        page = root / source_path(entry.get("page"))
+        resolved = page.resolve()
+        if not resolved.is_relative_to(root) or not resolved.is_file():
+            raise ValueError("Source page is missing or escapes its artifact")
+        if resolved.suffix != ".html":
+            raise ValueError("Retained source pages must be HTML")
+        relative = Path(
+            os.path.relpath(resolved, Path(output_directory).resolve())
+        )
+        links[path] = "./" + quote(relative.as_posix(), safe="/")
+    index["source_links"] = links
+    return index
 
 
 def build_index(records, repository_url=REPOSITORY_URL):
@@ -503,6 +533,17 @@ HTML = r"""<!doctype html>
     encodeURIComponent(data.revision) + "/" +
     path.split("/").map(encodeURIComponent).join("/") +
     (line ? "#L" + line : "");
+  const sourceLink = (label, path, line) => {
+    const local = (data.source_links || {})[path];
+    if (typeof local === "string" && local.startsWith("./") &&
+        !/[\\?#\x00-\x20]/.test(local) && !local.includes(":") &&
+        !/%(?:2f|5c|00)/i.test(local)) {
+      const link = text("a", label);
+      link.href = local + (line ? "#L" + line : "");
+      return link;
+    }
+    return safeLink(label, sourceUrl(path, line));
+  };
   const summary = data.summary;
   el("revision").textContent = "Source revision: " + data.revision;
   el("summary").textContent = summary.tests + " suites · " +
@@ -532,7 +573,7 @@ HTML = r"""<!doctype html>
       const row = document.createElement("tr");
       const location = item.path + ":" + item.line;
       const cell = document.createElement("td");
-      cell.append(safeLink(location, sourceUrl(item.path, item.line)));
+      cell.append(sourceLink(location, item.path, item.line));
       row.append(cell, text("td", item.ids.length));
       body.append(row);
     }
@@ -552,8 +593,7 @@ HTML = r"""<!doctype html>
     if (definition && !definition.split("/").includes("..")) {
       const path = definition.startsWith("tests/") ?
         definition : "tests/" + definition;
-      el("test-definition").append(safeLink("Open test definition",
-        sourceUrl(path)));
+      el("test-definition").append(sourceLink("Open test definition", path));
     }
     const counts = {complete: 0, missing: 0, error: 0};
     const ordinals = new Set(data.tests[uid].filter(ordinal =>
@@ -628,8 +668,7 @@ HTML = r"""<!doctype html>
         ": " + branch.count + " hits; " +
         (suites.length ? suites.join(", ") : "no covering suite")));
     }
-    el("line-status").replaceChildren(safeLink(path + ":" + number,
-      sourceUrl(path, number)), document.createTextNode(" — " + line[0] +
+    el("line-status").replaceChildren(sourceLink(path + ":" + number, path, number), document.createTextNode(" — " + line[0] +
       " hits across " + members.length + " invocations."));
     if (!members.length) {
       el("covering-tests").append(text("li",
@@ -685,6 +724,9 @@ def main(argv=None):
     )
     build.add_argument("--output", required=True, type=Path)
     build.add_argument("--repository-url", default=REPOSITORY_URL)
+    build.add_argument(
+        "--source-map", type=Path, help="Retained sources/map.json"
+    )
     reverse = commands.add_parser(
         "tests-for-line", help="Find tests covering a line"
     )
@@ -713,6 +755,8 @@ def main(argv=None):
             result = build_index(
                 read_index_records(args.input), args.repository_url
             )
+            if args.source_map:
+                attach_source_links(result, args.source_map, args.output)
             args.output.mkdir(parents=True, exist_ok=True)
             (args.output / "index.json").write_text(
                 json.dumps(

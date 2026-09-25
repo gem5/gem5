@@ -387,7 +387,7 @@ jobs:
                   SOURCE_REVISION: ${{ steps.source.outputs.source-ref }}
               run: python3 util/coverage/report.py landing coverage-input --output coverage-report --revision "$SOURCE_REVISION" --source-root coverage-tested-source
             - name: Build the test and source-line index
-              run: python3 util/coverage/index.py build coverage-input --output coverage-report/index
+              run: python3 util/coverage/index.py build coverage-input --output coverage-report/index --source-map coverage-report/sources/map.json
             - name: Retain reports even when collection is incomplete
               if: always()
               uses: actions/upload-artifact@v7

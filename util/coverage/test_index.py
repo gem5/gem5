@@ -51,6 +51,85 @@ def record(invocation, test="a", lines=None, **changes):
 
 
 class CoverageIndexTest(unittest.TestCase):
+    def test_retained_generated_source_links_and_cli(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source_dir = root / "sources"
+            source_dir.mkdir()
+            page = source_dir / "pages" / "generated page.html"
+            page.parent.mkdir()
+            page.write_text('<pre id="L1">generated source</pre>')
+            mapping = source_dir / "map.json"
+            mapping.write_text(
+                json.dumps(
+                    {
+                        "build/ALL/generated.cc": {
+                            "page": "pages/generated page.html"
+                        }
+                    }
+                )
+            )
+            profiles = root / "profiles"
+            profiles.mkdir()
+            item = record(
+                "generated",
+                files=[{"path": "build/ALL/generated.cc", "lines": {"1": 2}}],
+            )
+            (profiles / "coverage.json").write_text(json.dumps(item))
+            output = root / "index"
+            script = Path(coverage_index.__file__)
+            subprocess.run(
+                [
+                    sys.executable,
+                    str(script),
+                    "build",
+                    str(profiles),
+                    "--output",
+                    str(output),
+                    "--source-map",
+                    str(mapping),
+                ],
+                check=True,
+                capture_output=True,
+            )
+            result = json.loads((output / "index.json").read_text())
+            self.assertEqual(
+                result["source_links"]["build/ALL/generated.cc"],
+                "./../sources/pages/generated%20page.html",
+            )
+            html = (output / "index.html").read_text()
+            self.assertIn("generated%20page.html", html)
+            self.assertIn("sourceLink(location, item.path, item.line)", html)
+
+    def test_source_map_rejects_escape_missing_pages_and_non_html(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            sources = root / "sources"
+            sources.mkdir()
+            outside = root / "outside.html"
+            outside.write_text("outside")
+            (sources / "link.html").symlink_to(outside)
+            (sources / "code.py").write_text("print('not HTML')")
+            mapping = sources / "map.json"
+            for page in (
+                "../outside.html",
+                "link.html",
+                "missing.html",
+                "code.py",
+                "https://host/page.html",
+                "/absolute.html",
+            ):
+                with self.subTest(page=page), self.assertRaises(ValueError):
+                    mapping.write_text(
+                        json.dumps({"src/a.cc": {"page": page}})
+                    )
+                    coverage_index.attach_source_links(
+                        {}, mapping, root / "index"
+                    )
+            mapping.write_text(json.dumps({"../bad.cc": {"page": "code.py"}}))
+            with self.assertRaises(ValueError):
+                coverage_index.attach_source_links({}, mapping, root / "index")
+
     def test_union_preserves_both_directions_and_zero_lines(self):
         first = record("first", lines={"1": 2, "2": 0})
         second = record("second", "b", {"1": 3, "3": 1})
