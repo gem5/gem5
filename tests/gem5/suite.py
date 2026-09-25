@@ -40,6 +40,7 @@ import copy
 import os
 import subprocess
 import sys
+from contextlib import nullcontext
 
 from testlib.configuration import constants
 from testlib.helper import (
@@ -210,13 +211,23 @@ def _create_test_run_gem5(config, config_args, gem5_args):
         command.append(config)
         # Config_args should set up the program args.
         command.extend(config_args)
-        log_call(
-            params.log,
-            command,
-            time=params.time,
-            stdout=sys.stdout,
-            stderr=sys.stderr,
+        coverage = (
+            gem5_fixture.coverage_build.invocation(
+                params.suite.uid, params.log
+            )
+            if gcov == "per-test"
+            else nullcontext(None)
         )
+        with coverage as environment:
+            options = {} if environment is None else {"env": environment}
+            log_call(
+                params.log,
+                command,
+                time=params.time,
+                stdout=sys.stdout,
+                stderr=sys.stderr,
+                **options,
+            )
         if gcov == "ind-test-and-gcov":
             # run gcovr to get coverage metrics for each individual test
             run_gcovr(

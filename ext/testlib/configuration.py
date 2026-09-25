@@ -232,6 +232,7 @@ def define_defaults(defaults):
         os.path.join(defaults.base_dir, "tests", "gem5", "resources")
     )
     defaults.gcov = ""
+    defaults.gcov_tool = "gcov"
 
 
 def define_constants(constants):
@@ -656,14 +657,26 @@ def define_common_args(config):
         Argument(
             "--gcov",
             action="store",
-            choices=["test-only", "ind-test-and-gcov", "all-test-and-gcov"],
+            choices=[
+                "test-only",
+                "ind-test-and-gcov",
+                "all-test-and-gcov",
+                "per-test",
+            ],
             default=config._defaults.gcov,
             help="Build gem5 for running with gcov. If test-only is passed, "
             "TestLib will only run the tests. If ind-test-and-gcov is passed, "
             "TestLib will run gcovr, a tool for running gcov, after each "
             "individual test. If all-test-and-gcov is passed, TestLib will "
             "run all of the specified tests, then run gcovr after all of them "
-            "finish.",
+            "finish. If per-test is passed, collect isolated coverage for each "
+            "gem5 invocation while permitting parallel tests.",
+        ),
+        Argument(
+            "--gcov-tool",
+            action="store",
+            default=config._defaults.gcov_tool,
+            help="GCC gcov executable for --gcov=per-test (GCC 9 or newer).",
         ),
     ]
 
@@ -734,6 +747,7 @@ class RunParser(ArgParser):
         common_args.include_tags.add_to(parser)
         common_args.exclude_tags.add_to(parser)
         common_args.gcov.add_to(parser)
+        common_args.gcov_tool.add_to(parser)
 
 
 class ListParser(ArgParser):
@@ -800,6 +814,7 @@ class ListParser(ArgParser):
         common_args.include_tags.add_to(parser)
         common_args.exclude_tags.add_to(parser)
         common_args.gcov.add_to(parser)
+        common_args.gcov_tool.add_to(parser)
 
 
 class RerunParser(ArgParser):
@@ -819,6 +834,7 @@ class RerunParser(ArgParser):
         common_args.length.add_to(parser)
         common_args.host.add_to(parser)
         common_args.gcov.add_to(parser)
+        common_args.gcov_tool.add_to(parser)
 
 
 config = _Config()

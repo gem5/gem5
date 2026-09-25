@@ -54,6 +54,7 @@ from testlib.configuration import (
     config,
     constants,
 )
+from testlib.coverage import CoverageBuild
 from testlib.fixture import Fixture
 from testlib.helper import (
     absdirpath,
@@ -274,6 +275,17 @@ class Gem5Fixture(SConsFixture):
         self.isa = isa
         self.protocol = protocol
         self.set_global()
+
+    def _setup(self, testitem):
+        super()._setup(testitem)
+        if self.gcov == "per-test":
+            self.coverage_build = CoverageBuild(
+                self.directory,
+                self.target_dir,
+                self.path,
+                config.result_path,
+                config.gcov_tool,
+            )
 
     def get_get_build_info(self) -> str | None:
         build_target = self.target
