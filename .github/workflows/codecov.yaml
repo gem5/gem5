@@ -5,6 +5,12 @@
 name: Code Coverage
 
 on:
+    workflow_dispatch:
+        inputs:
+            source-run-id:
+                description: Completed coverage run whose artifacts to reprocess
+                type: string
+                required: true
     workflow_run:
         workflows: [Daily Tests, Weekly Tests]
         types: [completed]
@@ -171,3 +177,134 @@ jobs:
             source-ref: ${{ needs.gate.outputs.source-ref }}
         secrets:
             CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+
+    report:
+        name: Build recoverable coverage reports
+        needs: [gate, quick, daily, weekly]
+        if: ${{ always() && (github.event_name == 'workflow_dispatch' || needs.gate.outputs.allowed == 'true') }}
+        runs-on: ubuntu-24.04
+        outputs:
+            uploads: ${{ steps.build.outputs.uploads }}
+            source-ref: ${{ steps.source.outputs.source-ref }}
+        steps:
+            - name: Check the source coverage run
+              id: run
+              uses: actions/github-script@v9
+              env:
+                  REQUESTED_RUN: ${{ inputs.source-run-id }}
+              with:
+                  script: |
+                      const recovery = context.eventName === 'workflow_dispatch';
+                      if (recovery && context.ref !==
+                          `refs/heads/${context.payload.repository.default_branch}`) {
+                        throw new Error('Report recovery must run from the default branch');
+                      }
+                      const id = recovery ? process.env.REQUESTED_RUN : String(context.runId);
+                      if (!/^[1-9][0-9]*$/.test(id)) throw new Error('Invalid coverage run ID');
+                      const run = (await github.rest.actions.getWorkflowRun({
+                        ...context.repo, run_id: Number(id)
+                      })).data;
+                      if (run.path !== '.github/workflows/codecov.yaml' ||
+                          run.event !== 'workflow_run' ||
+                          run.head_repository?.full_name !==
+                            `${context.repo.owner}/${context.repo.repo}` ||
+                          (recovery && run.status !== 'completed')) {
+                        throw new Error('Source is not a completed trusted coverage campaign');
+                      }
+                      core.setOutput('run-id', id);
+            - name: Checkout trusted reporting tools
+              uses: actions/checkout@v7
+              with:
+                  ref: ${{ github.sha }}
+            - name: Recover manifests, raw profiles, and aggregate reports
+              uses: actions/download-artifact@v8
+              with:
+                  run-id: ${{ steps.run.outputs.run-id }}
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  pattern: coverage-{data,plan,source}-*
+                  path: coverage-input
+            - name: Verify the admitted source metadata
+              id: source
+              uses: actions/github-script@v9
+              with:
+                  script: |
+                      const fs = require('fs');
+                      const path = require('path');
+                      const dirs = fs.readdirSync('coverage-input', {withFileTypes: true})
+                        .filter(x => x.isDirectory() && x.name.startsWith('coverage-source-'));
+                      if (dirs.length !== 1) throw new Error('Expected one admission manifest');
+                      const manifest = JSON.parse(fs.readFileSync(path.join(
+                        'coverage-input', dirs[0].name, 'coverage-source.json'), 'utf8'));
+                      if (!/^[0-9a-f]{40}$/.test(manifest.commit) || manifest.branch !== 'develop') {
+                        throw new Error('Invalid source revision');
+                      }
+                      for (const [name, filename] of [['daily', 'daily-tests.yaml'],
+                                                      ['weekly', 'weekly-tests.yaml']]) {
+                        const entry = manifest[name];
+                        if (!Number.isSafeInteger(entry?.id) ||
+                            !Number.isSafeInteger(entry?.attempt)) {
+                          throw new Error('Invalid admission run identity');
+                        }
+                        const run = (await github.rest.actions.getWorkflowRunAttempt({
+                          ...context.repo, run_id: entry.id, attempt_number: entry.attempt
+                        })).data;
+                        if (run.path !== `.github/workflows/${filename}` ||
+                            run.head_sha !== manifest.commit || run.head_branch !== 'develop' ||
+                            run.event !== 'workflow_dispatch' || run.conclusion !== 'success' ||
+                            run.head_repository?.full_name !==
+                              `${context.repo.owner}/${context.repo.repo}`) {
+                          throw new Error('Admission metadata does not match trusted passing tests');
+                        }
+                      }
+                      core.setOutput('source-ref', manifest.commit);
+            - name: Account for coverage and export grouped reports
+              id: build
+              env:
+                  SOURCE_REVISION: ${{ steps.source.outputs.source-ref }}
+              run: |
+                  python3 util/coverage/report.py summarize coverage-input --output coverage-report --revision "$SOURCE_REVISION" --campaign
+                  cat coverage-report/summary.md >> "$GITHUB_STEP_SUMMARY"
+                  echo "uploads=$(jq -c . coverage-report/uploads.json)" >> "$GITHUB_OUTPUT"
+            - name: Build the test and source-line index
+              run: python3 util/coverage/index.py build coverage-input --output coverage-report/index
+            - name: Retain reports even when collection is incomplete
+              if: always()
+              uses: actions/upload-artifact@v7
+              with:
+                  name: coverage-report-${{ github.run_id }}
+                  path: coverage-report
+                  retention-days: 30
+                  overwrite: true
+                  if-no-files-found: error
+            - name: Fail visibly on incomplete collection
+              if: ${{ always() && steps.build.outcome == 'success' }}
+              run: jq -e '.complete == true' coverage-report/summary.json
+
+    upload:
+        name: Upload retained coverage groups
+        needs: report
+        if: ${{ always() && needs.report.outputs.uploads != '' && needs.report.outputs.uploads != '[]' }}
+        runs-on: ubuntu-24.04
+        strategy:
+            fail-fast: false
+            matrix:
+                report: ${{ fromJson(needs.report.outputs.uploads) }}
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ needs.report.outputs.source-ref }}
+            - uses: actions/download-artifact@v8
+              with:
+                  name: coverage-report-${{ github.run_id }}
+                  path: coverage-report
+            - name: Upload explicit coverage report
+              uses: codecov/codecov-action@v7
+              with:
+                  token: ${{ secrets.CODECOV_TOKEN }}
+                  files: coverage-report/${{ matrix.report.file }}
+                  disable_search: true
+                  flags: ${{ matrix.report.flags }}
+                  override_commit: ${{ needs.report.outputs.source-ref }}
+                  override_branch: develop
+                  fail_ci_if_error: true

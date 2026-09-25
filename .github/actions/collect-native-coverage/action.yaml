@@ -1,0 +1,35 @@
+---
+name: Collect aggregate native coverage
+description: Retain native gcov inputs and an explicit report for upload recovery
+inputs:
+    group:
+        description: Aggregate test group name
+        required: true
+    flags:
+        description: Existing Codecov group flags
+        required: true
+runs:
+    using: composite
+    steps:
+        - name: Retain raw inputs and export native coverage
+          shell: bash
+          env:
+              PYTHONPATH: ${{ runner.temp }}/coverage-tools
+              COVERAGE_GROUP: ${{ inputs.group }}
+              COVERAGE_FLAGS: ${{ inputs.flags }}
+          run: |
+              mkdir -p coverage-aggregate
+              find build -type f \( -name '*.gcno' -o -name '*.gcda' -o -name '*.cc' -o -name '*.hh' -o -name '*.c' -o -name '*.h' -o -name '*.inc' \) -print0 > "$RUNNER_TEMP/native-coverage-files"
+              tar -czf coverage-aggregate/raw-gcov.tar.gz --null -T "$RUNNER_TEMP/native-coverage-files"
+              python3 -m pip install --target "$PYTHONPATH" gcovr==8.3
+              python3 util/coverage/report.py aggregate --output coverage-aggregate --revision "$(git rev-parse HEAD)" --group "$COVERAGE_GROUP" --flags "$COVERAGE_FLAGS"
+        - name: Retain aggregate native coverage
+          if: always()
+          uses: actions/upload-artifact@v7
+          with:
+              name: coverage-data-${{ inputs.group }}
+              path: coverage-aggregate
+              compression-level: 0
+              retention-days: 30
+              overwrite: true
+              if-no-files-found: error

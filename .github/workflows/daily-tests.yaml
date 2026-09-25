@@ -164,14 +164,11 @@ jobs:
             - name: Run ALL/unittests.${{ matrix.type }} UnitTests
               run: scons build/ALL/unittests.${{ matrix.type }} ${GCOV_FLAGS:+--gcov} -j $(nproc)
 
-            - name: Upload coverage reports to Codecov
+            - name: Collect aggregate native coverage
               if: ${{ !cancelled() && inputs.coverage }}
-              uses: codecov/codecov-action@v7
+              uses: ./.github/actions/collect-native-coverage
               with:
-                  token: ${{ secrets.CODECOV_TOKEN }}
-                  override_commit: ${{ inputs.source-ref || github.sha }}
-                  override_branch: ${{ inputs.source-ref && 'develop' || github.ref_name }}
-                  fail_ci_if_error: true
+                  group: unittests-${{ matrix.type }}
                   flags: unittests-${{ matrix.type }},overall-unittests,overall-length-long
 
     get-testlib-long-dirs:
@@ -188,7 +185,7 @@ jobs:
               working-directory: ${{ github.workspace }}/tests
               id: dir-matrix
               run: |
-                  ./main.py list gem5 --suites -q --length=long ${GCOV_FLAGS:+--gcov=test-only} > "$RUNNER_TEMP/test-suites"
+                  ./main.py list gem5 --suites -q --length=long ${GCOV_FLAGS:+--gcov=per-test} > "$RUNNER_TEMP/test-suites"
                   test_dirs=$(jq -Rsc '
                     split("\n") |
                     map(select(startswith("SuiteUID:")) |
@@ -198,11 +195,25 @@ jobs:
                   ' "$RUNNER_TEMP/test-suites")
                   echo "test-dirs-matrix=$test_dirs" >> "$GITHUB_OUTPUT"
 
+            - name: Record expected coverage suites
+              if: inputs.coverage
+              run: |
+                  python3 util/coverage/report.py manifest "$RUNNER_TEMP/test-suites" --length=long --revision "$(git rev-parse HEAD)" --output "$RUNNER_TEMP/coverage-plan/expected.json"
+            - name: Retain coverage discovery manifest
+              if: ${{ always() && inputs.coverage }}
+              uses: actions/upload-artifact@v7
+              with:
+                  name: coverage-plan-long
+                  path: ${{ runner.temp }}/coverage-plan
+                  retention-days: 30
+                  overwrite: true
+                  if-no-files-found: error
+
             - name: Discover required binary configurations
               id: build-matrix
               working-directory: ${{ github.workspace }}/tests
               run: |
-                  ./main.py list gem5 --length=long --host x86_64 --build-targets -q ${GCOV_FLAGS:+--gcov=test-only} > "$RUNNER_TEMP/build-targets"
+                  ./main.py list gem5 --length=long --host x86_64 --build-targets -q ${GCOV_FLAGS:+--gcov=per-test} > "$RUNNER_TEMP/build-targets"
                   # Always refresh the ALL cache for the PR and weekly tests.
                   build_matrix=$(jq -Rsc 'split("\n") | map(select(length > 0) | split("/")[-2]) | . + ["ALL"] | unique' "$RUNNER_TEMP/build-targets")
                   echo "build-matrix=$build_matrix" >> "$GITHUB_OUTPUT"
@@ -238,7 +249,7 @@ jobs:
               env:
                   TEST_DIR: ${{ matrix.test-type }}
               run: |
-                  ./main.py list "$TEST_DIR" --length=long --build-targets -q ${GCOV_FLAGS:+--gcov=test-only} > "$RUNNER_TEMP/required-binaries"
+                  ./main.py list "$TEST_DIR" --length=long --build-targets -q ${GCOV_FLAGS:+--gcov=per-test} > "$RUNNER_TEMP/required-binaries"
                   if [ ! -s "$RUNNER_TEMP/required-binaries" ]; then
                     echo "has-binaries=false" >> "$GITHUB_OUTPUT"
                     exit 0
@@ -279,7 +290,7 @@ jobs:
                   if [ -n "$GCOV_FLAGS" ]; then
                     test_threads=1
                   fi
-                  ./main.py run ${{ matrix.test-type }} --skip-build -j$(nproc) --length=long -vv -t "$test_threads" --bin-path "$resource_dir" ${GCOV_FLAGS:+--gcov=test-only}
+                  ./main.py run ${{ matrix.test-type }} --skip-build -j$(nproc) --length=long -vv -t "$test_threads" --bin-path "$resource_dir" ${GCOV_FLAGS:+--gcov=per-test}
 
             - name: Sanitize test-dir for artifact name
               id: sanitize-test-dir
@@ -292,17 +303,22 @@ jobs:
               with:
                   name: daily-tests-${{ inputs.coverage && 'gcov-' || '' }}run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-long-${{
                       steps.sanitize-test-dir.outputs.sanitized-test-dir }}-status-${{ steps.run-tests.outcome }}-output
-                  path: tests/testing-results
-            - name: Upload coverage reports to Codecov
-              if: ${{ !cancelled() && inputs.coverage && steps.run-tests.outcome != 'skipped' }}
-              uses: codecov/codecov-action@v7
+                  path: |
+                      tests/testing-results
+                      !tests/testing-results/coverage/**
+            - name: Package raw profiles without duplicating shared notes
+              if: ${{ always() && inputs.coverage }}
+              run: python3 util/coverage/report.py package tests/testing-results --output coverage-data --revision "$(git rev-parse HEAD)"
+            - name: Retain per-invocation coverage and test results
+              if: ${{ always() && inputs.coverage }}
+              uses: actions/upload-artifact@v7
               with:
-                  token: ${{ secrets.CODECOV_TOKEN }}
-                  override_commit: ${{ inputs.source-ref || github.sha }}
-                  override_branch: ${{ inputs.source-ref && 'develop' || github.ref_name }}
-                  fail_ci_if_error: true
-                  flags: overall-testdir-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir }},overall-length-long,${{ steps.sanitize-test-dir.outputs.sanitized-test-dir
-                      }}-long
+                  name: coverage-data-long-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir }}
+                  path: coverage-data
+                  compression-level: 6
+                  retention-days: 30
+                  overwrite: true
+                  if-no-files-found: error
 
   # This runs the SST-gem5 integration compilation and tests it with
   # ext/sst/sst/example.py.
@@ -343,14 +359,11 @@ jobs:
               working-directory: ${{ github.workspace }}/ext/sst
               run: sst --add-lib-path=./ sst/example.py
 
-            - name: Upload coverage reports to Codecov
-              if: ${{ !cancelled() && inputs.coverage && steps.run-tests.outcome != 'skipped' }}
-              uses: codecov/codecov-action@v7
+            - name: Collect aggregate native coverage
+              if: ${{ !cancelled() && inputs.coverage }}
+              uses: ./.github/actions/collect-native-coverage
               with:
-                  token: ${{ secrets.CODECOV_TOKEN }}
-                  override_commit: ${{ inputs.source-ref || github.sha }}
-                  override_branch: ${{ inputs.source-ref && 'develop' || github.ref_name }}
-                  fail_ci_if_error: true
+                  group: sst-test
                   flags: sst-test,overall-length-long
 
   # This runs the gem5 within SystemC ingration and runs a simple hello-world
@@ -385,14 +398,11 @@ jobs:
             - name: Continue gem5 within SystemC test
               run: LD_LIBRARY_PATH=build/ARM/:/opt/systemc/lib-linux64/ ./util/systemc/gem5_within_systemc/gem5.opt.sc m5out/config.ini
 
-            - name: Upload coverage reports to Codecov
-              if: ${{ !cancelled() && inputs.coverage && steps.run-tests.outcome != 'skipped' }}
-              uses: codecov/codecov-action@v7
+            - name: Collect aggregate native coverage
+              if: ${{ !cancelled() && inputs.coverage }}
+              uses: ./.github/actions/collect-native-coverage
               with:
-                  token: ${{ secrets.CODECOV_TOKEN }}
-                  override_commit: ${{ inputs.source-ref || github.sha }}
-                  override_branch: ${{ inputs.source-ref && 'develop' || github.ref_name }}
-                  fail_ci_if_error: true
+                  group: systemc-test
                   flags: systemc-test,overall-length-long
 
     dramsys-tests:
@@ -438,12 +448,9 @@ jobs:
                   ./build/ALL/gem5.opt configs/example/gem5_library/dramsys/arm-hello-dramsys.py
                   ./build/ALL/gem5.opt configs/example/gem5_library/dramsys/dramsys-traffic.py
                   ./build/ALL/gem5.opt configs/example/dramsys.py
-            - name: Upload coverage reports to Codecov
-              if: ${{ !cancelled() && inputs.coverage && steps.run-tests.outcome != 'skipped' }}
-              uses: codecov/codecov-action@v7
+            - name: Collect aggregate native coverage
+              if: ${{ !cancelled() && inputs.coverage }}
+              uses: ./.github/actions/collect-native-coverage
               with:
-                  token: ${{ secrets.CODECOV_TOKEN }}
-                  override_commit: ${{ inputs.source-ref || github.sha }}
-                  override_branch: ${{ inputs.source-ref && 'develop' || github.ref_name }}
-                  fail_ci_if_error: true
+                  group: dramsys-tests
                   flags: dramsys-tests,overall-length-long

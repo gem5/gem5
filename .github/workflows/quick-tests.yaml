@@ -55,14 +55,11 @@ jobs:
               run: scons build/ALL/unittests.${{ matrix.type }} ${GCOV_FLAGS:+--gcov} -j $(nproc)
             - run: echo "This job's status is ${{ job.status }}."
 
-            - name: Upload coverage reports to Codecov
+            - name: Collect aggregate native coverage
               if: ${{ !cancelled() && inputs.coverage }}
-              uses: codecov/codecov-action@v7
+              uses: ./.github/actions/collect-native-coverage
               with:
-                  token: ${{ secrets.CODECOV_TOKEN }}
-                  override_commit: ${{ inputs.source-ref || github.sha }}
-                  override_branch: ${{ inputs.source-ref && 'develop' || github.ref_name }}
-                  fail_ci_if_error: true
+                  group: unittests-${{ matrix.type }}
                   flags: unittests-${{ matrix.type }},overall-unittests,overall-length-quick
 
     testlib-quick-matrix:
@@ -78,7 +75,7 @@ jobs:
               working-directory: ${{ github.workspace }}/tests
               id: dir-matrix
               run: |
-                  ./main.py list gem5 --suites -q ${GCOV_FLAGS:+--gcov=test-only} > "$RUNNER_TEMP/test-suites"
+                  ./main.py list gem5 --suites -q ${GCOV_FLAGS:+--gcov=per-test} > "$RUNNER_TEMP/test-suites"
                   test_dirs=$(jq -Rsc '
                     split("\n") |
                     map(select(startswith("SuiteUID:")) |
@@ -88,11 +85,25 @@ jobs:
                   ' "$RUNNER_TEMP/test-suites")
                   echo "test-dirs-matrix=$test_dirs" >> "$GITHUB_OUTPUT"
 
+            - name: Record expected coverage suites
+              if: inputs.coverage
+              run: |
+                  python3 util/coverage/report.py manifest "$RUNNER_TEMP/test-suites" --length=quick --revision "$(git rev-parse HEAD)" --output "$RUNNER_TEMP/coverage-plan/expected.json"
+            - name: Retain coverage discovery manifest
+              if: ${{ always() && inputs.coverage }}
+              uses: actions/upload-artifact@v7
+              with:
+                  name: coverage-plan-quick
+                  path: ${{ runner.temp }}/coverage-plan
+                  retention-days: 30
+                  overwrite: true
+                  if-no-files-found: error
+
             - name: Get the build targets for testlib-quick-gem5-builds
               working-directory: ${{ github.workspace }}/tests
               id: build-matrix
               run: |
-                  ./main.py list --build-targets -q ${GCOV_FLAGS:+--gcov=test-only} > "$RUNNER_TEMP/build-targets"
+                  ./main.py list --build-targets -q ${GCOV_FLAGS:+--gcov=per-test} > "$RUNNER_TEMP/build-targets"
                   build_matrix=$(jq -Rsc '
                     split("\n") | map(select(length > 0)) |
                     if length == 0 then error("No TestLib build targets found") else . end
@@ -237,7 +248,7 @@ jobs:
                   else
                     set --
                   fi
-                  ./main.py run --skip-build -t "$test_threads" "$TEST_DIR" ${GCOV_FLAGS:+--gcov=test-only} "$@"
+                  ./main.py run --skip-build -t "$test_threads" "$TEST_DIR" ${GCOV_FLAGS:+--gcov=per-test} "$@"
 
         # Get the basename of the matrix.test-dir path (to name the artifact).
             - name: Sanitize test-dir for artifact name
@@ -252,16 +263,21 @@ jobs:
               with:
                   name: ci-tests-${{ inputs.coverage && 'gcov-' || '' }}run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-quick-${{
                       steps.sanitize-test-dir.outputs.sanitized-test-dir }}-status-${{ steps.run-tests.outcome }}-output
-                  path: tests/testing-results
+                  path: |
+                      tests/testing-results
+                      !tests/testing-results/coverage/**
                   retention-days: 30
 
-            - name: Upload coverage reports to Codecov
-              if: ${{ !cancelled() && inputs.coverage && steps.run-tests.outcome != 'skipped' }}
-              uses: codecov/codecov-action@v7
+            - name: Package raw profiles without duplicating shared notes
+              if: ${{ always() && inputs.coverage }}
+              run: python3 util/coverage/report.py package tests/testing-results --output coverage-data --revision "$(git rev-parse HEAD)"
+            - name: Retain per-invocation coverage and test results
+              if: ${{ always() && inputs.coverage }}
+              uses: actions/upload-artifact@v7
               with:
-                  token: ${{ secrets.CODECOV_TOKEN }}
-                  override_commit: ${{ inputs.source-ref || github.sha }}
-                  override_branch: ${{ inputs.source-ref && 'develop' || github.ref_name }}
-                  fail_ci_if_error: true
-                  flags: overall-testdir-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir }},overall-length-quick,${{ steps.sanitize-test-dir.outputs.sanitized-test-dir
-                      }}-quick
+                  name: coverage-data-quick-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir }}
+                  path: coverage-data
+                  compression-level: 6
+                  retention-days: 30
+                  overwrite: true
+                  if-no-files-found: error

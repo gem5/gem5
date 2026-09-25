@@ -38,7 +38,7 @@ jobs:
               working-directory: ${{ github.workspace }}/tests
               id: dir-matrix
               run: |
-                  ./main.py list gem5 --suites -q --length=very-long ${GCOV_FLAGS:+--gcov=test-only} > "$RUNNER_TEMP/test-suites"
+                  ./main.py list gem5 --suites -q --length=very-long ${GCOV_FLAGS:+--gcov=per-test} > "$RUNNER_TEMP/test-suites"
                   test_dirs=$(jq -Rsc '
                     split("\n") |
                     map(select(startswith("SuiteUID:")) |
@@ -47,6 +47,20 @@ jobs:
                     if length == 0 then error("No TestLib suites found") else . end
                   ' "$RUNNER_TEMP/test-suites")
                   echo "test-dirs-matrix=$test_dirs" >> "$GITHUB_OUTPUT"
+
+            - name: Record expected coverage suites
+              if: inputs.coverage
+              run: |
+                  python3 util/coverage/report.py manifest "$RUNNER_TEMP/test-suites" --length=very-long --revision "$(git rev-parse HEAD)" --output "$RUNNER_TEMP/coverage-plan/expected.json"
+            - name: Retain coverage discovery manifest
+              if: ${{ always() && inputs.coverage }}
+              uses: actions/upload-artifact@v7
+              with:
+                  name: coverage-plan-very-long
+                  path: ${{ runner.temp }}/coverage-plan
+                  retention-days: 30
+                  overwrite: true
+                  if-no-files-found: error
 
     # start running the very-long tests
     testlib-very-long-tests:
@@ -76,10 +90,10 @@ jobs:
               working-directory: ${{ github.workspace }}/tests
               # The o3-cpu_8-cores_classic_DualChannelDDR4_2400_init test in the
               # very-long x86_boot_tests fails with a segmentation fault when
-              # run with the --gcov=test-only flag, so run x86_boot_tests
+              # run with the --gcov=per-test flag, so run x86_boot_tests
               # very-long without that flag.
               run: |
-                  extra_gcov_args="${GCOV_FLAGS:+--gcov=test-only}"
+                  extra_gcov_args="${GCOV_FLAGS:+--gcov=per-test}"
                   resource_dir="$GEM5_RESOURCE_DIR"
                   if [ -n "$GCOV_FLAGS" ] && [ "${{ matrix.test-type }}" = "gem5/x86_boot_tests" ]; then
                     extra_gcov_args=""
@@ -105,14 +119,20 @@ jobs:
               with:
                   name: ${{ inputs.coverage && 'gcov-' || '' }}weekly-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-very-long-${{
                       steps.sanitize-test-dir.outputs.sanitized-test-dir }}-status-${{ steps.run-tests.outcome }}-output
-                  path: tests/testing-results
+                  path: |
+                      tests/testing-results
+                      !tests/testing-results/coverage/**
 
-            - name: Upload coverage reports to Codecov
-              if: ${{ !cancelled() && inputs.coverage && matrix.test-type != 'gem5/x86_boot_tests' && steps.run-tests.outcome != 'skipped' }}
-              uses: codecov/codecov-action@v7
+            - name: Package raw profiles without duplicating shared notes
+              if: ${{ always() && inputs.coverage }}
+              run: python3 util/coverage/report.py package tests/testing-results --output coverage-data --revision "$(git rev-parse HEAD)"
+            - name: Retain per-invocation coverage and test results
+              if: ${{ always() && inputs.coverage }}
+              uses: actions/upload-artifact@v7
               with:
-                  token: ${{ secrets.CODECOV_TOKEN }}
-                  override_commit: ${{ inputs.source-ref || github.sha }}
-                  override_branch: ${{ inputs.source-ref && 'develop' || github.ref_name }}
-                  fail_ci_if_error: true
-                  flags: overall-testdir-${{steps.sanitize-test-dir.outputs.sanitized-test-dir}},overall-length-very-long,${{steps.sanitize-test-dir.outputs.sanitized-test-dir}}-very-long
+                  name: coverage-data-very-long-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir }}
+                  path: coverage-data
+                  compression-level: 6
+                  retention-days: 30
+                  overwrite: true
+                  if-no-files-found: error

@@ -36,8 +36,9 @@ which is `stable` for gem5. Relative reusable workflow calls also resolve from
 that branch. To activate this design, install `codecov.yaml` and its matching
 `quick-tests.yaml`, `daily-tests.yaml`, and `weekly-tests.yaml` definitions on
 `stable`, together with the `scheduler.yaml` change that removes the old
-coverage dispatch. Remove `ci-daily-codecov.yaml` there as well. Keep these
-workflow definitions synchronized when their interfaces or test plans change.
+coverage dispatch. Remove `ci-daily-codecov.yaml` there as well. Install the matching `util/coverage/index.py` and `report.py` reporting
+tools on `stable` as well. Keep these definitions and tools synchronized when
+their interfaces, test plans, or report schemas change.
 Merging only to `develop` does not activate the completion trigger.
 
 The source-ref input is necessary because the completion workflow itself has
@@ -48,18 +49,53 @@ started through the ordinary dispatch workflows.
 
 ## Reading the results
 
-Existing Codecov flags identify test directories, lengths, and integration or
-unit-test groups. They are aggregate groups, not an individual-test-to-line
-index. Test result artifact names include `gcov` during coverage runs, and coverage
-build caches are separate from ordinary quick/Daily caches.
+The `coverage-report-<run-id>` artifact contains a summary, explicit grouped
+Codecov reports, and `index/index.html` with a test selector and source-line
+lookup. Open the HTML locally; it does not need Codecov or a web server.
+The accompanying `index.json` supports command-line queries through
+`util/coverage/index.py`. See `util/coverage/README.md` for examples.
 
-The very-long `gem5/x86_boot_tests` group retains its existing uninstrumented
-fallback because of a known gcov segmentation fault. It still runs, but its
-coverage upload is skipped and the omission is reported in the job summary.
-Consequently, these reports do not represent coverage from every test.
-GCC coverage also measures native code, not execution of Python source.
+TestLib's `--gcov=per-test` mode retains a separate record for each gem5
+invocation, identified by its SuiteUID and invocation ID. The profile records
+include the source revision, build identity, outcome, and collection status.
+The combined report and the test-to-line and line-to-test lookups come from
+these same records. The browser index shares repeated membership sets to
+avoid embedding thousands of copies of the same baseline and identifiers.
 
-Codecov upload errors fail the coverage job. An interrupted process may not
-flush counters, and reports collected after a test failure can be partial.
-The current workflow does not yet publish expected-versus-collected test
-counts or retain every individual test's profile for later reprocessing.
+The summary accounts for expected, completed, failed, skipped, unfinished,
+excluded, and missing-profile TestLib suites. Execution outcome and profile
+availability are separate: a failed invocation may still have valid coverage,
+while a process terminated before flushing counters may have none. Invalid or
+missing discovery manifests and incomplete collections fail final accounting;
+valid partial reports are still retained and uploaded.
+
+C++ GTests and the SST, SystemC, and DRAMSys integrations retain aggregate
+reports and existing Codecov flags. These groups do not yet provide individual
+in-process GTest-case attribution in the TestLib index. Native GCC coverage
+does not measure Python source execution.
+
+The very-long `gem5/x86_boot_tests` group retains its uninstrumented fallback
+because of a known gcov segmentation fault. It still runs, and its omission
+from coverage is explicit in the accounting. Collection accounting can be
+complete within its declared scope while these exclusions remain; this must
+not be described as coverage from every test or every source language.
+
+## Retention and report-only recovery
+
+Coverage data artifacts retain individual records, matching notes, raw
+counters, test results, and exported aggregate reports for 30 days. Raw
+profiles are packed into a compressed tar archive to preserve shared hard
+links instead of duplicating compiler metadata for each test. Coverage result
+artifact names differ from ordinary test artifacts.
+
+To retry reporting or uploads without rebuilding or rerunning tests, dispatch
+**Code Coverage** on the default branch with `source-run-id` set to the
+original coverage campaign's Actions run ID. Recovery verifies the original
+workflow identity, admission manifest, source revision, and qualifying passing
+test attempts before rebuilding the index and grouped reports. It uses trusted
+reporting tools and does not execute code or unpack raw profiles from the
+artifacts. Valid groups retain their original Codecov flags when reuploaded.
+
+Recovery needs the retained artifacts. It cannot manufacture missing counters
+or repair an instrumented test failure; those require rerunning the relevant
+coverage jobs. New schemas may also require compatible reporting tools.
