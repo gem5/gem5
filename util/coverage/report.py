@@ -248,6 +248,7 @@ def summarize(source, output, revision, campaign=False):
     groups = defaultdict(list)
     native_ids, python_parents = {}, {}
     baseline_lines = {}
+    profile_exclusions = defaultdict(set)
     for path in profile_paths(source):
         try:
             loaded = load_sparse_record(path, root=source)
@@ -257,6 +258,13 @@ def summarize(source, output, revision, campaign=False):
             if record["revision"] != revision:
                 raise ValueError("Profile revision mismatch")
             uid, identity = record["test_uid"], record["invocation_id"]
+            limits = record.get("exclusions", [])
+            if not isinstance(limits, list) or any(
+                not isinstance(reason, str) or not reason for reason in limits
+            ):
+                raise ValueError("Profile exclusions must be nonempty strings")
+            for reason in limits:
+                profile_exclusions[reason].add(uid)
             if identity in seen:
                 raise ValueError("Duplicate invocation identity")
             if uid not in expected:
@@ -545,6 +553,10 @@ def summarize(source, output, revision, campaign=False):
         "aggregate_groups": sorted(aggregate_groups),
         "aggregates": aggregate_rows,
         "missing_python_invocations": missing_python,
+        "profile_exclusions": [
+            {"reason": reason, "tests": sorted(uids)}
+            for reason, uids in sorted(profile_exclusions.items())
+        ],
         "generated_at": datetime.now(timezone.utc).isoformat(),
     }
     write_json(output / "summary.json", summary)
@@ -577,6 +589,10 @@ def summarize(source, output, revision, campaign=False):
         "Completed/failed are execution outcomes; missing profiles is a separate count.",
         "Suites with no gem5 invocation also have no profile and remain visibly missing.",
     ]
+    if profile_exclusions:
+        message.extend(["", "Declared measurement limits:"])
+        for reason, uids in sorted(profile_exclusions.items()):
+            message.append(f"- {reason} ({len(uids)} suites)")
     message.extend("- " + item for item in errors)
     for uid, reason in sorted(excluded.items()):
         message.append(f"- Excluded `{uid}`: {reason}")

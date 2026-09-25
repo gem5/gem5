@@ -259,6 +259,17 @@ def build(source, output, revision, checkout=None):
         )
         + "</p>"
     )
+    limits = summary.get("profile_exclusions", [])
+    if limits:
+        body += "<h2>Declared measurement limits</h2><ul>"
+        for item in limits:
+            body += (
+                f"<li>{html.escape(item['reason'])}"
+                f"<details><summary>{len(item['tests'])} suites</summary>"
+                + "<br>".join(html.escape(uid) for uid in item["tests"])
+                + "</details></li>"
+            )
+        body += "</ul>"
     body += (
         "<h2>Collection issues</h2><ul>"
         + "".join(

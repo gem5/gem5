@@ -57,6 +57,30 @@ class CoverageReportTest(unittest.TestCase):
         self.output = self.root / "output"
         self.plan()
 
+    def test_declared_python_scope_is_visible_without_hiding_results(self):
+        self.profile()
+        self.profile(
+            identity="python",
+            language="python",
+            parent_invocation_id="one",
+            exclusions=["Child interpreters are outside this measurement."],
+        )
+        summary = report.summarize(self.source, self.output, REVISION)
+        self.assertTrue(summary["complete"])
+        self.assertEqual(
+            summary["profile_exclusions"],
+            [
+                {
+                    "reason": "Child interpreters are outside this measurement.",
+                    "tests": [UID],
+                }
+            ],
+        )
+        self.assertIn(
+            "Child interpreters are outside this measurement.",
+            (self.output / "summary.md").read_text(),
+        )
+
     def plan(self, uid=UID, length="quick", excluded=None):
         report.write_json(
             self.source / length / "expected.json",

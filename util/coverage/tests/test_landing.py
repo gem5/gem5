@@ -155,6 +155,12 @@ class LandingTest(unittest.TestCase):
                 "revision": "a" * 40,
                 "complete": True,
                 "scope": "separate languages",
+                "profile_exclusions": [
+                    {
+                        "reason": "No <child> interpreter coverage.",
+                        "tests": ["SuiteUID:gem5/example/test.py:case"],
+                    }
+                ],
                 "counts": {},
                 "errors": [],
                 "suites": [
@@ -192,6 +198,7 @@ class LandingTest(unittest.TestCase):
             text = (root / "index.html").read_text()
             self.assertIn("0 / 1 executable lines hit", text)
             self.assertIn("1 / 1 executable Python lines hit", text)
+            self.assertIn("No &lt;child&gt; interpreter coverage.", text)
             source = (
                 root / "sources" / mapping["src/python/example.py"]["page"]
             )
