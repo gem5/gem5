@@ -19,8 +19,7 @@ runs:
               COVERAGE_OUTCOMES: ${{ inputs.outcomes }}
           run: |
               python3 util/coverage/report.py aggregate --record-only --output coverage-aggregate --revision "$(git rev-parse HEAD)" --group "$COVERAGE_GROUP" --outcomes "$COVERAGE_OUTCOMES"
-              find build -type f \( -name '*.gcno' -o -name '*.gcda' -o -name '*.cc' -o -name '*.hh' -o -name '*.c' -o -name '*.h' -o -name '*.inc' \) -print0 > "$RUNNER_TEMP/native-coverage-files"
-              tar -czf coverage-aggregate/raw-gcov.tar.gz --null -T "$RUNNER_TEMP/native-coverage-files"
+              python3 util/coverage/report.py native-package --output coverage-aggregate --raw-output coverage-raw --revision "$(git rev-parse HEAD)"
               python3 -m pip install --target "$PYTHONPATH" gcovr==8.3
               python3 util/coverage/report.py aggregate --output coverage-aggregate --revision "$(git rev-parse HEAD)" --group "$COVERAGE_GROUP"
         - name: Retain aggregate native coverage
@@ -29,6 +28,16 @@ runs:
           with:
               name: coverage-data-${{ inputs.group }}
               path: coverage-aggregate
+              compression-level: 0
+              retention-days: 30
+              overwrite: true
+              if-no-files-found: error
+        - name: Retain native counters for extraction retries
+          if: always()
+          uses: actions/upload-artifact@v7
+          with:
+              name: coverage-raw-${{ inputs.group }}
+              path: coverage-raw
               compression-level: 0
               retention-days: 30
               overwrite: true

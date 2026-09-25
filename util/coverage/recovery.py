@@ -27,6 +27,7 @@
 
 """Retry native extraction from retained files without executing tests."""
 
+import hashlib
 import importlib.util
 import json
 import os
@@ -266,6 +267,45 @@ def aggregate_xml(files, output, timestamp):
     )
 
 
+def paired_data_directory(archive, revision):
+    """Match split artifacts by directory name, manifest and archive hash."""
+    directory = archive.parent
+    if (directory / "records").is_dir() or (
+        directory / "aggregate.json"
+    ).is_file():
+        return directory
+    if directory.name == "coverage-raw":
+        data = directory.with_name("coverage-data")
+    elif directory.name.startswith("coverage-raw-"):
+        data = directory.with_name(
+            "coverage-data-" + directory.name[len("coverage-raw-") :]
+        )
+    elif directory.name.endswith("-raw"):
+        data = directory.with_name(directory.name[:-4])
+    else:
+        return directory
+    raw_manifest = json.loads((directory / "artifact.json").read_text())
+    data_manifest = json.loads((data / "artifact.json").read_text())
+    kind = "testlib" if archive.name == "raw-profiles.tar.gz" else "native"
+    if (
+        raw_manifest != data_manifest
+        or raw_manifest.get("revision") != revision
+        or raw_manifest.get("schema_version") != 1
+        or raw_manifest.get("kind") != kind
+        or raw_manifest.get("raw_archive") != archive.name
+    ):
+        raise ValueError(
+            "Raw artifact does not match its report data artifact"
+        )
+    digest = hashlib.sha256()
+    with archive.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    if raw_manifest.get("raw_sha256") != digest.hexdigest():
+        raise ValueError("Raw artifact archive checksum mismatch")
+    return data
+
+
 def reextract(
     source, output, revision, gcov="gcov", max_bytes=MAX_ARCHIVE_BYTES
 ):
@@ -282,7 +322,13 @@ def reextract(
         raise ValueError("Extraction byte limit must be positive")
     if any(path.is_symlink() for path in source.rglob("*")):
         raise ValueError("Retained input must not contain symbolic links")
-    shutil.copytree(source, output, ignore=shutil.ignore_patterns("*.tar.gz"))
+    shutil.copytree(
+        source,
+        output,
+        ignore=shutil.ignore_patterns(
+            "raw-profiles.tar.gz", "raw-gcov.tar.gz"
+        ),
+    )
     result = {
         "schema_version": 1,
         "revision": revision,
@@ -303,8 +349,9 @@ def reextract(
     for archive in sorted(source.rglob("*.tar.gz")):
         if archive.name not in {"raw-profiles.tar.gz", "raw-gcov.tar.gz"}:
             continue
-        destination = output / archive.parent.relative_to(source)
         try:
+            data_directory = paired_data_directory(archive, revision)
+            destination = output / data_directory.relative_to(source)
             with tempfile.TemporaryDirectory() as directory:
                 restored = extract_archive(archive, directory, max_bytes)
                 if archive.name == "raw-profiles.tar.gz":

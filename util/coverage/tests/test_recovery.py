@@ -179,6 +179,174 @@ class RecoveryTest(unittest.TestCase):
                 ET.parse(output).getroot().get("timestamp"), "1700000000"
             )
 
+    def test_split_native_artifacts_pair_and_reextract(self):
+        import report
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            artifacts = root / "artifacts"
+            data = artifacts / "coverage-data-unittests-fast"
+            raw = artifacts / "coverage-raw-unittests-fast"
+            build = root / "build/ALL"
+            build.mkdir(parents=True)
+            (build / "file.gcno").write_bytes(b"notes")
+            (build / "file.gcda").write_bytes(b"counter")
+            (build / "generated.cc").write_text("return 1;\n")
+            report.write_json(
+                data / "aggregate.json",
+                {
+                    "schema_version": 2,
+                    "revision": "a" * 40,
+                    "group": "unittests-fast",
+                    "gcov_version": "gcov exact",
+                    "build_root": str(root),
+                    "collected_at": "2026-09-25T00:00:00+00:00",
+                    "outcomes": {"build_and_test": "success"},
+                    "extraction": "error",
+                },
+            )
+            report.package_native(data, raw, "a" * 40, root)
+            decoder = mock.Mock()
+            decoder._read_profiles.return_value = (
+                {
+                    "build/ALL/generated.cc": {
+                        "lines": {"1": 2},
+                        "branches": [],
+                    }
+                },
+                ["14.2"],
+            )
+            output = root / "recovered"
+            with (
+                mock.patch.object(
+                    recovery, "collector_module", return_value=decoder
+                ),
+                mock.patch.object(
+                    recovery, "gcov_version", return_value="gcov exact"
+                ),
+            ):
+                result = recovery.reextract(artifacts, output, "a" * 40)
+            self.assertEqual(result["errors"], [], result)
+            self.assertEqual(result["recovered_aggregates"], 1)
+            self.assertTrue((output / data.name / "coverage.xml").is_file())
+            self.assertTrue(
+                (output / data.name / "source-snapshots.tar.gz").is_file()
+            )
+            self.assertFalse(list(output.rglob("raw-gcov.tar.gz")))
+            manifest = json.loads((raw / "artifact.json").read_text())
+            manifest["revision"] = "b" * 40
+            (raw / "artifact.json").write_text(json.dumps(manifest))
+            with self.assertRaisesRegex(ValueError, "does not match"):
+                recovery.paired_data_directory(
+                    raw / "raw-gcov.tar.gz", "a" * 40
+                )
+
+    def test_split_raw_archive_checksum_must_match(self):
+        import report
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            data, raw = (
+                root / "coverage-data-example",
+                root / "coverage-raw-example",
+            )
+            data.mkdir()
+            raw.mkdir()
+            archive = raw / "raw-profiles.tar.gz"
+            archive.write_bytes(b"original")
+            manifest = {
+                "schema_version": 1,
+                "kind": "testlib",
+                "revision": "a" * 40,
+            }
+            report.retain_manifest(data, raw, manifest, archive)
+            self.assertEqual(
+                recovery.paired_data_directory(archive, "a" * 40), data
+            )
+            archive.write_bytes(b"changed")
+            with self.assertRaisesRegex(ValueError, "checksum"):
+                recovery.paired_data_directory(archive, "a" * 40)
+
+    def test_split_testlib_gzip_baseline_recovery_roundtrip(self):
+        import report
+        from schema import load_record
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / "results"
+            coverage = source / "coverage"
+            invocation = coverage / "attempt"
+            objects = invocation / "raw/producer/gem5/build/ALL"
+            objects.mkdir(parents=True)
+            (objects / "file.gcno").write_bytes(b"notes")
+            (objects / "file.gcda").write_bytes(b"counter")
+            baseline = {
+                "schema_version": 1,
+                "format": "gem5-coverage-baseline",
+                "revision": "a" * 40,
+                "language": "native",
+                "build_id": "build",
+                "files": [{"path": "src/file.cc", "lines": {"1": 0}}],
+            }
+            identity = canonical_hash(baseline)
+            report.write_json(
+                coverage / "baselines" / identity / "baseline.json", baseline
+            )
+            record = {
+                "schema_version": 2,
+                "revision": "a" * 40,
+                "language": "native",
+                "test_uid": "SuiteUID:tests/example.py:example",
+                "invocation_id": "attempt",
+                "outcome": "failed",
+                "collection": "error",
+                "files": [],
+                "baseline_id": identity,
+                "build": {
+                    "build_id": "build",
+                    "build_root": "/producer/gem5",
+                    "gcov_version": "gcov exact",
+                    "gcc_versions": ["14.2"],
+                },
+            }
+            report.write_json(invocation / "coverage.json", record)
+            artifacts = root / "artifacts"
+            data = artifacts / "coverage-data-quick-example"
+            raw = artifacts / "coverage-raw-quick-example"
+            report.package(source, data, "a" * 40, raw)
+            self.assertTrue(list(data.rglob("baseline.json.gz")))
+            self.assertFalse(list(data.rglob("baseline.json")))
+            decoder = mock.Mock()
+            decoder._read_profiles.return_value = (
+                {"src/file.cc": {"lines": {"1": 4}, "branches": []}},
+                ["14.2"],
+            )
+            output = root / "recovered"
+            with (
+                mock.patch.object(
+                    recovery, "collector_module", return_value=decoder
+                ),
+                mock.patch.object(
+                    recovery, "gcov_version", return_value="gcov exact"
+                ),
+            ):
+                result = recovery.reextract(artifacts, output, "a" * 40)
+            self.assertEqual(result["errors"], [], result)
+            self.assertEqual(result["recovered_invocations"], 1)
+            recovered = load_record(
+                output / data.name / "records/attempt/coverage.json",
+                root=output,
+            )
+            self.assertEqual(recovered["collection"], "complete")
+            self.assertEqual(recovered["outcome"], "failed")
+            self.assertEqual(recovered["files"][0]["lines"], {"1": 4})
+            self.assertEqual(
+                json.loads(
+                    (data / "records/attempt/coverage.json").read_text()
+                )["collection"],
+                "error",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

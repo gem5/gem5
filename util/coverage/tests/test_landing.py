@@ -67,7 +67,9 @@ class LandingTest(unittest.TestCase):
                 '<coverage><class filename="build/ALL/generated.cc"><lines><line number="2" hits="5"/></lines></class></coverage>'
             )
             text = b"<script>source</script>\nreturn 1;\n"
-            with tarfile.open(source / "raw-gcov.tar.gz", "w:gz") as archive:
+            with tarfile.open(
+                source / "source-snapshots.tar.gz", "w:gz"
+            ) as archive:
                 info = tarfile.TarInfo("build/ALL/generated.cc")
                 info.size = len(text)
                 archive.addfile(info, io.BytesIO(text))
@@ -203,6 +205,23 @@ class LandingTest(unittest.TestCase):
                 root / "sources" / mapping["src/python/example.py"]["page"]
             )
             self.assertIn('id="L1" class="hit"', source.read_text())
+
+    def test_lightweight_baseline_sources_need_no_raw_download(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with tarfile.open(
+                root / "source-snapshots.tar.gz", "w:gz"
+            ) as archive:
+                member = tarfile.TarInfo(
+                    "coverage/baselines/hash/sources/build/ALL/generated.cc"
+                )
+                member.size = 3
+                archive.addfile(member, io.BytesIO(b"x;\n"))
+            found, unavailable = landing.source_texts(
+                root, {"build/ALL/generated.cc"}, "a" * 40
+            )
+            self.assertEqual(found, {"build/ALL/generated.cc": "x;\n"})
+            self.assertFalse(unavailable)
 
 
 if __name__ == "__main__":

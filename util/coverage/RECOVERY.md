@@ -2,10 +2,22 @@
 
 A **report retry** rebuilds the summary, grouped uploads, landing page and
 index from retained `coverage.json`, `python-coverage.json`, baselines and
-aggregate XML. It does not run gcov or tests. Use `report.py summarize`,
+aggregate XML. Routine reporting downloads only `coverage-data-*`,
+`coverage-plan-*` and `coverage-source-*` artifacts. Shared baselines in the
+reporting artifacts are compressed as `baseline.json.gz`; generated source
+snapshots are packaged separately from runtime counters. It does not run
+gcov or tests. Use `report.py summarize`,
 `report.py landing` and `index.py build` against the recovered artifacts.
 
-An **extraction retry** reruns gcov against retained native notes and counters:
+An **extraction retry** reruns gcov against retained native notes and counters.
+Download both matching `coverage-data-*` and `coverage-raw-*` artifacts from
+the original run into one directory, preserving their artifact directory
+names (for example, `coverage-data-quick-gem5-example` alongside
+`coverage-raw-quick-gem5-example`). Both types are retained for 30 days.
+Recovery pairs their name suffixes and verifies their common revision and
+archive checksum. Older artifacts with colocated raw archives also work.
+
+Then run:
 
 ```sh
 python3 util/coverage/report.py reextract coverage-input \

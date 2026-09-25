@@ -123,14 +123,18 @@ def source_texts(source, requested, revision, checkout=None):
                 )
                 stream.read(1)
     conflicting = set()
-    archives = list(Path(source).rglob("raw-gcov.tar.gz"))
+    archives = list(Path(source).rglob("source-snapshots.tar.gz"))
+    archives.extend(Path(source).rglob("raw-gcov.tar.gz"))
     archives.extend(Path(source).rglob("raw-profiles.tar.gz"))
     for archive_path in sorted(archives):
         try:
             with tarfile.open(archive_path, "r:gz") as archive:
                 for member in archive:
                     name = member.name.removeprefix("./")
-                    if archive_path.name == "raw-profiles.tar.gz":
+                    if archive_path.name == "raw-profiles.tar.gz" or (
+                        archive_path.name == "source-snapshots.tar.gz"
+                        and name.startswith("coverage/")
+                    ):
                         parts = PurePosixPath(name).parts
                         if (
                             len(parts) < 6

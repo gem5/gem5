@@ -323,7 +323,8 @@ jobs:
                       !tests/testing-results/coverage/**
             - name: Package raw profiles without duplicating shared notes
               if: ${{ always() && inputs.coverage }}
-              run: python3 util/coverage/report.py package tests/testing-results --output coverage-data --revision "$(git rev-parse HEAD)"
+              run: python3 util/coverage/report.py package tests/testing-results --output coverage-data --raw-output coverage-raw --revision "$(git rev-parse
+                  HEAD)"
             - name: Retain per-invocation coverage and test results
               if: ${{ always() && inputs.coverage }}
               uses: actions/upload-artifact@v7
@@ -331,6 +332,16 @@ jobs:
                   name: coverage-data-long-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir }}
                   path: coverage-data
                   compression-level: 6
+                  retention-days: 30
+                  overwrite: true
+                  if-no-files-found: error
+            - name: Retain raw counters for extraction retries
+              if: ${{ always() && inputs.coverage }}
+              uses: actions/upload-artifact@v7
+              with:
+                  name: coverage-raw-long-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir }}
+                  path: coverage-raw
+                  compression-level: 0
                   retention-days: 30
                   overwrite: true
                   if-no-files-found: error

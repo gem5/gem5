@@ -28,6 +28,8 @@
 """Account for TestLib coverage and export recoverable, grouped LCOV reports."""
 
 import argparse
+import gzip
+import hashlib
 import json
 import re
 import shutil
@@ -674,33 +676,158 @@ def aggregate(
         write_json(metadata, item)
 
 
-def package(source, output, revision):
-    """Archive raw profiles once, preserving the collector's hard links."""
-    source, output = Path(source), Path(output)
-    output.mkdir(parents=True, exist_ok=True)
-    coverage = (source / "coverage").resolve()
+def file_digest(path):
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def source_snapshots(paths, output):
+    """Keep a bounded generated-source packet separate from runtime data."""
+    total, omitted = 0, []
+    with tarfile.open(
+        output / "source-snapshots.tar.gz", "w:gz", dereference=True
+    ) as archive:
+        for path, name in paths:
+            safe_path(name)
+            if not path.is_file() or path.is_symlink():
+                continue
+            size = path.stat().st_size
+            if size > 2 * 1024**2 or total + size > 128 * 1024**2:
+                omitted.append(name)
+                continue
+            archive.add(path, arcname=name, recursive=False)
+            total += size
     write_json(
-        output / "artifact.json",
-        {
-            "schema_version": 1,
-            "revision": revision,
-            "profiles_present": coverage.is_dir(),
-        },
+        output / "source-snapshots.json", {"bytes": total, "omitted": omitted}
     )
+
+
+def retain_manifest(output, raw_output, metadata, archive=None):
+    if archive is not None:
+        metadata["raw_archive"] = archive.name
+        metadata["raw_sha256"] = file_digest(archive)
+    write_json(output / "artifact.json", metadata)
+    write_json(raw_output / "artifact.json", metadata)
+
+
+def package(source, output, revision, raw_output=None):
+    """Separate small report inputs from recoverable raw runtime files."""
+    source, output = Path(source), Path(output)
+    raw_output = (
+        Path(raw_output)
+        if raw_output
+        else output.with_name(output.name + "-raw")
+    )
+    if raw_output.resolve().is_relative_to(
+        output.resolve()
+    ) or output.resolve().is_relative_to(raw_output.resolve()):
+        raise ValueError(
+            "Raw profiles need a separate, non-nested output directory"
+        )
+    output.mkdir(parents=True, exist_ok=True)
+    raw_output.mkdir(parents=True, exist_ok=True)
+    coverage = (source / "coverage").resolve()
+    if output.resolve().is_relative_to(
+        coverage
+    ) or raw_output.resolve().is_relative_to(coverage):
+        raise ValueError(
+            "Coverage package outputs must be outside input profiles"
+        )
+    metadata = {
+        "schema_version": 1,
+        "kind": "testlib",
+        "revision": revision,
+        "profiles_present": coverage.is_dir(),
+    }
+    retain_manifest(output, raw_output, metadata)
     if coverage.is_dir():
-        with tarfile.open(
-            output / "raw-profiles.tar.gz", "w:gz", dereference=False
-        ) as archive:
-            archive.add(coverage, arcname="coverage")
-        paths = profile_paths(coverage)
-        paths.extend(coverage.rglob("baseline.json"))
-        for path in paths:
+        for path in profile_paths(coverage):
             target = output / "records" / path.relative_to(coverage)
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(path, target)
+        for path in coverage.rglob("baseline.json"):
+            target = (
+                output
+                / "records"
+                / path.relative_to(coverage).with_suffix(".json.gz")
+            )
+            target.parent.mkdir(parents=True, exist_ok=True)
+            with path.open("rb") as src, target.open("wb") as compressed:
+                # Identical shard copies should share the reader's cache.
+                with gzip.GzipFile(
+                    filename="",
+                    fileobj=compressed,
+                    mode="wb",
+                    compresslevel=6,
+                    mtime=0,
+                ) as dst:
+                    shutil.copyfileobj(src, dst)
+        generated = []
+        for directory in sorted(
+            (coverage / "baselines").glob("*/sources/build")
+        ):
+            generated.extend(
+                (path, "coverage/" + path.relative_to(coverage).as_posix())
+                for path in sorted(directory.rglob("*"))
+                if path.is_file()
+            )
+        source_snapshots(generated, output)
+        archive_path = raw_output / "raw-profiles.tar.gz"
+        with tarfile.open(archive_path, "w:gz", dereference=False) as archive:
+            archive.add(coverage, arcname="coverage")
+        retain_manifest(output, raw_output, metadata, archive_path)
     results = source / "results.xml"
     if results.is_file():
         shutil.copyfile(results, output / "results.xml")
+
+
+def package_native(output, raw_output, revision, root="."):
+    output, raw_output, root = (
+        Path(output),
+        Path(raw_output),
+        Path(root).resolve(),
+    )
+    if raw_output.resolve().is_relative_to(
+        output.resolve()
+    ) or output.resolve().is_relative_to(raw_output.resolve()):
+        raise ValueError(
+            "Raw profiles need a separate, non-nested output directory"
+        )
+    metadata = json.loads((output / "aggregate.json").read_text())
+    if metadata["revision"] != revision:
+        raise ValueError("Native package revision mismatch")
+    raw_output.mkdir(parents=True, exist_ok=True)
+    manifest = {
+        "schema_version": 1,
+        "kind": "native",
+        "revision": revision,
+        "group": metadata["group"],
+    }
+    retain_manifest(output, raw_output, manifest)
+    paths = sorted(
+        path
+        for path in (root / "build").rglob("*")
+        if path.is_file() and not path.is_symlink()
+    )
+    generated = [
+        (path, path.relative_to(root).as_posix())
+        for path in paths
+        if path.suffix in {".cc", ".hh", ".c", ".h", ".inc", ".py"}
+    ]
+    source_snapshots(generated, output)
+    archive_path = raw_output / "raw-gcov.tar.gz"
+    with tarfile.open(archive_path, "w:gz", dereference=False) as archive:
+        for path in paths:
+            if path.suffix in {".gcno", ".gcda"}:
+                archive.add(
+                    path,
+                    arcname=path.relative_to(root).as_posix(),
+                    recursive=False,
+                )
+    retain_manifest(output, raw_output, manifest, archive_path)
 
 
 def main():
@@ -717,6 +844,9 @@ def main():
     build.add_argument("--campaign", action="store_true")
     pack = commands.add_parser("package")
     pack.add_argument("source")
+    pack.add_argument("--raw-output")
+    native_pack = commands.add_parser("native-package")
+    native_pack.add_argument("--raw-output", required=True)
     native = commands.add_parser("aggregate")
     native.add_argument("--group", required=True)
     native.add_argument("--outcomes")
@@ -737,6 +867,7 @@ def main():
         native,
         pack,
         native_discovery,
+        native_pack,
         landing_page,
         retry,
     ):
@@ -768,7 +899,9 @@ def main():
     elif args.command == "native-plan":
         native_plan(args.config, args.revision, args.output)
     elif args.command == "package":
-        package(args.source, args.output, args.revision)
+        package(args.source, args.output, args.revision, args.raw_output)
+    elif args.command == "native-package":
+        package_native(args.output, args.raw_output, args.revision)
     elif args.command == "aggregate":
         aggregate(
             args.output,

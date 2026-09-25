@@ -27,6 +27,7 @@
 
 """Exercise accounting boundaries and reproducible report recovery."""
 
+import gzip
 import importlib.util
 import json
 import os
@@ -129,7 +130,10 @@ class CoverageReportTest(unittest.TestCase):
         os.link(notes, source / "coverage" / "two" / "shared.gcno")
         report.write_json(source / "coverage" / "one" / "coverage.json", {})
         report.package(source, self.output, REVISION)
-        with tarfile.open(self.output / "raw-profiles.tar.gz") as archive:
+        with tarfile.open(
+            self.output.with_name(self.output.name + "-raw")
+            / "raw-profiles.tar.gz"
+        ) as archive:
             notes = [
                 entry for entry in archive if entry.name.endswith(".gcno")
             ]
@@ -478,7 +482,7 @@ class CoverageReportTest(unittest.TestCase):
             (self.output / "records/one/python-coverage.json").is_file()
         )
         self.assertTrue(
-            (self.output / "records/baselines/hash/baseline.json").is_file()
+            (self.output / "records/baselines/hash/baseline.json.gz").is_file()
         )
 
     def test_sparse_groups_seed_shared_baseline_without_expansion(self):
@@ -549,6 +553,101 @@ class CoverageReportTest(unittest.TestCase):
             set(branches),
             {"BRDA:1,0,gem5-compiled-one,1", "BRDA:1,0,gem5-compiled-two,1"},
         )
+
+    def test_small_package_compresses_baseline_and_retains_generated_source(
+        self,
+    ):
+        from schema import (
+            canonical_hash,
+            load_record,
+        )
+
+        source = self.root / "package-input"
+        coverage = source / "coverage"
+        baseline = {
+            "schema_version": 1,
+            "format": "gem5-coverage-baseline",
+            "revision": REVISION,
+            "language": "native",
+            "build_id": "shared",
+            "files": [{"path": "build/ALL/generated.cc", "lines": {"1": 0}}],
+        }
+        identity = canonical_hash(baseline)
+        record = {
+            "schema_version": 2,
+            "language": "native",
+            "revision": REVISION,
+            "test_uid": UID,
+            "invocation_id": "one",
+            "baseline_id": identity,
+            "outcome": "passed",
+            "collection": "complete",
+            "build": {"build_id": "shared"},
+            "files": [{"path": "build/ALL/generated.cc", "lines": {"1": 1}}],
+        }
+        report.write_json(coverage / "one/coverage.json", record)
+        report.write_json(
+            coverage / "baselines" / identity / "baseline.json", baseline
+        )
+        generated = (
+            coverage
+            / "baselines"
+            / identity
+            / "sources/build/ALL/generated.cc"
+        )
+        generated.parent.mkdir(parents=True)
+        generated.write_text("return 1;\n")
+        (coverage / "one/raw.gcno").write_bytes(b"native notes")
+        raw = self.root / "coverage-raw-one"
+        report.package(source, self.output, REVISION, raw)
+        self.assertFalse((self.output / "raw-profiles.tar.gz").exists())
+        self.assertFalse(list(self.output.rglob("*.gcno")))
+        self.assertFalse(list(self.output.rglob("baseline.json")))
+        expanded = load_record(
+            self.output / "records/one/coverage.json", root=self.output
+        )
+        self.assertEqual(expanded["files"][0]["lines"], {"1": 1})
+        compressed = next(self.output.rglob("baseline.json.gz"))
+        self.assertEqual(compressed.read_bytes()[4:8], b"\0" * 4)
+        with gzip.open(compressed, "rt") as stream:
+            self.assertEqual(json.load(stream), baseline)
+        with tarfile.open(raw / "raw-profiles.tar.gz") as archive:
+            self.assertTrue(
+                any(
+                    name.endswith("baseline.json")
+                    for name in archive.getnames()
+                )
+            )
+        with tarfile.open(self.output / "source-snapshots.tar.gz") as archive:
+            self.assertEqual(len(archive.getnames()), 1)
+            self.assertEqual(
+                archive.extractfile(archive.getmembers()[0]).read(),
+                b"return 1;\n",
+            )
+        self.assertEqual(
+            json.loads((self.output / "artifact.json").read_text()),
+            json.loads((raw / "artifact.json").read_text()),
+        )
+
+    def test_native_package_separates_sources_from_counters(self):
+        build = self.root / "build/ALL"
+        build.mkdir(parents=True)
+        (build / "file.gcno").write_bytes(b"notes")
+        (build / "file.gcda").write_bytes(b"counts")
+        (build / "generated.cc").write_text("return 1;\n")
+        report.write_json(
+            self.output / "aggregate.json",
+            {"revision": REVISION, "group": "unittests-fast"},
+        )
+        raw = self.root / "native-raw"
+        report.package_native(self.output, raw, REVISION, self.root)
+        with tarfile.open(raw / "raw-gcov.tar.gz") as archive:
+            self.assertEqual(
+                set(archive.getnames()),
+                {"build/ALL/file.gcno", "build/ALL/file.gcda"},
+            )
+        with tarfile.open(self.output / "source-snapshots.tar.gz") as archive:
+            self.assertEqual(archive.getnames(), ["build/ALL/generated.cc"])
 
 
 if __name__ == "__main__":
