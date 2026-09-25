@@ -1,27 +1,48 @@
 ---
-# This workflow runs all of the very-long tests within main.py and uploads gcov
-# code coverage information to Codecov
+# Very-long TestLib suites, shared by ordinary and coverage runs.
 
 name: Weekly Tests
 
 on:
     # This is triggered weekly via the 'scheduler.yaml' workflow.
     workflow_dispatch:
+    workflow_call:
+        inputs:
+            coverage-image:
+                description: Immutable container used by shared coverage builds
+                type: string
+                default: ''
+            source-ref:
+                description: Tested commit to check out for a coverage campaign
+                type: string
+                default: ''
+            coverage:
+                description: Build with gcov and upload coverage reports
+                type: boolean
+                default: false
+        secrets:
+            CODECOV_TOKEN:
+                required: false
+
+env:
+    GCOV_FLAGS: ${{ inputs.coverage && '--gcov' || '' }}
 
 jobs:
 
     get-testlib-very-long-dirs:
         runs-on: ubuntu-24.04
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        container: ${{ inputs.coverage-image || 'ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest' }}
         outputs:
             test-dirs-matrix: ${{ steps.dir-matrix.outputs.test-dirs-matrix }}
         steps:
             - uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.source-ref || github.sha }}
             - name: Get directories for testlib-very-long
               working-directory: ${{ github.workspace }}/tests
               id: dir-matrix
               run: |
-                  ./main.py list gem5 --suites -q --length=very-long --gcov=test-only > "$RUNNER_TEMP/test-suites"
+                  ./main.py list gem5 --suites -q --length=very-long ${GCOV_FLAGS:+--gcov=per-test --python-coverage} > "$RUNNER_TEMP/test-suites"
                   test_dirs=$(jq -Rsc '
                     split("\n") |
                     map(select(startswith("SuiteUID:")) |
@@ -31,6 +52,20 @@ jobs:
                   ' "$RUNNER_TEMP/test-suites")
                   echo "test-dirs-matrix=$test_dirs" >> "$GITHUB_OUTPUT"
 
+            - name: Record expected coverage suites
+              if: inputs.coverage
+              run: |
+                  python3 util/coverage/report.py manifest "$RUNNER_TEMP/test-suites" --length=very-long --revision "$(git rev-parse HEAD)" --python-coverage --output "$RUNNER_TEMP/coverage-plan/expected.json"
+            - name: Retain coverage discovery manifest
+              if: ${{ always() && inputs.coverage }}
+              uses: actions/upload-artifact@v7
+              with:
+                  name: coverage-plan-very-long
+                  path: ${{ runner.temp }}/coverage-plan
+                  retention-days: 30
+                  overwrite: true
+                  if-no-files-found: error
+
     # start running the very-long tests
     testlib-very-long-tests:
         name: very-long-tests
@@ -39,9 +74,9 @@ jobs:
             max-parallel: 5
             matrix:
                 test-type: ${{ fromJson(needs.get-testlib-very-long-dirs.outputs.test-dirs-matrix) }}
-        runs-on: [self-hosted, linux, x64]
+        runs-on: ${{ fromJSON(inputs.coverage && '{"group":"gem5-coverage","labels":"gem5-coverage"}' || '["self-hosted","linux","x64"]') }}
         container:
-            image: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+            image: ${{ inputs.coverage-image || 'ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest' }}
             volumes:
                 - /gem5-resource-cache:/gem5-resource-cache
         env:
@@ -50,20 +85,41 @@ jobs:
         needs: [get-testlib-very-long-dirs]
         steps:
             - uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.source-ref || github.sha }}
+
+            - name: Restore verified coverage binaries
+              if: ${{ inputs.coverage && matrix.test-type != 'gem5/x86_boot_tests' }}
+              uses: ./.github/actions/restore-coverage-build
+              with:
+                  test-dir: ${{ matrix.test-type }}
+                  length: very-long
+                  revision: ${{ inputs.source-ref || github.sha }}
+                  image: ${{ inputs.coverage-image }}
+
+            - name: Install the Python coverage tracer
+              if: ${{ inputs.coverage && matrix.test-type != 'gem5/x86_boot_tests' }}
+              run: |
+                  python3 -m pip install --target "$RUNNER_TEMP/coverage-python" coverage==7.10.7
+                  echo "PYTHONPATH=$RUNNER_TEMP/coverage-python${PYTHONPATH:+:$PYTHONPATH}" >> "$GITHUB_ENV"
 
             - name: Run very-long ${{ matrix.test-type }} tests
               id: run-tests
               timeout-minutes: 4290
               working-directory: ${{ github.workspace }}/tests
               # The o3-cpu_8-cores_classic_DualChannelDDR4_2400_init test in the
-              # very-long x86_boot_tests fails with a segmentation fault when
-              # run with the --gcov=test-only flag, so run x86_boot_tests
-              # very-long without that flag.
+              # very-long x86_boot_tests has a known segmentation fault with
+              # gcov-instrumented binaries. Retain its ordinary build until
+              # that instrumentation failure is resolved.
               run: |
-                  extra_gcov_args="--gcov=test-only"
+                  extra_gcov_args="${GCOV_FLAGS:+--gcov=per-test --python-coverage}"
+                  skip_build_args="${GCOV_FLAGS:+--skip-build}"
                   resource_dir="$GEM5_RESOURCE_DIR"
-                  if [ "${{ matrix.test-type }}" = "gem5/x86_boot_tests" ]; then
+                  if [ -n "$GCOV_FLAGS" ] && [ "${{ matrix.test-type }}" = "gem5/x86_boot_tests" ]; then
                     extra_gcov_args=""
+                    skip_build_args=""
+                    echo "::warning::x86_boot_tests runs without coverage due to a known instrumentation crash."
+                    echo "Coverage excludes very-long x86_boot_tests (known gcov crash)." >> "$GITHUB_STEP_SUMMARY"
                   fi
                   # These legacy fixtures do not checksum or lock downloads.
                   case "${{ matrix.test-type }}" in
@@ -71,7 +127,7 @@ jobs:
                       resource_dir="$RUNNER_TEMP/gem5-testlib-downloads"
                       ;;
                   esac
-                  ./main.py run ${{ matrix.test-type }} --length=very-long ${extra_gcov_args} -j"$(nproc)" -vv --bin-path "$resource_dir"
+                  ./main.py run ${{ matrix.test-type }} --length=very-long ${skip_build_args} ${extra_gcov_args} -j"$(nproc)" -vv --bin-path "$resource_dir"
 
             - name: Sanitize test-dir for artifact name
               id: sanitize-test-dir
@@ -82,12 +138,33 @@ jobs:
               if: always()
               uses: actions/upload-artifact@v7
               with:
-                  name: weekly-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-very-long-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir
-                      }}-status-${{ steps.run-tests.outcome }}-output
-                  path: tests/testing-results
+                  name: ${{ inputs.coverage && 'gcov-' || '' }}weekly-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-very-long-${{
+                      steps.sanitize-test-dir.outputs.sanitized-test-dir }}-status-${{ steps.run-tests.outcome }}-output
+                  path: |
+                      tests/testing-results
+                      !tests/testing-results/coverage/**
 
-            - name: Upload coverage reports to Codecov
-              uses: codecov/codecov-action@v7
+            - name: Package raw profiles without duplicating shared notes
+              if: ${{ always() && inputs.coverage }}
+              run: python3 util/coverage/report.py package tests/testing-results --output coverage-data --raw-output coverage-raw --revision "$(git rev-parse
+                  HEAD)"
+            - name: Retain per-invocation coverage and test results
+              if: ${{ always() && inputs.coverage }}
+              uses: actions/upload-artifact@v7
               with:
-                  token: ${{ secrets.CODECOV_TOKEN }}
-                  flags: overall-testdir-${{steps.sanitize-test-dir.outputs.sanitized-test-dir}},overall-length-very-long,${{steps.sanitize-test-dir.outputs.sanitized-test-dir}}-very-long
+                  name: coverage-data-very-long-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir }}
+                  path: coverage-data
+                  compression-level: 6
+                  retention-days: 30
+                  overwrite: true
+                  if-no-files-found: error
+            - name: Retain raw counters for extraction retries
+              if: ${{ always() && inputs.coverage }}
+              uses: actions/upload-artifact@v7
+              with:
+                  name: coverage-raw-very-long-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir }}
+                  path: coverage-raw
+                  compression-level: 0
+                  retention-days: 30
+                  overwrite: true
+                  if-no-files-found: error

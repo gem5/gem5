@@ -1,0 +1,82 @@
+{
+    "schema_version": 1,
+    "groups": [
+        {
+            "group": "unittests-fast",
+            "length": "quick",
+            "flags": [
+                "unittests-fast",
+                "overall-length-quick",
+                "overall-unittests"
+            ],
+            "stages": [
+                "build_and_test"
+            ]
+        },
+        {
+            "group": "unittests-opt",
+            "length": "quick",
+            "flags": [
+                "unittests-opt",
+                "overall-length-quick",
+                "overall-unittests"
+            ],
+            "stages": [
+                "build_and_test"
+            ]
+        },
+        {
+            "group": "unittests-debug",
+            "length": "long",
+            "flags": [
+                "unittests-debug",
+                "overall-length-long",
+                "overall-unittests"
+            ],
+            "stages": [
+                "build_and_test"
+            ]
+        },
+        {
+            "group": "sst-test",
+            "length": "long",
+            "flags": [
+                "sst-test",
+                "overall-length-long"
+            ],
+            "stages": [
+                "build",
+                "integration_build",
+                "run"
+            ]
+        },
+        {
+            "group": "dramsys-tests",
+            "length": "long",
+            "flags": [
+                "dramsys-tests",
+                "overall-length-long"
+            ],
+            "stages": [
+                "build",
+                "run"
+            ]
+        },
+        {
+            "group": "systemc-test",
+            "length": "long",
+            "flags": [
+                "systemc-test",
+                "overall-length-long"
+            ],
+            "stages": [
+                "build_binary",
+                "configure_library",
+                "build_library",
+                "integration_build",
+                "run_initial",
+                "run_continue"
+            ]
+        }
+    ]
+}

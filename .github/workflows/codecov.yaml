@@ -1,0 +1,454 @@
+---
+# Run one coverage campaign per UTC week of qualifying Weekly test runs.
+# workflow_run and relative reusable workflows must exist on the default
+# branch (stable). source-ref pins tested code and uploads to develop's SHA.
+name: Code Coverage
+
+on:
+    workflow_dispatch:
+        inputs:
+            source-run-id:
+                description: Completed coverage run whose artifacts to reprocess
+                type: string
+                required: true
+    workflow_run:
+        workflows: [Daily Tests, Weekly Tests]
+        types: [completed]
+        branches: [develop]
+
+permissions:
+    contents: read
+    actions: read
+
+# Serialize campaigns, including admission, without cancelling running tests.
+concurrency:
+    group: codecov-${{ github.repository }}
+    cancel-in-progress: false
+    # Preserve waiting completion checks and manual recovery requests.
+    queue: max
+
+jobs:
+    gate:
+        if: ${{ github.event.workflow_run.conclusion == 'success' }}
+        runs-on: ubuntu-24.04
+        outputs:
+            allowed: ${{ steps.check.outputs.allowed }}
+            source-ref: ${{ steps.check.outputs.source-ref }}
+        steps:
+            - name: Require passing Daily and Weekly tests
+              id: check
+              uses: actions/github-script@v9
+              env:
+                  COVERAGE_DISABLED: ${{ vars.GEM5_COVERAGE_DISABLED }}
+              with:
+                  script: |
+                      const repo = context.repo;
+                      const trigger = (await github.rest.actions.getWorkflowRun({
+                        ...repo, run_id: context.payload.workflow_run.id
+                      })).data;
+                      const skip = async reason => {
+                        core.notice(reason);
+                        await core.summary.addHeading('Coverage skipped')
+                          .addRaw(reason).write();
+                      };
+                      if (process.env.COVERAGE_DISABLED === 'true') {
+                        return skip('Collection is disabled by GEM5_COVERAGE_DISABLED.');
+                      }
+                      const trusted = run =>
+                        run.head_repository?.full_name ===
+                          `${repo.owner}/${repo.repo}` &&
+                        run.head_branch === 'develop' &&
+                        run.event === 'workflow_dispatch';
+                      if (!trusted(trigger) || ![
+                        '.github/workflows/daily-tests.yaml',
+                        '.github/workflows/weekly-tests.yaml'
+                      ].includes(trigger.path)) {
+                        return skip('The completed run is not a trusted test workflow.');
+                      }
+                      let weekly = trigger;
+                      if (trigger.path === '.github/workflows/daily-tests.yaml') {
+                        // Daily can finish after Weekly. Recheck the latest
+                        // Weekly run, without falling back to an older success.
+                        const runs = await github.paginate(
+                          github.rest.actions.listWorkflowRuns, {
+                            ...repo, workflow_id: 'weekly-tests.yaml',
+                            branch: 'develop', event: 'workflow_dispatch',
+                            per_page: 100
+                          });
+                        weekly = runs.sort((a, b) => b.id - a.id)[0];
+                        if (!weekly || weekly.head_sha !== trigger.head_sha) {
+                          return skip('No matching latest Weekly run for this Daily commit.');
+                        }
+                      }
+                      if (!trusted(weekly) ||
+                          weekly.path !== '.github/workflows/weekly-tests.yaml' ||
+                          weekly.status !== 'completed' ||
+                          weekly.conclusion !== 'success') {
+                        return skip('Weekly tests did not pass on trusted develop code.');
+                      }
+                      const dailyRuns = await github.paginate(
+                        github.rest.actions.listWorkflowRuns, {
+                          ...repo, workflow_id: 'daily-tests.yaml',
+                          branch: 'develop', head_sha: weekly.head_sha,
+                          event: 'workflow_dispatch', per_page: 100
+                        });
+                      const daily = dailyRuns.sort((a, b) => b.id - a.id)[0];
+                      if (!daily || !trusted(daily) ||
+                          daily.head_sha !== weekly.head_sha ||
+                          daily.status !== 'completed' ||
+                          daily.conclusion !== 'success') {
+                        return skip('The latest Daily run for the Weekly commit has not passed.');
+                      }
+                      const week = new Date(weekly.created_at);
+                      week.setUTCDate(week.getUTCDate() -
+                        (week.getUTCDay() + 6) % 7);
+                      week.setUTCHours(0, 0, 0, 0);
+                      const marker = `coverage-source-${week.toISOString().slice(0, 10)}`;
+                      // An artifact records admission, even if tests or uploads
+                      // subsequently fail. Rerunning this campaign is allowed.
+                      const artifacts = await github.paginate(
+                        github.rest.actions.listArtifactsForRepo, {
+                          ...repo, name: marker, per_page: 100
+                        });
+                      for (const artifact of artifacts) {
+                        const id = artifact.workflow_run?.id;
+                        if (artifact.expired || !id ||
+                            String(id) === String(context.runId)) continue;
+                        // PR and unrelated workflows can use the same name.
+                        // Only this trusted completion workflow can admit a run.
+                        const producer = (await github.rest.actions.getWorkflowRun({
+                          ...repo, run_id: id
+                        })).data;
+                        if (producer.path === '.github/workflows/codecov.yaml' &&
+                            producer.event === 'workflow_run' &&
+                            producer.head_repository?.full_name ===
+                              `${repo.owner}/${repo.repo}`) {
+                          return skip('A coverage campaign for this UTC week already exists.');
+                        }
+                      }
+                      const manifest = {
+                        commit: weekly.head_sha, branch: 'develop',
+                        week: week.toISOString().slice(0, 10),
+                        daily: {id: daily.id, attempt: daily.run_attempt,
+                          url: daily.html_url},
+                        weekly: {id: weekly.id, attempt: weekly.run_attempt,
+                          url: weekly.html_url}
+                      };
+                      const fs = require('fs');
+                      fs.writeFileSync(`${process.env.RUNNER_TEMP}/coverage-source.json`,
+                        JSON.stringify(manifest, null, 2) + '\n');
+                      core.setOutput('source-ref', weekly.head_sha);
+                      core.setOutput('marker', marker);
+                      core.setOutput('allowed', 'true');
+                      await core.summary.addHeading('Coverage source')
+                        .addCodeBlock(JSON.stringify(manifest, null, 2), 'json').write();
+
+            - uses: actions/checkout@v7
+              if: steps.check.outputs.allowed == 'true'
+              with:
+                  ref: ${{ github.sha }}
+            - name: Check default-branch coverage deployment
+              if: steps.check.outputs.allowed == 'true'
+              env:
+                  SOURCE_REVISION: ${{ steps.check.outputs.source-ref }}
+              run: |
+                  git fetch --no-tags --depth=1 origin "$SOURCE_REVISION"
+                  python3 util/coverage/deployment.py --reference "$SOURCE_REVISION" > "$RUNNER_TEMP/deployment.json" || {
+                    echo 'Coverage deployment differs from the tested revision:' >> "$GITHUB_STEP_SUMMARY"
+                    cat "$RUNNER_TEMP/deployment.json" >> "$GITHUB_STEP_SUMMARY"
+                    exit 1
+                  }
+
+            - name: Record the admitted weekly campaign
+              if: steps.check.outputs.allowed == 'true'
+              uses: actions/upload-artifact@v7
+              with:
+                  name: ${{ steps.check.outputs.marker }}
+                  path: ${{ runner.temp }}/coverage-source.json
+                  retention-days: 30
+                  overwrite: true
+                  if-no-files-found: error
+
+    coverage-image:
+        needs: gate
+        if: needs.gate.outputs.allowed == 'true'
+        runs-on: ubuntu-24.04
+        outputs:
+            image: ${{ steps.image.outputs.image }}
+        steps:
+            - name: Pin the coverage container for the campaign
+              id: image
+              run: |
+                  image=ghcr.io/gem5/ubuntu-24.04_all-dependencies
+                  docker buildx imagetools inspect "$image:latest" \
+                    --format '{{json .Manifest}}' > "$RUNNER_TEMP/image.json"
+                  digest=$(jq -er '.manifests[] | select(.platform.os == "linux" and .platform.architecture == "amd64") | .digest' "$RUNNER_TEMP/image.json")
+                  echo "image=$image@$digest" >> "$GITHUB_OUTPUT"
+
+    coverage-build-plan:
+        needs: [gate, coverage-image]
+        runs-on: ubuntu-24.04
+        container: ${{ needs.coverage-image.outputs.image }}
+        outputs:
+            targets: ${{ steps.plan.outputs.targets }}
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ needs.gate.outputs.source-ref }}
+            - name: Discover binaries across all coverage workloads
+              id: plan
+              run: |
+                  targets=$(python3 util/coverage/build.py plan)
+                  echo "$targets" | jq -e 'length > 0' >/dev/null
+                  echo "targets=$targets" >> "$GITHUB_OUTPUT"
+            - name: Record planned native coverage groups
+              env:
+                  SOURCE_REVISION: ${{ needs.gate.outputs.source-ref }}
+              run: python3 util/coverage/report.py native-plan .github/coverage-native.json --revision "$SOURCE_REVISION" --output "$RUNNER_TEMP/coverage-plan-native/expected-native.json"
+            - name: Retain the native coverage plan
+              uses: actions/upload-artifact@v7
+              with:
+                  name: coverage-plan-native
+                  path: ${{ runner.temp }}/coverage-plan-native
+                  retention-days: 30
+                  overwrite: true
+                  if-no-files-found: error
+
+    coverage-builds:
+        needs: [gate, coverage-image, coverage-build-plan]
+        runs-on:
+            group: gem5-coverage
+            labels: gem5-coverage
+        container: ${{ needs.coverage-image.outputs.image }}
+        timeout-minutes: 180
+        strategy:
+            fail-fast: false
+            max-parallel: 2
+            matrix:
+                target: ${{ fromJSON(needs.coverage-build-plan.outputs.targets) }}
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ needs.gate.outputs.source-ref }}
+            - name: Build and package each coverage binary once
+              id: build
+              env:
+                  BUILD_TARGET: ${{ matrix.target }}
+                  COVERAGE_IMAGE: ${{ needs.coverage-image.outputs.image }}
+              run: |
+                  python3 util/coverage/build.py build "$BUILD_TARGET" \
+                    --image "$COVERAGE_IMAGE" --output coverage-binary \
+                    --jobs "$(nproc)"
+                  name=${BUILD_TARGET#build/}
+                  echo "name=${name//\//-}" >> "$GITHUB_OUTPUT"
+            - name: Retain the verified binary and matching coverage notes
+              uses: actions/upload-artifact@v7
+              with:
+                  name: coverage-build-${{ steps.build.outputs.name }}
+                  path: coverage-binary
+                  retention-days: 30
+                  compression-level: 0
+                  overwrite: true
+                  if-no-files-found: error
+
+    quick:
+        needs: [gate, coverage-image, coverage-build-plan, coverage-builds]
+        if: ${{ !cancelled() && needs.gate.result == 'success' && needs.gate.outputs.allowed == 'true' && needs.coverage-image.result == 'success' && needs.coverage-build-plan.result
+            == 'success' }}
+        uses: ./.github/workflows/quick-tests.yaml
+        with:
+            coverage: true
+            coverage-image: ${{ needs.coverage-image.outputs.image }}
+            source-ref: ${{ needs.gate.outputs.source-ref }}
+        secrets:
+            CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+    daily:
+        # Keep the coverage matrices within the existing five-job limit.
+        # A failed workload must not prevent collection from the next one.
+        needs: [gate, coverage-image, coverage-build-plan, quick]
+        if: ${{ !cancelled() && needs.gate.result == 'success' && needs.gate.outputs.allowed == 'true' && needs.coverage-image.result == 'success' && needs.coverage-build-plan.result
+            == 'success' }}
+        uses: ./.github/workflows/daily-tests.yaml
+        with:
+            coverage: true
+            coverage-image: ${{ needs.coverage-image.outputs.image }}
+            source-ref: ${{ needs.gate.outputs.source-ref }}
+        secrets:
+            CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+    weekly:
+        needs: [gate, coverage-image, coverage-build-plan, daily]
+        if: ${{ !cancelled() && needs.gate.result == 'success' && needs.gate.outputs.allowed == 'true' && needs.coverage-image.result == 'success' && needs.coverage-build-plan.result
+            == 'success' }}
+        uses: ./.github/workflows/weekly-tests.yaml
+        with:
+            coverage: true
+            coverage-image: ${{ needs.coverage-image.outputs.image }}
+            source-ref: ${{ needs.gate.outputs.source-ref }}
+        secrets:
+            CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+
+    report:
+        name: Build recoverable coverage reports
+        needs: [gate, quick, daily, weekly]
+        if: ${{ always() && (github.event_name == 'workflow_dispatch' || needs.gate.outputs.allowed == 'true') }}
+        runs-on: ubuntu-24.04
+        outputs:
+            uploads: ${{ steps.build.outputs.uploads }}
+            source-ref: ${{ steps.source.outputs.source-ref }}
+        steps:
+            - name: Check the source coverage run
+              id: run
+              uses: actions/github-script@v9
+              env:
+                  REQUESTED_RUN: ${{ inputs.source-run-id }}
+              with:
+                  script: |
+                      const recovery = context.eventName === 'workflow_dispatch';
+                      if (recovery && context.ref !==
+                          `refs/heads/${context.payload.repository.default_branch}`) {
+                        throw new Error('Report recovery must run from the default branch');
+                      }
+                      const id = recovery ? process.env.REQUESTED_RUN : String(context.runId);
+                      if (!/^[1-9][0-9]*$/.test(id)) throw new Error('Invalid coverage run ID');
+                      const run = (await github.rest.actions.getWorkflowRun({
+                        ...context.repo, run_id: Number(id)
+                      })).data;
+                      if (run.path !== '.github/workflows/codecov.yaml' ||
+                          run.event !== 'workflow_run' ||
+                          run.head_repository?.full_name !==
+                            `${context.repo.owner}/${context.repo.repo}` ||
+                          (recovery && run.status !== 'completed')) {
+                        throw new Error('Source is not a completed trusted coverage campaign');
+                      }
+                      core.setOutput('run-id', id);
+            - name: Checkout trusted reporting tools
+              uses: actions/checkout@v7
+              with:
+                  ref: ${{ github.sha }}
+            - name: Recover manifests, raw profiles, and aggregate reports
+              uses: actions/download-artifact@v8
+              with:
+                  run-id: ${{ steps.run.outputs.run-id }}
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  pattern: coverage-{data,plan,source}-*
+                  path: coverage-input
+            - name: Verify the admitted source metadata
+              id: source
+              uses: actions/github-script@v9
+              with:
+                  script: |
+                      const fs = require('fs');
+                      const path = require('path');
+                      const dirs = fs.readdirSync('coverage-input', {withFileTypes: true})
+                        .filter(x => x.isDirectory() && x.name.startsWith('coverage-source-'));
+                      if (dirs.length !== 1) throw new Error('Expected one admission manifest');
+                      const manifest = JSON.parse(fs.readFileSync(path.join(
+                        'coverage-input', dirs[0].name, 'coverage-source.json'), 'utf8'));
+                      if (!/^[0-9a-f]{40}$/.test(manifest.commit) || manifest.branch !== 'develop') {
+                        throw new Error('Invalid source revision');
+                      }
+                      for (const [name, filename] of [['daily', 'daily-tests.yaml'],
+                                                      ['weekly', 'weekly-tests.yaml']]) {
+                        const entry = manifest[name];
+                        if (!Number.isSafeInteger(entry?.id) ||
+                            !Number.isSafeInteger(entry?.attempt)) {
+                          throw new Error('Invalid admission run identity');
+                        }
+                        const run = (await github.rest.actions.getWorkflowRunAttempt({
+                          ...context.repo, run_id: entry.id, attempt_number: entry.attempt
+                        })).data;
+                        if (run.path !== `.github/workflows/${filename}` ||
+                            run.head_sha !== manifest.commit || run.head_branch !== 'develop' ||
+                            run.event !== 'workflow_dispatch' || run.conclusion !== 'success' ||
+                            run.head_repository?.full_name !==
+                              `${context.repo.owner}/${context.repo.repo}`) {
+                          throw new Error('Admission metadata does not match trusted passing tests');
+                        }
+                      }
+                      core.setOutput('source-ref', manifest.commit);
+            - name: Checkout source for offline browsing
+              uses: actions/checkout@v7
+              with:
+                  ref: ${{ steps.source.outputs.source-ref }}
+                  path: coverage-tested-source
+            - name: Account for coverage and export grouped reports
+              id: build
+              env:
+                  SOURCE_REVISION: ${{ steps.source.outputs.source-ref }}
+              run: |
+                  python3 util/coverage/report.py summarize coverage-input --output coverage-report --revision "$SOURCE_REVISION" --campaign
+                  cat coverage-report/summary.md >> "$GITHUB_STEP_SUMMARY"
+                  echo "uploads=$(jq -c . coverage-report/uploads.json)" >> "$GITHUB_OUTPUT"
+            - name: Build the offline coverage landing page
+              env:
+                  SOURCE_REVISION: ${{ steps.source.outputs.source-ref }}
+              run: python3 util/coverage/report.py landing coverage-input --output coverage-report --revision "$SOURCE_REVISION" --source-root coverage-tested-source
+            - name: Build the test and source-line index
+              run: python3 util/coverage/index.py build coverage-input --output coverage-report/index --source-map coverage-report/sources/map.json
+            - name: Retain reports even when collection is incomplete
+              if: always()
+              uses: actions/upload-artifact@v7
+              with:
+                  name: coverage-report-${{ github.run_id }}
+                  path: coverage-report
+                  retention-days: 30
+                  overwrite: true
+                  if-no-files-found: error
+            - name: Fail visibly on incomplete collection
+              if: ${{ always() && steps.build.outcome == 'success' }}
+              run: jq -e '.complete == true' coverage-report/summary.json
+
+    upload:
+        name: Upload retained coverage groups
+        needs: report
+        if: ${{ always() && needs.report.outputs.uploads != '' && needs.report.outputs.uploads != '[]' }}
+        runs-on: ubuntu-24.04
+        strategy:
+            fail-fast: false
+            matrix:
+                report: ${{ fromJson(needs.report.outputs.uploads) }}
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ needs.report.outputs.source-ref }}
+            - uses: actions/download-artifact@v8
+              with:
+                  name: coverage-report-${{ github.run_id }}
+                  path: coverage-report
+            - name: Prepare selected report for upload
+              id: prepare
+              env:
+                  REPORT_FILE: ${{ matrix.report.file }}
+              run: |
+                  python3 - <<'PYTHON'
+                  import gzip
+                  import os
+                  import shutil
+                  from pathlib import Path
+
+                  root = Path('coverage-report').resolve()
+                  source = (root / os.environ['REPORT_FILE']).resolve()
+                  if not source.is_relative_to(root) or not source.is_file():
+                      raise ValueError('Report must be a retained regular file')
+                  if source.suffix == '.gz':
+                      target = Path(os.environ['RUNNER_TEMP']) / 'coverage.info'
+                      with gzip.open(source, 'rb') as stream, target.open('wb') as output:
+                          shutil.copyfileobj(stream, output)
+                  else:
+                      target = source
+                  with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+                      output.write(f'file={target}\n')
+                  PYTHON
+            - name: Upload explicit coverage report
+              uses: codecov/codecov-action@v7
+              with:
+                  token: ${{ secrets.CODECOV_TOKEN }}
+                  files: ${{ steps.prepare.outputs.file }}
+                  disable_search: true
+                  flags: ${{ matrix.report.flags }}
+                  override_commit: ${{ needs.report.outputs.source-ref }}
+                  override_branch: develop
+                  fail_ci_if_error: true

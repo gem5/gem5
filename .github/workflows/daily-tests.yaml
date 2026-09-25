@@ -1,11 +1,32 @@
 ---
-# This workflow runs all of the long tests within main.py, extra tests in nightly.sh, and unittests
+# Long TestLib suites, debug unit tests, and integration tests.
+# Coverage callers use this same test plan with GCC instrumentation enabled.
 
 name: Daily Tests
 
 on:
-    # This is triggered weekly via the 'scheduler.yaml' workflow.
+    # The scheduler dispatches ordinary Daily tests.
     workflow_dispatch:
+    workflow_call:
+        inputs:
+            coverage-image:
+                description: Immutable container used by shared coverage builds
+                type: string
+                default: ''
+            source-ref:
+                description: Tested commit to check out for a coverage campaign
+                type: string
+                default: ''
+            coverage:
+                description: Build with gcov and upload coverage reports
+                type: boolean
+                default: false
+        secrets:
+            CODECOV_TOKEN:
+                required: false
+
+env:
+    GCOV_FLAGS: ${{ inputs.coverage && '--gcov' || '' }}
 
 jobs:
 
@@ -19,6 +40,8 @@ jobs:
               run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
 
     macos-compilation:
+        # Cache warming is not a coverage test; gcov requires GCC on Linux.
+        if: ${{ !inputs.coverage }}
         # The purpose of this is to cache the macOS compilation.
         # MacOS compilation checks are run as part of the CI tests but as the
         # MacOS GitHub action runners are quite costly, it's advantageous to
@@ -35,6 +58,8 @@ jobs:
         steps:
             - name: Checkout the gem5 repository
               uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.source-ref || github.sha }}
 
             - name: Install the gem5 dependencies
               run: |
@@ -70,6 +95,7 @@ jobs:
               timeout-minutes: 120
 
     build-testlib-gem5:
+        if: ${{ !inputs.coverage }}
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         timeout-minutes: 180
@@ -81,6 +107,8 @@ jobs:
                 target: ${{ fromJson(needs.get-testlib-long-dirs.outputs.build-matrix) }}
         steps:
             - uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.source-ref || github.sha }}
 
             - name: Cache the incremental build
               uses: actions/cache@v6
@@ -99,11 +127,12 @@ jobs:
                   scons --ignore-style setconfig "build/$BUILD_TARGET" USE_TEST_OBJECTS=y
                   scons --ignore-style "build/$BUILD_TARGET/gem5.opt" -j "$(nproc)"
 
-            - name: Tarball the build executable
+            - name: Package the executable
               env:
                   BUILD_TARGET: ${{ matrix.target }}
               run: |
-                  tar -czf "gem5-$BUILD_TARGET.tar.gz" "build/$BUILD_TARGET/gem5.opt"
+                  printf '%s\0' "build/$BUILD_TARGET/gem5.opt" > "$RUNNER_TEMP/build-files"
+                  tar -czf "gem5-$BUILD_TARGET.tar.gz" --null -T "$RUNNER_TEMP/build-files"
 
             - name: Publish the build executable as artifact
               uses: actions/upload-artifact@v7
@@ -121,28 +150,40 @@ jobs:
         strategy:
             matrix:
                 type: [debug]
-        runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        runs-on: ${{ fromJSON(inputs.coverage && '{"group":"gem5-coverage","labels":"gem5-coverage"}' || '["self-hosted","linux","x64"]') }}
+        container: ${{ inputs.coverage-image || 'ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest' }}
         timeout-minutes: 60
         steps:
             - uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.source-ref || github.sha }}
 
             - name: Run ALL/unittests.${{ matrix.type }} UnitTests
-              run: scons build/ALL/unittests.${{ matrix.type }} -j $(nproc)
+              id: run-native
+              run: scons build/ALL/unittests.${{ matrix.type }} ${GCOV_FLAGS:+--gcov} -j $(nproc)
+
+            - name: Collect aggregate native coverage
+              if: ${{ !cancelled() && inputs.coverage }}
+              uses: ./.github/actions/collect-native-coverage
+              with:
+                  group: unittests-${{ matrix.type }}
+                  outcomes: '{"build_and_test":"${{ steps.run-native.outcome }}"}'
 
     get-testlib-long-dirs:
         runs-on: ubuntu-24.04
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        container: ${{ inputs.coverage-image || 'ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest' }}
         outputs:
             test-dirs-matrix: ${{ steps.dir-matrix.outputs.test-dirs-matrix }}
             build-matrix: ${{ steps.build-matrix.outputs.build-matrix }}
         steps:
             - uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.source-ref || github.sha }}
             - name: Get directories for testlib-long
               working-directory: ${{ github.workspace }}/tests
               id: dir-matrix
               run: |
-                  ./main.py list gem5 --suites -q --length=long > "$RUNNER_TEMP/test-suites"
+                  ./main.py list gem5 --suites -q --length=long ${GCOV_FLAGS:+--gcov=per-test --python-coverage} > "$RUNNER_TEMP/test-suites"
                   test_dirs=$(jq -Rsc '
                     split("\n") |
                     map(select(startswith("SuiteUID:")) |
@@ -152,11 +193,25 @@ jobs:
                   ' "$RUNNER_TEMP/test-suites")
                   echo "test-dirs-matrix=$test_dirs" >> "$GITHUB_OUTPUT"
 
+            - name: Record expected coverage suites
+              if: inputs.coverage
+              run: |
+                  python3 util/coverage/report.py manifest "$RUNNER_TEMP/test-suites" --length=long --revision "$(git rev-parse HEAD)" --python-coverage --output "$RUNNER_TEMP/coverage-plan/expected.json"
+            - name: Retain coverage discovery manifest
+              if: ${{ always() && inputs.coverage }}
+              uses: actions/upload-artifact@v7
+              with:
+                  name: coverage-plan-long
+                  path: ${{ runner.temp }}/coverage-plan
+                  retention-days: 30
+                  overwrite: true
+                  if-no-files-found: error
+
             - name: Discover required binary configurations
               id: build-matrix
               working-directory: ${{ github.workspace }}/tests
               run: |
-                  ./main.py list gem5 --length=long --host x86_64 --build-targets -q > "$RUNNER_TEMP/build-targets"
+                  ./main.py list gem5 --length=long --host x86_64 --build-targets -q ${GCOV_FLAGS:+--gcov=per-test --python-coverage} > "$RUNNER_TEMP/build-targets"
                   # Always refresh the ALL cache for the PR and weekly tests.
                   build_matrix=$(jq -Rsc 'split("\n") | map(select(length > 0) | split("/")[-2]) | . + ["ALL"] | unique' "$RUNNER_TEMP/build-targets")
                   echo "build-matrix=$build_matrix" >> "$GITHUB_OUTPUT"
@@ -164,32 +219,46 @@ jobs:
   # start running all of the long tests
     testlib-long-tests:
         name: long-tests
-        runs-on: [self-hosted, linux, x64]
+        if: ${{ !cancelled() && needs.get-testlib-long-dirs.result == 'success' && (inputs.coverage || needs.build-testlib-gem5.result == 'success') }}
+        runs-on: ${{ fromJSON(inputs.coverage && '{"group":"gem5-coverage","labels":"gem5-coverage"}' || '["self-hosted","linux","x64"]') }}
         container:
-            image: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+            image: ${{ inputs.coverage-image || 'ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest' }}
             volumes:
                 - /gem5-resource-cache:/gem5-resource-cache
         env:
             GEM5_RESOURCE_DIR: /gem5-resource-cache
-        timeout-minutes: 1440 # 24 hours for entire matrix to run
+        timeout-minutes: ${{ inputs.coverage && 1800 || 1440 }}
         needs:
             - build-testlib-gem5
             - get-testlib-long-dirs
             - get-date
         strategy:
             fail-fast: false
+            max-parallel: ${{ inputs.coverage && 5 || 256 }}
             matrix:
                 test-type: ${{ fromJson(needs.get-testlib-long-dirs.outputs.test-dirs-matrix) }}
 
         steps:
             - uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.source-ref || github.sha }}
+            - name: Restore verified coverage binaries
+              if: inputs.coverage
+              uses: ./.github/actions/restore-coverage-build
+              with:
+                  test-dir: ${{ matrix.test-type }}
+                  length: long
+                  revision: ${{ inputs.source-ref || github.sha }}
+                  image: ${{ inputs.coverage-image }}
+
             - name: Select the binaries needed by these suites
+              if: ${{ !inputs.coverage }}
               id: required-binaries
               working-directory: ${{ github.workspace }}/tests
               env:
                   TEST_DIR: ${{ matrix.test-type }}
               run: |
-                  ./main.py list "$TEST_DIR" --length=long --build-targets -q > "$RUNNER_TEMP/required-binaries"
+                  ./main.py list "$TEST_DIR" --length=long --build-targets -q ${GCOV_FLAGS:+--gcov=per-test --python-coverage} > "$RUNNER_TEMP/required-binaries"
                   if [ ! -s "$RUNNER_TEMP/required-binaries" ]; then
                     echo "has-binaries=false" >> "$GITHUB_OUTPUT"
                     exit 0
@@ -197,10 +266,10 @@ jobs:
                   targets=$(jq -Rrsc 'split("\n") | map(select(length > 0) | split("/")[-2]) | unique | join("|")' "$RUNNER_TEMP/required-binaries")
                   echo "has-binaries=true" >> "$GITHUB_OUTPUT"
                   # download-artifact uses minimatch: match exactly this set.
-                  echo "artifact-pattern=daily-gem5-$GITHUB_RUN_ID-@($targets)" >> "$GITHUB_OUTPUT"
+                  echo "artifact-pattern=daily-gem5-${{ inputs.coverage && 'gcov-' || '' }}$GITHUB_RUN_ID-@($targets)" >> "$GITHUB_OUTPUT"
 
             - name: Download this run's binary artifacts
-              if: steps.required-binaries.outputs.has-binaries == 'true'
+              if: ${{ !inputs.coverage && steps.required-binaries.outputs.has-binaries == 'true' }}
               uses: actions/download-artifact@v8
               with:
                   pattern: ${{ steps.required-binaries.outputs.artifact-pattern }}
@@ -208,15 +277,21 @@ jobs:
                   merge-multiple: true
 
             - name: Unpack the binaries
-              if: steps.required-binaries.outputs.has-binaries == 'true'
+              if: ${{ !inputs.coverage && steps.required-binaries.outputs.has-binaries == 'true' }}
               run: |
                   for archive in "$RUNNER_TEMP"/gem5-binaries/gem5-*.tar.gz; do
                     tar -xzf "$archive"
                   done
 
+            - name: Install the Python coverage tracer
+              if: inputs.coverage
+              run: |
+                  python3 -m pip install --target "$RUNNER_TEMP/coverage-python" coverage==7.10.7
+                  echo "PYTHONPATH=$RUNNER_TEMP/coverage-python${PYTHONPATH:+:$PYTHONPATH}" >> "$GITHUB_ENV"
+
             - name: Run long ${{ matrix.test-type }} tests
               id: run-tests
-              timeout-minutes: 1410
+              timeout-minutes: ${{ inputs.coverage && 1770 || 1410 }}
               working-directory: ${{ github.workspace }}/tests
               run: |
                   resource_dir="$GEM5_RESOURCE_DIR"
@@ -226,7 +301,11 @@ jobs:
                       resource_dir="$RUNNER_TEMP/gem5-testlib-downloads"
                       ;;
                   esac
-                  ./main.py run ${{ matrix.test-type }} --skip-build -j$(nproc) --length=long -vv -t $(nproc) --bin-path "$resource_dir"
+                  test_threads=$(nproc)
+                  if [ -n "$GCOV_FLAGS" ]; then
+                    test_threads=1
+                  fi
+                  ./main.py run ${{ matrix.test-type }} --skip-build -j$(nproc) --length=long -vv -t "$test_threads" --bin-path "$resource_dir" ${GCOV_FLAGS:+--gcov=per-test --python-coverage}
 
             - name: Sanitize test-dir for artifact name
               id: sanitize-test-dir
@@ -237,72 +316,144 @@ jobs:
               if: always()
               uses: actions/upload-artifact@v7
               with:
-                  name: daily-tests-run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-long-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir
-                      }}-status-${{ steps.run-tests.outcome }}-output
-                  path: tests/testing-results
+                  name: daily-tests-${{ inputs.coverage && 'gcov-' || '' }}run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-long-${{
+                      steps.sanitize-test-dir.outputs.sanitized-test-dir }}-status-${{ steps.run-tests.outcome }}-output
+                  path: |
+                      tests/testing-results
+                      !tests/testing-results/coverage/**
+            - name: Package raw profiles without duplicating shared notes
+              if: ${{ always() && inputs.coverage }}
+              run: python3 util/coverage/report.py package tests/testing-results --output coverage-data --raw-output coverage-raw --revision "$(git rev-parse
+                  HEAD)"
+            - name: Retain per-invocation coverage and test results
+              if: ${{ always() && inputs.coverage }}
+              uses: actions/upload-artifact@v7
+              with:
+                  name: coverage-data-long-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir }}
+                  path: coverage-data
+                  compression-level: 6
+                  retention-days: 30
+                  overwrite: true
+                  if-no-files-found: error
+            - name: Retain raw counters for extraction retries
+              if: ${{ always() && inputs.coverage }}
+              uses: actions/upload-artifact@v7
+              with:
+                  name: coverage-raw-long-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir }}
+                  path: coverage-raw
+                  compression-level: 0
+                  retention-days: 30
+                  overwrite: true
+                  if-no-files-found: error
+
   # This runs the SST-gem5 integration compilation and tests it with
   # ext/sst/sst/example.py.
     sst-test:
-        runs-on: [self-hosted, linux, x64]
+        runs-on: ${{ fromJSON(inputs.coverage && '{"group":"gem5-coverage","labels":"gem5-coverage"}' || '["self-hosted","linux","x64"]') }}
         container: ghcr.io/gem5/sst-env:latest
         timeout-minutes: 240
         needs: get-date
 
         steps:
             - uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.source-ref || github.sha }}
 
             - name: Cache the SST build
+              if: ${{ !inputs.coverage }}
               uses: actions/cache@v6
               with:
                   path: build/*
-                  key: sst-build-${{ needs.get-date.outputs.date }}
+                  key: ${{ inputs.coverage && 'gcov-' || '' }}sst-build-${{ needs.get-date.outputs.date }}
                   restore-keys: |
-                      sst-build
+                      ${{ inputs.coverage && 'gcov-' || '' }}sst-build
 
             - name: Build RISCV/libgem5_opt.so with SST
+              id: build-native
               run: |
                   scons defconfig build/RISCV build_opts/RISCV --ignore-style
-                  scons build/RISCV/libgem5_opt.so --without-tcmalloc --duplicate-sources --ignore-style -j $(nproc)
+                  scons build/RISCV/libgem5_opt.so ${GCOV_FLAGS:+--gcov} --without-tcmalloc --duplicate-sources --ignore-style -j $(nproc)
             - name: Makefile ext/sst
               working-directory: ${{ github.workspace }}/ext/sst
               run: mv Makefile.linux Makefile
             - name: Compile ext/sst
+              id: build-integration
               working-directory: ${{ github.workspace }}/ext/sst
               run: make -j $(nproc)
+            - name: Clear coverage counters before testing
+              if: inputs.coverage
+              run: find build -type f \( -name '*.gcda' -o -name '*.py.gcno' \) -delete
             - name: Run SST test
+              id: run-tests
               working-directory: ${{ github.workspace }}/ext/sst
               run: sst --add-lib-path=./ sst/example.py
+
+            - name: Collect aggregate native coverage
+              if: ${{ !cancelled() && inputs.coverage }}
+              uses: ./.github/actions/collect-native-coverage
+              with:
+                  group: sst-test
+                  outcomes: '{"build":"${{ steps.build-native.outcome }}","integration_build":"${{ steps.build-integration.outcome }}","run":"${{ steps.run-tests.outcome
+                      }}"}'
 
   # This runs the gem5 within SystemC ingration and runs a simple hello-world
   # simulation with it.
     systemc-test:
-        runs-on: [self-hosted, linux, x64]
+        runs-on: ${{ fromJSON(inputs.coverage && '{"group":"gem5-coverage","labels":"gem5-coverage"}' || '["self-hosted","linux","x64"]') }}
         container: ghcr.io/gem5/systemc-env:latest
         timeout-minutes: 180
+        env:
+            # GCC .o and .os outputs otherwise overwrite the same .gcno.
+            SYSTEMC_LIBRARY_BUILD: ${{ inputs.coverage && 'ARM-systemc-library' || 'ARM' }}
         # The shared-library build changes the configuration and generated
         # headers. Restoring it can race header regeneration on the next run.
         steps:
             - uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.source-ref || github.sha }}
             - name: Build ARM/gem5.opt
+              id: build-binary
               run: |
                   scons defconfig build/ARM build_opts/ARM --ignore-style
-                  scons build/ARM/gem5.opt --ignore-style --duplicate-sources -j$(nproc)
+                  scons build/ARM/gem5.opt ${GCOV_FLAGS:+--gcov} --ignore-style --duplicate-sources -j$(nproc)
             - name: disable systemc
-              run: scons setconfig build/ARM --ignore-style USE_SYSTEMC=n
+              id: configure-library
+              run: |
+                  if [ -n "${GCOV_FLAGS:-}" ]; then
+                      scons defconfig "build/$SYSTEMC_LIBRARY_BUILD" build_opts/ARM --ignore-style
+                  fi
+                  scons setconfig "build/$SYSTEMC_LIBRARY_BUILD" --ignore-style USE_SYSTEMC=n
             - name: Build ARM/libgem5_opt.so
-              run: scons build/ARM/libgem5_opt.so --with-cxx-config --without-python --without-tcmalloc -j$(nproc) --duplicate-sources
+              id: build-library
+              run: scons "build/$SYSTEMC_LIBRARY_BUILD/libgem5_opt.so" ${GCOV_FLAGS:+--gcov} --with-cxx-config --without-python --without-tcmalloc -j$(nproc)
+                  --duplicate-sources
             - name: Compile gem5 withing SystemC
+              id: build-integration
               working-directory: ${{ github.workspace }}/util/systemc/gem5_within_systemc
-              run: make
+              run: make ARCH="$SYSTEMC_LIBRARY_BUILD"
+            - name: Clear coverage counters before testing
+              if: inputs.coverage
+              run: find build -type f \( -name '*.gcda' -o -name '*.py.gcno' \) -delete
             - name: Run gem5 within SystemC test
+              id: run-tests
               run: ./build/ARM/gem5.opt configs/deprecated/example/se.py -c tests/test-progs/hello/bin/arm/linux/hello
             - name: Continue gem5 within SystemC test
-              run: LD_LIBRARY_PATH=build/ARM/:/opt/systemc/lib-linux64/ ./util/systemc/gem5_within_systemc/gem5.opt.sc m5out/config.ini
+              id: run-continue
+              run: LD_LIBRARY_PATH="build/$SYSTEMC_LIBRARY_BUILD/:/opt/systemc/lib-linux64/" ./util/systemc/gem5_within_systemc/gem5.opt.sc m5out/config.ini
+
+            - name: Collect aggregate native coverage
+              if: ${{ !cancelled() && inputs.coverage }}
+              uses: ./.github/actions/collect-native-coverage
+              with:
+                  group: systemc-test
+                  outcomes: '{"build_binary":"${{ steps.build-binary.outcome }}","configure_library":"${{ steps.configure-library.outcome }}","build_library":"${{
+                      steps.build-library.outcome }}","integration_build":"${{ steps.build-integration.outcome }}","run_initial":"${{ steps.run-tests.outcome
+                      }}","run_continue":"${{ steps.run-continue.outcome }}"}'
 
     dramsys-tests:
-        runs-on: [self-hosted, linux, x64]
+        runs-on: ${{ fromJSON(inputs.coverage && '{"group":"gem5-coverage","labels":"gem5-coverage"}' || '["self-hosted","linux","x64"]') }}
         container:
-            image: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+            image: ${{ inputs.coverage-image || 'ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest' }}
             volumes:
                 - /gem5-resource-cache:/gem5-resource-cache
         env:
@@ -311,28 +462,42 @@ jobs:
         needs: get-date
         steps:
             - uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.source-ref || github.sha }}
             - name: Checkout DRAMSys
               working-directory: ${{ github.workspace }}/ext/dramsys
               run: git clone https://github.com/tukl-msd/DRAMSys --branch v5.6.0 --depth 1 DRAMSys
 
             - name: Cache the build
+              if: ${{ !inputs.coverage }}
               uses: actions/cache@v6
               with:
                   path: build/*
-                  key: dramsys-build-${{ needs.get-date.outputs.date }}
+                  key: ${{ inputs.coverage && 'gcov-' || '' }}dramsys-build-${{ needs.get-date.outputs.date }}
                   restore-keys: |
-                      dramsys-build
+                      ${{ inputs.coverage && 'gcov-' || '' }}dramsys-build
 
               # gem5 is built separately because it depends on the DRAMSys library
             - name: Build gem5
+              id: build-native
               working-directory: ${{ github.workspace }}
               run: |
                   scons defconfig build/ALL build_opts/ALL
-                  scons build/ALL/gem5.opt -j $(nproc)
+                  scons build/ALL/gem5.opt ${GCOV_FLAGS:+--gcov} -j $(nproc)
 
+            - name: Clear coverage counters before testing
+              if: inputs.coverage
+              run: find build -type f \( -name '*.gcda' -o -name '*.py.gcno' \) -delete
             - name: Run DRAMSys Checks
+              id: run-tests
               working-directory: ${{ github.workspace }}
               run: |
                   ./build/ALL/gem5.opt configs/example/gem5_library/dramsys/arm-hello-dramsys.py
                   ./build/ALL/gem5.opt configs/example/gem5_library/dramsys/dramsys-traffic.py
                   ./build/ALL/gem5.opt configs/example/dramsys.py
+            - name: Collect aggregate native coverage
+              if: ${{ !cancelled() && inputs.coverage }}
+              uses: ./.github/actions/collect-native-coverage
+              with:
+                  group: dramsys-tests
+                  outcomes: '{"build":"${{ steps.build-native.outcome }}","run":"${{ steps.run-tests.outcome }}"}'

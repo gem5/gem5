@@ -1,0 +1,291 @@
+---
+# The quick test plan shared by PR CI and scheduled coverage.
+name: Quick Tests
+
+on:
+    workflow_call:
+        inputs:
+            coverage-image:
+                description: Immutable container used by shared coverage builds
+                type: string
+                default: ''
+            source-ref:
+                description: Tested commit to check out for a coverage campaign
+                type: string
+                default: ''
+            coverage:
+                description: Build with gcov and upload coverage reports
+                type: boolean
+                default: false
+        secrets:
+            CODECOV_TOKEN:
+                required: false
+
+env:
+    GCOV_FLAGS: ${{ inputs.coverage && '--gcov' || '' }}
+
+jobs:
+    get-date:
+    # We use the date to label caches. A cache is a a "hit" if the date is the
+    # request binary and date are the same as what is stored in the cache.
+    # This essentially means the first job to run on a given day for a given
+    # binary will always be a "miss" and will have to build the binary then
+    # upload it as that day's binary to upload. While this isn't the most
+    # efficient way to do this, the alternative was to run take a hash of the
+    # `src` directory contents and use it as a hash. We found there to be bugs
+    # with the hash function where this task would timeout. This approach is
+    # simple, works, and still provides some level of caching.
+        runs-on: ubuntu-24.04
+        outputs:
+            date: ${{ steps.date.outputs.date }}
+        steps:
+            - name: Get the current date
+              id: date
+              run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+
+    unittests-all-fast-opt:
+        strategy:
+            matrix:
+                type: [fast, opt]
+        runs-on: ${{ fromJSON(inputs.coverage && '{"group":"gem5-coverage","labels":"gem5-coverage"}' || '["self-hosted","linux","x64"]') }}
+        container: ${{ inputs.coverage-image || 'ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest' }}
+        timeout-minutes: 60
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.source-ref || github.sha }}
+            - name: CI Unittests (${{ matrix.type }})
+              id: run-native
+              working-directory: ${{ github.workspace }}
+              run: scons build/ALL/unittests.${{ matrix.type }} ${GCOV_FLAGS:+--gcov} -j $(nproc)
+            - run: echo "This job's status is ${{ job.status }}."
+
+            - name: Collect aggregate native coverage
+              if: ${{ !cancelled() && inputs.coverage }}
+              uses: ./.github/actions/collect-native-coverage
+              with:
+                  group: unittests-${{ matrix.type }}
+                  outcomes: '{"build_and_test":"${{ steps.run-native.outcome }}"}'
+
+    testlib-quick-matrix:
+        runs-on: ubuntu-24.04
+    # In order to make sure the environment is exactly the same, we run in
+    # the same container we use to build gem5 and run the testlib tests. This
+        container: ${{ inputs.coverage-image || 'ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest' }}
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.source-ref || github.sha }}
+            - name: Get directories for testlib-quick
+              working-directory: ${{ github.workspace }}/tests
+              id: dir-matrix
+              run: |
+                  ./main.py list gem5 --suites -q ${GCOV_FLAGS:+--gcov=per-test --python-coverage} > "$RUNNER_TEMP/test-suites"
+                  test_dirs=$(jq -Rsc '
+                    split("\n") |
+                    map(select(startswith("SuiteUID:")) |
+                        split(":")[1] | split("/")[1:-1] | join("/")) |
+                    unique |
+                    if length == 0 then error("No TestLib suites found") else . end
+                  ' "$RUNNER_TEMP/test-suites")
+                  echo "test-dirs-matrix=$test_dirs" >> "$GITHUB_OUTPUT"
+
+            - name: Record expected coverage suites
+              if: inputs.coverage
+              run: |
+                  python3 util/coverage/report.py manifest "$RUNNER_TEMP/test-suites" --length=quick --revision "$(git rev-parse HEAD)" --python-coverage --output "$RUNNER_TEMP/coverage-plan/expected.json"
+            - name: Retain coverage discovery manifest
+              if: ${{ always() && inputs.coverage }}
+              uses: actions/upload-artifact@v7
+              with:
+                  name: coverage-plan-quick
+                  path: ${{ runner.temp }}/coverage-plan
+                  retention-days: 30
+                  overwrite: true
+                  if-no-files-found: error
+
+            - name: Get the build targets for testlib-quick-gem5-builds
+              working-directory: ${{ github.workspace }}/tests
+              id: build-matrix
+              run: |
+                  ./main.py list --build-targets -q ${GCOV_FLAGS:+--gcov=per-test --python-coverage} > "$RUNNER_TEMP/build-targets"
+                  build_matrix=$(jq -Rsc '
+                    split("\n") | map(select(length > 0)) |
+                    if length == 0 then error("No TestLib build targets found") else . end
+                  ' "$RUNNER_TEMP/build-targets")
+                  echo "build-matrix=$build_matrix" >> "$GITHUB_OUTPUT"
+
+        outputs:
+            build-matrix: ${{ steps.build-matrix.outputs.build-matrix }}
+            test-dirs-matrix: ${{ steps.dir-matrix.outputs.test-dirs-matrix }}
+
+    testlib-quick-gem5-builds:
+        if: ${{ !inputs.coverage }}
+        runs-on: [self-hosted, linux, x64]
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        needs: [testlib-quick-matrix, get-date]
+        strategy:
+            matrix:
+                build-target: ${{ fromJson(needs.testlib-quick-matrix.outputs.build-matrix) }}
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.source-ref || github.sha }}
+
+            - name: Cache build/ALL
+              uses: actions/cache/restore@v6
+              if: ${{ endsWith(matrix.build-target, 'build/ALL/gem5.opt') }}
+              with:
+                  path: build/ALL
+                  key: testlib-build-ALL-${{ needs.get-date.outputs.date }}
+                  restore-keys: |
+                      testlib-build-ALL-
+
+            - name: Build gem5
+              env:
+                  BUILD_TARGET: ${{ matrix.build-target }}
+              run: |
+                  build_dir=$(dirname "$BUILD_TARGET")
+                  build_config=$(basename "$build_dir")
+                  scons defconfig "$build_dir" "build_opts/$build_config"
+                  scons "$BUILD_TARGET" -j "$(nproc)"
+
+            - name: Sanitize build-target for artifact name
+              id: sanitize-build-target
+              if: success() || failure()
+              run: echo "sanitized-build-target=$(echo '${{ matrix.build-target }}' | sed 's/[\\|\.]/-/g' | sed 's/[\/|__w|gem5|build]//g')" >> $GITHUB_OUTPUT
+
+        # Upload the gem5 binary as an artifact.
+        # Note: the "achor.txt" file is a hack to make sure the paths are
+        # preserverd in the artifact. The upload-artifact action finds the
+        # closest common directory and uploads everything relative to that.
+        # E.g., if we upload "build/ARM/gem5.opt" and "build/RISCV/gem5.opt"
+        # Then upload-artifact will upload "ARM/gem5.opt" and "RISCV/gem5.opt",
+        # stripping the "build" directory. By adding the "anchor.txt" file, we
+        # ensure the "build" directory is preserved.
+            - run: echo "anchor" > anchor.txt
+            - uses: actions/upload-artifact@v7
+              with:
+                  name: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds-${{ steps.sanitize-build-target.outputs.sanitized-build-target }}
+                  # Rebuilds replace artifacts; consumer-only reruns reuse them.
+                  overwrite: true
+                  path: |
+                      build/*/gem5.*
+                      anchor.txt
+
+    testlib-quick-execution:
+        name: quick-tests
+        if: ${{ !cancelled() && needs.testlib-quick-matrix.result == 'success' && (inputs.coverage || needs.testlib-quick-gem5-builds.result == 'success')
+            }}
+        runs-on: ${{ fromJSON(inputs.coverage && '{"group":"gem5-coverage","labels":"gem5-coverage"}' || '["self-hosted","linux","x64"]') }}
+        container:
+            image: ${{ inputs.coverage-image || 'ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest' }}
+            # PR jobs keep their existing container without a resource mount.
+            options: ${{ inputs.coverage && '--volume /gem5-resource-cache:/gem5-resource-cache' || '' }}
+        needs: [testlib-quick-matrix, testlib-quick-gem5-builds]
+        timeout-minutes: ${{ inputs.coverage && 1800 || 360 }}
+        strategy:
+            fail-fast: false
+            max-parallel: ${{ inputs.coverage && 5 || 256 }}
+            matrix:
+                test-dir: ${{ fromJson(needs.testlib-quick-matrix.outputs.test-dirs-matrix) }}
+        steps:
+        # Checkout the repository then download the gem5.opt artifact.
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ inputs.source-ref || github.sha }}
+            - name: Restore verified coverage binaries
+              if: inputs.coverage
+              uses: ./.github/actions/restore-coverage-build
+              with:
+                  test-dir: ${{ matrix.test-dir }}
+                  length: quick
+                  revision: ${{ inputs.source-ref || github.sha }}
+                  image: ${{ inputs.coverage-image }}
+
+            - uses: actions/download-artifact@v8
+              if: ${{ !inputs.coverage }}
+              name: Download gem5 artifacts
+              with:
+                  pattern: ci-tests-${{ inputs.coverage && 'gcov-' || '' }}${{ github.run_number }}-testlib-quick-all-gem5-builds*
+                  merge-multiple: true
+
+            - name: Chmod gem5.{opt,debug,fast} to be executable
+              run: |
+                  find . -name "gem5.opt" -exec chmod u+x {} \;
+                  find . -name "gem5.debug" -exec chmod u+x {} \;
+                  find . -name "gem5.fast" -exec chmod u+x {} \;
+
+        # Run the testlib quick tests in the given directory.
+            - name: Install the Python coverage tracer
+              if: inputs.coverage
+              run: |
+                  python3 -m pip install --target "$RUNNER_TEMP/coverage-python" coverage==7.10.7
+                  echo "PYTHONPATH=$RUNNER_TEMP/coverage-python${PYTHONPATH:+:$PYTHONPATH}" >> "$GITHUB_ENV"
+
+            - name: Run quick ${{ matrix.test-dir }} tests
+              id: run-tests
+              working-directory: ${{ github.workspace }}/tests
+              timeout-minutes: ${{ inputs.coverage && 1770 || 360 }}
+              env:
+                  TEST_DIR: ${{ matrix.test-dir }}
+              run: |
+                  test_threads=$(nproc)
+                  # Only scheduled coverage uses the persistent resource cache.
+                  if [ -n "$GCOV_FLAGS" ]; then
+                    test_threads=1
+                    export GEM5_RESOURCE_DIR=/gem5-resource-cache
+                    resource_dir="$GEM5_RESOURCE_DIR"
+                    case "$TEST_DIR" in
+                      gem5/cpu_tests|gem5/fdp_tests|gem5/m5threads_test_atomic)
+                        resource_dir="$RUNNER_TEMP/gem5-testlib-downloads"
+                        ;;
+                    esac
+                    set -- --bin-path "$resource_dir" -vv
+                  else
+                    set --
+                  fi
+                  ./main.py run --skip-build -t "$test_threads" "$TEST_DIR" ${GCOV_FLAGS:+--gcov=per-test --python-coverage} "$@"
+
+        # Get the basename of the matrix.test-dir path (to name the artifact).
+            - name: Sanitize test-dir for artifact name
+              id: sanitize-test-dir
+              if: success() || failure()
+              run: echo "sanitized-test-dir=$(echo '${{ matrix.test-dir }}' | sed 's/\//-/g')" >> $GITHUB_OUTPUT
+
+        # Upload the tests/testing-results directory as an artifact.
+            - name: Upload results
+              if: success() || failure()
+              uses: actions/upload-artifact@v7
+              with:
+                  name: ci-tests-${{ inputs.coverage && 'gcov-' || '' }}run-${{ github.run_number }}-attempt-${{ github.run_attempt }}-testlib-quick-${{
+                      steps.sanitize-test-dir.outputs.sanitized-test-dir }}-status-${{ steps.run-tests.outcome }}-output
+                  path: |
+                      tests/testing-results
+                      !tests/testing-results/coverage/**
+                  retention-days: 30
+
+            - name: Package raw profiles without duplicating shared notes
+              if: ${{ always() && inputs.coverage }}
+              run: python3 util/coverage/report.py package tests/testing-results --output coverage-data --raw-output coverage-raw --revision "$(git rev-parse
+                  HEAD)"
+            - name: Retain per-invocation coverage and test results
+              if: ${{ always() && inputs.coverage }}
+              uses: actions/upload-artifact@v7
+              with:
+                  name: coverage-data-quick-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir }}
+                  path: coverage-data
+                  compression-level: 6
+                  retention-days: 30
+                  overwrite: true
+                  if-no-files-found: error
+            - name: Retain raw counters for extraction retries
+              if: ${{ always() && inputs.coverage }}
+              uses: actions/upload-artifact@v7
+              with:
+                  name: coverage-raw-quick-${{ steps.sanitize-test-dir.outputs.sanitized-test-dir }}
+                  path: coverage-raw
+                  compression-level: 0
+                  retention-days: 30
+                  overwrite: true
+                  if-no-files-found: error

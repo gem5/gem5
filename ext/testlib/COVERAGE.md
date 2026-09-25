@@ -1,0 +1,154 @@
+# Per-invocation GCC coverage
+
+From `tests`, run a selected TestLib suite or directory with
+`./main.py run <selection> --gcov=per-test`. The mode builds with the existing
+GCC coverage flags. Use `--skip-build` only with an already instrumented build
+and its matching `.gcno` files. `--gcov-tool gcov-13`, for example, selects the
+gcov executable matching the build's compiler. GCC 9 or newer is required for
+JSON output. Ordinary TestLib runs are unchanged.
+
+Use one binary variant per run. `--gcov=per-test --variant=opt,debug` is
+rejected before testing because GCC uses the same `.gcno` names for gem5's
+`.o`, `.do`, and `.fo` object variants. To compare variants locally, use
+separate clean build roots, for example `--build-dir build/coverage-opt`
+and `--build-dir build/coverage-debug`, with one `--variant` each. Do not
+reuse an instrumented directory after changing its variant or compiler.
+
+The native denominator is the executable lines described by the retained
+notes in that build directory. It is not a link-map-derived list of only
+code in the selected executable: build helper and stale object notes can
+also contribute zero-count lines. A clean dedicated coverage build avoids
+stale configurations; the campaign build artifact records its exact notes.
+
+`-t` still controls parallel test execution. Each gem5 invocation writes to a
+unique `testing-results/coverage/<invocation-id>/raw` directory through
+`GCOV_PREFIX`. The original object paths are retained beneath that directory.
+The collector snapshots coverage notes once per build fixture and hardlinks
+those immutable notes beside each invocation's counters (copying when linking
+is unavailable). Build manifests are also snapshotted once and hardlinked into
+each invocation directory. No invocation deletes another invocation's counters. Archive
+the coverage tree with a format preserving hardlinks, such as tar, to avoid
+storing repeated copies of the notes.
+
+Every invocation has an atomically written `coverage.json` with:
+
+- `schema_version`: `2` (`1` remains readable by reporting tools).
+- `language`: `native`.
+- `baseline_id`: the SHA-256 of the shared canonical baseline document.
+- `test_uid`: the complete stable `SuiteUID`, including its prefix.
+- `invocation_id`: a UUID unique to this execution and retry.
+- `revision`: the source checkout's Git revision, or `unknown` when unavailable.
+- `build`: target, executable, gcov tool/version, and GCC versions from notes.
+- `outcome`: `passed`, `failed`, or `interrupted` for the gem5 process.
+- `collection`: `complete`, `missing`, or `error`.
+- `files`: repository-relative POSIX paths with a `lines` mapping containing
+  positive hit counts only. Executable zero-count lines are stored once in
+  `coverage/baselines/<baseline_id>/baseline.json`, not repeated per test.
+
+Retain the `baselines` directory with the invocation records when downloading
+or reprocessing a report. Consumers verify the baseline's canonical JSON hash,
+revision, and language before expanding sparse records. A preparation failure
+or early interrupted record can have no baseline and empty files. Such a
+record remains missing/error, never a measured zero.
+
+`build_id` hashes the normalized coverage graph, source contents, compiler,
+and configuration. `compatibility_id` identifies configuration/compiler/
+variant settings independently of source revision for comparison checks.
+Neither identity includes invocation UUIDs or absolute build paths.
+
+An initial `interrupted`/`missing` record is written before execution. Normal
+completion or an exception updates the outcome and collects available data
+without replacing the process's failure. A hard-killed harness leaves the
+initial record detectable. `missing` means no counters were found; it must not
+be treated as measured zero coverage. `error` includes an explanatory `error`
+field. `complete` means all available counters were processed successfully;
+it does not prove that an abnormally terminated process flushed every counter.
+The process outcome is separate from subsequent TestLib output verifiers.
+
+If `<target-directory>/<configuration>-gem5.<variant>.json` is present, its
+revision must match the checkout. The collector retains this manifest as
+`build.json`, records its SHA-256, compiler, image and instrumentation fields,
+and uses its `build_root` to relocate the original compiler paths. This permits
+build artifacts to run in another absolute checkout directory. Without that
+manifest, the collector assumes compilation used the current checkout path.
+
+The raw `.gcda` files and matching `.gcno` notes remain after extraction, even
+when a process fails. For manual reprocessing, restore the source revision,
+use the recorded matching gcov executable, and run `gcov --json-format
+--preserve-paths --hash-filenames <absolute-path-to-raw-counter.gcda>` from a
+separate output directory. Convert original compiler paths using the recorded
+build root. Notes can also be passed to gcov to recover executable lines with
+zero counters. Generated source files are supplied by the original build
+artifact; the per-invocation directory retains coverage notes, not a second
+copy of the entire build.
+
+The unit is one gem5 invocation, including any subprocesses inheriting its
+profile environment. It does not distinguish individual Python unittest cases
+run inside that process, or fix limitations
+of instrumented gem5 itself (including the existing x86 boot coverage issue).
+Sources outside the compilation checkout and generated `.py` embedding notes
+are excluded. Optimized GCC line counts retain GCC's documented limitations.
+
+Run the focused native checks with GNU GCC and matching gcov installed:
+
+```
+python3 -m pip install coverage==7.10.7
+python3 -m unittest discover -s ext/testlib/tests -v
+```
+
+These checks compile small native fixtures, compare serial and concurrent
+profiles, retain counters after failed processes, test relocated build
+artifacts, and exercise TestLib with a tiny stand-in executable. They do not
+build or validate the gem5 simulator.
+
+Native profiles also retain GCC control-flow branches. A branch ID combines
+its exact build identity, translation unit, function, source line, and GCC
+branch ordinal. The shared baseline stores zero counts and the descriptors;
+invocations store only positive branch counts. Opposite outcomes on the same
+source line remain distinct. These are compiler branches (including exception
+edges), not source-level conditions or MC/DC; optimized builds may fold or
+introduce edges. Branch identities are meaningful only within matching build
+scopes. Generated sources under `build/` are copied once beside the baseline
+under `sources/` for offline browsing.
+
+## Optional Python config coverage
+
+Add `--python-coverage` to `--gcov=per-test` after installing
+`coverage==7.10.7` in the Python environment embedded by gem5. This is opt-in;
+ordinary tests do not import coverage.py or run a wrapper. The file config
+runs with its original arguments, `__file__`, `__m5_main__` name, and config
+import directory. Module entry points (`gem5 -m package.module ...`) retain
+module argv, the original module search path, and gem5's
+`runpy.run_module(..., run_name="__m5_main__")` semantics. String entry points
+and interactive/debugger modes remain unsupported.
+Missing coverage.py or extraction errors are recorded without replacing the
+config's return status or exception.
+
+Each native invocation gets a separate `python-coverage.json` record with
+`language: python`, its SuiteUID, `parent_invocation_id`, and an invocation ID
+suffixed with `-python`. It is written before the process starts, so an early
+crash still appears as missing. Native and Python records remain separate;
+never combine their percentages or branch denominators. Python line counts
+are 0/1 (coverage.py records execution, not execution frequency). Python
+branches are coverage.py source arcs, including negative function-exit lines.
+
+The retained `.coverage` database contains a context comprising the SuiteUID
+and native invocation ID. `.coverage-mapped` and `python-contexts.json` retain
+the source mapping and line contexts used for normalized output. Producer
+source paths in embedded Python code are mapped to the current checkout for
+reporting. The recorded tool/interpreter versions identify the measurement.
+
+Measurement begins when the config wrapper starts. Its denominator consists
+of executable statements and decisions in measured repository Python files;
+it does not claim all unimported repository files, gem5 startup before the
+wrapper, shutdown after the config, individual unittest cases, or separate
+Python interpreter subprocesses. Abrupt termination may prevent Python data
+from being saved even when GCC counters are available. These omissions remain
+visible as separate collection status and process outcome.
+
+For module execution the record explicitly lists child interpreters as an
+excluded scope. In particular, multisim's controller is measured, while its
+forked discovery processes and separately launched gem5 simulation workers
+are not included in this Python profile. Native counters remain associated
+with the outer TestLib invocation. Forked children stop the inherited Python
+tracer and cannot replace their parent's database or normalized record.
