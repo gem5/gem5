@@ -101,6 +101,15 @@ class AbstractProcessor(SubSystem):
         assert getattr(self, "cores")
         return self.cores
 
+    def get_all_cores(self) -> List[AbstractCore]:
+        """Return every core configured in the processor.
+
+        This differs from :meth:`get_cores` only for switchable processors,
+        where it includes both active and switched-out cores. Boards should
+        use this method for backend capability setup, not for topology.
+        """
+        return self.get_cores()
+
     def get_isa(self) -> ISA:
         return self._isa
 

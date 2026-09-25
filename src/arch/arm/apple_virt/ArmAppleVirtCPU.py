@@ -1,4 +1,5 @@
-# Copyright 2023 Google LLC
+# Copyright (c) 2026 The Regents of the University of California
+# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -23,14 +24,11 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-config HAVE_CAPSTONE
-    def_bool $(HAVE_CAPSTONE)
+from m5.objects.BaseArmAppleVirtCPU import BaseArmAppleVirtCPU
+from m5.params import *
 
-rsource "kvm/Kconfig"
-rsource "apple_virt/Kconfig"
 
-config USE_CAPSTONE
-    depends on HAVE_CAPSTONE
-    depends on USE_ARM_ISA
-    bool "Use CapstoneDisassembler"
-    default y
+class ArmAppleVirtCPU(BaseArmAppleVirtCPU):
+    type = "ArmAppleVirtCPU"
+    cxx_header = "arch/arm/apple_virt/arm_cpu.hh"
+    cxx_class = "gem5::ArmAppleVirtCPU"
