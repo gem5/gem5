@@ -698,7 +698,8 @@ class RiscvISA(BaseISA):
             for extension in effective
             if self._is_supported(extension)
         }
-
+        if {"Zaamo", "Zalrsc"}.issubset(reportable):
+            reportable.add("A")
         if {"Zba", "Zbb", "Zbs"}.issubset(reportable):
             reportable.add("B")
         if "C" in reportable:
