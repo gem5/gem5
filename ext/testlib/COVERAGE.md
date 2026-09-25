@@ -32,15 +32,29 @@ storing repeated copies of the notes.
 
 Every invocation has an atomically written `coverage.json` with:
 
-- `schema_version`: `1`.
+- `schema_version`: `2` (`1` remains readable by reporting tools).
+- `language`: `native`.
+- `baseline_id`: the SHA-256 of the shared canonical baseline document.
 - `test_uid`: the complete stable `SuiteUID`, including its prefix.
 - `invocation_id`: a UUID unique to this execution and retry.
 - `revision`: the source checkout's Git revision, or `unknown` when unavailable.
 - `build`: target, executable, gcov tool/version, and GCC versions from notes.
 - `outcome`: `passed`, `failed`, or `interrupted` for the gem5 process.
 - `collection`: `complete`, `missing`, or `error`.
-- `files`: repository-relative POSIX paths with a `lines` mapping from string
-  line numbers to nonnegative hit counts, including known zero-count lines.
+- `files`: repository-relative POSIX paths with a `lines` mapping containing
+  positive hit counts only. Executable zero-count lines are stored once in
+  `coverage/baselines/<baseline_id>/baseline.json`, not repeated per test.
+
+Retain the `baselines` directory with the invocation records when downloading
+or reprocessing a report. Consumers verify the baseline's canonical JSON hash,
+revision, and language before expanding sparse records. A preparation failure
+or early interrupted record can have no baseline and empty files. Such a
+record remains missing/error, never a measured zero.
+
+`build_id` hashes the normalized coverage graph, source contents, compiler,
+and configuration. `compatibility_id` identifies configuration/compiler/
+variant settings independently of source revision for comparison checks.
+Neither identity includes invocation UUIDs or absolute build paths.
 
 An initial `interrupted`/`missing` record is written before execution. Normal
 completion or an exception updates the outcome and collects available data

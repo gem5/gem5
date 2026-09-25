@@ -130,9 +130,25 @@ class CoverageTest(unittest.TestCase):
             self.assertEqual(record["outcome"], "passed")
             self.assertEqual(record["files"], serial[argument]["files"])
             files = {f["path"]: f["lines"] for f in record["files"]}
-            self.assertEqual(files["main.c"]["4"], int(argument == "a"))
-            self.assertEqual(files["main.c"]["7"], int(argument == "b"))
-            self.assertEqual(files["unused.c"]["1"], 0)
+            self.assertEqual(files["main.c"].get("4", 0), int(argument == "a"))
+            self.assertEqual(files["main.c"].get("7", 0), int(argument == "b"))
+            baseline_path = (
+                self.build.output
+                / "baselines"
+                / record["baseline_id"]
+                / "baseline.json"
+            )
+            baseline = json.loads(baseline_path.read_text())
+            baseline_files = {f["path"]: f["lines"] for f in baseline["files"]}
+            self.assertEqual(baseline_files["unused.c"]["1"], 0)
+            self.assertNotIn("unused.c", files)
+            self.assertTrue(
+                all(
+                    count > 0
+                    for values in files.values()
+                    for count in values.values()
+                )
+            )
             directory = self.build.output / record["invocation_id"]
             counters = list(directory.rglob("*.gcda"))
             self.assertTrue(counters)
@@ -165,7 +181,8 @@ class CoverageTest(unittest.TestCase):
             pass
         record = json.loads(invocation.path.read_text())
         self.assertEqual(record["collection"], "missing")
-        self.assertTrue(record["files"])
+        self.assertEqual(record["files"], [])
+        self.assertIn("baseline_id", record)
 
     def test_collection_error_does_not_mask_simulator_failure(self):
         build = coverage.CoverageBuild(
@@ -219,6 +236,8 @@ class CoverageTest(unittest.TestCase):
         relocated = self.root / "relocated-checkout"
         target = relocated / "build"
         shutil.copytree(self.target, target)
+        shutil.copy2(self.source, relocated / "main.c")
+        shutil.copy2(self.root / "unused.c", relocated / "unused.c")
         manifest = {
             "schema_version": 1,
             "revision": self.build.revision,
@@ -239,6 +258,9 @@ class CoverageTest(unittest.TestCase):
         record = json.loads(invocation.path.read_text())
         self.assertEqual(record["collection"], "complete", record)
         self.assertEqual(record["files"], expected)
+        self.assertEqual(
+            record["build"]["build_id"], self.build.build["build_id"]
+        )
         counters = list(invocation.raw.rglob("*.gcda"))
         self.assertTrue(counters)
         self.assertTrue(all(p.with_suffix(".gcno").exists() for p in counters))
@@ -264,6 +286,44 @@ class CoverageTest(unittest.TestCase):
             archive.add(second_manifest, arcname="second.json")
         with tarfile.open(archive_path) as archive:
             self.assertTrue(archive.getmember("second.json").islnk())
+
+    def test_sparse_records_share_verified_zero_baseline(self):
+        unused = self.root / "unused.c"
+        unused.write_text(
+            "".join(
+                f"int unused_{i}(void) {{ return {i}; }}\n"
+                for i in range(1000)
+            )
+        )
+        subprocess.run(
+            [
+                "gcc",
+                "--coverage",
+                "-O0",
+                "-c",
+                str(unused),
+                "-o",
+                str(self.target / "unused.o"),
+            ],
+            check=True,
+        )
+        first, second = self.run_program("a"), self.run_program("b")
+        self.assertEqual(first["schema_version"], 2)
+        self.assertEqual(first["baseline_id"], second["baseline_id"])
+        baselines = list(
+            (self.build.output / "baselines").glob("*/baseline.json")
+        )
+        self.assertEqual(len(baselines), 1)
+        baseline = json.loads(baselines[0].read_text())
+        self.assertEqual(coverage._digest_json(baseline), first["baseline_id"])
+        native_lines = sum(len(item["lines"]) for item in baseline["files"])
+        self.assertGreaterEqual(native_lines, 1000)
+        record_path = (
+            self.build.output / first["invocation_id"] / "coverage.json"
+        )
+        self.assertLess(
+            record_path.stat().st_size, baselines[0].stat().st_size
+        )
 
     def test_multiple_variants_are_rejected_before_running(self):
         repository = MODULE.parents[2]

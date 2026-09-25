@@ -31,7 +31,6 @@ This module deliberately has no TestLib imports so the collector can also be
 validated with small native programs, without building the simulator.
 """
 
-import copy
 import gzip
 import hashlib
 import json
@@ -42,6 +41,26 @@ import tempfile
 import threading
 import uuid
 from pathlib import Path
+
+
+def _canonical_bytes(value):
+    return json.dumps(
+        value, sort_keys=True, separators=(",", ":"), ensure_ascii=True
+    ).encode("utf-8")
+
+
+def _digest_json(value):
+    return hashlib.sha256(_canonical_bytes(value)).hexdigest()
+
+
+def _file_digest(path):
+    if not path.is_file():
+        return None
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def _write_record(path, record):
@@ -118,6 +137,7 @@ class CoverageBuild:
         self.lock = threading.Lock()
         self.notes = None
         self.baseline = {}
+        self.baseline_id = None
         self.error = None
         self.manifest = None
         self.build = {
@@ -198,6 +218,48 @@ class CoverageBuild:
                         Path(directory),
                     )
                 self.build["gcc_versions"] = versions
+                files = [
+                    {"path": path, "lines": lines}
+                    for path, lines in sorted(self.baseline.items())
+                ]
+                compatibility = {
+                    "target": self.build["target"],
+                    "variant": self.binary.name,
+                    "gcc_versions": versions,
+                    "configuration": _file_digest(self.target / ".config"),
+                    "instrumentation": "gcc --gcov",
+                }
+                self.build["compatibility_id"] = _digest_json(compatibility)
+                self.build["build_id"] = _digest_json(
+                    {
+                        "compatibility_id": self.build["compatibility_id"],
+                        "files": files,
+                        "sources": {
+                            path: _file_digest(self.root / path)
+                            for path in self.baseline
+                        },
+                    }
+                )
+                baseline = {
+                    "schema_version": 1,
+                    "format": "gem5-coverage-baseline",
+                    "revision": self.revision,
+                    "language": "native",
+                    "build_id": self.build["build_id"],
+                    "files": files,
+                }
+                self.baseline_id = _digest_json(baseline)
+                baseline_dir = self.output / "baselines" / self.baseline_id
+                baseline_dir.mkdir(parents=True, exist_ok=True)
+                baseline_path = baseline_dir / "baseline.json"
+                if not baseline_path.exists():
+                    # Distinct fixtures may discover an identical baseline.
+                    # An atomic replace only publishes complete content.
+                    with tempfile.NamedTemporaryFile(
+                        dir=baseline_dir, delete=False
+                    ) as temporary:
+                        temporary.write(_canonical_bytes(baseline))
+                    Path(temporary.name).replace(baseline_path)
             except Exception as error:
                 self.error = str(error)
                 raise
@@ -219,7 +281,8 @@ class InvocationCoverage:
         self.raw = self.directory / "raw"
         self.raw.mkdir()
         self.record = {
-            "schema_version": 1,
+            "schema_version": 2,
+            "language": "native",
             "test_uid": str(test_uid),
             "invocation_id": self.identifier,
             "revision": build.revision,
@@ -243,6 +306,8 @@ class InvocationCoverage:
             self.log.message(f"Coverage preparation failed: {error}")
         try:
             self.record["build"] = dict(self.build.build)
+            if self.build.baseline_id is not None:
+                self.record["baseline_id"] = self.build.baseline_id
             if self.build.manifest is not None:
                 _link_metadata(
                     self.build.manifest, self.directory / "build.json"
@@ -273,7 +338,7 @@ class InvocationCoverage:
             self.record["outcome"] = "failed"
         try:
             if self.record["collection"] != "error":
-                files = copy.deepcopy(self.build.baseline)
+                files = {}
                 counters = sorted(self.raw.rglob("*.gcda"))
                 counters = [
                     path
@@ -290,8 +355,15 @@ class InvocationCoverage:
                         )
                     if versions != self.build.build["gcc_versions"]:
                         raise RuntimeError("Coverage compiler versions differ")
-                    for path, lines in covered.items():
-                        files.setdefault(path, {}).update(lines)
+                    files = {
+                        path: {
+                            line: count
+                            for line, count in lines.items()
+                            if count > 0
+                        }
+                        for path, lines in covered.items()
+                        if any(count > 0 for count in lines.values())
+                    }
                     self.record["collection"] = "complete"
                 self.record["files"] = [
                     {"path": path, "lines": lines}
