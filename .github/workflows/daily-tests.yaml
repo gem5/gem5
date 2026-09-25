@@ -159,6 +159,7 @@ jobs:
                   ref: ${{ inputs.source-ref || github.sha }}
 
             - name: Run ALL/unittests.${{ matrix.type }} UnitTests
+              id: run-native
               run: scons build/ALL/unittests.${{ matrix.type }} ${GCOV_FLAGS:+--gcov} -j $(nproc)
 
             - name: Collect aggregate native coverage
@@ -166,7 +167,7 @@ jobs:
               uses: ./.github/actions/collect-native-coverage
               with:
                   group: unittests-${{ matrix.type }}
-                  flags: unittests-${{ matrix.type }},overall-unittests,overall-length-long
+                  outcomes: '{"build_and_test":"${{ steps.run-native.outcome }}"}'
 
     get-testlib-long-dirs:
         runs-on: ubuntu-24.04
@@ -350,6 +351,7 @@ jobs:
                       ${{ inputs.coverage && 'gcov-' || '' }}sst-build
 
             - name: Build RISCV/libgem5_opt.so with SST
+              id: build-native
               run: |
                   scons defconfig build/RISCV build_opts/RISCV --ignore-style
                   scons build/RISCV/libgem5_opt.so ${GCOV_FLAGS:+--gcov} --without-tcmalloc --duplicate-sources --ignore-style -j $(nproc)
@@ -357,6 +359,7 @@ jobs:
               working-directory: ${{ github.workspace }}/ext/sst
               run: mv Makefile.linux Makefile
             - name: Compile ext/sst
+              id: build-integration
               working-directory: ${{ github.workspace }}/ext/sst
               run: make -j $(nproc)
             - name: Clear coverage counters before testing
@@ -372,7 +375,8 @@ jobs:
               uses: ./.github/actions/collect-native-coverage
               with:
                   group: sst-test
-                  flags: sst-test,overall-length-long
+                  outcomes: '{"build":"${{ steps.build-native.outcome }}","integration_build":"${{ steps.build-integration.outcome }}","run":"${{ steps.run-tests.outcome
+                      }}"}'
 
   # This runs the gem5 within SystemC ingration and runs a simple hello-world
   # simulation with it.
@@ -387,14 +391,18 @@ jobs:
               with:
                   ref: ${{ inputs.source-ref || github.sha }}
             - name: Build ARM/gem5.opt
+              id: build-binary
               run: |
                   scons defconfig build/ARM build_opts/ARM --ignore-style
                   scons build/ARM/gem5.opt ${GCOV_FLAGS:+--gcov} --ignore-style --duplicate-sources -j$(nproc)
             - name: disable systemc
+              id: configure-library
               run: scons setconfig build/ARM --ignore-style USE_SYSTEMC=n
             - name: Build ARM/libgem5_opt.so
+              id: build-library
               run: scons build/ARM/libgem5_opt.so ${GCOV_FLAGS:+--gcov} --with-cxx-config --without-python --without-tcmalloc -j$(nproc) --duplicate-sources
             - name: Compile gem5 withing SystemC
+              id: build-integration
               working-directory: ${{ github.workspace }}/util/systemc/gem5_within_systemc
               run: make
             - name: Clear coverage counters before testing
@@ -404,6 +412,7 @@ jobs:
               id: run-tests
               run: ./build/ARM/gem5.opt configs/deprecated/example/se.py -c tests/test-progs/hello/bin/arm/linux/hello
             - name: Continue gem5 within SystemC test
+              id: run-continue
               run: LD_LIBRARY_PATH=build/ARM/:/opt/systemc/lib-linux64/ ./util/systemc/gem5_within_systemc/gem5.opt.sc m5out/config.ini
 
             - name: Collect aggregate native coverage
@@ -411,7 +420,9 @@ jobs:
               uses: ./.github/actions/collect-native-coverage
               with:
                   group: systemc-test
-                  flags: systemc-test,overall-length-long
+                  outcomes: '{"build_binary":"${{ steps.build-binary.outcome }}","configure_library":"${{ steps.configure-library.outcome }}","build_library":"${{
+                      steps.build-library.outcome }}","integration_build":"${{ steps.build-integration.outcome }}","run_initial":"${{ steps.run-tests.outcome
+                      }}","run_continue":"${{ steps.run-continue.outcome }}"}'
 
     dramsys-tests:
         runs-on: ${{ fromJSON(inputs.coverage && '{"group":"gem5-coverage","labels":"gem5-coverage"}' || '["self-hosted","linux","x64"]') }}
@@ -441,6 +452,7 @@ jobs:
 
               # gem5 is built separately because it depends on the DRAMSys library
             - name: Build gem5
+              id: build-native
               working-directory: ${{ github.workspace }}
               run: |
                   scons defconfig build/ALL build_opts/ALL
@@ -461,4 +473,4 @@ jobs:
               uses: ./.github/actions/collect-native-coverage
               with:
                   group: dramsys-tests
-                  flags: dramsys-tests,overall-length-long
+                  outcomes: '{"build":"${{ steps.build-native.outcome }}","run":"${{ steps.run-tests.outcome }}"}'

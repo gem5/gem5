@@ -297,8 +297,25 @@ class CoverageReportTest(unittest.TestCase):
         report.write_json(path, data)
         self.assertFalse(self.run_report()["complete"])
 
+    def native_fixture(self):
+        config = (
+            Path(__file__).resolve().parents[3]
+            / ".github/coverage-native.json"
+        )
+        definition = report.native_groups(config)["unittests-fast"]
+        report.write_json(
+            self.source / "expected-native.json",
+            {
+                "schema_version": 1,
+                "revision": REVISION,
+                "groups": [definition],
+            },
+        )
+        return definition
+
     def test_recovered_aggregate_reconstructs_flags(self):
         self.profile()
+        self.native_fixture()
         directory = self.source / "native"
         report.write_json(
             directory / "aggregate.json",
@@ -306,6 +323,9 @@ class CoverageReportTest(unittest.TestCase):
                 "revision": REVISION,
                 "group": "unittests-fast",
                 "flags": "untrusted-label",
+                "schema_version": 2,
+                "outcomes": {"build_and_test": "success"},
+                "counters": {"files": 1, "bytes": 100},
             },
         )
         (directory / "coverage.xml").write_text(
@@ -320,6 +340,40 @@ class CoverageReportTest(unittest.TestCase):
         self.assertEqual(
             native["flags"],
             "unittests-fast,overall-length-quick,overall-unittests",
+        )
+
+    def test_failed_native_build_keeps_partial_report_incomplete(self):
+        self.test_recovered_aggregate_reconstructs_flags()
+        path = self.source / "native/aggregate.json"
+        data = json.loads(path.read_text())
+        data["outcomes"]["build_and_test"] = "failure"
+        report.write_json(path, data)
+        result = self.run_report()
+        self.assertFalse(result["complete"])
+        self.assertTrue(result["aggregates"][0]["report_present"])
+        self.assertTrue(
+            (self.output / "aggregate-unittests-fast.xml").exists()
+        )
+
+    def test_native_notes_without_runtime_counters_are_incomplete(self):
+        self.test_recovered_aggregate_reconstructs_flags()
+        path = self.source / "native/aggregate.json"
+        data = json.loads(path.read_text())
+        data["counters"] = {"files": 0, "bytes": 0}
+        report.write_json(path, data)
+        self.assertFalse(self.run_report()["complete"])
+
+    def test_native_plan_requires_all_groups_and_stages(self):
+        self.test_recovered_aggregate_reconstructs_flags()
+        path = self.source / "expected-native.json"
+        data = json.loads(path.read_text())
+        data["groups"][0]["stages"].append("new_stage")
+        report.write_json(path, data)
+        self.assertFalse(self.run_report()["complete"])
+        data["groups"].append(dict(data["groups"][0], group="new-group"))
+        report.write_json(path, data)
+        self.assertIn(
+            "Missing aggregate reports: new-group", self.run_report()["errors"]
         )
 
 

@@ -196,6 +196,18 @@ jobs:
                   targets=$(python3 util/coverage/build.py plan)
                   echo "$targets" | jq -e 'length > 0' >/dev/null
                   echo "targets=$targets" >> "$GITHUB_OUTPUT"
+            - name: Record planned native coverage groups
+              env:
+                  SOURCE_REVISION: ${{ needs.gate.outputs.source-ref }}
+              run: python3 util/coverage/report.py native-plan .github/coverage-native.json --revision "$SOURCE_REVISION" --output "$RUNNER_TEMP/coverage-plan-native/expected-native.json"
+            - name: Retain the native coverage plan
+              uses: actions/upload-artifact@v7
+              with:
+                  name: coverage-plan-native
+                  path: ${{ runner.temp }}/coverage-plan-native
+                  retention-days: 30
+                  overwrite: true
+                  if-no-files-found: error
 
     coverage-builds:
         needs: [gate, coverage-image, coverage-build-plan]

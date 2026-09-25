@@ -36,6 +36,10 @@ import sys
 import tarfile
 import xml.etree.ElementTree as ET
 from collections import defaultdict
+from datetime import (
+    datetime,
+    timezone,
+)
 from pathlib import (
     Path,
     PurePosixPath,
@@ -80,6 +84,52 @@ def manifest(listing, revision, length, output):
             "length": length,
             "expected": tests,
             "excluded": excluded,
+        },
+    )
+
+
+def native_groups(path):
+    data = json.loads(Path(path).read_text())
+    if data.get("schema_version") != 1:
+        raise ValueError("Unsupported native plan schema")
+    result = {}
+    for item in data["groups"]:
+        group = item["group"]
+        if not re.fullmatch(r"[a-zA-Z0-9_.-]+", group):
+            raise ValueError("Invalid native group")
+        if group in result or item["length"] not in {
+            "quick",
+            "long",
+            "very-long",
+        }:
+            raise ValueError("Duplicate group or invalid native length")
+        for field in ("flags", "stages"):
+            values = item[field]
+            if (
+                not isinstance(values, list)
+                or not values
+                or len(set(values)) != len(values)
+                or any(
+                    not isinstance(v, str)
+                    or not re.fullmatch(r"[a-zA-Z0-9_.-]+", v)
+                    for v in values
+                )
+            ):
+                raise ValueError(f"Invalid native {field}")
+        result[group] = item
+    if not result:
+        raise ValueError("Empty native plan")
+    return result
+
+
+def native_plan(config, revision, output):
+    write_json(
+        Path(output),
+        {
+            "schema_version": 1,
+            "format": "gem5-native-coverage-plan",
+            "revision": revision,
+            "groups": list(native_groups(config).values()),
         },
     )
 
@@ -303,63 +353,90 @@ def summarize(source, output, revision, campaign=False):
                 "flags": f"overall-testdir-{slug},overall-length-{length},{slug}-{length}",
             }
         )
-    aggregate_groups = set()
-    for path in source.rglob("aggregate.json"):
+    planned_native = {}
+    for path in sorted(source.rglob("expected-native.json")):
+        try:
+            plan = json.loads(path.read_text())
+            if plan.get("revision") != revision:
+                raise ValueError("Native plan revision mismatch")
+            for group, definition in native_groups(path).items():
+                if (
+                    group in planned_native
+                    and planned_native[group] != definition
+                ):
+                    raise ValueError("Conflicting native plans")
+                planned_native[group] = definition
+        except (ValueError, KeyError, TypeError, AttributeError) as error:
+            errors.append(f"Invalid native plan: {error}")
+    if campaign and not planned_native:
+        errors.append("Missing aggregate native discovery plan")
+    aggregate_groups, aggregate_rows = set(), []
+    for path in sorted(source.rglob("aggregate.json")):
         try:
             item = json.loads(path.read_text())
-            if not isinstance(item, dict):
-                raise ValueError("Aggregate metadata must be an object")
-        except ValueError as error:
-            errors.append(f"Invalid aggregate metadata: {error}")
-            continue
-        if item.get("revision") != revision:
-            errors.append("Aggregate report revision mismatch")
-            continue
-        group = item.get("group", "")
-        if not re.fullmatch(
-            r"(?:unittests-(?:fast|opt|debug)|sst-test|systemc-test|dramsys-tests)",
-            group,
-        ):
-            errors.append("Invalid aggregate group")
-            continue
-        if group in aggregate_groups:
-            errors.append(f"Duplicate aggregate report: {group}")
-            continue
-        report = path.parent / "coverage.xml"
-        if not report.is_file() or not report.stat().st_size:
-            errors.append(f"Missing aggregate report: {group}")
-            continue
-        try:
+            if (
+                item.get("revision") != revision
+                or item.get("schema_version") != 2
+            ):
+                raise ValueError("Aggregate schema or revision mismatch")
+            group = item["group"]
+            if group not in planned_native:
+                raise ValueError("Aggregate group has no native plan")
+            if group in aggregate_groups:
+                raise ValueError("Duplicate aggregate group")
+            aggregate_groups.add(group)
+            definition = planned_native[group]
+            outcomes = item["outcomes"]
+            execution_complete = set(outcomes) == set(
+                definition["stages"]
+            ) and all(value == "success" for value in outcomes.values())
+            counters = item["counters"]
+            counters_present = (
+                type(counters.get("files")) is int
+                and counters["files"] > 0
+                and type(counters.get("bytes")) is int
+                and counters["bytes"] > 0
+            )
+            row = {
+                "group": group,
+                "outcomes": outcomes,
+                "execution_complete": execution_complete,
+                "counters": counters,
+                "report_present": False,
+                "collected_at": item.get("collected_at"),
+            }
+            aggregate_rows.append(row)
+            if not execution_complete:
+                errors.append(
+                    f"Incomplete aggregate build/test stages: {group}"
+                )
+            if not counters_present:
+                errors.append(f"Missing aggregate runtime counters: {group}")
+            report = path.parent / "coverage.xml"
+            if not report.is_file():
+                raise ValueError(f"Missing aggregate report: {group}")
             tree = ET.parse(report)
             if tree.getroot().tag != "coverage" or not list(tree.iter("line")):
                 raise ValueError("No executable native lines")
-        except (ET.ParseError, ValueError) as error:
-            errors.append(f"Invalid aggregate report {group}: {error}")
-            continue
-        filename = f"aggregate-{group}.xml"
-        (output / filename).write_bytes(report.read_bytes())
-        length = (
-            "quick" if group in {"unittests-fast", "unittests-opt"} else "long"
-        )
-        flags = f"{group},overall-length-{length}"
-        if group.startswith("unittests-"):
-            flags += ",overall-unittests"
-        uploads.append({"file": filename, "flags": flags})
-        aggregate_groups.add(group)
-    if campaign:
-        required = {
-            "unittests-fast",
-            "unittests-opt",
-            "unittests-debug",
-            "sst-test",
-            "systemc-test",
-            "dramsys-tests",
-        }
-        missing = required - aggregate_groups
-        if missing:
-            errors.append(
-                "Missing aggregate reports: " + ", ".join(sorted(missing))
+            filename = f"aggregate-{group}.xml"
+            (output / filename).write_bytes(report.read_bytes())
+            row["report_present"] = True
+            uploads.append(
+                {"file": filename, "flags": ",".join(definition["flags"])}
             )
+        except (
+            ValueError,
+            KeyError,
+            TypeError,
+            AttributeError,
+            ET.ParseError,
+        ) as error:
+            errors.append(f"Invalid aggregate report: {error}")
+    missing = set(planned_native) - aggregate_groups
+    if missing:
+        errors.append(
+            "Missing aggregate reports: " + ", ".join(sorted(missing))
+        )
     complete = (
         not errors
         and not counts["missing_profiles"]
@@ -375,6 +452,8 @@ def summarize(source, output, revision, campaign=False):
         "suites": suites,
         "errors": errors,
         "aggregate_groups": sorted(aggregate_groups),
+        "aggregates": aggregate_rows,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
     }
     write_json(output / "summary.json", summary)
     write_json(output / "uploads.json", uploads)
@@ -413,29 +492,77 @@ def summarize(source, output, revision, campaign=False):
     return summary
 
 
-def aggregate(output, revision, group, flags):
+def aggregate(
+    output, revision, group, outcomes=None, config=None, record_only=False
+):
     output = Path(output)
-    write_json(
-        output / "aggregate.json",
-        {"revision": revision, "group": group, "flags": flags},
-    )
-    # Preserve explicit reports before upload, including failed test runs.
+    metadata = output / "aggregate.json"
+    if record_only:
+        definition = native_groups(config)[group]
+        outcomes = json.loads(outcomes)
+        if not isinstance(outcomes, dict) or set(outcomes) != set(
+            definition["stages"]
+        ):
+            raise ValueError(
+                "Native outcomes must match planned stages exactly"
+            )
+        if any(
+            value not in {"success", "failure", "cancelled", "skipped"}
+            for value in outcomes.values()
+        ):
+            raise ValueError("Invalid native stage outcome")
+        counters = [
+            p
+            for p in Path("build").rglob("*.gcda")
+            if not p.name.endswith(".py.gcda") and p.stat().st_size
+        ]
+        version = subprocess.run(
+            ["gcov", "--version"], check=True, text=True, capture_output=True
+        ).stdout
+        write_json(
+            metadata,
+            {
+                "schema_version": 2,
+                "revision": revision,
+                "group": group,
+                "outcomes": outcomes,
+                "collected_at": datetime.now(timezone.utc).isoformat(),
+                "counters": {
+                    "files": len(counters),
+                    "bytes": sum(p.stat().st_size for p in counters),
+                },
+                "gcov_version": version.splitlines()[0],
+                "extraction": "pending",
+            },
+        )
+        return
+    item = json.loads(metadata.read_text())
+    if item["revision"] != revision or item["group"] != group:
+        raise ValueError("Aggregate extraction identity mismatch")
+    # Embedded Python notes are not native machine-code coverage.
     for path in Path("build").rglob("*.py.gcno"):
         path.unlink()
-    subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "gcovr",
-            "--root",
-            ".",
-            "--merge-mode-functions",
-            "separate",
-            "--xml",
-            str(output / "coverage.xml"),
-        ],
-        check=True,
-    )
+    try:
+        subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "gcovr",
+                "--root",
+                ".",
+                "--merge-mode-functions",
+                "separate",
+                "--xml",
+                str(output / "coverage.xml"),
+            ],
+            check=True,
+        )
+        item["extraction"] = "complete"
+    except (OSError, subprocess.CalledProcessError):
+        item["extraction"] = "error"
+        raise
+    finally:
+        write_json(metadata, item)
 
 
 def package(source, output, revision):
@@ -480,17 +607,30 @@ def main():
     pack.add_argument("source")
     native = commands.add_parser("aggregate")
     native.add_argument("--group", required=True)
-    native.add_argument("--flags", required=True)
-    for command in (plan, build, native, pack):
+    native.add_argument("--outcomes")
+    native.add_argument("--config", default=".github/coverage-native.json")
+    native.add_argument("--record-only", action="store_true")
+    native_discovery = commands.add_parser("native-plan")
+    native_discovery.add_argument("config")
+    for command in (plan, build, native, pack, native_discovery):
         command.add_argument("--revision", required=True)
         command.add_argument("--output", required=True)
     args = parser.parse_args()
     if args.command == "manifest":
         manifest(args.listing, args.revision, args.length, args.output)
+    elif args.command == "native-plan":
+        native_plan(args.config, args.revision, args.output)
     elif args.command == "package":
         package(args.source, args.output, args.revision)
     elif args.command == "aggregate":
-        aggregate(args.output, args.revision, args.group, args.flags)
+        aggregate(
+            args.output,
+            args.revision,
+            args.group,
+            args.outcomes,
+            args.config,
+            args.record_only,
+        )
     else:
         summarize(args.source, args.output, args.revision, args.campaign)
 

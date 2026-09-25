@@ -55,6 +55,7 @@ jobs:
               with:
                   ref: ${{ inputs.source-ref || github.sha }}
             - name: CI Unittests (${{ matrix.type }})
+              id: run-native
               working-directory: ${{ github.workspace }}
               run: scons build/ALL/unittests.${{ matrix.type }} ${GCOV_FLAGS:+--gcov} -j $(nproc)
             - run: echo "This job's status is ${{ job.status }}."
@@ -64,7 +65,7 @@ jobs:
               uses: ./.github/actions/collect-native-coverage
               with:
                   group: unittests-${{ matrix.type }}
-                  flags: unittests-${{ matrix.type }},overall-unittests,overall-length-quick
+                  outcomes: '{"build_and_test":"${{ steps.run-native.outcome }}"}'
 
     testlib-quick-matrix:
         runs-on: ubuntu-24.04
