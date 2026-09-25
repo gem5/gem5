@@ -76,7 +76,7 @@ def _link_metadata(source, destination):
         shutil.copy2(source, destination)
 
 
-def _read_profiles(inputs, source_root, gcov, output_dir):
+def _read_profiles(inputs, source_root, gcov, output_dir, units):
     """Read GCC JSON, including zero counts from notes without data files."""
     files = {}
     versions = set()
@@ -85,6 +85,8 @@ def _read_profiles(inputs, source_root, gcov, output_dir):
         command = [
             gcov,
             "--json-format",
+            "--branch-counts",
+            "--branch-probabilities",
             "--preserve-paths",
             "--hash-filenames",
         ]
@@ -102,6 +104,7 @@ def _read_profiles(inputs, source_root, gcov, output_dir):
                 data = json.load(stream)
             versions.add(data["gcc_version"])
             working_dir = Path(data["current_working_directory"])
+            unit = units[data["data_file"]]
             for source in data["files"]:
                 path = Path(source["file"])
                 if not path.is_absolute():
@@ -111,7 +114,10 @@ def _read_profiles(inputs, source_root, gcov, output_dir):
                 except ValueError:
                     # System headers and other sources outside this checkout.
                     continue
-                lines = files.setdefault(relative.as_posix(), {})
+                entry = files.setdefault(
+                    relative.as_posix(), {"lines": {}, "branches": []}
+                )
+                lines = entry["lines"]
                 for line in source["lines"]:
                     number, count = line["line_number"], line["count"]
                     if number <= 0:
@@ -120,8 +126,41 @@ def _read_profiles(inputs, source_root, gcov, output_dir):
                         raise ValueError("gcov returned an invalid line count")
                     key = str(number)
                     lines[key] = lines.get(key, 0) + count
+                    for ordinal, branch in enumerate(line.get("branches", [])):
+                        hits = branch["count"]
+                        if type(hits) is not int or hits < 0:
+                            raise ValueError(
+                                "gcov returned invalid branch count"
+                            )
+                        entry["branches"].append(
+                            {
+                                "line": number,
+                                "unit": unit,
+                                "function": line.get("function_name", ""),
+                                "ordinal": ordinal,
+                                "fallthrough": bool(branch["fallthrough"]),
+                                "throw": bool(branch["throw"]),
+                                "count": hits,
+                            }
+                        )
             report.unlink()
+    for entry in files.values():
+        entry["branches"].sort(
+            key=lambda b: (b["unit"], b["function"], b["line"], b["ordinal"])
+        )
     return files, sorted(versions)
+
+
+def _branch_id(build_id, branch):
+    return _digest_json(
+        {
+            "build_id": build_id,
+            **{
+                key: branch[key]
+                for key in ("unit", "function", "line", "ordinal")
+            },
+        }
+    )
 
 
 class CoverageBuild:
@@ -136,6 +175,7 @@ class CoverageBuild:
         self.gcov = gcov
         self.lock = threading.Lock()
         self.notes = None
+        self.units = {}
         self.baseline = {}
         self.baseline_id = None
         self.error = None
@@ -203,6 +243,13 @@ class CoverageBuild:
                     saved.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copy2(original, saved)
                     notes.append((relative, saved))
+                    try:
+                        unit = object_path.relative_to(self.compiled_root)
+                    except ValueError:
+                        unit = Path("external") / original.relative_to(
+                            self.target
+                        )
+                    self.units[relative] = unit.as_posix()
                 if not notes:
                     raise RuntimeError("No GCC coverage notes in build target")
                 # Keep notes available for retries even if gcov is missing.
@@ -216,11 +263,15 @@ class CoverageBuild:
                         self.compiled_root,
                         self.gcov,
                         Path(directory),
+                        {
+                            str(saved): self.units[relative]
+                            for relative, saved in notes
+                        },
                     )
                 self.build["gcc_versions"] = versions
                 files = [
-                    {"path": path, "lines": lines}
-                    for path, lines in sorted(self.baseline.items())
+                    {"path": path, **entry}
+                    for path, entry in sorted(self.baseline.items())
                 ]
                 compatibility = {
                     "target": self.build["target"],
@@ -240,6 +291,11 @@ class CoverageBuild:
                         },
                     }
                 )
+                for entry in files:
+                    for branch in entry["branches"]:
+                        branch["id"] = _branch_id(
+                            self.build["build_id"], branch
+                        )
                 baseline = {
                     "schema_version": 1,
                     "format": "gem5-coverage-baseline",
@@ -260,6 +316,15 @@ class CoverageBuild:
                     ) as temporary:
                         temporary.write(_canonical_bytes(baseline))
                     Path(temporary.name).replace(baseline_path)
+                # Generated sources need an offline destination: GitHub cannot
+                # resolve their build/ paths at the source revision.
+                for entry in files:
+                    source = self.root / entry["path"]
+                    if entry["path"].startswith("build/") and source.is_file():
+                        saved = baseline_dir / "sources" / entry["path"]
+                        saved.parent.mkdir(parents=True, exist_ok=True)
+                        if not saved.exists():
+                            shutil.copy2(source, saved)
             except Exception as error:
                 self.error = str(error)
                 raise
@@ -352,22 +417,42 @@ class InvocationCoverage:
                             self.build.compiled_root,
                             self.build.gcov,
                             Path(directory),
+                            {
+                                str(path): self.build.units[
+                                    path.relative_to(self.raw).with_suffix(
+                                        ".gcno"
+                                    )
+                                ]
+                                for path in counters
+                            },
                         )
                     if versions != self.build.build["gcc_versions"]:
                         raise RuntimeError("Coverage compiler versions differ")
-                    files = {
-                        path: {
+                    for path, entry in covered.items():
+                        lines = {
                             line: count
-                            for line, count in lines.items()
+                            for line, count in entry["lines"].items()
                             if count > 0
                         }
-                        for path, lines in covered.items()
-                        if any(count > 0 for count in lines.values())
-                    }
+                        branches = [
+                            {
+                                "id": _branch_id(
+                                    self.build.build["build_id"], branch
+                                ),
+                                "count": branch["count"],
+                            }
+                            for branch in entry["branches"]
+                            if branch["count"] > 0
+                        ]
+                        if lines or branches:
+                            files[path] = {
+                                "lines": lines,
+                                "branches": branches,
+                            }
                     self.record["collection"] = "complete"
                 self.record["files"] = [
-                    {"path": path, "lines": lines}
-                    for path, lines in sorted(files.items())
+                    {"path": path, **entry}
+                    for path, entry in sorted(files.items())
                 ]
         except Exception as error:
             self.record["collection"] = "error"

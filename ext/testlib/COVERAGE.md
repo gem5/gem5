@@ -99,3 +99,13 @@ These checks compile small native fixtures, compare serial and concurrent
 profiles, retain counters after failed processes, test relocated build
 artifacts, and exercise TestLib with a tiny stand-in executable. They do not
 build or validate the gem5 simulator.
+
+Native profiles also retain GCC control-flow branches. A branch ID combines
+its exact build identity, translation unit, function, source line, and GCC
+branch ordinal. The shared baseline stores zero counts and the descriptors;
+invocations store only positive branch counts. Opposite outcomes on the same
+source line remain distinct. These are compiler branches (including exception
+edges), not source-level conditions or MC/DC; optimized builds may fold or
+introduce edges. Branch identities are meaningful only within matching build
+scopes. Generated sources under `build/` are copied once beside the baseline
+under `sources/` for offline browsing.

@@ -158,6 +158,45 @@ class CoverageTest(unittest.TestCase):
         self.assertFalse(list(self.target.rglob("*.gcda")))
         self.assertIn("gcc_versions", records[0]["build"])
 
+    def test_branch_identity_distinguishes_opposite_paths(self):
+        records = [self.run_program(argument) for argument in "ab"]
+        baseline = json.loads(
+            (
+                self.build.output
+                / "baselines"
+                / records[0]["baseline_id"]
+                / "baseline.json"
+            ).read_text()
+        )
+        branches = {
+            branch["id"]: branch
+            for entry in baseline["files"]
+            for branch in entry["branches"]
+        }
+        first = {
+            branch["id"]
+            for entry in records[0]["files"]
+            for branch in entry["branches"]
+        }
+        second = {
+            branch["id"]
+            for entry in records[1]["files"]
+            for branch in entry["branches"]
+        }
+        self.assertEqual(len(branches), 4)
+        self.assertTrue(first - second)
+        self.assertTrue(second - first)
+        self.assertTrue(first | second <= branches.keys())
+        self.assertTrue(
+            all(branch["count"] == 0 for branch in branches.values())
+        )
+        self.assertEqual({branches[key]["line"] for key in first}, {3})
+        self.assertEqual({branches[key]["line"] for key in second}, {3, 6})
+        self.assertEqual(
+            {branch["unit"] for branch in branches.values()},
+            {"build/main.gcno"},
+        )
+
     def test_failed_process_retains_counters_and_failure(self):
         invocation = self.build.invocation("SuiteUID:test.py:failure", Log())
         with self.assertRaises(subprocess.CalledProcessError) as raised:
