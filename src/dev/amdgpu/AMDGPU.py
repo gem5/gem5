@@ -70,6 +70,15 @@ class AMDGPUDevice(PciEndpoint):
     ProgIF = 0x00
 
     gpu_id = Param.Int(0, "ID of GPU, if multiple GPUs are instantiated")
+    xgmi_hive = Param.XGMIHive(
+        NULL, "XGMI hive this GPU belongs to or NULL if xGMI is disabled."
+    )
+    xgmi_node = Param.Int(0, "xGMI node id or 0 is xGMI is disabled.")
+    force_p2p_gart_remap = Param.Bool(
+        False,
+        "Force-remap GART PTEs for peer buffers into a peer BAR to enable true P2P.",
+    )
+    p2p_peer_id = Param.Int(1, "Peer GPU ID used for forced P2P GART remap.")
 
     # Use max possible BAR size for Vega 10. We can override with driver param
     BAR0 = PciMemBar(size="16GiB")
