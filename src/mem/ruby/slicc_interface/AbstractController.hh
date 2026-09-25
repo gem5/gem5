@@ -422,6 +422,14 @@ class AbstractController : public ClockedObject, public Consumer
     virtual bool coalesce()
     { fatal("coalesce: prefetching not supported"); return false; }
 
+    virtual bool
+    tryRead(const Addr &addr, const bool &is_secure, const unsigned &size,
+            uint8_t *out)
+    {
+        fatal("tryRead: prefetching not supported");
+        return false;
+    }
+
     friend class RubyPrefetcherProxy;
 
   protected:

@@ -98,13 +98,18 @@ Queued::DeferredPacket::finish(const Fault &fault,
 }
 
 Queued::Queued(const QueuedPrefetcherParams &p)
-    : Base(p), queueSize(p.queue_size),
+    : Base(p),
+      queueSize(p.queue_size),
       missingTranslationQueueSize(
-        p.max_prefetch_requests_with_pending_translation),
-      latency(p.latency), queueSquash(p.queue_squash),
-      queueFilter(p.queue_filter), cacheSnoop(p.cache_snoop),
+          p.max_prefetch_requests_with_pending_translation),
+      latency(p.latency),
+      queueSquash(p.queue_squash),
+      queueFilter(p.queue_filter),
+      cacheSnoop(p.cache_snoop),
       tagPrefetch(p.tag_prefetch),
-      throttleControlPct(p.throttle_control_percentage), statsQueued(this)
+      absoluteAddr(p.absolute_addr),
+      throttleControlPct(p.throttle_control_percentage),
+      statsQueued(this)
 {
 }
 
@@ -226,7 +231,8 @@ Queued::notify(const CacheAccessProbeArg &acc, const PrefetchInfo &pfi)
         }
 
         bool can_cross_page = (mmu != nullptr);
-        if (can_cross_page || samePage(addr_prio.first, pfi.getAddr())) {
+        if (absoluteAddr || can_cross_page ||
+            samePage(addr_prio.first, pfi.getAddr())) {
             PrefetchInfo new_pfi(pfi,addr_prio.first);
             statsQueued.pfIdentified++;
             DPRINTF(HWPrefetch, "Found a pf candidate addr: %#x, "
@@ -426,7 +432,11 @@ Queued::insert(const PacketPtr &pkt, PrefetchInfo &new_pfi,
     Addr target_paddr;
     bool has_target_pa = false;
     RequestPtr translation_req = nullptr;
-    if (samePage(orig_addr, new_pfi.getAddr())) {
+    if (absoluteAddr && !useVirtualAddresses) {
+        // Candidate is already the target PA (e.g. IMP A[B[i]]).
+        target_paddr = new_pfi.getAddr();
+        has_target_pa = true;
+    } else if (samePage(orig_addr, new_pfi.getAddr())) {
         if (useVirtualAddresses) {
             // if we trained with virtual addresses,
             // compute the target PA using the original PA and adding the
