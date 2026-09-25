@@ -38,6 +38,8 @@ jobs:
             - name: Require passing Daily and Weekly tests
               id: check
               uses: actions/github-script@v9
+              env:
+                  COVERAGE_DISABLED: ${{ vars.GEM5_COVERAGE_DISABLED }}
               with:
                   script: |
                       const repo = context.repo;
@@ -49,6 +51,9 @@ jobs:
                         await core.summary.addHeading('Coverage skipped')
                           .addRaw(reason).write();
                       };
+                      if (process.env.COVERAGE_DISABLED === 'true') {
+                        return skip('Collection is disabled by GEM5_COVERAGE_DISABLED.');
+                      }
                       const trusted = run =>
                         run.head_repository?.full_name ===
                           `${repo.owner}/${repo.repo}` &&

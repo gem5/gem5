@@ -35,6 +35,24 @@ Reporting and upload recovery run on GitHub-hosted runners.
 
 ## Enabling the completion trigger
 
+Use this deployment order:
+
+1. Merge the coverage changes to `develop`. Set the repository Actions
+   variable `GEM5_COVERAGE_DISABLED` to `true` while preparing deployment.
+2. Provision and check the dedicated runner group described below.
+3. Install the matching workflows, configuration, and runtime tools on
+   `stable`; remove the old coverage workflow and scheduler dispatch.
+4. Fetch both branches and run the deployment comparison below. Review the
+   effective Codecov report-age configuration as well.
+5. Set `GEM5_COVERAGE_DISABLED` to `false` or remove it. Let a qualifying
+   Weekly/Daily pair start collection, inspect the landing page and missing
+   groups, then exercise a report-only recovery while artifacts are retained.
+
+Setting the variable back to `true` stops new automatic collections without
+changing ordinary tests or disabling report-only recovery. It does not cancel
+an active campaign. The dedicated runner group and branch installation are
+external deployment steps, not actions performed by merging this PR.
+
 GitHub requires a `workflow_run` workflow on the repository's default branch,
 which is `stable` for gem5. Relative reusable workflow calls also resolve from
 that branch. To activate this design, install `codecov.yaml` and its matching
@@ -46,10 +64,12 @@ as well. Keep these definitions and tools synchronized when
 their interfaces, test plans, or report schemas change.
 Merging only to `develop` does not activate the completion trigger.
 
-Before building, the coordinator compares the deployed workflows,
+Before recording weekly admission or building, the coordinator compares the deployed workflows,
 configuration, and runtime coverage tools with the tested revision. A
 difference stops collection and lists the files to synchronize in the Actions
 summary. This prevents silently using a different test plan from `stable`.
+After repairing a deployment mismatch, a new completion event can admit the
+campaign; the failed preflight does not consume its weekly slot.
 Report-only recovery deliberately does not require byte-identical tools:
 current reporting tools can read compatible retained schemas.
 
