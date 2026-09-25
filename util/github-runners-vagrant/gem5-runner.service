@@ -1,0 +1,26 @@
+[Unit]
+Description=gem5 ephemeral GitHub Actions runner
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+RequiresMountsFor=/gem5-resource-cache
+ConditionPathExists=/etc/gem5-runner.env
+
+[Service]
+Type=simple
+User=vagrant
+SupplementaryGroups=docker
+WorkingDirectory=/home/vagrant
+EnvironmentFile=/etc/gem5-runner.env
+ExecStart=/home/vagrant/action-run.sh
+Restart=on-failure
+RestartSec=60
+RestartPreventExitStatus=78
+# Drain before stopping this service: stop deliberately terminates its job.
+TimeoutStopSec=120
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=gem5-runner
+
+[Install]
+WantedBy=multi-user.target
