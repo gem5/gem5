@@ -136,3 +136,9 @@ artifacts. Valid groups retain their original Codecov flags when reuploaded.
 Recovery needs the retained artifacts. It cannot manufacture missing counters
 or repair an instrumented test failure; those require rerunning the relevant
 coverage jobs. New schemas may also require compatible reporting tools.
+
+`.github/codecov.yml` accepts reports up to 90 days old so the original
+timestamps survive a long campaign and recovery within the 30-day artifact
+retention period. This does not extend artifact retention. Install this
+configuration on the tested branch and verify the effective Codecov settings
+during deployment; do not refresh timestamps to disguise old measurements.
