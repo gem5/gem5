@@ -27,6 +27,7 @@
 
 """Build the offline coverage landing page and retained source browser."""
 
+import gzip
 import hashlib
 import html
 import io
@@ -58,18 +59,20 @@ def safe_source(value):
 def native_lines(output, language="native"):
     """Union executable lines from retained TestLib LCOV and native XML."""
     files = defaultdict(dict)
-    for path in sorted(output.glob("*.info")):
+    for path in sorted([*output.glob("*.info"), *output.glob("*.info.gz")]):
         if path.name.startswith("python-") != (language == "python"):
             continue
         current = None
-        for row in path.read_text().splitlines():
-            if row.startswith("SF:"):
-                current = row[3:]
-            elif current and row.startswith("DA:"):
-                line, count = row[3:].split(",")[:2]
-                files[current][int(line)] = max(
-                    files[current].get(int(line), 0), int(count)
-                )
+        opener = gzip.open if path.suffix == ".gz" else open
+        with opener(path, "rt", encoding="utf-8") as stream:
+            for row in stream:
+                if row.startswith("SF:"):
+                    current = row[3:].rstrip("\r\n")
+                elif current and row.startswith("DA:"):
+                    line, count = row[3:].split(",")[:2]
+                    files[current][int(line)] = max(
+                        files[current].get(int(line), 0), int(count)
+                    )
     aggregates = (
         sorted(output.glob("aggregate-*.xml")) if language == "native" else []
     )

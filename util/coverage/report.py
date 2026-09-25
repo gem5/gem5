@@ -30,6 +30,7 @@
 import argparse
 import gzip
 import hashlib
+import io
 import json
 import re
 import shutil
@@ -178,7 +179,7 @@ def xml_statuses(root, errors):
 def summarize(source, output, revision, campaign=False):
     source, output = Path(source), Path(output)
     output.mkdir(parents=True, exist_ok=True)
-    for pattern in ("testlib-*.info", "python-*.info", "aggregate-*.xml"):
+    for pattern in ("testlib-*.info*", "python-*.info*", "aggregate-*.xml"):
         for old_report in output.glob(pattern):
             old_report.unlink()
     errors, expected, excluded, lengths = [], {}, {}, set()
@@ -382,8 +383,7 @@ def summarize(source, output, revision, campaign=False):
         if not re.fullmatch(r"[a-zA-Z0-9_.-]+", slug):
             errors.append("Invalid TestLib group directory")
             continue
-        filename = f"{'python' if language == 'python' else 'testlib'}-{length}-{slug}.info"
-        chunks = []
+        filename = f"{'python' if language == 'python' else 'testlib'}-{length}-{slug}.info.gz"
         # Re-read one group at a time rather than retaining every suite's
         # zero-count baseline (hundreds of thousands of lines) in memory.
         by_file = defaultdict(lambda: defaultdict(int))
@@ -417,32 +417,36 @@ def summarize(source, output, revision, campaign=False):
                         branch["line"],
                         previous[1] + branch["count"],
                     )
-        for path, hits in sorted(by_file.items()):
-            chunks.extend(["TN:", f"SF:{path}"])
-            chunks.extend(
-                f"DA:{line},{count}" for line, count in sorted(hits.items())
-            )
-            branches = by_branch[path]
-            for identity, (line, count) in sorted(branches.items()):
-                # LCOV permits expression strings. Keep the full compiled
-                # identity across groups instead of assigning local ordinals.
-                branch = "gem5-" + quote(identity, safe="")
-                chunks.append(f"BRDA:{line},0,{branch},{count}")
-            if branches:
-                chunks.extend(
-                    [
-                        f"BRF:{len(branches)}",
-                        f"BRH:{sum(count > 0 for _, count in branches.values())}",
-                    ]
-                )
-            chunks.extend(
-                [
-                    f"LF:{len(hits)}",
-                    f"LH:{sum(v > 0 for v in hits.values())}",
-                    "end_of_record",
-                ]
-            )
-        (output / filename).write_text("\n".join(chunks) + "\n")
+        # Stream each group into its retained compressed report. Compiled
+        # branch inventories can be hundreds of MiB before compression.
+        with (output / filename).open("wb") as raw:
+            with gzip.GzipFile(
+                fileobj=raw, mode="wb", mtime=0, filename=""
+            ) as compressed:
+                with io.TextIOWrapper(compressed, encoding="utf-8") as stream:
+                    for path, hits in sorted(by_file.items()):
+                        stream.write(f"TN:\nSF:{path}\n")
+                        for line, count in sorted(hits.items()):
+                            stream.write(f"DA:{line},{count}\n")
+                        branches = by_branch[path]
+                        for identity, (line, count) in sorted(
+                            branches.items()
+                        ):
+                            # LCOV expression strings retain compiled graph
+                            # identity across independent upload groups.
+                            branch = "gem5-" + quote(identity, safe="")
+                            stream.write(f"BRDA:{line},0,{branch},{count}\n")
+                        if branches:
+                            covered = sum(
+                                count > 0 for _, count in branches.values()
+                            )
+                            stream.write(
+                                f"BRF:{len(branches)}\nBRH:{covered}\n"
+                            )
+                        covered = sum(v > 0 for v in hits.values())
+                        stream.write(
+                            f"LF:{len(hits)}\nLH:{covered}\nend_of_record\n"
+                        )
         uploads.append(
             {
                 "file": filename,

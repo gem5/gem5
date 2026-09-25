@@ -29,6 +29,7 @@
 
 import concurrent.futures
 import copy
+import gzip
 import importlib.util
 import json
 import shutil
@@ -133,7 +134,10 @@ class BranchStorageTest(unittest.TestCase):
                 )
                 report.summarize(source, output, record["revision"])
                 exports.append(
-                    [path.read_text() for path in output.glob("*.info")]
+                    [
+                        gzip.decompress(path.read_bytes()).decode()
+                        for path in output.glob("*.info.gz")
+                    ]
                 )
             self.assertTrue(exports[0])
             self.assertEqual(*exports)

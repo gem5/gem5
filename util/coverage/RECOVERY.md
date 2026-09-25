@@ -54,3 +54,8 @@ those errors rather than declaring the campaign complete. The default
 archive expansion limit is 100 GiB per archive; `--max-bytes` changes it.
 Restoration rejects symbolic links, unsafe paths, duplicate members and
 special files, while retaining internal hard links to shared notes.
+
+Grouped LCOV uploads are retained as deterministic `.info.gz` files. Report
+retries and the offline source browser read them directly. Each upload job
+decompresses only its selected report before sending ordinary LCOV to
+Codecov; aggregate XML and older uncompressed reports remain supported.

@@ -418,11 +418,35 @@ jobs:
               with:
                   name: coverage-report-${{ github.run_id }}
                   path: coverage-report
+            - name: Prepare selected report for upload
+              id: prepare
+              env:
+                  REPORT_FILE: ${{ matrix.report.file }}
+              run: |
+                  python3 - <<'PYTHON'
+                  import gzip
+                  import os
+                  import shutil
+                  from pathlib import Path
+
+                  root = Path('coverage-report').resolve()
+                  source = (root / os.environ['REPORT_FILE']).resolve()
+                  if not source.is_relative_to(root) or not source.is_file():
+                      raise ValueError('Report must be a retained regular file')
+                  if source.suffix == '.gz':
+                      target = Path(os.environ['RUNNER_TEMP']) / 'coverage.info'
+                      with gzip.open(source, 'rb') as stream, target.open('wb') as output:
+                          shutil.copyfileobj(stream, output)
+                  else:
+                      target = source
+                  with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+                      output.write(f'file={target}\n')
+                  PYTHON
             - name: Upload explicit coverage report
               uses: codecov/codecov-action@v7
               with:
                   token: ${{ secrets.CODECOV_TOKEN }}
-                  files: coverage-report/${{ matrix.report.file }}
+                  files: ${{ steps.prepare.outputs.file }}
                   disable_search: true
                   flags: ${{ matrix.report.flags }}
                   override_commit: ${{ needs.report.outputs.source-ref }}

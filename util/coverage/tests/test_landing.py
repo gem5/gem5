@@ -27,6 +27,7 @@
 
 """Exercise the offline landing page using retained coverage artifacts."""
 
+import gzip
 import importlib.util
 import io
 import json
@@ -44,6 +45,20 @@ spec.loader.exec_module(landing)
 
 
 class LandingTest(unittest.TestCase):
+    def test_streams_compressed_and_legacy_reports(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "legacy.info").write_text("SF:src/example.cc\nDA:1,0\n")
+            with gzip.open(root / "new.info.gz", "wt") as stream:
+                stream.write("SF:src/example.cc\nDA:1,2\nDA:2,0\n")
+            with mock.patch.object(
+                Path, "read_text", side_effect=AssertionError
+            ):
+                self.assertEqual(
+                    landing.native_lines(root),
+                    {"src/example.cc": {1: 2, 2: 0}},
+                )
+
     def test_union_and_retained_generated_source_escaping(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

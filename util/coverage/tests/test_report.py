@@ -31,12 +31,15 @@ import gzip
 import importlib.util
 import json
 import os
+import subprocess
 import sys
 import tarfile
 import tempfile
 import unittest
 from pathlib import Path
 from unittest import mock
+
+import yaml
 
 MODULE = Path(__file__).resolve().parents[1] / "report.py"
 sys.path.insert(0, str(MODULE.parent))
@@ -156,9 +159,68 @@ class CoverageReportTest(unittest.TestCase):
             uploads[0]["flags"],
             "overall-testdir-gem5-example,overall-length-quick,gem5-example-quick",
         )
-        lcov = (self.output / uploads[0]["file"]).read_text()
+        lcov = gzip.decompress(
+            (self.output / uploads[0]["file"]).read_bytes()
+        ).decode()
         self.assertIn("DA:1,1\nDA:2,3", lcov)
         self.assertIn("LH:2", lcov)
+
+    def test_compressed_report_is_deterministic_and_upload_is_plain(self):
+        self.profile()
+        self.run_report()
+        path = next(self.output.glob("*.info.gz"))
+        original = path.read_bytes()
+        self.run_report()
+        self.assertEqual(path.read_bytes(), original)
+        workflow = yaml.safe_load(
+            (MODULE.parents[2] / ".github/workflows/codecov.yaml").read_text()
+        )
+        step = next(
+            step
+            for step in workflow["jobs"]["upload"]["steps"]
+            if step.get("id") == "prepare"
+        )
+        retained = self.root / "coverage-report"
+        retained.mkdir()
+        prepared = self.root / "prepared"
+        prepared.mkdir()
+        output = self.root / "github-output"
+        for filename, content in (
+            ("example.info.gz", original),
+            ("legacy.xml", b"<coverage/>"),
+        ):
+            with self.subTest(filename=filename):
+                (retained / filename).write_bytes(content)
+                output.write_text("")
+                env = dict(
+                    os.environ,
+                    REPORT_FILE=filename,
+                    RUNNER_TEMP=str(prepared),
+                    GITHUB_OUTPUT=str(output),
+                )
+                subprocess.run(
+                    ["bash", "-e", "-c", step["run"]],
+                    cwd=self.root,
+                    env=env,
+                    check=True,
+                )
+                selected = Path(
+                    output.read_text().strip().removeprefix("file=")
+                )
+                expected = (
+                    gzip.decompress(content)
+                    if filename.endswith(".gz")
+                    else content
+                )
+                self.assertEqual(selected.read_bytes(), expected)
+        env["REPORT_FILE"] = "../github-output"
+        rejected = subprocess.run(
+            ["bash", "-e", "-c", step["run"]],
+            cwd=self.root,
+            env=env,
+            capture_output=True,
+        )
+        self.assertNotEqual(rejected.returncode, 0)
 
     def test_two_thousand_shared_baselines(self):
         tests = [
@@ -186,7 +248,9 @@ class CoverageReportTest(unittest.TestCase):
         result = self.run_report()
         self.assertTrue(result["complete"])
         self.assertEqual(result["counts"]["completed"], 2000)
-        lcov = next(self.output.glob("*.info")).read_text()
+        lcov = gzip.decompress(
+            next(self.output.glob("*.info.gz")).read_bytes()
+        ).decode()
         self.assertIn("DA:1,2000", lcov)
         self.assertIn("LF:1000", lcov)
 
@@ -197,7 +261,7 @@ class CoverageReportTest(unittest.TestCase):
         self.assertFalse(result["complete"])
         self.assertEqual(result["counts"]["unfinished"], 1)
         self.assertEqual(result["counts"]["missing_profiles"], 0)
-        self.assertTrue(list(self.output.glob("*.info")))
+        self.assertTrue(list(self.output.glob("*.info.gz")))
 
     def test_missing_profile_is_visible(self):
         result = self.run_report()
@@ -442,7 +506,9 @@ class CoverageReportTest(unittest.TestCase):
             ],
         )
         self.assertTrue(self.run_report()["complete"])
-        text = next(self.output.glob("*.info")).read_text()
+        text = gzip.decompress(
+            next(self.output.glob("*.info.gz")).read_bytes()
+        ).decode()
         self.assertIn("DA:2,0", text)
         self.assertIn("BRDA:1,0,gem5-branch-one,2", text)
 
@@ -467,7 +533,7 @@ class CoverageReportTest(unittest.TestCase):
         self.assertTrue(result["complete"])
         self.assertEqual(result["counts"]["invocations"], 1)
         self.assertEqual(result["counts"]["python_invocations"], 1)
-        self.assertTrue(list(self.output.glob("python-*.info")))
+        self.assertTrue(list(self.output.glob("python-*.info.gz")))
         python["parent_invocation_id"] = "unknown"
         report.write_json(self.source / "one/python-coverage.json", python)
         self.assertFalse(self.run_report()["complete"])
@@ -519,7 +585,9 @@ class CoverageReportTest(unittest.TestCase):
         ):
             result = self.run_report()
         self.assertTrue(result["complete"])
-        text = next(self.output.glob("testlib-*.info")).read_text()
+        text = gzip.decompress(
+            next(self.output.glob("testlib-*.info.gz")).read_bytes()
+        ).decode()
         self.assertIn("DA:1,100", text)
         self.assertIn("DA:1200,0", text)
         self.assertIn("LF:1200", text)
@@ -545,8 +613,8 @@ class CoverageReportTest(unittest.TestCase):
         self.assertTrue(self.run_report()["complete"])
         branches = [
             row
-            for path in self.output.glob("testlib-*.info")
-            for row in path.read_text().splitlines()
+            for path in self.output.glob("testlib-*.info.gz")
+            for row in gzip.decompress(path.read_bytes()).decode().splitlines()
             if row.startswith("BRDA:")
         ]
         self.assertEqual(
