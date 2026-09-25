@@ -743,6 +743,8 @@ class RiscvISA(BaseISA):
 
         reported_extensions = self.get_reported_extensions()
         suppressed_extensions = set()
+        if "A" in reported_extensions:
+            suppressed_extensions.update(("Zaamo", "Zalrsc"))
         if "B" in reported_extensions:
             suppressed_extensions.update(("Zba", "Zbb", "Zbs"))
         if "C" in reported_extensions:
