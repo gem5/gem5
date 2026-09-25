@@ -176,6 +176,71 @@ def xml_statuses(root, errors):
     return results
 
 
+def profile_order(path):
+    """Keep baseline copies together without retaining their large records."""
+    try:
+        record = json.loads(path.read_text(encoding="utf-8"))
+        return (
+            str(record.get("language", "native")),
+            str(record.get("build", {}).get("build_id", "")),
+            str(record.get("baseline_id", "")),
+            str(path),
+        )
+    except (OSError, ValueError, AttributeError, TypeError):
+        # The regular validation pass reports malformed records to the user.
+        return ("", "", "", str(path))
+
+
+def write_graph_lcov(stream, paths, source):
+    """Merge one compiled graph, then release it before the next graph."""
+    by_file = defaultdict(lambda: defaultdict(int))
+    by_branch = defaultdict(dict)
+    seeded = set()
+    for profile_path in paths:
+        loaded = load_sparse_record(profile_path, root=source)
+        profile = (
+            loaded.record if isinstance(loaded, SparseProfile) else loaded
+        )
+        if (
+            isinstance(loaded, SparseProfile)
+            and profile["baseline_id"] not in seeded
+        ):
+            seeded.add(profile["baseline_id"])
+            for entry in loaded.baseline["files"]:
+                for line in entry["lines"]:
+                    by_file[entry["path"]].setdefault(int(line), 0)
+                for branch in entry.get("branches", []):
+                    by_branch[entry["path"]].setdefault(
+                        branch["id"], (branch["line"], 0)
+                    )
+        for entry in profile["files"]:
+            for line, count in entry["lines"].items():
+                by_file[entry["path"]][int(line)] += count
+            for branch in entry.get("branches", []):
+                previous = by_branch[entry["path"]].get(
+                    branch["id"], (branch["line"], 0)
+                )
+                by_branch[entry["path"]][branch["id"]] = (
+                    branch["line"],
+                    previous[1] + branch["count"],
+                )
+    for path, hits in sorted(by_file.items()):
+        stream.write(f"TN:\nSF:{path}\n")
+        for line, count in sorted(hits.items()):
+            stream.write(f"DA:{line},{count}\n")
+        branches = by_branch[path]
+        for identity, (line, count) in sorted(branches.items()):
+            # LCOV expression strings retain compiled graph
+            # identity across independent upload groups.
+            branch = "gem5-" + quote(identity, safe="")
+            stream.write(f"BRDA:{line},0,{branch},{count}\n")
+        if branches:
+            covered = sum(count > 0 for _, count in branches.values())
+            stream.write(f"BRF:{len(branches)}\nBRH:{covered}\n")
+        covered = sum(v > 0 for v in hits.values())
+        stream.write(f"LF:{len(hits)}\nLH:{covered}\nend_of_record\n")
+
+
 def summarize(source, output, revision, campaign=False):
     source, output = Path(source), Path(output)
     output.mkdir(parents=True, exist_ok=True)
@@ -248,11 +313,11 @@ def summarize(source, output, revision, campaign=False):
             + ", ".join(sorted({"quick", "long", "very-long"} - lengths))
         )
     records, seen = defaultdict(list), set()
-    groups = defaultdict(list)
+    groups = defaultdict(lambda: defaultdict(list))
     native_ids, python_parents = {}, {}
     baseline_lines = {}
     profile_exclusions = defaultdict(set)
-    for path in profile_paths(source):
+    for path in sorted(profile_paths(source), key=profile_order):
         try:
             loaded = load_sparse_record(path, root=source)
             record = (
@@ -300,9 +365,12 @@ def summarize(source, output, revision, campaign=False):
                     raise ValueError("Duplicate Python parent invocation")
                 python_parents[parent] = (uid, metadata)
             if record["collection"] == "complete":
-                groups[(language, expected[uid], suite_directory(uid))].append(
-                    path
+                graph = record["build"].get("build_id") or json.dumps(
+                    record["build"], sort_keys=True
                 )
+                groups[(language, expected[uid], suite_directory(uid))][
+                    graph
+                ].append(path)
         except (
             ValueError,
             KeyError,
@@ -311,6 +379,9 @@ def summarize(source, output, revision, campaign=False):
             OSError,
         ) as error:
             errors.append(f"Invalid profile {path.parent.name}: {error}")
+        finally:
+            # Let the schema cache release the previous graph on the next load.
+            loaded = record = None
     missing_python = []
     for identity, uid in native_ids.items():
         if "python" in required_languages[uid]:
@@ -384,39 +455,6 @@ def summarize(source, output, revision, campaign=False):
             errors.append("Invalid TestLib group directory")
             continue
         filename = f"{'python' if language == 'python' else 'testlib'}-{length}-{slug}.info.gz"
-        # Re-read one group at a time rather than retaining every suite's
-        # zero-count baseline (hundreds of thousands of lines) in memory.
-        by_file = defaultdict(lambda: defaultdict(int))
-        by_branch = defaultdict(dict)
-        seeded = set()
-        for profile_path in paths:
-            loaded = load_sparse_record(profile_path, root=source)
-            profile = (
-                loaded.record if isinstance(loaded, SparseProfile) else loaded
-            )
-            if (
-                isinstance(loaded, SparseProfile)
-                and profile["baseline_id"] not in seeded
-            ):
-                seeded.add(profile["baseline_id"])
-                for entry in loaded.baseline["files"]:
-                    for line in entry["lines"]:
-                        by_file[entry["path"]].setdefault(int(line), 0)
-                    for branch in entry.get("branches", []):
-                        by_branch[entry["path"]].setdefault(
-                            branch["id"], (branch["line"], 0)
-                        )
-            for entry in profile["files"]:
-                for line, count in entry["lines"].items():
-                    by_file[entry["path"]][int(line)] += count
-                for branch in entry.get("branches", []):
-                    previous = by_branch[entry["path"]].get(
-                        branch["id"], (branch["line"], 0)
-                    )
-                    by_branch[entry["path"]][branch["id"]] = (
-                        branch["line"],
-                        previous[1] + branch["count"],
-                    )
         # Stream each group into its retained compressed report. Compiled
         # branch inventories can be hundreds of MiB before compression.
         with (output / filename).open("wb") as raw:
@@ -424,29 +462,8 @@ def summarize(source, output, revision, campaign=False):
                 fileobj=raw, mode="wb", mtime=0, filename=""
             ) as compressed:
                 with io.TextIOWrapper(compressed, encoding="utf-8") as stream:
-                    for path, hits in sorted(by_file.items()):
-                        stream.write(f"TN:\nSF:{path}\n")
-                        for line, count in sorted(hits.items()):
-                            stream.write(f"DA:{line},{count}\n")
-                        branches = by_branch[path]
-                        for identity, (line, count) in sorted(
-                            branches.items()
-                        ):
-                            # LCOV expression strings retain compiled graph
-                            # identity across independent upload groups.
-                            branch = "gem5-" + quote(identity, safe="")
-                            stream.write(f"BRDA:{line},0,{branch},{count}\n")
-                        if branches:
-                            covered = sum(
-                                count > 0 for _, count in branches.values()
-                            )
-                            stream.write(
-                                f"BRF:{len(branches)}\nBRH:{covered}\n"
-                            )
-                        covered = sum(v > 0 for v in hits.values())
-                        stream.write(
-                            f"LF:{len(hits)}\nLH:{covered}\nend_of_record\n"
-                        )
+                    for graph_paths in paths.values():
+                        write_graph_lcov(stream, graph_paths, source)
         uploads.append(
             {
                 "file": filename,

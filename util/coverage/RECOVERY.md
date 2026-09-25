@@ -59,3 +59,9 @@ Grouped LCOV uploads are retained as deterministic `.info.gz` files. Report
 retries and the offline source browser read them directly. Each upload job
 decompresses only its selected report before sending ordinary LCOV to
 Codecov; aggregate XML and older uncompressed reports remain supported.
+
+Report generation processes one native build graph at a time, even when a
+directory/length group includes several build targets. A grouped LCOV file
+can therefore contain repeated source-file records for different builds;
+line counts merge across those records, while branch IDs preserve their
+compiled build identity. Codecov flags and the upload group remain unchanged.

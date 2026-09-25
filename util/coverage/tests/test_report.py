@@ -222,6 +222,66 @@ class CoverageReportTest(unittest.TestCase):
         )
         self.assertNotEqual(rejected.returncode, 0)
 
+    def test_validation_groups_baselines_before_loading(self):
+        for identity, graph in (("a", "one"), ("b", "two"), ("c", "one")):
+            self.profile(identity, build={"build_id": graph})
+        loaded = []
+        original = report.load_sparse_record
+
+        def observe(path, **kwargs):
+            record = original(path, **kwargs)
+            loaded.append(record["build"]["build_id"])
+            return record
+
+        with mock.patch.object(
+            report, "load_sparse_record", side_effect=observe
+        ):
+            self.assertTrue(self.run_report()["complete"])
+        self.assertEqual(loaded[:3], ["one", "one", "two"])
+        bad = self.source / "broken.json"
+        bad.write_text("{")
+        self.assertEqual(report.profile_order(bad), ("", "", "", str(bad)))
+
+    def test_multiple_builds_are_written_one_graph_at_a_time(self):
+        for identity, graph, hits in (
+            ("a", "one", 1),
+            ("b", "two", 0),
+            ("c", "one", 2),
+        ):
+            self.profile(
+                identity,
+                build={"build_id": graph},
+                files=[
+                    {
+                        "path": "src/example.cc",
+                        "lines": {"1": hits},
+                        "branches": [{"id": graph, "line": 1, "count": hits}],
+                    }
+                ],
+            )
+        with mock.patch.object(
+            report, "write_graph_lcov", wraps=report.write_graph_lcov
+        ) as write:
+            self.assertTrue(self.run_report()["complete"])
+        self.assertEqual(write.call_count, 2)
+        for call in write.call_args_list:
+            graphs = {
+                json.loads(path.read_text())["build"]["build_id"]
+                for path in call.args[1]
+            }
+            self.assertEqual(len(graphs), 1)
+        data = gzip.decompress(
+            next(self.output.glob("*.info.gz")).read_bytes()
+        ).decode()
+        self.assertEqual(data.count("SF:src/example.cc"), 2)
+        self.assertIn("DA:1,3", data)
+        self.assertIn("DA:1,0", data)
+        self.assertIn("BRDA:1,0,gem5-one,3", data)
+        self.assertIn("BRDA:1,0,gem5-two,0", data)
+        self.assertEqual(
+            len(json.loads((self.output / "uploads.json").read_text())), 1
+        )
+
     def test_two_thousand_shared_baselines(self):
         tests = [
             f"SuiteUID:tests/gem5/example/test.py:suite-{i}"
