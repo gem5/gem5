@@ -115,7 +115,10 @@ revision, container identity, and checksums before installation. Matching
 notes, generated sources, and configuration accompany the binary; build-time
 counters and object files are omitted. Ordinary caches are not used by these
 coverage builds. Integration and GTest builds remain separate because they
-use different targets or environments.
+use different targets or environments. Coverage integration jobs also start
+with fresh build directories: restoring old notes can count sources no longer
+in the build. SystemC uses separate executable and library build roots so its
+configuration change cannot overwrite the executable's coverage graph.
 
 The existing x86 boot exception builds its ordinary binary separately. A
 failed shared build does not prevent unrelated successfully built targets

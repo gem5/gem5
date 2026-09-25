@@ -349,6 +349,7 @@ jobs:
                   ref: ${{ inputs.source-ref || github.sha }}
 
             - name: Cache the SST build
+              if: ${{ !inputs.coverage }}
               uses: actions/cache@v6
               with:
                   path: build/*
@@ -457,6 +458,7 @@ jobs:
               run: git clone https://github.com/tukl-msd/DRAMSys --branch v5.6.0 --depth 1 DRAMSys
 
             - name: Cache the build
+              if: ${{ !inputs.coverage }}
               uses: actions/cache@v6
               with:
                   path: build/*
