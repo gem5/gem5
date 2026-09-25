@@ -289,6 +289,23 @@ jobs:
                   path: tests/testing-results
                   retention-days: 30
 
+    salam-link-test:
+        runs-on: [self-hosted, linux, x64]
+        if: github.event.pull_request.draft == false
+        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        needs: [pre-commit]
+        timeout-minutes: 90
+        steps:
+            - uses: actions/checkout@v7
+            - name: Install LLVM development package
+              run: |
+                  apt-get update
+                  apt-get install -y --no-install-recommends llvm-dev
+                  llvm-config --version
+            - name: Build gem5 with SALAM
+              run: |
+                  scons build/ARM/gem5.opt --with-salam -j $(nproc)
+
     ci-tests:
     # It is 'testlib-quick' which needs to pass for the pull request to be
     # merged. This job is a dummy job that depends on all the other jobs.
@@ -299,5 +316,6 @@ jobs:
             - unittests-all-fast-opt
             - macos-compilation
             - pre-commit
+            - salam-link-test
         steps:
             - run: echo "This job's status is ${{ job.status }}."
