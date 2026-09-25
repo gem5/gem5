@@ -369,6 +369,11 @@ jobs:
                         }
                       }
                       core.setOutput('source-ref', manifest.commit);
+            - name: Checkout source for offline browsing
+              uses: actions/checkout@v7
+              with:
+                  ref: ${{ steps.source.outputs.source-ref }}
+                  path: coverage-tested-source
             - name: Account for coverage and export grouped reports
               id: build
               env:
@@ -377,6 +382,10 @@ jobs:
                   python3 util/coverage/report.py summarize coverage-input --output coverage-report --revision "$SOURCE_REVISION" --campaign
                   cat coverage-report/summary.md >> "$GITHUB_STEP_SUMMARY"
                   echo "uploads=$(jq -c . coverage-report/uploads.json)" >> "$GITHUB_OUTPUT"
+            - name: Build the offline coverage landing page
+              env:
+                  SOURCE_REVISION: ${{ steps.source.outputs.source-ref }}
+              run: python3 util/coverage/report.py landing coverage-input --output coverage-report --revision "$SOURCE_REVISION" --source-root coverage-tested-source
             - name: Build the test and source-line index
               run: python3 util/coverage/index.py build coverage-input --output coverage-report/index
             - name: Retain reports even when collection is incomplete

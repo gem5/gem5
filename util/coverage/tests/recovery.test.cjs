@@ -41,7 +41,7 @@ function scriptBetween(start, end) {
 const checkRun = scriptBetween('Check the source coverage run',
     'Checkout trusted reporting tools');
 const checkManifest = scriptBetween('Verify the admitted source metadata',
-    'Account for coverage and export grouped reports');
+    'Checkout source for offline browsing');
 const revision = 'a'.repeat(40);
 const context = {
     eventName: 'workflow_dispatch', ref: 'refs/heads/stable', runId: 9,
