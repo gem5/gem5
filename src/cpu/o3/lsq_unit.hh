@@ -376,6 +376,8 @@ class LSQUnit
     void recvRetry();
 
     unsigned int cacheLineSize();
+    unsigned splitGrain(const DynInstPtr &inst);
+
   private:
     /** Reset the LSQ state */
     void resetState();
@@ -560,9 +562,17 @@ class LSQUnit
         statistics::Average lqAvgOccupancy;
         /** SQ Occupancy */
         statistics::Average sqAvgOccupancy;
+
+        /** Unit-stride vector accesses with vecMemPackWidth specified. */
+        statistics::Scalar vecMemPackAccesses;
+        /** LSQ fragments created for those accesses. */
+        statistics::Scalar vecMemPackFlows;
     } stats;
 
   public:
+    /** Record pack-width vector access fragments. */
+    void recordVecMemPack(uint64_t flows);
+
     /** Executes the load at the given index. */
     Fault read(LSQRequest *request, ssize_t load_idx);
 
