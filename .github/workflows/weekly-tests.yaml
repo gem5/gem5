@@ -42,7 +42,7 @@ jobs:
               working-directory: ${{ github.workspace }}/tests
               id: dir-matrix
               run: |
-                  ./main.py list gem5 --suites -q --length=very-long ${GCOV_FLAGS:+--gcov=per-test} > "$RUNNER_TEMP/test-suites"
+                  ./main.py list gem5 --suites -q --length=very-long ${GCOV_FLAGS:+--gcov=per-test --python-coverage} > "$RUNNER_TEMP/test-suites"
                   test_dirs=$(jq -Rsc '
                     split("\n") |
                     map(select(startswith("SuiteUID:")) |
@@ -55,7 +55,7 @@ jobs:
             - name: Record expected coverage suites
               if: inputs.coverage
               run: |
-                  python3 util/coverage/report.py manifest "$RUNNER_TEMP/test-suites" --length=very-long --revision "$(git rev-parse HEAD)" --output "$RUNNER_TEMP/coverage-plan/expected.json"
+                  python3 util/coverage/report.py manifest "$RUNNER_TEMP/test-suites" --length=very-long --revision "$(git rev-parse HEAD)" --python-coverage --output "$RUNNER_TEMP/coverage-plan/expected.json"
             - name: Retain coverage discovery manifest
               if: ${{ always() && inputs.coverage }}
               uses: actions/upload-artifact@v7
@@ -97,6 +97,12 @@ jobs:
                   revision: ${{ inputs.source-ref || github.sha }}
                   image: ${{ inputs.coverage-image }}
 
+            - name: Install the Python coverage tracer
+              if: ${{ inputs.coverage && matrix.test-type != 'gem5/x86_boot_tests' }}
+              run: |
+                  python3 -m pip install --target "$RUNNER_TEMP/coverage-python" coverage==7.10.7
+                  echo "PYTHONPATH=$RUNNER_TEMP/coverage-python${PYTHONPATH:+:$PYTHONPATH}" >> "$GITHUB_ENV"
+
             - name: Run very-long ${{ matrix.test-type }} tests
               id: run-tests
               timeout-minutes: 4290
@@ -106,7 +112,7 @@ jobs:
               # gcov-instrumented binaries. Retain its ordinary build until
               # that instrumentation failure is resolved.
               run: |
-                  extra_gcov_args="${GCOV_FLAGS:+--gcov=per-test}"
+                  extra_gcov_args="${GCOV_FLAGS:+--gcov=per-test --python-coverage}"
                   skip_build_args="${GCOV_FLAGS:+--skip-build}"
                   resource_dir="$GEM5_RESOURCE_DIR"
                   if [ -n "$GCOV_FLAGS" ] && [ "${{ matrix.test-type }}" = "gem5/x86_boot_tests" ]; then

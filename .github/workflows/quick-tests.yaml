@@ -80,7 +80,7 @@ jobs:
               working-directory: ${{ github.workspace }}/tests
               id: dir-matrix
               run: |
-                  ./main.py list gem5 --suites -q ${GCOV_FLAGS:+--gcov=per-test} > "$RUNNER_TEMP/test-suites"
+                  ./main.py list gem5 --suites -q ${GCOV_FLAGS:+--gcov=per-test --python-coverage} > "$RUNNER_TEMP/test-suites"
                   test_dirs=$(jq -Rsc '
                     split("\n") |
                     map(select(startswith("SuiteUID:")) |
@@ -93,7 +93,7 @@ jobs:
             - name: Record expected coverage suites
               if: inputs.coverage
               run: |
-                  python3 util/coverage/report.py manifest "$RUNNER_TEMP/test-suites" --length=quick --revision "$(git rev-parse HEAD)" --output "$RUNNER_TEMP/coverage-plan/expected.json"
+                  python3 util/coverage/report.py manifest "$RUNNER_TEMP/test-suites" --length=quick --revision "$(git rev-parse HEAD)" --python-coverage --output "$RUNNER_TEMP/coverage-plan/expected.json"
             - name: Retain coverage discovery manifest
               if: ${{ always() && inputs.coverage }}
               uses: actions/upload-artifact@v7
@@ -108,7 +108,7 @@ jobs:
               working-directory: ${{ github.workspace }}/tests
               id: build-matrix
               run: |
-                  ./main.py list --build-targets -q ${GCOV_FLAGS:+--gcov=per-test} > "$RUNNER_TEMP/build-targets"
+                  ./main.py list --build-targets -q ${GCOV_FLAGS:+--gcov=per-test --python-coverage} > "$RUNNER_TEMP/build-targets"
                   build_matrix=$(jq -Rsc '
                     split("\n") | map(select(length > 0)) |
                     if length == 0 then error("No TestLib build targets found") else . end
@@ -217,6 +217,12 @@ jobs:
                   find . -name "gem5.fast" -exec chmod u+x {} \;
 
         # Run the testlib quick tests in the given directory.
+            - name: Install the Python coverage tracer
+              if: inputs.coverage
+              run: |
+                  python3 -m pip install --target "$RUNNER_TEMP/coverage-python" coverage==7.10.7
+                  echo "PYTHONPATH=$RUNNER_TEMP/coverage-python${PYTHONPATH:+:$PYTHONPATH}" >> "$GITHUB_ENV"
+
             - name: Run quick ${{ matrix.test-dir }} tests
               id: run-tests
               working-directory: ${{ github.workspace }}/tests
@@ -239,7 +245,7 @@ jobs:
                   else
                     set --
                   fi
-                  ./main.py run --skip-build -t "$test_threads" "$TEST_DIR" ${GCOV_FLAGS:+--gcov=per-test} "$@"
+                  ./main.py run --skip-build -t "$test_threads" "$TEST_DIR" ${GCOV_FLAGS:+--gcov=per-test --python-coverage} "$@"
 
         # Get the basename of the matrix.test-dir path (to name the artifact).
             - name: Sanitize test-dir for artifact name

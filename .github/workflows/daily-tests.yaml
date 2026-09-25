@@ -183,7 +183,7 @@ jobs:
               working-directory: ${{ github.workspace }}/tests
               id: dir-matrix
               run: |
-                  ./main.py list gem5 --suites -q --length=long ${GCOV_FLAGS:+--gcov=per-test} > "$RUNNER_TEMP/test-suites"
+                  ./main.py list gem5 --suites -q --length=long ${GCOV_FLAGS:+--gcov=per-test --python-coverage} > "$RUNNER_TEMP/test-suites"
                   test_dirs=$(jq -Rsc '
                     split("\n") |
                     map(select(startswith("SuiteUID:")) |
@@ -196,7 +196,7 @@ jobs:
             - name: Record expected coverage suites
               if: inputs.coverage
               run: |
-                  python3 util/coverage/report.py manifest "$RUNNER_TEMP/test-suites" --length=long --revision "$(git rev-parse HEAD)" --output "$RUNNER_TEMP/coverage-plan/expected.json"
+                  python3 util/coverage/report.py manifest "$RUNNER_TEMP/test-suites" --length=long --revision "$(git rev-parse HEAD)" --python-coverage --output "$RUNNER_TEMP/coverage-plan/expected.json"
             - name: Retain coverage discovery manifest
               if: ${{ always() && inputs.coverage }}
               uses: actions/upload-artifact@v7
@@ -211,7 +211,7 @@ jobs:
               id: build-matrix
               working-directory: ${{ github.workspace }}/tests
               run: |
-                  ./main.py list gem5 --length=long --host x86_64 --build-targets -q ${GCOV_FLAGS:+--gcov=per-test} > "$RUNNER_TEMP/build-targets"
+                  ./main.py list gem5 --length=long --host x86_64 --build-targets -q ${GCOV_FLAGS:+--gcov=per-test --python-coverage} > "$RUNNER_TEMP/build-targets"
                   # Always refresh the ALL cache for the PR and weekly tests.
                   build_matrix=$(jq -Rsc 'split("\n") | map(select(length > 0) | split("/")[-2]) | . + ["ALL"] | unique' "$RUNNER_TEMP/build-targets")
                   echo "build-matrix=$build_matrix" >> "$GITHUB_OUTPUT"
@@ -258,7 +258,7 @@ jobs:
               env:
                   TEST_DIR: ${{ matrix.test-type }}
               run: |
-                  ./main.py list "$TEST_DIR" --length=long --build-targets -q ${GCOV_FLAGS:+--gcov=per-test} > "$RUNNER_TEMP/required-binaries"
+                  ./main.py list "$TEST_DIR" --length=long --build-targets -q ${GCOV_FLAGS:+--gcov=per-test --python-coverage} > "$RUNNER_TEMP/required-binaries"
                   if [ ! -s "$RUNNER_TEMP/required-binaries" ]; then
                     echo "has-binaries=false" >> "$GITHUB_OUTPUT"
                     exit 0
@@ -283,6 +283,12 @@ jobs:
                     tar -xzf "$archive"
                   done
 
+            - name: Install the Python coverage tracer
+              if: inputs.coverage
+              run: |
+                  python3 -m pip install --target "$RUNNER_TEMP/coverage-python" coverage==7.10.7
+                  echo "PYTHONPATH=$RUNNER_TEMP/coverage-python${PYTHONPATH:+:$PYTHONPATH}" >> "$GITHUB_ENV"
+
             - name: Run long ${{ matrix.test-type }} tests
               id: run-tests
               timeout-minutes: ${{ inputs.coverage && 1770 || 1410 }}
@@ -299,7 +305,7 @@ jobs:
                   if [ -n "$GCOV_FLAGS" ]; then
                     test_threads=1
                   fi
-                  ./main.py run ${{ matrix.test-type }} --skip-build -j$(nproc) --length=long -vv -t "$test_threads" --bin-path "$resource_dir" ${GCOV_FLAGS:+--gcov=per-test}
+                  ./main.py run ${{ matrix.test-type }} --skip-build -j$(nproc) --length=long -vv -t "$test_threads" --bin-path "$resource_dir" ${GCOV_FLAGS:+--gcov=per-test --python-coverage}
 
             - name: Sanitize test-dir for artifact name
               id: sanitize-test-dir

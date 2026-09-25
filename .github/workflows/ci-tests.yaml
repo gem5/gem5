@@ -28,7 +28,7 @@ jobs:
                   node-version: '24'
                   package-manager-cache: false
             - name: Install coverage test dependencies
-              run: python3 -m pip install gcovr==8.3 PyYAML==6.0.2
+              run: python3 -m pip install gcovr==8.3 PyYAML==6.0.2 coverage==7.10.7
             - name: Require the native coverage tools
               run: |
                   gcc --version | head -1

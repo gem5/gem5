@@ -109,6 +109,10 @@ class WorkloadCommandsTest(unittest.TestCase):
                                 enabled and not excluded,
                             )
                             self.assertEqual(
+                                "--python-coverage" in args,
+                                enabled and not excluded,
+                            )
+                            self.assertEqual(
                                 "--skip-build" in args,
                                 filename != "weekly-tests.yaml"
                                 or (enabled and not excluded),
