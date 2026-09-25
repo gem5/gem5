@@ -33,80 +33,31 @@ import json
 import sys
 from pathlib import (
     Path,
-    PurePosixPath,
 )
 from urllib.parse import urlsplit
 
+try:
+    from .schema import (
+        COLLECTIONS,
+        OUTCOMES,
+        SparseProfile,
+        normalize_record,
+        read_index_records,
+        read_records,
+        source_path,
+    )
+except ImportError:  # Direct command-line execution.
+    from schema import (
+        COLLECTIONS,
+        OUTCOMES,
+        SparseProfile,
+        normalize_record,
+        read_index_records,
+        read_records,
+        source_path,
+    )
+
 REPOSITORY_URL = "https://github.com/gem5/gem5"
-COLLECTIONS = ("complete", "missing", "error")
-OUTCOMES = ("passed", "failed", "interrupted")
-
-
-def source_path(value):
-    """Require a canonical repository-relative path, without traversal."""
-    if (
-        not isinstance(value, str)
-        or not value
-        or "\\" in value
-        or any(ord(char) < 32 for char in value)
-        or PurePosixPath(value).is_absolute()
-        or any(part in ("", ".", "..") for part in value.split("/"))
-    ):
-        raise ValueError(f"Invalid repository-relative path: {value!r}")
-    return value
-
-
-def normalize_record(record):
-    """Validate a producer record and order its files and line numbers."""
-    if not isinstance(record, dict):
-        raise ValueError("A coverage record must be an object")
-    if (
-        type(record.get("schema_version")) is not int
-        or record["schema_version"] != 1
-    ):
-        raise ValueError("Unsupported coverage record schema_version")
-    for name in ("test_uid", "invocation_id", "revision"):
-        if not isinstance(record.get(name), str) or not record[name]:
-            raise ValueError(f"Missing or invalid {name}")
-    if not record["test_uid"].startswith("SuiteUID:"):
-        raise ValueError("test_uid must identify a TestLib SuiteUID")
-    if not isinstance(record.get("build"), dict):
-        raise ValueError("build must be an object")
-    if record.get("outcome") not in OUTCOMES:
-        raise ValueError("Invalid invocation outcome")
-    if record.get("collection") not in COLLECTIONS:
-        raise ValueError("Invalid collection status")
-    if not isinstance(record.get("files"), list):
-        raise ValueError("files must be a list")
-    files = {}
-    for entry in record["files"]:
-        if not isinstance(entry, dict):
-            raise ValueError("A file entry must be an object")
-        path = source_path(entry.get("path"))
-        if path in files:
-            raise ValueError(f"Record contains duplicate file: {path}")
-        if not isinstance(entry.get("lines"), dict):
-            raise ValueError(f"lines must be an object: {path}")
-        lines = {}
-        for number, count in entry["lines"].items():
-            if (
-                not isinstance(number, str)
-                or not number.isascii()
-                or not number.isdecimal()
-                or str(int(number)) != number
-                or int(number) < 1
-                or type(count) is not int
-                or count < 0
-            ):
-                raise ValueError(f"Invalid line/count: {path}:{number}")
-            lines[number] = count
-        files[path] = {
-            **entry,
-            "lines": dict(
-                sorted(lines.items(), key=lambda item: int(item[0]))
-            ),
-        }
-    return {**record, "files": [files[path] for path in sorted(files)]}
 
 
 def build_index(records, repository_url=REPOSITORY_URL):
@@ -125,12 +76,16 @@ def build_index(records, repository_url=REPOSITORY_URL):
         raise ValueError("repository_url must be an HTTP(S) repository URL")
     invocations = {}
     fingerprints = {}
-    files = {}
+    inventories = {"native": {}, "python": {}}
+    branch_inventories = {"native": {}, "python": {}}
+    files = inventories["native"]
     revision = None
     collection = dict.fromkeys(COLLECTIONS, 0)
     outcomes = dict.fromkeys(OUTCOMES, 0)
+    seeded = set()
     for raw in records:
-        record = normalize_record(raw)
+        baseline = raw.baseline if isinstance(raw, SparseProfile) else None
+        record = raw.record if baseline is not None else normalize_record(raw)
         identifier = record["invocation_id"]
         fingerprint = hashlib.sha256(
             json.dumps(
@@ -159,7 +114,7 @@ def build_index(records, repository_url=REPOSITORY_URL):
         metadata["record_sha256"] = fingerprint
         metadata["profile_summary"] = {
             "measured_lines": sum(
-                len(item["lines"]) for item in record["files"]
+                len(item["lines"]) for item in (baseline or record)["files"]
             ),
             "covered_lines": sum(
                 count > 0
@@ -172,20 +127,74 @@ def build_index(records, repository_url=REPOSITORY_URL):
         outcomes[record["outcome"]] += 1
         if record["collection"] != "complete":
             continue
+        language = record["language"]
+        if baseline is not None and record["baseline_id"] not in seeded:
+            seeded.add(record["baseline_id"])
+            for entry in baseline["files"]:
+                lines = inventories[language].setdefault(entry["path"], {})
+                for number in entry["lines"]:
+                    lines.setdefault(number, [0, 0])
+                branches = branch_inventories[language].setdefault(
+                    entry["path"], {}
+                )
+                for branch in entry.get("branches", []):
+                    branches.setdefault(
+                        branch["id"],
+                        {
+                            "metadata": {
+                                key: value
+                                for key, value in branch.items()
+                                if key != "count"
+                            },
+                            "count": 0,
+                            "membership": 0,
+                        },
+                    )
         for entry in record["files"]:
-            lines = files.setdefault(entry["path"], {})
+            lines = inventories[language].setdefault(entry["path"], {})
             for number, count in entry["lines"].items():
                 line = lines.setdefault(number, [0, 0])
                 line[0] += count
                 if count > 0:
                     line[1] |= bit
+            branches = branch_inventories[language].setdefault(
+                entry["path"], {}
+            )
+            for branch in entry.get("branches", []):
+                metadata = {
+                    key: value
+                    for key, value in branch.items()
+                    if key != "count"
+                }
+                existing = branches.setdefault(
+                    branch["id"],
+                    {"metadata": metadata, "count": 0, "membership": 0},
+                )
+                if existing["metadata"] != metadata:
+                    raise ValueError(
+                        "Conflicting metadata for one branch identity"
+                    )
+                existing["count"] += branch["count"]
+                if branch["count"] > 0:
+                    existing["membership"] |= bit
     if not invocations:
         raise ValueError("No coverage.json invocation records found")
     ordered = [invocations[key] for key in sorted(invocations)]
     # Input order does not control public ordinals or membership IDs.
     ordinals = {item["invocation_id"]: i for i, item in enumerate(ordered)}
     remap = [ordinals[identifier] for identifier in invocations]
-    masks = {line[1] for lines in files.values() for line in lines.values()}
+    masks = {
+        line[1]
+        for inventory in inventories.values()
+        for lines in inventory.values()
+        for line in lines.values()
+    }
+    masks.update(
+        branch["membership"]
+        for inventory in branch_inventories.values()
+        for branches in inventory.values()
+        for branch in branches.values()
+    )
     memberships = {}
     for mask in masks:
         remaining = mask
@@ -197,9 +206,14 @@ def build_index(records, repository_url=REPOSITORY_URL):
         memberships[mask] = sorted(members)
     mask_order = sorted(masks, key=memberships.__getitem__)
     membership_ids = {mask: i for i, mask in enumerate(mask_order)}
-    for lines in files.values():
-        for line in lines.values():
-            line[1] = membership_ids[line[1]]
+    for inventory in inventories.values():
+        for lines in inventory.values():
+            for line in lines.values():
+                line[1] = membership_ids[line[1]]
+    for inventory in branch_inventories.values():
+        for branches in inventory.values():
+            for branch in branches.values():
+                branch["membership"] = membership_ids[branch["membership"]]
     tests = {}
     for ordinal, record in enumerate(ordered):
         tests.setdefault(record["test_uid"], []).append(ordinal)
@@ -215,12 +229,36 @@ def build_index(records, repository_url=REPOSITORY_URL):
         "invocations": ordered,
         "tests": dict(sorted(tests.items())),
         "files": files,
+        "python_files": inventories["python"],
+        "branches": branch_inventories,
         "memberships": [memberships[mask] for mask in mask_order],
         "summary": {
             "invocations": len(ordered),
             "tests": len(tests),
             "collection": collection,
             "outcomes": outcomes,
+            "languages": {
+                language: {
+                    "measured_lines": sum(
+                        len(lines) for lines in inventory.values()
+                    ),
+                    "covered_lines": sum(
+                        line[0] > 0
+                        for lines in inventory.values()
+                        for line in lines.values()
+                    ),
+                    "measured_branches": sum(
+                        len(branches)
+                        for branches in branch_inventories[language].values()
+                    ),
+                    "covered_branches": sum(
+                        branch["count"] > 0
+                        for branches in branch_inventories[language].values()
+                        for branch in branches.values()
+                    ),
+                }
+                for language, inventory in inventories.items()
+            },
             "measured_lines": sum(len(lines) for lines in files.values()),
             "covered_lines": sum(
                 line[0] > 0
@@ -231,12 +269,19 @@ def build_index(records, repository_url=REPOSITORY_URL):
     }
 
 
-def tests_for_line(index, path, line):
+def tests_for_line(index, path, line, language="native"):
     """Find only tests with positive hits; distinguish unknown from zero."""
     source_path(path)
     if type(line) is not int or line < 1:
         raise ValueError("A source line must be a positive integer")
-    measured = index["files"].get(path, {}).get(str(line))
+    if language not in ("native", "python"):
+        raise ValueError("Unknown coverage language")
+    inventory = (
+        index["files"]
+        if language == "native"
+        else index.get("python_files", {})
+    )
+    measured = inventory.get(path, {}).get(str(line))
     ordinals = index["memberships"][measured[1]] if measured else []
     tests = {}
     for ordinal in ordinals:
@@ -248,6 +293,7 @@ def tests_for_line(index, path, line):
         "revision": index["revision"],
         "path": path,
         "line": line,
+        "language": language,
         "measured": measured is not None,
         "count": measured[0] if measured else None,
         "tests": [
@@ -255,6 +301,35 @@ def tests_for_line(index, path, line):
             for uid, ids in sorted(tests.items())
         ],
         "collection": index["summary"]["collection"],
+    }
+
+
+def tests_for_branch(index, path, identity, language="native"):
+    source_path(path)
+    if language not in ("native", "python"):
+        raise ValueError("Unknown coverage language")
+    branch = (
+        index.get("branches", {}).get(language, {}).get(path, {}).get(identity)
+    )
+    tests = {}
+    if branch:
+        for ordinal in index["memberships"][branch["membership"]]:
+            record = index["invocations"][ordinal]
+            tests.setdefault(record["test_uid"], []).append(
+                record["invocation_id"]
+            )
+    return {
+        "revision": index["revision"],
+        "path": path,
+        "branch_id": identity,
+        "language": language,
+        "measured": branch is not None,
+        "count": branch["count"] if branch else None,
+        "metadata": branch["metadata"] if branch else None,
+        "tests": [
+            {"test_uid": uid, "invocation_ids": ids}
+            for uid, ids in sorted(tests.items())
+        ],
     }
 
 
@@ -283,9 +358,14 @@ def lines_for_test(index, test_uid):
         {
             "path": path,
             "line": int(number),
+            "language": language,
             "invocation_ids": matching[line[1]],
         }
-        for path, measured in sorted(index["files"].items())
+        for language, inventory in (
+            ("native", index["files"]),
+            ("python", index.get("python_files", {})),
+        )
+        for path, measured in sorted(inventory.items())
         for number, line in sorted(
             measured.items(), key=lambda item: int(item[0])
         )
@@ -299,14 +379,6 @@ def lines_for_test(index, test_uid):
         "coverage_known": collection["complete"] > 0,
         "lines": lines,
     }
-
-
-def read_records(directory):
-    for path in sorted(Path(directory).rglob("coverage.json")):
-        try:
-            yield json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, ValueError) as error:
-            raise ValueError(f"{path}: {error}") from error
 
 
 def render_html(index):
@@ -362,6 +434,9 @@ HTML = r"""<!doctype html>
   <p class="muted" id="revision"></p>
   <p id="summary"></p>
   <p id="collection" class="note"></p>
+  <label for="language">Coverage language</label>
+  <select id="language"><option value="native">Native C/C++</option>
+    <option value="python">Python</option></select>
 </header>
 <main>
   <section aria-labelledby="test-title">
@@ -432,7 +507,14 @@ HTML = r"""<!doctype html>
   el("revision").textContent = "Source revision: " + data.revision;
   el("summary").textContent = summary.tests + " suites · " +
     summary.invocations + " invocations · " + summary.covered_lines +
-    " covered / " + summary.measured_lines + " measured lines";
+    " covered / " + summary.measured_lines + " measured native lines";
+  const language = () => el("language").value;
+  const inventory = () => language() === "native" ? data.files : (data.python_files || {});
+  if (summary.languages) {
+    el("summary").textContent = Object.entries(summary.languages).map(([name, s]) =>
+      name + ": " + s.covered_lines + "/" + s.measured_lines + " lines, " +
+      s.covered_branches + "/" + s.measured_branches + " branches").join(" · ");
+  }
   const statuses = c => c.complete + " complete, " + c.missing +
     " missing, " + c.error + " extraction errors";
   el("collection").textContent = "Profiles: " + statuses(summary.collection) +
@@ -474,7 +556,8 @@ HTML = r"""<!doctype html>
         sourceUrl(path)));
     }
     const counts = {complete: 0, missing: 0, error: 0};
-    const ordinals = new Set(data.tests[uid]);
+    const ordinals = new Set(data.tests[uid].filter(ordinal =>
+      (data.invocations[ordinal].language || "native") === language()));
     for (const ordinal of ordinals) {
       const item = data.invocations[ordinal]; counts[item.collection]++;
       const li = text("li", item.invocation_id + " — " +
@@ -493,7 +576,7 @@ HTML = r"""<!doctype html>
       const overlap = members.filter(ordinal => ordinals.has(ordinal));
       if (overlap.length) matching.set(membership, overlap);
     });
-    for (const [path, measured] of Object.entries(data.files)) {
+    for (const [path, measured] of Object.entries(inventory())) {
       for (const [number, line] of Object.entries(measured)) {
         if (!matching.has(line[1])) continue;
         selectedLines.push({path, line: Number(number),
@@ -530,11 +613,21 @@ HTML = r"""<!doctype html>
         "for example src/cpu/base.cc:100."; return;
     }
     const [, path, number] = match;
-    const file = Object.hasOwn(data.files, path) ? data.files[path] : null;
+    const selected = inventory();
+    const file = Object.hasOwn(selected, path) ? selected[path] : null;
     const line = file && Object.hasOwn(file, number) ? file[number] : null;
     if (!line) { el("line-status").textContent =
       "No complete profile measured this line; coverage is unknown."; return; }
     const members = data.memberships[line[1]];
+    const branchSet = (data.branches || {})[language()] || {};
+    for (const branch of Object.values(branchSet[path] || {})) {
+      if (branch.metadata.line !== Number(number)) continue;
+      const suites = [...new Set(data.memberships[branch.membership].map(i =>
+        data.invocations[i].test_uid))];
+      el("covering-tests").append(text("li", "Branch " + branch.metadata.id +
+        ": " + branch.count + " hits; " +
+        (suites.length ? suites.join(", ") : "no covering suite")));
+    }
     el("line-status").replaceChildren(safeLink(path + ":" + number,
       sourceUrl(path, number)), document.createTextNode(" — " + line[0] +
       " hits across " + members.length + " invocations."));
@@ -561,6 +654,10 @@ HTML = r"""<!doctype html>
         text("p", "Invocations: " + groups.get(uid).join(", ")));
       el("covering-tests").append(li);
     }
+  });
+  el("language").addEventListener("change", () => {
+    selectTest(); el("covering-tests").replaceChildren();
+    el("line-status").textContent = "Enter a source location.";
   });
   el("test-filter").addEventListener("input", () =>
     filterTests(el("test-select").value));
@@ -593,6 +690,18 @@ def main(argv=None):
     )
     reverse.add_argument("index", type=Path, help="The generated index.json")
     reverse.add_argument("location", help="Repository-relative path:line")
+    reverse.add_argument(
+        "--language", choices=("native", "python"), default="native"
+    )
+    branch = commands.add_parser(
+        "tests-for-branch", help="Find tests covering a branch"
+    )
+    branch.add_argument("index", type=Path)
+    branch.add_argument("path")
+    branch.add_argument("identity")
+    branch.add_argument(
+        "--language", choices=("native", "python"), default="native"
+    )
     forward = commands.add_parser(
         "lines-for-test", help="Find lines covered by a suite"
     )
@@ -601,7 +710,9 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         if args.command == "build":
-            result = build_index(read_records(args.input), args.repository_url)
+            result = build_index(
+                read_index_records(args.input), args.repository_url
+            )
             args.output.mkdir(parents=True, exist_ok=True)
             (args.output / "index.json").write_text(
                 json.dumps(
@@ -632,7 +743,13 @@ def main(argv=None):
                     raise ValueError(
                         "Expected a repository-relative path:line"
                     )
-                answer = tests_for_line(result, path, int(number))
+                answer = tests_for_line(
+                    result, path, int(number), args.language
+                )
+            elif args.command == "tests-for-branch":
+                answer = tests_for_branch(
+                    result, args.path, args.identity, args.language
+                )
             else:
                 answer = lines_for_test(result, args.test_uid)
             print(json.dumps(answer, ensure_ascii=True, indent=2))

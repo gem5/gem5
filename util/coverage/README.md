@@ -142,3 +142,40 @@ python3 -m unittest discover -s util/coverage -p 'test_index.py'
 The focused tests cover merged and reverse queries, multiple attempts,
 revision and identity conflicts, unknown versus measured-zero coverage,
 validation, safe HTML data embedding, and command-line build/query behavior.
+
+## Shared record validation and sparse profiles
+
+`schema.py` is the common validation boundary for reporting and indexing.
+`load_record(path, root=input_directory)` returns a normalized record;
+`iter_records(directory)` yields `(path, record)` pairs and `read_records`
+yields records alone. Both `coverage.json` and `python-coverage.json` are read.
+Call `load_record` separately when a reporting application must retain valid
+records after rejecting another file.
+
+Version 1 profiles remain supported. Native version 2 profiles contain only
+positive line and branch counts, referencing a shared
+`baselines/<baseline_id>/baseline.json`. The loader checks the baseline's
+canonical JSON SHA-256, revision, language, and referenced lines and branches.
+It restores zero-count executable lines and branch metadata in memory.
+Missing/error records created before baseline preparation may have no baseline
+and no files. They remain visibly incomplete.
+
+`load_sparse_record` and `read_index_records` avoid expanding the baseline per
+invocation. They return a `SparseProfile(record, baseline)` for version 2 and
+ordinary normalized dictionaries for version 1. The index seeds each baseline
+once and processes positive counts thereafter. Consumers must treat shared
+baseline objects as immutable.
+
+The index keeps native and Python inventories separate. Its language selector
+changes both lookup directions; source-line lookup also lists matching branch
+identities and their covering suites. Native branch identities distinguish
+build graphs and translation units; Python branches describe directed arcs,
+including negative destination lines for function exits. Branch counts are
+compiler/interpreter observations, not proof of every semantic condition.
+
+```sh
+python3 util/coverage/index.py tests-for-line coverage-index/index.json \
+  src/python/gem5/resources/resource.py:100 --language python
+python3 util/coverage/index.py tests-for-branch coverage-index/index.json \
+  src/example.cc BRANCH_ID --language native
+```
