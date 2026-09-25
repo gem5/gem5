@@ -208,6 +208,7 @@ def _create_test_run_gem5(config, config_args, gem5_args):
             "--silent-redirect",
         ]
         command.extend(_gem5_args)
+        script_index = len(command)
         command.append(config)
         # Config_args should set up the program args.
         command.extend(config_args)
@@ -219,6 +220,8 @@ def _create_test_run_gem5(config, config_args, gem5_args):
             else nullcontext(None)
         )
         with coverage as environment:
+            if gcov == "per-test":
+                command = coverage.python_command(command, script_index)
             options = {} if environment is None else {"env": environment}
             log_call(
                 params.log,

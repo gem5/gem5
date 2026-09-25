@@ -233,6 +233,7 @@ def define_defaults(defaults):
     )
     defaults.gcov = ""
     defaults.gcov_tool = "gcov"
+    defaults.python_coverage = False
 
 
 def define_constants(constants):
@@ -392,6 +393,11 @@ def define_post_processors(config):
 
     def default_variant(variant):
         selected = variant[0] or [constants.opt_tag]
+        if (
+            config._lookup_val("python_coverage")[0]
+            and config._lookup_val("gcov")[0] != "per-test"
+        ):
+            raise ValueError("--python-coverage requires --gcov=per-test")
         if (
             config._lookup_val("gcov")[0] == "per-test"
             and len(set(selected)) > 1
@@ -678,6 +684,13 @@ def define_common_args(config):
             "gem5 invocation while permitting parallel tests.",
         ),
         Argument(
+            "--python-coverage",
+            action="store_true",
+            default=config._defaults.python_coverage,
+            help="Collect separate Python config coverage with invocation "
+            "contexts (requires --gcov=per-test and coverage.py).",
+        ),
+        Argument(
             "--gcov-tool",
             action="store",
             default=config._defaults.gcov_tool,
@@ -753,6 +766,7 @@ class RunParser(ArgParser):
         common_args.exclude_tags.add_to(parser)
         common_args.gcov.add_to(parser)
         common_args.gcov_tool.add_to(parser)
+        common_args.python_coverage.add_to(parser)
 
 
 class ListParser(ArgParser):
@@ -820,6 +834,7 @@ class ListParser(ArgParser):
         common_args.exclude_tags.add_to(parser)
         common_args.gcov.add_to(parser)
         common_args.gcov_tool.add_to(parser)
+        common_args.python_coverage.add_to(parser)
 
 
 class RerunParser(ArgParser):
@@ -840,6 +855,7 @@ class RerunParser(ArgParser):
         common_args.host.add_to(parser)
         common_args.gcov.add_to(parser)
         common_args.gcov_tool.add_to(parser)
+        common_args.python_coverage.add_to(parser)
 
 
 config = _Config()

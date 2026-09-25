@@ -285,6 +285,7 @@ class Gem5Fixture(SConsFixture):
                 self.path,
                 config.result_path,
                 config.gcov_tool,
+                python_coverage=config.python_coverage,
             )
 
     def get_get_build_info(self) -> str | None:

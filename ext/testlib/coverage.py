@@ -166,13 +166,22 @@ def _branch_id(build_id, branch):
 class CoverageBuild:
     """Snapshot matching notes once, then share immutable notes between runs."""
 
-    def __init__(self, root, target, binary, result_path, gcov="gcov"):
+    def __init__(
+        self,
+        root,
+        target,
+        binary,
+        result_path,
+        gcov="gcov",
+        python_coverage=False,
+    ):
         self.root = Path(root).resolve()
         self.compiled_root = self.root
         self.target = Path(target).resolve()
         self.binary = Path(binary).resolve()
         self.output = Path(result_path).resolve() / "coverage"
         self.gcov = gcov
+        self.python_coverage = python_coverage
         self.lock = threading.Lock()
         self.notes = None
         self.units = {}
@@ -357,6 +366,19 @@ class InvocationCoverage:
             "files": [],
         }
         _write_record(self.path, self.record)
+        self.python_path = self.directory / "python-coverage.json"
+        if build.python_coverage:
+            python_record = dict(self.record)
+            python_record.update(
+                schema_version=1,
+                language="python",
+                invocation_id=self.identifier + "-python",
+                parent_invocation_id=self.identifier,
+                build={"instrumentation": "coverage.py", "scope": "config"},
+                source_root=str(build.root),
+                compiled_root=str(build.compiled_root),
+            )
+            _write_record(self.python_path, python_record)
         self.environment = dict(os.environ)
         self.environment.update(
             GCOV_PREFIX=str(self.raw), GCOV_PREFIX_STRIP="0"
@@ -387,6 +409,30 @@ class InvocationCoverage:
             self.log.message(f"Coverage metadata copy failed: {error}")
         _write_record(self.path, self.record)
         return self.environment
+
+    def python_command(self, command, script_index):
+        """Wrap only file configurations; leave the user's config argv intact."""
+        if not self.build.python_coverage:
+            return command
+        # These modes execute a different entry point or retain its globals for
+        # an interactive session. Reject instead of silently changing behavior.
+        incompatible = {"-m", "-c", "--pdb", "-i", "--interactive"}
+        if any(arg in incompatible for arg in command[1:script_index]):
+            raise ValueError(
+                "Python coverage requires a noninteractive file config"
+            )
+        record = json.loads(self.python_path.read_text())
+        record["compiled_root"] = str(self.build.compiled_root)
+        record["build"]["gem5_compatibility_id"] = self.build.build.get(
+            "compatibility_id", "unknown"
+        )
+        _write_record(self.python_path, record)
+        wrapper = Path(__file__).with_name("coverage_python.py")
+        return (
+            command[:script_index]
+            + [str(wrapper), str(self.python_path)]
+            + command[script_index:]
+        )
 
     def __exit__(self, exception_type, exception, traceback):
         if exception_type is None:
@@ -459,6 +505,15 @@ class InvocationCoverage:
             self.record["error"] = str(error)
             self.log.message(f"Coverage collection failed: {error}")
         finally:
+            if self.build.python_coverage:
+                try:
+                    python_record = json.loads(self.python_path.read_text())
+                    python_record["outcome"] = self.record["outcome"]
+                    _write_record(self.python_path, python_record)
+                except Exception as error:
+                    self.log.message(
+                        f"Cannot update Python coverage result: {error}"
+                    )
             try:
                 _write_record(self.path, self.record)
             except Exception as error:

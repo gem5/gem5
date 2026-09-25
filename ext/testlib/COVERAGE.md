@@ -84,7 +84,7 @@ copy of the entire build.
 
 The unit is one gem5 invocation, including any subprocesses inheriting its
 profile environment. It does not distinguish individual Python unittest cases
-run inside that process, measure Python source execution, or fix limitations
+run inside that process, or fix limitations
 of instrumented gem5 itself (including the existing x86 boot coverage issue).
 Sources outside the compilation checkout and generated `.py` embedding notes
 are excluded. Optimized GCC line counts retain GCC's documented limitations.
@@ -92,6 +92,7 @@ are excluded. Optimized GCC line counts retain GCC's documented limitations.
 Run the focused native checks with GNU GCC and matching gcov installed:
 
 ```
+python3 -m pip install coverage==7.10.7
 python3 -m unittest discover -s ext/testlib/tests -v
 ```
 
@@ -109,3 +110,36 @@ edges), not source-level conditions or MC/DC; optimized builds may fold or
 introduce edges. Branch identities are meaningful only within matching build
 scopes. Generated sources under `build/` are copied once beside the baseline
 under `sources/` for offline browsing.
+
+## Optional Python config coverage
+
+Add `--python-coverage` to `--gcov=per-test` after installing
+`coverage==7.10.7` in the Python environment embedded by gem5. This is opt-in;
+ordinary tests do not import coverage.py or run a wrapper. The file config
+runs with its original arguments, `__file__`, `__m5_main__` name, and config
+import directory. Module/string entry points and interactive/debugger modes
+are rejected explicitly because wrapping them would change their semantics.
+Missing coverage.py or extraction errors are recorded without replacing the
+config's return status or exception.
+
+Each native invocation gets a separate `python-coverage.json` record with
+`language: python`, its SuiteUID, `parent_invocation_id`, and an invocation ID
+suffixed with `-python`. It is written before the process starts, so an early
+crash still appears as missing. Native and Python records remain separate;
+never combine their percentages or branch denominators. Python line counts
+are 0/1 (coverage.py records execution, not execution frequency). Python
+branches are coverage.py source arcs, including negative function-exit lines.
+
+The retained `.coverage` database contains a context comprising the SuiteUID
+and native invocation ID. `.coverage-mapped` and `python-contexts.json` retain
+the source mapping and line contexts used for normalized output. Producer
+source paths in embedded Python code are mapped to the current checkout for
+reporting. The recorded tool/interpreter versions identify the measurement.
+
+Measurement begins when the config wrapper starts. Its denominator consists
+of executable statements and decisions in measured repository Python files;
+it does not claim all unimported repository files, gem5 startup before the
+wrapper, shutdown after the config, individual unittest cases, or separate
+Python interpreter subprocesses. Abrupt termination may prevent Python data
+from being saved even when GCC counters are available. These omissions remain
+visible as separate collection status and process outcome.

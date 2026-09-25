@@ -119,6 +119,131 @@ class CoverageTest(unittest.TestCase):
             )
         return json.loads(invocation.path.read_text())
 
+    def python_config(self, argument="a", relocated=False, missing=False):
+        if not missing and importlib.util.find_spec("coverage") is None:
+            self.skipTest("coverage.py is required for Python collection")
+        stub = self.root / "gem5_stub.py"
+        stub.write_text(
+            "import os,sys,types\n"
+            "sys.modules['m5']=types.SimpleNamespace(options=types.SimpleNamespace(P=False))\n"
+            "sys.argv=sys.argv[1:]\n"
+            "sys.path.insert(0,os.path.dirname(sys.argv[0]))\n"
+            "exec(compile(open(sys.argv[0]).read(),sys.argv[0],'exec'),"
+            "{'__name__':'__m5_main__','__file__':sys.argv[0]})\n"
+        )
+        script = self.root / "config.py"
+        helper = self.root / "helper.py"
+        helper.write_text("value = 42\n")
+        script.write_text(
+            "import sys,helper\n"
+            "assert __name__ == '__m5_main__'\n"
+            "assert sys.argv == [__file__, sys.argv[1], 'space argument']\n"
+            "assert helper.value == 42\n"
+            "if sys.argv[1] == 'a':\n"
+            "    selected = 1\n"
+            "else:\n"
+            "    selected = 2\n"
+            "if sys.argv[1] == 'fail':\n"
+            "    sys.exit(7)\n"
+        )
+        if relocated:
+            embedded = self.root / "embedded.py"
+            embedded.write_text("embedded_value = 3\n")
+            script.write_text(
+                script.read_text()
+                + "exec(compile('embedded_value = 3\\n', "
+                + repr("/absent-producer-root/embedded.py")
+                + ", 'exec'), {})\n"
+            )
+        build = coverage.CoverageBuild(
+            self.root,
+            self.target,
+            self.binary,
+            self.root / "results",
+            python_coverage=True,
+        )
+        if relocated:
+            build.compiled_root = Path("/absent-producer-root")
+            # Avoid changing native gcov paths in this wrapper-specific fixture.
+            build._prepare = lambda: None
+        invocation = build.invocation(
+            "SuiteUID:gem5/example/test.py:python", Log()
+        )
+        early = json.loads(invocation.python_path.read_text())
+        self.assertEqual(
+            (early["outcome"], early["collection"]), ("interrupted", "missing")
+        )
+        options = ["-S"] if missing else []
+        command = [
+            sys.executable,
+            *options,
+            str(stub),
+            "config.py",
+            argument,
+            "space argument",
+        ]
+        result = None
+        try:
+            with invocation as environment:
+                command = invocation.python_command(command, 2 + len(options))
+                result = subprocess.run(
+                    command,
+                    env=environment,
+                    cwd=self.root,
+                    text=True,
+                    capture_output=True,
+                )
+                result.check_returncode()
+        except subprocess.CalledProcessError:
+            if argument != "fail":
+                self.fail(result.stderr)
+        record = json.loads(invocation.python_path.read_text())
+        return record, invocation, result
+
+    def test_python_config_identity_and_failure_are_preserved(self):
+        for argument in ("a", "b", "fail"):
+            record, invocation, result = self.python_config(argument)
+            self.assertEqual(result.returncode, 7 if argument == "fail" else 0)
+            self.assertEqual(record["collection"], "complete", record)
+            self.assertEqual(
+                record["outcome"], "failed" if argument == "fail" else "passed"
+            )
+            files = {entry["path"]: entry for entry in record["files"]}
+            self.assertEqual(
+                files["config.py"]["lines"]["6"], int(argument == "a")
+            )
+            self.assertEqual(
+                files["config.py"]["lines"]["8"], int(argument != "a")
+            )
+            self.assertEqual(files["helper.py"]["lines"], {"1": 1})
+            self.assertTrue(files["config.py"]["branches"])
+            self.assertEqual(
+                record["parent_invocation_id"], invocation.identifier
+            )
+            self.assertEqual(
+                record["invocation_id"], invocation.identifier + "-python"
+            )
+            self.assertTrue((invocation.directory / ".coverage").exists())
+            contexts = json.loads(
+                (invocation.directory / "python-contexts.json").read_text()
+            )
+            self.assertIn(
+                record["test_uid"] + "|" + invocation.identifier, str(contexts)
+            )
+
+    def test_python_relocated_embedded_source_is_mapped(self):
+        record, _, _ = self.python_config(relocated=True)
+        self.assertEqual(record["collection"], "complete", record)
+        files = {entry["path"]: entry for entry in record["files"]}
+        self.assertEqual(files["embedded.py"]["lines"], {"1": 1})
+
+    def test_missing_python_dependency_preserves_config_failure(self):
+        record, _, result = self.python_config("fail", missing=True)
+        self.assertEqual(result.returncode, 7)
+        self.assertEqual(record["outcome"], "failed")
+        self.assertEqual(record["collection"], "error")
+        self.assertIn("coverage", record["error"])
+
     def test_serial_and_parallel_profiles_remain_distinct(self):
         serial = {argument: self.run_program(argument) for argument in "ab"}
         with concurrent.futures.ThreadPoolExecutor(max_workers=4) as pool:
@@ -384,6 +509,27 @@ class CoverageTest(unittest.TestCase):
         self.assertNotEqual(process.returncode, 0)
         self.assertIn("requires one variant per run", process.stderr)
 
+    def test_python_coverage_requires_native_invocation_identity(self):
+        repository = MODULE.parents[2]
+        process = subprocess.run(
+            [
+                sys.executable,
+                str(repository / "tests/main.py"),
+                "list",
+                "gem5/pyunit",
+                "--python-coverage",
+                "--suites",
+                "-q",
+            ],
+            cwd=repository / "tests",
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotEqual(process.returncode, 0)
+        self.assertIn(
+            "--python-coverage requires --gcov=per-test", process.stderr
+        )
+
     def test_real_testlib_harness_records_each_invocation(self):
         repository = MODULE.parents[2]
         subprocess.run(["git", "init", "-q", str(self.root)], check=True)
@@ -456,6 +602,7 @@ class CoverageTest(unittest.TestCase):
                 str(suites),
                 "--skip-build",
                 "--gcov=per-test",
+                "--python-coverage",
                 "-t",
                 "2",
                 "--base-dir",
@@ -487,6 +634,25 @@ class CoverageTest(unittest.TestCase):
         )
         self.assertTrue(all(r["collection"] == "complete" for r in records))
         self.assertTrue(all(r["revision"] != "unknown" for r in records))
+        python_records = [
+            json.loads(path.read_text())
+            for path in (result_path / "coverage").glob(
+                "*/python-coverage.json"
+            )
+        ]
+        self.assertEqual(len(python_records), 2)
+        self.assertEqual(
+            {r["outcome"] for r in python_records}, {"passed", "failed"}
+        )
+        # This C stand-in never executes Python: early records must survive
+        # with missing collection instead of reporting measured zero.
+        self.assertTrue(
+            all(r["collection"] == "missing" for r in python_records)
+        )
+        self.assertEqual(
+            {r["parent_invocation_id"] for r in python_records},
+            {r["invocation_id"] for r in records},
+        )
         results = ET.parse(result_path / "results.xml")
         cases = list(results.iter("testcase"))
         self.assertEqual(
