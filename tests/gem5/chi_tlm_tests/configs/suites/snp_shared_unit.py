@@ -204,7 +204,7 @@ def test_snp_resp_sc_fwded_sc(generators):
     generator0 = generators[0]
     generator1 = generators[1]
 
-    tran = generator0.inject(
+    tran = generator0.chi_source.inject(
         payload_gen(ADDRESS), phase_gen(GENERATOR0_ID, FIRST_TXN_ID)
     )
     tran.ASSERT(channel_check_gen(Channel.DAT))
@@ -228,7 +228,7 @@ def test_snp_resp_sc_fwded_sc(generators):
     snoop.DO_WAIT_FOR(*cycles(1))
     snoop.DO(do_snp_resp_fwded_gen(Resp.RESP_SC, Resp.RESP_SC))
 
-    tran = generator1.inject(
+    tran = generator1.chi_source.inject(
         payload_gen(ADDRESS), phase_gen(GENERATOR1_ID, SECOND_TXN_ID)
     )
     tran.ASSERT(channel_check_gen(Channel.DAT))
@@ -251,7 +251,7 @@ def test_snp_resp_sc_fwded_sd(generators):
     generator0 = generators[0]
     generator1 = generators[1]
 
-    tran = generator0.inject(
+    tran = generator0.chi_source.inject(
         payload_gen(ADDRESS + 64), phase_gen(GENERATOR0_ID, FIRST_TXN_ID)
     )
     tran.ASSERT(channel_check_gen(Channel.DAT))
@@ -275,7 +275,7 @@ def test_snp_resp_sc_fwded_sd(generators):
     snoop.DO_WAIT_FOR(*cycles(1))
     snoop.DO(do_snp_resp_fwded_gen(Resp.RESP_SC, Resp.RESP_SD_PD))
 
-    tran = generator1.inject(
+    tran = generator1.chi_source.inject(
         payload_gen(ADDRESS + 64), phase_gen(GENERATOR1_ID, SECOND_TXN_ID)
     )
     tran.ASSERT(channel_check_gen(Channel.DAT))

@@ -108,7 +108,7 @@ def test_all(generators):
     payload = payload_gen()
     phase = phase_gen()
 
-    tran = generator.inject(payload, phase)
+    tran = generator.chi_source.inject(payload, phase)
     tran.ASSERT(channel_check)
     tran.ASSERT(opcode_check)
     tran.ASSERT(cacheline_check)
