@@ -679,7 +679,8 @@ decode QUADRANT default Unknown::unknown() {
                     0x10: decode NF {
                         0x00: VleOp::vle8ff_v({{
                             if ((machInst.vm || elem_mask(v0, ei)) &&
-                                i < this->microVl && i < this->faultIdx) {
+                                i < this->microVl &&
+                                i < RiscvISA::getFoFFaultIdx(xc, this)) {
                                 Vd_ub[i] = Mem_vc.as<uint8_t>()[i];
                             }
                         }}, inst_flags=SimdUnitStrideFaultOnlyFirstLoadOp);
@@ -862,7 +863,8 @@ decode QUADRANT default Unknown::unknown() {
                     0x10: decode NF {
                         0x00: VleOp::vle16ff_v({{
                             if ((machInst.vm || elem_mask(v0, ei)) &&
-                                i < this->microVl && i < this->faultIdx) {
+                                i < this->microVl &&
+                                i < RiscvISA::getFoFFaultIdx(xc, this)) {
                                 Vd_uh[i] = Mem_vc.as<uint16_t>()[i];
                             }
                         }}, inst_flags=SimdUnitStrideFaultOnlyFirstLoadOp);
@@ -1045,7 +1047,8 @@ decode QUADRANT default Unknown::unknown() {
                     0x10: decode NF {
                         0x00: VleOp::vle32ff_v({{
                             if ((machInst.vm || elem_mask(v0, ei)) &&
-                                i < this->microVl && i < this->faultIdx) {
+                                i < this->microVl &&
+                                i < RiscvISA::getFoFFaultIdx(xc, this)) {
                                 Vd_uw[i] = Mem_vc.as<uint32_t>()[i];
                             }
                         }}, inst_flags=SimdUnitStrideFaultOnlyFirstLoadOp);
@@ -1228,7 +1231,8 @@ decode QUADRANT default Unknown::unknown() {
                     0x10: decode NF {
                         0x00: VleOp::vle64ff_v({{
                             if ((machInst.vm || elem_mask(v0, ei)) &&
-                                i < this->microVl && i < this->faultIdx) {
+                                i < this->microVl &&
+                                i < RiscvISA::getFoFFaultIdx(xc, this)) {
                                 Vd_ud[i] = Mem_vc.as<uint64_t>()[i];
                             }
                         }}, inst_flags=SimdUnitStrideFaultOnlyFirstLoadOp);
