@@ -390,6 +390,9 @@ jobs:
         runs-on: ${{ fromJSON(inputs.coverage && '{"group":"gem5-coverage","labels":"gem5-coverage"}' || '["self-hosted","linux","x64"]') }}
         container: ghcr.io/gem5/systemc-env:latest
         timeout-minutes: 180
+        env:
+            # GCC .o and .os outputs otherwise overwrite the same .gcno.
+            SYSTEMC_LIBRARY_BUILD: ${{ inputs.coverage && 'ARM-systemc-library' || 'ARM' }}
         # The shared-library build changes the configuration and generated
         # headers. Restoring it can race header regeneration on the next run.
         steps:
@@ -403,14 +406,19 @@ jobs:
                   scons build/ARM/gem5.opt ${GCOV_FLAGS:+--gcov} --ignore-style --duplicate-sources -j$(nproc)
             - name: disable systemc
               id: configure-library
-              run: scons setconfig build/ARM --ignore-style USE_SYSTEMC=n
+              run: |
+                  if [ -n "${GCOV_FLAGS:-}" ]; then
+                      scons defconfig "build/$SYSTEMC_LIBRARY_BUILD" build_opts/ARM --ignore-style
+                  fi
+                  scons setconfig "build/$SYSTEMC_LIBRARY_BUILD" --ignore-style USE_SYSTEMC=n
             - name: Build ARM/libgem5_opt.so
               id: build-library
-              run: scons build/ARM/libgem5_opt.so ${GCOV_FLAGS:+--gcov} --with-cxx-config --without-python --without-tcmalloc -j$(nproc) --duplicate-sources
+              run: scons "build/$SYSTEMC_LIBRARY_BUILD/libgem5_opt.so" ${GCOV_FLAGS:+--gcov} --with-cxx-config --without-python --without-tcmalloc -j$(nproc)
+                  --duplicate-sources
             - name: Compile gem5 withing SystemC
               id: build-integration
               working-directory: ${{ github.workspace }}/util/systemc/gem5_within_systemc
-              run: make
+              run: make ARCH="$SYSTEMC_LIBRARY_BUILD"
             - name: Clear coverage counters before testing
               if: inputs.coverage
               run: find build -type f \( -name '*.gcda' -o -name '*.py.gcno' \) -delete
@@ -419,7 +427,7 @@ jobs:
               run: ./build/ARM/gem5.opt configs/deprecated/example/se.py -c tests/test-progs/hello/bin/arm/linux/hello
             - name: Continue gem5 within SystemC test
               id: run-continue
-              run: LD_LIBRARY_PATH=build/ARM/:/opt/systemc/lib-linux64/ ./util/systemc/gem5_within_systemc/gem5.opt.sc m5out/config.ini
+              run: LD_LIBRARY_PATH="build/$SYSTEMC_LIBRARY_BUILD/:/opt/systemc/lib-linux64/" ./util/systemc/gem5_within_systemc/gem5.opt.sc m5out/config.ini
 
             - name: Collect aggregate native coverage
               if: ${{ !cancelled() && inputs.coverage }}
