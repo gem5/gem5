@@ -28,6 +28,7 @@
 """Native collector checks; run explicitly, outside gem5's PyUnit suite."""
 
 import concurrent.futures
+import copy
 import importlib.util
 import json
 import shutil
@@ -48,6 +49,94 @@ spec.loader.exec_module(coverage)
 class Log:
     def message(self, message):
         pass
+
+
+class BranchStorageTest(unittest.TestCase):
+    def test_compaction_preserves_identity_queries_and_lcov(self):
+        sys.path.insert(0, str(MODULE.parents[2] / "util" / "coverage"))
+        try:
+            from util.coverage import (
+                index,
+                report,
+            )
+        finally:
+            sys.path.pop(0)
+
+        branches = [
+            {
+                "unit": "build/ALL/very_long_translation_unit.gcno",
+                "function": "_ZN" + "long_template_argument_" * 100,
+                "line": 1,
+                "ordinal": ordinal,
+                "count": ordinal % 2,
+                "fallthrough": ordinal % 2 == 0,
+                "throw": False,
+            }
+            for ordinal in range(200)
+        ]
+        expanded = [
+            {"path": "src/example.cc", "lines": {"1": 1}, "branches": branches}
+        ]
+        compact = copy.deepcopy(expanded)
+        for branch in branches:
+            branch["id"] = coverage._branch_id("build-identity", branch)
+        coverage._compact_branches(compact, "build-identity")
+        self.assertEqual(
+            [b["id"] for b in branches],
+            [b["id"] for b in compact[0]["branches"]],
+        )
+        self.assertLess(
+            len(coverage._canonical_bytes(compact)),
+            len(coverage._canonical_bytes(expanded)) / 10,
+        )
+        record = {
+            "schema_version": 1,
+            "revision": "a" * 40,
+            "test_uid": "SuiteUID:tests/gem5/example/test.py:one",
+            "invocation_id": "one",
+            "build": {},
+            "collection": "complete",
+            "outcome": "passed",
+        }
+        indexes = [
+            index.build_index([{**record, "files": files}])
+            for files in (expanded, compact)
+        ]
+        for branch in branches:
+            queries = [
+                index.tests_for_branch(data, "src/example.cc", branch["id"])
+                for data in indexes
+            ]
+            for query in queries:
+                query["metadata"].pop("unit", None)
+                query["metadata"].pop("function", None)
+            self.assertEqual(*queries)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            exports = []
+            for number, files in enumerate((expanded, compact)):
+                source = root / str(number) / "input"
+                source.mkdir(parents=True)
+                output = source.parent / "output"
+                report.write_json(
+                    source / "coverage.json", {**record, "files": files}
+                )
+                report.write_json(
+                    source / "expected.json",
+                    {
+                        "schema_version": 1,
+                        "revision": record["revision"],
+                        "length": "quick",
+                        "expected": [record["test_uid"]],
+                        "excluded": {},
+                    },
+                )
+                report.summarize(source, output, record["revision"])
+                exports.append(
+                    [path.read_text() for path in output.glob("*.info")]
+                )
+            self.assertTrue(exports[0])
+            self.assertEqual(*exports)
 
 
 class CoverageTest(unittest.TestCase):
@@ -317,9 +406,11 @@ class CoverageTest(unittest.TestCase):
         )
         self.assertEqual({branches[key]["line"] for key in first}, {3})
         self.assertEqual({branches[key]["line"] for key in second}, {3, 6})
-        self.assertEqual(
-            {branch["unit"] for branch in branches.values()},
-            {"build/main.gcno"},
+        self.assertTrue(
+            all("unit" not in branch for branch in branches.values())
+        )
+        self.assertTrue(
+            all("function" not in branch for branch in branches.values())
         )
 
     def test_failed_process_retains_counters_and_failure(self):

@@ -163,6 +163,19 @@ def _branch_id(build_id, branch):
     )
 
 
+def _compact_branches(files, build_id):
+    """Keep query metadata after deriving identity from the full GCC graph.
+
+    Notes retained in the raw artifact preserve function and translation-unit
+    details. Repeating those strings for every branch dominates large builds.
+    """
+    for entry in files:
+        for branch in entry["branches"]:
+            branch["id"] = _branch_id(build_id, branch)
+            del branch["function"]
+            del branch["unit"]
+
+
 class CoverageBuild:
     """Snapshot matching notes once, then share immutable notes between runs."""
 
@@ -300,11 +313,7 @@ class CoverageBuild:
                         },
                     }
                 )
-                for entry in files:
-                    for branch in entry["branches"]:
-                        branch["id"] = _branch_id(
-                            self.build["build_id"], branch
-                        )
+                _compact_branches(files, self.build["build_id"])
                 baseline = {
                     "schema_version": 1,
                     "format": "gem5-coverage-baseline",
