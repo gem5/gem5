@@ -52,6 +52,7 @@ from datetime import datetime
 from typing import (
     IO,
     List,
+    TypeAlias,
     Union,
 )
 
@@ -63,6 +64,9 @@ from m5.objects import *
 from m5.params import SimObjectVector
 
 from _m5 import stats as _m5_stats
+
+StatsRoot: TypeAlias = SimObject | SimObjectVector | list["StatsRoot"]
+StatsSnapshot: TypeAlias = SimStat | list["StatsSnapshot"]
 
 
 class Visitor(ABC):
@@ -95,7 +99,7 @@ class Visitor(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def visit_simstat(self, element: SimStat) -> Dict:
+    def visit_simstat(self, element: StatsSnapshot) -> dict | list:
         raise NotImplementedError
 
     @abstractmethod
@@ -103,7 +107,9 @@ class Visitor(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def dump(self, roots: list[SimObject] | Root, **kwargs) -> None:
+    def dump(
+        self, roots: SimObject | SimObjectVector | list[SimObject], **kwargs
+    ) -> None:
         raise NotImplementedError
 
     def _acceptable_type(self, element):
@@ -149,6 +155,7 @@ class CsvOutputVisitor(Visitor):
         """
 
         self.file = file
+        self._collection_output = False
 
     def visit_scalar(self, element: Scalar):
         return {
@@ -220,7 +227,16 @@ class CsvOutputVisitor(Visitor):
             values[key] = vlist
         return values
 
-    def visit_simstat(self, element: SimStat):
+    def visit_simstat(self, element: StatsSnapshot) -> dict | list:
+        if isinstance(element, list):
+            entries = []
+            for item in element:
+                entry = self.visit_simstat(item)
+                if isinstance(item, SimStat):
+                    entry["name"] = item.name
+                entries.append(entry)
+            return entries
+
         values = {
             "time_conversion": element.time_conversion,
             "creation_time": element.creation_time.isoformat(
@@ -237,39 +253,52 @@ class CsvOutputVisitor(Visitor):
         return values
 
     def flatten_dict(self, d, parent_key="", sep="."):
+        """Flatten a snapshot, using positions for root-list columns."""
         items = {}
-        for k, v in d.items():
-            new_key = f"{parent_key}{sep}{k}" if parent_key else k
 
+        def add(key, value):
+            if key in items:
+                raise ValueError(f"Duplicate CSV column {key!r}.")
+            items[key] = value
+
+        entries = enumerate(d) if isinstance(d, (list, tuple)) else d.items()
+        for k, v in entries:
+            new_key = f"{parent_key}{sep}{k}" if parent_key else str(k)
             if isinstance(v, dict):
-                # Recursively flatten nested dicts
-                items.update(self.flatten_dict(v, new_key, sep=sep))
+                for key, value in self.flatten_dict(v, new_key, sep).items():
+                    add(key, value)
             elif isinstance(v, (list, tuple)):
-                # Flatten arrays by indexing elements
+                if isinstance(d, (list, tuple)):
+                    for key, value in self.flatten_dict(
+                        v, new_key, sep
+                    ).items():
+                        add(key, value)
+                    continue
+                # Preserve existing indexed columns for vectors within groups.
                 for i, item in enumerate(v):
                     if isinstance(item, dict):
-                        # Recurse if element is a dict
-                        items.update(
-                            self.flatten_dict(item, f"{new_key}{i}", sep=sep)
-                        )
+                        for key, value in self.flatten_dict(
+                            item, f"{new_key}{i}", sep
+                        ).items():
+                            add(key, value)
                     else:
-                        items[f"{new_key}{i}"] = item
+                        add(f"{new_key}{i}", item)
             else:
-                # Primitive value
-                items[new_key] = v
-
+                add(new_key, v)
         return items
 
-    def dump(self, roots: list[SimObject] | Root, **kwargs) -> None:
+    def dump(
+        self, roots: SimObject | SimObjectVector | list[SimObject], **kwargs
+    ) -> None:
         """
         Dumps the stats of a simulation root (or list of roots) to the output
         CSV file specified in the constructor.
 
 
-        :param roots: The Root, or List of roots, whose stats are are to be dumped JSON.
+        :param roots: A SimObject or collection of SimObjects to export.
         """
 
-        simstat = get_simstat(root=roots, prepare_stats=False)
+        simstat = _get_dump_stats(roots)
         vals = self.visit_simstat(simstat)
         flat_dict = self.flatten_dict(vals)
 
@@ -279,11 +308,19 @@ class CsvOutputVisitor(Visitor):
                 writer.writerow(flat_dict.keys())
                 writer.writerow(flat_dict.values())
             self.file_created = True
+            self._collection_output = isinstance(vals, list)
         else:
             with open(self.file, newline="") as fp:
                 reader = csv.reader(fp)
                 header = next(reader)
 
+            if (self._collection_output or isinstance(vals, list)) and set(
+                flat_dict
+            ) != set(header):
+                raise ValueError(
+                    "CSV columns changed; use a separate file for a "
+                    "different statistics selection."
+                )
             row = [flat_dict.get(key, "") for key in header]
 
             with open(self.file, "a", newline="") as fp:
@@ -402,7 +439,10 @@ class JsonOutputVistor(Visitor):
             values[key] = vlist
         return values
 
-    def visit_simstat(self, element: SimStat):
+    def visit_simstat(self, element: StatsSnapshot) -> dict | list:
+        if isinstance(element, list):
+            return [self.visit_simstat(item) for item in element]
+
         values = {
             "type": element.type,
             "time_conversion": element.time_conversion,
@@ -420,7 +460,9 @@ class JsonOutputVistor(Visitor):
         values["name"] = element.name
         return values
 
-    def dump(self, roots: list[SimObject] | Root, **kwargs) -> None:
+    def dump(
+        self, roots: SimObject | SimObjectVector | list[SimObject], **kwargs
+    ) -> None:
         """
         Dumps the stats of a simulation root (or list of roots) to the output
         JSON file specified in the JsonOutput constructor.
@@ -431,15 +473,16 @@ class JsonOutputVistor(Visitor):
             for the target root.
 
 
-        :param roots: The Root, or List of roots, whose stats are are to be dumped JSON.
+        :param roots: A SimObject or collection of SimObjects to export.
         """
 
         if "indent" not in kwargs:
             kwargs["indent"] = 4
 
+        simstat = _get_dump_stats(roots)
+        values = self.visit_simstat(simstat)
         with open(self.file, "w") as fp:
-            simstat = get_simstat(root=roots, prepare_stats=False)
-            json.dump(obj=self.visit_simstat(simstat), fp=fp, **kwargs)
+            json.dump(obj=values, fp=fp, **kwargs)
 
 
 def __get_statistic(statistic: _m5_stats.Info) -> Optional[Statistic]:
@@ -719,46 +762,44 @@ def _process_simobject_stats(
 
 
 def get_simstat(
-    root: SimObject | SimObjectVector | list[SimObject | SimObjectVector],
+    root: StatsRoot,
     prepare_stats: bool = True,
-) -> SimStat:
+) -> StatsSnapshot:
+    """Obtain object/vector statistics, mapping Python lists recursively.
+
+    A SimObject returns a SimStat containing its statistics and descendants,
+    without an outer object-name key. A SimObjectVector returns an ordered
+    list of snapshots, including empty and one-element vectors.
+
+    Each snapshot retains its local ``name`` and the same simulation timing
+    metadata. Names are never used as keys for the selected vector members.
+    Selecting Root still exports the full hierarchy as a single SimStat.
+
+    A Python list returns one recursive ``get_simstat`` result per element,
+    preserving order, nesting, and empty or singleton lists. Each recursive
+    call receives ``prepare_stats`` and obtains its own snapshot metadata.
+
+    :param root: A SimObject, SimObjectVector, or list of supported inputs.
+    :param prepare_stats: Prepare the selected statistics before conversion.
+    :returns: A SimStat for an object, or a list for a vector or Python list.
     """
-    This function will return the SimStat object for a simulation given a
-    SimObject (typically a Root SimObject), or list of SimObjects. The returned
-    SimStat object will contain all the stats for all the SimObjects contained
-    within the "root", inclusive of the "root" SimObject/SimObjects.
-
-    :param root: A SimObject, or list of SimObjects, of the simulation for
-                 translation into a SimStat object. Typically this is the
-                 simulation's Root SimObject as this will obtain the entirety
-                 of a run's statistics in a single SimStat object.
-
-    :param prepare_stats: Dictates whether the stats are to be prepared prior
-                          to creating the SimStat object. By default this is
-                          ``True``.
-
-    :Returns: The SimStat Object of the current simulation.
-
-    """
+    if isinstance(root, SimObject):
+        objects = [root]
+    elif isinstance(root, SimObjectVector):
+        objects = list(root)
+        if not all(isinstance(obj, SimObject) for obj in objects):
+            raise TypeError("SimObjectVector entries must be SimObjects.")
+    elif isinstance(root, list):
+        return [get_simstat(obj, prepare_stats=prepare_stats) for obj in root]
+    else:
+        raise TypeError(
+            "get_simstat expects a SimObject, SimObjectVector, or list."
+        )
 
     if prepare_stats:
         _m5_stats.processDumpQueue()
-
-    stats_map = {}
-    for r in root:
-        if prepare_stats:
-            if isinstance(r, list):
-                for obj in r:
-                    _prepare_stats(obj)
-            else:
-                _prepare_stats(r)
-
-        stats = _process_simobject_stats(r).values
-        stats["name"] = r.get_name() if r.get_name() else "root"
-        stats_map[stats["name"]] = stats
-
-    if len(stats_map) == 1:
-        stats_map = stats_map[next(iter(stats_map))]
+        for obj in objects:
+            _prepare_stats(obj)
 
     creation_time = datetime.now()
     # TODO: https://github.com/gem5/gem5/issues/3447
@@ -767,9 +808,33 @@ def get_simstat(
     simulated_begin_time = int(final_tick - sim_ticks)
     simulated_end_time = int(final_tick)
 
-    return SimStat(
-        creation_time=creation_time,
-        simulated_begin_time=simulated_begin_time,
-        simulated_end_time=simulated_end_time,
-        **stats_map,
-    )
+    snapshots = []
+    for obj in objects:
+        stats = _process_simobject_stats(obj)
+        snapshots.append(
+            SimStat(
+                creation_time=creation_time,
+                simulated_begin_time=simulated_begin_time,
+                simulated_end_time=simulated_end_time,
+                name=obj.get_name() or "root",
+                **stats.values,
+            )
+        )
+    return snapshots[0] if isinstance(root, SimObject) else snapshots
+
+
+def _get_dump_stats(
+    roots: SimObject | SimObjectVector | list[SimObject],
+) -> StatsSnapshot:
+    """Adapt the dump API's flat root selection to individual conversions.
+
+    Dump visitors expect statistics to have been prepared by their caller.
+    Preserve the container even when only one object is selected.
+    """
+    if isinstance(roots, (SimObject, SimObjectVector)):
+        return get_simstat(roots, prepare_stats=False)
+    if not isinstance(roots, list) or not all(
+        isinstance(obj, SimObject) for obj in roots
+    ):
+        raise TypeError("Dump roots must be a flat list of SimObjects.")
+    return get_simstat(roots, prepare_stats=False)

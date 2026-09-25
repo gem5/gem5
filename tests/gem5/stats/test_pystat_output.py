@@ -252,3 +252,21 @@ gem5_verify_config(
     valid_isas=(constants.all_compiled_tag,),
     length=constants.quick_tag,
 )
+
+
+gem5_verify_config(
+    name="pystats-ordered-roots",
+    fixtures=(),
+    verifiers=(),
+    config=joinpath(
+        config.base_dir,
+        "tests",
+        "gem5",
+        "stats",
+        "configs",
+        "pystats_ordered_roots_check.py",
+    ),
+    config_args=[],
+    valid_isas=(constants.all_compiled_tag,),
+    length=constants.quick_tag,
+)
