@@ -174,7 +174,7 @@ def build_index(records, repository_url=REPOSITORY_URL):
                             "metadata": {
                                 key: value
                                 for key, value in branch.items()
-                                if key != "count"
+                                if key not in ("count", "id")
                             },
                             "count": 0,
                             "membership": 0,
@@ -194,7 +194,7 @@ def build_index(records, repository_url=REPOSITORY_URL):
                 metadata = {
                     key: value
                     for key, value in branch.items()
-                    if key != "count"
+                    if key not in ("count", "id")
                 }
                 existing = branches.setdefault(
                     branch["id"],
@@ -355,7 +355,7 @@ def tests_for_branch(index, path, identity, language="native"):
         "language": language,
         "measured": branch is not None,
         "count": branch["count"] if branch else None,
-        "metadata": branch["metadata"] if branch else None,
+        "metadata": {**branch["metadata"], "id": identity} if branch else None,
         "tests": [
             {"test_uid": uid, "invocation_ids": ids}
             for uid, ids in sorted(tests.items())
@@ -409,6 +409,60 @@ def lines_for_test(index, test_uid):
         "coverage_known": collection["complete"] > 0,
         "lines": lines,
     }
+
+
+def write_browser(index, output, chunk_size=4096):
+    """Keep complete branch inventories outside the initial offline page.
+
+    Script sidecars work from file:// without a server. A line-to-chunk map
+    loads only chunks containing the requested source line; each chunk is
+    bounded even when a generated source file has millions of branches.
+    """
+    if type(chunk_size) is not int or chunk_size < 1:
+        raise ValueError("Branch chunk size must be positive")
+    output = Path(output)
+    sidecars = output / "branches"
+    sidecars.mkdir(parents=True, exist_ok=True)
+    pages = {}
+    for language, files in index.get("branches", {}).items():
+        for path, branches in files.items():
+            by_line = {}
+            pages.setdefault(language, {})[path] = by_line
+            chunk = {}
+            number = 0
+            prefix = hashlib.sha256(
+                (language + "\0" + path).encode()
+            ).hexdigest()
+
+            def save():
+                filename = f"branches/{prefix}-{number}.js"
+                payload = json.dumps(
+                    chunk, ensure_ascii=True, separators=(",", ":")
+                )
+                (output / filename).write_text(
+                    "globalThis.gem5CoverageBranchData["
+                    + json.dumps(filename)
+                    + "]="
+                    + payload
+                    + ";\n",
+                    encoding="utf-8",
+                )
+                for line in {
+                    str(branch["metadata"]["line"])
+                    for branch in chunk.values()
+                }:
+                    by_line.setdefault(line, []).append(filename)
+
+            for identity, branch in branches.items():
+                chunk[identity] = branch
+                if len(chunk) == chunk_size:
+                    save()
+                    chunk = {}
+                    number += 1
+            if chunk:
+                save()
+    view = {**index, "branches": {}, "branch_pages": pages}
+    (output / "index.html").write_text(render_html(view), encoding="utf-8")
 
 
 def render_html(index):
@@ -498,6 +552,9 @@ HTML = r"""<!doctype html>
     </form>
     <p id="line-status" aria-live="polite">Enter a source location.</p>
     <ul id="covering-tests"></ul>
+    <p id="branch-status" aria-live="polite"></p>
+    <ul id="covering-branches"></ul>
+    <button id="more-branches" type="button" hidden>Show more branches</button>
   </section>
 </main>
 <footer class="muted">
@@ -645,8 +702,79 @@ HTML = r"""<!doctype html>
     selectTest();
   }
 
+  let branchRequest = 0;
+  let branchRows = [], branchVisible = 0;
+  globalThis.gem5CoverageBranchData = Object.create(null);
+  const pendingChunks = new Map();
+  function loadChunk(filename) {
+    if (!/^branches\/[a-f0-9]{64}-[0-9]+\.js$/.test(filename)) {
+      return Promise.reject(new Error("Invalid branch page"));
+    }
+    if (pendingChunks.has(filename)) return pendingChunks.get(filename);
+    const promise = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = filename;
+      script.onload = () => {
+        const payload = globalThis.gem5CoverageBranchData[filename];
+        delete globalThis.gem5CoverageBranchData[filename]; script.remove();
+        payload ? resolve(payload) : reject(new Error("Empty branch page"));
+      };
+      script.onerror = () => {
+        script.remove(); reject(new Error("Branch page could not be loaded"));
+      };
+      document.head.append(script);
+    }).finally(() => pendingChunks.delete(filename));
+    pendingChunks.set(filename, promise); return promise;
+  }
+  function drawBranches() {
+    const end = Math.min(branchVisible + 100, branchRows.length);
+    for (; branchVisible < end; branchVisible++) {
+      const [identity, branch] = branchRows[branchVisible];
+      const suites = [...new Set(data.memberships[branch.membership].map(i =>
+        data.invocations[i].test_uid))];
+      el("covering-branches").append(text("li", "Branch " + identity +
+        ": " + branch.count + " hits; " +
+        (suites.length ? suites.join(", ") : "no covering suite")));
+    }
+    el("more-branches").hidden = branchVisible >= branchRows.length;
+    el("branch-status").textContent = branchRows.length ?
+      "Showing " + branchVisible + " of " + branchRows.length + " measured branches." :
+      "No measured branches at this line.";
+  }
+  async function showBranches(path, number, selectedLanguage) {
+    const request = ++branchRequest;
+    branchRows = []; branchVisible = 0;
+    el("covering-branches").replaceChildren(); el("more-branches").hidden = true;
+    el("branch-status").textContent = "Loading branch coverage…";
+    try {
+      const pages = (((data.branch_pages || {})[selectedLanguage] || {})[path] || {})[number] || [];
+      const rows = [];
+      for (const filename of pages) {
+        const chunk = await loadChunk(filename);
+        if (request !== branchRequest) return;
+        for (const [identity, branch] of Object.entries(chunk)) {
+          if (branch.metadata.line === number) rows.push([identity, branch]);
+        }
+      }
+      const embedded = ((data.branches || {})[selectedLanguage] || {})[path] || {};
+      for (const [identity, branch] of Object.entries(embedded)) {
+        if (branch.metadata.line === number) rows.push([identity, branch]);
+      }
+      if (request !== branchRequest) return;
+      branchRows = rows; drawBranches();
+    } catch (error) {
+      if (request === branchRequest) el("branch-status").textContent =
+        "Branch coverage unavailable: " + error.message + ". Keep the branches directory with this page.";
+    }
+  }
+  function clearBranches() {
+    branchRequest++; branchRows = []; branchVisible = 0;
+    el("covering-branches").replaceChildren(); el("branch-status").textContent = "";
+    el("more-branches").hidden = true;
+  }
+  el("more-branches").addEventListener("click", drawBranches);
   el("lookup").addEventListener("submit", event => {
-    event.preventDefault(); el("covering-tests").replaceChildren();
+    event.preventDefault(); el("covering-tests").replaceChildren(); clearBranches();
     const match = /^(.*):([1-9][0-9]*)$/.exec(el("location").value.trim());
     if (!match) {
       el("line-status").textContent = "Use a repository path:line, " +
@@ -659,15 +787,7 @@ HTML = r"""<!doctype html>
     if (!line) { el("line-status").textContent =
       "No complete profile measured this line; coverage is unknown."; return; }
     const members = data.memberships[line[1]];
-    const branchSet = (data.branches || {})[language()] || {};
-    for (const branch of Object.values(branchSet[path] || {})) {
-      if (branch.metadata.line !== Number(number)) continue;
-      const suites = [...new Set(data.memberships[branch.membership].map(i =>
-        data.invocations[i].test_uid))];
-      el("covering-tests").append(text("li", "Branch " + branch.metadata.id +
-        ": " + branch.count + " hits; " +
-        (suites.length ? suites.join(", ") : "no covering suite")));
-    }
+    showBranches(path, Number(number), language());
     el("line-status").replaceChildren(sourceLink(path + ":" + number, path, number), document.createTextNode(" — " + line[0] +
       " hits across " + members.length + " invocations."));
     if (!members.length) {
@@ -695,7 +815,7 @@ HTML = r"""<!doctype html>
     }
   });
   el("language").addEventListener("change", () => {
-    selectTest(); el("covering-tests").replaceChildren();
+    selectTest(); el("covering-tests").replaceChildren(); clearBranches();
     el("line-status").textContent = "Enter a source location.";
   });
   el("test-filter").addEventListener("input", () =>
@@ -758,19 +878,18 @@ def main(argv=None):
             if args.source_map:
                 attach_source_links(result, args.source_map, args.output)
             args.output.mkdir(parents=True, exist_ok=True)
-            (args.output / "index.json").write_text(
-                json.dumps(
+            with (args.output / "index.json").open(
+                "w", encoding="utf-8"
+            ) as stream:
+                json.dump(
                     result,
+                    stream,
                     ensure_ascii=True,
                     sort_keys=True,
                     separators=(",", ":"),
                 )
-                + "\n",
-                encoding="utf-8",
-            )
-            (args.output / "index.html").write_text(
-                render_html(result), encoding="utf-8"
-            )
+                stream.write("\n")
+            write_browser(result, args.output)
             print(json.dumps(result["summary"], sort_keys=True))
         else:
             stored = json.loads(args.index.read_text(encoding="utf-8"))

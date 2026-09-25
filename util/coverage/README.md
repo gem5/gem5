@@ -245,3 +245,22 @@ uses GitHub links for sources absent from the map. Keep the source and index
 artifact directories together when moving the report. Programmatic report
 builders can call `attach_source_links(index, map_path, output_directory)`
 before writing `index.json` and rendering HTML.
+
+## Large branch inventories
+
+The complete `index.json` remains the input for command-line queries. The
+browser stores branch inventories in bounded `branches/*.js` sidecars instead
+of embedding every branch in `index.html`. Opening the page loads line/test
+coverage; querying a source line loads only the branch chunks containing that
+line. Results display 100 branches at a time, including measured zero-hit
+branches. Missing sidecars are reported as unavailable coverage, never as zero.
+Keep the entire index directory together when downloading or moving it.
+Programmatic builders should use `write_browser(index, output_directory)`;
+`render_html(index)` remains suitable for small self-contained fixtures.
+
+Baseline readers accept `baseline.json` or `baseline.json.gz`, validating the
+same canonical decompressed content identity. A directory containing both is
+ambiguous and rejected. Identical shard copies share a single parsed graph.
+Branch identities retain the complete GCC identity calculation, but new
+baselines omit repeated function and translation-unit names after computing
+those identities. Retained compiler notes preserve those details for recovery.

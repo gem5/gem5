@@ -51,6 +51,62 @@ def record(invocation, test="a", lines=None, **changes):
 
 
 class CoverageIndexTest(unittest.TestCase):
+    def test_browser_sidecars_preserve_all_branches_and_bound_each_chunk(self):
+        branches = [
+            {
+                "id": f"branch-{number}",
+                "line": 1 + number // 100,
+                "count": number % 2,
+                "ordinal": number,
+            }
+            for number in range(250)
+        ]
+        item = record(
+            "branches",
+            files=[
+                {
+                    "path": "src/example.cc",
+                    "lines": {"1": 1, "2": 1, "3": 1},
+                    "branches": branches,
+                }
+            ],
+        )
+        data = coverage_index.build_index([item])
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory)
+            coverage_index.write_browser(data, output, chunk_size=80)
+            html = (output / "index.html").read_text()
+            view = json.loads(
+                html.split(
+                    '<script id="coverage-data" type="application/json">'
+                )[1].split("</script>")[0]
+            )
+            self.assertEqual(view["branches"], {})
+            pages = view["branch_pages"]["native"]["src/example.cc"]
+            self.assertEqual(set(pages), {"1", "2", "3"})
+            recovered = {}
+            for path in (output / "branches").glob("*.js"):
+                payload = json.loads(path.read_text().split("]=", 1)[1][:-2])
+                self.assertLessEqual(len(payload), 80)
+                recovered.update(payload)
+            self.assertEqual(
+                set(recovered), {branch["id"] for branch in branches}
+            )
+            for branch in branches:
+                self.assertNotIn("id", recovered[branch["id"]]["metadata"])
+                self.assertEqual(
+                    recovered[branch["id"]]["count"], branch["count"]
+                )
+                queried = coverage_index.tests_for_branch(
+                    data, "src/example.cc", branch["id"]
+                )
+                self.assertTrue(queried["measured"])
+                self.assertEqual(queried["metadata"]["id"], branch["id"])
+            self.assertEqual(
+                data["summary"]["languages"]["native"]["measured_branches"],
+                250,
+            )
+
     def test_retained_generated_source_links_and_cli(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
