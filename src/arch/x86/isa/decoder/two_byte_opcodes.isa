@@ -111,8 +111,8 @@
                 }
                 0x2: decode MODRM_MOD {
                     0x3: decode MODRM_RM {
-                        0x0: xgetbv();
-                        0x1: xsetbv();
+                        0x0: Inst::XGETBV();
+                        0x1: Inst::XGETBV();
                     }
                     default: decode MODE_SUBMODE {
                         0x0: Cpl0Inst::LGDT(M);
@@ -153,6 +153,8 @@
                     0x3: decode MODRM_RM {
                         0x0: BasicOperate::SERIALIZE({{/*Nothing*/}},
                                                          IsSerializeAfter);
+                        0x6: Inst::RDPKRU();
+                        0x7: Inst::WRPKRU();
                         }
                     }
                 0x6: Inst::LMSW(Ew);
@@ -783,8 +785,16 @@
                     }
                     0x2: Inst::LDMXCSR(Md);
                     0x3: Inst::STMXCSR(Md);
-                    0x4: xsave();
-                    0x5: xrstor();
+                    0x4: decode OPSIZE {
+                         4: Inst::XSAVE(M);
+                         8: Inst::XSAVE64(M);
+                         default: xsave();
+                    }
+                    0x5: decode OPSIZE {
+                          4: Inst::XRSTOR(M);
+                          8: Inst::XRSTOR64(M);
+                          default: xrstor();
+                    }
                     0x6: decode LEGACY_DECODEVAL {
                         0x0: Inst::UD2();
                         0x1: Inst::CLWB(Mb);

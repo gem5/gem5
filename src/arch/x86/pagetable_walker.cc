@@ -312,6 +312,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         pte.a = 1;
         entry.writable = pte.w;
         entry.user = pte.u;
+        entry.memoryKey = pte.mpk;
         if (badNX || !pte.p) {
             doEndWalk = true;
             fault = pageFault(pte.p);
@@ -327,6 +328,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         pte.a = 1;
         entry.writable = entry.writable && pte.w;
         entry.user = entry.user && pte.u;
+        entry.memoryKey = pte.mpk;
         if (badNX || !pte.p) {
             doEndWalk = true;
             fault = pageFault(pte.p);
@@ -340,6 +342,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         pte.a = 1;
         entry.writable = entry.writable && pte.w;
         entry.user = entry.user && pte.u;
+        entry.memoryKey = pte.mpk;
         if (badNX || !pte.p) {
             doEndWalk = true;
             fault = pageFault(pte.p);
@@ -369,6 +372,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         pte.a = 1;
         entry.writable = entry.writable && pte.w;
         entry.user = entry.user && pte.u;
+        entry.memoryKey = pte.mpk;
         if (badNX || !pte.p) {
             doEndWalk = true;
             fault = pageFault(pte.p);
@@ -399,6 +403,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         pte.a = 1;
         entry.writable = pte.w;
         entry.user = pte.u;
+        entry.memoryKey = pte.mpk;
         if (badNX || !pte.p) {
             doEndWalk = true;
             fault = pageFault(pte.p);
@@ -429,6 +434,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         pte.a = 1;
         entry.writable = entry.writable && pte.w;
         entry.user = entry.user && pte.u;
+        entry.memoryKey = pte.mpk;
         if (badNX || !pte.p) {
             doEndWalk = true;
             fault = pageFault(pte.p);
@@ -448,6 +454,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         pte.a = 1;
         entry.writable = pte.w;
         entry.user = pte.u;
+        entry.memoryKey = pte.mpk;
         if (!pte.p) {
             doEndWalk = true;
             fault = pageFault(pte.p);
@@ -477,6 +484,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         pte.a = 1;
         entry.writable = pte.w;
         entry.user = pte.u;
+        entry.memoryKey = pte.mpk;
         if (!pte.p) {
             doEndWalk = true;
             fault = pageFault(pte.p);
@@ -493,6 +501,7 @@ Walker::WalkerState::stepWalk(PacketPtr &write)
         pte.a = 1;
         entry.writable = pte.w;
         entry.user = pte.u;
+        entry.memoryKey = pte.mpk;
         if (!pte.p) {
             doEndWalk = true;
             fault = pageFault(pte.p);
