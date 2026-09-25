@@ -35,6 +35,7 @@ import tarfile
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 MODULE = Path(__file__).resolve().parents[1] / "landing.py"
 spec = importlib.util.spec_from_file_location("coverage_landing", MODULE)
@@ -146,6 +147,55 @@ class LandingTest(unittest.TestCase):
                 root, {"source.cc"}, revision, root
             )
             self.assertEqual(found["source.cc"], "original\n")
+
+    def test_python_sources_and_legacy_suite_definition_are_browsable(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            summary = {
+                "revision": "a" * 40,
+                "complete": True,
+                "scope": "separate languages",
+                "counts": {},
+                "errors": [],
+                "suites": [
+                    {
+                        "test_uid": "SuiteUID:gem5/example/test.py:case",
+                        "outcome": "completed",
+                        "exclusion": None,
+                        "missing_profiles": False,
+                    }
+                ],
+            }
+            (root / "summary.json").write_text(json.dumps(summary))
+            (root / "testlib-group.info").write_text(
+                "SF:src/native.cc\nDA:1,0\n"
+            )
+            (root / "python-group.info").write_text(
+                "SF:src/python/example.py\nDA:1,1\n"
+            )
+            with mock.patch.object(
+                landing,
+                "source_texts",
+                return_value=(
+                    {
+                        "src/python/example.py": "print(1)\n",
+                        "tests/gem5/example/test.py": "# definition\n",
+                    },
+                    {},
+                ),
+            ) as sources:
+                mapping = landing.build(root, root, "a" * 40)
+            self.assertIn("src/python/example.py", mapping)
+            self.assertIn(
+                "tests/gem5/example/test.py", sources.call_args.args[1]
+            )
+            text = (root / "index.html").read_text()
+            self.assertIn("0 / 1 executable lines hit", text)
+            self.assertIn("1 / 1 executable Python lines hit", text)
+            source = (
+                root / "sources" / mapping["src/python/example.py"]["page"]
+            )
+            self.assertIn('id="L1" class="hit"', source.read_text())
 
 
 if __name__ == "__main__":

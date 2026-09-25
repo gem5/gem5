@@ -55,11 +55,11 @@ def safe_source(value):
     )
 
 
-def native_lines(output):
+def native_lines(output, language="native"):
     """Union executable lines from retained TestLib LCOV and native XML."""
     files = defaultdict(dict)
     for path in sorted(output.glob("*.info")):
-        if path.name.startswith("python-"):
+        if path.name.startswith("python-") != (language == "python"):
             continue
         current = None
         for row in path.read_text().splitlines():
@@ -70,7 +70,10 @@ def native_lines(output):
                 files[current][int(line)] = max(
                     files[current].get(int(line), 0), int(count)
                 )
-    for path in sorted(output.glob("aggregate-*.xml")):
+    aggregates = (
+        sorted(output.glob("aggregate-*.xml")) if language == "native" else []
+    )
+    for path in aggregates:
         tree = ET.parse(path)
         for item in tree.iter("class"):
             name = item.get("filename", "")
@@ -191,16 +194,19 @@ def build(source, output, revision, checkout=None):
     if summary["revision"] != revision:
         raise ValueError("Landing page revision mismatch")
     files = native_lines(output)
-    requested = set(files)
+    python_files = native_lines(output, "python")
+    requested = set(files) | set(python_files)
     for row in summary["suites"]:
         definition = row["test_uid"].split(":")[1]
+        if not definition.startswith("tests/"):
+            definition = "tests/" + definition
         if safe_source(definition):
             requested.add(definition)
     texts, unavailable = source_texts(source, requested, revision, checkout)
     source_map = {}
     for name, text in sorted(texts.items()):
         filename = hashlib.sha256(name.encode()).hexdigest() + ".html"
-        lines = files.get(name, {})
+        lines = files.get(name, python_files.get(name, {}))
         rows = []
         for number, value in enumerate(text.splitlines(), 1):
             css = (
@@ -277,6 +283,21 @@ def build(source, output, revision, checkout=None):
         + "".join(file_rows)
         + "</table>"
     )
+    python_covered = sum(
+        count > 0
+        for lines in python_files.values()
+        for count in lines.values()
+    )
+    python_executable = sum(len(lines) for lines in python_files.values())
+    body += f"<h2>Python line coverage</h2><p>{python_covered:,} / {python_executable:,} executable Python lines hit after gem5 initialization. This scope is separate from native coverage.</p><table><tr><th>Source</th><th>Hit</th><th>Executable</th></tr>"
+    for name, lines in sorted(python_files.items()):
+        label = html.escape(name)
+        if name in source_map:
+            label = f'<a href="sources/{source_map[name]["page"]}">{label}</a>'
+        else:
+            label += " (source unavailable)"
+        body += f"<tr><td>{label}</td><td>{sum(count > 0 for count in lines.values())}</td><td>{len(lines)}</td></tr>"
+    body += "</table>"
     body += "<h2>Suite execution and exclusions</h2><p>Suite outcomes include verifier results; a successful gem5 process can still belong to a failed suite. The test index retains individual invocation outcomes.</p><ul>"
     for row in summary["suites"]:
         if (
