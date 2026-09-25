@@ -411,28 +411,48 @@ class InvocationCoverage:
         return self.environment
 
     def python_command(self, command, script_index):
-        """Wrap only file configurations; leave the user's config argv intact."""
+        """Preserve gem5 file/module arguments while installing the tracer."""
         if not self.build.python_coverage:
             return command
-        # These modes execute a different entry point or retain its globals for
-        # an interactive session. Reject instead of silently changing behavior.
-        incompatible = {"-m", "-c", "--pdb", "-i", "--interactive"}
-        if any(arg in incompatible for arg in command[1:script_index]):
+        module_index = next(
+            (
+                index
+                for index in range(1, script_index)
+                if command[index] == "-m"
+            ),
+            None,
+        )
+        options_end = (
+            module_index if module_index is not None else script_index
+        )
+        incompatible = {"-c", "--pdb", "-i", "--interactive"}
+        if any(arg in incompatible for arg in command[1:options_end]):
             raise ValueError(
-                "Python coverage requires a noninteractive file config"
+                "Python coverage requires a noninteractive file or module config"
             )
         record = json.loads(self.python_path.read_text())
         record["compiled_root"] = str(self.build.compiled_root)
         record["build"]["gem5_compatibility_id"] = self.build.build.get(
             "compatibility_id", "unknown"
         )
+        if module_index is not None:
+            if module_index + 1 >= len(command):
+                raise ValueError("Missing Python module name")
+            record["entry_mode"] = "module"
+            record["exclusions"] = [
+                "Python coverage measures the module process only; forked "
+                "and separately launched interpreter processes are outside "
+                "this measurement scope."
+            ]
+            arguments = command[module_index + 1 :]
+            prefix = command[:module_index]
+        else:
+            record["entry_mode"] = "file"
+            arguments = command[script_index:]
+            prefix = command[:script_index]
         _write_record(self.python_path, record)
         wrapper = Path(__file__).with_name("coverage_python.py")
-        return (
-            command[:script_index]
-            + [str(wrapper), str(self.python_path)]
-            + command[script_index:]
-        )
+        return prefix + [str(wrapper), str(self.python_path)] + arguments
 
     def __exit__(self, exception_type, exception, traceback):
         if exception_type is None:

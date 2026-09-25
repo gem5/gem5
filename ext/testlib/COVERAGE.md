@@ -117,8 +117,10 @@ Add `--python-coverage` to `--gcov=per-test` after installing
 `coverage==7.10.7` in the Python environment embedded by gem5. This is opt-in;
 ordinary tests do not import coverage.py or run a wrapper. The file config
 runs with its original arguments, `__file__`, `__m5_main__` name, and config
-import directory. Module/string entry points and interactive/debugger modes
-are rejected explicitly because wrapping them would change their semantics.
+import directory. Module entry points (`gem5 -m package.module ...`) retain
+module argv, the original module search path, and gem5's
+`runpy.run_module(..., run_name="__m5_main__")` semantics. String entry points
+and interactive/debugger modes remain unsupported.
 Missing coverage.py or extraction errors are recorded without replacing the
 config's return status or exception.
 
@@ -143,3 +145,10 @@ wrapper, shutdown after the config, individual unittest cases, or separate
 Python interpreter subprocesses. Abrupt termination may prevent Python data
 from being saved even when GCC counters are available. These omissions remain
 visible as separate collection status and process outcome.
+
+For module execution the record explicitly lists child interpreters as an
+excluded scope. In particular, multisim's controller is measured, while its
+forked discovery processes and separately launched gem5 simulation workers
+are not included in this Python profile. Native counters remain associated
+with the outer TestLib invocation. Forked children stop the inherited Python
+tracer and cannot replace their parent's database or normalized record.

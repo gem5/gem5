@@ -25,7 +25,7 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-"""Run a gem5 file configuration with separate Python coverage contexts.
+"""Run a gem5 file or module with separate Python coverage contexts.
 
 Invoked by TestLib as a gem5 configuration. Keep dependencies out of ordinary
 runs and restore the original argv, script path and __m5_main__ globals.
@@ -34,6 +34,7 @@ runs and restore the original argv, script path and __m5_main__ globals.
 import hashlib
 import json
 import os
+import runpy
 import sys
 from pathlib import Path
 
@@ -104,11 +105,18 @@ def _main():
     path = Path(sys.argv[1])
     sys.argv = sys.argv[2:]
     filename = sys.argv[0]
+    record = json.loads(path.read_text())
+    module_mode = record.get("entry_mode") == "module"
+    if module_mode:
+        m5.options.m = (filename, sys.argv[1:])
     if not m5.options.P:
         # m5.main prepended this wrapper's directory. Restore exactly what
         # it would have prepended for the user's original configuration.
-        sys.path[0] = os.path.dirname(filename)
-    record = json.loads(path.read_text())
+        if module_mode:
+            del sys.path[0]
+        else:
+            sys.path[0] = os.path.dirname(filename)
+    owner_pid = os.getpid()
     collector = None
     try:
         import coverage
@@ -130,24 +138,32 @@ def _main():
             "python_version": sys.version.split()[0],
             "coverage_version": coverage.__version__,
             "instrumentation": "coverage.py branch contexts",
-            "scope": "config",
+            "scope": "module-process" if module_mode else "config",
         }
         record["build"] = dict(compatibility)
         if compatibility["gem5_compatibility_id"] != "unknown":
             record["build"]["compatibility_id"] = _identity(compatibility)
         collector.start()
+        if hasattr(os, "register_at_fork"):
+            # A fork inherits the tracer but must not overwrite the parent's
+            # database or normalized record. Child coverage is outside scope.
+            os.register_at_fork(after_in_child=collector.stop)
     except Exception as error:
         record["collection"] = "error"
         record["error"] = str(error)
         collector = None
         print(f"Python coverage preparation failed: {error}", file=sys.stderr)
     try:
-        # Match m5.main's file execution semantics, including its explicit
-        # UTF-8 decode and __m5_main__ name (runpy uses different globals).
-        with open(filename, "rb") as stream:
-            code = compile(stream.read().decode("utf-8"), filename, "exec")
-        scope = {"__file__": filename, "__name__": "__m5_main__"}
-        exec(code, scope)
+        if module_mode:
+            # Match m5.main exactly: argv begins with the module name and
+            # run_module does not alter sys.modules or the caller's globals.
+            runpy.run_module(filename, run_name="__m5_main__")
+        else:
+            # Match m5.main's UTF-8 file execution and explicit globals.
+            with open(filename, "rb") as stream:
+                code = compile(stream.read().decode("utf-8"), filename, "exec")
+            scope = {"__file__": filename, "__name__": "__m5_main__"}
+            exec(code, scope)
         record["outcome"] = "passed"
     except SystemExit as error:
         record["outcome"] = "passed" if error.code in (None, 0) else "failed"
@@ -159,22 +175,24 @@ def _main():
         record["outcome"] = "failed"
         raise
     finally:
-        if collector is not None:
+        if os.getpid() == owner_pid:
+            if collector is not None:
+                try:
+                    _finish(collector, record, path)
+                except Exception as error:
+                    record["collection"] = "error"
+                    record["error"] = str(error)
+                    print(
+                        f"Python coverage collection failed: {error}",
+                        file=sys.stderr,
+                    )
             try:
-                _finish(collector, record, path)
+                _write(path, record)
             except Exception as error:
-                record["collection"] = "error"
-                record["error"] = str(error)
                 print(
-                    f"Python coverage collection failed: {error}",
+                    f"Cannot save Python coverage result: {error}",
                     file=sys.stderr,
                 )
-        try:
-            _write(path, record)
-        except Exception as error:
-            print(
-                f"Cannot save Python coverage result: {error}", file=sys.stderr
-            )
 
 
 if __name__ in ("__main__", "__m5_main__"):
