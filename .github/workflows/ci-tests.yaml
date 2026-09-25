@@ -12,6 +12,35 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
+    coverage-tools:
+        # These small native fixtures also run on drafts; no gem5 build is needed.
+        runs-on: ubuntu-24.04
+        timeout-minutes: 15
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@v7
+            - uses: actions/setup-python@v6
+              with:
+                  python-version: '3.10'
+            - uses: actions/setup-node@v7
+              with:
+                  node-version: '24'
+                  package-manager-cache: false
+            - name: Install coverage test dependencies
+              run: python3 -m pip install gcovr==8.3 PyYAML==6.0.2
+            - name: Require the native coverage tools
+              run: |
+                  gcc --version | head -1
+                  gcov --version | head -1
+                  python3 -c 'import subprocess; assert "Free Software Foundation" in subprocess.check_output(["gcc", "--version"], text=True)'
+            - name: Check collection and reporting
+              run: |
+                  python3 -m unittest discover -s ext/testlib/tests -p 'test_coverage.py' -v
+                  python3 -m unittest discover -s util/coverage -p 'test_*.py' -v
+                  python3 -m unittest discover -s util/coverage/tests -p 'test_*.py' -v
+                  node --test util/coverage/tests/*.test.cjs
+
     pre-commit:
     # runs on github hosted runner
         runs-on: ubuntu-24.04
@@ -143,6 +172,7 @@ jobs:
     # Preserve the required aggregate check while the quick jobs are reused.
         runs-on: ubuntu-24.04
         needs:
+            - coverage-tools
             - quick-tests
             - clang-fast-compilation
             - macos-compilation
