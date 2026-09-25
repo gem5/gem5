@@ -24,6 +24,8 @@ permissions:
 concurrency:
     group: codecov-${{ github.repository }}
     cancel-in-progress: false
+    # Preserve waiting completion checks and manual recovery requests.
+    queue: max
 
 jobs:
     gate:

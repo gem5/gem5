@@ -24,7 +24,10 @@ Only one campaign is admitted for each UTC week (Monday through Sunday) in
 which Weekly tests were started. A 30-day `coverage-source-YYYY-MM-DD` artifact
 records admission, including campaigns that later fail. Keep this artifact to
 preserve deduplication. Rerunning the same coverage run is allowed. Coverage
-campaigns are serialized without cancelling an active campaign, and quick,
+uses GitHub's larger queue so later Daily completions do not replace waiting
+Weekly checks or recovery requests. Up to 100 requests can wait; requests
+beyond that platform limit are cancelled. Campaigns are serialized without
+cancelling an active campaign, and quick,
 Daily, and Weekly workloads run sequentially to retain the five-job TestLib
 matrix limit. Later workloads still collect coverage if an earlier one fails.
 Coverage builds and tests target the dedicated `gem5-coverage` runner group.
