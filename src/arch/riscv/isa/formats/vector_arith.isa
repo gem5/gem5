@@ -193,10 +193,10 @@ let {{
         return constraint_checks + code
 
     def narrowingOpRegisterConstraintChecks(code, src2_sew_mul, src1_is_vec):
-        def checkOverlap(vreg_name):
+        def checkOverlap(vreg_name, vreg_regs):
             check_code = '''
             if (({vreg_name} < VD) &&
-                (VD <= ({vreg_name} + num_microops - 1))) {
+                (VD <= ({vreg_name} + {vreg_regs} - 1))) {
                 // A destination vector register group can overlap a source
                 // vector register group if the destination EEW is smaller than
                 // the source EEW and the overlap is in the lowest-numbered
@@ -208,6 +208,7 @@ let {{
             }
             '''
             check_code = check_code.replace("{vreg_name}", vreg_name)
+            check_code = check_code.replace("{vreg_regs}", vreg_regs)
             return check_code
         src2_sew_mul_bits = src2_sew_mul.bit_length() - 1
         constraint_checks = '''
@@ -219,9 +220,14 @@ let {{
                 return std::make_shared<IllegalInstFault>(error, machInst);
             }
         ''' % src2_sew_mul_bits
-        constraint_checks += checkOverlap("VS2")
+        constraint_checks += checkOverlap("VS2", "num_microops")
         if src1_is_vec:
-            constraint_checks += checkOverlap("VS1")
+            # VS1 has EEW = SEW, so its group is sized by LMUL.
+            constraint_checks += '''
+            const uint32_t vs1_num_regs =
+                1 << std::max<int64_t>(0, vlmul);
+            '''
+            constraint_checks += checkOverlap("VS1", "vs1_num_regs")
         return constraint_checks + code
 
     def fflags_wrapper(code):
