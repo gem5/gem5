@@ -29,8 +29,11 @@ LABEL org.opencontainers.image.source=https://github.com/gem5/gem5
 LABEL org.opencontainers.image.licenses=BSD-3-Clause
 
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt -y update && apt -y upgrade && apt -y install \
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends \
     build-essential \
+    ca-certificates \
+    graphviz \
     scons \
     python3-dev \
     git \
@@ -63,7 +66,8 @@ RUN apt -y update && apt -y upgrade && apt -y install \
     bash \
     curl \
     gpg \
-    zstd
+    zstd && \
+    rm -rf /var/lib/apt/lists/*
 
 # pre-commit, as installed via apt in 24.04, attempts to create a cache
 # directory at "${HOME}/.cache/pre-commit". If running docker with non-root,

@@ -1,0 +1,94 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "gem5: build",
+            "type": "process",
+            "command": "${workspaceFolder}/.devcontainer/build.sh",
+            "args": [
+                "build",
+                "${input:gem5ISA}",
+                "${input:gem5Jobs}"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "gem5: generate compiler commands",
+            "type": "process",
+            "command": "${workspaceFolder}/.devcontainer/build.sh",
+            "args": [
+                "database",
+                "${input:gem5ISA}",
+                "${input:gem5Jobs}"
+            ],
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "gem5: list quick suites",
+            "type": "process",
+            "command": "${workspaceFolder}/.venv/bin/python",
+            "args": [
+                "main.py",
+                "list",
+                "--isa=ALL",
+                "--length=quick",
+                "-q",
+                "--suites"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/tests"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "gem5: run selected quick suite",
+            "type": "process",
+            "command": "${workspaceFolder}/.venv/bin/python",
+            "args": [
+                "main.py",
+                "run",
+                "--uid",
+                "${input:gem5Suite}",
+                "--isa=ALL",
+                "--length=quick",
+                "-j",
+                "${input:gem5Jobs}"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/tests"
+            },
+            "group": "test",
+            "problemMatcher": []
+        }
+    ],
+    "inputs": [
+        {
+            "id": "gem5ISA",
+            "type": "pickString",
+            "description": "gem5 build configuration",
+            "options": [
+                "ALL",
+                "X86",
+                "ARM",
+                "RISCV",
+                "NULL"
+            ],
+            "default": "ALL"
+        },
+        {
+            "id": "gem5Jobs",
+            "type": "promptString",
+            "description": "Parallel build jobs (choose for available memory)",
+            "default": "2"
+        },
+        {
+            "id": "gem5Suite",
+            "type": "promptString",
+            "description": "Exact suite UID from gem5: list quick suites"
+        }
+    ]
+}
