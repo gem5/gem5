@@ -51,6 +51,45 @@ def record(invocation, test="a", lines=None, **changes):
 
 
 class CoverageIndexTest(unittest.TestCase):
+    def test_full_and_compact_branch_descriptors_can_be_combined(self):
+        branch = {
+            "id": "same-compiled-edge",
+            "line": 1,
+            "count": 1,
+            "unit": "build/ALL/example.gcno",
+            "function": "example",
+            "ordinal": 0,
+            "fallthrough": True,
+            "throw": False,
+        }
+        full = record(
+            "full",
+            files=[
+                {
+                    "path": "src/example.cc",
+                    "lines": {"1": 1},
+                    "branches": [branch],
+                }
+            ],
+        )
+        compact = copy.deepcopy(full)
+        compact["invocation_id"] = "compact"
+        compact["files"][0]["branches"][0].pop("unit")
+        compact["files"][0]["branches"][0].pop("function")
+        data = coverage_index.build_index([full, compact])
+        self.assertEqual(data, coverage_index.build_index([compact, full]))
+        result = coverage_index.tests_for_branch(
+            data, "src/example.cc", branch["id"]
+        )
+        self.assertEqual(result["count"], 2)
+        self.assertEqual(
+            result["tests"][0]["invocation_ids"], ["compact", "full"]
+        )
+        conflicting = copy.deepcopy(compact)
+        conflicting["files"][0]["branches"][0]["line"] = 2
+        with self.assertRaisesRegex(ValueError, "Conflicting metadata"):
+            coverage_index.build_index([full, conflicting])
+
     def test_browser_sidecars_preserve_all_branches_and_bound_each_chunk(self):
         branches = [
             {

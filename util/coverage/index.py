@@ -174,7 +174,8 @@ def build_index(records, repository_url=REPOSITORY_URL):
                             "metadata": {
                                 key: value
                                 for key, value in branch.items()
-                                if key not in ("count", "id")
+                                if key
+                                not in ("count", "id", "function", "unit")
                             },
                             "count": 0,
                             "membership": 0,
@@ -194,7 +195,7 @@ def build_index(records, repository_url=REPOSITORY_URL):
                 metadata = {
                     key: value
                     for key, value in branch.items()
-                    if key not in ("count", "id")
+                    if key not in ("count", "id", "function", "unit")
                 }
                 existing = branches.setdefault(
                     branch["id"],
