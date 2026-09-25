@@ -1,0 +1,269 @@
+// Copyright (c) 2026 Rajesh Gangam
+// All rights reserved.
+//
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are
+// met: redistributions of source code must retain the above copyright
+// notice, this list of conditions and the following disclaimer;
+// redistributions in binary form must reproduce the above copyright
+// notice, this list of conditions and the following disclaimer in the
+// documentation and/or other materials provided with the distribution;
+// neither the name of the copyright holders nor the names of its
+// contributors may be used to endorse or promote products derived from
+// this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+syntax = "proto2";
+
+package ProtoMessage;
+
+// Header for an E-Trace v2.0 stream, written once at the start.
+// Carries the discovery parameters the decoder needs to determine
+// field widths and encoder-mode flags for every subsequent packet.
+message ETraceHeader
+{
+    optional string obj_id = 1;
+    optional uint32 ver = 2 [ default = 2 ];
+    optional uint64 tick_freq = 3;
+    optional uint32 arch_width = 4;
+
+    // Spec discovery parameters (iaddress_width_p etc.)
+    optional uint32 iaddress_width_p = 5;
+    optional uint32 iaddress_lsb_p = 6;
+    optional uint32 privilege_width_p = 7;
+    optional uint32 ecause_width_p = 8;
+    optional uint32 context_width_p = 9;
+    optional uint32 time_width_p = 10;
+    optional uint32 f0s_width_p = 11;
+    optional uint32 cache_size_p = 12;
+    optional uint32 call_counter_size_p = 13;
+    optional uint32 bpred_size_p = 14;
+
+    // Encoder-selected bit assignments for ioptions/doptions
+    // (spec marks these implementation-defined).
+    // gem5 ioptions bit layout:
+    //   bit 0 = implicit_return
+    //   bit 1 = branch_prediction
+    //   bit 2 = jump_target_cache
+    //   bit 3 = sijump
+    //   bit 4 = implicit_exception
+    //   bit 5 = full_address (never differential)
+    // gem5 doptions bit layout:
+    //   bit 0 = no_data (address only)
+    //   bit 1 = no_addr (data only)
+    optional uint32 ioptions_bits = 15;
+    optional uint32 doptions_bits = 16;
+}
+
+// A single E-Trace v2.0 te_inst packet.
+//
+// Packet formats (see riscv-trace-spec payload.adoc):
+//   0 - correctly-predicted-branch-count (sub 0) / jtc-hit (sub 1)
+//   1 - branch map, with or without address
+//   2 - address only (no branch map)
+//   3 - synchronization: start / trap / context / support
+//
+// The encoder chooses ONE address representation per packet:
+//   - `saddress` (differential) for Format 1 / Format 2 / JTC-hit
+//   - `address`  (full, unshifted-by-iaddress_lsb_p) for Format 3
+//     sub 0 (start) and Format 3 sub 1 (trap)
+//   - Format 3 sub 2 (context) and sub 3 (support) carry no address.
+message ETracePacket
+{
+    enum Format
+    {
+        FORMAT_0 = 0;
+        FORMAT_1 = 1;
+        FORMAT_2 = 2;
+        FORMAT_3 = 3;
+    }
+    // Format 3 subformat selector.
+    enum SubFormat
+    {
+        START = 0;    // Format 3-0
+        TRAP = 1;     // Format 3-1
+        CONTEXT = 2;  // Format 3-2
+        SUPPORT = 3;  // Format 3-3
+    }
+    // Format 0 subformat selector.
+    enum F0SubFormat
+    {
+        F0_BRANCH_COUNT = 0;  // Format 0-0
+        F0_JTC = 1;           // Format 0-1
+    }
+    // qual_status values per payload.adoc section on Format 3-3.
+    enum QualStatus
+    {
+        QS_NO_CHANGE = 0;   // 00 - trace continues
+        QS_ENDED_REP = 1;   // 01 - clean end, previous packet reported explicitly
+        QS_TRACE_LOST = 2;  // 10 - buffer overflow
+        QS_ENDED_NTR = 3;   // 11 - clean end, previous packet would have been reported anyway
+    }
+
+    optional uint64 tick = 1;
+    optional Format format = 2;
+    optional SubFormat subformat = 3;      // Format 3 only
+    optional F0SubFormat f0_subformat = 4; // Format 0 only
+
+    // Address representations. At most one is set per packet.
+    optional uint64 address = 5;   // Full address (Format 3-0 / 3-1)
+    optional sint64 saddress = 6;  // Differential address (Format 1 / 2)
+
+    // Branch map (Format 1). branches encodes the tapered set:
+    //   0 -> full 31-bit map (Format 1 no-address form)
+    //   1 -> 1 bit, 2/3 -> 3 bits, 4-7 -> 7 bits, 8-15 -> 15 bits,
+    //   16-31 -> 31 bits (Format 1 with-address form).
+    // branch_map bit 0 is the oldest branch; 0 = taken, 1 = not-taken.
+    optional uint32 branch_map = 7;
+    optional uint32 branches = 8;
+
+    // Format 3-0 branch bit: 1 iff the reported instruction is a
+    // taken branch that terminates the branch map. Single bit.
+    optional bool branch = 9;
+
+    // Privilege level (spec field width = privilege_width_p; typical 2 bits
+    // covering U=0 S=1 M=3, or 3 bits with hypervisor).
+    optional uint32 priv = 10;
+
+    // Free-running time (Format 3 packets when time_width_p > 0).
+    optional uint64 time = 11;
+
+    // Context / ASID / VMID field (Format 3 packets when context_width_p > 0).
+    optional uint64 context = 12;
+
+    // Trap fields (Format 3-1).
+    optional uint32 cause = 13;         // width ecause_width_p
+    optional bool interrupt = 14;
+    optional bool thaddr = 15;          // 1 = address IS handler PC
+                                        // 0 = address is EPC (updiscon path)
+    optional uint64 tval = 16;          // omitted iff interrupt=true
+
+    // Encoder discovery / support packet (Format 3-3).
+    optional bool ienable = 17;
+    optional uint32 encoder_mode = 18;
+    optional QualStatus qual_status = 19;
+    optional uint32 ioptions = 20;
+    optional bool denable = 21;
+    optional bool dloss = 22;
+    optional uint32 doptions = 23;
+
+    // XOR-chain disambiguation bits (Format 0-0-w-addr, Format 1, Format 2).
+    // In the spec these are transmitted as differences against the
+    // preceding field's MSB (address MSB, then chained). Encoder stores
+    // the actual bit values; decoder reconstructs / verifies chain.
+    optional bool notify = 24;
+    optional bool updiscon = 25;
+    optional bool irreport = 26;
+    optional uint32 irdepth = 27;
+
+    // Jump target cache hit (Format 0-1).
+    optional uint32 jtc_index = 28;
+
+    // Correctly-predicted branch count (Format 0-0).
+    // Value is (count - 31), matching spec's branch_count field.
+    optional uint32 branch_count = 29;
+
+    // Format 0-0 sub-subformat: 00 = no-addr, 10 = addr, 11 = addr-fail
+    optional uint32 branch_fmt = 30;
+
+    // gem5 debugging aid: which itype the retire was classified as.
+    // Not part of the on-wire spec te_inst; decoder ignores.
+    optional uint32 itype = 31;
+}
+
+// Data-trace packet per riscv-trace-spec dataTracePayload.adoc.
+//
+// Format numeric codes match the spec on-wire encoding:
+//   000 (0) = load, aligned      (unified addr + data)
+//   001 (1) = load, unaligned    (unified addr + data)
+//   010 (2) = store, aligned     (unified addr + data)
+//   011 (3) = store, unaligned   (unified addr + data)
+//   100 (4) = split-load data response
+//   101 (5) = CSR access
+//   110 (6) = atomic
+message ETraceDataPacket
+{
+    enum DataFormat
+    {
+        LOAD_ALIGNED = 0;
+        LOAD_UNALIGNED = 1;
+        STORE_ALIGNED = 2;
+        STORE_UNALIGNED = 3;
+        LOAD_DATA_RESP = 4;
+        CSR = 5;
+        ATOMIC = 6;
+    }
+    // Atomic sub-op per spec (3-bit field). LR / SC are separate packet
+    // forms in the spec (not atomic subtypes) and are represented as
+    // LOAD_ALIGNED / STORE_ALIGNED with the `is_lr` / `is_sc` flag set.
+    enum AtomicSubtype
+    {
+        AMOSWAP = 0;
+        AMOADD = 1;
+        AMOAND = 2;
+        AMOOR = 3;
+        AMOXOR = 4;
+        AMOMAX = 5;
+        AMOMIN = 6;
+        AMO_RESERVED = 7;
+    }
+    // CSR access sub-op (2-bit field).
+    enum CsrSubtype
+    {
+        CSRRW = 0;
+        CSRRS = 1;
+        CSRRC = 2;
+        CSR_RESERVED = 3;
+    }
+
+    optional uint64 tick = 1;
+    optional DataFormat format = 2;
+
+    // Transfer size as spec log2 exponent: 2^size bytes.
+    optional uint32 size = 3;
+
+    // diff field. Semantics vary by packet form:
+    //   unified addr+data (formats 0-3): 2 bits
+    //     00 full addr + full data
+    //     01 diff addr + XOR-compressed data
+    //     10 diff addr + full data
+    //     11 diff addr + diff data
+    //   split-load data response (format 4): 2 bits (see resp field below)
+    //   CSR (format 5): 2 bits, same as unified
+    //   atomic (format 6): 2 bits, same as unified
+    optional uint32 diff = 4;
+
+    // Address delta (differential) OR full address depending on diff bits.
+    optional sint64 address = 5;
+
+    // Data payload — length equal to 2^size bytes when present.
+    optional bytes data = 6;
+
+    // Atomic packet fields.
+    optional AtomicSubtype atomic_subtype = 7;
+    optional bytes operand = 8;   // rs2 value pre-op
+
+    // Split-load response fields.
+    optional uint32 lrid = 9;
+    optional uint32 resp = 10;    // 00 error, 01 xor, 10 full, 11 diff
+
+    // CSR access fields.
+    optional CsrSubtype csr_subtype = 11;
+    optional uint32 csr_addr = 12;
+
+    // LR/SC are LOAD_ALIGNED / STORE_ALIGNED with these flags set;
+    // spec has no distinct format code for them at the unified level.
+    optional bool is_lr = 13;
+    optional bool is_sc = 14;
+}
