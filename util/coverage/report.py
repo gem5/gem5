@@ -610,14 +610,23 @@ def main():
     native.add_argument("--outcomes")
     native.add_argument("--config", default=".github/coverage-native.json")
     native.add_argument("--record-only", action="store_true")
+    landing_page = commands.add_parser("landing")
+    landing_page.add_argument("source")
+    landing_page.add_argument("--source-root")
     native_discovery = commands.add_parser("native-plan")
     native_discovery.add_argument("config")
-    for command in (plan, build, native, pack, native_discovery):
+    for command in (plan, build, native, pack, native_discovery, landing_page):
         command.add_argument("--revision", required=True)
         command.add_argument("--output", required=True)
     args = parser.parse_args()
     if args.command == "manifest":
         manifest(args.listing, args.revision, args.length, args.output)
+    elif args.command == "landing":
+        from landing import build as build_landing
+
+        build_landing(
+            args.source, args.output, args.revision, args.source_root
+        )
     elif args.command == "native-plan":
         native_plan(args.config, args.revision, args.output)
     elif args.command == "package":
