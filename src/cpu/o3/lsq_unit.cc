@@ -687,6 +687,27 @@ LSQUnit::executeLoad(const DynInstPtr &inst)
         iewStage->instToCommit(inst);
         iewStage->activityThisCycle();
     } else {
+        // A prefetch has no destination register and no architectural
+        // side effects, so retirement need not wait for the response;
+        // commit it as soon as the request has been sent. A late
+        // response is dropped like a squashed one (recvTimingResp bails
+        // out on isReleased(), LSQ::recvTimingResp still cleans up).
+        // Prefetches in an HTM transaction are excluded: their response
+        // may signal a transaction abort, which is only raised from
+        // completeDataAccess().
+        if ((inst->isDataPrefetch() || inst->isInstPrefetch()) &&
+            inst->savedRequest && inst->savedRequest->isSent() &&
+            !inst->inHtmTransactionalState()) {
+            DPRINTF(LSQUnit,
+                    "Prefetch [sn:%lli] retired early after the "
+                    "request was sent\n",
+                    inst->seqNum);
+            inst->setExecuted();
+            iewStage->instToCommit(inst);
+            iewStage->activityThisCycle();
+            return NoFault;
+        }
+
         if (inst->effAddrValid()) {
             auto it = inst->lqIt;
             ++it;
