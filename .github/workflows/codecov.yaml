@@ -138,6 +138,22 @@ jobs:
                       await core.summary.addHeading('Coverage source')
                         .addCodeBlock(JSON.stringify(manifest, null, 2), 'json').write();
 
+            - uses: actions/checkout@v7
+              if: steps.check.outputs.allowed == 'true'
+              with:
+                  ref: ${{ github.sha }}
+            - name: Check default-branch coverage deployment
+              if: steps.check.outputs.allowed == 'true'
+              env:
+                  SOURCE_REVISION: ${{ steps.check.outputs.source-ref }}
+              run: |
+                  git fetch --no-tags --depth=1 origin "$SOURCE_REVISION"
+                  python3 util/coverage/deployment.py --reference "$SOURCE_REVISION" > "$RUNNER_TEMP/deployment.json" || {
+                    echo 'Coverage deployment differs from the tested revision:' >> "$GITHUB_STEP_SUMMARY"
+                    cat "$RUNNER_TEMP/deployment.json" >> "$GITHUB_STEP_SUMMARY"
+                    exit 1
+                  }
+
             - name: Record the admitted weekly campaign
               if: steps.check.outputs.allowed == 'true'
               uses: actions/upload-artifact@v7

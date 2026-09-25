@@ -46,6 +46,23 @@ as well. Keep these definitions and tools synchronized when
 their interfaces, test plans, or report schemas change.
 Merging only to `develop` does not activate the completion trigger.
 
+Before building, the coordinator compares the deployed workflows,
+configuration, and runtime coverage tools with the tested revision. A
+difference stops collection and lists the files to synchronize in the Actions
+summary. This prevents silently using a different test plan from `stable`.
+Report-only recovery deliberately does not require byte-identical tools:
+current reporting tools can read compatible retained schemas.
+
+To check a deployment locally after fetching the reference:
+
+```sh
+python3 util/coverage/deployment.py --reference origin/stable
+```
+
+The comparison includes the matching files under `util/coverage`,
+`.github/coverage-native.json`, and `.github/codecov.yml`. Runtime tools added
+later are discovered automatically; tests and prose documentation are excluded.
+
 The source-ref input is necessary because the completion workflow itself has
 `stable` as its GitHub ref/SHA. The test source and Codecov attribution use the
 qualifying Weekly run's commit instead. The gate does not execute or download
