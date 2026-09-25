@@ -416,7 +416,7 @@ class CoverageReportTest(unittest.TestCase):
         self.assertTrue(self.run_report()["complete"])
         text = next(self.output.glob("*.info")).read_text()
         self.assertIn("DA:2,0", text)
-        self.assertIn("BRDA:1,0,0,2", text)
+        self.assertIn("BRDA:1,0,gem5-branch-one,2", text)
 
     def test_required_python_profile_accounted_per_parent(self):
         self.profile()
@@ -495,6 +495,36 @@ class CoverageReportTest(unittest.TestCase):
         self.assertIn("DA:1,100", text)
         self.assertIn("DA:1200,0", text)
         self.assertIn("LF:1200", text)
+
+    def test_branch_identity_is_stable_across_upload_groups(self):
+        other = "SuiteUID:tests/gem5/other/test.py:other"
+        self.plan(other, "long")
+        for identity, uid, branch in (
+            ("one", UID, "compiled-one"),
+            ("two", other, "compiled-two"),
+        ):
+            self.profile(
+                identity,
+                test_uid=uid,
+                files=[
+                    {
+                        "path": "src/shared.cc",
+                        "lines": {"1": 1},
+                        "branches": [{"id": branch, "line": 1, "count": 1}],
+                    }
+                ],
+            )
+        self.assertTrue(self.run_report()["complete"])
+        branches = [
+            row
+            for path in self.output.glob("testlib-*.info")
+            for row in path.read_text().splitlines()
+            if row.startswith("BRDA:")
+        ]
+        self.assertEqual(
+            set(branches),
+            {"BRDA:1,0,gem5-compiled-one,1", "BRDA:1,0,gem5-compiled-two,1"},
+        )
 
 
 if __name__ == "__main__":

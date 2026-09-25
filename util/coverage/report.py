@@ -44,6 +44,7 @@ from pathlib import (
     Path,
     PurePosixPath,
 )
+from urllib.parse import quote
 
 from schema import (
     SparseProfile,
@@ -412,10 +413,11 @@ def summarize(source, output, revision, campaign=False):
                 f"DA:{line},{count}" for line, count in sorted(hits.items())
             )
             branches = by_branch[path]
-            for ordinal, (_, (line, count)) in enumerate(
-                sorted(branches.items())
-            ):
-                chunks.append(f"BRDA:{line},0,{ordinal},{count}")
+            for identity, (line, count) in sorted(branches.items()):
+                # LCOV permits expression strings. Keep the full compiled
+                # identity across groups instead of assigning local ordinals.
+                branch = "gem5-" + quote(identity, safe="")
+                chunks.append(f"BRDA:{line},0,{branch},{count}")
             if branches:
                 chunks.extend(
                     [
