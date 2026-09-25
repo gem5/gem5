@@ -248,6 +248,7 @@ Inst_VOP3__V_MUL_LEGACY_F32::Inst_VOP3__V_MUL_LEGACY_F32(InFmt_VOP3A *iFmt)
 {
     setFlag(ALU);
     setFlag(F32);
+    setFlag(FpMul);
 } // Inst_VOP3__V_MUL_LEGACY_F32
 
 Inst_VOP3__V_MUL_LEGACY_F32::~Inst_VOP3__V_MUL_LEGACY_F32()
@@ -344,6 +345,7 @@ Inst_VOP3__V_MUL_F32::Inst_VOP3__V_MUL_F32(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_mul_f32", false)
 {
     setFlag(ALU);
+    setFlag(FpMul);
     setFlag(F32);
 } // Inst_VOP3__V_MUL_F32
 
@@ -441,6 +443,8 @@ Inst_VOP3__V_MUL_I32_I24::Inst_VOP3__V_MUL_I32_I24(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_mul_i32_i24", false)
 {
     setFlag(ALU);
+    setFlag(IntMul);
+    setFlag(IntMul24);
 } // Inst_VOP3__V_MUL_I32_I24
 
 Inst_VOP3__V_MUL_I32_I24::~Inst_VOP3__V_MUL_I32_I24()
@@ -484,6 +488,8 @@ Inst_VOP3__V_MUL_HI_I32_I24::Inst_VOP3__V_MUL_HI_I32_I24(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_mul_hi_i32_i24", false)
 {
     setFlag(ALU);
+    setFlag(IntMul);
+    setFlag(IntMul24);
 } // Inst_VOP3__V_MUL_HI_I32_I24
 
 Inst_VOP3__V_MUL_HI_I32_I24::~Inst_VOP3__V_MUL_HI_I32_I24()
@@ -531,6 +537,8 @@ Inst_VOP3__V_MUL_U32_U24::Inst_VOP3__V_MUL_U32_U24(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_mul_u32_u24", false)
 {
     setFlag(ALU);
+    setFlag(IntMul);
+    setFlag(IntMul24);
 } // Inst_VOP3__V_MUL_U32_U24
 
 Inst_VOP3__V_MUL_U32_U24::~Inst_VOP3__V_MUL_U32_U24()
@@ -573,6 +581,9 @@ Inst_VOP3__V_MUL_HI_U32_U24::Inst_VOP3__V_MUL_HI_U32_U24(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_mul_hi_u32_u24", false)
 {
     setFlag(ALU);
+    setFlag(IntMul);
+    setFlag(IntMul24);
+    setFlag(IntMul32);
 } // Inst_VOP3__V_MUL_HI_U32_U24
 
 Inst_VOP3__V_MUL_HI_U32_U24::~Inst_VOP3__V_MUL_HI_U32_U24()
@@ -1254,6 +1265,7 @@ Inst_VOP3__V_MAC_F32::Inst_VOP3__V_MAC_F32(InFmt_VOP3A *iFmt)
     setFlag(ALU);
     setFlag(F32);
     setFlag(MAC);
+    setFlag(FpMul);
 } // Inst_VOP3__V_MAC_F32
 
 Inst_VOP3__V_MAC_F32::~Inst_VOP3__V_MAC_F32()
@@ -1672,6 +1684,7 @@ Inst_VOP3__V_MUL_F16::Inst_VOP3__V_MUL_F16(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_mul_f16", false)
 {
     setFlag(ALU);
+    setFlag(FpMul);
     setFlag(F16);
 } // Inst_VOP3__V_MUL_F16
 
@@ -1844,6 +1857,7 @@ Inst_VOP3__V_MUL_LO_U16::Inst_VOP3__V_MUL_LO_U16(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_mul_lo_u16", false)
 {
     setFlag(ALU);
+    setFlag(IntMul);
 } // Inst_VOP3__V_MUL_LO_U16
 
 Inst_VOP3__V_MUL_LO_U16::~Inst_VOP3__V_MUL_LO_U16()
@@ -2403,6 +2417,7 @@ Inst_VOP3__V_FMAC_F32::Inst_VOP3__V_FMAC_F32(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_fmac_f32", false)
 {
     setFlag(ALU);
+    setFlag(FpMul);
     setFlag(F32);
     setFlag(FMA);
 } // Inst_VOP3__V_FMAC_F32
@@ -3740,6 +3755,7 @@ Inst_VOP3__V_EXP_F32::Inst_VOP3__V_EXP_F32(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_exp_f32", false)
 {
     setFlag(ALU);
+    setFlag(FpExp);
     setFlag(F32);
 } // Inst_VOP3__V_EXP_F32
 
@@ -3779,6 +3795,7 @@ Inst_VOP3__V_LOG_F32::Inst_VOP3__V_LOG_F32(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_log_f32", false)
 {
     setFlag(ALU);
+    setFlag(FpLg);
     setFlag(F32);
 } // Inst_VOP3__V_LOG_F32
 
@@ -3826,6 +3843,7 @@ Inst_VOP3__V_RCP_F32::Inst_VOP3__V_RCP_F32(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_rcp_f32", false)
 {
     setFlag(ALU);
+    setFlag(FpDiv);
     setFlag(F32);
 } // Inst_VOP3__V_RCP_F32
 
@@ -3906,6 +3924,7 @@ Inst_VOP3__V_RSQ_F32::Inst_VOP3__V_RSQ_F32(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_rsq_f32", false)
 {
     setFlag(ALU);
+    setFlag(FpSqrt);
     setFlag(F32);
 } // Inst_VOP3__V_RSQ_F32
 
@@ -3945,6 +3964,7 @@ Inst_VOP3__V_RCP_F64::Inst_VOP3__V_RCP_F64(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_rcp_f64", false)
 {
     setFlag(ALU);
+    setFlag(FpDiv);
     setFlag(F64);
 } // Inst_VOP3__V_RCP_F64
 
@@ -3996,6 +4016,7 @@ Inst_VOP3__V_RSQ_F64::Inst_VOP3__V_RSQ_F64(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_rsq_f64", false)
 {
     setFlag(ALU);
+    setFlag(FpSqrt);
     setFlag(F64);
 } // Inst_VOP3__V_RSQ_F64
 
@@ -4045,6 +4066,7 @@ Inst_VOP3__V_SQRT_F32::Inst_VOP3__V_SQRT_F32(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_sqrt_f32", false)
 {
     setFlag(ALU);
+    setFlag(FpSqrt);
     setFlag(F32);
 } // Inst_VOP3__V_SQRT_F32
 
@@ -4084,6 +4106,7 @@ Inst_VOP3__V_SQRT_F64::Inst_VOP3__V_SQRT_F64(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_sqrt_f64", false)
 {
     setFlag(ALU);
+    setFlag(FpSqrt);
     setFlag(F64);
 } // Inst_VOP3__V_SQRT_F64
 
@@ -4123,6 +4146,7 @@ Inst_VOP3__V_SIN_F32::Inst_VOP3__V_SIN_F32(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_sin_f32", false)
 {
     setFlag(ALU);
+    setFlag(FpSin);
     setFlag(F32);
 } // Inst_VOP3__V_SIN_F32
 
@@ -4717,6 +4741,7 @@ Inst_VOP3__V_RCP_F16::Inst_VOP3__V_RCP_F16(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_rcp_f16", false)
 {
     setFlag(ALU);
+    setFlag(FpDiv);
     setFlag(F16);
 } // Inst_VOP3__V_RCP_F16
 
@@ -4739,6 +4764,7 @@ Inst_VOP3__V_SQRT_F16::Inst_VOP3__V_SQRT_F16(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_sqrt_f16", false)
 {
     setFlag(ALU);
+    setFlag(FpSqrt);
     setFlag(F16);
 } // Inst_VOP3__V_SQRT_F16
 
@@ -4761,6 +4787,7 @@ Inst_VOP3__V_RSQ_F16::Inst_VOP3__V_RSQ_F16(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_rsq_f16", false)
 {
     setFlag(ALU);
+    setFlag(FpSqrt);
     setFlag(F16);
 } // Inst_VOP3__V_RSQ_F16
 
@@ -4783,6 +4810,7 @@ Inst_VOP3__V_LOG_F16::Inst_VOP3__V_LOG_F16(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_log_f16", false)
 {
     setFlag(ALU);
+    setFlag(FpLg);
     setFlag(F16);
 } // Inst_VOP3__V_LOG_F16
 
@@ -4805,6 +4833,7 @@ Inst_VOP3__V_EXP_F16::Inst_VOP3__V_EXP_F16(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_exp_f16", false)
 {
     setFlag(ALU);
+    setFlag(FpExp);
     setFlag(F16);
 } // Inst_VOP3__V_EXP_F16
 
@@ -4979,6 +5008,7 @@ Inst_VOP3__V_SIN_F16::Inst_VOP3__V_SIN_F16(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_sin_f16", false)
 {
     setFlag(ALU);
+    setFlag(FpSin);
     setFlag(F16);
 } // Inst_VOP3__V_SIN_F16
 
@@ -5064,6 +5094,7 @@ Inst_VOP3__V_LOG_LEGACY_F32::Inst_VOP3__V_LOG_LEGACY_F32(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_log_legacy_f32", false)
 {
     setFlag(ALU);
+    setFlag(FpLg);
     setFlag(F32);
 } // Inst_VOP3__V_LOG_LEGACY_F32
 
@@ -5201,6 +5232,7 @@ Inst_VOP3__V_MAD_LEGACY_F32::Inst_VOP3__V_MAD_LEGACY_F32(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_mad_legacy_f32", false)
 {
     setFlag(ALU);
+    setFlag(FpMul);
     setFlag(F32);
     setFlag(MAD);
 } // Inst_VOP3__V_MAD_LEGACY_F32
@@ -5321,6 +5353,8 @@ Inst_VOP3__V_MAD_I32_I24::Inst_VOP3__V_MAD_I32_I24(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_mad_i32_i24", false)
 {
     setFlag(ALU);
+    setFlag(IntMul);
+    setFlag(IntMul24);
     setFlag(MAD);
 } // Inst_VOP3__V_MAD_I32_I24
 
@@ -5368,6 +5402,8 @@ Inst_VOP3__V_MAD_U32_U24::Inst_VOP3__V_MAD_U32_U24(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_mad_u32_u24", false)
 {
     setFlag(ALU);
+    setFlag(IntMul);
+    setFlag(IntMul24);
     setFlag(MAD);
 } // Inst_VOP3__V_MAD_U32_U24
 
@@ -5638,6 +5674,7 @@ Inst_VOP3__V_FMA_F32::Inst_VOP3__V_FMA_F32(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_fma_f32", false)
 {
     setFlag(ALU);
+    setFlag(FpMul);
     setFlag(F32);
     setFlag(FMA);
 } // Inst_VOP3__V_FMA_F32
@@ -5698,6 +5735,7 @@ Inst_VOP3__V_FMA_F64::Inst_VOP3__V_FMA_F64(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_fma_f64", false)
 {
     setFlag(ALU);
+    setFlag(FpMul);
     setFlag(F64);
     setFlag(FMA);
 } // Inst_VOP3__V_FMA_F64
@@ -6620,6 +6658,7 @@ Inst_VOP3__V_DIV_FIXUP_F32::Inst_VOP3__V_DIV_FIXUP_F32(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_div_fixup_f32", false)
 {
     setFlag(ALU);
+    setFlag(FpDiv);
     setFlag(F32);
 } // Inst_VOP3__V_DIV_FIXUP_F32
 
@@ -6697,6 +6736,7 @@ Inst_VOP3__V_DIV_FIXUP_F64::Inst_VOP3__V_DIV_FIXUP_F64(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_div_fixup_f64", false)
 {
     setFlag(ALU);
+    setFlag(FpDiv);
     setFlag(F64);
 } // Inst_VOP3__V_DIV_FIXUP_F64
 
@@ -6784,6 +6824,7 @@ Inst_VOP3__V_DIV_SCALE_F32::Inst_VOP3__V_DIV_SCALE_F32(InFmt_VOP3B *iFmt)
     : Inst_VOP3B(iFmt, "v_div_scale_f32")
 {
     setFlag(ALU);
+    setFlag(FpDiv);
     setFlag(WritesVCC);
     setFlag(F32);
 } // Inst_VOP3__V_DIV_SCALE_F32
@@ -6839,6 +6880,7 @@ Inst_VOP3__V_DIV_SCALE_F64::Inst_VOP3__V_DIV_SCALE_F64(InFmt_VOP3B *iFmt)
     : Inst_VOP3B(iFmt, "v_div_scale_f64")
 {
     setFlag(ALU);
+    setFlag(FpDiv);
     setFlag(WritesVCC);
     setFlag(F64);
 } // Inst_VOP3__V_DIV_SCALE_F64
@@ -6926,6 +6968,7 @@ Inst_VOP3__V_DIV_FMAS_F32::Inst_VOP3__V_DIV_FMAS_F32(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_div_fmas_f32", false)
 {
     setFlag(ALU);
+    setFlag(FpDiv);
     setFlag(ReadsVCC);
     setFlag(F32);
     setFlag(FMA);
@@ -6988,6 +7031,7 @@ Inst_VOP3__V_DIV_FMAS_F64::Inst_VOP3__V_DIV_FMAS_F64(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_div_fmas_f64", false)
 {
     setFlag(ALU);
+    setFlag(FpDiv);
     setFlag(ReadsVCC);
     setFlag(F64);
     setFlag(FMA);
@@ -7666,6 +7710,7 @@ Inst_VOP3__V_FMA_F16::Inst_VOP3__V_FMA_F16(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_fma_f16", false)
 {
     setFlag(ALU);
+    setFlag(FpMul);
     setFlag(F16);
     setFlag(FMA);
 } // Inst_VOP3__V_FMA_F16
@@ -7687,6 +7732,7 @@ Inst_VOP3__V_DIV_FIXUP_F16::Inst_VOP3__V_DIV_FIXUP_F16(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_div_fixup_f16", false)
 {
     setFlag(ALU);
+    setFlag(FpDiv);
     setFlag(F16);
 } // Inst_VOP3__V_DIV_FIXUP_F16
 
@@ -8416,6 +8462,7 @@ Inst_VOP3__V_MUL_F64::Inst_VOP3__V_MUL_F64(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_mul_f64", false)
 {
     setFlag(ALU);
+    setFlag(FpMul);
     setFlag(F64);
 } // Inst_VOP3__V_MUL_F64
 
@@ -8683,6 +8730,8 @@ Inst_VOP3__V_MUL_LO_U32::Inst_VOP3__V_MUL_LO_U32(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_mul_lo_u32", false)
 {
     setFlag(ALU);
+    setFlag(IntMul);
+    setFlag(IntMul32);
 } // Inst_VOP3__V_MUL_LO_U32
 
 Inst_VOP3__V_MUL_LO_U32::~Inst_VOP3__V_MUL_LO_U32()
@@ -8727,6 +8776,8 @@ Inst_VOP3__V_MUL_HI_U32::Inst_VOP3__V_MUL_HI_U32(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_mul_hi_u32", false)
 {
     setFlag(ALU);
+    setFlag(IntMul);
+    setFlag(IntMul32);
 } // Inst_VOP3__V_MUL_HI_U32
 
 Inst_VOP3__V_MUL_HI_U32::~Inst_VOP3__V_MUL_HI_U32()
@@ -8771,6 +8822,8 @@ Inst_VOP3__V_MUL_HI_I32::Inst_VOP3__V_MUL_HI_I32(InFmt_VOP3A *iFmt)
     : Inst_VOP3A(iFmt, "v_mul_hi_i32", false)
 {
     setFlag(ALU);
+    setFlag(IntMul);
+    setFlag(IntMul32);
 } // Inst_VOP3__V_MUL_HI_I32
 
 Inst_VOP3__V_MUL_HI_I32::~Inst_VOP3__V_MUL_HI_I32()

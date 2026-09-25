@@ -900,6 +900,16 @@ class ClassicGeneratorExitHandler(
             )(),
             ExitEvent.KERNEL_PANIC: exit_generator(),
             ExitEvent.KERNEL_OOPS: exit_generator(),
+            ExitEvent.KERNEL_START: skip_generator(),
+            ExitEvent.KERNEL_END: skip_generator(),
+            ExitEvent.KERNEL_WG_START: skip_generator(),
+            ExitEvent.KERNEL_WG_END: skip_generator(),
+            ExitEvent.BLIT_START: warn_default_decorator(
+                skip_generator,
+                "start of GPU blit kernel!",
+                "doing nothing and continuing simulation",
+            )(),
+            ExitEvent.BLIT_END: skip_generator(),
         }
 
         if on_exit_event:
