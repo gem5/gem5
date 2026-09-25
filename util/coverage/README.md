@@ -280,3 +280,6 @@ ambiguous and rejected. Identical shard copies share a single parsed graph.
 Branch identities retain the complete GCC identity calculation, but new
 baselines omit repeated function and translation-unit names after computing
 those identities. Retained compiler notes preserve those details for recovery.
+
+See [the bounded gem5 pilot](PILOT.md) for measured collection, reporting,
+and recovery costs and the remaining production validation limits.
