@@ -1,4 +1,8 @@
-# Copyright 2022 Google LLC
+# -*- mode:python -*-
+
+# Copyright (c) 2026 The Board of Trustees of the Leland Stanford
+# Junior University
+# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -23,7 +27,25 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-config USE_X86_ISA
-    bool "X86 ISA support"
+import os
 
-rsource "pin/Kconfig"
+Import('*')
+
+if not env['CONF']['USE_X86_ISA'] or not env['CONF']['USE_PIN']:
+    Return()
+
+env.TagImplies('pin', 'gem5 lib')
+
+SimObject('X86PinCPU.py', sim_objects=['X86PinCPU'], tags='pin')
+Source('cpu.cc', tags='pin')
+Source('message.cc', tags='pin')
+DebugFlag('PinCPU', tags='pin')
+
+guest_exe, client_pintool = SConscript(
+    Dir('#util/pincpu').File('SConscript').abspath,
+    variant_dir=os.path.join(env['BUILDDIR'], 'util', 'pincpu'),
+    duplicate=0,
+)
+
+# Make sure that SCons builds the guest binary and the pintools.
+env.Depends(File('X86PinCPU.py.cc'), [guest_exe, client_pintool])

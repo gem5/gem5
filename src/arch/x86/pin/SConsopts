@@ -1,4 +1,6 @@
-# Copyright 2022 Google LLC
+# Copyright (c) 2026 The Board of Trustees of the Leland Stanford
+# Junior University
+# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -23,7 +25,31 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-config USE_X86_ISA
-    bool "X86 ISA support"
+import os
 
-rsource "pin/Kconfig"
+Import('*')
+
+from gem5_scons import warning
+
+import gem5_scons
+
+gem5_root = Dir('#').srcnode().abspath
+
+# Pin is normally located at ext/pin, extracted by ext/pin/configure.
+# Let its path be overridden by an environment variable.
+requested_pin_dir = os.environ.get('PIN_DIR')
+main['CONF'].setdefault(
+    'PIN_DIR', requested_pin_dir or os.path.join(gem5_root, 'ext/pin')
+)
+
+with gem5_scons.Configure(main) as conf:
+    # Check if we should enable Pin.
+    main['CONF']['HAVE_PIN'] = False
+
+    pin_dir = main['CONF']['PIN_DIR']
+    pin_exe = os.path.join(pin_dir, "pin")
+
+    if os.path.isfile(pin_exe):
+        conf.env['CONF']['HAVE_PIN'] = True
+    elif requested_pin_dir:
+        warning(f"Pin executable does not exist at {pin_exe}")

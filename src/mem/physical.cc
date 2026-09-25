@@ -82,11 +82,13 @@ PhysicalMemory::PhysicalMemory(const std::string &_name,
                                bool mmap_using_noreserve,
                                const std::string &shared_backstore,
                                bool auto_unlink_shared_backstore,
-                               bool is_sparse_restore)
+                               bool is_sparse_restore,
+                               bool anonymous_shared_backstore)
     : _name(_name),
       size(0),
       mmapUsingNoReserve(mmap_using_noreserve),
       sharedBackstore(shared_backstore),
+      anonymousSharedBackstore(anonymous_shared_backstore),
       sharedBackstoreSize(0),
       pageSize(sysconf(_SC_PAGE_SIZE)),
       isSparseRestore(is_sparse_restore)
@@ -267,7 +269,16 @@ PhysicalMemory::createBackingStore(
         sharedBackstoreSize += roundUp(range.size(), pageSize);
         DPRINTF(AddrRanges, "Sharing backing store as %s at offset %llu\n",
                 sharedBackstore.c_str(), (uint64_t)map_offset);
-        shm_fd = shm_open(sharedBackstore.c_str(), O_CREAT | O_RDWR, 0666);
+        if (anonymousSharedBackstore) {
+#if defined(__linux__)
+            shm_fd = memfd_create(sharedBackstore.c_str(), 0);
+#else
+            fatal("anonymous_shared_backstore requires memfd_create(2), "
+                  "which is only available on Linux.");
+#endif
+        } else {
+            shm_fd = shm_open(sharedBackstore.c_str(), O_CREAT | O_RDWR, 0666);
+        }
         if (shm_fd == -1)
                panic("Shared memory failed");
         if (ftruncate(shm_fd, sharedBackstoreSize))

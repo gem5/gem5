@@ -1,4 +1,6 @@
-# Copyright 2022 Google LLC
+# Copyright (c) 2026 The Board of Trustees of the Leland Stanford
+# Junior University
+# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -23,7 +25,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-config USE_X86_ISA
-    bool "X86 ISA support"
+config HAVE_PIN
+    bool
+    default "$(HAVE_PIN)"
 
-rsource "pin/Kconfig"
+config USE_PIN
+    depends on HAVE_PIN
+    depends on USE_X86_ISA
+    bool "Enable Pin CPU model"
+    default y
