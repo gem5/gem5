@@ -1,18 +1,19 @@
 # TestLib coverage index
 
-Build a bidirectional index from the per-invocation `coverage.json` records
-collected by TestLib:
+Build a bidirectional index from TestLib's native `coverage.json` and
+optional `python-coverage.json` invocation records:
 
 ```sh
 python3 util/coverage/index.py build downloaded-profiles --output coverage-index
 ```
 
-The input directory is searched recursively for files named `coverage.json`.
+The input directory is searched recursively for those two profile filenames.
 Other JSON files, raw counters, and ordinary test results are not interpreted
 as profiles. The command writes `index.json` and a standalone `index.html`.
 Open the HTML file directly in a browser; no server, network connection, or
 JavaScript packages are needed to use the index. Following source or result
-links requires access to their host. The Python commands use only the standard
+links requires access to their host unless a retained source map is supplied.
+The Python commands use only the standard
 library.
 
 The viewer lets you select a TestLib suite, inspect its invocations and build
@@ -44,7 +45,8 @@ plus collection status counts. A suite with no complete profile has
 
 ## Input records and identity
 
-Each `coverage.json` describes one gem5 invocation:
+The following version 1 example describes one native gem5 invocation. New
+native collection uses sparse version 2 records, described below:
 
 ```json
 {
@@ -92,7 +94,8 @@ uncovered lines.
 `index.json` has `format: "gem5-coverage-index"` and `schema_version: 1`:
 
 - `invocations` contains metadata sorted by invocation ID, a SHA-256 digest
-  of each normalized full record, and counts of its measured/covered lines.
+  of each normalized record (including its baseline reference for version 2),
+  and counts of its measured/covered lines.
   The array position is that invocation's ordinal.
 - `tests` maps each suite UID to its invocation ordinals.
 - `memberships` contains distinct lists of covering invocation ordinals.
@@ -121,8 +124,9 @@ claim that every gem5 source file or every test has been included. A missing
 record cannot be inferred from the index alone; campaign completeness needs
 the separate expected-test manifest and reporting checks. A process that
 never flushed its counters may leave missing or partial coverage. This index
-does not measure Python source execution or distinguish individual cases
-within a gem5 invocation.
+does not infer missing Python execution or distinguish individual cases
+within a gem5 invocation. Python appears only when the separate tracer
+records are present; native and Python denominators remain separate.
 
 The standalone page embeds the compact index. Keep the JSON alongside it for
 repeatable command-line queries, and retain the raw profile artifacts for

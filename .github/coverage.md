@@ -59,12 +59,14 @@ that branch. To activate this design, install `codecov.yaml` and its matching
 `quick-tests.yaml`, `daily-tests.yaml`, and `weekly-tests.yaml` definitions on
 `stable`, together with the `scheduler.yaml` change that removes the old
 coverage dispatch. Remove `ci-daily-codecov.yaml` there as well. Install the
-matching `util/coverage/index.py` and `report.py` reporting tools on `stable`
-as well. Keep these definitions and tools synchronized when
+matching runtime tools under `util/coverage/` and the native decoder
+`ext/testlib/coverage.py` on `stable` as well. Keep these definitions and
+tools synchronized when
 their interfaces, test plans, or report schemas change.
 Merging only to `develop` does not activate the completion trigger.
 
-Before recording weekly admission or building, the coordinator compares the deployed workflows,
+Before recording weekly admission or building, the coordinator compares the
+deployed workflows,
 configuration, and runtime coverage tools with the tested revision. A
 difference stops collection and lists the files to synchronize in the Actions
 summary. This prevents silently using a different test plan from `stable`.
@@ -79,8 +81,8 @@ To check a deployment locally after fetching the reference:
 python3 util/coverage/deployment.py --reference origin/stable
 ```
 
-The comparison includes the matching files under `util/coverage`,
-`.github/coverage-native.json`, and `.github/codecov.yml`. Runtime tools added
+The comparison includes the matching files under `util/coverage`, the native
+decoder, `.github/coverage-native.json`, and `.github/codecov.yml`. Runtime tools added
 later are discovered automatically; tests and prose documentation are excluded.
 
 The source-ref input is necessary because the completion workflow itself has
@@ -123,9 +125,11 @@ existing per-job execution limits until gem5 memory/runtime costs are measured.
 
 ## Reading the results
 
-The `coverage-report-<run-id>` artifact contains a summary, explicit grouped
-Codecov reports, and `index/index.html` with a test selector and source-line
-lookup. Open the HTML locally; it does not need Codecov or a web server.
+The `coverage-report-<run-id>` artifact opens at `index.html`. It combines
+collection status, native line coverage from TestLib and aggregate jobs,
+and links to grouped reports and the test/line browser at `index/index.html`.
+Download and unpack the whole artifact before opening it locally; it does
+not need Codecov or a web server.
 The accompanying `index.json` supports command-line queries through
 `util/coverage/index.py`. See `util/coverage/README.md` for examples.
 
@@ -133,8 +137,11 @@ TestLib's `--gcov=per-test` mode retains a separate record for each gem5
 invocation, identified by its SuiteUID and invocation ID. The profile records
 include the source revision, build identity, outcome, and collection status.
 The combined report and the test-to-line and line-to-test lookups come from
-these same records. The browser index shares repeated membership sets to
-avoid embedding thousands of copies of the same baseline and identifiers.
+these same records. Native profiles store the executable baseline once per
+build and retain only positive counts for each invocation. The browser
+index also shares repeated memberships instead of duplicating test IDs.
+GCC branch observations retain build and translation-unit identities;
+branches from different compiler graphs are not treated as one branch.
 
 The summary accounts for expected, completed, failed, skipped, unfinished,
 excluded, and missing-profile TestLib suites. Execution outcome and profile
@@ -145,8 +152,29 @@ valid partial reports are still retained and uploaded.
 
 C++ GTests and the SST, SystemC, and DRAMSys integrations retain aggregate
 reports and existing Codecov flags. These groups do not yet provide individual
-in-process GTest-case attribution in the TestLib index. Native GCC coverage
-does not measure Python source execution.
+in-process GTest-case attribution in the TestLib index. Their required
+build/run stages and runtime counters must be present before collection can
+be complete. `.github/coverage-native.json` defines the expected groups,
+flags, and stages, with a regression check against the actual workflows.
+
+Scheduled TestLib collection also enables `--python-coverage`, using a
+pinned coverage.py tracer in the embedded Python interpreter. Native and
+Python inventories remain separate in reports and queries. Python coverage
+begins at configuration execution: it does not include gem5 startup or
+shutdown, unimported modules, separate interpreters, or individual PyUnit
+cases within an invocation. Expected Python child profiles are checked, so
+a missing tracer result remains a visible gap.
+
+Source browsing uses committed files from the tested revision and retained
+generated sources. Missing, oversized, or conflicting generated files are
+labelled unavailable. Source retention for the browser is capped at 2 MiB
+per file and 128 MiB in total; these limits do not change coverage counts.
+
+The command-line tools can suggest tests for changed files or a verified
+diff, compare compatible observations, and identify lines covered by only
+one observed test. These are aids for investigation, not a rule for skipping
+CI: new code and missing tests cannot be assigned coverage from old data.
+See `util/coverage/README.md` for commands and comparison limits.
 
 The very-long `gem5/x86_boot_tests` group retains its uninstrumented fallback
 because of a known gcov segmentation fault. It still runs, and its omission
@@ -159,7 +187,8 @@ not be described as coverage from every test or every source language.
 Coverage data artifacts retain individual records, matching notes, raw
 counters, test results, and exported aggregate reports for 30 days. Raw
 profiles are packed into a compressed tar archive to preserve shared hard
-links instead of duplicating compiler metadata for each test. Coverage result
+links instead of duplicating compiler metadata for each test. Shared baseline
+JSON and Python profiles accompany the archive. Coverage result
 artifact names differ from ordinary test artifacts.
 
 To retry reporting or uploads without rebuilding or rerunning tests, dispatch
@@ -179,3 +208,22 @@ timestamps survive a long campaign and recovery within the 30-day artifact
 retention period. This does not extend artifact retention. Install this
 configuration on the tested branch and verify the effective Codecov settings
 during deployment; do not refresh timestamps to disguise old measurements.
+
+A local extraction retry can also rerun the original gcov against retained
+native notes and counters, without running gem5. This requires the matching
+toolchain and writes a separate recovered directory; see
+[`util/coverage/RECOVERY.md`](../util/coverage/RECOVERY.md). Report recovery
+cannot repair missing execution data, and native extraction recovery does
+not regenerate Python tracer output.
+
+## Maintaining and validating the infrastructure
+
+The hosted `coverage-tools` PR job runs the collector, report, index,
+workflow-admission and command-selection regression tests, including on
+draft PRs. These checks use small real GCC programs and recorded workflow
+commands; they do not start the weekly campaign or require coverage runners.
+
+Keep normal workload edits in the shared quick, Daily, or Weekly definition.
+Update the native plan when adding or removing an aggregate group or required
+stage. When changing profile schemas, retain support for artifacts still
+within the retention window or document the recovery boundary.
