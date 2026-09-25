@@ -59,6 +59,21 @@ class PcCountTracker(ProbeListenerObject):
     cxx_header = "cpu/probes/pc_count_tracker.hh"
     cxx_class = "gem5::PcCountTracker"
 
+    cxx_exports = [
+        PyBindMethod("getHottestPcs"),
+    ]
+
     targets = VectorParam.PcCountPair("the target PC Count pairs")
     core = Param.BaseCPU("the connected cpu")
-    ptmanager = Param.PcCountTrackerManager("the PcCountTracker manager")
+    ptmanager = Param.PcCountTrackerManager(NULL, "the PcCountTracker manager")
+    enable_pc_profiling = Param.Bool(
+        False, "Enable recording of all committed PCs and counts"
+    )
+    granularity = Param.Unsigned(
+        0,
+        "Number of low bits to mask out when grouping PCs (0 = exact PC, 1 = 2B"
+        " alignment, 6 = 64B cache line alignment)",
+    )
+    filter_ranges = VectorParam.AddrRange(
+        [], "Only track PCs within these ranges (empty = track all)"
+    )
