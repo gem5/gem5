@@ -7,6 +7,19 @@ and its matching `.gcno` files. `--gcov-tool gcov-13`, for example, selects the
 gcov executable matching the build's compiler. GCC 9 or newer is required for
 JSON output. Ordinary TestLib runs are unchanged.
 
+Use one binary variant per run. `--gcov=per-test --variant=opt,debug` is
+rejected before testing because GCC uses the same `.gcno` names for gem5's
+`.o`, `.do`, and `.fo` object variants. To compare variants locally, use
+separate clean build roots, for example `--build-dir build/coverage-opt`
+and `--build-dir build/coverage-debug`, with one `--variant` each. Do not
+reuse an instrumented directory after changing its variant or compiler.
+
+The native denominator is the executable lines described by the retained
+notes in that build directory. It is not a link-map-derived list of only
+code in the selected executable: build helper and stale object notes can
+also contribute zero-count lines. A clean dedicated coverage build avoids
+stale configurations; the campaign build artifact records its exact notes.
+
 `-t` still controls parallel test execution. Each gem5 invocation writes to a
 unique `testing-results/coverage/<invocation-id>/raw` directory through
 `GCOV_PREFIX`. The original object paths are retained beneath that directory.

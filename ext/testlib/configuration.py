@@ -391,12 +391,17 @@ def define_post_processors(config):
             return isa
 
     def default_variant(variant):
-        if not variant[0]:
-            # Default variant is only opt. No need to run tests with multiple
-            # different compilation targets
-            return [[constants.opt_tag]]
-        else:
-            return variant
+        selected = variant[0] or [constants.opt_tag]
+        if (
+            config._lookup_val("gcov")[0] == "per-test"
+            and len(set(selected)) > 1
+        ):
+            raise ValueError(
+                "--gcov=per-test requires one variant per run: GCC reuses "
+                "coverage notes across opt/debug/fast objects. Run each "
+                "variant separately with a clean, distinct --build-dir."
+            )
+        return [selected]
 
     def default_length(length):
         if not length[0]:

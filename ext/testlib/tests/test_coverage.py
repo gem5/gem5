@@ -265,6 +265,26 @@ class CoverageTest(unittest.TestCase):
         with tarfile.open(archive_path) as archive:
             self.assertTrue(archive.getmember("second.json").islnk())
 
+    def test_multiple_variants_are_rejected_before_running(self):
+        repository = MODULE.parents[2]
+        process = subprocess.run(
+            [
+                sys.executable,
+                str(repository / "tests/main.py"),
+                "list",
+                "gem5/pyunit",
+                "--gcov=per-test",
+                "--variant=opt,debug",
+                "--suites",
+                "-q",
+            ],
+            cwd=repository / "tests",
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotEqual(process.returncode, 0)
+        self.assertIn("requires one variant per run", process.stderr)
+
     def test_real_testlib_harness_records_each_invocation(self):
         repository = MODULE.parents[2]
         subprocess.run(["git", "init", "-q", str(self.root)], check=True)
