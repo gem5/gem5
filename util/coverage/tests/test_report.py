@@ -35,6 +35,7 @@ import tarfile
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 MODULE = Path(__file__).resolve().parents[1] / "report.py"
 sys.path.insert(0, str(MODULE.parent))
@@ -455,6 +456,45 @@ class CoverageReportTest(unittest.TestCase):
         self.assertTrue(
             (self.output / "records/baselines/hash/baseline.json").is_file()
         )
+
+    def test_sparse_groups_seed_shared_baseline_without_expansion(self):
+        from schema import canonical_hash
+
+        baseline = {
+            "schema_version": 1,
+            "format": "gem5-coverage-baseline",
+            "revision": REVISION,
+            "language": "native",
+            "build_id": "shared",
+            "files": [
+                {
+                    "path": "src/shared.cc",
+                    "lines": {str(i): 0 for i in range(1, 1201)},
+                }
+            ],
+        }
+        identity = canonical_hash(baseline)
+        report.write_json(
+            self.source / "baselines" / identity / "baseline.json", baseline
+        )
+        for attempt in range(100):
+            self.profile(
+                str(attempt),
+                schema_version=2,
+                baseline_id=identity,
+                build={"build_id": "shared"},
+                files=[{"path": "src/shared.cc", "lines": {"1": 1}}],
+            )
+        with mock.patch(
+            "schema.expand_baseline",
+            side_effect=AssertionError("No per-invocation expansion"),
+        ):
+            result = self.run_report()
+        self.assertTrue(result["complete"])
+        text = next(self.output.glob("testlib-*.info")).read_text()
+        self.assertIn("DA:1,100", text)
+        self.assertIn("DA:1200,0", text)
+        self.assertIn("LF:1200", text)
 
 
 if __name__ == "__main__":

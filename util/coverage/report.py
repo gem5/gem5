@@ -46,7 +46,8 @@ from pathlib import (
 )
 
 from schema import (
-    load_record,
+    SparseProfile,
+    load_sparse_record,
     profile_paths,
 )
 
@@ -245,9 +246,13 @@ def summarize(source, output, revision, campaign=False):
     records, seen = defaultdict(list), set()
     groups = defaultdict(list)
     native_ids, python_parents = {}, {}
+    baseline_lines = {}
     for path in profile_paths(source):
         try:
-            record = load_record(path, root=source)
+            loaded = load_sparse_record(path, root=source)
+            record = (
+                loaded.record if isinstance(loaded, SparseProfile) else loaded
+            )
             if record["revision"] != revision:
                 raise ValueError("Profile revision mismatch")
             uid, identity = record["test_uid"], record["invocation_id"]
@@ -256,7 +261,18 @@ def summarize(source, output, revision, campaign=False):
             if uid not in expected:
                 raise ValueError("Profile has no expected suite")
             language = record["language"]
-            line_count = sum(len(entry["lines"]) for entry in record["files"])
+            if isinstance(loaded, SparseProfile):
+                identity_key = record["baseline_id"]
+                if identity_key not in baseline_lines:
+                    baseline_lines[identity_key] = sum(
+                        len(entry["lines"])
+                        for entry in loaded.baseline["files"]
+                    )
+                line_count = baseline_lines[identity_key]
+            else:
+                line_count = sum(
+                    len(entry["lines"]) for entry in record["files"]
+                )
             if record["collection"] == "complete" and not line_count:
                 raise ValueError(
                     "Complete profile contains no executable lines"
@@ -361,8 +377,24 @@ def summarize(source, output, revision, campaign=False):
         # zero-count baseline (hundreds of thousands of lines) in memory.
         by_file = defaultdict(lambda: defaultdict(int))
         by_branch = defaultdict(dict)
+        seeded = set()
         for profile_path in paths:
-            profile = load_record(profile_path, root=source)
+            loaded = load_sparse_record(profile_path, root=source)
+            profile = (
+                loaded.record if isinstance(loaded, SparseProfile) else loaded
+            )
+            if (
+                isinstance(loaded, SparseProfile)
+                and profile["baseline_id"] not in seeded
+            ):
+                seeded.add(profile["baseline_id"])
+                for entry in loaded.baseline["files"]:
+                    for line in entry["lines"]:
+                        by_file[entry["path"]].setdefault(int(line), 0)
+                    for branch in entry.get("branches", []):
+                        by_branch[entry["path"]].setdefault(
+                            branch["id"], (branch["line"], 0)
+                        )
             for entry in profile["files"]:
                 for line, count in entry["lines"].items():
                     by_file[entry["path"]][int(line)] += count
