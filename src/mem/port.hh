@@ -71,6 +71,7 @@ class MasterPort;
 class SlavePort;
 
 class ResponsePort;
+class RequestPort;
 
 /**
  * TracingExtension is an Extension of the Packet for recording the trace
@@ -80,76 +81,41 @@ class ResponsePort;
 class TracingExtension : public gem5::Extension<Packet, TracingExtension>
 {
   public:
+    struct TraceEntry
+    {
+        const RequestPort *request_port;
+        gem5::Addr addr;
+    };
+
     TracingExtension() = default;
-    TracingExtension(const std::vector<std::string> &q) { trace_ = q; }
 
-    std::unique_ptr<ExtensionBase>
-    clone() const override
-    { return std::make_unique<TracingExtension>(trace_); }
+    explicit TracingExtension(const std::vector<TraceEntry> &q) : trace_(q) {}
 
-    void
-    add(std::string request_port, std::string response_port, gem5::Addr addr)
-    {
-        trace_.push_back(request_port + csprintf(" addr=%#llx", addr));
-        trace_.push_back(response_port);
-    }
+    std::unique_ptr<ExtensionBase> clone() const override;
 
-    void
-    remove()
-    {
-        trace_.pop_back(); // Remove the response port name.
-        trace_.pop_back(); // Remove the request port name.
-    }
+    /* Adds a trace to port trace vector. First in, first out. */
+    void add(const RequestPort *request_port, gem5::Addr addr);
 
-    bool
-    empty()
-    { return trace_.empty(); }
+    /* Removes a trace to port trace vector. */
+    void remove();
 
-    std::vector<std::string> &
-    getTrace()
-    { return trace_; }
+    /* @return `true` if port trace vector is empty. */
+    bool empty() const;
 
-    std::string
-    getTraceInString() const
-    {
-        std::stringstream port_trace;
-        port_trace << "Port trace of the Packet (" << std::endl
-                   << "[Destination] ";
-        for (auto rit = trace_.rbegin(); rit != trace_.rend(); rit++) {
-            if (std::next(rit) == trace_.rend()) {
-                port_trace << "[Source] ";
-            }
-            port_trace << *rit << std::endl;
-        }
-        port_trace << ")";
-        return port_trace.str();
-    }
+    /* @return the entire port trace in string. */
+    std::string getTraceInString() const;
 
     /**
      * @return the source port of the trace, return std::nullopt if the trace
-     * is empty
+     * is empty.
      */
-    std::optional<std::string>
-    getTraceSource() const
-    {
-        if (trace_.empty()) {
-            return std::nullopt;
-        }
-        return trace_[0];
-    }
+    std::optional<std::string> getTraceSource() const;
 
-    static void
-    dumpPortTrace(const gem5::PacketPtr pkt)
-    {
-        auto ext = pkt->getExtension<gem5::TracingExtension>();
-        if (ext) {
-            DPRINTF(PortTrace, "%s\n", ext->getTraceInString());
-        }
-    }
+    static void dumpPortTrace(const gem5::PacketPtr pkt);
 
   private:
-    // Ordered from the original source to the current point in the trace
-    std::vector<std::string> trace_;
+    /* Ordered from the original source to the current point in the trace. */
+    std::vector<TraceEntry> trace_;
 };
 
 /**
@@ -174,6 +140,12 @@ class RequestPort: public Port, public AtomicRequestProtocol,
     RequestPort(const std::string& name, PortID id=InvalidPortID);
 
     virtual ~RequestPort();
+
+    const ResponsePort *
+    getResponsePort() const
+    {
+        return _responsePort;
+    }
 
     /**
      * Bind this request port to a response port. This also does the
