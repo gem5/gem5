@@ -9,12 +9,13 @@ python3 util/coverage/index.py build downloaded-profiles --output coverage-index
 
 The input directory is searched recursively for those two profile filenames.
 Other JSON files, raw counters, and ordinary test results are not interpreted
-as profiles. The command writes `index.json` and a standalone `index.html`.
-Open the HTML file directly in a browser; no server, network connection, or
-JavaScript packages are needed to use the index. Following source or result
-links requires access to their host unless a retained source map is supplied.
-The Python commands use only the standard
-library.
+as profiles. The command writes `index.json`, `index.html`, and bounded
+branch sidecars under `branches/`. Keep the whole output directory together.
+Open the HTML file directly in a current browser; no server, network
+connection, or JavaScript packages are needed to use the index. Following
+source or result links requires access to their host unless a retained source
+map is supplied.
+The Python commands use only the standard library.
 
 The viewer lets you select a TestLib suite, inspect its invocations and build
 details, filter its covered source lines, and find tests that covered a
@@ -91,7 +92,10 @@ baseline or a list of UUIDs for every invocation and source line. Identical
 memberships are shared in the output, including the empty membership for
 uncovered lines.
 
-`index.json` has `format: "gem5-coverage-index"` and `schema_version: 1`:
+The compact index has `format: "gem5-coverage-index"`. Artifact builds use
+`schema_version: 2` for external branch data; the small in-memory format
+remains version 1. Current query tools read both versions. Its core fields
+are:
 
 - `invocations` contains metadata sorted by invocation ID, a SHA-256 digest
   of each normalized record (including its baseline reference for version 2),
@@ -128,12 +132,13 @@ does not infer missing Python execution or distinguish individual cases
 within a gem5 invocation. Python appears only when the separate tracer
 records are present; native and Python denominators remain separate.
 
-The standalone page embeds the compact index. Keep the JSON alongside it for
-repeatable command-line queries, and retain the raw profile artifacts for
-reprocessing. Covered-line tables initially show 200 rows and can be expanded
-or filtered. A focused size test covers 2,000 invocations sharing a 1,000-line
-baseline and requires the standalone HTML to stay below 2 MB. Actual campaign
-size depends on its source-line count and distinct coverage memberships.
+The page embeds compact line and invocation data and loads branch sidecars
+on demand. Keep the JSON and sidecars alongside it for repeatable
+command-line queries, and retain the profile artifacts for reprocessing.
+Covered-line tables initially show 200 rows and can be expanded or filtered. A focused size test covers 2,000 invocations sharing a 1,000-line
+baseline and requires the small self-contained HTML fixture to stay below
+2 MB. Actual campaign size depends on its source-line count and distinct
+coverage memberships.
 
 ## Verification
 
@@ -158,8 +163,9 @@ records after rejecting another file.
 
 Version 1 profiles remain supported. Native version 2 profiles contain only
 positive line and branch counts, referencing a shared
-`baselines/<baseline_id>/baseline.json`. The loader checks the baseline's
-canonical JSON SHA-256, revision, language, and referenced lines and branches.
+`baselines/<baseline_id>/baseline.json` (or `baseline.json.gz` in reporting
+artifacts). The loader checks the baseline's canonical JSON SHA-256, revision,
+language, and referenced lines and branches.
 It restores zero-count executable lines and branch metadata in memory.
 Missing/error records created before baseline preparation may have no baseline
 and no files. They remain visibly incomplete.
@@ -248,15 +254,25 @@ before writing `index.json` and rendering HTML.
 
 ## Large branch inventories
 
-The complete `index.json` remains the input for command-line queries. The
-browser stores branch inventories in bounded `branches/*.js` sidecars instead
-of embedding every branch in `index.html`. Opening the page loads line/test
-coverage; querying a source line loads only the branch chunks containing that
-line. Results display 100 branches at a time, including measured zero-hit
-branches. Missing sidecars are reported as unavailable coverage, never as zero.
-Keep the entire index directory together when downloading or moving it.
-Programmatic builders should use `write_browser(index, output_directory)`;
-`render_html(index)` remains suitable for small self-contained fixtures.
+`index.json` contains the core line and invocation data and references bounded
+`branches/*.js` sidecars for branch inventories. Both the browser and
+command-line queries need those sidecars. Opening the page loads line/test
+coverage; querying a source line loads only its branch chunks. The browser
+uses the built-in `DecompressionStream` API to decode their compressed data,
+so use a current browser. Results display 100 branches at a time, including
+measured zero-hit branches. Missing sidecars are reported as unavailable
+coverage, never as zero. Keep the entire index directory together when
+downloading or moving it.
+
+The CLI builds large artifacts one compiled graph at a time. Programmatic
+callers can use `index_artifact.build_artifact(directory, output)` to write
+branch shards and return the core index, then attach source links, save
+`index.json`, and call `write_browser(core, output)`. The CLI performs all
+these steps. `build_index` and `render_html` remain suitable for small
+in-memory fixtures. When querying
+external branch data programmatically, pass the output directory as
+`artifact_root` to `tests_for_branch`. The command-line tools resolve that
+directory from the supplied index path.
 
 Baseline readers accept `baseline.json` or `baseline.json.gz`, validating the
 same canonical decompressed content identity. A directory containing both is

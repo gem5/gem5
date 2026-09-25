@@ -133,8 +133,9 @@ collection status, native line coverage from TestLib and aggregate jobs,
 and links to grouped reports and the test/line browser at `index/index.html`.
 Download and unpack the whole artifact before opening it locally; it does
 not need Codecov or a web server.
-The accompanying `index.json` supports command-line queries through
-`util/coverage/index.py`. See `util/coverage/README.md` for examples.
+The `index/index.json` file and its `index/branches/` sidecars support
+command-line queries through `util/coverage/index.py`. Keep the complete
+artifact directory together. See `util/coverage/README.md` for examples.
 
 TestLib's `--gcov=per-test` mode retains a separate record for each gem5
 invocation, identified by its SuiteUID and invocation ID. The profile records
@@ -165,8 +166,9 @@ pinned coverage.py tracer in the embedded Python interpreter. Native and
 Python inventories remain separate in reports and queries. Python coverage
 begins at configuration execution: it does not include gem5 startup or
 shutdown, unimported modules, separate interpreters, or individual PyUnit
-cases within an invocation. Expected Python child profiles are checked, so
-a missing tracer result remains a visible gap.
+cases within an invocation. The Python companion record for each native
+invocation is checked, so a missing tracer result remains a visible gap.
+This check does not require profiles from separately spawned interpreters.
 
 Source browsing uses committed files from the tested revision and retained
 generated sources. Missing, oversized, or conflicting generated files are
@@ -187,12 +189,21 @@ not be described as coverage from every test or every source language.
 
 ## Retention and report-only recovery
 
-Coverage data artifacts retain individual records, matching notes, raw
-counters, test results, and exported aggregate reports for 30 days. Raw
-profiles are packed into a compressed tar archive to preserve shared hard
-links instead of duplicating compiler metadata for each test. Shared baseline
-JSON and Python profiles accompany the archive. Coverage result
-artifact names differ from ordinary test artifacts.
+`coverage-data-*` artifacts retain invocation records, compressed shared
+baselines, test results, aggregate XML, and generated-source snapshots.
+Routine reporting downloads these lightweight inputs together with the
+discovery and admission manifests. It does not download raw counters.
+
+The matching `coverage-raw-*` artifacts retain native notes and counters in
+compressed tar archives, preserving shared hard links instead of duplicating
+compiler metadata for each test. Download both matching artifact types for
+a local extraction retry. Both types are retained for 30 days and have names
+distinct from ordinary test artifacts.
+
+The resulting `coverage-report-<run-id>` artifact retains the offline browser,
+collection summary, aggregate XML, and compressed `.info.gz` LCOV reports.
+Each upload job decompresses its selected LCOV report before sending it to
+Codecov.
 
 To retry reporting or uploads without rebuilding or rerunning tests, dispatch
 **Code Coverage** on the default branch with `source-run-id` set to the

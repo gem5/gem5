@@ -6,8 +6,10 @@ aggregate XML. Routine reporting downloads only `coverage-data-*`,
 `coverage-plan-*` and `coverage-source-*` artifacts. Shared baselines in the
 reporting artifacts are compressed as `baseline.json.gz`; generated source
 snapshots are packaged separately from runtime counters. It does not run
-gcov or tests. Use `report.py summarize`,
-`report.py landing` and `index.py build` against the recovered artifacts.
+gcov or tests. Use `report.py summarize`, `report.py landing` and
+`index.py build` against the recovered artifacts. Retain the resulting index
+directory, including its branch sidecars, for browser and command-line
+queries.
 
 An **extraction retry** reruns gcov against retained native notes and counters.
 Download both matching `coverage-data-*` and `coverage-raw-*` artifacts from
@@ -37,7 +39,7 @@ original artifacts for any further retry.
 
 Recovery preserves invocation IDs, build identities and execution outcomes.
 A failed test stays failed after its coverage is successfully extracted.
-Shared schema 2 baselines are required for invocation retries. Native
+Schema 2 native profiles require their shared baselines for retries. Native
 aggregate retries require the recorded build root and gcov version. Older
 artifacts missing those fields can still support a report retry when their
 extracted reports are available.
