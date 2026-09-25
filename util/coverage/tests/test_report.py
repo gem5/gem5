@@ -326,6 +326,7 @@ class CoverageReportTest(unittest.TestCase):
                 "group": "unittests-fast",
                 "flags": "untrusted-label",
                 "schema_version": 2,
+                "extraction": "complete",
                 "outcomes": {"build_and_test": "success"},
                 "counters": {"files": 1, "bytes": 100},
             },

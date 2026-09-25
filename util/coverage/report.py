@@ -174,8 +174,21 @@ def xml_statuses(root, errors):
 def summarize(source, output, revision, campaign=False):
     source, output = Path(source), Path(output)
     output.mkdir(parents=True, exist_ok=True)
+    for pattern in ("testlib-*.info", "python-*.info", "aggregate-*.xml"):
+        for old_report in output.glob(pattern):
+            old_report.unlink()
     errors, expected, excluded, lengths = [], {}, {}, set()
     required_languages = {}
+    for path in source.rglob("reextraction.json"):
+        try:
+            retry = json.loads(path.read_text())
+            if retry["revision"] != revision:
+                raise ValueError("Extraction retry revision mismatch")
+            errors.extend(
+                "Extraction retry: " + str(error) for error in retry["errors"]
+            )
+        except (ValueError, KeyError, TypeError) as error:
+            errors.append(f"Invalid extraction retry audit: {error}")
     for path in source.rglob("expected.json"):
         try:
             data = json.loads(path.read_text())
@@ -446,6 +459,8 @@ def summarize(source, output, revision, campaign=False):
                 "collected_at": item.get("collected_at"),
             }
             aggregate_rows.append(row)
+            if item.get("extraction") != "complete":
+                errors.append(f"Incomplete aggregate extraction: {group}")
             if not execution_complete:
                 errors.append(
                     f"Incomplete aggregate build/test stages: {group}"
@@ -574,6 +589,7 @@ def aggregate(
                     "files": len(counters),
                     "bytes": sum(p.stat().st_size for p in counters),
                 },
+                "build_root": str(Path.cwd().resolve()),
                 "gcov_version": version.splitlines()[0],
                 "extraction": "pending",
             },
@@ -656,12 +672,24 @@ def main():
     native.add_argument("--outcomes")
     native.add_argument("--config", default=".github/coverage-native.json")
     native.add_argument("--record-only", action="store_true")
+    retry = commands.add_parser("reextract")
+    retry.add_argument("source")
+    retry.add_argument("--gcov", default="gcov")
+    retry.add_argument("--max-bytes", type=int, default=100 * 1024**3)
     landing_page = commands.add_parser("landing")
     landing_page.add_argument("source")
     landing_page.add_argument("--source-root")
     native_discovery = commands.add_parser("native-plan")
     native_discovery.add_argument("config")
-    for command in (plan, build, native, pack, native_discovery, landing_page):
+    for command in (
+        plan,
+        build,
+        native,
+        pack,
+        native_discovery,
+        landing_page,
+        retry,
+    ):
         command.add_argument("--revision", required=True)
         command.add_argument("--output", required=True)
     args = parser.parse_args()
@@ -673,6 +701,14 @@ def main():
             args.output,
             args.python_coverage,
         )
+    elif args.command == "reextract":
+        from recovery import reextract
+
+        result = reextract(
+            args.source, args.output, args.revision, args.gcov, args.max_bytes
+        )
+        if result["errors"]:
+            raise SystemExit(1)
     elif args.command == "landing":
         from landing import build as build_landing
 
