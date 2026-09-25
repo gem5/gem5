@@ -33,6 +33,7 @@ validated with small native programs, without building the simulator.
 
 import gzip
 import hashlib
+import importlib.util
 import json
 import os
 import shutil
@@ -40,7 +41,74 @@ import subprocess
 import tempfile
 import threading
 import uuid
+from functools import lru_cache
 from pathlib import Path
+
+
+@lru_cache(maxsize=1)
+def _gem5_option_modules():
+    # Load only host-safe modules, not m5.__init__ and its embedded bindings.
+    # The declarations remain owned by m5.main; coverage has no option list.
+    directory = Path(__file__).resolve().parents[2] / "src/python/m5"
+    modules = []
+    for name in ("main", "options"):
+        spec = importlib.util.spec_from_file_location(
+            f"_coverage_gem5_{name}", directory / f"{name}.py"
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        modules.append(module)
+    return modules
+
+
+def _python_entry(command):
+    """Use gem5's real parser to preserve option/value and module boundaries."""
+    main, declarations = _gem5_option_modules()
+    parser = main.get_option_parser(declarations.OptionParser)._optparse
+    prefix = [command[0]]
+    # Observe options after optparse has split grouped/attached arguments.
+    # Do not execute callbacks here: help, stats, and configuration actions
+    # belong to the child gem5 process. It also performs value conversion.
+    entry = None
+    incompatible = False
+
+    def observe(option):
+        def record(opt, value, values, parser):
+            nonlocal entry, incompatible
+            if opt in ("-m", "-c"):
+                entry = (opt, value, parser.rargs[:])
+                del parser.rargs[:]
+                incompatible |= opt == "-c"
+                return
+            incompatible |= opt in ("-i", "--interactive", "--pdb")
+            prefix.append(opt)
+            if value is not None:
+                prefix.extend(value if isinstance(value, tuple) else [value])
+
+        option.process = record
+
+    for option in parser.option_list:
+        observe(option)
+    for group in parser.option_groups:
+        for option in group.option_list:
+            observe(option)
+
+    def invalid(message):
+        raise ValueError(f"Invalid gem5 coverage command: {message}")
+
+    parser.error = invalid
+    _, arguments = parser.parse_args(command[1:])
+    if incompatible:
+        raise ValueError(
+            "Python coverage requires a noninteractive file or module config"
+        )
+    if entry is not None:
+        return prefix, [entry[1], *entry[2]], "module"
+    if not arguments:
+        raise ValueError(
+            "Python coverage requires a configuration entry point"
+        )
+    return prefix, arguments, "file"
 
 
 def _canonical_bytes(value):
@@ -423,42 +491,21 @@ class InvocationCoverage:
         """Preserve gem5 file/module arguments while installing the tracer."""
         if not self.build.python_coverage:
             return command
-        module_index = next(
-            (
-                index
-                for index in range(1, script_index)
-                if command[index] == "-m"
-            ),
-            None,
-        )
-        options_end = (
-            module_index if module_index is not None else script_index
-        )
-        incompatible = {"-c", "--pdb", "-i", "--interactive"}
-        if any(arg in incompatible for arg in command[1:options_end]):
-            raise ValueError(
-                "Python coverage requires a noninteractive file or module config"
-            )
+        prefix, arguments, mode = _python_entry(command)
         record = json.loads(self.python_path.read_text())
         record["compiled_root"] = str(self.build.compiled_root)
         record["build"]["gem5_compatibility_id"] = self.build.build.get(
             "compatibility_id", "unknown"
         )
-        if module_index is not None:
-            if module_index + 1 >= len(command):
-                raise ValueError("Missing Python module name")
+        if mode == "module":
             record["entry_mode"] = "module"
             record["exclusions"] = [
                 "Python coverage measures the module process only; forked "
                 "and separately launched interpreter processes are outside "
                 "this measurement scope."
             ]
-            arguments = command[module_index + 1 :]
-            prefix = command[:module_index]
         else:
             record["entry_mode"] = "file"
-            arguments = command[script_index:]
-            prefix = command[:script_index]
         _write_record(self.python_path, record)
         wrapper = Path(__file__).with_name("coverage_python.py")
         return prefix + [str(wrapper), str(self.python_path)] + arguments

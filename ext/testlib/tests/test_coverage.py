@@ -274,7 +274,11 @@ class CoverageTest(unittest.TestCase):
         result = None
         try:
             with invocation as environment:
-                command = invocation.python_command(command, 2 + len(options))
+                command = [
+                    sys.executable,
+                    *options,
+                    *invocation.python_command(command[1 + len(options) :], 1),
+                ]
                 result = subprocess.run(
                     command,
                     env=environment,

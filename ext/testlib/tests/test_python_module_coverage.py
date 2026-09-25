@@ -54,19 +54,24 @@ class PythonModuleCoverageTest(unittest.TestCase):
         self.root = Path(self.temporary.name).resolve()
         self.stub = self.root / "gem5_stub.py"
         self.stub.write_text(
-            "import json,os,runpy,sys,types\n"
-            "args=sys.argv[1:]\n"
-            "safe=args[:1]==['-P']\n"
-            "if safe: args=args[1:]\n"
-            "options=types.SimpleNamespace(P=safe,m='')\n"
+            "import importlib.util,json,os,runpy,sys,types\n"
+            f"root={str(ROOT)!r}\n"
+            "def load(name):\n"
+            "    spec=importlib.util.spec_from_file_location('_fixture_'+name,root+'/src/python/m5/'+name+'.py')\n"
+            "    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module);return module\n"
+            "options_module=load('options');main=load('main')\n"
+            "sys.modules['_fixture']=types.ModuleType('_fixture')\n"
+            "sys.modules['_fixture.options']=options_module\n"
+            "main.__package__='_fixture'\n"
+            "options,args=main.parse_options()\n"
             "sys.modules['m5']=types.SimpleNamespace(options=options)\n"
-            "if args[0]=='-m':\n"
-            "    options.m=(args[1],args[2:])\n"
-            "    sys.argv=args[1:]\n"
-            "    runpy.run_module(args[1],run_name='__m5_main__')\n"
+            "sys.path[0:0]=options.path\n"
+            "if options.m:\n"
+            "    sys.argv=[options.m[0]]+options.m[1]\n"
+            "    runpy.run_module(options.m[0],run_name='__m5_main__')\n"
             "else:\n"
             "    sys.argv=args\n"
-            "    if not safe: sys.path.insert(0,os.path.dirname(args[0]))\n"
+            "    if not options.P: sys.path.insert(0,os.path.dirname(args[0]))\n"
             "    exec(compile(open(args[0]).read(),args[0],'exec'),{'__name__':'__m5_main__','__file__':args[0]})\n"
         )
         package = self.root / "package"
@@ -78,6 +83,7 @@ class PythonModuleCoverageTest(unittest.TestCase):
             "print(json.dumps({'argv':sys.argv,'path':sys.path,'options_m':m5.options.m,"
             "'name':__name__,'package':__package__,'spec':__spec__.name,"
             "'file':__file__,'cached':__cached__,'sibling':value,"
+            "'outdir':m5.options.outdir,'quiet':m5.options.quiet,"
             "'registered':'__m5_main__' in sys.modules}))\n"
             "if 'fail' in sys.argv: raise SystemExit(7)\n"
         )
@@ -113,9 +119,12 @@ class PythonModuleCoverageTest(unittest.TestCase):
                         command, cwd=self.root, text=True, capture_output=True
                     )
                     invocation = self.invocation()
-                    wrapped = invocation.python_command(
-                        command, len(prefix) + 2
-                    )
+                    wrapped = [
+                        sys.executable,
+                        *invocation.python_command(
+                            command[1:], len(prefix) + 1
+                        ),
+                    ]
                     measured = subprocess.run(
                         wrapped, cwd=self.root, text=True, capture_output=True
                     )
@@ -140,6 +149,67 @@ class PythonModuleCoverageTest(unittest.TestCase):
                         {entry["path"] for entry in record["files"]},
                     )
 
+    def test_attached_grouped_and_option_value_boundaries_match_real_parser(
+        self,
+    ):
+        for options in (
+            ["-mpackage"],
+            ["-Pm", "package"],
+            ["-Pmpackage"],
+            ["-dmyout", "-mpackage"],
+            ["-d-module-directory", "-mpackage"],
+            ["--outdir", "-module-directory", "-mpackage"],
+            ["--outdir=-module-directory", "-Pm", "package"],
+            ["-p", str(self.root), "-qPm", "package"],
+        ):
+            with self.subTest(options=options):
+                command = [
+                    str(self.stub),
+                    *options,
+                    "config.py",
+                    "-i",
+                    "space argument",
+                ]
+                normal = subprocess.run(
+                    [sys.executable, *command],
+                    cwd=self.root,
+                    text=True,
+                    capture_output=True,
+                )
+                invocation = self.invocation()
+                wrapped = invocation.python_command(command, 1 + len(options))
+                measured = subprocess.run(
+                    [sys.executable, *wrapped],
+                    cwd=self.root,
+                    text=True,
+                    capture_output=True,
+                )
+                self.assertEqual(
+                    measured.returncode, normal.returncode, measured.stderr
+                )
+                self.assertEqual(normal.returncode, 0, normal.stderr)
+                self.assertEqual(
+                    json.loads(measured.stdout), json.loads(normal.stdout)
+                )
+                data = json.loads(invocation.python_path.read_text())
+                self.assertEqual(data["collection"], "complete", data)
+                self.assertEqual(data["entry_mode"], "module")
+
+    def test_normalization_never_executes_help_or_stats_callbacks(self):
+        for option in ("--help", "--stats-help"):
+            prefix, arguments, mode = collector._python_entry(
+                ["gem5", option, "config.py"]
+            )
+            self.assertEqual(prefix, ["gem5", option])
+            self.assertEqual(arguments, ["config.py"])
+            self.assertEqual(mode, "file")
+        prefix, arguments, mode = collector._python_entry(
+            ["gem5", "--outdir", "-m", "config.py", "-mpackage"]
+        )
+        self.assertEqual(prefix, ["gem5", "--outdir", "-m"])
+        self.assertEqual(arguments, ["config.py", "-mpackage"])
+        self.assertEqual(mode, "file")
+
     def test_file_config_behavior_is_unchanged(self):
         script = self.root / "config.py"
         script.write_text(
@@ -161,7 +231,10 @@ class PythonModuleCoverageTest(unittest.TestCase):
                     check=True,
                 )
                 invocation = self.invocation()
-                wrapped = invocation.python_command(command, len(prefix))
+                wrapped = [
+                    sys.executable,
+                    *invocation.python_command(command[1:], len(prefix) - 1),
+                ]
                 measured = subprocess.run(
                     wrapped,
                     cwd=self.root,
@@ -199,7 +272,7 @@ class PythonModuleCoverageTest(unittest.TestCase):
             "config.py",
         ]
         measured = subprocess.run(
-            invocation.python_command(command, 4),
+            [sys.executable, *invocation.python_command(command[1:], 3)],
             cwd=self.root,
             text=True,
             capture_output=True,
