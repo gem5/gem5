@@ -27,7 +27,8 @@ preserve deduplication. Rerunning the same coverage run is allowed. Coverage
 campaigns are serialized without cancelling an active campaign, and quick,
 Daily, and Weekly workloads run sequentially to retain the five-job TestLib
 matrix limit. Later workloads still collect coverage if an earlier one fails.
-These jobs still share the self-hosted runner pool with normal CI.
+Coverage builds and tests target the dedicated `gem5-coverage` runner group.
+Reporting and upload recovery run on GitHub-hosted runners.
 
 ## Enabling the completion trigger
 
@@ -36,8 +37,9 @@ which is `stable` for gem5. Relative reusable workflow calls also resolve from
 that branch. To activate this design, install `codecov.yaml` and its matching
 `quick-tests.yaml`, `daily-tests.yaml`, and `weekly-tests.yaml` definitions on
 `stable`, together with the `scheduler.yaml` change that removes the old
-coverage dispatch. Remove `ci-daily-codecov.yaml` there as well. Install the matching `util/coverage/index.py` and `report.py` reporting
-tools on `stable` as well. Keep these definitions and tools synchronized when
+coverage dispatch. Remove `ci-daily-codecov.yaml` there as well. Install the
+matching `util/coverage/index.py` and `report.py` reporting tools on `stable`
+as well. Keep these definitions and tools synchronized when
 their interfaces, test plans, or report schemas change.
 Merging only to `develop` does not activate the completion trigger.
 
@@ -46,6 +48,38 @@ The source-ref input is necessary because the completion workflow itself has
 qualifying Weekly run's commit instead. The gate does not execute or download
 code from the completed run; it admits only same-repository `develop` runs
 started through the ordinary dispatch workflows.
+
+## Runner isolation and shared builds
+
+Provision the `gem5-coverage` group before activating collection. Its runners
+must be Linux x86_64 machines with Docker and the `/gem5-resource-cache`
+mount. Register them without default labels and give them only the
+`gem5-coverage` label, so ordinary jobs selecting `self-hosted`, `linux`, and
+`x64` cannot consume this pool. Group membership alone does not prevent those
+ordinary label-based jobs from using a runner.
+
+Restrict the group's workflow access to these definitions at
+`refs/heads/stable`: `gem5/gem5/.github/workflows/codecov.yaml`,
+`quick-tests.yaml`, `daily-tests.yaml`, and `weekly-tests.yaml` (use the full
+repository/workflow path for each). GitHub applies this restriction to the
+workflows directly defining jobs, including reusable workflows. Runner
+provisioning and group access settings are external to this PR.
+
+The coordinator resolves the all-dependencies image to an immutable Linux
+x86_64 digest, discovers the union of TestLib build targets across all three
+lengths, and builds each target once with test objects and GCC coverage.
+Workers download only the binaries needed by their suites and verify the
+revision, container identity, and checksums before installation. Matching
+notes, generated sources, and configuration accompany the binary; build-time
+counters and object files are omitted. Ordinary caches are not used by these
+coverage builds. Integration and GTest builds remain separate because they
+use different targets or environments.
+
+The existing x86 boot exception builds its ordinary binary separately. A
+failed shared build does not prevent unrelated successfully built targets
+from collecting coverage; the final accounting reports the resulting gaps.
+The collector supports parallel invocations, but scheduled coverage keeps its
+existing per-job execution limits until gem5 memory/runtime costs are measured.
 
 ## Reading the results
 

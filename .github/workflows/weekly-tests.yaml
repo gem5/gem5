@@ -8,6 +8,10 @@ on:
     workflow_dispatch:
     workflow_call:
         inputs:
+            coverage-image:
+                description: Immutable container used by shared coverage builds
+                type: string
+                default: ''
             source-ref:
                 description: Tested commit to check out for a coverage campaign
                 type: string
@@ -27,7 +31,7 @@ jobs:
 
     get-testlib-very-long-dirs:
         runs-on: ubuntu-24.04
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        container: ${{ inputs.coverage-image || 'ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest' }}
         outputs:
             test-dirs-matrix: ${{ steps.dir-matrix.outputs.test-dirs-matrix }}
         steps:
@@ -70,9 +74,9 @@ jobs:
             max-parallel: 5
             matrix:
                 test-type: ${{ fromJson(needs.get-testlib-very-long-dirs.outputs.test-dirs-matrix) }}
-        runs-on: [self-hosted, linux, x64]
+        runs-on: ${{ fromJSON(inputs.coverage && '{"group":"gem5-coverage","labels":"gem5-coverage"}' || '["self-hosted","linux","x64"]') }}
         container:
-            image: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+            image: ${{ inputs.coverage-image || 'ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest' }}
             volumes:
                 - /gem5-resource-cache:/gem5-resource-cache
         env:
@@ -84,19 +88,30 @@ jobs:
               with:
                   ref: ${{ inputs.source-ref || github.sha }}
 
+            - name: Restore verified coverage binaries
+              if: ${{ inputs.coverage && matrix.test-type != 'gem5/x86_boot_tests' }}
+              uses: ./.github/actions/restore-coverage-build
+              with:
+                  test-dir: ${{ matrix.test-type }}
+                  length: very-long
+                  revision: ${{ inputs.source-ref || github.sha }}
+                  image: ${{ inputs.coverage-image }}
+
             - name: Run very-long ${{ matrix.test-type }} tests
               id: run-tests
               timeout-minutes: 4290
               working-directory: ${{ github.workspace }}/tests
               # The o3-cpu_8-cores_classic_DualChannelDDR4_2400_init test in the
-              # very-long x86_boot_tests fails with a segmentation fault when
-              # run with the --gcov=per-test flag, so run x86_boot_tests
-              # very-long without that flag.
+              # very-long x86_boot_tests has a known segmentation fault with
+              # gcov-instrumented binaries. Retain its ordinary build until
+              # that instrumentation failure is resolved.
               run: |
                   extra_gcov_args="${GCOV_FLAGS:+--gcov=per-test}"
+                  skip_build_args="${GCOV_FLAGS:+--skip-build}"
                   resource_dir="$GEM5_RESOURCE_DIR"
                   if [ -n "$GCOV_FLAGS" ] && [ "${{ matrix.test-type }}" = "gem5/x86_boot_tests" ]; then
                     extra_gcov_args=""
+                    skip_build_args=""
                     echo "::warning::x86_boot_tests runs without coverage due to a known instrumentation crash."
                     echo "Coverage excludes very-long x86_boot_tests (known gcov crash)." >> "$GITHUB_STEP_SUMMARY"
                   fi
@@ -106,7 +121,7 @@ jobs:
                       resource_dir="$RUNNER_TEMP/gem5-testlib-downloads"
                       ;;
                   esac
-                  ./main.py run ${{ matrix.test-type }} --length=very-long ${extra_gcov_args} -j"$(nproc)" -vv --bin-path "$resource_dir"
+                  ./main.py run ${{ matrix.test-type }} --length=very-long ${skip_build_args} ${extra_gcov_args} -j"$(nproc)" -vv --bin-path "$resource_dir"
 
             - name: Sanitize test-dir for artifact name
               id: sanitize-test-dir

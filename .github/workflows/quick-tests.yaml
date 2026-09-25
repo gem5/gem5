@@ -5,6 +5,10 @@ name: Quick Tests
 on:
     workflow_call:
         inputs:
+            coverage-image:
+                description: Immutable container used by shared coverage builds
+                type: string
+                default: ''
             source-ref:
                 description: Tested commit to check out for a coverage campaign
                 type: string
@@ -43,8 +47,8 @@ jobs:
         strategy:
             matrix:
                 type: [fast, opt]
-        runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        runs-on: ${{ fromJSON(inputs.coverage && '{"group":"gem5-coverage","labels":"gem5-coverage"}' || '["self-hosted","linux","x64"]') }}
+        container: ${{ inputs.coverage-image || 'ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest' }}
         timeout-minutes: 60
         steps:
             - uses: actions/checkout@v7
@@ -66,7 +70,7 @@ jobs:
         runs-on: ubuntu-24.04
     # In order to make sure the environment is exactly the same, we run in
     # the same container we use to build gem5 and run the testlib tests. This
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        container: ${{ inputs.coverage-image || 'ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest' }}
         steps:
             - uses: actions/checkout@v7
               with:
@@ -115,6 +119,7 @@ jobs:
             test-dirs-matrix: ${{ steps.dir-matrix.outputs.test-dirs-matrix }}
 
     testlib-quick-gem5-builds:
+        if: ${{ !inputs.coverage }}
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         needs: [testlib-quick-matrix, get-date]
@@ -131,9 +136,9 @@ jobs:
               if: ${{ endsWith(matrix.build-target, 'build/ALL/gem5.opt') }}
               with:
                   path: build/ALL
-                  key: ${{ inputs.coverage && 'gcov-' || '' }}testlib-build-ALL-${{ needs.get-date.outputs.date }}
+                  key: testlib-build-ALL-${{ needs.get-date.outputs.date }}
                   restore-keys: |
-                      ${{ inputs.coverage && 'gcov-' || '' }}testlib-build-ALL-
+                      testlib-build-ALL-
 
             - name: Build gem5
               env:
@@ -142,12 +147,7 @@ jobs:
                   build_dir=$(dirname "$BUILD_TARGET")
                   build_config=$(basename "$build_dir")
                   scons defconfig "$build_dir" "build_opts/$build_config"
-                  # Coverage previously built through Gem5Fixture, which
-                  # includes the objects used by tests.
-                  if [ -n "$GCOV_FLAGS" ]; then
-                    scons setconfig "$build_dir" USE_TEST_OBJECTS=y
-                  fi
-                  scons "$BUILD_TARGET" ${GCOV_FLAGS:+--gcov} -j "$(nproc)"
+                  scons "$BUILD_TARGET" -j "$(nproc)"
 
             - name: Sanitize build-target for artifact name
               id: sanitize-build-target
@@ -162,35 +162,23 @@ jobs:
         # Then upload-artifact will upload "ARM/gem5.opt" and "RISCV/gem5.opt",
         # stripping the "build" directory. By adding the "anchor.txt" file, we
         # ensure the "build" directory is preserved.
-            - name: Package coverage metadata
-              if: inputs.coverage
-              env:
-                  BUILD_TARGET: ${{ matrix.build-target }}
-              run: |
-                  build_dir=$(dirname "$BUILD_TARGET")
-                  find "$build_dir" -type f \( \
-                    -name '*.gcno' -o -name '*.cc' -o -name '*.hh' -o \
-                    -name '*.c' -o -name '*.h' -o -name '*.inc' \) \
-                    -print0 > "$RUNNER_TEMP/coverage-files"
-                  tar -czf "coverage-${{ steps.sanitize-build-target.outputs.sanitized-build-target }}.tar.gz" --null -T "$RUNNER_TEMP/coverage-files"
-
             - run: echo "anchor" > anchor.txt
             - uses: actions/upload-artifact@v7
               with:
-                  name: ci-tests-${{ inputs.coverage && 'gcov-' || '' }}${{ github.run_number }}-testlib-quick-all-gem5-builds-${{ steps.sanitize-build-target.outputs.sanitized-build-target
-                      }}
+                  name: ci-tests-${{ github.run_number }}-testlib-quick-all-gem5-builds-${{ steps.sanitize-build-target.outputs.sanitized-build-target }}
                   # Rebuilds replace artifacts; consumer-only reruns reuse them.
                   overwrite: true
                   path: |
                       build/*/gem5.*
                       anchor.txt
-                      coverage-*.tar.gz
 
     testlib-quick-execution:
         name: quick-tests
-        runs-on: [self-hosted, linux, x64]
+        if: ${{ !cancelled() && needs.testlib-quick-matrix.result == 'success' && (inputs.coverage || needs.testlib-quick-gem5-builds.result == 'success')
+            }}
+        runs-on: ${{ fromJSON(inputs.coverage && '{"group":"gem5-coverage","labels":"gem5-coverage"}' || '["self-hosted","linux","x64"]') }}
         container:
-            image: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+            image: ${{ inputs.coverage-image || 'ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest' }}
             # PR jobs keep their existing container without a resource mount.
             options: ${{ inputs.coverage && '--volume /gem5-resource-cache:/gem5-resource-cache' || '' }}
         needs: [testlib-quick-matrix, testlib-quick-gem5-builds]
@@ -205,20 +193,22 @@ jobs:
             - uses: actions/checkout@v7
               with:
                   ref: ${{ inputs.source-ref || github.sha }}
+            - name: Restore verified coverage binaries
+              if: inputs.coverage
+              uses: ./.github/actions/restore-coverage-build
+              with:
+                  test-dir: ${{ matrix.test-dir }}
+                  length: quick
+                  revision: ${{ inputs.source-ref || github.sha }}
+                  image: ${{ inputs.coverage-image }}
+
             - uses: actions/download-artifact@v8
+              if: ${{ !inputs.coverage }}
               name: Download gem5 artifacts
               with:
                   pattern: ci-tests-${{ inputs.coverage && 'gcov-' || '' }}${{ github.run_number }}-testlib-quick-all-gem5-builds*
                   merge-multiple: true
 
-            - name: Unpack coverage metadata
-              if: inputs.coverage
-              run: |
-                  for archive in coverage-*.tar.gz; do
-                    tar -xzf "$archive"
-                  done
-
-        # Check that the gem5.opt artifact exists and is executable.
             - name: Chmod gem5.{opt,debug,fast} to be executable
               run: |
                   find . -name "gem5.opt" -exec chmod u+x {} \;

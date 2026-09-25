@@ -146,12 +146,84 @@ jobs:
                   overwrite: true
                   if-no-files-found: error
 
-    quick:
+    coverage-image:
         needs: gate
         if: needs.gate.outputs.allowed == 'true'
+        runs-on: ubuntu-24.04
+        outputs:
+            image: ${{ steps.image.outputs.image }}
+        steps:
+            - name: Pin the coverage container for the campaign
+              id: image
+              run: |
+                  image=ghcr.io/gem5/ubuntu-24.04_all-dependencies
+                  docker buildx imagetools inspect "$image:latest" \
+                    --format '{{json .Manifest}}' > "$RUNNER_TEMP/image.json"
+                  digest=$(jq -er '.manifests[] | select(.platform.os == "linux" and .platform.architecture == "amd64") | .digest' "$RUNNER_TEMP/image.json")
+                  echo "image=$image@$digest" >> "$GITHUB_OUTPUT"
+
+    coverage-build-plan:
+        needs: [gate, coverage-image]
+        runs-on: ubuntu-24.04
+        container: ${{ needs.coverage-image.outputs.image }}
+        outputs:
+            targets: ${{ steps.plan.outputs.targets }}
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ needs.gate.outputs.source-ref }}
+            - name: Discover binaries across all coverage workloads
+              id: plan
+              run: |
+                  targets=$(python3 util/coverage/build.py plan)
+                  echo "$targets" | jq -e 'length > 0' >/dev/null
+                  echo "targets=$targets" >> "$GITHUB_OUTPUT"
+
+    coverage-builds:
+        needs: [gate, coverage-image, coverage-build-plan]
+        runs-on:
+            group: gem5-coverage
+            labels: gem5-coverage
+        container: ${{ needs.coverage-image.outputs.image }}
+        timeout-minutes: 180
+        strategy:
+            fail-fast: false
+            max-parallel: 2
+            matrix:
+                target: ${{ fromJSON(needs.coverage-build-plan.outputs.targets) }}
+        steps:
+            - uses: actions/checkout@v7
+              with:
+                  ref: ${{ needs.gate.outputs.source-ref }}
+            - name: Build and package each coverage binary once
+              id: build
+              env:
+                  BUILD_TARGET: ${{ matrix.target }}
+                  COVERAGE_IMAGE: ${{ needs.coverage-image.outputs.image }}
+              run: |
+                  python3 util/coverage/build.py build "$BUILD_TARGET" \
+                    --image "$COVERAGE_IMAGE" --output coverage-binary \
+                    --jobs "$(nproc)"
+                  name=${BUILD_TARGET#build/}
+                  echo "name=${name//\//-}" >> "$GITHUB_OUTPUT"
+            - name: Retain the verified binary and matching coverage notes
+              uses: actions/upload-artifact@v7
+              with:
+                  name: coverage-build-${{ steps.build.outputs.name }}
+                  path: coverage-binary
+                  retention-days: 30
+                  compression-level: 0
+                  overwrite: true
+                  if-no-files-found: error
+
+    quick:
+        needs: [gate, coverage-image, coverage-build-plan, coverage-builds]
+        if: ${{ !cancelled() && needs.gate.result == 'success' && needs.gate.outputs.allowed == 'true' && needs.coverage-image.result == 'success' && needs.coverage-build-plan.result
+            == 'success' }}
         uses: ./.github/workflows/quick-tests.yaml
         with:
             coverage: true
+            coverage-image: ${{ needs.coverage-image.outputs.image }}
             source-ref: ${{ needs.gate.outputs.source-ref }}
         secrets:
             CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -159,21 +231,25 @@ jobs:
     daily:
         # Keep the coverage matrices within the existing five-job limit.
         # A failed workload must not prevent collection from the next one.
-        needs: [gate, quick]
-        if: ${{ !cancelled() && needs.gate.result == 'success' && needs.gate.outputs.allowed == 'true' }}
+        needs: [gate, coverage-image, coverage-build-plan, quick]
+        if: ${{ !cancelled() && needs.gate.result == 'success' && needs.gate.outputs.allowed == 'true' && needs.coverage-image.result == 'success' && needs.coverage-build-plan.result
+            == 'success' }}
         uses: ./.github/workflows/daily-tests.yaml
         with:
             coverage: true
+            coverage-image: ${{ needs.coverage-image.outputs.image }}
             source-ref: ${{ needs.gate.outputs.source-ref }}
         secrets:
             CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
     weekly:
-        needs: [gate, daily]
-        if: ${{ !cancelled() && needs.gate.result == 'success' && needs.gate.outputs.allowed == 'true' }}
+        needs: [gate, coverage-image, coverage-build-plan, daily]
+        if: ${{ !cancelled() && needs.gate.result == 'success' && needs.gate.outputs.allowed == 'true' && needs.coverage-image.result == 'success' && needs.coverage-build-plan.result
+            == 'success' }}
         uses: ./.github/workflows/weekly-tests.yaml
         with:
             coverage: true
+            coverage-image: ${{ needs.coverage-image.outputs.image }}
             source-ref: ${{ needs.gate.outputs.source-ref }}
         secrets:
             CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

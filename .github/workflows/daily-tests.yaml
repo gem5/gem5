@@ -9,6 +9,10 @@ on:
     workflow_dispatch:
     workflow_call:
         inputs:
+            coverage-image:
+                description: Immutable container used by shared coverage builds
+                type: string
+                default: ''
             source-ref:
                 description: Tested commit to check out for a coverage campaign
                 type: string
@@ -91,6 +95,7 @@ jobs:
               timeout-minutes: 120
 
     build-testlib-gem5:
+        if: ${{ !inputs.coverage }}
         runs-on: [self-hosted, linux, x64]
         container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
         timeout-minutes: 180
@@ -109,9 +114,9 @@ jobs:
               uses: actions/cache@v6
               with:
                   path: build/${{ matrix.target }}
-                  key: ${{ inputs.coverage && 'gcov-' || '' }}testlib-build-${{ matrix.target }}-${{ needs.get-date.outputs.date }}
+                  key: testlib-build-${{ matrix.target }}-${{ needs.get-date.outputs.date }}
                   restore-keys: |
-                      ${{ inputs.coverage && 'gcov-' || '' }}testlib-build-${{ matrix.target }}
+                      testlib-build-${{ matrix.target }}
 
             - name: Build the TestLib target
               env:
@@ -120,28 +125,20 @@ jobs:
                   # Match Gem5Fixture, including objects used only by tests.
                   scons --ignore-style defconfig "build/$BUILD_TARGET" "build_opts/$BUILD_TARGET"
                   scons --ignore-style setconfig "build/$BUILD_TARGET" USE_TEST_OBJECTS=y
-                  scons --ignore-style ${GCOV_FLAGS:+--gcov} "build/$BUILD_TARGET/gem5.opt" -j "$(nproc)"
+                  scons --ignore-style "build/$BUILD_TARGET/gem5.opt" -j "$(nproc)"
 
-            - name: Package the executable and coverage metadata
+            - name: Package the executable
               env:
                   BUILD_TARGET: ${{ matrix.target }}
               run: |
                   printf '%s\0' "build/$BUILD_TARGET/gem5.opt" > "$RUNNER_TEMP/build-files"
-                  if [ -n "$GCOV_FLAGS" ]; then
-                    # gcov needs the matching notes and generated sources,
-                    # but not object files or counters from the build itself.
-                    find "build/$BUILD_TARGET" -type f \( \
-                      -name '*.gcno' -o -name '*.cc' -o -name '*.hh' -o \
-                      -name '*.c' -o -name '*.h' -o -name '*.inc' \) \
-                      -print0 >> "$RUNNER_TEMP/build-files"
-                  fi
                   tar -czf "gem5-$BUILD_TARGET.tar.gz" --null -T "$RUNNER_TEMP/build-files"
 
             - name: Publish the build executable as artifact
               uses: actions/upload-artifact@v7
               with:
                   # Keep names stable when rerunning only failed consumers.
-                  name: daily-gem5-${{ inputs.coverage && 'gcov-' || '' }}${{ github.run_id }}-${{ matrix.target }}
+                  name: daily-gem5-${{ github.run_id }}-${{ matrix.target }}
                   path: gem5-${{ matrix.target }}.tar.gz
                   compression-level: 0
                   if-no-files-found: error
@@ -153,8 +150,8 @@ jobs:
         strategy:
             matrix:
                 type: [debug]
-        runs-on: [self-hosted, linux, x64]
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        runs-on: ${{ fromJSON(inputs.coverage && '{"group":"gem5-coverage","labels":"gem5-coverage"}' || '["self-hosted","linux","x64"]') }}
+        container: ${{ inputs.coverage-image || 'ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest' }}
         timeout-minutes: 60
         steps:
             - uses: actions/checkout@v7
@@ -173,7 +170,7 @@ jobs:
 
     get-testlib-long-dirs:
         runs-on: ubuntu-24.04
-        container: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+        container: ${{ inputs.coverage-image || 'ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest' }}
         outputs:
             test-dirs-matrix: ${{ steps.dir-matrix.outputs.test-dirs-matrix }}
             build-matrix: ${{ steps.build-matrix.outputs.build-matrix }}
@@ -221,9 +218,10 @@ jobs:
   # start running all of the long tests
     testlib-long-tests:
         name: long-tests
-        runs-on: [self-hosted, linux, x64]
+        if: ${{ !cancelled() && needs.get-testlib-long-dirs.result == 'success' && (inputs.coverage || needs.build-testlib-gem5.result == 'success') }}
+        runs-on: ${{ fromJSON(inputs.coverage && '{"group":"gem5-coverage","labels":"gem5-coverage"}' || '["self-hosted","linux","x64"]') }}
         container:
-            image: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+            image: ${{ inputs.coverage-image || 'ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest' }}
             volumes:
                 - /gem5-resource-cache:/gem5-resource-cache
         env:
@@ -243,7 +241,17 @@ jobs:
             - uses: actions/checkout@v7
               with:
                   ref: ${{ inputs.source-ref || github.sha }}
+            - name: Restore verified coverage binaries
+              if: inputs.coverage
+              uses: ./.github/actions/restore-coverage-build
+              with:
+                  test-dir: ${{ matrix.test-type }}
+                  length: long
+                  revision: ${{ inputs.source-ref || github.sha }}
+                  image: ${{ inputs.coverage-image }}
+
             - name: Select the binaries needed by these suites
+              if: ${{ !inputs.coverage }}
               id: required-binaries
               working-directory: ${{ github.workspace }}/tests
               env:
@@ -260,7 +268,7 @@ jobs:
                   echo "artifact-pattern=daily-gem5-${{ inputs.coverage && 'gcov-' || '' }}$GITHUB_RUN_ID-@($targets)" >> "$GITHUB_OUTPUT"
 
             - name: Download this run's binary artifacts
-              if: steps.required-binaries.outputs.has-binaries == 'true'
+              if: ${{ !inputs.coverage && steps.required-binaries.outputs.has-binaries == 'true' }}
               uses: actions/download-artifact@v8
               with:
                   pattern: ${{ steps.required-binaries.outputs.artifact-pattern }}
@@ -268,7 +276,7 @@ jobs:
                   merge-multiple: true
 
             - name: Unpack the binaries
-              if: steps.required-binaries.outputs.has-binaries == 'true'
+              if: ${{ !inputs.coverage && steps.required-binaries.outputs.has-binaries == 'true' }}
               run: |
                   for archive in "$RUNNER_TEMP"/gem5-binaries/gem5-*.tar.gz; do
                     tar -xzf "$archive"
@@ -323,7 +331,7 @@ jobs:
   # This runs the SST-gem5 integration compilation and tests it with
   # ext/sst/sst/example.py.
     sst-test:
-        runs-on: [self-hosted, linux, x64]
+        runs-on: ${{ fromJSON(inputs.coverage && '{"group":"gem5-coverage","labels":"gem5-coverage"}' || '["self-hosted","linux","x64"]') }}
         container: ghcr.io/gem5/sst-env:latest
         timeout-minutes: 240
         needs: get-date
@@ -369,7 +377,7 @@ jobs:
   # This runs the gem5 within SystemC ingration and runs a simple hello-world
   # simulation with it.
     systemc-test:
-        runs-on: [self-hosted, linux, x64]
+        runs-on: ${{ fromJSON(inputs.coverage && '{"group":"gem5-coverage","labels":"gem5-coverage"}' || '["self-hosted","linux","x64"]') }}
         container: ghcr.io/gem5/systemc-env:latest
         timeout-minutes: 180
         # The shared-library build changes the configuration and generated
@@ -406,9 +414,9 @@ jobs:
                   flags: systemc-test,overall-length-long
 
     dramsys-tests:
-        runs-on: [self-hosted, linux, x64]
+        runs-on: ${{ fromJSON(inputs.coverage && '{"group":"gem5-coverage","labels":"gem5-coverage"}' || '["self-hosted","linux","x64"]') }}
         container:
-            image: ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest
+            image: ${{ inputs.coverage-image || 'ghcr.io/gem5/ubuntu-24.04_all-dependencies:latest' }}
             volumes:
                 - /gem5-resource-cache:/gem5-resource-cache
         env:
