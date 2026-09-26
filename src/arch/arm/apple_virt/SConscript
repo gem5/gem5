@@ -1,4 +1,5 @@
-# Copyright 2023 Google LLC
+# Copyright (c) 2026 The Regents of the University of California
+# All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -23,14 +24,24 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-config HAVE_CAPSTONE
-    def_bool $(HAVE_CAPSTONE)
+Import('*')
 
-rsource "kvm/Kconfig"
-rsource "apple_virt/Kconfig"
+if env['CONF'].get('APPLE_VIRT_ISA') != 'arm' \
+        or not env['CONF'].get('USE_ARM_ISA', False) \
+        or not env['CONF'].get('USE_APPLE_VIRT', False):
+    Return()
 
-config USE_CAPSTONE
-    depends on HAVE_CAPSTONE
-    depends on USE_ARM_ISA
-    bool "Use CapstoneDisassembler"
-    default y
+SimObject('BaseArmAppleVirtCPU.py', sim_objects=['BaseArmAppleVirtCPU'],
+          tags=['arm apple_virt'])
+SimObject('ArmAppleVirtCPU.py', sim_objects=['ArmAppleVirtCPU'],
+          tags=['arm apple_virt'])
+
+Source('base_cpu.cc', tags=['arm apple_virt'])
+Source('arm_cpu.cc', tags=['arm apple_virt'])
+
+GTest('exit_decode.test', 'exit_decode.test.cc')
+GTest(
+    'hypervisor.test',
+    'hypervisor.test.cc',
+    apple_virt_entitlement=True,
+)
